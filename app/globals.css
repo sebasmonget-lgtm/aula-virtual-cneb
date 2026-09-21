@@ -1,0 +1,94 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "../vendor/shadcn-tailwind-4.13.0.css";
+
+:root {
+  --background: #f9fbff;
+  --foreground: #182d50;
+  --card: #ffffff;
+  --card-foreground: #182d50;
+  --popover: #ffffff;
+  --popover-foreground: #182d50;
+  --primary: #087d96;
+  --primary-foreground: #ffffff;
+  --secondary: #e8f6fb;
+  --secondary-foreground: #13546d;
+  --muted: #eef3fa;
+  --muted-foreground: #63748d;
+  --accent: #e9f5fc;
+  --accent-foreground: #182d50;
+  --destructive: #b83b45;
+  --border: #dde6f1;
+  --input: #dce6f0;
+  --ring: #087d96;
+  --radius: 0.9rem;
+  --sidebar: #f5f8ff;
+  --sidebar-foreground: #19345b;
+  --sidebar-primary: #d8f0f4;
+  --sidebar-primary-foreground: #126177;
+  --sidebar-accent: #e8f2fb;
+  --sidebar-accent-foreground: #19345b;
+  --sidebar-border: #e4eaf3;
+  --sidebar-ring: #087d96;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --radius-sm: calc(var(--radius) - 5px);
+  --radius-md: calc(var(--radius) - 3px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 5px);
+  --font-sans: "Aptos", "Segoe UI", Arial, sans-serif;
+}
+
+* { border-color: var(--border); }
+body { margin: 0; background: var(--background); color: var(--foreground); }
+button, a { -webkit-tap-highlight-color: transparent; }
+::selection { background: #f6c85f80; }
+
+.paper-grid {
+  background-image: linear-gradient(#dce5e1 1px, transparent 1px), linear-gradient(90deg, #dce5e1 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+.diagnostic-shell {
+  color: #182d50;
+}
+
+.diagnostic-panel {
+  border: 1px solid #dce6f4;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 12px 34px rgba(36, 69, 112, .035);
+}
+
+.diagnostic-field {
+  border-radius: 10px;
+  background: #f0f4fb;
+  padding: 11px 13px;
+}
