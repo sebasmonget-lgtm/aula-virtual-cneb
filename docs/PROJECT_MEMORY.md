@@ -9,6 +9,7 @@ Proyecto nuevo iniciado el 20 de septiembre de 2026. Existe un shell responsive 
 - Identidad visual y shell PWA responsive.
 - Tema visual inspirado en la referencia entregada por la usuaria: fondo azul muy claro, texto azul marino, acento turquesa, tarjetas blancas y paneles de ayuda pastel. El diagnóstico muestra datos reales del perfil/aula y cobertura calculada de la base local, no cifras copiadas de la imagen.
 - Navegación principal: Hoy, Planificar, Niños, Evaluar, Documentos y Biblioteca.
+- Hoy es el inicio docente: deriva una línea de tiempo del horario local, destaca el bloque vigente/próximo y enlaza actividades o talleres sin duplicarlos.
 - Primer flujo vertical persistente: actividad actual → seleccionar estudiante → describir evidencia → guardar en PostgreSQL local → actualizar cobertura.
 - Migración inicial para Supabase con entidades de Fase 0 y Fase 1, más las relaciones mínimas necesarias para el flujo de evidencia.
 - Políticas RLS preparadas, sin aplicar a ninguna cuenta.

@@ -19,6 +19,7 @@ export type LocalDashboard = {
   };
   students: LocalStudent[];
   metrics: { students_total: number; evidences_week: number; students_observed: number };
+  today: { date: string; now: string; blocks: { id: string; start_time: string; end_time: string; block_type: string; title: string; activity_id: string | null; purpose: string | null; experience_title: string | null; materials: string[]; criterion_id: string | null; status: string }[] };
   profile: {
     teacher_name: string; institution_name: string; section: string; age_label: string;
     age_years: number; school_year: number; institution_code: string | null; district: string | null;

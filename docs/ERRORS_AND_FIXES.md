@@ -1,5 +1,13 @@
 # Errores y soluciones
 
+## 2026-09-21 Renderizador DOCX sin LibreOffice disponible
+
+**Síntoma.** El renderizador empaquetado no pudo convertir la Actualización 03 a PNG porque `soffice.exe` no estaba disponible en la ruta del runtime.
+
+**Impacto.** No afecta a la aplicación. Se extrajeron e inspeccionaron las imágenes de referencia incrustadas y el contenido DOCX se leyó estructuralmente.
+
+**Prevención.** Restaurar el binario LibreOffice empaquetado antes de requerir una entrega DOCX con validación visual.
+
 ## 2026-09-20 Scripts auxiliares del starter no encontraron npm
 
 **Síntoma.** Los scripts auxiliares de instalación y build intentaron resolver `node_modules/npm/bin/npm-cli.js` dentro del proyecto y terminaron con `MODULE_NOT_FOUND`.

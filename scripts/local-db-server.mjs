@@ -22,6 +22,7 @@ const exportTables = [
   "activities", "activity_criteria", "evidences", "competency_observation_guides",
   "document_templates", "document_versions", "diagnostic_sessions",
   "diagnostic_entries", "observation_references", "student_observations",
+  "class_schedule_entries", "daily_execution_logs",
 ];
 
 await mkdir(path.dirname(dataDir), { recursive: true });
@@ -134,9 +135,28 @@ async function dashboard() {
      where p.user_id = $1
      limit 1
   `, [teacherId]);
+  const dateFormatter = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Lima", year: "numeric", month: "2-digit", day: "2-digit" });
+  const timeFormatter = new Intl.DateTimeFormat("en-GB", { timeZone: "America/Lima", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+  const today = dateFormatter.format(new Date());
+  const now = timeFormatter.format(new Date());
+  const todayBlocks = await db.query(`
+    select se.id, se.start_time::text, se.end_time::text, se.block_type, coalesce(se.title, a.title) as title,
+           se.activity_id, a.purpose, le.title as experience_title, ac.id as criterion_id,
+           coalesce(a.preparation->'materials', '[]'::jsonb) as materials, coalesce(del.status, 'planned') as saved_status
+      from class_schedule_entries se
+      join classrooms cl on cl.id = se.classroom_id
+      left join activities a on a.id = se.activity_id
+      left join learning_experiences le on le.id = a.experience_id
+      left join lateral (select id from activity_criteria where activity_id = a.id order by display_order limit 1) ac on true
+      left join daily_execution_logs del on del.schedule_entry_id = se.id and del.execution_date = $2::date
+     where cl.teacher_id = $1 and (se.scheduled_on = $2::date or (se.scheduled_on is null and se.weekday = extract(dow from $2::date)))
+     order by se.start_time, se.sort_order
+  `, [teacherId, today]);
+  const blocks = todayBlocks.rows.map((block) => ({ ...block, materials: block.materials ?? [], status: block.saved_status === "planned" && now >= block.start_time.slice(0,5) && now < block.end_time.slice(0,5) ? "active" : block.saved_status === "planned" && now >= block.end_time.slice(0,5) ? "completed" : block.saved_status }));
 
   return {
     activity: activityResult.rows[0],
+    today: { date: today, now, blocks },
     students: studentsResult.rows,
     metrics: metricsResult.rows[0],
     profile: profileResult.rows[0] ? {

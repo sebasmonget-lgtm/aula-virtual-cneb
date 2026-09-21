@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import {
   BookOpen, CalendarDays, Check, ChevronRight, ClipboardCheck, Database, FileText,
-  Home, Library, Menu, MessageCircle, MoreHorizontal, Plus, Search,
+  Camera, CheckCircle2, Clock3, Home, Library, Menu, MessageCircle, MoreHorizontal, Plus, Search,
   Settings2, Sparkles, Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -34,7 +34,7 @@ const fallbackStudents: LocalStudent[] = [
 ].map(([id, name]) => ({ id, name }));
 
 export function TeacherWorkspace() {
-  const [active, setActive] = useState("Evaluar");
+  const [active, setActive] = useState("Hoy");
   const [evidenceOpen, setEvidenceOpen] = useState(false);
   const [studentId, setStudentId] = useState("3");
   const [note, setNote] = useState("");
@@ -150,6 +150,8 @@ export function TeacherWorkspace() {
         <main className="mx-auto w-full max-w-[1450px] px-4 pb-24 pt-6 md:px-7 md:pt-8">
           {active === "Perfil" ? dashboard ? <InstitutionProfile dashboard={dashboard} onSaved={setDashboard} /> : <p role={databaseState === "offline" ? "alert" : "status"} className="text-sm text-muted-foreground">{databaseState === "offline" ? "No se pudo conectar con la base local. Inicia npm run db:local y vuelve a cargar la página." : "Cargando perfil..."}</p> :
           active === "Evaluar" ? dashboard ? <GuidedDiagnostic dashboard={dashboard} /> : <p role={databaseState === "offline" ? "alert" : "status"} className="text-sm text-muted-foreground">{databaseState === "offline" ? "No se pudo conectar con la base local. Inicia npm run db:local y vuelve a cargar la página." : "Cargando evaluación diagnóstica..."}</p> : <>
+          {active === "Hoy" && <TodayScreen dashboard={dashboard} openEvidence={() => setEvidenceOpen(true)} />}
+          <div className={active === "Hoy" ? "hidden" : ""}>
           <section className="mb-7 flex flex-wrap items-end justify-between gap-4">
             <div><p className="mb-1 text-sm font-semibold text-[#087d96]">{active}</p><h1 className="text-3xl font-bold tracking-[-0.035em] md:text-4xl">Buenos días, profesora {profile?.teacher_name?.split(" ")[0] ?? "Marisol"}</h1><p className="mt-2 max-w-2xl text-base text-muted-foreground">Esto es lo más importante para tu jornada de hoy.</p></div>
             <Button className="h-11 rounded-xl px-5 shadow-sm"><Plus /> Nueva experiencia</Button>
@@ -197,7 +199,7 @@ export function TeacherWorkspace() {
             <Metric label="Cobertura de observación" value={`${metrics?.students_observed ?? 0}/${metrics?.students_total ?? 6}`} detail={`${Math.max((metrics?.students_total ?? 6) - (metrics?.students_observed ?? 0), 0)} por observar`} warning />
             <article className="paper-grid rounded-2xl border bg-white p-5"><p className="text-sm font-medium text-muted-foreground">Próxima fecha importante</p><p className="mt-3 text-xl font-bold">Día de la Primavera</p><p className="mt-1 text-sm text-muted-foreground">23 de septiembre</p></article>
           </section>
-          </>}
+          </div></>}
         </main>
 
         <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t bg-white px-2 pb-[env(safe-area-inset-bottom)] md:hidden" aria-label="Navegación rápida">
@@ -206,6 +208,22 @@ export function TeacherWorkspace() {
       </SidebarInset>
     </SidebarProvider>
   );
+}
+
+function TodayScreen({ dashboard, openEvidence }: { dashboard: LocalDashboard | null; openEvidence: () => void }) {
+  const today = dashboard?.today;
+  const active = today?.blocks.find((block) => block.status === "active");
+  const next = today?.blocks.find((block) => block.status === "planned");
+  const featured = active ?? next ?? today?.blocks.at(-1);
+  const action = featured?.block_type === "workshop" ? "Guardar dibujo" : "Registrar evidencia";
+  return <div className="mx-auto max-w-4xl space-y-5">
+    <div className="flex items-center justify-between"><div><p className="text-sm font-semibold text-[#087d96]">Hoy</p><h1 className="text-3xl font-extrabold tracking-tight">{today?.date ?? "Cargando día..."}</h1></div><span className="rounded-full bg-[#e8f6fb] px-3 py-2 text-sm font-semibold text-[#126177]">{dashboard?.profile.age_label} · {dashboard?.profile.section}</span></div>
+    {!today?.blocks.length ? <section className="diagnostic-panel p-6"><Clock3 className="mb-3 text-[#087d96]" /><h2 className="text-xl font-bold">Configura el horario</h2><Button className="mt-4">Configurar horario</Button></section> : <>
+      {featured && <section className="diagnostic-panel overflow-hidden p-5 md:p-7"><div className="flex items-center justify-between gap-3"><span className={`rounded-full px-3 py-1 text-xs font-bold ${featured.status === "active" ? "bg-[#d8f3f4] text-[#087d96]" : featured.status === "completed" ? "bg-[#edf1f6] text-[#66758e]" : "bg-[#fff0c7] text-[#926329]"}`}>{featured.status === "active" ? "AHORA" : featured.status === "completed" ? "REALIZADO" : "PRÓXIMO"}</span><span className="text-sm font-semibold text-[#47617f]">{featured.start_time.slice(0,5)} – {featured.end_time.slice(0,5)}</span></div><h2 className="mt-4 text-2xl font-extrabold">{featured.title}</h2>{featured.experience_title && <p className="mt-1 text-sm text-muted-foreground">{featured.experience_title}</p>}{featured.materials.length > 0 && <p className="mt-5 rounded-xl bg-[#f0f4fb] px-4 py-3 text-sm"><strong>Materiales</strong> · {featured.materials.join(" · ")}</p>}<div className="mt-5 flex flex-wrap gap-3"><Button variant="outline">Ver {featured.block_type === "workshop" ? "taller" : "actividad"}</Button>{featured.activity_id && <Button onClick={openEvidence}><Camera /> {action}</Button>}{featured.status === "completed" && <Button variant="outline"><CheckCircle2 /> ¿Cómo salió?</Button>}</div></section>}
+      <section className="diagnostic-panel p-5"><h2 className="text-lg font-extrabold">Horario</h2><div className="mt-3 space-y-2">{today.blocks.map((block) => <div key={block.id} className="flex items-center gap-3 rounded-xl px-3 py-3 odd:bg-[#f7f9fc]"><span className="w-22 text-sm font-semibold text-[#47617f]">{block.start_time.slice(0,5)}</span><span className={`size-2 rounded-full ${block.status === "active" ? "bg-[#087d96]" : block.status === "completed" ? "bg-[#b8c4d4]" : "bg-[#e6ae44]"}`} /><span className="min-w-0 flex-1 truncate font-medium">{block.title}</span><span className="text-xs text-muted-foreground">{block.block_type === "workshop" ? "Taller" : ""}</span></div>)}</div></section>
+      <section className="grid gap-3 sm:grid-cols-2"><div className="rounded-2xl bg-[#fff8ef] p-5"><p className="text-sm font-bold">Pendientes</p><p className="mt-2 text-sm text-[#55657c]">{dashboard?.metrics.evidences_week ?? 0} evidencias esta semana</p></div><div className="rounded-2xl bg-[#edf8f3] p-5"><p className="text-sm font-bold">Aula</p><p className="mt-2 text-sm text-[#35675f]">{dashboard?.metrics.students_observed ?? 0}/{dashboard?.metrics.students_total ?? 0} observados</p></div></section>
+    </>}
+  </div>;
 }
 
 function Metric({ label, value, detail, warning = false }: { label: string; value: string; detail: string; warning?: boolean }) {
