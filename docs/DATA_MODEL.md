@@ -29,4 +29,6 @@ La actualización de evidencia conserva las notas históricas y añade la marca 
 
 `daily_execution_logs.current_step_index` conserva el paso actual de una actividad programada. El índice se normaliza contra los pasos disponibles al leer la jornada, para que una edición posterior de la planificación no deje una posición inválida.
 
+`activity_criteria.evidence_kind` es opcional y describe la evidencia planificada (`observation`, `oral`, `drawing`, `production`, `photo` o `movement`); solo adapta la etiqueta de la interfaz, no infiere una valoración. Las fotos se guardan localmente en `.local/assets/evidences/` con UUID, MIME y tamaño validados. `evidences.media_path` conserva solo la ruta privada: los snapshots reciben `media_available`, nunca el binario.
+
 Las evidencias históricas pueden no tener `observation_status`; se preservan para el historial, pero no cuentan como información suficiente en estadísticas. Estas agregan el último estado marcado por estudiante y competencia, no el número bruto de evidencias.

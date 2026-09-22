@@ -11,7 +11,7 @@ Proyecto nuevo iniciado el 20 de septiembre de 2026. Existe un shell responsive 
 - Navegación principal: Hoy, Planificar, Niños, Evaluar, Documentos y Biblioteca.
 - Hoy es el inicio docente: resuelve la jornada desde el horario local, destaca un único siguiente paso (asistencia, actividad, evidencia o cierre) y enlaza actividades o talleres sin duplicarlos.
 - Modo Jornada: asistencia rápida por estudiante, estado diario centralizado, inicio/cierre de bloques y extensión manual. Las evidencias permanecen opcionales y heredan el contexto de actividad/criterio. Las actividades con pasos planificados abren un ejecutor guiado que conserva el paso actual en la jornada.
-- Flujo de evidencia con marca observacional docente obligatoria por criterio para registros nuevos; la nota es opcional. Las actividades pueden exponer varios criterios planificados y la evidencia sigue siendo una acción secundaria durante la actividad.
+- Flujo de evidencia con marca observacional docente obligatoria por criterio para registros nuevos; la nota y una foto son opcionales. Las actividades pueden exponer varios criterios planificados y la evidencia sigue siendo una acción secundaria durante la actividad. La acción “Guardar y siguiente” avanza solo al siguiente niño disponible y nunca reinicia la lista.
 - Módulo Niños funcional: lista, perfil pedagógico y trayectorias por competencia basadas en registros reales. `StudentContextService` genera snapshots JSON deterministas sin multimedia ni texto de IA.
 - `StatisticsService` local calcula cobertura por aula y por competencia, presencia reciente en planificación y marcas observacionales. Su contrato se reutilizará para UI, informes, Excel e IA, sin duplicar lógica.
 - Primer flujo vertical persistente: actividad actual → seleccionar estudiante → describir evidencia → guardar en PostgreSQL local → actualizar cobertura.
@@ -33,7 +33,7 @@ Proyecto nuevo iniciado el 20 de septiembre de 2026. Existe un shell responsive 
 ## Próximo trabajo recomendado
 
 1. Sustituir el catálogo ilustrativo por desempeños y referentes CNEB oficiales revisados para 3, 4 y 5 años.
-2. Añadir carga/normalización de logo aportado por institución y evidencias multimedia privadas con compresión, límites y consentimiento.
+2. Añadir carga/normalización de logo aportado por institución, consentimiento y las siguientes clases de evidencia multimedia privadas (audio/video).
 3. Implementar síntesis editable/confirmable y su conexión condicionada con el plan anual.
 4. Crear proyectos nuevos de Supabase y hosting/staging; aplicar migraciones y comprobar RLS/Storage con dos usuarios de prueba.
 5. Completar importación en staging solo después de validar currículo, identidad y respaldos.

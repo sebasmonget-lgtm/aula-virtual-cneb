@@ -17,10 +17,12 @@ export type LocalEvidence = {
   observation_text: string | null;
   observation_status: ObservationStatus | null;
   observed_at: string;
+  media_path?: string | null;
 };
 
 export type ObservationStatus = "demonstrated" | "with_support" | "not_yet_demonstrated" | "insufficient_information";
-export type ActivityCriterion = { id: string; criterion_text: string; competency_id: string; competency_text: string; performance_id: string | null };
+export type EvidenceKind = "observation" | "oral" | "drawing" | "production" | "photo" | "movement";
+export type ActivityCriterion = { id: string; criterion_text: string; competency_id: string; competency_text: string; performance_id: string | null; evidence_kind: EvidenceKind | null };
 
 export type LocalDashboard = {
   activity: {
@@ -91,6 +93,7 @@ export async function createLocalEvidence(input: {
   criterionId: string;
   observationStatus: ObservationStatus;
   observationText?: string;
+  photo?: { base64: string; mimeType: "image/jpeg" | "image/png" | "image/webp" };
 }) {
   const response = await fetch(`${apiUrl}/api/evidences`, {
     method: "POST",

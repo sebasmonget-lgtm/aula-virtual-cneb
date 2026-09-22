@@ -13,6 +13,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const dataDir = path.join(root, ".local", "pgdata");
 const migrationsDir = path.join(root, "local-db", "migrations");
 const assetsDir = path.join(root, ".local", "assets");
+const evidenceAssetsDir = path.join(assetsDir, "evidences");
 const port = Number(process.env.AYNI_LOCAL_DB_PORT ?? 8788);
 const teacherId = "00000000-0000-4000-8000-000000000001";
 const allowedOrigins = new Set([
@@ -31,6 +32,7 @@ const exportTables = [
 
 await mkdir(path.dirname(dataDir), { recursive: true });
 await mkdir(assetsDir, { recursive: true });
+await mkdir(evidenceAssetsDir, { recursive: true });
 const db = await PGlite.create(dataDir);
 await migrate();
 
@@ -96,7 +98,7 @@ async function readJson(request) {
   let body = "";
   for await (const chunk of request) {
     body += chunk;
-    if (body.length > 20_000) throw new Error("El contenido excede el límite permitido.");
+    if (body.length > 4_200_000) throw new Error("El contenido excede el límite permitido.");
   }
   return JSON.parse(body || "{}");
 }
@@ -106,7 +108,7 @@ async function dashboard() {
     select a.id, a.title, a.purpose, a.occurs_on, e.title as experience_title,
            coalesce(jsonb_agg(jsonb_build_object('id', c.id, 'criterion_text', c.criterion_text,
              'competency_id', c.competency_id, 'competency_text', co.official_text,
-             'performance_id', c.performance_id) order by c.display_order) filter (where c.id is not null), '[]'::jsonb) as criteria
+             'performance_id', c.performance_id, 'evidence_kind', c.evidence_kind) order by c.display_order) filter (where c.id is not null), '[]'::jsonb) as criteria
       from activities a
       join learning_experiences e on e.id = a.experience_id
       left join activity_criteria c on c.activity_id = a.id
@@ -170,7 +172,7 @@ async function dashboard() {
       left join lateral (
         select jsonb_agg(jsonb_build_object('id', ac.id, 'criterion_text', ac.criterion_text,
           'competency_id', ac.competency_id, 'competency_text', co.official_text,
-          'performance_id', ac.performance_id) order by ac.display_order) as criteria
+          'performance_id', ac.performance_id, 'evidence_kind', ac.evidence_kind) order by ac.display_order) as criteria
         from activity_criteria ac join competencies co on co.id = ac.competency_id
         where ac.activity_id = a.id
       ) criteria on true
@@ -483,13 +485,31 @@ const server = createServer(async (request, response) => {
         send(response, 403, { error: "El registro no pertenece al aula local activa." }, origin);
         return;
       }
+      let mediaPath = null;
+      if (body.photo) {
+        const allowedMedia = new Map([["image/jpeg", "jpg"], ["image/png", "png"], ["image/webp", "webp"]]);
+        const extension = allowedMedia.get(body.photo.mimeType);
+        const encoded = typeof body.photo.base64 === "string" ? body.photo.base64 : "";
+        if (!extension || !/^[A-Za-z0-9+/]+={0,2}$/.test(encoded)) {
+          send(response, 400, { error: "La foto debe ser JPEG, PNG o WebP." }, origin);
+          return;
+        }
+        const bytes = Buffer.from(encoded, "base64");
+        if (!bytes.length || bytes.length > 3_000_000) {
+          send(response, 400, { error: "La foto debe pesar como máximo 3 MB." }, origin);
+          return;
+        }
+        const filename = `${randomUUID()}.${extension}`;
+        await writeFile(path.join(evidenceAssetsDir, filename), bytes);
+        mediaPath = `.local/assets/evidences/${filename}`;
+      }
       const result = await db.query(`
         insert into evidences (
           id, student_id, activity_id, criterion_id, type,
-          observation_text, observation_status, source, created_by
-        ) values ($1, $2, $3, $4, 'observation', $5, $6, 'teacher', $7)
-        returning id, student_id, observation_text, observation_status, observed_at
-      `, [randomUUID(), body.studentId, body.activityId, body.criterionId, observation || null, body.observationStatus, teacherId]);
+          observation_text, observation_status, media_path, source, created_by
+        ) values ($1, $2, $3, $4, 'observation', $5, $6, $7, 'teacher', $8)
+        returning id, student_id, observation_text, observation_status, media_path, observed_at
+      `, [randomUUID(), body.studentId, body.activityId, body.criterionId, observation || null, body.observationStatus, mediaPath, teacherId]);
       await refreshStudentContextSnapshot(db, body.studentId);
       send(response, 201, { evidence: result.rows[0] }, origin);
       return;

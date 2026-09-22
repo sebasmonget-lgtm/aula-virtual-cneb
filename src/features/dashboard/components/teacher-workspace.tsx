@@ -50,6 +50,7 @@ export function TeacherWorkspace() {
   const [criterionId, setCriterionId] = useState("");
   const [observationStatus, setObservationStatus] = useState<ObservationStatus | "">("");
   const [note, setNote] = useState("");
+  const [photo, setPhoto] = useState<{ base64: string; mimeType: "image/jpeg" | "image/png" | "image/webp"; name: string } | null>(null);
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [dashboard, setDashboard] = useState<LocalDashboard | null>(null);
@@ -83,16 +84,23 @@ export function TeacherWorkspace() {
         criterionId,
         observationStatus,
         observationText: note || undefined,
+        photo: photo ? { base64: photo.base64, mimeType: photo.mimeType } : undefined,
       });
       setDashboard(await loadLocalDashboard());
       if (andNext) {
         setSaved(false);
         setNote("");
         setObservationStatus("");
+        setPhoto(null);
+        const currentIndex = students.findIndex((student) => student.id === studentId);
+        const nextStudent = students[currentIndex + 1];
+        if (nextStudent) setStudentId(nextStudent.id);
+        else setSaveError("Último niño de la lista. Puedes cerrar o elegir otro estudiante.");
       } else window.setTimeout(() => {
         setEvidenceOpen(false);
         setSaved(false);
         setNote("");
+        setPhoto(null);
       }, 850);
     } catch (error) {
       setSaved(false);
@@ -113,6 +121,7 @@ export function TeacherWorkspace() {
       setSaved(false);
       setNote("");
       setObservationStatus("");
+      setPhoto(null);
     }
   }
 
@@ -130,6 +139,7 @@ export function TeacherWorkspace() {
     setEvidenceContext({ activityId: block.activity_id, criteria: block.criteria, title: block.title });
     setCriterionId(block.criteria[0].id);
     setObservationStatus("");
+    setPhoto(null);
     setEvidenceOpen(true);
   }
 
@@ -252,7 +262,7 @@ export function TeacherWorkspace() {
         </nav>
       </SidebarInset>
       <AttendanceDialog open={attendanceOpen} onOpenChange={setAttendanceOpen} students={students} onSave={markAttendance} />
-      <EvidenceDialog open={evidenceOpen} onOpenChange={closeEvidence} students={students} studentId={studentId} setStudentId={setStudentId} criterionId={criterionId} setCriterionId={setCriterionId} criteria={evidenceContext?.criteria ?? activity?.criteria ?? []} observationStatus={observationStatus} setObservationStatus={setObservationStatus} note={note} setNote={setNote} saved={saved} saveError={saveError} saveEvidence={saveEvidence} activityTitle={evidenceContext?.title ?? activity?.title ?? "Actividad"} databaseConnected={databaseState === "connected"} />
+      <EvidenceDialog open={evidenceOpen} onOpenChange={closeEvidence} students={students} studentId={studentId} setStudentId={setStudentId} criterionId={criterionId} setCriterionId={setCriterionId} criteria={evidenceContext?.criteria ?? activity?.criteria ?? []} observationStatus={observationStatus} setObservationStatus={setObservationStatus} note={note} setNote={setNote} photo={photo} setPhoto={setPhoto} saved={saved} saveError={saveError} saveEvidence={saveEvidence} activityTitle={evidenceContext?.title ?? activity?.title ?? "Actividad"} databaseConnected={databaseState === "connected"} />
     </SidebarProvider>
   );
 }
@@ -299,10 +309,23 @@ function Metric({ label, value, detail, warning = false }: { label: string; valu
   return <article className="rounded-2xl border bg-white p-5"><p className="text-sm font-medium text-muted-foreground">{label}</p><div className="mt-3 flex items-end justify-between"><p className="text-3xl font-bold">{value}</p><span className={`text-xs font-semibold ${warning ? "text-[#b96b1e]" : "text-[#087d96]"}`}>{detail}</span></div></article>;
 }
 
-function EvidenceDialog({ open, onOpenChange, students, studentId, setStudentId, criterionId, setCriterionId, criteria, observationStatus, setObservationStatus, note, setNote, saved, saveError, saveEvidence, activityTitle, databaseConnected }: {
+async function preparePhoto(file: File) {
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) throw new Error('La foto debe ser JPEG, PNG o WebP.');
+  const source = await new Promise<string>((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(String(reader.result)); reader.onerror = () => reject(new Error('No se pudo leer la foto.')); reader.readAsDataURL(file); });
+  const image = await new Promise<HTMLImageElement>((resolve, reject) => { const element = new Image(); element.onload = () => resolve(element); element.onerror = () => reject(new Error('No se pudo procesar la foto.')); element.src = source; });
+  const scale = Math.min(1, 1600 / Math.max(image.width, image.height));
+  const canvas = document.createElement('canvas'); canvas.width = Math.round(image.width * scale); canvas.height = Math.round(image.height * scale);
+  canvas.getContext('2d')?.drawImage(image, 0, 0, canvas.width, canvas.height);
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.78);
+  const base64 = dataUrl.split(',')[1] ?? '';
+  if (base64.length > 4_000_000) throw new Error('La foto sigue siendo demasiado grande. Elige una imagen más ligera.');
+  return { base64, mimeType: 'image/jpeg' as const, name: file.name };
+}
+
+function EvidenceDialog({ open, onOpenChange, students, studentId, setStudentId, criterionId, setCriterionId, criteria, observationStatus, setObservationStatus, note, setNote, photo, setPhoto, saved, saveError, saveEvidence, activityTitle, databaseConnected }: {
   open: boolean; onOpenChange: (open: boolean) => void; students: LocalStudent[]; studentId: string; setStudentId: (id: string) => void;
   criterionId: string; setCriterionId: (id: string) => void; criteria: ActivityCriterion[]; observationStatus: ObservationStatus | ""; setObservationStatus: (value: ObservationStatus) => void;
-  note: string; setNote: (value: string) => void; saved: boolean; saveError: string; saveEvidence: (andNext?: boolean) => void;
+  note: string; setNote: (value: string) => void; photo: { base64: string; mimeType: "image/jpeg" | "image/png" | "image/webp"; name: string } | null; setPhoto: (photo: { base64: string; mimeType: "image/jpeg" | "image/png" | "image/webp"; name: string } | null) => void; saved: boolean; saveError: string; saveEvidence: (andNext?: boolean) => void;
   activityTitle: string; databaseConnected: boolean;
 }) {
   return <Dialog open={open} onOpenChange={onOpenChange}>
@@ -314,6 +337,7 @@ function EvidenceDialog({ open, onOpenChange, students, studentId, setStudentId,
         {criteria.length > 1 && <fieldset><legend className="mb-2 text-sm font-semibold">¿Qué criterio observaste?</legend><div className="space-y-2">{criteria.map((criterion) => <button key={criterion.id} type="button" onClick={() => setCriterionId(criterion.id)} className={`w-full rounded-xl border p-3 text-left text-sm ${criterionId === criterion.id ? "border-[#087d96] bg-[#e8f6fb]" : "bg-white"}`}><span className="font-semibold">{criterion.criterion_text}</span><span className="mt-1 block text-xs text-[#526b87]">{criterion.competency_text}</span></button>)}</div></fieldset>}
         <fieldset><legend className="mb-2 text-sm font-semibold">¿Cómo mostró este criterio?</legend><div className="grid gap-2 sm:grid-cols-2">{([['demonstrated','Lo demostró'],['with_support','Con apoyo'],['not_yet_demonstrated','Aún no'],['insufficient_information','No pude determinarlo']] as const).map(([value,label]) => <button key={value} type="button" onClick={() => setObservationStatus(value)} className={`min-h-11 rounded-xl border px-3 text-left text-sm font-semibold ${observationStatus === value ? "border-[#087d96] bg-[#087d96] text-white" : "bg-white text-[#315a78]"}`}>{label}</button>)}</div><p className="mt-2 text-xs text-muted-foreground">Es una marca del criterio observado, no una calificación final.</p></fieldset>
         <div><label htmlFor="evidence-note" className="mb-2 block text-sm font-semibold">Nota breve <span className="font-normal text-muted-foreground">(opcional)</span></label><Textarea id="evidence-note" value={note} onChange={(event) => setNote(event.target.value)} placeholder="Ej.: Camila comparó dos macetas y dijo que la que estaba cerca de la ventana creció más..." className="min-h-24 resize-none" /></div>
+        <div><label htmlFor="evidence-photo" className="mb-2 block text-sm font-semibold">Foto <span className="font-normal text-muted-foreground">(opcional)</span></label><input id="evidence-photo" type="file" accept="image/jpeg,image/png,image/webp" capture="environment" className="block w-full text-sm" onChange={async (event) => { const file = event.target.files?.[0]; if (!file) return; try { setPhoto(await preparePhoto(file)); } catch (error) { alert(error instanceof Error ? error.message : 'No se pudo preparar la foto.'); event.currentTarget.value = ''; } }} />{photo && <p className="mt-2 text-xs font-medium text-[#126177]">Foto lista: {photo.name} <button type="button" className="underline" onClick={() => setPhoto(null)}>Quitar</button></p>}<p className="mt-1 text-xs text-muted-foreground">La foto se guarda solo en este equipo y no se envía a IA.</p></div>
         {saveError && <p role="alert" className="text-sm font-medium text-destructive">{saveError}</p>}
       </div>
       <DialogFooter className="border-t px-6 py-4"><Button variant="ghost" onClick={() => onOpenChange(false)}>Cancelar</Button><Button variant="outline" disabled={!criterionId || !observationStatus || saved || !studentId} onClick={() => saveEvidence(true)}>Guardar y siguiente</Button><Button disabled={!criterionId || !observationStatus || saved || !studentId} onClick={() => saveEvidence()}>{saved ? <><Check /> Evidencia guardada</> : "Guardar evidencia"}</Button></DialogFooter>
