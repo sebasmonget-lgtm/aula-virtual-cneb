@@ -41,7 +41,8 @@
     "test:learning-experience-hardening-v4": "node --test src/lib/learning-experience-hardening.test.mjs",
     "test:activity-persistence-v4": "node --test src/lib/activity-persistence-v4.test.mjs",
     "test:criterion-evidence-v4": "node --test src/lib/criterion-evidence-v4.test.mjs",
-    "test:evidence-capture-v4": "node --test src/lib/evidence-capture-v4.test.mjs"
+    "test:evidence-capture-v4": "node --test src/lib/evidence-capture-v4.test.mjs",
+    "test:assessment-v4": "node --test src/lib/assessment-v4.test.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

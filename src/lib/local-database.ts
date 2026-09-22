@@ -1,10 +1,11 @@
 export type LocalStudent = { id: string; name: string };
+export type TeacherConfirmedAssessment = { id: string; period_start: string; period_end: string; information_status: "sufficient" | "insufficient"; evidence_overview: string; strengths_and_advances: string[]; support_needs: string[]; next_opportunities: string[]; teacher_confirmed_at: string };
 export type StudentPedagogicalProfile = {
   student: { id: string; name: string; first_name: string; last_name: string; section: string; age_years: number; school_year: number };
   diagnosis: { competency_id: string; teacher_interpretation: string | null; teacher_confirmed: boolean; updated_at: string }[];
-  competencies: { competency_id: string; competency_text: string; evidence_count: number; last_observed_at: string | null; observations: Record<ObservationStatus, number>; recent_evidence: LocalEvidence[]; teacher_confirmed_assessment: null }[];
-  recent_relevant_observations: (LocalEvidence & { activity_title: string; criterion_text: string; competency_id: string; media_available: boolean })[];
-  confirmed_period_assessments: [];
+  competencies: { competency_key: string; competency_id: string | null; competency_v4_id: string | null; competency_text: string; evidence_count: number; last_observed_at: string | null; observations: Record<ObservationStatus, number>; recent_evidence: LocalEvidence[]; teacher_confirmed_assessment: TeacherConfirmedAssessment | null }[];
+  recent_relevant_observations: (LocalEvidence & { activity_title: string; criterion_text: string; competency_id: string | null; competency_v4_id: string | null; competency_key: string; media_available: boolean })[];
+  confirmed_period_assessments: (TeacherConfirmedAssessment & { competency_v4_id: string })[];
   snapshot: { generated_at: string; source_updated_at: string } | null;
 };
 export type LocalStatistics = {

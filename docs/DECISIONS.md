@@ -1,5 +1,11 @@
 # Decisiones de arquitectura
 
+## ADR 032 Assessment v4 como síntesis pedagógica revisable
+
+**Decisión.** `assessment` consume solo evidencias v4 del estudiante, competencia y periodo solicitados. El servidor anonimiza el contexto que llega al proveedor, conserva un snapshot de fingerprints SHA-256 de evidencias y criterios, y usa Sol/medium con `assessment-v1` estricto. La docente revisa el borrador y solo puede confirmarlo si las fuentes siguen iguales. La confirmación archiva únicamente la versión activa del mismo estudiante, competencia y periodo dentro de una transacción.
+
+**Consecuencia.** Las marcas observacionales no son notas ni conclusiones finales. Una evidencia obliga a declarar información insuficiente; con más evidencias no se presume suficiencia. La versión confirmada alimenta `StudentContextSnapshot` sin metadata técnica ni multimedia. `descriptive_conclusion` será el siguiente workflow.
+
 ## ADR 029 Captura de evidencia v4 determinista
 
 **Decisión.** `evidence_capture` se resuelve exclusivamente en código y reutiliza `evidences`. Cada registro requiere una Activity y un criterio activos, un estudiante del aula y una marca observacional explícita de la docente. Los criterios v4 se enlazan mediante `criterion_id` y conservan su `competency_v4_id`; los criterios legacy siguen usando su UUID propio. La foto queda en almacenamiento local privado y no se envía a proveedores.
