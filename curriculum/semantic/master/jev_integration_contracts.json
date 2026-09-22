@@ -1,0 +1,69 @@
+{
+  "purpose": "Contratos sugeridos para usar Jev como capa de decisión barata antes de modelos generativos.",
+  "rules": [
+    "Nunca pedir a Jev que invente IDs CNEB.",
+    "Backend filtra primero; Jev solo elige entre IDs válidos.",
+    "No usar Jev para cálculos deterministas que SQL/código resuelve mejor.",
+    "No usar Jev para valoración pedagógica final de un niño.",
+    "GPT/LLM generativo se llama solo cuando se necesita redactar/generar contenido."
+  ],
+  "use_cases": [
+    {
+      "id": "assistant_router",
+      "input": "mensaje + estado mínimo de la app",
+      "choices": [
+        "open_today",
+        "query_student",
+        "register_evidence",
+        "plan_activity",
+        "plan_project",
+        "select_curriculum",
+        "search_library",
+        "generate_resource",
+        "needs_generative_llm"
+      ],
+      "cost_goal": "Evitar una llamada generativa solo para entender intención."
+    },
+    {
+      "id": "competency_selector",
+      "input": "edad + contexto pedagógico + lista de competency_id válidos del runtime",
+      "output": "principal_competency_id + optional_secondary_ids + confidence",
+      "human_confirmation": "Sí cuando modifica planificación."
+    },
+    {
+      "id": "performance_selector",
+      "input": "edad + competencia confirmada + lista de performance_id oficiales verificados",
+      "output": "ranked performance_id + confidence",
+      "human_confirmation": "Sí cuando modifica planificación."
+    },
+    {
+      "id": "reuse_before_generate",
+      "input": "necesidad actual + candidatos de biblioteca recuperados por búsqueda",
+      "output": "best_existing_resource/activity + relevance",
+      "cost_goal": "Reutilizar/adaptar antes de llamar a un LLM generativo."
+    },
+    {
+      "id": "model_router",
+      "input": "intención + complejidad + necesidad de texto libre",
+      "choices": [
+        "deterministic_code",
+        "jev_only",
+        "cheap_generative_model",
+        "strong_generative_model",
+        "image_model"
+      ],
+      "cost_goal": "Usar modelo generativo solo cuando aporta valor."
+    }
+  ],
+  "post_generation_policy": {
+    "default": "No llamar Jev después de GPT por defecto.",
+    "use_only_when": "Hace falta una validación semántica barata que no puede resolverse por reglas deterministas.",
+    "prefer_code_checks": [
+      "IDs existen",
+      "performance pertenece a competencia",
+      "performance corresponde a edad",
+      "version curricular activa",
+      "campos obligatorios"
+    ]
+  }
+}

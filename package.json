@@ -21,6 +21,7 @@
     "build:curriculum": "node scripts/build-curriculum-runtimes.mjs",
     "test:curriculum": "node scripts/validate-curriculum.mjs",
     "test:jev": "node --test src/lib/jev-decision.test.mjs",
+    "test:jev-benchmark": "node --test src/lib/jev-benchmark.test.mjs",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "db:generate": "drizzle-kit generate"
   },

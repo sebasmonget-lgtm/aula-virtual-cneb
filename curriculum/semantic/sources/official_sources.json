@@ -1,0 +1,45 @@
+{
+  "catalog_version": "1.0.0",
+  "generated_on": "2026-09-22",
+  "authoritative_sources": [
+    {
+      "id": "CNEB",
+      "title": "Currículo Nacional de la Educación Básica",
+      "publisher": "Ministerio de Educación del Perú",
+      "official_pdf": "https://www.minedu.gob.pe/curriculo/pdf/curriculo-nacional-de-la-educacion-basica.pdf",
+      "repository": "https://repositorio.minedu.gob.pe/handle/20.500.12799/4551",
+      "role": [
+        "marco curricular nacional",
+        "perfil de egreso",
+        "enfoques transversales",
+        "definiciones de competencia, capacidad, estándar y desempeño",
+        "orientaciones pedagógicas",
+        "evaluación formativa",
+        "diversificación curricular"
+      ]
+    },
+    {
+      "id": "PCI",
+      "title": "Programa Curricular de Educación Inicial",
+      "publisher": "Ministerio de Educación del Perú",
+      "official_pdf": "https://www.minedu.gob.pe/curriculo/pdf/programa-curricular-educacion-inicial.pdf",
+      "repository": "https://repositorio.minedu.gob.pe/handle/20.500.12799/4548",
+      "role": [
+        "caracterización de Educación Inicial",
+        "Ciclo I y Ciclo II",
+        "áreas curriculares",
+        "competencias y capacidades",
+        "estándares por ciclo",
+        "desempeños por edad",
+        "condiciones para favorecer el desarrollo de competencias",
+        "competencias transversales en Inicial"
+      ]
+    }
+  ],
+  "implementation_rule": {
+    "source_of_truth": "Los PDF oficiales y la base curricular versionada del backend.",
+    "ai_runtime": "Los archivos runtime son una representación semántica compacta, no sustituyen el texto oficial.",
+    "official_text": "Cuando el sistema deba mostrar/citar texto CNEB, recupera el texto oficial por ID desde la base, no desde el resumen IA.",
+    "review": "Los textos exactos extraídos de los PDF deben quedar con trazabilidad y revisión antes de marcarse como verificados."
+  }
+}

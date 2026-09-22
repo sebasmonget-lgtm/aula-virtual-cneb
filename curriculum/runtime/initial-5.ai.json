@@ -1,7 +1,1100 @@
 {
   "schema_version": 1,
-  "generated_from": "initial-cycle-ii-master.json",
+  "generated_from": [
+    "official/initial-cycle-ii-master.json",
+    "semantic/master/initial_cycle_ii.ai.json"
+  ],
   "source_status": "official_pending_transcription",
   "age": 5,
-  "competencies": []
+  "competencies": [
+    {
+      "id": "PS_IDENTIDAD",
+      "official_name": "Construye su identidad",
+      "review_status": "pending",
+      "meaning": "El niño se reconoce como una persona única, valiosa y perteneciente a grupos significativos; actúa con creciente autonomía y reconoce, expresa y regula progresivamente sus emociones.",
+      "pedagogical_intent": "El niño se reconoce como una persona única, valiosa y perteneciente a grupos significativos; actúa con creciente autonomía y reconoce, expresa y regula progresivamente sus emociones.",
+      "capacities": [
+        {
+          "id": "PS_IDENTIDAD.CAP1",
+          "official_name": "Se valora a sí mismo",
+          "meaning": "Reconoce sus características, preferencias, cualidades, necesidades, pertenencias y valor personal."
+        },
+        {
+          "id": "PS_IDENTIDAD.CAP2",
+          "official_name": "Autorregula sus emociones",
+          "meaning": "Reconoce y expresa emociones, comprende progresivamente sus causas y busca estrategias o apoyo para regularlas."
+        }
+      ],
+      "cycle_standard_meaning": "Al final del ciclo II se espera una identidad personal cada vez más afirmada, autonomía en decisiones y autocuidado, pertenencia a familia/aula y reconocimiento-expresión de emociones propias y de otros con apoyo pertinente.",
+      "when_to_use": [
+        "autonomía personal",
+        "emociones",
+        "autoimagen",
+        "preferencias",
+        "hábitos de autocuidado",
+        "pertenencia",
+        "identidad personal"
+      ],
+      "do_not_use_when": [
+        "el foco central es convivencia y normas colectivas",
+        "el foco es resolver un problema matemático o científico"
+      ],
+      "typical_contexts": [
+        "autonomía personal",
+        "emociones",
+        "autoimagen",
+        "preferencias",
+        "hábitos de autocuidado",
+        "pertenencia",
+        "identidad personal"
+      ],
+      "observable_actions": [
+        "Reconoce características, cualidades, preferencias y explica algunas razones.",
+        "Participa y toma decisiones con mayor autonomía en rutinas y cuidado personal.",
+        "Reconoce pertenencia a familia, aula y comunidad cercana.",
+        "Identifica emociones y causas en sí y otros; busca apoyo cuando lo necesita."
+      ],
+      "possible_evidence": [],
+      "examples": [],
+      "not_examples": [],
+      "key_signals": [
+        "autonomía personal",
+        "emociones",
+        "autoimagen",
+        "preferencias",
+        "hábitos de autocuidado",
+        "pertenencia",
+        "identidad personal"
+      ],
+      "common_confusions": [],
+      "age_profile": {
+        "status": "specified",
+        "ai_focus": "Mayor autonomía, argumentación sobre sí mismo y regulación emocional.",
+        "observable_patterns": [
+          "Reconoce características, cualidades, preferencias y explica algunas razones.",
+          "Participa y toma decisiones con mayor autonomía en rutinas y cuidado personal.",
+          "Reconoce pertenencia a familia, aula y comunidad cercana.",
+          "Identifica emociones y causas en sí y otros; busca apoyo cuando lo necesita."
+        ]
+      },
+      "performances": []
+    },
+    {
+      "id": "PS_CONVIVE",
+      "official_name": "Convive y participa democráticamente en la búsqueda del bien común",
+      "review_status": "pending",
+      "meaning": "El niño aprende a relacionarse con otros con respeto, construir y asumir acuerdos, participar en decisiones simples y cuidar lo que es de todos.",
+      "pedagogical_intent": "El niño aprende a relacionarse con otros con respeto, construir y asumir acuerdos, participar en decisiones simples y cuidar lo que es de todos.",
+      "capacities": [
+        {
+          "id": "PS_CONVIVE.CAP1",
+          "official_name": "Interactúa con todas las personas",
+          "meaning": "Se relaciona respetuosamente con niños y adultos, reconoce diferencias y participa con otros."
+        },
+        {
+          "id": "PS_CONVIVE.CAP2",
+          "official_name": "Construye normas, y asume acuerdos y leyes",
+          "meaning": "Participa progresivamente en acuerdos y reglas necesarias para convivir."
+        },
+        {
+          "id": "PS_CONVIVE.CAP3",
+          "official_name": "Participa en acciones que promueven el bienestar común",
+          "meaning": "Colabora y cuida espacios, materiales y situaciones que benefician al grupo."
+        }
+      ],
+      "cycle_standard_meaning": "Al final del ciclo II se espera que conviva respetuosamente, asuma responsabilidades, se interese por personas y costumbres diferentes, construya acuerdos básicos y participe en el cuidado del bienestar y recursos comunes.",
+      "when_to_use": [
+        "convivencia",
+        "normas",
+        "acuerdos",
+        "turnos",
+        "responsabilidad",
+        "cuidado común",
+        "trabajo en grupo",
+        "conflictos cotidianos"
+      ],
+      "do_not_use_when": [
+        "el foco principal es reconocer emociones personales sin dimensión grupal"
+      ],
+      "typical_contexts": [
+        "convivencia",
+        "normas",
+        "acuerdos",
+        "turnos",
+        "responsabilidad",
+        "cuidado común",
+        "trabajo en grupo",
+        "conflictos cotidianos"
+      ],
+      "observable_actions": [
+        "Participa activamente en actividades grupales y propone formas de organizarse.",
+        "Propone, acuerda y respeta normas vinculadas a necesidades del grupo.",
+        "Asume responsabilidades y explica por qué ayudan a convivir.",
+        "Participa en acciones de cuidado y bienestar para todos."
+      ],
+      "possible_evidence": [],
+      "examples": [],
+      "not_examples": [],
+      "key_signals": [
+        "convivencia",
+        "normas",
+        "acuerdos",
+        "turnos",
+        "responsabilidad",
+        "cuidado común",
+        "trabajo en grupo",
+        "conflictos cotidianos"
+      ],
+      "common_confusions": [],
+      "age_profile": {
+        "status": "specified",
+        "ai_focus": "Participación democrática inicial y responsabilidad por el bienestar común.",
+        "observable_patterns": [
+          "Participa activamente en actividades grupales y propone formas de organizarse.",
+          "Propone, acuerda y respeta normas vinculadas a necesidades del grupo.",
+          "Asume responsabilidades y explica por qué ayudan a convivir.",
+          "Participa en acciones de cuidado y bienestar para todos."
+        ]
+      },
+      "performances": []
+    },
+    {
+      "id": "PS_RELIGION",
+      "official_name": "Construye su identidad, como persona humana, amada por Dios, digna, libre y trascendente, comprendiendo la doctrina de su propia religión, abierta al diálogo con las que le son cercanas",
+      "review_status": "pending",
+      "meaning": "Competencia del área religiosa: favorece identidad espiritual, gratitud, respeto y acciones de solidaridad desde la propia tradición religiosa, dialogando respetuosamente con otras.",
+      "pedagogical_intent": "Competencia del área religiosa: favorece identidad espiritual, gratitud, respeto y acciones de solidaridad desde la propia tradición religiosa, dialogando respetuosamente con otras.",
+      "capacities": [
+        {
+          "id": "PS_RELIGION.CAP1",
+          "official_name": "Conoce a Dios y asume su identidad religiosa y espiritual como persona digna, libre y trascendente",
+          "meaning": "Reconoce experiencias, relatos y expresiones religiosas vinculadas a su identidad y dignidad."
+        },
+        {
+          "id": "PS_RELIGION.CAP2",
+          "official_name": "Cultiva y valora las manifestaciones religiosas de su entorno argumentando su fe de manera comprensible y respetuosa",
+          "meaning": "Participa y valora expresiones religiosas del entorno mostrando respeto hacia otros."
+        }
+      ],
+      "cycle_standard_meaning": "Al final del ciclo II reconoce el amor recibido en familia y entorno como experiencia vinculada a Dios, expresa gratitud y practica solidaridad y generosidad, respetando manifestaciones religiosas cercanas.",
+      "when_to_use": [
+        "religión",
+        "Dios",
+        "gratitud",
+        "solidaridad desde la fe",
+        "manifestaciones religiosas"
+      ],
+      "do_not_use_when": [
+        "la actividad no tiene propósito religioso o espiritual"
+      ],
+      "typical_contexts": [
+        "religión",
+        "Dios",
+        "gratitud",
+        "solidaridad desde la fe",
+        "manifestaciones religiosas"
+      ],
+      "observable_actions": [
+        "Relaciona enseñanzas o relatos de su tradición con acciones concretas de amor, ayuda y cuidado.",
+        "Participa y explica de forma sencilla algunas manifestaciones religiosas cercanas.",
+        "Actúa con solidaridad y respeto, reconociendo que otras personas pueden vivir expresiones distintas."
+      ],
+      "possible_evidence": [],
+      "examples": [],
+      "not_examples": [],
+      "key_signals": [
+        "religión",
+        "Dios",
+        "gratitud",
+        "solidaridad desde la fe",
+        "manifestaciones religiosas"
+      ],
+      "common_confusions": [],
+      "age_profile": {
+        "status": "specified",
+        "ai_focus": "Integra identidad espiritual, gratitud, solidaridad y respeto a otras expresiones.",
+        "observable_patterns": [
+          "Relaciona enseñanzas o relatos de su tradición con acciones concretas de amor, ayuda y cuidado.",
+          "Participa y explica de forma sencilla algunas manifestaciones religiosas cercanas.",
+          "Actúa con solidaridad y respeto, reconociendo que otras personas pueden vivir expresiones distintas."
+        ]
+      },
+      "performances": []
+    },
+    {
+      "id": "PSICO_MOTRICIDAD",
+      "official_name": "Se desenvuelve de manera autónoma a través de su motricidad",
+      "review_status": "pending",
+      "meaning": "El niño conoce y usa su cuerpo de manera cada vez más autónoma, segura y expresiva; coordina movimientos y comunica sensaciones, emociones e ideas corporalmente.",
+      "pedagogical_intent": "El niño conoce y usa su cuerpo de manera cada vez más autónoma, segura y expresiva; coordina movimientos y comunica sensaciones, emociones e ideas corporalmente.",
+      "capacities": [
+        {
+          "id": "PSICO_MOTRICIDAD.CAP1",
+          "official_name": "Comprende su cuerpo",
+          "meaning": "Reconoce sensaciones, posibilidades, partes y organización de su cuerpo en relación con espacio, objetos y otros."
+        },
+        {
+          "id": "PSICO_MOTRICIDAD.CAP2",
+          "official_name": "Se expresa corporalmente",
+          "meaning": "Usa movimiento, gestos, postura y acciones motrices para explorar y comunicar."
+        }
+      ],
+      "cycle_standard_meaning": "Al final del ciclo II realiza acciones motrices con autonomía y seguridad, coordina movimientos globales y finos, se orienta en espacio/tiempo y representa o expresa corporalmente sensaciones y emociones.",
+      "when_to_use": [
+        "movimiento",
+        "equilibrio",
+        "coordinación",
+        "esquema corporal",
+        "motricidad",
+        "expresión corporal"
+      ],
+      "do_not_use_when": [
+        "solo se usa movimiento como dinámica incidental sin propósito motriz"
+      ],
+      "typical_contexts": [
+        "movimiento",
+        "equilibrio",
+        "coordinación",
+        "esquema corporal",
+        "motricidad",
+        "expresión corporal"
+      ],
+      "observable_actions": [
+        "Combina habilidades motrices y ajusta movimientos a espacio, tiempo, objetos y otros.",
+        "Coordina acciones con mayor precisión en retos motores.",
+        "Expresa ideas o emociones mediante movimiento y postura.",
+        "Reconoce sensaciones y representa el cuerpo con mayor detalle."
+      ],
+      "possible_evidence": [],
+      "examples": [],
+      "not_examples": [],
+      "key_signals": [
+        "movimiento",
+        "equilibrio",
+        "coordinación",
+        "esquema corporal",
+        "motricidad",
+        "expresión corporal"
+      ],
+      "common_confusions": [],
+      "age_profile": {
+        "status": "specified",
+        "ai_focus": "Movimientos más complejos, precisos y adaptados a situaciones.",
+        "observable_patterns": [
+          "Combina habilidades motrices y ajusta movimientos a espacio, tiempo, objetos y otros.",
+          "Coordina acciones con mayor precisión en retos motores.",
+          "Expresa ideas o emociones mediante movimiento y postura.",
+          "Reconoce sensaciones y representa el cuerpo con mayor detalle."
+        ]
+      },
+      "performances": []
+    },
+    {
+      "id": "COM_ORAL",
+      "official_name": "Se comunica oralmente en su lengua materna",
+      "review_status": "pending",
+      "meaning": "El niño comprende y produce mensajes orales para interactuar: escucha, obtiene e infiere información, organiza lo que quiere decir, usa voz/gestos y conversa con otros.",
+      "pedagogical_intent": "El niño comprende y produce mensajes orales para interactuar: escucha, obtiene e infiere información, organiza lo que quiere decir, usa voz/gestos y conversa con otros.",
+      "capacities": [
+        {
+          "id": "COM_ORAL.CAP1",
+          "official_name": "Obtiene información del texto oral",
+          "meaning": "Recupera información explícita de lo que escucha."
+        },
+        {
+          "id": "COM_ORAL.CAP2",
+          "official_name": "Infiere e interpreta información del texto oral",
+          "meaning": "Deduce información y construye sentido a partir de pistas."
+        },
+        {
+          "id": "COM_ORAL.CAP3",
+          "official_name": "Adecúa, organiza y desarrolla el texto de forma coherente y cohesionada",
+          "meaning": "Expresa ideas considerando propósito, interlocutor y tema."
+        },
+        {
+          "id": "COM_ORAL.CAP4",
+          "official_name": "Utiliza recursos no verbales y paraverbales de forma estratégica",
+          "meaning": "Usa gestos, mirada, postura, volumen, entonación y otros recursos."
+        },
+        {
+          "id": "COM_ORAL.CAP5",
+          "official_name": "Interactúa estratégicamente con distintos interlocutores",
+          "meaning": "Participa, escucha, pregunta y responde de manera pertinente."
+        },
+        {
+          "id": "COM_ORAL.CAP6",
+          "official_name": "Reflexiona y evalúa la forma, el contenido y contexto del texto oral",
+          "meaning": "Comenta y valora aspectos de lo escuchado."
+        }
+      ],
+      "cycle_standard_meaning": "Al final del ciclo II comprende información explícita, realiza inferencias sencillas, interpreta recursos no verbales, expresa y desarrolla ideas con vocabulario frecuente y participa de forma pertinente en intercambios.",
+      "when_to_use": [
+        "conversación",
+        "explicar oralmente",
+        "cuento escuchado",
+        "preguntar",
+        "narrar",
+        "dialogar",
+        "opinar",
+        "escucha"
+      ],
+      "do_not_use_when": [
+        "la evidencia central es exclusivamente lectura o producción escrita"
+      ],
+      "typical_contexts": [
+        "conversación",
+        "explicar oralmente",
+        "cuento escuchado",
+        "preguntar",
+        "narrar",
+        "dialogar",
+        "opinar",
+        "escucha"
+      ],
+      "observable_actions": [
+        "Expresa necesidades, intereses y experiencias con mayor detalle y vocabulario.",
+        "Participa en conversaciones y relatos respetando intercambios.",
+        "Recupera información explícita relevante.",
+        "Formula inferencias sencillas sobre relaciones, personajes y hechos.",
+        "Opina y explica preferencias a partir de su experiencia y del texto."
+      ],
+      "possible_evidence": [],
+      "examples": [],
+      "not_examples": [],
+      "key_signals": [
+        "conversación",
+        "explicar oralmente",
+        "cuento escuchado",
+        "preguntar",
+        "narrar",
+        "dialogar",
+        "opinar",
+        "escucha"
+      ],
+      "common_confusions": [],
+      "age_profile": {
+        "status": "specified",
+        "ai_focus": "Mayor organización de ideas, inferencia y participación pertinente.",
+        "observable_patterns": [
+          "Expresa necesidades, intereses y experiencias con mayor detalle y vocabulario.",
+          "Participa en conversaciones y relatos respetando intercambios.",
+          "Recupera información explícita relevante.",
+          "Formula inferencias sencillas sobre relaciones, personajes y hechos.",
+          "Opina y explica preferencias a partir de su experiencia y del texto."
+        ]
+      },
+      "performances": []
+    },
+    {
+      "id": "COM_LECTURA",
+      "official_name": "Lee diversos tipos de textos escritos en su lengua materna",
+      "review_status": "pending",
+      "meaning": "En Inicial la lectura es principalmente no convencional: el niño construye sentido usando ilustraciones, marcas gráficas, palabras conocidas, organización del texto y anticipaciones según su experiencia.",
+      "pedagogical_intent": "En Inicial la lectura es principalmente no convencional: el niño construye sentido usando ilustraciones, marcas gráficas, palabras conocidas, organización del texto y anticipaciones según su experiencia.",
+      "capacities": [
+        {
+          "id": "COM_LECTURA.CAP1",
+          "official_name": "Obtiene información del texto escrito",
+          "meaning": "Ubica información visible en ilustraciones, palabras u otros elementos del texto."
+        },
+        {
+          "id": "COM_LECTURA.CAP2",
+          "official_name": "Infiere e interpreta información del texto",
+          "meaning": "Anticipa, relaciona pistas y construye significado."
+        },
+        {
+          "id": "COM_LECTURA.CAP3",
+          "official_name": "Reflexiona y evalúa la forma, el contenido y contexto del texto",
+          "meaning": "Expresa preferencias, opiniones y relaciones con su experiencia."
+        }
+      ],
+      "cycle_standard_meaning": "Al final del ciclo II lee textos sobre temas conocidos usando ilustraciones y algunas marcas/palabras, anticipa contenido, realiza inferencias sencillas y expresa opiniones o preferencias.",
+      "when_to_use": [
+        "libros",
+        "cuentos escritos",
+        "carteles",
+        "etiquetas",
+        "leer imágenes",
+        "anticipar texto",
+        "biblioteca"
+      ],
+      "do_not_use_when": [
+        "el foco es solo escuchar un cuento sin interacción con el texto escrito"
+      ],
+      "typical_contexts": [
+        "libros",
+        "cuentos escritos",
+        "carteles",
+        "etiquetas",
+        "leer imágenes",
+        "anticipar texto",
+        "biblioteca"
+      ],
+      "observable_actions": [
+        "Localiza información usando ilustraciones, palabras conocidas y características del texto.",
+        "Anticipa y contrasta hipótesis sobre contenido.",
+        "Deduce relaciones sencillas entre información del texto.",
+        "Opina sobre contenido o forma a partir de experiencia y propósito."
+      ],
+      "possible_evidence": [],
+      "examples": [],
+      "not_examples": [],
+      "key_signals": [
+        "libros",
+        "cuentos escritos",
+        "carteles",
+        "etiquetas",
+        "leer imágenes",
+        "anticipar texto",
+        "biblioteca"
+      ],
+      "common_confusions": [],
+      "age_profile": {
+        "status": "specified",
+        "ai_focus": "Lectura no convencional más intencional usando múltiples pistas.",
+        "observable_patterns": [
+          "Localiza información usando ilustraciones, palabras conocidas y características del texto.",
+          "Anticipa y contrasta hipótesis sobre contenido.",
+          "Deduce relaciones sencillas entre información del texto.",
+          "Opina sobre contenido o forma a partir de experiencia y propósito."
+        ]
+      },
+      "performances": []
+    },
+    {
+      "id": "COM_ESCRITURA",
+      "official_name": "Escribe diversos tipos de textos en su lengua materna",
+      "review_status": "pending",
+      "meaning": "El niño produce escrituras desde sus propias hipótesis para comunicar algo con propósito y destinatario, avanzando hacia organización, direccionalidad y revisión.",
+      "pedagogical_intent": "El niño produce escrituras desde sus propias hipótesis para comunicar algo con propósito y destinatario, avanzando hacia organización, direccionalidad y revisión.",
+      "capacities": [
+        {
+          "id": "COM_ESCRITURA.CAP1",
+          "official_name": "Adecúa el texto a la situación comunicativa",
+          "meaning": "Considera para qué y para quién quiere escribir."
+        },
+        {
+          "id": "COM_ESCRITURA.CAP2",
+          "official_name": "Organiza y desarrolla las ideas de forma coherente y cohesionada",
+          "meaning": "Mantiene ideas vinculadas al propósito y tema."
+        },
+        {
+          "id": "COM_ESCRITURA.CAP3",
+          "official_name": "Utiliza convenciones del lenguaje escrito de forma pertinente",
+          "meaning": "Usa progresivamente marcas, grafismos, letras, direccionalidad y otras convenciones."
+        },
+        {
+          "id": "COM_ESCRITURA.CAP4",
+          "official_name": "Reflexiona y evalúa la forma, el contenido y contexto del texto escrito",
+          "meaning": "Revisa lo producido para mejorar o verificar lo que quiso comunicar."
+        }
+      ],
+      "cycle_standard_meaning": "Al final del ciclo II escribe desde sus hipótesis considerando propósito y destinatario, organiza ideas sobre un tema y usa progresivamente linealidad/direccionalidad; puede revisar lo que produjo con apoyo.",
+      "when_to_use": [
+        "escribir mensaje",
+        "cartel",
+        "nota",
+        "lista",
+        "producción escrita",
+        "grafismos",
+        "dictado al adulto"
+      ],
+      "do_not_use_when": [
+        "trazo mecánico sin intención comunicativa"
+      ],
+      "typical_contexts": [
+        "escribir mensaje",
+        "cartel",
+        "nota",
+        "lista",
+        "producción escrita",
+        "grafismos",
+        "dictado al adulto"
+      ],
+      "observable_actions": [
+        "Escribe por iniciativa considerando para quién y para qué escribe.",
+        "Usa grafismos, letras o aproximaciones organizadas de izquierda a derecha sobre una línea imaginaria.",
+        "Expresa ideas vinculadas a un tema o propósito.",
+        "Revisa, con ayuda, si su producción comunica lo que quería."
+      ],
+      "possible_evidence": [],
+      "examples": [],
+      "not_examples": [],
+      "key_signals": [
+        "escribir mensaje",
+        "cartel",
+        "nota",
+        "lista",
+        "producción escrita",
+        "grafismos",
+        "dictado al adulto"
+      ],
+      "common_confusions": [],
+      "age_profile": {
+        "status": "specified",
+        "ai_focus": "Mayor consideración de destinatario, propósito, linealidad y revisión.",
+        "observable_patterns": [
+          "Escribe por iniciativa considerando para quién y para qué escribe.",
+          "Usa grafismos, letras o aproximaciones organizadas de izquierda a derecha sobre una línea imaginaria.",
+          "Expresa ideas vinculadas a un tema o propósito.",
+          "Revisa, con ayuda, si su producción comunica lo que quería."
+        ]
+      },
+      "performances": []
+    },
+    {
+      "id": "COM_ARTE",
+      "official_name": "Crea proyectos desde los lenguajes artísticos",
+      "review_status": "pending",
+      "meaning": "El niño explora materiales y lenguajes artísticos, transforma ideas y experiencias en creaciones y comparte su proceso o producción.",
+      "pedagogical_intent": "El niño explora materiales y lenguajes artísticos, transforma ideas y experiencias en creaciones y comparte su proceso o producción.",
+      "capacities": [
+        {
+          "id": "COM_ARTE.CAP1",
+          "official_name": "Explora y experimenta los lenguajes del arte",
+          "meaning": "Prueba materiales, sonidos, movimientos, colores y posibilidades expresivas."
+        },
+        {
+          "id": "COM_ARTE.CAP2",
+          "official_name": "Aplica procesos creativos",
+          "meaning": "Transforma ideas, vivencias e imaginación en producciones artísticas."
+        },
+        {
+          "id": "COM_ARTE.CAP3",
+          "official_name": "Socializa sus procesos y proyectos",
+          "meaning": "Comparte, describe o comenta sus creaciones y experiencias."
+        }
+      ],
+      "cycle_standard_meaning": "Al final del ciclo II experimenta libremente con medios y materiales, explora elementos de los lenguajes artísticos, transforma vivencias e ideas mediante juego, dibujo, pintura, construcción, música o movimiento y comparte sus creaciones.",
+      "when_to_use": [
+        "dibujo",
+        "pintura",
+        "música",
+        "danza",
+        "teatro",
+        "títeres",
+        "construcción artística",
+        "expresión creativa"
+      ],
+      "do_not_use_when": [
+        "manualidad repetitiva cuyo objetivo es copiar un modelo sin exploración ni creación"
+      ],
+      "typical_contexts": [
+        "dibujo",
+        "pintura",
+        "música",
+        "danza",
+        "teatro",
+        "títeres",
+        "construcción artística",
+        "expresión creativa"
+      ],
+      "observable_actions": [
+        "Explora individual o grupalmente materiales y combinaciones según intereses.",
+        "Representa vivencias y aspectos del contexto mediante diversos lenguajes.",
+        "Muestra, describe y comenta su creación y observa las de otros.",
+        "Expresa qué le gustó de su experiencia o de las producciones."
+      ],
+      "possible_evidence": [],
+      "examples": [],
+      "not_examples": [],
+      "key_signals": [
+        "dibujo",
+        "pintura",
+        "música",
+        "danza",
+        "teatro",
+        "títeres",
+        "construcción artística",
+        "expresión creativa"
+      ],
+      "common_confusions": [],
+      "age_profile": {
+        "status": "specified",
+        "ai_focus": "Exploración individual/grupal, representación del contexto y reflexión sencilla.",
+        "observable_patterns": [
+          "Explora individual o grupalmente materiales y combinaciones según intereses.",
+          "Representa vivencias y aspectos del contexto mediante diversos lenguajes.",
+          "Muestra, describe y comenta su creación y observa las de otros.",
+          "Expresa qué le gustó de su experiencia o de las producciones."
+        ]
+      },
+      "performances": []
+    },
+    {
+      "id": "CAST_L2_ORAL",
+      "official_name": "Se comunica oralmente en castellano como segunda lengua",
+      "review_status": "pending",
+      "meaning": "El niño cuya lengua materna no es castellano desarrolla comunicación oral básica en castellano de forma gradual, segura y contextualizada, usando palabras, frases, gestos y apoyos.",
+      "pedagogical_intent": "El niño cuya lengua materna no es castellano desarrolla comunicación oral básica en castellano de forma gradual, segura y contextualizada, usando palabras, frases, gestos y apoyos.",
+      "capacities": [
+        {
+          "id": "CAST_L2_ORAL.CAP1",
+          "official_name": "Obtiene información del texto oral",
+          "meaning": "Reconoce información explícita en mensajes orales sencillos."
+        },
+        {
+          "id": "CAST_L2_ORAL.CAP2",
+          "official_name": "Infiere e interpreta información del texto oral",
+          "meaning": "Construye sentido con apoyo del contexto, gestos y entonación."
+        },
+        {
+          "id": "CAST_L2_ORAL.CAP3",
+          "official_name": "Adecúa, organiza y desarrolla el texto de forma coherente y cohesionada",
+          "meaning": "Produce mensajes breves acordes a necesidad y contexto."
+        },
+        {
+          "id": "CAST_L2_ORAL.CAP4",
+          "official_name": "Utiliza recursos no verbales y paraverbales de forma estratégica",
+          "meaning": "Se apoya en gestos, mirada, movimientos, volumen y entonación."
+        },
+        {
+          "id": "CAST_L2_ORAL.CAP5",
+          "official_name": "Interactúa estratégicamente con distintos interlocutores",
+          "meaning": "Participa en intercambios sencillos."
+        },
+        {
+          "id": "CAST_L2_ORAL.CAP6",
+          "official_name": "Reflexiona y evalúa la forma, el contenido y contexto del texto oral",
+          "meaning": "Progresivamente reconoce cómo funciona el intercambio comunicativo."
+        }
+      ],
+      "cycle_standard_meaning": "Al final del ciclo II usa palabras y frases breves en castellano, comprende información básica apoyándose en gestos y tono, y responde/interactúa combinando lenguaje verbal y no verbal.",
+      "when_to_use": [
+        "aula bilingüe",
+        "castellano segunda lengua",
+        "niño cuya lengua materna no es castellano"
+      ],
+      "do_not_use_when": [
+        "castellano es lengua materna del grupo"
+      ],
+      "typical_contexts": [
+        "aula bilingüe",
+        "castellano segunda lengua",
+        "niño cuya lengua materna no es castellano"
+      ],
+      "observable_actions": [
+        "Comprende y usa palabras o frases breves vinculadas a situaciones cotidianas.",
+        "Obtiene información explícita con apoyo del contexto, gestos y entonación.",
+        "Responde e interactúa usando palabras, gestos, movimientos y, cuando necesita, recursos de su lengua materna."
+      ],
+      "possible_evidence": [],
+      "examples": [],
+      "not_examples": [],
+      "key_signals": [
+        "aula bilingüe",
+        "castellano segunda lengua",
+        "niño cuya lengua materna no es castellano"
+      ],
+      "common_confusions": [],
+      "age_profile": {
+        "status": "specified",
+        "ai_focus": "Comunicación oral básica en castellano con fuerte apoyo contextual y no verbal.",
+        "observable_patterns": [
+          "Comprende y usa palabras o frases breves vinculadas a situaciones cotidianas.",
+          "Obtiene información explícita con apoyo del contexto, gestos y entonación.",
+          "Responde e interactúa usando palabras, gestos, movimientos y, cuando necesita, recursos de su lengua materna."
+        ]
+      },
+      "performances": []
+    },
+    {
+      "id": "MAT_CANTIDAD",
+      "official_name": "Resuelve problemas de cantidad",
+      "review_status": "pending",
+      "meaning": "El niño usa relaciones de cantidad en situaciones reales: agrupa, compara, ordena, cuenta, estima, agrega o quita y comunica sus ideas con objetos, cuerpo, dibujos o expresiones numéricas iniciales.",
+      "pedagogical_intent": "El niño usa relaciones de cantidad en situaciones reales: agrupa, compara, ordena, cuenta, estima, agrega o quita y comunica sus ideas con objetos, cuerpo, dibujos o expresiones numéricas iniciales.",
+      "capacities": [
+        {
+          "id": "MAT_CANTIDAD.CAP1",
+          "official_name": "Traduce cantidades a expresiones numéricas",
+          "meaning": "Representa relaciones y cantidades usando acciones, objetos, dibujos o expresiones numéricas iniciales."
+        },
+        {
+          "id": "MAT_CANTIDAD.CAP2",
+          "official_name": "Comunica su comprensión sobre los números y las operaciones",
+          "meaning": "Explica o muestra cómo comprende cantidades, conteo y transformaciones."
+        },
+        {
+          "id": "MAT_CANTIDAD.CAP3",
+          "official_name": "Usa estrategias y procedimientos de estimación y cálculo",
+          "meaning": "Prueba procedimientos para contar, comparar, estimar, agregar o quitar."
+        }
+      ],
+      "cycle_standard_meaning": "Al final del ciclo II relaciona objetos por características perceptivas, agrupa/ordena/seria, compara cantidades y pesos, resuelve situaciones de agregar/quitar hasta cantidades pequeñas, cuenta progresivamente y usa cuantificadores y nociones temporales.",
+      "when_to_use": [
+        "contar",
+        "cantidad",
+        "agrupar",
+        "comparar colecciones",
+        "más/menos",
+        "agregar",
+        "quitar",
+        "peso",
+        "orden"
+      ],
+      "do_not_use_when": [
+        "solo se nombran números de memoria sin problema o relación cuantitativa"
+      ],
+      "typical_contexts": [
+        "contar",
+        "cantidad",
+        "agrupar",
+        "comparar colecciones",
+        "más/menos",
+        "agregar",
+        "quitar",
+        "peso",
+        "orden"
+      ],
+      "observable_actions": [
+        "Cuenta en situaciones cotidianas hasta cantidades acordes al estándar del ciclo.",
+        "Compara colecciones y expresa dónde hay más, menos o igual en situaciones concretas.",
+        "Resuelve acciones de agregar o quitar con objetos o representaciones en cantidades pequeñas.",
+        "Ordena, compara peso y usa nociones temporales en actividades significativas."
+      ],
+      "possible_evidence": [],
+      "examples": [],
+      "not_examples": [],
+      "key_signals": [
+        "contar",
+        "cantidad",
+        "agrupar",
+        "comparar colecciones",
+        "más/menos",
+        "agregar",
+        "quitar",
+        "peso",
+        "orden"
+      ],
+      "common_confusions": [],
+      "age_profile": {
+        "status": "specified",
+        "ai_focus": "Conteo más estable, comparación y transformaciones sencillas.",
+        "observable_patterns": [
+          "Cuenta en situaciones cotidianas hasta cantidades acordes al estándar del ciclo.",
+          "Compara colecciones y expresa dónde hay más, menos o igual en situaciones concretas.",
+          "Resuelve acciones de agregar o quitar con objetos o representaciones en cantidades pequeñas.",
+          "Ordena, compara peso y usa nociones temporales en actividades significativas."
+        ]
+      },
+      "performances": []
+    },
+    {
+      "id": "MAT_FORMA",
+      "official_name": "Resuelve problemas de forma, movimiento y localización",
+      "review_status": "pending",
+      "meaning": "El niño resuelve situaciones relacionadas con formas, tamaños, posiciones, desplazamientos y orientación usando su cuerpo, objetos, construcciones y estrategias espaciales.",
+      "pedagogical_intent": "El niño resuelve situaciones relacionadas con formas, tamaños, posiciones, desplazamientos y orientación usando su cuerpo, objetos, construcciones y estrategias espaciales.",
+      "capacities": [
+        {
+          "id": "MAT_FORMA.CAP1",
+          "official_name": "Modela objetos con formas geométricas y sus transformaciones",
+          "meaning": "Relaciona objetos y construcciones con formas y cambios de forma."
+        },
+        {
+          "id": "MAT_FORMA.CAP2",
+          "official_name": "Comunica su comprensión sobre las formas y relaciones geométricas",
+          "meaning": "Expresa posiciones, formas, tamaños y relaciones espaciales."
+        },
+        {
+          "id": "MAT_FORMA.CAP3",
+          "official_name": "Usa estrategias y procedimientos para orientarse en el espacio",
+          "meaning": "Prueba movimientos, recorridos, comparaciones y construcciones para resolver situaciones espaciales."
+        }
+      ],
+      "cycle_standard_meaning": "Al final del ciclo II relaciona objetos con formas 2D/3D, ubica personas y objetos, expresa direcciones y posiciones, compara longitudes y resuelve retos mediante movimientos y construcciones.",
+      "when_to_use": [
+        "formas",
+        "espacio",
+        "ubicación",
+        "recorrido",
+        "construcción",
+        "tamaño",
+        "longitud",
+        "posición",
+        "movimiento espacial"
+      ],
+      "do_not_use_when": [
+        "el movimiento corporal es el foco motriz y no existe un problema espacial/geométrico"
+      ],
+      "typical_contexts": [
+        "formas",
+        "espacio",
+        "ubicación",
+        "recorrido",
+        "construcción",
+        "tamaño",
+        "longitud",
+        "posición",
+        "movimiento espacial"
+      ],
+      "observable_actions": [
+        "Modela y compara objetos considerando formas y transformaciones.",
+        "Comunica posiciones, direcciones y relaciones espaciales con mayor precisión.",
+        "Compara longitudes en situaciones concretas.",
+        "Planifica y ajusta recorridos o construcciones para resolver retos."
+      ],
+      "possible_evidence": [],
+      "examples": [],
+      "not_examples": [],
+      "key_signals": [
+        "formas",
+        "espacio",
+        "ubicación",
+        "recorrido",
+        "construcción",
+        "tamaño",
+        "longitud",
+        "posición",
+        "movimiento espacial"
+      ],
+      "common_confusions": [],
+      "age_profile": {
+        "status": "specified",
+        "ai_focus": "Relaciones espaciales más precisas y estrategias de orientación.",
+        "observable_patterns": [
+          "Modela y compara objetos considerando formas y transformaciones.",
+          "Comunica posiciones, direcciones y relaciones espaciales con mayor precisión.",
+          "Compara longitudes en situaciones concretas.",
+          "Planifica y ajusta recorridos o construcciones para resolver retos."
+        ]
+      },
+      "performances": []
+    },
+    {
+      "id": "CYT_INDAGA",
+      "official_name": "Indaga mediante métodos científicos para construir sus conocimientos",
+      "review_status": "pending",
+      "meaning": "El niño explora fenómenos, objetos y seres vivos desde su curiosidad: pregunta, propone posibles respuestas, observa/manipula, registra o compara información y comunica lo que descubre.",
+      "pedagogical_intent": "El niño explora fenómenos, objetos y seres vivos desde su curiosidad: pregunta, propone posibles respuestas, observa/manipula, registra o compara información y comunica lo que descubre.",
+      "capacities": [
+        {
+          "id": "CYT_INDAGA.CAP1",
+          "official_name": "Problematiza situaciones para hacer indagación",
+          "meaning": "Formula preguntas o problemas a partir de curiosidad y situaciones observables."
+        },
+        {
+          "id": "CYT_INDAGA.CAP2",
+          "official_name": "Diseña estrategias para hacer indagación",
+          "meaning": "Propone acciones, materiales o formas de obtener información."
+        },
+        {
+          "id": "CYT_INDAGA.CAP3",
+          "official_name": "Genera y registra datos o información",
+          "meaning": "Observa, manipula, mide de manera inicial y registra hallazgos."
+        },
+        {
+          "id": "CYT_INDAGA.CAP4",
+          "official_name": "Analiza datos e información",
+          "meaning": "Compara y relaciona lo observado con preguntas o ideas iniciales."
+        },
+        {
+          "id": "CYT_INDAGA.CAP5",
+          "official_name": "Evalúa y comunica el proceso y resultado de su indagación",
+          "meaning": "Cuenta, representa o muestra qué hizo, qué encontró y qué aprendió."
+        }
+      ],
+      "cycle_standard_meaning": "Al final del ciclo II explora objetos, espacio y hechos; formula preguntas, propone posibles respuestas, obtiene información mediante observación/manipulación, compara sus ideas con hallazgos y comunica el proceso y resultados oral o gráficamente.",
+      "when_to_use": [
+        "por qué",
+        "qué pasará",
+        "observar",
+        "experimentar",
+        "comparar hallazgos",
+        "seres vivos",
+        "fenómeno natural",
+        "explorar"
+      ],
+      "do_not_use_when": [
+        "solo se transmite información científica sin que los niños exploren o construyan respuestas"
+      ],
+      "typical_contexts": [
+        "por qué",
+        "qué pasará",
+        "observar",
+        "experimentar",
+        "comparar hallazgos",
+        "seres vivos",
+        "fenómeno natural",
+        "explorar"
+      ],
+      "observable_actions": [
+        "Formula preguntas y propone posibles respuestas a situaciones observables.",
+        "Propone acciones, materiales o fuentes para obtener información.",
+        "Obtiene y registra datos mediante observación, comparación o experiencias.",
+        "Relaciona hallazgos con su pregunta o predicción.",
+        "Comunica lo realizado, resultados y descubrimientos."
+      ],
+      "possible_evidence": [],
+      "examples": [],
+      "not_examples": [],
+      "key_signals": [
+        "por qué",
+        "qué pasará",
+        "observar",
+        "experimentar",
+        "comparar hallazgos",
+        "seres vivos",
+        "fenómeno natural",
+        "explorar"
+      ],
+      "common_confusions": [],
+      "age_profile": {
+        "status": "specified",
+        "ai_focus": "Indagación más organizada y comparación de evidencias.",
+        "observable_patterns": [
+          "Formula preguntas y propone posibles respuestas a situaciones observables.",
+          "Propone acciones, materiales o fuentes para obtener información.",
+          "Obtiene y registra datos mediante observación, comparación o experiencias.",
+          "Relaciona hallazgos con su pregunta o predicción.",
+          "Comunica lo realizado, resultados y descubrimientos."
+        ]
+      },
+      "performances": []
+    },
+    {
+      "id": "TRANS_TIC",
+      "official_name": "Se desenvuelve en los entornos virtuales generados por las TIC",
+      "review_status": "pending",
+      "meaning": "El niño usa dispositivos y entornos virtuales con acompañamiento para explorar funciones, obtener/registrar información y crear objetos digitales sencillos con un propósito.",
+      "pedagogical_intent": "El niño usa dispositivos y entornos virtuales con acompañamiento para explorar funciones, obtener/registrar información y crear objetos digitales sencillos con un propósito.",
+      "capacities": [
+        {
+          "id": "TRANS_TIC.CAP1",
+          "official_name": "Personaliza entornos virtuales",
+          "meaning": "Reconoce y ajusta elementos básicos del entorno digital según necesidades y posibilidades."
+        },
+        {
+          "id": "TRANS_TIC.CAP2",
+          "official_name": "Gestiona información del entorno virtual",
+          "meaning": "Explora y usa información o recursos digitales de forma guiada."
+        },
+        {
+          "id": "TRANS_TIC.CAP3",
+          "official_name": "Crea objetos virtuales en diversos formatos",
+          "meaning": "Produce imágenes, audios, videos u otros objetos digitales sencillos."
+        }
+      ],
+      "cycle_standard_meaning": "Al final del ciclo II se desenvuelve en entornos virtuales al buscar/manipular objetos digitales y realizar actividades que le permiten registrar y comunicar ideas y emociones.",
+      "when_to_use": [
+        "cámara",
+        "tablet",
+        "grabadora",
+        "audio digital",
+        "video",
+        "entorno virtual",
+        "producción digital"
+      ],
+      "do_not_use_when": [
+        "el dispositivo solo se usa pasivamente sin propósito de aprendizaje o creación"
+      ],
+      "typical_contexts": [
+        "cámara",
+        "tablet",
+        "grabadora",
+        "audio digital",
+        "video",
+        "entorno virtual",
+        "producción digital"
+      ],
+      "observable_actions": [
+        "Explora con acompañamiento dispositivos y entornos virtuales y reconoce funciones básicas para su uso y cuidado.",
+        "Produce imágenes, audio o video para comunicar ideas, hallazgos o afectos, o para registrar acontecimientos."
+      ],
+      "possible_evidence": [],
+      "examples": [],
+      "not_examples": [],
+      "key_signals": [
+        "cámara",
+        "tablet",
+        "grabadora",
+        "audio digital",
+        "video",
+        "entorno virtual",
+        "producción digital"
+      ],
+      "common_confusions": [],
+      "age_profile": {
+        "status": "specified",
+        "ai_focus": "Uso acompañado de dispositivos para explorar, registrar y crear.",
+        "observable_patterns": [
+          "Explora con acompañamiento dispositivos y entornos virtuales y reconoce funciones básicas para su uso y cuidado.",
+          "Produce imágenes, audio o video para comunicar ideas, hallazgos o afectos, o para registrar acontecimientos."
+        ]
+      },
+      "performances": []
+    },
+    {
+      "id": "TRANS_AUTONOMO",
+      "official_name": "Gestiona su aprendizaje de manera autónoma",
+      "review_status": "pending",
+      "meaning": "El niño empieza a reconocer qué quiere lograr, pensar cómo hacerlo, ejecutar acciones, revisar si funcionan y ajustarlas con facilitación adulta.",
+      "pedagogical_intent": "El niño empieza a reconocer qué quiere lograr, pensar cómo hacerlo, ejecutar acciones, revisar si funcionan y ajustarlas con facilitación adulta.",
+      "capacities": [
+        {
+          "id": "TRANS_AUTONOMO.CAP1",
+          "official_name": "Define metas de aprendizaje",
+          "meaning": "Reconoce qué quiere o necesita lograr en una tarea o situación de interés."
+        },
+        {
+          "id": "TRANS_AUTONOMO.CAP2",
+          "official_name": "Organiza acciones estratégicas para alcanzar sus metas de aprendizaje",
+          "meaning": "Propone y ordena acciones, recursos o estrategias para conseguir su propósito."
+        },
+        {
+          "id": "TRANS_AUTONOMO.CAP3",
+          "official_name": "Monitorea y ajusta su desempeño durante el proceso de aprendizaje",
+          "meaning": "Revisa lo que hace, reconoce dificultades y modifica acciones con apoyo."
+        }
+      ],
+      "cycle_standard_meaning": "Al final del ciclo II identifica qué quiere lograr, conecta lo que sabe con una tarea, sigue o propone estrategias con facilitación, revisa resultados y acepta ajustes para alcanzar su propósito.",
+      "when_to_use": [
+        "meta",
+        "planificar cómo hacer",
+        "elegir estrategia",
+        "revisar si funcionó",
+        "ajustar estrategia",
+        "aprender a aprender"
+      ],
+      "do_not_use_when": [
+        "la actividad solo exige seguir instrucciones sin decisión, planificación o revisión por parte del niño"
+      ],
+      "typical_contexts": [
+        "meta",
+        "planificar cómo hacer",
+        "elegir estrategia",
+        "revisar si funcionó",
+        "ajustar estrategia",
+        "aprender a aprender"
+      ],
+      "observable_actions": [
+        "Reflexiona con ayuda sobre qué necesita hacer para una tarea de interés, usando experiencias previas.",
+        "Plantea con ayuda una estrategia o acciones para alcanzar la tarea.",
+        "Revisa lo que hizo, identifica dificultades o cambios en su estrategia y comunica lo aprendido."
+      ],
+      "possible_evidence": [],
+      "examples": [],
+      "not_examples": [],
+      "key_signals": [
+        "meta",
+        "planificar cómo hacer",
+        "elegir estrategia",
+        "revisar si funcionó",
+        "ajustar estrategia",
+        "aprender a aprender"
+      ],
+      "common_confusions": [],
+      "age_profile": {
+        "status": "specified",
+        "ai_focus": "Planificación, estrategia y revisión con ayuda docente.",
+        "observable_patterns": [
+          "Reflexiona con ayuda sobre qué necesita hacer para una tarea de interés, usando experiencias previas.",
+          "Plantea con ayuda una estrategia o acciones para alcanzar la tarea.",
+          "Revisa lo que hizo, identifica dificultades o cambios en su estrategia y comunica lo aprendido."
+        ]
+      },
+      "performances": []
+    }
+  ]
 }

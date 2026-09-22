@@ -1,0 +1,74 @@
+{
+  "concepts": {
+    "competency": {
+      "ai_meaning": "Actuación compleja: la persona combina varias capacidades para lograr un propósito en una situación concreta de manera pertinente y ética.",
+      "important_for_ai": "No tratar una competencia como una habilidad binaria ni como una lista de tareas independientes."
+    },
+    "capacity": {
+      "ai_meaning": "Recurso que se combina dentro de una competencia: conocimientos, habilidades y actitudes.",
+      "important_for_ai": "No evaluar una capacidad aislada como si equivaliera a toda la competencia."
+    },
+    "standard": {
+      "ai_meaning": "Descripción del nivel de desarrollo esperado de una competencia al final de un ciclo. Sirve como referencia para observar progresión y evaluar formativamente.",
+      "important_for_ai": "Es referencia de progreso, no checklist diario."
+    },
+    "performance": {
+      "ai_meaning": "Descripción específica y observable de actuaciones que ayudan a reconocer cómo progresa una competencia en una edad o grado.",
+      "important_for_ai": "Los desempeños orientan la observación y planificación; no agotan todas las formas posibles de demostrar la competencia."
+    },
+    "formative_assessment": {
+      "ai_meaning": "Proceso continuo para comprender cómo progresa el niño, retroalimentar y ajustar la enseñanza. Se apoya en evidencias y estándares.",
+      "important_for_ai": "La IA puede organizar evidencia y proponer síntesis; la docente confirma la valoración pedagógica."
+    },
+    "transversal_approach": {
+      "ai_meaning": "Valores, actitudes y formas de actuar que atraviesan la vida escolar y orientan convivencia y decisiones pedagógicas.",
+      "important_for_ai": "No son competencias ni deben forzarse todos en cada actividad."
+    }
+  },
+  "transversal_approaches": [
+    {
+      "id": "rights",
+      "name": "Enfoque de derechos",
+      "ai_meaning": "Reconoce a niñas y niños como sujetos de derechos y promueve participación, libertad responsable, diálogo y convivencia democrática."
+    },
+    {
+      "id": "inclusive",
+      "name": "Enfoque inclusivo o de atención a la diversidad",
+      "ai_meaning": "Valora diferencias y elimina barreras para que todos participen y aprendan con oportunidades pertinentes."
+    },
+    {
+      "id": "intercultural",
+      "name": "Enfoque intercultural",
+      "ai_meaning": "Reconoce y valora la diversidad cultural y lingüística, favoreciendo diálogo y respeto entre culturas."
+    },
+    {
+      "id": "gender",
+      "name": "Enfoque de igualdad de género",
+      "ai_meaning": "Promueve iguales derechos, oportunidades y valoración, evitando estereotipos y discriminación por género."
+    },
+    {
+      "id": "environmental",
+      "name": "Enfoque ambiental",
+      "ai_meaning": "Promueve cuidado de la vida, ambiente, recursos y acciones responsables frente a problemas ambientales."
+    },
+    {
+      "id": "common_good",
+      "name": "Enfoque de orientación al bien común",
+      "ai_meaning": "Prioriza responsabilidad, solidaridad, justicia y cuidado de bienes compartidos."
+    },
+    {
+      "id": "excellence",
+      "name": "Enfoque de búsqueda de la excelencia",
+      "ai_meaning": "Promueve mejora continua, flexibilidad, esfuerzo y uso de capacidades para alcanzar metas personales y colectivas."
+    }
+  ],
+  "planning_principles_for_initial_ai": [
+    "Partir de características, intereses, necesidades, contexto y evidencias del grupo.",
+    "Planificar para desarrollar competencias, no para completar fichas o temas aislados.",
+    "Ofrecer múltiples oportunidades para movilizar una competencia en situaciones significativas.",
+    "Usar desempeños y estándar como referentes; contextualizar criterios sin alterar el texto oficial.",
+    "La planificación es flexible: puede ajustarse por intereses emergentes, necesidades observadas o cambios del contexto.",
+    "La evidencia se recoge de actuaciones reales y pertinentes; no es obligatorio registrar evidencia de cada niño en cada actividad.",
+    "La evaluación formativa retroalimenta la siguiente planificación."
+  ]
+}
