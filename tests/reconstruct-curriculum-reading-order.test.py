@@ -18,10 +18,16 @@ class ReadingOrderTests(unittest.TestCase):
     def test_geometric_fragmentation_only(self):
         joined = [{"text":"cn","top":10,"x0":0,"x1":10,"bottom":20}]
         fragments = [{"text":"c","top":10,"x0":0,"x1":5,"bottom":20},{"text":"n","top":10,"x0":5.2,"x1":10,"bottom":20}]
-        self.assertEqual(module.canonical_tokens(joined), module.canonical_tokens(fragments))
+        self.assertTrue(module.content_fidelity(module.canonical_tokens(joined), module.canonical_tokens(fragments))["matches"])
         spaced = [{"text":"c","top":10,"x0":0,"x1":5,"bottom":20},{"text":"n","top":10,"x0":9,"x1":14,"bottom":20}]
         self.assertEqual(module.classify(module.canonical_tokens(joined), module.canonical_tokens(spaced)), "needs_visual_review")
     def test_accent_difference_requires_review(self):
         self.assertEqual(module.classify(["educación"], ["educacion"]), "needs_visual_review")
+        self.assertFalse(module.content_fidelity(["educación"], ["educacion"])["matches"])
+    def test_geometric_regions_and_block_order(self):
+        words=[{"text":"Head","top":1,"bottom":5,"x0":0,"x1":5},{"text":"contenido","top":30,"bottom":35,"x0":0,"x1":10},{"text":"pie","top":99,"bottom":100,"x0":0,"x1":3}]
+        header, content, footer=module.content_region(words,100)
+        self.assertEqual([x["text"] for x in content],["contenido"]); self.assertEqual(len(header)+len(footer),2)
+        self.assertTrue(module.match_block_groups(module.blocks(content), list(reversed(module.blocks(content))))["matched"])
 
 if __name__ == "__main__": unittest.main()
