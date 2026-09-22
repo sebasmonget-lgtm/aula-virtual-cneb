@@ -4,6 +4,7 @@ import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { PGlite } from "@electric-sql/pglite";
+import { resolveDailyState } from "../src/lib/daily-state.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const dataDir = path.join(root, ".local", "pgdata");
@@ -22,7 +23,7 @@ const exportTables = [
   "activities", "activity_criteria", "evidences", "competency_observation_guides",
   "document_templates", "document_versions", "diagnostic_sessions",
   "diagnostic_entries", "observation_references", "student_observations",
-  "class_schedule_entries", "daily_execution_logs",
+  "class_schedule_entries", "daily_execution_logs", "attendance_records", "calendar_exceptions",
 ];
 
 await mkdir(path.dirname(dataDir), { recursive: true });
@@ -139,10 +140,22 @@ async function dashboard() {
   const timeFormatter = new Intl.DateTimeFormat("en-GB", { timeZone: "America/Lima", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
   const today = dateFormatter.format(new Date());
   const now = timeFormatter.format(new Date());
+  const classroomResult = await db.query(`select id from classrooms where teacher_id = $1 and status = 'active' limit 1`, [teacherId]);
+  const classroomId = classroomResult.rows[0]?.id;
+  const attendanceResult = await db.query(`
+    select count(*)::int as recorded_count from attendance_records
+     where classroom_id = $1 and attendance_date = $2::date
+  `, [classroomId, today]);
+  const exceptionResult = await db.query(`
+    select type, label, is_instructional from calendar_exceptions
+     where classroom_id = $1 and exception_date = $2::date limit 1
+  `, [classroomId, today]);
   const todayBlocks = await db.query(`
     select se.id, se.start_time::text, se.end_time::text, se.block_type, coalesce(se.title, a.title) as title,
            se.activity_id, a.purpose, le.title as experience_title, ac.id as criterion_id,
-           coalesce(a.preparation->'materials', '[]'::jsonb) as materials, coalesce(del.status, 'planned') as saved_status
+           coalesce(a.preparation->'materials', '[]'::jsonb) as materials, coalesce(a.preparation->'steps', '[]'::jsonb) as steps,
+           coalesce(del.status, 'planned') as status, coalesce(del.current_override, false) as current_override,
+           del.closure_type, del.teacher_closure_note
       from class_schedule_entries se
       join classrooms cl on cl.id = se.classroom_id
       left join activities a on a.id = se.activity_id
@@ -152,11 +165,22 @@ async function dashboard() {
      where cl.teacher_id = $1 and (se.scheduled_on = $2::date or (se.scheduled_on is null and se.weekday = extract(dow from $2::date)))
      order by se.start_time, se.sort_order
   `, [teacherId, today]);
-  const blocks = todayBlocks.rows.map((block) => ({ ...block, materials: block.materials ?? [], status: block.saved_status === "planned" && now >= block.start_time.slice(0,5) && now < block.end_time.slice(0,5) ? "active" : block.saved_status === "planned" && now >= block.end_time.slice(0,5) ? "completed" : block.saved_status }));
+  const rawBlocks = todayBlocks.rows.map((block) => ({ ...block, materials: block.materials ?? [], steps: block.steps ?? [] }));
+  const attendanceRecorded = Number(attendanceResult.rows[0]?.recorded_count ?? 0) > 0;
+  const calendarException = exceptionResult.rows[0] ?? null;
+  const journey = resolveDailyState({ now, scheduleEntries: rawBlocks, attendanceRecorded, calendarException });
+  const blocks = rawBlocks.map((block) => ({
+    ...block,
+    display_status: block.id === journey.currentBlock?.id ? "active" : block.status === "planned" && now >= block.end_time.slice(0, 5) ? "ready_to_close" : block.status,
+  }));
 
   return {
     activity: activityResult.rows[0],
-    today: { date: today, now, blocks },
+    today: {
+      date: today, now, blocks, attendance: { recorded: attendanceRecorded, recorded_count: Number(attendanceResult.rows[0]?.recorded_count ?? 0) },
+      calendar_exception: calendarException,
+      journey: { mode: journey.mode, current_block_id: journey.currentBlock?.id ?? null, next_block_id: journey.nextBlock?.id ?? null, primary_action: journey.primaryAction, pending_items: journey.pendingItems },
+    },
     students: studentsResult.rows,
     metrics: metricsResult.rows[0],
     profile: profileResult.rows[0] ? {
@@ -425,6 +449,61 @@ const server = createServer(async (request, response) => {
         returning id, student_id, observation_text, observed_at
       `, [randomUUID(), body.studentId, body.activityId, body.criterionId, observation, teacherId]);
       send(response, 201, { evidence: result.rows[0] }, origin);
+      return;
+    }
+    if (request.method === "POST" && url.pathname === "/api/attendance") {
+      const body = await readJson(request);
+      const records = Array.isArray(body.records) ? body.records : [];
+      const allowedStatuses = new Set(["present", "absent", "late", "excused"]);
+      const classroom = (await db.query(`select id from classrooms where teacher_id = $1 and status = 'active' limit 1`, [teacherId])).rows[0];
+      const currentStudents = (await db.query(`select id from students where classroom_id = $1 and status = 'active'`, [classroom.id])).rows;
+      const permittedIds = new Set(currentStudents.map((student) => student.id));
+      if (!records.length || records.some((record) => !permittedIds.has(record.studentId) || !allowedStatuses.has(record.status))) {
+        send(response, 400, { error: "La asistencia contiene estudiantes o estados no válidos." }, origin);
+        return;
+      }
+      const today = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Lima", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+      await db.exec("begin");
+      try {
+        for (const record of records) await db.query(`insert into attendance_records
+          (id, classroom_id, student_id, attendance_date, status, recorded_by)
+          values ($1,$2,$3,$4::date,$5,$6)
+          on conflict (student_id, attendance_date) do update set status = excluded.status, recorded_at = now(), recorded_by = excluded.recorded_by
+        `, [randomUUID(), classroom.id, record.studentId, today, record.status, teacherId]);
+        await db.exec("commit");
+      } catch (error) {
+        await db.exec("rollback");
+        throw error;
+      }
+      send(response, 200, { dashboard: await dashboard() }, origin);
+      return;
+    }
+    if (request.method === "POST" && url.pathname === "/api/today/execution") {
+      const body = await readJson(request);
+      const action = body.action;
+      const allowedActions = new Set(["start", "complete", "skip", "keep_current"]);
+      if (!body.scheduleEntryId || !allowedActions.has(action)) {
+        send(response, 400, { error: "La acción de jornada no es válida." }, origin);
+        return;
+      }
+      const entry = (await db.query(`select se.id from class_schedule_entries se join classrooms c on c.id = se.classroom_id where se.id = $1 and c.teacher_id = $2`, [body.scheduleEntryId, teacherId])).rows[0];
+      if (!entry) {
+        send(response, 403, { error: "El bloque no pertenece al aula activa." }, origin);
+        return;
+      }
+      const today = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Lima", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+      const status = action === "complete" ? "completed" : action === "skip" ? "skipped" : "active";
+      const closureType = action === "complete" ? (body.closureType === "note" ? "note" : "as_planned") : action === "skip" ? "cancelled" : null;
+      const closureNote = cleanText(body.closureNote, 800) || null;
+      await db.query(`insert into daily_execution_logs
+        (id, schedule_entry_id, execution_date, status, actual_started_at, actual_ended_at, teacher_closure_note, closure_type, current_override)
+        values ($1,$2,$3::date,$4,case when $4 = 'active' then now() else null end,case when $4 in ('completed','skipped') then now() else null end,$5,$6,$7)
+        on conflict (schedule_entry_id, execution_date) do update set
+          status = excluded.status, actual_started_at = coalesce(daily_execution_logs.actual_started_at, excluded.actual_started_at),
+          actual_ended_at = excluded.actual_ended_at, teacher_closure_note = excluded.teacher_closure_note,
+          closure_type = excluded.closure_type, current_override = excluded.current_override
+      `, [randomUUID(), entry.id, today, status, closureNote, closureType, action === "keep_current"]);
+      send(response, 200, { dashboard: await dashboard() }, origin);
       return;
     }
     send(response, 404, { error: "Ruta local no encontrada." }, origin);

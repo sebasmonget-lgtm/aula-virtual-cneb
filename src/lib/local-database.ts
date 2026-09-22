@@ -19,7 +19,13 @@ export type LocalDashboard = {
   };
   students: LocalStudent[];
   metrics: { students_total: number; evidences_week: number; students_observed: number };
-  today: { date: string; now: string; blocks: { id: string; start_time: string; end_time: string; block_type: string; title: string; activity_id: string | null; purpose: string | null; experience_title: string | null; materials: string[]; criterion_id: string | null; status: string }[] };
+  today: {
+    date: string; now: string;
+    attendance: { recorded: boolean; recorded_count: number };
+    calendar_exception: { type: string; label: string; is_instructional: boolean } | null;
+    journey: { mode: string; current_block_id: string | null; next_block_id: string | null; primary_action: string; pending_items: string[] };
+    blocks: { id: string; start_time: string; end_time: string; block_type: string; title: string; activity_id: string | null; purpose: string | null; experience_title: string | null; materials: string[]; steps: string[]; criterion_id: string | null; status: string; display_status: string; current_override: boolean; closure_type: string | null }[];
+  };
   profile: {
     teacher_name: string; institution_name: string; section: string; age_label: string;
     age_years: number; school_year: number; institution_code: string | null; district: string | null;
@@ -67,6 +73,26 @@ export async function createLocalEvidence(input: {
   if (!response.ok) throw new Error(payload.error ?? "No se pudo guardar la evidencia.");
   if (!payload.evidence) throw new Error("La base local devolvió una respuesta incompleta.");
   return payload.evidence;
+}
+
+async function postDashboard(path: string, input: Record<string, unknown>): Promise<LocalDashboard> {
+  const response = await fetch(`${apiUrl}${path}`, {
+    method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(input),
+  });
+  const payload = await response.json() as { error?: string; dashboard?: LocalDashboard };
+  if (!response.ok || !payload.dashboard) throw new Error(payload.error ?? "No se pudo actualizar la jornada.");
+  return payload.dashboard;
+}
+
+export function saveLocalAttendance(records: { studentId: string; status: "present" | "absent" | "late" | "excused" }[]) {
+  return postDashboard("/api/attendance", { records });
+}
+
+export function updateLocalExecution(input: {
+  scheduleEntryId: string; action: "start" | "complete" | "skip" | "keep_current";
+  closureType?: "as_planned" | "note"; closureNote?: string;
+}) {
+  return postDashboard("/api/today/execution", input);
 }
 
 export async function saveLocalProfile(input: {

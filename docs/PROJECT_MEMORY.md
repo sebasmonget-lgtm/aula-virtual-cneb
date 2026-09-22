@@ -9,7 +9,8 @@ Proyecto nuevo iniciado el 20 de septiembre de 2026. Existe un shell responsive 
 - Identidad visual y shell PWA responsive.
 - Tema visual inspirado en la referencia entregada por la usuaria: fondo azul muy claro, texto azul marino, acento turquesa, tarjetas blancas y paneles de ayuda pastel. El diagnóstico muestra datos reales del perfil/aula y cobertura calculada de la base local, no cifras copiadas de la imagen.
 - Navegación principal: Hoy, Planificar, Niños, Evaluar, Documentos y Biblioteca.
-- Hoy es el inicio docente: deriva una línea de tiempo del horario local, destaca el bloque vigente/próximo y enlaza actividades o talleres sin duplicarlos.
+- Hoy es el inicio docente: resuelve la jornada desde el horario local, destaca un único siguiente paso (asistencia, actividad, evidencia o cierre) y enlaza actividades o talleres sin duplicarlos.
+- Modo Jornada: asistencia rápida por estudiante, estado diario centralizado, inicio/cierre de bloques y extensión manual. Las evidencias permanecen opcionales y heredan el contexto de actividad/criterio.
 - Primer flujo vertical persistente: actividad actual → seleccionar estudiante → describir evidencia → guardar en PostgreSQL local → actualizar cobertura.
 - Migración inicial para Supabase con entidades de Fase 0 y Fase 1, más las relaciones mínimas necesarias para el flujo de evidencia.
 - Políticas RLS preparadas, sin aplicar a ninguna cuenta.
@@ -40,3 +41,4 @@ Proyecto nuevo iniciado el 20 de septiembre de 2026. Existe un shell responsive 
 - No se ha realizado revisión legal de datos personales de menores.
 - PGlite no reproduce Auth, Storage ni RLS; esas capas se validarán en el nuevo staging Supabase.
 - El diagnóstico local no permite concluir niveles formales ni pasar prioridades al plan anual; las pantallas de resultados/conclusiones son preparatorias.
+- La asistencia y las excepciones de calendario están persistidas localmente; sus políticas RLS se aplicarán y probarán recién en el nuevo staging Supabase.
