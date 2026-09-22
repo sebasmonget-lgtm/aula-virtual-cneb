@@ -1,0 +1,11 @@
+[
+  {"id":"p01","age":3,"competency_id":"PS_IDENTIDAD","situation":"Expresa una preferencia propia durante el juego.","expected_outcome":"manual_until_verified"},
+  {"id":"p02","age":4,"competency_id":"PS_CONVIVE","situation":"Busca resolver un desacuerdo por el turno.","expected_outcome":"manual_until_verified"},
+  {"id":"p03","age":5,"competency_id":"PSICO_MOTRICIDAD","situation":"Completa un circuito de desplazamientos.","expected_outcome":"manual_until_verified"},
+  {"id":"p04","age":3,"competency_id":"COM_ORAL","situation":"Cuenta lo ocurrido en su casa.","expected_outcome":"manual_until_verified"},
+  {"id":"p05","age":4,"competency_id":"COM_LECTURA","situation":"Anticipa de qué tratará un cuento desde sus imágenes.","expected_outcome":"manual_until_verified"},
+  {"id":"p06","age":5,"competency_id":"COM_ESCRITURA","situation":"Escribe a su manera una invitación.","expected_outcome":"manual_until_verified"},
+  {"id":"p07","age":4,"competency_id":"MAT_CANTIDAD","situation":"Resuelve cuántos platos necesita para el grupo.","expected_outcome":"manual_until_verified"},
+  {"id":"p08","age":5,"competency_id":"MAT_FORMA","situation":"Explica el recorrido de un laberinto.","expected_outcome":"manual_until_verified"},
+  {"id":"p09","age":5,"competency_id":"CYT_INDAGA","situation":"Formula una pregunta sobre una planta observada.","expected_outcome":"manual_until_verified"}
+]
