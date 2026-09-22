@@ -22,10 +22,12 @@ Proyecto nuevo iniciado el 20 de septiembre de 2026. Existe un shell responsive 
 - Diagnóstico guiado con datos precargados, lista de competencias, cobertura por estudiantes, registro por referente/estado observacional y guardado para continuar después.
 - Catálogo local ilustrativo de dos referentes vinculado a un desempeño de muestra. La interfaz lo advierte y el importador bloquea su paso a producción por defecto.
 - Preparador de importación Supabase con dry run, validación curricular, mapeo explícito del usuario nuevo, SQL transaccional y manifiesto de logos. Incluye las tablas de jornada, asistencia y snapshots; preserva rutas de fotos como referencias privadas, sin copiarlas. No ejecuta cambios externos.
-- La capa semántica para Jev incluye 14 competencias de Inicial y genera runtimes separados para 3, 4 y 5 años. Permanece separada del registro oficial, que está en transcripción pendiente de contraste por página desde PDF MINEDU.
-- Jev exige revisión doble (`official_review_status` y `semantic_review_status`) antes de proponer una selección. En desempeños, valida además edad y competencia previamente confirmada. El benchmark contiene 50 situaciones de competencia y casos de desempeño marcados para fallback manual hasta completar el maestro oficial.
-- Se integró `CNEB_Inicial_AI_KnowledgePack_v2` como enriquecimiento de las 14 fichas semánticas y 140 candidatos semánticos de desempeño. Sus textos no modifican `curriculum/official`, conservan estado pendiente y los candidatos no ingresan a los runtimes hasta contrastarlos con PDF MINEDU.
-- La importación es reproducible con `node scripts/import-cneb-knowledge-pack-v2.mjs <directorio-del-paquete-extraído>`; el ZIP y los PDF de trabajo no se guardan en Git.
+- La fuente vigente para cualquier IA de Inicial 3–5 es `knowledge/cneb-initial-3-5/v4.0.0/`: contiene 245 knowledge units, 14 competency cards y 13 workflows versionados.
+- El runtime v4 ya implementa `loadKnowledgeBaseV4()`, `retrieveKnowledgeV4()` y `buildAIContext()`. Valida integridad, edad, workflow, aplicabilidad, contexto obligatorio, límites y provenance antes de producir un `AIContextBundle`.
+- El runtime v4 no lee PDFs. No hay extracción ni transcripción de PDF pendiente para esta arquitectura y no debe crearse un `official-corpus` como ruta alternativa.
+- `prepareAIRequestV4()` es el punto de entrada neutral para una futura conexión de modelo: entrega el `AIContextBundle` y metadata del workflow, sin HTTP, proveedores ni selección fuera del bundle. La futura IA debe consumir ese bundle y nunca leer documentos directamente.
+- v3, los catálogos `curriculum/` heredados, Jev y `CNEB_Inicial_AI_KnowledgePack_v2` se conservan solo como histórico, compatibilidad y pruebas legacy; no son dependencias de la arquitectura v4.
+- Auditoría de consumidores de Jev (2026-09-22): `jev-decision.mjs` solo se importa desde `jev-decision.test.mjs` y `jev-benchmark.test.mjs`; no tiene consumidores productivos activos. Las integraciones nuevas deben importar únicamente `prepare-ai-request-v4.mjs`.
 
 ## Decisiones recientes
 
@@ -36,16 +38,16 @@ Proyecto nuevo iniciado el 20 de septiembre de 2026. Existe un shell responsive 
 
 ## Próximo trabajo recomendado
 
-1. Sustituir el catálogo ilustrativo por desempeños y referentes CNEB oficiales revisados para 3, 4 y 5 años.
+1. Conectar un proveedor de IA únicamente a `prepareAIRequestV4()` y conservar la confirmación docente de toda propuesta o conclusión.
 2. Añadir carga/normalización de logo aportado por institución, consentimiento y las siguientes clases de evidencia multimedia privadas (audio/video).
 3. Implementar síntesis editable/confirmable y su conexión condicionada con el plan anual.
 4. Crear proyectos nuevos de Supabase y hosting/staging; aplicar migraciones y comprobar RLS/Storage con dos usuarios de prueba.
-5. Completar importación en staging solo después de validar currículo, identidad y respaldos.
+5. Completar importación en staging solo después de validar identidad, respaldos y RLS.
 6. Crear la interfaz de radar de competencias y, en una fase posterior, reutilizar sus estadísticas para Excel sin duplicar cálculos.
 
 ## Riesgos
 
-- El contenido CNEB incluido en la demo es ilustrativo; antes de producción debe cargarse y validarse desde fuentes oficiales.
+- La conexión con cualquier proveedor de IA sigue pendiente; solo podrá recibir `AIContextBundle` v4 mediante `prepareAIRequestV4()`.
 - No se ha realizado revisión legal de datos personales de menores.
 - PGlite no reproduce Auth, Storage ni RLS; esas capas se validarán en el nuevo staging Supabase.
 - El diagnóstico local no permite concluir niveles formales ni pasar prioridades al plan anual; las pantallas de resultados/conclusiones son preparatorias.

@@ -1,3 +1,4 @@
+// Legacy v2/v3 compatibility only. New AI integrations must use prepareAIRequestV4.
 const requiredCompetencyFields = ["id", "official_name", "meaning", "pedagogical_intent", "capacities", "cycle_standard_meaning", "when_to_use", "do_not_use_when", "typical_contexts", "observable_actions", "possible_evidence", "examples", "not_examples", "common_confusions"];
 const requiredPerformanceFields = ["id", "competency_id", "age", "official_text_ref", "meaning", "focus", "when_to_select", "when_not_to_select", "observable_actions", "expected_evidence", "examples", "not_examples", "confusable_with"];
 

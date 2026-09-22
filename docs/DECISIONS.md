@@ -1,5 +1,11 @@
 # Decisiones de arquitectura
 
+## ADR 022 Arquitectura vigente de IA: Knowledge Base v4
+
+**Decisión.** La arquitectura vigente de IA para Inicial 3–5 es `knowledge/cneb-initial-3-5/v4.0.0/` y su pipeline `loadKnowledgeBaseV4` → `retrieveKnowledgeV4` → `buildAIContext` → `prepareAIRequestV4`. El runtime usa conocimiento versionado y no lee PDFs, no crea `official-corpus` y no depende de Jev ni del Knowledge Pack v2.
+
+**Consecuencia.** Cualquier integración futura de modelo consume únicamente `AIContextBundle`. v3, Jev y los catálogos previos se mantienen como histórico, compatibilidad o pruebas legacy; no deben ser importados por integraciones nuevas.
+
 ## ADR 021 Preservación explícita de entradas de workflow
 
 **Decisión.** El bundle v4 conserva los campos presentes requeridos o preferidos por el workflow en `context.workflow_inputs`, además de los subconjuntos de aula, estudiante y evidencia ya definidos. Las tarjetas sin competencia confirmada provienen únicamente de unidades semánticas recuperadas; no se completan por orden alfabético.
@@ -70,11 +76,15 @@ La señal interna usa una cobertura mínima configurable de 50%, y requiere al m
 
 ## ADR 011 Doble revisión para propuestas curriculares de Jev
 
+**Estado.** Superada para la arquitectura de IA vigente por ADR 017–022, en particular ADR 022. La condición `official_review_status === verified` y `semantic_review_status === verified` permanece solo en Jev legacy y no bloquea Knowledge Base v4.
+
 **Decisión.** Una tarjeta que Jev use para proponer competencia o desempeño debe tener `official_review_status: verified` y `semantic_review_status: verified`, además de todos sus campos obligatorios. Para desempeño, también debe coincidir con la edad y con la competencia ya confirmada por la docente.
 
 **Consecuencia.** La ausencia de catálogo oficial trazado obliga el modo de selección manual. Los bancos de casos sirven para medir el enrutamiento y el fallback, pero no convierten hipótesis semánticas en contenido oficial ni activan una integración de IA.
 
 ## ADR 016 Knowledge Pack semántico importado con cuarentena curricular
+
+**Estado.** Superada como ruta principal de IA por ADR 022. `CNEB_Inicial_AI_KnowledgePack_v2` permanece como histórico/compatibilidad; v4 es la fuente vigente y no requiere transcribir ni extraer PDFs para completar su runtime.
 
 **Decisión.** El paquete CNEB Inicial AI Knowledge Pack v2 enriquece las fichas semánticas existentes y conserva sus 140 candidatos de desempeño en un catálogo separado. La importación mantiene ambos estados de revisión en `pending`; no escribe sobre `curriculum/official` ni agrega candidatos semánticos como desempeños del runtime.
 
