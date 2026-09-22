@@ -11,6 +11,7 @@ import { buildClassroomStatistics } from "../src/lib/statistics-service.mjs";
 import { loadKnowledgeBaseV4 } from "../src/lib/knowledge-base-v4.mjs";
 import { generateTeacherActivity } from "../src/lib/ai-activity-ui-service.mjs";
 import { generateTeacherAnnualPlan } from "../src/lib/ai-annual-plan-ui-service.mjs";
+import { nextAnnualPlanVersion, safeAnnualGenerationMetadata } from "../src/lib/annual-plan-persistence.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const dataDir = path.join(root, ".local", "pgdata");
@@ -19,6 +20,8 @@ const assetsDir = path.join(root, ".local", "assets");
 const evidenceAssetsDir = path.join(assetsDir, "evidences");
 const port = Number(process.env.AYNI_LOCAL_DB_PORT ?? 8788);
 const teacherId = "00000000-0000-4000-8000-000000000001";
+// Local-only handoff: production must replace this map with durable, access-controlled audit records.
+const pendingAnnualGenerations = new Map();
 const allowedOrigins = new Set([
   "http://localhost:5173",
   "http://127.0.0.1:5173",
@@ -431,16 +434,46 @@ const server = createServer(async (request, response) => {
     }
     if (request.method === "POST" && url.pathname === "/api/ai/annual-plan/generate") {
       const classroom = await annualPlanningContext(); if (!classroom) { send(response, 404, { error: "No se encontró un aula activa." }, origin); return; }
-      try { const generated = await generateTeacherAnnualPlan({ classroom, request: await readJson(request) }); send(response, 200, { proposal: generated.proposal }, origin); } catch (error) { send(response, 422, { error: error?.message || "No pudimos generar una propuesta válida." }, origin); } return;
+      try {
+        const generated = await generateTeacherAnnualPlan({ classroom, request: await readJson(request) });
+        const generationId = randomUUID();
+        pendingAnnualGenerations.set(generationId, { metadata: safeAnnualGenerationMetadata(generated.internalMetadata), createdAt: Date.now() });
+        send(response, 200, { proposal: generated.proposal, generation_id: generationId }, origin);
+      } catch (error) { send(response, 422, { error: error?.message || "No pudimos generar una propuesta válida." }, origin); } return;
     }
     if (request.method === "POST" && url.pathname === "/api/annual-plans") {
-      const context = await annualPlanningContext(); const body = await readJson(request); if (!context || !body.proposal) { send(response, 400, { error: "Falta propuesta o aula activa." }, origin); return; }
-      const existing = (await db.query(`select id from annual_plans where classroom_id=$1 and school_year_id=$2 and status='draft' order by updated_at desc limit 1`, [context.id, context.school_year_id])).rows[0]; const id = existing?.id ?? randomUUID();
-      await db.query(`insert into annual_plans (id,classroom_id,school_year_id,curriculum_version_id,status,proposal,generation_metadata) values ($1,$2,$3,$4,'draft',$5::jsonb,'{}'::jsonb) on conflict (id) do update set proposal=excluded.proposal, updated_at=now()`, [id, context.id, context.school_year_id, context.curriculum_version_id, JSON.stringify(body.proposal)]);
-      send(response, 200, { id, status: "draft" }, origin); return;
+      const context = await annualPlanningContext(); const body = await readJson(request);
+      if (!context || !body.proposal) { send(response, 400, { error: "Falta propuesta o aula activa." }, origin); return; }
+      const existingId = typeof body.planId === "string" ? body.planId : null;
+      const pending = typeof body.generationId === "string" ? pendingAnnualGenerations.get(body.generationId) : null;
+      if (!existingId && !pending) { send(response, 422, { error: "La generación anual ya no está disponible. Genera nuevamente el borrador." }, origin); return; }
+      await db.exec("begin");
+      try {
+        if (existingId) {
+          const updated = await db.query(`update annual_plans set proposal=$1::jsonb, updated_at=now() where id=$2 and classroom_id=$3 and school_year_id=$4 and status='draft' returning id`, [JSON.stringify(body.proposal), existingId, context.id, context.school_year_id]);
+          if (!updated.rows[0]) throw new Error("Borrador anual no disponible.");
+          await db.exec("commit"); send(response, 200, { id: existingId, status: "draft" }, origin); return;
+        }
+        const latest = await db.query(`select coalesce(max(version), 0) as max_version from annual_plans where classroom_id=$1 and school_year_id=$2`, [context.id, context.school_year_id]);
+        const version = nextAnnualPlanVersion(Number(latest.rows[0].max_version)); const id = randomUUID();
+        await db.query(`insert into annual_plans (id,classroom_id,school_year_id,curriculum_version_id,version,status,proposal,generation_metadata) values ($1,$2,$3,$4,$5,'draft',$6::jsonb,$7::jsonb)`, [id, context.id, context.school_year_id, context.curriculum_version_id, version, JSON.stringify(body.proposal), JSON.stringify(pending?.metadata ?? {})]);
+        await db.exec("commit");
+        if (pending) pendingAnnualGenerations.delete(body.generationId);
+        send(response, 200, { id, version, status: "draft" }, origin);
+      } catch (error) { await db.exec("rollback"); send(response, 422, { error: error?.message || "No se pudo guardar el borrador." }, origin); }
+      return;
     }
     if (request.method === "POST" && url.pathname.startsWith("/api/annual-plans/") && url.pathname.endsWith("/confirm")) {
-      const id = url.pathname.split("/")[3]; const result = await db.query(`update annual_plans set status='active', teacher_confirmed_at=now(), updated_at=now() where id=$1 and classroom_id in (select id from classrooms where teacher_id=$2) and status='draft' returning id,status`, [id, teacherId]); if (!result.rows[0]) { send(response, 404, { error: "Plan anual no disponible para confirmar." }, origin); return; } send(response, 200, result.rows[0], origin); return;
+      const id = url.pathname.split("/")[3];
+      await db.exec("begin");
+      try {
+        const draft = await db.query(`select id,classroom_id,school_year_id from annual_plans where id=$1 and classroom_id in (select id from classrooms where teacher_id=$2) and status='draft'`, [id, teacherId]);
+        if (!draft.rows[0]) throw new Error("Plan anual no disponible para confirmar.");
+        await db.query(`update annual_plans set status='archived', updated_at=now() where classroom_id=$1 and school_year_id=$2 and status='active'`, [draft.rows[0].classroom_id, draft.rows[0].school_year_id]);
+        const result = await db.query(`update annual_plans set status='active', teacher_confirmed_at=now(), updated_at=now() where id=$1 and status='draft' returning id,status,version`, [id]);
+        await db.exec("commit"); send(response, 200, result.rows[0], origin);
+      } catch (error) { await db.exec("rollback"); send(response, 404, { error: error?.message || "Plan anual no disponible para confirmar." }, origin); }
+      return;
     }    if (request.method === "GET" && url.pathname === "/api/ai/activity/options") {
       send(response, 200, await activityGenerationOptions(), origin);
       return;

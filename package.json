@@ -35,7 +35,8 @@
     "test:ai-provider-factory-v4": "node --test src/lib/ai-provider-factory.test.mjs",
     "test:openai-activity-smoke": "node --test src/lib/openai-activity-smoke.test.mjs",
     "smoke:openai-activity": "node --env-file-if-exists=.env.local scripts/smoke-openai-activity.mjs",
-    "test:ai-activity-ui-v4": "node --test src/lib/ai-activity-ui-service.test.mjs src/lib/ai-activity-ui.test.mjs"
+    "test:ai-activity-ui-v4": "node --test src/lib/ai-activity-ui-service.test.mjs src/lib/ai-activity-ui.test.mjs",
+    "test:annual-plan-v4": "node --test src/lib/annual-plan-hardening.test.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

@@ -2,11 +2,13 @@
 
 ## ADR 028 Plan anual v4 como raíz de planificación
 
-**Decisión.** nnual_plan usa Sol/medium desde el router, guarda propuesta y metadata en nnual_plans, y solo cambia a activo por confirmación docente. Las experiencias propuestas permanecen en el payload; no crean learning_experiences.
+**Decisión.** `annual_plan` usa Sol/medium desde el router, guarda propuesta y metadata de auditoría reducida en `annual_plans`, y solo cambia a activo por confirmación docente. En local, el servidor retiene esa metadata tras un identificador opaco de generación hasta que se guarda el borrador; producción debe sustituir este handoff por auditoría durable y con control de acceso. Cada borrador nuevo usa `max(version)+1`; al confirmar se archiva el anterior activo dentro de la misma transacción. Las experiencias propuestas permanecen en el payload; no crean `learning_experiences`.
 
 ## ADR 027 Generación de activity desde Planificar
 
 **Decisión.** La pantalla existente Planificar consume un endpoint del backend local para generar únicamente `activity`. El backend obtiene el aula y edad activa, crea el input v4, resuelve el plan, construye el provider con `createAIProviderForPlan` y devuelve solo la propuesta ya validada. La interfaz precarga datos disponibles, permite editar, descartar o regenerar, y no recibe claves, bundle, prompts ni metadata técnica.
+
+**Compatibilidad curricular.** `annual_plan_competencies.competency_id` referencia UUIDs del catálogo heredado. No existe un mapping explícito y seguro desde los IDs semánticos v4, por lo que esa tabla queda sin poblar. La alineación futura mínima requiere una tabla de correspondencias versionada, revisada y con claves v4 antes de persistir competencias estructuradas.
 
 **Consecuencia.** Una generación no crea ni confirma una actividad, competencia, criterio, evidencia o evaluación. La operación local actual no tiene un endpoint aprobado para crear actividades; por ello “Revisar y guardar” deja explícito que la propuesta sigue sin persistir hasta diseñar esa operación sobre la base existente. La metadata queda en el límite del backend para una futura auditoría, sin exponerla a la docente.
 ## ADR 026 Smoke controlado para OpenAI activity
@@ -16,9 +18,11 @@
 **Consecuencia.** El equipo puede comprobar el camino completo con una llamada explícita y acotada, sin exponer claves, prompts, bundles completos, nombres, multimedia ni rutas privadas. Las pruebas automáticas inyectan factory y generador simulados, por lo que no consumen API ni generan costos.
 ## ADR 025 OpenAI aislado para generación v4 de actividades
 
-**Decisión.** `OpenAIProvider` es una implementación intercambiable de `AIProvider` para el workflow `activity`. Recibe únicamente un `AIContextBundle` inmutable, el schema `activity-v1` y el execution plan producido por `resolveAIExecutionPlan`. Usa la Responses API con Structured Outputs strict y toma la clave solo de `OPENAI_API_KEY`; el modelo y `reasoning_effort` se obtienen del plan central y cualquier discrepancia se rechaza.
+**Decisión.** `OpenAIProvider` es una implementación intercambiable de `AIProvider` para los workflows habilitados por el router. Recibe únicamente un `AIContextBundle` inmutable, el schema `activity-v1` y el execution plan producido por `resolveAIExecutionPlan`. Usa la Responses API con Structured Outputs strict y toma la clave solo de `OPENAI_API_KEY`; el modelo y `reasoning_effort` se obtienen del plan central y cualquier discrepancia se rechaza.
 
 **Consecuencia.** La respuesta conserva validación local, provenance y metadata de uso, sin enviar fotos, rutas privadas, multimedia ni input crudo. Errores de clave, autenticación, rate limit, timeout, respuesta incompleta, rechazo, JSON inválido o modelo inesperado son estados estructurados. Las pruebas usan un cliente simulado y no realizan llamadas de pago.
+
+**Estado.** Histórico: la misma arquitectura v4 también habilita `annual_plan` desde ADR 028.
 ## ADR 024 Política central de routing de modelos
 
 **Decisión.** `resolveAIExecutionPlan` decide de forma determinista el tier, provider, modelo y posibilidad de escalamiento antes de cualquier generación. Code resuelve tareas deterministas; TypeSafe queda reservado para decisiones estructuradas; Luna, Terra y Sol se asignan según complejidad. Ningún modelo ni provider puede escoger su propio routing.
@@ -29,8 +33,10 @@
 
 **Decisión.** La primera generación vertical de IA usa `generateAIWorkflowV4(input, options)`: prepara el bundle v4, entrega al provider inyectado una copia inmutable del `AIContextBundle` y valida una salida estructurada de actividad antes de devolverla. El provider no recibe el input crudo ni puede seleccionar conocimiento fuera del bundle.
 
-**Consecuencia.** La selección de proveedor/modelo queda desacoplada de la Knowledge Base y se podrá configurar externamente sin cambiar el constructor de contexto. Solo `activity` está habilitado; los otros workflows permanecen fuera de la capa generativa.
+**Consecuencia.** La selección de proveedor/modelo queda desacoplada de la Knowledge Base y se podrá configurar externamente sin cambiar el constructor de contexto. `activity` y `annual_plan` están habilitados; los otros 11 workflows permanecen fuera de la capa generativa.
 
+
+**Estado.** Histórico: ADR 028 extiende esta arquitectura a `annual_plan`; no describe ya el único workflow habilitado.
 ## ADR 022 Arquitectura vigente de IA: Knowledge Base v4
 
 **Decisión.** La arquitectura vigente de IA para Inicial 3–5 es `knowledge/cneb-initial-3-5/v4.0.0/` y su pipeline `loadKnowledgeBaseV4` → `retrieveKnowledgeV4` → `buildAIContext` → `prepareAIRequestV4`. El runtime usa conocimiento versionado y no lee PDFs, no crea `official-corpus` y no depende de Jev ni del Knowledge Pack v2.

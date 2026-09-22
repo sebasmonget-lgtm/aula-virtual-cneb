@@ -66,7 +66,8 @@ export type DiagnosticWorkspace = {
   observations: { id: string; student_id: string; competency_id: string; reference_id: string; status: string; note: string | null }[];
 };
 
-const apiUrl = process.env.NEXT_PUBLIC_LOCAL_DATABASE_URL ?? "http://127.0.0.1:8788";
+export const localDatabaseApiUrl = process.env.NEXT_PUBLIC_LOCAL_DATABASE_URL ?? "http://127.0.0.1:8788";
+const apiUrl = localDatabaseApiUrl;
 
 export async function loadLocalDashboard(signal?: AbortSignal): Promise<LocalDashboard> {
   const response = await fetch(`${apiUrl}/api/dashboard`, { signal, cache: "no-store" });

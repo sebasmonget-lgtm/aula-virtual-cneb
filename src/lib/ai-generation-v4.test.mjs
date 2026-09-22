@@ -47,6 +47,8 @@ test("A: genera una activity de 5 años con competencia confirmada", async () =>
   assert.equal(result.output.competency_status, "confirmed");
   assert.equal(result.output.competency_id, "COM_ORAL");
   assert.equal(result.validation.status, "valid");
+  assert.equal(result.validation.schema, "activity-v1");
+  assert.equal(provider.requests[0].workflow, "activity");
   assert.equal(result.metadata.workflow, "activity");
   assert.deepEqual(result.metadata.execution_plan.provider, "openai");
   assert.equal(result.metadata.execution_plan.model, "gpt-5.6-terra");

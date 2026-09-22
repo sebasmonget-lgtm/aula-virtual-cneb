@@ -121,10 +121,10 @@ function assertAnnualPlanOutput(output, bundle) {
   }
   return output;
 }
-function buildProviderRequest(bundle, executionPlan, outputSchema) {
+export function buildProviderRequest(workflow, bundle, executionPlan, outputSchema) {
   const immutableBundle = deepFreeze(structuredClone(bundle));
   return deepFreeze({
-    workflow: "activity",
+    workflow,
     ai_context_bundle: immutableBundle,
     output_schema: outputSchema,
     execution_plan: structuredClone(executionPlan),
@@ -149,7 +149,7 @@ export async function generateAIWorkflowV4(input, { provider, knowledgeBase, exe
   }
   const prepared = await prepareAIRequestV4(input, knowledgeBase);
   const outputSchema = input.workflow === "annual_plan" ? ANNUAL_PLAN_OUTPUT_SCHEMA : ACTIVITY_OUTPUT_SCHEMA;
-  const providerRequest = buildProviderRequest(prepared.aiContextBundle, plan, outputSchema);
+  const providerRequest = buildProviderRequest(input.workflow, prepared.aiContextBundle, plan, outputSchema);
   const confirmedCompetencyId = input.competency_ids?.length === 1 ? input.competency_ids[0] : null;
   const providerResponse = unwrapProviderResponse(await provider.generate(providerRequest));
   const output = input.workflow === "annual_plan" ? assertAnnualPlanOutput(providerResponse.output, prepared.aiContextBundle) : assertActivityOutput(providerResponse.output, prepared.aiContextBundle, confirmedCompetencyId);
@@ -165,7 +165,7 @@ export async function generateAIWorkflowV4(input, { provider, knowledgeBase, exe
       usage: providerResponse.providerMetadata?.usage ?? null,
     },
     provenance: prepared.aiContextBundle.provenance,
-    validation: { status: "valid", schema: ACTIVITY_OUTPUT_SCHEMA.id },
+    validation: { status: "valid", schema: outputSchema.id },
   };
 }
 
