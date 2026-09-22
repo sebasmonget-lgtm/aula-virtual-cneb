@@ -28,7 +28,7 @@ export function resolveDailyState({ now, scheduleEntries, attendanceRecorded, ca
   const pendingClosure = ordered
     .filter((entry) => instructionalBlocks.has(entry.block_type) && entry.status !== "completed" && entry.status !== "skipped" && currentMinute >= minutes(entry.end_time))
     .at(-1);
-  if (pendingClosure) {
+  if (!currentBlock && pendingClosure) {
     return {
       mode: "closure",
       currentBlock: pendingClosure,
@@ -42,7 +42,7 @@ export function resolveDailyState({ now, scheduleEntries, attendanceRecorded, ca
   }
   if (currentBlock) {
     const action = currentBlock.status === "active" && instructionalBlocks.has(currentBlock.block_type)
-      ? "record_contextual_evidence"
+      ? "continue_block"
       : currentBlock.status === "active" ? "view_block" : "start_block";
     return { mode: "in_progress", currentBlock, nextBlock, primaryAction: action, pendingItems: [] };
   }

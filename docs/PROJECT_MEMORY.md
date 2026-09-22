@@ -11,6 +11,7 @@ Proyecto nuevo iniciado el 20 de septiembre de 2026. Existe un shell responsive 
 - Navegación principal: Hoy, Planificar, Niños, Evaluar, Documentos y Biblioteca.
 - Hoy es el inicio docente: resuelve la jornada desde el horario local, destaca un único siguiente paso (asistencia, actividad, evidencia o cierre) y enlaza actividades o talleres sin duplicarlos.
 - Modo Jornada: asistencia rápida por estudiante, estado diario centralizado, inicio/cierre de bloques y extensión manual. Las evidencias permanecen opcionales y heredan el contexto de actividad/criterio.
+- Flujo de evidencia con marca observacional docente obligatoria por criterio para registros nuevos; la nota es opcional. Las actividades pueden exponer varios criterios planificados y la evidencia sigue siendo una acción secundaria durante la actividad.
 - Primer flujo vertical persistente: actividad actual → seleccionar estudiante → describir evidencia → guardar en PostgreSQL local → actualizar cobertura.
 - Migración inicial para Supabase con entidades de Fase 0 y Fase 1, más las relaciones mínimas necesarias para el flujo de evidencia.
 - Políticas RLS preparadas, sin aplicar a ninguna cuenta.
@@ -34,6 +35,7 @@ Proyecto nuevo iniciado el 20 de septiembre de 2026. Existe un shell responsive 
 3. Implementar síntesis editable/confirmable y su conexión condicionada con el plan anual.
 4. Crear proyectos nuevos de Supabase y hosting/staging; aplicar migraciones y comprobar RLS/Storage con dos usuarios de prueba.
 5. Completar importación en staging solo después de validar currículo, identidad y respaldos.
+6. Implementar perfiles pedagógicos de Niños, snapshots estructurados y estadísticas longitudinales antes de conectar IA o exportación Excel.
 
 ## Riesgos
 

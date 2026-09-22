@@ -23,6 +23,7 @@ test("respeta una actividad extendida manualmente", () => {
   const entries = blocks.map((block) => block.id === "activity" ? { ...block, status: "active", current_override: true } : block);
   const state = resolveDailyState({ now: "11:30", scheduleEntries: entries, attendanceRecorded: true, calendarException: null });
   assert.equal(state.currentBlock?.id, "activity");
+  assert.equal(state.primaryAction, "continue_block");
 });
 
 test("no sugiere actividades en un feriado", () => {

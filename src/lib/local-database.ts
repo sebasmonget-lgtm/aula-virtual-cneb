@@ -2,9 +2,13 @@ export type LocalStudent = { id: string; name: string };
 export type LocalEvidence = {
   id: string;
   student_id: string;
-  observation_text: string;
+  observation_text: string | null;
+  observation_status: ObservationStatus;
   observed_at: string;
 };
+
+export type ObservationStatus = "demonstrated" | "with_support" | "not_yet_demonstrated" | "insufficient_information";
+export type ActivityCriterion = { id: string; criterion_text: string; competency_id: string; competency_text: string; performance_id: string | null };
 
 export type LocalDashboard = {
   activity: {
@@ -13,9 +17,7 @@ export type LocalDashboard = {
     purpose: string;
     occurs_on: string;
     experience_title: string;
-    criterion_id: string;
-    criterion_text: string;
-    competency_text: string;
+    criteria: ActivityCriterion[];
   };
   students: LocalStudent[];
   metrics: { students_total: number; evidences_week: number; students_observed: number };
@@ -24,7 +26,7 @@ export type LocalDashboard = {
     attendance: { recorded: boolean; recorded_count: number };
     calendar_exception: { type: string; label: string; is_instructional: boolean } | null;
     journey: { mode: string; current_block_id: string | null; next_block_id: string | null; primary_action: string; pending_items: string[] };
-    blocks: { id: string; start_time: string; end_time: string; block_type: string; title: string; activity_id: string | null; purpose: string | null; experience_title: string | null; materials: string[]; steps: string[]; criterion_id: string | null; status: string; display_status: string; current_override: boolean; closure_type: string | null }[];
+    blocks: { id: string; start_time: string; end_time: string; block_type: string; title: string; activity_id: string | null; purpose: string | null; experience_title: string | null; materials: string[]; steps: string[]; criteria: ActivityCriterion[]; status: string; display_status: string; current_override: boolean; closure_type: string | null }[];
   };
   profile: {
     teacher_name: string; institution_name: string; section: string; age_label: string;
@@ -62,7 +64,8 @@ export async function createLocalEvidence(input: {
   studentId: string;
   activityId: string;
   criterionId: string;
-  observationText: string;
+  observationStatus: ObservationStatus;
+  observationText?: string;
 }) {
   const response = await fetch(`${apiUrl}/api/evidences`, {
     method: "POST",

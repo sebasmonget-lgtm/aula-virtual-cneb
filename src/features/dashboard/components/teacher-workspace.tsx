@@ -9,7 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader,
-  DialogTitle, DialogTrigger,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -18,7 +18,7 @@ import {
   SidebarProvider, SidebarTrigger,
 } from "@/components/ui/sidebar";
 import {
-  createLocalEvidence, loadLocalDashboard, saveLocalAttendance, updateLocalExecution, type LocalDashboard, type LocalStudent,
+  createLocalEvidence, loadLocalDashboard, saveLocalAttendance, updateLocalExecution, type ActivityCriterion, type LocalDashboard, type LocalStudent, type ObservationStatus,
 } from "@/src/lib/local-database";
 import { GuidedDiagnostic, InstitutionProfile } from "./profile-and-diagnostic";
 
@@ -42,8 +42,10 @@ export function TeacherWorkspace() {
   const [active, setActive] = useState("Hoy");
   const [evidenceOpen, setEvidenceOpen] = useState(false);
   const [attendanceOpen, setAttendanceOpen] = useState(false);
-  const [evidenceContext, setEvidenceContext] = useState<{ activityId: string; criterionId: string; title: string } | null>(null);
+  const [evidenceContext, setEvidenceContext] = useState<{ activityId: string; criteria: ActivityCriterion[]; title: string } | null>(null);
   const [studentId, setStudentId] = useState("3");
+  const [criterionId, setCriterionId] = useState("");
+  const [observationStatus, setObservationStatus] = useState<ObservationStatus | "">("");
   const [note, setNote] = useState("");
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState("");
@@ -59,14 +61,15 @@ export function TeacherWorkspace() {
       .then((data) => {
         setDashboard(data);
         setStudentId(data.students[2]?.id ?? data.students[0]?.id ?? "");
+        setCriterionId(data.activity?.criteria[0]?.id ?? "");
         setDatabaseState("connected");
       })
       .catch(() => setDatabaseState("offline"));
     return () => controller.abort();
   }, []);
 
-  async function saveEvidence() {
-    if (!note.trim()) return;
+  async function saveEvidence(andNext = false) {
+    if (!criterionId || !observationStatus) return;
     setSaved(true);
     setSaveError("");
     try {
@@ -74,11 +77,16 @@ export function TeacherWorkspace() {
       await createLocalEvidence({
         studentId,
         activityId: evidenceContext?.activityId ?? dashboard.activity.id,
-        criterionId: evidenceContext?.criterionId ?? dashboard.activity.criterion_id,
-        observationText: note,
+        criterionId,
+        observationStatus,
+        observationText: note || undefined,
       });
       setDashboard(await loadLocalDashboard());
-      window.setTimeout(() => {
+      if (andNext) {
+        setSaved(false);
+        setNote("");
+        setObservationStatus("");
+      } else window.setTimeout(() => {
         setEvidenceOpen(false);
         setSaved(false);
         setNote("");
@@ -101,6 +109,7 @@ export function TeacherWorkspace() {
       setEvidenceOpen(false);
       setSaved(false);
       setNote("");
+      setObservationStatus("");
     }
   }
 
@@ -114,8 +123,10 @@ export function TeacherWorkspace() {
   }
 
   function openEvidenceFor(block: LocalDashboard["today"]["blocks"][number]) {
-    if (!block.activity_id || !block.criterion_id) return;
-    setEvidenceContext({ activityId: block.activity_id, criterionId: block.criterion_id, title: block.title });
+    if (!block.activity_id || !block.criteria.length) return;
+    setEvidenceContext({ activityId: block.activity_id, criteria: block.criteria, title: block.title });
+    setCriterionId(block.criteria[0].id);
+    setObservationStatus("");
     setEvidenceOpen(true);
   }
 
@@ -191,12 +202,12 @@ export function TeacherWorkspace() {
                   <div className="shrink-0 rounded-xl bg-[#f0f4fb] px-4 py-3 text-center"><p className="text-2xl font-bold">45</p><p className="text-xs text-muted-foreground">minutos</p></div>
                 </div>
                 <div className="grid gap-3 border-y py-5 sm:grid-cols-2">
-                  <div><p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Competencia principal</p><p className="mt-1.5 font-semibold">{activity?.competency_text ?? "Indaga mediante métodos científicos"}</p></div>
-                  <div><p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Evidencia esperada</p><p className="mt-1.5 text-sm leading-relaxed">{activity?.criterion_text ?? "Explica con sus palabras qué cree que necesita una semilla."}</p></div>
+                  <div><p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Competencia principal</p><p className="mt-1.5 font-semibold">{activity?.criteria[0]?.competency_text ?? "Indaga mediante métodos científicos"}</p></div>
+                  <div><p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Evidencia esperada</p><p className="mt-1.5 text-sm leading-relaxed">{activity?.criteria[0]?.criterion_text ?? "Explica con sus palabras qué cree que necesita una semilla."}</p></div>
                 </div>
                 <div className="mt-5 flex flex-col gap-3 sm:flex-row">
                   <Button className="h-11 flex-1 rounded-xl"><BookOpen /> Abrir actividad <ChevronRight /></Button>
-                  <EvidenceDialog open={evidenceOpen} onOpenChange={closeEvidence} students={students} studentId={studentId} setStudentId={setStudentId} note={note} setNote={setNote} saved={saved} saveError={saveError} saveEvidence={saveEvidence} activityTitle={evidenceContext?.title ?? activity?.title ?? "Actividad"} databaseConnected={databaseState === "connected"} />
+                  <Button variant="outline" className="h-11 flex-1 rounded-xl border-[#87bdcb] text-[#126177]" onClick={() => { if (!activity?.id || !activity.criteria.length) return; setEvidenceContext({ activityId: activity.id, criteria: activity.criteria, title: activity.title }); setCriterionId(activity.criteria[0].id); setObservationStatus(""); setEvidenceOpen(true); }}><ClipboardCheck /> Registrar evidencia</Button>
                 </div>
               </div>
             </section>
@@ -229,6 +240,7 @@ export function TeacherWorkspace() {
         </nav>
       </SidebarInset>
       <AttendanceDialog open={attendanceOpen} onOpenChange={setAttendanceOpen} students={students} onSave={markAttendance} />
+      <EvidenceDialog open={evidenceOpen} onOpenChange={closeEvidence} students={students} studentId={studentId} setStudentId={setStudentId} criterionId={criterionId} setCriterionId={setCriterionId} criteria={evidenceContext?.criteria ?? activity?.criteria ?? []} observationStatus={observationStatus} setObservationStatus={setObservationStatus} note={note} setNote={setNote} saved={saved} saveError={saveError} saveEvidence={saveEvidence} activityTitle={evidenceContext?.title ?? activity?.title ?? "Actividad"} databaseConnected={databaseState === "connected"} />
     </SidebarProvider>
   );
 }
@@ -250,12 +262,12 @@ function TodayScreen({ dashboard, openEvidence, openAttendance, updateExecution 
   const isAttendance = journey?.primary_action === "attendance";
   const isClosure = journey?.primary_action === "close_block";
   const isReadyToClose = !isClosure && featured?.status === "active";
-  const primaryLabel = isAttendance ? "Marcar asistencia" : journey?.primary_action === "start_block" ? "Iniciar actividad" : featured?.block_type === "workshop" ? "Ver taller" : featured?.activity_id ? "Registrar evidencia" : "Ver bloque";
+  const primaryLabel = isAttendance ? "Marcar asistencia" : journey?.primary_action === "start_block" ? "Iniciar actividad" : journey?.primary_action === "continue_block" ? "Continuar actividad" : featured?.block_type === "workshop" ? "Ver taller" : featured?.activity_id ? "Registrar evidencia" : "Ver bloque";
 
   return <div className="mx-auto max-w-4xl space-y-5">
     <div className="rounded-3xl bg-[radial-gradient(circle_at_85%_30%,#d9f6f5,transparent_32%),linear-gradient(135deg,#ffffff,#edf9ff)] px-5 py-6 md:px-7"><div className="flex items-center justify-between gap-4"><div><p className="text-sm font-semibold text-[#087d96]">Mi día de hoy</p><h1 className="mt-1 text-3xl font-extrabold tracking-tight">{today?.date ?? "Cargando día..."}</h1></div><span className="rounded-2xl bg-white/80 px-3 py-2 text-sm font-semibold text-[#126177]">{dashboard?.profile.age_label} · {dashboard?.profile.section}</span></div></div>
     {isNoClasses ? <section className="diagnostic-panel bg-[#f7f4ff] p-6"><CalendarDays className="mb-3 text-[#7554aa]" /><h2 className="text-xl font-bold">{today?.calendar_exception?.label ?? "No hay clases hoy"}</h2><p className="mt-2 text-sm text-[#5b6680]">La jornada queda libre de actividades y evidencias.</p></section> : !today?.blocks.length ? <section className="diagnostic-panel p-6"><Clock3 className="mb-3 text-[#087d96]" /><h2 className="text-xl font-bold">Configura el horario</h2><p className="mt-2 text-sm text-muted-foreground">Mientras tanto puedes abrir tu planificación manualmente.</p><Button className="mt-4 h-12">Configurar horario</Button></section> : <>
-      {featured && <section className="diagnostic-panel overflow-hidden border-[#c5edf0] bg-[linear-gradient(135deg,#ffffff,#e9fbfb)] p-5 md:p-7"><div className="flex items-center justify-between gap-3"><span className={`rounded-full px-3 py-1 text-xs font-bold ${current ? "bg-[#087d96] text-white" : "bg-[#fff0c7] text-[#926329]"}`}>{isClosure ? "CIERRE" : current ? "AHORA" : "PRÓXIMO"}</span><span className="text-sm font-semibold text-[#47617f]">{featured.start_time.slice(0,5)} – {featured.end_time.slice(0,5)}</span></div><p className="mt-4 text-sm text-[#37658d]">{featured.experience_title ?? (featured.block_type === "workshop" ? "Taller programado" : "Jornada de aula")}</p><h2 className="mt-1 text-2xl font-extrabold">{featured.title}</h2>{featured.purpose && <p className="mt-2 text-sm leading-relaxed text-[#526b87]">{featured.purpose}</p>}{featured.materials.length > 0 && <div className="mt-5 flex flex-wrap gap-2">{featured.materials.map((material) => <span key={material} className="rounded-full bg-white px-3 py-2 text-sm font-medium text-[#315a78] shadow-sm">{material}</span>)}</div>}{featured.steps.length > 0 && <ol className="mt-5 space-y-2 rounded-2xl bg-white/75 p-4 text-sm text-[#315a78]">{featured.steps.slice(0, 3).map((step, index) => <li key={step} className="flex gap-3"><span className="font-bold text-[#087d96]">{index + 1}</span>{step}</li>)}</ol>}<div className="mt-5 grid gap-3 sm:grid-cols-2">{isAttendance ? <Button className="h-12" onClick={openAttendance}><Users /> {primaryLabel}</Button> : journey?.primary_action === "start_block" ? <Button className="h-12" onClick={() => updateExecution({ scheduleEntryId: featured.id, action: "start" })}><Play /> {primaryLabel}</Button> : isClosure ? <Button className="h-12" onClick={() => setClosing(true)}><CheckCircle2 /> ¿Cómo salió?</Button> : featured.activity_id && featured.criterion_id ? <Button className="h-12" onClick={() => openEvidence(featured)}><Camera /> {primaryLabel}</Button> : <Button className="h-12" variant="outline">Ver bloque</Button>}{isReadyToClose && <Button variant="outline" className="h-12" onClick={() => setClosing(true)}><CheckCircle2 /> ¿Cómo salió?</Button>}</div>{(current?.current_override || isClosure) && <Button variant="ghost" className="mt-3 h-10 text-[#126177]" onClick={() => updateExecution({ scheduleEntryId: featured.id, action: "keep_current" })}>Mantener como actual</Button>}</section>}
+      {featured && <section className="diagnostic-panel overflow-hidden border-[#c5edf0] bg-[linear-gradient(135deg,#ffffff,#e9fbfb)] p-5 md:p-7"><div className="flex items-center justify-between gap-3"><span className={`rounded-full px-3 py-1 text-xs font-bold ${current ? "bg-[#087d96] text-white" : "bg-[#fff0c7] text-[#926329]"}`}>{isClosure ? "CIERRE" : current ? "AHORA" : "PRÓXIMO"}</span><span className="text-sm font-semibold text-[#47617f]">{featured.start_time.slice(0,5)} – {featured.end_time.slice(0,5)}</span></div><p className="mt-4 text-sm text-[#37658d]">{featured.experience_title ?? (featured.block_type === "workshop" ? "Taller programado" : "Jornada de aula")}</p><h2 className="mt-1 text-2xl font-extrabold">{featured.title}</h2>{featured.purpose && <p className="mt-2 text-sm leading-relaxed text-[#526b87]">{featured.purpose}</p>}{featured.materials.length > 0 && <div className="mt-5 flex flex-wrap gap-2">{featured.materials.map((material) => <span key={material} className="rounded-full bg-white px-3 py-2 text-sm font-medium text-[#315a78] shadow-sm">{material}</span>)}</div>}{featured.steps.length > 0 && <ol className="mt-5 space-y-2 rounded-2xl bg-white/75 p-4 text-sm text-[#315a78]">{featured.steps.slice(0, 3).map((step, index) => <li key={step} className="flex gap-3"><span className="font-bold text-[#087d96]">{index + 1}</span>{step}</li>)}</ol>}<div className="mt-5 grid gap-3 sm:grid-cols-2">{isAttendance ? <Button className="h-12" onClick={openAttendance}><Users /> {primaryLabel}</Button> : journey?.primary_action === "start_block" ? <Button className="h-12" onClick={() => updateExecution({ scheduleEntryId: featured.id, action: "start" })}><Play /> {primaryLabel}</Button> : journey?.primary_action === "continue_block" ? <Button className="h-12" onClick={() => updateExecution({ scheduleEntryId: featured.id, action: "keep_current" })}><Play /> {primaryLabel}</Button> : isClosure ? <Button className="h-12" onClick={() => setClosing(true)}><CheckCircle2 /> ¿Cómo salió?</Button> : featured.activity_id && featured.criteria.length ? <Button className="h-12" onClick={() => openEvidence(featured)}><Camera /> {primaryLabel}</Button> : <Button className="h-12" variant="outline">Ver bloque</Button>}{isReadyToClose && <Button variant="outline" className="h-12" onClick={() => setClosing(true)}><CheckCircle2 /> ¿Cómo salió?</Button>}</div>{(current?.current_override || isClosure) && <Button variant="ghost" className="mt-3 h-10 text-[#126177]" onClick={() => updateExecution({ scheduleEntryId: featured.id, action: "keep_current" })}>Mantener como actual</Button>}</section>}
       <section className="diagnostic-panel p-4 md:p-5"><div className="flex items-center justify-between"><h2 className="text-lg font-extrabold">Mi jornada</h2><Clock3 className="size-5 text-[#087d96]" /></div><div className="mt-3 space-y-2">{today.blocks.map((block) => <div key={block.id} className={`flex items-center gap-3 rounded-2xl border px-3 py-3 ${block.id === featured?.id ? "border-[#bce9ee] bg-[#f0fbfc]" : "border-[#edf1f7] bg-white"}`}><span className="w-12 text-sm font-bold text-[#315575]">{block.start_time.slice(0,5)}</span><span className={`size-2.5 rounded-full ${block.display_status === "active" ? "bg-[#087d96]" : block.display_status === "ready_to_close" || block.status === "completed" ? "bg-[#b8c4d4]" : "bg-[#e6ae44]"}`} /><span className="min-w-0 flex-1 truncate font-semibold">{block.title}</span>{block.block_type === "workshop" && <span className="rounded-full bg-[#eee4ff] px-2 py-1 text-xs font-semibold text-[#7554aa]">Taller</span>}</div>)}</div></section>
       <section className="grid gap-3 sm:grid-cols-2"><div className="rounded-2xl bg-[#fff8ef] p-5"><p className="text-sm font-bold">Asistencia</p><p className="mt-2 text-sm text-[#55657c]">{today.attendance.recorded ? "Registrada para hoy" : "Pendiente de registrar"}</p></div><div className="rounded-2xl bg-[#edf8f3] p-5"><p className="text-sm font-bold">Aula</p><p className="mt-2 text-sm text-[#35675f]">{dashboard?.metrics.students_observed ?? 0}/{dashboard?.metrics.students_total ?? 0} observados</p></div></section>
     </>}
@@ -274,22 +286,24 @@ function Metric({ label, value, detail, warning = false }: { label: string; valu
   return <article className="rounded-2xl border bg-white p-5"><p className="text-sm font-medium text-muted-foreground">{label}</p><div className="mt-3 flex items-end justify-between"><p className="text-3xl font-bold">{value}</p><span className={`text-xs font-semibold ${warning ? "text-[#b96b1e]" : "text-[#087d96]"}`}>{detail}</span></div></article>;
 }
 
-function EvidenceDialog({ open, onOpenChange, students, studentId, setStudentId, note, setNote, saved, saveError, saveEvidence, activityTitle, databaseConnected }: {
+function EvidenceDialog({ open, onOpenChange, students, studentId, setStudentId, criterionId, setCriterionId, criteria, observationStatus, setObservationStatus, note, setNote, saved, saveError, saveEvidence, activityTitle, databaseConnected }: {
   open: boolean; onOpenChange: (open: boolean) => void; students: LocalStudent[]; studentId: string; setStudentId: (id: string) => void;
-  note: string; setNote: (value: string) => void; saved: boolean; saveError: string; saveEvidence: () => void;
+  criterionId: string; setCriterionId: (id: string) => void; criteria: ActivityCriterion[]; observationStatus: ObservationStatus | ""; setObservationStatus: (value: ObservationStatus) => void;
+  note: string; setNote: (value: string) => void; saved: boolean; saveError: string; saveEvidence: (andNext?: boolean) => void;
   activityTitle: string; databaseConnected: boolean;
 }) {
   return <Dialog open={open} onOpenChange={onOpenChange}>
-    <DialogTrigger asChild><Button variant="outline" className="h-11 flex-1 rounded-xl border-[#87bdcb] text-[#126177]"><ClipboardCheck /> Registrar evidencia</Button></DialogTrigger>
     <DialogContent className="rounded-2xl p-0 sm:max-w-xl">
       <DialogHeader className="border-b px-6 py-5"><DialogTitle>Registrar evidencia</DialogTitle><DialogDescription>Actividad: {activityTitle}</DialogDescription></DialogHeader>
       <div className="space-y-5 px-6 py-1">
         {!databaseConnected && <p className="rounded-xl bg-[#fff1d6] px-4 py-3 text-sm text-[#784a17]">La base local no está iniciada. Puedes revisar el formulario, pero debes ejecutar <strong>npm run db:local</strong> para guardar.</p>}
         <fieldset><legend className="mb-2 text-sm font-semibold">¿A quién observaste?</legend><div className="flex flex-wrap gap-2">{students.map((student) => <button key={student.id} type="button" onClick={() => setStudentId(student.id)} className={`rounded-full border px-3 py-2 text-sm font-medium transition ${studentId === student.id ? "border-[#087d96] bg-[#e8f6fb] text-[#126177]" : "bg-white hover:bg-muted"}`}>{studentId === student.id && <Check className="mr-1 inline size-3.5" />}{student.name}</button>)}</div></fieldset>
-        <div><label htmlFor="evidence-note" className="mb-2 block text-sm font-semibold">¿Qué hizo o dijo?</label><Textarea id="evidence-note" value={note} onChange={(event) => setNote(event.target.value)} placeholder="Ej.: Camila comparó dos macetas y dijo que la que estaba cerca de la ventana creció más..." className="min-h-28 resize-none" /><p className="mt-2 text-xs text-muted-foreground">Describe solo lo que observaste. Podrás interpretarlo después al evaluar.</p></div>
+        {criteria.length > 1 && <fieldset><legend className="mb-2 text-sm font-semibold">¿Qué criterio observaste?</legend><div className="space-y-2">{criteria.map((criterion) => <button key={criterion.id} type="button" onClick={() => setCriterionId(criterion.id)} className={`w-full rounded-xl border p-3 text-left text-sm ${criterionId === criterion.id ? "border-[#087d96] bg-[#e8f6fb]" : "bg-white"}`}><span className="font-semibold">{criterion.criterion_text}</span><span className="mt-1 block text-xs text-[#526b87]">{criterion.competency_text}</span></button>)}</div></fieldset>}
+        <fieldset><legend className="mb-2 text-sm font-semibold">¿Cómo mostró este criterio?</legend><div className="grid gap-2 sm:grid-cols-2">{([['demonstrated','Lo demostró'],['with_support','Con apoyo'],['not_yet_demonstrated','Aún no'],['insufficient_information','No pude determinarlo']] as const).map(([value,label]) => <button key={value} type="button" onClick={() => setObservationStatus(value)} className={`min-h-11 rounded-xl border px-3 text-left text-sm font-semibold ${observationStatus === value ? "border-[#087d96] bg-[#087d96] text-white" : "bg-white text-[#315a78]"}`}>{label}</button>)}</div><p className="mt-2 text-xs text-muted-foreground">Es una marca del criterio observado, no una calificación final.</p></fieldset>
+        <div><label htmlFor="evidence-note" className="mb-2 block text-sm font-semibold">Nota breve <span className="font-normal text-muted-foreground">(opcional)</span></label><Textarea id="evidence-note" value={note} onChange={(event) => setNote(event.target.value)} placeholder="Ej.: Camila comparó dos macetas y dijo que la que estaba cerca de la ventana creció más..." className="min-h-24 resize-none" /></div>
         {saveError && <p role="alert" className="text-sm font-medium text-destructive">{saveError}</p>}
       </div>
-      <DialogFooter className="border-t px-6 py-4"><Button variant="ghost" onClick={() => onOpenChange(false)}>Cancelar</Button><Button disabled={!note.trim() || saved || !studentId} onClick={saveEvidence}>{saved ? <><Check /> Evidencia guardada</> : "Guardar evidencia"}</Button></DialogFooter>
+      <DialogFooter className="border-t px-6 py-4"><Button variant="ghost" onClick={() => onOpenChange(false)}>Cancelar</Button><Button variant="outline" disabled={!criterionId || !observationStatus || saved || !studentId} onClick={() => saveEvidence(true)}>Guardar y siguiente</Button><Button disabled={!criterionId || !observationStatus || saved || !studentId} onClick={() => saveEvidence()}>{saved ? <><Check /> Evidencia guardada</> : "Guardar evidencia"}</Button></DialogFooter>
     </DialogContent>
   </Dialog>;
 }

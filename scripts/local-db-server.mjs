@@ -101,13 +101,15 @@ async function readJson(request) {
 async function dashboard() {
   const activityResult = await db.query(`
     select a.id, a.title, a.purpose, a.occurs_on, e.title as experience_title,
-           c.id as criterion_id, c.criterion_text,
-           co.official_text as competency_text
+           coalesce(jsonb_agg(jsonb_build_object('id', c.id, 'criterion_text', c.criterion_text,
+             'competency_id', c.competency_id, 'competency_text', co.official_text,
+             'performance_id', c.performance_id) order by c.display_order) filter (where c.id is not null), '[]'::jsonb) as criteria
       from activities a
       join learning_experiences e on e.id = a.experience_id
-      join activity_criteria c on c.activity_id = a.id
-      join competencies co on co.id = c.competency_id
-     order by a.occurs_on desc, c.display_order asc
+      left join activity_criteria c on c.activity_id = a.id
+      left join competencies co on co.id = c.competency_id
+     group by a.id, e.title
+     order by a.occurs_on desc
      limit 1
   `);
   const studentsResult = await db.query(`
@@ -152,7 +154,8 @@ async function dashboard() {
   `, [classroomId, today]);
   const todayBlocks = await db.query(`
     select se.id, se.start_time::text, se.end_time::text, se.block_type, coalesce(se.title, a.title) as title,
-           se.activity_id, a.purpose, le.title as experience_title, ac.id as criterion_id,
+           se.activity_id, a.purpose, le.title as experience_title,
+           coalesce(criteria.criteria, '[]'::jsonb) as criteria,
            coalesce(a.preparation->'materials', '[]'::jsonb) as materials, coalesce(a.preparation->'steps', '[]'::jsonb) as steps,
            coalesce(del.status, 'planned') as status, coalesce(del.current_override, false) as current_override,
            del.closure_type, del.teacher_closure_note
@@ -160,12 +163,18 @@ async function dashboard() {
       join classrooms cl on cl.id = se.classroom_id
       left join activities a on a.id = se.activity_id
       left join learning_experiences le on le.id = a.experience_id
-      left join lateral (select id from activity_criteria where activity_id = a.id order by display_order limit 1) ac on true
+      left join lateral (
+        select jsonb_agg(jsonb_build_object('id', ac.id, 'criterion_text', ac.criterion_text,
+          'competency_id', ac.competency_id, 'competency_text', co.official_text,
+          'performance_id', ac.performance_id) order by ac.display_order) as criteria
+        from activity_criteria ac join competencies co on co.id = ac.competency_id
+        where ac.activity_id = a.id
+      ) criteria on true
       left join daily_execution_logs del on del.schedule_entry_id = se.id and del.execution_date = $2::date
      where cl.teacher_id = $1 and (se.scheduled_on = $2::date or (se.scheduled_on is null and se.weekday = extract(dow from $2::date)))
      order by se.start_time, se.sort_order
   `, [teacherId, today]);
-  const rawBlocks = todayBlocks.rows.map((block) => ({ ...block, materials: block.materials ?? [], steps: block.steps ?? [] }));
+  const rawBlocks = todayBlocks.rows.map((block) => ({ ...block, materials: block.materials ?? [], steps: block.steps ?? [], criteria: block.criteria ?? [] }));
   const attendanceRecorded = Number(attendanceResult.rows[0]?.recorded_count ?? 0) > 0;
   const calendarException = exceptionResult.rows[0] ?? null;
   const journey = resolveDailyState({ now, scheduleEntries: rawBlocks, attendanceRecorded, calendarException });
@@ -420,8 +429,9 @@ const server = createServer(async (request, response) => {
     if (request.method === "POST" && url.pathname === "/api/evidences") {
       const body = await readJson(request);
       const observation = typeof body.observationText === "string" ? body.observationText.trim() : "";
-      if (!body.studentId || !body.activityId || !body.criterionId || !observation) {
-        send(response, 400, { error: "Faltan estudiante, actividad, criterio u observación." }, origin);
+      const observationStatuses = new Set(["demonstrated", "with_support", "not_yet_demonstrated", "insufficient_information"]);
+      if (!body.studentId || !body.activityId || !body.criterionId || !observationStatuses.has(body.observationStatus)) {
+        send(response, 400, { error: "Selecciona estudiante, actividad, criterio y marca observacional." }, origin);
         return;
       }
       if (observation.length > 4000) {
@@ -444,10 +454,10 @@ const server = createServer(async (request, response) => {
       const result = await db.query(`
         insert into evidences (
           id, student_id, activity_id, criterion_id, type,
-          observation_text, source, created_by
-        ) values ($1, $2, $3, $4, 'observation', $5, 'teacher', $6)
-        returning id, student_id, observation_text, observed_at
-      `, [randomUUID(), body.studentId, body.activityId, body.criterionId, observation, teacherId]);
+          observation_text, observation_status, source, created_by
+        ) values ($1, $2, $3, $4, 'observation', $5, $6, 'teacher', $7)
+        returning id, student_id, observation_text, observation_status, observed_at
+      `, [randomUUID(), body.studentId, body.activityId, body.criterionId, observation || null, body.observationStatus, teacherId]);
       send(response, 201, { evidence: result.rows[0] }, origin);
       return;
     }
