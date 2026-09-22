@@ -85,10 +85,7 @@ function shortlistCards(knowledgeBase, retrieval, age, applicability) {
   const cardById = new Map(knowledgeBase.competencyCards.map((card) => [card.id, card]));
   const retrievedIds = uniqueStrings(retrieval.semanticUnits.map((unit) => unit.competency_id));
   const shortlisted = retrievedIds.map((id) => cardById.get(id)).filter((card) => card && cardIsApplicable(card, applicability));
-  const remaining = knowledgeBase.competencyCards
-    .filter((card) => !retrievedIds.includes(card.id) && cardIsApplicable(card, applicability))
-    .sort((left, right) => left.id.localeCompare(right.id));
-  return allCardsComplete([...shortlisted, ...remaining], age, true).slice(0, SHORTLIST_SIZE);
+  return allCardsComplete(shortlisted, age, true).slice(0, SHORTLIST_SIZE);
 }
 
 function relevantPedagogyModules(knowledgeBase, workflowRequirements) {
@@ -117,7 +114,8 @@ function buildConstraints(knowledgeBase, workflowRequirements, rules) {
 function hasValue(value) {
   if (value == null) return false;
   if (typeof value === "string") return value.trim().length > 0;
-  if (Array.isArray(value)) return value.length > 0;
+  if (Array.isArray(value)) return value.some(hasValue);
+  if (typeof value === "object") return Object.values(value).some(hasValue);
   return true;
 }
 
@@ -148,6 +146,19 @@ export function resolveRequiredUserContext(input, requiredFields) {
   for (const field of requiredFields) values[field] ??= firstStructuredValue(input, field);
   const missingFields = requiredFields.filter((field) => !hasValue(values[field]));
   return { values, missingFields };
+}
+
+function workflowInputSubset(input, workflowRequirements) {
+  const fields = uniqueStrings([...workflowRequirements.required_user_context, ...workflowRequirements.preferred_user_context]);
+  const { values } = resolveRequiredUserContext(input, fields);
+  const representedElsewhere = new Set([
+    "age", "classroom_or_student_scope", "classroom_context", "student_context", "competency_id",
+    "calendar", "language_context", "student_id", "criterion_id", "observed_status", "evidence_history",
+    "multiple_evidence_records", "teacher_confirmed_findings",
+  ]);
+  return Object.fromEntries(fields
+    .filter((field) => !representedElsewhere.has(field) && hasValue(values[field]))
+    .map((field) => [field, values[field]]));
 }
 
 function workflowUses(workflowRequirements, fragment) {
@@ -196,6 +207,27 @@ function workflowNeedsEvidence(workflowRequirements) {
     || workflowUses(workflowRequirements, "criterion")
     || workflowUses(workflowRequirements, "observed_status")
     || workflowRequirements.required_domains.includes("evidence_and_criteria");
+}
+
+function studentSubset(input, workflowRequirements) {
+  if (!workflowNeedsStudent(workflowRequirements)) return null;
+  const student = pickKnownFields(input.student_context, STUDENT_FIELDS) ?? {};
+  const { values } = resolveRequiredUserContext(input, [...workflowRequirements.required_user_context, ...workflowRequirements.preferred_user_context]);
+  const aliases = { student_id: "id", evidence_history: "evidence_history", teacher_confirmed_findings: "teacher_confirmed_findings" };
+  for (const [field, target] of Object.entries(aliases)) {
+    if (hasValue(values[field])) student[target] = values[field];
+  }
+  return Object.keys(student).length ? student : null;
+}
+
+function evidenceSubset(input, workflowRequirements) {
+  if (!workflowNeedsEvidence(workflowRequirements)) return null;
+  const evidence = pickKnownFields(input.evidence, EVIDENCE_FIELDS) ?? {};
+  const { values } = resolveRequiredUserContext(input, [...workflowRequirements.required_user_context, ...workflowRequirements.preferred_user_context]);
+  for (const field of ["criterion_id", "observed_status", "multiple_evidence_records"]) {
+    if (hasValue(values[field])) evidence[field] = values[field];
+  }
+  return Object.keys(evidence).length ? evidence : null;
 }
 
 function validateInput(input, knowledgeBase) {
@@ -252,8 +284,9 @@ export async function buildAIContext(input, knowledgeBase) {
     context: {
       teacher_request: input.teacher_request,
       classroom: classroomSubset(input, workflowRequirements, retrieval),
-      student: workflowNeedsStudent(workflowRequirements) ? pickKnownFields(input.student_context, STUDENT_FIELDS) : null,
-      evidence: workflowNeedsEvidence(workflowRequirements) ? pickKnownFields(input.evidence, EVIDENCE_FIELDS) : null,
+      student: studentSubset(input, workflowRequirements),
+      evidence: evidenceSubset(input, workflowRequirements),
+      workflow_inputs: workflowInputSubset(input, workflowRequirements),
     },
     curriculum: {
       competency_cards: competencyCards,

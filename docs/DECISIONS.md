@@ -1,5 +1,11 @@
 # Decisiones de arquitectura
 
+## ADR 021 Preservación explícita de entradas de workflow
+
+**Decisión.** El bundle v4 conserva los campos presentes requeridos o preferidos por el workflow en `context.workflow_inputs`, además de los subconjuntos de aula, estudiante y evidencia ya definidos. Las tarjetas sin competencia confirmada provienen únicamente de unidades semánticas recuperadas; no se completan por orden alfabético.
+
+**Consecuencia.** Un futuro modelo recibirá el propósito, detonante, situación, material o bloque horario como dato estructurado y no deberá deducirlos de la solicitud libre. Contextos vacíos no satisfacen requisitos obligatorios.
+
 ## ADR 020 Contexto obligatorio y aplicabilidad antes de IA
 
 **Decisión.** Un bundle solo se construye cuando el contexto obligatorio declarado por su workflow está presente en campos estructurados. Las tarjetas candidatas respetan las condiciones de L2 y Religión, y los atajos prohibidos forman parte de las restricciones duras.

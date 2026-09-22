@@ -38,7 +38,7 @@ test("B: activity de 4 años sin competencia confirmada no rellena L2 ni Religi�
   const knowledgeBase = await loadKnowledgeBaseV4();
   const bundle = await buildAIContext({ workflow: "activity", age: 4, teacher_request: "Proponer una actividad de exploración.", activity_purpose: "Explorar materiales y compartir hallazgos." }, knowledgeBase);
   const ids = bundle.curriculum.competency_cards.map((card) => card.id);
-  assert.ok(ids.length > 0 && ids.length <= 3);
+  assert.ok(ids.length <= 3);
   assert.ok(!ids.includes("CAST_L2_ORAL") && !ids.includes("PS_RELIGION"));
   assert.equal(Object.hasOwn(bundle.curriculum, "primary_competency_id"), false);
   assertBoundedAndTraceable(bundle, knowledgeBase.workflows.activity);
@@ -106,4 +106,58 @@ test("aplicabilidad especial confirmada exige contexto válido", async () => {
   const knowledgeBase = await loadKnowledgeBaseV4();
   await assert.rejects(() => buildAIContext({ ...activityFive, competency_ids: ["CAST_L2_ORAL"] }, knowledgeBase), /L2 no es aplicable/);
   await assert.rejects(() => buildAIContext({ ...activityFive, competency_ids: ["PS_RELIGION"] }, knowledgeBase), /Religión no es aplicable/);
+});
+
+const workflowCases = [
+  ["diagnostic", { age: 3, classroom_or_student_scope: "aula-diagnóstico" }, "classroom_or_student_scope", "aula-diagnóstico"],
+  ["annual_plan", { age: 4, calendar_context: { term: "2026-I" }, classroom_context: { id: "aula-anual" } }, "calendar_context", "2026-I"],
+  ["project", { age: 4, classroom_context: { id: "aula-proyecto" }, project_trigger_or_interest: "¿Por qué caen las hojas?" }, "classroom_context", "¿Por qué caen las hojas?"],
+  ["unit", { age: 4, classroom_context: { id: "aula-unidad" }, learning_need_or_context: "ordenar colecciones" }, "classroom_context", "ordenar colecciones"],
+  ["workshop", { age: 4, workshop_purpose: "explorar arcilla", frequency_or_time: "viernes 30 minutos" }, "workshop_purpose", "explorar arcilla"],
+  ["activity", { age: 5, activity_purpose: "comparar sonidos" }, "activity_purpose", "comparar sonidos"],
+  ["criterion_and_evidence", { age: 5, competency_ids: ["COM_ORAL"], learning_situation: "Conversan sobre una visita." }, "competency_ids", "Conversan sobre una visita."],
+  ["evidence_capture", { age: 5, student_id: "student-capture", criterion_id: "criterion-capture", observed_status: "demonstrated" }, "student_id", "student-capture"],
+  ["assessment", { age: 5, student_id: "student-assessment", competency_ids: ["COM_ORAL"], evidence_history: ["record-1"] }, "student_id", "record-1"],
+  ["descriptive_conclusion", { age: 5, student_id: "student-conclusion", competency_ids: ["COM_ORAL"], multiple_evidence_records: ["record-1", "record-2"] }, "student_id", "record-2"],
+  ["family_report", { age: 5, student_context: { id: "student-family" }, teacher_confirmed_findings: "Avanza al conversar con pares." }, "student_context", "Avanza al conversar con pares."],
+  ["material_generation", { age: 5, activity_purpose: "explorar semillas", requested_material_type: "tarjetas de clasificación" }, "activity_purpose", "tarjetas de clasificación"],
+  ["today_mode", { age: 5, current_schedule_block: "actividad de exploración", active_plan: "plan semanal 1" }, "current_schedule_block", "actividad de exploración"],
+];
+
+test("contrato mínimo y determinista de los 13 workflows", async () => {
+  const knowledgeBase = await loadKnowledgeBaseV4();
+  for (const [workflow, values, missingField, expectedValue] of workflowCases) {
+    const input = { workflow, teacher_request: `Solicitud de ${workflow}.`, ...values, unrelated: "never-send", classroom_context: values.classroom_context ? { ...values.classroom_context, unrelated: "never-send" } : values.classroom_context };
+    const first = await buildAIContext(input, knowledgeBase);
+    const second = await buildAIContext(input, knowledgeBase);
+    assert.deepEqual(first, second, `${workflow} debe ser determinista`);
+    assert.ok(JSON.stringify(first).includes(expectedValue), `${workflow} debe conservar su contexto obligatorio relevante`);
+    assert.equal(JSON.stringify(first.context).includes("never-send"), false, `${workflow} no debe enviar contexto irrelevante`);
+
+    const incomplete = { ...input };
+    delete incomplete[missingField];
+    await assert.rejects(() => buildAIContext(incomplete, knowledgeBase), `${workflow} debe rechazar un required_user_context faltante`);
+  }
+});
+
+test("preserva inputs de workflow sin depender de teacher_request", async () => {
+  const knowledgeBase = await loadKnowledgeBaseV4();
+  const project = await buildAIContext({ workflow: "project", age: 5, teacher_request: "Crear propuesta.", classroom_context: { id: "project-class" }, project_trigger_or_interest: "Una pregunta sobre sombras." }, knowledgeBase);
+  const activity = await buildAIContext({ workflow: "activity", age: 5, teacher_request: "Crear propuesta.", activity_purpose: "Explorar sombras." }, knowledgeBase);
+  const criterion = await buildAIContext({ workflow: "criterion_and_evidence", age: 5, teacher_request: "Crear propuesta.", competency_ids: ["CYT_INDAGA"], learning_situation: "Prueban luz y sombra." }, knowledgeBase);
+  const materials = await buildAIContext({ workflow: "material_generation", age: 5, teacher_request: "Crear propuesta.", activity_purpose: "Explorar sombras.", requested_material_type: "linternas y tarjetas" }, knowledgeBase);
+  const today = await buildAIContext({ workflow: "today_mode", age: 5, teacher_request: "Crear propuesta.", current_schedule_block: "exploración", active_plan: "plan de lunes" }, knowledgeBase);
+  assert.equal(project.context.workflow_inputs.project_trigger_or_interest, "Una pregunta sobre sombras.");
+  assert.equal(activity.context.workflow_inputs.activity_purpose, "Explorar sombras.");
+  assert.equal(criterion.context.workflow_inputs.learning_situation, "Prueban luz y sombra.");
+  assert.equal(materials.context.workflow_inputs.requested_material_type, "linternas y tarjetas");
+  assert.deepEqual(today.context.workflow_inputs, { current_schedule_block: "exploración", active_plan: "plan de lunes" });
+});
+
+test("objetos vacíos no satisfacen contexto obligatorio y el shortlist no se rellena", async () => {
+  const knowledgeBase = await loadKnowledgeBaseV4();
+  await assert.rejects(() => buildAIContext({ workflow: "annual_plan", age: 5, teacher_request: "Plan.", calendar_context: {}, classroom_context: {} }, knowledgeBase), MissingWorkflowContextError);
+  await assert.rejects(() => buildAIContext({ workflow: "family_report", age: 5, teacher_request: "Informe.", student_context: {}, teacher_confirmed_findings: {} }, knowledgeBase), MissingWorkflowContextError);
+  const bundle = await buildAIContext({ workflow: "activity", age: 5, teacher_request: "Actividad.", activity_purpose: "Explorar." }, knowledgeBase);
+  assert.deepEqual(bundle.curriculum.competency_cards, []);
 });
