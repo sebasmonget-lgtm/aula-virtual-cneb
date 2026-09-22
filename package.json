@@ -20,6 +20,7 @@
     "test:activity-runner": "node --test src/lib/activity-runner.test.mjs",
     "build:curriculum": "node scripts/build-curriculum-runtimes.mjs",
     "test:curriculum": "node scripts/validate-curriculum.mjs",
+    "test:jev": "node --test src/lib/jev-decision.test.mjs",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "db:generate": "drizzle-kit generate"
   },

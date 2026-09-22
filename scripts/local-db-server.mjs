@@ -21,13 +21,13 @@ const allowedOrigins = new Set([
   "http://127.0.0.1:5173",
 ]);
 const exportTables = [
-  "profiles", "curriculum_versions", "levels", "age_grades", "curriculum_areas",
-  "competencies", "performances", "school_years", "classrooms",
+  "profiles", "curriculum_source_documents", "curriculum_versions", "levels", "cycles", "age_grades", "curriculum_areas",
+  "competencies", "capacities", "standards", "performances", "transversal_approaches", "school_years", "classrooms",
   "institution_assets", "institution_profiles", "students", "learning_experiences",
   "activities", "activity_criteria", "evidences", "competency_observation_guides",
   "document_templates", "document_versions", "diagnostic_sessions",
   "diagnostic_entries", "observation_references", "student_observations",
-  "class_schedule_entries", "daily_execution_logs", "attendance_records", "calendar_exceptions", "student_context_snapshots",
+  "class_schedule_entries", "daily_execution_logs", "attendance_records", "calendar_exceptions", "student_context_snapshots", "annual_plans", "annual_plan_competencies", "annual_plan_changes",
 ];
 
 await mkdir(path.dirname(dataDir), { recursive: true });

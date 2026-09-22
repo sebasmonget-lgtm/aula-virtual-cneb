@@ -11,14 +11,15 @@ const userIndex = args.indexOf("--new-user-id");
 const newUserId = userIndex >= 0 ? args[userIndex + 1] : null;
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const tableOrder = [
-  "profiles", "curriculum_versions", "levels", "age_grades", "curriculum_areas",
-  "competencies", "performances", "school_years", "classrooms",
+  "profiles", "curriculum_source_documents", "levels", "cycles", "curriculum_versions", "age_grades", "curriculum_areas",
+  "competencies", "capacities", "standards", "performances", "transversal_approaches", "school_years", "classrooms",
   "institution_assets", "institution_profiles", "students", "learning_experiences",
   "activities", "activity_criteria", "evidences", "competency_observation_guides",
   "document_templates", "document_versions", "diagnostic_sessions",
   "diagnostic_entries", "observation_references", "student_observations",
   "class_schedule_entries", "daily_execution_logs", "attendance_records", "calendar_exceptions",
   "student_context_snapshots",
+  "annual_plans", "annual_plan_competencies", "annual_plan_changes",
 ];
 const userFields = new Set(["user_id", "owner_id", "owner_user_id", "teacher_id", "created_by", "author_id"]);
 const arrayFields = new Set(["official_performance_ids", "performance_ids"]);
