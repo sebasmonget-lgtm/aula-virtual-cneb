@@ -1,4 +1,5 @@
 import { AIProvider } from "./ai-provider.mjs";
+import { resolveAIExecutionPlan } from "./ai-execution-router-v4.mjs";
 import { prepareAIRequestV4 } from "./prepare-ai-request-v4.mjs";
 
 const ACTIVITY_FIELDS = [
@@ -97,11 +98,15 @@ function buildProviderRequest(bundle) {
 /**
  * Generates one validated activity through an injected provider.
  * @param {object} input - activity workflow input accepted by prepareAIRequestV4.
- * @param {{ provider: AIProvider, knowledgeBase?: object }} options
+ * @param {{ provider: AIProvider, knowledgeBase?: object, executionPlan?: object, routingPolicy?: object }} options
  */
-export async function generateAIWorkflowV4(input, { provider, knowledgeBase } = {}) {
-  if (input?.workflow !== "activity") {
-    throw new InvalidAIGenerationError("unsupported_workflow", { workflow: input?.workflow });
+export async function generateAIWorkflowV4(input, { provider, knowledgeBase, executionPlan, routingPolicy } = {}) {
+  const plan = executionPlan ?? resolveAIExecutionPlan({ workflow: input?.workflow, task: "generation", context: input?.context ?? null }, routingPolicy);
+  if (plan.execution === "code") {
+    throw new InvalidAIGenerationError("workflow_not_generation_enabled", { workflow: input?.workflow, execution_plan: plan });
+  }
+  if (input?.workflow !== "activity" || plan.execution !== "generation") {
+    throw new InvalidAIGenerationError("unsupported_workflow", { workflow: input?.workflow, execution_plan: plan });
   }
   if (!provider || typeof provider.generate !== "function") {
     throw new InvalidAIGenerationError("provider_not_configured");
@@ -117,6 +122,7 @@ export async function generateAIWorkflowV4(input, { provider, knowledgeBase } = 
       provider: provider.id ?? "anonymous",
       model: provider.model ?? null,
       output_schema: ACTIVITY_OUTPUT_SCHEMA.id,
+      execution_plan: plan,
     },
     provenance: prepared.aiContextBundle.provenance,
     validation: { status: "valid", schema: ACTIVITY_OUTPUT_SCHEMA.id },

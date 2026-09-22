@@ -1,5 +1,11 @@
 # Decisiones de arquitectura
 
+## ADR 024 Política central de routing de modelos
+
+**Decisión.** `resolveAIExecutionPlan` decide de forma determinista el tier, provider, modelo y posibilidad de escalamiento antes de cualquier generación. Code resuelve tareas deterministas; TypeSafe queda reservado para decisiones estructuradas; Luna, Terra y Sol se asignan según complejidad. Ningún modelo ni provider puede escoger su propio routing.
+
+**Consecuencia.** Los nombres de modelo viven en una sola política versionada y la generación de `activity` consume el plan sin acoplarse a un modelo. El escalamiento Luna → Terra → Sol queda permitido solo donde la política lo declara y no se ejecuta automáticamente.
+
 ## ADR 023 Generación de actividades mediante provider neutral
 
 **Decisión.** La primera generación vertical de IA usa `generateAIWorkflowV4(input, options)`: prepara el bundle v4, entrega al provider inyectado una copia inmutable del `AIContextBundle` y valida una salida estructurada de actividad antes de devolverla. El provider no recibe el input crudo ni puede seleccionar conocimiento fuera del bundle.

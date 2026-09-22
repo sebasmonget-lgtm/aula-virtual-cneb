@@ -48,6 +48,8 @@ test("A: genera una activity de 5 años con competencia confirmada", async () =>
   assert.equal(result.output.competency_id, "COM_ORAL");
   assert.equal(result.validation.status, "valid");
   assert.equal(result.metadata.workflow, "activity");
+  assert.deepEqual(result.metadata.execution_plan.provider, "openai");
+  assert.equal(result.metadata.execution_plan.model, "gpt-5.6-terra");
   assert.deepEqual(result.provenance, provider.requests[0].ai_context_bundle.provenance);
   assert.equal(provider.requests[0].ai_context_bundle.context.workflow_inputs.activity_purpose, "Explorar cambios de sombra.");
   assert.ok(Object.isFrozen(provider.requests[0].ai_context_bundle));
@@ -116,4 +118,27 @@ test("la capa de generación no importa Jev, proveedores concretos, HTTP ni PDFs
   const source = await readFile(new URL("./ai-generation-v4.mjs", import.meta.url), "utf8");
   assert.doesNotMatch(source, /jev-decision|\.pdf|fetch\(|https?:|openai|gpt|anthropic/i);
   assert.match(source, /prepareAIRequestV4/);
+});
+
+test("una tarea code no llama al provider", async () => {
+  const provider = new MockAIProvider({ ...activityFields, competency_status: "unconfirmed", competency_id: null });
+  await assert.rejects(
+    () => generateAIWorkflowV4({ workflow: "evidence_capture" }, { provider }),
+    (error) => error instanceof InvalidAIGenerationError && error.reason === "workflow_not_generation_enabled",
+  );
+  assert.equal(provider.requests.length, 0);
+});
+
+test("un cambio de política aplica a activity sin modificar el generador", async () => {
+  const knowledgeBase = await loadKnowledgeBaseV4();
+  const policy = {
+    ...((await import("./ai-execution-router-v4.mjs")).AI_ROUTING_POLICY),
+    workflows: {
+      ...(await import("./ai-execution-router-v4.mjs")).AI_ROUTING_POLICY.workflows,
+      activity: { tier: "light_generation", allow_escalation: true },
+    },
+  };
+  const provider = new MockAIProvider({ ...activityFields, competency_status: "confirmed", competency_id: "COM_ORAL" });
+  const result = await generateAIWorkflowV4(confirmedInput, { provider, knowledgeBase, routingPolicy: policy });
+  assert.equal(result.metadata.execution_plan.model, "gpt-5.6-luna");
 });
