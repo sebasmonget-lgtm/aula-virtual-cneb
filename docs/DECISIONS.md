@@ -1,5 +1,11 @@
 # Decisiones de arquitectura
 
+## ADR 023 Generación de actividades mediante provider neutral
+
+**Decisión.** La primera generación vertical de IA usa `generateAIWorkflowV4(input, options)`: prepara el bundle v4, entrega al provider inyectado una copia inmutable del `AIContextBundle` y valida una salida estructurada de actividad antes de devolverla. El provider no recibe el input crudo ni puede seleccionar conocimiento fuera del bundle.
+
+**Consecuencia.** La selección de proveedor/modelo queda desacoplada de la Knowledge Base y se podrá configurar externamente sin cambiar el constructor de contexto. Solo `activity` está habilitado; los otros workflows permanecen fuera de la capa generativa.
+
 ## ADR 022 Arquitectura vigente de IA: Knowledge Base v4
 
 **Decisión.** La arquitectura vigente de IA para Inicial 3–5 es `knowledge/cneb-initial-3-5/v4.0.0/` y su pipeline `loadKnowledgeBaseV4` → `retrieveKnowledgeV4` → `buildAIContext` → `prepareAIRequestV4`. El runtime usa conocimiento versionado y no lee PDFs, no crea `official-corpus` y no depende de Jev ni del Knowledge Pack v2.

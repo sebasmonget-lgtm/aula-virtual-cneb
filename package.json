@@ -26,6 +26,7 @@
     "test:knowledge-retrieval-v4": "node --test src/lib/knowledge-retrieval-v4.test.mjs",
     "test:ai-context-v4": "node --test src/lib/ai-context-builder-v4.test.mjs",
     "test:prepare-ai-v4": "node --test src/lib/prepare-ai-request-v4.test.mjs",
+    "test:ai-generation-v4": "node --test src/lib/ai-generation-v4.test.mjs",
     "test:jev-benchmark": "node --test src/lib/jev-benchmark.test.mjs",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "db:generate": "drizzle-kit generate"

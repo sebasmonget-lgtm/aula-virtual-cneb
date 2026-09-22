@@ -26,6 +26,8 @@ Proyecto nuevo iniciado el 20 de septiembre de 2026. Existe un shell responsive 
 - El runtime v4 ya implementa `loadKnowledgeBaseV4()`, `retrieveKnowledgeV4()` y `buildAIContext()`. Valida integridad, edad, workflow, aplicabilidad, contexto obligatorio, límites y provenance antes de producir un `AIContextBundle`.
 - El runtime v4 no lee PDFs. No hay extracción ni transcripción de PDF pendiente para esta arquitectura y no debe crearse un `official-corpus` como ruta alternativa.
 - `prepareAIRequestV4()` es el punto de entrada neutral para una futura conexión de modelo: entrega el `AIContextBundle` y metadata del workflow, sin HTTP, proveedores ni selección fuera del bundle. La futura IA debe consumir ese bundle y nunca leer documentos directamente.
+- Existe una capa de generación v4 para `activity`: `generateAIWorkflowV4()` acepta un provider neutral inyectado, le entrega solo una copia inmutable del `AIContextBundle` y valida una salida estructurada antes de devolverla. No hay proveedor externo habilitado ni claves en el repositorio.
+- Los otros 12 workflows no generan todavía mediante modelo. La interfaz, Supabase, despliegue, PDFs, embeddings, vector DB y Jev legacy siguen fuera de esta capa.
 - v3, los catálogos `curriculum/` heredados, Jev y `CNEB_Inicial_AI_KnowledgePack_v2` se conservan solo como histórico, compatibilidad y pruebas legacy; no son dependencias de la arquitectura v4.
 - Auditoría de consumidores de Jev (2026-09-22): `jev-decision.mjs` solo se importa desde `jev-decision.test.mjs` y `jev-benchmark.test.mjs`; no tiene consumidores productivos activos. Las integraciones nuevas deben importar únicamente `prepare-ai-request-v4.mjs`.
 
@@ -38,7 +40,7 @@ Proyecto nuevo iniciado el 20 de septiembre de 2026. Existe un shell responsive 
 
 ## Próximo trabajo recomendado
 
-1. Conectar un proveedor de IA únicamente a `prepareAIRequestV4()` y conservar la confirmación docente de toda propuesta o conclusión.
+1. Configurar un proveedor externo únicamente detrás de `generateAIWorkflowV4()` y conservar la confirmación docente de toda propuesta o conclusión.
 2. Añadir carga/normalización de logo aportado por institución, consentimiento y las siguientes clases de evidencia multimedia privadas (audio/video).
 3. Implementar síntesis editable/confirmable y su conexión condicionada con el plan anual.
 4. Crear proyectos nuevos de Supabase y hosting/staging; aplicar migraciones y comprobar RLS/Storage con dos usuarios de prueba.
