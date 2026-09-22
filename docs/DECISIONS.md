@@ -1,5 +1,11 @@
 # Decisiones de arquitectura
 
+## ADR 019 Constructor de contexto acotado por workflow
+
+**Decisión.** `buildAIContext` compone loader, retrieval, tarjetas completas, referencia curricular de una sola edad, módulos pedagógicos, reglas de generación y guardrails en un bundle trazable por workflow. Una competencia confirmada restringe el bundle a esa tarjeta; sin confirmación se entregan pocas candidatas sin declarar una ganadora.
+
+**Consecuencia.** La futura capa de IA recibirá solamente conocimiento pertinente y una procedencia completa. L2, Religión y los overlays de 2026 exigen aplicabilidad explícita antes de entrar al bundle.
+
 ## ADR 018 Retrieval local determinista para Knowledge Base v4
 
 **Decisión.** El retrieval v4 filtra unidades por workflow, edad, dominios permitidos, competencia confirmada y aplicabilidad contextual. Excluye por defecto las reglas temporales de 2026 y las unidades de Castellano L2 o Religión sin contexto explícito. Luego ordena de forma estable según la política versionada y aplica los límites de unidades semánticas y reclamos de fuente.

@@ -14,6 +14,33 @@ const FILES = {
   cards: "03_semantic/competency_cards.jsonl",
   workflows: "05_workflows/workflow_knowledge_requirements.json",
   sources: "01_sources/source_registry.json",
+  curriculumReference: "02_official_reference/curriculum_reference.json",
+  specialApplicability: "02_official_reference/special_applicability.json",
+  generationGuardrails: "00_contract/generation_guardrails.json",
+};
+
+const PEDAGOGY_FILES = {
+  diagnostic_assessment: "04_pedagogy/diagnostic_assessment.json",
+  formative_assessment: "04_pedagogy/formative_assessment.json",
+  planning: "04_pedagogy/planning.json",
+  projects_units_workshops: "04_pedagogy/projects_units_workshops.json",
+  activity_design: "04_pedagogy/activity_design.json",
+  teacher_interaction_and_mediation: "04_pedagogy/teacher_interaction_and_mediation.json",
+  evidence_and_criteria: "04_pedagogy/evidence_and_criteria.json",
+  spaces_materials: "04_pedagogy/spaces_materials.json",
+  family_context_and_adaptation: "04_pedagogy/family_context_and_adaptation.json",
+  tutoring_wellbeing: "04_pedagogy/tutoring_and_wellbeing.json",
+  play_and_sectors: "04_pedagogy/play_and_sectors.json",
+  orality_cycle_ii: "04_pedagogy/orality_cycle_ii.json",
+};
+
+const GENERATION_FILES = {
+  activity: "05_generation/activity_generation.json",
+  annual_plan: "05_generation/annual_plan_generation.json",
+  project_unit: "05_generation/project_unit_generation.json",
+  assessment: "05_generation/assessment_synthesis_generation.json",
+  reports: "05_generation/reports_and_documents_generation.json",
+  prohibitedShortcuts: "05_generation/prohibited_shortcuts.json",
 };
 
 function requireValid(condition, message) {
@@ -68,7 +95,7 @@ export function validateKnowledgeBaseWorkflow(workflow, workflows) {
 }
 
 export async function loadKnowledgeBaseV4(rootDir = KNOWLEDGE_BASE_V4_ROOT) {
-  const names = ["manifest.json", ...Object.values(FILES)];
+  const names = ["manifest.json", ...Object.values(FILES), ...Object.values(PEDAGOGY_FILES), ...Object.values(GENERATION_FILES)];
   const contents = await Promise.all(names.map((name) => readFile(path.join(rootDir, name))));
   const byName = new Map(names.map((name, index) => [name, contents[index]]));
   const json = (name) => parseJson(byName.get(name).toString("utf8"), name);
@@ -77,7 +104,7 @@ export async function loadKnowledgeBaseV4(rootDir = KNOWLEDGE_BASE_V4_ROOT) {
   const manifest = json("manifest.json");
   requireValid(manifest.version === VERSION, `versión de manifiesto inesperada: ${manifest.version}`);
   requireValid(JSON.stringify(manifest.scope?.ages) === "[3,4,5]", "edades de manifiesto inválidas");
-  for (const name of Object.values(FILES)) {
+  for (const name of names.filter((name) => name !== "manifest.json")) {
     const actual = createHash("sha256").update(byName.get(name)).digest("hex");
     requireValid(manifest.integrity?.files?.[name] === actual, `huella SHA-256 inválida: ${name}`);
   }
@@ -85,9 +112,14 @@ export async function loadKnowledgeBaseV4(rootDir = KNOWLEDGE_BASE_V4_ROOT) {
   const retrievalPolicy = json(FILES.policy);
   const workflowRequirements = json(FILES.workflows);
   const sourceRegistry = json(FILES.sources);
+  const curriculumReference = json(FILES.curriculumReference);
+  const specialApplicability = json(FILES.specialApplicability);
+  const generationGuardrails = json(FILES.generationGuardrails);
+  const pedagogyModules = Object.fromEntries(Object.entries(PEDAGOGY_FILES).map(([domain, name]) => [domain, json(name)]));
+  const generationRules = Object.fromEntries(Object.entries(GENERATION_FILES).map(([name, file]) => [name, json(file)]));
   const knowledgeUnits = jsonl(FILES.units);
   const competencyCards = jsonl(FILES.cards);
-  for (const [name, value] of Object.entries({ retrievalPolicy, workflowRequirements, sourceRegistry })) {
+  for (const [name, value] of Object.entries({ retrievalPolicy, workflowRequirements, sourceRegistry, curriculumReference, specialApplicability })) {
     requireValid(value.version === VERSION, `versión inválida en ${name}`);
   }
   requireValid(retrievalPolicy.corpus === FILES.units, "corpus de retrieval inesperado");
@@ -128,6 +160,11 @@ export async function loadKnowledgeBaseV4(rootDir = KNOWLEDGE_BASE_V4_ROOT) {
     version: VERSION,
     retrievalPolicy,
     sourceRegistry,
+    curriculumReference,
+    specialApplicability,
+    generationGuardrails,
+    pedagogyModules,
+    generationRules,
     knowledgeUnits,
     competencyCards,
     workflows: workflowRequirements.workflows,

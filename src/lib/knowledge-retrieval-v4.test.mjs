@@ -51,12 +51,14 @@ test("incluye conocimiento L2 y Religión solo con aplicabilidad explícita", as
   assert.ok(religion.units.some((unit) => unit.competency_id === "PS_RELIGION"));
 });
 
-test("incluye el overlay 2026 solamente cuando hay contexto temporal explícito", async () => {
+test("incluye el overlay 2026 solamente cuando hay contexto temporal aplicable", async () => {
   const knowledgeBase = await loadKnowledgeBaseV4();
   const defaultResult = await retrieveKnowledgeV4({ ...baseInput, workflow: "annual_plan" }, knowledgeBase);
-  const temporalResult = await retrieveKnowledgeV4({ ...baseInput, workflow: "annual_plan", temporalContext: { year: 2026 } }, knowledgeBase);
+  const yearOnlyResult = await retrieveKnowledgeV4({ ...baseInput, workflow: "annual_plan", temporalContext: { year: 2026 } }, knowledgeBase);
+  const temporalResult = await retrieveKnowledgeV4({ ...baseInput, workflow: "annual_plan", temporalContext: { year: 2026, event: "school_year_start" } }, knowledgeBase);
 
   assert.ok(defaultResult.units.every((unit) => unit.temporal_scope !== "2026"));
+  assert.ok(yearOnlyResult.units.every((unit) => unit.temporal_scope !== "2026"));
   assert.ok(temporalResult.units.some((unit) => unit.temporal_scope === "2026"));
 });
 
@@ -65,4 +67,6 @@ test("rechaza edad, workflow y competencia confirmada inválidos", async () => {
   await assert.rejects(() => retrieveKnowledgeV4({ workflow: "diagnostic", age: 6 }, knowledgeBase), /3, 4 o 5/);
   await assert.rejects(() => retrieveKnowledgeV4({ workflow: "unknown", age: 5 }, knowledgeBase), /Workflow.*desconocido/);
   await assert.rejects(() => retrieveKnowledgeV4({ ...baseInput, confirmedCompetencyId: "UNKNOWN" }, knowledgeBase), /Competencia confirmada desconocida/);
+  await assert.rejects(() => retrieveKnowledgeV4({ ...baseInput, confirmedCompetencyId: "CAST_L2_ORAL" }, knowledgeBase), /L2 no es aplicable/);
+  await assert.rejects(() => retrieveKnowledgeV4({ ...baseInput, confirmedCompetencyId: "PS_RELIGION" }, knowledgeBase), /Religión no es aplicable/);
 });

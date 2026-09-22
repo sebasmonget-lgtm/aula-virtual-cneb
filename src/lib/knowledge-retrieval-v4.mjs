@@ -24,7 +24,8 @@ function isReligionUnit(unit) {
 }
 
 function hasExplicit2026Context(temporalContext) {
-  return temporalContext?.year === 2026 || temporalContext?.include2026Overlay === true;
+  return temporalContext?.include2026Overlay === true
+    || (temporalContext?.year === 2026 && (temporalContext?.event === "school_year_start" || temporalContext?.context === "school_year_start"));
 }
 
 function sourceAuthority(unit, sourceRanks) {
@@ -60,6 +61,12 @@ export async function retrieveKnowledgeV4(input, knowledgeBase) {
   const confirmedCompetencyId = input?.confirmedCompetencyId ?? null;
   if (confirmedCompetencyId !== null && !knowledgeBase.competencyCards.some((card) => card.id === confirmedCompetencyId)) {
     throw new RangeError(`Competencia confirmada desconocida: ${confirmedCompetencyId}`);
+  }
+  if (confirmedCompetencyId === L2_COMPETENCY_ID && input?.castellanoL2Applicable !== true) {
+    throw new RangeError("Castellano L2 no es aplicable sin un contexto lingüístico válido.");
+  }
+  if (confirmedCompetencyId === RELIGION_COMPETENCY_ID && input?.religionApplicable !== true) {
+    throw new RangeError("Religión no es aplicable sin un contexto de participación válido.");
   }
 
   const requiredDomains = new Set(workflowRequirements.required_domains);
