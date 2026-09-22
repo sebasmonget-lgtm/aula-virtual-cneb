@@ -1,0 +1,90 @@
+{
+  "version": "3.0.0",
+  "steps": [
+    {
+      "step": 1,
+      "action": "Classify request",
+      "outputs": [
+        "diagnostic",
+        "annual_plan",
+        "unit",
+        "project",
+        "workshop",
+        "activity",
+        "criterion",
+        "evidence",
+        "assessment_synthesis",
+        "report",
+        "family_communication",
+        "materials",
+        "other"
+      ]
+    },
+    {
+      "step": 2,
+      "action": "Load classroom constraints",
+      "required": [
+        "age",
+        "language_context",
+        "calendar/time",
+        "known_students_or_group_context"
+      ],
+      "optional": [
+        "resources",
+        "school_context",
+        "family_context",
+        "teacher_preferences"
+      ]
+    },
+    {
+      "step": 3,
+      "action": "Retrieve diagnostic/evidence if the artifact should respond to actual learning needs",
+      "fallback": "If absent, mark the proposal as provisional instead of fabricating needs."
+    },
+    {
+      "step": 4,
+      "action": "Retrieve canonical curriculum candidates for the age and purpose",
+      "rule": "purpose > topic keywords"
+    },
+    {
+      "step": 5,
+      "action": "Choose one primary competency; add secondary only if genuinely mobilized",
+      "human_confirmation": "required when selection materially changes planning unless teacher chose explicitly"
+    },
+    {
+      "step": 6,
+      "action": "Retrieve pedagogy modules relevant to artifact type",
+      "examples": [
+        "project rules for project",
+        "evaluation rules for criteria",
+        "spaces/materials for environment"
+      ]
+    },
+    {
+      "step": 7,
+      "action": "Generate artifact with traceable knowledge_unit_ids internally",
+      "teacher_facing_sources": "optional; backend provenance mandatory"
+    },
+    {
+      "step": 8,
+      "action": "Run deterministic validation",
+      "checks": [
+        "age",
+        "official names",
+        "no invented performance",
+        "criterion/evidence coherence",
+        "no unsupported formal judgment",
+        "conditional religion/L2"
+      ]
+    },
+    {
+      "step": 9,
+      "action": "Teacher review/confirmation",
+      "required_for": [
+        "formal assessment",
+        "descriptive conclusion",
+        "final planning decisions"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "id": "teacher_interaction_and_mediation",
+  "version": "3.0.0",
+  "purpose": "Orientar la mediación docente durante juego, actividades, rutinas y evaluación.",
+  "source_refs": [
+    "INTERACCIONES_2019",
+    "ACOMPANAR_COMPETENCIAS_2021",
+    "ORALIDAD_CICLO_II_2025"
+  ],
+  "rules": [
+    {
+      "id": "INT-01",
+      "rule": "Crear clima afectivo de respeto, seguridad y colaboración; atender señales y necesidades con sensibilidad.",
+      "why": "El bienestar sostiene participación y aprendizaje."
+    },
+    {
+      "id": "INT-02",
+      "rule": "Escuchar ideas infantiles y dar tiempo para responder; no convertir la conversación en interrogatorio de respuesta única.",
+      "why": "Favorece pensamiento y lenguaje."
+    },
+    {
+      "id": "INT-03",
+      "rule": "Usar preguntas/comentarios que ayuden a explicar, comparar, anticipar, fundamentar y revisar ideas.",
+      "why": "La mediación puede profundizar el razonamiento."
+    },
+    {
+      "id": "INT-04",
+      "rule": "Organizar el ambiente y la actividad para sostener participación y autorregulación sin control excesivo.",
+      "why": "Compromiso y autonomía se construyen en la interacción."
+    },
+    {
+      "id": "INT-05",
+      "rule": "Modelar lenguaje e introducir información cuando amplía la exploración, sin reemplazar la elaboración del niño.",
+      "why": "El adulto funciona como andamiaje, no como solucionador permanente."
+    }
+  ],
+  "generation_implications": []
+}

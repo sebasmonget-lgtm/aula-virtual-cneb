@@ -1,0 +1,36 @@
+{
+  "version": "3.0.0",
+  "canonical_resolution_policy": [
+    {
+      "id": "RES-PCI-BINARY",
+      "issue": "El registro histórico del repositorio de Programa Curricular puede reflejar una versión de trabajo anterior y presentar nomenclatura distinta.",
+      "resolution": "Para el catálogo canónico de Ayni Aula usar el PDF oficial directo MINEDU validado por el proyecto y la nomenclatura vigente coherente con CNEB/normativa; conservar nombres antiguos solo como aliases.",
+      "runtime_effect": "La IA nunca decide entre nombres antiguos y actuales; recibe únicamente el nombre canónico y aliases para búsqueda."
+    },
+    {
+      "id": "RES-EVAL-2024",
+      "issue": "La norma de evaluación 2020 fue modificada en 2024.",
+      "resolution": "La interpretación canónica de evaluación incorpora la modificación 2024 y evita reglas procedimentales obsoletas del texto base cuando hayan sido modificadas.",
+      "runtime_effect": "Las reglas de generación usan evaluación formativa vigente y no piden resolver versiones."
+    },
+    {
+      "id": "RES-SPACES",
+      "issue": "Existen guías antiguas y recientes sobre espacios y materiales.",
+      "resolution": "La cartilla MINEDU 2024 es la referencia práctica principal; guías anteriores solo complementan si no contradicen.",
+      "runtime_effect": "Las recomendaciones de espacio/material usan la orientación 2024."
+    },
+    {
+      "id": "RES-2026-OVERLAY",
+      "issue": "Las orientaciones 2026 son coyunturales al inicio del año escolar.",
+      "resolution": "Conservarlas como overlay temporal y no convertir cada precisión anual en principio pedagógico permanente.",
+      "runtime_effect": "Solo se recuperan cuando la consulta se refiere al inicio del año 2026 o a una precisión vigente de ese periodo."
+    },
+    {
+      "id": "RES-PANDEMIC",
+      "issue": "Algunas orientaciones 2021 mezclan principios estables con condiciones de emergencia sanitaria.",
+      "resolution": "Incorporar solo principios pedagógicos estables: vínculo, escucha, mediación, contexto familiar y evaluación formativa; excluir logística coyuntural.",
+      "runtime_effect": "La IA no genera recomendaciones pandémicas por defecto."
+    }
+  ],
+  "canonical_naming_policy": "Nombres oficiales actuales en canonical_name; denominaciones previas o de versiones de trabajo únicamente en aliases."
+}

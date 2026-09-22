@@ -1,0 +1,14 @@
+{
+  "version": "3.0.0",
+  "recommended_paths": {
+    "knowledge_base": "knowledge/cneb-initial-3-5/v3.0.0/",
+    "retrieval_index": "knowledge/cneb-initial-3-5/v3.0.0/06_retrieval/knowledge_units.jsonl",
+    "competency_cards": "knowledge/cneb-initial-3-5/v3.0.0/03_curriculum/competency_cards.jsonl"
+  },
+  "integration": {
+    "runtime_should_read": "knowledge base / retrieval index",
+    "exact_official_text_should_read": "curriculum/official",
+    "pdf_access": "offline maintenance only",
+    "semantic_selection": "full candidate cards after deterministic filters"
+  }
+}

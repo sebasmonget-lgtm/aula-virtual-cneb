@@ -1,0 +1,36 @@
+{
+  "version": "3.0.0",
+  "preferred_terms": {
+    "learning_activity": "actividad de aprendizaje",
+    "child": "niña/niño o niño según contexto textual, evitando lenguaje mecánico",
+    "observational_state": [
+      "Lo demostró",
+      "Con apoyo",
+      "Aún no",
+      "No pude determinarlo"
+    ],
+    "insufficient_information": "expresión válida; no forzar juicio"
+  },
+  "distinctions": [
+    {
+      "a": "evidence",
+      "b": "evaluation",
+      "rule": "La evidencia describe/recoge una actuación; la evaluación interpreta evidencias frente a referentes."
+    },
+    {
+      "a": "performance",
+      "b": "criterion",
+      "rule": "El desempeño es referente curricular por edad; el criterio contextualiza qué se observará/valorará en una situación."
+    },
+    {
+      "a": "project",
+      "b": "unit",
+      "rule": "Proyecto exige una situación/pregunta/interés auténtico con participación infantil y evolución abierta; unidad puede organizar aprendizajes pertinentes sin esa dinámica investigativa emergente."
+    },
+    {
+      "a": "workshop",
+      "b": "activity",
+      "rule": "El taller puede ser una organización recurrente/paralela con propósito específico; la actividad es la unidad de experiencia concreta dentro de una planificación."
+    }
+  ]
+}

@@ -1,0 +1,168 @@
+{
+  "version": "3.0.0",
+  "digests": [
+    {
+      "source_id": "CNEB",
+      "canonical_takeaways": [
+        "Competencia se entiende como actuación que combina capacidades ante situaciones y propósitos.",
+        "Capacidades son recursos que se movilizan de manera integrada.",
+        "Estándares describen progresión de competencia y son referencia común para evaluación y planificación.",
+        "Desempeños ilustran actuaciones observables vinculadas al desarrollo de la competencia.",
+        "Los enfoques transversales atraviesan la práctica y no funcionan como asignaturas.",
+        "La evaluación es formativa y orienta decisiones de enseñanza y aprendizaje."
+      ],
+      "excluded_or_not_runtime": [
+        "contenido de otros niveles que no sea necesario para interpretar Inicial 3-5"
+      ]
+    },
+    {
+      "source_id": "PCI_INICIAL_CANONICAL",
+      "canonical_takeaways": [
+        "Organización curricular de Educación Inicial y particularidades del Ciclo II.",
+        "Competencias, capacidades, estándares y referentes por edad para 3, 4 y 5 años.",
+        "Condiciones de espacio, materiales y rol del adulto que favorecen desarrollo de competencias.",
+        "La lectura del desempeño siempre se contextualiza por edad y competencia."
+      ],
+      "excluded_or_not_runtime": [
+        "nomenclatura de versiones históricas cuando contradice la nomenclatura canónica actual; se conserva solo como alias"
+      ]
+    },
+    {
+      "source_id": "EVALUACION_RVM094_MOD048",
+      "canonical_takeaways": [
+        "La evaluación se realiza desde un enfoque formativo y tiene por objeto el desarrollo de competencias.",
+        "Los criterios y evidencias deben ser coherentes con referentes curriculares.",
+        "La información recogida se interpreta para retroalimentar y tomar decisiones pedagógicas.",
+        "Una conclusión debe apoyarse en evidencia pertinente y no en conteos mecánicos."
+      ],
+      "excluded_or_not_runtime": [
+        "procedimientos del texto 2020 que hayan sido modificados por la norma 2024"
+      ]
+    },
+    {
+      "source_id": "PLANIFICACION_INICIAL_2019",
+      "canonical_takeaways": [
+        "La planificación parte de observación registrada de intereses y necesidades.",
+        "Debe articular propósitos, evidencias, actividades, espacios, materiales y mediación.",
+        "La planificación es flexible y se reajusta con información del proceso.",
+        "En Ciclo II se organizan experiencias considerando contexto, necesidades e intereses."
+      ]
+    },
+    {
+      "source_id": "PROYECTOS_INICIAL_2019",
+      "canonical_takeaways": [
+        "Los proyectos parten de situaciones genuinamente interesantes, preguntas, problemas o necesidades.",
+        "El niño tiene rol protagónico y el docente actúa como mediador.",
+        "Un proyecto puede cambiar a partir de nuevas preguntas, hallazgos e intereses.",
+        "Curiosidad, investigación, búsqueda de información y prueba de ideas son rasgos centrales."
+      ]
+    },
+    {
+      "source_id": "INTERACCIONES_2019",
+      "canonical_takeaways": [
+        "La calidad de la interacción docente-niño influye en bienestar y aprendizaje.",
+        "La mediación favorece seguridad emocional, participación, autorregulación, pensamiento y lenguaje.",
+        "Preguntas y comentarios pueden ayudar al niño a profundizar y fundamentar sus ideas.",
+        "El diálogo y la reflexión deben aparecer de forma auténtica durante experiencias pedagógicas."
+      ]
+    },
+    {
+      "source_id": "JUEGO_SIMBOLICO_2019",
+      "canonical_takeaways": [
+        "El juego simbólico y el juego libre en sectores son contextos relevantes para desarrollo y aprendizaje.",
+        "La organización de sectores, espacios, materiales y juguetes debe favorecer iniciativa y proyectos de juego.",
+        "El docente observa, acompaña y potencia sin dirigir el juego hacia un resultado prefijado."
+      ]
+    },
+    {
+      "source_id": "DIAGNOSTICO_INICIAL_2023",
+      "canonical_takeaways": [
+        "La evaluación diagnóstica busca conocer a cada niña y niño para orientar decisiones.",
+        "Puede recuperar matrícula, informe de progreso, portafolio, registros de observación/cuaderno de campo/anecdotario y entrevistas a familias.",
+        "La información familiar y contextual complementa la observación del niño.",
+        "El diagnóstico alimenta planificación, ambiente, mediación y seguimiento."
+      ]
+    },
+    {
+      "source_id": "ESPACIOS_2024",
+      "canonical_takeaways": [
+        "Los espacios deben favorecer seguridad, libre desplazamiento y autonomía.",
+        "Materiales y pertenencias relevantes deben estar organizados y al alcance.",
+        "Los sectores deben responder a edad, intereses y posibilidades de juego/aprendizaje.",
+        "El espacio se observa, evalúa y reorganiza; no es una configuración estática."
+      ]
+    },
+    {
+      "source_id": "ADAPTACION_2024",
+      "canonical_takeaways": [
+        "Cada proceso de adaptación tiene un ritmo particular.",
+        "Familia y servicio educativo coordinan una separación progresiva y respetuosa.",
+        "La planificación inicial debe incluir experiencias familiares, espacios acogedores y actividades para generar confianza.",
+        "Sentirse comprendido y seguro favorece exploración, juego y aprendizaje."
+      ]
+    },
+    {
+      "source_id": "TUTORIA_INICIAL_2024",
+      "canonical_takeaways": [
+        "Tutoría y orientación educativa se integran a la experiencia cotidiana de Inicial.",
+        "El vínculo se construye con trato respetuoso, atención oportuna, confianza y protección.",
+        "Se consideran dimensiones personal, social y de aprendizajes.",
+        "Bienestar, convivencia y progresiva conciencia del propio aprendizaje se acompañan de manera integrada."
+      ]
+    },
+    {
+      "source_id": "SOCIOEMOCIONAL_2021",
+      "canonical_takeaways": [
+        "Conciencia y regulación emocional se desarrollan progresivamente en 3-5.",
+        "El adulto ofrece co-regulación, vínculo seguro y herramientas para transitar hacia la calma.",
+        "Reconocer y aceptar emociones precede a exigir estrategias de regulación."
+      ]
+    },
+    {
+      "source_id": "ACOMPANAR_COMPETENCIAS_2021",
+      "canonical_takeaways": [
+        "Acompañar tiene intencionalidad pedagógica y se apoya en cercanía, vínculo, escucha y mediación.",
+        "Es necesario conocer historia, saberes, capacidades, formas de aprender y entorno familiar del niño.",
+        "La evaluación formativa permite recoger información y tomar decisiones para ayudar a avanzar."
+      ],
+      "excluded_or_not_runtime": [
+        "logística coyuntural propia del periodo de emergencia sanitaria"
+      ]
+    },
+    {
+      "source_id": "CASTELLANO_L2_EIB_2024",
+      "canonical_takeaways": [
+        "El castellano como segunda lengua se desarrolla en situaciones comunicativas significativas.",
+        "La metodología responde a características lingüísticas y socioculturales.",
+        "El desarrollo del castellano no debe debilitar la lengua materna."
+      ]
+    },
+    {
+      "source_id": "ORALIDAD_CICLO_II_2025",
+      "canonical_takeaways": [
+        "La oralidad se promueve mediante situaciones significativas de escucha, conversación, narración, explicación e interacción.",
+        "La competencia oral no se reduce a repetir vocabulario ni a responder preguntas cerradas.",
+        "La mediación docente ayuda a ampliar, organizar y fundamentar ideas."
+      ]
+    },
+    {
+      "source_id": "ORIENTACIONES_INICIAL_2025",
+      "canonical_takeaways": [
+        "Atender de forma individual y grupal según características, intereses y necesidades de aprendizaje.",
+        "Generar condiciones mediante sectores, espacios, materiales y rol del adulto.",
+        "En Ciclo II diseñar proyectos y unidades vinculados a necesidades e intereses.",
+        "Usar la evaluación diagnóstica y el recojo continuo de evidencias para orientar el trabajo."
+      ]
+    },
+    {
+      "source_id": "INICIO_2026",
+      "canonical_takeaways": [
+        "Contiene precisiones para el momento de inicio del año escolar 2026.",
+        "Se usa como overlay temporal sobre la base pedagógica estable."
+      ],
+      "excluded_or_not_runtime": [
+        "convertir precisiones coyunturales de 2026 en principios permanentes"
+      ]
+    }
+  ]
+}

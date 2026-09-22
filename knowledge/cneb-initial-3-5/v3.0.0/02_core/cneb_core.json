@@ -1,0 +1,68 @@
+{
+  "version": "3.0.0",
+  "scope": "CNEB concepts needed by Inicial 3-5",
+  "concepts": [
+    {
+      "id": "competency",
+      "canonical_meaning": "Facultad de combinar un conjunto de capacidades para lograr un propósito específico en una situación determinada, actuando de manera pertinente y con sentido ético.",
+      "ai_operational_rule": "Seleccionar competencia por la intención/propósito de aprendizaje y la actuación que se espera movilizar, no por palabras del tema.",
+      "source_refs": [
+        "CNEB"
+      ]
+    },
+    {
+      "id": "capacity",
+      "canonical_meaning": "Recursos para actuar competentemente: conocimientos, habilidades y actitudes que se combinan ante situaciones.",
+      "ai_operational_rule": "No evaluar capacidades como compartimentos aislados si la tarea demanda una actuación integrada.",
+      "source_refs": [
+        "CNEB"
+      ]
+    },
+    {
+      "id": "learning_standard",
+      "canonical_meaning": "Descripción del desarrollo de una competencia en niveles de creciente complejidad a lo largo de la escolaridad y referencia común para conocer cercanía al nivel esperado.",
+      "ai_operational_rule": "Usar el estándar del ciclo como horizonte para interpretar evidencias y planificar; no convertirlo en checklist rígido.",
+      "source_refs": [
+        "CNEB",
+        "EVALUACION_RVM094_MOD048"
+      ]
+    },
+    {
+      "id": "performance",
+      "canonical_meaning": "Descripción de actuaciones observables que ilustran niveles de desarrollo de una competencia en relación con una edad/grado.",
+      "ai_operational_rule": "Filtrar por edad y competencia confirmada; usarlo como referente para observación/planificación, no como lista exhaustiva ni como resultado automático.",
+      "source_refs": [
+        "CNEB",
+        "PCI_INICIAL_CANONICAL"
+      ]
+    },
+    {
+      "id": "formative_assessment",
+      "canonical_meaning": "Proceso permanente de recoger, analizar e interpretar información sobre el desarrollo de competencias para retroalimentar al estudiante y ajustar la enseñanza.",
+      "ai_operational_rule": "Evidencia → interpretación respecto a referentes → retroalimentación/decisión pedagógica → ajuste de planificación.",
+      "source_refs": [
+        "CNEB",
+        "EVALUACION_RVM094_MOD048",
+        "ACOMPANAR_COMPETENCIAS_2021"
+      ]
+    },
+    {
+      "id": "evidence",
+      "canonical_meaning": "Producción, actuación, explicación, interacción o registro que permite inferir aspectos del desarrollo de una competencia en una situación.",
+      "ai_operational_rule": "Describir qué hizo/dijo/produjo el niño y vincularlo al criterio; no confundir el archivo/foto con la evidencia pedagógica en sí.",
+      "source_refs": [
+        "PLANIFICACION_INICIAL_2019",
+        "EVALUACION_RVM094_MOD048"
+      ]
+    },
+    {
+      "id": "criterion",
+      "canonical_meaning": "Referencia para valorar la calidad de una actuación o producción, construida en coherencia con competencias, estándares y desempeños pertinentes.",
+      "ai_operational_rule": "Contextualizar el criterio a la situación sin cambiar el sentido del referente curricular; hacerlo comprensible y observable.",
+      "source_refs": [
+        "EVALUACION_RVM094_MOD048",
+        "PLANIFICACION_INICIAL_2019"
+      ]
+    }
+  ]
+}

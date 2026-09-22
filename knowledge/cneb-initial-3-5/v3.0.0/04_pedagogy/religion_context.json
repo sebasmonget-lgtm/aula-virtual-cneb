@@ -1,0 +1,27 @@
+{
+  "id": "religion_context",
+  "version": "3.0.0",
+  "purpose": "Aplicar correctamente la competencia religiosa.",
+  "source_refs": [
+    "PCI_INICIAL_CANONICAL",
+    "CNEB"
+  ],
+  "rules": [
+    {
+      "id": "REL-01",
+      "rule": "Aplicar la competencia religiosa cuando corresponda al servicio, opción educativa y condiciones normativas; respetar exoneración cuando aplique.",
+      "why": "No todas las situaciones o estudiantes deben ser tratados como si la competencia fuera obligatoria en la misma forma."
+    },
+    {
+      "id": "REL-02",
+      "rule": "Diferenciar valores de convivencia generales de una experiencia explícitamente religiosa/espiritual.",
+      "why": "Solidaridad o gratitud por sí solas no convierten una actividad en Religión."
+    },
+    {
+      "id": "REL-03",
+      "rule": "Promover respeto hacia manifestaciones y experiencias diversas del entorno.",
+      "why": "La competencia incluye apertura y trato respetuoso."
+    }
+  ],
+  "generation_implications": []
+}

@@ -1,0 +1,33 @@
+{
+  "id": "socioemotional",
+  "version": "3.0.0",
+  "purpose": "Orientar bienestar, conciencia y regulación emocional 3-5.",
+  "source_refs": [
+    "SOCIOEMOCIONAL_2021",
+    "TUTORIA_INICIAL_2024",
+    "PCI_INICIAL_CANONICAL"
+  ],
+  "rules": [
+    {
+      "id": "SOC-01",
+      "rule": "El adulto ayuda a reconocer, nombrar y aceptar emociones sin ridiculizarlas ni exigir calma inmediata.",
+      "why": "La regulación se desarrolla progresivamente con co-regulación."
+    },
+    {
+      "id": "SOC-02",
+      "rule": "Construir vínculo de seguridad y confianza mediante disponibilidad, respeto, previsibilidad y aceptación.",
+      "why": "Favorece exploración, juego y aprendizaje."
+    },
+    {
+      "id": "SOC-03",
+      "rule": "Ofrecer apoyos para transitar a la calma y luego conversar sobre la experiencia; no usar regulación emocional como obediencia.",
+      "why": "El objetivo es desarrollar conciencia y estrategias."
+    },
+    {
+      "id": "SOC-04",
+      "rule": "Distinguir emoción de conducta: aceptar la emoción no implica aceptar acciones que dañen.",
+      "why": "Permite acompañar límites con respeto."
+    }
+  ],
+  "generation_implications": []
+}

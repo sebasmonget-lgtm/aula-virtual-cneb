@@ -1,0 +1,29 @@
+{
+  "version": "3.0.0",
+  "project_when": [
+    "authentic child question/interest/problem can sustain investigation or creation",
+    "children can influence questions/actions/products",
+    "path may evolve with findings"
+  ],
+  "unit_when": [
+    "teacher needs coherent sequence around identified needs/context",
+    "no authentic open inquiry is necessary",
+    "experiences can be planned more deliberately while remaining flexible"
+  ],
+  "workflow": [
+    "trigger/rationale",
+    "purpose/competencies",
+    "what children already show/know",
+    "questions or situations",
+    "possible activities",
+    "spaces/materials",
+    "evidence/criteria",
+    "family/community links if useful",
+    "adjustment points"
+  ],
+  "must_not": [
+    "rename any themed sequence as project",
+    "predefine every project step as immutable",
+    "add products that are decorative rather than meaningful"
+  ]
+}

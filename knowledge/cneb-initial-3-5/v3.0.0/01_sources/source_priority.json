@@ -1,0 +1,60 @@
+{
+  "version": "3.0.0",
+  "rule": "Las contradicciones se resuelven en build-time y no se delegan al modelo en runtime.",
+  "priority": [
+    {
+      "rank": 1,
+      "kind": "normativa_vigente_y_modificatorias",
+      "examples": [
+        "EVALUACION_RVM094_MOD048"
+      ]
+    },
+    {
+      "rank": 2,
+      "kind": "curriculo_nacional_vigente",
+      "examples": [
+        "CNEB"
+      ]
+    },
+    {
+      "rank": 3,
+      "kind": "programa_curricular_nivel_vigente",
+      "examples": [
+        "PCI_INICIAL_CANONICAL"
+      ]
+    },
+    {
+      "rank": 4,
+      "kind": "orientacion_minedu_mas_reciente_del_tema",
+      "examples": [
+        "ORIENTACIONES_INICIAL_2025",
+        "ESPACIOS_2024",
+        "CASTELLANO_L2_EIB_2024",
+        "ORALIDAD_CICLO_II_2025"
+      ]
+    },
+    {
+      "rank": 5,
+      "kind": "guia_minedu_estable_compatible",
+      "examples": [
+        "PLANIFICACION_INICIAL_2019",
+        "PROYECTOS_INICIAL_2019",
+        "INTERACCIONES_2019"
+      ]
+    },
+    {
+      "rank": 6,
+      "kind": "capa_semantica_editorial_del_paquete",
+      "examples": [
+        "competency_cards",
+        "generation_rules"
+      ]
+    }
+  ],
+  "runtime_policy": {
+    "do_not_surface_conflicts_to_teacher": true,
+    "use_canonical_resolution": true,
+    "year_overlays_only_when_applicable": true,
+    "never_replace_official_names_with_semantic_paraphrases": true
+  }
+}

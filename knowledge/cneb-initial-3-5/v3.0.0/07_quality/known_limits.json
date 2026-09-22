@@ -1,0 +1,30 @@
+{
+  "version": "3.0.0",
+  "limits": [
+    {
+      "id": "LIMIT-NOT-VERBATIM-CORPUS",
+      "severity": "important",
+      "description": "Esta base está optimizada para comprensión/generación y contiene síntesis/paráfrasis pedagógicas, no una reproducción completa y literal de los PDF.",
+      "runtime_effect": "No citar una paráfrasis como frase textual de MINEDU. Para mostrar texto oficial literal o auditoría legal, usar el registro official estructurado del repositorio."
+    },
+    {
+      "id": "LIMIT-OFFICIAL-PERFORMANCE-TEXT",
+      "severity": "important",
+      "description": "Los 140 progression_semantic_candidates son candidatos semánticos, no desempeños oficiales textuales.",
+      "runtime_effect": "Pueden ayudar a retrieval/ranking; una salida que requiera el desempeño oficial debe resolverlo contra curriculum/official una vez este se encuentre poblado."
+    },
+    {
+      "id": "LIMIT-YEAR-OVERLAY",
+      "severity": "normal",
+      "description": "Las orientaciones 2026 son temporales.",
+      "runtime_effect": "No convertirlas en regla permanente fuera de contexto."
+    },
+    {
+      "id": "LIMIT-RELIGION-L2",
+      "severity": "normal",
+      "description": "Religión y Castellano L2 son contextuales.",
+      "runtime_effect": "Filtrar por aplicabilidad antes de seleccionarlas."
+    }
+  ],
+  "design_decision": "El backend no debe releer PDF para generar documentos ordinarios. La ingestión/actualización de fuentes es un proceso offline/versionado."
+}

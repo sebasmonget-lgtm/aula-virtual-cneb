@@ -1,0 +1,38 @@
+{
+  "id": "projects_units_workshops",
+  "version": "3.0.0",
+  "purpose": "Elegir y diseñar la organización pedagógica adecuada.",
+  "source_refs": [
+    "PROYECTOS_INICIAL_2019",
+    "PLANIFICACION_INICIAL_2019",
+    "ORIENTACIONES_INICIAL_2025"
+  ],
+  "rules": [
+    {
+      "id": "ORG-01",
+      "rule": "Elegir proyecto cuando exista un interés, pregunta, problema o necesidad auténtica que pueda sostener exploración e investigación con participación de los niños.",
+      "why": "El proyecto no es solo un tema con varias actividades."
+    },
+    {
+      "id": "ORG-02",
+      "rule": "El proyecto se construye de forma abierta: escuchar preguntas, recoger ideas/teorías, buscar información, probar alternativas y redefinir acciones.",
+      "why": "Los niños tienen rol protagónico y el docente media."
+    },
+    {
+      "id": "ORG-03",
+      "rule": "No planificar un proyecto de manera completamente cerrada de inicio a fin; anticipar propósitos y posibles caminos, dejando espacio a emergentes.",
+      "why": "La curiosidad real puede modificar la secuencia."
+    },
+    {
+      "id": "ORG-04",
+      "rule": "Usar unidad cuando convenga organizar un conjunto de experiencias alrededor de necesidades/contextos pertinentes sin requerir dinámica investigativa emergente.",
+      "why": "No todo aprendizaje necesita formato de proyecto."
+    },
+    {
+      "id": "ORG-05",
+      "rule": "Los talleres pueden funcionar de manera paralela/recurrente cuando existe un propósito y tiempo definido; no crearlos solo por llenar horario.",
+      "why": "La organización debe responder a intención pedagógica y contexto."
+    }
+  ],
+  "generation_implications": []
+}

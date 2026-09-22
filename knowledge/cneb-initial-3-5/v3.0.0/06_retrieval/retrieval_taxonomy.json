@@ -1,0 +1,60 @@
+{
+  "version": "3.0.0",
+  "filters": {
+    "age": "3|4|5",
+    "domain": [
+      "curriculum_core",
+      "transversal_approaches",
+      "curriculum_competency",
+      "curriculum_age_profile",
+      "curriculum_selection",
+      "planning",
+      "diagnostic_assessment",
+      "formative_assessment",
+      "projects_units_workshops",
+      "activity_design",
+      "evidence_and_criteria",
+      "teacher_interaction_and_mediation",
+      "play_and_sectors",
+      "spaces_materials",
+      "socioemotional",
+      "family_context_and_adaptation",
+      "tutoring_and_wellbeing",
+      "castellano_l2",
+      "religion_context",
+      "orality_cycle_ii",
+      "school_year_start"
+    ],
+    "competency_id": [
+      "PS_IDENTIDAD",
+      "PS_CONVIVE",
+      "PS_RELIGION",
+      "PSICO_MOTRICIDAD",
+      "COM_ORAL",
+      "COM_LECTURA",
+      "COM_ESCRITURA",
+      "COM_ARTE",
+      "CAST_L2_ORAL",
+      "MAT_CANTIDAD",
+      "MAT_FORMA",
+      "CYT_INDAGA",
+      "TRANS_TIC",
+      "TRANS_AUTONOMO"
+    ],
+    "temporal_scope": [
+      "stable",
+      "2026"
+    ]
+  },
+  "recommended_retrieval": {
+    "default_top_k": 8,
+    "rerank_rules": [
+      "age exact match first",
+      "teacher explicit artifact intent first",
+      "competency exact match when already confirmed",
+      "authority/rule priority before examples",
+      "retrieve confusion boundary when top candidates are semantically close"
+    ],
+    "context_budget_policy": "Prefer fewer complete units over many truncated fragments; include full competency decision card when selecting a competency."
+  }
+}

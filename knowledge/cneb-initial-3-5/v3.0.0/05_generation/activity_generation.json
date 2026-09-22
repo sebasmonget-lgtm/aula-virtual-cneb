@@ -1,0 +1,53 @@
+{
+  "version": "3.0.0",
+  "required_context": [
+    "age",
+    "primary_competency",
+    "purpose",
+    "classroom_context"
+  ],
+  "recommended_context": [
+    "specific_performance_or_age_profile",
+    "criterion",
+    "expected_evidence",
+    "student/group interests",
+    "materials/time"
+  ],
+  "structure": [
+    {
+      "field": "purpose",
+      "rule": "One clear pedagogical intention."
+    },
+    {
+      "field": "meaningful_situation",
+      "rule": "A reason to act, play, explore, solve, communicate or create."
+    },
+    {
+      "field": "teacher_preparation",
+      "rule": "Space/materials/possible prompts, not a script of child answers."
+    },
+    {
+      "field": "child_actions",
+      "rule": "What children can choose/do/try/communicate."
+    },
+    {
+      "field": "mediation",
+      "rule": "Questions and interventions conditional on what happens."
+    },
+    {
+      "field": "evidence_opportunities",
+      "rule": "Natural moments where the criterion can be observed."
+    },
+    {
+      "field": "closure_or_continuity",
+      "rule": "Socialize/represent/revisit or continue later; closure need not be worksheet."
+    }
+  ],
+  "quality_checks": [
+    "age appropriate",
+    "not worksheet dependent",
+    "allows agency",
+    "evidence coherent",
+    "secondary competencies not inflated"
+  ]
+}

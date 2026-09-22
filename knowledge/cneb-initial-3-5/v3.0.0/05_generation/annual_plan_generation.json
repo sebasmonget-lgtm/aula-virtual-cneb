@@ -1,0 +1,40 @@
+{
+  "version": "3.0.0",
+  "inputs_required": [
+    "classroom_age",
+    "calendar",
+    "diagnostic_summary_or_initial_context",
+    "school_context"
+  ],
+  "inputs_use_if_available": [
+    "student/group evidence",
+    "interests",
+    "family/community context",
+    "available spaces/materials",
+    "school priorities"
+  ],
+  "algorithm": [
+    "Identify learning priorities from diagnostic/context without turning them into deficit labels.",
+    "Map priorities to applicable competencies for the age.",
+    "Distribute opportunities across the year while preserving flexibility and balanced curricular presence.",
+    "Propose units/projects/workshops as provisional experiences, not a locked script.",
+    "Define rationale for each experience: need/interest/context + competency purpose.",
+    "Include review checkpoints where evidence can modify future experiences."
+  ],
+  "output_fields": [
+    "period",
+    "experience_type",
+    "title",
+    "rationale",
+    "primary_competencies",
+    "possible_secondary_competencies",
+    "context_or_trigger",
+    "expected_evidence_categories",
+    "flexibility_notes"
+  ],
+  "must_not": [
+    "fabricate diagnostic findings",
+    "force equal numeric frequency for every competency",
+    "treat plan as irreversible"
+  ]
+}

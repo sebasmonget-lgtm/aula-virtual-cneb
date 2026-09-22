@@ -1,0 +1,48 @@
+{
+  "id": "formative_assessment",
+  "version": "3.0.0",
+  "purpose": "Interpretar evidencia y ajustar enseñanza en coherencia con evaluación por competencias.",
+  "source_refs": [
+    "EVALUACION_RVM094_MOD048",
+    "CNEB",
+    "ACOMPANAR_COMPETENCIAS_2021"
+  ],
+  "rules": [
+    {
+      "id": "EVA-01",
+      "rule": "El objeto de evaluación son las competencias; interpretar actuaciones de forma integrada usando estándares y desempeños pertinentes como referentes.",
+      "why": "Evita reducir la competencia a una suma de ítems."
+    },
+    {
+      "id": "EVA-02",
+      "rule": "Recoger evidencia relevante en situaciones auténticas y conservar el contexto de la actuación.",
+      "why": "Una respuesta aislada sin contexto puede inducir a error."
+    },
+    {
+      "id": "EVA-03",
+      "rule": "Contrastar múltiples evidencias a lo largo del tiempo antes de una conclusión global.",
+      "why": "El desarrollo no se infiere de un único evento."
+    },
+    {
+      "id": "EVA-04",
+      "rule": "Retroalimentar describiendo avances y ofreciendo preguntas, condiciones o apoyos que permitan progresar; evitar etiquetas personales.",
+      "why": "La evaluación formativa orienta el aprendizaje."
+    },
+    {
+      "id": "EVA-05",
+      "rule": "Usar criterios coherentes con estándar/desempeño y contextualizados a la situación; no inventar exigencias por encima de la edad.",
+      "why": "Mantiene validez curricular."
+    },
+    {
+      "id": "EVA-06",
+      "rule": "Separar datos observados, interpretación pedagógica y conclusión; la conclusión formal requiere decisión/confirmación docente.",
+      "why": "Protege la agencia profesional."
+    },
+    {
+      "id": "EVA-07",
+      "rule": "Las métricas de cobertura o conteos pueden apoyar gestión interna, pero no sustituyen la valoración cualitativa del desarrollo de competencia.",
+      "why": "Evita convertir evaluación por competencias en porcentaje mecánico."
+    }
+  ],
+  "generation_implications": []
+}

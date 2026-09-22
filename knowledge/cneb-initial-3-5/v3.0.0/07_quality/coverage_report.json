@@ -1,0 +1,46 @@
+{
+  "version": "3.0.0",
+  "scope": {
+    "ages": [
+      3,
+      4,
+      5
+    ],
+    "cycle": "II",
+    "official_source_policy": "MINEDU only"
+  },
+  "counts": {
+    "sources": 17,
+    "competencies": 14,
+    "semantic_progression_candidates": 140,
+    "retrieval_units": 176,
+    "pedagogy_modules": 15,
+    "benchmark_cases": 50
+  },
+  "covered_domains": [
+    "CNEB core",
+    "transversal approaches",
+    "14 competency decision cards",
+    "age profiles 3/4/5",
+    "planning",
+    "diagnostic assessment",
+    "formative assessment",
+    "projects/units/workshops",
+    "activity design",
+    "criteria/evidence",
+    "teacher mediation",
+    "play/sectors",
+    "spaces/materials",
+    "socioemotional",
+    "family/adaptation",
+    "tutoring/wellbeing",
+    "Castellano L2",
+    "religion",
+    "orality",
+    "annual plan generation",
+    "project/unit generation",
+    "activity generation",
+    "assessment synthesis",
+    "reports"
+  ]
+}

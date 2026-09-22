@@ -1,0 +1,69 @@
+{
+  "version": "3.0.0",
+  "approaches": [
+    {
+      "id": "rights",
+      "canonical_name": "Enfoque de derechos",
+      "ai_meaning": "Reconocer a niñas y niños como sujetos de derechos, capaces de participar, opinar y ser protegidos.",
+      "selection_rule": "Integrar cuando el contexto lo haga auténtico; no añadir como etiqueta decorativa.",
+      "source_refs": [
+        "CNEB"
+      ]
+    },
+    {
+      "id": "inclusive_attention_diversity",
+      "canonical_name": "Enfoque inclusivo o de atención a la diversidad",
+      "ai_meaning": "Eliminar barreras, sostener altas expectativas pertinentes y responder a diferencias sin homogeneizar.",
+      "selection_rule": "Integrar cuando el contexto lo haga auténtico; no añadir como etiqueta decorativa.",
+      "source_refs": [
+        "CNEB"
+      ]
+    },
+    {
+      "id": "intercultural",
+      "canonical_name": "Enfoque intercultural",
+      "ai_meaning": "Valorar identidades culturales, diálogo respetuoso y aprendizaje desde contextos diversos, sin jerarquizar culturas.",
+      "selection_rule": "Integrar cuando el contexto lo haga auténtico; no añadir como etiqueta decorativa.",
+      "source_refs": [
+        "CNEB"
+      ]
+    },
+    {
+      "id": "gender_equality",
+      "canonical_name": "Enfoque de igualdad de género",
+      "ai_meaning": "Evitar estereotipos y garantizar iguales oportunidades, participación y trato.",
+      "selection_rule": "Integrar cuando el contexto lo haga auténtico; no añadir como etiqueta decorativa.",
+      "source_refs": [
+        "CNEB"
+      ]
+    },
+    {
+      "id": "environmental",
+      "canonical_name": "Enfoque ambiental",
+      "ai_meaning": "Promover cuidado responsable de ambiente y recursos a través de experiencias concretas y decisiones cotidianas.",
+      "selection_rule": "Integrar cuando el contexto lo haga auténtico; no añadir como etiqueta decorativa.",
+      "source_refs": [
+        "CNEB"
+      ]
+    },
+    {
+      "id": "common_good",
+      "canonical_name": "Enfoque de orientación al bien común",
+      "ai_meaning": "Favorecer responsabilidad, cooperación y cuidado de bienes compartidos.",
+      "selection_rule": "Integrar cuando el contexto lo haga auténtico; no añadir como etiqueta decorativa.",
+      "source_refs": [
+        "CNEB"
+      ]
+    },
+    {
+      "id": "excellence",
+      "canonical_name": "Enfoque de búsqueda de la excelencia",
+      "ai_meaning": "Favorecer mejora continua, flexibilidad y disposición a aprender, sin competencia punitiva ni comparación humillante.",
+      "selection_rule": "Integrar cuando el contexto lo haga auténtico; no añadir como etiqueta decorativa.",
+      "source_refs": [
+        "CNEB"
+      ]
+    }
+  ],
+  "rule": "Los enfoques atraviesan las experiencias y decisiones pedagógicas; no funcionan como cursos ni como lista obligatoria en cada actividad."
+}

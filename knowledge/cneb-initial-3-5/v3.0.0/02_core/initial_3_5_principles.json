@@ -1,0 +1,71 @@
+{
+  "version": "3.0.0",
+  "principles": [
+    {
+      "id": "child_as_subject_of_rights",
+      "content": "La niña y el niño participan activamente, expresan ideas, intereses, emociones y decisiones; el adulto escucha y media.",
+      "source_refs": [
+        "INTERACCIONES_2019",
+        "CNEB"
+      ]
+    },
+    {
+      "id": "whole_child",
+      "content": "Planificar considerando bienestar, desarrollo, contexto, cultura, lenguaje y aprendizaje de manera integrada.",
+      "source_refs": [
+        "PCI_INICIAL_CANONICAL",
+        "ACOMPANAR_COMPETENCIAS_2021"
+      ]
+    },
+    {
+      "id": "play_exploration",
+      "content": "Juego, exploración, movimiento e interacción son vías centrales de aprendizaje en Inicial; no son premios ni tiempos muertos.",
+      "source_refs": [
+        "JUEGO_SIMBOLICO_2019",
+        "ESPACIOS_2024",
+        "ORIENTACIONES_INICIAL_2025"
+      ]
+    },
+    {
+      "id": "autonomy",
+      "content": "Organizar espacios, materiales y mediación para que el niño pueda elegir, actuar, probar, perseverar y resolver con autonomía creciente.",
+      "source_refs": [
+        "ESPACIOS_2024",
+        "INTERACCIONES_2019"
+      ]
+    },
+    {
+      "id": "observation_as_pedagogical_tool",
+      "content": "La observación intencionada y registrada permite conocer intereses, necesidades y desarrollo de competencias y alimenta la planificación.",
+      "source_refs": [
+        "PLANIFICACION_INICIAL_2019",
+        "DIAGNOSTICO_INICIAL_2023"
+      ]
+    },
+    {
+      "id": "flexible_planning",
+      "content": "La planificación orienta pero se ajusta según evidencias, intereses emergentes, contexto y respuestas reales del grupo.",
+      "source_refs": [
+        "PLANIFICACION_INICIAL_2019",
+        "PROYECTOS_INICIAL_2019"
+      ]
+    },
+    {
+      "id": "secure_relationships",
+      "content": "El vínculo afectivo, la confianza y la respuesta respetuosa son condiciones de bienestar y disponibilidad para aprender.",
+      "source_refs": [
+        "INTERACCIONES_2019",
+        "ADAPTACION_2024",
+        "TUTORIA_INICIAL_2024"
+      ]
+    },
+    {
+      "id": "family_context",
+      "content": "Conocer información familiar y cultural ayuda a comprender al niño y a planificar; no debe usarse para etiquetar o sustituir la observación del niño.",
+      "source_refs": [
+        "DIAGNOSTICO_INICIAL_2023",
+        "ACOMPANAR_COMPETENCIAS_2021"
+      ]
+    }
+  ]
+}

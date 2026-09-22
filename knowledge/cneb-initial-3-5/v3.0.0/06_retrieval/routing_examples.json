@@ -1,0 +1,60 @@
+{
+  "version": "3.0.0",
+  "examples": [
+    {
+      "query": "Necesito un proyecto porque encontraron caracoles en el jardín",
+      "retrieve": [
+        "projects_units_workshops",
+        "CYT_INDAGA",
+        "teacher_interaction_and_mediation"
+      ],
+      "note": "Proyecto solo si existe interés/pregunta real que pueda sostener investigación."
+    },
+    {
+      "query": "Dame una actividad para que los niños de 4 comparen quién tiene más",
+      "retrieve": [
+        "MAT_CANTIDAD",
+        "activity_design",
+        "evidence_and_criteria"
+      ],
+      "age": 4
+    },
+    {
+      "query": "Un niño dibujó lo que vio en la planta, ¿Arte o Ciencia?",
+      "retrieve": [
+        "CYT_INDAGA",
+        "COM_ARTE",
+        "confusion_boundary"
+      ],
+      "note": "Determinar por propósito: registro de información vs creación artística."
+    },
+    {
+      "query": "Haz el plan anual",
+      "retrieve": [
+        "planning",
+        "diagnostic_assessment",
+        "annual_plan_generation",
+        "age_runtime"
+      ],
+      "note": "No inventar prioridades si falta diagnóstico."
+    },
+    {
+      "query": "Necesito una conclusión descriptiva",
+      "retrieve": [
+        "formative_assessment",
+        "assessment_synthesis_generation",
+        "competency_age_profile"
+      ],
+      "note": "Solo proponer síntesis; confirmación docente."
+    },
+    {
+      "query": "Qué hacemos con un niño cuya lengua materna no es castellano",
+      "retrieve": [
+        "castellano_l2",
+        "CAST_L2_ORAL",
+        "family_context_and_adaptation"
+      ],
+      "note": "Preservar lengua materna y contexto."
+    }
+  ]
+}
