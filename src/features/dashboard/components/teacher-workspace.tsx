@@ -26,6 +26,7 @@ import { ActivityRunView } from "./activity-run-view";
 import { AttendanceDialog } from "./attendance-dialog";
 import { AIActivityGenerator } from "./ai-activity-generator";
 import { AnnualPlanGenerator } from "./annual-plan-generator";
+import { LearningExperienceGenerator } from "./learning-experience-generator";
 
 const nav = [
   ["Hoy", Home], ["Planificar", CalendarDays], ["Niños", Users],
@@ -206,7 +207,7 @@ export function TeacherWorkspace() {
         <main className="mx-auto w-full max-w-[1450px] px-4 pb-24 pt-6 md:px-7 md:pt-8">
           {active === "Perfil" ? dashboard ? <InstitutionProfile dashboard={dashboard} onSaved={setDashboard} /> : <p role={databaseState === "offline" ? "alert" : "status"} className="text-sm text-muted-foreground">{databaseState === "offline" ? "No se pudo conectar con la base local. Inicia npm run db:local y vuelve a cargar la página." : "Cargando perfil..."}</p> :
           active === "Evaluar" ? dashboard ? <GuidedDiagnostic dashboard={dashboard} /> : <p role={databaseState === "offline" ? "alert" : "status"} className="text-sm text-muted-foreground">{databaseState === "offline" ? "No se pudo conectar con la base local. Inicia npm run db:local y vuelve a cargar la página." : "Cargando evaluación diagnóstica..."}</p> :
-          active === "Niños" ? <StudentsScreen students={students} /> : active === "Planificar" ? dashboard ? <><div className="mb-5 flex gap-3"><span className="rounded-full bg-[#d8f0f4] px-3 py-1 text-sm font-semibold">Plan anual</span><span className="rounded-full bg-muted px-3 py-1 text-sm">Proyectos / Unidades · próximamente</span><span className="rounded-full bg-muted px-3 py-1 text-sm">Actividades · prototipo</span></div><AnnualPlanGenerator /><div className="mt-10 border-t pt-8"><AIActivityGenerator dashboard={dashboard} initialMaterials={dashboard.today.blocks.find((block) => block.activity_id === dashboard.activity?.id)?.materials ?? []} /></div></> : <p role={databaseState === "offline" ? "alert" : "status"} className="text-sm text-muted-foreground">{databaseState === "offline" ? "No se pudo conectar con la base local. Inicia npm run db:local y vuelve a cargar la página." : "Cargando planificación..."}</p> : <>
+          active === "Niños" ? <StudentsScreen students={students} /> : active === "Planificar" ? dashboard ? <PlanningArea dashboard={dashboard} /> : <p role={databaseState === "offline" ? "alert" : "status"} className="text-sm text-muted-foreground">{databaseState === "offline" ? "No se pudo conectar con la base local. Inicia npm run db:local y vuelve a cargar la página." : "Cargando planificación..."}</p> : <>
           {activityRunBlock ? <ActivityRunView block={activityRunBlock} onBack={() => setActivityRunBlockId(null)} onEvidence={() => openEvidenceFor(activityRunBlock)} onStepChange={async (stepIndex) => updateExecution({ scheduleEntryId: activityRunBlock.id, action: "set_step", stepIndex })} onComplete={async () => { await updateExecution({ scheduleEntryId: activityRunBlock.id, action: "complete", closureType: "as_planned" }); setActivityRunBlockId(null); }} /> : active === "Hoy" && <TodayScreen dashboard={dashboard} openEvidence={openEvidenceFor} openAttendance={() => setAttendanceOpen(true)} updateExecution={updateExecution} openActivity={openActivity} />}
           <div className={activityRunBlock || active === "Hoy" ? "hidden" : ""}>
           <section className="mb-7 flex flex-wrap items-end justify-between gap-4">
@@ -337,4 +338,9 @@ function EvidenceDialog({ open, onOpenChange, students, studentId, setStudentId,
       <DialogFooter className="border-t px-6 py-4"><Button variant="ghost" onClick={() => onOpenChange(false)}>Cancelar</Button><Button variant="outline" disabled={!criterionId || !observationStatus || saved || !studentId} onClick={() => saveEvidence(true)}>Guardar y siguiente</Button><Button disabled={!criterionId || !observationStatus || saved || !studentId} onClick={() => saveEvidence()}>{saved ? <><Check /> Evidencia guardada</> : "Guardar evidencia"}</Button></DialogFooter>
     </DialogContent>
   </Dialog>;
+}
+
+function PlanningArea({ dashboard }: { dashboard: LocalDashboard }) {
+ const [tab,setTab]=useState<"annual"|"experiences"|"activities">("annual");
+ return <><div className="mb-5 flex flex-wrap gap-3"><Button variant={tab==="annual"?"default":"outline"} onClick={()=>setTab("annual")}>Plan anual</Button><Button variant={tab==="experiences"?"default":"outline"} onClick={()=>setTab("experiences")}>Proyectos y unidades</Button><Button variant={tab==="activities"?"default":"outline"} onClick={()=>setTab("activities")}>Actividades</Button></div>{tab==="annual"?<AnnualPlanGenerator />:tab==="experiences"?<LearningExperienceGenerator />:<AIActivityGenerator dashboard={dashboard} initialMaterials={dashboard.today.blocks.find((block) => block.activity_id === dashboard.activity?.id)?.materials ?? []} />}</>;
 }

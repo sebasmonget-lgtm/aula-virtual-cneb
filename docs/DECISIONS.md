@@ -181,3 +181,9 @@ La señal interna usa una cobertura mínima configurable de 50%, y requiere al m
 
 **Decisión.** Los textos oficiales se almacenan por versión y se referencian por ID estable. Una experiencia o actividad no guarda una reformulación libre de la competencia como sustituto del dato oficial.
 
+
+## ADR 029 Project y Unit como experiencias v4 derivadas
+
+**Decisión.** `project` y `unit` usan schemas estrictos, routing Sol/medium y se materializan solamente tras confirmación docente como `learning_experiences`. Una propuesta del plan anual se identifica por `annual_plan_id` y su índice final; un índice único evita duplicados. Las experiencias emergentes usan `origin = emergent`. La metadata queda detrás de un identificador opaco de generación y nunca llega al navegador.
+
+**Consecuencia.** El plan anual sigue siendo una propuesta. Project y Unit conservan en `details` propósito, competencias v4, detonante o necesidad, caminos o situaciones, materiales, evidencia y flexibilidad para la futura creación de actividades. Esta fase no crea `activities`; workshop sigue pendiente.

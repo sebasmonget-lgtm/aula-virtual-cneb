@@ -40,6 +40,18 @@ export const ANNUAL_PLAN_OUTPUT_SCHEMA = {
     } } }, review_checkpoints: { type: "array", items: { type: "string", minLength: 1 } }, flexibility_notes: { type: "string", minLength: 1 },
   },
 };
+const EXPERIENCE_GENERATION_FIELDS = ["title", "purpose", "starting_point", "primary_competency_ids", "possible_secondary_competency_ids", "spaces_and_materials", "evidence_opportunities", "family_or_community_links", "adjustment_points", "flexibility_notes"];
+const PATHWAY_FIELDS = ["title", "pedagogical_intention", "possible_child_actions"];
+function experienceOutputSchema(id, contextField, collectionField) {
+  return { id, type: "object", additionalProperties: false, required: [...EXPERIENCE_GENERATION_FIELDS, contextField, collectionField], properties: {
+    title: { type: "string", minLength: 1 }, purpose: { type: "string", minLength: 1 }, [contextField]: { type: "string", minLength: 1 }, starting_point: { type: "string", minLength: 1 },
+    primary_competency_ids: { type: "array", items: { type: "string" } }, possible_secondary_competency_ids: { type: "array", items: { type: "string" } },
+    [collectionField]: { type: "array", items: { type: "object", additionalProperties: false, required: PATHWAY_FIELDS, properties: { title: { type: "string", minLength: 1 }, pedagogical_intention: { type: "string", minLength: 1 }, possible_child_actions: { type: "string", minLength: 1 } } } },
+    spaces_and_materials: { type: "array", items: { type: "string", minLength: 1 } }, evidence_opportunities: { type: "array", items: { type: "string", minLength: 1 } }, family_or_community_links: { type: "array", items: { type: "string", minLength: 1 } }, adjustment_points: { type: "array", items: { type: "string", minLength: 1 } }, flexibility_notes: { type: "string", minLength: 1 },
+  } };
+}
+export const PROJECT_OUTPUT_SCHEMA = experienceOutputSchema("project-v1", "trigger_or_interest", "possible_pathways");
+export const UNIT_OUTPUT_SCHEMA = experienceOutputSchema("unit-v1", "learning_need_or_context", "proposed_situations");
 export class InvalidAIGenerationError extends Error {
   constructor(reason, details = {}) {
     super(`Generación de IA inválida: ${reason}.`);
@@ -130,6 +142,20 @@ export function buildProviderRequest(workflow, bundle, executionPlan, outputSche
     execution_plan: structuredClone(executionPlan),
   });
 }
+function assertExperienceOutput(output, bundle, workflow) {
+  const contextField = workflow === "project" ? "trigger_or_interest" : "learning_need_or_context";
+  const collectionField = workflow === "project" ? "possible_pathways" : "proposed_situations";
+  const allowedFields = [...EXPERIENCE_GENERATION_FIELDS, contextField, collectionField];
+  const missing = allowedFields.filter((field) => !(field in output));
+  const unknown = Object.keys(output).filter((field) => !allowedFields.includes(field));
+  if (missing.length || unknown.length) throw new InvalidAIGenerationError(`${workflow}_schema_mismatch`, { missing_fields: missing, unknown_fields: unknown });
+  for (const field of ["title", "purpose", "starting_point", contextField, "flexibility_notes"]) if (typeof output[field] !== "string" || !output[field].trim()) throw new InvalidAIGenerationError(`${workflow}_required_field_invalid`, { field });
+  for (const field of ["primary_competency_ids", "possible_secondary_competency_ids", "spaces_and_materials", "evidence_opportunities", "family_or_community_links", "adjustment_points", collectionField]) if (!Array.isArray(output[field])) throw new InvalidAIGenerationError(`${workflow}_required_field_invalid`, { field });
+  const allowed = new Set(bundle.curriculum.competency_cards.map((card) => card.id));
+  for (const id of [...output.primary_competency_ids, ...output.possible_secondary_competency_ids]) if (!allowed.has(id)) throw new InvalidAIGenerationError(`${workflow}_competency_outside_bundle`, { competency_id: id });
+  for (const item of output[collectionField]) if (!item || typeof item !== "object" || PATHWAY_FIELDS.some((field) => typeof item[field] !== "string" || !item[field].trim()) || Object.keys(item).some((field) => !PATHWAY_FIELDS.includes(field))) throw new InvalidAIGenerationError(`${workflow}_pathway_schema_mismatch`);
+  return output;
+}
 
 /**
  * Generates one validated activity through an injected provider.
@@ -141,18 +167,18 @@ export async function generateAIWorkflowV4(input, { provider, knowledgeBase, exe
   if (plan.execution === "code") {
     throw new InvalidAIGenerationError("workflow_not_generation_enabled", { workflow: input?.workflow, execution_plan: plan });
   }
-  if (!["activity", "annual_plan"].includes(input?.workflow) || plan.execution !== "generation") {
+  if (!["activity", "annual_plan", "project", "unit"].includes(input?.workflow) || plan.execution !== "generation") {
     throw new InvalidAIGenerationError("unsupported_workflow", { workflow: input?.workflow, execution_plan: plan });
   }
   if (!provider || typeof provider.generate !== "function") {
     throw new InvalidAIGenerationError("provider_not_configured");
   }
   const prepared = await prepareAIRequestV4(input, knowledgeBase);
-  const outputSchema = input.workflow === "annual_plan" ? ANNUAL_PLAN_OUTPUT_SCHEMA : ACTIVITY_OUTPUT_SCHEMA;
+  const outputSchema = input.workflow === "annual_plan" ? ANNUAL_PLAN_OUTPUT_SCHEMA : input.workflow === "project" ? PROJECT_OUTPUT_SCHEMA : input.workflow === "unit" ? UNIT_OUTPUT_SCHEMA : ACTIVITY_OUTPUT_SCHEMA;
   const providerRequest = buildProviderRequest(input.workflow, prepared.aiContextBundle, plan, outputSchema);
   const confirmedCompetencyId = input.competency_ids?.length === 1 ? input.competency_ids[0] : null;
   const providerResponse = unwrapProviderResponse(await provider.generate(providerRequest));
-  const output = input.workflow === "annual_plan" ? assertAnnualPlanOutput(providerResponse.output, prepared.aiContextBundle) : assertActivityOutput(providerResponse.output, prepared.aiContextBundle, confirmedCompetencyId);
+  const output = input.workflow === "annual_plan" ? assertAnnualPlanOutput(providerResponse.output, prepared.aiContextBundle) : ["project", "unit"].includes(input.workflow) ? assertExperienceOutput(providerResponse.output, prepared.aiContextBundle, input.workflow) : assertActivityOutput(providerResponse.output, prepared.aiContextBundle, confirmedCompetencyId);
   return {
     output,
     metadata: {

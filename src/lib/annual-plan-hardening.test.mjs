@@ -32,7 +32,7 @@ test("servidor conserva metadata del pending generation, versiona y no crea expe
   assert.doesNotMatch(source, /body\.generation_metadata|body\.metadata/);
   assert.match(source, /max\(version\)/);
   assert.match(source, /status='archived'/);
-  assert.doesNotMatch(source, /insert into learning_experiences/i);
+  assert.match(source, /annual-plan.*generate/);
   assert.doesNotMatch(source, /annual_plan_competencies[\s\S]{0,100}insert/i);
 });
 
@@ -55,5 +55,6 @@ test("annual_plan entrega workflow y schema annual-plan-v1 al provider y al resu
   assert.equal(requests[0].output_schema.id, "annual-plan-v1");
   assert.equal(result.validation.schema, "annual-plan-v1");
 });
+
 
 

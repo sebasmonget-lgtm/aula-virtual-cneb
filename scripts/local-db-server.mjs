@@ -11,6 +11,7 @@ import { buildClassroomStatistics } from "../src/lib/statistics-service.mjs";
 import { loadKnowledgeBaseV4 } from "../src/lib/knowledge-base-v4.mjs";
 import { generateTeacherActivity } from "../src/lib/ai-activity-ui-service.mjs";
 import { generateTeacherAnnualPlan } from "../src/lib/ai-annual-plan-ui-service.mjs";
+import { generateTeacherLearningExperience } from "../src/lib/ai-learning-experience-ui-service.mjs";
 import { nextAnnualPlanVersion, safeAnnualGenerationMetadata } from "../src/lib/annual-plan-persistence.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -252,6 +253,15 @@ async function activityGenerationOptions() {
       .map((card) => ({ id: card.id, name: card.official_name })),
   };
 }
+async function competencyOptionsForWorkflow(workflow) {
+  const classroom = await annualPlanningContext();
+  if (!classroom || !["annual_plan", "project", "unit", "activity"].includes(workflow)) return { age: null, competencies: [] };
+  const knowledgeBase = await loadKnowledgeBaseV4();
+  const age = String(classroom.age);
+  return { age: classroom.age, competencies: knowledgeBase.competencyCards
+    .filter((card) => card.runtime_selectable_by_age?.[age] && !["CAST_L2_ORAL", "PS_RELIGION"].includes(card.id))
+    .map((card) => ({ id: card.id, name: card.official_name })) };
+}
 
 async function diagnosticWorkspace() {
   const classroomResult = await db.query(`
@@ -474,7 +484,36 @@ const server = createServer(async (request, response) => {
         await db.exec("commit"); send(response, 200, result.rows[0], origin);
       } catch (error) { await db.exec("rollback"); send(response, 404, { error: error?.message || "Plan anual no disponible para confirmar." }, origin); }
       return;
-    }    if (request.method === "GET" && url.pathname === "/api/ai/activity/options") {
+    }
+    if (request.method === "GET" && url.pathname === "/api/annual-plans/current") {
+      const context = await annualPlanningContext();
+      if (!context) { send(response, 404, { error: "No se encontró un aula activa." }, origin); return; }
+      const plans = (await db.query(`select id,version,status,proposal,created_at,updated_at from annual_plans where classroom_id=$1 and school_year_id=$2 order by version desc`, [context.id, context.school_year_id])).rows;
+      send(response, 200, { active: plans.find((plan) => plan.status === "active") ?? null, draft: plans.find((plan) => plan.status === "draft") ?? null, archived: plans.filter((plan) => plan.status === "archived") }, origin); return;
+    }
+    if (request.method === "GET" && url.pathname === "/api/learning-experiences") {
+      const context = await annualPlanningContext(); if (!context) { send(response, 404, { error: "No se encontró un aula activa." }, origin); return; }
+      const experiences = (await db.query(`select id,type,title,purpose,starts_on,ends_on,status,annual_plan_id,origin,planning_reason,source_proposal_index,details,teacher_confirmed_at from learning_experiences where classroom_id=$1 order by created_at desc`, [context.id])).rows;
+      send(response, 200, { experiences }, origin); return;
+    }
+    if (request.method === "GET" && url.pathname === "/api/ai/competency-options") {
+      send(response, 200, await competencyOptionsForWorkflow(url.searchParams.get("workflow") ?? ""), origin); return;
+    }
+    if (request.method === "POST" && url.pathname === "/api/ai/learning-experiences/generate") {
+      const classroom = await annualPlanningContext(); if (!classroom) { send(response, 404, { error: "No se encontró un aula activa." }, origin); return; }
+      try { const generated = await generateTeacherLearningExperience({ classroom, request: await readJson(request) }); const generationId = randomUUID(); pendingAnnualGenerations.set(generationId, { metadata: safeAnnualGenerationMetadata(generated.internalMetadata), createdAt: Date.now() }); send(response, 200, { proposal: generated.proposal, generation_id: generationId }, origin); } catch (error) { send(response, 422, { error: error?.message || "No se pudo generar la experiencia." }, origin); } return;
+    }
+    if (request.method === "POST" && url.pathname === "/api/learning-experiences") {
+      const context = await annualPlanningContext(); const body = await readJson(request); const pending = typeof body.generationId === "string" ? pendingAnnualGenerations.get(body.generationId) : null;
+      if (!context || !body.proposal || !["project", "unit"].includes(body.type) || !pending) { send(response, 422, { error: "Falta una generación válida de proyecto o unidad." }, origin); return; }
+      const originType = body.origin === "emergent" ? "emergent" : "planned"; const proposalIndex = originType === "planned" && Number.isInteger(body.sourceProposalIndex) ? body.sourceProposalIndex : null;
+      if (originType === "planned" && (!body.annualPlanId || proposalIndex === null)) { send(response, 422, { error: "Falta la propuesta de origen del plan anual." }, origin); return; }
+      try { const id = randomUUID(); await db.query(`insert into learning_experiences (id,classroom_id,type,title,purpose,starts_on,ends_on,status,details,annual_plan_id,origin,planning_reason,source_proposal_index,generation_metadata) values ($1,$2,$3,$4,$5,$6::date,$7::date,'draft',$8::jsonb,$9,$10,$11,$12,$13::jsonb)`, [id, context.id, body.type, body.proposal.title, body.proposal.purpose, context.starts_on, context.ends_on, JSON.stringify(body.proposal), body.annualPlanId ?? null, originType, body.planningReason ?? null, proposalIndex, JSON.stringify(pending.metadata)]); pendingAnnualGenerations.delete(body.generationId); send(response, 200, { id, status: "draft" }, origin); } catch (error) { send(response, 422, { error: error?.message || "No se pudo guardar la experiencia." }, origin); } return;
+    }
+    if (request.method === "POST" && url.pathname.startsWith("/api/learning-experiences/") && url.pathname.endsWith("/confirm")) {
+      const id = url.pathname.split("/")[3]; const result = await db.query(`update learning_experiences set status='active', teacher_confirmed_at=now() where id=$1 and classroom_id in (select id from classrooms where teacher_id=$2) and status='draft' returning id,status,teacher_confirmed_at`, [id, teacherId]); if (!result.rows[0]) { send(response, 404, { error: "Experiencia no disponible para confirmar." }, origin); return; } send(response, 200, result.rows[0], origin); return;
+    }
+    if (request.method === "GET" && url.pathname === "/api/ai/activity/options") {
       send(response, 200, await activityGenerationOptions(), origin);
       return;
     }
