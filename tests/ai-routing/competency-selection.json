@@ -1,0 +1,5 @@
+[
+  {"id":"caracoles-indagacion","age":5,"situation":"Encontramos caracoles en el jardín y queremos saber dónde viven.","acceptable_competency_ids":["CYT_INDAGA"],"expected_outcome":"manual_until_verified"},
+  {"id":"ambigua-relato","age":5,"situation":"Las niñas comentan un cuento y explican qué les gustó.","acceptable_competency_ids":["COM_ORAL","COM_LECTURA"],"expected_outcome":"manual_until_verified"},
+  {"id":"no-indagacion","age":5,"situation":"Copian un modelo de mariposa para decorar el aula.","unacceptable_competency_ids":["CYT_INDAGA"],"expected_outcome":"manual_until_verified"}
+]
