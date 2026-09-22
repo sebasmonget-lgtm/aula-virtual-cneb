@@ -9,13 +9,13 @@ export type StudentPedagogicalProfile = {
 };
 export type LocalStatistics = {
   classroom: { students_active: number; students_observed: number; coverage: string };
-  competencies: { competency_id: string; competency_text: string; planned_activities: number; students_with_information: number; evidence_count: number; demonstrated: number; with_support: number; not_yet_demonstrated: number; insufficient_information: number; last_observed_at: string | null; coverage: { students_with_information: number; students_total: number }; insight: "low_planning_presence" | "insufficient_information" | "observed_support_need" | "enough_information" }[];
+  competencies: { competency_id: string; competency_text: string; planning: { activities_last_28_days: number }; coverage: { total_students: number; students_observed: number; students_with_sufficient_information: number; students_insufficient_information: number }; students: { demonstrated: number; with_support: number; not_yet_demonstrated: number }; evidence_count: number; last_observed_at: string | null; insight: "low_planning_presence" | "insufficient_information" | "observed_support_need" | "enough_information" }[];
 };
 export type LocalEvidence = {
   id: string;
   student_id: string;
   observation_text: string | null;
-  observation_status: ObservationStatus;
+  observation_status: ObservationStatus | null;
   observed_at: string;
 };
 

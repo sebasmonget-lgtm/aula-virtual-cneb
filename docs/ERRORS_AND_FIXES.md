@@ -1,5 +1,13 @@
 # Errores y soluciones
 
+## 2026-09-22 Señal estadística sensible a evidencias repetidas
+
+**Síntoma.** El conteo inicial podía ocultar competencias sin uso y transformar varias evidencias de un mismo niño —o un único caso con apoyo— en una señal grupal.
+
+**Solución.** Partir del currículo aplicable por edad, usar el último estado marcado por estudiante/competencia y exigir cobertura y umbrales configurables para la señal interna.
+
+**Prevención.** Las pruebas separan ausencia de planificación, información insuficiente, registros históricos y necesidad observada grupal.
+
 ## 2026-09-22 Estado síncrono dentro de efecto al cargar un perfil de niño
 
 **Síntoma.** El linter de React detectó un `setState` síncrono dentro de un efecto al iniciar la carga del perfil pedagógico.

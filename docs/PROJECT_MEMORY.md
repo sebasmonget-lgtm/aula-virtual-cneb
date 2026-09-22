@@ -37,7 +37,7 @@ Proyecto nuevo iniciado el 20 de septiembre de 2026. Existe un shell responsive 
 3. Implementar síntesis editable/confirmable y su conexión condicionada con el plan anual.
 4. Crear proyectos nuevos de Supabase y hosting/staging; aplicar migraciones y comprobar RLS/Storage con dos usuarios de prueba.
 5. Completar importación en staging solo después de validar currículo, identidad y respaldos.
-6. Implementar perfiles pedagógicos de Niños, snapshots estructurados y estadísticas longitudinales antes de conectar IA o exportación Excel.
+6. Crear la interfaz de radar de competencias y, en una fase posterior, reutilizar sus estadísticas para Excel sin duplicar cálculos.
 
 ## Riesgos
 

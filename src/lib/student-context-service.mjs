@@ -1,5 +1,10 @@
 import { randomUUID } from "node:crypto";
 
+export function resolveSourceUpdatedAt(...timestamps) {
+  const valid = timestamps.flat().filter(Boolean).map((value) => new Date(value)).filter((value) => !Number.isNaN(value.valueOf()));
+  return valid.length ? new Date(Math.max(...valid.map((value) => value.valueOf()))).toISOString() : new Date(0).toISOString();
+}
+
 export async function buildStudentPedagogicalContext(db, studentId) {
   const student = (await db.query(`
     select s.id, coalesce(s.preferred_name, s.first_name) as name, s.first_name, s.last_name,
@@ -58,7 +63,10 @@ export async function buildStudentPedagogicalContext(db, studentId) {
 export async function refreshStudentContextSnapshot(db, studentId) {
   const context = await buildStudentPedagogicalContext(db, studentId);
   if (!context) return null;
-  const sourceUpdatedAt = context.recent_relevant_observations[0]?.observed_at ?? new Date().toISOString();
+  const sourceUpdatedAt = resolveSourceUpdatedAt(
+    context.recent_relevant_observations.map((item) => item.observed_at),
+    context.diagnosis.map((item) => item.updated_at),
+  );
   await db.query(`insert into student_context_snapshots
     (id, student_id, version, structured_payload, source_updated_at)
     values ($1, $2, 1, $3::jsonb, $4::timestamptz)

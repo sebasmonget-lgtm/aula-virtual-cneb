@@ -26,3 +26,5 @@ La actualización 01 añade `institution_profiles`, `institution_assets`, `compe
 La actualización de evidencia conserva las notas históricas y añade la marca observacional nullable para compatibilidad. La API actual exige la marca para toda evidencia nueva vinculada a un criterio. Las actividades exponen todos sus `activity_criteria` planificados, no solo el primero.
 
 `student_context_snapshots` guarda una derivación JSON determinista de diagnóstico y evidencias por estudiante. No es fuente de verdad, no contiene binarios multimedia y su `summary_text` queda vacío hasta que exista una integración de IA autorizada.
+
+Las evidencias históricas pueden no tener `observation_status`; se preservan para el historial, pero no cuentan como información suficiente en estadísticas. Estas agregan el último estado marcado por estudiante y competencia, no el número bruto de evidencias.
