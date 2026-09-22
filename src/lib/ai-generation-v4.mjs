@@ -3,6 +3,7 @@ import { resolveAIExecutionPlan } from "./ai-execution-router-v4.mjs";
 import { prepareAIRequestV4 } from "./prepare-ai-request-v4.mjs";
 import { validateAssessmentProposal } from "./assessment-v4-service.mjs";
 import { CONCLUSION_FIELDS, validateDescriptiveConclusion } from "./descriptive-conclusion-v4-service.mjs";
+import { FAMILY_REPORT_FIELDS, FAMILY_REPORT_SECTION_FIELDS, validateFamilyReport } from "./family-report-v4-service.mjs";
 
 const ACTIVITY_FIELDS = [
   "title",
@@ -59,6 +60,13 @@ export const CRITERION_EVIDENCE_OUTPUT_SCHEMA={id:"criterion-evidence-v1",type:"
 const ASSESSMENT_FIELDS=["competency_id","information_status","evidence_overview","observable_patterns","strengths_and_advances","support_needs","next_opportunities","teacher_questions","insufficiency_reason","caution"];
 export const ASSESSMENT_OUTPUT_SCHEMA={id:"assessment-v1",type:"object",additionalProperties:false,required:ASSESSMENT_FIELDS,properties:{competency_id:{type:"string",minLength:1},information_status:{enum:["sufficient","insufficient"]},evidence_overview:{type:"string",minLength:1},observable_patterns:{type:"array",items:{type:"string"}},strengths_and_advances:{type:"array",items:{type:"string"}},support_needs:{type:"array",items:{type:"string"}},next_opportunities:{type:"array",items:{type:"string"}},teacher_questions:{type:"array",items:{type:"string"}},insufficiency_reason:{type:["string","null"]},caution:{type:"string",minLength:1}}};
 export const DESCRIPTIVE_CONCLUSION_OUTPUT_SCHEMA = { id: "descriptive-conclusion-v1", type: "object", additionalProperties: false, required: CONCLUSION_FIELDS, properties: { competency_id: { type: "string", minLength: 1 }, information_status: { enum: ["sufficient", "insufficient"] }, conclusion_text: { type: "string", minLength: 1 }, progress_examples: { type: "array", items: { type: "string", minLength: 1 } }, support_or_conditions: { type: "array", items: { type: "string", minLength: 1 } }, next_steps: { type: "array", items: { type: "string", minLength: 1 } }, insufficiency_reason: { type: ["string", "null"] }, caution: { type: "string", minLength: 1 } } };
+export const FAMILY_REPORT_OUTPUT_SCHEMA = { id: "family-report-v1", type: "object", additionalProperties: false, required: FAMILY_REPORT_FIELDS, properties: {
+  introduction: { type: "string", minLength: 1 }, closing_note: { type: "string", minLength: 1 },
+  sections: { type: "array", items: { type: "object", additionalProperties: false, required: FAMILY_REPORT_SECTION_FIELDS, properties: {
+    competency_id: { type: "string", minLength: 1 }, information_status: { enum: ["sufficient", "insufficient"] }, progress_summary: { type: "string", minLength: 1 },
+    examples: { type: "array", items: { type: "string", minLength: 1 } }, support_or_conditions: { type: "array", items: { type: "string", minLength: 1 } }, next_steps: { type: "array", items: { type: "string", minLength: 1 } }, family_suggestions: { type: "array", items: { type: "string", minLength: 1 } }, insufficiency_note: { type: ["string", "null"] },
+  } } },
+} };
 export class InvalidAIGenerationError extends Error {
   constructor(reason, details = {}) {
     super(`Generación de IA inválida: ${reason}.`);
@@ -174,6 +182,13 @@ function assertDescriptiveConclusionOutput(output, bundle, competencyId, informa
   try { return validateDescriptiveConclusion(output, competencyId, informationStatus); }
   catch (error) { throw new InvalidAIGenerationError("descriptive_conclusion_schema_mismatch", { message: error.message }); }
 }
+function assertFamilyReportOutput(output, bundle, input) {
+  const selected = input.competency_ids;
+  if (bundle.curriculum.competency_cards.length !== selected.length || selected.some((id) => !bundle.curriculum.competency_cards.some((card) => card.id === id))) throw new InvalidAIGenerationError("family_report_competency_outside_bundle");
+  const sourceStatuses = input.student_context.teacher_confirmed_findings.map((item) => ({ competency_id: item.competency_id, information_status: item.information_status, has_progress_examples: item.progress_examples.length > 0 }));
+  try { return validateFamilyReport(output, selected, sourceStatuses); }
+  catch (error) { throw new InvalidAIGenerationError("family_report_schema_mismatch", { message: error.message }); }
+}
 
 /**
  * Generates one validated activity through an injected provider.
@@ -185,18 +200,18 @@ export async function generateAIWorkflowV4(input, { provider, knowledgeBase, exe
   if (plan.execution === "code") {
     throw new InvalidAIGenerationError("workflow_not_generation_enabled", { workflow: input?.workflow, execution_plan: plan });
   }
-  if (!["activity", "annual_plan", "project", "unit", "criterion_and_evidence", "assessment", "descriptive_conclusion"].includes(input?.workflow) || plan.execution !== "generation") {
+  if (!["activity", "annual_plan", "project", "unit", "criterion_and_evidence", "assessment", "descriptive_conclusion", "family_report"].includes(input?.workflow) || plan.execution !== "generation") {
     throw new InvalidAIGenerationError("unsupported_workflow", { workflow: input?.workflow, execution_plan: plan });
   }
   if (!provider || typeof provider.generate !== "function") {
     throw new InvalidAIGenerationError("provider_not_configured");
   }
   const prepared = await prepareAIRequestV4(input, knowledgeBase);
-  const outputSchema = input.workflow === "annual_plan" ? ANNUAL_PLAN_OUTPUT_SCHEMA : input.workflow === "project" ? PROJECT_OUTPUT_SCHEMA : input.workflow === "unit" ? UNIT_OUTPUT_SCHEMA : input.workflow === "criterion_and_evidence" ? CRITERION_EVIDENCE_OUTPUT_SCHEMA : input.workflow === "assessment" ? ASSESSMENT_OUTPUT_SCHEMA : input.workflow === "descriptive_conclusion" ? DESCRIPTIVE_CONCLUSION_OUTPUT_SCHEMA : ACTIVITY_OUTPUT_SCHEMA;
+  const outputSchema = input.workflow === "annual_plan" ? ANNUAL_PLAN_OUTPUT_SCHEMA : input.workflow === "project" ? PROJECT_OUTPUT_SCHEMA : input.workflow === "unit" ? UNIT_OUTPUT_SCHEMA : input.workflow === "criterion_and_evidence" ? CRITERION_EVIDENCE_OUTPUT_SCHEMA : input.workflow === "assessment" ? ASSESSMENT_OUTPUT_SCHEMA : input.workflow === "descriptive_conclusion" ? DESCRIPTIVE_CONCLUSION_OUTPUT_SCHEMA : input.workflow === "family_report" ? FAMILY_REPORT_OUTPUT_SCHEMA : ACTIVITY_OUTPUT_SCHEMA;
   const providerRequest = buildProviderRequest(input.workflow, prepared.aiContextBundle, plan, outputSchema);
   const confirmedCompetencyId = input.competency_ids?.length === 1 ? input.competency_ids[0] : null;
   const providerResponse = unwrapProviderResponse(await provider.generate(providerRequest));
-  const output = input.workflow === "annual_plan" ? assertAnnualPlanOutput(providerResponse.output, prepared.aiContextBundle) : ["project", "unit"].includes(input.workflow) ? assertExperienceOutput(providerResponse.output, prepared.aiContextBundle, input.workflow) : input.workflow === "criterion_and_evidence" ? assertCriterionEvidenceOutput(providerResponse.output,prepared.aiContextBundle,confirmedCompetencyId) : input.workflow === "assessment" ? assertAssessmentOutput(providerResponse.output,prepared.aiContextBundle,confirmedCompetencyId,input.evidence_history?.length??0) : input.workflow === "descriptive_conclusion" ? assertDescriptiveConclusionOutput(providerResponse.output, prepared.aiContextBundle, confirmedCompetencyId, input.student_context?.teacher_confirmed_findings?.information_status) : assertActivityOutput(providerResponse.output, prepared.aiContextBundle, confirmedCompetencyId);
+  const output = input.workflow === "annual_plan" ? assertAnnualPlanOutput(providerResponse.output, prepared.aiContextBundle) : ["project", "unit"].includes(input.workflow) ? assertExperienceOutput(providerResponse.output, prepared.aiContextBundle, input.workflow) : input.workflow === "criterion_and_evidence" ? assertCriterionEvidenceOutput(providerResponse.output,prepared.aiContextBundle,confirmedCompetencyId) : input.workflow === "assessment" ? assertAssessmentOutput(providerResponse.output,prepared.aiContextBundle,confirmedCompetencyId,input.evidence_history?.length??0) : input.workflow === "descriptive_conclusion" ? assertDescriptiveConclusionOutput(providerResponse.output, prepared.aiContextBundle, confirmedCompetencyId, input.student_context?.teacher_confirmed_findings?.information_status) : input.workflow === "family_report" ? assertFamilyReportOutput(providerResponse.output, prepared.aiContextBundle, input) : assertActivityOutput(providerResponse.output, prepared.aiContextBundle, confirmedCompetencyId);
   return {
     output,
     metadata: {

@@ -119,7 +119,7 @@ const workflowCases = [
   ["evidence_capture", { age: 5, student_id: "student-capture", criterion_id: "criterion-capture", observed_status: "demonstrated" }, "student_id", "student-capture"],
   ["assessment", { age: 5, student_id: "student-assessment", competency_ids: ["COM_ORAL"], evidence_history: ["record-1"] }, "student_id", "record-1"],
   ["descriptive_conclusion", { age: 5, student_id: "student-conclusion", competency_ids: ["COM_ORAL"], multiple_evidence_records: ["record-1", "record-2"] }, "student_id", "record-2"],
-  ["family_report", { age: 5, student_context: { id: "student-family" }, teacher_confirmed_findings: "Avanza al conversar con pares." }, "student_context", "Avanza al conversar con pares."],
+  ["family_report", { age: 5, competency_ids: ["COM_ORAL"], student_context: { id: "student-family" }, teacher_confirmed_findings: "Avanza al conversar con pares." }, "student_context", "Avanza al conversar con pares."],
   ["material_generation", { age: 5, activity_purpose: "explorar semillas", requested_material_type: "tarjetas de clasificación" }, "activity_purpose", "tarjetas de clasificación"],
   ["today_mode", { age: 5, current_schedule_block: "actividad de exploración", active_plan: "plan semanal 1" }, "current_schedule_block", "actividad de exploración"],
 ];

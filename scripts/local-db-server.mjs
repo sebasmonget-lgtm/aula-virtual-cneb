@@ -21,6 +21,7 @@ import { generateCriterionEvidence } from "../src/lib/ai-criterion-evidence-ui-s
 import { validateEvidenceCaptureV4 } from "../src/lib/evidence-capture-v4.mjs";
 import { createAssessmentRouteHandler } from "./assessment-routes.mjs";
 import { createDescriptiveConclusionRouteHandler } from "./descriptive-conclusion-routes.mjs";
+import { createFamilyReportRouteHandler } from "./family-report-routes.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const dataDir = path.join(root, ".local", "pgdata");
@@ -43,7 +44,7 @@ const exportTables = [
   "activities", "activity_criteria", "evidences", "competency_observation_guides",
   "document_templates", "document_versions", "diagnostic_sessions",
   "diagnostic_entries", "observation_references", "student_observations",
-  "class_schedule_entries", "daily_execution_logs", "attendance_records", "calendar_exceptions", "student_context_snapshots", "annual_plans", "annual_plan_competencies", "annual_plan_changes", "competency_assessments", "competency_descriptive_conclusions",
+  "class_schedule_entries", "daily_execution_logs", "attendance_records", "calendar_exceptions", "student_context_snapshots", "annual_plans", "annual_plan_competencies", "annual_plan_changes", "competency_assessments", "competency_descriptive_conclusions", "family_reports",
 ];
 
 await mkdir(path.dirname(dataDir), { recursive: true });
@@ -360,6 +361,7 @@ async function diagnosticWorkspace() {
 
 const handleAssessmentRoute = createAssessmentRouteHandler({ db, annualPlanningContext, readJson, send, pending: pendingAIGenerations, metadataForAudit: safeAnnualGenerationMetadata, refreshStudentContext: refreshStudentContextSnapshot });
 const handleDescriptiveConclusionRoute = createDescriptiveConclusionRouteHandler({ db, annualPlanningContext, readJson, send, pending: pendingAIGenerations, metadataForAudit: safeAnnualGenerationMetadata, refreshStudentContext: refreshStudentContextSnapshot });
+const handleFamilyReportRoute = createFamilyReportRouteHandler({ db, annualPlanningContext, readJson, send, pending: pendingAIGenerations, metadataForAudit: safeAnnualGenerationMetadata });
 const server = createServer(async (request, response) => {
   const origin = request.headers.origin;
   const url = new URL(request.url ?? "/", `http://127.0.0.1:${port}`);
@@ -708,6 +710,7 @@ const server = createServer(async (request, response) => {
     }
     if (await handleAssessmentRoute({ request, url, response, origin })) return;
     if (await handleDescriptiveConclusionRoute({ request, url, response, origin })) return;
+    if (await handleFamilyReportRoute({ request, url, response, origin })) return;
     if (request.method === "POST" && url.pathname === "/api/evidences") {
       const body = await readJson(request);
       let capture;

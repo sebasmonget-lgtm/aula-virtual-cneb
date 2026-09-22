@@ -29,6 +29,7 @@ import { AnnualPlanGenerator } from "./annual-plan-generator";
 import { LearningExperienceGenerator } from "./learning-experience-generator";
 import { AssessmentGenerator } from "./assessment-generator";
 import { DescriptiveConclusionGenerator } from "./descriptive-conclusion-generator";
+import { FamilyReportGenerator } from "./family-report-generator";
 
 const nav = [
   ["Hoy", Home], ["Planificar", CalendarDays], ["Niños", Users],
@@ -346,12 +347,13 @@ function EvidenceDialog({ open, onOpenChange, students, studentId, setStudentId,
 }
 
 function EvaluationArea({ dashboard, students }: { dashboard: LocalDashboard; students: LocalStudent[] }) {
-  const [tab, setTab] = useState<"diagnostic" | "assessment" | "conclusion">("diagnostic");
+  const [tab, setTab] = useState<"diagnostic" | "assessment" | "conclusion" | "family_report">("diagnostic");
   return <><div className="mb-5 flex flex-wrap gap-3">
     <Button variant={tab === "diagnostic" ? "default" : "outline"} onClick={() => setTab("diagnostic")}>Diagnóstico</Button>
     <Button variant={tab === "assessment" ? "default" : "outline"} onClick={() => setTab("assessment")}>Análisis de evidencias</Button>
     <Button variant={tab === "conclusion" ? "default" : "outline"} onClick={() => setTab("conclusion")}>Conclusiones descriptivas</Button>
-  </div>{tab === "diagnostic" ? <GuidedDiagnostic dashboard={dashboard} /> : tab === "assessment" ? <AssessmentGenerator students={students} /> : <DescriptiveConclusionGenerator students={students} />}</>;
+    <Button variant={tab === "family_report" ? "default" : "outline"} onClick={() => setTab("family_report")}>Informe a familias</Button>
+  </div>{tab === "diagnostic" ? <GuidedDiagnostic dashboard={dashboard} /> : tab === "assessment" ? <AssessmentGenerator students={students} /> : tab === "conclusion" ? <DescriptiveConclusionGenerator students={students} /> : <FamilyReportGenerator students={students} />}</>;
 }
 function PlanningArea() {
  const [tab,setTab]=useState<"annual"|"experiences"|"activities">("annual");

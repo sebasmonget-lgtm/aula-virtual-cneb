@@ -217,3 +217,11 @@ La señal interna usa una cobertura mínima configurable de 50%, y requiere al m
 **Decisión.** `criterion_and_evidence` se genera solo para una Activity activa con competencia v4 confirmada. Su salida estricta se persiste en `activity_criteria.details`, con `competency_v4_id` y sin UUID artificial en `competency_id` ni `performance_id`. La docente confirma el criterio antes de que pueda usarse en un flujo posterior.
 
 **Consecuencia.** El criterio y la evidencia esperada no registran una observación real ni crean filas en `evidences`. Las filas legacy siguen usando `competency_id` UUID; la migración permite ambos formatos. `evidence_capture` será el siguiente workflow.
+
+## ADR 035 Informe familiar como comunicación derivada de conclusiones confirmadas
+
+**Decisión.** `family_report` recibe solo las conclusiones descriptivas v4 activas y confirmadas del estudiante, completamente dentro del rango elegido y para las competencias seleccionadas por la docente. El servidor resuelve y anonimiza el contenido antes de crear el `AIContextBundle`; el proveedor recibe identidad neutral, sin UUID, fotos, rutas ni metadata técnica. La salida estricta `family-report-v1` conserva una sección por competencia y el estado de información suficiente o insuficiente.
+
+**Persistencia.** `family_reports` guarda el contenido estructurado, periodo, versión y estado draft/active/archived. IDs de conclusiones, snapshot con huellas de contenido y metadata de generación permanecen en servidor. Guardado de nueva generación y confirmación revalidan fuentes; la confirmación archiva la versión anterior del mismo estudiante y periodo en una transacción. La edición manual conserva auditoría y fuentes; regenerar reemplaza ambas mediante un identificador válido. Migraciones local y Supabase preparan índices únicos parciales y RLS por estudiante.
+
+**Consecuencia.** El informe confirmado queda inmutable y podrá alimentar un documento futuro sin regeneración. No se incorpora a `StudentContextSnapshot`: ya existen conclusiones confirmadas como fuente de continuidad y se evita que la comunicación familiar se convierta en nueva fuente de assessment. `material_generation`, PDF, despliegue y Supabase real siguen pendientes.

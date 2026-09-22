@@ -1,5 +1,5 @@
-import { createHash } from "node:crypto";
 import { neutralizeAssessmentText, sanitizeEvidenceForAssessment } from "./assessment-v4-service.mjs";
+import { stableFingerprint } from "./source-fingerprint-v4.mjs";
 
 export const CONCLUSION_FIELDS = ["competency_id", "information_status", "conclusion_text", "progress_examples", "support_or_conditions", "next_steps", "insufficiency_reason", "caution"];
 
@@ -18,10 +18,9 @@ export function validateDescriptiveConclusion(value, competencyId, informationSt
 }
 
 const dateTime = (value) => new Date(value).toISOString();
-const canonical = (value) => Array.isArray(value) ? value.map(canonical) : value && typeof value === "object" ? Object.fromEntries(Object.keys(value).sort().map((key) => [key, canonical(value[key])])) : value;
 export function sourceAssessmentSnapshot(row) {
   const details = row.details ?? {};
-  return { assessment_id: row.id, version: Number(row.version), updated_at: dateTime(row.updated_at), teacher_confirmed_at: dateTime(row.teacher_confirmed_at), information_status: details.information_status, details_hash: createHash("sha256").update(JSON.stringify(canonical(details))).digest("hex") };
+  return { assessment_id: row.id, version: Number(row.version), updated_at: dateTime(row.updated_at), teacher_confirmed_at: dateTime(row.teacher_confirmed_at), information_status: details.information_status, details_hash: stableFingerprint(details) };
 }
 
 export function sameAssessmentSnapshot(previous, current) {
