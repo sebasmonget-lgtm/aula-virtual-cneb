@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowRight, BookOpen, Camera, CheckCircle2, ClipboardList, P
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { LocalDashboard } from "@/src/lib/local-database";
+import { AsyncButton, WorkflowFeedback } from "./workflow-ui";
 
 type ActivityBlock = LocalDashboard["today"]["blocks"][number];
 
@@ -15,6 +16,15 @@ export function ActivityRunView({ block, onBack, onEvidence, onStepChange, onCom
   onComplete: () => Promise<void>;
 }) {
   const [showComplete, setShowComplete] = useState(false);
+  const [operation, setOperation] = useState<"step" | "complete" | null>(null);
+  const [error, setError] = useState("");
+  async function run(action: "step" | "complete", nextIndex?: number) {
+    if (operation) return;
+    setOperation(action); setError("");
+    try { if (action === "complete") await onComplete(); else if (nextIndex !== undefined) await onStepChange(nextIndex); }
+    catch { setError(action === "complete" ? "No se pudo cerrar la actividad. Vuelve a intentarlo." : "No se pudo cambiar de paso. Vuelve a intentarlo."); }
+    finally { setOperation(null); }
+  }
   const steps = block.steps;
   const currentStepIndex = Math.min(Math.max(block.current_step_index ?? 0, 0), Math.max(steps.length - 1, 0));
   const hasSteps = steps.length > 0;
@@ -34,9 +44,10 @@ export function ActivityRunView({ block, onBack, onEvidence, onStepChange, onCom
     <article className="diagnostic-panel p-5 md:p-7">
       <div className="flex items-center justify-between gap-3"><div className="flex items-center gap-2"><ClipboardList className="size-5 text-[#087d96]" /><h2 className="text-xl font-extrabold">{hasSteps ? `Paso ${currentStepIndex + 1} de ${steps.length}` : "Pasos guiados"}</h2></div>{hasSteps && <span className="rounded-full bg-[#e8f6fb] px-3 py-1 text-sm font-bold text-[#126177]">{currentStepIndex + 1}/{steps.length}</span>}</div>
       <p className="mt-5 min-h-20 text-lg leading-relaxed text-[#294d6d]">{hasSteps ? steps[currentStepIndex] : "Esta actividad no tiene pasos breves registrados todavía."}</p>
-      {hasSteps && <div className="mt-6 grid gap-3 sm:grid-cols-2"><Button variant="outline" className="h-12" disabled={isFirst} onClick={() => onStepChange(currentStepIndex - 1)}><ArrowLeft /> Anterior</Button><Button className="h-12" disabled={isLast} onClick={() => onStepChange(currentStepIndex + 1)}>Siguiente <ArrowRight /></Button></div>}
+      {hasSteps && <div className="mt-6 grid gap-3 sm:grid-cols-2"><AsyncButton variant="outline" className="h-12" busy={operation === "step"} busyLabel="Cambiando paso..." disabled={Boolean(operation) || isFirst} onClick={() => void run("step", currentStepIndex - 1)}><ArrowLeft /> Anterior</AsyncButton><AsyncButton className="h-12" busy={operation === "step"} busyLabel="Cambiando paso..." disabled={Boolean(operation) || isLast} onClick={() => void run("step", currentStepIndex + 1)}>Siguiente <ArrowRight /></AsyncButton></div>}
     </article>
-    <div className="grid gap-3 sm:grid-cols-2"><Button variant="outline" className="h-12 border-[#87bdcb] text-[#126177]" disabled={!block.criteria.length} onClick={onEvidence}><Camera /> {evidenceLabel}</Button><Button className="h-12" onClick={onComplete}><CheckCircle2 /> Terminar actividad</Button></div>
+    {error && <WorkflowFeedback tone="error">{error}</WorkflowFeedback>}
+    <div className="grid gap-3 sm:grid-cols-2"><Button variant="outline" className="h-12 border-[#87bdcb] text-[#126177]" disabled={!block.criteria.length || Boolean(operation)} onClick={onEvidence}><Camera /> {evidenceLabel}</Button><AsyncButton className="h-12" busy={operation === "complete"} busyLabel="Terminando..." disabled={Boolean(operation)} onClick={() => void run("complete")}><CheckCircle2 /> Terminar actividad</AsyncButton></div>
     {hasSteps && <div><Button variant="ghost" className="text-[#126177]" onClick={() => setShowComplete((visible) => !visible)}><BookOpen /> {showComplete ? "Ocultar actividad completa" : "Ver actividad completa"}</Button>{showComplete && <ol className="mt-2 space-y-2 rounded-2xl border bg-white p-4 text-sm text-[#315a78]">{steps.map((step, index) => <li key={`${index}-${step}`} className="flex gap-3"><span className="font-bold text-[#087d96]">{index + 1}</span><span>{step}</span></li>)}</ol>}</div>}
     <p className="flex items-center gap-2 text-sm text-muted-foreground"><BookOpen className="size-4" /> La evidencia es opcional y puedes volver a la actividad completa cuando lo necesites.</p>
   </section>;

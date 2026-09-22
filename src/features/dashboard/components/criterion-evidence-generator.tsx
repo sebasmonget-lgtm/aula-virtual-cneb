@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { localDatabaseApiUrl } from "@/src/lib/local-database";
+import { AsyncButton, LoadingState, ReadOnlyField, WorkflowFeedback } from "./workflow-ui";
 
 type Proposal = {
   competency_id: string;
@@ -24,6 +25,8 @@ export function CriterionEvidenceGenerator({ activityId, activityTitle, competen
   const [generationId, setGenerationId] = useState<string | null>(null);
   const [note, setNote] = useState("");
   const [message, setMessage] = useState("");
+  const [messageTone, setMessageTone] = useState<"success" | "error">("success");
+  const [operation, setOperation] = useState<"generate" | "save" | "confirm" | null>(null);
   const readOnly = stored?.status === "active";
 
   useEffect(() => {
@@ -39,43 +42,55 @@ export function CriterionEvidenceGenerator({ activityId, activityTitle, competen
         setOpened(false);
         setLoaded(true);
       })
-      .catch(() => { if (!cancelled) { setStored(null); setProposal(null); setLoaded(true); } });
+      .catch(() => { if (!cancelled) { setStored(null); setProposal(null); setLoaded(true); setMessage("No se pudo cargar el criterio de esta actividad."); setMessageTone("error"); } });
     return () => { cancelled = true; };
   }, [activityId]);
 
   async function generate() {
-    const response = await fetch(`${localDatabaseApiUrl}/api/ai/activity-criteria/generate`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ activityId, note }) });
-    const data = await response.json() as { error?: string; proposal?: Proposal; generation_id?: string };
-    if (!response.ok || !data.proposal) { setMessage(data.error ?? "No pudimos generar un criterio válido."); return; }
-    setProposal(data.proposal);
-    setGenerationId(data.generation_id ?? null);
-    setOpened(true);
+    if (operation) return;
+    setOperation("generate"); setMessage("");
+    try {
+      const response = await fetch(`${localDatabaseApiUrl}/api/ai/activity-criteria/generate`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ activityId, note }) });
+      const data = await response.json() as { error?: string; proposal?: Proposal; generation_id?: string };
+      if (!response.ok || !data.proposal) throw new Error(data.error ?? "No pudimos generar un criterio válido.");
+      setProposal(data.proposal); setGenerationId(data.generation_id ?? null); setOpened(true);
+      setMessage("Propuesta lista. Revísala antes de guardar."); setMessageTone("success");
+    } catch (error) { setMessage(error instanceof Error ? error.message : "No pudimos generar un criterio válido."); setMessageTone("error"); }
+    finally { setOperation(null); }
   }
 
   async function save() {
-    if (!proposal) return;
+    if (!proposal || operation) return;
+    setOperation("save"); setMessage("");
+    try {
     const response = await fetch(stored ? `${localDatabaseApiUrl}/api/activity-criteria/${stored.id}` : `${localDatabaseApiUrl}/api/activity-criteria`, {
       method: stored ? "PUT" : "POST", headers: { "content-type": "application/json" },
       body: JSON.stringify(stored ? { proposal, generationId } : { activityId, generationId, proposal }),
     });
     const data = await response.json() as { error?: string; id?: string };
-    if (!response.ok) { setMessage(data.error ?? "No se pudo guardar."); return; }
+    if (!response.ok) throw new Error(data.error ?? "No se pudo guardar.");
     setStored({ id: data.id ?? stored?.id ?? "", details: proposal, status: "draft" });
     setGenerationId(null);
-    setMessage("Borrador guardado.");
+    setMessage("Borrador guardado."); setMessageTone("success");
+    } catch (error) { setMessage(error instanceof Error ? error.message : "No se pudo guardar."); setMessageTone("error"); }
+    finally { setOperation(null); }
   }
 
   async function confirm() {
-    if (!stored) return;
+    if (!stored || operation) return;
+    setOperation("confirm"); setMessage("");
+    try {
     const response = await fetch(`${localDatabaseApiUrl}/api/activity-criteria/${stored.id}/confirm`, { method: "POST" });
     const data = await response.json() as { error?: string };
-    if (!response.ok) { setMessage(data.error ?? "No se pudo confirmar."); return; }
+    if (!response.ok) throw new Error(data.error ?? "No se pudo confirmar.");
     setStored({ ...stored, status: "active" });
-    setMessage("Criterio confirmado.");
+    setMessage("Criterio confirmado."); setMessageTone("success");
+    } catch (error) { setMessage(error instanceof Error ? error.message : "No se pudo confirmar."); setMessageTone("error"); }
+    finally { setOperation(null); }
   }
 
-  if (!loaded) return <section className="mt-3 rounded border p-3">Cargando criterio y evidencia…</section>;
-  if (!opened) return <section className="mt-3 rounded border p-3"><p className="font-semibold">Actividad: {activityTitle}</p><p className="text-sm">Competencia: {competencyName}</p>{!stored ? <Button onClick={() => setOpened(true)}>Preparar criterio y evidencia</Button> : <><p>{stored.status === "active" ? "Criterio: Confirmado" : "Criterio: Borrador"}</p><Button variant="outline" onClick={() => setOpened(true)}>{stored.status === "active" ? "Ver criterio" : "Abrir criterio"}</Button></>}</section>;
+  if (!loaded) return <LoadingState label="Cargando criterio y evidencia..." />;
+  if (!opened) return <section className="ayni-panel mt-3 space-y-3 p-4 sm:p-5"><div><h3 className="font-bold">{activityTitle}</h3><p className="mt-1 text-sm text-[#526b87]">Competencia: {competencyName}</p></div>{message && <WorkflowFeedback tone={messageTone}>{message}</WorkflowFeedback>}{stored && <p className="text-sm font-semibold text-[#126177]">{stored.status === "active" ? "Criterio: Confirmado" : "Criterio: Borrador"}</p>}<Button variant={stored ? "outline" : "default"} onClick={() => setOpened(true)}>{!stored ? "Preparar criterio y evidencia" : stored.status === "active" ? "Ver criterio" : "Abrir criterio"}</Button></section>;
 
-  return <section className="mt-3 space-y-3 rounded border p-3"><p className="font-semibold">Actividad: {activityTitle}</p><p className="text-sm">Competencia: {competencyName}</p>{message && <p role="status">{message}</p>}{!proposal ? <><label>Nota contextual opcional<Textarea value={note} onChange={(event) => setNote(event.target.value)} /></label><Button onClick={() => void generate()}>Preparar criterio y evidencia</Button></> : <><p>{readOnly ? "Criterio confirmado · solo lectura" : "Criterio: Borrador"}</p>{([ ["criterion_text", "Criterio"], ["expected_evidence", "Evidencia esperada"], ["teacher_caution", "Nota para la docente"] ] as const).map(([key, label]) => <label key={key}>{label}<Textarea disabled={readOnly} value={proposal[key]} onChange={(event) => setProposal({ ...proposal, [key]: event.target.value })} /></label>)}<label>Variaciones válidas<Textarea disabled={readOnly} value={proposal.acceptable_evidence_variations.join("\n")} onChange={(event) => setProposal({ ...proposal, acceptable_evidence_variations: event.target.value.split("\n").filter(Boolean) })} /></label><label>En qué observar<Textarea disabled={readOnly} value={proposal.observation_focus.join("\n")} onChange={(event) => setProposal({ ...proposal, observation_focus: event.target.value.split("\n").filter(Boolean) })} /></label><label>Alcance<select disabled={readOnly} value={proposal.evidence_scope} onChange={(event) => setProposal({ ...proposal, evidence_scope: event.target.value as Proposal["evidence_scope"] })}><option value="individual">Individual</option><option value="group">Grupal</option><option value="mixed">Mixto</option></select></label>{!readOnly && <><Button onClick={() => void save()}>{stored ? "Guardar cambios" : "Guardar borrador"}</Button><Button variant="outline" onClick={() => void generate()}>Regenerar</Button>{stored && <Button onClick={() => void confirm()}>Confirmar criterio</Button>}</>}</>}</section>;
+  return <section className="ayni-workflow ayni-panel mt-3 space-y-4 p-4 sm:p-6"><div><h3 className="font-bold">{activityTitle}</h3><p className="mt-1 text-sm text-[#526b87]">Competencia: {competencyName}</p></div>{message && <WorkflowFeedback tone={messageTone}>{message}</WorkflowFeedback>}{!proposal ? <><label className="block">Nota contextual opcional<Textarea disabled={Boolean(operation)} value={note} onChange={(event) => setNote(event.target.value)} /></label><AsyncButton busy={operation === "generate"} busyLabel="Preparando criterio..." onClick={() => void generate()}>Preparar criterio y evidencia</AsyncButton></> : <><WorkflowFeedback tone={readOnly ? "success" : "info"}>{readOnly ? "Criterio confirmado · solo lectura" : "Borrador de criterio. Revísalo antes de confirmar."}</WorkflowFeedback>{([ ["criterion_text", "Criterio"], ["expected_evidence", "Evidencia esperada"], ["teacher_caution", "Nota para la docente"] ] as const).map(([key, label]) => readOnly ? <ReadOnlyField key={key} label={label} value={proposal[key]} /> : <label className="block" key={key}>{label}<Textarea disabled={Boolean(operation)} value={proposal[key]} onChange={(event) => setProposal({ ...proposal, [key]: event.target.value })} /></label>)}{readOnly ? <ReadOnlyField label="Variaciones válidas" value={proposal.acceptable_evidence_variations} /> : <label className="block">Variaciones válidas<Textarea disabled={Boolean(operation)} value={proposal.acceptable_evidence_variations.join("\n")} onChange={(event) => setProposal({ ...proposal, acceptable_evidence_variations: event.target.value.split("\n").filter(Boolean) })} /></label>}{readOnly ? <ReadOnlyField label="En qué observar" value={proposal.observation_focus} /> : <label className="block">En qué observar<Textarea disabled={Boolean(operation)} value={proposal.observation_focus.join("\n")} onChange={(event) => setProposal({ ...proposal, observation_focus: event.target.value.split("\n").filter(Boolean) })} /></label>}{readOnly ? <ReadOnlyField label="Alcance" value={proposal.evidence_scope === "individual" ? "Individual" : proposal.evidence_scope === "group" ? "Grupal" : "Mixto"} /> : <label className="block">Alcance<select disabled={Boolean(operation)} value={proposal.evidence_scope} onChange={(event) => setProposal({ ...proposal, evidence_scope: event.target.value as Proposal["evidence_scope"] })}><option value="individual">Individual</option><option value="group">Grupal</option><option value="mixed">Mixto</option></select></label>}{!readOnly && <div className="flex flex-wrap gap-2"><AsyncButton busy={operation === "save"} busyLabel="Guardando..." disabled={Boolean(operation)} onClick={() => void save()}>{stored ? "Guardar cambios" : "Guardar borrador"}</AsyncButton><AsyncButton variant="outline" busy={operation === "generate"} busyLabel="Regenerando..." disabled={Boolean(operation)} onClick={() => void generate()}>Regenerar</AsyncButton>{stored && <AsyncButton busy={operation === "confirm"} busyLabel="Confirmando..." disabled={Boolean(operation)} onClick={() => void confirm()}>Confirmar criterio</AsyncButton>}</div>}</>}</section>;
 }
