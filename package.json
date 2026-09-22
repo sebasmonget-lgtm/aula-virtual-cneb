@@ -31,7 +31,10 @@
     "test:jev-benchmark": "node --test src/lib/jev-benchmark.test.mjs",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "db:generate": "drizzle-kit generate",
-    "test:openai-provider-v4": "node --test src/lib/openai-provider.test.mjs"
+    "test:openai-provider-v4": "node --test src/lib/openai-provider.test.mjs",
+    "test:ai-provider-factory-v4": "node --test src/lib/ai-provider-factory.test.mjs",
+    "test:openai-activity-smoke": "node --test src/lib/openai-activity-smoke.test.mjs",
+    "smoke:openai-activity": "node --env-file-if-exists=.env.local scripts/smoke-openai-activity.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

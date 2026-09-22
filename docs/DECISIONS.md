@@ -1,5 +1,10 @@
 # Decisiones de arquitectura
 
+## ADR 026 Smoke controlado para OpenAI activity
+
+**Decisión.** El único smoke real disponible usa `npm run smoke:openai-activity`, un input ficticio mínimo para `activity`, el plan central y `createAIProviderForPlan`. Si falta `OPENAI_API_KEY`, informa que no se ejecutó y termina sin invocar proveedor. El script muestra únicamente el resultado validado, el uso de tokens y el tiempo total.
+
+**Consecuencia.** El equipo puede comprobar el camino completo con una llamada explícita y acotada, sin exponer claves, prompts, bundles completos, nombres, multimedia ni rutas privadas. Las pruebas automáticas inyectan factory y generador simulados, por lo que no consumen API ni generan costos.
 ## ADR 025 OpenAI aislado para generación v4 de actividades
 
 **Decisión.** `OpenAIProvider` es una implementación intercambiable de `AIProvider` para el workflow `activity`. Recibe únicamente un `AIContextBundle` inmutable, el schema `activity-v1` y el execution plan producido por `resolveAIExecutionPlan`. Usa la Responses API con Structured Outputs strict y toma la clave solo de `OPENAI_API_KEY`; el modelo y `reasoning_effort` se obtienen del plan central y cualquier discrepancia se rechaza.
