@@ -4,6 +4,8 @@ import { prepareAIRequestV4 } from "./prepare-ai-request-v4.mjs";
 import { validateAssessmentProposal } from "./assessment-v4-service.mjs";
 import { CONCLUSION_FIELDS, validateDescriptiveConclusion } from "./descriptive-conclusion-v4-service.mjs";
 import { FAMILY_REPORT_FIELDS, FAMILY_REPORT_SECTION_FIELDS, validateFamilyReport } from "./family-report-v4-service.mjs";
+import { ANNUAL_PLAN_OUTPUT_SCHEMA, AnnualPlanValidationError, validateAnnualPlanProposal } from "./annual-plan-contract.mjs";
+export { ANNUAL_PLAN_OUTPUT_SCHEMA } from "./annual-plan-contract.mjs";
 
 const ACTIVITY_FIELDS = [
   "title",
@@ -31,18 +33,6 @@ export const ACTIVITY_OUTPUT_SCHEMA = {
 };
 
 
-const ANNUAL_PLAN_FIELDS = ["title", "school_year", "general_context_summary", "planning_priorities", "competency_overview", "proposed_experiences", "review_checkpoints", "flexibility_notes"];
-const EXPERIENCE_FIELDS = ["period", "experience_type", "title", "rationale", "primary_competency_ids", "possible_secondary_competency_ids", "context_or_trigger", "expected_evidence_categories", "flexibility_notes"];
-export const ANNUAL_PLAN_OUTPUT_SCHEMA = {
-  id: "annual-plan-v1", type: "object", additionalProperties: false, required: ANNUAL_PLAN_FIELDS,
-  properties: {
-    title: { type: "string", minLength: 1 }, school_year: { type: "string", minLength: 1 }, general_context_summary: { type: "string", minLength: 1 },
-    planning_priorities: { type: "array", items: { type: "string", minLength: 1 } }, competency_overview: { type: "array", items: { type: "string", minLength: 1 } },
-    proposed_experiences: { type: "array", items: { type: "object", additionalProperties: false, required: EXPERIENCE_FIELDS, properties: {
-      period: { type: "string", minLength: 1 }, experience_type: { enum: ["project", "unit", "workshop"] }, title: { type: "string", minLength: 1 }, rationale: { type: "string", minLength: 1 }, primary_competency_ids: { type: "array", items: { type: "string" } }, possible_secondary_competency_ids: { type: "array", items: { type: "string" } }, context_or_trigger: { type: "string", minLength: 1 }, expected_evidence_categories: { type: "array", items: { type: "string", minLength: 1 } }, flexibility_notes: { type: "string", minLength: 1 },
-    } } }, review_checkpoints: { type: "array", items: { type: "string", minLength: 1 } }, flexibility_notes: { type: "string", minLength: 1 },
-  },
-};
 const EXPERIENCE_GENERATION_FIELDS = ["title", "purpose", "starting_point", "primary_competency_ids", "possible_secondary_competency_ids", "spaces_and_materials", "evidence_opportunities", "family_or_community_links", "adjustment_points", "flexibility_notes"];
 const PATHWAY_FIELDS = ["title", "pedagogical_intention", "possible_child_actions"];
 function experienceOutputSchema(id, contextField, collectionField) {
@@ -135,18 +125,8 @@ function assertActivityOutput(output, bundle, confirmedCompetencyId) {
 
 
 function assertAnnualPlanOutput(output, bundle) {
-  const missing = ANNUAL_PLAN_FIELDS.filter((field) => !(field in output));
-  const unknown = Object.keys(output).filter((field) => !ANNUAL_PLAN_FIELDS.includes(field));
-  if (missing.length || unknown.length) throw new InvalidAIGenerationError("annual_plan_schema_mismatch", { missing_fields: missing, unknown_fields: unknown });
-  for (const field of ["title", "school_year", "general_context_summary", "flexibility_notes"]) if (typeof output[field] !== "string" || !output[field].trim()) throw new InvalidAIGenerationError("annual_plan_required_field_invalid", { field });
-  for (const field of ["planning_priorities", "competency_overview", "review_checkpoints", "proposed_experiences"]) if (!Array.isArray(output[field])) throw new InvalidAIGenerationError("annual_plan_required_field_invalid", { field });
-  const allowed = new Set(bundle.curriculum.competency_cards.map((card) => card.id));
-  for (const experience of output.proposed_experiences) {
-    if (!experience || typeof experience !== "object" || EXPERIENCE_FIELDS.some((field) => !(field in experience)) || Object.keys(experience).some((field) => !EXPERIENCE_FIELDS.includes(field))) throw new InvalidAIGenerationError("annual_plan_experience_schema_mismatch");
-    if (!["project", "unit", "workshop"].includes(experience.experience_type)) throw new InvalidAIGenerationError("annual_plan_experience_type_invalid");
-    for (const id of [...experience.primary_competency_ids, ...experience.possible_secondary_competency_ids]) if (!allowed.has(id)) throw new InvalidAIGenerationError("annual_plan_competency_outside_bundle", { competency_id: id });
-  }
-  return output;
+  try { return validateAnnualPlanProposal(output, bundle.curriculum.competency_cards.map((card) => card.id), bundle.context?.classroom?.calendar_context?.school_year); }
+  catch (error) { if (error instanceof AnnualPlanValidationError) throw new InvalidAIGenerationError(error.reason, error.details); throw error; }
 }
 export function buildProviderRequest(workflow, bundle, executionPlan, outputSchema) {
   const immutableBundle = deepFreeze(structuredClone(bundle));

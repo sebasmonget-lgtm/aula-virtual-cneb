@@ -14,6 +14,7 @@ import { generateTeacherActivity } from "../src/lib/ai-activity-ui-service.mjs";
 import { generateTeacherAnnualPlan } from "../src/lib/ai-annual-plan-ui-service.mjs";
 import { generateTeacherLearningExperience } from "../src/lib/ai-learning-experience-ui-service.mjs";
 import { nextAnnualPlanVersion, safeAnnualGenerationMetadata } from "../src/lib/annual-plan-persistence.mjs";
+import { validateAnnualPlanProposal } from "../src/lib/annual-plan-contract.mjs";
 import { validateLearningExperienceProposal } from "../src/lib/learning-experience-validation.mjs";
 import { normalizeActivityMaterials, publicActivityParent, validateActivityV4 } from "../src/lib/activity-v4-validation.mjs";
 import { validateCriterionEvidenceV4 } from "../src/lib/criterion-evidence-validation.mjs";
@@ -524,6 +525,8 @@ const server = createServer(async (request, response) => {
     if (request.method === "POST" && url.pathname === "/api/annual-plans") {
       const context = await annualPlanningContext(); const body = await readJson(request);
       if (!context || !body.proposal) { send(response, 400, { error: "Falta propuesta o aula activa." }, origin); return; }
+      try { validateAnnualPlanProposal(body.proposal, await applicableCompetencyIds("annual_plan", context), context.year); }
+      catch (error) { send(response, 422, { error: error.message, reason: error.reason, details: error.details }, origin); return; }
       const existingId = typeof body.planId === "string" ? body.planId : null;
       const pending = typeof body.generationId === "string" ? await pendingAIGenerations.get(body.generationId) : null;
       if (!existingId && (!pending || pending.classroom_id !== context.id || pending.workflow !== "annual_plan")) { send(response, 422, { error: "La generación anual ya no está disponible. Genera nuevamente el borrador." }, origin); return; }
@@ -547,14 +550,17 @@ const server = createServer(async (request, response) => {
     }
     if (request.method === "POST" && url.pathname.startsWith("/api/annual-plans/") && url.pathname.endsWith("/confirm")) {
       const id = url.pathname.split("/")[3];
+      const context = await annualPlanningContext();
+      if (!context) { send(response, 404, { error: "No se encontró un aula activa." }, origin); return; }
       await db.exec("begin");
       try {
-        const draft = await db.query(`select id,classroom_id,school_year_id from annual_plans where id=$1 and classroom_id in (select id from classrooms where teacher_id=$2) and status='draft'`, [id, teacherId]);
+        const draft = await db.query(`select id,classroom_id,school_year_id,proposal from annual_plans where id=$1 and classroom_id=$2 and school_year_id=$3 and status='draft'`, [id, context.id, context.school_year_id]);
         if (!draft.rows[0]) throw new Error("Plan anual no disponible para confirmar.");
+        validateAnnualPlanProposal(draft.rows[0].proposal, await applicableCompetencyIds("annual_plan", context), context.year);
         await db.query(`update annual_plans set status='archived', updated_at=now() where classroom_id=$1 and school_year_id=$2 and status='active'`, [draft.rows[0].classroom_id, draft.rows[0].school_year_id]);
         const result = await db.query(`update annual_plans set status='active', teacher_confirmed_at=now(), updated_at=now() where id=$1 and status='draft' returning id,status,version`, [id]);
         await db.exec("commit"); send(response, 200, result.rows[0], origin);
-      } catch (error) { await db.exec("rollback"); send(response, 404, { error: error?.message || "Plan anual no disponible para confirmar." }, origin); }
+      } catch (error) { await db.exec("rollback"); send(response, error?.reason ? 422 : 404, { error: error?.message || "Plan anual no disponible para confirmar.", ...(error?.reason ? { reason: error.reason, details: error.details } : {}) }, origin); }
       return;
     }
     if (request.method === "GET" && url.pathname === "/api/annual-plans/current") {
