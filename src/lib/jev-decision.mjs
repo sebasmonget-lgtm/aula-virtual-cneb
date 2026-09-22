@@ -13,14 +13,21 @@ export function routeAssistantIntent(message = "") {
 
 export function hasCompleteSemanticCard(card, kind = "competency") {
   const fields = kind === "competency" ? requiredCompetencyFields : requiredPerformanceFields;
-  return card?.review_status === "verified" && fields.every((field) => Array.isArray(card[field]) ? card[field].length > 0 : Boolean(card[field]));
+  return card?.official_review_status === "verified" && card?.semantic_review_status === "verified" && fields.every((field) => Array.isArray(card[field]) ? card[field].length > 0 : Boolean(card[field]));
 }
 
-export function validateJevSelection({ age, candidates, selection, kind = "competency", minimumConfidence = 0.7 }) {
-  const valid = candidates.filter((candidate) => hasCompleteSemanticCard(candidate, kind) && (kind !== "performance" || candidate.age === age));
+export function validateJevSelection({ age, candidates = [], selection = {}, kind = "competency", selectedCompetencyId, minimumConfidence = 0.7 }) {
+  const valid = candidates.filter((candidate) => {
+    if (!hasCompleteSemanticCard(candidate, kind)) return false;
+    if (kind !== "performance") return true;
+    return candidate.age === age && candidate.competency_id === selectedCompetencyId;
+  });
   const candidateIds = new Set(valid.map((candidate) => candidate.id));
   const selectedIds = kind === "competency" ? [selection.primary_competency_id, ...(selection.secondary_competency_ids ?? [])] : selection.ranked_performance_ids ?? [];
-  if (!valid.length) return { status: "manual_selection_required", reason: "no_verified_semantic_candidates", candidate_ids: [] };
+  if (kind === "performance" && !selectedCompetencyId) {
+    return { status: "manual_selection_required", reason: "missing_confirmed_competency", candidate_ids: [] };
+  }
+  if (!valid.length) return { status: "manual_selection_required", reason: "no_verified_official_semantic_candidates", candidate_ids: [] };
   if (!selectedIds.length || selectedIds.some((id) => !candidateIds.has(id))) return { status: "manual_selection_required", reason: "selection_outside_candidates", candidate_ids: [...candidateIds] };
   if (selection.confidence < minimumConfidence) return { status: "manual_selection_required", reason: "low_confidence", candidate_ids: [...candidateIds] };
   return { status: "proposal", selected_ids: selectedIds, confidence: selection.confidence };

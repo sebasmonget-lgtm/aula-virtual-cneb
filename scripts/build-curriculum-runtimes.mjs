@@ -7,7 +7,7 @@ const semanticCatalog = JSON.parse(await readFile(path.join(root, "curriculum/se
 await mkdir(path.join(root, "curriculum/runtime"), { recursive: true });
 for (const age of master.ages) {
   const competencies = semanticCatalog.competencies.map((competency) => ({
-    id: competency.id, official_name: competency.official_name, review_status: "pending",
+    id: competency.id, official_name: competency.official_name, official_review_status: "pending", semantic_review_status: "pending",
     meaning: competency.ai_meaning, pedagogical_intent: competency.ai_meaning,
     capacities: competency.capacities.map((capacity, index) => ({ id: `${competency.id}.CAP${index + 1}`, official_name: capacity.official_name, meaning: capacity.ai_meaning })),
     cycle_standard_meaning: competency.cycle_ii_standard_ai,

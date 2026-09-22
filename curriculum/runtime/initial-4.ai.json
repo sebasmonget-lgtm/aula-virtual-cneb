@@ -10,7 +10,8 @@
     {
       "id": "PS_IDENTIDAD",
       "official_name": "Construye su identidad",
-      "review_status": "pending",
+      "official_review_status": "pending",
+      "semantic_review_status": "pending",
       "meaning": "El niño se reconoce como una persona única, valiosa y perteneciente a grupos significativos; actúa con creciente autonomía y reconoce, expresa y regula progresivamente sus emociones.",
       "pedagogical_intent": "El niño se reconoce como una persona única, valiosa y perteneciente a grupos significativos; actúa con creciente autonomía y reconoce, expresa y regula progresivamente sus emociones.",
       "capacities": [
@@ -82,7 +83,8 @@
     {
       "id": "PS_CONVIVE",
       "official_name": "Convive y participa democráticamente en la búsqueda del bien común",
-      "review_status": "pending",
+      "official_review_status": "pending",
+      "semantic_review_status": "pending",
       "meaning": "El niño aprende a relacionarse con otros con respeto, construir y asumir acuerdos, participar en decisiones simples y cuidar lo que es de todos.",
       "pedagogical_intent": "El niño aprende a relacionarse con otros con respeto, construir y asumir acuerdos, participar en decisiones simples y cuidar lo que es de todos.",
       "capacities": [
@@ -161,7 +163,8 @@
     {
       "id": "PS_RELIGION",
       "official_name": "Construye su identidad, como persona humana, amada por Dios, digna, libre y trascendente, comprendiendo la doctrina de su propia religión, abierta al diálogo con las que le son cercanas",
-      "review_status": "pending",
+      "official_review_status": "pending",
+      "semantic_review_status": "pending",
       "meaning": "Competencia del área religiosa: favorece identidad espiritual, gratitud, respeto y acciones de solidaridad desde la propia tradición religiosa, dialogando respetuosamente con otras.",
       "pedagogical_intent": "Competencia del área religiosa: favorece identidad espiritual, gratitud, respeto y acciones de solidaridad desde la propia tradición religiosa, dialogando respetuosamente con otras.",
       "capacities": [
@@ -224,7 +227,8 @@
     {
       "id": "PSICO_MOTRICIDAD",
       "official_name": "Se desenvuelve de manera autónoma a través de su motricidad",
-      "review_status": "pending",
+      "official_review_status": "pending",
+      "semantic_review_status": "pending",
       "meaning": "El niño conoce y usa su cuerpo de manera cada vez más autónoma, segura y expresiva; coordina movimientos y comunica sensaciones, emociones e ideas corporalmente.",
       "pedagogical_intent": "El niño conoce y usa su cuerpo de manera cada vez más autónoma, segura y expresiva; coordina movimientos y comunica sensaciones, emociones e ideas corporalmente.",
       "capacities": [
@@ -292,7 +296,8 @@
     {
       "id": "COM_ORAL",
       "official_name": "Se comunica oralmente en su lengua materna",
-      "review_status": "pending",
+      "official_review_status": "pending",
+      "semantic_review_status": "pending",
       "meaning": "El niño comprende y produce mensajes orales para interactuar: escucha, obtiene e infiere información, organiza lo que quiere decir, usa voz/gestos y conversa con otros.",
       "pedagogical_intent": "El niño comprende y produce mensajes orales para interactuar: escucha, obtiene e infiere información, organiza lo que quiere decir, usa voz/gestos y conversa con otros.",
       "capacities": [
@@ -388,7 +393,8 @@
     {
       "id": "COM_LECTURA",
       "official_name": "Lee diversos tipos de textos escritos en su lengua materna",
-      "review_status": "pending",
+      "official_review_status": "pending",
+      "semantic_review_status": "pending",
       "meaning": "En Inicial la lectura es principalmente no convencional: el niño construye sentido usando ilustraciones, marcas gráficas, palabras conocidas, organización del texto y anticipaciones según su experiencia.",
       "pedagogical_intent": "En Inicial la lectura es principalmente no convencional: el niño construye sentido usando ilustraciones, marcas gráficas, palabras conocidas, organización del texto y anticipaciones según su experiencia.",
       "capacities": [
@@ -464,7 +470,8 @@
     {
       "id": "COM_ESCRITURA",
       "official_name": "Escribe diversos tipos de textos en su lengua materna",
-      "review_status": "pending",
+      "official_review_status": "pending",
+      "semantic_review_status": "pending",
       "meaning": "El niño produce escrituras desde sus propias hipótesis para comunicar algo con propósito y destinatario, avanzando hacia organización, direccionalidad y revisión.",
       "pedagogical_intent": "El niño produce escrituras desde sus propias hipótesis para comunicar algo con propósito y destinatario, avanzando hacia organización, direccionalidad y revisión.",
       "capacities": [
@@ -543,7 +550,8 @@
     {
       "id": "COM_ARTE",
       "official_name": "Crea proyectos desde los lenguajes artísticos",
-      "review_status": "pending",
+      "official_review_status": "pending",
+      "semantic_review_status": "pending",
       "meaning": "El niño explora materiales y lenguajes artísticos, transforma ideas y experiencias en creaciones y comparte su proceso o producción.",
       "pedagogical_intent": "El niño explora materiales y lenguajes artísticos, transforma ideas y experiencias en creaciones y comparte su proceso o producción.",
       "capacities": [
@@ -620,7 +628,8 @@
     {
       "id": "CAST_L2_ORAL",
       "official_name": "Se comunica oralmente en castellano como segunda lengua",
-      "review_status": "pending",
+      "official_review_status": "pending",
+      "semantic_review_status": "pending",
       "meaning": "El niño cuya lengua materna no es castellano desarrolla comunicación oral básica en castellano de forma gradual, segura y contextualizada, usando palabras, frases, gestos y apoyos.",
       "pedagogical_intent": "El niño cuya lengua materna no es castellano desarrolla comunicación oral básica en castellano de forma gradual, segura y contextualizada, usando palabras, frases, gestos y apoyos.",
       "capacities": [
@@ -693,7 +702,8 @@
     {
       "id": "MAT_CANTIDAD",
       "official_name": "Resuelve problemas de cantidad",
-      "review_status": "pending",
+      "official_review_status": "pending",
+      "semantic_review_status": "pending",
       "meaning": "El niño usa relaciones de cantidad en situaciones reales: agrupa, compara, ordena, cuenta, estima, agrega o quita y comunica sus ideas con objetos, cuerpo, dibujos o expresiones numéricas iniciales.",
       "pedagogical_intent": "El niño usa relaciones de cantidad en situaciones reales: agrupa, compara, ordena, cuenta, estima, agrega o quita y comunica sus ideas con objetos, cuerpo, dibujos o expresiones numéricas iniciales.",
       "capacities": [
@@ -775,7 +785,8 @@
     {
       "id": "MAT_FORMA",
       "official_name": "Resuelve problemas de forma, movimiento y localización",
-      "review_status": "pending",
+      "official_review_status": "pending",
+      "semantic_review_status": "pending",
       "meaning": "El niño resuelve situaciones relacionadas con formas, tamaños, posiciones, desplazamientos y orientación usando su cuerpo, objetos, construcciones y estrategias espaciales.",
       "pedagogical_intent": "El niño resuelve situaciones relacionadas con formas, tamaños, posiciones, desplazamientos y orientación usando su cuerpo, objetos, construcciones y estrategias espaciales.",
       "capacities": [
@@ -857,7 +868,8 @@
     {
       "id": "CYT_INDAGA",
       "official_name": "Indaga mediante métodos científicos para construir sus conocimientos",
-      "review_status": "pending",
+      "official_review_status": "pending",
+      "semantic_review_status": "pending",
       "meaning": "El niño explora fenómenos, objetos y seres vivos desde su curiosidad: pregunta, propone posibles respuestas, observa/manipula, registra o compara información y comunica lo que descubre.",
       "pedagogical_intent": "El niño explora fenómenos, objetos y seres vivos desde su curiosidad: pregunta, propone posibles respuestas, observa/manipula, registra o compara información y comunica lo que descubre.",
       "capacities": [
@@ -946,7 +958,8 @@
     {
       "id": "TRANS_TIC",
       "official_name": "Se desenvuelve en los entornos virtuales generados por las TIC",
-      "review_status": "pending",
+      "official_review_status": "pending",
+      "semantic_review_status": "pending",
       "meaning": "El niño usa dispositivos y entornos virtuales con acompañamiento para explorar funciones, obtener/registrar información y crear objetos digitales sencillos con un propósito.",
       "pedagogical_intent": "El niño usa dispositivos y entornos virtuales con acompañamiento para explorar funciones, obtener/registrar información y crear objetos digitales sencillos con un propósito.",
       "capacities": [
@@ -1016,7 +1029,8 @@
     {
       "id": "TRANS_AUTONOMO",
       "official_name": "Gestiona su aprendizaje de manera autónoma",
-      "review_status": "pending",
+      "official_review_status": "pending",
+      "semantic_review_status": "pending",
       "meaning": "El niño empieza a reconocer qué quiere lograr, pensar cómo hacerlo, ejecutar acciones, revisar si funcionan y ajustarlas con facilitación adulta.",
       "pedagogical_intent": "El niño empieza a reconocer qué quiere lograr, pensar cómo hacerlo, ejecutar acciones, revisar si funcionan y ajustarlas con facilitación adulta.",
       "capacities": [
