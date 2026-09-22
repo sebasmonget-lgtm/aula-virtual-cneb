@@ -156,9 +156,11 @@ function workflowInputSubset(input, workflowRequirements) {
     "calendar", "language_context", "student_id", "criterion_id", "observed_status", "evidence_history",
     "multiple_evidence_records", "teacher_confirmed_findings",
   ]);
-  return Object.fromEntries(fields
+  const subset = Object.fromEntries(fields
     .filter((field) => !representedElsewhere.has(field) && hasValue(values[field]))
     .map((field) => [field, values[field]]));
+  if (["project", "unit"].includes(input.workflow) && hasValue(input.planned_experience)) subset.planned_experience = input.planned_experience;
+  return subset;
 }
 
 function workflowUses(workflowRequirements, fragment) {

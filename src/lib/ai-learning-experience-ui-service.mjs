@@ -12,6 +12,7 @@ export function buildLearningExperienceGenerationInput({ classroom, request = {}
     classroom_context: { id: classroom.id, group_context: classroom.group_context, school_context: classroom.school_context, available_resources: classroom.available_resources, diagnostic_summary: classroom.diagnostic_summary },
     calendar_context: classroom.calendar, diagnostic_summary: classroom.diagnostic_summary, available_resources: classroom.available_resources, language_context: classroom.language_context,
     competency_ids: Array.isArray(request.competency_ids) ? request.competency_ids : [], [required]: request[required].trim(),
+    planned_experience: request.planned_experience ?? null,
   };
 }
 
