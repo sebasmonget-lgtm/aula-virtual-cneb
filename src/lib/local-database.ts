@@ -1,4 +1,12 @@
 export type LocalStudent = { id: string; name: string };
+export type StudentPedagogicalProfile = {
+  student: { id: string; name: string; first_name: string; last_name: string; section: string; age_years: number; school_year: number };
+  diagnosis: { competency_id: string; teacher_interpretation: string | null; teacher_confirmed: boolean; updated_at: string }[];
+  competencies: { competency_id: string; competency_text: string; evidence_count: number; last_observed_at: string | null; observations: Record<ObservationStatus, number>; recent_evidence: LocalEvidence[]; teacher_confirmed_assessment: null }[];
+  recent_relevant_observations: (LocalEvidence & { activity_title: string; criterion_text: string; competency_id: string; media_available: boolean })[];
+  confirmed_period_assessments: [];
+  snapshot: { generated_at: string; source_updated_at: string } | null;
+};
 export type LocalEvidence = {
   id: string;
   student_id: string;
@@ -58,6 +66,13 @@ export async function loadLocalDashboard(signal?: AbortSignal): Promise<LocalDas
   const response = await fetch(`${apiUrl}/api/dashboard`, { signal, cache: "no-store" });
   if (!response.ok) throw new Error("La base local no está disponible.");
   return response.json();
+}
+
+export async function loadStudentPedagogicalProfile(studentId: string): Promise<StudentPedagogicalProfile> {
+  const response = await fetch(`${apiUrl}/api/students/${studentId}`, { cache: "no-store" });
+  const payload = await response.json() as StudentPedagogicalProfile & { error?: string };
+  if (!response.ok) throw new Error(payload.error ?? "No se pudo cargar el perfil del niño.");
+  return payload;
 }
 
 export async function createLocalEvidence(input: {

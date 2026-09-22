@@ -24,3 +24,5 @@ PGlite usa `local-db/migrations` y persiste en `.local/pgdata`. La API local con
 La actualización 01 añade `institution_profiles`, `institution_assets`, `competency_observation_guides`, `document_templates` y `document_versions`. Se extiende el modelo existente; no se duplican aulas, competencias ni evidencias.
 
 La actualización de evidencia conserva las notas históricas y añade la marca observacional nullable para compatibilidad. La API actual exige la marca para toda evidencia nueva vinculada a un criterio. Las actividades exponen todos sus `activity_criteria` planificados, no solo el primero.
+
+`student_context_snapshots` guarda una derivación JSON determinista de diagnóstico y evidencias por estudiante. No es fuente de verdad, no contiene binarios multimedia y su `summary_text` queda vacío hasta que exista una integración de IA autorizada.

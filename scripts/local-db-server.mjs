@@ -5,6 +5,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { PGlite } from "@electric-sql/pglite";
 import { resolveDailyState } from "../src/lib/daily-state.mjs";
+import { buildStudentPedagogicalContext, refreshStudentContextSnapshot } from "../src/lib/student-context-service.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const dataDir = path.join(root, ".local", "pgdata");
@@ -23,7 +24,7 @@ const exportTables = [
   "activities", "activity_criteria", "evidences", "competency_observation_guides",
   "document_templates", "document_versions", "diagnostic_sessions",
   "diagnostic_entries", "observation_references", "student_observations",
-  "class_schedule_entries", "daily_execution_logs", "attendance_records", "calendar_exceptions",
+  "class_schedule_entries", "daily_execution_logs", "attendance_records", "calendar_exceptions", "student_context_snapshots",
 ];
 
 await mkdir(path.dirname(dataDir), { recursive: true });
@@ -201,6 +202,18 @@ async function dashboard() {
   };
 }
 
+async function studentProfile(studentId) {
+  const allowed = await db.query(`
+    select s.id from students s join classrooms c on c.id = s.classroom_id
+     where s.id = $1 and c.teacher_id = $2
+  `, [studentId, teacherId]);
+  if (!allowed.rows.length) return null;
+  const context = await buildStudentPedagogicalContext(db, studentId);
+  const snapshot = (await db.query(`select generated_at, source_updated_at from student_context_snapshots
+    where student_id = $1 and version = 1`, [studentId])).rows[0] ?? null;
+  return { ...context, snapshot };
+}
+
 async function diagnosticWorkspace() {
   const classroomResult = await db.query(`
     select c.id, c.section, ag.age_years
@@ -362,6 +375,16 @@ const server = createServer(async (request, response) => {
       send(response, 200, await diagnosticWorkspace(), origin);
       return;
     }
+    if (request.method === "GET" && url.pathname.startsWith("/api/students/")) {
+      const studentId = url.pathname.split("/").at(-1);
+      const profile = await studentProfile(studentId);
+      if (!profile) {
+        send(response, 404, { error: "Niño no encontrado en el aula activa." }, origin);
+        return;
+      }
+      send(response, 200, profile, origin);
+      return;
+    }
     if (request.method === "POST" && url.pathname === "/api/diagnostics") {
       const body = await readJson(request);
       const context = cleanText(body.observationContext, 240);
@@ -418,6 +441,7 @@ const server = createServer(async (request, response) => {
         on conflict (diagnostic_entry_id, reference_id) do update set
           status = excluded.status, note = excluded.note, observed_at = now()
       `, [randomUUID(), entryId, body.referenceId, status, observation || null, teacherId]);
+      await refreshStudentContextSnapshot(db, body.studentId);
       await db.exec("commit");
       } catch (error) {
         await db.exec("rollback");
@@ -458,6 +482,7 @@ const server = createServer(async (request, response) => {
         ) values ($1, $2, $3, $4, 'observation', $5, $6, 'teacher', $7)
         returning id, student_id, observation_text, observation_status, observed_at
       `, [randomUUID(), body.studentId, body.activityId, body.criterionId, observation || null, body.observationStatus, teacherId]);
+      await refreshStudentContextSnapshot(db, body.studentId);
       send(response, 201, { evidence: result.rows[0] }, origin);
       return;
     }
