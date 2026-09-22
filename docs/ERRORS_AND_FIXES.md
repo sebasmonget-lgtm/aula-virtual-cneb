@@ -2,7 +2,7 @@
 
 ## 2026-09-22 Extracción textual no fiable del Programa Curricular de Inicial
 
-**Síntoma.** El extractor local recuperó páginas de competencias del PDF MINEDU con sustituciones de caracteres críticos, por ejemplo tildes y eñes convertidas en caracteres de reemplazo.
+**Síntoma.** Los extractores preservaron Unicode, pero produjeron diferencias de segmentación de palabras y orden de bloques por la maquetación del PDF.
 
 **Decisión.** Se registraron las huellas SHA-256 de los PDF y se dejó el maestro oficial en estado de transcripción pendiente. No se escribió texto corrupto ni se promovió contenido semántico como fuente oficial.
 
