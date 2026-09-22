@@ -1,5 +1,15 @@
 # Errores y soluciones
 
+## 2026-09-22 Extracción textual no fiable del Programa Curricular de Inicial
+
+**Síntoma.** El extractor local recuperó páginas de competencias del PDF MINEDU con sustituciones de caracteres críticos, por ejemplo tildes y eñes convertidas en caracteres de reemplazo.
+
+**Decisión.** Se registraron las huellas SHA-256 de los PDF y se dejó el maestro oficial en estado de transcripción pendiente. No se escribió texto corrupto ni se promovió contenido semántico como fuente oficial.
+
+**Prevención.** La siguiente ingestión debe contrastar una representación visual/OCR de cada página, conservar página/sección/hash por elemento y ejecutar una segunda pasada antes de crear registros oficiales.
+
+**Control implementado.** `scripts/extract-curriculum-unicode.py` compara PyMuPDF con pdfplumber, normaliza solamente saltos y espacios, y rechaza `Ã`, `Â`, `â€`, `ï¿½` y `�`. El piloto de Ciencia y Tecnología (PDF p. 189, impresa p. 187) queda como `needs_visual_review`: ambos extractores conservan texto corrupto, por lo que no se escribió ningún elemento oficial.
+
 ## 2026-09-22 Señal estadística sensible a evidencias repetidas
 
 **Síntoma.** El conteo inicial podía ocultar competencias sin uso y transformar varias evidencias de un mismo niño —o un único caso con apoyo— en una señal grupal.

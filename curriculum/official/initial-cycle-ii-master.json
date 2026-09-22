@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "status": "official_pending_transcription",
+  "status": "official_source_acquired_pending_clean_transcription",
   "level": "Educación Inicial",
   "cycle": "II",
   "source_documents": [
-    {"id":"cneb-2016","title":"Currículo Nacional de la Educación Básica","url":"https://www.minedu.gob.pe/curriculo/pdf/curriculo-nacional-de-la-educacion-basica.pdf","review_status":"pending"},
-    {"id":"programa-inicial-2016","title":"Programa curricular de Educación Inicial","url":"https://www.minedu.gob.pe/curriculo/pdf/programa-curricular-educacion-inicial.pdf","review_status":"pending"}
+    {"id":"cneb-2016","title":"Currículo Nacional de la Educación Básica","url":"https://www.minedu.gob.pe/curriculo/pdf/curriculo-nacional-de-la-educacion-basica.pdf","sha256":"a745ca842113f53609c435df9a13eda67371164b22ccb8492b2b02167dc2299b","retrieved_at":"2026-09-22","review_status":"pending"},
+    {"id":"programa-inicial-2016","title":"Programa Curricular de Educación Inicial","url":"https://www.minedu.gob.pe/curriculo/pdf/programa-curricular-educacion-inicial.pdf","sha256":"1f5e7330099c894181b82265dccab9478e094b15cc766ef680608468a82c0821","retrieved_at":"2026-09-22","review_status":"pending","extraction_note":"El extractor de texto local sustituye caracteres críticos del PDF; no transcribir ni verificar texto hasta completar una pasada visual/OCR con contraste por página."}
   ],
   "ages": [3,4,5],
   "competencies": [],
-  "note": "Esta fuente maestra es deliberadamente vacía hasta que textos, páginas y hashes sean transcritos y revisados desde los PDF oficiales. El seed demo no puede importarse ni exponerse como currículo oficial."
+  "note": "Los binarios oficiales y sus hashes fueron adquiridos localmente. Esta fuente maestra permanece deliberadamente sin transcripciones hasta una extracción visual/OCR que preserve texto, página y sección. El seed demo y la capa semántica no pueden importarse ni exponerse como currículo oficial."
 }

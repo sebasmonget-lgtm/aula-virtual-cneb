@@ -45,4 +45,5 @@ next-env.d.ts
 /.codex/
 /outputs/
 /work/
+/tmp/
 /.local/
