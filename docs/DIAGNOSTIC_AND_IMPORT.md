@@ -6,6 +6,8 @@ El flujo local precarga institución, docente, aula, edad, sección, año y estu
 
 El catálogo incluido es **solo ilustrativo**: su desempeño tiene `source_ref = seed-local-no-oficial`. La interfaz lo señala y el preparador bloquea un paquete de producción. Antes de publicar, el equipo pedagógico debe cargar los textos oficiales, vincular y revisar cada referente, y probar 3/4/5 años. Ningún referente se genera con IA en cada uso.
 
+El catálogo semántico de Jev no sustituye esa revisión: sus resúmenes son ayuda para selección y permanecen `pending` hasta que cada texto oficial, página y hash se contraste contra los PDF de MINEDU.
+
 Resultados muestra cobertura real; conclusiones no emite una valoración ni escribe en planificación. Audio, foto y video aún no están habilitados: faltan compresión, límites, acceso privado y borrado controlado. No se deben subir originales de menores ni activar buckets públicos.
 
 ## Preparar una importación
