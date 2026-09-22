@@ -5,6 +5,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { PGlite } from "@electric-sql/pglite";
 import { resolveDailyState } from "../src/lib/daily-state.mjs";
+import { isValidStepIndex } from "../src/lib/activity-runner.mjs";
 import { buildStudentPedagogicalContext, refreshStudentContextSnapshot } from "../src/lib/student-context-service.mjs";
 import { buildClassroomStatistics } from "../src/lib/statistics-service.mjs";
 
@@ -160,6 +161,7 @@ async function dashboard() {
            coalesce(criteria.criteria, '[]'::jsonb) as criteria,
            coalesce(a.preparation->'materials', '[]'::jsonb) as materials, coalesce(a.preparation->'steps', '[]'::jsonb) as steps,
            coalesce(del.status, 'planned') as status, coalesce(del.current_override, false) as current_override,
+           least(coalesce(del.current_step_index, 0), greatest(coalesce(jsonb_array_length(a.preparation->'steps'), 0) - 1, 0))::int as current_step_index,
            del.closure_type, del.teacher_closure_note
       from class_schedule_entries se
       join classrooms cl on cl.id = se.classroom_id
@@ -522,28 +524,33 @@ const server = createServer(async (request, response) => {
     if (request.method === "POST" && url.pathname === "/api/today/execution") {
       const body = await readJson(request);
       const action = body.action;
-      const allowedActions = new Set(["start", "complete", "skip", "keep_current"]);
+      const allowedActions = new Set(["start", "complete", "skip", "keep_current", "set_step"]);
       if (!body.scheduleEntryId || !allowedActions.has(action)) {
         send(response, 400, { error: "La acción de jornada no es válida." }, origin);
         return;
       }
-      const entry = (await db.query(`select se.id from class_schedule_entries se join classrooms c on c.id = se.classroom_id where se.id = $1 and c.teacher_id = $2`, [body.scheduleEntryId, teacherId])).rows[0];
+      const entry = (await db.query(`select se.id, coalesce(jsonb_array_length(a.preparation->'steps'), 0)::int as total_steps from class_schedule_entries se join classrooms c on c.id = se.classroom_id left join activities a on a.id = se.activity_id where se.id = $1 and c.teacher_id = $2`, [body.scheduleEntryId, teacherId])).rows[0];
       if (!entry) {
         send(response, 403, { error: "El bloque no pertenece al aula activa." }, origin);
         return;
       }
       const today = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Lima", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
-      const status = action === "complete" ? "completed" : action === "skip" ? "skipped" : "active";
+      if (action === "set_step" && !isValidStepIndex(body.stepIndex, entry.total_steps)) {
+        send(response, 400, { error: "El paso no pertenece a esta actividad." }, origin);
+        return;
+      }
+      const status = action === "complete" ? "completed" : action === "skip" ? "skipped" : action === "set_step" ? "active" : "active";
       const closureType = action === "complete" ? (body.closureType === "note" ? "note" : "as_planned") : action === "skip" ? "cancelled" : null;
       const closureNote = cleanText(body.closureNote, 800) || null;
       await db.query(`insert into daily_execution_logs
-        (id, schedule_entry_id, execution_date, status, actual_started_at, actual_ended_at, teacher_closure_note, closure_type, current_override)
-        values ($1,$2,$3::date,$4,case when $4 = 'active' then now() else null end,case when $4 in ('completed','skipped') then now() else null end,$5,$6,$7)
+        (id, schedule_entry_id, execution_date, status, actual_started_at, actual_ended_at, teacher_closure_note, closure_type, current_override, current_step_index)
+        values ($1,$2,$3::date,$4,case when $4 = 'active' then now() else null end,case when $4 in ('completed','skipped') then now() else null end,$5,$6,$7,$8)
         on conflict (schedule_entry_id, execution_date) do update set
           status = excluded.status, actual_started_at = coalesce(daily_execution_logs.actual_started_at, excluded.actual_started_at),
           actual_ended_at = excluded.actual_ended_at, teacher_closure_note = excluded.teacher_closure_note,
-          closure_type = excluded.closure_type, current_override = excluded.current_override
-      `, [randomUUID(), entry.id, today, status, closureNote, closureType, action === "keep_current"]);
+          closure_type = excluded.closure_type, current_override = excluded.current_override,
+          current_step_index = case when $9 = 'set_step' then excluded.current_step_index else daily_execution_logs.current_step_index end
+      `, [randomUUID(), entry.id, today, status, closureNote, closureType, action === "keep_current", body.stepIndex ?? 0, action]);
       send(response, 200, { dashboard: await dashboard() }, origin);
       return;
     }

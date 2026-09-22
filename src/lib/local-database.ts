@@ -38,7 +38,7 @@ export type LocalDashboard = {
     attendance: { recorded: boolean; recorded_count: number };
     calendar_exception: { type: string; label: string; is_instructional: boolean } | null;
     journey: { mode: string; current_block_id: string | null; next_block_id: string | null; primary_action: string; pending_items: string[] };
-    blocks: { id: string; start_time: string; end_time: string; block_type: string; title: string; activity_id: string | null; purpose: string | null; experience_title: string | null; materials: string[]; steps: string[]; criteria: ActivityCriterion[]; status: string; display_status: string; current_override: boolean; closure_type: string | null }[];
+    blocks: { id: string; start_time: string; end_time: string; block_type: string; title: string; activity_id: string | null; purpose: string | null; experience_title: string | null; materials: string[]; steps: string[]; criteria: ActivityCriterion[]; status: string; display_status: string; current_override: boolean; current_step_index: number; closure_type: string | null }[];
   };
   profile: {
     teacher_name: string; institution_name: string; section: string; age_label: string;
@@ -117,7 +117,8 @@ export function saveLocalAttendance(records: { studentId: string; status: "prese
 }
 
 export function updateLocalExecution(input: {
-  scheduleEntryId: string; action: "start" | "complete" | "skip" | "keep_current";
+  scheduleEntryId: string; action: "start" | "complete" | "skip" | "keep_current" | "set_step";
+  stepIndex?: number;
   closureType?: "as_planned" | "note"; closureNote?: string;
 }) {
   return postDashboard("/api/today/execution", input);

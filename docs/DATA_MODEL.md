@@ -27,4 +27,6 @@ La actualización de evidencia conserva las notas históricas y añade la marca 
 
 `student_context_snapshots` guarda una derivación JSON determinista de diagnóstico y evidencias por estudiante. No es fuente de verdad, no contiene binarios multimedia y su `summary_text` queda vacío hasta que exista una integración de IA autorizada.
 
+`daily_execution_logs.current_step_index` conserva el paso actual de una actividad programada. El índice se normaliza contra los pasos disponibles al leer la jornada, para que una edición posterior de la planificación no deje una posición inválida.
+
 Las evidencias históricas pueden no tener `observation_status`; se preservan para el historial, pero no cuentan como información suficiente en estadísticas. Estas agregan el último estado marcado por estudiante y competencia, no el número bruto de evidencias.

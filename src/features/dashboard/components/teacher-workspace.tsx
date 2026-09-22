@@ -22,6 +22,7 @@ import {
 } from "@/src/lib/local-database";
 import { GuidedDiagnostic, InstitutionProfile } from "./profile-and-diagnostic";
 import { StudentsScreen } from "./students-screen";
+import { ActivityRunView } from "./activity-run-view";
 
 const nav = [
   ["Hoy", Home], ["Planificar", CalendarDays], ["Niños", Users],
@@ -43,6 +44,7 @@ export function TeacherWorkspace() {
   const [active, setActive] = useState("Hoy");
   const [evidenceOpen, setEvidenceOpen] = useState(false);
   const [attendanceOpen, setAttendanceOpen] = useState(false);
+  const [activityRunBlockId, setActivityRunBlockId] = useState<string | null>(null);
   const [evidenceContext, setEvidenceContext] = useState<{ activityId: string; criteria: ActivityCriterion[]; title: string } | null>(null);
   const [studentId, setStudentId] = useState("3");
   const [criterionId, setCriterionId] = useState("");
@@ -119,7 +121,7 @@ export function TeacherWorkspace() {
     setAttendanceOpen(false);
   }
 
-  async function updateExecution(input: { scheduleEntryId: string; action: "start" | "complete" | "skip" | "keep_current"; closureType?: "as_planned" | "note"; closureNote?: string }) {
+  async function updateExecution(input: { scheduleEntryId: string; action: "start" | "complete" | "skip" | "keep_current" | "set_step"; stepIndex?: number; closureType?: "as_planned" | "note"; closureNote?: string }) {
     setDashboard(await updateLocalExecution(input));
   }
 
@@ -130,6 +132,14 @@ export function TeacherWorkspace() {
     setObservationStatus("");
     setEvidenceOpen(true);
   }
+
+  async function openActivity(block: LocalDashboard["today"]["blocks"][number], start = false) {
+    if (!block.activity_id) return;
+    if (start) await updateExecution({ scheduleEntryId: block.id, action: "start" });
+    setActivityRunBlockId(block.id);
+  }
+
+  const activityRunBlock = dashboard?.today.blocks.find((block) => block.id === activityRunBlockId) ?? null;
 
   return (
     <SidebarProvider style={{ "--sidebar-width": "13.5rem" } as CSSProperties}>
@@ -185,8 +195,8 @@ export function TeacherWorkspace() {
           {active === "Perfil" ? dashboard ? <InstitutionProfile dashboard={dashboard} onSaved={setDashboard} /> : <p role={databaseState === "offline" ? "alert" : "status"} className="text-sm text-muted-foreground">{databaseState === "offline" ? "No se pudo conectar con la base local. Inicia npm run db:local y vuelve a cargar la página." : "Cargando perfil..."}</p> :
           active === "Evaluar" ? dashboard ? <GuidedDiagnostic dashboard={dashboard} /> : <p role={databaseState === "offline" ? "alert" : "status"} className="text-sm text-muted-foreground">{databaseState === "offline" ? "No se pudo conectar con la base local. Inicia npm run db:local y vuelve a cargar la página." : "Cargando evaluación diagnóstica..."}</p> :
           active === "Niños" ? <StudentsScreen students={students} /> : <>
-          {active === "Hoy" && <TodayScreen dashboard={dashboard} openEvidence={openEvidenceFor} openAttendance={() => setAttendanceOpen(true)} updateExecution={updateExecution} />}
-          <div className={active === "Hoy" ? "hidden" : ""}>
+          {activityRunBlock ? <ActivityRunView block={activityRunBlock} onBack={() => setActivityRunBlockId(null)} onEvidence={() => openEvidenceFor(activityRunBlock)} onStepChange={async (stepIndex) => updateExecution({ scheduleEntryId: activityRunBlock.id, action: "set_step", stepIndex })} onComplete={async () => { await updateExecution({ scheduleEntryId: activityRunBlock.id, action: "complete", closureType: "as_planned" }); setActivityRunBlockId(null); }} /> : active === "Hoy" && <TodayScreen dashboard={dashboard} openEvidence={openEvidenceFor} openAttendance={() => setAttendanceOpen(true)} updateExecution={updateExecution} openActivity={openActivity} />}
+          <div className={activityRunBlock || active === "Hoy" ? "hidden" : ""}>
           <section className="mb-7 flex flex-wrap items-end justify-between gap-4">
             <div><p className="mb-1 text-sm font-semibold text-[#087d96]">{active}</p><h1 className="text-3xl font-bold tracking-[-0.035em] md:text-4xl">Buenos días, profesora {profile?.teacher_name?.split(" ")[0] ?? "Marisol"}</h1><p className="mt-2 max-w-2xl text-base text-muted-foreground">Esto es lo más importante para tu jornada de hoy.</p></div>
             <Button className="h-11 rounded-xl px-5 shadow-sm"><Plus /> Nueva experiencia</Button>
@@ -208,7 +218,7 @@ export function TeacherWorkspace() {
                   <div><p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Evidencia esperada</p><p className="mt-1.5 text-sm leading-relaxed">{activity?.criteria[0]?.criterion_text ?? "Explica con sus palabras qué cree que necesita una semilla."}</p></div>
                 </div>
                 <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-                  <Button className="h-11 flex-1 rounded-xl"><BookOpen /> Abrir actividad <ChevronRight /></Button>
+                  <Button className="h-11 flex-1 rounded-xl" disabled={!dashboard?.today.blocks.some((block) => block.activity_id === activity?.id)} onClick={() => { const block = dashboard?.today.blocks.find((item) => item.activity_id === activity?.id); if (block) void openActivity(block); }}><BookOpen /> Abrir actividad <ChevronRight /></Button>
                   <Button variant="outline" className="h-11 flex-1 rounded-xl border-[#87bdcb] text-[#126177]" onClick={() => { if (!activity?.id || !activity.criteria.length) return; setEvidenceContext({ activityId: activity.id, criteria: activity.criteria, title: activity.title }); setCriterionId(activity.criteria[0].id); setObservationStatus(""); setEvidenceOpen(true); }}><ClipboardCheck /> Registrar evidencia</Button>
                 </div>
               </div>
@@ -247,11 +257,12 @@ export function TeacherWorkspace() {
   );
 }
 
-function TodayScreen({ dashboard, openEvidence, openAttendance, updateExecution }: {
+function TodayScreen({ dashboard, openEvidence, openAttendance, updateExecution, openActivity }: {
   dashboard: LocalDashboard | null;
   openEvidence: (block: LocalDashboard["today"]["blocks"][number]) => void;
   openAttendance: () => void;
-  updateExecution: (input: { scheduleEntryId: string; action: "start" | "complete" | "skip" | "keep_current"; closureType?: "as_planned" | "note"; closureNote?: string }) => Promise<void>;
+  updateExecution: (input: { scheduleEntryId: string; action: "start" | "complete" | "skip" | "keep_current" | "set_step"; stepIndex?: number; closureType?: "as_planned" | "note"; closureNote?: string }) => Promise<void>;
+  openActivity: (block: LocalDashboard["today"]["blocks"][number], start?: boolean) => Promise<void>;
 }) {
   const [closing, setClosing] = useState(false);
   const [closureNote, setClosureNote] = useState("");
@@ -269,7 +280,7 @@ function TodayScreen({ dashboard, openEvidence, openAttendance, updateExecution 
   return <div className="mx-auto max-w-4xl space-y-5">
     <div className="rounded-3xl bg-[radial-gradient(circle_at_85%_30%,#d9f6f5,transparent_32%),linear-gradient(135deg,#ffffff,#edf9ff)] px-5 py-6 md:px-7"><div className="flex items-center justify-between gap-4"><div><p className="text-sm font-semibold text-[#087d96]">Mi día de hoy</p><h1 className="mt-1 text-3xl font-extrabold tracking-tight">{today?.date ?? "Cargando día..."}</h1></div><span className="rounded-2xl bg-white/80 px-3 py-2 text-sm font-semibold text-[#126177]">{dashboard?.profile.age_label} · {dashboard?.profile.section}</span></div></div>
     {isNoClasses ? <section className="diagnostic-panel bg-[#f7f4ff] p-6"><CalendarDays className="mb-3 text-[#7554aa]" /><h2 className="text-xl font-bold">{today?.calendar_exception?.label ?? "No hay clases hoy"}</h2><p className="mt-2 text-sm text-[#5b6680]">La jornada queda libre de actividades y evidencias.</p></section> : !today?.blocks.length ? <section className="diagnostic-panel p-6"><Clock3 className="mb-3 text-[#087d96]" /><h2 className="text-xl font-bold">Configura el horario</h2><p className="mt-2 text-sm text-muted-foreground">Mientras tanto puedes abrir tu planificación manualmente.</p><Button className="mt-4 h-12">Configurar horario</Button></section> : <>
-      {featured && <section className="diagnostic-panel overflow-hidden border-[#c5edf0] bg-[linear-gradient(135deg,#ffffff,#e9fbfb)] p-5 md:p-7"><div className="flex items-center justify-between gap-3"><span className={`rounded-full px-3 py-1 text-xs font-bold ${current ? "bg-[#087d96] text-white" : "bg-[#fff0c7] text-[#926329]"}`}>{isClosure ? "CIERRE" : current ? "AHORA" : "PRÓXIMO"}</span><span className="text-sm font-semibold text-[#47617f]">{featured.start_time.slice(0,5)} – {featured.end_time.slice(0,5)}</span></div><p className="mt-4 text-sm text-[#37658d]">{featured.experience_title ?? (featured.block_type === "workshop" ? "Taller programado" : "Jornada de aula")}</p><h2 className="mt-1 text-2xl font-extrabold">{featured.title}</h2>{featured.purpose && <p className="mt-2 text-sm leading-relaxed text-[#526b87]">{featured.purpose}</p>}{featured.materials.length > 0 && <div className="mt-5 flex flex-wrap gap-2">{featured.materials.map((material) => <span key={material} className="rounded-full bg-white px-3 py-2 text-sm font-medium text-[#315a78] shadow-sm">{material}</span>)}</div>}{featured.steps.length > 0 && <ol className="mt-5 space-y-2 rounded-2xl bg-white/75 p-4 text-sm text-[#315a78]">{featured.steps.slice(0, 3).map((step, index) => <li key={step} className="flex gap-3"><span className="font-bold text-[#087d96]">{index + 1}</span>{step}</li>)}</ol>}<div className="mt-5 grid gap-3 sm:grid-cols-2">{isAttendance ? <Button className="h-12" onClick={openAttendance}><Users /> {primaryLabel}</Button> : journey?.primary_action === "start_block" ? <Button className="h-12" onClick={() => updateExecution({ scheduleEntryId: featured.id, action: "start" })}><Play /> {primaryLabel}</Button> : journey?.primary_action === "continue_block" ? <Button className="h-12" onClick={() => updateExecution({ scheduleEntryId: featured.id, action: "keep_current" })}><Play /> {primaryLabel}</Button> : isClosure ? <Button className="h-12" onClick={() => setClosing(true)}><CheckCircle2 /> ¿Cómo salió?</Button> : featured.activity_id && featured.criteria.length ? <Button className="h-12" onClick={() => openEvidence(featured)}><Camera /> {primaryLabel}</Button> : <Button className="h-12" variant="outline">Ver bloque</Button>}{journey?.primary_action === "continue_block" && featured.activity_id && featured.criteria.length > 0 && <Button variant="outline" className="h-12" onClick={() => openEvidence(featured)}><Camera /> Registrar evidencia</Button>}{isReadyToClose && <Button variant="outline" className="h-12" onClick={() => setClosing(true)}><CheckCircle2 /> ¿Cómo salió?</Button>}</div>{(current?.current_override || isClosure) && <Button variant="ghost" className="mt-3 h-10 text-[#126177]" onClick={() => updateExecution({ scheduleEntryId: featured.id, action: "keep_current" })}>Mantener como actual</Button>}</section>}
+      {featured && <section className="diagnostic-panel overflow-hidden border-[#c5edf0] bg-[linear-gradient(135deg,#ffffff,#e9fbfb)] p-5 md:p-7"><div className="flex items-center justify-between gap-3"><span className={`rounded-full px-3 py-1 text-xs font-bold ${current ? "bg-[#087d96] text-white" : "bg-[#fff0c7] text-[#926329]"}`}>{isClosure ? "CIERRE" : current ? "AHORA" : "PRÓXIMO"}</span><span className="text-sm font-semibold text-[#47617f]">{featured.start_time.slice(0,5)} – {featured.end_time.slice(0,5)}</span></div><p className="mt-4 text-sm text-[#37658d]">{featured.experience_title ?? (featured.block_type === "workshop" ? "Taller programado" : "Jornada de aula")}</p><h2 className="mt-1 text-2xl font-extrabold">{featured.title}</h2>{featured.purpose && <p className="mt-2 text-sm leading-relaxed text-[#526b87]">{featured.purpose}</p>}<div className="mt-5 grid gap-3 sm:grid-cols-2">{isAttendance ? <Button className="h-12" onClick={openAttendance}><Users /> {primaryLabel}</Button> : journey?.primary_action === "start_block" && featured.activity_id ? <Button className="h-12" onClick={() => void openActivity(featured, true)}><Play /> {primaryLabel}</Button> : journey?.primary_action === "continue_block" && featured.activity_id ? <Button className="h-12" onClick={() => void openActivity(featured)}><Play /> {primaryLabel}</Button> : isClosure ? <Button className="h-12" onClick={() => setClosing(true)}><CheckCircle2 /> ¿Cómo salió?</Button> : featured.activity_id ? <Button className="h-12" onClick={() => void openActivity(featured)}><Play /> Abrir actividad</Button> : <p className="rounded-xl border bg-white px-4 py-3 text-sm text-[#526b87]">Bloque sin actividad guiada.</p>}{journey?.primary_action === "continue_block" && featured.activity_id && featured.criteria.length > 0 && <Button variant="outline" className="h-12" onClick={() => openEvidence(featured)}><Camera /> Registrar evidencia</Button>}{isReadyToClose && <Button variant="outline" className="h-12" onClick={() => setClosing(true)}><CheckCircle2 /> ¿Cómo salió?</Button>}</div>{(current?.current_override || isClosure) && <Button variant="ghost" className="mt-3 h-10 text-[#126177]" onClick={() => updateExecution({ scheduleEntryId: featured.id, action: "keep_current" })}>Mantener como actual</Button>}</section>}
       <section className="diagnostic-panel p-4 md:p-5"><div className="flex items-center justify-between"><h2 className="text-lg font-extrabold">Mi jornada</h2><Clock3 className="size-5 text-[#087d96]" /></div><div className="mt-3 space-y-2">{today.blocks.map((block) => <div key={block.id} className={`flex items-center gap-3 rounded-2xl border px-3 py-3 ${block.id === featured?.id ? "border-[#bce9ee] bg-[#f0fbfc]" : "border-[#edf1f7] bg-white"}`}><span className="w-12 text-sm font-bold text-[#315575]">{block.start_time.slice(0,5)}</span><span className={`size-2.5 rounded-full ${block.display_status === "active" ? "bg-[#087d96]" : block.display_status === "ready_to_close" || block.status === "completed" ? "bg-[#b8c4d4]" : "bg-[#e6ae44]"}`} /><span className="min-w-0 flex-1 truncate font-semibold">{block.title}</span>{block.block_type === "workshop" && <span className="rounded-full bg-[#eee4ff] px-2 py-1 text-xs font-semibold text-[#7554aa]">Taller</span>}</div>)}</div></section>
       <section className="grid gap-3 sm:grid-cols-2"><div className="rounded-2xl bg-[#fff8ef] p-5"><p className="text-sm font-bold">Asistencia</p><p className="mt-2 text-sm text-[#55657c]">{today.attendance.recorded ? "Registrada para hoy" : "Pendiente de registrar"}</p></div><div className="rounded-2xl bg-[#edf8f3] p-5"><p className="text-sm font-bold">Aula</p><p className="mt-2 text-sm text-[#35675f]">{dashboard?.metrics.students_observed ?? 0}/{dashboard?.metrics.students_total ?? 0} observados</p></div></section>
     </>}

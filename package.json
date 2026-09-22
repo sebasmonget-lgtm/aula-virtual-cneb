@@ -17,6 +17,7 @@
     "test:daily-state": "node --test src/lib/daily-state.test.mjs",
     "test:statistics": "node --test src/lib/statistics-service.test.mjs",
     "test:student-context": "node --test src/lib/student-context-service.test.mjs",
+    "test:activity-runner": "node --test src/lib/activity-runner.test.mjs",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "db:generate": "drizzle-kit generate"
   },
