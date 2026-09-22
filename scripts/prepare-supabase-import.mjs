@@ -17,6 +17,8 @@ const tableOrder = [
   "activities", "activity_criteria", "evidences", "competency_observation_guides",
   "document_templates", "document_versions", "diagnostic_sessions",
   "diagnostic_entries", "observation_references", "student_observations",
+  "class_schedule_entries", "daily_execution_logs", "attendance_records", "calendar_exceptions",
+  "student_context_snapshots",
 ];
 const userFields = new Set(["user_id", "owner_id", "owner_user_id", "teacher_id", "created_by", "author_id"]);
 const arrayFields = new Set(["official_performance_ids", "performance_ids"]);
@@ -34,6 +36,9 @@ const tables = source.tables;
 const problems = [];
 for (const table of tableOrder) {
   if (!Array.isArray(tables[table])) problems.push(`Falta la tabla ${table} en la exportación.`);
+}
+for (const table of Object.keys(tables)) {
+  if (!tableOrder.includes(table)) problems.push(`La tabla exportada ${table} no está contemplada por el importador.`);
 }
 const localUsers = new Set((tables.profiles ?? []).map((row) => row.user_id));
 if (localUsers.size !== 1) problems.push("Esta versión del importador requiere exactamente una docente local.");
@@ -83,6 +88,7 @@ const assetManifest = [];
 const sql = [
   "-- Ayni Aula: importar SOLO en un proyecto Supabase nuevo, vacío y con migraciones aplicadas.",
   "-- Revisar el manifiesto de logos. Este SQL no sube objetos a Storage.",
+  "-- Las rutas de evidencias multimedia se preservan como referencias; no se copian fotos privadas.",
   "begin;",
   `do $$ begin if not exists (select 1 from auth.users where id = '${newUserId}') then raise exception 'Usuario destino no existe en auth.users'; end if; end $$;`,
 ];

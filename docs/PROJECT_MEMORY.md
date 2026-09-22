@@ -21,7 +21,7 @@ Proyecto nuevo iniciado el 20 de septiembre de 2026. Existe un shell responsive 
 - Esquema incremental para perfil institucional, logo, guías de observación y plantillas según la actualización 01.
 - Diagnóstico guiado con datos precargados, lista de competencias, cobertura por estudiantes, registro por referente/estado observacional y guardado para continuar después.
 - Catálogo local ilustrativo de dos referentes vinculado a un desempeño de muestra. La interfaz lo advierte y el importador bloquea su paso a producción por defecto.
-- Preparador de importación Supabase con dry run, validación curricular, mapeo explícito del usuario nuevo, SQL transaccional y manifiesto de logos. No ejecuta cambios externos.
+- Preparador de importación Supabase con dry run, validación curricular, mapeo explícito del usuario nuevo, SQL transaccional y manifiesto de logos. Incluye las tablas de jornada, asistencia y snapshots; preserva rutas de fotos como referencias privadas, sin copiarlas. No ejecuta cambios externos.
 
 ## Decisiones recientes
 
