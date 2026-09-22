@@ -52,6 +52,8 @@ function experienceOutputSchema(id, contextField, collectionField) {
 }
 export const PROJECT_OUTPUT_SCHEMA = experienceOutputSchema("project-v1", "trigger_or_interest", "possible_pathways");
 export const UNIT_OUTPUT_SCHEMA = experienceOutputSchema("unit-v1", "learning_need_or_context", "proposed_situations");
+const CRITERION_FIELDS=["competency_id","criterion_text","expected_evidence","acceptable_evidence_variations","observation_focus","evidence_scope","teacher_caution"];
+export const CRITERION_EVIDENCE_OUTPUT_SCHEMA={id:"criterion-evidence-v1",type:"object",additionalProperties:false,required:CRITERION_FIELDS,properties:{competency_id:{type:"string",minLength:1},criterion_text:{type:"string",minLength:1},expected_evidence:{type:"string",minLength:1},acceptable_evidence_variations:{type:"array",items:{type:"string",minLength:1}},observation_focus:{type:"array",items:{type:"string",minLength:1}},evidence_scope:{enum:["individual","group","mixed"]},teacher_caution:{type:"string",minLength:1}}};
 export class InvalidAIGenerationError extends Error {
   constructor(reason, details = {}) {
     super(`Generación de IA inválida: ${reason}.`);
@@ -156,6 +158,7 @@ function assertExperienceOutput(output, bundle, workflow) {
   for (const item of output[collectionField]) if (!item || typeof item !== "object" || PATHWAY_FIELDS.some((field) => typeof item[field] !== "string" || !item[field].trim()) || Object.keys(item).some((field) => !PATHWAY_FIELDS.includes(field))) throw new InvalidAIGenerationError(`${workflow}_pathway_schema_mismatch`);
   return output;
 }
+function assertCriterionEvidenceOutput(output,bundle,competencyId){const missing=CRITERION_FIELDS.filter((field)=>!(field in output));const unknown=Object.keys(output).filter((field)=>!CRITERION_FIELDS.includes(field));if(missing.length||unknown.length)throw new InvalidAIGenerationError("criterion_evidence_schema_mismatch");for(const field of ["competency_id","criterion_text","expected_evidence","teacher_caution"])if(typeof output[field]!=="string"||!output[field].trim())throw new InvalidAIGenerationError("criterion_evidence_required_field_invalid",{field});for(const field of ["acceptable_evidence_variations","observation_focus"])if(!Array.isArray(output[field])||output[field].some((v)=>typeof v!=="string"||!v.trim()))throw new InvalidAIGenerationError("criterion_evidence_required_field_invalid",{field});if(!["individual","group","mixed"].includes(output.evidence_scope))throw new InvalidAIGenerationError("criterion_evidence_scope_invalid");if(output.competency_id!==competencyId||!bundle.curriculum.competency_cards.some((card)=>card.id===competencyId))throw new InvalidAIGenerationError("criterion_evidence_competency_outside_bundle");return output;}
 
 /**
  * Generates one validated activity through an injected provider.
@@ -167,18 +170,18 @@ export async function generateAIWorkflowV4(input, { provider, knowledgeBase, exe
   if (plan.execution === "code") {
     throw new InvalidAIGenerationError("workflow_not_generation_enabled", { workflow: input?.workflow, execution_plan: plan });
   }
-  if (!["activity", "annual_plan", "project", "unit"].includes(input?.workflow) || plan.execution !== "generation") {
+  if (!["activity", "annual_plan", "project", "unit", "criterion_and_evidence"].includes(input?.workflow) || plan.execution !== "generation") {
     throw new InvalidAIGenerationError("unsupported_workflow", { workflow: input?.workflow, execution_plan: plan });
   }
   if (!provider || typeof provider.generate !== "function") {
     throw new InvalidAIGenerationError("provider_not_configured");
   }
   const prepared = await prepareAIRequestV4(input, knowledgeBase);
-  const outputSchema = input.workflow === "annual_plan" ? ANNUAL_PLAN_OUTPUT_SCHEMA : input.workflow === "project" ? PROJECT_OUTPUT_SCHEMA : input.workflow === "unit" ? UNIT_OUTPUT_SCHEMA : ACTIVITY_OUTPUT_SCHEMA;
+  const outputSchema = input.workflow === "annual_plan" ? ANNUAL_PLAN_OUTPUT_SCHEMA : input.workflow === "project" ? PROJECT_OUTPUT_SCHEMA : input.workflow === "unit" ? UNIT_OUTPUT_SCHEMA : input.workflow === "criterion_and_evidence" ? CRITERION_EVIDENCE_OUTPUT_SCHEMA : ACTIVITY_OUTPUT_SCHEMA;
   const providerRequest = buildProviderRequest(input.workflow, prepared.aiContextBundle, plan, outputSchema);
   const confirmedCompetencyId = input.competency_ids?.length === 1 ? input.competency_ids[0] : null;
   const providerResponse = unwrapProviderResponse(await provider.generate(providerRequest));
-  const output = input.workflow === "annual_plan" ? assertAnnualPlanOutput(providerResponse.output, prepared.aiContextBundle) : ["project", "unit"].includes(input.workflow) ? assertExperienceOutput(providerResponse.output, prepared.aiContextBundle, input.workflow) : assertActivityOutput(providerResponse.output, prepared.aiContextBundle, confirmedCompetencyId);
+  const output = input.workflow === "annual_plan" ? assertAnnualPlanOutput(providerResponse.output, prepared.aiContextBundle) : ["project", "unit"].includes(input.workflow) ? assertExperienceOutput(providerResponse.output, prepared.aiContextBundle, input.workflow) : input.workflow === "criterion_and_evidence" ? assertCriterionEvidenceOutput(providerResponse.output,prepared.aiContextBundle,confirmedCompetencyId) : assertActivityOutput(providerResponse.output, prepared.aiContextBundle, confirmedCompetencyId);
   return {
     output,
     metadata: {

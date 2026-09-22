@@ -1,0 +1,9 @@
+alter table activity_criteria alter column competency_id drop not null;
+alter table activity_criteria add column if not exists competency_v4_id text;
+alter table activity_criteria add column if not exists details jsonb not null default '{}'::jsonb;
+alter table activity_criteria add column if not exists generation_metadata jsonb not null default '{}'::jsonb;
+alter table activity_criteria add column if not exists status text not null default 'active';
+alter table activity_criteria add column if not exists teacher_confirmed_at timestamptz;
+alter table activity_criteria add column if not exists created_at timestamptz not null default now();
+alter table activity_criteria add column if not exists updated_at timestamptz not null default now();
+alter table activity_criteria add constraint activity_criteria_competency_any check (competency_id is not null or competency_v4_id is not null);

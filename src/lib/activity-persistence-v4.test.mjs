@@ -40,7 +40,7 @@ test("I: activity conserva el routing Terra/low y el servidor preserva límites 
   assert.match(server, /pending\.learning_experience_id !== experience\.id/);
   assert.match(server, /sequence,preparation,adaptations,status,details,generation_metadata/);
   assert.match(server, /'\[\]'::jsonb/);
-  assert.doesNotMatch(server.slice(server.indexOf('pathname === "/api/activities"'), server.indexOf('pathname === "/api/ai/activity/options"')), /insert into activity_criteria|insert into evidences/);
+  assert.doesNotMatch(server.slice(server.indexOf('pathname === "/api/activities"'), server.indexOf('pathname === "/api/activity-criteria"')), /insert into activity_criteria|insert into evidences/);
 });
 
 test("A-C: OPTIONS permite PUT y el parent público no filtra metadata técnica", async () => {

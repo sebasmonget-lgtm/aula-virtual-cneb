@@ -193,3 +193,9 @@ La señal interna usa una cobertura mínima configurable de 50%, y requiere al m
 **Decisión.** Las nuevas actividades docentes se crean únicamente como hijas de un `learning_experience` activo de tipo `project` o `unit`. El servidor vuelve a comprobar propiedad del aula, estado del parent, aplicabilidad y pertenencia de la competencia v4, fechas de experiencia y año escolar en generación, guardado, edición y confirmación. La salida `activity-v1` se persiste íntegra en `activities.details`; `generation_metadata` queda en servidor y se asocia mediante un identificador opaco de generación.
 
 **Consecuencia.** La docente no vuelve a transcribir el contexto del Project o Unit. Los borradores se pueden reabrir y editar; las actividades activas son de solo lectura. `sequence` y `adaptations` se mantienen como arreglos vacíos y no se crean filas en `activity_criteria` ni evidencias: esos conceptos se resolverán en `criterion_and_evidence`, sin mapear IDs v4 al catálogo curricular legacy.
+
+## ADR 031 Criterios v4 preparados desde actividades confirmadas
+
+**Decisión.** `criterion_and_evidence` se genera solo para una Activity activa con competencia v4 confirmada. Su salida estricta se persiste en `activity_criteria.details`, con `competency_v4_id` y sin UUID artificial en `competency_id` ni `performance_id`. La docente confirma el criterio antes de que pueda usarse en un flujo posterior.
+
+**Consecuencia.** El criterio y la evidencia esperada no registran una observación real ni crean filas en `evidences`. Las filas legacy siguen usando `competency_id` UUID; la migración permite ambos formatos. `evidence_capture` será el siguiente workflow.

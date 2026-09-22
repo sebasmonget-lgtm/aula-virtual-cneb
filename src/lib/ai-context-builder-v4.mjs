@@ -161,6 +161,7 @@ function workflowInputSubset(input, workflowRequirements) {
     .map((field) => [field, values[field]]));
   if (["project", "unit"].includes(input.workflow) && hasValue(input.planned_experience)) subset.planned_experience = input.planned_experience;
   if (input.workflow === "activity" && hasValue(input.learning_experience_context)) subset.learning_experience_context = input.learning_experience_context;
+  if (input.workflow === "criterion_and_evidence" && hasValue(input.activity_context)) subset.activity_context = input.activity_context;
   return subset;
 }
 
