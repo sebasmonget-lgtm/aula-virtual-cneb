@@ -1,6 +1,6 @@
 import { spawn } from "node:child_process";
 
-const database = spawn(process.execPath, ["scripts/local-db-server.mjs"], { stdio: "inherit" });
+const database = spawn(process.execPath, ["--env-file-if-exists=.env.local", "scripts/local-db-server.mjs"], { stdio: "inherit" });
 const web = spawn(process.execPath, ["scripts/run-framework.mjs", "dev", "--host", "127.0.0.1"], { stdio: "inherit" });
 const children = [database, web];
 

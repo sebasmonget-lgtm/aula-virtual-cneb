@@ -8,6 +8,8 @@ import { resolveDailyState } from "../src/lib/daily-state.mjs";
 import { isValidStepIndex } from "../src/lib/activity-runner.mjs";
 import { buildStudentPedagogicalContext, refreshStudentContextSnapshot } from "../src/lib/student-context-service.mjs";
 import { buildClassroomStatistics } from "../src/lib/statistics-service.mjs";
+import { loadKnowledgeBaseV4 } from "../src/lib/knowledge-base-v4.mjs";
+import { generateTeacherActivity } from "../src/lib/ai-activity-ui-service.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const dataDir = path.join(root, ".local", "pgdata");
@@ -219,6 +221,25 @@ async function studentProfile(studentId) {
   return { ...context, snapshot };
 }
 
+async function activeClassroomForActivityGeneration() {
+  return (await db.query(`select c.id, c.section, ag.age_years as age
+    from classrooms c join age_grades ag on ag.id = c.age_grade_id
+    where c.teacher_id = $1 and c.status = 'active' limit 1`, [teacherId])).rows[0] ?? null;
+}
+
+async function activityGenerationOptions() {
+  const classroom = await activeClassroomForActivityGeneration();
+  if (!classroom) return { age: null, competencies: [] };
+  const knowledgeBase = await loadKnowledgeBaseV4();
+  const age = String(classroom.age);
+  return {
+    age: classroom.age,
+    competencies: knowledgeBase.competencyCards
+      .filter((card) => card.runtime_selectable_by_age?.[age] && !["CAST_L2_ORAL", "PS_RELIGION"].includes(card.id))
+      .map((card) => ({ id: card.id, name: card.official_name })),
+  };
+}
+
 async function diagnosticWorkspace() {
   const classroomResult = await db.query(`
     select c.id, c.section, ag.age_years
@@ -393,6 +414,26 @@ const server = createServer(async (request, response) => {
     if (request.method === "GET" && url.pathname === "/api/statistics") {
       const classroom = (await db.query(`select id from classrooms where teacher_id = $1 and status = 'active' limit 1`, [teacherId])).rows[0];
       send(response, 200, await buildClassroomStatistics(db, classroom.id), origin);
+      return;
+    }
+    if (request.method === "GET" && url.pathname === "/api/ai/activity/options") {
+      send(response, 200, await activityGenerationOptions(), origin);
+      return;
+    }
+    if (request.method === "POST" && url.pathname === "/api/ai/activity/generate") {
+      const classroom = await activeClassroomForActivityGeneration();
+      if (!classroom) {
+        send(response, 403, { error: "No se encontró un aula activa para generar la actividad." }, origin);
+        return;
+      }
+      const body = await readJson(request);
+      try {
+        const generated = await generateTeacherActivity({ request: body, classroom });
+        // Metadata and provenance stay on the server boundary for future audit storage; the UI receives only the validated proposal.
+        send(response, 200, { proposal: generated.proposal }, origin);
+      } catch (error) {
+        send(response, 422, { error: error?.message || "No pudimos preparar la actividad." }, origin);
+      }
       return;
     }
     if (request.method === "POST" && url.pathname === "/api/diagnostics") {
