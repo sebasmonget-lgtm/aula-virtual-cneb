@@ -1,5 +1,11 @@
 # Decisiones de arquitectura
 
+## ADR 020 Contexto obligatorio y aplicabilidad antes de IA
+
+**Decisión.** Un bundle solo se construye cuando el contexto obligatorio declarado por su workflow está presente en campos estructurados. Las tarjetas candidatas respetan las condiciones de L2 y Religión, y los atajos prohibidos forman parte de las restricciones duras.
+
+**Consecuencia.** El backend no aparenta disponer de información que falta ni expone contexto estructurado que el workflow no necesita. Las integraciones de modelos deberán manejar el error estructurado de contexto incompleto antes de solicitar una generación.
+
 ## ADR 019 Constructor de contexto acotado por workflow
 
 **Decisión.** `buildAIContext` compone loader, retrieval, tarjetas completas, referencia curricular de una sola edad, módulos pedagógicos, reglas de generación y guardrails en un bundle trazable por workflow. Una competencia confirmada restringe el bundle a esa tarjeta; sin confirmación se entregan pocas candidatas sin declarar una ganadora.
