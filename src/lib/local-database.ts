@@ -7,6 +7,10 @@ export type StudentPedagogicalProfile = {
   confirmed_period_assessments: [];
   snapshot: { generated_at: string; source_updated_at: string } | null;
 };
+export type LocalStatistics = {
+  classroom: { students_active: number; students_observed: number; coverage: string };
+  competencies: { competency_id: string; competency_text: string; planned_activities: number; students_with_information: number; evidence_count: number; demonstrated: number; with_support: number; not_yet_demonstrated: number; insufficient_information: number; last_observed_at: string | null; coverage: { students_with_information: number; students_total: number }; insight: "low_planning_presence" | "insufficient_information" | "observed_support_need" | "enough_information" }[];
+};
 export type LocalEvidence = {
   id: string;
   student_id: string;
@@ -73,6 +77,12 @@ export async function loadStudentPedagogicalProfile(studentId: string): Promise<
   const payload = await response.json() as StudentPedagogicalProfile & { error?: string };
   if (!response.ok) throw new Error(payload.error ?? "No se pudo cargar el perfil del niño.");
   return payload;
+}
+
+export async function loadLocalStatistics(): Promise<LocalStatistics> {
+  const response = await fetch(`${apiUrl}/api/statistics`, { cache: "no-store" });
+  if (!response.ok) throw new Error("No se pudieron calcular las estadísticas locales.");
+  return response.json();
 }
 
 export async function createLocalEvidence(input: {

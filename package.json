@@ -15,6 +15,7 @@
     "db:export": "node scripts/export-local-data.mjs",
     "db:prepare-import": "node scripts/prepare-supabase-import.mjs",
     "test:daily-state": "node --test src/lib/daily-state.test.mjs",
+    "test:statistics": "node --test src/lib/statistics-service.test.mjs",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "db:generate": "drizzle-kit generate"
   },

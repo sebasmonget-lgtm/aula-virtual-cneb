@@ -13,6 +13,7 @@ Proyecto nuevo iniciado el 20 de septiembre de 2026. Existe un shell responsive 
 - Modo Jornada: asistencia rápida por estudiante, estado diario centralizado, inicio/cierre de bloques y extensión manual. Las evidencias permanecen opcionales y heredan el contexto de actividad/criterio.
 - Flujo de evidencia con marca observacional docente obligatoria por criterio para registros nuevos; la nota es opcional. Las actividades pueden exponer varios criterios planificados y la evidencia sigue siendo una acción secundaria durante la actividad.
 - Módulo Niños funcional: lista, perfil pedagógico y trayectorias por competencia basadas en registros reales. `StudentContextService` genera snapshots JSON deterministas sin multimedia ni texto de IA.
+- `StatisticsService` local calcula cobertura por aula y por competencia, presencia reciente en planificación y marcas observacionales. Su contrato se reutilizará para UI, informes, Excel e IA, sin duplicar lógica.
 - Primer flujo vertical persistente: actividad actual → seleccionar estudiante → describir evidencia → guardar en PostgreSQL local → actualizar cobertura.
 - Migración inicial para Supabase con entidades de Fase 0 y Fase 1, más las relaciones mínimas necesarias para el flujo de evidencia.
 - Políticas RLS preparadas, sin aplicar a ninguna cuenta.

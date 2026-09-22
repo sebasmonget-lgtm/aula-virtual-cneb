@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import { PGlite } from "@electric-sql/pglite";
 import { resolveDailyState } from "../src/lib/daily-state.mjs";
 import { buildStudentPedagogicalContext, refreshStudentContextSnapshot } from "../src/lib/student-context-service.mjs";
+import { buildClassroomStatistics } from "../src/lib/statistics-service.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const dataDir = path.join(root, ".local", "pgdata");
@@ -383,6 +384,11 @@ const server = createServer(async (request, response) => {
         return;
       }
       send(response, 200, profile, origin);
+      return;
+    }
+    if (request.method === "GET" && url.pathname === "/api/statistics") {
+      const classroom = (await db.query(`select id from classrooms where teacher_id = $1 and status = 'active' limit 1`, [teacherId])).rows[0];
+      send(response, 200, await buildClassroomStatistics(db, classroom.id), origin);
       return;
     }
     if (request.method === "POST" && url.pathname === "/api/diagnostics") {
