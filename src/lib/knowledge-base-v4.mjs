@@ -127,6 +127,7 @@ export async function loadKnowledgeBaseV4(rootDir = KNOWLEDGE_BASE_V4_ROOT) {
   return {
     version: VERSION,
     retrievalPolicy,
+    sourceRegistry,
     knowledgeUnits,
     competencyCards,
     workflows: workflowRequirements.workflows,

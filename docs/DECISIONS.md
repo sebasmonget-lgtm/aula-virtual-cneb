@@ -1,5 +1,11 @@
 # Decisiones de arquitectura
 
+## ADR 018 Retrieval local determinista para Knowledge Base v4
+
+**Decisión.** El retrieval v4 filtra unidades por workflow, edad, dominios permitidos, competencia confirmada y aplicabilidad contextual. Excluye por defecto las reglas temporales de 2026 y las unidades de Castellano L2 o Religión sin contexto explícito. Luego ordena de forma estable según la política versionada y aplica los límites de unidades semánticas y reclamos de fuente.
+
+**Consecuencia.** La selección es repetible, trazable y local. La construcción de contexto de IA, cualquier proveedor de modelos y los embeddings siguen fuera de esta fase.
+
 ## ADR 017 Runtime de carga para Knowledge Base v4
 
 **Decisión.** Cargar la Knowledge Base v4 desde sus JSON y JSONL versionados, validando versión, huellas SHA-256, cardinalidades, IDs, referencias de fuente, edades y requisitos de workflow al iniciar su consumo. El loader no realiza retrieval ni construye contextos de IA.

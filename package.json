@@ -23,6 +23,7 @@
     "test:jev": "node --test src/lib/jev-decision.test.mjs",
     "test:knowledge-pack": "node --test src/lib/knowledge-pack.test.mjs",
     "test:knowledge-base-v4": "node --test src/lib/knowledge-base-v4.test.mjs",
+    "test:knowledge-retrieval-v4": "node --test src/lib/knowledge-retrieval-v4.test.mjs",
     "test:jev-benchmark": "node --test src/lib/jev-benchmark.test.mjs",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "db:generate": "drizzle-kit generate"
