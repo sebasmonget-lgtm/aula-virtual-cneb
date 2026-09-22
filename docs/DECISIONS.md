@@ -44,6 +44,12 @@ La señal interna usa una cobertura mínima configurable de 50%, y requiere al m
 
 **Consecuencia.** La ausencia de catálogo oficial trazado obliga el modo de selección manual. Los bancos de casos sirven para medir el enrutamiento y el fallback, pero no convierten hipótesis semánticas en contenido oficial ni activan una integración de IA.
 
+## ADR 016 Knowledge Pack semántico importado con cuarentena curricular
+
+**Decisión.** El paquete CNEB Inicial AI Knowledge Pack v2 enriquece las fichas semánticas existentes y conserva sus 140 candidatos de desempeño en un catálogo separado. La importación mantiene ambos estados de revisión en `pending`; no escribe sobre `curriculum/official` ni agrega candidatos semánticos como desempeños del runtime.
+
+**Consecuencia.** Jev obtiene mejores explicaciones, ejemplos y distinciones cuando exista una ficha doblemente validada, pero el estado actual sigue exigiendo selección manual. La siguiente ingestión oficial debe transcribir PDF MINEDU, guardar página/sección/hash y recién mapear estos candidatos a IDs oficiales.
+
 ## ADR 009 Horario derivado para la pantalla Hoy
 
 **Decisión.** Guardar bloques de horario que referencian actividades existentes y registrar su ejecución diaria de forma separada. La pantalla Hoy consulta esos bloques en la zona horaria America/Lima; no crea una copia diaria de actividades ni talleres.

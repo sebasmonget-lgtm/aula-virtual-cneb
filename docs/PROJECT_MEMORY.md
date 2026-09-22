@@ -24,6 +24,8 @@ Proyecto nuevo iniciado el 20 de septiembre de 2026. Existe un shell responsive 
 - Preparador de importación Supabase con dry run, validación curricular, mapeo explícito del usuario nuevo, SQL transaccional y manifiesto de logos. Incluye las tablas de jornada, asistencia y snapshots; preserva rutas de fotos como referencias privadas, sin copiarlas. No ejecuta cambios externos.
 - La capa semántica para Jev incluye 14 competencias de Inicial y genera runtimes separados para 3, 4 y 5 años. Permanece separada del registro oficial, que está en transcripción pendiente de contraste por página desde PDF MINEDU.
 - Jev exige revisión doble (`official_review_status` y `semantic_review_status`) antes de proponer una selección. En desempeños, valida además edad y competencia previamente confirmada. El benchmark contiene 50 situaciones de competencia y casos de desempeño marcados para fallback manual hasta completar el maestro oficial.
+- Se integró `CNEB_Inicial_AI_KnowledgePack_v2` como enriquecimiento de las 14 fichas semánticas y 140 candidatos semánticos de desempeño. Sus textos no modifican `curriculum/official`, conservan estado pendiente y los candidatos no ingresan a los runtimes hasta contrastarlos con PDF MINEDU.
+- La importación es reproducible con `node scripts/import-cneb-knowledge-pack-v2.mjs <directorio-del-paquete-extraído>`; el ZIP y los PDF de trabajo no se guardan en Git.
 
 ## Decisiones recientes
 

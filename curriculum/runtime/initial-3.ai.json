@@ -13,7 +13,7 @@
       "official_review_status": "pending",
       "semantic_review_status": "pending",
       "meaning": "El niño se reconoce como una persona única, valiosa y perteneciente a grupos significativos; actúa con creciente autonomía y reconoce, expresa y regula progresivamente sus emociones.",
-      "pedagogical_intent": "El niño se reconoce como una persona única, valiosa y perteneciente a grupos significativos; actúa con creciente autonomía y reconoce, expresa y regula progresivamente sus emociones.",
+      "pedagogical_intent": "Construir una imagen positiva y diferenciada de sí mismo, actuar con autonomía creciente y comprender/regular progresivamente las emociones.",
       "capacities": [
         {
           "id": "PS_IDENTIDAD.CAP1",
@@ -28,17 +28,15 @@
       ],
       "cycle_standard_meaning": "Al final del ciclo II se espera una identidad personal cada vez más afirmada, autonomía en decisiones y autocuidado, pertenencia a familia/aula y reconocimiento-expresión de emociones propias y de otros con apoyo pertinente.",
       "when_to_use": [
-        "autonomía personal",
-        "emociones",
-        "autoimagen",
-        "preferencias",
-        "hábitos de autocuidado",
-        "pertenencia",
-        "identidad personal"
+        "el foco es reconocer características, gustos, necesidades o cualidades propias",
+        "se busca autonomía en decisiones, rutinas o autocuidado",
+        "se identifican, expresan o regulan emociones propias",
+        "se trabaja pertenencia personal a familia, aula o grupos significativos"
       ],
       "do_not_use_when": [
-        "el foco central es convivencia y normas colectivas",
-        "el foco es resolver un problema matemático o científico"
+        "el foco es construir acuerdos, resolver conflictos o cuidar el bien común",
+        "el objetivo principal es una creación artística",
+        "solo se cumple una rutina sin elección, reflexión o autonomía"
       ],
       "typical_contexts": [
         "autonomía personal",
@@ -55,9 +53,27 @@
         "Realiza actividades por iniciativa y practica hábitos básicos de alimentación e higiene.",
         "Expresa emociones y, con ayuda del adulto, empieza a identificarlas en sí y en otros."
       ],
-      "possible_evidence": [],
-      "examples": [],
-      "not_examples": [],
+      "possible_evidence": [
+        "elección explicada",
+        "expresión de emoción",
+        "acción autónoma en rutina",
+        "autorretrato comentado",
+        "relato sobre cualidades/preferencias"
+      ],
+      "examples": [
+        "Elige un material para representar algo que le gusta y explica por qué.",
+        "Identifica cómo se siente y pide ayuda para tranquilizarse.",
+        "Prepara sus pertenencias y decide qué necesita para una actividad.",
+        "Comenta características que reconoce en sí mismo.",
+        "Explica algo que ya puede hacer solo y algo para lo que necesita apoyo."
+      ],
+      "not_examples": [
+        "El grupo vota una norma.",
+        "Esperan turnos para compartir un triciclo.",
+        "Clasifican objetos por tamaño.",
+        "Realizan un circuito de equilibrio.",
+        "Escuchan un cuento sin relacionarlo con experiencias propias."
+      ],
       "key_signals": [
         "autonomía personal",
         "emociones",
@@ -67,7 +83,20 @@
         "pertenencia",
         "identidad personal"
       ],
-      "common_confusions": [],
+      "common_confusions": [
+        {
+          "competency_id": "PS_CONVIVE",
+          "difference": "IDENTIDAD se centra en quién soy, autonomía y emociones propias; CONVIVE en relaciones, acuerdos, responsabilidades y bien común."
+        },
+        {
+          "competency_id": "COM_ARTE",
+          "difference": "ARTE es principal si el aprendizaje central es explorar/crear con lenguajes artísticos; IDENTIDAD si la creación es un medio para reconocerse y valorarse."
+        },
+        {
+          "competency_id": "TRANS_AUTONOMO",
+          "difference": "IDENTIDAD aborda autonomía personal y emociones; GESTIONA SU APRENDIZAJE metas, estrategias y revisión del propio aprendizaje."
+        }
+      ],
       "age_profile": {
         "status": "specified",
         "ai_focus": "Reconocimiento de sí mismo y primeras acciones autónomas.",
@@ -86,7 +115,7 @@
       "official_review_status": "pending",
       "semantic_review_status": "pending",
       "meaning": "El niño aprende a relacionarse con otros con respeto, construir y asumir acuerdos, participar en decisiones simples y cuidar lo que es de todos.",
-      "pedagogical_intent": "El niño aprende a relacionarse con otros con respeto, construir y asumir acuerdos, participar en decisiones simples y cuidar lo que es de todos.",
+      "pedagogical_intent": "Desarrollar relaciones respetuosas, participación en acuerdos y responsabilidades, y acciones orientadas al bienestar común.",
       "capacities": [
         {
           "id": "PS_CONVIVE.CAP1",
@@ -106,17 +135,15 @@
       ],
       "cycle_standard_meaning": "Al final del ciclo II se espera que conviva respetuosamente, asuma responsabilidades, se interese por personas y costumbres diferentes, construya acuerdos básicos y participe en el cuidado del bienestar y recursos comunes.",
       "when_to_use": [
-        "convivencia",
-        "normas",
-        "acuerdos",
-        "turnos",
-        "responsabilidad",
-        "cuidado común",
-        "trabajo en grupo",
-        "conflictos cotidianos"
+        "el propósito es convivir, compartir, coordinar o resolver una situación con otros",
+        "se construyen o aplican acuerdos y normas",
+        "hay responsabilidades o cuidado de materiales/espacios comunes",
+        "hay participación grupal en decisiones o acciones de bienestar"
       ],
       "do_not_use_when": [
-        "el foco principal es reconocer emociones personales sin dimensión grupal"
+        "el foco es una emoción o preferencia personal sin dimensión colectiva",
+        "solo hay varios niños juntos pero no aprendizaje de convivencia",
+        "el grupo es solo formato para trabajar otra competencia"
       ],
       "typical_contexts": [
         "convivencia",
@@ -133,9 +160,27 @@
         "Practica algunas reglas conocidas del aula con acompañamiento.",
         "Colabora en el cuidado de materiales y espacios compartidos."
       ],
-      "possible_evidence": [],
-      "examples": [],
-      "not_examples": [],
+      "possible_evidence": [
+        "acuerdo propuesto",
+        "solución a conflicto cotidiano",
+        "responsabilidad asumida",
+        "participación en decisión grupal",
+        "acción de cuidado común"
+      ],
+      "examples": [
+        "Acuerdan cómo turnarse para usar un material.",
+        "Proponen reglas para cuidar una mascota del aula.",
+        "Buscan una solución a un desacuerdo durante el juego.",
+        "Organizan responsabilidades para ordenar un espacio compartido.",
+        "Votan entre propuestas y aceptan el acuerdo del grupo."
+      ],
+      "not_examples": [
+        "Un niño nombra que está enojado.",
+        "Cuenta cuántos vasos necesita.",
+        "Describe oralmente a su familia.",
+        "Dibuja a sus amigos sin interacción grupal.",
+        "Corre una carrera siguiendo instrucciones."
+      ],
       "key_signals": [
         "convivencia",
         "normas",
@@ -146,7 +191,16 @@
         "trabajo en grupo",
         "conflictos cotidianos"
       ],
-      "common_confusions": [],
+      "common_confusions": [
+        {
+          "competency_id": "PS_IDENTIDAD",
+          "difference": "CONVIVE mira la relación con otros y el bien común; IDENTIDAD autoconocimiento, autonomía y emociones propias."
+        },
+        {
+          "competency_id": "COM_ORAL",
+          "difference": "Hablar es un medio frecuente de convivencia; ORAL es principal si el foco es comprender/expresar mensajes, CONVIVE si el foco es acuerdo, participación o relación social."
+        }
+      ],
       "age_profile": {
         "status": "specified",
         "ai_focus": "Primeras interacciones grupales, reglas conocidas y cuidado de recursos.",
@@ -164,7 +218,7 @@
       "official_review_status": "pending",
       "semantic_review_status": "pending",
       "meaning": "Competencia del área religiosa: favorece identidad espiritual, gratitud, respeto y acciones de solidaridad desde la propia tradición religiosa, dialogando respetuosamente con otras.",
-      "pedagogical_intent": "Competencia del área religiosa: favorece identidad espiritual, gratitud, respeto y acciones de solidaridad desde la propia tradición religiosa, dialogando respetuosamente con otras.",
+      "pedagogical_intent": "Favorecer identidad religiosa/espiritual, gratitud, solidaridad y respeto por manifestaciones religiosas cercanas, según contexto y opción educativa.",
       "capacities": [
         {
           "id": "PS_RELIGION.CAP1",
@@ -179,14 +233,14 @@
       ],
       "cycle_standard_meaning": "Al final del ciclo II reconoce el amor recibido en familia y entorno como experiencia vinculada a Dios, expresa gratitud y practica solidaridad y generosidad, respetando manifestaciones religiosas cercanas.",
       "when_to_use": [
-        "religión",
-        "Dios",
-        "gratitud",
-        "solidaridad desde la fe",
-        "manifestaciones religiosas"
+        "el propósito es explícitamente religioso o espiritual",
+        "gratitud/solidaridad se trabajan desde una tradición religiosa",
+        "se conoce o participa respetuosamente en una manifestación religiosa"
       ],
       "do_not_use_when": [
-        "la actividad no tiene propósito religioso o espiritual"
+        "solo se trabaja solidaridad o convivencia sin propósito religioso",
+        "la celebración es cultural sin intención religiosa",
+        "existe exoneración aplicable"
       ],
       "typical_contexts": [
         "religión",
@@ -200,9 +254,26 @@
         "Participa respetuosamente en manifestaciones religiosas familiares o de su comunidad.",
         "Realiza acciones sencillas de ayuda, respeto y agradecimiento."
       ],
-      "possible_evidence": [],
-      "examples": [],
-      "not_examples": [],
+      "possible_evidence": [
+        "comentario sobre significado religioso",
+        "acción solidaria vinculada a experiencia",
+        "expresión de gratitud",
+        "participación respetuosa"
+      ],
+      "examples": [
+        "Conversan sobre una celebración religiosa familiar y su significado.",
+        "Relacionan un relato de su tradición con una acción de ayuda.",
+        "Expresan agradecimiento dentro de una experiencia religiosa.",
+        "Reconocen signos de una celebración religiosa cercana.",
+        "Participan respetuosamente en una actividad de fe prevista."
+      ],
+      "not_examples": [
+        "Ordenan el aula para ayudar al grupo.",
+        "Votan una norma.",
+        "Investigan cómo crece una planta.",
+        "Aprenden una canción solo por ritmo.",
+        "Hablan de costumbres familiares sin propósito religioso."
+      ],
       "key_signals": [
         "religión",
         "Dios",
@@ -210,7 +281,16 @@
         "solidaridad desde la fe",
         "manifestaciones religiosas"
       ],
-      "common_confusions": [],
+      "common_confusions": [
+        {
+          "competency_id": "PS_CONVIVE",
+          "difference": "Ambas pueden incluir solidaridad; RELIGIÓN es principal si se trabaja explícitamente desde identidad/experiencia religiosa; CONVIVE desde ciudadanía y bien común."
+        },
+        {
+          "competency_id": "PS_IDENTIDAD",
+          "difference": "RELIGIÓN aborda identidad espiritual/religiosa; IDENTIDAD autoconocimiento, autonomía y emociones en sentido general."
+        }
+      ],
       "age_profile": {
         "status": "specified",
         "ai_focus": "Gratitud, afecto, cuidado y primeras manifestaciones religiosas cercanas.",
@@ -228,7 +308,7 @@
       "official_review_status": "pending",
       "semantic_review_status": "pending",
       "meaning": "El niño conoce y usa su cuerpo de manera cada vez más autónoma, segura y expresiva; coordina movimientos y comunica sensaciones, emociones e ideas corporalmente.",
-      "pedagogical_intent": "El niño conoce y usa su cuerpo de manera cada vez más autónoma, segura y expresiva; coordina movimientos y comunica sensaciones, emociones e ideas corporalmente.",
+      "pedagogical_intent": "Favorecer dominio corporal, autonomía motriz, coordinación, orientación y expresión mediante el movimiento.",
       "capacities": [
         {
           "id": "PSICO_MOTRICIDAD.CAP1",
@@ -243,15 +323,15 @@
       ],
       "cycle_standard_meaning": "Al final del ciclo II realiza acciones motrices con autonomía y seguridad, coordina movimientos globales y finos, se orienta en espacio/tiempo y representa o expresa corporalmente sensaciones y emociones.",
       "when_to_use": [
-        "movimiento",
-        "equilibrio",
-        "coordinación",
-        "esquema corporal",
-        "motricidad",
-        "expresión corporal"
+        "el aprendizaje central es controlar, coordinar o adaptar movimientos",
+        "se busca equilibrio, desplazamiento o coordinación",
+        "se exploran posibilidades corporales",
+        "el cuerpo es el principal medio de expresión/aprendizaje"
       ],
       "do_not_use_when": [
-        "solo se usa movimiento como dinámica incidental sin propósito motriz"
+        "hay movimiento pero el reto central es geométrico/espacial",
+        "la danza se usa principalmente para creación artística",
+        "el movimiento es solo pausa activa"
       ],
       "typical_contexts": [
         "movimiento",
@@ -267,9 +347,27 @@
         "Reconoce sensaciones y algunas partes de su cuerpo.",
         "Representa de manera inicial su cuerpo mediante dibujo o movimiento."
       ],
-      "possible_evidence": [],
-      "examples": [],
-      "not_examples": [],
+      "possible_evidence": [
+        "recorrido motor",
+        "ajuste de equilibrio/fuerza",
+        "coordinación con objeto",
+        "representación corporal",
+        "comentario sobre sensaciones"
+      ],
+      "examples": [
+        "Crean y recorren un circuito variando saltos y equilibrio.",
+        "Lanzan y reciben pelotas ajustando fuerza y dirección.",
+        "Se desplazan por distintos niveles y superficies.",
+        "Representan emociones con postura y movimiento.",
+        "Coordinan manos y ojos en un reto motriz."
+      ],
+      "not_examples": [
+        "Describen un recorrido en un mapa.",
+        "Clasifican figuras geométricas.",
+        "Bailan con foco escénico/artístico.",
+        "Cuentan saltos para comparar cantidades.",
+        "Siguen una flecha sin reto motriz."
+      ],
       "key_signals": [
         "movimiento",
         "equilibrio",
@@ -278,7 +376,16 @@
         "motricidad",
         "expresión corporal"
       ],
-      "common_confusions": [],
+      "common_confusions": [
+        {
+          "competency_id": "MAT_FORMA",
+          "difference": "PSICOMOTRICIDAD es principal cuando el reto es controlar/coordinar el cuerpo; MAT_FORMA cuando el reto es comprender forma, posición, recorrido, medida u orientación espacial."
+        },
+        {
+          "competency_id": "COM_ARTE",
+          "difference": "PSICOMOTRICIDAD busca dominio/expresión corporal; ARTE creación y comunicación artística mediante movimiento."
+        }
+      ],
       "age_profile": {
         "status": "specified",
         "ai_focus": "Exploración motriz global y reconocimiento básico del cuerpo.",
@@ -297,7 +404,7 @@
       "official_review_status": "pending",
       "semantic_review_status": "pending",
       "meaning": "El niño comprende y produce mensajes orales para interactuar: escucha, obtiene e infiere información, organiza lo que quiere decir, usa voz/gestos y conversa con otros.",
-      "pedagogical_intent": "El niño comprende y produce mensajes orales para interactuar: escucha, obtiene e infiere información, organiza lo que quiere decir, usa voz/gestos y conversa con otros.",
+      "pedagogical_intent": "Desarrollar comprensión y producción oral pertinente, interacción con interlocutores e interpretación de mensajes orales.",
       "capacities": [
         {
           "id": "COM_ORAL.CAP1",
@@ -332,17 +439,15 @@
       ],
       "cycle_standard_meaning": "Al final del ciclo II comprende información explícita, realiza inferencias sencillas, interpreta recursos no verbales, expresa y desarrolla ideas con vocabulario frecuente y participa de forma pertinente en intercambios.",
       "when_to_use": [
-        "conversación",
-        "explicar oralmente",
-        "cuento escuchado",
-        "preguntar",
-        "narrar",
-        "dialogar",
-        "opinar",
-        "escucha"
+        "el propósito es conversar, narrar, explicar, preguntar, escuchar o responder oralmente",
+        "se recupera o infiere información de un mensaje oral",
+        "se organizan ideas para un interlocutor",
+        "se observa participación en intercambios orales"
       ],
       "do_not_use_when": [
-        "la evidencia central es exclusivamente lectura o producción escrita"
+        "el aprendizaje central surge de un texto escrito/ilustrado",
+        "hablar solo comunica resultados de otra competencia sin objetivo comunicativo propio",
+        "solo se repiten palabras mecánicamente"
       ],
       "typical_contexts": [
         "conversación",
@@ -361,9 +466,27 @@
         "Recupera información explícita y sigue indicaciones simples.",
         "Deduce características sencillas y comenta gustos o disgustos."
       ],
-      "possible_evidence": [],
-      "examples": [],
-      "not_examples": [],
+      "possible_evidence": [
+        "audio breve",
+        "registro anecdótico",
+        "respuesta a preguntas",
+        "relato oral",
+        "explicación oral"
+      ],
+      "examples": [
+        "Relata algo ocurrido y responde preguntas.",
+        "Entrevistan a una visitante.",
+        "Después de escuchar un cuento explica qué le sorprendió.",
+        "Explica oralmente cómo hizo una construcción.",
+        "Comparte hipótesis antes de explorar un fenómeno."
+      ],
+      "not_examples": [
+        "Anticipa un cuento desde portada/ilustraciones.",
+        "Escribe una invitación.",
+        "Repite una rima sin producir mensajes.",
+        "Cuenta objetos aunque verbalice números.",
+        "Registra una indagación solo con dibujos."
+      ],
       "key_signals": [
         "conversación",
         "explicar oralmente",
@@ -374,7 +497,20 @@
         "opinar",
         "escucha"
       ],
-      "common_confusions": [],
+      "common_confusions": [
+        {
+          "competency_id": "COM_LECTURA",
+          "difference": "ORAL construye/comunica significado mediante lenguaje hablado; LECTURA desde texto escrito, ilustraciones y pistas del soporte."
+        },
+        {
+          "competency_id": "CYT_INDAGA",
+          "difference": "Si el aprendizaje central es averiguar y comparar un fenómeno, INDAGA es principal; ORAL puede ser secundaria aunque haya mucha conversación."
+        },
+        {
+          "competency_id": "COM_ARTE",
+          "difference": "Narrar/explicar es ORAL si el foco es el mensaje verbal; crear/representar mediante lenguajes artísticos es ARTE."
+        }
+      ],
       "age_profile": {
         "status": "specified",
         "ai_focus": "Comunicación espontánea sobre necesidades y experiencias; escucha y comprensión literal inicial.",
@@ -394,7 +530,7 @@
       "official_review_status": "pending",
       "semantic_review_status": "pending",
       "meaning": "En Inicial la lectura es principalmente no convencional: el niño construye sentido usando ilustraciones, marcas gráficas, palabras conocidas, organización del texto y anticipaciones según su experiencia.",
-      "pedagogical_intent": "En Inicial la lectura es principalmente no convencional: el niño construye sentido usando ilustraciones, marcas gráficas, palabras conocidas, organización del texto y anticipaciones según su experiencia.",
+      "pedagogical_intent": "Favorecer construcción de significado a partir de textos escritos mediante ilustraciones, organización, palabras conocidas, anticipación e inferencia.",
       "capacities": [
         {
           "id": "COM_LECTURA.CAP1",
@@ -414,16 +550,15 @@
       ],
       "cycle_standard_meaning": "Al final del ciclo II lee textos sobre temas conocidos usando ilustraciones y algunas marcas/palabras, anticipa contenido, realiza inferencias sencillas y expresa opiniones o preferencias.",
       "when_to_use": [
-        "libros",
-        "cuentos escritos",
-        "carteles",
-        "etiquetas",
-        "leer imágenes",
-        "anticipar texto",
-        "biblioteca"
+        "hay interacción directa con libro, cartel, etiqueta u otro soporte escrito",
+        "se usan portada, ilustraciones o palabras conocidas para comprender",
+        "se localiza o infiere información desde el soporte",
+        "se opina sobre un texto explorado como lector"
       ],
       "do_not_use_when": [
-        "el foco es solo escuchar un cuento sin interacción con el texto escrito"
+        "solo se escucha un cuento sin interactuar con el soporte",
+        "el propósito es producir un texto propio",
+        "la imagen se usa solo como objeto artístico"
       ],
       "typical_contexts": [
         "libros",
@@ -439,9 +574,27 @@
         "Anticipa de qué puede tratar un texto observando imágenes.",
         "Expresa emociones, gustos o comentarios sobre lo que observa y escucha leer."
       ],
-      "possible_evidence": [],
-      "examples": [],
-      "not_examples": [],
+      "possible_evidence": [
+        "anticipación basada en soporte",
+        "localización de información",
+        "inferencia sencilla",
+        "comentario sobre texto",
+        "elección justificada de información"
+      ],
+      "examples": [
+        "Anticipa de qué tratará un cuento desde portada e ilustraciones.",
+        "Busca información en un cartel.",
+        "Relaciona ilustraciones para explicar qué ocurrió.",
+        "Explora una receta ilustrada para anticipar materiales.",
+        "Comenta qué parte de un libro le gustó usando elementos del texto."
+      ],
+      "not_examples": [
+        "Escucha un cuento sin ver el texto.",
+        "Dicta una lista al adulto.",
+        "Copia letras sin propósito.",
+        "Describe oralmente una foto familiar.",
+        "Dibuja una escena sin usar texto como fuente."
+      ],
       "key_signals": [
         "libros",
         "cuentos escritos",
@@ -451,7 +604,20 @@
         "anticipar texto",
         "biblioteca"
       ],
-      "common_confusions": [],
+      "common_confusions": [
+        {
+          "competency_id": "COM_ORAL",
+          "difference": "LECTURA construye sentido desde un soporte escrito; ORAL desde mensajes hablados."
+        },
+        {
+          "competency_id": "COM_ESCRITURA",
+          "difference": "LECTURA interpreta textos existentes; ESCRITURA produce textos con intención comunicativa."
+        },
+        {
+          "competency_id": "COM_ARTE",
+          "difference": "La ilustración en LECTURA es pista para construir sentido; en ARTE es lenguaje de creación/expresión."
+        }
+      ],
       "age_profile": {
         "status": "specified",
         "ai_focus": "Construcción de sentido principalmente desde ilustraciones y experiencia.",
@@ -469,7 +635,7 @@
       "official_review_status": "pending",
       "semantic_review_status": "pending",
       "meaning": "El niño produce escrituras desde sus propias hipótesis para comunicar algo con propósito y destinatario, avanzando hacia organización, direccionalidad y revisión.",
-      "pedagogical_intent": "El niño produce escrituras desde sus propias hipótesis para comunicar algo con propósito y destinatario, avanzando hacia organización, direccionalidad y revisión.",
+      "pedagogical_intent": "Favorecer producción escrita con intención comunicativa desde hipótesis propias, considerando propósito y destinatario.",
       "capacities": [
         {
           "id": "COM_ESCRITURA.CAP1",
@@ -494,16 +660,15 @@
       ],
       "cycle_standard_meaning": "Al final del ciclo II escribe desde sus hipótesis considerando propósito y destinatario, organiza ideas sobre un tema y usa progresivamente linealidad/direccionalidad; puede revisar lo que produjo con apoyo.",
       "when_to_use": [
-        "escribir mensaje",
-        "cartel",
-        "nota",
-        "lista",
-        "producción escrita",
-        "grafismos",
-        "dictado al adulto"
+        "se producen marcas, grafismos o letras para comunicar",
+        "hay propósito real: lista, nota, invitación, cartel, menú o mensaje",
+        "se decide qué escribir y para quién",
+        "se revisa si el producto comunica la intención"
       ],
       "do_not_use_when": [
-        "trazo mecánico sin intención comunicativa"
+        "se copian letras o trazos sin intención comunicativa",
+        "solo se interpreta un texto existente",
+        "el dibujo no tiene intención textual"
       ],
       "typical_contexts": [
         "escribir mensaje",
@@ -518,9 +683,27 @@
         "No inventar desempeño oficial de 3 años.",
         "Si aparece escritura espontánea, registrarla como evidencia contextual sin asignar un desempeño oficial inexistente."
       ],
-      "possible_evidence": [],
-      "examples": [],
-      "not_examples": [],
+      "possible_evidence": [
+        "producción escrita auténtica",
+        "explicación de intención",
+        "revisión del mensaje",
+        "dictado al adulto con escritura propia",
+        "uso intencional de grafismos/letras"
+      ],
+      "examples": [
+        "Escribe a su manera una lista de materiales.",
+        "Produce una invitación para las familias.",
+        "Escribe el menú del juego de restaurante.",
+        "Deja una nota para cuidar una planta.",
+        "Revisa si su mensaje expresa lo que quería."
+      ],
+      "not_examples": [
+        "Repasa líneas punteadas.",
+        "Copia su nombre repetidamente sin propósito.",
+        "Mira un cartel para anticipar contenido.",
+        "Cuenta oralmente una experiencia.",
+        "Dibuja libremente sin intención textual."
+      ],
       "key_signals": [
         "escribir mensaje",
         "cartel",
@@ -530,7 +713,16 @@
         "grafismos",
         "dictado al adulto"
       ],
-      "common_confusions": [],
+      "common_confusions": [
+        {
+          "competency_id": "COM_LECTURA",
+          "difference": "ESCRITURA produce un texto para comunicar; LECTURA interpreta un texto existente."
+        },
+        {
+          "competency_id": "COM_ARTE",
+          "difference": "ESCRITURA prioriza comunicación textual; ARTE expresión mediante lenguajes artísticos."
+        }
+      ],
       "age_profile": {
         "status": "not_specified_in_program",
         "ai_focus": "El Programa Curricular no presenta desempeños específicos de esta competencia para 3 años.",
@@ -547,7 +739,7 @@
       "official_review_status": "pending",
       "semantic_review_status": "pending",
       "meaning": "El niño explora materiales y lenguajes artísticos, transforma ideas y experiencias en creaciones y comparte su proceso o producción.",
-      "pedagogical_intent": "El niño explora materiales y lenguajes artísticos, transforma ideas y experiencias en creaciones y comparte su proceso o producción.",
+      "pedagogical_intent": "Favorecer exploración, creación y comunicación de ideas, emociones y experiencias mediante lenguajes artísticos.",
       "capacities": [
         {
           "id": "COM_ARTE.CAP1",
@@ -567,17 +759,15 @@
       ],
       "cycle_standard_meaning": "Al final del ciclo II experimenta libremente con medios y materiales, explora elementos de los lenguajes artísticos, transforma vivencias e ideas mediante juego, dibujo, pintura, construcción, música o movimiento y comparte sus creaciones.",
       "when_to_use": [
-        "dibujo",
-        "pintura",
-        "música",
-        "danza",
-        "teatro",
-        "títeres",
-        "construcción artística",
-        "expresión creativa"
+        "el propósito es explorar materiales, sonidos, movimientos, imágenes o dramatización",
+        "hay decisiones creativas",
+        "se valora el proceso de creación, no la copia",
+        "se comparte o comenta la producción"
       ],
       "do_not_use_when": [
-        "manualidad repetitiva cuyo objetivo es copiar un modelo sin exploración ni creación"
+        "se copia exactamente un modelo decorativo",
+        "el dibujo solo registra datos de una indagación",
+        "el movimiento se trabaja principalmente como coordinación motriz"
       ],
       "typical_contexts": [
         "dibujo",
@@ -594,9 +784,27 @@
         "Representa experiencias o intereses mediante juego simbólico, movimiento, imagen o sonido.",
         "Comenta espontáneamente sus experiencias o producciones."
       ],
-      "possible_evidence": [],
-      "examples": [],
-      "not_examples": [],
+      "possible_evidence": [
+        "producción visual/sonora/corporal",
+        "registro del proceso creativo",
+        "explicación de la creación",
+        "elección de materiales/técnicas",
+        "presentación de una creación"
+      ],
+      "examples": [
+        "Exploran sonidos y crean una secuencia propia.",
+        "Crean un collage para representar una experiencia.",
+        "Inventan personajes y dramatizan.",
+        "Prueban mezclas de colores y deciden cómo usarlas.",
+        "Explican qué quisieron representar."
+      ],
+      "not_examples": [
+        "Todos colorean igual siguiendo colores indicados.",
+        "Copian una mariposa idéntica al modelo.",
+        "Dibujan raíces solo para registrar ciencia.",
+        "Realizan saltos con foco en equilibrio.",
+        "Escriben una lista de materiales."
+      ],
       "key_signals": [
         "dibujo",
         "pintura",
@@ -607,7 +815,20 @@
         "construcción artística",
         "expresión creativa"
       ],
-      "common_confusions": [],
+      "common_confusions": [
+        {
+          "competency_id": "PSICO_MOTRICIDAD",
+          "difference": "ARTE usa movimiento con intención expresiva/creativa; PSICOMOTRICIDAD busca control y coordinación corporal."
+        },
+        {
+          "competency_id": "CYT_INDAGA",
+          "difference": "Un dibujo en INDAGA puede registrar información; en ARTE importa la decisión expresiva y el lenguaje visual."
+        },
+        {
+          "competency_id": "COM_ESCRITURA",
+          "difference": "ARTE prioriza creación expresiva; ESCRITURA producción textual con propósito."
+        }
+      ],
       "age_profile": {
         "status": "specified",
         "ai_focus": "Exploración libre, representación de experiencias y comunicación espontánea.",
@@ -625,7 +846,7 @@
       "official_review_status": "pending",
       "semantic_review_status": "pending",
       "meaning": "El niño cuya lengua materna no es castellano desarrolla comunicación oral básica en castellano de forma gradual, segura y contextualizada, usando palabras, frases, gestos y apoyos.",
-      "pedagogical_intent": "El niño cuya lengua materna no es castellano desarrolla comunicación oral básica en castellano de forma gradual, segura y contextualizada, usando palabras, frases, gestos y apoyos.",
+      "pedagogical_intent": "Desarrollar comunicación oral progresiva en castellano como segunda lengua, respetando y apoyándose en la lengua materna y el contexto.",
       "capacities": [
         {
           "id": "CAST_L2_ORAL.CAP1",
@@ -660,12 +881,14 @@
       ],
       "cycle_standard_meaning": "Al final del ciclo II usa palabras y frases breves en castellano, comprende información básica apoyándose en gestos y tono, y responde/interactúa combinando lenguaje verbal y no verbal.",
       "when_to_use": [
-        "aula bilingüe",
-        "castellano segunda lengua",
-        "niño cuya lengua materna no es castellano"
+        "el niño tiene otra lengua materna y el propósito es comunicarse oralmente en castellano",
+        "se trabaja lenguaje funcional en situaciones auténticas",
+        "se usan gestos/contexto y recursos de lengua materna para comunicarse"
       ],
       "do_not_use_when": [
-        "castellano es lengua materna del grupo"
+        "el castellano es lengua materna para esa situación",
+        "se busca reemplazar o prohibir la lengua materna",
+        "solo se repiten palabras descontextualizadas"
       ],
       "typical_contexts": [
         "aula bilingüe",
@@ -675,15 +898,38 @@
       "observable_actions": [
         "No inventar desempeño oficial."
       ],
-      "possible_evidence": [],
-      "examples": [],
-      "not_examples": [],
+      "possible_evidence": [
+        "interacción breve en castellano L2",
+        "respuesta funcional",
+        "comprensión contextual",
+        "vocabulario funcional",
+        "registro anecdótico/audio"
+      ],
+      "examples": [
+        "Responde un saludo y pregunta cotidiana en castellano con gestos.",
+        "Pide un material en castellano con apoyo visual.",
+        "Comprende una indicación sencilla por contexto/gestos.",
+        "Nombra elementos en una rutina auténtica.",
+        "Participa en intercambio breve combinando recursos lingüísticos."
+      ],
+      "not_examples": [
+        "Un castellanohablante relata una experiencia.",
+        "Memoriza palabras sin contexto.",
+        "Se prohíbe su lengua materna.",
+        "Lee un cartel con foco en lectura.",
+        "Copia una palabra."
+      ],
       "key_signals": [
         "aula bilingüe",
         "castellano segunda lengua",
         "niño cuya lengua materna no es castellano"
       ],
-      "common_confusions": [],
+      "common_confusions": [
+        {
+          "competency_id": "COM_ORAL",
+          "difference": "CAST_L2_ORAL aplica al desarrollo del castellano como segunda lengua; COM_ORAL al desarrollo oral en la lengua materna."
+        }
+      ],
       "age_profile": {
         "status": "not_specified_in_program",
         "ai_focus": "No hay desempeños específicos publicados para 3 años en esta competencia.",
@@ -699,7 +945,7 @@
       "official_review_status": "pending",
       "semantic_review_status": "pending",
       "meaning": "El niño usa relaciones de cantidad en situaciones reales: agrupa, compara, ordena, cuenta, estima, agrega o quita y comunica sus ideas con objetos, cuerpo, dibujos o expresiones numéricas iniciales.",
-      "pedagogical_intent": "El niño usa relaciones de cantidad en situaciones reales: agrupa, compara, ordena, cuenta, estima, agrega o quita y comunica sus ideas con objetos, cuerpo, dibujos o expresiones numéricas iniciales.",
+      "pedagogical_intent": "Desarrollar pensamiento cuantitativo al resolver situaciones reales de agrupación, comparación, conteo, orden, estimación y transformación de cantidades.",
       "capacities": [
         {
           "id": "MAT_CANTIDAD.CAP1",
@@ -719,18 +965,15 @@
       ],
       "cycle_standard_meaning": "Al final del ciclo II relaciona objetos por características perceptivas, agrupa/ordena/seria, compara cantidades y pesos, resuelve situaciones de agregar/quitar hasta cantidades pequeñas, cuenta progresivamente y usa cuantificadores y nociones temporales.",
       "when_to_use": [
-        "contar",
-        "cantidad",
-        "agrupar",
-        "comparar colecciones",
-        "más/menos",
-        "agregar",
-        "quitar",
-        "peso",
-        "orden"
+        "el problema exige determinar cuánto/cuántos/más/menos/igual",
+        "se agrupa, compara, ordena o cuenta para resolver",
+        "se agregan o quitan elementos",
+        "se comparan magnitudes cuantitativas"
       ],
       "do_not_use_when": [
-        "solo se nombran números de memoria sin problema o relación cuantitativa"
+        "solo se recita la serie numérica",
+        "hay números pero no problema cuantitativo",
+        "el reto central es forma, posición o recorrido"
       ],
       "typical_contexts": [
         "contar",
@@ -749,9 +992,27 @@
         "Compara de manera inicial colecciones u objetos.",
         "Cuenta espontáneamente en situaciones de juego aunque todavía no siempre conserve la secuencia."
       ],
-      "possible_evidence": [],
-      "examples": [],
-      "not_examples": [],
+      "possible_evidence": [
+        "colección construida",
+        "comparación explicada",
+        "conteo funcional",
+        "solución a agregar/quitar",
+        "representación de cantidad"
+      ],
+      "examples": [
+        "Prepara exactamente la cantidad solicitada en un mercado.",
+        "Compara dos colecciones.",
+        "Determina cuántos platos faltan.",
+        "Agrega objetos y explica el cambio.",
+        "Ordena objetos por peso o cantidad."
+      ],
+      "not_examples": [
+        "Recita del 1 al 20.",
+        "Copia números.",
+        "Busca salida de un laberinto.",
+        "Clasifica figuras por forma.",
+        "Cuenta saltos cuando el foco es motriz."
+      ],
       "key_signals": [
         "contar",
         "cantidad",
@@ -763,7 +1024,16 @@
         "peso",
         "orden"
       ],
-      "common_confusions": [],
+      "common_confusions": [
+        {
+          "competency_id": "MAT_FORMA",
+          "difference": "CANTIDAD resuelve número/comparación/magnitud cuantitativa; FORMA relaciones geométricas, espaciales, posición y desplazamiento."
+        },
+        {
+          "competency_id": "CYT_INDAGA",
+          "difference": "Contar dentro de una exploración no vuelve CANTIDAD principal si la pregunta central es investigable; sí si el problema es cuantitativo."
+        }
+      ],
       "age_profile": {
         "status": "specified",
         "ai_focus": "Comparaciones perceptivas, agrupaciones simples y conteo espontáneo.",
@@ -782,7 +1052,7 @@
       "official_review_status": "pending",
       "semantic_review_status": "pending",
       "meaning": "El niño resuelve situaciones relacionadas con formas, tamaños, posiciones, desplazamientos y orientación usando su cuerpo, objetos, construcciones y estrategias espaciales.",
-      "pedagogical_intent": "El niño resuelve situaciones relacionadas con formas, tamaños, posiciones, desplazamientos y orientación usando su cuerpo, objetos, construcciones y estrategias espaciales.",
+      "pedagogical_intent": "Desarrollar razonamiento espacial y geométrico al resolver problemas de forma, tamaño, posición, trayectoria, orientación y longitud.",
       "capacities": [
         {
           "id": "MAT_FORMA.CAP1",
@@ -802,18 +1072,15 @@
       ],
       "cycle_standard_meaning": "Al final del ciclo II relaciona objetos con formas 2D/3D, ubica personas y objetos, expresa direcciones y posiciones, compara longitudes y resuelve retos mediante movimientos y construcciones.",
       "when_to_use": [
-        "formas",
-        "espacio",
-        "ubicación",
-        "recorrido",
-        "construcción",
-        "tamaño",
-        "longitud",
-        "posición",
-        "movimiento espacial"
+        "el reto exige ubicarse o ubicar objetos",
+        "se resuelve un recorrido o problema de orientación",
+        "se comparan formas, tamaños o longitudes",
+        "se construyen/modelan objetos atendiendo a relaciones espaciales"
       ],
       "do_not_use_when": [
-        "el movimiento corporal es el foco motriz y no existe un problema espacial/geométrico"
+        "el propósito es contar o comparar cantidades",
+        "el movimiento solo busca coordinación corporal",
+        "solo se nombran figuras sin problema espacial"
       ],
       "typical_contexts": [
         "formas",
@@ -832,9 +1099,27 @@
         "Se ubica y ubica objetos en relación con su cuerpo.",
         "Prueba movimientos o construcciones para resolver retos simples."
       ],
-      "possible_evidence": [],
-      "examples": [],
-      "not_examples": [],
+      "possible_evidence": [
+        "recorrido explicado",
+        "construcción espacial",
+        "uso de vocabulario espacial",
+        "comparación de longitudes",
+        "representación de ubicación"
+      ],
+      "examples": [
+        "Explica cómo llegar de un punto a otro.",
+        "Construye un puente ajustando posiciones.",
+        "Resuelve un laberinto y describe el recorrido.",
+        "Compara qué objeto es más largo.",
+        "Usa formas para resolver una construcción."
+      ],
+      "not_examples": [
+        "Recita nombres de figuras.",
+        "Cuenta bloques.",
+        "Corre para mejorar equilibrio.",
+        "Clasifica frutas por cantidad.",
+        "Dibuja libremente una casa."
+      ],
       "key_signals": [
         "formas",
         "espacio",
@@ -846,7 +1131,16 @@
         "posición",
         "movimiento espacial"
       ],
-      "common_confusions": [],
+      "common_confusions": [
+        {
+          "competency_id": "PSICO_MOTRICIDAD",
+          "difference": "MAT_FORMA se centra en relaciones espaciales/geométricas; PSICOMOTRICIDAD en control/coord. corporal."
+        },
+        {
+          "competency_id": "MAT_CANTIDAD",
+          "difference": "FORMA atiende forma, posición, orientación y longitud; CANTIDAD número, conteo y transformaciones cuantitativas."
+        }
+      ],
       "age_profile": {
         "status": "specified",
         "ai_focus": "Relaciones de tamaño y posición desde el propio cuerpo.",
@@ -865,7 +1159,7 @@
       "official_review_status": "pending",
       "semantic_review_status": "pending",
       "meaning": "El niño explora fenómenos, objetos y seres vivos desde su curiosidad: pregunta, propone posibles respuestas, observa/manipula, registra o compara información y comunica lo que descubre.",
-      "pedagogical_intent": "El niño explora fenómenos, objetos y seres vivos desde su curiosidad: pregunta, propone posibles respuestas, observa/manipula, registra o compara información y comunica lo que descubre.",
+      "pedagogical_intent": "Desarrollar curiosidad investigativa y construcción de conocimiento mediante preguntas, exploración, obtención/análisis de información y comunicación de hallazgos.",
       "capacities": [
         {
           "id": "CYT_INDAGA.CAP1",
@@ -895,17 +1189,16 @@
       ],
       "cycle_standard_meaning": "Al final del ciclo II explora objetos, espacio y hechos; formula preguntas, propone posibles respuestas, obtiene información mediante observación/manipulación, compara sus ideas con hallazgos y comunica el proceso y resultados oral o gráficamente.",
       "when_to_use": [
-        "por qué",
-        "qué pasará",
-        "observar",
-        "experimentar",
-        "comparar hallazgos",
-        "seres vivos",
-        "fenómeno natural",
-        "explorar"
+        "hay una pregunta auténtica que se quiere averiguar",
+        "se observa, explora, prueba o busca información para responder",
+        "se comparan hallazgos con ideas/predicciones",
+        "se comunica qué se hizo y qué se descubrió"
       ],
       "do_not_use_when": [
-        "solo se transmite información científica sin que los niños exploren o construyan respuestas"
+        "la docente solo transmite información científica",
+        "se observa sin pregunta ni propósito de averiguar",
+        "el objetivo central es contar, conversar o crear artísticamente",
+        "se copia, colorea o decora un tema de ciencia"
       ],
       "typical_contexts": [
         "por qué",
@@ -923,9 +1216,28 @@
         "Obtiene información directa de lo que observa y manipula.",
         "Comunica descubrimientos mediante palabras, gestos o representaciones."
       ],
-      "possible_evidence": [],
-      "examples": [],
-      "not_examples": [],
+      "possible_evidence": [
+        "pregunta formulada",
+        "predicción",
+        "registro gráfico",
+        "comparación de resultados",
+        "explicación de hallazgos",
+        "secuencia de exploración"
+      ],
+      "examples": [
+        "Averiguan en qué lugares del jardín aparecen caracoles.",
+        "Predicen qué objetos flotarán y lo prueban.",
+        "Observan dos plantas y registran cambios.",
+        "Comparan sombras en distintos momentos.",
+        "Exploran qué materiales absorben agua."
+      ],
+      "not_examples": [
+        "Escuchan una explicación sobre caracoles.",
+        "Colorean una ficha de animales.",
+        "Cuentan hojas con propósito de cantidad.",
+        "Copian una mariposa.",
+        "Memorizan partes de una planta sin explorar."
+      ],
       "key_signals": [
         "por qué",
         "qué pasará",
@@ -936,7 +1248,20 @@
         "fenómeno natural",
         "explorar"
       ],
-      "common_confusions": [],
+      "common_confusions": [
+        {
+          "competency_id": "COM_ORAL",
+          "difference": "INDAGA es principal cuando hablar sirve para investigar/comunicar hallazgos; ORAL cuando comprender/producir mensajes es el aprendizaje central."
+        },
+        {
+          "competency_id": "MAT_CANTIDAD",
+          "difference": "CANTIDAD es principal si la situación se resuelve por relaciones cuantitativas; INDAGA si las cantidades son datos para responder una pregunta."
+        },
+        {
+          "competency_id": "COM_ARTE",
+          "difference": "Un dibujo en INDAGA registra información; en ARTE expresa/crea con lenguaje visual."
+        }
+      ],
       "age_profile": {
         "status": "specified",
         "ai_focus": "Curiosidad, exploración sensorial y comunicación de descubrimientos.",
@@ -955,7 +1280,7 @@
       "official_review_status": "pending",
       "semantic_review_status": "pending",
       "meaning": "El niño usa dispositivos y entornos virtuales con acompañamiento para explorar funciones, obtener/registrar información y crear objetos digitales sencillos con un propósito.",
-      "pedagogical_intent": "El niño usa dispositivos y entornos virtuales con acompañamiento para explorar funciones, obtener/registrar información y crear objetos digitales sencillos con un propósito.",
+      "pedagogical_intent": "Desarrollar uso intencional, acompañado y progresivamente autónomo de entornos digitales para explorar, registrar, crear y comunicar.",
       "capacities": [
         {
           "id": "TRANS_TIC.CAP1",
@@ -975,16 +1300,14 @@
       ],
       "cycle_standard_meaning": "Al final del ciclo II se desenvuelve en entornos virtuales al buscar/manipular objetos digitales y realizar actividades que le permiten registrar y comunicar ideas y emociones.",
       "when_to_use": [
-        "cámara",
-        "tablet",
-        "grabadora",
-        "audio digital",
-        "video",
-        "entorno virtual",
-        "producción digital"
+        "el dispositivo digital forma parte del aprendizaje",
+        "el niño usa cámara/audio/video u otra herramienta para registrar o crear",
+        "explora funciones básicas de un entorno virtual con propósito"
       ],
       "do_not_use_when": [
-        "el dispositivo solo se usa pasivamente sin propósito de aprendizaje o creación"
+        "solo mira pasivamente un video",
+        "el adulto controla todo el dispositivo",
+        "el dispositivo es accesorio y no hay aprendizaje digital"
       ],
       "typical_contexts": [
         "cámara",
@@ -998,9 +1321,27 @@
       "observable_actions": [
         "No inventar desempeño oficial."
       ],
-      "possible_evidence": [],
-      "examples": [],
-      "not_examples": [],
+      "possible_evidence": [
+        "foto tomada por el niño",
+        "audio/video creado",
+        "objeto digital sencillo",
+        "elección de herramienta",
+        "registro de uso guiado"
+      ],
+      "examples": [
+        "Toma una foto para registrar una construcción.",
+        "Graba un audio para comunicar una idea.",
+        "Crea una imagen digital sencilla.",
+        "Explora funciones de una app para registrar información.",
+        "Elige una herramienta digital para documentar un proyecto."
+      ],
+      "not_examples": [
+        "Mira un video proyectado.",
+        "La docente toma todas las fotos.",
+        "Escucha música sin interactuar.",
+        "Usa una pantalla solo como cronómetro.",
+        "Ve una imagen digital sin acción digital propia."
+      ],
       "key_signals": [
         "cámara",
         "tablet",
@@ -1010,7 +1351,16 @@
         "entorno virtual",
         "producción digital"
       ],
-      "common_confusions": [],
+      "common_confusions": [
+        {
+          "competency_id": "COM_ARTE",
+          "difference": "TIC es principal cuando el aprendizaje está en desenvolverse en el entorno digital; ARTE cuando está en la creación expresiva."
+        },
+        {
+          "competency_id": "CYT_INDAGA",
+          "difference": "La cámara puede ser secundaria en una indagación; INDAGA sigue siendo principal si el propósito es investigar."
+        }
+      ],
       "age_profile": {
         "status": "not_specified_in_program",
         "ai_focus": "El Programa Curricular no presenta desempeños específicos para 3 años.",
@@ -1026,7 +1376,7 @@
       "official_review_status": "pending",
       "semantic_review_status": "pending",
       "meaning": "El niño empieza a reconocer qué quiere lograr, pensar cómo hacerlo, ejecutar acciones, revisar si funcionan y ajustarlas con facilitación adulta.",
-      "pedagogical_intent": "El niño empieza a reconocer qué quiere lograr, pensar cómo hacerlo, ejecutar acciones, revisar si funcionan y ajustarlas con facilitación adulta.",
+      "pedagogical_intent": "Desarrollar conciencia y regulación inicial del propio aprendizaje: reconocer una meta, organizar acciones, revisar resultados y ajustar estrategias.",
       "capacities": [
         {
           "id": "TRANS_AUTONOMO.CAP1",
@@ -1046,15 +1396,15 @@
       ],
       "cycle_standard_meaning": "Al final del ciclo II identifica qué quiere lograr, conecta lo que sabe con una tarea, sigue o propone estrategias con facilitación, revisa resultados y acepta ajustes para alcanzar su propósito.",
       "when_to_use": [
-        "meta",
-        "planificar cómo hacer",
-        "elegir estrategia",
-        "revisar si funcionó",
-        "ajustar estrategia",
-        "aprender a aprender"
+        "el niño participa en definir qué quiere lograr",
+        "elige u organiza acciones/materiales para una meta",
+        "revisa si su estrategia funcionó y ajusta",
+        "explica qué hizo o cambiaría"
       ],
       "do_not_use_when": [
-        "la actividad solo exige seguir instrucciones sin decisión, planificación o revisión por parte del niño"
+        "solo sigue instrucciones decididas por el adulto",
+        "la autonomía es solo de autocuidado",
+        "completar la tarea sin reflexión es la única evidencia"
       ],
       "typical_contexts": [
         "meta",
@@ -1067,9 +1417,27 @@
       "observable_actions": [
         "Puede observarse autonomía emergente, pero no inventar un desempeño oficial por edad."
       ],
-      "possible_evidence": [],
-      "examples": [],
-      "not_examples": [],
+      "possible_evidence": [
+        "plan de acciones",
+        "elección de estrategia",
+        "ajuste justificado",
+        "explicación de lo aprendido",
+        "auto-revisión con apoyo"
+      ],
+      "examples": [
+        "Decide materiales y orden para construir una torre.",
+        "Cambia la base al notar que la torre cae y explica por qué.",
+        "Elige una estrategia y comenta si funcionó.",
+        "Define con apoyo qué necesita terminar.",
+        "Compara resultado con meta y decide qué modificar."
+      ],
+      "not_examples": [
+        "Guarda su lonchera por rutina.",
+        "Sigue un modelo sin decidir.",
+        "Completa una ficha guiada.",
+        "Espera su turno.",
+        "Reconoce que está triste."
+      ],
       "key_signals": [
         "meta",
         "planificar cómo hacer",
@@ -1078,7 +1446,16 @@
         "ajustar estrategia",
         "aprender a aprender"
       ],
-      "common_confusions": [],
+      "common_confusions": [
+        {
+          "competency_id": "PS_IDENTIDAD",
+          "difference": "GESTIONA SU APRENDIZAJE trata metas/estrategias/revisión; IDENTIDAD autonomía personal, autoconocimiento y emociones."
+        },
+        {
+          "competency_id": "PS_CONVIVE",
+          "difference": "Organizarse para una meta de aprendizaje es AUTÓNOMO; asumir acuerdos/responsabilidades para el grupo es CONVIVE."
+        }
+      ],
       "age_profile": {
         "status": "not_specified_in_program",
         "ai_focus": "No se presenta una tabla específica de desempeños para 3 años.",

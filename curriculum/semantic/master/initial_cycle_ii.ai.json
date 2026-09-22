@@ -94,7 +94,68 @@
       "avoid_when": [
         "el foco central es convivencia y normas colectivas",
         "el foco es resolver un problema matemático o científico"
-      ]
+      ],
+      "pedagogical_intent": "Construir una imagen positiva y diferenciada de sí mismo, actuar con autonomía creciente y comprender/regular progresivamente las emociones.",
+      "when_to_use": [
+        "el foco es reconocer características, gustos, necesidades o cualidades propias",
+        "se busca autonomía en decisiones, rutinas o autocuidado",
+        "se identifican, expresan o regulan emociones propias",
+        "se trabaja pertenencia personal a familia, aula o grupos significativos"
+      ],
+      "do_not_use_when": [
+        "el foco es construir acuerdos, resolver conflictos o cuidar el bien común",
+        "el objetivo principal es una creación artística",
+        "solo se cumple una rutina sin elección, reflexión o autonomía"
+      ],
+      "examples": [
+        "Elige un material para representar algo que le gusta y explica por qué.",
+        "Identifica cómo se siente y pide ayuda para tranquilizarse.",
+        "Prepara sus pertenencias y decide qué necesita para una actividad.",
+        "Comenta características que reconoce en sí mismo.",
+        "Explica algo que ya puede hacer solo y algo para lo que necesita apoyo."
+      ],
+      "not_examples": [
+        "El grupo vota una norma.",
+        "Esperan turnos para compartir un triciclo.",
+        "Clasifican objetos por tamaño.",
+        "Realizan un circuito de equilibrio.",
+        "Escuchan un cuento sin relacionarlo con experiencias propias."
+      ],
+      "common_confusions": [
+        {
+          "competency_id": "PS_CONVIVE",
+          "difference": "IDENTIDAD se centra en quién soy, autonomía y emociones propias; CONVIVE en relaciones, acuerdos, responsabilidades y bien común."
+        },
+        {
+          "competency_id": "COM_ARTE",
+          "difference": "ARTE es principal si el aprendizaje central es explorar/crear con lenguajes artísticos; IDENTIDAD si la creación es un medio para reconocerse y valorarse."
+        },
+        {
+          "competency_id": "TRANS_AUTONOMO",
+          "difference": "IDENTIDAD aborda autonomía personal y emociones; GESTIONA SU APRENDIZAJE metas, estrategias y revisión del propio aprendizaje."
+        }
+      ],
+      "possible_evidence": [
+        "elección explicada",
+        "expresión de emoción",
+        "acción autónoma en rutina",
+        "autorretrato comentado",
+        "relato sobre cualidades/preferencias"
+      ],
+      "semantic_source": "Paráfrasis editorial para IA; no es redacción oficial MINEDU.",
+      "official_text_mapping": {
+        "official_competency_id": null,
+        "official_definition_ref": null,
+        "official_standard_ref": null,
+        "official_performance_refs_by_age": {
+          "3": [],
+          "4": [],
+          "5": []
+        },
+        "mapping_status": "pending"
+      },
+      "official_review_status": "pending",
+      "semantic_review_status": "pending"
     },
     {
       "id": "PS_CONVIVE",
@@ -160,7 +221,64 @@
       ],
       "avoid_when": [
         "el foco principal es reconocer emociones personales sin dimensión grupal"
-      ]
+      ],
+      "pedagogical_intent": "Desarrollar relaciones respetuosas, participación en acuerdos y responsabilidades, y acciones orientadas al bienestar común.",
+      "when_to_use": [
+        "el propósito es convivir, compartir, coordinar o resolver una situación con otros",
+        "se construyen o aplican acuerdos y normas",
+        "hay responsabilidades o cuidado de materiales/espacios comunes",
+        "hay participación grupal en decisiones o acciones de bienestar"
+      ],
+      "do_not_use_when": [
+        "el foco es una emoción o preferencia personal sin dimensión colectiva",
+        "solo hay varios niños juntos pero no aprendizaje de convivencia",
+        "el grupo es solo formato para trabajar otra competencia"
+      ],
+      "examples": [
+        "Acuerdan cómo turnarse para usar un material.",
+        "Proponen reglas para cuidar una mascota del aula.",
+        "Buscan una solución a un desacuerdo durante el juego.",
+        "Organizan responsabilidades para ordenar un espacio compartido.",
+        "Votan entre propuestas y aceptan el acuerdo del grupo."
+      ],
+      "not_examples": [
+        "Un niño nombra que está enojado.",
+        "Cuenta cuántos vasos necesita.",
+        "Describe oralmente a su familia.",
+        "Dibuja a sus amigos sin interacción grupal.",
+        "Corre una carrera siguiendo instrucciones."
+      ],
+      "common_confusions": [
+        {
+          "competency_id": "PS_IDENTIDAD",
+          "difference": "CONVIVE mira la relación con otros y el bien común; IDENTIDAD autoconocimiento, autonomía y emociones propias."
+        },
+        {
+          "competency_id": "COM_ORAL",
+          "difference": "Hablar es un medio frecuente de convivencia; ORAL es principal si el foco es comprender/expresar mensajes, CONVIVE si el foco es acuerdo, participación o relación social."
+        }
+      ],
+      "possible_evidence": [
+        "acuerdo propuesto",
+        "solución a conflicto cotidiano",
+        "responsabilidad asumida",
+        "participación en decisión grupal",
+        "acción de cuidado común"
+      ],
+      "semantic_source": "Paráfrasis editorial para IA; no es redacción oficial MINEDU.",
+      "official_text_mapping": {
+        "official_competency_id": null,
+        "official_definition_ref": null,
+        "official_standard_ref": null,
+        "official_performance_refs_by_age": {
+          "3": [],
+          "4": [],
+          "5": []
+        },
+        "mapping_status": "pending"
+      },
+      "official_review_status": "pending",
+      "semantic_review_status": "pending"
     },
     {
       "id": "PS_RELIGION",
@@ -218,7 +336,62 @@
       ],
       "avoid_when": [
         "la actividad no tiene propósito religioso o espiritual"
-      ]
+      ],
+      "pedagogical_intent": "Favorecer identidad religiosa/espiritual, gratitud, solidaridad y respeto por manifestaciones religiosas cercanas, según contexto y opción educativa.",
+      "when_to_use": [
+        "el propósito es explícitamente religioso o espiritual",
+        "gratitud/solidaridad se trabajan desde una tradición religiosa",
+        "se conoce o participa respetuosamente en una manifestación religiosa"
+      ],
+      "do_not_use_when": [
+        "solo se trabaja solidaridad o convivencia sin propósito religioso",
+        "la celebración es cultural sin intención religiosa",
+        "existe exoneración aplicable"
+      ],
+      "examples": [
+        "Conversan sobre una celebración religiosa familiar y su significado.",
+        "Relacionan un relato de su tradición con una acción de ayuda.",
+        "Expresan agradecimiento dentro de una experiencia religiosa.",
+        "Reconocen signos de una celebración religiosa cercana.",
+        "Participan respetuosamente en una actividad de fe prevista."
+      ],
+      "not_examples": [
+        "Ordenan el aula para ayudar al grupo.",
+        "Votan una norma.",
+        "Investigan cómo crece una planta.",
+        "Aprenden una canción solo por ritmo.",
+        "Hablan de costumbres familiares sin propósito religioso."
+      ],
+      "common_confusions": [
+        {
+          "competency_id": "PS_CONVIVE",
+          "difference": "Ambas pueden incluir solidaridad; RELIGIÓN es principal si se trabaja explícitamente desde identidad/experiencia religiosa; CONVIVE desde ciudadanía y bien común."
+        },
+        {
+          "competency_id": "PS_IDENTIDAD",
+          "difference": "RELIGIÓN aborda identidad espiritual/religiosa; IDENTIDAD autoconocimiento, autonomía y emociones en sentido general."
+        }
+      ],
+      "possible_evidence": [
+        "comentario sobre significado religioso",
+        "acción solidaria vinculada a experiencia",
+        "expresión de gratitud",
+        "participación respetuosa"
+      ],
+      "semantic_source": "Paráfrasis editorial para IA; no es redacción oficial MINEDU.",
+      "official_text_mapping": {
+        "official_competency_id": null,
+        "official_definition_ref": null,
+        "official_standard_ref": null,
+        "official_performance_refs_by_age": {
+          "3": [],
+          "4": [],
+          "5": []
+        },
+        "mapping_status": "pending"
+      },
+      "official_review_status": "pending",
+      "semantic_review_status": "pending"
     },
     {
       "id": "PSICO_MOTRICIDAD",
@@ -279,7 +452,64 @@
       ],
       "avoid_when": [
         "solo se usa movimiento como dinámica incidental sin propósito motriz"
-      ]
+      ],
+      "pedagogical_intent": "Favorecer dominio corporal, autonomía motriz, coordinación, orientación y expresión mediante el movimiento.",
+      "when_to_use": [
+        "el aprendizaje central es controlar, coordinar o adaptar movimientos",
+        "se busca equilibrio, desplazamiento o coordinación",
+        "se exploran posibilidades corporales",
+        "el cuerpo es el principal medio de expresión/aprendizaje"
+      ],
+      "do_not_use_when": [
+        "hay movimiento pero el reto central es geométrico/espacial",
+        "la danza se usa principalmente para creación artística",
+        "el movimiento es solo pausa activa"
+      ],
+      "examples": [
+        "Crean y recorren un circuito variando saltos y equilibrio.",
+        "Lanzan y reciben pelotas ajustando fuerza y dirección.",
+        "Se desplazan por distintos niveles y superficies.",
+        "Representan emociones con postura y movimiento.",
+        "Coordinan manos y ojos en un reto motriz."
+      ],
+      "not_examples": [
+        "Describen un recorrido en un mapa.",
+        "Clasifican figuras geométricas.",
+        "Bailan con foco escénico/artístico.",
+        "Cuentan saltos para comparar cantidades.",
+        "Siguen una flecha sin reto motriz."
+      ],
+      "common_confusions": [
+        {
+          "competency_id": "MAT_FORMA",
+          "difference": "PSICOMOTRICIDAD es principal cuando el reto es controlar/coordinar el cuerpo; MAT_FORMA cuando el reto es comprender forma, posición, recorrido, medida u orientación espacial."
+        },
+        {
+          "competency_id": "COM_ARTE",
+          "difference": "PSICOMOTRICIDAD busca dominio/expresión corporal; ARTE creación y comunicación artística mediante movimiento."
+        }
+      ],
+      "possible_evidence": [
+        "recorrido motor",
+        "ajuste de equilibrio/fuerza",
+        "coordinación con objeto",
+        "representación corporal",
+        "comentario sobre sensaciones"
+      ],
+      "semantic_source": "Paráfrasis editorial para IA; no es redacción oficial MINEDU.",
+      "official_text_mapping": {
+        "official_competency_id": null,
+        "official_definition_ref": null,
+        "official_standard_ref": null,
+        "official_performance_refs_by_age": {
+          "3": [],
+          "4": [],
+          "5": []
+        },
+        "mapping_status": "pending"
+      },
+      "official_review_status": "pending",
+      "semantic_review_status": "pending"
     },
     {
       "id": "COM_ORAL",
@@ -361,7 +591,68 @@
       ],
       "avoid_when": [
         "la evidencia central es exclusivamente lectura o producción escrita"
-      ]
+      ],
+      "pedagogical_intent": "Desarrollar comprensión y producción oral pertinente, interacción con interlocutores e interpretación de mensajes orales.",
+      "when_to_use": [
+        "el propósito es conversar, narrar, explicar, preguntar, escuchar o responder oralmente",
+        "se recupera o infiere información de un mensaje oral",
+        "se organizan ideas para un interlocutor",
+        "se observa participación en intercambios orales"
+      ],
+      "do_not_use_when": [
+        "el aprendizaje central surge de un texto escrito/ilustrado",
+        "hablar solo comunica resultados de otra competencia sin objetivo comunicativo propio",
+        "solo se repiten palabras mecánicamente"
+      ],
+      "examples": [
+        "Relata algo ocurrido y responde preguntas.",
+        "Entrevistan a una visitante.",
+        "Después de escuchar un cuento explica qué le sorprendió.",
+        "Explica oralmente cómo hizo una construcción.",
+        "Comparte hipótesis antes de explorar un fenómeno."
+      ],
+      "not_examples": [
+        "Anticipa un cuento desde portada/ilustraciones.",
+        "Escribe una invitación.",
+        "Repite una rima sin producir mensajes.",
+        "Cuenta objetos aunque verbalice números.",
+        "Registra una indagación solo con dibujos."
+      ],
+      "common_confusions": [
+        {
+          "competency_id": "COM_LECTURA",
+          "difference": "ORAL construye/comunica significado mediante lenguaje hablado; LECTURA desde texto escrito, ilustraciones y pistas del soporte."
+        },
+        {
+          "competency_id": "CYT_INDAGA",
+          "difference": "Si el aprendizaje central es averiguar y comparar un fenómeno, INDAGA es principal; ORAL puede ser secundaria aunque haya mucha conversación."
+        },
+        {
+          "competency_id": "COM_ARTE",
+          "difference": "Narrar/explicar es ORAL si el foco es el mensaje verbal; crear/representar mediante lenguajes artísticos es ARTE."
+        }
+      ],
+      "possible_evidence": [
+        "audio breve",
+        "registro anecdótico",
+        "respuesta a preguntas",
+        "relato oral",
+        "explicación oral"
+      ],
+      "semantic_source": "Paráfrasis editorial para IA; no es redacción oficial MINEDU.",
+      "official_text_mapping": {
+        "official_competency_id": null,
+        "official_definition_ref": null,
+        "official_standard_ref": null,
+        "official_performance_refs_by_age": {
+          "3": [],
+          "4": [],
+          "5": []
+        },
+        "mapping_status": "pending"
+      },
+      "official_review_status": "pending",
+      "semantic_review_status": "pending"
     },
     {
       "id": "COM_LECTURA",
@@ -426,7 +717,68 @@
       ],
       "avoid_when": [
         "el foco es solo escuchar un cuento sin interacción con el texto escrito"
-      ]
+      ],
+      "pedagogical_intent": "Favorecer construcción de significado a partir de textos escritos mediante ilustraciones, organización, palabras conocidas, anticipación e inferencia.",
+      "when_to_use": [
+        "hay interacción directa con libro, cartel, etiqueta u otro soporte escrito",
+        "se usan portada, ilustraciones o palabras conocidas para comprender",
+        "se localiza o infiere información desde el soporte",
+        "se opina sobre un texto explorado como lector"
+      ],
+      "do_not_use_when": [
+        "solo se escucha un cuento sin interactuar con el soporte",
+        "el propósito es producir un texto propio",
+        "la imagen se usa solo como objeto artístico"
+      ],
+      "examples": [
+        "Anticipa de qué tratará un cuento desde portada e ilustraciones.",
+        "Busca información en un cartel.",
+        "Relaciona ilustraciones para explicar qué ocurrió.",
+        "Explora una receta ilustrada para anticipar materiales.",
+        "Comenta qué parte de un libro le gustó usando elementos del texto."
+      ],
+      "not_examples": [
+        "Escucha un cuento sin ver el texto.",
+        "Dicta una lista al adulto.",
+        "Copia letras sin propósito.",
+        "Describe oralmente una foto familiar.",
+        "Dibuja una escena sin usar texto como fuente."
+      ],
+      "common_confusions": [
+        {
+          "competency_id": "COM_ORAL",
+          "difference": "LECTURA construye sentido desde un soporte escrito; ORAL desde mensajes hablados."
+        },
+        {
+          "competency_id": "COM_ESCRITURA",
+          "difference": "LECTURA interpreta textos existentes; ESCRITURA produce textos con intención comunicativa."
+        },
+        {
+          "competency_id": "COM_ARTE",
+          "difference": "La ilustración en LECTURA es pista para construir sentido; en ARTE es lenguaje de creación/expresión."
+        }
+      ],
+      "possible_evidence": [
+        "anticipación basada en soporte",
+        "localización de información",
+        "inferencia sencilla",
+        "comentario sobre texto",
+        "elección justificada de información"
+      ],
+      "semantic_source": "Paráfrasis editorial para IA; no es redacción oficial MINEDU.",
+      "official_text_mapping": {
+        "official_competency_id": null,
+        "official_definition_ref": null,
+        "official_standard_ref": null,
+        "official_performance_refs_by_age": {
+          "3": [],
+          "4": [],
+          "5": []
+        },
+        "mapping_status": "pending"
+      },
+      "official_review_status": "pending",
+      "semantic_review_status": "pending"
     },
     {
       "id": "COM_ESCRITURA",
@@ -493,7 +845,64 @@
       ],
       "avoid_when": [
         "trazo mecánico sin intención comunicativa"
-      ]
+      ],
+      "pedagogical_intent": "Favorecer producción escrita con intención comunicativa desde hipótesis propias, considerando propósito y destinatario.",
+      "when_to_use": [
+        "se producen marcas, grafismos o letras para comunicar",
+        "hay propósito real: lista, nota, invitación, cartel, menú o mensaje",
+        "se decide qué escribir y para quién",
+        "se revisa si el producto comunica la intención"
+      ],
+      "do_not_use_when": [
+        "se copian letras o trazos sin intención comunicativa",
+        "solo se interpreta un texto existente",
+        "el dibujo no tiene intención textual"
+      ],
+      "examples": [
+        "Escribe a su manera una lista de materiales.",
+        "Produce una invitación para las familias.",
+        "Escribe el menú del juego de restaurante.",
+        "Deja una nota para cuidar una planta.",
+        "Revisa si su mensaje expresa lo que quería."
+      ],
+      "not_examples": [
+        "Repasa líneas punteadas.",
+        "Copia su nombre repetidamente sin propósito.",
+        "Mira un cartel para anticipar contenido.",
+        "Cuenta oralmente una experiencia.",
+        "Dibuja libremente sin intención textual."
+      ],
+      "common_confusions": [
+        {
+          "competency_id": "COM_LECTURA",
+          "difference": "ESCRITURA produce un texto para comunicar; LECTURA interpreta un texto existente."
+        },
+        {
+          "competency_id": "COM_ARTE",
+          "difference": "ESCRITURA prioriza comunicación textual; ARTE expresión mediante lenguajes artísticos."
+        }
+      ],
+      "possible_evidence": [
+        "producción escrita auténtica",
+        "explicación de intención",
+        "revisión del mensaje",
+        "dictado al adulto con escritura propia",
+        "uso intencional de grafismos/letras"
+      ],
+      "semantic_source": "Paráfrasis editorial para IA; no es redacción oficial MINEDU.",
+      "official_text_mapping": {
+        "official_competency_id": null,
+        "official_definition_ref": null,
+        "official_standard_ref": null,
+        "official_performance_refs_by_age": {
+          "3": [],
+          "4": [],
+          "5": []
+        },
+        "mapping_status": "pending"
+      },
+      "official_review_status": "pending",
+      "semantic_review_status": "pending"
     },
     {
       "id": "COM_ARTE",
@@ -558,7 +967,68 @@
       ],
       "avoid_when": [
         "manualidad repetitiva cuyo objetivo es copiar un modelo sin exploración ni creación"
-      ]
+      ],
+      "pedagogical_intent": "Favorecer exploración, creación y comunicación de ideas, emociones y experiencias mediante lenguajes artísticos.",
+      "when_to_use": [
+        "el propósito es explorar materiales, sonidos, movimientos, imágenes o dramatización",
+        "hay decisiones creativas",
+        "se valora el proceso de creación, no la copia",
+        "se comparte o comenta la producción"
+      ],
+      "do_not_use_when": [
+        "se copia exactamente un modelo decorativo",
+        "el dibujo solo registra datos de una indagación",
+        "el movimiento se trabaja principalmente como coordinación motriz"
+      ],
+      "examples": [
+        "Exploran sonidos y crean una secuencia propia.",
+        "Crean un collage para representar una experiencia.",
+        "Inventan personajes y dramatizan.",
+        "Prueban mezclas de colores y deciden cómo usarlas.",
+        "Explican qué quisieron representar."
+      ],
+      "not_examples": [
+        "Todos colorean igual siguiendo colores indicados.",
+        "Copian una mariposa idéntica al modelo.",
+        "Dibujan raíces solo para registrar ciencia.",
+        "Realizan saltos con foco en equilibrio.",
+        "Escriben una lista de materiales."
+      ],
+      "common_confusions": [
+        {
+          "competency_id": "PSICO_MOTRICIDAD",
+          "difference": "ARTE usa movimiento con intención expresiva/creativa; PSICOMOTRICIDAD busca control y coordinación corporal."
+        },
+        {
+          "competency_id": "CYT_INDAGA",
+          "difference": "Un dibujo en INDAGA puede registrar información; en ARTE importa la decisión expresiva y el lenguaje visual."
+        },
+        {
+          "competency_id": "COM_ESCRITURA",
+          "difference": "ARTE prioriza creación expresiva; ESCRITURA producción textual con propósito."
+        }
+      ],
+      "possible_evidence": [
+        "producción visual/sonora/corporal",
+        "registro del proceso creativo",
+        "explicación de la creación",
+        "elección de materiales/técnicas",
+        "presentación de una creación"
+      ],
+      "semantic_source": "Paráfrasis editorial para IA; no es redacción oficial MINEDU.",
+      "official_text_mapping": {
+        "official_competency_id": null,
+        "official_definition_ref": null,
+        "official_standard_ref": null,
+        "official_performance_refs_by_age": {
+          "3": [],
+          "4": [],
+          "5": []
+        },
+        "mapping_status": "pending"
+      },
+      "official_review_status": "pending",
+      "semantic_review_status": "pending"
     },
     {
       "id": "CAST_L2_ORAL",
@@ -631,7 +1101,59 @@
       ],
       "avoid_when": [
         "castellano es lengua materna del grupo"
-      ]
+      ],
+      "pedagogical_intent": "Desarrollar comunicación oral progresiva en castellano como segunda lengua, respetando y apoyándose en la lengua materna y el contexto.",
+      "when_to_use": [
+        "el niño tiene otra lengua materna y el propósito es comunicarse oralmente en castellano",
+        "se trabaja lenguaje funcional en situaciones auténticas",
+        "se usan gestos/contexto y recursos de lengua materna para comunicarse"
+      ],
+      "do_not_use_when": [
+        "el castellano es lengua materna para esa situación",
+        "se busca reemplazar o prohibir la lengua materna",
+        "solo se repiten palabras descontextualizadas"
+      ],
+      "examples": [
+        "Responde un saludo y pregunta cotidiana en castellano con gestos.",
+        "Pide un material en castellano con apoyo visual.",
+        "Comprende una indicación sencilla por contexto/gestos.",
+        "Nombra elementos en una rutina auténtica.",
+        "Participa en intercambio breve combinando recursos lingüísticos."
+      ],
+      "not_examples": [
+        "Un castellanohablante relata una experiencia.",
+        "Memoriza palabras sin contexto.",
+        "Se prohíbe su lengua materna.",
+        "Lee un cartel con foco en lectura.",
+        "Copia una palabra."
+      ],
+      "common_confusions": [
+        {
+          "competency_id": "COM_ORAL",
+          "difference": "CAST_L2_ORAL aplica al desarrollo del castellano como segunda lengua; COM_ORAL al desarrollo oral en la lengua materna."
+        }
+      ],
+      "possible_evidence": [
+        "interacción breve en castellano L2",
+        "respuesta funcional",
+        "comprensión contextual",
+        "vocabulario funcional",
+        "registro anecdótico/audio"
+      ],
+      "semantic_source": "Paráfrasis editorial para IA; no es redacción oficial MINEDU.",
+      "official_text_mapping": {
+        "official_competency_id": null,
+        "official_definition_ref": null,
+        "official_standard_ref": null,
+        "official_performance_refs_by_age": {
+          "3": [],
+          "4": [],
+          "5": []
+        },
+        "mapping_status": "pending"
+      },
+      "official_review_status": "pending",
+      "semantic_review_status": "pending"
     },
     {
       "id": "MAT_CANTIDAD",
@@ -699,7 +1221,64 @@
       ],
       "avoid_when": [
         "solo se nombran números de memoria sin problema o relación cuantitativa"
-      ]
+      ],
+      "pedagogical_intent": "Desarrollar pensamiento cuantitativo al resolver situaciones reales de agrupación, comparación, conteo, orden, estimación y transformación de cantidades.",
+      "when_to_use": [
+        "el problema exige determinar cuánto/cuántos/más/menos/igual",
+        "se agrupa, compara, ordena o cuenta para resolver",
+        "se agregan o quitan elementos",
+        "se comparan magnitudes cuantitativas"
+      ],
+      "do_not_use_when": [
+        "solo se recita la serie numérica",
+        "hay números pero no problema cuantitativo",
+        "el reto central es forma, posición o recorrido"
+      ],
+      "examples": [
+        "Prepara exactamente la cantidad solicitada en un mercado.",
+        "Compara dos colecciones.",
+        "Determina cuántos platos faltan.",
+        "Agrega objetos y explica el cambio.",
+        "Ordena objetos por peso o cantidad."
+      ],
+      "not_examples": [
+        "Recita del 1 al 20.",
+        "Copia números.",
+        "Busca salida de un laberinto.",
+        "Clasifica figuras por forma.",
+        "Cuenta saltos cuando el foco es motriz."
+      ],
+      "common_confusions": [
+        {
+          "competency_id": "MAT_FORMA",
+          "difference": "CANTIDAD resuelve número/comparación/magnitud cuantitativa; FORMA relaciones geométricas, espaciales, posición y desplazamiento."
+        },
+        {
+          "competency_id": "CYT_INDAGA",
+          "difference": "Contar dentro de una exploración no vuelve CANTIDAD principal si la pregunta central es investigable; sí si el problema es cuantitativo."
+        }
+      ],
+      "possible_evidence": [
+        "colección construida",
+        "comparación explicada",
+        "conteo funcional",
+        "solución a agregar/quitar",
+        "representación de cantidad"
+      ],
+      "semantic_source": "Paráfrasis editorial para IA; no es redacción oficial MINEDU.",
+      "official_text_mapping": {
+        "official_competency_id": null,
+        "official_definition_ref": null,
+        "official_standard_ref": null,
+        "official_performance_refs_by_age": {
+          "3": [],
+          "4": [],
+          "5": []
+        },
+        "mapping_status": "pending"
+      },
+      "official_review_status": "pending",
+      "semantic_review_status": "pending"
     },
     {
       "id": "MAT_FORMA",
@@ -767,7 +1346,64 @@
       ],
       "avoid_when": [
         "el movimiento corporal es el foco motriz y no existe un problema espacial/geométrico"
-      ]
+      ],
+      "pedagogical_intent": "Desarrollar razonamiento espacial y geométrico al resolver problemas de forma, tamaño, posición, trayectoria, orientación y longitud.",
+      "when_to_use": [
+        "el reto exige ubicarse o ubicar objetos",
+        "se resuelve un recorrido o problema de orientación",
+        "se comparan formas, tamaños o longitudes",
+        "se construyen/modelan objetos atendiendo a relaciones espaciales"
+      ],
+      "do_not_use_when": [
+        "el propósito es contar o comparar cantidades",
+        "el movimiento solo busca coordinación corporal",
+        "solo se nombran figuras sin problema espacial"
+      ],
+      "examples": [
+        "Explica cómo llegar de un punto a otro.",
+        "Construye un puente ajustando posiciones.",
+        "Resuelve un laberinto y describe el recorrido.",
+        "Compara qué objeto es más largo.",
+        "Usa formas para resolver una construcción."
+      ],
+      "not_examples": [
+        "Recita nombres de figuras.",
+        "Cuenta bloques.",
+        "Corre para mejorar equilibrio.",
+        "Clasifica frutas por cantidad.",
+        "Dibuja libremente una casa."
+      ],
+      "common_confusions": [
+        {
+          "competency_id": "PSICO_MOTRICIDAD",
+          "difference": "MAT_FORMA se centra en relaciones espaciales/geométricas; PSICOMOTRICIDAD en control/coord. corporal."
+        },
+        {
+          "competency_id": "MAT_CANTIDAD",
+          "difference": "FORMA atiende forma, posición, orientación y longitud; CANTIDAD número, conteo y transformaciones cuantitativas."
+        }
+      ],
+      "possible_evidence": [
+        "recorrido explicado",
+        "construcción espacial",
+        "uso de vocabulario espacial",
+        "comparación de longitudes",
+        "representación de ubicación"
+      ],
+      "semantic_source": "Paráfrasis editorial para IA; no es redacción oficial MINEDU.",
+      "official_text_mapping": {
+        "official_competency_id": null,
+        "official_definition_ref": null,
+        "official_standard_ref": null,
+        "official_performance_refs_by_age": {
+          "3": [],
+          "4": [],
+          "5": []
+        },
+        "mapping_status": "pending"
+      },
+      "official_review_status": "pending",
+      "semantic_review_status": "pending"
     },
     {
       "id": "CYT_INDAGA",
@@ -843,7 +1479,70 @@
       ],
       "avoid_when": [
         "solo se transmite información científica sin que los niños exploren o construyan respuestas"
-      ]
+      ],
+      "pedagogical_intent": "Desarrollar curiosidad investigativa y construcción de conocimiento mediante preguntas, exploración, obtención/análisis de información y comunicación de hallazgos.",
+      "when_to_use": [
+        "hay una pregunta auténtica que se quiere averiguar",
+        "se observa, explora, prueba o busca información para responder",
+        "se comparan hallazgos con ideas/predicciones",
+        "se comunica qué se hizo y qué se descubrió"
+      ],
+      "do_not_use_when": [
+        "la docente solo transmite información científica",
+        "se observa sin pregunta ni propósito de averiguar",
+        "el objetivo central es contar, conversar o crear artísticamente",
+        "se copia, colorea o decora un tema de ciencia"
+      ],
+      "examples": [
+        "Averiguan en qué lugares del jardín aparecen caracoles.",
+        "Predicen qué objetos flotarán y lo prueban.",
+        "Observan dos plantas y registran cambios.",
+        "Comparan sombras en distintos momentos.",
+        "Exploran qué materiales absorben agua."
+      ],
+      "not_examples": [
+        "Escuchan una explicación sobre caracoles.",
+        "Colorean una ficha de animales.",
+        "Cuentan hojas con propósito de cantidad.",
+        "Copian una mariposa.",
+        "Memorizan partes de una planta sin explorar."
+      ],
+      "common_confusions": [
+        {
+          "competency_id": "COM_ORAL",
+          "difference": "INDAGA es principal cuando hablar sirve para investigar/comunicar hallazgos; ORAL cuando comprender/producir mensajes es el aprendizaje central."
+        },
+        {
+          "competency_id": "MAT_CANTIDAD",
+          "difference": "CANTIDAD es principal si la situación se resuelve por relaciones cuantitativas; INDAGA si las cantidades son datos para responder una pregunta."
+        },
+        {
+          "competency_id": "COM_ARTE",
+          "difference": "Un dibujo en INDAGA registra información; en ARTE expresa/crea con lenguaje visual."
+        }
+      ],
+      "possible_evidence": [
+        "pregunta formulada",
+        "predicción",
+        "registro gráfico",
+        "comparación de resultados",
+        "explicación de hallazgos",
+        "secuencia de exploración"
+      ],
+      "semantic_source": "Paráfrasis editorial para IA; no es redacción oficial MINEDU.",
+      "official_text_mapping": {
+        "official_competency_id": null,
+        "official_definition_ref": null,
+        "official_standard_ref": null,
+        "official_performance_refs_by_age": {
+          "3": [],
+          "4": [],
+          "5": []
+        },
+        "mapping_status": "pending"
+      },
+      "official_review_status": "pending",
+      "semantic_review_status": "pending"
     },
     {
       "id": "TRANS_TIC",
@@ -901,7 +1600,63 @@
       ],
       "avoid_when": [
         "el dispositivo solo se usa pasivamente sin propósito de aprendizaje o creación"
-      ]
+      ],
+      "pedagogical_intent": "Desarrollar uso intencional, acompañado y progresivamente autónomo de entornos digitales para explorar, registrar, crear y comunicar.",
+      "when_to_use": [
+        "el dispositivo digital forma parte del aprendizaje",
+        "el niño usa cámara/audio/video u otra herramienta para registrar o crear",
+        "explora funciones básicas de un entorno virtual con propósito"
+      ],
+      "do_not_use_when": [
+        "solo mira pasivamente un video",
+        "el adulto controla todo el dispositivo",
+        "el dispositivo es accesorio y no hay aprendizaje digital"
+      ],
+      "examples": [
+        "Toma una foto para registrar una construcción.",
+        "Graba un audio para comunicar una idea.",
+        "Crea una imagen digital sencilla.",
+        "Explora funciones de una app para registrar información.",
+        "Elige una herramienta digital para documentar un proyecto."
+      ],
+      "not_examples": [
+        "Mira un video proyectado.",
+        "La docente toma todas las fotos.",
+        "Escucha música sin interactuar.",
+        "Usa una pantalla solo como cronómetro.",
+        "Ve una imagen digital sin acción digital propia."
+      ],
+      "common_confusions": [
+        {
+          "competency_id": "COM_ARTE",
+          "difference": "TIC es principal cuando el aprendizaje está en desenvolverse en el entorno digital; ARTE cuando está en la creación expresiva."
+        },
+        {
+          "competency_id": "CYT_INDAGA",
+          "difference": "La cámara puede ser secundaria en una indagación; INDAGA sigue siendo principal si el propósito es investigar."
+        }
+      ],
+      "possible_evidence": [
+        "foto tomada por el niño",
+        "audio/video creado",
+        "objeto digital sencillo",
+        "elección de herramienta",
+        "registro de uso guiado"
+      ],
+      "semantic_source": "Paráfrasis editorial para IA; no es redacción oficial MINEDU.",
+      "official_text_mapping": {
+        "official_competency_id": null,
+        "official_definition_ref": null,
+        "official_standard_ref": null,
+        "official_performance_refs_by_age": {
+          "3": [],
+          "4": [],
+          "5": []
+        },
+        "mapping_status": "pending"
+      },
+      "official_review_status": "pending",
+      "semantic_review_status": "pending"
     },
     {
       "id": "TRANS_AUTONOMO",
@@ -959,12 +1714,85 @@
       ],
       "avoid_when": [
         "la actividad solo exige seguir instrucciones sin decisión, planificación o revisión por parte del niño"
-      ]
+      ],
+      "pedagogical_intent": "Desarrollar conciencia y regulación inicial del propio aprendizaje: reconocer una meta, organizar acciones, revisar resultados y ajustar estrategias.",
+      "when_to_use": [
+        "el niño participa en definir qué quiere lograr",
+        "elige u organiza acciones/materiales para una meta",
+        "revisa si su estrategia funcionó y ajusta",
+        "explica qué hizo o cambiaría"
+      ],
+      "do_not_use_when": [
+        "solo sigue instrucciones decididas por el adulto",
+        "la autonomía es solo de autocuidado",
+        "completar la tarea sin reflexión es la única evidencia"
+      ],
+      "examples": [
+        "Decide materiales y orden para construir una torre.",
+        "Cambia la base al notar que la torre cae y explica por qué.",
+        "Elige una estrategia y comenta si funcionó.",
+        "Define con apoyo qué necesita terminar.",
+        "Compara resultado con meta y decide qué modificar."
+      ],
+      "not_examples": [
+        "Guarda su lonchera por rutina.",
+        "Sigue un modelo sin decidir.",
+        "Completa una ficha guiada.",
+        "Espera su turno.",
+        "Reconoce que está triste."
+      ],
+      "common_confusions": [
+        {
+          "competency_id": "PS_IDENTIDAD",
+          "difference": "GESTIONA SU APRENDIZAJE trata metas/estrategias/revisión; IDENTIDAD autonomía personal, autoconocimiento y emociones."
+        },
+        {
+          "competency_id": "PS_CONVIVE",
+          "difference": "Organizarse para una meta de aprendizaje es AUTÓNOMO; asumir acuerdos/responsabilidades para el grupo es CONVIVE."
+        }
+      ],
+      "possible_evidence": [
+        "plan de acciones",
+        "elección de estrategia",
+        "ajuste justificado",
+        "explicación de lo aprendido",
+        "auto-revisión con apoyo"
+      ],
+      "semantic_source": "Paráfrasis editorial para IA; no es redacción oficial MINEDU.",
+      "official_text_mapping": {
+        "official_competency_id": null,
+        "official_definition_ref": null,
+        "official_standard_ref": null,
+        "official_performance_refs_by_age": {
+          "3": [],
+          "4": [],
+          "5": []
+        },
+        "mapping_status": "pending"
+      },
+      "official_review_status": "pending",
+      "semantic_review_status": "pending"
     }
   ],
   "data_layers": {
     "official_registry": "Debe guardar texto oficial exacto, página/sección, versión y hash. No se replica completo en este archivo IA.",
     "ai_semantic_catalog": "Este archivo: conserva significado curricular en forma estructurada y compacta.",
     "age_runtime": "Archivos derivados de 3/4/5 años usados por Jev/LLM para reducir tokens."
+  },
+  "knowledge_pack": {
+    "id": "CNEB_Inicial_AI_KnowledgePack_v2",
+    "version": "2.0.0",
+    "authority": "semantic_subordinate_to_verified_official",
+    "imported_fields": [
+      "pedagogical_intent",
+      "when_to_use",
+      "do_not_use_when",
+      "examples",
+      "not_examples",
+      "common_confusions",
+      "possible_evidence",
+      "semantic_source",
+      "official_text_mapping"
+    ]
   }
 }

@@ -1,0 +1,4486 @@
+[
+  {
+    "semantic_performance_id": "PS_IDENTIDAD_A3_SEM01",
+    "competency_semantic_id": "PS_IDENTIDAD",
+    "age": 3,
+    "age_profile_status": "specified",
+    "semantic_focus": "Reconocimiento de sí mismo y primeras acciones autónomas.",
+    "meaning": "Reconoce características físicas, necesidades e intereses propios.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Reconoce características físicas, necesidades e intereses propios."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Reconoce características físicas, necesidades e intereses propios."
+    ],
+    "expected_evidence": [
+      "elección explicada",
+      "expresión de emoción",
+      "acción autónoma en rutina",
+      "autorretrato comentado",
+      "relato sobre cualidades/preferencias"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "PS_IDENTIDAD_A3_SEM02",
+    "competency_semantic_id": "PS_IDENTIDAD",
+    "age": 3,
+    "age_profile_status": "specified",
+    "semantic_focus": "Reconocimiento de sí mismo y primeras acciones autónomas.",
+    "meaning": "Se reconoce como miembro de su familia y grupo de aula.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Se reconoce como miembro de su familia y grupo de aula."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Se reconoce como miembro de su familia y grupo de aula."
+    ],
+    "expected_evidence": [
+      "elección explicada",
+      "expresión de emoción",
+      "acción autónoma en rutina",
+      "autorretrato comentado",
+      "relato sobre cualidades/preferencias"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "PS_IDENTIDAD_A3_SEM03",
+    "competency_semantic_id": "PS_IDENTIDAD",
+    "age": 3,
+    "age_profile_status": "specified",
+    "semantic_focus": "Reconocimiento de sí mismo y primeras acciones autónomas.",
+    "meaning": "Realiza actividades por iniciativa y practica hábitos básicos de alimentación e higiene.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Realiza actividades por iniciativa y practica hábitos básicos de alimentación e higiene."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Realiza actividades por iniciativa y practica hábitos básicos de alimentación e higiene."
+    ],
+    "expected_evidence": [
+      "elección explicada",
+      "expresión de emoción",
+      "acción autónoma en rutina",
+      "autorretrato comentado",
+      "relato sobre cualidades/preferencias"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "PS_IDENTIDAD_A3_SEM04",
+    "competency_semantic_id": "PS_IDENTIDAD",
+    "age": 3,
+    "age_profile_status": "specified",
+    "semantic_focus": "Reconocimiento de sí mismo y primeras acciones autónomas.",
+    "meaning": "Expresa emociones y, con ayuda del adulto, empieza a identificarlas en sí y en otros.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Expresa emociones y, con ayuda del adulto, empieza a identificarlas en sí y en otros."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Expresa emociones y, con ayuda del adulto, empieza a identificarlas en sí y en otros."
+    ],
+    "expected_evidence": [
+      "elección explicada",
+      "expresión de emoción",
+      "acción autónoma en rutina",
+      "autorretrato comentado",
+      "relato sobre cualidades/preferencias"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "PS_IDENTIDAD_A4_SEM01",
+    "competency_semantic_id": "PS_IDENTIDAD",
+    "age": 4,
+    "age_profile_status": "specified",
+    "semantic_focus": "Amplía la descripción de sí mismo, autonomía y comprensión emocional.",
+    "meaning": "Expresa preferencias, características y cualidades que lo distinguen.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Expresa preferencias, características y cualidades que lo distinguen."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Expresa preferencias, características y cualidades que lo distinguen."
+    ],
+    "expected_evidence": [
+      "elección explicada",
+      "expresión de emoción",
+      "acción autónoma en rutina",
+      "autorretrato comentado",
+      "relato sobre cualidades/preferencias"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "PS_IDENTIDAD_A4_SEM02",
+    "competency_semantic_id": "PS_IDENTIDAD",
+    "age": 4,
+    "age_profile_status": "specified",
+    "semantic_focus": "Amplía la descripción de sí mismo, autonomía y comprensión emocional.",
+    "meaning": "Actúa con mayor iniciativa en actividades y autocuidado.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Actúa con mayor iniciativa en actividades y autocuidado."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Actúa con mayor iniciativa en actividades y autocuidado."
+    ],
+    "expected_evidence": [
+      "elección explicada",
+      "expresión de emoción",
+      "acción autónoma en rutina",
+      "autorretrato comentado",
+      "relato sobre cualidades/preferencias"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "PS_IDENTIDAD_A4_SEM03",
+    "competency_semantic_id": "PS_IDENTIDAD",
+    "age": 4,
+    "age_profile_status": "specified",
+    "semantic_focus": "Amplía la descripción de sí mismo, autonomía y comprensión emocional.",
+    "meaning": "Reconoce pertenencia a familia/aula y valora vínculos cercanos.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Reconoce pertenencia a familia/aula y valora vínculos cercanos."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Reconoce pertenencia a familia/aula y valora vínculos cercanos."
+    ],
+    "expected_evidence": [
+      "elección explicada",
+      "expresión de emoción",
+      "acción autónoma en rutina",
+      "autorretrato comentado",
+      "relato sobre cualidades/preferencias"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "PS_IDENTIDAD_A4_SEM04",
+    "competency_semantic_id": "PS_IDENTIDAD",
+    "age": 4,
+    "age_profile_status": "specified",
+    "semantic_focus": "Amplía la descripción de sí mismo, autonomía y comprensión emocional.",
+    "meaning": "Expresa emociones e identifica causas simples con acompañamiento.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Expresa emociones e identifica causas simples con acompañamiento."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Expresa emociones e identifica causas simples con acompañamiento."
+    ],
+    "expected_evidence": [
+      "elección explicada",
+      "expresión de emoción",
+      "acción autónoma en rutina",
+      "autorretrato comentado",
+      "relato sobre cualidades/preferencias"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "PS_IDENTIDAD_A5_SEM01",
+    "competency_semantic_id": "PS_IDENTIDAD",
+    "age": 5,
+    "age_profile_status": "specified",
+    "semantic_focus": "Mayor autonomía, argumentación sobre sí mismo y regulación emocional.",
+    "meaning": "Reconoce características, cualidades, preferencias y explica algunas razones.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Reconoce características, cualidades, preferencias y explica algunas razones."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Reconoce características, cualidades, preferencias y explica algunas razones."
+    ],
+    "expected_evidence": [
+      "elección explicada",
+      "expresión de emoción",
+      "acción autónoma en rutina",
+      "autorretrato comentado",
+      "relato sobre cualidades/preferencias"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "PS_IDENTIDAD_A5_SEM02",
+    "competency_semantic_id": "PS_IDENTIDAD",
+    "age": 5,
+    "age_profile_status": "specified",
+    "semantic_focus": "Mayor autonomía, argumentación sobre sí mismo y regulación emocional.",
+    "meaning": "Participa y toma decisiones con mayor autonomía en rutinas y cuidado personal.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Participa y toma decisiones con mayor autonomía en rutinas y cuidado personal."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Participa y toma decisiones con mayor autonomía en rutinas y cuidado personal."
+    ],
+    "expected_evidence": [
+      "elección explicada",
+      "expresión de emoción",
+      "acción autónoma en rutina",
+      "autorretrato comentado",
+      "relato sobre cualidades/preferencias"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "PS_IDENTIDAD_A5_SEM03",
+    "competency_semantic_id": "PS_IDENTIDAD",
+    "age": 5,
+    "age_profile_status": "specified",
+    "semantic_focus": "Mayor autonomía, argumentación sobre sí mismo y regulación emocional.",
+    "meaning": "Reconoce pertenencia a familia, aula y comunidad cercana.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Reconoce pertenencia a familia, aula y comunidad cercana."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Reconoce pertenencia a familia, aula y comunidad cercana."
+    ],
+    "expected_evidence": [
+      "elección explicada",
+      "expresión de emoción",
+      "acción autónoma en rutina",
+      "autorretrato comentado",
+      "relato sobre cualidades/preferencias"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "PS_IDENTIDAD_A5_SEM04",
+    "competency_semantic_id": "PS_IDENTIDAD",
+    "age": 5,
+    "age_profile_status": "specified",
+    "semantic_focus": "Mayor autonomía, argumentación sobre sí mismo y regulación emocional.",
+    "meaning": "Identifica emociones y causas en sí y otros; busca apoyo cuando lo necesita.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Identifica emociones y causas en sí y otros; busca apoyo cuando lo necesita."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Identifica emociones y causas en sí y otros; busca apoyo cuando lo necesita."
+    ],
+    "expected_evidence": [
+      "elección explicada",
+      "expresión de emoción",
+      "acción autónoma en rutina",
+      "autorretrato comentado",
+      "relato sobre cualidades/preferencias"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "PS_CONVIVE_A3_SEM01",
+    "competency_semantic_id": "PS_CONVIVE",
+    "age": 3,
+    "age_profile_status": "specified",
+    "semantic_focus": "Primeras interacciones grupales, reglas conocidas y cuidado de recursos.",
+    "meaning": "Se relaciona con adultos y niños de su entorno y participa en pequeños grupos de juego.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Se relaciona con adultos y niños de su entorno y participa en pequeños grupos de juego."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Se relaciona con adultos y niños de su entorno y participa en pequeños grupos de juego."
+    ],
+    "expected_evidence": [
+      "acuerdo propuesto",
+      "solución a conflicto cotidiano",
+      "responsabilidad asumida",
+      "participación en decisión grupal",
+      "acción de cuidado común"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "PS_CONVIVE_A3_SEM02",
+    "competency_semantic_id": "PS_CONVIVE",
+    "age": 3,
+    "age_profile_status": "specified",
+    "semantic_focus": "Primeras interacciones grupales, reglas conocidas y cuidado de recursos.",
+    "meaning": "Practica algunas reglas conocidas del aula con acompañamiento.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Practica algunas reglas conocidas del aula con acompañamiento."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Practica algunas reglas conocidas del aula con acompañamiento."
+    ],
+    "expected_evidence": [
+      "acuerdo propuesto",
+      "solución a conflicto cotidiano",
+      "responsabilidad asumida",
+      "participación en decisión grupal",
+      "acción de cuidado común"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "PS_CONVIVE_A3_SEM03",
+    "competency_semantic_id": "PS_CONVIVE",
+    "age": 3,
+    "age_profile_status": "specified",
+    "semantic_focus": "Primeras interacciones grupales, reglas conocidas y cuidado de recursos.",
+    "meaning": "Colabora en el cuidado de materiales y espacios compartidos.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Colabora en el cuidado de materiales y espacios compartidos."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Colabora en el cuidado de materiales y espacios compartidos."
+    ],
+    "expected_evidence": [
+      "acuerdo propuesto",
+      "solución a conflicto cotidiano",
+      "responsabilidad asumida",
+      "participación en decisión grupal",
+      "acción de cuidado común"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "PS_CONVIVE_A4_SEM01",
+    "competency_semantic_id": "PS_CONVIVE",
+    "age": 4,
+    "age_profile_status": "specified",
+    "semantic_focus": "Participación grupal más sostenida y mayor comprensión de acuerdos.",
+    "meaning": "Se integra en juegos y actividades con distintos compañeros.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Se integra en juegos y actividades con distintos compañeros."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Se integra en juegos y actividades con distintos compañeros."
+    ],
+    "expected_evidence": [
+      "acuerdo propuesto",
+      "solución a conflicto cotidiano",
+      "responsabilidad asumida",
+      "participación en decisión grupal",
+      "acción de cuidado común"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "PS_CONVIVE_A4_SEM02",
+    "competency_semantic_id": "PS_CONVIVE",
+    "age": 4,
+    "age_profile_status": "specified",
+    "semantic_focus": "Participación grupal más sostenida y mayor comprensión de acuerdos.",
+    "meaning": "Muestra interés por costumbres o características de otras personas.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Muestra interés por costumbres o características de otras personas."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Muestra interés por costumbres o características de otras personas."
+    ],
+    "expected_evidence": [
+      "acuerdo propuesto",
+      "solución a conflicto cotidiano",
+      "responsabilidad asumida",
+      "participación en decisión grupal",
+      "acción de cuidado común"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "PS_CONVIVE_A4_SEM03",
+    "competency_semantic_id": "PS_CONVIVE",
+    "age": 4,
+    "age_profile_status": "specified",
+    "semantic_focus": "Participación grupal más sostenida y mayor comprensión de acuerdos.",
+    "meaning": "Participa en acuerdos simples y asume responsabilidades cercanas.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Participa en acuerdos simples y asume responsabilidades cercanas."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Participa en acuerdos simples y asume responsabilidades cercanas."
+    ],
+    "expected_evidence": [
+      "acuerdo propuesto",
+      "solución a conflicto cotidiano",
+      "responsabilidad asumida",
+      "participación en decisión grupal",
+      "acción de cuidado común"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "PS_CONVIVE_A4_SEM04",
+    "competency_semantic_id": "PS_CONVIVE",
+    "age": 4,
+    "age_profile_status": "specified",
+    "semantic_focus": "Participación grupal más sostenida y mayor comprensión de acuerdos.",
+    "meaning": "Colabora en el cuidado de recursos y espacios comunes.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Colabora en el cuidado de recursos y espacios comunes."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Colabora en el cuidado de recursos y espacios comunes."
+    ],
+    "expected_evidence": [
+      "acuerdo propuesto",
+      "solución a conflicto cotidiano",
+      "responsabilidad asumida",
+      "participación en decisión grupal",
+      "acción de cuidado común"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "PS_CONVIVE_A5_SEM01",
+    "competency_semantic_id": "PS_CONVIVE",
+    "age": 5,
+    "age_profile_status": "specified",
+    "semantic_focus": "Participación democrática inicial y responsabilidad por el bienestar común.",
+    "meaning": "Participa activamente en actividades grupales y propone formas de organizarse.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Participa activamente en actividades grupales y propone formas de organizarse."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Participa activamente en actividades grupales y propone formas de organizarse."
+    ],
+    "expected_evidence": [
+      "acuerdo propuesto",
+      "solución a conflicto cotidiano",
+      "responsabilidad asumida",
+      "participación en decisión grupal",
+      "acción de cuidado común"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "PS_CONVIVE_A5_SEM02",
+    "competency_semantic_id": "PS_CONVIVE",
+    "age": 5,
+    "age_profile_status": "specified",
+    "semantic_focus": "Participación democrática inicial y responsabilidad por el bienestar común.",
+    "meaning": "Propone, acuerda y respeta normas vinculadas a necesidades del grupo.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Propone, acuerda y respeta normas vinculadas a necesidades del grupo."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Propone, acuerda y respeta normas vinculadas a necesidades del grupo."
+    ],
+    "expected_evidence": [
+      "acuerdo propuesto",
+      "solución a conflicto cotidiano",
+      "responsabilidad asumida",
+      "participación en decisión grupal",
+      "acción de cuidado común"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "PS_CONVIVE_A5_SEM03",
+    "competency_semantic_id": "PS_CONVIVE",
+    "age": 5,
+    "age_profile_status": "specified",
+    "semantic_focus": "Participación democrática inicial y responsabilidad por el bienestar común.",
+    "meaning": "Asume responsabilidades y explica por qué ayudan a convivir.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Asume responsabilidades y explica por qué ayudan a convivir."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Asume responsabilidades y explica por qué ayudan a convivir."
+    ],
+    "expected_evidence": [
+      "acuerdo propuesto",
+      "solución a conflicto cotidiano",
+      "responsabilidad asumida",
+      "participación en decisión grupal",
+      "acción de cuidado común"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "PS_CONVIVE_A5_SEM04",
+    "competency_semantic_id": "PS_CONVIVE",
+    "age": 5,
+    "age_profile_status": "specified",
+    "semantic_focus": "Participación democrática inicial y responsabilidad por el bienestar común.",
+    "meaning": "Participa en acciones de cuidado y bienestar para todos.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Participa en acciones de cuidado y bienestar para todos."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Participa en acciones de cuidado y bienestar para todos."
+    ],
+    "expected_evidence": [
+      "acuerdo propuesto",
+      "solución a conflicto cotidiano",
+      "responsabilidad asumida",
+      "participación en decisión grupal",
+      "acción de cuidado común"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "PS_RELIGION_A3_SEM01",
+    "competency_semantic_id": "PS_RELIGION",
+    "age": 3,
+    "age_profile_status": "specified",
+    "semantic_focus": "Gratitud, afecto, cuidado y primeras manifestaciones religiosas cercanas.",
+    "meaning": "Reconoce experiencias de amor, cuidado y protección en familia y entorno.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Reconoce experiencias de amor, cuidado y protección en familia y entorno."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Reconoce experiencias de amor, cuidado y protección en familia y entorno."
+    ],
+    "expected_evidence": [
+      "comentario sobre significado religioso",
+      "acción solidaria vinculada a experiencia",
+      "expresión de gratitud",
+      "participación respetuosa"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "PS_RELIGION_A3_SEM02",
+    "competency_semantic_id": "PS_RELIGION",
+    "age": 3,
+    "age_profile_status": "specified",
+    "semantic_focus": "Gratitud, afecto, cuidado y primeras manifestaciones religiosas cercanas.",
+    "meaning": "Participa respetuosamente en manifestaciones religiosas familiares o de su comunidad.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Participa respetuosamente en manifestaciones religiosas familiares o de su comunidad."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Participa respetuosamente en manifestaciones religiosas familiares o de su comunidad."
+    ],
+    "expected_evidence": [
+      "comentario sobre significado religioso",
+      "acción solidaria vinculada a experiencia",
+      "expresión de gratitud",
+      "participación respetuosa"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "PS_RELIGION_A3_SEM03",
+    "competency_semantic_id": "PS_RELIGION",
+    "age": 3,
+    "age_profile_status": "specified",
+    "semantic_focus": "Gratitud, afecto, cuidado y primeras manifestaciones religiosas cercanas.",
+    "meaning": "Realiza acciones sencillas de ayuda, respeto y agradecimiento.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Realiza acciones sencillas de ayuda, respeto y agradecimiento."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Realiza acciones sencillas de ayuda, respeto y agradecimiento."
+    ],
+    "expected_evidence": [
+      "comentario sobre significado religioso",
+      "acción solidaria vinculada a experiencia",
+      "expresión de gratitud",
+      "participación respetuosa"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "PS_RELIGION_A4_SEM01",
+    "competency_semantic_id": "PS_RELIGION",
+    "age": 4,
+    "age_profile_status": "specified",
+    "semantic_focus": "Relaciona experiencias de cuidado y comunidad con valores de su tradición.",
+    "meaning": "Expresa gratitud por personas y situaciones que valora.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Expresa gratitud por personas y situaciones que valora."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Expresa gratitud por personas y situaciones que valora."
+    ],
+    "expected_evidence": [
+      "comentario sobre significado religioso",
+      "acción solidaria vinculada a experiencia",
+      "expresión de gratitud",
+      "participación respetuosa"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "PS_RELIGION_A4_SEM02",
+    "competency_semantic_id": "PS_RELIGION",
+    "age": 4,
+    "age_profile_status": "specified",
+    "semantic_focus": "Relaciona experiencias de cuidado y comunidad con valores de su tradición.",
+    "meaning": "Participa en manifestaciones religiosas de su entorno y reconoce algunos signos o relatos.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Participa en manifestaciones religiosas de su entorno y reconoce algunos signos o relatos."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Participa en manifestaciones religiosas de su entorno y reconoce algunos signos o relatos."
+    ],
+    "expected_evidence": [
+      "comentario sobre significado religioso",
+      "acción solidaria vinculada a experiencia",
+      "expresión de gratitud",
+      "participación respetuosa"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "PS_RELIGION_A4_SEM03",
+    "competency_semantic_id": "PS_RELIGION",
+    "age": 4,
+    "age_profile_status": "specified",
+    "semantic_focus": "Relaciona experiencias de cuidado y comunidad con valores de su tradición.",
+    "meaning": "Practica acciones de solidaridad y respeto con otros.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Practica acciones de solidaridad y respeto con otros."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Practica acciones de solidaridad y respeto con otros."
+    ],
+    "expected_evidence": [
+      "comentario sobre significado religioso",
+      "acción solidaria vinculada a experiencia",
+      "expresión de gratitud",
+      "participación respetuosa"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "PS_RELIGION_A5_SEM01",
+    "competency_semantic_id": "PS_RELIGION",
+    "age": 5,
+    "age_profile_status": "specified",
+    "semantic_focus": "Integra identidad espiritual, gratitud, solidaridad y respeto a otras expresiones.",
+    "meaning": "Relaciona enseñanzas o relatos de su tradición con acciones concretas de amor, ayuda y cuidado.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Relaciona enseñanzas o relatos de su tradición con acciones concretas de amor, ayuda y cuidado."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Relaciona enseñanzas o relatos de su tradición con acciones concretas de amor, ayuda y cuidado."
+    ],
+    "expected_evidence": [
+      "comentario sobre significado religioso",
+      "acción solidaria vinculada a experiencia",
+      "expresión de gratitud",
+      "participación respetuosa"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "PS_RELIGION_A5_SEM02",
+    "competency_semantic_id": "PS_RELIGION",
+    "age": 5,
+    "age_profile_status": "specified",
+    "semantic_focus": "Integra identidad espiritual, gratitud, solidaridad y respeto a otras expresiones.",
+    "meaning": "Participa y explica de forma sencilla algunas manifestaciones religiosas cercanas.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Participa y explica de forma sencilla algunas manifestaciones religiosas cercanas."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Participa y explica de forma sencilla algunas manifestaciones religiosas cercanas."
+    ],
+    "expected_evidence": [
+      "comentario sobre significado religioso",
+      "acción solidaria vinculada a experiencia",
+      "expresión de gratitud",
+      "participación respetuosa"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "PS_RELIGION_A5_SEM03",
+    "competency_semantic_id": "PS_RELIGION",
+    "age": 5,
+    "age_profile_status": "specified",
+    "semantic_focus": "Integra identidad espiritual, gratitud, solidaridad y respeto a otras expresiones.",
+    "meaning": "Actúa con solidaridad y respeto, reconociendo que otras personas pueden vivir expresiones distintas.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Actúa con solidaridad y respeto, reconociendo que otras personas pueden vivir expresiones distintas."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Actúa con solidaridad y respeto, reconociendo que otras personas pueden vivir expresiones distintas."
+    ],
+    "expected_evidence": [
+      "comentario sobre significado religioso",
+      "acción solidaria vinculada a experiencia",
+      "expresión de gratitud",
+      "participación respetuosa"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "PSICO_MOTRICIDAD_A3_SEM01",
+    "competency_semantic_id": "PSICO_MOTRICIDAD",
+    "age": 3,
+    "age_profile_status": "specified",
+    "semantic_focus": "Exploración motriz global y reconocimiento básico del cuerpo.",
+    "meaning": "Corre, salta, trepa, rueda y explora movimientos según sus posibilidades.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Corre, salta, trepa, rueda y explora movimientos según sus posibilidades."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Corre, salta, trepa, rueda y explora movimientos según sus posibilidades."
+    ],
+    "expected_evidence": [
+      "recorrido motor",
+      "ajuste de equilibrio/fuerza",
+      "coordinación con objeto",
+      "representación corporal",
+      "comentario sobre sensaciones"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "PSICO_MOTRICIDAD_A3_SEM02",
+    "competency_semantic_id": "PSICO_MOTRICIDAD",
+    "age": 3,
+    "age_profile_status": "specified",
+    "semantic_focus": "Exploración motriz global y reconocimiento básico del cuerpo.",
+    "meaning": "Coordina acciones simples de manos/pies con objetos.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Coordina acciones simples de manos/pies con objetos."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Coordina acciones simples de manos/pies con objetos."
+    ],
+    "expected_evidence": [
+      "recorrido motor",
+      "ajuste de equilibrio/fuerza",
+      "coordinación con objeto",
+      "representación corporal",
+      "comentario sobre sensaciones"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "PSICO_MOTRICIDAD_A3_SEM03",
+    "competency_semantic_id": "PSICO_MOTRICIDAD",
+    "age": 3,
+    "age_profile_status": "specified",
+    "semantic_focus": "Exploración motriz global y reconocimiento básico del cuerpo.",
+    "meaning": "Reconoce sensaciones y algunas partes de su cuerpo.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Reconoce sensaciones y algunas partes de su cuerpo."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Reconoce sensaciones y algunas partes de su cuerpo."
+    ],
+    "expected_evidence": [
+      "recorrido motor",
+      "ajuste de equilibrio/fuerza",
+      "coordinación con objeto",
+      "representación corporal",
+      "comentario sobre sensaciones"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "PSICO_MOTRICIDAD_A3_SEM04",
+    "competency_semantic_id": "PSICO_MOTRICIDAD",
+    "age": 3,
+    "age_profile_status": "specified",
+    "semantic_focus": "Exploración motriz global y reconocimiento básico del cuerpo.",
+    "meaning": "Representa de manera inicial su cuerpo mediante dibujo o movimiento.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Representa de manera inicial su cuerpo mediante dibujo o movimiento."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Representa de manera inicial su cuerpo mediante dibujo o movimiento."
+    ],
+    "expected_evidence": [
+      "recorrido motor",
+      "ajuste de equilibrio/fuerza",
+      "coordinación con objeto",
+      "representación corporal",
+      "comentario sobre sensaciones"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "PSICO_MOTRICIDAD_A4_SEM01",
+    "competency_semantic_id": "PSICO_MOTRICIDAD",
+    "age": 4,
+    "age_profile_status": "specified",
+    "semantic_focus": "Mayor control, equilibrio, coordinación y orientación espacial.",
+    "meaning": "Combina desplazamientos y movimientos con mayor control y seguridad.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Combina desplazamientos y movimientos con mayor control y seguridad."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Combina desplazamientos y movimientos con mayor control y seguridad."
+    ],
+    "expected_evidence": [
+      "recorrido motor",
+      "ajuste de equilibrio/fuerza",
+      "coordinación con objeto",
+      "representación corporal",
+      "comentario sobre sensaciones"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "PSICO_MOTRICIDAD_A4_SEM02",
+    "competency_semantic_id": "PSICO_MOTRICIDAD",
+    "age": 4,
+    "age_profile_status": "specified",
+    "semantic_focus": "Mayor control, equilibrio, coordinación y orientación espacial.",
+    "meaning": "Regula fuerza, equilibrio y velocidad en juegos.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Regula fuerza, equilibrio y velocidad en juegos."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Regula fuerza, equilibrio y velocidad en juegos."
+    ],
+    "expected_evidence": [
+      "recorrido motor",
+      "ajuste de equilibrio/fuerza",
+      "coordinación con objeto",
+      "representación corporal",
+      "comentario sobre sensaciones"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "PSICO_MOTRICIDAD_A4_SEM03",
+    "competency_semantic_id": "PSICO_MOTRICIDAD",
+    "age": 4,
+    "age_profile_status": "specified",
+    "semantic_focus": "Mayor control, equilibrio, coordinación y orientación espacial.",
+    "meaning": "Mejora coordinación óculo-manual y óculo-podal.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Mejora coordinación óculo-manual y óculo-podal."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Mejora coordinación óculo-manual y óculo-podal."
+    ],
+    "expected_evidence": [
+      "recorrido motor",
+      "ajuste de equilibrio/fuerza",
+      "coordinación con objeto",
+      "representación corporal",
+      "comentario sobre sensaciones"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "PSICO_MOTRICIDAD_A4_SEM04",
+    "competency_semantic_id": "PSICO_MOTRICIDAD",
+    "age": 4,
+    "age_profile_status": "specified",
+    "semantic_focus": "Mayor control, equilibrio, coordinación y orientación espacial.",
+    "meaning": "Reconoce cambios corporales y representa mejor su esquema corporal.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Reconoce cambios corporales y representa mejor su esquema corporal."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Reconoce cambios corporales y representa mejor su esquema corporal."
+    ],
+    "expected_evidence": [
+      "recorrido motor",
+      "ajuste de equilibrio/fuerza",
+      "coordinación con objeto",
+      "representación corporal",
+      "comentario sobre sensaciones"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "PSICO_MOTRICIDAD_A5_SEM01",
+    "competency_semantic_id": "PSICO_MOTRICIDAD",
+    "age": 5,
+    "age_profile_status": "specified",
+    "semantic_focus": "Movimientos más complejos, precisos y adaptados a situaciones.",
+    "meaning": "Combina habilidades motrices y ajusta movimientos a espacio, tiempo, objetos y otros.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Combina habilidades motrices y ajusta movimientos a espacio, tiempo, objetos y otros."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Combina habilidades motrices y ajusta movimientos a espacio, tiempo, objetos y otros."
+    ],
+    "expected_evidence": [
+      "recorrido motor",
+      "ajuste de equilibrio/fuerza",
+      "coordinación con objeto",
+      "representación corporal",
+      "comentario sobre sensaciones"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "PSICO_MOTRICIDAD_A5_SEM02",
+    "competency_semantic_id": "PSICO_MOTRICIDAD",
+    "age": 5,
+    "age_profile_status": "specified",
+    "semantic_focus": "Movimientos más complejos, precisos y adaptados a situaciones.",
+    "meaning": "Coordina acciones con mayor precisión en retos motores.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Coordina acciones con mayor precisión en retos motores."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Coordina acciones con mayor precisión en retos motores."
+    ],
+    "expected_evidence": [
+      "recorrido motor",
+      "ajuste de equilibrio/fuerza",
+      "coordinación con objeto",
+      "representación corporal",
+      "comentario sobre sensaciones"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "PSICO_MOTRICIDAD_A5_SEM03",
+    "competency_semantic_id": "PSICO_MOTRICIDAD",
+    "age": 5,
+    "age_profile_status": "specified",
+    "semantic_focus": "Movimientos más complejos, precisos y adaptados a situaciones.",
+    "meaning": "Expresa ideas o emociones mediante movimiento y postura.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Expresa ideas o emociones mediante movimiento y postura."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Expresa ideas o emociones mediante movimiento y postura."
+    ],
+    "expected_evidence": [
+      "recorrido motor",
+      "ajuste de equilibrio/fuerza",
+      "coordinación con objeto",
+      "representación corporal",
+      "comentario sobre sensaciones"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "PSICO_MOTRICIDAD_A5_SEM04",
+    "competency_semantic_id": "PSICO_MOTRICIDAD",
+    "age": 5,
+    "age_profile_status": "specified",
+    "semantic_focus": "Movimientos más complejos, precisos y adaptados a situaciones.",
+    "meaning": "Reconoce sensaciones y representa el cuerpo con mayor detalle.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Reconoce sensaciones y representa el cuerpo con mayor detalle."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Reconoce sensaciones y representa el cuerpo con mayor detalle."
+    ],
+    "expected_evidence": [
+      "recorrido motor",
+      "ajuste de equilibrio/fuerza",
+      "coordinación con objeto",
+      "representación corporal",
+      "comentario sobre sensaciones"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "COM_ORAL_A3_SEM01",
+    "competency_semantic_id": "COM_ORAL",
+    "age": 3,
+    "age_profile_status": "specified",
+    "semantic_focus": "Comunicación espontánea sobre necesidades y experiencias; escucha y comprensión literal inicial.",
+    "meaning": "Expresa necesidades, emociones, intereses y experiencias usando palabras, gestos y voz.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Expresa necesidades, emociones, intereses y experiencias usando palabras, gestos y voz."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Expresa necesidades, emociones, intereses y experiencias usando palabras, gestos y voz."
+    ],
+    "expected_evidence": [
+      "audio breve",
+      "registro anecdótico",
+      "respuesta a preguntas",
+      "relato oral",
+      "explicación oral"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "COM_ORAL_A3_SEM02",
+    "competency_semantic_id": "COM_ORAL",
+    "age": 3,
+    "age_profile_status": "specified",
+    "semantic_focus": "Comunicación espontánea sobre necesidades y experiencias; escucha y comprensión literal inicial.",
+    "meaning": "Participa en conversaciones y escucha cuentos u otros relatos.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Participa en conversaciones y escucha cuentos u otros relatos."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Participa en conversaciones y escucha cuentos u otros relatos."
+    ],
+    "expected_evidence": [
+      "audio breve",
+      "registro anecdótico",
+      "respuesta a preguntas",
+      "relato oral",
+      "explicación oral"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "COM_ORAL_A3_SEM03",
+    "competency_semantic_id": "COM_ORAL",
+    "age": 3,
+    "age_profile_status": "specified",
+    "semantic_focus": "Comunicación espontánea sobre necesidades y experiencias; escucha y comprensión literal inicial.",
+    "meaning": "Pregunta o responde sobre lo que le interesa.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Pregunta o responde sobre lo que le interesa."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Pregunta o responde sobre lo que le interesa."
+    ],
+    "expected_evidence": [
+      "audio breve",
+      "registro anecdótico",
+      "respuesta a preguntas",
+      "relato oral",
+      "explicación oral"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "COM_ORAL_A3_SEM04",
+    "competency_semantic_id": "COM_ORAL",
+    "age": 3,
+    "age_profile_status": "specified",
+    "semantic_focus": "Comunicación espontánea sobre necesidades y experiencias; escucha y comprensión literal inicial.",
+    "meaning": "Recupera información explícita y sigue indicaciones simples.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Recupera información explícita y sigue indicaciones simples."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Recupera información explícita y sigue indicaciones simples."
+    ],
+    "expected_evidence": [
+      "audio breve",
+      "registro anecdótico",
+      "respuesta a preguntas",
+      "relato oral",
+      "explicación oral"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "COM_ORAL_A3_SEM05",
+    "competency_semantic_id": "COM_ORAL",
+    "age": 3,
+    "age_profile_status": "specified",
+    "semantic_focus": "Comunicación espontánea sobre necesidades y experiencias; escucha y comprensión literal inicial.",
+    "meaning": "Deduce características sencillas y comenta gustos o disgustos.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Deduce características sencillas y comenta gustos o disgustos."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Deduce características sencillas y comenta gustos o disgustos."
+    ],
+    "expected_evidence": [
+      "audio breve",
+      "registro anecdótico",
+      "respuesta a preguntas",
+      "relato oral",
+      "explicación oral"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "COM_ORAL_A4_SEM01",
+    "competency_semantic_id": "COM_ORAL",
+    "age": 4,
+    "age_profile_status": "specified",
+    "semantic_focus": "Conversación más elaborada y primeras relaciones de causa/efecto.",
+    "meaning": "Comunica experiencias considerando mejor interlocutor y propósito.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Comunica experiencias considerando mejor interlocutor y propósito."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Comunica experiencias considerando mejor interlocutor y propósito."
+    ],
+    "expected_evidence": [
+      "audio breve",
+      "registro anecdótico",
+      "respuesta a preguntas",
+      "relato oral",
+      "explicación oral"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "COM_ORAL_A4_SEM02",
+    "competency_semantic_id": "COM_ORAL",
+    "age": 4,
+    "age_profile_status": "specified",
+    "semantic_focus": "Conversación más elaborada y primeras relaciones de causa/efecto.",
+    "meaning": "Formula preguntas sobre lo que quiere saber o no comprendió.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Formula preguntas sobre lo que quiere saber o no comprendió."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Formula preguntas sobre lo que quiere saber o no comprendió."
+    ],
+    "expected_evidence": [
+      "audio breve",
+      "registro anecdótico",
+      "respuesta a preguntas",
+      "relato oral",
+      "explicación oral"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "COM_ORAL_A4_SEM03",
+    "competency_semantic_id": "COM_ORAL",
+    "age": 4,
+    "age_profile_status": "specified",
+    "semantic_focus": "Conversación más elaborada y primeras relaciones de causa/efecto.",
+    "meaning": "Recupera hechos y personajes de textos orales y vuelve a contar partes.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Recupera hechos y personajes de textos orales y vuelve a contar partes."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Recupera hechos y personajes de textos orales y vuelve a contar partes."
+    ],
+    "expected_evidence": [
+      "audio breve",
+      "registro anecdótico",
+      "respuesta a preguntas",
+      "relato oral",
+      "explicación oral"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "COM_ORAL_A4_SEM04",
+    "competency_semantic_id": "COM_ORAL",
+    "age": 4,
+    "age_profile_status": "specified",
+    "semantic_focus": "Conversación más elaborada y primeras relaciones de causa/efecto.",
+    "meaning": "Deduce características y relaciones simples de causa-efecto.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Deduce características y relaciones simples de causa-efecto."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Deduce características y relaciones simples de causa-efecto."
+    ],
+    "expected_evidence": [
+      "audio breve",
+      "registro anecdótico",
+      "respuesta a preguntas",
+      "relato oral",
+      "explicación oral"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "COM_ORAL_A4_SEM05",
+    "competency_semantic_id": "COM_ORAL",
+    "age": 4,
+    "age_profile_status": "specified",
+    "semantic_focus": "Conversación más elaborada y primeras relaciones de causa/efecto.",
+    "meaning": "Expresa opiniones sobre situaciones o relatos.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Expresa opiniones sobre situaciones o relatos."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Expresa opiniones sobre situaciones o relatos."
+    ],
+    "expected_evidence": [
+      "audio breve",
+      "registro anecdótico",
+      "respuesta a preguntas",
+      "relato oral",
+      "explicación oral"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "COM_ORAL_A5_SEM01",
+    "competency_semantic_id": "COM_ORAL",
+    "age": 5,
+    "age_profile_status": "specified",
+    "semantic_focus": "Mayor organización de ideas, inferencia y participación pertinente.",
+    "meaning": "Expresa necesidades, intereses y experiencias con mayor detalle y vocabulario.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Expresa necesidades, intereses y experiencias con mayor detalle y vocabulario."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Expresa necesidades, intereses y experiencias con mayor detalle y vocabulario."
+    ],
+    "expected_evidence": [
+      "audio breve",
+      "registro anecdótico",
+      "respuesta a preguntas",
+      "relato oral",
+      "explicación oral"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "COM_ORAL_A5_SEM02",
+    "competency_semantic_id": "COM_ORAL",
+    "age": 5,
+    "age_profile_status": "specified",
+    "semantic_focus": "Mayor organización de ideas, inferencia y participación pertinente.",
+    "meaning": "Participa en conversaciones y relatos respetando intercambios.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Participa en conversaciones y relatos respetando intercambios."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Participa en conversaciones y relatos respetando intercambios."
+    ],
+    "expected_evidence": [
+      "audio breve",
+      "registro anecdótico",
+      "respuesta a preguntas",
+      "relato oral",
+      "explicación oral"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "COM_ORAL_A5_SEM03",
+    "competency_semantic_id": "COM_ORAL",
+    "age": 5,
+    "age_profile_status": "specified",
+    "semantic_focus": "Mayor organización de ideas, inferencia y participación pertinente.",
+    "meaning": "Recupera información explícita relevante.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Recupera información explícita relevante."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Recupera información explícita relevante."
+    ],
+    "expected_evidence": [
+      "audio breve",
+      "registro anecdótico",
+      "respuesta a preguntas",
+      "relato oral",
+      "explicación oral"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "COM_ORAL_A5_SEM04",
+    "competency_semantic_id": "COM_ORAL",
+    "age": 5,
+    "age_profile_status": "specified",
+    "semantic_focus": "Mayor organización de ideas, inferencia y participación pertinente.",
+    "meaning": "Formula inferencias sencillas sobre relaciones, personajes y hechos.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Formula inferencias sencillas sobre relaciones, personajes y hechos."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Formula inferencias sencillas sobre relaciones, personajes y hechos."
+    ],
+    "expected_evidence": [
+      "audio breve",
+      "registro anecdótico",
+      "respuesta a preguntas",
+      "relato oral",
+      "explicación oral"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "COM_ORAL_A5_SEM05",
+    "competency_semantic_id": "COM_ORAL",
+    "age": 5,
+    "age_profile_status": "specified",
+    "semantic_focus": "Mayor organización de ideas, inferencia y participación pertinente.",
+    "meaning": "Opina y explica preferencias a partir de su experiencia y del texto.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Opina y explica preferencias a partir de su experiencia y del texto."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Opina y explica preferencias a partir de su experiencia y del texto."
+    ],
+    "expected_evidence": [
+      "audio breve",
+      "registro anecdótico",
+      "respuesta a preguntas",
+      "relato oral",
+      "explicación oral"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "COM_LECTURA_A3_SEM01",
+    "competency_semantic_id": "COM_LECTURA",
+    "age": 3,
+    "age_profile_status": "specified",
+    "semantic_focus": "Construcción de sentido principalmente desde ilustraciones y experiencia.",
+    "meaning": "Identifica personas, personajes, objetos o acciones a partir de ilustraciones.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Identifica personas, personajes, objetos o acciones a partir de ilustraciones."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Identifica personas, personajes, objetos o acciones a partir de ilustraciones."
+    ],
+    "expected_evidence": [
+      "anticipación basada en soporte",
+      "localización de información",
+      "inferencia sencilla",
+      "comentario sobre texto",
+      "elección justificada de información"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "COM_LECTURA_A3_SEM02",
+    "competency_semantic_id": "COM_LECTURA",
+    "age": 3,
+    "age_profile_status": "specified",
+    "semantic_focus": "Construcción de sentido principalmente desde ilustraciones y experiencia.",
+    "meaning": "Anticipa de qué puede tratar un texto observando imágenes.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Anticipa de qué puede tratar un texto observando imágenes."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Anticipa de qué puede tratar un texto observando imágenes."
+    ],
+    "expected_evidence": [
+      "anticipación basada en soporte",
+      "localización de información",
+      "inferencia sencilla",
+      "comentario sobre texto",
+      "elección justificada de información"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "COM_LECTURA_A3_SEM03",
+    "competency_semantic_id": "COM_LECTURA",
+    "age": 3,
+    "age_profile_status": "specified",
+    "semantic_focus": "Construcción de sentido principalmente desde ilustraciones y experiencia.",
+    "meaning": "Expresa emociones, gustos o comentarios sobre lo que observa y escucha leer.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Expresa emociones, gustos o comentarios sobre lo que observa y escucha leer."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Expresa emociones, gustos o comentarios sobre lo que observa y escucha leer."
+    ],
+    "expected_evidence": [
+      "anticipación basada en soporte",
+      "localización de información",
+      "inferencia sencilla",
+      "comentario sobre texto",
+      "elección justificada de información"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "COM_LECTURA_A4_SEM01",
+    "competency_semantic_id": "COM_LECTURA",
+    "age": 4,
+    "age_profile_status": "specified",
+    "semantic_focus": "Usa más pistas del soporte y relaciona información para anticipar.",
+    "meaning": "Obtiene información a partir de ilustraciones y algunos indicios escritos.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Obtiene información a partir de ilustraciones y algunos indicios escritos."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Obtiene información a partir de ilustraciones y algunos indicios escritos."
+    ],
+    "expected_evidence": [
+      "anticipación basada en soporte",
+      "localización de información",
+      "inferencia sencilla",
+      "comentario sobre texto",
+      "elección justificada de información"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "COM_LECTURA_A4_SEM02",
+    "competency_semantic_id": "COM_LECTURA",
+    "age": 4,
+    "age_profile_status": "specified",
+    "semantic_focus": "Usa más pistas del soporte y relaciona información para anticipar.",
+    "meaning": "Predice contenido usando portada, imágenes u organización del texto.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Predice contenido usando portada, imágenes u organización del texto."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Predice contenido usando portada, imágenes u organización del texto."
+    ],
+    "expected_evidence": [
+      "anticipación basada en soporte",
+      "localización de información",
+      "inferencia sencilla",
+      "comentario sobre texto",
+      "elección justificada de información"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "COM_LECTURA_A4_SEM03",
+    "competency_semantic_id": "COM_LECTURA",
+    "age": 4,
+    "age_profile_status": "specified",
+    "semantic_focus": "Usa más pistas del soporte y relaciona información para anticipar.",
+    "meaning": "Relaciona hechos o características sencillas.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Relaciona hechos o características sencillas."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Relaciona hechos o características sencillas."
+    ],
+    "expected_evidence": [
+      "anticipación basada en soporte",
+      "localización de información",
+      "inferencia sencilla",
+      "comentario sobre texto",
+      "elección justificada de información"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "COM_LECTURA_A4_SEM04",
+    "competency_semantic_id": "COM_LECTURA",
+    "age": 4,
+    "age_profile_status": "specified",
+    "semantic_focus": "Usa más pistas del soporte y relaciona información para anticipar.",
+    "meaning": "Comenta preferencias y explica algunas razones.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Comenta preferencias y explica algunas razones."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Comenta preferencias y explica algunas razones."
+    ],
+    "expected_evidence": [
+      "anticipación basada en soporte",
+      "localización de información",
+      "inferencia sencilla",
+      "comentario sobre texto",
+      "elección justificada de información"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "COM_LECTURA_A5_SEM01",
+    "competency_semantic_id": "COM_LECTURA",
+    "age": 5,
+    "age_profile_status": "specified",
+    "semantic_focus": "Lectura no convencional más intencional usando múltiples pistas.",
+    "meaning": "Localiza información usando ilustraciones, palabras conocidas y características del texto.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Localiza información usando ilustraciones, palabras conocidas y características del texto."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Localiza información usando ilustraciones, palabras conocidas y características del texto."
+    ],
+    "expected_evidence": [
+      "anticipación basada en soporte",
+      "localización de información",
+      "inferencia sencilla",
+      "comentario sobre texto",
+      "elección justificada de información"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "COM_LECTURA_A5_SEM02",
+    "competency_semantic_id": "COM_LECTURA",
+    "age": 5,
+    "age_profile_status": "specified",
+    "semantic_focus": "Lectura no convencional más intencional usando múltiples pistas.",
+    "meaning": "Anticipa y contrasta hipótesis sobre contenido.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Anticipa y contrasta hipótesis sobre contenido."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Anticipa y contrasta hipótesis sobre contenido."
+    ],
+    "expected_evidence": [
+      "anticipación basada en soporte",
+      "localización de información",
+      "inferencia sencilla",
+      "comentario sobre texto",
+      "elección justificada de información"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "COM_LECTURA_A5_SEM03",
+    "competency_semantic_id": "COM_LECTURA",
+    "age": 5,
+    "age_profile_status": "specified",
+    "semantic_focus": "Lectura no convencional más intencional usando múltiples pistas.",
+    "meaning": "Deduce relaciones sencillas entre información del texto.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Deduce relaciones sencillas entre información del texto."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Deduce relaciones sencillas entre información del texto."
+    ],
+    "expected_evidence": [
+      "anticipación basada en soporte",
+      "localización de información",
+      "inferencia sencilla",
+      "comentario sobre texto",
+      "elección justificada de información"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "COM_LECTURA_A5_SEM04",
+    "competency_semantic_id": "COM_LECTURA",
+    "age": 5,
+    "age_profile_status": "specified",
+    "semantic_focus": "Lectura no convencional más intencional usando múltiples pistas.",
+    "meaning": "Opina sobre contenido o forma a partir de experiencia y propósito.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Opina sobre contenido o forma a partir de experiencia y propósito."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Opina sobre contenido o forma a partir de experiencia y propósito."
+    ],
+    "expected_evidence": [
+      "anticipación basada en soporte",
+      "localización de información",
+      "inferencia sencilla",
+      "comentario sobre texto",
+      "elección justificada de información"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "COM_ESCRITURA_A3_SEM01",
+    "competency_semantic_id": "COM_ESCRITURA",
+    "age": 3,
+    "age_profile_status": "not_specified_in_program",
+    "semantic_focus": "El Programa Curricular no presenta desempeños específicos de esta competencia para 3 años.",
+    "meaning": "No inventar desempeño oficial de 3 años.",
+    "when_to_select": [
+      "la actuación central observable coincide con: No inventar desempeño oficial de 3 años."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "No inventar desempeño oficial de 3 años."
+    ],
+    "expected_evidence": [
+      "producción escrita auténtica",
+      "explicación de intención",
+      "revisión del mensaje",
+      "dictado al adulto con escritura propia",
+      "uso intencional de grafismos/letras"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "COM_ESCRITURA_A3_SEM02",
+    "competency_semantic_id": "COM_ESCRITURA",
+    "age": 3,
+    "age_profile_status": "not_specified_in_program",
+    "semantic_focus": "El Programa Curricular no presenta desempeños específicos de esta competencia para 3 años.",
+    "meaning": "Si aparece escritura espontánea, registrarla como evidencia contextual sin asignar un desempeño oficial inexistente.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Si aparece escritura espontánea, registrarla como evidencia contextual sin asignar un desempeño oficial inexistente."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Si aparece escritura espontánea, registrarla como evidencia contextual sin asignar un desempeño oficial inexistente."
+    ],
+    "expected_evidence": [
+      "producción escrita auténtica",
+      "explicación de intención",
+      "revisión del mensaje",
+      "dictado al adulto con escritura propia",
+      "uso intencional de grafismos/letras"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "COM_ESCRITURA_A4_SEM01",
+    "competency_semantic_id": "COM_ESCRITURA",
+    "age": 4,
+    "age_profile_status": "specified",
+    "semantic_focus": "Escritura espontánea mediante grafismos desde hipótesis propias.",
+    "meaning": "Escribe por iniciativa y a su manera para comunicar ideas o emociones.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Escribe por iniciativa y a su manera para comunicar ideas o emociones."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Escribe por iniciativa y a su manera para comunicar ideas o emociones."
+    ],
+    "expected_evidence": [
+      "producción escrita auténtica",
+      "explicación de intención",
+      "revisión del mensaje",
+      "dictado al adulto con escritura propia",
+      "uso intencional de grafismos/letras"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "COM_ESCRITURA_A4_SEM02",
+    "competency_semantic_id": "COM_ESCRITURA",
+    "age": 4,
+    "age_profile_status": "specified",
+    "semantic_focus": "Escritura espontánea mediante grafismos desde hipótesis propias.",
+    "meaning": "Usa trazos, grafismos u otras marcas con una intención comunicativa.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Usa trazos, grafismos u otras marcas con una intención comunicativa."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Usa trazos, grafismos u otras marcas con una intención comunicativa."
+    ],
+    "expected_evidence": [
+      "producción escrita auténtica",
+      "explicación de intención",
+      "revisión del mensaje",
+      "dictado al adulto con escritura propia",
+      "uso intencional de grafismos/letras"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "COM_ESCRITURA_A4_SEM03",
+    "competency_semantic_id": "COM_ESCRITURA",
+    "age": 4,
+    "age_profile_status": "specified",
+    "semantic_focus": "Escritura espontánea mediante grafismos desde hipótesis propias.",
+    "meaning": "Empieza a considerar el propósito de textos cercanos como notas, mensajes o relatos.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Empieza a considerar el propósito de textos cercanos como notas, mensajes o relatos."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Empieza a considerar el propósito de textos cercanos como notas, mensajes o relatos."
+    ],
+    "expected_evidence": [
+      "producción escrita auténtica",
+      "explicación de intención",
+      "revisión del mensaje",
+      "dictado al adulto con escritura propia",
+      "uso intencional de grafismos/letras"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "COM_ESCRITURA_A5_SEM01",
+    "competency_semantic_id": "COM_ESCRITURA",
+    "age": 5,
+    "age_profile_status": "specified",
+    "semantic_focus": "Mayor consideración de destinatario, propósito, linealidad y revisión.",
+    "meaning": "Escribe por iniciativa considerando para quién y para qué escribe.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Escribe por iniciativa considerando para quién y para qué escribe."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Escribe por iniciativa considerando para quién y para qué escribe."
+    ],
+    "expected_evidence": [
+      "producción escrita auténtica",
+      "explicación de intención",
+      "revisión del mensaje",
+      "dictado al adulto con escritura propia",
+      "uso intencional de grafismos/letras"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "COM_ESCRITURA_A5_SEM02",
+    "competency_semantic_id": "COM_ESCRITURA",
+    "age": 5,
+    "age_profile_status": "specified",
+    "semantic_focus": "Mayor consideración de destinatario, propósito, linealidad y revisión.",
+    "meaning": "Usa grafismos, letras o aproximaciones organizadas de izquierda a derecha sobre una línea imaginaria.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Usa grafismos, letras o aproximaciones organizadas de izquierda a derecha sobre una línea imaginaria."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Usa grafismos, letras o aproximaciones organizadas de izquierda a derecha sobre una línea imaginaria."
+    ],
+    "expected_evidence": [
+      "producción escrita auténtica",
+      "explicación de intención",
+      "revisión del mensaje",
+      "dictado al adulto con escritura propia",
+      "uso intencional de grafismos/letras"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "COM_ESCRITURA_A5_SEM03",
+    "competency_semantic_id": "COM_ESCRITURA",
+    "age": 5,
+    "age_profile_status": "specified",
+    "semantic_focus": "Mayor consideración de destinatario, propósito, linealidad y revisión.",
+    "meaning": "Expresa ideas vinculadas a un tema o propósito.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Expresa ideas vinculadas a un tema o propósito."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Expresa ideas vinculadas a un tema o propósito."
+    ],
+    "expected_evidence": [
+      "producción escrita auténtica",
+      "explicación de intención",
+      "revisión del mensaje",
+      "dictado al adulto con escritura propia",
+      "uso intencional de grafismos/letras"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "COM_ESCRITURA_A5_SEM04",
+    "competency_semantic_id": "COM_ESCRITURA",
+    "age": 5,
+    "age_profile_status": "specified",
+    "semantic_focus": "Mayor consideración de destinatario, propósito, linealidad y revisión.",
+    "meaning": "Revisa, con ayuda, si su producción comunica lo que quería.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Revisa, con ayuda, si su producción comunica lo que quería."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Revisa, con ayuda, si su producción comunica lo que quería."
+    ],
+    "expected_evidence": [
+      "producción escrita auténtica",
+      "explicación de intención",
+      "revisión del mensaje",
+      "dictado al adulto con escritura propia",
+      "uso intencional de grafismos/letras"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "COM_ARTE_A3_SEM01",
+    "competency_semantic_id": "COM_ARTE",
+    "age": 3,
+    "age_profile_status": "specified",
+    "semantic_focus": "Exploración libre, representación de experiencias y comunicación espontánea.",
+    "meaning": "Explora materiales, movimientos, sonidos y posibilidades expresivas.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Explora materiales, movimientos, sonidos y posibilidades expresivas."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Explora materiales, movimientos, sonidos y posibilidades expresivas."
+    ],
+    "expected_evidence": [
+      "producción visual/sonora/corporal",
+      "registro del proceso creativo",
+      "explicación de la creación",
+      "elección de materiales/técnicas",
+      "presentación de una creación"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "COM_ARTE_A3_SEM02",
+    "competency_semantic_id": "COM_ARTE",
+    "age": 3,
+    "age_profile_status": "specified",
+    "semantic_focus": "Exploración libre, representación de experiencias y comunicación espontánea.",
+    "meaning": "Representa experiencias o intereses mediante juego simbólico, movimiento, imagen o sonido.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Representa experiencias o intereses mediante juego simbólico, movimiento, imagen o sonido."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Representa experiencias o intereses mediante juego simbólico, movimiento, imagen o sonido."
+    ],
+    "expected_evidence": [
+      "producción visual/sonora/corporal",
+      "registro del proceso creativo",
+      "explicación de la creación",
+      "elección de materiales/técnicas",
+      "presentación de una creación"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "COM_ARTE_A3_SEM03",
+    "competency_semantic_id": "COM_ARTE",
+    "age": 3,
+    "age_profile_status": "specified",
+    "semantic_focus": "Exploración libre, representación de experiencias y comunicación espontánea.",
+    "meaning": "Comenta espontáneamente sus experiencias o producciones.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Comenta espontáneamente sus experiencias o producciones."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Comenta espontáneamente sus experiencias o producciones."
+    ],
+    "expected_evidence": [
+      "producción visual/sonora/corporal",
+      "registro del proceso creativo",
+      "explicación de la creación",
+      "elección de materiales/técnicas",
+      "presentación de una creación"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "COM_ARTE_A4_SEM01",
+    "competency_semantic_id": "COM_ARTE",
+    "age": 4,
+    "age_profile_status": "specified",
+    "semantic_focus": "Combina materiales y representa vivencias con mayor intencionalidad.",
+    "meaning": "Explora por iniciativa y descubre efectos al combinar materiales.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Explora por iniciativa y descubre efectos al combinar materiales."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Explora por iniciativa y descubre efectos al combinar materiales."
+    ],
+    "expected_evidence": [
+      "producción visual/sonora/corporal",
+      "registro del proceso creativo",
+      "explicación de la creación",
+      "elección de materiales/técnicas",
+      "presentación de una creación"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "COM_ARTE_A4_SEM02",
+    "competency_semantic_id": "COM_ARTE",
+    "age": 4,
+    "age_profile_status": "specified",
+    "semantic_focus": "Combina materiales y representa vivencias con mayor intencionalidad.",
+    "meaning": "Representa vivencias personales mediante diferentes lenguajes artísticos.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Representa vivencias personales mediante diferentes lenguajes artísticos."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Representa vivencias personales mediante diferentes lenguajes artísticos."
+    ],
+    "expected_evidence": [
+      "producción visual/sonora/corporal",
+      "registro del proceso creativo",
+      "explicación de la creación",
+      "elección de materiales/técnicas",
+      "presentación de una creación"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "COM_ARTE_A4_SEM03",
+    "competency_semantic_id": "COM_ARTE",
+    "age": 4,
+    "age_profile_status": "specified",
+    "semantic_focus": "Combina materiales y representa vivencias con mayor intencionalidad.",
+    "meaning": "Muestra y comenta lo realizado con compañeros o adultos.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Muestra y comenta lo realizado con compañeros o adultos."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Muestra y comenta lo realizado con compañeros o adultos."
+    ],
+    "expected_evidence": [
+      "producción visual/sonora/corporal",
+      "registro del proceso creativo",
+      "explicación de la creación",
+      "elección de materiales/técnicas",
+      "presentación de una creación"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "COM_ARTE_A5_SEM01",
+    "competency_semantic_id": "COM_ARTE",
+    "age": 5,
+    "age_profile_status": "specified",
+    "semantic_focus": "Exploración individual/grupal, representación del contexto y reflexión sencilla.",
+    "meaning": "Explora individual o grupalmente materiales y combinaciones según intereses.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Explora individual o grupalmente materiales y combinaciones según intereses."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Explora individual o grupalmente materiales y combinaciones según intereses."
+    ],
+    "expected_evidence": [
+      "producción visual/sonora/corporal",
+      "registro del proceso creativo",
+      "explicación de la creación",
+      "elección de materiales/técnicas",
+      "presentación de una creación"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "COM_ARTE_A5_SEM02",
+    "competency_semantic_id": "COM_ARTE",
+    "age": 5,
+    "age_profile_status": "specified",
+    "semantic_focus": "Exploración individual/grupal, representación del contexto y reflexión sencilla.",
+    "meaning": "Representa vivencias y aspectos del contexto mediante diversos lenguajes.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Representa vivencias y aspectos del contexto mediante diversos lenguajes."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Representa vivencias y aspectos del contexto mediante diversos lenguajes."
+    ],
+    "expected_evidence": [
+      "producción visual/sonora/corporal",
+      "registro del proceso creativo",
+      "explicación de la creación",
+      "elección de materiales/técnicas",
+      "presentación de una creación"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "COM_ARTE_A5_SEM03",
+    "competency_semantic_id": "COM_ARTE",
+    "age": 5,
+    "age_profile_status": "specified",
+    "semantic_focus": "Exploración individual/grupal, representación del contexto y reflexión sencilla.",
+    "meaning": "Muestra, describe y comenta su creación y observa las de otros.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Muestra, describe y comenta su creación y observa las de otros."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Muestra, describe y comenta su creación y observa las de otros."
+    ],
+    "expected_evidence": [
+      "producción visual/sonora/corporal",
+      "registro del proceso creativo",
+      "explicación de la creación",
+      "elección de materiales/técnicas",
+      "presentación de una creación"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "COM_ARTE_A5_SEM04",
+    "competency_semantic_id": "COM_ARTE",
+    "age": 5,
+    "age_profile_status": "specified",
+    "semantic_focus": "Exploración individual/grupal, representación del contexto y reflexión sencilla.",
+    "meaning": "Expresa qué le gustó de su experiencia o de las producciones.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Expresa qué le gustó de su experiencia o de las producciones."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Expresa qué le gustó de su experiencia o de las producciones."
+    ],
+    "expected_evidence": [
+      "producción visual/sonora/corporal",
+      "registro del proceso creativo",
+      "explicación de la creación",
+      "elección de materiales/técnicas",
+      "presentación de una creación"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "CAST_L2_ORAL_A3_SEM01",
+    "competency_semantic_id": "CAST_L2_ORAL",
+    "age": 3,
+    "age_profile_status": "not_specified_in_program",
+    "semantic_focus": "No hay desempeños específicos publicados para 3 años en esta competencia.",
+    "meaning": "No inventar desempeño oficial.",
+    "when_to_select": [
+      "la actuación central observable coincide con: No inventar desempeño oficial."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "No inventar desempeño oficial."
+    ],
+    "expected_evidence": [
+      "interacción breve en castellano L2",
+      "respuesta funcional",
+      "comprensión contextual",
+      "vocabulario funcional",
+      "registro anecdótico/audio"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "CAST_L2_ORAL_A4_SEM01",
+    "competency_semantic_id": "CAST_L2_ORAL",
+    "age": 4,
+    "age_profile_status": "not_specified_in_program",
+    "semantic_focus": "No hay desempeños específicos publicados para 4 años en esta competencia.",
+    "meaning": "No inventar desempeño oficial.",
+    "when_to_select": [
+      "la actuación central observable coincide con: No inventar desempeño oficial."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "No inventar desempeño oficial."
+    ],
+    "expected_evidence": [
+      "interacción breve en castellano L2",
+      "respuesta funcional",
+      "comprensión contextual",
+      "vocabulario funcional",
+      "registro anecdótico/audio"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "CAST_L2_ORAL_A5_SEM01",
+    "competency_semantic_id": "CAST_L2_ORAL",
+    "age": 5,
+    "age_profile_status": "specified",
+    "semantic_focus": "Comunicación oral básica en castellano con fuerte apoyo contextual y no verbal.",
+    "meaning": "Comprende y usa palabras o frases breves vinculadas a situaciones cotidianas.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Comprende y usa palabras o frases breves vinculadas a situaciones cotidianas."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Comprende y usa palabras o frases breves vinculadas a situaciones cotidianas."
+    ],
+    "expected_evidence": [
+      "interacción breve en castellano L2",
+      "respuesta funcional",
+      "comprensión contextual",
+      "vocabulario funcional",
+      "registro anecdótico/audio"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "CAST_L2_ORAL_A5_SEM02",
+    "competency_semantic_id": "CAST_L2_ORAL",
+    "age": 5,
+    "age_profile_status": "specified",
+    "semantic_focus": "Comunicación oral básica en castellano con fuerte apoyo contextual y no verbal.",
+    "meaning": "Obtiene información explícita con apoyo del contexto, gestos y entonación.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Obtiene información explícita con apoyo del contexto, gestos y entonación."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Obtiene información explícita con apoyo del contexto, gestos y entonación."
+    ],
+    "expected_evidence": [
+      "interacción breve en castellano L2",
+      "respuesta funcional",
+      "comprensión contextual",
+      "vocabulario funcional",
+      "registro anecdótico/audio"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "CAST_L2_ORAL_A5_SEM03",
+    "competency_semantic_id": "CAST_L2_ORAL",
+    "age": 5,
+    "age_profile_status": "specified",
+    "semantic_focus": "Comunicación oral básica en castellano con fuerte apoyo contextual y no verbal.",
+    "meaning": "Responde e interactúa usando palabras, gestos, movimientos y, cuando necesita, recursos de su lengua materna.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Responde e interactúa usando palabras, gestos, movimientos y, cuando necesita, recursos de su lengua materna."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Responde e interactúa usando palabras, gestos, movimientos y, cuando necesita, recursos de su lengua materna."
+    ],
+    "expected_evidence": [
+      "interacción breve en castellano L2",
+      "respuesta funcional",
+      "comprensión contextual",
+      "vocabulario funcional",
+      "registro anecdótico/audio"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "MAT_CANTIDAD_A3_SEM01",
+    "competency_semantic_id": "MAT_CANTIDAD",
+    "age": 3,
+    "age_profile_status": "specified",
+    "semantic_focus": "Comparaciones perceptivas, agrupaciones simples y conteo espontáneo.",
+    "meaning": "Agrupa objetos por características perceptibles según la situación.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Agrupa objetos por características perceptibles según la situación."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Agrupa objetos por características perceptibles según la situación."
+    ],
+    "expected_evidence": [
+      "colección construida",
+      "comparación explicada",
+      "conteo funcional",
+      "solución a agregar/quitar",
+      "representación de cantidad"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "MAT_CANTIDAD_A3_SEM02",
+    "competency_semantic_id": "MAT_CANTIDAD",
+    "age": 3,
+    "age_profile_status": "specified",
+    "semantic_focus": "Comparaciones perceptivas, agrupaciones simples y conteo espontáneo.",
+    "meaning": "Usa expresiones de cantidad, peso o tiempo en contextos cotidianos.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Usa expresiones de cantidad, peso o tiempo en contextos cotidianos."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Usa expresiones de cantidad, peso o tiempo en contextos cotidianos."
+    ],
+    "expected_evidence": [
+      "colección construida",
+      "comparación explicada",
+      "conteo funcional",
+      "solución a agregar/quitar",
+      "representación de cantidad"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "MAT_CANTIDAD_A3_SEM03",
+    "competency_semantic_id": "MAT_CANTIDAD",
+    "age": 3,
+    "age_profile_status": "specified",
+    "semantic_focus": "Comparaciones perceptivas, agrupaciones simples y conteo espontáneo.",
+    "meaning": "Compara de manera inicial colecciones u objetos.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Compara de manera inicial colecciones u objetos."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Compara de manera inicial colecciones u objetos."
+    ],
+    "expected_evidence": [
+      "colección construida",
+      "comparación explicada",
+      "conteo funcional",
+      "solución a agregar/quitar",
+      "representación de cantidad"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "MAT_CANTIDAD_A3_SEM04",
+    "competency_semantic_id": "MAT_CANTIDAD",
+    "age": 3,
+    "age_profile_status": "specified",
+    "semantic_focus": "Comparaciones perceptivas, agrupaciones simples y conteo espontáneo.",
+    "meaning": "Cuenta espontáneamente en situaciones de juego aunque todavía no siempre conserve la secuencia.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Cuenta espontáneamente en situaciones de juego aunque todavía no siempre conserve la secuencia."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Cuenta espontáneamente en situaciones de juego aunque todavía no siempre conserve la secuencia."
+    ],
+    "expected_evidence": [
+      "colección construida",
+      "comparación explicada",
+      "conteo funcional",
+      "solución a agregar/quitar",
+      "representación de cantidad"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "MAT_CANTIDAD_A4_SEM01",
+    "competency_semantic_id": "MAT_CANTIDAD",
+    "age": 4,
+    "age_profile_status": "specified",
+    "semantic_focus": "Mayor correspondencia, seriación y conteo en situaciones concretas.",
+    "meaning": "Agrupa y compara objetos considerando criterios pertinentes.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Agrupa y compara objetos considerando criterios pertinentes."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Agrupa y compara objetos considerando criterios pertinentes."
+    ],
+    "expected_evidence": [
+      "colección construida",
+      "comparación explicada",
+      "conteo funcional",
+      "solución a agregar/quitar",
+      "representación de cantidad"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "MAT_CANTIDAD_A4_SEM02",
+    "competency_semantic_id": "MAT_CANTIDAD",
+    "age": 4,
+    "age_profile_status": "specified",
+    "semantic_focus": "Mayor correspondencia, seriación y conteo en situaciones concretas.",
+    "meaning": "Ordena pequeñas colecciones o seriaciones por tamaño u otra magnitud.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Ordena pequeñas colecciones o seriaciones por tamaño u otra magnitud."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Ordena pequeñas colecciones o seriaciones por tamaño u otra magnitud."
+    ],
+    "expected_evidence": [
+      "colección construida",
+      "comparación explicada",
+      "conteo funcional",
+      "solución a agregar/quitar",
+      "representación de cantidad"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "MAT_CANTIDAD_A4_SEM03",
+    "competency_semantic_id": "MAT_CANTIDAD",
+    "age": 4,
+    "age_profile_status": "specified",
+    "semantic_focus": "Mayor correspondencia, seriación y conteo en situaciones concretas.",
+    "meaning": "Establece correspondencias uno a uno en situaciones concretas.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Establece correspondencias uno a uno en situaciones concretas."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Establece correspondencias uno a uno en situaciones concretas."
+    ],
+    "expected_evidence": [
+      "colección construida",
+      "comparación explicada",
+      "conteo funcional",
+      "solución a agregar/quitar",
+      "representación de cantidad"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "MAT_CANTIDAD_A4_SEM04",
+    "competency_semantic_id": "MAT_CANTIDAD",
+    "age": 4,
+    "age_profile_status": "specified",
+    "semantic_focus": "Mayor correspondencia, seriación y conteo en situaciones concretas.",
+    "meaning": "Cuenta colecciones pequeñas y usa cuantificadores para comparar.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Cuenta colecciones pequeñas y usa cuantificadores para comparar."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Cuenta colecciones pequeñas y usa cuantificadores para comparar."
+    ],
+    "expected_evidence": [
+      "colección construida",
+      "comparación explicada",
+      "conteo funcional",
+      "solución a agregar/quitar",
+      "representación de cantidad"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "MAT_CANTIDAD_A5_SEM01",
+    "competency_semantic_id": "MAT_CANTIDAD",
+    "age": 5,
+    "age_profile_status": "specified",
+    "semantic_focus": "Conteo más estable, comparación y transformaciones sencillas.",
+    "meaning": "Cuenta en situaciones cotidianas hasta cantidades acordes al estándar del ciclo.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Cuenta en situaciones cotidianas hasta cantidades acordes al estándar del ciclo."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Cuenta en situaciones cotidianas hasta cantidades acordes al estándar del ciclo."
+    ],
+    "expected_evidence": [
+      "colección construida",
+      "comparación explicada",
+      "conteo funcional",
+      "solución a agregar/quitar",
+      "representación de cantidad"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "MAT_CANTIDAD_A5_SEM02",
+    "competency_semantic_id": "MAT_CANTIDAD",
+    "age": 5,
+    "age_profile_status": "specified",
+    "semantic_focus": "Conteo más estable, comparación y transformaciones sencillas.",
+    "meaning": "Compara colecciones y expresa dónde hay más, menos o igual en situaciones concretas.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Compara colecciones y expresa dónde hay más, menos o igual en situaciones concretas."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Compara colecciones y expresa dónde hay más, menos o igual en situaciones concretas."
+    ],
+    "expected_evidence": [
+      "colección construida",
+      "comparación explicada",
+      "conteo funcional",
+      "solución a agregar/quitar",
+      "representación de cantidad"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "MAT_CANTIDAD_A5_SEM03",
+    "competency_semantic_id": "MAT_CANTIDAD",
+    "age": 5,
+    "age_profile_status": "specified",
+    "semantic_focus": "Conteo más estable, comparación y transformaciones sencillas.",
+    "meaning": "Resuelve acciones de agregar o quitar con objetos o representaciones en cantidades pequeñas.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Resuelve acciones de agregar o quitar con objetos o representaciones en cantidades pequeñas."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Resuelve acciones de agregar o quitar con objetos o representaciones en cantidades pequeñas."
+    ],
+    "expected_evidence": [
+      "colección construida",
+      "comparación explicada",
+      "conteo funcional",
+      "solución a agregar/quitar",
+      "representación de cantidad"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "MAT_CANTIDAD_A5_SEM04",
+    "competency_semantic_id": "MAT_CANTIDAD",
+    "age": 5,
+    "age_profile_status": "specified",
+    "semantic_focus": "Conteo más estable, comparación y transformaciones sencillas.",
+    "meaning": "Ordena, compara peso y usa nociones temporales en actividades significativas.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Ordena, compara peso y usa nociones temporales en actividades significativas."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Ordena, compara peso y usa nociones temporales en actividades significativas."
+    ],
+    "expected_evidence": [
+      "colección construida",
+      "comparación explicada",
+      "conteo funcional",
+      "solución a agregar/quitar",
+      "representación de cantidad"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "MAT_FORMA_A3_SEM01",
+    "competency_semantic_id": "MAT_FORMA",
+    "age": 3,
+    "age_profile_status": "specified",
+    "semantic_focus": "Relaciones de tamaño y posición desde el propio cuerpo.",
+    "meaning": "Relaciona objetos por tamaño o forma perceptible.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Relaciona objetos por tamaño o forma perceptible."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Relaciona objetos por tamaño o forma perceptible."
+    ],
+    "expected_evidence": [
+      "recorrido explicado",
+      "construcción espacial",
+      "uso de vocabulario espacial",
+      "comparación de longitudes",
+      "representación de ubicación"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "MAT_FORMA_A3_SEM02",
+    "competency_semantic_id": "MAT_FORMA",
+    "age": 3,
+    "age_profile_status": "specified",
+    "semantic_focus": "Relaciones de tamaño y posición desde el propio cuerpo.",
+    "meaning": "Usa nociones como arriba/abajo, dentro/fuera y cerca/lejos desde situaciones concretas.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Usa nociones como arriba/abajo, dentro/fuera y cerca/lejos desde situaciones concretas."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Usa nociones como arriba/abajo, dentro/fuera y cerca/lejos desde situaciones concretas."
+    ],
+    "expected_evidence": [
+      "recorrido explicado",
+      "construcción espacial",
+      "uso de vocabulario espacial",
+      "comparación de longitudes",
+      "representación de ubicación"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "MAT_FORMA_A3_SEM03",
+    "competency_semantic_id": "MAT_FORMA",
+    "age": 3,
+    "age_profile_status": "specified",
+    "semantic_focus": "Relaciones de tamaño y posición desde el propio cuerpo.",
+    "meaning": "Se ubica y ubica objetos en relación con su cuerpo.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Se ubica y ubica objetos en relación con su cuerpo."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Se ubica y ubica objetos en relación con su cuerpo."
+    ],
+    "expected_evidence": [
+      "recorrido explicado",
+      "construcción espacial",
+      "uso de vocabulario espacial",
+      "comparación de longitudes",
+      "representación de ubicación"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "MAT_FORMA_A3_SEM04",
+    "competency_semantic_id": "MAT_FORMA",
+    "age": 3,
+    "age_profile_status": "specified",
+    "semantic_focus": "Relaciones de tamaño y posición desde el propio cuerpo.",
+    "meaning": "Prueba movimientos o construcciones para resolver retos simples.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Prueba movimientos o construcciones para resolver retos simples."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Prueba movimientos o construcciones para resolver retos simples."
+    ],
+    "expected_evidence": [
+      "recorrido explicado",
+      "construcción espacial",
+      "uso de vocabulario espacial",
+      "comparación de longitudes",
+      "representación de ubicación"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "MAT_FORMA_A4_SEM01",
+    "competency_semantic_id": "MAT_FORMA",
+    "age": 4,
+    "age_profile_status": "specified",
+    "semantic_focus": "Mayor reconocimiento de formas, posiciones y recorridos.",
+    "meaning": "Relaciona objetos del entorno con formas conocidas.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Relaciona objetos del entorno con formas conocidas."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Relaciona objetos del entorno con formas conocidas."
+    ],
+    "expected_evidence": [
+      "recorrido explicado",
+      "construcción espacial",
+      "uso de vocabulario espacial",
+      "comparación de longitudes",
+      "representación de ubicación"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "MAT_FORMA_A4_SEM02",
+    "competency_semantic_id": "MAT_FORMA",
+    "age": 4,
+    "age_profile_status": "specified",
+    "semantic_focus": "Mayor reconocimiento de formas, posiciones y recorridos.",
+    "meaning": "Describe posiciones y desplazamientos usando referentes espaciales.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Describe posiciones y desplazamientos usando referentes espaciales."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Describe posiciones y desplazamientos usando referentes espaciales."
+    ],
+    "expected_evidence": [
+      "recorrido explicado",
+      "construcción espacial",
+      "uso de vocabulario espacial",
+      "comparación de longitudes",
+      "representación de ubicación"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "MAT_FORMA_A4_SEM03",
+    "competency_semantic_id": "MAT_FORMA",
+    "age": 4,
+    "age_profile_status": "specified",
+    "semantic_focus": "Mayor reconocimiento de formas, posiciones y recorridos.",
+    "meaning": "Compara longitudes o tamaños de manera concreta.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Compara longitudes o tamaños de manera concreta."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Compara longitudes o tamaños de manera concreta."
+    ],
+    "expected_evidence": [
+      "recorrido explicado",
+      "construcción espacial",
+      "uso de vocabulario espacial",
+      "comparación de longitudes",
+      "representación de ubicación"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "MAT_FORMA_A4_SEM04",
+    "competency_semantic_id": "MAT_FORMA",
+    "age": 4,
+    "age_profile_status": "specified",
+    "semantic_focus": "Mayor reconocimiento de formas, posiciones y recorridos.",
+    "meaning": "Construye y recorre trayectos probando estrategias.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Construye y recorre trayectos probando estrategias."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Construye y recorre trayectos probando estrategias."
+    ],
+    "expected_evidence": [
+      "recorrido explicado",
+      "construcción espacial",
+      "uso de vocabulario espacial",
+      "comparación de longitudes",
+      "representación de ubicación"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "MAT_FORMA_A5_SEM01",
+    "competency_semantic_id": "MAT_FORMA",
+    "age": 5,
+    "age_profile_status": "specified",
+    "semantic_focus": "Relaciones espaciales más precisas y estrategias de orientación.",
+    "meaning": "Modela y compara objetos considerando formas y transformaciones.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Modela y compara objetos considerando formas y transformaciones."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Modela y compara objetos considerando formas y transformaciones."
+    ],
+    "expected_evidence": [
+      "recorrido explicado",
+      "construcción espacial",
+      "uso de vocabulario espacial",
+      "comparación de longitudes",
+      "representación de ubicación"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "MAT_FORMA_A5_SEM02",
+    "competency_semantic_id": "MAT_FORMA",
+    "age": 5,
+    "age_profile_status": "specified",
+    "semantic_focus": "Relaciones espaciales más precisas y estrategias de orientación.",
+    "meaning": "Comunica posiciones, direcciones y relaciones espaciales con mayor precisión.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Comunica posiciones, direcciones y relaciones espaciales con mayor precisión."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Comunica posiciones, direcciones y relaciones espaciales con mayor precisión."
+    ],
+    "expected_evidence": [
+      "recorrido explicado",
+      "construcción espacial",
+      "uso de vocabulario espacial",
+      "comparación de longitudes",
+      "representación de ubicación"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "MAT_FORMA_A5_SEM03",
+    "competency_semantic_id": "MAT_FORMA",
+    "age": 5,
+    "age_profile_status": "specified",
+    "semantic_focus": "Relaciones espaciales más precisas y estrategias de orientación.",
+    "meaning": "Compara longitudes en situaciones concretas.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Compara longitudes en situaciones concretas."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Compara longitudes en situaciones concretas."
+    ],
+    "expected_evidence": [
+      "recorrido explicado",
+      "construcción espacial",
+      "uso de vocabulario espacial",
+      "comparación de longitudes",
+      "representación de ubicación"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "MAT_FORMA_A5_SEM04",
+    "competency_semantic_id": "MAT_FORMA",
+    "age": 5,
+    "age_profile_status": "specified",
+    "semantic_focus": "Relaciones espaciales más precisas y estrategias de orientación.",
+    "meaning": "Planifica y ajusta recorridos o construcciones para resolver retos.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Planifica y ajusta recorridos o construcciones para resolver retos."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Planifica y ajusta recorridos o construcciones para resolver retos."
+    ],
+    "expected_evidence": [
+      "recorrido explicado",
+      "construcción espacial",
+      "uso de vocabulario espacial",
+      "comparación de longitudes",
+      "representación de ubicación"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "CYT_INDAGA_A3_SEM01",
+    "competency_semantic_id": "CYT_INDAGA",
+    "age": 3,
+    "age_profile_status": "specified",
+    "semantic_focus": "Curiosidad, exploración sensorial y comunicación de descubrimientos.",
+    "meaning": "Formula preguntas a partir de curiosidad por objetos, seres vivos o hechos.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Formula preguntas a partir de curiosidad por objetos, seres vivos o hechos."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Formula preguntas a partir de curiosidad por objetos, seres vivos o hechos."
+    ],
+    "expected_evidence": [
+      "pregunta formulada",
+      "predicción",
+      "registro gráfico",
+      "comparación de resultados",
+      "explicación de hallazgos",
+      "secuencia de exploración"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "CYT_INDAGA_A3_SEM02",
+    "competency_semantic_id": "CYT_INDAGA",
+    "age": 3,
+    "age_profile_status": "specified",
+    "semantic_focus": "Curiosidad, exploración sensorial y comunicación de descubrimientos.",
+    "meaning": "Explora usando sentidos, acciones y herramientas simples.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Explora usando sentidos, acciones y herramientas simples."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Explora usando sentidos, acciones y herramientas simples."
+    ],
+    "expected_evidence": [
+      "pregunta formulada",
+      "predicción",
+      "registro gráfico",
+      "comparación de resultados",
+      "explicación de hallazgos",
+      "secuencia de exploración"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "CYT_INDAGA_A3_SEM03",
+    "competency_semantic_id": "CYT_INDAGA",
+    "age": 3,
+    "age_profile_status": "specified",
+    "semantic_focus": "Curiosidad, exploración sensorial y comunicación de descubrimientos.",
+    "meaning": "Obtiene información directa de lo que observa y manipula.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Obtiene información directa de lo que observa y manipula."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Obtiene información directa de lo que observa y manipula."
+    ],
+    "expected_evidence": [
+      "pregunta formulada",
+      "predicción",
+      "registro gráfico",
+      "comparación de resultados",
+      "explicación de hallazgos",
+      "secuencia de exploración"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "CYT_INDAGA_A3_SEM04",
+    "competency_semantic_id": "CYT_INDAGA",
+    "age": 3,
+    "age_profile_status": "specified",
+    "semantic_focus": "Curiosidad, exploración sensorial y comunicación de descubrimientos.",
+    "meaning": "Comunica descubrimientos mediante palabras, gestos o representaciones.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Comunica descubrimientos mediante palabras, gestos o representaciones."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Comunica descubrimientos mediante palabras, gestos o representaciones."
+    ],
+    "expected_evidence": [
+      "pregunta formulada",
+      "predicción",
+      "registro gráfico",
+      "comparación de resultados",
+      "explicación de hallazgos",
+      "secuencia de exploración"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "CYT_INDAGA_A4_SEM01",
+    "competency_semantic_id": "CYT_INDAGA",
+    "age": 4,
+    "age_profile_status": "specified",
+    "semantic_focus": "Predicciones sencillas, observación intencional y comparación.",
+    "meaning": "Formula preguntas y expresa posibles explicaciones o predicciones.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Formula preguntas y expresa posibles explicaciones o predicciones."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Formula preguntas y expresa posibles explicaciones o predicciones."
+    ],
+    "expected_evidence": [
+      "pregunta formulada",
+      "predicción",
+      "registro gráfico",
+      "comparación de resultados",
+      "explicación de hallazgos",
+      "secuencia de exploración"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "CYT_INDAGA_A4_SEM02",
+    "competency_semantic_id": "CYT_INDAGA",
+    "age": 4,
+    "age_profile_status": "specified",
+    "semantic_focus": "Predicciones sencillas, observación intencional y comparación.",
+    "meaning": "Propone acciones simples para averiguar.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Propone acciones simples para averiguar."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Propone acciones simples para averiguar."
+    ],
+    "expected_evidence": [
+      "pregunta formulada",
+      "predicción",
+      "registro gráfico",
+      "comparación de resultados",
+      "explicación de hallazgos",
+      "secuencia de exploración"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "CYT_INDAGA_A4_SEM03",
+    "competency_semantic_id": "CYT_INDAGA",
+    "age": 4,
+    "age_profile_status": "specified",
+    "semantic_focus": "Predicciones sencillas, observación intencional y comparación.",
+    "meaning": "Observa, manipula y registra información con diferentes recursos.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Observa, manipula y registra información con diferentes recursos."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Observa, manipula y registra información con diferentes recursos."
+    ],
+    "expected_evidence": [
+      "pregunta formulada",
+      "predicción",
+      "registro gráfico",
+      "comparación de resultados",
+      "explicación de hallazgos",
+      "secuencia de exploración"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "CYT_INDAGA_A4_SEM04",
+    "competency_semantic_id": "CYT_INDAGA",
+    "age": 4,
+    "age_profile_status": "specified",
+    "semantic_focus": "Predicciones sencillas, observación intencional y comparación.",
+    "meaning": "Compara lo encontrado con su idea inicial y comunica resultados.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Compara lo encontrado con su idea inicial y comunica resultados."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Compara lo encontrado con su idea inicial y comunica resultados."
+    ],
+    "expected_evidence": [
+      "pregunta formulada",
+      "predicción",
+      "registro gráfico",
+      "comparación de resultados",
+      "explicación de hallazgos",
+      "secuencia de exploración"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "CYT_INDAGA_A5_SEM01",
+    "competency_semantic_id": "CYT_INDAGA",
+    "age": 5,
+    "age_profile_status": "specified",
+    "semantic_focus": "Indagación más organizada y comparación de evidencias.",
+    "meaning": "Formula preguntas y propone posibles respuestas a situaciones observables.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Formula preguntas y propone posibles respuestas a situaciones observables."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Formula preguntas y propone posibles respuestas a situaciones observables."
+    ],
+    "expected_evidence": [
+      "pregunta formulada",
+      "predicción",
+      "registro gráfico",
+      "comparación de resultados",
+      "explicación de hallazgos",
+      "secuencia de exploración"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "CYT_INDAGA_A5_SEM02",
+    "competency_semantic_id": "CYT_INDAGA",
+    "age": 5,
+    "age_profile_status": "specified",
+    "semantic_focus": "Indagación más organizada y comparación de evidencias.",
+    "meaning": "Propone acciones, materiales o fuentes para obtener información.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Propone acciones, materiales o fuentes para obtener información."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Propone acciones, materiales o fuentes para obtener información."
+    ],
+    "expected_evidence": [
+      "pregunta formulada",
+      "predicción",
+      "registro gráfico",
+      "comparación de resultados",
+      "explicación de hallazgos",
+      "secuencia de exploración"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "CYT_INDAGA_A5_SEM03",
+    "competency_semantic_id": "CYT_INDAGA",
+    "age": 5,
+    "age_profile_status": "specified",
+    "semantic_focus": "Indagación más organizada y comparación de evidencias.",
+    "meaning": "Obtiene y registra datos mediante observación, comparación o experiencias.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Obtiene y registra datos mediante observación, comparación o experiencias."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Obtiene y registra datos mediante observación, comparación o experiencias."
+    ],
+    "expected_evidence": [
+      "pregunta formulada",
+      "predicción",
+      "registro gráfico",
+      "comparación de resultados",
+      "explicación de hallazgos",
+      "secuencia de exploración"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "CYT_INDAGA_A5_SEM04",
+    "competency_semantic_id": "CYT_INDAGA",
+    "age": 5,
+    "age_profile_status": "specified",
+    "semantic_focus": "Indagación más organizada y comparación de evidencias.",
+    "meaning": "Relaciona hallazgos con su pregunta o predicción.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Relaciona hallazgos con su pregunta o predicción."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Relaciona hallazgos con su pregunta o predicción."
+    ],
+    "expected_evidence": [
+      "pregunta formulada",
+      "predicción",
+      "registro gráfico",
+      "comparación de resultados",
+      "explicación de hallazgos",
+      "secuencia de exploración"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "CYT_INDAGA_A5_SEM05",
+    "competency_semantic_id": "CYT_INDAGA",
+    "age": 5,
+    "age_profile_status": "specified",
+    "semantic_focus": "Indagación más organizada y comparación de evidencias.",
+    "meaning": "Comunica lo realizado, resultados y descubrimientos.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Comunica lo realizado, resultados y descubrimientos."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Comunica lo realizado, resultados y descubrimientos."
+    ],
+    "expected_evidence": [
+      "pregunta formulada",
+      "predicción",
+      "registro gráfico",
+      "comparación de resultados",
+      "explicación de hallazgos",
+      "secuencia de exploración"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "TRANS_TIC_A3_SEM01",
+    "competency_semantic_id": "TRANS_TIC",
+    "age": 3,
+    "age_profile_status": "not_specified_in_program",
+    "semantic_focus": "El Programa Curricular no presenta desempeños específicos para 3 años.",
+    "meaning": "No inventar desempeño oficial.",
+    "when_to_select": [
+      "la actuación central observable coincide con: No inventar desempeño oficial."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "No inventar desempeño oficial."
+    ],
+    "expected_evidence": [
+      "foto tomada por el niño",
+      "audio/video creado",
+      "objeto digital sencillo",
+      "elección de herramienta",
+      "registro de uso guiado"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "TRANS_TIC_A4_SEM01",
+    "competency_semantic_id": "TRANS_TIC",
+    "age": 4,
+    "age_profile_status": "not_specified_in_program",
+    "semantic_focus": "El Programa Curricular no presenta desempeños específicos para 4 años.",
+    "meaning": "No inventar desempeño oficial.",
+    "when_to_select": [
+      "la actuación central observable coincide con: No inventar desempeño oficial."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "No inventar desempeño oficial."
+    ],
+    "expected_evidence": [
+      "foto tomada por el niño",
+      "audio/video creado",
+      "objeto digital sencillo",
+      "elección de herramienta",
+      "registro de uso guiado"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "TRANS_TIC_A5_SEM01",
+    "competency_semantic_id": "TRANS_TIC",
+    "age": 5,
+    "age_profile_status": "specified",
+    "semantic_focus": "Uso acompañado de dispositivos para explorar, registrar y crear.",
+    "meaning": "Explora con acompañamiento dispositivos y entornos virtuales y reconoce funciones básicas para su uso y cuidado.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Explora con acompañamiento dispositivos y entornos virtuales y reconoce funciones básicas para su uso y cuidado."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Explora con acompañamiento dispositivos y entornos virtuales y reconoce funciones básicas para su uso y cuidado."
+    ],
+    "expected_evidence": [
+      "foto tomada por el niño",
+      "audio/video creado",
+      "objeto digital sencillo",
+      "elección de herramienta",
+      "registro de uso guiado"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "TRANS_TIC_A5_SEM02",
+    "competency_semantic_id": "TRANS_TIC",
+    "age": 5,
+    "age_profile_status": "specified",
+    "semantic_focus": "Uso acompañado de dispositivos para explorar, registrar y crear.",
+    "meaning": "Produce imágenes, audio o video para comunicar ideas, hallazgos o afectos, o para registrar acontecimientos.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Produce imágenes, audio o video para comunicar ideas, hallazgos o afectos, o para registrar acontecimientos."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Produce imágenes, audio o video para comunicar ideas, hallazgos o afectos, o para registrar acontecimientos."
+    ],
+    "expected_evidence": [
+      "foto tomada por el niño",
+      "audio/video creado",
+      "objeto digital sencillo",
+      "elección de herramienta",
+      "registro de uso guiado"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "TRANS_AUTONOMO_A3_SEM01",
+    "competency_semantic_id": "TRANS_AUTONOMO",
+    "age": 3,
+    "age_profile_status": "not_specified_in_program",
+    "semantic_focus": "No se presenta una tabla específica de desempeños para 3 años.",
+    "meaning": "Puede observarse autonomía emergente, pero no inventar un desempeño oficial por edad.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Puede observarse autonomía emergente, pero no inventar un desempeño oficial por edad."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Puede observarse autonomía emergente, pero no inventar un desempeño oficial por edad."
+    ],
+    "expected_evidence": [
+      "plan de acciones",
+      "elección de estrategia",
+      "ajuste justificado",
+      "explicación de lo aprendido",
+      "auto-revisión con apoyo"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "TRANS_AUTONOMO_A4_SEM01",
+    "competency_semantic_id": "TRANS_AUTONOMO",
+    "age": 4,
+    "age_profile_status": "not_specified_in_program",
+    "semantic_focus": "No se presenta una tabla específica de desempeños para 4 años.",
+    "meaning": "Puede observarse autonomía emergente, pero no inventar un desempeño oficial por edad.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Puede observarse autonomía emergente, pero no inventar un desempeño oficial por edad."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Puede observarse autonomía emergente, pero no inventar un desempeño oficial por edad."
+    ],
+    "expected_evidence": [
+      "plan de acciones",
+      "elección de estrategia",
+      "ajuste justificado",
+      "explicación de lo aprendido",
+      "auto-revisión con apoyo"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "TRANS_AUTONOMO_A5_SEM01",
+    "competency_semantic_id": "TRANS_AUTONOMO",
+    "age": 5,
+    "age_profile_status": "specified",
+    "semantic_focus": "Planificación, estrategia y revisión con ayuda docente.",
+    "meaning": "Reflexiona con ayuda sobre qué necesita hacer para una tarea de interés, usando experiencias previas.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Reflexiona con ayuda sobre qué necesita hacer para una tarea de interés, usando experiencias previas."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Reflexiona con ayuda sobre qué necesita hacer para una tarea de interés, usando experiencias previas."
+    ],
+    "expected_evidence": [
+      "plan de acciones",
+      "elección de estrategia",
+      "ajuste justificado",
+      "explicación de lo aprendido",
+      "auto-revisión con apoyo"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "TRANS_AUTONOMO_A5_SEM02",
+    "competency_semantic_id": "TRANS_AUTONOMO",
+    "age": 5,
+    "age_profile_status": "specified",
+    "semantic_focus": "Planificación, estrategia y revisión con ayuda docente.",
+    "meaning": "Plantea con ayuda una estrategia o acciones para alcanzar la tarea.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Plantea con ayuda una estrategia o acciones para alcanzar la tarea."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Plantea con ayuda una estrategia o acciones para alcanzar la tarea."
+    ],
+    "expected_evidence": [
+      "plan de acciones",
+      "elección de estrategia",
+      "ajuste justificado",
+      "explicación de lo aprendido",
+      "auto-revisión con apoyo"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  },
+  {
+    "semantic_performance_id": "TRANS_AUTONOMO_A5_SEM03",
+    "competency_semantic_id": "TRANS_AUTONOMO",
+    "age": 5,
+    "age_profile_status": "specified",
+    "semantic_focus": "Planificación, estrategia y revisión con ayuda docente.",
+    "meaning": "Revisa lo que hizo, identifica dificultades o cambios en su estrategia y comunica lo aprendido.",
+    "when_to_select": [
+      "la actuación central observable coincide con: Revisa lo que hizo, identifica dificultades o cambios en su estrategia y comunica lo aprendido."
+    ],
+    "when_not_to_select": [
+      "el foco corresponde a otra actuación de la misma competencia",
+      "no hay evidencia suficiente"
+    ],
+    "observable_actions": [
+      "Revisa lo que hizo, identifica dificultades o cambios en su estrategia y comunica lo aprendido."
+    ],
+    "expected_evidence": [
+      "plan de acciones",
+      "elección de estrategia",
+      "ajuste justificado",
+      "explicación de lo aprendido",
+      "auto-revisión con apoyo"
+    ],
+    "examples": [],
+    "not_examples": [],
+    "confusable_with": [],
+    "official_performance_id": null,
+    "official_text_ref": null,
+    "official_mapping_status": "pending",
+    "warning": "Tarjeta semántica provisional; no equivale a texto ni segmentación oficial de desempeños."
+  }
+]
