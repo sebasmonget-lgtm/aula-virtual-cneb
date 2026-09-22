@@ -1,5 +1,9 @@
 # Decisiones de arquitectura
 
+## ADR 028 Plan anual v4 como raíz de planificación
+
+**Decisión.** nnual_plan usa Sol/medium desde el router, guarda propuesta y metadata en nnual_plans, y solo cambia a activo por confirmación docente. Las experiencias propuestas permanecen en el payload; no crean learning_experiences.
+
 ## ADR 027 Generación de activity desde Planificar
 
 **Decisión.** La pantalla existente Planificar consume un endpoint del backend local para generar únicamente `activity`. El backend obtiene el aula y edad activa, crea el input v4, resuelve el plan, construye el provider con `createAIProviderForPlan` y devuelve solo la propuesta ya validada. La interfaz precarga datos disponibles, permite editar, descartar o regenerar, y no recibe claves, bundle, prompts ni metadata técnica.
@@ -170,3 +174,4 @@ La señal interna usa una cobertura mínima configurable de 50%, y requiere al m
 ## ADR 004 Currículo versionado
 
 **Decisión.** Los textos oficiales se almacenan por versión y se referencian por ID estable. Una experiencia o actividad no guarda una reformulación libre de la competencia como sustituto del dato oficial.
+

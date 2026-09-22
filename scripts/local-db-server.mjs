@@ -10,6 +10,7 @@ import { buildStudentPedagogicalContext, refreshStudentContextSnapshot } from ".
 import { buildClassroomStatistics } from "../src/lib/statistics-service.mjs";
 import { loadKnowledgeBaseV4 } from "../src/lib/knowledge-base-v4.mjs";
 import { generateTeacherActivity } from "../src/lib/ai-activity-ui-service.mjs";
+import { generateTeacherAnnualPlan } from "../src/lib/ai-annual-plan-ui-service.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const dataDir = path.join(root, ".local", "pgdata");
@@ -227,6 +228,15 @@ async function activeClassroomForActivityGeneration() {
     where c.teacher_id = $1 and c.status = 'active' limit 1`, [teacherId])).rows[0] ?? null;
 }
 
+
+async function annualPlanningContext() {
+  const row = (await db.query(`select c.id, c.section, c.context, ag.age_years as age, sy.id as school_year_id, sy.year, sy.starts_on, sy.ends_on, cv.id as curriculum_version_id, ip.display_name as institution_name
+    from classrooms c join age_grades ag on ag.id=c.age_grade_id join school_years sy on sy.id=c.school_year_id join curriculum_versions cv on cv.active=true left join institution_profiles ip on ip.owner_user_id=c.teacher_id
+    where c.teacher_id=$1 and c.status='active' limit 1`, [teacherId])).rows[0];
+  if (!row) return null;
+  const diagnostic = await db.query(`select de.teacher_interpretation from diagnostic_entries de join diagnostic_sessions ds on ds.id=de.session_id where ds.classroom_id=$1 and de.teacher_confirmed=true and de.teacher_interpretation is not null`, [row.id]);
+  return { ...row, calendar: { school_year: row.year, starts_on: row.starts_on, ends_on: row.ends_on }, group_context: row.context || `Aula ${row.section} de ${row.age} años`, school_context: row.institution_name || undefined, diagnostic_summary: diagnostic.rows.map((item) => item.teacher_interpretation).filter(Boolean).join(" ") || undefined };
+}
 async function activityGenerationOptions() {
   const classroom = await activeClassroomForActivityGeneration();
   if (!classroom) return { age: null, competencies: [] };
@@ -416,7 +426,22 @@ const server = createServer(async (request, response) => {
       send(response, 200, await buildClassroomStatistics(db, classroom.id), origin);
       return;
     }
-    if (request.method === "GET" && url.pathname === "/api/ai/activity/options") {
+    if (request.method === "GET" && url.pathname === "/api/ai/annual-plan/context") {
+      const context = await annualPlanningContext(); send(response, context ? 200 : 404, context ?? { error: "No se encontró un aula activa." }, origin); return;
+    }
+    if (request.method === "POST" && url.pathname === "/api/ai/annual-plan/generate") {
+      const classroom = await annualPlanningContext(); if (!classroom) { send(response, 404, { error: "No se encontró un aula activa." }, origin); return; }
+      try { const generated = await generateTeacherAnnualPlan({ classroom, request: await readJson(request) }); send(response, 200, { proposal: generated.proposal }, origin); } catch (error) { send(response, 422, { error: error?.message || "No pudimos generar una propuesta válida." }, origin); } return;
+    }
+    if (request.method === "POST" && url.pathname === "/api/annual-plans") {
+      const context = await annualPlanningContext(); const body = await readJson(request); if (!context || !body.proposal) { send(response, 400, { error: "Falta propuesta o aula activa." }, origin); return; }
+      const existing = (await db.query(`select id from annual_plans where classroom_id=$1 and school_year_id=$2 and status='draft' order by updated_at desc limit 1`, [context.id, context.school_year_id])).rows[0]; const id = existing?.id ?? randomUUID();
+      await db.query(`insert into annual_plans (id,classroom_id,school_year_id,curriculum_version_id,status,proposal,generation_metadata) values ($1,$2,$3,$4,'draft',$5::jsonb,'{}'::jsonb) on conflict (id) do update set proposal=excluded.proposal, updated_at=now()`, [id, context.id, context.school_year_id, context.curriculum_version_id, JSON.stringify(body.proposal)]);
+      send(response, 200, { id, status: "draft" }, origin); return;
+    }
+    if (request.method === "POST" && url.pathname.startsWith("/api/annual-plans/") && url.pathname.endsWith("/confirm")) {
+      const id = url.pathname.split("/")[3]; const result = await db.query(`update annual_plans set status='active', teacher_confirmed_at=now(), updated_at=now() where id=$1 and classroom_id in (select id from classrooms where teacher_id=$2) and status='draft' returning id,status`, [id, teacherId]); if (!result.rows[0]) { send(response, 404, { error: "Plan anual no disponible para confirmar." }, origin); return; } send(response, 200, result.rows[0], origin); return;
+    }    if (request.method === "GET" && url.pathname === "/api/ai/activity/options") {
       send(response, 200, await activityGenerationOptions(), origin);
       return;
     }
