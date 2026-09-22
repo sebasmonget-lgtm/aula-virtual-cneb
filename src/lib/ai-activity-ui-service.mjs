@@ -41,7 +41,7 @@ export function teacherMessageForActivityGenerationError(error) {
   }
 }
 
-export function buildTeacherActivityGenerationInput({ request = {}, classroom }) {
+export function buildTeacherActivityGenerationInput({ request = {}, classroom, learningExperience = null }) {
   if (!classroom || ![3, 4, 5].includes(classroom.age)) {
     throw new ActivityGenerationUIError("invalid_classroom", "No pudimos preparar la actividad.");
   }
@@ -57,16 +57,22 @@ export function buildTeacherActivityGenerationInput({ request = {}, classroom })
     classroom_context: {
       id: classroom.id,
       section: classroom.section,
-      group_context: context || undefined,
-      materials: materials(request.materials),
+      group_context: context || classroom.group_context || undefined,
+      school_context: classroom.school_context,
+      diagnostic_summary: classroom.diagnostic_summary,
+      religion_applicable: classroom.religion_applicable === true,
+      materials: materials([...(learningExperience?.details?.spaces_and_materials ?? []), ...(request.materials ?? [])]),
     },
+    ...(classroom.calendar ? { calendar_context: classroom.calendar } : {}),
+    ...(classroom.language_context ? { language_context: classroom.language_context } : {}),
+    ...(learningExperience ? { learning_experience_context: { id: learningExperience.id, type: learningExperience.type, title: learningExperience.title, purpose: learningExperience.purpose, trigger_or_interest: learningExperience.details?.trigger_or_interest ?? null, learning_need_or_context: learningExperience.details?.learning_need_or_context ?? null, starting_point: learningExperience.details?.starting_point ?? null, primary_competency_ids: learningExperience.details?.primary_competency_ids ?? [], possible_secondary_competency_ids: learningExperience.details?.possible_secondary_competency_ids ?? [], possible_pathways: learningExperience.details?.possible_pathways ?? [], proposed_situations: learningExperience.details?.proposed_situations ?? [], spaces_and_materials: learningExperience.details?.spaces_and_materials ?? [], evidence_opportunities: learningExperience.details?.evidence_opportunities ?? [], family_or_community_links: learningExperience.details?.family_or_community_links ?? [], adjustment_points: learningExperience.details?.adjustment_points ?? [], flexibility_notes: learningExperience.details?.flexibility_notes ?? null, prior_activities: learningExperience.prior_activities ?? [] } } : {}),
     ...(competencyId ? { competency_ids: [competencyId] } : {}),
   };
 }
 
 /** Server-only orchestration for the teacher activity screen. */
-export async function generateTeacherActivity({ request, classroom, resolvePlan = resolveAIExecutionPlan, createProvider = createAIProviderForPlan, generate = generateAIWorkflowV4 }) {
-  const input = buildTeacherActivityGenerationInput({ request, classroom });
+export async function generateTeacherActivity({ request, classroom, learningExperience = null, resolvePlan = resolveAIExecutionPlan, createProvider = createAIProviderForPlan, generate = generateAIWorkflowV4 }) {
+  const input = buildTeacherActivityGenerationInput({ request, classroom, learningExperience });
   if (input.workflow !== "activity") throw new ActivityGenerationUIError("unsupported_workflow", "No pudimos preparar la actividad.");
   try {
     const executionPlan = resolvePlan({ workflow: "activity", task: "generation" });

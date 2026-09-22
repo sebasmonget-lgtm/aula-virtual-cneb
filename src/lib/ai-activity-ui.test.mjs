@@ -19,9 +19,12 @@ test("el cliente solo llama al backend local y el backend mantiene la generació
   assert.doesNotMatch(server.match(/send\(response, 200, \{ proposal: generated\.proposal \}, origin\)/)?.[0] ?? "", /metadata|provenance|usage/);
 });
 
-test("la pantalla Planificar reutiliza edad, aula y materiales del dashboard", async () => {
+test("la pantalla Planificar usa Activities parent-aware y no el prototipo aislado", async () => {
   const source = await readFile(new URL("../features/dashboard/components/teacher-workspace.tsx", import.meta.url), "utf8");
+  const activityScreen = await readFile(new URL("../features/dashboard/components/parent-activity-generator.tsx", import.meta.url), "utf8");
   assert.match(source, /active === "Planificar"/);
-  assert.match(source, /AIActivityGenerator/);
-  assert.match(source, /initialMaterials=.*\.materials/);
+  assert.match(source, /ParentActivityGenerator/);
+  assert.match(activityScreen, /Experiencias confirmadas/);
+  assert.match(activityScreen, /Planificar próxima actividad/);
+  assert.match(activityScreen, /\/api\/activities\?experienceId=/);
 });

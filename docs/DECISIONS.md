@@ -187,3 +187,9 @@ La señal interna usa una cobertura mínima configurable de 50%, y requiere al m
 **Decisión.** `project` y `unit` usan schemas estrictos, routing Sol/medium y se materializan solamente tras confirmación docente como `learning_experiences`. Una propuesta del plan anual se identifica por `annual_plan_id` y su índice final; un índice único evita duplicados. Las experiencias emergentes usan `origin = emergent`. La metadata queda detrás de un identificador opaco de generación y nunca llega al navegador.
 
 **Consecuencia.** El plan anual sigue siendo una propuesta. Project y Unit conservan en `details` propósito, competencias v4, detonante o necesidad, caminos o situaciones, materiales, evidencia y flexibilidad para la futura creación de actividades. Esta fase no crea `activities`; workshop sigue pendiente.
+
+## ADR 030 Activities v4 derivadas de experiencias confirmadas
+
+**Decisión.** Las nuevas actividades docentes se crean únicamente como hijas de un `learning_experience` activo de tipo `project` o `unit`. El servidor vuelve a comprobar propiedad del aula, estado del parent, aplicabilidad y pertenencia de la competencia v4, fechas de experiencia y año escolar en generación, guardado, edición y confirmación. La salida `activity-v1` se persiste íntegra en `activities.details`; `generation_metadata` queda en servidor y se asocia mediante un identificador opaco de generación.
+
+**Consecuencia.** La docente no vuelve a transcribir el contexto del Project o Unit. Los borradores se pueden reabrir y editar; las actividades activas son de solo lectura. `sequence` y `adaptations` se mantienen como arreglos vacíos y no se crean filas en `activity_criteria` ni evidencias: esos conceptos se resolverán en `criterion_and_evidence`, sin mapear IDs v4 al catálogo curricular legacy.

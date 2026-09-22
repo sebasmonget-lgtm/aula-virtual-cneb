@@ -160,6 +160,7 @@ function workflowInputSubset(input, workflowRequirements) {
     .filter((field) => !representedElsewhere.has(field) && hasValue(values[field]))
     .map((field) => [field, values[field]]));
   if (["project", "unit"].includes(input.workflow) && hasValue(input.planned_experience)) subset.planned_experience = input.planned_experience;
+  if (input.workflow === "activity" && hasValue(input.learning_experience_context)) subset.learning_experience_context = input.learning_experience_context;
   return subset;
 }
 

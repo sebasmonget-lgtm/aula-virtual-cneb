@@ -20,6 +20,18 @@ test("B: conserva exactamente una competencia confirmada", () => {
   assert.deepEqual(input.competency_ids, ["CYT_INDAGA"]);
 });
 
+test("D-G: conserva el contexto pedagógico mínimo del parent y su continuidad", () => {
+  const learningExperience = {
+    id: "project-1", type: "project", title: "Sombras", purpose: "Indagar", prior_activities: [{ occurs_on: "2026-04-01", title: "Luz", purpose: "Observar", closure_or_continuity: "Cambiar distancia" }],
+    details: { trigger_or_interest: "¿Por qué cambia?", primary_competency_ids: ["CYT_INDAGA"], possible_pathways: ["Mover luz"], spaces_and_materials: ["linternas"], family_or_community_links: ["Conversar"], adjustment_points: ["Parejas"], flexibility_notes: "Seguir preguntas" },
+  };
+  const input = buildTeacherActivityGenerationInput({ request: { ...request, materials: ["papel"] }, classroom, learningExperience });
+  assert.equal(input.learning_experience_context.title, "Sombras");
+  assert.deepEqual(input.learning_experience_context.possible_pathways, ["Mover luz"]);
+  assert.equal(input.learning_experience_context.prior_activities[0].closure_or_continuity, "Cambiar distancia");
+  assert.deepEqual(input.classroom_context.materials, ["linternas", "papel"]);
+});
+
 test("genera solo activity, conserva metadata interna y no envía datos privados", async () => {
   let providerRequest;
   const result = await generateTeacherActivity({

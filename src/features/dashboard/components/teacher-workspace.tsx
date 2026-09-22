@@ -24,7 +24,7 @@ import { GuidedDiagnostic, InstitutionProfile } from "./profile-and-diagnostic";
 import { StudentsScreen } from "./students-screen";
 import { ActivityRunView } from "./activity-run-view";
 import { AttendanceDialog } from "./attendance-dialog";
-import { AIActivityGenerator } from "./ai-activity-generator";
+import { ParentActivityGenerator } from "./parent-activity-generator";
 import { AnnualPlanGenerator } from "./annual-plan-generator";
 import { LearningExperienceGenerator } from "./learning-experience-generator";
 
@@ -342,5 +342,5 @@ function EvidenceDialog({ open, onOpenChange, students, studentId, setStudentId,
 
 function PlanningArea({ dashboard }: { dashboard: LocalDashboard }) {
  const [tab,setTab]=useState<"annual"|"experiences"|"activities">("annual");
- return <><div className="mb-5 flex flex-wrap gap-3"><Button variant={tab==="annual"?"default":"outline"} onClick={()=>setTab("annual")}>Plan anual</Button><Button variant={tab==="experiences"?"default":"outline"} onClick={()=>setTab("experiences")}>Proyectos y unidades</Button><Button variant={tab==="activities"?"default":"outline"} onClick={()=>setTab("activities")}>Actividades</Button></div>{tab==="annual"?<AnnualPlanGenerator />:tab==="experiences"?<LearningExperienceGenerator />:<AIActivityGenerator dashboard={dashboard} initialMaterials={dashboard.today.blocks.find((block) => block.activity_id === dashboard.activity?.id)?.materials ?? []} />}</>;
+ return <><div className="mb-5 flex flex-wrap gap-3"><Button variant={tab==="annual"?"default":"outline"} onClick={()=>setTab("annual")}>Plan anual</Button><Button variant={tab==="experiences"?"default":"outline"} onClick={()=>setTab("experiences")}>Proyectos y unidades</Button><Button variant={tab==="activities"?"default":"outline"} onClick={()=>setTab("activities")}>Actividades</Button></div>{tab==="annual"?<AnnualPlanGenerator />:tab==="experiences"?<LearningExperienceGenerator />:<ParentActivityGenerator />}</>;
 }

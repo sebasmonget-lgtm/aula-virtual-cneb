@@ -15,6 +15,7 @@ import { generateTeacherAnnualPlan } from "../src/lib/ai-annual-plan-ui-service.
 import { generateTeacherLearningExperience } from "../src/lib/ai-learning-experience-ui-service.mjs";
 import { nextAnnualPlanVersion, safeAnnualGenerationMetadata } from "../src/lib/annual-plan-persistence.mjs";
 import { validateLearningExperienceProposal } from "../src/lib/learning-experience-validation.mjs";
+import { validateActivityV4 } from "../src/lib/activity-v4-validation.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const dataDir = path.join(root, ".local", "pgdata");
@@ -263,6 +264,21 @@ async function applicableCompetencyIds(workflow, classroom) {
 }
 function validateExperienceDates(body, context) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(body.startsOn ?? "") || !/^\d{4}-\d{2}-\d{2}$/.test(body.endsOn ?? "") || body.startsOn > body.endsOn || body.startsOn < context.starts_on || body.endsOn > context.ends_on) throw new Error("Las fechas deben estar dentro del año escolar y en orden válido.");
+}
+async function activeLearningExperience(id, classroomId) {
+  return (await db.query(`select * from learning_experiences where id=$1 and classroom_id=$2 and status='active' and type in ('project','unit')`, [id, classroomId])).rows[0] ?? null;
+}
+async function activityParentContext(experience) {
+  const prior = (await db.query(`select occurs_on,title,purpose,details->>'closure_or_continuity' as closure_or_continuity from activities where experience_id=$1 and status='active' order by occurs_on desc limit 5`, [experience.id])).rows;
+  return { ...experience, prior_activities: prior.map((item) => ({ occurs_on: item.occurs_on, title: item.title, purpose: item.purpose, closure_or_continuity: item.closure_or_continuity })) };
+}
+async function activityAllowedCompetencies(experience, classroom) {
+  const parentIds = new Set([...(experience.details?.primary_competency_ids ?? []), ...(experience.details?.possible_secondary_competency_ids ?? [])]);
+  const applicable = await applicableCompetencyIds("activity", classroom);
+  return new Set([...parentIds].filter((id) => applicable.has(id)));
+}
+function validateActivityDate(occursOn, experience, classroom) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(occursOn ?? "") || occursOn < String(experience.starts_on).slice(0,10) || occursOn > String(experience.ends_on).slice(0,10) || occursOn < classroom.starts_on || occursOn > classroom.ends_on) throw new Error("La fecha debe estar dentro de la experiencia y del año escolar.");
 }
 
 async function diagnosticWorkspace() {
@@ -546,6 +562,30 @@ const server = createServer(async (request, response) => {
         if (current.origin === "planned") { const parent = (await db.query(`select proposal from annual_plans where id=$1 and classroom_id=$2 and status='active'`, [current.annual_plan_id, context.id])).rows[0]; const source = parent?.proposal?.proposed_experiences?.[current.source_proposal_index]; if (!source || source.experience_type !== current.type) throw new Error("La propuesta anual activa no coincide con esta experiencia."); }
         const result = await db.query(`update learning_experiences set status='active', teacher_confirmed_at=now() where id=$1 returning id,status,teacher_confirmed_at`, [id]); send(response, 200, result.rows[0], origin);
       } catch (error) { send(response, 422, { error: error.message }, origin); } return;
+    }
+    if (request.method === "GET" && url.pathname === "/api/activities") {
+      const context = await annualPlanningContext(); const experience = context && await activeLearningExperience(url.searchParams.get("experienceId"), context.id);
+      if (!experience) { send(response, 404, { error: "Experiencia confirmada no disponible." }, origin); return; }
+      const activities = (await db.query(`select id,occurs_on,title,purpose,status,details,preparation,teacher_confirmed_at from activities where experience_id=$1 order by occurs_on`, [experience.id])).rows; send(response, 200, { experience: await activityParentContext(experience), activities }, origin); return;
+    }
+    if (request.method === "POST" && url.pathname === "/api/ai/activities/generate") {
+      const context = await annualPlanningContext(); const body = await readJson(request); const experience = context && await activeLearningExperience(body.experienceId, context.id);
+      if (!experience) { send(response, 422, { error: "Selecciona un Project o Unit confirmado." }, origin); return; }
+      const allowed = await activityAllowedCompetencies(experience, context);
+      if (body.competencyId && !allowed.has(body.competencyId)) { send(response, 422, { error: "La competencia no pertenece a la experiencia." }, origin); return; }
+      try { const generated = await generateTeacherActivity({ request: body, classroom: context, learningExperience: await activityParentContext(experience) }); const generationId = randomUUID(); pendingAIGenerations.set(generationId, { workflow: "activity", classroom_id: context.id, learning_experience_id: experience.id, metadata: safeAnnualGenerationMetadata(generated.internalMetadata), createdAt: Date.now() }); send(response, 200, { proposal: generated.proposal, generation_id: generationId }, origin); } catch (error) { send(response, 422, { error: error.message || "No se pudo generar la actividad." }, origin); } return;
+    }
+    if (request.method === "POST" && url.pathname === "/api/activities") {
+      const context = await annualPlanningContext(); const body = await readJson(request); const experience = context && await activeLearningExperience(body.experienceId, context.id); const pending = pendingAIGenerations.get(body.generationId);
+      if (!experience || !pending || pending.workflow !== "activity" || pending.classroom_id !== context.id || pending.learning_experience_id !== experience.id) { send(response, 422, { error: "La generación de actividad no corresponde a esta experiencia." }, origin); return; }
+      try { validateActivityDate(body.occursOn, experience, context); validateActivityV4(body.proposal, await activityAllowedCompetencies(experience, context)); const id=randomUUID(); await db.query(`insert into activities (id,experience_id,occurs_on,title,purpose,sequence,preparation,adaptations,status,details,generation_metadata) values ($1,$2,$3::date,$4,$5,'[]'::jsonb,$6::jsonb,'[]'::jsonb,'draft',$7::jsonb,$8::jsonb)`, [id,experience.id,body.occursOn,body.proposal.title,body.proposal.purpose,JSON.stringify({materials: body.materials ?? []}),JSON.stringify(body.proposal),JSON.stringify(pending.metadata)]); pendingAIGenerations.delete(body.generationId); send(response,200,{id,status:"draft"},origin); } catch(error) { send(response,422,{error:error.message},origin); } return;
+    }
+    if (request.method === "PUT" && url.pathname.startsWith("/api/activities/")) {
+      const id=url.pathname.split("/")[3]; const context=await annualPlanningContext(); const body=await readJson(request); const current=context&&(await db.query(`select a.*,e.classroom_id,e.status as experience_status,e.details as experience_details,e.starts_on as experience_starts_on,e.ends_on as experience_ends_on from activities a join learning_experiences e on e.id=a.experience_id where a.id=$1 and e.classroom_id=$2 and a.status='draft'`,[id,context.id])).rows[0];
+      if(!current||current.experience_status!=="active"){send(response,404,{error:"Borrador no disponible."},origin);return;} try { const parent={ details: current.experience_details }; validateActivityDate(body.occursOn,{starts_on:current.experience_starts_on,ends_on:current.experience_ends_on},context); validateActivityV4(body.proposal,await activityAllowedCompetencies(parent,context)); await db.query(`update activities set occurs_on=$1::date,title=$2,purpose=$3,details=$4::jsonb,preparation=$5::jsonb,updated_at=now() where id=$6`,[body.occursOn,body.proposal.title,body.proposal.purpose,JSON.stringify(body.proposal),JSON.stringify({materials:body.materials??[]}),id]);send(response,200,{id,status:"draft"},origin);}catch(error){send(response,422,{error:error.message},origin);}return;
+    }
+    if (request.method === "POST" && url.pathname.startsWith("/api/activities/") && url.pathname.endsWith("/confirm")) {
+      const id=url.pathname.split("/")[3]; const context=await annualPlanningContext(); const current=context&&(await db.query(`select a.*,e.classroom_id,e.status as experience_status,e.details as experience_details,e.starts_on as experience_starts_on,e.ends_on as experience_ends_on from activities a join learning_experiences e on e.id=a.experience_id where a.id=$1 and e.classroom_id=$2 and a.status='draft'`,[id,context.id])).rows[0]; if(!current||current.experience_status!=="active"){send(response,404,{error:"Actividad no disponible."},origin);return;}try{validateActivityDate(String(current.occurs_on).slice(0,10),{starts_on:current.experience_starts_on,ends_on:current.experience_ends_on},context);validateActivityV4(current.details,await activityAllowedCompetencies({details:current.experience_details},context));const result=await db.query(`update activities set status='active',teacher_confirmed_at=now(),updated_at=now() where id=$1 returning id,status,teacher_confirmed_at`,[id]);send(response,200,result.rows[0],origin);}catch(error){send(response,422,{error:error.message},origin);}return;
     }
     if (request.method === "GET" && url.pathname === "/api/ai/activity/options") {
       send(response, 200, await activityGenerationOptions(), origin);
