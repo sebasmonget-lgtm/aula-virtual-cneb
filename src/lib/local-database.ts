@@ -22,7 +22,7 @@ export type LocalEvidence = {
 
 export type ObservationStatus = "demonstrated" | "with_support" | "not_yet_demonstrated" | "insufficient_information";
 export type EvidenceKind = "observation" | "oral" | "drawing" | "production" | "photo" | "movement";
-export type ActivityCriterion = { id: string; criterion_text: string; competency_id: string; competency_text: string; performance_id: string | null; evidence_kind: EvidenceKind | null };
+export type ActivityCriterion = { id: string; criterion_text: string; competency_id: string | null; competency_v4_id: string | null; competency_text: string; performance_id: string | null; evidence_kind: EvidenceKind | null; details?: { competency_id?: string; expected_evidence?: string; acceptable_evidence_variations?: string[]; observation_focus?: string[]; evidence_scope?: "individual" | "group" | "mixed"; teacher_caution?: string } };
 
 export type LocalDashboard = {
   activity: {

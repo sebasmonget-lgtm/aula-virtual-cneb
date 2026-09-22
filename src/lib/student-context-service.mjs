@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { loadKnowledgeBaseV4 } from "./knowledge-base-v4.mjs";
 
 export function resolveSourceUpdatedAt(...timestamps) {
   const valid = timestamps.flat().filter(Boolean).map((value) => new Date(value)).filter((value) => !Number.isNaN(value.valueOf()));
@@ -15,24 +16,28 @@ export async function buildStudentPedagogicalContext(db, studentId) {
   `, [studentId])).rows[0];
   if (!student) return null;
 
+  const v4Names = new Map((await loadKnowledgeBaseV4()).competencyCards.map((card) => [card.id, card.official_name]));
   const competencies = (await db.query(`
-    select co.id as competency_id, co.official_text as competency_text,
+    select coalesce(ac.competency_v4_id, ac.competency_id::text) as raw_competency_id,
+      case when ac.competency_v4_id is null then concat('legacy:', ac.competency_id::text) else concat('v4:', ac.competency_v4_id) end as competency_key,
+      ac.competency_id, ac.competency_v4_id, co.official_text as competency_text,
       count(e.id)::int as evidence_count,
       count(e.id) filter (where e.observation_status = 'demonstrated')::int as demonstrated,
       count(e.id) filter (where e.observation_status = 'with_support')::int as with_support,
       count(e.id) filter (where e.observation_status = 'not_yet_demonstrated')::int as not_yet_demonstrated,
       count(e.id) filter (where e.observation_status = 'insufficient_information')::int as insufficient_information,
       max(e.observed_at) as last_observed_at
-    from competencies co
-    join activity_criteria ac on ac.competency_id = co.id
+    from activity_criteria ac
+    left join competencies co on ac.competency_id = co.id
     left join evidences e on e.criterion_id = ac.id and e.student_id = $1
-    group by co.id, co.official_text
+    group by ac.competency_id, ac.competency_v4_id, co.official_text
     having count(e.id) > 0
     order by max(e.observed_at) desc nulls last
   `, [studentId])).rows;
   const recentEvidence = (await db.query(`
     select e.id, e.observed_at, e.observation_status, e.observation_text,
-           a.title as activity_title, ac.criterion_text, ac.competency_id,
+           a.title as activity_title, ac.criterion_text, ac.competency_id, ac.competency_v4_id,
+           case when ac.competency_v4_id is null then concat('legacy:', ac.competency_id::text) else concat('v4:', ac.competency_v4_id) end as competency_key,
            (e.media_path is not null) as media_available
       from evidences e join activities a on a.id = e.activity_id
       join activity_criteria ac on ac.id = e.criterion_id
@@ -46,16 +51,16 @@ export async function buildStudentPedagogicalContext(db, studentId) {
     student,
     diagnosis,
     competencies: competencies.map((competency) => ({
-      ...competency,
+      ...competency, competency_text: competency.competency_text ?? v4Names.get(competency.competency_v4_id) ?? competency.competency_v4_id,
       observations: {
         demonstrated: competency.demonstrated, with_support: competency.with_support,
         not_yet_demonstrated: competency.not_yet_demonstrated,
         insufficient_information: competency.insufficient_information,
       },
-      recent_evidence: recentEvidence.filter((evidence) => evidence.competency_id === competency.competency_id),
+      recent_evidence: recentEvidence.filter((evidence) => evidence.competency_key === competency.competency_key),
       teacher_confirmed_assessment: null,
     })),
-    recent_relevant_observations: recentEvidence,
+    recent_relevant_observations: recentEvidence.map((evidence) => ({ ...evidence, competency_text: evidence.competency_v4_id ? v4Names.get(evidence.competency_v4_id) ?? evidence.competency_v4_id : undefined })),
     confirmed_period_assessments: [],
   };
 }

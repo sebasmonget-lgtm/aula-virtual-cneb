@@ -1,5 +1,11 @@
 # Decisiones de arquitectura
 
+## ADR 029 Captura de evidencia v4 determinista
+
+**Decisión.** `evidence_capture` se resuelve exclusivamente en código y reutiliza `evidences`. Cada registro requiere una Activity y un criterio activos, un estudiante del aula y una marca observacional explícita de la docente. Los criterios v4 se enlazan mediante `criterion_id` y conservan su `competency_v4_id`; los criterios legacy siguen usando su UUID propio. La foto queda en almacenamiento local privado y no se envía a proveedores.
+
+**Consecuencia.** La evidencia esperada orienta la interfaz, pero no se transforma en observación ni assessment. `StudentContextService` conserva ambos catálogos con claves explícitas (`v4:<id>` y `legacy:<uuid>`), sin mappings inventados. La captura grupal sigue produciendo únicamente observaciones individuales que la docente decide registrar.
+
 ## ADR 028 Plan anual v4 como raíz de planificación
 
 **Decisión.** `annual_plan` usa Sol/medium desde el router, guarda propuesta y metadata de auditoría reducida en `annual_plans`, y solo cambia a activo por confirmación docente. En local, el servidor retiene esa metadata tras un identificador opaco de generación hasta que se guarda el borrador; producción debe sustituir este handoff por auditoría durable y con control de acceso. Cada borrador nuevo usa `max(version)+1`; al confirmar se archiva el anterior activo dentro de la misma transacción. Las experiencias propuestas permanecen en el payload; no crean `learning_experiences`.

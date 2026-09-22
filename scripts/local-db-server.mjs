@@ -18,6 +18,7 @@ import { validateLearningExperienceProposal } from "../src/lib/learning-experien
 import { normalizeActivityMaterials, publicActivityParent, validateActivityV4 } from "../src/lib/activity-v4-validation.mjs";
 import { validateCriterionEvidenceV4 } from "../src/lib/criterion-evidence-validation.mjs";
 import { generateCriterionEvidence } from "../src/lib/ai-criterion-evidence-ui-service.mjs";
+import { validateEvidenceCaptureV4 } from "../src/lib/evidence-capture-v4.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const dataDir = path.join(root, ".local", "pgdata");
@@ -117,15 +118,18 @@ async function readJson(request) {
 }
 
 async function dashboard() {
+  const v4CompetencyNames = new Map((await loadKnowledgeBaseV4()).competencyCards.map((card) => [card.id, card.official_name]));
+  const normalizeCriteria = (criteria = []) => criteria.map((criterion) => ({ ...criterion, competency_text: criterion.competency_text ?? v4CompetencyNames.get(criterion.competency_v4_id) ?? criterion.competency_v4_id ?? "Competencia curricular" }));
   const activityResult = await db.query(`
     select a.id, a.title, a.purpose, a.occurs_on, e.title as experience_title,
            coalesce(jsonb_agg(jsonb_build_object('id', c.id, 'criterion_text', c.criterion_text,
-             'competency_id', c.competency_id, 'competency_text', co.official_text,
-             'performance_id', c.performance_id, 'evidence_kind', c.evidence_kind) order by c.display_order) filter (where c.id is not null), '[]'::jsonb) as criteria
+             'competency_id', c.competency_id, 'competency_v4_id', c.competency_v4_id, 'competency_text', co.official_text,
+             'performance_id', c.performance_id, 'evidence_kind', c.evidence_kind, 'details', c.details) order by c.display_order) filter (where c.id is not null), '[]'::jsonb) as criteria
       from activities a
       join learning_experiences e on e.id = a.experience_id
-      left join activity_criteria c on c.activity_id = a.id
+      left join activity_criteria c on c.activity_id = a.id and c.status = 'active'
       left join competencies co on co.id = c.competency_id
+     where a.status = 'active'
      group by a.id, e.title
      order by a.occurs_on desc
      limit 1
@@ -180,20 +184,20 @@ async function dashboard() {
            del.closure_type, del.teacher_closure_note
       from class_schedule_entries se
       join classrooms cl on cl.id = se.classroom_id
-      left join activities a on a.id = se.activity_id
+      left join activities a on a.id = se.activity_id and a.status = 'active'
       left join learning_experiences le on le.id = a.experience_id
       left join lateral (
         select jsonb_agg(jsonb_build_object('id', ac.id, 'criterion_text', ac.criterion_text,
-          'competency_id', ac.competency_id, 'competency_text', co.official_text,
-          'performance_id', ac.performance_id, 'evidence_kind', ac.evidence_kind) order by ac.display_order) as criteria
-        from activity_criteria ac join competencies co on co.id = ac.competency_id
-        where ac.activity_id = a.id
+          'competency_id', ac.competency_id, 'competency_v4_id', ac.competency_v4_id, 'competency_text', co.official_text,
+          'performance_id', ac.performance_id, 'evidence_kind', ac.evidence_kind, 'details', ac.details) order by ac.display_order) as criteria
+        from activity_criteria ac left join competencies co on co.id = ac.competency_id
+        where ac.activity_id = a.id and ac.status = 'active'
       ) criteria on true
       left join daily_execution_logs del on del.schedule_entry_id = se.id and del.execution_date = $2::date
      where cl.teacher_id = $1 and (se.scheduled_on = $2::date or (se.scheduled_on is null and se.weekday = extract(dow from $2::date)))
      order by se.start_time, se.sort_order
   `, [teacherId, today]);
-  const rawBlocks = todayBlocks.rows.map((block) => ({ ...block, materials: block.materials ?? [], steps: block.steps ?? [], criteria: block.criteria ?? [] }));
+  const rawBlocks = todayBlocks.rows.map((block) => ({ ...block, materials: block.materials ?? [], steps: block.steps ?? [], criteria: normalizeCriteria(block.criteria ?? []) }));
   const attendanceRecorded = Number(attendanceResult.rows[0]?.recorded_count ?? 0) > 0;
   const calendarException = exceptionResult.rows[0] ?? null;
   const journey = resolveDailyState({ now, scheduleEntries: rawBlocks, attendanceRecorded, calendarException });
@@ -203,7 +207,7 @@ async function dashboard() {
   }));
 
   return {
-    activity: activityResult.rows[0],
+    activity: activityResult.rows[0] ? { ...activityResult.rows[0], criteria: normalizeCriteria(activityResult.rows[0].criteria ?? []) } : null,
     today: {
       date: today, now, blocks, attendance: { recorded: attendanceRecorded, recorded_count: Number(attendanceResult.rows[0]?.recorded_count ?? 0) },
       calendar_exception: calendarException,
@@ -700,27 +704,24 @@ const server = createServer(async (request, response) => {
     }
     if (request.method === "POST" && url.pathname === "/api/evidences") {
       const body = await readJson(request);
-      const observation = typeof body.observationText === "string" ? body.observationText.trim() : "";
-      const observationStatuses = new Set(["demonstrated", "with_support", "not_yet_demonstrated", "insufficient_information"]);
-      if (!body.studentId || !body.activityId || !body.criterionId || !observationStatuses.has(body.observationStatus)) {
-        send(response, 400, { error: "Selecciona estudiante, actividad, criterio y marca observacional." }, origin);
-        return;
-      }
-      if (observation.length > 4000) {
-        send(response, 400, { error: "La observación no puede superar 4000 caracteres." }, origin);
-        return;
-      }
+      let capture;
+      try { capture = validateEvidenceCaptureV4(body); } catch (error) { send(response, 400, { error: error.message }, origin); return; }
       const allowed = await db.query(`
-        select 1
+        select ac.id, ac.competency_id, ac.competency_v4_id, a.details as activity_details
           from students s
           join classrooms cl on cl.id = s.classroom_id
           join learning_experiences le on le.classroom_id = cl.id
-          join activities a on a.experience_id = le.id
-          join activity_criteria ac on ac.activity_id = a.id
-         where s.id = $1 and a.id = $2 and ac.id = $3 and cl.teacher_id = $4
-      `, [body.studentId, body.activityId, body.criterionId, teacherId]);
+          join activities a on a.experience_id = le.id and a.status = 'active'
+          join activity_criteria ac on ac.activity_id = a.id and ac.status = 'active'
+         where s.id = $1 and s.status = 'active' and a.id = $2 and ac.id = $3 and cl.teacher_id = $4 and cl.status = 'active'
+      `, [capture.studentId, capture.activityId, capture.criterionId, teacherId]);
       if (!allowed.rows.length) {
         send(response, 403, { error: "El registro no pertenece al aula local activa." }, origin);
+        return;
+      }
+      const criterion = allowed.rows[0];
+      if (criterion.competency_v4_id && (criterion.activity_details?.competency_status !== "confirmed" || criterion.activity_details?.competency_id !== criterion.competency_v4_id)) {
+        send(response, 422, { error: "El criterio v4 ya no coincide con la competencia confirmada de la actividad." }, origin);
         return;
       }
       let mediaPath = null;
@@ -747,8 +748,8 @@ const server = createServer(async (request, response) => {
           observation_text, observation_status, media_path, source, created_by
         ) values ($1, $2, $3, $4, 'observation', $5, $6, $7, 'teacher', $8)
         returning id, student_id, observation_text, observation_status, media_path, observed_at
-      `, [randomUUID(), body.studentId, body.activityId, body.criterionId, observation || null, body.observationStatus, mediaPath, teacherId]);
-      await refreshStudentContextSnapshot(db, body.studentId);
+      `, [randomUUID(), capture.studentId, capture.activityId, capture.criterionId, capture.observationText || null, capture.observationStatus, mediaPath, teacherId]);
+      await refreshStudentContextSnapshot(db, capture.studentId);
       send(response, 201, { evidence: result.rows[0] }, origin);
       return;
     }
