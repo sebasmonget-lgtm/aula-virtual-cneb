@@ -50,6 +50,7 @@ test("A: genera una activity de 5 años con competencia confirmada", async () =>
   assert.equal(result.metadata.workflow, "activity");
   assert.deepEqual(result.metadata.execution_plan.provider, "openai");
   assert.equal(result.metadata.execution_plan.model, "gpt-5.6-terra");
+  assert.equal(result.metadata.execution_plan.reasoning_effort, "low");
   assert.deepEqual(result.provenance, provider.requests[0].ai_context_bundle.provenance);
   assert.equal(provider.requests[0].ai_context_bundle.context.workflow_inputs.activity_purpose, "Explorar cambios de sombra.");
   assert.ok(Object.isFrozen(provider.requests[0].ai_context_bundle));
@@ -111,7 +112,7 @@ test("H: el provider solo recibe AIContextBundle sin datos privados", async () =
   await generateAIWorkflowV4(confirmedInput, { provider, knowledgeBase });
   const serializedRequest = JSON.stringify(provider.requests[0]);
   assert.doesNotMatch(serializedRequest, /private_path|photo_path|private\/photo|binary/);
-  assert.deepEqual(Object.keys(provider.requests[0]).sort(), ["ai_context_bundle", "output_schema", "workflow"]);
+  assert.deepEqual(Object.keys(provider.requests[0]).sort(), ["ai_context_bundle", "execution_plan", "output_schema", "workflow"]);
 });
 
 test("la capa de generación no importa Jev, proveedores concretos, HTTP ni PDFs", async () => {

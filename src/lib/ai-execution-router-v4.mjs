@@ -1,10 +1,10 @@
 export const AI_ROUTING_POLICY = Object.freeze({
   version: "1.0.0",
   tiers: Object.freeze({
-    decision: Object.freeze({ execution: "decision", provider: "typesafe", capability: "decision", model: null }),
-    light_generation: Object.freeze({ execution: "generation", provider: "openai", model: "gpt-5.6-luna" }),
-    standard_generation: Object.freeze({ execution: "generation", provider: "openai", model: "gpt-5.6-terra" }),
-    deep_generation: Object.freeze({ execution: "generation", provider: "openai", model: "gpt-5.6-sol" }),
+    decision: Object.freeze({ execution: "decision", provider: "typesafe", capability: "decision", model: null, reasoning_effort: null }),
+    light_generation: Object.freeze({ execution: "generation", provider: "openai", model: "gpt-5.6-luna", reasoning_effort: "none" }),
+    standard_generation: Object.freeze({ execution: "generation", provider: "openai", model: "gpt-5.6-terra", reasoning_effort: "low" }),
+    deep_generation: Object.freeze({ execution: "generation", provider: "openai", model: "gpt-5.6-sol", reasoning_effort: "medium" }),
   }),
   workflows: Object.freeze({
     diagnostic: Object.freeze({ tier: "standard_generation", allow_escalation: true }),
@@ -46,6 +46,7 @@ function planForTier(tier, reason, allowEscalation, policy) {
     tier,
     provider: definition.provider,
     model: definition.model,
+    reasoning_effort: definition.reasoning_effort,
     capability: definition.capability ?? null,
     reason,
     allow_escalation: allowEscalation,
@@ -71,6 +72,7 @@ export function resolveAIExecutionPlan({ workflow, task = null, context = null }
       tier: null,
       provider: null,
       model: null,
+      reasoning_effort: null,
       capability: null,
       reason: `Workflow ${workflow} se resuelve de forma determinista en código.`,
       allow_escalation: false,

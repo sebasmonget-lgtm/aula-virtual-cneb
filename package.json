@@ -30,7 +30,8 @@
     "test:ai-routing-v4": "node --test src/lib/ai-execution-router-v4.test.mjs",
     "test:jev-benchmark": "node --test src/lib/jev-benchmark.test.mjs",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
-    "db:generate": "drizzle-kit generate"
+    "db:generate": "drizzle-kit generate",
+    "test:openai-provider-v4": "node --test src/lib/openai-provider.test.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
@@ -47,6 +48,7 @@
     "lucide-react": "^1.31.0",
     "next": "16.3.4",
     "next-themes": "^0.4.6",
+    "openai": "^7.21.0",
     "radix-ui": "^1.6.7",
     "react": "19.2.6",
     "react-day-picker": "^10.0.1",

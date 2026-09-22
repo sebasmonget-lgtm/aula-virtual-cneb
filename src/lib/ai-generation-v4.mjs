@@ -18,10 +18,10 @@ const ACTIVITY_FIELDS = [
 export const ACTIVITY_OUTPUT_SCHEMA = {
   id: "activity-v1",
   type: "object",
-  additional_properties: false,
+  additionalProperties: false,
   required: ACTIVITY_FIELDS,
   properties: Object.fromEntries([
-    ...ACTIVITY_FIELDS.slice(0, 8).map((field) => [field, { type: "string", min_length: 1 }]),
+    ...ACTIVITY_FIELDS.slice(0, 8).map((field) => [field, { type: "string", minLength: 1 }]),
     ["competency_status", { enum: ["confirmed", "unconfirmed"] }],
     ["competency_id", { type: ["string", "null"] }],
   ]),
@@ -59,6 +59,13 @@ function parseProviderOutput(response) {
   return response;
 }
 
+function unwrapProviderResponse(response) {
+  if (response && typeof response === "object" && !Array.isArray(response) && "output" in response && "provider_metadata" in response) {
+    return { output: parseProviderOutput(response.output), providerMetadata: response.provider_metadata };
+  }
+  return { output: parseProviderOutput(response), providerMetadata: null };
+}
+
 function assertActivityOutput(output, bundle, confirmedCompetencyId) {
   const keys = Object.keys(output);
   const unknownFields = keys.filter((field) => !ACTIVITY_FIELDS.includes(field));
@@ -86,12 +93,13 @@ function assertActivityOutput(output, bundle, confirmedCompetencyId) {
   return output;
 }
 
-function buildProviderRequest(bundle) {
+function buildProviderRequest(bundle, executionPlan) {
   const immutableBundle = deepFreeze(structuredClone(bundle));
   return deepFreeze({
     workflow: "activity",
     ai_context_bundle: immutableBundle,
     output_schema: ACTIVITY_OUTPUT_SCHEMA,
+    execution_plan: structuredClone(executionPlan),
   });
 }
 
@@ -112,17 +120,20 @@ export async function generateAIWorkflowV4(input, { provider, knowledgeBase, exe
     throw new InvalidAIGenerationError("provider_not_configured");
   }
   const prepared = await prepareAIRequestV4(input, knowledgeBase);
-  const providerRequest = buildProviderRequest(prepared.aiContextBundle);
+  const providerRequest = buildProviderRequest(prepared.aiContextBundle, plan);
   const confirmedCompetencyId = input.competency_ids?.length === 1 ? input.competency_ids[0] : null;
-  const output = assertActivityOutput(parseProviderOutput(await provider.generate(providerRequest)), prepared.aiContextBundle, confirmedCompetencyId);
+  const providerResponse = unwrapProviderResponse(await provider.generate(providerRequest));
+  const output = assertActivityOutput(providerResponse.output, prepared.aiContextBundle, confirmedCompetencyId);
   return {
     output,
     metadata: {
       ...prepared.metadata,
-      provider: provider.id ?? "anonymous",
-      model: provider.model ?? null,
+      provider: providerResponse.providerMetadata?.provider ?? provider.id ?? "anonymous",
+      model: providerResponse.providerMetadata?.model ?? provider.model ?? null,
       output_schema: ACTIVITY_OUTPUT_SCHEMA.id,
       execution_plan: plan,
+      response_id: providerResponse.providerMetadata?.response_id ?? null,
+      usage: providerResponse.providerMetadata?.usage ?? null,
     },
     provenance: prepared.aiContextBundle.provenance,
     validation: { status: "valid", schema: ACTIVITY_OUTPUT_SCHEMA.id },
