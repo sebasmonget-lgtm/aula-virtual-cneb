@@ -1,0 +1,21 @@
+{
+  "version": "4.0.0",
+  "runtime_pdf_dependency": false,
+  "limits": [
+    {
+      "id": "NO-LONG-VERBATIM-CORPUS",
+      "description": "Base estructurada para IA, no reproducción literal completa de publicaciones MINEDU.",
+      "impact": "Planificación/generación/selección no requiere PDFs. Citas largas exactas/auditoría requieren registro oficial exacto o fuente."
+    },
+    {
+      "id": "SEMANTIC-PERFORMANCE-NOT-OFFICIAL-TEXT",
+      "description": "Los significados de desempeño por edad están normalizados/parafraseados para razonamiento.",
+      "impact": "Usar para selección, criterio, actividad y evaluación; no etiquetarlos como cita literal."
+    },
+    {
+      "id": "TEACHER-AUTHORITY",
+      "description": "Conclusiones pedagógicas formales requieren confirmación docente.",
+      "impact": "IA propone/organiza, no finaliza silenciosamente."
+    }
+  ]
+}

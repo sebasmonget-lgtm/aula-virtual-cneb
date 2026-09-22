@@ -1,0 +1,47 @@
+{
+  "version": "4.0.0",
+  "specified_performance_competencies_by_age": {
+    "3": [
+      "PS_IDENTIDAD",
+      "PS_CONVIVE",
+      "PS_RELIGION",
+      "PSICO_MOTRICIDAD",
+      "COM_ORAL",
+      "COM_LECTURA",
+      "COM_ARTE",
+      "MAT_CANTIDAD",
+      "MAT_FORMA",
+      "CYT_INDAGA"
+    ],
+    "4": [
+      "PS_IDENTIDAD",
+      "PS_CONVIVE",
+      "PS_RELIGION",
+      "PSICO_MOTRICIDAD",
+      "COM_ORAL",
+      "COM_LECTURA",
+      "COM_ESCRITURA",
+      "COM_ARTE",
+      "MAT_CANTIDAD",
+      "MAT_FORMA",
+      "CYT_INDAGA"
+    ],
+    "5": [
+      "PS_IDENTIDAD",
+      "PS_CONVIVE",
+      "PS_RELIGION",
+      "PSICO_MOTRICIDAD",
+      "COM_ORAL",
+      "COM_LECTURA",
+      "COM_ESCRITURA",
+      "COM_ARTE",
+      "CAST_L2_ORAL",
+      "MAT_CANTIDAD",
+      "MAT_FORMA",
+      "CYT_INDAGA",
+      "TRANS_TIC",
+      "TRANS_AUTONOMO"
+    ]
+  },
+  "important": "Una competencia puede ser pedagógicamente relevante aunque el Programa no especifique desempeño para la edad; no fabricar un desempeño oficial."
+}

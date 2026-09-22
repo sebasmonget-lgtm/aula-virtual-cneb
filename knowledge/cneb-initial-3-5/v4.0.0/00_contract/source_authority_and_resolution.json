@@ -1,0 +1,80 @@
+{
+  "version": "4.0.0",
+  "principle": "Las divergencias se resuelven en mantenimiento offline. El modelo de runtime recibe una vista canónica ya resuelta.",
+  "priority": [
+    {
+      "rank": 1,
+      "kind": "current_norm_and_modifications",
+      "examples": [
+        "EVALUACION_RVM094_MOD048"
+      ]
+    },
+    {
+      "rank": 2,
+      "kind": "CNEB_current",
+      "examples": [
+        "CNEB"
+      ],
+      "use": "definiciones marco, enfoques, competencias transversales y estructura general"
+    },
+    {
+      "rank": 3,
+      "kind": "current_level_program",
+      "examples": [
+        "PCI_INICIAL_CANONICAL"
+      ],
+      "use": "operacionalización específica de Inicial 3-5"
+    },
+    {
+      "rank": 4,
+      "kind": "recent_topic_guidance",
+      "examples": [
+        "ORALIDAD_CICLO_II_2025",
+        "ESPACIOS_2024",
+        "TUTORIA_INICIAL_2024",
+        "DIAGNOSTICO_INICIAL_2023"
+      ]
+    },
+    {
+      "rank": 5,
+      "kind": "compatible_stable_guidance",
+      "examples": [
+        "PLANIFICACION_INICIAL_2019",
+        "PROYECTOS_INICIAL_2019",
+        "INTERACCIONES_2019",
+        "JUEGO_SIMBOLICO_2019"
+      ]
+    },
+    {
+      "rank": 6,
+      "kind": "semantic_editorial_layer",
+      "examples": [
+        "competency_cards",
+        "workflow_rules"
+      ]
+    }
+  ],
+  "resolved_cases": [
+    {
+      "id": "RES-TIC-CAPACITIES",
+      "issue": "El CNEB general describe cuatro capacidades TIC; la sección operativa del Programa de Inicial enumera tres para el nivel.",
+      "resolution": "Conservar cuatro capacidades en la definición CNEB y una vista operativa de Inicial con las tres capacidades enumeradas en el Programa. No inventar desempeños de 3/4 años ni para una capacidad no explicitada.",
+      "runtime_rule": "Selección por edad usa la vista de Programa Inicial."
+    },
+    {
+      "id": "RES-EVAL-2024",
+      "issue": "La norma de evaluación 2020 fue modificada en 2024.",
+      "resolution": "Aplicar la norma base junto con la modificación 2024; no mandar reglas incompatibles al modelo."
+    },
+    {
+      "id": "RES-PROGRAM-HISTORICAL",
+      "issue": "Versiones históricas/repositorio pueden diferir del PDF curricular canónico.",
+      "resolution": "Para nombres y estructura de Inicial usar el PDF curricular canónico directo registrado por el proyecto; versiones previas solo como alias/histórico."
+    },
+    {
+      "id": "RES-2026-OVERLAY",
+      "issue": "Las orientaciones de inicio 2026 son coyunturales.",
+      "resolution": "Mantenerlas como overlay temporal."
+    }
+  ]
+}

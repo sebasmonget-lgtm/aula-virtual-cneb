@@ -1,0 +1,43 @@
+{
+  "knowledge_base": "CNEB_INICIAL_3_5_AI_KnowledgeBase",
+  "version": "3.0.0",
+  "language": "es-PE",
+  "technical_field_names": "English snake_case",
+  "audience": "backend AI / retrieval / generation services",
+  "scope": {
+    "level": "Educación Inicial",
+    "cycle": "II",
+    "ages": [
+      3,
+      4,
+      5
+    ],
+    "country": "Perú"
+  },
+  "primary_goal": "Dar a la IA conocimiento curricular y pedagógico canónico, ya reconciliado, para generar y asistir sin releer PDF en cada solicitud.",
+  "runtime_rules": [
+    "No consultar los PDF para una generación ordinaria; consultar esta base y el registro oficial estructurado.",
+    "Filtrar primero por edad, contexto, lengua y condiciones de aplicación.",
+    "Usar nombres oficiales sin reescribirlos cuando el documento generado requiera nomenclatura curricular.",
+    "Distinguir texto/contenido curricular oficial de explicación semántica editorial.",
+    "No inventar desempeños, criterios, evidencias observadas ni niveles de logro.",
+    "La evidencia observada y la valoración pedagógica son capas distintas.",
+    "Una evidencia aislada no determina por sí sola el estado global de una competencia.",
+    "La docente conserva la decisión pedagógica final y puede declarar información insuficiente.",
+    "La planificación parte de información del grupo, necesidades, intereses, contexto y evidencias; no de un tema genérico aislado.",
+    "Priorizar experiencias significativas, juego, exploración, autonomía, interacción y mediación sobre fichas mecánicas.",
+    "Una competencia puede ser principal y otras secundarias; no etiquetar todas las competencias posibles por aparecer incidentalmente.",
+    "No forzar proyecto cuando no existe pregunta/interés/problema auténtico; una unidad puede ser más pertinente.",
+    "Aplicar religión según servicio educativo y condiciones de participación/exoneración.",
+    "Aplicar Castellano L2 solo cuando corresponda al contexto lingüístico; fortalecer, no desplazar, la lengua materna."
+  ],
+  "generation_context_order": [
+    "teacher_explicit_request",
+    "classroom_age_and_language_context",
+    "observed_evidence_and_diagnostic_context",
+    "school_calendar_and_available_time",
+    "canonical_curriculum",
+    "pedagogical_guidance",
+    "semantic_examples"
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "version": "4.0.0",
+  "rules": [
+    {
+      "competency_id": "CAST_L2_ORAL",
+      "condition": "Solo cuando el castellano funciona como segunda lengua.",
+      "must": [
+        "Respetar y fortalecer lengua materna.",
+        "Usar situaciones comunicativas significativas."
+      ],
+      "must_not": [
+        "Aplicar automáticamente a castellanohablantes.",
+        "Reducir la competencia a pronunciación/repetición."
+      ]
+    },
+    {
+      "competency_id": "PS_RELIGION",
+      "condition": "Según contexto del servicio y condiciones de participación/exoneración.",
+      "must": [
+        "Respetar contexto familiar y diversidad."
+      ],
+      "must_not": [
+        "Convertir comportamiento prosocial genérico en Religión automáticamente."
+      ]
+    },
+    {
+      "competency_id": "COM_ESCRITURA",
+      "condition": "Sin desempeño específico de Programa a los 3 años.",
+      "must_not": [
+        "Inventar desempeño oficial de escritura para 3 años.",
+        "Forzar escritura alfabética convencional."
+      ]
+    },
+    {
+      "competency_id": "TRANS_TIC",
+      "condition": "Desempeño específico del Programa solo a los 5 años en este catálogo.",
+      "must_not": [
+        "Inventar desempeño oficial 3/4 años."
+      ]
+    },
+    {
+      "competency_id": "TRANS_AUTONOMO",
+      "condition": "Desempeño específico del Programa solo a los 5 años en este catálogo.",
+      "must_not": [
+        "Inventar desempeño oficial 3/4 años."
+      ]
+    }
+  ]
+}

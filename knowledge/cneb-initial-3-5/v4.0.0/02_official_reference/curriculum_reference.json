@@ -1,0 +1,960 @@
+{
+  "version": "4.0.0",
+  "scope": {
+    "level": "Educación Inicial",
+    "cycle": "II",
+    "ages": [
+      3,
+      4,
+      5
+    ]
+  },
+  "text_policy": "Canonical names/capacity labels are preserved as short official labels. Standards/performance content is normalized as AI semantic summaries with MINEDU source references; not a long verbatim reproduction.",
+  "competencies": [
+    {
+      "id": "PS_IDENTIDAD",
+      "canonical_name": "Construye su identidad",
+      "area_id": "personal_social",
+      "area_name": "Personal Social",
+      "canonical_capacity_names": [
+        "Se valora a sí mismo",
+        "Autorregula sus emociones"
+      ],
+      "cycle_ii_standard_semantic_summary": "Al final del ciclo II se espera una identidad personal cada vez más afirmada, autonomía en decisiones y autocuidado, pertenencia a familia/aula y reconocimiento-expresión de emociones propias y de otros con apoyo pertinente.",
+      "source_refs": [
+        "CNEB",
+        "PCI_INICIAL_CANONICAL"
+      ],
+      "source_locator": {
+        "program_page_label_hints": [
+          78
+        ]
+      },
+      "age_references": {
+        "3": {
+          "status": "specified",
+          "official_performance_count": 5,
+          "semantic_focus": "Reconocimiento de sí mismo y primeras acciones autónomas.",
+          "observable_patterns": [
+            "Reconoce características físicas, necesidades e intereses propios.",
+            "Se reconoce como miembro de su familia y grupo de aula.",
+            "Realiza actividades por iniciativa y practica hábitos básicos de alimentación e higiene.",
+            "Expresa emociones y, con ayuda del adulto, empieza a identificarlas en sí y en otros."
+          ],
+          "source_grounded_performance_meanings": [
+            "Reconoce necesidades, intereses y pertenencia a familia/aula; inicia autocuidado; expresa emociones y busca seguridad en el adulto."
+          ],
+          "runtime_rule": "Use as age-specific meaning/routing context; do not present these paraphrases as verbatim MINEDU performance text."
+        },
+        "4": {
+          "status": "specified",
+          "official_performance_count": 5,
+          "semantic_focus": "Amplía la descripción de sí mismo, autonomía y comprensión emocional.",
+          "observable_patterns": [
+            "Expresa preferencias, características y cualidades que lo distinguen.",
+            "Actúa con mayor iniciativa en actividades y autocuidado.",
+            "Reconoce pertenencia a familia/aula y valora vínculos cercanos.",
+            "Expresa emociones e identifica causas simples con acompañamiento."
+          ],
+          "source_grounded_performance_meanings": [
+            "Amplía reconocimiento de preferencias e historia familiar; actúa con más autonomía en cuidado; reconoce emociones ajenas y brinda ayuda."
+          ],
+          "runtime_rule": "Use as age-specific meaning/routing context; do not present these paraphrases as verbatim MINEDU performance text."
+        },
+        "5": {
+          "status": "specified",
+          "official_performance_count": 6,
+          "semantic_focus": "Mayor autonomía, argumentación sobre sí mismo y regulación emocional.",
+          "observable_patterns": [
+            "Reconoce características, cualidades, preferencias y explica algunas razones.",
+            "Participa y toma decisiones con mayor autonomía en rutinas y cuidado personal.",
+            "Reconoce pertenencia a familia, aula y comunidad cercana.",
+            "Identifica emociones y causas en sí y otros; busca apoyo cuando lo necesita."
+          ],
+          "source_grounded_performance_meanings": [
+            "Reconoce cualidades e intereses; asume roles sin distinción de género; toma decisiones de autocuidado; explica causas emocionales y límites de seguridad."
+          ],
+          "runtime_rule": "Use as age-specific meaning/routing context; do not present these paraphrases as verbatim MINEDU performance text."
+        }
+      }
+    },
+    {
+      "id": "PS_CONVIVE",
+      "canonical_name": "Convive y participa democráticamente en la búsqueda del bien común",
+      "area_id": "personal_social",
+      "area_name": "Personal Social",
+      "canonical_capacity_names": [
+        "Interactúa con todas las personas",
+        "Construye normas, y asume acuerdos y leyes",
+        "Participa en acciones que promueven el bienestar común"
+      ],
+      "cycle_ii_standard_semantic_summary": "Al final del ciclo II se espera que conviva respetuosamente, asuma responsabilidades, se interese por personas y costumbres diferentes, construya acuerdos básicos y participe en el cuidado del bienestar y recursos comunes.",
+      "source_refs": [
+        "CNEB",
+        "PCI_INICIAL_CANONICAL"
+      ],
+      "source_locator": {
+        "program_page_label_hints": [
+          86
+        ]
+      },
+      "age_references": {
+        "3": {
+          "status": "specified",
+          "official_performance_count": 3,
+          "semantic_focus": "Primeras interacciones grupales, reglas conocidas y cuidado de recursos.",
+          "observable_patterns": [
+            "Se relaciona con adultos y niños de su entorno y participa en pequeños grupos de juego.",
+            "Practica algunas reglas conocidas del aula con acompañamiento.",
+            "Colabora en el cuidado de materiales y espacios compartidos."
+          ],
+          "source_grounded_performance_meanings": [
+            "Se relaciona y juega en pequeños grupos; practica normas conocidas; cuida recursos y espacios compartidos."
+          ],
+          "runtime_rule": "Use as age-specific meaning/routing context; do not present these paraphrases as verbatim MINEDU performance text."
+        },
+        "4": {
+          "status": "specified",
+          "official_performance_count": 4,
+          "semantic_focus": "Participación grupal más sostenida y mayor comprensión de acuerdos.",
+          "observable_patterns": [
+            "Se integra en juegos y actividades con distintos compañeros.",
+            "Muestra interés por costumbres o características de otras personas.",
+            "Participa en acuerdos simples y asume responsabilidades cercanas.",
+            "Colabora en el cuidado de recursos y espacios comunes."
+          ],
+          "source_grounded_performance_meanings": [
+            "Propone ideas y reglas de juego; conoce costumbres de otros; participa en acuerdos; colabora en cuidado de recursos."
+          ],
+          "runtime_rule": "Use as age-specific meaning/routing context; do not present these paraphrases as verbatim MINEDU performance text."
+        },
+        "5": {
+          "status": "specified",
+          "official_performance_count": 5,
+          "semantic_focus": "Participación democrática inicial y responsabilidad por el bienestar común.",
+          "observable_patterns": [
+            "Participa activamente en actividades grupales y propone formas de organizarse.",
+            "Propone, acuerda y respeta normas vinculadas a necesidades del grupo.",
+            "Asume responsabilidades y explica por qué ayudan a convivir.",
+            "Participa en acciones de cuidado y bienestar para todos."
+          ],
+          "source_grounded_performance_meanings": [
+            "Se pone de acuerdo sobre reglas; se interesa por costumbres familiares; construye acuerdos de grupo; asume responsabilidades y propone acciones de cuidado común."
+          ],
+          "runtime_rule": "Use as age-specific meaning/routing context; do not present these paraphrases as verbatim MINEDU performance text."
+        }
+      }
+    },
+    {
+      "id": "PS_RELIGION",
+      "canonical_name": "Construye su identidad, como persona humana, amada por Dios, digna, libre y trascendente, comprendiendo la doctrina de su propia religión, abierta al diálogo con las que le son cercanas",
+      "area_id": "personal_social",
+      "area_name": "Personal Social",
+      "canonical_capacity_names": [
+        "Conoce a Dios y asume su identidad religiosa y espiritual como persona digna, libre y trascendente",
+        "Cultiva y valora las manifestaciones religiosas de su entorno argumentando su fe de manera comprensible y respetuosa"
+      ],
+      "cycle_ii_standard_semantic_summary": "Al final del ciclo II reconoce el amor recibido en familia y entorno como experiencia vinculada a Dios, expresa gratitud y practica solidaridad y generosidad, respetando manifestaciones religiosas cercanas.",
+      "source_refs": [
+        "CNEB",
+        "PCI_INICIAL_CANONICAL"
+      ],
+      "source_locator": {
+        "program_page_label_hints": [
+          92,
+          93
+        ]
+      },
+      "age_references": {
+        "3": {
+          "status": "specified",
+          "official_performance_count": 4,
+          "semantic_focus": "Gratitud, afecto, cuidado y primeras manifestaciones religiosas cercanas.",
+          "observable_patterns": [
+            "Reconoce experiencias de amor, cuidado y protección en familia y entorno.",
+            "Participa respetuosamente en manifestaciones religiosas familiares o de su comunidad.",
+            "Realiza acciones sencillas de ayuda, respeto y agradecimiento."
+          ],
+          "source_grounded_performance_meanings": [
+            "Reconoce cuidado familiar como signo de amor de Dios; participa en prácticas familiares; disfruta la creación; comparte y acoge."
+          ],
+          "runtime_rule": "Use as age-specific meaning/routing context; do not present these paraphrases as verbatim MINEDU performance text."
+        },
+        "4": {
+          "status": "specified",
+          "official_performance_count": 4,
+          "semantic_focus": "Relaciona experiencias de cuidado y comunidad con valores de su tradición.",
+          "observable_patterns": [
+            "Expresa gratitud por personas y situaciones que valora.",
+            "Participa en manifestaciones religiosas de su entorno y reconoce algunos signos o relatos.",
+            "Practica acciones de solidaridad y respeto con otros."
+          ],
+          "source_grounded_performance_meanings": [
+            "Expresa amor/cuidado mediante compartir, ayudar y colaborar; participa en prácticas religiosas familiares/comunitarias; cuida la creación; actúa solidariamente."
+          ],
+          "runtime_rule": "Use as age-specific meaning/routing context; do not present these paraphrases as verbatim MINEDU performance text."
+        },
+        "5": {
+          "status": "specified",
+          "official_performance_count": 4,
+          "semantic_focus": "Integra identidad espiritual, gratitud, solidaridad y respeto a otras expresiones.",
+          "observable_patterns": [
+            "Relaciona enseñanzas o relatos de su tradición con acciones concretas de amor, ayuda y cuidado.",
+            "Participa y explica de forma sencilla algunas manifestaciones religiosas cercanas.",
+            "Actúa con solidaridad y respeto, reconociendo que otras personas pueden vivir expresiones distintas."
+          ],
+          "source_grounded_performance_meanings": [
+            "Relaciona cuidado recibido con amor de Dios; participa y comunica prácticas de su comunidad; usa responsablemente recursos; brinda ayuda material y espiritual."
+          ],
+          "runtime_rule": "Use as age-specific meaning/routing context; do not present these paraphrases as verbatim MINEDU performance text."
+        }
+      }
+    },
+    {
+      "id": "PSICO_MOTRICIDAD",
+      "canonical_name": "Se desenvuelve de manera autónoma a través de su motricidad",
+      "area_id": "psychomotor",
+      "area_name": "Psicomotriz",
+      "canonical_capacity_names": [
+        "Comprende su cuerpo",
+        "Se expresa corporalmente"
+      ],
+      "cycle_ii_standard_semantic_summary": "Al final del ciclo II realiza acciones motrices con autonomía y seguridad, coordina movimientos globales y finos, se orienta en espacio/tiempo y representa o expresa corporalmente sensaciones y emociones.",
+      "source_refs": [
+        "CNEB",
+        "PCI_INICIAL_CANONICAL"
+      ],
+      "source_locator": {
+        "program_page_label_hints": [
+          104
+        ]
+      },
+      "age_references": {
+        "3": {
+          "status": "specified",
+          "official_performance_count": 3,
+          "semantic_focus": "Exploración motriz global y reconocimiento básico del cuerpo.",
+          "observable_patterns": [
+            "Corre, salta, trepa, rueda y explora movimientos según sus posibilidades.",
+            "Coordina acciones simples de manos/pies con objetos.",
+            "Reconoce sensaciones y algunas partes de su cuerpo.",
+            "Representa de manera inicial su cuerpo mediante dibujo o movimiento."
+          ],
+          "source_grounded_performance_meanings": [
+            "Explora desplazamientos y equilibrio básico; coordinación óculo-manual/podal inicial; reconoce sensaciones y partes del cuerpo."
+          ],
+          "runtime_rule": "Use as age-specific meaning/routing context; do not present these paraphrases as verbatim MINEDU performance text."
+        },
+        "4": {
+          "status": "specified",
+          "official_performance_count": 3,
+          "semantic_focus": "Mayor control, equilibrio, coordinación y orientación espacial.",
+          "observable_patterns": [
+            "Combina desplazamientos y movimientos con mayor control y seguridad.",
+            "Regula fuerza, equilibrio y velocidad en juegos.",
+            "Mejora coordinación óculo-manual y óculo-podal.",
+            "Reconoce cambios corporales y representa mejor su esquema corporal."
+          ],
+          "source_grounded_performance_meanings": [
+            "Combina más acciones motrices y regula fuerza/velocidad/equilibrio; coordinación acorde a objetos; reconoce cambios corporales y representa figura humana básica."
+          ],
+          "runtime_rule": "Use as age-specific meaning/routing context; do not present these paraphrases as verbatim MINEDU performance text."
+        },
+        "5": {
+          "status": "specified",
+          "official_performance_count": 3,
+          "semantic_focus": "Movimientos más complejos, precisos y adaptados a situaciones.",
+          "observable_patterns": [
+            "Combina habilidades motrices y ajusta movimientos a espacio, tiempo, objetos y otros.",
+            "Coordina acciones con mayor precisión en retos motores.",
+            "Expresa ideas o emociones mediante movimiento y postura.",
+            "Reconoce sensaciones y representa el cuerpo con mayor detalle."
+          ],
+          "source_grounded_performance_meanings": [
+            "Combina habilidades con mayor control lateral; coordinación más precisa; reconoce cambios corporales y representa el cuerpo con más detalles."
+          ],
+          "runtime_rule": "Use as age-specific meaning/routing context; do not present these paraphrases as verbatim MINEDU performance text."
+        }
+      }
+    },
+    {
+      "id": "COM_ORAL",
+      "canonical_name": "Se comunica oralmente en su lengua materna",
+      "area_id": "communication",
+      "area_name": "Comunicación",
+      "canonical_capacity_names": [
+        "Obtiene información del texto oral",
+        "Infiere e interpreta información del texto oral",
+        "Adecúa, organiza y desarrolla el texto de forma coherente y cohesionada",
+        "Utiliza recursos no verbales y paraverbales de forma estratégica",
+        "Interactúa estratégicamente con distintos interlocutores",
+        "Reflexiona y evalúa la forma, el contenido y contexto del texto oral"
+      ],
+      "cycle_ii_standard_semantic_summary": "Al final del ciclo II comprende información explícita, realiza inferencias sencillas, interpreta recursos no verbales, expresa y desarrolla ideas con vocabulario frecuente y participa de forma pertinente en intercambios.",
+      "source_refs": [
+        "CNEB",
+        "PCI_INICIAL_CANONICAL"
+      ],
+      "source_locator": {
+        "program_page_label_hints": [
+          118
+        ]
+      },
+      "age_references": {
+        "3": {
+          "status": "specified",
+          "official_performance_count": 5,
+          "semantic_focus": "Comunicación espontánea sobre necesidades y experiencias; escucha y comprensión literal inicial.",
+          "observable_patterns": [
+            "Expresa necesidades, emociones, intereses y experiencias usando palabras, gestos y voz.",
+            "Participa en conversaciones y escucha cuentos u otros relatos.",
+            "Pregunta o responde sobre lo que le interesa.",
+            "Recupera información explícita y sigue indicaciones simples.",
+            "Deduce características sencillas y comenta gustos o disgustos."
+          ],
+          "source_grounded_performance_meanings": [
+            "Expresa necesidades/intereses; conversa y escucha relatos; recupera información explícita; hace inferencias simples y expresa gustos."
+          ],
+          "runtime_rule": "Use as age-specific meaning/routing context; do not present these paraphrases as verbatim MINEDU performance text."
+        },
+        "4": {
+          "status": "specified",
+          "official_performance_count": 5,
+          "semantic_focus": "Conversación más elaborada y primeras relaciones de causa/efecto.",
+          "observable_patterns": [
+            "Comunica experiencias considerando mejor interlocutor y propósito.",
+            "Formula preguntas sobre lo que quiere saber o no comprendió.",
+            "Recupera hechos y personajes de textos orales y vuelve a contar partes.",
+            "Deduce características y relaciones simples de causa-efecto.",
+            "Expresa opiniones sobre situaciones o relatos."
+          ],
+          "source_grounded_performance_meanings": [
+            "Sostiene conversaciones y pregunta para comprender; recupera hechos; infiere características/causas; comenta preferencias sobre lo escuchado."
+          ],
+          "runtime_rule": "Use as age-specific meaning/routing context; do not present these paraphrases as verbatim MINEDU performance text."
+        },
+        "5": {
+          "status": "specified",
+          "official_performance_count": 5,
+          "semantic_focus": "Mayor organización de ideas, inferencia y participación pertinente.",
+          "observable_patterns": [
+            "Expresa necesidades, intereses y experiencias con mayor detalle y vocabulario.",
+            "Participa en conversaciones y relatos respetando intercambios.",
+            "Recupera información explícita relevante.",
+            "Formula inferencias sencillas sobre relaciones, personajes y hechos.",
+            "Opina y explica preferencias a partir de su experiencia y del texto."
+          ],
+          "source_grounded_performance_meanings": [
+            "Desarrolla ideas alrededor de un tema; respeta turnos e intercambia información; recupera detalles; infiere causas/características y justifica preferencias de manera simple."
+          ],
+          "runtime_rule": "Use as age-specific meaning/routing context; do not present these paraphrases as verbatim MINEDU performance text."
+        }
+      }
+    },
+    {
+      "id": "COM_LECTURA",
+      "canonical_name": "Lee diversos tipos de textos escritos en su lengua materna",
+      "area_id": "communication",
+      "area_name": "Comunicación",
+      "canonical_capacity_names": [
+        "Obtiene información del texto escrito",
+        "Infiere e interpreta información del texto escrito",
+        "Reflexiona y evalúa la forma, el contenido y contexto del texto escrito"
+      ],
+      "cycle_ii_standard_semantic_summary": "Al final del ciclo II lee textos sobre temas conocidos usando ilustraciones y algunas marcas/palabras, anticipa contenido, realiza inferencias sencillas y expresa opiniones o preferencias.",
+      "source_refs": [
+        "CNEB",
+        "PCI_INICIAL_CANONICAL"
+      ],
+      "source_locator": {
+        "program_page_label_hints": []
+      },
+      "age_references": {
+        "3": {
+          "status": "specified",
+          "official_performance_count": 3,
+          "semantic_focus": "Construcción de sentido principalmente desde ilustraciones y experiencia.",
+          "observable_patterns": [
+            "Identifica personas, personajes, objetos o acciones a partir de ilustraciones.",
+            "Anticipa de qué puede tratar un texto observando imágenes.",
+            "Expresa emociones, gustos o comentarios sobre lo que observa y escucha leer."
+          ],
+          "source_grounded_performance_meanings": [
+            "Lee de manera no convencional apoyándose en ilustraciones; anticipa contenido; expresa emociones ante textos."
+          ],
+          "runtime_rule": "Use as age-specific meaning/routing context; do not present these paraphrases as verbatim MINEDU performance text."
+        },
+        "4": {
+          "status": "specified",
+          "official_performance_count": 3,
+          "semantic_focus": "Usa más pistas del soporte y relaciona información para anticipar.",
+          "observable_patterns": [
+            "Obtiene información a partir de ilustraciones y algunos indicios escritos.",
+            "Predice contenido usando portada, imágenes u organización del texto.",
+            "Relaciona hechos o características sencillas.",
+            "Comenta preferencias y explica algunas razones."
+          ],
+          "source_grounded_performance_meanings": [
+            "Usa ilustraciones y otros indicios para identificar información y anticipar; comenta su experiencia de lectura."
+          ],
+          "runtime_rule": "Use as age-specific meaning/routing context; do not present these paraphrases as verbatim MINEDU performance text."
+        },
+        "5": {
+          "status": "specified",
+          "official_performance_count": 3,
+          "semantic_focus": "Lectura no convencional más intencional usando múltiples pistas.",
+          "observable_patterns": [
+            "Localiza información usando ilustraciones, palabras conocidas y características del texto.",
+            "Anticipa y contrasta hipótesis sobre contenido.",
+            "Deduce relaciones sencillas entre información del texto.",
+            "Opina sobre contenido o forma a partir de experiencia y propósito."
+          ],
+          "source_grounded_performance_meanings": [
+            "Integra ilustraciones y algunas palabras conocidas; formula predicciones a partir de diversos indicios y opina con razones simples."
+          ],
+          "runtime_rule": "Use as age-specific meaning/routing context; do not present these paraphrases as verbatim MINEDU performance text."
+        }
+      }
+    },
+    {
+      "id": "COM_ESCRITURA",
+      "canonical_name": "Escribe diversos tipos de textos en su lengua materna",
+      "area_id": "communication",
+      "area_name": "Comunicación",
+      "canonical_capacity_names": [
+        "Adecúa el texto a la situación comunicativa",
+        "Organiza y desarrolla las ideas de forma coherente y cohesionada",
+        "Utiliza convenciones del lenguaje escrito de forma pertinente",
+        "Reflexiona y evalúa la forma, el contenido y contexto del texto escrito"
+      ],
+      "cycle_ii_standard_semantic_summary": "Al final del ciclo II escribe desde sus hipótesis considerando propósito y destinatario, organiza ideas sobre un tema y usa progresivamente linealidad/direccionalidad; puede revisar lo que produjo con apoyo.",
+      "source_refs": [
+        "CNEB",
+        "PCI_INICIAL_CANONICAL"
+      ],
+      "source_locator": {
+        "program_page_label_hints": [
+          130,
+          131
+        ]
+      },
+      "age_references": {
+        "3": {
+          "status": "not_specified_in_program",
+          "official_performance_count": 0,
+          "semantic_focus": "El Programa Curricular no presenta desempeños específicos de esta competencia para 3 años.",
+          "observable_patterns": [
+            "No inventar desempeño oficial de 3 años.",
+            "Si aparece escritura espontánea, registrarla como evidencia contextual sin asignar un desempeño oficial inexistente."
+          ],
+          "source_grounded_performance_meanings": [
+            "El Programa no especifica desempeños para 3 años; no forzar escritura convencional."
+          ],
+          "runtime_rule": "Use as age-specific meaning/routing context; do not present these paraphrases as verbatim MINEDU performance text."
+        },
+        "4": {
+          "status": "specified",
+          "official_performance_count": 1,
+          "semantic_focus": "Escritura espontánea mediante grafismos desde hipótesis propias.",
+          "observable_patterns": [
+            "Escribe por iniciativa y a su manera para comunicar ideas o emociones.",
+            "Usa trazos, grafismos u otras marcas con una intención comunicativa.",
+            "Empieza a considerar el propósito de textos cercanos como notas, mensajes o relatos."
+          ],
+          "source_grounded_performance_meanings": [
+            "Escribe a su manera por iniciativa propia usando trazos/grafismos u otras formas con intención comunicativa."
+          ],
+          "runtime_rule": "Use as age-specific meaning/routing context; do not present these paraphrases as verbatim MINEDU performance text."
+        },
+        "5": {
+          "status": "specified",
+          "official_performance_count": 2,
+          "semantic_focus": "Mayor consideración de destinatario, propósito, linealidad y revisión.",
+          "observable_patterns": [
+            "Escribe por iniciativa considerando para quién y para qué escribe.",
+            "Usa grafismos, letras o aproximaciones organizadas de izquierda a derecha sobre una línea imaginaria.",
+            "Expresa ideas vinculadas a un tema o propósito.",
+            "Revisa, con ayuda, si su producción comunica lo que quería."
+          ],
+          "source_grounded_performance_meanings": [
+            "Escribe con propósito y destinatario usando hipótesis de escritura; organiza trazos/grafismos/letras con direccionalidad progresiva y revisa lo dictado/escrito con apoyo."
+          ],
+          "runtime_rule": "Use as age-specific meaning/routing context; do not present these paraphrases as verbatim MINEDU performance text."
+        }
+      }
+    },
+    {
+      "id": "COM_ARTE",
+      "canonical_name": "Crea proyectos desde los lenguajes artísticos",
+      "area_id": "communication",
+      "area_name": "Comunicación",
+      "canonical_capacity_names": [
+        "Explora y experimenta los lenguajes del arte",
+        "Aplica procesos creativos",
+        "Socializa sus procesos y proyectos"
+      ],
+      "cycle_ii_standard_semantic_summary": "Al final del ciclo II experimenta libremente con medios y materiales, explora elementos de los lenguajes artísticos, transforma vivencias e ideas mediante juego, dibujo, pintura, construcción, música o movimiento y comparte sus creaciones.",
+      "source_refs": [
+        "CNEB",
+        "PCI_INICIAL_CANONICAL"
+      ],
+      "source_locator": {
+        "program_page_label_hints": [
+          134
+        ]
+      },
+      "age_references": {
+        "3": {
+          "status": "specified",
+          "official_performance_count": 3,
+          "semantic_focus": "Exploración libre, representación de experiencias y comunicación espontánea.",
+          "observable_patterns": [
+            "Explora materiales, movimientos, sonidos y posibilidades expresivas.",
+            "Representa experiencias o intereses mediante juego simbólico, movimiento, imagen o sonido.",
+            "Comenta espontáneamente sus experiencias o producciones."
+          ],
+          "source_grounded_performance_meanings": [
+            "Explora materiales y movimientos por interés; representa vivencias y comparte espontáneamente su creación."
+          ],
+          "runtime_rule": "Use as age-specific meaning/routing context; do not present these paraphrases as verbatim MINEDU performance text."
+        },
+        "4": {
+          "status": "specified",
+          "official_performance_count": 3,
+          "semantic_focus": "Combina materiales y representa vivencias con mayor intencionalidad.",
+          "observable_patterns": [
+            "Explora por iniciativa y descubre efectos al combinar materiales.",
+            "Representa vivencias personales mediante diferentes lenguajes artísticos.",
+            "Muestra y comenta lo realizado con compañeros o adultos."
+          ],
+          "source_grounded_performance_meanings": [
+            "Combina materiales y descubre efectos; representa experiencias con distintos lenguajes; comenta lo creado."
+          ],
+          "runtime_rule": "Use as age-specific meaning/routing context; do not present these paraphrases as verbatim MINEDU performance text."
+        },
+        "5": {
+          "status": "specified",
+          "official_performance_count": 3,
+          "semantic_focus": "Exploración individual/grupal, representación del contexto y reflexión sencilla.",
+          "observable_patterns": [
+            "Explora individual o grupalmente materiales y combinaciones según intereses.",
+            "Representa vivencias y aspectos del contexto mediante diversos lenguajes.",
+            "Muestra, describe y comenta su creación y observa las de otros.",
+            "Expresa qué le gustó de su experiencia o de las producciones."
+          ],
+          "source_grounded_performance_meanings": [
+            "Explora individual y colectivamente, transforma experiencias/contexto en producciones y conversa sobre su proceso y el de otros."
+          ],
+          "runtime_rule": "Use as age-specific meaning/routing context; do not present these paraphrases as verbatim MINEDU performance text."
+        }
+      }
+    },
+    {
+      "id": "CAST_L2_ORAL",
+      "canonical_name": "Se comunica oralmente en castellano como segunda lengua",
+      "area_id": "spanish_l2",
+      "area_name": "Castellano como Segunda Lengua",
+      "canonical_capacity_names": [
+        "Obtiene información del texto oral",
+        "Infiere e interpreta información del texto oral",
+        "Adecúa, organiza y desarrolla el texto de forma coherente y cohesionada",
+        "Utiliza recursos no verbales y paraverbales de forma estratégica",
+        "Interactúa estratégicamente con distintos interlocutores",
+        "Reflexiona y evalúa la forma, el contenido y contexto del texto oral"
+      ],
+      "cycle_ii_standard_semantic_summary": "Al final del ciclo II usa palabras y frases breves en castellano, comprende información básica apoyándose en gestos y tono, y responde/interactúa combinando lenguaje verbal y no verbal.",
+      "source_refs": [
+        "CNEB",
+        "PCI_INICIAL_CANONICAL"
+      ],
+      "source_locator": {
+        "program_page_label_hints": [
+          144,
+          146
+        ]
+      },
+      "age_references": {
+        "3": {
+          "status": "not_specified_in_program",
+          "official_performance_count": 0,
+          "semantic_focus": "No hay desempeños específicos publicados para 3 años en esta competencia.",
+          "observable_patterns": [
+            "No inventar desempeño oficial."
+          ],
+          "source_grounded_performance_meanings": [
+            "No hay desempeño específico en el Programa para esta edad."
+          ],
+          "runtime_rule": "Use as age-specific meaning/routing context; do not present these paraphrases as verbatim MINEDU performance text."
+        },
+        "4": {
+          "status": "not_specified_in_program",
+          "official_performance_count": 0,
+          "semantic_focus": "No hay desempeños específicos publicados para 4 años en esta competencia.",
+          "observable_patterns": [
+            "No inventar desempeño oficial."
+          ],
+          "source_grounded_performance_meanings": [
+            "No hay desempeño específico en el Programa para esta edad."
+          ],
+          "runtime_rule": "Use as age-specific meaning/routing context; do not present these paraphrases as verbatim MINEDU performance text."
+        },
+        "5": {
+          "status": "specified",
+          "official_performance_count": 2,
+          "semantic_focus": "Comunicación oral básica en castellano con fuerte apoyo contextual y no verbal.",
+          "observable_patterns": [
+            "Comprende y usa palabras o frases breves vinculadas a situaciones cotidianas.",
+            "Obtiene información explícita con apoyo del contexto, gestos y entonación.",
+            "Responde e interactúa usando palabras, gestos, movimientos y, cuando necesita, recursos de su lengua materna."
+          ],
+          "source_grounded_performance_meanings": [
+            "Recupera información de textos orales apoyándose en gestos/contexto; responde funcionalmente con palabras/frases y puede apoyarse en su lengua materna."
+          ],
+          "runtime_rule": "Use as age-specific meaning/routing context; do not present these paraphrases as verbatim MINEDU performance text."
+        }
+      }
+    },
+    {
+      "id": "MAT_CANTIDAD",
+      "canonical_name": "Resuelve problemas de cantidad",
+      "area_id": "mathematics",
+      "area_name": "Matemática",
+      "canonical_capacity_names": [
+        "Traduce cantidades a expresiones numéricas",
+        "Comunica su comprensión sobre los números y las operaciones",
+        "Usa estrategias y procedimientos de estimación y cálculo"
+      ],
+      "cycle_ii_standard_semantic_summary": "Al final del ciclo II relaciona objetos por características perceptivas, agrupa/ordena/seria, compara cantidades y pesos, resuelve situaciones de agregar/quitar hasta cantidades pequeñas, cuenta progresivamente y usa cuantificadores y nociones temporales.",
+      "source_refs": [
+        "CNEB",
+        "PCI_INICIAL_CANONICAL"
+      ],
+      "source_locator": {
+        "program_page_label_hints": [
+          174
+        ]
+      },
+      "age_references": {
+        "3": {
+          "status": "specified",
+          "official_performance_count": 3,
+          "semantic_focus": "Comparaciones perceptivas, agrupaciones simples y conteo espontáneo.",
+          "observable_patterns": [
+            "Agrupa objetos por características perceptibles según la situación.",
+            "Usa expresiones de cantidad, peso o tiempo en contextos cotidianos.",
+            "Compara de manera inicial colecciones u objetos.",
+            "Cuenta espontáneamente en situaciones de juego aunque todavía no siempre conserve la secuencia."
+          ],
+          "source_grounded_performance_meanings": [
+            "Agrupa por rasgos perceptivos, usa cuantificadores cotidianos y realiza conteo espontáneo aún no estable."
+          ],
+          "runtime_rule": "Use as age-specific meaning/routing context; do not present these paraphrases as verbatim MINEDU performance text."
+        },
+        "4": {
+          "status": "specified",
+          "official_performance_count": 6,
+          "semantic_focus": "Mayor correspondencia, seriación y conteo en situaciones concretas.",
+          "observable_patterns": [
+            "Agrupa y compara objetos considerando criterios pertinentes.",
+            "Ordena pequeñas colecciones o seriaciones por tamaño u otra magnitud.",
+            "Establece correspondencias uno a uno en situaciones concretas.",
+            "Cuenta colecciones pequeñas y usa cuantificadores para comparar."
+          ],
+          "source_grounded_performance_meanings": [
+            "Agrupa/compara, ordena pequeñas series, establece correspondencia uno a uno, usa cuantificadores y cuenta colecciones pequeñas."
+          ],
+          "runtime_rule": "Use as age-specific meaning/routing context; do not present these paraphrases as verbatim MINEDU performance text."
+        },
+        "5": {
+          "status": "specified",
+          "official_performance_count": 7,
+          "semantic_focus": "Conteo más estable, comparación y transformaciones sencillas.",
+          "observable_patterns": [
+            "Cuenta en situaciones cotidianas hasta cantidades acordes al estándar del ciclo.",
+            "Compara colecciones y expresa dónde hay más, menos o igual en situaciones concretas.",
+            "Resuelve acciones de agregar o quitar con objetos o representaciones en cantidades pequeñas.",
+            "Ordena, compara peso y usa nociones temporales en actividades significativas."
+          ],
+          "source_grounded_performance_meanings": [
+            "Explicita criterios de agrupación, seria hasta cinco, compara cantidades/pesos/tiempos, cuenta hasta diez y resuelve agregar/quitar en pequeñas cantidades."
+          ],
+          "runtime_rule": "Use as age-specific meaning/routing context; do not present these paraphrases as verbatim MINEDU performance text."
+        }
+      }
+    },
+    {
+      "id": "MAT_FORMA",
+      "canonical_name": "Resuelve problemas de forma, movimiento y localización",
+      "area_id": "mathematics",
+      "area_name": "Matemática",
+      "canonical_capacity_names": [
+        "Modela objetos con formas geométricas y sus transformaciones",
+        "Comunica su comprensión sobre las formas y relaciones geométricas",
+        "Usa estrategias y procedimientos para orientarse en el espacio"
+      ],
+      "cycle_ii_standard_semantic_summary": "Al final del ciclo II relaciona objetos con formas 2D/3D, ubica personas y objetos, expresa direcciones y posiciones, compara longitudes y resuelve retos mediante movimientos y construcciones.",
+      "source_refs": [
+        "CNEB",
+        "PCI_INICIAL_CANONICAL"
+      ],
+      "source_locator": {
+        "program_page_label_hints": [
+          180,
+          181
+        ]
+      },
+      "age_references": {
+        "3": {
+          "status": "specified",
+          "official_performance_count": 3,
+          "semantic_focus": "Relaciones de tamaño y posición desde el propio cuerpo.",
+          "observable_patterns": [
+            "Relaciona objetos por tamaño o forma perceptible.",
+            "Usa nociones como arriba/abajo, dentro/fuera y cerca/lejos desde situaciones concretas.",
+            "Se ubica y ubica objetos en relación con su cuerpo.",
+            "Prueba movimientos o construcciones para resolver retos simples."
+          ],
+          "source_grounded_performance_meanings": [
+            "Compara tamaños en situaciones cotidianas, usa nociones espaciales básicas y prueba maneras de desplazarse/construir."
+          ],
+          "runtime_rule": "Use as age-specific meaning/routing context; do not present these paraphrases as verbatim MINEDU performance text."
+        },
+        "4": {
+          "status": "specified",
+          "official_performance_count": 5,
+          "semantic_focus": "Mayor reconocimiento de formas, posiciones y recorridos.",
+          "observable_patterns": [
+            "Relaciona objetos del entorno con formas conocidas.",
+            "Describe posiciones y desplazamientos usando referentes espaciales.",
+            "Compara longitudes o tamaños de manera concreta.",
+            "Construye y recorre trayectos probando estrategias."
+          ],
+          "source_grounded_performance_meanings": [
+            "Relaciona formas del entorno, usa más vocabulario espacial, representa relaciones en dibujos/materiales y elige estrategias."
+          ],
+          "runtime_rule": "Use as age-specific meaning/routing context; do not present these paraphrases as verbatim MINEDU performance text."
+        },
+        "5": {
+          "status": "specified",
+          "official_performance_count": 5,
+          "semantic_focus": "Relaciones espaciales más precisas y estrategias de orientación.",
+          "observable_patterns": [
+            "Modela y compara objetos considerando formas y transformaciones.",
+            "Comunica posiciones, direcciones y relaciones espaciales con mayor precisión.",
+            "Compara longitudes en situaciones concretas.",
+            "Planifica y ajusta recorridos o construcciones para resolver retos."
+          ],
+          "source_grounded_performance_meanings": [
+            "Relaciona objetos con formas geométricas, compara longitudes, usa relaciones espaciales más precisas y explica estrategias de ubicación/construcción."
+          ],
+          "runtime_rule": "Use as age-specific meaning/routing context; do not present these paraphrases as verbatim MINEDU performance text."
+        }
+      }
+    },
+    {
+      "id": "CYT_INDAGA",
+      "canonical_name": "Indaga mediante métodos científicos para construir sus conocimientos",
+      "area_id": "science_technology",
+      "area_name": "Ciencia y Tecnología",
+      "canonical_capacity_names": [
+        "Problematiza situaciones para hacer indagación",
+        "Diseña estrategias para hacer indagación",
+        "Genera y registra datos o información",
+        "Analiza datos e información",
+        "Evalúa y comunica el proceso y resultado de su indagación"
+      ],
+      "cycle_ii_standard_semantic_summary": "Al final del ciclo II explora objetos, espacio y hechos; formula preguntas, propone posibles respuestas, obtiene información mediante observación/manipulación, compara sus ideas con hallazgos y comunica el proceso y resultados oral o gráficamente.",
+      "source_refs": [
+        "CNEB",
+        "PCI_INICIAL_CANONICAL"
+      ],
+      "source_locator": {
+        "program_page_label_hints": [
+          187
+        ]
+      },
+      "age_references": {
+        "3": {
+          "status": "specified",
+          "official_performance_count": 3,
+          "semantic_focus": "Curiosidad, exploración sensorial y comunicación de descubrimientos.",
+          "observable_patterns": [
+            "Formula preguntas a partir de curiosidad por objetos, seres vivos o hechos.",
+            "Explora usando sentidos, acciones y herramientas simples.",
+            "Obtiene información directa de lo que observa y manipula.",
+            "Comunica descubrimientos mediante palabras, gestos o representaciones."
+          ],
+          "source_grounded_performance_meanings": [
+            "Pregunta por curiosidad, explora con sentidos/herramientas simples y comunica descubrimientos."
+          ],
+          "runtime_rule": "Use as age-specific meaning/routing context; do not present these paraphrases as verbatim MINEDU performance text."
+        },
+        "4": {
+          "status": "specified",
+          "official_performance_count": 5,
+          "semantic_focus": "Predicciones sencillas, observación intencional y comparación.",
+          "observable_patterns": [
+            "Formula preguntas y expresa posibles explicaciones o predicciones.",
+            "Propone acciones simples para averiguar.",
+            "Observa, manipula y registra información con diferentes recursos.",
+            "Compara lo encontrado con su idea inicial y comunica resultados."
+          ],
+          "source_grounded_performance_meanings": [
+            "Expresa lo que sabe, propone acciones/materiales, observa y registra, compara con ideas iniciales y comunica resultados."
+          ],
+          "runtime_rule": "Use as age-specific meaning/routing context; do not present these paraphrases as verbatim MINEDU performance text."
+        },
+        "5": {
+          "status": "specified",
+          "official_performance_count": 5,
+          "semantic_focus": "Indagación más organizada y comparación de evidencias.",
+          "observable_patterns": [
+            "Formula preguntas y propone posibles respuestas a situaciones observables.",
+            "Propone acciones, materiales o fuentes para obtener información.",
+            "Obtiene y registra datos mediante observación, comparación o experiencias.",
+            "Relaciona hallazgos con su pregunta o predicción.",
+            "Comunica lo realizado, resultados y descubrimientos."
+          ],
+          "source_grounded_performance_meanings": [
+            "Formula posibles explicaciones, propone estrategias/fuentes, registra datos de varias formas, contrasta predicciones y participa en conclusiones."
+          ],
+          "runtime_rule": "Use as age-specific meaning/routing context; do not present these paraphrases as verbatim MINEDU performance text."
+        }
+      }
+    },
+    {
+      "id": "TRANS_TIC",
+      "canonical_name": "Se desenvuelve en los entornos virtuales generados por las TIC",
+      "area_id": "transversal",
+      "area_name": "Competencia transversal",
+      "canonical_capacity_names": [
+        "Personaliza entornos virtuales",
+        "Gestiona información del entorno virtual",
+        "Interactúa en entornos virtuales",
+        "Crea objetos virtuales en diversos formatos"
+      ],
+      "cycle_ii_standard_semantic_summary": "Al final del ciclo II se desenvuelve en entornos virtuales al buscar/manipular objetos digitales y realizar actividades que le permiten registrar y comunicar ideas y emociones.",
+      "source_refs": [
+        "CNEB",
+        "PCI_INICIAL_CANONICAL"
+      ],
+      "source_locator": {
+        "program_page_label_hints": [
+          204
+        ]
+      },
+      "age_references": {
+        "3": {
+          "status": "not_specified_in_program",
+          "official_performance_count": 0,
+          "semantic_focus": "El Programa Curricular no presenta desempeños específicos para 3 años.",
+          "observable_patterns": [
+            "No inventar desempeño oficial."
+          ],
+          "source_grounded_performance_meanings": [
+            "Sin desempeño específico de Programa Inicial para 3 años."
+          ],
+          "runtime_rule": "Use as age-specific meaning/routing context; do not present these paraphrases as verbatim MINEDU performance text."
+        },
+        "4": {
+          "status": "not_specified_in_program",
+          "official_performance_count": 0,
+          "semantic_focus": "El Programa Curricular no presenta desempeños específicos para 4 años.",
+          "observable_patterns": [
+            "No inventar desempeño oficial."
+          ],
+          "source_grounded_performance_meanings": [
+            "Sin desempeño específico de Programa Inicial para 4 años."
+          ],
+          "runtime_rule": "Use as age-specific meaning/routing context; do not present these paraphrases as verbatim MINEDU performance text."
+        },
+        "5": {
+          "status": "specified",
+          "official_performance_count": 2,
+          "semantic_focus": "Uso acompañado de dispositivos para explorar, registrar y crear.",
+          "observable_patterns": [
+            "Explora con acompañamiento dispositivos y entornos virtuales y reconoce funciones básicas para su uso y cuidado.",
+            "Produce imágenes, audio o video para comunicar ideas, hallazgos o afectos, o para registrar acontecimientos."
+          ],
+          "source_grounded_performance_meanings": [
+            "Explora dispositivos y herramientas con acompañamiento y cuidado; produce registros digitales para comunicar ideas, hallazgos o acontecimientos."
+          ],
+          "runtime_rule": "Use as age-specific meaning/routing context; do not present these paraphrases as verbatim MINEDU performance text."
+        }
+      },
+      "capacity_resolution": {
+        "cneb_general_capacity_names": [
+          "Personaliza entornos virtuales",
+          "Gestiona información del entorno virtual",
+          "Interactúa en entornos virtuales",
+          "Crea objetos virtuales en diversos formatos"
+        ],
+        "initial_program_operational_capacity_names": [
+          "Personaliza entornos virtuales",
+          "Gestiona información del entorno virtual",
+          "Crea objetos virtuales en diversos formatos"
+        ],
+        "runtime_rule": "Para Inicial, la selección por edad sigue la operacionalización del Programa; no inventar desempeño para Interactúa."
+      }
+    },
+    {
+      "id": "TRANS_AUTONOMO",
+      "canonical_name": "Gestiona su aprendizaje de manera autónoma",
+      "area_id": "transversal",
+      "area_name": "Competencia transversal",
+      "canonical_capacity_names": [
+        "Define metas de aprendizaje",
+        "Organiza acciones estratégicas para alcanzar sus metas de aprendizaje",
+        "Monitorea y ajusta su desempeño durante el proceso de aprendizaje"
+      ],
+      "cycle_ii_standard_semantic_summary": "Al final del ciclo II identifica qué quiere lograr, conecta lo que sabe con una tarea, sigue o propone estrategias con facilitación, revisa resultados y acepta ajustes para alcanzar su propósito.",
+      "source_refs": [
+        "CNEB",
+        "PCI_INICIAL_CANONICAL"
+      ],
+      "source_locator": {
+        "program_page_label_hints": []
+      },
+      "age_references": {
+        "3": {
+          "status": "not_specified_in_program",
+          "official_performance_count": 0,
+          "semantic_focus": "No se presenta una tabla específica de desempeños para 3 años.",
+          "observable_patterns": [
+            "Puede observarse autonomía emergente, pero no inventar un desempeño oficial por edad."
+          ],
+          "source_grounded_performance_meanings": [
+            "Sin desempeño específico de Programa Inicial para 3 años."
+          ],
+          "runtime_rule": "Use as age-specific meaning/routing context; do not present these paraphrases as verbatim MINEDU performance text."
+        },
+        "4": {
+          "status": "not_specified_in_program",
+          "official_performance_count": 0,
+          "semantic_focus": "No se presenta una tabla específica de desempeños para 4 años.",
+          "observable_patterns": [
+            "Puede observarse autonomía emergente, pero no inventar un desempeño oficial por edad."
+          ],
+          "source_grounded_performance_meanings": [
+            "Sin desempeño específico de Programa Inicial para 4 años."
+          ],
+          "runtime_rule": "Use as age-specific meaning/routing context; do not present these paraphrases as verbatim MINEDU performance text."
+        },
+        "5": {
+          "status": "specified",
+          "official_performance_count": 3,
+          "semantic_focus": "Planificación, estrategia y revisión con ayuda docente.",
+          "observable_patterns": [
+            "Reflexiona con ayuda sobre qué necesita hacer para una tarea de interés, usando experiencias previas.",
+            "Plantea con ayuda una estrategia o acciones para alcanzar la tarea.",
+            "Revisa lo que hizo, identifica dificultades o cambios en su estrategia y comunica lo aprendido."
+          ],
+          "source_grounded_performance_meanings": [
+            "Reflexiona con ayuda sobre lo necesario para una tarea, propone acciones/estrategias y revisa su actuar para ajustar y comunicar lo aprendido."
+          ],
+          "runtime_rule": "Use as age-specific meaning/routing context; do not present these paraphrases as verbatim MINEDU performance text."
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "id": "family_context_and_adaptation",
+  "version": "3.0.0",
+  "purpose": "Integrar contexto familiar y acompañar adaptación.",
+  "source_refs": [
+    "DIAGNOSTICO_INICIAL_2023",
+    "ADAPTACION_2024",
+    "ACOMPANAR_COMPETENCIAS_2021"
+  ],
+  "rules": [
+    {
+      "id": "FAM-01",
+      "rule": "Recoger información familiar relevante con respeto: rutinas, lengua, experiencias, intereses, formas de cuidado y cambios importantes.",
+      "why": "Contextualiza la comprensión del niño."
+    },
+    {
+      "id": "FAM-02",
+      "rule": "Usar información familiar para planificar apoyos y continuidad, no para etiquetar capacidades o explicar todo comportamiento.",
+      "why": "La evidencia del niño sigue siendo necesaria."
+    },
+    {
+      "id": "FAM-03",
+      "rule": "Comunicar avances y necesidades con ejemplos concretos de actuaciones, evitando comparaciones entre niños.",
+      "why": "Fortalece alianza y comprensión del proceso."
+    },
+    {
+      "id": "FAM-04",
+      "rule": "En adaptación, permitir acompañamiento y separación progresiva según necesidad individual, coordinando con familia.",
+      "why": "Cada proceso de adaptación tiene ritmo propio."
+    }
+  ],
+  "generation_implications": []
+}

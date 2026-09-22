@@ -1,0 +1,474 @@
+{
+  "version": "4.0.0",
+  "source_policy": "MINEDU only",
+  "sources": [
+    {
+      "id": "CNEB",
+      "title": "Currículo Nacional de la Educación Básica",
+      "publisher": "Ministerio de Educación del Perú",
+      "year": 2016,
+      "authority_rank": 1,
+      "scope": "national_curriculum_framework",
+      "temporal_scope": "stable_until_formally_replaced_or_modified",
+      "status": "canonical",
+      "urls": {
+        "repository": "https://repositorio.minedu.gob.pe/handle/20.500.12799/4551",
+        "official_pdf": "https://www.minedu.gob.pe/curriculo/pdf/curriculo-nacional-de-la-educacion-basica.pdf"
+      },
+      "known_project_sha256": "a745ca842113f53609c435df9a13eda67371164b22ccb8492b2b02167dc2299b",
+      "use_for": [
+        "perfil de egreso",
+        "enfoques transversales",
+        "competencia/capacidad/estándar/desempeño",
+        "organización curricular",
+        "evaluación formativa",
+        "diversificación curricular"
+      ]
+    },
+    {
+      "id": "PCI_INICIAL_CANONICAL",
+      "title": "Programa Curricular de Educación Inicial",
+      "publisher": "Ministerio de Educación del Perú",
+      "year": 2016,
+      "authority_rank": 2,
+      "scope": "initial_education_curriculum",
+      "temporal_scope": "stable_until_formally_replaced_or_modified",
+      "status": "canonical_for_initial_3_5",
+      "urls": {
+        "official_pdf": "https://www.minedu.gob.pe/curriculo/pdf/programa-curricular-educacion-inicial.pdf",
+        "repository_record": "https://repositorio.minedu.gob.pe/handle/20.500.12799/4548"
+      },
+      "known_project_sha256": "1f5e7330099c894181b82265dccab9478e094b15cc766ef680608468a82c0821",
+      "use_for": [
+        "caracterización del nivel",
+        "Ciclo II",
+        "áreas",
+        "competencias",
+        "capacidades",
+        "estándares del ciclo",
+        "desempeños por edad",
+        "condiciones para favorecer competencias",
+        "tutoría",
+        "espacios/materiales/rol adulto"
+      ],
+      "important_note": "Para texto curricular canónico usar el PDF oficial directo cuya huella está registrada por el proyecto. El registro histórico del repositorio puede corresponder a una versión de trabajo anterior y no debe sobreescribir nombres actuales si difiere."
+    },
+    {
+      "id": "EVALUACION_RVM094_MOD048",
+      "title": "Norma que regula la Evaluación de las Competencias de los Estudiantes de Educación Básica, con modificación 2024",
+      "publisher": "Ministerio de Educación del Perú",
+      "year": 2024,
+      "authority_rank": 1,
+      "scope": "assessment_norm",
+      "temporal_scope": "current_normative_overlay",
+      "status": "canonical_for_assessment",
+      "urls": {
+        "base_norm": "https://repositorio.minedu.gob.pe/handle/20.500.12799/6895",
+        "modification_2024": "https://www.gob.pe/institucion/minedu/normas-legales/5518274-048-2-24-minedu"
+      },
+      "use_for": [
+        "evaluación por competencias",
+        "criterios",
+        "evidencias",
+        "retroalimentación",
+        "conclusiones descriptivas",
+        "decisiones pedagógicas"
+      ]
+    },
+    {
+      "id": "PLANIFICACION_INICIAL_2019",
+      "title": "La planificación en la Educación Inicial: guía de orientaciones",
+      "publisher": "Ministerio de Educación del Perú - Dirección de Educación Inicial",
+      "year": 2019,
+      "authority_rank": 4,
+      "scope": "planning_guidance",
+      "temporal_scope": "stable_pedagogical_guidance",
+      "status": "canonical_guidance",
+      "url": "https://repositorio.minedu.gob.pe/handle/20.500.12799/6518",
+      "use_for": [
+        "planificación anual y de corto plazo",
+        "Ciclo II",
+        "observación",
+        "necesidades/intereses",
+        "evidencias",
+        "actividades"
+      ]
+    },
+    {
+      "id": "PROYECTOS_INICIAL_2019",
+      "title": "Guía de orientación para desarrollar proyectos de aprendizaje en Educación Inicial",
+      "publisher": "Ministerio de Educación del Perú - Dirección de Educación Inicial",
+      "year": 2019,
+      "authority_rank": 4,
+      "scope": "project_based_learning_guidance",
+      "temporal_scope": "stable_pedagogical_guidance",
+      "status": "canonical_guidance",
+      "url": "https://repositorio.minedu.gob.pe/handle/20.500.12799/6517",
+      "use_for": [
+        "proyectos",
+        "intereses/preguntas auténticas",
+        "investigación",
+        "niño protagonista",
+        "docente mediador",
+        "flexibilidad"
+      ]
+    },
+    {
+      "id": "INTERACCIONES_2019",
+      "title": "Interacciones que promueven aprendizajes",
+      "publisher": "Ministerio de Educación del Perú - Dirección de Educación Inicial",
+      "year": 2019,
+      "authority_rank": 4,
+      "scope": "teacher_child_interactions",
+      "temporal_scope": "stable_pedagogical_guidance",
+      "status": "canonical_guidance",
+      "url": "https://repositorio.minedu.gob.pe/handle/20.500.12799/6886",
+      "use_for": [
+        "bienestar",
+        "seguridad afectiva",
+        "autorregulación",
+        "compromiso",
+        "pensamiento",
+        "lenguaje",
+        "mediación"
+      ]
+    },
+    {
+      "id": "JUEGO_SIMBOLICO_2019",
+      "title": "El juego simbólico en la Hora del Juego Libre en los Sectores",
+      "publisher": "Ministerio de Educación del Perú",
+      "year": 2019,
+      "authority_rank": 4,
+      "scope": "play_and_sectors",
+      "temporal_scope": "stable_pedagogical_guidance",
+      "status": "canonical_guidance",
+      "url": "https://repositorio.minedu.gob.pe/handle/20.500.12799/6519",
+      "use_for": [
+        "juego simbólico",
+        "juego libre en sectores",
+        "organización de sectores",
+        "materiales",
+        "rol docente"
+      ]
+    },
+    {
+      "id": "DIAGNOSTICO_INICIAL_2023",
+      "title": "La evaluación diagnóstica para conocer a nuestras niñas y nuestros niños",
+      "publisher": "Ministerio de Educación del Perú - Dirección de Educación Inicial",
+      "year": 2023,
+      "authority_rank": 3,
+      "scope": "diagnostic_assessment",
+      "temporal_scope": "current_stable_guidance",
+      "status": "canonical_guidance",
+      "url": "https://repositorio.minedu.gob.pe/handle/20.500.12799/12683",
+      "use_for": [
+        "evaluación diagnóstica",
+        "información previa",
+        "portafolio",
+        "observación",
+        "familias",
+        "contexto",
+        "planificación"
+      ]
+    },
+    {
+      "id": "ESPACIOS_2024",
+      "title": "Espacios educativos: ambientes pensados para nuestros bebés, niñas y niños",
+      "publisher": "Ministerio de Educación del Perú - Dirección de Educación Inicial",
+      "year": 2024,
+      "authority_rank": 3,
+      "scope": "learning_spaces_materials",
+      "temporal_scope": "current_stable_guidance",
+      "status": "canonical_guidance",
+      "url": "https://repositorio.minedu.gob.pe/handle/20.500.12799/10166",
+      "use_for": [
+        "espacios",
+        "mobiliario",
+        "materiales",
+        "sectores",
+        "autonomía",
+        "seguridad",
+        "organización por edad"
+      ]
+    },
+    {
+      "id": "ADAPTACION_2024",
+      "title": "El proceso de adaptación en Educación Inicial",
+      "publisher": "Ministerio de Educación del Perú - Dirección de Educación Inicial",
+      "year": 2024,
+      "authority_rank": 3,
+      "scope": "adaptation_transition",
+      "temporal_scope": "current_stable_guidance",
+      "status": "canonical_guidance",
+      "url": "https://repositorio.minedu.gob.pe/handle/20.500.12799/10165",
+      "use_for": [
+        "inicio/adaptación",
+        "vínculo",
+        "familia",
+        "rutinas",
+        "bienestar",
+        "transiciones"
+      ]
+    },
+    {
+      "id": "TUTORIA_INICIAL_2024",
+      "title": "La tutoría y orientación educativa en los servicios educativos del nivel inicial",
+      "publisher": "Ministerio de Educación del Perú - Dirección de Educación Inicial",
+      "year": 2024,
+      "authority_rank": 3,
+      "scope": "tutoring_wellbeing",
+      "temporal_scope": "current_stable_guidance",
+      "status": "canonical_guidance",
+      "url": "https://repositorio.minedu.gob.pe/handle/20.500.12799/10167",
+      "use_for": [
+        "bienestar",
+        "vínculos",
+        "dimensión personal",
+        "dimensión social",
+        "dimensión de aprendizajes",
+        "convivencia"
+      ]
+    },
+    {
+      "id": "SOCIOEMOCIONAL_2021",
+      "title": "Conciencia y regulación emocional: fundamentos y orientaciones para 3 a 5 años",
+      "publisher": "Ministerio de Educación del Perú - Dirección de Educación Inicial",
+      "year": 2021,
+      "authority_rank": 4,
+      "scope": "socioemotional",
+      "temporal_scope": "stable_pedagogical_guidance",
+      "status": "canonical_guidance",
+      "url": "https://repositorio.minedu.gob.pe/handle/20.500.12799/7239",
+      "use_for": [
+        "conciencia emocional",
+        "regulación emocional",
+        "vínculo seguro",
+        "rol del adulto"
+      ]
+    },
+    {
+      "id": "ACOMPANAR_COMPETENCIAS_2021",
+      "title": "Acompañar y promover el desarrollo de competencias: orientaciones para el nivel inicial",
+      "publisher": "Ministerio de Educación del Perú - Dirección de Educación Inicial",
+      "year": 2021,
+      "authority_rank": 4,
+      "scope": "pedagogical_accompaniment",
+      "temporal_scope": "stable_principles_only",
+      "status": "canonical_guidance_with_exclusions",
+      "url": "https://repositorio.minedu.gob.pe/handle/20.500.12799/7804",
+      "use_for": [
+        "mediación",
+        "escucha",
+        "vínculo",
+        "conocimiento del niño y familia",
+        "evaluación formativa"
+      ],
+      "excluded_from_canonical": [
+        "indicaciones coyunturales asociadas a emergencia/pandemia"
+      ]
+    },
+    {
+      "id": "CASTELLANO_L2_EIB_2024",
+      "title": "¿Cómo desarrollamos las competencias de Castellano como Segunda Lengua de los niños y niñas en educación inicial intercultural bilingüe?",
+      "publisher": "Ministerio de Educación del Perú - Dirección de Educación Intercultural Bilingüe",
+      "year": 2024,
+      "authority_rank": 3,
+      "scope": "spanish_as_second_language",
+      "temporal_scope": "current_stable_guidance",
+      "status": "canonical_when_applicable",
+      "url": "https://repositorio.minedu.gob.pe/handle/20.500.12799/11228",
+      "use_for": [
+        "castellano L2",
+        "situaciones comunicativas significativas",
+        "lengua materna",
+        "contexto lingüístico y sociocultural"
+      ]
+    },
+    {
+      "id": "ORALIDAD_CICLO_II_2025",
+      "title": "¿Cómo desarrollar la oralidad en los niños de ciclo II de educación inicial? Guía para docentes",
+      "publisher": "Ministerio de Educación del Perú - Dirección de Educación Inicial",
+      "year": 2025,
+      "authority_rank": 3,
+      "scope": "oral_language_cycle_ii",
+      "temporal_scope": "current_stable_guidance",
+      "status": "canonical_guidance",
+      "url": "https://repositorio.minedu.gob.pe/bitstream/handle/20.500.12799/11855/C%C3%B3mo%20desarrollar%20la%20oralidad%20en%20los%20ni%C3%B1os%20de%20ciclo%20II%20de%20educaci%C3%B3n%20inicial.pdf?isAllowed=y&sequence=1",
+      "use_for": [
+        "competencia oral",
+        "situaciones significativas",
+        "interacción oral",
+        "mediación docente"
+      ]
+    },
+    {
+      "id": "ORIENTACIONES_INICIAL_2025",
+      "title": "Orientaciones para el trabajo en el nivel de Educación Inicial",
+      "publisher": "Ministerio de Educación del Perú - Dirección de Educación Inicial",
+      "year": 2025,
+      "authority_rank": 3,
+      "scope": "current_initial_guidance",
+      "temporal_scope": "2025_guidance_with_stable_principles",
+      "status": "current_guidance",
+      "url": "https://repositorio.minedu.gob.pe/handle/20.500.12799/12682",
+      "use_for": [
+        "enfoque del nivel",
+        "atención individual/grupal",
+        "sectores",
+        "espacios/materiales",
+        "rol adulto",
+        "proyectos/unidades Ciclo II"
+      ]
+    },
+    {
+      "id": "INICIO_2026",
+      "title": "Orientaciones para el inicio del año escolar 2026",
+      "publisher": "Ministerio de Educación del Perú - Dirección de Educación Inicial",
+      "year": 2026,
+      "authority_rank": 3,
+      "scope": "school_year_start_overlay",
+      "temporal_scope": "2026_only",
+      "status": "year_overlay",
+      "url": "https://repositorio.minedu.gob.pe/handle/20.500.12799/12678",
+      "use_for": [
+        "momento de inicio 2026",
+        "precisiones actuales",
+        "adaptación y organización inicial"
+      ],
+      "do_not_promote_to_stable_core": true
+    },
+    {
+      "id": "MATH_QUANTITY_PLAY_5_2022",
+      "title": "Resolvemos problemas jugando 1: orientaciones para docentes, competencia Resuelve problemas de cantidad, 5 años",
+      "publisher": "Ministerio de Educación del Perú - Dirección de Educación Inicial",
+      "year": 2022,
+      "authority_rank": 4,
+      "scope": "mathematics_quantity_age_5_guidance",
+      "temporal_scope": "stable_pedagogical_guidance",
+      "status": "supplemental_guidance",
+      "url": "https://repositorio.minedu.gob.pe/handle/20.500.12799/8042",
+      "use_for": [
+        "juego matemático",
+        "material concreto",
+        "clasificación",
+        "correspondencia",
+        "conteo",
+        "estrategias"
+      ],
+      "runtime_condition": {
+        "age": [
+          5
+        ],
+        "competency_ids": [
+          "MAT_CANTIDAD"
+        ]
+      }
+    },
+    {
+      "id": "MATH_SHAPE_PLAY_5_2022",
+      "title": "Resolvemos problemas jugando 1: orientaciones para docentes, competencia Resuelve problemas de forma, movimiento y localización, 5 años",
+      "publisher": "Ministerio de Educación del Perú - Dirección de Educación Inicial",
+      "year": 2022,
+      "authority_rank": 4,
+      "scope": "mathematics_shape_age_5_guidance",
+      "temporal_scope": "stable_pedagogical_guidance",
+      "status": "supplemental_guidance",
+      "url": "https://repositorio.minedu.gob.pe/handle/20.500.12799/8044",
+      "use_for": [
+        "juego matemático",
+        "formas",
+        "desplazamiento",
+        "material concreto",
+        "orientación espacial"
+      ],
+      "runtime_condition": {
+        "age": [
+          5
+        ],
+        "competency_ids": [
+          "MAT_FORMA"
+        ]
+      }
+    },
+    {
+      "id": "LITERACY_NAME_5_2022",
+      "title": "Leemos y escribimos 1: orientaciones para docentes, 5 años",
+      "publisher": "Ministerio de Educación del Perú - Dirección de Educación Inicial",
+      "year": 2022,
+      "authority_rank": 4,
+      "scope": "emergent_literacy_age_5_guidance",
+      "temporal_scope": "stable_pedagogical_guidance",
+      "status": "supplemental_guidance",
+      "url": "https://repositorio.minedu.gob.pe/handle/20.500.12799/8028",
+      "use_for": [
+        "lectura emergente",
+        "escritura emergente",
+        "nombre propio",
+        "textos reales",
+        "reflexión sobre escritura"
+      ],
+      "runtime_condition": {
+        "age": [
+          5
+        ],
+        "competency_ids": [
+          "COM_LECTURA",
+          "COM_ESCRITURA"
+        ]
+      }
+    },
+    {
+      "id": "LITERACY_STORIES_5_2022",
+      "title": "Leemos y escribimos 2: orientaciones para docentes, 5 años",
+      "publisher": "Ministerio de Educación del Perú - Dirección de Educación Inicial",
+      "year": 2022,
+      "authority_rank": 4,
+      "scope": "emergent_literacy_age_5_guidance",
+      "temporal_scope": "stable_pedagogical_guidance",
+      "status": "supplemental_guidance",
+      "url": "https://repositorio.minedu.gob.pe/handle/20.500.12799/8032",
+      "use_for": [
+        "lectura a través del adulto",
+        "conversación sobre textos",
+        "dictado al adulto",
+        "aproximación al sistema de escritura"
+      ],
+      "runtime_condition": {
+        "age": [
+          5
+        ],
+        "competency_ids": [
+          "COM_LECTURA",
+          "COM_ESCRITURA",
+          "COM_ORAL"
+        ]
+      }
+    },
+    {
+      "id": "LITERACY_INFORMATIONAL_5_2022",
+      "title": "Leemos y escribimos 4: orientaciones para docentes, 5 años",
+      "publisher": "Ministerio de Educación del Perú - Dirección de Educación Inicial",
+      "year": 2022,
+      "authority_rank": 4,
+      "scope": "emergent_literacy_age_5_guidance",
+      "temporal_scope": "stable_pedagogical_guidance",
+      "status": "supplemental_guidance",
+      "url": "https://repositorio.minedu.gob.pe/handle/20.500.12799/8038",
+      "use_for": [
+        "textos informativos",
+        "lectura con propósito",
+        "escritura por sí mismos o a través del adulto",
+        "diversidad de experiencias"
+      ],
+      "runtime_condition": {
+        "age": [
+          5
+        ],
+        "competency_ids": [
+          "COM_LECTURA",
+          "COM_ESCRITURA"
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,353 @@
+{
+  "version": "4.0.0",
+  "principle": "Toda llamada con IA es específica de un workflow. El backend decide el conocimiento; el modelo no decide qué documentos leer.",
+  "workflows": {
+    "diagnostic": {
+      "required_user_context": [
+        "age",
+        "classroom_or_student_scope"
+      ],
+      "preferred_user_context": [
+        "prior_reports",
+        "family_context",
+        "observations",
+        "portfolio_summary",
+        "language_context"
+      ],
+      "required_domains": [
+        "diagnostic_assessment",
+        "formative_assessment",
+        "curriculum_age_profile"
+      ],
+      "optional_domains": [
+        "family_context_and_adaptation",
+        "teacher_interaction_and_mediation",
+        "tutoring_wellbeing"
+      ],
+      "curriculum_policy": "Cargar competencias aplicables a la edad y reducir según observaciones.",
+      "max_semantic_units": 12,
+      "max_source_claims": 5,
+      "output_guardrails": [
+        "No inferir no logrado desde no observado.",
+        "Permitir información insuficiente."
+      ]
+    },
+    "annual_plan": {
+      "required_user_context": [
+        "age",
+        "calendar",
+        "classroom_context"
+      ],
+      "preferred_user_context": [
+        "diagnostic_summary",
+        "interests",
+        "school_context",
+        "available_resources",
+        "language_context"
+      ],
+      "required_domains": [
+        "planning",
+        "diagnostic_assessment",
+        "formative_assessment",
+        "projects_units_workshops"
+      ],
+      "optional_domains": [
+        "spaces_materials",
+        "family_context_and_adaptation",
+        "tutoring_wellbeing"
+      ],
+      "curriculum_policy": "Cargar mapa curricular de edad + prioridades diagnósticas; no forzar distribución numérica igual.",
+      "max_semantic_units": 16,
+      "max_source_claims": 7,
+      "output_guardrails": [
+        "No inventar prioridades diagnósticas.",
+        "Plan revisable."
+      ]
+    },
+    "project": {
+      "required_user_context": [
+        "age",
+        "classroom_context",
+        "project_trigger_or_interest"
+      ],
+      "preferred_user_context": [
+        "diagnostic_summary",
+        "children_questions",
+        "available_time",
+        "materials",
+        "community_context",
+        "language_context"
+      ],
+      "required_domains": [
+        "projects_units_workshops",
+        "activity_design",
+        "teacher_interaction_and_mediation",
+        "evidence_and_criteria",
+        "formative_assessment"
+      ],
+      "optional_domains": [
+        "spaces_materials",
+        "family_context_and_adaptation",
+        "orality_cycle_ii"
+      ],
+      "curriculum_policy": "Recuperar tarjetas por propósito; confirmar competencia principal y luego referencia por edad.",
+      "max_semantic_units": 14,
+      "max_source_claims": 7,
+      "output_guardrails": [
+        "No llamar proyecto a una secuencia temática cerrada.",
+        "Dejar espacio a preguntas y cambios infantiles."
+      ]
+    },
+    "unit": {
+      "required_user_context": [
+        "age",
+        "classroom_context",
+        "learning_need_or_context"
+      ],
+      "preferred_user_context": [
+        "diagnostic_summary",
+        "available_time",
+        "resources",
+        "language_context"
+      ],
+      "required_domains": [
+        "planning",
+        "projects_units_workshops",
+        "activity_design",
+        "evidence_and_criteria"
+      ],
+      "optional_domains": [
+        "teacher_interaction_and_mediation",
+        "spaces_materials",
+        "formative_assessment"
+      ],
+      "curriculum_policy": "Seleccionar competencia por necesidad/propósito, no por palabra temática.",
+      "max_semantic_units": 12,
+      "max_source_claims": 6
+    },
+    "workshop": {
+      "required_user_context": [
+        "age",
+        "workshop_purpose",
+        "frequency_or_time"
+      ],
+      "preferred_user_context": [
+        "materials",
+        "space",
+        "group_context"
+      ],
+      "required_domains": [
+        "activity_design",
+        "spaces_materials",
+        "teacher_interaction_and_mediation"
+      ],
+      "optional_domains": [
+        "play_and_sectors",
+        "evidence_and_criteria"
+      ],
+      "curriculum_policy": "Asociar competencia solo si hay propósito curricular real.",
+      "max_semantic_units": 9,
+      "max_source_claims": 4
+    },
+    "activity": {
+      "required_user_context": [
+        "age",
+        "activity_purpose"
+      ],
+      "preferred_user_context": [
+        "confirmed_competency_id",
+        "criterion",
+        "expected_evidence",
+        "materials",
+        "time",
+        "group_context"
+      ],
+      "required_domains": [
+        "activity_design",
+        "teacher_interaction_and_mediation",
+        "evidence_and_criteria"
+      ],
+      "optional_domains": [
+        "spaces_materials",
+        "play_and_sectors",
+        "orality_cycle_ii"
+      ],
+      "curriculum_policy": "Si no hay competencia confirmada, usar tarjetas ricas; si existe, cargar solo esa tarjeta + edad.",
+      "max_semantic_units": 10,
+      "max_source_claims": 4
+    },
+    "criterion_and_evidence": {
+      "required_user_context": [
+        "age",
+        "competency_id",
+        "learning_situation"
+      ],
+      "preferred_user_context": [
+        "age_reference",
+        "student_or_group_context"
+      ],
+      "required_domains": [
+        "evidence_and_criteria",
+        "formative_assessment"
+      ],
+      "optional_domains": [],
+      "curriculum_policy": "Usar significado + estándar semántico + referencia por edad; criterio contextual, no supuesto texto oficial.",
+      "max_semantic_units": 7,
+      "max_source_claims": 3
+    },
+    "evidence_capture": {
+      "required_user_context": [
+        "age",
+        "student_id",
+        "criterion_id",
+        "observed_status"
+      ],
+      "preferred_user_context": [
+        "observation_note",
+        "activity_context"
+      ],
+      "required_domains": [
+        "formative_assessment",
+        "evidence_and_criteria"
+      ],
+      "optional_domains": [],
+      "curriculum_policy": "Cargar criterio/competencia seleccionados solamente.",
+      "max_semantic_units": 5,
+      "max_source_claims": 2,
+      "output_guardrails": [
+        "Evidencia no es evaluación final.",
+        "No observado no es fracaso."
+      ]
+    },
+    "assessment": {
+      "required_user_context": [
+        "age",
+        "student_id",
+        "competency_id",
+        "evidence_history"
+      ],
+      "preferred_user_context": [
+        "criteria_history",
+        "prior_teacher_conclusions",
+        "context_changes"
+      ],
+      "required_domains": [
+        "formative_assessment",
+        "evidence_and_criteria",
+        "curriculum_age_profile"
+      ],
+      "optional_domains": [
+        "diagnostic_assessment",
+        "tutoring_wellbeing"
+      ],
+      "curriculum_policy": "Cargar tarjeta, referencia de ciclo y edad; usar múltiples evidencias.",
+      "max_semantic_units": 10,
+      "max_source_claims": 4,
+      "output_guardrails": [
+        "La docente decide la valoración formal.",
+        "Conteos son señales auxiliares."
+      ]
+    },
+    "descriptive_conclusion": {
+      "required_user_context": [
+        "age",
+        "student_id",
+        "competency_id",
+        "multiple_evidence_records"
+      ],
+      "preferred_user_context": [
+        "prior_conclusion",
+        "supports_used",
+        "teacher_notes"
+      ],
+      "required_domains": [
+        "formative_assessment",
+        "curriculum_age_profile"
+      ],
+      "optional_domains": [
+        "evidence_and_criteria"
+      ],
+      "curriculum_policy": "Una competencia salvo solicitud multi-competencia.",
+      "max_semantic_units": 7,
+      "max_source_claims": 3,
+      "output_guardrails": [
+        "Proponer borrador y requerir confirmación docente.",
+        "Declarar evidencia insuficiente cuando corresponda."
+      ]
+    },
+    "family_report": {
+      "required_user_context": [
+        "student_context",
+        "teacher_confirmed_findings"
+      ],
+      "preferred_user_context": [
+        "examples_of_progress",
+        "next_steps"
+      ],
+      "required_domains": [
+        "formative_assessment",
+        "family_context_and_adaptation"
+      ],
+      "optional_domains": [
+        "tutoring_wellbeing"
+      ],
+      "curriculum_policy": "Cargar solo competencias comentadas.",
+      "max_semantic_units": 7,
+      "max_source_claims": 3,
+      "output_guardrails": [
+        "Lenguaje claro y ejemplos concretos.",
+        "No comparar con pares."
+      ]
+    },
+    "material_generation": {
+      "required_user_context": [
+        "age",
+        "activity_purpose",
+        "requested_material_type"
+      ],
+      "preferred_user_context": [
+        "competency_id",
+        "criterion",
+        "print_constraints",
+        "available_materials"
+      ],
+      "required_domains": [
+        "activity_design",
+        "spaces_materials"
+      ],
+      "optional_domains": [
+        "literacy",
+        "mathematics",
+        "play_and_sectors"
+      ],
+      "curriculum_policy": "Cargar competencia/edad cuando material está ligado a propósito curricular.",
+      "max_semantic_units": 8,
+      "max_source_claims": 4,
+      "output_guardrails": [
+        "Evitar carga textual/cognitiva excesiva.",
+        "La ficha es apoyo, no método por defecto."
+      ]
+    },
+    "today_mode": {
+      "required_user_context": [
+        "age",
+        "current_schedule_block",
+        "active_plan"
+      ],
+      "preferred_user_context": [
+        "recent_evidence",
+        "materials_status"
+      ],
+      "required_domains": [
+        "activity_design"
+      ],
+      "optional_domains": [
+        "teacher_interaction_and_mediation",
+        "evidence_and_criteria"
+      ],
+      "curriculum_policy": "Cargar solo competencias de la actividad actual.",
+      "max_semantic_units": 5,
+      "max_source_claims": 2
+    }
+  }
+}

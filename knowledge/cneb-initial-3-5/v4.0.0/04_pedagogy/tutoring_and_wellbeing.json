@@ -1,0 +1,26 @@
+{
+  "id": "tutoring_and_wellbeing",
+  "version": "3.0.0",
+  "purpose": "Orientar tutoría, convivencia y bienestar en Inicial.",
+  "source_refs": [
+    "TUTORIA_INICIAL_2024"
+  ],
+  "rules": [
+    {
+      "id": "TUT-01",
+      "rule": "Tutoría y orientación atraviesan la vida cotidiana; no se reducen a una hora aislada.",
+      "why": "Bienestar y desarrollo se construyen en interacciones y convivencia."
+    },
+    {
+      "id": "TUT-02",
+      "rule": "Atender dimensiones personal, social y de aprendizajes de manera integrada.",
+      "why": "Inicial acompaña identidad, convivencia y progresiva conciencia del aprendizaje."
+    },
+    {
+      "id": "TUT-03",
+      "rule": "Construir vínculos afectivos mediante trato cordial, respetuoso, respuesta oportuna y seguridad.",
+      "why": "Condición de bienestar y confianza."
+    }
+  ],
+  "generation_implications": []
+}

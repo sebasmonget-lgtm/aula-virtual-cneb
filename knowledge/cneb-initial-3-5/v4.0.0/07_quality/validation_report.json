@@ -1,0 +1,24 @@
+{
+  "version": "4.0.0",
+  "status": "PASS",
+  "checks": {
+    "source_ids_unique": true,
+    "sources": 22,
+    "competency_count": 14,
+    "competency_ids_unique": true,
+    "ages": [
+      3,
+      4,
+      5
+    ],
+    "combined_retrieval_units": 245,
+    "all_retrieval_source_refs_registered": true,
+    "workflow_count": 13,
+    "benchmark_cases": 50,
+    "runtime_pdf_dependency": false
+  },
+  "notes": [
+    "Sin vector DB externo; retrieval local por metadatos/texto primero.",
+    "Resúmenes de fuente separados de etiquetas oficiales y fichas semánticas."
+  ]
+}

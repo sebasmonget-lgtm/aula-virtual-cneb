@@ -1,0 +1,28 @@
+{
+  "version": "4.0.0",
+  "corpus": "06_retrieval/combined_knowledge_units.jsonl",
+  "layers": [
+    "official_reference",
+    "source_digest",
+    "semantic"
+  ],
+  "default_filters": {
+    "age_exact": true,
+    "exclude_temporal_overlays": true,
+    "exclude_inapplicable_religion": true,
+    "exclude_inapplicable_castellano_l2": true
+  },
+  "ranking_order": [
+    "exact workflow-required domain",
+    "confirmed competency_id",
+    "exact age",
+    "retrieval_priority",
+    "source authority",
+    "text/tag relevance"
+  ],
+  "selection_notes": {
+    "competency_selection": "Tras filtros deterministas, pasar tarjetas completas.",
+    "generation": "Solo unidades requeridas por workflow.",
+    "official_wording": "Para razonamiento/generación usar esta base; para una cita oficial larga exacta usar el registro oficial exacto/fuente, no una paráfrasis."
+  }
+}

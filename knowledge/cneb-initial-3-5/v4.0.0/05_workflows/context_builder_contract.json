@@ -1,0 +1,62 @@
+{
+  "version": "4.0.0",
+  "function_contract": "buildAIContext(input) -> AIContextBundle",
+  "input": {
+    "workflow": "required enum",
+    "age": "3|4|5",
+    "teacher_request": "required",
+    "classroom_context": "workflow-dependent",
+    "student_context": "workflow-dependent",
+    "competency_ids": "optional",
+    "evidence": "optional",
+    "calendar_context": "optional",
+    "language_context": "optional",
+    "temporal_context": "optional"
+  },
+  "output": {
+    "workflow": "string",
+    "context": {
+      "teacher_request": "string",
+      "classroom": "minimal relevant subset",
+      "student": "minimal relevant subset or null",
+      "evidence": "minimal relevant subset or null"
+    },
+    "curriculum": {
+      "competency_cards": "0..N complete cards",
+      "age_reference": "only requested age",
+      "special_applicability": "only relevant rules"
+    },
+    "knowledge": {
+      "semantic_units": "ranked/deduplicated",
+      "source_claims": "ranked/deduplicated",
+      "pedagogical_modules": "required excerpts",
+      "generation_rules": "workflow-specific"
+    },
+    "constraints": "hard guardrails for this call",
+    "provenance": {
+      "knowledge_base_version": "4.0.0",
+      "knowledge_unit_ids": [],
+      "source_claim_ids": [],
+      "source_refs": [],
+      "competency_ids": []
+    }
+  },
+  "selection_order": [
+    "validate age/applicability",
+    "load workflow requirements",
+    "deterministic filters",
+    "retrieve semantic units",
+    "retrieve source claims",
+    "load complete shortlisted competency cards",
+    "deduplicate",
+    "apply workflow context budget",
+    "attach provenance"
+  ],
+  "token_efficiency_rules": [
+    "No inyectar las 14 tarjetas salvo necesidad real.",
+    "No cargar edades distintas.",
+    "No cargar overlay 2026 salvo contexto.",
+    "Preferir pocas unidades completas y relevantes.",
+    "Evitar repetir la misma regla en varias capas."
+  ]
+}
