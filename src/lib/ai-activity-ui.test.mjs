@@ -28,3 +28,13 @@ test("la pantalla Planificar usa Activities parent-aware y no el prototipo aisla
   assert.match(activityScreen, /Planificar próxima actividad/);
   assert.match(activityScreen, /\/api\/activities\?experienceId=/);
 });
+
+test("reabrir y regenerar un draft conserva el ID y reinicia el estado de edición", async () => {
+  const source = await readFile(new URL("../features/dashboard/components/parent-activity-generator.tsx", import.meta.url), "utf8");
+  assert.match(source, /setPurpose\(activity\.details\.purpose\)/);
+  assert.match(source, /setCompetencyId\(activity\.details\.competency_id \?\? ""\)/);
+  assert.match(source, /setContext\(""\)/);
+  assert.match(source, /generationId, materials/);
+  assert.match(source, /setGenerationId\(data\.generation_id \?\? null\)/);
+  assert.match(source, /setGenerationId\(null\)/);
+});

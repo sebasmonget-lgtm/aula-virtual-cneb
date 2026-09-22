@@ -15,7 +15,7 @@ import { generateTeacherAnnualPlan } from "../src/lib/ai-annual-plan-ui-service.
 import { generateTeacherLearningExperience } from "../src/lib/ai-learning-experience-ui-service.mjs";
 import { nextAnnualPlanVersion, safeAnnualGenerationMetadata } from "../src/lib/annual-plan-persistence.mjs";
 import { validateLearningExperienceProposal } from "../src/lib/learning-experience-validation.mjs";
-import { validateActivityV4 } from "../src/lib/activity-v4-validation.mjs";
+import { normalizeActivityMaterials, publicActivityParent, validateActivityV4 } from "../src/lib/activity-v4-validation.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const dataDir = path.join(root, ".local", "pgdata");
@@ -26,6 +26,7 @@ const port = Number(process.env.AYNI_LOCAL_DB_PORT ?? 8788);
 const teacherId = "00000000-0000-4000-8000-000000000001";
 // Local-only handoff: production must replace this map with durable, access-controlled audit records.
 const pendingAIGenerations = new Map();
+const corsMethods = "GET,POST,PUT,OPTIONS";
 const allowedOrigins = new Set([
   "http://localhost:5173",
   "http://127.0.0.1:5173",
@@ -73,7 +74,7 @@ function send(response, status, payload, origin) {
   const headers = {
     "content-type": "application/json; charset=utf-8",
     "cache-control": "no-store",
-    "access-control-allow-methods": "GET,POST,PUT,OPTIONS",
+    "access-control-allow-methods": corsMethods,
     "access-control-allow-headers": "content-type",
   };
   if (origin && allowedOrigins.has(origin)) headers["access-control-allow-origin"] = origin;
@@ -270,7 +271,7 @@ async function activeLearningExperience(id, classroomId) {
 }
 async function activityParentContext(experience) {
   const prior = (await db.query(`select occurs_on,title,purpose,details->>'closure_or_continuity' as closure_or_continuity from activities where experience_id=$1 and status='active' order by occurs_on desc limit 5`, [experience.id])).rows;
-  return { ...experience, prior_activities: prior.map((item) => ({ occurs_on: item.occurs_on, title: item.title, purpose: item.purpose, closure_or_continuity: item.closure_or_continuity })) };
+  return publicActivityParent(experience, prior);
 }
 async function activityAllowedCompetencies(experience, classroom) {
   const parentIds = new Set([...(experience.details?.primary_competency_ids ?? []), ...(experience.details?.possible_secondary_competency_ids ?? [])]);
@@ -352,7 +353,7 @@ const server = createServer(async (request, response) => {
   if (request.method === "OPTIONS") {
     response.writeHead(204, {
       "access-control-allow-origin": origin ?? "http://localhost:5173",
-      "access-control-allow-methods": "GET,POST,OPTIONS",
+      "access-control-allow-methods": corsMethods,
       "access-control-allow-headers": "content-type",
     });
     response.end();
@@ -578,11 +579,11 @@ const server = createServer(async (request, response) => {
     if (request.method === "POST" && url.pathname === "/api/activities") {
       const context = await annualPlanningContext(); const body = await readJson(request); const experience = context && await activeLearningExperience(body.experienceId, context.id); const pending = pendingAIGenerations.get(body.generationId);
       if (!experience || !pending || pending.workflow !== "activity" || pending.classroom_id !== context.id || pending.learning_experience_id !== experience.id) { send(response, 422, { error: "La generación de actividad no corresponde a esta experiencia." }, origin); return; }
-      try { validateActivityDate(body.occursOn, experience, context); validateActivityV4(body.proposal, await activityAllowedCompetencies(experience, context)); const id=randomUUID(); await db.query(`insert into activities (id,experience_id,occurs_on,title,purpose,sequence,preparation,adaptations,status,details,generation_metadata) values ($1,$2,$3::date,$4,$5,'[]'::jsonb,$6::jsonb,'[]'::jsonb,'draft',$7::jsonb,$8::jsonb)`, [id,experience.id,body.occursOn,body.proposal.title,body.proposal.purpose,JSON.stringify({materials: body.materials ?? []}),JSON.stringify(body.proposal),JSON.stringify(pending.metadata)]); pendingAIGenerations.delete(body.generationId); send(response,200,{id,status:"draft"},origin); } catch(error) { send(response,422,{error:error.message},origin); } return;
+      try { validateActivityDate(body.occursOn, experience, context); validateActivityV4(body.proposal, await activityAllowedCompetencies(experience, context)); const id=randomUUID(); await db.query(`insert into activities (id,experience_id,occurs_on,title,purpose,sequence,preparation,adaptations,status,details,generation_metadata) values ($1,$2,$3::date,$4,$5,'[]'::jsonb,$6::jsonb,'[]'::jsonb,'draft',$7::jsonb,$8::jsonb)`, [id,experience.id,body.occursOn,body.proposal.title,body.proposal.purpose,JSON.stringify({materials: normalizeActivityMaterials(body.materials)}),JSON.stringify(body.proposal),JSON.stringify(pending.metadata)]); pendingAIGenerations.delete(body.generationId); send(response,200,{id,status:"draft"},origin); } catch(error) { send(response,422,{error:error.message},origin); } return;
     }
     if (request.method === "PUT" && url.pathname.startsWith("/api/activities/")) {
       const id=url.pathname.split("/")[3]; const context=await annualPlanningContext(); const body=await readJson(request); const current=context&&(await db.query(`select a.*,e.classroom_id,e.status as experience_status,e.details as experience_details,e.starts_on as experience_starts_on,e.ends_on as experience_ends_on from activities a join learning_experiences e on e.id=a.experience_id where a.id=$1 and e.classroom_id=$2 and a.status='draft'`,[id,context.id])).rows[0];
-      if(!current||current.experience_status!=="active"){send(response,404,{error:"Borrador no disponible."},origin);return;} try { const parent={ details: current.experience_details }; validateActivityDate(body.occursOn,{starts_on:current.experience_starts_on,ends_on:current.experience_ends_on},context); validateActivityV4(body.proposal,await activityAllowedCompetencies(parent,context)); await db.query(`update activities set occurs_on=$1::date,title=$2,purpose=$3,details=$4::jsonb,preparation=$5::jsonb,updated_at=now() where id=$6`,[body.occursOn,body.proposal.title,body.proposal.purpose,JSON.stringify(body.proposal),JSON.stringify({materials:body.materials??[]}),id]);send(response,200,{id,status:"draft"},origin);}catch(error){send(response,422,{error:error.message},origin);}return;
+      if(!current||current.experience_status!=="active"){send(response,404,{error:"Borrador no disponible."},origin);return;} const pending=typeof body.generationId==="string"?pendingAIGenerations.get(body.generationId):null; if(body.generationId&&(!pending||pending.workflow!=="activity"||pending.classroom_id!==context.id||pending.learning_experience_id!==current.experience_id)){send(response,422,{error:"La regeneración no corresponde a esta actividad."},origin);return;} try { const parent={ details: current.experience_details }; validateActivityDate(body.occursOn,{starts_on:current.experience_starts_on,ends_on:current.experience_ends_on},context); validateActivityV4(body.proposal,await activityAllowedCompetencies(parent,context)); const values=[body.occursOn,body.proposal.title,body.proposal.purpose,JSON.stringify(body.proposal),JSON.stringify({materials:normalizeActivityMaterials(body.materials)})]; if(pending){await db.query(`update activities set occurs_on=$1::date,title=$2,purpose=$3,details=$4::jsonb,preparation=$5::jsonb,generation_metadata=$6::jsonb,updated_at=now() where id=$7`,[...values,JSON.stringify(pending.metadata),id]);pendingAIGenerations.delete(body.generationId);}else await db.query(`update activities set occurs_on=$1::date,title=$2,purpose=$3,details=$4::jsonb,preparation=$5::jsonb,updated_at=now() where id=$6`,[...values,id]);send(response,200,{id,status:"draft"},origin);}catch(error){send(response,422,{error:error.message},origin);}return;
     }
     if (request.method === "POST" && url.pathname.startsWith("/api/activities/") && url.pathname.endsWith("/confirm")) {
       const id=url.pathname.split("/")[3]; const context=await annualPlanningContext(); const current=context&&(await db.query(`select a.*,e.classroom_id,e.status as experience_status,e.details as experience_details,e.starts_on as experience_starts_on,e.ends_on as experience_ends_on from activities a join learning_experiences e on e.id=a.experience_id where a.id=$1 and e.classroom_id=$2 and a.status='draft'`,[id,context.id])).rows[0]; if(!current||current.experience_status!=="active"){send(response,404,{error:"Actividad no disponible."},origin);return;}try{validateActivityDate(String(current.occurs_on).slice(0,10),{starts_on:current.experience_starts_on,ends_on:current.experience_ends_on},context);validateActivityV4(current.details,await activityAllowedCompetencies({details:current.experience_details},context));const result=await db.query(`update activities set status='active',teacher_confirmed_at=now(),updated_at=now() where id=$1 returning id,status,teacher_confirmed_at`,[id]);send(response,200,result.rows[0],origin);}catch(error){send(response,422,{error:error.message},origin);}return;
