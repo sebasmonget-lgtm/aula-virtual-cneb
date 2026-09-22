@@ -534,6 +534,8 @@ const server = createServer(async (request, response) => {
           if (!updated.rows[0]) throw new Error("Borrador anual no disponible.");
           await db.exec("commit"); send(response, 200, { id: existingId, status: "draft" }, origin); return;
         }
+        const openDraft = await db.query(`select id from annual_plans where classroom_id=$1 and school_year_id=$2 and status='draft' limit 1`, [context.id, context.school_year_id]);
+        if (openDraft.rows.length) throw new Error("Ya existe un borrador anual. Ábrelo y guarda los cambios en ese mismo plan.");
         const latest = await db.query(`select coalesce(max(version), 0) as max_version from annual_plans where classroom_id=$1 and school_year_id=$2`, [context.id, context.school_year_id]);
         const version = nextAnnualPlanVersion(Number(latest.rows[0].max_version)); const id = randomUUID();
         await db.query(`insert into annual_plans (id,classroom_id,school_year_id,curriculum_version_id,version,status,proposal,generation_metadata) values ($1,$2,$3,$4,$5,'draft',$6::jsonb,$7::jsonb)`, [id, context.id, context.school_year_id, context.curriculum_version_id, version, JSON.stringify(body.proposal), JSON.stringify(pending?.metadata ?? {})]);
@@ -563,7 +565,7 @@ const server = createServer(async (request, response) => {
     }
     if (request.method === "GET" && url.pathname === "/api/learning-experiences") {
       const context = await annualPlanningContext(); if (!context) { send(response, 404, { error: "No se encontró un aula activa." }, origin); return; }
-      const experiences = (await db.query(`select id,type,title,purpose,starts_on,ends_on,status,annual_plan_id,origin,planning_reason,source_proposal_index,details,teacher_confirmed_at from learning_experiences where classroom_id=$1 order by created_at desc`, [context.id])).rows;
+      const experiences = (await db.query(`select id,type,title,purpose,starts_on,ends_on,status,annual_plan_id,origin,planning_reason,source_proposal_index,details,teacher_confirmed_at from learning_experiences where classroom_id=$1 order by starts_on desc, id desc`, [context.id])).rows;
       send(response, 200, { experiences }, origin); return;
     }
     if (request.method === "GET" && url.pathname === "/api/ai/competency-options") {

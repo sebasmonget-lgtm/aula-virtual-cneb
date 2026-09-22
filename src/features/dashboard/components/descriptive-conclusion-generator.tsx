@@ -27,9 +27,14 @@ export function DescriptiveConclusionGenerator({ students }: { students: LocalSt
   const [operation, setOperation] = useState<"generate" | "save" | "confirm" | null>(null);
   const [loadingOptions, setLoadingOptions] = useState(false);
   const [loadingContext, setLoadingContext] = useState(false);
+  const [optionsError, setOptionsError] = useState(false);
+  const [contextError, setContextError] = useState(false);
+  const [optionsReload, setOptionsReload] = useState(0);
+  const [contextReload, setContextReload] = useState(0);
   const [messageTone, setMessageTone] = useState<"info" | "success" | "error">("info");
   const selected = assessments.find((item) => item.id === assessmentId);
   const readOnly = stored?.status === "active";
+  const hasUnsavedChanges = Boolean(stored && proposal && (generationId || JSON.stringify(proposal) !== JSON.stringify(stored.details)));
 
   useEffect(() => {
     if (!studentId) return;
@@ -37,25 +42,26 @@ export function DescriptiveConclusionGenerator({ students }: { students: LocalSt
     void fetch(`${localDatabaseApiUrl}/api/descriptive-conclusions/options?studentId=${encodeURIComponent(studentId)}`).then(async (response) => {
       if (!response.ok) throw new Error("No se pudieron cargar los análisis confirmados.");
       return response.json() as Promise<{ assessments: AssessmentOption[] }>;
-    }).then((data) => { if (live) { setAssessments(data.assessments); setAssessmentId(data.assessments[0]?.id ?? ""); setLoadingContext(Boolean(data.assessments[0]?.id)); } }).catch((error: Error) => { if (live) { setMessage(error.message); setMessageTone("error"); } }).finally(() => { if (live) setLoadingOptions(false); });
+    }).then((data) => { if (live) { setAssessments(data.assessments); setAssessmentId(data.assessments[0]?.id ?? ""); setLoadingContext(Boolean(data.assessments[0]?.id)); setOptionsError(false); setMessage(""); } }).catch((error: Error) => { if (live) { setOptionsError(true); setAssessments([]); setMessage(error.message); setMessageTone("error"); } }).finally(() => { if (live) setLoadingOptions(false); });
     return () => { live = false; };
-  }, [studentId]);
+  }, [studentId, optionsReload]);
 
   useEffect(() => {
     if (!studentId || !assessmentId) return;
     let live = true;
     const query = new URLSearchParams({ studentId, assessmentId });
     void Promise.all([
-      fetch(`${localDatabaseApiUrl}/api/descriptive-conclusions?${query}`).then((response) => response.json() as Promise<{ conclusions?: Stored[]; error?: string }>),
-      fetch(`${localDatabaseApiUrl}/api/descriptive-conclusions/context?assessmentId=${encodeURIComponent(assessmentId)}`).then((response) => response.json() as Promise<{ evidence?: Evidence[]; error?: string }>),
+      fetch(`${localDatabaseApiUrl}/api/descriptive-conclusions?${query}`).then((response) => { if (!response.ok) throw new Error("No se pudieron cargar las conclusiones."); return response.json() as Promise<{ conclusions?: Stored[]; error?: string }>; }),
+      fetch(`${localDatabaseApiUrl}/api/descriptive-conclusions/context?assessmentId=${encodeURIComponent(assessmentId)}`).then((response) => { if (!response.ok) throw new Error("No se pudieron cargar las evidencias de soporte."); return response.json() as Promise<{ evidence?: Evidence[]; error?: string }>; }),
     ]).then(([records, context]) => {
       if (!live) return;
       if (records.error || context.error) throw new Error(records.error ?? context.error);
       const current = records.conclusions?.find((item) => item.status === "draft") ?? records.conclusions?.find((item) => item.status === "active") ?? null;
       setStored(current); setProposal(current?.details ?? null); setGenerationId(null); setEvidence(context.evidence ?? []);
-    }).catch((error: Error) => { if (live) { setMessage(error.message); setMessageTone("error"); } }).finally(() => { if (live) setLoadingContext(false); });
+      setContextError(false); setMessage("");
+    }).catch((error: Error) => { if (live) { setContextError(true); setStored(null); setProposal(null); setEvidence([]); setMessage(error.message); setMessageTone("error"); } }).finally(() => { if (live) setLoadingContext(false); });
     return () => { live = false; };
-  }, [studentId, assessmentId]);
+  }, [studentId, assessmentId, contextReload]);
 
   async function generate() {
     setBusy(true); setOperation("generate"); setMessage("");
@@ -79,7 +85,7 @@ export function DescriptiveConclusionGenerator({ students }: { students: LocalSt
     } catch (error) { setMessage((error as Error).message); setMessageTone("error"); } finally { setBusy(false); setOperation(null); }
   }
   async function confirm() {
-    if (!stored || generationId) return;
+    if (!stored || hasUnsavedChanges) return;
     setBusy(true); setOperation("confirm"); setMessage("");
     try {
       const response = await fetch(`${localDatabaseApiUrl}/api/descriptive-conclusions/${stored.id}/confirm`, { method: "POST" });
@@ -98,20 +104,22 @@ export function DescriptiveConclusionGenerator({ students }: { students: LocalSt
   return <section className="ayni-workflow space-y-5">
     <header><h2 className="text-xl font-extrabold">Conclusiones descriptivas</h2><p className="mt-1 text-sm text-muted-foreground">Resume el progreso a partir de un análisis confirmado y conserva la revisión docente.</p></header>
     <div className="ayni-panel grid gap-4 p-4 sm:grid-cols-2 sm:p-5">
-      <label>Niño<select value={studentId} onChange={(event) => { setStudentId(event.target.value); setLoadingOptions(Boolean(event.target.value)); setAssessmentId(""); setAssessments([]); setEvidence([]); setTeacherNotes(""); setMessage(""); setStored(null); setProposal(null); }}><option value="">Selecciona un niño</option>{students.map((student) => <option key={student.id} value={student.id}>{student.name}</option>)}</select></label>
-      {studentId && <label>Competencia con análisis confirmado<select disabled={loadingOptions || assessments.length === 0} value={assessmentId} onChange={(event) => { setAssessmentId(event.target.value); setLoadingContext(Boolean(event.target.value)); setTeacherNotes(""); setMessage(""); setStored(null); setProposal(null); }}><option value="">Selecciona una competencia</option>{assessments.map((item) => <option key={item.id} value={item.id}>{item.competency_name} · {item.period_start} a {item.period_end}</option>)}</select></label>}
+      <label>Niño<select value={studentId} onChange={(event) => { setStudentId(event.target.value); setLoadingOptions(Boolean(event.target.value)); setOptionsError(false); setContextError(false); setAssessmentId(""); setAssessments([]); setEvidence([]); setTeacherNotes(""); setMessage(""); setStored(null); setProposal(null); }}><option value="">Selecciona un niño</option>{students.map((student) => <option key={student.id} value={student.id}>{student.name}</option>)}</select></label>
+      {studentId && !optionsError && <label>Competencia con análisis confirmado<select disabled={loadingOptions || assessments.length === 0} value={assessmentId} onChange={(event) => { setAssessmentId(event.target.value); setLoadingContext(Boolean(event.target.value)); setContextError(false); setTeacherNotes(""); setMessage(""); setStored(null); setProposal(null); }}><option value="">Selecciona una competencia</option>{assessments.map((item) => <option key={item.id} value={item.id}>{item.competency_name} · {item.period_start} a {item.period_end}</option>)}</select></label>}
     </div>
     {!studentId && <EmptyState title={students.length ? "Elige un niño para comenzar" : "Aún no hay niños en el aula"} description={students.length ? "Aquí aparecerán sus análisis confirmados para preparar una conclusión." : "Añade alumnos desde Niños para revisar su progreso."} />}
     {loadingOptions && <LoadingState label="Cargando análisis confirmados..." />}
-    {studentId && !loadingOptions && assessments.length === 0 && <EmptyState title="Todavía no hay análisis confirmados" description="Confirma un análisis de evidencias para poder redactar la conclusión descriptiva." />}
+    {studentId && !loadingOptions && !optionsError && assessments.length === 0 && <EmptyState title="Todavía no hay análisis confirmados" description="Confirma un análisis de evidencias para poder redactar la conclusión descriptiva." />}
     {message && <WorkflowFeedback tone={messageTone}>{message}</WorkflowFeedback>}
+    {optionsError && <Button variant="outline" onClick={() => { setLoadingOptions(true); setOptionsReload((value) => value + 1); }}>Reintentar carga de análisis</Button>}
     {selected && <div className="space-y-5">
       <div className="ayni-panel space-y-3 p-4 sm:p-5"><h3 className="font-bold">{selected.competency_name}</h3><p className="text-sm text-[#526b87]">Periodo: {selected.period_start} a {selected.period_end} · {selected.information_status === "sufficient" ? "Información suficiente" : "Información insuficiente"}</p><p className="text-sm">{selected.evidence_overview}</p></div>
-      {loadingContext ? <LoadingState label="Cargando evidencias de soporte..." /> : <div className="ayni-panel space-y-3 p-4 sm:p-5"><h3 className="font-bold">Evidencias de soporte · {evidence.length}</h3>{evidence.length ? <ul className="space-y-2">{evidence.map((item, index) => <li key={`${item.observed_on}-${index}`} className="rounded-xl border bg-[#fbfdff] p-3 text-sm"><p className="font-semibold">{new Date(item.observed_on).toLocaleDateString("es-PE")} · {item.activity_title}</p><p className="mt-1 text-[#526b87]">{item.criterion_text} · {item.observation_status}</p>{item.observation_note && <p className="mt-2">{item.observation_note}</p>}</li>)}</ul> : <EmptyState title="Sin evidencias de soporte" description="Revisa el análisis confirmado o registra nuevas observaciones desde una actividad." />}</div>}
+      {contextError && <Button variant="outline" onClick={() => { setLoadingContext(true); setContextReload((value) => value + 1); }}>Reintentar carga de evidencias</Button>}
+      {loadingContext ? <LoadingState label="Cargando evidencias de soporte..." /> : !contextError && <div className="ayni-panel space-y-3 p-4 sm:p-5"><h3 className="font-bold">Evidencias de soporte · {evidence.length}</h3>{evidence.length ? <ul className="space-y-2">{evidence.map((item, index) => <li key={`${item.observed_on}-${index}`} className="rounded-xl border bg-[#fbfdff] p-3 text-sm"><p className="font-semibold">{new Date(item.observed_on).toLocaleDateString("es-PE")} · {item.activity_title}</p><p className="mt-1 text-[#526b87]">{item.criterion_text} · {item.observation_status}</p>{item.observation_note && <p className="mt-2">{item.observation_note}</p>}</li>)}</ul> : <EmptyState title="Sin evidencias de soporte" description="Revisa el análisis confirmado o registra nuevas observaciones desde una actividad." />}</div>}
       {!readOnly && <label className="block">Nota docente opcional<Textarea disabled={busy} value={teacherNotes} onChange={(event) => setTeacherNotes(event.target.value)} /></label>}
-      {!proposal ? <AsyncButton busy={operation === "generate"} busyLabel="Redactando la conclusión..." disabled={busy || loadingContext || evidence.length === 0} onClick={() => void generate()}>Preparar conclusión descriptiva</AsyncButton> : <div className="ayni-panel space-y-4 p-4 sm:p-6"><WorkflowFeedback tone={readOnly ? "success" : "info"}>{readOnly ? "Conclusión confirmada · solo lectura" : stored ? "Borrador de conclusión · revisa antes de confirmar" : "Propuesta de conclusión. Revísala antes de guardar."}</WorkflowFeedback><p className="text-sm font-semibold">Estado de información: {proposal.information_status === "sufficient" ? "suficiente" : "insuficiente"}</p>
+      {!proposal ? <AsyncButton busy={operation === "generate"} busyLabel="Redactando la conclusión..." disabled={busy || loadingContext || contextError || evidence.length === 0} onClick={() => void generate()}>Preparar conclusión descriptiva</AsyncButton> : <div className="ayni-panel space-y-4 p-4 sm:p-6"><WorkflowFeedback tone={readOnly ? "success" : "info"}>{readOnly ? "Conclusión confirmada · solo lectura" : stored ? "Borrador de conclusión · revisa antes de confirmar" : "Propuesta de conclusión. Revísala antes de guardar."}</WorkflowFeedback><p className="text-sm font-semibold">Estado de información: {proposal.information_status === "sufficient" ? "suficiente" : "insuficiente"}</p>
         {Object.keys(labels).map((field) => { const value = Array.isArray(proposal[field as keyof Conclusion]) ? proposal[field as keyof Conclusion] as string[] : String(proposal[field as keyof Conclusion] ?? ""); return readOnly ? <ReadOnlyField key={field} label={labels[field]} value={value} /> : <label className="block" key={field}>{labels[field]}<Textarea disabled={busy || field === "insufficiency_reason" && proposal.information_status === "sufficient"} value={Array.isArray(value) ? value.join("\n") : value} onChange={(event) => edit(field, event.target.value)} /></label>; })}
-        {readOnly ? <Button variant="outline" onClick={() => { setStored(null); setProposal(null); setGenerationId(null); }}>Preparar nueva versión</Button> : <div className="flex flex-wrap gap-2"><AsyncButton busy={operation === "save"} busyLabel="Guardando..." disabled={busy} onClick={() => void save()}>{stored ? "Guardar cambios" : "Guardar borrador"}</AsyncButton><AsyncButton variant="outline" busy={operation === "generate"} busyLabel="Regenerando..." disabled={busy} onClick={() => void generate()}>Regenerar</AsyncButton><Button variant="outline" disabled={busy} onClick={() => { setProposal(stored?.details ?? null); setGenerationId(null); }}>Descartar cambios</Button>{stored && <AsyncButton busy={operation === "confirm"} busyLabel="Confirmando..." disabled={busy || Boolean(generationId)} onClick={() => void confirm()}>Confirmar conclusión</AsyncButton>}</div>}
+        {readOnly ? <Button variant="outline" onClick={() => { setStored(null); setProposal(null); setGenerationId(null); }}>Preparar nueva versión</Button> : <>{hasUnsavedChanges && <p className="text-sm text-[#526b87]">Guarda los cambios antes de confirmar.</p>}<div className="flex flex-wrap gap-2"><AsyncButton busy={operation === "save"} busyLabel="Guardando..." disabled={busy} onClick={() => void save()}>{stored ? "Guardar cambios" : "Guardar borrador"}</AsyncButton><AsyncButton variant="outline" busy={operation === "generate"} busyLabel="Regenerando..." disabled={busy} onClick={() => void generate()}>Regenerar</AsyncButton><Button variant="outline" disabled={busy} onClick={() => { setProposal(stored?.details ?? null); setGenerationId(null); }}>Descartar cambios</Button>{stored && <AsyncButton busy={operation === "confirm"} busyLabel="Confirmando..." disabled={busy || hasUnsavedChanges} onClick={() => void confirm()}>Confirmar conclusión</AsyncButton>}</div></>}
       </div>}
     </div>}
   </section>;
