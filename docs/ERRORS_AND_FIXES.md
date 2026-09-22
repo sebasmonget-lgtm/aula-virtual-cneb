@@ -8,7 +8,7 @@
 
 **Prevención.** La siguiente ingestión debe contrastar una representación visual/OCR de cada página, conservar página/sección/hash por elemento y ejecutar una segunda pasada antes de crear registros oficiales.
 
-**Control implementado.** `scripts/extract-curriculum-unicode.py` compara PyMuPDF con pdfplumber, normaliza solamente saltos y espacios, y rechaza `Ã`, `Â`, `â€`, `ï¿½` y `�`. El piloto de Ciencia y Tecnología (PDF p. 189, impresa p. 187) queda como `needs_visual_review`: ambos extractores conservan texto corrupto, por lo que no se escribió ningún elemento oficial.
+**Control implementado.** Los extractores preservan Unicode crítico en el piloto. `scripts/reconstruct-curriculum-reading-order.py` clasifica diferencias de orden de bloques por tokens geométricos, sin reescribir palabras; las discrepancias pendientes son de maquetación, no de tildes o eñes corruptas.
 
 ## 2026-09-22 Señal estadística sensible a evidencias repetidas
 
