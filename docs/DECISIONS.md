@@ -1,5 +1,11 @@
 # Decisiones de arquitectura
 
+## ADR 017 Runtime de carga para Knowledge Base v4
+
+**Decisión.** Cargar la Knowledge Base v4 desde sus JSON y JSONL versionados, validando versión, huellas SHA-256, cardinalidades, IDs, referencias de fuente, edades y requisitos de workflow al iniciar su consumo. El loader no realiza retrieval ni construye contextos de IA.
+
+**Consecuencia.** Las futuras llamadas de IA podrán depender de una base comprobada y trazable sin releer PDFs en runtime. La selección de unidades y `buildAIContext` quedan en una fase posterior.
+
 ## ADR 013 Estadísticas con cobertura y señales separadas
 
 **Decisión.** `StatisticsService` calcula conteos desde datos estructurados y clasifica por separado poca presencia en planificación, información insuficiente y necesidad observada con cobertura suficiente.
