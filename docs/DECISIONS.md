@@ -1,5 +1,11 @@
 # Decisiones de arquitectura
 
+## ADR 033 Conclusión descriptiva v4 dependiente de assessment confirmado
+
+**Decisión.** `descriptive_conclusion` recibe una sola competencia y usa Sol/medium con el schema estricto `descriptive-conclusion-v1`. El servidor construye el `AIContextBundle` a partir del assessment activo confirmado y las evidencias v4 que lo sustentaron; entrega al proveedor solo identificador neutro, textos depurados y contexto curricular pertinente. La conclusión se guarda como draft versionado y conserva una huella del assessment confirmado. Antes de confirmar, se comprueba que el assessment siga activo e intacto y que sus evidencias no hayan cambiado. La confirmación archiva solo la conclusión activa del mismo estudiante, competencia y periodo dentro de una transacción.
+
+**Consecuencia.** El texto es una propuesta contextual, no texto oficial ni valoración automática. La docente puede revisar, editar y regenerar sobre el mismo draft; una conclusión activa es de solo lectura. `StudentContextSnapshot` conserva un resumen seguro y `family_report` podrá consumirlo en una fase posterior. La metadata técnica permanece en servidor.
+
 ## ADR 032 Assessment v4 como síntesis pedagógica revisable
 
 **Decisión.** `assessment` consume solo evidencias v4 del estudiante, competencia y periodo solicitados. El servidor anonimiza el contexto que llega al proveedor, conserva un snapshot de fingerprints SHA-256 de evidencias y criterios, y usa Sol/medium con `assessment-v1` estricto. La docente revisa el borrador y solo puede confirmarlo si las fuentes siguen iguales. La confirmación archiva únicamente la versión activa del mismo estudiante, competencia y periodo dentro de una transacción.

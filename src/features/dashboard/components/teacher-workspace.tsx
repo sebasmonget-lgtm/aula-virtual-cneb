@@ -28,6 +28,7 @@ import { ParentActivityGenerator } from "./parent-activity-generator";
 import { AnnualPlanGenerator } from "./annual-plan-generator";
 import { LearningExperienceGenerator } from "./learning-experience-generator";
 import { AssessmentGenerator } from "./assessment-generator";
+import { DescriptiveConclusionGenerator } from "./descriptive-conclusion-generator";
 
 const nav = [
   ["Hoy", Home], ["Planificar", CalendarDays], ["Niños", Users],
@@ -208,7 +209,7 @@ export function TeacherWorkspace() {
         <main className="mx-auto w-full max-w-[1450px] px-4 pb-24 pt-6 md:px-7 md:pt-8">
           {active === "Perfil" ? dashboard ? <InstitutionProfile dashboard={dashboard} onSaved={setDashboard} /> : <p role={databaseState === "offline" ? "alert" : "status"} className="text-sm text-muted-foreground">{databaseState === "offline" ? "No se pudo conectar con la base local. Inicia npm run db:local y vuelve a cargar la página." : "Cargando perfil..."}</p> :
           active === "Evaluar" ? dashboard ? <EvaluationArea dashboard={dashboard} students={students} /> : <p role={databaseState === "offline" ? "alert" : "status"} className="text-sm text-muted-foreground">{databaseState === "offline" ? "No se pudo conectar con la base local. Inicia npm run db:local y vuelve a cargar la página." : "Cargando evaluación diagnóstica..."}</p> :
-          active === "Niños" ? <StudentsScreen students={students} /> : active === "Planificar" ? dashboard ? <PlanningArea dashboard={dashboard} /> : <p role={databaseState === "offline" ? "alert" : "status"} className="text-sm text-muted-foreground">{databaseState === "offline" ? "No se pudo conectar con la base local. Inicia npm run db:local y vuelve a cargar la página." : "Cargando planificación..."}</p> : <>
+          active === "Niños" ? <StudentsScreen students={students} /> : active === "Planificar" ? dashboard ? <PlanningArea /> : <p role={databaseState === "offline" ? "alert" : "status"} className="text-sm text-muted-foreground">{databaseState === "offline" ? "No se pudo conectar con la base local. Inicia npm run db:local y vuelve a cargar la página." : "Cargando planificación..."}</p> : <>
           {activityRunBlock ? <ActivityRunView block={activityRunBlock} onBack={() => setActivityRunBlockId(null)} onEvidence={() => openEvidenceFor(activityRunBlock)} onStepChange={async (stepIndex) => updateExecution({ scheduleEntryId: activityRunBlock.id, action: "set_step", stepIndex })} onComplete={async () => { await updateExecution({ scheduleEntryId: activityRunBlock.id, action: "complete", closureType: "as_planned" }); setActivityRunBlockId(null); }} /> : active === "Hoy" && <TodayScreen dashboard={dashboard} openEvidence={openEvidenceFor} openAttendance={() => setAttendanceOpen(true)} updateExecution={updateExecution} openActivity={openActivity} />}
           <div className={activityRunBlock || active === "Hoy" ? "hidden" : ""}>
           <section className="mb-7 flex flex-wrap items-end justify-between gap-4">
@@ -344,8 +345,15 @@ function EvidenceDialog({ open, onOpenChange, students, studentId, setStudentId,
   </Dialog>;
 }
 
-function EvaluationArea({dashboard,students}:{dashboard:LocalDashboard;students:LocalStudent[]}) { const [tab,setTab]=useState<"diagnostic"|"assessment">("diagnostic");return <><div className="mb-5 flex gap-3"><Button variant={tab==="diagnostic"?"default":"outline"} onClick={()=>setTab("diagnostic")}>Diagnóstico</Button><Button variant={tab==="assessment"?"default":"outline"} onClick={()=>setTab("assessment")}>Análisis de evidencias</Button></div>{tab==="diagnostic"?<GuidedDiagnostic dashboard={dashboard}/>:<AssessmentGenerator students={students}/>}</> }
-function PlanningArea({ dashboard }: { dashboard: LocalDashboard }) {
+function EvaluationArea({ dashboard, students }: { dashboard: LocalDashboard; students: LocalStudent[] }) {
+  const [tab, setTab] = useState<"diagnostic" | "assessment" | "conclusion">("diagnostic");
+  return <><div className="mb-5 flex flex-wrap gap-3">
+    <Button variant={tab === "diagnostic" ? "default" : "outline"} onClick={() => setTab("diagnostic")}>Diagnóstico</Button>
+    <Button variant={tab === "assessment" ? "default" : "outline"} onClick={() => setTab("assessment")}>Análisis de evidencias</Button>
+    <Button variant={tab === "conclusion" ? "default" : "outline"} onClick={() => setTab("conclusion")}>Conclusiones descriptivas</Button>
+  </div>{tab === "diagnostic" ? <GuidedDiagnostic dashboard={dashboard} /> : tab === "assessment" ? <AssessmentGenerator students={students} /> : <DescriptiveConclusionGenerator students={students} />}</>;
+}
+function PlanningArea() {
  const [tab,setTab]=useState<"annual"|"experiences"|"activities">("annual");
  return <><div className="mb-5 flex flex-wrap gap-3"><Button variant={tab==="annual"?"default":"outline"} onClick={()=>setTab("annual")}>Plan anual</Button><Button variant={tab==="experiences"?"default":"outline"} onClick={()=>setTab("experiences")}>Proyectos y unidades</Button><Button variant={tab==="activities"?"default":"outline"} onClick={()=>setTab("activities")}>Actividades</Button></div>{tab==="annual"?<AnnualPlanGenerator />:tab==="experiences"?<LearningExperienceGenerator />:<ParentActivityGenerator />}</>;
 }

@@ -1,5 +1,15 @@
 # Errores y soluciones
 
+## 2026-09-22 Comparación de snapshots JSONB de conclusión
+
+**Síntoma.** Una conclusión recién regenerada no podía confirmarse aunque el assessment fuente seguía intacto.
+
+**Causa raíz.** La comparación serializaba objetos completos con `JSON.stringify`; PostgreSQL `jsonb` reordena claves y producía un falso cambio.
+
+**Solución validada.** Comparar por campos estables (`assessment_id`, versión, timestamps, estado y hash de details) y normalizar el contenido antes de calcular SHA-256. Una prueba con PGlite verifica guardar, regenerar y confirmar, así como el bloqueo ante un cambio real del assessment.
+
+**Prevención.** Nunca usar el orden de claves de objetos JSONB como criterio de igualdad de snapshots.
+
 ## 2026-09-22 Extracción textual no fiable del Programa Curricular de Inicial
 
 **Síntoma.** Los extractores preservaron Unicode, pero produjeron diferencias de segmentación de palabras y orden de bloques por la maquetación del PDF.

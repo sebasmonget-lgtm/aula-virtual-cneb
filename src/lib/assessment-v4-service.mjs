@@ -17,7 +17,12 @@ export function validateAssessmentProposal(value, competencyId, evidenceCount) {
 
 export function neutralizeAssessmentText(value, names) {
   if (typeof value !== "string") return value;
-  return names.filter((name) => typeof name === "string" && name.trim().length > 1).sort((a, b) => b.length - a.length).reduce((text, name) => text.replace(new RegExp(name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi"), "[estudiante]"), value);
+  const withoutNames = names.filter((name) => typeof name === "string" && name.trim().length > 1).sort((a, b) => b.length - a.length).reduce((text, name) => text.replace(new RegExp(name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi"), "[estudiante]"), value);
+  return withoutNames
+    .replace(/\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/gi, "[identificador]")
+    .replace(/data:(?:image|audio|video)\/[^\s;]+;base64,[A-Za-z0-9+/=]+/gi, "[archivo privado]")
+    .replace(/(?:[A-Za-z]:\\|\/private\/|\/Users\/)[^\s]+/g, "[ruta privada]")
+    .replace(/\b[A-Za-z0-9+/]{80,}={0,2}\b/g, "[archivo privado]");
 }
 
 export function sanitizeEvidenceForAssessment(evidence, knownNames = []) {
