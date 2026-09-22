@@ -16,8 +16,8 @@ Proyecto nuevo iniciado el 20 de septiembre de 2026. Existe un shell responsive 
 - `StatisticsService` local calcula cobertura por aula y por competencia, presencia reciente en planificación y marcas observacionales. Su contrato se reutilizará para UI, informes, Excel e IA, sin duplicar lógica.
 - Primer flujo vertical persistente: actividad actual → seleccionar estudiante → describir evidencia → guardar en PostgreSQL local → actualizar cobertura.
 - Migración inicial para Supabase con entidades de Fase 0 y Fase 1, más las relaciones mínimas necesarias para el flujo de evidencia.
-- Políticas RLS preparadas, sin aplicar a ninguna cuenta.
-- Migraciones locales reproducibles y exportación JSON versionada para una futura importación controlada.
+- Políticas RLS preparadas para todas las tablas públicas, sin aplicar a ninguna cuenta; su comportamiento real requiere prueba en staging.
+- Migraciones locales reproducibles y exportación JSON versionada, habilitada solo explícitamente, para una futura importación controlada.
 - Esquema incremental para perfil institucional, logo, guías de observación y plantillas según la actualización 01.
 - Diagnóstico guiado con datos precargados, lista de competencias, cobertura por estudiantes, registro por referente/estado observacional y guardado para continuar después.
 - Catálogo local ilustrativo de dos referentes vinculado a un desempeño de muestra. La interfaz lo advierte y el importador bloquea su paso a producción por defecto.
@@ -38,6 +38,7 @@ Proyecto nuevo iniciado el 20 de septiembre de 2026. Existe un shell responsive 
 - Ocho workflows generan mediante modelo: `annual_plan`, `project`, `unit`, `activity`, `criterion_and_evidence`, `assessment`, `descriptive_conclusion` y `family_report`. `evidence_capture` sigue siendo determinista en código. Los otros workflows aún no generan. Supabase real, despliegue, PDFs, embeddings, vector DB y Jev legacy siguen fuera de esta capa.
 - v3, los catálogos `curriculum/` heredados, Jev y `CNEB_Inicial_AI_KnowledgePack_v2` se conservan solo como histórico, compatibilidad y pruebas legacy; no son dependencias de la arquitectura v4.
 - Auditoría de consumidores de Jev (2026-09-22): `jev-decision.mjs` solo se importa desde `jev-decision.test.mjs` y `jev-benchmark.test.mjs`; no tiene consumidores productivos activos. Las integraciones nuevas deben importar únicamente `prepare-ai-request-v4.mjs`.
+- Preparación para piloto (2026-09-22): `ai_pending_generations` persiste el handoff de generación con TTL de 24 horas; onboarding local configura docente, institución, año, aula, edad y calendario, y Niños importa formularios/CSV. La identidad local sigue siendo de simulación por proceso. Las fotos pasan por un adaptador privado local y la migración Supabase define bucket privado y políticas. Se cerraron omisiones de RLS en Plan Anual y referencia curricular; índices únicos protegen versiones de assessment/conclusión. La exportación local requiere habilitación expresa. `docs/PRODUCTION_READINESS.md` registra blockers y checklist para staging.
 
 ## Decisiones recientes
 
@@ -48,12 +49,9 @@ Proyecto nuevo iniciado el 20 de septiembre de 2026. Existe un shell responsive 
 
 ## Próximo trabajo recomendado
 
-1. Diseñar `material_generation` y la futura representación documental del informe familiar confirmado, sin volver a pedir al modelo que reconstruya su contenido.
-2. Añadir carga/normalización de logo aportado por institución, consentimiento y las siguientes clases de evidencia multimedia privadas (audio/video).
-3. Diseñar continuidad pedagógica entre las síntesis confirmadas y la planificación futura sin automatizar decisiones docentes.
-4. Crear proyectos nuevos de Supabase y hosting/staging; aplicar migraciones y comprobar RLS/Storage con dos usuarios de prueba.
-5. Completar importación en staging solo después de validar identidad, respaldos y RLS.
-6. Crear la interfaz de radar de competencias y, en una fase posterior, reutilizar sus estadísticas para Excel sin duplicar cálculos.
+1. Seguir `docs/PRODUCTION_READINESS.md`: crear staging nuevo, conectar Auth por petición, backend y Storage privado, aplicar migraciones y comprobar aislamiento con dos usuarios ficticios.
+2. Probar backups/restauración, importación revisada, flujo pedagógico completo y móvil antes de solicitar uso de datos reales.
+3. Posponer módulos pedagógicos secundarios y documentos derivados hasta cerrar los blockers del piloto.
 
 ## Riesgos
 

@@ -72,7 +72,7 @@ export function createAssessmentRouteHandler({ db, annualPlanningContext, readJs
         const plan = resolveAIExecutionPlan({ workflow: "assessment", task: "generation" });
         const result = await generate(input, { provider: createProvider(plan), executionPlan: plan });
         const generationId = randomUUID();
-        pending.set(generationId, { workflow: "assessment", classroom_id: context.id, student_id: student.id, competency_v4_id: card.id, period_start: body.periodStart, period_end: body.periodEnd, source_evidence_ids: rows.map((row) => row.id), source_evidence_snapshot: assessmentSourceSnapshot(rows), metadata: metadataForAudit(result.metadata), createdAt: Date.now() });
+        await pending.set(generationId, { workflow: "assessment", classroom_id: context.id, student_id: student.id, competency_v4_id: card.id, period_start: body.periodStart, period_end: body.periodEnd, source_evidence_ids: rows.map((row) => row.id), source_evidence_snapshot: assessmentSourceSnapshot(rows), metadata: metadataForAudit(result.metadata), createdAt: Date.now() });
         send(response, 200, { proposal: result.output, generation_id: generationId, evidence_count: rows.length }, origin);
         return true;
       }
@@ -80,7 +80,7 @@ export function createAssessmentRouteHandler({ db, annualPlanningContext, readJs
         const body = await readJson(request);
         const { student } = await scope(context, body.studentId, body.competencyId);
         validateAssessmentPeriod(body.periodStart, body.periodEnd, context.calendar);
-        const item = pending.get(body.generationId);
+        const item = await pending.get(body.generationId);
         checkPending(item, context, student.id, body.competencyId, body.periodStart, body.periodEnd);
         validateAssessmentProposal(body.proposal, body.competencyId, item.source_evidence_ids.length);
         const rows = await loadAssessmentEvidence(db, { studentId: student.id, competencyId: body.competencyId, periodStart: body.periodStart, periodEnd: body.periodEnd });
@@ -90,19 +90,19 @@ export function createAssessmentRouteHandler({ db, annualPlanningContext, readJs
         const id = existing?.id ?? randomUUID();
         if (existing) await db.query(`update competency_assessments set details=$1::jsonb,generation_metadata=$2::jsonb,source_evidence_ids=$3::jsonb,source_evidence_snapshot=$4::jsonb,updated_at=now() where id=$5`, [JSON.stringify(body.proposal), JSON.stringify(item.metadata), JSON.stringify(item.source_evidence_ids), JSON.stringify(item.source_evidence_snapshot), id]);
         else await db.query(`insert into competency_assessments(id,student_id,competency_v4_id,period_start,period_end,version,source_evidence_ids,source_evidence_snapshot,details,generation_metadata,status) values($1,$2,$3,$4::date,$5::date,$6,$7::jsonb,$8::jsonb,$9::jsonb,$10::jsonb,'draft')`, [id, student.id, body.competencyId, body.periodStart, body.periodEnd, version, JSON.stringify(item.source_evidence_ids), JSON.stringify(item.source_evidence_snapshot), JSON.stringify(body.proposal), JSON.stringify(item.metadata)]);
-        pending.delete(body.generationId);
+        await pending.delete(body.generationId);
         send(response, 200, { id, status: "draft" }, origin);
         return true;
       }
       const match = url.pathname.match(/^\/api\/assessments\/([^/]+)(\/confirm)?$/);
       if (match && request.method === "PUT" && !match[2]) {
         const body = await readJson(request), current = await currentDraft(context, match[1]);
-        const item = body.generationId ? pending.get(body.generationId) : null;
+        const item = body.generationId ? await pending.get(body.generationId) : null;
         if (body.generationId) checkPending(item, context, current.student_id, current.competency_v4_id, dateOnly(current.period_start), dateOnly(current.period_end));
         validateAssessmentProposal(body.proposal, current.competency_v4_id, item?.source_evidence_ids.length ?? current.source_evidence_ids.length);
         if (item) {
           await db.query(`update competency_assessments set details=$1::jsonb,generation_metadata=$2::jsonb,source_evidence_ids=$3::jsonb,source_evidence_snapshot=$4::jsonb,updated_at=now() where id=$5`, [JSON.stringify(body.proposal), JSON.stringify(item.metadata), JSON.stringify(item.source_evidence_ids), JSON.stringify(item.source_evidence_snapshot), current.id]);
-          pending.delete(body.generationId);
+          await pending.delete(body.generationId);
         } else await db.query(`update competency_assessments set details=$1::jsonb,updated_at=now() where id=$2`, [JSON.stringify(body.proposal), current.id]);
         send(response, 200, { id: current.id, status: "draft" }, origin);
         return true;

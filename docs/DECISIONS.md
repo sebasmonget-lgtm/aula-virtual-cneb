@@ -225,3 +225,9 @@ La señal interna usa una cobertura mínima configurable de 50%, y requiere al m
 **Persistencia.** `family_reports` guarda el contenido estructurado, periodo, versión y estado draft/active/archived. IDs de conclusiones, snapshot con huellas de contenido y metadata de generación permanecen en servidor. Guardado de nueva generación y confirmación revalidan fuentes; la confirmación archiva la versión anterior del mismo estudiante y periodo en una transacción. La edición manual conserva auditoría y fuentes; regenerar reemplaza ambas mediante un identificador válido. Migraciones local y Supabase preparan índices únicos parciales y RLS por estudiante.
 
 **Consecuencia.** El informe confirmado queda inmutable y podrá alimentar un documento futuro sin regeneración. No se incorpora a `StudentContextSnapshot`: ya existen conclusiones confirmadas como fuente de continuidad y se evita que la comunicación familiar se convierta en nueva fuente de assessment. `material_generation`, PDF, despliegue y Supabase real siguen pendientes.
+
+## ADR 036 Preparación local separada de autorización real
+
+**Decisión.** El piloto local puede configurar un docente/aula nuevos y cargar niños sin SQL manual. `AYNI_LOCAL_TEACHER_ID` selecciona la identidad ficticia del proceso local; no se toma del navegador ni se considera Auth. Los datos pedagógicos se filtran por aula. El handoff de generación se guarda en PostgreSQL con TTL; fotos usan una interfaz de almacenamiento privado. La exportación de datos de menores exige habilitación explícita.
+
+**Consecuencia.** RLS y Storage están definidos en migraciones, pero no probados contra Supabase. No se despliega el servidor local como backend real. Un API con Auth verificada por petición, aislamiento en staging, backups y prueba con dos docentes son condiciones para datos reales. Ver `docs/PRODUCTION_READINESS.md`.

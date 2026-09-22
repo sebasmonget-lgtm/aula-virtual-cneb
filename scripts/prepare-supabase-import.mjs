@@ -20,6 +20,7 @@ const tableOrder = [
   "class_schedule_entries", "daily_execution_logs", "attendance_records", "calendar_exceptions",
   "student_context_snapshots",
   "annual_plans", "annual_plan_competencies", "annual_plan_changes",
+  "competency_assessments", "competency_descriptive_conclusions", "family_reports",
 ];
 const userFields = new Set(["user_id", "owner_id", "owner_user_id", "teacher_id", "created_by", "author_id"]);
 const arrayFields = new Set(["official_performance_ids", "performance_ids"]);

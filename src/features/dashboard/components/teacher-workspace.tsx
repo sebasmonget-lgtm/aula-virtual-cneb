@@ -18,7 +18,7 @@ import {
   SidebarProvider, SidebarTrigger,
 } from "@/components/ui/sidebar";
 import {
-  createLocalEvidence, loadLocalDashboard, saveLocalAttendance, updateLocalExecution, type ActivityCriterion, type LocalDashboard, type LocalStudent, type ObservationStatus,
+  createLocalEvidence, loadLocalDashboard, loadPilotSetup, saveLocalAttendance, updateLocalExecution, type ActivityCriterion, type LocalDashboard, type LocalStudent, type ObservationStatus,
 } from "@/src/lib/local-database";
 import { GuidedDiagnostic, InstitutionProfile } from "./profile-and-diagnostic";
 import { StudentsScreen } from "./students-screen";
@@ -30,6 +30,7 @@ import { LearningExperienceGenerator } from "./learning-experience-generator";
 import { AssessmentGenerator } from "./assessment-generator";
 import { DescriptiveConclusionGenerator } from "./descriptive-conclusion-generator";
 import { FamilyReportGenerator } from "./family-report-generator";
+import { PilotSetup } from "./pilot-setup";
 
 const nav = [
   ["Hoy", Home], ["Planificar", CalendarDays], ["Niños", Users],
@@ -41,11 +42,6 @@ const mobileNav = [
   ["Hoy", "Hoy", Home], ["Plan", "Planificar", CalendarDays], ["Diagnóstico", "Evaluar", ClipboardCheck],
   ["Alumnos", "Niños", Users], ["Más", "Perfil", MoreHorizontal],
 ] as const;
-
-const fallbackStudents: LocalStudent[] = [
-  ["1", "Alessia"], ["2", "Benjamín"], ["3", "Camila"],
-  ["4", "Diego"], ["5", "Emilia"], ["6", "Fabián"],
-].map(([id, name]) => ({ id, name }));
 
 export function TeacherWorkspace() {
   const [active, setActive] = useState("Hoy");
@@ -61,15 +57,21 @@ export function TeacherWorkspace() {
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [dashboard, setDashboard] = useState<LocalDashboard | null>(null);
+  const [needsSetup, setNeedsSetup] = useState(false);
   const [databaseState, setDatabaseState] = useState<"checking" | "connected" | "offline">("checking");
+  const [retry, setRetry] = useState(0);
   const today = useMemo(() => new Intl.DateTimeFormat("es-PE", {
     weekday: "long", day: "numeric", month: "long",
   }).format(new Date()), []);
 
   useEffect(() => {
     const controller = new AbortController();
-    loadLocalDashboard(controller.signal)
+    loadPilotSetup().then((setup) => {
+      if (!setup.configured) { setNeedsSetup(true); setDatabaseState("connected"); return null; }
+      return loadLocalDashboard(controller.signal);
+    })
       .then((data) => {
+        if (!data) return;
         setDashboard(data);
         setStudentId(data.students[2]?.id ?? data.students[0]?.id ?? "");
         setCriterionId(data.activity?.criteria[0]?.id ?? "");
@@ -77,7 +79,7 @@ export function TeacherWorkspace() {
       })
       .catch(() => setDatabaseState("offline"));
     return () => controller.abort();
-  }, []);
+  }, [retry]);
 
   async function saveEvidence(andNext = false) {
     if (!criterionId || !observationStatus) return;
@@ -87,7 +89,7 @@ export function TeacherWorkspace() {
       if (!dashboard) throw new Error("Inicia la base local para guardar información.");
       await createLocalEvidence({
         studentId,
-        activityId: evidenceContext?.activityId ?? dashboard.activity.id,
+        activityId: evidenceContext?.activityId ?? dashboard.activity?.id ?? "",
         criterionId,
         observationStatus,
         observationText: note || undefined,
@@ -115,7 +117,7 @@ export function TeacherWorkspace() {
     }
   }
 
-  const students = dashboard?.students ?? fallbackStudents;
+  const students = dashboard?.students ?? [];
   const profile = dashboard?.profile;
   const activity = dashboard?.activity;
   const metrics = dashboard?.metrics;
@@ -158,6 +160,9 @@ export function TeacherWorkspace() {
 
   const activityRunBlock = dashboard?.today.blocks.find((block) => block.id === activityRunBlockId) ?? null;
 
+  if (needsSetup) return <PilotSetup onReady={(ready) => { setDashboard(ready); setNeedsSetup(false); setDatabaseState("connected"); }} />;
+  if (databaseState === "offline") return <main className="mx-auto max-w-xl space-y-4 p-6"><h1 className="text-2xl font-bold">No se pudo conectar con el aula</h1><p>Inicia la base local y vuelve a intentarlo. Tus borradores guardados seguirán disponibles.</p><Button onClick={() => { setDatabaseState("checking"); setRetry((value) => value + 1); }}>Reintentar</Button></main>;
+
   return (
     <SidebarProvider style={{ "--sidebar-width": "13.5rem" } as CSSProperties}>
       <Sidebar collapsible="offcanvas" className="border-r border-[#e4eaf3] text-[#19345b]">
@@ -187,7 +192,7 @@ export function TeacherWorkspace() {
         <SidebarFooter className="p-4">
           <div className="rounded-xl border border-[#dce6f4] bg-white p-3">
             <p className="text-sm font-semibold">{profile?.section ?? "Sala Amarilla"} · {profile?.age_label ?? "5 años"}</p>
-            <p className="mt-1 text-xs text-[#63748d]">{profile?.school_year ?? 2026} · {metrics?.students_total ?? 6} estudiantes</p>
+            <p className="mt-1 text-xs text-[#63748d]">{profile?.school_year ?? "Año sin configurar"} · {metrics?.students_total ?? 0} estudiantes</p>
           </div>
         </SidebarFooter>
       </Sidebar>
@@ -196,25 +201,25 @@ export function TeacherWorkspace() {
         <header className="sticky top-0 z-20 flex h-18 items-center justify-between border-b border-[#e7edf7] bg-white/95 px-4 backdrop-blur md:px-8">
           <div className="flex items-center gap-3">
             <SidebarTrigger className="md:hidden" aria-label="Abrir menú"><Menu /></SidebarTrigger>
-            <div><p className="text-sm font-semibold capitalize md:text-base">{today}</p><p className="hidden text-xs text-muted-foreground sm:block">{profile?.institution_name ?? "Jardín Los Girasoles"} · {profile?.section ?? "Sala Amarilla"}</p></div>
+            <div><p className="text-sm font-semibold capitalize md:text-base">{today}</p><p className="hidden text-xs text-muted-foreground sm:block">{profile?.institution_name ?? "Institución por configurar"} · {profile?.section ?? "Aula"}</p></div>
           </div>
           <div className="flex items-center gap-2">
-            <div className={`hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold sm:flex ${databaseState === "connected" ? "bg-[#e5f1ee] text-[#1f625c]" : databaseState === "offline" ? "bg-[#fff1d6] text-[#8a5418]" : "bg-muted text-muted-foreground"}`}>
+            <div className={`hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold sm:flex ${databaseState === "connected" ? "bg-[#e5f1ee] text-[#1f625c]" : "bg-muted text-muted-foreground"}`}>
               <Database className="size-3.5" />
-              {databaseState === "connected" ? "Base local conectada" : databaseState === "offline" ? "Modo demostración" : "Conectando"}
+              {databaseState === "connected" ? "Base local conectada" : "Conectando"}
             </div>
-            <div className="grid size-9 place-items-center rounded-full bg-[#d9eaf4] text-sm font-bold text-[#155a78]">{profile?.teacher_name?.split(" ").map((part) => part[0]).slice(0, 2).join("") ?? "MR"}</div>
+            <div className="grid size-9 place-items-center rounded-full bg-[#d9eaf4] text-sm font-bold text-[#155a78]">{profile?.teacher_name?.split(" ").map((part) => part[0]).slice(0, 2).join("") ?? ""}</div>
           </div>
         </header>
 
         <main className="mx-auto w-full max-w-[1450px] px-4 pb-24 pt-6 md:px-7 md:pt-8">
-          {active === "Perfil" ? dashboard ? <InstitutionProfile dashboard={dashboard} onSaved={setDashboard} /> : <p role={databaseState === "offline" ? "alert" : "status"} className="text-sm text-muted-foreground">{databaseState === "offline" ? "No se pudo conectar con la base local. Inicia npm run db:local y vuelve a cargar la página." : "Cargando perfil..."}</p> :
-          active === "Evaluar" ? dashboard ? <EvaluationArea dashboard={dashboard} students={students} /> : <p role={databaseState === "offline" ? "alert" : "status"} className="text-sm text-muted-foreground">{databaseState === "offline" ? "No se pudo conectar con la base local. Inicia npm run db:local y vuelve a cargar la página." : "Cargando evaluación diagnóstica..."}</p> :
-          active === "Niños" ? <StudentsScreen students={students} /> : active === "Planificar" ? dashboard ? <PlanningArea /> : <p role={databaseState === "offline" ? "alert" : "status"} className="text-sm text-muted-foreground">{databaseState === "offline" ? "No se pudo conectar con la base local. Inicia npm run db:local y vuelve a cargar la página." : "Cargando planificación..."}</p> : <>
+          {active === "Perfil" ? dashboard ? <InstitutionProfile dashboard={dashboard} onSaved={setDashboard} /> : <p role="status" className="text-sm text-muted-foreground">Cargando perfil...</p> :
+          active === "Evaluar" ? dashboard ? <EvaluationArea dashboard={dashboard} students={students} /> : <p role="status" className="text-sm text-muted-foreground">Cargando evaluación diagnóstica...</p> :
+          active === "Niños" ? dashboard ? <StudentsScreen students={students} onImported={setDashboard} /> : <p role="status">Cargando aula...</p> : active === "Planificar" ? dashboard ? <PlanningArea /> : <p role="status" className="text-sm text-muted-foreground">Cargando planificación...</p> : <>
           {activityRunBlock ? <ActivityRunView block={activityRunBlock} onBack={() => setActivityRunBlockId(null)} onEvidence={() => openEvidenceFor(activityRunBlock)} onStepChange={async (stepIndex) => updateExecution({ scheduleEntryId: activityRunBlock.id, action: "set_step", stepIndex })} onComplete={async () => { await updateExecution({ scheduleEntryId: activityRunBlock.id, action: "complete", closureType: "as_planned" }); setActivityRunBlockId(null); }} /> : active === "Hoy" && <TodayScreen dashboard={dashboard} openEvidence={openEvidenceFor} openAttendance={() => setAttendanceOpen(true)} updateExecution={updateExecution} openActivity={openActivity} />}
           <div className={activityRunBlock || active === "Hoy" ? "hidden" : ""}>
           <section className="mb-7 flex flex-wrap items-end justify-between gap-4">
-            <div><p className="mb-1 text-sm font-semibold text-[#087d96]">{active}</p><h1 className="text-3xl font-bold tracking-[-0.035em] md:text-4xl">Buenos días, profesora {profile?.teacher_name?.split(" ")[0] ?? "Marisol"}</h1><p className="mt-2 max-w-2xl text-base text-muted-foreground">Esto es lo más importante para tu jornada de hoy.</p></div>
+            <div><p className="mb-1 text-sm font-semibold text-[#087d96]">{active}</p><h1 className="text-3xl font-bold tracking-[-0.035em] md:text-4xl">Buenos días, profesora {profile?.teacher_name?.split(" ")[0] ?? ""}</h1><p className="mt-2 max-w-2xl text-base text-muted-foreground">Esto es lo más importante para tu jornada de hoy.</p></div>
           </section>
 
           <div className="grid gap-5 lg:grid-cols-[minmax(0,1.55fr)_minmax(300px,.75fr)]">
@@ -225,39 +230,33 @@ export function TeacherWorkspace() {
               </div>
               <div className="p-5 md:p-7">
                 <div className="mb-5 flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
-                  <div><p className="text-sm font-medium text-muted-foreground">Proyecto · {activity?.experience_title ?? "Los secretos de nuestro jardín"}</p><h2 className="mt-1 max-w-2xl text-2xl font-bold tracking-tight md:text-3xl">{activity?.title ?? "¿Qué necesitan las plantas para crecer?"}</h2></div>
-                  <div className="shrink-0 rounded-xl bg-[#f0f4fb] px-4 py-3 text-center"><p className="text-2xl font-bold">45</p><p className="text-xs text-muted-foreground">minutos</p></div>
+                  <div><p className="text-sm font-medium text-muted-foreground">{activity?.experience_title ? `Experiencia · ${activity.experience_title}` : "Sin actividad confirmada"}</p><h2 className="mt-1 max-w-2xl text-2xl font-bold tracking-tight md:text-3xl">{activity?.title ?? "Prepara una actividad en Planificar"}</h2></div>
                 </div>
                 <div className="grid gap-3 border-y py-5 sm:grid-cols-2">
-                  <div><p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Competencia principal</p><p className="mt-1.5 font-semibold">{activity?.criteria[0]?.competency_text ?? "Indaga mediante métodos científicos"}</p></div>
+                  <div><p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Competencia principal</p><p className="mt-1.5 font-semibold">{activity?.criteria[0]?.competency_text ?? "Sin criterio confirmado"}</p></div>
                   <div><p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Evidencia que podría verse</p><p className="mt-1.5 text-sm leading-relaxed">{activity?.criteria[0]?.details?.expected_evidence ?? activity?.criteria[0]?.criterion_text ?? "Sin criterio activo para observar."}</p></div>
                 </div>
                 <div className="mt-5 flex flex-col gap-3 sm:flex-row">
                   <Button className="h-11 flex-1 rounded-xl" disabled={!dashboard?.today.blocks.some((block) => block.activity_id === activity?.id)} onClick={() => { const block = dashboard?.today.blocks.find((item) => item.activity_id === activity?.id); if (block) void openActivity(block); }}><BookOpen /> Abrir actividad <ChevronRight /></Button>
-                  <Button variant="outline" className="h-11 flex-1 rounded-xl border-[#87bdcb] text-[#126177]" onClick={() => { if (!activity?.id || !activity.criteria.length) return; setEvidenceContext({ activityId: activity.id, criteria: activity.criteria, title: activity.title }); setCriterionId(activity.criteria[0].id); setObservationStatus(""); setEvidenceOpen(true); }}><ClipboardCheck /> Registrar evidencia</Button>
+                  <Button variant="outline" disabled={!activity?.criteria.length} className="h-11 flex-1 rounded-xl border-[#87bdcb] text-[#126177]" onClick={() => { if (!activity?.id || !activity.criteria.length) return; setEvidenceContext({ activityId: activity.id, criteria: activity.criteria, title: activity.title }); setCriterionId(activity.criteria[0].id); setObservationStatus(""); setEvidenceOpen(true); }}><ClipboardCheck /> Registrar evidencia</Button>
                 </div>
               </div>
             </section>
 
             <aside className="space-y-5">
               <section className="rounded-2xl border border-[#e4dff7] bg-[#f5f0ff] p-5 shadow-[0_12px_35px_rgba(36,69,112,.04)]">
-                <div className="mb-4 flex items-center justify-between"><div className="grid size-10 place-items-center rounded-xl bg-[#e6dafc]"><Sparkles className="size-5 text-[#7652bc]" /></div><span className="rounded-full bg-white px-2.5 py-1 text-xs text-[#684d9c]">Sugerencia</span></div>
-                <h2 className="text-xl font-bold">Tu asistente encontró una conexión</h2><p className="mt-2 text-sm leading-relaxed text-[#5e6385]">Ayer el grupo preguntó por qué algunas hojas cambian de color. Puedes retomarlo en el cierre de hoy.</p>
-                <p className="mt-4 text-sm font-medium text-[#5e468f]">Sugerencia disponible para considerar durante el cierre.</p>
+                <div className="mb-4 flex items-center justify-between"><div className="grid size-10 place-items-center rounded-xl bg-[#e6dafc]"><Sparkles className="size-5 text-[#7652bc]" /></div><span className="rounded-full bg-white px-2.5 py-1 text-xs text-[#684d9c]">Siguiente paso</span></div>
+                <h2 className="text-xl font-bold">Organiza tu jornada</h2><p className="mt-2 text-sm leading-relaxed text-[#5e6385]">Revisa la planificación confirmada y registra observaciones solo cuando ocurran.</p>
               </section>
               <section className="rounded-2xl border bg-white p-5">
-                <div className="mb-4 flex items-center justify-between"><h2 className="font-bold">Pendientes de esta semana</h2><span className="text-sm font-bold text-[#b96b1e]">3</span></div>
-                <ul className="space-y-3 text-sm">
-                  {["Completar diagnóstico de 2 niños", "Revisar materiales del viernes", "Confirmar feriado local"].map((item, index) => <li key={item} className="flex items-start gap-3"><span className={`mt-0.5 grid size-6 shrink-0 place-items-center rounded-full text-xs font-bold ${index === 0 ? "bg-[#fff1d6] text-[#9a5a12]" : "bg-muted text-muted-foreground"}`}>{index + 1}</span><span className="pt-0.5 leading-snug">{item}</span></li>)}
-                </ul>
+                <h2 className="font-bold">Pendientes</h2><p className="mt-2 text-sm text-muted-foreground">Consulta Hoy y Evaluar para revisar tareas basadas en registros reales.</p>
               </section>
             </aside>
           </div>
 
           <section className="mt-6 grid gap-4 sm:grid-cols-3">
             <Metric label="Observaciones esta semana" value={String(metrics?.evidences_week ?? 0)} detail={`${metrics?.students_observed ?? 0} estudiantes`} />
-            <Metric label="Cobertura de observación" value={`${metrics?.students_observed ?? 0}/${metrics?.students_total ?? 6}`} detail={`${Math.max((metrics?.students_total ?? 6) - (metrics?.students_observed ?? 0), 0)} por observar`} warning />
-            <article className="paper-grid rounded-2xl border bg-white p-5"><p className="text-sm font-medium text-muted-foreground">Próxima fecha importante</p><p className="mt-3 text-xl font-bold">Día de la Primavera</p><p className="mt-1 text-sm text-muted-foreground">23 de septiembre</p></article>
+            <Metric label="Cobertura de observación" value={`${metrics?.students_observed ?? 0}/${metrics?.students_total ?? 0}`} detail={`${Math.max((metrics?.students_total ?? 0) - (metrics?.students_observed ?? 0), 0)} por observar`} warning />
           </section>
           </div></>}
         </main>

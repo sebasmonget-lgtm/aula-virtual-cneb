@@ -44,7 +44,8 @@
     "test:evidence-capture-v4": "node --test src/lib/evidence-capture-v4.test.mjs",
     "test:assessment-v4": "node --test src/lib/assessment-v4.test.mjs",
     "test:descriptive-conclusion-v4": "node --test src/lib/descriptive-conclusion-v4.test.mjs",
-    "test:family-report-v4": "node --test src/lib/family-report-v4.test.mjs"
+    "test:family-report-v4": "node --test src/lib/family-report-v4.test.mjs",
+    "test:pilot-readiness": "node --test src/lib/pilot-readiness.test.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

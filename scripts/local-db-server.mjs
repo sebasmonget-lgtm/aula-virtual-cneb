@@ -22,16 +22,21 @@ import { validateEvidenceCaptureV4 } from "../src/lib/evidence-capture-v4.mjs";
 import { createAssessmentRouteHandler } from "./assessment-routes.mjs";
 import { createDescriptiveConclusionRouteHandler } from "./descriptive-conclusion-routes.mjs";
 import { createFamilyReportRouteHandler } from "./family-report-routes.mjs";
+import { createPendingAIGenerationsStore } from "../src/lib/pending-ai-generations-store.mjs";
+import { createPilotClassroom, importStudentsForTeacher, parseStudentCsv } from "../src/lib/pilot-onboarding-service.mjs";
+import { createLocalPrivateEvidenceStorage } from "../src/lib/private-evidence-storage.mjs";
+import { recordOperationalEvent } from "../src/lib/operational-events.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const dataDir = path.join(root, ".local", "pgdata");
 const migrationsDir = path.join(root, "local-db", "migrations");
 const assetsDir = path.join(root, ".local", "assets");
 const evidenceAssetsDir = path.join(assetsDir, "evidences");
+const evidenceStorage = createLocalPrivateEvidenceStorage(evidenceAssetsDir);
 const port = Number(process.env.AYNI_LOCAL_DB_PORT ?? 8788);
-const teacherId = "00000000-0000-4000-8000-000000000001";
-// Local-only handoff: production must replace this map with durable, access-controlled audit records.
-const pendingAIGenerations = new Map();
+// Local process identity only. A real backend must resolve this from verified Auth claims per request.
+const teacherId = process.env.AYNI_LOCAL_TEACHER_ID || "00000000-0000-4000-8000-000000000001";
+if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(teacherId)) throw new Error("AYNI_LOCAL_TEACHER_ID debe ser UUID.");
 const corsMethods = "GET,POST,PUT,OPTIONS";
 const allowedOrigins = new Set([
   "http://localhost:5173",
@@ -52,6 +57,8 @@ await mkdir(assetsDir, { recursive: true });
 await mkdir(evidenceAssetsDir, { recursive: true });
 const db = await PGlite.create(dataDir);
 await migrate();
+const pendingAIGenerations = createPendingAIGenerationsStore(db);
+await pendingAIGenerations.pruneExpired();
 
 async function migrate() {
   await db.exec(`create table if not exists local_schema_migrations (
@@ -121,6 +128,9 @@ async function readJson(request) {
 }
 
 async function dashboard() {
+  const classroomResult = await db.query(`select id from classrooms where teacher_id = $1 and status = 'active' limit 1`, [teacherId]);
+  const classroomId = classroomResult.rows[0]?.id;
+  if (!classroomId) return null;
   const v4CompetencyNames = new Map((await loadKnowledgeBaseV4()).competencyCards.map((card) => [card.id, card.official_name]));
   const normalizeCriteria = (criteria = []) => criteria.map((criterion) => ({ ...criterion, competency_text: criterion.competency_text ?? v4CompetencyNames.get(criterion.competency_v4_id) ?? criterion.competency_v4_id ?? "Competencia curricular" }));
   const activityResult = await db.query(`
@@ -132,23 +142,23 @@ async function dashboard() {
       join learning_experiences e on e.id = a.experience_id
       left join activity_criteria c on c.activity_id = a.id and c.status = 'active'
       left join competencies co on co.id = c.competency_id
-     where a.status = 'active'
+     where a.status = 'active' and e.classroom_id = $1
      group by a.id, e.title
      order by a.occurs_on desc
      limit 1
-  `);
+  `, [classroomId]);
   const studentsResult = await db.query(`
     select id, coalesce(preferred_name, first_name) as name
       from students
-     where status = 'active'
+     where classroom_id = $1 and status = 'active'
      order by coalesce(preferred_name, first_name)
-  `);
+  `, [classroomId]);
   const metricsResult = await db.query(`
     select
-      (select count(*)::int from students where status = 'active') as students_total,
-      (select count(*)::int from evidences where observed_at >= now() - interval '7 days') as evidences_week,
-      (select count(distinct student_id)::int from evidences) as students_observed
-  `);
+      (select count(*)::int from students where classroom_id=$1 and status = 'active') as students_total,
+      (select count(*)::int from evidences ev join students s on s.id=ev.student_id where s.classroom_id=$1 and ev.observed_at >= now() - interval '7 days') as evidences_week,
+      (select count(distinct ev.student_id)::int from evidences ev join students s on s.id=ev.student_id where s.classroom_id=$1) as students_observed
+  `, [classroomId]);
   const profileResult = await db.query(`
     select p.display_name as teacher_name, ip.display_name as institution_name,
            ip.institution_code, ip.district, ip.ugel, ip.director_name,
@@ -160,15 +170,13 @@ async function dashboard() {
       join age_grades ag on ag.id = c.age_grade_id
       left join institution_profiles ip on ip.owner_user_id = p.user_id
       left join institution_assets ia on ia.id = ip.logo_asset_id
-     where p.user_id = $1
+     where p.user_id = $1 and c.id=$2
      limit 1
-  `, [teacherId]);
+  `, [teacherId, classroomId]);
   const dateFormatter = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Lima", year: "numeric", month: "2-digit", day: "2-digit" });
   const timeFormatter = new Intl.DateTimeFormat("en-GB", { timeZone: "America/Lima", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
   const today = dateFormatter.format(new Date());
   const now = timeFormatter.format(new Date());
-  const classroomResult = await db.query(`select id from classrooms where teacher_id = $1 and status = 'active' limit 1`, [teacherId]);
-  const classroomId = classroomResult.rows[0]?.id;
   const attendanceResult = await db.query(`
     select count(*)::int as recorded_count from attendance_records
      where classroom_id = $1 and attendance_date = $2::date
@@ -363,6 +371,7 @@ const handleAssessmentRoute = createAssessmentRouteHandler({ db, annualPlanningC
 const handleDescriptiveConclusionRoute = createDescriptiveConclusionRouteHandler({ db, annualPlanningContext, readJson, send, pending: pendingAIGenerations, metadataForAudit: safeAnnualGenerationMetadata, refreshStudentContext: refreshStudentContextSnapshot });
 const handleFamilyReportRoute = createFamilyReportRouteHandler({ db, annualPlanningContext, readJson, send, pending: pendingAIGenerations, metadataForAudit: safeAnnualGenerationMetadata });
 const server = createServer(async (request, response) => {
+  const requestId = randomUUID();
   const origin = request.headers.origin;
   const url = new URL(request.url ?? "/", `http://127.0.0.1:${port}`);
 
@@ -385,13 +394,35 @@ const server = createServer(async (request, response) => {
       send(response, 200, { ok: true, engine: "pglite", storage: ".local/pgdata" }, origin);
       return;
     }
+    if (request.method === "GET" && url.pathname === "/api/pilot/setup") {
+      const classroom = (await db.query(`select id from classrooms where teacher_id=$1 and status='active'`, [teacherId])).rows[0];
+      send(response, 200, { configured: Boolean(classroom) }, origin);
+      return;
+    }
+    if (request.method === "POST" && url.pathname === "/api/pilot/setup") {
+      try {
+        await createPilotClassroom(db, teacherId, await readJson(request));
+        send(response, 201, { dashboard: await dashboard() }, origin);
+      } catch (error) { send(response, 422, { error: error.message }, origin); }
+      return;
+    }
+    if (request.method === "POST" && url.pathname === "/api/students/import") {
+      try {
+        const body = await readJson(request);
+        const rows = body.csv === undefined ? body.students : parseStudentCsv(body.csv);
+        const count = await importStudentsForTeacher(db, teacherId, rows);
+        send(response, 201, { count, dashboard: await dashboard() }, origin);
+      } catch (error) { send(response, 422, { error: error.message }, origin); }
+      return;
+    }
     if (request.method === "GET" && url.pathname === "/api/dashboard") {
-      send(response, 200, await dashboard(), origin);
+      const current = await dashboard();
+      send(response, current ? 200 : 409, current ?? { error: "Configura primero la institución y el aula." }, origin);
       return;
     }
     if (request.method === "GET" && url.pathname === "/api/export") {
-      if (origin) {
-        send(response, 403, { error: "Exportación solo desde el equipo local." }, origin);
+      if (origin || process.env.AYNI_ALLOW_LOCAL_EXPORT !== "1") {
+        send(response, 403, { error: "Exportación local deshabilitada." }, origin);
         return;
       }
       const tables = {};
@@ -486,7 +517,7 @@ const server = createServer(async (request, response) => {
       try {
         const generated = await generateTeacherAnnualPlan({ classroom, request: await readJson(request) });
         const generationId = randomUUID();
-        pendingAIGenerations.set(generationId, { workflow: generated.internalMetadata.workflow, metadata: safeAnnualGenerationMetadata(generated.internalMetadata), classroom_id: classroom.id, createdAt: Date.now() });
+        await pendingAIGenerations.set(generationId, { workflow: generated.internalMetadata.workflow, metadata: safeAnnualGenerationMetadata(generated.internalMetadata), classroom_id: classroom.id, createdAt: Date.now() });
         send(response, 200, { proposal: generated.proposal, generation_id: generationId }, origin);
       } catch (error) { send(response, 422, { error: error?.message || "No pudimos generar una propuesta válida." }, origin); } return;
     }
@@ -494,7 +525,7 @@ const server = createServer(async (request, response) => {
       const context = await annualPlanningContext(); const body = await readJson(request);
       if (!context || !body.proposal) { send(response, 400, { error: "Falta propuesta o aula activa." }, origin); return; }
       const existingId = typeof body.planId === "string" ? body.planId : null;
-      const pending = typeof body.generationId === "string" ? pendingAIGenerations.get(body.generationId) : null;
+      const pending = typeof body.generationId === "string" ? await pendingAIGenerations.get(body.generationId) : null;
       if (!existingId && (!pending || pending.classroom_id !== context.id || pending.workflow !== "annual_plan")) { send(response, 422, { error: "La generación anual ya no está disponible. Genera nuevamente el borrador." }, origin); return; }
       await db.exec("begin");
       try {
@@ -507,7 +538,7 @@ const server = createServer(async (request, response) => {
         const version = nextAnnualPlanVersion(Number(latest.rows[0].max_version)); const id = randomUUID();
         await db.query(`insert into annual_plans (id,classroom_id,school_year_id,curriculum_version_id,version,status,proposal,generation_metadata) values ($1,$2,$3,$4,$5,'draft',$6::jsonb,$7::jsonb)`, [id, context.id, context.school_year_id, context.curriculum_version_id, version, JSON.stringify(body.proposal), JSON.stringify(pending?.metadata ?? {})]);
         await db.exec("commit");
-        if (pending) pendingAIGenerations.delete(body.generationId);
+        if (pending) await pendingAIGenerations.delete(body.generationId);
         send(response, 200, { id, version, status: "draft" }, origin);
       } catch (error) { await db.exec("rollback"); send(response, 422, { error: error?.message || "No se pudo guardar el borrador." }, origin); }
       return;
@@ -550,12 +581,12 @@ const server = createServer(async (request, response) => {
           Object.assign(body, { [contextKey]: body[contextKey]?.trim() || source.context_or_trigger, competency_ids: body.competency_ids ?? source.primary_competency_ids, planned_experience: { title: source.title, period: source.period, rationale: source.rationale, context_or_trigger: source.context_or_trigger, primary_competency_ids: source.primary_competency_ids, possible_secondary_competency_ids: source.possible_secondary_competency_ids, expected_evidence_categories: source.expected_evidence_categories, flexibility_notes: source.flexibility_notes, annual_plan_id: parent.id, source_proposal_index: body.sourceProposalIndex } });
         }
         const generated = await generateTeacherLearningExperience({ classroom, request: body }); const generationId = randomUUID();
-        pendingAIGenerations.set(generationId, { workflow: generated.internalMetadata.workflow, classroom_id: classroom.id, metadata: safeAnnualGenerationMetadata(generated.internalMetadata), createdAt: Date.now(), parent: parent ? { annual_plan_id: parent.id, source_proposal_index: body.sourceProposalIndex } : null });
+        await pendingAIGenerations.set(generationId, { workflow: generated.internalMetadata.workflow, classroom_id: classroom.id, metadata: safeAnnualGenerationMetadata(generated.internalMetadata), createdAt: Date.now(), parent: parent ? { annual_plan_id: parent.id, source_proposal_index: body.sourceProposalIndex } : null });
         send(response, 200, { proposal: generated.proposal, generation_id: generationId }, origin);
       } catch (error) { send(response, 422, { error: error?.message || "No se pudo generar la experiencia." }, origin); } return;
     }
     if (request.method === "POST" && url.pathname === "/api/learning-experiences") {
-      const context = await annualPlanningContext(); const body = await readJson(request); const pending = typeof body.generationId === "string" ? pendingAIGenerations.get(body.generationId) : null;
+      const context = await annualPlanningContext(); const body = await readJson(request); const pending = typeof body.generationId === "string" ? await pendingAIGenerations.get(body.generationId) : null;
       if (!context || !body.proposal || !["project", "unit"].includes(body.type) || !pending || pending.classroom_id !== context.id || pending.workflow !== body.type) { send(response, 422, { error: "Falta una generación válida de proyecto o unidad." }, origin); return; }
       const originType = body.origin === "emergent" ? "emergent" : "planned"; const proposalIndex = originType === "planned" && Number.isInteger(body.sourceProposalIndex) ? body.sourceProposalIndex : null;
       if (originType === "planned" && (!body.annualPlanId || proposalIndex === null)) { send(response, 422, { error: "Falta la propuesta de origen del plan anual." }, origin); return; }
@@ -566,7 +597,7 @@ const server = createServer(async (request, response) => {
         const source = parent?.proposal?.proposed_experiences?.[proposalIndex];
         if (!source || source.experience_type !== body.type) { send(response, 422, { error: "La propuesta anual activa no coincide con esta experiencia." }, origin); return; }
       }
-      try { const id = randomUUID(); await db.query(`insert into learning_experiences (id,classroom_id,type,title,purpose,starts_on,ends_on,status,details,annual_plan_id,origin,planning_reason,source_proposal_index,generation_metadata) values ($1,$2,$3,$4,$5,$6::date,$7::date,'draft',$8::jsonb,$9,$10,$11,$12,$13::jsonb)`, [id, context.id, body.type, body.proposal.title, body.proposal.purpose, body.startsOn, body.endsOn, JSON.stringify(body.proposal), body.annualPlanId ?? null, originType, body.planningReason ?? null, proposalIndex, JSON.stringify(pending.metadata)]); pendingAIGenerations.delete(body.generationId); send(response, 200, { id, status: "draft" }, origin); } catch (error) { send(response, 422, { error: error?.message || "No se pudo guardar la experiencia." }, origin); } return;
+      try { const id = randomUUID(); await db.query(`insert into learning_experiences (id,classroom_id,type,title,purpose,starts_on,ends_on,status,details,annual_plan_id,origin,planning_reason,source_proposal_index,generation_metadata) values ($1,$2,$3,$4,$5,$6::date,$7::date,'draft',$8::jsonb,$9,$10,$11,$12,$13::jsonb)`, [id, context.id, body.type, body.proposal.title, body.proposal.purpose, body.startsOn, body.endsOn, JSON.stringify(body.proposal), body.annualPlanId ?? null, originType, body.planningReason ?? null, proposalIndex, JSON.stringify(pending.metadata)]); await pendingAIGenerations.delete(body.generationId); send(response, 200, { id, status: "draft" }, origin); } catch (error) { send(response, 422, { error: error?.message || "No se pudo guardar la experiencia." }, origin); } return;
     }
     if (request.method === "PUT" && url.pathname.startsWith("/api/learning-experiences/")) {
       const id = url.pathname.split("/")[3]; const context = await annualPlanningContext(); const body = await readJson(request);
@@ -594,16 +625,16 @@ const server = createServer(async (request, response) => {
       if (!experience) { send(response, 422, { error: "Selecciona un Project o Unit confirmado." }, origin); return; }
       const allowed = await activityAllowedCompetencies(experience, context);
       if (body.competencyId && !allowed.has(body.competencyId)) { send(response, 422, { error: "La competencia no pertenece a la experiencia." }, origin); return; }
-      try { const generated = await generateTeacherActivity({ request: body, classroom: context, learningExperience: await activityParentContext(experience) }); const generationId = randomUUID(); pendingAIGenerations.set(generationId, { workflow: "activity", classroom_id: context.id, learning_experience_id: experience.id, metadata: safeAnnualGenerationMetadata(generated.internalMetadata), createdAt: Date.now() }); send(response, 200, { proposal: generated.proposal, generation_id: generationId }, origin); } catch (error) { send(response, 422, { error: error.message || "No se pudo generar la actividad." }, origin); } return;
+      try { const generated = await generateTeacherActivity({ request: body, classroom: context, learningExperience: await activityParentContext(experience) }); const generationId = randomUUID(); await pendingAIGenerations.set(generationId, { workflow: "activity", classroom_id: context.id, learning_experience_id: experience.id, metadata: safeAnnualGenerationMetadata(generated.internalMetadata), createdAt: Date.now() }); send(response, 200, { proposal: generated.proposal, generation_id: generationId }, origin); } catch (error) { send(response, 422, { error: error.message || "No se pudo generar la actividad." }, origin); } return;
     }
     if (request.method === "POST" && url.pathname === "/api/activities") {
-      const context = await annualPlanningContext(); const body = await readJson(request); const experience = context && await activeLearningExperience(body.experienceId, context.id); const pending = pendingAIGenerations.get(body.generationId);
+      const context = await annualPlanningContext(); const body = await readJson(request); const experience = context && await activeLearningExperience(body.experienceId, context.id); const pending = await pendingAIGenerations.get(body.generationId);
       if (!experience || !pending || pending.workflow !== "activity" || pending.classroom_id !== context.id || pending.learning_experience_id !== experience.id) { send(response, 422, { error: "La generación de actividad no corresponde a esta experiencia." }, origin); return; }
-      try { validateActivityDate(body.occursOn, experience, context); validateActivityV4(body.proposal, await activityAllowedCompetencies(experience, context)); const id=randomUUID(); await db.query(`insert into activities (id,experience_id,occurs_on,title,purpose,sequence,preparation,adaptations,status,details,generation_metadata) values ($1,$2,$3::date,$4,$5,'[]'::jsonb,$6::jsonb,'[]'::jsonb,'draft',$7::jsonb,$8::jsonb)`, [id,experience.id,body.occursOn,body.proposal.title,body.proposal.purpose,JSON.stringify({materials: normalizeActivityMaterials(body.materials)}),JSON.stringify(body.proposal),JSON.stringify(pending.metadata)]); pendingAIGenerations.delete(body.generationId); send(response,200,{id,status:"draft"},origin); } catch(error) { send(response,422,{error:error.message},origin); } return;
+      try { validateActivityDate(body.occursOn, experience, context); validateActivityV4(body.proposal, await activityAllowedCompetencies(experience, context)); const id=randomUUID(); await db.query(`insert into activities (id,experience_id,occurs_on,title,purpose,sequence,preparation,adaptations,status,details,generation_metadata) values ($1,$2,$3::date,$4,$5,'[]'::jsonb,$6::jsonb,'[]'::jsonb,'draft',$7::jsonb,$8::jsonb)`, [id,experience.id,body.occursOn,body.proposal.title,body.proposal.purpose,JSON.stringify({materials: normalizeActivityMaterials(body.materials)}),JSON.stringify(body.proposal),JSON.stringify(pending.metadata)]); await pendingAIGenerations.delete(body.generationId); send(response,200,{id,status:"draft"},origin); } catch(error) { send(response,422,{error:error.message},origin); } return;
     }
     if (request.method === "PUT" && url.pathname.startsWith("/api/activities/")) {
       const id=url.pathname.split("/")[3]; const context=await annualPlanningContext(); const body=await readJson(request); const current=context&&(await db.query(`select a.*,e.classroom_id,e.status as experience_status,e.details as experience_details,e.starts_on as experience_starts_on,e.ends_on as experience_ends_on from activities a join learning_experiences e on e.id=a.experience_id where a.id=$1 and e.classroom_id=$2 and a.status='draft'`,[id,context.id])).rows[0];
-      if(!current||current.experience_status!=="active"){send(response,404,{error:"Borrador no disponible."},origin);return;} const pending=typeof body.generationId==="string"?pendingAIGenerations.get(body.generationId):null; if(body.generationId&&(!pending||pending.workflow!=="activity"||pending.classroom_id!==context.id||pending.learning_experience_id!==current.experience_id)){send(response,422,{error:"La regeneración no corresponde a esta actividad."},origin);return;} try { const parent={ details: current.experience_details }; validateActivityDate(body.occursOn,{starts_on:current.experience_starts_on,ends_on:current.experience_ends_on},context); validateActivityV4(body.proposal,await activityAllowedCompetencies(parent,context)); const values=[body.occursOn,body.proposal.title,body.proposal.purpose,JSON.stringify(body.proposal),JSON.stringify({materials:normalizeActivityMaterials(body.materials)})]; if(pending){await db.query(`update activities set occurs_on=$1::date,title=$2,purpose=$3,details=$4::jsonb,preparation=$5::jsonb,generation_metadata=$6::jsonb,updated_at=now() where id=$7`,[...values,JSON.stringify(pending.metadata),id]);pendingAIGenerations.delete(body.generationId);}else await db.query(`update activities set occurs_on=$1::date,title=$2,purpose=$3,details=$4::jsonb,preparation=$5::jsonb,updated_at=now() where id=$6`,[...values,id]);send(response,200,{id,status:"draft"},origin);}catch(error){send(response,422,{error:error.message},origin);}return;
+      if(!current||current.experience_status!=="active"){send(response,404,{error:"Borrador no disponible."},origin);return;} const pending=typeof body.generationId==="string"?await pendingAIGenerations.get(body.generationId):null; if(body.generationId&&(!pending||pending.workflow!=="activity"||pending.classroom_id!==context.id||pending.learning_experience_id!==current.experience_id)){send(response,422,{error:"La regeneración no corresponde a esta actividad."},origin);return;} try { const parent={ details: current.experience_details }; validateActivityDate(body.occursOn,{starts_on:current.experience_starts_on,ends_on:current.experience_ends_on},context); validateActivityV4(body.proposal,await activityAllowedCompetencies(parent,context)); const values=[body.occursOn,body.proposal.title,body.proposal.purpose,JSON.stringify(body.proposal),JSON.stringify({materials:normalizeActivityMaterials(body.materials)})]; if(pending){await db.query(`update activities set occurs_on=$1::date,title=$2,purpose=$3,details=$4::jsonb,preparation=$5::jsonb,generation_metadata=$6::jsonb,updated_at=now() where id=$7`,[...values,JSON.stringify(pending.metadata),id]);await pendingAIGenerations.delete(body.generationId);}else await db.query(`update activities set occurs_on=$1::date,title=$2,purpose=$3,details=$4::jsonb,preparation=$5::jsonb,updated_at=now() where id=$6`,[...values,id]);send(response,200,{id,status:"draft"},origin);}catch(error){send(response,422,{error:error.message},origin);}return;
     }
     if (request.method === "POST" && url.pathname.startsWith("/api/activities/") && url.pathname.endsWith("/confirm")) {
       const id=url.pathname.split("/")[3]; const context=await annualPlanningContext(); const current=context&&(await db.query(`select a.*,e.classroom_id,e.status as experience_status,e.details as experience_details,e.starts_on as experience_starts_on,e.ends_on as experience_ends_on from activities a join learning_experiences e on e.id=a.experience_id where a.id=$1 and e.classroom_id=$2 and a.status='draft'`,[id,context.id])).rows[0]; if(!current||current.experience_status!=="active"){send(response,404,{error:"Actividad no disponible."},origin);return;}try{validateActivityDate(String(current.occurs_on).slice(0,10),{starts_on:current.experience_starts_on,ends_on:current.experience_ends_on},context);validateActivityV4(current.details,await activityAllowedCompetencies({details:current.experience_details},context));const result=await db.query(`update activities set status='active',teacher_confirmed_at=now(),updated_at=now() where id=$1 returning id,status,teacher_confirmed_at`,[id]);send(response,200,result.rows[0],origin);}catch(error){send(response,422,{error:error.message},origin);}return;
@@ -612,13 +643,13 @@ const server = createServer(async (request, response) => {
       const context=await annualPlanningContext();const activity=context&&(await db.query(`select a.*,e.details as experience_details,e.title as experience_title,e.purpose as experience_purpose from activities a join learning_experiences e on e.id=a.experience_id where a.id=$1 and e.classroom_id=$2 and a.status='active'`,[url.searchParams.get("activityId"),context.id])).rows[0];if(!activity){send(response,404,{error:"Actividad confirmada no disponible."},origin);return;}const criteria=(await db.query(`select id,activity_id,competency_v4_id,criterion_text,details,status,teacher_confirmed_at from activity_criteria where activity_id=$1 and competency_v4_id=$2 order by created_at desc`,[activity.id,activity.details?.competency_id])).rows;send(response,200,{activity:{id:activity.id,title:activity.title,details:activity.details},criteria},origin);return;
     }
     if(request.method==="POST"&&url.pathname==="/api/ai/activity-criteria/generate"){
-      const context=await annualPlanningContext();const body=await readJson(request);const activity=context&&(await db.query(`select a.*,e.id as parent_id,e.type as parent_type,e.title as parent_title,e.purpose as parent_purpose,e.details as parent_details from activities a join learning_experiences e on e.id=a.experience_id where a.id=$1 and e.classroom_id=$2 and a.status='active'`,[body.activityId,context.id])).rows[0];if(!activity||activity.details?.competency_status!=="confirmed"||!activity.details?.competency_id){send(response,422,{error:"Confirma la competencia de la actividad antes de preparar el criterio."},origin);return;}const allowed=await activityAllowedCompetencies({details:activity.parent_details},context);if(!allowed.has(activity.details.competency_id)){send(response,422,{error:"El criterio ya no corresponde a esta actividad."},origin);return;}try{const generated=await generateCriterionEvidence({classroom:context,activity,parent:{id:activity.parent_id,type:activity.parent_type,title:activity.parent_title,purpose:activity.parent_purpose,details:activity.parent_details},note:cleanText(body.note,1000)});const generationId=randomUUID();pendingAIGenerations.set(generationId,{workflow:"criterion_and_evidence",classroom_id:context.id,activity_id:activity.id,competency_v4_id:activity.details.competency_id,metadata:safeAnnualGenerationMetadata(generated.internalMetadata),createdAt:Date.now()});send(response,200,{proposal:generated.proposal,generation_id:generationId},origin);}catch{send(response,422,{error:"No pudimos generar un criterio válido."},origin);}return;
+      const context=await annualPlanningContext();const body=await readJson(request);const activity=context&&(await db.query(`select a.*,e.id as parent_id,e.type as parent_type,e.title as parent_title,e.purpose as parent_purpose,e.details as parent_details from activities a join learning_experiences e on e.id=a.experience_id where a.id=$1 and e.classroom_id=$2 and a.status='active'`,[body.activityId,context.id])).rows[0];if(!activity||activity.details?.competency_status!=="confirmed"||!activity.details?.competency_id){send(response,422,{error:"Confirma la competencia de la actividad antes de preparar el criterio."},origin);return;}const allowed=await activityAllowedCompetencies({details:activity.parent_details},context);if(!allowed.has(activity.details.competency_id)){send(response,422,{error:"El criterio ya no corresponde a esta actividad."},origin);return;}try{const generated=await generateCriterionEvidence({classroom:context,activity,parent:{id:activity.parent_id,type:activity.parent_type,title:activity.parent_title,purpose:activity.parent_purpose,details:activity.parent_details},note:cleanText(body.note,1000)});const generationId=randomUUID();await pendingAIGenerations.set(generationId,{workflow:"criterion_and_evidence",classroom_id:context.id,activity_id:activity.id,competency_v4_id:activity.details.competency_id,metadata:safeAnnualGenerationMetadata(generated.internalMetadata),createdAt:Date.now()});send(response,200,{proposal:generated.proposal,generation_id:generationId},origin);}catch{send(response,422,{error:"No pudimos generar un criterio válido."},origin);}return;
     }
     if(request.method==="POST"&&url.pathname==="/api/activity-criteria"){
-      const context=await annualPlanningContext();const body=await readJson(request);const pending=pendingAIGenerations.get(body.generationId);const activity=context&&(await db.query(`select a.*,e.details as parent_details from activities a join learning_experiences e on e.id=a.experience_id where a.id=$1 and e.classroom_id=$2 and a.status='active'`,[body.activityId,context.id])).rows[0];if(!activity||!pending||pending.workflow!=="criterion_and_evidence"||pending.classroom_id!==context.id||pending.activity_id!==activity.id||pending.competency_v4_id!==activity.details?.competency_id){send(response,422,{error:"El criterio ya no corresponde a esta actividad."},origin);return;}try{const allowed=await activityAllowedCompetencies({details:activity.parent_details},context);if(activity.details?.competency_status!=="confirmed"||!allowed.has(activity.details.competency_id))throw new Error("El criterio ya no corresponde a esta actividad.");validateCriterionEvidenceV4(body.proposal,activity.details.competency_id);const existing=(await db.query(`select id,status from activity_criteria where activity_id=$1 and competency_v4_id=$2`,[activity.id,activity.details.competency_id])).rows[0];if(existing?.status==='active')throw new Error("Esta actividad ya tiene un criterio confirmado.");const id=existing?.id??randomUUID();if(existing)await db.query(`update activity_criteria set criterion_text=$1,details=$2::jsonb,generation_metadata=$3::jsonb,updated_at=now() where id=$4`,[body.proposal.criterion_text,JSON.stringify(body.proposal),JSON.stringify(pending.metadata),id]);else await db.query(`insert into activity_criteria(id,activity_id,competency_id,competency_v4_id,performance_id,criterion_text,details,generation_metadata,status) values($1,$2,null,$3,null,$4,$5::jsonb,$6::jsonb,'draft')`,[id,activity.id,activity.details.competency_id,body.proposal.criterion_text,JSON.stringify(body.proposal),JSON.stringify(pending.metadata)]);pendingAIGenerations.delete(body.generationId);send(response,200,{id,status:"draft"},origin);}catch(error){send(response,422,{error:error.message},origin);}return;
+      const context=await annualPlanningContext();const body=await readJson(request);const pending=await pendingAIGenerations.get(body.generationId);const activity=context&&(await db.query(`select a.*,e.details as parent_details from activities a join learning_experiences e on e.id=a.experience_id where a.id=$1 and e.classroom_id=$2 and a.status='active'`,[body.activityId,context.id])).rows[0];if(!activity||!pending||pending.workflow!=="criterion_and_evidence"||pending.classroom_id!==context.id||pending.activity_id!==activity.id||pending.competency_v4_id!==activity.details?.competency_id){send(response,422,{error:"El criterio ya no corresponde a esta actividad."},origin);return;}try{const allowed=await activityAllowedCompetencies({details:activity.parent_details},context);if(activity.details?.competency_status!=="confirmed"||!allowed.has(activity.details.competency_id))throw new Error("El criterio ya no corresponde a esta actividad.");validateCriterionEvidenceV4(body.proposal,activity.details.competency_id);const existing=(await db.query(`select id,status from activity_criteria where activity_id=$1 and competency_v4_id=$2`,[activity.id,activity.details.competency_id])).rows[0];if(existing?.status==='active')throw new Error("Esta actividad ya tiene un criterio confirmado.");const id=existing?.id??randomUUID();if(existing)await db.query(`update activity_criteria set criterion_text=$1,details=$2::jsonb,generation_metadata=$3::jsonb,updated_at=now() where id=$4`,[body.proposal.criterion_text,JSON.stringify(body.proposal),JSON.stringify(pending.metadata),id]);else await db.query(`insert into activity_criteria(id,activity_id,competency_id,competency_v4_id,performance_id,criterion_text,details,generation_metadata,status) values($1,$2,null,$3,null,$4,$5::jsonb,$6::jsonb,'draft')`,[id,activity.id,activity.details.competency_id,body.proposal.criterion_text,JSON.stringify(body.proposal),JSON.stringify(pending.metadata)]);await pendingAIGenerations.delete(body.generationId);send(response,200,{id,status:"draft"},origin);}catch(error){send(response,422,{error:error.message},origin);}return;
     }
     if(request.method==="PUT"&&url.pathname.startsWith("/api/activity-criteria/")){
-      const id=url.pathname.split("/")[3],context=await annualPlanningContext(),body=await readJson(request);const current=context&&(await db.query(`select ac.*,a.details as activity_details,e.classroom_id,e.details as parent_details from activity_criteria ac join activities a on a.id=ac.activity_id join learning_experiences e on e.id=a.experience_id where ac.id=$1 and e.classroom_id=$2 and ac.status='draft' and a.status='active'`,[id,context.id])).rows[0];if(!current){send(response,404,{error:"Criterio no disponible."},origin);return;}const pending=body.generationId&&pendingAIGenerations.get(body.generationId);if(body.generationId&&(!pending||pending.workflow!=="criterion_and_evidence"||pending.activity_id!==current.activity_id||pending.classroom_id!==context.id||pending.competency_v4_id!==current.competency_v4_id)){send(response,422,{error:"El criterio ya no corresponde a esta actividad."},origin);return;}try{await validateStoredActivityCriterion(current,context);validateCriterionEvidenceV4(body.proposal,current.activity_details.competency_id);if(pending){await db.query(`update activity_criteria set criterion_text=$1,details=$2::jsonb,generation_metadata=$3::jsonb,updated_at=now() where id=$4`,[body.proposal.criterion_text,JSON.stringify(body.proposal),JSON.stringify(pending.metadata),id]);pendingAIGenerations.delete(body.generationId)}else await db.query(`update activity_criteria set criterion_text=$1,details=$2::jsonb,updated_at=now() where id=$3`,[body.proposal.criterion_text,JSON.stringify(body.proposal),id]);send(response,200,{id,status:"draft"},origin)}catch(error){send(response,422,{error:error.message},origin)}return;
+      const id=url.pathname.split("/")[3],context=await annualPlanningContext(),body=await readJson(request);const current=context&&(await db.query(`select ac.*,a.details as activity_details,e.classroom_id,e.details as parent_details from activity_criteria ac join activities a on a.id=ac.activity_id join learning_experiences e on e.id=a.experience_id where ac.id=$1 and e.classroom_id=$2 and ac.status='draft' and a.status='active'`,[id,context.id])).rows[0];if(!current){send(response,404,{error:"Criterio no disponible."},origin);return;}const pending=body.generationId&&await pendingAIGenerations.get(body.generationId);if(body.generationId&&(!pending||pending.workflow!=="criterion_and_evidence"||pending.activity_id!==current.activity_id||pending.classroom_id!==context.id||pending.competency_v4_id!==current.competency_v4_id)){send(response,422,{error:"El criterio ya no corresponde a esta actividad."},origin);return;}try{await validateStoredActivityCriterion(current,context);validateCriterionEvidenceV4(body.proposal,current.activity_details.competency_id);if(pending){await db.query(`update activity_criteria set criterion_text=$1,details=$2::jsonb,generation_metadata=$3::jsonb,updated_at=now() where id=$4`,[body.proposal.criterion_text,JSON.stringify(body.proposal),JSON.stringify(pending.metadata),id]);await pendingAIGenerations.delete(body.generationId)}else await db.query(`update activity_criteria set criterion_text=$1,details=$2::jsonb,updated_at=now() where id=$3`,[body.proposal.criterion_text,JSON.stringify(body.proposal),id]);send(response,200,{id,status:"draft"},origin)}catch(error){send(response,422,{error:error.message},origin)}return;
     }
     if(request.method==="POST"&&url.pathname.startsWith("/api/activity-criteria/")&&url.pathname.endsWith("/confirm")){
       const id=url.pathname.split("/")[3],context=await annualPlanningContext();const current=context&&(await db.query(`select ac.*,a.details as activity_details,e.classroom_id,e.details as parent_details from activity_criteria ac join activities a on a.id=ac.activity_id join learning_experiences e on e.id=a.experience_id where ac.id=$1 and e.classroom_id=$2 and ac.status='draft' and a.status='active'`,[id,context.id])).rows[0];if(!current){send(response,404,{error:"Criterio no disponible."},origin);return;}try{await validateStoredActivityCriterion(current,context);validateCriterionEvidenceV4(current.details,current.activity_details.competency_id);const result=await db.query(`update activity_criteria set status='active',teacher_confirmed_at=now(),updated_at=now() where id=$1 returning id,status,teacher_confirmed_at`,[id]);send(response,200,result.rows[0],origin)}catch(error){send(response,422,{error:error.message},origin)}return;
@@ -747,17 +778,18 @@ const server = createServer(async (request, response) => {
           send(response, 400, { error: "La foto debe pesar como máximo 3 MB." }, origin);
           return;
         }
-        const filename = `${randomUUID()}.${extension}`;
-        await writeFile(path.join(evidenceAssetsDir, filename), bytes);
-        mediaPath = `.local/assets/evidences/${filename}`;
+        try { mediaPath = await evidenceStorage.save({ teacherId, studentId: capture.studentId, mimeType: body.photo.mimeType, bytes }); }
+        catch (error) { recordOperationalEvent("evidence_storage_failure", { requestId, status: 500 }); throw error; }
       }
-      const result = await db.query(`
+      let result;
+      try { result = await db.query(`
         insert into evidences (
           id, student_id, activity_id, criterion_id, type,
           observation_text, observation_status, media_path, source, created_by
         ) values ($1, $2, $3, $4, 'observation', $5, $6, $7, 'teacher', $8)
-        returning id, student_id, observation_text, observation_status, media_path, observed_at
+        returning id, student_id, observation_text, observation_status, observed_at
       `, [randomUUID(), capture.studentId, capture.activityId, capture.criterionId, capture.observationText || null, capture.observationStatus, mediaPath, teacherId]);
+      } catch (error) { if (mediaPath) await evidenceStorage.delete(mediaPath); throw error; }
       await refreshStudentContextSnapshot(db, capture.studentId);
       send(response, 201, { evidence: result.rows[0] }, origin);
       return;
@@ -767,6 +799,7 @@ const server = createServer(async (request, response) => {
       const records = Array.isArray(body.records) ? body.records : [];
       const allowedStatuses = new Set(["present", "absent", "late", "excused"]);
       const classroom = (await db.query(`select id from classrooms where teacher_id = $1 and status = 'active' limit 1`, [teacherId])).rows[0];
+      if (!classroom) { send(response, 409, { error: "Configura primero un aula activa." }, origin); return; }
       const currentStudents = (await db.query(`select id from students where classroom_id = $1 and status = 'active'`, [classroom.id])).rows;
       const permittedIds = new Set(currentStudents.map((student) => student.id));
       if (!records.length || records.some((record) => !permittedIds.has(record.studentId) || !allowedStatuses.has(record.status))) {
@@ -823,9 +856,9 @@ const server = createServer(async (request, response) => {
       return;
     }
     send(response, 404, { error: "Ruta local no encontrada." }, origin);
-  } catch (error) {
-    console.error(error);
-    send(response, 500, { error: "La base local no pudo completar la operación." }, origin);
+  } catch {
+    recordOperationalEvent("api_unexpected_failure", { requestId, status: 500 });
+    send(response, 500, { error: "La base local no pudo completar la operación.", request_id: requestId }, origin);
   }
 });
 

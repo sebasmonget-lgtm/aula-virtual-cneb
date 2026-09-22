@@ -35,7 +35,7 @@ export type LocalDashboard = {
     occurs_on: string;
     experience_title: string;
     criteria: ActivityCriterion[];
-  };
+  } | null;
   students: LocalStudent[];
   metrics: { students_total: number; evidences_week: number; students_observed: number };
   today: {
@@ -69,13 +69,33 @@ export type DiagnosticWorkspace = {
   observations: { id: string; student_id: string; competency_id: string; reference_id: string; status: string; note: string | null }[];
 };
 
-export const localDatabaseApiUrl = process.env.NEXT_PUBLIC_LOCAL_DATABASE_URL ?? "http://127.0.0.1:8788";
+export const localDatabaseApiUrl = process.env.NEXT_PUBLIC_AYNI_API_URL ?? process.env.NEXT_PUBLIC_LOCAL_DATABASE_URL ?? "http://127.0.0.1:8788";
 const apiUrl = localDatabaseApiUrl;
 
 export async function loadLocalDashboard(signal?: AbortSignal): Promise<LocalDashboard> {
   const response = await fetch(`${apiUrl}/api/dashboard`, { signal, cache: "no-store" });
   if (!response.ok) throw new Error("La base local no está disponible.");
   return response.json();
+}
+
+export async function loadPilotSetup(): Promise<{ configured: boolean }> {
+  const response = await fetch(`${apiUrl}/api/pilot/setup`, { cache: "no-store" });
+  if (!response.ok) throw new Error("No se pudo consultar la configuración del aula.");
+  return response.json();
+}
+
+export async function savePilotSetup(input: { teacherName: string; institutionName: string; section: string; age: number; year: number; startsOn: string; endsOn: string; castellanoL2Applicable: boolean; religionApplicable: boolean }): Promise<LocalDashboard> {
+  const response = await fetch(`${apiUrl}/api/pilot/setup`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(input) });
+  const result = await response.json() as { dashboard?: LocalDashboard; error?: string };
+  if (!response.ok || !result.dashboard) throw new Error(result.error ?? "No se pudo configurar el aula.");
+  return result.dashboard;
+}
+
+export async function importPilotStudents(input: { csv: string } | { students: { firstName: string; lastName: string; preferredName?: string }[] }): Promise<LocalDashboard> {
+  const response = await fetch(`${apiUrl}/api/students/import`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(input) });
+  const result = await response.json() as { dashboard?: LocalDashboard; error?: string };
+  if (!response.ok || !result.dashboard) throw new Error(result.error ?? "No se pudieron cargar los niños.");
+  return result.dashboard;
 }
 
 export async function loadStudentPedagogicalProfile(studentId: string): Promise<StudentPedagogicalProfile> {

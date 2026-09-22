@@ -86,7 +86,7 @@ export function createDescriptiveConclusionRouteHandler({ db, annualPlanningCont
         const plan = resolveAIExecutionPlan({ workflow: "descriptive_conclusion", task: "generation" });
         const result = await generate(input, { provider: createProvider(plan), executionPlan: plan });
         const generationId = randomUUID();
-        pending.set(generationId, { workflow: "descriptive_conclusion", classroom_id: context.id, student_id: student.id, competency_v4_id: assessment.competency_v4_id, assessment_id: assessment.id, period_start: dateOnly(assessment.period_start), period_end: dateOnly(assessment.period_end), source_assessment_snapshot: sourceAssessmentSnapshot(assessment), metadata: metadataForAudit(result.metadata), createdAt: Date.now() });
+        await pending.set(generationId, { workflow: "descriptive_conclusion", classroom_id: context.id, student_id: student.id, competency_v4_id: assessment.competency_v4_id, assessment_id: assessment.id, period_start: dateOnly(assessment.period_start), period_end: dateOnly(assessment.period_end), source_assessment_snapshot: sourceAssessmentSnapshot(assessment), metadata: metadataForAudit(result.metadata), createdAt: Date.now() });
         send(response, 200, { proposal: result.output, generation_id: generationId }, origin);
         return true;
       }
@@ -95,7 +95,7 @@ export function createDescriptiveConclusionRouteHandler({ db, annualPlanningCont
         if (!body.studentId) throw new Error("Selecciona un niño.");
         const { assessment } = await activeAssessment(context, body.assessmentId, body.studentId);
         await sourceEvidence(assessment);
-        const item = pending.get(body.generationId);
+        const item = await pending.get(body.generationId);
         checkPending(item, context, assessment);
         if (!sameAssessmentSnapshot(item.source_assessment_snapshot, sourceAssessmentSnapshot(assessment))) throw new Error(staleMessage);
         validateDescriptiveConclusion(body.proposal, assessment.competency_v4_id, assessment.details.information_status);
@@ -104,21 +104,21 @@ export function createDescriptiveConclusionRouteHandler({ db, annualPlanningCont
         const id = existing?.id ?? randomUUID();
         if (existing) await db.query(`update competency_descriptive_conclusions set assessment_id=$1,details=$2::jsonb,generation_metadata=$3::jsonb,source_assessment_snapshot=$4::jsonb,updated_at=now() where id=$5`, [assessment.id, JSON.stringify(body.proposal), JSON.stringify(item.metadata), JSON.stringify(item.source_assessment_snapshot), id]);
         else await db.query(`insert into competency_descriptive_conclusions(id,student_id,competency_v4_id,assessment_id,period_start,period_end,version,details,generation_metadata,source_assessment_snapshot,status) values($1,$2,$3,$4,$5::date,$6::date,$7,$8::jsonb,$9::jsonb,$10::jsonb,'draft')`, [id, assessment.student_id, assessment.competency_v4_id, assessment.id, assessment.period_start, assessment.period_end, version, JSON.stringify(body.proposal), JSON.stringify(item.metadata), JSON.stringify(item.source_assessment_snapshot)]);
-        pending.delete(body.generationId);
+        await pending.delete(body.generationId);
         send(response, 200, { id, status: "draft" }, origin);
         return true;
       }
       const match = url.pathname.match(/^\/api\/descriptive-conclusions\/([^/]+)(\/confirm)?$/);
       if (match && request.method === "PUT" && !match[2]) {
         const body = await readJson(request), { row, assessment } = await draft(context, match[1]);
-        const item = body.generationId ? pending.get(body.generationId) : null;
+        const item = body.generationId ? await pending.get(body.generationId) : null;
         if (body.generationId) checkPending(item, context, assessment);
         if (!item && row.assessment_id !== assessment.id) throw new Error(staleMessage);
         validateDescriptiveConclusion(body.proposal, row.competency_v4_id, assessment.details.information_status);
         if (item) {
           if (!sameAssessmentSnapshot(item.source_assessment_snapshot, sourceAssessmentSnapshot(assessment))) throw new Error(staleMessage);
           await db.query(`update competency_descriptive_conclusions set assessment_id=$1,details=$2::jsonb,generation_metadata=$3::jsonb,source_assessment_snapshot=$4::jsonb,updated_at=now() where id=$5`, [assessment.id, JSON.stringify(body.proposal), JSON.stringify(item.metadata), JSON.stringify(item.source_assessment_snapshot), row.id]);
-          pending.delete(body.generationId);
+          await pending.delete(body.generationId);
         } else await db.query(`update competency_descriptive_conclusions set details=$1::jsonb,updated_at=now() where id=$2`, [JSON.stringify(body.proposal), row.id]);
         send(response, 200, { id: row.id, status: "draft" }, origin);
         return true;

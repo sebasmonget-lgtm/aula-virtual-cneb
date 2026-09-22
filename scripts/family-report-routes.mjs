@@ -78,13 +78,13 @@ export function createFamilyReportRouteHandler({ db, annualPlanningContext, read
         const plan = resolveAIExecutionPlan({ workflow: "family_report", task: "generation" });
         const result = await generate(input, { provider: createProvider(plan), executionPlan: plan });
         const generationId = randomUUID();
-        pending.set(generationId, { workflow: "family_report", classroom_id: context.id, student_id: student.id, period_start: body.periodStart, period_end: body.periodEnd, selected_competency_ids: ids, source_conclusion_ids: rows.map((row) => row.id), source_conclusion_snapshot: conclusionSourceSnapshot(rows), metadata: metadataForAudit(result.metadata), createdAt: Date.now() });
+        await pending.set(generationId, { workflow: "family_report", classroom_id: context.id, student_id: student.id, period_start: body.periodStart, period_end: body.periodEnd, selected_competency_ids: ids, source_conclusion_ids: rows.map((row) => row.id), source_conclusion_snapshot: conclusionSourceSnapshot(rows), metadata: metadataForAudit(result.metadata), createdAt: Date.now() });
         send(response, 200, { proposal: result.output, generation_id: generationId }, origin);
         return true;
       }
       if (request.method === "POST" && url.pathname === "/api/family-reports") {
         const body = await readJson(request), student = await studentInClass(context, body.studentId);
-        const item = pending.get(body.generationId);
+        const item = await pending.get(body.generationId);
         checkPending(item, context, student.id, body.periodStart, body.periodEnd);
         if (!sameIds(Array.isArray(body.competencyIds) ? [...body.competencyIds].sort() : [], item.selected_competency_ids)) throw new Error("La selección no corresponde a la generación.");
         const { rows } = await validatedSources(context, student.id, body.periodStart, body.periodEnd, item.selected_competency_ids);
@@ -95,14 +95,14 @@ export function createFamilyReportRouteHandler({ db, annualPlanningContext, read
         const id = existing?.id ?? randomUUID();
         if (existing) await db.query(`update family_reports set selected_competency_ids=$1::jsonb,source_conclusion_ids=$2::jsonb,source_conclusion_snapshot=$3::jsonb,details=$4::jsonb,generation_metadata=$5::jsonb,updated_at=now() where id=$6`, [JSON.stringify(item.selected_competency_ids), JSON.stringify(item.source_conclusion_ids), JSON.stringify(item.source_conclusion_snapshot), JSON.stringify(body.proposal), JSON.stringify(item.metadata), id]);
         else await db.query(`insert into family_reports(id,student_id,period_start,period_end,version,selected_competency_ids,source_conclusion_ids,source_conclusion_snapshot,details,generation_metadata,status) values($1,$2,$3::date,$4::date,$5,$6::jsonb,$7::jsonb,$8::jsonb,$9::jsonb,$10::jsonb,'draft')`, [id, student.id, body.periodStart, body.periodEnd, version, JSON.stringify(item.selected_competency_ids), JSON.stringify(item.source_conclusion_ids), JSON.stringify(item.source_conclusion_snapshot), JSON.stringify(body.proposal), JSON.stringify(item.metadata)]);
-        pending.delete(body.generationId);
+        await pending.delete(body.generationId);
         send(response, 200, { id, status: "draft" }, origin);
         return true;
       }
       const match = url.pathname.match(/^\/api\/family-reports\/([^/]+)(\/confirm)?$/);
       if (match && request.method === "PUT" && !match[2]) {
         const body = await readJson(request), row = await draft(context, match[1]);
-        const item = body.generationId ? pending.get(body.generationId) : null;
+        const item = body.generationId ? await pending.get(body.generationId) : null;
         if (body.generationId) checkPending(item, context, row.student_id, dateOnly(row.period_start), dateOnly(row.period_end));
         const ids = item?.selected_competency_ids ?? row.selected_competency_ids;
         const snapshot = item?.source_conclusion_snapshot ?? row.source_conclusion_snapshot;
@@ -111,7 +111,7 @@ export function createFamilyReportRouteHandler({ db, annualPlanningContext, read
           const { rows } = await validatedSources(context, row.student_id, dateOnly(row.period_start), dateOnly(row.period_end), ids);
           if (!sameConclusionSourceSnapshot(snapshot, conclusionSourceSnapshot(rows))) throw new Error(staleMessage);
           await db.query(`update family_reports set selected_competency_ids=$1::jsonb,source_conclusion_ids=$2::jsonb,source_conclusion_snapshot=$3::jsonb,details=$4::jsonb,generation_metadata=$5::jsonb,updated_at=now() where id=$6`, [JSON.stringify(ids), JSON.stringify(item.source_conclusion_ids), JSON.stringify(snapshot), JSON.stringify(body.proposal), JSON.stringify(item.metadata), row.id]);
-          pending.delete(body.generationId);
+          await pending.delete(body.generationId);
         } else await db.query(`update family_reports set details=$1::jsonb,updated_at=now() where id=$2`, [JSON.stringify(body.proposal), row.id]);
         send(response, 200, { id: row.id, status: "draft" }, origin);
         return true;
