@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "status": "official_pending_transcription",
+  "level": "Educación Inicial",
+  "cycle": "II",
+  "source_documents": [
+    {"id":"cneb-2016","title":"Currículo Nacional de la Educación Básica","url":"https://www.minedu.gob.pe/curriculo/pdf/curriculo-nacional-de-la-educacion-basica.pdf","review_status":"pending"},
+    {"id":"programa-inicial-2016","title":"Programa curricular de Educación Inicial","url":"https://www.minedu.gob.pe/curriculo/pdf/programa-curricular-educacion-inicial.pdf","review_status":"pending"}
+  ],
+  "ages": [3,4,5],
+  "competencies": [],
+  "note": "Esta fuente maestra es deliberadamente vacía hasta que textos, páginas y hashes sean transcritos y revisados desde los PDF oficiales. El seed demo no puede importarse ni exponerse como currículo oficial."
+}

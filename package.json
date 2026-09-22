@@ -18,6 +18,8 @@
     "test:statistics": "node --test src/lib/statistics-service.test.mjs",
     "test:student-context": "node --test src/lib/student-context-service.test.mjs",
     "test:activity-runner": "node --test src/lib/activity-runner.test.mjs",
+    "build:curriculum": "node scripts/build-curriculum-runtimes.mjs",
+    "test:curriculum": "node scripts/validate-curriculum.mjs",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "db:generate": "drizzle-kit generate"
   },
