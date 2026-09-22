@@ -9,6 +9,7 @@ import { isValidStepIndex } from "../src/lib/activity-runner.mjs";
 import { buildStudentPedagogicalContext, refreshStudentContextSnapshot } from "../src/lib/student-context-service.mjs";
 import { buildClassroomStatistics } from "../src/lib/statistics-service.mjs";
 import { loadKnowledgeBaseV4 } from "../src/lib/knowledge-base-v4.mjs";
+import { applicableL2, applicableReligion, cardIsApplicable } from "../src/lib/ai-context-builder-v4.mjs";
 import { generateTeacherActivity } from "../src/lib/ai-activity-ui-service.mjs";
 import { generateTeacherAnnualPlan } from "../src/lib/ai-annual-plan-ui-service.mjs";
 import { generateTeacherLearningExperience } from "../src/lib/ai-learning-experience-ui-service.mjs";
@@ -22,7 +23,7 @@ const evidenceAssetsDir = path.join(assetsDir, "evidences");
 const port = Number(process.env.AYNI_LOCAL_DB_PORT ?? 8788);
 const teacherId = "00000000-0000-4000-8000-000000000001";
 // Local-only handoff: production must replace this map with durable, access-controlled audit records.
-const pendingAnnualGenerations = new Map();
+const pendingAIGenerations = new Map();
 const allowedOrigins = new Set([
   "http://localhost:5173",
   "http://127.0.0.1:5173",
@@ -253,13 +254,14 @@ async function activityGenerationOptions() {
       .map((card) => ({ id: card.id, name: card.official_name })),
   };
 }
-async function competencyOptionsForWorkflow(workflow) {
+async function competencyOptionsForWorkflow(workflow, requestContext = {}) {
   const classroom = await annualPlanningContext();
   if (!classroom || !["annual_plan", "project", "unit", "activity"].includes(workflow)) return { age: null, competencies: [] };
   const knowledgeBase = await loadKnowledgeBaseV4();
   const age = String(classroom.age);
+  const applicability = { castellanoL2Applicable: applicableL2(requestContext), religionApplicable: applicableReligion(requestContext) };
   return { age: classroom.age, competencies: knowledgeBase.competencyCards
-    .filter((card) => card.runtime_selectable_by_age?.[age] && !["CAST_L2_ORAL", "PS_RELIGION"].includes(card.id))
+    .filter((card) => card.runtime_selectable_by_age?.[age] && cardIsApplicable(card, applicability))
     .map((card) => ({ id: card.id, name: card.official_name })) };
 }
 
@@ -447,7 +449,7 @@ const server = createServer(async (request, response) => {
       try {
         const generated = await generateTeacherAnnualPlan({ classroom, request: await readJson(request) });
         const generationId = randomUUID();
-        pendingAnnualGenerations.set(generationId, { metadata: safeAnnualGenerationMetadata(generated.internalMetadata), createdAt: Date.now() });
+        pendingAIGenerations.set(generationId, { metadata: safeAnnualGenerationMetadata(generated.internalMetadata), classroom_id: classroom.id, createdAt: Date.now() });
         send(response, 200, { proposal: generated.proposal, generation_id: generationId }, origin);
       } catch (error) { send(response, 422, { error: error?.message || "No pudimos generar una propuesta válida." }, origin); } return;
     }
@@ -455,7 +457,7 @@ const server = createServer(async (request, response) => {
       const context = await annualPlanningContext(); const body = await readJson(request);
       if (!context || !body.proposal) { send(response, 400, { error: "Falta propuesta o aula activa." }, origin); return; }
       const existingId = typeof body.planId === "string" ? body.planId : null;
-      const pending = typeof body.generationId === "string" ? pendingAnnualGenerations.get(body.generationId) : null;
+      const pending = typeof body.generationId === "string" ? pendingAIGenerations.get(body.generationId) : null;
       if (!existingId && !pending) { send(response, 422, { error: "La generación anual ya no está disponible. Genera nuevamente el borrador." }, origin); return; }
       await db.exec("begin");
       try {
@@ -468,7 +470,7 @@ const server = createServer(async (request, response) => {
         const version = nextAnnualPlanVersion(Number(latest.rows[0].max_version)); const id = randomUUID();
         await db.query(`insert into annual_plans (id,classroom_id,school_year_id,curriculum_version_id,version,status,proposal,generation_metadata) values ($1,$2,$3,$4,$5,'draft',$6::jsonb,$7::jsonb)`, [id, context.id, context.school_year_id, context.curriculum_version_id, version, JSON.stringify(body.proposal), JSON.stringify(pending?.metadata ?? {})]);
         await db.exec("commit");
-        if (pending) pendingAnnualGenerations.delete(body.generationId);
+        if (pending) pendingAIGenerations.delete(body.generationId);
         send(response, 200, { id, version, status: "draft" }, origin);
       } catch (error) { await db.exec("rollback"); send(response, 422, { error: error?.message || "No se pudo guardar el borrador." }, origin); }
       return;
@@ -497,18 +499,25 @@ const server = createServer(async (request, response) => {
       send(response, 200, { experiences }, origin); return;
     }
     if (request.method === "GET" && url.pathname === "/api/ai/competency-options") {
-      send(response, 200, await competencyOptionsForWorkflow(url.searchParams.get("workflow") ?? ""), origin); return;
+      send(response, 200, await competencyOptionsForWorkflow(url.searchParams.get("workflow") ?? "", { language_context: { castellano_l2_applicable: url.searchParams.get("castellano_l2_applicable") === "true" }, classroom_context: { religion_applicable: url.searchParams.get("religion_applicable") === "true" } }), origin); return;
     }
     if (request.method === "POST" && url.pathname === "/api/ai/learning-experiences/generate") {
       const classroom = await annualPlanningContext(); if (!classroom) { send(response, 404, { error: "No se encontró un aula activa." }, origin); return; }
-      try { const generated = await generateTeacherLearningExperience({ classroom, request: await readJson(request) }); const generationId = randomUUID(); pendingAnnualGenerations.set(generationId, { metadata: safeAnnualGenerationMetadata(generated.internalMetadata), createdAt: Date.now() }); send(response, 200, { proposal: generated.proposal, generation_id: generationId }, origin); } catch (error) { send(response, 422, { error: error?.message || "No se pudo generar la experiencia." }, origin); } return;
+      try { const generated = await generateTeacherLearningExperience({ classroom, request: await readJson(request) }); const generationId = randomUUID(); pendingAIGenerations.set(generationId, { metadata: safeAnnualGenerationMetadata(generated.internalMetadata), classroom_id: classroom.id, createdAt: Date.now() }); send(response, 200, { proposal: generated.proposal, generation_id: generationId }, origin); } catch (error) { send(response, 422, { error: error?.message || "No se pudo generar la experiencia." }, origin); } return;
     }
     if (request.method === "POST" && url.pathname === "/api/learning-experiences") {
-      const context = await annualPlanningContext(); const body = await readJson(request); const pending = typeof body.generationId === "string" ? pendingAnnualGenerations.get(body.generationId) : null;
-      if (!context || !body.proposal || !["project", "unit"].includes(body.type) || !pending) { send(response, 422, { error: "Falta una generación válida de proyecto o unidad." }, origin); return; }
+      const context = await annualPlanningContext(); const body = await readJson(request); const pending = typeof body.generationId === "string" ? pendingAIGenerations.get(body.generationId) : null;
+      if (!context || !body.proposal || !["project", "unit"].includes(body.type) || !pending || pending.classroom_id !== context.id || pending.metadata.workflow !== body.type) { send(response, 422, { error: "Falta una generación válida de proyecto o unidad." }, origin); return; }
       const originType = body.origin === "emergent" ? "emergent" : "planned"; const proposalIndex = originType === "planned" && Number.isInteger(body.sourceProposalIndex) ? body.sourceProposalIndex : null;
       if (originType === "planned" && (!body.annualPlanId || proposalIndex === null)) { send(response, 422, { error: "Falta la propuesta de origen del plan anual." }, origin); return; }
-      try { const id = randomUUID(); await db.query(`insert into learning_experiences (id,classroom_id,type,title,purpose,starts_on,ends_on,status,details,annual_plan_id,origin,planning_reason,source_proposal_index,generation_metadata) values ($1,$2,$3,$4,$5,$6::date,$7::date,'draft',$8::jsonb,$9,$10,$11,$12,$13::jsonb)`, [id, context.id, body.type, body.proposal.title, body.proposal.purpose, context.starts_on, context.ends_on, JSON.stringify(body.proposal), body.annualPlanId ?? null, originType, body.planningReason ?? null, proposalIndex, JSON.stringify(pending.metadata)]); pendingAnnualGenerations.delete(body.generationId); send(response, 200, { id, status: "draft" }, origin); } catch (error) { send(response, 422, { error: error?.message || "No se pudo guardar la experiencia." }, origin); } return;
+      if (originType === "emergent" && !cleanText(body.planningReason, 500)) { send(response, 422, { error: "Explica la razón de esta experiencia emergente." }, origin); return; }
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(body.startsOn ?? "") || !/^\d{4}-\d{2}-\d{2}$/.test(body.endsOn ?? "") || body.startsOn > body.endsOn || body.startsOn < context.starts_on || body.endsOn > context.ends_on) { send(response, 422, { error: "Las fechas deben estar dentro del año escolar y en orden válido." }, origin); return; }
+      if (originType === "planned") {
+        const parent = (await db.query(`select proposal from annual_plans where id=$1 and classroom_id=$2 and status='active'`, [body.annualPlanId, context.id])).rows[0];
+        const source = parent?.proposal?.proposed_experiences?.[proposalIndex];
+        if (!source || source.experience_type !== body.type) { send(response, 422, { error: "La propuesta anual activa no coincide con esta experiencia." }, origin); return; }
+      }
+      try { const id = randomUUID(); await db.query(`insert into learning_experiences (id,classroom_id,type,title,purpose,starts_on,ends_on,status,details,annual_plan_id,origin,planning_reason,source_proposal_index,generation_metadata) values ($1,$2,$3,$4,$5,$6::date,$7::date,'draft',$8::jsonb,$9,$10,$11,$12,$13::jsonb)`, [id, context.id, body.type, body.proposal.title, body.proposal.purpose, body.startsOn, body.endsOn, JSON.stringify(body.proposal), body.annualPlanId ?? null, originType, body.planningReason ?? null, proposalIndex, JSON.stringify(pending.metadata)]); pendingAIGenerations.delete(body.generationId); send(response, 200, { id, status: "draft" }, origin); } catch (error) { send(response, 422, { error: error?.message || "No se pudo guardar la experiencia." }, origin); } return;
     }
     if (request.method === "POST" && url.pathname.startsWith("/api/learning-experiences/") && url.pathname.endsWith("/confirm")) {
       const id = url.pathname.split("/")[3]; const result = await db.query(`update learning_experiences set status='active', teacher_confirmed_at=now() where id=$1 and classroom_id in (select id from classrooms where teacher_id=$2) and status='draft' returning id,status,teacher_confirmed_at`, [id, teacherId]); if (!result.rows[0]) { send(response, 404, { error: "Experiencia no disponible para confirmar." }, origin); return; } send(response, 200, result.rows[0], origin); return;
@@ -730,3 +739,7 @@ for (const signal of ["SIGINT", "SIGTERM"]) {
     process.exit(0);
   });
 }
+
+
+
+

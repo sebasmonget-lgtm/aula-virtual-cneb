@@ -30,7 +30,7 @@ Proyecto nuevo iniciado el 20 de septiembre de 2026. Existe un shell responsive 
 - La pantalla Planificar integra `activity` mediante el backend local: precarga aula, edad y materiales, recibe solo una propuesta validada editable y no muestra metadata técnica. La propuesta no se guarda automáticamente; falta una operación local de creación de actividades aprobada antes de persistirla.
 - Existe una capa de generación v4 para `activity` y `annual_plan`: `generateAIWorkflowV4()` entrega solo una copia inmutable del `AIContextBundle` y valida una salida estructurada antes de devolverla. `OpenAIProvider` usa la Responses API con Structured Outputs strict cuando recibe `OPENAI_API_KEY`; no hay clave en el repositorio, no hay llamadas durante pruebas y no se habilitaron otros proveedores externos. `createAIProviderForPlan()` centraliza su construcción y `npm run smoke:openai-activity` deja preparada una prueba real ficticia que no se ejecuta en CI ni durante desarrollo normal.
 - La política central de routing decide el modelo y `reasoning_effort` antes de cualquier llamada: Code resuelve tareas deterministas; TypeSafe/Jev queda para decisiones estructuradas; Luna usa `none`, Terra `low` y Sol `medium`. `OpenAIProvider` ejecuta exclusivamente el plan recibido y rechaza discrepancias de modelo.
-- Los otros 11 workflows no generan todavía mediante modelo. `annual_plan`, `project`, `unit` y `activity` son los workflows habilitados mediante modelo. La interfaz, Supabase, despliegue, PDFs, embeddings, vector DB y Jev legacy siguen fuera de esta capa.
+- Los otros 9 workflows no generan todavía mediante modelo. `annual_plan`, `project`, `unit` y `activity` son los workflows habilitados mediante modelo. La interfaz, Supabase, despliegue, PDFs, embeddings, vector DB y Jev legacy siguen fuera de esta capa.
 - v3, los catálogos `curriculum/` heredados, Jev y `CNEB_Inicial_AI_KnowledgePack_v2` se conservan solo como histórico, compatibilidad y pruebas legacy; no son dependencias de la arquitectura v4.
 - Auditoría de consumidores de Jev (2026-09-22): `jev-decision.mjs` solo se importa desde `jev-decision.test.mjs` y `jev-benchmark.test.mjs`; no tiene consumidores productivos activos. Las integraciones nuevas deben importar únicamente `prepare-ai-request-v4.mjs`.
 
@@ -52,10 +52,11 @@ Proyecto nuevo iniciado el 20 de septiembre de 2026. Existe un shell responsive 
 
 ## Riesgos
 
-- OpenAI está habilitado únicamente detrás de `createAIProviderForPlan()` para `activity` y `annual_plan`; las pruebas normales usan mocks y los demás workflows permanecen sin generación.
+- OpenAI está habilitado únicamente detrás de `createAIProviderForPlan()` para `activity`, `annual_plan`, `project` y `unit`; las pruebas normales usan mocks y los demás workflows permanecen sin generación.
 - No se ha realizado revisión legal de datos personales de menores.
 - PGlite no reproduce Auth, Storage ni RLS; esas capas se validarán en el nuevo staging Supabase.
 - El diagnóstico local no permite concluir niveles formales ni pasar prioridades al plan anual; las pantallas de resultados/conclusiones son preparatorias.
 - La asistencia y las excepciones de calendario están persistidas localmente; sus políticas RLS se aplicarán y probarán recién en el nuevo staging Supabase.
+
 
 

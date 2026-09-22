@@ -26,7 +26,7 @@ test("metadata anual preserva solo auditoría permitida", () => {
 
 test("servidor conserva metadata del pending generation, versiona y no crea experiencias reales", async () => {
   const source = await readFile(new URL("../../scripts/local-db-server.mjs", import.meta.url), "utf8");
-  assert.match(source, /pendingAnnualGenerations\.set/);
+  assert.match(source, /pendingAIGenerations\.set/);
   assert.match(source, /pending\?\.metadata/);
   assert.match(source, /!existingId && !pending/);
   assert.doesNotMatch(source, /body\.generation_metadata|body\.metadata/);
@@ -55,6 +55,7 @@ test("annual_plan entrega workflow y schema annual-plan-v1 al provider y al resu
   assert.equal(requests[0].output_schema.id, "annual-plan-v1");
   assert.equal(result.validation.schema, "annual-plan-v1");
 });
+
 
 
 

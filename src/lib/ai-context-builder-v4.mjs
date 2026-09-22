@@ -59,13 +59,13 @@ function specialRules(specialApplicability, cardIds) {
   return specialApplicability.rules.filter((rule) => cardIds.includes(rule.competency_id));
 }
 
-function applicableL2(input) {
+export function applicableL2(input) {
   return input.castellano_l2_applicable === true
     || input.language_context?.castellano_l2_applicable === true
     || input.language_context?.castellanoL2Applicable === true;
 }
 
-function applicableReligion(input) {
+export function applicableReligion(input) {
   return input.religion_applicable === true
     || input.classroom_context?.religion_applicable === true
     || input.classroom_context?.religionApplicable === true;
@@ -75,7 +75,7 @@ function allCardsComplete(cards, age, selectableOnly = false) {
   return cards.filter((card) => card?.id && card.official_name && card.ages?.[String(age)] && (!selectableOnly || card.runtime_selectable_by_age?.[String(age)]));
 }
 
-function cardIsApplicable(card, { castellanoL2Applicable, religionApplicable }) {
+export function cardIsApplicable(card, { castellanoL2Applicable, religionApplicable }) {
   if (card.id === "CAST_L2_ORAL") return castellanoL2Applicable;
   if (card.id === "PS_RELIGION") return religionApplicable;
   return true;
