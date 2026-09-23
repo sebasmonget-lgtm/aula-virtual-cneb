@@ -8,9 +8,10 @@ const component = async (name) => readFile(new URL(`../features/dashboard/compon
 test("plan anual reabre el mismo borrador y no genera otro mientras existe", async () => {
   const source = await component("annual-plan-generator");
   assert.match(source, /function openPlan\(plan: SavedPlan\).*setProposal\(plan\.proposal\).*setPlanId\(plan\.id\)/);
-  assert.match(source, /existingPlan\.status === "draft" \? "Abrir borrador" : "Ver plan"/);
+  assert.match(source, /existingPlan\.status === "draft" \? "Continuar mi borrador" : "Ver plan confirmado"/);
   assert.match(source, /existingPlan\?\.status === "draft"\) return/);
-  assert.match(source, /disabled=\{Boolean\(operation\) \|\| loading \|\| loadError \|\| existingPlan\?\.status === "draft"\}/);
+  assert.match(source, /existingPlan\?\.status === "active" && <AsyncButton/);
+  assert.match(source, /!loading&&!existingPlan&&!proposal&&<EmptyState/);
   assert.match(source, /fieldset disabled=\{activeView \|\| Boolean\(operation\)\}/);
   assert.match(source, /!planId \|\| operation \|\| activeView \|\| hasUnsavedChanges/);
   assert.match(source, /disabled=\{Boolean\(operation\) \|\| !planId \|\| hasUnsavedChanges\}/);
@@ -89,4 +90,24 @@ test("conclusiones e informes exigen guardar cambios antes de confirmar", async 
   const report = await component("family-report-generator");
   assert.match(report, /!loadingOptions && !loadError &&/);
   assert.match(report, /Reintentar carga de informes/);
+});
+
+test("la continuación de evaluar se reconstruye desde registros confirmados tras recargar", async () => {
+  const assessment = await component("assessment-generator");
+  const conclusion = await component("descriptive-conclusion-generator");
+  const workspace = await component("teacher-workspace");
+  assert.match(assessment, /setLatest\(context\.latest_confirmed \?\? null\)/);
+  assert.match(assessment, /\(readOnly \|\| latest\) && onNext && <NextStepCard/);
+  assert.match(conclusion, /setHasConfirmedConclusion\(Boolean\(records\.conclusions\?\.some\(\(item\) => item\.status === "active"\)\)\)/);
+  assert.match(conclusion, /\(readOnly \|\| hasConfirmedConclusion\) && onNext && <NextStepCard/);
+  assert.match(workspace, /initialStudentId=\{target\?\.studentId\}/);
+  assert.match(workspace, /onNext=\{\(studentId, competencyId\) => \{ setTarget\(\{ studentId, competencyId, stage: "conclusion" \}\)/);
+});
+
+test("el perfil propone solo acciones posibles para competencias v4 y los vacíos vuelven a planificar", async () => {
+  const source = await component("students-screen");
+  assert.match(source, /recommendedStudentGuidance\(competencies\)/);
+  assert.match(source, /if \(guidance\.action && competency\.competency_v4_id\) onEvaluate/);
+  assert.match(source, /onPlan && <EmptyState title="Prepara nuevas observaciones"/);
+  assert.match(source, /Registro anterior · sin marca observacional/);
 });

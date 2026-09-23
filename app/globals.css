@@ -88,6 +88,22 @@ button, a[href], input, select, textarea { transition: background-color .16s eas
 .ayni-tab:active { transform: translateY(1px); }
 .ayni-tab[aria-selected="true"] { border-color: #087d96; background: #087d96; color: #fff; box-shadow: 0 5px 14px rgba(8,125,150,.16); }
 .ayni-tab[aria-selected="true"]:hover { background: #076d82; }
+.ayni-next-step { display: flex; gap: .75rem; border: 1px solid #bfe3d2; border-radius: 1rem; background: #f0faf5; padding: 1rem; color: #244260; }
+.ayni-journey { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .4rem; margin: 0; padding: 0; list-style: none; }
+.ayni-journey li { position: relative; display: flex; min-width: 0; flex-direction: column; align-items: center; gap: .35rem; color: #75849a; text-align: center; }
+.ayni-journey li:not(:last-child)::after { content: ""; position: absolute; top: 1rem; left: calc(50% + 1.3rem); width: calc(100% - 2.6rem); height: 2px; background: #dbe5ef; }
+.ayni-journey li > span { z-index: 1; display: grid; width: 2rem; height: 2rem; place-items: center; border: 2px solid #d6e1ec; border-radius: 999px; background: #fff; font-size: .78rem; font-weight: 800; }
+.ayni-journey li > span svg { width: 1rem; height: 1rem; }
+.ayni-journey li > small { overflow: hidden; max-width: 100%; font-size: .7rem; font-weight: 700; text-overflow: ellipsis; }
+.ayni-journey li[aria-current="step"] { color: #087d96; }
+.ayni-journey li[aria-current="step"] > span { border-color: #087d96; background: #087d96; color: #fff; box-shadow: 0 4px 12px rgba(8,125,150,.2); }
+.ayni-journey li.is-complete { color: #287163; }
+.ayni-journey li.is-complete > span { border-color: #b8dfd4; background: #e6f6f0; color: #287163; }
+.ayni-journey li.is-complete::after { background: #b8dfd4; }
+.ayni-journey li.is-draft { color: #986b2d; }
+.ayni-journey li.is-draft > span { border-color: #e7c58c; background: #fff8e8; color: #986b2d; }
+.ayni-journey li > em { font-size: .65rem; font-style: normal; }
+.ayni-step-actions { display: flex; justify-content: flex-start; }
 .ayni-workflow { max-width: 56rem; margin-inline: auto; }
 .ayni-workflow :is(input:not([type="checkbox"]), select, textarea) { width: 100%; min-height: 2.75rem; max-width: 100%; border: 1px solid #d5e1ee; border-radius: .65rem; padding: .6rem .75rem; background: #fff; color: #182d50; }
 .ayni-workflow select { width: 100%; }
@@ -111,9 +127,12 @@ button, a[href], input, select, textarea { transition: background-color .16s eas
 .ayni-choice:hover:has(input:not(:disabled)) { border-color: #98cad4; box-shadow: 0 3px 12px rgba(20,88,115,.07); }
 .ayni-choice:has(input:checked) { border-color: #087d96; background: #eef9fb; box-shadow: inset 3px 0 #087d96; }
 .ayni-choice:focus-within { outline: 3px solid #38a6b7; outline-offset: 2px; }
+.ayni-choice input[type="checkbox"] { width: 1.25rem; min-height: 1.25rem; }
+.ayni-section-title { display: flex; align-items: center; gap: .65rem; padding-bottom: .65rem; border-bottom: 1px solid #e7edf5; color: #19345b; font-size: 1rem; font-weight: 800; }
 .ayni-skeleton { background: linear-gradient(105deg,#edf2f8 30%,#f9fbff 48%,#edf2f8 66%); background-size: 230% 100%; animation: ayni-shimmer 1.6s ease-in-out infinite; }
 @keyframes ayni-shimmer { to { background-position-x: -230%; } }
 @media (min-width: 1024px) { .ayni-tabs { width: 100%; } .ayni-tab { min-width: 0; flex: 1 1 0; } }
+@media (min-width: 768px) { .ayni-journey li > small { font-size: .8rem; } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; } }
 
 .paper-grid {

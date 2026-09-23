@@ -24,8 +24,8 @@ test("la pantalla Planificar usa Activities parent-aware y no el prototipo aisla
   const activityScreen = await readFile(new URL("../features/dashboard/components/parent-activity-generator.tsx", import.meta.url), "utf8");
   assert.match(source, /active === "Planificar"/);
   assert.match(source, /ParentActivityGenerator/);
-  assert.match(activityScreen, /Experiencias confirmadas/);
-  assert.match(activityScreen, /Planificar próxima actividad/);
+  assert.match(activityScreen, /¿En qué experiencia trabajarás\?/);
+  assert.match(activityScreen, /Prepara la próxima actividad/);
   assert.match(activityScreen, /\/api\/activities\?experienceId=/);
 });
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, ArrowRight, BookOpen, Check, ChevronDown, ClipboardCheck, Heart, Lightbulb, Save, School, Sparkles, Users } from "lucide-react";
+import { ArrowLeft, ArrowRight, BookOpen, Check, ChevronDown, ClipboardCheck, Save, School, Sparkles, Users } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -85,7 +85,7 @@ export function InstitutionProfile({ dashboard, onSaved }: {
   </div>;
 }
 
-export function GuidedDiagnostic({ dashboard }: { dashboard: LocalDashboard }) {
+export function GuidedDiagnostic({ dashboard, onPlan }: { dashboard: LocalDashboard; onPlan?: () => void }) {
   const [data, setData] = useState<DiagnosticWorkspace | null>(null);
   const [error, setError] = useState("");
   const [step, setStep] = useState(1);
@@ -145,7 +145,7 @@ export function GuidedDiagnostic({ dashboard }: { dashboard: LocalDashboard }) {
       ].map(([label, value]) => <div key={label}><p className="mb-1 text-xs font-semibold text-[#314e75]">{label}</p><div className="diagnostic-field min-h-11 text-sm font-medium">{value}</div></div>)}</div>
       <div className="mt-5 rounded-xl bg-[#e9f7ff] p-4"><p className="flex items-center gap-2 font-bold"><span className="grid size-7 place-items-center rounded-lg bg-[#b9eafa] text-[#087d96]"><Users className="size-4" /></span> Propósito de la evaluación diagnóstica</p><p className="mt-2 text-sm leading-relaxed text-[#49647f]">Conocer las características, intereses, fortalezas y necesidades de aprendizaje de las niñas y los niños para orientar la planificación pedagógica del año.</p></div>
     </section>}
-    {step === 1 && <section className="diagnostic-panel p-5 md:p-6"><div className="mb-4 flex flex-wrap items-center justify-between gap-3"><div className="flex min-w-0 items-center gap-3"><span className="grid size-9 shrink-0 place-items-center rounded-xl bg-[#e8ddff] text-[#7951bc]"><BookOpen className="size-5" /></span><h2 className="text-lg font-extrabold">Competencias y registro de información</h2></div><Button variant="outline" size="sm" onClick={() => setStep(2)}>Ver todas <ArrowRight className="size-4" /></Button></div><CompetencyList data={data} onOpen={openGuide} /></section>}
+    {step === 1 && <Button className="min-h-12" onClick={() => setStep(2)}>Continuar: qué observar <ArrowRight className="size-4" /></Button>}
     {step === 2 && !selectedGuide && <section className="diagnostic-panel p-5 md:p-6"><div className="mb-4 flex items-center gap-3"><span className="grid size-9 place-items-center rounded-xl bg-[#e8ddff] text-[#7951bc]"><BookOpen className="size-5" /></span><h2 className="text-xl font-extrabold">Competencias</h2></div><CompetencyList data={data} onOpen={openGuide} /><div className="mt-5 flex justify-end"><Button variant="outline" onClick={() => setStep(3)}>Revisar resultados <ArrowRight /></Button></div></section>}
     {step === 2 && selectedGuide && <section className="diagnostic-panel p-5 md:p-7">
       <Button variant="ghost" onClick={() => setGuideId(null)}><ArrowLeft /> Competencias</Button>
@@ -159,13 +159,9 @@ export function GuidedDiagnostic({ dashboard }: { dashboard: LocalDashboard }) {
       <div className="sticky bottom-16 mt-5 flex flex-wrap gap-3 border-t bg-white py-4 md:bottom-0"><AsyncButton busy={working} busyLabel="Guardando..." onClick={() => save(false)} disabled={!referenceId || !referenceStatus}><Save /> Guardar</AsyncButton><AsyncButton variant="outline" busy={working} busyLabel="Guardando..." onClick={() => save(true)} disabled={!referenceId || !referenceStatus}>Guardar y siguiente <ArrowRight /></AsyncButton></div>
     </section>}
     {step === 3 && <section className="diagnostic-panel p-5 md:p-7"><h2 className="text-xl font-bold">Resultados observados</h2><p className="mt-2 text-muted-foreground">{usefulStudents.size}/{data.students.length} estudiantes con al menos una marca útil. “Aún no lo observé” y “Necesito más información” no cuentan como resultado negativo.</p><div className="mt-5 space-y-3">{data.guides.map((guide) => { const count = new Set(data.observations.filter((item) => item.competency_id === guide.competency_id && ["observed", "with_support"].includes(item.status)).map((item) => item.student_id)).size; return <div key={guide.id} className="rounded-xl bg-[#f1f6fb] p-4"><p className="font-semibold">{guide.competency_text}</p><p className="mt-1 text-sm text-muted-foreground">Cobertura útil: {count}/{data.students.length} estudiantes</p></div>; })}</div></section>}
-    {step === 4 && <section className="diagnostic-panel p-5 md:p-7"><div className="flex items-center gap-3"><Sparkles className="text-[#7951bc]" /><h2 className="text-xl font-bold">Conclusiones</h2></div><p className="mt-3 text-muted-foreground">Las conclusiones y prioridades del plan anual requieren suficiente información y confirmación de la docente. No se generan a partir de una sola marca.</p><p className="mt-4 rounded-xl bg-[#fff8e7] p-4 text-sm">Esta etapa permanece pendiente de un catálogo oficial validado y una síntesis revisable. Ninguna valoración se envía al plan anual automáticamente.</p></section>}
+    {step === 4 && <section className="diagnostic-panel p-5 md:p-7"><div className="flex items-center gap-3"><Sparkles className="text-[#7951bc]" /><h2 className="text-xl font-bold">Lo que conocemos del aula</h2></div><p className="mt-3 text-muted-foreground">Estas observaciones ayudan a conocer al grupo. Una sola marca no determina una conclusión ni cambia el plan anual automáticamente.</p><p className="mt-4 rounded-xl bg-[#fff8e7] p-4 text-sm">Puedes seguir observando durante el año. Cuando prepares el plan anual, revisarás y confirmarás cada propuesta.</p>{onPlan && <Button className="mt-4" onClick={onPlan}>Continuar al plan anual <ArrowRight className="size-4" /></Button>}</section>}
     </div>
-    <aside className="space-y-3">
-      <div className="rounded-2xl bg-[#fff8ef] p-5"><div className="flex items-center gap-2"><Lightbulb className="size-6 text-[#e7a526]" /><h2 className="font-extrabold">¿Cómo funciona?</h2></div><ol className="mt-4 space-y-4 text-sm text-[#465b77]">{["Revisa los datos generales ya precargados.", "Registra actuaciones por competencia y estudiante.", "Comprueba la cobertura y lo que falta observar.", "Revisa las conclusiones antes de planificar."].map((item, index) => <li key={item} className="flex gap-3"><span className="grid size-6 shrink-0 place-items-center rounded-full bg-[#087d96] text-xs font-bold text-white">{index + 1}</span>{item}</li>)}</ol></div>
-      <div className="rounded-2xl bg-[#edf8f3] p-5"><h2 className="flex items-center gap-2 font-extrabold"><School className="size-5 text-[#23966a]" />Recuerda</h2><p className="mt-3 text-sm leading-relaxed text-[#275e56]">No necesitas tener toda la información hoy. Puedes guardar y continuar después.</p></div>
-      <div className="rounded-2xl bg-[#fff0f5] p-5"><h2 className="flex items-center gap-2 font-extrabold"><Heart className="size-5 text-[#e86091]" />Aquí para apoyarte</h2><p className="mt-3 text-sm leading-relaxed text-[#77546a]">Abre “¿Cómo observar?” para consultar una microguía breve al registrar cada competencia.</p></div>
-    </aside>
+    <aside><details className="rounded-2xl border bg-[#fff8ef] p-4"><summary className="cursor-pointer font-bold">¿Necesitas ayuda?</summary><p className="mt-3 text-sm leading-relaxed text-[#465b77]">Elige una competencia, observa a cada niño y guarda lo que viste. Puedes continuar otro día. Abre “¿Cómo observar?” para consultar una guía breve.</p></details></aside>
     </div>
   </div>;
 }

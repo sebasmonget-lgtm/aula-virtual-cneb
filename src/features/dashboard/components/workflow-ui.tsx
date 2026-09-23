@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, type ComponentProps, type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
-import { AlertCircle, CheckCircle2, Inbox, LoaderCircle, type LucideIcon } from "lucide-react";
+import { AlertCircle, ArrowRight, CheckCircle2, Inbox, LoaderCircle, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function PageIntro({ eyebrow, title, description, icon: Icon }: { eyebrow?: string; title: string; description?: string; icon?: LucideIcon }) {
@@ -32,6 +32,34 @@ export function WorkflowTabs<T extends string>({ tabs, value, onChange, label }:
       {Icon && <Icon aria-hidden="true" className="size-4 shrink-0" />}<span className="hidden sm:inline">{tab.label}</span><span className="sm:hidden">{tab.shortLabel ?? tab.label}</span>
     </button>; })}
   </div></div>;
+}
+
+export function NextStepCard({ title, description, action, onAction }: { title: string; description: string; action: string; onAction: () => void }) {
+  return <section className="ayni-next-step" aria-label="Siguiente paso recomendado">
+    <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-[#287163]" aria-hidden="true" />
+    <div className="min-w-0 flex-1"><p className="font-bold">{title}</p><p className="mt-1 text-sm text-[#526b87]">{description}</p><Button className="mt-3" onClick={onAction}>{action}<ArrowRight className="size-4" /></Button></div>
+  </section>;
+}
+
+export function CompetencyChecklist({ label, description = "Toca cada competencia que deseas incluir.", value, options, disabled = false, onChange }: { label: string; description?: string; value: string[]; options: { id: string; name: string }[]; disabled?: boolean; onChange: (ids: string[]) => void }) {
+  const available = [...options, ...value.filter((id) => !options.some((option) => option.id === id)).map((id) => ({ id, name: `${id} · requiere revisión` }))];
+  function toggle(id: string, checked: boolean) {
+    const next = checked ? [...new Set([...value, id])] : value.filter((item) => item !== id);
+    onChange(next);
+  }
+  return <details className="rounded-xl border bg-[#f8fbff] p-3">
+    <summary className="font-semibold text-[#244260]">{label} · {value.length ? `${value.length} elegida${value.length === 1 ? "" : "s"}` : "por elegir"}</summary>
+    {value.length > 0 && <p className="mt-2 text-xs text-[#526b87]">{value.map((id) => available.find((item) => item.id === id)?.name ?? id).join(" · ")}</p>}
+    <fieldset className="mt-3 space-y-2" disabled={disabled}>
+      <legend className="sr-only">{label}</legend>
+      <p className="text-xs font-normal text-muted-foreground">{disabled ? "Competencias registradas en esta propuesta." : description}</p>
+      <div className="grid gap-2 sm:grid-cols-2">{available.map((option) => <label key={option.id} className="ayni-choice flex min-h-12 items-start gap-3 text-sm font-medium">
+        <input type="checkbox" className="mt-0.5 size-5 shrink-0 accent-[#087d96]" checked={value.includes(option.id)} onChange={(event) => toggle(option.id, event.target.checked)} />
+        <span>{option.name}</span>
+      </label>)}</div>
+      {!available.length && <p className="rounded-xl bg-[#f8fbff] p-3 text-sm text-muted-foreground">No hay competencias disponibles para esta aula.</p>}
+    </fieldset>
+  </details>;
 }
 
 export function AsyncButton({ busy, busyLabel, children, disabled, ...props }: ComponentProps<typeof Button> & { busy?: boolean; busyLabel: string }) {

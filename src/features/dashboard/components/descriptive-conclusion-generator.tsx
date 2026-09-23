@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { localDatabaseApiUrl, type LocalStudent } from "@/src/lib/local-database";
-import { AsyncButton, EmptyState, LoadingState, ReadOnlyField, WorkflowFeedback } from "./workflow-ui";
+import { AsyncButton, EmptyState, LoadingState, NextStepCard, ReadOnlyField, WorkflowFeedback } from "./workflow-ui";
 
 type AssessmentOption = { id: string; competency_name: string; competency_v4_id: string; period_start: string; period_end: string; information_status: "sufficient" | "insufficient"; evidence_overview: string; strengths_and_advances: string[]; support_needs: string[]; next_opportunities: string[] };
 type Evidence = { observed_on: string; activity_title: string; criterion_text: string; observation_status: string; observation_note: string | null };
@@ -13,13 +13,14 @@ type Stored = { id: string; status: "draft" | "active" | "archived"; details: Co
 const arrays = ["progress_examples", "support_or_conditions", "next_steps"] as const;
 const labels: Record<string, string> = { conclusion_text: "Conclusión descriptiva", progress_examples: "Ejemplos de progreso", support_or_conditions: "Apoyos o condiciones", next_steps: "Próximos pasos", insufficiency_reason: "Razón de información insuficiente", caution: "Cautela docente" };
 
-export function DescriptiveConclusionGenerator({ students }: { students: LocalStudent[] }) {
-  const [studentId, setStudentId] = useState("");
+export function DescriptiveConclusionGenerator({ students, initialStudentId = "", initialCompetencyId = "", onNext, onAssessment }: { students: LocalStudent[]; initialStudentId?: string; initialCompetencyId?: string; onNext?: (studentId: string, competencyId: string) => void; onAssessment?: (studentId: string) => void }) {
+  const [studentId, setStudentId] = useState(initialStudentId);
   const [assessments, setAssessments] = useState<AssessmentOption[]>([]);
   const [assessmentId, setAssessmentId] = useState("");
   const [evidence, setEvidence] = useState<Evidence[]>([]);
   const [teacherNotes, setTeacherNotes] = useState("");
   const [stored, setStored] = useState<Stored | null>(null);
+  const [hasConfirmedConclusion, setHasConfirmedConclusion] = useState(false);
   const [proposal, setProposal] = useState<Conclusion | null>(null);
   const [generationId, setGenerationId] = useState<string | null>(null);
   const [message, setMessage] = useState("");
@@ -42,9 +43,9 @@ export function DescriptiveConclusionGenerator({ students }: { students: LocalSt
     void fetch(`${localDatabaseApiUrl}/api/descriptive-conclusions/options?studentId=${encodeURIComponent(studentId)}`).then(async (response) => {
       if (!response.ok) throw new Error("No se pudieron cargar los análisis confirmados.");
       return response.json() as Promise<{ assessments: AssessmentOption[] }>;
-    }).then((data) => { if (live) { setAssessments(data.assessments); setAssessmentId(data.assessments[0]?.id ?? ""); setLoadingContext(Boolean(data.assessments[0]?.id)); setOptionsError(false); setMessage(""); } }).catch((error: Error) => { if (live) { setOptionsError(true); setAssessments([]); setMessage(error.message); setMessageTone("error"); } }).finally(() => { if (live) setLoadingOptions(false); });
+    }).then((data) => { if (live) { const initial = studentId === initialStudentId ? data.assessments.find((item) => item.competency_v4_id === initialCompetencyId) : null; const selectedId = initial?.id ?? data.assessments[0]?.id ?? ""; setAssessments(data.assessments); setAssessmentId(selectedId); setLoadingContext(Boolean(selectedId)); setOptionsError(false); setMessage(""); } }).catch((error: Error) => { if (live) { setOptionsError(true); setAssessments([]); setMessage(error.message); setMessageTone("error"); } }).finally(() => { if (live) setLoadingOptions(false); });
     return () => { live = false; };
-  }, [studentId, optionsReload]);
+  }, [studentId, initialStudentId, initialCompetencyId, optionsReload]);
 
   useEffect(() => {
     if (!studentId || !assessmentId) return;
@@ -57,9 +58,10 @@ export function DescriptiveConclusionGenerator({ students }: { students: LocalSt
       if (!live) return;
       if (records.error || context.error) throw new Error(records.error ?? context.error);
       const current = records.conclusions?.find((item) => item.status === "draft") ?? records.conclusions?.find((item) => item.status === "active") ?? null;
+      setHasConfirmedConclusion(Boolean(records.conclusions?.some((item) => item.status === "active")));
       setStored(current); setProposal(current?.details ?? null); setGenerationId(null); setEvidence(context.evidence ?? []);
       setContextError(false); setMessage("");
-    }).catch((error: Error) => { if (live) { setContextError(true); setStored(null); setProposal(null); setEvidence([]); setMessage(error.message); setMessageTone("error"); } }).finally(() => { if (live) setLoadingContext(false); });
+    }).catch((error: Error) => { if (live) { setContextError(true); setHasConfirmedConclusion(false); setStored(null); setProposal(null); setEvidence([]); setMessage(error.message); setMessageTone("error"); } }).finally(() => { if (live) setLoadingContext(false); });
     return () => { live = false; };
   }, [studentId, assessmentId, contextReload]);
 
@@ -92,6 +94,7 @@ export function DescriptiveConclusionGenerator({ students }: { students: LocalSt
       const data = await response.json() as { teacher_confirmed_at: string; error?: string };
       if (!response.ok) throw new Error(data.error ?? "No se pudo confirmar la conclusión.");
       setStored({ ...stored, status: "active", teacher_confirmed_at: data.teacher_confirmed_at });
+      setHasConfirmedConclusion(true);
       setMessage("Conclusión confirmada por la docente."); setMessageTone("success");
     } catch (error) { setMessage((error as Error).message); setMessageTone("error"); } finally { setBusy(false); setOperation(null); }
   }
@@ -104,12 +107,12 @@ export function DescriptiveConclusionGenerator({ students }: { students: LocalSt
   return <section className="ayni-workflow space-y-5">
     <header><h2 className="text-xl font-extrabold">Conclusiones descriptivas</h2><p className="mt-1 text-sm text-muted-foreground">Resume el progreso a partir de un análisis confirmado y conserva la revisión docente.</p></header>
     <div className="ayni-panel grid gap-4 p-4 sm:grid-cols-2 sm:p-5">
-      <label>Niño<select value={studentId} onChange={(event) => { setStudentId(event.target.value); setLoadingOptions(Boolean(event.target.value)); setOptionsError(false); setContextError(false); setAssessmentId(""); setAssessments([]); setEvidence([]); setTeacherNotes(""); setMessage(""); setStored(null); setProposal(null); }}><option value="">Selecciona un niño</option>{students.map((student) => <option key={student.id} value={student.id}>{student.name}</option>)}</select></label>
-      {studentId && !optionsError && <label>Competencia con análisis confirmado<select disabled={loadingOptions || assessments.length === 0} value={assessmentId} onChange={(event) => { setAssessmentId(event.target.value); setLoadingContext(Boolean(event.target.value)); setContextError(false); setTeacherNotes(""); setMessage(""); setStored(null); setProposal(null); }}><option value="">Selecciona una competencia</option>{assessments.map((item) => <option key={item.id} value={item.id}>{item.competency_name} · {item.period_start} a {item.period_end}</option>)}</select></label>}
+      <label>Niño<select value={studentId} onChange={(event) => { setStudentId(event.target.value); setLoadingOptions(Boolean(event.target.value)); setOptionsError(false); setContextError(false); setAssessmentId(""); setAssessments([]); setEvidence([]); setTeacherNotes(""); setMessage(""); setStored(null); setProposal(null); setHasConfirmedConclusion(false); }}><option value="">Selecciona un niño</option>{students.map((student) => <option key={student.id} value={student.id}>{student.name}</option>)}</select></label>
+      {studentId && !optionsError && <label>Competencia con análisis confirmado<select disabled={loadingOptions || assessments.length === 0} value={assessmentId} onChange={(event) => { setAssessmentId(event.target.value); setHasConfirmedConclusion(false); setLoadingContext(Boolean(event.target.value)); setContextError(false); setTeacherNotes(""); setMessage(""); setStored(null); setProposal(null); }}><option value="">Selecciona una competencia</option>{assessments.map((item) => <option key={item.id} value={item.id}>{item.competency_name} · {item.period_start} a {item.period_end}</option>)}</select></label>}
     </div>
     {!studentId && <EmptyState title={students.length ? "Elige un niño para comenzar" : "Aún no hay niños en el aula"} description={students.length ? "Aquí aparecerán sus análisis confirmados para preparar una conclusión." : "Añade alumnos desde Niños para revisar su progreso."} />}
     {loadingOptions && <LoadingState label="Cargando análisis confirmados..." />}
-    {studentId && !loadingOptions && !optionsError && assessments.length === 0 && <EmptyState title="Todavía no hay análisis confirmados" description="Confirma un análisis de evidencias para poder redactar la conclusión descriptiva." />}
+    {studentId && !loadingOptions && !optionsError && assessments.length === 0 && <EmptyState title="Todavía no hay análisis confirmados" description="Confirma un análisis de evidencias para poder redactar la conclusión descriptiva." action={onAssessment && <Button variant="outline" onClick={() => onAssessment(studentId)}>Ir a análisis</Button>} />}
     {message && <WorkflowFeedback tone={messageTone}>{message}</WorkflowFeedback>}
     {optionsError && <Button variant="outline" onClick={() => { setLoadingOptions(true); setOptionsReload((value) => value + 1); }}>Reintentar carga de análisis</Button>}
     {selected && <div className="space-y-5">
@@ -121,6 +124,7 @@ export function DescriptiveConclusionGenerator({ students }: { students: LocalSt
         {Object.keys(labels).map((field) => { const value = Array.isArray(proposal[field as keyof Conclusion]) ? proposal[field as keyof Conclusion] as string[] : String(proposal[field as keyof Conclusion] ?? ""); return readOnly ? <ReadOnlyField key={field} label={labels[field]} value={value} /> : <label className="block" key={field}>{labels[field]}<Textarea disabled={busy || field === "insufficiency_reason" && proposal.information_status === "sufficient"} value={Array.isArray(value) ? value.join("\n") : value} onChange={(event) => edit(field, event.target.value)} /></label>; })}
         {readOnly ? <Button variant="outline" onClick={() => { setStored(null); setProposal(null); setGenerationId(null); }}>Preparar nueva versión</Button> : <>{hasUnsavedChanges && <p className="text-sm text-[#526b87]">Guarda los cambios antes de confirmar.</p>}<div className="flex flex-wrap gap-2"><AsyncButton busy={operation === "save"} busyLabel="Guardando..." disabled={busy} onClick={() => void save()}>{stored ? "Guardar cambios" : "Guardar borrador"}</AsyncButton><AsyncButton variant="outline" busy={operation === "generate"} busyLabel="Regenerando..." disabled={busy} onClick={() => void generate()}>Regenerar</AsyncButton><Button variant="outline" disabled={busy} onClick={() => { setProposal(stored?.details ?? null); setGenerationId(null); }}>Descartar cambios</Button>{stored && <AsyncButton busy={operation === "confirm"} busyLabel="Confirmando..." disabled={busy || hasUnsavedChanges} onClick={() => void confirm()}>Confirmar conclusión</AsyncButton>}</div></>}
       </div>}
+      {!loadingContext && !contextError && (readOnly || hasConfirmedConclusion) && onNext && <NextStepCard title="Conclusión confirmada disponible" description={readOnly ? "Ya puedes preparar un informe claro para la familia." : "El borrador nuevo no impide usar la conclusión confirmada anterior."} action="Preparar informe" onAction={() => onNext(studentId, selected.competency_v4_id)} />}
     </div>}
   </section>;
 }
