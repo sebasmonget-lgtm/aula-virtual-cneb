@@ -4,6 +4,8 @@ export type TeacherConfirmedConclusion = { id: string; period_start: string; per
 export type StudentPedagogicalProfile = {
   student: { id: string; name: string; first_name: string; last_name: string; section: string; age_years: number; school_year: number };
   diagnosis: { competency_id: string; teacher_interpretation: string | null; teacher_confirmed: boolean; updated_at: string }[];
+  diagnostic_observations: { id: string; experience_id: string; aspect_id: string; competency_v4_id: string; competency_name: string; observation_status: ObservationStatus; observation_text: string | null; observed_at: string }[];
+  confirmed_diagnostic_reviews: { id: string; competency_v4_id: string; competency_name: string; version: number; information_status: "information_available" | "insufficient_information"; summary_text: string; next_observation: string; teacher_confirmed_at: string; source: "diagnostic" }[];
   competencies: { competency_key: string; competency_id: string | null; competency_v4_id: string | null; competency_text: string; evidence_count: number; last_observed_at: string | null; observations: Record<ObservationStatus, number>; recent_evidence: LocalEvidence[]; teacher_confirmed_assessment: TeacherConfirmedAssessment | null; teacher_confirmed_conclusion: TeacherConfirmedConclusion | null }[];
   recent_relevant_observations: (LocalEvidence & { activity_title: string; criterion_text: string; competency_id: string | null; competency_v4_id: string | null; competency_key: string; media_available: boolean })[];
   confirmed_period_assessments: (TeacherConfirmedAssessment & { competency_v4_id: string })[];
@@ -65,8 +67,33 @@ export type DiagnosticWorkspace = {
     performance_ids: string[]; evidence_recommendation: string; official_verified: boolean;
   }[];
   session: { id: string; title: string; status: string } | null;
+  reviewed: boolean;
   entries: { id: string; student_id: string; competency_id: string; teacher_confirmed: boolean; teacher_interpretation: string | null }[];
   observations: { id: string; student_id: string; competency_id: string; reference_id: string; status: string; note: string | null }[];
+  experiences: {
+    id: string; title: string; explanation: string;
+    competencies: { id: string; name: string }[];
+    aspects: { id: string; competency_id: string; competency_name: string; area_name: string; prompt: string; age_reference: string }[];
+  }[];
+  experience_observations: {
+    id: string; student_id: string; experience_id: string; aspect_id: string;
+    competency_v4_id: string; observation_status: ObservationStatus;
+    observation_text: string | null; observed_at: string;
+  }[];
+  experience_coverage: {
+    experience_id: string; students_with_records: number; students_with_information: number;
+    competency_coverage: { competency_id: string; students_with_information: number }[];
+  }[];
+};
+
+export type DiagnosticSynthesisDetails = { information_status: "information_available" | "insufficient_information"; summary_text: string; next_observation: string };
+export type DiagnosticGroupDetails = { strengths: string; needs: string; planning_priorities: string };
+export type DiagnosticReviewWorkspace = {
+  students: (LocalStudent & { initial_context: string | null })[];
+  observations: { id: string; student_id: string; competency_v4_id: string; experience_id: string; aspect_id: string; catalog_version: string; experience_title: string; aspect_prompt: string; observation_status: ObservationStatus; observation_text: string | null; observed_at: string }[];
+  reviews: { id: string; student_id: string; competency_v4_id: string; version: number; status: "draft" | "confirmed"; details: DiagnosticSynthesisDetails; teacher_confirmed_at: string | null; updated_at: string }[];
+  group_reviews: { id: string; version: number; status: "draft" | "confirmed"; details: DiagnosticGroupDetails; teacher_confirmed_at: string | null }[];
+  group_coverage: { competency_id: string; competency_name: string; children_with_observations: number; confirmed_with_information: number; confirmed_insufficient: number; children_without_observations: number }[];
 };
 
 export const localDatabaseApiUrl = process.env.NEXT_PUBLIC_AYNI_API_URL ?? process.env.NEXT_PUBLIC_LOCAL_DATABASE_URL ?? "http://127.0.0.1:8788";
@@ -170,6 +197,13 @@ export async function loadDiagnostics(): Promise<DiagnosticWorkspace> {
   return response.json();
 }
 
+export async function completeDiagnosticReview(): Promise<DiagnosticWorkspace> {
+  const response = await fetch(`${apiUrl}/api/diagnostics/complete`, { method: "POST" });
+  const payload = await response.json() as { error?: string; workspace?: DiagnosticWorkspace };
+  if (!response.ok || !payload.workspace) throw new Error(payload.error ?? "No se pudo guardar la revisión diagnóstica.");
+  return payload.workspace;
+}
+
 export async function saveDiagnosticObservation(input: {
   studentId: string; competencyId: string; referenceId: string; referenceStatus: string;
   observationContext: string; observationText: string;
@@ -182,3 +216,32 @@ export async function saveDiagnosticObservation(input: {
   if (!response.ok || !payload.workspace) throw new Error(payload.error ?? "No se pudo guardar el diagnóstico.");
   return payload.workspace;
 }
+
+export async function saveDiagnosticExperienceObservation(input: {
+  studentId: string; experienceId: string; aspectId: string;
+  observationStatus: ObservationStatus; observationText?: string;
+}): Promise<DiagnosticWorkspace> {
+  const response = await fetch(`${apiUrl}/api/diagnostics/experience-observations`, {
+    method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(input),
+  });
+  const payload = await response.json() as { error?: string; workspace?: DiagnosticWorkspace };
+  if (!response.ok || !payload.workspace) throw new Error(payload.error ?? "No se pudo guardar la observación.");
+  return payload.workspace;
+}
+
+async function diagnosticRequest<T>(path: string, method = "GET", body?: unknown): Promise<T> {
+  const response = await fetch(`${apiUrl}/api/diagnostics/${path}`, {
+    method, cache: "no-store", ...(body === undefined ? {} : { headers: { "content-type": "application/json" }, body: JSON.stringify(body) }),
+  });
+  const payload = await response.json() as T & { error?: string };
+  if (!response.ok) throw new Error(payload.error ?? "No se pudo completar la revisión diagnóstica.");
+  return payload;
+}
+export const loadDiagnosticReview = () => diagnosticRequest<DiagnosticReviewWorkspace>("reviews");
+export const prepareDiagnosticSynthesis = (studentId: string, competencyId: string) => diagnosticRequest<{ id: string; details: DiagnosticSynthesisDetails }>("reviews/prepare", "POST", { studentId, competencyId });
+export const saveDiagnosticSynthesis = (id: string, details: DiagnosticSynthesisDetails) => diagnosticRequest(`reviews/${encodeURIComponent(id)}`, "PUT", { details });
+export const confirmDiagnosticSynthesis = (id: string) => diagnosticRequest(`reviews/${encodeURIComponent(id)}/confirm`, "POST");
+export const prepareDiagnosticGroup = () => diagnosticRequest<{ id: string; details: DiagnosticGroupDetails }>("group-review/prepare", "POST");
+export const saveDiagnosticGroup = (id: string, details: DiagnosticGroupDetails) => diagnosticRequest(`group-review/${encodeURIComponent(id)}`, "PUT", { details });
+export const confirmDiagnosticGroup = (id: string) => diagnosticRequest(`group-review/${encodeURIComponent(id)}/confirm`, "POST");
+export const saveDiagnosticInitialContext = (studentId: string, initialContext: string) => diagnosticRequest(`students/${encodeURIComponent(studentId)}/initial-context`, "PUT", { initialContext });

@@ -76,10 +76,16 @@ test("OpenAIProvider usa Responses API, el plan central y Structured Outputs str
   assert.equal(request.text.format.schema.additionalProperties, false);
   assert.deepEqual(request.text.format.schema.required, Object.keys(activityOutput));
   assert.equal(options.timeout, 30_000);
+  assert.equal(options.maxRetries, 0);
   assert.equal(result.metadata.provider, "openai");
   assert.equal(result.metadata.model, "gpt-5.6-terra");
   assert.equal(result.metadata.response_id, "resp_123");
   assert.deepEqual(result.metadata.usage, { input_tokens: 110, cached_input_tokens: 12, output_tokens: 55, total_tokens: 165 });
+});
+
+test("el cliente real queda configurado sin reintentos automáticos", () => {
+  const provider = new OpenAIProvider({ apiKey: "test-key" });
+  assert.equal(provider.getClient().maxRetries, 0);
 });
 
 test("OpenAIProvider envía solamente el bundle filtrado e inmutable", async () => {

@@ -36,7 +36,7 @@
     "test:openai-activity-smoke": "node --test src/lib/openai-activity-smoke.test.mjs",
     "smoke:openai-activity": "node --env-file-if-exists=.env.local scripts/smoke-openai-activity.mjs",
     "test:ai-activity-ui-v4": "node --test src/lib/ai-activity-ui-service.test.mjs src/lib/ai-activity-ui.test.mjs",
-    "test:annual-plan-v4": "node --test src/lib/annual-plan-hardening.test.mjs",
+    "test:annual-plan-v4": "node --test src/lib/annual-plan-hardening.test.mjs src/lib/ai-annual-plan-ui-service.test.mjs",
     "test:ai-learning-experience-v4": "node --test src/lib/ai-learning-experience-v4.test.mjs",
     "test:learning-experience-hardening-v4": "node --test src/lib/learning-experience-hardening.test.mjs",
     "test:activity-persistence-v4": "node --test src/lib/activity-persistence-v4.test.mjs",
@@ -46,9 +46,11 @@
     "test:descriptive-conclusion-v4": "node --test src/lib/descriptive-conclusion-v4.test.mjs",
     "test:family-report-v4": "node --test src/lib/family-report-v4.test.mjs",
     "test:workflow-ui-continuity": "node --test src/lib/workflow-ui-continuity.test.mjs",
-    "test:planning-journey": "node --test src/lib/planning-journey.test.mjs",
+    "test:planning-journey": "node --test src/lib/planning-journey.test.mjs src/lib/diagnostic-review-service.test.mjs",
     "test:student-guidance": "node --test src/lib/student-guidance.test.mjs",
-    "test:pilot-readiness": "node --test src/lib/pilot-readiness.test.mjs"
+    "test:pilot-readiness": "node --test src/lib/pilot-readiness.test.mjs",
+    "test:diagnostic-experiences-v4": "node --test src/lib/diagnostic-experiences-v4.test.mjs",
+    "test:diagnostic-assessment-v4": "node --test src/lib/diagnostic-assessment-v4.test.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

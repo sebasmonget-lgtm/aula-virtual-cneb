@@ -56,7 +56,7 @@ export class OpenAIProvider extends AIProvider {
 
   getClient() {
     if (!this.apiKey) throw new OpenAIProviderError("api_key_missing");
-    return this.client ?? new OpenAI({ apiKey: this.apiKey, timeout: this.timeoutMs });
+    return this.client ?? new OpenAI({ apiKey: this.apiKey, timeout: this.timeoutMs, maxRetries: 0 });
   }
 
   async generate(request) {
@@ -83,7 +83,7 @@ export class OpenAIProvider extends AIProvider {
             schema: activityJsonSchema(request.output_schema),
           },
         },
-      }, { timeout: this.timeoutMs });
+      }, { timeout: this.timeoutMs, maxRetries: 0 });
     } catch (error) {
       if (error instanceof OpenAIProviderError) throw error;
       throw new OpenAIProviderError(classifyError(error));

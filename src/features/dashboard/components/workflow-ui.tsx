@@ -79,6 +79,16 @@ export function LoadingState({ label }: { label: string }) {
   return <div className="ayni-loading" role="status"><LoaderCircle className="size-4 animate-spin" aria-hidden="true" />{label}</div>;
 }
 
+export function GenerationProgress({ label, description }: { label: string; description: string }) {
+  return <div className="ayni-generation-progress" role="status">
+    <p className="font-bold text-[#19345b]">{label}</p>
+    <p className="mt-1 text-sm text-[#526b87]">{description}</p>
+    <div className="ayni-generation-progress-track" role="progressbar" aria-label={label} aria-valuetext="En curso">
+      <span className="ayni-generation-progress-bar" />
+    </div>
+  </div>;
+}
+
 export function ReadOnlyField({ label, value }: { label: string; value: string | string[] | null | undefined }) {
   const text = Array.isArray(value) ? value.join("\n") : value;
   return <div className="ayni-readonly-field"><h4>{label}</h4><p>{text?.trim() || "Sin información registrada."}</p></div>;

@@ -89,7 +89,7 @@ button, a[href], input, select, textarea { transition: background-color .16s eas
 .ayni-tab[aria-selected="true"] { border-color: #087d96; background: #087d96; color: #fff; box-shadow: 0 5px 14px rgba(8,125,150,.16); }
 .ayni-tab[aria-selected="true"]:hover { background: #076d82; }
 .ayni-next-step { display: flex; gap: .75rem; border: 1px solid #bfe3d2; border-radius: 1rem; background: #f0faf5; padding: 1rem; color: #244260; }
-.ayni-journey { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .4rem; margin: 0; padding: 0; list-style: none; }
+.ayni-journey { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: .4rem; margin: 0; padding: 0; list-style: none; }
 .ayni-journey li { position: relative; display: flex; min-width: 0; flex-direction: column; align-items: center; gap: .35rem; color: #75849a; text-align: center; }
 .ayni-journey li:not(:last-child)::after { content: ""; position: absolute; top: 1rem; left: calc(50% + 1.3rem); width: calc(100% - 2.6rem); height: 2px; background: #dbe5ef; }
 .ayni-journey li > span { z-index: 1; display: grid; width: 2rem; height: 2rem; place-items: center; border: 2px solid #d6e1ec; border-radius: 999px; background: #fff; font-size: .78rem; font-weight: 800; }
@@ -118,6 +118,10 @@ button, a[href], input, select, textarea { transition: background-color .16s eas
 .ayni-empty p { margin-top: .2rem; font-size: .84rem; line-height: 1.5; }
 .ayni-empty-icon { display: grid; flex: none; width: 2.25rem; height: 2.25rem; place-items: center; border-radius: .7rem; background: #e7f3fb; color: #087d96; }
 .ayni-loading { display: flex; align-items: center; gap: .55rem; border-radius: .75rem; background: #edf8fc; padding: .7rem .85rem; color: #126177; font-size: .85rem; font-weight: 650; }
+.ayni-generation-progress { border: 1px solid #bfe1eb; border-radius: 1rem; background: #f1faff; padding: 1rem; }
+.ayni-generation-progress-track { height: .65rem; margin-top: .85rem; overflow: hidden; border-radius: 999px; background: #dcecf2; }
+.ayni-generation-progress-bar { display: block; width: 38%; height: 100%; border-radius: inherit; background: #087d96; animation: ayni-generation-progress 1.8s ease-in-out infinite alternate; }
+@keyframes ayni-generation-progress { from { transform: translateX(-100%); } to { transform: translateX(265%); } }
 .ayni-readonly-field { border: 1px solid #e3eaf3; border-radius: .8rem; background: #f8fafd; padding: .85rem 1rem; }
 .ayni-readonly-field h4 { margin-bottom: .35rem; color: #526b87; font-size: .75rem; font-weight: 750; letter-spacing: .02em; }
 .ayni-readonly-field p { white-space: pre-line; font-size: .9rem; line-height: 1.6; }
@@ -134,6 +138,7 @@ button, a[href], input, select, textarea { transition: background-color .16s eas
 @media (min-width: 1024px) { .ayni-tabs { width: 100%; } .ayni-tab { min-width: 0; flex: 1 1 0; } }
 @media (min-width: 768px) { .ayni-journey li > small { font-size: .8rem; } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+@media (prefers-reduced-motion: reduce) { .ayni-generation-progress-bar { animation: none; transform: none; } }
 
 .paper-grid {
   background-image: linear-gradient(#dce5e1 1px, transparent 1px), linear-gradient(90deg, #dce5e1 1px, transparent 1px);

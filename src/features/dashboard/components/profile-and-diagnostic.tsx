@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  loadDiagnostics, saveDiagnosticObservation, saveLocalProfile,
+  completeDiagnosticReview, loadDiagnostics, saveDiagnosticObservation, saveLocalProfile,
   type DiagnosticWorkspace, type LocalDashboard,
 } from "@/src/lib/local-database";
 import { AsyncButton, LoadingState, WorkflowFeedback } from "./workflow-ui";
@@ -85,10 +85,12 @@ export function InstitutionProfile({ dashboard, onSaved }: {
   </div>;
 }
 
-export function GuidedDiagnostic({ dashboard, onPlan }: { dashboard: LocalDashboard; onPlan?: () => void }) {
+/** @deprecated Compatibility view for the legacy UUID reference catalog. The active flow is guided-diagnostic-v4.tsx. */
+export function GuidedDiagnostic({ dashboard, onPlan, onStudents }: { dashboard: LocalDashboard; onPlan?: () => void; onStudents?: () => void }) {
   const [data, setData] = useState<DiagnosticWorkspace | null>(null);
   const [error, setError] = useState("");
   const [step, setStep] = useState(1);
+  const [maxStep, setMaxStep] = useState(1);
   const [guideId, setGuideId] = useState<string | null>(null);
   const [studentIndex, setStudentIndex] = useState(0);
   const [referenceId, setReferenceId] = useState("");
@@ -104,9 +106,11 @@ export function GuidedDiagnostic({ dashboard, onPlan }: { dashboard: LocalDashbo
   const student = data?.students[studentIndex];
   const usefulStudents = new Set(data?.observations.filter((item) => item.status === "observed" || item.status === "with_support").map((item) => item.student_id) ?? []);
 
+  function advanceTo(next: number) { setMaxStep((current) => Math.max(current, next)); setStep(next); }
+
   function openGuide(id: string) {
     setGuideId(id); setReferenceId(""); setReferenceStatus(""); setObservationText(""); setObservationContext(""); setMessage("");
-    setStep(2);
+    advanceTo(2);
   }
 
   async function save(next: boolean) {
@@ -123,15 +127,25 @@ export function GuidedDiagnostic({ dashboard, onPlan }: { dashboard: LocalDashbo
     finally { setWorking(false); }
   }
 
+  async function finishReview() {
+    if (working || !data?.students.length) return;
+    if (data.reviewed) { onPlan?.(); return; }
+    setWorking(true); setError("");
+    try { setData(await completeDiagnosticReview()); onPlan?.(); }
+    catch (cause) { setError(cause instanceof Error ? cause.message : "No se pudo guardar la revisión diagnóstica."); }
+    finally { setWorking(false); }
+  }
+
   if (error && !data) return <p role="alert" className="rounded-xl bg-[#fff1d6] p-4">{error}</p>;
   if (!data) return <LoadingState label="Cargando diagnóstico..." />;
+  if (!data.students.length) return <section className="diagnostic-panel space-y-3 p-5"><h1 className="text-2xl font-bold">Primero, conoce a tu grupo</h1><p className="text-sm text-[#526b87]">Agrega a las niñas y los niños del aula para comenzar la evaluación diagnóstica.</p>{onStudents && <Button onClick={onStudents}>Agregar niños <ArrowRight className="size-4" /></Button>}</section>;
 
   return <div className="diagnostic-shell space-y-6">
     <div className="flex flex-wrap items-center justify-between gap-4">
-      <div className="flex items-center gap-4"><span className="grid size-13 shrink-0 place-items-center rounded-2xl bg-[#e9ddff] text-[#7652bc]"><ClipboardCheck className="size-6" /></span><div><h1 className="text-2xl font-extrabold tracking-tight text-[#172b52] md:text-[30px]">Evaluación Diagnóstica</h1><p className="text-sm text-[#61718e]">Conoce a tus estudiantes para una mejor planificación</p></div></div>
+      <div className="flex items-center gap-4"><span className="grid size-13 shrink-0 place-items-center rounded-2xl bg-[#e9ddff] text-[#7652bc]"><ClipboardCheck className="size-6" /></span><div><p className="text-sm font-semibold text-[#087d96]">Paso 3 de 6 · Conocer al grupo</p><h1 className="text-2xl font-extrabold tracking-tight text-[#172b52] md:text-[30px]">Evaluación Diagnóstica</h1><p className="text-sm text-[#61718e]">Conoce a tus estudiantes para una mejor planificación</p></div></div>
       <div className="flex items-center gap-2 rounded-full bg-[#edf5fb] px-4 py-2 text-sm font-semibold text-[#1b5175]"><Users className="size-4" /> Aula: {data.classroom.age_years} años · {data.classroom.section}</div>
     </div>
-    <div className="flex flex-wrap items-center gap-2" aria-label="Pasos del diagnóstico">{["Datos generales", "Competencias", "Resultados", "Conclusiones"].map((label, index) => <button key={label} onClick={() => { setStep(index + 1); setGuideId(null); }} className={`flex items-center gap-2 rounded-full px-2 py-2 text-xs font-semibold transition sm:text-sm ${step === index + 1 ? "text-[#173b67]" : "text-[#72809a]"}`}><span className={`grid size-8 place-items-center rounded-full ${step === index + 1 ? "bg-[#087d96] text-white shadow-[0_3px_9px_#087d9644]" : index + 1 < step ? "bg-[#1a9a9a] text-white" : "bg-[#e9eef6] text-[#4a5b76]"}`}>{index + 1 < step ? <Check className="size-4" /> : index + 1}</span><span className="hidden sm:inline">{label}</span><span className="sm:hidden">{label.split(" ")[0]}</span></button>)}</div>
+    <div className="flex flex-wrap items-center gap-2" aria-label="Pasos del diagnóstico">{["Datos generales", "Competencias", "Resultados", "Conclusiones"].map((label, index) => <button key={label} disabled={index + 1 > maxStep} onClick={() => { setStep(index + 1); setGuideId(null); }} className={`flex items-center gap-2 rounded-full px-2 py-2 text-xs font-semibold transition sm:text-sm ${step === index + 1 ? "text-[#173b67]" : "text-[#72809a]"}`}><span className={`grid size-8 place-items-center rounded-full ${step === index + 1 ? "bg-[#087d96] text-white shadow-[0_3px_9px_#087d9644]" : index + 1 < step ? "bg-[#1a9a9a] text-white" : "bg-[#e9eef6] text-[#4a5b76]"}`}>{index + 1 < step ? <Check className="size-4" /> : index + 1}</span><span className="hidden sm:inline">{label}</span><span className="sm:hidden">{label.split(" ")[0]}</span></button>)}</div>
     <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_250px]">
     <div className="space-y-4">
     {step === 1 && <section className="diagnostic-panel p-5 md:p-6">
@@ -145,8 +159,8 @@ export function GuidedDiagnostic({ dashboard, onPlan }: { dashboard: LocalDashbo
       ].map(([label, value]) => <div key={label}><p className="mb-1 text-xs font-semibold text-[#314e75]">{label}</p><div className="diagnostic-field min-h-11 text-sm font-medium">{value}</div></div>)}</div>
       <div className="mt-5 rounded-xl bg-[#e9f7ff] p-4"><p className="flex items-center gap-2 font-bold"><span className="grid size-7 place-items-center rounded-lg bg-[#b9eafa] text-[#087d96]"><Users className="size-4" /></span> Propósito de la evaluación diagnóstica</p><p className="mt-2 text-sm leading-relaxed text-[#49647f]">Conocer las características, intereses, fortalezas y necesidades de aprendizaje de las niñas y los niños para orientar la planificación pedagógica del año.</p></div>
     </section>}
-    {step === 1 && <Button className="min-h-12" onClick={() => setStep(2)}>Continuar: qué observar <ArrowRight className="size-4" /></Button>}
-    {step === 2 && !selectedGuide && <section className="diagnostic-panel p-5 md:p-6"><div className="mb-4 flex items-center gap-3"><span className="grid size-9 place-items-center rounded-xl bg-[#e8ddff] text-[#7951bc]"><BookOpen className="size-5" /></span><h2 className="text-xl font-extrabold">Competencias</h2></div><CompetencyList data={data} onOpen={openGuide} /><div className="mt-5 flex justify-end"><Button variant="outline" onClick={() => setStep(3)}>Revisar resultados <ArrowRight /></Button></div></section>}
+    {step === 1 && <Button className="min-h-12" onClick={() => advanceTo(2)}>Continuar: qué observar <ArrowRight className="size-4" /></Button>}
+    {step === 2 && !selectedGuide && <section className="diagnostic-panel p-5 md:p-6"><div className="mb-4 flex items-center gap-3"><span className="grid size-9 place-items-center rounded-xl bg-[#e8ddff] text-[#7951bc]"><BookOpen className="size-5" /></span><h2 className="text-xl font-extrabold">Competencias</h2></div><CompetencyList data={data} onOpen={openGuide} /><div className="mt-5 flex justify-end"><Button variant="outline" onClick={() => advanceTo(3)}>Revisar resultados <ArrowRight /></Button></div></section>}
     {step === 2 && selectedGuide && <section className="diagnostic-panel p-5 md:p-7">
       <Button variant="ghost" onClick={() => setGuideId(null)}><ArrowLeft /> Competencias</Button>
       <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-[#087d96]">Inicial · {data.classroom.age_years} años · {data.classroom.section}</p><h2 className="mt-1 text-2xl font-bold">{selectedGuide.competency_text}</h2>
@@ -159,7 +173,8 @@ export function GuidedDiagnostic({ dashboard, onPlan }: { dashboard: LocalDashbo
       <div className="sticky bottom-16 mt-5 flex flex-wrap gap-3 border-t bg-white py-4 md:bottom-0"><AsyncButton busy={working} busyLabel="Guardando..." onClick={() => save(false)} disabled={!referenceId || !referenceStatus}><Save /> Guardar</AsyncButton><AsyncButton variant="outline" busy={working} busyLabel="Guardando..." onClick={() => save(true)} disabled={!referenceId || !referenceStatus}>Guardar y siguiente <ArrowRight /></AsyncButton></div>
     </section>}
     {step === 3 && <section className="diagnostic-panel p-5 md:p-7"><h2 className="text-xl font-bold">Resultados observados</h2><p className="mt-2 text-muted-foreground">{usefulStudents.size}/{data.students.length} estudiantes con al menos una marca útil. “Aún no lo observé” y “Necesito más información” no cuentan como resultado negativo.</p><div className="mt-5 space-y-3">{data.guides.map((guide) => { const count = new Set(data.observations.filter((item) => item.competency_id === guide.competency_id && ["observed", "with_support"].includes(item.status)).map((item) => item.student_id)).size; return <div key={guide.id} className="rounded-xl bg-[#f1f6fb] p-4"><p className="font-semibold">{guide.competency_text}</p><p className="mt-1 text-sm text-muted-foreground">Cobertura útil: {count}/{data.students.length} estudiantes</p></div>; })}</div></section>}
-    {step === 4 && <section className="diagnostic-panel p-5 md:p-7"><div className="flex items-center gap-3"><Sparkles className="text-[#7951bc]" /><h2 className="text-xl font-bold">Lo que conocemos del aula</h2></div><p className="mt-3 text-muted-foreground">Estas observaciones ayudan a conocer al grupo. Una sola marca no determina una conclusión ni cambia el plan anual automáticamente.</p><p className="mt-4 rounded-xl bg-[#fff8e7] p-4 text-sm">Puedes seguir observando durante el año. Cuando prepares el plan anual, revisarás y confirmarás cada propuesta.</p>{onPlan && <Button className="mt-4" onClick={onPlan}>Continuar al plan anual <ArrowRight className="size-4" /></Button>}</section>}
+    {step === 3 && <Button onClick={() => advanceTo(4)}>Continuar: qué sabemos del grupo <ArrowRight className="size-4" /></Button>}
+    {step === 4 && <section className="diagnostic-panel p-5 md:p-7"><div className="flex items-center gap-3"><Sparkles className="text-[#7951bc]" /><h2 className="text-xl font-bold">Lo que conocemos del aula</h2></div><p className="mt-3 text-muted-foreground">Estas observaciones ayudan a conocer al grupo. Una sola marca no determina una conclusión ni cambia el plan anual automáticamente.</p><p className="mt-4 rounded-xl bg-[#fff8e7] p-4 text-sm">Puedes seguir observando durante el año. Cuando prepares el plan anual, revisarás y confirmarás cada propuesta.</p>{!data.observations.length && <p className="mt-3 text-sm text-[#86571d]">Aún no hay observaciones guardadas. Puedes continuar con información insuficiente y seguir observando después.</p>}{error && <p role="alert" className="mt-3 text-sm text-destructive">{error}</p>}{onPlan && <AsyncButton className="mt-4" busy={working} busyLabel="Guardando revisión..." onClick={() => void finishReview()}>{data.reviewed ? "Continuar al plan anual" : "Terminar revisión inicial y continuar"} <ArrowRight className="size-4" /></AsyncButton>}</section>}
     </div>
     <aside><details className="rounded-2xl border bg-[#fff8ef] p-4"><summary className="cursor-pointer font-bold">¿Necesitas ayuda?</summary><p className="mt-3 text-sm leading-relaxed text-[#465b77]">Elige una competencia, observa a cada niño y guarda lo que viste. Puedes continuar otro día. Abre “¿Cómo observar?” para consultar una guía breve.</p></details></aside>
     </div>

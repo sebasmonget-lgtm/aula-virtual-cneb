@@ -50,9 +50,31 @@ export async function buildStudentPedagogicalContext(db, studentId) {
     select de.competency_id, de.teacher_interpretation, de.teacher_confirmed, de.updated_at
       from diagnostic_entries de where de.student_id = $1 order by de.updated_at desc
   `, [studentId])).rows;
+  const diagnosticObservations = (await db.query(`
+    select id, experience_id, aspect_id, competency_v4_id, observation_status,
+           observation_text, observed_at
+      from diagnostic_experience_observations where student_id = $1
+     order by observed_at desc, id desc limit 30
+  `, [studentId])).rows;
+  const confirmedDiagnosticReviews = (await db.query(`select distinct on (competency_v4_id)
+      id, competency_v4_id, version, details, teacher_confirmed_at
+    from diagnostic_competency_reviews where student_id = $1 and status = 'confirmed'
+    order by competency_v4_id, version desc`, [studentId])).rows;
   return {
     student,
     diagnosis,
+    diagnostic_observations: diagnosticObservations.map((item) => ({
+      ...item, competency_name: v4Names.get(item.competency_v4_id) ?? item.competency_v4_id,
+    })),
+    confirmed_diagnostic_reviews: confirmedDiagnosticReviews.map((item) => ({
+      id: item.id, competency_v4_id: item.competency_v4_id,
+      competency_name: v4Names.get(item.competency_v4_id) ?? item.competency_v4_id,
+      version: item.version, information_status: item.details.information_status,
+      summary_text: item.details.summary_text,
+      next_observation: item.details.next_observation,
+      teacher_confirmed_at: item.teacher_confirmed_at,
+      source: "diagnostic",
+    })),
     competencies: competencies.map((competency) => ({
       ...competency, competency_text: competency.competency_text ?? v4Names.get(competency.competency_v4_id) ?? competency.competency_v4_id,
       observations: {
@@ -76,6 +98,8 @@ export async function refreshStudentContextSnapshot(db, studentId) {
   const sourceUpdatedAt = resolveSourceUpdatedAt(
     context.recent_relevant_observations.map((item) => item.observed_at),
     context.diagnosis.map((item) => item.updated_at),
+    context.diagnostic_observations.map((item) => item.observed_at),
+    context.confirmed_diagnostic_reviews.map((item) => item.teacher_confirmed_at),
     context.confirmed_period_assessments.map((item) => item.teacher_confirmed_at),
     context.confirmed_period_conclusions.map((item) => item.teacher_confirmed_at),
   );

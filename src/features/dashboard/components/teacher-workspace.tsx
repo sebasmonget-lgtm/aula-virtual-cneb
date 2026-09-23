@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import {
   BookOpen, CalendarDays, Check, ChevronRight, ClipboardCheck, Database, FileText,
   Camera, CheckCircle2, Clock3, Home, Menu, Play,
@@ -20,8 +20,9 @@ import {
 import {
   createLocalEvidence, loadLocalDashboard, loadPilotSetup, localDatabaseApiUrl, saveLocalAttendance, updateLocalExecution, type ActivityCriterion, type LocalDashboard, type LocalStudent, type ObservationStatus,
 } from "@/src/lib/local-database";
-import { loadPlanningJourney } from "@/src/lib/planning-journey.mjs";
-import { GuidedDiagnostic, InstitutionProfile } from "./profile-and-diagnostic";
+import { loadPlanningJourney, loadStartingGuidance } from "@/src/lib/planning-journey.mjs";
+import { InstitutionProfile } from "./profile-and-diagnostic";
+import { GuidedDiagnostic } from "./guided-diagnostic-v4";
 import { StudentsScreen } from "./students-screen";
 import { ActivityRunView } from "./activity-run-view";
 import { AttendanceDialog } from "./attendance-dialog";
@@ -47,6 +48,7 @@ const sentenceCase = (value: string) => value.charAt(0).toLocaleUpperCase("es-PE
 
 export function TeacherWorkspace() {
   const [active, setActive] = useState("Hoy");
+  const navigationTouched = useRef(false);
   const [evaluationTarget, setEvaluationTarget] = useState<{ studentId: string; stage: "assessment" | "conclusion" | "family_report"; competencyId: string } | null>(null);
   const [evidenceOpen, setEvidenceOpen] = useState(false);
   const [attendanceOpen, setAttendanceOpen] = useState(false);
@@ -63,6 +65,9 @@ export function TeacherWorkspace() {
   const [dashboard, setDashboard] = useState<LocalDashboard | null>(null);
   const [needsSetup, setNeedsSetup] = useState(false);
   const [databaseState, setDatabaseState] = useState<"checking" | "connected" | "offline">("checking");
+  const [guidanceError, setGuidanceError] = useState(false);
+  const [starting, setStarting] = useState(true);
+  const [needsFirstDiagnostic, setNeedsFirstDiagnostic] = useState(false);
   const [retry, setRetry] = useState(0);
   const today = useMemo(() => new Intl.DateTimeFormat("es-PE", {
     weekday: "long", day: "numeric", month: "long",
@@ -74,14 +79,23 @@ export function TeacherWorkspace() {
       if (!setup.configured) { setNeedsSetup(true); setDatabaseState("connected"); return null; }
       return loadLocalDashboard(controller.signal);
     })
-      .then((data) => {
+      .then(async (data) => {
         if (!data) return;
         setDashboard(data);
         setStudentId(data.students[2]?.id ?? data.students[0]?.id ?? "");
         setCriterionId(data.activity?.criteria[0]?.id ?? "");
         setDatabaseState("connected");
+        try {
+          const guidance = await loadStartingGuidance(localDatabaseApiUrl);
+          if (!controller.signal.aborted && !navigationTouched.current) setActive(guidance.startingSection);
+          if (!controller.signal.aborted) {
+            setNeedsFirstDiagnostic(!guidance.plans.active && !guidance.plans.draft && guidance.diagnostic !== "reviewed");
+            setGuidanceError(false);
+          }
+        } catch { if (!controller.signal.aborted) setGuidanceError(true); }
+        finally { if (!controller.signal.aborted) setStarting(false); }
       })
-      .catch(() => setDatabaseState("offline"));
+      .catch(() => { setDatabaseState("offline"); setStarting(false); });
     return () => controller.abort();
   }, [retry]);
 
@@ -124,6 +138,8 @@ export function TeacherWorkspace() {
   const activity = dashboard?.activity;
   const metrics = dashboard?.metrics;
 
+  function navigate(section: string) { navigationTouched.current = true; setStarting(false); setActive(section); }
+
   function closeEvidence(open: boolean) {
     setEvidenceOpen(open);
     if (!open) {
@@ -162,7 +178,7 @@ export function TeacherWorkspace() {
 
   const activityRunBlock = dashboard?.today.blocks.find((block) => block.id === activityRunBlockId) ?? null;
 
-  if (needsSetup) return <PilotSetup onReady={(ready) => { setDashboard(ready); setNeedsSetup(false); setDatabaseState("connected"); }} />;
+  if (needsSetup) return <PilotSetup onReady={(ready) => { setDashboard(ready); setNeedsSetup(false); setDatabaseState("connected"); setNeedsFirstDiagnostic(true); navigate("Niños"); }} />;
   if (databaseState === "offline") return <main className="mx-auto max-w-xl space-y-4 p-6"><h1 className="text-2xl font-bold">No se pudo conectar con el aula</h1><p>Inicia la base local y vuelve a intentarlo. Tus borradores guardados seguirán disponibles.</p><Button onClick={() => { setDatabaseState("checking"); setRetry((value) => value + 1); }}>Reintentar</Button></main>;
 
   return (
@@ -183,7 +199,7 @@ export function TeacherWorkspace() {
                 {nav.map(([label, Icon]) => (
                   <SidebarMenuItem key={label}>
                     <SidebarMenuButton asChild isActive={active === label} className="h-11 rounded-xl px-3 text-[15px] transition-colors hover:bg-[#eaf6f9] focus-visible:ring-2 data-[active=true]:bg-[#087d96] data-[active=true]:font-semibold data-[active=true]:text-white">
-                      <button type="button" aria-current={active === label ? "page" : undefined} onClick={() => setActive(label)}><Icon /><span>{label}</span></button>
+                      <button type="button" aria-current={active === label ? "page" : undefined} onClick={() => navigate(label)}><Icon /><span>{label}</span></button>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 ))}
@@ -215,15 +231,16 @@ export function TeacherWorkspace() {
         </header>
 
         <main className="mx-auto w-full max-w-[1450px] px-4 pb-24 pt-6 md:px-7 md:pt-8">
-          {active === "Perfil" ? dashboard ? <InstitutionProfile dashboard={dashboard} onSaved={setDashboard} /> : <ScreenSkeleton /> :
-          active === "Evaluar" ? dashboard ? <EvaluationArea dashboard={dashboard} students={students} initialTarget={evaluationTarget} onPlan={() => setActive("Planificar")} /> : <ScreenSkeleton /> :
-          active === "Niños" ? dashboard ? <StudentsScreen students={students} onImported={setDashboard} onEvaluate={(studentId, stage, competencyId) => { setEvaluationTarget({ studentId, stage, competencyId }); setActive("Evaluar"); }} onPlan={() => setActive("Planificar")} /> : <ScreenSkeleton /> : active === "Planificar" ? dashboard ? <PlanningArea onGoToday={() => setActive("Hoy")} /> : <ScreenSkeleton /> : <>
-          {activityRunBlock ? <ActivityRunView block={activityRunBlock} onBack={() => setActivityRunBlockId(null)} onEvidence={() => openEvidenceFor(activityRunBlock)} onStepChange={async (stepIndex) => updateExecution({ scheduleEntryId: activityRunBlock.id, action: "set_step", stepIndex })} onComplete={async () => { await updateExecution({ scheduleEntryId: activityRunBlock.id, action: "complete", closureType: "as_planned" }); setActivityRunBlockId(null); }} /> : active === "Hoy" && (dashboard ? <TodayScreen dashboard={dashboard} openEvidence={openEvidenceFor} openAttendance={() => setAttendanceOpen(true)} updateExecution={updateExecution} openActivity={openActivity} onPlan={() => setActive("Planificar")} /> : <ScreenSkeleton />)}
+          {guidanceError && <div className="mb-4 flex flex-wrap items-center gap-3"><WorkflowFeedback tone="error">No pudimos comprobar cuál es tu siguiente paso.</WorkflowFeedback><Button variant="outline" onClick={() => { setGuidanceError(false); setRetry((value) => value + 1); }}>Reintentar</Button></div>}
+          {starting ? <ScreenSkeleton /> : active === "Perfil" ? dashboard ? <InstitutionProfile dashboard={dashboard} onSaved={setDashboard} /> : <ScreenSkeleton /> :
+          active === "Evaluar" ? dashboard ? <EvaluationArea dashboard={dashboard} students={students} initialTarget={evaluationTarget} focused={needsFirstDiagnostic} onPlan={() => { setNeedsFirstDiagnostic(false); navigate("Planificar"); }} onStudents={() => navigate("Niños")} /> : <ScreenSkeleton /> :
+          active === "Niños" ? dashboard ? <StudentsScreen students={students} onImported={setDashboard} onDiagnostic={() => navigate("Evaluar")} onEvaluate={(studentId, stage, competencyId) => { setEvaluationTarget({ studentId, stage, competencyId }); navigate("Evaluar"); }} onPlan={() => navigate("Planificar")} /> : <ScreenSkeleton /> : active === "Planificar" ? dashboard ? <PlanningArea onGoToday={() => navigate("Hoy")} onGoDiagnostic={() => navigate("Evaluar")} onGoStudents={() => navigate("Niños")} /> : <ScreenSkeleton /> : <>
+          {activityRunBlock ? <ActivityRunView block={activityRunBlock} onBack={() => setActivityRunBlockId(null)} onEvidence={() => openEvidenceFor(activityRunBlock)} onStepChange={async (stepIndex) => updateExecution({ scheduleEntryId: activityRunBlock.id, action: "set_step", stepIndex })} onComplete={async () => { await updateExecution({ scheduleEntryId: activityRunBlock.id, action: "complete", closureType: "as_planned" }); setActivityRunBlockId(null); }} /> : active === "Hoy" && (dashboard ? <TodayScreen dashboard={dashboard} openEvidence={openEvidenceFor} openAttendance={() => setAttendanceOpen(true)} updateExecution={updateExecution} openActivity={openActivity} onPlan={() => navigate("Planificar")} /> : <ScreenSkeleton />)}
           </>}
         </main>
 
         <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-[#e1e9f2] bg-white/97 px-1 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_rgba(24,45,80,.05)] backdrop-blur md:hidden" aria-label="Navegación rápida">
-          {mobileNav.map(([label, destination, Icon]) => <button key={label} type="button" aria-current={active === destination ? "page" : undefined} onClick={() => setActive(destination)} className={`group mx-0.5 flex min-h-16 flex-col items-center justify-center gap-1 rounded-xl text-[11px] font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-[-3px] active:bg-[#d8f0f4] ${active === destination ? "text-[#087d96]" : "text-[#60718a]"}`}><span className={`grid h-7 w-11 place-items-center rounded-lg ${active === destination ? "bg-[#dff3f6]" : "group-hover:bg-[#edf6fa]"}`}><Icon className="size-5" /></span><span>{label}</span></button>)}
+          {mobileNav.map(([label, destination, Icon]) => <button key={label} type="button" aria-current={active === destination ? "page" : undefined} onClick={() => navigate(destination)} className={`group mx-0.5 flex min-h-16 flex-col items-center justify-center gap-1 rounded-xl text-[11px] font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-[-3px] active:bg-[#d8f0f4] ${active === destination ? "text-[#087d96]" : "text-[#60718a]"}`}><span className={`grid h-7 w-11 place-items-center rounded-lg ${active === destination ? "bg-[#dff3f6]" : "group-hover:bg-[#edf6fa]"}`}><Icon className="size-5" /></span><span>{label}</span></button>)}
         </nav>
       </SidebarInset>
       <AttendanceDialog open={attendanceOpen} onOpenChange={setAttendanceOpen} students={students} onSave={markAttendance} />
@@ -315,28 +332,28 @@ function EvidenceDialog({ open, onOpenChange, students, studentId, setStudentId,
   </Dialog>;
 }
 
-function EvaluationArea({ dashboard, students, initialTarget, onPlan }: { dashboard: LocalDashboard; students: LocalStudent[]; initialTarget: { studentId: string; stage: "assessment" | "conclusion" | "family_report"; competencyId: string } | null; onPlan: () => void }) {
+function EvaluationArea({ dashboard, students, initialTarget, focused, onPlan, onStudents }: { dashboard: LocalDashboard; students: LocalStudent[]; initialTarget: { studentId: string; stage: "assessment" | "conclusion" | "family_report"; competencyId: string } | null; focused: boolean; onPlan: () => void; onStudents: () => void }) {
   const [tab, setTab] = useState<"diagnostic" | "assessment" | "conclusion" | "family_report">(initialTarget?.stage ?? "diagnostic");
   const [target, setTarget] = useState(initialTarget);
   return <section className="mx-auto max-w-5xl space-y-5">
     <PageIntro eyebrow="Acompañamiento pedagógico" title="Evaluar" description="Conoce el desarrollo de cada niño a partir de evidencias reales y decisiones confirmadas por ti." icon={ClipboardCheck} />
-    <WorkflowTabs label="Secciones de Evaluar" value={tab} onChange={setTab} tabs={[
+    {!focused && <WorkflowTabs label="Secciones de Evaluar" value={tab} onChange={setTab} tabs={[
       { id: "diagnostic", label: "Diagnóstico", icon: ClipboardCheck },
       { id: "assessment", label: "Análisis de evidencias", shortLabel: "Análisis", icon: Sparkles },
       { id: "conclusion", label: "Conclusiones descriptivas", shortLabel: "Conclusiones", icon: FileText },
       { id: "family_report", label: "Informe a familias", shortLabel: "Informe", icon: BookOpen },
-    ]} />
-    {tab === "diagnostic" ? <GuidedDiagnostic dashboard={dashboard} onPlan={onPlan} /> : tab === "assessment" ? <AssessmentGenerator students={students} initialStudentId={target?.studentId} initialCompetencyId={target?.competencyId} onNext={(studentId, competencyId) => { setTarget({ studentId, competencyId, stage: "conclusion" }); setTab("conclusion"); }} onPlan={onPlan} /> : tab === "conclusion" ? <DescriptiveConclusionGenerator students={students} initialStudentId={target?.studentId} initialCompetencyId={target?.competencyId} onNext={(studentId, competencyId) => { setTarget({ studentId, competencyId, stage: "family_report" }); setTab("family_report"); }} onAssessment={(studentId) => { setTarget({ studentId, competencyId: "", stage: "assessment" }); setTab("assessment"); }} /> : <FamilyReportGenerator students={students} initialStudentId={target?.studentId} onConclusion={(studentId) => { setTarget({ studentId, competencyId: "", stage: "conclusion" }); setTab("conclusion"); }} />}
+    ]} />}
+    {tab === "diagnostic" ? <GuidedDiagnostic dashboard={dashboard} onPlan={onPlan} onStudents={onStudents} /> : tab === "assessment" ? <AssessmentGenerator students={students} initialStudentId={target?.studentId} initialCompetencyId={target?.competencyId} onNext={(studentId, competencyId) => { setTarget({ studentId, competencyId, stage: "conclusion" }); setTab("conclusion"); }} onPlan={onPlan} /> : tab === "conclusion" ? <DescriptiveConclusionGenerator students={students} initialStudentId={target?.studentId} initialCompetencyId={target?.competencyId} onNext={(studentId, competencyId) => { setTarget({ studentId, competencyId, stage: "family_report" }); setTab("family_report"); }} onAssessment={(studentId) => { setTarget({ studentId, competencyId: "", stage: "assessment" }); setTab("assessment"); }} /> : <FamilyReportGenerator students={students} initialStudentId={target?.studentId} onConclusion={(studentId) => { setTarget({ studentId, competencyId: "", stage: "conclusion" }); setTab("conclusion"); }} />}
   </section>;
 }
-function PlanningArea({ onGoToday }: { onGoToday: () => void }) {
-  const [tab, setTab] = useState<"annual" | "experiences" | "activities">("annual");
+function PlanningArea({ onGoToday, onGoDiagnostic, onGoStudents }: { onGoToday: () => void; onGoDiagnostic: () => void; onGoStudents: () => void }) {
+  const [tab, setTab] = useState<"diagnostic" | "annual" | "experiences" | "activities">("annual");
   const [journey, setJourney] = useState<Awaited<ReturnType<typeof loadPlanningJourney>> | null>(null);
   const [loading, setLoading] = useState(true);
   const [progressError, setProgressError] = useState(false);
-  const steps = [{ id: "annual" as const, label: "Plan anual" }, { id: "experiences" as const, label: "Proyecto o unidad" }, { id: "activities" as const, label: "Actividad" }];
+  const steps = [{ id: "diagnostic" as const, label: "Diagnóstico" }, { id: "annual" as const, label: "Plan anual" }, { id: "experiences" as const, label: "Proyecto o unidad" }, { id: "activities" as const, label: "Actividad" }];
   const stepIndex = steps.findIndex((step) => step.id === tab);
-  const status = journey && (tab === "annual" ? journey.annual : tab === "experiences" ? journey.experience : journey.activity);
+  const status = journey && (tab === "diagnostic" ? journey.diagnostic : tab === "annual" ? journey.annual : tab === "experiences" ? journey.experience : journey.activity);
 
   useEffect(() => {
     let live = true;
@@ -350,24 +367,24 @@ function PlanningArea({ onGoToday }: { onGoToday: () => void }) {
   }, []);
 
   async function refreshJourney() {
-    try { setJourney(await loadPlanningJourney(localDatabaseApiUrl)); setProgressError(false); }
+    try { const next = await loadPlanningJourney(localDatabaseApiUrl); setJourney(next); if (!journey) setTab(next.recommended); setProgressError(false); }
     catch { setJourney(null); setProgressError(true); }
   }
 
   return <section className="mx-auto max-w-5xl space-y-5">
     <PageIntro eyebrow="Organiza el aprendizaje" title="Planificar" description="Avanza un paso a la vez. Puedes guardar y continuar después." icon={CalendarDays} />
-    {loading ? <LoadingState label="Buscando dónde continuar..." /> : <>
-      {progressError && <div className="space-y-2"><WorkflowFeedback tone="error">No se pudo comprobar dónde continuar. Tus datos guardados no se han perdido.</WorkflowFeedback><Button variant="outline" onClick={() => void refreshJourney()}>Reintentar carga del avance</Button></div>}
-      <ol className="ayni-journey" aria-label="Tu recorrido de planificación">{steps.map((step, index) => {
-        const saved = journey && (step.id === "annual" ? journey.annual : step.id === "experiences" ? journey.experience : journey.activity);
-        const hasConfirmed = journey && (step.id === "annual" ? journey.hasConfirmedAnnual : step.id === "experiences" ? journey.hasConfirmedExperience : journey.hasConfirmedActivity);
-        return <li key={step.id} aria-current={tab === step.id ? "step" : undefined} className={saved === "confirmed" ? "is-complete" : saved === "draft" ? "is-draft" : ""}>
-          <span>{saved === "confirmed" ? <Check aria-hidden="true" /> : index + 1}</span><small>{step.label}</small>
-          <em>{saved === "confirmed" ? "Confirmado" : saved === "draft" ? hasConfirmed ? "Confirmado + borrador" : "Borrador" : saved === "pending" ? "Pendiente" : ""}</em>
+    {loading ? <LoadingState label="Buscando dónde continuar..." /> : progressError ? <div className="space-y-2"><WorkflowFeedback tone="error">No se pudo comprobar dónde continuar. Tus datos guardados no se han perdido.</WorkflowFeedback><Button variant="outline" onClick={() => void refreshJourney()}>Reintentar carga del avance</Button></div> : <>
+      <p className="text-sm text-[#526b87]">✓ 1. Aula configurada · {journey?.studentCount ? `✓ 2. ${journey.studentCount} alumnos registrados` : "2. Añadir alumnos: pendiente"}</p>
+      <ol className="ayni-journey" aria-label="Siguientes pasos del recorrido">{steps.map((step, index) => {
+        const saved = journey && (step.id === "diagnostic" ? journey.diagnostic : step.id === "annual" ? journey.annual : step.id === "experiences" ? journey.experience : journey.activity);
+        const hasConfirmed = journey && (step.id === "diagnostic" ? journey.diagnostic === "reviewed" : step.id === "annual" ? journey.hasConfirmedAnnual : step.id === "experiences" ? journey.hasConfirmedExperience : journey.hasConfirmedActivity);
+        return <li key={step.id} aria-current={tab === step.id ? "step" : undefined} className={saved === "confirmed" || saved === "reviewed" ? "is-complete" : saved === "draft" || saved === "in_progress" ? "is-draft" : ""}>
+          <span>{saved === "confirmed" || saved === "reviewed" ? <Check aria-hidden="true" /> : index + 3}</span><small>{step.label}</small>
+          <em>{saved === "reviewed" ? "Revisado" : saved === "in_progress" ? "En curso" : saved === "confirmed" ? "Confirmado" : saved === "draft" ? hasConfirmed ? "Confirmado + borrador" : "Borrador" : saved === "pending" ? "Pendiente" : ""}</em>
         </li>;
       })}</ol>
-      {tab === "annual" ? <AnnualPlanGenerator onConfirmed={() => void refreshJourney()} /> : tab === "experiences" ? <LearningExperienceGenerator onConfirmed={() => void refreshJourney()} /> : <ParentActivityGenerator onConfirmed={() => void refreshJourney()} onGoToday={onGoToday} />}
-      {status === "confirmed" && stepIndex < steps.length - 1 && <NextStepCard title={`${steps[stepIndex].label} listo`} description="Ya puedes avanzar. Tu trabajo quedó guardado y podrás volver a verlo." action={`Continuar: ${steps[stepIndex + 1].label}`} onAction={() => { setTab(steps[stepIndex + 1].id); void refreshJourney(); }} />}
+      {tab === "diagnostic" ? (status !== "reviewed" ? <NextStepCard title={journey?.studentCount ? "Primero, conoce a tu grupo" : "Primero, agrega a los niños"} description={journey?.studentCount ? "Revisa el diagnóstico inicial y guarda tu decisión antes de preparar el plan anual." : "Necesitas la lista del aula para registrar el diagnóstico inicial."} action={journey?.studentCount ? "Ir a evaluación diagnóstica" : "Agregar niños"} onAction={journey?.studentCount ? onGoDiagnostic : onGoStudents} /> : null) : tab === "annual" ? <AnnualPlanGenerator onConfirmed={() => void refreshJourney()} /> : tab === "experiences" ? <LearningExperienceGenerator onConfirmed={() => void refreshJourney()} /> : <ParentActivityGenerator onConfirmed={() => void refreshJourney()} onGoToday={onGoToday} />}
+      {(status === "confirmed" || status === "reviewed") && stepIndex < steps.length - 1 && <NextStepCard title={tab === "diagnostic" ? "Revisión inicial guardada" : `${steps[stepIndex].label} listo`} description={tab === "diagnostic" ? "Puedes preparar el plan anual con la información disponible y seguir observando después." : "Ya puedes avanzar. Tu trabajo quedó guardado y podrás volver a verlo."} action={`Continuar: ${steps[stepIndex + 1].label}`} onAction={() => { setTab(steps[stepIndex + 1].id); void refreshJourney(); }} />}
       {tab === "annual" && status === "draft" && journey?.hasConfirmedAnnual && <Button variant="outline" onClick={() => setTab("experiences")}>Seguir con el plan confirmado anterior</Button>}
       {tab === "experiences" && status === "draft" && journey?.hasConfirmedExperience && <Button variant="outline" onClick={() => setTab("activities")}>Preparar actividad de una experiencia confirmada</Button>}
       {stepIndex > 0 && <nav className="ayni-step-actions" aria-label="Volver en la planificación"><Button variant="outline" onClick={() => setTab(steps[stepIndex - 1].id)}>Ver paso anterior</Button></nav>}

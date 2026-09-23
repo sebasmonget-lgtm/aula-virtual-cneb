@@ -27,6 +27,9 @@ import { createPendingAIGenerationsStore } from "../src/lib/pending-ai-generatio
 import { createPilotClassroom, importStudentsForTeacher, parseStudentCsv } from "../src/lib/pilot-onboarding-service.mjs";
 import { createLocalPrivateEvidenceStorage } from "../src/lib/private-evidence-storage.mjs";
 import { recordOperationalEvent } from "../src/lib/operational-events.mjs";
+import { completeDiagnosticReviewForTeacher, diagnosticProgressForTeacher, DiagnosticReviewError } from "../src/lib/diagnostic-review-service.mjs";
+import { DiagnosticExperienceError, loadDiagnosticExperienceWorkspace, recordDiagnosticExperienceObservation } from "../src/lib/diagnostic-experiences-v4.mjs";
+import { DiagnosticAssessmentError, loadDiagnosticAssessmentWorkspace, prepareDiagnosticSynthesis, saveDiagnosticSynthesis, confirmDiagnosticSynthesis, prepareDiagnosticGroupReview, saveDiagnosticGroupReview, confirmDiagnosticGroupReview, saveStudentInitialContext, diagnosticPlanningSummary } from "../src/lib/diagnostic-assessment-v4.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const dataDir = path.join(root, ".local", "pgdata");
@@ -49,7 +52,7 @@ const exportTables = [
   "institution_assets", "institution_profiles", "students", "learning_experiences",
   "activities", "activity_criteria", "evidences", "competency_observation_guides",
   "document_templates", "document_versions", "diagnostic_sessions",
-  "diagnostic_entries", "observation_references", "student_observations",
+  "diagnostic_entries", "observation_references", "student_observations", "diagnostic_experience_observations", "diagnostic_competency_reviews", "diagnostic_group_reviews",
   "class_schedule_entries", "daily_execution_logs", "attendance_records", "calendar_exceptions", "student_context_snapshots", "annual_plans", "annual_plan_competencies", "annual_plan_changes", "competency_assessments", "competency_descriptive_conclusions", "family_reports",
 ];
 
@@ -261,7 +264,10 @@ async function annualPlanningContext() {
     where c.teacher_id=$1 and c.status='active' limit 1`, [teacherId])).rows[0];
   if (!row) return null;
   const diagnostic = await db.query(`select de.teacher_interpretation from diagnostic_entries de join diagnostic_sessions ds on ds.id=de.session_id where ds.classroom_id=$1 and de.teacher_confirmed=true and de.teacher_interpretation is not null`, [row.id]);
-  return { ...row, calendar: { school_year: row.year, starts_on: row.starts_on, ends_on: row.ends_on }, group_context: row.context?.group_context || row.context || `Aula ${row.section} de ${row.age} años`, school_context: row.institution_name || undefined, diagnostic_summary: diagnostic.rows.map((item) => item.teacher_interpretation).filter(Boolean).join(" ") || undefined, language_context: row.castellano_l2_applicable ? { castellano_l2_applicable: true } : undefined };
+  const group = (await db.query(`select details from diagnostic_group_reviews where classroom_id=$1 and status='confirmed' order by version desc limit 1`, [row.id])).rows[0];
+  const studentNames = group ? (await db.query(`select coalesce(preferred_name, first_name) as name from students where classroom_id=$1`, [row.id])).rows.map((item) => item.name) : [];
+  const groupSummary = diagnosticPlanningSummary(group?.details, studentNames);
+  return { ...row, calendar: { school_year: row.year, starts_on: row.starts_on, ends_on: row.ends_on }, group_context: row.context?.group_context || row.context || `Aula ${row.section} de ${row.age} años`, school_context: row.institution_name || undefined, diagnostic_summary: groupSummary || diagnostic.rows.map((item) => item.teacher_interpretation).filter(Boolean).join(" ") || undefined, language_context: row.castellano_l2_applicable ? { castellano_l2_applicable: true } : undefined };
 }
 async function activityGenerationOptions() {
   return competencyOptionsForWorkflow("activity");
@@ -309,17 +315,8 @@ function validateActivityDate(occursOn, experience, classroom) {
 }
 
 async function diagnosticWorkspace() {
-  const classroomResult = await db.query(`
-    select c.id, c.section, ag.age_years
-      from classrooms c join age_grades ag on ag.id = c.age_grade_id
-     where c.teacher_id = $1 and c.status = 'active' limit 1
-  `, [teacherId]);
-  const classroom = classroomResult.rows[0];
-  const students = (await db.query(`
-    select id, coalesce(preferred_name, first_name) as name
-      from students where classroom_id = $1 and status = 'active'
-     order by coalesce(preferred_name, first_name)
-  `, [classroom.id])).rows;
+  const experienceWorkspace = await loadDiagnosticExperienceWorkspace(db, teacherId);
+  const { classroom } = experienceWorkspace;
   const guides = (await db.query(`
     select g.id, g.competency_id, g.short_meaning, g.suggested_contexts,
            g.observe_for, g.suggested_actions, g.caution_text,
@@ -348,10 +345,11 @@ async function diagnosticWorkspace() {
   `, [classroom.age_years])).rows;
   const sessionResult = await db.query(`
     select id, title, status, started_at from diagnostic_sessions
-     where classroom_id = $1 and status = 'active'
+     where classroom_id = $1
      order by started_at desc limit 1
   `, [classroom.id]);
   const session = sessionResult.rows[0] ?? null;
+  const reviewed = (await db.query(`select exists(select 1 from diagnostic_sessions where classroom_id = $1 and status = 'completed') as reviewed`, [classroom.id])).rows[0].reviewed;
   const entries = session ? (await db.query(`
     select de.id, de.student_id, de.competency_id, de.observation_context,
            de.observation_text, de.teacher_interpretation,
@@ -365,7 +363,7 @@ async function diagnosticWorkspace() {
       join diagnostic_entries de on de.id = so.diagnostic_entry_id
      where de.session_id = $1
   `, [session.id])).rows : [];
-  return { classroom, students, guides, references, session, entries, observations };
+  return { ...experienceWorkspace, guides, references, session, reviewed, entries, observations };
 }
 
 const handleAssessmentRoute = createAssessmentRouteHandler({ db, annualPlanningContext, readJson, send, pending: pendingAIGenerations, metadataForAudit: safeAnnualGenerationMetadata, refreshStudentContext: refreshStudentContextSnapshot });
@@ -495,6 +493,36 @@ const server = createServer(async (request, response) => {
       send(response, 200, await diagnosticWorkspace(), origin);
       return;
     }
+    if (request.method === "GET" && url.pathname === "/api/diagnostics/progress") {
+      send(response, 200, await diagnosticProgressForTeacher(db, teacherId), origin);
+      return;
+    }
+    if (url.pathname.startsWith("/api/diagnostics/reviews") || url.pathname.startsWith("/api/diagnostics/group-review") || url.pathname.startsWith("/api/diagnostics/students/")) {
+      try {
+        const parts = url.pathname.split("/");
+        let result;
+        if (request.method === "GET" && url.pathname === "/api/diagnostics/reviews") result = await loadDiagnosticAssessmentWorkspace(db, teacherId);
+        else if (request.method === "POST" && url.pathname === "/api/diagnostics/reviews/prepare") result = await prepareDiagnosticSynthesis(db, teacherId, await readJson(request));
+        else if (request.method === "PUT" && parts.length === 5 && parts[3] === "reviews") result = await saveDiagnosticSynthesis(db, teacherId, parts[4], (await readJson(request)).details);
+        else if (request.method === "POST" && parts.length === 6 && parts[3] === "reviews" && parts[5] === "confirm") {
+          result = await confirmDiagnosticSynthesis(db, teacherId, parts[4]);
+          try { await refreshStudentContextSnapshot(db, result.student_id); }
+          catch { recordOperationalEvent("student_context_refresh_failed", { workflow: "diagnostic" }); }
+        }
+        else if (request.method === "POST" && url.pathname === "/api/diagnostics/group-review/prepare") result = await prepareDiagnosticGroupReview(db, teacherId);
+        else if (request.method === "PUT" && parts.length === 5 && parts[3] === "group-review") result = await saveDiagnosticGroupReview(db, teacherId, parts[4], (await readJson(request)).details);
+        else if (request.method === "POST" && parts.length === 6 && parts[3] === "group-review" && parts[5] === "confirm") result = await confirmDiagnosticGroupReview(db, teacherId, parts[4]);
+        else if (request.method === "PUT" && parts.length === 6 && parts[3] === "students" && parts[5] === "initial-context") result = await saveStudentInitialContext(db, teacherId, parts[4], (await readJson(request)).initialContext);
+        else { send(response, 404, { error: "Ruta de diagnóstico no encontrada." }, origin); return; }
+        send(response, 200, result, origin);
+      } catch (error) {
+        if (error instanceof DiagnosticAssessmentError) {
+          send(response, ["no_classroom", "invalid_student", "not_editable"].includes(error.reason) ? 404 : 422,
+            { error: error.message, reason: error.reason }, origin);
+        } else throw error;
+      }
+      return;
+    }
     if (request.method === "GET" && url.pathname.startsWith("/api/students/")) {
       const studentId = url.pathname.split("/").at(-1);
       const profile = await studentProfile(studentId);
@@ -520,7 +548,7 @@ const server = createServer(async (request, response) => {
         const generationId = randomUUID();
         await pendingAIGenerations.set(generationId, { workflow: generated.internalMetadata.workflow, metadata: safeAnnualGenerationMetadata(generated.internalMetadata), classroom_id: classroom.id, createdAt: Date.now() });
         send(response, 200, { proposal: generated.proposal, generation_id: generationId }, origin);
-      } catch (error) { send(response, 422, { error: error?.message || "No pudimos generar una propuesta válida." }, origin); } return;
+      } catch (error) { send(response, 422, { error: error?.message || "No pudimos preparar el plan anual.", reason: error?.reason ?? "unknown" }, origin); } return;
     }
     if (request.method === "POST" && url.pathname === "/api/annual-plans") {
       const context = await annualPlanningContext(); const body = await readJson(request);
@@ -679,6 +707,31 @@ const server = createServer(async (request, response) => {
         send(response, 200, { proposal: generated.proposal }, origin);
       } catch (error) {
         send(response, 422, { error: error?.message || "No pudimos preparar la actividad." }, origin);
+      }
+      return;
+    }
+    if (request.method === "POST" && url.pathname === "/api/diagnostics/complete") {
+      try { await completeDiagnosticReviewForTeacher(db, teacherId); }
+      catch (error) {
+        if (error instanceof DiagnosticReviewError) { send(response, error.reason === "no_classroom" ? 404 : 422, { error: error.message }, origin); return; }
+        throw error;
+      }
+      send(response, 200, { workspace: await diagnosticWorkspace() }, origin);
+      return;
+    }
+    if (request.method === "POST" && url.pathname === "/api/diagnostics/experience-observations") {
+      try {
+        const saved = await recordDiagnosticExperienceObservation(db, teacherId, await readJson(request));
+        try { await refreshStudentContextSnapshot(db, saved.studentId); }
+        catch { recordOperationalEvent("student_context_refresh_failed", { workflow: "diagnostic" }); }
+        send(response, 201, { workspace: await diagnosticWorkspace() }, origin);
+      } catch (error) {
+        if (error instanceof DiagnosticExperienceError) {
+          send(response, error.reason === "invalid_student" ? 403 : error.reason === "no_classroom" ? 404 : 400,
+            { error: error.message }, origin);
+          return;
+        }
+        throw error;
       }
       return;
     }
