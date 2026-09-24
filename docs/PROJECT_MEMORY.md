@@ -150,6 +150,11 @@ Proyecto nuevo iniciado el 20 de septiembre de 2026. Existe un shell responsive 
 - Proyecto/Unidad V2 nace de una copia de V1 confirmada como nuevo borrador, sin llamada automática a IA. Conserva `supersedes_experience_id`, `annual_plan_id`, `source_proposal_index`, tipo y origen, incluso si el plan anual de origen ya es histórico. La docente puede editar o regenerar explícitamente el contenido del borrador, guardarlo y confirmarlo. Solo entonces V1 pasa a `archived`; un trigger impide modificar o borrar versiones confirmadas. Ver ADR 055.
 - Las actividades mantienen su `experience_id` original. La pantalla de actividades permite abrir una experiencia histórica y terminar sus actividades existentes, pero las nuevas nacen solo de una experiencia vigente. Documentos puede leer ambas versiones sin generar de nuevo su contenido.
 
+## Versiones de Actividad (2026-09-24)
+
+- Una actividad confirmada en un proyecto o unidad vigente se copia sin IA a un borrador nuevo con `supersedes_activity_id`. La docente puede editar o pedir una regeneración explícita. La V1 pasa a histórica únicamente al confirmar V2; ambas conservan sus IDs y el Word histórico se carga por el ID pedido.
+- Criterios, evidencias y programación existente conservan su `activity_id` original. Los bloques futuros fechados y sin ejecución se pueden cambiar a V2 mediante una acción docente concreta; Hoy sigue leyendo V1 histórica cuando aún está programada. Ver ADR 056.
+
 
 
 

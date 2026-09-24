@@ -430,3 +430,11 @@ La confirmación de la actividad y la inserción del criterio heredado se ejecut
 **Actividades.** Su `experience_id` nunca se modifica. La versión histórica sigue disponible para consultar y terminar actividades ya creadas, incluso borradores; solo la versión vigente admite actividades nuevas. Las propuestas anuales del plan vigente y las experiencias ya creadas son listas distintas. La biblioteca conserva cada versión por ID para consulta y exportación.
 
 **Reversión.** Se puede retirar la acción de copia y regeneración sin migrar actividades ni modificar documentos previos. La migración de procedencia e inmutabilidad se conserva; las migraciones local y Supabase son equivalentes.
+
+## ADR 056 Versiones de Actividad sin mover evidencias ni programación
+
+**Decisión.** La docente puede copiar una actividad confirmada de un proyecto o unidad vigente. La copia es un borrador con ID y versión propios; editarla o regenerarla requiere una acción explícita. Al confirmar, la actividad anterior pasa a histórica en la misma transacción que confirma la nueva y guarda su criterio heredado. Un trigger impide modificar o borrar el contenido de versiones confirmadas. Los criterios, observaciones, evidencias, registros de ejecución y bloques programados mantienen el ID de la actividad original.
+
+**Programación.** Los bloques futuros con fecha que aún no tengan ejecución se muestran como asociados a la versión histórica. La docente puede cambiar cada bloque a la nueva versión de forma explícita. Los bloques recurrentes o ya ejecutados no se reasignan automáticamente. La consulta de Hoy sigue leyendo una actividad histórica si está programada.
+
+**Reversión.** Se puede retirar la acción de copia y el cambio explícito de programación sin alterar los documentos ni datos históricos. La migración de procedencia e inmutabilidad permanece; los esquemas local y Supabase son equivalentes.

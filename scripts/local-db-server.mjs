@@ -29,6 +29,7 @@ import { loadInstitutionLogoForDocuments, normalizeInstitutionLogoUpload } from 
 import { validateLearningExperienceProposal } from "../src/lib/learning-experience-validation.mjs";
 import { inheritedActivityCriterion, routeItemFor, saveActivityDetails, saveExperienceDetails } from "../src/lib/experience-lineage.mjs";
 import { confirmActivityWithCriterion } from "../src/lib/activity-confirmation.mjs";
+import { copyConfirmedActivity } from "../src/lib/activity-version-service.mjs";
 import { normalizeActivityMaterials, publicActivityParent, validateActivityV4 } from "../src/lib/activity-v4-validation.mjs";
 import { validateCriterionEvidenceV4 } from "../src/lib/criterion-evidence-validation.mjs";
 import { generateCriterionEvidence } from "../src/lib/ai-criterion-evidence-ui-service.mjs";
@@ -233,7 +234,7 @@ async function dashboard() {
            del.closure_type, del.teacher_closure_note
       from class_schedule_entries se
       join classrooms cl on cl.id = se.classroom_id
-      left join activities a on a.id = se.activity_id and a.status = 'active'
+      left join activities a on a.id = se.activity_id and a.status in ('active','archived')
       left join learning_experiences le on le.id = a.experience_id
       left join lateral (
         select jsonb_agg(jsonb_build_object('id', ac.id, 'criterion_text', ac.criterion_text,
@@ -1042,7 +1043,30 @@ const server = createServer(async (request, response) => {
     if (request.method === "GET" && url.pathname === "/api/activities") {
       const context = await annualPlanningContext(); const experience = context && await existingLearningExperience(url.searchParams.get("experienceId"), context.id);
       if (!experience) { send(response, 404, { error: "Experiencia confirmada no disponible." }, origin); return; }
-      const activities = (await db.query(`select id,occurs_on,title,purpose,status,details,preparation,teacher_confirmed_at from activities where experience_id=$1 order by occurs_on`, [experience.id])).rows; send(response, 200, { experience: await activityParentContext(experience), activities }, origin); return;
+      const activities = (await db.query(`select a.id,a.occurs_on,a.title,a.purpose,a.status,a.details,a.preparation,a.teacher_confirmed_at,a.version,a.supersedes_activity_id,
+        (select coalesce(jsonb_agg(jsonb_build_object('id',se.id,'scheduled_on',se.scheduled_on) order by se.scheduled_on),'[]'::jsonb)
+          from class_schedule_entries se where se.activity_id=a.id and se.scheduled_on > (now() at time zone 'America/Lima')::date
+          and not exists(select 1 from daily_execution_logs del where del.schedule_entry_id=se.id)) as future_schedules
+        from activities a where a.experience_id=$1 order by a.occurs_on,a.version`, [experience.id])).rows; send(response, 200, { experience: await activityParentContext(experience), activities }, origin); return;
+    }
+    if (request.method === "POST" && /^\/api\/activities\/[^/]+\/copy$/.test(url.pathname)) {
+      const id=url.pathname.split("/")[3],context=await annualPlanningContext();
+      if (!context) { send(response,404,{error:"Aula no disponible."},origin); return; }
+      try { send(response,200,await copyConfirmedActivity(db,teacherId,context.id,id),origin); }
+      catch(error) { send(response,422,{error:error.message},origin); }
+      return;
+    }
+    if (request.method === "POST" && /^\/api\/activities\/[^/]+\/switch-schedule$/.test(url.pathname)) {
+      const id=url.pathname.split("/")[3],body=await readJson(request),context=await annualPlanningContext();
+      const activity=context&&(await db.query(`select a.id,a.supersedes_activity_id from activities a join learning_experiences e on e.id=a.experience_id
+        where a.id=$1 and e.classroom_id=$2 and a.status='active'`,[id,context.id])).rows[0];
+      if (!activity?.supersedes_activity_id || !body.scheduleEntryId) { send(response,422,{error:"Elige una actividad nueva y un bloque futuro."},origin); return; }
+      const changed=await db.query(`update class_schedule_entries se set activity_id=$1 where se.id=$2 and se.classroom_id=$3
+        and se.activity_id=$4 and se.scheduled_on > (now() at time zone 'America/Lima')::date
+        and not exists(select 1 from daily_execution_logs del where del.schedule_entry_id=se.id)
+        returning se.id`,[id,body.scheduleEntryId,context.id,activity.supersedes_activity_id]);
+      if (!changed.rows[0]) { send(response,422,{error:"El bloque no es futuro, pertenece a otra actividad o ya tiene ejecución. No se cambió."},origin); return; }
+      send(response,200,{id:changed.rows[0].id,activity_id:id},origin); return;
     }
     if (request.method === "POST" && url.pathname === "/api/ai/activities/generate") {
       const context = await annualPlanningContext(); const body = await readJson(request); const experience = context && await activeLearningExperience(body.experienceId, context.id);
