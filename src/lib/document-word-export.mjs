@@ -152,6 +152,7 @@ function contentForActivity(document, names) {
 function contentForFamilyReport(document, names) {
   const value = document.content ?? {};
   const children = [
+    ...labelled("Período de evaluación", document.period_label || "Informe histórico sin período formal"),
     ...labelled("Período", [dateLabel(document.period_start), dateLabel(document.period_end)].filter(Boolean).join(" al ")),
     ...section("Para la familia", value.introduction),
   ];
@@ -212,6 +213,7 @@ export async function renderSavedDocumentWord(document, competencyCards = [], { 
         ...(Number(document.version) > 1 ? labelled("Versión", String(document.version)) : []),
         ...labelled("Institución educativa", document.institution_name ?? document.document_context?.institution_name),
         ...labelled("Aula", document.classroom),
+        ...(document.kind === "family_report" ? labelled("Docente",document.teacher_name) : []),
         ...detail,
       ],
     }],

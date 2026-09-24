@@ -127,6 +127,15 @@ test("diagnóstico, experiencia, actividad e informe conservan contenido pedagó
   }
 });
 
+test("Word familiar identifica el período formal y conserva el contenido del informe", async () => {
+  const xml=await xmlFor({ ...base("family_report",{introduction:"Avances confirmados",sections:[],closing_note:"Seguimos observando"}),
+    period_label:"Bimestre 2",period_start:"2026-05-01",period_end:"2026-07-01",teacher_name:"Docente de prueba" });
+  assert.match(xml,/Bimestre 2/);
+  assert.match(xml,/Docente de prueba/);
+  assert.match(xml,/Avances confirmados/);
+  assert.doesNotMatch(xml,/Informe histórico sin período formal/);
+});
+
 test("la descarga consulta de nuevo la propiedad docente y rechaza IDs ajenos", async () => {
   const db = new PGlite();
   try {

@@ -25,7 +25,7 @@ async function fixture() {
     create table class_schedule_entries(id uuid primary key,activity_id uuid,classroom_id uuid);
     create table daily_execution_logs(id uuid primary key,schedule_entry_id uuid,execution_date date,teacher_closure_note text);
     create table students(id uuid primary key,classroom_id uuid,first_name text,preferred_name text,status text default 'active');
-    create table family_reports(id uuid primary key,student_id uuid,status text,version int,details jsonb,updated_at timestamptz,period_start date,period_end date,teacher_confirmed_at timestamptz,generation_metadata jsonb);
+    create table family_reports(id uuid primary key,student_id uuid,status text,version int,details jsonb,updated_at timestamptz,period_start date,period_end date,teacher_confirmed_at timestamptz,generation_metadata jsonb,evaluation_period_id uuid);
     create table evaluation_periods(id uuid primary key,school_year_id uuid,label text,starts_on date,ends_on date);
     create table period_closure_versions(id uuid primary key,classroom_id uuid,evaluation_period_id uuid,version int,confirmed_at timestamptz,manifest jsonb);
   `);
@@ -47,7 +47,7 @@ async function fixture() {
     [id(20), id(12), JSON.stringify({ observation_focus: ["Pregunta por el cambio de luz"] })]);
   await db.exec(`alter table activity_criteria add column version integer not null default 1`);
   await db.query(`insert into students values($1,$2,'Alessia',null)`, [id(13), id(6)]);
-  await db.query(`insert into family_reports values($1,$2,'active',1,$3::jsonb,now(),'2026-03-01','2026-06-01',now(),$4::jsonb)`,
+  await db.query(`insert into family_reports(id,student_id,status,version,details,updated_at,period_start,period_end,teacher_confirmed_at,generation_metadata) values($1,$2,'active',1,$3::jsonb,now(),'2026-03-01','2026-06-01',now(),$4::jsonb)`,
     [id(14), id(13), JSON.stringify({ introduction: "Compartimos avances", sections: [], closing_note: "Seguimos juntos", source_snapshot: "hidden" }), JSON.stringify({ tokens: 300 })]);
   return db;
 }

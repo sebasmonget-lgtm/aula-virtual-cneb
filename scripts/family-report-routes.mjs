@@ -11,8 +11,15 @@ const sameIds = (left, right) => Array.isArray(left) && Array.isArray(right) && 
 const safeReport = (row) => ({ id: row.id, evaluation_period_id: row.evaluation_period_id ?? null, period_start: dateOnly(row.period_start), period_end: dateOnly(row.period_end), version: row.version, selected_competency_ids: row.selected_competency_ids, details: row.details, status: row.status, teacher_confirmed_at: row.teacher_confirmed_at });
 const staleMessage = "Las conclusiones confirmadas cambiaron desde que se preparó el informe. Regenera el informe antes de confirmarlo.";
 
-export function createFamilyReportRouteHandler({ db, annualPlanningContext, readJson, send, loadKnowledgeBase = loadKnowledgeBaseV4, generate = generateAIWorkflowV4, createProvider = createAIProviderForPlan, pending, metadataForAudit }) {
+export function createFamilyReportRouteHandler({ db, teacherId, annualPlanningContext, readJson, send, loadKnowledgeBase = loadKnowledgeBaseV4, generate = generateAIWorkflowV4, createProvider = createAIProviderForPlan, pending, metadataForAudit }) {
   const fail = (response, origin, error, status = 422) => send(response, status, { error: error.message }, origin);
+  async function reportContext(classroomId) {
+    if (!classroomId) return annualPlanningContext();
+    const row=(await db.query(`select c.id,c.school_year_id,c.castellano_l2_applicable,c.religion_applicable,ag.age_years as age,sy.starts_on,sy.ends_on
+      from classrooms c join school_years sy on sy.id=c.school_year_id join age_grades ag on ag.id=c.age_grade_id
+      where c.id=$1 and c.teacher_id=$2 and sy.owner_id=$2`,[classroomId,teacherId])).rows[0];
+    return row?{...row,calendar:{starts_on:row.starts_on,ends_on:row.ends_on}}:null;
+  }
   async function studentInClass(context, studentId) {
     if (!context) throw new Error("Aula no disponible.");
     const student = (await db.query(`select id,first_name,last_name,preferred_name from students where id=$1 and classroom_id=$2 and status='active'`, [studentId, context.id])).rows[0];
@@ -55,7 +62,9 @@ export function createFamilyReportRouteHandler({ db, annualPlanningContext, read
   }
   async function handle({ request, url, response, origin }) {
     if (!url.pathname.startsWith("/api/family-reports") && url.pathname !== "/api/ai/family-reports/generate") return false;
-    const context = await annualPlanningContext();
+    const hasBody=request.method==="PUT" || (request.method==="POST" && !url.pathname.endsWith("/confirm"));
+    const body = hasBody ? await readJson(request) : null;
+    const context = await reportContext(url.searchParams.get("classroomId") ?? body?.classroomId);
     try {
       if (request.method === "GET" && url.pathname === "/api/family-reports/options") {
         const student = await studentInClass(context, url.searchParams.get("studentId"));
@@ -84,7 +93,7 @@ export function createFamilyReportRouteHandler({ db, annualPlanningContext, read
         return true;
       }
       if (request.method === "POST" && url.pathname === "/api/ai/family-reports/generate") {
-        const body = await readJson(request), student = await studentInClass(context, body.studentId);
+        const student = await studentInClass(context, body.studentId);
         const period=await formalPeriod(context,body.periodId,body.periodStart,body.periodEnd);
         const { ids, rows } = await validatedSources(context, student.id, body.periodStart, body.periodEnd, body.competencyIds ?? [],period?.id);
         const input = buildFamilyReportInput({ age: context.age, competencyIds: ids, conclusions: rows, knownNames: [student.first_name, student.last_name, student.preferred_name], castellanoL2Applicable: context.castellano_l2_applicable === true, religionApplicable: context.religion_applicable === true });
@@ -96,7 +105,7 @@ export function createFamilyReportRouteHandler({ db, annualPlanningContext, read
         return true;
       }
       if (request.method === "POST" && url.pathname === "/api/family-reports") {
-        const body = await readJson(request), student = await studentInClass(context, body.studentId);
+        const student = await studentInClass(context, body.studentId);
         const item = await pending.get(body.generationId);
         const period=await formalPeriod(context,body.periodId,body.periodStart,body.periodEnd);
         checkPending(item, context, student.id, body.periodStart, body.periodEnd,period?.id);
@@ -115,7 +124,7 @@ export function createFamilyReportRouteHandler({ db, annualPlanningContext, read
       }
       const match = url.pathname.match(/^\/api\/family-reports\/([^/]+)(\/confirm)?$/);
       if (match && request.method === "PUT" && !match[2]) {
-        const body = await readJson(request), row = await draft(context, match[1]);
+        const row = await draft(context, match[1]);
         await formalPeriod(context,row.evaluation_period_id,dateOnly(row.period_start),dateOnly(row.period_end));
         const item = body.generationId ? await pending.get(body.generationId) : null;
         if (body.generationId) checkPending(item, context, row.student_id, dateOnly(row.period_start), dateOnly(row.period_end),row.evaluation_period_id);

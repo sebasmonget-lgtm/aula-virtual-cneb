@@ -10,7 +10,7 @@ import { LoadingState, PageIntro, WorkflowFeedback } from "./workflow-ui";
 type DocumentKind = "annual_plan" | "diagnostic_summary" | "experience" | "activity" | "family_report" | "period_closure";
 type DocumentEntry = {
   id: string; kind: DocumentKind; subtype?: "project" | "unit"; title: string;
-  status: string; version?: number; school_year: number; classroom: string; date: string;
+  status: string; version?: number; school_year: number; classroom: string; date: string; period_label?: string | null;
 };
 type OpenDocument = DocumentEntry & {
   institution_name?: string; document_context?: DocumentContext; content: Record<string, unknown>;
@@ -98,6 +98,7 @@ function DocumentContent({ document }: { document: OpenDocument }) {
         {text(content.competency_id) && <Section title="Competencia confirmada" value={names.get(text(content.competency_id)) ?? text(content.competency_id)} />}
       </>}
       {document.kind === "family_report" && <>
+        <p className="rounded-xl bg-[#eaf7fb] p-3 text-sm">{document.period_label || "Informe histórico sin período formal"}</p>
         <Section title="Para la familia" value={content.introduction} />
         {Array.isArray(content.sections) && content.sections.map((raw, index) => {
           const section = raw && typeof raw === "object" ? raw as Record<string, unknown> : {};
@@ -179,7 +180,7 @@ export function DocumentsScreen() {
         <div className="rounded-2xl border border-[#d6e5ef] bg-white p-6"><FileText className="size-8 text-[#087d96]" /><h2 className="mt-3 text-lg font-bold">Aún no hay documentos guardados</h2><p className="mt-1 text-[#526b87]">Cuando guardes tu diagnóstico, plan anual o una actividad, aparecerán aquí.</p></div> :
         years.map((year) => <section key={year} aria-label={`Documentos ${year}`} className="space-y-3"><h2 className="text-lg font-extrabold text-[#172b52]">Año escolar {year}</h2>
           <ul className="space-y-2">{documents.filter((item) => item.school_year === year).map((item) => <li key={`${item.kind}-${item.id}`} className="rounded-2xl border border-[#d6e5ef] bg-white p-4 shadow-sm sm:flex sm:items-center sm:justify-between sm:gap-5">
-            <div className="min-w-0"><p className="text-xs font-bold uppercase tracking-wide text-[#087d96]">{labelFor(item)} · {statusFor(item.status)}</p><h3 className="mt-1 break-words text-lg font-bold text-[#172b52]">{item.title}</h3><p className="mt-1 text-sm text-[#526b87]">{item.classroom}{item.date ? ` · ${dateFor(item.date)}` : ""}{item.version && item.version > 1 ? ` · Versión ${item.version}` : ""}</p></div>
+            <div className="min-w-0"><p className="text-xs font-bold uppercase tracking-wide text-[#087d96]">{labelFor(item)} · {statusFor(item.status)}</p><h3 className="mt-1 break-words text-lg font-bold text-[#172b52]">{item.title}</h3><p className="mt-1 text-sm text-[#526b87]">{item.classroom}{item.period_label ? ` · ${item.period_label}` : item.kind === "family_report" ? " · Informe histórico sin período formal" : ""}{item.date ? ` · ${dateFor(item.date)}` : ""}{item.version && item.version > 1 ? ` · Versión ${item.version}` : ""}</p></div>
             <Button variant="outline" className="mt-3 min-h-11 shrink-0 sm:mt-0" onClick={() => { setOpened(null); setError(""); setWordMessage(""); setWordError(""); setOpening(true); setSelected({ kind: item.kind, id: item.id }); }}>Abrir documento</Button>
           </li>)}</ul>
         </section>)}

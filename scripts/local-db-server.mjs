@@ -467,7 +467,7 @@ async function diagnosticWorkspace() {
 
 const handleAssessmentRoute = createAssessmentRouteHandler({ db, annualPlanningContext, readJson, send, pending: pendingAIGenerations, metadataForAudit: safeAnnualGenerationMetadata, refreshStudentContext: refreshStudentContextSnapshot });
 const handleDescriptiveConclusionRoute = createDescriptiveConclusionRouteHandler({ db, annualPlanningContext, readJson, send, pending: pendingAIGenerations, metadataForAudit: safeAnnualGenerationMetadata, refreshStudentContext: refreshStudentContextSnapshot });
-const handleFamilyReportRoute = createFamilyReportRouteHandler({ db, annualPlanningContext, readJson, send, pending: pendingAIGenerations, metadataForAudit: safeAnnualGenerationMetadata });
+const handleFamilyReportRoute = createFamilyReportRouteHandler({ db, teacherId, annualPlanningContext, readJson, send, pending: pendingAIGenerations, metadataForAudit: safeAnnualGenerationMetadata });
 const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStorage, readJson, send, pending: pendingAIGenerations, metadataForAudit: safeAnnualGenerationMetadata, refreshStudentContext: refreshStudentContextSnapshot });
 const server = createServer(async (request, response) => {
   const requestId = randomUUID();

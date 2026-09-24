@@ -8,6 +8,8 @@ import { buildFamilyReportInput, conclusionSourceSnapshot, sameConclusionSourceS
 import { createFamilyReportRouteHandler } from "../../scripts/family-report-routes.mjs";
 
 const classroomId = "00000000-0000-4000-8000-000000000211";
+const teacherId = "00000000-0000-4000-8000-000000000021";
+const ageGradeId = "00000000-0000-4000-8000-000000000221";
 const schoolYearId = "00000000-0000-4000-8000-000000000311";
 const evaluationPeriodId = "00000000-0000-4000-8000-000000000411";
 const studentId = "00000000-0000-4000-8000-000000000111";
@@ -22,14 +24,16 @@ const url = (path) => `http://localhost${path}`;
 
 async function fixture({ oralStatus = "active", mathStatus = "active", oralInformation = "sufficient" } = {}) {
   const db = await PGlite.create();
-  await db.exec(`create table school_years(id uuid primary key);
-    create table classrooms(id uuid primary key,school_year_id uuid not null references school_years(id));
+  await db.exec(`create table school_years(id uuid primary key,owner_id uuid,starts_on date,ends_on date);
+    create table age_grades(id uuid primary key,age_years integer);
+    create table classrooms(id uuid primary key,school_year_id uuid not null references school_years(id),teacher_id uuid,age_grade_id uuid,castellano_l2_applicable boolean,religion_applicable boolean);
     create table evaluation_periods(id uuid primary key,school_year_id uuid not null references school_years(id),starts_on date not null,ends_on date not null,label text);
     create table students(id uuid primary key,classroom_id uuid not null references classrooms(id),status text not null,first_name text,last_name text,preferred_name text);
     create table competency_descriptive_conclusions(id uuid primary key,student_id uuid,competency_v4_id text,period_start date,period_end date,version integer,details jsonb,status text,teacher_confirmed_at timestamptz,updated_at timestamptz default now());`);
   await db.exec(await readFile(new URL("../../local-db/migrations/0022_family_reports.sql", import.meta.url), "utf8"));
-  await db.query(`insert into school_years values($1)`, [schoolYearId]);
-  await db.query(`insert into classrooms values($1,$2)`, [classroomId,schoolYearId]);
+  await db.query(`insert into school_years values($1,$2,'2026-03-01','2026-12-20')`, [schoolYearId,teacherId]);
+  await db.query(`insert into age_grades values($1,5)`, [ageGradeId]);
+  await db.query(`insert into classrooms values($1,$2,$3,$4,false,false)`, [classroomId,schoolYearId,teacherId,ageGradeId]);
   await db.query(`insert into evaluation_periods values($1,$2,$3::date,$4::date,'Período de prueba')`, [evaluationPeriodId,schoolYearId,start,end]);
   await db.exec(await readFile(new URL("../../local-db/migrations/0043_family_report_period.sql", import.meta.url), "utf8"));
   await db.query(`insert into students values($1,$2,'active','Ana','Pérez','Anita'),($3,$2,'active','Otro','Niño',null)`, [studentId, classroomId, otherStudentId]);
@@ -38,7 +42,7 @@ async function fixture({ oralStatus = "active", mathStatus = "active", oralInfor
   }
   const pending = new Map(), captures = [], responses = [];
   const context = { id: classroomId, school_year_id:schoolYearId, age: 5, castellano_l2_applicable: false, religion_applicable: false, calendar: { starts_on: "2026-03-01", ends_on: "2026-12-20" } };
-  const handler = createFamilyReportRouteHandler({ db, annualPlanningContext: async () => context, readJson: async (request) => request.body, send: (_res, status, body) => responses.push({ status, body }), pending, metadataForAudit: (value) => value, createProvider: (plan) => { captures.push({ plan }); return {}; }, generate: async (input) => { captures.push({ input }); return { output: report(input.competency_ids, Object.fromEntries(input.student_context.teacher_confirmed_findings.map((finding) => [finding.competency_id, finding.information_status]))), metadata: { model: "mock", secret: "audit-only" } }; } });
+  const handler = createFamilyReportRouteHandler({ db, teacherId, annualPlanningContext: async () => context, readJson: async (request) => request.body, send: (_res, status, body) => responses.push({ status, body }), pending, metadataForAudit: (value) => value, createProvider: (plan) => { captures.push({ plan }); return {}; }, generate: async (input) => { captures.push({ input }); return { output: report(input.competency_ids, Object.fromEntries(input.student_context.teacher_confirmed_findings.map((finding) => [finding.competency_id, finding.information_status]))), metadata: { model: "mock", secret: "audit-only" } }; } });
   async function call(method, path, body) { responses.length = 0; await handler({ request: { method, body }, url: new URL(url(path)), response: {}, origin: null }); return responses[0]; }
   async function generate(ids = ["COM_ORAL"]) { return call("POST", "/api/ai/family-reports/generate", { studentId, periodStart: start, periodEnd: end, competencyIds: ids }); }
   async function save(generated, ids = ["COM_ORAL"]) { return call("POST", "/api/family-reports", { studentId, periodStart: start, periodEnd: end, competencyIds: ids, proposal: generated.body.proposal, generationId: generated.body.generation_id }); }
@@ -217,6 +221,23 @@ test("informe nuevo se vincula al período formal y usa solo sus conclusiones co
   assert.equal((await f.call("POST", "/api/ai/family-reports/generate", { ...body, periodId: "00000000-0000-4000-8000-000000000499" })).status, 422);
 });
 
+test("el período y estudiante se aíslan por aula y propiedad docente", async () => {
+  const f=await fixture();
+  const anotherYear="00000000-0000-4000-8000-000000000312",anotherClass="00000000-0000-4000-8000-000000000212",anotherPeriod="00000000-0000-4000-8000-000000000412";
+  const foreignClass="00000000-0000-4000-8000-000000000213",foreignYear="00000000-0000-4000-8000-000000000313";
+  await f.db.query(`insert into school_years values($1,$2,'2026-03-01','2026-12-20'),($3,$4,'2026-03-01','2026-12-20')`,[anotherYear,teacherId,foreignYear,"00000000-0000-4000-8000-000000000099"]);
+  await f.db.query(`insert into classrooms values($1,$2,$3,$4,false,false),($5,$6,$7,$4,false,false)`,[anotherClass,anotherYear,teacherId,ageGradeId,foreignClass,foreignYear,"00000000-0000-4000-8000-000000000099"]);
+  await f.db.query(`insert into evaluation_periods values($1,$2,$3::date,$4::date,'Otro período')`,[anotherPeriod,anotherYear,start,end]);
+  const own=await f.call("GET",`/api/family-reports/options?classroomId=${classroomId}&studentId=${studentId}&periodId=${evaluationPeriodId}`);
+  assert.equal(own.status,200);
+  const wrongClass=await f.call("GET",`/api/family-reports/options?classroomId=${anotherClass}&studentId=${studentId}&periodId=${anotherPeriod}`);
+  assert.equal(wrongClass.status,422);
+  const wrongPeriod=await f.call("GET",`/api/family-reports/options?classroomId=${classroomId}&studentId=${studentId}&periodId=${anotherPeriod}`);
+  assert.equal(wrongPeriod.status,422);
+  const unauthorized=await f.call("GET",`/api/family-reports/options?classroomId=${foreignClass}&studentId=${studentId}&periodId=${evaluationPeriodId}`);
+  assert.equal(unauthorized.status,422);
+});
+
 test("backfill histórico solo enlaza períodos exactos e inequívocos", async () => {
   const db = await PGlite.create();
   await db.exec(`create table school_years(id uuid primary key); create table classrooms(id uuid primary key,school_year_id uuid); create table students(id uuid primary key,classroom_id uuid); create table evaluation_periods(id uuid primary key,school_year_id uuid,starts_on date,ends_on date); create table family_reports(id uuid primary key,student_id uuid,period_start date,period_end date);`);
@@ -258,4 +279,17 @@ test("migraciones y UI incluyen RLS, estados de recarga y editor solo lectura", 
   assert.match(ui, /api\/family-reports\/options/); assert.match(ui, /api\/family-reports\?/); assert.match(ui, /solo lectura/); assert.match(ui, /Confirmar informe/);
   assert.match(workspace, /PeriodEvaluation/);
   assert.doesNotMatch(studentContext, /from family_reports/);
+});
+
+test("Evaluar comparte período y aula con el informe familiar y Documentos identifica informes históricos", async () => {
+  const [evaluation,generator,documents]=await Promise.all([
+    readFile(new URL("../features/dashboard/components/period-evaluation.tsx",import.meta.url),"utf8"),
+    readFile(new URL("../features/dashboard/components/family-report-generator.tsx",import.meta.url),"utf8"),
+    readFile(new URL("../features/dashboard/components/documents-screen.tsx",import.meta.url),"utf8"),
+  ]);
+  assert.match(evaluation,/FamilyReportGenerator/);
+  assert.match(evaluation,/classroomId=\{classroomId\} period=\{currentPeriod\}/);
+  assert.match(generator,/periodId:period\?\.id/);
+  assert.match(generator,/Descargar Word/);
+  assert.match(documents,/Informe histórico sin período formal/);
 });
