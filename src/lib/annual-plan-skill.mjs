@@ -5,6 +5,7 @@ const SKILL_FILES = [
   ["SKILL.md", new URL("../../skills/crear-plan-anual/SKILL.md", import.meta.url)],
   ["references/lectura-del-contexto.md", new URL("../../skills/crear-plan-anual/references/lectura-del-contexto.md", import.meta.url)],
   ["references/criterios-cneb.md", new URL("../../skills/crear-plan-anual/references/criterios-cneb.md", import.meta.url)],
+  ["references/calendario-pedagogico.md", new URL("../../skills/crear-plan-anual/references/calendario-pedagogico.md", import.meta.url)],
   ["references/estructura-plan-maestro.md", new URL("../../skills/crear-plan-anual/references/estructura-plan-maestro.md", import.meta.url)],
 ];
 

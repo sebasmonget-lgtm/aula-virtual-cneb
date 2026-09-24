@@ -117,6 +117,11 @@ Proyecto nuevo iniciado el 20 de septiembre de 2026. Existe un shell responsive 
 - El Word diagnóstico se sigue rellenando desde el resumen grupal que confirme la docente y los recuentos verificables de la base. La Skill no genera el DOCX ni cambia la plantilla. No se añadieron tablas ni migraciones. Ver ADR 049.
 - Prueba real con datos ficticios, sin guardar en la base: `gpt-5.6-terra` devolvió los tres campos válidos en 4,9 s (1374 tokens de entrada, 234 de salida). El resultado permanece en `.local/test-results/smoke-diagnostic-skill-result.json` para revisión local; la prueba no alteró los documentos de la profesora.
 
+## Hitos del calendario y evaluación del plan anual (2026-09-24)
+
+- `crear-plan-anual` orienta cuatro de las doce propuestas hacia Día del Niño Peruano, Día de la Educación Inicial, Fiestas Patrias y Navidad/cierre de año. Recibe los doce espacios lectivos ya calculados para situarlas cerca de los hitos sin inventar fechas ni transformar una celebración en manualidades. Las otras ocho se basan en el diagnóstico e intereses del grupo y todas siguen siendo revisables.
+- El Word flexible recoge una categoría de actuación individual de cada proyecto en «Evidencias principales», sin truncar la lista tras los primeros. «Criterios de cada actividad» deja de figurar como instrumento y el producto posible se distingue de la evidencia individual también en el editor. El esquema guardado, el calendario, Sol/Terra y la plantilla binaria no cambian.
+
 
 
 

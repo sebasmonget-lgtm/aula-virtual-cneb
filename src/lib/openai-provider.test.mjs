@@ -131,6 +131,7 @@ test("OpenAIProvider clasifica respuestas y errores controlados", async () => {
     [Object.assign(new Error("límite"), { status: 429 }), "rate_limited"],
     [Object.assign(new Error("credenciales"), { status: 401 }), "authentication_failed"],
     [Object.assign(new Error("timeout"), { code: "ETIMEDOUT" }), "timeout"],
+    [Object.assign(new Error("request aborted"), { cause: Object.assign(new Error("aborted"), { name: "AbortError" }) }), "timeout"],
     [new Error("fallo desconocido"), "provider_error"],
   ];
   for (const [response, reason] of cases) {

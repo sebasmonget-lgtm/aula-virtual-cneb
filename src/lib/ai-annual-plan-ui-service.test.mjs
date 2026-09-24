@@ -39,6 +39,8 @@ test("la indicación docente permanece separada de la metodología de la Skill",
   assert.equal(input.teacher_request, "Explorar el patio Preparar el Plan Maestro anual.");
   assert.deepEqual(input.available_resources, ["papel", "semillas"]);
   assert.equal(input.calendar_context.starts_on, "2026-03-01");
+  assert.equal(input.calendar_context.project_slots.length, 12);
+  assert.deepEqual(input.calendar_context.project_slots[0], { code: "P01", period: "Bimestre 1", starts_on: "2026-03-30", ends_on: "2026-04-10" });
   assert.match(input.diagnostic_summary, /necesita más oportunidades/);
   assert.equal(JSON.stringify(input).includes("nombre de un niño"), false);
   const screen = await readFile(new URL("../features/dashboard/components/annual-plan-generator.tsx", import.meta.url), "utf8");
@@ -98,6 +100,9 @@ test("plan maestro y desarrollo usan dos providers mock, Sol y Terra, sin llamad
       assert.match(options.skillInstructions, /Skill crear-plan-anual/);
       assert.match(options.skillInstructions, /PLAN-01/);
       assert.match(options.skillInstructions, /exactamente \*\*12 proyectos/);
+      for (const milestone of ["Día del Niño Peruano", "Día de la Educación Inicial", "Fiestas Patrias", "Navidad y cierre de año"]) {
+        assert.match(options.skillInstructions, new RegExp(milestone));
+      }
       return { output: master, metadata: { workflow: "annual_plan", model: masterPlan.model, response_id: "master-test", usage: { input_tokens: 100, output_tokens: 200, total_tokens: 300 } }, provenance: {} };
     },
   });
@@ -153,6 +158,7 @@ test("el pipeline real de contexto entrega solo el bundle a los dos providers mo
   });
   assert.equal(requests.length, 2);
   assert.equal(requests[0].output_schema.id, "annual-plan-v2");
+  assert.equal(requests[0].ai_context_bundle.context.classroom.calendar_context.project_slots.length, 12);
   assert.equal(requests[1].output_schema.id, "annual-plan-development-v1");
   assert.match(requests[0].skill_instructions, /Skill crear-plan-anual/);
   assert.equal(requests[1].skill_instructions, undefined);

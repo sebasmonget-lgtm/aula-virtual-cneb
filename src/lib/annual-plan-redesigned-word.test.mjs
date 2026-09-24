@@ -26,7 +26,7 @@ const master = {
     period: `Bimestre ${Math.floor(index / 3) + 1}`, experience_type: "project", title: topics[index],
     rationale: `Ofrecer oportunidades para ${topics[index].toLocaleLowerCase("es")}.`, primary_competency_ids: ["COMP-1"],
     possible_secondary_competency_ids: [], context_or_trigger: `Una situación de juego sobre ${topics[index].toLocaleLowerCase("es")}.`,
-    expected_evidence_categories: ["Preguntas y dibujos"], flexibility_notes: "Cambiar materiales si hace falta.",
+    expected_evidence_categories: [`Actuación individual del proyecto ${index + 1}`], flexibility_notes: "Cambiar materiales si hace falta.",
   })),
 };
 const development = { organization_criteria: ["Escuchar al grupo", "Empezar por el patio", "Dar tiempo para jugar", "Revisar lo observado"],
@@ -98,6 +98,10 @@ test("la vista y el Word usan las doce propuestas y la etapa inicial sin placeho
   assert.match(xml, /Las entrevistas ayudan a conocer el contexto/);
   assert.match(xml, /El plan anual organiza los proyectos y las actividades/);
   assert.match(xml, /Las familias mencionaron intereses como plantas, cuentos/);
+  assert.match(xml, /Actuación individual del proyecto 1; [\s\S]*Actuación individual del proyecto 12/);
+  assert.match(xml, /Registros de observación y notas anecdóticas de la docente en Ayni/);
+  assert.match(xml, /Producto posible del proyecto/);
+  assert.doesNotMatch(xml, /criterios de cada actividad|Producto o evidencia final/);
   assert.equal((xml.match(/PLANIFICACIÓN ANUAL/g) ?? []).length, 1);
   assert.equal((xml.match(/<w:br w:type="page"\/>/g) ?? []).length, 12,
     "las secciones llenas y el primer proyecto no deben añadir hojas vacías");

@@ -3,7 +3,7 @@ import { generateAIWorkflowV4 } from "./ai-generation-v4.mjs";
 import { createAIProviderForPlan } from "./ai-provider-factory.mjs";
 import { buildAnnualPlanContext } from "./context-policy-v4.mjs";
 import { mergeAnnualPlanDevelopment } from "./annual-plan-contract.mjs";
-import { AnnualCalendarError, defaultInitialStage, nationalCalendarBlocks2026, suggestAnnualProjectDurations } from "./annual-plan-calendar.mjs";
+import { AnnualCalendarError, buildFlexibleAnnualSchedule, defaultInitialStage, nationalCalendarBlocks2026, suggestAnnualProjectDurations } from "./annual-plan-calendar.mjs";
 import { loadAnnualPlanSkill } from "./annual-plan-skill.mjs";
 
 const ANNUAL_PLAN_TIMEOUT_MS = 180_000;
@@ -47,6 +47,9 @@ export function buildAnnualPlanGenerationInput({ classroom, request = {} }) {
     blocks: classroom.calendar.blocks ?? (Number(classroom.calendar.school_year) === 2026 ? nationalCalendarBlocks2026() : []),
     initial_stage: { ...(classroom.calendar.initial_stage ?? defaultInitialStage()), teacher_notes: "" } };
   calendar.project_duration_weeks = suggestAnnualProjectDurations(calendar);
+  calendar.project_slots = buildFlexibleAnnualSchedule(calendar,
+    calendar.project_duration_weeks.map((duration_weeks) => ({ duration_weeks }))).projects
+    .map(({ code, period, starts_on, ends_on }) => ({ code, period, starts_on, ends_on }));
   const group = buildAnnualPlanContext(classroom.context_v4);
   return {
     workflow: "annual_plan", age: classroom.age,
@@ -89,7 +92,7 @@ export async function generateTeacherAnnualPlan({ classroom, request, resolvePla
     const master = await generate({ ...input, annual_stage: "master" }, { provider: createProvider(masterPlan, { timeoutMs: ANNUAL_PLAN_TIMEOUT_MS }), executionPlan: masterPlan, skillInstructions });
     const developmentPlan = resolvePlan({ workflow: "annual_plan", task: "document_development" });
     const developed = await generate({ ...input, annual_stage: "development", master_plan: developmentSource(master.output),
-      teacher_request: "Desarrolla el plan maestro validado que aparece en workflow_inputs.master_plan. Conserva sus doce proyectos, su orden y sus competencias. Para cada índice escribe un propósito concreto y diferente, un posible producto o evidencia pertinente y materiales sencillos compatibles con el aula. No conviertas un producto grupal automáticamente en evidencia individual. No repitas el mismo propósito ni el mismo producto cambiando solo el número; algunos productos pueden ser juegos, acuerdos, relatos, construcciones, dibujos, exploraciones o registros cuando tengan sentido. Devuelve cuatro criterios de organización y enfoques transversales solo cuando el contexto y la Knowledge Base los sustenten. Usa español claro; no inventes observaciones ni datos familiares." },
+      teacher_request: "Desarrolla el plan maestro validado que aparece en workflow_inputs.master_plan. Conserva sus doce proyectos, su orden, sus cuatro vínculos con el calendario y sus competencias. Para cada índice escribe un propósito concreto y diferente, un producto posible del proyecto y materiales sencillos compatibles con el aula. El producto es distinto de las actuaciones individuales que la docente observará como evidencia: no lo presentes como prueba automática del aprendizaje. No repitas el mismo propósito ni el mismo producto cambiando solo el número; algunos productos pueden ser acuerdos, relatos, construcciones, dibujos o registros cuando tengan sentido. Evita manualidades decorativas como propósito central. Devuelve cuatro criterios de organización y enfoques transversales solo cuando el contexto y la Knowledge Base los sustenten. Usa español claro; no inventes observaciones ni datos familiares." },
     { provider: createProvider(developmentPlan, { timeoutMs: ANNUAL_PLAN_TIMEOUT_MS }), executionPlan: developmentPlan });
     const proposal = mergeAnnualPlanDevelopment(master.output, developed.output, input.calendar_context.project_duration_weeks);
     const stages = [{ stage: "master", model: master.metadata.model, reasoning_effort: masterPlan.reasoning_effort, response_id: master.metadata.response_id, usage: master.metadata.usage },

@@ -271,7 +271,7 @@ function validateInput(input, knowledgeBase) {
     throw new TypeError("competency_ids debe ser una lista de IDs de competencia.");
   }
   const uniqueIds = uniqueStrings(competencyIds);
-  if (uniqueIds.length > 1 && input.workflow !== "family_report") {
+  if (uniqueIds.length > 1 && !["family_report", "project", "unit"].includes(input.workflow)) {
     throw new RangeError("AIContextBundle acepta una sola competencia confirmada por llamada.");
   }
   const workflowRequirements = knowledgeBase.workflows[input.workflow];
@@ -289,15 +289,15 @@ export async function buildAIContext(input, knowledgeBase) {
   const workflowRequirements = knowledgeBase.workflows[input.workflow];
   const applicability = { castellanoL2Applicable: applicableL2(input), religionApplicable: applicableReligion(input) };
   const retrievalInput = (id) => ({ workflow: input.workflow, age: input.age, teacherRequest: input.teacher_request, confirmedCompetencyId: id, ...applicability, temporalContext: input.temporal_context });
-  const retrieval = input.workflow === "family_report" && confirmedIds.length > 1
+  const retrieval = ["family_report", "project", "unit"].includes(input.workflow) && confirmedIds.length > 1
     ? mergeFamilyRetrievals(await Promise.all(confirmedIds.map((id) => retrieveKnowledgeV4(retrievalInput(id), knowledgeBase))), workflowRequirements)
     : await retrieveKnowledgeV4(retrievalInput(confirmedCompetencyId), knowledgeBase);
   const competencyCards = confirmedCompetencyId
-    ? allCardsComplete(knowledgeBase.competencyCards.filter((card) => confirmedIds.includes(card.id)), input.age)
+    ? allCardsComplete(knowledgeBase.competencyCards.filter((card) => confirmedIds.includes(card.id) && cardIsApplicable(card, applicability)), input.age)
     : input.workflow === "annual_plan"
       ? allCardsComplete(knowledgeBase.competencyCards.filter((card) => cardIsApplicable(card, applicability)), input.age, true)
       : shortlistCards(knowledgeBase, retrieval, input.age, applicability);
-  if (input.workflow === "family_report" && competencyCards.length !== confirmedIds.length) throw new RangeError("Hay competencias seleccionadas sin tarjeta aplicable para esta edad.");
+  if (["family_report", "project", "unit"].includes(input.workflow) && confirmedIds.length > 0 && competencyCards.length !== confirmedIds.length) throw new RangeError("Hay competencias seleccionadas sin tarjeta aplicable para esta edad.");
   const competencyIds = competencyCards.map((card) => card.id);
   const applicabilityRules = specialRules(knowledgeBase.specialApplicability, competencyIds);
   const pedagogicalModules = relevantPedagogyModules(knowledgeBase, workflowRequirements);

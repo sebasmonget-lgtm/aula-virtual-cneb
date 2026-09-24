@@ -9,6 +9,7 @@ Esta Skill guía **solo la primera etapa** de generación: el Plan Maestro. Reci
 
 1. Lee [lectura-del-contexto.md](references/lectura-del-contexto.md) para distinguir diagnóstico, observaciones docentes, entrevistas familiares y contexto disponible.
 2. Aplica [criterios-cneb.md](references/criterios-cneb.md) para derivar prioridades y seleccionar únicamente competencias pertinentes que aparezcan en las tarjetas curriculares del bundle.
-3. Construye el objeto conforme a [estructura-plan-maestro.md](references/estructura-plan-maestro.md) y al `output_schema` recibido. Usa los campos exactos del esquema, sin campos adicionales.
+3. Ubica las cuatro propuestas ligadas al calendario según [calendario-pedagogico.md](references/calendario-pedagogico.md); las otras ocho parten del diagnóstico y pueden cambiar durante el año.
+4. Construye el objeto conforme a [estructura-plan-maestro.md](references/estructura-plan-maestro.md) y al `output_schema` recibido. Usa los campos exactos del esquema, sin campos adicionales.
 
 No inventes hallazgos, intereses, características de niños, competencias, capacidades, desempeños ni citas MINEDU. Cuando el diagnóstico sea parcial, formula propuestas iniciales revisables y expresa la incertidumbre sin convertirla en déficit. Escribe en español claro para una profesora de Inicial.

@@ -4,6 +4,15 @@ import { createAIProviderForPlan } from "./ai-provider-factory.mjs";
 import { ActivityGenerationUIError, teacherMessageForActivityGenerationError } from "./ai-activity-ui-service.mjs";
 import { buildProjectContext, buildUnitContext } from "./context-policy-v4.mjs";
 
+const LEARNING_EXPERIENCE_TIMEOUT_MS = 120_000;
+
+function teacherMessageForLearningExperienceError(error) {
+  if (error?.reason === "timeout") return "La preparación tardó demasiado. Puedes volver a intentarlo.";
+  if (["authentication_failed", "api_key_missing", "rate_limited"].includes(error?.reason)) return teacherMessageForActivityGenerationError(error);
+  if (/^(project|unit)_/.test(error?.reason ?? "")) return "No pudimos validar la propuesta generada. Inténtalo nuevamente.";
+  return "No pudimos preparar la propuesta. Inténtalo nuevamente.";
+}
+
 export function buildLearningExperienceGenerationInput({ classroom, request = {} }) {
   const workflow = request.workflow;
   const required = workflow === "project" ? "project_trigger_or_interest" : workflow === "unit" ? "learning_need_or_context" : null;
@@ -23,7 +32,7 @@ export async function generateTeacherLearningExperience({ classroom, request, re
   const input = buildLearningExperienceGenerationInput({ classroom, request });
   try {
     const executionPlan = resolvePlan({ workflow: input.workflow, task: "generation" });
-    const generated = await generate(input, { provider: createProvider(executionPlan), executionPlan });
+    const generated = await generate(input, { provider: createProvider(executionPlan, { timeoutMs: LEARNING_EXPERIENCE_TIMEOUT_MS }), executionPlan });
     return { proposal: generated.output, internalMetadata: { workflow: generated.metadata.workflow, model: generated.metadata.model, reasoning_effort: executionPlan.reasoning_effort, response_id: generated.metadata.response_id, usage: generated.metadata.usage, provenance: generated.provenance, ...(input.context_snapshot ? { context_snapshot: input.context_snapshot } : {}) } };
-  } catch (error) { throw new ActivityGenerationUIError(error?.reason ?? "unknown", teacherMessageForActivityGenerationError(error)); }
+  } catch (error) { const wrapped = new ActivityGenerationUIError(error?.reason ?? "unknown", teacherMessageForLearningExperienceError(error)); wrapped.cause = error; throw wrapped; }
 }

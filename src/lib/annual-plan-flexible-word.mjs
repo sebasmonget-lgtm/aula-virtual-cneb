@@ -8,6 +8,7 @@ const templateUrl = new URL("../../assets/templates/planificacion-anual-inicial-
 const text = (value) => typeof value === "string" ? value.trim() : "";
 const list = (value) => Array.isArray(value) ? value.map(text).filter(Boolean) : [];
 const joined = (value) => list(value).map((item) => item.replace(/[.;]+$/u, "")).join("; ");
+const annualEvidence = (projects) => [...new Set(projects.map((project) => list(project.expected_evidence_categories)[0]).filter(Boolean))].join("; ");
 const firstSentences = (value, count) => text(value).split(/(?<=[.!?])\s+/u).slice(0, count).join(" ");
 const sentence = (value) => /[.!?]$/.test(value) ? value : `${value}.`;
 const diagnosisParagraph = (value, next, missing) => {
@@ -138,8 +139,8 @@ function valuesFor(document, cards, schedule) {
       || "Organizar juegos, preguntas y materiales variados; observar cómo participa cada niño y ajustar el acompañamiento.",
     ARTICULACION_FLEXIBILIDAD: "Las fechas son tentativas. La docente podrá ajustar preguntas, materiales, tiempos y productos según lo que observe durante el año.",
     EVALUACION_ENFOQUE_COMPLEMENTO: "Observar lo que hacen y dicen los niños durante el juego. Guardar registros concretos y revisarlos para ajustar las próximas actividades.",
-    EVIDENCIAS_PRINCIPALES: [...new Set(proposal.proposed_experiences.flatMap((project) => list(project.expected_evidence_categories)))].slice(0, 8).join("; "),
-    INSTRUMENTOS_REGISTROS: "Notas de observación, criterios de cada actividad y evidencias registradas en Ayni.",
+    EVIDENCIAS_PRINCIPALES: annualEvidence(proposal.proposed_experiences),
+    INSTRUMENTOS_REGISTROS: "Registros de observación y notas anecdóticas de la docente en Ayni.",
     USO_INFORMACION_EVALUACION: "Revisar los registros al cierre de cada proyecto y bimestre para ajustar lo siguiente.",
     OBSERVACION_FINAL_ADICIONAL: "Revisar las propuestas al cerrar cada bimestre y ajustarlas a las necesidades del grupo.",
   };
@@ -192,6 +193,7 @@ export async function renderAnnualPlanFlexibleWord(document, competencyCards = [
   xml = xml.replace(/<w:p(?:\s[^>]*)?>[\s\S]*?<\/w:p>/g, (paragraph) =>
     paragraph.includes("Plantilla editable") ? "" : paragraph);
   xml = xml.replace(/Recurso visual \/ enlace \(opcional\)/g, "Qué podríamos observar");
+  xml = xml.replace(/Producto o evidencia final/g, "Producto posible del proyecto");
   xml = xml.replace(/sesiones de aprendizaje/g, "actividades");
   xml = xml.replace(/Contexto familiar y sociocultural/g, "Contexto del grupo");
   xml = replaceParagraphText(xml, "Resumen breve construido", "El resumen del aula fue confirmado por la docente. Las entrevistas ayudan a conocer el contexto; las observaciones cuentan lo que ocurrió en el aula.");

@@ -1,5 +1,15 @@
 # Errores y soluciones
 
+## 2026-09-24 «Desarrollar esta propuesta» parecía no responder
+
+**Síntoma.** Al elegir una propuesta del plan anual, la profesora permanecía viendo la tarjeta y parecía que no se abría ningún editor.
+
+**Causa raíz.** El editor sí se creaba, pero se mostraba después de las doce propuestas, fuera de la pantalla visible; tampoco recibía el foco.
+
+**Solución validada localmente.** Al elegir una propuesta, abrir un borrador o consultar una experiencia confirmada, la vista se desplaza al editor y le da foco. Se deja espacio para el encabezado fijo. Se comprobó el clic y la posición visible del editor en el navegador local.
+
+**Prevención.** Si una acción abre contenido lejos del control que la inició, llevar a la persona al resultado y hacer visible el cambio de estado.
+
 ## 2026-09-23 Planes anuales duplicables y difíciles de revisar
 
 **Síntoma.** La cuenta podía generar más de un plan para el mismo año en aulas distintas y el resultado aparecía como un formulario extenso antes de verse como documento. Esto confundía la revisión docente y podía causar llamadas al modelo innecesarias.

@@ -41,7 +41,7 @@ function outputText(response) {
 function classifyError(error) {
   if (error?.status === 401) return "authentication_failed";
   if (error?.status === 429) return "rate_limited";
-  if (/timeout|timedout/i.test(error?.name ?? "") || error?.code === "ETIMEDOUT") return "timeout";
+  if (/timeout|timedout|abort/i.test(`${error?.name ?? ""} ${error?.cause?.name ?? ""}`) || error?.code === "ETIMEDOUT") return "timeout";
   return "provider_error";
 }
 
@@ -86,7 +86,13 @@ export class OpenAIProvider extends AIProvider {
       }, { timeout: this.timeoutMs, maxRetries: 0 });
     } catch (error) {
       if (error instanceof OpenAIProviderError) throw error;
-      throw new OpenAIProviderError(classifyError(error));
+      throw new OpenAIProviderError(classifyError(error), {
+        status: error?.status ?? null,
+        name: error?.name ?? null,
+        code: error?.code ?? null,
+        param: error?.param ?? null,
+        cause_name: error?.cause?.name ?? null,
+      });
     }
     if (response.status === "incomplete" || response.incomplete_details) {
       throw new OpenAIProviderError("response_incomplete");

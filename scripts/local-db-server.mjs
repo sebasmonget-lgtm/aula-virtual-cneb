@@ -943,12 +943,16 @@ const server = createServer(async (request, response) => {
           const source = parent?.proposal?.proposed_experiences?.[body.sourceProposalIndex];
           if (!source || source.experience_type !== body.workflow) throw new Error("La propuesta anual activa no coincide con esta experiencia.");
           const contextKey = body.workflow === "project" ? "project_trigger_or_interest" : "learning_need_or_context";
-          Object.assign(body, { [contextKey]: body[contextKey]?.trim() || source.context_or_trigger, competency_ids: body.competency_ids ?? source.primary_competency_ids, planned_experience: { title: source.title, period: source.period, rationale: source.rationale, context_or_trigger: source.context_or_trigger, primary_competency_ids: source.primary_competency_ids, possible_secondary_competency_ids: source.possible_secondary_competency_ids, expected_evidence_categories: source.expected_evidence_categories, flexibility_notes: source.flexibility_notes, annual_plan_id: parent.id, source_proposal_index: body.sourceProposalIndex } });
+          const primary = Array.isArray(body.primary_competency_ids) ? body.primary_competency_ids : source.primary_competency_ids;
+          const secondary = Array.isArray(body.possible_secondary_competency_ids) ? body.possible_secondary_competency_ids : source.possible_secondary_competency_ids;
+          Object.assign(body, { [contextKey]: body[contextKey]?.trim() || source.context_or_trigger, competency_ids: [...new Set([...primary, ...secondary])], planned_experience: { title: source.title, period: source.period, rationale: source.rationale, context_or_trigger: source.context_or_trigger, primary_competency_ids: primary, possible_secondary_competency_ids: secondary, expected_evidence_categories: source.expected_evidence_categories, flexibility_notes: source.flexibility_notes, annual_plan_id: parent.id, source_proposal_index: body.sourceProposalIndex } });
         }
+        const applicable = await applicableCompetencyIds(body.workflow, classroom);
+        if (!Array.isArray(body.competency_ids) || body.competency_ids.length > 6 || body.competency_ids.some((id) => typeof id !== "string" || !applicable.has(id))) throw new Error("Selecciona competencias aplicables para esta aula.");
         const generated = await generateTeacherLearningExperience({ classroom, request: body }); const generationId = randomUUID();
         await pendingAIGenerations.set(generationId, { workflow: generated.internalMetadata.workflow, classroom_id: classroom.id, metadata: safeAnnualGenerationMetadata(generated.internalMetadata), createdAt: Date.now(), parent: parent ? { annual_plan_id: parent.id, source_proposal_index: body.sourceProposalIndex } : null });
         send(response, 200, { proposal: generated.proposal, generation_id: generationId }, origin);
-      } catch (error) { send(response, 422, { error: error?.message || "No se pudo generar la experiencia." }, origin); } return;
+      } catch (error) { send(response, 422, { error: error?.message || "No se pudo generar la experiencia.", reason: error?.reason ?? "unknown" }, origin); } return;
     }
     if (request.method === "POST" && url.pathname === "/api/learning-experiences") {
       const context = await annualPlanningContext(); const body = await readJson(request); const pending = typeof body.generationId === "string" ? await pendingAIGenerations.get(body.generationId) : null;
