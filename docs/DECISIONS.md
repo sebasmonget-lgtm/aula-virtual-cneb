@@ -462,3 +462,9 @@ La confirmación de la actividad y la inserción del criterio heredado se ejecut
 **Documento.** Documentos muestra una proyección estructurada y explícitamente provisional de cada cierre histórico. No se genera Word de cierre hasta recibir una plantilla definitiva. El acceso se limita en servidor al aula y año de la docente; las evidencias visuales no se copian al manifiesto.
 
 **Reversión.** Se puede retirar la vista provisional y mantener la tabla histórica. El puntero nullable conserva compatibilidad con cierres anteriores. Las migraciones local y Supabase son equivalentes.
+
+## ADR 060 Informe familiar ligado al período formal
+
+**Decisión.** `family_reports` reutiliza su flujo de borrador, edición y confirmación y agrega una referencia opcional a `evaluation_periods`. Los informes históricos solo reciben el vínculo si año escolar y fechas coinciden exactamente con un único período; los demás conservan el vínculo nulo. Un trigger valida la correspondencia de estudiante, año y fechas en cada escritura vinculada.
+
+**Fuentes.** Cuando se usa un período formal, el informe toma solo conclusiones confirmadas con las fechas exactas del período. Las conclusiones fuente no se modifican. El acceso continúa comprobando en servidor que el estudiante pertenece al aula activa. La interfaz anterior basada en fechas sigue legible durante la integración con Evaluar.

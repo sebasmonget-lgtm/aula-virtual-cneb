@@ -8,6 +8,8 @@ import { buildFamilyReportInput, conclusionSourceSnapshot, sameConclusionSourceS
 import { createFamilyReportRouteHandler } from "../../scripts/family-report-routes.mjs";
 
 const classroomId = "00000000-0000-4000-8000-000000000211";
+const schoolYearId = "00000000-0000-4000-8000-000000000311";
+const evaluationPeriodId = "00000000-0000-4000-8000-000000000411";
 const studentId = "00000000-0000-4000-8000-000000000111";
 const otherStudentId = "00000000-0000-4000-8000-000000000112";
 const oralId = "00000000-0000-4000-8000-000000000711";
@@ -20,15 +22,22 @@ const url = (path) => `http://localhost${path}`;
 
 async function fixture({ oralStatus = "active", mathStatus = "active", oralInformation = "sufficient" } = {}) {
   const db = await PGlite.create();
-  await db.exec(`create table students(id uuid primary key,classroom_id uuid not null,status text not null,first_name text,last_name text,preferred_name text);
+  await db.exec(`create table school_years(id uuid primary key);
+    create table classrooms(id uuid primary key,school_year_id uuid not null references school_years(id));
+    create table evaluation_periods(id uuid primary key,school_year_id uuid not null references school_years(id),starts_on date not null,ends_on date not null,label text);
+    create table students(id uuid primary key,classroom_id uuid not null references classrooms(id),status text not null,first_name text,last_name text,preferred_name text);
     create table competency_descriptive_conclusions(id uuid primary key,student_id uuid,competency_v4_id text,period_start date,period_end date,version integer,details jsonb,status text,teacher_confirmed_at timestamptz,updated_at timestamptz default now());`);
   await db.exec(await readFile(new URL("../../local-db/migrations/0022_family_reports.sql", import.meta.url), "utf8"));
+  await db.query(`insert into school_years values($1)`, [schoolYearId]);
+  await db.query(`insert into classrooms values($1,$2)`, [classroomId,schoolYearId]);
+  await db.query(`insert into evaluation_periods values($1,$2,$3::date,$4::date,'Período de prueba')`, [evaluationPeriodId,schoolYearId,start,end]);
+  await db.exec(await readFile(new URL("../../local-db/migrations/0043_family_report_period.sql", import.meta.url), "utf8"));
   await db.query(`insert into students values($1,$2,'active','Ana','Pérez','Anita'),($3,$2,'active','Otro','Niño',null)`, [studentId, classroomId, otherStudentId]);
   for (const [id, competencyId, status, details] of [[oralId, "COM_ORAL", oralStatus, sourceDetails("COM_ORAL", oralInformation)], [mathId, "MAT_CANTIDAD", mathStatus, sourceDetails("MAT_CANTIDAD")]]) {
     await db.query(`insert into competency_descriptive_conclusions(id,student_id,competency_v4_id,period_start,period_end,version,details,status,teacher_confirmed_at) values($1,$2,$3,$4::date,$5::date,1,$6::jsonb,$7,$8::timestamptz)`, [id, studentId, competencyId, start, end, JSON.stringify(details), status, status === "active" ? "2026-09-22T12:00:00Z" : null]);
   }
   const pending = new Map(), captures = [], responses = [];
-  const context = { id: classroomId, age: 5, castellano_l2_applicable: false, religion_applicable: false, calendar: { starts_on: "2026-03-01", ends_on: "2026-12-20" } };
+  const context = { id: classroomId, school_year_id:schoolYearId, age: 5, castellano_l2_applicable: false, religion_applicable: false, calendar: { starts_on: "2026-03-01", ends_on: "2026-12-20" } };
   const handler = createFamilyReportRouteHandler({ db, annualPlanningContext: async () => context, readJson: async (request) => request.body, send: (_res, status, body) => responses.push({ status, body }), pending, metadataForAudit: (value) => value, createProvider: (plan) => { captures.push({ plan }); return {}; }, generate: async (input) => { captures.push({ input }); return { output: report(input.competency_ids, Object.fromEntries(input.student_context.teacher_confirmed_findings.map((finding) => [finding.competency_id, finding.information_status]))), metadata: { model: "mock", secret: "audit-only" } }; } });
   async function call(method, path, body) { responses.length = 0; await handler({ request: { method, body }, url: new URL(url(path)), response: {}, origin: null }); return responses[0]; }
   async function generate(ids = ["COM_ORAL"]) { return call("POST", "/api/ai/family-reports/generate", { studentId, periodStart: start, periodEnd: end, competencyIds: ids }); }
@@ -186,6 +195,41 @@ test("confirmación versiona y archiva solo el mismo periodo; active es inmutabl
   assert.deepEqual(rows.map((item) => [item.status, item.version]), [["archived", 1], ["active", 2]]);
   const listing = await f.call("GET", `/api/family-reports?studentId=${studentId}&periodStart=${start}&periodEnd=${end}`);
   assert.equal(listing.body.reports.length, 2); assert.equal(listing.body.reports[0].status, "active");
+});
+
+test("informe nuevo se vincula al período formal y usa solo sus conclusiones confirmadas", async () => {
+  const f = await fixture();
+  const options = await f.call("GET", `/api/family-reports/options?studentId=${studentId}&periodId=${evaluationPeriodId}`);
+  assert.equal(options.status, 200);
+  assert.equal(options.body.evaluation_period_id, evaluationPeriodId);
+  assert.deepEqual(options.body.competencies.map((item) => item.competency_id).sort(), ["COM_ORAL", "MAT_CANTIDAD"]);
+  const body = { studentId, periodId: evaluationPeriodId, periodStart: start, periodEnd: end, competencyIds: ["COM_ORAL"] };
+  const generated = await f.call("POST", "/api/ai/family-reports/generate", body);
+  assert.equal(generated.status, 200);
+  const saved = await f.call("POST", "/api/family-reports", { ...body, proposal: generated.body.proposal, generationId: generated.body.generation_id });
+  assert.equal(saved.status, 200);
+  const row = (await f.db.query(`select evaluation_period_id,status from family_reports where id=$1`, [saved.body.id])).rows[0];
+  assert.equal(row.evaluation_period_id, evaluationPeriodId);
+  assert.equal(row.status, "draft");
+  assert.equal((await f.call("POST", `/api/family-reports/${saved.body.id}/confirm`)).status, 200);
+  assert.equal((await f.db.query(`select status from competency_descriptive_conclusions where id=$1`, [oralId])).rows[0].status, "active");
+  assert.equal((await f.call("POST", "/api/ai/family-reports/generate", { ...body, periodStart: "2026-04-01" })).status, 422);
+  assert.equal((await f.call("POST", "/api/ai/family-reports/generate", { ...body, periodId: "00000000-0000-4000-8000-000000000499" })).status, 422);
+});
+
+test("backfill histórico solo enlaza períodos exactos e inequívocos", async () => {
+  const db = await PGlite.create();
+  await db.exec(`create table school_years(id uuid primary key); create table classrooms(id uuid primary key,school_year_id uuid); create table students(id uuid primary key,classroom_id uuid); create table evaluation_periods(id uuid primary key,school_year_id uuid,starts_on date,ends_on date); create table family_reports(id uuid primary key,student_id uuid,period_start date,period_end date);`);
+  await db.query(`insert into school_years values($1)`, [schoolYearId]);
+  await db.query(`insert into classrooms values($1,$2)`, [classroomId,schoolYearId]);
+  await db.query(`insert into students values($1,$2)`, [studentId,classroomId]);
+  await db.query(`insert into evaluation_periods values($1,$2,$3::date,$4::date)`, [evaluationPeriodId,schoolYearId,start,end]);
+  const exact = "00000000-0000-4000-8000-000000000811", other = "00000000-0000-4000-8000-000000000812";
+  await db.query(`insert into family_reports values($1,$3,$4::date,$5::date),($2,$3,'2026-04-01'::date,'2026-04-30'::date)`, [exact,other,studentId,start,end]);
+  await db.exec(await readFile(new URL("../../local-db/migrations/0043_family_report_period.sql", import.meta.url), "utf8"));
+  const rows = (await db.query(`select id,evaluation_period_id from family_reports order by id`)).rows;
+  assert.deepEqual(rows.map((row) => row.evaluation_period_id), [evaluationPeriodId,null]);
+  await assert.rejects(() => db.query(`update family_reports set evaluation_period_id=$1 where id=$2`, [evaluationPeriodId,other]));
 });
 
 test("índices evitan duplicados y rollback preserva informe activo si falla confirmación", async () => {
