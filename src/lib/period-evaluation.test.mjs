@@ -4,6 +4,7 @@ import { readFile } from "node:fs/promises";
 import { PGlite } from "@electric-sql/pglite";
 import { createPeriodEvaluationRouteHandler } from "../../scripts/period-evaluation-routes.mjs";
 import { defaultEvaluationPeriods } from "./period-evaluation-service.mjs";
+import { loadPlanningFeedback,planningFeedbackText } from "./planning-feedback.mjs";
 
 const teacher = "00000000-0000-4000-8000-000000000001";
 const otherTeacher = "00000000-0000-4000-8000-000000000002";
@@ -47,6 +48,18 @@ test("cobertura deriva registros por niño y competencia sin convertir ausencias
   assert.equal(unobserved.planned,true);
   assert.ok(result.body.by_competency.length>1);
   assert.equal((await f.call("GET",`/api/period-evaluations/coverage?classroomId=${otherClass}&periodId=${period.id}`)).status,422);
+});
+
+test("contexto para planificar verifica docente, aula y período y no expone expedientes",async()=>{
+  const f=await fixture();
+  const period=(await f.call("GET","/api/period-evaluations/workspace")).body.periods[0];
+  const feedback=await loadPlanningFeedback(f.db,{teacherId:teacher,classroomId:classId,periodId:period.id});
+  assert.equal(feedback.students_total,2);
+  assert.equal(feedback.confirmed_assessments,0);
+  assert.doesNotMatch(JSON.stringify(feedback),/Ana|Luis|Pérez|Rojas|Propuso un juego|observación/);
+  assert.match(planningFeedbackText(feedback),/sin registro/);
+  await assert.rejects(()=>loadPlanningFeedback(f.db,{teacherId:otherTeacher,classroomId:classId,periodId:period.id}),/Aula no disponible/);
+  await assert.rejects(()=>loadPlanningFeedback(f.db,{teacherId:teacher,classroomId:otherClass,periodId:period.id}),/Aula no disponible/);
 });
 
 test("la migración futura exige lectura propia y escritura mediante servidor", async () => {

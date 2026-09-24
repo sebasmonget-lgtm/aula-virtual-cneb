@@ -41,7 +41,7 @@ test("el recorrido retoma un borrador anual y no marca etapas por haberlas visit
     [planUrl]: { active: null, draft: { id: "draft-1" } },
     [experienceUrl]: { experiences: [] },
   }));
-  assert.deepEqual(journey, { diagnostic: "reviewed", studentCount: 1, annual: "draft", experience: "pending", activity: "pending", recommended: "annual", hasConfirmedAnnual: false, hasConfirmedExperience: false, hasConfirmedActivity: false });
+  assert.deepEqual(journey, { mode:"first_setup",diagnostic: "reviewed", studentCount: 1, annual: "draft", experience: "pending", activity: "pending", recommended: "annual", hasConfirmedAnnual: false, hasConfirmedExperience: false, hasConfirmedActivity: false });
 });
 
 test("el recorrido propone continuar un proyecto guardado y después la actividad", async () => {
@@ -57,7 +57,7 @@ test("el recorrido propone continuar un proyecto guardado y después la activida
     [experienceUrl]: { experiences: [activeExperience] },
     [`${base}/api/activities?experienceId=exp-1`]: { activities: [{ status: "draft" }] },
   }));
-  assert.deepEqual(withActivity, { diagnostic: "reviewed", studentCount: 1, annual: "confirmed", experience: "confirmed", activity: "draft", recommended: "activities", hasConfirmedAnnual: true, hasConfirmedExperience: true, hasConfirmedActivity: false });
+  assert.deepEqual(withActivity, { mode:"first_setup",diagnostic: "reviewed", studentCount: 1, annual: "confirmed", experience: "confirmed", activity: "draft", recommended: "activities", hasConfirmedAnnual: true, hasConfirmedExperience: true, hasConfirmedActivity: false });
 });
 
 test("un borrador nuevo no oculta los planes y experiencias confirmados que siguen disponibles", async () => {

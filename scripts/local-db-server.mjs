@@ -49,6 +49,7 @@ import { DiagnosticExperienceError, loadDiagnosticExperienceWorkspace, recordDia
 import { DiagnosticAssessmentError, loadDiagnosticAssessmentWorkspace, prepareDiagnosticSynthesis, saveDiagnosticSynthesis, confirmDiagnosticSynthesis, prepareDiagnosticStudentReview, saveDiagnosticStudentReview, confirmDiagnosticStudentReview, prepareDiagnosticGroupReview, saveDiagnosticGroupReview, confirmDiagnosticGroupReview, saveStudentInitialContext, diagnosticPlanningSummary } from "../src/lib/diagnostic-assessment-v4.mjs";
 import { DiagnosticSourceError, loadFamilyInterview, listFamilyInterviewStatuses, saveFamilyInterview, confirmFamilyInterview, attachFamilyInterview, familyInterviewAttachmentPath, recordSpontaneousObservation, recordMatrixDiagnosticObservation, loadSpontaneousObservations, correctSpontaneousClassification, markSpontaneousNeedsReview } from "../src/lib/diagnostic-sources-v4.mjs";
 import { neutralizeAssessmentText } from "../src/lib/assessment-v4-service.mjs";
+import { loadPlanningFeedback, planningFeedbackText } from "../src/lib/planning-feedback.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const dataDir = path.join(root, ".local", "pgdata");
@@ -736,6 +737,14 @@ const server = createServer(async (request, response) => {
     if (request.method === "GET" && url.pathname === "/api/ai/annual-plan/context") {
       const context = await annualPlanningContext(); send(response, context ? 200 : 404, context ?? { error: "No se encontró un aula activa." }, origin); return;
     }
+    if (request.method === "GET" && url.pathname === "/api/planning-feedback") {
+      try { const context=await annualPlanningContext();if(!context)throw new Error("Aula no disponible.");
+        const periods=(await db.query(`select id,label,starts_on,ends_on from evaluation_periods where school_year_id=$1 order by starts_on desc`,[context.school_year_id])).rows;
+        const selected=url.searchParams.get("periodId")||periods[0]?.id;
+        const feedback=selected?await loadPlanningFeedback(db,{teacherId,classroomId:context.id,periodId:selected}):null;
+        send(response,200,{periods:periods.map((period)=>({id:period.id,label:period.label,starts_on:annualCalendarDay(period.starts_on),ends_on:annualCalendarDay(period.ends_on)})),feedback},origin);
+      }catch(error){send(response,422,{error:error.message},origin);}return;
+    }
     if (request.method === "GET" && url.pathname === "/api/documents") {
       send(response, 200, { documents: await listSavedDocuments(db, teacherId) }, origin); return;
     }
@@ -1002,6 +1011,11 @@ const server = createServer(async (request, response) => {
         }
         const applicable = await applicableCompetencyIds(body.workflow, classroom);
         if (!Array.isArray(body.competency_ids) || body.competency_ids.length < 1 || body.competency_ids.length > 6 || body.competency_ids.some((id) => typeof id !== "string" || !applicable.has(id))) throw new Error("Selecciona al menos una competencia aplicable para esta aula.");
+        if(body.usePlanningFeedback===true){
+          const feedback=await loadPlanningFeedback(db,{teacherId,classroomId:classroom.id,periodId:body.planningFeedbackPeriodId});
+          const summary=planningFeedbackText(feedback);
+          if(summary)body.teacher_request=`${String(body.teacher_request||body[body.workflow==="project"?"project_trigger_or_interest":"learning_need_or_context"]||"").slice(0,900)}\n${summary}`;
+        }
         const generated = await generateTeacherLearningExperience({ classroom, request: body }); const generationId = randomUUID();
         await pendingAIGenerations.set(generationId, { workflow: generated.internalMetadata.workflow, classroom_id: classroom.id, metadata: safeAnnualGenerationMetadata(generated.internalMetadata), generated_proposal: generated.proposal, createdAt: Date.now(), revision_experience_id: revision?.id ?? null, parent: parent ? { annual_plan_id: parent.id, source_proposal_index: revision ? revision.source_proposal_index : body.sourceProposalIndex } : null });
         send(response, 200, { proposal: generated.proposal, generation_id: generationId }, origin);
@@ -1078,7 +1092,8 @@ const server = createServer(async (request, response) => {
       if ((experience.details?.activity_route?.length && !routeItem) || (body.routeItemId && !routeItem)) { send(response, 422, { error: "Elige una actividad de la ruta confirmada." }, origin); return; }
       const allowed = await activityAllowedCompetencies(experience, context);
       if ((routeItem?.competency_id || body.competencyId) && !allowed.has(routeItem?.competency_id || body.competencyId)) { send(response, 422, { error: "La competencia no pertenece a la experiencia." }, origin); return; }
-      try { const generated = await generateTeacherActivity({ request: body, classroom: context, learningExperience: await activityParentContext(experience) }); const generationId = randomUUID(); await pendingAIGenerations.set(generationId, { workflow: "activity", classroom_id: context.id, learning_experience_id: experience.id, route_item_id: routeItem?.id ?? null, metadata: safeAnnualGenerationMetadata(generated.internalMetadata), createdAt: Date.now() }); send(response, 200, { proposal: generated.proposal, generation_id: generationId }, origin); } catch (error) { send(response, 422, { error: error.message || "No se pudo generar la actividad." }, origin); } return;
+      try { if(body.usePlanningFeedback===true){const feedback=await loadPlanningFeedback(db,{teacherId,classroomId:context.id,periodId:body.planningFeedbackPeriodId});const summary=planningFeedbackText(feedback);if(summary)body.context=`${String(body.context||"").slice(0,500)}\n${summary}`.slice(0,1000);}
+        const generated = await generateTeacherActivity({ request: body, classroom: context, learningExperience: await activityParentContext(experience) }); const generationId = randomUUID(); await pendingAIGenerations.set(generationId, { workflow: "activity", classroom_id: context.id, learning_experience_id: experience.id, route_item_id: routeItem?.id ?? null, metadata: safeAnnualGenerationMetadata(generated.internalMetadata), createdAt: Date.now() }); send(response, 200, { proposal: generated.proposal, generation_id: generationId }, origin); } catch (error) { send(response, 422, { error: error.message || "No se pudo generar la actividad." }, origin); } return;
     }
     if (request.method === "POST" && url.pathname === "/api/activities") {
       const context = await annualPlanningContext(); const body = await readJson(request); const experience = context && await activeLearningExperience(body.experienceId, context.id); const pending = await pendingAIGenerations.get(body.generationId);

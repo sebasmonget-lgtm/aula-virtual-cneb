@@ -478,3 +478,9 @@ La confirmación de la actividad y la inserción del criterio heredado se ejecut
 ## ADR 062 Cobertura pedagógica derivada
 
 **Decisión.** La cobertura no guarda otra tabla de resultados. Se calcula para el aula y período autorizados desde estudiantes activos, competencias aplicables a su edad, alcance previsto, criterios de actividades, evidencias y valoraciones existentes. Muestra cada pareja niño–competencia, incluso sin registros. “Sin registro” y “pendiente de observar” describen el estado de documentación; nunca se transforman en un nivel C ni en una dificultad. Las acciones conducen a Planificar, donde la docente decide qué preparar.
+
+## ADR 063 Hallazgos del período como contexto opcional de planificación
+
+**Decisión.** Al preparar un proyecto, unidad o actividad, la docente puede marcar una opción inicialmente desactivada para usar hallazgos del período formal que elija. El servidor comprueba otra vez la propiedad del aula y el año, y construye un resumen grupal a partir de la cobertura derivada y las valoraciones confirmadas. Las necesidades y oportunidades aparecen como patrones compartidos únicamente cuando se repiten en al menos dos valoraciones y hay al menos tres valoraciones confirmadas de la competencia. Se suprimen nombres, identificadores y referencias a archivos; no se envían entrevistas, observaciones individuales ni evidencias visuales. La docente conserva la decisión de aceptar o editar lo generado.
+
+**Recorrido.** Una vez confirmada una actividad, Planificar muestra el ciclo cotidiano y accesos al plan anual, proyecto o unidad y actividad. Los datos existentes no cambian por esta proyección. Retirar la opción de contexto restaura la generación anterior sin migración ni transformar planes confirmados.

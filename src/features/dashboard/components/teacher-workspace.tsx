@@ -31,6 +31,7 @@ import { AnnualPlanGenerator } from "./annual-plan-generator";
 import { DocumentsScreen } from "./documents-screen";
 import { LearningExperienceGenerator } from "./learning-experience-generator";
 import { PeriodEvaluation } from "./period-evaluation";
+import { PlanningFeedbackOption } from "./planning-feedback-option";
 import { PilotSetup } from "./pilot-setup";
 import { AsyncButton, LoadingState, NextStepCard, PageIntro, ScreenSkeleton, WorkflowFeedback, WorkflowTabs } from "./workflow-ui";
 
@@ -340,6 +341,7 @@ function EvaluationArea({ dashboard, initialTarget, focused, onPlan, onPrepareAc
 }
 function PlanningArea({ initialTab, onGoToday, onGoDiagnostic, onGoStudents }: { initialTab?:"activities"|null; onGoToday: () => void; onGoDiagnostic: () => void; onGoStudents: () => void }) {
   const [tab, setTab] = useState<"diagnostic" | "annual" | "experiences" | "activities">(initialTab??"annual");
+  const [feedbackPeriodId,setFeedbackPeriodId]=useState<string|null>(null);
   const [journey, setJourney] = useState<Awaited<ReturnType<typeof loadPlanningJourney>> | null>(null);
   const [loading, setLoading] = useState(true);
   const [progressError, setProgressError] = useState(false);
@@ -364,9 +366,9 @@ function PlanningArea({ initialTab, onGoToday, onGoDiagnostic, onGoStudents }: {
   }
 
   return <section className="mx-auto max-w-5xl space-y-5">
-    <PageIntro eyebrow="Organiza el aprendizaje" title="Planificar" description="Avanza un paso a la vez. Puedes guardar y continuar después." icon={CalendarDays} />
+    <PageIntro eyebrow="Organiza el aprendizaje" title="Planificar" description={journey?.mode==="ongoing_cycle"?"Ajusta proyectos y actividades según lo que observas en el aula.":"Avanza un paso a la vez. Puedes guardar y continuar después."} icon={CalendarDays} />
     {loading ? <LoadingState label="Buscando dónde continuar..." /> : progressError ? <div className="space-y-2"><WorkflowFeedback tone="error">No se pudo comprobar dónde continuar. Tus datos guardados no se han perdido.</WorkflowFeedback><Button variant="outline" onClick={() => void refreshJourney()}>Reintentar carga del avance</Button></div> : <>
-      <p className="text-sm text-[#526b87]">✓ 1. Aula configurada · {journey?.studentCount ? `✓ 2. ${journey.studentCount} alumnos registrados` : "2. Añadir alumnos: pendiente"}</p>
+      {journey?.mode==="ongoing_cycle"?<div className="rounded-xl bg-[#eaf7fb] p-4"><p className="font-bold">Trabajo cotidiano</p><p className="mt-1 text-sm">Planificar ↔ Hoy ↔ Evidencias ↔ Evaluar. Vuelve a ajustar cuando observes algo nuevo.</p><div className="mt-3 flex flex-wrap gap-2"><Button variant="outline" onClick={()=>setTab("annual")}>Plan anual</Button><Button variant="outline" onClick={()=>setTab("experiences")}>Proyecto o unidad</Button><Button variant="outline" onClick={()=>setTab("activities")}>Actividad</Button></div></div>:<><p className="text-sm text-[#526b87]">✓ 1. Aula configurada · {journey?.studentCount ? `✓ 2. ${journey.studentCount} alumnos registrados` : "2. Añadir alumnos: pendiente"}</p>
       <ol className="ayni-journey" aria-label="Siguientes pasos del recorrido">{steps.map((step, index) => {
         const saved = journey && (step.id === "diagnostic" ? journey.diagnostic : step.id === "annual" ? journey.annual : step.id === "experiences" ? journey.experience : journey.activity);
         const hasConfirmed = journey && (step.id === "diagnostic" ? journey.diagnostic === "reviewed" : step.id === "annual" ? journey.hasConfirmedAnnual : step.id === "experiences" ? journey.hasConfirmedExperience : journey.hasConfirmedActivity);
@@ -374,9 +376,10 @@ function PlanningArea({ initialTab, onGoToday, onGoDiagnostic, onGoStudents }: {
           <span>{saved === "confirmed" || saved === "reviewed" ? <Check aria-hidden="true" /> : index + 3}</span><small>{step.label}</small>
           <em>{saved === "reviewed" ? "Revisado" : saved === "in_progress" ? "En curso" : saved === "confirmed" ? "Confirmado" : saved === "draft" ? hasConfirmed ? "Confirmado + borrador" : "Borrador" : saved === "pending" ? "Pendiente" : ""}</em>
         </li>;
-      })}</ol>
-      {tab === "diagnostic" ? (status !== "reviewed" ? <NextStepCard title={journey?.studentCount ? "Primero, conoce a tu grupo" : "Primero, agrega a los niños"} description={journey?.studentCount ? "Revisa el diagnóstico inicial y guarda tu decisión antes de preparar el plan anual." : "Necesitas la lista del aula para registrar el diagnóstico inicial."} action={journey?.studentCount ? "Ir a evaluación diagnóstica" : "Agregar niños"} onAction={journey?.studentCount ? onGoDiagnostic : onGoStudents} /> : null) : tab === "annual" ? <AnnualPlanGenerator onConfirmed={() => void refreshJourney()} onGoDiagnostic={onGoDiagnostic} /> : tab === "experiences" ? <LearningExperienceGenerator onConfirmed={() => void refreshJourney()} /> : <ParentActivityGenerator onConfirmed={() => void refreshJourney()} onGoToday={onGoToday} />}
-      {(status === "confirmed" || status === "reviewed") && stepIndex < steps.length - 1 && <NextStepCard title={tab === "diagnostic" ? "Revisión inicial guardada" : `${steps[stepIndex].label} listo`} description={tab === "diagnostic" ? "Puedes preparar el plan anual con la información disponible y seguir observando después." : "Ya puedes avanzar. Tu trabajo quedó guardado y podrás volver a verlo."} action={`Continuar: ${steps[stepIndex + 1].label}`} onAction={() => { setTab(steps[stepIndex + 1].id); void refreshJourney(); }} />}
+      })}</ol></>}
+      {(tab==="experiences"||tab==="activities")&&<PlanningFeedbackOption value={feedbackPeriodId} onChange={setFeedbackPeriodId}/>}
+      {tab === "diagnostic" ? (status !== "reviewed" ? <NextStepCard title={journey?.studentCount ? "Primero, conoce a tu grupo" : "Primero, agrega a los niños"} description={journey?.studentCount ? "Revisa el diagnóstico inicial y guarda tu decisión antes de preparar el plan anual." : "Necesitas la lista del aula para registrar el diagnóstico inicial."} action={journey?.studentCount ? "Ir a evaluación diagnóstica" : "Agregar niños"} onAction={journey?.studentCount ? onGoDiagnostic : onGoStudents} /> : null) : tab === "annual" ? <AnnualPlanGenerator onConfirmed={() => void refreshJourney()} onGoDiagnostic={onGoDiagnostic} /> : tab === "experiences" ? <LearningExperienceGenerator ongoing={journey?.mode==="ongoing_cycle"} feedbackPeriodId={feedbackPeriodId} onConfirmed={() => void refreshJourney()} /> : <ParentActivityGenerator ongoing={journey?.mode==="ongoing_cycle"} feedbackPeriodId={feedbackPeriodId} onConfirmed={() => void refreshJourney()} onGoToday={onGoToday} />}
+      {journey?.mode!=="ongoing_cycle"&&(status === "confirmed" || status === "reviewed") && stepIndex < steps.length - 1 && <NextStepCard title={tab === "diagnostic" ? "Revisión inicial guardada" : `${steps[stepIndex].label} listo`} description={tab === "diagnostic" ? "Puedes preparar el plan anual con la información disponible y seguir observando después." : "Ya puedes avanzar. Tu trabajo quedó guardado y podrás volver a verlo."} action={`Continuar: ${steps[stepIndex + 1].label}`} onAction={() => { setTab(steps[stepIndex + 1].id); void refreshJourney(); }} />}
       {tab === "annual" && status === "draft" && journey?.hasConfirmedAnnual && <Button variant="outline" onClick={() => setTab("experiences")}>Seguir con el plan confirmado anterior</Button>}
       {tab === "experiences" && status === "draft" && journey?.hasConfirmedExperience && <Button variant="outline" onClick={() => setTab("activities")}>Preparar actividad de una experiencia confirmada</Button>}
       {stepIndex > 0 && <nav className="ayni-step-actions" aria-label="Volver en la planificación"><Button variant="outline" onClick={() => setTab(steps[stepIndex - 1].id)}>Ver paso anterior</Button></nav>}
