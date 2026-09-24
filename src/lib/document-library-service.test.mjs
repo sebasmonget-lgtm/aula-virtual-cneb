@@ -1,7 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { PGlite } from "@electric-sql/pglite";
+import JSZip from "jszip";
 import { listSavedDocuments, loadSavedDocument } from "./document-library-service.mjs";
+import { loadKnowledgeBaseV4 } from "./knowledge-base-v4.mjs";
+import { renderActivityUnifiedWord } from "./activity-unified-word.mjs";
 
 const id = (number) => `00000000-0000-4000-8000-${String(number).padStart(12, "0")}`;
 
@@ -17,7 +20,8 @@ async function fixture() {
     create table diagnostic_group_reviews(id uuid primary key,classroom_id uuid,status text,version int,details jsonb,updated_at timestamptz,teacher_confirmed_at timestamptz,source_snapshot jsonb);
     create table learning_experiences(id uuid primary key,classroom_id uuid,type text,title text,purpose text,status text,details jsonb,starts_on date,ends_on date,origin text,planning_reason text,source_proposal_index int);
     create table activities(id uuid primary key,experience_id uuid,title text,purpose text,status text,details jsonb,preparation jsonb,occurs_on date);
-    create table evidences(id uuid primary key,student_id uuid,activity_id uuid,observation_text text,observation_status text,type text,observed_at timestamptz,media_path text,created_by uuid);
+    create table activity_criteria(id uuid primary key,activity_id uuid,competency_v4_id text,criterion_text text,details jsonb,status text,teacher_confirmed_at timestamptz);
+    create table evidences(id uuid primary key,student_id uuid,activity_id uuid,criterion_id uuid,observation_text text,observation_status text,type text,observed_at timestamptz,media_path text,created_by uuid);
     create table class_schedule_entries(id uuid primary key,activity_id uuid,classroom_id uuid);
     create table daily_execution_logs(id uuid primary key,schedule_entry_id uuid,execution_date date,teacher_closure_note text);
     create table students(id uuid primary key,classroom_id uuid,first_name text,preferred_name text,status text default 'active');
@@ -36,6 +40,8 @@ async function fixture() {
     [id(10), id(6), JSON.stringify({ starting_point: "Vimos semillas", possible_pathways: [], generation_metadata: { response_id: "hidden" } }), id(11)]);
   await db.query(`insert into activities values($1,$2,'Jugar con sombras','Observar luz','active',$3::jsonb,$4::jsonb,'2026-04-02')`,
     [id(12), id(10), JSON.stringify({ meaningful_situation: "El patio cambia", child_actions: ["Mueven la luz"], response_id: "hidden" }), JSON.stringify({ materials: ["linternas"], private_path: "hidden" })]);
+  await db.query(`insert into activity_criteria values($1,$2,'CYT_INDAGA','Explica lo que observó',$3::jsonb,'active',now())`,
+    [id(20), id(12), JSON.stringify({ observation_focus: ["Pregunta por el cambio de luz"] })]);
   await db.query(`insert into students values($1,$2,'Alessia',null)`, [id(13), id(6)]);
   await db.query(`insert into family_reports values($1,$2,'active',1,$3::jsonb,now(),'2026-03-01','2026-06-01',now(),$4::jsonb)`,
     [id(14), id(13), JSON.stringify({ introduction: "Compartimos avances", sections: [], closing_note: "Seguimos juntos", source_snapshot: "hidden" }), JSON.stringify({ tokens: 300 })]);
@@ -72,13 +78,27 @@ test("cada documento se abre solo para su docente y sin metadata técnica", asyn
 test("el Word de actividad recibe solo evidencia nominal real del aula autorizada", async () => {
   const db = await fixture();
   try {
-    await db.query(`insert into evidences values($1,$2,$3,'Propuso esperar su turno','observed_without_judgment','observation',now(),null,$4)`,
-      [id(21), id(13), id(12), id(1)]);
+    await db.query(`insert into evidences values($1,$2,$3,$4,'Propuso esperar su turno',null,'observation',now(),null,$5)`,
+      [id(21), id(13), id(12), id(20), id(1)]);
     await db.query(`insert into class_schedule_entries values($1,$2,$3)`, [id(22), id(12), id(6)]);
     await db.query(`insert into daily_execution_logs values($1,$2,'2026-04-02','El grupo pidió otro turno')`, [id(23), id(22)]);
     const document = await loadSavedDocument(db, id(1), "activity", id(12));
     assert.deepEqual(document.registered_evidence.map((item) => [item.student_name, item.observation_text]),
       [["Alessia", "Propuso esperar su turno"]]);
+    assert.equal(document.registered_evidence[0].criterion_id, id(20));
+    assert.equal(document.registered_evidence[0].criterion_text, "Explica lo que observó");
+    assert.equal(document.registered_evidence[0].competency_v4_id, "CYT_INDAGA");
+    assert.deepEqual(document.active_criterion.observation_focus, ["Pregunta por el cambio de luz"]);
+    const cards = (await loadKnowledgeBaseV4()).competencyCards.map((card) => ({ id: card.id,
+      name: card.official_name, capacities: card.capacities, ages: card.ages }));
+    const activity = { ...document, content: { ...document.content, document_template_version: "activity-unified-v1", competency_id: "CYT_INDAGA", evaluation_criterion: "Criterio anterior" } };
+    const word = await JSZip.loadAsync(await renderActivityUnifiedWord(activity, cards));
+    const xml = await word.file("word/document.xml").async("string");
+    assert.match(xml, /Alessia/);
+    assert.match(xml, /Explica lo que observó/);
+    assert.match(xml, /Pregunta por el cambio de luz/);
+    assert.match(xml, /Propuso esperar su turno/);
+    assert.doesNotMatch(xml, /\{\{|Registro sin texto descriptivo/);
     assert.equal(document.teacher_closure_note, "El grupo pidió otro turno");
     assert.doesNotMatch(JSON.stringify(document), /media_path|private_path/);
     assert.equal(await loadSavedDocument(db, id(2), "activity", id(12)), null);

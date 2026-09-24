@@ -132,6 +132,12 @@ Proyecto nuevo iniciado el 20 de septiembre de 2026. Existe un shell responsive 
 - Los DOCX de proyecto y actividad toman la estructura unificada. El de actividad muestra registros nominales y cierre docente solo si ya se guardaron; no se anticipan resultados. Las versiones históricas sin marcador siguen usando el exportador anterior. Ver ADR 051.
 - La confirmación de la actividad y su criterio heredado son atómicas; un error al guardar el criterio revierte la confirmación. Ver ADR 051.
 
+## Actividad de aprendizaje: criterio y registro real (2026-09-24)
+
+- La copia intacta de `Ayni_Actividad_Inicial.docx` está en `assets/templates/actividad-aprendizaje-inicial-ayni-v2.docx`. El exportador usa esa versión y muestra «¿Qué observar?» desde el criterio confirmado de la actividad. El campo de desempeño conserva una síntesis orientativa filtrada por la edad, identificada como tal; aún no se presenta como cita oficial literal.
+- La docente registra un hecho o una foto después de la actividad, sin marcar un nivel por cada registro. El servidor valida aula, alumno, actividad y criterio activo; guarda sus IDs y fecha. La descarga autorizada toma cada observación de la base, une su criterio real y agrega una fila nominal al Word. Las fotos privadas no se incrustan ni pasan a IA; el Word indica que están guardadas en Ayni.
+- La sección de observaciones y la reflexión docente aparecen solo cuando existen registros reales. Se quitaron frases genéricas de síntesis y ajustes que anticipaban decisiones docentes. Los registros sin marca siguen contando para el análisis posterior. Ver ADR 052.
+
 
 
 

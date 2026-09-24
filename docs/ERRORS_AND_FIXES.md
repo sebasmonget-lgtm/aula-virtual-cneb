@@ -354,3 +354,11 @@
 **Causa raíz.** El constructor reenviaba la propiedad `ages` completa de la tarjeta CNEB. Los marcadores de Word estaban resueltos, pero imágenes, encabezados y saltos son partes independientes del OOXML.
 
 **Solución validada.** El paquete de IA limita `ages` y la selección por edad antes de llamar al proveedor. El exportador retira la imagen de ejemplo, inserta el logo institucional autorizado cuando existe, corrige el encabezado y elimina saltos redundantes en la copia generada. Los cuatro DOCX se abrieron en Microsoft Word y se exportaron a PDF para inspección visual. Las pruebas comprueban la proyección de edad, los marcadores, la privacidad nominal y las rutas de datos heredados.
+
+## 2026-09-24 La actividad con una observación dejaba una página casi vacía
+
+**Síntoma.** La nueva plantilla de actividad generaba cinco páginas con un solo registro; la reflexión docente terminaba sola en la última.
+
+**Causa raíz.** El exportador insertaba textos genéricos de síntesis y ajustes en filas de la sección VII aunque la docente no los había escrito. Estas filas empujaban el cierre real a otra página.
+
+**Solución validada.** Se omiten esas filas y la instrucción editorial de la sección VI en la copia generada. La reflexión se muestra solo si existe un cierre docente guardado. El mismo ejemplo quedó en cuatro páginas tras abrirlo y exportarlo con Microsoft Word; se inspeccionó la última página y las pruebas comprueban que el registro nominal y su criterio proceden de la base. Para prevenirlo, renderizar tanto una actividad sin observaciones como otra con observaciones y revisar la paginación.

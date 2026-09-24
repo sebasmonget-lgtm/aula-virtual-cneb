@@ -4,14 +4,16 @@ import { readFile } from "node:fs/promises";
 import { resolveAIExecutionPlan } from "./ai-execution-router-v4.mjs";
 import { buildEvidenceCaptureContext, validateEvidenceCaptureV4 } from "./evidence-capture-v4.mjs";
 
-const valid = { studentId: "student", activityId: "activity", criterionId: "criterion", observationStatus: "demonstrated" };
+const valid = { studentId: "student", activityId: "activity", criterionId: "criterion", observationText: "Explicó su acuerdo al grupo." };
 
 test("A-B: evidence_capture se resuelve en código sin provider", () => {
   const plan = resolveAIExecutionPlan({ workflow: "evidence_capture" });
   assert.equal(plan.execution, "code"); assert.equal(plan.provider, null); assert.equal(plan.model, null);
 });
-test("K-M: valida estados, IDs, nota opcional y límite de observación", () => {
-  assert.equal(validateEvidenceCaptureV4(valid).observationText, "");
+test("K-M: registra un hecho o foto sin exigir una marca de logro", () => {
+  assert.equal(validateEvidenceCaptureV4(valid).observationStatus, null);
+  assert.equal(validateEvidenceCaptureV4({ ...valid, observationText: "", photo: { mimeType: "image/png" } }).observationText, "");
+  assert.throws(() => validateEvidenceCaptureV4({ ...valid, observationText: "" }));
   assert.throws(() => validateEvidenceCaptureV4({ ...valid, observationStatus: "AD" }));
   assert.throws(() => validateEvidenceCaptureV4({ ...valid, observationText: "x".repeat(4001) }));
 });
@@ -26,5 +28,5 @@ test("C-J, N-O, R, S-T y Y: servidor exige relación activa, coherencia v4, foto
 });
 test("U-X: dashboard y StudentContext conservan competencias v4 sin UUID inventado", async () => {
   const [server, context, ui] = await Promise.all([readFile(new URL("../../scripts/local-db-server.mjs", import.meta.url), "utf8"), readFile(new URL("./student-context-service.mjs", import.meta.url), "utf8"), readFile(new URL("../features/dashboard/components/teacher-workspace.tsx", import.meta.url), "utf8")]);
-  assert.match(server, /c\.status = 'active'/); assert.match(server, /ac\.status = 'active'/); assert.match(server, /competency_v4_id/); assert.match(context, /v4:/); assert.match(context, /competency_v4_id/); assert.match(context, /media_available/); assert.match(ui, /Evidencia que podría verse/); assert.match(ui, /Esta es una observación de esta situación, no una calificación final/); assert.match(ui, /observación grupal/);
+  assert.match(server, /c\.status = 'active'/); assert.match(server, /ac\.status = 'active'/); assert.match(server, /competency_v4_id/); assert.match(context, /v4:/); assert.match(context, /competency_v4_id/); assert.match(context, /media_available/); assert.match(ui, /Evidencia que podría verse/); assert.match(ui, /no necesitas marcar un nivel de logro/); assert.match(ui, /observación grupal/);
 });

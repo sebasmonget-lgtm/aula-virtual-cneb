@@ -18,11 +18,12 @@ test("los IDs de ruta sobreviven ediciones y se registran cambios explícitos", 
 test("la actividad conserva el origen y registra una modificación docente del criterio", () => {
   const item = { ...route(1, "Compartir"), id: "route-1" };
   const proposal = { title: "Compartir", purpose: "Compartir", competency_status: "confirmed", competency_id: "PS_CONVIVE",
-    evaluation_criterion: "Nuevo criterio", expected_evidence: item.expected_evidence };
+    evaluation_criterion: "Nuevo criterio", expected_evidence: item.expected_evidence, evidence_opportunities: "Escuchar cómo propone los turnos" };
   const saved = saveActivityDetails(proposal, item);
   assert.equal(saved.route_item_id, item.id);
   assert.deepEqual(saved.teacher_overrides.map((entry) => entry.field), ["evaluation_criterion"]);
   assert.equal(inheritedActivityCriterion(saved, item)?.criterion_text, "Nuevo criterio");
+  assert.deepEqual(inheritedActivityCriterion(saved, item)?.observation_focus, ["Escuchar cómo propone los turnos"]);
 });
 
 test("los borradores históricos siguen usando su exportador anterior", () => {

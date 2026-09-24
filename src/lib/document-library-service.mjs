@@ -129,9 +129,13 @@ export async function loadSavedDocument(db, teacherId, kind, id) {
       where a.id=$2 and c.teacher_id=$1 and sy.owner_id=$1 and a.details ? 'meaningful_situation'`, [teacherId, id])).rows[0];
     if (!row) return null;
     const registeredEvidence = (await db.query(`select ev.id,ev.student_id,coalesce(s.preferred_name,s.first_name) as student_name,
-      ev.observation_text,ev.observation_status,ev.type,ev.observed_at,ev.media_path is not null as has_attachment
+      ev.criterion_id,ac.criterion_text,ac.competency_v4_id,ev.observation_text,ev.observation_status,ev.type,ev.observed_at,
+      ev.media_path is not null as has_attachment
       from evidences ev join students s on s.id=ev.student_id and s.classroom_id=$3
+      join activity_criteria ac on ac.id=ev.criterion_id and ac.activity_id=ev.activity_id
       where ev.activity_id=$1 and ev.created_by=$2 order by ev.observed_at,ev.id`, [row.id, teacherId, row.classroom_id])).rows;
+    const activeCriterion = (await db.query(`select criterion_text,competency_v4_id,details from activity_criteria
+      where activity_id=$1 and status='active' order by teacher_confirmed_at desc limit 1`, [row.id])).rows[0];
     const closure = (await db.query(`select del.teacher_closure_note from daily_execution_logs del
       join class_schedule_entries se on se.id=del.schedule_entry_id
       where se.activity_id=$1 and se.classroom_id=$2 and del.teacher_closure_note is not null
@@ -141,7 +145,10 @@ export async function loadSavedDocument(db, teacherId, kind, id) {
       age: Number(row.age_years), teacher_name: row.teacher_name, ugel: row.ugel, district: row.district,
       occurs_on: dateOnly(row.occurs_on), experience_title: row.experience_title,
       experience_id: row.experience_id, experience_details: { activity_route: row.experience_details?.activity_route ?? [] },
+      active_criterion: activeCriterion ? { criterion_text: activeCriterion.criterion_text,
+        competency_v4_id: activeCriterion.competency_v4_id, observation_focus: activeCriterion.details?.observation_focus ?? [] } : null,
       registered_evidence: registeredEvidence.map((item) => ({ id: item.id, student_id: item.student_id,
+        criterion_id: item.criterion_id, criterion_text: item.criterion_text, competency_v4_id: item.competency_v4_id,
         student_name: item.student_name, observation_text: item.observation_text, observation_status: item.observation_status,
         type: item.type, observed_at: timestamp(item.observed_at), has_attachment: item.has_attachment })),
       teacher_closure_note: closure?.teacher_closure_note ?? null,

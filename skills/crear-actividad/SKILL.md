@@ -9,6 +9,6 @@ Recibe una fila de la ruta confirmada, el contexto pertinente del aula y las tar
 
 1. Usa [herencia-y-curriculo.md](references/herencia-y-curriculo.md) para distinguir datos heredados, contexto y currículo.
 2. Desarrolla inicio, desarrollo y cierre en lenguaje sencillo, con acciones posibles de los niños y preguntas de mediación.
-3. Describe oportunidades para observar. No afirmes que ocurrieron, no inventes registros individuales, logros, dificultades ni reflexión posterior.
+3. En `evidence_opportunities`, explica de forma concreta «¿Qué observar?» durante esta actividad: una actuación visible del niño, ligada al criterio heredado, al propósito y a la edad del aula. No afirmes que ocurrió ni inventes registros individuales, logros, dificultades o reflexión posterior.
 
 La actividad cotidiana es la unidad de trabajo. La plantilla DOCX y las fechas las controla la aplicación, no esta Skill.

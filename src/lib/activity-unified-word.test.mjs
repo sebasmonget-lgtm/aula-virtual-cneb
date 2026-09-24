@@ -13,6 +13,7 @@ test("la actividad usa su fila heredada y oculta registros no realizados", async
     competency_id: "PS_CONVIVE", evaluation_criterion: "Acordar turnos", expected_evidence: "Explica un acuerdo" };
   const document = { kind: "activity", school_year: 2026, age: 5, classroom: "Sala A", title: "Nos organizamos",
     occurs_on: "2026-04-14", experience_title: "Jugamos juntos", experience_details: { activity_route: [route] },
+    active_criterion: { criterion_text: "Acordar turnos", competency_v4_id: "PS_CONVIVE", observation_focus: ["Escuchar cómo propone los turnos"] },
     content: { document_template_version: "activity-unified-v1", route_item_id: route.id, title: "Nos organizamos", purpose: route.specific_purpose,
       competency_id: route.competency_id, evaluation_criterion: route.evaluation_criterion, expected_evidence: route.expected_evidence,
       meaningful_situation: "Los niños quieren jugar", teacher_preparation: "Preparar objetos", child_actions: "Elegir y conversar",
@@ -23,13 +24,21 @@ test("la actividad usa su fila heredada y oculta registros no realizados", async
   const xml = await archive.file("word/document.xml").async("string");
   assert.match(xml, /Acordar turnos/);
   assert.match(xml, /Explica un acuerdo/);
+  assert.match(xml, /Escuchar cómo propone los turnos/);
+  assert.match(xml, /Síntesis orientativa para 5 años/);
   assert.doesNotMatch(xml, /\{\{/);
-  assert.doesNotMatch(xml, /VI\. CUADERNO DE CAMPO/);
-  const completed = { ...document, registered_evidence: [{ student_name: "Ana", observation_text: "Propuso esperar su turno.", observation_status: "observed_without_judgment", has_attachment: false }], teacher_closure_note: "El grupo propuso nuevos turnos." };
-  const completedArchive = await JSZip.loadAsync(await renderActivityUnifiedWord(completed, cards));
+  assert.doesNotMatch(xml, /VI\. REGISTRO DE OBSERVACIONES Y EVIDENCIAS/);
+  const completed = { ...document, registered_evidence: [{ student_name: "Ana", criterion_id: "criterion-1", criterion_text: "Explica cómo acuerda un turno", competency_v4_id: "PS_CONVIVE", observed_at: "2026-04-14T15:00:00Z", observation_text: "Propuso esperar su turno.", observation_status: null, has_attachment: true }], teacher_closure_note: "El grupo propuso nuevos turnos." };
+  const completedWord = await renderActivityUnifiedWord(completed, cards);
+  if (process.env.AYNI_QA_DOCX_DIR) await writeFile(path.join(process.env.AYNI_QA_DOCX_DIR, "activity-with-observation-qa.docx"), completedWord);
+  const completedArchive = await JSZip.loadAsync(completedWord);
   const completedXml = await completedArchive.file("word/document.xml").async("string");
   assert.match(completedXml, /Ana/);
+  assert.match(completedXml, /VI\. REGISTRO DE OBSERVACIONES Y EVIDENCIAS/);
+  assert.match(completedXml, /Explica cómo acuerda un turno/);
   assert.match(completedXml, /Propuso esperar su turno/);
+  assert.match(completedXml, /14\/04\/2026/);
+  assert.match(completedXml, /Guardada en Ayni/);
   assert.match(completedXml, /El grupo propuso nuevos turnos/);
   assert.doesNotMatch(completedXml, /VIII\. TALLER|\{\{/);
 });

@@ -183,7 +183,7 @@ export async function createLocalEvidence(input: {
   studentId: string;
   activityId: string;
   criterionId: string;
-  observationStatus: ObservationStatus;
+  observationStatus?: ObservationStatus | null;
   observationText?: string;
   photo?: { base64: string; mimeType: "image/jpeg" | "image/png" | "image/webp" };
 }) {

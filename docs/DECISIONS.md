@@ -392,3 +392,11 @@ La señal interna usa una cobertura mínima configurable de 50%, y requiere al m
 La confirmación de la actividad y la inserción del criterio heredado se ejecutan en una sola transacción para evitar estados parciales.
 
 **Reversión.** Retirar los marcadores de formato nuevos en futuras generaciones restaura los exportadores anteriores; los registros y las plantillas originales permanecen intactos. Los cambios pedagógicos ya confirmados no se regeneran al exportar.
+
+## ADR 052 Actividad: criterio práctico y observación descriptiva
+
+**Decisión.** Las actividades nuevas que nacen de una fila confirmada de proyecto o unidad heredan competencia, propósito y criterio con identificador estable. La IA desarrolla `evidence_opportunities` como «¿Qué observar?» específico de esa actividad; la docente puede corregir decisiones heredadas y el cambio queda registrado. El Word usa la plantilla nueva intacta como base y representa el criterio activo, el referente de edad como síntesis orientativa y los datos estructurados autorizados.
+
+**Registros posteriores.** Guardar una observación requiere texto o foto, pero no una marca de logro. El servidor vincula alumno, actividad, criterio, competencia y fecha; el DOCX muestra el criterio de cada registro, no el criterio genérico de la actividad. Solo se incorporan hechos guardados por la docente, y las fotos permanecen en almacenamiento privado. El análisis posterior puede considerar estos registros sin inferir una conclusión desde la ausencia de marca.
+
+**Reversión.** La plantilla anterior permanece en el repositorio y puede restablecerse en el exportador. La interfaz de captura puede revertirse sin transformar registros existentes ni editar migraciones. Los estados observacionales históricos siguen siendo legibles.
