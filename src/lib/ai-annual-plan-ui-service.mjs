@@ -19,6 +19,7 @@ export class AnnualPlanGenerationUIError extends Error {
 export function teacherMessageForAnnualPlanGenerationError(reason) {
   switch (reason) {
     case "missing_annual_context": return "Falta información del aula o calendario para preparar el plan anual.";
+    case "diagnostic_review_required": return "Hay información diagnóstica nueva. Revisa y confirma el resumen del aula antes de preparar el plan anual.";
     case "calendar_invalid": return "Revisa el calendario escolar antes de preparar el plan anual.";
     case "calendar_project_does_not_fit": return "El calendario no alcanza para las doce propuestas. Revisa las interrupciones o la duración de los proyectos.";
     case "api_key_missing":
@@ -43,6 +44,7 @@ function safeAnnualPlanFailureReason(error) {
 
 export function buildAnnualPlanGenerationInput({ classroom, request = {} }) {
   if (!classroom || ![3, 4, 5].includes(classroom.age) || !classroom.calendar) throw new AnnualPlanGenerationUIError("missing_annual_context");
+  if (classroom.context_v4 && classroom.context_v4.diagnostic_review_current === false) throw new AnnualPlanGenerationUIError("diagnostic_review_required");
   const calendar = { ...classroom.calendar,
     blocks: classroom.calendar.blocks ?? (Number(classroom.calendar.school_year) === 2026 ? nationalCalendarBlocks2026() : []),
     initial_stage: { ...(classroom.calendar.initial_stage ?? defaultInitialStage()), teacher_notes: "" } };
@@ -57,7 +59,7 @@ export function buildAnnualPlanGenerationInput({ classroom, request = {} }) {
     calendar_context: calendar,
     classroom_context: { id: classroom.id, group_context: [classroom.group_context, group?.group_context].filter(Boolean).join(" "), school_context: classroom.school_context, available_resources: classroom.available_resources, diagnostic_summary: group?.diagnostic_summary ?? classroom.diagnostic_summary },
     diagnostic_summary: group?.diagnostic_summary ?? classroom.diagnostic_summary,
-    interests: group?.interests.length ? group.interests : classroom.interests,
+    interests: group?.interests ?? [],
     available_resources: classroom.available_resources,
     language_context: { ...classroom.language_context, ...group?.language_context },
     ...(group ? { context_snapshot: group.snapshot } : {}),

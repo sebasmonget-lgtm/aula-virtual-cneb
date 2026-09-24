@@ -7,6 +7,8 @@ import { neutralizeAssessmentText } from "./assessment-v4-service.mjs";
 import { applicableDiagnosticCompetencies } from "./diagnostic-sources-v4.mjs";
 import { safeFamilyContext } from "./diagnostic-sources-v4.mjs";
 import { isDiagnosticScaffoldSummary } from "./diagnostic-review-copy.mjs";
+import { interviewInterestOptions } from "./family-interview-contract.mjs";
+import { normalizeFamilyInterviewDetails } from "./diagnostic-sources-v4.mjs";
 
 export class DiagnosticAssessmentError extends Error {
   constructor(reason, message) { super(message); this.name = "DiagnosticAssessmentError"; this.reason = reason; }
@@ -28,6 +30,18 @@ export const sameDiagnosticSources = (a, b) => {
     .map((row) => [row.id, row.fingerprint]).sort((left, right) => left[0].localeCompare(right[0])));
   return stable(a) === stable(b);
 };
+
+export function derivedDiagnosticGroupInformation(familyRows, coverage) {
+  const interests = interviewInterestOptions.map(({ id, label }) => ({ key: id, label,
+    count: familyRows.filter((row) => normalizeFamilyInterviewDetails(row.details).interest_tags?.includes(id)).length }))
+    .filter((item) => item.count >= 2 && item.count * 2 >= familyRows.length)
+    .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label, "es"));
+  const observation_gaps = coverage.filter((item) => item.children_without_observations > 0)
+    .map(({ competency_id, competency_name, children_with_observations, children_without_observations }) => ({
+      competency_id, competency_name, children_with_observations, children_without_observations,
+    })).sort((a, b) => b.children_without_observations - a.children_without_observations || a.competency_name.localeCompare(b.competency_name, "es"));
+  return { confirmed_interviews: familyRows.length, interests, observation_gaps };
+}
 
 export function diagnosticPlanningSummary(confirmedGroupDetails, studentNames = []) {
   if (!confirmedGroupDetails) return undefined;
@@ -203,9 +217,10 @@ export function summarizeDiagnosticGroup(students, observations, reviews, catalo
 
 export async function loadDiagnosticAssessmentWorkspace(db, teacherId) {
   const { classroom, students, catalog } = await scope(db, teacherId);
-  const familyRows = (await db.query(`select distinct on (student_id) id,student_id,version,details,teacher_confirmed_at
-    from student_family_interviews where classroom_id=$1 and status='confirmed'
-    order by student_id,version desc`, [classroom.id])).rows;
+  const familyRows = (await db.query(`select distinct on (i.student_id) i.id,i.student_id,i.version,i.details,i.teacher_confirmed_at
+    from student_family_interviews i join students s on s.id=i.student_id and s.classroom_id=i.classroom_id
+    where i.classroom_id=$1 and i.status='confirmed' and s.status='active'
+    order by i.student_id,i.version desc`, [classroom.id])).rows;
   const family = new Map(familyRows.map((row) => [row.student_id, { version: row.version, ...safeFamilyContext(row.details) }]));
   const unclassified = (await db.query(`select student_id,count(*)::int as total
     from diagnostic_spontaneous_observations where classroom_id=$1 and classification_status <> 'classified'
@@ -245,6 +260,8 @@ export async function loadDiagnosticAssessmentWorkspace(db, teacherId) {
   }
   const aspects = new Map(catalog.flatMap((experience) => experience.aspects.map((aspect) => [`${experience.id}:${aspect.id}`, { experience_title: experience.title, aspect_prompt: aspect.prompt }])));
   const availableCompetencies = await applicableDiagnosticCompetencies(classroom);
+  const groupCoverage = summarizeDiagnosticGroup(students, observations, reviews,
+    [{ competencies: availableCompetencies.map((item) => ({ id: item.id, name: item.name })) }]);
   return { students: students.map((item) => ({ ...item, family_context: family.get(item.id) ?? null,
     unclassified_observations: pending.get(item.id) ?? 0 })), observations: observations.map((row) => ({ ...row,
     experience_title: row.experience_title_snapshot ?? aspects.get(`${row.experience_id}:${row.aspect_id}`)?.experience_title ?? "Experiencia diagnóstica",
@@ -257,8 +274,8 @@ export async function loadDiagnosticAssessmentWorkspace(db, teacherId) {
   group_reviews: groupReviews.map((row) => ({ id: row.id, version: row.version, status: row.status, details: row.details,
     teacher_confirmed_at: row.teacher_confirmed_at,
     is_current: currentGroupSnapshot !== null && sameDiagnosticSources(row.source_snapshot, currentGroupSnapshot) })),
-  group_coverage: summarizeDiagnosticGroup(students, observations, reviews,
-    [{ competencies: availableCompetencies.map((item) => ({ id: item.id, name: item.name })) }]) };
+  group_coverage: groupCoverage,
+  derived_group_information: derivedDiagnosticGroupInformation(familyRows, groupCoverage) };
 }
 
 export async function prepareDiagnosticSynthesis(db, teacherId, { studentId, competencyId }) {

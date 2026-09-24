@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { interviewLanguageOptions, interviewInterestOptions } from "./family-interview-contract.mjs";
 import { normalizeFamilyInterviewDetails } from "./diagnostic-sources-v4.mjs";
-import { diagnosticPlanningSummary } from "./diagnostic-assessment-v4.mjs";
+import { diagnosticPlanningSummary, loadDiagnosticAssessmentWorkspace } from "./diagnostic-assessment-v4.mjs";
 
 export class ClassroomContextError extends Error {
   constructor(message) { super(message); this.name = "ClassroomContextError"; this.reason = "classroom_not_owned"; }
@@ -22,8 +22,9 @@ export async function getCurrentClassroomContext(db, teacherId, classroomId = nu
     where c.teacher_id=$1 and c.status='active' and ($2::uuid is null or c.id=$2::uuid)
     limit 1`, [teacherId, classroomId])).rows[0];
   if (!classroom) throw new ClassroomContextError("El aula no pertenece a la docente o no está activa.");
-  const students = (await db.query(`select id,coalesce(preferred_name,first_name) as name
-    from students where classroom_id=$1 and status='active' order by id`, [classroom.id])).rows;
+  const roster = (await db.query(`select id,first_name,last_name,preferred_name,status
+    from students where classroom_id=$1 order by id`, [classroom.id])).rows;
+  const students = roster.filter((student) => student.status === "active");
   const interviews = (await db.query(`select distinct on (i.student_id) i.id,i.student_id,i.version,i.details,i.teacher_confirmed_at
     from student_family_interviews i join students s on s.id=i.student_id and s.classroom_id=i.classroom_id
     where i.classroom_id=$1 and s.status='active' and i.status='confirmed'
@@ -32,9 +33,12 @@ export async function getCurrentClassroomContext(db, teacherId, classroomId = nu
   const group = (await db.query(`select id,version,details,teacher_confirmed_at
     from diagnostic_group_reviews where classroom_id=$1 and status='confirmed'
     order by version desc limit 1`, [classroom.id])).rows[0] ?? null;
-  const coverage = (await db.query(`select count(distinct student_id)::int as students_with_observations
-    from diagnostic_experience_observations where classroom_id=$1`, [classroom.id])).rows[0];
-  const names = students.map((student) => student.name);
+  const diagnosticWorkspace = await loadDiagnosticAssessmentWorkspace(db, teacherId);
+  const currentGroup = diagnosticWorkspace.group_reviews.find((item) => item.status === "confirmed");
+  const groupIsCurrent = Boolean(group && currentGroup?.id === group.id && currentGroup.is_current);
+  const observedStudents = new Set(diagnosticWorkspace.observations.map((row) => row.student_id));
+  const names = roster.flatMap((student) => [student.first_name, student.last_name, student.preferred_name,
+    [student.first_name, student.last_name].filter(Boolean).join(" ")]).filter(Boolean);
   const previous = { yes: 0, no: 0, unknown: 0 };
   for (const row of interviews) if (row.details.previous_education_status in previous) previous[row.details.previous_education_status]++;
   const sourceRefs = interviews.map((row) => ({ source_type: "family_interview", source_id: row.id,
@@ -49,8 +53,10 @@ export async function getCurrentClassroomContext(db, teacherId, classroomId = nu
     primary_languages: countChoice(interviews, "primary_language_tag", interviewLanguageOptions),
     common_interests: countTags(interviews, "interest_tags", interviewInterestOptions),
     previous_education: previous,
-    confirmed_diagnostic_summary: group ? diagnosticPlanningSummary(group.details, names) : null,
-    diagnostic_coverage: { students_with_observations: coverage.students_with_observations ?? 0 },
+    confirmed_diagnostic_summary: groupIsCurrent ? diagnosticPlanningSummary(group.details, names) : null,
+    diagnostic_review_current: groupIsCurrent,
+    diagnostic_coverage: { students_with_observations: observedStudents.size },
+    observation_gaps: diagnosticWorkspace.derived_group_information.observation_gaps,
     provenance: { source_refs: sourceRefs, source_fingerprint: sourceFingerprint,
       derived_at: new Date().toISOString() },
   };
@@ -68,5 +74,7 @@ export function publicClassroomContext(current) {
     previous_education: previous,
     confirmed_diagnostic_summary: current.confirmed_diagnostic_summary,
     diagnostic_coverage: current.diagnostic_coverage,
+    diagnostic_review_current: current.diagnostic_review_current,
+    observation_gaps: current.observation_gaps.filter((item) => visiblePattern(item.children_without_observations, current.students_total)),
     source_fingerprint: current.provenance.source_fingerprint };
 }

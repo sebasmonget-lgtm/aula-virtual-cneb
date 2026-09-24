@@ -50,7 +50,7 @@ type ClassroomContext = DocumentContext & {
   id: string; section: string; year: number; age: number; diagnostic_summary?: string;
   available_resources?: string[];
   calendar: AnnualCalendar;
-  context_v4?: { students_total: number; confirmed_interviews: number;
+  context_v4?: { students_total: number; confirmed_interviews: number; diagnostic_review_current: boolean;
     common_interests: { label: string }[]; languages: { label: string }[] };
 };
 type SavedPlan = {
@@ -393,7 +393,7 @@ export function AnnualPlanGenerator({ onConfirmed, onGoDiagnostic }: { onConfirm
       <div className="mt-5 grid gap-3 sm:grid-cols-2"><div className="rounded-xl bg-[#f2f8fc] p-4"><p className="text-xs font-bold text-[#526b87]">COLEGIO Y DOCENTE</p><p className="mt-2 font-bold">{classroom.institution_name || "Colegio sin completar"}</p><p className="text-sm">{classroom.teacher_name || "Docente sin completar"}</p></div>
         <div className="rounded-xl bg-[#f2f8fc] p-4"><p className="text-xs font-bold text-[#526b87]">AULA Y AÑO</p><p className="mt-2 font-bold">{classroom.age} años · {classroom.section}</p><p className="text-sm">{classroom.year} · Clases: {teachingRange}</p></div></div>
       <div className="mt-3 rounded-xl border border-[#d6e5ef] p-4"><p className="font-bold">Lo que conocemos del grupo</p><p className="mt-1 text-sm text-[#526b87]">{classroom.context_v4?.confirmed_interviews ?? 0} de {classroom.context_v4?.students_total ?? 0} entrevistas confirmadas. Se usarán solo patrones grupales, sin respuestas individuales.</p>
-        {classroom.diagnostic_summary ? <p className="mt-3 whitespace-pre-line text-sm leading-relaxed">{classroom.diagnostic_summary}</p> : <p className="mt-3 text-sm font-semibold text-[#9a6220]">Confirma primero el resumen diagnóstico del aula para preparar el plan.</p>}
+        {classroom.diagnostic_summary ? <p className="mt-3 whitespace-pre-line text-sm leading-relaxed">{classroom.diagnostic_summary}</p> : <p className="mt-3 text-sm font-semibold text-[#9a6220]">{classroom.context_v4?.diagnostic_review_current === false ? "Hay información diagnóstica nueva. Revisa y confirma el resumen del aula antes de preparar el plan." : "Confirma primero el resumen diagnóstico del aula para preparar el plan."}</p>}
         {Boolean(classroom.context_v4?.common_interests?.length) && <p className="mt-2 text-sm"><span className="font-semibold">Intereses frecuentes:</span> {classroom.context_v4!.common_interests.map((item) => item.label).join(", ")}.</p>}
         {Boolean(classroom.available_resources?.length) && <p className="mt-2 text-sm"><span className="font-semibold">Materiales disponibles:</span> {classroom.available_resources?.join(", ")}.</p>}
       </div>

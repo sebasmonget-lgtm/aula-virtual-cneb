@@ -6,8 +6,10 @@ import { createPilotClassroom, importStudentsForTeacher } from "./pilot-onboardi
 import { loadDiagnosticExperienceWorkspace, recordDiagnosticExperienceObservation } from "./diagnostic-experiences-v4.mjs";
 import { saveFamilyInterview, confirmFamilyInterview } from "./diagnostic-sources-v4.mjs";
 import { confirmDiagnosticStudentReview, loadDiagnosticAssessmentWorkspace, prepareDiagnosticGroupReview,
-  prepareDiagnosticStudentReview, saveDiagnosticStudentReview } from "./diagnostic-assessment-v4.mjs";
+  prepareDiagnosticStudentReview, saveDiagnosticStudentReview, saveDiagnosticGroupReview, confirmDiagnosticGroupReview } from "./diagnostic-assessment-v4.mjs";
 import { buildStudentPedagogicalContext, buildSafeDiagnosticStudentContext } from "./student-context-service.mjs";
+import { getCurrentClassroomContext, publicClassroomContext } from "./classroom-context-service.mjs";
+import { buildAnnualPlanGenerationInput } from "./ai-annual-plan-ui-service.mjs";
 
 const teacher = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 const other = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
@@ -90,6 +92,57 @@ test("entrevista y observaciones nuevas invalidan el borrador o comentario; aula
     assert.equal((await buildStudentPedagogicalContext(db, ana.id)).confirmed_student_diagnostic_review.is_current, false);
     assert.equal((await buildSafeDiagnosticStudentContext(db, teacher, ana.id)).teacher_confirmed_student_comment, null);
     await assert.rejects(prepareDiagnosticGroupReview(db, teacher), { reason: "stale_sources" });
+  } finally { await db.close(); }
+});
+
+test("panorama grupal deriva intereses y vacíos; el plan usa solo fuentes vigentes y grupales", async () => {
+  const db = await database();
+  try {
+    const initial = await classroom(db, teacher, "A");
+    const [ana, bruno] = initial.students;
+    await saveFamilyInterview(db, teacher, ana.id, { interests: "Le gusta construir.", interest_tags: ["construction"] });
+    await confirmFamilyInterview(db, teacher, ana.id);
+    await saveFamilyInterview(db, teacher, bruno.id, { interests: "Le gusta construir.", interest_tags: ["construction"] });
+    await confirmFamilyInterview(db, teacher, bruno.id);
+    await saveFamilyInterview(db, teacher, bruno.id, { interests: "Le gusta dibujar.", interest_tags: ["drawing"] }); // borrador excluido
+    const aspect = initial.experiences[0].aspects[0];
+    await recordDiagnosticExperienceObservation(db, teacher, { studentId: ana.id,
+      experienceId: initial.experiences[0].id, aspectId: aspect.id,
+      observationStatus: "observed_without_judgment", observationText: "Eligió bloques para jugar." });
+    for (const [student, information_status, comment_text] of [
+      [ana, "information_available", "En el aula eligió bloques; su familia contó que le gusta construir."],
+      [bruno, "insufficient_information", "Todavía necesito observar más a Bruno durante el juego."],
+    ]) {
+      const draft = await prepareDiagnosticStudentReview(db, teacher, student.id);
+      await saveDiagnosticStudentReview(db, teacher, draft.id, { information_status, comment_text });
+      await confirmDiagnosticStudentReview(db, teacher, draft.id);
+    }
+    const before = await loadDiagnosticAssessmentWorkspace(db, teacher);
+    assert.deepEqual(before.derived_group_information.interests.map((item) => [item.key, item.count]), [["construction", 2]]);
+    assert.equal(before.group_coverage.find((item) => item.competency_id === aspect.competency_id).children_without_observations, 1);
+    assert.ok(before.group_coverage.some((item) => item.children_without_observations === 2));
+    const draft = await prepareDiagnosticGroupReview(db, teacher);
+    await saveDiagnosticGroupReview(db, teacher, draft.id, { strengths: "Ana explica sus elecciones y otros niños también participan.", needs: "Conviene recoger más observaciones.", planning_priorities: "Proponer juegos para conversar." });
+    await confirmDiagnosticGroupReview(db, teacher, draft.id);
+    const current = publicClassroomContext(await getCurrentClassroomContext(db, teacher, initial.classroom.id));
+    assert.equal(current.diagnostic_review_current, true);
+    assert.match(current.confirmed_diagnostic_summary, /Proponer juegos/);
+    assert.doesNotMatch(current.confirmed_diagnostic_summary, /\bAna\b/);
+    const input = buildAnnualPlanGenerationInput({ classroom: { id: initial.classroom.id, age: 5,
+      group_context: "Aula de 5 años", diagnostic_summary: current.confirmed_diagnostic_summary,
+      context_v4: current, calendar: { school_year: 2026, starts_on: "2026-03-01", ends_on: "2026-12-18" } } });
+    const serialized = JSON.stringify(input);
+    assert.equal(input.calendar_context.project_slots.length, 12);
+    assert.doesNotMatch(serialized, /\bAna\b|\bBruno\b|Le gusta construir|Eligió bloques|student_id|student_context|adjunto|foto/i);
+    assert.equal(input.context_snapshot.observation_gaps.some((item) => item.competency_id === aspect.competency_id), false); // celda pequeña suprimida
+    await recordDiagnosticExperienceObservation(db, teacher, { studentId: bruno.id,
+      experienceId: initial.experiences[0].id, aspectId: aspect.id,
+      observationStatus: "observed_without_judgment", observationText: "Comentó su juego." });
+    const stale = publicClassroomContext(await getCurrentClassroomContext(db, teacher, initial.classroom.id));
+    assert.equal(stale.diagnostic_review_current, false);
+    assert.equal(stale.confirmed_diagnostic_summary, null);
+    assert.throws(() => buildAnnualPlanGenerationInput({ classroom: { id: initial.classroom.id, age: 5,
+      context_v4: stale, calendar: input.calendar_context } }), { reason: "diagnostic_review_required" });
   } finally { await db.close(); }
 });
 

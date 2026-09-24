@@ -22,6 +22,7 @@ function planningProjection(context, { includePrevious = false, maxInterests = 4
     fragments.push(`Experiencia educativa previa informada: ${Object.entries(context.previous_education).map(([key,count]) => `${key === "yes" ? "sí" : key === "no" ? "no" : "sin precisar"} (${count})`).join(", ")}.`);
   }
   if (includeCoverage) fragments.push(`Niños con observación diagnóstica registrada: ${context.diagnostic_coverage.students_with_observations}.`);
+  if (includeCoverage && context.observation_gaps?.length) fragments.push(`Competencias en las que conviene recoger más observaciones, sin atribuir dificultad por ausencia de registros: ${context.observation_gaps.map((item) => item.competency_name).join(", ")}.`);
   return { group_context: fragments.join(" "), interests: interests.map((item) => item.label),
     language_context: context.languages.length || context.primary_languages?.length ? {
       group_languages: context.languages.map(({ key, count }) => ({ key, count })),
@@ -33,7 +34,8 @@ function planningProjection(context, { includePrevious = false, maxInterests = 4
       common_interests: interests,
       previous_education: includePrevious ? context.previous_education : {},
       confirmed_diagnostic_summary: context.confirmed_diagnostic_summary ?? null,
-      diagnostic_coverage: includeCoverage ? context.diagnostic_coverage : null },
+      diagnostic_coverage: includeCoverage ? context.diagnostic_coverage : null,
+      observation_gaps: includeCoverage ? context.observation_gaps ?? [] : [] },
   };
 }
 

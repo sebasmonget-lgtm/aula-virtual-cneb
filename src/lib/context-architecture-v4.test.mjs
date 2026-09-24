@@ -92,10 +92,9 @@ test("current ClassroomContext agrega solo etiquetas confirmadas del aula autori
     assert.equal(assessment.classroom_context, undefined);
     assert.equal(JSON.stringify(assessment).includes("EXPECTATIVA_PRIVADA"), false);
     assert.ok(CONTEXT_POLICY_V4.some((item) => item.source === "family_interview" && item.projection === "classroom_tag_aggregate"));
-    const generationInput = buildAnnualPlanGenerationInput({ classroom: { id: a.id, age: 5,
-      calendar: { school_year: 2026, starts_on: "2026-03-16", ends_on: "2026-12-18" }, group_context: "Aula A", context_v4: publicView } });
-    assert.match(generationInput.classroom_context.group_context, /animales/);
-    assert.equal(JSON.stringify(generationInput).includes("EXPECTATIVA_PRIVADA"), false);
+    assert.equal(publicView.diagnostic_review_current, false);
+    assert.throws(() => buildAnnualPlanGenerationInput({ classroom: { id: a.id, age: 5,
+      calendar: { school_year: 2026, starts_on: "2026-03-16", ends_on: "2026-12-18" }, group_context: "Aula A", context_v4: publicView } }), { reason: "diagnostic_review_required" });
     const historical = structuredClone(safeAnnualGenerationMetadata({ workflow: "annual_plan", context_snapshot: planning.snapshot }));
     await saveFamilyInterview(db, teacherA, a.students[0].id, { interest_tags: ["construction"], interests: "Ahora prefiere construir." });
     await confirmFamilyInterview(db, teacherA, a.students[0].id);

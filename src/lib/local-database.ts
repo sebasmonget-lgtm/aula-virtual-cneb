@@ -101,6 +101,7 @@ export type DiagnosticReviewWorkspace = {
   pending_observations: { id: string; student_id: string; context_label: string; observation_text: string; observed_at: string }[];
   group_reviews: { id: string; version: number; status: "draft" | "confirmed"; details: DiagnosticGroupDetails; teacher_confirmed_at: string | null; is_current: boolean }[];
   group_coverage: { competency_id: string; competency_name: string; children_with_observations: number; confirmed_with_information: number; confirmed_insufficient: number; children_without_observations: number }[];
+  derived_group_information: { confirmed_interviews: number; interests: { key: string; label: string; count: number }[]; observation_gaps: { competency_id: string; competency_name: string; children_with_observations: number; children_without_observations: number }[] };
 };
 
 export type FamilyInterviewAnswerKey = "family_context" | "language_context" | "interests" | "autonomy_context" | "communication_emotional_context" | "social_context" | "adaptation_context" | "previous_education" | "daily_routine_context" | "family_expectations";
@@ -170,6 +171,8 @@ export type PublicClassroomContext = {
   previous_education: Record<string, number>;
   confirmed_diagnostic_summary: string | null;
   diagnostic_coverage: { students_with_observations: number };
+  diagnostic_review_current: boolean;
+  observation_gaps: { competency_id: string; competency_name: string; children_with_observations: number; children_without_observations: number }[];
   source_fingerprint: string;
 };
 
