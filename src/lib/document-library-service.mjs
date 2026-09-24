@@ -1,10 +1,11 @@
 import { diagnosticPlanningSummary } from "./diagnostic-assessment-v4.mjs";
 import { getCurrentClassroomContext } from "./classroom-context-service.mjs";
+import { projectPeriodClosureDocument } from "./period-closure-history.mjs";
 
 const dateOnly = (value) => value instanceof Date ? value.toISOString().slice(0, 10) : String(value ?? "").slice(0, 10);
 const timestamp = (value) => value instanceof Date ? value.toISOString() : String(value ?? "");
 const validId = (value) => typeof value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
-const kinds = new Set(["annual_plan", "diagnostic_summary", "experience", "activity", "family_report"]);
+const kinds = new Set(["annual_plan", "diagnostic_summary", "experience", "activity", "family_report", "period_closure"]);
 const selectContent = (source, fields) => Object.fromEntries(fields.map((field) => [field, source?.[field]]).filter(([, value]) => value !== undefined));
 
 /** A read-only catalog over canonical rows. No document copy or AI metadata is stored. */
@@ -41,12 +42,25 @@ export async function listSavedDocuments(db, teacherId) {
       status: row.status, version: Number(row.version), school_year: Number(row.year),
       classroom: row.section, date: timestamp(row.updated_at),
     }));
-  return [...annual, ...diagnostics, ...experiences, ...activities, ...reports]
+  const closures=(await db.query(`select v.id,v.version,v.confirmed_at,p.label,sy.year,c.section from period_closure_versions v
+    join classrooms c on c.id=v.classroom_id join school_years sy on sy.id=c.school_year_id
+    join evaluation_periods p on p.id=v.evaluation_period_id and p.school_year_id=sy.id
+    where c.teacher_id=$1 and sy.owner_id=$1`,[teacherId])).rows.map((row)=>({
+      id:row.id,kind:"period_closure",title:`Cierre de evaluación · ${row.label}`,status:"confirmed",version:Number(row.version),
+      school_year:Number(row.year),classroom:row.section,date:timestamp(row.confirmed_at)}));
+  return [...annual, ...diagnostics, ...experiences, ...activities, ...reports, ...closures]
     .sort((a, b) => b.school_year - a.school_year || b.date.localeCompare(a.date) || a.kind.localeCompare(b.kind) || a.id.localeCompare(b.id));
 }
 
 export async function loadSavedDocument(db, teacherId, kind, id) {
   if (!kinds.has(kind) || !validId(id)) return null;
+  if (kind === "period_closure") {
+    const row=(await db.query(`select v.id,v.version,v.confirmed_at,v.manifest,p.label,p.starts_on,p.ends_on,sy.year,c.section,c.institution_name
+      from period_closure_versions v join classrooms c on c.id=v.classroom_id
+      join school_years sy on sy.id=c.school_year_id join evaluation_periods p on p.id=v.evaluation_period_id and p.school_year_id=sy.id
+      where v.id=$2 and c.teacher_id=$1 and sy.owner_id=$1`,[teacherId,id])).rows[0];
+    return row?projectPeriodClosureDocument(row):null;
+  }
   if (kind === "annual_plan") {
     const row = (await db.query(`select ap.id,ap.status,ap.version,ap.proposal,ap.document_context,ap.teacher_confirmed_at,
       ap.classroom_id,sy.year,sy.starts_on,sy.ends_on,c.section,coalesce(ip.display_name,c.institution_name) as institution_name,ag.age_years,p.display_name as teacher_name,

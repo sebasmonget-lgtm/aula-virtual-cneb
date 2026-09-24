@@ -62,6 +62,7 @@ async function fixture({ analysis = mockAnalysis() } = {}) {
   const migration = await readFile(new URL("../../local-db/migrations/0036_evaluation_periods.sql", import.meta.url), "utf8");
   await db.exec(migration);
   await db.exec(await readFile(new URL("../../local-db/migrations/0041_period_assessment_drafts.sql", import.meta.url), "utf8"));
+  await db.exec(await readFile(new URL("../../local-db/migrations/0042_period_closure_history.sql", import.meta.url), "utf8"));
   await db.query(`insert into school_years values($1,$2,2026,'2026-03-01','2026-12-31')`, [year, teacher]);
   await db.query(`insert into age_grades values($1,5)`, [ageGrade]);
   await db.query(`insert into classrooms values($1,$2,$3,$4,'Sala Amarilla',false,false),($5,$2,$6,$4,'Otra aula',false,false)`, [classId, year, teacher, ageGrade, otherClass, otherTeacher]);
@@ -130,7 +131,12 @@ test("ficha única, nivel docente, cierre, salidas derivadas y cambio posterior 
     assert.equal((await f.call("POST","/api/period-evaluations/save-draft",{...decisionB,provisionalLevel:"A"})).status,200);
     const confirmedSecond = await f.call("POST", "/api/period-evaluations/confirm", decisionB);
     assert.equal(confirmedSecond.status, 200, JSON.stringify(confirmedSecond.body));
-    assert.equal((await f.call("POST", "/api/period-evaluations/close", { classroomId: classId, periodId: period.id })).status, 200);
+    const firstClose=await f.call("POST", "/api/period-evaluations/close", { classroomId: classId, periodId: period.id });
+    assert.equal(firstClose.status, 200);
+    assert.equal(firstClose.body.version,1);
+    const originalManifest=(await f.db.query(`select manifest from period_closure_versions where id=$1`,[firstClose.body.id])).rows[0].manifest;
+    assert.equal(originalManifest.entries.length,2);
+    assert.ok(originalManifest.entries.some((entry)=>entry.assessment_id===confirmed.body.assessment_id && entry.achievement_level==="B"));
     const report = await f.call("GET", `/api/period-evaluations/progress-report?${query}&studentId=${studentA}`);
     assert.equal(report.status, 200); assert.equal(report.body.competencies[0].achievement_level, "B");
     const csv = await f.call("GET", `/api/period-evaluations/consolidated.csv?${query}`);
@@ -141,6 +147,15 @@ test("ficha única, nivel docente, cierre, salidas derivadas y cambio posterior 
     assert.equal(stale.body.closure.current, false);
     assert.equal((await f.call("GET", `/api/period-evaluations/progress-report?${query}&studentId=${studentA}`)).status, 422);
     assert.equal((await f.call("GET", `/api/period-evaluations/detail?classroomId=${otherClass}&periodId=${period.id}&studentId=${studentA}&competencyId=COM_ORAL`)).status, 422);
+    const revised=await f.call("GET",`/api/period-evaluations/detail?${query}&studentId=${studentA}&competencyId=COM_ORAL`);
+    const decisionV2={...decisionA,evidenceFingerprint:revised.body.evidence_fingerprint,teacherAnalysis:"La docente revisó la nota corregida y el conjunto de observaciones."};
+    assert.equal((await f.call("POST","/api/period-evaluations/save-draft",{...decisionV2,provisionalLevel:"B"})).status,200);
+    assert.equal((await f.call("POST","/api/period-evaluations/confirm",decisionV2)).status,200);
+    const secondClose=await f.call("POST","/api/period-evaluations/close",{classroomId:classId,periodId:period.id});
+    assert.equal(secondClose.status,200,JSON.stringify(secondClose.body));
+    assert.equal(secondClose.body.version,2);
+    assert.deepEqual((await f.db.query(`select manifest from period_closure_versions where id=$1`,[firstClose.body.id])).rows[0].manifest,originalManifest);
+    await assert.rejects(f.db.query(`update period_closure_versions set manifest='{}'::jsonb where id=$1`,[firstClose.body.id]),/inmutable/);
   } finally { await f.db.close(); }
 });
 

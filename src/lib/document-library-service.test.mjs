@@ -26,6 +26,8 @@ async function fixture() {
     create table daily_execution_logs(id uuid primary key,schedule_entry_id uuid,execution_date date,teacher_closure_note text);
     create table students(id uuid primary key,classroom_id uuid,first_name text,preferred_name text,status text default 'active');
     create table family_reports(id uuid primary key,student_id uuid,status text,version int,details jsonb,updated_at timestamptz,period_start date,period_end date,teacher_confirmed_at timestamptz,generation_metadata jsonb);
+    create table evaluation_periods(id uuid primary key,school_year_id uuid,label text,starts_on date,ends_on date);
+    create table period_closure_versions(id uuid primary key,classroom_id uuid,evaluation_period_id uuid,version int,confirmed_at timestamptz,manifest jsonb);
   `);
   await db.query(`insert into profiles values($1,'Docente A'),($2,'Docente B')`, [id(1), id(2)]);
   await db.query(`insert into age_grades values($1,5)`, [id(3)]);
@@ -59,6 +61,20 @@ test("la biblioteca lista registros canónicos de la docente y excluye contenido
     assert.ok(documents.every((row) => !Object.hasOwn(row, "content") && !Object.hasOwn(row, "generation_metadata")));
     assert.equal((await listSavedDocuments(db, id(2))).length, 1);
   } finally { await db.close(); }
+});
+
+test("la biblioteca muestra el cierre histórico solo a la docente de su aula",async()=>{
+  const db=await fixture();
+  try {
+    const period=id(30),closure=id(31);
+    await db.query(`insert into evaluation_periods values($1,$2,'Bimestre 1','2026-03-16','2026-05-15')`,[period,id(4)]);
+    await db.query(`insert into period_closure_versions values($1,$2,$3,1,now(),$4::jsonb)`,
+      [closure,id(6),period,JSON.stringify({period:{id:period,label:"Bimestre 1"},entries:[{student_id:id(13),student_name:"Alessia",competency_id:"CYT_INDAGA",assessment_id:id(32),conclusion_id:id(33),achievement_level:"A",assessment_details:{evidence_overview:"Exploró la luz"},conclusion_details:{conclusion_text:"Explica sus ideas."},evidence:[]}]})]);
+    const listed=await listSavedDocuments(db,id(1));
+    assert.ok(listed.some((item)=>item.id===closure && item.kind==="period_closure"));
+    assert.equal((await loadSavedDocument(db,id(1),"period_closure",closure)).content.entries[0].achievement_level,"A");
+    assert.equal(await loadSavedDocument(db,id(2),"period_closure",closure),null);
+  } finally {await db.close();}
 });
 
 test("cada documento se abre solo para su docente y sin metadata técnica", async () => {

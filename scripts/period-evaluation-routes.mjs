@@ -8,6 +8,7 @@ import { assessmentSourceSnapshot, buildAssessmentInput, neutralizeAssessmentTex
 import { buildDescriptiveConclusionInput, sourceAssessmentSnapshot, validateDescriptiveConclusion } from "../src/lib/descriptive-conclusion-v4-service.mjs";
 import { dateOnly, defaultEvaluationPeriods, loadPeriodEvaluationRows, periodClosureFingerprint } from "../src/lib/period-evaluation-service.mjs";
 import { assertSavedEvaluationDraft, savePeriodEvaluationDraft } from "../src/lib/period-evaluation-draft-service.mjs";
+import { closePeriodWithManifest } from "../src/lib/period-closure-history.mjs";
 
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const hash = (value) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
@@ -230,9 +231,9 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
         if (!data.model.students.length || !data.model.scope.length) throw new Error("Incluye estudiantes y competencias trabajadas antes de cerrar.");
         const pendingRows = data.model.rows.filter((row) => row.state !== "confirmed");
         if (pendingRows.length) throw new Error(`Quedan ${pendingRows.length} evaluaciones por revisar o confirmar.`);
-        const fingerprint = periodClosureFingerprint(data.model.rows);
-        await db.query(`insert into period_closures(id,classroom_id,evaluation_period_id,source_fingerprint,confirmed_by) values($1,$2,$3,$4,$5) on conflict(classroom_id,evaluation_period_id) do update set source_fingerprint=excluded.source_fingerprint,confirmed_by=excluded.confirmed_by,confirmed_at=now()`, [randomUUID(), data.classroom.id, data.period.id, fingerprint, teacherId]);
-        send(response, 200, { closed: true, current: true }, origin); return true;
+        const closed=await closePeriodWithManifest(db,{classroomId:data.classroom.id,period:data.period,teacherId,
+          loadCurrent:()=>loadPeriodEvaluationRows(db,{classroomId:data.classroom.id,period:data.period,applicableIds:new Set(data.cards.map((card)=>card.id))})});
+        send(response, 200, closed, origin); return true;
       }
       if (request.method === "GET" && ["/api/period-evaluations/progress-report", "/api/period-evaluations/consolidated", "/api/period-evaluations/consolidated.csv"].includes(url.pathname)) {
         const data = await context(url.searchParams.get("classroomId"), url.searchParams.get("periodId"));

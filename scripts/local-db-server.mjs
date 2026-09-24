@@ -73,7 +73,7 @@ const exportTables = [
   "activities", "activity_criteria", "evidences", "competency_observation_guides",
   "document_templates", "document_versions", "diagnostic_sessions",
   "diagnostic_entries", "observation_references", "student_observations", "diagnostic_experience_observations", "diagnostic_spontaneous_observations", "student_family_interviews", "student_family_interview_attachments", "diagnostic_competency_reviews", "diagnostic_student_reviews", "diagnostic_group_reviews",
-  "class_schedule_entries", "daily_execution_logs", "attendance_records", "calendar_exceptions", "calendar_blocks", "initial_stages", "project_slots", "evaluation_periods", "period_competency_scope", "period_closures", "student_context_snapshots", "annual_plans", "annual_plan_competencies", "annual_plan_changes", "competency_assessments", "competency_descriptive_conclusions", "family_reports",
+  "class_schedule_entries", "daily_execution_logs", "attendance_records", "calendar_exceptions", "calendar_blocks", "initial_stages", "project_slots", "evaluation_periods", "period_competency_scope", "period_closures", "period_closure_versions", "student_context_snapshots", "annual_plans", "annual_plan_competencies", "annual_plan_changes", "competency_assessments", "competency_descriptive_conclusions", "family_reports",
 ];
 
 await mkdir(path.dirname(dataDir), { recursive: true });
@@ -742,6 +742,7 @@ const server = createServer(async (request, response) => {
     if (request.method === "GET" && url.pathname.startsWith("/api/documents/") && url.pathname.endsWith("/download")) {
       const parts = url.pathname.split("/");
       if (parts.length !== 6 || parts[5] !== "download") { send(response, 404, { error: "Documento no disponible." }, origin); return; }
+      if (parts[3] === "period_closure") { send(response, 409, { error: "El Word del cierre estará disponible cuando se incorpore su plantilla definitiva." }, origin); return; }
       const knowledgeBase = await loadKnowledgeBaseV4();
       const cards = knowledgeBase.competencyCards.map((card) => ({ id: card.id, name: card.official_name,
         area_name: card.area_name, capacities: card.capacities, ages: card.ages }));
@@ -765,6 +766,7 @@ const server = createServer(async (request, response) => {
     if (request.method === "POST" && url.pathname.startsWith("/api/documents/") && url.pathname.endsWith("/save-local")) {
       const parts = url.pathname.split("/");
       if (parts.length !== 6 || parts[5] !== "save-local") { send(response, 404, { error: "Documento no disponible." }, origin); return; }
+      if (parts[3] === "period_closure") { send(response, 409, { error: "El Word del cierre estará disponible cuando se incorpore su plantilla definitiva." }, origin); return; }
       const knowledgeBase = await loadKnowledgeBaseV4();
       const cards = knowledgeBase.competencyCards.map((card) => ({ id: card.id, name: card.official_name,
         area_name: card.area_name, capacities: card.capacities, ages: card.ages }));

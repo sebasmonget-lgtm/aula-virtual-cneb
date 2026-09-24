@@ -7,7 +7,7 @@ import { localDatabaseApiUrl } from "@/src/lib/local-database";
 import { AnnualPlanDocument, type DocumentContext, type Proposal } from "./annual-plan-generator";
 import { LoadingState, PageIntro, WorkflowFeedback } from "./workflow-ui";
 
-type DocumentKind = "annual_plan" | "diagnostic_summary" | "experience" | "activity" | "family_report";
+type DocumentKind = "annual_plan" | "diagnostic_summary" | "experience" | "activity" | "family_report" | "period_closure";
 type DocumentEntry = {
   id: string; kind: DocumentKind; subtype?: "project" | "unit"; title: string;
   status: string; version?: number; school_year: number; classroom: string; date: string;
@@ -22,7 +22,8 @@ const text = (value: unknown) => typeof value === "string" ? value.trim() : "";
 const items = (value: unknown) => Array.isArray(value) ? value.filter((item): item is string => typeof item === "string" && Boolean(item.trim())) : [];
 const labelFor = (entry: DocumentEntry) => entry.kind === "annual_plan" ? "Plan anual" :
   entry.kind === "diagnostic_summary" ? "Diagnóstico del aula" : entry.kind === "experience" ?
-    entry.subtype === "project" ? "Proyecto" : "Unidad" : entry.kind === "activity" ? "Actividad" : "Informe a la familia";
+    entry.subtype === "project" ? "Proyecto" : "Unidad" : entry.kind === "activity" ? "Actividad" :
+    entry.kind === "period_closure" ? "Cierre del período" : "Informe a la familia";
 const statusFor = (status: string) => status === "active" || status === "confirmed" ? "Confirmado" :
   status === "archived" ? "Versión anterior" : "Borrador";
 const dateFor = (value: string) => {
@@ -60,6 +61,11 @@ function Pathways({ title, value }: { title: string; value: unknown }) {
 
 function DocumentContent({ document }: { document: OpenDocument }) {
   if (document.kind === "annual_plan") return <AnnualPlanDocument proposal={document.content as Proposal} context={document.document_context ?? {}} competencies={document.competencies ?? []} status={document.status as "draft" | "active" | "archived"} />;
+  if (document.kind === "period_closure") {
+    const entries=Array.isArray(document.content.entries)?document.content.entries as Record<string,unknown>[]:[];
+    const names=new Map((document.competencies??[]).map((card)=>[card.id,card.name]));
+    return <article className="rounded-3xl border bg-white p-5 sm:p-8"><p className="text-xs font-bold uppercase tracking-wide text-[#087d96]">Proyección provisional · cierre V{document.version}</p><h2 className="mt-2 text-2xl font-extrabold">{document.title}</h2><p className="mt-2 text-sm text-[#526b87]">{document.classroom} · {document.school_year} · {dateFor(document.period_start??"")} a {dateFor(document.period_end??"")}</p><p className="mt-4 rounded-xl bg-[#eaf7fb] p-3 text-sm">Esta vista conserva los datos del cierre. El Word final se preparará cuando esté disponible su plantilla.</p><div className="mt-5 space-y-3">{entries.map((entry,index)=>{const assessment=(entry.assessment_details??{}) as Record<string,unknown>,conclusion=(entry.conclusion_details??{}) as Record<string,unknown>,evidence=Array.isArray(entry.evidence)?entry.evidence:[];return <section key={`${entry.assessment_id??index}`} className="rounded-xl border p-4"><h3 className="font-bold">{text(entry.student_name)} · {names.get(text(entry.competency_id))??text(entry.competency_id)}</h3><p className="mt-1 text-sm">Nivel confirmado por la docente: <b>{text(entry.achievement_level)}</b> · {evidence.length} registros</p>{text(assessment.evidence_overview)&&<p className="mt-2 text-sm">{text(assessment.evidence_overview)}</p>}{text(conclusion.conclusion_text)&&<p className="mt-2 text-sm"><b>Conclusión:</b> {text(conclusion.conclusion_text)}</p>}</section>;})}</div></article>;
+  }
   const content = document.content;
   const names = new Map((document.competencies ?? []).map((card) => [card.id, card.name]));
   return <article aria-label={labelFor(document)} className="overflow-hidden rounded-[1.5rem] border border-[#d6e5ef] bg-white shadow-sm">
@@ -144,7 +150,7 @@ export function DocumentsScreen() {
   }, [selected, revision]);
 
   const years = [...new Set(documents.map((item) => item.school_year))].sort((a, b) => b - a);
-  const downloadUrl = opened
+  const downloadUrl = opened && opened.kind !== "period_closure"
     ? `${localDatabaseApiUrl}/api/documents/${opened.kind}/${opened.id}/download`
     : null;
   async function saveWordLocally() {
@@ -159,9 +165,9 @@ export function DocumentsScreen() {
     finally { setSavingWord(false); }
   }
   return <section className="mx-auto max-w-5xl space-y-5">
-    <PageIntro eyebrow="Tu trabajo guardado" title="Documentos" description="Encuentra aquí tus diagnósticos, planes, experiencias, actividades e informes." icon={BookOpen} />
+    <PageIntro eyebrow="Tu trabajo guardado" title="Documentos" description="Encuentra aquí tus diagnósticos, planes, experiencias, actividades, cierres e informes." icon={BookOpen} />
     {selected && <div className="flex flex-wrap items-center justify-between gap-3"><Button variant="outline" className="min-h-11" onClick={() => { setSelected(null); setOpened(null); setError(""); setWordMessage(""); setWordError(""); }}><ArrowLeft className="mr-2 size-4" />Volver a mis documentos</Button>
-      {opened && <Button className="min-h-11" disabled={savingWord} onClick={() => void saveWordLocally()}><Download className="mr-2 size-4" />{savingWord ? "Guardando Word..." : "Guardar Word en Descargas"}</Button>}</div>}
+      {opened && opened.kind !== "period_closure" && <Button className="min-h-11" disabled={savingWord} onClick={() => void saveWordLocally()}><Download className="mr-2 size-4" />{savingWord ? "Guardando Word..." : "Guardar Word en Descargas"}</Button>}</div>}
     {wordMessage && <WorkflowFeedback tone="success">{wordMessage}</WorkflowFeedback>}
     {wordError && <WorkflowFeedback tone="error">{wordError}</WorkflowFeedback>}
     {opened?.kind === "annual_plan" && opened.content.plan_format !== "twelve_projects_flexible_weeks" &&

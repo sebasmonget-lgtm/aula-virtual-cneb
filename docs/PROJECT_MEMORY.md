@@ -164,6 +164,10 @@ Proyecto nuevo iniciado el 20 de septiembre de 2026. Existe un shell responsive 
 
 - La ficha por niño y competencia guarda y recupera análisis, sugerencia, conclusión en trabajo y nivel provisional en `competency_assessments` borrador. El nivel definitivo solo se escribe al confirmar. La confirmación compara campos guardados y fingerprint vigente; la insuficiencia no produce C automáticamente. Ver ADR 058.
 
+## Cierre documental del período (2026-09-24)
+
+- Cada cierre nuevo guarda un manifiesto inmutable versionado con IDs y snapshots de valoraciones, conclusiones y observaciones. El cierre anterior sigue consultable cuando se reevalúa y se cierra V2. Documentos muestra una proyección provisional; no existe aún Word definitivo del período. Ver ADR 059.
+
 
 
 

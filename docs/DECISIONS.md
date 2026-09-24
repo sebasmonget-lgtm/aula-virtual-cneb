@@ -454,3 +454,11 @@ La confirmación de la actividad y la inserción del criterio heredado se ejecut
 **Insuficiencia.** La ausencia de evidencias o una sugerencia de información insuficiente mantiene un estado propio y nunca se convierte en C. Si cambian las fuentes, la docente debe revisar y guardar de nuevo; al hacerlo se descarta una sugerencia de IA desactualizada.
 
 **Reversión.** Los campos de borrador son opcionales y las valoraciones confirmadas anteriores siguen legibles. La interfaz puede volver al flujo previo sin transformar niveles oficiales. La migración local y Supabase añade las mismas columnas y restricción.
+
+## ADR 059 Manifiesto inmutable del cierre del período
+
+**Decisión.** Cada cierre nuevo crea `period_closure_versions` con versión, período, fecha, docente, fingerprint y un manifiesto de IDs de evaluaciones y conclusiones confirmadas, niveles docentes y snapshots de las observaciones que sustentaron el cierre. `period_closures` conserva solo el puntero al cierre más reciente. Un trigger impide modificar o borrar manifiestos. Los cierres antiguos sin manifiesto permanecen legibles como cierre legacy, sin inventarles una versión retrospectiva.
+
+**Documento.** Documentos muestra una proyección estructurada y explícitamente provisional de cada cierre histórico. No se genera Word de cierre hasta recibir una plantilla definitiva. El acceso se limita en servidor al aula y año de la docente; las evidencias visuales no se copian al manifiesto.
+
+**Reversión.** Se puede retirar la vista provisional y mantener la tabla histórica. El puntero nullable conserva compatibilidad con cierres anteriores. Las migraciones local y Supabase son equivalentes.
