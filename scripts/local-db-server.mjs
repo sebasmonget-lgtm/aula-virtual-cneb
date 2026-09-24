@@ -14,6 +14,7 @@ import { loadKnowledgeBaseV4 } from "../src/lib/knowledge-base-v4.mjs";
 import { cardIsApplicable } from "../src/lib/ai-context-builder-v4.mjs";
 import { generateTeacherActivity } from "../src/lib/ai-activity-ui-service.mjs";
 import { generateTeacherAnnualPlan } from "../src/lib/ai-annual-plan-ui-service.mjs";
+import { DiagnosticSuggestionError, suggestDiagnosticGroupReview } from "../src/lib/ai-diagnostic-evaluation-service.mjs";
 import { generateTeacherLearningExperience } from "../src/lib/ai-learning-experience-ui-service.mjs";
 import { nextAnnualPlanVersion, safeAnnualGenerationMetadata } from "../src/lib/annual-plan-persistence.mjs";
 import { ANNUAL_PLAN_TEMPLATE_FORMAT, validateAnnualPlanProposal } from "../src/lib/annual-plan-contract.mjs";
@@ -685,13 +686,16 @@ const server = createServer(async (request, response) => {
           catch { recordOperationalEvent("student_context_refresh_failed", { workflow: "diagnostic_student" }); }
         }
         else if (request.method === "POST" && url.pathname === "/api/diagnostics/group-review/prepare") result = await prepareDiagnosticGroupReview(db, teacherId);
+        else if (request.method === "POST" && url.pathname === "/api/diagnostics/group-review/suggest") result = await suggestDiagnosticGroupReview(db, teacherId, (await readJson(request)).draftId);
         else if (request.method === "PUT" && parts.length === 5 && parts[3] === "group-review") result = await saveDiagnosticGroupReview(db, teacherId, parts[4], (await readJson(request)).details);
         else if (request.method === "POST" && parts.length === 6 && parts[3] === "group-review" && parts[5] === "confirm") result = await confirmDiagnosticGroupReview(db, teacherId, parts[4]);
         else if (request.method === "PUT" && parts.length === 6 && parts[3] === "students" && parts[5] === "initial-context") result = await saveStudentInitialContext(db, teacherId, parts[4], (await readJson(request)).initialContext);
         else { send(response, 404, { error: "Ruta de diagnóstico no encontrada." }, origin); return; }
         send(response, 200, result, origin);
       } catch (error) {
-        if (error instanceof DiagnosticAssessmentError) {
+        if (error instanceof DiagnosticSuggestionError) {
+          send(response, 422, { error: error.message, reason: error.reason }, origin);
+        } else if (error instanceof DiagnosticAssessmentError) {
           send(response, ["no_classroom", "invalid_student", "not_editable"].includes(error.reason) ? 404 : 422,
             { error: error.message, reason: error.reason }, origin);
         } else throw error;

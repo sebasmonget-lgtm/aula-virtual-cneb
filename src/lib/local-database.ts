@@ -287,6 +287,7 @@ export const prepareDiagnosticStudentReview = (studentId: string) => diagnosticR
 export const saveDiagnosticStudentReview = (id: string, details: DiagnosticStudentReviewDetails) => diagnosticRequest(`student-reviews/${encodeURIComponent(id)}`, "PUT", { details });
 export const confirmDiagnosticStudentReview = (id: string) => diagnosticRequest(`student-reviews/${encodeURIComponent(id)}/confirm`, "POST");
 export const prepareDiagnosticGroup = () => diagnosticRequest<{ id: string; details: DiagnosticGroupDetails }>("group-review/prepare", "POST");
+export const suggestDiagnosticGroup = (draftId: string) => diagnosticRequest<{ details: DiagnosticGroupDetails }>("group-review/suggest", "POST", { draftId });
 export const saveDiagnosticGroup = (id: string, details: DiagnosticGroupDetails) => diagnosticRequest(`group-review/${encodeURIComponent(id)}`, "PUT", { details });
 export const confirmDiagnosticGroup = (id: string) => diagnosticRequest(`group-review/${encodeURIComponent(id)}/confirm`, "POST");
 export const saveDiagnosticInitialContext = (studentId: string, initialContext: string) => diagnosticRequest(`students/${encodeURIComponent(studentId)}/initial-context`, "PUT", { initialContext });

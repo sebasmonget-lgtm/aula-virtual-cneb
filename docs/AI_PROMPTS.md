@@ -1,6 +1,6 @@
 # Contratos de IA
 
-No hay llamadas activas a modelos en la entrega inicial. Cuando se implementen, toda llamada será server-side y validará salida JSON.
+El contrato inicial de este documento se conserva como referencia histórica. Los flujos activos llaman a modelos desde el servidor y validan salidas JSON antes de presentarlas a la docente.
 
 ## Selección curricular con Jev
 
@@ -17,3 +17,7 @@ Reglas: no reescribir texto oficial, no inventar observaciones de estudiantes, n
 ## Contrato para resumir diagnóstico
 
 Entrada: observaciones confirmadas por la docente. Salida: fortalezas, necesidades, intereses y prioridades con referencias a los IDs de observación utilizados. Si no hay evidencia suficiente, devolver `insufficient_data: true`.
+
+### Flujo grupal vigente
+
+La sugerencia opcional de «Revisar aula» usa `skills/crear-evaluacion-diagnostica/` como instrucciones del modelo. Recibe solo comentarios individuales confirmados, sin nombres conocidos, y devuelve `strengths`, `needs` y `planning_priorities` mediante un esquema JSON estricto. La profesora revisa y confirma el texto. Los IDs de observación y las entrevistas completas no salen al modelo ni se copian al informe Word; la estructura histórica descrita arriba no corresponde a este flujo.

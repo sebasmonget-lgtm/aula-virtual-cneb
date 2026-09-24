@@ -17,7 +17,10 @@ export function validateAssessmentProposal(value, competencyId, evidenceCount) {
 
 export function neutralizeAssessmentText(value, names) {
   if (typeof value !== "string") return value;
-  const withoutNames = names.filter((name) => typeof name === "string" && name.trim().length > 1).sort((a, b) => b.length - a.length).reduce((text, name) => text.replace(new RegExp(name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi"), "[estudiante]"), value);
+  const withoutNames = names.filter((name) => typeof name === "string" && name.trim().length > 1).sort((a, b) => b.length - a.length).reduce((text, name) => {
+    const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return text.replace(new RegExp(`(^|[^\\p{L}\\p{N}])${escaped}(?=$|[^\\p{L}\\p{N}])`, "giu"), "$1[estudiante]");
+  }, value);
   return withoutNames
     .replace(/\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/gi, "[identificador]")
     .replace(/data:(?:image|audio|video)\/[^\s;]+;base64,[A-Za-z0-9+/=]+/gi, "[archivo privado]")

@@ -160,7 +160,7 @@ test("docentes y aulas quedan aislados; no se aceptan fuentes ni competencias fa
   } finally { await db.close(); }
 });
 
-test("migración remota protege lectura y exige servidor para escritura; la UI no llama a un modelo", async () => {
+test("migración remota protege lectura y exige servidor para escritura; el servicio base no llama a un modelo", async () => {
   const [sql, hardening, ui, service] = await Promise.all([
     readFile(new URL("../../supabase/migrations/202609230001_diagnostic_review_v4.sql", import.meta.url), "utf8"),
     readFile(new URL("../../supabase/migrations/202609230003_diagnostic_server_authority.sql", import.meta.url), "utf8"),

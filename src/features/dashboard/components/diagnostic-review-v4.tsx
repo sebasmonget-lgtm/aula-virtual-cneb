@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   confirmDiagnosticGroup, confirmDiagnosticStudentReview, loadDiagnosticReview, loadFamilyInterview,
   prepareDiagnosticGroup, prepareDiagnosticStudentReview, saveDiagnosticGroup, saveDiagnosticStudentReview,
+  suggestDiagnosticGroup,
   saveMatrixDiagnosticObservation,
   type DiagnosticGroupDetails, type DiagnosticReviewWorkspace, type DiagnosticStudentReviewDetails,
   type DiagnosticObservationStatus, type FamilyInterview, type FamilyInterviewAnswerKey,
@@ -240,6 +241,7 @@ export function DiagnosticReview({ onObserve, onPlan, onGroupConfirmed }: { onOb
         }}>{groupReview ? "Continuar borrador del aula" : groupConfirmed ? "Corregir resumen del aula" : "Escribir resumen del aula"}</Button>
       </div>}
       {allReviewed && groupDraft && <div className="space-y-4 rounded-2xl border border-[#c7e4ec] bg-[#f8fcfd] p-4"><h4 className="text-lg font-bold">Tu resumen del aula</h4>
+        {!groupDraftDirty && !Object.values(groupDraft).some((value) => value.trim()) && groupReview && <AsyncButton variant="outline" className="min-h-12 w-full sm:w-auto" busy={busy} busyLabel="Preparando propuesta..." onClick={() => void action(async () => { const suggestion = await suggestDiagnosticGroup(groupReview.id); setGroupDraft(suggestion.details); setGroupDraftDirty(true); setMessage("Ayni preparó una propuesta. Revísala y cambia lo que necesites antes de confirmar."); })}>Sugerir resumen con Ayni</AsyncButton>}
         {groupSummaryPrompts.map(([field, label, example]) => <label key={field} className="block font-semibold">{label}<Textarea className="mt-2 bg-white placeholder:italic placeholder:text-[#8292a8]" maxLength={3000} placeholder={example} value={groupDraft[field]} onChange={(event) => { setGroupDraft({ ...groupDraft, [field]: event.target.value }); setGroupDraftDirty(true); }} /></label>)}
         <p className="text-sm text-[#526b87]">Escribe patrones del aula sin nombrar niños. Solo lo confirmado orientará el plan.</p>
         <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap"><AsyncButton className="min-h-12 w-full sm:w-auto" busy={busy} busyLabel="Confirmando..." disabled={!groupReview} onClick={() => void action(async () => { await saveDiagnosticGroup(groupReview!.id, groupDraft); await confirmDiagnosticGroup(groupReview!.id); setGroupDraft(null); setGroupDraftDirty(false); onGroupConfirmed?.(); setMessage("Resumen del aula confirmado."); })}>Confirmar resumen</AsyncButton><AsyncButton variant="outline" className="min-h-12 w-full sm:w-auto" busy={busy} busyLabel="Guardando..." disabled={!groupReview} onClick={() => void action(async () => { await saveDiagnosticGroup(groupReview!.id, groupDraft); setGroupDraft(null); setGroupDraftDirty(false); setMessage("Borrador del aula guardado. Puedes retomarlo después."); })}>Guardar para después</AsyncButton></div>

@@ -123,7 +123,7 @@ test("los registros diagnósticos anteriores también aparecen y actualizan la h
   } finally { await db.close(); }
 });
 
-test("comentarios son privados por docente y la UI no genera interpretaciones con IA", async () => {
+test("comentarios individuales son privados por docente y la UI no llama directamente al proveedor", async () => {
   const db = await database();
   try {
     const first = await classroom(db, teacher, "A");

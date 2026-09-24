@@ -406,6 +406,32 @@ export async function prepareDiagnosticGroupReview(db, teacherId) {
   return { id, details, status: "draft" };
 }
 
+/** Build a model-safe projection; known names are returned separately for output validation. */
+export async function diagnosticGroupProposalSources(db, teacherId, draftId) {
+  const { classroom, students } = await scope(db, teacherId);
+  const draft = (await db.query(`select source_snapshot from diagnostic_group_reviews
+    where id=$1 and classroom_id=$2 and created_by=$3 and status='draft'`, [draftId, classroom.id, teacherId])).rows[0];
+  if (!draft) fail("not_editable", "Prepara primero el borrador del aula.");
+  const sourceSnapshot = await confirmedSnapshot(db, classroom.id);
+  if (!sameDiagnosticSources(draft.source_snapshot, sourceSnapshot))
+    fail("stale_sources", "Los comentarios de los niños cambiaron. Actualiza el resumen del aula.");
+  const comments = (await db.query(`select distinct on (r.student_id) r.details
+    from diagnostic_student_reviews r join students s on s.id=r.student_id
+    where r.classroom_id=$1 and s.classroom_id=$1 and s.status='active' and r.status='confirmed'
+    order by r.student_id,r.version desc`, [classroom.id])).rows;
+  if (comments.length !== students.length || !comments.length)
+    fail("incomplete_children", "Revisa el comentario de cada niño antes de preparar el resumen del aula.");
+  const names = (await db.query(`select first_name,last_name,preferred_name from students
+    where classroom_id=$1 and status='active'`, [classroom.id])).rows
+    .flatMap((row) => [row.first_name, row.last_name, row.preferred_name,
+      [row.first_name, row.last_name].filter(Boolean).join(" ")]).filter(Boolean);
+  return { age: classroom.age_years, student_count: students.length,
+    comments: comments.map((row) => ({
+      information_status: row.details.information_status,
+      comment: neutralizeAssessmentText(row.details.comment_text, names).slice(0, 3000),
+    })), known_names: names, source_snapshot: sourceSnapshot };
+}
+
 export async function saveDiagnosticGroupReview(db, teacherId, id, details) {
   const { classroom } = await scope(db, teacherId);
   const validated = validateGroupDetails(details);

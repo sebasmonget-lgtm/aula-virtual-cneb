@@ -111,6 +111,12 @@ Proyecto nuevo iniciado el 20 de septiembre de 2026. Existe un shell responsive 
 - La metodología del primer llamado anual reside en `skills/crear-plan-anual/SKILL.md` y tres referencias enfocadas en lectura de fuentes, criterios CNEB y estructura del Plan Maestro. La aplicación carga esos archivos fijos como instrucciones de Sol/high solo para `annual_stage: master`. La petición de la docente sigue dentro del `AIContextBundle` filtrado; la Skill no entra allí ni puede elegirse mediante datos de usuario.
 - El primer resultado sigue siendo `annual-plan-v2` y pasa por la validación curricular y estructural existente. Terra/low desarrolla los detalles en el segundo llamado; el calendario, las autorizaciones, el guardado y la plantilla DOCX permanecen en código. Los archivos de Knowledge Base CNEB versionados siguen siendo la fuente canónica, sin copiar un catálogo curricular dentro de la Skill. Ver ADR 048.
 
+## Skill crear-evaluacion-diagnostica (2026-09-24)
+
+- «Revisar aula» conserva la escritura manual y ofrece una sugerencia opcional mediante `skills/crear-evaluacion-diagnostica/`. La sugerencia usa los comentarios individuales confirmados y vigentes de todos los niños activos, depurados de nombres conocidos; entrevistas y observaciones crudas permanecen en la base. El modelo devuelve solo tres campos del resumen grupal como borrador editable. Antes y después de llamar a Terra/low se comprueba que el borrador y las fuentes sigan vigentes. No se guarda ni confirma automáticamente.
+- El Word diagnóstico se sigue rellenando desde el resumen grupal que confirme la docente y los recuentos verificables de la base. La Skill no genera el DOCX ni cambia la plantilla. No se añadieron tablas ni migraciones. Ver ADR 049.
+- Prueba real con datos ficticios, sin guardar en la base: `gpt-5.6-terra` devolvió los tres campos válidos en 4,9 s (1374 tokens de entrada, 234 de salida). El resultado permanece en `.local/test-results/smoke-diagnostic-skill-result.json` para revisión local; la prueba no alteró los documentos de la profesora.
+
 
 
 
