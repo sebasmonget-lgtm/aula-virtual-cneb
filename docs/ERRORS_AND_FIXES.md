@@ -1,5 +1,35 @@
 # Errores y soluciones
 
+## 2026-09-24 Una propuesta de IA podía presentarse como hallazgo confirmado
+
+**Síntoma.** Al preparar nivel y conclusión en una misma ficha, el constructor antiguo de conclusiones etiquetaba el análisis recibido como `teacher_confirmed_findings`, aunque en ese punto solo era una propuesta de IA.
+
+**Causa raíz.** El workflow anterior generaba la conclusión después de confirmar el análisis; el nuevo flujo presenta ambas propuestas antes de la confirmación docente.
+
+**Solución validada localmente.** La conclusión preliminar recibe las observaciones reales y el estado informativo, sin pasar el análisis de IA como hallazgo docente. El constructor antiguo conserva su ruta de evaluación ya confirmada. Una prueba del generador verifica el contexto enviado al proveedor.
+
+**Prevención.** Distinguir en los contratos de IA las propuestas de los hallazgos docentes confirmados, incluso si comparten la misma ficha.
+
+## 2026-09-24 La exportación local incluía tablas que el importador no aceptaba
+
+**Síntoma.** La prueba de preparación para Supabase detectó que la exportación incluía calendario, proyectos y períodos que faltaban en el orden de importación.
+
+**Causa raíz.** Los cambios del calendario y la evaluación habían ampliado `exportTables` sin actualizar `tableOrder` ni los campos de usuario de la preparación del traslado.
+
+**Solución validada localmente.** El importador incluye esas tablas en orden de dependencias y remapea `confirmed_by` y `level_confirmed_by` a la cuenta nueva. La prueba de paridad de tablas vuelve a pasar.
+
+**Prevención.** Mantener la prueba de igualdad exportador/importador y de los identificadores docentes al añadir entidades transferibles.
+
+## 2026-09-24 El cierre podía perder competencias sin observaciones
+
+**Síntoma.** Una vista basada solo en evidencias no mostraba las competencias previstas en el plan anual sin registros; se podía interpretar el cierre como completo con información omitida.
+
+**Causa raíz.** El mapa de evidencias se construía a partir de filas observadas, no del alcance curricular del período.
+
+**Solución validada localmente.** La evaluación toma competencias de criterios de actividades y de proyectos calendarizados del plan anual, las combina con observaciones reales y muestra explícitamente las fichas sin evidencias. La exclusión docente exige motivo y no oculta competencias con registros o valoración. Una prueba PGlite comprueba ambos casos.
+
+**Prevención.** Calcular el cierre desde las competencias previstas y las fichas de todos los niños, no únicamente desde lo observado.
+
 ## 2026-09-24 «Desarrollar esta propuesta» parecía no responder
 
 **Síntoma.** Al elegir una propuesta del plan anual, la profesora permanecía viendo la tarjeta y parecía que no se abría ningún editor.

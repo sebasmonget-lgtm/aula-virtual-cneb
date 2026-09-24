@@ -19,14 +19,14 @@ const proposal = (status = "insufficient") => ({ competency_id: "COM_ORAL", info
 test("assessment routing, schema y provider reciben una sola tarjeta", async () => {
   const plan = resolveAIExecutionPlan({ workflow: "assessment" });
   assert.equal(plan.model, "gpt-5.6-sol"); assert.equal(plan.reasoning_effort, "medium");
-  assert.equal(ASSESSMENT_OUTPUT_SCHEMA.id, "assessment-v1"); assert.equal(ASSESSMENT_OUTPUT_SCHEMA.additionalProperties, false);
+  assert.equal(ASSESSMENT_OUTPUT_SCHEMA.id, "assessment-v2"); assert.equal(ASSESSMENT_OUTPUT_SCHEMA.additionalProperties, false);
   let captured;
   const evidence = [{ observed_on: "2026-09-20T12:00:00.000Z", activity_title: "Actividad", criterion_text: "Expresa ideas", observation_status: "with_support", observation_note: "Dijo algo", media_available: true }];
   const input = buildAssessmentInput({ age: 5, competencyId: "COM_ORAL", evidenceHistory: evidence });
   const result = await generateAIWorkflowV4(input, { provider: { id: "mock", async generate(request) { captured = request; return proposal(); } } });
   assert.equal(captured.workflow, "assessment"); assert.equal(captured.ai_context_bundle.curriculum.competency_cards.length, 1);
   assert.equal(captured.ai_context_bundle.curriculum.competency_cards[0].id, "COM_ORAL");
-  assert.equal(result.validation.schema, "assessment-v1");
+  assert.equal(result.validation.schema, "assessment-v2");
   assert.equal(captured.ai_context_bundle.context.student.id, "current_student");
 });
 

@@ -9,7 +9,7 @@ test("plan anual reabre el mismo borrador y no genera otro mientras existe", asy
   const source = await component("annual-plan-generator");
   assert.match(source, /const saved = plans\.draft \?\? plans\.active \?\? plans\.archived\?\.\[0\] \?\? null/);
   assert.match(source, /setProposal\(saved\?\.proposal \?\? null\); setPlanId\(saved\?\.id \?\? null\)/);
-  assert.match(source, /if \(operation \|\| loading \|\| loadError \|\| existingPlan \|\| calendarDirty \|\| calendarWarning/);
+  assert.match(source, /if \(operation \|\| loading \|\| loadError \|\| \(existingPlan && !canReplaceLegacy\) \|\| calendarDirty \|\| calendarWarning/);
   assert.match(source, /const readOnly = existingPlan\?\.status === "active" \|\| existingPlan\?\.status === "archived"/);
   assert.match(source, /if \(!planId \|\| !proposal \|\| operation \|\| readOnly \|\| hasUnsavedChanges \|\| calendarDirty \|\| calendarWarning\) return/);
   assert.match(source, /get<PlansResponse>\("\/api\/annual-plans\/current", "No se pudo cargar el plan anual\."\)/);
@@ -59,8 +59,8 @@ test("la consulta real de experiencias usa columnas presentes en las migraciones
 test("el servidor rechaza una segunda creación anual cuando ya existe un draft", async () => {
   const source = await readFile(new URL("../../scripts/local-db-server.mjs", import.meta.url), "utf8");
   const route = source.slice(source.indexOf('url.pathname === "/api/annual-plans"'), source.indexOf('url.pathname.startsWith("/api/annual-plans/")'));
-  assert.match(route, /select id from annual_plans where school_year_id=\$1 limit 1/);
-  assert.match(route, /if \(priorPlan\.rows\.length\) throw new Error\("Ya existe un plan anual para esta cuenta y año escolar/);
+  assert.match(route, /select id,classroom_id,status,proposal from annual_plans where school_year_id=\$1 and status in \('active','draft'\)/);
+  assert.match(route, /if \(draft \|\| \(active && !replacingLegacy\) \|\| \(!active && body\.replacementPlanId\)\)/);
   assert.match(route, /update annual_plans set proposal=\$1::jsonb, updated_at=now\(\) where id=\$2 and classroom_id=\$3 and school_year_id=\$4 and status='draft'/);
 });
 
@@ -90,22 +90,21 @@ test("conclusiones e informes exigen guardar cambios antes de confirmar", async 
   assert.match(report, /Reintentar carga de informes/);
 });
 
-test("la continuación de evaluar se reconstruye desde registros confirmados tras recargar", async () => {
-  const assessment = await component("assessment-generator");
-  const conclusion = await component("descriptive-conclusion-generator");
+test("Evaluar reúne nivel y conclusión en una ficha y reconstruye el estado al recargar", async () => {
+  const evaluation = await component("period-evaluation");
   const workspace = await component("teacher-workspace");
-  assert.match(assessment, /setLatest\(context\.latest_confirmed \?\? null\)/);
-  assert.match(assessment, /\(readOnly \|\| latest\) && onNext && <NextStepCard/);
-  assert.match(conclusion, /setHasConfirmedConclusion\(Boolean\(records\.conclusions\?\.some\(\(item\) => item\.status === "active"\)\)\)/);
-  assert.match(conclusion, /\(readOnly \|\| hasConfirmedConclusion\) && onNext && <NextStepCard/);
-  assert.match(workspace, /initialStudentId=\{target\?\.studentId\}/);
-  assert.match(workspace, /onNext=\{\(studentId, competencyId\) => \{ setTarget\(\{ studentId, competencyId, stage: "conclusion" \}\)/);
+  assert.match(evaluation, /period-evaluations\/detail/);
+  assert.match(evaluation, /Nivel que confirmas/);
+  assert.match(evaluation, /Conclusión descriptiva/);
+  assert.match(evaluation, /reloadOverview\(\)/);
+  assert.match(workspace, /initialStudentId=\{initialTarget\?\.studentId\}/);
+  assert.match(workspace, /<PeriodEvaluation initialStudentId=\{initialTarget\?\.studentId\}/);
 });
 
 test("el perfil propone solo acciones posibles para competencias v4 y los vacíos vuelven a planificar", async () => {
   const source = await component("students-screen");
   assert.match(source, /recommendedStudentGuidance\(competencies\)/);
-  assert.match(source, /if \(guidance\.action && competency\.competency_v4_id\) onEvaluate/);
+  assert.match(source, /if \(guidance\.action && competency\.competency_v4_id\) onEvaluate\?\./);
   assert.match(source, /onPlan && <EmptyState title="Prepara nuevas observaciones"/);
-  assert.match(source, /Registro anterior · sin marca observacional/);
+  assert.match(source, /Observación registrada/);
 });

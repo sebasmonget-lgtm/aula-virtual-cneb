@@ -20,11 +20,11 @@ export function validateDescriptiveConclusion(value, competencyId, informationSt
 const dateTime = (value) => new Date(value).toISOString();
 export function sourceAssessmentSnapshot(row) {
   const details = row.details ?? {};
-  return { assessment_id: row.id, version: Number(row.version), updated_at: dateTime(row.updated_at), teacher_confirmed_at: dateTime(row.teacher_confirmed_at), information_status: details.information_status, details_hash: stableFingerprint(details) };
+  return { assessment_id: row.id, version: Number(row.version), updated_at: dateTime(row.updated_at), teacher_confirmed_at: dateTime(row.teacher_confirmed_at), information_status: details.information_status, achievement_level: row.achievement_level ?? null, details_hash: stableFingerprint(details) };
 }
 
 export function sameAssessmentSnapshot(previous, current) {
-  return Boolean(previous && current) && ["assessment_id", "version", "updated_at", "teacher_confirmed_at", "information_status", "details_hash"].every((field) => previous[field] === current[field]);
+  return Boolean(previous && current) && ["assessment_id", "version", "updated_at", "teacher_confirmed_at", "information_status", "achievement_level", "details_hash"].every((field) => previous[field] === current[field]);
 }
 
 export function safeConfirmedAssessment(row, names = []) {
@@ -34,7 +34,7 @@ export function safeConfirmedAssessment(row, names = []) {
   return { information_status: details.information_status, evidence_overview: clean(details.evidence_overview), observable_patterns: cleanArray(details.observable_patterns), strengths_and_advances: cleanArray(details.strengths_and_advances), support_needs: cleanArray(details.support_needs), next_opportunities: cleanArray(details.next_opportunities) };
 }
 
-export function buildDescriptiveConclusionInput({ age, competencyId, assessment, evidenceRows, knownNames = [], priorConclusion, teacherNotes }) {
-  const safeAssessment = safeConfirmedAssessment(assessment, knownNames);
-  return { workflow: "descriptive_conclusion", age, student_id: "current_student", competency_ids: [competencyId], teacher_request: "Redactar una propuesta descriptiva a partir del análisis confirmado y las evidencias que lo sustentan.", multiple_evidence_records: evidenceRows.map((row) => sanitizeEvidenceForAssessment(row, knownNames)), student_context: { id: "current_student", teacher_confirmed_findings: safeAssessment }, ...(priorConclusion ? { prior_conclusion: neutralizeAssessmentText(priorConclusion, knownNames) } : {}), ...(teacherNotes?.trim() ? { teacher_notes: neutralizeAssessmentText(teacherNotes.trim(), knownNames) } : {}) };
+export function buildDescriptiveConclusionInput({ age, competencyId, assessment, analysisStatus, evidenceRows, knownNames = [], priorConclusion, teacherNotes }) {
+  const confirmedFindings = assessment ? safeConfirmedAssessment(assessment, knownNames) : null;
+  return { workflow: "descriptive_conclusion", age, student_id: "current_student", competency_ids: [competencyId], teacher_request: confirmedFindings ? "Redactar una propuesta descriptiva a partir del análisis confirmado y las evidencias que lo sustentan." : `Proponer una conclusión descriptiva solo desde las evidencias. El análisis preliminar indica información ${analysisStatus === "sufficient" ? "suficiente" : "insuficiente"}; ninguna interpretación está confirmada por la docente.`, analysis_status: analysisStatus ?? confirmedFindings?.information_status, multiple_evidence_records: evidenceRows.map((row) => sanitizeEvidenceForAssessment(row, knownNames)), student_context: { id: "current_student", ...(confirmedFindings ? { teacher_confirmed_findings: confirmedFindings } : {}) }, ...(priorConclusion ? { prior_conclusion: neutralizeAssessmentText(priorConclusion, knownNames) } : {}), ...(teacherNotes?.trim() ? { teacher_notes: neutralizeAssessmentText(teacherNotes.trim(), knownNames) } : {}) };
 }

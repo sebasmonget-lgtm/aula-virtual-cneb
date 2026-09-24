@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react"
 import {
   BookOpen, CalendarDays, Check, ChevronRight, ClipboardCheck, Database, FileText,
   Camera, CheckCircle2, Clock3, Home, Menu, Play,
-  Settings2, Sparkles, Users,
+  Settings2, Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,9 +30,7 @@ import { ParentActivityGenerator } from "./parent-activity-generator";
 import { AnnualPlanGenerator } from "./annual-plan-generator";
 import { DocumentsScreen } from "./documents-screen";
 import { LearningExperienceGenerator } from "./learning-experience-generator";
-import { AssessmentGenerator } from "./assessment-generator";
-import { DescriptiveConclusionGenerator } from "./descriptive-conclusion-generator";
-import { FamilyReportGenerator } from "./family-report-generator";
+import { PeriodEvaluation } from "./period-evaluation";
 import { PilotSetup } from "./pilot-setup";
 import { AsyncButton, LoadingState, NextStepCard, PageIntro, ScreenSkeleton, WorkflowFeedback, WorkflowTabs } from "./workflow-ui";
 
@@ -50,7 +48,7 @@ const sentenceCase = (value: string) => value.charAt(0).toLocaleUpperCase("es-PE
 export function TeacherWorkspace() {
   const [active, setActive] = useState("Hoy");
   const navigationTouched = useRef(false);
-  const [evaluationTarget, setEvaluationTarget] = useState<{ studentId: string; stage: "assessment" | "conclusion" | "family_report"; competencyId: string } | null>(null);
+  const [evaluationTarget, setEvaluationTarget] = useState<{ studentId: string; competencyId: string } | null>(null);
   const [evidenceOpen, setEvidenceOpen] = useState(false);
   const [attendanceOpen, setAttendanceOpen] = useState(false);
   const [activityRunBlockId, setActivityRunBlockId] = useState<string | null>(null);
@@ -230,8 +228,8 @@ export function TeacherWorkspace() {
           {guidanceError && <div className="mb-4 flex flex-wrap items-center gap-3"><WorkflowFeedback tone="error">No pudimos comprobar cuál es tu siguiente paso.</WorkflowFeedback><Button variant="outline" onClick={() => { setGuidanceError(false); setRetry((value) => value + 1); }}>Reintentar</Button></div>}
           {starting ? <ScreenSkeleton /> : active === "Perfil" ? dashboard ? <InstitutionProfile dashboard={dashboard} onSaved={setDashboard} /> : <ScreenSkeleton /> :
           active === "Documentos" ? <DocumentsScreen /> :
-          active === "Evaluar" ? dashboard ? <EvaluationArea dashboard={dashboard} students={students} initialTarget={evaluationTarget} focused={needsFirstDiagnostic} onPlan={() => { setNeedsFirstDiagnostic(false); navigate("Planificar"); }} onStudents={() => navigate("Niños")} /> : <ScreenSkeleton /> :
-          active === "Niños" ? dashboard ? <StudentsScreen students={students} onImported={setDashboard} onDiagnostic={() => navigate("Evaluar")} onEvaluate={(studentId, stage, competencyId) => { setEvaluationTarget({ studentId, stage, competencyId }); navigate("Evaluar"); }} onPlan={() => navigate("Planificar")} /> : <ScreenSkeleton /> : active === "Planificar" ? dashboard ? <PlanningArea onGoToday={() => navigate("Hoy")} onGoDiagnostic={() => navigate("Evaluar")} onGoStudents={() => navigate("Niños")} /> : <ScreenSkeleton /> : <>
+          active === "Evaluar" ? dashboard ? <EvaluationArea dashboard={dashboard} initialTarget={evaluationTarget} focused={needsFirstDiagnostic} onPlan={() => { setNeedsFirstDiagnostic(false); navigate("Planificar"); }} onStudents={() => navigate("Niños")} /> : <ScreenSkeleton /> :
+          active === "Niños" ? dashboard ? <StudentsScreen students={students} onImported={setDashboard} onDiagnostic={() => navigate("Evaluar")} onEvaluate={(studentId, competencyId) => { setEvaluationTarget({ studentId, competencyId }); navigate("Evaluar"); }} onPlan={() => navigate("Planificar")} /> : <ScreenSkeleton /> : active === "Planificar" ? dashboard ? <PlanningArea onGoToday={() => navigate("Hoy")} onGoDiagnostic={() => navigate("Evaluar")} onGoStudents={() => navigate("Niños")} /> : <ScreenSkeleton /> : <>
           {activityRunBlock ? <ActivityRunView block={activityRunBlock} onBack={() => setActivityRunBlockId(null)} onEvidence={() => openEvidenceFor(activityRunBlock)} onStepChange={async (stepIndex) => updateExecution({ scheduleEntryId: activityRunBlock.id, action: "set_step", stepIndex })} onComplete={async () => { await updateExecution({ scheduleEntryId: activityRunBlock.id, action: "complete", closureType: "as_planned" }); setActivityRunBlockId(null); }} /> : active === "Hoy" && (dashboard ? <TodayScreen dashboard={dashboard} openEvidence={openEvidenceFor} openAttendance={() => setAttendanceOpen(true)} updateExecution={updateExecution} openActivity={openActivity} onPlan={() => navigate("Planificar")} /> : <ScreenSkeleton />)}
           </>}
         </main>
@@ -328,18 +326,15 @@ function EvidenceDialog({ open, onOpenChange, students, studentId, setStudentId,
   </Dialog>;
 }
 
-function EvaluationArea({ dashboard, students, initialTarget, focused, onPlan, onStudents }: { dashboard: LocalDashboard; students: LocalStudent[]; initialTarget: { studentId: string; stage: "assessment" | "conclusion" | "family_report"; competencyId: string } | null; focused: boolean; onPlan: () => void; onStudents: () => void }) {
-  const [tab, setTab] = useState<"diagnostic" | "assessment" | "conclusion" | "family_report">(initialTarget?.stage ?? "diagnostic");
-  const [target, setTarget] = useState(initialTarget);
+function EvaluationArea({ dashboard, initialTarget, focused, onPlan, onStudents }: { dashboard: LocalDashboard; initialTarget: { studentId: string; competencyId: string } | null; focused: boolean; onPlan: () => void; onStudents: () => void }) {
+  const [tab, setTab] = useState<"diagnostic" | "period">(initialTarget ? "period" : "diagnostic");
   return <section className="mx-auto max-w-5xl space-y-5">
     <PageIntro eyebrow="Acompañamiento pedagógico" title="Evaluar" description="Conoce el desarrollo de cada niño a partir de evidencias reales y decisiones confirmadas por ti." icon={ClipboardCheck} />
     {!focused && <WorkflowTabs label="Secciones de Evaluar" value={tab} onChange={setTab} tabs={[
       { id: "diagnostic", label: "Diagnóstico", icon: ClipboardCheck },
-      { id: "assessment", label: "Análisis de evidencias", shortLabel: "Análisis", icon: Sparkles },
-      { id: "conclusion", label: "Conclusiones descriptivas", shortLabel: "Conclusiones", icon: FileText },
-      { id: "family_report", label: "Informe a familias", shortLabel: "Informe", icon: BookOpen },
+      { id: "period", label: "Evaluación del período", shortLabel: "Período", icon: BookOpen },
     ]} />}
-    {tab === "diagnostic" ? <GuidedDiagnostic dashboard={dashboard} onPlan={onPlan} onStudents={onStudents} /> : tab === "assessment" ? <AssessmentGenerator students={students} initialStudentId={target?.studentId} initialCompetencyId={target?.competencyId} onNext={(studentId, competencyId) => { setTarget({ studentId, competencyId, stage: "conclusion" }); setTab("conclusion"); }} onPlan={onPlan} /> : tab === "conclusion" ? <DescriptiveConclusionGenerator students={students} initialStudentId={target?.studentId} initialCompetencyId={target?.competencyId} onNext={(studentId, competencyId) => { setTarget({ studentId, competencyId, stage: "family_report" }); setTab("family_report"); }} onAssessment={(studentId) => { setTarget({ studentId, competencyId: "", stage: "assessment" }); setTab("assessment"); }} /> : <FamilyReportGenerator students={students} initialStudentId={target?.studentId} onConclusion={(studentId) => { setTarget({ studentId, competencyId: "", stage: "conclusion" }); setTab("conclusion"); }} />}
+    {tab === "diagnostic" ? <GuidedDiagnostic dashboard={dashboard} onPlan={onPlan} onStudents={onStudents} /> : <PeriodEvaluation initialStudentId={initialTarget?.studentId} initialCompetencyId={initialTarget?.competencyId} />}
   </section>;
 }
 function PlanningArea({ onGoToday, onGoDiagnostic, onGoStudents }: { onGoToday: () => void; onGoDiagnostic: () => void; onGoStudents: () => void }) {

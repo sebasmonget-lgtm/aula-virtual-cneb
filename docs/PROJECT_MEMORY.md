@@ -6,6 +6,8 @@ Proyecto nuevo iniciado el 20 de septiembre de 2026. Existe un shell responsive 
 
 ## Alcance implementado
 
+- Evaluación del período (2026-09-24, cambios locales): bimestres/trimestres formales, una ficha por niño y competencia con criterios, actividad, observaciones y referente curricular correspondiente a su edad. Reutiliza `competency_assessments` y conclusiones, separa la sugerencia de IA del nivel confirmado por docente, y mantiene «información insuficiente» sin convertirla en C. La cobertura incluye competencias planificadas aunque falten evidencias. Las fuentes posteriores vuelven obsoleta la confirmación y el cierre. Informe de Progreso estructurado y consolidado CSV se derivan de valoraciones confirmadas; no hay carga a SIAGIE ni plantilla Word/PDF para esas salidas. Ver ADR 043.
+
 - Arquitectura de contexto v4 (en revisión, sin commit): las fuentes canónicas permanecen en sus tablas; `StudentContext` conserva procedencia individual y `ClassroomContext` agrega opciones elegidas durante entrevistas confirmadas, cobertura y síntesis grupal. La entrevista combina respuesta libre con lenguas múltiples y principal, intereses múltiples y «Otro», y experiencia educativa previa con tipo opcional. Una nueva confirmación actualiza el agregado sin reclasificación posterior; las versiones antiguas sin opciones siguen funcionando. Los builders de Plan Anual, Project, Unit y Activity reciben solo el agregado público necesario, con huella de fuentes y snapshot histórico de generación en metadata de servidor. Assessment, conclusión e informe permanecen individuales. La vista «Conocer» muestra patrones suficientemente frecuentes sin exponer respuestas familiares. Ver `docs/CONTEXT_ARCHITECTURE.md`.
 
 - Identidad visual y shell PWA responsive.

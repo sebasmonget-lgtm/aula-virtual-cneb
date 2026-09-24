@@ -36,6 +36,15 @@ test("descriptive_conclusion usa Sol/medium, schema strict y una tarjeta en el p
   assert.equal(captured.ai_context_bundle.context.student.id, "current_student");
 });
 
+test("la propuesta conjunta usa evidencias sin atribuir un análisis de IA a la docente", async () => {
+  const input = buildDescriptiveConclusionInput({ age: 5, competencyId: "COM_ORAL", analysisStatus: "sufficient", evidenceRows: [{ observed_at: "2026-09-20T12:00:00Z", activity_title: "Relato", criterion_text: "Expresa ideas", observation_status: "observed_without_judgment", observation_text: "Explicó su propuesta." }] });
+  let captured;
+  const result = await generateAIWorkflowV4(input, { provider: { id: "mock", async generate(request) { captured = request; return conclusion(); } } });
+  assert.equal(result.output.information_status, "sufficient");
+  assert.equal(captured.ai_context_bundle.context.student.teacher_confirmed_findings, undefined);
+  assert.match(captured.ai_context_bundle.context.teacher_request, /preliminar/);
+});
+
 test("conclusión rechaza campos extra, otra competencia, notas, comparaciones y falsa certeza", async () => {
   assert.deepEqual(validateDescriptiveConclusion(conclusion(), "COM_ORAL", "sufficient"), conclusion());
   assert.deepEqual(validateDescriptiveConclusion(conclusion("insufficient"), "COM_ORAL", "insufficient"), conclusion("insufficient"));
@@ -250,7 +259,8 @@ test("interfaz y migración sostienen reload, solo lectura y RLS", async () => {
   assert.match(ui, /status === "active"/);
   assert.match(ui, /solo lectura/);
   assert.match(ui, /Confirmar conclusión/);
-  assert.match(workspace, /Conclusiones descriptivas/);
+  assert.match(workspace, /PeriodEvaluation/);
+  assert.match(workspace, /Evaluación del período/);
   assert.match(migration, /enable row level security/);
   assert.match(migration, /public\.owns_student\(student_id\)/);
   assert.match(migration, /where status = 'draft'/);

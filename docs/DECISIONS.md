@@ -1,5 +1,13 @@
 # Decisiones de arquitectura
 
+## ADR 043 Evaluación por estudiante, competencia y período formal
+
+**Decisión.** `evaluation_periods` define bimestres o trimestres del año escolar. La pantalla Evaluar presenta una ficha por estudiante, competencia y período, y consulta las tablas existentes `evidences`, `competency_assessments` y `competency_descriptive_conclusions`. El alcance incluye competencias de criterios de actividades y proyectos del plan anual que se superponen con el período, incluso cuando aún no hay evidencias. Una docente puede añadir o excluir una competencia con motivo; una competencia con observaciones o valoración no se puede ocultar. Las fuentes conservan IDs de actividad, criterio, desempeño cuando existe, fecha y evidencia adjunta privada.
+
+**Decisión docente.** Ninguna evidencia individual recibe AD/A/B/C. La IA propone `suggested_level` y una conclusión, sin confirmar el nivel. `achievement_level` solo se escribe cuando la docente revisa la ficha, elige el nivel y confirma. La ausencia de registros y la información insuficiente permanecen como estados distintos de C. La docente debe dejar una justificación explícita cuando confirma con pocos registros, contra una sugerencia de información insuficiente o con un nivel diferente del sugerido. El análisis, la conclusión y la justificación confirmados se versionan en las tablas existentes. Un cambio posterior en las fuentes marca la valoración como «requiere revisión» por comparación de snapshots.
+
+**Cierre y salidas.** `period_closures` guarda la huella de todas las fichas confirmadas. El Informe de Progreso estructurado y el CSV de consolidado se calculan de las valoraciones vigentes, sin duplicar notas. El consolidado se puede previsualizar con pendientes antes del cierre; la salida final solo se habilita con cierre vigente. No se ingresa información automáticamente a SIAGIE. Las tablas nuevas y vínculos usan migraciones aditivas local/Supabase; las políticas RLS de Supabase se deberán verificar en staging antes de habilitar ese backend. Revertir la interfaz no elimina observaciones ni valoraciones anteriores.
+
 ## ADR 038 Un plan anual por cuenta y año escolar, presentado como documento
 
 **Decisión.** Cada cuenta conserva como máximo un plan anual vigente por año escolar. `school_years.owner_id` identifica la cuenta y un índice único parcial sobre `annual_plans.school_year_id` protege los estados `draft` y `active`, incluso si la cuenta tiene más de un aula. El servidor consulta el año antes de llamar al modelo y antes de insertar; un borrador existente se reabre y edita sobre el mismo ID. Los planes de años anteriores se conservan y los archivados siguen legibles. No se borran ni fusionan duplicados antiguos automáticamente al aplicar la migración.

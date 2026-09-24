@@ -119,5 +119,6 @@ test("Supabase migrations cover reference RLS and private evidence bucket; trans
   const exported = server.match(/const exportTables = \[([\s\S]*?)\];/)?.[1].match(/"[a-z_]+"/g)?.map((name) => JSON.parse(name));
   const imported = importer.match(/const tableOrder = \[([\s\S]*?)\];/)?.[1].match(/"[a-z_]+"/g)?.map((name) => JSON.parse(name));
   assert.deepEqual(new Set(exported), new Set(imported));
+  assert.match(importer, /"confirmed_by", "level_confirmed_by"/);
   assert.match(server, /AYNI_ALLOW_LOCAL_EXPORT/);
 });

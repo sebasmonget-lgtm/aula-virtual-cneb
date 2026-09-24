@@ -212,6 +212,6 @@ test("migraciones y UI incluyen RLS, estados de recarga y editor solo lectura", 
   assert.match(local, /source_conclusion_snapshot/); assert.match(local, /where status = 'draft'/);
   assert.match(supabase, /enable row level security/); assert.match(supabase, /public\.owns_student\(student_id\)/);
   assert.match(ui, /api\/family-reports\/options/); assert.match(ui, /api\/family-reports\?/); assert.match(ui, /solo lectura/); assert.match(ui, /Confirmar informe/);
-  assert.match(workspace, /Informe a familias/);
+  assert.match(workspace, /PeriodEvaluation/);
   assert.doesNotMatch(studentContext, /from family_reports/);
 });

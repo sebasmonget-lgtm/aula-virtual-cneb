@@ -106,7 +106,7 @@ test("la interfaz abre el diagnóstico y ofrece continuar al plan solo tras guar
   assert.match(students, /Paso 2 de 6 · Añade a los alumnos/);
   assert.match(workspace, /setActive\(guidance\.startingSection\)/);
   assert.match(workspace, /id: "diagnostic" as const, label: "Diagnóstico"/);
-  assert.match(workspace, /tab === "diagnostic" \? \(status !== "reviewed" \? <NextStepCard/);
+  assert.match(workspace, /tab === "diagnostic" \? <GuidedDiagnostic/);
   assert.match(workspace, /focused=\{needsFirstDiagnostic\}/);
   assert.match(diagnostic, /disabled=\{index \+ 1 > maxStep\}/);
   assert.match(diagnostic, /setData\(await completeDiagnosticReview\(\)\); onPlan\?\.\(\)/);

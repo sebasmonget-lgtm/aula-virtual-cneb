@@ -34,6 +34,7 @@ import { validateEvidenceCaptureV4 } from "../src/lib/evidence-capture-v4.mjs";
 import { createAssessmentRouteHandler } from "./assessment-routes.mjs";
 import { createDescriptiveConclusionRouteHandler } from "./descriptive-conclusion-routes.mjs";
 import { createFamilyReportRouteHandler } from "./family-report-routes.mjs";
+import { createPeriodEvaluationRouteHandler } from "./period-evaluation-routes.mjs";
 import { createPendingAIGenerationsStore } from "../src/lib/pending-ai-generations-store.mjs";
 import { createPilotClassroom, importStudentsForTeacher, parseStudentCsv } from "../src/lib/pilot-onboarding-service.mjs";
 import { createLocalPrivateEvidenceStorage } from "../src/lib/private-evidence-storage.mjs";
@@ -67,7 +68,7 @@ const exportTables = [
   "activities", "activity_criteria", "evidences", "competency_observation_guides",
   "document_templates", "document_versions", "diagnostic_sessions",
   "diagnostic_entries", "observation_references", "student_observations", "diagnostic_experience_observations", "diagnostic_spontaneous_observations", "student_family_interviews", "student_family_interview_attachments", "diagnostic_competency_reviews", "diagnostic_student_reviews", "diagnostic_group_reviews",
-  "class_schedule_entries", "daily_execution_logs", "attendance_records", "calendar_exceptions", "calendar_blocks", "initial_stages", "project_slots", "student_context_snapshots", "annual_plans", "annual_plan_competencies", "annual_plan_changes", "competency_assessments", "competency_descriptive_conclusions", "family_reports",
+  "class_schedule_entries", "daily_execution_logs", "attendance_records", "calendar_exceptions", "calendar_blocks", "initial_stages", "project_slots", "evaluation_periods", "period_competency_scope", "period_closures", "student_context_snapshots", "annual_plans", "annual_plan_competencies", "annual_plan_changes", "competency_assessments", "competency_descriptive_conclusions", "family_reports",
 ];
 
 await mkdir(path.dirname(dataDir), { recursive: true });
@@ -457,6 +458,7 @@ async function diagnosticWorkspace() {
 const handleAssessmentRoute = createAssessmentRouteHandler({ db, annualPlanningContext, readJson, send, pending: pendingAIGenerations, metadataForAudit: safeAnnualGenerationMetadata, refreshStudentContext: refreshStudentContextSnapshot });
 const handleDescriptiveConclusionRoute = createDescriptiveConclusionRouteHandler({ db, annualPlanningContext, readJson, send, pending: pendingAIGenerations, metadataForAudit: safeAnnualGenerationMetadata, refreshStudentContext: refreshStudentContextSnapshot });
 const handleFamilyReportRoute = createFamilyReportRouteHandler({ db, annualPlanningContext, readJson, send, pending: pendingAIGenerations, metadataForAudit: safeAnnualGenerationMetadata });
+const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStorage, readJson, send, pending: pendingAIGenerations, metadataForAudit: safeAnnualGenerationMetadata, refreshStudentContext: refreshStudentContextSnapshot });
 const server = createServer(async (request, response) => {
   const requestId = randomUUID();
   const origin = request.headers.origin;
@@ -1158,6 +1160,7 @@ const server = createServer(async (request, response) => {
       send(response, 201, { workspace: await diagnosticWorkspace() }, origin);
       return;
     }
+    if (await handlePeriodEvaluationRoute({ request, url, response, origin })) return;
     if (await handleAssessmentRoute({ request, url, response, origin })) return;
     if (await handleDescriptiveConclusionRoute({ request, url, response, origin })) return;
     if (await handleFamilyReportRoute({ request, url, response, origin })) return;
@@ -1166,7 +1169,7 @@ const server = createServer(async (request, response) => {
       let capture;
       try { capture = validateEvidenceCaptureV4(body); } catch (error) { send(response, 400, { error: error.message }, origin); return; }
       const allowed = await db.query(`
-        select ac.id, ac.competency_id, ac.competency_v4_id, a.details as activity_details
+        select ac.id, ac.competency_id, ac.competency_v4_id, a.details as activity_details, a.occurs_on
           from students s
           join classrooms cl on cl.id = s.classroom_id
           join learning_experiences le on le.classroom_id = cl.id
@@ -1204,10 +1207,10 @@ const server = createServer(async (request, response) => {
       try { result = await db.query(`
         insert into evidences (
           id, student_id, activity_id, criterion_id, type,
-          observation_text, observation_status, media_path, source, created_by
-        ) values ($1, $2, $3, $4, 'observation', $5, $6, $7, 'teacher', $8)
-        returning id, student_id, observation_text, observation_status, observed_at
-      `, [randomUUID(), capture.studentId, capture.activityId, capture.criterionId, capture.observationText || null, capture.observationStatus, mediaPath, teacherId]);
+          observation_text, observation_status, media_path, observed_on, source, created_by
+        ) values ($1, $2, $3, $4, 'observation', $5, $6, $7, $8::date, 'teacher', $9)
+        returning id, student_id, observation_text, observation_status, observed_at, observed_on
+      `, [randomUUID(), capture.studentId, capture.activityId, capture.criterionId, capture.observationText || null, capture.observationStatus, mediaPath, criterion.occurs_on, teacherId]);
       } catch (error) { if (mediaPath) await evidenceStorage.delete(mediaPath); throw error; }
       await refreshStudentContextSnapshot(db, capture.studentId);
       send(response, 201, { evidence: result.rows[0] }, origin);

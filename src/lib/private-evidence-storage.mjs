@@ -1,9 +1,10 @@
 import { randomUUID } from "node:crypto";
-import { mkdir, writeFile, unlink } from "node:fs/promises";
+import { mkdir, writeFile, unlink, readFile } from "node:fs/promises";
 import path from "node:path";
 
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const extensions = new Map([["image/jpeg", "jpg"], ["image/png", "png"], ["image/webp", "webp"]]);
+const validPath = /^student-evidence\/[0-9a-f-]{36}\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|png|webp)$/i;
 
 /** Storage boundary. The caller authorizes teacher, pupil and evidence before save. */
 export function createLocalPrivateEvidenceStorage(root) {
@@ -19,8 +20,14 @@ export function createLocalPrivateEvidenceStorage(root) {
       return `student-evidence/${key}`;
     },
     async delete(mediaPath) {
-      if (typeof mediaPath !== "string" || !/^student-evidence\/[0-9a-f-]{36}\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|png|webp)$/i.test(mediaPath)) return;
+      if (typeof mediaPath !== "string" || !validPath.test(mediaPath)) return;
       await unlink(path.join(root, ...mediaPath.slice("student-evidence/".length).split("/")));
+    },
+    async read(mediaPath, { teacherId, studentId }) {
+      if (typeof mediaPath !== "string" || !validPath.test(mediaPath) || !mediaPath.startsWith(`student-evidence/${teacherId}/${studentId}/`)) throw new Error("Evidencia privada no disponible.");
+      const data = await readFile(path.join(root, ...mediaPath.slice("student-evidence/".length).split("/")));
+      const mimeType = mediaPath.endsWith(".png") ? "image/png" : mediaPath.endsWith(".webp") ? "image/webp" : "image/jpeg";
+      return { data, mimeType };
     },
   };
 }
