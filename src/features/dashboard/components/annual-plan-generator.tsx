@@ -55,7 +55,8 @@ type ClassroomContext = DocumentContext & {
 };
 type SavedPlan = {
   id: string; classroom_id: string; version: number; status: "draft" | "active" | "archived";
-  proposal: Proposal; document_context: DocumentContext;
+  proposal: Proposal; document_context: DocumentContext; supersedes_plan_id?: string | null;
+  source_diagnostic_review_id?: string | null;
 };
 type PlansResponse = { active?: SavedPlan | null; draft?: SavedPlan | null; archived?: SavedPlan[] };
 type GeneratedResponse = { proposal?: Proposal; generation_id?: string; document_context?: DocumentContext; error?: string };
@@ -251,12 +252,13 @@ function AnnualCalendarEditor({ calendar, onChange, onSave, saving }: {
 export function AnnualPlanGenerator({ onConfirmed, onGoDiagnostic }: { onConfirmed?: () => void; onGoDiagnostic?: () => void }) {
   const [proposal, setProposal] = useState<Proposal | null>(null);
   const [existingPlan, setExistingPlan] = useState<SavedPlan | null>(null);
+  const [savedPlans, setSavedPlans] = useState<PlansResponse | null>(null);
   const [classroom, setClassroom] = useState<ClassroomContext | null>(null);
   const [calendarDraft, setCalendarDraft] = useState<AnnualCalendar | null>(null);
   const [generatedHeader, setGeneratedHeader] = useState<DocumentContext | null>(null);
   const [competencies, setCompetencies] = useState<AIActivityCompetencyOption[]>([]);
   const [editing, setEditing] = useState(false);
-  const [operation, setOperation] = useState<"generate" | "save" | "confirm" | "calendar" | null>(null);
+  const [operation, setOperation] = useState<"generate" | "copy" | "save" | "confirm" | "calendar" | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [message, setMessage] = useState("");
@@ -270,6 +272,8 @@ export function AnnualPlanGenerator({ onConfirmed, onGoDiagnostic }: { onConfirm
     Boolean(existingPlan && classroom && existingPlan.classroom_id !== classroom.id);
   const canReplaceLegacy = Boolean(existingPlan?.status === "active" && classroom &&
     existingPlan.classroom_id === classroom.id && existingPlan.proposal.plan_format !== "twelve_projects_flexible_weeks");
+  const canCopyCurrent = Boolean(existingPlan?.status === "active" && classroom &&
+    existingPlan.classroom_id === classroom.id && existingPlan.proposal.plan_format === "twelve_projects_flexible_weeks");
   const calendarDirty = Boolean(classroom && calendarDraft && JSON.stringify(calendarDraft) !== JSON.stringify(classroom.calendar));
   let calendarWarning = "";
   if (calendarDraft) {
@@ -313,7 +317,7 @@ export function AnnualPlanGenerator({ onConfirmed, onGoDiagnostic }: { onConfirm
       if (!live) return;
       const saved = plans.draft ?? plans.active ?? plans.archived?.[0] ?? null;
       setCompetencies(options.competencies ?? []);
-      setExistingPlan(saved); setClassroom(context);
+      setExistingPlan(saved); setSavedPlans(plans); setClassroom(context);
       setCalendarDraft(context.calendar);
       setProposal(saved?.proposal ?? null); setPlanId(saved?.id ?? null);
       setGeneratedHeader(null); setGenerationId(null); setReplacementPlanId(null); setEditing(false);
@@ -324,7 +328,7 @@ export function AnnualPlanGenerator({ onConfirmed, onGoDiagnostic }: { onConfirm
   }, [reload]);
 
   async function saveCalendar() {
-    if (!calendarDraft || !classroom || operation || readOnly) return;
+    if (!calendarDraft || !classroom || operation || readOnly || savedPlans?.active) return;
     setOperation("calendar"); setMessage("");
     try {
       const response = await fetch(`${localDatabaseApiUrl}/api/annual-calendar`, { method: "PUT",
@@ -355,6 +359,28 @@ export function AnnualPlanGenerator({ onConfirmed, onGoDiagnostic }: { onConfirm
       setMessage(error instanceof TypeError ? "No se pudo conectar con el servidor local. Comprueba que la app esté iniciada." : error instanceof Error ? error.message : "No pudimos preparar el plan anual."); setMessageTone("error");
     } finally { setOperation(null); }
   }
+  async function copyCurrentVersion() {
+    if (!canCopyCurrent || !existingPlan || operation || savedPlans?.draft) return;
+    setOperation("copy"); setMessage("");
+    try {
+      const response = await fetch(`${localDatabaseApiUrl}/api/annual-plans/${existingPlan.id}/new-version`, { method: "POST" });
+      const result = await response.json() as { id?: string; error?: string };
+      if (!response.ok || !result.id) throw new Error(result.error ?? "No se pudo preparar la nueva versión.");
+      const plansResponse = await fetch(`${localDatabaseApiUrl}/api/annual-plans/current`);
+      if (!plansResponse.ok) throw new Error("La versión se guardó, pero no se pudo abrir. Vuelve a cargar el plan.");
+      const plans = await plansResponse.json() as PlansResponse;
+      if (!plans.draft || plans.draft.id !== result.id) throw new Error("La versión se guardó, pero no se pudo abrir. Vuelve a cargar el plan.");
+      setSavedPlans(plans); setExistingPlan(plans.draft); setProposal(plans.draft.proposal);
+      setPlanId(plans.draft.id); setGeneratedHeader(null); setGenerationId(null); setReplacementPlanId(null); setEditing(false);
+      setMessage("Copiamos el plan vigente como borrador. Revisa y cambia lo que necesites antes de confirmarlo."); setMessageTone("success");
+    } catch (error) { setMessage(error instanceof Error ? error.message : "No se pudo preparar la nueva versión."); setMessageTone("error"); }
+    finally { setOperation(null); }
+  }
+  function viewSavedPlan(plan: SavedPlan) {
+    if (hasUnsavedChanges || operation) { setMessage("Guarda los cambios del borrador antes de abrir otra versión."); setMessageTone("error"); return; }
+    setExistingPlan(plan); setProposal(plan.proposal); setPlanId(plan.id); setGeneratedHeader(null);
+    setGenerationId(null); setReplacementPlanId(null); setEditing(false); setMessage("");
+  }
   async function save() {
     if (!proposal || operation || readOnly || calendarDirty || calendarWarning) return;
     setOperation("save"); setMessage("");
@@ -362,8 +388,9 @@ export function AnnualPlanGenerator({ onConfirmed, onGoDiagnostic }: { onConfirm
       const response = await fetch(`${localDatabaseApiUrl}/api/annual-plans`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ proposal, planId, generationId, ...(replacementPlanId ? { replacementPlanId } : {}) }) });
       const data = await response.json() as { error?: string; id?: string; version?: number };
       if (!response.ok || !data.id) throw new Error(data.error ?? "No se pudo guardar el borrador.");
-      setPlanId(data.id); setExistingPlan({ id: data.id, classroom_id: classroom!.id, version: data.version ?? existingPlan?.version ?? 1,
-        status: "draft", proposal, document_context: documentContext });
+      const savedDraft: SavedPlan = { id: data.id, classroom_id: classroom!.id, version: data.version ?? existingPlan?.version ?? 1,
+        status: "draft", proposal, document_context: documentContext, supersedes_plan_id: existingPlan?.supersedes_plan_id ?? replacementPlanId };
+      setPlanId(data.id); setExistingPlan(savedDraft); setSavedPlans((current) => ({ ...current, draft: savedDraft }));
       setGenerationId(null); setReplacementPlanId(null); setEditing(false);
       setMessage("Borrador guardado. Léelo una vez más y confírmalo cuando estés conforme."); setMessageTone("success");
     } catch (error) { setMessage(error instanceof Error ? error.message : "No se pudo guardar el borrador."); setMessageTone("error"); }
@@ -377,7 +404,10 @@ export function AnnualPlanGenerator({ onConfirmed, onGoDiagnostic }: { onConfirm
       const data = await response.json() as { error?: string; version?: number };
       if (!response.ok) throw new Error(data.error ?? "No se pudo confirmar el plan.");
       setExistingPlan({ id: planId, classroom_id: classroom!.id, version: data.version ?? existingPlan?.version ?? 1,
-        status: "active", proposal, document_context: documentContext });
+        status: "active", proposal, document_context: documentContext, supersedes_plan_id: existingPlan?.supersedes_plan_id });
+      setSavedPlans((current) => current ? { active: { id: planId, classroom_id: classroom!.id, version: data.version ?? existingPlan?.version ?? 1,
+        status: "active", proposal, document_context: documentContext, supersedes_plan_id: existingPlan?.supersedes_plan_id }, draft: null,
+        archived: [...(current.archived ?? []), ...(current.active ? [{ ...current.active, status: "archived" as const }] : [])] } : current);
       setEditing(false); setMessage("Plan anual confirmado por la docente."); setMessageTone("success"); onConfirmed?.();
     } catch (error) { setMessage(error instanceof Error ? error.message : "No se pudo confirmar el plan."); setMessageTone("error"); }
     finally { setOperation(null); }
@@ -414,8 +444,12 @@ export function AnnualPlanGenerator({ onConfirmed, onGoDiagnostic }: { onConfirm
         <p className="mt-1 text-sm text-[#694717]">Contiene seis experiencias y usa la plantilla antigua. Puedes preparar una nueva versión con doce propuestas y la plantilla actual. El plan confirmado seguirá vigente hasta que revises y confirmes la nueva versión.</p>
         <AsyncButton className="mt-3 min-h-11" busy={operation === "generate"} busyLabel="Preparando nueva versión..." disabled={Boolean(operation) || calendarDirty || Boolean(calendarWarning) || !classroom?.diagnostic_summary} onClick={() => void generate()}>Preparar versión actualizada <ArrowRight /></AsyncButton>
       </div>}
-      {existingPlan && <p className="rounded-xl border border-[#d6e5ef] bg-white p-3 text-sm font-semibold">{existingPlan.status === "active" ? "Plan anual confirmado" : existingPlan.status === "draft" ? "Borrador de tu plan anual" : "Plan anual anterior"} · año {proposal.school_year}{readOnly && existingPlan.status === "draft" ? " · pertenece a otra aula de tu cuenta" : ""}</p>}
-      {existingPlan?.status === "draft" && !readOnly && calendarDraft && <AnnualCalendarEditor calendar={calendarDraft} onChange={setCalendarDraft} onSave={() => void saveCalendar()} saving={Boolean(operation)} />}
+      {existingPlan && <p className="rounded-xl border border-[#d6e5ef] bg-white p-3 text-sm font-semibold">{existingPlan.status === "active" ? "Plan anual vigente" : existingPlan.status === "draft" ? "Borrador de la nueva versión" : "Plan anual histórico"} · versión {existingPlan.version} · año {proposal.school_year}{readOnly && existingPlan.status === "draft" ? " · pertenece a otra aula de tu cuenta" : ""}</p>}
+      {savedPlans?.draft && existingPlan?.id !== savedPlans.draft.id && <Button variant="outline" className="min-h-11" onClick={() => viewSavedPlan(savedPlans.draft!)}>Volver al borrador · versión {savedPlans.draft.version}</Button>}
+      {savedPlans?.active && existingPlan?.id !== savedPlans.active.id && <Button variant="outline" className="min-h-11" onClick={() => viewSavedPlan(savedPlans.active!)}>Ver plan vigente · versión {savedPlans.active.version}</Button>}
+      {existingPlan?.status === "draft" && existingPlan.supersedes_plan_id && <p className="rounded-xl bg-[#f2f8fc] p-3 text-sm">Esta versión es una copia del plan anterior. Conserva sus doce propuestas hasta que tú las cambies y confirmes.</p>}
+      {canCopyCurrent && <div className="rounded-2xl border border-[#c7e4ec] bg-[#f5fbfd] p-4"><p className="font-bold">¿Necesitas actualizar el plan?</p><p className="mt-1 text-sm text-[#526b87]">Ayni copiará las doce propuestas en un borrador nuevo. El plan vigente y los proyectos que ya nacieron de él conservarán su versión.</p><AsyncButton className="mt-3 min-h-11" busy={operation === "copy"} busyLabel="Copiando el plan..." disabled={Boolean(operation) || Boolean(savedPlans?.draft) || !classroom?.diagnostic_summary} onClick={() => void copyCurrentVersion()}>Preparar nueva versión</AsyncButton>{!classroom?.diagnostic_summary && <p className="mt-2 text-sm font-semibold text-[#9a6220]">Revisa y confirma primero el diagnóstico actual del aula.</p>}</div>}
+      {existingPlan?.status === "draft" && !readOnly && !savedPlans?.active && calendarDraft && <AnnualCalendarEditor calendar={calendarDraft} onChange={setCalendarDraft} onSave={() => void saveCalendar()} saving={Boolean(operation)} />}
       {existingPlan?.status === "draft" && calendarDirty && <p className="rounded-xl border border-[#e9d6a7] bg-[#fff8e9] p-3 text-sm font-semibold">Guarda el calendario antes de guardar o confirmar el plan.</p>}
       {existingPlan?.status === "draft" && calendarWarning && <p className="rounded-xl border border-[#f0c2b8] bg-[#fff4f2] p-3 text-sm font-semibold text-[#9a392d]">{calendarWarning} Ajusta las interrupciones o la duración de los proyectos antes de confirmar.</p>}
       {editing && !readOnly ? <><Button variant="outline" className="min-h-11" onClick={() => setEditing(false)}><ArrowLeft /> Ver documento</Button><AnnualPlanEditor proposal={proposal} setProposal={setProposal} competencies={competencies} disabled={Boolean(operation)} /></>
@@ -426,6 +460,7 @@ export function AnnualPlanGenerator({ onConfirmed, onGoDiagnostic }: { onConfirm
         {!editing && <Button variant="outline" className="min-h-12 w-full sm:w-auto" disabled={Boolean(operation)} onClick={() => { setProposal(completeDocumentFields(proposal)); setEditing(true); }}><Pencil /> Corregir contenido</Button>}
         {hasUnsavedChanges && planId && <p className="w-full text-sm text-[#526b87]">Guarda los cambios antes de confirmar.</p>}
       </div>}
+      {savedPlans?.archived?.length ? <section className="rounded-2xl border border-[#d6e5ef] bg-white p-4"><h2 className="font-bold">Versiones anteriores</h2><p className="mt-1 text-sm text-[#526b87]">Puedes consultarlas y descargar su Word desde Documentos. Los proyectos creados desde ellas conservan su vínculo.</p><div className="mt-3 flex flex-wrap gap-2">{savedPlans.archived.map((plan) => <Button key={plan.id} variant="outline" className="min-h-11" onClick={() => viewSavedPlan(plan)}>Ver versión {plan.version}</Button>)}{existingPlan?.status === "archived" && savedPlans.active && <Button className="min-h-11" onClick={() => viewSavedPlan(savedPlans.active!)}>Volver al plan vigente</Button>}</div></section> : null}
     </>}
   </section>;
 }

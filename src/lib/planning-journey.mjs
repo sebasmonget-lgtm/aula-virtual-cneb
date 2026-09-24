@@ -39,7 +39,7 @@ export async function loadPlanningJourney(apiUrl, fetcher = fetch) {
   const experiences = (experienceData.experiences ?? []).filter((item) =>
     (item.type === "project" || item.type === "unit") &&
     item.details && typeof item.details.starting_point === "string" &&
-    (item.annual_plan_id === plan?.id || item.origin === "emergent"),
+    (item.annual_plan_id != null || item.origin === "emergent"),
   );
   const experience = experiences.some((item) => item.status === "draft") ? "draft" :
     experiences.some((item) => item.status === "active") ? "confirmed" : "pending";

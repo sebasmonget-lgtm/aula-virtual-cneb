@@ -392,3 +392,11 @@
 **Causa raíz.** El exportador insertaba textos genéricos de síntesis y ajustes en filas de la sección VII aunque la docente no los había escrito. Estas filas empujaban el cierre real a otra página.
 
 **Solución validada.** Se omiten esas filas y la instrucción editorial de la sección VI en la copia generada. La reflexión se muestra solo si existe un cierre docente guardado. El mismo ejemplo quedó en cuatro páginas tras abrirlo y exportarlo con Microsoft Word; se inspeccionó la última página y las pruebas comprueban que el registro nominal y su criterio proceden de la base. Para prevenirlo, renderizar tanto una actividad sin observaciones como otra con observaciones y revisar la paginación.
+
+## 2026-09-24 Proyectos de un plan sustituido desaparecían del recorrido
+
+**Síntoma.** Al pasar a una nueva versión anual, `planning-journey` solo contaba experiencias cuyo `annual_plan_id` coincidía con el plan vigente. Además, el servidor exigía que el plan padre siguiera activo al confirmar un proyecto borrador.
+
+**Causa raíz.** Una misma condición se usaba para dos preguntas distintas: qué propuestas sirven para trabajo nuevo y qué proyectos ya existen. Archivar un plan no invalida sus proyectos ni la procedencia del borrador.
+
+**Solución y prevención.** El recorrido incluye experiencias guardadas vinculadas a cualquier versión del aula; la UI muestra su versión de origen. La generación de trabajo nuevo sigue leyendo solo el plan vigente, mientras guardar una generación ya iniciada y confirmar un borrador validan su propuesta contra el plan padre activo o histórico. Una prueba con V1, V2 y proyectos de ambos estados comprueba que no se reasignan ni desaparecen.

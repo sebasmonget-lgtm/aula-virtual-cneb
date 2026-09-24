@@ -17,6 +17,7 @@ import { generateTeacherAnnualPlan } from "../src/lib/ai-annual-plan-ui-service.
 import { DiagnosticSuggestionError, suggestDiagnosticGroupReview } from "../src/lib/ai-diagnostic-evaluation-service.mjs";
 import { generateTeacherLearningExperience } from "../src/lib/ai-learning-experience-ui-service.mjs";
 import { nextAnnualPlanVersion, safeAnnualGenerationMetadata } from "../src/lib/annual-plan-persistence.mjs";
+import { copyConfirmedAnnualPlan } from "../src/lib/annual-plan-version-service.mjs";
 import { ANNUAL_PLAN_TEMPLATE_FORMAT, validateAnnualPlanProposal } from "../src/lib/annual-plan-contract.mjs";
 import { annualCalendarDay } from "../src/lib/annual-plan-schedule.mjs";
 import { buildFlexibleAnnualSchedule, defaultInitialStage, nationalCalendarBlocks2026, validateAnnualCalendar } from "../src/lib/annual-plan-calendar.mjs";
@@ -861,6 +862,15 @@ const server = createServer(async (request, response) => {
         send(response, 200, { proposal: generated.proposal, generation_id: generationId, document_context: annualDocumentContext(classroom) }, origin);
       } catch (error) { send(response, 422, { error: error?.message || "No pudimos preparar el plan anual.", reason: error?.reason ?? "unknown" }, origin); } return;
     }
+    if (request.method === "POST" && /^\/api\/annual-plans\/[0-9a-f-]+\/new-version$/i.test(url.pathname)) {
+      const context = await annualPlanningContext();
+      if (!context) { send(response, 404, { error: "No se encontró un aula activa." }, origin); return; }
+      try {
+        const copied = await copyConfirmedAnnualPlan(db, teacherId, context, url.pathname.split("/")[3], annualDocumentContext(context));
+        send(response, 201, copied, origin);
+      } catch (error) { send(response, 422, { error: error.message, reason: error.reason ?? "version_unavailable" }, origin); }
+      return;
+    }
     if (request.method === "POST" && url.pathname === "/api/annual-plans") {
       const context = await annualPlanningContext(); const body = await readJson(request);
       if (!context || !body.proposal) { send(response, 400, { error: "Falta propuesta o aula activa." }, origin); return; }
@@ -891,7 +901,7 @@ const server = createServer(async (request, response) => {
         }
         const latest = await db.query(`select coalesce(max(version), 0) as max_version from annual_plans where classroom_id=$1 and school_year_id=$2`, [context.id, context.school_year_id]);
         const version = nextAnnualPlanVersion(Number(latest.rows[0].max_version)); const id = randomUUID();
-        await db.query(`insert into annual_plans (id,classroom_id,school_year_id,curriculum_version_id,version,status,proposal,generation_metadata,document_context) values ($1,$2,$3,$4,$5,'draft',$6::jsonb,$7::jsonb,$8::jsonb)`, [id, context.id, context.school_year_id, context.curriculum_version_id, version, JSON.stringify(body.proposal), JSON.stringify(pending?.metadata ?? {}), JSON.stringify(annualDocumentContext(context))]);
+        await db.query(`insert into annual_plans (id,classroom_id,school_year_id,curriculum_version_id,version,status,proposal,generation_metadata,document_context,supersedes_plan_id,source_diagnostic_review_id,source_context_fingerprint) values ($1,$2,$3,$4,$5,'draft',$6::jsonb,$7::jsonb,$8::jsonb,$9,$10,$11)`, [id, context.id, context.school_year_id, context.curriculum_version_id, version, JSON.stringify(body.proposal), JSON.stringify(pending?.metadata ?? {}), JSON.stringify({ ...annualDocumentContext(context), supersedes_plan_id: replacingLegacy ? active.id : null }), replacingLegacy ? active.id : null, context.source_diagnostic_review_id, context.context_v4.source_fingerprint]);
         if (annualSchedule) await replaceAnnualProjectSlots(id, annualSchedule);
         await db.exec("commit");
         if (pending) await pendingAIGenerations.delete(body.generationId);
@@ -905,15 +915,19 @@ const server = createServer(async (request, response) => {
       if (!context) { send(response, 404, { error: "No se encontró un aula activa." }, origin); return; }
       await db.exec("begin");
       try {
-        const draft = await db.query(`select id,classroom_id,school_year_id,proposal,document_context from annual_plans where id=$1 and classroom_id=$2 and school_year_id=$3 and status='draft'`, [id, context.id, context.school_year_id]);
+        const draft = await db.query(`select id,classroom_id,school_year_id,proposal,document_context,supersedes_plan_id,source_diagnostic_review_id,source_context_fingerprint from annual_plans where id=$1 and classroom_id=$2 and school_year_id=$3 and status='draft'`, [id, context.id, context.school_year_id]);
         if (!draft.rows[0]) throw new Error("Plan anual no disponible para confirmar.");
-        if (!context.context_v4?.diagnostic_review_current || (draft.rows[0].document_context?.source_context_fingerprint && draft.rows[0].document_context.source_context_fingerprint !== context.context_v4.source_fingerprint)) throw new Error("Cambió el diagnóstico del aula. Revísalo y confírmalo antes de confirmar el plan anual.");
+        const sourceFingerprint = draft.rows[0].source_context_fingerprint ?? draft.rows[0].document_context?.source_context_fingerprint;
+        const sourceDiagnosticId = draft.rows[0].source_diagnostic_review_id ?? draft.rows[0].document_context?.source_diagnostic_review_id;
+        if (!context.context_v4?.diagnostic_review_current || (sourceFingerprint && sourceFingerprint !== context.context_v4.source_fingerprint) || (sourceDiagnosticId && sourceDiagnosticId !== context.source_diagnostic_review_id)) throw new Error("Cambió el diagnóstico del aula. Revísalo y confírmalo antes de confirmar el plan anual.");
+        const currentPlan = (await db.query(`select id from annual_plans where school_year_id=$1 and status='active'`, [context.school_year_id])).rows[0];
+        if (currentPlan && currentPlan.id !== draft.rows[0].supersedes_plan_id) throw new Error("El plan vigente cambió. Prepara una nueva versión desde el plan actual.");
         validateAnnualPlanProposal(draft.rows[0].proposal, await applicableCompetencyIds("annual_plan", context), context.year);
         if (draft.rows[0].proposal.plan_format === ANNUAL_PLAN_TEMPLATE_FORMAT) {
           const schedule = buildFlexibleAnnualSchedule(context.calendar, draft.rows[0].proposal.proposed_experiences);
           await replaceAnnualProjectSlots(id, schedule);
         }
-        await db.query(`update annual_plans set status='archived', updated_at=now() where classroom_id=$1 and school_year_id=$2 and status='active'`, [draft.rows[0].classroom_id, draft.rows[0].school_year_id]);
+        if (currentPlan) await db.query(`update annual_plans set status='archived', updated_at=now() where id=$1 and status='active'`, [currentPlan.id]);
         const result = await db.query(`update annual_plans set status='active', teacher_confirmed_at=now(), updated_at=now() where id=$1 and status='draft' returning id,status,version`, [id]);
         await db.exec("commit"); send(response, 200, result.rows[0], origin);
       } catch (error) { await db.exec("rollback"); send(response, error?.reason ? 422 : 404, { error: error?.message || "Plan anual no disponible para confirmar.", ...(error?.reason ? { reason: error.reason, details: error.details } : {}) }, origin); }
@@ -922,7 +936,7 @@ const server = createServer(async (request, response) => {
     if (request.method === "GET" && url.pathname === "/api/annual-plans/current") {
       const context = await annualPlanningContext();
       if (!context) { send(response, 404, { error: "No se encontró un aula activa." }, origin); return; }
-      const plans = (await db.query(`select ap.id,ap.classroom_id,ap.version,ap.status,ap.proposal,ap.document_context,ap.created_at,ap.updated_at,
+      const plans = (await db.query(`select ap.id,ap.classroom_id,ap.version,ap.status,ap.proposal,ap.document_context,ap.supersedes_plan_id,ap.source_diagnostic_review_id,ap.source_context_fingerprint,ap.created_at,ap.updated_at,
         c.section as source_section,ag.age_years as source_age,p.display_name as source_teacher_name,
         coalesce(ip.display_name,c.institution_name) as source_institution_name,ip.institution_code as source_institution_code,
         ip.district as source_district,ip.ugel as source_ugel,sy.year as source_year,sy.starts_on as source_starts_on,sy.ends_on as source_ends_on
@@ -931,6 +945,7 @@ const server = createServer(async (request, response) => {
         left join institution_profiles ip on ip.owner_user_id=c.teacher_id
         where ap.school_year_id=$1 and sy.owner_id=$2 order by ap.version desc`, [context.school_year_id, teacherId])).rows.map((row) => ({
           id: row.id, classroom_id: row.classroom_id, version: row.version, status: row.status,
+          supersedes_plan_id: row.supersedes_plan_id, source_diagnostic_review_id: row.source_diagnostic_review_id,
           proposal: row.proposal, created_at: row.created_at, updated_at: row.updated_at,
           document_context: Object.keys(row.document_context ?? {}).length ? row.document_context : annualDocumentContext({
             institution_name: row.source_institution_name, institution_code: row.source_institution_code,
@@ -974,12 +989,14 @@ const server = createServer(async (request, response) => {
       if (!context || !body.proposal || !["project", "unit"].includes(body.type) || !pending || pending.classroom_id !== context.id || pending.workflow !== body.type) { send(response, 422, { error: "Falta una generación válida de proyecto o unidad." }, origin); return; }
       const originType = body.origin === "emergent" ? "emergent" : "planned"; const proposalIndex = originType === "planned" && Number.isInteger(body.sourceProposalIndex) ? body.sourceProposalIndex : null;
       if (originType === "planned" && (!body.annualPlanId || proposalIndex === null)) { send(response, 422, { error: "Falta la propuesta de origen del plan anual." }, origin); return; }
+      if (originType === "planned" && (pending.parent?.annual_plan_id !== body.annualPlanId || pending.parent?.source_proposal_index !== proposalIndex)) { send(response, 422, { error: "La propuesta ya no coincide con el plan que inició este proyecto." }, origin); return; }
+      if (originType === "emergent" && pending.parent) { send(response, 422, { error: "Esta generación pertenece a una propuesta del plan anual." }, origin); return; }
       if (originType === "emergent" && !cleanText(body.planningReason, 500)) { send(response, 422, { error: "Explica la razón de esta experiencia emergente." }, origin); return; }
       try { validateExperienceDates(body, context); validateLearningExperienceProposal(body.type, body.proposal, await applicableCompetencyIds(body.type, context)); } catch (error) { send(response, 422, { error: error.message }, origin); return; }
       if (originType === "planned") {
-        const parent = (await db.query(`select proposal from annual_plans where id=$1 and classroom_id=$2 and status='active'`, [body.annualPlanId, context.id])).rows[0];
+        const parent = (await db.query(`select proposal from annual_plans where id=$1 and classroom_id=$2 and status in ('active','archived')`, [body.annualPlanId, context.id])).rows[0];
         const source = parent?.proposal?.proposed_experiences?.[proposalIndex];
-        if (!source || source.experience_type !== body.type) { send(response, 422, { error: "La propuesta anual activa no coincide con esta experiencia." }, origin); return; }
+        if (!source || source.experience_type !== body.type) { send(response, 422, { error: "La propuesta de origen ya no coincide con esta experiencia." }, origin); return; }
       }
       try { const id = randomUUID(); const details = saveExperienceDetails(body.proposal, null, pending.generated_proposal); await db.query(`insert into learning_experiences (id,classroom_id,type,title,purpose,starts_on,ends_on,status,details,annual_plan_id,origin,planning_reason,source_proposal_index,generation_metadata) values ($1,$2,$3,$4,$5,$6::date,$7::date,'draft',$8::jsonb,$9,$10,$11,$12,$13::jsonb)`, [id, context.id, body.type, details.title, details.purpose, body.startsOn, body.endsOn, JSON.stringify(details), body.annualPlanId ?? null, originType, body.planningReason ?? null, proposalIndex, JSON.stringify(pending.metadata)]); await pendingAIGenerations.delete(body.generationId); send(response, 200, { id, status: "draft" }, origin); } catch (error) { send(response, 422, { error: error?.message || "No se pudo guardar la experiencia." }, origin); } return;
     }
@@ -995,7 +1012,7 @@ const server = createServer(async (request, response) => {
       try {
         validateExperienceDates({ startsOn: String(current.starts_on).slice(0,10), endsOn: String(current.ends_on).slice(0,10) }, context); validateLearningExperienceProposal(current.type, current.details, await applicableCompetencyIds(current.type, context));
         if (current.origin === "emergent" && !cleanText(current.planning_reason, 500)) throw new Error("Explica la razón de esta experiencia emergente.");
-        if (current.origin === "planned") { const parent = (await db.query(`select proposal from annual_plans where id=$1 and classroom_id=$2 and status='active'`, [current.annual_plan_id, context.id])).rows[0]; const source = parent?.proposal?.proposed_experiences?.[current.source_proposal_index]; if (!source || source.experience_type !== current.type) throw new Error("La propuesta anual activa no coincide con esta experiencia."); }
+        if (current.origin === "planned") { const parent = (await db.query(`select proposal from annual_plans where id=$1 and classroom_id=$2 and status in ('active','archived')`, [current.annual_plan_id, context.id])).rows[0]; const source = parent?.proposal?.proposed_experiences?.[current.source_proposal_index]; if (!source || source.experience_type !== current.type) throw new Error("La propuesta de origen ya no coincide con esta experiencia."); }
         const result = await db.query(`update learning_experiences set status='active', teacher_confirmed_at=now() where id=$1 returning id,status,teacher_confirmed_at`, [id]); send(response, 200, result.rows[0], origin);
       } catch (error) { send(response, 422, { error: error.message }, origin); } return;
     }

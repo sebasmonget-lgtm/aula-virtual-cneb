@@ -87,13 +87,15 @@ test("una actividad confirmada sigue visible en el recorrido aunque exista un bo
   assert.equal(journey.hasConfirmedActivity, true);
 });
 
-test("solo cuenta experiencias del plan vigente y falla claramente si no puede leer el avance", async () => {
+test("un proyecto de un plan histórico sigue en el recorrido y falla claramente si no puede leer el avance", async () => {
   const journey = await loadPlanningJourney(base, fetchFrom({
     [planUrl]: { active: { id: "plan-2" } },
     [experienceUrl]: { experiences: [{ id: "old", type: "unit", status: "active", annual_plan_id: "plan-1", details: { starting_point: "Antes" } }] },
+    [`${base}/api/activities?experienceId=old`]: { activities: [{ status: "draft" }] },
   }));
-  assert.equal(journey.experience, "pending");
-  assert.equal(journey.recommended, "experiences");
+  assert.equal(journey.experience, "confirmed");
+  assert.equal(journey.activity, "draft");
+  assert.equal(journey.recommended, "activities");
   await assert.rejects(loadPlanningJourney(base, fetchFrom({ [planUrl]: null, [experienceUrl]: { experiences: [] } })), /avance/);
 });
 

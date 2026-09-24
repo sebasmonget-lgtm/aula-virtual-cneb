@@ -140,6 +140,11 @@ Proyecto nuevo iniciado el 20 de septiembre de 2026. Existe un shell responsive 
 - La docente registra un hecho o una foto después de la actividad, sin marcar un nivel por cada registro. El servidor valida aula, alumno, actividad y criterio activo; guarda sus IDs y fecha. La descarga autorizada toma cada observación de la base, une su criterio real y agrega una fila nominal al Word. Las fotos privadas no se incrustan ni pasan a IA; el Word indica que están guardadas en Ayni.
 - La sección de observaciones y la reflexión docente aparecen solo cuando existen registros reales. Se quitaron frases genéricas de síntesis y ajustes que anticipaban decisiones docentes. Los registros sin marca siguen contando para el análisis posterior. Ver ADR 052.
 
+## Versiones del Plan Anual (2026-09-24)
+
+- Una nueva versión de un plan actual de doce propuestas nace de una copia editable, sin IA. Guarda `supersedes_plan_id`, `source_diagnostic_review_id` y `source_context_fingerprint`; exige diagnóstico grupal confirmado y vigente. El plan activo se archiva solo al confirmar el borrador. El contenido de planes confirmados queda protegido por trigger. El flujo previo para convertir planes de formato antiguo se mantiene.
+- El recorrido y la lista de experiencias conservan los proyectos/unidades creados desde planes históricos. Solo el plan vigente ofrece propuestas para trabajo nuevo; un proyecto borrador nacido de una versión anterior conserva su plan e índice y puede confirmarse contra esa versión archivada. Documentos mantiene el acceso por ID a cada versión. Ver ADR 054.
+
 
 
 
