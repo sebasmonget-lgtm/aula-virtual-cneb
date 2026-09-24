@@ -145,6 +145,11 @@ Proyecto nuevo iniciado el 20 de septiembre de 2026. Existe un shell responsive 
 - Una nueva versión de un plan actual de doce propuestas nace de una copia editable, sin IA. Guarda `supersedes_plan_id`, `source_diagnostic_review_id` y `source_context_fingerprint`; exige diagnóstico grupal confirmado y vigente. El plan activo se archiva solo al confirmar el borrador. El contenido de planes confirmados queda protegido por trigger. El flujo previo para convertir planes de formato antiguo se mantiene.
 - El recorrido y la lista de experiencias conservan los proyectos/unidades creados desde planes históricos. Solo el plan vigente ofrece propuestas para trabajo nuevo; un proyecto borrador nacido de una versión anterior conserva su plan e índice y puede confirmarse contra esa versión archivada. Documentos mantiene el acceso por ID a cada versión. Ver ADR 054.
 
+## Versiones de Proyecto y Unidad (2026-09-24)
+
+- Proyecto/Unidad V2 nace de una copia de V1 confirmada como nuevo borrador, sin llamada automática a IA. Conserva `supersedes_experience_id`, `annual_plan_id`, `source_proposal_index`, tipo y origen, incluso si el plan anual de origen ya es histórico. La docente puede editar o regenerar explícitamente el contenido del borrador, guardarlo y confirmarlo. Solo entonces V1 pasa a `archived`; un trigger impide modificar o borrar versiones confirmadas. Ver ADR 055.
+- Las actividades mantienen su `experience_id` original. La pantalla de actividades permite abrir una experiencia histórica y terminar sus actividades existentes, pero las nuevas nacen solo de una experiencia vigente. Documentos puede leer ambas versiones sin generar de nuevo su contenido.
+
 
 
 

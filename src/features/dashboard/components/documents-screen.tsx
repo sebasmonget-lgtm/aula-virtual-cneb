@@ -64,7 +64,7 @@ function DocumentContent({ document }: { document: OpenDocument }) {
   const names = new Map((document.competencies ?? []).map((card) => [card.id, card.name]));
   return <article aria-label={labelFor(document)} className="overflow-hidden rounded-[1.5rem] border border-[#d6e5ef] bg-white shadow-sm">
     <header className="bg-gradient-to-r from-[#e8f6fa] to-[#f5f9fd] p-5 sm:p-8">
-      <div className="flex flex-wrap justify-between gap-2"><p className="text-xs font-extrabold uppercase tracking-wider text-[#087d96]">{labelFor(document)}</p><span className="rounded-full bg-white px-3 py-1 text-xs font-semibold">{statusFor(document.status)}</span></div>
+      <div className="flex flex-wrap justify-between gap-2"><p className="text-xs font-extrabold uppercase tracking-wider text-[#087d96]">{labelFor(document)}{document.kind === "experience" && document.version ? ` · Versión ${document.version}` : ""}</p><span className="rounded-full bg-white px-3 py-1 text-xs font-semibold">{statusFor(document.status)}</span></div>
       <h2 className="mt-3 text-2xl font-extrabold leading-tight text-[#172b52]">{document.title}</h2>
       <p className="mt-2 text-sm text-[#526b87]">{[document.institution_name, document.classroom, document.school_year].filter(Boolean).join(" · ")}</p>
       {(document.starts_on || document.occurs_on || document.period_start) && <p className="mt-1 text-sm text-[#526b87]">{document.occurs_on ? dateFor(document.occurs_on) : document.period_start ? `${dateFor(document.period_start)} – ${dateFor(document.period_end ?? "")}` : `${dateFor(document.starts_on ?? "")} – ${dateFor(document.ends_on ?? "")}`}</p>}

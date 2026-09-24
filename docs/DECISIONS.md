@@ -422,3 +422,11 @@ La confirmación de la actividad y la inserción del criterio heredado se ejecut
 **Descendientes.** Los proyectos y unidades conservan el ID y el índice de la propuesta del plan del que nacieron. El plan vigente aporta las propuestas para trabajo nuevo; los proyectos existentes de planes históricos permanecen visibles y los borradores pueden completarse con su fuente archivada. La biblioteca continúa leyendo las versiones históricas desde su fila original. El flujo anterior que convierte un plan de formato antiguo a doce propuestas permanece separado de la copia sin IA.
 
 **Reversión.** La interfaz y la ruta de copia pueden retirarse sin alterar planes confirmados; la migración se conserva porque fija procedencia e inmutabilidad. No se regeneran Plan Maestro, desarrollo ni DOCX al crear una versión copiada.
+
+## ADR 055 Versiones de Proyecto y Unidad sin reasignar actividades
+
+**Decisión.** «Preparar nueva versión» copia una experiencia confirmada de tipo proyecto o unidad a una fila nueva en borrador. Guarda una FK a la versión anterior y conserva el plan anual, origen, índice de propuesta y tipo. La copia no llama a la IA; la docente puede editarla o pedir explícitamente una nueva redacción usando el generador existente. Al confirmar, la versión anterior pasa a histórica y V2 queda vigente en una transacción. Un trigger protege las versiones confirmadas frente a cambios de contenido o eliminación. Las filas antiguas parten de versión 1 sin inventar relaciones retrospectivas.
+
+**Actividades.** Su `experience_id` nunca se modifica. La versión histórica sigue disponible para consultar y terminar actividades ya creadas, incluso borradores; solo la versión vigente admite actividades nuevas. Las propuestas anuales del plan vigente y las experiencias ya creadas son listas distintas. La biblioteca conserva cada versión por ID para consulta y exportación.
+
+**Reversión.** Se puede retirar la acción de copia y regeneración sin migrar actividades ni modificar documentos previos. La migración de procedencia e inmutabilidad se conserva; las migraciones local y Supabase son equivalentes.

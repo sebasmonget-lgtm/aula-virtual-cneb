@@ -38,6 +38,7 @@ async function fixture() {
     [id(9), id(6), JSON.stringify({ strengths: "Juegan juntos", needs: "Más diálogo", planning_priorities: "Conversar", private_note: "hidden" }), JSON.stringify({ raw: "hidden" })]);
   await db.query(`insert into learning_experiences values($1,$2,'project','El huerto','Explorar plantas','active',$3::jsonb,'2026-04-01','2026-05-01','planned','Desde el plan',0),($4,$2,'workshop','Taller antiguo','Legacy','active','{}'::jsonb,'2026-04-01','2026-05-01','planned',null,null)`,
     [id(10), id(6), JSON.stringify({ starting_point: "Vimos semillas", possible_pathways: [], generation_metadata: { response_id: "hidden" } }), id(11)]);
+  await db.exec(`alter table learning_experiences add column version integer not null default 1`);
   await db.query(`insert into activities values($1,$2,'Jugar con sombras','Observar luz','active',$3::jsonb,$4::jsonb,'2026-04-02')`,
     [id(12), id(10), JSON.stringify({ meaningful_situation: "El patio cambia", child_actions: ["Mueven la luz"], response_id: "hidden" }), JSON.stringify({ materials: ["linternas"], private_path: "hidden" })]);
   await db.query(`insert into activity_criteria values($1,$2,'CYT_INDAGA','Explica lo que observó',$3::jsonb,'active',now())`,

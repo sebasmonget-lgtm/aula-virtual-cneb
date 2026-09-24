@@ -400,3 +400,11 @@
 **Causa raíz.** Una misma condición se usaba para dos preguntas distintas: qué propuestas sirven para trabajo nuevo y qué proyectos ya existen. Archivar un plan no invalida sus proyectos ni la procedencia del borrador.
 
 **Solución y prevención.** El recorrido incluye experiencias guardadas vinculadas a cualquier versión del aula; la UI muestra su versión de origen. La generación de trabajo nuevo sigue leyendo solo el plan vigente, mientras guardar una generación ya iniciada y confirmar un borrador validan su propuesta contra el plan padre activo o histórico. Una prueba con V1, V2 y proyectos de ambos estados comprueba que no se reasignan ni desaparecen.
+
+## 2026-09-24 Archivar un proyecto ocultaba sus actividades anteriores
+
+**Síntoma.** La selección de actividades y su consulta exigían que el proyecto o unidad padre estuviera activo. Al confirmar una nueva versión, las actividades ligadas a la versión anterior dejaban de verse o de poder terminarse.
+
+**Causa raíz.** La misma condición `status='active'` se usaba para iniciar actividades nuevas y para leer o terminar las ya existentes. La base local tampoco tenía `updated_at` en `learning_experiences`, a diferencia del esquema remoto.
+
+**Solución validada.** La ruta de creación conserva el requisito de versión vigente. La consulta de actividades y la edición o confirmación de borradores existentes admiten un padre histórico; la pantalla lo identifica y oculta el formulario para crear actividades nuevas allí. La transición de versión local cambia solo el estado, compatible con ambos esquemas. Las pruebas persisten V1, V2 y una actividad que conserva su `experience_id` original.

@@ -21,10 +21,10 @@ export async function listSavedDocuments(db, teacherId) {
       id: row.id, kind: "diagnostic_summary", title: "Resumen diagnóstico del aula", status: row.status,
       version: Number(row.version), school_year: Number(row.year), classroom: row.section, date: timestamp(row.updated_at),
     }));
-  const experiences = (await db.query(`select e.id,e.type,e.title,e.status,e.starts_on,sy.year,c.section
+  const experiences = (await db.query(`select e.id,e.type,e.title,e.status,e.version,e.starts_on,sy.year,c.section
     from learning_experiences e join classrooms c on c.id=e.classroom_id join school_years sy on sy.id=c.school_year_id
     where c.teacher_id=$1 and sy.owner_id=$1 and e.type in ('project','unit') and e.details ? 'starting_point'`, [teacherId])).rows.map((row) => ({
-      id: row.id, kind: "experience", subtype: row.type, title: row.title, status: row.status,
+      id: row.id, kind: "experience", subtype: row.type, title: row.title, status: row.status, version: Number(row.version),
       school_year: Number(row.year), classroom: row.section, date: dateOnly(row.starts_on),
     }));
   const activities = (await db.query(`select a.id,a.title,a.status,a.occurs_on,sy.year,c.section
@@ -107,13 +107,13 @@ export async function loadSavedDocument(db, teacherId, kind, id) {
         document_format: row.details?.document_format, report_snapshot: row.details?.report_snapshot } } : null;
   }
   if (kind === "experience") {
-    const row = (await db.query(`select e.id,e.type,e.title,e.purpose,e.status,e.details,e.starts_on,e.ends_on,e.origin,e.planning_reason,e.source_proposal_index,
+    const row = (await db.query(`select e.id,e.type,e.title,e.purpose,e.status,e.version,e.details,e.starts_on,e.ends_on,e.origin,e.planning_reason,e.source_proposal_index,
       sy.year,c.section,c.institution_name,ag.age_years,p.display_name as teacher_name,ip.ugel,ip.district from learning_experiences e join classrooms c on c.id=e.classroom_id
       join school_years sy on sy.id=c.school_year_id
       join age_grades ag on ag.id=c.age_grade_id join profiles p on p.user_id=c.teacher_id
       left join institution_profiles ip on ip.owner_user_id=c.teacher_id
       where e.id=$2 and c.teacher_id=$1 and sy.owner_id=$1 and e.type in ('project','unit') and e.details ? 'starting_point'`, [teacherId, id])).rows[0];
-    return row ? { id: row.id, kind, subtype: row.type, title: row.title, status: row.status,
+    return row ? { id: row.id, kind, subtype: row.type, title: row.title, status: row.status, version: Number(row.version),
       school_year: Number(row.year), classroom: row.section, institution_name: row.institution_name,
       age: Number(row.age_years), teacher_name: row.teacher_name, ugel: row.ugel, district: row.district,
       starts_on: dateOnly(row.starts_on), ends_on: dateOnly(row.ends_on), origin: row.origin,
