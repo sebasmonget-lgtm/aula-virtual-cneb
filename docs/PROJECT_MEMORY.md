@@ -122,6 +122,16 @@ Proyecto nuevo iniciado el 20 de septiembre de 2026. Existe un shell responsive 
 - `crear-plan-anual` orienta cuatro de las doce propuestas hacia Día del Niño Peruano, Día de la Educación Inicial, Fiestas Patrias y Navidad/cierre de año. Recibe los doce espacios lectivos ya calculados para situarlas cerca de los hitos sin inventar fechas ni transformar una celebración en manualidades. Las otras ocho se basan en el diagnóstico e intereses del grupo y todas siguen siendo revisables.
 - El Word flexible recoge una categoría de actuación individual de cada proyecto en «Evidencias principales», sin truncar la lista tras los primeros. «Criterios de cada actividad» deja de figurar como instrumento y el producto posible se distingue de la evidencia individual también en el editor. El esquema guardado, el calendario, Sol/Terra y la plantilla binaria no cambian.
 
+## Migración a cuatro plantillas unificadas (2026-09-24)
+
+- Commit de respaldo previo: `3fcef66`. Los cuatro DOCX unificados del usuario se copiaron intactos a `assets/templates/`; sus hashes coinciden con los originales.
+- El contexto CNEB enviado a la IA proyecta las tarjetas a la edad del aula. El informe diagnóstico confirmado guarda una instantánea interna de nombres, comentarios, entrevista familiar pertinente y observaciones reales, junto con la síntesis grupal. El Word expresa información insuficiente cuando faltan registros.
+- El seguimiento nominal del Word muestra hasta dos registros reales por niño con su competencia; el apoyo se plantea como siguiente oportunidad de observación, sin convertir una falta de datos en dificultad. El plan anual conserva el ID del diagnóstico confirmado del que partió.
+- El Plan Anual nuevo marca `annual-unified-v1`; sus doce propuestas alimentan cronograma, resumen mensual y doce fichas. Se descartan ocho fichas modelo en la copia generada, sin tocar la plantilla fuente.
+- Los proyectos y unidades nuevos incorporan `activity_route` y usan `crear-proyecto-unidad`. El servidor asigna IDs estables a las filas y guarda cambios docentes explícitos. La actividad usa `crear-actividad` con el routing anterior, hereda propósito, competencia, criterio y evidencia de una fila, y conserva su `route_item_id`.
+- Los DOCX de proyecto y actividad toman la estructura unificada. El de actividad muestra registros nominales y cierre docente solo si ya se guardaron; no se anticipan resultados. Las versiones históricas sin marcador siguen usando el exportador anterior. Ver ADR 051.
+- La confirmación de la actividad y su criterio heredado son atómicas; un error al guardar el criterio revierte la confirmación. Ver ADR 051.
+
 
 
 

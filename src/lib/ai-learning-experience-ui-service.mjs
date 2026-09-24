@@ -3,6 +3,7 @@ import { generateAIWorkflowV4 } from "./ai-generation-v4.mjs";
 import { createAIProviderForPlan } from "./ai-provider-factory.mjs";
 import { ActivityGenerationUIError, teacherMessageForActivityGenerationError } from "./ai-activity-ui-service.mjs";
 import { buildProjectContext, buildUnitContext } from "./context-policy-v4.mjs";
+import { loadLearningExperienceSkill } from "./learning-experience-skill.mjs";
 
 const LEARNING_EXPERIENCE_TIMEOUT_MS = 120_000;
 
@@ -28,11 +29,12 @@ export function buildLearningExperienceGenerationInput({ classroom, request = {}
   };
 }
 
-export async function generateTeacherLearningExperience({ classroom, request, resolvePlan = resolveAIExecutionPlan, createProvider = createAIProviderForPlan, generate = generateAIWorkflowV4 }) {
+export async function generateTeacherLearningExperience({ classroom, request, resolvePlan = resolveAIExecutionPlan, createProvider = createAIProviderForPlan, generate = generateAIWorkflowV4, loadSkill = loadLearningExperienceSkill }) {
   const input = buildLearningExperienceGenerationInput({ classroom, request });
   try {
     const executionPlan = resolvePlan({ workflow: input.workflow, task: "generation" });
-    const generated = await generate(input, { provider: createProvider(executionPlan, { timeoutMs: LEARNING_EXPERIENCE_TIMEOUT_MS }), executionPlan });
+    const generated = await generate(input, { provider: createProvider(executionPlan, { timeoutMs: LEARNING_EXPERIENCE_TIMEOUT_MS }), executionPlan,
+      skillInstructions: await loadSkill() });
     return { proposal: generated.output, internalMetadata: { workflow: generated.metadata.workflow, model: generated.metadata.model, reasoning_effort: executionPlan.reasoning_effort, response_id: generated.metadata.response_id, usage: generated.metadata.usage, provenance: generated.provenance, ...(input.context_snapshot ? { context_snapshot: input.context_snapshot } : {}) } };
   } catch (error) { const wrapped = new ActivityGenerationUIError(error?.reason ?? "unknown", teacherMessageForLearningExperienceError(error)); wrapped.cause = error; throw wrapped; }
 }

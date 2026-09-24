@@ -15,8 +15,11 @@ async function fixture() {
     create table classrooms(id uuid primary key,teacher_id uuid,school_year_id uuid,age_grade_id uuid,section text,institution_name text);
     create table annual_plans(id uuid primary key,classroom_id uuid,school_year_id uuid,status text,version int,proposal jsonb,document_context jsonb,updated_at timestamptz,teacher_confirmed_at timestamptz,generation_metadata jsonb);
     create table diagnostic_group_reviews(id uuid primary key,classroom_id uuid,status text,version int,details jsonb,updated_at timestamptz,teacher_confirmed_at timestamptz,source_snapshot jsonb);
-    create table learning_experiences(id uuid primary key,classroom_id uuid,type text,title text,purpose text,status text,details jsonb,starts_on date,ends_on date,origin text,planning_reason text);
+    create table learning_experiences(id uuid primary key,classroom_id uuid,type text,title text,purpose text,status text,details jsonb,starts_on date,ends_on date,origin text,planning_reason text,source_proposal_index int);
     create table activities(id uuid primary key,experience_id uuid,title text,purpose text,status text,details jsonb,preparation jsonb,occurs_on date);
+    create table evidences(id uuid primary key,student_id uuid,activity_id uuid,observation_text text,observation_status text,type text,observed_at timestamptz,media_path text,created_by uuid);
+    create table class_schedule_entries(id uuid primary key,activity_id uuid,classroom_id uuid);
+    create table daily_execution_logs(id uuid primary key,schedule_entry_id uuid,execution_date date,teacher_closure_note text);
     create table students(id uuid primary key,classroom_id uuid,first_name text,preferred_name text,status text default 'active');
     create table family_reports(id uuid primary key,student_id uuid,status text,version int,details jsonb,updated_at timestamptz,period_start date,period_end date,teacher_confirmed_at timestamptz,generation_metadata jsonb);
   `);
@@ -29,7 +32,7 @@ async function fixture() {
   await db.query(`insert into annual_plans values($1,$2,$3,'archived',1,'{}'::jsonb,'{}'::jsonb,now(),null,'{}'::jsonb)`, [id(19), id(6), id(4)]);
   await db.query(`insert into diagnostic_group_reviews values($1,$2,'confirmed',1,$3::jsonb,now(),now(),$4::jsonb)`,
     [id(9), id(6), JSON.stringify({ strengths: "Juegan juntos", needs: "Más diálogo", planning_priorities: "Conversar", private_note: "hidden" }), JSON.stringify({ raw: "hidden" })]);
-  await db.query(`insert into learning_experiences values($1,$2,'project','El huerto','Explorar plantas','active',$3::jsonb,'2026-04-01','2026-05-01','planned','Desde el plan'),($4,$2,'workshop','Taller antiguo','Legacy','active','{}'::jsonb,'2026-04-01','2026-05-01','planned',null)`,
+  await db.query(`insert into learning_experiences values($1,$2,'project','El huerto','Explorar plantas','active',$3::jsonb,'2026-04-01','2026-05-01','planned','Desde el plan',0),($4,$2,'workshop','Taller antiguo','Legacy','active','{}'::jsonb,'2026-04-01','2026-05-01','planned',null,null)`,
     [id(10), id(6), JSON.stringify({ starting_point: "Vimos semillas", possible_pathways: [], generation_metadata: { response_id: "hidden" } }), id(11)]);
   await db.query(`insert into activities values($1,$2,'Jugar con sombras','Observar luz','active',$3::jsonb,$4::jsonb,'2026-04-02')`,
     [id(12), id(10), JSON.stringify({ meaningful_situation: "El patio cambia", child_actions: ["Mueven la luz"], response_id: "hidden" }), JSON.stringify({ materials: ["linternas"], private_path: "hidden" })]);
@@ -63,6 +66,22 @@ test("cada documento se abre solo para su docente y sin metadata técnica", asyn
     assert.equal(await loadSavedDocument(db, id(1), "experience", id(11)), null);
     assert.equal(await loadSavedDocument(db, id(1), "annual_plan", "../../etc/passwd"), null);
     assert.equal(await loadSavedDocument(db, id(1), "other", id(8)), null);
+  } finally { await db.close(); }
+});
+
+test("el Word de actividad recibe solo evidencia nominal real del aula autorizada", async () => {
+  const db = await fixture();
+  try {
+    await db.query(`insert into evidences values($1,$2,$3,'Propuso esperar su turno','observed_without_judgment','observation',now(),null,$4)`,
+      [id(21), id(13), id(12), id(1)]);
+    await db.query(`insert into class_schedule_entries values($1,$2,$3)`, [id(22), id(12), id(6)]);
+    await db.query(`insert into daily_execution_logs values($1,$2,'2026-04-02','El grupo pidió otro turno')`, [id(23), id(22)]);
+    const document = await loadSavedDocument(db, id(1), "activity", id(12));
+    assert.deepEqual(document.registered_evidence.map((item) => [item.student_name, item.observation_text]),
+      [["Alessia", "Propuso esperar su turno"]]);
+    assert.equal(document.teacher_closure_note, "El grupo pidió otro turno");
+    assert.doesNotMatch(JSON.stringify(document), /media_path|private_path/);
+    assert.equal(await loadSavedDocument(db, id(2), "activity", id(12)), null);
   } finally { await db.close(); }
 });
 

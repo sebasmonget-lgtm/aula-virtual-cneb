@@ -103,27 +103,49 @@ export async function loadSavedDocument(db, teacherId, kind, id) {
     return row ? { id: row.id, kind, title: "Resumen diagnóstico del aula", status: row.status,
       version: Number(row.version), school_year: Number(row.year), classroom: row.section,
       institution_name: row.institution_name, confirmed_at: row.teacher_confirmed_at ? timestamp(row.teacher_confirmed_at) : null,
-      content: { strengths: row.details?.strengths ?? "", needs: row.details?.needs ?? "", planning_priorities: row.details?.planning_priorities ?? "" } } : null;
+      content: { strengths: row.details?.strengths ?? "", needs: row.details?.needs ?? "", planning_priorities: row.details?.planning_priorities ?? "",
+        document_format: row.details?.document_format, report_snapshot: row.details?.report_snapshot } } : null;
   }
   if (kind === "experience") {
-    const row = (await db.query(`select e.id,e.type,e.title,e.purpose,e.status,e.details,e.starts_on,e.ends_on,e.origin,e.planning_reason,
-      sy.year,c.section,c.institution_name from learning_experiences e join classrooms c on c.id=e.classroom_id
+    const row = (await db.query(`select e.id,e.type,e.title,e.purpose,e.status,e.details,e.starts_on,e.ends_on,e.origin,e.planning_reason,e.source_proposal_index,
+      sy.year,c.section,c.institution_name,ag.age_years,p.display_name as teacher_name,ip.ugel,ip.district from learning_experiences e join classrooms c on c.id=e.classroom_id
       join school_years sy on sy.id=c.school_year_id
+      join age_grades ag on ag.id=c.age_grade_id join profiles p on p.user_id=c.teacher_id
+      left join institution_profiles ip on ip.owner_user_id=c.teacher_id
       where e.id=$2 and c.teacher_id=$1 and sy.owner_id=$1 and e.type in ('project','unit') and e.details ? 'starting_point'`, [teacherId, id])).rows[0];
     return row ? { id: row.id, kind, subtype: row.type, title: row.title, status: row.status,
       school_year: Number(row.year), classroom: row.section, institution_name: row.institution_name,
+      age: Number(row.age_years), teacher_name: row.teacher_name, ugel: row.ugel, district: row.district,
       starts_on: dateOnly(row.starts_on), ends_on: dateOnly(row.ends_on), origin: row.origin,
-      content: { ...selectContent(row.details, ["starting_point", "trigger_or_interest", "learning_need_or_context", "primary_competency_ids", "possible_secondary_competency_ids", "possible_pathways", "proposed_situations", "spaces_and_materials", "evidence_opportunities", "family_or_community_links", "adjustment_points", "flexibility_notes"]), purpose: row.details?.purpose || row.purpose, planning_reason: row.planning_reason } } : null;
+      source_proposal_index: Number.isInteger(row.source_proposal_index) ? row.source_proposal_index : null,
+      content: { ...selectContent(row.details, ["starting_point", "trigger_or_interest", "learning_need_or_context", "primary_competency_ids", "possible_secondary_competency_ids", "possible_pathways", "proposed_situations", "spaces_and_materials", "evidence_opportunities", "family_or_community_links", "adjustment_points", "flexibility_notes", "activity_route", "document_template_version", "teacher_overrides"]), purpose: row.details?.purpose || row.purpose, planning_reason: row.planning_reason } } : null;
   }
   if (kind === "activity") {
     const row = (await db.query(`select a.id,a.title,a.purpose,a.status,a.details,a.preparation,a.occurs_on,e.title as experience_title,
-      sy.year,c.section,c.institution_name from activities a join learning_experiences e on e.id=a.experience_id
+      e.id as experience_id,e.details as experience_details,c.id as classroom_id,sy.year,c.section,c.institution_name,ag.age_years,p.display_name as teacher_name,ip.ugel,ip.district from activities a join learning_experiences e on e.id=a.experience_id
       join classrooms c on c.id=e.classroom_id join school_years sy on sy.id=c.school_year_id
+      join age_grades ag on ag.id=c.age_grade_id join profiles p on p.user_id=c.teacher_id
+      left join institution_profiles ip on ip.owner_user_id=c.teacher_id
       where a.id=$2 and c.teacher_id=$1 and sy.owner_id=$1 and a.details ? 'meaningful_situation'`, [teacherId, id])).rows[0];
-    return row ? { id: row.id, kind, title: row.title, status: row.status,
+    if (!row) return null;
+    const registeredEvidence = (await db.query(`select ev.id,ev.student_id,coalesce(s.preferred_name,s.first_name) as student_name,
+      ev.observation_text,ev.observation_status,ev.type,ev.observed_at,ev.media_path is not null as has_attachment
+      from evidences ev join students s on s.id=ev.student_id and s.classroom_id=$3
+      where ev.activity_id=$1 and ev.created_by=$2 order by ev.observed_at,ev.id`, [row.id, teacherId, row.classroom_id])).rows;
+    const closure = (await db.query(`select del.teacher_closure_note from daily_execution_logs del
+      join class_schedule_entries se on se.id=del.schedule_entry_id
+      where se.activity_id=$1 and se.classroom_id=$2 and del.teacher_closure_note is not null
+      order by del.execution_date desc limit 1`, [row.id, row.classroom_id])).rows[0];
+    return { id: row.id, kind, title: row.title, status: row.status,
       school_year: Number(row.year), classroom: row.section, institution_name: row.institution_name,
+      age: Number(row.age_years), teacher_name: row.teacher_name, ugel: row.ugel, district: row.district,
       occurs_on: dateOnly(row.occurs_on), experience_title: row.experience_title,
-      content: { ...selectContent(row.details, ["meaningful_situation", "teacher_preparation", "child_actions", "mediation", "evidence_opportunities", "closure_or_continuity", "competency_status", "competency_id"]), purpose: row.details?.purpose || row.purpose, materials: row.preparation?.materials ?? [] } } : null;
+      experience_id: row.experience_id, experience_details: { activity_route: row.experience_details?.activity_route ?? [] },
+      registered_evidence: registeredEvidence.map((item) => ({ id: item.id, student_id: item.student_id,
+        student_name: item.student_name, observation_text: item.observation_text, observation_status: item.observation_status,
+        type: item.type, observed_at: timestamp(item.observed_at), has_attachment: item.has_attachment })),
+      teacher_closure_note: closure?.teacher_closure_note ?? null,
+      content: { ...selectContent(row.details, ["meaningful_situation", "teacher_preparation", "child_actions", "mediation", "evidence_opportunities", "closure_or_continuity", "competency_status", "competency_id", "route_item_id", "evaluation_criterion", "expected_evidence", "document_template_version", "teacher_overrides"]), purpose: row.details?.purpose || row.purpose, materials: row.preparation?.materials ?? [] } };
   }
   const row = (await db.query(`select r.id,r.status,r.version,r.details,r.period_start,r.period_end,r.teacher_confirmed_at,
     s.first_name,s.preferred_name,sy.year,c.section,c.institution_name from family_reports r

@@ -120,7 +120,7 @@ test("H: el provider solo recibe AIContextBundle sin datos privados", async () =
 test("las instrucciones de Skill no se pueden aplicar a otro workflow", async () => {
   const provider = new MockAIProvider({ ...activityFields, competency_status: "confirmed", competency_id: "COM_ORAL" });
   await assert.rejects(
-    () => generateAIWorkflowV4(confirmedInput, { provider, skillInstructions: "Skill ajena" }),
+    () => generateAIWorkflowV4({ ...confirmedInput, workflow: "assessment" }, { provider, skillInstructions: "Skill ajena" }),
     (error) => error instanceof InvalidAIGenerationError && error.reason === "skill_scope_invalid",
   );
   assert.equal(provider.requests.length, 0);

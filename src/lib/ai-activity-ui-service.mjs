@@ -2,6 +2,7 @@ import { resolveAIExecutionPlan } from "./ai-execution-router-v4.mjs";
 import { generateAIWorkflowV4 } from "./ai-generation-v4.mjs";
 import { createAIProviderForPlan } from "./ai-provider-factory.mjs";
 import { buildActivityContext } from "./context-policy-v4.mjs";
+import { loadActivitySkill } from "./activity-skill.mjs";
 
 const MAX_PURPOSE_LENGTH = 500;
 const MAX_CONTEXT_LENGTH = 1_000;
@@ -46,10 +47,12 @@ export function buildTeacherActivityGenerationInput({ request = {}, classroom, l
   if (!classroom || ![3, 4, 5].includes(classroom.age)) {
     throw new ActivityGenerationUIError("invalid_classroom", "No pudimos preparar la actividad.");
   }
-  const activityPurpose = text(request.activityPurpose, MAX_PURPOSE_LENGTH);
+  const routeItem = learningExperience?.details?.activity_route?.find((item) => item.id === request.routeItemId) ?? null;
+  if (request.routeItemId && !routeItem) throw new ActivityGenerationUIError("route_item_missing", "La actividad elegida no pertenece a este proyecto.");
+  const activityPurpose = text(routeItem?.specific_purpose ?? request.activityPurpose, MAX_PURPOSE_LENGTH);
   if (!activityPurpose) throw new ActivityGenerationUIError("missing_activity_purpose", teacherMessageForActivityGenerationError({ reason: "missing_activity_purpose" }));
   const context = text(request.context, MAX_CONTEXT_LENGTH);
-  const competencyId = text(request.competencyId, 80) || null;
+  const competencyId = text(routeItem?.competency_id ?? request.competencyId, 80) || null;
   const group = buildActivityContext(classroom.context_v4);
   return {
     workflow: "activity",
@@ -68,22 +71,24 @@ export function buildTeacherActivityGenerationInput({ request = {}, classroom, l
     ...(classroom.calendar ? { calendar_context: classroom.calendar } : {}),
     ...(classroom.language_context || group?.language_context ? { language_context: { ...classroom.language_context, ...group?.language_context } } : {}),
     ...(group ? { context_snapshot: group.snapshot } : {}),
-    ...(learningExperience ? { learning_experience_context: { id: learningExperience.id, type: learningExperience.type, title: learningExperience.title, purpose: learningExperience.purpose, trigger_or_interest: learningExperience.details?.trigger_or_interest ?? null, learning_need_or_context: learningExperience.details?.learning_need_or_context ?? null, starting_point: learningExperience.details?.starting_point ?? null, primary_competency_ids: learningExperience.details?.primary_competency_ids ?? [], possible_secondary_competency_ids: learningExperience.details?.possible_secondary_competency_ids ?? [], possible_pathways: learningExperience.details?.possible_pathways ?? [], proposed_situations: learningExperience.details?.proposed_situations ?? [], spaces_and_materials: learningExperience.details?.spaces_and_materials ?? [], evidence_opportunities: learningExperience.details?.evidence_opportunities ?? [], family_or_community_links: learningExperience.details?.family_or_community_links ?? [], adjustment_points: learningExperience.details?.adjustment_points ?? [], flexibility_notes: learningExperience.details?.flexibility_notes ?? null, prior_activities: learningExperience.prior_activities ?? [] } } : {}),
+    ...(learningExperience ? { learning_experience_context: { id: learningExperience.id, type: learningExperience.type, title: learningExperience.title, purpose: learningExperience.purpose, trigger_or_interest: learningExperience.details?.trigger_or_interest ?? null, learning_need_or_context: learningExperience.details?.learning_need_or_context ?? null, starting_point: learningExperience.details?.starting_point ?? null, primary_competency_ids: learningExperience.details?.primary_competency_ids ?? [], possible_secondary_competency_ids: learningExperience.details?.possible_secondary_competency_ids ?? [], possible_pathways: learningExperience.details?.possible_pathways ?? [], proposed_situations: learningExperience.details?.proposed_situations ?? [], spaces_and_materials: learningExperience.details?.spaces_and_materials ?? [], evidence_opportunities: learningExperience.details?.evidence_opportunities ?? [], family_or_community_links: learningExperience.details?.family_or_community_links ?? [], adjustment_points: learningExperience.details?.adjustment_points ?? [], flexibility_notes: learningExperience.details?.flexibility_notes ?? null, inherited_route_item: routeItem ? { id: routeItem.id, number: routeItem.number, title: routeItem.title, specific_purpose: routeItem.specific_purpose, competency_id: routeItem.competency_id, evaluation_criterion: routeItem.evaluation_criterion, expected_evidence: routeItem.expected_evidence } : null, prior_activities: learningExperience.prior_activities ?? [] } } : {}),
     ...(competencyId ? { competency_ids: [competencyId] } : {}),
   };
 }
 
 /** Server-only orchestration for the teacher activity screen. */
-export async function generateTeacherActivity({ request, classroom, learningExperience = null, resolvePlan = resolveAIExecutionPlan, createProvider = createAIProviderForPlan, generate = generateAIWorkflowV4 }) {
+export async function generateTeacherActivity({ request, classroom, learningExperience = null, resolvePlan = resolveAIExecutionPlan, createProvider = createAIProviderForPlan, generate = generateAIWorkflowV4, loadSkill = loadActivitySkill }) {
   const input = buildTeacherActivityGenerationInput({ request, classroom, learningExperience });
   if (input.workflow !== "activity") throw new ActivityGenerationUIError("unsupported_workflow", "No pudimos preparar la actividad.");
   try {
     const executionPlan = resolvePlan({ workflow: "activity", task: "generation" });
     const provider = createProvider(executionPlan);
     if (!provider) throw new ActivityGenerationUIError("provider_not_configured", "No se pudo acceder al servicio de IA.");
-    const generated = await generate(input, { provider, executionPlan });
+    const generated = await generate(input, { provider, executionPlan, skillInstructions: await loadSkill() });
+    const inherited = input.learning_experience_context?.inherited_route_item;
     return {
-      proposal: generated.output,
+      proposal: inherited ? { ...generated.output, purpose: inherited.specific_purpose, competency_status: "confirmed", competency_id: inherited.competency_id,
+        route_item_id: inherited.id, evaluation_criterion: inherited.evaluation_criterion, expected_evidence: inherited.expected_evidence } : generated.output,
       internalMetadata: {
         workflow: generated.metadata.workflow,
         model: generated.metadata.model,

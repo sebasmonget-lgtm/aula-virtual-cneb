@@ -72,7 +72,14 @@ export function applicableReligion(input) {
 }
 
 function allCardsComplete(cards, age, selectableOnly = false) {
-  return cards.filter((card) => card?.id && card.official_name && card.ages?.[String(age)] && (!selectableOnly || card.runtime_selectable_by_age?.[String(age)]));
+  const ageKey = String(age);
+  return cards
+    .filter((card) => card?.id && card.official_name && card.ages?.[ageKey] && (!selectableOnly || card.runtime_selectable_by_age?.[ageKey]))
+    .map((card) => ({
+      ...card,
+      ages: { [ageKey]: card.ages[ageKey] },
+      runtime_selectable_by_age: { [ageKey]: card.runtime_selectable_by_age[ageKey] },
+    }));
 }
 
 export function cardIsApplicable(card, { castellanoL2Applicable, religionApplicable }) {

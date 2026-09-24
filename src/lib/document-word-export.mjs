@@ -6,6 +6,10 @@ import { renderAnnualPlanRedesignedWord } from "./annual-plan-redesigned-word.mj
 import { renderAnnualPlanFlexibleWord } from "./annual-plan-flexible-word.mjs";
 import { ANNUAL_PLAN_LEGACY_TEMPLATE_FORMAT, ANNUAL_PLAN_TEMPLATE_FORMAT } from "./annual-plan-contract.mjs";
 import { renderDiagnosticReportWord } from "./diagnostic-report-word.mjs";
+import { renderDiagnosticUnifiedWord } from "./diagnostic-unified-word.mjs";
+import { renderAnnualPlanUnifiedWord } from "./annual-plan-unified-word.mjs";
+import { renderLearningExperienceUnifiedWord } from "./learning-experience-unified-word.mjs";
+import { renderActivityUnifiedWord } from "./activity-unified-word.mjs";
 
 const clean = (value) => typeof value === "string" ? value.trim() : "";
 const lines = (value) => Array.isArray(value) ? value.map(clean).filter(Boolean) : [];
@@ -169,11 +173,17 @@ export async function renderSavedDocumentWord(document, competencyCards = [], { 
   if (!document || !["annual_plan", "diagnostic_summary", "experience", "activity", "family_report"].includes(document.kind)) {
     throw new Error("Documento no disponible para Word.");
   }
+  if (document.kind === "annual_plan" && document.document_context?.template_version === "annual-unified-v1")
+    return renderAnnualPlanUnifiedWord(document, competencyCards, { logo });
   if (document.kind === "annual_plan") return document.content?.plan_format === ANNUAL_PLAN_TEMPLATE_FORMAT
     ? renderAnnualPlanFlexibleWord(document, competencyCards, { logo })
     : document.content?.plan_format === ANNUAL_PLAN_LEGACY_TEMPLATE_FORMAT
       ? renderAnnualPlanRedesignedWord(document, competencyCards, { logo })
       : renderAnnualPlanTemplateWord(document, competencyCards, { logo });
+  if (document.kind === "experience" && document.content?.document_template_version === "experience-unified-v1")
+    return renderLearningExperienceUnifiedWord(document, competencyCards, { logo });
+  if (document.kind === "activity" && document.content?.document_template_version === "activity-unified-v1")
+    return renderActivityUnifiedWord(document, competencyCards, { logo });
   const names = new Map(competencyCards.map((card) => [card.id, card.name]));
   const detail = document.kind === "annual_plan" ? contentForAnnual(document, names) :
     document.kind === "diagnostic_summary" ? contentForDiagnostic(document) :
@@ -217,7 +227,9 @@ export async function prepareWordDownload(db, teacherId, kind, id, competencyCar
     const context = await loadDiagnosticWordContext(db, teacherId, id);
     if (!context) return null;
     return { filename: wordFilenameFor(document),
-      buffer: await renderDiagnosticReportWord(document, context, competencyCards, options) };
+      buffer: document.content?.document_format === "diagnostic-unified-v1"
+        ? await renderDiagnosticUnifiedWord(document, context, competencyCards, options)
+        : await renderDiagnosticReportWord(document, context, competencyCards, options) };
   }
   return { filename: wordFilenameFor(document), buffer: await renderSavedDocumentWord(document, competencyCards, options) };
 }

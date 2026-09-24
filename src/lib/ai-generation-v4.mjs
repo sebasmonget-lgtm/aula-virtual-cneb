@@ -33,18 +33,23 @@ export const ACTIVITY_OUTPUT_SCHEMA = {
 };
 
 
-const EXPERIENCE_GENERATION_FIELDS = ["title", "purpose", "starting_point", "primary_competency_ids", "possible_secondary_competency_ids", "spaces_and_materials", "evidence_opportunities", "family_or_community_links", "adjustment_points", "flexibility_notes"];
+const EXPERIENCE_GENERATION_FIELDS = ["title", "purpose", "starting_point", "primary_competency_ids", "possible_secondary_competency_ids", "spaces_and_materials", "evidence_opportunities", "family_or_community_links", "adjustment_points", "flexibility_notes", "activity_route"];
 const PATHWAY_FIELDS = ["title", "pedagogical_intention", "possible_child_actions"];
+const ROUTE_FIELDS = ["number", "title", "specific_purpose", "competency_id", "evaluation_criterion", "expected_evidence"];
 function experienceOutputSchema(id, contextField, collectionField) {
   return { id, type: "object", additionalProperties: false, required: [...EXPERIENCE_GENERATION_FIELDS, contextField, collectionField], properties: {
     title: { type: "string", minLength: 1 }, purpose: { type: "string", minLength: 1 }, [contextField]: { type: "string", minLength: 1 }, starting_point: { type: "string", minLength: 1 },
     primary_competency_ids: { type: "array", items: { type: "string" } }, possible_secondary_competency_ids: { type: "array", items: { type: "string" } },
     [collectionField]: { type: "array", items: { type: "object", additionalProperties: false, required: PATHWAY_FIELDS, properties: { title: { type: "string", minLength: 1 }, pedagogical_intention: { type: "string", minLength: 1 }, possible_child_actions: { type: "string", minLength: 1 } } } },
+    activity_route: { type: "array", minItems: 1, maxItems: 15, items: { type: "object", additionalProperties: false,
+      required: ROUTE_FIELDS, properties: { number: { type: "integer" }, title: { type: "string", minLength: 1 },
+        specific_purpose: { type: "string", minLength: 1 }, competency_id: { type: "string", minLength: 1 },
+        evaluation_criterion: { type: "string", minLength: 1 }, expected_evidence: { type: "string", minLength: 1 } } } },
     spaces_and_materials: { type: "array", items: { type: "string", minLength: 1 } }, evidence_opportunities: { type: "array", items: { type: "string", minLength: 1 } }, family_or_community_links: { type: "array", items: { type: "string", minLength: 1 } }, adjustment_points: { type: "array", items: { type: "string", minLength: 1 } }, flexibility_notes: { type: "string", minLength: 1 },
   } };
 }
-export const PROJECT_OUTPUT_SCHEMA = experienceOutputSchema("project-v1", "trigger_or_interest", "possible_pathways");
-export const UNIT_OUTPUT_SCHEMA = experienceOutputSchema("unit-v1", "learning_need_or_context", "proposed_situations");
+export const PROJECT_OUTPUT_SCHEMA = experienceOutputSchema("project-v2", "trigger_or_interest", "possible_pathways");
+export const UNIT_OUTPUT_SCHEMA = experienceOutputSchema("unit-v2", "learning_need_or_context", "proposed_situations");
 const CRITERION_FIELDS=["competency_id","criterion_text","expected_evidence","acceptable_evidence_variations","observation_focus","evidence_scope","teacher_caution"];
 export const CRITERION_EVIDENCE_OUTPUT_SCHEMA={id:"criterion-evidence-v1",type:"object",additionalProperties:false,required:CRITERION_FIELDS,properties:{competency_id:{type:"string",minLength:1},criterion_text:{type:"string",minLength:1},expected_evidence:{type:"string",minLength:1},acceptable_evidence_variations:{type:"array",items:{type:"string",minLength:1}},observation_focus:{type:"array",items:{type:"string",minLength:1}},evidence_scope:{enum:["individual","group","mixed"]},teacher_caution:{type:"string",minLength:1}}};
 const ASSESSMENT_FIELDS=["competency_id","information_status","evidence_overview","observable_patterns","strengths_and_advances","support_needs","next_opportunities","teacher_questions","insufficiency_reason","caution"];
@@ -160,6 +165,14 @@ function assertExperienceOutput(output, bundle, workflow) {
   const allowed = new Set(bundle.curriculum.competency_cards.map((card) => card.id));
   for (const id of [...output.primary_competency_ids, ...output.possible_secondary_competency_ids]) if (!allowed.has(id)) throw new InvalidAIGenerationError(`${workflow}_competency_outside_bundle`, { competency_id: id });
   for (const item of output[collectionField]) if (!item || typeof item !== "object" || PATHWAY_FIELDS.some((field) => typeof item[field] !== "string" || !item[field].trim()) || Object.keys(item).some((field) => !PATHWAY_FIELDS.includes(field))) throw new InvalidAIGenerationError(`${workflow}_pathway_schema_mismatch`);
+  const chosen = new Set([...output.primary_competency_ids, ...output.possible_secondary_competency_ids]);
+  if (!Array.isArray(output.activity_route) || output.activity_route.length < 1 || output.activity_route.length > 15) throw new InvalidAIGenerationError(`${workflow}_route_invalid`);
+  for (const [index, item] of output.activity_route.entries()) {
+    if (!item || typeof item !== "object" || Array.isArray(item) || Object.keys(item).some((field) => !ROUTE_FIELDS.includes(field)) ||
+        ROUTE_FIELDS.some((field) => !(field in item)) || item.number !== index + 1 ||
+        ROUTE_FIELDS.filter((field) => field !== "number").some((field) => typeof item[field] !== "string" || !item[field].trim()) ||
+        !chosen.has(item.competency_id)) throw new InvalidAIGenerationError(`${workflow}_route_invalid`, { index });
+  }
   return output;
 }
 function assertCriterionEvidenceOutput(output,bundle,competencyId){const missing=CRITERION_FIELDS.filter((field)=>!(field in output));const unknown=Object.keys(output).filter((field)=>!CRITERION_FIELDS.includes(field));if(missing.length||unknown.length)throw new InvalidAIGenerationError("criterion_evidence_schema_mismatch");for(const field of ["competency_id","criterion_text","expected_evidence","teacher_caution"])if(typeof output[field]!=="string"||!output[field].trim())throw new InvalidAIGenerationError("criterion_evidence_required_field_invalid",{field});for(const field of ["acceptable_evidence_variations","observation_focus"])if(!Array.isArray(output[field])||output[field].some((v)=>typeof v!=="string"||!v.trim()))throw new InvalidAIGenerationError("criterion_evidence_required_field_invalid",{field});if(!["individual","group","mixed"].includes(output.evidence_scope))throw new InvalidAIGenerationError("criterion_evidence_scope_invalid");if(output.competency_id!==competencyId||!bundle.curriculum.competency_cards.some((card)=>card.id===competencyId))throw new InvalidAIGenerationError("criterion_evidence_competency_outside_bundle");return output;}
@@ -197,7 +210,8 @@ export async function generateAIWorkflowV4(input, { provider, knowledgeBase, exe
   if (!provider || typeof provider.generate !== "function") {
     throw new InvalidAIGenerationError("provider_not_configured");
   }
-  if (skillInstructions !== undefined && (input.workflow !== "annual_plan" || input.annual_stage !== "master" || typeof skillInstructions !== "string" || !skillInstructions.trim())) {
+  const skillAllowed = (input.workflow === "annual_plan" && input.annual_stage === "master") || ["project", "unit", "activity"].includes(input.workflow);
+  if (skillInstructions !== undefined && (!skillAllowed || typeof skillInstructions !== "string" || !skillInstructions.trim())) {
     throw new InvalidAIGenerationError("skill_scope_invalid");
   }
   const prepared = await prepareAIRequestV4(input, knowledgeBase);

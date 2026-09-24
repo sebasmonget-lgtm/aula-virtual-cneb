@@ -113,6 +113,24 @@ test("la vista y el Word usan las doce propuestas y la etapa inicial sin placeho
   assert.doesNotMatch(cleanCover, /r:embed="rId8"|\{\{LOGO_COLEGIO\}\}/);
 });
 
+test("la plantilla unificada utiliza exactamente los mismos doce objetos en cronograma y fichas", async () => {
+  const unified = { ...saved, document_context: { ...documentContext, template_version: "annual-unified-v1" } };
+  const rendered = await renderSavedDocumentWord(unified, cards);
+  if (process.env.AYNI_QA_DOCX_DIR) await writeFile(path.join(process.env.AYNI_QA_DOCX_DIR, "annual-unified-qa.docx"), rendered);
+  const zip = await JSZip.loadAsync(rendered);
+  const xml = await zip.file("word/document.xml").async("string");
+  assert.doesNotMatch(xml, /\{\{|PROYECTO_13_|P13 \||P20 \||Plantilla editable|Producto o evidencia final/);
+  for (let index = 1; index <= 12; index += 1) {
+    const code = `P${String(index).padStart(2, "0")}`;
+    assert.match(xml, new RegExp(code));
+    assert.match(xml, new RegExp(topics[index - 1]));
+  }
+  const documentText = [...xml.matchAll(/<w:t(?:\s[^>]*)?>([\s\S]*?)<\/w:t>/g)].map((match) => match[1]).join("");
+  assert.match(documentText, /Diciembre/);
+  assert.match(documentText, /Doce propuestas iniciales/);
+  assert.doesNotMatch(documentText, /Producto o evidencia final/);
+});
+
 test("el Word resume párrafos extensos y completa orientaciones sin repetir instrucciones técnicas", async () => {
   const lengthy = { ...proposal,
     general_context_summary: "El grupo juega en el patio. Varios niños hacen preguntas. Se necesitan más ocasiones para conversar. Esta cuarta idea queda en el borrador.",

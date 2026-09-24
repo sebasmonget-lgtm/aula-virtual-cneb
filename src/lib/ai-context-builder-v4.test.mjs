@@ -176,6 +176,21 @@ test("el plan anual recibe todas las competencias aplicables a la edad sin decla
   assert.ok(!bundle.context.workflow_inputs?.competency_id);
 });
 
+test("el bundle curricular elimina antes del modelo los referentes específicos de otras edades", async () => {
+  const knowledgeBase = await loadKnowledgeBaseV4();
+  const source = knowledgeBase.competencyCards.find((card) => card.id === "PS_IDENTIDAD");
+  const bundle = await buildAIContext({ workflow: "annual_plan", age: 4,
+    teacher_request: "Preparar plan anual del aula.", calendar_context: { school_year: 2026 },
+    classroom_context: { id: "aula-4" } }, knowledgeBase);
+  const selected = bundle.curriculum.competency_cards.find((card) => card.id === "PS_IDENTIDAD");
+  assert.deepEqual(Object.keys(selected.ages), ["4"]);
+  assert.deepEqual(Object.keys(selected.runtime_selectable_by_age), ["4"]);
+  assert.deepEqual(selected.ages["4"], source.ages["4"]);
+  assert.equal(JSON.stringify(bundle.curriculum).includes(source.ages["3"].ai_focus), false);
+  assert.equal(JSON.stringify(bundle.curriculum).includes(source.ages["5"].ai_focus), false);
+  assert.ok(bundle.curriculum.age_reference.every((item) => item.age === 4));
+});
+
 test("el desarrollo anual recibe solo el plan maestro proyectado y el contexto requerido", async () => {
   const knowledgeBase = await loadKnowledgeBaseV4();
   const base = { workflow: "annual_plan", age: 5, teacher_request: "Desarrollar el plan.",

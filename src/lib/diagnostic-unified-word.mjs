@@ -1,0 +1,167 @@
+import { renderUnifiedWord, removeParagraphsContaining, xmlEscape } from "./unified-word-template.mjs";
+
+const templateUrl = new URL("../../assets/templates/evaluacion-diagnostica-inicial-unificada-v1.docx", import.meta.url);
+const competencyFields = [
+  ["PS_IDENTIDAD", "CONSTRUYE_IDENTIDAD"], ["PS_CONVIVE", "CONVIVE"],
+  ["PSICO_MOTRICIDAD", "MOTRICIDAD"], ["COM_ORAL", "ORALIDAD"],
+  ["COM_LECTURA", "LECTURA"], ["COM_ESCRITURA", "ESCRITURA"],
+  ["COM_ARTE", "ARTE"], ["MAT_CANTIDAD", "CANTIDAD"],
+  ["MAT_FORMA", "FORMA"], ["CYT_INDAGA", "INDAGA"],
+  ["TRANS_AUTONOMO", "GESTIONA"], ["TRANS_TIC", "TIC"],
+  ["PS_RELIGION", "RELIGION"], ["CAST_L2_ORAL", "CASTELLANO_L2"],
+];
+const clean = (value) => typeof value === "string" ? value.trim() : "";
+const dateLabel = (value) => /^\d{4}-\d{2}-\d{2}/.test(String(value ?? ""))
+  ? `${String(value).slice(8, 10)}/${String(value).slice(5, 7)}/${String(value).slice(0, 4)}` : "";
+const countLabel = (count, one, many) => `${count} ${count === 1 ? one : many}`;
+
+function snapshotOf(document) {
+  const snapshot = document?.content?.report_snapshot;
+  if (document?.content?.document_format !== "diagnostic-unified-v1" || snapshot?.version !== "diagnostic-unified-v1" ||
+      !Array.isArray(snapshot.children) || !Array.isArray(snapshot.observations)) {
+    throw new Error("Este diagnóstico no tiene una versión estructurada para la plantilla unificada.");
+  }
+  return snapshot;
+}
+
+function competencyValues(snapshot, cards) {
+  const names = new Map(cards.map((card) => [card.id, clean(card.name || card.official_name)]));
+  const children = new Map(snapshot.children.map((child) => [child.student_id, child]));
+  const values = {};
+  for (const [id, key] of competencyFields) {
+    const records = snapshot.observations.filter((item) => item.competency_id === id);
+    const withText = records.filter((item) => clean(item.observation_text));
+    const observedChildren = new Set(records.map((item) => item.student_id));
+    values[`EVID_${key}`] = withText.length
+      ? withText.slice(0, 4).map((item) => `${children.get(item.student_id)?.name || "Niño del aula"}: “${clean(item.observation_text).slice(0, 360)}”`).join("; ")
+      : records.length ? `${countLabel(records.length, "registro", "registros")} sin una nota descriptiva suficiente.` : "Información insuficiente: aún no hay observaciones vinculadas.";
+    values[`LECTURA_${key}`] = records.length
+      ? `Hay registros de ${countLabel(observedChildren.size, "niño", "niños")}. Son un punto de partida; la docente contrastará estas actuaciones en otras situaciones.`
+      : "Información insuficiente para interpretar esta competencia en el grupo.";
+    values[`DECISION_${key}`] = records.length
+      ? "Ofrecer nuevas oportunidades en el juego y registrar cómo participa cada niño."
+      : "Mantenerla en observación antes de tomar una decisión específica.";
+    if (!names.has(id) && records.length) throw new Error(`Competencia diagnóstica no disponible: ${id}.`);
+  }
+  return values;
+}
+
+function valuesFor(document, context, cards) {
+  const snapshot = snapshotOf(document);
+  const group = document.content;
+  const observations = snapshot.observations;
+  const children = snapshot.children;
+  const observedIds = new Set(observations.map((item) => item.student_id));
+  const dates = observations.map((item) => String(item.observed_at ?? "").slice(0, 10)).filter((item) => /^\d{4}-\d{2}-\d{2}$/.test(item)).sort();
+  const observedFrom = dateLabel(dates[0]);
+  const observedTo = dateLabel(dates.at(-1));
+  const needs = clean(group.needs);
+  const strengths = clean(group.strengths);
+  const priorities = clean(group.planning_priorities);
+  const reportedInterests = [...new Set(children.map((child) => clean(child.family_context?.interests)).filter(Boolean))].slice(0, 4);
+  const reportedLanguages = [...new Set(children.map((child) => clean(child.family_context?.language_context)).filter(Boolean))].slice(0, 4);
+  const missing = competencyFields.filter(([id]) => !observations.some((item) => item.competency_id === id))
+    .map(([id]) => cards.find((card) => card.id === id)?.name || cards.find((card) => card.id === id)?.official_name)
+    .filter(Boolean).slice(0, 4);
+  const values = {
+    "AÑO_ESCOLAR": String(context.school_year ?? document.school_year),
+    INSTITUCION_EDUCATIVA: clean(context.institution_name) || clean(document.institution_name),
+    EDAD_AULA: `${context.age} años · ${clean(context.classroom || document.classroom)}`,
+    DOCENTE: clean(context.teacher_name) || "Docente del aula",
+    UGEL: clean(context.ugel) || "No registrada",
+    FECHA_INICIO_DIAGNOSTICO: observedFrom || "Inicio del año escolar",
+    FECHA_FIN_DIAGNOSTICO: observedTo || "Fecha de confirmación del informe",
+    N_ESTUDIANTES: String(children.length),
+    N_OBSERVADOS: String(observedIds.size),
+    N_ENTREVISTAS_COMPLETADAS: String(children.filter((item) => item.has_confirmed_interview).length),
+    N_EVIDENCIAS_REVISADAS: String(observations.length),
+    PROPOSITO_DIAGNOSTICO: "Conocer cómo inicia el grupo para decidir cómo acompañar sus aprendizajes.",
+    CONTEXTO_PERIODO_DIAGNOSTICO: dates.length
+      ? `Se revisaron registros del ${observedFrom} al ${observedTo} y los comentarios confirmados de la docente.`
+      : "Se revisaron los comentarios disponibles; aún faltan observaciones fechadas del aula.",
+    FOCOS_DIAGNOSTICOS: "El juego, la expresión, la convivencia, la exploración y las necesidades que aparecen en el aula.",
+    CONDICIONES_RECOJO: "Las entrevistas describen el contexto familiar. Las observaciones docentes muestran lo ocurrido en el aula; una ausencia de registro no indica una dificultad.",
+    ESTADO_ENTREV: `${children.filter((item) => item.has_confirmed_interview).length} de ${children.length} entrevistas confirmadas`,
+    ESTADO_OBS: `${countLabel(observations.length, "registro", "registros")} de ${countLabel(observedIds.size, "niño", "niños")}`,
+    ESTADO_DOC: `${children.length} comentarios individuales confirmados por la docente`,
+    ESTADO_PORT: "Producciones y portafolio: consultar los registros disponibles en Ayni.",
+    INFORMACION_PENDIENTE: children.length > observedIds.size
+      ? `${children.length - observedIds.size} niños aún no tienen observaciones docentes en este corte. Se continuará observando.`
+      : "La observación continúa durante el año; estas conclusiones son iniciales.",
+    DIAGNOSTICO_FORTALEZAS: strengths || "Información insuficiente para describir una fortaleza grupal.",
+    DIAGNOSTICO_NECESIDADES: needs || "Información insuficiente para precisar necesidades grupales.",
+    DIAGNOSTICO_INTERESES: reportedInterests.length ? `Las familias mencionaron estos intereses: ${reportedInterests.join("; ")}. Conviene retomarlos y comprobar cuáles aparecen en el juego.` : "Información insuficiente sobre intereses compartidos; se explorarán durante el juego y la conversación.",
+    DIAGNOSTICO_CONTEXTO: reportedLanguages.length ? `Las familias informaron sobre las lenguas del hogar: ${reportedLanguages.join("; ")}. Este contexto ayuda a planificar formas de participación; no sustituye la observación docente.` : "Las entrevistas confirmadas aportan contexto para comprender a cada niño. Sus respuestas no se usan como observaciones docentes.",
+    DIAGNOSTICO_ADAPTACION_BIENESTAR: "Revisar cómo se adapta y participa cada niño en distintas situaciones; aún no se establece una conclusión general sin evidencia suficiente.",
+    DIAGNOSTICO_BARRERAS_APOYOS: "Ajustar materiales, tiempos e interacciones según las necesidades observadas y los comentarios confirmados de la docente.",
+    PRIORIDADES_DIAGNOSTICAS: priorities || "Seguir observando para precisar las primeras prioridades.",
+    PRIORIDAD_1: "Aprovechar las fortalezas observadas", DECISION_PRIORIDAD_1: strengths || "Seguir recogiendo registros para reconocer fortalezas.",
+    PRIORIDAD_2: "Ofrecer más oportunidades de aprendizaje", DECISION_PRIORIDAD_2: needs || "Precisar necesidades con nuevas observaciones.",
+    PRIORIDAD_3: "Ajustar las próximas experiencias", DECISION_PRIORIDAD_3: priorities || "Revisar lo observado antes de planificar.",
+    FORTALEZAS_A_POTENCIAR: strengths || "Información insuficiente.",
+    IMPLICANCIAS_PLAN_ANUAL: priorities || "El plan anual se ajustará con nuevas observaciones confirmadas.",
+    IMPLICANCIAS_PRIMERAS_EXPERIENCIAS: needs || "Ofrecer juego, conversación y exploración para seguir conociendo al grupo.",
+    ASPECTOS_PENDIENTES_OBSERVAR: missing.length ? `Seguir observando, entre otras, estas competencias: ${missing.join("; ")}.` : "Continuar reuniendo evidencias en situaciones variadas.",
+    FECHA_REVISION_DIAGNOSTICO: "Al revisar las siguientes experiencias del aula.",
+    CONCLUSION_DIAGNOSTICA_GRUPAL: [strengths && `Fortalezas: ${strengths}`, needs && `Oportunidades para acompañar: ${needs}`,
+      priorities && `Primeras decisiones: ${priorities}`, "El diagnóstico se actualizará con nuevas observaciones."].filter(Boolean).join(" "),
+    REFERENCIA_ENTREVISTAS: `${children.filter((item) => item.has_confirmed_interview).length} entrevistas confirmadas en Ayni Aula.`,
+    REFERENCIA_OBSERVACIONES: `${countLabel(observations.length, "registro", "registros")} de observación incluidos en este corte.`,
+    REFERENCIA_PORTAFOLIO: "Consultar el portafolio del aula si existen producciones vinculadas.",
+    REFERENCIA_OTROS: "Comentarios individuales confirmados por la docente.",
+    RESPONSABLE_REVISION: "Revisión interna del aula",
+    ...competencyValues(snapshot, cards),
+  };
+  // The teacher's confirmed comments are the nominal interpretation. No model
+  // invents a child-specific diagnosis or a future observation for this table.
+  const competencyNames = new Map(cards.map((card) => [card.id, clean(card.name || card.official_name)]));
+  const followups = children.map((child) => {
+    const childObservations = observations.filter((item) => item.student_id === child.student_id && clean(item.observation_text));
+    const observedCompetencies = [...new Set(childObservations.map((item) => competencyNames.get(item.competency_id)).filter(Boolean))].slice(0, 2);
+    const excerpts = childObservations.slice(0, 2).map((item) =>
+      `${competencyNames.get(item.competency_id) || "Observación"}: “${clean(item.observation_text).slice(0, 180)}”`);
+    return {
+      name: child.name,
+      situation: [clean(child.teacher_comment) && `Docente: ${clean(child.teacher_comment)}`,
+        excerpts.length && `En el aula: ${excerpts.join("; ")}`,
+        clean(child.family_context?.adaptation_context) && `Familia informa: ${clean(child.family_context.adaptation_context)}`].filter(Boolean).join(" ") || "Información insuficiente.",
+      support: child.information_status === "insufficient_information"
+        ? "Continuar observando y precisar el acompañamiento con nuevos registros."
+        : [clean(child.family_context?.interests) && `Ofrecer oportunidades vinculadas con ${clean(child.family_context.interests)} y comprobar si ese interés aparece en el aula.`,
+          observedCompetencies.length && `Retomar ${observedCompetencies.join(" y ")} en nuevas situaciones; considerar el comentario docente antes de ajustar los apoyos.`,
+          !observedCompetencies.length && "Planificar primeras oportunidades de observación y considerar el comentario docente."].filter(Boolean).join(" "),
+      date: "Durante las próximas experiencias",
+    };
+  });
+  return { values, followups };
+}
+
+function transformDiagnostic(xml, context, snapshot, followups) {
+  let output = removeParagraphsContaining(xml, ["{{...", "Plantilla editable"]);
+  if (Number(context.school_year) !== 2026) output = removeParagraphsContaining(output, ["Orientaciones para el inicio del año escolar 2026"]);
+  const skipSpecial = [];
+  if (!snapshot.religion_applicable) skipSpecial.push("{{EVID_RELIGION}}");
+  if (!snapshot.castellano_l2_applicable) skipSpecial.push("{{EVID_CASTELLANO_L2}}");
+  if (skipSpecial.length) output = output.replace(/<w:tr(?:\s[^>]*)?>[\s\S]*?<\/w:tr>/g,
+    (row) => skipSpecial.some((marker) => row.includes(marker)) ? "" : row);
+  // The source design has three sample rows. Use one as a visual model and
+  // expand it to the number of confirmed children instead of truncating them.
+  output = output.replace(/<w:tr(?:\s[^>]*)?>[\s\S]*?<\/w:tr>/g,
+    (row) => /\{\{SEGUIMIENTO_[23]_ESTUDIANTE\}\}/.test(row) ? "" : row);
+  const model = [...output.matchAll(/<w:tr(?:\s[^>]*)?>[\s\S]*?<\/w:tr>/g)]
+    .map((match) => match[0]).find((row) => row.includes("{{SEGUIMIENTO_1_ESTUDIANTE}}"));
+  if (!model) throw new Error("La plantilla diagnóstica no tiene la tabla nominal esperada.");
+  output = output.replace(model, followups.map((child) => model
+    .replace("{{SEGUIMIENTO_1_ESTUDIANTE}}", xmlEscape(child.name))
+    .replace("{{SEGUIMIENTO_1_SITUACION}}", xmlEscape(child.situation))
+    .replace("{{SEGUIMIENTO_1_APOYO}}", xmlEscape(child.support))
+    .replace("{{SEGUIMIENTO_1_FECHA}}", xmlEscape(child.date))).join(""));
+  return output;
+}
+
+export async function renderDiagnosticUnifiedWord(document, context, cards = [], { logo = null } = {}) {
+  const snapshot = snapshotOf(document);
+  const { values, followups } = valuesFor(document, context, cards);
+  return renderUnifiedWord({ templateUrl, values, logo,
+    transform: (xml) => transformDiagnostic(xml, context, snapshot, followups) });
+}

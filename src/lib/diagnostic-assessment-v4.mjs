@@ -450,9 +450,33 @@ export async function confirmDiagnosticGroupReview(db, teacherId, id) {
   validateGroupDetails(row.details);
   if (!sameDiagnosticSources(row.source_snapshot, await confirmedSnapshot(db, classroom.id)))
     fail("stale_sources", "Cambiaron los diagnósticos individuales. Vuelve a preparar la revisión grupal.");
-  const confirmed = await db.query(`update diagnostic_group_reviews set status = 'confirmed',
+  const workspace = await loadDiagnosticAssessmentWorkspace(db, teacherId);
+  const children = workspace.students.map((student) => {
+    const review = workspace.student_reviews.find((item) => item.student_id === student.id && item.status === "confirmed" && item.is_current);
+    return review ? { student_id: student.id, name: student.name, review_id: review.id,
+      information_status: review.details.information_status, teacher_comment: review.details.comment_text,
+      has_confirmed_interview: Boolean(student.family_context),
+      family_context: student.family_context ? Object.fromEntries(["language_context", "interests", "autonomy_context", "adaptation_context", "communication_emotional_context", "social_context"]
+        .filter((key) => typeof student.family_context[key] === "string" && student.family_context[key].trim())
+        .map((key) => [key, student.family_context[key].slice(0, 500)])) : null } : null;
+  });
+  // Legacy group reviews were based on per-competency comments. They retain
+  // their original exporter; only the current one-comment-per-child flow uses
+  // the unified nominal report.
+  const details = children.every(Boolean) ? { ...row.details, document_format: "diagnostic-unified-v1",
+    report_snapshot: {
+      version: "diagnostic-unified-v1", children,
+      religion_applicable: classroom.religion_applicable === true,
+      castellano_l2_applicable: classroom.castellano_l2_applicable === true,
+      observations: workspace.observations.map((item) => ({ id: item.id, student_id: item.student_id,
+        competency_id: item.competency_v4_id, observed_at: item.observed_at,
+        observation_text: item.observation_text || "", aspect_prompt: item.aspect_prompt || "",
+        observation_status: item.observation_status })),
+      competency_coverage: workspace.group_coverage,
+    } } : row.details;
+  const confirmed = await db.query(`update diagnostic_group_reviews set status = 'confirmed', details=$2::jsonb,
     teacher_confirmed_at = now(), updated_at = now() where id = $1 and status = 'draft'
-    returning id,version,status,details,teacher_confirmed_at`, [id]);
+    returning id,version,status,details,teacher_confirmed_at`, [id, JSON.stringify(details)]);
   await completeDiagnosticReviewForTeacher(db, teacherId);
   return confirmed.rows[0];
 }

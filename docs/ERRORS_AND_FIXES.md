@@ -346,3 +346,11 @@
 **Solución validada.** Se permite una sola versión activa y un solo borrador por año escolar. La docente puede preparar una versión actualizada del plan histórico; el servidor comprueba el aula, año, ID activo, formato anterior y generación antes de guardar. La versión anterior sigue vigente hasta confirmar la nueva. Una generación real con dos llamadas a IA produjo doce proyectos distintos y se guardó como borrador v2; el plan v1 permanece activo. Documentos avisa cuando se abre un plan anterior. Typecheck, lint, build y pruebas del plan y documentos pasaron.
 
 **Revisión del Word.** Microsoft Word mostró páginas vacías causadas por saltos al final de tablas llenas. El exportador eliminó los saltos redundantes antes de las secciones III, V y VII y el salto posterior al primer proyecto; también abrevia una nota de ajuste solo en el Word. El borrador revisado se abrió en Word y se exportó a PDF de 17 páginas, sin páginas vacías; portada, cronograma y fichas se inspeccionaron visualmente. Para prevenir la regresión, verificar paginación real además de contratos y marcadores XML.
+
+## 2026-09-24 Contexto de otra edad y residuos de plantilla en DOCX unificados
+
+**Síntoma.** El paquete de currículo podía incluir focos de edades distintas a la del aula. Las plantillas nuevas traían una imagen de logo de ejemplo, instrucciones editoriales y saltos de página que producían páginas casi vacías. La plantilla de actividad conservaba un encabezado de Planificación Anual.
+
+**Causa raíz.** El constructor reenviaba la propiedad `ages` completa de la tarjeta CNEB. Los marcadores de Word estaban resueltos, pero imágenes, encabezados y saltos son partes independientes del OOXML.
+
+**Solución validada.** El paquete de IA limita `ages` y la selección por edad antes de llamar al proveedor. El exportador retira la imagen de ejemplo, inserta el logo institucional autorizado cuando existe, corrige el encabezado y elimina saltos redundantes en la copia generada. Los cuatro DOCX se abrieron en Microsoft Word y se exportaron a PDF para inspección visual. Las pruebas comprueban la proyección de edad, los marcadores, la privacidad nominal y las rutas de datos heredados.

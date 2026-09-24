@@ -97,7 +97,7 @@ function replaceParagraphText(xml, marker, replacement) {
   return result;
 }
 
-function valuesFor(document, cards, schedule) {
+export function annualFlexibleValues(document, cards, schedule) {
   const proposal = document.content;
   const context = document.document_context ?? {};
   const names = new Map(cards.map((card) => [card.id, card.name || card.official_name]));
@@ -176,7 +176,7 @@ export async function renderAnnualPlanFlexibleWord(document, competencyCards = [
     throw new Error("Este plan no tiene las doce propuestas requeridas por la plantilla.");
   }
   const schedule = buildFlexibleAnnualSchedule(document.document_context?.calendar, document.content.proposed_experiences);
-  const values = valuesFor(document, competencyCards, schedule);
+  const values = annualFlexibleValues(document, competencyCards, schedule);
   const archive = await JSZip.loadAsync(await readFile(templateUrl));
   let xml = await archive.file("word/document.xml")?.async("string");
   if (!xml) throw new Error("La plantilla anual no tiene contenido Word.");
