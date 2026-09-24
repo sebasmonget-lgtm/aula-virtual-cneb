@@ -408,3 +408,11 @@
 **Causa raíz.** La misma condición `status='active'` se usaba para iniciar actividades nuevas y para leer o terminar las ya existentes. La base local tampoco tenía `updated_at` en `learning_experiences`, a diferencia del esquema remoto.
 
 **Solución validada.** La ruta de creación conserva el requisito de versión vigente. La consulta de actividades y la edición o confirmación de borradores existentes admiten un padre histórico; la pantalla lo identifica y oculta el formulario para crear actividades nuevas allí. La transición de versión local cambia solo el estado, compatible con ambos esquemas. Las pruebas persisten V1, V2 y una actividad que conserva su `experience_id` original.
+
+## 2026-09-24 Confirmación de Criterio V2 respondía sin la fila confirmada
+
+**Síntoma.** El servidor completaba la confirmación de Criterio V2, pero enviaba una respuesta vacía al navegador.
+
+**Causa raíz.** `confirmCriterionVersion()` ya devuelve la fila confirmada; la ruta intentaba leer `result.rows[0]` como si recibiera el objeto de consulta de PostgreSQL.
+
+**Solución y prevención.** La ruta envía directamente la fila devuelta. La prueba de servicio de Criterio V2 y el recorrido integrado comprueban el estado confirmado y la permanencia del `criterion_id` de las evidencias históricas. Al integrar servicios, revisar su contrato de retorno además del efecto en la base.

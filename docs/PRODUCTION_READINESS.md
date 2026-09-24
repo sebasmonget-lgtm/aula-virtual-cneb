@@ -63,6 +63,21 @@ Los snapshots v4 conservan fuentes y estados pedagógicos; los informes familiar
 6. Configurar backups automáticos y hacer una restauración de prueba; fijar política de retención y procedimiento de rollback. Para rollback de código, volver al commit anterior; para esquema, restaurar backup verificado o aplicar migración compensatoria nueva, nunca editar migraciones ya aplicadas.
 7. Ejecutar smoke manual con datos ficticios: alta de dos docentes/aulas, CSV, diagnóstico, plan anual, proyecto/unidad, actividad, criterio, evidencia, assessment, conclusión e informe familiar. Probar generación mock primero; cualquier llamada real al proveedor requiere autorización separada. Verificar rechazo cruzado de lectura/escritura en alumnos, planificación, criterios, fotos, assessments, conclusiones e informes; repetir en móvil, reload y errores de red.
 
+## Traspaso exacto de la identidad local al backend multiusuario
+
+El API local fija `teacherId` una sola vez desde `AYNI_LOCAL_TEACHER_ID` en `scripts/local-db-server.mjs`. Ese valor no autentica ninguna petición. Al migrar a staging hay que resolver y verificar la identidad de **cada petición** antes del router, pasar ese ID a los servicios existentes y rechazar peticiones sin sesión. Los IDs de aula, año, período, estudiante, plan, experiencia, actividad y documento enviados por el navegador son selectores, nunca autorización. No se debe sustituir la comprobación de propiedad del servidor por RLS sola. El API local y su endpoint de guardar Word en Descargas no deben publicarse como backend multiusuario.
+
+| Ruta o grupo | Comprobación actual en servidor | Trabajo de staging |
+| --- | --- | --- |
+| `annual-plans`, `learning-experiences`, `activities`, `activity-criteria`, copia y confirmación V2 | Aula activa de la docente; los servicios de copia unen aula y año con `teacherId`; los descendientes conservan sus IDs | Inyectar identidad por petición, repetir la propiedad al confirmar y generar, probar lectura y escritura cruzadas en versiones históricas y borradores |
+| `period-evaluations/*` y media privada | `ownedClassroom`, `ownedYear`, período del año y estudiante activo del aula; foto por docente y estudiante | Ejecutar con identidad por petición, bucket privado y pruebas de rechazo cruzado en detalle, borrador, cierre V1/V2, CSV y foto |
+| `family-reports/*` | Aula y año de la docente, estudiante activo y período del año; las conclusiones se buscan por estudiante | Mantener esas uniones y verificar el vínculo de período; probar generación, edición, confirmación y Word con otro usuario |
+| `planning-feedback` | Aula activa propia, período del año y proyección grupal sin nombres; el servidor revalida antes de cada llamada a IA | Mantener el opt-in y la revalidación con la identidad por petición; verificar que no salgan observaciones o adjuntos nominales |
+| `documents/*`, `/download`, `/save-local` | `listSavedDocuments` y `loadSavedDocument` filtran docente y año; descarga usa `prepareWordDownload` sobre la fila autorizada y `private, no-store` | Sustituir disco local por descarga autenticada o URL firmada corta; deshabilitar `/save-local` y probar 404/denegación cruzada, incluso versiones históricas |
+| Evidencias y adjuntos de entrevista | Ruta privada validada por estudiante/docente en el servidor local | Adaptador Supabase Storage privado y prueba de lectura, escritura y eliminación cruzadas |
+
+Las migraciones Supabase preparan RLS para las tablas nuevas de períodos, alcance, cierres y versiones, con escritura de evaluación y cierre restringida al servidor. `ai_pending_generations` no admite acceso de cliente. Esta revisión fue estática y la prueba integrada usó PGlite con dos docentes, dos aulas y dos años; **no ejecutó Auth, Storage ni RLS en Supabase**. Antes de datos reales se deben aplicar las migraciones a un proyecto nuevo y repetir la matriz de permisos con dos usuarios autenticados, tokens distintos y solicitudes sin token. El rol de servicio y la clave de OpenAI deben permanecer exclusivamente en el servidor.
+
 ## READY FOR PILOT
 
 | Criterio | Estado |
