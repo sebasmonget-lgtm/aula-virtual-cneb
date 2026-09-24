@@ -42,8 +42,8 @@ test("I: activity conserva el routing Terra/low y el servidor preserva límites 
   assert.match(server, /'\[\]'::jsonb/);
   const activitySection = server.slice(server.indexOf('pathname === "/api/activities"'), server.indexOf('pathname === "/api/activity-criteria"'));
   assert.doesNotMatch(activitySection, /insert into evidences/);
-  assert.match(activitySection, /inheritedActivityCriterion\(current\.details,routeItem\)/);
-  assert.match(activitySection, /if\(criterion\)await db\.query\(`insert into activity_criteria/);
+  assert.match(activitySection, /inheritedActivityCriterion\(current\.details,\s*routeItem\)/);
+  assert.match(activitySection, /confirmActivityWithCriterion\(db,\s*id,\s*criterion\)/);
 });
 
 test("A-C: OPTIONS permite PUT y el parent público no filtra metadata técnica", async () => {
