@@ -135,7 +135,8 @@ export async function loadSavedDocument(db, teacherId, kind, id) {
       join activity_criteria ac on ac.id=ev.criterion_id and ac.activity_id=ev.activity_id
       where ev.activity_id=$1 and ev.created_by=$2 order by ev.observed_at,ev.id`, [row.id, teacherId, row.classroom_id])).rows;
     const activeCriterion = (await db.query(`select criterion_text,competency_v4_id,details from activity_criteria
-      where activity_id=$1 and status='active' order by teacher_confirmed_at desc limit 1`, [row.id])).rows[0];
+      where activity_id=$1 and (($2='archived' and version=1) or ($2<>'archived' and status='active'))
+      order by teacher_confirmed_at desc nulls last limit 1`, [row.id,row.status])).rows[0];
     const closure = (await db.query(`select del.teacher_closure_note from daily_execution_logs del
       join class_schedule_entries se on se.id=del.schedule_entry_id
       where se.activity_id=$1 and se.classroom_id=$2 and del.teacher_closure_note is not null

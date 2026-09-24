@@ -155,6 +155,11 @@ Proyecto nuevo iniciado el 20 de septiembre de 2026. Existe un shell responsive 
 - Una actividad confirmada en un proyecto o unidad vigente se copia sin IA a un borrador nuevo con `supersedes_activity_id`. La docente puede editar o pedir una regeneración explícita. La V1 pasa a histórica únicamente al confirmar V2; ambas conservan sus IDs y el Word histórico se carga por el ID pedido.
 - Criterios, evidencias y programación existente conservan su `activity_id` original. Los bloques futuros fechados y sin ejecución se pueden cambiar a V2 mediante una acción docente concreta; Hoy sigue leyendo V1 histórica cuando aún está programada. Ver ADR 056.
 
+## Versiones de criterio (2026-09-24)
+
+- Un criterio activo se copia a un borrador con `supersedes_criterion_id` y versión propia. La docente puede editarlo o regenerarlo; V1 se archiva al confirmar V2. El índice de actividad y competencia distingue activo y borrador, y el trigger protege criterios confirmados. Las evidencias guardadas mantienen el ID del criterio original.
+- Documentos lee el criterio real de cada evidencia y, para el encabezado de una actividad histórica, el criterio inicial de esa actividad. Ver ADR 057.
+
 
 
 

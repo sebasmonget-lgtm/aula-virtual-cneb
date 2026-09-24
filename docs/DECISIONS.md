@@ -438,3 +438,11 @@ La confirmación de la actividad y la inserción del criterio heredado se ejecut
 **Programación.** Los bloques futuros con fecha que aún no tengan ejecución se muestran como asociados a la versión histórica. La docente puede cambiar cada bloque a la nueva versión de forma explícita. Los bloques recurrentes o ya ejecutados no se reasignan automáticamente. La consulta de Hoy sigue leyendo una actividad histórica si está programada.
 
 **Reversión.** Se puede retirar la acción de copia y el cambio explícito de programación sin alterar los documentos ni datos históricos. La migración de procedencia e inmutabilidad permanece; los esquemas local y Supabase son equivalentes.
+
+## ADR 057 Versiones de criterio y lectura histórica
+
+**Decisión.** Un criterio confirmado puede copiarse a un borrador V2 para edición o regeneración expresa. La nueva versión conserva `activity_id` y competencia; al confirmar, V1 pasa a histórica en la misma transacción. Un índice único permite solo un criterio activo y un borrador por actividad y competencia. Las evidencias existentes conservan exactamente su `criterion_id` y el criterio archivado es inmutable.
+
+**Documento.** Cada observación del Word lee el texto del criterio al que está vinculada por ID. Para una actividad histórica, el encabezado usa su criterio de origen (versión 1); para una actividad vigente, usa el criterio activo. No se sustituye el significado de observaciones anteriores por un texto nuevo.
+
+**Reversión.** Se puede retirar la acción de copia sin tocar las evidencias. La migración y las versiones históricas se conservan para proteger su procedencia.
