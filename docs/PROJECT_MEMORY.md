@@ -97,6 +97,10 @@ Proyecto nuevo iniciado el 20 de septiembre de 2026. Existe un shell responsive 
 - La descarga vuelve a autorizar docente/aula/año. Nombre de institución, UGEL, docente y logo proceden del perfil autorizado; la síntesis procede del resumen guardado, y los recuentos se calculan de fuentes diagnósticas canónicas. Las respuestas familiares, los comentarios individuales y el texto de observaciones no se copian al informe. Los nombres conocidos se neutralizan si aparecieron en la síntesis grupal. El Word se crea a demanda, sin llamada a IA ni nueva tabla. Los recuentos reflejan los registros disponibles al descargar, mientras el texto de la síntesis conserva la versión elegida.
 - Ajuste visual posterior: la tabla de competencias y el título de decisiones llevan separación exterior explícita, y sus filas tienen más aire. Si el informe tiene al menos diez competencias, las decisiones comienzan en la página siguiente para no dejar el título aislado. En el plan anual flexible, el resumen por periodos se separa del título del cronograma y se amplía ligeramente el espacio interno de las fichas y de la etapa inicial. Los cuadros largos del cronograma conservan sus dimensiones para que sus doce filas sigan juntas. Las vistas previas ficticias se reabrieron en Word y el plan mantuvo 17 páginas.
 
+## Guardado Word en Descargas de la computadora local (2026-09-23)
+
+- El navegador integrado no guarda archivos descargados mediante `blob:` ni por enlace HTTP. Documentos ahora ofrece «Guardar Word en Descargas», que llama a una ruta POST del servidor local: vuelve a autorizar el documento, genera el Word y lo escribe en `Downloads` de la computadora que ejecuta Ayni. La interfaz confirma el nombre. El enlace HTTP queda como alternativa para otros dispositivos. La prueba real desde la app guardó el plan activo y verificó el archivo de 385364 bytes. Este mecanismo no se traslada a producción remota; ver ADR 046.
+
 
 
 

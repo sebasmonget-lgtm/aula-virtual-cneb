@@ -114,6 +114,9 @@ export function DocumentsScreen() {
   const [opened, setOpened] = useState<OpenDocument | null>(null);
   const [loading, setLoading] = useState(true);
   const [opening, setOpening] = useState(false);
+  const [savingWord, setSavingWord] = useState(false);
+  const [wordMessage, setWordMessage] = useState("");
+  const [wordError, setWordError] = useState("");
   const [error, setError] = useState("");
   const [revision, setRevision] = useState(0);
 
@@ -144,10 +147,24 @@ export function DocumentsScreen() {
   const downloadUrl = opened
     ? `${localDatabaseApiUrl}/api/documents/${opened.kind}/${opened.id}/download`
     : null;
+  async function saveWordLocally() {
+    if (!opened || savingWord) return;
+    setSavingWord(true); setWordMessage(""); setWordError("");
+    try {
+      const response = await fetch(`${localDatabaseApiUrl}/api/documents/${opened.kind}/${opened.id}/save-local`, { method: "POST" });
+      const result = await response.json() as { filename?: string; alreadyExists?: boolean; error?: string };
+      if (!response.ok || !result.filename) throw new Error(result.error || "No se pudo guardar el Word.");
+      setWordMessage(`${result.alreadyExists ? "El Word ya estaba guardado" : "Word guardado"} en Descargas: ${result.filename}`);
+    } catch (error) { setWordError(error instanceof Error ? error.message : "No se pudo guardar el Word."); }
+    finally { setSavingWord(false); }
+  }
   return <section className="mx-auto max-w-5xl space-y-5">
     <PageIntro eyebrow="Tu trabajo guardado" title="Documentos" description="Encuentra aquí tus diagnósticos, planes, experiencias, actividades e informes." icon={BookOpen} />
-    {selected && <div className="flex flex-wrap items-center justify-between gap-3"><Button variant="outline" className="min-h-11" onClick={() => { setSelected(null); setOpened(null); setError(""); }}><ArrowLeft className="mr-2 size-4" />Volver a mis documentos</Button>
-      {opened && downloadUrl && <Button asChild className="min-h-11"><a href={downloadUrl} download><Download className="mr-2 size-4" />{opened.kind === "annual_plan" ? "Descargar plan anual en Word" : "Descargar en Word"}</a></Button>}</div>}
+    {selected && <div className="flex flex-wrap items-center justify-between gap-3"><Button variant="outline" className="min-h-11" onClick={() => { setSelected(null); setOpened(null); setError(""); setWordMessage(""); setWordError(""); }}><ArrowLeft className="mr-2 size-4" />Volver a mis documentos</Button>
+      {opened && <Button className="min-h-11" disabled={savingWord} onClick={() => void saveWordLocally()}><Download className="mr-2 size-4" />{savingWord ? "Guardando Word..." : "Guardar Word en Descargas"}</Button>}</div>}
+    {wordMessage && <WorkflowFeedback tone="success">{wordMessage}</WorkflowFeedback>}
+    {wordError && <WorkflowFeedback tone="error">{wordError}</WorkflowFeedback>}
+    {opened && downloadUrl && <p className="text-sm text-[#526b87]">Se guarda en la computadora donde corre Ayni. <a className="underline" href={downloadUrl} download>Descargar en este dispositivo</a></p>}
     {error && <div className="flex flex-wrap items-center gap-3"><WorkflowFeedback tone="error">{error}</WorkflowFeedback><Button variant="outline" onClick={() => { setLoading(!selected); setOpening(Boolean(selected)); setRevision((value) => value + 1); }}>Reintentar</Button></div>}
     {selected ? opening ? <LoadingState label="Abriendo documento..." /> : opened ? <DocumentContent document={opened} /> : null :
       loading ? <LoadingState label="Buscando tus documentos..." /> : error ? null : documents.length === 0 ?
@@ -155,7 +172,7 @@ export function DocumentsScreen() {
         years.map((year) => <section key={year} aria-label={`Documentos ${year}`} className="space-y-3"><h2 className="text-lg font-extrabold text-[#172b52]">Año escolar {year}</h2>
           <ul className="space-y-2">{documents.filter((item) => item.school_year === year).map((item) => <li key={`${item.kind}-${item.id}`} className="rounded-2xl border border-[#d6e5ef] bg-white p-4 shadow-sm sm:flex sm:items-center sm:justify-between sm:gap-5">
             <div className="min-w-0"><p className="text-xs font-bold uppercase tracking-wide text-[#087d96]">{labelFor(item)} · {statusFor(item.status)}</p><h3 className="mt-1 break-words text-lg font-bold text-[#172b52]">{item.title}</h3><p className="mt-1 text-sm text-[#526b87]">{item.classroom}{item.date ? ` · ${dateFor(item.date)}` : ""}{item.version && item.version > 1 ? ` · Versión ${item.version}` : ""}</p></div>
-            <Button variant="outline" className="mt-3 min-h-11 shrink-0 sm:mt-0" onClick={() => { setOpened(null); setError(""); setOpening(true); setSelected({ kind: item.kind, id: item.id }); }}>Abrir documento</Button>
+            <Button variant="outline" className="mt-3 min-h-11 shrink-0 sm:mt-0" onClick={() => { setOpened(null); setError(""); setWordMessage(""); setWordError(""); setOpening(true); setSelected({ kind: item.kind, id: item.id }); }}>Abrir documento</Button>
           </li>)}</ul>
         </section>)}
   </section>;

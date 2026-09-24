@@ -1,6 +1,7 @@
 import { createServer } from "node:http";
 import { randomUUID } from "node:crypto";
 import { mkdir, readFile, readdir, unlink, writeFile } from "node:fs/promises";
+import { homedir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { PGlite } from "@electric-sql/pglite";
@@ -20,6 +21,7 @@ import { annualCalendarDay } from "../src/lib/annual-plan-schedule.mjs";
 import { buildFlexibleAnnualSchedule, defaultInitialStage, nationalCalendarBlocks2026, validateAnnualCalendar } from "../src/lib/annual-plan-calendar.mjs";
 import { listSavedDocuments, loadSavedDocument } from "../src/lib/document-library-service.mjs";
 import { prepareWordDownload } from "../src/lib/document-word-export.mjs";
+import { saveWordToLocalDownloads } from "../src/lib/local-word-save.mjs";
 import { loadInstitutionLogoForDocuments, normalizeInstitutionLogoUpload } from "../src/lib/institution-logo.mjs";
 import { validateLearningExperienceProposal } from "../src/lib/learning-experience-validation.mjs";
 import { normalizeActivityMaterials, publicActivityParent, validateActivityV4 } from "../src/lib/activity-v4-validation.mjs";
@@ -738,6 +740,19 @@ const server = createServer(async (request, response) => {
       }
       response.writeHead(200, headers);
       response.end(download.buffer);
+      return;
+    }
+    if (request.method === "POST" && url.pathname.startsWith("/api/documents/") && url.pathname.endsWith("/save-local")) {
+      const parts = url.pathname.split("/");
+      if (parts.length !== 6 || parts[5] !== "save-local") { send(response, 404, { error: "Documento no disponible." }, origin); return; }
+      const knowledgeBase = await loadKnowledgeBaseV4();
+      const cards = knowledgeBase.competencyCards.map((card) => ({ id: card.id, name: card.official_name,
+        area_name: card.area_name, capacities: card.capacities }));
+      const logo = await loadInstitutionLogoForDocuments(db, teacherId, assetsDir);
+      const download = await prepareWordDownload(db, teacherId, parts[3], parts[4], cards, { logo });
+      if (!download) { send(response, 404, { error: "Documento no disponible." }, origin); return; }
+      const saved = await saveWordToLocalDownloads(download, path.join(homedir(), "Downloads"));
+      send(response, 200, { filename: saved.filename, folder: "Descargas", alreadyExists: saved.alreadyExists }, origin);
       return;
     }
     if (request.method === "GET" && url.pathname.startsWith("/api/documents/")) {
