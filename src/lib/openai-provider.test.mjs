@@ -83,6 +83,21 @@ test("OpenAIProvider usa Responses API, el plan central y Structured Outputs str
   assert.deepEqual(result.metadata.usage, { input_tokens: 110, cached_input_tokens: 12, output_tokens: 55, total_tokens: 165 });
 });
 
+test("OpenAIProvider coloca la Skill en instrucciones y conserva el bundle como dato", async () => {
+  const client = fakeClient(validResponse({ model: "gpt-5.6-sol" }));
+  const provider = new OpenAIProvider({ apiKey: "test-key", client });
+  await provider.generate({
+    execution_plan: { provider: "openai", model: "gpt-5.6-sol", reasoning_effort: "high" },
+    output_schema: { id: "annual-plan-v2", type: "object", properties: {}, required: [], additionalProperties: false },
+    ai_context_bundle: { context: { classroom: "Grupo de prueba" } },
+    skill_instructions: "Skill crear-plan-anual: usa las fuentes confirmadas.",
+  });
+  const request = client.calls[0][0];
+  assert.deepEqual(request.reasoning, { effort: "high" });
+  assert.match(request.instructions, /Skill crear-plan-anual/);
+  assert.doesNotMatch(request.input[0].content[0].text, /Skill crear-plan-anual/);
+});
+
 test("el cliente real queda configurado sin reintentos automáticos", () => {
   const provider = new OpenAIProvider({ apiKey: "test-key" });
   assert.equal(provider.getClient().maxRetries, 0);

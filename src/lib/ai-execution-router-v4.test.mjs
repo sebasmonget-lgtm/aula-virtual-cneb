@@ -6,7 +6,7 @@ test("aplica la política inicial de routing por workflow", () => {
   const cases = [
     ["activity", "standard_generation", "openai", "gpt-5.6-terra", "low"],
     ["project", "deep_generation", "openai", "gpt-5.6-sol", "medium"],
-    ["annual_plan", "deep_generation", "openai", "gpt-5.6-sol", "medium"],
+    ["annual_plan", "deep_generation", "openai", "gpt-5.6-sol", "high"],
     ["material_generation", "light_generation", "openai", "gpt-5.6-luna", "none"],
   ];
   for (const [workflow, tier, provider, model, reasoning_effort] of cases) {
@@ -22,6 +22,7 @@ test("el desarrollo del plan anual usa Terra y conserva Sol para el plan maestro
   const master = resolveAIExecutionPlan({ workflow: "annual_plan", task: "generation" });
   const detail = resolveAIExecutionPlan({ workflow: "annual_plan", task: "document_development" });
   assert.equal(master.model, "gpt-5.6-sol");
+  assert.equal(master.reasoning_effort, "high");
   assert.equal(detail.model, "gpt-5.6-terra");
   assert.equal(detail.reasoning_effort, "low");
   assert.equal(detail.provider, "openai");

@@ -138,13 +138,14 @@ function assertAnnualPlanStageOutput(output, bundle, stage) {
     throw error;
   }
 }
-export function buildProviderRequest(workflow, bundle, executionPlan, outputSchema) {
+export function buildProviderRequest(workflow, bundle, executionPlan, outputSchema, skillInstructions = null) {
   const immutableBundle = deepFreeze(structuredClone(bundle));
   return deepFreeze({
     workflow,
     ai_context_bundle: immutableBundle,
     output_schema: outputSchema,
     execution_plan: structuredClone(executionPlan),
+    ...(skillInstructions ? { skill_instructions: skillInstructions } : {}),
   });
 }
 function assertExperienceOutput(output, bundle, workflow) {
@@ -183,9 +184,9 @@ function assertFamilyReportOutput(output, bundle, input) {
 /**
  * Generates one validated activity through an injected provider.
  * @param {object} input - activity workflow input accepted by prepareAIRequestV4.
- * @param {{ provider: AIProvider, knowledgeBase?: object, executionPlan?: object, routingPolicy?: object }} options
+ * @param {{ provider: AIProvider, knowledgeBase?: object, executionPlan?: object, routingPolicy?: object, skillInstructions?: string }} options
  */
-export async function generateAIWorkflowV4(input, { provider, knowledgeBase, executionPlan, routingPolicy } = {}) {
+export async function generateAIWorkflowV4(input, { provider, knowledgeBase, executionPlan, routingPolicy, skillInstructions } = {}) {
   const plan = executionPlan ?? resolveAIExecutionPlan({ workflow: input?.workflow, task: "generation", context: input?.context ?? null }, routingPolicy);
   if (plan.execution === "code") {
     throw new InvalidAIGenerationError("workflow_not_generation_enabled", { workflow: input?.workflow, execution_plan: plan });
@@ -196,9 +197,12 @@ export async function generateAIWorkflowV4(input, { provider, knowledgeBase, exe
   if (!provider || typeof provider.generate !== "function") {
     throw new InvalidAIGenerationError("provider_not_configured");
   }
+  if (skillInstructions !== undefined && (input.workflow !== "annual_plan" || input.annual_stage !== "master" || typeof skillInstructions !== "string" || !skillInstructions.trim())) {
+    throw new InvalidAIGenerationError("skill_scope_invalid");
+  }
   const prepared = await prepareAIRequestV4(input, knowledgeBase);
   const outputSchema = input.workflow === "annual_plan" ? (input.annual_stage === "development" ? ANNUAL_PLAN_DEVELOPMENT_SCHEMA : ANNUAL_PLAN_OUTPUT_SCHEMA) : input.workflow === "project" ? PROJECT_OUTPUT_SCHEMA : input.workflow === "unit" ? UNIT_OUTPUT_SCHEMA : input.workflow === "criterion_and_evidence" ? CRITERION_EVIDENCE_OUTPUT_SCHEMA : input.workflow === "assessment" ? ASSESSMENT_OUTPUT_SCHEMA : input.workflow === "descriptive_conclusion" ? DESCRIPTIVE_CONCLUSION_OUTPUT_SCHEMA : input.workflow === "family_report" ? FAMILY_REPORT_OUTPUT_SCHEMA : ACTIVITY_OUTPUT_SCHEMA;
-  const providerRequest = buildProviderRequest(input.workflow, prepared.aiContextBundle, plan, outputSchema);
+  const providerRequest = buildProviderRequest(input.workflow, prepared.aiContextBundle, plan, outputSchema, skillInstructions);
   const confirmedCompetencyId = input.competency_ids?.length === 1 ? input.competency_ids[0] : null;
   const providerResponse = unwrapProviderResponse(await provider.generate(providerRequest));
   const output = input.workflow === "annual_plan" ? assertAnnualPlanStageOutput(providerResponse.output, prepared.aiContextBundle, input.annual_stage) : ["project", "unit"].includes(input.workflow) ? assertExperienceOutput(providerResponse.output, prepared.aiContextBundle, input.workflow) : input.workflow === "criterion_and_evidence" ? assertCriterionEvidenceOutput(providerResponse.output,prepared.aiContextBundle,confirmedCompetencyId) : input.workflow === "assessment" ? assertAssessmentOutput(providerResponse.output,prepared.aiContextBundle,confirmedCompetencyId,input.evidence_history?.length??0) : input.workflow === "descriptive_conclusion" ? assertDescriptiveConclusionOutput(providerResponse.output, prepared.aiContextBundle, confirmedCompetencyId, input.student_context?.teacher_confirmed_findings?.information_status) : input.workflow === "family_report" ? assertFamilyReportOutput(providerResponse.output, prepared.aiContextBundle, input) : assertActivityOutput(providerResponse.output, prepared.aiContextBundle, confirmedCompetencyId);

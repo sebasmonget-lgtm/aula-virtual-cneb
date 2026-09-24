@@ -73,7 +73,7 @@ export class OpenAIProvider extends AIProvider {
       response = await client.responses.create({
         model: plan.model,
         ...(plan.reasoning_effort ? { reasoning: { effort: plan.reasoning_effort } } : {}),
-        instructions: "Actúa como asistente pedagógico de Educación Inicial. Usa exclusivamente el AIContextBundle entregado; respeta constraints.must y constraints.must_not; no inventes hechos sobre estudiantes ni presentes paráfrasis semánticas como citas literales MINEDU. Respeta edad, propósito, contexto, materiales y estado de competencia. Produce únicamente el objeto requerido por el schema.",
+        instructions: ["Actúa como asistente pedagógico de Educación Inicial. Usa exclusivamente el AIContextBundle entregado; respeta constraints.must y constraints.must_not; no inventes hechos sobre estudiantes ni presentes paráfrasis semánticas como citas literales MINEDU. Respeta edad, propósito, contexto, materiales y estado de competencia. Produce únicamente el objeto requerido por el schema.", request.skill_instructions].filter(Boolean).join("\n\n"),
         input: [{ role: "user", content: [{ type: "input_text", text: JSON.stringify(request.ai_context_bundle) }] }],
         text: {
           format: {

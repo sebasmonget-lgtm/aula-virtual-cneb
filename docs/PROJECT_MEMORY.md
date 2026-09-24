@@ -106,6 +106,11 @@ Proyecto nuevo iniciado el 20 de septiembre de 2026. Existe un shell responsive 
 - El plan confirmado de 2026 era una propuesta antigua de seis experiencias sin `plan_format`. La descarga funcionaba, pero exportaba fielmente ese registro anterior. Ahora Plan ofrece «Preparar versión actualizada» para un plan histórico del aula. Una generación nueva usa doce proyectos y se guarda como único borrador del año mientras el anterior sigue activo. La confirmación archiva la versión previa y activa la nueva en una transacción; nunca se reescribe automáticamente un plan confirmado. Documentos advierte del formato anterior. Ver ADR 047.
 - La prueba real del aula local produjo doce propuestas diferentes en dos llamadas a IA y guardó el borrador v2; el plan v1 continúa activo hasta revisión docente. Se descargó el borrador con logo, UGEL y cronograma actual. En Microsoft Word se corrigieron saltos redundantes y se verificó un PDF de 17 páginas sin páginas vacías. Las notas abreviadas para el Word conservan su texto completo en el borrador.
 
+## Skill crear-plan-anual (2026-09-23)
+
+- La metodología del primer llamado anual reside en `skills/crear-plan-anual/SKILL.md` y tres referencias enfocadas en lectura de fuentes, criterios CNEB y estructura del Plan Maestro. La aplicación carga esos archivos fijos como instrucciones de Sol/high solo para `annual_stage: master`. La petición de la docente sigue dentro del `AIContextBundle` filtrado; la Skill no entra allí ni puede elegirse mediante datos de usuario.
+- El primer resultado sigue siendo `annual-plan-v2` y pasa por la validación curricular y estructural existente. Terra/low desarrolla los detalles en el segundo llamado; el calendario, las autorizaciones, el guardado y la plantilla DOCX permanecen en código. Los archivos de Knowledge Base CNEB versionados siguen siendo la fuente canónica, sin copiar un catálogo curricular dentro de la Skill. Ver ADR 048.
+
 
 
 

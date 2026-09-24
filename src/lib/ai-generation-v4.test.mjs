@@ -117,6 +117,15 @@ test("H: el provider solo recibe AIContextBundle sin datos privados", async () =
   assert.deepEqual(Object.keys(provider.requests[0]).sort(), ["ai_context_bundle", "execution_plan", "output_schema", "workflow"]);
 });
 
+test("las instrucciones de Skill no se pueden aplicar a otro workflow", async () => {
+  const provider = new MockAIProvider({ ...activityFields, competency_status: "confirmed", competency_id: "COM_ORAL" });
+  await assert.rejects(
+    () => generateAIWorkflowV4(confirmedInput, { provider, skillInstructions: "Skill ajena" }),
+    (error) => error instanceof InvalidAIGenerationError && error.reason === "skill_scope_invalid",
+  );
+  assert.equal(provider.requests.length, 0);
+});
+
 test("la capa de generación no importa Jev, proveedores concretos, HTTP ni PDFs", async () => {
   const source = await readFile(new URL("./ai-generation-v4.mjs", import.meta.url), "utf8");
   assert.doesNotMatch(source, /jev-decision|\.pdf|fetch\(|https?:|openai|gpt|anthropic/i);

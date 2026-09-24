@@ -1,5 +1,5 @@
 export const AI_ROUTING_POLICY = Object.freeze({
-  version: "1.0.0",
+  version: "1.1.0",
   tiers: Object.freeze({
     decision: Object.freeze({ execution: "decision", provider: "typesafe", capability: "decision", model: null, reasoning_effort: null }),
     light_generation: Object.freeze({ execution: "generation", provider: "openai", model: "gpt-5.6-luna", reasoning_effort: "none" }),
@@ -8,7 +8,7 @@ export const AI_ROUTING_POLICY = Object.freeze({
   }),
   workflows: Object.freeze({
     diagnostic: Object.freeze({ tier: "standard_generation", allow_escalation: true }),
-    annual_plan: Object.freeze({ tier: "deep_generation", allow_escalation: false }),
+    annual_plan: Object.freeze({ tier: "deep_generation", reasoning_effort: "high", allow_escalation: false }),
     project: Object.freeze({ tier: "deep_generation", allow_escalation: false }),
     unit: Object.freeze({ tier: "deep_generation", allow_escalation: false }),
     workshop: Object.freeze({ tier: "standard_generation", allow_escalation: true }),
@@ -81,5 +81,6 @@ export function resolveAIExecutionPlan({ workflow, task = null, context = null }
       allow_escalation: false,
     };
   }
-  return planForTier(workflowPolicy.tier, `Política v${policy.version} para ${workflow}.`, workflowPolicy.allow_escalation, policy);
+  const plan = planForTier(workflowPolicy.tier, `Política v${policy.version} para ${workflow}.`, workflowPolicy.allow_escalation, policy);
+  return workflowPolicy.reasoning_effort ? { ...plan, reasoning_effort: workflowPolicy.reasoning_effort } : plan;
 }

@@ -4,6 +4,7 @@ import { createAIProviderForPlan } from "./ai-provider-factory.mjs";
 import { buildAnnualPlanContext } from "./context-policy-v4.mjs";
 import { mergeAnnualPlanDevelopment } from "./annual-plan-contract.mjs";
 import { AnnualCalendarError, defaultInitialStage, nationalCalendarBlocks2026, suggestAnnualProjectDurations } from "./annual-plan-calendar.mjs";
+import { loadAnnualPlanSkill } from "./annual-plan-skill.mjs";
 
 const ANNUAL_PLAN_TIMEOUT_MS = 180_000;
 
@@ -49,7 +50,7 @@ export function buildAnnualPlanGenerationInput({ classroom, request = {} }) {
   const group = buildAnnualPlanContext(classroom.context_v4);
   return {
     workflow: "annual_plan", age: classroom.age,
-    teacher_request: `${request.teacherRequest?.trim() || "Preparar el plan anual con el contexto disponible."} Construye el PLAN MAESTRO: exactamente doce propuestas distintas de proyectos, tres por cada uno de cuatro periodos lectivos. La acogida, adaptación y evaluación diagnóstica es una etapa aparte; nunca la conviertas en P01 ni le asignes producto final. Usa experience_type project y period Bimestre 1, Bimestre 2, Bimestre 3 o Bimestre 4 según su posición. Cada proyecto debe tener al menos una competencia principal aplicable, una situación de partida concreta y un motivo ligado al diagnóstico o al contexto; los intereses no necesitan repetirse artificialmente. Las fechas cívicas solo sirven como contexto si aportan una experiencia pertinente; no fuerces un proyecto por una celebración. Varía los temas, situaciones y competencias. Da a cada proyecto un título propio; nunca uses el mismo título o situación añadiendo un número. Las fechas y duraciones lectivas las calculará el servidor. Escribe frases cortas y palabras comunes para profesoras de Inicial. No inventes hallazgos diagnósticos, datos de familias o niños. Estas son propuestas iniciales que la docente puede ajustar durante el año.`,
+    teacher_request: `${request.teacherRequest?.trim() || "Preparar el plan anual con el contexto disponible."} Preparar el Plan Maestro anual.`,
     calendar_context: calendar,
     classroom_context: { id: classroom.id, group_context: [classroom.group_context, group?.group_context].filter(Boolean).join(" "), school_context: classroom.school_context, available_resources: classroom.available_resources, diagnostic_summary: group?.diagnostic_summary ?? classroom.diagnostic_summary },
     diagnostic_summary: group?.diagnostic_summary ?? classroom.diagnostic_summary,
@@ -84,7 +85,8 @@ export async function generateTeacherAnnualPlan({ classroom, request, resolvePla
   try {
     const input = buildAnnualPlanGenerationInput({ classroom, request });
     const masterPlan = resolvePlan({ workflow: "annual_plan", task: "generation" });
-    const master = await generate({ ...input, annual_stage: "master" }, { provider: createProvider(masterPlan, { timeoutMs: ANNUAL_PLAN_TIMEOUT_MS }), executionPlan: masterPlan });
+    const skillInstructions = await loadAnnualPlanSkill();
+    const master = await generate({ ...input, annual_stage: "master" }, { provider: createProvider(masterPlan, { timeoutMs: ANNUAL_PLAN_TIMEOUT_MS }), executionPlan: masterPlan, skillInstructions });
     const developmentPlan = resolvePlan({ workflow: "annual_plan", task: "document_development" });
     const developed = await generate({ ...input, annual_stage: "development", master_plan: developmentSource(master.output),
       teacher_request: "Desarrolla el plan maestro validado que aparece en workflow_inputs.master_plan. Conserva sus doce proyectos, su orden y sus competencias. Para cada índice escribe un propósito concreto y diferente, un posible producto o evidencia pertinente y materiales sencillos compatibles con el aula. No conviertas un producto grupal automáticamente en evidencia individual. No repitas el mismo propósito ni el mismo producto cambiando solo el número; algunos productos pueden ser juegos, acuerdos, relatos, construcciones, dibujos, exploraciones o registros cuando tengan sentido. Devuelve cuatro criterios de organización y enfoques transversales solo cuando el contexto y la Knowledge Base los sustenten. Usa español claro; no inventes observaciones ni datos familiares." },

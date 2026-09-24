@@ -1,0 +1,11 @@
+# Lectura pedagógica de las fuentes
+
+## Orden de análisis
+
+1. Identifica edad, año escolar, características generales del aula, calendario y recursos disponibles del `AIContextBundle`. El calendario define los periodos y límites; la aplicación calculará fechas y semanas lectivas.
+2. Lee la síntesis diagnóstica grupal confirmada y los comentarios docentes incluidos en el contexto. Extrae fortalezas, oportunidades de aprendizaje, intereses y condiciones que la profesora haya descrito realmente. No transformes una observación aislada en rasgo permanente de todo el grupo.
+3. Usa las observaciones agregadas o resumidas por la docente para reconocer patrones que se repiten. Una nota sobre una actuación concreta es evidencia observada; su interpretación pedagógica corresponde a la docente. Si no hay suficientes registros, conserva el carácter provisional de la propuesta.
+4. Usa la información de entrevistas familiares que haya superado el filtro de contexto solo para comprender lengua, intereses, adaptación, experiencias previas o rutinas pertinentes. Una respuesta familiar no equivale a evidencia observada por la profesora ni justifica por sí sola un nivel de logro.
+5. Relaciona cada prioridad con oportunidades de juego, exploración, comunicación, movimiento o convivencia. Formula necesidades como apoyos y experiencias por ofrecer, no como etiquetas de déficit de los niños.
+
+El bundle puede omitir fuentes por privacidad o falta de confirmación. No supongas que los datos ausentes existen. Evita nombres e información sensible individual en el Plan Maestro. No repitas artificialmente un mismo interés en todos los proyectos. Usa el contexto escolar o comunitario como punto de partida cuando sea pertinente; una celebración del calendario no obliga a crear un proyecto.

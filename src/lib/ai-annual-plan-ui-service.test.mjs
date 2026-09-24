@@ -34,12 +34,9 @@ test("el plan anual usa su propio mensaje y clasifica contexto faltante", () => 
   }
 });
 
-test("la nueva propuesta organiza cuatro bimestres y pide lenguaje sencillo incluso con indicación docente", async () => {
+test("la indicación docente permanece separada de la metodología de la Skill", async () => {
   const input = buildAnnualPlanGenerationInput({ classroom, request: { teacherRequest: "Explorar el patio" } });
-  assert.match(input.teacher_request, /Explorar el patio/);
-  assert.match(input.teacher_request, /cuatro bimestres|Bimestre 4/);
-  assert.match(input.teacher_request, /frases cortas y palabras comunes/);
-  assert.match(input.teacher_request, /nunca uses el mismo título/);
+  assert.equal(input.teacher_request, "Explorar el patio Preparar el Plan Maestro anual.");
   assert.deepEqual(input.available_resources, ["papel", "semillas"]);
   assert.equal(input.calendar_context.starts_on, "2026-03-01");
   assert.match(input.diagnostic_summary, /necesita más oportunidades/);
@@ -66,7 +63,7 @@ test("las notas privadas de la etapa inicial no entran al contexto del modelo", 
 
 test("plan maestro y desarrollo usan dos providers mock, Sol y Terra, sin llamada real", async () => {
   const calls = [];
-  const masterPlan = { workflow: "annual_plan", provider: "openai", model: "gpt-5.6-sol", reasoning_effort: "medium" };
+  const masterPlan = { workflow: "annual_plan", provider: "openai", model: "gpt-5.6-sol", reasoning_effort: "high" };
   const developmentPlan = { workflow: "annual_plan", provider: "openai", model: "gpt-5.6-terra", reasoning_effort: "low" };
   const master = {
     title: "Plan ficticio", school_year: "2026", general_context_summary: "Grupo ficticio", planning_priorities: ["Observar"],
@@ -91,12 +88,16 @@ test("plan maestro y desarrollo usan dos providers mock, Sol y Terra, sin llamad
       assert.equal(options.provider.id, "mock");
       if (input.annual_stage === "development") {
         assert.equal(options.executionPlan, developmentPlan);
+        assert.equal(options.skillInstructions, undefined);
         assert.equal(input.master_plan.proposed_experiences.length, 12);
         assert.equal(input.master_plan.proposed_experiences[0].primary_competency_ids[0], "COMP-1");
         return { output: development, metadata: { workflow: "annual_plan", model: developmentPlan.model, response_id: "detail-test", usage: { input_tokens: 20, output_tokens: 30, total_tokens: 50 } }, provenance: {} };
       }
       assert.equal(input.annual_stage, "master");
       assert.equal(options.executionPlan, masterPlan);
+      assert.match(options.skillInstructions, /Skill crear-plan-anual/);
+      assert.match(options.skillInstructions, /PLAN-01/);
+      assert.match(options.skillInstructions, /exactamente \*\*12 proyectos/);
       return { output: master, metadata: { workflow: "annual_plan", model: masterPlan.model, response_id: "master-test", usage: { input_tokens: 100, output_tokens: 200, total_tokens: 300 } }, provenance: {} };
     },
   });
@@ -153,6 +154,9 @@ test("el pipeline real de contexto entrega solo el bundle a los dos providers mo
   assert.equal(requests.length, 2);
   assert.equal(requests[0].output_schema.id, "annual-plan-v2");
   assert.equal(requests[1].output_schema.id, "annual-plan-development-v1");
+  assert.match(requests[0].skill_instructions, /Skill crear-plan-anual/);
+  assert.equal(requests[1].skill_instructions, undefined);
+  assert.equal(JSON.stringify(requests[0].ai_context_bundle).includes("Skill crear-plan-anual"), false);
   assert.equal(requests[0].ai_context_bundle.context.workflow_inputs.master_plan, undefined);
   assert.equal(requests[1].ai_context_bundle.context.workflow_inputs.master_plan.proposed_experiences.length, 12);
   assert.equal(JSON.stringify(requests).includes("private_path"), false);
