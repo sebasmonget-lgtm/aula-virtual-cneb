@@ -9,6 +9,7 @@ import { buildDescriptiveConclusionInput, sourceAssessmentSnapshot, validateDesc
 import { dateOnly, defaultEvaluationPeriods, loadPeriodEvaluationRows, periodClosureFingerprint } from "../src/lib/period-evaluation-service.mjs";
 import { assertSavedEvaluationDraft, savePeriodEvaluationDraft } from "../src/lib/period-evaluation-draft-service.mjs";
 import { closePeriodWithManifest } from "../src/lib/period-closure-history.mjs";
+import { projectPedagogicalCoverage } from "../src/lib/pedagogical-coverage.mjs";
 
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const hash = (value) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
@@ -118,6 +119,16 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
           await db.exec("commit");
         } catch (error) { await db.exec("rollback"); throw error; }
         send(response, 200, { periods: await ensurePeriods(year) }, origin); return true;
+      }
+      if (request.method === "GET" && url.pathname === "/api/period-evaluations/coverage") {
+        const data=await context(url.searchParams.get("classroomId"),url.searchParams.get("periodId"));
+        const counts=(await db.query(`select ac.competency_v4_id,count(distinct a.id)::int as activity_count
+          from activity_criteria ac join activities a on a.id=ac.activity_id join learning_experiences le on le.id=a.experience_id
+          where le.classroom_id=$1 and a.status='active' and ac.status='active' and a.occurs_on between $2::date and $3::date
+          group by ac.competency_v4_id`,[data.classroom.id,data.period.starts_on,data.period.ends_on])).rows;
+        const projection=projectPedagogicalCoverage({students:data.model.students,cards:data.cards,model:data.model,
+          activityCounts:new Map(counts.map((item)=>[item.competency_v4_id,Number(item.activity_count)]))});
+        send(response,200,{period:data.period,classroom_id:data.classroom.id,...projection},origin);return true;
       }
       if (request.method === "GET" && url.pathname === "/api/period-evaluations/overview") {
         const data = await context(url.searchParams.get("classroomId"), url.searchParams.get("periodId"));

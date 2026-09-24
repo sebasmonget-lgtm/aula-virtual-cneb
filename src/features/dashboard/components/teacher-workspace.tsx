@@ -49,6 +49,7 @@ export function TeacherWorkspace() {
   const [active, setActive] = useState("Hoy");
   const navigationTouched = useRef(false);
   const [evaluationTarget, setEvaluationTarget] = useState<{ studentId: string; competencyId: string } | null>(null);
+  const [planningTarget, setPlanningTarget] = useState<"activities" | null>(null);
   const [evidenceOpen, setEvidenceOpen] = useState(false);
   const [attendanceOpen, setAttendanceOpen] = useState(false);
   const [activityRunBlockId, setActivityRunBlockId] = useState<string | null>(null);
@@ -134,7 +135,7 @@ export function TeacherWorkspace() {
   const activity = dashboard?.activity;
   const metrics = dashboard?.metrics;
 
-  function navigate(section: string) { navigationTouched.current = true; setStarting(false); setActive(section); }
+  function navigate(section: string) { navigationTouched.current = true; setStarting(false); if(section!=="Planificar")setPlanningTarget(null); setActive(section); }
 
   function closeEvidence(open: boolean) {
     setEvidenceOpen(open);
@@ -228,8 +229,8 @@ export function TeacherWorkspace() {
           {guidanceError && <div className="mb-4 flex flex-wrap items-center gap-3"><WorkflowFeedback tone="error">No pudimos comprobar cuál es tu siguiente paso.</WorkflowFeedback><Button variant="outline" onClick={() => { setGuidanceError(false); setRetry((value) => value + 1); }}>Reintentar</Button></div>}
           {starting ? <ScreenSkeleton /> : active === "Perfil" ? dashboard ? <InstitutionProfile dashboard={dashboard} onSaved={setDashboard} /> : <ScreenSkeleton /> :
           active === "Documentos" ? <DocumentsScreen /> :
-          active === "Evaluar" ? dashboard ? <EvaluationArea dashboard={dashboard} initialTarget={evaluationTarget} focused={needsFirstDiagnostic} onPlan={() => { setNeedsFirstDiagnostic(false); navigate("Planificar"); }} onStudents={() => navigate("Niños")} /> : <ScreenSkeleton /> :
-          active === "Niños" ? dashboard ? <StudentsScreen students={students} onImported={setDashboard} onDiagnostic={() => navigate("Evaluar")} onEvaluate={(studentId, competencyId) => { setEvaluationTarget({ studentId, competencyId }); navigate("Evaluar"); }} onPlan={() => navigate("Planificar")} /> : <ScreenSkeleton /> : active === "Planificar" ? dashboard ? <PlanningArea onGoToday={() => navigate("Hoy")} onGoDiagnostic={() => navigate("Evaluar")} onGoStudents={() => navigate("Niños")} /> : <ScreenSkeleton /> : <>
+          active === "Evaluar" ? dashboard ? <EvaluationArea dashboard={dashboard} initialTarget={evaluationTarget} focused={needsFirstDiagnostic} onPlan={() => { setNeedsFirstDiagnostic(false); setPlanningTarget(null); navigate("Planificar"); }} onPrepareActivity={() => { setNeedsFirstDiagnostic(false); setPlanningTarget("activities"); navigate("Planificar"); }} onStudents={() => navigate("Niños")} /> : <ScreenSkeleton /> :
+          active === "Niños" ? dashboard ? <StudentsScreen students={students} onImported={setDashboard} onDiagnostic={() => navigate("Evaluar")} onEvaluate={(studentId, competencyId) => { setEvaluationTarget({ studentId, competencyId }); navigate("Evaluar"); }} onPlan={() => navigate("Planificar")} /> : <ScreenSkeleton /> : active === "Planificar" ? dashboard ? <PlanningArea initialTab={planningTarget} onGoToday={() => navigate("Hoy")} onGoDiagnostic={() => navigate("Evaluar")} onGoStudents={() => navigate("Niños")} /> : <ScreenSkeleton /> : <>
           {activityRunBlock ? <ActivityRunView block={activityRunBlock} onBack={() => setActivityRunBlockId(null)} onEvidence={() => openEvidenceFor(activityRunBlock)} onStepChange={async (stepIndex) => updateExecution({ scheduleEntryId: activityRunBlock.id, action: "set_step", stepIndex })} onComplete={async () => { await updateExecution({ scheduleEntryId: activityRunBlock.id, action: "complete", closureType: "as_planned" }); setActivityRunBlockId(null); }} /> : active === "Hoy" && (dashboard ? <TodayScreen dashboard={dashboard} openEvidence={openEvidenceFor} openAttendance={() => setAttendanceOpen(true)} updateExecution={updateExecution} openActivity={openActivity} onPlan={() => navigate("Planificar")} /> : <ScreenSkeleton />)}
           </>}
         </main>
@@ -326,7 +327,7 @@ function EvidenceDialog({ open, onOpenChange, students, studentId, setStudentId,
   </Dialog>;
 }
 
-function EvaluationArea({ dashboard, initialTarget, focused, onPlan, onStudents }: { dashboard: LocalDashboard; initialTarget: { studentId: string; competencyId: string } | null; focused: boolean; onPlan: () => void; onStudents: () => void }) {
+function EvaluationArea({ dashboard, initialTarget, focused, onPlan, onPrepareActivity, onStudents }: { dashboard: LocalDashboard; initialTarget: { studentId: string; competencyId: string } | null; focused: boolean; onPlan: () => void; onPrepareActivity: () => void; onStudents: () => void }) {
   const [tab, setTab] = useState<"diagnostic" | "period">(initialTarget ? "period" : "diagnostic");
   return <section className="mx-auto max-w-5xl space-y-5">
     <PageIntro eyebrow="Acompañamiento pedagógico" title="Evaluar" description="Conoce el desarrollo de cada niño a partir de evidencias reales y decisiones confirmadas por ti." icon={ClipboardCheck} />
@@ -334,11 +335,11 @@ function EvaluationArea({ dashboard, initialTarget, focused, onPlan, onStudents 
       { id: "diagnostic", label: "Diagnóstico", icon: ClipboardCheck },
       { id: "period", label: "Evaluación del período", shortLabel: "Período", icon: BookOpen },
     ]} />}
-    {tab === "diagnostic" ? <GuidedDiagnostic dashboard={dashboard} onPlan={onPlan} onStudents={onStudents} /> : <PeriodEvaluation initialStudentId={initialTarget?.studentId} initialCompetencyId={initialTarget?.competencyId} />}
+    {tab === "diagnostic" ? <GuidedDiagnostic dashboard={dashboard} onPlan={onPlan} onStudents={onStudents} /> : <PeriodEvaluation initialStudentId={initialTarget?.studentId} initialCompetencyId={initialTarget?.competencyId} onPlan={onPlan} onPrepareActivity={onPrepareActivity} />}
   </section>;
 }
-function PlanningArea({ onGoToday, onGoDiagnostic, onGoStudents }: { onGoToday: () => void; onGoDiagnostic: () => void; onGoStudents: () => void }) {
-  const [tab, setTab] = useState<"diagnostic" | "annual" | "experiences" | "activities">("annual");
+function PlanningArea({ initialTab, onGoToday, onGoDiagnostic, onGoStudents }: { initialTab?:"activities"|null; onGoToday: () => void; onGoDiagnostic: () => void; onGoStudents: () => void }) {
+  const [tab, setTab] = useState<"diagnostic" | "annual" | "experiences" | "activities">(initialTab??"annual");
   const [journey, setJourney] = useState<Awaited<ReturnType<typeof loadPlanningJourney>> | null>(null);
   const [loading, setLoading] = useState(true);
   const [progressError, setProgressError] = useState(false);
@@ -351,11 +352,11 @@ function PlanningArea({ onGoToday, onGoDiagnostic, onGoStudents }: { onGoToday: 
     loadPlanningJourney(localDatabaseApiUrl).then((next) => {
       if (!live) return;
       setJourney(next);
-      setTab(next.recommended);
+      if(!initialTab)setTab(next.recommended);
       setProgressError(false);
     }).catch(() => { if (live) setProgressError(true); }).finally(() => { if (live) setLoading(false); });
     return () => { live = false; };
-  }, []);
+  }, [initialTab]);
 
   async function refreshJourney() {
     try { const next = await loadPlanningJourney(localDatabaseApiUrl); setJourney(next); if (!journey) setTab(next.recommended); setProgressError(false); }

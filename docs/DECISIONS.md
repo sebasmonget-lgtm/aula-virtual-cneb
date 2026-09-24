@@ -474,3 +474,7 @@ La confirmación de la actividad y la inserción del criterio heredado se ejecut
 **Decisión.** Evaluar comparte el aula, período formal y estudiante seleccionados con el generador existente de informes familiares. La docente escoge conclusiones confirmadas, genera una propuesta, la edita, guarda un borrador y confirma. El Word conserva el nombre del período y la docente. Documentos muestra tanto las versiones vinculadas como los informes históricos sin período formal.
 
 **Autorización.** El servicio puede resolver un aula concreta solo si pertenece a la docente y al año escolar de su cuenta; cada estudiante se comprueba dentro de esa aula. La descarga vuelve a verificar la propiedad del documento. El flujo heredado por fechas permanece para leer y editar informes antiguos.
+
+## ADR 062 Cobertura pedagógica derivada
+
+**Decisión.** La cobertura no guarda otra tabla de resultados. Se calcula para el aula y período autorizados desde estudiantes activos, competencias aplicables a su edad, alcance previsto, criterios de actividades, evidencias y valoraciones existentes. Muestra cada pareja niño–competencia, incluso sin registros. “Sin registro” y “pendiente de observar” describen el estado de documentación; nunca se transforman en un nivel C ni en una dificultad. Las acciones conducen a Planificar, donde la docente decide qué preparar.

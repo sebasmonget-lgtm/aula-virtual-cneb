@@ -33,6 +33,22 @@ test("períodos formales separan cuatro bimestres o tres trimestres", () => {
   assert.equal(defaultEvaluationPeriods(calendar, blocks, "trimester").length, 3);
 });
 
+test("cobertura deriva registros por niño y competencia sin convertir ausencias en niveles", async () => {
+  const f=await fixture();
+  const period=(await f.call("GET","/api/period-evaluations/workspace")).body.periods[0];
+  const result=await f.call("GET",`/api/period-evaluations/coverage?classroomId=${classId}&periodId=${period.id}`);
+  assert.equal(result.status,200,JSON.stringify(result.body));
+  const observed=result.body.rows.find((row)=>row.student_id===studentA&&row.competency_id==="COM_ORAL");
+  const unobserved=result.body.rows.find((row)=>row.student_id===studentB&&row.competency_id==="COM_ORAL");
+  assert.equal(observed.evidence_count,2);
+  assert.equal(observed.activity_count,1);
+  assert.equal(unobserved.evidence_count,0);
+  assert.equal(unobserved.evaluation_status,"sin_registro");
+  assert.equal(unobserved.planned,true);
+  assert.ok(result.body.by_competency.length>1);
+  assert.equal((await f.call("GET",`/api/period-evaluations/coverage?classroomId=${otherClass}&periodId=${period.id}`)).status,422);
+});
+
 test("la migración futura exige lectura propia y escritura mediante servidor", async () => {
   const sql = await readFile(new URL("../../supabase/migrations/202609240001_evaluation_periods.sql", import.meta.url), "utf8");
   for (const table of ["evaluation_periods", "period_competency_scope", "period_closures"]) assert.match(sql, new RegExp(`alter table public\\.${table} enable row level security`));

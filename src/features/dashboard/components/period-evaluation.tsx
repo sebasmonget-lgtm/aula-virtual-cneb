@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { localDatabaseApiUrl } from "@/src/lib/local-database";
 import { FamilyReportGenerator } from "./family-report-generator";
+import { PedagogicalCoverage } from "./pedagogical-coverage";
 
 type Year = { id: string; year: number };
 type Classroom = { id: string; school_year_id: string; section: string; age: number };
@@ -31,7 +32,7 @@ async function api<T>(path: string, body?: unknown): Promise<T> {
   return payload;
 }
 
-export function PeriodEvaluation({ initialStudentId = "", initialCompetencyId = "" }: { initialStudentId?: string; initialCompetencyId?: string }) {
+export function PeriodEvaluation({ initialStudentId = "", initialCompetencyId = "", onPlan, onPrepareActivity }: { initialStudentId?: string; initialCompetencyId?: string; onPlan?:()=>void; onPrepareActivity?:()=>void }) {
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [yearId, setYearId] = useState("");
   const [classroomId, setClassroomId] = useState("");
@@ -40,7 +41,7 @@ export function PeriodEvaluation({ initialStudentId = "", initialCompetencyId = 
   const [competencyId, setCompetencyId] = useState(initialCompetencyId);
   const [overview, setOverview] = useState<Overview | null>(null);
   const [detail, setDetail] = useState<Detail | null>(null);
-  const [view, setView] = useState<"student" | "classroom" | "report" | "family">("student");
+  const [view, setView] = useState<"student" | "classroom" | "report" | "family" | "coverage">("student");
   const [showSustento, setShowSustento] = useState(false);
   const [teacherAnalysis, setTeacherAnalysis] = useState("");
   const [achievementLevel, setAchievementLevel] = useState("");
@@ -132,7 +133,8 @@ export function PeriodEvaluation({ initialStudentId = "", initialCompetencyId = 
     {message && <p role="status" className="rounded-xl bg-[#eaf7fb] px-4 py-3 text-sm text-[#17475d]">{message}</p>}
     {!overview ? <p>{classroomId && periodId ? "Cargando registros…" : "Selecciona un aula y un período para comenzar."}</p> : <>
       <div className="grid gap-3 sm:grid-cols-2"><div className="rounded-2xl bg-[#eaf7fb] p-4"><b>{overview.progress.students_complete}/{overview.progress.students_total} niños completos</b></div><div className="rounded-2xl bg-[#eff8f2] p-4"><b>{overview.progress.competencies_complete}/{overview.progress.competencies_total} valoraciones confirmadas</b></div></div>
-      <div className="flex flex-wrap gap-2"><Button variant={view === "student" ? "default" : "outline"} onClick={() => setView("student")}>Revisar un niño</Button><Button variant={view === "classroom" ? "default" : "outline"} onClick={() => setView("classroom")}>Revisar aula</Button><Button variant={view === "report" ? "default" : "outline"} onClick={() => setView("report")}>Informe de progreso</Button><Button variant={view === "family" ? "default" : "outline"} onClick={() => setView("family")}>Informe a familias</Button></div>
+      <div className="flex flex-wrap gap-2"><Button variant={view === "student" ? "default" : "outline"} onClick={() => setView("student")}>Revisar un niño</Button><Button variant={view === "classroom" ? "default" : "outline"} onClick={() => setView("classroom")}>Revisar aula</Button><Button variant={view === "coverage" ? "default" : "outline"} onClick={() => setView("coverage")}>Cobertura</Button><Button variant={view === "report" ? "default" : "outline"} onClick={() => setView("report")}>Informe de progreso</Button><Button variant={view === "family" ? "default" : "outline"} onClick={() => setView("family")}>Informe a familias</Button></div>
+      {view === "coverage" && <PedagogicalCoverage classroomId={classroomId} periodId={periodId} onPlan={onPlan} onPrepareActivity={onPrepareActivity} />}
       {view === "family" && currentPeriod && <FamilyReportGenerator key={`${classroomId}:${periodId}`} classroomId={classroomId} period={currentPeriod} students={overview.students.map((student) => ({ id:student.id,name:studentName(student) }))} initialStudentId={studentId} onConclusion={(id) => { setStudentId(id); setView("student"); }} />}
       {view === "student" && <div className="grid gap-5 lg:grid-cols-[240px_1fr]">
         <aside className="rounded-2xl border bg-white p-3"><h3 className="px-2 py-2 font-bold">Niños</h3><div className="space-y-1">{overview.students.map((student) => { const complete = overview.scope.length > 0 && overview.scope.every((item) => overview.rows.some((row) => row.student_id === student.id && row.competency_id === item.id && row.state === "confirmed")); return <button key={student.id} type="button" onClick={() => setStudentId(student.id)} className={`flex min-h-11 w-full items-center justify-between rounded-xl px-3 text-left text-sm ${studentId === student.id ? "bg-[#e8f6fb] font-bold text-[#07516a]" : "hover:bg-[#f4f8fb]"}`}>{studentName(student)}{complete && <Check className="size-4 text-green-700" />}</button>; })}</div></aside>
