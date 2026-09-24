@@ -7,6 +7,7 @@ import { generateAIWorkflowV4 } from "../src/lib/ai-generation-v4.mjs";
 import { assessmentSourceSnapshot, buildAssessmentInput, neutralizeAssessmentText, sanitizeEvidenceForAssessment, validateAssessmentProposal } from "../src/lib/assessment-v4-service.mjs";
 import { buildDescriptiveConclusionInput, sourceAssessmentSnapshot, validateDescriptiveConclusion } from "../src/lib/descriptive-conclusion-v4-service.mjs";
 import { dateOnly, defaultEvaluationPeriods, loadPeriodEvaluationRows, periodClosureFingerprint } from "../src/lib/period-evaluation-service.mjs";
+import { assertSavedEvaluationDraft, savePeriodEvaluationDraft } from "../src/lib/period-evaluation-draft-service.mjs";
 
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const hash = (value) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
@@ -141,7 +142,9 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
         const data = await selectedRow({ classroomId: url.searchParams.get("classroomId"), periodId: url.searchParams.get("periodId"), studentId: url.searchParams.get("studentId"), competencyId: url.searchParams.get("competencyId") });
         const official = await db.query(`select distinct p.id,p.official_text,p.source_ref from activity_criteria ac join performances p on p.id=ac.performance_id join activities a on a.id=ac.activity_id join learning_experiences le on le.id=a.experience_id where le.classroom_id=$1 and ac.competency_v4_id=$2 and p.age_grade_id=$3 and a.occurs_on between $4::date and $5::date`, [data.classroom.id, data.card.id, data.classroom.age_grade_id, data.period.starts_on, data.period.ends_on]);
         const semantic = data.knowledge.curriculumReference.competencies.find((item) => item.id === data.card.id)?.age_references?.[String(data.classroom.age)];
-        send(response, 200, { classroom_id: data.classroom.id, period_id: data.period.id, student_id: data.row.student_id, competency_id: data.card.id, state: data.row.state, evidence_count: data.row.sourceRows.length, evidence_fingerprint: hash(assessmentSourceSnapshot(data.row.sourceRows)), timeline: data.row.sourceRows.map((item) => ({ id: item.id, observed_on: dateOnly(item.observed_on), registered_at: item.observed_at, activity_id: item.activity_id, activity_title: item.activity_title, criterion_id: item.criterion_id, criterion_text: item.criterion_text, performance_id: item.performance_id, observation_text: item.observation_text, media_available: item.media_available })), reference: official.rows.length ? { kind: "official", items: official.rows } : { kind: "orientative", text: semantic?.semantic_focus ?? "Referente por edad aún no disponible." }, assessment: data.row.assessment ? { id: data.row.assessment.id, achievement_level: data.row.assessment.achievement_level, suggested_level: data.row.assessment.suggested_level, suggestion_reason: data.row.assessment.suggestion_reason, teacher_justification: data.row.assessment.teacher_justification, details: data.row.assessment.details, teacher_confirmed_at: data.row.assessment.teacher_confirmed_at } : null, insufficiency_reason: data.row.state === "insufficient_information" ? data.row.draft?.details?.insufficiency_reason ?? null : null, conclusion: data.row.conclusion?.details?.conclusion_text ?? null }, origin);
+        const currentFingerprint=hash(assessmentSourceSnapshot(data.row.sourceRows));
+        const draft=data.row.draft;
+        send(response, 200, { classroom_id: data.classroom.id, period_id: data.period.id, student_id: data.row.student_id, competency_id: data.card.id, state: data.row.state, evidence_count: data.row.sourceRows.length, evidence_fingerprint: currentFingerprint, timeline: data.row.sourceRows.map((item) => ({ id: item.id, observed_on: dateOnly(item.observed_on), registered_at: item.observed_at, activity_id: item.activity_id, activity_title: item.activity_title, criterion_id: item.criterion_id, criterion_text: item.criterion_text, performance_id: item.performance_id, observation_text: item.observation_text, media_available: item.media_available })), reference: official.rows.length ? { kind: "official", items: official.rows } : { kind: "orientative", text: semantic?.semantic_focus ?? "Referente por edad aún no disponible." }, assessment: data.row.assessment ? { id: data.row.assessment.id, achievement_level: data.row.assessment.achievement_level, suggested_level: data.row.assessment.suggested_level, suggestion_reason: data.row.assessment.suggestion_reason, teacher_justification: data.row.assessment.teacher_justification, details: data.row.assessment.details, teacher_confirmed_at: data.row.assessment.teacher_confirmed_at } : null, draft: draft ? { id:draft.id, current:hash(draft.source_evidence_snapshot??[])===currentFingerprint, teacher_analysis:draft.draft_teacher_analysis??"", conclusion_text:draft.working_conclusion_text??"", provisional_level:draft.provisional_level??null, teacher_justification:draft.draft_teacher_justification??"", suggested_level:draft.suggested_level??null, suggestion_reason:draft.suggestion_reason??null, details:draft.details } : null, insufficiency_reason: data.row.state === "insufficient_information" ? draft?.details?.insufficiency_reason ?? null : null, conclusion: data.row.conclusion?.details?.conclusion_text ?? null }, origin);
         return true;
       }
       if (request.method === "POST" && url.pathname === "/api/period-evaluations/suggest") {
@@ -161,17 +164,25 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
           validateDescriptiveConclusion(result.output, data.card.id, analysis.output.information_status);
           conclusion = result.output; conclusionMetadata = metadataForAudit(result.metadata);
         }
-        const generationId = randomUUID(), sourceSnapshot = assessmentSourceSnapshot(data.row.sourceRows), evidenceFingerprint = hash(sourceSnapshot);
-        if (analysis.output.information_status === "insufficient") {
-          const existing = (await db.query(`select id,version from competency_assessments where student_id=$1 and competency_v4_id=$2 and period_start=$3::date and period_end=$4::date and status='draft'`, [student.id, data.card.id, data.period.starts_on, data.period.ends_on])).rows[0];
-          if (existing) await db.query(`update competency_assessments set evaluation_period_id=$1,details=$2::jsonb,source_evidence_ids=$3::jsonb,source_evidence_snapshot=$4::jsonb,generation_metadata=$5::jsonb,suggested_level=null,suggestion_reason=null,updated_at=now() where id=$6`, [data.period.id, JSON.stringify(analysis.output), JSON.stringify(data.row.sourceRows.map((row) => row.id)), JSON.stringify(sourceSnapshot), JSON.stringify(metadataForAudit(analysis.metadata)), existing.id]);
-          else {
-            const version = Number((await db.query(`select coalesce(max(version),0)+1 as version from competency_assessments where student_id=$1 and competency_v4_id=$2 and period_start=$3::date and period_end=$4::date`, [student.id, data.card.id, data.period.starts_on, data.period.ends_on])).rows[0].version);
-            await db.query(`insert into competency_assessments(id,student_id,competency_v4_id,evaluation_period_id,period_start,period_end,version,source_evidence_ids,source_evidence_snapshot,details,generation_metadata,status) values($1,$2,$3,$4,$5::date,$6::date,$7,$8::jsonb,$9::jsonb,$10::jsonb,$11::jsonb,'draft')`, [randomUUID(), student.id, data.card.id, data.period.id, data.period.starts_on, data.period.ends_on, version, JSON.stringify(data.row.sourceRows.map((row) => row.id)), JSON.stringify(sourceSnapshot), JSON.stringify(analysis.output), JSON.stringify(metadataForAudit(analysis.metadata))]);
-          }
-        }
+        const generationId = randomUUID(), evidenceFingerprint = hash(assessmentSourceSnapshot(data.row.sourceRows));
+        const latest = await selectedRow(body);
+        if (hash(assessmentSourceSnapshot(latest.row.sourceRows)) !== evidenceFingerprint)
+          throw new Error("Las observaciones cambiaron durante la sugerencia. Revísalas otra vez.");
+        const draft = await savePeriodEvaluationDraft(db, { studentId: student.id, competencyId: data.card.id, period: data.period,
+          sourceRows: latest.row.sourceRows, analysis: analysis.output,
+          metadata: { analysis: metadataForAudit(analysis.metadata), conclusion: conclusionMetadata },
+          teacherAnalysis: analysis.output.evidence_overview, conclusionText: conclusion?.conclusion_text ?? "" });
         await pending.set(generationId, { workflow: "period_evaluation", classroom_id: data.classroom.id, period_id: data.period.id, student_id: student.id, competency_v4_id: data.card.id, evidence_fingerprint: evidenceFingerprint, analysis: analysis.output, conclusion, analysis_metadata: metadataForAudit(analysis.metadata), conclusion_metadata: conclusionMetadata, createdAt: Date.now() });
-        send(response, 200, { generation_id: generationId, evidence_fingerprint: evidenceFingerprint, analysis: analysis.output, conclusion }, origin); return true;
+        send(response, 200, { generation_id: generationId, draft_id: draft.id, evidence_fingerprint: evidenceFingerprint, analysis: analysis.output, conclusion }, origin); return true;
+      }
+      if (request.method === "POST" && url.pathname === "/api/period-evaluations/save-draft") {
+        const body=await readJson(request),data=await selectedRow(body);
+        const fingerprint=hash(assessmentSourceSnapshot(data.row.sourceRows));
+        if(body.evidenceFingerprint!==fingerprint) {fail(response,origin,new Error("Las observaciones cambiaron. Revísalas antes de guardar."),409);return true;}
+        const saved=await savePeriodEvaluationDraft(db,{studentId:body.studentId,competencyId:body.competencyId,period:data.period,
+          sourceRows:data.row.sourceRows,teacherAnalysis:body.teacherAnalysis,conclusionText:body.conclusionText,
+          provisionalLevel:body.provisionalLevel||null,teacherJustification:body.teacherJustification});
+        send(response,200,{draft_id:saved.id,evidence_fingerprint:saved.evidence_fingerprint,saved:true},origin);return true;
       }
       if (request.method === "POST" && url.pathname === "/api/period-evaluations/confirm") {
         const body = await readJson(request), data = await selectedRow(body);
@@ -182,12 +193,16 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
         const teacherAnalysis = clean(body.teacherAnalysis), conclusionText = clean(body.conclusionText), teacherJustification = clean(body.teacherJustification, 1000);
         if (!teacherAnalysis) throw new Error("Describe brevemente qué muestran las observaciones.");
         if (body.achievementLevel !== "AD" && !conclusionText) throw new Error("Escribe una conclusión para el nivel confirmado.");
-        const suggestion = body.generationId ? await pending.get(body.generationId) : null;
-        if (body.generationId && (!suggestion || suggestion.workflow !== "period_evaluation" || suggestion.classroom_id !== data.classroom.id || suggestion.period_id !== data.period.id || suggestion.student_id !== body.studentId || suggestion.competency_v4_id !== body.competencyId || suggestion.evidence_fingerprint !== fingerprint)) throw new Error("La sugerencia ya no corresponde a estas observaciones.");
+        const savedDraft=assertSavedEvaluationDraft(data.row.draft,{fingerprint,teacherAnalysis,conclusionText,
+          achievementLevel:body.achievementLevel,teacherJustification});
+        const suggestion={analysis:savedDraft.details,analysis_metadata:savedDraft.generation_metadata?.analysis??{},
+          conclusion_metadata:savedDraft.generation_metadata?.conclusion??{}};
         if ((sourceRows.length < 2 || suggestion?.analysis?.information_status === "insufficient" || (suggestion?.analysis?.suggested_level && suggestion.analysis.suggested_level !== body.achievementLevel)) && !teacherJustification) throw new Error("Explica brevemente el criterio de tu decisión docente.");
         const analysis = suggestion?.analysis ? { ...suggestion.analysis, information_status: "sufficient", evidence_overview: teacherAnalysis, insufficiency_reason: null } : { competency_id: data.card.id, information_status: "sufficient", evidence_overview: teacherAnalysis, observable_patterns: [], strengths_and_advances: [], support_needs: [], next_opportunities: [], teacher_questions: [], insufficiency_reason: null, caution: "Interpretación confirmada por la docente." };
         validateAssessmentProposal(analysis, data.card.id, Math.max(sourceRows.length, 2));
-        const conclusion = conclusionText ? suggestion?.conclusion ? { ...suggestion.conclusion, conclusion_text: conclusionText } : { competency_id: data.card.id, information_status: "sufficient", conclusion_text: conclusionText, progress_examples: [], support_or_conditions: [], next_steps: [], insufficiency_reason: null, caution: "Conclusión revisada y confirmada por la docente." } : null;
+        const conclusion = conclusionText ? { competency_id: data.card.id, information_status: "sufficient", conclusion_text: conclusionText,
+          progress_examples: [], support_or_conditions: [], next_steps: [], insufficiency_reason: null,
+          caution: "Conclusión revisada y confirmada por la docente." } : null;
         if (conclusion) validateDescriptiveConclusion(conclusion, data.card.id, "sufficient");
         await db.exec("begin");
         let assessment;

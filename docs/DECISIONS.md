@@ -446,3 +446,11 @@ La confirmación de la actividad y la inserción del criterio heredado se ejecut
 **Documento.** Cada observación del Word lee el texto del criterio al que está vinculada por ID. Para una actividad histórica, el encabezado usa su criterio de origen (versión 1); para una actividad vigente, usa el criterio activo. No se sustituye el significado de observaciones anteriores por un texto nuevo.
 
 **Reversión.** Se puede retirar la acción de copia sin tocar las evidencias. La migración y las versiones históricas se conservan para proteger su procedencia.
+
+## ADR 058 Borrador persistente de evaluación por período
+
+**Decisión.** La misma fila `competency_assessments` en estado borrador guarda análisis de IA o docente, `suggested_level`, conclusión en trabajo, nivel provisional y justificación. `achievement_level` permanece nulo hasta la confirmación docente; una restricción de base lo protege. La sugerencia de IA se guarda con el snapshot de evidencias y se puede recuperar tras salir. La confirmación exige que la versión guardada coincida con los campos visibles y con el fingerprint actual; archiva el borrador y crea la valoración confirmada usando las tablas existentes.
+
+**Insuficiencia.** La ausencia de evidencias o una sugerencia de información insuficiente mantiene un estado propio y nunca se convierte en C. Si cambian las fuentes, la docente debe revisar y guardar de nuevo; al hacerlo se descarta una sugerencia de IA desactualizada.
+
+**Reversión.** Los campos de borrador son opcionales y las valoraciones confirmadas anteriores siguen legibles. La interfaz puede volver al flujo previo sin transformar niveles oficiales. La migración local y Supabase añade las mismas columnas y restricción.

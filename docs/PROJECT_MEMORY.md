@@ -160,6 +160,10 @@ Proyecto nuevo iniciado el 20 de septiembre de 2026. Existe un shell responsive 
 - Un criterio activo se copia a un borrador con `supersedes_criterion_id` y versión propia. La docente puede editarlo o regenerarlo; V1 se archiva al confirmar V2. El índice de actividad y competencia distingue activo y borrador, y el trigger protege criterios confirmados. Las evidencias guardadas mantienen el ID del criterio original.
 - Documentos lee el criterio real de cada evidencia y, para el encabezado de una actividad histórica, el criterio inicial de esa actividad. Ver ADR 057.
 
+## Borrador de evaluación del período (2026-09-24)
+
+- La ficha por niño y competencia guarda y recupera análisis, sugerencia, conclusión en trabajo y nivel provisional en `competency_assessments` borrador. El nivel definitivo solo se escribe al confirmar. La confirmación compara campos guardados y fingerprint vigente; la insuficiencia no produce C automáticamente. Ver ADR 058.
+
 
 
 
