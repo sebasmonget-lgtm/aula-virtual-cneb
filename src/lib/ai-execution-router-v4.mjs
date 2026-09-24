@@ -65,6 +65,9 @@ export function resolveAIExecutionPlan({ workflow, task = null, context = null }
   if (workflow === "today_mode" && task && policy.today_mode_text_tasks.includes(task)) {
     return planForTier("light_generation", `Redacción futura de today_mode: ${task}.`, false, policy);
   }
+  if (workflow === "annual_plan" && task === "document_development") {
+    return planForTier("standard_generation", "Desarrollo del plan maestro anual validado.", false, policy);
+  }
   const workflowPolicy = policy.workflows[workflow];
   if (workflowPolicy.execution === "code") {
     return {

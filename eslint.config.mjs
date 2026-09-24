@@ -13,6 +13,7 @@ const eslintConfig = defineConfig([
     "build/**",
     "tmp/**",
     "scripts/__pycache__/**",
+    "experiments/**",
     "next-env.d.ts",
   ]),
   {

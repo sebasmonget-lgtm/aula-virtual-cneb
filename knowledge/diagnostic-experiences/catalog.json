@@ -1,0 +1,292 @@
+{
+  "version": "diagnostic-v4.3",
+  "status": "development_fixture",
+  "experiences": [
+    {
+      "id": "getting_to_know_us",
+      "title": "Nos conocemos y organizamos el juego",
+      "explanation": "Ofrece espacios de juego, deja que elijan y conversa brevemente sobre cómo jugar juntos.",
+      "aspects": [
+        {
+          "id": "choice",
+          "competencyId": "PS_IDENTIDAD",
+          "label": "Elige un juego",
+          "prompt": "Elige dónde jugar y muestra qué le interesa.",
+          "examples": ["Se acerca por iniciativa propia a un espacio de juego.", "Señala o dice qué material quiere usar."],
+          "patternIndex": 0
+        },
+        {
+          "id": "conversation",
+          "competencyId": "COM_ORAL",
+          "label": "Comparte una idea",
+          "prompt": "Cuenta lo que quiere hacer y atiende a la respuesta de otro niño.",
+          "examples": ["Explica cómo quiere jugar.", "Responde a una propuesta de otro niño."],
+          "patternIndex": 1
+        },
+        {
+          "id": "agreements",
+          "competencyId": "PS_CONVIVE",
+          "label": "Acuerda cómo jugar",
+          "prompt": "Propone o acepta una manera de compartir el juego.",
+          "examples": ["Espera su turno después de conversarlo.", "Propone repartir materiales."],
+          "patternIndex": 1
+        },
+        {
+          "id": "joins_game",
+          "competencyId": "PS_CONVIVE",
+          "label": "Se incorpora al grupo",
+          "prompt": "Se acerca a otros niños y participa en el juego a su manera.",
+          "examples": ["Observa y luego se suma al juego.", "Invita a otro niño a participar."],
+          "patternIndex": 1
+        }
+      ],
+      "ages": [
+        3,
+        4,
+        5
+      ],
+      "teacher_instructions": "Prepara dos o tres opciones sencillas, como bloques, dibujo o juego de roles. Invita a los niños a elegir dónde jugar y acompaña sin dirigir todas sus decisiones.",
+      "examples": [],
+      "sort_order": 1,
+      "active": true
+    },
+    {
+      "id": "movement_and_art",
+      "title": "Nos movemos y creamos",
+      "explanation": "Invita a jugar con movimientos y materiales de expresión; observa lo que cada niño decide hacer.",
+      "aspects": [
+        {
+          "id": "movement",
+          "competencyId": "PSICO_MOTRICIDAD",
+          "label": "Explora movimientos",
+          "prompt": "Prueba distintas maneras de moverse durante el juego.",
+          "examples": ["Corre, gira o se agacha al explorar.", "Cambia de dirección al encontrar un obstáculo."],
+          "patternIndex": 0
+        },
+        {
+          "id": "creation",
+          "competencyId": "COM_ARTE",
+          "label": "Prueba materiales",
+          "prompt": "Combina materiales para crear algo propio.",
+          "examples": ["Prueba varias formas de usar papel o pintura.", "Une materiales para representar una idea."],
+          "patternIndex": 0
+        },
+        {
+          "id": "adjust_movement",
+          "competencyId": "PSICO_MOTRICIDAD",
+          "label": "Ajusta su movimiento",
+          "prompt": "Cambia cómo se mueve cuando el juego lo requiere.",
+          "examples": ["Pasa por debajo o alrededor de un objeto.", "Vuelve a intentarlo de otra manera."],
+          "patternIndex": 0
+        },
+        {
+          "id": "express_idea",
+          "competencyId": "COM_ARTE",
+          "label": "Expresa una idea",
+          "prompt": "Usa movimientos o materiales para mostrar lo que imagina.",
+          "examples": ["Representa un animal con el cuerpo.", "Cuenta qué quiso crear con sus materiales."],
+          "patternIndex": 0
+        }
+      ],
+      "ages": [
+        3,
+        4,
+        5
+      ],
+      "teacher_instructions": "Deja espacio para moverse y ofrece telas, papel u otros materiales para crear. Invita a explorar libremente, sin mostrar una única forma correcta.",
+      "examples": [],
+      "sort_order": 2,
+      "active": true
+    },
+    {
+      "id": "count_and_locate",
+      "title": "Contamos y encontramos lugares",
+      "explanation": "Ofrece objetos y recorridos para que los niños resuelvan situaciones de juego a su manera.",
+      "aspects": [
+        {
+          "id": "quantity",
+          "competencyId": "MAT_CANTIDAD",
+          "label": "Reúne objetos",
+          "prompt": "Cuenta o reúne objetos para resolver una situación de juego.",
+          "examples": ["Busca las piezas que faltan.", "Cuenta objetos para repartirlos."],
+          "patternIndex": 0
+        },
+        {
+          "id": "space",
+          "competencyId": "MAT_FORMA",
+          "label": "Ubica objetos",
+          "prompt": "Coloca objetos o explica por dónde pasar en el recorrido.",
+          "examples": ["Pone un objeto dentro o detrás de otro.", "Señala un camino para llegar a un lugar."],
+          "patternIndex": 0
+        },
+        {
+          "id": "compare_groups",
+          "competencyId": "MAT_CANTIDAD",
+          "label": "Compara cantidades",
+          "prompt": "Nota si un grupo de objetos tiene más, menos o la misma cantidad.",
+          "examples": ["Acerca dos grupos de fichas para compararlos.", "Dice que faltan piezas para completar el juego."],
+          "patternIndex": 0
+        },
+        {
+          "id": "change_route",
+          "competencyId": "MAT_FORMA",
+          "label": "Cambia el recorrido",
+          "prompt": "Prueba otro camino cuando algo impide pasar.",
+          "examples": ["Rodea un obstáculo.", "Mueve una pieza para abrir paso."],
+          "patternIndex": 0
+        }
+      ],
+      "ages": [
+        3,
+        4,
+        5
+      ],
+      "teacher_instructions": "Pon objetos que puedan agrupar o repartir y prepara un recorrido sencillo. Plantea una pequeña necesidad de juego y deja que prueben cómo resolverla.",
+      "examples": [],
+      "sort_order": 3,
+      "active": true
+    },
+    {
+      "id": "explore_our_world",
+      "title": "Exploramos nuestro entorno",
+      "explanation": "Deja que exploren materiales o elementos cercanos, hagan preguntas y cuenten lo que descubren.",
+      "aspects": [
+        {
+          "id": "question",
+          "competencyId": "CYT_INDAGA",
+          "label": "Hace una pregunta",
+          "prompt": "Pregunta por algo que ve o le llama la atención.",
+          "examples": ["Pregunta por qué flota un objeto.", "Se pregunta qué hay debajo de una hoja."],
+          "patternIndex": 0
+        },
+        {
+          "id": "tell_discovery",
+          "competencyId": "COM_ORAL",
+          "label": "Cuenta un hallazgo",
+          "prompt": "Describe a otro niño o a la docente lo que observó.",
+          "examples": ["Explica qué pasó al mezclar materiales.", "Muestra algo que encontró y lo describe."],
+          "patternIndex": 0
+        },
+        {
+          "id": "compare_materials",
+          "competencyId": "CYT_INDAGA",
+          "label": "Compara materiales",
+          "prompt": "Mira o toca dos materiales y nota alguna diferencia.",
+          "examples": ["Distingue cuál está seco o mojado.", "Compara el tamaño de dos hojas."],
+          "patternIndex": 0
+        },
+        {
+          "id": "tries_again",
+          "competencyId": "CYT_INDAGA",
+          "label": "Prueba otra vez",
+          "prompt": "Cambia algo de su exploración para ver qué ocurre.",
+          "examples": ["Usa otra cantidad de agua.", "Prueba un material diferente."],
+          "patternIndex": 0
+        }
+      ],
+      "ages": [
+        3,
+        4,
+        5
+      ],
+      "teacher_instructions": "Acerca hojas, agua u otros materiales seguros del entorno. Deja que los niños los exploren y escucha sus preguntas antes de ofrecer respuestas.",
+      "examples": [],
+      "sort_order": 4,
+      "active": true
+    },
+    {
+      "id": "stories_and_marks",
+      "title": "Escuchamos y contamos historias",
+      "explanation": "Comparte un cuento y ofrece papel o materiales para que expresen sus ideas libremente.",
+      "aspects": [
+        {
+          "id": "reading",
+          "competencyId": "COM_LECTURA",
+          "label": "Anticipa la historia",
+          "prompt": "Dice qué cree que pasará al mirar el cuento.",
+          "examples": ["Señala una imagen y anticipa una acción.", "Comenta qué podría hacer un personaje."],
+          "patternIndex": 0
+        },
+        {
+          "id": "writing",
+          "competencyId": "COM_ESCRITURA",
+          "label": "Hace marcas propias",
+          "prompt": "Dibuja o traza marcas para comunicar algo de la historia.",
+          "examples": ["Dibuja un personaje.", "Hace marcas y cuenta qué significan."],
+          "patternIndex": 0
+        },
+        {
+          "id": "retelling",
+          "competencyId": "COM_ORAL",
+          "label": "Cuenta una parte",
+          "prompt": "Relata con sus palabras algo que ocurrió en el cuento.",
+          "examples": ["Cuenta qué hizo un personaje.", "Relaciona dos momentos de la historia."],
+          "patternIndex": 2
+        },
+        {
+          "id": "shares_marks",
+          "competencyId": "COM_ESCRITURA",
+          "label": "Explica sus marcas",
+          "prompt": "Muestra sus trazos y dice qué quiso comunicar.",
+          "examples": ["Señala un dibujo y cuenta qué representa.", "Explica a otro niño sus marcas."],
+          "patternIndex": 0
+        }
+      ],
+      "ages": [
+        3,
+        4,
+        5
+      ],
+      "teacher_instructions": "Lee un cuento breve y deja tiempo para mirar y comentar las imágenes. Después ofrece papel y colores para dibujar o contar algo de la historia.",
+      "examples": [],
+      "sort_order": 5,
+      "active": true
+    },
+    {
+      "id": "spanish_second_language",
+      "title": "Jugamos y conversamos en castellano",
+      "explanation": "Si el castellano es segunda lengua del aula, observa la participación oral en un juego cercano.",
+      "aspects": [
+        {
+          "id": "l2_oral",
+          "competencyId": "CAST_L2_ORAL",
+          "label": "Participa en castellano",
+          "prompt": "Responde o se expresa en castellano durante un juego cercano.",
+          "examples": ["Responde a una invitación breve.", "Nombra un material que quiere usar."],
+          "patternIndex": 0
+        }
+      ],
+      "ages": [
+        5
+      ],
+      "teacher_instructions": "Propón un juego conocido con objetos cercanos. Habla en castellano con frases breves y permite que respondan también con gestos o en su lengua familiar.",
+      "examples": [],
+      "sort_order": 6,
+      "active": true
+    },
+    {
+      "id": "beliefs_and_care",
+      "title": "Compartimos creencias y cuidado",
+      "explanation": "Cuando corresponde al contexto del aula, conversa con respeto sobre el cuidado y las creencias familiares.",
+      "aspects": [
+        {
+          "id": "religion",
+          "competencyId": "PS_RELIGION",
+          "label": "Comparte una vivencia",
+          "prompt": "Cuenta una experiencia familiar de cuidado o creencias, si desea hacerlo.",
+          "examples": ["Relata una acción de cuidado que conoce.", "Escucha con respeto lo que comparte otro niño."],
+          "patternIndex": 0
+        }
+      ],
+      "ages": [
+        3,
+        4,
+        5
+      ],
+      "teacher_instructions": "Invita a compartir, solo si lo desean, acciones de cuidado o tradiciones familiares. Escucha con respeto y evita pedir detalles personales.",
+      "examples": [],
+      "sort_order": 7,
+      "active": true
+    }
+  ]
+}

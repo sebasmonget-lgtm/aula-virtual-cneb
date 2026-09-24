@@ -18,6 +18,15 @@ test("aplica la política inicial de routing por workflow", () => {
   }
 });
 
+test("el desarrollo del plan anual usa Terra y conserva Sol para el plan maestro", () => {
+  const master = resolveAIExecutionPlan({ workflow: "annual_plan", task: "generation" });
+  const detail = resolveAIExecutionPlan({ workflow: "annual_plan", task: "document_development" });
+  assert.equal(master.model, "gpt-5.6-sol");
+  assert.equal(detail.model, "gpt-5.6-terra");
+  assert.equal(detail.reasoning_effort, "low");
+  assert.equal(detail.provider, "openai");
+});
+
 test("mantiene evidence_capture y today_mode en código", () => {
   for (const workflow of ["evidence_capture", "today_mode"]) {
     const plan = resolveAIExecutionPlan({ workflow });

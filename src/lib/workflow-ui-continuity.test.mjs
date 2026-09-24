@@ -7,15 +7,12 @@ const component = async (name) => readFile(new URL(`../features/dashboard/compon
 
 test("plan anual reabre el mismo borrador y no genera otro mientras existe", async () => {
   const source = await component("annual-plan-generator");
-  assert.match(source, /function openPlan\(plan: SavedPlan\).*setProposal\(plan\.proposal\).*setPlanId\(plan\.id\)/);
-  assert.match(source, /existingPlan\.status === "draft" \? "Continuar mi borrador" : "Ver plan confirmado"/);
-  assert.match(source, /existingPlan\?\.status === "draft"\) return/);
-  assert.match(source, /existingPlan\?\.status === "active" && <AsyncButton/);
-  assert.match(source, /!loading&&!existingPlan&&!proposal&&<EmptyState/);
-  assert.match(source, /fieldset disabled=\{activeView \|\| Boolean\(operation\)\}/);
-  assert.match(source, /!planId \|\| operation \|\| activeView \|\| hasUnsavedChanges/);
-  assert.match(source, /disabled=\{Boolean\(operation\) \|\| !planId \|\| hasUnsavedChanges\}/);
-  assert.match(source, /if \(!response\.ok\) throw new Error\("No se pudo cargar el plan anual\."\)/);
+  assert.match(source, /const saved = plans\.draft \?\? plans\.active \?\? plans\.archived\?\.\[0\] \?\? null/);
+  assert.match(source, /setProposal\(saved\?\.proposal \?\? null\); setPlanId\(saved\?\.id \?\? null\)/);
+  assert.match(source, /if \(operation \|\| loading \|\| loadError \|\| existingPlan \|\| calendarDirty \|\| calendarWarning/);
+  assert.match(source, /const readOnly = existingPlan\?\.status === "active" \|\| existingPlan\?\.status === "archived"/);
+  assert.match(source, /if \(!planId \|\| !proposal \|\| operation \|\| readOnly \|\| hasUnsavedChanges \|\| calendarDirty \|\| calendarWarning\) return/);
+  assert.match(source, /get<PlansResponse>\("\/api\/annual-plans\/current", "No se pudo cargar el plan anual\."\)/);
 });
 
 test("criterio no convierte un error de lectura en un formulario nuevo", async () => {
@@ -62,8 +59,9 @@ test("la consulta real de experiencias usa columnas presentes en las migraciones
 test("el servidor rechaza una segunda creación anual cuando ya existe un draft", async () => {
   const source = await readFile(new URL("../../scripts/local-db-server.mjs", import.meta.url), "utf8");
   const route = source.slice(source.indexOf('url.pathname === "/api/annual-plans"'), source.indexOf('url.pathname.startsWith("/api/annual-plans/")'));
-  assert.match(route, /select id from annual_plans where classroom_id=\$1 and school_year_id=\$2 and status='draft' limit 1/);
-  assert.match(route, /if \(openDraft\.rows\.length\) throw new Error\("Ya existe un borrador anual/);
+  assert.match(route, /select id from annual_plans where school_year_id=\$1 limit 1/);
+  assert.match(route, /if \(priorPlan\.rows\.length\) throw new Error\("Ya existe un plan anual para esta cuenta y año escolar/);
+  assert.match(route, /update annual_plans set proposal=\$1::jsonb, updated_at=now\(\) where id=\$2 and classroom_id=\$3 and school_year_id=\$4 and status='draft'/);
 });
 
 test("análisis no presenta evidencias inexistentes ante un error HTTP", async () => {

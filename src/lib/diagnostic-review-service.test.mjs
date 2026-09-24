@@ -3,9 +3,11 @@ import assert from "node:assert/strict";
 import { readFile, readdir } from "node:fs/promises";
 import { PGlite } from "@electric-sql/pglite";
 import { createPilotClassroom, importStudentsForTeacher } from "./pilot-onboarding-service.mjs";
-import { completeDiagnosticReviewForTeacher, diagnosticProgressForTeacher } from "./diagnostic-review-service.mjs";
+import { completeDiagnosticReviewForTeacher, diagnosticProgressForTeacher, diagnosticStepProgressForTeacher } from "./diagnostic-review-service.mjs";
 import { loadDiagnosticExperienceWorkspace, recordDiagnosticExperienceObservation } from "./diagnostic-experiences-v4.mjs";
-import { prepareDiagnosticSynthesis, saveDiagnosticSynthesis, confirmDiagnosticSynthesis, prepareDiagnosticGroupReview, saveDiagnosticGroupReview, confirmDiagnosticGroupReview } from "./diagnostic-assessment-v4.mjs";
+import { recordSpontaneousObservation } from "./diagnostic-sources-v4.mjs";
+import { prepareDiagnosticStudentReview, saveDiagnosticStudentReview, confirmDiagnosticStudentReview,
+  prepareDiagnosticGroupReview, saveDiagnosticGroupReview, confirmDiagnosticGroupReview } from "./diagnostic-assessment-v4.mjs";
 
 const teacher = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 const otherTeacher = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
@@ -43,9 +45,10 @@ test("la revisión grupal confirmada cierra el diagnóstico y permite continuar 
     await recordDiagnosticExperienceObservation(db, teacher, { studentId: workspace.students[0].id,
       experienceId: experience.id, aspectId: experience.aspects[0].id,
       observationStatus: "insufficient_information", observationText: "Solo lo vi un momento." });
-    const synthesis = await prepareDiagnosticSynthesis(db, teacher, { studentId: workspace.students[0].id, competencyId: experience.aspects[0].competency_id });
-    await saveDiagnosticSynthesis(db, teacher, synthesis.id, synthesis.details);
-    await confirmDiagnosticSynthesis(db, teacher, synthesis.id);
+    const synthesis = await prepareDiagnosticStudentReview(db, teacher, workspace.students[0].id);
+    await saveDiagnosticStudentReview(db, teacher, synthesis.id, { information_status: "insufficient_information",
+      comment_text: "Por ahora solo lo observé un momento; seguiré acompañando su juego." });
+    await confirmDiagnosticStudentReview(db, teacher, synthesis.id);
     const group = await prepareDiagnosticGroupReview(db, teacher);
     await saveDiagnosticGroupReview(db, teacher, group.id, { strengths: "", needs: "Seguir observando.", planning_priorities: "" });
     await confirmDiagnosticGroupReview(db, teacher, group.id);
@@ -62,5 +65,37 @@ test("la revisión grupal confirmada cierra el diagnóstico y permite continuar 
     const third = await completeDiagnosticReviewForTeacher(db, teacher);
     assert.equal(third.sessionId, activeId);
     assert.equal((await db.query(`select count(*)::int as total from diagnostic_sessions where classroom_id=$1 and status='completed'`, [classroomId])).rows[0].total, 2);
+  } finally { await db.close(); }
+});
+
+test("el avance visible cuenta niños distintos y solo confirma Resumir con revisión grupal", async () => {
+  const db = await database();
+  try {
+    await createPilotClassroom(db, teacher, { teacherName: "Docente", institutionName: "Escuela", section: "A", age: 5, year: 2026, startsOn: "2026-03-01", endsOn: "2026-12-18", castellanoL2Applicable: false, religionApplicable: false });
+    await importStudentsForTeacher(db, teacher, [{ firstName: "Niña", lastName: "Uno" }, { firstName: "Niño", lastName: "Dos" }]);
+    assert.deepEqual(await diagnosticStepProgressForTeacher(db, teacher), { observed_student_count: 0, group_review_confirmed: false });
+    const workspace = await loadDiagnosticExperienceWorkspace(db, teacher);
+    const experience = workspace.experiences[0];
+    const input = { studentId: workspace.students[0].id, experienceId: experience.id,
+      aspectId: experience.aspects[0].id, observationStatus: "observed_without_judgment", observationText: "Eligió un juego y explicó su elección." };
+    await recordDiagnosticExperienceObservation(db, teacher, input);
+    await recordDiagnosticExperienceObservation(db, teacher, input);
+    assert.deepEqual(await diagnosticStepProgressForTeacher(db, teacher), { observed_student_count: 1, group_review_confirmed: false });
+    await recordSpontaneousObservation(db, teacher, { studentId: workspace.students[1].id, contextLabel: "Juego libre", observationText: "Contó los bloques y pidió otro." });
+    assert.deepEqual(await diagnosticStepProgressForTeacher(db, teacher), { observed_student_count: 2, group_review_confirmed: false });
+    const synthesis = await prepareDiagnosticStudentReview(db, teacher, input.studentId);
+    await saveDiagnosticStudentReview(db, teacher, synthesis.id, { information_status: "information_available",
+      comment_text: "Eligió un juego y explicó su elección; seguiré observando cómo participa con otros." });
+    await confirmDiagnosticStudentReview(db, teacher, synthesis.id);
+    await assert.rejects(prepareDiagnosticGroupReview(db, teacher), { reason: "incomplete_children" });
+    const second = await prepareDiagnosticStudentReview(db, teacher, workspace.students[1].id);
+    await saveDiagnosticStudentReview(db, teacher, second.id, { information_status: "information_available",
+      comment_text: "Durante el juego libre contó los bloques y pidió otro." });
+    await confirmDiagnosticStudentReview(db, teacher, second.id);
+    const group = await prepareDiagnosticGroupReview(db, teacher);
+    await saveDiagnosticGroupReview(db, teacher, group.id, { strengths: "Se interesan por elegir juegos.", needs: "", planning_priorities: "" });
+    await confirmDiagnosticGroupReview(db, teacher, group.id);
+    assert.deepEqual(await diagnosticStepProgressForTeacher(db, teacher), { observed_student_count: 2, group_review_confirmed: true });
+    await assert.rejects(diagnosticStepProgressForTeacher(db, otherTeacher), { reason: "no_classroom" });
   } finally { await db.close(); }
 });

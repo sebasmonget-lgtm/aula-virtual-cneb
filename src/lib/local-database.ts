@@ -4,8 +4,10 @@ export type TeacherConfirmedConclusion = { id: string; period_start: string; per
 export type StudentPedagogicalProfile = {
   student: { id: string; name: string; first_name: string; last_name: string; section: string; age_years: number; school_year: number };
   diagnosis: { competency_id: string; teacher_interpretation: string | null; teacher_confirmed: boolean; updated_at: string }[];
-  diagnostic_observations: { id: string; experience_id: string; aspect_id: string; competency_v4_id: string; competency_name: string; observation_status: ObservationStatus; observation_text: string | null; observed_at: string }[];
+  family_interview_context: ({ version: number; teacher_confirmed_at: string } & Record<string, string | number>) | null;
+  diagnostic_observations: { id: string; experience_id: string; aspect_id: string; competency_v4_id: string | null; competency_name: string | null; observation_status: DiagnosticObservationStatus; observation_text: string | null; observed_at: string; context_label?: string; classification_status?: string; classification_source?: string }[];
   confirmed_diagnostic_reviews: { id: string; competency_v4_id: string; competency_name: string; version: number; information_status: "information_available" | "insufficient_information"; summary_text: string; next_observation: string; teacher_confirmed_at: string; source: "diagnostic" }[];
+  confirmed_student_diagnostic_review: { id: string; version: number; information_status: "information_available" | "insufficient_information"; comment_text: string; teacher_confirmed_at: string; is_current: boolean } | null;
   competencies: { competency_key: string; competency_id: string | null; competency_v4_id: string | null; competency_text: string; evidence_count: number; last_observed_at: string | null; observations: Record<ObservationStatus, number>; recent_evidence: LocalEvidence[]; teacher_confirmed_assessment: TeacherConfirmedAssessment | null; teacher_confirmed_conclusion: TeacherConfirmedConclusion | null }[];
   recent_relevant_observations: (LocalEvidence & { activity_title: string; criterion_text: string; competency_id: string | null; competency_v4_id: string | null; competency_key: string; media_available: boolean })[];
   confirmed_period_assessments: (TeacherConfirmedAssessment & { competency_v4_id: string })[];
@@ -26,6 +28,7 @@ export type LocalEvidence = {
 };
 
 export type ObservationStatus = "demonstrated" | "with_support" | "not_yet_demonstrated" | "insufficient_information";
+export type DiagnosticObservationStatus = ObservationStatus | "observed_without_judgment";
 export type EvidenceKind = "observation" | "oral" | "drawing" | "production" | "photo" | "movement";
 export type ActivityCriterion = { id: string; criterion_text: string; competency_id: string | null; competency_v4_id: string | null; competency_text: string; performance_id: string | null; evidence_kind: EvidenceKind | null; details?: { competency_id?: string; expected_evidence?: string; acceptable_evidence_variations?: string[]; observation_focus?: string[]; evidence_scope?: "individual" | "group" | "mixed"; teacher_caution?: string } };
 
@@ -68,16 +71,17 @@ export type DiagnosticWorkspace = {
   }[];
   session: { id: string; title: string; status: string } | null;
   reviewed: boolean;
+  step_progress: { observed_student_count: number; group_review_confirmed: boolean };
   entries: { id: string; student_id: string; competency_id: string; teacher_confirmed: boolean; teacher_interpretation: string | null }[];
   observations: { id: string; student_id: string; competency_id: string; reference_id: string; status: string; note: string | null }[];
   experiences: {
-    id: string; title: string; explanation: string;
+    id: string; title: string; explanation: string; teacher_instructions: string; examples: string[]; catalog_version: string; catalog_status: string;
     competencies: { id: string; name: string }[];
-    aspects: { id: string; competency_id: string; competency_name: string; area_name: string; prompt: string; age_reference: string }[];
+    aspects: { id: string; competency_id: string; competency_name: string; area_name: string; label: string; prompt: string; examples: string[]; age_reference: string }[];
   }[];
   experience_observations: {
     id: string; student_id: string; experience_id: string; aspect_id: string;
-    competency_v4_id: string; observation_status: ObservationStatus;
+    competency_v4_id: string; observation_status: DiagnosticObservationStatus;
     observation_text: string | null; observed_at: string;
   }[];
   experience_coverage: {
@@ -87,14 +91,34 @@ export type DiagnosticWorkspace = {
 };
 
 export type DiagnosticSynthesisDetails = { information_status: "information_available" | "insufficient_information"; summary_text: string; next_observation: string };
+export type DiagnosticStudentReviewDetails = { information_status: "information_available" | "insufficient_information"; comment_text: string };
 export type DiagnosticGroupDetails = { strengths: string; needs: string; planning_priorities: string };
 export type DiagnosticReviewWorkspace = {
-  students: (LocalStudent & { initial_context: string | null })[];
-  observations: { id: string; student_id: string; competency_v4_id: string; experience_id: string; aspect_id: string; catalog_version: string; experience_title: string; aspect_prompt: string; observation_status: ObservationStatus; observation_text: string | null; observed_at: string }[];
+  students: (LocalStudent & { initial_context: string | null; family_context: ({ version: number } & Record<string, string | number>) | null; unclassified_observations: number })[];
+  observations: { id: string; student_id: string; competency_v4_id: string | null; experience_id: string; aspect_id: string; catalog_version: string; experience_title: string; aspect_prompt: string; observation_status: DiagnosticObservationStatus; observation_text: string | null; observed_at: string }[];
   reviews: { id: string; student_id: string; competency_v4_id: string; version: number; status: "draft" | "confirmed"; details: DiagnosticSynthesisDetails; teacher_confirmed_at: string | null; updated_at: string }[];
-  group_reviews: { id: string; version: number; status: "draft" | "confirmed"; details: DiagnosticGroupDetails; teacher_confirmed_at: string | null }[];
+  student_reviews: { id: string; student_id: string; version: number; status: "draft" | "confirmed"; details: DiagnosticStudentReviewDetails; teacher_confirmed_at: string | null; is_current: boolean }[];
+  pending_observations: { id: string; student_id: string; context_label: string; observation_text: string; observed_at: string }[];
+  group_reviews: { id: string; version: number; status: "draft" | "confirmed"; details: DiagnosticGroupDetails; teacher_confirmed_at: string | null; is_current: boolean }[];
   group_coverage: { competency_id: string; competency_name: string; children_with_observations: number; confirmed_with_information: number; confirmed_insufficient: number; children_without_observations: number }[];
 };
+
+export type FamilyInterviewAnswerKey = "family_context" | "language_context" | "interests" | "autonomy_context" | "communication_emotional_context" | "social_context" | "adaptation_context" | "previous_education" | "daily_routine_context" | "family_expectations";
+export type FamilyInterviewDetails = Partial<Record<FamilyInterviewAnswerKey, string>> & {
+  language_tags?: string[]; primary_language_tag?: string; other_language_text?: string;
+  interest_tags?: string[]; other_interest_text?: string;
+  previous_education_status?: "yes" | "no" | "unknown";
+  previous_education_type?: "nursery" | "kindergarten" | "daycare" | "other";
+  structured_options_version?: number;
+};
+export const familyContextLabels: Record<string, string> = {
+  language_context: "Lenguas en casa", interests: "Intereses", autonomy_context: "Autonomía",
+  communication_emotional_context: "Comunicación y emociones", social_context: "Relación con otros",
+  adaptation_context: "Rutinas que dan seguridad", previous_education: "Experiencias educativas anteriores",
+};
+export type FamilyInterview = { id: string; student_id: string; version: number; status: "draft" | "confirmed"; details: FamilyInterviewDetails; has_attachment: boolean; updated_at: string; teacher_confirmed_at: string | null };
+export type FamilyInterviewStatus = "not_started" | "partial" | "confirmed";
+export type SpontaneousObservation = { id: string; student_id: string; context_label: string; observation_text: string; support_status: "yes" | "no" | "unknown" | null; observed_at: string; classification_status: "pending" | "classified" | "needs_review"; classification_source: "jev" | "teacher" | null; competency_v4_id: string | null; secondary_competency_v4_id: string | null };
 
 export const localDatabaseApiUrl = process.env.NEXT_PUBLIC_AYNI_API_URL ?? process.env.NEXT_PUBLIC_LOCAL_DATABASE_URL ?? "http://127.0.0.1:8788";
 const apiUrl = localDatabaseApiUrl;
@@ -135,6 +159,23 @@ export async function loadStudentPedagogicalProfile(studentId: string): Promise<
 export async function loadLocalStatistics(): Promise<LocalStatistics> {
   const response = await fetch(`${apiUrl}/api/statistics`, { cache: "no-store" });
   if (!response.ok) throw new Error("No se pudieron calcular las estadísticas locales.");
+  return response.json();
+}
+
+export type PublicClassroomContext = {
+  version: string; age_group: number; students_total: number; confirmed_interviews: number;
+  languages: { key: string; label: string; count: number }[];
+  primary_languages: { key: string; label: string; count: number }[];
+  common_interests: { key: string; label: string; count: number }[];
+  previous_education: Record<string, number>;
+  confirmed_diagnostic_summary: string | null;
+  diagnostic_coverage: { students_with_observations: number };
+  source_fingerprint: string;
+};
+
+export async function loadClassroomContext(): Promise<PublicClassroomContext> {
+  const response = await fetch(`${apiUrl}/api/classroom/context`, { cache: "no-store" });
+  if (!response.ok) throw new Error("No se pudo cargar el panorama del grupo.");
   return response.json();
 }
 
@@ -182,6 +223,7 @@ export async function saveLocalProfile(input: {
   teacherName: string; institutionName: string; section: string;
   institutionCode: string; district: string; ugel: string; directorName: string;
   createLogo: boolean; logoInitials: string; logoPrimary: string; logoAccent: string;
+  logoUpload?: { mimeType: "image/png" | "image/jpeg" | "image/webp"; base64: string };
 }): Promise<LocalDashboard> {
   const response = await fetch(`${apiUrl}/api/profile`, {
     method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(input),
@@ -219,7 +261,7 @@ export async function saveDiagnosticObservation(input: {
 
 export async function saveDiagnosticExperienceObservation(input: {
   studentId: string; experienceId: string; aspectId: string;
-  observationStatus: ObservationStatus; observationText?: string;
+  observationStatus: DiagnosticObservationStatus; observationText?: string;
 }): Promise<DiagnosticWorkspace> {
   const response = await fetch(`${apiUrl}/api/diagnostics/experience-observations`, {
     method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(input),
@@ -241,7 +283,21 @@ export const loadDiagnosticReview = () => diagnosticRequest<DiagnosticReviewWork
 export const prepareDiagnosticSynthesis = (studentId: string, competencyId: string) => diagnosticRequest<{ id: string; details: DiagnosticSynthesisDetails }>("reviews/prepare", "POST", { studentId, competencyId });
 export const saveDiagnosticSynthesis = (id: string, details: DiagnosticSynthesisDetails) => diagnosticRequest(`reviews/${encodeURIComponent(id)}`, "PUT", { details });
 export const confirmDiagnosticSynthesis = (id: string) => diagnosticRequest(`reviews/${encodeURIComponent(id)}/confirm`, "POST");
+export const prepareDiagnosticStudentReview = (studentId: string) => diagnosticRequest<{ id: string; student_id: string; details: DiagnosticStudentReviewDetails }>("student-reviews/prepare", "POST", { studentId });
+export const saveDiagnosticStudentReview = (id: string, details: DiagnosticStudentReviewDetails) => diagnosticRequest(`student-reviews/${encodeURIComponent(id)}`, "PUT", { details });
+export const confirmDiagnosticStudentReview = (id: string) => diagnosticRequest(`student-reviews/${encodeURIComponent(id)}/confirm`, "POST");
 export const prepareDiagnosticGroup = () => diagnosticRequest<{ id: string; details: DiagnosticGroupDetails }>("group-review/prepare", "POST");
 export const saveDiagnosticGroup = (id: string, details: DiagnosticGroupDetails) => diagnosticRequest(`group-review/${encodeURIComponent(id)}`, "PUT", { details });
 export const confirmDiagnosticGroup = (id: string) => diagnosticRequest(`group-review/${encodeURIComponent(id)}/confirm`, "POST");
 export const saveDiagnosticInitialContext = (studentId: string, initialContext: string) => diagnosticRequest(`students/${encodeURIComponent(studentId)}/initial-context`, "PUT", { initialContext });
+
+export const loadFamilyInterview = (studentId: string) => diagnosticRequest<{ draft: FamilyInterview | null; confirmed: FamilyInterview | null }>(`students/${encodeURIComponent(studentId)}/family-interview`);
+export const loadFamilyInterviewStatuses = () => diagnosticRequest<{ students: { student_id: string; status: FamilyInterviewStatus }[] }>("family-interview-status");
+export const saveFamilyInterview = (studentId: string, details: FamilyInterviewDetails) => diagnosticRequest<FamilyInterview>(`students/${encodeURIComponent(studentId)}/family-interview`, "PUT", { details });
+export const confirmFamilyInterview = (studentId: string) => diagnosticRequest<FamilyInterview>(`students/${encodeURIComponent(studentId)}/family-interview/confirm`, "POST");
+export const attachFamilyInterview = (studentId: string, mimeType: string, base64: string) => diagnosticRequest<FamilyInterview>(`students/${encodeURIComponent(studentId)}/family-interview/attachment`, "POST", { mimeType, base64 });
+export const familyInterviewAttachmentUrl = (studentId: string) => `${apiUrl}/api/diagnostics/students/${encodeURIComponent(studentId)}/family-interview/attachment`;
+export const loadSpontaneousObservations = () => diagnosticRequest<{ observations: SpontaneousObservation[]; competencies: { id: string; name: string }[] }>("spontaneous-observations");
+export const saveSpontaneousObservation = (input: { studentId: string; contextLabel: string; observationText: string; supportStatus?: "yes" | "no" | "unknown" }) => diagnosticRequest<{ id: string; student_id: string; classification_status: "pending" }>("spontaneous-observations", "POST", input);
+export const saveMatrixDiagnosticObservation = (input: { studentId: string; competencyId: string; contextLabel: string; observationText: string }) => diagnosticRequest<{ id: string; student_id: string; competency_v4_id: string }>("spontaneous-observations/matrix", "POST", input);
+export const correctSpontaneousClassification = (id: string, competencyId: string | null) => diagnosticRequest(`spontaneous-observations/${encodeURIComponent(id)}/classification`, "PUT", { competencyId });

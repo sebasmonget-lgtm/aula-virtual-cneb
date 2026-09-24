@@ -16,7 +16,7 @@ const tableOrder = [
   "institution_assets", "institution_profiles", "students", "learning_experiences",
   "activities", "activity_criteria", "evidences", "competency_observation_guides",
   "document_templates", "document_versions", "diagnostic_sessions",
-  "diagnostic_entries", "observation_references", "student_observations", "diagnostic_experience_observations", "diagnostic_competency_reviews", "diagnostic_group_reviews",
+  "diagnostic_entries", "observation_references", "student_observations", "diagnostic_experience_observations", "diagnostic_spontaneous_observations", "student_family_interviews", "student_family_interview_attachments", "diagnostic_competency_reviews", "diagnostic_student_reviews", "diagnostic_group_reviews",
   "class_schedule_entries", "daily_execution_logs", "attendance_records", "calendar_exceptions",
   "student_context_snapshots",
   "annual_plans", "annual_plan_competencies", "annual_plan_changes",

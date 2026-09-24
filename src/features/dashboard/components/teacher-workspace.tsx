@@ -28,6 +28,7 @@ import { ActivityRunView } from "./activity-run-view";
 import { AttendanceDialog } from "./attendance-dialog";
 import { ParentActivityGenerator } from "./parent-activity-generator";
 import { AnnualPlanGenerator } from "./annual-plan-generator";
+import { DocumentsScreen } from "./documents-screen";
 import { LearningExperienceGenerator } from "./learning-experience-generator";
 import { AssessmentGenerator } from "./assessment-generator";
 import { DescriptiveConclusionGenerator } from "./descriptive-conclusion-generator";
@@ -37,12 +38,12 @@ import { AsyncButton, LoadingState, NextStepCard, PageIntro, ScreenSkeleton, Wor
 
 const nav = [
   ["Hoy", Home], ["Planificar", CalendarDays], ["Niños", Users],
-  ["Evaluar", ClipboardCheck], ["Perfil", Settings2],
+  ["Evaluar", ClipboardCheck], ["Documentos", FileText], ["Perfil", Settings2],
 ] as const;
 
 const mobileNav = [
   ["Hoy", "Hoy", Home], ["Plan", "Planificar", CalendarDays], ["Evaluar", "Evaluar", ClipboardCheck],
-  ["Niños", "Niños", Users], ["Perfil", "Perfil", Settings2],
+  ["Niños", "Niños", Users], ["Docs", "Documentos", FileText],
 ] as const;
 const sentenceCase = (value: string) => value.charAt(0).toLocaleUpperCase("es-PE") + value.slice(1);
 
@@ -226,13 +227,14 @@ export function TeacherWorkspace() {
               <Database className="size-3.5" />
               {databaseState === "connected" ? "Base local conectada" : "Conectando"}
             </div>
-            <div className="grid size-9 place-items-center rounded-full bg-[#d9eaf4] text-sm font-bold text-[#155a78]">{profile?.teacher_name?.split(" ").map((part) => part[0]).slice(0, 2).join("") ?? ""}</div>
+            <button type="button" title="Abrir perfil" aria-label="Abrir perfil" onClick={() => navigate("Perfil")} className="grid size-10 place-items-center rounded-full bg-[#d9eaf4] text-sm font-bold text-[#155a78] hover:bg-[#c4e3f0] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#087d96]">{profile?.teacher_name?.split(" ").map((part) => part[0]).slice(0, 2).join("") ?? ""}</button>
           </div>
         </header>
 
         <main className="mx-auto w-full max-w-[1450px] px-4 pb-24 pt-6 md:px-7 md:pt-8">
           {guidanceError && <div className="mb-4 flex flex-wrap items-center gap-3"><WorkflowFeedback tone="error">No pudimos comprobar cuál es tu siguiente paso.</WorkflowFeedback><Button variant="outline" onClick={() => { setGuidanceError(false); setRetry((value) => value + 1); }}>Reintentar</Button></div>}
           {starting ? <ScreenSkeleton /> : active === "Perfil" ? dashboard ? <InstitutionProfile dashboard={dashboard} onSaved={setDashboard} /> : <ScreenSkeleton /> :
+          active === "Documentos" ? <DocumentsScreen /> :
           active === "Evaluar" ? dashboard ? <EvaluationArea dashboard={dashboard} students={students} initialTarget={evaluationTarget} focused={needsFirstDiagnostic} onPlan={() => { setNeedsFirstDiagnostic(false); navigate("Planificar"); }} onStudents={() => navigate("Niños")} /> : <ScreenSkeleton /> :
           active === "Niños" ? dashboard ? <StudentsScreen students={students} onImported={setDashboard} onDiagnostic={() => navigate("Evaluar")} onEvaluate={(studentId, stage, competencyId) => { setEvaluationTarget({ studentId, stage, competencyId }); navigate("Evaluar"); }} onPlan={() => navigate("Planificar")} /> : <ScreenSkeleton /> : active === "Planificar" ? dashboard ? <PlanningArea onGoToday={() => navigate("Hoy")} onGoDiagnostic={() => navigate("Evaluar")} onGoStudents={() => navigate("Niños")} /> : <ScreenSkeleton /> : <>
           {activityRunBlock ? <ActivityRunView block={activityRunBlock} onBack={() => setActivityRunBlockId(null)} onEvidence={() => openEvidenceFor(activityRunBlock)} onStepChange={async (stepIndex) => updateExecution({ scheduleEntryId: activityRunBlock.id, action: "set_step", stepIndex })} onComplete={async () => { await updateExecution({ scheduleEntryId: activityRunBlock.id, action: "complete", closureType: "as_planned" }); setActivityRunBlockId(null); }} /> : active === "Hoy" && (dashboard ? <TodayScreen dashboard={dashboard} openEvidence={openEvidenceFor} openAttendance={() => setAttendanceOpen(true)} updateExecution={updateExecution} openActivity={openActivity} onPlan={() => navigate("Planificar")} /> : <ScreenSkeleton />)}
@@ -383,7 +385,7 @@ function PlanningArea({ onGoToday, onGoDiagnostic, onGoStudents }: { onGoToday: 
           <em>{saved === "reviewed" ? "Revisado" : saved === "in_progress" ? "En curso" : saved === "confirmed" ? "Confirmado" : saved === "draft" ? hasConfirmed ? "Confirmado + borrador" : "Borrador" : saved === "pending" ? "Pendiente" : ""}</em>
         </li>;
       })}</ol>
-      {tab === "diagnostic" ? (status !== "reviewed" ? <NextStepCard title={journey?.studentCount ? "Primero, conoce a tu grupo" : "Primero, agrega a los niños"} description={journey?.studentCount ? "Revisa el diagnóstico inicial y guarda tu decisión antes de preparar el plan anual." : "Necesitas la lista del aula para registrar el diagnóstico inicial."} action={journey?.studentCount ? "Ir a evaluación diagnóstica" : "Agregar niños"} onAction={journey?.studentCount ? onGoDiagnostic : onGoStudents} /> : null) : tab === "annual" ? <AnnualPlanGenerator onConfirmed={() => void refreshJourney()} /> : tab === "experiences" ? <LearningExperienceGenerator onConfirmed={() => void refreshJourney()} /> : <ParentActivityGenerator onConfirmed={() => void refreshJourney()} onGoToday={onGoToday} />}
+      {tab === "diagnostic" ? (status !== "reviewed" ? <NextStepCard title={journey?.studentCount ? "Primero, conoce a tu grupo" : "Primero, agrega a los niños"} description={journey?.studentCount ? "Revisa el diagnóstico inicial y guarda tu decisión antes de preparar el plan anual." : "Necesitas la lista del aula para registrar el diagnóstico inicial."} action={journey?.studentCount ? "Ir a evaluación diagnóstica" : "Agregar niños"} onAction={journey?.studentCount ? onGoDiagnostic : onGoStudents} /> : null) : tab === "annual" ? <AnnualPlanGenerator onConfirmed={() => void refreshJourney()} onGoDiagnostic={onGoDiagnostic} /> : tab === "experiences" ? <LearningExperienceGenerator onConfirmed={() => void refreshJourney()} /> : <ParentActivityGenerator onConfirmed={() => void refreshJourney()} onGoToday={onGoToday} />}
       {(status === "confirmed" || status === "reviewed") && stepIndex < steps.length - 1 && <NextStepCard title={tab === "diagnostic" ? "Revisión inicial guardada" : `${steps[stepIndex].label} listo`} description={tab === "diagnostic" ? "Puedes preparar el plan anual con la información disponible y seguir observando después." : "Ya puedes avanzar. Tu trabajo quedó guardado y podrás volver a verlo."} action={`Continuar: ${steps[stepIndex + 1].label}`} onAction={() => { setTab(steps[stepIndex + 1].id); void refreshJourney(); }} />}
       {tab === "annual" && status === "draft" && journey?.hasConfirmedAnnual && <Button variant="outline" onClick={() => setTab("experiences")}>Seguir con el plan confirmado anterior</Button>}
       {tab === "experiences" && status === "draft" && journey?.hasConfirmedExperience && <Button variant="outline" onClick={() => setTab("activities")}>Preparar actividad de una experiencia confirmada</Button>}

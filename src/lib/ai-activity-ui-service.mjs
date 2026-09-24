@@ -1,6 +1,7 @@
 import { resolveAIExecutionPlan } from "./ai-execution-router-v4.mjs";
 import { generateAIWorkflowV4 } from "./ai-generation-v4.mjs";
 import { createAIProviderForPlan } from "./ai-provider-factory.mjs";
+import { buildActivityContext } from "./context-policy-v4.mjs";
 
 const MAX_PURPOSE_LENGTH = 500;
 const MAX_CONTEXT_LENGTH = 1_000;
@@ -49,6 +50,7 @@ export function buildTeacherActivityGenerationInput({ request = {}, classroom, l
   if (!activityPurpose) throw new ActivityGenerationUIError("missing_activity_purpose", teacherMessageForActivityGenerationError({ reason: "missing_activity_purpose" }));
   const context = text(request.context, MAX_CONTEXT_LENGTH);
   const competencyId = text(request.competencyId, 80) || null;
+  const group = buildActivityContext(classroom.context_v4);
   return {
     workflow: "activity",
     age: classroom.age,
@@ -57,14 +59,15 @@ export function buildTeacherActivityGenerationInput({ request = {}, classroom, l
     classroom_context: {
       id: classroom.id,
       section: classroom.section,
-      group_context: context || classroom.group_context || undefined,
+      group_context: [context || classroom.group_context, group?.group_context].filter(Boolean).join(" ") || undefined,
       school_context: classroom.school_context,
-      diagnostic_summary: classroom.diagnostic_summary,
+      diagnostic_summary: group?.diagnostic_summary ?? classroom.diagnostic_summary,
       religion_applicable: classroom.religion_applicable === true,
       materials: materials([...(learningExperience?.details?.spaces_and_materials ?? []), ...(request.materials ?? [])]),
     },
     ...(classroom.calendar ? { calendar_context: classroom.calendar } : {}),
-    ...(classroom.language_context ? { language_context: classroom.language_context } : {}),
+    ...(classroom.language_context || group?.language_context ? { language_context: { ...classroom.language_context, ...group?.language_context } } : {}),
+    ...(group ? { context_snapshot: group.snapshot } : {}),
     ...(learningExperience ? { learning_experience_context: { id: learningExperience.id, type: learningExperience.type, title: learningExperience.title, purpose: learningExperience.purpose, trigger_or_interest: learningExperience.details?.trigger_or_interest ?? null, learning_need_or_context: learningExperience.details?.learning_need_or_context ?? null, starting_point: learningExperience.details?.starting_point ?? null, primary_competency_ids: learningExperience.details?.primary_competency_ids ?? [], possible_secondary_competency_ids: learningExperience.details?.possible_secondary_competency_ids ?? [], possible_pathways: learningExperience.details?.possible_pathways ?? [], proposed_situations: learningExperience.details?.proposed_situations ?? [], spaces_and_materials: learningExperience.details?.spaces_and_materials ?? [], evidence_opportunities: learningExperience.details?.evidence_opportunities ?? [], family_or_community_links: learningExperience.details?.family_or_community_links ?? [], adjustment_points: learningExperience.details?.adjustment_points ?? [], flexibility_notes: learningExperience.details?.flexibility_notes ?? null, prior_activities: learningExperience.prior_activities ?? [] } } : {}),
     ...(competencyId ? { competency_ids: [competencyId] } : {}),
   };
@@ -88,6 +91,7 @@ export async function generateTeacherActivity({ request, classroom, learningExpe
         response_id: generated.metadata.response_id,
         usage: generated.metadata.usage,
         provenance: generated.provenance,
+        ...(input.context_snapshot ? { context_snapshot: input.context_snapshot } : {}),
       },
     };
   } catch (error) {

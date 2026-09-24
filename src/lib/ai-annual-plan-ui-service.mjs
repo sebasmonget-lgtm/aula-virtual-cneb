@@ -1,8 +1,11 @@
 import { resolveAIExecutionPlan } from "./ai-execution-router-v4.mjs";
 import { generateAIWorkflowV4 } from "./ai-generation-v4.mjs";
 import { createAIProviderForPlan } from "./ai-provider-factory.mjs";
+import { buildAnnualPlanContext } from "./context-policy-v4.mjs";
+import { mergeAnnualPlanDevelopment } from "./annual-plan-contract.mjs";
+import { AnnualCalendarError, defaultInitialStage, nationalCalendarBlocks2026, suggestAnnualProjectDurations } from "./annual-plan-calendar.mjs";
 
-const ANNUAL_PLAN_TIMEOUT_MS = 90_000;
+const ANNUAL_PLAN_TIMEOUT_MS = 180_000;
 
 export class AnnualPlanGenerationUIError extends Error {
   constructor(reason) {
@@ -15,6 +18,8 @@ export class AnnualPlanGenerationUIError extends Error {
 export function teacherMessageForAnnualPlanGenerationError(reason) {
   switch (reason) {
     case "missing_annual_context": return "Falta información del aula o calendario para preparar el plan anual.";
+    case "calendar_invalid": return "Revisa el calendario escolar antes de preparar el plan anual.";
+    case "calendar_project_does_not_fit": return "El calendario no alcanza para las doce propuestas. Revisa las interrupciones o la duración de los proyectos.";
     case "api_key_missing":
     case "authentication_failed": return "No se pudo acceder al servicio de IA. Pide revisar su configuración.";
     case "rate_limited": return "El servicio de IA está ocupado. Espera unos minutos antes de volver a intentar.";
@@ -27,7 +32,9 @@ export function teacherMessageForAnnualPlanGenerationError(reason) {
 
 function safeAnnualPlanFailureReason(error) {
   const reason = error?.reason;
+  if (error instanceof AnnualPlanGenerationUIError) return reason;
   if (error?.name === "MissingWorkflowContextError") return "missing_annual_context";
+  if (error instanceof AnnualCalendarError) return error.reason === "project_does_not_fit" ? "calendar_project_does_not_fit" : "calendar_invalid";
   if (["api_key_missing", "authentication_failed", "rate_limited", "timeout", "provider_error"].includes(reason)) return reason;
   if (typeof reason === "string" && (reason.startsWith("annual_plan_") || ["response_incomplete", "response_refusal", "structured_output_invalid", "provider_response_not_parseable", "provider_response_invalid_format"].includes(reason))) return "proposal_invalid";
   return "unknown";
@@ -35,25 +42,59 @@ function safeAnnualPlanFailureReason(error) {
 
 export function buildAnnualPlanGenerationInput({ classroom, request = {} }) {
   if (!classroom || ![3, 4, 5].includes(classroom.age) || !classroom.calendar) throw new AnnualPlanGenerationUIError("missing_annual_context");
+  const calendar = { ...classroom.calendar,
+    blocks: classroom.calendar.blocks ?? (Number(classroom.calendar.school_year) === 2026 ? nationalCalendarBlocks2026() : []),
+    initial_stage: { ...(classroom.calendar.initial_stage ?? defaultInitialStage()), teacher_notes: "" } };
+  calendar.project_duration_weeks = suggestAnnualProjectDurations(calendar);
+  const group = buildAnnualPlanContext(classroom.context_v4);
   return {
     workflow: "annual_plan", age: classroom.age,
-    teacher_request: request.teacherRequest?.trim() || "Preparar una propuesta anual flexible con el contexto disponible.",
-    calendar_context: classroom.calendar,
-    classroom_context: { id: classroom.id, group_context: classroom.group_context, school_context: classroom.school_context, available_resources: classroom.available_resources, diagnostic_summary: classroom.diagnostic_summary },
-    diagnostic_summary: classroom.diagnostic_summary,
-    interests: classroom.interests,
+    teacher_request: `${request.teacherRequest?.trim() || "Preparar el plan anual con el contexto disponible."} Construye el PLAN MAESTRO: exactamente doce propuestas distintas de proyectos, tres por cada uno de cuatro periodos lectivos. La acogida, adaptación y evaluación diagnóstica es una etapa aparte; nunca la conviertas en P01 ni le asignes producto final. Usa experience_type project y period Bimestre 1, Bimestre 2, Bimestre 3 o Bimestre 4 según su posición. Cada proyecto debe tener al menos una competencia principal aplicable, una situación de partida concreta y un motivo ligado al diagnóstico o al contexto; los intereses no necesitan repetirse artificialmente. Las fechas cívicas solo sirven como contexto si aportan una experiencia pertinente; no fuerces un proyecto por una celebración. Varía los temas, situaciones y competencias. Da a cada proyecto un título propio; nunca uses el mismo título o situación añadiendo un número. Las fechas y duraciones lectivas las calculará el servidor. Escribe frases cortas y palabras comunes para profesoras de Inicial. No inventes hallazgos diagnósticos, datos de familias o niños. Estas son propuestas iniciales que la docente puede ajustar durante el año.`,
+    calendar_context: calendar,
+    classroom_context: { id: classroom.id, group_context: [classroom.group_context, group?.group_context].filter(Boolean).join(" "), school_context: classroom.school_context, available_resources: classroom.available_resources, diagnostic_summary: group?.diagnostic_summary ?? classroom.diagnostic_summary },
+    diagnostic_summary: group?.diagnostic_summary ?? classroom.diagnostic_summary,
+    interests: group?.interests.length ? group.interests : classroom.interests,
     available_resources: classroom.available_resources,
-    language_context: classroom.language_context,
+    language_context: { ...classroom.language_context, ...group?.language_context },
+    ...(group ? { context_snapshot: group.snapshot } : {}),
   };
 }
 
+function developmentSource(master) {
+  return {
+    school_year: master.school_year,
+    general_context_summary: master.general_context_summary,
+    planning_priorities: master.planning_priorities,
+    proposed_experiences: master.proposed_experiences.map((project, index) => ({
+      index: index + 1, title: project.title, period: project.period, rationale: project.rationale,
+      context_or_trigger: project.context_or_trigger, primary_competency_ids: project.primary_competency_ids,
+      expected_evidence_categories: project.expected_evidence_categories,
+    })),
+  };
+}
+
+function combinedUsage(...parts) {
+  return Object.fromEntries(["input_tokens", "cached_input_tokens", "output_tokens", "total_tokens"].map((field) => {
+    const values = parts.map((part) => part?.usage?.[field]).filter((value) => Number.isInteger(value));
+    return [field, values.length ? values.reduce((sum, value) => sum + value, 0) : null];
+  }));
+}
+
 export async function generateTeacherAnnualPlan({ classroom, request, resolvePlan = resolveAIExecutionPlan, createProvider = createAIProviderForPlan, generate = generateAIWorkflowV4 }) {
-  const input = buildAnnualPlanGenerationInput({ classroom, request });
   try {
-    const executionPlan = resolvePlan({ workflow: "annual_plan", task: "generation" });
-    const provider = createProvider(executionPlan, { timeoutMs: ANNUAL_PLAN_TIMEOUT_MS });
-    const generated = await generate(input, { provider, executionPlan });
-    return { proposal: generated.output, internalMetadata: { workflow: generated.metadata.workflow, model: generated.metadata.model, reasoning_effort: executionPlan.reasoning_effort, response_id: generated.metadata.response_id, usage: generated.metadata.usage, provenance: generated.provenance } };
+    const input = buildAnnualPlanGenerationInput({ classroom, request });
+    const masterPlan = resolvePlan({ workflow: "annual_plan", task: "generation" });
+    const master = await generate({ ...input, annual_stage: "master" }, { provider: createProvider(masterPlan, { timeoutMs: ANNUAL_PLAN_TIMEOUT_MS }), executionPlan: masterPlan });
+    const developmentPlan = resolvePlan({ workflow: "annual_plan", task: "document_development" });
+    const developed = await generate({ ...input, annual_stage: "development", master_plan: developmentSource(master.output),
+      teacher_request: "Desarrolla el plan maestro validado que aparece en workflow_inputs.master_plan. Conserva sus doce proyectos, su orden y sus competencias. Para cada índice escribe un propósito concreto y diferente, un posible producto o evidencia pertinente y materiales sencillos compatibles con el aula. No conviertas un producto grupal automáticamente en evidencia individual. No repitas el mismo propósito ni el mismo producto cambiando solo el número; algunos productos pueden ser juegos, acuerdos, relatos, construcciones, dibujos, exploraciones o registros cuando tengan sentido. Devuelve cuatro criterios de organización y enfoques transversales solo cuando el contexto y la Knowledge Base los sustenten. Usa español claro; no inventes observaciones ni datos familiares." },
+    { provider: createProvider(developmentPlan, { timeoutMs: ANNUAL_PLAN_TIMEOUT_MS }), executionPlan: developmentPlan });
+    const proposal = mergeAnnualPlanDevelopment(master.output, developed.output, input.calendar_context.project_duration_weeks);
+    const stages = [{ stage: "master", model: master.metadata.model, reasoning_effort: masterPlan.reasoning_effort, response_id: master.metadata.response_id, usage: master.metadata.usage },
+      { stage: "development", model: developed.metadata.model, reasoning_effort: developmentPlan.reasoning_effort, response_id: developed.metadata.response_id, usage: developed.metadata.usage }];
+    return { proposal, internalMetadata: { workflow: "annual_plan", model: master.metadata.model, reasoning_effort: masterPlan.reasoning_effort,
+      response_id: master.metadata.response_id, usage: combinedUsage(master.metadata, developed.metadata), stages,
+      provenance: master.provenance, ...(input.context_snapshot ? { context_snapshot: input.context_snapshot } : {}) } };
   } catch (error) {
     throw new AnnualPlanGenerationUIError(safeAnnualPlanFailureReason(error));
   }

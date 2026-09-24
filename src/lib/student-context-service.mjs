@@ -1,5 +1,10 @@
 import { randomUUID } from "node:crypto";
 import { loadKnowledgeBaseV4 } from "./knowledge-base-v4.mjs";
+import { safeFamilyContext } from "./diagnostic-sources-v4.mjs";
+import { neutralizeAssessmentText } from "./assessment-v4-service.mjs";
+import { buildDiagnosticContext } from "./context-policy-v4.mjs";
+import { isDiagnosticScaffoldSummary } from "./diagnostic-review-copy.mjs";
+import { isCurrentDiagnosticStudentReview } from "./diagnostic-assessment-v4.mjs";
 
 export function resolveSourceUpdatedAt(...timestamps) {
   const valid = timestamps.flat().filter(Boolean).map((value) => new Date(value)).filter((value) => !Number.isNaN(value.valueOf()));
@@ -56,14 +61,42 @@ export async function buildStudentPedagogicalContext(db, studentId) {
       from diagnostic_experience_observations where student_id = $1
      order by observed_at desc, id desc limit 30
   `, [studentId])).rows;
+  const spontaneousObservations = (await db.query(`select id, context_label, observation_text,
+      support_status, observed_at, classification_status, classification_source, competency_v4_id
+    from diagnostic_spontaneous_observations where student_id=$1
+    order by observed_at desc,id desc limit 30`, [studentId])).rows;
+  const interview = (await db.query(`select id,version,details,teacher_confirmed_at from student_family_interviews
+    where student_id=$1 and status='confirmed' order by version desc limit 1`, [studentId])).rows[0];
   const confirmedDiagnosticReviews = (await db.query(`select distinct on (competency_v4_id)
       id, competency_v4_id, version, details, teacher_confirmed_at
     from diagnostic_competency_reviews where student_id = $1 and status = 'confirmed'
-    order by competency_v4_id, version desc`, [studentId])).rows;
+    order by competency_v4_id, version desc`, [studentId])).rows
+    .filter((row) => !isDiagnosticScaffoldSummary(row.details?.summary_text));
+  const confirmedStudentReview = (await db.query(`select id,classroom_id,version,details,source_snapshot,teacher_confirmed_at
+    from diagnostic_student_reviews where student_id=$1 and status='confirmed'
+    order by version desc limit 1`, [studentId])).rows[0];
+  const studentReviewCurrent = confirmedStudentReview ? await isCurrentDiagnosticStudentReview(db,
+    confirmedStudentReview.classroom_id, studentId, confirmedStudentReview.source_snapshot) : false;
   return {
     student,
+    source_provenance: [
+      ...(interview ? [{ source_type: "family_interview", source_id: interview.id, source_version: interview.version, confirmed_at: interview.teacher_confirmed_at }] : []),
+      ...diagnosticObservations.map((item) => ({ source_type: "diagnostic_observation", source_id: item.id, observed_at: item.observed_at })),
+      ...spontaneousObservations.map((item) => ({ source_type: "diagnostic_spontaneous_observation", source_id: item.id, observed_at: item.observed_at })),
+      ...confirmedDiagnosticReviews.map((item) => ({ source_type: "diagnostic_initial", source_id: item.id, source_version: item.version, confirmed_at: item.teacher_confirmed_at })),
+      ...(confirmedStudentReview ? [{ source_type: "diagnostic_student_review", source_id: confirmedStudentReview.id,
+        source_version: confirmedStudentReview.version, confirmed_at: confirmedStudentReview.teacher_confirmed_at }] : []),
+      ...recentEvidence.map((item) => ({ source_type: "formative_evidence", source_id: item.id, observed_at: item.observed_at })),
+      ...assessments.map((item) => ({ source_type: "formative_assessment", source_id: item.id, confirmed_at: item.teacher_confirmed_at })),
+      ...conclusions.map((item) => ({ source_type: "descriptive_conclusion", source_id: item.id, confirmed_at: item.teacher_confirmed_at })),
+    ],
     diagnosis,
-    diagnostic_observations: diagnosticObservations.map((item) => ({
+    family_interview_context: interview ? { version: interview.version, teacher_confirmed_at: interview.teacher_confirmed_at,
+      ...safeFamilyContext(interview.details) } : null,
+    diagnostic_observations: [...diagnosticObservations, ...spontaneousObservations.map((item) => ({
+      ...item, experience_id: "spontaneous", aspect_id: item.context_label,
+      observation_status: item.support_status === "yes" ? "with_support" : "observed_without_judgment",
+    }))].sort((a,b) => new Date(b.observed_at) - new Date(a.observed_at) || b.id.localeCompare(a.id)).slice(0, 30).map((item) => ({
       ...item, competency_name: v4Names.get(item.competency_v4_id) ?? item.competency_v4_id,
     })),
     confirmed_diagnostic_reviews: confirmedDiagnosticReviews.map((item) => ({
@@ -75,6 +108,13 @@ export async function buildStudentPedagogicalContext(db, studentId) {
       teacher_confirmed_at: item.teacher_confirmed_at,
       source: "diagnostic",
     })),
+    confirmed_student_diagnostic_review: confirmedStudentReview ? {
+      id: confirmedStudentReview.id, version: confirmedStudentReview.version,
+      information_status: confirmedStudentReview.details.information_status,
+      comment_text: confirmedStudentReview.details.comment_text,
+      teacher_confirmed_at: confirmedStudentReview.teacher_confirmed_at,
+      is_current: studentReviewCurrent,
+    } : null,
     competencies: competencies.map((competency) => ({
       ...competency, competency_text: competency.competency_text ?? v4Names.get(competency.competency_v4_id) ?? competency.competency_v4_id,
       observations: {
@@ -99,6 +139,8 @@ export async function refreshStudentContextSnapshot(db, studentId) {
     context.recent_relevant_observations.map((item) => item.observed_at),
     context.diagnosis.map((item) => item.updated_at),
     context.diagnostic_observations.map((item) => item.observed_at),
+    context.family_interview_context?.teacher_confirmed_at,
+    context.confirmed_student_diagnostic_review?.teacher_confirmed_at,
     context.confirmed_diagnostic_reviews.map((item) => item.teacher_confirmed_at),
     context.confirmed_period_assessments.map((item) => item.teacher_confirmed_at),
     context.confirmed_period_conclusions.map((item) => item.teacher_confirmed_at),
@@ -110,4 +152,37 @@ export async function refreshStudentContextSnapshot(db, studentId) {
       generated_at = now(), source_updated_at = excluded.source_updated_at, summary_text = null`,
     [randomUUID(), studentId, JSON.stringify(context), sourceUpdatedAt]);
   return context;
+}
+
+/** Explicit allowlist for a future diagnostic AI workflow; never pass the stored snapshot wholesale. */
+export async function buildSafeDiagnosticStudentContext(db, teacherId, studentId) {
+  const allowed = (await db.query(`select s.id,s.classroom_id from students s join classrooms c on c.id=s.classroom_id
+    where s.id=$1 and s.status='active' and c.teacher_id=$2 and c.status='active'`, [studentId,teacherId])).rows[0];
+  if (!allowed) return null;
+  const profile = await buildStudentPedagogicalContext(db, studentId);
+  const knownNames = (await db.query(`select first_name,last_name,preferred_name from students where classroom_id=$1`, [allowed.classroom_id])).rows
+    .flatMap((row) => [row.first_name,row.last_name,row.preferred_name]).filter(Boolean);
+  const clean = (value) => neutralizeAssessmentText(value, knownNames);
+  const individual = { age: profile.student.age_years,
+    family_context_source: profile.family_interview_context ? "antecedente_informado_por_la_familia" : null,
+    family_context: Object.fromEntries(["language_context", "language_tags", "primary_language_tag", "other_language_text",
+      "interests", "interest_tags", "other_interest_text", "previous_education_status", "previous_education_type", "autonomy_context",
+      "communication_emotional_context", "social_context", "adaptation_context", "previous_education"]
+      .filter((key) => profile.family_interview_context?.[key])
+      .map((key) => [key, clean(profile.family_interview_context[key])])),
+    observations: profile.diagnostic_observations.filter((item) => item.competency_v4_id && item.observation_text)
+      .slice(0,12).map((item) => ({ competency_id: item.competency_v4_id,
+        date: new Date(item.observed_at).toISOString().slice(0,10),
+        observation_note: clean(item.observation_text) })),
+    teacher_confirmed_findings: profile.confirmed_diagnostic_reviews.map((item) => ({
+      competency_id: item.competency_v4_id, information_status: item.information_status,
+      summary_text: clean(item.summary_text), next_observation: clean(item.next_observation),
+    })),
+  };
+  return { ...buildDiagnosticContext(individual).student_context,
+    family_context_source: individual.family_context_source,
+    teacher_confirmed_student_comment: profile.confirmed_student_diagnostic_review?.is_current ? {
+      information_status: profile.confirmed_student_diagnostic_review.information_status,
+      comment_text: clean(profile.confirmed_student_diagnostic_review.comment_text),
+    } : null };
 }

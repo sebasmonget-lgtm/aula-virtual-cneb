@@ -42,7 +42,11 @@ test("síntesis individual conserva fuentes reales, versiones e inmutabilidad", 
     await assert.rejects(prepareDiagnosticSynthesis(db, teacher, { studentId, competencyId }), { reason: "no_observations" });
     const firstObservation = await observe(db, teacher, workspace, studentId);
     const prepared = await prepareDiagnosticSynthesis(db, teacher, { studentId, competencyId });
-    assert.match(prepared.details.summary_text, /1 observaciones diagnósticas/);
+    assert.equal(prepared.details.summary_text, "");
+    await assert.rejects(confirmDiagnosticSynthesis(db, teacher, prepared.id), { reason: "invalid_details" });
+    await assert.rejects(saveDiagnosticSynthesis(db, teacher, prepared.id, {
+      ...prepared.details, summary_text: "Se registraron 1 observaciones diagnósticas: prueba. Revisa estas actuaciones y redacta tu interpretación.",
+    }), { reason: "invalid_details" });
     const original = (await db.query(`select source_snapshot from diagnostic_competency_reviews where id=$1`, [prepared.id])).rows[0].source_snapshot;
     assert.deepEqual(original.map((item) => item.id), [firstObservation.id]);
     assert.equal(sameDiagnosticSources(original, [{ fingerprint: original[0].fingerprint, id: original[0].id }]), true);
@@ -80,7 +84,8 @@ test("información insuficiente es explícita y la ausencia de registro no crea 
     await observe(db, teacher, workspace, studentId, 0, "insufficient_information", "Solo lo vi un momento.");
     const prepared = await prepareDiagnosticSynthesis(db, teacher, { studentId, competencyId });
     assert.equal(prepared.details.information_status, "insufficient_information");
-    await saveDiagnosticSynthesis(db, teacher, prepared.id, prepared.details);
+    await saveDiagnosticSynthesis(db, teacher, prepared.id, { ...prepared.details,
+      summary_text: "Por ahora solo lo observé brevemente; necesito otra ocasión de juego para conocer cómo participa." });
     const confirmed = await confirmDiagnosticSynthesis(db, teacher, prepared.id);
     assert.equal(confirmed.details.information_status, "insufficient_information");
     const review = await loadDiagnosticAssessmentWorkspace(db, teacher);
@@ -148,7 +153,9 @@ test("docentes y aulas quedan aislados; no se aceptan fuentes ni competencias fa
     const snapshot = (await db.query(`select source_snapshot from diagnostic_competency_reviews where id=$1`, [prepared.id])).rows[0].source_snapshot;
     assert.equal(snapshot.length, 1);
     assert.notEqual(snapshot[0].id, second.students[0].id);
-    await assert.rejects(saveDiagnosticSynthesis(db, other, prepared.id, prepared.details), { reason: "not_editable" });
+    await assert.rejects(saveDiagnosticSynthesis(db, other, prepared.id, {
+      ...prepared.details, summary_text: "Observé cómo eligió y explicó su juego.",
+    }), { reason: "not_editable" });
     assert.deepEqual((await loadDiagnosticAssessmentWorkspace(db, other)).observations, []);
   } finally { await db.close(); }
 });
@@ -167,7 +174,7 @@ test("migración remota protege lectura y exige servidor para escritura; la UI n
   assert.match(hardening, /drop policy if exists diagnostic_experience_insert_own/);
   assert.match(hardening, /revoke insert, update, delete on public\.diagnostic_competency_reviews from authenticated/);
   assert.match(hardening, /revoke insert, update, delete on public\.diagnostic_group_reviews from authenticated/);
-  assert.match(ui, /Revisar diagnóstico/);
+  assert.match(ui, /Resume lo que observaste/);
   assert.match(ui, /Información insuficiente/);
   assert.doesNotMatch(service, /OpenAIProvider|fetch\(|generateAIWorkflowV4/);
 });

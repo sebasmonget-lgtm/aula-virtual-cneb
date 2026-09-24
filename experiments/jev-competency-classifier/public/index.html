@@ -1,0 +1,8 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Jev–CNEB · Experimento</title><link rel="stylesheet" href="/app.css"></head>
+<body><main><p class="eyebrow">EXPERIMENTO LOCAL · DATOS FICTICIOS</p><h1>Clasificador Jev–CNEB</h1><p id="configuration" class="notice"></p>
+<form id="form"><label>Edad<select id="age" name="age"><option value="3">3 años</option><option value="4">4 años</option><option value="5" selected>5 años</option></select></label>
+<label>Contexto<select id="context" name="context"><option value="">Sin contexto</option><option value="juego_libre">Juego libre</option><option value="recreo">Recreo</option><option value="lonchera">Lonchera</option><option value="asamblea">Asamblea</option><option value="rutina">Rutina</option><option value="exploracion">Exploración</option><option value="actividad">Actividad</option><option value="otro">Otro</option></select></label>
+<fieldset><legend>Aplicabilidad explícita</legend><label><input id="l2" type="checkbox"> Castellano como segunda lengua</label><label><input id="religion" type="checkbox"> Religión aplicable</label></fieldset>
+<label>Observación<textarea id="observation" name="observation" maxlength="2000" placeholder="Ej.: Contó los vasos antes de repartirlos y dijo que faltaba uno." required></textarea></label><button>Clasificar con Jev</button></form>
+<section id="result" hidden><h2>Resultado</h2><dl id="summary"></dl><h3>Probabilidades</h3><ol id="probabilities"></ol></section><p id="error" role="alert"></p></main><script type="module" src="/app.js"></script></body></html>

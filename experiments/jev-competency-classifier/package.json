@@ -1,0 +1,17 @@
+{
+  "name": "jev-competency-classifier-experiment",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22.13.0" },
+  "scripts": {
+    "dev": "node --env-file-if-exists=.env.local src/local-server.mjs",
+    "test": "node --test tests/kb-and-criteria.test.mjs tests/policy-and-client.test.mjs tests/classifier-and-metrics.test.mjs tests/cache.test.mjs",
+    "typecheck": "node scripts/typecheck.mjs",
+    "lint": "node scripts/lint.mjs",
+    "build": "node scripts/build.mjs",
+    "models": "node --env-file-if-exists=.env.local cli/models.mjs",
+    "eval:jev": "node --env-file-if-exists=.env.local cli/benchmark.mjs --provider jev",
+    "eval:baseline": "node cli/benchmark.mjs --provider baseline"
+  }
+}

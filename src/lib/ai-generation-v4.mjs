@@ -4,7 +4,7 @@ import { prepareAIRequestV4 } from "./prepare-ai-request-v4.mjs";
 import { validateAssessmentProposal } from "./assessment-v4-service.mjs";
 import { CONCLUSION_FIELDS, validateDescriptiveConclusion } from "./descriptive-conclusion-v4-service.mjs";
 import { FAMILY_REPORT_FIELDS, FAMILY_REPORT_SECTION_FIELDS, validateFamilyReport } from "./family-report-v4-service.mjs";
-import { ANNUAL_PLAN_OUTPUT_SCHEMA, AnnualPlanValidationError, validateAnnualPlanProposal } from "./annual-plan-contract.mjs";
+import { ANNUAL_PLAN_DEVELOPMENT_SCHEMA, ANNUAL_PLAN_OUTPUT_SCHEMA, AnnualPlanValidationError, validateAnnualPlanDevelopment, validateAnnualPlanMaster, validateAnnualPlanProposal } from "./annual-plan-contract.mjs";
 export { ANNUAL_PLAN_OUTPUT_SCHEMA } from "./annual-plan-contract.mjs";
 
 const ACTIVITY_FIELDS = [
@@ -125,8 +125,18 @@ function assertActivityOutput(output, bundle, confirmedCompetencyId) {
 
 
 function assertAnnualPlanOutput(output, bundle) {
-  try { return validateAnnualPlanProposal(output, bundle.curriculum.competency_cards.map((card) => card.id), bundle.context?.classroom?.calendar_context?.school_year); }
+  try { return validateAnnualPlanProposal(output, bundle.curriculum.competency_cards.map((card) => card.id), bundle.context?.classroom?.calendar_context?.school_year, { requireCurrentSchema: true }); }
   catch (error) { if (error instanceof AnnualPlanValidationError) throw new InvalidAIGenerationError(error.reason, error.details); throw error; }
+}
+function assertAnnualPlanStageOutput(output, bundle, stage) {
+  try {
+    if (stage === "development") return validateAnnualPlanDevelopment(output);
+    const master = assertAnnualPlanOutput(output, bundle);
+    return stage === "master" ? validateAnnualPlanMaster(master) : master;
+  } catch (error) {
+    if (error instanceof AnnualPlanValidationError) throw new InvalidAIGenerationError(error.reason, error.details);
+    throw error;
+  }
 }
 export function buildProviderRequest(workflow, bundle, executionPlan, outputSchema) {
   const immutableBundle = deepFreeze(structuredClone(bundle));
@@ -187,11 +197,11 @@ export async function generateAIWorkflowV4(input, { provider, knowledgeBase, exe
     throw new InvalidAIGenerationError("provider_not_configured");
   }
   const prepared = await prepareAIRequestV4(input, knowledgeBase);
-  const outputSchema = input.workflow === "annual_plan" ? ANNUAL_PLAN_OUTPUT_SCHEMA : input.workflow === "project" ? PROJECT_OUTPUT_SCHEMA : input.workflow === "unit" ? UNIT_OUTPUT_SCHEMA : input.workflow === "criterion_and_evidence" ? CRITERION_EVIDENCE_OUTPUT_SCHEMA : input.workflow === "assessment" ? ASSESSMENT_OUTPUT_SCHEMA : input.workflow === "descriptive_conclusion" ? DESCRIPTIVE_CONCLUSION_OUTPUT_SCHEMA : input.workflow === "family_report" ? FAMILY_REPORT_OUTPUT_SCHEMA : ACTIVITY_OUTPUT_SCHEMA;
+  const outputSchema = input.workflow === "annual_plan" ? (input.annual_stage === "development" ? ANNUAL_PLAN_DEVELOPMENT_SCHEMA : ANNUAL_PLAN_OUTPUT_SCHEMA) : input.workflow === "project" ? PROJECT_OUTPUT_SCHEMA : input.workflow === "unit" ? UNIT_OUTPUT_SCHEMA : input.workflow === "criterion_and_evidence" ? CRITERION_EVIDENCE_OUTPUT_SCHEMA : input.workflow === "assessment" ? ASSESSMENT_OUTPUT_SCHEMA : input.workflow === "descriptive_conclusion" ? DESCRIPTIVE_CONCLUSION_OUTPUT_SCHEMA : input.workflow === "family_report" ? FAMILY_REPORT_OUTPUT_SCHEMA : ACTIVITY_OUTPUT_SCHEMA;
   const providerRequest = buildProviderRequest(input.workflow, prepared.aiContextBundle, plan, outputSchema);
   const confirmedCompetencyId = input.competency_ids?.length === 1 ? input.competency_ids[0] : null;
   const providerResponse = unwrapProviderResponse(await provider.generate(providerRequest));
-  const output = input.workflow === "annual_plan" ? assertAnnualPlanOutput(providerResponse.output, prepared.aiContextBundle) : ["project", "unit"].includes(input.workflow) ? assertExperienceOutput(providerResponse.output, prepared.aiContextBundle, input.workflow) : input.workflow === "criterion_and_evidence" ? assertCriterionEvidenceOutput(providerResponse.output,prepared.aiContextBundle,confirmedCompetencyId) : input.workflow === "assessment" ? assertAssessmentOutput(providerResponse.output,prepared.aiContextBundle,confirmedCompetencyId,input.evidence_history?.length??0) : input.workflow === "descriptive_conclusion" ? assertDescriptiveConclusionOutput(providerResponse.output, prepared.aiContextBundle, confirmedCompetencyId, input.student_context?.teacher_confirmed_findings?.information_status) : input.workflow === "family_report" ? assertFamilyReportOutput(providerResponse.output, prepared.aiContextBundle, input) : assertActivityOutput(providerResponse.output, prepared.aiContextBundle, confirmedCompetencyId);
+  const output = input.workflow === "annual_plan" ? assertAnnualPlanStageOutput(providerResponse.output, prepared.aiContextBundle, input.annual_stage) : ["project", "unit"].includes(input.workflow) ? assertExperienceOutput(providerResponse.output, prepared.aiContextBundle, input.workflow) : input.workflow === "criterion_and_evidence" ? assertCriterionEvidenceOutput(providerResponse.output,prepared.aiContextBundle,confirmedCompetencyId) : input.workflow === "assessment" ? assertAssessmentOutput(providerResponse.output,prepared.aiContextBundle,confirmedCompetencyId,input.evidence_history?.length??0) : input.workflow === "descriptive_conclusion" ? assertDescriptiveConclusionOutput(providerResponse.output, prepared.aiContextBundle, confirmedCompetencyId, input.student_context?.teacher_confirmed_findings?.information_status) : input.workflow === "family_report" ? assertFamilyReportOutput(providerResponse.output, prepared.aiContextBundle, input) : assertActivityOutput(providerResponse.output, prepared.aiContextBundle, confirmedCompetencyId);
   return {
     output,
     metadata: {

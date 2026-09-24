@@ -1,0 +1,19 @@
+{
+  "version": "baseline-keywords-v1",
+  "keywords": {
+    "PS_IDENTIDAD": ["me siento", "emocion", "triste", "alegre", "enojad", "prefiero", "me gusta", "solo", "autonomia", "higiene"],
+    "PS_CONVIVE": ["acuerdo", "turno", "compart", "compañer", "grupo", "norma", "conflicto", "ordenar juntos", "cuidar el aula"],
+    "PS_RELIGION": ["dios", "oracion", "jesus", "religion", "celebracion religiosa"],
+    "PSICO_MOTRICIDAD": ["salto", "equilibr", "corre", "trepa", "gatea", "lanz", "movimiento", "cuerpo"],
+    "COM_ORAL": ["explico", "conto", "dijo", "convers", "relato", "pregunto", "opinion", "hablo"],
+    "COM_LECTURA": ["cuento", "lee", "portada", "personaje", "texto", "imagen", "anticip", "letrero"],
+    "COM_ESCRITURA": ["escrib", "dictado", "letra", "mensaje", "firma", "lista", "nombre"],
+    "COM_ARTE": ["dibujo", "pinto", "pintura", "cancion", "musica", "model", "teatro", "ritmo"],
+    "CAST_L2_ORAL": ["castellano", "segunda lengua", "palabra nueva", "lengua materna"],
+    "MAT_CANTIDAD": ["conto", "contó", "cantidad", "mas", "menos", "faltaba", "sobraba", "numero", "repart"],
+    "MAT_FORMA": ["forma", "figura", "recorrido", "ubic", "delante", "detras", "cerca", "lejos", "espacio"],
+    "CYT_INDAGA": ["experimento", "observ", "descubrio", "descubrió", "hipotes", "comparo", "pregunto por que", "investig"],
+    "TRANS_TIC": ["tableta", "computadora", "camara", "cámara", "audio", "digital", "pantalla"],
+    "TRANS_AUTONOMO": ["estrategia", "planifico", "planificó", "reviso", "revisó", "cambio", "meta", "intento otra vez"]
+  }
+}

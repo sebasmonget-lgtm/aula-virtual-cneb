@@ -152,6 +152,23 @@ button, a[href], input, select, textarea { transition: background-color .16s eas
 
 .diagnostic-shell .grid > * { min-width: 0; }
 
+.diagnostic-shell .diagnostic-back-button {
+  min-height: 48px;
+  width: fit-content;
+  border: 1px solid #b7d4e3;
+  border-radius: 12px;
+  background: #eff8fc;
+  padding: 10px 16px;
+  color: #174761;
+  font-size: 15px;
+  font-weight: 700;
+  box-shadow: 0 2px 5px rgba(36, 69, 112, .07);
+}
+
+.diagnostic-shell .diagnostic-back-button:hover { border-color: #087d96; background: #dff3f7; }
+.diagnostic-shell .diagnostic-back-button:focus-visible { outline: 3px solid #087d96; outline-offset: 2px; }
+.diagnostic-shell .diagnostic-back-button svg { width: 20px; height: 20px; }
+
 .diagnostic-panel {
   border: 1px solid #dce6f4;
   border-radius: 18px;

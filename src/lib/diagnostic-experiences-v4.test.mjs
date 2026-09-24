@@ -28,10 +28,17 @@ test("guías por edad usan tarjetas v4 y solo muestran competencias especiales a
   for (const age of [3, 4, 5]) {
     const experiences = buildDiagnosticExperienceCatalog(kb, { age });
     assert.equal(experiences.length, 5);
+    assert.equal(experiences[0].catalog_version, "diagnostic-v4.3");
+    assert.match(experiences[0].teacher_instructions, /Prepara dos o tres opciones sencillas/);
+    assert.ok(experiences.every((item) => item.aspects.length >= 2 && item.aspects.length <= 4));
+    if (age === 3) assert.equal(experiences.find((item) => item.id === "stories_and_marks").aspects.length, 2);
     for (const experience of experiences) for (const aspect of experience.aspects) {
       const card = kb.competencyCards.find((item) => item.id === aspect.competency_id);
       assert.equal(aspect.competency_name, card.official_name);
       assert.ok(card.ages[String(age)].observable_patterns.includes(aspect.age_reference));
+      assert.ok(aspect.label.length <= 55 && aspect.prompt.length <= 120);
+      assert.ok(aspect.examples.length >= 2 && aspect.examples.length <= 3);
+      assert.doesNotMatch(aspect.prompt, /^\s*¿/);
     }
     assert.ok(experiences.every((item) => !item.aspects.some((aspect) => ["CAST_L2_ORAL", "PS_RELIGION"].includes(aspect.competency_id))));
   }
@@ -115,7 +122,14 @@ test("UI abre la lista completa y vuelve a ella al guardar; RLS remota exige esc
   assert.match(ui, /data\.students/);
   assert.match(ui, /Sin observaciones/);
   assert.match(ui, /Observados hoy/);
-  assert.match(ui, /Aún no se observó/);
+  assert.match(ui, /1\. Prepara el juego/);
+  assert.match(ui, /2\. Mientras juegan, observa/);
+  assert.match(ui, /No tienes que observarlas todas/);
+  assert.match(ui, /Ver ejemplos/);
+  assert.match(ui, /3\. Elige a un niño y anota lo que viste/);
+  assert.match(ui, /Relación curricular/);
+  assert.doesNotMatch(ui, /¿Necesitó apoyo\?|No puedo determinarlo/);
+  assert.match(ui, /observed_without_judgment/);
   assert.match(server, /recordDiagnosticExperienceObservation/);
   assert.match(sql, /enable row level security/);
   assert.match(sql, /for select to authenticated/);

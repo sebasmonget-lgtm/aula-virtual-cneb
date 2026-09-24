@@ -161,3 +161,32 @@ test("objetos vacíos no satisfacen contexto obligatorio y el shortlist no se re
   const bundle = await buildAIContext({ workflow: "activity", age: 5, teacher_request: "Actividad.", activity_purpose: "Explorar." }, knowledgeBase);
   assert.deepEqual(bundle.curriculum.competency_cards, []);
 });
+
+test("el plan anual recibe todas las competencias aplicables a la edad sin declararlas ganadoras", async () => {
+  const knowledgeBase = await loadKnowledgeBaseV4();
+  const bundle = await buildAIContext({ workflow: "annual_plan", age: 5,
+    teacher_request: "Preparar plan anual del aula.", calendar_context: { school_year: 2026 },
+    classroom_context: { group_context: "Grupo de cinco años" } }, knowledgeBase);
+  const actual = bundle.curriculum.competency_cards.map((card) => card.id);
+  const applicable = knowledgeBase.competencyCards.filter((card) => card.runtime_selectable_by_age?.["5"]
+    && !["CAST_L2_ORAL", "PS_RELIGION"].includes(card.id)).map((card) => card.id);
+  assert.deepEqual(actual, applicable);
+  assert.ok(actual.length > 3);
+  assert.deepEqual(bundle.curriculum.age_reference.map((item) => item.age), Array(actual.length).fill(5));
+  assert.ok(!bundle.context.workflow_inputs?.competency_id);
+});
+
+test("el desarrollo anual recibe solo el plan maestro proyectado y el contexto requerido", async () => {
+  const knowledgeBase = await loadKnowledgeBaseV4();
+  const base = { workflow: "annual_plan", age: 5, teacher_request: "Desarrollar el plan.",
+    calendar_context: { school_year: 2026, starts_on: "2026-03-16", ends_on: "2026-12-18" },
+    classroom_context: { group_context: "Grupo de cinco años", available_resources: ["papel"] } };
+  const master = { school_year: "2026", proposed_experiences: [{ index: 1, title: "Exploramos plantas", primary_competency_ids: ["COMP-1"] }] };
+  const masterBundle = await buildAIContext({ ...base, annual_stage: "master", master_plan: master }, knowledgeBase);
+  assert.equal(masterBundle.context.workflow_inputs.annual_stage, "master");
+  assert.equal(masterBundle.context.workflow_inputs.master_plan, undefined);
+  const developmentBundle = await buildAIContext({ ...base, annual_stage: "development", master_plan: master }, knowledgeBase);
+  assert.deepEqual(developmentBundle.context.workflow_inputs.master_plan, master);
+  assert.deepEqual(developmentBundle.context.classroom.calendar_context, base.calendar_context);
+  assert.equal(developmentBundle.context.classroom.available_resources[0], "papel");
+});

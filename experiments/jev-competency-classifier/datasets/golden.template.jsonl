@@ -1,0 +1,2 @@
+{"id":"golden-example-001","age":5,"context":"lonchera","observation":"Texto ficticio revisado por docentes.","applicability":{},"expected_competency_id":"MAT_CANTIDAD","acceptable_secondary_ids":[],"case_type":"clear","label_status":"reviewed"}
+{"id":"golden-example-002","age":4,"context":"actividad","observation":"Texto ficticio insuficiente revisado por docentes.","applicability":{},"expected_competency_id":null,"acceptable_secondary_ids":[],"case_type":"poor","label_status":"reviewed"}

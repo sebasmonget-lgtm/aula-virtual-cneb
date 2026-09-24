@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, BookOpen, Check, ChevronDown, ClipboardCheck, Save, School, Sparkles, Users } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -43,22 +43,39 @@ export function InstitutionProfile({ dashboard, onSaved }: {
   const [logoPrimary, setLogoPrimary] = useState("#087d96");
   const [logoAccent, setLogoAccent] = useState("#e9ddff");
   const [createLogo, setCreateLogo] = useState(false);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const logoInputRef = useRef<HTMLInputElement>(null);
   const [working, setWorking] = useState(false);
   const [message, setMessage] = useState("");
 
   async function save() {
     setWorking(true); setMessage("");
     try {
+      let logoUpload: { mimeType: "image/png" | "image/jpeg" | "image/webp"; base64: string } | undefined;
+      if (logoFile) {
+        if (logoFile.size > 2_000_000 || !["image/png", "image/jpeg", "image/webp"].includes(logoFile.type)) {
+          throw new Error("Elige un logo PNG, JPG o WebP de hasta 2 MB.");
+        }
+        const dataUrl = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(String(reader.result));
+          reader.onerror = () => reject(new Error("No se pudo leer el logo."));
+          reader.readAsDataURL(logoFile);
+        });
+        logoUpload = { mimeType: logoFile.type as "image/png" | "image/jpeg" | "image/webp", base64: dataUrl.split(",")[1] ?? "" };
+      }
       const result = await saveLocalProfile({ teacherName, institutionName, section, institutionCode,
-        district, ugel, directorName, createLogo, logoInitials, logoPrimary, logoAccent });
-      onSaved(result); setCreateLogo(false); setMessage("Perfil guardado en la base local.");
+        district, ugel, directorName, createLogo, logoInitials, logoPrimary, logoAccent, logoUpload });
+      onSaved(result); setCreateLogo(false); setLogoFile(null);
+      if (logoInputRef.current) logoInputRef.current.value = "";
+      setMessage("Datos del colegio guardados.");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "No se pudo guardar.");
     } finally { setWorking(false); }
   }
 
   return <div className="space-y-6">
-    <div><p className="text-sm font-semibold text-[#087d96]">Configuración</p><h1 className="mt-1 text-3xl font-bold tracking-tight">Perfil institucional</h1><p className="mt-2 text-muted-foreground">Estos datos aparecerán prellenados en diagnósticos y documentos.</p></div>
+    <div><p className="text-sm font-semibold text-[#087d96]">Configuración</p><h1 className="mt-1 text-3xl font-bold tracking-tight">Datos del colegio</h1><p className="mt-2 text-muted-foreground">Escribe estos datos una vez. Aparecerán en tus documentos.</p></div>
     <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
       <section className="diagnostic-panel p-5 md:p-7">
         <div className="grid gap-5 sm:grid-cols-2">
@@ -70,12 +87,16 @@ export function InstitutionProfile({ dashboard, onSaved }: {
           <Field label="UGEL" value={ugel} onChange={setUgel} placeholder="Opcional" />
           <Field label="Dirección" value={directorName} onChange={setDirectorName} placeholder="Nombre de la directora o director" />
         </div>
-        <div className="mt-6 flex flex-wrap items-center gap-3"><AsyncButton busy={working} busyLabel="Guardando perfil..." onClick={save}><Save /> Guardar perfil</AsyncButton>{message && <WorkflowFeedback tone={message.startsWith("Perfil guardado") ? "success" : "error"}>{message}</WorkflowFeedback>}</div>
+        <div className="mt-6 flex flex-wrap items-center gap-3"><AsyncButton busy={working} busyLabel="Guardando datos..." onClick={save}><Save /> Guardar datos</AsyncButton>{message && <WorkflowFeedback tone={message.startsWith("Datos del colegio guardados") ? "success" : "error"}>{message}</WorkflowFeedback>}</div>
       </section>
       <aside className="rounded-2xl border border-[#dce9f2] bg-[#eef8fb] p-5">
-        <div className="flex items-center gap-3"><div className="grid size-16 place-items-center overflow-hidden rounded-2xl bg-[#087d96] text-white">{p.logo_url ? <Image unoptimized src={p.logo_url} alt="Logo institucional" width={64} height={64} className="size-full object-cover" /> : <School className="size-8" />}</div><div><p className="font-bold">Logo institucional</p><p className="text-xs text-muted-foreground">Generado localmente y editable</p></div></div>
-        <p className="mt-4 text-sm text-muted-foreground">Crea una marca sencilla con iniciales y colores. No envía imágenes a ningún servicio externo.</p>
-        <label className="mt-5 flex items-center gap-2 text-sm font-medium"><input type="checkbox" checked={createLogo} onChange={(event) => setCreateLogo(event.target.checked)} /> Crear nuevo logo al guardar</label>
+        <div className="flex items-center gap-3"><div className="grid size-16 place-items-center overflow-hidden rounded-2xl bg-[#087d96] text-white">{p.logo_url ? <Image unoptimized src={p.logo_url} alt="Logo del colegio" width={64} height={64} className="size-full object-contain bg-white" /> : <School className="size-8" />}</div><div><p className="font-bold">Logo del colegio</p><p className="text-xs text-muted-foreground">Aparecerá en tus documentos Word.</p></div></div>
+        <label className="mt-5 block text-sm font-semibold">Subir una imagen del logo
+          <input ref={logoInputRef} className="mt-2 block w-full text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-white file:px-3 file:py-2 file:font-semibold file:text-[#075d70]" type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => { setLogoFile(event.target.files?.[0] ?? null); if (event.target.files?.[0]) setCreateLogo(false); }} />
+        </label>
+        <p className="mt-2 text-xs text-muted-foreground">PNG, JPG o WebP. Hasta 2 MB. Se guarda en este equipo.</p>
+        {logoFile && <p className="mt-2 text-sm text-[#075d70]">Listo para guardar: {logoFile.name}</p>}
+        <label className="mt-5 flex items-center gap-2 text-sm font-medium"><input type="checkbox" checked={createLogo} onChange={(event) => { setCreateLogo(event.target.checked); if (event.target.checked) { setLogoFile(null); if (logoInputRef.current) logoInputRef.current.value = ""; } }} /> Prefiero crear uno con iniciales</label>
         {createLogo && <div className="mt-4 space-y-4">
           <Field label="Iniciales (máximo 3)" value={logoInitials} onChange={setLogoInitials} />
           <div className="flex gap-5 text-sm"><label>Color base <input type="color" value={logoPrimary} onChange={(event) => setLogoPrimary(event.target.value)} className="ml-2 align-middle" /></label><label>Acento <input type="color" value={logoAccent} onChange={(event) => setLogoAccent(event.target.value)} className="ml-2 align-middle" /></label></div>

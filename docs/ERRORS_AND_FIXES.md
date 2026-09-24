@@ -1,5 +1,45 @@
 # Errores y soluciones
 
+## 2026-09-23 Planes anuales duplicables y difíciles de revisar
+
+**Síntoma.** La cuenta podía generar más de un plan para el mismo año en aulas distintas y el resultado aparecía como un formulario extenso antes de verse como documento. Esto confundía la revisión docente y podía causar llamadas al modelo innecesarias.
+
+**Causa raíz.** La unicidad anterior estaba limitada a borradores del mismo aula/año; el servidor permitía nuevas versiones y la UI mostraba los campos editables como vista principal.
+
+**Solución validada localmente.** El servidor comprueba el año escolar de la cuenta antes de generar o insertar y una migración aditiva impide dos planes vigentes por año. El plan se presenta primero como documento legible, con encabezado institucional; la edición queda en una acción separada. Se añadieron pruebas de migración, presentación y guard previo al modelo. Los planes históricos se preservan.
+
+**Prevención.** Hacer cumplir reglas de unicidad en servidor y base de datos, y mantener el documento estructurado legible como vista principal de una propuesta pedagógica.
+
+## 2026-09-23 La síntesis por competencia fragmentaba la mirada del niño
+
+**Síntoma.** La docente debía alternar entre competencias para interpretar a un mismo niño, aunque necesitaba considerar también la entrevista familiar y observaciones aún no clasificadas.
+
+**Causa raíz.** El editor tomaba cada competencia como unidad de revisión y el progreso contaba síntesis separadas.
+
+**Solución validada localmente.** Una vista por niño muestra entrevista y observaciones antes de un solo comentario docente; la matriz curricular queda como mapa de registros. La nueva tabla versionada protege la confirmación y detecta fuentes nuevas. Las revisiones anteriores por competencia siguen accesibles como historial.
+
+**Prevención.** La competencia organiza la observación, pero el diagnóstico inicial requiere una interpretación integral del niño y confirmación docente explícita.
+
+## 2026-09-23 Un texto de guía podía confirmarse como interpretación docente
+
+**Síntoma.** Una síntesis confirmada mostraba conteos técnicos y la instrucción «Revisa estas actuaciones y redacta tu interpretación», en lugar de una interpretación de la profesora.
+
+**Causa raíz.** `prepareDiagnosticSynthesis()` precargaba ese texto en `summary_text`, y la confirmación validaba solo que no estuviera vacío.
+
+**Solución validada localmente.** Los nuevos borradores comienzan con `summary_text` vacío. Las notas observadas se muestran por separado, guardar/confirmar rechazan textos de guía antiguos y la vista señala las confirmaciones históricas que requieren una versión docente nueva.
+
+**Prevención.** Los textos instructivos y ejemplos deben ser ayuda visual, nunca valores guardables como juicio pedagógico.
+
+## 2026-09-23 La revisión diagnóstica exigía demasiados saltos
+
+**Síntoma.** Para revisar a un niño había que abrir primero su lista de competencias, entrar a una competencia, escribir la síntesis y volver varias veces. El acceso al resumen grupal aparecía tras una sola síntesis, sin mostrar el avance de todos los niños observados.
+
+**Causa raíz.** La interfaz usaba la competencia como pantalla independiente y contaba cualquier síntesis confirmada como si el niño estuviera revisado.
+
+**Solución validada localmente.** La pantalla del niño reúne todas las observaciones y síntesis por competencia. El avance cuenta solo competencias observadas y aplicables con síntesis confirmada posterior a sus observaciones; el botón «Revisar aula» aparece al completar los niños con registros. La edición local sin guardar bloquea la salida accidental. Se añadieron pruebas de progreso y una revisión visual local.
+
+**Prevención.** Para señalar un paso terminado, calcularlo desde fuentes y confirmaciones vigentes, no desde la existencia de una única fila.
+
 ## 2026-09-23 La revisión inicial no era un diagnóstico trazable
 
 **Síntoma.** Guardar la revisión solo completaba una sesión, sin interpretar por niño/competencia, conservar fuentes ni dar prioridades grupales confirmadas a la planificación.
@@ -216,3 +256,63 @@
 **Solución validada localmente.** El plan anual tiene mensajes propios, clasificación segura en su respuesta HTTP y una indicación visible durante la espera. El provider realiza una sola solicitud por clic, y el plan anual permite hasta 90 segundos para generar una propuesta amplia. Pruebas con mocks cubren clasificación, plazo y ausencia de reintentos; la preparación del contexto del aula local pasó sin llamar al modelo.
 
 **Prevención.** No reutilizar mensajes de otro workflow. Mantener motivo seguro en errores de generación y probar el comportamiento del SDK ante reintentos y plazos sin hacer llamadas reales en la suite.
+
+**Actualización 2026-09-23.** El plan anual rediseñado realiza dos llamadas secuenciales sin reintentos: plan maestro y desarrollo del documento. Cada una dispone de hasta 180 segundos; la pantalla avisa que la espera puede durar varios minutos. Los fallos de cualquiera de las etapas no crean un borrador y conservan una categoría segura para la docente. Esta actualización sustituye el plazo anterior de 90 segundos para este workflow.
+# Plan anual antiguo descargado con numerosos campos «Pendiente de completar» (2026-09-23)
+
+- **Síntoma:** el Word de un plan activo anterior mostraba cuadros vacíos para fortalezas, necesidades, intereses y competencias, además de párrafos densos de prioridades.
+- **Causa:** ese plan se guardó antes de confirmar el diagnóstico grupal y su propuesta histórica no tenía IDs de competencias; la plantilla interpretaba cada campo ausente como una tarea manual pendiente.
+- **Solución validada:** la proyección de descarga recupera datos grupales confirmados para campos ausentes del plan activo, y la plantilla omite apartados que todavía carecen de fuente real. Las experiencias se muestran de forma compacta, los bimestres son la organización predeterminada y se evita duplicar decisiones. El archivo se abrió en Word y las pruebas comprueban que no aparece la frase «Pendiente de completar por la docente».
+- **Prevención:** pruebas de exportación con propuestas v1 sin competencias ni diagnóstico en su snapshot, además de revisión visual del Word tras cambios de plantilla.
+
+## 2026-09-23 El Word rediseñado conservaba frases genéricas de la plantilla
+
+**Síntoma.** En una prueba de 26 páginas, la síntesis decía que se había construido a partir de entrevistas y observaciones sin distinguir sus funciones; el cierre mencionaba unidades y sesiones aunque el plan nuevo contiene proyectos y actividades. Cuando un proyecto tenía una sola competencia aparecía la frase de relleno «Se prioriza la competencia eje».
+
+**Causa raíz.** Word dividió una frase entre varios elementos de texto XML, por lo que un reemplazo literal no la encontró. La plantilla también contenía texto editorial fijo y el renderizador completaba la competencia de soporte ausente con una explicación redundante.
+
+**Solución validada.** El renderizador sustituye la frase completa por párrafo, distingue la entrevista como contexto de la observación docente, ajusta el cierre a proyectos y actividades y omite la línea de soporte cuando no existe otra competencia. Una prueba descarga el plan desde un registro guardado y verifica autorización y ausencia de placeholders. El Word se abrió de nuevo con textos más largos y mantuvo 26 páginas legibles.
+
+## 2026-09-23 Encabezado duplicado, UGEL ausente y proyectos de muestra repetidos
+
+**Síntoma.** La vista previa Word mostraba dos franjas de encabezado, «UGEL: No registrada» pese a existir en Ayni y veinte proyectos casi idénticos que solo cambiaban de número.
+
+**Causa raíz.** La plantilla traía una franja en el encabezado de página y otra en la portada; además repetía el título de desarrollo en cada ficha. La vista previa ficticia se creó sin perfil institucional y con un fixture repetitivo. La proyección de un borrador tampoco completaba campos institucionales vacíos desde el perfil actualizado.
+
+**Solución validada.** Se deja una franja solo en portada y un título de desarrollo en la primera ficha; el Word carga logo y UGEL del perfil autorizado cuando faltan en el borrador. Los cuadros diagnósticos pasan a frases completas basadas en datos confirmados. El contrato rechaza títulos numerados y repeticiones excesivas de situaciones, motivos, propósitos y productos. Una nueva vista previa con veinte proyectos diferentes se abrió en Word y se revisó en 26 páginas, con el logo y la UGEL locales. Las pruebas automatizadas usan providers simulados.
+
+## 2026-09-23 Fechas SQL y desbordamiento del Word detectados en prueba real
+
+**Síntoma.** El primer intento de prueba del plan anual se detuvo antes del modelo con `calendar_invalid`. Después de normalizar fechas, la generación real funcionó, pero el Word puso prioridades en una página casi vacía y desplazó la firma a otra página.
+
+**Causa raíz.** PGlite entrega fechas SQL como objetos `Date` y la agenda esperaba `AAAA-MM-DD`. En la exportación, listas extensas del modelo se volcaron completas en celdas con espacio limitado y repitieron información ya visible. Un campo de flexibilidad incluso decía que las fechas aún no estaban calculadas.
+
+**Solución validada.** El contexto del servidor normaliza los días en UTC antes de generar y guardar el snapshot. La exportación resume prioridades y contexto, usa indicaciones breves para evaluación y flexibilidad, y completa orientaciones diarias desde estrategias existentes cuando el modelo no propone enfoques. La propuesta completa sigue en el borrador. La prueba real hizo dos llamadas previstas, una por etapa, produjo veinte títulos y productos distintos, y el Word revisado se abrió en 27 páginas sin hojas casi vacías. No se guardó ni confirmó un plan nuevo.
+
+**Prevención.** Comprobar frases visibles en el DOCX generado y revisar visualmente las páginas de diagnóstico, proyecto y cierre, además de validar que no queden campos de plantilla.
+
+## 2026-09-23 Veinte proyectos de diez días ignoraban semanas no lectivas
+
+**Síntoma.** El plan trataba la adaptación como el primer proyecto y asignaba fechas a veinte proyectos de diez días aunque los periodos lectivos de 2026 no daban espacio para ese recorrido. Podía mostrar días de gestión o interrupciones como parte de un proyecto.
+
+**Causa raíz.** El contrato exigía veinte proyectos y un cálculo por días de lunes a viernes entre los límites generales del año; no distinguía los cuatro bloques lectivos, la gestión, las excepciones ni la etapa diagnóstica.
+
+**Solución.** Las nuevas generaciones usan doce propuestas y una etapa inicial independiente. Un planificador determinista ocupa dos o tres semanas lectivas, con cierre en viernes, dentro de cuatro bloques. Excluye semanas enteramente interrumpidas; un feriado de un día conserva el resto de la semana, pero no permite comenzar o cerrar en un día sin clases. Falla antes de llamar a IA cuando el calendario no permite completar el plan. Se guardan los slots calculados y se revalidan al confirmar. Los planes históricos siguen disponibles.
+
+**Prevención.** Pruebas del calendario oficial 2026, gestión, suspensiones y feriados, duración editable y compatibilidad del formato anterior. Revisar visualmente el Word después de cambiar su plantilla.
+
+## 2026-09-23 Word diagnóstico inválido al ocultar el logo ausente
+
+**Síntoma.** Microsoft Word informó que una vista previa `.docx` parecía corrupta, aunque todos sus XML eran bien formados.
+
+**Causa raíz.** Al no existir logo institucional, el renderizador eliminaba el párrafo completo que contenía el dibujo. La celda de portada quedó sin su párrafo obligatorio en WordprocessingML.
+
+**Solución validada.** Se conserva el párrafo y se retira solo el nodo del dibujo. El documento sin logo se abrió en Word y se exportó a PDF; el caso también tiene prueba automatizada. La revisión visual detectó una firma aislada y un cuadro dividido por saltos, por lo que la plantilla derivada conserva los saltos de sección originales y omite el bloque de firma que no corresponde a un dato confirmado.
+
+## 2026-09-23 Bloques pegados en los Word diagnóstico y anual
+
+**Síntoma.** En el informe diagnóstico, la tabla de competencias terminaba pegada al título de prioridades. En el plan anual, el cuadro de periodos tocaba el título del cronograma y las fichas tenían poco espacio interno.
+
+**Causa raíz.** Los bloques consecutivos son tablas de Word sin un párrafo separador. La plantilla también usa interlineado y márgenes internos muy compactos. Un primer aumento global de márgenes hizo que el cronograma de doce filas se partiera, por lo que no era apropiado para todos los cuadros.
+
+**Solución validada.** Se añadieron espacios cortos entre los bloques afectados y se amplió solo el relleno de las fichas y la etapa inicial; se dejó compacto el cronograma. Cuando la tabla diagnóstica tiene al menos diez competencias, el título de decisiones comienza en la página siguiente junto con su contenido. Los documentos ficticios se abrieron en Microsoft Word y se exportaron a PDF para revisar la página diagnóstica y las páginas de calendario y proyecto. El plan conserva sus doce filas en una página y sus 17 páginas totales.

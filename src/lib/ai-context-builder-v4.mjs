@@ -182,6 +182,10 @@ function workflowInputSubset(input, workflowRequirements) {
     .filter((field) => !representedElsewhere.has(field) && hasValue(values[field]))
     .map((field) => [field, values[field]]));
   if (["project", "unit"].includes(input.workflow) && hasValue(input.planned_experience)) subset.planned_experience = input.planned_experience;
+  if (input.workflow === "annual_plan" && ["master", "development"].includes(input.annual_stage)) {
+    subset.annual_stage = input.annual_stage;
+    if (input.annual_stage === "development" && hasValue(input.master_plan)) subset.master_plan = input.master_plan;
+  }
   if (input.workflow === "activity" && hasValue(input.learning_experience_context)) subset.learning_experience_context = input.learning_experience_context;
   if (input.workflow === "criterion_and_evidence" && hasValue(input.activity_context)) subset.activity_context = input.activity_context;
   return subset;
@@ -290,7 +294,9 @@ export async function buildAIContext(input, knowledgeBase) {
     : await retrieveKnowledgeV4(retrievalInput(confirmedCompetencyId), knowledgeBase);
   const competencyCards = confirmedCompetencyId
     ? allCardsComplete(knowledgeBase.competencyCards.filter((card) => confirmedIds.includes(card.id)), input.age)
-    : shortlistCards(knowledgeBase, retrieval, input.age, applicability);
+    : input.workflow === "annual_plan"
+      ? allCardsComplete(knowledgeBase.competencyCards.filter((card) => cardIsApplicable(card, applicability)), input.age, true)
+      : shortlistCards(knowledgeBase, retrieval, input.age, applicability);
   if (input.workflow === "family_report" && competencyCards.length !== confirmedIds.length) throw new RangeError("Hay competencias seleccionadas sin tarjeta aplicable para esta edad.");
   const competencyIds = competencyCards.map((card) => card.id);
   const applicabilityRules = specialRules(knowledgeBase.specialApplicability, competencyIds);
