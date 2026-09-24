@@ -164,6 +164,8 @@ export function DocumentsScreen() {
       {opened && <Button className="min-h-11" disabled={savingWord} onClick={() => void saveWordLocally()}><Download className="mr-2 size-4" />{savingWord ? "Guardando Word..." : "Guardar Word en Descargas"}</Button>}</div>}
     {wordMessage && <WorkflowFeedback tone="success">{wordMessage}</WorkflowFeedback>}
     {wordError && <WorkflowFeedback tone="error">{wordError}</WorkflowFeedback>}
+    {opened?.kind === "annual_plan" && opened.content.plan_format !== "twelve_projects_flexible_weeks" &&
+      <WorkflowFeedback tone="error">Este plan se creó antes del formato actual. Su Word conserva la plantilla anterior. Abre Plan para preparar una versión actualizada; el plan vigente seguirá guardado mientras la revisas.</WorkflowFeedback>}
     {opened && downloadUrl && <p className="text-sm text-[#526b87]">Se guarda en la computadora donde corre Ayni. <a className="underline" href={downloadUrl} download>Descargar en este dispositivo</a></p>}
     {error && <div className="flex flex-wrap items-center gap-3"><WorkflowFeedback tone="error">{error}</WorkflowFeedback><Button variant="outline" onClick={() => { setLoading(!selected); setOpening(Boolean(selected)); setRevision((value) => value + 1); }}>Reintentar</Button></div>}
     {selected ? opening ? <LoadingState label="Abriendo documento..." /> : opened ? <DocumentContent document={opened} /> : null :

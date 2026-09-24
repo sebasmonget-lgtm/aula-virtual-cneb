@@ -150,10 +150,34 @@ test("servidor comprueba el año antes de llamar al modelo y no acepta otro plan
   const generate = source.slice(source.indexOf('url.pathname === "/api/ai/annual-plan/generate"'), source.indexOf('url.pathname === "/api/annual-plans"'));
   assert.ok(generate.indexOf("where school_year_id=$1") < generate.indexOf("generateTeacherAnnualPlan"));
   const save = source.slice(source.indexOf('url.pathname === "/api/annual-plans"'), source.indexOf('url.pathname.startsWith("/api/annual-plans/")'));
-  assert.match(save, /select id from annual_plans where school_year_id=\$1 limit 1/);
+  assert.match(save, /select id,classroom_id,status,proposal from annual_plans where school_year_id=\$1 and status in \('active','draft'\)/);
+  assert.match(save, /active\.id === pending\?\.replacement_plan_id/);
   const current = source.slice(source.indexOf('url.pathname === "/api/annual-plans/current"'), source.indexOf('url.pathname === "/api/learning-experiences"'));
   assert.match(current, /ap\.school_year_id=\$1 and sy\.owner_id=\$2/);
   assert.doesNotMatch(current, /generation_metadata|response_id|usage/);
+});
+
+test("un plan anterior puede seguir vigente mientras se revisa un solo borrador nuevo", async () => {
+  const migrations = [
+    [new URL("../../local-db/migrations/0033_annual_plan_account_year.sql", import.meta.url), new URL("../../local-db/migrations/0035_annual_plan_replacement_draft.sql", import.meta.url)],
+    [new URL("../../supabase/migrations/202609230006_annual_plan_account_year.sql", import.meta.url), new URL("../../supabase/migrations/202609230008_annual_plan_replacement_draft.sql", import.meta.url)],
+  ];
+  for (const [originalUrl, replacementUrl] of migrations) {
+    const db = await PGlite.create();
+    try {
+      await db.exec("create table public.annual_plans (id integer primary key, classroom_id integer not null, school_year_id integer not null, status text not null)");
+      await db.exec(await readFile(originalUrl, "utf8"));
+      await db.exec(await readFile(replacementUrl, "utf8"));
+      await db.exec("insert into public.annual_plans (id,classroom_id,school_year_id,status) values (1,10,2026,'active')");
+      await db.exec("insert into public.annual_plans (id,classroom_id,school_year_id,status) values (2,10,2026,'draft')");
+      await assert.rejects(db.exec("insert into public.annual_plans (id,classroom_id,school_year_id,status) values (3,11,2026,'draft')"));
+      await assert.rejects(db.exec("insert into public.annual_plans (id,classroom_id,school_year_id,status) values (4,11,2026,'active')"));
+      await db.exec("update public.annual_plans set status='archived' where id=1");
+      await db.exec("update public.annual_plans set status='active' where id=2");
+      const rows = (await db.query("select id,status from public.annual_plans where school_year_id=2026 order by id")).rows;
+      assert.deepEqual(rows, [{ id: 1, status: "archived" }, { id: 2, status: "active" }]);
+    } finally { await db.close(); }
+  }
 });
 
 

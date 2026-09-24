@@ -101,6 +101,11 @@ Proyecto nuevo iniciado el 20 de septiembre de 2026. Existe un shell responsive 
 
 - El navegador integrado no guarda archivos descargados mediante `blob:` ni por enlace HTTP. Documentos ahora ofrece «Guardar Word en Descargas», que llama a una ruta POST del servidor local: vuelve a autorizar el documento, genera el Word y lo escribe en `Downloads` de la computadora que ejecuta Ayni. La interfaz confirma el nombre. El enlace HTTP queda como alternativa para otros dispositivos. La prueba real desde la app guardó el plan activo y verificó el archivo de 385364 bytes. Este mecanismo no se traslada a producción remota; ver ADR 046.
 
+## Actualización de un plan anual histórico (2026-09-23)
+
+- El plan confirmado de 2026 era una propuesta antigua de seis experiencias sin `plan_format`. La descarga funcionaba, pero exportaba fielmente ese registro anterior. Ahora Plan ofrece «Preparar versión actualizada» para un plan histórico del aula. Una generación nueva usa doce proyectos y se guarda como único borrador del año mientras el anterior sigue activo. La confirmación archiva la versión previa y activa la nueva en una transacción; nunca se reescribe automáticamente un plan confirmado. Documentos advierte del formato anterior. Ver ADR 047.
+- La prueba real del aula local produjo doce propuestas diferentes en dos llamadas a IA y guardó el borrador v2; el plan v1 continúa activo hasta revisión docente. Se descargó el borrador con logo, UGEL y cronograma actual. En Microsoft Word se corrigieron saltos redundantes y se verificó un PDF de 17 páginas sin páginas vacías. Las notas abreviadas para el Word conservan su texto completo en el borrador.
+
 
 
 

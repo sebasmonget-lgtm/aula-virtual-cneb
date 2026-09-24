@@ -826,13 +826,21 @@ const server = createServer(async (request, response) => {
     }
     if (request.method === "POST" && url.pathname === "/api/ai/annual-plan/generate") {
       const classroom = await annualPlanningContext(); if (!classroom) { send(response, 404, { error: "No se encontró un aula activa." }, origin); return; }
-      const existing = (await db.query(`select id from annual_plans where school_year_id=$1 limit 1`, [classroom.school_year_id])).rows[0];
-      if (existing) { send(response, 409, { error: "Ya tienes un plan anual para este año escolar. Abre el plan existente." }, origin); return; }
+      const body = (await readJson(request)) ?? {};
+      const plans = (await db.query(`select id,classroom_id,status,proposal from annual_plans where school_year_id=$1 and status in ('active','draft')`, [classroom.school_year_id])).rows;
+      const active = plans.find((item) => item.status === "active");
+      const draft = plans.find((item) => item.status === "draft");
+      const replacementPlanId = typeof body.replacementPlanId === "string" ? body.replacementPlanId : null;
+      const replacingLegacy = Boolean(active && active.id === replacementPlanId && active.classroom_id === classroom.id &&
+        active.proposal?.plan_format !== ANNUAL_PLAN_TEMPLATE_FORMAT && !draft);
+      if (draft || (active && !replacingLegacy) || (!active && replacementPlanId)) {
+        send(response, 409, { error: "Ya existe un plan o borrador para este año. Abre el plan disponible." }, origin); return;
+      }
       if (!classroom.diagnostic_summary) { send(response, 422, { error: "Confirma primero el resumen diagnóstico del aula antes de preparar el plan anual." }, origin); return; }
       try {
-        const generated = await generateTeacherAnnualPlan({ classroom, request: await readJson(request) });
+        const generated = await generateTeacherAnnualPlan({ classroom, request: body });
         const generationId = randomUUID();
-        await pendingAIGenerations.set(generationId, { workflow: generated.internalMetadata.workflow, metadata: safeAnnualGenerationMetadata(generated.internalMetadata), classroom_id: classroom.id, createdAt: Date.now() });
+        await pendingAIGenerations.set(generationId, { workflow: generated.internalMetadata.workflow, metadata: safeAnnualGenerationMetadata(generated.internalMetadata), classroom_id: classroom.id, replacement_plan_id: replacingLegacy ? active.id : null, createdAt: Date.now() });
         send(response, 200, { proposal: generated.proposal, generation_id: generationId, document_context: annualDocumentContext(classroom) }, origin);
       } catch (error) { send(response, 422, { error: error?.message || "No pudimos preparar el plan anual.", reason: error?.reason ?? "unknown" }, origin); } return;
     }
@@ -854,8 +862,15 @@ const server = createServer(async (request, response) => {
           if (annualSchedule) await replaceAnnualProjectSlots(existingId, annualSchedule);
           await db.exec("commit"); send(response, 200, { id: existingId, status: "draft" }, origin); return;
         }
-        const priorPlan = await db.query(`select id from annual_plans where school_year_id=$1 limit 1`, [context.school_year_id]);
-        if (priorPlan.rows.length) throw new Error("Ya existe un plan anual para esta cuenta y año escolar. Abre el plan existente.");
+        const currentPlans = await db.query(`select id,classroom_id,status,proposal from annual_plans where school_year_id=$1 and status in ('active','draft')`, [context.school_year_id]);
+        const active = currentPlans.rows.find((item) => item.status === "active");
+        const draft = currentPlans.rows.find((item) => item.status === "draft");
+        const replacingLegacy = Boolean(active && active.id === body.replacementPlanId && active.classroom_id === context.id &&
+          active.id === pending?.replacement_plan_id && active.proposal?.plan_format !== ANNUAL_PLAN_TEMPLATE_FORMAT &&
+          body.proposal.plan_format === ANNUAL_PLAN_TEMPLATE_FORMAT && !draft);
+        if (draft || (active && !replacingLegacy) || (!active && body.replacementPlanId)) {
+          throw new Error("Ya existe un plan anual vigente o borrador para este año escolar.");
+        }
         const latest = await db.query(`select coalesce(max(version), 0) as max_version from annual_plans where classroom_id=$1 and school_year_id=$2`, [context.id, context.school_year_id]);
         const version = nextAnnualPlanVersion(Number(latest.rows[0].max_version)); const id = randomUUID();
         await db.query(`insert into annual_plans (id,classroom_id,school_year_id,curriculum_version_id,version,status,proposal,generation_metadata,document_context) values ($1,$2,$3,$4,$5,'draft',$6::jsonb,$7::jsonb,$8::jsonb)`, [id, context.id, context.school_year_id, context.curriculum_version_id, version, JSON.stringify(body.proposal), JSON.stringify(pending?.metadata ?? {}), JSON.stringify(annualDocumentContext(context))]);

@@ -51,6 +51,35 @@ async function keepOnlyCoverHeading(archive, xml) {
   return body;
 }
 
+function removePageBreakBefore(xml, heading, fromEnd = false) {
+  const headingAt = fromEnd ? xml.lastIndexOf(heading) : xml.indexOf(heading);
+  const tableAt = [...xml.slice(0, headingAt).matchAll(/<w:tbl(?:\s[^>]*)?>/g)].at(-1)?.index;
+  if (headingAt < 0 || tableAt === undefined) throw new Error(`La plantilla anual no contiene la sección ${heading}.`);
+  let cursor = tableAt;
+  for (let step = 0; step < 2; step += 1) {
+    const before = xml.slice(0, cursor);
+    const paragraphAt = [...before.matchAll(/<w:p(?:\s[^>]*)?>/g)].at(-1)?.index;
+    if (paragraphAt === undefined) break;
+    const closingAt = before.indexOf("</w:p>", paragraphAt);
+    if (closingAt < 0) break;
+    const paragraphEnd = closingAt + "</w:p>".length;
+    const paragraph = before.slice(paragraphAt, paragraphEnd);
+    if (before.slice(paragraphEnd).trim()) break;
+    if (/<w:br\b[^>]*w:type="page"/.test(paragraph)) {
+      return xml.slice(0, paragraphAt) + xml.slice(paragraphEnd);
+    }
+    if (/<w:t(?:\s[^>]*)?>[^<]+<\/w:t>|<w:drawing\b/.test(paragraph)) break;
+    cursor = paragraphAt;
+  }
+  throw new Error(`La plantilla anual cambió el salto anterior a ${heading}.`);
+}
+
+function removeProjectPageBreaks(xml) {
+  // The first project shares a page with the end of the yearly overview. Its
+  // following hard break can be pushed onto an otherwise empty page by Word.
+  return removePageBreakBefore(xml, "{{PROYECTO_02_TITULO}}", true);
+}
+
 function replaceParagraphText(xml, marker, replacement) {
   let found = false;
   const result = xml.replace(/<w:p(?:\s[^>]*)?>[\s\S]*?<\/w:p>/g, (paragraph) => {
@@ -134,7 +163,7 @@ function valuesFor(document, cards, schedule) {
       [`${prefix}PROPOSITO`]: project.purpose,
       [`${prefix}MATERIALES`]: joined(project.materials),
       [`${prefix}RECURSO_VISUAL`]: joined(project.expected_evidence_categories),
-      [`${prefix}OBSERVACIONES`]: project.flexibility_notes,
+      [`${prefix}OBSERVACIONES`]: firstSentences(project.flexibility_notes, 1),
     });
   }
   return values;
@@ -153,6 +182,12 @@ export async function renderAnnualPlanFlexibleWord(document, competencyCards = [
   xml = await addLogo(archive, xml, logo);
   values.LOGO_COLEGIO = values.INSTITUCION_EDUCATIVA;
   xml = await keepOnlyCoverHeading(archive, xml);
+  // A full table can push its trailing page-break paragraph onto a new sheet.
+  // These three sections already flow to the next page when space runs out.
+  for (const heading of ["III. ORGANIZACIÓN GENERAL", "V. ORGANIZACIÓN DE PROYECTOS", "VII. DESARROLLO DE LOS PROYECTOS"]) {
+    xml = removePageBreakBefore(xml, heading);
+  }
+  xml = removeProjectPageBreaks(xml);
   // Editorial instructions belong to the template, not to the teacher's finished plan.
   xml = xml.replace(/<w:p(?:\s[^>]*)?>[\s\S]*?<\/w:p>/g, (paragraph) =>
     paragraph.includes("Plantilla editable") ? "" : paragraph);

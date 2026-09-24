@@ -99,6 +99,8 @@ test("la vista y el Word usan las doce propuestas y la etapa inicial sin placeho
   assert.match(xml, /El plan anual organiza los proyectos y las actividades/);
   assert.match(xml, /Las familias mencionaron intereses como plantas, cuentos/);
   assert.equal((xml.match(/PLANIFICACIÓN ANUAL/g) ?? []).length, 1);
+  assert.equal((xml.match(/<w:br w:type="page"\/>/g) ?? []).length, 12,
+    "las secciones llenas y el primer proyecto no deben añadir hojas vacías");
   assert.doesNotMatch(await archive.file("word/header1.xml").async("string"), /PLANIFICACIÓN ANUAL/);
   assert.deepEqual(await sharp(await archive.file("word/media/image1.png").async("nodebuffer")).metadata().then(({ width, height }) => [width, height]), [320, 480]);
   assert.match(await archive.file("word/_rels/document.xml.rels").async("string"), /Id="rId8"[^>]*media\/image1.png/);

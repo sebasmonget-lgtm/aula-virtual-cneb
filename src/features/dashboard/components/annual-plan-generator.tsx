@@ -263,10 +263,13 @@ export function AnnualPlanGenerator({ onConfirmed, onGoDiagnostic }: { onConfirm
   const [messageTone, setMessageTone] = useState<"success" | "error">("success");
   const [planId, setPlanId] = useState<string | null>(null);
   const [generationId, setGenerationId] = useState<string | null>(null);
+  const [replacementPlanId, setReplacementPlanId] = useState<string | null>(null);
   const [reload, setReload] = useState(0);
   const [teacherRequest, setTeacherRequest] = useState("");
   const readOnly = existingPlan?.status === "active" || existingPlan?.status === "archived" ||
     Boolean(existingPlan && classroom && existingPlan.classroom_id !== classroom.id);
+  const canReplaceLegacy = Boolean(existingPlan?.status === "active" && classroom &&
+    existingPlan.classroom_id === classroom.id && existingPlan.proposal.plan_format !== "twelve_projects_flexible_weeks");
   const calendarDirty = Boolean(classroom && calendarDraft && JSON.stringify(calendarDraft) !== JSON.stringify(classroom.calendar));
   let calendarWarning = "";
   if (calendarDraft) {
@@ -313,7 +316,7 @@ export function AnnualPlanGenerator({ onConfirmed, onGoDiagnostic }: { onConfirm
       setExistingPlan(saved); setClassroom(context);
       setCalendarDraft(context.calendar);
       setProposal(saved?.proposal ?? null); setPlanId(saved?.id ?? null);
-      setGeneratedHeader(null); setGenerationId(null); setEditing(false);
+      setGeneratedHeader(null); setGenerationId(null); setReplacementPlanId(null); setEditing(false);
       setLoadError(false); setMessage("");
     }).catch(() => { if (live) { setLoadError(true); setMessage("No se pudo cargar el plan anual. Inténtalo nuevamente."); setMessageTone("error"); } })
       .finally(() => { if (live) setLoading(false); });
@@ -338,14 +341,15 @@ export function AnnualPlanGenerator({ onConfirmed, onGoDiagnostic }: { onConfirm
   }
 
   async function generate() {
-    if (operation || loading || loadError || existingPlan || calendarDirty || calendarWarning || !classroom?.diagnostic_summary) return;
+    if (operation || loading || loadError || (existingPlan && !canReplaceLegacy) || calendarDirty || calendarWarning || !classroom?.diagnostic_summary) return;
     setOperation("generate"); setMessage("");
     try {
-      const response = await fetch(`${localDatabaseApiUrl}/api/ai/annual-plan/generate`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ teacherRequest: teacherRequest.trim() }) });
+      const replacingId = canReplaceLegacy ? existingPlan!.id : null;
+      const response = await fetch(`${localDatabaseApiUrl}/api/ai/annual-plan/generate`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ teacherRequest: teacherRequest.trim(), ...(replacingId ? { replacementPlanId: replacingId } : {}) }) });
       const data = await response.json() as GeneratedResponse;
       if (!response.ok || !data.proposal || !data.generation_id) throw new Error(data.error ?? "No pudimos generar una propuesta válida.");
       setProposal(data.proposal); setGeneratedHeader(data.document_context ?? null);
-      setGenerationId(data.generation_id); setPlanId(null); setEditing(false);
+      setGenerationId(data.generation_id); setPlanId(null); setReplacementPlanId(replacingId); setExistingPlan(null); setEditing(false);
       setMessage("Tu propuesta está lista. Léela, corrige lo necesario y guarda el borrador."); setMessageTone("success");
     } catch (error) {
       setMessage(error instanceof TypeError ? "No se pudo conectar con el servidor local. Comprueba que la app esté iniciada." : error instanceof Error ? error.message : "No pudimos preparar el plan anual."); setMessageTone("error");
@@ -355,12 +359,12 @@ export function AnnualPlanGenerator({ onConfirmed, onGoDiagnostic }: { onConfirm
     if (!proposal || operation || readOnly || calendarDirty || calendarWarning) return;
     setOperation("save"); setMessage("");
     try {
-      const response = await fetch(`${localDatabaseApiUrl}/api/annual-plans`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ proposal, planId, generationId }) });
+      const response = await fetch(`${localDatabaseApiUrl}/api/annual-plans`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ proposal, planId, generationId, ...(replacementPlanId ? { replacementPlanId } : {}) }) });
       const data = await response.json() as { error?: string; id?: string; version?: number };
       if (!response.ok || !data.id) throw new Error(data.error ?? "No se pudo guardar el borrador.");
       setPlanId(data.id); setExistingPlan({ id: data.id, classroom_id: classroom!.id, version: data.version ?? existingPlan?.version ?? 1,
         status: "draft", proposal, document_context: documentContext });
-      setGenerationId(null); setEditing(false);
+      setGenerationId(null); setReplacementPlanId(null); setEditing(false);
       setMessage("Borrador guardado. Léelo una vez más y confírmalo cuando estés conforme."); setMessageTone("success");
     } catch (error) { setMessage(error instanceof Error ? error.message : "No se pudo guardar el borrador."); setMessageTone("error"); }
     finally { setOperation(null); }
@@ -405,6 +409,11 @@ export function AnnualPlanGenerator({ onConfirmed, onGoDiagnostic }: { onConfirm
     </section>}
     {operation === "generate" && <GenerationProgress label="Preparando tu plan anual" description="Ayni organiza doce propuestas de proyecto y después completa sus detalles. Puede tardar varios minutos. Mantén esta pantalla abierta." />}
     {proposal && <>
+      {canReplaceLegacy && <div className="rounded-2xl border border-[#e9d6a7] bg-[#fff8e9] p-4">
+        <p className="font-bold text-[#694717]">Este plan se creó con el formato anterior</p>
+        <p className="mt-1 text-sm text-[#694717]">Contiene seis experiencias y usa la plantilla antigua. Puedes preparar una nueva versión con doce propuestas y la plantilla actual. El plan confirmado seguirá vigente hasta que revises y confirmes la nueva versión.</p>
+        <AsyncButton className="mt-3 min-h-11" busy={operation === "generate"} busyLabel="Preparando nueva versión..." disabled={Boolean(operation) || calendarDirty || Boolean(calendarWarning) || !classroom?.diagnostic_summary} onClick={() => void generate()}>Preparar versión actualizada <ArrowRight /></AsyncButton>
+      </div>}
       {existingPlan && <p className="rounded-xl border border-[#d6e5ef] bg-white p-3 text-sm font-semibold">{existingPlan.status === "active" ? "Plan anual confirmado" : existingPlan.status === "draft" ? "Borrador de tu plan anual" : "Plan anual anterior"} · año {proposal.school_year}{readOnly && existingPlan.status === "draft" ? " · pertenece a otra aula de tu cuenta" : ""}</p>}
       {existingPlan?.status === "draft" && !readOnly && calendarDraft && <AnnualCalendarEditor calendar={calendarDraft} onChange={setCalendarDraft} onSave={() => void saveCalendar()} saving={Boolean(operation)} />}
       {existingPlan?.status === "draft" && calendarDirty && <p className="rounded-xl border border-[#e9d6a7] bg-[#fff8e9] p-3 text-sm font-semibold">Guarda el calendario antes de guardar o confirmar el plan.</p>}
