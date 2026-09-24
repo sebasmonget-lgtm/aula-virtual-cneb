@@ -316,3 +316,11 @@
 **Causa raíz.** Los bloques consecutivos son tablas de Word sin un párrafo separador. La plantilla también usa interlineado y márgenes internos muy compactos. Un primer aumento global de márgenes hizo que el cronograma de doce filas se partiera, por lo que no era apropiado para todos los cuadros.
 
 **Solución validada.** Se añadieron espacios cortos entre los bloques afectados y se amplió solo el relleno de las fichas y la etapa inicial; se dejó compacto el cronograma. Cuando la tabla diagnóstica tiene al menos diez competencias, el título de decisiones comienza en la página siguiente junto con su contenido. Los documentos ficticios se abrieron en Microsoft Word y se exportaron a PDF para revisar la página diagnóstica y las páginas de calendario y proyecto. El plan conserva sus doce filas en una página y sus 17 páginas totales.
+
+## 2026-09-23 La descarga Word no se iniciaba desde Documentos
+
+**Síntoma.** La app mostraba el plan anual guardado y el botón de descarga, pero al pulsarlo el navegador integrado no guardaba ningún archivo ni mostraba un error.
+
+**Causa raíz.** El cliente recuperaba correctamente el DOCX mediante `fetch`, pero intentaba descargarlo con un enlace temporal `blob:` creado y pulsado por JavaScript. Ese gesto no produjo un evento de descarga en el navegador integrado. El endpoint autorizado sí devolvía el Word completo.
+
+**Solución.** Documentos presenta ahora un enlace de descarga normal a la ruta autorizada del servidor, con `download` y `Content-Disposition: attachment`; ya no depende de un objeto `blob:` ni de un clic programático. La ruta real del plan guardado respondió HTTP 200 con un DOCX de 385364 bytes, que se dejó también en Descargas para acceso inmediato. Typecheck, lint, build y las 16 pruebas de documentos pasaron. El navegador integrado aún no mostró un evento de descarga verificable al pulsar el enlace; debe comprobarse el guardado desde un navegador estándar antes de dar por resuelto ese entorno.

@@ -114,8 +114,6 @@ export function DocumentsScreen() {
   const [opened, setOpened] = useState<OpenDocument | null>(null);
   const [loading, setLoading] = useState(true);
   const [opening, setOpening] = useState(false);
-  const [downloading, setDownloading] = useState(false);
-  const [downloadError, setDownloadError] = useState("");
   const [error, setError] = useState("");
   const [revision, setRevision] = useState(0);
 
@@ -143,30 +141,13 @@ export function DocumentsScreen() {
   }, [selected, revision]);
 
   const years = [...new Set(documents.map((item) => item.school_year))].sort((a, b) => b - a);
-  async function downloadWord() {
-    if (!opened || downloading) return;
-    setDownloading(true);
-    setDownloadError("");
-    try {
-      const response = await fetch(`${localDatabaseApiUrl}/api/documents/${opened.kind}/${opened.id}/download`);
-      if (!response.ok || !response.headers.get("content-type")?.includes("wordprocessingml.document")) throw new Error("Descarga no disponible.");
-      const name = response.headers.get("content-disposition")?.match(/filename="([^"\\/]+\.docx)"/)?.[1] ?? `documento-${opened.school_year}.docx`;
-      const url = URL.createObjectURL(await response.blob());
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = name;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-    } catch { setDownloadError("No pudimos descargar el Word. Inténtalo de nuevo."); }
-    finally { setDownloading(false); }
-  }
+  const downloadUrl = opened
+    ? `${localDatabaseApiUrl}/api/documents/${opened.kind}/${opened.id}/download`
+    : null;
   return <section className="mx-auto max-w-5xl space-y-5">
     <PageIntro eyebrow="Tu trabajo guardado" title="Documentos" description="Encuentra aquí tus diagnósticos, planes, experiencias, actividades e informes." icon={BookOpen} />
-    {selected && <div className="flex flex-wrap items-center justify-between gap-3"><Button variant="outline" className="min-h-11" onClick={() => { setSelected(null); setOpened(null); setError(""); setDownloadError(""); }}><ArrowLeft className="mr-2 size-4" />Volver a mis documentos</Button>
-      {opened && <Button className="min-h-11" disabled={downloading} onClick={() => void downloadWord()}><Download className="mr-2 size-4" />{downloading ? "Preparando Word..." : opened.kind === "annual_plan" ? "Descargar plan anual en Word" : "Descargar en Word"}</Button>}</div>}
-    {downloadError && <WorkflowFeedback tone="error">{downloadError}</WorkflowFeedback>}
+    {selected && <div className="flex flex-wrap items-center justify-between gap-3"><Button variant="outline" className="min-h-11" onClick={() => { setSelected(null); setOpened(null); setError(""); }}><ArrowLeft className="mr-2 size-4" />Volver a mis documentos</Button>
+      {opened && downloadUrl && <Button asChild className="min-h-11"><a href={downloadUrl} download><Download className="mr-2 size-4" />{opened.kind === "annual_plan" ? "Descargar plan anual en Word" : "Descargar en Word"}</a></Button>}</div>}
     {error && <div className="flex flex-wrap items-center gap-3"><WorkflowFeedback tone="error">{error}</WorkflowFeedback><Button variant="outline" onClick={() => { setLoading(!selected); setOpening(Boolean(selected)); setRevision((value) => value + 1); }}>Reintentar</Button></div>}
     {selected ? opening ? <LoadingState label="Abriendo documento..." /> : opened ? <DocumentContent document={opened} /> : null :
       loading ? <LoadingState label="Buscando tus documentos..." /> : error ? null : documents.length === 0 ?
