@@ -56,6 +56,8 @@ export function buildAnnualPlanPresentation(proposal, documentContext = {}, comp
       .map((id) => ({ id, name: nameFor(id), opportunities: proposal.proposed_experiences
         .filter((item) => [...item.primary_competency_ids, ...item.possible_secondary_competency_ids].includes(id))
         .map((item) => `${item.period}: ${item.title}`) })),
+    annualCompetencyMap: buildAnnualCompetencyMap(proposal, competencyOptions,
+      documentContext.diagnostic_group?.competency_priorities ?? [], documentContext.other_opportunities ?? []),
     experiences: proposal.proposed_experiences.map((item, index) => ({
       ...item,
       number: index + 1,
@@ -76,3 +78,4 @@ export function buildAnnualPlanPresentation(proposal, documentContext = {}, comp
 import { buildAnnualProjectSchedule } from "./annual-plan-schedule.mjs";
 import { buildFlexibleAnnualSchedule } from "./annual-plan-calendar.mjs";
 import { ANNUAL_PLAN_LEGACY_TEMPLATE_FORMAT, ANNUAL_PLAN_TEMPLATE_FORMAT } from "./annual-plan-contract.mjs";
+import { buildAnnualCompetencyMap } from "./annual-competency-map.mjs";
