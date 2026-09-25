@@ -45,7 +45,6 @@ export function PedagogicalCoverage({ classroomId, periodId, onPlan, onPrepareAc
   const [revision, setRevision] = useState(0);
   useEffect(() => {
     const controller = new AbortController();
-    setCoverage(null); setDetail(null); setSelection(null); setError("");
     apiFetch(`${localDatabaseApiUrl}/api/period-evaluations/coverage?${new URLSearchParams({ classroomId, periodId })}`,
       { signal: controller.signal, cache: "no-store" })
       .then(async (response) => { const data = await response.json() as Coverage & { error?: string }; if (!response.ok) throw new Error(data.error ?? "No se pudo cargar la cobertura."); return data; })
