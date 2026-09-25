@@ -45,9 +45,20 @@ test("cobertura deriva registros por niño y competencia sin convertir ausencias
   assert.equal(observed.evidence_count,2);
   assert.equal(observed.activity_count,1);
   assert.equal(unobserved.evidence_count,0);
-  assert.equal(unobserved.evaluation_status,"sin_registro");
+  assert.equal(unobserved.coverage_state,"no_records");
+  assert.equal(unobserved.assessment_state,"not_assessed");
   assert.equal(unobserved.planned,true);
   assert.ok(result.body.by_competency.length>1);
+  await f.db.query(`insert into diagnostic_experience_observations values(gen_random_uuid(),$1,$2,'COM_ORAL','2026-04-12T12:00:00Z','Contó su idea en la asamblea.','demonstrated','asamblea','Asamblea','Cuenta una idea')`,[classId,studentB]);
+  const updated=await f.call("GET",`/api/period-evaluations/coverage?classroomId=${classId}&periodId=${period.id}`);
+  const diagnosticCell=updated.body.rows.find((row)=>row.student_id===studentB&&row.competency_id==="COM_ORAL");
+  assert.equal(diagnosticCell.coverage_state,"building_evidence");
+  assert.equal(diagnosticCell.diagnostic_count,1);
+  assert.equal(diagnosticCell.evidence_count,0);
+  assert.equal(diagnosticCell.assessment_state,"not_assessed");
+  const history=await f.call("GET",`/api/period-evaluations/coverage/detail?classroomId=${classId}&periodId=${period.id}&studentId=${studentB}&competencyId=COM_ORAL`);
+  assert.equal(history.status,200,JSON.stringify(history.body));
+  assert.equal(history.body.timeline[0].source_type,"diagnostic_guided");
   assert.equal((await f.call("GET",`/api/period-evaluations/coverage?classroomId=${otherClass}&periodId=${period.id}`)).status,422);
 });
 
@@ -99,6 +110,12 @@ async function fixture({ analysis = mockAnalysis() } = {}) {
     alter table competency_assessments add column revision bigint not null default 1;
     create function test_bump_revision() returns trigger as $$ begin new.revision=old.revision+1;return new;end $$ language plpgsql;
     create trigger assessment_revision before update on competency_assessments for each row execute function test_bump_revision();`);
+  await db.exec(`create table diagnostic_experience_observations(id uuid primary key,classroom_id uuid,student_id uuid,
+    competency_v4_id text,observed_at timestamptz,observation_text text,observation_status text,experience_id text,
+    experience_title_snapshot text,aspect_prompt_snapshot text);
+    create table diagnostic_spontaneous_observations(id uuid primary key,classroom_id uuid,student_id uuid,
+    competency_v4_ids text[],observed_at timestamptz,observation_text text,context_label text,support_status text,
+    classification_status text);`);
   await db.query(`insert into profiles values($1,'Docente de prueba'),($2,'Otra docente')`,[teacher,otherTeacher]);
   await db.query(`insert into school_years values($1,$2,2026,'2026-03-01','2026-12-31')`, [year, teacher]);
   await db.query(`insert into age_grades values($1,5)`, [ageGrade]);

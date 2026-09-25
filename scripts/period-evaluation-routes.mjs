@@ -1,6 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
 import { loadKnowledgeBaseV4 } from "../src/lib/knowledge-base-v4.mjs";
-import { cardIsApplicable } from "../src/lib/ai-context-builder-v4.mjs";
+import { competencyApplicability } from "../src/lib/competency-applicability.mjs";
 import { resolveAIExecutionPlan } from "../src/lib/ai-execution-router-v4.mjs";
 import { createAIProviderForPlan } from "../src/lib/ai-provider-factory.mjs";
 import { generateAIWorkflowV4 } from "../src/lib/ai-generation-v4.mjs";
@@ -9,7 +9,8 @@ import { buildDescriptiveConclusionInput, sourceAssessmentSnapshot, validateDesc
 import { dateOnly, defaultEvaluationPeriods, loadPeriodEvaluationRows, periodClosureFingerprint } from "../src/lib/period-evaluation-service.mjs";
 import { assertSavedEvaluationDraft, savePeriodEvaluationDraft } from "../src/lib/period-evaluation-draft-service.mjs";
 import { closePeriodWithManifest } from "../src/lib/period-closure-history.mjs";
-import { projectPedagogicalCoverage } from "../src/lib/pedagogical-coverage.mjs";
+import { loadDiagnosticCoverageRecords, projectPedagogicalCoverage } from "../src/lib/pedagogical-coverage.mjs";
+import { assessmentState } from "../src/lib/evidence-coverage.mjs";
 import { VersionConflictError, conflictPayload, httpStatusForError, isVersionConflict, publicErrorMessage, versionTransaction } from "../src/lib/version-integrity.mjs";
 
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -48,7 +49,10 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
   }
   async function cardsForClass(classroom) {
     const knowledge = await loadKnowledgeBase();
-    const cards = knowledge.competencyCards.filter((card) => card.runtime_selectable_by_age?.[String(classroom.age)] && cardIsApplicable(card, { castellanoL2Applicable: classroom.castellano_l2_applicable === true, religionApplicable: classroom.religion_applicable === true }));
+    const cards = knowledge.competencyCards.filter((card) => competencyApplicability(card, classroom.age, {
+      castellanoL2Applicable: classroom.castellano_l2_applicable === true,
+      religionApplicable: classroom.religion_applicable === true,
+    }).planning_available);
     return { cards, knowledge };
   }
   async function ensurePeriods(year) {
@@ -131,9 +135,28 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
           from activity_criteria ac join activities a on a.id=ac.activity_id join learning_experiences le on le.id=a.experience_id
           where le.classroom_id=$1 and a.status='active' and ac.status='active' and a.occurs_on between $2::date and $3::date
           group by ac.competency_v4_id`,[data.classroom.id,data.period.starts_on,data.period.ends_on])).rows;
-        const projection=projectPedagogicalCoverage({students:data.model.students,cards:data.cards,model:data.model,
+        const diagnosticRecords=await loadDiagnosticCoverageRecords(db,data.classroom.id,data.period);
+        const projection=projectPedagogicalCoverage({students:data.model.students,cards:data.cards,model:data.model,diagnosticRecords,
+          today: data.period.ends_on < new Date().toISOString().slice(0,10) ? data.period.ends_on : new Date().toISOString().slice(0,10),
           activityCounts:new Map(counts.map((item)=>[item.competency_v4_id,Number(item.activity_count)]))});
         send(response,200,{period:data.period,classroom_id:data.classroom.id,...projection},origin);return true;
+      }
+      if (request.method === "GET" && url.pathname === "/api/period-evaluations/coverage/detail") {
+        const data=await context(url.searchParams.get("classroomId"),url.searchParams.get("periodId"));
+        const student=await studentForClass(data.classroom,url.searchParams.get("studentId"));
+        const competencyId=url.searchParams.get("competencyId");
+        if (!data.cards.some((card)=>card.id===competencyId)) throw new Error("Competencia no disponible para esta aula.");
+        const row=data.model.rows.find((item)=>item.student_id===student.id&&item.competency_v4_id===competencyId);
+        const diagnostic=(await loadDiagnosticCoverageRecords(db,data.classroom.id,data.period))
+          .filter((item)=>item.student_id===student.id&&item.competency_id===competencyId);
+        const timeline=[...(row?.sourceRows??[]).map((item)=>({id:item.id,source_type:"activity_evidence",
+          observed_on:dateOnly(item.observed_on),situation_title:item.activity_title,
+          criterion_text:item.criterion_text,observation_text:item.observation_text,
+          media_available:item.media_available})),...diagnostic.map((item)=>({id:item.id,source_type:item.source_type,
+          observed_on:dateOnly(item.observed_at),situation_title:item.situation_title,
+          criterion_text:item.criterion_text,observation_text:item.observation_text,media_available:false}))]
+          .sort((a,b)=>a.observed_on.localeCompare(b.observed_on)||a.id.localeCompare(b.id));
+        send(response,200,{student_id:student.id,competency_id:competencyId,assessment_state:assessmentState(row),timeline},origin);return true;
       }
       if (request.method === "GET" && url.pathname === "/api/period-evaluations/overview") {
         const data = await context(url.searchParams.get("classroomId"), url.searchParams.get("periodId"));
