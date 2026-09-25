@@ -443,3 +443,11 @@
 **Causa raíz.** La autorización previa interpretaba `/api/students/import` como si `import` fuese un ID de alumno.
 
 **Solución y prevención.** La ruta reservada se excluye del analizador de IDs. La prueba HTTP crea dos aulas, importa un alumno y comprueba accesos propios y cruzados antes de considerar completo un cambio en el límite común.
+
+## 2026-09-25 Typecheck fallaba después del build de vinext
+
+**Síntoma.** `npx tsc --noEmit` pasaba antes de compilar, pero después del build señalaba que `AppRoutes`, `LayoutRoutes` y `ParamMap` no existían en `.next/types/routes.d.ts`.
+
+**Causa raíz.** Quedó un `validator.ts` generado por Next.js junto a los tipos de rutas generados por vinext. El validador esperaba exportaciones del generador anterior.
+
+**Solución y prevención.** `tsconfig.json` excluye únicamente los validadores generados por Next.js, incluidos los de desarrollo; conserva los tipos de rutas de vinext. Verificar typecheck también después del build.
