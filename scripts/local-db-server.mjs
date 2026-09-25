@@ -42,12 +42,14 @@ import { createPeriodEvaluationRouteHandler } from "./period-evaluation-routes.m
 import { createPendingAIGenerationsStore } from "../src/lib/pending-ai-generations-store.mjs";
 import { createPilotClassroom, importStudentsForTeacher, parseStudentCsv } from "../src/lib/pilot-onboarding-service.mjs";
 import { createLocalPrivateEvidenceStorage } from "../src/lib/private-evidence-storage.mjs";
+import { validateShortAudio, transcribeAndPolishAudio, AUDIO_MIME_TYPES } from "../src/lib/audio-note-service.mjs";
+import { createOpenAICompetencyClassifier } from "../src/lib/openai-competency-classifier.mjs";
 import { createLocalPrivateInterviewStorage } from "../src/lib/private-interview-storage.mjs";
 import { recordOperationalEvent } from "../src/lib/operational-events.mjs";
 import { completeDiagnosticReviewForTeacher, diagnosticProgressForTeacher, diagnosticStepProgressForTeacher, DiagnosticReviewError } from "../src/lib/diagnostic-review-service.mjs";
 import { DiagnosticExperienceError, loadDiagnosticExperienceWorkspace, recordDiagnosticExperienceObservation } from "../src/lib/diagnostic-experiences-v4.mjs";
 import { DiagnosticAssessmentError, loadDiagnosticAssessmentWorkspace, prepareDiagnosticSynthesis, saveDiagnosticSynthesis, confirmDiagnosticSynthesis, prepareDiagnosticStudentReview, saveDiagnosticStudentReview, confirmDiagnosticStudentReview, prepareDiagnosticGroupReview, saveDiagnosticGroupReview, confirmDiagnosticGroupReview, saveStudentInitialContext, diagnosticPlanningSummary } from "../src/lib/diagnostic-assessment-v4.mjs";
-import { DiagnosticSourceError, loadFamilyInterview, listFamilyInterviewStatuses, saveFamilyInterview, confirmFamilyInterview, attachFamilyInterview, familyInterviewAttachmentPath, recordSpontaneousObservation, recordMatrixDiagnosticObservation, loadSpontaneousObservations, correctSpontaneousClassification, markSpontaneousNeedsReview } from "../src/lib/diagnostic-sources-v4.mjs";
+import { DiagnosticSourceError, loadFamilyInterview, listFamilyInterviewStatuses, saveFamilyInterview, confirmFamilyInterview, attachFamilyInterview, familyInterviewAttachmentPath, recordSpontaneousObservation, recordMatrixDiagnosticObservation, loadSpontaneousObservations, correctSpontaneousClassification, suggestSpontaneousCompetencies, markSpontaneousNeedsReview } from "../src/lib/diagnostic-sources-v4.mjs";
 import { neutralizeAssessmentText } from "../src/lib/assessment-v4-service.mjs";
 import { loadPlanningFeedback, planningFeedbackText } from "../src/lib/planning-feedback.mjs";
 import { expectedRevision, assertRevision, conflictPayload, httpStatusForError, isVersionConflict, versionTransaction, VersionConflictError, publicErrorMessage } from "../src/lib/version-integrity.mjs";
@@ -117,15 +119,20 @@ else {
 const pendingAIGenerations = createPendingAIGenerationsStore(db);
 await pendingAIGenerations.pruneExpired();
 let diagnosticClassificationQueue = Promise.resolve();
+const diagnosticClassificationInFlight = new Set();
+const diagnosticClassifier = createOpenAICompetencyClassifier();
 function queueDiagnosticClassification(id, studentId, teacherId) {
+  if (diagnosticClassificationInFlight.has(id)) return;
+  diagnosticClassificationInFlight.add(id);
   diagnosticClassificationQueue = diagnosticClassificationQueue.then(async () => {
     try {
-      await markSpontaneousNeedsReview(db, teacherId, id);
+      if (process.env.OPENAI_API_KEY) await suggestSpontaneousCompetencies(db, teacherId, id, diagnosticClassifier);
+      else await markSpontaneousNeedsReview(db, teacherId, id);
       await refreshStudentContextSnapshot(db, studentId);
     } catch {
       await markSpontaneousNeedsReview(db, teacherId, id).catch(() => {});
       recordOperationalEvent("diagnostic_classification_failed", { workflow: "diagnostic" });
-    }
+    } finally { diagnosticClassificationInFlight.delete(id); }
   });
 }
 const pendingDiagnosticRows = authMode === "local" ? (await db.query(`select o.id,o.student_id from diagnostic_spontaneous_observations o
@@ -206,11 +213,27 @@ function readJson(request) {
     let body = "";
     for await (const chunk of request) {
       body += chunk;
-      if (body.length > 4_200_000) throw new Error("El contenido excede el límite permitido.");
+      if (body.length > 11_000_000) throw new Error("El contenido excede el límite permitido.");
     }
     return JSON.parse(body || "{}");
   })());
   return parsedBodies.get(request);
+}
+
+async function decodePrivateMedia(value) {
+  if (!value) return null;
+  const mimeType = value.mimeType;
+  const audio = AUDIO_MIME_TYPES.has(mimeType);
+  if (!audio && !["image/jpeg", "image/png", "image/webp"].includes(mimeType))
+    throw new TypeError("Usa una foto JPEG, PNG o WebP, o un audio WebM, MP3, M4A, WAV u OGG.");
+  const encoded = value.base64;
+  if (typeof encoded !== "string" || encoded.length > 10_700_000 || !/^[A-Za-z0-9+/]+={0,2}$/.test(encoded))
+    throw new TypeError("El archivo no tiene un formato válido.");
+  const bytes = Buffer.from(encoded, "base64");
+  if (!bytes.length || bytes.length > (audio ? 8_000_000 : 3_000_000))
+    throw new TypeError(audio ? "El audio debe pesar como máximo 8 MB." : "La foto debe pesar como máximo 3 MB.");
+  if (audio) await validateShortAudio(bytes, mimeType);
+  return { bytes, mimeType, audio };
 }
 
 async function handleAuthenticatedRequest({ teacherId, requestId, db }, request, response) {
@@ -547,6 +570,27 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
   }
 
   try {
+    if (request.method === "POST" && url.pathname === "/api/audio/transcribe") {
+      try {
+        const body = await readJson(request);
+        const owned = (await db.query(`select s.id from students s join classrooms c on c.id=s.classroom_id
+          where s.id=$1 and s.status='active' and c.status='active' and c.teacher_id=$2`, [body.studentId,teacherId])).rows[0];
+        if (!owned) { send(response, 404, { error: "Niño no encontrado." }, origin); return; }
+        const media = await decodePrivateMedia(body.audio);
+        if (!media?.audio) throw new TypeError("Selecciona un audio de hasta un minuto.");
+        const names = (await db.query(`select s.first_name,s.last_name,s.preferred_name from students s
+          join classrooms c on c.id=s.classroom_id where c.teacher_id=$1 and c.status='active'`, [teacherId])).rows
+          .flatMap((row) => [row.first_name,row.last_name,row.preferred_name]).filter(Boolean);
+        const result = await transcribeAndPolishAudio({ bytes: media.bytes, mimeType: media.mimeType,
+          context: body.context, names });
+        send(response, 200, { transcript: result.transcript, improved_text: result.improved_text }, origin);
+      } catch (error) {
+        recordOperationalEvent("audio_transcription_failed", { requestId, workflow: "audio" });
+        send(response, error instanceof TypeError ? 422 : 503,
+          { error: error instanceof TypeError ? error.message : "No se pudo transcribir el audio. Puedes escribir la observación." }, origin);
+      }
+      return;
+    }
     if (request.method === "GET" && url.pathname === "/health") {
       send(response, 200, { ok: true, engine: dbMode, ...(dbMode === "local" ? { storage: ".local/pgdata" } : {}) }, origin);
       return;
@@ -758,21 +802,46 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
     }
     if (url.pathname.startsWith("/api/diagnostics/spontaneous-observations")) {
       try {
-        if (request.method === "GET" && url.pathname === "/api/diagnostics/spontaneous-observations")
-          send(response, 200, await loadSpontaneousObservations(db, teacherId), origin);
+        if (request.method === "GET" && /^\/api\/diagnostics\/spontaneous-observations\/[0-9a-f-]+\/media$/i.test(url.pathname)) {
+          if (dbMode === "postgres") { send(response, 503, { error: "Los archivos estarán disponibles al conectar Storage." }, origin); return; }
+          const id = url.pathname.split("/")[4];
+          const row = (await db.query(`select o.student_id,o.media_path from diagnostic_spontaneous_observations o
+            join classrooms c on c.id=o.classroom_id where o.id=$1 and c.teacher_id=$2`, [id,teacherId])).rows[0];
+          if (!row?.media_path) { send(response, 404, { error: "Archivo no encontrado." }, origin); return; }
+          const media = await evidenceStorage.read(row.media_path, { teacherId, studentId: row.student_id });
+          sendAsset(response, 200, media.data, media.mimeType, origin, "private, no-store");
+        }
+        else if (request.method === "GET" && url.pathname === "/api/diagnostics/spontaneous-observations") {
+          const result = await loadSpontaneousObservations(db, teacherId);
+          send(response, 200, result, origin);
+          for (const row of result.observations.filter((item) => item.classification_status === "pending"))
+            setImmediate(() => queueDiagnosticClassification(row.id, row.student_id, teacherId));
+        }
         else if (request.method === "POST" && url.pathname === "/api/diagnostics/spontaneous-observations/matrix") {
           const saved = await recordMatrixDiagnosticObservation(db, teacherId, await readJson(request));
           await refreshStudentContextSnapshot(db, saved.student_id);
           send(response, 201, saved, origin);
         }
         else if (request.method === "POST" && url.pathname === "/api/diagnostics/spontaneous-observations") {
-          const saved = await recordSpontaneousObservation(db, teacherId, await readJson(request));
+          const body = await readJson(request);
+          if (dbMode === "postgres" && body.media) { send(response, 503, { error: "Los archivos estarán disponibles al conectar Storage." }, origin); return; }
+          const owned = (await db.query(`select s.id from students s join classrooms c on c.id=s.classroom_id
+            where s.id=$1 and s.status='active' and c.teacher_id=$2 and c.status='active'`, [body.studentId,teacherId])).rows[0];
+          if (!owned) { send(response, 404, { error: "Niño no encontrado." }, origin); return; }
+          const media = await decodePrivateMedia(body.media);
+          const mediaPath = media ? await evidenceStorage.save({ teacherId, studentId: body.studentId,
+            mimeType: media.mimeType, bytes: media.bytes }) : null;
+          let saved;
+          try { saved = await recordSpontaneousObservation(db, teacherId, { ...body,
+            mediaPath, mediaMimeType: media?.mimeType }); }
+          catch (error) { if (mediaPath) await evidenceStorage.delete(mediaPath).catch(() => {}); throw error; }
           await refreshStudentContextSnapshot(db, saved.student_id);
           send(response, 201, saved, origin);
           setImmediate(() => queueDiagnosticClassification(saved.id, saved.student_id, teacherId));
         } else if (request.method === "PUT" && url.pathname.endsWith("/classification")) {
           const id = url.pathname.split("/")[4];
-          const saved = await correctSpontaneousClassification(db, teacherId, id, (await readJson(request)).competencyId ?? null);
+          const body = await readJson(request);
+          const saved = await correctSpontaneousClassification(db, teacherId, id, body.competencyIds ?? body.competencyId ?? null);
           await refreshStudentContextSnapshot(db, saved.student_id);
           send(response, 200, saved, origin);
         } else send(response, 404, { error: "Ruta de observación no encontrada." }, origin);
@@ -1367,8 +1436,8 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
     if (await handleFamilyReportRoute({ request, url, response, origin })) return;
     if (request.method === "POST" && url.pathname === "/api/evidences") {
       const body = await readJson(request);
-      if (dbMode === "postgres" && body.photo) {
-        send(response, 503, { error: "Las fotos estarán disponibles al conectar Storage. Guarda la observación sin foto." }, origin);
+      if (dbMode === "postgres" && (body.photo || body.media)) {
+        send(response, 503, { error: "Los archivos estarán disponibles al conectar Storage. Guarda la observación como texto." }, origin);
         return;
       }
       let capture;
@@ -1397,21 +1466,13 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
         return;
       }
       let mediaPath = null;
-      if (body.photo) {
-        const allowedMedia = new Map([["image/jpeg", "jpg"], ["image/png", "png"], ["image/webp", "webp"]]);
-        const extension = allowedMedia.get(body.photo.mimeType);
-        const encoded = typeof body.photo.base64 === "string" ? body.photo.base64 : "";
-        if (!extension || !/^[A-Za-z0-9+/]+={0,2}$/.test(encoded)) {
-          send(response, 400, { error: "La foto debe ser JPEG, PNG o WebP." }, origin);
-          return;
-        }
-        const bytes = Buffer.from(encoded, "base64");
-        if (!bytes.length || bytes.length > 3_000_000) {
-          send(response, 400, { error: "La foto debe pesar como máximo 3 MB." }, origin);
-          return;
-        }
-        try { mediaPath = await evidenceStorage.save({ teacherId, studentId: capture.studentId, mimeType: body.photo.mimeType, bytes }); }
-        catch (error) { recordOperationalEvent("evidence_storage_failure", { requestId, status: 500 }); throw error; }
+      try {
+        const media = await decodePrivateMedia(body.media ?? body.photo);
+        if (media) mediaPath = await evidenceStorage.save({ teacherId, studentId: capture.studentId,
+          mimeType: media.mimeType, bytes: media.bytes });
+      } catch (error) {
+        if (error instanceof TypeError) { send(response, 422, { error: error.message }, origin); return; }
+        recordOperationalEvent("evidence_storage_failure", { requestId, status: 500 }); throw error;
       }
       let result;
       try {
@@ -1423,7 +1484,7 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
           id, student_id, activity_id, criterion_id, type,
           observation_text, observation_status, media_path, observed_on, source, created_by
         ) values ($1, $2, $3, $4, 'observation', $5, $6, $7, $8::date, 'teacher', $9)
-        returning id, student_id, observation_text, observation_status, observed_at, observed_on
+        returning id, student_id, observation_text, observation_status, media_path, observed_at, observed_on
       `, [randomUUID(), capture.studentId, capture.activityId, capture.criterionId, capture.observationText || null, capture.observationStatus, mediaPath, criterion.occurs_on, teacherId]);
       result=period?await versionTransaction(db,`period:${period.id}`,insert):await insert(db);
       } catch (error) { if (mediaPath) await evidenceStorage.delete(mediaPath); throw error; }

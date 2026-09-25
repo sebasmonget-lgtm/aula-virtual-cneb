@@ -62,7 +62,7 @@ export async function buildStudentPedagogicalContext(db, studentId) {
      order by observed_at desc, id desc limit 30
   `, [studentId])).rows;
   const spontaneousObservations = (await db.query(`select id, context_label, observation_text,
-      support_status, observed_at, classification_status, classification_source, competency_v4_id
+      support_status, observed_at, classification_status, classification_source, competency_v4_id, competency_v4_ids
     from diagnostic_spontaneous_observations where student_id=$1
     order by observed_at desc,id desc limit 30`, [studentId])).rows;
   const interview = (await db.query(`select id,version,details,teacher_confirmed_at from student_family_interviews
@@ -93,10 +93,12 @@ export async function buildStudentPedagogicalContext(db, studentId) {
     diagnosis,
     family_interview_context: interview ? { version: interview.version, teacher_confirmed_at: interview.teacher_confirmed_at,
       ...safeFamilyContext(interview.details) } : null,
-    diagnostic_observations: [...diagnosticObservations, ...spontaneousObservations.map((item) => ({
-      ...item, experience_id: "spontaneous", aspect_id: item.context_label,
-      observation_status: item.support_status === "yes" ? "with_support" : "observed_without_judgment",
-    }))].sort((a,b) => new Date(b.observed_at) - new Date(a.observed_at) || b.id.localeCompare(a.id)).slice(0, 30).map((item) => ({
+    diagnostic_observations: [...diagnosticObservations, ...spontaneousObservations.flatMap((item) =>
+      (item.classification_status === "classified" && item.competency_v4_ids?.length ? item.competency_v4_ids : [item.competency_v4_id])
+        .map((competencyId) => ({
+          ...item, competency_v4_id: competencyId, experience_id: "spontaneous", aspect_id: item.context_label,
+          observation_status: item.support_status === "yes" ? "with_support" : "observed_without_judgment",
+        })))].sort((a,b) => new Date(b.observed_at) - new Date(a.observed_at) || b.id.localeCompare(a.id)).slice(0, 30).map((item) => ({
       ...item, competency_name: v4Names.get(item.competency_v4_id) ?? item.competency_v4_id,
     })),
     confirmed_diagnostic_reviews: confirmedDiagnosticReviews.map((item) => ({

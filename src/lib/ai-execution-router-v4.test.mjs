@@ -4,10 +4,10 @@ import { AI_ROUTING_POLICY, AIExecutionRoutingError, resolveAIExecutionPlan } fr
 
 test("aplica la política inicial de routing por workflow", () => {
   const cases = [
-    ["activity", "standard_generation", "openai", "gpt-5.6-terra", "low"],
-    ["project", "deep_generation", "openai", "gpt-5.6-sol", "medium"],
-    ["annual_plan", "deep_generation", "openai", "gpt-5.6-sol", "high"],
-    ["material_generation", "light_generation", "openai", "gpt-5.6-luna", "none"],
+    ["activity", "standard_generation", "openai", "gpt-6-luna", "low"],
+    ["project", "deep_generation", "openai", "gpt-6-sol", "medium"],
+    ["annual_plan", "deep_generation", "openai", "gpt-6-sol", "high"],
+    ["material_generation", "light_generation", "openai", "gpt-6-luna", "none"],
   ];
   for (const [workflow, tier, provider, model, reasoning_effort] of cases) {
     assert.deepEqual(resolveAIExecutionPlan({ workflow }), {
@@ -18,12 +18,12 @@ test("aplica la política inicial de routing por workflow", () => {
   }
 });
 
-test("el desarrollo del plan anual usa Terra y conserva Sol para el plan maestro", () => {
+test("el desarrollo del plan anual usa Luna y conserva Sol para el plan maestro", () => {
   const master = resolveAIExecutionPlan({ workflow: "annual_plan", task: "generation" });
   const detail = resolveAIExecutionPlan({ workflow: "annual_plan", task: "document_development" });
-  assert.equal(master.model, "gpt-5.6-sol");
+  assert.equal(master.model, "gpt-6-sol");
   assert.equal(master.reasoning_effort, "high");
-  assert.equal(detail.model, "gpt-5.6-terra");
+  assert.equal(detail.model, "gpt-6-luna");
   assert.equal(detail.reasoning_effort, "low");
   assert.equal(detail.provider, "openai");
 });
@@ -37,7 +37,7 @@ test("mantiene evidence_capture y today_mode en código", () => {
     assert.equal(plan.allow_escalation, false);
   }
   const explanation = resolveAIExecutionPlan({ workflow: "today_mode", task: "explanation" });
-  assert.deepEqual([explanation.execution, explanation.tier, explanation.model, explanation.reasoning_effort], ["generation", "light_generation", "gpt-5.6-luna", "none"]);
+  assert.deepEqual([explanation.execution, explanation.tier, explanation.model, explanation.reasoning_effort], ["generation", "light_generation", "gpt-6-luna", "none"]);
 });
 
 test("usa TypeSafe solo para tareas de decisión estructurada", () => {

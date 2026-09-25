@@ -44,7 +44,7 @@ function fakeClient(result) {
 function validResponse(overrides = {}) {
   return {
     id: "resp_123",
-    model: "gpt-5.6-terra",
+    model: "gpt-6-luna",
     output_text: JSON.stringify(activityOutput),
     usage: {
       input_tokens: 110,
@@ -68,7 +68,7 @@ test("OpenAIProvider usa Responses API, el plan central y Structured Outputs str
   const { client, result } = await generateWith(validResponse());
   assert.equal(client.calls.length, 1);
   const [request, options] = client.calls[0];
-  assert.equal(request.model, "gpt-5.6-terra");
+  assert.equal(request.model, "gpt-6-luna");
   assert.deepEqual(request.reasoning, { effort: "low" });
   assert.equal(request.text.format.type, "json_schema");
   assert.equal(request.text.format.strict, true);
@@ -78,16 +78,16 @@ test("OpenAIProvider usa Responses API, el plan central y Structured Outputs str
   assert.equal(options.timeout, 30_000);
   assert.equal(options.maxRetries, 0);
   assert.equal(result.metadata.provider, "openai");
-  assert.equal(result.metadata.model, "gpt-5.6-terra");
+  assert.equal(result.metadata.model, "gpt-6-luna");
   assert.equal(result.metadata.response_id, "resp_123");
   assert.deepEqual(result.metadata.usage, { input_tokens: 110, cached_input_tokens: 12, output_tokens: 55, total_tokens: 165 });
 });
 
 test("OpenAIProvider coloca la Skill en instrucciones y conserva el bundle como dato", async () => {
-  const client = fakeClient(validResponse({ model: "gpt-5.6-sol" }));
+  const client = fakeClient(validResponse({ model: "gpt-6-sol" }));
   const provider = new OpenAIProvider({ apiKey: "test-key", client });
   await provider.generate({
-    execution_plan: { provider: "openai", model: "gpt-5.6-sol", reasoning_effort: "high" },
+    execution_plan: { provider: "openai", model: "gpt-6-sol", reasoning_effort: "high" },
     output_schema: { id: "annual-plan-v2", type: "object", properties: {}, required: [], additionalProperties: false },
     ai_context_bundle: { context: { classroom: "Grupo de prueba" } },
     skill_instructions: "Skill crear-plan-anual: usa las fuentes confirmadas.",
@@ -127,7 +127,7 @@ test("OpenAIProvider clasifica respuestas y errores controlados", async () => {
     [validResponse({ output_text: "", status: "incomplete" }), "response_incomplete"],
     [validResponse({ output_text: "", output: [{ content: [{ type: "refusal", refusal: "No puedo." }] }] }), "response_refusal"],
     [validResponse({ output_text: "no es JSON" }), "structured_output_invalid"],
-    [validResponse({ model: "gpt-5.6-sol" }), "model_mismatch"],
+    [validResponse({ model: "gpt-6-sol" }), "model_mismatch"],
     [Object.assign(new Error("límite"), { status: 429 }), "rate_limited"],
     [Object.assign(new Error("credenciales"), { status: 401 }), "authentication_failed"],
     [Object.assign(new Error("timeout"), { code: "ETIMEDOUT" }), "timeout"],
@@ -147,7 +147,7 @@ test("OpenAIProvider clasifica respuestas y errores controlados", async () => {
 
 test("OpenAIProvider rechaza un modelo configurado que no coincide con el plan sin llamar HTTP", async () => {
   const client = fakeClient(validResponse());
-  const provider = new OpenAIProvider({ apiKey: "test-key", client, model: "gpt-5.6-sol" });
+  const provider = new OpenAIProvider({ apiKey: "test-key", client, model: "gpt-6-sol" });
   const knowledgeBase = await loadKnowledgeBaseV4();
   await assert.rejects(
     () => generateAIWorkflowV4(activityInput, { provider, knowledgeBase }),

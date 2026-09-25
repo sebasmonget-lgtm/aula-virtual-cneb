@@ -13,12 +13,13 @@ import { buildStudentPedagogicalContext, buildSafeDiagnosticStudentContext } fro
 import { loadDiagnosticAssessmentWorkspace, prepareDiagnosticSynthesis, saveDiagnosticSynthesis, confirmDiagnosticSynthesis,
   prepareDiagnosticGroupReview, saveDiagnosticGroupReview, confirmDiagnosticGroupReview } from "./diagnostic-assessment-v4.mjs";
 import { createLocalPrivateInterviewStorage } from "./private-interview-storage.mjs";
+import { createLocalPrivateEvidenceStorage } from "./private-evidence-storage.mjs";
 import { buildFamilyInterviewPrintHtml } from "./family-interview-print.mjs";
 import { familyInterviewCategories, familyInterviewQuestionGroups } from "./family-interview-contract.mjs";
 import { createDiagnosticJevAdapter } from "./diagnostic-jev-adapter.mjs";
 import { attachFamilyInterview, classifySpontaneousObservation, confirmFamilyInterview,
   correctSpontaneousClassification, familyInterviewAttachmentPath, loadFamilyInterview,
-  listFamilyInterviewStatuses, loadSpontaneousObservations, markSpontaneousNeedsReview, recordSpontaneousObservation, recordMatrixDiagnosticObservation, safeFamilyContext, saveFamilyInterview,
+  listFamilyInterviewStatuses, loadSpontaneousObservations, markSpontaneousNeedsReview, recordSpontaneousObservation, recordMatrixDiagnosticObservation, suggestSpontaneousCompetencies, safeFamilyContext, saveFamilyInterview,
   validateClassifierDecision, validateFamilyInterviewDetails } from "./diagnostic-sources-v4.mjs";
 
 const teacher = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
@@ -45,6 +46,45 @@ test("catálogo JSON versionado valida IDs, edad y mapping v4 sin IA", async () 
   assert.throws(() => validateDiagnosticCatalog({ ...catalog, experiences: [{ ...catalog.experiences[0], aspects: [{ ...catalog.experiences[0].aspects[0], competencyId: "FAKE" }] }] }, kb.competencyCards), /inválido/);
   assert.throws(() => validateDiagnosticCatalog({ ...catalog, experiences: [{ ...catalog.experiences[0], ages: [5, 5] }] }, kb.competencyCards), /inválida/);
   assert.throws(() => validateDiagnosticCatalog({ ...catalog, experiences: [{ ...catalog.experiences[0], aspects: [{ ...catalog.experiences[0].aspects[0], patternIndex: 999 }] }] }, kb.competencyCards), /Referente ausente/);
+});
+
+test("una observación conserva varias competencias elegidas y la sugerencia nunca las confirma", async () => {
+  const db = await database();
+  try {
+    const workspace = await setup(db, teacher, "M");
+    const options = (await loadSpontaneousObservations(db, teacher)).competencies;
+    assert.ok(options.length >= 2);
+    const saved = await recordSpontaneousObservation(db, teacher, { studentId: workspace.students[0].id,
+      contextLabel: "Juego", observationText: "Contó piezas y explicó cómo las ordenó." });
+    const suggestion = await suggestSpontaneousCompetencies(db, teacher, saved.id, { classify: async ({ options: received }) => {
+      assert.deepEqual(received.map((item) => item.id), options.map((item) => item.id));
+      return { candidate_ids: options.slice(0, 2).map((item) => item.id) };
+    } });
+    assert.equal(suggestion.status, "needs_review");
+    let row = (await loadSpontaneousObservations(db, teacher)).observations[0];
+    assert.deepEqual(row.competency_v4_ids, []);
+    assert.deepEqual(row.suggested_competency_v4_ids, options.slice(0, 2).map((item) => item.id));
+    await correctSpontaneousClassification(db, teacher, saved.id, options.slice(0, 2).map((item) => item.id));
+    row = (await loadSpontaneousObservations(db, teacher)).observations[0];
+    assert.equal(row.classification_status, "classified");
+    assert.deepEqual(row.competency_v4_ids, options.slice(0, 2).map((item) => item.id));
+    const review = await loadDiagnosticAssessmentWorkspace(db, teacher);
+    assert.ok(review.observations.filter((item) => item.id === saved.id).length >= 2);
+    await correctSpontaneousClassification(db, teacher, saved.id, [options[1].id]);
+    assert.deepEqual((await loadSpontaneousObservations(db, teacher)).observations[0].competency_v4_ids, [options[1].id]);
+    await assert.rejects(correctSpontaneousClassification(db, other, saved.id, [options[0].id]), /aula activa|no encontrada/);
+  } finally { await db.close(); }
+});
+
+test("un archivo privado queda ligado al niño y no puede leerse como otro docente", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "ayni-evidence-media-"));
+  const storage = createLocalPrivateEvidenceStorage(dir);
+  try {
+    const studentId = randomUUID();
+    const key = await storage.save({ teacherId: teacher, studentId, mimeType: "audio/webm", bytes: Buffer.from("audio de prueba") });
+    assert.equal((await storage.read(key, { teacherId: teacher, studentId })).mimeType, "audio/webm");
+    await assert.rejects(storage.read(key, { teacherId: other, studentId }), /privada/);
+  } finally { await rm(dir, { recursive: true, force: true }); }
 });
 
 test("adapter Jev es opt-in y solo recibe decisión cerrada sin proveedor real en tests", async () => {

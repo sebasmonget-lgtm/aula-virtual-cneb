@@ -1,10 +1,10 @@
 export const AI_ROUTING_POLICY = Object.freeze({
-  version: "1.1.0",
+  version: "1.2.0",
   tiers: Object.freeze({
     decision: Object.freeze({ execution: "decision", provider: "typesafe", capability: "decision", model: null, reasoning_effort: null }),
-    light_generation: Object.freeze({ execution: "generation", provider: "openai", model: "gpt-5.6-luna", reasoning_effort: "none" }),
-    standard_generation: Object.freeze({ execution: "generation", provider: "openai", model: "gpt-5.6-terra", reasoning_effort: "low" }),
-    deep_generation: Object.freeze({ execution: "generation", provider: "openai", model: "gpt-5.6-sol", reasoning_effort: "medium" }),
+    light_generation: Object.freeze({ execution: "generation", provider: "openai", model: "gpt-6-luna", reasoning_effort: "none" }),
+    standard_generation: Object.freeze({ execution: "generation", provider: "openai", model: "gpt-6-luna", reasoning_effort: "low" }),
+    deep_generation: Object.freeze({ execution: "generation", provider: "openai", model: "gpt-6-sol", reasoning_effort: "medium" }),
   }),
   workflows: Object.freeze({
     diagnostic: Object.freeze({ tier: "standard_generation", allow_escalation: true }),

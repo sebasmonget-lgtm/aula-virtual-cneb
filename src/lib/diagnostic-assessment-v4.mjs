@@ -20,7 +20,7 @@ const clean = (value, limit = 3000) => typeof value === "string" && value.trim()
 
 export function diagnosticSourceSnapshot(rows) {
   return rows.map((row) => ({ id: row.id, fingerprint: hash([
-    row.student_id, row.competency_v4_id, row.experience_id, row.aspect_id,
+    row.student_id, row.competency_v4_id, row.competency_v4_ids ?? null, row.experience_id, row.aspect_id,
     row.catalog_version, row.observation_status, row.observation_text ?? "", row.classification_source ?? null,
     new Date(row.observed_at).toISOString(),
   ]) })).sort((a, b) => a.id.localeCompare(b.id));
@@ -113,7 +113,7 @@ async function studentReviewSources(db, classroomId, studentId) {
   const guided = (await db.query(`select id,student_id,competency_v4_id,experience_id,aspect_id,catalog_version,
       observation_status,observation_text,observed_at from diagnostic_experience_observations
       where classroom_id=$1 and student_id=$2`, [classroomId, studentId])).rows;
-  const spontaneous = (await db.query(`select id,student_id,competency_v4_id,context_label,observation_text,
+  const spontaneous = (await db.query(`select id,student_id,competency_v4_id,competency_v4_ids,context_label,observation_text,
       support_status,observed_at,classification_source,classification_status
       from diagnostic_spontaneous_observations where classroom_id=$1 and student_id=$2`, [classroomId, studentId])).rows
     .map((row) => ({ ...row, experience_id: "spontaneous", aspect_id: row.context_label,
@@ -171,7 +171,7 @@ async function sourceRows(db, classroomId, studentId, competencyId) {
       o.observation_text,o.support_status,o.observed_at,o.classification_source
     from diagnostic_spontaneous_observations o join students s on s.id=o.student_id
     where o.classroom_id=$1 and o.student_id=$2 and o.classification_status='classified'
-      and o.competency_v4_id=$3
+      and $3=any(o.competency_v4_ids)
       and s.classroom_id=$1 and s.status='active'`, [classroomId, studentId, competencyId])).rows.map((row) => ({
       ...row, competency_v4_id: competencyId, experience_id: "spontaneous", aspect_id: row.context_label,
       catalog_version: "spontaneous-v1", experience_title_snapshot: "Observación espontánea",
@@ -232,15 +232,17 @@ export async function loadDiagnosticAssessmentWorkspace(db, teacherId) {
     from diagnostic_experience_observations o join students s on s.id = o.student_id
     where o.classroom_id = $1 and s.classroom_id = $1 and s.status = 'active'
     order by o.observed_at, o.id`, [classroom.id])).rows;
-  const spontaneousAll = (await db.query(`select o.id,o.student_id,o.competency_v4_id,o.context_label,o.observation_text,
-      o.support_status,o.observed_at,o.classification_source,o.classification_status
+  const spontaneousAll = (await db.query(`select o.id,o.student_id,o.competency_v4_id,o.competency_v4_ids,o.context_label,o.observation_text,
+      o.support_status,o.observed_at,o.classification_source,o.classification_status,o.media_path is not null as has_media
     from diagnostic_spontaneous_observations o join students s on s.id=o.student_id and s.classroom_id=o.classroom_id
     where o.classroom_id=$1 and s.status='active'`, [classroom.id])).rows.map((row) => ({ ...row,
       experience_id: "spontaneous", aspect_id: row.context_label, catalog_version: "spontaneous-v1",
       experience_title_snapshot: "Observación espontánea", aspect_prompt_snapshot: row.context_label,
       observation_status: row.support_status === "yes" ? "with_support" : "observed_without_judgment",
     }));
-  const spontaneous = spontaneousAll.filter((row) => row.classification_status === "classified" && row.competency_v4_id);
+  const spontaneous = spontaneousAll.filter((row) => row.classification_status === "classified")
+    .flatMap((row) => (row.competency_v4_ids?.length ? row.competency_v4_ids : [row.competency_v4_id].filter(Boolean))
+      .map((id) => ({ ...row, competency_v4_id: id })));
   const legacy = await legacyDiagnosticObservations(db, classroom.id);
   const observations = [...guided, ...spontaneous, ...legacy].sort((a,b) => new Date(a.observed_at) - new Date(b.observed_at) || a.id.localeCompare(b.id));
   const reviews = (await db.query(`select r.* from diagnostic_competency_reviews r join students s on s.id = r.student_id
@@ -268,7 +270,7 @@ export async function loadDiagnosticAssessmentWorkspace(db, teacherId) {
     aspect_prompt: row.aspect_prompt_snapshot ?? aspects.get(`${row.experience_id}:${row.aspect_id}`)?.aspect_prompt ?? "Aspecto observado",
   })), pending_observations: spontaneousAll.filter((row) => row.classification_status !== "classified" || !row.competency_v4_id)
     .map((row) => ({ id: row.id, student_id: row.student_id, context_label: row.context_label,
-      observation_text: row.observation_text, observed_at: row.observed_at })),
+      observation_text: row.observation_text, observed_at: row.observed_at, has_media: row.has_media })),
   reviews: reviews.map(publicReview), student_reviews: studentReviews.map((row) => publicStudentReview(row,
     sameDiagnosticSources(row.source_snapshot, sourceSnapshots.get(row.student_id)))),
   group_reviews: groupReviews.map((row) => ({ id: row.id, version: row.version, status: row.status, details: row.details,

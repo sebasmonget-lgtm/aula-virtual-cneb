@@ -17,7 +17,7 @@ import {
   SidebarProvider,
 } from "@/components/ui/sidebar";
 import {
-  createLocalEvidence, loadLocalDashboard, loadPilotSetup, localDatabaseApiUrl, saveLocalAttendance, updateLocalExecution, type ActivityCriterion, type LocalDashboard, type LocalStudent,
+  createLocalEvidence, loadLocalDashboard, loadPilotSetup, localDatabaseApiUrl, saveLocalAttendance, updateLocalExecution, type ActivityCriterion, type LocalDashboard, type LocalStudent, type PrivateMediaUpload,
 } from "@/src/lib/local-database";
 import { loadPlanningJourney, loadStartingGuidance } from "@/src/lib/planning-journey.mjs";
 import { InstitutionProfile } from "./profile-and-diagnostic";
@@ -31,6 +31,7 @@ import { ResourceLibraryScreen } from "./resource-library-screen";
 import { PlanningHome } from "./planning-home";
 import { EvaluationHome } from "./evaluation-home";
 import { TodayHome } from "./today-home";
+import { MediaAttachmentInput } from "./media-attachment-input";
 import type { LibraryResource } from "@/src/lib/library-resource";
 import { LearningExperienceGenerator } from "./learning-experience-generator";
 import { PeriodEvaluation } from "./period-evaluation";
@@ -66,6 +67,7 @@ export function TeacherWorkspace() {
   const [criterionId, setCriterionId] = useState("");
   const [note, setNote] = useState("");
   const [photo, setPhoto] = useState<{ base64: string; mimeType: "image/jpeg" | "image/png" | "image/webp"; name: string } | null>(null);
+  const [audio, setAudio] = useState<PrivateMediaUpload | null>(null);
   const [saved, setSaved] = useState(false);
   const [savingEvidence, setSavingEvidence] = useState(false);
   const [saveError, setSaveError] = useState("");
@@ -105,7 +107,7 @@ export function TeacherWorkspace() {
   }, [retry]);
 
   async function saveEvidence(andNext = false) {
-    if (!criterionId || (!note.trim() && !photo) || savingEvidence || saved) return;
+    if (!criterionId || (!note.trim() && !photo && !audio) || savingEvidence || saved) return;
     setSavingEvidence(true);
     setSaveError("");
     try {
@@ -116,6 +118,7 @@ export function TeacherWorkspace() {
         criterionId,
         observationText: note || undefined,
         photo: photo ? { base64: photo.base64, mimeType: photo.mimeType } : undefined,
+        media: audio ?? undefined,
       });
       setDashboard(await loadLocalDashboard());
       setSaved(true);
@@ -123,6 +126,7 @@ export function TeacherWorkspace() {
         setSaved(false);
         setNote("");
         setPhoto(null);
+        setAudio(null);
         const currentIndex = students.findIndex((student) => student.id === studentId);
         const nextStudent = students[currentIndex + 1];
         if (nextStudent) setStudentId(nextStudent.id);
@@ -151,6 +155,7 @@ export function TeacherWorkspace() {
       setSaved(false);
       setNote("");
       setPhoto(null);
+      setAudio(null);
     }
   }
 
@@ -168,6 +173,7 @@ export function TeacherWorkspace() {
     setEvidenceContext({ activityId: block.activity_id, criteria: block.criteria, title: block.title });
     setCriterionId(block.criteria[0].id);
     setPhoto(null);
+    setAudio(null);
     setEvidenceOpen(true);
   }
 
@@ -247,7 +253,7 @@ export function TeacherWorkspace() {
         </nav>
       </SidebarInset>
       <AttendanceDialog open={attendanceOpen} onOpenChange={setAttendanceOpen} students={students} onSave={markAttendance} />
-      <EvidenceDialog open={evidenceOpen} onOpenChange={closeEvidence} students={students} studentId={studentId} setStudentId={setStudentId} criterionId={criterionId} setCriterionId={setCriterionId} criteria={evidenceContext?.criteria ?? activity?.criteria ?? []} note={note} setNote={setNote} photo={photo} setPhoto={setPhoto} saved={saved} saving={savingEvidence} saveError={saveError} saveEvidence={saveEvidence} activityTitle={evidenceContext?.title ?? activity?.title ?? "Actividad"} databaseConnected={databaseState === "connected"} />
+      <EvidenceDialog open={evidenceOpen} onOpenChange={closeEvidence} students={students} studentId={studentId} setStudentId={setStudentId} criterionId={criterionId} setCriterionId={setCriterionId} criteria={evidenceContext?.criteria ?? activity?.criteria ?? []} note={note} setNote={setNote} photo={photo} setPhoto={setPhoto} audio={audio} setAudio={setAudio} saved={saved} saving={savingEvidence} saveError={saveError} saveEvidence={saveEvidence} activityTitle={evidenceContext?.title ?? activity?.title ?? "Actividad"} databaseConnected={databaseState === "connected"} />
     </SidebarProvider>
   );
 }
@@ -265,10 +271,10 @@ async function preparePhoto(file: File) {
   return { base64, mimeType: 'image/jpeg' as const, name: file.name };
 }
 
-function EvidenceDialog({ open, onOpenChange, students, studentId, setStudentId, criterionId, setCriterionId, criteria, note, setNote, photo, setPhoto, saved, saving, saveError, saveEvidence, activityTitle, databaseConnected }: {
+function EvidenceDialog({ open, onOpenChange, students, studentId, setStudentId, criterionId, setCriterionId, criteria, note, setNote, photo, setPhoto, audio, setAudio, saved, saving, saveError, saveEvidence, activityTitle, databaseConnected }: {
   open: boolean; onOpenChange: (open: boolean) => void; students: LocalStudent[]; studentId: string; setStudentId: (id: string) => void;
   criterionId: string; setCriterionId: (id: string) => void; criteria: ActivityCriterion[];
-  note: string; setNote: (value: string) => void; photo: { base64: string; mimeType: "image/jpeg" | "image/png" | "image/webp"; name: string } | null; setPhoto: (photo: { base64: string; mimeType: "image/jpeg" | "image/png" | "image/webp"; name: string } | null) => void; saved: boolean; saveError: string; saveEvidence: (andNext?: boolean) => void;
+  note: string; setNote: (value: string) => void; photo: { base64: string; mimeType: "image/jpeg" | "image/png" | "image/webp"; name: string } | null; setPhoto: (photo: { base64: string; mimeType: "image/jpeg" | "image/png" | "image/webp"; name: string } | null) => void; audio: PrivateMediaUpload | null; setAudio: (value: PrivateMediaUpload | null) => void; saved: boolean; saveError: string; saveEvidence: (andNext?: boolean) => void;
   activityTitle: string; databaseConnected: boolean; saving: boolean;
 }) {
   const [preparingPhoto, setPreparingPhoto] = useState(false);
@@ -284,11 +290,12 @@ function EvidenceDialog({ open, onOpenChange, students, studentId, setStudentId,
         {criteria.length > 1 && <fieldset><legend className="mb-2 text-sm font-semibold">¿Qué criterio observaste?</legend><div className="space-y-2">{criteria.map((item) => <button key={item.id} type="button" aria-pressed={criterionId === item.id} onClick={() => setCriterionId(item.id)} className={`min-h-11 w-full rounded-xl border p-3 text-left text-sm hover:border-[#9bcbd7] hover:bg-[#f0f9fc] ${criterionId === item.id ? "border-[#087d96] bg-[#e8f6fb]" : "bg-white"}`}><span className="font-semibold">{item.criterion_text}</span><span className="mt-1 block text-xs text-[#526b87]">{item.competency_text}</span></button>)}</div></fieldset>}
         {criterion && <section className="rounded-xl bg-[#edf8f3] p-4 text-sm"><p className="text-xs font-bold uppercase tracking-wider">Criterio</p><p className="font-semibold">{criterion.criterion_text}</p>{criterion.details?.expected_evidence && <><p className="mt-3 text-xs font-bold uppercase tracking-wider">Evidencia que podría verse</p><p>{criterion.details.expected_evidence}</p></>}{criterion.details?.observation_focus?.length ? <><p className="mt-3 text-xs font-bold uppercase tracking-wider">En qué fijarse</p><ul className="list-disc pl-5">{criterion.details.observation_focus.map((item) => <li key={item}>{item}</li>)}</ul></> : null}{criterion.details?.acceptable_evidence_variations?.length ? <><p className="mt-3 text-xs font-bold uppercase tracking-wider">Aceptar también</p><ul className="list-disc pl-5">{criterion.details.acceptable_evidence_variations.map((item) => <li key={item}>{item}</li>)}</ul></> : null}{criterion.details?.teacher_caution && <p className="mt-3 rounded bg-white p-2"><b>Nota pedagógica:</b> {criterion.details.teacher_caution}</p>}<p className="mt-3 text-xs">Alcance: {scopeLabel}</p>{criterion.details?.evidence_scope === "group" && <p className="mt-2 rounded bg-[#fff8ef] p-2">Esta situación fue pensada principalmente para observación grupal. Registra evidencia individual solo si observaste directamente a este niño.</p>}</section>}
         <div><label htmlFor="evidence-note" className="mb-2 block text-sm font-semibold">¿Qué hizo o dijo el niño?</label><Textarea id="evidence-note" value={note} onChange={(event) => setNote(event.target.value)} placeholder="Ej.: Comparó dos macetas y explicó cuál recibió más luz." className="min-h-24 resize-none" /><p className="mt-2 text-xs text-muted-foreground">Describe lo observado. Puedes adjuntar una foto si ayuda; no necesitas marcar un nivel de logro. Escribe una nota o adjunta una foto para guardar.</p></div>
-        <div><label htmlFor="evidence-photo" className="mb-2 block text-sm font-semibold">Foto <span className="font-normal text-muted-foreground">(opcional)</span></label><input id="evidence-photo" type="file" accept="image/jpeg,image/png,image/webp" capture="environment" disabled={preparingPhoto || saving || saved} className="block w-full text-sm" onChange={async (event) => { const input = event.currentTarget; const file = input.files?.[0]; if (!file) return; setPhotoError(""); setPreparingPhoto(true); try { setPhoto(await preparePhoto(file)); } catch (error) { setPhotoError(error instanceof Error ? error.message : "No se pudo preparar la foto."); input.value = ""; } finally { setPreparingPhoto(false); } }} />{preparingPhoto && <LoadingState label="Preparando foto..." />}{photoError && <WorkflowFeedback tone="error">{photoError}</WorkflowFeedback>}{photo && <p className="mt-2 text-xs font-medium text-[#126177]">Foto lista: {photo.name} <button type="button" className="underline" onClick={() => setPhoto(null)}>Quitar</button></p>}<p className="mt-1 text-xs text-muted-foreground">La foto se guarda solo en este equipo y no se envía a IA.</p></div>
+        <div><label htmlFor="evidence-photo" className="mb-2 block text-sm font-semibold">Foto <span className="font-normal text-muted-foreground">(opcional)</span></label><input id="evidence-photo" type="file" accept="image/jpeg,image/png,image/webp" capture="environment" disabled={preparingPhoto || saving || saved} className="block w-full text-sm" onChange={async (event) => { const input = event.currentTarget; const file = input.files?.[0]; if (!file) return; setPhotoError(""); setPreparingPhoto(true); try { setPhoto(await preparePhoto(file)); setAudio(null); } catch (error) { setPhotoError(error instanceof Error ? error.message : "No se pudo preparar la foto."); input.value = ""; } finally { setPreparingPhoto(false); } }} />{preparingPhoto && <LoadingState label="Preparando foto..." />}{photoError && <WorkflowFeedback tone="error">{photoError}</WorkflowFeedback>}{photo && <p className="mt-2 text-xs font-medium text-[#126177]">Foto lista: {photo.name} <button type="button" className="underline" onClick={() => setPhoto(null)}>Quitar</button></p>}<p className="mt-1 text-xs text-muted-foreground">La foto se guarda privada y no se envía a IA.</p></div>
+        <MediaAttachmentInput audioOnly studentId={studentId} context={criterion?.criterion_text ?? activityTitle} media={audio} onMedia={(value) => { setAudio(value); if (value) setPhoto(null); }} onTranscribed={setNote} disabled={saving || saved} />
         {saved && <WorkflowFeedback tone="success">Evidencia guardada. Puedes cerrar esta ventana.</WorkflowFeedback>}
         {saveError && <WorkflowFeedback tone="error">{saveError}</WorkflowFeedback>}
       </div>
-      <DialogFooter className="border-t px-6 py-4"><Button variant="ghost" onClick={() => onOpenChange(false)}>{saved ? "Cerrar" : "Cancelar"}</Button><AsyncButton variant="outline" busy={saving} busyLabel="Guardando..." disabled={!criterionId || (!note.trim() && !photo) || saved || !studentId || preparingPhoto} onClick={() => saveEvidence(true)}>Guardar y siguiente</AsyncButton><AsyncButton busy={saving} busyLabel="Guardando..." disabled={!criterionId || (!note.trim() && !photo) || saved || !studentId || preparingPhoto} onClick={() => saveEvidence()}>Guardar observación</AsyncButton></DialogFooter>
+      <DialogFooter className="border-t px-6 py-4"><Button variant="ghost" onClick={() => onOpenChange(false)}>{saved ? "Cerrar" : "Cancelar"}</Button><AsyncButton variant="outline" busy={saving} busyLabel="Guardando..." disabled={!criterionId || (!note.trim() && !photo && !audio) || saved || !studentId || preparingPhoto} onClick={() => saveEvidence(true)}>Guardar y siguiente</AsyncButton><AsyncButton busy={saving} busyLabel="Guardando..." disabled={!criterionId || (!note.trim() && !photo && !audio) || saved || !studentId || preparingPhoto} onClick={() => saveEvidence()}>Guardar observación</AsyncButton></DialogFooter>
     </DialogContent>
   </Dialog>;
 }

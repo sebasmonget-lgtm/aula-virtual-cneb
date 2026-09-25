@@ -92,7 +92,7 @@ test("the HTTP boundary protects every route and local PGlite remains usable", {
       "/api/pilot/setup", "/api/profile", "/api/diagnostics",
       "/api/diagnostics/students/11111111-1111-4111-8111-111111111111/family-interview",
       "/api/diagnostics/students/11111111-1111-4111-8111-111111111111/family-interview/attachment",
-      "/api/diagnostics/spontaneous-observations", "/api/ai/annual-plan/context",
+      "/api/diagnostics/spontaneous-observations", "/api/audio/transcribe", "/api/ai/annual-plan/context",
       "/api/annual-plans/current", "/api/learning-experiences", "/api/activities",
       "/api/activity-criteria", "/api/evidences", "/api/assessments",
       "/api/period-evaluations/years", "/api/family-reports",
@@ -151,6 +151,10 @@ test("the HTTP boundary protects every route and local PGlite remains usable", {
     assert.equal((await call("/api/diagnostics/spontaneous-observations", "token-a", {
       method: "POST", headers: { "content-type": "application/json" },
       body: JSON.stringify({ studentId: studentB, teacherId: teacherA, contextLabel: "Juego", observationText: "Nota ficticia" }),
+    })).status, 404);
+    assert.equal((await call("/api/audio/transcribe", "token-a", {
+      method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ studentId: studentB, context: "Juego", audio: { mimeType: "audio/wav", base64: "YQ==" } }),
     })).status, 404);
     assert.equal((await call(`/api/documents/family_report/${studentB}/download`, "token-a")).status, 404);
     assert.equal((await call("/api/documents", "expired")).status, 401);

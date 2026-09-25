@@ -54,7 +54,7 @@ test("la descarga toma recuentos autorizados sin incluir respuestas ni nombres d
       create table diagnostic_group_reviews(id uuid,classroom_id uuid,status text,version int,details jsonb,teacher_confirmed_at timestamptz);
       create table students(id uuid,classroom_id uuid,first_name text,last_name text,preferred_name text,status text);
       create table diagnostic_experience_observations(student_id uuid,classroom_id uuid,competency_v4_id text,observed_at timestamptz,observation_text text);
-      create table diagnostic_spontaneous_observations(student_id uuid,classroom_id uuid,competency_v4_id text,classification_status text,observed_at timestamptz,observation_text text);
+      create table diagnostic_spontaneous_observations(student_id uuid,classroom_id uuid,competency_v4_id text,competency_v4_ids text[] default '{}',classification_status text,observed_at timestamptz,observation_text text);
       create table diagnostic_sessions(id uuid,classroom_id uuid);
       create table diagnostic_entries(id uuid,student_id uuid,session_id uuid);
       create table student_observations(diagnostic_entry_id uuid,observed_at timestamptz);
@@ -69,7 +69,7 @@ test("la descarga toma recuentos autorizados sin incluir respuestas ni nombres d
     await db.query("insert into diagnostic_group_reviews values($1,$2,'confirmed',1,$3::jsonb,now())",
       [id(8), id(4), JSON.stringify(document.content)]);
     await db.query("insert into diagnostic_experience_observations values($1,$2,'COM_ORAL',now(),'Dato privado del niño')", [id(5), id(4)]);
-    await db.query("insert into diagnostic_spontaneous_observations values($1,$2,null,'pending',now(),'Otra nota privada')", [id(5), id(4)]);
+    await db.query("insert into diagnostic_spontaneous_observations(student_id,classroom_id,competency_v4_id,classification_status,observed_at,observation_text) values($1,$2,null,'pending',now(),'Otra nota privada')", [id(5), id(4)]);
     await db.query("insert into student_family_interviews values($1,$2,'confirmed',$3::jsonb)",
       [id(5), id(4), JSON.stringify({ answer: "Secreto familiar" })]);
     await db.query("insert into diagnostic_student_reviews values($1,$2,'confirmed',$3::jsonb)",

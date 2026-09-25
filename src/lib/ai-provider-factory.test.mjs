@@ -9,7 +9,7 @@ test("el factory crea OpenAIProvider para el plan Terra sin decidir un modelo", 
   const provider = createAIProviderForPlan(plan, { apiKey: "test-key", client: {} });
   assert.ok(provider instanceof OpenAIProvider);
   assert.equal(provider.configuredModel, plan.model);
-  assert.equal(provider.configuredModel, "gpt-5.6-terra");
+  assert.equal(provider.configuredModel, "gpt-6-luna");
 });
 
 test("el factory no crea provider para code", () => {

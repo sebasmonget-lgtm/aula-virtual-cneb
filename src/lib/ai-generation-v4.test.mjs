@@ -51,7 +51,7 @@ test("A: genera una activity de 5 años con competencia confirmada", async () =>
   assert.equal(provider.requests[0].workflow, "activity");
   assert.equal(result.metadata.workflow, "activity");
   assert.deepEqual(result.metadata.execution_plan.provider, "openai");
-  assert.equal(result.metadata.execution_plan.model, "gpt-5.6-terra");
+  assert.equal(result.metadata.execution_plan.model, "gpt-6-luna");
   assert.equal(result.metadata.execution_plan.reasoning_effort, "low");
   assert.deepEqual(result.provenance, provider.requests[0].ai_context_bundle.provenance);
   assert.equal(provider.requests[0].ai_context_bundle.context.workflow_inputs.activity_purpose, "Explorar cambios de sombra.");
@@ -152,5 +152,5 @@ test("un cambio de política aplica a activity sin modificar el generador", asyn
   };
   const provider = new MockAIProvider({ ...activityFields, competency_status: "confirmed", competency_id: "COM_ORAL" });
   const result = await generateAIWorkflowV4(confirmedInput, { provider, knowledgeBase, routingPolicy: policy });
-  assert.equal(result.metadata.execution_plan.model, "gpt-5.6-luna");
+  assert.equal(result.metadata.execution_plan.model, "gpt-6-luna");
 });

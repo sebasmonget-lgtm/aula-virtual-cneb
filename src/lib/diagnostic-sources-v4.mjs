@@ -3,6 +3,7 @@ import { loadKnowledgeBaseV4 } from "./knowledge-base-v4.mjs";
 import { cardIsApplicable } from "./ai-context-builder-v4.mjs";
 import { resolveAIExecutionPlan } from "./ai-execution-router-v4.mjs";
 import { neutralizeAssessmentText } from "./assessment-v4-service.mjs";
+import { buildClassifierOptions } from "./openai-competency-classifier.mjs";
 import { familyInterviewCategories, familyInterviewStructuredOptionsVersion, interviewLanguageOptions, interviewInterestOptions, interviewPreviousEducationOptions, interviewPreviousEducationTypeOptions } from "./family-interview-contract.mjs";
 
 export class DiagnosticSourceError extends Error {
@@ -196,20 +197,20 @@ export async function applicableDiagnosticCompetencies(classroom) {
 export async function recordSpontaneousObservation(db, teacherId, input) {
   const classroom = await scope(db, teacherId);
   await studentInScope(db, classroom.id, input?.studentId);
-  const { context, note } = validatedSpontaneousNote(input);
+  const { context, note } = validatedSpontaneousNote(input, Boolean(input?.mediaPath));
   if (input.supportStatus != null && !["no", "yes", "unknown"].includes(input.supportStatus))
     fail("invalid_observation", "Indica dónde ocurrió y qué hizo o dijo el niño.");
   const id = randomUUID();
   await db.query(`insert into diagnostic_spontaneous_observations
-    (id,classroom_id,student_id,context_label,observation_text,support_status,created_by)
-    values($1,$2,$3,$4,$5,$6,$7)`, [id,classroom.id,input.studentId,context,note,input.supportStatus ?? null,teacherId]);
+    (id,classroom_id,student_id,context_label,observation_text,support_status,created_by,media_path,media_mime_type)
+    values($1,$2,$3,$4,$5,$6,$7,$8,$9)`, [id,classroom.id,input.studentId,context,note || null,input.supportStatus ?? null,teacherId,input.mediaPath ?? null,input.mediaMimeType ?? null]);
   return { id, student_id: input.studentId, classification_status: "pending" };
 }
 
-function validatedSpontaneousNote(input) {
+function validatedSpontaneousNote(input, hasMedia = false) {
   const context = typeof input?.contextLabel === "string" ? input.contextLabel.trim() : "";
   const note = typeof input?.observationText === "string" ? input.observationText.trim() : "";
-  if (!context || context.length > 120 || !note || note.length > 4000)
+  if (!context || context.length > 120 || (!note && !hasMedia) || note.length > 4000)
     fail("invalid_observation", "Indica dónde ocurrió y qué hizo o dijo el niño.");
   return { context, note };
 }
@@ -224,8 +225,8 @@ export async function recordMatrixDiagnosticObservation(db, teacherId, input) {
   const id = randomUUID();
   const saved = (await db.query(`insert into diagnostic_spontaneous_observations
     (id,classroom_id,student_id,context_label,observation_text,created_by,
-      classification_status,classification_source,competency_v4_id,classified_at)
-    values($1,$2,$3,$4,$5,$6,'classified','teacher',$7,now())
+      classification_status,classification_source,competency_v4_id,competency_v4_ids,classified_at)
+    values($1,$2,$3,$4,$5,$6,'classified','teacher',$7,array[$7]::text[],now())
     returning id,student_id,competency_v4_id,context_label,observation_text,observed_at`,
     [id,classroom.id,input.studentId,context,note,teacherId,input.competencyId])).rows[0];
   return saved;
@@ -249,6 +250,7 @@ export async function classifySpontaneousObservation(db, teacherId, id, classifi
   const observation = (await db.query(`select * from diagnostic_spontaneous_observations where id=$1 and classroom_id=$2 and created_by=$3`, [id,classroom.id,teacherId])).rows[0];
   if (!observation) fail("not_found", "Observación no encontrada.");
   if (observation.classification_source === "teacher") return { id, status: "teacher_preserved" };
+  if (observation.classification_status !== "pending") return { id, status: observation.classification_status };
   const options = await applicableDiagnosticCompetencies(classroom);
   const plan = resolveAIExecutionPlan({ workflow: "diagnostic", task: "workflow_classification" });
   if (plan.provider !== "typesafe" || plan.capability !== "decision") fail("invalid_routing", "La clasificación requiere el router de decisiones.");
@@ -275,15 +277,48 @@ export async function markSpontaneousNeedsReview(db, teacherId, id) {
       and classification_status='pending'`, [id,classroom.id,teacherId]);
 }
 
-export async function correctSpontaneousClassification(db, teacherId, id, competencyId) {
+export async function suggestSpontaneousCompetencies(db, teacherId, id, classifier) {
+  const classroom = await scope(db, teacherId);
+  const observation = (await db.query(`select * from diagnostic_spontaneous_observations
+    where id=$1 and classroom_id=$2 and created_by=$3`, [id,classroom.id,teacherId])).rows[0];
+  if (!observation) fail("not_found", "Observación no encontrada.");
+  if (observation.classification_source === "teacher") return { id, status: "teacher_preserved" };
+  if (observation.classification_status !== "pending") return { id, status: observation.classification_status };
+  if (!observation.observation_text?.trim()) {
+    await markSpontaneousNeedsReview(db, teacherId, id);
+    return { id, status: "needs_review" };
+  }
+  const applicable = await applicableDiagnosticCompetencies(classroom);
+  const options = buildClassifierOptions((await loadKnowledgeBaseV4()).competencyCards,
+    classroom.age_years, applicable.map((item) => item.id));
+  const names = (await db.query(`select first_name,last_name,preferred_name from students where classroom_id=$1`, [classroom.id])).rows
+    .flatMap((row) => [row.first_name, row.last_name, row.preferred_name]).filter(Boolean);
+  const decision = await classifier.classify({ observation: neutralizeAssessmentText(observation.observation_text, names),
+    context: observation.context_label, age: classroom.age_years, options });
+  const allowed = new Set(options.map((item) => item.id));
+  const candidateIds = decision?.candidate_ids;
+  if (!Array.isArray(candidateIds) || candidateIds.length > 4 || candidateIds.some((item) => !allowed.has(item)))
+    fail("invalid_classification", "El clasificador devolvió competencias inválidas.");
+  const updated = await db.query(`update diagnostic_spontaneous_observations set classification_status='needs_review',
+    classification_source='openai',suggested_competency_v4_ids=$1::text[],classified_at=now()
+    where id=$2 and classroom_id=$3 and created_by=$4 and classification_source is distinct from 'teacher'
+      and classification_status='pending' returning id`, [[...new Set(candidateIds)],id,classroom.id,teacherId]);
+  return { id, status: updated.rows.length ? "needs_review" : "teacher_preserved" };
+}
+
+export async function correctSpontaneousClassification(db, teacherId, id, competencyIds) {
   const classroom = await scope(db, teacherId);
   const allowed = new Set((await applicableDiagnosticCompetencies(classroom)).map((item) => item.id));
-  if (competencyId !== null && !allowed.has(competencyId)) fail("invalid_competency", "La competencia no es aplicable al aula.");
+  const selected = competencyIds == null ? [] : typeof competencyIds === "string" ? [competencyIds] : competencyIds;
+  if (!Array.isArray(selected) || selected.length > allowed.size || selected.some((item) => !allowed.has(item)))
+    fail("invalid_competency", "La competencia no es aplicable al aula.");
+  const ids = [...new Set(selected)];
   const updated = await db.query(`update diagnostic_spontaneous_observations set classification_status=$1,
-    classification_source='teacher',competency_v4_id=$2,secondary_competency_v4_id=null,
+    classification_source='teacher',competency_v4_id=$2,secondary_competency_v4_id=$3,
+    competency_v4_ids=$4::text[],
     classification_confidence=null,classification_reason=null,classified_at=now()
-    where id=$3 and classroom_id=$4 and created_by=$5 returning id,student_id,classification_status,competency_v4_id`,
-    [competencyId ? "classified" : "needs_review",competencyId,id,classroom.id,teacherId]);
+    where id=$5 and classroom_id=$6 and created_by=$7 returning id,student_id,classification_status,competency_v4_id,competency_v4_ids`,
+    [ids.length ? "classified" : "needs_review",ids[0] ?? null,ids[1] ?? null,ids,id,classroom.id,teacherId]);
   if (!updated.rows.length) fail("not_found", "Observación no encontrada.");
   return updated.rows[0];
 }
@@ -291,7 +326,8 @@ export async function correctSpontaneousClassification(db, teacherId, id, compet
 export async function loadSpontaneousObservations(db, teacherId) {
   const classroom = await scope(db, teacherId);
   const observations = (await db.query(`select o.id,o.student_id,o.context_label,o.observation_text,o.support_status,
-    o.observed_at,o.classification_status,o.classification_source,o.competency_v4_id,o.secondary_competency_v4_id
+    o.observed_at,o.classification_status,o.classification_source,o.competency_v4_id,o.secondary_competency_v4_id,
+    o.competency_v4_ids,o.suggested_competency_v4_ids,o.media_path is not null as has_media,o.media_mime_type
     from diagnostic_spontaneous_observations o join students s on s.id=o.student_id and s.classroom_id=o.classroom_id
     where o.classroom_id=$1 and s.status='active' order by o.observed_at desc,o.id desc`, [classroom.id])).rows;
   return { observations, competencies: await applicableDiagnosticCompetencies(classroom) };

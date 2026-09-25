@@ -18,7 +18,7 @@ const proposal = (status = "insufficient") => ({ competency_id: "COM_ORAL", info
 
 test("assessment routing, schema y provider reciben una sola tarjeta", async () => {
   const plan = resolveAIExecutionPlan({ workflow: "assessment" });
-  assert.equal(plan.model, "gpt-5.6-sol"); assert.equal(plan.reasoning_effort, "medium");
+  assert.equal(plan.model, "gpt-6-sol"); assert.equal(plan.reasoning_effort, "medium");
   assert.equal(ASSESSMENT_OUTPUT_SCHEMA.id, "assessment-v2"); assert.equal(ASSESSMENT_OUTPUT_SCHEMA.additionalProperties, false);
   let captured;
   const evidence = [{ observed_on: "2026-09-20T12:00:00.000Z", activity_title: "Actividad", criterion_text: "Expresa ideas", observation_status: "with_support", observation_note: "Dijo algo", media_available: true }];

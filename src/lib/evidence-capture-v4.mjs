@@ -5,12 +5,12 @@ export class EvidenceCaptureValidationError extends Error {
   constructor(message) { super(message); this.name = "EvidenceCaptureValidationError"; }
 }
 
-export function validateEvidenceCaptureV4({ studentId, activityId, criterionId, observationStatus = null, observationText, photo } = {}) {
+export function validateEvidenceCaptureV4({ studentId, activityId, criterionId, observationStatus = null, observationText, photo, media } = {}) {
   if (![studentId, activityId, criterionId].every((value) => typeof value === "string" && value.trim())) throw new EvidenceCaptureValidationError("Selecciona estudiante, actividad y criterio.");
   if (observationStatus != null && !OBSERVATION_STATUSES.includes(observationStatus)) throw new EvidenceCaptureValidationError("Selecciona una marca observacional válida.");
   if (observationText != null && (typeof observationText !== "string" || observationText.trim().length > 4000)) throw new EvidenceCaptureValidationError("La observación no puede superar 4000 caracteres.");
   const note = typeof observationText === "string" ? observationText.trim() : "";
-  if (!note && !photo) throw new EvidenceCaptureValidationError("Describe lo que observaste o adjunta una foto.");
+  if (!note && !photo && !media) throw new EvidenceCaptureValidationError("Describe lo que observaste o adjunta una foto o audio.");
   return { studentId: studentId.trim(), activityId: activityId.trim(), criterionId: criterionId.trim(), observationStatus, observationText: note };
 }
 

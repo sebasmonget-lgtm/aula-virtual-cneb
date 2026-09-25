@@ -8,7 +8,7 @@ import {
   confirmDiagnosticGroup, confirmDiagnosticStudentReview, loadDiagnosticReview, loadFamilyInterview,
   prepareDiagnosticGroup, prepareDiagnosticStudentReview, saveDiagnosticGroup, saveDiagnosticStudentReview,
   suggestDiagnosticGroup,
-  saveMatrixDiagnosticObservation,
+  saveMatrixDiagnosticObservation, spontaneousObservationMediaUrl,
   type DiagnosticGroupDetails, type DiagnosticReviewWorkspace, type DiagnosticStudentReviewDetails,
   type DiagnosticObservationStatus, type FamilyInterview, type FamilyInterviewAnswerKey,
 } from "@/src/lib/local-database";
@@ -204,10 +204,10 @@ export function DiagnosticReview({ onObserve, onPlan, onGroupConfirmed }: { onOb
       <section className="space-y-3 rounded-2xl border border-[#d6e5ef] bg-white p-4"><h4 className="text-lg font-bold">2 · Lo que observaste</h4>
         {observations.length === 0 && pendingObservations.length === 0 && <p className="rounded-xl bg-[#f1f6fb] p-3 text-sm">Aún no hay observaciones docentes. Puedes dejar constancia de que necesitas observar más.</p>}
         <ul className="list-disc space-y-3 pl-6 marker:text-[#087d96]">{[...observations.map((row) => ({ id: row.id, competencyId: row.competency_v4_id, observedAt: row.observed_at,
-          title: row.experience_title, prompt: row.aspect_prompt, status: statusText[row.observation_status], text: row.observation_text, legacy: row.experience_id === "legacy" })),
+          title: row.experience_title, prompt: row.aspect_prompt, status: statusText[row.observation_status], text: row.observation_text, legacy: row.experience_id === "legacy", hasMedia: row.has_media })),
           ...pendingObservations.map((row) => ({ id: row.id, competencyId: null, observedAt: row.observed_at,
-            title: "Observación espontánea", prompt: row.context_label, status: "Aún sin competencia", text: row.observation_text, legacy: false }))]
-          .sort((a, b) => new Date(a.observedAt).getTime() - new Date(b.observedAt).getTime()).map((row) => <li key={row.id} className={`pl-1 text-sm leading-relaxed ${focusCompetencyId && row.competencyId === focusCompetencyId ? "text-[#075d70]" : ""}`}><span className="font-semibold">{new Date(row.observedAt).toLocaleDateString("es-PE")} · {row.title}</span><span className="block text-[#526b87]">{row.legacy ? "Registro anterior" : row.competencyId ? competencyNames.get(row.competencyId) : "Sin competencia asignada"} · {row.status}</span><span className="block">{row.prompt}</span>{row.text && <span className="block">“{row.text}”</span>}</li>)}
+            title: "Observación espontánea", prompt: row.context_label, status: "Aún sin competencia", text: row.observation_text, legacy: false, hasMedia: row.has_media }))]
+          .sort((a, b) => new Date(a.observedAt).getTime() - new Date(b.observedAt).getTime()).map((row) => <li key={`${row.id}:${row.competencyId ?? "pending"}`} className={`pl-1 text-sm leading-relaxed ${focusCompetencyId && row.competencyId === focusCompetencyId ? "text-[#075d70]" : ""}`}><span className="font-semibold">{new Date(row.observedAt).toLocaleDateString("es-PE")} · {row.title}</span><span className="block text-[#526b87]">{row.legacy ? "Registro anterior" : row.competencyId ? competencyNames.get(row.competencyId) : "Sin competencia asignada"} · {row.status}</span><span className="block">{row.prompt}</span>{row.text && <span className="block">“{row.text}”</span>}{row.hasMedia && <a className="block text-[#075d70] underline" href={spontaneousObservationMediaUrl(row.id)} target="_blank" rel="noreferrer">Abrir archivo privado</a>}</li>)}
         </ul>
       </section>
       <section className="space-y-3 rounded-2xl border border-[#87cbd9] bg-white p-4"><h4 className="text-lg font-bold">3 · Tu comentario sobre {student.name}</h4>

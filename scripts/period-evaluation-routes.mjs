@@ -94,7 +94,7 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
     try {
       const mediaMatch = url.pathname.match(/^\/api\/period-evaluations\/evidence\/([0-9a-f-]{36})\/media$/i);
       if (request.method === "GET" && mediaMatch) {
-        if (!mediaAvailable) { send(response, 503, { error: "Las fotos estarán disponibles al conectar Storage." }, origin); return true; }
+        if (!mediaAvailable) { send(response, 503, { error: "Los archivos estarán disponibles al conectar Storage." }, origin); return true; }
         const row = (await db.query(`select e.media_path,e.student_id from evidences e join students s on s.id=e.student_id join classrooms c on c.id=s.classroom_id join school_years sy on sy.id=c.school_year_id where e.id=$1 and c.teacher_id=$2 and sy.owner_id=$2`, [mediaMatch[1], teacherId])).rows[0];
         if (!row?.media_path) throw new Error("Adjunto no disponible para esta aula.");
         const media = await evidenceStorage.read(row.media_path, { teacherId, studentId: row.student_id });

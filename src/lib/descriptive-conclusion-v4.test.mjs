@@ -23,7 +23,7 @@ const conclusion = (status = "sufficient") => ({ competency_id: "COM_ORAL", info
 
 test("descriptive_conclusion usa Sol/medium, schema strict y una tarjeta en el provider", async () => {
   const plan = resolveAIExecutionPlan({ workflow: "descriptive_conclusion", task: "generation" });
-  assert.equal(plan.model, "gpt-5.6-sol"); assert.equal(plan.reasoning_effort, "medium");
+  assert.equal(plan.model, "gpt-6-sol"); assert.equal(plan.reasoning_effort, "medium");
   assert.equal(DESCRIPTIVE_CONCLUSION_OUTPUT_SCHEMA.id, "descriptive-conclusion-v1");
   assert.equal(DESCRIPTIVE_CONCLUSION_OUTPUT_SCHEMA.additionalProperties, false);
   let captured;
@@ -32,7 +32,7 @@ test("descriptive_conclusion usa Sol/medium, schema strict y una tarjeta en el p
   assert.equal(captured.workflow, "descriptive_conclusion"); assert.equal(captured.ai_context_bundle.curriculum.competency_cards.length, 1);
   assert.equal(captured.ai_context_bundle.curriculum.competency_cards[0].id, "COM_ORAL");
   assert.equal(result.validation.schema, "descriptive-conclusion-v1");
-  assert.equal(captured.execution_plan.model, "gpt-5.6-sol");
+  assert.equal(captured.execution_plan.model, "gpt-6-sol");
   assert.equal(captured.ai_context_bundle.context.student.id, "current_student");
 });
 

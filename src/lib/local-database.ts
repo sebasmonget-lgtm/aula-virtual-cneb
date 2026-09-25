@@ -27,6 +27,7 @@ export type LocalEvidence = {
   observed_at: string;
   media_path?: string | null;
 };
+export type PrivateMediaUpload = { base64: string; mimeType: string; name?: string };
 
 export type ObservationStatus = "demonstrated" | "with_support" | "not_yet_demonstrated" | "insufficient_information";
 export type DiagnosticObservationStatus = ObservationStatus | "observed_without_judgment";
@@ -96,10 +97,10 @@ export type DiagnosticStudentReviewDetails = { information_status: "information_
 export type DiagnosticGroupDetails = { strengths: string; needs: string; planning_priorities: string };
 export type DiagnosticReviewWorkspace = {
   students: (LocalStudent & { initial_context: string | null; family_context: ({ version: number } & Record<string, string | number>) | null; unclassified_observations: number })[];
-  observations: { id: string; student_id: string; competency_v4_id: string | null; experience_id: string; aspect_id: string; catalog_version: string; experience_title: string; aspect_prompt: string; observation_status: DiagnosticObservationStatus; observation_text: string | null; observed_at: string }[];
+  observations: { id: string; student_id: string; competency_v4_id: string | null; experience_id: string; aspect_id: string; catalog_version: string; experience_title: string; aspect_prompt: string; observation_status: DiagnosticObservationStatus; observation_text: string | null; observed_at: string; has_media?: boolean }[];
   reviews: { id: string; student_id: string; competency_v4_id: string; version: number; status: "draft" | "confirmed"; details: DiagnosticSynthesisDetails; teacher_confirmed_at: string | null; updated_at: string }[];
   student_reviews: { id: string; student_id: string; version: number; status: "draft" | "confirmed"; details: DiagnosticStudentReviewDetails; teacher_confirmed_at: string | null; is_current: boolean }[];
-  pending_observations: { id: string; student_id: string; context_label: string; observation_text: string; observed_at: string }[];
+  pending_observations: { id: string; student_id: string; context_label: string; observation_text: string | null; observed_at: string; has_media?: boolean }[];
   group_reviews: { id: string; version: number; status: "draft" | "confirmed"; details: DiagnosticGroupDetails; teacher_confirmed_at: string | null; is_current: boolean }[];
   group_coverage: { competency_id: string; competency_name: string; children_with_observations: number; confirmed_with_information: number; confirmed_insufficient: number; children_without_observations: number }[];
   derived_group_information: { confirmed_interviews: number; interests: { key: string; label: string; count: number }[]; observation_gaps: { competency_id: string; competency_name: string; children_with_observations: number; children_without_observations: number }[] };
@@ -120,7 +121,7 @@ export const familyContextLabels: Record<string, string> = {
 };
 export type FamilyInterview = { id: string; student_id: string; version: number; status: "draft" | "confirmed"; details: FamilyInterviewDetails; has_attachment: boolean; updated_at: string; teacher_confirmed_at: string | null };
 export type FamilyInterviewStatus = "not_started" | "partial" | "confirmed";
-export type SpontaneousObservation = { id: string; student_id: string; context_label: string; observation_text: string; support_status: "yes" | "no" | "unknown" | null; observed_at: string; classification_status: "pending" | "classified" | "needs_review"; classification_source: "jev" | "teacher" | null; competency_v4_id: string | null; secondary_competency_v4_id: string | null };
+export type SpontaneousObservation = { id: string; student_id: string; context_label: string; observation_text: string | null; support_status: "yes" | "no" | "unknown" | null; observed_at: string; classification_status: "pending" | "classified" | "needs_review"; classification_source: "jev" | "openai" | "teacher" | null; competency_v4_id: string | null; secondary_competency_v4_id: string | null; competency_v4_ids: string[]; suggested_competency_v4_ids: string[]; has_media: boolean; media_mime_type: string | null };
 
 export const localDatabaseApiUrl = process.env.NEXT_PUBLIC_AYNI_API_URL || process.env.NEXT_PUBLIC_LOCAL_DATABASE_URL || "http://127.0.0.1:8788";
 const apiUrl = localDatabaseApiUrl;
@@ -190,6 +191,7 @@ export async function createLocalEvidence(input: {
   observationStatus?: ObservationStatus | null;
   observationText?: string;
   photo?: { base64: string; mimeType: "image/jpeg" | "image/png" | "image/webp" };
+  media?: PrivateMediaUpload;
 }) {
   const response = await apiFetch(`${apiUrl}/api/evidences`, {
     method: "POST",
@@ -303,6 +305,16 @@ export const confirmFamilyInterview = (studentId: string) => diagnosticRequest<F
 export const attachFamilyInterview = (studentId: string, mimeType: string, base64: string) => diagnosticRequest<FamilyInterview>(`students/${encodeURIComponent(studentId)}/family-interview/attachment`, "POST", { mimeType, base64 });
 export const familyInterviewAttachmentUrl = (studentId: string) => `${apiUrl}/api/diagnostics/students/${encodeURIComponent(studentId)}/family-interview/attachment`;
 export const loadSpontaneousObservations = () => diagnosticRequest<{ observations: SpontaneousObservation[]; competencies: { id: string; name: string }[] }>("spontaneous-observations");
-export const saveSpontaneousObservation = (input: { studentId: string; contextLabel: string; observationText: string; supportStatus?: "yes" | "no" | "unknown" }) => diagnosticRequest<{ id: string; student_id: string; classification_status: "pending" }>("spontaneous-observations", "POST", input);
+export const saveSpontaneousObservation = (input: { studentId: string; contextLabel: string; observationText: string; supportStatus?: "yes" | "no" | "unknown"; media?: PrivateMediaUpload }) => diagnosticRequest<{ id: string; student_id: string; classification_status: "pending" }>("spontaneous-observations", "POST", input);
 export const saveMatrixDiagnosticObservation = (input: { studentId: string; competencyId: string; contextLabel: string; observationText: string }) => diagnosticRequest<{ id: string; student_id: string; competency_v4_id: string }>("spontaneous-observations/matrix", "POST", input);
-export const correctSpontaneousClassification = (id: string, competencyId: string | null) => diagnosticRequest(`spontaneous-observations/${encodeURIComponent(id)}/classification`, "PUT", { competencyId });
+export const correctSpontaneousClassification = (id: string, competencyIds: string[]) => diagnosticRequest(`spontaneous-observations/${encodeURIComponent(id)}/classification`, "PUT", { competencyIds });
+export const spontaneousObservationMediaUrl = (id: string) => `${apiUrl}/api/diagnostics/spontaneous-observations/${encodeURIComponent(id)}/media`;
+export const evidenceMediaUrl = (id: string) => `${apiUrl}/api/period-evaluations/evidence/${encodeURIComponent(id)}/media`;
+export async function transcribeShortAudio(input: { studentId: string; context: string; audio: PrivateMediaUpload }) {
+  const response = await apiFetch(`${apiUrl}/api/audio/transcribe`, {
+    method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(input),
+  });
+  const result = await response.json() as { transcript?: string; improved_text?: string; error?: string };
+  if (!response.ok || !result.improved_text) throw new Error(result.error ?? "No se pudo transcribir el audio.");
+  return { transcript: result.transcript ?? "", improvedText: result.improved_text };
+}

@@ -205,7 +205,7 @@ export async function loadDiagnosticWordContext(db, teacherId, reviewId) {
     db.query(`select o.student_id,o.competency_v4_id,o.observed_at from diagnostic_experience_observations o
       join students s on s.id=o.student_id and s.classroom_id=o.classroom_id
       where o.classroom_id=$1 and s.status='active'`, [scope.classroom_id]),
-    db.query(`select o.student_id,o.competency_v4_id,o.classification_status,o.observed_at
+    db.query(`select o.student_id,o.competency_v4_id,o.competency_v4_ids,o.classification_status,o.observed_at
       from diagnostic_spontaneous_observations o join students s on s.id=o.student_id and s.classroom_id=o.classroom_id
       where o.classroom_id=$1 and s.status='active'`, [scope.classroom_id]),
     db.query(`select de.student_id,so.observed_at from student_observations so
@@ -223,7 +223,9 @@ export async function loadDiagnosticWordContext(db, teacherId, reviewId) {
   const observations = [...guided.rows, ...spontaneous.rows, ...legacy.rows]
     .filter((row) => activeIds.has(row.student_id));
   const coverage = new Map();
-  for (const row of [...guided.rows, ...spontaneous.rows.filter((item) => item.classification_status === 'classified')]) {
+  for (const row of [...guided.rows, ...spontaneous.rows.filter((item) => item.classification_status === 'classified')
+    .flatMap((item) => (item.competency_v4_ids?.length ? item.competency_v4_ids : [item.competency_v4_id].filter(Boolean))
+      .map((id) => ({ ...item, competency_v4_id: id })))]) {
     if (!row.competency_v4_id) continue;
     const item = coverage.get(row.competency_v4_id) ?? { competency_id: row.competency_v4_id, records: 0, students: new Set() };
     item.records += 1;

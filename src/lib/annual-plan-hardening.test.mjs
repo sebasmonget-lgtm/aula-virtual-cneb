@@ -8,7 +8,7 @@ import { loadKnowledgeBaseV4 } from "./knowledge-base-v4.mjs";
 import { nextAnnualPlanVersion, safeAnnualGenerationMetadata } from "./annual-plan-persistence.mjs";
 
 const bundle = { curriculum: { competency_cards: [] }, provenance: {} };
-const plan = { provider: "openai", model: "gpt-5.6-sol", execution: "generation" };
+const plan = { provider: "openai", model: "gpt-6-sol", execution: "generation" };
 
 test("provider request conserva el workflow y el schema de cada salida", () => {
   const activity = buildProviderRequest("activity", bundle, plan, ACTIVITY_OUTPUT_SCHEMA);
@@ -20,8 +20,8 @@ test("provider request conserva el workflow y el schema de cada salida", () => {
 });
 
 test("metadata anual preserva solo auditoría permitida", () => {
-  const saved = safeAnnualGenerationMetadata({ workflow: "annual_plan", model: "gpt-5.6-sol", reasoning_effort: "medium", response_id: "resp_1", usage: { input_tokens: 2, cached_input_tokens: 1, output_tokens: 3, total_tokens: 5, secret: "no" }, provenance: { knowledge_base_version: "4.0.0", knowledge_unit_ids: ["KU-1"] }, prompt: "never" });
-  assert.deepEqual(saved, { workflow: "annual_plan", model: "gpt-5.6-sol", reasoning_effort: "medium", response_id: "resp_1", usage: { input_tokens: 2, cached_input_tokens: 1, output_tokens: 3, total_tokens: 5 }, provenance: { knowledge_base_version: "4.0.0", knowledge_unit_ids: ["KU-1"] }, knowledge_base_version: "4.0.0" });
+  const saved = safeAnnualGenerationMetadata({ workflow: "annual_plan", model: "gpt-6-sol", reasoning_effort: "medium", response_id: "resp_1", usage: { input_tokens: 2, cached_input_tokens: 1, output_tokens: 3, total_tokens: 5, secret: "no" }, provenance: { knowledge_base_version: "4.0.0", knowledge_unit_ids: ["KU-1"] }, prompt: "never" });
+  assert.deepEqual(saved, { workflow: "annual_plan", model: "gpt-6-sol", reasoning_effort: "medium", response_id: "resp_1", usage: { input_tokens: 2, cached_input_tokens: 1, output_tokens: 3, total_tokens: 5 }, provenance: { knowledge_base_version: "4.0.0", knowledge_unit_ids: ["KU-1"] }, knowledge_base_version: "4.0.0" });
   assert.equal(nextAnnualPlanVersion(0), 1);
   assert.equal(nextAnnualPlanVersion(1), 2);
 });
@@ -52,7 +52,7 @@ const annualOutput = {
 
 test("annual_plan entrega workflow y schema annual-plan-v2 al provider y al resultado", async () => {
   const requests = [];
-  const provider = { id: "mock", model: "gpt-5.6-sol", generate: async (request) => { requests.push(request); return annualOutput; } };
+  const provider = { id: "mock", model: "gpt-6-sol", generate: async (request) => { requests.push(request); return annualOutput; } };
   const result = await generateAIWorkflowV4({ workflow: "annual_plan", age: 5, teacher_request: "Preparar plan anual.", calendar_context: { school_year: "2026", starts_on: "2026-03-01", ends_on: "2026-12-18" }, classroom_context: { group_context: "Grupo de cinco años" } }, { provider, knowledgeBase: await loadKnowledgeBaseV4() });
   assert.equal(requests[0].workflow, "annual_plan");
   assert.equal(requests[0].output_schema.id, "annual-plan-v2");
@@ -92,14 +92,14 @@ test("el schema nuevo exige secciones del documento y un plan guardado v1 sigue 
 
 test("el modelo no puede devolver el schema histórico para una generación nueva", async () => {
   const legacy = Object.fromEntries(Object.entries(annualOutput).filter(([key]) => !["annual_purposes", "teaching_strategies", "assessment_followup", "family_collaboration", "inclusive_supports"].includes(key)));
-  const provider = { id: "mock", model: "gpt-5.6-sol", generate: async () => legacy };
+  const provider = { id: "mock", model: "gpt-6-sol", generate: async () => legacy };
   const input = { workflow: "annual_plan", age: 5, teacher_request: "Preparar plan anual.", calendar_context: { school_year: "2026", starts_on: "2026-03-01", ends_on: "2026-12-18" }, classroom_context: { group_context: "Grupo ficticio" } };
   await assert.rejects(generateAIWorkflowV4(input, { provider, knowledgeBase: await loadKnowledgeBaseV4() }), (error) => error.code === "INVALID_AI_GENERATION" && error.reason === "annual_plan_schema_mismatch");
 });
 
 test("salida anual malformada del provider falla de forma controlada", async () => {
   const input = { workflow: "annual_plan", age: 5, teacher_request: "Preparar plan anual.", calendar_context: { school_year: "2026", starts_on: "2026-03-01", ends_on: "2026-12-18" }, classroom_context: { group_context: "Grupo de cinco años" } };
-  const provider = { id: "mock", model: "gpt-5.6-sol", generate: async () => ({ ...annualOutput, proposed_experiences: [{ ...sampleExperience, primary_competency_ids: null }] }) };
+  const provider = { id: "mock", model: "gpt-6-sol", generate: async () => ({ ...annualOutput, proposed_experiences: [{ ...sampleExperience, primary_competency_ids: null }] }) };
   await assert.rejects(generateAIWorkflowV4(input, { provider, knowledgeBase: await loadKnowledgeBaseV4() }), (error) => error.code === "INVALID_AI_GENERATION" && error.reason === "annual_plan_experience_schema_mismatch");
 });
 

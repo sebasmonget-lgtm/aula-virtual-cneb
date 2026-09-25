@@ -5,7 +5,7 @@ import { buildTeacherActivityGenerationInput, generateTeacherActivity, ActivityG
 const classroom = { id: "classroom-5", section: "Sala Amarilla", age: 5 };
 const request = { activityPurpose: "Explorar cambios de sombra.", context: "El grupo juega con linternas.", materials: ["linternas", "papel"] };
 const proposal = { title: "Sombras", purpose: "Explorar", meaningful_situation: "Situación", teacher_preparation: "Preparar", child_actions: "Explorar", mediation: "Preguntar", evidence_opportunities: "Observar", closure_or_continuity: "Cerrar", competency_status: "unconfirmed", competency_id: null };
-const plan = { execution: "generation", provider: "openai", model: "gpt-5.6-terra", reasoning_effort: "low" };
+const plan = { execution: "generation", provider: "openai", model: "gpt-6-luna", reasoning_effort: "low" };
 
 test("A y H: prepara activity sin competencia con aula y materiales precargados", () => {
   const input = buildTeacherActivityGenerationInput({ request, classroom });
@@ -41,8 +41,8 @@ test("genera solo activity, conserva metadata interna y no envía datos privados
     createProvider: (receivedPlan) => ({ id: receivedPlan.provider }),
     generate: async (input, options) => {
       providerRequest = input;
-      assert.equal(options.executionPlan.model, "gpt-5.6-terra");
-      return { output: proposal, metadata: { workflow: "activity", model: "gpt-5.6-terra", response_id: "resp_mock", usage: { input_tokens: 1 }, execution_plan: plan }, provenance: { knowledge_unit_ids: ["unit-1"] } };
+      assert.equal(options.executionPlan.model, "gpt-6-luna");
+      return { output: proposal, metadata: { workflow: "activity", model: "gpt-6-luna", response_id: "resp_mock", usage: { input_tokens: 1 }, execution_plan: plan }, provenance: { knowledge_unit_ids: ["unit-1"] } };
     },
   });
   assert.equal(result.proposal.competency_status, "unconfirmed");
