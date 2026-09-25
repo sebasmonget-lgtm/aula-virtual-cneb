@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { loadKnowledgeBaseV4 } from "./knowledge-base-v4.mjs";
 import { cardIsApplicable } from "./ai-context-builder-v4.mjs";
+import { competencyApplicability } from "./competency-applicability.mjs";
 import { resolveAIExecutionPlan } from "./ai-execution-router-v4.mjs";
 import { neutralizeAssessmentText } from "./assessment-v4-service.mjs";
 import { buildClassifierOptions } from "./openai-competency-classifier.mjs";
@@ -188,7 +189,7 @@ export async function familyInterviewAttachmentPath(db, teacherId, studentId) {
 
 export async function applicableDiagnosticCompetencies(classroom) {
   return (await loadKnowledgeBaseV4()).competencyCards.filter((card) =>
-    card.runtime_selectable_by_age?.[String(classroom.age_years)] && cardIsApplicable(card, {
+    competencyApplicability(card, classroom.age_years).belongs_to_cycle && cardIsApplicable(card, {
       castellanoL2Applicable: classroom.castellano_l2_applicable,
       religionApplicable: classroom.religion_applicable,
     })).map((card) => ({ id: card.id, name: card.official_name }));

@@ -1,5 +1,6 @@
 import { loadKnowledgeBaseV4, validateKnowledgeBaseAge, validateKnowledgeBaseWorkflow } from "./knowledge-base-v4.mjs";
 import { retrieveKnowledgeV4 } from "./knowledge-retrieval-v4.mjs";
+import { competencyApplicability } from "./competency-applicability.mjs";
 
 const SHORTLIST_SIZE = 3;
 
@@ -74,11 +75,14 @@ export function applicableReligion(input) {
 function allCardsComplete(cards, age, selectableOnly = false) {
   const ageKey = String(age);
   return cards
-    .filter((card) => card?.id && card.official_name && card.ages?.[ageKey] && (!selectableOnly || card.runtime_selectable_by_age?.[ageKey]))
+    .filter((card) => card?.id && card.official_name && card.ages?.[ageKey] && (!selectableOnly || competencyApplicability(card, age).has_age_performance))
     .map((card) => ({
       ...card,
       ages: { [ageKey]: card.ages[ageKey] },
       runtime_selectable_by_age: { [ageKey]: card.runtime_selectable_by_age[ageKey] },
+      age_performance_status: card.ages[ageKey].status,
+      age_reference_notice: card.ages[ageKey].status === "specified" ? null
+        : "No existe desempeño específico publicado para esta edad. Usa competencia, capacidades, estándar de ciclo y situación concreta; no inventes ni copies desempeños de otra edad.",
     }));
 }
 
@@ -302,7 +306,7 @@ export async function buildAIContext(input, knowledgeBase) {
   const competencyCards = confirmedCompetencyId
     ? allCardsComplete(knowledgeBase.competencyCards.filter((card) => confirmedIds.includes(card.id) && cardIsApplicable(card, applicability)), input.age)
     : input.workflow === "annual_plan"
-      ? allCardsComplete(knowledgeBase.competencyCards.filter((card) => cardIsApplicable(card, applicability)), input.age, true)
+      ? allCardsComplete(knowledgeBase.competencyCards.filter((card) => cardIsApplicable(card, applicability)), input.age)
       : shortlistCards(knowledgeBase, retrieval, input.age, applicability);
   if (["family_report", "project", "unit"].includes(input.workflow) && confirmedIds.length > 0 && competencyCards.length !== confirmedIds.length) throw new RangeError("Hay competencias seleccionadas sin tarjeta aplicable para esta edad.");
   const competencyIds = competencyCards.map((card) => card.id);

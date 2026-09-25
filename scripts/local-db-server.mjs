@@ -11,7 +11,7 @@ import { buildStudentPedagogicalContext, refreshStudentContextSnapshot } from ".
 import { getCurrentClassroomContext, publicClassroomContext } from "../src/lib/classroom-context-service.mjs";
 import { buildClassroomStatistics } from "../src/lib/statistics-service.mjs";
 import { loadKnowledgeBaseV4 } from "../src/lib/knowledge-base-v4.mjs";
-import { cardIsApplicable } from "../src/lib/ai-context-builder-v4.mjs";
+import { competencyApplicability } from "../src/lib/competency-applicability.mjs";
 import { generateTeacherActivity } from "../src/lib/ai-activity-ui-service.mjs";
 import { generateTeacherAnnualPlan } from "../src/lib/ai-annual-plan-ui-service.mjs";
 import { DiagnosticSuggestionError, suggestDiagnosticGroupReview } from "../src/lib/ai-diagnostic-evaluation-service.mjs";
@@ -456,13 +456,15 @@ async function competencyOptionsForWorkflow(workflow) {
   const age = String(classroom.age);
   const applicability = { castellanoL2Applicable: classroom.castellano_l2_applicable === true, religionApplicable: classroom.religion_applicable === true };
   return { age: classroom.age, competencies: knowledgeBase.competencyCards
-    .filter((card) => card.runtime_selectable_by_age?.[age] && cardIsApplicable(card, applicability))
-    .map((card) => ({ id: card.id, name: card.official_name })) };
+    .filter((card) => competencyApplicability(card, age, applicability).planning_available)
+    .map((card) => ({ id: card.id, name: card.official_name,
+      has_age_performance: competencyApplicability(card, age, applicability).has_age_performance,
+      reference_kind: competencyApplicability(card, age, applicability).reference_kind })) };
 }
 async function applicableCompetencyIds(workflow, classroom) {
   const knowledgeBase = await loadKnowledgeBaseV4();
   const applicability = { castellanoL2Applicable: classroom.castellano_l2_applicable === true, religionApplicable: classroom.religion_applicable === true };
-  return new Set(knowledgeBase.competencyCards.filter((card) => card.runtime_selectable_by_age?.[String(classroom.age)] && cardIsApplicable(card, applicability)).map((card) => card.id));
+  return new Set(knowledgeBase.competencyCards.filter((card) => competencyApplicability(card, classroom.age, applicability).planning_available).map((card) => card.id));
 }
 function validateExperienceDates(body, context) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(body.startsOn ?? "") || !/^\d{4}-\d{2}-\d{2}$/.test(body.endsOn ?? "") || body.startsOn > body.endsOn || body.startsOn < context.starts_on || body.endsOn > context.ends_on) throw new Error("Las fechas deben estar dentro del año escolar y en orden válido.");
