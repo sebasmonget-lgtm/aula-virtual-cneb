@@ -69,7 +69,22 @@ function validateGroupDetails(details) {
   const planning = clean(details.planning_priorities, 3000);
   if (strengths === null || needs === null || planning === null || ![strengths, needs, planning].some(Boolean))
     fail("invalid_details", "Escribe al menos una observación del grupo antes de confirmarla.");
-  return { strengths, needs, planning_priorities: planning };
+  const priorities = details.competency_priorities ?? [];
+  if (!Array.isArray(priorities) || priorities.length > 14 || priorities.some((item) => !item || typeof item !== "object" ||
+      !/^[A-Z][A-Z0-9_]+$/.test(item.competency_id ?? "") ||
+      !["prioritize", "maintain", "observe_more"].includes(item.emphasis) || !clean(item.reason, 500)))
+    fail("invalid_details", "Revisa las competencias y motivos del resumen del aula.");
+  if (new Set(priorities.map((item) => item.competency_id)).size !== priorities.length)
+    fail("invalid_details", "Una competencia solo puede aparecer una vez en las prioridades del aula.");
+  return { strengths, needs, planning_priorities: planning,
+    competency_priorities: priorities.map((item) => ({ competency_id: item.competency_id, emphasis: item.emphasis, reason: clean(item.reason, 500) })) };
+}
+
+async function validateGroupCompetencyIds(details, classroom) {
+  const cards = await applicableDiagnosticCompetencies(classroom);
+  const allowed = new Set(cards.map((card) => card.id));
+  if (details.competency_priorities.some((item) => !allowed.has(item.competency_id)))
+    fail("invalid_details", "Una competencia no corresponde a esta aula.");
 }
 
 function validateStudentReviewDetails(details) {
@@ -418,7 +433,7 @@ export async function prepareDiagnosticGroupReview(db, teacherId) {
   }
   const version = (await db.query(`select coalesce(max(version),0)::int + 1 as next from diagnostic_group_reviews where classroom_id = $1`, [classroom.id])).rows[0].next;
   const id = randomUUID();
-  const details = { strengths: "", needs: "", planning_priorities: "" };
+  const details = { strengths: "", needs: "", planning_priorities: "", competency_priorities: [] };
   await db.query(`insert into diagnostic_group_reviews
     (id,classroom_id,version,status,details,source_snapshot,created_by)
     values($1,$2,$3,'draft',$4::jsonb,$5::jsonb,$6)`, [id,classroom.id,version,JSON.stringify(details),JSON.stringify(snapshot),teacherId]);
@@ -444,7 +459,8 @@ export async function diagnosticGroupProposalSources(db, teacherId, draftId) {
     where classroom_id=$1 and status='active'`, [classroom.id])).rows
     .flatMap((row) => [row.first_name, row.last_name, row.preferred_name,
       [row.first_name, row.last_name].filter(Boolean).join(" ")]).filter(Boolean);
-  return { age: classroom.age_years, student_count: students.length,
+  const competencyOptions = await applicableDiagnosticCompetencies(classroom);
+  return { age: classroom.age_years, student_count: students.length, competency_options: competencyOptions,
     comments: comments.map((row) => ({
       information_status: row.details.information_status,
       comment: neutralizeAssessmentText(row.details.comment_text, names).slice(0, 3000),
@@ -454,6 +470,7 @@ export async function diagnosticGroupProposalSources(db, teacherId, draftId) {
 export async function saveDiagnosticGroupReview(db, teacherId, id, details) {
   const { classroom } = await scope(db, teacherId);
   const validated = validateGroupDetails(details);
+  await validateGroupCompetencyIds(validated, classroom);
   const result = await db.query(`update diagnostic_group_reviews set details = $1::jsonb, updated_at = now()
     where id = $2 and classroom_id = $3 and created_by = $4 and status = 'draft' returning id,version,status,details,teacher_confirmed_at`,
   [JSON.stringify(validated), id, classroom.id, teacherId]);
@@ -466,7 +483,7 @@ export async function confirmDiagnosticGroupReview(db, teacherId, id) {
   const row = (await db.query(`select * from diagnostic_group_reviews where id = $1 and classroom_id = $2
     and created_by = $3 and status = 'draft'`, [id,classroom.id,teacherId])).rows[0];
   if (!row) fail("not_editable", "La revisión del grupo ya está confirmada o no pertenece a tu aula.");
-  validateGroupDetails(row.details);
+  await validateGroupCompetencyIds(validateGroupDetails(row.details), classroom);
   if (!sameDiagnosticSources(row.source_snapshot, await confirmedSnapshot(db, classroom.id)))
     fail("stale_sources", "Cambiaron los diagnósticos individuales. Vuelve a preparar la revisión grupal.");
   const workspace = await loadDiagnosticAssessmentWorkspace(db, teacherId);

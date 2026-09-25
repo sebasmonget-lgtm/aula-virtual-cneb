@@ -107,7 +107,8 @@ test("vista grupal usa solo síntesis confirmadas; prioridades docentes llegan a
     await saveDiagnosticSynthesis(db, teacher, individual.id, { information_status: "information_available", summary_text: "Eligió y explicó el juego.", next_observation: "" });
     await confirmDiagnosticSynthesis(db, teacher, individual.id);
     const group = await prepareDiagnosticGroupReview(db, teacher);
-    await saveDiagnosticGroupReview(db, teacher, group.id, { strengths: "Interés por el juego.", needs: "Ofrecer más oportunidades de conversación.", planning_priorities: "Proponer juego compartido." });
+    await saveDiagnosticGroupReview(db, teacher, group.id, { strengths: "Interés por el juego.", needs: "Ofrecer más oportunidades de conversación.", planning_priorities: "Proponer juego compartido.",
+      competency_priorities: [{ competency_id: competencyId, emphasis: "observe_more", reason: "Conviene recoger actuaciones en otros juegos." }] });
     const secondStudent = workspace.students[1].id;
     const secondCompetency = workspace.experiences[0].aspects[1].competency_id;
     await observe(db, teacher, workspace, secondStudent, 1, "with_support", "Conversó con apoyo.");
@@ -126,6 +127,7 @@ test("vista grupal usa solo síntesis confirmadas; prioridades docentes llegan a
     assert.equal(coverage.confirmed_with_information, 1);
     assert.equal(coverage.children_without_observations, 1);
     assert.equal(review.group_reviews[0].details.planning_priorities, "Proponer juego compartido.");
+    assert.deepEqual(review.group_reviews[0].details.competency_priorities, [{ competency_id: competencyId, emphasis: "observe_more", reason: "Conviene recoger actuaciones en otros juegos." }]);
     assert.equal(summarizeDiagnosticGroup(workspace.students, [], [], workspace.experiences).every((item) => item.confirmed_with_information === 0), true);
     const server = await readFile(new URL("../../scripts/local-db-server.mjs", import.meta.url), "utf8");
     assert.match(server, /diagnostic_group_reviews where classroom_id=\$1 and status='confirmed'/);

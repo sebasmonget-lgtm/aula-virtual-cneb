@@ -424,8 +424,11 @@ async function annualPlanningContext() {
     .flatMap((item) => [item.first_name, item.last_name, item.preferred_name, [item.first_name, item.last_name].filter(Boolean).join(" ")]).filter(Boolean) : [];
   const contextV4 = publicClassroomContext(await getCurrentClassroomContext(db, teacherId, row.id));
   const groupSummary = contextV4.diagnostic_review_current ? diagnosticPlanningSummary(group?.details, studentNames) : null;
-  const diagnostic_group = group && contextV4.diagnostic_review_current ? Object.fromEntries(["strengths", "needs", "planning_priorities"]
-    .map((field) => [field, diagnosticPlanningSummary({ [field]: group.details?.[field] }, studentNames) ?? ""])) : null;
+  const diagnostic_group = group && contextV4.diagnostic_review_current ? {
+    ...Object.fromEntries(["strengths", "needs", "planning_priorities"]
+      .map((field) => [field, diagnosticPlanningSummary({ [field]: group.details?.[field] }, studentNames) ?? ""])),
+    competency_priorities: group.details?.competency_priorities ?? [],
+  } : null;
   const startDay = annualCalendarDay(row.starts_on);
   const endDay = annualCalendarDay(row.ends_on);
   return { ...row, starts_on: startDay, ends_on: endDay,

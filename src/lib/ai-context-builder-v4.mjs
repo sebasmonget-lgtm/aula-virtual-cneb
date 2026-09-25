@@ -218,6 +218,7 @@ function classroomSubset(input, workflowRequirements, retrieval) {
   if (workflowUses(workflowRequirements, "time") || workflowUses(workflowRequirements, "frequency")) allowed.add("available_time");
   if (workflowUses(workflowRequirements, "interest") || workflowUses(workflowRequirements, "children_questions") || workflowUses(workflowRequirements, "project_trigger")) allowed.add("interests");
   if (workflowUses(workflowRequirements, "diagnostic")) allowed.add("diagnostic_summary");
+  if (input.workflow === "annual_plan") allowed.add("confirmed_competency_priorities");
   if (workflowUses(workflowRequirements, "prior_reports")) allowed.add("prior_reports");
   if (workflowUses(workflowRequirements, "family")) allowed.add("family_context");
   const classroom = pickKnownFields(input.classroom_context, allowed) ?? {};

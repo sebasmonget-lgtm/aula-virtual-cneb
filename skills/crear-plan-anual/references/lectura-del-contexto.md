@@ -9,3 +9,6 @@
 5. Relaciona cada prioridad con oportunidades de juego, exploración, comunicación, movimiento o convivencia. Formula necesidades como apoyos y experiencias por ofrecer, no como etiquetas de déficit de los niños.
 
 El bundle puede omitir fuentes por privacidad o falta de confirmación. No supongas que los datos ausentes existen. Evita nombres e información sensible individual en el Plan Maestro. No repitas artificialmente un mismo interés en todos los proyectos. Salvo los cuatro hitos solicitados en [calendario-pedagogico.md](calendario-pedagogico.md), una celebración del calendario no obliga a crear un proyecto.
+# Prioridades vinculadas a competencias
+
+Si el contexto incluye `confirmed_competency_priorities`, son decisiones grupales confirmadas por la docente. Usa sus IDs y motivos para orientar las doce propuestas; `observe_more` pide recoger información, no supone dificultad ni asigna la misma necesidad a cada estudiante. No conviertas un número de registros en nivel de logro. Conserva la síntesis narrativa como contexto y no inventes prioridades cuando el arreglo esté vacío.

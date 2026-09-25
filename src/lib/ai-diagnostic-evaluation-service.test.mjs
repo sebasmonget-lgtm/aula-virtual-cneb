@@ -43,7 +43,8 @@ test("Skill diagnóstica sugiere un borrador editable sin enviar nombres, entrev
     const requests = [];
     const output = { strengths: "En el juego surgieron intentos de participar.",
       needs: "Conviene ofrecer más momentos para conversar y seguir observando al grupo.",
-      planning_priorities: "Organizar juegos en pequeños grupos y escuchar sus ideas." };
+      planning_priorities: "Organizar juegos en pequeños grupos y escuchar sus ideas.",
+      competency_priorities: [{ competency_id: "COM_ORAL", emphasis: "observe_more", reason: "Conviene recoger más conversaciones durante el juego." }] };
     const suggestion = await suggestDiagnosticGroupReview(db, teacher, group.id, {
       createProvider: (plan) => ({ generate: async (request) => { requests.push({ plan, request }); return { output }; } }),
     });
@@ -64,15 +65,16 @@ test("rechaza salida incompleta, niveles y fuentes que cambian durante la llamad
   assert.equal(neutralizeAssessmentText("Ana llegó en la mañana y Anabel miró.", ["Ana"]),
     "[estudiante] llegó en la mañana y Anabel miró.");
   const source = { age: 5, student_count: 1, comments: [{ information_status: "information_available", comment: "Jugó y conversó." }],
+    competency_options: [{ id: "COM_ORAL", name: "Se comunica oralmente" }],
     source_snapshot: [{ id: "a", fingerprint: "uno" }] };
   const run = (output, loadSources = async () => source) => suggestDiagnosticGroupReview(null, teacher, "draft", {
     loadSources, createProvider: () => ({ generate: async () => ({ output }) }),
   });
   await assert.rejects(run({ strengths: "Algo." }), (error) => error instanceof DiagnosticSuggestionError && error.reason === "proposal_invalid");
-  await assert.rejects(run({ strengths: "Nivel A", needs: "Más juego.", planning_priorities: "Observar." }), { reason: "proposal_invalid" });
-  await assert.rejects(run({ strengths: "Ana juega.", needs: "Conversar.", planning_priorities: "Juegos." },
+  await assert.rejects(run({ strengths: "Nivel A", needs: "Más juego.", planning_priorities: "Observar.", competency_priorities: [] }), { reason: "proposal_invalid" });
+  await assert.rejects(run({ strengths: "Ana juega.", needs: "Conversar.", planning_priorities: "Juegos.", competency_priorities: [] },
     async () => ({ ...source, known_names: ["Ana"] })), { reason: "proposal_invalid" });
   let calls = 0;
-  await assert.rejects(run({ strengths: "Jugó.", needs: "Conversar.", planning_priorities: "Juegos." },
+  await assert.rejects(run({ strengths: "Jugó.", needs: "Conversar.", planning_priorities: "Juegos.", competency_priorities: [] },
     async () => ++calls === 1 ? source : { ...source, source_snapshot: [{ id: "a", fingerprint: "dos" }] }), { reason: "stale_sources" });
 });

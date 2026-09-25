@@ -94,7 +94,8 @@ export type DiagnosticWorkspace = {
 
 export type DiagnosticSynthesisDetails = { information_status: "information_available" | "insufficient_information"; summary_text: string; next_observation: string };
 export type DiagnosticStudentReviewDetails = { information_status: "information_available" | "insufficient_information"; comment_text: string };
-export type DiagnosticGroupDetails = { strengths: string; needs: string; planning_priorities: string };
+export type DiagnosticCompetencyPriority = { competency_id: string; emphasis: "prioritize" | "maintain" | "observe_more"; reason: string };
+export type DiagnosticGroupDetails = { strengths: string; needs: string; planning_priorities: string; competency_priorities?: DiagnosticCompetencyPriority[] };
 export type DiagnosticReviewWorkspace = {
   students: (LocalStudent & { initial_context: string | null; family_context: ({ version: number } & Record<string, string | number>) | null; unclassified_observations: number })[];
   observations: { id: string; student_id: string; competency_v4_id: string | null; experience_id: string; aspect_id: string; catalog_version: string; experience_title: string; aspect_prompt: string; observation_status: DiagnosticObservationStatus; observation_text: string | null; observed_at: string; has_media?: boolean }[];
