@@ -17,6 +17,7 @@ async function fixture() {
     create table age_grades(id uuid primary key,age_years int);
     create table classrooms(id uuid primary key,teacher_id uuid,school_year_id uuid,age_grade_id uuid,section text,institution_name text);
     create table annual_plans(id uuid primary key,classroom_id uuid,school_year_id uuid,status text,version int,proposal jsonb,document_context jsonb,updated_at timestamptz,teacher_confirmed_at timestamptz,generation_metadata jsonb);
+    create table annual_plan_formal_content(annual_plan_id uuid primary key,content jsonb);
     create table diagnostic_group_reviews(id uuid primary key,classroom_id uuid,status text,version int,details jsonb,updated_at timestamptz,teacher_confirmed_at timestamptz,source_snapshot jsonb);
     create table learning_experiences(id uuid primary key,classroom_id uuid,type text,title text,purpose text,status text,details jsonb,starts_on date,ends_on date,origin text,planning_reason text,source_proposal_index int);
     create table activities(id uuid primary key,experience_id uuid,title text,purpose text,status text,details jsonb,preparation jsonb,occurs_on date);

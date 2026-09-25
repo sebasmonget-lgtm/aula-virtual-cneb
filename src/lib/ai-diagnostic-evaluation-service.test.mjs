@@ -43,14 +43,13 @@ test("Skill diagnóstica sugiere un borrador editable sin enviar nombres, entrev
     const requests = [];
     const output = { strengths: "En el juego surgieron intentos de participar.",
       needs: "Conviene ofrecer más momentos para conversar y seguir observando al grupo.",
-      planning_priorities: "Organizar juegos en pequeños grupos y escuchar sus ideas.",
-      competency_priorities: [{ competency_id: "COM_ORAL", emphasis: "observe_more", reason: "Conviene recoger más conversaciones durante el juego." }] };
+      planning_priorities: "Organizar juegos en pequeños grupos y escuchar sus ideas." };
     const suggestion = await suggestDiagnosticGroupReview(db, teacher, group.id, {
       createProvider: (plan) => ({ generate: async (request) => { requests.push({ plan, request }); return { output }; } }),
     });
-    assert.deepEqual(suggestion.details, output);
+    assert.deepEqual(suggestion.details, { ...output, competency_priorities: [] });
     assert.equal(requests.length, 1);
-    assert.equal(requests[0].request.output_schema.id, "diagnostic-group-suggestion-v1");
+    assert.equal(requests[0].request.output_schema.id, "diagnostic-group-suggestion-v2");
     assert.match(requests[0].request.skill_instructions, /Skill crear-evaluacion-diagnostica/);
     const bundle = requests[0].request.ai_context_bundle;
     assert.equal(bundle.context.confirmed_teacher_comments.length, 2);
@@ -67,14 +66,14 @@ test("rechaza salida incompleta, niveles y fuentes que cambian durante la llamad
   const source = { age: 5, student_count: 1, comments: [{ information_status: "information_available", comment: "Jugó y conversó." }],
     competency_options: [{ id: "COM_ORAL", name: "Se comunica oralmente" }],
     source_snapshot: [{ id: "a", fingerprint: "uno" }] };
-  const run = (output, loadSources = async () => source) => suggestDiagnosticGroupReview(null, teacher, "draft", {
+  const run = (output, loadSources = async () => source) => suggestDiagnosticGroupReview({ query: async () => ({ rows: [] }) }, teacher, "draft", {
     loadSources, createProvider: () => ({ generate: async () => ({ output }) }),
   });
   await assert.rejects(run({ strengths: "Algo." }), (error) => error instanceof DiagnosticSuggestionError && error.reason === "proposal_invalid");
-  await assert.rejects(run({ strengths: "Nivel A", needs: "Más juego.", planning_priorities: "Observar.", competency_priorities: [] }), { reason: "proposal_invalid" });
-  await assert.rejects(run({ strengths: "Ana juega.", needs: "Conversar.", planning_priorities: "Juegos.", competency_priorities: [] },
+  await assert.rejects(run({ strengths: "Nivel A", needs: "Más juego.", planning_priorities: "Observar." }), { reason: "proposal_invalid" });
+  await assert.rejects(run({ strengths: "Ana juega.", needs: "Conversar.", planning_priorities: "Juegos." },
     async () => ({ ...source, known_names: ["Ana"] })), { reason: "proposal_invalid" });
   let calls = 0;
-  await assert.rejects(run({ strengths: "Jugó.", needs: "Conversar.", planning_priorities: "Juegos.", competency_priorities: [] },
+  await assert.rejects(run({ strengths: "Jugó.", needs: "Conversar.", planning_priorities: "Juegos." },
     async () => ++calls === 1 ? source : { ...source, source_snapshot: [{ id: "a", fingerprint: "dos" }] }), { reason: "stale_sources" });
 });

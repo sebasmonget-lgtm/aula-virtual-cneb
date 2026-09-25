@@ -96,6 +96,8 @@ export type DiagnosticSynthesisDetails = { information_status: "information_avai
 export type DiagnosticStudentReviewDetails = { information_status: "information_available" | "insufficient_information"; comment_text: string };
 export type DiagnosticCompetencyPriority = { competency_id: string; emphasis: "prioritize" | "maintain" | "observe_more"; reason: string };
 export type DiagnosticGroupDetails = { strengths: string; needs: string; planning_priorities: string; competency_priorities?: DiagnosticCompetencyPriority[] };
+export type DiagnosticAnnualPriority = { title: string; reason: string; related_competency_ids: string[]; importance: "higher" | "normal" | "observe_more" };
+export type DiagnosticPriorityDetails = { priorities: DiagnosticAnnualPriority[] };
 export type DiagnosticReviewWorkspace = {
   students: (LocalStudent & { initial_context: string | null; family_context: ({ version: number } & Record<string, string | number>) | null; unclassified_observations: number })[];
   observations: { id: string; student_id: string; competency_v4_id: string | null; experience_id: string; aspect_id: string; catalog_version: string; experience_title: string; aspect_prompt: string; observation_status: DiagnosticObservationStatus; observation_text: string | null; observed_at: string; has_media?: boolean }[];
@@ -103,6 +105,7 @@ export type DiagnosticReviewWorkspace = {
   student_reviews: { id: string; student_id: string; version: number; status: "draft" | "confirmed"; details: DiagnosticStudentReviewDetails; teacher_confirmed_at: string | null; is_current: boolean }[];
   pending_observations: { id: string; student_id: string; context_label: string; observation_text: string | null; observed_at: string; has_media?: boolean }[];
   group_reviews: { id: string; version: number; status: "draft" | "confirmed"; details: DiagnosticGroupDetails; teacher_confirmed_at: string | null; is_current: boolean }[];
+  priority_reviews: { id: string; group_review_id: string; version: number; status: "draft" | "confirmed"; details: DiagnosticPriorityDetails; teacher_confirmed_at: string | null }[];
   group_coverage: { competency_id: string; competency_name: string; children_with_observations: number; confirmed_with_information: number; confirmed_insufficient: number; children_without_observations: number }[];
   derived_group_information: { confirmed_interviews: number; interests: { key: string; label: string; count: number }[]; observation_gaps: { competency_id: string; competency_name: string; children_with_observations: number; children_without_observations: number }[] };
 };
@@ -291,12 +294,17 @@ export const prepareDiagnosticSynthesis = (studentId: string, competencyId: stri
 export const saveDiagnosticSynthesis = (id: string, details: DiagnosticSynthesisDetails) => diagnosticRequest(`reviews/${encodeURIComponent(id)}`, "PUT", { details });
 export const confirmDiagnosticSynthesis = (id: string) => diagnosticRequest(`reviews/${encodeURIComponent(id)}/confirm`, "POST");
 export const prepareDiagnosticStudentReview = (studentId: string) => diagnosticRequest<{ id: string; student_id: string; details: DiagnosticStudentReviewDetails }>("student-reviews/prepare", "POST", { studentId });
+export const suggestDiagnosticStudentReview = (draftId: string) => diagnosticRequest<{ details: DiagnosticStudentReviewDetails; supporting_observation_ids: string[] }>("student-reviews/suggest", "POST", { draftId });
 export const saveDiagnosticStudentReview = (id: string, details: DiagnosticStudentReviewDetails) => diagnosticRequest(`student-reviews/${encodeURIComponent(id)}`, "PUT", { details });
 export const confirmDiagnosticStudentReview = (id: string) => diagnosticRequest(`student-reviews/${encodeURIComponent(id)}/confirm`, "POST");
 export const prepareDiagnosticGroup = () => diagnosticRequest<{ id: string; details: DiagnosticGroupDetails }>("group-review/prepare", "POST");
 export const suggestDiagnosticGroup = (draftId: string) => diagnosticRequest<{ details: DiagnosticGroupDetails }>("group-review/suggest", "POST", { draftId });
 export const saveDiagnosticGroup = (id: string, details: DiagnosticGroupDetails) => diagnosticRequest(`group-review/${encodeURIComponent(id)}`, "PUT", { details });
 export const confirmDiagnosticGroup = (id: string) => diagnosticRequest(`group-review/${encodeURIComponent(id)}/confirm`, "POST");
+export const prepareDiagnosticPriorities = () => diagnosticRequest<{ id: string; group_review_id: string; details: DiagnosticPriorityDetails }>("priorities/prepare", "POST");
+export const suggestDiagnosticPriorities = (draftId: string) => diagnosticRequest<{ details: DiagnosticPriorityDetails }>("priorities/suggest", "POST", { draftId });
+export const saveDiagnosticPriorities = (id: string, details: DiagnosticPriorityDetails) => diagnosticRequest(`priorities/${encodeURIComponent(id)}`, "PUT", { details });
+export const confirmDiagnosticPriorities = (id: string) => diagnosticRequest(`priorities/${encodeURIComponent(id)}/confirm`, "POST");
 export const saveDiagnosticInitialContext = (studentId: string, initialContext: string) => diagnosticRequest(`students/${encodeURIComponent(studentId)}/initial-context`, "PUT", { initialContext });
 
 export const loadFamilyInterview = (studentId: string) => diagnosticRequest<{ draft: FamilyInterview | null; confirmed: FamilyInterview | null }>(`students/${encodeURIComponent(studentId)}/family-interview`);

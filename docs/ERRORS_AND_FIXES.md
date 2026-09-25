@@ -477,3 +477,11 @@
 **Causa raíz.** Las sugerencias se consultaban solo al abrir la actividad, sin depender de los registros nuevos.
 
 **Solución y prevención.** Cada guardado incrementa una revisión de evidencias y vuelve a consultar las sugerencias. Mientras llega la respuesta, se oculta la lista anterior para no presentar motivos obsoletos. En una prueba aislada, Diego pasó de “Aún no tenemos registros” a “Solo tenemos registros de una situación” sin recargar la página.
+
+## 2026-09-25 Los tests de documentos no creaban la tabla de desarrollo formal
+
+**Síntoma.** La consulta de un Plan Anual histórico falló en pruebas con `relation annual_plan_formal_content does not exist`.
+
+**Causa raíz.** Tres fixtures construían un esquema mínimo manual y no incluían la tabla aditiva que ahora se consulta para encontrar el Word derivado.
+
+**Solución y prevención.** Se añadió la tabla mínima a esos fixtures y se repitieron las suites de Word y Documentos. Cuando una lectura canónica incorpore una tabla nueva, revisar también los esquemas mínimos de sus pruebas además de la paridad de migraciones.

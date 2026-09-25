@@ -164,6 +164,7 @@ test("la descarga del plan guardado usa la plantilla nueva y verifica propiedad"
       create table age_grades(id uuid,age_years int);
       create table classrooms(id uuid,teacher_id uuid,school_year_id uuid,age_grade_id uuid,section text,institution_name text);
       create table annual_plans(id uuid,classroom_id uuid,school_year_id uuid,status text,version int,proposal jsonb,document_context jsonb,teacher_confirmed_at timestamptz);`);
+    await db.exec(`create table annual_plan_formal_content(annual_plan_id uuid primary key,content jsonb);`);
     await db.query("insert into profiles values($1,'Docente ficticia')", [teacherId]);
     const assetsRoot = path.join(temp, ".local", "assets");
     await mkdir(assetsRoot, { recursive: true });

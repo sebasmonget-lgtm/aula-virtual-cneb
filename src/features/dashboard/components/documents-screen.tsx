@@ -15,6 +15,7 @@ type DocumentEntry = {
 };
 type OpenDocument = DocumentEntry & {
   institution_name?: string; document_context?: DocumentContext; content: Record<string, unknown>;
+  source_plan_format?: string; formal_ready?: boolean;
   starts_on?: string; ends_on?: string; occurs_on?: string; experience_title?: string;
   period_start?: string; period_end?: string; competencies?: { id: string; name: string }[];
 };
@@ -61,6 +62,13 @@ function Pathways({ title, value }: { title: string; value: unknown }) {
 }
 
 function DocumentContent({ document }: { document: OpenDocument }) {
+  if (document.kind === "annual_plan" && document.source_plan_format === "annual_preplan_v1" && !document.formal_ready) {
+    const rows = Array.isArray(document.content.proposed_experiences) ? document.content.proposed_experiences as Record<string, unknown>[] : [];
+    return <article className="rounded-2xl border bg-white p-5"><h2 className="text-xl font-bold">Mi año · versión {document.version}</h2>
+      <p className="mt-2 text-sm text-[#526b87]">{document.status === "draft" ? "Preplan en revisión. El Word se preparará después de confirmarlo." : "El preplan está confirmado. Abre Planificar para preparar el Word formal."}</p>
+      <ol className="mt-4 space-y-3">{rows.map((row, index) => <li key={String(row.proposal_id ?? index)} className="rounded-xl border p-3"><b>{index + 1}. {text(row.title)}</b>
+        <p className="mt-1 text-sm">{text(row.period)} · {String(row.duration_weeks ?? "")} semanas</p><p className="mt-1">{text(row.rationale)}</p></li>)}</ol></article>;
+  }
   if (document.kind === "annual_plan") return <AnnualPlanDocument proposal={document.content as Proposal} context={document.document_context ?? {}} competencies={document.competencies ?? []} status={document.status as "draft" | "active" | "archived"} />;
   if (document.kind === "period_closure") {
     const entries=Array.isArray(document.content.entries)?document.content.entries as Record<string,unknown>[]:[];
@@ -162,7 +170,8 @@ export function DocumentsScreen() {
   }, [selected, revision]);
 
   const years = [...new Set(documents.map((item) => item.school_year))].sort((a, b) => b - a);
-  const downloadUrl = opened && opened.kind !== "period_closure"
+  const downloadable = opened && opened.kind !== "period_closure" && !(opened.source_plan_format === "annual_preplan_v1" && !opened.formal_ready);
+  const downloadUrl = downloadable
     ? `${localDatabaseApiUrl}/api/documents/${opened.kind}/${opened.id}/download`
     : null;
   async function saveWordLocally() {
@@ -196,10 +205,10 @@ export function DocumentsScreen() {
   return <section className="mx-auto max-w-5xl space-y-5">
     <PageIntro eyebrow="Tu trabajo guardado" title="Documentos" description="Encuentra aquí tus diagnósticos, planes, experiencias, actividades, cierres e informes." icon={BookOpen} />
     {selected && <div className="flex flex-wrap items-center justify-between gap-3"><Button variant="outline" className="min-h-11" onClick={() => { setSelected(null); setOpened(null); setError(""); setWordMessage(""); setWordError(""); }}><ArrowLeft className="mr-2 size-4" />Volver a mis documentos</Button>
-      {opened && opened.kind !== "period_closure" && <Button className="min-h-11" disabled={savingWord} onClick={() => void saveWordLocally()}><Download className="mr-2 size-4" />{savingWord ? "Preparando Word..." : authMode === "supabase" ? "Descargar Word" : "Guardar Word en Descargas"}</Button>}</div>}
+      {downloadable && <Button className="min-h-11" disabled={savingWord} onClick={() => void saveWordLocally()}><Download className="mr-2 size-4" />{savingWord ? "Preparando Word..." : authMode === "supabase" ? "Descargar Word" : "Guardar Word en Descargas"}</Button>}</div>}
     {wordMessage && <WorkflowFeedback tone="success">{wordMessage}</WorkflowFeedback>}
     {wordError && <WorkflowFeedback tone="error">{wordError}</WorkflowFeedback>}
-    {opened?.kind === "annual_plan" && opened.content.plan_format !== "twelve_projects_flexible_weeks" &&
+    {opened?.kind === "annual_plan" && opened.source_plan_format !== "annual_preplan_v1" && opened.content.plan_format !== "twelve_projects_flexible_weeks" &&
       <WorkflowFeedback tone="error">Este plan se creó antes del formato actual. Su Word conserva la plantilla anterior. Abre Plan para preparar una versión actualizada; el plan vigente seguirá guardado mientras la revisas.</WorkflowFeedback>}
     {opened && downloadUrl && <p className="text-sm text-[#526b87]">{authMode === "local" ? "Se guarda en la computadora donde corre Ayni. " : ""}<a className="underline" href={downloadUrl} download>Descargar en este dispositivo</a></p>}
     {error && <div className="flex flex-wrap items-center gap-3"><WorkflowFeedback tone="error">{error}</WorkflowFeedback><Button variant="outline" onClick={() => { setLoading(!selected); setOpening(Boolean(selected)); setRevision((value) => value + 1); }}>Reintentar</Button></div>}

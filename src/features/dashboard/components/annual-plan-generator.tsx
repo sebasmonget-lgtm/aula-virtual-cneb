@@ -39,6 +39,7 @@ export type DocumentContext = {
   diagnostic_group?: { strengths?: string; needs?: string; planning_priorities?: string;
     competency_priorities?: { competency_id: string; emphasis: "prioritize" | "maintain" | "observe_more"; reason: string }[] } | null;
   group_interests?: string[];
+  source_plan_format?: string | null;
   calendar?: AnnualCalendar | null;
 };
 type AnnualCalendarBlock = { id?: string; type: "instructional" | "management" | "holiday" | "institutional" | "vacation";

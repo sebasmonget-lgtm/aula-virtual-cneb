@@ -3,13 +3,15 @@
 import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
   confirmDiagnosticGroup, confirmDiagnosticStudentReview, loadDiagnosticReview, loadFamilyInterview,
   prepareDiagnosticGroup, prepareDiagnosticStudentReview, saveDiagnosticGroup, saveDiagnosticStudentReview,
-  suggestDiagnosticGroup,
+  suggestDiagnosticGroup, suggestDiagnosticStudentReview,
+  prepareDiagnosticPriorities, suggestDiagnosticPriorities, saveDiagnosticPriorities, confirmDiagnosticPriorities,
   saveMatrixDiagnosticObservation, spontaneousObservationMediaUrl,
-  type DiagnosticGroupDetails, type DiagnosticReviewWorkspace, type DiagnosticStudentReviewDetails,
+  type DiagnosticGroupDetails, type DiagnosticPriorityDetails, type DiagnosticReviewWorkspace, type DiagnosticStudentReviewDetails,
   type DiagnosticObservationStatus, type FamilyInterview, type FamilyInterviewAnswerKey,
 } from "@/src/lib/local-database";
 import { familyInterviewQuestionGroups, interviewInterestOptions, interviewLanguageOptions,
@@ -64,13 +66,16 @@ export function DiagnosticReview({ onObserve, onPlan, onGroupConfirmed }: { onOb
   const [workspace, setWorkspace] = useState<DiagnosticReviewWorkspace | null>(null);
   const [studentId, setStudentId] = useState<string | null>(null);
   const [focusCompetencyId, setFocusCompetencyId] = useState<string | null>(null);
-  const [view, setView] = useState<"individual" | "group">("individual");
+  const [view, setView] = useState<"individual" | "group" | "priorities">("individual");
   const [interview, setInterview] = useState<FamilyInterview | null>(null);
   const [interviewError, setInterviewError] = useState("");
   const [draft, setDraft] = useState<DiagnosticStudentReviewDetails | null>(null);
   const [draftDirty, setDraftDirty] = useState(false);
   const [groupDraft, setGroupDraft] = useState<DiagnosticGroupDetails | null>(null);
   const [groupDraftDirty, setGroupDraftDirty] = useState(false);
+  const [priorityDraft, setPriorityDraft] = useState<DiagnosticPriorityDetails | null>(null);
+  const [priorityDraftId, setPriorityDraftId] = useState<string | null>(null);
+  const [priorityDirty, setPriorityDirty] = useState(false);
   const [matrixEditor, setMatrixEditor] = useState<MatrixObservationDraft | null>(null);
   const matrixEditorRef = useRef<HTMLDivElement>(null);
   const matrixSelection = matrixEditor ? `${matrixEditor.studentId}:${matrixEditor.competencyId}` : "";
@@ -104,6 +109,7 @@ export function DiagnosticReview({ onObserve, onPlan, onGroupConfirmed }: { onOb
   const nextStudent = workspace?.students.find((item) => item.id !== studentId && progress?.children.find((row) => row.studentId === item.id)?.status !== "reviewed");
   const groupReview = workspace?.group_reviews.find((item) => item.status === "draft");
   const groupConfirmed = workspace?.group_reviews.find((item) => item.status === "confirmed");
+  const priorityConfirmed = workspace?.priority_reviews.find((item) => item.status === "confirmed" && item.group_review_id === groupConfirmed?.id);
   const matrixCompetencies = workspace?.group_coverage ?? [];
   const competencyNames = new Map(workspace?.group_coverage.map((item) => [item.competency_id, item.competency_name]) ?? []);
   const matrixStudent = workspace?.students.find((item) => item.id === matrixEditor?.studentId);
@@ -130,7 +136,19 @@ export function DiagnosticReview({ onObserve, onPlan, onGroupConfirmed }: { onOb
   }
   function leaveGroup(next: () => void) {
     if (groupDraftDirty) { setError("Guarda o descarta los cambios del resumen antes de salir."); return; }
+    if (priorityDirty) { setError("Guarda o descarta los cambios de prioridades antes de salir."); return; }
     setError(""); next();
+  }
+  async function openPriorities() {
+    if (!groupConfirmed) return;
+    if (priorityConfirmed) { setPriorityDraft(null); setPriorityDraftId(null); setPriorityDirty(false); setView("priorities"); return; }
+    await action(async () => {
+      const prepared = await prepareDiagnosticPriorities();
+      setPriorityDraft(prepared.details);
+      setPriorityDraftId(prepared.id);
+      setPriorityDirty(false);
+      setView("priorities");
+    });
   }
   function leaveStudent(next: () => void) {
     if (busy) return;
@@ -218,6 +236,7 @@ export function DiagnosticReview({ onObserve, onPlan, onGroupConfirmed }: { onOb
         }}>{currentDraft ? "Continuar mi comentario" : confirmed ? "Actualizar mi comentario" : "Escribir mi comentario"} <ArrowRight /></Button>}
         {draft && <div className="space-y-3 rounded-xl bg-[#f8fcfd] p-4">
           {draftDirty && <p className="text-sm font-semibold text-[#075d70]">Tienes cambios sin guardar.</p>}
+          {currentDraft && !draft.comment_text.trim() && <AsyncButton variant="outline" className="min-h-11" busy={busy} busyLabel="Preparando..." onClick={() => void action(async () => { const suggestion=await suggestDiagnosticStudentReview(currentDraft.id); setDraft(suggestion.details); setDraftDirty(true); setMessage("Ayni preparó un comentario. Revísalo y cámbialo antes de confirmar."); })}>Sugerir comentario con Ayni</AsyncButton>}
           <fieldset className="space-y-2"><legend className="font-semibold">Con lo visto hasta ahora...</legend>{([["information_available", "Puedo escribir una primera idea"], ["insufficient_information", "Necesito observar más"]] as const).map(([value, label]) => <label key={value} className="flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border border-[#d6e5ef] bg-white p-3"><input type="radio" name="student-diagnostic-information" checked={draft.information_status === value} onChange={() => { setDraft({ ...draft, information_status: value }); setDraftDirty(true); }} /><span>{label}</span></label>)}</fieldset>
           <label className="block font-semibold">¿Qué conoces de {student.name} y qué te gustaría seguir observando?<Textarea className="mt-2 min-h-32 bg-white" placeholder="Por ejemplo: En el juego eligió materiales y explicó su interés. La familia cuenta que también le gusta construir en casa. Seguiré observando cómo comparte sus ideas con otros niños." value={draft.comment_text} maxLength={3000} onChange={(event) => { setDraft({ ...draft, comment_text: event.target.value }); setDraftDirty(true); }} /></label>
           <p className="text-xs text-[#526b87]">Distingue lo que contó la familia de lo que viste tú. No asignes niveles de logro.</p>
@@ -231,31 +250,51 @@ export function DiagnosticReview({ onObserve, onPlan, onGroupConfirmed }: { onOb
       </div>}
     </div>}
 
-    {view === "group" && <div className="space-y-4"><h3 className="text-xl font-bold">Revisar aula</h3><p className="text-sm text-[#526b87]">{reviewedCount} de {studentCount} niños con comentario confirmado y vigente.</p>
+    {view === "group" && <div className="space-y-4"><h3 className="text-xl font-bold">Así está mi grupo</h3><p className="text-sm text-[#526b87]">{reviewedCount} de {studentCount} niños con comentario confirmado y vigente.</p>
       {!allReviewed && <p className="rounded-xl bg-[#fff5df] p-3 text-sm">Revisa el comentario de cada niño antes de preparar el resumen del aula.</p>}
-      {groupConfirmed && <section className={`rounded-xl border p-4 ${groupConfirmed.is_current ? "border-[#b5dfc8] bg-[#f0faf4]" : "border-[#e7c989] bg-[#fff8e7]"}`}><h4 className="font-bold">Decisiones de la docente · versión {groupConfirmed.version}{groupConfirmed.is_current ? " · confirmadas y vigentes" : " · requieren revisión"}</h4><dl className="mt-2 space-y-2 text-sm"><div><dt className="font-semibold">Fortalezas</dt><dd>{groupConfirmed.details.strengths || "Sin registrar"}</dd></div><div><dt className="font-semibold">Necesidades</dt><dd>{groupConfirmed.details.needs || "Sin registrar"}</dd></div><div><dt className="font-semibold">Prioridades</dt><dd>{groupConfirmed.details.planning_priorities || "Sin registrar"}</dd></div></dl>{Boolean(groupConfirmed.details.competency_priorities?.length) && <ul className="mt-3 list-disc space-y-1 pl-5 text-sm">{groupConfirmed.details.competency_priorities?.map((item) => <li key={item.competency_id}><b>{competencyNames.get(item.competency_id) ?? item.competency_id}:</b> {item.reason}</li>)}</ul>}{!groupConfirmed.is_current && <p className="mt-3 text-sm font-semibold">Hay entrevistas, observaciones o comentarios nuevos. Revisa y confirma el diagnóstico antes del plan anual.</p>}</section>}
+      {groupConfirmed && <section className={`rounded-xl border p-4 ${groupConfirmed.is_current ? "border-[#b5dfc8] bg-[#f0faf4]" : "border-[#e7c989] bg-[#fff8e7]"}`}><h4 className="font-bold">Visión confirmada por la docente · versión {groupConfirmed.version}</h4><dl className="mt-2 space-y-2 text-sm"><div><dt className="font-semibold">Fortalezas</dt><dd>{groupConfirmed.details.strengths || "Sin registrar"}</dd></div><div><dt className="font-semibold">Necesidades de acompañamiento</dt><dd>{groupConfirmed.details.needs || "Sin registrar"}</dd></div><div><dt className="font-semibold">Qué tendremos en cuenta</dt><dd>{groupConfirmed.details.planning_priorities || "Sin registrar"}</dd></div></dl>{!groupConfirmed.is_current && <p className="mt-3 text-sm font-semibold">Hay información nueva. Puedes preparar otra versión de esta visión cuando lo consideres necesario.</p>}</section>}
       <section className="rounded-xl border border-[#d6e5ef] bg-[#f6fafc] p-4"><h4 className="font-bold">Información que Ayni detecta</h4><p className="mt-1 text-xs text-[#526b87]">Son datos para revisar; no son conclusiones ni prioridades confirmadas.</p><div className="mt-3 grid gap-4 sm:grid-cols-2"><div><p className="text-sm font-semibold">Intereses contados por las familias</p><p className="text-xs text-[#526b87]">{workspace?.derived_group_information?.confirmed_interviews ?? 0} entrevistas confirmadas</p>{workspace?.derived_group_information?.interests.length ? <ul className="mt-2 list-disc pl-5 text-sm">{workspace.derived_group_information.interests.slice(0, 6).map((item) => <li key={item.key}>{item.label} · {item.count} {item.count === 1 ? "familia" : "familias"}</li>)}</ul> : <p className="mt-2 text-sm">Todavía no hay intereses frecuentes registrados en las entrevistas confirmadas.</p>}</div><div><p className="text-sm font-semibold">Competencias que conviene seguir observando</p><p className="text-xs text-[#526b87]">Sin registro significa información insuficiente, no dificultad.</p>{workspace?.derived_group_information?.observation_gaps.length ? <ul className="mt-2 max-h-48 list-disc space-y-1 overflow-y-auto pl-5 text-sm">{workspace.derived_group_information.observation_gaps.map((item) => <li key={item.competency_id}>{item.competency_name} · faltan registros de {item.children_without_observations} de {studentCount}</li>)}</ul> : <p className="mt-2 text-sm">Hay registros en todas las competencias aplicables.</p>}</div></div></section>
       {allReviewed && !groupDraft && <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-        {groupConfirmed?.is_current && onPlan && <Button className="min-h-12 w-full text-base sm:w-auto" onClick={onPlan}>Continuar al plan anual <ArrowRight /></Button>}
-        <Button variant={groupConfirmed?.is_current && onPlan ? "outline" : "default"} className="min-h-12 w-full text-base sm:w-auto" disabled={busy} onClick={() => {
+        {groupConfirmed && <Button className="min-h-12 w-full text-base sm:w-auto" disabled={busy} onClick={() => void openPriorities()}>{priorityConfirmed ? "Ver prioridades del año" : "Continuar a prioridades del año"} <ArrowRight /></Button>}
+        <Button variant={groupConfirmed ? "outline" : "default"} className="min-h-12 w-full text-base sm:w-auto" disabled={busy} onClick={() => {
           void action(async () => { const prepared = await prepareDiagnosticGroup(); setGroupDraft(prepared.details); setGroupDraftDirty(false); setMessage("Revisión del aula preparada con los comentarios confirmados."); });
         }}>{groupReview ? "Continuar borrador del aula" : groupConfirmed ? "Corregir resumen del aula" : "Escribir resumen del aula"}</Button>
       </div>}
       {allReviewed && groupDraft && <div className="space-y-4 rounded-2xl border border-[#c7e4ec] bg-[#f8fcfd] p-4"><h4 className="text-lg font-bold">Tu resumen del aula</h4>
         {!groupDraftDirty && ![groupDraft.strengths, groupDraft.needs, groupDraft.planning_priorities].some((value) => value.trim()) && groupReview && <AsyncButton variant="outline" className="min-h-12 w-full sm:w-auto" busy={busy} busyLabel="Preparando propuesta..." onClick={() => void action(async () => { const suggestion = await suggestDiagnosticGroup(groupReview.id); setGroupDraft(suggestion.details); setGroupDraftDirty(true); setMessage("Ayni preparó una propuesta. Revísala y cambia lo que necesites antes de confirmar."); })}>Sugerir resumen con Ayni</AsyncButton>}
         {groupSummaryPrompts.map(([field, label, example]) => <label key={field} className="block font-semibold">{label}<Textarea className="mt-2 bg-white placeholder:italic placeholder:text-[#8292a8]" maxLength={3000} placeholder={example} value={groupDraft[field]} onChange={(event) => { setGroupDraft({ ...groupDraft, [field]: event.target.value }); setGroupDraftDirty(true); }} /></label>)}
-        <section className="rounded-xl border bg-white p-4"><h5 className="font-bold">Competencias que orientarían el plan</h5><p className="mt-1 text-sm text-[#526b87]">Revisa estas prioridades del grupo. Una falta de registros indica que conviene observar, no una dificultad de todos los niños.</p>
-          <div className="mt-3 space-y-3">{(groupDraft.competency_priorities ?? []).map((item, index) => <div key={item.competency_id} className="rounded-xl border p-3"><p className="font-semibold">{competencyNames.get(item.competency_id) ?? item.competency_id}</p><select aria-label={`Enfoque de ${competencyNames.get(item.competency_id) ?? item.competency_id}`} className="mt-2 min-h-11 w-full rounded-lg border px-3" value={item.emphasis} onChange={(event) => { const next = [...(groupDraft.competency_priorities ?? [])]; next[index] = { ...item, emphasis: event.target.value as typeof item.emphasis }; setGroupDraft({ ...groupDraft, competency_priorities: next }); setGroupDraftDirty(true); }}><option value="prioritize">Dar más oportunidades</option><option value="maintain">Seguir aprovechando</option><option value="observe_more">Conocer mejor primero</option></select><Textarea className="mt-2 bg-white" aria-label={`Motivo de ${competencyNames.get(item.competency_id) ?? item.competency_id}`} maxLength={500} value={item.reason} onChange={(event) => { const next = [...(groupDraft.competency_priorities ?? [])]; next[index] = { ...item, reason: event.target.value }; setGroupDraft({ ...groupDraft, competency_priorities: next }); setGroupDraftDirty(true); }} /><Button type="button" variant="ghost" onClick={() => { setGroupDraft({ ...groupDraft, competency_priorities: (groupDraft.competency_priorities ?? []).filter((_, i) => i !== index) }); setGroupDraftDirty(true); }}>Quitar competencia</Button></div>)}</div>
-          <label className="mt-3 block text-sm font-semibold">Añadir competencia<select className="mt-1 min-h-11 w-full rounded-lg border bg-white px-3" value="" onChange={(event) => { if (!event.target.value) return; setGroupDraft({ ...groupDraft, competency_priorities: [...(groupDraft.competency_priorities ?? []), { competency_id: event.target.value, emphasis: "observe_more", reason: "Revisar con las observaciones del grupo." }] }); setGroupDraftDirty(true); }}><option value="">Elige una competencia</option>{matrixCompetencies.filter((item) => !(groupDraft.competency_priorities ?? []).some((priority) => priority.competency_id === item.competency_id)).map((item) => <option key={item.competency_id} value={item.competency_id}>{item.competency_name}</option>)}</select></label>
-        </section>
         <p className="text-sm text-[#526b87]">Escribe patrones del aula sin nombrar niños. Solo lo confirmado orientará el plan.</p>
-        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap"><AsyncButton className="min-h-12 w-full sm:w-auto" busy={busy} busyLabel="Confirmando..." disabled={!groupReview} onClick={() => void action(async () => { await saveDiagnosticGroup(groupReview!.id, groupDraft); await confirmDiagnosticGroup(groupReview!.id); setGroupDraft(null); setGroupDraftDirty(false); onGroupConfirmed?.(); setMessage("Resumen del aula confirmado."); })}>Confirmar resumen</AsyncButton><AsyncButton variant="outline" className="min-h-12 w-full sm:w-auto" busy={busy} busyLabel="Guardando..." disabled={!groupReview} onClick={() => void action(async () => { await saveDiagnosticGroup(groupReview!.id, groupDraft); setGroupDraft(null); setGroupDraftDirty(false); setMessage("Borrador del aula guardado. Puedes retomarlo después."); })}>Guardar para después</AsyncButton></div>
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap"><AsyncButton className="min-h-12 w-full sm:w-auto" busy={busy} busyLabel="Confirmando..." disabled={!groupReview} onClick={() => void action(async () => { await saveDiagnosticGroup(groupReview!.id, groupDraft); await confirmDiagnosticGroup(groupReview!.id); setGroupDraft(null); setGroupDraftDirty(false); setMessage("Así está mi grupo quedó confirmado. Ahora revisa las prioridades del año."); })}>Confirmar «Así está mi grupo»</AsyncButton><AsyncButton variant="outline" className="min-h-12 w-full sm:w-auto" busy={busy} busyLabel="Guardando..." disabled={!groupReview} onClick={() => void action(async () => { await saveDiagnosticGroup(groupReview!.id, groupDraft); setGroupDraft(null); setGroupDraftDirty(false); setMessage("Borrador del aula guardado. Puedes retomarlo después."); })}>Guardar para después</AsyncButton></div>
         <Button variant="ghost" className="min-h-11" disabled={busy} onClick={() => { setGroupDraft(null); setGroupDraftDirty(false); setError(""); }}>{groupDraftDirty ? "Descartar cambios sin guardar" : "Cerrar editor"}</Button>
       </div>}
       <div className="flex flex-wrap items-center gap-3 border-t border-[#d6e5ef] pt-4">
         <Button variant="outline" className="diagnostic-back-button" onClick={() => leaveGroup(() => setView("individual"))}><ArrowLeft /> Ver comentarios de los niños</Button>
         <Button variant="ghost" className="min-h-11" onClick={() => leaveGroup(onObserve)}>Volver a observar</Button>
       </div>
+    </div>}
+    {view === "priorities" && groupConfirmed && <div className="space-y-4">
+      <Button variant="outline" className="min-h-11" onClick={() => leaveGroup(() => setView("group"))}><ArrowLeft /> Así está mi grupo</Button>
+      <header><h3 className="text-2xl font-extrabold">Prioridades del año</h3><p className="mt-1 text-sm text-[#526b87]">Trabajaremos todas las competencias. Estas son las que podrían necesitar más oportunidades según la visión del grupo que confirmaste.</p></header>
+      <div className="rounded-xl border border-[#d6e5ef] bg-[#f6fafc] p-4"><p className="font-bold">Punto de partida confirmado</p><p className="mt-2 text-sm">{groupConfirmed.details.strengths} {groupConfirmed.details.needs}</p></div>
+      {priorityConfirmed && !priorityDraft && <section className="rounded-xl border border-[#b5dfc8] bg-[#f0faf4] p-4"><h4 className="font-bold">Prioridades confirmadas · versión {priorityConfirmed.version}</h4>
+        <ul className="mt-3 space-y-3">{priorityConfirmed.details.priorities.map((item, index) => <li key={index} className="rounded-lg bg-white p-3"><b>{item.title}</b><p className="text-sm">{item.reason}</p><p className="mt-1 text-xs text-[#526b87]">{item.related_competency_ids.map((id) => competencyNames.get(id) ?? id).join(" · ")}</p></li>)}</ul>
+        {onPlan && <Button className="mt-4 min-h-12" onClick={onPlan}>Continuar al plan anual <ArrowRight /></Button>}
+        <Button variant="outline" className="mt-4 min-h-12 sm:ml-3" disabled={busy} onClick={() => void action(async () => { const prepared = await prepareDiagnosticPriorities(); setPriorityDraftId(prepared.id); setPriorityDraft(prepared.details); setPriorityDirty(false); })}>Preparar nueva versión de prioridades</Button>
+      </section>}
+      {!priorityConfirmed && !priorityDraft && <Button className="min-h-12" disabled={busy} onClick={() => void openPriorities()}>Revisar prioridades <ArrowRight /></Button>}
+      {priorityDraft && <section className="space-y-4 rounded-xl border border-[#c7e4ec] bg-[#f8fcfd] p-4"><h4 className="text-lg font-bold">Revisa qué merece más atención</h4>
+        {!priorityDraft.priorities.length && priorityDraftId && <AsyncButton variant="outline" busy={busy} busyLabel="Preparando..." onClick={() => void action(async () => { const suggestion = await suggestDiagnosticPriorities(priorityDraftId); setPriorityDraft(suggestion.details); setPriorityDirty(true); setMessage("Ayni preparó una propuesta. Puedes cambiarla antes de confirmar."); })}>Sugerir con Ayni</AsyncButton>}
+        {priorityDraft.priorities.map((item, index) => <div key={index} className="space-y-3 rounded-xl border bg-white p-4">
+          <label className="block text-sm font-semibold">Aspecto que atenderemos<Input className="mt-1 bg-white" value={item.title} maxLength={180} onChange={(event) => { const rows=[...priorityDraft.priorities]; rows[index]={...item,title:event.target.value}; setPriorityDraft({priorities:rows}); setPriorityDirty(true); }} /></label>
+          <label className="block text-sm font-semibold">¿Por qué?<Textarea className="mt-1 bg-white" value={item.reason} maxLength={500} onChange={(event) => { const rows=[...priorityDraft.priorities]; rows[index]={...item,reason:event.target.value}; setPriorityDraft({priorities:rows}); setPriorityDirty(true); }} /></label>
+          <label className="block text-sm font-semibold">Enfoque<select className="mt-1 min-h-11 w-full rounded-lg border bg-white px-3" value={item.importance} onChange={(event) => { const rows=[...priorityDraft.priorities]; rows[index]={...item,importance:event.target.value as typeof item.importance}; setPriorityDraft({priorities:rows}); setPriorityDirty(true); }}><option value="higher">Dar más oportunidades</option><option value="normal">Seguir aprovechando</option><option value="observe_more">Conocer mejor primero</option></select></label>
+          <fieldset><legend className="text-sm font-semibold">Competencias relacionadas</legend><div className="mt-2 grid gap-2 sm:grid-cols-2">{matrixCompetencies.map((card) => <label key={card.competency_id} className="flex items-start gap-2 rounded-lg border p-2 text-sm"><input type="checkbox" checked={item.related_competency_ids.includes(card.competency_id)} onChange={(event) => { const ids=event.target.checked?[...item.related_competency_ids,card.competency_id]:item.related_competency_ids.filter((id)=>id!==card.competency_id); const rows=[...priorityDraft.priorities]; rows[index]={...item,related_competency_ids:ids}; setPriorityDraft({priorities:rows}); setPriorityDirty(true); }} />{card.competency_name}</label>)}</div></fieldset>
+          <Button variant="ghost" onClick={() => { setPriorityDraft({ priorities: priorityDraft.priorities.filter((_,i)=>i!==index) }); setPriorityDirty(true); }}>Quitar prioridad</Button>
+        </div>)}
+        <Button variant="outline" className="min-h-11" onClick={() => { setPriorityDraft({priorities:[...priorityDraft.priorities,{title:"",reason:"",related_competency_ids:[],importance:"higher"}]}); setPriorityDirty(true); }}>Agregar prioridad</Button>
+        <div className="flex flex-wrap gap-3"><AsyncButton busy={busy} busyLabel="Confirmando..." disabled={!priorityDraftId || priorityDraft.priorities.some((item) => !item.title.trim() || !item.reason.trim() || !item.related_competency_ids.length)} onClick={() => void action(async () => { await saveDiagnosticPriorities(priorityDraftId!,priorityDraft); await confirmDiagnosticPriorities(priorityDraftId!); setPriorityDraft(null); setPriorityDraftId(null); setPriorityDirty(false); onGroupConfirmed?.(); setMessage("Prioridades confirmadas. Ya puedes preparar el plan anual."); })}>Confirmar prioridades</AsyncButton>
+          <AsyncButton variant="outline" busy={busy} busyLabel="Guardando..." disabled={!priorityDraftId} onClick={() => void action(async () => { await saveDiagnosticPriorities(priorityDraftId!,priorityDraft); setPriorityDirty(false); setMessage("Borrador de prioridades guardado."); })}>Guardar para después</AsyncButton></div>
+      </section>}
     </div>}
     {view === "individual" && <Button variant="outline" className="diagnostic-back-button" onClick={() => leaveStudent(onObserve)}><ArrowLeft /> Volver a observar</Button>}
   </section>;

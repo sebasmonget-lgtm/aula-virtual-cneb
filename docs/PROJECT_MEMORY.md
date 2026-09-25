@@ -196,6 +196,12 @@ Proyecto nuevo iniciado el 20 de septiembre de 2026. Existe un shell responsive 
 - La matriz del período cruza niñas y niños con competencias aplicables y separa cobertura de evaluación. El historial de una celda reúne observaciones diagnósticas y evidencias de actividades, sin convertir entrevistas familiares en evidencia ni inferir niveles por ausencia de registros.
 - La actividad consulta «Podrías observar hoy» para hasta cuatro sugerencias explicadas. La docente puede elegir cualquier estudiante. Los hallazgos grupales del período solo se usan en propuestas futuras cuando la docente activa esa opción; los planes existentes no cambian.
 
+## «Mi año» y documento formal (2026-09-25)
+
+- El diagnóstico tiene dos confirmaciones visibles: visión del grupo y prioridades. El Plan Anual nuevo requiere ambas. Una sugerencia individual de IA puede redactar un comentario a partir de observaciones del niño; sin observaciones devuelve información insuficiente. Las prioridades grupales se versionan aparte y una nueva versión copia la confirmada para que la docente ajuste sin regenerar.
+- `annual_preplan_v1` guarda doce propuestas iniciales de Sol High como filas editables. La docente puede cambiar cantidad, orden, tipo, mes, duración, motivo, propósito y competencias; un ID por fila permanece estable. El código asigna fechas y conserva un solo plan vigente por cuenta/año, con versiones anteriores consultables.
+- Tras confirmar el preplan, Luna desarrolla los campos formales usando la versión confirmada, diagnóstico y prioridades de origen, CNEB de la edad, calendario y estructura de la plantilla unificada. `annual_plan_formal_content` guarda el resultado derivado. El Word se puede reintentar y utiliza las mismas filas que «Mi año». El documento original de plantilla queda intacto. Ver ADR 069.
+
 
 
 

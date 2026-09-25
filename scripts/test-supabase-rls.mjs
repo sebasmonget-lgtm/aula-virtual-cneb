@@ -79,6 +79,7 @@ try {
   assert.equal(storageWrites.rows.length, 0, 'No direct Storage writes');
 
   await db.query('insert into auth.users(id) values ($1),($2)', [teacherA, teacherB]);
+  await db.query("insert into public.profiles(user_id,display_name) values ($1,'Docente A'),($2,'Docente B')", [teacherA, teacherB]);
   await db.exec(`insert into public.curriculum_versions(id,name,source_url) values ('00000000-0000-4000-8000-000000000001','CNEB','https://example.invalid');
     insert into public.levels(id,name) values ('00000000-0000-4000-8000-000000000002','Inicial');
     insert into public.age_grades(id,level_id,label,age_years) values ('00000000-0000-4000-8000-000000000003','00000000-0000-4000-8000-000000000002','5 años',5);`);
@@ -106,9 +107,13 @@ try {
     const attachment = await inserted(`insert into public.student_family_interview_attachments(classroom_id,student_id,interview_id,storage_path,mime_type,created_by) values ($1,$2,$3,$4,'application/pdf',$5)`, [room, student, interview, `family-interview/${teacher}/${student}/file.pdf`, teacher]);
     const document = await inserted(`insert into public.document_versions(owner_user_id,entity_type,entity_id,template_id,structured_payload) values ($1,'family_report',$2,$3,'{}')`, [teacher, report, templateId]);
     const diagnostic = await inserted(`insert into public.diagnostic_student_reviews(classroom_id,student_id,version,status,details,source_snapshot,created_by) values ($1,$2,1,'draft','{}','{}',$3)`, [room, student, teacher]);
+    const group = await inserted(`insert into public.diagnostic_group_reviews(classroom_id,version,status,details,source_snapshot,created_by) values ($1,1,'confirmed','{}','{}',$2)`, [room, teacher]);
+    const priority = await inserted(`insert into public.diagnostic_priority_reviews(classroom_id,group_review_id,version,status,details,created_by) values ($1,$2,1,'confirmed','{}',$3)`, [room, group, teacher]);
+    const plan = await inserted(`insert into public.annual_plans(classroom_id,school_year_id,curriculum_version_id,version,status,source_diagnostic_review_id,source_priority_review_id) values ($1,$2,'00000000-0000-4000-8000-000000000001',1,'active',$3,$4)`, [room, year, group, priority]);
+    await db.query(`insert into public.annual_plan_formal_content(annual_plan_id,content,source_revision) values ($1,'{}',1)`, [plan]);
     await db.query(`insert into storage.objects(bucket_id,name) values ('family-interviews',$1)`, [`family-interview/${teacher}/${student}/file.pdf`]);
     await db.query(`insert into storage.objects(bucket_id,name) values ('student-evidence',$1)`, [`${teacher}/${student}/image.png`]);
-    sensitiveRows.push({ assessment, conclusion, report, closure, interview, attachment, document, diagnostic });
+    sensitiveRows.push({ assessment, conclusion, report, closure, interview, attachment, document, diagnostic, group, priority, plan });
   }
 
   async function asTeacher(teacher, sql) {
@@ -126,11 +131,14 @@ try {
       ['family_reports', 'report'], ['period_closures', 'closure'],
       ['student_family_interviews', 'interview'], ['student_family_interview_attachments', 'attachment'],
       ['document_versions', 'document'], ['diagnostic_student_reviews', 'diagnostic'],
+      ['diagnostic_group_reviews', 'group'], ['diagnostic_priority_reviews', 'priority'], ['annual_plans', 'plan'],
     ];
     for (const [table, key] of scopedRows) {
       const id = own[key];
       assert.equal((await asTeacher(teacher, `select id from public.${table} where id='${id}'`)).rows.length, 1, `${table}: own SELECT`);
     }
+    assert.equal((await asTeacher(teacher, `select annual_plan_id from public.annual_plan_formal_content where annual_plan_id='${own.plan}'`)).rows.length, 1, 'annual formal: own SELECT');
+    assert.equal((await asTeacher(teacher, `select annual_plan_id from public.annual_plan_formal_content where annual_plan_id='${other.plan}'`)).rows.length, 0, 'annual formal: cross SELECT');
     for (const [table, key] of scopedRows) {
       const id = other[key];
       assert.equal((await asTeacher(teacher, `select id from public.${table} where id='${id}'`)).rows.length, 0, `${table}: cross SELECT`);
@@ -167,8 +175,13 @@ try {
         await assert.rejects(() => asTeacher(teacher, `update public.${table} set id=id where id='${id}'`), /permission denied/);
       }
     }
+    for (const planId of [own.plan, other.plan]) {
+      await assert.rejects(() => asTeacher(teacher, `insert into public.annual_plan_formal_content(annual_plan_id,content,source_revision) values ('${planId}','{}',1)`), /permission denied/);
+      await assert.rejects(() => asTeacher(teacher, `update public.annual_plan_formal_content set content='{}' where annual_plan_id='${planId}'`), /permission denied/);
+      await assert.rejects(() => asTeacher(teacher, `delete from public.annual_plan_formal_content where annual_plan_id='${planId}'`), /permission denied/);
+    }
   }
-  console.log(`RLS: ${privateTables.length} private tables read-only; two teachers isolated across 11 sensitive tables and Storage; SELECT/INSERT/UPDATE/DELETE exercised`);
+  console.log(`RLS: ${privateTables.length} private tables read-only; two teachers isolated across 15 sensitive tables and Storage; SELECT/INSERT/UPDATE/DELETE exercised`);
 } finally {
   await db.close();
 }
