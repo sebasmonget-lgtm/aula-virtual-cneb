@@ -9,8 +9,9 @@ import { AsyncButton, WorkflowFeedback } from "./workflow-ui";
 
 type ActivityBlock = LocalDashboard["today"]["blocks"][number];
 
-export function ActivityRunView({ block, onBack, onEvidence, onStepChange, onComplete }: {
+export function ActivityRunView({ block, evidenceRevision, onBack, onEvidence, onStepChange, onComplete }: {
   block: ActivityBlock;
+  evidenceRevision: number;
   onBack: () => void;
   onEvidence: (studentId?: string) => void;
   onStepChange: (stepIndex: number) => Promise<void>;
@@ -23,12 +24,13 @@ export function ActivityRunView({ block, onBack, onEvidence, onStepChange, onCom
   useEffect(()=>{
     if(!block.activity_id)return;
     const controller=new AbortController();
+    setSuggestions([]);
     apiFetch(`${localDatabaseApiUrl}/api/period-evaluations/observe-today?activityId=${encodeURIComponent(block.activity_id)}`,{signal:controller.signal,cache:"no-store"})
       .then(async(response)=>response.ok?await response.json() as {suggestions:typeof suggestions}:null)
       .then((result)=>{if(!controller.signal.aborted)setSuggestions(result?.suggestions??[]);})
       .catch(()=>{if(!controller.signal.aborted)setSuggestions([]);});
     return()=>controller.abort();
-  },[block.activity_id]);
+  },[block.activity_id,evidenceRevision]);
   async function run(action: "step" | "complete", nextIndex?: number) {
     if (operation) return;
     setOperation(action); setError("");

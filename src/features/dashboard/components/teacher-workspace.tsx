@@ -60,6 +60,7 @@ export function TeacherWorkspace() {
   const [evaluationEntry, setEvaluationEntry] = useState<"home" | "diagnostic">("home");
   const [diagnosticInitialStep, setDiagnosticInitialStep] = useState<1 | 2 | 3>(1);
   const [evidenceOpen, setEvidenceOpen] = useState(false);
+  const [evidenceRevision, setEvidenceRevision] = useState(0);
   const [attendanceOpen, setAttendanceOpen] = useState(false);
   const [activityRunBlockId, setActivityRunBlockId] = useState<string | null>(null);
   const [evidenceContext, setEvidenceContext] = useState<{ activityId: string; criteria: ActivityCriterion[]; title: string } | null>(null);
@@ -121,6 +122,7 @@ export function TeacherWorkspace() {
         media: audio ?? undefined,
       });
       setDashboard(await loadLocalDashboard());
+      setEvidenceRevision((revision) => revision + 1);
       setSaved(true);
       if (andNext) {
         setSaved(false);
@@ -245,7 +247,7 @@ export function TeacherWorkspace() {
           active === "Biblioteca" ? dashboard ? <ResourceLibraryScreen age={dashboard.profile.age_years} initialFilter={libraryFilter} onUse={(resource) => { setSelectedResource(resource); setPlanningTarget("activities"); navigate("Planificar"); }} /> : <ScreenSkeleton /> :
           active === "Evaluar" ? dashboard ? <EvaluationArea dashboard={dashboard} initialTarget={evaluationTarget} initialSection={evaluationEntry} initialDiagnosticStep={diagnosticInitialStep} onPlan={() => { setPlanningTarget(null); navigate("Planificar"); }} onPrepareActivity={() => { setPlanningTarget("activities"); navigate("Planificar"); }} onStudents={() => navigate("Aula")} /> : <ScreenSkeleton /> :
           active === "Aula" ? dashboard ? <StudentsScreen students={students} onImported={setDashboard} onDiagnostic={() => { navigate("Evaluar"); setEvaluationEntry("diagnostic"); }} onEvaluate={(studentId, competencyId) => { navigate("Evaluar"); setEvaluationTarget({ studentId, competencyId }); }} onPlan={() => navigate("Planificar")} /> : <ScreenSkeleton /> : active === "Planificar" ? dashboard ? <PlanningArea dashboard={dashboard} initialTab={planningTarget} selectedResource={selectedResource} onGoToday={() => navigate("Hoy")} onGoDiagnostic={() => { navigate("Evaluar"); setEvaluationEntry("diagnostic"); }} onGoStudents={() => navigate("Aula")} onGoWorkshops={() => { setLibraryFilter("workshops"); navigate("Biblioteca"); }} /> : <ScreenSkeleton /> : <>
-          {activityRunBlock ? <ActivityRunView block={activityRunBlock} onBack={() => setActivityRunBlockId(null)} onEvidence={(suggestedStudentId) => openEvidenceFor(activityRunBlock,suggestedStudentId)} onStepChange={async (stepIndex) => updateExecution({ scheduleEntryId: activityRunBlock.id, action: "set_step", stepIndex })} onComplete={async () => { await updateExecution({ scheduleEntryId: activityRunBlock.id, action: "complete", closureType: "as_planned" }); setActivityRunBlockId(null); }} /> : active === "Hoy" && (dashboard ? <TodayHome dashboard={dashboard} openEvidence={openEvidenceFor} openAttendance={() => setAttendanceOpen(true)} updateExecution={updateExecution} openActivity={openActivity} onPlan={() => navigate("Planificar")} onPrepareActivity={() => { setPlanningTarget("activities"); navigate("Planificar"); }} onDiagnostic={() => { navigate("Evaluar"); setEvaluationEntry("diagnostic"); setDiagnosticInitialStep(2); }} /> : <ScreenSkeleton />)}
+          {activityRunBlock ? <ActivityRunView block={activityRunBlock} evidenceRevision={evidenceRevision} onBack={() => setActivityRunBlockId(null)} onEvidence={(suggestedStudentId) => openEvidenceFor(activityRunBlock,suggestedStudentId)} onStepChange={async (stepIndex) => updateExecution({ scheduleEntryId: activityRunBlock.id, action: "set_step", stepIndex })} onComplete={async () => { await updateExecution({ scheduleEntryId: activityRunBlock.id, action: "complete", closureType: "as_planned" }); setActivityRunBlockId(null); }} /> : active === "Hoy" && (dashboard ? <TodayHome dashboard={dashboard} openEvidence={openEvidenceFor} openAttendance={() => setAttendanceOpen(true)} updateExecution={updateExecution} openActivity={openActivity} onPlan={() => navigate("Planificar")} onPrepareActivity={() => { setPlanningTarget("activities"); navigate("Planificar"); }} onDiagnostic={() => { navigate("Evaluar"); setEvaluationEntry("diagnostic"); setDiagnosticInitialStep(2); }} /> : <ScreenSkeleton />)}
           </>}
         </main>
 
