@@ -4,7 +4,7 @@ import { prepareAIRequestV4 } from "./prepare-ai-request-v4.mjs";
 import { validateAssessmentProposal } from "./assessment-v4-service.mjs";
 import { CONCLUSION_FIELDS, validateDescriptiveConclusion } from "./descriptive-conclusion-v4-service.mjs";
 import { FAMILY_REPORT_FIELDS, FAMILY_REPORT_SECTION_FIELDS, validateFamilyReport } from "./family-report-v4-service.mjs";
-import { ANNUAL_PLAN_DEVELOPMENT_SCHEMA, ANNUAL_PLAN_OUTPUT_SCHEMA, AnnualPlanValidationError, validateAnnualPlanDevelopment, validateAnnualPlanMaster, validateAnnualPlanProposal } from "./annual-plan-contract.mjs";
+import { ANNUAL_PLAN_DEVELOPMENT_SCHEMA, ANNUAL_PLAN_OUTPUT_SCHEMA, AnnualPlanValidationError, requiredAnnualCoverageIds, validateAnnualPlanDevelopment, validateAnnualPlanMaster, validateAnnualPlanMasterCoverage, validateAnnualPlanProposal } from "./annual-plan-contract.mjs";
 export { ANNUAL_PLAN_OUTPUT_SCHEMA } from "./annual-plan-contract.mjs";
 
 const ACTIVITY_FIELDS = [
@@ -137,7 +137,8 @@ function assertAnnualPlanStageOutput(output, bundle, stage) {
   try {
     if (stage === "development") return validateAnnualPlanDevelopment(output);
     const master = assertAnnualPlanOutput(output, bundle);
-    return stage === "master" ? validateAnnualPlanMaster(master) : master;
+    return stage === "master" ? validateAnnualPlanMasterCoverage(validateAnnualPlanMaster(master),
+      requiredAnnualCoverageIds(bundle.curriculum.competency_cards, bundle.context.classroom.available_resources)) : master;
   } catch (error) {
     if (error instanceof AnnualPlanValidationError) throw new InvalidAIGenerationError(error.reason, error.details);
     throw error;

@@ -6,6 +6,7 @@ Aplica las reglas de planificación `PLAN-01` a `PLAN-07` de `knowledge/cneb-ini
 
 - Parte de observaciones, intereses, necesidades y contexto reales del grupo. Una situación de partida debe explicar por qué la propuesta tiene sentido.
 - Selecciona competencias aplicables a la edad y ligadas al propósito. Distingue competencia principal de las secundarias posibles. No fuerces todas las competencias en cada proyecto ni una frecuencia numérica idéntica para todas.
+- Al revisar los doce proyectos juntos, busca dos oportunidades con sentido para cada competencia aplicable del bundle y asegura al menos una. Las competencias priorizadas por el diagnóstico pueden recibir más. Una competencia secundaria cuenta solo si la situación ofrece una actuación observable real; no la agregues para subir un contador. Para TIC, confirma que existan medios digitales disponibles y una acción infantil pertinente. Si el contexto no permite una oportunidad honesta, no inventes el recurso ni la actuación: informa la limitación para revisión docente.
 - Anticipa categorías de evidencia coherentes con la competencia y la experiencia. Un producto colectivo no demuestra por sí mismo el aprendizaje de cada niño.
 - Considera espacios, materiales, tiempos, interacciones y participación de familias cuando aporten al propósito.
 - Prefiere experiencias activas de juego, exploración, interacción, movimiento, comunicación y toma de decisiones.

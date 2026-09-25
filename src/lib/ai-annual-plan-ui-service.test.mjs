@@ -8,6 +8,7 @@ import {
   teacherMessageForAnnualPlanGenerationError,
 } from "./ai-annual-plan-ui-service.mjs";
 import { loadKnowledgeBaseV4 } from "./knowledge-base-v4.mjs";
+import { applicableCompetencyCards } from "./competency-applicability.mjs";
 import { defaultInitialStage, nationalCalendarBlocks2026 } from "./annual-plan-calendar.mjs";
 
 const classroom = {
@@ -132,9 +133,35 @@ test("un error de modelo conserva una categoría segura sin filtrar mensajes té
   }
 });
 
+test("una omisión curricular rehace el Plan Maestro una sola vez antes de redactar", async () => {
+  const master = { title: "Plan de prueba", school_year: "2026", general_context_summary: "Grupo ficticio",
+    planning_priorities: ["Observar"], competency_overview: ["Participar"], review_checkpoints: ["Cada bimestre"],
+    flexibility_notes: "Ajustar", annual_purposes: [], teaching_strategies: [], assessment_followup: [],
+    family_collaboration: [], inclusive_supports: [],
+    proposed_experiences: Array.from({ length: 12 }, (_, index) => ({ period: `Bimestre ${Math.floor(index / 3) + 1}`,
+      experience_type: "project", title: themes[index], rationale: `Ofrecer ${themes[index]}`,
+      primary_competency_ids: ["COMP-1"], possible_secondary_competency_ids: index === 2 ? ["COMP-2"] : [],
+      context_or_trigger: `Juego ${themes[index]}`, expected_evidence_categories: ["Conversación"], flexibility_notes: "Ajustar" })) };
+  const development = { organization_criteria: ["Uno", "Dos", "Tres", "Cuatro"], transversal_approaches: [],
+    project_details: Array.from({ length: 12 }, (_, index) => ({ index: index + 1, purpose: `Explorar ${themes[index]}`,
+      final_product: `Registro ${themes[index]}`, materials: ["Papel"] })) };
+  const calls = [];
+  const result = await generateTeacherAnnualPlan({ classroom, request: {}, createProvider: () => ({ id: "mock" }),
+    generate: async (input) => {
+      calls.push(input);
+      if (calls.length === 1) throw Object.assign(new Error("missing"), { reason: "annual_plan_coverage_missing", details: { missing_competency_ids: ["COMP-2"] } });
+      return { output: input.annual_stage === "master" ? master : development,
+        metadata: { model: input.annual_stage === "master" ? "gpt-6-sol" : "gpt-6-luna", response_id: "mock", usage: null }, provenance: {} };
+    } });
+  assert.deepEqual(calls.map((call) => call.annual_stage), ["master", "master", "development"]);
+  assert.match(calls[1].teacher_request, /COMP-2/);
+  assert.equal(result.proposal.proposed_experiences.length, 12);
+});
+
 test("el pipeline real de contexto entrega solo el bundle a los dos providers mock", async () => {
   const knowledgeBase = await loadKnowledgeBaseV4();
-  const competencyId = knowledgeBase.competencyCards.find((card) => card.runtime_selectable_by_age?.["5"] && !["CAST_L2_ORAL", "PS_RELIGION"].includes(card.id)).id;
+  const competencyIds = applicableCompetencyCards(knowledgeBase.competencyCards, 5, {}).map((card) => card.id);
+  const competencyId = competencyIds[0];
   const master = {
     title: "Plan de prueba", school_year: "2026", general_context_summary: "El grupo explora el entorno.",
     planning_priorities: ["Conversar"], competency_overview: ["Explorar"], review_checkpoints: ["Cada bimestre"],
@@ -142,7 +169,7 @@ test("el pipeline real de contexto entrega solo el bundle a los dos providers mo
     assessment_followup: ["Observar"], family_collaboration: [], inclusive_supports: [],
     proposed_experiences: Array.from({ length: 12 }, (_, index) => ({ period: `Bimestre ${Math.floor(index / 3) + 1}`,
       experience_type: "project", title: themes[index], rationale: `Oportunidad para ${themes[index]}.`,
-      primary_competency_ids: [competencyId], possible_secondary_competency_ids: [],
+      primary_competency_ids: [competencyIds[index % competencyIds.length]], possible_secondary_competency_ids: [],
       context_or_trigger: `Juego sobre ${themes[index]}.`, expected_evidence_categories: ["Preguntas"], flexibility_notes: "Ajustar." })),
   };
   const development = { organization_criteria: ["Uno", "Dos", "Tres", "Cuatro"], transversal_approaches: [],

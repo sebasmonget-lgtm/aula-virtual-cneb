@@ -93,7 +93,16 @@ export async function generateTeacherAnnualPlan({ classroom, request, resolvePla
     const input = buildAnnualPlanGenerationInput({ classroom, request });
     const masterPlan = resolvePlan({ workflow: "annual_plan", task: "generation" });
     const skillInstructions = await loadAnnualPlanSkill();
-    const master = await generate({ ...input, annual_stage: "master" }, { provider: createProvider(masterPlan, { timeoutMs: ANNUAL_PLAN_TIMEOUT_MS }), executionPlan: masterPlan, skillInstructions });
+    let master;
+    try {
+      master = await generate({ ...input, annual_stage: "master" }, { provider: createProvider(masterPlan, { timeoutMs: ANNUAL_PLAN_TIMEOUT_MS }), executionPlan: masterPlan, skillInstructions });
+    } catch (error) {
+      if (error?.reason !== "annual_plan_coverage_missing" || !Array.isArray(error.details?.missing_competency_ids)) throw error;
+      const missing = error.details.missing_competency_ids.join(", ");
+      master = await generate({ ...input, annual_stage: "master",
+        teacher_request: `${input.teacher_request} Revisa toda la secuencia: faltó una oportunidad pertinente para ${missing}. Crea un nuevo Plan Maestro completo. Vincula cada ID solo a un proyecto cuya situación permita observar esa competencia de verdad; conserva las doce propuestas y las prioridades diagnósticas.` },
+      { provider: createProvider(masterPlan, { timeoutMs: ANNUAL_PLAN_TIMEOUT_MS }), executionPlan: masterPlan, skillInstructions });
+    }
     const developmentPlan = resolvePlan({ workflow: "annual_plan", task: "document_development" });
     const developed = await generate({ ...input, annual_stage: "development", master_plan: developmentSource(master.output),
       teacher_request: "Desarrolla el plan maestro validado que aparece en workflow_inputs.master_plan. Conserva sus doce proyectos, su orden, sus cuatro vínculos con el calendario y sus competencias. Para cada índice escribe un propósito concreto y diferente, un producto posible del proyecto y materiales sencillos compatibles con el aula. El producto es distinto de las actuaciones individuales que la docente observará como evidencia: no lo presentes como prueba automática del aprendizaje. No repitas el mismo propósito ni el mismo producto cambiando solo el número; algunos productos pueden ser acuerdos, relatos, construcciones, dibujos o registros cuando tengan sentido. Evita manualidades decorativas como propósito central. Devuelve cuatro criterios de organización y enfoques transversales solo cuando el contexto y la Knowledge Base los sustenten. Usa español claro; no inventes observaciones ni datos familiares." },

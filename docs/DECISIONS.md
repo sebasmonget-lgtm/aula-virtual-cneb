@@ -1,5 +1,13 @@
 # Decisiones de arquitectura
 
+## ADR 071 Cobertura anual y propuesta de proyecto por fecha
+
+**Cobertura.** La Skill del Plan Maestro busca dos oportunidades pertinentes por competencia aplicable y exige al menos una en el resultado nuevo. TIC se exige solo cuando el aula confirma un medio digital disponible; sin ese recurso permanece visible en el mapa con la oportunidad pendiente, sin inventar dispositivos. La validación ocurre antes de la redacción del documento; si falta un ID exigible, Sol recibe una sola oportunidad de rehacer el Plan Maestro completo con los IDs faltantes. No se insertan competencias mediante código ni se alteran planes ya confirmados. La docente puede revisar y editar la propuesta. Este mínimo es una decisión de Ayni, no una regla del MINEDU. Las advertencias del mapa siguen siendo una proyección de los doce objetos del plan.
+
+**Selección por fecha.** El endpoint del plan vigente devuelve sus `project_slots`, siempre después de verificar el año y la propietaria del aula. Proyecto/Unidad muestra primero el espacio que incluye la fecha local de hoy; si no hay uno, muestra el siguiente, o el último si terminó la secuencia. Al elegirlo, completa las fechas guardadas para ese índice estable. Las otras propuestas siguen elegibles y las fechas siguen editables. Los planes históricos sin espacios fechados mantienen la selección manual.
+
+**Reversión.** Se puede retirar la validación y la recomendación de interfaz sin migración; los planes y proyectos ya guardados conservan sus IDs, fechas e historial.
+
 ## ADR 070 Recorrido secuencial y calendario anual sencillo
 
 **Decisión.** La navegación de Planificar permite volver siempre al diagnóstico. Preparar un plan nuevo requiere una síntesis grupal confirmada; un proyecto o unidad nuevo requiere un plan anual activo, y una actividad nueva requiere además un proyecto o unidad confirmado. La interfaz explica el paso pendiente y el servidor repite las comprobaciones para impedir que un cliente omita la secuencia. Los registros históricos siguen consultables.

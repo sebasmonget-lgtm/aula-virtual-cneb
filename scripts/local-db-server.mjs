@@ -1146,7 +1146,10 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
             starts_on: row.source_starts_on, ends_on: row.source_ends_on,
           }),
         }));
-      send(response, 200, { active: plans.find((plan) => plan.status === "active") ?? null, draft: plans.find((plan) => plan.status === "draft") ?? null, archived: plans.filter((plan) => plan.status === "archived") }, origin); return;
+      const activePlan = plans.find((plan) => plan.status === "active") ?? null;
+      if (activePlan) activePlan.project_slots = (await db.query(`select slot_index,starts_on::text,ends_on::text,duration_weeks
+        from project_slots where annual_plan_id=$1 order by slot_index`, [activePlan.id])).rows;
+      send(response, 200, { active: activePlan, draft: plans.find((plan) => plan.status === "draft") ?? null, archived: plans.filter((plan) => plan.status === "archived") }, origin); return;
     }
     if (request.method === "GET" && url.pathname === "/api/learning-experiences") {
       const context = await annualPlanningContext(); if (!context) { send(response, 404, { error: "No se encontró un aula activa." }, origin); return; }

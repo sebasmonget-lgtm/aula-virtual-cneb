@@ -53,6 +53,7 @@ export class AnnualPlanValidationError extends Error {
       annual_plan_project_order_invalid: "Los proyectos deben seguir el orden de los cuatro periodos lectivos.",
       annual_plan_project_duration_invalid: "Cada proyecto debe durar dos o tres semanas lectivas.",
       annual_plan_project_diversity_invalid: "Los proyectos se parecen demasiado entre sí. Revisa títulos, situaciones y productos para que cada uno tenga sentido propio.",
+      annual_plan_coverage_missing: "Faltan oportunidades para algunas competencias aplicables al aula.",
       annual_plan_development_invalid: "El desarrollo de los proyectos llegó incompleto.",
     };
     super(messages[reason] ?? "La propuesta anual no es válida.");
@@ -122,6 +123,22 @@ export function validateAnnualPlanMaster(master) {
   rejectRepeatedProjects(projects.map((project) => project.context_or_trigger), "context_or_trigger", 5);
   rejectRepeatedProjects(projects.map((project) => project.rationale), "rationale", 5);
   return master;
+}
+
+/** New master plans must offer a real planning place for every applicable competency. */
+export function validateAnnualPlanMasterCoverage(master, applicableCompetencyIds) {
+  const covered = new Set((master?.proposed_experiences ?? []).flatMap((project) =>
+    [...(project.primary_competency_ids ?? []), ...(project.possible_secondary_competency_ids ?? [])]));
+  const missing = [...new Set(applicableCompetencyIds)].filter((id) => !covered.has(id));
+  if (missing.length) throw new AnnualPlanValidationError("annual_plan_coverage_missing", { missing_competency_ids: missing });
+  return master;
+}
+
+/** Do not require a digital experience when the classroom has not confirmed a device. */
+export function requiredAnnualCoverageIds(cards, availableResources = []) {
+  const hasDigitalDevice = Array.isArray(availableResources) && availableResources.some((resource) =>
+    /\b(celular|tel[eé]fono|tablet|tableta|computadora|ordenador|laptop|proyector|pantalla|dispositivo digital|c[aá]mara)\b/i.test(String(resource)));
+  return cards.filter((card) => card.id !== "TRANS_TIC" || hasDigitalDevice).map((card) => card.id);
 }
 
 export function validateAnnualPlanDevelopment(output) {

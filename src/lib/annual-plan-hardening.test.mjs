@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { PGlite } from "@electric-sql/pglite";
 import { ACTIVITY_OUTPUT_SCHEMA, ANNUAL_PLAN_OUTPUT_SCHEMA, buildProviderRequest, generateAIWorkflowV4 } from "./ai-generation-v4.mjs";
-import { AnnualPlanValidationError, validateAnnualPlanProposal } from "./annual-plan-contract.mjs";
+import { AnnualPlanValidationError, requiredAnnualCoverageIds, validateAnnualPlanMasterCoverage, validateAnnualPlanProposal } from "./annual-plan-contract.mjs";
 import { loadKnowledgeBaseV4 } from "./knowledge-base-v4.mjs";
 import { nextAnnualPlanVersion, safeAnnualGenerationMetadata } from "./annual-plan-persistence.mjs";
 
@@ -80,6 +80,23 @@ test("contrato anual valida todos los campos, listas, año y competencias aplica
   for (const [proposal, reason, ids = new Set(["COMP-1"])] of invalid) {
     assert.throws(() => validateAnnualPlanProposal(proposal, ids, 2026), (error) => error instanceof AnnualPlanValidationError && error.reason === reason);
   }
+});
+
+test("el Plan Maestro nuevo detecta competencias sin oportunidades sin alterar planes anteriores", () => {
+  const master = { proposed_experiences: [
+    { primary_competency_ids: ["COM_ORAL"], possible_secondary_competency_ids: ["MAT_CANTIDAD"] },
+    { primary_competency_ids: ["COM_ORAL"], possible_secondary_competency_ids: [] },
+  ] };
+  assert.equal(validateAnnualPlanMasterCoverage(master, ["COM_ORAL", "MAT_CANTIDAD"]), master);
+  assert.throws(() => validateAnnualPlanMasterCoverage(master, ["COM_ORAL", "MAT_CANTIDAD", "CYT_INDAGA"]),
+    (error) => error instanceof AnnualPlanValidationError && error.reason === "annual_plan_coverage_missing"
+      && error.details.missing_competency_ids[0] === "CYT_INDAGA");
+});
+
+test("TIC solo es obligatoria en la cobertura cuando hay un medio digital confirmado", () => {
+  const cards = [{ id: "COM_ORAL" }, { id: "TRANS_TIC" }];
+  assert.deepEqual(requiredAnnualCoverageIds(cards, ["papel", "semillas"]), ["COM_ORAL"]);
+  assert.deepEqual(requiredAnnualCoverageIds(cards, ["tableta del aula"]), ["COM_ORAL", "TRANS_TIC"]);
 });
 
 test("el schema nuevo exige secciones del documento y un plan guardado v1 sigue siendo editable", () => {
