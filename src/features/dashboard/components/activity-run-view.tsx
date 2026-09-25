@@ -8,6 +8,7 @@ import { apiFetch } from "@/src/lib/ayni-api-fetch";
 import { AsyncButton, WorkflowFeedback } from "./workflow-ui";
 
 type ActivityBlock = LocalDashboard["today"]["blocks"][number];
+type ObservationSuggestion = {student_id:string;student_name:string;competency_name:string;reason:string};
 
 export function ActivityRunView({ block, evidenceRevision, onBack, onEvidence, onStepChange, onComplete }: {
   block: ActivityBlock;
@@ -20,17 +21,17 @@ export function ActivityRunView({ block, evidenceRevision, onBack, onEvidence, o
   const [showComplete, setShowComplete] = useState(false);
   const [operation, setOperation] = useState<"step" | "complete" | null>(null);
   const [error, setError] = useState("");
-  const [suggestions, setSuggestions] = useState<{student_id:string;student_name:string;competency_name:string;reason:string}[]>([]);
+  const [suggestionSnapshot, setSuggestionSnapshot] = useState<{activityId:string;revision:number;items:ObservationSuggestion[]}>({activityId:"",revision:-1,items:[]});
   useEffect(()=>{
     if(!block.activity_id)return;
     const controller=new AbortController();
-    setSuggestions([]);
     apiFetch(`${localDatabaseApiUrl}/api/period-evaluations/observe-today?activityId=${encodeURIComponent(block.activity_id)}`,{signal:controller.signal,cache:"no-store"})
-      .then(async(response)=>response.ok?await response.json() as {suggestions:typeof suggestions}:null)
-      .then((result)=>{if(!controller.signal.aborted)setSuggestions(result?.suggestions??[]);})
-      .catch(()=>{if(!controller.signal.aborted)setSuggestions([]);});
+      .then(async(response)=>response.ok?await response.json() as {suggestions:ObservationSuggestion[]}:null)
+      .then((result)=>{if(!controller.signal.aborted)setSuggestionSnapshot({activityId:block.activity_id!,revision:evidenceRevision,items:result?.suggestions??[]});})
+      .catch(()=>{if(!controller.signal.aborted)setSuggestionSnapshot({activityId:block.activity_id!,revision:evidenceRevision,items:[]});});
     return()=>controller.abort();
   },[block.activity_id,evidenceRevision]);
+  const suggestions=suggestionSnapshot.activityId===block.activity_id&&suggestionSnapshot.revision===evidenceRevision?suggestionSnapshot.items:[];
   async function run(action: "step" | "complete", nextIndex?: number) {
     if (operation) return;
     setOperation(action); setError("");

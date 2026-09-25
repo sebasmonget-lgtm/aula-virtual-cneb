@@ -451,3 +451,19 @@
 **Causa raíz.** Quedó un `validator.ts` generado por Next.js junto a los tipos de rutas generados por vinext. El validador esperaba exportaciones del generador anterior.
 
 **Solución y prevención.** `tsconfig.json` excluye únicamente los validadores generados por Next.js, incluidos los de desarrollo; conserva los tipos de rutas de vinext. Verificar typecheck también después del build.
+
+## 2026-09-25 El diagnóstico parecía evidencia de la valoración del período
+
+**Síntoma.** La matriz mostraba una observación diagnóstica y la ficha de evaluación indicaba cero evidencias, sin explicar que se trataba de fuentes diferentes.
+
+**Causa raíz.** La cobertura podía contar observaciones diagnósticas como registros de seguimiento, mientras la valoración del período solo leía evidencias de actividades. La interfaz llamaba “registros” a ambas cifras.
+
+**Solución y prevención.** La ficha y el historial muestran los antecedentes diagnósticos separados de las evidencias del período; la matriz identifica cada fuente en sus dos vistas. El antecedente permanece fuera del cálculo de la valoración y su huella de confirmación. Las pruebas cubren antecedente sin evidencia y antecedente con evidencias. Revisar siempre los textos de conteo junto con la procedencia del dato.
+
+## 2026-09-25 Las sugerencias de observación quedaban desactualizadas tras guardar
+
+**Síntoma.** “Podrías observar hoy” seguía mostrando el motivo anterior hasta recargar la página.
+
+**Causa raíz.** Las sugerencias se consultaban solo al abrir la actividad, sin depender de los registros nuevos.
+
+**Solución y prevención.** Cada guardado incrementa una revisión de evidencias y vuelve a consultar las sugerencias. Mientras llega la respuesta, se oculta la lista anterior para no presentar motivos obsoletos. En una prueba aislada, Diego pasó de “Aún no tenemos registros” a “Solo tenemos registros de una situación” sin recargar la página.
