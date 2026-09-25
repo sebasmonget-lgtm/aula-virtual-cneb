@@ -9,7 +9,7 @@ export class AnnualPlanVersionError extends Error {
 }
 
 export async function copyConfirmedAnnualPlan(db, teacherId, context, sourcePlanId, documentContext, expectedSourceRevision = null) {
-  if (!context?.context_v4?.diagnostic_review_current || !context.source_diagnostic_review_id)
+  if (!context?.source_diagnostic_review_id)
     throw new AnnualPlanVersionError("diagnostic_review_required", "Revisa y confirma el diagnóstico del aula antes de preparar una nueva versión.");
   return versionTransaction(db, `annual:${context.school_year_id}`, async (tx) => {
     const source = (await tx.query(`select ap.* from annual_plans ap

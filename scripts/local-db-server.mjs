@@ -21,7 +21,7 @@ import { copyConfirmedAnnualPlan, confirmAnnualPlanVersion } from "../src/lib/an
 import { copyConfirmedLearningExperience, confirmLearningExperienceVersion } from "../src/lib/learning-experience-version-service.mjs";
 import { ANNUAL_PLAN_TEMPLATE_FORMAT, validateAnnualPlanProposal } from "../src/lib/annual-plan-contract.mjs";
 import { annualCalendarDay } from "../src/lib/annual-plan-schedule.mjs";
-import { buildFlexibleAnnualSchedule, defaultInitialStage, nationalCalendarBlocks2026, validateAnnualCalendar } from "../src/lib/annual-plan-calendar.mjs";
+import { buildFlexibleAnnualSchedule, defaultInitialStage, nationalCalendarBlocks2026, nationalSchoolHolidays2026, validateAnnualCalendar } from "../src/lib/annual-plan-calendar.mjs";
 import { listSavedDocuments, loadSavedDocument } from "../src/lib/document-library-service.mjs";
 import { prepareWordDownload } from "../src/lib/document-word-export.mjs";
 import { saveWordToLocalDownloads } from "../src/lib/local-word-save.mjs";
@@ -398,10 +398,13 @@ async function annualCalendarForClassroom(row) {
       from initial_stages where school_year_id=$1`, [row.school_year_id])).rows[0];
   }
   const exceptions = (await db.query(`select exception_date,type,label,is_instructional from calendar_exceptions where classroom_id=$1 order by exception_date`, [row.id])).rows;
+  const datedExceptions = exceptions.map((item) => ({ ...item, exception_date: annualCalendarDay(item.exception_date) }));
+  const customDates = new Set(datedExceptions.map((item) => item.exception_date));
+  const defaultHolidays = Number(row.year) === 2026 ? nationalSchoolHolidays2026().filter((item) => !customDates.has(item.exception_date)) : [];
   return { school_year: row.year, starts_on: annualCalendarDay(row.starts_on), ends_on: annualCalendarDay(row.ends_on),
     blocks: blocks.map((block) => ({ ...block, start_date: annualCalendarDay(block.start_date), end_date: annualCalendarDay(block.end_date) })),
     initial_stage: stage ?? null,
-    exceptions: exceptions.map((item) => ({ ...item, exception_date: annualCalendarDay(item.exception_date) })) };
+    exceptions: [...defaultHolidays, ...datedExceptions].sort((a, b) => a.exception_date.localeCompare(b.exception_date)) };
 }
 
 async function replaceAnnualProjectSlots(planId, schedule, runner = db) {
@@ -423,8 +426,8 @@ async function annualPlanningContext() {
   const studentNames = group ? (await db.query(`select first_name,last_name,preferred_name from students where classroom_id=$1`, [row.id])).rows
     .flatMap((item) => [item.first_name, item.last_name, item.preferred_name, [item.first_name, item.last_name].filter(Boolean).join(" ")]).filter(Boolean) : [];
   const contextV4 = publicClassroomContext(await getCurrentClassroomContext(db, teacherId, row.id));
-  const groupSummary = contextV4.diagnostic_review_current ? diagnosticPlanningSummary(group?.details, studentNames) : null;
-  const diagnostic_group = group && contextV4.diagnostic_review_current ? {
+  const groupSummary = group ? diagnosticPlanningSummary(group.details, studentNames) : null;
+  const diagnostic_group = group ? {
     ...Object.fromEntries(["strengths", "needs", "planning_priorities"]
       .map((field) => [field, diagnosticPlanningSummary({ [field]: group.details?.[field] }, studentNames) ?? ""])),
     competency_priorities: group.details?.competency_priorities ?? [],
@@ -1043,8 +1046,7 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
       if (draft || (active && !replacingLegacy) || (!active && replacementPlanId)) {
         send(response, 409, { error: "Ya existe un plan o borrador para este año. Abre el plan disponible." }, origin); return;
       }
-      if (!classroom.context_v4?.diagnostic_review_current) { send(response, 422, { error: "El diagnóstico del aula necesita revisión. Confirma el resumen con la información actual antes de preparar el plan anual.", reason: "diagnostic_review_required" }, origin); return; }
-      if (!classroom.diagnostic_summary) { send(response, 422, { error: "Confirma primero el resumen diagnóstico del aula antes de preparar el plan anual." }, origin); return; }
+      if (!classroom.source_diagnostic_review_id || !classroom.diagnostic_summary) { send(response, 422, { error: "Confirma primero el resumen diagnóstico del aula antes de preparar el plan anual.", reason: "diagnostic_review_required" }, origin); return; }
       try {
         const studentNames = (await db.query(`select first_name,last_name,preferred_name from students where classroom_id=$1`, [classroom.id])).rows
           .flatMap((item) => [item.first_name, item.last_name, item.preferred_name, [item.first_name, item.last_name].filter(Boolean).join(" ")]).filter(Boolean);
@@ -1075,7 +1077,7 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
       const existingId = typeof body.planId === "string" ? body.planId : null;
       const pending = typeof body.generationId === "string" ? await pendingAIGenerations.get(body.generationId) : null;
       if (!existingId && (!pending || pending.classroom_id !== context.id || pending.workflow !== "annual_plan")) { send(response, 422, { error: "La generación anual ya no está disponible. Genera nuevamente el borrador." }, origin); return; }
-      if (!existingId && (!context.context_v4?.diagnostic_review_current || pending.source_diagnostic_review_id !== context.source_diagnostic_review_id || pending.source_context_fingerprint !== context.context_v4.source_fingerprint)) { send(response, 422, { error: "Cambió el diagnóstico del aula. Revísalo y confírmalo antes de guardar el plan." }, origin); return; }
+      if (!existingId && (!context.source_diagnostic_review_id || pending.source_diagnostic_review_id !== context.source_diagnostic_review_id)) { send(response, 409, { error: "Se confirmó un nuevo resumen diagnóstico. Prepara nuevamente el borrador del plan." }, origin); return; }
       try {
         const saved=await versionTransaction(db,`annual:${context.school_year_id}`,async(tx)=>{
         if (existingId) {
@@ -1114,9 +1116,8 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
       try {
         const body=await readJson(request),revision=expectedRevision(body.expectedRevision);
         const result=await confirmAnnualPlanVersion(db,context,id,revision,async(draft,tx)=>{
-          const sourceFingerprint=draft.source_context_fingerprint??draft.document_context?.source_context_fingerprint;
           const sourceDiagnosticId=draft.source_diagnostic_review_id??draft.document_context?.source_diagnostic_review_id;
-          if(!context.context_v4?.diagnostic_review_current || (sourceFingerprint&&sourceFingerprint!==context.context_v4.source_fingerprint) || (sourceDiagnosticId&&sourceDiagnosticId!==context.source_diagnostic_review_id)) throw new VersionConflictError("Cambió el diagnóstico del aula. Revísalo antes de confirmar.",draft.revision);
+          if(!context.source_diagnostic_review_id || (sourceDiagnosticId&&sourceDiagnosticId!==context.source_diagnostic_review_id)) throw new VersionConflictError("Se confirmó un nuevo resumen diagnóstico. Revisa el plan antes de confirmar.",draft.revision);
           validateAnnualPlanProposal(draft.proposal,await applicableCompetencyIds("annual_plan",context),context.year);
           if(draft.proposal.plan_format===ANNUAL_PLAN_TEMPLATE_FORMAT) await replaceAnnualProjectSlots(id,buildFlexibleAnnualSchedule(context.calendar,draft.proposal.proposed_experiences),tx);
         });
@@ -1168,6 +1169,8 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
         const body = await readJson(request); let parent = null;
         const revision = body.sourceExperienceId ? (await db.query(`select * from learning_experiences where id=$1 and classroom_id=$2 and status='draft' and supersedes_experience_id is not null and type in ('project','unit')`, [body.sourceExperienceId, classroom.id])).rows[0] : null;
         if (body.sourceExperienceId && (!revision || revision.type !== body.workflow)) throw new Error("La versión que quieres regenerar ya no está disponible.");
+        if (!revision && !(await db.query(`select 1 from annual_plans where classroom_id=$1 and school_year_id=$2 and status='active' limit 1`, [classroom.id, classroom.school_year_id])).rows.length)
+          throw new Error("Confirma primero el plan anual antes de preparar un proyecto o unidad.");
         if (revision?.origin === "emergent") {
           const key = revision.type === "project" ? "project_trigger_or_interest" : "learning_need_or_context";
           body[key] = body[key]?.trim() || revision.details?.[revision.type === "project" ? "trigger_or_interest" : "learning_need_or_context"] || revision.planning_reason;
@@ -1198,6 +1201,7 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
     if (request.method === "POST" && url.pathname === "/api/learning-experiences") {
       const context = await annualPlanningContext(); const body = await readJson(request); const pending = typeof body.generationId === "string" ? await pendingAIGenerations.get(body.generationId) : null;
       if (!context || !body.proposal || !["project", "unit"].includes(body.type) || !pending || pending.classroom_id !== context.id || pending.workflow !== body.type) { send(response, 422, { error: "Falta una generación válida de proyecto o unidad." }, origin); return; }
+      if (!(await db.query(`select 1 from annual_plans where classroom_id=$1 and school_year_id=$2 and status='active' limit 1`, [context.id, context.school_year_id])).rows.length) { send(response, 422, { error: "Confirma primero el plan anual antes de guardar un proyecto o unidad." }, origin); return; }
       const originType = body.origin === "emergent" ? "emergent" : "planned"; const proposalIndex = originType === "planned" && Number.isInteger(body.sourceProposalIndex) ? body.sourceProposalIndex : null;
       if (originType === "planned" && (!body.annualPlanId || proposalIndex === null)) { send(response, 422, { error: "Falta la propuesta de origen del plan anual." }, origin); return; }
       if (originType === "planned" && (pending.parent?.annual_plan_id !== body.annualPlanId || pending.parent?.source_proposal_index !== proposalIndex)) { send(response, 422, { error: "La propuesta ya no coincide con el plan que inició este proyecto." }, origin); return; }
@@ -1263,6 +1267,7 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
     }
     if (request.method === "POST" && url.pathname === "/api/ai/activities/generate") {
       const context = await annualPlanningContext(); const body = await readJson(request); const experience = context && await activeLearningExperience(body.experienceId, context.id);
+      if (context && !(await db.query(`select 1 from annual_plans where classroom_id=$1 and school_year_id=$2 and status='active' limit 1`, [context.id, context.school_year_id])).rows.length) { send(response, 422, { error: "Confirma primero el plan anual antes de preparar una actividad." }, origin); return; }
       if (!experience) { send(response, 422, { error: "Selecciona un Project o Unit confirmado." }, origin); return; }
       const routeItem = routeItemFor(experience, body.routeItemId);
       if ((experience.details?.activity_route?.length && !routeItem) || (body.routeItemId && !routeItem)) { send(response, 422, { error: "Elige una actividad de la ruta confirmada." }, origin); return; }
@@ -1273,6 +1278,7 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
     }
     if (request.method === "POST" && url.pathname === "/api/activities") {
       const context = await annualPlanningContext(); const body = await readJson(request); const experience = context && await activeLearningExperience(body.experienceId, context.id); const pending = await pendingAIGenerations.get(body.generationId);
+      if (context && !(await db.query(`select 1 from annual_plans where classroom_id=$1 and school_year_id=$2 and status='active' limit 1`, [context.id, context.school_year_id])).rows.length) { send(response, 422, { error: "Confirma primero el plan anual antes de guardar una actividad." }, origin); return; }
       if (!experience || !pending || pending.workflow !== "activity" || pending.classroom_id !== context.id || pending.learning_experience_id !== experience.id) { send(response, 422, { error: "La generación de actividad no corresponde a esta experiencia." }, origin); return; }
       try { validateActivityDate(body.occursOn, experience, context); validateActivityV4(body.proposal, await activityAllowedCompetencies(experience, context)); const routeItem = routeItemFor(experience, pending.route_item_id); if (experience.details?.activity_route?.length && !routeItem) throw new Error("La actividad de origen ya no está en la ruta confirmada."); const details = saveActivityDetails(body.proposal, routeItem); const id=randomUUID(); await db.query(`insert into activities (id,experience_id,occurs_on,title,purpose,sequence,preparation,adaptations,status,details,generation_metadata) values ($1,$2,$3::date,$4,$5,'[]'::jsonb,$6::jsonb,'[]'::jsonb,'draft',$7::jsonb,$8::jsonb)`, [id,experience.id,body.occursOn,details.title,details.purpose,JSON.stringify({materials: normalizeActivityMaterials(body.materials)}),JSON.stringify(details),JSON.stringify(pending.metadata)]); await pendingAIGenerations.delete(body.generationId); send(response,200,{id,status:"draft",revision:1},origin); } catch(error) { send(response,httpStatusForError(error,422),{error:publicErrorMessage(error)},origin); } return;
     }

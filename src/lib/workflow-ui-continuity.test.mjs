@@ -9,9 +9,9 @@ test("plan anual reabre el mismo borrador y no genera otro mientras existe", asy
   const source = await component("annual-plan-generator");
   assert.match(source, /const saved = plans\.draft \?\? plans\.active \?\? plans\.archived\?\.\[0\] \?\? null/);
   assert.match(source, /setProposal\(saved\?\.proposal \?\? null\); setPlanId\(saved\?\.id \?\? null\)/);
-  assert.match(source, /if \(operation \|\| loading \|\| loadError \|\| \(existingPlan && !canReplaceLegacy\) \|\| calendarDirty \|\| calendarWarning/);
+  assert.match(source, /if \(operation \|\| loading \|\| loadError \|\| \(existingPlan && !canReplaceLegacy\) \|\| calendarWarning/);
   assert.match(source, /const readOnly = existingPlan\?\.status === "active" \|\| existingPlan\?\.status === "archived"/);
-  assert.match(source, /if \(!planId \|\| !proposal \|\| operation \|\| readOnly \|\| hasUnsavedChanges \|\| calendarDirty \|\| calendarWarning\) return/);
+  assert.match(source, /if \(!planId \|\| !proposal \|\| operation \|\| readOnly \|\| hasUnsavedChanges \|\| calendarWarning\) return/);
   assert.match(source, /get<PlansResponse>\("\/api\/annual-plans\/current", "No se pudo cargar el plan anual\."\)/);
 });
 

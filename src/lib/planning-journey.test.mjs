@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import { loadPlanningJourney, loadStartingGuidance } from "./planning-journey.mjs";
+import { canOpenPlanningStep, loadPlanningJourney, loadStartingGuidance } from "./planning-journey.mjs";
 
 const base = "http://local";
 const planUrl = `${base}/api/annual-plans/current`;
@@ -34,6 +34,20 @@ test("una observación guardada deja el diagnóstico en curso hasta la revisión
   const next = await loadPlanningJourney(base, fetchFrom({ [planUrl]: plans, [experienceUrl]: { experiences: [] }, [diagnosticUrl]: { ...diagnostic, reviewed: true } }));
   assert.equal(next.diagnostic, "reviewed");
   assert.equal(next.recommended, "annual");
+});
+
+test("solo se abren pasos con el documento anterior confirmado", () => {
+  const journey = { diagnostic: "in_progress", hasConfirmedAnnual: false, hasConfirmedExperience: false };
+  assert.equal(canOpenPlanningStep(journey, "diagnostic"), true);
+  assert.equal(canOpenPlanningStep(journey, "annual"), false);
+  journey.diagnostic = "reviewed";
+  assert.equal(canOpenPlanningStep(journey, "annual"), true);
+  assert.equal(canOpenPlanningStep(journey, "experiences"), false);
+  journey.hasConfirmedAnnual = true;
+  assert.equal(canOpenPlanningStep(journey, "experiences"), true);
+  assert.equal(canOpenPlanningStep(journey, "activities"), false);
+  journey.hasConfirmedExperience = true;
+  assert.equal(canOpenPlanningStep(journey, "activities"), true);
 });
 
 test("el recorrido retoma un borrador anual y no marca etapas por haberlas visitado", async () => {
@@ -108,6 +122,7 @@ test("la interfaz abre el diagnóstico y ofrece continuar al plan solo tras guar
   assert.match(students, /Añadir niños al aula/);
   assert.match(workspace, /guidance\.startingSection === "Niños" \? "Aula" : guidance\.startingSection/);
   assert.match(workspace, /id: "diagnostic" as const, label: "Diagnóstico"/);
+  assert.match(workspace, /className="ayni-journey-link" onClick=\{onGoDiagnostic\}/);
   assert.match(workspace, /section === "diagnostic" \? <GuidedDiagnostic/);
   assert.match(workspace, /<EvaluationHome dashboard=\{dashboard\}/);
   assert.match(diagnostic, /disabled=\{index \+ 1 > maxStep\}/);

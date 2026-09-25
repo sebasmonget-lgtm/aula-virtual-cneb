@@ -1,5 +1,13 @@
 # Decisiones de arquitectura
 
+## ADR 070 Recorrido secuencial y calendario anual sencillo
+
+**Decisión.** La navegación de Planificar permite volver siempre al diagnóstico. Preparar un plan nuevo requiere una síntesis grupal confirmada; un proyecto o unidad nuevo requiere un plan anual activo, y una actividad nueva requiere además un proyecto o unidad confirmado. La interfaz explica el paso pendiente y el servidor repite las comprobaciones para impedir que un cliente omita la secuencia. Los registros históricos siguen consultables.
+
+**Diagnóstico posterior.** Una observación o entrevista posterior no invalida automáticamente la síntesis grupal ya confirmada para planificar. El plan conserva el ID de la síntesis que utilizó. Si la profesora confirma una síntesis grupal nueva durante la generación, el guardado o la confirmación del plan exige revisar la nueva fuente. La huella agregada sigue registrada como procedencia, pero un cambio de fuentes sin nueva decisión docente no bloquea el plan.
+
+**Calendario.** Para 2026 se precargan los bloques lectivos y de gestión y los feriados nacionales dentro del año escolar. La profesora elige visiblemente entre una y cuatro semanas de adaptación; Ayni calcula los doce espacios de proyecto. Si el calendario institucional difiere, puede editar bloques o agregar interrupciones. El calendario se guarda al preparar o confirmar el plan. No se editan migraciones existentes ni plantillas Word. Reversión: volver al UI y servicio anterior; los planes y calendarios guardados conservan sus fuentes y fechas.
+
 ## ADR 044 Concurrencia e integridad de versiones
 
 **Decisión.** Las ediciones y confirmaciones de Plan Anual, proyecto/unidad, actividad y criterio exigen `expectedRevision`. El servidor serializa cada linaje o período con un bloqueo transaccional de PostgreSQL y comprueba la revisión al escribir. Las restricciones únicas conservan un solo borrador y una sola versión activa por linaje. Una revisión obsoleta responde `409 version_conflict` con `currentRevision` cuando se conoce. El cliente debe recargar y revisar; no fusionamos cambios automáticamente.

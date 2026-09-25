@@ -72,7 +72,7 @@ test("V2 copia las doce propuestas y sus slots, conserva V1 y sus descendientes,
     } }));
     assert.equal(journey.experience,"draft");
     assert.equal(journey.hasConfirmedExperience,true);
-    await assert.rejects(copyConfirmedAnnualPlan(db,teacher,{ ...context, context_v4: { diagnostic_review_current: false } },copied.id,{}), { reason: "diagnostic_review_required" });
+    await assert.rejects(copyConfirmedAnnualPlan(db,teacher,{ ...context, source_diagnostic_review_id: null },copied.id,{}), { reason: "diagnostic_review_required" });
   } finally { await db.close(); }
 });
 

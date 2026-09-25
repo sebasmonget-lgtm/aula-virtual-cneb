@@ -23,7 +23,7 @@ export async function diagnosticProgressForTeacher(db, teacherId) {
       +
       (select count(*) from diagnostic_spontaneous_observations where classroom_id = $1)
     )::int as total`, [classroom.id]),
-    db.query(`select exists(select 1 from diagnostic_sessions where classroom_id = $1 and status = 'completed') as value`, [classroom.id]),
+    db.query(`select exists(select 1 from diagnostic_group_reviews where classroom_id = $1 and status = 'confirmed') as value`, [classroom.id]),
   ]);
   return { student_count: students.rows[0].total, observation_count: observations.rows[0].total, reviewed: reviewed.rows[0].value };
 }

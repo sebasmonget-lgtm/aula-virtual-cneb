@@ -140,9 +140,10 @@ test("panorama grupal deriva intereses y vacíos; el plan usa solo fuentes vigen
       observationStatus: "observed_without_judgment", observationText: "Comentó su juego." });
     const stale = publicClassroomContext(await getCurrentClassroomContext(db, teacher, initial.classroom.id));
     assert.equal(stale.diagnostic_review_current, false);
-    assert.equal(stale.confirmed_diagnostic_summary, null);
-    assert.throws(() => buildAnnualPlanGenerationInput({ classroom: { id: initial.classroom.id, age: 5,
-      context_v4: stale, calendar: input.calendar_context } }), { reason: "diagnostic_review_required" });
+    assert.match(stale.confirmed_diagnostic_summary, /Proponer juegos/);
+    const continued = buildAnnualPlanGenerationInput({ classroom: { id: initial.classroom.id, age: 5,
+      diagnostic_summary: stale.confirmed_diagnostic_summary, context_v4: stale, calendar: input.calendar_context } });
+    assert.equal(continued.calendar_context.project_slots.length, 12);
   } finally { await db.close(); }
 });
 

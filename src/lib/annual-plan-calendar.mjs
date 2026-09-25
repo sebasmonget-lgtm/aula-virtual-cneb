@@ -41,6 +41,17 @@ export function nationalCalendarBlocks2026() {
   ].map(([type, start_date, end_date, label], sort_order) => ({ type, start_date, end_date, label, editable: true, sort_order }));
 }
 
+/** Feriados nacionales de 2026 que caen dentro de los bloques lectivos. Los días institucionales se agregan aparte. */
+export function nationalSchoolHolidays2026() {
+  return [
+    ["2026-04-02", "Jueves Santo"], ["2026-04-03", "Viernes Santo"],
+    ["2026-05-01", "Día del Trabajo"], ["2026-06-29", "San Pedro y San Pablo"],
+    ["2026-07-23", "Día de la Fuerza Aérea del Perú"], ["2026-08-06", "Batalla de Junín"],
+    ["2026-10-08", "Combate de Angamos"], ["2026-12-08", "Inmaculada Concepción"],
+    ["2026-12-09", "Batalla de Ayacucho"],
+  ].map(([exception_date, label]) => ({ exception_date, type: "holiday", label, is_instructional: false }));
+}
+
 export function defaultInitialStage() {
   return { name: "Acogida, adaptación y evaluación diagnóstica", duration_weeks: 2,
     purpose: "Conocer a los niños, acompañar su adaptación y preparar un ambiente seguro para jugar y aprender.",

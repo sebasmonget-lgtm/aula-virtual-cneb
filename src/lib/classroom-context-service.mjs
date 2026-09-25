@@ -53,7 +53,7 @@ export async function getCurrentClassroomContext(db, teacherId, classroomId = nu
     primary_languages: countChoice(interviews, "primary_language_tag", interviewLanguageOptions),
     common_interests: countTags(interviews, "interest_tags", interviewInterestOptions),
     previous_education: previous,
-    confirmed_diagnostic_summary: groupIsCurrent ? diagnosticPlanningSummary(group.details, names) : null,
+    confirmed_diagnostic_summary: group ? diagnosticPlanningSummary(group.details, names) : null,
     diagnostic_review_current: groupIsCurrent,
     diagnostic_coverage: { students_with_observations: observedStudents.size },
     observation_gaps: diagnosticWorkspace.derived_group_information.observation_gaps,

@@ -225,15 +225,19 @@ function AnnualPlanEditor({ proposal, setProposal, competencies, disabled }: {
   </section>;
 }
 
-function AnnualCalendarEditor({ calendar, onChange, onSave, saving }: {
-  calendar: AnnualCalendar; onChange: (value: AnnualCalendar) => void; onSave: () => void; saving: boolean;
+function AnnualCalendarEditor({ calendar, onChange, saving }: {
+  calendar: AnnualCalendar; onChange: (value: AnnualCalendar) => void; saving: boolean;
 }) {
   const stage = calendar.initial_stage;
   const updateBlock = (index: number, patch: Partial<AnnualCalendarBlock>) => onChange({ ...calendar,
     blocks: calendar.blocks.map((block, itemIndex) => itemIndex === index ? { ...block, ...patch } : block) });
   const updateStage = (patch: Partial<InitialStage>) => stage && onChange({ ...calendar, initial_stage: { ...stage, ...patch } });
-  return <details className="mt-4 rounded-xl border border-[#d6e5ef] bg-[#fbfdff] p-4"><summary className="cursor-pointer font-bold text-[#075d70]">Revisar calendario y etapa inicial</summary>
-    <p className="mt-3 text-sm text-[#526b87]">Ayni usa estos periodos para calcular fechas de lunes a viernes. Puedes ajustarlos al calendario de tu institución antes de confirmar el plan.</p>
+  return <section className="mt-4 rounded-xl border border-[#d6e5ef] bg-[#fbfdff] p-4">
+    {stage && <label className="block font-semibold text-[#075d70]">¿Cuántas semanas duró la adaptación del grupo?
+      <select className="mt-2 min-h-11 w-full rounded-lg border border-[#d6e5ef] bg-white px-3" value={stage.duration_weeks} disabled={saving} onChange={(event) => updateStage({ duration_weeks: Number(event.target.value) })}>{[1, 2, 3, 4].map((weeks) => <option key={weeks} value={weeks}>{weeks} {weeks === 1 ? "semana lectiva" : "semanas lectivas"}</option>)}</select>
+    </label>}
+    <p className="mt-2 text-sm text-[#526b87]">Ayni calculará las fechas de los proyectos con el calendario escolar y los feriados nacionales. Si tu colegio tiene otras fechas, puedes cambiarlas aquí.</p>
+    <details className="mt-3"><summary className="cursor-pointer font-bold text-[#075d70]">Mi colegio usa otras fechas</summary>
     <div className="mt-4 space-y-3">{calendar.blocks.map((block, index) => <div key={block.id ?? index} className="grid gap-2 rounded-xl border border-[#d6e5ef] bg-white p-3 sm:grid-cols-[1fr_10rem_10rem_auto] sm:items-end">
       <label className="text-sm font-semibold">{block.type === "instructional" ? "Periodo lectivo" : "Interrupción o gestión"}<Input className="mt-1 bg-white" value={block.label} disabled={!block.editable || saving} onChange={(event) => updateBlock(index, { label: event.target.value })} /></label>
       <label className="text-sm font-semibold">Inicio<Input type="date" className="mt-1 bg-white" value={block.start_date} disabled={!block.editable || saving} onChange={(event) => updateBlock(index, { start_date: event.target.value })} /></label>
@@ -241,14 +245,8 @@ function AnnualCalendarEditor({ calendar, onChange, onSave, saving }: {
       {block.type !== "instructional" && <Button type="button" variant="outline" className="min-h-10" disabled={!block.editable || saving} onClick={() => onChange({ ...calendar, blocks: calendar.blocks.filter((_, itemIndex) => itemIndex !== index) })}>Quitar</Button>}
     </div>)}</div>
     <div className="mt-3 flex flex-wrap gap-2">{(["holiday", "institutional", "vacation"] as const).map((type) => <Button key={type} type="button" variant="outline" className="min-h-10" disabled={saving} onClick={() => onChange({ ...calendar, blocks: [...calendar.blocks, { type, label: type === "holiday" ? "Feriado" : type === "vacation" ? "Vacaciones" : "Suspensión institucional", start_date: "", end_date: "", editable: true, sort_order: calendar.blocks.length }] })}>Añadir {type === "holiday" ? "feriado" : type === "vacation" ? "vacaciones" : "suspensión"}</Button>)}</div>
-    {stage && <div className="mt-5 space-y-3 border-t border-[#d6e5ef] pt-4"><h3 className="font-bold text-[#075d70]">Acogida, adaptación y diagnóstico</h3>
-      <label className="block text-sm font-semibold">Duración inicial<select className="mt-1 min-h-11 w-full rounded-lg border border-[#d6e5ef] bg-white px-3" value={stage.duration_weeks} disabled={saving} onChange={(event) => updateStage({ duration_weeks: Number(event.target.value) })}>{[1, 2, 3, 4].map((weeks) => <option key={weeks} value={weeks}>{weeks} {weeks === 1 ? "semana lectiva" : "semanas lectivas"}</option>)}</select></label>
-      <label className="block text-sm font-semibold">Propósito<Textarea className="mt-1 bg-white" value={stage.purpose} disabled={saving} onChange={(event) => updateStage({ purpose: event.target.value })} /></label>
-      {(["suggested_experiences", "what_to_observe", "family_actions", "diagnostic_focus"] as const).map((field) => <label key={field} className="block text-sm font-semibold">{{ suggested_experiences: "Experiencias sugeridas", what_to_observe: "Qué observar", family_actions: "Acciones con familias", diagnostic_focus: "Foco diagnóstico" }[field]}<Textarea className="mt-1 bg-white" value={lines(stage[field])} disabled={saving} onChange={(event) => updateStage({ [field]: toLines(event.target.value) })} /></label>)}
-      <label className="block text-sm font-semibold">Notas de la docente <span className="font-normal text-[#526b87]">Solo para organizarte; no se envían a la IA</span><Textarea className="mt-1 bg-white" value={stage.teacher_notes} disabled={saving} onChange={(event) => updateStage({ teacher_notes: event.target.value })} /></label>
-    </div>}
-    <AsyncButton className="mt-4 min-h-11" busy={saving} busyLabel="Guardando calendario..." onClick={onSave}>Guardar calendario</AsyncButton>
-  </details>;
+    </details>
+  </section>;
 }
 
 export function AnnualPlanGenerator({ onConfirmed, onGoDiagnostic }: { onConfirmed?: () => void; onGoDiagnostic?: () => void }) {
@@ -260,7 +258,7 @@ export function AnnualPlanGenerator({ onConfirmed, onGoDiagnostic }: { onConfirm
   const [generatedHeader, setGeneratedHeader] = useState<DocumentContext | null>(null);
   const [competencies, setCompetencies] = useState<AIActivityCompetencyOption[]>([]);
   const [editing, setEditing] = useState(false);
-  const [operation, setOperation] = useState<"generate" | "copy" | "save" | "confirm" | "calendar" | null>(null);
+  const [operation, setOperation] = useState<"generate" | "copy" | "save" | "confirm" | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [message, setMessage] = useState("");
@@ -329,10 +327,9 @@ export function AnnualPlanGenerator({ onConfirmed, onGoDiagnostic }: { onConfirm
     return () => { live = false; };
   }, [reload]);
 
-  async function saveCalendar() {
-    if (!calendarDraft || !classroom || operation || readOnly || savedPlans?.active) return;
-    setOperation("calendar"); setMessage("");
-    try {
+  async function persistCalendar() {
+    if (!calendarDraft || !classroom || !calendarDirty) return classroom?.calendar;
+    if (readOnly) throw new Error("Este calendario ya pertenece a un plan confirmado.");
       const response = await apiFetch(`${localDatabaseApiUrl}/api/annual-calendar`, { method: "PUT",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ blocks: calendarDraft.blocks, initial_stage: calendarDraft.initial_stage }) });
@@ -341,15 +338,14 @@ export function AnnualPlanGenerator({ onConfirmed, onGoDiagnostic }: { onConfirm
       setClassroom({ ...classroom, calendar: data.calendar }); setCalendarDraft(data.calendar);
       setExistingPlan((current) => current?.status === "draft" ? { ...current,
         revision:current.revision+1,document_context: { ...current.document_context, calendar: data.calendar } } : current);
-      setMessage("Calendario guardado. Ya puedes preparar tu plan anual."); setMessageTone("success");
-    } catch (error) { setMessage(error instanceof Error ? error.message : "No se pudo guardar el calendario."); setMessageTone("error"); }
-    finally { setOperation(null); }
+      return data.calendar;
   }
 
   async function generate() {
-    if (operation || loading || loadError || (existingPlan && !canReplaceLegacy) || calendarDirty || calendarWarning || !classroom?.diagnostic_summary) return;
+    if (operation || loading || loadError || (existingPlan && !canReplaceLegacy) || calendarWarning || !classroom?.diagnostic_summary) return;
     setOperation("generate"); setMessage("");
     try {
+      await persistCalendar();
       const replacingId = canReplaceLegacy ? existingPlan!.id : null;
       const response = await apiFetch(`${localDatabaseApiUrl}/api/ai/annual-plan/generate`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ teacherRequest: teacherRequest.trim(), ...(replacingId ? { replacementPlanId: replacingId } : {}) }) });
       const data = await response.json() as GeneratedResponse;
@@ -384,14 +380,15 @@ export function AnnualPlanGenerator({ onConfirmed, onGoDiagnostic }: { onConfirm
     setGenerationId(null); setReplacementPlanId(null); setEditing(false); setMessage("");
   }
   async function save() {
-    if (!proposal || operation || readOnly || calendarDirty || calendarWarning) return;
+    if (!proposal || operation || readOnly || calendarWarning) return;
     setOperation("save"); setMessage("");
     try {
-      const response = await apiFetch(`${localDatabaseApiUrl}/api/annual-plans`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ proposal, planId, generationId, ...(planId ? { expectedRevision:existingPlan?.revision }:{}), ...(replacementPlanId ? { replacementPlanId } : {}) }) });
+      const savedCalendar = await persistCalendar();
+      const response = await apiFetch(`${localDatabaseApiUrl}/api/annual-plans`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ proposal, planId, generationId, ...(planId ? { expectedRevision:(existingPlan?.revision ?? 0) + (calendarDirty ? 1 : 0) }:{}), ...(replacementPlanId ? { replacementPlanId } : {}) }) });
       const data = await response.json() as { error?: string; id?: string; version?: number;revision?:number };
       if (!response.ok || !data.id) throw new Error(data.error ?? "No se pudo guardar el borrador.");
       const savedDraft: SavedPlan = { id: data.id, classroom_id: classroom!.id, version: data.version ?? existingPlan?.version ?? 1,revision:data.revision??1,
-        status: "draft", proposal, document_context: documentContext, supersedes_plan_id: existingPlan?.supersedes_plan_id ?? replacementPlanId };
+        status: "draft", proposal, document_context: { ...documentContext, calendar: savedCalendar }, supersedes_plan_id: existingPlan?.supersedes_plan_id ?? replacementPlanId };
       setPlanId(data.id); setExistingPlan(savedDraft); setSavedPlans((current) => ({ ...current, draft: savedDraft }));
       setGenerationId(null); setReplacementPlanId(null); setEditing(false);
       setMessage("Borrador guardado. Léelo una vez más y confírmalo cuando estés conforme."); setMessageTone("success");
@@ -399,16 +396,17 @@ export function AnnualPlanGenerator({ onConfirmed, onGoDiagnostic }: { onConfirm
     finally { setOperation(null); }
   }
   async function confirm() {
-    if (!planId || !proposal || operation || readOnly || hasUnsavedChanges || calendarDirty || calendarWarning) return;
+    if (!planId || !proposal || operation || readOnly || hasUnsavedChanges || calendarWarning) return;
     setOperation("confirm"); setMessage("");
     try {
-      const response = await apiFetch(`${localDatabaseApiUrl}/api/annual-plans/${planId}/confirm`, { method: "POST",headers:{"content-type":"application/json"},body:JSON.stringify({expectedRevision:existingPlan?.revision}) });
+      const savedCalendar = await persistCalendar();
+      const response = await apiFetch(`${localDatabaseApiUrl}/api/annual-plans/${planId}/confirm`, { method: "POST",headers:{"content-type":"application/json"},body:JSON.stringify({expectedRevision:(existingPlan?.revision ?? 0) + (calendarDirty ? 1 : 0)}) });
       const data = await response.json() as { error?: string; version?: number;revision?:number };
       if (!response.ok) throw new Error(data.error ?? "No se pudo confirmar el plan.");
       setExistingPlan({ id: planId, classroom_id: classroom!.id, version: data.version ?? existingPlan?.version ?? 1,revision:data.revision??(existingPlan?.revision??1)+1,
-        status: "active", proposal, document_context: documentContext, supersedes_plan_id: existingPlan?.supersedes_plan_id });
+        status: "active", proposal, document_context: { ...documentContext, calendar: savedCalendar }, supersedes_plan_id: existingPlan?.supersedes_plan_id });
       setSavedPlans((current) => current ? { active: { id: planId, classroom_id: classroom!.id, version: data.version ?? existingPlan?.version ?? 1,revision:data.revision??(existingPlan?.revision??1)+1,
-        status: "active", proposal, document_context: documentContext, supersedes_plan_id: existingPlan?.supersedes_plan_id }, draft: null,
+        status: "active", proposal, document_context: { ...documentContext, calendar: savedCalendar }, supersedes_plan_id: existingPlan?.supersedes_plan_id }, draft: null,
         archived: [...(current.archived ?? []), ...(current.active ? [{ ...current.active, status: "archived" as const }] : [])] } : current);
       setEditing(false); setMessage("Plan anual confirmado por la docente."); setMessageTone("success"); onConfirmed?.();
     } catch (error) { setMessage(error instanceof Error ? error.message : "No se pudo confirmar el plan."); setMessageTone("error"); }
@@ -425,17 +423,16 @@ export function AnnualPlanGenerator({ onConfirmed, onGoDiagnostic }: { onConfirm
       <div className="mt-5 grid gap-3 sm:grid-cols-2"><div className="rounded-xl bg-[#f2f8fc] p-4"><p className="text-xs font-bold text-[#526b87]">COLEGIO Y DOCENTE</p><p className="mt-2 font-bold">{classroom.institution_name || "Colegio sin completar"}</p><p className="text-sm">{classroom.teacher_name || "Docente sin completar"}</p></div>
         <div className="rounded-xl bg-[#f2f8fc] p-4"><p className="text-xs font-bold text-[#526b87]">AULA Y AÑO</p><p className="mt-2 font-bold">{classroom.age} años · {classroom.section}</p><p className="text-sm">{classroom.year} · Clases: {teachingRange}</p></div></div>
       <div className="mt-3 rounded-xl border border-[#d6e5ef] p-4"><p className="font-bold">Lo que conocemos del grupo</p><p className="mt-1 text-sm text-[#526b87]">{classroom.context_v4?.confirmed_interviews ?? 0} de {classroom.context_v4?.students_total ?? 0} entrevistas confirmadas. Se usarán solo patrones grupales, sin respuestas individuales.</p>
-        {classroom.diagnostic_summary ? <p className="mt-3 whitespace-pre-line text-sm leading-relaxed">{classroom.diagnostic_summary}</p> : <p className="mt-3 text-sm font-semibold text-[#9a6220]">{classroom.context_v4?.diagnostic_review_current === false ? "Hay información diagnóstica nueva. Revisa y confirma el resumen del aula antes de preparar el plan." : "Confirma primero el resumen diagnóstico del aula para preparar el plan."}</p>}
+        {classroom.diagnostic_summary ? <p className="mt-3 whitespace-pre-line text-sm leading-relaxed">{classroom.diagnostic_summary}</p> : <p className="mt-3 text-sm font-semibold text-[#9a6220]">Confirma primero el resumen diagnóstico del aula para preparar el plan.</p>}
         {Boolean(classroom.context_v4?.common_interests?.length) && <p className="mt-2 text-sm"><span className="font-semibold">Intereses frecuentes:</span> {classroom.context_v4!.common_interests.map((item) => item.label).join(", ")}.</p>}
         {Boolean(classroom.available_resources?.length) && <p className="mt-2 text-sm"><span className="font-semibold">Materiales disponibles:</span> {classroom.available_resources?.join(", ")}.</p>}
       </div>
-      {calendarDraft && <AnnualCalendarEditor calendar={calendarDraft} onChange={setCalendarDraft} onSave={() => void saveCalendar()} saving={operation === "calendar"} />}
-      {calendarDirty && <p className="mt-2 text-sm font-semibold text-[#9a6220]">Guarda el calendario antes de preparar el plan.</p>}
+      {calendarDraft && <AnnualCalendarEditor calendar={calendarDraft} onChange={setCalendarDraft} saving={Boolean(operation)} />}
       {calendarWarning && <p className="mt-2 rounded-xl border border-[#f0c2b8] bg-[#fff4f2] p-3 text-sm font-semibold text-[#9a392d]">{calendarWarning} Ajusta la etapa inicial o las interrupciones del calendario para que quepan doce proyectos.</p>}
       <label className="mt-4 block font-semibold">¿Hay algo que quieras tener en cuenta? <span className="text-sm font-normal text-[#526b87]">Opcional</span>
         <Textarea className="mt-2 bg-white" value={teacherRequest} onChange={(event) => setTeacherRequest(event.target.value)} placeholder="Por ejemplo: este año queremos aprovechar el huerto del colegio." />
       </label>
-      <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center"><AsyncButton className="min-h-12 w-full sm:w-auto" busy={operation === "generate"} busyLabel="Preparando tu plan anual..." disabled={Boolean(operation) || calendarDirty || Boolean(calendarWarning) || !classroom.diagnostic_summary} onClick={() => void generate()}>Preparar mi plan anual <ArrowRight /></AsyncButton>
+      <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center"><AsyncButton className="min-h-12 w-full sm:w-auto" busy={operation === "generate"} busyLabel="Preparando tu plan anual..." disabled={Boolean(operation) || Boolean(calendarWarning) || !classroom.diagnostic_summary} onClick={() => void generate()}>Preparar mi plan anual <ArrowRight /></AsyncButton>
         {!classroom.diagnostic_summary && onGoDiagnostic && <Button variant="outline" className="min-h-12 w-full sm:w-auto" onClick={onGoDiagnostic}>Ir a evaluación diagnóstica</Button>}</div>
       <p className="mt-3 text-xs text-[#526b87]">La propuesta se mostrará como documento para que puedas revisarla. Nada se confirma automáticamente.</p>
     </section>}
@@ -444,21 +441,20 @@ export function AnnualPlanGenerator({ onConfirmed, onGoDiagnostic }: { onConfirm
       {canReplaceLegacy && <div className="rounded-2xl border border-[#e9d6a7] bg-[#fff8e9] p-4">
         <p className="font-bold text-[#694717]">Este plan se creó con el formato anterior</p>
         <p className="mt-1 text-sm text-[#694717]">Contiene seis experiencias y usa la plantilla antigua. Puedes preparar una nueva versión con doce propuestas y la plantilla actual. El plan confirmado seguirá vigente hasta que revises y confirmes la nueva versión.</p>
-        <AsyncButton className="mt-3 min-h-11" busy={operation === "generate"} busyLabel="Preparando nueva versión..." disabled={Boolean(operation) || calendarDirty || Boolean(calendarWarning) || !classroom?.diagnostic_summary} onClick={() => void generate()}>Preparar versión actualizada <ArrowRight /></AsyncButton>
+        <AsyncButton className="mt-3 min-h-11" busy={operation === "generate"} busyLabel="Preparando nueva versión..." disabled={Boolean(operation) || Boolean(calendarWarning) || !classroom?.diagnostic_summary} onClick={() => void generate()}>Preparar versión actualizada <ArrowRight /></AsyncButton>
       </div>}
       {existingPlan && <p className="rounded-xl border border-[#d6e5ef] bg-white p-3 text-sm font-semibold">{existingPlan.status === "active" ? "Plan anual vigente" : existingPlan.status === "draft" ? "Borrador de la nueva versión" : "Plan anual histórico"} · versión {existingPlan.version} · año {proposal.school_year}{readOnly && existingPlan.status === "draft" ? " · pertenece a otra aula de tu cuenta" : ""}</p>}
       {savedPlans?.draft && existingPlan?.id !== savedPlans.draft.id && <Button variant="outline" className="min-h-11" onClick={() => viewSavedPlan(savedPlans.draft!)}>Volver al borrador · versión {savedPlans.draft.version}</Button>}
       {savedPlans?.active && existingPlan?.id !== savedPlans.active.id && <Button variant="outline" className="min-h-11" onClick={() => viewSavedPlan(savedPlans.active!)}>Ver plan vigente · versión {savedPlans.active.version}</Button>}
       {existingPlan?.status === "draft" && existingPlan.supersedes_plan_id && <p className="rounded-xl bg-[#f2f8fc] p-3 text-sm">Esta versión es una copia del plan anterior. Conserva sus doce propuestas hasta que tú las cambies y confirmes.</p>}
       {canCopyCurrent && <div className="rounded-2xl border border-[#c7e4ec] bg-[#f5fbfd] p-4"><p className="font-bold">¿Necesitas actualizar el plan?</p><p className="mt-1 text-sm text-[#526b87]">Ayni copiará las doce propuestas en un borrador nuevo. El plan vigente y los proyectos que ya nacieron de él conservarán su versión.</p><AsyncButton className="mt-3 min-h-11" busy={operation === "copy"} busyLabel="Copiando el plan..." disabled={Boolean(operation) || Boolean(savedPlans?.draft) || !classroom?.diagnostic_summary} onClick={() => void copyCurrentVersion()}>Preparar nueva versión</AsyncButton>{!classroom?.diagnostic_summary && <p className="mt-2 text-sm font-semibold text-[#9a6220]">Revisa y confirma primero el diagnóstico actual del aula.</p>}</div>}
-      {existingPlan?.status === "draft" && !readOnly && !savedPlans?.active && calendarDraft && <AnnualCalendarEditor calendar={calendarDraft} onChange={setCalendarDraft} onSave={() => void saveCalendar()} saving={Boolean(operation)} />}
-      {existingPlan?.status === "draft" && calendarDirty && <p className="rounded-xl border border-[#e9d6a7] bg-[#fff8e9] p-3 text-sm font-semibold">Guarda el calendario antes de guardar o confirmar el plan.</p>}
+      {existingPlan?.status === "draft" && !readOnly && !savedPlans?.active && calendarDraft && <AnnualCalendarEditor calendar={calendarDraft} onChange={setCalendarDraft} saving={Boolean(operation)} />}
       {existingPlan?.status === "draft" && calendarWarning && <p className="rounded-xl border border-[#f0c2b8] bg-[#fff4f2] p-3 text-sm font-semibold text-[#9a392d]">{calendarWarning} Ajusta las interrupciones o la duración de los proyectos antes de confirmar.</p>}
       {editing && !readOnly ? <><Button variant="outline" className="min-h-11" onClick={() => setEditing(false)}><ArrowLeft /> Ver documento</Button><AnnualPlanEditor proposal={proposal} setProposal={setProposal} competencies={competencies} disabled={Boolean(operation)} /></>
         : <AnnualPlanDocument proposal={proposal} context={documentContext} competencies={competencies} status={existingPlan?.status ?? "preview"} />}
       {!readOnly && <div className="flex flex-col gap-3 rounded-2xl border border-[#d6e5ef] bg-white p-4 sm:flex-row sm:flex-wrap sm:items-center">
-        {hasUnsavedChanges ? <AsyncButton className="min-h-12 w-full sm:w-auto" busy={operation === "save"} busyLabel="Guardando..." disabled={Boolean(operation) || calendarDirty || Boolean(calendarWarning)} onClick={() => void save()}>{planId ? "Guardar cambios" : "Guardar borrador"} <ArrowRight /></AsyncButton>
-          : !editing && <AsyncButton className="min-h-12 w-full sm:w-auto" busy={operation === "confirm"} busyLabel="Confirmando..." disabled={Boolean(operation) || !planId || calendarDirty || Boolean(calendarWarning)} onClick={() => void confirm()}>Confirmar mi plan anual <ArrowRight /></AsyncButton>}
+        {hasUnsavedChanges ? <AsyncButton className="min-h-12 w-full sm:w-auto" busy={operation === "save"} busyLabel="Guardando..." disabled={Boolean(operation) || Boolean(calendarWarning)} onClick={() => void save()}>{planId ? "Guardar cambios" : "Guardar borrador"} <ArrowRight /></AsyncButton>
+          : !editing && <AsyncButton className="min-h-12 w-full sm:w-auto" busy={operation === "confirm"} busyLabel="Confirmando..." disabled={Boolean(operation) || !planId || Boolean(calendarWarning)} onClick={() => void confirm()}>Confirmar mi plan anual <ArrowRight /></AsyncButton>}
         {!editing && <Button variant="outline" className="min-h-12 w-full sm:w-auto" disabled={Boolean(operation)} onClick={() => { setProposal(completeDocumentFields(proposal)); setEditing(true); }}><Pencil /> Corregir contenido</Button>}
         {hasUnsavedChanges && planId && <p className="w-full text-sm text-[#526b87]">Guarda los cambios antes de confirmar.</p>}
       </div>}

@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { PGlite } from "@electric-sql/pglite";
-import { AnnualCalendarError, buildFlexibleAnnualSchedule, defaultInitialStage, nationalCalendarBlocks2026,
+import { AnnualCalendarError, buildFlexibleAnnualSchedule, defaultInitialStage, nationalCalendarBlocks2026, nationalSchoolHolidays2026,
   suggestAnnualProjectDurations, validateAnnualCalendar } from "./annual-plan-calendar.mjs";
 
 const durations = [2, 2, 2, 2, 2, 3, 2, 2, 3, 2, 2, 3];
@@ -21,6 +21,16 @@ test("la plantilla nacional 2026 ubica la etapa inicial fuera de P01 y solo doce
   assert.ok(plan.projects.every((slot) => !plan.blocks.some((block) => block.type === "management" &&
     slot.starts_on <= block.end_date && slot.ends_on >= block.start_date)));
   assert.equal(plan.projects.at(-1).ends_on, "2026-12-04");
+});
+
+test("los feriados nacionales del año escolar se incluyen por defecto sin consumir una semana lectiva completa", () => {
+  const holidays = nationalSchoolHolidays2026();
+  assert.ok(holidays.some((day) => day.exception_date === "2026-04-03"));
+  assert.ok(holidays.some((day) => day.exception_date === "2026-12-09"));
+  const custom = { ...calendar(), exceptions: holidays };
+  const scheduled = buildFlexibleAnnualSchedule(custom, projects);
+  assert.equal(scheduled.projects.length, 12);
+  assert.ok(scheduled.projects.every((slot) => slot.ends_on <= "2026-12-18"));
 });
 
 test("feriados y suspensiones bloquean la semana completa sin atravesar gestión", () => {

@@ -6,6 +6,8 @@ Proyecto nuevo iniciado el 20 de septiembre de 2026. Existe un shell responsive 
 
 ## Alcance implementado
 
+- Recorrido secuencial de planificación (2026-09-25): la barra permite volver a Diagnóstico; los pasos posteriores requieren el documento anterior confirmado, también en las rutas de creación del servidor. El plan puede usar la última síntesis grupal confirmada aunque se hayan registrado nuevas observaciones. La duración de adaptación se elige en un campo visible y el calendario 2026 incluye feriados nacionales; fechas institucionales distintas siguen editables. Ver ADR 070.
+
 - Cobertura y prioridades estructuradas (2026-09-25, en curso): política central de heurísticas internas, contratos separados de cobertura/evaluación y aplicabilidad curricular por ciclo, desempeño de edad y condiciones especiales. El borrador diagnóstico grupal admite IDs de competencias y motivos confirmables por docente; el plan recibe esas prioridades y conserva el vínculo ya existente con la versión diagnóstica. Los datos históricos y plantillas Word no se reescriben. Ver ADR 069.
 
 - Registros de observación con multimedia y routing GPT-6 (2026-09-25, cambios locales): GPT-6 Sol/Luna sustituyen a los modelos 5.6 en el router central. El audio de hasta un minuto se transcribe con `gpt-4o-mini-transcribe` solo por acción explícita y GPT-6 Luna mejora la escritura sin agregar hechos. Las observaciones espontáneas admiten texto, foto o audio; GPT-6 Luna sugiere competencias aplicables a la edad y la docente confirma una o varias. Las evidencias de actividad admiten los mismos medios y permanecen asociadas a niño, criterio y actividad. Archivos privados siguen disponibles solo en PGlite local; Storage remoto continúa pendiente. Ver ADR 068.

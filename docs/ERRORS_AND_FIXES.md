@@ -1,5 +1,15 @@
 # Errores y soluciones
 
+## 2026-09-25 Un registro nuevo bloqueaba el plan aunque existía síntesis confirmada
+
+**Síntoma.** Planificar mostraba «Hay información diagnóstica nueva» y deshabilitaba la generación tras añadir una observación, incluso con una síntesis grupal confirmada.
+
+**Causa raíz.** La generación exigía que la huella de todas las fuentes siguiera idéntica, mezclando registros nuevos con la decisión grupal confirmada por la docente.
+
+**Solución validada.** El plan usa la última síntesis grupal confirmada y conserva su ID. Una síntesis nueva confirmada sí produce un conflicto que requiere revisar el plan. El recorrido deja regresar al diagnóstico con un clic. Typecheck, lint, build y pruebas focalizadas verifican el cambio.
+
+**Prevención.** Separar la vigencia de una decisión docente de la llegada de datos sin sintetizar; probar ambos casos en el flujo de planificación.
+
 ## 2026-09-24 Una base Supabase vacía no tenía versión curricular activa
 
 **Síntoma.** Tras aplicar el esquema, el contexto del aula no podía elegir una versión curricular activa, aunque el flujo local sí podía hacerlo.
