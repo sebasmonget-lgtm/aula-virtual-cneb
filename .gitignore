@@ -48,3 +48,7 @@ next-env.d.ts
 /tmp/
 /.local/
 /scripts/__pycache__/
+
+# Material-source originals and review-only derivatives must never be published.
+/library/materials/sources/**/private/
+/library/materials/sources/**/internal/
