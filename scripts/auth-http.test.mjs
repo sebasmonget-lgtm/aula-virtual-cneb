@@ -97,6 +97,7 @@ test("the HTTP boundary protects every route and local PGlite remains usable", {
       "/api/activity-criteria", "/api/evidences", "/api/assessments",
       "/api/period-evaluations/years", "/api/family-reports",
       "/api/period-evaluations/coverage", "/api/documents",
+      "/api/library/resources", "/api/library/resources/taller-04-grafico-plastico-colores-que-cambian/download",
       "/api/documents/family_report/11111111-1111-4111-8111-111111111111/download",
     ];
     for (const route of privateRoutes) assert.equal((await call(route)).status, 401, route);
@@ -125,6 +126,15 @@ test("the HTTP boundary protects every route and local PGlite remains usable", {
     const contextA = await (await call("/api/ai/annual-plan/context", "token-a")).json();
     const contextB = await (await call("/api/ai/annual-plan/context", "token-b")).json();
     assert(contextA.id && contextB.id && contextA.id !== contextB.id);
+    const library = await (await call("/api/library/resources", "token-a")).json();
+    assert.equal(library.resources.length, 7);
+    assert(library.resources.every((resource) => !("download" in resource)));
+    const workshopWord = await call("/api/library/resources/taller-04-grafico-plastico-colores-que-cambian/download", "token-a");
+    assert.equal(workshopWord.status, 200);
+    assert.equal(Buffer.from(await workshopWord.arrayBuffer()).subarray(0, 2).toString(), "PK");
+    assert.equal((await call("/api/library/resources/unknown/download", "token-a")).status, 404);
+    assert.equal((await call("/api/library/resources/taller-04-grafico-plastico-colores-que-cambian/save-local", "token-a", { method: "POST" })).status, 404);
+    assert.equal((await call("/api/library/resources/taller-04-grafico-plastico-colores-que-cambian/save-local", null, { method: "POST" })).status, 401);
     assert.equal((await call(`/api/ai/annual-plan/context?classroomId=${contextA.id}`, "token-a")).status, 200);
     assert.equal((await call(`/api/ai/annual-plan/context?classroomId=${contextB.id}`, "token-a")).status, 403);
     const imported = await call("/api/students/import", "token-b", {
@@ -133,6 +143,9 @@ test("the HTTP boundary protects every route and local PGlite remains usable", {
     });
     assert.equal(imported.status, 201);
     const studentB = (await imported.json()).dashboard.students[0].id;
+    const studentCard = (await (await call("/api/dashboard", "token-b")).json()).students[0];
+    assert.equal(studentCard.full_name, "Alumna Ficticia");
+    assert.equal(studentCard.evidence_count, 0);
     assert.equal((await call(`/api/students/${studentB}`, "token-a")).status, 404);
     assert.equal((await call(`/api/students/${studentB}`, "token-b")).status, 200);
     assert.equal((await call("/api/diagnostics/spontaneous-observations", "token-a", {

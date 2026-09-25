@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Search } from "lucide-react";
+import { ArrowLeft, Plus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { importPilotStudents, loadStudentPedagogicalProfile, type LocalDashboard, type LocalStudent, type StudentPedagogicalProfile } from "@/src/lib/local-database";
 import { recommendedStudentGuidance, studentCompetencyGuidance } from "@/src/lib/student-guidance.mjs";
-import { AsyncButton, EmptyState, NextStepCard, PageIntro, ScreenSkeleton, WorkflowFeedback, WorkflowTabs } from "./workflow-ui";
+import { AsyncButton, EmptyState, NextStepCard, ScreenSkeleton, WorkflowFeedback, WorkflowTabs } from "./workflow-ui";
 import { FamilyInformationPanel, FamilyInterviewStatusBadge, useFamilyInterviewStatusMap } from "./family-interview-v4";
 
 const statusLabels = {
@@ -30,8 +30,20 @@ export function StudentsScreen({ students, onImported, onEvaluate, onPlan, onDia
   const [importBusy, setImportBusy] = useState(false);
   const [importMessage, setImportMessage] = useState("");
   const [importTone, setImportTone] = useState<"success" | "error">("success");
+  const [addOpen, setAddOpen] = useState(students.length === 0);
+  const [filter, setFilter] = useState<"all" | "unobserved" | "evidence">("all");
   const { statuses: interviewStatuses } = useFamilyInterviewStatusMap(`${selectedId ?? "list"}:${students.map((item) => item.id).join(",")}`, students.length > 0);
-  const visibleStudents = useMemo(() => students.filter((student) => student.name.toLocaleLowerCase().includes(query.toLocaleLowerCase())), [students, query]);
+  const visibleStudents = useMemo(() => students.filter((student) =>
+    (student.full_name ?? student.name).toLocaleLowerCase("es-PE").includes(query.toLocaleLowerCase("es-PE")) &&
+    (filter === "all" || (filter === "unobserved" ? !student.evidence_count : Boolean(student.evidence_count))),
+  ), [students, query, filter]);
+  const observedCount = students.filter((student) => Boolean(student.evidence_count)).length;
+  const recordSummary = (student: LocalStudent) => {
+    const records = student.evidence_count ?? 0;
+    const competencies = student.competency_count ?? 0;
+    if (!records) return "Sin evidencias registradas";
+    return `${records} ${records === 1 ? "evidencia" : "evidencias"} · ${competencies ? `${competencies} ${competencies === 1 ? "competencia" : "competencias"}` : "sin competencia vinculada"}`;
+  };
 
   async function addStudents(useCsv: boolean) {
     setImportBusy(true); setImportMessage("");
@@ -57,25 +69,13 @@ export function StudentsScreen({ students, onImported, onEvaluate, onPlan, onDia
   }, [selectedId]);
 
   if (selectedId) return <StudentProfile profile={profile} loading={loading} error={profileError} onBack={() => { setSelectedId(null); setProfile(null); setProfileError(""); }} onEvaluate={onEvaluate} onPlan={onPlan} />;
-  return <section className="ayni-workflow space-y-5">
-    <PageIntro eyebrow={students.length ? "Aula activa" : "Paso 2 de 6 · Añade a los alumnos"} title="Niños" description={students.length ? "Consulta sus registros y acompaña el progreso de cada niño." : "Registra a los niños del aula. Después conocerás al grupo con la evaluación diagnóstica."} />
-    <label className="ayni-panel flex min-h-12 items-center gap-2 px-4 text-[#60718a]"><Search className="size-5" aria-hidden="true" /><span className="sr-only">Buscar niño</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar niño" className="min-w-0 flex-1 border-0 bg-transparent outline-none" /></label>
-    <div className="space-y-2">{visibleStudents.length ? visibleStudents.map((student) => <button key={student.id} type="button" onClick={() => { setProfile(null); setLoading(true); setSelectedId(student.id); }} className={`ayni-panel flex min-h-16 w-full items-center justify-between gap-3 px-5 py-4 text-left transition hover:border-[#8fd4dc] hover:shadow-sm active:translate-y-px ${interviewStatuses[student.id] === "confirmed" ? "border-[#a8dbc1] bg-[#f0faf4]" : interviewStatuses[student.id] === "partial" ? "border-[#ecd29a] bg-[#fff9ec]" : ""}`}><span className="min-w-0 font-bold">{student.name}</span><span className="flex shrink-0 flex-wrap items-center justify-end gap-2"><FamilyInterviewStatusBadge status={interviewStatuses[student.id]} /><span className="text-sm font-semibold text-[#087d96]">Ver perfil →</span></span></button>) : <EmptyState title={students.length ? "No encontramos niños" : "Aún no hay niños en el aula"} description={students.length ? "Prueba con otro nombre en la búsqueda." : "Añade un niño para empezar a acompañar su progreso."} />}</div>
-    <details className="ayni-panel p-4 sm:p-5" open={students.length === 0}>
-      <summary className="cursor-pointer font-bold text-[#126177]">Añadir niños al aula</summary>
-      <div className="mt-4 space-y-4">
-      <h2 className="font-bold">Añadir niños</h2>
-      <div className="grid gap-3 sm:grid-cols-3">
-        <label>Nombre<input value={firstName} onChange={(event) => setFirstName(event.target.value)} /></label>
-        <label>Apellido<input value={lastName} onChange={(event) => setLastName(event.target.value)} /></label>
-        <label>Nombre preferido <span className="font-normal text-muted-foreground">(opcional)</span><input value={preferredName} onChange={(event) => setPreferredName(event.target.value)} /></label>
-      </div>
-      <AsyncButton busy={importBusy} busyLabel="Añadiendo..." disabled={!firstName.trim() || !lastName.trim()} onClick={() => void addStudents(false)}>Añadir niño</AsyncButton>
-      <details className="rounded-xl border bg-[#fbfdff] p-3"><summary className="font-semibold">Importar varios desde CSV</summary><p className="mt-2 text-sm text-muted-foreground">Encabezado: first_name,last_name,preferred_name. Una fila por niño; máximo 40 por importación.</p><Textarea className="mt-2" aria-label="Niños en formato CSV" value={csv} onChange={(event) => setCsv(event.target.value)} placeholder={'first_name,last_name,preferred_name\nMaría,López,María'} /><AsyncButton className="mt-2" variant="outline" busy={importBusy} busyLabel="Importando..." disabled={!csv.trim()} onClick={() => void addStudents(true)}>Importar CSV</AsyncButton></details>
-      {importMessage && <WorkflowFeedback tone={importTone}>{importMessage}</WorkflowFeedback>}
-      {importTone === "success" && importMessage && onDiagnostic && <Button onClick={onDiagnostic}>Continuar: evaluación diagnóstica</Button>}
-      </div>
-    </details>
+  return <section className="mx-auto max-w-5xl space-y-5">
+    <header className="flex items-start justify-between gap-3"><div><h1 className="text-3xl font-extrabold tracking-tight text-[#1c2e50]">Mi aula</h1><p className="mt-1 text-[#566883]">Tus niños y sus registros</p></div><button type="button" onClick={() => setAddOpen((open) => !open)} aria-expanded={addOpen} className="flex min-h-11 shrink-0 items-center gap-2 rounded-xl border border-[#0b7891] bg-white px-4 font-bold text-[#07576c]"><Plus className="size-4" /> Añadir</button></header>
+    <div className="grid grid-cols-3 gap-2"><div className="rounded-2xl bg-[#eaf5fd] p-3"><strong className="block text-2xl text-[#0b7891]">{students.length}</strong><span className="text-xs font-semibold text-[#536681]">niños</span></div><div className="rounded-2xl bg-[#eaf8f2] p-3"><strong className="block text-2xl text-[#287561]">{observedCount}</strong><span className="text-xs font-semibold text-[#536681]">con registros</span></div><div className="rounded-2xl bg-[#fff4df] p-3"><strong className="block text-2xl text-[#a16917]">{students.length - observedCount}</strong><span className="text-xs font-semibold text-[#536681]">sin registros</span></div></div>
+    <label className="flex min-h-14 items-center gap-3 rounded-2xl border border-[#d4e1ed] bg-white px-4 text-[#60718a]"><Search className="size-5" aria-hidden="true" /><span className="sr-only">Buscar niño</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar niño" className="min-w-0 flex-1 border-0 bg-transparent text-[#1c2e50] outline-none" /></label>
+    <div className="flex flex-wrap gap-2" aria-label="Filtrar niños">{([["all", "Todos"], ["unobserved", "Por observar"], ["evidence", "Con evidencias"]] as const).map(([id, label]) => <button type="button" key={id} aria-pressed={filter === id} onClick={() => setFilter(id)} className={`min-h-11 rounded-full px-4 text-sm font-semibold ${filter === id ? "bg-[#0b7891] text-white" : "border border-[#d4e1ed] bg-white text-[#536681]"}`}>{label}</button>)}</div>
+    {addOpen && <section className="rounded-[1.3rem] border border-[#d4e1ed] bg-white p-5"><h2 className="font-extrabold text-[#1c2e50]">Añadir niños al aula</h2><div className="mt-4 grid gap-3 sm:grid-cols-3"><label>Nombre<input value={firstName} onChange={(event) => setFirstName(event.target.value)} /></label><label>Apellido<input value={lastName} onChange={(event) => setLastName(event.target.value)} /></label><label>Nombre preferido <span className="font-normal text-muted-foreground">(opcional)</span><input value={preferredName} onChange={(event) => setPreferredName(event.target.value)} /></label></div><AsyncButton className="mt-4" busy={importBusy} busyLabel="Añadiendo..." disabled={!firstName.trim() || !lastName.trim()} onClick={() => void addStudents(false)}>Añadir niño</AsyncButton><details className="mt-4 rounded-xl border bg-[#fbfdff] p-3"><summary className="font-semibold">Importar varios desde CSV</summary><p className="mt-2 text-sm text-muted-foreground">Encabezado: first_name,last_name,preferred_name. Una fila por niño; máximo 40 por importación.</p><Textarea className="mt-2" aria-label="Niños en formato CSV" value={csv} onChange={(event) => setCsv(event.target.value)} placeholder={'first_name,last_name,preferred_name\nMaría,López,María'} /><AsyncButton className="mt-2" variant="outline" busy={importBusy} busyLabel="Importando..." disabled={!csv.trim()} onClick={() => void addStudents(true)}>Importar CSV</AsyncButton></details>{importMessage && <div className="mt-3"><WorkflowFeedback tone={importTone}>{importMessage}</WorkflowFeedback></div>}{importTone === "success" && importMessage && onDiagnostic && <Button className="mt-3" onClick={onDiagnostic}>Continuar: evaluación diagnóstica</Button>}</section>}
+    <div className="space-y-2">{visibleStudents.length ? visibleStudents.map((student) => <button key={student.id} type="button" onClick={() => { setProfile(null); setLoading(true); setSelectedId(student.id); }} className="flex min-h-24 w-full items-center gap-3 rounded-[1.3rem] border border-[#d4e1ed] bg-white p-4 text-left hover:border-[#8acbd8] hover:shadow-sm"><span className="grid size-14 shrink-0 place-items-center rounded-full bg-[#eaf5fd] text-base font-extrabold text-[#07576c]">{(student.full_name ?? student.name).split(" ").slice(0, 2).map((word) => word[0]).join("")}</span><span className="min-w-0 flex-1"><strong className="block truncate text-[#1c2e50]">{student.full_name ?? student.name}</strong><small className="mt-1 block text-[#566883]">{recordSummary(student)}</small><FamilyInterviewStatusBadge status={interviewStatuses[student.id]} /></span><span className="shrink-0 text-right"><span className={`block rounded-full px-2 py-1 text-xs font-bold ${student.evidence_count ? "bg-[#eaf8f2] text-[#287561]" : "bg-[#fff4df] text-[#9a641a]"}`}>{student.evidence_count ? "Con registros" : "Por observar"}</span><span className="mt-2 block text-xs font-bold text-[#07576c]">Ver perfil →</span></span></button>) : <EmptyState title={students.length ? "No encontramos niños" : "Aún no hay niños en el aula"} description={students.length ? "Prueba con otro nombre o filtro." : "Añade un niño para empezar a acompañar su progreso."} />}</div>
   </section>;
 }
 

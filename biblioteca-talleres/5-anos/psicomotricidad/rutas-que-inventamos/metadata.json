@@ -1,0 +1,125 @@
+{
+  "id": "taller-05-psicomotricidad-rutas-que-inventamos",
+  "slug": "rutas-que-inventamos",
+  "titulo": "Rutas que inventamos",
+  "edad": 5,
+  "tipo_taller": "Psicomotricidad",
+  "duracion_referencial": "55 minutos, con posibilidad de continuar otro día",
+  "competencia_principal_id": "PSICO_MOTRICIDAD",
+  "competencia_principal_nombre_canonico": "Se desenvuelve de manera autónoma a través de su motricidad",
+  "capacidades_pertinentes": [
+    "Comprende su cuerpo",
+    "Se expresa corporalmente"
+  ],
+  "referencia_curricular_edad": {
+    "edad": 5,
+    "estado": "specified",
+    "foco_semantico": "Movimientos más complejos, precisos y adaptados a situaciones.",
+    "patrones_observables": [
+      "Combina habilidades motrices y ajusta movimientos a espacio, tiempo, objetos y otros.",
+      "Coordina acciones con mayor precisión en retos motores.",
+      "Expresa ideas o emociones mediante movimiento y postura.",
+      "Reconoce sensaciones y representa el cuerpo con mayor detalle."
+    ],
+    "significado_trazable": [
+      "Combina habilidades con mayor control lateral; coordinación más precisa; reconoce cambios corporales y representa el cuerpo con más detalles."
+    ],
+    "politica_de_texto": "Paráfrasis semántica trazable para diseño pedagógico; no es cita textual MINEDU."
+  },
+  "proposito": "Diseñar y resolver recorridos ajustando movimientos al espacio, los objetos y los demás.",
+  "criterio": "Propone y realiza una secuencia de retos motores, ajustando dirección, equilibrio y coordinación al espacio, los objetos y la presencia de otros, y explica un cambio realizado.",
+  "evidencia_esperada": "Ruta organizada con tarjetas, ejecución de la secuencia y explicación o demostración del ajuste hecho después de probarla.",
+  "materiales": [
+    "tarjetas imprimibles de recorrido",
+    "cinta de pintor",
+    "aros",
+    "conos bajos",
+    "saquitos de tela",
+    "cuerdas cortas"
+  ],
+  "espacio": "Patio o sala amplia dividida en zonas de diseño, prueba y espera activa.",
+  "recursos_asociados": [
+    {
+      "name": "Tarjetas de recorrido motor",
+      "type": "SVG y PNG imprimibles",
+      "description": "Seis tarjetas de alto contraste para elegir y ordenar acciones de equilibrio, zigzag, salto, transporte, giro y paso bajo.",
+      "files": [
+        "assets/tarjetas-recorrido-motor.svg",
+        "assets/tarjetas-recorrido-motor.png"
+      ],
+      "provenance": {
+        "knowledge_base_version": "4.0.0",
+        "knowledge_unit_ids": [
+          "SPA-02",
+          "SPA-03",
+          "SPA-01",
+          "SPA-04",
+          "SPA-05",
+          "ACT-01",
+          "ACT-05",
+          "ACT-03",
+          "SRC_SPACES_2024",
+          "SRC_LITERACY_NAME_5",
+          "SRC_LITERACY_TEXTS_5"
+        ],
+        "source_claim_ids": [
+          "SRC_SPACES_2024",
+          "SRC_LITERACY_NAME_5",
+          "SRC_LITERACY_TEXTS_5"
+        ],
+        "source_refs": [
+          "CNEB",
+          "ESPACIOS_2024",
+          "INTERACCIONES_2019",
+          "LITERACY_INFORMATIONAL_5_2022",
+          "LITERACY_NAME_5_2022",
+          "ORIENTACIONES_INICIAL_2025",
+          "PCI_INICIAL_CANONICAL",
+          "PLANIFICACION_INICIAL_2019",
+          "PROYECTOS_INICIAL_2019"
+        ],
+        "competency_ids": [
+          "PSICO_MOTRICIDAD"
+        ]
+      }
+    }
+  ],
+  "reutilizable": true,
+  "knowledge_base_version": "4.0.0",
+  "knowledge_unit_ids": [
+    "SPA-02",
+    "SPA-04",
+    "INT-01",
+    "INT-02",
+    "INT-03",
+    "INT-04",
+    "INT-05",
+    "SPA-01",
+    "SPA-03",
+    "SRC_SPACES_2024",
+    "SRC_INTERACTIONS_2019"
+  ],
+  "source_claim_ids": [
+    "SRC_SPACES_2024",
+    "SRC_INTERACTIONS_2019"
+  ],
+  "source_refs": [
+    "ACOMPANAR_COMPETENCIAS_2021",
+    "CNEB",
+    "ESPACIOS_2024",
+    "INTERACCIONES_2019",
+    "ORALIDAD_CICLO_II_2025",
+    "ORIENTACIONES_INICIAL_2025",
+    "PCI_INICIAL_CANONICAL",
+    "PLANIFICACION_INICIAL_2019",
+    "PROYECTOS_INICIAL_2019"
+  ],
+  "competency_ids": [
+    "PSICO_MOTRICIDAD"
+  ],
+  "plantilla": {
+    "archivo": "assets/templates/taller-inicial-ayni-unificada-v1.docx",
+    "sha256": "e868a4c30d6c73896510838f3b31c440330336c8f0b54baae9db11a56468c341",
+    "version": "taller-unified-v1"
+  }
+}

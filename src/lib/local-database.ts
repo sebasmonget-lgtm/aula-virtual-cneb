@@ -1,5 +1,5 @@
 import { apiFetch } from "./ayni-api-fetch";
-export type LocalStudent = { id: string; name: string };
+export type LocalStudent = { id: string; name: string; full_name?: string; evidence_count?: number; competency_count?: number; last_observed_at?: string | null };
 export type TeacherConfirmedAssessment = { id: string; period_start: string; period_end: string; information_status: "sufficient" | "insufficient"; evidence_overview: string; strengths_and_advances: string[]; support_needs: string[]; next_opportunities: string[]; teacher_confirmed_at: string };
 export type TeacherConfirmedConclusion = { id: string; period_start: string; period_end: string; information_status: "sufficient" | "insufficient"; conclusion_text: string; support_or_conditions: string[]; next_steps: string[]; teacher_confirmed_at: string };
 export type StudentPedagogicalProfile = {

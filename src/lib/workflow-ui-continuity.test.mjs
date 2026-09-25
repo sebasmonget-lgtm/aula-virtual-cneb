@@ -97,8 +97,8 @@ test("Evaluar reúne nivel y conclusión en una ficha y reconstruye el estado al
   assert.match(evaluation, /Nivel que confirmas/);
   assert.match(evaluation, /Conclusión descriptiva/);
   assert.match(evaluation, /reloadOverview\(\)/);
-  assert.match(workspace, /initialStudentId=\{initialTarget\?\.studentId\}/);
-  assert.match(workspace, /<PeriodEvaluation initialStudentId=\{initialTarget\?\.studentId\}/);
+  assert.match(workspace, /<EvaluationHome dashboard=\{dashboard\}/);
+  assert.match(workspace, /<PeriodEvaluation key=\{.*initialStudentId=\{target\?\.studentId\}/);
 });
 
 test("el perfil propone solo acciones posibles para competencias v4 y los vacíos vuelven a planificar", async () => {

@@ -53,6 +53,7 @@ import { loadPlanningFeedback, planningFeedbackText } from "../src/lib/planning-
 import { expectedRevision, assertRevision, conflictPayload, httpStatusForError, isVersionConflict, versionTransaction, VersionConflictError, publicErrorMessage } from "../src/lib/version-integrity.mjs";
 import { createRequestAuth, RequestAuthError } from "./request-auth.mjs";
 import { authorizeRequestSelectors, RequestAccessError } from "./request-authorization.mjs";
+import { loadLibraryResources, publicLibraryResource, saveLibraryResourceToDownloads } from "./library-resources.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const dataDir = process.env.AYNI_LOCAL_DATA_DIR ? path.resolve(process.env.AYNI_LOCAL_DATA_DIR) : path.join(root, ".local", "pgdata");
@@ -234,10 +235,22 @@ async function dashboard() {
      limit 1
   `, [classroomId]);
   const studentsResult = await db.query(`
-    select id, coalesce(preferred_name, first_name) as name
-      from students
-     where classroom_id = $1 and status = 'active'
-     order by coalesce(preferred_name, first_name)
+    select s.id, coalesce(s.preferred_name, s.first_name) as name,
+           concat_ws(' ', coalesce(s.preferred_name, s.first_name), s.last_name) as full_name,
+           coalesce(records.evidence_count, 0)::int as evidence_count,
+           coalesce(records.competency_count, 0)::int as competency_count,
+           records.last_observed_at
+      from students s
+      left join lateral (
+        select count(*)::int as evidence_count,
+               count(distinct ac.competency_v4_id)::int as competency_count,
+               max(ev.observed_at) as last_observed_at
+          from evidences ev
+          left join activity_criteria ac on ac.id = ev.criterion_id
+         where ev.student_id = s.id
+      ) records on true
+     where s.classroom_id = $1 and s.status = 'active'
+     order by coalesce(s.preferred_name, s.first_name)
   `, [classroomId]);
   const metricsResult = await db.query(`
     select
@@ -562,6 +575,41 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
     if (request.method === "GET" && url.pathname === "/api/dashboard") {
       const current = await dashboard();
       send(response, current ? 200 : 409, current ?? { error: "Configura primero la institución y el aula." }, origin);
+      return;
+    }
+    if (request.method === "GET" && url.pathname === "/api/library/resources") {
+      send(response, 200, { resources: (await loadLibraryResources()).map(publicLibraryResource) }, origin);
+      return;
+    }
+    if (request.method === "GET" && /^\/api\/library\/resources\/[a-z0-9-]+\/download$/.test(url.pathname)) {
+      const id = url.pathname.split("/")[4];
+      const resource = (await loadLibraryResources()).find((item) => item.id === id);
+      if (!resource) { send(response, 404, { error: "Recurso no disponible." }, origin); return; }
+      const bytes = await readFile(resource.download.path);
+      const headers = {
+        "content-type": resource.download.mimeType,
+        "content-disposition": `attachment; filename="${resource.download.filename}"`,
+        "content-length": String(bytes.length),
+        "cache-control": "private, no-store",
+        "x-content-type-options": "nosniff",
+      };
+      if (origin && allowedOrigins.has(origin)) {
+        headers["access-control-allow-origin"] = origin;
+        headers["access-control-allow-credentials"] = "true";
+        headers["access-control-expose-headers"] = "content-disposition";
+        headers.vary = "Origin";
+      }
+      response.writeHead(200, headers);
+      response.end(bytes);
+      return;
+    }
+    if (request.method === "POST" && /^\/api\/library\/resources\/[a-z0-9-]+\/save-local$/.test(url.pathname)) {
+      if (authMode !== "local") { send(response, 404, { error: "Ruta local no disponible." }, origin); return; }
+      const id = url.pathname.split("/")[4];
+      const resource = (await loadLibraryResources()).find((item) => item.id === id);
+      if (!resource) { send(response, 404, { error: "Recurso no disponible." }, origin); return; }
+      const saved = await saveLibraryResourceToDownloads(resource, path.join(homedir(), "Downloads"));
+      send(response, 200, { filename: saved.filename, folder: "Descargas", alreadyExists: saved.alreadyExists }, origin);
       return;
     }
     if (request.method === "GET" && url.pathname === "/api/export") {

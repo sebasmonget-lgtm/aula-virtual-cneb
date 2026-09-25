@@ -16,11 +16,11 @@ import { SpontaneousDiagnostic } from "./spontaneous-diagnostic-v4";
 type Filter = "all" | "without" | "with" | "today";
 function isToday(value: string) { return new Date(value).toDateString() === new Date().toDateString(); }
 
-export function GuidedDiagnostic({ dashboard, onPlan, onStudents }: {
-  dashboard: LocalDashboard; onPlan?: () => void; onStudents?: () => void;
+export function GuidedDiagnostic({ dashboard, onPlan, onStudents, initialStep = 1 }: {
+  dashboard: LocalDashboard; onPlan?: () => void; onStudents?: () => void; initialStep?: 1 | 2 | 3;
 }) {
   const [data, setData] = useState<DiagnosticWorkspace | null>(null);
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [step, setStep] = useState<1 | 2 | 3>(initialStep);
   const [experienceId, setExperienceId] = useState<string | null>(null);
   const [interviewStudentId, setInterviewStudentId] = useState<string | null>(null);
   const [observationMode, setObservationMode] = useState<"guided" | "spontaneous">("guided");

@@ -105,11 +105,11 @@ test("la interfaz abre el diagnóstico y ofrece continuar al plan solo tras guar
   const students = await readFile(new URL("../features/dashboard/components/students-screen.tsx", import.meta.url), "utf8");
   const setup = await readFile(new URL("../features/dashboard/components/pilot-setup.tsx", import.meta.url), "utf8");
   assert.match(setup, /Paso 1 de 6 · Configura el aula/);
-  assert.match(students, /Paso 2 de 6 · Añade a los alumnos/);
-  assert.match(workspace, /setActive\(guidance\.startingSection\)/);
+  assert.match(students, /Añadir niños al aula/);
+  assert.match(workspace, /guidance\.startingSection === "Niños" \? "Aula" : guidance\.startingSection/);
   assert.match(workspace, /id: "diagnostic" as const, label: "Diagnóstico"/);
-  assert.match(workspace, /tab === "diagnostic" \? <GuidedDiagnostic/);
-  assert.match(workspace, /focused=\{needsFirstDiagnostic\}/);
+  assert.match(workspace, /section === "diagnostic" \? <GuidedDiagnostic/);
+  assert.match(workspace, /<EvaluationHome dashboard=\{dashboard\}/);
   assert.match(diagnostic, /disabled=\{index \+ 1 > maxStep\}/);
   assert.match(diagnostic, /setData\(await completeDiagnosticReview\(\)\); onPlan\?\.\(\)/);
   assert.match(diagnostic, /!data\.observations\.length.*información insuficiente/);

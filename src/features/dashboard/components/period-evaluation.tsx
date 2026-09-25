@@ -33,7 +33,7 @@ async function api<T>(path: string, body?: unknown): Promise<T> {
   return payload;
 }
 
-export function PeriodEvaluation({ initialStudentId = "", initialCompetencyId = "", onPlan, onPrepareActivity }: { initialStudentId?: string; initialCompetencyId?: string; onPlan?:()=>void; onPrepareActivity?:()=>void }) {
+export function PeriodEvaluation({ initialStudentId = "", initialCompetencyId = "", initialView = "student", onPlan, onPrepareActivity }: { initialStudentId?: string; initialCompetencyId?: string; initialView?: "student" | "family" | "coverage"; onPlan?:()=>void; onPrepareActivity?:()=>void }) {
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [yearId, setYearId] = useState("");
   const [classroomId, setClassroomId] = useState("");
@@ -42,7 +42,7 @@ export function PeriodEvaluation({ initialStudentId = "", initialCompetencyId = 
   const [competencyId, setCompetencyId] = useState(initialCompetencyId);
   const [overview, setOverview] = useState<Overview | null>(null);
   const [detail, setDetail] = useState<Detail | null>(null);
-  const [view, setView] = useState<"student" | "classroom" | "report" | "family" | "coverage">("student");
+  const [view, setView] = useState<"student" | "classroom" | "report" | "family" | "coverage">(initialView);
   const [showSustento, setShowSustento] = useState(false);
   const [teacherAnalysis, setTeacherAnalysis] = useState("");
   const [achievementLevel, setAchievementLevel] = useState("");

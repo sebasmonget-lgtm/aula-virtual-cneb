@@ -1,0 +1,82 @@
+{
+  "id": "taller-05-grafico-plastico-mural-del-lugar-que-compartimos",
+  "slug": "mural-del-lugar-que-compartimos",
+  "titulo": "Mural del lugar que compartimos",
+  "edad": 5,
+  "tipo_taller": "Taller gráfico-plástico",
+  "duracion_referencial": "60 minutos, ampliables en dos encuentros",
+  "competencia_principal_id": "COM_ARTE",
+  "competencia_principal_nombre_canonico": "Crea proyectos desde los lenguajes artísticos",
+  "capacidades_pertinentes": [
+    "Explora y experimenta los lenguajes del arte",
+    "Aplica procesos creativos",
+    "Socializa sus procesos y proyectos"
+  ],
+  "referencia_curricular_edad": {
+    "edad": 5,
+    "estado": "specified",
+    "foco_semantico": "Exploración individual/grupal, representación del contexto y reflexión sencilla.",
+    "patrones_observables": [
+      "Explora individual o grupalmente materiales y combinaciones según intereses.",
+      "Representa vivencias y aspectos del contexto mediante diversos lenguajes.",
+      "Muestra, describe y comenta su creación y observa las de otros.",
+      "Expresa qué le gustó de su experiencia o de las producciones."
+    ],
+    "significado_trazable": [
+      "Explora individual y colectivamente, transforma experiencias/contexto en producciones y conversa sobre su proceso y el de otros."
+    ],
+    "politica_de_texto": "Paráfrasis semántica trazable para diseño pedagógico; no es cita textual MINEDU."
+  },
+  "proposito": "Crear en grupo una composición gráfico-plástica sobre un lugar cercano y conversar sobre decisiones y procesos.",
+  "criterio": "Explora y combina recursos gráfico-plásticos para representar aspectos de un lugar cercano, integra su aporte en la composición grupal y describe una decisión o algo que valora del proceso.",
+  "evidencia_esperada": "Aporte integrado en el mural, registro de una combinación de materiales y comentario sobre una decisión propia, grupal o una producción observada.",
+  "materiales": [
+    "papel kraft grande",
+    "papeles reutilizados",
+    "témperas lavables",
+    "crayones",
+    "esponjas",
+    "pegamento escolar",
+    "telas o lanas"
+  ],
+  "espacio": "Aula con mesas de exploración y pared o piso amplio para montar el mural sin bloquear la circulación.",
+  "recursos_asociados": [],
+  "reutilizable": true,
+  "knowledge_base_version": "4.0.0",
+  "knowledge_unit_ids": [
+    "INT-01",
+    "SPA-04",
+    "INT-02",
+    "INT-03",
+    "INT-04",
+    "INT-05",
+    "SPA-01",
+    "SPA-02",
+    "SPA-03",
+    "SRC_SPACES_2024",
+    "SRC_INTERACTIONS_2019"
+  ],
+  "source_claim_ids": [
+    "SRC_SPACES_2024",
+    "SRC_INTERACTIONS_2019"
+  ],
+  "source_refs": [
+    "ACOMPANAR_COMPETENCIAS_2021",
+    "CNEB",
+    "ESPACIOS_2024",
+    "INTERACCIONES_2019",
+    "ORALIDAD_CICLO_II_2025",
+    "ORIENTACIONES_INICIAL_2025",
+    "PCI_INICIAL_CANONICAL",
+    "PLANIFICACION_INICIAL_2019",
+    "PROYECTOS_INICIAL_2019"
+  ],
+  "competency_ids": [
+    "COM_ARTE"
+  ],
+  "plantilla": {
+    "archivo": "assets/templates/taller-inicial-ayni-unificada-v1.docx",
+    "sha256": "e868a4c30d6c73896510838f3b31c440330336c8f0b54baae9db11a56468c341",
+    "version": "taller-unified-v1"
+  }
+}

@@ -1,0 +1,80 @@
+{
+  "id": "taller-03-grafico-plastico-huellas-de-mis-movimientos",
+  "slug": "huellas-de-mis-movimientos",
+  "titulo": "Huellas de mis movimientos",
+  "edad": 3,
+  "tipo_taller": "Taller gráfico-plástico",
+  "duracion_referencial": "45 minutos, flexible según el interés",
+  "competencia_principal_id": "COM_ARTE",
+  "competencia_principal_nombre_canonico": "Crea proyectos desde los lenguajes artísticos",
+  "capacidades_pertinentes": [
+    "Explora y experimenta los lenguajes del arte",
+    "Aplica procesos creativos",
+    "Socializa sus procesos y proyectos"
+  ],
+  "referencia_curricular_edad": {
+    "edad": 3,
+    "estado": "specified",
+    "foco_semantico": "Exploración libre, representación de experiencias y comunicación espontánea.",
+    "patrones_observables": [
+      "Explora materiales, movimientos, sonidos y posibilidades expresivas.",
+      "Representa experiencias o intereses mediante juego simbólico, movimiento, imagen o sonido.",
+      "Comenta espontáneamente sus experiencias o producciones."
+    ],
+    "significado_trazable": [
+      "Explora materiales y movimientos por interés; representa vivencias y comparte espontáneamente su creación."
+    ],
+    "politica_de_texto": "Paráfrasis semántica trazable para diseño pedagógico; no es cita textual MINEDU."
+  },
+  "proposito": "Explorar huellas, colores y gestos gráficos para representar una experiencia propia.",
+  "criterio": "Explora materiales y movimientos para producir huellas propias, toma decisiones durante el proceso y comunica con palabras, gestos o acciones algo de su creación.",
+  "evidencia_esperada": "Composición de huellas surgida de la exploración y una manifestación espontánea sobre el material, el movimiento o lo representado.",
+  "materiales": [
+    "papel kraft o cartulina grande",
+    "témpera lavable no tóxica",
+    "esponjas",
+    "rodillos",
+    "tapones grandes",
+    "mandiles"
+  ],
+  "espacio": "Zona protegida del aula o patio, con materiales al alcance y un lugar cercano para lavarse.",
+  "recursos_asociados": [],
+  "reutilizable": true,
+  "knowledge_base_version": "4.0.0",
+  "knowledge_unit_ids": [
+    "INT-02",
+    "INT-03",
+    "INT-04",
+    "SPA-01",
+    "INT-01",
+    "INT-05",
+    "SPA-02",
+    "SPA-03",
+    "SPA-04",
+    "SRC_SPACES_2024",
+    "SRC_INTERACTIONS_2019"
+  ],
+  "source_claim_ids": [
+    "SRC_SPACES_2024",
+    "SRC_INTERACTIONS_2019"
+  ],
+  "source_refs": [
+    "ACOMPANAR_COMPETENCIAS_2021",
+    "CNEB",
+    "ESPACIOS_2024",
+    "INTERACCIONES_2019",
+    "ORALIDAD_CICLO_II_2025",
+    "ORIENTACIONES_INICIAL_2025",
+    "PCI_INICIAL_CANONICAL",
+    "PLANIFICACION_INICIAL_2019",
+    "PROYECTOS_INICIAL_2019"
+  ],
+  "competency_ids": [
+    "COM_ARTE"
+  ],
+  "plantilla": {
+    "archivo": "assets/templates/taller-inicial-ayni-unificada-v1.docx",
+    "sha256": "e868a4c30d6c73896510838f3b31c440330336c8f0b54baae9db11a56468c341",
+    "version": "taller-unified-v1"
+  }
+}

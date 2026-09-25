@@ -176,6 +176,12 @@ Proyecto nuevo iniciado el 20 de septiembre de 2026. Existe un shell responsive 
 
 - Cada cierre nuevo guarda un manifiesto inmutable versionado con IDs y snapshots de valoraciones, conclusiones y observaciones. El cierre anterior sigue consultable cuando se reevalúa y se cierra V2. Documentos muestra una proyección provisional; no existe aún Word definitivo del período. Ver ADR 059.
 
+## Navegación móvil y Biblioteca (2026-09-24)
+
+- El espacio docente usa cinco destinos: Hoy, Planificar, Aula, Evaluar y Biblioteca. Perfil se abre desde el avatar del encabezado. Planificar y Evaluar tienen portadas breves, pero los formularios y servicios previos permanecen detrás de sus acciones.
+- Los conteos, tarjetas y sugerencias salen de `/api/dashboard`, el recorrido de planificación y la evaluación del período; las cifras de los mockups no se incorporan como datos. Biblioteca usa seis talleres piloto para 3, 4 y 5 años, más un material asociado, sin presentar fichas inexistentes. Los documentos propios siguen en la misma biblioteca bajo «Mis documentos».
+- «Usar en actividad» lleva propósito y materiales del recurso al borrador editable de Actividad, después de que la docente elija un proyecto o unidad. Descargar/guardar toma el archivo real desde una ruta autenticada; en modo local lo guarda en Descargas del equipo. Ver ADR 067.
+
 
 
 
