@@ -426,3 +426,10 @@
 **Causa raíz.** `confirmCriterionVersion()` ya devuelve la fila confirmada; la ruta intentaba leer `result.rows[0]` como si recibiera el objeto de consulta de PostgreSQL.
 
 **Solución y prevención.** La ruta envía directamente la fila devuelta. La prueba de servicio de Criterio V2 y el recorrido integrado comprueban el estado confirmado y la permanencia del `criterion_id` de las evidencias históricas. Al integrar servicios, revisar su contrato de retorno además del efecto en la base.
+## 2026-09-24 Un selector de recurso confundía la ruta de importación
+
+**Síntoma.** La prueba HTTP con Auth devolvía 404 al importar alumnos, aunque la docente estuviera autenticada.
+
+**Causa raíz.** La autorización previa interpretaba `/api/students/import` como si `import` fuese un ID de alumno.
+
+**Solución y prevención.** La ruta reservada se excluye del analizador de IDs. La prueba HTTP crea dos aulas, importa un alumno y comprueba accesos propios y cruzados antes de considerar completo un cambio en el límite común.

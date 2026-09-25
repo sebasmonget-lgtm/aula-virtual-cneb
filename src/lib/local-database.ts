@@ -1,3 +1,4 @@
+import { apiFetch } from "./ayni-api-fetch";
 export type LocalStudent = { id: string; name: string };
 export type TeacherConfirmedAssessment = { id: string; period_start: string; period_end: string; information_status: "sufficient" | "insufficient"; evidence_overview: string; strengths_and_advances: string[]; support_needs: string[]; next_opportunities: string[]; teacher_confirmed_at: string };
 export type TeacherConfirmedConclusion = { id: string; period_start: string; period_end: string; information_status: "sufficient" | "insufficient"; conclusion_text: string; support_or_conditions: string[]; next_steps: string[]; teacher_confirmed_at: string };
@@ -121,44 +122,44 @@ export type FamilyInterview = { id: string; student_id: string; version: number;
 export type FamilyInterviewStatus = "not_started" | "partial" | "confirmed";
 export type SpontaneousObservation = { id: string; student_id: string; context_label: string; observation_text: string; support_status: "yes" | "no" | "unknown" | null; observed_at: string; classification_status: "pending" | "classified" | "needs_review"; classification_source: "jev" | "teacher" | null; competency_v4_id: string | null; secondary_competency_v4_id: string | null };
 
-export const localDatabaseApiUrl = process.env.NEXT_PUBLIC_AYNI_API_URL ?? process.env.NEXT_PUBLIC_LOCAL_DATABASE_URL ?? "http://127.0.0.1:8788";
+export const localDatabaseApiUrl = process.env.NEXT_PUBLIC_AYNI_API_URL || process.env.NEXT_PUBLIC_LOCAL_DATABASE_URL || "http://127.0.0.1:8788";
 const apiUrl = localDatabaseApiUrl;
 
 export async function loadLocalDashboard(signal?: AbortSignal): Promise<LocalDashboard> {
-  const response = await fetch(`${apiUrl}/api/dashboard`, { signal, cache: "no-store" });
+  const response = await apiFetch(`${apiUrl}/api/dashboard`, { signal, cache: "no-store" });
   if (!response.ok) throw new Error("La base local no está disponible.");
   return response.json();
 }
 
 export async function loadPilotSetup(): Promise<{ configured: boolean }> {
-  const response = await fetch(`${apiUrl}/api/pilot/setup`, { cache: "no-store" });
+  const response = await apiFetch(`${apiUrl}/api/pilot/setup`, { cache: "no-store" });
   if (!response.ok) throw new Error("No se pudo consultar la configuración del aula.");
   return response.json();
 }
 
 export async function savePilotSetup(input: { teacherName: string; institutionName: string; section: string; age: number; year: number; startsOn: string; endsOn: string; castellanoL2Applicable: boolean; religionApplicable: boolean }): Promise<LocalDashboard> {
-  const response = await fetch(`${apiUrl}/api/pilot/setup`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(input) });
+  const response = await apiFetch(`${apiUrl}/api/pilot/setup`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(input) });
   const result = await response.json() as { dashboard?: LocalDashboard; error?: string };
   if (!response.ok || !result.dashboard) throw new Error(result.error ?? "No se pudo configurar el aula.");
   return result.dashboard;
 }
 
 export async function importPilotStudents(input: { csv: string } | { students: { firstName: string; lastName: string; preferredName?: string }[] }): Promise<LocalDashboard> {
-  const response = await fetch(`${apiUrl}/api/students/import`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(input) });
+  const response = await apiFetch(`${apiUrl}/api/students/import`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(input) });
   const result = await response.json() as { dashboard?: LocalDashboard; error?: string };
   if (!response.ok || !result.dashboard) throw new Error(result.error ?? "No se pudieron cargar los niños.");
   return result.dashboard;
 }
 
 export async function loadStudentPedagogicalProfile(studentId: string): Promise<StudentPedagogicalProfile> {
-  const response = await fetch(`${apiUrl}/api/students/${studentId}`, { cache: "no-store" });
+  const response = await apiFetch(`${apiUrl}/api/students/${studentId}`, { cache: "no-store" });
   const payload = await response.json() as StudentPedagogicalProfile & { error?: string };
   if (!response.ok) throw new Error(payload.error ?? "No se pudo cargar el perfil del niño.");
   return payload;
 }
 
 export async function loadLocalStatistics(): Promise<LocalStatistics> {
-  const response = await fetch(`${apiUrl}/api/statistics`, { cache: "no-store" });
+  const response = await apiFetch(`${apiUrl}/api/statistics`, { cache: "no-store" });
   if (!response.ok) throw new Error("No se pudieron calcular las estadísticas locales.");
   return response.json();
 }
@@ -177,7 +178,7 @@ export type PublicClassroomContext = {
 };
 
 export async function loadClassroomContext(): Promise<PublicClassroomContext> {
-  const response = await fetch(`${apiUrl}/api/classroom/context`, { cache: "no-store" });
+  const response = await apiFetch(`${apiUrl}/api/classroom/context`, { cache: "no-store" });
   if (!response.ok) throw new Error("No se pudo cargar el panorama del grupo.");
   return response.json();
 }
@@ -190,7 +191,7 @@ export async function createLocalEvidence(input: {
   observationText?: string;
   photo?: { base64: string; mimeType: "image/jpeg" | "image/png" | "image/webp" };
 }) {
-  const response = await fetch(`${apiUrl}/api/evidences`, {
+  const response = await apiFetch(`${apiUrl}/api/evidences`, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify(input),
@@ -202,7 +203,7 @@ export async function createLocalEvidence(input: {
 }
 
 async function postDashboard(path: string, input: Record<string, unknown>): Promise<LocalDashboard> {
-  const response = await fetch(`${apiUrl}${path}`, {
+  const response = await apiFetch(`${apiUrl}${path}`, {
     method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(input),
   });
   const payload = await response.json() as { error?: string; dashboard?: LocalDashboard };
@@ -228,7 +229,7 @@ export async function saveLocalProfile(input: {
   createLogo: boolean; logoInitials: string; logoPrimary: string; logoAccent: string;
   logoUpload?: { mimeType: "image/png" | "image/jpeg" | "image/webp"; base64: string };
 }): Promise<LocalDashboard> {
-  const response = await fetch(`${apiUrl}/api/profile`, {
+  const response = await apiFetch(`${apiUrl}/api/profile`, {
     method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(input),
   });
   const payload = await response.json() as { error?: string; dashboard?: LocalDashboard };
@@ -237,13 +238,13 @@ export async function saveLocalProfile(input: {
 }
 
 export async function loadDiagnostics(): Promise<DiagnosticWorkspace> {
-  const response = await fetch(`${apiUrl}/api/diagnostics`, { cache: "no-store" });
+  const response = await apiFetch(`${apiUrl}/api/diagnostics`, { cache: "no-store" });
   if (!response.ok) throw new Error("No se pudo cargar el diagnóstico local.");
   return response.json();
 }
 
 export async function completeDiagnosticReview(): Promise<DiagnosticWorkspace> {
-  const response = await fetch(`${apiUrl}/api/diagnostics/complete`, { method: "POST" });
+  const response = await apiFetch(`${apiUrl}/api/diagnostics/complete`, { method: "POST" });
   const payload = await response.json() as { error?: string; workspace?: DiagnosticWorkspace };
   if (!response.ok || !payload.workspace) throw new Error(payload.error ?? "No se pudo guardar la revisión diagnóstica.");
   return payload.workspace;
@@ -254,7 +255,7 @@ export async function saveDiagnosticObservation(input: {
   observationContext: string; observationText: string;
   teacherInterpretation: string; teacherConfirmed: boolean;
 }): Promise<DiagnosticWorkspace> {
-  const response = await fetch(`${apiUrl}/api/diagnostics`, {
+  const response = await apiFetch(`${apiUrl}/api/diagnostics`, {
     method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(input),
   });
   const payload = await response.json() as { error?: string; workspace?: DiagnosticWorkspace };
@@ -266,7 +267,7 @@ export async function saveDiagnosticExperienceObservation(input: {
   studentId: string; experienceId: string; aspectId: string;
   observationStatus: DiagnosticObservationStatus; observationText?: string;
 }): Promise<DiagnosticWorkspace> {
-  const response = await fetch(`${apiUrl}/api/diagnostics/experience-observations`, {
+  const response = await apiFetch(`${apiUrl}/api/diagnostics/experience-observations`, {
     method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(input),
   });
   const payload = await response.json() as { error?: string; workspace?: DiagnosticWorkspace };
@@ -275,7 +276,7 @@ export async function saveDiagnosticExperienceObservation(input: {
 }
 
 async function diagnosticRequest<T>(path: string, method = "GET", body?: unknown): Promise<T> {
-  const response = await fetch(`${apiUrl}/api/diagnostics/${path}`, {
+  const response = await apiFetch(`${apiUrl}/api/diagnostics/${path}`, {
     method, cache: "no-store", ...(body === undefined ? {} : { headers: { "content-type": "application/json" }, body: JSON.stringify(body) }),
   });
   const payload = await response.json() as T & { error?: string };

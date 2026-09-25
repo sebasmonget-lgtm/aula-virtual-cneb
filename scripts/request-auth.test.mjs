@@ -1,0 +1,91 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { PGlite } from "@electric-sql/pglite";
+import { createRequestAuth, RequestAuthError } from "./request-auth.mjs";
+import { authorizeRequestSelectors, RequestAccessError } from "./request-authorization.mjs";
+
+const teacherA = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+const teacherB = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+const roomA = "11111111-1111-4111-8111-111111111111";
+const roomB = "22222222-2222-4222-8222-222222222222";
+const studentA = "33333333-3333-4333-8333-333333333333";
+const studentB = "44444444-4444-4444-8444-444444444444";
+const yearA = "55555555-5555-4555-8555-555555555555";
+const yearB = "66666666-6666-4666-8666-666666666666";
+const periodA = "77777777-7777-4777-8777-777777777777";
+const periodB = "88888888-8888-4888-8888-888888888888";
+
+function fakeAuthFetch(url, options) {
+  if (url.includes("/auth/v1/token?")) {
+    const body = JSON.parse(options.body);
+    return Promise.resolve(Response.json(body.email === "a@example.test" && body.password === "correcta"
+      ? { access_token: "token-a", expires_in: 3600 }
+      : { error: "invalid_grant" }, { status: body.password === "correcta" ? 200 : 401 }));
+  }
+  if (url.endsWith("/auth/v1/user")) {
+    const token = options.headers.authorization;
+    const id = token === "Bearer token-a" ? teacherA : token === "Bearer token-b" ? teacherB : null;
+    return Promise.resolve(Response.json(id ? { id, role: "authenticated" } : { error: "invalid_token" }, { status: id ? 200 : 401 }));
+  }
+  return Promise.resolve(new Response(null, { status: 204 }));
+}
+
+const auth = createRequestAuth({ mode: "supabase", supabaseUrl: "https://test.supabase.co", publishableKey: "public-test-key", fetchImpl: fakeAuthFetch });
+const request = (token, extraHeaders = {}) => ({ headers: { ...(token ? { authorization: `Bearer ${token}` } : {}), ...extraHeaders } });
+
+test("identity is verified for every request and never comes from client IDs", async () => {
+  const db = { query() {} };
+  await assert.rejects(() => auth.resolve(request(null), db), (error) => error instanceof RequestAuthError && error.status === 401);
+  await assert.rejects(() => auth.resolve(request("invalid"), db), (error) => error instanceof RequestAuthError && error.status === 401);
+  await assert.rejects(() => auth.resolve(request("expired"), db), (error) => error instanceof RequestAuthError && error.status === 401);
+  const a = await auth.resolve(request("token-a", { "x-teacher-id": teacherB }), db);
+  const b = await auth.resolve(request("token-b"), db);
+  assert.equal(a.teacherId, teacherA);
+  assert.equal(b.teacherId, teacherB);
+  assert.equal(a.db, db);
+  assert.notEqual(a.requestId, b.requestId);
+  assert.equal((await auth.resolve({ headers: { cookie: "ayni_session=token-a" } }, db)).teacherId, teacherA);
+});
+
+test("email/password sign-in verifies the returned token and sets an HTTP-only cookie", async () => {
+  const session = await auth.signIn("a@example.test", "correcta");
+  assert.equal(session.teacherId, teacherA);
+  assert.match(auth.sessionCookie(session.token, session.expiresIn), /HttpOnly; Path=\/api; SameSite=Lax; Secure/);
+  await assert.rejects(() => auth.signIn("a@example.test", "incorrecta"), (error) => error.status === 401);
+});
+
+test("local mode retains PGlite identity without any token", async () => {
+  const local = createRequestAuth({ mode: "local", localTeacherId: teacherA });
+  assert.equal((await local.resolve(request(null), {})).teacherId, teacherA);
+});
+
+test("request selectors are scoped to the verified classroom tree", async () => {
+  const db = new PGlite();
+  try {
+    await db.exec(`
+      create table school_years(id uuid primary key, owner_id uuid);
+      create table classrooms(id uuid primary key, school_year_id uuid, teacher_id uuid);
+      create table students(id uuid primary key, classroom_id uuid);
+      create table evaluation_periods(id uuid primary key, school_year_id uuid);
+    `);
+    for (const [teacher, year, room, student, period] of [
+      [teacherA, yearA, roomA, studentA, periodA], [teacherB, yearB, roomB, studentB, periodB],
+    ]) {
+      await db.query("insert into school_years values ($1,$2)", [year, teacher]);
+      await db.query("insert into classrooms values ($1,$2,$3)", [room, year, teacher]);
+      await db.query("insert into students values ($1,$2)", [student, room]);
+      await db.query("insert into evaluation_periods values ($1,$2)", [period, year]);
+    }
+    const check = (pathname, body) => authorizeRequestSelectors({ db, teacherId: teacherA, url: new URL(`http://localhost${pathname}`), body });
+    assert.equal((await db.query("select count(*)::int as count from classrooms")).rows[0].count, 2);
+    assert.equal((await db.query("select count(*)::int as count from evaluation_periods")).rows[0].count, 2);
+    assert.equal((await db.query("select c.teacher_id as owner_id from classrooms c join school_years y on y.id=c.school_year_id and y.owner_id=c.teacher_id where c.id=$1", [roomA])).rows[0]?.owner_id, teacherA);
+    assert.equal((await db.query("select y.owner_id from evaluation_periods p join school_years y on y.id=p.school_year_id where p.id=$1", [periodA])).rows[0]?.owner_id, teacherA);
+    await check(`/api/period-evaluations/coverage?classroomId=${roomA}&periodId=${periodA}`);
+    await check(`/api/students/${studentA}`);
+    await assert.rejects(() => check(`/api/period-evaluations/coverage?classroomId=${roomB}&periodId=${periodB}`), (error) => error instanceof RequestAccessError && error.status === 403);
+    await assert.rejects(() => check(`/api/students/${studentB}`), (error) => error instanceof RequestAccessError && error.status === 404);
+    await assert.rejects(() => check("/api/evidences", { studentId: studentB, teacherId: teacherA }), (error) => error instanceof RequestAccessError && error.status === 404);
+    await assert.rejects(() => check("/api/attendance", { records: [{ studentId: studentA }, { studentId: studentB }] }), (error) => error instanceof RequestAccessError && error.status === 404);
+  } finally { await db.close(); }
+});

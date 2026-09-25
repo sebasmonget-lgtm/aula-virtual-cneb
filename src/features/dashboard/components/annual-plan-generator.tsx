@@ -1,4 +1,5 @@
 "use client";
+import { apiFetch } from "@/src/lib/ayni-api-fetch";
 
 import { useEffect, useState } from "react";
 import { ArrowLeft, ArrowRight, BookOpen, CalendarDays, Pencil, School, UserRound } from "lucide-react";
@@ -305,7 +306,7 @@ export function AnnualPlanGenerator({ onConfirmed, onGoDiagnostic }: { onConfirm
   useEffect(() => {
     let live = true;
     const get = async <T,>(path: string, error: string): Promise<T> => {
-      const response = await fetch(`${localDatabaseApiUrl}${path}`);
+      const response = await apiFetch(`${localDatabaseApiUrl}${path}`);
       if (!response.ok) throw new Error(error);
       return response.json() as Promise<T>;
     };
@@ -331,7 +332,7 @@ export function AnnualPlanGenerator({ onConfirmed, onGoDiagnostic }: { onConfirm
     if (!calendarDraft || !classroom || operation || readOnly || savedPlans?.active) return;
     setOperation("calendar"); setMessage("");
     try {
-      const response = await fetch(`${localDatabaseApiUrl}/api/annual-calendar`, { method: "PUT",
+      const response = await apiFetch(`${localDatabaseApiUrl}/api/annual-calendar`, { method: "PUT",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ blocks: calendarDraft.blocks, initial_stage: calendarDraft.initial_stage }) });
       const data = await response.json() as { calendar?: AnnualCalendar; error?: string };
@@ -349,7 +350,7 @@ export function AnnualPlanGenerator({ onConfirmed, onGoDiagnostic }: { onConfirm
     setOperation("generate"); setMessage("");
     try {
       const replacingId = canReplaceLegacy ? existingPlan!.id : null;
-      const response = await fetch(`${localDatabaseApiUrl}/api/ai/annual-plan/generate`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ teacherRequest: teacherRequest.trim(), ...(replacingId ? { replacementPlanId: replacingId } : {}) }) });
+      const response = await apiFetch(`${localDatabaseApiUrl}/api/ai/annual-plan/generate`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ teacherRequest: teacherRequest.trim(), ...(replacingId ? { replacementPlanId: replacingId } : {}) }) });
       const data = await response.json() as GeneratedResponse;
       if (!response.ok || !data.proposal || !data.generation_id) throw new Error(data.error ?? "No pudimos generar una propuesta válida.");
       setProposal(data.proposal); setGeneratedHeader(data.document_context ?? null);
@@ -363,10 +364,10 @@ export function AnnualPlanGenerator({ onConfirmed, onGoDiagnostic }: { onConfirm
     if (!canCopyCurrent || !existingPlan || operation || savedPlans?.draft) return;
     setOperation("copy"); setMessage("");
     try {
-      const response = await fetch(`${localDatabaseApiUrl}/api/annual-plans/${existingPlan.id}/new-version`, { method: "POST",headers:{"content-type":"application/json"},body:JSON.stringify({expectedRevision:existingPlan.revision}) });
+      const response = await apiFetch(`${localDatabaseApiUrl}/api/annual-plans/${existingPlan.id}/new-version`, { method: "POST",headers:{"content-type":"application/json"},body:JSON.stringify({expectedRevision:existingPlan.revision}) });
       const result = await response.json() as { id?: string; error?: string };
       if (!response.ok || !result.id) throw new Error(result.error ?? "No se pudo preparar la nueva versión.");
-      const plansResponse = await fetch(`${localDatabaseApiUrl}/api/annual-plans/current`);
+      const plansResponse = await apiFetch(`${localDatabaseApiUrl}/api/annual-plans/current`);
       if (!plansResponse.ok) throw new Error("La versión se guardó, pero no se pudo abrir. Vuelve a cargar el plan.");
       const plans = await plansResponse.json() as PlansResponse;
       if (!plans.draft || plans.draft.id !== result.id) throw new Error("La versión se guardó, pero no se pudo abrir. Vuelve a cargar el plan.");
@@ -385,7 +386,7 @@ export function AnnualPlanGenerator({ onConfirmed, onGoDiagnostic }: { onConfirm
     if (!proposal || operation || readOnly || calendarDirty || calendarWarning) return;
     setOperation("save"); setMessage("");
     try {
-      const response = await fetch(`${localDatabaseApiUrl}/api/annual-plans`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ proposal, planId, generationId, ...(planId ? { expectedRevision:existingPlan?.revision }:{}), ...(replacementPlanId ? { replacementPlanId } : {}) }) });
+      const response = await apiFetch(`${localDatabaseApiUrl}/api/annual-plans`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ proposal, planId, generationId, ...(planId ? { expectedRevision:existingPlan?.revision }:{}), ...(replacementPlanId ? { replacementPlanId } : {}) }) });
       const data = await response.json() as { error?: string; id?: string; version?: number;revision?:number };
       if (!response.ok || !data.id) throw new Error(data.error ?? "No se pudo guardar el borrador.");
       const savedDraft: SavedPlan = { id: data.id, classroom_id: classroom!.id, version: data.version ?? existingPlan?.version ?? 1,revision:data.revision??1,
@@ -400,7 +401,7 @@ export function AnnualPlanGenerator({ onConfirmed, onGoDiagnostic }: { onConfirm
     if (!planId || !proposal || operation || readOnly || hasUnsavedChanges || calendarDirty || calendarWarning) return;
     setOperation("confirm"); setMessage("");
     try {
-      const response = await fetch(`${localDatabaseApiUrl}/api/annual-plans/${planId}/confirm`, { method: "POST",headers:{"content-type":"application/json"},body:JSON.stringify({expectedRevision:existingPlan?.revision}) });
+      const response = await apiFetch(`${localDatabaseApiUrl}/api/annual-plans/${planId}/confirm`, { method: "POST",headers:{"content-type":"application/json"},body:JSON.stringify({expectedRevision:existingPlan?.revision}) });
       const data = await response.json() as { error?: string; version?: number;revision?:number };
       if (!response.ok) throw new Error(data.error ?? "No se pudo confirmar el plan.");
       setExistingPlan({ id: planId, classroom_id: classroom!.id, version: data.version ?? existingPlan?.version ?? 1,revision:data.revision??(existingPlan?.revision??1)+1,

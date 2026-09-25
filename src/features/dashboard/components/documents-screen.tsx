@@ -1,4 +1,5 @@
 "use client";
+import { apiFetch } from "@/src/lib/ayni-api-fetch";
 
 import { useEffect, useState } from "react";
 import { ArrowLeft, BookOpen, Download, FileText } from "lucide-react";
@@ -116,6 +117,7 @@ function DocumentContent({ document }: { document: OpenDocument }) {
 }
 
 export function DocumentsScreen() {
+  const [authMode, setAuthMode] = useState<"local" | "supabase">("local");
   const [documents, setDocuments] = useState<DocumentEntry[]>([]);
   const [selected, setSelected] = useState<{ kind: DocumentKind; id: string } | null>(null);
   const [opened, setOpened] = useState<OpenDocument | null>(null);
@@ -129,7 +131,16 @@ export function DocumentsScreen() {
 
   useEffect(() => {
     const controller = new AbortController();
-    fetch(`${localDatabaseApiUrl}/api/documents`, { signal: controller.signal }).then(async (response) => {
+    void apiFetch(`${localDatabaseApiUrl}/api/auth/config`, { signal: controller.signal })
+      .then(async (response) => response.ok ? response.json() as Promise<{ mode: "local" | "supabase" }> : null)
+      .then((config) => { if (!controller.signal.aborted && config?.mode) setAuthMode(config.mode); })
+      .catch(() => {});
+    return () => controller.abort();
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    apiFetch(`${localDatabaseApiUrl}/api/documents`, { signal: controller.signal }).then(async (response) => {
       if (!response.ok) throw new Error("No pudimos cargar tus documentos.");
       return response.json() as Promise<{ documents: DocumentEntry[] }>;
     }).then((result) => { setDocuments(result.documents); setError(""); })
@@ -141,7 +152,7 @@ export function DocumentsScreen() {
   useEffect(() => {
     if (!selected) return;
     const controller = new AbortController();
-    fetch(`${localDatabaseApiUrl}/api/documents/${selected.kind}/${selected.id}`, { signal: controller.signal }).then(async (response) => {
+    apiFetch(`${localDatabaseApiUrl}/api/documents/${selected.kind}/${selected.id}`, { signal: controller.signal }).then(async (response) => {
       if (!response.ok) throw new Error("No pudimos abrir este documento.");
       return response.json() as Promise<{ document: OpenDocument }>;
     }).then((result) => { setOpened(result.document); setError(""); })
@@ -158,7 +169,24 @@ export function DocumentsScreen() {
     if (!opened || savingWord) return;
     setSavingWord(true); setWordMessage(""); setWordError("");
     try {
-      const response = await fetch(`${localDatabaseApiUrl}/api/documents/${opened.kind}/${opened.id}/save-local`, { method: "POST" });
+      if (authMode === "supabase") {
+        const response = await apiFetch(`${localDatabaseApiUrl}/api/documents/${opened.kind}/${opened.id}/download`);
+        if (!response.ok) throw new Error("No se pudo descargar el Word.");
+        const blob = await response.blob();
+        const filename = response.headers.get("content-disposition")?.match(/filename="([^"\\/]+)"/)?.[1]
+          ?? `documento-${opened.id}.docx`;
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.setTimeout(() => URL.revokeObjectURL(url), 60000);
+        setWordMessage(`Word descargado: ${filename}`);
+        return;
+      }
+      const response = await apiFetch(`${localDatabaseApiUrl}/api/documents/${opened.kind}/${opened.id}/save-local`, { method: "POST" });
       const result = await response.json() as { filename?: string; alreadyExists?: boolean; error?: string };
       if (!response.ok || !result.filename) throw new Error(result.error || "No se pudo guardar el Word.");
       setWordMessage(`${result.alreadyExists ? "El Word ya estaba guardado" : "Word guardado"} en Descargas: ${result.filename}`);
@@ -168,12 +196,12 @@ export function DocumentsScreen() {
   return <section className="mx-auto max-w-5xl space-y-5">
     <PageIntro eyebrow="Tu trabajo guardado" title="Documentos" description="Encuentra aquí tus diagnósticos, planes, experiencias, actividades, cierres e informes." icon={BookOpen} />
     {selected && <div className="flex flex-wrap items-center justify-between gap-3"><Button variant="outline" className="min-h-11" onClick={() => { setSelected(null); setOpened(null); setError(""); setWordMessage(""); setWordError(""); }}><ArrowLeft className="mr-2 size-4" />Volver a mis documentos</Button>
-      {opened && opened.kind !== "period_closure" && <Button className="min-h-11" disabled={savingWord} onClick={() => void saveWordLocally()}><Download className="mr-2 size-4" />{savingWord ? "Guardando Word..." : "Guardar Word en Descargas"}</Button>}</div>}
+      {opened && opened.kind !== "period_closure" && <Button className="min-h-11" disabled={savingWord} onClick={() => void saveWordLocally()}><Download className="mr-2 size-4" />{savingWord ? "Preparando Word..." : authMode === "supabase" ? "Descargar Word" : "Guardar Word en Descargas"}</Button>}</div>}
     {wordMessage && <WorkflowFeedback tone="success">{wordMessage}</WorkflowFeedback>}
     {wordError && <WorkflowFeedback tone="error">{wordError}</WorkflowFeedback>}
     {opened?.kind === "annual_plan" && opened.content.plan_format !== "twelve_projects_flexible_weeks" &&
       <WorkflowFeedback tone="error">Este plan se creó antes del formato actual. Su Word conserva la plantilla anterior. Abre Plan para preparar una versión actualizada; el plan vigente seguirá guardado mientras la revisas.</WorkflowFeedback>}
-    {opened && downloadUrl && <p className="text-sm text-[#526b87]">Se guarda en la computadora donde corre Ayni. <a className="underline" href={downloadUrl} download>Descargar en este dispositivo</a></p>}
+    {opened && downloadUrl && <p className="text-sm text-[#526b87]">{authMode === "local" ? "Se guarda en la computadora donde corre Ayni. " : ""}<a className="underline" href={downloadUrl} download>Descargar en este dispositivo</a></p>}
     {error && <div className="flex flex-wrap items-center gap-3"><WorkflowFeedback tone="error">{error}</WorkflowFeedback><Button variant="outline" onClick={() => { setLoading(!selected); setOpening(Boolean(selected)); setRevision((value) => value + 1); }}>Reintentar</Button></div>}
     {selected ? opening ? <LoadingState label="Abriendo documento..." /> : opened ? <DocumentContent document={opened} /> : null :
       loading ? <LoadingState label="Buscando tus documentos..." /> : error ? null : documents.length === 0 ?

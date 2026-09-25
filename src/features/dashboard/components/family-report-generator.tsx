@@ -1,4 +1,5 @@
 "use client";
+import { apiFetch } from "@/src/lib/ayni-api-fetch";
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -49,13 +50,13 @@ export function FamilyReportGenerator({ students, initialStudentId = "", classro
     if (selectedStart) query.set("periodStart", selectedStart);
     if (selectedEnd) query.set("periodEnd", selectedEnd);
     void (async () => {
-      const response = await fetch(`${localDatabaseApiUrl}/api/family-reports/options?${query}`);
+      const response = await apiFetch(`${localDatabaseApiUrl}/api/family-reports/options?${query}`);
       const data = await response.json() as OptionsResponse & { error?: string };
       if (!response.ok) throw new Error(data.error ?? "No se pudieron cargar las conclusiones confirmadas.");
       if (!live) return;
       setCalendar(data.calendar); setOptions(data.competencies); setLoadError(false); setMessage("");
       if (!selectedStart || !selectedEnd) { setPeriodStart(data.period_start); setPeriodEnd(data.period_end); return; }
-      const records = await fetch(`${localDatabaseApiUrl}/api/family-reports?${query}`);
+      const records = await apiFetch(`${localDatabaseApiUrl}/api/family-reports?${query}`);
       const listed = await records.json() as { reports?: Stored[]; error?: string };
       if (!records.ok) throw new Error(listed.error ?? "No se pudieron cargar los informes.");
       if (!live) return;
@@ -69,7 +70,7 @@ export function FamilyReportGenerator({ students, initialStudentId = "", classro
 
   function resetEditor() { setStored(null); setProposal(null); setGenerationId(null); setSelectedIds([]); setHistory([]); setOptions([]); setLoadError(false); setMessage(""); }
   async function send(path: string, method: "POST" | "PUT", body?: object) {
-    const response = await fetch(`${localDatabaseApiUrl}${path}`, { method, ...(body ? { headers: { "content-type": "application/json" }, body: JSON.stringify(body) } : {}) });
+    const response = await apiFetch(`${localDatabaseApiUrl}${path}`, { method, ...(body ? { headers: { "content-type": "application/json" }, body: JSON.stringify(body) } : {}) });
     const data = await response.json() as Record<string, unknown> & { error?: string };
     if (!response.ok) throw new Error(data.error ?? "No se pudo completar la operación.");
     return data;

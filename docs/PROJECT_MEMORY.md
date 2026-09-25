@@ -6,6 +6,8 @@ Proyecto nuevo iniciado el 20 de septiembre de 2026. Existe un shell responsive 
 
 ## Alcance implementado
 
+- Identidad por petición (2026-09-24, Commit 15): el servidor tiene un límite común de Auth con contexto `teacherId/requestId/db`. Modo Supabase verifica cada token contra Auth; el login de staging usa correo/contraseña y cookie HTTP-only. Los selectores de aula, niño y período se comprueban contra la docente verificada; servicios existentes y descargas quedan detrás del mismo límite. Las pruebas simulan Auth y conservan PGlite; aún no se conecta PostgreSQL/Supabase real ni Storage. Ver ADR 065.
+
 - Hardening RLS Supabase (2026-09-24, Commit 14): 40 tablas privadas tienen lectura autenticada restringida al árbol propio y ninguna escritura directa de cliente. Las funciones de pertenencia `SECURITY DEFINER` están en `private` con `search_path` vacío; se cerró `EXECUTE` público. Se retiraron escrituras cliente en buckets de logo y evidencias. La prueba local ejecuta las migraciones completas y simula dos docentes; aún no hay Auth ni despliegue. Ver ADR 064.
 
 - Integridad de versiones (2026-09-24, Commit 13): Plan Anual, proyecto/unidad, actividad, criterio, valoración y cierre usan revisión esperada y operaciones serializadas en servidor. Proyecto, actividad y criterio tienen linaje explícito; sus descendientes históricos conservan los IDs originales. Las migraciones aditivas local/Supabase auditan relaciones cruzadas antes de añadir restricciones. La confirmación de una valoración vuelve a calcular la huella de evidencias dentro de la transacción y el cierre conserva un snapshot del contexto institucional y docente. Las solicitudes obsoletas reciben `409 version_conflict`; no se conectó Supabase real. Ver ADR 044.

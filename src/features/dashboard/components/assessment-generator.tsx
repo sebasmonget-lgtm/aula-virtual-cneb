@@ -1,4 +1,5 @@
 "use client";
+import { apiFetch } from "@/src/lib/ayni-api-fetch";
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -41,7 +42,7 @@ export function AssessmentGenerator({ students, initialStudentId = "", initialCo
   useEffect(() => {
     if (!studentId) return;
     let live = true;
-    void fetch(`${localDatabaseApiUrl}/api/assessments/options?studentId=${encodeURIComponent(studentId)}`).then(async (response) => {
+    void apiFetch(`${localDatabaseApiUrl}/api/assessments/options?studentId=${encodeURIComponent(studentId)}`).then(async (response) => {
       if (!response.ok) throw new Error("No se pudieron cargar las competencias.");
       return response.json() as Promise<{ competencies: Option[]; calendar: { starts_on: string; ends_on: string } }>;
     }).then((data) => { if (live) { setOptions(data.competencies); if (studentId === initialStudentId && initialCompetencyId && data.competencies.some((item) => item.competency_v4_id === initialCompetencyId)) setCompetencyId(initialCompetencyId); setStart(data.calendar.starts_on.slice(0, 10)); setEnd(data.calendar.ends_on.slice(0, 10)); setLoadingContext(true); setOptionsError(false); setMessage(""); } }).catch((error: Error) => { if (live) { setOptionsError(true); setMessage(error.message); setMessageTone("error"); } }).finally(() => { if (live) setLoadingOptions(false); });
@@ -53,8 +54,8 @@ export function AssessmentGenerator({ students, initialStudentId = "", initialCo
     let live = true;
     const query = new URLSearchParams({ studentId, competencyId, periodStart: start, periodEnd: end });
     void Promise.all([
-      fetch(`${localDatabaseApiUrl}/api/assessments?studentId=${encodeURIComponent(studentId)}&competencyId=${encodeURIComponent(competencyId)}`).then((response) => { if (!response.ok) throw new Error("No se pudieron cargar los análisis."); return response.json() as Promise<{ assessments?: Stored[] }>; }),
-      fetch(`${localDatabaseApiUrl}/api/assessments/context?${query}`).then((response) => { if (!response.ok) throw new Error("No se pudieron cargar las evidencias del periodo."); return response.json() as Promise<{ timeline?: TimelineItem[]; latest_confirmed?: Stored }>; }),
+      apiFetch(`${localDatabaseApiUrl}/api/assessments?studentId=${encodeURIComponent(studentId)}&competencyId=${encodeURIComponent(competencyId)}`).then((response) => { if (!response.ok) throw new Error("No se pudieron cargar los análisis."); return response.json() as Promise<{ assessments?: Stored[] }>; }),
+      apiFetch(`${localDatabaseApiUrl}/api/assessments/context?${query}`).then((response) => { if (!response.ok) throw new Error("No se pudieron cargar las evidencias del periodo."); return response.json() as Promise<{ timeline?: TimelineItem[]; latest_confirmed?: Stored }>; }),
     ]).then(([records, context]) => {
       if (!live) return;
       const matches = (records.assessments ?? []).filter((item) => item.period_start === start && item.period_end === end);
@@ -73,7 +74,7 @@ export function AssessmentGenerator({ students, initialStudentId = "", initialCo
   useEffect(() => {
     if (!studentId || !competencyId) return;
     let live = true;
-    void fetch(`${localDatabaseApiUrl}/api/assessments?studentId=${encodeURIComponent(studentId)}&competencyId=${encodeURIComponent(competencyId)}`).then((response) => { if (!response.ok) throw new Error("No se pudieron recuperar los análisis anteriores."); return response.json() as Promise<{ assessments?: Stored[] }>; }).then((data) => {
+    void apiFetch(`${localDatabaseApiUrl}/api/assessments?studentId=${encodeURIComponent(studentId)}&competencyId=${encodeURIComponent(competencyId)}`).then((response) => { if (!response.ok) throw new Error("No se pudieron recuperar los análisis anteriores."); return response.json() as Promise<{ assessments?: Stored[] }>; }).then((data) => {
       if (!live) return;
       const current = data.assessments?.find((item) => item.status === "draft") ?? data.assessments?.find((item) => item.status === "active");
       if (current) { setStart(current.period_start); setEnd(current.period_end); setLoadingContext(true); }
@@ -84,7 +85,7 @@ export function AssessmentGenerator({ students, initialStudentId = "", initialCo
   async function generate() {
     setBusy(true); setOperation("generate"); setMessage("");
     try {
-      const response = await fetch(`${localDatabaseApiUrl}/api/ai/assessments/generate`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ studentId, competencyId, periodStart: start, periodEnd: end }) });
+      const response = await apiFetch(`${localDatabaseApiUrl}/api/ai/assessments/generate`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ studentId, competencyId, periodStart: start, periodEnd: end }) });
       const data = await response.json() as { error?: string; proposal: Proposal; generation_id: string };
       if (!response.ok) throw new Error(data.error ?? "No se pudo preparar el análisis.");
       setProposal(data.proposal); setGenerationId(data.generation_id);
@@ -97,7 +98,7 @@ export function AssessmentGenerator({ students, initialStudentId = "", initialCo
     try {
       const endpoint = stored ? `/api/assessments/${stored.id}` : "/api/assessments";
       const body = stored ? { proposal, ...(generationId ? { generationId } : {}) } : { studentId, competencyId, periodStart: start, periodEnd: end, proposal, generationId };
-      const response = await fetch(`${localDatabaseApiUrl}${endpoint}`, { method: stored ? "PUT" : "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+      const response = await apiFetch(`${localDatabaseApiUrl}${endpoint}`, { method: stored ? "PUT" : "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
       const data = await response.json() as { error?: string; id: string };
       if (!response.ok) throw new Error(data.error ?? "No se pudo guardar el borrador.");
       setStored({ id: data.id, period_start: start, period_end: end, version: stored?.version ?? 1, details: proposal, status: "draft", teacher_confirmed_at: null, evidence_count: timeline.length });
@@ -108,7 +109,7 @@ export function AssessmentGenerator({ students, initialStudentId = "", initialCo
     if (!stored || !proposal || hasUnsavedChanges || contextError) return;
     setBusy(true); setOperation("confirm"); setMessage("");
     try {
-      const response = await fetch(`${localDatabaseApiUrl}/api/assessments/${stored.id}/confirm`, { method: "POST" });
+      const response = await apiFetch(`${localDatabaseApiUrl}/api/assessments/${stored.id}/confirm`, { method: "POST" });
       const data = await response.json() as { error?: string; teacher_confirmed_at: string };
       if (!response.ok) throw new Error(data.error ?? "No se pudo confirmar el análisis.");
       setStored({ ...stored, status: "active", teacher_confirmed_at: data.teacher_confirmed_at });

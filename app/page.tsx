@@ -1,5 +1,5 @@
-import { TeacherWorkspace } from "@/src/features/dashboard/components/teacher-workspace";
+import { AuthGate } from "@/src/features/dashboard/components/auth-gate";
 
 export default function Home() {
-  return <TeacherWorkspace />;
+  return <AuthGate />;
 }

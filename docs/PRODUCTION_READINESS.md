@@ -1,8 +1,8 @@
-# Preparación para piloto de Ayni Aula (2026-09-22)
+# Preparación para piloto de Ayni Aula (actualizado 2026-09-24)
 
 ## Estado y arquitectura
 
-**Clasificación: apto para ensayo local con datos ficticios. No apto aún para datos reales.** La interfaz usa el API de `scripts/local-db-server.mjs` en `127.0.0.1`, PGlite persistente y la Knowledge Base v4. El servidor construye los bundles, decide el modelo con el router v4, valida las salidas y conserva los metadatos de generación. No se aplicaron migraciones a Supabase, no se conectó Auth y no se hizo despliegue. El servidor local usa `AYNI_LOCAL_TEACHER_ID` como identidad *de simulación del proceso*, no como autorización de una petición. No debe exponerse en una red ni desplegarse como backend real.
+**Clasificación: apto para ensayo local con datos ficticios. No apto aún para datos reales.** La interfaz usa el API de `scripts/local-db-server.mjs`, PGlite persistente y la Knowledge Base v4. El servidor construye los bundles, decide el modelo con el router v4, valida las salidas y conserva los metadatos de generación. La capa común de Auth verifica cada petición en modo Supabase; se ha probado contra un servidor Auth simulado, todavía con PGlite. No se aplicaron migraciones a Supabase real, no se conectaron PostgreSQL ni Storage reales y no se hizo despliegue. `AYNI_LOCAL_TEACHER_ID` solo opera en modo local/PGlite ligado a loopback.
 
 La cadena implementada es diagnóstico → plan anual → proyecto/unidad → actividad → criterio → evidencia observada → assessment → conclusión descriptiva → informe familiar. Cada salida de IA es una propuesta; los hechos pedagógicos usados en assessments e informes requieren confirmación docente. `family_report` comunica conclusiones confirmadas; no hace un assessment nuevo.
 
@@ -15,6 +15,7 @@ La cadena implementada es diagnóstico → plan anual → proyecto/unidad → ac
 - RLS añadida a las tres tablas del Plan Anual y las tres tablas de referencia curricular que carecían de ella. Las tablas de referencia son solo lectura para usuarios autenticados. La suite comprueba cobertura de RLS para todas las tablas públicas creadas en migraciones. RLS **no está probado contra Supabase real**.
 - Índices únicos de versión para assessment y conclusión; los drafts/actives ya tenían índices únicos parciales. Un índice nuevo protege también el único borrador de Plan Anual por aula y año. El cálculo `max(version)+1` conserva una posible colisión concurrente, que ahora falla de forma segura por constraint y debe recibir manejo/reintento transaccional en el backend real. Antes de aplicar el índice anual a una base con datos existentes, detectar y resolver duplicados de borrador tras un respaldo; la migración no los elimina.
 - La exportación local con datos de menores está deshabilitada salvo `AYNI_ALLOW_LOCAL_EXPORT=1`; sigue limitada a loopback y a procesos sin `Origin`. La importación offline ya reconoce assessment, conclusión e informe familiar. El importador actual exige una sola identidad local, revisión explícita del usuario Auth destino y revisión curricular; las fotos no se transfieren automáticamente.
+- En modo Supabase, el límite HTTP valida la sesión con `/auth/v1/user` en cada petición, produce `teacherId/requestId/db` y comprueba selectores de recursos antes de ejecutar los servicios. El navegador usa cookie HTTP-only tras el acceso con correo y contraseña. La descarga Word se probó con un documento propio y otro ajeno; `/save-local` queda solo para PGlite local.
 - Eventos operativos de fallos inesperados y Storage registran códigos y request IDs, sin volcar errores crudos, claves, contextos, fotos ni notas. Los errores controlados de generación aún necesitan trazas sanitizadas más completas en el backend real.
 
 ## Configuración local
@@ -36,7 +37,7 @@ Los snapshots v4 conservan fuentes y estados pedagógicos; los informes familiar
 
 ### Bloqueantes para un piloto con datos reales
 
-1. Implementar backend real con identidad por petición derivada de Auth verificada. El API PGlite actual comparte una identidad por proceso y no es una frontera de seguridad multiusuario. Sustituir repositorios locales sin duplicar reglas de negocio ni confiar en IDs de cliente.
+1. Conectar los repositorios del backend a PostgreSQL/Supabase real y validar la capa de Auth existente contra sesiones reales, sin duplicar reglas de negocio. Las pruebas actuales usan Auth simulado y PGlite, por lo que aún no demuestran aislamiento de staging.
 2. Aplicar migraciones en un proyecto **nuevo** de Supabase staging y verificar RLS con dos usuarios reales en todas las rutas; el test local de dos docentes demuestra separación por consultas de aula, pero **no** equivale a una prueba de Auth/RLS real.
 3. Conectar el adaptador privado de Supabase Storage para fotos de evidencia y respaldos de entrevista, probar lectura/escritura/borrado cruzados y estrategia de transferencia. El bucket/políticas de evidencia están definidos pero no ejecutados; el respaldo de entrevista requiere bucket/políticas nuevos.
 4. Configurar backups y probar restauración, gestión de secretos, entorno de despliegue y logs sanitizados antes de ingresar datos de menores.
@@ -58,14 +59,14 @@ Los snapshots v4 conservan fuentes y estados pedagógicos; los informes familiar
 1. Crear cuentas/proyectos **nuevos** de Supabase y hosting. Configurar URL, anon key y service role solo en servidor; preparar OpenAI con clave de servidor y límites. No reutilizar cuentas existentes.
 2. Respaldar la base local antes de cualquier transferencia. Revisar que no haya datos demo ni secretos. Comprobar que export/import incluyen las tablas esperadas y que cada docente se mapea explícitamente a un `auth.users.id` válido.
 3. Aplicar todas las migraciones Supabase en orden lexicográfico, incluida `202609230004_diagnostic_sources.sql`, en una instancia vacía. Revisar FKs, índices, estados y políticas. Verificar la tabla `ai_pending_generations` solo con rol de servidor. No subir el JSON exportado a un repositorio.
-4. Integrar Auth y un API real que resuelva `teacher_id = auth.uid()` por petición, verifique pertenencia aula→alumno→actividad→criterio→evidencia y conserve la lógica v4 existente. RLS es segunda barrera; no confiar solo en la UI.
+4. Conectar el API que ya obtiene `teacherId` desde una sesión verificada a PostgreSQL/Supabase real; repetir el aislamiento con dos usuarias Auth reales y RLS como segunda barrera. Conservar la lógica v4 existente.
 5. Integrar el bucket `student-evidence` privado. Probar acceso docente propio, denegación a otro docente, URL firmada de corta duración si se implementa vista, límite de 3 MB y MIME, borrado y respaldo. Mantener multimedia fuera del provider.
 6. Configurar backups automáticos y hacer una restauración de prueba; fijar política de retención y procedimiento de rollback. Para rollback de código, volver al commit anterior; para esquema, restaurar backup verificado o aplicar migración compensatoria nueva, nunca editar migraciones ya aplicadas.
 7. Ejecutar smoke manual con datos ficticios: alta de dos docentes/aulas, CSV, diagnóstico, plan anual, proyecto/unidad, actividad, criterio, evidencia, assessment, conclusión e informe familiar. Probar generación mock primero; cualquier llamada real al proveedor requiere autorización separada. Verificar rechazo cruzado de lectura/escritura en alumnos, planificación, criterios, fotos, assessments, conclusiones e informes; repetir en móvil, reload y errores de red.
 
-## Traspaso exacto de la identidad local al backend multiusuario
+## Identidad por petición y siguiente traspaso al backend real
 
-El API local fija `teacherId` una sola vez desde `AYNI_LOCAL_TEACHER_ID` en `scripts/local-db-server.mjs`. Ese valor no autentica ninguna petición. Al migrar a staging hay que resolver y verificar la identidad de **cada petición** antes del router, pasar ese ID a los servicios existentes y rechazar peticiones sin sesión. Los IDs de aula, año, período, estudiante, plan, experiencia, actividad y documento enviados por el navegador son selectores, nunca autorización. No se debe sustituir la comprobación de propiedad del servidor por RLS sola. El API local y su endpoint de guardar Word en Descargas no deben publicarse como backend multiusuario.
+El modo local usa `AYNI_LOCAL_TEACHER_ID` solo en loopback para PGlite. El modo Supabase ya resuelve y verifica la identidad de **cada petición** antes del router, pasa el ID confirmado a los servicios existentes y rechaza peticiones sin sesión. Los IDs de aula, año, período, estudiante, plan, experiencia, actividad y documento enviados por el navegador son selectores, nunca autorización. Falta conectar PostgreSQL/Supabase real y volver a probar con dos cuentas reales. El endpoint de guardar Word en Descargas no está disponible en modo Supabase.
 
 | Ruta o grupo | Comprobación actual en servidor | Trabajo de staging |
 | --- | --- | --- |
@@ -85,7 +86,7 @@ Las migraciones Supabase preparan RLS para las tablas nuevas de períodos, alcan
 | Pipeline pedagógico v4 y confirmación docente | Implementado y probado localmente |
 | Onboarding e importación CSV | Implementado localmente; probar en staging |
 | Pending generations durable | Implementado en PGlite/PostgreSQL; verificar en backend real |
-| Auth por petición e aislamiento de dos docentes | **PENDIENTE DE STAGING** |
+| Auth por petición e aislamiento de dos docentes | Capa y pruebas con Auth simulado implementadas; **PENDIENTE DE STAGING REAL** |
 | RLS de todas las tablas sensibles | SQL preparado y cobertura estática; **PENDIENTE DE STAGING** |
 | Storage privado y permisos por estudiante | SQL/adaptador local preparados; **PENDIENTE DE STAGING** |
 | Backups y restauración | **PENDIENTE DE STAGING** |

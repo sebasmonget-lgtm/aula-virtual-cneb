@@ -1,4 +1,5 @@
 "use client";
+import { apiFetch } from "@/src/lib/ayni-api-fetch";
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -18,7 +19,7 @@ export function PedagogicalCoverage({classroomId,periodId,onPlan,onPrepareActivi
   const coverage=loaded?.key===key?loaded.coverage:null;
   const error=loadError?.key===key?loadError.message:"";
   useEffect(()=>{const controller=new AbortController();
-    fetch(`${localDatabaseApiUrl}/api/period-evaluations/coverage?${new URLSearchParams({classroomId,periodId})}`,{signal:controller.signal,cache:"no-store"})
+    apiFetch(`${localDatabaseApiUrl}/api/period-evaluations/coverage?${new URLSearchParams({classroomId,periodId})}`,{signal:controller.signal,cache:"no-store"})
       .then(async(response)=>{const value=await response.json() as Coverage&{error?:string};if(!response.ok)throw new Error(value.error??"No se pudo cargar la cobertura.");return value;})
       .then((value)=>{setLoaded({key,coverage:value});setLoadError(null);}).catch((cause)=>{if(!controller.signal.aborted)setLoadError({key,message:cause instanceof Error?cause.message:"No se pudo cargar la cobertura."});});
     return()=>controller.abort();},[classroomId,periodId,key]);

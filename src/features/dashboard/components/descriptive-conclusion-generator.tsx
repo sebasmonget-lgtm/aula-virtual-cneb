@@ -1,4 +1,5 @@
 "use client";
+import { apiFetch } from "@/src/lib/ayni-api-fetch";
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -40,7 +41,7 @@ export function DescriptiveConclusionGenerator({ students, initialStudentId = ""
   useEffect(() => {
     if (!studentId) return;
     let live = true;
-    void fetch(`${localDatabaseApiUrl}/api/descriptive-conclusions/options?studentId=${encodeURIComponent(studentId)}`).then(async (response) => {
+    void apiFetch(`${localDatabaseApiUrl}/api/descriptive-conclusions/options?studentId=${encodeURIComponent(studentId)}`).then(async (response) => {
       if (!response.ok) throw new Error("No se pudieron cargar los análisis confirmados.");
       return response.json() as Promise<{ assessments: AssessmentOption[] }>;
     }).then((data) => { if (live) { const initial = studentId === initialStudentId ? data.assessments.find((item) => item.competency_v4_id === initialCompetencyId) : null; const selectedId = initial?.id ?? data.assessments[0]?.id ?? ""; setAssessments(data.assessments); setAssessmentId(selectedId); setLoadingContext(Boolean(selectedId)); setOptionsError(false); setMessage(""); } }).catch((error: Error) => { if (live) { setOptionsError(true); setAssessments([]); setMessage(error.message); setMessageTone("error"); } }).finally(() => { if (live) setLoadingOptions(false); });
@@ -52,8 +53,8 @@ export function DescriptiveConclusionGenerator({ students, initialStudentId = ""
     let live = true;
     const query = new URLSearchParams({ studentId, assessmentId });
     void Promise.all([
-      fetch(`${localDatabaseApiUrl}/api/descriptive-conclusions?${query}`).then((response) => { if (!response.ok) throw new Error("No se pudieron cargar las conclusiones."); return response.json() as Promise<{ conclusions?: Stored[]; error?: string }>; }),
-      fetch(`${localDatabaseApiUrl}/api/descriptive-conclusions/context?assessmentId=${encodeURIComponent(assessmentId)}`).then((response) => { if (!response.ok) throw new Error("No se pudieron cargar las evidencias de soporte."); return response.json() as Promise<{ evidence?: Evidence[]; error?: string }>; }),
+      apiFetch(`${localDatabaseApiUrl}/api/descriptive-conclusions?${query}`).then((response) => { if (!response.ok) throw new Error("No se pudieron cargar las conclusiones."); return response.json() as Promise<{ conclusions?: Stored[]; error?: string }>; }),
+      apiFetch(`${localDatabaseApiUrl}/api/descriptive-conclusions/context?assessmentId=${encodeURIComponent(assessmentId)}`).then((response) => { if (!response.ok) throw new Error("No se pudieron cargar las evidencias de soporte."); return response.json() as Promise<{ evidence?: Evidence[]; error?: string }>; }),
     ]).then(([records, context]) => {
       if (!live) return;
       if (records.error || context.error) throw new Error(records.error ?? context.error);
@@ -68,7 +69,7 @@ export function DescriptiveConclusionGenerator({ students, initialStudentId = ""
   async function generate() {
     setBusy(true); setOperation("generate"); setMessage("");
     try {
-      const response = await fetch(`${localDatabaseApiUrl}/api/ai/descriptive-conclusions/generate`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ studentId, assessmentId, teacherNotes }) });
+      const response = await apiFetch(`${localDatabaseApiUrl}/api/ai/descriptive-conclusions/generate`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ studentId, assessmentId, teacherNotes }) });
       const data = await response.json() as { proposal: Conclusion; generation_id: string; error?: string };
       if (!response.ok) throw new Error(data.error ?? "No se pudo preparar la conclusión.");
       setProposal(data.proposal); setGenerationId(data.generation_id);
@@ -79,7 +80,7 @@ export function DescriptiveConclusionGenerator({ students, initialStudentId = ""
     if (!proposal) return;
     setBusy(true); setOperation("save"); setMessage("");
     try {
-      const response = await fetch(`${localDatabaseApiUrl}${stored ? `/api/descriptive-conclusions/${stored.id}` : "/api/descriptive-conclusions"}`, { method: stored ? "PUT" : "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(stored ? { proposal, ...(generationId ? { generationId } : {}) } : { studentId, assessmentId, proposal, generationId }) });
+      const response = await apiFetch(`${localDatabaseApiUrl}${stored ? `/api/descriptive-conclusions/${stored.id}` : "/api/descriptive-conclusions"}`, { method: stored ? "PUT" : "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(stored ? { proposal, ...(generationId ? { generationId } : {}) } : { studentId, assessmentId, proposal, generationId }) });
       const data = await response.json() as { id: string; error?: string };
       if (!response.ok) throw new Error(data.error ?? "No se pudo guardar la conclusión.");
       setStored({ id: data.id, status: "draft", details: proposal, teacher_confirmed_at: null, version: stored?.version ?? 1 });
@@ -90,7 +91,7 @@ export function DescriptiveConclusionGenerator({ students, initialStudentId = ""
     if (!stored || hasUnsavedChanges) return;
     setBusy(true); setOperation("confirm"); setMessage("");
     try {
-      const response = await fetch(`${localDatabaseApiUrl}/api/descriptive-conclusions/${stored.id}/confirm`, { method: "POST" });
+      const response = await apiFetch(`${localDatabaseApiUrl}/api/descriptive-conclusions/${stored.id}/confirm`, { method: "POST" });
       const data = await response.json() as { teacher_confirmed_at: string; error?: string };
       if (!response.ok) throw new Error(data.error ?? "No se pudo confirmar la conclusión.");
       setStored({ ...stored, status: "active", teacher_confirmed_at: data.teacher_confirmed_at });

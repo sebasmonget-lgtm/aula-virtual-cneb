@@ -1,4 +1,5 @@
 "use client";
+import { apiFetch } from "@/src/lib/ayni-api-fetch";
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -35,7 +36,7 @@ export function CriterionEvidenceGenerator({ activityId, activityTitle, competen
 
   useEffect(() => {
     let cancelled = false;
-    void fetch(`${localDatabaseApiUrl}/api/activity-criteria?activityId=${activityId}`)
+    void apiFetch(`${localDatabaseApiUrl}/api/activity-criteria?activityId=${activityId}`)
       .then((response) => { if (!response.ok) throw new Error("No se pudo cargar el criterio de esta actividad."); return response.json() as Promise<{ criteria?: StoredCriterion[] }>; })
       .then((data) => {
         if (cancelled) return;
@@ -57,7 +58,7 @@ export function CriterionEvidenceGenerator({ activityId, activityTitle, competen
     if (operation) return;
     setOperation("generate"); setMessage("");
     try {
-      const response = await fetch(`${localDatabaseApiUrl}/api/ai/activity-criteria/generate`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ activityId, note }) });
+      const response = await apiFetch(`${localDatabaseApiUrl}/api/ai/activity-criteria/generate`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ activityId, note }) });
       const data = await response.json() as { error?: string; proposal?: Proposal; generation_id?: string };
       if (!response.ok || !data.proposal) throw new Error(data.error ?? "No pudimos generar un criterio válido.");
       setProposal(data.proposal); setGenerationId(data.generation_id ?? null); setOpened(true);
@@ -70,7 +71,7 @@ export function CriterionEvidenceGenerator({ activityId, activityTitle, competen
     if (!proposal || operation) return;
     setOperation("save"); setMessage("");
     try {
-    const response = await fetch(stored ? `${localDatabaseApiUrl}/api/activity-criteria/${stored.id}` : `${localDatabaseApiUrl}/api/activity-criteria`, {
+    const response = await apiFetch(stored ? `${localDatabaseApiUrl}/api/activity-criteria/${stored.id}` : `${localDatabaseApiUrl}/api/activity-criteria`, {
       method: stored ? "PUT" : "POST", headers: { "content-type": "application/json" },
       body: JSON.stringify(stored ? { proposal, generationId,expectedRevision:stored.revision } : { activityId, generationId, proposal }),
     });
@@ -87,7 +88,7 @@ export function CriterionEvidenceGenerator({ activityId, activityTitle, competen
     if (!stored || operation || hasUnsavedChanges) return;
     setOperation("confirm"); setMessage("");
     try {
-    const response = await fetch(`${localDatabaseApiUrl}/api/activity-criteria/${stored.id}/confirm`, { method: "POST",headers:{"content-type":"application/json"},body:JSON.stringify({expectedRevision:stored.revision}) });
+    const response = await apiFetch(`${localDatabaseApiUrl}/api/activity-criteria/${stored.id}/confirm`, { method: "POST",headers:{"content-type":"application/json"},body:JSON.stringify({expectedRevision:stored.revision}) });
     const data = await response.json() as { error?: string;message?:string;revision?:number };
     if (!response.ok) throw new Error(data.message??data.error ?? "No se pudo confirmar.");
     setStored({ ...stored, status: "active",revision:data.revision??stored.revision+1 });
@@ -100,7 +101,7 @@ export function CriterionEvidenceGenerator({ activityId, activityTitle, competen
     if (!stored || stored.status !== "active" || operation) return;
     setOperation("save"); setMessage("");
     try {
-      const response = await fetch(`${localDatabaseApiUrl}/api/activity-criteria/${stored.id}/copy`, { method: "POST",headers:{"content-type":"application/json"},body:JSON.stringify({expectedRevision:stored.revision}) });
+      const response = await apiFetch(`${localDatabaseApiUrl}/api/activity-criteria/${stored.id}/copy`, { method: "POST",headers:{"content-type":"application/json"},body:JSON.stringify({expectedRevision:stored.revision}) });
       const data = await response.json() as { id?: string; version?: number;revision?:number; error?: string;message?:string };
       if (!response.ok || !data.id) throw new Error(data.message??data.error ?? "No se pudo preparar la nueva versión.");
       setStored({ id: data.id, version: data.version ?? stored.version + 1,revision:data.revision??1, status: "draft", details: stored.details, supersedes_criterion_id: stored.id });

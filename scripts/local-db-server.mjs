@@ -51,22 +51,32 @@ import { DiagnosticSourceError, loadFamilyInterview, listFamilyInterviewStatuses
 import { neutralizeAssessmentText } from "../src/lib/assessment-v4-service.mjs";
 import { loadPlanningFeedback, planningFeedbackText } from "../src/lib/planning-feedback.mjs";
 import { expectedRevision, assertRevision, conflictPayload, isVersionConflict, versionTransaction, VersionConflictError, publicErrorMessage } from "../src/lib/version-integrity.mjs";
+import { createRequestAuth, RequestAuthError } from "./request-auth.mjs";
+import { authorizeRequestSelectors, RequestAccessError } from "./request-authorization.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const dataDir = path.join(root, ".local", "pgdata");
+const dataDir = process.env.AYNI_LOCAL_DATA_DIR ? path.resolve(process.env.AYNI_LOCAL_DATA_DIR) : path.join(root, ".local", "pgdata");
 const migrationsDir = path.join(root, "local-db", "migrations");
 const assetsDir = path.join(root, ".local", "assets");
 const evidenceAssetsDir = path.join(assetsDir, "evidences");
 const evidenceStorage = createLocalPrivateEvidenceStorage(evidenceAssetsDir);
 const interviewStorage = createLocalPrivateInterviewStorage(path.join(assetsDir, "family-interviews"));
 const port = Number(process.env.AYNI_LOCAL_DB_PORT ?? 8788);
-// Local process identity only. A real backend must resolve this from verified Auth claims per request.
-const teacherId = process.env.AYNI_LOCAL_TEACHER_ID || "00000000-0000-4000-8000-000000000001";
-if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(teacherId)) throw new Error("AYNI_LOCAL_TEACHER_ID debe ser UUID.");
+const authMode = process.env.AYNI_AUTH_MODE ?? "local";
+if (process.env.NODE_ENV === "production" && authMode === "local") throw new Error("El modo local de identidad no está disponible en producción.");
+const listenHost = process.env.AYNI_API_HOST ?? "127.0.0.1";
+if (authMode === "local" && !["127.0.0.1", "localhost", "::1"].includes(listenHost)) {
+  throw new Error("El modo local de identidad solo puede escuchar en este equipo.");
+}
+const localTeacherId = authMode === "local" ? (process.env.AYNI_LOCAL_TEACHER_ID || "00000000-0000-4000-8000-000000000001") : undefined;
+const requestAuth = createRequestAuth({ mode: authMode, localTeacherId,
+  supabaseUrl: process.env.AYNI_SUPABASE_URL,
+  publishableKey: process.env.AYNI_SUPABASE_PUBLISHABLE_KEY,
+  secureCookie: process.env.AYNI_AUTH_COOKIE_SECURE !== "0" });
 const corsMethods = "GET,POST,PUT,OPTIONS";
 const allowedOrigins = new Set([
-  "http://localhost:5173",
-  "http://127.0.0.1:5173",
+  ...(authMode === "local" ? ["http://localhost:5173", "http://127.0.0.1:5173"] : []),
+  ...(process.env.AYNI_ALLOWED_ORIGIN ? [process.env.AYNI_ALLOWED_ORIGIN] : []),
 ]);
 const exportTables = [
   "profiles", "curriculum_source_documents", "curriculum_versions", "levels", "cycles", "age_grades", "curriculum_areas",
@@ -86,7 +96,7 @@ await migrate();
 const pendingAIGenerations = createPendingAIGenerationsStore(db);
 await pendingAIGenerations.pruneExpired();
 let diagnosticClassificationQueue = Promise.resolve();
-function queueDiagnosticClassification(id, studentId) {
+function queueDiagnosticClassification(id, studentId, teacherId) {
   diagnosticClassificationQueue = diagnosticClassificationQueue.then(async () => {
     try {
       await markSpontaneousNeedsReview(db, teacherId, id);
@@ -97,10 +107,10 @@ function queueDiagnosticClassification(id, studentId) {
     }
   });
 }
-const pendingDiagnosticRows = (await db.query(`select o.id,o.student_id from diagnostic_spontaneous_observations o
+const pendingDiagnosticRows = authMode === "local" ? (await db.query(`select o.id,o.student_id from diagnostic_spontaneous_observations o
   join classrooms c on c.id=o.classroom_id where c.teacher_id=$1 and o.classification_status='pending'
-  order by o.observed_at,o.id`, [teacherId])).rows;
-for (const row of pendingDiagnosticRows) queueDiagnosticClassification(row.id, row.student_id);
+  order by o.observed_at,o.id`, [localTeacherId])).rows : [];
+for (const row of pendingDiagnosticRows) queueDiagnosticClassification(row.id, row.student_id, localTeacherId);
 
 async function migrate() {
   await db.exec(`create table if not exists local_schema_migrations (
@@ -125,14 +135,19 @@ async function migrate() {
   }
 }
 
-function send(response, status, payload, origin) {
+function send(response, status, payload, origin, extraHeaders = {}) {
   const headers = {
     "content-type": "application/json; charset=utf-8",
     "cache-control": "no-store",
     "access-control-allow-methods": corsMethods,
-    "access-control-allow-headers": "content-type",
+    "access-control-allow-headers": "content-type, authorization",
   };
-  if (origin && allowedOrigins.has(origin)) headers["access-control-allow-origin"] = origin;
+  if (origin && allowedOrigins.has(origin)) {
+    headers["access-control-allow-origin"] = origin;
+    headers["access-control-allow-credentials"] = "true";
+    headers.vary = "Origin";
+  }
+  Object.assign(headers, extraHeaders);
   response.writeHead(status, headers);
   response.end(JSON.stringify(payload));
 }
@@ -143,7 +158,11 @@ function sendAsset(response, status, body, mimeType, origin, cacheControl = "pri
     "cache-control": cacheControl,
     "x-content-type-options": "nosniff",
   };
-  if (origin && allowedOrigins.has(origin)) headers["access-control-allow-origin"] = origin;
+  if (origin && allowedOrigins.has(origin)) {
+    headers["access-control-allow-origin"] = origin;
+    headers["access-control-allow-credentials"] = "true";
+    headers.vary = "Origin";
+  }
   response.writeHead(status, headers);
   response.end(body);
 }
@@ -160,15 +179,20 @@ function safeHex(value, fallback) {
   return /^#[0-9a-f]{6}$/i.test(value ?? "") ? value : fallback;
 }
 
-async function readJson(request) {
-  let body = "";
-  for await (const chunk of request) {
-    body += chunk;
-    if (body.length > 4_200_000) throw new Error("El contenido excede el límite permitido.");
-  }
-  return JSON.parse(body || "{}");
+const parsedBodies = new WeakMap();
+function readJson(request) {
+  if (!parsedBodies.has(request)) parsedBodies.set(request, (async () => {
+    let body = "";
+    for await (const chunk of request) {
+      body += chunk;
+      if (body.length > 4_200_000) throw new Error("El contenido excede el límite permitido.");
+    }
+    return JSON.parse(body || "{}");
+  })());
+  return parsedBodies.get(request);
 }
 
+async function handleAuthenticatedRequest({ teacherId, requestId, db }, request, response) {
 async function dashboard() {
   const classroomResult = await db.query(`select id from classrooms where teacher_id = $1 and status = 'active' limit 1`, [teacherId]);
   const classroomId = classroomResult.rows[0]?.id;
@@ -471,8 +495,7 @@ const handleAssessmentRoute = createAssessmentRouteHandler({ db, annualPlanningC
 const handleDescriptiveConclusionRoute = createDescriptiveConclusionRouteHandler({ db, annualPlanningContext, readJson, send, pending: pendingAIGenerations, metadataForAudit: safeAnnualGenerationMetadata, refreshStudentContext: refreshStudentContextSnapshot });
 const handleFamilyReportRoute = createFamilyReportRouteHandler({ db, teacherId, annualPlanningContext, readJson, send, pending: pendingAIGenerations, metadataForAudit: safeAnnualGenerationMetadata });
 const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStorage, readJson, send, pending: pendingAIGenerations, metadataForAudit: safeAnnualGenerationMetadata, refreshStudentContext: refreshStudentContextSnapshot });
-const server = createServer(async (request, response) => {
-  const requestId = randomUUID();
+{
   const origin = request.headers.origin;
   const url = new URL(request.url ?? "/", `http://127.0.0.1:${port}`);
 
@@ -522,7 +545,7 @@ const server = createServer(async (request, response) => {
       return;
     }
     if (request.method === "GET" && url.pathname === "/api/export") {
-      if (origin || process.env.AYNI_ALLOW_LOCAL_EXPORT !== "1") {
+      if (authMode !== "local" || origin || process.env.AYNI_ALLOW_LOCAL_EXPORT !== "1") {
         send(response, 403, { error: "Exportación local deshabilitada." }, origin);
         return;
       }
@@ -671,7 +694,7 @@ const server = createServer(async (request, response) => {
           const saved = await recordSpontaneousObservation(db, teacherId, await readJson(request));
           await refreshStudentContextSnapshot(db, saved.student_id);
           send(response, 201, saved, origin);
-          setImmediate(() => queueDiagnosticClassification(saved.id, saved.student_id));
+          setImmediate(() => queueDiagnosticClassification(saved.id, saved.student_id, teacherId));
         } else if (request.method === "PUT" && url.pathname.endsWith("/classification")) {
           const id = url.pathname.split("/")[4];
           const saved = await correctSpontaneousClassification(db, teacherId, id, (await readJson(request)).competencyId ?? null);
@@ -767,13 +790,16 @@ const server = createServer(async (request, response) => {
       };
       if (origin && allowedOrigins.has(origin)) {
         headers["access-control-allow-origin"] = origin;
+        headers["access-control-allow-credentials"] = "true";
         headers["access-control-expose-headers"] = "content-disposition";
+        headers.vary = "Origin";
       }
       response.writeHead(200, headers);
       response.end(download.buffer);
       return;
     }
     if (request.method === "POST" && url.pathname.startsWith("/api/documents/") && url.pathname.endsWith("/save-local")) {
+      if (authMode !== "local") { send(response, 404, { error: "Ruta local no disponible." }, origin); return; }
       const parts = url.pathname.split("/");
       if (parts.length !== 6 || parts[5] !== "save-local") { send(response, 404, { error: "Documento no disponible." }, origin); return; }
       if (parts[3] === "period_closure") { send(response, 409, { error: "El Word del cierre estará disponible cuando se incorpore su plantilla definitiva." }, origin); return; }
@@ -1392,10 +1418,85 @@ const server = createServer(async (request, response) => {
     recordOperationalEvent("api_unexpected_failure", { requestId, status: 500 });
     send(response, 500, { error: "La base local no pudo completar la operación.", request_id: requestId }, origin);
   }
+}
+}
+
+const server = createServer(async (request, response) => {
+  const origin = request.headers.origin;
+  const url = new URL(request.url ?? "/", `http://127.0.0.1:${port}`);
+  if (origin && !allowedOrigins.has(origin)) {
+    send(response, 403, { error: "Origen no permitido." });
+    return;
+  }
+  if (request.method === "OPTIONS") {
+    response.writeHead(204, {
+      ...(origin && allowedOrigins.has(origin) ? {
+        "access-control-allow-origin": origin,
+        "access-control-allow-credentials": "true",
+      } : {}),
+      "access-control-allow-methods": corsMethods,
+      "access-control-allow-headers": "content-type, authorization",
+      vary: "Origin",
+    });
+    response.end();
+    return;
+  }
+  if (request.method === "GET" && url.pathname === "/health") {
+    send(response, 200, { ok: true, engine: "pglite", storage: ".local/pgdata" }, origin);
+    return;
+  }
+  if (request.method === "GET" && url.pathname === "/api/auth/config") {
+    send(response, 200, { mode: authMode }, origin);
+    return;
+  }
+  if (request.method === "POST" && url.pathname === "/api/auth/login") {
+    try {
+      const body = await readJson(request);
+      const session = await requestAuth.signIn(body.email, body.password);
+      send(response, 200, { teacherId: session.teacherId }, origin, {
+        "set-cookie": requestAuth.sessionCookie(session.token, session.expiresIn),
+      });
+    } catch (error) {
+      const status = error instanceof RequestAuthError ? error.status : 401;
+      send(response, status, { error: status === 503 ? "No se pudo verificar el servicio de acceso." : "Correo o contraseña inválidos." }, origin);
+    }
+    return;
+  }
+  if (request.method === "POST" && url.pathname === "/api/auth/logout") {
+    await requestAuth.signOut(request);
+    send(response, 200, { ok: true }, origin, { "set-cookie": requestAuth.clearCookie() });
+    return;
+  }
+  let context;
+  try { context = await requestAuth.resolve(request, db); }
+  catch (error) {
+    const status = error instanceof RequestAuthError ? error.status : 401;
+    send(response, status, { error: status === 503 ? "No se pudo verificar la sesión." : "Inicia sesión para continuar." }, origin);
+    return;
+  }
+  if (context.authMode === "supabase" && context.tokenSource === "cookie" && !["GET", "HEAD"].includes(request.method) && !origin) {
+    send(response, 403, { error: "Origen requerido para esta operación." }, origin);
+    return;
+  }
+  if (request.method === "GET" && url.pathname === "/api/auth/session") {
+    send(response, 200, { teacherId: context.teacherId }, origin);
+    return;
+  }
+  if (context.authMode === "supabase") {
+    try {
+      const body = ["POST", "PUT", "PATCH", "DELETE"].includes(request.method) ? await readJson(request) : null;
+      await authorizeRequestSelectors({ db: context.db, teacherId: context.teacherId, url, body });
+    } catch (error) {
+      if (error instanceof RequestAccessError) send(response, error.status, { error: error.message }, origin);
+      else send(response, 400, { error: "Solicitud inválida." }, origin);
+      return;
+    }
+  }
+  await handleAuthenticatedRequest(context, request, response);
 });
 
-server.listen(port, "127.0.0.1", () => {
-  console.log(`Ayni local database ready at http://127.0.0.1:${port}`);
+server.listen(port, listenHost, () => {
+  console.log(`Ayni API ready at http://${listenHost}:${port} (${authMode})`);
 });
 
 for (const signal of ["SIGINT", "SIGTERM"]) {

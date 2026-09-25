@@ -1,4 +1,5 @@
 "use client";
+import { apiFetch } from "@/src/lib/ayni-api-fetch";
 
 import { useCallback, useEffect, useState } from "react";
 import { ArrowRight, Check, ChevronDown, FileDown, Sparkles } from "lucide-react";
@@ -26,7 +27,7 @@ const studentName = (student: Student) => [student.preferred_name || student.fir
 const formatDate = (date: string) => new Date(`${date.slice(0, 10)}T12:00:00`).toLocaleDateString("es-PE");
 
 async function api<T>(path: string, body?: unknown): Promise<T> {
-  const response = await fetch(`${localDatabaseApiUrl}${path}`, { method: body === undefined ? "GET" : "POST", headers: body === undefined ? undefined : { "content-type": "application/json" }, body: body === undefined ? undefined : JSON.stringify(body), cache: "no-store" });
+  const response = await apiFetch(`${localDatabaseApiUrl}${path}`, { method: body === undefined ? "GET" : "POST", headers: body === undefined ? undefined : { "content-type": "application/json" }, body: body === undefined ? undefined : JSON.stringify(body), cache: "no-store" });
   const payload = await response.json() as T & { error?: string;message?:string };
   if (!response.ok) throw new Error(payload.message??payload.error ?? "No se pudo completar la acción.");
   return payload;

@@ -1,3 +1,5 @@
+import { apiFetch } from "./ayni-api-fetch";
+import { localDatabaseApiUrl } from "./local-database";
 export type AIActivityProposal = {
   title: string;
   purpose: string;
@@ -13,10 +15,10 @@ export type AIActivityProposal = {
 
 export type AIActivityCompetencyOption = { id: string; name: string };
 
-const apiUrl = process.env.NEXT_PUBLIC_LOCAL_DATABASE_URL ?? "http://127.0.0.1:8788";
+const apiUrl = localDatabaseApiUrl;
 
 export async function loadAIActivityCompetencyOptions() {
-  const response = await fetch(`${apiUrl}/api/ai/activity/options`, { cache: "no-store" });
+  const response = await apiFetch(`${apiUrl}/api/ai/activity/options`, { cache: "no-store" });
   const payload = await response.json() as { competencies?: AIActivityCompetencyOption[]; error?: string };
   if (!response.ok) throw new Error(payload.error ?? "No se pudieron cargar las competencias.");
   return payload.competencies ?? [];
@@ -28,7 +30,7 @@ export async function generateLocalAIActivity(input: {
   materials: string[];
   competencyId?: string | null;
 }) {
-  const response = await fetch(`${apiUrl}/api/ai/activity/generate`, {
+  const response = await apiFetch(`${apiUrl}/api/ai/activity/generate`, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify(input),
