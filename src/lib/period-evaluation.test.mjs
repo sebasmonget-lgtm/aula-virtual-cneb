@@ -262,6 +262,28 @@ test("información insuficiente queda guardada sin nivel y no se convierte en C"
   } finally { await f.db.close(); }
 });
 
+test("una observación sustantiva admite valoración docente justificada sin umbral automático", async () => {
+  const f=await fixture();
+  try {
+    await f.db.query(`delete from evidences where id=$1`,["00000000-0000-4000-8000-000000000702"]);
+    const period=(await f.call("GET","/api/period-evaluations/workspace")).body.periods[0];
+    const query=`classroomId=${classId}&periodId=${period.id}&studentId=${studentA}&competencyId=COM_ORAL`;
+    const detail=(await f.call("GET",`/api/period-evaluations/detail?${query}`)).body;
+    assert.equal(detail.state,"pending");
+    const input={classroomId:classId,periodId:period.id,studentId:studentA,competencyId:"COM_ORAL",
+      evidenceFingerprint:detail.evidence_fingerprint,expectedDraftRevision:null,
+      teacherAnalysis:"Durante el juego explicó con detalle su propuesta y respondió a las preguntas del grupo.",
+      conclusionText:"Explica sus ideas en el juego y puede seguir compartiéndolas en grupos pequeños.",
+      achievementLevel:"A",provisionalLevel:"A",
+      teacherJustification:"La descripción concreta de esta situación permite valorar la comunicación observada."};
+    const saved=await f.call("POST","/api/period-evaluations/save-draft",input);
+    assert.equal(saved.status,200,JSON.stringify(saved.body));
+    const confirmed=await f.call("POST","/api/period-evaluations/confirm",{...input,expectedDraftRevision:saved.body.draft_revision});
+    assert.equal(confirmed.status,200,JSON.stringify(confirmed.body));
+    assert.equal((await f.call("GET",`/api/period-evaluations/detail?${query}`)).body.state,"confirmed");
+  } finally { await f.db.close(); }
+});
+
 test("dos confirmaciones de la misma revisión dejan una sola evaluación oficial", async () => {
   const f=await fixture();
   try {
