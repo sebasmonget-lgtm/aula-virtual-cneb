@@ -6,7 +6,9 @@ const dateLabel = (value) => {
 /** Read-only document view. It changes labels only; the saved proposal remains canonical. */
 export function buildAnnualPlanPresentation(proposal, documentContext = {}, competencyOptions = []) {
   const names = new Map(competencyOptions.map((item) => [item.id, item.name]));
-  const nameFor = (id) => names.get(id) ?? id;
+  const nameFor = (id) => names.get(id) ?? "Competencia por revisar";
+  const teacherText = (value) => String(value ?? "").replace(/\b[A-Z]{2,8}_[A-Z0-9_]+\b/g,
+    (id) => nameFor(id));
   const [contextForTeacher, technicalContext] = String(proposal.general_context_summary).split("Trazabilidad interna:");
   const templatePlan = proposal.plan_format === ANNUAL_PLAN_TEMPLATE_FORMAT;
   const legacyTemplate = proposal.plan_format === ANNUAL_PLAN_LEGACY_TEMPLATE_FORMAT;
@@ -49,15 +51,17 @@ export function buildAnnualPlanPresentation(proposal, documentContext = {}, comp
       needs: documentContext.diagnostic_group?.needs || null,
       interests: documentContext.group_interests ?? [],
     },
-    priorities: proposal.planning_priorities,
+    priorities: proposal.planning_priorities.map(teacherText),
     annualPurposes: proposal.annual_purposes ?? [],
-    competencyOverview: proposal.competency_overview,
+    competencyOverview: proposal.competency_overview.map(teacherText),
     competencyMap: [...new Set(proposal.proposed_experiences.flatMap((item) => [...item.primary_competency_ids, ...item.possible_secondary_competency_ids]))]
       .map((id) => ({ id, name: nameFor(id), opportunities: proposal.proposed_experiences
         .filter((item) => [...item.primary_competency_ids, ...item.possible_secondary_competency_ids].includes(id))
         .map((item) => `${item.period}: ${item.title}`) })),
     annualCompetencyMap: buildAnnualCompetencyMap(proposal, competencyOptions,
-      documentContext.diagnostic_group?.competency_priorities ?? [], documentContext.other_opportunities ?? []),
+      documentContext.diagnostic_group?.competency_priorities ?? [], documentContext.other_opportunities ?? [])
+      .map((item) => ({ ...item, competency_name: nameFor(item.competency_id),
+        diagnostic_reason: item.diagnostic_reason ? teacherText(item.diagnostic_reason) : null })),
     experiences: proposal.proposed_experiences.map((item, index) => ({
       ...item,
       number: index + 1,

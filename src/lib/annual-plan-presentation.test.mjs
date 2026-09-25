@@ -61,7 +61,20 @@ test("datos institucionales ausentes no se inventan", () => {
   assert.equal(document.header.institution, null);
   assert.equal(document.header.studentCount, null);
   assert.deepEqual(document.header.dates, []);
-  assert.deepEqual(document.experiences[0].primaryCompetencies, ["COMP-1"]);
+  assert.deepEqual(document.experiences[0].primaryCompetencies, ["Competencia por revisar"]);
+});
+
+test("la vista docente sustituye identificadores curriculares por nombres", () => {
+  const source = { ...proposal, planning_priorities: ["Atender MAT_CANTIDAD"],
+    competency_overview: ["MAT_CANTIDAD y CYT_INDAGA necesitan oportunidades"] };
+  const document = buildAnnualPlanPresentation(source, {}, [
+    { id: "MAT_CANTIDAD", name: "Resuelve problemas de cantidad" },
+    { id: "CYT_INDAGA", name: "Indaga mediante métodos científicos" },
+  ]);
+  assert.equal(document.priorities[0], "Atender Resuelve problemas de cantidad");
+  assert.equal(document.competencyOverview[0], "Resuelve problemas de cantidad y Indaga mediante métodos científicos necesitan oportunidades");
+  assert.doesNotMatch(JSON.stringify(document.competencyOverview), /MAT_CANTIDAD|CYT_INDAGA/);
+  assert.deepEqual(source.competency_overview, ["MAT_CANTIDAD y CYT_INDAGA necesitan oportunidades"]);
 });
 
 test("un plan histórico conserva la trazabilidad sin ponerla en el texto principal", () => {
