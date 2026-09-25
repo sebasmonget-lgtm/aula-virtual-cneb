@@ -17,3 +17,11 @@ export async function loadAnnualPlanSkill() {
   }));
   return `Skill crear-plan-anual (instrucciones de la aplicación para el Plan Maestro):\n\n${contents.join("\n\n")}`;
 }
+
+/** V3 only loads the references relevant to an editable preplan. */
+export async function loadAnnualPreplanSkill() {
+  const files = ["SKILL.md", "references/lectura-del-contexto.md", "references/criterios-cneb.md",
+    "references/calendario-pedagogico.md", "references/preplan-editable.md"];
+  return (await Promise.all(files.map(async (name) =>
+    `## ${name}\n${(await readFile(new URL(`../../skills/crear-plan-anual/${name}`, import.meta.url), "utf8")).trim()}`))).join("\n\n");
+}

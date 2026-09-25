@@ -12,7 +12,7 @@ const selectContent = (source, fields) => Object.fromEntries(fields.map((field) 
 export async function listSavedDocuments(db, teacherId) {
   const annual = (await db.query(`select ap.id,ap.status,ap.version,ap.proposal,ap.updated_at,sy.year,c.section
     from annual_plans ap join classrooms c on c.id=ap.classroom_id join school_years sy on sy.id=ap.school_year_id
-    where c.teacher_id=$1 and sy.owner_id=$1 and ap.proposal ? 'title'`, [teacherId])).rows.map((row) => ({
+    where c.teacher_id=$1 and sy.owner_id=$1 and (ap.proposal ? 'title' or ap.proposal->>'plan_format'='annual_preplan_v1')`, [teacherId])).rows.map((row) => ({
       id: row.id, kind: "annual_plan", title: row.proposal?.title || "Plan anual", status: row.status,
       version: Number(row.version), school_year: Number(row.year), classroom: row.section, date: timestamp(row.updated_at),
     }));
@@ -63,18 +63,20 @@ export async function loadSavedDocument(db, teacherId, kind, id) {
     return row?projectPeriodClosureDocument(row):null;
   }
   if (kind === "annual_plan") {
-    const row = (await db.query(`select ap.id,ap.status,ap.version,ap.proposal,ap.document_context,ap.teacher_confirmed_at,
+    const row = (await db.query(`select ap.id,ap.status,ap.version,ap.proposal,ap.document_context,ap.teacher_confirmed_at,af.content as formal_content,
       ap.classroom_id,sy.year,sy.starts_on,sy.ends_on,c.section,coalesce(ip.display_name,c.institution_name) as institution_name,ag.age_years,p.display_name as teacher_name,
       ip.institution_code,ip.district,ip.ugel
       from annual_plans ap join classrooms c on c.id=ap.classroom_id join school_years sy on sy.id=ap.school_year_id
       join age_grades ag on ag.id=c.age_grade_id join profiles p on p.user_id=c.teacher_id
       left join institution_profiles ip on ip.owner_user_id=c.teacher_id
-      where ap.id=$2 and c.teacher_id=$1 and sy.owner_id=$1 and ap.proposal ? 'title'`, [teacherId, id])).rows[0];
+      left join annual_plan_formal_content af on af.annual_plan_id=ap.id
+      where ap.id=$2 and c.teacher_id=$1 and sy.owner_id=$1 and (ap.proposal ? 'title' or ap.proposal->>'plan_format'='annual_preplan_v1')`, [teacherId, id])).rows[0];
     if (!row) return null;
     const fallback = { institution_name: row.institution_name, teacher_name: row.teacher_name,
       classroom_section: row.section, age: Number(row.age_years), school_year: Number(row.year),
       starts_on: dateOnly(row.starts_on), ends_on: dateOnly(row.ends_on) };
     const documentContext = { ...fallback, ...row.document_context };
+    documentContext.source_plan_format = row.proposal?.plan_format ?? null;
     // A draft may have been saved before the institution profile was completed.
     // Keep explicit snapshot values, but fill missing display fields from the current profile.
     for (const field of ["institution_name", "teacher_name", "classroom_section", "institution_code", "district", "ugel"]) {
@@ -109,7 +111,8 @@ export async function loadSavedDocument(db, teacherId, kind, id) {
     return { id: row.id, kind, title: row.proposal?.title || "Plan anual", status: row.status,
       version: Number(row.version), school_year: Number(row.year), classroom: row.section,
       confirmed_at: row.teacher_confirmed_at ? timestamp(row.teacher_confirmed_at) : null,
-      content: row.proposal, document_context: documentContext };
+      content: row.formal_content ?? row.proposal, source_plan_format: row.proposal?.plan_format,
+      formal_ready: Boolean(row.formal_content), document_context: documentContext };
   }
   if (kind === "diagnostic_summary") {
     const row = (await db.query(`select d.id,d.status,d.version,d.details,d.teacher_confirmed_at,sy.year,c.section,c.institution_name

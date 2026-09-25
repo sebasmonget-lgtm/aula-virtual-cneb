@@ -6,13 +6,9 @@ import { loadDiagnosticEvaluationSkill } from "./diagnostic-evaluation-skill.mjs
 import { neutralizeAssessmentText } from "./assessment-v4-service.mjs";
 
 const fields = ["strengths", "needs", "planning_priorities"];
-const OUTPUT_SCHEMA = { id: "diagnostic-group-suggestion-v1", type: "object", additionalProperties: false,
-  required: [...fields, "competency_priorities"], properties: {
+const OUTPUT_SCHEMA = { id: "diagnostic-group-suggestion-v2", type: "object", additionalProperties: false,
+  required: fields, properties: {
     ...Object.fromEntries(fields.map((field) => [field, { type: "string" }])),
-    competency_priorities: { type: "array", items: { type: "object", additionalProperties: false,
-      required: ["competency_id", "emphasis", "reason"], properties: {
-        competency_id: { type: "string" }, emphasis: { enum: ["prioritize", "maintain", "observe_more"] }, reason: { type: "string" },
-      } } },
   } };
 const forbiddenJudgment = /\b(?:nivel\s*(?:AD|A|B|C)|calificaci[oó]n\s*(?:AD|A|B|C)|ranking)\b/i;
 
@@ -28,21 +24,14 @@ export class DiagnosticSuggestionError extends Error {
   }
 }
 
-function validateSuggestion(output, knownNames = [], competencyOptions = []) {
-  const allowed = new Set(competencyOptions.map((item) => item.id));
+function validateSuggestion(output, knownNames = []) {
   if (!output || typeof output !== "object" || Array.isArray(output) ||
-      Object.keys(output).length !== fields.length + 1 || fields.some((field) =>
+      Object.keys(output).length !== fields.length || fields.some((field) =>
         typeof output[field] !== "string" || !output[field].trim() || output[field].length > 3000 ||
-        forbiddenJudgment.test(output[field]) || neutralizeAssessmentText(output[field], knownNames) !== output[field]) ||
-      !Array.isArray(output.competency_priorities) || output.competency_priorities.length > 6 ||
-      output.competency_priorities.some((item) => !item || !allowed.has(item.competency_id) ||
-        !["prioritize", "maintain", "observe_more"].includes(item.emphasis) ||
-        typeof item.reason !== "string" || !item.reason.trim() || item.reason.length > 500 ||
-        forbiddenJudgment.test(item.reason) || neutralizeAssessmentText(item.reason, knownNames) !== item.reason) ||
-      new Set(output.competency_priorities.map((item) => item.competency_id)).size !== output.competency_priorities.length)
+        forbiddenJudgment.test(output[field]) || neutralizeAssessmentText(output[field], knownNames) !== output[field]))
     throw new DiagnosticSuggestionError("proposal_invalid");
   return { ...Object.fromEntries(fields.map((field) => [field, output[field].trim()])),
-    competency_priorities: output.competency_priorities.map((item) => ({ ...item, reason: item.reason.trim() })) };
+    competency_priorities: [] };
 }
 
 function safeFailure(error) {
@@ -64,15 +53,18 @@ export async function suggestDiagnosticGroupReview(db, teacherId, draftId, {
     const bundle = { workflow: "diagnostic", context: { age: sources.age, student_count: sources.student_count,
       confirmed_teacher_comments: sources.comments }, curriculum: { competency_cards: sources.competency_options ?? [] },
       constraints: { must: ["Basar cada afirmación en comentarios docentes confirmados.", "Expresar necesidades como oportunidades pedagógicas.",
-        "Proponer solo IDs de la lista curricular para prioridades grupales. Usar observe_more si falta información; no convertir ausencia de registro en dificultad."],
+        "Redactar una visión breve del grupo, sin priorizar competencias todavía.", "No convertir ausencia de registro en dificultad."],
         must_not: ["Inventar observaciones o niveles de logro.", "Nombrar o identificar a niños y familias.",
           "Concluir que todos los niños necesitan el mismo apoyo por una prioridad grupal."] },
       provenance: { source_type: "confirmed_diagnostic_student_reviews", source_count: sources.comments.length } };
     const request = buildProviderRequest("diagnostic", bundle, plan, OUTPUT_SCHEMA, await loadSkill());
     const response = await provider.generate(request);
-    const details = validateSuggestion(response.output, sources.known_names, sources.competency_options);
+    const details = validateSuggestion(response.output, sources.known_names);
     const current = await loadSources(db, teacherId, draftId);
     if (!sameDiagnosticSources(sources.source_snapshot, current.source_snapshot)) throw new DiagnosticSuggestionError("stale_sources");
+    await db.query(`update diagnostic_group_reviews set ai_snapshot=$1::jsonb,updated_at=now()
+      where id=$2 and status='draft'`, [JSON.stringify({ output: details, model: plan.model,
+      usage: response.provider_metadata?.usage ?? null, source_snapshot: sources.source_snapshot }), draftId]);
     return { details };
   } catch (error) { throw safeFailure(error); }
 }

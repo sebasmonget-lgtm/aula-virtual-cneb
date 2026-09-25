@@ -1,4 +1,4 @@
-import { buildFlexibleAnnualSchedule } from "./annual-plan-calendar.mjs";
+import { buildFlexibleAnnualSchedule, buildEditableAnnualSchedule } from "./annual-plan-calendar.mjs";
 import { ANNUAL_PLAN_TEMPLATE_FORMAT } from "./annual-plan-contract.mjs";
 import { annualFlexibleValues } from "./annual-plan-flexible-word.mjs";
 import { removePageBreakAfterTable, removePageBreakBeforeTable, removeParagraphsContaining, renderUnifiedWord, replaceWordText } from "./unified-word-template.mjs";
@@ -15,14 +15,17 @@ function tableSlices(xml) {
 function transformAnnual(xml, schedule) {
   let output = removeParagraphsContaining(xml, ["Plantilla editable", "Los campos {{ }}"]);
   const tables = tableSlices(output);
-  const project13 = tables.findIndex((table) => table.text.includes("P13 | {{PROYECTO_13_TITULO}}"));
+  const nextNumber = schedule.projects.length + 1;
+  const nextMarker = `P${String(nextNumber).padStart(2, "0")} | {{PROYECTO_${String(nextNumber).padStart(2, "0")}_TITULO}}`;
+  const nextProject = nextNumber <= 20 ? tables.findIndex((table) => table.text.includes(nextMarker)) : -1;
   const evaluation = tables.findIndex((table) => table.text.includes("VII. EVALUACIÓN Y SEGUIMIENTO"));
-  if (project13 < 1 || evaluation <= project13 || !tables[project13 - 1].text.includes("VI. DESARROLLO MENSUAL")) {
+  if (evaluation < 0 || (nextNumber <= 20 && (nextProject < 1 || evaluation <= nextProject || !tables[nextProject - 1].text.includes("VI. DESARROLLO MENSUAL")))) {
     throw new Error("La plantilla anual cambió la secuencia de fichas de proyecto.");
   }
-  output = output.slice(0, tables[project13 - 1].start) + output.slice(tables[evaluation].start);
+  if (nextProject > 0) output = output.slice(0, tables[nextProject - 1].start) + output.slice(tables[evaluation].start);
   output = output.replace(/<w:tr(?:\s[^>]*)?>[\s\S]*?<\/w:tr>/g, (row) =>
-    /\{\{PROYECTO_(?:1[3-9]|20)_(?:TITULO|INICIO|FIN|DURACION|PRODUCTO)\}\}/.test(row) ? "" : row);
+    [...row.matchAll(/\{\{PROYECTO_(\d{2})_(?:TITULO|INICIO|FIN|DURACION|PRODUCTO)\}\}/g)]
+      .some((match) => Number(match[1]) > schedule.projects.length) ? "" : row);
   let headingCount = 0;
   output = output.replace(/<w:tbl(?:\s[^>]*)?>[\s\S]*?<\/w:tbl>/g, (table) => {
     const text = plainText(table);
@@ -36,10 +39,11 @@ function transformAnnual(xml, schedule) {
     if (!entry) throw new Error(`La ficha ${title[1]} no tiene propuesta estructurada.`);
     const month = months[Number(entry.starts_on.slice(5, 7)) - 3];
     if (!month) throw new Error(`Fecha de proyecto fuera del año lectivo: ${entry.starts_on}.`);
-    return table.replace(/(<w:t(?:\s[^>]*)?>)(?:MARZO|ABRIL|MAYO|JUNIO|JULIO|AGOSTO|SEPTIEMBRE|OCTUBRE|NOVIEMBRE|DICIEMBRE)(<\/w:t>)/,
+    const dated = table.replace(/(<w:t(?:\s[^>]*)?>)(?:MARZO|ABRIL|MAYO|JUNIO|JULIO|AGOSTO|SEPTIEMBRE|OCTUBRE|NOVIEMBRE|DICIEMBRE)(<\/w:t>)/,
       (_, open, close) => `${open}${month}${close}`);
+    return entry.code.startsWith("U") ? dated.replace(`P${title[1]} |`, `U${title[1]} |`) : dated;
   });
-  if (headingCount !== 12) throw new Error("La plantilla anual no contiene las doce fichas esperadas.");
+  if (headingCount !== schedule.projects.length) throw new Error("La plantilla anual no contiene las fichas esperadas.");
   for (const [source, target] of [
     ["Producto o evidencia final", "Producto posible del proyecto"],
     ["Recurso visual / enlace (opcional)", "Qué podríamos observar"],
@@ -54,12 +58,16 @@ function transformAnnual(xml, schedule) {
   return output;
 }
 
-/** One validated twelve-object array drives the monthly view, chronology and cards. */
+/** The same confirmed proposals drive the monthly view, chronology and cards. */
 export async function renderAnnualPlanUnifiedWord(document, cards = [], { logo = null } = {}) {
-  if (document?.content?.plan_format !== ANNUAL_PLAN_TEMPLATE_FORMAT || document.content.proposed_experiences?.length !== 12) {
-    throw new Error("La planificación anual requiere exactamente doce propuestas.");
+  const editable = document?.source_plan_format === "annual_preplan_v1";
+  if (document?.content?.plan_format !== ANNUAL_PLAN_TEMPLATE_FORMAT ||
+    (!editable && document.content.proposed_experiences?.length !== 12) ||
+    (editable && (document.content.proposed_experiences?.length < 1 || document.content.proposed_experiences?.length > 20))) {
+    throw new Error("La planificación anual requiere propuestas confirmadas.");
   }
-  const schedule = buildFlexibleAnnualSchedule(document.document_context?.calendar, document.content.proposed_experiences);
+  const schedule = editable ? buildEditableAnnualSchedule(document.document_context?.calendar, document.content.proposed_experiences)
+    : buildFlexibleAnnualSchedule(document.document_context?.calendar, document.content.proposed_experiences);
   const values = annualFlexibleValues(document, cards, schedule);
   for (const month of months) {
     const number = months.indexOf(month) + 3;

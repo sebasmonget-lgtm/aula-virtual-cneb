@@ -15,7 +15,9 @@ export function buildAnnualPlanPresentation(proposal, documentContext = {}, comp
   let flexible = null;
   let calendarWarning = null;
   if (templatePlan) {
-    try { flexible = buildFlexibleAnnualSchedule(documentContext.calendar, proposal.proposed_experiences); }
+    try { flexible = documentContext.source_plan_format === "annual_preplan_v1"
+      ? buildEditableAnnualSchedule(documentContext.calendar, proposal.proposed_experiences)
+      : buildFlexibleAnnualSchedule(documentContext.calendar, proposal.proposed_experiences); }
     catch (error) { calendarWarning = error?.message ?? "Revisa las fechas de los proyectos."; }
   }
   const schedule = flexible?.projects ?? (legacyTemplate ? buildAnnualProjectSchedule({
@@ -80,6 +82,6 @@ export function buildAnnualPlanPresentation(proposal, documentContext = {}, comp
   };
 }
 import { buildAnnualProjectSchedule } from "./annual-plan-schedule.mjs";
-import { buildFlexibleAnnualSchedule } from "./annual-plan-calendar.mjs";
+import { buildFlexibleAnnualSchedule, buildEditableAnnualSchedule } from "./annual-plan-calendar.mjs";
 import { ANNUAL_PLAN_LEGACY_TEMPLATE_FORMAT, ANNUAL_PLAN_TEMPLATE_FORMAT } from "./annual-plan-contract.mjs";
 import { buildAnnualCompetencyMap } from "./annual-competency-map.mjs";

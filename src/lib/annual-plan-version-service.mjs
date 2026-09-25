@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { ANNUAL_PLAN_TEMPLATE_FORMAT } from "./annual-plan-contract.mjs";
-import { buildFlexibleAnnualSchedule } from "./annual-plan-calendar.mjs";
+import { buildFlexibleAnnualSchedule, buildEditableAnnualSchedule } from "./annual-plan-calendar.mjs";
+import { ANNUAL_PREPLAN_FORMAT } from "./annual-preplan-service.mjs";
 import { assertRevision, versionTransaction, VersionConflictError } from "./version-integrity.mjs";
 const dateOnly = (value) => value instanceof Date ? value.toISOString().slice(0, 10) : String(value).slice(0, 10);
 
@@ -18,7 +19,7 @@ export async function copyConfirmedAnnualPlan(db, teacherId, context, sourcePlan
     [teacherId, sourcePlanId, context.id, context.school_year_id])).rows[0];
     if (!source) throw new AnnualPlanVersionError("source_unavailable", "El plan vigente ya no está disponible para crear otra versión.");
     if (expectedSourceRevision !== null) assertRevision(source, expectedSourceRevision);
-    if (source.proposal?.plan_format !== ANNUAL_PLAN_TEMPLATE_FORMAT || source.proposal?.proposed_experiences?.length !== 12)
+    if (![ANNUAL_PLAN_TEMPLATE_FORMAT, ANNUAL_PREPLAN_FORMAT].includes(source.proposal?.plan_format))
       throw new AnnualPlanVersionError("legacy_plan", "Este plan usa un formato anterior. Usa «Preparar versión actualizada» para convertirlo al formato de doce propuestas.");
     const existingDraft = (await tx.query(`select id from annual_plans where school_year_id=$1 and status='draft' limit 1`, [context.school_year_id])).rows[0];
     if (existingDraft) throw new VersionConflictError("Ya hay un borrador de este año. Ábrelo antes de crear otra versión.", source.revision, "draft_exists");
@@ -30,18 +31,21 @@ export async function copyConfirmedAnnualPlan(db, teacherId, context, sourcePlan
     const id = randomUUID();
     await tx.query(`insert into annual_plans
       (id,classroom_id,school_year_id,curriculum_version_id,version,status,proposal,generation_metadata,document_context,
-       supersedes_plan_id,source_diagnostic_review_id,source_context_fingerprint)
-      values ($1,$2,$3,$4,$5,'draft',$6::jsonb,$7::jsonb,$8::jsonb,$9,$10,$11)`,
+       supersedes_plan_id,source_diagnostic_review_id,source_priority_review_id,source_context_fingerprint)
+      values ($1,$2,$3,$4,$5,'draft',$6::jsonb,$7::jsonb,$8::jsonb,$9,$10,$11,$12)`,
     [id, context.id, context.school_year_id, source.curriculum_version_id, version,
       JSON.stringify(source.proposal), JSON.stringify({ workflow: "annual_plan_copy", source_plan_id: source.id }),
       JSON.stringify({ ...documentContext, supersedes_plan_id: source.id }), source.id,
-      context.source_diagnostic_review_id, context.context_v4.source_fingerprint]);
+      context.source_diagnostic_review_id, context.source_priority_review_id ?? source.source_priority_review_id,
+      context.context_v4.source_fingerprint]);
     const sourceSlots = (await tx.query(`select slot_index,calendar_block_id,duration_weeks,starts_on,ends_on
       from project_slots where annual_plan_id=$1 order by slot_index`, [source.id])).rows;
-    const slots = sourceSlots.length === 12 ? sourceSlots.map((slot) => ({
+    const slots = sourceSlots.length === source.proposal.proposed_experiences.length ? sourceSlots.map((slot) => ({
       index: slot.slot_index, calendar_block_id: slot.calendar_block_id, duration_weeks: slot.duration_weeks,
       starts_on: dateOnly(slot.starts_on), ends_on: dateOnly(slot.ends_on),
-    })) : buildFlexibleAnnualSchedule(context.calendar, source.proposal.proposed_experiences).projects;
+    })) : (source.proposal.plan_format === ANNUAL_PREPLAN_FORMAT
+      ? buildEditableAnnualSchedule(context.calendar, source.proposal.proposed_experiences)
+      : buildFlexibleAnnualSchedule(context.calendar, source.proposal.proposed_experiences)).projects;
     for (const slot of slots) await tx.query(`insert into project_slots
       (id,annual_plan_id,slot_index,calendar_block_id,duration_weeks,starts_on,ends_on)
       values ($1,$2,$3,$4,$5,$6::date,$7::date)`, [randomUUID(), id, slot.index,
@@ -61,8 +65,9 @@ export async function confirmAnnualPlanVersion(db, context, draftId, expectedDra
       throw new VersionConflictError("El plan vigente cambió. Prepara una versión desde el actual.",draft.revision);
     await validate(draft,tx);
     if(current) await tx.query(`update annual_plans set status='archived',updated_at=now() where id=$1 and status='active'`,[current.id]);
-    const confirmed=(await tx.query(`update annual_plans set status='active',teacher_confirmed_at=now(),updated_at=now()
-      where id=$1 and status='draft' and revision=$2 returning id,status,version,revision`,[draftId,expectedDraftRevision])).rows[0];
+    const confirmed=(await tx.query(`update annual_plans set status='active',teacher_confirmed_at=now(),
+      preplan_confirmed_at=case when proposal->>'plan_format'=$3 then now() else preplan_confirmed_at end,updated_at=now()
+      where id=$1 and status='draft' and revision=$2 returning id,status,version,revision`,[draftId,expectedDraftRevision,ANNUAL_PREPLAN_FORMAT])).rows[0];
     if(!confirmed) throw new VersionConflictError();
     return confirmed;
   });

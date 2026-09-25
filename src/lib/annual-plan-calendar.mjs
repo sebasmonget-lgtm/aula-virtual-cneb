@@ -141,6 +141,52 @@ export function buildFlexibleAnnualSchedule(calendar, projects) {
   return { initial_stage, projects: schedule, blocks: valid.blocks };
 }
 
+/** Schedule an edited preplan from its ordered proposals. The initial suggestion has 12 rows;
+ * the teacher can change that count before confirmation (the DOCX has room for 20). */
+export function buildEditableAnnualSchedule(calendar, projects) {
+  const valid = validateAnnualCalendar(calendar);
+  if (!Array.isArray(projects) || projects.length < 1 || projects.length > 20)
+    throw new AnnualCalendarError("invalid", { field: "project_count" });
+  const blocks = valid.blocks.filter((block) => block.type === "instructional");
+  const exceptions = [...(valid.exceptions ?? []), ...valid.blocks.filter((block) => block.type !== "instructional")];
+  const stage = calendar.initial_stage ?? defaultInitialStage();
+  const stageWeeks = Number(stage.duration_weeks);
+  if (!Number.isInteger(stageWeeks) || stageWeeks < 1 || stageWeeks > 4)
+    throw new AnnualCalendarError("invalid", { field: "initial_stage" });
+  const firstWeeks = weeksIn(blocks[0], exceptions);
+  let stageStart = 0;
+  while (stageStart + stageWeeks <= firstWeeks.length && !fits(firstWeeks.slice(stageStart, stageStart + stageWeeks), stageWeeks)) stageStart += 1;
+  const selectedStage = firstWeeks.slice(stageStart, stageStart + stageWeeks);
+  if (!fits(selectedStage, stageWeeks)) throw new AnnualCalendarError("stage_does_not_fit");
+  const initial_stage = { ...stage, starts_on: iso(selectedStage[0].monday), ends_on: iso(selectedStage.at(-1).friday) };
+  const cursors = [0, 0, 0, 0];
+  let previousPeriod = 1;
+  const schedule = projects.map((project, index) => {
+    const period = Number(String(project.period).match(/^Bimestre ([1-4])$/)?.[1]);
+    const duration = Number(project.duration_weeks);
+    if (!period || period < previousPeriod || ![2, 3].includes(duration))
+      throw new AnnualCalendarError("invalid", { field: "period_or_duration", index });
+    previousPeriod = period;
+    const block = blocks[period - 1];
+    const available = weeksIn(block, exceptions).filter((week) => period !== 1 || week.monday > selectedStage.at(-1).friday);
+    let cursor = cursors[period - 1];
+    const desiredMonth = Number(project.month);
+    if (project.month != null && (!Number.isInteger(desiredMonth) || desiredMonth < 3 || desiredMonth > 12))
+      throw new AnnualCalendarError("invalid", { field: "month", index });
+    while (cursor + duration <= available.length &&
+      (!fits(available.slice(cursor, cursor + duration), duration) ||
+        (desiredMonth && available[cursor].monday.getUTCMonth() + 1 < desiredMonth))) cursor += 1;
+    const selected = available.slice(cursor, cursor + duration);
+    if (!fits(selected, duration))
+      throw new AnnualCalendarError("project_does_not_fit", { index, block: period, duration_weeks: duration });
+    cursors[period - 1] = cursor + duration;
+    return { index: index + 1, code: `${project.experience_type === "unit" ? "U" : "P"}${String(index + 1).padStart(2, "0")}`,
+      starts_on: iso(selected[0].monday), ends_on: iso(selected.at(-1).friday), duration_weeks: duration,
+      period: project.period, calendar_block_id: block.id ?? null };
+  });
+  return { initial_stage, projects: schedule, blocks: valid.blocks };
+}
+
 /** Prefer three weeks for the last proposal in a period when the real calendar allows it. */
 export function suggestAnnualProjectDurations(calendar) {
   const durations = Array(ANNUAL_PROJECT_COUNT).fill(2);

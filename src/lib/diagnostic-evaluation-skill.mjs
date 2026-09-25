@@ -6,6 +6,8 @@ const SKILL_FILES = [
   ["references/fuentes-y-criterio.md", new URL("../../skills/crear-evaluacion-diagnostica/references/fuentes-y-criterio.md", import.meta.url)],
   ["references/lectura-pedagogica-cneb.md", new URL("../../skills/crear-evaluacion-diagnostica/references/lectura-pedagogica-cneb.md", import.meta.url)],
   ["references/estructura-del-borrador.md", new URL("../../skills/crear-evaluacion-diagnostica/references/estructura-del-borrador.md", import.meta.url)],
+  ["references/prioridades-del-ano.md", new URL("../../skills/crear-evaluacion-diagnostica/references/prioridades-del-ano.md", import.meta.url)],
+  ["references/comentario-individual.md", new URL("../../skills/crear-evaluacion-diagnostica/references/comentario-individual.md", import.meta.url)],
 ];
 
 export async function loadDiagnosticEvaluationSkill() {
@@ -14,5 +16,5 @@ export async function loadDiagnosticEvaluationSkill() {
     if (!content) throw new Error(`Diagnostic Skill empty: ${name}`);
     return `## ${name}\n${content}`;
   }));
-  return `Skill crear-evaluacion-diagnostica (propuesta grupal para revisión docente):\n\n${contents.join("\n\n")}`;
+  return `Skill crear-evaluacion-diagnostica (visión grupal o prioridades, según stage):\n\n${contents.join("\n\n")}`;
 }

@@ -19,8 +19,7 @@ export function buildAnnualCompetencyMap(proposal, options = [], priorities = []
     const other = otherOpportunities.filter((item) => item.competency_id === id && item.explicit_criterion === true);
     const priority = priorityById.get(id) ?? null;
     const warnings = [];
-    const agePerformance = options.find((item) => item.id === id)?.has_age_performance !== false;
-    if (agePerformance || priority) {
+    {
       if (!occurrences.length && !other.length) warnings.push("No hay una oportunidad explícita prevista.");
       else if (occurrences.length + other.length < policy.annual_low_opportunities) warnings.push("Hay una sola oportunidad prevista.");
       if (occurrences.length >= policy.annual_low_opportunities && periods.length <= policy.annual_concentrated_periods)

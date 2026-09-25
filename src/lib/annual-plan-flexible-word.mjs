@@ -133,7 +133,7 @@ export function annualFlexibleValues(document, cards, schedule) {
     DIAGNOSTICO_INTERESES: interestParagraph(interests),
     DIAGNOSTICO_CONTEXTO: firstSentences(proposal.general_context_summary, 3),
     PRIORIDADES_ANUALES: joined(proposal.planning_priorities.slice(0, 3)),
-    DESCRIPCION_GENERAL_PROGRAMACION: "Doce propuestas iniciales de proyectos, organizadas en cuatro periodos lectivos. Sus fechas y duración podrán ajustarse según lo que ocurra en el aula.",
+    DESCRIPCION_GENERAL_PROGRAMACION: `${proposal.proposed_experiences.length === 12 ? "Doce" : proposal.proposed_experiences.length} propuestas iniciales de proyectos y unidades, organizadas en cuatro periodos lectivos. Sus fechas y duración podrán ajustarse según lo que ocurra en el aula.`,
     ENFOQUES_TRANSVERSALES: joined(proposal.transversal_approaches.length
       ? proposal.transversal_approaches : proposal.teaching_strategies.slice(0, 2))
       || "Organizar juegos, preguntas y materiales variados; observar cómo participa cada niño y ajustar el acompañamiento.",
