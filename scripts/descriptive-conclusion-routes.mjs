@@ -6,6 +6,7 @@ import { createAIProviderForPlan } from "../src/lib/ai-provider-factory.mjs";
 import { generateAIWorkflowV4 } from "../src/lib/ai-generation-v4.mjs";
 import { assessmentSourceSnapshot, loadAssessmentEvidence, sameEvidenceSourceSnapshot, sanitizeEvidenceForAssessment } from "../src/lib/assessment-v4-service.mjs";
 import { buildDescriptiveConclusionInput, sameAssessmentSnapshot, sourceAssessmentSnapshot, validateDescriptiveConclusion } from "../src/lib/descriptive-conclusion-v4-service.mjs";
+import { httpStatusForError, publicErrorMessage } from "../src/lib/version-integrity.mjs";
 
 const dateOnly = (value) => value instanceof Date ? value.toISOString().slice(0, 10) : String(value).slice(0, 10);
 const safeConclusion = (row) => ({ id: row.id, competency_v4_id: row.competency_v4_id, assessment_id: row.assessment_id, period_start: dateOnly(row.period_start), period_end: dateOnly(row.period_end), version: row.version, details: row.details, status: row.status, teacher_confirmed_at: row.teacher_confirmed_at });
@@ -13,7 +14,7 @@ const safeAssessment = (row) => ({ id: row.id, competency_v4_id: row.competency_
 const staleMessage = "El análisis de evidencias cambió desde que se preparó esta conclusión. Regenera la conclusión antes de confirmarla.";
 
 export function createDescriptiveConclusionRouteHandler({ db, annualPlanningContext, readJson, send, loadKnowledgeBase = loadKnowledgeBaseV4, generate = generateAIWorkflowV4, createProvider = createAIProviderForPlan, pending, metadataForAudit, refreshStudentContext }) {
-  const fail = (response, origin, error, status = 422) => send(response, status, { error: error.message }, origin);
+  const fail = (response, origin, error, status = 422) => send(response, httpStatusForError(error, status), { error: publicErrorMessage(error) }, origin);
   async function studentInClass(context, studentId) {
     if (!context) throw new Error("Aula no disponible.");
     const student = (await db.query(`select id,first_name,last_name,preferred_name from students where id=$1 and classroom_id=$2 and status='active'`, [studentId, context.id])).rows[0];

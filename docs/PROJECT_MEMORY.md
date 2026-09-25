@@ -6,6 +6,8 @@ Proyecto nuevo iniciado el 20 de septiembre de 2026. Existe un shell responsive 
 
 ## Alcance implementado
 
+- Adaptador PostgreSQL preparado (2026-09-24, Commit 16): PGlite local y `pg.Pool` staging comparten `query/exec/transaction`; Auth Supabase entrega la identidad verificada por petición al mismo servidor y servicios. Transacciones fijan una conexión del pool y rollback libera la conexión; SQLSTATE se traduce sin exponer SQL. La suite aplica desde cero las migraciones Supabase con esquemas Auth/Storage simulados y verifica paridad de tablas/columnas. La nueva migración agrega solo la versión curricular activa que faltaba en una base vacía. No se ha creado staging real, conectado Storage ni desplegado. Ver ADR 066 y `docs/STAGING_POSTGRESQL.md`.
+
 - Identidad por petición (2026-09-24, Commit 15): el servidor tiene un límite común de Auth con contexto `teacherId/requestId/db`. Modo Supabase verifica cada token contra Auth; el login de staging usa correo/contraseña y cookie HTTP-only. Los selectores de aula, niño y período se comprueban contra la docente verificada; servicios existentes y descargas quedan detrás del mismo límite. Las pruebas simulan Auth y conservan PGlite; aún no se conecta PostgreSQL/Supabase real ni Storage. Ver ADR 065.
 
 - Hardening RLS Supabase (2026-09-24, Commit 14): 40 tablas privadas tienen lectura autenticada restringida al árbol propio y ninguna escritura directa de cliente. Las funciones de pertenencia `SECURITY DEFINER` están en `private` con `search_path` vacío; se cerró `EXECUTE` público. Se retiraron escrituras cliente en buckets de logo y evidencias. La prueba local ejecuta las migraciones completas y simula dos docentes; aún no hay Auth ni despliegue. Ver ADR 064.

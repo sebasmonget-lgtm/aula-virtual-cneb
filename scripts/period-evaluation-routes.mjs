@@ -10,7 +10,7 @@ import { dateOnly, defaultEvaluationPeriods, loadPeriodEvaluationRows, periodClo
 import { assertSavedEvaluationDraft, savePeriodEvaluationDraft } from "../src/lib/period-evaluation-draft-service.mjs";
 import { closePeriodWithManifest } from "../src/lib/period-closure-history.mjs";
 import { projectPedagogicalCoverage } from "../src/lib/pedagogical-coverage.mjs";
-import { VersionConflictError, conflictPayload, isVersionConflict, publicErrorMessage, versionTransaction } from "../src/lib/version-integrity.mjs";
+import { VersionConflictError, conflictPayload, httpStatusForError, isVersionConflict, publicErrorMessage, versionTransaction } from "../src/lib/version-integrity.mjs";
 
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const hash = (value) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
@@ -18,8 +18,8 @@ const clean = (value, limit = 4000) => typeof value === "string" ? value.trim().
 const grade = new Set(["AD", "A", "B", "C"]);
 const safeCsv = (value) => { const raw = String(value ?? ""); const safe = /^[=+@\-\t\r]/.test(raw) ? `'${raw}` : raw; return `"${safe.replaceAll('"', '""')}"`; };
 
-export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStorage, readJson, send, pending, metadataForAudit, refreshStudentContext, loadKnowledgeBase = loadKnowledgeBaseV4, generate = generateAIWorkflowV4, createProvider = createAIProviderForPlan }) {
-  const fail = (response, origin, error, status = 422) => send(response, isVersionConflict(error)?409:status,
+export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStorage, mediaAvailable = true, readJson, send, pending, metadataForAudit, refreshStudentContext, loadKnowledgeBase = loadKnowledgeBaseV4, generate = generateAIWorkflowV4, createProvider = createAIProviderForPlan }) {
+  const fail = (response, origin, error, status = 422) => send(response, httpStatusForError(error, status),
     isVersionConflict(error)?conflictPayload(error):{ error: publicErrorMessage(error) }, origin);
 
   async function ownedYear(yearId) {
@@ -94,6 +94,7 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
     try {
       const mediaMatch = url.pathname.match(/^\/api\/period-evaluations\/evidence\/([0-9a-f-]{36})\/media$/i);
       if (request.method === "GET" && mediaMatch) {
+        if (!mediaAvailable) { send(response, 503, { error: "Las fotos estarán disponibles al conectar Storage." }, origin); return true; }
         const row = (await db.query(`select e.media_path,e.student_id from evidences e join students s on s.id=e.student_id join classrooms c on c.id=s.classroom_id join school_years sy on sy.id=c.school_year_id where e.id=$1 and c.teacher_id=$2 and sy.owner_id=$2`, [mediaMatch[1], teacherId])).rows[0];
         if (!row?.media_path) throw new Error("Adjunto no disponible para esta aula.");
         const media = await evidenceStorage.read(row.media_path, { teacherId, studentId: row.student_id });

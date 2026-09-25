@@ -5,6 +5,7 @@ import { resolveAIExecutionPlan } from "../src/lib/ai-execution-router-v4.mjs";
 import { createAIProviderForPlan } from "../src/lib/ai-provider-factory.mjs";
 import { generateAIWorkflowV4 } from "../src/lib/ai-generation-v4.mjs";
 import { loadAssessmentEvidence, assessmentSourceSnapshot, sameEvidenceSourceSnapshot, sanitizeEvidenceForAssessment, neutralizeAssessmentText, buildAssessmentInput, validateAssessmentPeriod, validateAssessmentProposal } from "../src/lib/assessment-v4-service.mjs";
+import { httpStatusForError, publicErrorMessage } from "../src/lib/version-integrity.mjs";
 
 const dateOnly = (value) => value instanceof Date ? value.toISOString().slice(0, 10) : String(value).slice(0, 10);
 const safeAssessment = (row) => ({ id: row.id, competency_v4_id: row.competency_v4_id, period_start: dateOnly(row.period_start), period_end: dateOnly(row.period_end), version: row.version, details: row.details, status: row.status, teacher_confirmed_at: row.teacher_confirmed_at, evidence_count: Array.isArray(row.source_evidence_ids) ? row.source_evidence_ids.length : Number(row.evidence_count ?? 0) });
@@ -21,7 +22,7 @@ export function createAssessmentRouteHandler({ db, annualPlanningContext, readJs
     }
     return { student };
   }
-  const fail = (response, origin, error, status = 422) => send(response, status, { error: error.message }, origin);
+  const fail = (response, origin, error, status = 422) => send(response, httpStatusForError(error, status), { error: publicErrorMessage(error) }, origin);
   async function currentDraft(context, id) {
     const row = (await db.query(`select ca.* from competency_assessments ca join students s on s.id=ca.student_id where ca.id=$1 and ca.status='draft' and s.classroom_id=$2`, [id, context.id])).rows[0];
     if (!row) throw new Error("Borrador no disponible.");

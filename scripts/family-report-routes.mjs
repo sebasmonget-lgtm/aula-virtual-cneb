@@ -5,6 +5,7 @@ import { resolveAIExecutionPlan } from "../src/lib/ai-execution-router-v4.mjs";
 import { createAIProviderForPlan } from "../src/lib/ai-provider-factory.mjs";
 import { generateAIWorkflowV4 } from "../src/lib/ai-generation-v4.mjs";
 import { buildFamilyReportInput, conclusionSourceSnapshot, sameConclusionSourceSnapshot, selectConfirmedConclusions, validateFamilyReport, validateFamilyReportPeriod } from "../src/lib/family-report-v4-service.mjs";
+import { httpStatusForError, publicErrorMessage } from "../src/lib/version-integrity.mjs";
 
 const dateOnly = (value) => value instanceof Date ? value.toISOString().slice(0, 10) : String(value).slice(0, 10);
 const sameIds = (left, right) => Array.isArray(left) && Array.isArray(right) && left.length === right.length && left.every((id, index) => id === right[index]);
@@ -12,7 +13,7 @@ const safeReport = (row) => ({ id: row.id, evaluation_period_id: row.evaluation_
 const staleMessage = "Las conclusiones confirmadas cambiaron desde que se preparó el informe. Regenera el informe antes de confirmarlo.";
 
 export function createFamilyReportRouteHandler({ db, teacherId, annualPlanningContext, readJson, send, loadKnowledgeBase = loadKnowledgeBaseV4, generate = generateAIWorkflowV4, createProvider = createAIProviderForPlan, pending, metadataForAudit }) {
-  const fail = (response, origin, error, status = 422) => send(response, status, { error: error.message }, origin);
+  const fail = (response, origin, error, status = 422) => send(response, httpStatusForError(error, status), { error: publicErrorMessage(error) }, origin);
   async function reportContext(classroomId) {
     if (!classroomId) return annualPlanningContext();
     const row=(await db.query(`select c.id,c.school_year_id,c.castellano_l2_applicable,c.religion_applicable,ag.age_years as age,sy.starts_on,sy.ends_on

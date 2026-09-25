@@ -4,7 +4,7 @@ import { mkdir, readFile, readdir, unlink, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { PGlite } from "@electric-sql/pglite";
+import { createDatabase } from "./database-adapter.mjs";
 import { resolveDailyState } from "../src/lib/daily-state.mjs";
 import { isValidStepIndex } from "../src/lib/activity-runner.mjs";
 import { buildStudentPedagogicalContext, refreshStudentContextSnapshot } from "../src/lib/student-context-service.mjs";
@@ -50,7 +50,7 @@ import { DiagnosticAssessmentError, loadDiagnosticAssessmentWorkspace, prepareDi
 import { DiagnosticSourceError, loadFamilyInterview, listFamilyInterviewStatuses, saveFamilyInterview, confirmFamilyInterview, attachFamilyInterview, familyInterviewAttachmentPath, recordSpontaneousObservation, recordMatrixDiagnosticObservation, loadSpontaneousObservations, correctSpontaneousClassification, markSpontaneousNeedsReview } from "../src/lib/diagnostic-sources-v4.mjs";
 import { neutralizeAssessmentText } from "../src/lib/assessment-v4-service.mjs";
 import { loadPlanningFeedback, planningFeedbackText } from "../src/lib/planning-feedback.mjs";
-import { expectedRevision, assertRevision, conflictPayload, isVersionConflict, versionTransaction, VersionConflictError, publicErrorMessage } from "../src/lib/version-integrity.mjs";
+import { expectedRevision, assertRevision, conflictPayload, httpStatusForError, isVersionConflict, versionTransaction, VersionConflictError, publicErrorMessage } from "../src/lib/version-integrity.mjs";
 import { createRequestAuth, RequestAuthError } from "./request-auth.mjs";
 import { authorizeRequestSelectors, RequestAccessError } from "./request-authorization.mjs";
 
@@ -63,6 +63,11 @@ const evidenceStorage = createLocalPrivateEvidenceStorage(evidenceAssetsDir);
 const interviewStorage = createLocalPrivateInterviewStorage(path.join(assetsDir, "family-interviews"));
 const port = Number(process.env.AYNI_LOCAL_DB_PORT ?? 8788);
 const authMode = process.env.AYNI_AUTH_MODE ?? "local";
+const dbMode = process.env.AYNI_DB_MODE ?? (authMode === "local" ? "local" : "postgres");
+const testAuthWithPglite = process.env.NODE_ENV === "test" && process.env.AYNI_TEST_AUTH_PGLITE === "1";
+if ((authMode === "local") !== (dbMode === "local") && !testAuthWithPglite) {
+  throw new Error("Usa Auth local con PGlite o Auth Supabase con PostgreSQL.");
+}
 if (process.env.NODE_ENV === "production" && authMode === "local") throw new Error("El modo local de identidad no está disponible en producción.");
 const listenHost = process.env.AYNI_API_HOST ?? "127.0.0.1";
 if (authMode === "local" && !["127.0.0.1", "localhost", "::1"].includes(listenHost)) {
@@ -88,11 +93,26 @@ const exportTables = [
   "class_schedule_entries", "daily_execution_logs", "attendance_records", "calendar_exceptions", "calendar_blocks", "initial_stages", "project_slots", "evaluation_periods", "period_competency_scope", "period_closures", "period_closure_versions", "student_context_snapshots", "annual_plans", "annual_plan_competencies", "annual_plan_changes", "competency_assessments", "competency_descriptive_conclusions", "family_reports",
 ];
 
-await mkdir(path.dirname(dataDir), { recursive: true });
+if (dbMode === "local") await mkdir(path.dirname(dataDir), { recursive: true });
 await mkdir(assetsDir, { recursive: true });
 await mkdir(evidenceAssetsDir, { recursive: true });
-const db = await PGlite.create(dataDir);
-await migrate();
+const database = await createDatabase({ mode: dbMode, dataDir, connectionString: process.env.SUPABASE_DB_URL });
+const db = database.db;
+if (dbMode === "local") await migrate();
+else {
+  const schema = (await db.query(`select to_regclass('public.profiles') as profiles,
+    to_regclass('public.ai_pending_generations') as generations,
+    to_regclass('public.period_closure_versions') as closures`)).rows[0];
+  if (!schema?.profiles || !schema.generations || !schema.closures) {
+    await database.close();
+    throw new Error("Faltan migraciones Supabase; aplícalas antes de iniciar Ayni.");
+  }
+  const permission = (await db.query(`select has_table_privilege(current_user, 'public.profiles', 'INSERT') as backend_writes`)).rows[0];
+  if (!permission?.backend_writes) {
+    await database.close();
+    throw new Error("La conexión PostgreSQL del backend necesita permiso de escritura.");
+  }
+}
 const pendingAIGenerations = createPendingAIGenerationsStore(db);
 await pendingAIGenerations.pruneExpired();
 let diagnosticClassificationQueue = Promise.resolve();
@@ -494,7 +514,7 @@ async function diagnosticWorkspace() {
 const handleAssessmentRoute = createAssessmentRouteHandler({ db, annualPlanningContext, readJson, send, pending: pendingAIGenerations, metadataForAudit: safeAnnualGenerationMetadata, refreshStudentContext: refreshStudentContextSnapshot });
 const handleDescriptiveConclusionRoute = createDescriptiveConclusionRouteHandler({ db, annualPlanningContext, readJson, send, pending: pendingAIGenerations, metadataForAudit: safeAnnualGenerationMetadata, refreshStudentContext: refreshStudentContextSnapshot });
 const handleFamilyReportRoute = createFamilyReportRouteHandler({ db, teacherId, annualPlanningContext, readJson, send, pending: pendingAIGenerations, metadataForAudit: safeAnnualGenerationMetadata });
-const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStorage, readJson, send, pending: pendingAIGenerations, metadataForAudit: safeAnnualGenerationMetadata, refreshStudentContext: refreshStudentContextSnapshot });
+const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStorage, mediaAvailable: dbMode === "local", readJson, send, pending: pendingAIGenerations, metadataForAudit: safeAnnualGenerationMetadata, refreshStudentContext: refreshStudentContextSnapshot });
 {
   const origin = request.headers.origin;
   const url = new URL(request.url ?? "/", `http://127.0.0.1:${port}`);
@@ -515,7 +535,7 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
 
   try {
     if (request.method === "GET" && url.pathname === "/health") {
-      send(response, 200, { ok: true, engine: "pglite", storage: ".local/pgdata" }, origin);
+      send(response, 200, { ok: true, engine: dbMode, ...(dbMode === "local" ? { storage: ".local/pgdata" } : {}) }, origin);
       return;
     }
     if (request.method === "GET" && url.pathname === "/api/pilot/setup") {
@@ -527,7 +547,7 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
       try {
         await createPilotClassroom(db, teacherId, await readJson(request));
         send(response, 201, { dashboard: await dashboard() }, origin);
-      } catch (error) { send(response, 422, { error: publicErrorMessage(error) }, origin); }
+      } catch (error) { send(response, httpStatusForError(error, 422), { error: publicErrorMessage(error) }, origin); }
       return;
     }
     if (request.method === "POST" && url.pathname === "/api/students/import") {
@@ -536,7 +556,7 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
         const rows = body.csv === undefined ? body.students : parseStudentCsv(body.csv);
         const count = await importStudentsForTeacher(db, teacherId, rows);
         send(response, 201, { count, dashboard: await dashboard() }, origin);
-      } catch (error) { send(response, 422, { error: publicErrorMessage(error) }, origin); }
+      } catch (error) { send(response, httpStatusForError(error, 422), { error: publicErrorMessage(error) }, origin); }
       return;
     }
     if (request.method === "GET" && url.pathname === "/api/dashboard") {
@@ -545,7 +565,7 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
       return;
     }
     if (request.method === "GET" && url.pathname === "/api/export") {
-      if (authMode !== "local" || origin || process.env.AYNI_ALLOW_LOCAL_EXPORT !== "1") {
+      if (dbMode !== "local" || origin || process.env.AYNI_ALLOW_LOCAL_EXPORT !== "1") {
         send(response, 403, { error: "Exportación local deshabilitada." }, origin);
         return;
       }
@@ -555,6 +575,7 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
       return;
     }
     if (request.method === "GET" && url.pathname.startsWith("/api/assets/")) {
+      if (dbMode === "postgres") { send(response, 503, { error: "Los logos estarán disponibles al conectar Storage." }, origin); return; }
       const assetId = url.pathname.split("/").at(-1);
       const assetResult = await db.query(`
         select original_path, mime_type from institution_assets
@@ -574,6 +595,10 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
     }
     if (request.method === "POST" && url.pathname === "/api/profile") {
       const body = await readJson(request);
+      if (dbMode === "postgres" && (body.logoUpload || body.createLogo)) {
+        send(response, 503, { error: "La carga de logos estará disponible al conectar Storage." }, origin);
+        return;
+      }
       const teacherName = cleanText(body.teacherName, 100);
       const institutionName = cleanText(body.institutionName, 200);
       const section = cleanText(body.section, 80);
@@ -592,7 +617,7 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
           const id = randomUUID();
           newLogo = { id, bytes, relativePath: `.local/assets/${id}.png`, mimeType: "image/png", width: 384, height: 384 };
           logoAssetId = id;
-        } catch (error) { send(response, 400, { error: publicErrorMessage(error) }, origin); return; }
+        } catch (error) { send(response, httpStatusForError(error, 400), { error: publicErrorMessage(error) }, origin); return; }
       }
       if (body.createLogo) {
         const initials = cleanText(body.logoInitials, 3).toUpperCase().replace(/[^A-ZÁÉÍÓÚÑ0-9]/g, "") || "AA";
@@ -657,6 +682,7 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
           await refreshStudentContextSnapshot(db, studentId);
           send(response, 200, saved, origin);
         } else if (request.method === "POST" && parts[6] === "attachment") {
+          if (dbMode === "postgres") { send(response, 503, { error: "Los adjuntos estarán disponibles al conectar Storage." }, origin); return; }
           const interview = await loadFamilyInterview(db, teacherId, studentId);
           if (!interview.draft && !interview.confirmed) throw new DiagnosticSourceError("invalid_attachment", "Guarda primero la entrevista.");
           const body = await readJson(request);
@@ -670,13 +696,14 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
             recordOperationalEvent("interview_attachment_cleanup_failed", { workflow: "diagnostic" }));
           send(response, 200, publicSaved, origin);
         } else if (request.method === "GET" && parts[6] === "attachment") {
+          if (dbMode === "postgres") { send(response, 503, { error: "Los adjuntos estarán disponibles al conectar Storage." }, origin); return; }
           const storagePath = await familyInterviewAttachmentPath(db, teacherId, studentId);
           if (!storagePath) { send(response, 404, { error: "Adjunto no encontrado." }, origin); return; }
           const attachment = await interviewStorage.read(storagePath, teacherId, studentId);
           sendAsset(response, 200, attachment.bytes, attachment.mimeType, origin, "private, no-store");
         } else send(response, 404, { error: "Ruta de entrevista no encontrada." }, origin);
       } catch (error) {
-        if (error instanceof DiagnosticSourceError || error instanceof TypeError) send(response, 422, { error: publicErrorMessage(error) }, origin);
+        if (error instanceof DiagnosticSourceError || error instanceof TypeError) send(response, httpStatusForError(error, 422), { error: publicErrorMessage(error) }, origin);
         else throw error;
       }
       return;
@@ -702,7 +729,7 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
           send(response, 200, saved, origin);
         } else send(response, 404, { error: "Ruta de observación no encontrada." }, origin);
       } catch (error) {
-        if (error instanceof DiagnosticSourceError) send(response, 422, { error: publicErrorMessage(error), reason: error.reason }, origin);
+        if (error instanceof DiagnosticSourceError) send(response, httpStatusForError(error, 422), { error: publicErrorMessage(error), reason: error.reason }, origin);
         else throw error;
       }
       return;
@@ -735,7 +762,7 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
         send(response, 200, result, origin);
       } catch (error) {
         if (error instanceof DiagnosticSuggestionError) {
-          send(response, 422, { error: publicErrorMessage(error), reason: error.reason }, origin);
+          send(response, httpStatusForError(error, 422), { error: publicErrorMessage(error), reason: error.reason }, origin);
         } else if (error instanceof DiagnosticAssessmentError) {
           send(response, ["no_classroom", "invalid_student", "not_editable"].includes(error.reason) ? 404 : 422,
             { error: publicErrorMessage(error), reason: error.reason }, origin);
@@ -767,7 +794,7 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
         const selected=url.searchParams.get("periodId")||periods[0]?.id;
         const feedback=selected?await loadPlanningFeedback(db,{teacherId,classroomId:context.id,periodId:selected}):null;
         send(response,200,{periods:periods.map((period)=>({id:period.id,label:period.label,starts_on:annualCalendarDay(period.starts_on),ends_on:annualCalendarDay(period.ends_on)})),feedback},origin);
-      }catch(error){send(response,422,{error:publicErrorMessage(error)},origin);}return;
+      }catch(error){send(response,httpStatusForError(error,422),{error:publicErrorMessage(error)},origin);}return;
     }
     if (request.method === "GET" && url.pathname === "/api/documents") {
       send(response, 200, { documents: await listSavedDocuments(db, teacherId) }, origin); return;
@@ -779,7 +806,7 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
       const knowledgeBase = await loadKnowledgeBaseV4();
       const cards = knowledgeBase.competencyCards.map((card) => ({ id: card.id, name: card.official_name,
         area_name: card.area_name, capacities: card.capacities, ages: card.ages }));
-      const logo = await loadInstitutionLogoForDocuments(db, teacherId, assetsDir);
+      const logo = dbMode === "local" ? await loadInstitutionLogoForDocuments(db, teacherId, assetsDir) : null;
       const download = await prepareWordDownload(db, teacherId, parts[3], parts[4], cards, { logo });
       if (!download) { send(response, 404, { error: "Documento no disponible." }, origin); return; }
       const headers = {
@@ -806,7 +833,7 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
       const knowledgeBase = await loadKnowledgeBaseV4();
       const cards = knowledgeBase.competencyCards.map((card) => ({ id: card.id, name: card.official_name,
         area_name: card.area_name, capacities: card.capacities, ages: card.ages }));
-      const logo = await loadInstitutionLogoForDocuments(db, teacherId, assetsDir);
+      const logo = dbMode === "local" ? await loadInstitutionLogoForDocuments(db, teacherId, assetsDir) : null;
       const download = await prepareWordDownload(db, teacherId, parts[3], parts[4], cards, { logo });
       if (!download) { send(response, 404, { error: "Documento no disponible." }, origin); return; }
       const saved = await saveWordToLocalDownloads(download, path.join(homedir(), "Downloads"));
@@ -879,7 +906,7 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
         }
         await db.exec("commit");
         send(response, 200, { calendar: updatedCalendar }, origin);
-      } catch (error) { await db.exec("rollback").catch(() => {}); send(response, 422, { error: publicErrorMessage(error) || "No se pudo guardar el calendario." }, origin); }
+      } catch (error) { await db.exec("rollback").catch(() => {}); send(response, httpStatusForError(error, 422), { error: publicErrorMessage(error) || "No se pudo guardar el calendario." }, origin); }
       return;
     }
     if (request.method === "POST" && url.pathname === "/api/ai/annual-plan/generate") {
@@ -904,7 +931,7 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
         const generationId = randomUUID();
         await pendingAIGenerations.set(generationId, { workflow: generated.internalMetadata.workflow, metadata: safeAnnualGenerationMetadata(generated.internalMetadata), classroom_id: classroom.id, source_diagnostic_review_id: classroom.source_diagnostic_review_id, source_context_fingerprint: classroom.context_v4.source_fingerprint, replacement_plan_id: replacingLegacy ? active.id : null, createdAt: Date.now() });
         send(response, 200, { proposal: generated.proposal, generation_id: generationId, document_context: annualDocumentContext(classroom) }, origin);
-      } catch (error) { send(response, 422, { error: publicErrorMessage(error) || "No pudimos preparar el plan anual.", reason: error?.reason ?? "unknown" }, origin); } return;
+      } catch (error) { send(response, httpStatusForError(error, 422), { error: publicErrorMessage(error) || "No pudimos preparar el plan anual.", reason: error?.reason ?? "unknown" }, origin); } return;
     }
     if (request.method === "POST" && /^\/api\/annual-plans\/[0-9a-f-]+\/new-version$/i.test(url.pathname)) {
       const context = await annualPlanningContext();
@@ -913,7 +940,7 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
         const body=await readJson(request);
         const copied = await copyConfirmedAnnualPlan(db, teacherId, context, url.pathname.split("/")[3], annualDocumentContext(context), expectedRevision(body.expectedRevision));
         send(response, 201, copied, origin);
-      } catch (error) { send(response, isVersionConflict(error)?409:422, isVersionConflict(error)?conflictPayload(error):{ error: publicErrorMessage(error), reason: error.reason ?? "version_unavailable" }, origin); }
+      } catch (error) { send(response, httpStatusForError(error, 422), isVersionConflict(error)?conflictPayload(error):{ error: publicErrorMessage(error), reason: error.reason ?? "version_unavailable" }, origin); }
       return;
     }
     if (request.method === "POST" && url.pathname === "/api/annual-plans") {
@@ -922,7 +949,7 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
       let annualSchedule = null;
       try { validateAnnualPlanProposal(body.proposal, await applicableCompetencyIds("annual_plan", context), context.year);
         if (body.proposal.plan_format === ANNUAL_PLAN_TEMPLATE_FORMAT) annualSchedule = buildFlexibleAnnualSchedule(context.calendar, body.proposal.proposed_experiences); }
-      catch (error) { send(response, 422, { error: publicErrorMessage(error), reason: error.reason, details: error.details }, origin); return; }
+      catch (error) { send(response, httpStatusForError(error, 422), { error: publicErrorMessage(error), reason: error.reason, details: error.details }, origin); return; }
       const existingId = typeof body.planId === "string" ? body.planId : null;
       const pending = typeof body.generationId === "string" ? await pendingAIGenerations.get(body.generationId) : null;
       if (!existingId && (!pending || pending.classroom_id !== context.id || pending.workflow !== "annual_plan")) { send(response, 422, { error: "La generación anual ya no está disponible. Genera nuevamente el borrador." }, origin); return; }
@@ -955,7 +982,7 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
         });
         if (pending) await pendingAIGenerations.delete(body.generationId);
         send(response, 200, saved, origin);
-      } catch (error) { send(response, isVersionConflict(error)?409:422, isVersionConflict(error)?conflictPayload(error):{ error: publicErrorMessage(error) || "No se pudo guardar el borrador." }, origin); }
+      } catch (error) { send(response, httpStatusForError(error, 422), isVersionConflict(error)?conflictPayload(error):{ error: publicErrorMessage(error) || "No se pudo guardar el borrador." }, origin); }
       return;
     }
     if (request.method === "POST" && url.pathname.startsWith("/api/annual-plans/") && url.pathname.endsWith("/confirm")) {
@@ -972,7 +999,7 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
           if(draft.proposal.plan_format===ANNUAL_PLAN_TEMPLATE_FORMAT) await replaceAnnualProjectSlots(id,buildFlexibleAnnualSchedule(context.calendar,draft.proposal.proposed_experiences),tx);
         });
         send(response,200,result,origin);
-      } catch (error) { send(response, isVersionConflict(error)?409:error?.reason?422:404, isVersionConflict(error)?conflictPayload(error):{ error: publicErrorMessage(error) || "Plan anual no disponible para confirmar.", ...(error?.reason ? { reason: error.reason, details: error.details } : {}) }, origin); }
+      } catch (error) { send(response, httpStatusForError(error, error?.reason?422:404), isVersionConflict(error)?conflictPayload(error):{ error: publicErrorMessage(error) || "Plan anual no disponible para confirmar.", ...(error?.reason ? { reason: error.reason, details: error.details } : {}) }, origin); }
       return;
     }
     if (request.method === "GET" && url.pathname === "/api/annual-plans/current") {
@@ -1007,7 +1034,7 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
       const context = await annualPlanningContext();
       if (!context) { send(response, 404, { error: "No se encontró un aula activa." }, origin); return; }
       try { const body=await readJson(request);send(response, 201, await copyConfirmedLearningExperience(db, teacherId, context.id, url.pathname.split("/")[3],expectedRevision(body.expectedRevision)), origin); }
-      catch (error) { send(response, isVersionConflict(error)?409:422, isVersionConflict(error)?conflictPayload(error):{ error: publicErrorMessage(error), reason: error.reason ?? "version_unavailable" }, origin); }
+      catch (error) { send(response, httpStatusForError(error, 422), isVersionConflict(error)?conflictPayload(error):{ error: publicErrorMessage(error), reason: error.reason ?? "version_unavailable" }, origin); }
       return;
     }
     if (request.method === "GET" && url.pathname === "/api/ai/competency-options") {
@@ -1044,7 +1071,7 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
         const generated = await generateTeacherLearningExperience({ classroom, request: body }); const generationId = randomUUID();
         await pendingAIGenerations.set(generationId, { workflow: generated.internalMetadata.workflow, classroom_id: classroom.id, metadata: safeAnnualGenerationMetadata(generated.internalMetadata), generated_proposal: generated.proposal, createdAt: Date.now(), revision_experience_id: revision?.id ?? null, parent: parent ? { annual_plan_id: parent.id, source_proposal_index: revision ? revision.source_proposal_index : body.sourceProposalIndex } : null });
         send(response, 200, { proposal: generated.proposal, generation_id: generationId }, origin);
-      } catch (error) { send(response, 422, { error: publicErrorMessage(error) || "No se pudo generar la experiencia.", reason: error?.reason ?? "unknown" }, origin); } return;
+      } catch (error) { send(response, httpStatusForError(error, 422), { error: publicErrorMessage(error) || "No se pudo generar la experiencia.", reason: error?.reason ?? "unknown" }, origin); } return;
     }
     if (request.method === "POST" && url.pathname === "/api/learning-experiences") {
       const context = await annualPlanningContext(); const body = await readJson(request); const pending = typeof body.generationId === "string" ? await pendingAIGenerations.get(body.generationId) : null;
@@ -1054,13 +1081,13 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
       if (originType === "planned" && (pending.parent?.annual_plan_id !== body.annualPlanId || pending.parent?.source_proposal_index !== proposalIndex)) { send(response, 422, { error: "La propuesta ya no coincide con el plan que inició este proyecto." }, origin); return; }
       if (originType === "emergent" && pending.parent) { send(response, 422, { error: "Esta generación pertenece a una propuesta del plan anual." }, origin); return; }
       if (originType === "emergent" && !cleanText(body.planningReason, 500)) { send(response, 422, { error: "Explica la razón de esta experiencia emergente." }, origin); return; }
-      try { validateExperienceDates(body, context); validateLearningExperienceProposal(body.type, body.proposal, await applicableCompetencyIds(body.type, context)); } catch (error) { send(response, 422, { error: publicErrorMessage(error) }, origin); return; }
+      try { validateExperienceDates(body, context); validateLearningExperienceProposal(body.type, body.proposal, await applicableCompetencyIds(body.type, context)); } catch (error) { send(response, httpStatusForError(error, 422), { error: publicErrorMessage(error) }, origin); return; }
       if (originType === "planned") {
         const parent = (await db.query(`select proposal from annual_plans where id=$1 and classroom_id=$2 and status in ('active','archived')`, [body.annualPlanId, context.id])).rows[0];
         const source = parent?.proposal?.proposed_experiences?.[proposalIndex];
         if (!source || source.experience_type !== body.type) { send(response, 422, { error: "La propuesta de origen ya no coincide con esta experiencia." }, origin); return; }
       }
-      try { const id = randomUUID(); const details = saveExperienceDetails(body.proposal, null, pending.generated_proposal); await db.query(`insert into learning_experiences (id,classroom_id,type,title,purpose,starts_on,ends_on,status,details,annual_plan_id,origin,planning_reason,source_proposal_index,generation_metadata) values ($1,$2,$3,$4,$5,$6::date,$7::date,'draft',$8::jsonb,$9,$10,$11,$12,$13::jsonb)`, [id, context.id, body.type, details.title, details.purpose, body.startsOn, body.endsOn, JSON.stringify(details), body.annualPlanId ?? null, originType, body.planningReason ?? null, proposalIndex, JSON.stringify(pending.metadata)]); await pendingAIGenerations.delete(body.generationId); send(response, 200, { id, status: "draft",revision:1 }, origin); } catch (error) { send(response, isVersionConflict(error)?409:422, isVersionConflict(error)?conflictPayload(error):{ error: publicErrorMessage(error) || "No se pudo guardar la experiencia." }, origin); } return;
+      try { const id = randomUUID(); const details = saveExperienceDetails(body.proposal, null, pending.generated_proposal); await db.query(`insert into learning_experiences (id,classroom_id,type,title,purpose,starts_on,ends_on,status,details,annual_plan_id,origin,planning_reason,source_proposal_index,generation_metadata) values ($1,$2,$3,$4,$5,$6::date,$7::date,'draft',$8::jsonb,$9,$10,$11,$12,$13::jsonb)`, [id, context.id, body.type, details.title, details.purpose, body.startsOn, body.endsOn, JSON.stringify(details), body.annualPlanId ?? null, originType, body.planningReason ?? null, proposalIndex, JSON.stringify(pending.metadata)]); await pendingAIGenerations.delete(body.generationId); send(response, 200, { id, status: "draft",revision:1 }, origin); } catch (error) { send(response, httpStatusForError(error, 422), isVersionConflict(error)?conflictPayload(error):{ error: publicErrorMessage(error) || "No se pudo guardar la experiencia." }, origin); } return;
     }
     if (request.method === "PUT" && url.pathname.startsWith("/api/learning-experiences/")) {
       const id = url.pathname.split("/")[3]; const context = await annualPlanningContext(); const body = await readJson(request);
@@ -1070,7 +1097,7 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
       if (body.generationId && (!pending || pending.workflow !== current.type || pending.classroom_id !== context.id || pending.revision_experience_id !== id ||
           (current.origin === "planned" && (pending.parent?.annual_plan_id !== current.annual_plan_id || pending.parent?.source_proposal_index !== current.source_proposal_index)) ||
           (current.origin === "emergent" && pending.parent))) { send(response, 422, { error: "La regeneración no corresponde a este borrador." }, origin); return; }
-      try { const revision=expectedRevision(body.expectedRevision);validateExperienceDates(body, context); validateLearningExperienceProposal(current.type, body.proposal, await applicableCompetencyIds(current.type, context)); if (current.origin === "emergent" && !cleanText(body.planningReason, 500)) throw new Error("Explica la razón de esta experiencia emergente."); const details = saveExperienceDetails(body.proposal, current.details, pending?.generated_proposal); const saved=await versionTransaction(db,`experience:${current.lineage_id}`,async(tx)=>{const result=(await tx.query(`update learning_experiences set title=$1,purpose=$2,starts_on=$3::date,ends_on=$4::date,details=$5::jsonb,planning_reason=$6 where id=$7 and status='draft' and revision=$8 returning revision`, [details.title, details.purpose, body.startsOn, body.endsOn, JSON.stringify(details), current.origin === "emergent" ? body.planningReason : current.planning_reason, id,revision])).rows[0];if(!result){const now=(await tx.query(`select revision from learning_experiences where id=$1`,[id])).rows[0];throw new VersionConflictError(undefined,now?.revision??null);}return result;}); if (pending) await pendingAIGenerations.delete(body.generationId); send(response, 200, { id, status: "draft",revision:Number(saved.revision) }, origin); } catch (error) { send(response, isVersionConflict(error)?409:422, isVersionConflict(error)?conflictPayload(error):{ error: publicErrorMessage(error) }, origin); } return;
+      try { const revision=expectedRevision(body.expectedRevision);validateExperienceDates(body, context); validateLearningExperienceProposal(current.type, body.proposal, await applicableCompetencyIds(current.type, context)); if (current.origin === "emergent" && !cleanText(body.planningReason, 500)) throw new Error("Explica la razón de esta experiencia emergente."); const details = saveExperienceDetails(body.proposal, current.details, pending?.generated_proposal); const saved=await versionTransaction(db,`experience:${current.lineage_id}`,async(tx)=>{const result=(await tx.query(`update learning_experiences set title=$1,purpose=$2,starts_on=$3::date,ends_on=$4::date,details=$5::jsonb,planning_reason=$6 where id=$7 and status='draft' and revision=$8 returning revision`, [details.title, details.purpose, body.startsOn, body.endsOn, JSON.stringify(details), current.origin === "emergent" ? body.planningReason : current.planning_reason, id,revision])).rows[0];if(!result){const now=(await tx.query(`select revision from learning_experiences where id=$1`,[id])).rows[0];throw new VersionConflictError(undefined,now?.revision??null);}return result;}); if (pending) await pendingAIGenerations.delete(body.generationId); send(response, 200, { id, status: "draft",revision:Number(saved.revision) }, origin); } catch (error) { send(response, httpStatusForError(error, 422), isVersionConflict(error)?conflictPayload(error):{ error: publicErrorMessage(error) }, origin); } return;
     }
     if (request.method === "POST" && url.pathname.startsWith("/api/learning-experiences/") && url.pathname.endsWith("/confirm")) {
       const id = url.pathname.split("/")[3]; const context = await annualPlanningContext(); const current = context && (await db.query(`select * from learning_experiences where id=$1 and classroom_id=$2`, [id, context.id])).rows[0];
@@ -1082,7 +1109,7 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
         if (current.origin === "planned") { const parent = (await db.query(`select proposal from annual_plans where id=$1 and classroom_id=$2 and status in ('active','archived')`, [current.annual_plan_id, context.id])).rows[0]; const source = parent?.proposal?.proposed_experiences?.[current.source_proposal_index]; if (!source || source.experience_type !== current.type) throw new Error("La propuesta de origen ya no coincide con esta experiencia."); }
         const body=await readJson(request);
         send(response, 200, await confirmLearningExperienceVersion(db, context.id, id,expectedRevision(body.expectedRevision)), origin);
-      } catch (error) { send(response, isVersionConflict(error)?409:422, isVersionConflict(error)?conflictPayload(error):{ error: publicErrorMessage(error) }, origin); } return;
+      } catch (error) { send(response, httpStatusForError(error, 422), isVersionConflict(error)?conflictPayload(error):{ error: publicErrorMessage(error) }, origin); } return;
     }
     if (request.method === "GET" && url.pathname === "/api/activities") {
       const context = await annualPlanningContext(); const experience = context && await existingLearningExperience(url.searchParams.get("experienceId"), context.id);
@@ -1097,7 +1124,7 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
       const id=url.pathname.split("/")[3],context=await annualPlanningContext();
       if (!context) { send(response,404,{error:"Aula no disponible."},origin); return; }
       try { const body=await readJson(request);send(response,200,await copyConfirmedActivity(db,teacherId,context.id,id,expectedRevision(body.expectedRevision)),origin); }
-      catch(error) { send(response,isVersionConflict(error)?409:422,isVersionConflict(error)?conflictPayload(error):{error:publicErrorMessage(error)},origin); }
+      catch(error) { send(response,httpStatusForError(error,422),isVersionConflict(error)?conflictPayload(error):{error:publicErrorMessage(error)},origin); }
       return;
     }
     if (request.method === "POST" && /^\/api\/activities\/[^/]+\/switch-schedule$/.test(url.pathname)) {
@@ -1120,16 +1147,16 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
       const allowed = await activityAllowedCompetencies(experience, context);
       if ((routeItem?.competency_id || body.competencyId) && !allowed.has(routeItem?.competency_id || body.competencyId)) { send(response, 422, { error: "La competencia no pertenece a la experiencia." }, origin); return; }
       try { if(body.usePlanningFeedback===true){const feedback=await loadPlanningFeedback(db,{teacherId,classroomId:context.id,periodId:body.planningFeedbackPeriodId});const summary=planningFeedbackText(feedback);if(summary)body.context=`${String(body.context||"").slice(0,500)}\n${summary}`.slice(0,1000);}
-        const generated = await generateTeacherActivity({ request: body, classroom: context, learningExperience: await activityParentContext(experience) }); const generationId = randomUUID(); await pendingAIGenerations.set(generationId, { workflow: "activity", classroom_id: context.id, learning_experience_id: experience.id, route_item_id: routeItem?.id ?? null, metadata: safeAnnualGenerationMetadata(generated.internalMetadata), createdAt: Date.now() }); send(response, 200, { proposal: generated.proposal, generation_id: generationId }, origin); } catch (error) { send(response, 422, { error: publicErrorMessage(error) || "No se pudo generar la actividad." }, origin); } return;
+        const generated = await generateTeacherActivity({ request: body, classroom: context, learningExperience: await activityParentContext(experience) }); const generationId = randomUUID(); await pendingAIGenerations.set(generationId, { workflow: "activity", classroom_id: context.id, learning_experience_id: experience.id, route_item_id: routeItem?.id ?? null, metadata: safeAnnualGenerationMetadata(generated.internalMetadata), createdAt: Date.now() }); send(response, 200, { proposal: generated.proposal, generation_id: generationId }, origin); } catch (error) { send(response, httpStatusForError(error, 422), { error: publicErrorMessage(error) || "No se pudo generar la actividad." }, origin); } return;
     }
     if (request.method === "POST" && url.pathname === "/api/activities") {
       const context = await annualPlanningContext(); const body = await readJson(request); const experience = context && await activeLearningExperience(body.experienceId, context.id); const pending = await pendingAIGenerations.get(body.generationId);
       if (!experience || !pending || pending.workflow !== "activity" || pending.classroom_id !== context.id || pending.learning_experience_id !== experience.id) { send(response, 422, { error: "La generación de actividad no corresponde a esta experiencia." }, origin); return; }
-      try { validateActivityDate(body.occursOn, experience, context); validateActivityV4(body.proposal, await activityAllowedCompetencies(experience, context)); const routeItem = routeItemFor(experience, pending.route_item_id); if (experience.details?.activity_route?.length && !routeItem) throw new Error("La actividad de origen ya no está en la ruta confirmada."); const details = saveActivityDetails(body.proposal, routeItem); const id=randomUUID(); await db.query(`insert into activities (id,experience_id,occurs_on,title,purpose,sequence,preparation,adaptations,status,details,generation_metadata) values ($1,$2,$3::date,$4,$5,'[]'::jsonb,$6::jsonb,'[]'::jsonb,'draft',$7::jsonb,$8::jsonb)`, [id,experience.id,body.occursOn,details.title,details.purpose,JSON.stringify({materials: normalizeActivityMaterials(body.materials)}),JSON.stringify(details),JSON.stringify(pending.metadata)]); await pendingAIGenerations.delete(body.generationId); send(response,200,{id,status:"draft",revision:1},origin); } catch(error) { send(response,422,{error:publicErrorMessage(error)},origin); } return;
+      try { validateActivityDate(body.occursOn, experience, context); validateActivityV4(body.proposal, await activityAllowedCompetencies(experience, context)); const routeItem = routeItemFor(experience, pending.route_item_id); if (experience.details?.activity_route?.length && !routeItem) throw new Error("La actividad de origen ya no está en la ruta confirmada."); const details = saveActivityDetails(body.proposal, routeItem); const id=randomUUID(); await db.query(`insert into activities (id,experience_id,occurs_on,title,purpose,sequence,preparation,adaptations,status,details,generation_metadata) values ($1,$2,$3::date,$4,$5,'[]'::jsonb,$6::jsonb,'[]'::jsonb,'draft',$7::jsonb,$8::jsonb)`, [id,experience.id,body.occursOn,details.title,details.purpose,JSON.stringify({materials: normalizeActivityMaterials(body.materials)}),JSON.stringify(details),JSON.stringify(pending.metadata)]); await pendingAIGenerations.delete(body.generationId); send(response,200,{id,status:"draft",revision:1},origin); } catch(error) { send(response,httpStatusForError(error,422),{error:publicErrorMessage(error)},origin); } return;
     }
     if (request.method === "PUT" && url.pathname.startsWith("/api/activities/")) {
       const id=url.pathname.split("/")[3]; const context=await annualPlanningContext(); const body=await readJson(request); const current=context&&(await db.query(`select a.*,e.classroom_id,e.status as experience_status,e.details as experience_details,e.starts_on as experience_starts_on,e.ends_on as experience_ends_on from activities a join learning_experiences e on e.id=a.experience_id where a.id=$1 and e.classroom_id=$2 and a.status='draft'`,[id,context.id])).rows[0];
-      if(!current||!["active","archived"].includes(current.experience_status)){send(response,404,{error:"Borrador no disponible."},origin);return;} const pending=typeof body.generationId==="string"?await pendingAIGenerations.get(body.generationId):null; if(body.generationId&&(!pending||pending.workflow!=="activity"||pending.classroom_id!==context.id||pending.learning_experience_id!==current.experience_id)){send(response,422,{error:"La regeneración no corresponde a esta actividad."},origin);return;} try { const revision=expectedRevision(body.expectedRevision);const parent={ details: current.experience_details }; validateActivityDate(body.occursOn,{starts_on:current.experience_starts_on,ends_on:current.experience_ends_on},context); validateActivityV4(body.proposal,await activityAllowedCompetencies(parent,context)); const routeItem=routeItemFor(parent,current.details?.route_item_id); if(current.experience_details?.activity_route?.length&&!routeItem)throw new Error("La actividad ya no corresponde a la ruta del proyecto."); const details=saveActivityDetails(body.proposal,routeItem,current.details); const values=[body.occursOn,details.title,details.purpose,JSON.stringify(details),JSON.stringify({materials:normalizeActivityMaterials(body.materials)})];const saved=await versionTransaction(db,`activity:${current.lineage_id}`,async(tx)=>{const result=pending?await tx.query(`update activities set occurs_on=$1::date,title=$2,purpose=$3,details=$4::jsonb,preparation=$5::jsonb,generation_metadata=$6::jsonb,updated_at=now() where id=$7 and status='draft' and revision=$8 returning revision`,[...values,JSON.stringify(pending.metadata),id,revision]):await tx.query(`update activities set occurs_on=$1::date,title=$2,purpose=$3,details=$4::jsonb,preparation=$5::jsonb,updated_at=now() where id=$6 and status='draft' and revision=$7 returning revision`,[...values,id,revision]);if(!result.rows[0]){const now=(await tx.query(`select revision from activities where id=$1`,[id])).rows[0];throw new VersionConflictError(undefined,now?.revision??null);}return result.rows[0];});if(pending)await pendingAIGenerations.delete(body.generationId);send(response,200,{id,status:"draft",revision:Number(saved.revision)},origin);}catch(error){send(response,isVersionConflict(error)?409:422,isVersionConflict(error)?conflictPayload(error):{error:publicErrorMessage(error)},origin);}return;
+      if(!current||!["active","archived"].includes(current.experience_status)){send(response,404,{error:"Borrador no disponible."},origin);return;} const pending=typeof body.generationId==="string"?await pendingAIGenerations.get(body.generationId):null; if(body.generationId&&(!pending||pending.workflow!=="activity"||pending.classroom_id!==context.id||pending.learning_experience_id!==current.experience_id)){send(response,422,{error:"La regeneración no corresponde a esta actividad."},origin);return;} try { const revision=expectedRevision(body.expectedRevision);const parent={ details: current.experience_details }; validateActivityDate(body.occursOn,{starts_on:current.experience_starts_on,ends_on:current.experience_ends_on},context); validateActivityV4(body.proposal,await activityAllowedCompetencies(parent,context)); const routeItem=routeItemFor(parent,current.details?.route_item_id); if(current.experience_details?.activity_route?.length&&!routeItem)throw new Error("La actividad ya no corresponde a la ruta del proyecto."); const details=saveActivityDetails(body.proposal,routeItem,current.details); const values=[body.occursOn,details.title,details.purpose,JSON.stringify(details),JSON.stringify({materials:normalizeActivityMaterials(body.materials)})];const saved=await versionTransaction(db,`activity:${current.lineage_id}`,async(tx)=>{const result=pending?await tx.query(`update activities set occurs_on=$1::date,title=$2,purpose=$3,details=$4::jsonb,preparation=$5::jsonb,generation_metadata=$6::jsonb,updated_at=now() where id=$7 and status='draft' and revision=$8 returning revision`,[...values,JSON.stringify(pending.metadata),id,revision]):await tx.query(`update activities set occurs_on=$1::date,title=$2,purpose=$3,details=$4::jsonb,preparation=$5::jsonb,updated_at=now() where id=$6 and status='draft' and revision=$7 returning revision`,[...values,id,revision]);if(!result.rows[0]){const now=(await tx.query(`select revision from activities where id=$1`,[id])).rows[0];throw new VersionConflictError(undefined,now?.revision??null);}return result.rows[0];});if(pending)await pendingAIGenerations.delete(body.generationId);send(response,200,{id,status:"draft",revision:Number(saved.revision)},origin);}catch(error){send(response,httpStatusForError(error,422),isVersionConflict(error)?conflictPayload(error):{error:publicErrorMessage(error)},origin);}return;
     }
     if (request.method === "POST" && url.pathname.startsWith("/api/activities/") && url.pathname.endsWith("/confirm")) {
       const id = url.pathname.split("/")[3];
@@ -1150,7 +1177,7 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
         const confirmed = await confirmActivityWithCriterion(db, id, criterion, randomUUID(), expectedRevision(body.expectedRevision));
         send(response, 200, confirmed, origin);
       } catch (error) {
-        send(response, isVersionConflict(error)?409:422, isVersionConflict(error)?conflictPayload(error):{ error: publicErrorMessage(error) }, origin);
+        send(response, httpStatusForError(error, 422), isVersionConflict(error)?conflictPayload(error):{ error: publicErrorMessage(error) }, origin);
       }
       return;
     }
@@ -1161,20 +1188,20 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
       const id=url.pathname.split("/")[3],context=await annualPlanningContext();
       if(!context){send(response,404,{error:"Aula no disponible."},origin);return;}
       try {const body=await readJson(request);send(response,200,await copyConfirmedCriterion(db,teacherId,context.id,id,expectedRevision(body.expectedRevision)),origin);}
-      catch(error){send(response,isVersionConflict(error)?409:422,isVersionConflict(error)?conflictPayload(error):{error:publicErrorMessage(error)},origin);}
+      catch(error){send(response,httpStatusForError(error,422),isVersionConflict(error)?conflictPayload(error):{error:publicErrorMessage(error)},origin);}
       return;
     }
     if(request.method==="POST"&&url.pathname==="/api/ai/activity-criteria/generate"){
       const context=await annualPlanningContext();const body=await readJson(request);const activity=context&&(await db.query(`select a.*,e.id as parent_id,e.type as parent_type,e.title as parent_title,e.purpose as parent_purpose,e.details as parent_details from activities a join learning_experiences e on e.id=a.experience_id where a.id=$1 and e.classroom_id=$2 and a.status='active'`,[body.activityId,context.id])).rows[0];if(!activity||activity.details?.competency_status!=="confirmed"||!activity.details?.competency_id){send(response,422,{error:"Confirma la competencia de la actividad antes de preparar el criterio."},origin);return;}const allowed=await activityAllowedCompetencies({details:activity.parent_details},context);if(!allowed.has(activity.details.competency_id)){send(response,422,{error:"El criterio ya no corresponde a esta actividad."},origin);return;}try{const generated=await generateCriterionEvidence({classroom:context,activity,parent:{id:activity.parent_id,type:activity.parent_type,title:activity.parent_title,purpose:activity.parent_purpose,details:activity.parent_details},note:cleanText(body.note,1000)});const generationId=randomUUID();await pendingAIGenerations.set(generationId,{workflow:"criterion_and_evidence",classroom_id:context.id,activity_id:activity.id,competency_v4_id:activity.details.competency_id,metadata:safeAnnualGenerationMetadata(generated.internalMetadata),createdAt:Date.now()});send(response,200,{proposal:generated.proposal,generation_id:generationId},origin);}catch{send(response,422,{error:"No pudimos generar un criterio válido."},origin);}return;
     }
     if(request.method==="POST"&&url.pathname==="/api/activity-criteria"){
-      const context=await annualPlanningContext();const body=await readJson(request);const pending=await pendingAIGenerations.get(body.generationId);const activity=context&&(await db.query(`select a.*,e.details as parent_details from activities a join learning_experiences e on e.id=a.experience_id where a.id=$1 and e.classroom_id=$2 and a.status='active'`,[body.activityId,context.id])).rows[0];if(!activity||!pending||pending.workflow!=="criterion_and_evidence"||pending.classroom_id!==context.id||pending.activity_id!==activity.id||pending.competency_v4_id!==activity.details?.competency_id){send(response,422,{error:"El criterio ya no corresponde a esta actividad."},origin);return;}try{const allowed=await activityAllowedCompetencies({details:activity.parent_details},context);if(activity.details?.competency_status!=="confirmed"||!allowed.has(activity.details.competency_id))throw new Error("El criterio ya no corresponde a esta actividad.");validateCriterionEvidenceV4(body.proposal,activity.details.competency_id);const existing=(await db.query(`select id,revision,lineage_id,status from activity_criteria where activity_id=$1 and competency_v4_id=$2 and status='draft'`,[activity.id,activity.details.competency_id])).rows[0];const active=(await db.query(`select id from activity_criteria where activity_id=$1 and competency_v4_id=$2 and status='active'`,[activity.id,activity.details.competency_id])).rows[0];if(active&&!existing)throw new Error("Prepara una nueva versión del criterio confirmado antes de regenerarlo.");const id=existing?.id??randomUUID();let revision=1;if(existing){const expected=expectedRevision(body.expectedRevision);const saved=await versionTransaction(db,`criterion:${existing.lineage_id}`,async(tx)=>{const result=(await tx.query(`update activity_criteria set criterion_text=$1,details=$2::jsonb,generation_metadata=$3::jsonb,updated_at=now() where id=$4 and status='draft' and revision=$5 returning revision`,[body.proposal.criterion_text,JSON.stringify(body.proposal),JSON.stringify(pending.metadata),id,expected])).rows[0];if(!result)throw new VersionConflictError(undefined,(await tx.query(`select revision from activity_criteria where id=$1`,[id])).rows[0]?.revision??null);return result;});revision=Number(saved.revision);}else await db.query(`insert into activity_criteria(id,activity_id,competency_id,competency_v4_id,performance_id,criterion_text,details,generation_metadata,status) values($1,$2,null,$3,null,$4,$5::jsonb,$6::jsonb,'draft')`,[id,activity.id,activity.details.competency_id,body.proposal.criterion_text,JSON.stringify(body.proposal),JSON.stringify(pending.metadata)]);await pendingAIGenerations.delete(body.generationId);send(response,200,{id,status:"draft",revision},origin);}catch(error){send(response,isVersionConflict(error)?409:422,isVersionConflict(error)?conflictPayload(error):{error:publicErrorMessage(error)},origin);}return;
+      const context=await annualPlanningContext();const body=await readJson(request);const pending=await pendingAIGenerations.get(body.generationId);const activity=context&&(await db.query(`select a.*,e.details as parent_details from activities a join learning_experiences e on e.id=a.experience_id where a.id=$1 and e.classroom_id=$2 and a.status='active'`,[body.activityId,context.id])).rows[0];if(!activity||!pending||pending.workflow!=="criterion_and_evidence"||pending.classroom_id!==context.id||pending.activity_id!==activity.id||pending.competency_v4_id!==activity.details?.competency_id){send(response,422,{error:"El criterio ya no corresponde a esta actividad."},origin);return;}try{const allowed=await activityAllowedCompetencies({details:activity.parent_details},context);if(activity.details?.competency_status!=="confirmed"||!allowed.has(activity.details.competency_id))throw new Error("El criterio ya no corresponde a esta actividad.");validateCriterionEvidenceV4(body.proposal,activity.details.competency_id);const existing=(await db.query(`select id,revision,lineage_id,status from activity_criteria where activity_id=$1 and competency_v4_id=$2 and status='draft'`,[activity.id,activity.details.competency_id])).rows[0];const active=(await db.query(`select id from activity_criteria where activity_id=$1 and competency_v4_id=$2 and status='active'`,[activity.id,activity.details.competency_id])).rows[0];if(active&&!existing)throw new Error("Prepara una nueva versión del criterio confirmado antes de regenerarlo.");const id=existing?.id??randomUUID();let revision=1;if(existing){const expected=expectedRevision(body.expectedRevision);const saved=await versionTransaction(db,`criterion:${existing.lineage_id}`,async(tx)=>{const result=(await tx.query(`update activity_criteria set criterion_text=$1,details=$2::jsonb,generation_metadata=$3::jsonb,updated_at=now() where id=$4 and status='draft' and revision=$5 returning revision`,[body.proposal.criterion_text,JSON.stringify(body.proposal),JSON.stringify(pending.metadata),id,expected])).rows[0];if(!result)throw new VersionConflictError(undefined,(await tx.query(`select revision from activity_criteria where id=$1`,[id])).rows[0]?.revision??null);return result;});revision=Number(saved.revision);}else await db.query(`insert into activity_criteria(id,activity_id,competency_id,competency_v4_id,performance_id,criterion_text,details,generation_metadata,status) values($1,$2,null,$3,null,$4,$5::jsonb,$6::jsonb,'draft')`,[id,activity.id,activity.details.competency_id,body.proposal.criterion_text,JSON.stringify(body.proposal),JSON.stringify(pending.metadata)]);await pendingAIGenerations.delete(body.generationId);send(response,200,{id,status:"draft",revision},origin);}catch(error){send(response,httpStatusForError(error,422),isVersionConflict(error)?conflictPayload(error):{error:publicErrorMessage(error)},origin);}return;
     }
     if(request.method==="PUT"&&url.pathname.startsWith("/api/activity-criteria/")){
-      const id=url.pathname.split("/")[3],context=await annualPlanningContext(),body=await readJson(request);const current=context&&(await db.query(`select ac.*,a.details as activity_details,e.classroom_id,e.details as parent_details from activity_criteria ac join activities a on a.id=ac.activity_id join learning_experiences e on e.id=a.experience_id where ac.id=$1 and e.classroom_id=$2 and a.status='active'`,[id,context.id])).rows[0];if(!current){send(response,404,{error:"Criterio no disponible."},origin);return;}if(current.status!=="draft"){send(response,409,conflictPayload(new VersionConflictError("El criterio ya fue confirmado o reemplazado.",current.revision)),origin);return;}const pending=body.generationId&&await pendingAIGenerations.get(body.generationId);if(body.generationId&&(!pending||pending.workflow!=="criterion_and_evidence"||pending.activity_id!==current.activity_id||pending.classroom_id!==context.id||pending.competency_v4_id!==current.competency_v4_id)){send(response,422,{error:"El criterio ya no corresponde a esta actividad."},origin);return;}try{const revision=expectedRevision(body.expectedRevision);await validateStoredActivityCriterion(current,context);validateCriterionEvidenceV4(body.proposal,current.activity_details.competency_id);const saved=await versionTransaction(db,`criterion:${current.lineage_id}`,async(tx)=>{const result=pending?await tx.query(`update activity_criteria set criterion_text=$1,details=$2::jsonb,generation_metadata=$3::jsonb,updated_at=now() where id=$4 and status='draft' and revision=$5 returning revision`,[body.proposal.criterion_text,JSON.stringify(body.proposal),JSON.stringify(pending.metadata),id,revision]):await tx.query(`update activity_criteria set criterion_text=$1,details=$2::jsonb,updated_at=now() where id=$3 and status='draft' and revision=$4 returning revision`,[body.proposal.criterion_text,JSON.stringify(body.proposal),id,revision]);if(!result.rows[0])throw new VersionConflictError(undefined,(await tx.query(`select revision from activity_criteria where id=$1`,[id])).rows[0]?.revision??null);return result.rows[0];});if(pending)await pendingAIGenerations.delete(body.generationId);send(response,200,{id,status:"draft",revision:Number(saved.revision)},origin)}catch(error){send(response,isVersionConflict(error)?409:422,isVersionConflict(error)?conflictPayload(error):{error:publicErrorMessage(error)},origin)}return;
+      const id=url.pathname.split("/")[3],context=await annualPlanningContext(),body=await readJson(request);const current=context&&(await db.query(`select ac.*,a.details as activity_details,e.classroom_id,e.details as parent_details from activity_criteria ac join activities a on a.id=ac.activity_id join learning_experiences e on e.id=a.experience_id where ac.id=$1 and e.classroom_id=$2 and a.status='active'`,[id,context.id])).rows[0];if(!current){send(response,404,{error:"Criterio no disponible."},origin);return;}if(current.status!=="draft"){send(response,409,conflictPayload(new VersionConflictError("El criterio ya fue confirmado o reemplazado.",current.revision)),origin);return;}const pending=body.generationId&&await pendingAIGenerations.get(body.generationId);if(body.generationId&&(!pending||pending.workflow!=="criterion_and_evidence"||pending.activity_id!==current.activity_id||pending.classroom_id!==context.id||pending.competency_v4_id!==current.competency_v4_id)){send(response,422,{error:"El criterio ya no corresponde a esta actividad."},origin);return;}try{const revision=expectedRevision(body.expectedRevision);await validateStoredActivityCriterion(current,context);validateCriterionEvidenceV4(body.proposal,current.activity_details.competency_id);const saved=await versionTransaction(db,`criterion:${current.lineage_id}`,async(tx)=>{const result=pending?await tx.query(`update activity_criteria set criterion_text=$1,details=$2::jsonb,generation_metadata=$3::jsonb,updated_at=now() where id=$4 and status='draft' and revision=$5 returning revision`,[body.proposal.criterion_text,JSON.stringify(body.proposal),JSON.stringify(pending.metadata),id,revision]):await tx.query(`update activity_criteria set criterion_text=$1,details=$2::jsonb,updated_at=now() where id=$3 and status='draft' and revision=$4 returning revision`,[body.proposal.criterion_text,JSON.stringify(body.proposal),id,revision]);if(!result.rows[0])throw new VersionConflictError(undefined,(await tx.query(`select revision from activity_criteria where id=$1`,[id])).rows[0]?.revision??null);return result.rows[0];});if(pending)await pendingAIGenerations.delete(body.generationId);send(response,200,{id,status:"draft",revision:Number(saved.revision)},origin)}catch(error){send(response,httpStatusForError(error,422),isVersionConflict(error)?conflictPayload(error):{error:publicErrorMessage(error)},origin)}return;
     }
     if(request.method==="POST"&&url.pathname.startsWith("/api/activity-criteria/")&&url.pathname.endsWith("/confirm")){
-      const id=url.pathname.split("/")[3],context=await annualPlanningContext();const current=context&&(await db.query(`select ac.*,a.details as activity_details,e.classroom_id,e.details as parent_details from activity_criteria ac join activities a on a.id=ac.activity_id join learning_experiences e on e.id=a.experience_id where ac.id=$1 and e.classroom_id=$2 and a.status='active'`,[id,context.id])).rows[0];if(!current){send(response,404,{error:"Criterio no disponible."},origin);return;}if(current.status!=="draft"){send(response,409,conflictPayload(new VersionConflictError("El criterio ya fue confirmado o reemplazado.",current.revision)),origin);return;}try{const body=await readJson(request);await validateStoredActivityCriterion(current,context);validateCriterionEvidenceV4(current.details,current.activity_details.competency_id);const result=await confirmCriterionVersion(db,id,current.activity_id,expectedRevision(body.expectedRevision));send(response,200,result,origin)}catch(error){send(response,isVersionConflict(error)?409:422,isVersionConflict(error)?conflictPayload(error):{error:publicErrorMessage(error)},origin)}return;
+      const id=url.pathname.split("/")[3],context=await annualPlanningContext();const current=context&&(await db.query(`select ac.*,a.details as activity_details,e.classroom_id,e.details as parent_details from activity_criteria ac join activities a on a.id=ac.activity_id join learning_experiences e on e.id=a.experience_id where ac.id=$1 and e.classroom_id=$2 and a.status='active'`,[id,context.id])).rows[0];if(!current){send(response,404,{error:"Criterio no disponible."},origin);return;}if(current.status!=="draft"){send(response,409,conflictPayload(new VersionConflictError("El criterio ya fue confirmado o reemplazado.",current.revision)),origin);return;}try{const body=await readJson(request);await validateStoredActivityCriterion(current,context);validateCriterionEvidenceV4(current.details,current.activity_details.competency_id);const result=await confirmCriterionVersion(db,id,current.activity_id,expectedRevision(body.expectedRevision));send(response,200,result,origin)}catch(error){send(response,httpStatusForError(error,422),isVersionConflict(error)?conflictPayload(error):{error:publicErrorMessage(error)},origin)}return;
     }
     if (request.method === "GET" && url.pathname === "/api/ai/activity/options") {
       send(response, 200, await activityGenerationOptions(), origin);
@@ -1192,7 +1219,7 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
         // Metadata and provenance stay on the server boundary for future audit storage; the UI receives only the validated proposal.
         send(response, 200, { proposal: generated.proposal }, origin);
       } catch (error) {
-        send(response, 422, { error: publicErrorMessage(error) || "No pudimos preparar la actividad." }, origin);
+        send(response, httpStatusForError(error, 422), { error: publicErrorMessage(error) || "No pudimos preparar la actividad." }, origin);
       }
       return;
     }
@@ -1292,8 +1319,12 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
     if (await handleFamilyReportRoute({ request, url, response, origin })) return;
     if (request.method === "POST" && url.pathname === "/api/evidences") {
       const body = await readJson(request);
+      if (dbMode === "postgres" && body.photo) {
+        send(response, 503, { error: "Las fotos estarán disponibles al conectar Storage. Guarda la observación sin foto." }, origin);
+        return;
+      }
       let capture;
-      try { capture = validateEvidenceCaptureV4(body); } catch (error) { send(response, 400, { error: publicErrorMessage(error) }, origin); return; }
+      try { capture = validateEvidenceCaptureV4(body); } catch (error) { send(response, httpStatusForError(error, 400), { error: publicErrorMessage(error) }, origin); return; }
       const allowed = await db.query(`
         select ac.id, ac.competency_id, ac.competency_v4_id, a.details as activity_details, a.occurs_on
           from students s
@@ -1416,7 +1447,7 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
     send(response, 404, { error: "Ruta local no encontrada." }, origin);
   } catch {
     recordOperationalEvent("api_unexpected_failure", { requestId, status: 500 });
-    send(response, 500, { error: "La base local no pudo completar la operación.", request_id: requestId }, origin);
+    send(response, 500, { error: "No se pudo completar la operación.", request_id: requestId }, origin);
   }
 }
 }
@@ -1442,7 +1473,7 @@ const server = createServer(async (request, response) => {
     return;
   }
   if (request.method === "GET" && url.pathname === "/health") {
-    send(response, 200, { ok: true, engine: "pglite", storage: ".local/pgdata" }, origin);
+    send(response, 200, { ok: true, engine: dbMode, ...(dbMode === "local" ? { storage: ".local/pgdata" } : {}) }, origin);
     return;
   }
   if (request.method === "GET" && url.pathname === "/api/auth/config") {
@@ -1467,8 +1498,10 @@ const server = createServer(async (request, response) => {
     send(response, 200, { ok: true }, origin, { "set-cookie": requestAuth.clearCookie() });
     return;
   }
+  const requestDb = database.requestDb();
+  try {
   let context;
-  try { context = await requestAuth.resolve(request, db); }
+  try { context = await requestAuth.resolve(request, requestDb); }
   catch (error) {
     const status = error instanceof RequestAuthError ? error.status : 401;
     send(response, status, { error: status === 503 ? "No se pudo verificar la sesión." : "Inicia sesión para continuar." }, origin);
@@ -1493,6 +1526,12 @@ const server = createServer(async (request, response) => {
     }
   }
   await handleAuthenticatedRequest(context, request, response);
+  } finally {
+    if (dbMode === "postgres") {
+      try { await requestDb.close(); }
+      catch { recordOperationalEvent("db_request_cleanup_failed", { requestId: context?.requestId, status: 500 }); }
+    }
+  }
 });
 
 server.listen(port, listenHost, () => {
@@ -1501,8 +1540,8 @@ server.listen(port, listenHost, () => {
 
 for (const signal of ["SIGINT", "SIGTERM"]) {
   process.on(signal, async () => {
-    server.close();
-    await db.close();
+    await new Promise((resolve) => server.close(resolve));
+    await database.close();
     process.exit(0);
   });
 }

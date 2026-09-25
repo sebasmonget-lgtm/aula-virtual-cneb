@@ -10,11 +10,13 @@ import { copyConfirmedLearningExperience } from "./learning-experience-version-s
 import { copyConfirmedActivity } from "./activity-version-service.mjs";
 import { confirmActivityWithCriterion } from "./activity-confirmation.mjs";
 import { copyConfirmedCriterion } from "./criterion-version-service.mjs";
-import { VersionConflictError, publicErrorMessage, versionTransaction } from "./version-integrity.mjs";
+import { VersionConflictError, httpStatusForError, publicErrorMessage, versionTransaction } from "./version-integrity.mjs";
 
 test("errores SQL no exponen nombres de tablas ni valores al cliente",()=>{
   assert.equal(publicErrorMessage({code:"23503",message:"Key (student_id)=(private-id) is not present in table students"}),
-    "No se pudo completar esta operación. Recarga e inténtalo de nuevo.");
+    "El registro relacionado cambió o ya no está disponible.");
+  for (const [code,status] of [["23505",409],["23503",409],["40001",409],["40P01",409],["42501",403],["22P02",400],["23514",400],["57014",500]])
+    assert.equal(httpStatusForError({code}),status);
 });
 
 const teacherA="aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";

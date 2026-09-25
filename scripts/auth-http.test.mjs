@@ -78,6 +78,7 @@ test("the HTTP boundary protects every route and local PGlite remains usable", {
     const port = await freePort();
     running = await startAyni(port, dataDir, {
       AYNI_AUTH_MODE: "supabase",
+      AYNI_DB_MODE: "local", NODE_ENV: "test", AYNI_TEST_AUTH_PGLITE: "1",
       AYNI_SUPABASE_URL: `http://127.0.0.1:${authPort}`,
       AYNI_SUPABASE_PUBLISHABLE_KEY: "public-test-key",
       AYNI_AUTH_COOKIE_SECURE: "0",
@@ -153,7 +154,8 @@ test("the HTTP boundary protects every route and local PGlite remains usable", {
         planning_priorities: "Organizar juegos de conteo y conversación." }), teacherA]);
     } finally { await seeded.close(); }
     running = await startAyni(await freePort(), dataDir, {
-      AYNI_AUTH_MODE: "supabase", AYNI_SUPABASE_URL: `http://127.0.0.1:${authPort}`,
+      AYNI_AUTH_MODE: "supabase", AYNI_DB_MODE: "local", NODE_ENV: "test", AYNI_TEST_AUTH_PGLITE: "1",
+      AYNI_SUPABASE_URL: `http://127.0.0.1:${authPort}`,
       AYNI_SUPABASE_PUBLISHABLE_KEY: "public-test-key", AYNI_ALLOWED_ORIGIN: "http://localhost:5173",
       AYNI_AUTH_COOKIE_SECURE: "0",
     });

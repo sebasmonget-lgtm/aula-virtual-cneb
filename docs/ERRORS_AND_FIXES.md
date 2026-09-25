@@ -1,5 +1,15 @@
 # Errores y soluciones
 
+## 2026-09-24 Una base Supabase vacía no tenía versión curricular activa
+
+**Síntoma.** Tras aplicar el esquema, el contexto del aula no podía elegir una versión curricular activa, aunque el flujo local sí podía hacerlo.
+
+**Causa raíz.** El seed de PGlite aportaba esa fila de metadatos y el esquema Supabase solo creaba la tabla. No se debe copiar el contenido curricular ficticio del seed local.
+
+**Solución validada en migraciones simuladas.** `202609240011_staging_curriculum_version.sql` inserta una versión activa solo cuando falta, sin inventar competencias ni desempeños. La prueba de paridad aplica las migraciones completas desde cero.
+
+**Prevención.** Comparar también los datos de configuración indispensables, además de tablas y columnas, antes de conectar staging real.
+
 ## 2026-09-24 La confirmación simultánea devolvía un error genérico
 
 **Síntoma.** La segunda solicitud de confirmación de la misma valoración, o una confirmación con evidencia nueva, podía devolver `422` o un texto suelto aunque los datos habían cambiado.

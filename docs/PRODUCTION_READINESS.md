@@ -2,7 +2,7 @@
 
 ## Estado y arquitectura
 
-**Clasificación: apto para ensayo local con datos ficticios. No apto aún para datos reales.** La interfaz usa el API de `scripts/local-db-server.mjs`, PGlite persistente y la Knowledge Base v4. El servidor construye los bundles, decide el modelo con el router v4, valida las salidas y conserva los metadatos de generación. La capa común de Auth verifica cada petición en modo Supabase; se ha probado contra un servidor Auth simulado, todavía con PGlite. No se aplicaron migraciones a Supabase real, no se conectaron PostgreSQL ni Storage reales y no se hizo despliegue. `AYNI_LOCAL_TEACHER_ID` solo opera en modo local/PGlite ligado a loopback.
+**Clasificación: apto para ensayo local con datos ficticios. No apto aún para datos reales.** La interfaz usa el API de `scripts/local-db-server.mjs` y la Knowledge Base v4. El modo local conserva PGlite; el modo staging ya tiene adaptador `pg.Pool` y Auth Supabase por petición. El adaptador y las migraciones se probaron con pool y esquemas Auth/Storage simulados; no se conectó un proyecto Supabase real ni se desplegó. Storage sigue pendiente. `AYNI_LOCAL_TEACHER_ID` solo opera en modo local/PGlite ligado a loopback. Ver `docs/STAGING_POSTGRESQL.md`.
 
 La cadena implementada es diagnóstico → plan anual → proyecto/unidad → actividad → criterio → evidencia observada → assessment → conclusión descriptiva → informe familiar. Cada salida de IA es una propuesta; los hechos pedagógicos usados en assessments e informes requieren confirmación docente. `family_report` comunica conclusiones confirmadas; no hace un assessment nuevo.
 
@@ -37,7 +37,7 @@ Los snapshots v4 conservan fuentes y estados pedagógicos; los informes familiar
 
 ### Bloqueantes para un piloto con datos reales
 
-1. Conectar los repositorios del backend a PostgreSQL/Supabase real y validar la capa de Auth existente contra sesiones reales, sin duplicar reglas de negocio. Las pruebas actuales usan Auth simulado y PGlite, por lo que aún no demuestran aislamiento de staging.
+1. Crear un proyecto Supabase nuevo, aplicar las migraciones y validar el adaptador PostgreSQL y Auth contra dos sesiones reales. El código está preparado, pero las pruebas actuales usan pool y Auth simulados y no demuestran aislamiento de staging real.
 2. Aplicar migraciones en un proyecto **nuevo** de Supabase staging y verificar RLS con dos usuarios reales en todas las rutas; el test local de dos docentes demuestra separación por consultas de aula, pero **no** equivale a una prueba de Auth/RLS real.
 3. Conectar el adaptador privado de Supabase Storage para fotos de evidencia y respaldos de entrevista, probar lectura/escritura/borrado cruzados y estrategia de transferencia. El bucket/políticas de evidencia están definidos pero no ejecutados; el respaldo de entrevista requiere bucket/políticas nuevos.
 4. Configurar backups y probar restauración, gestión de secretos, entorno de despliegue y logs sanitizados antes de ingresar datos de menores.
@@ -86,7 +86,7 @@ Las migraciones Supabase preparan RLS para las tablas nuevas de períodos, alcan
 | Pipeline pedagógico v4 y confirmación docente | Implementado y probado localmente |
 | Onboarding e importación CSV | Implementado localmente; probar en staging |
 | Pending generations durable | Implementado en PGlite/PostgreSQL; verificar en backend real |
-| Auth por petición e aislamiento de dos docentes | Capa y pruebas con Auth simulado implementadas; **PENDIENTE DE STAGING REAL** |
+| Auth por petición, PostgreSQL e aislamiento de dos docentes | Capas y pruebas con Auth/pool simulados implementadas; **PENDIENTE DE STAGING REAL** |
 | RLS de todas las tablas sensibles | SQL preparado y cobertura estática; **PENDIENTE DE STAGING** |
 | Storage privado y permisos por estudiante | SQL/adaptador local preparados; **PENDIENTE DE STAGING** |
 | Backups y restauración | **PENDIENTE DE STAGING** |
