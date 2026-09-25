@@ -15,7 +15,7 @@ type Proposal = {
   evidence_scope: "individual" | "group" | "mixed";
   teacher_caution: string;
 };
-type StoredCriterion = { id: string; details: Proposal; status: "draft" | "active" | "archived"; version: number; supersedes_criterion_id?: string | null };
+type StoredCriterion = { id: string; details: Proposal; status: "draft" | "active" | "archived"; version: number; revision:number; supersedes_criterion_id?: string | null };
 
 export function CriterionEvidenceGenerator({ activityId, activityTitle, competencyName, onGoToday }: { activityId: string; activityTitle: string; competencyName: string; onGoToday?: () => void }) {
   const [stored, setStored] = useState<StoredCriterion | null>(null);
@@ -72,11 +72,11 @@ export function CriterionEvidenceGenerator({ activityId, activityTitle, competen
     try {
     const response = await fetch(stored ? `${localDatabaseApiUrl}/api/activity-criteria/${stored.id}` : `${localDatabaseApiUrl}/api/activity-criteria`, {
       method: stored ? "PUT" : "POST", headers: { "content-type": "application/json" },
-      body: JSON.stringify(stored ? { proposal, generationId } : { activityId, generationId, proposal }),
+      body: JSON.stringify(stored ? { proposal, generationId,expectedRevision:stored.revision } : { activityId, generationId, proposal }),
     });
-    const data = await response.json() as { error?: string; id?: string };
-    if (!response.ok) throw new Error(data.error ?? "No se pudo guardar.");
-    setStored({ id: data.id ?? stored?.id ?? "", details: proposal, status: "draft", version: stored?.version ?? 1, supersedes_criterion_id: stored?.supersedes_criterion_id });
+    const data = await response.json() as { error?: string;message?:string; id?: string;revision?:number };
+    if (!response.ok) throw new Error(data.message??data.error ?? "No se pudo guardar.");
+    setStored({ id: data.id ?? stored?.id ?? "", details: proposal, status: "draft", version: stored?.version ?? 1,revision:data.revision??1, supersedes_criterion_id: stored?.supersedes_criterion_id });
     setGenerationId(null);
     setMessage("Borrador guardado."); setMessageTone("success");
     } catch (error) { setMessage(error instanceof Error ? error.message : "No se pudo guardar."); setMessageTone("error"); }
@@ -87,10 +87,10 @@ export function CriterionEvidenceGenerator({ activityId, activityTitle, competen
     if (!stored || operation || hasUnsavedChanges) return;
     setOperation("confirm"); setMessage("");
     try {
-    const response = await fetch(`${localDatabaseApiUrl}/api/activity-criteria/${stored.id}/confirm`, { method: "POST" });
-    const data = await response.json() as { error?: string };
-    if (!response.ok) throw new Error(data.error ?? "No se pudo confirmar.");
-    setStored({ ...stored, status: "active" });
+    const response = await fetch(`${localDatabaseApiUrl}/api/activity-criteria/${stored.id}/confirm`, { method: "POST",headers:{"content-type":"application/json"},body:JSON.stringify({expectedRevision:stored.revision}) });
+    const data = await response.json() as { error?: string;message?:string;revision?:number };
+    if (!response.ok) throw new Error(data.message??data.error ?? "No se pudo confirmar.");
+    setStored({ ...stored, status: "active",revision:data.revision??stored.revision+1 });
     setMessage("Criterio confirmado."); setMessageTone("success");
     } catch (error) { setMessage(error instanceof Error ? error.message : "No se pudo confirmar."); setMessageTone("error"); }
     finally { setOperation(null); }
@@ -100,10 +100,10 @@ export function CriterionEvidenceGenerator({ activityId, activityTitle, competen
     if (!stored || stored.status !== "active" || operation) return;
     setOperation("save"); setMessage("");
     try {
-      const response = await fetch(`${localDatabaseApiUrl}/api/activity-criteria/${stored.id}/copy`, { method: "POST" });
-      const data = await response.json() as { id?: string; version?: number; error?: string };
-      if (!response.ok || !data.id) throw new Error(data.error ?? "No se pudo preparar la nueva versión.");
-      setStored({ id: data.id, version: data.version ?? stored.version + 1, status: "draft", details: stored.details, supersedes_criterion_id: stored.id });
+      const response = await fetch(`${localDatabaseApiUrl}/api/activity-criteria/${stored.id}/copy`, { method: "POST",headers:{"content-type":"application/json"},body:JSON.stringify({expectedRevision:stored.revision}) });
+      const data = await response.json() as { id?: string; version?: number;revision?:number; error?: string;message?:string };
+      if (!response.ok || !data.id) throw new Error(data.message??data.error ?? "No se pudo preparar la nueva versión.");
+      setStored({ id: data.id, version: data.version ?? stored.version + 1,revision:data.revision??1, status: "draft", details: stored.details, supersedes_criterion_id: stored.id });
       setProposal(stored.details); setGenerationId(null); setOpened(true);
       setMessage("Nueva versión en borrador. Puedes editarla o regenerarla antes de confirmar."); setMessageTone("success");
     } catch (error) { setMessage(error instanceof Error ? error.message : "No se pudo preparar la nueva versión."); setMessageTone("error"); }

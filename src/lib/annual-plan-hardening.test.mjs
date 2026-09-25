@@ -33,7 +33,7 @@ test("servidor conserva metadata del pending generation, versiona y no crea expe
   assert.match(source, /!existingId && \(!pending/);
   assert.doesNotMatch(source, /body\.generation_metadata|body\.metadata/);
   assert.match(source, /max\(version\)/);
-  assert.match(source, /status='archived'/);
+  assert.match(await readFile(new URL("./annual-plan-version-service.mjs", import.meta.url), "utf8"), /status='archived'/);
   assert.match(source, /annual-plan.*generate/);
   assert.doesNotMatch(source, /annual_plan_competencies[\s\S]{0,100}insert/i);
 });
@@ -108,9 +108,11 @@ test("servidor valida POST y CONFIRM antes de persistir o activar el plan", asyn
   const post = source.slice(source.indexOf('url.pathname === "/api/annual-plans"'), source.indexOf('url.pathname.startsWith("/api/annual-plans/")'));
   const confirm = source.slice(source.indexOf('url.pathname.endsWith("/confirm")'), source.indexOf('url.pathname === "/api/annual-plans/current"'));
   assert.match(post, /validateAnnualPlanProposal\(body\.proposal, await applicableCompetencyIds\("annual_plan", context\), context\.year\)/);
-  assert.ok(post.indexOf("validateAnnualPlanProposal") < post.indexOf("await db.exec(\"begin\")"));
-  assert.match(confirm, /validateAnnualPlanProposal\(draft\.rows\[0\]\.proposal, await applicableCompetencyIds\("annual_plan", context\), context\.year\)/);
-  assert.ok(confirm.indexOf("validateAnnualPlanProposal") < confirm.indexOf("set status='archived'"));
+  assert.ok(post.indexOf("validateAnnualPlanProposal") < post.indexOf("versionTransaction"));
+  assert.match(confirm, /validateAnnualPlanProposal\(draft\.proposal,await applicableCompetencyIds\("annual_plan",context\),context\.year\)/);
+  assert.match(confirm, /confirmAnnualPlanVersion\(db,context,id,revision,async\(draft,tx\)=>\{/);
+  const versionService = await readFile(new URL("./annual-plan-version-service.mjs", import.meta.url), "utf8");
+  assert.ok(versionService.indexOf("await validate(draft,tx)") < versionService.indexOf("set status='archived'"));
 });
 
 test("migraciones local y Supabase impiden dos borradores anuales del mismo aula y año", async () => {

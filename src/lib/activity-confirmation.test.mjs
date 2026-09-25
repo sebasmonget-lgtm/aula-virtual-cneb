@@ -6,7 +6,7 @@ import { confirmActivityWithCriterion } from "./activity-confirmation.mjs";
 test("la confirmación y el criterio heredado se guardan juntos o se revierten juntos", async () => {
   const db = new PGlite();
   try {
-    await db.exec(`create table activities(id text primary key,experience_id text,supersedes_activity_id text,status text not null,teacher_confirmed_at timestamptz,updated_at timestamptz);
+    await db.exec(`create table activities(id text primary key,experience_id text,supersedes_activity_id text,lineage_id text not null default 'test-lineage',revision bigint not null default 1,status text not null,teacher_confirmed_at timestamptz,updated_at timestamptz,superseded_at timestamptz);
       create table activity_criteria(id text primary key,activity_id text references activities(id),competency_id text,
         competency_v4_id text,performance_id text,criterion_text text,details jsonb,status text,teacher_confirmed_at timestamptz);`);
     await db.query("insert into activities(id,status) values('ok','draft'),('rollback','draft')");

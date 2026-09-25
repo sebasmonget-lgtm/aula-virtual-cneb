@@ -41,7 +41,7 @@ test("actividad y experiencia distinguen fallos de lectura y de refresco de un f
 
 test("la consulta real de experiencias usa columnas presentes en las migraciones locales", async () => {
   const source = await readFile(new URL("../../scripts/local-db-server.mjs", import.meta.url), "utf8");
-  const sql = source.match(/const experiences = \(await db\.query\(`(select id,type,title,purpose,starts_on,ends_on,status,annual_plan_id,origin,planning_reason,source_proposal_index,details,teacher_confirmed_at from learning_experiences[^`]+)`/i)?.[1];
+  const sql = source.match(/const experiences = \(await db\.query\(`(select id,type,title,purpose,starts_on,ends_on,status,annual_plan_id,origin,planning_reason,source_proposal_index,details,teacher_confirmed_at,version,revision,lineage_id,supersedes_experience_id,superseded_at from learning_experiences[^`]+)`/i)?.[1];
   assert.ok(sql, "La ruta GET debe conservar una consulta verificable.");
   const migrations = new URL("../../local-db/migrations/", import.meta.url);
   const db = await PGlite.create();
@@ -61,7 +61,7 @@ test("el servidor rechaza una segunda creación anual cuando ya existe un draft"
   const route = source.slice(source.indexOf('url.pathname === "/api/annual-plans"'), source.indexOf('url.pathname.startsWith("/api/annual-plans/")'));
   assert.match(route, /select id,classroom_id,status,proposal from annual_plans where school_year_id=\$1 and status in \('active','draft'\)/);
   assert.match(route, /if \(draft \|\| \(active && !replacingLegacy\) \|\| \(!active && body\.replacementPlanId\)\)/);
-  assert.match(route, /update annual_plans set proposal=\$1::jsonb, updated_at=now\(\) where id=\$2 and classroom_id=\$3 and school_year_id=\$4 and status='draft'/);
+  assert.match(route, /update annual_plans set proposal=\$1::jsonb, updated_at=now\(\) where id=\$2 and status='draft' and revision=\$3/);
 });
 
 test("análisis no presenta evidencias inexistentes ante un error HTTP", async () => {

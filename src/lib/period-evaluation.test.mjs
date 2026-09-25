@@ -5,6 +5,7 @@ import { PGlite } from "@electric-sql/pglite";
 import { createPeriodEvaluationRouteHandler } from "../../scripts/period-evaluation-routes.mjs";
 import { defaultEvaluationPeriods } from "./period-evaluation-service.mjs";
 import { loadPlanningFeedback,planningFeedbackText } from "./planning-feedback.mjs";
+import { projectPeriodClosureDocument } from "./period-closure-history.mjs";
 
 const teacher = "00000000-0000-4000-8000-000000000001";
 const otherTeacher = "00000000-0000-4000-8000-000000000002";
@@ -92,6 +93,13 @@ async function fixture({ analysis = mockAnalysis() } = {}) {
   await db.exec(migration);
   await db.exec(await readFile(new URL("../../local-db/migrations/0041_period_assessment_drafts.sql", import.meta.url), "utf8"));
   await db.exec(await readFile(new URL("../../local-db/migrations/0042_period_closure_history.sql", import.meta.url), "utf8"));
+  await db.exec(`create table profiles(user_id uuid primary key,display_name text);
+    create table institution_profiles(owner_user_id uuid primary key,display_name text,ugel text);
+    alter table classrooms add column institution_name text not null default 'Jardín de prueba';
+    alter table competency_assessments add column revision bigint not null default 1;
+    create function test_bump_revision() returns trigger as $$ begin new.revision=old.revision+1;return new;end $$ language plpgsql;
+    create trigger assessment_revision before update on competency_assessments for each row execute function test_bump_revision();`);
+  await db.query(`insert into profiles values($1,'Docente de prueba'),($2,'Otra docente')`,[teacher,otherTeacher]);
   await db.query(`insert into school_years values($1,$2,2026,'2026-03-01','2026-12-31')`, [year, teacher]);
   await db.query(`insert into age_grades values($1,5)`, [ageGrade]);
   await db.query(`insert into classrooms values($1,$2,$3,$4,'Sala Amarilla',false,false),($5,$2,$6,$4,'Otra aula',false,false)`, [classId, year, teacher, ageGrade, otherClass, otherTeacher]);
@@ -108,13 +116,12 @@ async function fixture({ analysis = mockAnalysis() } = {}) {
   for (const [id, date, note] of [[firstEvidence, "2026-04-10", "Propuso un juego y explicó su idea."], ["00000000-0000-4000-8000-000000000702", "2026-04-11", "Escuchó y respondió al grupo."]]) {
     await db.query(`insert into evidences(id,student_id,activity_id,criterion_id,observed_at,observed_on,observation_text) values($1,$2,$3,$4,'2026-06-01T12:00:00Z',$5::date,$6)`, [id, studentA, activity, criterion, date, note]);
   }
-  const pending = new Map(), calls = [], responses = [];
-  const handle = createPeriodEvaluationRouteHandler({ db, teacherId: teacher, readJson: async (request) => request.body, send: (_response, status, payload) => responses.push({ status, body: payload }), pending, metadataForAudit: (metadata) => metadata, refreshStudentContext: async () => {}, evidenceStorage: { read: async () => ({ data: Buffer.from("image"), mimeType: "image/png" }) }, createProvider: () => ({}), generate: async (input) => { calls.push(input); return { output: input.workflow === "assessment" ? analysis : mockConclusion(), metadata: { model: "mock" } }; } });
+  const pending = new Map(), calls = [];
+  const handle = createPeriodEvaluationRouteHandler({ db, teacherId: teacher, readJson: async (request) => request.body, send: (response, status, payload) => { response.result={status,body:payload}; }, pending, metadataForAudit: (metadata) => metadata, refreshStudentContext: async () => {}, evidenceStorage: { read: async () => ({ data: Buffer.from("image"), mimeType: "image/png" }) }, createProvider: () => ({}), generate: async (input) => { calls.push(input); return { output: input.workflow === "assessment" ? analysis : mockConclusion(), metadata: { model: "mock" } }; } });
   async function call(method, route, body) {
-    responses.length = 0;
     const response = { writeHead(status, headers) { this.status = status; this.headers = headers; }, end(data) { this.data = data; } };
     await handle({ request: { method, body }, url: new URL(`http://localhost${route}`), response, origin: null });
-    return responses[0] ?? { status: response.status, body: response.data, headers: response.headers };
+    return response.result ?? { status: response.status, body: response.data, headers: response.headers };
   }
   return { db, call, calls };
 }
@@ -142,25 +149,30 @@ test("ficha única, nivel docente, cierre, salidas derivadas y cambio posterior 
     assert.equal(f.calls[1].student_context.teacher_confirmed_findings, undefined);
     assert.match(f.calls[1].teacher_request, /preliminar/);
     const decisionA = { classroomId: classId, periodId: period.id, studentId: studentA, competencyId: "COM_ORAL", evidenceFingerprint: detail.body.evidence_fingerprint, achievementLevel: "B", teacherAnalysis: "En distintos juegos explicó ideas y escuchó al grupo.", conclusionText: "Explica ideas en el juego y sigue aprendiendo a escuchar otras propuestas.", teacherJustification: "Mi revisión de los registros indica que sigue necesitando apoyo para escuchar." };
-    assert.equal((await f.call("POST", "/api/period-evaluations/confirm", decisionA)).status, 422);
-    assert.equal((await f.call("POST", "/api/period-evaluations/save-draft", { ...decisionA, provisionalLevel: decisionA.achievementLevel })).status, 200);
+    assert.equal((await f.call("POST", "/api/period-evaluations/confirm", {...decisionA,expectedDraftRevision:suggestion.body.draft_revision})).status, 422);
+    assert.equal((await f.call("POST", "/api/period-evaluations/save-draft", { ...decisionA, expectedDraftRevision:suggestion.body.draft_revision, provisionalLevel: decisionA.achievementLevel })).status, 200);
     const resumed = await f.call("GET", `/api/period-evaluations/detail?${query}&studentId=${studentA}&competencyId=COM_ORAL`);
     assert.equal(resumed.body.draft.provisional_level, "B");
     assert.equal(resumed.body.draft.suggested_level, "A");
     assert.equal((await f.db.query(`select achievement_level from competency_assessments where id=$1`,[resumed.body.draft.id])).rows[0].achievement_level,null);
-    assert.equal((await f.call("POST", "/api/period-evaluations/confirm", {...decisionA,teacherAnalysis:"Cambio no guardado"})).status,422);
-    const confirmed = await f.call("POST", "/api/period-evaluations/confirm", decisionA);
+    assert.equal((await f.call("POST", "/api/period-evaluations/confirm", {...decisionA,expectedDraftRevision:resumed.body.draft.revision,teacherAnalysis:"Cambio no guardado"})).status,422);
+    const confirmed = await f.call("POST", "/api/period-evaluations/confirm", {...decisionA,expectedDraftRevision:resumed.body.draft.revision});
     assert.equal(confirmed.status, 200, JSON.stringify(confirmed.body));
     const persisted = (await f.db.query(`select achievement_level,suggested_level,teacher_justification,level_confirmed_by from competency_assessments where id=$1`, [confirmed.body.assessment_id])).rows[0];
     assert.equal(persisted.achievement_level, "B"); assert.equal(persisted.suggested_level, "A"); assert.equal(persisted.level_confirmed_by, teacher); assert.match(persisted.teacher_justification, /sigue necesitando apoyo/);
-    assert.equal((await f.call("POST", "/api/period-evaluations/close", { classroomId: classId, periodId: period.id })).status, 422);
+    const incomplete=await f.call("GET",`/api/period-evaluations/overview?${query}`);
+    assert.equal((await f.call("POST", "/api/period-evaluations/close", { classroomId: classId, periodId: period.id,
+      expectedCurrentVersionId:incomplete.body.closure.current_version_id,expectedSourceFingerprint:incomplete.body.closure.source_fingerprint })).status, 422);
     for (const [id, note] of [["00000000-0000-4000-8000-000000000703", "Explicó cómo jugar."], ["00000000-0000-4000-8000-000000000704", "Respondió a una propuesta."]]) await f.db.query(`insert into evidences(id,student_id,activity_id,criterion_id,observed_at,observed_on,observation_text) values($1,$2,$3,$4,now(),'2026-04-10',$5)`, [id, studentB, activity, criterion, note]);
     const second = await f.call("GET", `/api/period-evaluations/detail?${query}&studentId=${studentB}&competencyId=COM_ORAL`);
     const decisionB={ classroomId: classId, periodId: period.id, studentId: studentB, competencyId: "COM_ORAL", evidenceFingerprint: second.body.evidence_fingerprint, achievementLevel: "A", teacherAnalysis: "Explicó su juego y respondió a un compañero.", conclusionText: "Explica sus ideas y escucha propuestas durante el juego." };
-    assert.equal((await f.call("POST","/api/period-evaluations/save-draft",{...decisionB,provisionalLevel:"A"})).status,200);
-    const confirmedSecond = await f.call("POST", "/api/period-evaluations/confirm", decisionB);
+    const savedSecond=await f.call("POST","/api/period-evaluations/save-draft",{...decisionB,expectedDraftRevision:null,provisionalLevel:"A"});
+    assert.equal(savedSecond.status,200,JSON.stringify(savedSecond.body));
+    const confirmedSecond = await f.call("POST", "/api/period-evaluations/confirm", {...decisionB,expectedDraftRevision:savedSecond.body.draft_revision});
     assert.equal(confirmedSecond.status, 200, JSON.stringify(confirmedSecond.body));
-    const firstClose=await f.call("POST", "/api/period-evaluations/close", { classroomId: classId, periodId: period.id });
+    const beforeFirstClose=await f.call("GET",`/api/period-evaluations/overview?${query}`);
+    const firstClose=await f.call("POST", "/api/period-evaluations/close", { classroomId: classId, periodId: period.id,
+      expectedCurrentVersionId:beforeFirstClose.body.closure.current_version_id,expectedSourceFingerprint:beforeFirstClose.body.closure.source_fingerprint });
     assert.equal(firstClose.status, 200);
     assert.equal(firstClose.body.version,1);
     const originalManifest=(await f.db.query(`select manifest from period_closure_versions where id=$1`,[firstClose.body.id])).rows[0].manifest;
@@ -178,9 +190,12 @@ test("ficha única, nivel docente, cierre, salidas derivadas y cambio posterior 
     assert.equal((await f.call("GET", `/api/period-evaluations/detail?classroomId=${otherClass}&periodId=${period.id}&studentId=${studentA}&competencyId=COM_ORAL`)).status, 422);
     const revised=await f.call("GET",`/api/period-evaluations/detail?${query}&studentId=${studentA}&competencyId=COM_ORAL`);
     const decisionV2={...decisionA,evidenceFingerprint:revised.body.evidence_fingerprint,teacherAnalysis:"La docente revisó la nota corregida y el conjunto de observaciones."};
-    assert.equal((await f.call("POST","/api/period-evaluations/save-draft",{...decisionV2,provisionalLevel:"B"})).status,200);
-    assert.equal((await f.call("POST","/api/period-evaluations/confirm",decisionV2)).status,200);
-    const secondClose=await f.call("POST","/api/period-evaluations/close",{classroomId:classId,periodId:period.id});
+    const savedV2=await f.call("POST","/api/period-evaluations/save-draft",{...decisionV2,expectedDraftRevision:revised.body.draft?.revision??null,provisionalLevel:"B"});
+    assert.equal(savedV2.status,200,JSON.stringify(savedV2.body));
+    assert.equal((await f.call("POST","/api/period-evaluations/confirm",{...decisionV2,expectedDraftRevision:savedV2.body.draft_revision})).status,200);
+    const beforeSecondClose=await f.call("GET",`/api/period-evaluations/overview?${query}`);
+    const secondClose=await f.call("POST","/api/period-evaluations/close",{classroomId:classId,periodId:period.id,
+      expectedCurrentVersionId:beforeSecondClose.body.closure.current_version_id,expectedSourceFingerprint:beforeSecondClose.body.closure.source_fingerprint});
     assert.equal(secondClose.status,200,JSON.stringify(secondClose.body));
     assert.equal(secondClose.body.version,2);
     assert.deepEqual((await f.db.query(`select manifest from period_closure_versions where id=$1`,[firstClose.body.id])).rows[0].manifest,originalManifest);
@@ -223,4 +238,78 @@ test("información insuficiente queda guardada sin nivel y no se convierte en C"
     const draft = (await f.db.query(`select status,achievement_level from competency_assessments where student_id=$1 and competency_v4_id='COM_ORAL'`, [studentA])).rows[0];
     assert.equal(draft.status, "draft"); assert.equal(draft.achievement_level, null);
   } finally { await f.db.close(); }
+});
+
+test("dos confirmaciones de la misma revisión dejan una sola evaluación oficial", async () => {
+  const f=await fixture();
+  try {
+    const period=(await f.call("GET","/api/period-evaluations/workspace")).body.periods[0];
+    const query=`classroomId=${classId}&periodId=${period.id}&studentId=${studentA}&competencyId=COM_ORAL`;
+    const detail=(await f.call("GET",`/api/period-evaluations/detail?${query}`)).body;
+    const body={classroomId:classId,periodId:period.id,studentId:studentA,competencyId:"COM_ORAL",
+      evidenceFingerprint:detail.evidence_fingerprint,achievementLevel:"A",provisionalLevel:"A",
+      teacherAnalysis:"Explicó ideas en dos juegos.",conclusionText:"Explica sus ideas y escucha las propuestas del grupo.",expectedDraftRevision:null};
+    const saved=await f.call("POST","/api/period-evaluations/save-draft",body);
+    assert.equal(saved.status,200,JSON.stringify(saved.body));
+    const attempts=await Promise.all([1,2].map(()=>f.call("POST","/api/period-evaluations/confirm",{
+      ...body,expectedDraftRevision:saved.body.draft_revision})));
+    assert.deepEqual(attempts.map((x)=>x.status).sort(),[200,409]);
+    assert.equal(attempts.find((x)=>x.status===409).body.error,"version_conflict");
+    const count=(await f.db.query(`select count(*)::int as n from competency_assessments where student_id=$1 and evaluation_period_id=$2 and status='active'`,[studentA,period.id])).rows[0].n;
+    assert.equal(count,1);
+  } finally {await f.db.close();}
+});
+
+test("evidencia posterior invalida la huella y dos cierres simultáneos crean solo una versión", async () => {
+  const f=await fixture();
+  try {
+    const period=(await f.call("GET","/api/period-evaluations/workspace")).body.periods[0];
+    const base={classroomId:classId,periodId:period.id,competencyId:"COM_ORAL",achievementLevel:"A",provisionalLevel:"A",
+      teacherAnalysis:"Comparó ideas durante el juego.",conclusionText:"Explica sus ideas en las conversaciones del aula.",
+      teacherJustification:"La docente revisó el contexto y confirmó esta valoración preliminar."};
+    const detailA=(await f.call("GET",`/api/period-evaluations/detail?classroomId=${classId}&periodId=${period.id}&studentId=${studentA}&competencyId=COM_ORAL`)).body;
+    const stale={...base,studentId:studentA,evidenceFingerprint:detailA.evidence_fingerprint,expectedDraftRevision:null};
+    const savedA=await f.call("POST","/api/period-evaluations/save-draft",stale);
+    assert.equal(savedA.status,200,JSON.stringify(savedA.body));
+    await f.db.query(`insert into evidences(id,student_id,activity_id,criterion_id,observed_at,observed_on,observation_text)
+      values(gen_random_uuid(),$1,$2,$3,now(),'2026-04-12','Nueva observación')`,[studentA,activity,criterion]);
+    const invalid=await f.call("POST","/api/period-evaluations/confirm",{...stale,expectedDraftRevision:savedA.body.draft_revision});
+    assert.equal(invalid.status,409,JSON.stringify(invalid.body));
+    assert.equal(invalid.body.error,"version_conflict");
+    assert.equal((await f.db.query(`select count(*)::int as n from competency_assessments where student_id=$1 and status='active'`,[studentA])).rows[0].n,0);
+    for(const id of [studentA,studentB]) {
+      if(id===studentB) await f.db.query(`insert into evidences(id,student_id,activity_id,criterion_id,observed_at,observed_on,observation_text)
+        values(gen_random_uuid(),$1,$2,$3,now(),'2026-04-12','Explicó una idea')`,[id,activity,criterion]);
+      const detail=(await f.call("GET",`/api/period-evaluations/detail?classroomId=${classId}&periodId=${period.id}&studentId=${id}&competencyId=COM_ORAL`)).body;
+      const body={...base,studentId:id,evidenceFingerprint:detail.evidence_fingerprint,expectedDraftRevision:detail.draft?.revision??null};
+      const saved=await f.call("POST","/api/period-evaluations/save-draft",body);
+      assert.equal(saved.status,200,JSON.stringify(saved.body));
+      const confirmed=await f.call("POST","/api/period-evaluations/confirm",{...body,expectedDraftRevision:saved.body.draft_revision});
+      assert.equal(confirmed.status,200,JSON.stringify(confirmed.body));
+    }
+    await f.db.query(`insert into institution_profiles(owner_user_id,display_name,ugel) values($1,'Jardín del cierre','UGEL 01')`,[teacher]);
+    const overview=(await f.call("GET",`/api/period-evaluations/overview?classroomId=${classId}&periodId=${period.id}`)).body;
+    const closure={classroomId:classId,periodId:period.id,expectedCurrentVersionId:overview.closure.current_version_id,
+      expectedSourceFingerprint:overview.closure.source_fingerprint};
+    const attempts=await Promise.all([1,2].map(()=>f.call("POST","/api/period-evaluations/close",closure)));
+    assert.deepEqual(attempts.map((x)=>x.status).sort(),[200,409],JSON.stringify(attempts));
+    assert.equal((await f.db.query(`select count(*)::int as n from period_closure_versions where evaluation_period_id=$1`,[period.id])).rows[0].n,1);
+    const manifest=(await f.db.query(`select manifest from period_closure_versions where evaluation_period_id=$1`,[period.id])).rows[0].manifest;
+    assert.equal(manifest.context.teacher_id,teacher);
+    assert.equal(manifest.context.teacher_name,"Docente de prueba");
+    assert.equal(manifest.context.institution_name,"Jardín del cierre");
+    assert.equal(manifest.context.ugel,"UGEL 01");
+    assert.equal(manifest.context.section,"Sala Amarilla");
+    assert.equal(manifest.context.school_year,2026);
+    assert.ok(manifest.context.closed_at);
+    assert.equal(manifest.entries.length,2);
+    await f.db.query(`update institution_profiles set display_name='Nombre posterior',ugel='UGEL 99' where owner_user_id=$1`,[teacher]);
+    const projection=projectPeriodClosureDocument({id:attempts.find((x)=>x.status===200).body.id,version:1,
+      manifest,label:"Período cambiado",starts_on:"2027-01-01",ends_on:"2027-02-01",confirmed_at:new Date(),
+      year:2027,section:"Sección posterior",institution_name:"Nombre posterior",confirmed_by:teacher});
+    assert.equal(projection.institution_name,"Jardín del cierre");
+    assert.equal(projection.ugel,"UGEL 01");
+    assert.equal(projection.title,`Cierre de evaluación · ${period.label}`);
+    assert.equal(projection.period_start,"2026-03-16");
+  } finally {await f.db.close();}
 });

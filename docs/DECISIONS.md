@@ -1,5 +1,13 @@
 # Decisiones de arquitectura
 
+## ADR 044 Concurrencia e integridad de versiones
+
+**Decisión.** Las ediciones y confirmaciones de Plan Anual, proyecto/unidad, actividad y criterio exigen `expectedRevision`. El servidor serializa cada linaje o período con un bloqueo transaccional de PostgreSQL y comprueba la revisión al escribir. Las restricciones únicas conservan un solo borrador y una sola versión activa por linaje. Una revisión obsoleta responde `409 version_conflict` con `currentRevision` cuando se conoce. El cliente debe recargar y revisar; no fusionamos cambios automáticamente.
+
+**Integridad histórica.** Las nuevas versiones de proyecto, actividad y criterio reciben `lineage_id`, `revision` y `superseded_at`. Las programaciones, evidencias, criterios y documentos ya vinculados conservan sus IDs históricos. Claves compuestas y guards acotados impiden mezclar año, aula, plan, estudiante, período, actividad y criterio de árboles diferentes. La migración audita filas existentes y aborta si detecta inconsistencias; no las repara ni elimina. Rollback: revertir el código y la migración únicamente en una base de prueba restaurada desde respaldo, sin borrar cadenas históricas en uso.
+
+**Evaluación y cierre.** La confirmación compara revisión y huella de evidencias recalculada dentro de la misma transacción. `suggested_level` sigue siendo propuesta; `achievement_level` requiere confirmación docente. El cierre serializa por período, comprueba la versión vigente y huella esperadas, y congela identidad docente, institución, UGEL, aula, edad, año, período, fecha y referencias históricas de valoración/conclusión. Ninguna pantalla cliente es la única barrera de integridad. Esta decisión no conecta Auth, Storage ni Supabase real.
+
 ## ADR 043 Evaluación por estudiante, competencia y período formal
 
 **Decisión.** `evaluation_periods` define bimestres o trimestres del año escolar. La pantalla Evaluar presenta una ficha por estudiante, competencia y período, y consulta las tablas existentes `evidences`, `competency_assessments` y `competency_descriptive_conclusions`. El alcance incluye competencias de criterios de actividades y proyectos del plan anual que se superponen con el período, incluso cuando aún no hay evidencias. Una docente puede añadir o excluir una competencia con motivo; una competencia con observaciones o valoración no se puede ocultar. Las fuentes conservan IDs de actividad, criterio, desempeño cuando existe, fecha y evidencia adjunta privada.

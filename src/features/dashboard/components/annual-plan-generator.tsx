@@ -54,7 +54,7 @@ type ClassroomContext = DocumentContext & {
     common_interests: { label: string }[]; languages: { label: string }[] };
 };
 type SavedPlan = {
-  id: string; classroom_id: string; version: number; status: "draft" | "active" | "archived";
+  id: string; classroom_id: string; version: number; revision: number; status: "draft" | "active" | "archived";
   proposal: Proposal; document_context: DocumentContext; supersedes_plan_id?: string | null;
   source_diagnostic_review_id?: string | null;
 };
@@ -338,7 +338,7 @@ export function AnnualPlanGenerator({ onConfirmed, onGoDiagnostic }: { onConfirm
       if (!response.ok || !data.calendar) throw new Error(data.error ?? "No se pudo guardar el calendario.");
       setClassroom({ ...classroom, calendar: data.calendar }); setCalendarDraft(data.calendar);
       setExistingPlan((current) => current?.status === "draft" ? { ...current,
-        document_context: { ...current.document_context, calendar: data.calendar } } : current);
+        revision:current.revision+1,document_context: { ...current.document_context, calendar: data.calendar } } : current);
       setMessage("Calendario guardado. Ya puedes preparar tu plan anual."); setMessageTone("success");
     } catch (error) { setMessage(error instanceof Error ? error.message : "No se pudo guardar el calendario."); setMessageTone("error"); }
     finally { setOperation(null); }
@@ -363,7 +363,7 @@ export function AnnualPlanGenerator({ onConfirmed, onGoDiagnostic }: { onConfirm
     if (!canCopyCurrent || !existingPlan || operation || savedPlans?.draft) return;
     setOperation("copy"); setMessage("");
     try {
-      const response = await fetch(`${localDatabaseApiUrl}/api/annual-plans/${existingPlan.id}/new-version`, { method: "POST" });
+      const response = await fetch(`${localDatabaseApiUrl}/api/annual-plans/${existingPlan.id}/new-version`, { method: "POST",headers:{"content-type":"application/json"},body:JSON.stringify({expectedRevision:existingPlan.revision}) });
       const result = await response.json() as { id?: string; error?: string };
       if (!response.ok || !result.id) throw new Error(result.error ?? "No se pudo preparar la nueva versión.");
       const plansResponse = await fetch(`${localDatabaseApiUrl}/api/annual-plans/current`);
@@ -385,10 +385,10 @@ export function AnnualPlanGenerator({ onConfirmed, onGoDiagnostic }: { onConfirm
     if (!proposal || operation || readOnly || calendarDirty || calendarWarning) return;
     setOperation("save"); setMessage("");
     try {
-      const response = await fetch(`${localDatabaseApiUrl}/api/annual-plans`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ proposal, planId, generationId, ...(replacementPlanId ? { replacementPlanId } : {}) }) });
-      const data = await response.json() as { error?: string; id?: string; version?: number };
+      const response = await fetch(`${localDatabaseApiUrl}/api/annual-plans`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ proposal, planId, generationId, ...(planId ? { expectedRevision:existingPlan?.revision }:{}), ...(replacementPlanId ? { replacementPlanId } : {}) }) });
+      const data = await response.json() as { error?: string; id?: string; version?: number;revision?:number };
       if (!response.ok || !data.id) throw new Error(data.error ?? "No se pudo guardar el borrador.");
-      const savedDraft: SavedPlan = { id: data.id, classroom_id: classroom!.id, version: data.version ?? existingPlan?.version ?? 1,
+      const savedDraft: SavedPlan = { id: data.id, classroom_id: classroom!.id, version: data.version ?? existingPlan?.version ?? 1,revision:data.revision??1,
         status: "draft", proposal, document_context: documentContext, supersedes_plan_id: existingPlan?.supersedes_plan_id ?? replacementPlanId };
       setPlanId(data.id); setExistingPlan(savedDraft); setSavedPlans((current) => ({ ...current, draft: savedDraft }));
       setGenerationId(null); setReplacementPlanId(null); setEditing(false);
@@ -400,12 +400,12 @@ export function AnnualPlanGenerator({ onConfirmed, onGoDiagnostic }: { onConfirm
     if (!planId || !proposal || operation || readOnly || hasUnsavedChanges || calendarDirty || calendarWarning) return;
     setOperation("confirm"); setMessage("");
     try {
-      const response = await fetch(`${localDatabaseApiUrl}/api/annual-plans/${planId}/confirm`, { method: "POST" });
-      const data = await response.json() as { error?: string; version?: number };
+      const response = await fetch(`${localDatabaseApiUrl}/api/annual-plans/${planId}/confirm`, { method: "POST",headers:{"content-type":"application/json"},body:JSON.stringify({expectedRevision:existingPlan?.revision}) });
+      const data = await response.json() as { error?: string; version?: number;revision?:number };
       if (!response.ok) throw new Error(data.error ?? "No se pudo confirmar el plan.");
-      setExistingPlan({ id: planId, classroom_id: classroom!.id, version: data.version ?? existingPlan?.version ?? 1,
+      setExistingPlan({ id: planId, classroom_id: classroom!.id, version: data.version ?? existingPlan?.version ?? 1,revision:data.revision??(existingPlan?.revision??1)+1,
         status: "active", proposal, document_context: documentContext, supersedes_plan_id: existingPlan?.supersedes_plan_id });
-      setSavedPlans((current) => current ? { active: { id: planId, classroom_id: classroom!.id, version: data.version ?? existingPlan?.version ?? 1,
+      setSavedPlans((current) => current ? { active: { id: planId, classroom_id: classroom!.id, version: data.version ?? existingPlan?.version ?? 1,revision:data.revision??(existingPlan?.revision??1)+1,
         status: "active", proposal, document_context: documentContext, supersedes_plan_id: existingPlan?.supersedes_plan_id }, draft: null,
         archived: [...(current.archived ?? []), ...(current.active ? [{ ...current.active, status: "archived" as const }] : [])] } : current);
       setEditing(false); setMessage("Plan anual confirmado por la docente."); setMessageTone("success"); onConfirmed?.();

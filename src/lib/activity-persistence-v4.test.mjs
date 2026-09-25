@@ -43,7 +43,7 @@ test("I: activity conserva el routing Terra/low y el servidor preserva límites 
   const activitySection = server.slice(server.indexOf('pathname === "/api/activities"'), server.indexOf('pathname === "/api/activity-criteria"'));
   assert.doesNotMatch(activitySection, /insert into evidences/);
   assert.match(activitySection, /inheritedActivityCriterion\(current\.details,\s*routeItem\)/);
-  assert.match(activitySection, /confirmActivityWithCriterion\(db,\s*id,\s*criterion\)/);
+  assert.match(activitySection, /confirmActivityWithCriterion\(db,\s*id,\s*criterion,\s*randomUUID\(\),\s*expectedRevision\(body\.expectedRevision\)\)/);
 });
 
 test("A-C: OPTIONS permite PUT y el parent público no filtra metadata técnica", async () => {
@@ -62,11 +62,11 @@ test("G-N: edición conserva metadata, regeneración validada la reemplaza y mat
   assert.match(server, /metadata: safeAnnualGenerationMetadata\(generated\.internalMetadata\)/);
   assert.match(server, /generation_metadata\) values/);
   assert.match(server, /pending\.learning_experience_id!==current\.experience_id/);
-  assert.match(server, /generation_metadata=\$6::jsonb/);
+  assert.match(server, /generation_metadata=\$6::jsonb[\s\S]*status='draft' and revision=\$8/);
   assert.match(server, /pendingAIGenerations\.delete\(body\.generationId\)/);
   assert.match(server, /normalizeActivityMaterials\(body\.materials\)/);
   assert.match(server, /a\.status='draft'/);
-  assert.match(server, /teacher_confirmed_at=now\(\)/);
+  assert.match(await readFile(new URL("./activity-confirmation.mjs", import.meta.url), "utf8"), /teacher_confirmed_at=now\(\)/);
   assert.deepEqual(normalizeActivityMaterials([" linterna ", "", "linterna", 7, { name: "papel" }, "papel"]), ["linterna", "papel"]);
   assert.equal(normalizeActivityMaterials("linterna").length, 0);
   assert.equal(normalizeActivityMaterials(Array.from({ length: 25 }, (_, index) => `m${index}`)).length, 20);

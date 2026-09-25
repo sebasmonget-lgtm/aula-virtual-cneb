@@ -1,5 +1,15 @@
 # Errores y soluciones
 
+## 2026-09-24 La confirmación simultánea devolvía un error genérico
+
+**Síntoma.** La segunda solicitud de confirmación de la misma valoración, o una confirmación con evidencia nueva, podía devolver `422` o un texto suelto aunque los datos habían cambiado.
+
+**Causa raíz.** La validación previa a la transacción trataba la ausencia de borrador confirmado y la huella obsoleta como errores de formulario.
+
+**Solución validada localmente.** Esos casos devuelven `409 version_conflict`; la transacción vuelve a leer borrador y evidencias antes de escribir. Pruebas concurrentes verifican una sola valoración y una sola versión de cierre.
+
+**Prevención.** Los cambios de versión o de fuentes se expresan como conflictos estructurados y se prueban con dos solicitudes sobre la misma revisión.
+
 ## 2026-09-24 Una propuesta de IA podía presentarse como hallazgo confirmado
 
 **Síntoma.** Al preparar nivel y conclusión en una misma ficha, el constructor antiguo de conclusiones etiquetaba el análisis recibido como `teacher_confirmed_findings`, aunque en ese punto solo era una propuesta de IA.
