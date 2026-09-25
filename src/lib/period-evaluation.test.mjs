@@ -59,6 +59,10 @@ test("cobertura deriva registros por niño y competencia sin convertir ausencias
   const history=await f.call("GET",`/api/period-evaluations/coverage/detail?classroomId=${classId}&periodId=${period.id}&studentId=${studentB}&competencyId=COM_ORAL`);
   assert.equal(history.status,200,JSON.stringify(history.body));
   assert.equal(history.body.timeline[0].source_type,"diagnostic_guided");
+  const today=await f.call("GET",`/api/period-evaluations/observe-today?activityId=${activity}`);
+  assert.equal(today.status,200,JSON.stringify(today.body));
+  assert.ok(today.body.suggestions.some((item)=>item.student_id===studentB&&item.reason));
+  assert.equal((await f.call("GET",`/api/period-evaluations/observe-today?activityId=${"00000000-0000-4000-8000-000000000999"}`)).status,404);
   assert.equal((await f.call("GET",`/api/period-evaluations/coverage?classroomId=${otherClass}&periodId=${period.id}`)).status,422);
 });
 
@@ -68,7 +72,8 @@ test("contexto para planificar verifica docente, aula y período y no expone exp
   const feedback=await loadPlanningFeedback(f.db,{teacherId:teacher,classroomId:classId,periodId:period.id});
   assert.equal(feedback.students_total,2);
   assert.equal(feedback.confirmed_assessments,0);
-  assert.doesNotMatch(JSON.stringify(feedback),/Ana|Luis|Pérez|Rojas|Propuso un juego|observación/);
+  assert.doesNotMatch(JSON.stringify(feedback),/Ana|Luis|Pérez|Rojas|Propuso un juego/);
+  assert.ok(feedback.suggested_adjustments.every((item)=>item.reason&&item.suggestion));
   assert.match(planningFeedbackText(feedback),/sin registro/);
   await assert.rejects(()=>loadPlanningFeedback(f.db,{teacherId:otherTeacher,classroomId:classId,periodId:period.id}),/Aula no disponible/);
   await assert.rejects(()=>loadPlanningFeedback(f.db,{teacherId:teacher,classroomId:otherClass,periodId:period.id}),/Aula no disponible/);

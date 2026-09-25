@@ -21,7 +21,7 @@ export async function savePeriodEvaluationDraft(db, { studentId, competencyId, p
     if(expectedDraftRevision!==undefined && (existing ? Number(existing.revision) : null)!==expectedDraftRevision)
       throw new VersionConflictError("El borrador cambió en otra pestaña. Revísalo antes de guardar.",existing?.revision??null);
     const previousCurrent=existing && evidenceFingerprint(existing.source_evidence_snapshot ?? [])===fingerprint;
-    const manualStatus=rows.length>=2 && clean(teacherAnalysis) ? "sufficient" : "insufficient";
+    const manualStatus=rows.length>0 && clean(teacherAnalysis) ? "sufficient" : "insufficient";
     const details=analysis ?? (previousCurrent && existing.generation_metadata?.analysis ? existing.details : {
       competency_id:competencyId,information_status:manualStatus,evidence_overview:clean(teacherAnalysis)||"Análisis pendiente de la docente.",observable_patterns:[],strengths_and_advances:[],
       support_needs:[],next_opportunities:[],teacher_questions:[],insufficiency_reason:manualStatus==="insufficient"?"La docente revisará más oportunidades de observación.":null,caution:"Borrador docente." });

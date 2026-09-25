@@ -41,12 +41,13 @@ test("assessment-v1 valida estructura, estado, competencia, niveles y cantidad d
     { ...proposal("sufficient"), evidence_overview: "Nivel AD en la competencia." },
     { ...proposal(), caution: "Nota 18." }, { ...proposal(), support_needs: ["90% de logro"] },
   ]) assert.throws(() => validateAssessmentProposal(bad, "COM_ORAL", 2), JSON.stringify(bad));
-  assert.throws(() => validateAssessmentProposal(proposal("sufficient"), "COM_ORAL", 1));
+  assert.deepEqual(validateAssessmentProposal(proposal("sufficient"), "COM_ORAL", 1), proposal("sufficient"));
+  assert.throws(() => validateAssessmentProposal(proposal("sufficient"), "COM_ORAL", 0));
 });
 
 test("provider no puede devolver salida inválida", async () => {
   const input = buildAssessmentInput({ age: 5, competencyId: "COM_ORAL", evidenceHistory: [{ observation_note: "Evidencia" }] });
-  await assert.rejects(() => generateAIWorkflowV4(input, { provider: { async generate() { return proposal("sufficient"); } } }), InvalidAIGenerationError);
+  await assert.rejects(() => generateAIWorkflowV4(input, { provider: { async generate() { return { ...proposal("sufficient"), competency_id: "OTHER" }; } } }), InvalidAIGenerationError);
 });
 
 test("sanitización solo afecta copia provider y elimina identidad y rutas", () => {

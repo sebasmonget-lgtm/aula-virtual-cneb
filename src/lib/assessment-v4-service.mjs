@@ -10,7 +10,7 @@ export function validateAssessmentProposal(value, competencyId, evidenceCount) {
   if (!["evidence_overview", "caution"].every((key) => typeof value[key] === "string" && value[key].trim())) throw new Error("Falta texto obligatorio del análisis.");
   if (listFields.some((key) => !Array.isArray(value[key]) || value[key].some((item) => typeof item !== "string" || !item.trim()))) throw new Error("Las listas del análisis deben contener solo texto no vacío.");
   if (value.information_status === "insufficient" ? typeof value.insufficiency_reason !== "string" || !value.insufficiency_reason.trim() : value.insufficiency_reason !== null) throw new Error("La razón de información insuficiente no coincide con el estado.");
-  if (evidenceCount < 2 && value.information_status !== "insufficient") throw new Error("Con una sola evidencia la información debe declararse insuficiente.");
+  if (evidenceCount === 0 && value.information_status !== "insufficient") throw new Error("Sin observaciones la información debe declararse insuficiente.");
   if (value.suggested_level !== undefined || value.suggestion_reason !== undefined) {
     if (![null, "AD", "A", "B", "C"].includes(value.suggested_level) || (value.suggestion_reason !== null && (typeof value.suggestion_reason !== "string" || !value.suggestion_reason.trim()))) throw new Error("La sugerencia de nivel no es válida.");
     if (value.information_status === "insufficient" && value.suggested_level !== null) throw new Error("La información insuficiente no puede convertirse en un nivel sugerido.");

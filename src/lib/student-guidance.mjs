@@ -3,8 +3,7 @@ export function studentCompetencyGuidance(competency) {
   if (!competency.competency_v4_id) return { state: "legacy", label: "Registro anterior", action: null };
   if (competency.teacher_confirmed_conclusion) return { state: "conclusion", label: "Conclusión confirmada", action: "family_report" };
   if (competency.teacher_confirmed_assessment) return { state: "assessment", label: "Análisis confirmado", action: "conclusion" };
-  if (competency.evidence_count >= 2) return { state: "ready", label: "Evidencias para analizar", action: "assessment" };
-  if (competency.evidence_count === 1) return { state: "limited", label: "Hace falta observar más", action: "evidence" };
+  if (competency.evidence_count > 0) return { state: "ready", label: "Revisar registros", action: "assessment" };
   return { state: "empty", label: "Sin evidencias todavía", action: null };
 }
 

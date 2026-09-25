@@ -6,4 +6,5 @@ export const AYNI_HEURISTICS = Object.freeze({
   observe_today_limit: 4,
   annual_low_opportunities: 2,
   annual_concentrated_periods: 1,
+  assessment_low_records_for_explanation: 2,
 });

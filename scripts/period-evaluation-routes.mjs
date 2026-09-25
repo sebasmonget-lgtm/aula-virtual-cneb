@@ -10,7 +10,8 @@ import { dateOnly, defaultEvaluationPeriods, loadPeriodEvaluationRows, periodClo
 import { assertSavedEvaluationDraft, savePeriodEvaluationDraft } from "../src/lib/period-evaluation-draft-service.mjs";
 import { closePeriodWithManifest } from "../src/lib/period-closure-history.mjs";
 import { loadDiagnosticCoverageRecords, projectPedagogicalCoverage } from "../src/lib/pedagogical-coverage.mjs";
-import { assessmentState } from "../src/lib/evidence-coverage.mjs";
+import { assessmentState, observeTodaySuggestions } from "../src/lib/evidence-coverage.mjs";
+import { AYNI_HEURISTICS } from "../src/lib/ayni-heuristics.mjs";
 import { VersionConflictError, conflictPayload, httpStatusForError, isVersionConflict, publicErrorMessage, versionTransaction } from "../src/lib/version-integrity.mjs";
 
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -141,6 +142,34 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
           activityCounts:new Map(counts.map((item)=>[item.competency_v4_id,Number(item.activity_count)]))});
         send(response,200,{period:data.period,classroom_id:data.classroom.id,...projection},origin);return true;
       }
+      if (request.method === "GET" && url.pathname === "/api/period-evaluations/observe-today") {
+        const activityId=url.searchParams.get("activityId");
+        if(!uuid.test(activityId??"")) throw new Error("Actividad inválida.");
+        const activity=(await db.query(`select a.id,a.occurs_on,le.classroom_id from activities a
+          join learning_experiences le on le.id=a.experience_id join classrooms c on c.id=le.classroom_id
+          join school_years sy on sy.id=c.school_year_id
+          where a.id=$1 and a.status='active' and c.teacher_id=$2 and sy.owner_id=$2`,[activityId,teacherId])).rows[0];
+        if(!activity){send(response,404,{error:"Actividad no disponible."},origin);return true;}
+        const classroom=await ownedClassroom(activity.classroom_id);
+        const year=await ownedYear(classroom.school_year_id);
+        const periods=await ensurePeriods(year);
+        const activityDay=dateOnly(activity.occurs_on);
+        const period=periods.find((item)=>item.starts_on<=activityDay&&item.ends_on>=activityDay);
+        if(!period){send(response,200,{suggestions:[],message:"Esta actividad no pertenece a un período de evaluación."},origin);return true;}
+        const data=await context(classroom.id,period.id);
+        const criteria=(await db.query(`select id,competency_v4_id from activity_criteria where activity_id=$1 and status='active'`,[activity.id])).rows;
+        const diagnostic=await loadDiagnosticCoverageRecords(db,classroom.id,period);
+        const students=data.model.students.map((student)=>({id:student.id,name:[student.preferred_name||student.first_name,student.last_name].filter(Boolean).join(" ")}));
+        const suggestions=[...new Set(criteria.map((item)=>item.competency_v4_id))].flatMap((competencyId)=>{
+          const criterionIds=criteria.filter((item)=>item.competency_v4_id===competencyId).map((item)=>item.id);
+          const records=[...data.model.rows.filter((row)=>row.competency_v4_id===competencyId).flatMap((row)=>row.sourceRows.map((item)=>({...item,student_id:row.student_id,competency_id:competencyId,situation_id:item.activity_id,criterion_focus_key:item.criterion_id}))),
+            ...diagnostic.filter((item)=>item.competency_id===competencyId)];
+          return observeTodaySuggestions(students,records,competencyId,criterionIds,{today:activityDay})
+            .map((item)=>({...item,competency_name:data.cards.find((card)=>card.id===competencyId)?.official_name??competencyId}));
+        }).sort((a,b)=>a.rank-b.rank||a.student_name.localeCompare(b.student_name,"es"))
+          .slice(0,AYNI_HEURISTICS.observe_today_limit);
+        send(response,200,{period_id:period.id,suggestions},origin);return true;
+      }
       if (request.method === "GET" && url.pathname === "/api/period-evaluations/coverage/detail") {
         const data=await context(url.searchParams.get("classroomId"),url.searchParams.get("periodId"));
         const student=await studentForClass(data.classroom,url.searchParams.get("studentId"));
@@ -183,10 +212,10 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
       if (request.method === "GET" && url.pathname === "/api/period-evaluations/detail") {
         const data = await selectedRow({ classroomId: url.searchParams.get("classroomId"), periodId: url.searchParams.get("periodId"), studentId: url.searchParams.get("studentId"), competencyId: url.searchParams.get("competencyId") });
         const official = await db.query(`select distinct p.id,p.official_text,p.source_ref from activity_criteria ac join performances p on p.id=ac.performance_id join activities a on a.id=ac.activity_id join learning_experiences le on le.id=a.experience_id where le.classroom_id=$1 and ac.competency_v4_id=$2 and p.age_grade_id=$3 and a.occurs_on between $4::date and $5::date`, [data.classroom.id, data.card.id, data.classroom.age_grade_id, data.period.starts_on, data.period.ends_on]);
-        const semantic = data.knowledge.curriculumReference.competencies.find((item) => item.id === data.card.id)?.age_references?.[String(data.classroom.age)];
+        const curriculum = data.knowledge.curriculumReference.competencies.find((item) => item.id === data.card.id);
         const currentFingerprint=hash(assessmentSourceSnapshot(data.row.sourceRows));
         const draft=data.row.draft;
-        send(response, 200, { classroom_id: data.classroom.id, period_id: data.period.id, student_id: data.row.student_id, competency_id: data.card.id, state: data.row.state, evidence_count: data.row.sourceRows.length, evidence_fingerprint: currentFingerprint, timeline: data.row.sourceRows.map((item) => ({ id: item.id, observed_on: dateOnly(item.observed_on), registered_at: item.observed_at, activity_id: item.activity_id, activity_title: item.activity_title, criterion_id: item.criterion_id, criterion_text: item.criterion_text, performance_id: item.performance_id, observation_text: item.observation_text, media_available: item.media_available })), reference: official.rows.length ? { kind: "official", items: official.rows } : { kind: "orientative", text: semantic?.semantic_focus ?? "Referente por edad aún no disponible." }, assessment: data.row.assessment ? { id: data.row.assessment.id, achievement_level: data.row.assessment.achievement_level, suggested_level: data.row.assessment.suggested_level, suggestion_reason: data.row.assessment.suggestion_reason, teacher_justification: data.row.assessment.teacher_justification, details: data.row.assessment.details, teacher_confirmed_at: data.row.assessment.teacher_confirmed_at } : null, draft: draft ? { id:draft.id, revision:Number(draft.revision), current:hash(draft.source_evidence_snapshot??[])===currentFingerprint, teacher_analysis:draft.draft_teacher_analysis??"", conclusion_text:draft.working_conclusion_text??"", provisional_level:draft.provisional_level??null, teacher_justification:draft.draft_teacher_justification??"", suggested_level:draft.suggested_level??null, suggestion_reason:draft.suggestion_reason??null, details:draft.details } : null, insufficiency_reason: data.row.state === "insufficient_information" ? draft?.details?.insufficiency_reason ?? null : null, conclusion: data.row.conclusion?.details?.conclusion_text ?? null }, origin);
+        send(response, 200, { classroom_id: data.classroom.id, period_id: data.period.id, student_id: data.row.student_id, competency_id: data.card.id, state: data.row.state, evidence_count: data.row.sourceRows.length, evidence_fingerprint: currentFingerprint, timeline: data.row.sourceRows.map((item) => ({ id: item.id, observed_on: dateOnly(item.observed_on), registered_at: item.observed_at, activity_id: item.activity_id, activity_title: item.activity_title, criterion_id: item.criterion_id, criterion_text: item.criterion_text, performance_id: item.performance_id, observation_text: item.observation_text, media_available: item.media_available })), reference: official.rows.length ? { kind: "official", items: official.rows } : { kind: "cycle_standard", competency: curriculum?.canonical_name ?? data.card.official_name, capacities: curriculum?.canonical_capacity_names ?? data.card.capacities?.map((item)=>item.official_name) ?? [], standard_summary: curriculum?.cycle_ii_standard_semantic_summary ?? data.card.cycle_ii_standard_ai ?? "Estándar del ciclo pendiente de verificar.", age_performance: null }, assessment: data.row.assessment ? { id: data.row.assessment.id, achievement_level: data.row.assessment.achievement_level, suggested_level: data.row.assessment.suggested_level, suggestion_reason: data.row.assessment.suggestion_reason, teacher_justification: data.row.assessment.teacher_justification, details: data.row.assessment.details, teacher_confirmed_at: data.row.assessment.teacher_confirmed_at } : null, draft: draft ? { id:draft.id, revision:Number(draft.revision), current:hash(draft.source_evidence_snapshot??[])===currentFingerprint, teacher_analysis:draft.draft_teacher_analysis??"", conclusion_text:draft.working_conclusion_text??"", provisional_level:draft.provisional_level??null, teacher_justification:draft.draft_teacher_justification??"", suggested_level:draft.suggested_level??null, suggestion_reason:draft.suggestion_reason??null, details:draft.details } : null, insufficiency_reason: data.row.state === "insufficient_information" ? draft?.details?.insufficiency_reason ?? null : null, conclusion: data.row.conclusion?.details?.conclusion_text ?? null }, origin);
         return true;
       }
       if (request.method === "POST" && url.pathname === "/api/period-evaluations/suggest") {
@@ -249,9 +278,9 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
           achievementLevel:body.achievementLevel,teacherJustification});
         const suggestion={analysis:savedDraft.details,analysis_metadata:savedDraft.generation_metadata?.analysis??{},
           conclusion_metadata:savedDraft.generation_metadata?.conclusion??{}};
-        if ((sourceRows.length < 2 || suggestion?.analysis?.information_status === "insufficient" || (suggestion?.analysis?.suggested_level && suggestion.analysis.suggested_level !== body.achievementLevel)) && !teacherJustification) throw new Error("Explica brevemente el criterio de tu decisión docente.");
+        if ((sourceRows.length < AYNI_HEURISTICS.assessment_low_records_for_explanation || suggestion?.analysis?.information_status === "insufficient" || (suggestion?.analysis?.suggested_level && suggestion.analysis.suggested_level !== body.achievementLevel)) && !teacherJustification) throw new Error("Explica brevemente el criterio de tu decisión docente.");
         const analysis = suggestion?.analysis ? { ...suggestion.analysis, information_status: "sufficient", evidence_overview: teacherAnalysis, insufficiency_reason: null } : { competency_id: data.card.id, information_status: "sufficient", evidence_overview: teacherAnalysis, observable_patterns: [], strengths_and_advances: [], support_needs: [], next_opportunities: [], teacher_questions: [], insufficiency_reason: null, caution: "Interpretación confirmada por la docente." };
-        validateAssessmentProposal(analysis, data.card.id, Math.max(sourceRows.length, 2));
+        validateAssessmentProposal(analysis, data.card.id, sourceRows.length);
         const conclusion = conclusionText ? { competency_id: data.card.id, information_status: "sufficient", conclusion_text: conclusionText,
           progress_examples: [], support_or_conditions: [], next_steps: [], insufficiency_reason: null,
           caution: "Conclusión revisada y confirmada por la docente." } : null;

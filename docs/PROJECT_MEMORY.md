@@ -186,6 +186,12 @@ Proyecto nuevo iniciado el 20 de septiembre de 2026. Existe un shell responsive 
 - Los conteos, tarjetas y sugerencias salen de `/api/dashboard`, el recorrido de planificación y la evaluación del período; las cifras de los mockups no se incorporan como datos. Biblioteca usa seis talleres piloto para 3, 4 y 5 años, más un material asociado, sin presentar fichas inexistentes. Los documentos propios siguen en la misma biblioteca bajo «Mis documentos».
 - «Usar en actividad» lleva propósito y materiales del recurso al borrador editable de Actividad, después de que la docente elija un proyecto o unidad. Descargar/guardar toma el archivo real desde una ruta autenticada; en modo local lo guarda en Descargas del equipo. Ver ADR 067.
 
+## Cobertura y continuidad de planificación (2026-09-25)
+
+- El Plan Anual muestra el mapa de competencias derivado de sus mismas propuestas y señala oportunidades ausentes, escasas o concentradas. No agrega competencias para mejorar los contadores.
+- La matriz del período cruza niñas y niños con competencias aplicables y separa cobertura de evaluación. El historial de una celda reúne observaciones diagnósticas y evidencias de actividades, sin convertir entrevistas familiares en evidencia ni inferir niveles por ausencia de registros.
+- La actividad consulta «Podrías observar hoy» para hasta cuatro sugerencias explicadas. La docente puede elegir cualquier estudiante. Los hallazgos grupales del período solo se usan en propuestas futuras cuando la docente activa esa opción; los planes existentes no cambian.
+
 
 
 

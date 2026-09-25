@@ -1,9 +1,10 @@
 "use client";
 
 import { ArrowLeft, ArrowRight, BookOpen, Camera, CheckCircle2, ClipboardList, Package } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import type { LocalDashboard } from "@/src/lib/local-database";
+import { localDatabaseApiUrl, type LocalDashboard } from "@/src/lib/local-database";
+import { apiFetch } from "@/src/lib/ayni-api-fetch";
 import { AsyncButton, WorkflowFeedback } from "./workflow-ui";
 
 type ActivityBlock = LocalDashboard["today"]["blocks"][number];
@@ -11,13 +12,23 @@ type ActivityBlock = LocalDashboard["today"]["blocks"][number];
 export function ActivityRunView({ block, onBack, onEvidence, onStepChange, onComplete }: {
   block: ActivityBlock;
   onBack: () => void;
-  onEvidence: () => void;
+  onEvidence: (studentId?: string) => void;
   onStepChange: (stepIndex: number) => Promise<void>;
   onComplete: () => Promise<void>;
 }) {
   const [showComplete, setShowComplete] = useState(false);
   const [operation, setOperation] = useState<"step" | "complete" | null>(null);
   const [error, setError] = useState("");
+  const [suggestions, setSuggestions] = useState<{student_id:string;student_name:string;competency_name:string;reason:string}[]>([]);
+  useEffect(()=>{
+    if(!block.activity_id)return;
+    const controller=new AbortController();
+    apiFetch(`${localDatabaseApiUrl}/api/period-evaluations/observe-today?activityId=${encodeURIComponent(block.activity_id)}`,{signal:controller.signal,cache:"no-store"})
+      .then(async(response)=>response.ok?await response.json() as {suggestions:typeof suggestions}:null)
+      .then((result)=>{if(!controller.signal.aborted)setSuggestions(result?.suggestions??[]);})
+      .catch(()=>{if(!controller.signal.aborted)setSuggestions([]);});
+    return()=>controller.abort();
+  },[block.activity_id]);
   async function run(action: "step" | "complete", nextIndex?: number) {
     if (operation) return;
     setOperation(action); setError("");
@@ -47,7 +58,8 @@ export function ActivityRunView({ block, onBack, onEvidence, onStepChange, onCom
       {hasSteps && <div className="mt-6 grid gap-3 sm:grid-cols-2"><AsyncButton variant="outline" className="h-12" busy={operation === "step"} busyLabel="Cambiando paso..." disabled={Boolean(operation) || isFirst} onClick={() => void run("step", currentStepIndex - 1)}><ArrowLeft /> Anterior</AsyncButton><AsyncButton className="h-12" busy={operation === "step"} busyLabel="Cambiando paso..." disabled={Boolean(operation) || isLast} onClick={() => void run("step", currentStepIndex + 1)}>Siguiente <ArrowRight /></AsyncButton></div>}
     </article>
     {error && <WorkflowFeedback tone="error">{error}</WorkflowFeedback>}
-    <div className="grid gap-3 sm:grid-cols-2"><Button variant="outline" className="h-12 border-[#87bdcb] text-[#126177]" disabled={!block.criteria.length || Boolean(operation)} onClick={onEvidence}><Camera /> {evidenceLabel}</Button><AsyncButton className="h-12" busy={operation === "complete"} busyLabel="Terminando..." disabled={Boolean(operation)} onClick={() => void run("complete")}><CheckCircle2 /> Terminar actividad</AsyncButton></div>
+    {suggestions.length>0&&<article className="diagnostic-panel p-5"><h2 className="text-lg font-extrabold">Podrías observar hoy</h2><p className="mt-1 text-sm text-[#526b87]">Sugerencias basadas en los registros del período. Puedes observar a cualquier niña o niño.</p><ul className="mt-3 space-y-2">{suggestions.map((item)=><li key={`${item.student_id}:${item.competency_name}`} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-white p-3"><div><b>{item.student_name}</b><p className="text-sm text-[#526b87]">{item.competency_name} · {item.reason}</p></div><Button type="button" variant="outline" onClick={()=>onEvidence(item.student_id)}>Registrar</Button></li>)}</ul></article>}
+    <div className="grid gap-3 sm:grid-cols-2"><Button variant="outline" className="h-12 border-[#87bdcb] text-[#126177]" disabled={!block.criteria.length || Boolean(operation)} onClick={()=>onEvidence()}><Camera /> {evidenceLabel}</Button><AsyncButton className="h-12" busy={operation === "complete"} busyLabel="Terminando..." disabled={Boolean(operation)} onClick={() => void run("complete")}><CheckCircle2 /> Terminar actividad</AsyncButton></div>
     {hasSteps && <div><Button variant="ghost" className="text-[#126177]" onClick={() => setShowComplete((visible) => !visible)}><BookOpen /> {showComplete ? "Ocultar actividad completa" : "Ver actividad completa"}</Button>{showComplete && <ol className="mt-2 space-y-2 rounded-2xl border bg-white p-4 text-sm text-[#315a78]">{steps.map((step, index) => <li key={`${index}-${step}`} className="flex gap-3"><span className="font-bold text-[#087d96]">{index + 1}</span><span>{step}</span></li>)}</ol>}</div>}
     <p className="flex items-center gap-2 text-sm text-muted-foreground"><BookOpen className="size-4" /> La evidencia es opcional y puedes volver a la actividad completa cuando lo necesites.</p>
   </section>;

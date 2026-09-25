@@ -10,12 +10,12 @@ test("los registros legacy nunca ofrecen continuar en un workflow v4", () => {
   assert.equal(recommendedStudentGuidance([legacy]), null);
 });
 
-test("la recomendación distingue información escasa, análisis y conclusión confirmados", () => {
+test("la recomendación invita a revisar cualquier registro sin declarar su suficiencia", () => {
   const limited = competency("a", 1);
   const ready = competency("b", 3);
   const assessed = competency("c", 3, { teacher_confirmed_assessment: { id: "assessment-1" } });
   const concluded = competency("d", 3, { teacher_confirmed_assessment: { id: "assessment-2" }, teacher_confirmed_conclusion: { id: "conclusion-1" } });
-  assert.equal(studentCompetencyGuidance(limited).action, "evidence");
+  assert.equal(studentCompetencyGuidance(limited).action, "assessment");
   assert.equal(studentCompetencyGuidance(ready).action, "assessment");
   assert.equal(studentCompetencyGuidance(assessed).action, "conclusion");
   assert.equal(studentCompetencyGuidance(concluded).action, "family_report");
