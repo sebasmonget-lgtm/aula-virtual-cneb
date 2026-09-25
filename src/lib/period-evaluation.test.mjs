@@ -59,6 +59,16 @@ test("cobertura deriva registros por niño y competencia sin convertir ausencias
   const history=await f.call("GET",`/api/period-evaluations/coverage/detail?classroomId=${classId}&periodId=${period.id}&studentId=${studentB}&competencyId=COM_ORAL`);
   assert.equal(history.status,200,JSON.stringify(history.body));
   assert.equal(history.body.timeline[0].source_type,"diagnostic_guided");
+  const onlyAntecedent=await f.call("GET",`/api/period-evaluations/detail?classroomId=${classId}&periodId=${period.id}&studentId=${studentB}&competencyId=COM_ORAL`);
+  assert.equal(onlyAntecedent.body.evidence_count,0);
+  assert.equal(onlyAntecedent.body.timeline.length,0);
+  assert.equal(onlyAntecedent.body.diagnostic_antecedents.length,1);
+  assert.equal(onlyAntecedent.body.state,"no_evidence");
+  await f.db.query(`insert into diagnostic_experience_observations values(gen_random_uuid(),$1,$2,'COM_ORAL','2026-03-12T12:00:00Z','Explicó otra idea.','demonstrated','asamblea','Asamblea de marzo','Cuenta una idea')`,[classId,studentA]);
+  const withBoth=await f.call("GET",`/api/period-evaluations/detail?classroomId=${classId}&periodId=${period.id}&studentId=${studentA}&competencyId=COM_ORAL`);
+  assert.equal(withBoth.body.evidence_count,2);
+  assert.equal(withBoth.body.timeline.length,2);
+  assert.equal(withBoth.body.diagnostic_antecedents.length,1);
   const today=await f.call("GET",`/api/period-evaluations/observe-today?activityId=${activity}`);
   assert.equal(today.status,200,JSON.stringify(today.body));
   assert.ok(today.body.suggestions.some((item)=>item.student_id===studentB&&item.reason));
