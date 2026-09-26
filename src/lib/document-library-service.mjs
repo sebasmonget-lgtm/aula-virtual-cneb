@@ -126,17 +126,21 @@ export async function loadSavedDocument(db, teacherId, kind, id) {
   }
   if (kind === "experience") {
     const row = (await db.query(`select e.id,e.type,e.title,e.purpose,e.status,e.version,e.details,e.starts_on,e.ends_on,e.origin,e.planning_reason,e.source_proposal_index,
+      ef.content as formal_content,
       sy.year,c.section,c.institution_name,ag.age_years,p.display_name as teacher_name,ip.ugel,ip.district from learning_experiences e join classrooms c on c.id=e.classroom_id
       join school_years sy on sy.id=c.school_year_id
       join age_grades ag on ag.id=c.age_grade_id join profiles p on p.user_id=c.teacher_id
       left join institution_profiles ip on ip.owner_user_id=c.teacher_id
+      left join experience_formal_contents ef on ef.experience_id=e.id
       where e.id=$2 and c.teacher_id=$1 and sy.owner_id=$1 and e.type in ('project','unit') and e.details ? 'starting_point'`, [teacherId, id])).rows[0];
     return row ? { id: row.id, kind, subtype: row.type, title: row.title, status: row.status, version: Number(row.version),
       school_year: Number(row.year), classroom: row.section, institution_name: row.institution_name,
       age: Number(row.age_years), teacher_name: row.teacher_name, ugel: row.ugel, district: row.district,
       starts_on: dateOnly(row.starts_on), ends_on: dateOnly(row.ends_on), origin: row.origin,
       source_proposal_index: Number.isInteger(row.source_proposal_index) ? row.source_proposal_index : null,
-      content: { ...selectContent(row.details, ["starting_point", "trigger_or_interest", "learning_need_or_context", "primary_competency_ids", "possible_secondary_competency_ids", "possible_pathways", "proposed_situations", "spaces_and_materials", "evidence_opportunities", "family_or_community_links", "adjustment_points", "flexibility_notes", "activity_route", "document_template_version", "teacher_overrides"]), purpose: row.details?.purpose || row.purpose, planning_reason: row.planning_reason } } : null;
+      formal_ready: Boolean(row.formal_content),
+      content: { ...selectContent(row.details, ["starting_point", "trigger_or_interest", "learning_need_or_context", "primary_competency_ids", "possible_secondary_competency_ids", "possible_pathways", "proposed_situations", "spaces_and_materials", "evidence_opportunities", "family_or_community_links", "adjustment_points", "flexibility_notes", "activity_route", "document_template_version", "teacher_overrides", "project_master", "dependents", "decisions"]), purpose: row.details?.purpose || row.purpose, planning_reason: row.planning_reason,
+        formal_content: row.formal_content ?? null } } : null;
   }
   if (kind === "activity") {
     const row = (await db.query(`select a.id,a.title,a.purpose,a.status,a.details,a.preparation,a.occurs_on,e.title as experience_title,

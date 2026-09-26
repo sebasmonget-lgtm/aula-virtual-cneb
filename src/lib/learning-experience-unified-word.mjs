@@ -4,6 +4,11 @@ const templateUrl = new URL("../../assets/templates/proyecto-unidad-inicial-unif
 const clean = (value) => typeof value === "string" ? value.trim() : "";
 const list = (value) => Array.isArray(value) ? value.map(clean).filter(Boolean).join("; ") : "";
 const dateLabel = (value) => /^\d{4}-\d{2}-\d{2}$/.test(value ?? "") ? `${value.slice(8)}/${value.slice(5, 7)}/${value.slice(0, 4)}` : "";
+const durationWeeks = (startsOn, endsOn) => {
+  const start = new Date(`${startsOn}T00:00:00Z`), end = new Date(`${endsOn}T00:00:00Z`);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end < start) return "Duración referencial";
+  return `${Math.max(1, Math.floor((end.getTime() - start.getTime()) / 604800000) + 1)} semanas lectivas previstas`;
+};
 const xmlText = (xml) => [...xml.matchAll(/<w:t(?:\s[^>]*)?>([\s\S]*?)<\/w:t>/g)].map((match) => match[1]).join("");
 
 function removeBetween(xml, startText, endText = null) {
@@ -16,7 +21,8 @@ function removeBetween(xml, startText, endText = null) {
 
 function valuesFor(document, cards) {
   const content = document.content ?? {};
-  if (content.document_template_version !== "experience-unified-v1" || !content.activity_route?.length)
+  const modern = content.document_template_version === "experience-unified-v2";
+  if (!["experience-unified-v1", "experience-unified-v2"].includes(content.document_template_version) || !content.activity_route?.length)
     throw new Error("Esta experiencia no tiene ruta estructurada para la plantilla unificada.");
   const byId = new Map(cards.map((card) => [card.id, card]));
   const primary = content.primary_competency_ids ?? [];
@@ -28,14 +34,16 @@ function valuesFor(document, cards) {
   const competencyRows = selected.map((id) => {
     const card = byId.get(id);
     if (!card) throw new Error(`Competencia no disponible en la plantilla: ${id}.`);
-    const activities = content.activity_route.filter((item) => item.competency_id === id);
+    const activities = content.activity_route.filter((item) => (item.competency_ids ?? [item.competency_id]).includes(id));
+    const generalCriterion = content.dependents?.general_criteria?.find((item) => item.competency_id === id);
     return { AREA: clean(card.area_name), COMPETENCIA: clean(card.name), CAPACIDADES: capacity(card),
-      DESEMPENO_REFERENTE: focus(card) || "Referente por revisar con la docente",
-      CRITERIOS: list(activities.map((item) => item.evaluation_criterion)) || "Se definirá al desarrollar las actividades.",
-      EVIDENCIAS: list(activities.map((item) => item.expected_evidence)) || "Se precisará en las actividades." };
+      DESEMPENO_REFERENTE: modern && card?.ages?.[String(document.age)]?.status !== "specified"
+        ? "Sin desempeño específico para esta edad; se considera el estándar del ciclo." : focus(card) || "Referente por revisar con la docente",
+      CRITERIOS: clean(generalCriterion?.criterion) || list(activities.map((item) => item.evaluation_criterion)) || "Se definirá al desarrollar las actividades.",
+      EVIDENCIAS: list(generalCriterion?.expected_evidence) || list(activities.map((item) => item.expected_evidence)) || "Se precisará en las actividades." };
   });
   const routeRows = content.activity_route.map((item, index) => ({
-    NRO_ACTIVIDAD: String(item.number), FECHA_ACTIVIDAD: index === 0 ? "Inicio" : index === content.activity_route.length - 1 ? "Cierre" : "Desarrollo",
+    NRO_ACTIVIDAD: String(item.number), FECHA_ACTIVIDAD: modern ? dateLabel(item.date) : index === 0 ? "Inicio" : index === content.activity_route.length - 1 ? "Cierre" : "Desarrollo",
     TITULO_ACTIVIDAD: item.title, PROPOSITO_ESPECIFICO: item.specific_purpose,
     COMPETENCIA_PRINCIPAL_ACTIVIDAD: byId.get(item.competency_id)?.name ?? item.competency_id,
     CRITERIO_ACTIVIDAD: item.evaluation_criterion, EVIDENCIA_ACTIVIDAD: item.expected_evidence,
@@ -45,30 +53,31 @@ function valuesFor(document, cards) {
     NUMERO_EXPERIENCIA: Number.isInteger(document.source_proposal_index) ? String(document.source_proposal_index + 1) : "Emergente",
     CODIGO_EXPERIENCIA: document.id.slice(0, 8).toUpperCase(), TITULO_EXPERIENCIA: document.title,
     FECHA_INICIO: dateLabel(document.starts_on), FECHA_FIN: dateLabel(document.ends_on),
-    DURACION_REFERENCIAL: "Ajustable según el grupo", INSTITUCION_EDUCATIVA: clean(document.institution_name) || "Institución educativa",
+    DURACION_REFERENCIAL: modern ? durationWeeks(document.starts_on, document.ends_on) : "Ajustable según el grupo", INSTITUCION_EDUCATIVA: clean(document.institution_name) || "Institución educativa",
     EDAD_AULA: `${document.age || ""} años · ${clean(document.classroom)}`,
     DOCENTE: clean(document.teacher_name) || "Docente del aula", UGEL: clean(document.ugel) || "Sin dato registrado",
     PRIORIDAD_ANUAL_O_PROYECTO_ORIGEN: document.origin === "planned" ? "Propuesta del plan anual" : clean(content.planning_reason),
     FECHA_SIGNIFICATIVA: "Según el calendario del aula", ORIGEN_NECESIDAD_INTERES_PROBLEMA: clean(content.trigger_or_interest || content.learning_need_or_context || content.starting_point),
-    SITUACION_SIGNIFICATIVA: clean(content.starting_point), RETO_PREGUNTA: clean(content.possible_pathways?.[0]?.title || content.proposed_situations?.[0]?.title || content.title),
-    PRODUCTO_FINAL: "El resultado colectivo se acordará con los niños al iniciar la experiencia.",
+    SITUACION_SIGNIFICATIVA: modern ? [clean(content.formal_content?.situation), clean(content.formal_content?.foundation)].filter(Boolean).join(" ")
+      : clean(content.starting_point), RETO_PREGUNTA: clean(content.dependents?.guiding_questions?.[0] || content.possible_pathways?.[0]?.title || content.proposed_situations?.[0]?.title || content.title),
+    PRODUCTO_FINAL: modern ? clean(content.project_master?.closing_description) : "El resultado colectivo se acordará con los niños al iniciar la experiencia.",
     EVIDENCIAS_CLAVE: list(content.evidence_opportunities), PREPLAN_QUE: list(content.activity_route.map((item) => item.title)),
-    PREPLAN_COMO: list((content.possible_pathways || content.proposed_situations)?.map((item) => item.possible_child_actions)),
+    PREPLAN_COMO: modern ? clean(content.formal_content?.methodology) || list(content.dependents?.journey?.map((item) => item.description)) : list((content.possible_pathways || content.proposed_situations)?.map((item) => item.possible_child_actions)),
     PREPLAN_RECURSOS: list(content.spaces_and_materials),
     NINOS_QUE: "", NINOS_COMO: "", NINOS_NECESITAN: "", PROPOSITO_GENERAL_EXPERIENCIA: content.purpose,
     AREA: "", COMPETENCIA: "", CAPACIDADES: "", DESEMPENO_REFERENTE: "", CRITERIOS: "", EVIDENCIAS: "",
     ENFOQUES_TRANSVERSALES: "Se concretarán en las actividades según la situación vivida.",
     ACTITUDES_OBSERVABLES: "Escuchar, participar y respetar formas diversas de expresión.",
-    APOYOS_DIVERSIDAD: list(content.adjustment_points) || "Ajustar materiales, tiempos y formas de participación según las necesidades observadas.",
-    PARTICIPACION_FAMILIA_COMUNIDAD: list(content.family_or_community_links) || "Cuando resulte pertinente para el grupo.",
-    ESTRATEGIA_RECOJO_EVIDENCIAS: "Observar y registrar actuaciones durante el juego y las actividades.",
+    APOYOS_DIVERSIDAD: clean(content.formal_content?.diversity_support) || list(content.adjustment_points) || "Ajustar materiales, tiempos y formas de participación según las necesidades observadas.",
+    PARTICIPACION_FAMILIA_COMUNIDAD: clean(content.formal_content?.family_collaboration) || list(content.family_or_community_links) || "Cuando resulte pertinente para el grupo.",
+    ESTRATEGIA_RECOJO_EVIDENCIAS: clean(content.formal_content?.assessment_followup) || "Observar y registrar actuaciones durante el juego y las actividades.",
     INSTRUMENTOS_PROYECTO: "Notas de observación y evidencias registradas por la docente.",
     USO_EVIDENCIAS_PARA_AJUSTAR: "Revisar los registros y ajustar las siguientes actividades.",
     NRO_ACTIVIDAD: "", FECHA_ACTIVIDAD: "", TITULO_ACTIVIDAD: "", PROPOSITO_ESPECIFICO: "", COMPETENCIA_PRINCIPAL_ACTIVIDAD: "", CRITERIO_ACTIVIDAD: "", EVIDENCIA_ACTIVIDAD: "",
     MATERIALES_RECURSOS_PROYECTO: list(content.spaces_and_materials), ORGANIZACION_ESPACIOS: clean(content.spaces_and_materials?.[0]) || "Según la actividad.",
     HITOS_CALENDARIO: `${dateLabel(document.starts_on)} al ${dateLabel(document.ends_on)}`,
     AJUSTES_FLEXIBILIDAD: list(content.adjustment_points) || clean(content.flexibility_notes),
-    CIERRE_SOCIALIZACION: "Compartir lo realizado y conversar sobre lo aprendido, según decida el grupo.",
+    CIERRE_SOCIALIZACION: clean(content.formal_content?.closing) || "Compartir lo realizado y conversar sobre lo aprendido, según decida el grupo.",
     SINTESIS_EVIDENCIAS_PROYECTO: "", AVANCES_GRUPO: "", NECESIDADES_EMERGENTES: "", AJUSTES_REALIZADOS: "",
     VALORACION_APRENDIZAJES: "", EVIDENCIAS_CIERRE: "", PROYECCION_SIGUIENTE: "", DIRECTOR_COORDINADOR: "",
   };

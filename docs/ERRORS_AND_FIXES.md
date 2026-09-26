@@ -495,3 +495,19 @@
 **Causa raíz.** Tres fixtures construían un esquema mínimo manual y no incluían la tabla aditiva que ahora se consulta para encontrar el Word derivado.
 
 **Solución y prevención.** Se añadió la tabla mínima a esos fixtures y se repitieron las suites de Word y Documentos. Cuando una lectura canónica incorpore una tabla nueva, revisar también los esquemas mínimos de sus pruebas además de la paridad de migraciones.
+
+## 2026-09-26 Los planes históricos no podían iniciar el nuevo flujo de proyecto
+
+**Síntoma.** Las doce propuestas se mostraban, pero al desarrollar una perteneciente a un plan anterior la API respondía que no pertenecía al Plan Anual.
+
+**Causa raíz.** Los planes históricos tienen filas por posición y espacios de calendario, pero no `proposal_id`. El flujo nuevo usaba únicamente ese identificador. Además, la primera migración de retrocompatibilidad contenía una expresión regular incompleta para una de las actualizaciones y ya había sido aplicada localmente.
+
+**Solución y prevención.** El servidor acepta el ID estable de `project_slots` para planes históricos y conserva el índice de origen. La interfaz normaliza ambos formatos. Se añadió una migración posterior que corrige el backfill sin editar la migración aplicada. Una prueba real con API creó contexto, propósitos, preguntas, criterios y un mapa de ocho actividades a partir del plan histórico vigente.
+
+## 2026-09-26 Un ejemplo de contexto válido era rechazado por longitud
+
+**Síntoma.** Luna devolvía una vista previa estructurada válida, pero la API respondía «No pudimos preparar las opciones del proyecto».
+
+**Causa raíz.** El contrato de salida permitía texto, mientras la validación posterior limitaba el ejemplo opcional a 250 caracteres. La respuesta real tenía 298 caracteres y el mensaje no distinguía esa causa.
+
+**Solución y prevención.** El límite del ejemplo se alineó con el uso visible a 500 caracteres y se mantuvieron límites estrictos para contexto y propósitos. La misma llamada real pasó después del ajuste.

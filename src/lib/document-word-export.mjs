@@ -183,7 +183,9 @@ export async function renderSavedDocumentWord(document, competencyCards = [], { 
     : document.content?.plan_format === ANNUAL_PLAN_LEGACY_TEMPLATE_FORMAT
       ? renderAnnualPlanRedesignedWord(document, competencyCards, { logo })
       : renderAnnualPlanTemplateWord(document, competencyCards, { logo });
-  if (document.kind === "experience" && document.content?.document_template_version === "experience-unified-v1")
+  if (document.kind === "experience" && document.content?.document_template_version === "experience-unified-v2" && !document.formal_ready)
+    throw new Error("Prepara primero el Word desde el proyecto confirmado.");
+  if (document.kind === "experience" && ["experience-unified-v1", "experience-unified-v2"].includes(document.content?.document_template_version))
     return renderLearningExperienceUnifiedWord(document, competencyCards, { logo });
   if (document.kind === "activity" && document.content?.document_template_version === "activity-unified-v1")
     return renderActivityUnifiedWord(document, competencyCards, { logo });

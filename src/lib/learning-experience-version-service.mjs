@@ -25,11 +25,11 @@ export async function copyConfirmedLearningExperience(db, teacherId, classroomId
     const version = Number(source.version ?? 1) + 1;
     await tx.query(`insert into learning_experiences
       (id,classroom_id,type,title,purpose,starts_on,ends_on,status,details,annual_plan_id,origin,
-       planning_reason,source_proposal_index,generation_metadata,version,supersedes_experience_id,lineage_id)
-      values ($1,$2,$3,$4,$5,$6::date,$7::date,'draft',$8::jsonb,$9,$10,$11,$12,$13::jsonb,$14,$15,$16)`,
+       planning_reason,source_proposal_index,generation_metadata,version,supersedes_experience_id,lineage_id,source_proposal_id)
+      values ($1,$2,$3,$4,$5,$6::date,$7::date,'draft',$8::jsonb,$9,$10,$11,$12,$13::jsonb,$14,$15,$16,$17)`,
     [id, source.classroom_id, source.type, source.title, source.purpose, dateOnly(source.starts_on), dateOnly(source.ends_on),
       JSON.stringify(source.details), source.annual_plan_id, source.origin, source.planning_reason,
-      source.source_proposal_index, JSON.stringify({ workflow: "learning_experience_copy", source_experience_id: source.id }), version, source.id, source.lineage_id]);
+      source.source_proposal_index, JSON.stringify({ workflow: "learning_experience_copy", source_experience_id: source.id }), version, source.id, source.lineage_id, source.source_proposal_id]);
     return { id, version, revision: 1, lineage_id: source.lineage_id, status: "draft", supersedes_experience_id: source.id };
   });
 }

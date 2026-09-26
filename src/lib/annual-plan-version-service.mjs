@@ -47,9 +47,10 @@ export async function copyConfirmedAnnualPlan(db, teacherId, context, sourcePlan
       ? buildEditableAnnualSchedule(context.calendar, source.proposal.proposed_experiences)
       : buildFlexibleAnnualSchedule(context.calendar, source.proposal.proposed_experiences)).projects;
     for (const slot of slots) await tx.query(`insert into project_slots
-      (id,annual_plan_id,slot_index,calendar_block_id,duration_weeks,starts_on,ends_on)
-      values ($1,$2,$3,$4,$5,$6::date,$7::date)`, [randomUUID(), id, slot.index,
-      slot.calendar_block_id, slot.duration_weeks, slot.starts_on, slot.ends_on]);
+      (id,annual_plan_id,slot_index,calendar_block_id,duration_weeks,starts_on,ends_on,proposal_id)
+      values ($1,$2,$3,$4,$5,$6::date,$7::date,$8)`, [randomUUID(), id, slot.index,
+      slot.calendar_block_id, slot.duration_weeks, slot.starts_on, slot.ends_on,
+      source.proposal.proposed_experiences[slot.index - 1]?.proposal_id ?? null]);
     return { id, version, revision: 1, status: "draft", supersedes_plan_id: source.id, source_diagnostic_review_id: diagnostic.id };
   });
 }

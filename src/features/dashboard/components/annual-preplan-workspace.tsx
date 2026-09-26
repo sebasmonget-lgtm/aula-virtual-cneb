@@ -35,8 +35,8 @@ const body = (value: unknown): RequestInit => ({ method: "POST", headers: { "con
 const monthLabel = (value: number) => months[value] ?? "Mes por definir";
 const isPreplan = (plan: Plan | null | undefined): plan is Plan & { proposal: Preplan } => plan?.proposal?.plan_format === "annual_preplan_v1";
 
-function PreplanTable({ rows, options, editable, onChange }: { rows: Row[]; options: Competency[];
-  editable: boolean; onChange: (rows: Row[]) => void }) {
+function PreplanTable({ rows, options, editable, onChange, onDevelop }: { rows: Row[]; options: Competency[];
+  editable: boolean; onChange: (rows: Row[]) => void; onDevelop?: (proposalId: string) => void }) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const editingIndex = rows.findIndex((item) => item.proposal_id === editingId);
   const editing = editingIndex < 0 ? null : rows[editingIndex];
@@ -66,7 +66,8 @@ function PreplanTable({ rows, options, editable, onChange }: { rows: Row[]; opti
         <td className="sticky right-0 z-10 bg-white px-4 py-3 shadow-[-1px_0_0_#e3edf4] group-even:bg-[#f9fcfe]"><div className="flex flex-wrap gap-1">{editable && <><Button type="button" variant="outline" className="min-h-10" onClick={() => setEditingId(row.proposal_id)}>Editar</Button>
           <Button type="button" variant="ghost" size="sm" aria-label={`Subir ${row.title}`} disabled={index === 0} onClick={() => move(index, -1)}>↑</Button>
           <Button type="button" variant="ghost" size="sm" aria-label={`Bajar ${row.title}`} disabled={index === rows.length - 1} onClick={() => move(index, 1)}>↓</Button></>}
-          {!editable && <span className="text-xs text-[#526b87]">Confirmada</span>}</div></td>
+          {!editable && (onDevelop ? <Button type="button" variant="outline" className="min-h-10" onClick={() => onDevelop(row.proposal_id)}>Desarrollar</Button>
+            : <span className="text-xs text-[#526b87]">Confirmada</span>)}</div></td>
       </tr>)}</tbody></table></div>
     {editable && <div className="flex flex-wrap items-center justify-between gap-3"><Button type="button" variant="outline" className="min-h-11" disabled={rows.length >= 20}
       onClick={() => { const last = rows.at(-1); const created: Row = { proposal_id: crypto.randomUUID(), experience_type: "project", title: "",
@@ -87,7 +88,8 @@ function PreplanTable({ rows, options, editable, onChange }: { rows: Row[]; opti
   </section>;
 }
 
-export function AnnualPreplanWorkspace({ onConfirmed, onGoDiagnostic }: { onConfirmed?: () => void; onGoDiagnostic?: () => void }) {
+export function AnnualPreplanWorkspace({ onConfirmed, onGoDiagnostic, onDevelop }: { onConfirmed?: () => void; onGoDiagnostic?: () => void;
+  onDevelop?: (proposalId: string) => void }) {
   const [plans, setPlans] = useState<Plans | null>(null), [context, setContext] = useState<Context | null>(null);
   const [options, setOptions] = useState<Competency[]>([]), [selectedId, setSelectedId] = useState<string | null>(null);
   const [proposal, setProposal] = useState<Preplan | null>(null), [notes, setNotes] = useState("");
@@ -167,7 +169,9 @@ export function AnnualPreplanWorkspace({ onConfirmed, onGoDiagnostic }: { onConf
       <div className="mt-4 flex flex-wrap gap-2"><Button variant="outline" onClick={() => setShowLegacy(true)}>Ver plan anterior</Button></div></section>}
     {isPreplan(selected) && proposal && <><div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-[#edf7fa] p-4"><p className="font-bold">{selected.status === "active" ? "Mi año vigente" : selected.status === "draft" ? "Mi año en revisión" : "Versión anterior"} · versión {selected.version}</p>
       {selected.status === "active" && !plans?.draft && <Button variant="outline" disabled={Boolean(busy)} onClick={copy}>Preparar nueva versión</Button>}</div>
-      <PreplanTable rows={proposal.proposed_experiences} options={options} editable={editable} onChange={(rows) => setProposal({ ...proposal, proposed_experiences: rows })} />
+      <PreplanTable rows={proposal.proposed_experiences} options={options} editable={editable}
+        onDevelop={selected.status === "active" ? onDevelop : undefined}
+        onChange={(rows) => setProposal({ ...proposal, proposed_experiences: rows })} />
       <section className="rounded-2xl border bg-white p-4"><h2 className="font-bold">Cobertura de competencias</h2><p className="mt-1 text-sm text-[#526b87]">Ayni señala oportunidades previstas; puedes decidir cómo ajustarlas.</p>
         <div className="mt-3 grid gap-2 sm:grid-cols-2">{coverage.filter((item: { warnings: string[] }) => item.warnings.length).map((item: { competency_id: string; competency_name: string; project_count: number; warnings: string[] }) => <p key={item.competency_id} className="rounded-lg bg-[#fff5e4] p-3 text-sm"><b>{item.competency_name}</b> · {item.project_count} {item.project_count === 1 ? "oportunidad" : "oportunidades"}<br />{item.warnings.join(" ")}</p>)}
           {!coverage.some((item: { warnings: string[] }) => item.warnings.length) && <p className="text-sm">Las competencias del aula tienen oportunidades previstas en este preplan.</p>}</div></section>

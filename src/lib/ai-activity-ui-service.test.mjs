@@ -32,6 +32,24 @@ test("D-G: conserva el contexto pedagógico mínimo del parent y su continuidad"
   assert.deepEqual(input.classroom_context.materials, ["linternas", "papel"]);
 });
 
+test("la actividad de una fila recibe el Project Master confirmado, sus vecinas y su posición", () => {
+  const route = [
+    { id: "route-1", number: 1, date: "2026-04-13", title: "Preguntamos", specific_purpose: "Recoger preguntas", competency_id: "CYT_INDAGA", evaluation_criterion: "Formula preguntas", expected_evidence: "Pregunta registrada" },
+    { id: "route-2", number: 2, date: "2026-04-14", title: "Observamos", specific_purpose: "Comparar cambios", competency_id: "CYT_INDAGA", evaluation_criterion: "Compara cambios", expected_evidence: "Explicación" },
+    { id: "route-3", number: 3, date: "2026-04-15", title: "Compartimos", specific_purpose: "Comunicar hallazgos", competency_id: "CYT_INDAGA", evaluation_criterion: "Comunica hallazgos", expected_evidence: "Relato" },
+  ];
+  const learningExperience = { id: "project-2", type: "project", title: "Plantas", purpose: "Indagar cambios",
+    details: { flow_version: "project-master-v1", decisions: { purpose: "Indagar cambios" }, dependents: { guiding_questions: ["¿Qué cambia?"] },
+      project_master: { foundation: "Pregunta del grupo" }, activity_route: route } };
+  const input = buildTeacherActivityGenerationInput({ request: { ...request, routeItemId: "route-2", context: "Hoy apareció una hoja nueva." }, classroom, learningExperience });
+  assert.equal(input.activity_purpose, "Comparar cambios");
+  assert.equal(input.learning_experience_context.confirmed_project_master.activity_route.length, 3);
+  assert.deepEqual(input.learning_experience_context.route_position, { number: 2, total: 3 });
+  assert.equal(input.learning_experience_context.previous_map_item.id, "route-1");
+  assert.equal(input.learning_experience_context.next_map_item.id, "route-3");
+  assert.match(input.classroom_context.group_context, /hoja nueva/);
+});
+
 test("genera solo activity, conserva metadata interna y no envía datos privados", async () => {
   let providerRequest;
   const result = await generateTeacherActivity({

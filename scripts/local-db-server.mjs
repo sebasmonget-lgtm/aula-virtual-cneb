@@ -20,6 +20,9 @@ import { DiagnosticSuggestionError, suggestDiagnosticGroupReview } from "../src/
 import { suggestDiagnosticStudentReview } from "../src/lib/ai-diagnostic-student-service.mjs";
 import { DiagnosticPriorityError, prepareDiagnosticPriorities, suggestDiagnosticPriorities, saveDiagnosticPriorities, confirmDiagnosticPriorities } from "../src/lib/diagnostic-priority-service.mjs";
 import { generateTeacherLearningExperience } from "../src/lib/ai-learning-experience-ui-service.mjs";
+import { generateProjectPreview, generateProjectDependents, generateProjectMaster, generateProjectFormal,
+  instructionalDates, validateProjectDecisions, validateProjectDependents, validateEditedActivityMap,
+  projectDetails, preserveTeacherMapEdits, suggestEmergentProposal } from "../src/lib/project-flow-service.mjs";
 import { nextAnnualPlanVersion, safeAnnualGenerationMetadata } from "../src/lib/annual-plan-persistence.mjs";
 import { copyConfirmedAnnualPlan, confirmAnnualPlanVersion } from "../src/lib/annual-plan-version-service.mjs";
 import { copyConfirmedLearningExperience, confirmLearningExperienceVersion } from "../src/lib/learning-experience-version-service.mjs";
@@ -412,11 +415,13 @@ async function annualCalendarForClassroom(row) {
 }
 
 async function replaceAnnualProjectSlots(planId, schedule, runner = db) {
+  const plan = (await runner.query(`select proposal from annual_plans where id=$1`, [planId])).rows[0];
   await runner.query(`delete from project_slots where annual_plan_id=$1`, [planId]);
   for (const slot of schedule.projects) {
-    await runner.query(`insert into project_slots(id,annual_plan_id,slot_index,calendar_block_id,duration_weeks,starts_on,ends_on)
-      values($1,$2,$3,$4,$5,$6::date,$7::date)`, [randomUUID(), planId, slot.index, slot.calendar_block_id,
-      slot.duration_weeks, slot.starts_on, slot.ends_on]);
+    const proposalId = plan?.proposal?.proposed_experiences?.[slot.index - 1]?.proposal_id ?? null;
+    await runner.query(`insert into project_slots(id,annual_plan_id,slot_index,calendar_block_id,duration_weeks,starts_on,ends_on,proposal_id)
+      values($1,$2,$3,$4,$5,$6::date,$7::date,$8)`, [randomUUID(), planId, slot.index, slot.calendar_block_id,
+      slot.duration_weeks, slot.starts_on, slot.ends_on, proposalId]);
   }
 }
 
@@ -1273,13 +1278,253 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
           }),
         }));
       const activePlan = plans.find((plan) => plan.status === "active") ?? null;
-      if (activePlan) activePlan.project_slots = (await db.query(`select slot_index,starts_on::text,ends_on::text,duration_weeks
+      if (activePlan) activePlan.project_slots = (await db.query(`select id,proposal_id,slot_index,starts_on::text,ends_on::text,duration_weeks
         from project_slots where annual_plan_id=$1 order by slot_index`, [activePlan.id])).rows;
       send(response, 200, { active: activePlan, draft: plans.find((plan) => plan.status === "draft") ?? null, archived: plans.filter((plan) => plan.status === "archived") }, origin); return;
     }
+    async function projectFlowSource(planId, proposalId, allowArchived = false) {
+      const classroom = await annualPlanningContext();
+      if (!classroom) throw new Error("No se encontró un aula activa.");
+      const plan = (await db.query(`select id,status,proposal,document_context,source_priority_review_id from annual_plans
+        where id=$1 and classroom_id=$2 and school_year_id=$3 and status in ('active','archived')`,
+      [planId, classroom.id, classroom.school_year_id])).rows[0];
+      if (!plan || (!allowArchived && plan.status !== "active")) throw new Error("El plan anual vigente no está disponible.");
+      const directIndex = plan.proposal?.proposed_experiences?.findIndex((item) => item.proposal_id === proposalId) ?? -1;
+      const legacySlot = directIndex < 0 ? (await db.query(`select id,slot_index,starts_on::text,ends_on::text,duration_weeks
+        from project_slots where annual_plan_id=$1 and id=$2 limit 1`, [plan.id, proposalId])).rows[0] : null;
+      const index = directIndex >= 0 ? directIndex : legacySlot ? Number(legacySlot.slot_index) - 1 : -1;
+      const source = plan.proposal?.proposed_experiences?.[index];
+      if (index < 0 || !source || !["project", "unit"].includes(source.experience_type)) throw new Error("La propuesta no pertenece a este plan anual.");
+      const slot = legacySlot ?? (await db.query(`select id,starts_on::text,ends_on::text,duration_weeks from project_slots
+        where annual_plan_id=$1 and (proposal_id=$2 or (proposal_id is null and slot_index=$3)) limit 1`,
+      [plan.id, proposalId, index + 1])).rows[0];
+      if (!slot) throw new Error("El calendario de esta propuesta no está disponible.");
+      const curriculum = await ageFilteredAnnualCurriculum(classroom);
+      const names = (await db.query(`select first_name,last_name,preferred_name from students where classroom_id=$1`, [classroom.id])).rows
+        .flatMap((item) => [item.first_name, item.last_name, item.preferred_name]).filter(Boolean);
+      const safe = (value) => neutralizeAssessmentText(String(value ?? ""), names);
+      const priorityReview = plan.source_priority_review_id ? (await db.query(`select details from diagnostic_priority_reviews
+        where id=$1 and classroom_id=$2 and status='confirmed'`, [plan.source_priority_review_id,classroom.id])).rows[0] : null;
+      const planPriorities = priorityReview?.details?.priorities ?? classroom.confirmed_priorities;
+      const aiContext = { school_year: classroom.year, age: classroom.age,
+        group_context: safe(plan.document_context?.diagnostic_group?.strengths || classroom.group_context),
+        group_needs: safe(plan.document_context?.diagnostic_group?.needs || classroom.diagnostic_group?.needs),
+        confirmed_priorities: planPriorities.map((item) => ({ title: safe(item.title), reason: safe(item.reason),
+          competency_ids: item.related_competency_ids })),
+        group_interests: (plan.document_context?.group_interests ?? []).map(safe),
+        annual_proposal: source, calendar: { starts_on: slot.starts_on, ends_on: slot.ends_on,
+          duration_weeks: slot.duration_weeks }, curriculum };
+      return { classroom, plan, source, index, slot, aiContext,
+        dates: instructionalDates(plan.document_context?.calendar ?? classroom.calendar, slot.starts_on, slot.ends_on) };
+    }
+    async function projectFlowRow(id) {
+      const classroom = await annualPlanningContext();
+      const row = classroom && (await db.query(`select * from learning_experiences where id=$1 and classroom_id=$2
+        and type in ('project','unit')`, [id, classroom.id])).rows[0];
+      return { classroom, row };
+    }
+    if (request.method === "POST" && url.pathname === "/api/project-flow/emergent-preview") {
+      try {
+        const body = await readJson(request), classroom = await annualPlanningContext();
+        if (!classroom) { send(response, 404, { error: "Aula no disponible." }, origin); return; }
+        const situation = String(body.situation ?? "").trim();
+        if (situation.length < 20 || situation.length > 1000) throw new Error("Describe brevemente qué interés o situación apareció en el grupo.");
+        const active = (await db.query(`select id,proposal,document_context from annual_plans
+          where classroom_id=$1 and school_year_id=$2 and status='active'`, [classroom.id,classroom.school_year_id])).rows[0];
+        if (!active || active.proposal?.plan_format !== ANNUAL_PREPLAN_FORMAT) throw new Error("Confirma primero «Mi año» para añadir una propuesta.");
+        const names = (await db.query(`select first_name,last_name,preferred_name from students where classroom_id=$1`, [classroom.id])).rows
+          .flatMap((item) => [item.first_name,item.last_name,item.preferred_name]).filter(Boolean);
+        const curriculum = await ageFilteredAnnualCurriculum(classroom);
+        const result = await suggestEmergentProposal({ allowedIds: curriculum.map((card) => card.id),
+          context: { age: classroom.age, school_year: classroom.year,
+            situation: neutralizeAssessmentText(situation, names),
+            diagnostic_group: active.document_context?.diagnostic_group,
+            priorities: classroom.confirmed_priorities.map((item) => ({ title: neutralizeAssessmentText(item.title, names),
+              reason: neutralizeAssessmentText(item.reason, names), competency_ids: item.related_competency_ids })),
+            curriculum } });
+        send(response, 200, { proposal: result.output }, origin);
+      } catch (error) { send(response, httpStatusForError(error, 422), { error: publicErrorMessage(error) }, origin); }
+      return;
+    }
+    if (request.method === "POST" && url.pathname === "/api/project-flow/emergent-annual-draft") {
+      try {
+        const body = await readJson(request), classroom = await annualPlanningContext();
+        if (!classroom) { send(response, 404, { error: "Aula no disponible." }, origin); return; }
+        const active = (await db.query(`select * from annual_plans where id=$1 and classroom_id=$2
+          and school_year_id=$3 and status='active'`, [body.annualPlanId,classroom.id,classroom.school_year_id])).rows[0];
+        if (!active || active.proposal?.plan_format !== ANNUAL_PREPLAN_FORMAT) throw new Error("El plan anual vigente no está disponible.");
+        if (!["keep", "postpone", "replace"].includes(body.mode)) throw new Error("Elige qué hacer con la propuesta prevista.");
+        const rows = [...active.proposal.proposed_experiences];
+        const index = rows.findIndex((item) => item.proposal_id === body.targetProposalId);
+        if (index < 0) throw new Error("La propuesta prevista ya no está disponible.");
+        const target = rows[index];
+        const candidate = { proposal_id: randomUUID(), experience_type: "project", title: String(body.proposal?.title ?? "").trim(),
+          period: target.period, month: target.month, duration_weeks: Number(body.proposal?.duration_weeks ?? 2),
+          rationale: String(body.proposal?.rationale ?? "").trim(), purpose: String(body.proposal?.purpose ?? "").trim(),
+          primary_competency_ids: body.proposal?.primary_competency_ids };
+        if (body.mode === "replace") rows[index] = candidate;
+        else rows.splice(index + (body.mode === "keep" ? 1 : 0), 0, candidate);
+        const curriculum = await ageFilteredAnnualCurriculum(classroom);
+        const proposal = validateAnnualPreplan({ ...active.proposal, proposed_experiences: rows },
+          curriculum.map((card) => card.id), classroom.year);
+        let schedule;
+        try { schedule = buildEditableAnnualSchedule(classroom.calendar, proposal.proposed_experiences); }
+        catch { throw new Error("No hay semanas lectivas suficientes para conservar ambas propuestas. Puedes reemplazar una o ajustar el calendario de «Mi año»."); }
+        const copied = await copyConfirmedAnnualPlan(db, teacherId, classroom, active.id,
+          annualDocumentContext(classroom), expectedRevision(body.expectedRevision));
+        await versionTransaction(db, `annual:${classroom.school_year_id}`, async (tx) => {
+          const changed = (await tx.query(`update annual_plans set proposal=$1::jsonb,updated_at=now()
+            where id=$2 and classroom_id=$3 and status='draft' and revision=$4 returning revision`,
+          [JSON.stringify(proposal),copied.id,classroom.id,copied.revision])).rows[0];
+          if (!changed) throw new VersionConflictError("Abre el borrador de «Mi año» para continuar.");
+          await replaceAnnualProjectSlots(copied.id, schedule, tx);
+        });
+        send(response, 201, { id: copied.id, proposal_id: candidate.proposal_id,
+          message: "Nueva versión de «Mi año» lista para revisar. Confírmala antes de desarrollar el proyecto." }, origin);
+      } catch (error) { send(response, httpStatusForError(error, 422), isVersionConflict(error) ? conflictPayload(error) : { error: publicErrorMessage(error) }, origin); }
+      return;
+    }
+    if (request.method === "POST" && url.pathname === "/api/project-flow/start") {
+      try {
+        const body = await readJson(request);
+        const source = await projectFlowSource(body.annualPlanId, body.proposalId);
+        const previous = (await db.query(`select * from learning_experiences where annual_plan_id=$1
+          and (source_proposal_id=$2 or (source_proposal_id is null and source_proposal_index=$3))
+          and status in ('draft','active') order by version desc limit 1`,
+        [source.plan.id, body.proposalId,source.index])).rows[0];
+        if (previous) { send(response, 200, { experience: previous, existing: true,
+          available_dates: source.dates }, origin); return; }
+        const generated = await generateProjectPreview({ context: source.aiContext, workflow: source.source.experience_type });
+        const id = randomUUID();
+        const details = { flow_version: "project-master-v1", stage: "decisions", preview: generated.output };
+        const saved = (await db.query(`insert into learning_experiences(id,classroom_id,type,title,purpose,starts_on,ends_on,
+          status,details,annual_plan_id,origin,source_proposal_index,source_proposal_id,generation_metadata)
+          values($1,$2,$3,$4,$5,$6::date,$7::date,'draft',$8::jsonb,$9,'planned',$10,$11,$12::jsonb)
+          returning *`, [id,source.classroom.id,source.source.experience_type,source.source.title,source.source.purpose,
+          source.slot.starts_on,source.slot.ends_on,JSON.stringify(details),source.plan.id,source.index,body.proposalId,
+          JSON.stringify({ workflow: "project_preview", ...generated.metadata })])).rows[0];
+        send(response, 201, { experience: saved, existing: false, available_dates: source.dates }, origin);
+      } catch (error) { send(response, httpStatusForError(error, 422), { error: publicErrorMessage(error) }, origin); }
+      return;
+    }
+    if (request.method === "GET" && /^\/api\/project-flow\/[0-9a-f-]+$/i.test(url.pathname)) {
+      const { row } = await projectFlowRow(url.pathname.split("/")[3]);
+      const source = row?.source_proposal_id ? await projectFlowSource(row.annual_plan_id, row.source_proposal_id, true) : null;
+      send(response, row ? 200 : 404, row ? { experience: row, available_dates: source?.dates ?? [] } : { error: "Proyecto no disponible." }, origin); return;
+    }
+    if (request.method === "POST" && /^\/api\/project-flow\/[0-9a-f-]+\/dependents$/i.test(url.pathname)) {
+      try {
+        const id = url.pathname.split("/")[3], body = await readJson(request);
+        const { row } = await projectFlowRow(id);
+        if (!row || row.status !== "draft" || row.details?.flow_version !== "project-master-v1") { send(response, 404, { error: "Borrador no disponible." }, origin); return; }
+        const source = await projectFlowSource(row.annual_plan_id, row.source_proposal_id, true);
+        const allowed = (await ageFilteredAnnualCurriculum(source.classroom)).map((card) => card.id);
+        const decisions = validateProjectDecisions(body.decisions, allowed);
+        const result = await generateProjectDependents({ context: { ...source.aiContext,
+          curriculum: source.aiContext.curriculum.filter((card) => decisions.competency_ids.includes(card.id)) },
+          decisions, workflow: row.type });
+        const details = { flow_version: "project-master-v1", stage: "dependents", preview: row.details.preview,
+          decisions, dependents: result.output, previous_map: row.details.activity_route ?? row.details.previous_map ?? null,
+          teacher_overrides: row.details.teacher_overrides ?? [] };
+        const saved = (await db.query(`update learning_experiences set purpose=$1,details=$2::jsonb
+          where id=$3 and status='draft' and revision=$4 returning *`, [decisions.purpose,JSON.stringify(details),id,
+          expectedRevision(body.expectedRevision)])).rows[0];
+        if (!saved) throw new VersionConflictError("El borrador cambió. Vuelve a abrirlo.");
+        send(response, 200, { experience: saved }, origin);
+      } catch (error) { send(response, httpStatusForError(error, 422), isVersionConflict(error) ? conflictPayload(error) : { error: publicErrorMessage(error) }, origin); }
+      return;
+    }
+    if (request.method === "POST" && /^\/api\/project-flow\/[0-9a-f-]+\/master$/i.test(url.pathname)) {
+      try {
+        const id = url.pathname.split("/")[3], body = await readJson(request);
+        const { row } = await projectFlowRow(id);
+        if (!row || row.status !== "draft" || row.details?.flow_version !== "project-master-v1") { send(response, 404, { error: "Borrador no disponible." }, origin); return; }
+        if (!row.details.decisions || !row.details.dependents) throw new Error("Elige primero el propósito y revisa las preguntas.");
+        const source = await projectFlowSource(row.annual_plan_id, row.source_proposal_id, true);
+        const dependents = validateProjectDependents(body.dependents ?? row.details.dependents, row.details.decisions.competency_ids);
+        const generated = await generateProjectMaster({ context: { ...source.aiContext,
+          curriculum: source.aiContext.curriculum.filter((card) => row.details.decisions.competency_ids.includes(card.id)) },
+          decisions: row.details.decisions,
+          dependents, availableDates: source.dates, workflow: row.type });
+        const base = projectDetails({ source: source.source, preview: row.details.preview,
+          decisions: row.details.decisions, dependents, master: generated.output, previous: row.details });
+        const route = preserveTeacherMapEdits(base.activity_route, row.details.previous_map ?? row.details.activity_route,
+          row.details.teacher_overrides, row.details.decisions);
+        validateEditedActivityMap(route, row.details.decisions, dependents, source.dates);
+        const details = { ...base, activity_route: route, previous_map: row.details.previous_map ?? null,
+          stage: "map_review" };
+        const saved = (await db.query(`update learning_experiences set title=$1,purpose=$2,details=$3::jsonb,
+          generation_metadata=$4::jsonb where id=$5 and status='draft' and revision=$6 returning *`,
+        [details.title,details.purpose,JSON.stringify(details),JSON.stringify({ workflow: "project_master", ...generated.metadata }),
+          id,expectedRevision(body.expectedRevision)])).rows[0];
+        if (!saved) throw new VersionConflictError("El borrador cambió. Vuelve a abrirlo.");
+        send(response, 200, { experience: saved }, origin);
+      } catch (error) { send(response, httpStatusForError(error, 422), isVersionConflict(error) ? conflictPayload(error) : { error: publicErrorMessage(error) }, origin); }
+      return;
+    }
+    if (request.method === "PUT" && /^\/api\/project-flow\/[0-9a-f-]+\/map$/i.test(url.pathname)) {
+      try {
+        const id = url.pathname.split("/")[3], body = await readJson(request);
+        const { row } = await projectFlowRow(id);
+        if (!row || row.status !== "draft" || row.details?.stage !== "map_review") { send(response, 404, { error: "Mapa no disponible." }, origin); return; }
+        const source = await projectFlowSource(row.annual_plan_id, row.source_proposal_id, true);
+        const route = validateEditedActivityMap(body.activity_route, row.details.decisions, row.details.dependents, source.dates);
+        const overrides = [...(row.details.teacher_overrides ?? [])];
+        for (const before of row.details.activity_route ?? []) {
+          if (!route.some((item) => item.id === before.id))
+            overrides.push({ field: "removed", route_item_id: before.id, date: before.date,
+              source: "teacher_review", at: new Date().toISOString() });
+        }
+        for (const item of route) {
+          const before = row.details.activity_route?.find((entry) => entry.id === item.id);
+          if (!before) { overrides.push({ field: "added", route_item_id: item.id,
+            source: "teacher_review", at: new Date().toISOString() }); continue; }
+          for (const field of ["date", "title", "specific_purpose", "role_in_project", "expected_progression", "competency_ids"]) {
+            if (JSON.stringify(before[field]) !== JSON.stringify(item[field]))
+              overrides.push({ field, route_item_id: item.id, source: "teacher_review", at: new Date().toISOString() });
+          }
+        }
+        const details = { ...row.details, activity_route: route, teacher_overrides: overrides };
+        const saved = (await db.query(`update learning_experiences set details=$1::jsonb
+          where id=$2 and status='draft' and revision=$3 returning *`, [JSON.stringify(details),id,
+          expectedRevision(body.expectedRevision)])).rows[0];
+        if (!saved) throw new VersionConflictError("El borrador cambió. Vuelve a abrirlo.");
+        send(response, 200, { experience: saved }, origin);
+      } catch (error) { send(response, httpStatusForError(error, 422), isVersionConflict(error) ? conflictPayload(error) : { error: publicErrorMessage(error) }, origin); }
+      return;
+    }
+    if (request.method === "POST" && /^\/api\/project-flow\/[0-9a-f-]+\/confirm$/i.test(url.pathname)) {
+      try {
+        const id = url.pathname.split("/")[3], body = await readJson(request);
+        const { row } = await projectFlowRow(id);
+        if (!row || row.status !== "draft" || row.details?.stage !== "map_review") { send(response, 404, { error: "Proyecto no disponible para confirmar." }, origin); return; }
+        const source = await projectFlowSource(row.annual_plan_id, row.source_proposal_id, true);
+        validateEditedActivityMap(row.details.activity_route, row.details.decisions, row.details.dependents, source.dates);
+        const confirmed = await confirmLearningExperienceVersion(db, source.classroom.id, id, expectedRevision(body.expectedRevision));
+        send(response, 200, confirmed, origin);
+      } catch (error) { send(response, httpStatusForError(error, 422), isVersionConflict(error) ? conflictPayload(error) : { error: publicErrorMessage(error) }, origin); }
+      return;
+    }
+    if (request.method === "POST" && /^\/api\/project-flow\/[0-9a-f-]+\/formalize$/i.test(url.pathname)) {
+      try {
+        const id = url.pathname.split("/")[3], { row } = await projectFlowRow(id);
+        if (!row || row.status !== "active" || row.details?.flow_version !== "project-master-v1") { send(response, 404, { error: "Proyecto confirmado no disponible." }, origin); return; }
+        const prior = (await db.query(`select id from experience_formal_contents where experience_id=$1`, [id])).rows[0];
+        if (prior) { send(response, 200, { ready: true, already_ready: true }, origin); return; }
+        const source = await projectFlowSource(row.annual_plan_id, row.source_proposal_id, true);
+        const generated = await generateProjectFormal({ workflow: row.type, context: { ...source.aiContext,
+          curriculum: source.aiContext.curriculum.filter((card) => row.details.decisions?.competency_ids.includes(card.id)),
+          confirmed_project_master: row.details } });
+        await db.query(`insert into experience_formal_contents(id,experience_id,content,source_revision,generation_metadata)
+          values($1,$2,$3::jsonb,$4,$5::jsonb) on conflict (experience_id) do nothing`,
+        [randomUUID(),id,JSON.stringify(generated.output),row.revision,JSON.stringify(generated.metadata)]);
+        send(response, 200, { ready: true, already_ready: false }, origin);
+      } catch (error) { send(response, httpStatusForError(error, 422), { error: publicErrorMessage(error) }, origin); }
+      return;
+    }
     if (request.method === "GET" && url.pathname === "/api/learning-experiences") {
       const context = await annualPlanningContext(); if (!context) { send(response, 404, { error: "No se encontró un aula activa." }, origin); return; }
-      const experiences = (await db.query(`select id,type,title,purpose,starts_on,ends_on,status,annual_plan_id,origin,planning_reason,source_proposal_index,details,teacher_confirmed_at,version,revision,lineage_id,supersedes_experience_id,superseded_at from learning_experiences where classroom_id=$1 order by starts_on desc, version desc, id desc`, [context.id])).rows;
+      const experiences = (await db.query(`select id,type,title,purpose,starts_on,ends_on,status,annual_plan_id,origin,planning_reason,source_proposal_index,source_proposal_id,details,teacher_confirmed_at,version,revision,lineage_id,supersedes_experience_id,superseded_at from learning_experiences where classroom_id=$1 order by starts_on desc, version desc, id desc`, [context.id])).rows;
       send(response, 200, { experiences }, origin); return;
     }
     if (request.method === "POST" && /^\/api\/learning-experiences\/[0-9a-f-]+\/new-version$/i.test(url.pathname)) {

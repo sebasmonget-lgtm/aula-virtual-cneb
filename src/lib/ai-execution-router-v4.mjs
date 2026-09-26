@@ -68,6 +68,14 @@ export function resolveAIExecutionPlan({ workflow, task = null, context = null }
   if (workflow === "annual_plan" && task === "document_development") {
     return planForTier("standard_generation", "Desarrollo del plan maestro anual validado.", false, policy);
   }
+  if (["project", "unit"].includes(workflow) && ["preview", "dependents", "document_development"].includes(task)) {
+    const plan = planForTier("standard_generation", `Preparación focalizada de ${workflow}: ${task}.`, false, policy);
+    return { ...plan, reasoning_effort: "medium" };
+  }
+  if (workflow === "activity" && task === "generation") {
+    const plan = planForTier("standard_generation", "Desarrollo de una actividad del proyecto confirmado.", false, policy);
+    return { ...plan, reasoning_effort: "medium" };
+  }
   const workflowPolicy = policy.workflows[workflow];
   if (workflowPolicy.execution === "code") {
     return {

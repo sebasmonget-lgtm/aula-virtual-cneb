@@ -5,7 +5,7 @@ description: Preparar una actividad de Educación Inicial desde una fila confirm
 
 # Crear actividad
 
-Recibe una fila de la ruta confirmada, el contexto pertinente del aula y las tarjetas CNEB de la edad. Devuelve solo el JSON exigido por `output_schema`. Conserva el propósito específico, la competencia, el criterio y la evidencia esperada de la fila; la docente puede modificarlos después de forma explícita.
+Recibe el Plan Maestro confirmado, una fila de su mapa, las filas anterior y siguiente, la posición de la actividad, el contexto pertinente actualizado del aula y las tarjetas CNEB de la edad. Devuelve solo el JSON exigido por `output_schema`. Conserva el propósito específico, la competencia, el criterio y la evidencia esperada de la fila; la docente puede modificarlos después de forma explícita. No reprogrames todo el proyecto ni desarrolles las otras actividades.
 
 1. Usa [herencia-y-curriculo.md](references/herencia-y-curriculo.md) para distinguir datos heredados, contexto y currículo.
 2. Desarrolla inicio, desarrollo y cierre en lenguaje sencillo, con acciones posibles de los niños y preguntas de mediación.

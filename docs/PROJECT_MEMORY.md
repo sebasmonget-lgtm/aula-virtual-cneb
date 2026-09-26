@@ -202,6 +202,12 @@ Proyecto nuevo iniciado el 20 de septiembre de 2026. Existe un shell responsive 
 - `annual_preplan_v1` guarda doce propuestas iniciales de Sol High como filas editables. La docente puede cambiar cantidad, orden, tipo, mes, duración, motivo, propósito y competencias; un ID por fila permanece estable. El código asigna fechas y conserva un solo plan vigente por cuenta/año, con versiones anteriores consultables.
 - Tras confirmar el preplan, Luna desarrolla los campos formales usando la versión confirmada, diagnóstico y prioridades de origen, CNEB de la edad, calendario y estructura de la plantilla unificada. `annual_plan_formal_content` guarda el resultado derivado. El Word se puede reintentar y utiliza las mismas filas que «Mi año». El documento original de plantilla queda intacto. Ver ADR 069.
 
+## Desarrollo de proyecto o unidad por decisiones y mapa (2026-09-26)
+
+- Una propuesta confirmada de «Mi año» se desarrolla en dos tramos. Luna prepara contexto y opciones de propósito; solo después de la elección docente genera preguntas, recorrido flexible y criterios generales. Si cambian contexto, propósito o competencias, se regeneran esas dependencias y el mapa, conservando cambios docentes compatibles.
+- Sol genera el `Project Master` y un mapa de entre dos y quince actividades dentro de días lectivos. La docente puede editar, ordenar, añadir o retirar filas. El proyecto se confirma únicamente después de revisar ese mapa. La versión confirmada alimenta el Word y las actividades posteriores.
+- Cada actividad se genera bajo demanda con Luna. Recibe el `Project Master` confirmado, su fila, las filas anterior y siguiente, la posición en la secuencia y el contexto actualizado. No se generan actividades completas por adelantado. Ver ADR 070.
+
 
 
 
