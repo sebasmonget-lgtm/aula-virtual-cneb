@@ -615,3 +615,13 @@ La confirmación de la actividad y la inserción del criterio heredado se ejecut
 **Actividad bajo demanda.** GPT-6 Luna desarrolla una sola actividad cuando la docente la solicita. El contexto incluye el Project Master confirmado, la fila seleccionada, sus vecinas anterior y siguiente, su posición y el contexto actualizado escrito por la profesora. La fila hereda propósito, competencia, criterio y evidencia esperada; la IA no replantea el proyecto ni genera todas las actividades por adelantado.
 
 **Datos, permisos y reversión.** `source_proposal_id` enlaza plan, espacio de calendario y proyecto sin depender de títulos. `experience_formal_contents` guarda la redacción formal derivada. Las escrituras continúan detrás del servidor; Supabase solo concede lectura propia de la redacción formal mediante RLS. Los planes históricos sin IDs de propuesta usan el ID estable del espacio de calendario como compatibilidad. Las migraciones son aditivas y no modifican migraciones aplicadas.
+
+## ADR 071 Calendario escolar versionado y fecha canónica de actividad
+
+**Decisión.** Mantener una base oficial versionada por año y una capa independiente de excepciones por aula. Un feriado nacional, un fin de semana o una semana de gestión no se vuelve lectivo mediante una excepción ordinaria. El Plan Anual deriva sus rangos reales de esa fuente y cada Project Master se genera únicamente después de confirmar una lista explícita de días lectivos.
+
+**Fecha canónica.** `activities.occurs_on` decide cuándo se ejecuta una actividad. `planned_date` conserva la fecha inicialmente heredada del blueprint y `schedule_status` expresa si fue reprogramada, cancelada o no realizada. `class_schedule_entries` se mantiene como proyección horaria sincronizada para Hoy; no compite como segunda fuente de fecha.
+
+**Trazabilidad.** La reprogramación pasa por servidor, valida propiedad, calendario efectivo, intervalo del proyecto y conflictos. La operación actualiza actividad y horario en una transacción y crea `activity_schedule_changes`. Los registros confirmados continúan protegidos contra cambios pedagógicos; la excepción del trigger solo permite metadata de ejecución auditada.
+
+**IA.** No cambia el routing. Sol recibe las fechas confirmadas como restricción y produce exactamente un blueprint por día. Luna desarrolla después una sola actividad y la fecha se asigna por código, no por decisión del modelo.

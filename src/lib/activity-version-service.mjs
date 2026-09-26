@@ -6,6 +6,7 @@ export class ActivityVersionError extends Error {
 }
 
 export async function copyConfirmedActivity(db, teacherId, classroomId, sourceId, expectedSourceRevision = null) {
+  const dateOnly=(value)=>value instanceof Date?value.toISOString().slice(0,10):/^\d{4}-\d{2}-\d{2}/.test(String(value))?String(value).slice(0,10):new Date(value).toISOString().slice(0,10);
   const identity = (await db.query(`select lineage_id from activities where id=$1`, [sourceId])).rows[0];
   if (!identity) throw new ActivityVersionError("source_unavailable", "La actividad vigente ya no está disponible.");
   return versionTransaction(db, `activity:${identity.lineage_id}`, async (tx) => {
@@ -23,9 +24,10 @@ export async function copyConfirmedActivity(db, teacherId, classroomId, sourceId
     const id = randomUUID();
     const version = Number(source.version ?? 1) + 1;
     await tx.query(`insert into activities
-      (id,experience_id,occurs_on,title,purpose,sequence,preparation,adaptations,status,details,generation_metadata,version,supersedes_activity_id,lineage_id)
-      values($1,$2,$3::date,$4,$5,$6::jsonb,$7::jsonb,$8::jsonb,'draft',$9::jsonb,$10::jsonb,$11,$12,$13)`,
-    [id,source.experience_id,source.occurs_on instanceof Date?source.occurs_on.toISOString().slice(0,10):String(source.occurs_on).slice(0,10),source.title,source.purpose,
+      (id,experience_id,occurs_on,planned_date,schedule_status,title,purpose,sequence,preparation,adaptations,status,details,generation_metadata,version,supersedes_activity_id,lineage_id)
+      values($1,$2,$3::date,$4::date,$5,$6,$7,$8::jsonb,$9::jsonb,$10::jsonb,'draft',$11::jsonb,$12::jsonb,$13,$14,$15)`,
+    [id,source.experience_id,dateOnly(source.occurs_on),
+      dateOnly(source.planned_date??source.occurs_on),source.schedule_status??"planned",source.title,source.purpose,
       JSON.stringify(source.sequence),JSON.stringify(source.preparation),JSON.stringify(source.adaptations),
       JSON.stringify(source.details),JSON.stringify({workflow:"activity_copy",source_activity_id:source.id}),version,source.id,source.lineage_id]);
     return {id,version,revision:1,lineage_id:source.lineage_id,status:"draft",supersedes_activity_id:source.id};

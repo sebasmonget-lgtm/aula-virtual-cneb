@@ -213,3 +213,11 @@ Proyecto nuevo iniciado el 20 de septiembre de 2026. Existe un shell responsive 
 
 
 
+
+## Calendario escolar como fuente de verdad (2026-09-26)
+
+- El calendario oficial versionado vive en `school_calendar_versions`, `school_calendar_holidays` y `school_calendar_days`. La plantilla 2026 parte de la RM 501-2025-MINEDU, distingue días lectivos, feriados, fines de semana y semanas de gestión, y conserva la fuente oficial. `classroom_calendar_overrides` agrega excepciones del aula sin reescribir la base nacional.
+- El Plan Anual guarda en sus mismas doce propuestas el inicio, fin y número real de días de clase calculados. Antes de generar un Project Master, la docente revisa y confirma los días del proyecto. `project_calendar_selections` y `project_instructional_dates` guardan esa decisión; Sol recibe la lista exacta y debe devolver un blueprint por cada día, sin agregar ni omitir fechas.
+- La actividad creada desde una fila hereda su `planned_date` por código. `activities.occurs_on` es la fecha canónica de ejecución; `class_schedule_entries` es la proyección sincronizada que usa Hoy. Una reprogramación valida calendario, intervalo y conflictos, actualiza ambas superficies en una transacción y registra la causa en `activity_schedule_changes`.
+- Calendario es un módulo principal con vistas Mes, Semana y Año. Muestra días de clase, feriados, gestión, excepciones, proyectos y actividades. Permite reprogramar o marcar una actividad como no realizada. Los proyectos y actividades históricos siguen legibles; no se recalculan de forma retroactiva.
+- Prueba real de Project Master con datos ficticios: `gpt-6-sol` medium recibió tres fechas confirmadas y devolvió exactamente tres actividades en las mismas fechas. El routing, la Skill y la arquitectura pedagógica permanecieron sin cambios.

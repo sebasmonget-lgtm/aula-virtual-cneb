@@ -30,6 +30,9 @@ type Experience = { id: string; annual_plan_id: string; source_proposal_id: stri
   source_proposal_index: number; title: string; type: "project" | "unit"; status: "draft" | "active" | "archived";
   version: number; revision: number; details: Details };
 type Competency = { id: string; name: string };
+type CalendarReview = { selection: { id: string; status: "draft" | "confirmed"; starts_on: string; ends_on: string; revision: number };
+  days: { id: string; date: string; calendar_type: string; is_instructional: boolean; editable: boolean; reason: string;
+    selected: boolean; exclusion_reason: string | null }[]; selected_dates: string[] };
 const api = (path: string) => `${localDatabaseApiUrl}${path}`;
 async function json<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await apiFetch(api(path), init);
@@ -48,6 +51,7 @@ export function ProjectDevelopmentWorkspace({ initialProposalId, onConfirmed, on
   const [plan, setPlan] = useState<Plan | null>(null), [experiences, setExperiences] = useState<Experience[]>([]);
   const [competencies, setCompetencies] = useState<Competency[]>([]), [selected, setSelected] = useState<Experience | null>(null);
   const [dates, setDates] = useState<string[]>([]), [decisions, setDecisions] = useState<Decision | null>(null);
+  const [calendarReview,setCalendarReview]=useState<CalendarReview|null>(null);
   const [step, setStep] = useState(0);
   const [dependents, setDependents] = useState<Dependents | null>(null), [route, setRoute] = useState<Route[]>([]);
   const [editingRoute, setEditingRoute] = useState<string | null>(null), [busy, setBusy] = useState<string | null>(null);
@@ -70,8 +74,9 @@ export function ProjectDevelopmentWorkspace({ initialProposalId, onConfirmed, on
     JSON.stringify(selected.details.activity_route) !== JSON.stringify(route));
   const depChanged = Boolean(selected?.details.dependents && dependents &&
     JSON.stringify(selected.details.dependents) !== JSON.stringify(dependents));
-  function showExperience(experience: Experience, availableDates: string[] = []) {
+  function showExperience(experience: Experience, availableDates: string[] = [],review:CalendarReview|null=null) {
     setSelected(experience); setDates(availableDates); setEditingRoute(null);
+    setCalendarReview(review);
     setStep(experience.status === "active" ? 8 : experience.details.stage === "map_review" ? 7 :
       experience.details.stage === "dependents" ? 3 : 0);
     const source = plan?.proposal.proposed_experiences[experience.source_proposal_index];
@@ -101,15 +106,15 @@ export function ProjectDevelopmentWorkspace({ initialProposalId, onConfirmed, on
       (item.source_proposal_id === proposalId || (!item.source_proposal_id && item.source_proposal_index === index)) &&
       item.status !== "archived")
       .sort((a, b) => b.version - a.version)[0];
-    if (existing?.details.flow_version === "project-master-v1") {
-      await act("open", async () => { const result = await json<{ experience: Experience; available_dates: string[] }>(`/api/project-flow/${existing.id}`);
-        showExperience(result.experience, result.available_dates); }); return;
+    if (existing && ["project-master-v1","project-master-v2"].includes(existing.details.flow_version ?? "")) {
+      await act("open", async () => { const result = await json<{ experience: Experience; available_dates: string[];calendar_review:CalendarReview }>(`/api/project-flow/${existing.id}`);
+        showExperience(result.experience, result.available_dates,result.calendar_review); }); return;
     }
     if (existing) { setLegacy(true); return; }
-    await act("start", async () => { const result = await json<{ experience: Experience; available_dates: string[] }>(
+    await act("start", async () => { const result = await json<{ experience: Experience; available_dates: string[];calendar_review:CalendarReview }>(
       "/api/project-flow/start", post({ annualPlanId: plan.id, proposalId }));
       const item = plan.proposal.proposed_experiences[index];
-      setSelected(result.experience); setDates(result.available_dates);
+      setSelected(result.experience); setDates(result.available_dates);setCalendarReview(result.calendar_review);
       setStep(0);
       setDecisions({ context_summary: result.experience.details.preview?.context_summary ?? "",
         purpose: result.experience.details.preview?.purpose_options?.[0] ?? item?.purpose ?? "",
@@ -135,6 +140,13 @@ export function ProjectDevelopmentWorkspace({ initialProposalId, onConfirmed, on
       setSelected(result.experience); setRoute(result.experience.details.activity_route ?? []);
       setStep(7);
       setNotice("Mapa preparado. Revísalo y ajústalo antes de confirmar el proyecto."); }); }
+  async function confirmCalendar(){if(!selected||!calendarReview)return;await act("calendar",async()=>{
+    const selectedDates=calendarReview.days.filter((day)=>day.selected).map((day)=>day.date);
+    const exclusions=Object.fromEntries(calendarReview.days.filter((day)=>day.is_instructional&&!day.selected).map((day)=>[day.date,day.exclusion_reason||"No se utilizará en este proyecto"]));
+    await json(`/api/project-flow/${selected.id}/calendar`,{method:"PUT",headers:{"content-type":"application/json"},body:JSON.stringify({selectedDates,exclusions,confirm:true})});
+    const fresh=await json<CalendarReview>(`/api/project-flow/${selected.id}/calendar`);setCalendarReview(fresh);setDates(fresh.selected_dates);
+    setNotice(`${fresh.selected_dates.length} días confirmados. Ayni preparará ${fresh.selected_dates.length} actividades.`);
+  });}
   async function saveMap() { if (!selected) return;
     await act("save", async () => { const result = await json<{ experience: Experience }>(`/api/project-flow/${selected.id}/map`,
       { method: "PUT", headers: { "content-type": "application/json" },
@@ -142,8 +154,8 @@ export function ProjectDevelopmentWorkspace({ initialProposalId, onConfirmed, on
       setSelected(result.experience); setRoute(result.experience.details.activity_route ?? []); setNotice("Mapa guardado."); }); }
   async function confirm() { if (!selected || mapChanged || decisionsChanged || depChanged) return;
     await act("confirm", async () => { await json(`/api/project-flow/${selected.id}/confirm`, post({ expectedRevision: selected.revision }));
-      const result = await json<{ experience: Experience; available_dates: string[] }>(`/api/project-flow/${selected.id}`);
-      showExperience(result.experience, result.available_dates); await refresh(); onConfirmed?.();
+      const result = await json<{ experience: Experience; available_dates: string[];calendar_review:CalendarReview }>(`/api/project-flow/${selected.id}`);
+      showExperience(result.experience, result.available_dates,result.calendar_review); await refresh(); onConfirmed?.();
       setNotice("Proyecto confirmado. Las actividades se desarrollarán una por una desde este mapa."); }); }
   async function formalize() { if (!selected) return;
     await act("formal", async () => { await json(`/api/project-flow/${selected.id}/formalize`, post({}));
@@ -151,8 +163,8 @@ export function ProjectDevelopmentWorkspace({ initialProposalId, onConfirmed, on
   async function copyVersion() { if (!selected) return;
     await act("copy", async () => { const copied = await json<{ id: string }>(`/api/learning-experiences/${selected.id}/new-version`,
       post({ expectedRevision: selected.revision })); await refresh();
-      const result = await json<{ experience: Experience; available_dates: string[] }>(`/api/project-flow/${copied.id}`);
-      showExperience(result.experience, result.available_dates);
+      const result = await json<{ experience: Experience; available_dates: string[];calendar_review:CalendarReview }>(`/api/project-flow/${copied.id}`);
+      showExperience(result.experience, result.available_dates,result.calendar_review);
       setNotice("Nueva versión en revisión. La versión confirmada permanece disponible."); }); }
   async function suggestEmergent() { if (!plan) return;
     await act("emergent", async () => { const result = await json<{ proposal: { title: string; rationale: string; purpose: string;
@@ -172,15 +184,6 @@ export function ProjectDevelopmentWorkspace({ initialProposalId, onConfirmed, on
     const next = [...route], earlier = next[index], later = next[nextIndex];
     next[index] = { ...later, date: earlier.date, number: index + 1 };
     next[nextIndex] = { ...earlier, date: later.date, number: nextIndex + 1 }; setRoute(next); }
-  function addRoute() { if (!selected?.details.decisions || route.length >= 15) return;
-    const date = dates.find((item) => !route.some((row) => row.date === item));
-    if (!date) return;
-    const competencyId = selected.details.decisions.competency_ids[0];
-    setRoute([...route, { id: crypto.randomUUID(), number: route.length + 1, date, title: "Nueva actividad",
-      specific_purpose: selected.details.decisions.purpose, competency_id: competencyId,
-      competency_ids: [competencyId], criterion_competency_id: competencyId,
-      evaluation_criterion: "", expected_evidence: "", role_in_project: "Continuar el recorrido del proyecto",
-      expected_progression: "Observar cómo avanza el grupo", estimated_minutes: 45 }]); }
   const currentEdit = route.find((item) => item.id === editingRoute);
   const suggestedIndex = plan?.project_slots.find((slot) => localDay() <= slot.ends_on.slice(0, 10))?.slot_index ?? 1;
   if (loading) return <LoadingState label="Abriendo proyectos y unidades..." />;
@@ -293,8 +296,18 @@ export function ProjectDevelopmentWorkspace({ initialProposalId, onConfirmed, on
           <p><b>Preguntas:</b> {dependents.guiding_questions.join(" · ")}</p>
           <p><b>Recorrido:</b> {dependents.journey.map((part) => part.title).join(" → ")}</p>
           <p><b>Evaluación:</b> {dependents.general_criteria.map((item) => `${name(item.competency_id)}: ${item.criterion}`).join(" · ")}</p></div>}
+        {step === 6 && calendarReview && <section className="space-y-3 rounded-xl border border-[#b9dce5] bg-white p-4"><div><h3 className="text-lg font-bold">Revisa los días del proyecto</h3>
+          <p className="text-sm text-[#526b87]">Verde: habrá actividad. Los días bloqueados muestran el motivo. Puedes quitar un día de clase antes de continuar.</p></div>
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">{calendarReview.days.map((day)=><button type="button" key={day.date}
+            disabled={!day.is_instructional||!day.editable} onClick={()=>setCalendarReview({...calendarReview,selection:{...calendarReview.selection,status:"draft"},days:calendarReview.days.map((item)=>item.date===day.date?{...item,selected:!item.selected,exclusion_reason:item.selected?"No se utilizará en este proyecto":null}:item)})}
+            className={`min-h-16 rounded-xl border p-3 text-left text-sm ${day.selected?"border-[#64b69d] bg-[#eaf7f1]":"border-[#e3c3c3] bg-[#fff1f1]"} disabled:cursor-not-allowed`}>
+            <b>{new Intl.DateTimeFormat("es-PE",{weekday:"short",day:"numeric",month:"short",timeZone:"UTC"}).format(new Date(`${day.date}T00:00:00Z`))}</b>
+            <span className="mt-1 block text-xs">{day.selected?"✓ Habrá actividad":`Sin actividad · ${day.exclusion_reason||day.reason}`}</span></button>)}</div>
+          <p className="rounded-lg bg-[#eaf7fb] p-3 font-semibold">{calendarReview.selection.status==="confirmed"?dates.length:calendarReview.days.filter((day)=>day.selected).length} días seleccionados → Ayni generará {calendarReview.selection.status==="confirmed"?dates.length:calendarReview.days.filter((day)=>day.selected).length} actividades.</p>
+          {calendarReview.selection.status!=="confirmed"?<AsyncButton busy={busy==="calendar"} busyLabel="Guardando días..." disabled={Boolean(busy)||!calendarReview.days.some((day)=>day.selected)} onClick={()=>void confirmCalendar()}>Confirmar estos días</AsyncButton>:
+          <Button variant="outline" onClick={()=>setCalendarReview({...calendarReview,selection:{...calendarReview.selection,status:"draft"}})}>Cambiar días</Button>}</section>}
         {step === 6 && <>
-        <AsyncButton busy={busy === "master"} busyLabel="Preparando mapa..." disabled={Boolean(busy)} onClick={() => void prepareMaster()}>
+        <AsyncButton busy={busy === "master"} busyLabel="Preparando mapa..." disabled={Boolean(busy)||calendarReview?.selection.status!=="confirmed"} onClick={() => void prepareMaster()}>
           {selected.details.stage === "map_review" || depChanged ? "Actualizar mapa" : "Preparar mapa de actividades"}</AsyncButton></>}
         {depChanged && <p className="text-sm text-[#a56712]">El mapa anterior se actualizará con estas preguntas y criterios.</p>}
       </section>}
@@ -313,7 +326,6 @@ export function ProjectDevelopmentWorkspace({ initialProposalId, onConfirmed, on
               <Button variant="ghost" size="sm" aria-label={`Subir ${item.title}`} disabled={index === 0} onClick={() => moveRoute(index, -1)}>↑</Button>
               <Button variant="ghost" size="sm" aria-label={`Bajar ${item.title}`} disabled={index === route.length - 1} onClick={() => moveRoute(index, 1)}>↓</Button>
             </div></td></tr>)}</tbody></table></div>
-        <Button variant="outline" disabled={route.length >= Math.min(15, dates.length)} onClick={addRoute}>+ Agregar actividad</Button>
         {mapChanged && <AsyncButton busy={busy === "save"} busyLabel="Guardando mapa..." disabled={Boolean(busy)} onClick={() => void saveMap()}>Guardar mapa</AsyncButton>}
         {!mapChanged && <AsyncButton busy={busy === "confirm"} busyLabel="Confirmando proyecto..." disabled={Boolean(busy)} onClick={() => void confirm()}>Confirmar proyecto</AsyncButton>}
         <p className="text-sm text-[#526b87]">El proyecto queda confirmado después de revisar este mapa.</p></section>}
@@ -327,8 +339,7 @@ export function ProjectDevelopmentWorkspace({ initialProposalId, onConfirmed, on
       {currentEdit && selected.status === "draft" && <div role="dialog" aria-modal="true" aria-label="Editar actividad" className="fixed inset-0 z-50 flex justify-end bg-[#10233a]/45">
         <div className="h-full w-full max-w-xl space-y-4 overflow-y-auto bg-white p-5 shadow-2xl"><div className="flex items-center justify-between gap-2"><h2 className="text-xl font-bold">Editar actividad del mapa</h2>
           <Button variant="outline" onClick={() => setEditingRoute(null)}>Cerrar</Button></div>
-          <label className="block font-semibold">Fecha<select className="mt-2 min-h-11 w-full rounded-lg border px-3" value={currentEdit.date}
-            onChange={(event) => updateRoute(currentEdit.id, { date: event.target.value })}>{dates.map((date) => <option key={date} value={date}>{dateLabel(date)}</option>)}</select></label>
+          <p className="rounded-lg bg-[#edf5fa] p-3 text-sm"><b>Fecha confirmada:</b> {dateLabel(currentEdit.date)}. Para cambiarla después, usa Reprogramar.</p>
           <label className="block font-semibold">Título<Input className="mt-2" value={currentEdit.title} onChange={(event) => updateRoute(currentEdit.id, { title: event.target.value })} /></label>
           <label className="block font-semibold">Propósito<Textarea className="mt-2" value={currentEdit.specific_purpose} onChange={(event) => updateRoute(currentEdit.id, { specific_purpose: event.target.value })} /></label>
           <label className="block font-semibold">Función en el proyecto<Textarea className="mt-2" value={currentEdit.role_in_project} onChange={(event) => updateRoute(currentEdit.id, { role_in_project: event.target.value })} /></label>
@@ -336,8 +347,7 @@ export function ProjectDevelopmentWorkspace({ initialProposalId, onConfirmed, on
           <label className="block font-semibold">Competencia principal<select className="mt-2 min-h-11 w-full rounded-lg border px-3" value={currentEdit.criterion_competency_id}
             onChange={(event) => updateRoute(currentEdit.id, { competency_ids: [event.target.value], competency_id: event.target.value,
               criterion_competency_id: event.target.value })}>{selected.details.decisions?.competency_ids.map((id) => <option key={id} value={id}>{name(id)}</option>)}</select></label>
-          <div className="flex gap-2"><Button onClick={() => setEditingRoute(null)}>Listo</Button><Button variant="outline" disabled={route.length <= 2}
-            onClick={() => { setRoute(route.filter((item) => item.id !== currentEdit.id).map((item, index) => ({ ...item, number: index + 1 }))); setEditingRoute(null); }}>Eliminar</Button></div>
+          <div className="flex gap-2"><Button onClick={() => setEditingRoute(null)}>Listo</Button></div>
         </div></div>}
     </>}
   </section>;

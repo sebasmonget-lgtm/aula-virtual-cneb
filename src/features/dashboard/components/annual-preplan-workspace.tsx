@@ -10,7 +10,8 @@ import { AsyncButton, CompetencyChecklist, LoadingState, WorkflowFeedback } from
 import { AnnualPlanGenerator as LegacyAnnualPlanGenerator } from "./annual-plan-generator";
 
 type Row = { proposal_id: string; experience_type: "project" | "unit"; title: string; period: string;
-  month: number; duration_weeks: 2 | 3; rationale: string; purpose: string; primary_competency_ids: string[] };
+  month: number; duration_weeks: 2 | 3; rationale: string; purpose: string; primary_competency_ids: string[];
+  planned_start_date?: string; planned_end_date?: string; planned_instructional_days?: number };
 type Preplan = { plan_format: "annual_preplan_v1"; title: string; school_year: string; proposed_experiences: Row[] };
 type Plan = { id: string; version: number; revision: number; status: "draft" | "active" | "archived";
   proposal: Preplan | { plan_format?: string }; formal_ready?: boolean; supersedes_plan_id?: string | null };
@@ -33,6 +34,8 @@ async function json<T>(path: string, init?: RequestInit): Promise<T> {
 }
 const body = (value: unknown): RequestInit => ({ method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(value) });
 const monthLabel = (value: number) => months[value] ?? "Mes por definir";
+const compactDate = (value: string) => new Intl.DateTimeFormat("es-PE", { day: "numeric", month: "short", timeZone: "UTC" })
+  .format(new Date(`${value}T00:00:00Z`));
 const isPreplan = (plan: Plan | null | undefined): plan is Plan & { proposal: Preplan } => plan?.proposal?.plan_format === "annual_preplan_v1";
 
 function PreplanTable({ rows, options, editable, onChange, onDevelop }: { rows: Row[]; options: Competency[];
@@ -60,7 +63,9 @@ function PreplanTable({ rows, options, editable, onChange, onDevelop }: { rows: 
         <th key={label} scope="col" className={`border-b border-[#dce8f0] px-4 py-3 font-bold ${label === "Acción" ? "sticky right-0 z-10 bg-[#edf5fa]" : ""}`}>{label}</th>)}</tr></thead>
       <tbody>{rows.map((row, index) => <tr key={row.proposal_id} className="group h-20 border-b border-[#e3edf4] align-top even:bg-[#f9fcfe]">
         <td className="min-w-56 px-4 py-4"><span className="mr-2 rounded-md bg-[#e8f6fa] px-2 py-1 text-xs font-bold text-[#087d96]">{String(index + 1).padStart(2, "0")}</span><b>{row.title || "Propuesta sin título"}</b><p className="mt-1 text-xs text-[#526b87]">{row.experience_type === "unit" ? "Unidad" : "Proyecto"}</p></td>
-        <td className="min-w-36 px-4 py-4">{monthLabel(row.month)} · {row.duration_weeks} semanas<p className="mt-1 text-xs text-[#526b87]">{row.period}</p></td>
+        <td className="min-w-40 px-4 py-4">{row.planned_start_date && row.planned_end_date
+          ? <>{compactDate(row.planned_start_date)}–{compactDate(row.planned_end_date)}<p className="mt-1 text-xs text-[#526b87]">{row.planned_instructional_days} días de clase · {row.period}</p></>
+          : <>{monthLabel(row.month)} · {row.duration_weeks} semanas<p className="mt-1 text-xs text-[#526b87]">{row.period}</p></>}</td>
         <td className="min-w-56 px-4 py-4 leading-relaxed">{row.rationale}</td>
         <td className="min-w-56 px-4 py-4">{row.primary_competency_ids.map((id) => names.get(id) ?? id).join(" · ")}</td>
         <td className="sticky right-0 z-10 bg-white px-4 py-3 shadow-[-1px_0_0_#e3edf4] group-even:bg-[#f9fcfe]"><div className="flex flex-wrap gap-1">{editable && <><Button type="button" variant="outline" className="min-h-10" onClick={() => setEditingId(row.proposal_id)}>Editar</Button>

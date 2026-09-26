@@ -17,12 +17,13 @@ const tableOrder = [
   "activities", "activity_criteria", "evidences", "competency_observation_guides",
   "document_templates", "document_versions", "diagnostic_sessions",
   "diagnostic_entries", "observation_references", "student_observations", "diagnostic_experience_observations", "diagnostic_spontaneous_observations", "student_family_interviews", "student_family_interview_attachments", "diagnostic_competency_reviews", "diagnostic_student_reviews", "diagnostic_group_reviews", "diagnostic_priority_reviews",
-  "class_schedule_entries", "daily_execution_logs", "attendance_records", "calendar_exceptions", "calendar_blocks", "initial_stages", "evaluation_periods",
+  "class_schedule_entries", "daily_execution_logs", "attendance_records", "calendar_exceptions", "calendar_blocks", "initial_stages",
+  "school_calendar_holidays", "school_calendar_versions", "school_calendar_days", "classroom_calendar_overrides", "evaluation_periods",
   "student_context_snapshots",
-  "annual_plans", "annual_plan_formal_content", "project_slots", "annual_plan_competencies", "annual_plan_changes", "period_competency_scope", "period_closure_versions", "period_closures",
+  "annual_plans", "annual_plan_formal_content", "project_slots", "project_calendar_selections", "project_instructional_dates", "activity_schedule_changes", "annual_plan_competencies", "annual_plan_changes", "period_competency_scope", "period_closure_versions", "period_closures",
   "competency_assessments", "competency_descriptive_conclusions", "family_reports",
 ];
-const userFields = new Set(["user_id", "owner_id", "owner_user_id", "teacher_id", "created_by", "author_id", "confirmed_by", "level_confirmed_by"]);
+const userFields = new Set(["user_id", "owner_id", "owner_user_id", "teacher_id", "created_by", "author_id", "confirmed_by", "level_confirmed_by", "changed_by", "reverted_by"]);
 const arrayFields = new Set(["official_performance_ids", "performance_ids"]);
 
 if (!input) {

@@ -30,6 +30,15 @@ export async function copyConfirmedLearningExperience(db, teacherId, classroomId
     [id, source.classroom_id, source.type, source.title, source.purpose, dateOnly(source.starts_on), dateOnly(source.ends_on),
       JSON.stringify(source.details), source.annual_plan_id, source.origin, source.planning_reason,
       source.source_proposal_index, JSON.stringify({ workflow: "learning_experience_copy", source_experience_id: source.id }), version, source.id, source.lineage_id, source.source_proposal_id]);
+    const calendar=(await tx.query(`select * from project_calendar_selections where learning_experience_id=$1`,[source.id])).rows[0];
+    if(calendar){
+      const selectionId=randomUUID();
+      await tx.query(`insert into project_calendar_selections(id,learning_experience_id,starts_on,ends_on,status,revision)
+        values($1,$2,$3,$4,'draft',1)`,[selectionId,id,calendar.starts_on,calendar.ends_on]);
+      const days=(await tx.query(`select calendar_day_id,date,selected,exclusion_reason from project_instructional_dates where selection_id=$1`,[calendar.id])).rows;
+      for(const day of days)await tx.query(`insert into project_instructional_dates(id,selection_id,calendar_day_id,date,selected,exclusion_reason)
+        values($1,$2,$3,$4,$5,$6)`,[randomUUID(),selectionId,day.calendar_day_id,day.date,day.selected,day.exclusion_reason]);
+    }
     return { id, version, revision: 1, lineage_id: source.lineage_id, status: "draft", supersedes_experience_id: source.id };
   });
 }

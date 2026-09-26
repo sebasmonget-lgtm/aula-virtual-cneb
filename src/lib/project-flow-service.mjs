@@ -91,7 +91,7 @@ export function validateProjectMaster(output, decisions, dependents, availableDa
   if (!hasText(output?.foundation, 1500) || !hasText(output.closing_description, 700) ||
       !hasText(output.closing_rationale, 700) || !Array.isArray(output.resources) ||
       output.resources.some((value) => !hasText(value, 160)) || !Array.isArray(output.activities) ||
-      output.activities.length < 2 || output.activities.length > Math.min(15, availableDates.length))
+      output.activities.length !== availableDates.length)
     fail("invalid_master", "El proyecto generado necesita revisión. Inténtalo nuevamente.");
   const dates = new Set(availableDates), seenDates = new Set(), selected = new Set(decisions.competency_ids);
   const titles = new Set();
@@ -115,7 +115,7 @@ export function validateProjectMaster(output, decisions, dependents, availableDa
   }
   const ordered = [...output.activities].sort((a, b) => a.date.localeCompare(b.date));
   return { ...output, activity_route: ordered.map((item, index) => ({
-    id: randomUUID(), number: index + 1, position: index + 1, date: item.date, title: item.title,
+    id: randomUUID(), number: index + 1, position: index + 1, date: item.date, planned_date: item.date, title: item.title,
     specific_purpose: item.purpose, competency_id: item.competency_ids[0],
     competency_ids: item.competency_ids, criterion_competency_id: item.criterion_competency_id,
     primary_competency_id: item.criterion_competency_id,
@@ -161,8 +161,8 @@ export function projectDetails({ source, preview, decisions, dependents, master,
 }
 
 export function validateEditedActivityMap(route, decisions, dependents, dates) {
-  if (!Array.isArray(route) || route.length < 2 || route.length > Math.min(15, dates.length))
-    fail("invalid_activity_map", "Revisa la cantidad de actividades del mapa.");
+  if (!Array.isArray(route) || route.length !== dates.length)
+    fail("invalid_activity_map", "Debe existir una actividad por cada día confirmado.");
   const allowedDates = new Set(dates), usedDates = new Set(), usedIds = new Set(), usedTitles = new Set();
   const allowedCompetencies = new Set(decisions.competency_ids);
   return route.map((row, index) => {
@@ -179,7 +179,7 @@ export function validateEditedActivityMap(route, decisions, dependents, dates) {
         !hasText(row.flexibility_notes, 500) || !hasText(row.role_in_project, 400) || !hasText(row.expected_progression, 400))
       fail("invalid_activity_map", `Revisa la actividad ${index + 1} del mapa.`);
     usedIds.add(row.id); usedDates.add(row.date); usedTitles.add(normalizedTitle);
-    return { ...row, number: index + 1, position: index + 1, competency_id: row.competency_ids[0],
+    return { ...row, date: row.date, planned_date: row.date, number: index + 1, position: index + 1, competency_id: row.competency_ids[0],
       primary_competency_id: row.criterion_competency_id,
       possible_secondary_competency_ids: row.competency_ids.filter((id) => id !== row.criterion_competency_id),
       criterion_text: row.evaluation_criterion };
@@ -256,7 +256,9 @@ export async function generateProjectMaster({ context, decisions, dependents, av
     outputSchema: PROJECT_MASTER_SCHEMA, context: { ...context, confirmed_decisions: decisions,
       confirmed_questions: dependents.guiding_questions, confirmed_journey: dependents.journey,
       confirmed_general_criteria: dependents.general_criteria, available_instructional_dates: availableDates,
-      task: `Diseña TODO el proyecto como mapa razonable de 2 a ${Math.min(15, availableDates.length)} actividades. Cada actividad debe ser un blueprint reutilizable con propósito, competencia principal, posibles competencias secundarias, intención pedagógica, criterio observable, evidencia esperada y variaciones aceptables, foco de observación, materiales, mediación, continuidad y flexibilidad. Propón como máximo una actividad principal por fecha lectiva: no fuerces una actividad en cada día disponible. Usa solo fechas lectivas y competencias confirmadas. No inventes observaciones ni niveles. La última actividad conduce al cierre. Mantén las decisiones docentes intactas y devuelve solo los campos del esquema.` } });
+      project_start_date: availableDates[0], project_end_date: availableDates.at(-1),
+      instructional_dates: availableDates, total_activities: availableDates.length,
+      task: `Diseña exactamente ${availableDates.length} actividades: una por cada fecha confirmada en instructional_dates, sin agregar, omitir ni cambiar fechas. El campo date de cada fila es su planned_date confirmado. Cada actividad debe ser un blueprint reutilizable con propósito, competencia principal, posibles competencias secundarias, intención pedagógica, criterio observable, evidencia esperada y variaciones aceptables, foco de observación, materiales, mediación, continuidad y flexibilidad. Usa solo las competencias confirmadas. No inventes observaciones ni niveles. La última actividad conduce al cierre. Mantén las decisiones docentes intactas y devuelve solo los campos del esquema.` } });
   return { ...result, output: validateProjectMaster(result.output, decisions, dependents, availableDates) };
 }
 

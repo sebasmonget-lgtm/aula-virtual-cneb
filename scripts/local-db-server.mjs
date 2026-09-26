@@ -29,6 +29,8 @@ import { copyConfirmedLearningExperience, confirmLearningExperienceVersion } fro
 import { ANNUAL_PLAN_TEMPLATE_FORMAT, validateAnnualPlanProposal } from "../src/lib/annual-plan-contract.mjs";
 import { annualCalendarDay } from "../src/lib/annual-plan-schedule.mjs";
 import { buildFlexibleAnnualSchedule, buildEditableAnnualSchedule, defaultInitialStage, nationalCalendarBlocks2026, nationalSchoolHolidays2026, validateAnnualCalendar } from "../src/lib/annual-plan-calendar.mjs";
+import { candidateProjectDates, ensureSchoolCalendar, loadEffectiveCalendar, reprogramActivity, saveClassroomOverride,
+  validateSelectedInstructionalDates } from "../src/lib/school-calendar-service.mjs";
 import { listSavedDocuments, loadSavedDocument } from "../src/lib/document-library-service.mjs";
 import { prepareWordDownload } from "../src/lib/document-word-export.mjs";
 import { saveWordToLocalDownloads } from "../src/lib/local-word-save.mjs";
@@ -101,7 +103,7 @@ const exportTables = [
   "activities", "activity_criteria", "evidences", "competency_observation_guides",
   "document_templates", "document_versions", "diagnostic_sessions",
   "diagnostic_entries", "observation_references", "student_observations", "diagnostic_experience_observations", "diagnostic_spontaneous_observations", "student_family_interviews", "student_family_interview_attachments", "diagnostic_competency_reviews", "diagnostic_student_reviews", "diagnostic_group_reviews", "diagnostic_priority_reviews",
-  "class_schedule_entries", "daily_execution_logs", "attendance_records", "calendar_exceptions", "calendar_blocks", "initial_stages", "project_slots", "evaluation_periods", "period_competency_scope", "period_closures", "period_closure_versions", "student_context_snapshots", "annual_plans", "annual_plan_formal_content", "annual_plan_competencies", "annual_plan_changes", "competency_assessments", "competency_descriptive_conclusions", "family_reports",
+  "class_schedule_entries", "daily_execution_logs", "attendance_records", "calendar_exceptions", "calendar_blocks", "initial_stages", "project_slots", "school_calendar_versions", "school_calendar_holidays", "school_calendar_days", "classroom_calendar_overrides", "project_calendar_selections", "project_instructional_dates", "activity_schedule_changes", "evaluation_periods", "period_competency_scope", "period_closures", "period_closure_versions", "student_context_snapshots", "annual_plans", "annual_plan_formal_content", "annual_plan_competencies", "annual_plan_changes", "competency_assessments", "competency_descriptive_conclusions", "family_reports",
 ];
 
 if (dbMode === "local") await mkdir(path.dirname(dataDir), { recursive: true });
@@ -315,6 +317,8 @@ async function dashboard() {
     select type, label, is_instructional from calendar_exceptions
      where classroom_id = $1 and exception_date = $2::date limit 1
   `, [classroomId, today]);
+  let effectiveCalendarDay=null;
+  try{effectiveCalendarDay=(await loadEffectiveCalendar(db,{teacherId,classroomId,from:today,to:today})).days[0]??null;}catch{}
   const todayBlocks = await db.query(`
     select se.id, se.start_time::text, se.end_time::text, se.block_type, coalesce(se.title, a.title) as title,
            se.activity_id, a.purpose, le.title as experience_title,
@@ -340,7 +344,9 @@ async function dashboard() {
   `, [teacherId, today]);
   const rawBlocks = todayBlocks.rows.map((block) => ({ ...block, materials: block.materials ?? [], steps: block.steps ?? [], criteria: normalizeCriteria(block.criteria ?? []) }));
   const attendanceRecorded = Number(attendanceResult.rows[0]?.recorded_count ?? 0) > 0;
-  const calendarException = exceptionResult.rows[0] ?? null;
+  const legacyException=exceptionResult.rows[0]??null;
+  const calendarException=legacyException??(effectiveCalendarDay&&!effectiveCalendarDay.is_instructional?{
+    type:effectiveCalendarDay.calendar_type,label:effectiveCalendarDay.reason,is_instructional:false}:null);
   const journey = resolveDailyState({ now, scheduleEntries: rawBlocks, attendanceRecorded, calendarException });
   const blocks = rawBlocks.map((block) => ({
     ...block,
@@ -416,13 +422,31 @@ async function annualCalendarForClassroom(row) {
 }
 
 async function replaceAnnualProjectSlots(planId, schedule, runner = db) {
-  const plan = (await runner.query(`select proposal from annual_plans where id=$1`, [planId])).rows[0];
+  const plan = (await runner.query(`select proposal,classroom_id,school_year_id from annual_plans where id=$1`, [planId])).rows[0];
   await runner.query(`delete from project_slots where annual_plan_id=$1`, [planId]);
   for (const slot of schedule.projects) {
     const proposalId = plan?.proposal?.proposed_experiences?.[slot.index - 1]?.proposal_id ?? null;
     await runner.query(`insert into project_slots(id,annual_plan_id,slot_index,calendar_block_id,duration_weeks,starts_on,ends_on,proposal_id)
       values($1,$2,$3,$4,$5,$6::date,$7::date,$8)`, [randomUUID(), planId, slot.index, slot.calendar_block_id,
       slot.duration_weeks, slot.starts_on, slot.ends_on, proposalId]);
+  }
+  if(plan?.proposal?.proposed_experiences){
+    const rows=[];
+    for(const slot of schedule.projects){
+      const count=(await runner.query(`select count(*)::int as n from school_calendar_days d
+        join school_calendar_versions v on v.id=d.calendar_version_id and v.school_year_id=$1 and v.status='active'
+        left join classroom_calendar_overrides o on o.classroom_id=$2 and o.override_date=d.date and o.reverted_at is null
+        where d.date between $3::date and $4::date and coalesce(o.new_is_instructional,d.is_instructional)=true`,
+      [plan.school_year_id,plan.classroom_id,slot.starts_on,slot.ends_on])).rows[0];
+      rows.push(Number(count?.n??slot.duration_weeks*5));
+    }
+    const proposal={...plan.proposal,proposed_experiences:plan.proposal.proposed_experiences.map((item,index)=>({
+      ...item,planned_start_date:schedule.projects[index]?.starts_on??item.planned_start_date,
+      planned_end_date:schedule.projects[index]?.ends_on??item.planned_end_date,
+      planned_instructional_days:rows[index]??item.planned_instructional_days,
+      period_label:item.period
+    }))};
+    await runner.query(`update annual_plans set proposal=$1::jsonb,updated_at=now() where id=$2`,[JSON.stringify(proposal),planId]);
   }
 }
 
@@ -432,6 +456,7 @@ async function annualPlanningContext() {
     from classrooms c join age_grades ag on ag.id=c.age_grade_id join school_years sy on sy.id=c.school_year_id join profiles p on p.user_id=c.teacher_id join curriculum_versions cv on cv.active=true left join institution_profiles ip on ip.owner_user_id=c.teacher_id
     where c.teacher_id=$1 and sy.owner_id=$1 and c.status='active' limit 1`, [teacherId])).rows[0];
   if (!row) return null;
+  await ensureSchoolCalendar(db,row.school_year_id);
   const group = (await db.query(`select id,version,details from diagnostic_group_reviews where classroom_id=$1 and status='confirmed' order by version desc limit 1`, [row.id])).rows[0];
   const priorityReview = group ? (await db.query(`select id,details from diagnostic_priority_reviews
     where classroom_id=$1 and group_review_id=$2 and status='confirmed' order by version desc limit 1`,
@@ -1316,14 +1341,73 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
         group_interests: (plan.document_context?.group_interests ?? []).map(safe),
         annual_proposal: source, calendar: { starts_on: slot.starts_on, ends_on: slot.ends_on,
           duration_weeks: slot.duration_weeks }, curriculum };
-      return { classroom, plan, source, index, slot, aiContext,
-        dates: instructionalDates(plan.document_context?.calendar ?? classroom.calendar, slot.starts_on, slot.ends_on) };
+      const selection = (await db.query(`select id,status,revision from project_calendar_selections
+        where learning_experience_id in (select id from learning_experiences where annual_plan_id=$1 and source_proposal_id=$2)
+        order by updated_at desc limit 1`,[plan.id,proposalId])).rows[0];
+      const selectedDates = selection?.status === "confirmed" ? (await db.query(`select date::text from project_instructional_dates
+        where selection_id=$1 and selected=true order by date`,[selection.id])).rows.map((item)=>item.date) : null;
+      return { classroom, plan, source, index, slot, aiContext, selection,
+        dates: selectedDates?.length ? selectedDates : instructionalDates(plan.document_context?.calendar ?? classroom.calendar, slot.starts_on, slot.ends_on) };
     }
     async function projectFlowRow(id) {
       const classroom = await annualPlanningContext();
       const row = classroom && (await db.query(`select * from learning_experiences where id=$1 and classroom_id=$2
         and type in ('project','unit')`, [id, classroom.id])).rows[0];
       return { classroom, row };
+    }
+    async function ensureProjectCalendarSelection(row, source) {
+      let selection=(await db.query(`select * from project_calendar_selections where learning_experience_id=$1`,[row.id])).rows[0];
+      if(!selection){
+        selection=(await db.query(`insert into project_calendar_selections(id,learning_experience_id,starts_on,ends_on)
+          values($1,$2,$3::date,$4::date) returning *`,[randomUUID(),row.id,source.slot.starts_on,source.slot.ends_on])).rows[0];
+      }
+      const calendar=await loadEffectiveCalendar(db,{teacherId,classroomId:source.classroom.id,from:source.slot.starts_on,to:source.slot.ends_on});
+      const existing=(await db.query(`select id,date::text,selected,exclusion_reason from project_instructional_dates where selection_id=$1 order by date`,[selection.id])).rows;
+      if(!existing.length){
+        for(const day of calendar.days.filter((item)=>item.is_instructional))await db.query(`insert into project_instructional_dates(id,selection_id,calendar_day_id,date,selected)
+          values($1,$2,$3,$4::date,true)`,[randomUUID(),selection.id,day.id,day.date]);
+      }
+      const stored=(await db.query(`select id,date::text,selected,exclusion_reason from project_instructional_dates where selection_id=$1 order by date`,[selection.id])).rows;
+      const exclusions=stored.filter((item)=>!item.selected);
+      const days=candidateProjectDates(calendar.days,source.slot.starts_on,source.slot.ends_on,exclusions);
+      return { selection:{...selection,starts_on:String(selection.starts_on).slice(0,10),ends_on:String(selection.ends_on).slice(0,10)},days,
+        selected_dates:stored.filter((item)=>item.selected).map((item)=>item.date) };
+    }
+    if(request.method==="GET"&&url.pathname==="/api/school-calendar"){
+      try{const classroom=await annualPlanningContext();if(!classroom){send(response,404,{error:"Aula no disponible."},origin);return;}
+        const data=await loadEffectiveCalendar(db,{teacherId,classroomId:classroom.id,from:url.searchParams.get("from"),to:url.searchParams.get("to")});send(response,200,data,origin);}
+      catch(error){send(response,httpStatusForError(error,422),{error:publicErrorMessage(error)},origin);}return;
+    }
+    if(request.method==="PUT"&&url.pathname==="/api/school-calendar/override"){
+      try{const body=await readJson(request),classroom=await annualPlanningContext();if(!classroom){send(response,404,{error:"Aula no disponible."},origin);return;}
+        const value=await saveClassroomOverride(db,{teacherId,classroomId:classroom.id,date:body.date,isInstructional:body.isInstructional===true,reason:body.reason});send(response,200,value,origin);}
+      catch(error){send(response,httpStatusForError(error,422),{error:publicErrorMessage(error)},origin);}return;
+    }
+    if(request.method==="GET"&&/^\/api\/project-flow\/[0-9a-f-]+\/calendar$/i.test(url.pathname)){
+      try{const id=url.pathname.split("/")[3],{row}=await projectFlowRow(id);if(!row){send(response,404,{error:"Proyecto no disponible."},origin);return;}
+        const source=await projectFlowSource(row.annual_plan_id,row.source_proposal_id,true);send(response,200,await ensureProjectCalendarSelection(row,source),origin);}
+      catch(error){send(response,httpStatusForError(error,422),{error:publicErrorMessage(error)},origin);}return;
+    }
+    if(request.method==="PUT"&&/^\/api\/project-flow\/[0-9a-f-]+\/calendar$/i.test(url.pathname)){
+      try{const id=url.pathname.split("/")[3],body=await readJson(request),{row}=await projectFlowRow(id);if(!row||row.status!=="draft"){send(response,404,{error:"Borrador no disponible."},origin);return;}
+        const source=await projectFlowSource(row.annual_plan_id,row.source_proposal_id,true),review=await ensureProjectCalendarSelection(row,source);
+        const calendar=await loadEffectiveCalendar(db,{teacherId,classroomId:source.classroom.id,from:source.slot.starts_on,to:source.slot.ends_on});
+        const selected=validateSelectedInstructionalDates(calendar.days,body.selectedDates,source.slot.starts_on,source.slot.ends_on),selectedSet=new Set(selected);
+        for(const day of calendar.days.filter((item)=>item.is_instructional)){
+          const reason=String(body.exclusions?.[day.date]??"").trim()||null;
+          await db.query(`insert into project_instructional_dates(id,selection_id,calendar_day_id,date,selected,exclusion_reason)
+            values($1,$2,$3,$4::date,$5,$6) on conflict(selection_id,date) do update set selected=excluded.selected,exclusion_reason=excluded.exclusion_reason,updated_at=now()`,
+          [randomUUID(),review.selection.id,day.id,day.date,selectedSet.has(day.date),selectedSet.has(day.date)?null:reason]);
+        }
+        const updated=(await db.query(`update project_calendar_selections set status=$1,confirmed_at=case when $1='confirmed' then now() else null end,
+          confirmed_by=case when $1='confirmed' then $2 else null end,revision=revision+1,updated_at=now() where id=$3 returning *`,
+        [body.confirm===true?"confirmed":"draft",teacherId,review.selection.id])).rows[0];
+        send(response,200,{selection:updated,selected_dates:selected},origin);
+      }catch(error){send(response,httpStatusForError(error,422),{error:publicErrorMessage(error)},origin);}return;
+    }
+    if(request.method==="POST"&&/^\/api\/activities\/[0-9a-f-]+\/reschedule$/i.test(url.pathname)){
+      try{const body=await readJson(request);send(response,200,await reprogramActivity(db,{teacherId,activityId:url.pathname.split("/")[3],newDate:body.newDate,reason:body.reason,changeType:body.changeType}),origin);}
+      catch(error){send(response,httpStatusForError(error,422),{error:publicErrorMessage(error)},origin);}return;
     }
     if (request.method === "POST" && url.pathname === "/api/project-flow/emergent-preview") {
       try {
@@ -1394,8 +1478,8 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
           and (source_proposal_id=$2 or (source_proposal_id is null and source_proposal_index=$3))
           and status in ('draft','active') order by version desc limit 1`,
         [source.plan.id, body.proposalId,source.index])).rows[0];
-        if (previous) { send(response, 200, { experience: previous, existing: true,
-          available_dates: source.dates }, origin); return; }
+        if (previous) { const calendar_review=await ensureProjectCalendarSelection(previous,source);send(response, 200, { experience: previous, existing: true,
+          available_dates: calendar_review.selected_dates,calendar_review }, origin); return; }
         const generated = await generateProjectPreview({ context: source.aiContext, workflow: source.source.experience_type });
         const id = randomUUID();
         const details = { flow_version: "project-master-v1", stage: "decisions", preview: generated.output };
@@ -1405,14 +1489,16 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
           returning *`, [id,source.classroom.id,source.source.experience_type,source.source.title,source.source.purpose,
           source.slot.starts_on,source.slot.ends_on,JSON.stringify(details),source.plan.id,source.index,body.proposalId,
           JSON.stringify({ workflow: "project_preview", ...generated.metadata })])).rows[0];
-        send(response, 201, { experience: saved, existing: false, available_dates: source.dates }, origin);
+        const calendar_review=await ensureProjectCalendarSelection(saved,source);
+        send(response, 201, { experience: saved, existing: false, available_dates: calendar_review.selected_dates,calendar_review }, origin);
       } catch (error) { send(response, httpStatusForError(error, 422), { error: publicErrorMessage(error) }, origin); }
       return;
     }
     if (request.method === "GET" && /^\/api\/project-flow\/[0-9a-f-]+$/i.test(url.pathname)) {
       const { row } = await projectFlowRow(url.pathname.split("/")[3]);
       const source = row?.source_proposal_id ? await projectFlowSource(row.annual_plan_id, row.source_proposal_id, true) : null;
-      send(response, row ? 200 : 404, row ? { experience: row, available_dates: source?.dates ?? [] } : { error: "Proyecto no disponible." }, origin); return;
+      const calendar_review=row&&source?await ensureProjectCalendarSelection(row,source):null;
+      send(response, row ? 200 : 404, row ? { experience: row, available_dates: calendar_review?.selected_dates ?? source?.dates ?? [],calendar_review } : { error: "Proyecto no disponible." }, origin); return;
     }
     if (request.method === "POST" && /^\/api\/project-flow\/[0-9a-f-]+\/dependents$/i.test(url.pathname)) {
       try {
@@ -1443,16 +1529,18 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
         if (!row || row.status !== "draft" || row.details?.flow_version !== "project-master-v1") { send(response, 404, { error: "Borrador no disponible." }, origin); return; }
         if (!row.details.decisions || !row.details.dependents) throw new Error("Elige primero el propósito y revisa las preguntas.");
         const source = await projectFlowSource(row.annual_plan_id, row.source_proposal_id, true);
+        const calendarReview=await ensureProjectCalendarSelection(row,source);
+        if(calendarReview.selection.status!=="confirmed")throw new Error("Confirma primero los días del proyecto.");
         const dependents = validateProjectDependents(body.dependents ?? row.details.dependents, row.details.decisions.competency_ids);
         const generated = await generateProjectMaster({ context: { ...source.aiContext,
           curriculum: source.aiContext.curriculum.filter((card) => row.details.decisions.competency_ids.includes(card.id)) },
           decisions: row.details.decisions,
-          dependents, availableDates: source.dates, workflow: row.type });
+          dependents, availableDates: calendarReview.selected_dates, workflow: row.type });
         const base = projectDetails({ source: source.source, preview: row.details.preview,
           decisions: row.details.decisions, dependents, master: generated.output, previous: row.details });
         const route = preserveTeacherMapEdits(base.activity_route, row.details.previous_map ?? row.details.activity_route,
           row.details.teacher_overrides, row.details.decisions);
-        validateEditedActivityMap(route, row.details.decisions, dependents, source.dates);
+        validateEditedActivityMap(route, row.details.decisions, dependents, calendarReview.selected_dates);
         const details = { ...base, activity_route: route, previous_map: row.details.previous_map ?? null,
           stage: "map_review" };
         const saved = (await db.query(`update learning_experiences set title=$1,purpose=$2,details=$3::jsonb,
@@ -1470,7 +1558,9 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
         const { row } = await projectFlowRow(id);
         if (!row || row.status !== "draft" || row.details?.stage !== "map_review") { send(response, 404, { error: "Mapa no disponible." }, origin); return; }
         const source = await projectFlowSource(row.annual_plan_id, row.source_proposal_id, true);
-        const route = validateEditedActivityMap(body.activity_route, row.details.decisions, row.details.dependents, source.dates);
+        const calendarReview=await ensureProjectCalendarSelection(row,source);
+        if(calendarReview.selection.status!=="confirmed")throw new Error("Confirma primero los días del proyecto.");
+        const route = validateEditedActivityMap(body.activity_route, row.details.decisions, row.details.dependents, calendarReview.selected_dates);
         const overrides = [...(row.details.teacher_overrides ?? [])];
         for (const before of row.details.activity_route ?? []) {
           if (!route.some((item) => item.id === before.id))
@@ -1501,7 +1591,9 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
         const { row } = await projectFlowRow(id);
         if (!row || row.status !== "draft" || row.details?.stage !== "map_review") { send(response, 404, { error: "Proyecto no disponible para confirmar." }, origin); return; }
         const source = await projectFlowSource(row.annual_plan_id, row.source_proposal_id, true);
-        validateEditedActivityMap(row.details.activity_route, row.details.decisions, row.details.dependents, source.dates);
+        const calendarReview=await ensureProjectCalendarSelection(row,source);
+        if(calendarReview.selection.status!=="confirmed")throw new Error("Confirma primero los días del proyecto.");
+        validateEditedActivityMap(row.details.activity_route, row.details.decisions, row.details.dependents, calendarReview.selected_dates);
         const confirmed = await confirmLearningExperienceVersion(db, source.classroom.id, id, expectedRevision(body.expectedRevision));
         send(response, 200, confirmed, origin);
       } catch (error) { send(response, httpStatusForError(error, 422), isVersionConflict(error) ? conflictPayload(error) : { error: publicErrorMessage(error) }, origin); }
@@ -1510,7 +1602,7 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
     if (request.method === "POST" && /^\/api\/project-flow\/[0-9a-f-]+\/formalize$/i.test(url.pathname)) {
       try {
         const id = url.pathname.split("/")[3], { row } = await projectFlowRow(id);
-        if (!row || row.status !== "active" || row.details?.flow_version !== "project-master-v1") { send(response, 404, { error: "Proyecto confirmado no disponible." }, origin); return; }
+        if (!row || row.status !== "active" || !["project-master-v1","project-master-v2"].includes(row.details?.flow_version)) { send(response, 404, { error: "Proyecto confirmado no disponible." }, origin); return; }
         const prior = (await db.query(`select id from experience_formal_contents where experience_id=$1`, [id])).rows[0];
         if (prior) { send(response, 200, { ready: true, already_ready: true }, origin); return; }
         const source = await projectFlowSource(row.annual_plan_id, row.source_proposal_id, true);
@@ -1656,11 +1748,11 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
       const context = await annualPlanningContext(); const body = await readJson(request); const experience = context && await activeLearningExperience(body.experienceId, context.id); const pending = await pendingAIGenerations.get(body.generationId);
       if (context && !(await db.query(`select 1 from annual_plans where classroom_id=$1 and school_year_id=$2 and status='active' limit 1`, [context.id, context.school_year_id])).rows.length) { send(response, 422, { error: "Confirma primero el plan anual antes de guardar una actividad." }, origin); return; }
       if (!experience || !pending || pending.workflow !== "activity" || pending.classroom_id !== context.id || pending.learning_experience_id !== experience.id) { send(response, 422, { error: "La generación de actividad no corresponde a esta experiencia." }, origin); return; }
-      try { validateActivityDate(body.occursOn, experience, context); validateActivityV4(body.proposal, await activityAllowedCompetencies(experience, context)); const routeItem = routeItemFor(experience, pending.route_item_id); if (experience.details?.activity_route?.length && !routeItem) throw new Error("La actividad de origen ya no está en la ruta confirmada."); const details = saveActivityDetails(body.proposal, routeItem); const id=randomUUID(); await db.query(`insert into activities (id,experience_id,occurs_on,title,purpose,sequence,preparation,adaptations,status,details,generation_metadata) values ($1,$2,$3::date,$4,$5,'[]'::jsonb,$6::jsonb,'[]'::jsonb,'draft',$7::jsonb,$8::jsonb)`, [id,experience.id,body.occursOn,details.title,details.purpose,JSON.stringify({materials: normalizeActivityMaterials(body.materials)}),JSON.stringify(details),JSON.stringify(pending.metadata)]); await pendingAIGenerations.delete(body.generationId); send(response,200,{id,status:"draft",revision:1},origin); } catch(error) { send(response,httpStatusForError(error,422),{error:publicErrorMessage(error)},origin); } return;
+      try { const routeItem = routeItemFor(experience, pending.route_item_id); if (experience.details?.activity_route?.length && !routeItem) throw new Error("La actividad de origen ya no está en la ruta confirmada."); const occursOn=routeItem?.planned_date??routeItem?.date??body.occursOn;validateActivityDate(occursOn, experience, context); const calendar=await loadEffectiveCalendar(db,{teacherId,classroomId:context.id,from:occursOn,to:occursOn});validateSelectedInstructionalDates(calendar.days,[occursOn],String(experience.starts_on).slice(0,10),String(experience.ends_on).slice(0,10));validateActivityV4(body.proposal, await activityAllowedCompetencies(experience, context)); const conflict=(await db.query(`select 1 from activities where experience_id=$1 and occurs_on=$2::date and status in ('draft','active') limit 1`,[experience.id,occursOn])).rows[0];if(conflict)throw new Error("Ya existe una actividad del proyecto para esa fecha.");const details = saveActivityDetails(body.proposal, routeItem); const id=randomUUID(); await db.query(`insert into activities (id,experience_id,occurs_on,planned_date,title,purpose,sequence,preparation,adaptations,status,details,generation_metadata) values ($1,$2,$3::date,$3::date,$4,$5,'[]'::jsonb,$6::jsonb,'[]'::jsonb,'draft',$7::jsonb,$8::jsonb)`, [id,experience.id,occursOn,details.title,details.purpose,JSON.stringify({materials: normalizeActivityMaterials(body.materials)}),JSON.stringify(details),JSON.stringify(pending.metadata)]); await pendingAIGenerations.delete(body.generationId); send(response,200,{id,status:"draft",revision:1,occurs_on:occursOn},origin); } catch(error) { send(response,httpStatusForError(error,422),{error:publicErrorMessage(error)},origin); } return;
     }
     if (request.method === "PUT" && url.pathname.startsWith("/api/activities/")) {
       const id=url.pathname.split("/")[3]; const context=await annualPlanningContext(); const body=await readJson(request); const current=context&&(await db.query(`select a.*,e.classroom_id,e.status as experience_status,e.details as experience_details,e.starts_on as experience_starts_on,e.ends_on as experience_ends_on from activities a join learning_experiences e on e.id=a.experience_id where a.id=$1 and e.classroom_id=$2 and a.status='draft'`,[id,context.id])).rows[0];
-      if(!current||!["active","archived"].includes(current.experience_status)){send(response,404,{error:"Borrador no disponible."},origin);return;} const pending=typeof body.generationId==="string"?await pendingAIGenerations.get(body.generationId):null; if(body.generationId&&(!pending||pending.workflow!=="activity"||pending.classroom_id!==context.id||pending.learning_experience_id!==current.experience_id)){send(response,422,{error:"La regeneración no corresponde a esta actividad."},origin);return;} try { const revision=expectedRevision(body.expectedRevision);const parent={ details: current.experience_details }; validateActivityDate(body.occursOn,{starts_on:current.experience_starts_on,ends_on:current.experience_ends_on},context); validateActivityV4(body.proposal,await activityAllowedCompetencies(parent,context)); const routeItem=routeItemFor(parent,current.details?.route_item_id); if(current.experience_details?.activity_route?.length&&!routeItem)throw new Error("La actividad ya no corresponde a la ruta del proyecto."); const details=saveActivityDetails(body.proposal,routeItem,current.details); const values=[body.occursOn,details.title,details.purpose,JSON.stringify(details),JSON.stringify({materials:normalizeActivityMaterials(body.materials)})];const saved=await versionTransaction(db,`activity:${current.lineage_id}`,async(tx)=>{const result=pending?await tx.query(`update activities set occurs_on=$1::date,title=$2,purpose=$3,details=$4::jsonb,preparation=$5::jsonb,generation_metadata=$6::jsonb,updated_at=now() where id=$7 and status='draft' and revision=$8 returning revision`,[...values,JSON.stringify(pending.metadata),id,revision]):await tx.query(`update activities set occurs_on=$1::date,title=$2,purpose=$3,details=$4::jsonb,preparation=$5::jsonb,updated_at=now() where id=$6 and status='draft' and revision=$7 returning revision`,[...values,id,revision]);if(!result.rows[0]){const now=(await tx.query(`select revision from activities where id=$1`,[id])).rows[0];throw new VersionConflictError(undefined,now?.revision??null);}return result.rows[0];});if(pending)await pendingAIGenerations.delete(body.generationId);send(response,200,{id,status:"draft",revision:Number(saved.revision)},origin);}catch(error){send(response,httpStatusForError(error,422),isVersionConflict(error)?conflictPayload(error):{error:publicErrorMessage(error)},origin);}return;
+      if(!current||!["active","archived"].includes(current.experience_status)){send(response,404,{error:"Borrador no disponible."},origin);return;} const pending=typeof body.generationId==="string"?await pendingAIGenerations.get(body.generationId):null; if(body.generationId&&(!pending||pending.workflow!=="activity"||pending.classroom_id!==context.id||pending.learning_experience_id!==current.experience_id)){send(response,422,{error:"La regeneración no corresponde a esta actividad."},origin);return;} try { const revision=expectedRevision(body.expectedRevision);const parent={ details: current.experience_details }; const routeItem=routeItemFor(parent,current.details?.route_item_id); if(current.experience_details?.activity_route?.length&&!routeItem)throw new Error("La actividad ya no corresponde a la ruta del proyecto.");const occursOn=routeItem?.planned_date??routeItem?.date??String(current.planned_date??current.occurs_on).slice(0,10);validateActivityDate(occursOn,{starts_on:current.experience_starts_on,ends_on:current.experience_ends_on},context);const calendar=await loadEffectiveCalendar(db,{teacherId,classroomId:context.id,from:occursOn,to:occursOn});validateSelectedInstructionalDates(calendar.days,[occursOn],String(current.experience_starts_on).slice(0,10),String(current.experience_ends_on).slice(0,10)); validateActivityV4(body.proposal,await activityAllowedCompetencies(parent,context)); const details=saveActivityDetails(body.proposal,routeItem,current.details); const values=[occursOn,details.title,details.purpose,JSON.stringify(details),JSON.stringify({materials:normalizeActivityMaterials(body.materials)})];const saved=await versionTransaction(db,`activity:${current.lineage_id}`,async(tx)=>{const result=pending?await tx.query(`update activities set occurs_on=$1::date,planned_date=coalesce(planned_date,$1::date),title=$2,purpose=$3,details=$4::jsonb,preparation=$5::jsonb,generation_metadata=$6::jsonb,updated_at=now() where id=$7 and status='draft' and revision=$8 returning revision`,[...values,JSON.stringify(pending.metadata),id,revision]):await tx.query(`update activities set occurs_on=$1::date,planned_date=coalesce(planned_date,$1::date),title=$2,purpose=$3,details=$4::jsonb,preparation=$5::jsonb,updated_at=now() where id=$6 and status='draft' and revision=$7 returning revision`,[...values,id,revision]);if(!result.rows[0]){const now=(await tx.query(`select revision from activities where id=$1`,[id])).rows[0];throw new VersionConflictError(undefined,now?.revision??null);}return result.rows[0];});if(pending)await pendingAIGenerations.delete(body.generationId);send(response,200,{id,status:"draft",revision:Number(saved.revision),occurs_on:occursOn},origin);}catch(error){send(response,httpStatusForError(error,422),isVersionConflict(error)?conflictPayload(error):{error:publicErrorMessage(error)},origin);}return;
     }
     if (request.method === "POST" && url.pathname.startsWith("/api/activities/") && url.pathname.endsWith("/confirm")) {
       const id = url.pathname.split("/")[3];

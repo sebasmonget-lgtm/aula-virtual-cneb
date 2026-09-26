@@ -539,3 +539,13 @@
 **Causa raíz.** El contrato de salida permitía texto, mientras la validación posterior limitaba el ejemplo opcional a 250 caracteres. La respuesta real tenía 298 caracteres y el mensaje no distinguía esa causa.
 
 **Solución y prevención.** El límite del ejemplo se alineó con el uso visible a 500 caracteres y se mantuvieron límites estrictos para contexto y propósitos. La misma llamada real pasó después del ajuste.
+
+## 2026-09-26 La migración del calendario intentaba modificar actividades confirmadas
+
+**Síntoma.** Al aplicar la nueva migración sobre una base con actividades confirmadas, el backfill de `planned_date` era rechazado por el trigger de inmutabilidad.
+
+**Causa raíz.** El nuevo campo se intentó completar mediante un `UPDATE` general. El trigger protege correctamente todo cambio en una actividad confirmada y no distingue un backfill histórico de una edición pedagógica.
+
+**Solución validada.** La migración deja `planned_date` nulo en actividades históricas y la lectura usa `occurs_on` como respaldo. Las actividades nuevas guardan ambos campos desde su creación. El trigger actualizado solo admite cambios auditados de fecha y estado de ejecución; título, propósito, contenido y relación pedagógica continúan inmutables. La paridad local/Supabase, la copia de versiones y los casos históricos pasaron sus pruebas.
+
+**Prevención.** Las migraciones aditivas no deben reescribir filas confirmadas cuando el valor puede derivarse de forma segura. Probar siempre una base con documentos históricos antes de dar por válida una migración.
