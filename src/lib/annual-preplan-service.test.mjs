@@ -35,8 +35,14 @@ test("Sol recibe diagnóstico y currículo filtrado; sus doce filas quedan edita
   assert.equal(request.ai_context_bundle.confirmed_group.strengths, "Se comunican jugando.");
   assert.equal(request.ai_context_bundle.confirmed_priorities[0].title, "Más diálogo");
   assert.deepEqual(Object.keys(request.ai_context_bundle.curriculum.competency_cards[0].ages), ["5"]);
+  assert.equal(request.ai_context_bundle.initial_slots[5].starts_on, "2026-07-06");
+  assert.equal(request.ai_context_bundle.initial_slots[11].starts_on, "2026-12-07");
+  assert.match(request.ai_context_bundle.task, /la 6 a Fiestas Patrias/);
   assert.equal(generated.proposal.proposed_experiences.length, 12);
   assert.ok(generated.proposal.proposed_experiences.every((item) => item.proposal_id && item.purpose));
+  assert.equal(generated.proposal.proposed_experiences[5].month, 7);
+  assert.equal(generated.proposal.proposed_experiences[11].month, 12);
+  assert.equal(buildEditableAnnualSchedule(calendar(), generated.proposal.proposed_experiences).projects[11].ends_on, "2026-12-18");
   const shorter = { ...generated.proposal, proposed_experiences: generated.proposal.proposed_experiences.slice(0, 10) };
   assert.equal(validateAnnualPreplan(shorter, ["COM_ORAL"], 2026).proposed_experiences.length, 10);
   assert.equal(buildEditableAnnualSchedule(calendar(), shorter.proposed_experiences).projects.length, 10);

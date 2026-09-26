@@ -1,5 +1,15 @@
 # Errores y soluciones
 
+## 2026-09-25 Las propuestas vinculadas a fechas escolares quedaban demasiado temprano
+
+**Síntoma.** En una prueba real de generación, Sol propuso Fiestas Patrias en una fila que comenzaba en junio y Navidad/cierre en otra que terminaba a inicios de diciembre, aunque ambos títulos eran pertinentes.
+
+**Causa raíz.** Los doce espacios iniciales se asignaban consecutivamente dentro de cada bimestre sin reservar las semanas lectivas cercanas a esos acontecimientos. El prompt no indicaba en qué fila ubicar cada uno.
+
+**Solución validada.** El calendario intenta reservar julio para la sexta propuesta y diciembre para la duodécima, sin cruzar semanas de gestión ni forzar el calendario propio de una institución. El prompt asocia explícitamente los cuatro acontecimientos a sus filas. El código conserva los meses y duraciones calculados aun si la respuesta de Sol difiere. Una prueba real con datos ficticios devolvió doce propuestas, con Fiestas Patrias en julio y Navidad/cierre en diciembre; también pasaron la prueba focalizada, typecheck, lint y build.
+
+**Prevención.** Verificar fechas reales de los espacios sugeridos además de contar propuestas y comprobar el esquema de respuesta. Mantener la opción docente de mover, editar o eliminar cualquier propuesta.
+
 ## 2026-09-25 Un registro nuevo bloqueaba el plan aunque existía síntesis confirmada
 
 **Síntoma.** Planificar mostraba «Hay información diagnóstica nueva» y deshabilitaba la generación tras añadir una observación, incluso con una síntesis grupal confirmada.
