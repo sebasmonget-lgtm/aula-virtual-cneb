@@ -247,7 +247,7 @@ test("lista marca respuestas parciales y confirmadas; corregir conserva versione
   } finally { await db.close(); }
 });
 
-test("observación espontánea guarda primero; Jev mock clasifica, abstiene y respeta corrección docente", async () => {
+test("observación espontánea guarda primero; Jev queda no disponible y se respeta la corrección docente", async () => {
   const db = await database();
   try {
     const a = await setup(db, teacher, "A");
@@ -256,16 +256,8 @@ test("observación espontánea guarda primero; Jev mock clasifica, abstiene y re
       observationText: "Camila contó los vasos y dijo que faltaba uno.", supportStatus: "no" });
     assert.equal(saved.classification_status, "pending");
     assert.equal((await loadSpontaneousObservations(db, teacher)).observations[0].competency_v4_id, null);
-    const mock = { classify: async ({ plan, options, observation }) => {
-      assert.equal(plan.provider, "typesafe");
-      assert.equal(plan.model, null);
-      assert.ok(options.some((item) => item.id === "MAT_CANTIDAD"));
-      assert.match(observation, /vasos/);
-      assert.doesNotMatch(observation, /Camila/);
-      return { primary_competency: "MAT_CANTIDAD", confidence: 0.93,
-        optional_secondary_candidate: null, needs_review: false };
-    } };
-    assert.equal((await classifySpontaneousObservation(db, teacher, saved.id, mock)).status, "needs_review");
+    const mock = { classify: async () => { throw new Error("Jev no debe ejecutarse"); } };
+    await assert.rejects(classifySpontaneousObservation(db, teacher, saved.id, mock), { reason: "classifier_unavailable" });
     await correctSpontaneousClassification(db, teacher, saved.id, "MAT_CANTIDAD");
     const review = await loadDiagnosticAssessmentWorkspace(db, teacher);
     assert.ok(review.observations.some((row) => row.id === saved.id && row.competency_v4_id === "MAT_CANTIDAD"));
@@ -283,8 +275,8 @@ test("observación espontánea guarda primero; Jev mock clasifica, abstiene y re
     await assert.rejects(db.query(`update diagnostic_spontaneous_observations set observation_text='cambiado' where id=$1`, [saved.id]), /inmutable/);
     await assert.rejects(confirmDiagnosticSynthesis(db, teacher, prepared.id), { reason: "no_observations" });
     const uncertain = await recordSpontaneousObservation(db, teacher, { studentId, contextLabel: "Recreo", observationText: "Se acercó al grupo." });
-    const abstain = { classify: async () => ({ primary_competency: null, confidence: 0.2, optional_secondary_candidate: null, needs_review: true }) };
-    assert.equal((await classifySpontaneousObservation(db, teacher, uncertain.id, abstain)).status, "needs_review");
+    await assert.rejects(classifySpontaneousObservation(db, teacher, uncertain.id, mock), { reason: "classifier_unavailable" });
+    await markSpontaneousNeedsReview(db, teacher, uncertain.id);
     const unavailable = await recordSpontaneousObservation(db, teacher, { studentId, contextLabel: "Juego libre", observationText: "Eligió un libro." });
     await markSpontaneousNeedsReview(db, teacher, unavailable.id);
     assert.equal((await loadSpontaneousObservations(db, teacher)).observations.find((item) => item.id === unavailable.id).classification_status, "needs_review");

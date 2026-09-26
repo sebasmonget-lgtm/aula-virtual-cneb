@@ -52,3 +52,4 @@ next-env.d.ts
 # Material-source originals and review-only derivatives must never be published.
 /library/materials/sources/**/private/
 /library/materials/sources/**/internal/
+evals/ai-routing-v4/results/

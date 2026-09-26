@@ -108,10 +108,18 @@ export async function generateTeacherAnnualPlan({ classroom, request, resolvePla
       teacher_request: "Desarrolla el plan maestro validado que aparece en workflow_inputs.master_plan. Conserva sus doce proyectos, su orden, sus cuatro vínculos con el calendario y sus competencias. Para cada índice escribe un propósito concreto y diferente, un producto posible del proyecto y materiales sencillos compatibles con el aula. El producto es distinto de las actuaciones individuales que la docente observará como evidencia: no lo presentes como prueba automática del aprendizaje. No repitas el mismo propósito ni el mismo producto cambiando solo el número; algunos productos pueden ser acuerdos, relatos, construcciones, dibujos o registros cuando tengan sentido. Evita manualidades decorativas como propósito central. Devuelve cuatro criterios de organización y enfoques transversales solo cuando el contexto y la Knowledge Base los sustenten. Usa español claro; no inventes observaciones ni datos familiares." },
     { provider: createProvider(developmentPlan, { timeoutMs: ANNUAL_PLAN_TIMEOUT_MS }), executionPlan: developmentPlan });
     const proposal = mergeAnnualPlanDevelopment(master.output, developed.output, input.calendar_context.project_duration_weeks);
-    const stages = [{ stage: "master", model: master.metadata.model, reasoning_effort: masterPlan.reasoning_effort, response_id: master.metadata.response_id, usage: master.metadata.usage },
-      { stage: "development", model: developed.metadata.model, reasoning_effort: developmentPlan.reasoning_effort, response_id: developed.metadata.response_id, usage: developed.metadata.usage }];
-    return { proposal, internalMetadata: { workflow: "annual_plan", model: master.metadata.model, reasoning_effort: masterPlan.reasoning_effort,
-      response_id: master.metadata.response_id, usage: combinedUsage(master.metadata, developed.metadata), stages,
+    const stages = [{ stage: "master", provider: master.metadata.provider ?? masterPlan.provider, model: master.metadata.model,
+      reasoning_effort: master.metadata.reasoning_effort ?? masterPlan.reasoning_effort,
+      routing_policy_version: master.metadata.routing_policy_version ?? masterPlan.routing_policy_version,
+      response_id: master.metadata.response_id, usage: master.metadata.usage },
+      { stage: "development", provider: developed.metadata.provider ?? developmentPlan.provider, model: developed.metadata.model,
+        reasoning_effort: developed.metadata.reasoning_effort ?? developmentPlan.reasoning_effort,
+        routing_policy_version: developed.metadata.routing_policy_version ?? developmentPlan.routing_policy_version,
+        response_id: developed.metadata.response_id, usage: developed.metadata.usage }];
+    return { proposal, internalMetadata: { workflow: "annual_plan", provider: master.metadata.provider ?? masterPlan.provider,
+      model: master.metadata.model, reasoning_effort: master.metadata.reasoning_effort ?? masterPlan.reasoning_effort,
+      routing_policy_version: master.metadata.routing_policy_version ?? masterPlan.routing_policy_version,
+      response_id: master.metadata.response_id, usage: combinedUsage(master.metadata, developed.metadata), fallback_used: false, stages,
       provenance: master.provenance, ...(input.context_snapshot ? { context_snapshot: input.context_snapshot } : {}) } };
   } catch (error) {
     throw new AnnualPlanGenerationUIError(safeAnnualPlanFailureReason(error));

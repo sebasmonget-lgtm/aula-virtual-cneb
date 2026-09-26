@@ -19,10 +19,10 @@ export async function suggestDiagnosticStudentReview(db, teacherId, draftId, {
   if (!source.observations.length) return { details: { information_status: "insufficient_information",
     comment_text: "Todavía necesito observar más situaciones de juego y aprendizaje para conocer mejor cómo participa este niño." },
     supporting_observation_ids: [] };
-  const plan = resolvePlan({ workflow: "diagnostic", task: "generation" });
+  const plan = resolvePlan({ workflow: "diagnostic_individual_assist", task: "generation" });
   const provider = createProvider(plan, { timeoutMs: 120_000 });
-  const response = await provider.generate(buildProviderRequest("diagnostic", {
-    workflow: "diagnostic", stage: "student_review", context: { age: source.age,
+  const response = await provider.generate(buildProviderRequest("diagnostic_individual_assist", {
+    workflow: "diagnostic_individual_assist", stage: "student_review", context: { age: source.age,
       observations: source.observations, family_context_not_performance_evidence: source.family_context },
     curriculum: { competency_cards: source.competency_cards },
     constraints: { must: ["Cita solo IDs de observaciones recibidas.",
@@ -45,7 +45,9 @@ export async function suggestDiagnosticStudentReview(db, teacherId, draftId, {
   if (!sameDiagnosticSources(source.source_snapshot, current.source_snapshot)) throw new Error("Las observaciones cambiaron durante el análisis.");
   const details = { information_status: output.information_status, comment_text: output.comment_text.trim() };
   await db.query(`update diagnostic_student_reviews set ai_snapshot=$1::jsonb,updated_at=now()
-    where id=$2 and status='draft'`, [JSON.stringify({ output, model: plan.model,
-      usage: response.provider_metadata?.usage ?? null, source_snapshot: source.source_snapshot }), draftId]);
+    where id=$2 and status='draft'`, [JSON.stringify({ output, provider: response.provider_metadata?.provider ?? plan.provider,
+      model: plan.model, reasoning_effort: plan.reasoning_effort, routing_policy_version: plan.routing_policy_version,
+      response_id: response.provider_metadata?.response_id ?? null, usage: response.provider_metadata?.usage ?? null,
+      source_snapshot: source.source_snapshot }), draftId]);
   return { details, supporting_observation_ids: output.supporting_observation_ids };
 }

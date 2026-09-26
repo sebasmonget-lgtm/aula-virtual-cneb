@@ -94,9 +94,8 @@ export async function generateTeacherActivity({ request, classroom, learningExpe
   if (input.workflow !== "activity") throw new ActivityGenerationUIError("unsupported_workflow", "No pudimos preparar la actividad.");
   try {
     const executionPlan = resolvePlan({ workflow: "activity", task: "generation" });
-    const provider = createProvider(executionPlan);
-    if (!provider) throw new ActivityGenerationUIError("provider_not_configured", "No se pudo acceder al servicio de IA.");
-    const generated = await generate(input, { provider, executionPlan, skillInstructions: await loadSkill() });
+    const providerFactory = (plan) => createProvider(plan);
+    const generated = await generate(input, { providerFactory, executionPlan, skillInstructions: await loadSkill() });
     const inherited = input.learning_experience_context?.inherited_route_item;
     return {
       proposal: inherited ? { ...generated.output, purpose: inherited.specific_purpose, competency_status: "confirmed", competency_id: inherited.competency_id,
@@ -107,6 +106,13 @@ export async function generateTeacherActivity({ request, classroom, learningExpe
         reasoning_effort: generated.metadata.execution_plan.reasoning_effort,
         response_id: generated.metadata.response_id,
         usage: generated.metadata.usage,
+        provider: generated.metadata.provider,
+        routing_policy_version: generated.metadata.routing_policy_version,
+        fallback_used: generated.metadata.fallback_used,
+        primary_model: generated.metadata.primary_model ?? null,
+        fallback_model: generated.metadata.fallback_model ?? null,
+        fallback_reason: generated.metadata.fallback_reason ?? null,
+        attempts: generated.metadata.attempts,
         provenance: generated.provenance,
         ...(input.context_snapshot ? { context_snapshot: input.context_snapshot } : {}),
       },

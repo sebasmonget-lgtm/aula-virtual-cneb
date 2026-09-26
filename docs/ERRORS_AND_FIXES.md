@@ -1,5 +1,15 @@
 # Errores y soluciones
 
+## 2026-09-26 El router declaraba rutas que no podían ejecutarse
+
+**Síntoma.** Una tarea `decision` podía devolver `provider: "typesafe"` aunque el factory no implementaba ese proveedor. El booleano `allow_escalation` tampoco indicaba qué modelo usar, por qué motivo ni cuántos intentos estaban permitidos.
+
+**Causa raíz.** La política mezclaba capacidades previstas con implementaciones productivas y no existía un contrato explícito de fallback en la orquestación.
+
+**Solución validada.** Las decisiones, Taller y materiales quedan como `unavailable`; el factory no crea providers para planes inactivos. Actividad declara un único fallback Luna/medium → Sol/low, ejecutado por la orquestación solo tras una validación de calidad. Las pruebas demuestran que Auth, rate limit y timeout no escalan y que contexto y schema son idénticos entre intentos.
+
+**Prevención.** Todo workflow nuevo debe aportar provider, contrato, validadores y benchmark antes de marcarse productivo. La suite de routing comprueba que política, factory y generador no declaren capacidades incompatibles.
+
 ## 2026-09-25 Las propuestas vinculadas a fechas escolares quedaban demasiado temprano
 
 **Síntoma.** En una prueba real de generación, Sol propuso Fiestas Patrias en una fila que comenzaba en junio y Navidad/cierre en otra que terminaba a inicios de diciembre, aunque ambos títulos eran pertinentes.

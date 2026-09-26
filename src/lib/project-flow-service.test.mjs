@@ -31,18 +31,18 @@ test("las fechas útiles excluyen fines de semana, feriados y gestión", () => {
   assert.deepEqual(instructionalDates(calendar, "2026-05-15", "2026-05-25"), ["2026-05-15", "2026-05-25"]);
 });
 
-test("Luna prepara primero contexto y propósitos, después solo dependencias del propósito elegido", async () => {
+test("Sol prepara primero contexto y propósitos, después solo dependencias del propósito elegido", async () => {
   const preview = await generateProjectPreview({ context: { age: 5 }, createProvider: provider({
     context_summary: "Hay plantas cercanas.", context_points: ["Hay un patio."],
     additional_context_example: "Hay árboles junto al aula.", purpose_options: ["Observar plantas.", "Comparar cambios."]
-  }, (request) => { assert.equal(request.execution_plan.model, "gpt-6-luna");
+  }, (request) => { assert.equal(request.execution_plan.model, "gpt-6-sol");
     assert.equal(request.execution_plan.reasoning_effort, "medium");
     assert.equal(request.ai_context_bundle.confirmed_questions, undefined); }), loadSkill: async () => "Skill" });
   assert.equal(preview.output.purpose_options.length, 2);
   const next = await generateProjectDependents({ context: { age: 5 }, decisions,
     createProvider: provider(dependents, (request) => {
       assert.equal(request.ai_context_bundle.confirmed_decisions.purpose, decisions.purpose);
-      assert.equal(request.execution_plan.model, "gpt-6-luna");
+      assert.equal(request.execution_plan.model, "gpt-6-sol");
     }), loadSkill: async () => "Skill" });
   assert.equal(next.output.general_criteria[0].competency_id, "SCI_INQUIRY");
 });

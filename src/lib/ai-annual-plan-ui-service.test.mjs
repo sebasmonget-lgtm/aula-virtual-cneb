@@ -64,10 +64,10 @@ test("las notas privadas de la etapa inicial no entran al contexto del modelo", 
   assert.doesNotMatch(JSON.stringify(input), /NOTA PRIVADA DE LA DOCENTE/);
 });
 
-test("plan maestro y desarrollo usan dos providers mock, Sol y Terra, sin llamada real", async () => {
+test("plan maestro y desarrollo usan Astra high sin llamada real", async () => {
   const calls = [];
-  const masterPlan = { workflow: "annual_plan", provider: "openai", model: "gpt-6-sol", reasoning_effort: "high" };
-  const developmentPlan = { workflow: "annual_plan", provider: "openai", model: "gpt-6-luna", reasoning_effort: "low" };
+  const masterPlan = { workflow: "annual_plan", provider: "openai", model: "gpt-6-astra", reasoning_effort: "high" };
+  const developmentPlan = { workflow: "annual_plan", provider: "openai", model: "gpt-6-astra", reasoning_effort: "high" };
   const master = {
     title: "Plan ficticio", school_year: "2026", general_context_summary: "Grupo ficticio", planning_priorities: ["Observar"],
     competency_overview: ["Participar"], review_checkpoints: ["Cada bimestre"], flexibility_notes: "Ajustar según el grupo",
@@ -108,13 +108,13 @@ test("plan maestro y desarrollo usan dos providers mock, Sol y Terra, sin llamad
     },
   });
   assert.equal(calls.length, 2);
-  assert.deepEqual(calls.map((item) => item.executionPlan.model), ["gpt-6-sol", "gpt-6-luna"]);
+  assert.deepEqual(calls.map((item) => item.executionPlan.model), ["gpt-6-astra", "gpt-6-astra"]);
   assert.ok(calls.every((item) => item.options.timeoutMs === 180_000));
   assert.equal(result.proposal.title, "Plan ficticio");
   assert.equal(result.proposal.plan_format, "twelve_projects_flexible_weeks");
   assert.equal(result.proposal.proposed_experiences[2].duration_weeks, 3);
   assert.equal(result.proposal.proposed_experiences[11].final_product, "Muestra de Taller de arte");
-  assert.deepEqual(result.internalMetadata.stages.map((stage) => stage.model), ["gpt-6-sol", "gpt-6-luna"]);
+  assert.deepEqual(result.internalMetadata.stages.map((stage) => stage.model), ["gpt-6-astra", "gpt-6-astra"]);
   assert.equal(result.internalMetadata.usage.total_tokens, 350);
 });
 
@@ -151,7 +151,7 @@ test("una omisión curricular rehace el Plan Maestro una sola vez antes de redac
       calls.push(input);
       if (calls.length === 1) throw Object.assign(new Error("missing"), { reason: "annual_plan_coverage_missing", details: { missing_competency_ids: ["COMP-2"] } });
       return { output: input.annual_stage === "master" ? master : development,
-        metadata: { model: input.annual_stage === "master" ? "gpt-6-sol" : "gpt-6-luna", response_id: "mock", usage: null }, provenance: {} };
+        metadata: { model: "gpt-6-astra", response_id: "mock", usage: null }, provenance: {} };
     } });
   assert.deepEqual(calls.map((call) => call.annual_stage), ["master", "master", "development"]);
   assert.match(calls[1].teacher_request, /COMP-2/);

@@ -48,22 +48,25 @@ export async function suggestDiagnosticGroupReview(db, teacherId, draftId, {
 } = {}) {
   const sources = await loadSources(db, teacherId, draftId);
   try {
-    const plan = resolvePlan({ workflow: "diagnostic", task: "generation" });
+    const plan = resolvePlan({ workflow: "diagnostic_group_synthesis", task: "generation" });
     const provider = createProvider(plan, { timeoutMs: 120_000 });
-    const bundle = { workflow: "diagnostic", context: { age: sources.age, student_count: sources.student_count,
+    const bundle = { workflow: "diagnostic_group_synthesis", context: { age: sources.age, student_count: sources.student_count,
       confirmed_teacher_comments: sources.comments }, curriculum: { competency_cards: sources.competency_options ?? [] },
       constraints: { must: ["Basar cada afirmación en comentarios docentes confirmados.", "Expresar necesidades como oportunidades pedagógicas.",
         "Redactar una visión breve del grupo, sin priorizar competencias todavía.", "No convertir ausencia de registro en dificultad."],
         must_not: ["Inventar observaciones o niveles de logro.", "Nombrar o identificar a niños y familias.",
           "Concluir que todos los niños necesitan el mismo apoyo por una prioridad grupal."] },
       provenance: { source_type: "confirmed_diagnostic_student_reviews", source_count: sources.comments.length } };
-    const request = buildProviderRequest("diagnostic", bundle, plan, OUTPUT_SCHEMA, await loadSkill());
+    const request = buildProviderRequest("diagnostic_group_synthesis", bundle, plan, OUTPUT_SCHEMA, await loadSkill());
     const response = await provider.generate(request);
     const details = validateSuggestion(response.output, sources.known_names);
     const current = await loadSources(db, teacherId, draftId);
     if (!sameDiagnosticSources(sources.source_snapshot, current.source_snapshot)) throw new DiagnosticSuggestionError("stale_sources");
     await db.query(`update diagnostic_group_reviews set ai_snapshot=$1::jsonb,updated_at=now()
-      where id=$2 and status='draft'`, [JSON.stringify({ output: details, model: plan.model,
+      where id=$2 and status='draft'`, [JSON.stringify({ output: details,
+      provider: response.provider_metadata?.provider ?? plan.provider, model: plan.model,
+      reasoning_effort: plan.reasoning_effort, routing_policy_version: plan.routing_policy_version,
+      response_id: response.provider_metadata?.response_id ?? null,
       usage: response.provider_metadata?.usage ?? null, source_snapshot: sources.source_snapshot }), draftId]);
     return { details };
   } catch (error) { throw safeFailure(error); }

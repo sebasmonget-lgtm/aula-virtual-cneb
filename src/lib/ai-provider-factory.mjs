@@ -15,7 +15,7 @@ export function createAIProviderForPlan(executionPlan, options = {}) {
   if (!executionPlan || typeof executionPlan !== "object") {
     throw new AIProviderFactoryError("execution_plan_required");
   }
-  if (executionPlan.execution === "code") return null;
+  if (["code", "unavailable", "transcription"].includes(executionPlan.execution)) return null;
   if (executionPlan.provider === "openai") {
     if (!executionPlan.model) throw new AIProviderFactoryError("execution_plan_model_required");
     return new OpenAIProvider({

@@ -49,16 +49,16 @@ async function fixture({ oralStatus = "active", mathStatus = "active", oralInfor
   return { db, call, generate, save, captures, pending, context };
 }
 
-test("router Terra/low y schema strict family-report-v1; bundle usa solo competencias elegidas", async () => {
+test("router Sol/low y schema strict family-report-v1; bundle usa solo competencias elegidas", async () => {
   const plan = resolveAIExecutionPlan({ workflow: "family_report", task: "generation" });
-  assert.equal(plan.model, "gpt-6-luna"); assert.equal(plan.reasoning_effort, "low");
+  assert.equal(plan.model, "gpt-6-sol"); assert.equal(plan.reasoning_effort, "low");
   assert.equal(FAMILY_REPORT_OUTPUT_SCHEMA.id, "family-report-v1"); assert.equal(FAMILY_REPORT_OUTPUT_SCHEMA.additionalProperties, false);
   assert.equal(FAMILY_REPORT_OUTPUT_SCHEMA.properties.sections.items.additionalProperties, false);
   const conclusions = [{ competency_v4_id: "COM_ORAL", period_start: start, period_end: end, details: sourceDetails("COM_ORAL") }, { competency_v4_id: "MAT_CANTIDAD", period_start: start, period_end: end, details: sourceDetails("MAT_CANTIDAD") }];
   const input = buildFamilyReportInput({ age: 5, competencyIds: ["COM_ORAL"], conclusions, knownNames: ["Ana"] });
   let request;
   const generated = await generateAIWorkflowV4(input, { provider: { async generate(value) { request = value; return report(); } } });
-  assert.equal(generated.validation.schema, "family-report-v1"); assert.equal(request.execution_plan.model, "gpt-6-luna");
+  assert.equal(generated.validation.schema, "family-report-v1"); assert.equal(request.execution_plan.model, "gpt-6-sol");
   assert.deepEqual(request.ai_context_bundle.curriculum.competency_cards.map((card) => card.id), ["COM_ORAL"]);
   assert.deepEqual(request.ai_context_bundle.context.student.teacher_confirmed_findings.map((finding) => finding.competency_id), ["COM_ORAL"]);
   assert.deepEqual(request.ai_context_bundle.provenance.competency_ids, ["COM_ORAL"]);
@@ -146,7 +146,7 @@ test("proveedor recibe hallazgos confirmados anonimizados, nunca fuentes interna
   const pending = f.pending.get(generated.body.generation_id);
   assert.deepEqual(pending.source_conclusion_ids, [oralId]); assert.equal(pending.source_conclusion_snapshot[0].details_hash.length, 64);
   assert.doesNotMatch(JSON.stringify(generated.body), /audit-only|source_conclusion_snapshot|00000000/);
-  assert.equal(f.captures.find((item) => item.plan).plan.model, "gpt-6-luna");
+  assert.equal(f.captures.find((item) => item.plan).plan.model, "gpt-6-sol");
 });
 
 test("draft reabre tras reload; edición manual conserva auditoría; regeneración cambia metadata y mantiene ID", async () => {

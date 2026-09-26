@@ -1,4 +1,5 @@
-import { OpenAIProvider } from "./openai-provider.mjs";
+import { resolveAIExecutionPlan } from "./ai-execution-router-v4.mjs";
+import { createAIProviderForPlan } from "./ai-provider-factory.mjs";
 
 export function buildClassifierOptions(cards, age, applicableIds) {
   const allowed = new Set(applicableIds);
@@ -11,13 +12,16 @@ export function buildClassifierOptions(cards, age, applicableIds) {
 }
 
 /** A small, closed-set copy of the Jev experiment's decision boundary. */
-export function createOpenAICompetencyClassifier({ provider = new OpenAIProvider({ timeoutMs: 30_000 }) } = {}) {
+export function createOpenAICompetencyClassifier({ provider = null, resolvePlan = resolveAIExecutionPlan,
+  createProvider = createAIProviderForPlan } = {}) {
   return {
     async classify({ observation, context, age, options }) {
       const allowed = new Set(options.map((item) => item.id));
       if (!allowed.size || typeof observation !== "string" || !observation.trim()) return { candidate_ids: [] };
-      const { output } = await provider.generate({
-        execution_plan: { execution: "generation", provider: "openai", model: "gpt-6-luna", reasoning_effort: "low" },
+      const plan = resolvePlan({ workflow: "observation_competency_suggestion", task: "generation" });
+      const executor = provider ?? createProvider(plan, { timeoutMs: 30_000 });
+      const { output } = await executor.generate({
+        execution_plan: plan,
         skill_instructions: [
           "Clasifica una observación factual en cero o varias competencias CNEB de la lista permitida.",
           "Usa solo acciones observables del texto. No infieras capacidades, dificultades ni niveles de logro.",

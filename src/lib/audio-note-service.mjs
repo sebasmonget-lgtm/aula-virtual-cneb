@@ -1,6 +1,7 @@
 import OpenAI, { toFile } from "openai";
 import { parseBuffer } from "music-metadata";
 import { neutralizeAssessmentText } from "./assessment-v4-service.mjs";
+import { resolveAIExecutionPlan } from "./ai-execution-router-v4.mjs";
 
 export const AUDIO_MIME_TYPES = Object.freeze(new Set(["audio/webm", "audio/mpeg", "audio/mp4", "audio/wav", "audio/ogg"]));
 const fileExtension = { "audio/webm": "webm", "audio/mpeg": "mp3", "audio/mp4": "m4a", "audio/wav": "wav", "audio/ogg": "ogg" };
@@ -20,12 +21,14 @@ export async function transcribeAndPolishAudio({ bytes, mimeType, context = "", 
   await validateShortAudio(bytes, mimeType);
   if (!process.env.OPENAI_API_KEY && !client) throw new Error("La transcripción no está configurada.");
   const openai = client ?? new OpenAI({ apiKey: process.env.OPENAI_API_KEY, timeout: 45_000, maxRetries: 0 });
+  const transcriptionPlan = resolveAIExecutionPlan({ workflow: "audio_transcription", task: "generation" });
+  const rewritePlan = resolveAIExecutionPlan({ workflow: "observation_rewrite", task: "generation" });
   const file = await toFile(bytes, `observacion.${fileExtension[mimeType]}`, { type: mimeType });
-  const transcription = await openai.audio.transcriptions.create({ file, model: "gpt-4o-mini-transcribe", language: "es" });
+  const transcription = await openai.audio.transcriptions.create({ file, model: transcriptionPlan.model, language: "es" });
   const transcript = typeof transcription.text === "string" ? transcription.text.trim().slice(0, 4000) : "";
   if (!transcript) throw new Error("No se reconoció voz en el audio.");
   const response = await openai.responses.create({
-    model: "gpt-6-luna", reasoning: { effort: "low" },
+    model: rewritePlan.model, reasoning: { effort: rewritePlan.reasoning_effort },
     instructions: "Corrige puntuación, ortografía y frases truncadas en una transcripción de una observación docente de Educación Inicial. Conserva exactamente los hechos, la incertidumbre y quién dijo o hizo cada cosa. No inventes acciones, competencias, diagnósticos ni niveles. Si una palabra no se entiende, consérvala como [inaudible]. Devuelve solo JSON.",
     input: JSON.stringify({ transcript: neutralizeAssessmentText(transcript, names), context: neutralizeAssessmentText(String(context).slice(0, 300), names) }),
     text: { format: { type: "json_schema", name: "audio_observation_edit_v1", strict: true,
@@ -34,5 +37,7 @@ export async function transcribeAndPolishAudio({ bytes, mimeType, context = "", 
   });
   const improved = JSON.parse(response.output_text || "{}").improved_text;
   if (typeof improved !== "string" || !improved.trim()) throw new Error("No se pudo preparar el texto del audio.");
-  return { transcript, improved_text: improved.trim().slice(0, 4000), transcription_model: "gpt-4o-mini-transcribe", editing_model: "gpt-6-luna" };
+  return { transcript, improved_text: improved.trim().slice(0, 4000),
+    transcription_model: transcriptionPlan.model, editing_model: rewritePlan.model,
+    routing_policy_version: rewritePlan.routing_policy_version };
 }

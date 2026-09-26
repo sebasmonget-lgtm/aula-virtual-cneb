@@ -109,8 +109,10 @@ export async function generateAnnualPreplan({ context, curriculum, resolvePlan =
       duration_weeks: initialSlots[index]?.duration_weeks })) };
   const proposal = validateGeneratedPreplan(alignedOutput, curriculum.map((card) => card.id), context.year);
   buildEditableAnnualSchedule(context.calendar, proposal.proposed_experiences);
-  return { proposal, metadata: { model: plan.model, usage: response.provider_metadata?.usage ?? null,
-    response_id: response.provider_metadata?.response_id ?? null },
+  return { proposal, metadata: { provider: response.provider_metadata?.provider ?? plan.provider,
+    model: response.provider_metadata?.model ?? plan.model, reasoning_effort: plan.reasoning_effort,
+    routing_policy_version: plan.routing_policy_version, usage: response.provider_metadata?.usage ?? null,
+    response_id: response.provider_metadata?.response_id ?? null, fallback_used: false },
     source: { diagnostic_review_id: context.source_diagnostic_review_id, priority_review_id: context.source_priority_review_id } };
 }
 

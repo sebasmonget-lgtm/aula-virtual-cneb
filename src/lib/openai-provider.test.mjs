@@ -69,7 +69,7 @@ test("OpenAIProvider usa Responses API, el plan central y Structured Outputs str
   assert.equal(client.calls.length, 1);
   const [request, options] = client.calls[0];
   assert.equal(request.model, "gpt-6-luna");
-  assert.deepEqual(request.reasoning, { effort: "low" });
+  assert.deepEqual(request.reasoning, { effort: "medium" });
   assert.equal(request.text.format.type, "json_schema");
   assert.equal(request.text.format.strict, true);
   assert.equal(request.text.format.name, "activity_v1");

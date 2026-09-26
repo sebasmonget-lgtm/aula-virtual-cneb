@@ -1,23 +1,44 @@
-# Contratos de IA
+# Contratos y routing de IA
 
-El contrato inicial de este documento se conserva como referencia histórica. Los flujos activos llaman a modelos desde el servidor y validan salidas JSON antes de presentarlas a la docente.
+## Límites comunes
 
-## Selección curricular con Jev
+Toda generación productiva se ejecuta en servidor. `prepareAIRequestV4()` construye un `AIContextBundle` filtrado; `OpenAIProvider` recibe ese bundle, el plan central y un schema de Structured Outputs estricto. El proveedor no elige modelos ni reintenta (`maxRetries: 0`). Edad, competencias permitidas, calendario, fuentes, versiones y confirmación se vuelven a validar en código.
 
-El backend carga únicamente el runtime de la edad del aula. Jev recibe fichas semánticas completas y solo puede devolver IDs incluidos en `candidates`; una ficha debe estar `verified` y tener trazabilidad oficial antes de ser elegible. Si no hay candidatos completos o la confianza es baja, el resultado es selección manual, nunca una invención curricular.
+No se envían nombres, rutas privadas, fotos, grabaciones, archivos completos ni UUID innecesarios por defecto. Assessment, conclusión e informe familiar usan contexto anonimizado. La IA produce borradores editables; nunca confirma una valoración, convierte evidencia esperada en observación real ni sustituye la decisión docente.
 
-## Contrato para sugerir una actividad
+## Política GPT-6 v2.0.0
 
-Entrada mínima: resumen del aula, ficha de experiencia, dos o tres actividades recientes, IDs CNEB pertinentes, intereses nuevos y restricciones.
+`src/lib/ai-execution-router-v4.mjs` es la única fuente de modelos y razonamiento:
 
-Salida esperada: `title`, `purpose`, `competency_ids`, `criteria`, `expected_evidence`, `sequence`, `materials` y `teacher_questions`.
+| Tier | Modelo | Reasoning | Uso |
+| --- | --- | --- | --- |
+| `structured_light` | GPT-6 Luna | low | clasificación cerrada y mejora breve de texto |
+| `routine_generation` | GPT-6 Luna | medium | actividad |
+| `focused_writing` | GPT-6 Sol | low | comunicación clara a familias y fallback de actividad |
+| `judgment_generation` | GPT-6 Sol | medium | proyecto, unidad, criterio, valoración y conclusiones |
+| `deep_planning` | GPT-6 Astra | high | Plan Anual |
 
-Reglas: no reescribir texto oficial, no inventar observaciones de estudiantes, no repetir actividades recientes y marcar toda sugerencia como pendiente de confirmación.
+Plan Anual usa Astra/high; Proyecto y Unidad, Sol/medium; Actividad, Luna/medium; criterio/evidencia, valoración y conclusión, Sol/medium; informe familiar, Sol/low. La transcripción explícita de audio continúa en `gpt-4o-mini-transcribe`; la corrección factual posterior usa el tier `structured_light`.
 
-## Contrato para resumir diagnóstico
+Actividad tiene un solo fallback permitido: Luna/medium → Sol/low, con el mismo bundle, schema y Skill. Solo se activa por salida estructurada inválida, referencia curricular fuera del bundle u otra validación local de contenido. Nunca se activa por clave ausente, autenticación, rate limit, timeout o conectividad. La auditoría conserva ambos intentos en servidor y no expone modelos en la interfaz.
 
-Entrada: observaciones confirmadas por la docente. Salida: fortalezas, necesidades, intereses y prioridades con referencias a los IDs de observación utilizados. Si no hay evidencia suficiente, devolver `insufficient_data: true`.
+## Diagnóstico y tareas deterministas
 
-### Flujo grupal vigente
+El diagnóstico principal sigue en código y requiere revisión docente. Las ayudas opcionales tienen workflows separados: `diagnostic_individual_assist`, `diagnostic_group_synthesis` y `diagnostic_priority_assist`, todos con Sol/medium, contratos estrictos y fuentes anonimizadas. `evidence_capture` y `today_mode` permanecen en código.
 
-La sugerencia opcional de «Revisar aula» usa `skills/crear-evaluacion-diagnostica/` como instrucciones del modelo. Recibe solo comentarios individuales confirmados, sin nombres conocidos, y devuelve `strengths`, `needs` y `planning_priorities` mediante un esquema JSON estricto. La profesora revisa y confirma el texto. Los IDs de observación y las entrevistas completas no salen al modelo ni se copian al informe Word; la estructura histórica descrita arriba no corresponde a este flujo.
+Las tareas genéricas `decision` y el proveedor TypeSafe/Jev no tienen ruta productiva. `workshop` y `material_generation` se declaran no disponibles hasta contar con contrato, provider y benchmark. Sus modelos previstos son Luna/medium para Taller y Luna/low para material, con posible fallback Sol/low para material; esta previsión no habilita llamadas.
+
+## Prompts y Skills
+
+- Plan Anual: `skills/crear-plan-anual/`; recibe visión grupal y prioridades confirmadas, contexto anual, calendario y CNEB filtrado por edad. No replantea decisiones ya confirmadas.
+- Proyecto/Unidad: `skills/crear-proyecto-unidad/`; recibe la propuesta anual confirmada, decisiones docentes, fechas lectivas y competencias permitidas.
+- Actividad: `skills/crear-actividad/`; recibe Project Master confirmado, fila elegida, vecinas, posición y contexto actualizado. Solo desarrolla una actividad.
+- Diagnóstico: `skills/crear-evaluacion-diagnostica/`; las asistencias reciben únicamente las fuentes seguras necesarias para su etapa.
+
+Los schemas y validadores locales definen el contrato final. Las instrucciones extensas permanecen en las Skills y sus `references/`; los prompts de servicio solo describen la acción concreta.
+
+## Evaluación de modelos
+
+La suite `evals/ai-routing-v4/` está separada de los unit tests y requiere `AYNI_RUN_MODEL_EVALS=1` más una clave configurada. Incluye fixtures ficticios de los ocho workflows productivos, métricas automáticas, tokens, latencia, costo opcional mediante una tabla externa y una plantilla de revisión pedagógica ciega.
+
+El inventario completo de rutas activas, previstas y deterministas está en `docs/AI_WORKFLOW_INVENTORY.md`.

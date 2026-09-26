@@ -1,5 +1,5 @@
 import { AIProvider } from "./ai-provider.mjs";
-import { resolveAIExecutionPlan } from "./ai-execution-router-v4.mjs";
+import { resolveAIFallbackPlan, resolveAIExecutionPlan } from "./ai-execution-router-v4.mjs";
 import { prepareAIRequestV4 } from "./prepare-ai-request-v4.mjs";
 import { validateAssessmentProposal } from "./assessment-v4-service.mjs";
 import { CONCLUSION_FIELDS, validateDescriptiveConclusion } from "./descriptive-conclusion-v4-service.mjs";
@@ -195,12 +195,69 @@ function assertFamilyReportOutput(output, bundle, input) {
   catch (error) { throw new InvalidAIGenerationError("family_report_schema_mismatch", { message: error.message }); }
 }
 
+function validateWorkflowOutput(input, output, bundle, confirmedCompetencyId) {
+  return input.workflow === "annual_plan" ? assertAnnualPlanStageOutput(output, bundle, input.annual_stage)
+    : ["project", "unit"].includes(input.workflow) ? assertExperienceOutput(output, bundle, input.workflow)
+    : input.workflow === "criterion_and_evidence" ? assertCriterionEvidenceOutput(output, bundle, confirmedCompetencyId)
+    : input.workflow === "assessment" ? assertAssessmentOutput(output, bundle, confirmedCompetencyId, input.evidence_history?.length ?? 0)
+    : input.workflow === "descriptive_conclusion" ? assertDescriptiveConclusionOutput(output, bundle, confirmedCompetencyId,
+      input.analysis_status ?? input.student_context?.teacher_confirmed_findings?.information_status)
+    : input.workflow === "family_report" ? assertFamilyReportOutput(output, bundle, input)
+    : assertActivityOutput(output, bundle, confirmedCompetencyId);
+}
+
+function fallbackReason(error) {
+  const reason = error?.reason;
+  if (reason === "structured_output_invalid") return "structured_output_invalid";
+  if (!(error instanceof InvalidAIGenerationError)) return null;
+  if (reason === "provider_response_not_parseable" || reason === "provider_response_invalid_format") return "structured_output_invalid";
+  if (/outside_bundle|competency_missing|competency_must_be/.test(reason)) return "curriculum_reference_invalid";
+  if (/schema|invalid|required_field|route/.test(reason)) return "content_validation_failed";
+  return null;
+}
+
+function normalizedUsage(value = null) {
+  if (!value) return null;
+  return { input_tokens: value.input_tokens ?? null, cached_input_tokens: value.cached_input_tokens ?? null,
+    output_tokens: value.output_tokens ?? null, total_tokens: value.total_tokens ?? null };
+}
+
+function combinedUsage(...values) {
+  const present = values.filter(Boolean);
+  if (!present.length) return null;
+  const sum = (field) => present.every((item) => Number.isFinite(item?.[field]))
+    ? present.reduce((total, item) => total + item[field], 0) : null;
+  return { input_tokens: sum("input_tokens"), cached_input_tokens: sum("cached_input_tokens"),
+    output_tokens: sum("output_tokens"), total_tokens: sum("total_tokens") };
+}
+
+function attemptAudit(role, plan, provider, providerMetadata, outcome) {
+  return { role, provider: providerMetadata?.provider ?? provider?.id ?? plan.provider ?? null,
+    model: providerMetadata?.model ?? provider?.model ?? plan.model ?? null,
+    reasoning_effort: plan.reasoning_effort ?? null, response_id: providerMetadata?.response_id ?? null,
+    usage: normalizedUsage(providerMetadata?.usage), outcome };
+}
+
+async function runGenerationAttempt({ input, prepared, plan, provider, outputSchema, skillInstructions, confirmedCompetencyId }) {
+  if (!provider || typeof provider.generate !== "function") throw new InvalidAIGenerationError("provider_not_configured");
+  const request = buildProviderRequest(input.workflow, prepared.aiContextBundle, plan, outputSchema, skillInstructions);
+  let providerResponse;
+  try {
+    providerResponse = unwrapProviderResponse(await provider.generate(request));
+    return { output: validateWorkflowOutput(input, providerResponse.output, prepared.aiContextBundle, confirmedCompetencyId),
+      providerMetadata: providerResponse.providerMetadata, request };
+  } catch (error) {
+    if (providerResponse?.providerMetadata && error && typeof error === "object") error.providerMetadata = providerResponse.providerMetadata;
+    throw error;
+  }
+}
+
 /**
  * Generates one validated activity through an injected provider.
  * @param {object} input - activity workflow input accepted by prepareAIRequestV4.
- * @param {{ provider: AIProvider, knowledgeBase?: object, executionPlan?: object, routingPolicy?: object, skillInstructions?: string }} options
+ * @param {{ provider?: AIProvider, providerFactory?: Function, knowledgeBase?: object, executionPlan?: object, routingPolicy?: object, skillInstructions?: string }} options
  */
-export async function generateAIWorkflowV4(input, { provider, knowledgeBase, executionPlan, routingPolicy, skillInstructions } = {}) {
+export async function generateAIWorkflowV4(input, { provider, providerFactory, knowledgeBase, executionPlan, routingPolicy, skillInstructions } = {}) {
   const plan = executionPlan ?? resolveAIExecutionPlan({ workflow: input?.workflow, task: "generation", context: input?.context ?? null }, routingPolicy);
   if (plan.execution === "code") {
     throw new InvalidAIGenerationError("workflow_not_generation_enabled", { workflow: input?.workflow, execution_plan: plan });
@@ -208,29 +265,49 @@ export async function generateAIWorkflowV4(input, { provider, knowledgeBase, exe
   if (!["activity", "annual_plan", "project", "unit", "criterion_and_evidence", "assessment", "descriptive_conclusion", "family_report"].includes(input?.workflow) || plan.execution !== "generation") {
     throw new InvalidAIGenerationError("unsupported_workflow", { workflow: input?.workflow, execution_plan: plan });
   }
-  if (!provider || typeof provider.generate !== "function") {
-    throw new InvalidAIGenerationError("provider_not_configured");
-  }
   const skillAllowed = (input.workflow === "annual_plan" && input.annual_stage === "master") || ["project", "unit", "activity"].includes(input.workflow);
   if (skillInstructions !== undefined && (!skillAllowed || typeof skillInstructions !== "string" || !skillInstructions.trim())) {
     throw new InvalidAIGenerationError("skill_scope_invalid");
   }
   const prepared = await prepareAIRequestV4(input, knowledgeBase);
   const outputSchema = input.workflow === "annual_plan" ? (input.annual_stage === "development" ? ANNUAL_PLAN_DEVELOPMENT_SCHEMA : ANNUAL_PLAN_OUTPUT_SCHEMA) : input.workflow === "project" ? PROJECT_OUTPUT_SCHEMA : input.workflow === "unit" ? UNIT_OUTPUT_SCHEMA : input.workflow === "criterion_and_evidence" ? CRITERION_EVIDENCE_OUTPUT_SCHEMA : input.workflow === "assessment" ? ASSESSMENT_OUTPUT_SCHEMA : input.workflow === "descriptive_conclusion" ? DESCRIPTIVE_CONCLUSION_OUTPUT_SCHEMA : input.workflow === "family_report" ? FAMILY_REPORT_OUTPUT_SCHEMA : ACTIVITY_OUTPUT_SCHEMA;
-  const providerRequest = buildProviderRequest(input.workflow, prepared.aiContextBundle, plan, outputSchema, skillInstructions);
   const confirmedCompetencyId = input.competency_ids?.length === 1 ? input.competency_ids[0] : null;
-  const providerResponse = unwrapProviderResponse(await provider.generate(providerRequest));
-  const output = input.workflow === "annual_plan" ? assertAnnualPlanStageOutput(providerResponse.output, prepared.aiContextBundle, input.annual_stage) : ["project", "unit"].includes(input.workflow) ? assertExperienceOutput(providerResponse.output, prepared.aiContextBundle, input.workflow) : input.workflow === "criterion_and_evidence" ? assertCriterionEvidenceOutput(providerResponse.output,prepared.aiContextBundle,confirmedCompetencyId) : input.workflow === "assessment" ? assertAssessmentOutput(providerResponse.output,prepared.aiContextBundle,confirmedCompetencyId,input.evidence_history?.length??0) : input.workflow === "descriptive_conclusion" ? assertDescriptiveConclusionOutput(providerResponse.output, prepared.aiContextBundle, confirmedCompetencyId, input.analysis_status ?? input.student_context?.teacher_confirmed_findings?.information_status) : input.workflow === "family_report" ? assertFamilyReportOutput(providerResponse.output, prepared.aiContextBundle, input) : assertActivityOutput(providerResponse.output, prepared.aiContextBundle, confirmedCompetencyId);
+  const primaryProvider = provider ?? providerFactory?.(plan);
+  let finalPlan = plan;
+  let attempt;
+  let attempts = [];
+  let safeFallbackReason = null;
+  try {
+    attempt = await runGenerationAttempt({ input, prepared, plan, provider: primaryProvider, outputSchema, skillInstructions, confirmedCompetencyId });
+    attempts.push(attemptAudit("primary", plan, primaryProvider, attempt.providerMetadata, "valid"));
+  } catch (error) {
+    const category = fallbackReason(error);
+    const fallbackPlan = category && providerFactory ? resolveAIFallbackPlan(plan, routingPolicy) : null;
+    if (!fallbackPlan) throw error;
+    attempts.push(attemptAudit("primary", plan, primaryProvider, error.providerMetadata, "quality_validation_failed"));
+    const fallbackProvider = providerFactory(fallbackPlan);
+    attempt = await runGenerationAttempt({ input, prepared, plan: fallbackPlan, provider: fallbackProvider,
+      outputSchema, skillInstructions, confirmedCompetencyId });
+    attempts.push(attemptAudit("fallback", fallbackPlan, fallbackProvider, attempt.providerMetadata, "valid"));
+    finalPlan = fallbackPlan;
+    safeFallbackReason = category;
+  }
+  const finalProvider = attempts.at(-1);
   return {
-    output,
+    output: attempt.output,
     metadata: {
       ...prepared.metadata,
-      provider: providerResponse.providerMetadata?.provider ?? provider.id ?? "anonymous",
-      model: providerResponse.providerMetadata?.model ?? provider.model ?? null,
+      provider: finalProvider.provider ?? "anonymous",
+      model: finalProvider.model,
+      reasoning_effort: finalPlan.reasoning_effort,
       output_schema: outputSchema.id,
-      execution_plan: plan,
-      response_id: providerResponse.providerMetadata?.response_id ?? null,
-      usage: providerResponse.providerMetadata?.usage ?? null,
+      execution_plan: finalPlan,
+      routing_policy_version: plan.routing_policy_version ?? null,
+      response_id: finalProvider.response_id,
+      usage: combinedUsage(...attempts.map((item) => item.usage)),
+      attempts,
+      ...(safeFallbackReason ? { fallback_used: true, primary_model: plan.model,
+        fallback_model: finalPlan.model, fallback_reason: safeFallbackReason } : { fallback_used: false }),
     },
     provenance: prepared.aiContextBundle.provenance,
     validation: { status: "valid", schema: outputSchema.id },

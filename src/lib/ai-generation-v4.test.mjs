@@ -147,10 +147,55 @@ test("un cambio de política aplica a activity sin modificar el generador", asyn
     ...((await import("./ai-execution-router-v4.mjs")).AI_ROUTING_POLICY),
     workflows: {
       ...(await import("./ai-execution-router-v4.mjs")).AI_ROUTING_POLICY.workflows,
-      activity: { tier: "light_generation", allow_escalation: true },
+      activity: { tier: "structured_light", fallback_tier: "focused_writing" },
     },
   };
   const provider = new MockAIProvider({ ...activityFields, competency_status: "confirmed", competency_id: "COM_ORAL" });
   const result = await generateAIWorkflowV4(confirmedInput, { provider, knowledgeBase, routingPolicy: policy });
   assert.equal(result.metadata.execution_plan.model, "gpt-6-luna");
+  assert.equal(result.metadata.execution_plan.reasoning_effort, "low");
+});
+
+test("activity escala una sola vez de Luna medium a Sol low por calidad", async () => {
+  const knowledgeBase = await loadKnowledgeBaseV4();
+  const calls = [];
+  const providerFactory = (plan) => ({ id: "openai", model: plan.model, async generate(request) {
+    calls.push(request);
+    if (calls.length === 1) return { title: "incompleta" };
+    return { ...activityFields, competency_status: "confirmed", competency_id: "COM_ORAL" };
+  } });
+  const result = await generateAIWorkflowV4(confirmedInput, { providerFactory, knowledgeBase });
+  assert.equal(calls.length, 2);
+  assert.deepEqual(calls.map((request) => [request.execution_plan.model, request.execution_plan.reasoning_effort]),
+    [["gpt-6-luna", "medium"], ["gpt-6-sol", "low"]]);
+  assert.deepEqual(calls[1].ai_context_bundle, calls[0].ai_context_bundle);
+  assert.deepEqual(calls[1].output_schema, calls[0].output_schema);
+  assert.equal(result.metadata.fallback_used, true);
+  assert.equal(result.metadata.primary_model, "gpt-6-luna");
+  assert.equal(result.metadata.fallback_model, "gpt-6-sol");
+  assert.equal(result.metadata.fallback_reason, "content_validation_failed");
+  assert.equal(result.metadata.attempts.length, 2);
+});
+
+test("activity no intenta un tercer modelo si el fallback también falla", async () => {
+  const knowledgeBase = await loadKnowledgeBaseV4();
+  let calls = 0;
+  const providerFactory = () => ({ id: "openai", async generate() { calls += 1; return { title: "incompleta" }; } });
+  await assert.rejects(() => generateAIWorkflowV4(confirmedInput, { providerFactory, knowledgeBase }),
+    (error) => error instanceof InvalidAIGenerationError && error.reason === "activity_schema_mismatch");
+  assert.equal(calls, 2);
+});
+
+test("activity no escala por clave, autenticación, rate limit, timeout ni conectividad", async () => {
+  const knowledgeBase = await loadKnowledgeBaseV4();
+  for (const reason of ["api_key_missing", "authentication_failed", "rate_limited", "timeout", "provider_error"]) {
+    let calls = 0;
+    const providerFactory = () => ({ id: "openai", async generate() {
+      calls += 1;
+      throw Object.assign(new Error(reason), { reason });
+    } });
+    await assert.rejects(() => generateAIWorkflowV4(confirmedInput, { providerFactory, knowledgeBase }),
+      (error) => error.reason === reason);
+    assert.equal(calls, 1, `${reason} no debe activar fallback`);
+  }
 });

@@ -1,51 +1,59 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { AI_ROUTING_POLICY, AIExecutionRoutingError, resolveAIExecutionPlan } from "./ai-execution-router-v4.mjs";
+import { AI_ROUTING_POLICY, AIExecutionRoutingError, resolveAIFallbackPlan, resolveAIExecutionPlan } from "./ai-execution-router-v4.mjs";
 
-test("aplica la política inicial de routing por workflow", () => {
+test("aplica los tiers semánticos GPT-6 a los workflows productivos", () => {
   const cases = [
-    ["activity", "standard_generation", "openai", "gpt-6-luna", "low"],
-    ["project", "deep_generation", "openai", "gpt-6-sol", "medium"],
-    ["annual_plan", "deep_generation", "openai", "gpt-6-sol", "high"],
-    ["material_generation", "light_generation", "openai", "gpt-6-luna", "none"],
+    ["annual_plan", "deep_planning", "gpt-6-astra", "high"],
+    ["project", "judgment_generation", "gpt-6-sol", "medium"],
+    ["unit", "judgment_generation", "gpt-6-sol", "medium"],
+    ["activity", "routine_generation", "gpt-6-luna", "medium"],
+    ["criterion_and_evidence", "judgment_generation", "gpt-6-sol", "medium"],
+    ["assessment", "judgment_generation", "gpt-6-sol", "medium"],
+    ["descriptive_conclusion", "judgment_generation", "gpt-6-sol", "medium"],
+    ["family_report", "focused_writing", "gpt-6-sol", "low"],
   ];
-  for (const [workflow, tier, provider, model, reasoning_effort] of cases) {
-    assert.deepEqual(resolveAIExecutionPlan({ workflow }), {
-      execution: "generation", tier, provider, model, reasoning_effort, capability: null,
-      reason: `Política v${AI_ROUTING_POLICY.version} para ${workflow}.`,
-      allow_escalation: workflow === "material_generation" || workflow === "activity",
-    });
+  for (const [workflow, tier, model, reasoning] of cases) {
+    const plan = resolveAIExecutionPlan({ workflow, task: "generation" });
+    assert.deepEqual([plan.tier, plan.provider, plan.model, plan.reasoning_effort], [tier, "openai", model, reasoning]);
+    assert.equal(plan.routing_policy_version, AI_ROUTING_POLICY.version);
   }
 });
 
-test("el desarrollo del plan anual usa Luna y conserva Sol para el plan maestro", () => {
-  const master = resolveAIExecutionPlan({ workflow: "annual_plan", task: "generation" });
-  const detail = resolveAIExecutionPlan({ workflow: "annual_plan", task: "document_development" });
-  assert.equal(master.model, "gpt-6-sol");
-  assert.equal(master.reasoning_effort, "high");
-  assert.equal(detail.model, "gpt-6-luna");
-  assert.equal(detail.reasoning_effort, "low");
-  assert.equal(detail.provider, "openai");
+test("activity tiene un único fallback explícito de Luna medium a Sol low", () => {
+  const primary = resolveAIExecutionPlan({ workflow: "activity", task: "generation" });
+  assert.deepEqual(primary.fallback, { tier: "focused_writing", provider: "openai", model: "gpt-6-sol",
+    reasoning_effort: "low", trigger: "quality_or_validation_failure", max_attempts: 1 });
+  const fallback = resolveAIFallbackPlan(primary);
+  assert.deepEqual([fallback.tier, fallback.model, fallback.reasoning_effort, fallback.fallback],
+    ["focused_writing", "gpt-6-sol", "low", null]);
 });
 
-test("mantiene evidence_capture y today_mode en código", () => {
-  for (const workflow of ["evidence_capture", "today_mode"]) {
+test("diagnóstico principal, evidencia y modo Hoy se resuelven en código", () => {
+  for (const workflow of ["diagnostic", "evidence_capture", "today_mode"]) {
     const plan = resolveAIExecutionPlan({ workflow });
     assert.equal(plan.execution, "code");
     assert.equal(plan.provider, null);
-    assert.equal(plan.reasoning_effort, null);
-    assert.equal(plan.allow_escalation, false);
+    assert.equal(plan.fallback, null);
   }
-  const explanation = resolveAIExecutionPlan({ workflow: "today_mode", task: "explanation" });
-  assert.deepEqual([explanation.execution, explanation.tier, explanation.model, explanation.reasoning_effort], ["generation", "light_generation", "gpt-6-luna", "none"]);
 });
 
-test("usa TypeSafe solo para tareas de decisión estructurada", () => {
-  const plan = resolveAIExecutionPlan({ workflow: "activity", task: "option_ranking" });
-  assert.deepEqual(plan, {
-    execution: "decision", tier: "decision", provider: "typesafe", model: null, reasoning_effort: null, capability: "decision",
-    reason: "Tarea estructurada 'option_ranking' para activity.", allow_escalation: false,
-  });
+test("las ayudas diagnósticas opcionales tienen workflows explícitos", () => {
+  for (const workflow of ["diagnostic_individual_assist", "diagnostic_group_synthesis", "diagnostic_priority_assist"]) {
+    const plan = resolveAIExecutionPlan({ workflow, task: "generation" });
+    assert.deepEqual([plan.model, plan.reasoning_effort], ["gpt-6-sol", "medium"]);
+  }
+});
+
+test("decisiones, workshop y materiales quedan explícitamente no disponibles", () => {
+  const decision = resolveAIExecutionPlan({ workflow: "activity", task: "option_ranking" });
+  assert.deepEqual([decision.execution, decision.provider, decision.unavailable_reason],
+    ["unavailable", null, "decision_provider_not_implemented"]);
+  const workshop = resolveAIExecutionPlan({ workflow: "workshop" });
+  assert.deepEqual([workshop.execution, workshop.planned_tier], ["unavailable", "routine_generation"]);
+  const material = resolveAIExecutionPlan({ workflow: "material_generation" });
+  assert.deepEqual([material.execution, material.planned_tier, material.planned_fallback_tier],
+    ["unavailable", "structured_light", "focused_writing"]);
 });
 
 test("el routing es determinista y rechaza workflows desconocidos", () => {

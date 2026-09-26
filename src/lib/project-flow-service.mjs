@@ -196,8 +196,10 @@ async function call({ workflow, task, context, outputSchema, resolvePlan, create
   const plan = resolvePlan({ workflow, task });
   const response = await createProvider(plan, { timeoutMs: 180_000 })
     .generate(buildProviderRequest(workflow, context, plan, outputSchema, await loadSkill()));
-  return { output: response.output, metadata: { model: plan.model, usage: response.provider_metadata?.usage ?? null,
-    response_id: response.provider_metadata?.response_id ?? null } };
+  return { output: response.output, metadata: { provider: response.provider_metadata?.provider ?? plan.provider,
+    model: response.provider_metadata?.model ?? plan.model, reasoning_effort: plan.reasoning_effort,
+    routing_policy_version: plan.routing_policy_version, usage: response.provider_metadata?.usage ?? null,
+    response_id: response.provider_metadata?.response_id ?? null, fallback_used: false } };
 }
 
 export async function generateProjectPreview({ context, workflow = "project", resolvePlan = resolveAIExecutionPlan,

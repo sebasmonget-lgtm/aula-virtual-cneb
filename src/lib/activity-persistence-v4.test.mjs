@@ -33,7 +33,7 @@ test("D-H: Project y Unit llegan como contexto mínimo, con continuidad y sin da
   assert.equal(bundle.context.workflow_inputs.learning_experience_context.prior_activities.length, 1);
 });
 
-test("I: activity conserva el routing Terra/low y el servidor preserva límites de parent/persistencia", async () => {
+test("I: activity conserva límites de parent y persistencia", async () => {
   const server = await readFile(new URL("../../scripts/local-db-server.mjs", import.meta.url), "utf8");
   assert.match(server, /activeLearningExperience\(body\.experienceId, context\.id\)/);
   assert.match(server, /activityAllowedCompetencies/);

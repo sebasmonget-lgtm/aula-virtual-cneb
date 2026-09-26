@@ -81,10 +81,10 @@ export async function suggestDiagnosticPriorities(db, teacherId, draftId, {
   if (!draft) fail("not_found", "Abre primero las prioridades de este grupo.");
   if (draft.source_snapshot?.fingerprint !== source.fingerprint) fail("stale", "La visión del grupo cambió. Vuelve a preparar las prioridades.");
   const cards = await applicableDiagnosticCompetencies(classroom);
-  const plan = resolvePlan({ workflow: "diagnostic", task: "generation" });
+  const plan = resolvePlan({ workflow: "diagnostic_priority_assist", task: "generation" });
   const provider = createProvider(plan, { timeoutMs: 120_000 });
-  const request = buildProviderRequest("diagnostic", {
-    workflow: "diagnostic", stage: "annual_priorities", context: { age: classroom.age_years,
+  const request = buildProviderRequest("diagnostic_priority_assist", {
+    workflow: "diagnostic_priority_assist", stage: "annual_priorities", context: { age: classroom.age_years,
       confirmed_group: { strengths: group.details.strengths, needs: group.details.needs,
         planning_notes: group.details.planning_priorities } },
     curriculum: { competency_cards: cards },
@@ -98,7 +98,10 @@ export async function suggestDiagnosticPriorities(db, teacherId, draftId, {
   const current = await scope(db, teacherId);
   if (current.source.fingerprint !== source.fingerprint) fail("stale", "La visión del grupo cambió durante el análisis.");
   await db.query(`update diagnostic_priority_reviews set ai_snapshot=$1::jsonb,updated_at=now()
-    where id=$2 and classroom_id=$3 and status='draft'`, [JSON.stringify({ output: details, model: plan.model,
+    where id=$2 and classroom_id=$3 and status='draft'`, [JSON.stringify({ output: details,
+      provider: response.provider_metadata?.provider ?? plan.provider, model: plan.model,
+      reasoning_effort: plan.reasoning_effort, routing_policy_version: plan.routing_policy_version,
+      response_id: response.provider_metadata?.response_id ?? null,
       usage: response.provider_metadata?.usage ?? null, source }), draftId, classroom.id]);
   return { details };
 }

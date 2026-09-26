@@ -5,7 +5,7 @@ import { buildTeacherActivityGenerationInput, generateTeacherActivity, ActivityG
 const classroom = { id: "classroom-5", section: "Sala Amarilla", age: 5 };
 const request = { activityPurpose: "Explorar cambios de sombra.", context: "El grupo juega con linternas.", materials: ["linternas", "papel"] };
 const proposal = { title: "Sombras", purpose: "Explorar", meaningful_situation: "Situación", teacher_preparation: "Preparar", child_actions: "Explorar", mediation: "Preguntar", evidence_opportunities: "Observar", closure_or_continuity: "Cerrar", competency_status: "unconfirmed", competency_id: null };
-const plan = { execution: "generation", provider: "openai", model: "gpt-6-luna", reasoning_effort: "low" };
+const plan = { execution: "generation", provider: "openai", model: "gpt-6-luna", reasoning_effort: "medium" };
 
 test("A y H: prepara activity sin competencia con aula y materiales precargados", () => {
   const input = buildTeacherActivityGenerationInput({ request, classroom });

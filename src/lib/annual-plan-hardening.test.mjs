@@ -20,8 +20,15 @@ test("provider request conserva el workflow y el schema de cada salida", () => {
 });
 
 test("metadata anual preserva solo auditoría permitida", () => {
-  const saved = safeAnnualGenerationMetadata({ workflow: "annual_plan", model: "gpt-6-sol", reasoning_effort: "medium", response_id: "resp_1", usage: { input_tokens: 2, cached_input_tokens: 1, output_tokens: 3, total_tokens: 5, secret: "no" }, provenance: { knowledge_base_version: "4.0.0", knowledge_unit_ids: ["KU-1"] }, prompt: "never" });
-  assert.deepEqual(saved, { workflow: "annual_plan", model: "gpt-6-sol", reasoning_effort: "medium", response_id: "resp_1", usage: { input_tokens: 2, cached_input_tokens: 1, output_tokens: 3, total_tokens: 5 }, provenance: { knowledge_base_version: "4.0.0", knowledge_unit_ids: ["KU-1"] }, knowledge_base_version: "4.0.0" });
+  const saved = safeAnnualGenerationMetadata({ workflow: "annual_plan", provider: "openai", model: "gpt-6-astra",
+    reasoning_effort: "high", routing_policy_version: "2.0.0", response_id: "resp_1", fallback_used: false,
+    usage: { input_tokens: 2, cached_input_tokens: 1, output_tokens: 3, total_tokens: 5, secret: "no" },
+    provenance: { knowledge_base_version: "4.0.0", knowledge_unit_ids: ["KU-1"] }, prompt: "never" });
+  assert.deepEqual(saved, { workflow: "annual_plan", provider: "openai", model: "gpt-6-astra",
+    reasoning_effort: "high", routing_policy_version: "2.0.0", response_id: "resp_1",
+    usage: { input_tokens: 2, cached_input_tokens: 1, output_tokens: 3, total_tokens: 5 }, fallback_used: false,
+    primary_model: null, fallback_model: null, fallback_reason: null,
+    provenance: { knowledge_base_version: "4.0.0", knowledge_unit_ids: ["KU-1"] }, knowledge_base_version: "4.0.0" });
   assert.equal(nextAnnualPlanVersion(0), 1);
   assert.equal(nextAnnualPlanVersion(1), 2);
 });
@@ -171,7 +178,7 @@ test("servidor comprueba el año antes de llamar al modelo y no acepta otro plan
   const save = source.slice(source.indexOf('url.pathname === "/api/annual-plans"'), source.indexOf('url.pathname.startsWith("/api/annual-plans/")'));
   assert.match(save, /select id,classroom_id,status,proposal from annual_plans where school_year_id=\$1 and status in \('active','draft'\)/);
   assert.match(save, /active\.id === pending\?\.replacement_plan_id/);
-  const current = source.slice(source.indexOf('url.pathname === "/api/annual-plans/current"'), source.indexOf('url.pathname === "/api/learning-experiences"'));
+  const current = source.slice(source.indexOf('url.pathname === "/api/annual-plans/current"'), source.indexOf("async function projectFlowSource"));
   assert.match(current, /ap\.school_year_id=\$1 and sy\.owner_id=\$2/);
   assert.doesNotMatch(current, /generation_metadata|response_id|usage/);
 });

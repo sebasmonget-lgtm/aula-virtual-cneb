@@ -120,6 +120,9 @@ export async function developConfirmedAnnualPlan(db, teacherId, planId, context,
   const content = projectFormalAnnualContent(preplan, formal, safeGroup, safePriorities);
   await db.query(`insert into annual_plan_formal_content(annual_plan_id,content,ai_metadata,source_revision)
     values($1,$2::jsonb,$3::jsonb,$4) on conflict(annual_plan_id) do nothing`,
-  [planId, JSON.stringify(content), JSON.stringify({ model: routing.model, usage: response.provider_metadata?.usage ?? null }), plan.revision]);
+  [planId, JSON.stringify(content), JSON.stringify({ provider: response.provider_metadata?.provider ?? routing.provider,
+    model: response.provider_metadata?.model ?? routing.model, reasoning_effort: routing.reasoning_effort,
+    routing_policy_version: routing.routing_policy_version, response_id: response.provider_metadata?.response_id ?? null,
+    usage: response.provider_metadata?.usage ?? null, fallback_used: false }), plan.revision]);
   return { content, already_ready: false };
 }

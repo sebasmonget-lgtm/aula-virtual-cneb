@@ -35,6 +35,11 @@ export async function generateTeacherLearningExperience({ classroom, request, re
     const executionPlan = resolvePlan({ workflow: input.workflow, task: "generation" });
     const generated = await generate(input, { provider: createProvider(executionPlan, { timeoutMs: LEARNING_EXPERIENCE_TIMEOUT_MS }), executionPlan,
       skillInstructions: await loadSkill() });
-    return { proposal: generated.output, internalMetadata: { workflow: generated.metadata.workflow, model: generated.metadata.model, reasoning_effort: executionPlan.reasoning_effort, response_id: generated.metadata.response_id, usage: generated.metadata.usage, provenance: generated.provenance, ...(input.context_snapshot ? { context_snapshot: input.context_snapshot } : {}) } };
+    return { proposal: generated.output, internalMetadata: { workflow: generated.metadata.workflow,
+      provider: generated.metadata.provider, model: generated.metadata.model,
+      reasoning_effort: generated.metadata.reasoning_effort, response_id: generated.metadata.response_id,
+      usage: generated.metadata.usage, routing_policy_version: generated.metadata.routing_policy_version,
+      fallback_used: generated.metadata.fallback_used === true, provenance: generated.provenance,
+      ...(input.context_snapshot ? { context_snapshot: input.context_snapshot } : {}) } };
   } catch (error) { const wrapped = new ActivityGenerationUIError(error?.reason ?? "unknown", teacherMessageForLearningExperienceError(error)); wrapped.cause = error; throw wrapped; }
 }

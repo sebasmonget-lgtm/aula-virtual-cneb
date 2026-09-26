@@ -2,7 +2,6 @@ import { randomUUID } from "node:crypto";
 import { loadKnowledgeBaseV4 } from "./knowledge-base-v4.mjs";
 import { cardIsApplicable } from "./ai-context-builder-v4.mjs";
 import { competencyApplicability } from "./competency-applicability.mjs";
-import { resolveAIExecutionPlan } from "./ai-execution-router-v4.mjs";
 import { neutralizeAssessmentText } from "./assessment-v4-service.mjs";
 import { buildClassifierOptions } from "./openai-competency-classifier.mjs";
 import { familyInterviewCategories, familyInterviewStructuredOptionsVersion, interviewLanguageOptions, interviewInterestOptions, interviewPreviousEducationOptions, interviewPreviousEducationTypeOptions } from "./family-interview-contract.mjs";
@@ -245,29 +244,15 @@ export function validateClassifierDecision(decision, allowedIds) {
     primary, secondary, confidence };
 }
 
-/** Only a TypeSafe/Jev-compatible decision adapter is accepted; it never evaluates achievement. */
+/** Historical Jev entrypoint kept only to fail closed; productive suggestions use suggestSpontaneousCompetencies. */
 export async function classifySpontaneousObservation(db, teacherId, id, classifier) {
+  void classifier;
   const classroom = await scope(db, teacherId);
   const observation = (await db.query(`select * from diagnostic_spontaneous_observations where id=$1 and classroom_id=$2 and created_by=$3`, [id,classroom.id,teacherId])).rows[0];
   if (!observation) fail("not_found", "Observación no encontrada.");
   if (observation.classification_source === "teacher") return { id, status: "teacher_preserved" };
   if (observation.classification_status !== "pending") return { id, status: observation.classification_status };
-  const options = await applicableDiagnosticCompetencies(classroom);
-  const plan = resolveAIExecutionPlan({ workflow: "diagnostic", task: "workflow_classification" });
-  if (plan.provider !== "typesafe" || plan.capability !== "decision") fail("invalid_routing", "La clasificación requiere el router de decisiones.");
-  const names = (await db.query(`select first_name,last_name,preferred_name from students where classroom_id=$1`, [classroom.id])).rows
-    .flatMap((row) => [row.first_name, row.last_name, row.preferred_name]).filter(Boolean);
-  const decision = await classifier.classify({ plan, observation: neutralizeAssessmentText(observation.observation_text, names),
-    context: observation.context_label, age: classroom.age_years, options });
-  const validated = validateClassifierDecision(decision, options.map((item) => item.id));
-  const updated = await db.query(`update diagnostic_spontaneous_observations set
-    classification_status=$1,classification_source='jev',competency_v4_id=$2,
-    secondary_competency_v4_id=$3,classification_confidence=$4,classification_reason=$5,classified_at=now()
-    where id=$6 and classroom_id=$7 and created_by=$8 and classification_source is distinct from 'teacher' returning id`,
-    [validated.status,validated.primary,validated.secondary,validated.confidence,
-      validated.status === "needs_review" ? "Clasificación ambigua o con baja confianza" : null,
-      id,classroom.id,teacherId]);
-  return { id, status: updated.rows.length ? validated.status : "teacher_preserved" };
+  fail("classifier_unavailable", "El clasificador Jev no está disponible. La docente puede clasificar manualmente la observación.");
 }
 
 export async function markSpontaneousNeedsReview(db, teacherId, id) {

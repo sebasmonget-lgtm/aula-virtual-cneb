@@ -1,5 +1,13 @@
 # Decisiones de arquitectura
 
+## ADR 072 Routing GPT-6 semántico y fallback explícito
+
+**Decisión.** `ai-execution-router-v4.mjs` es la única fuente de selección de modelos y usa cinco tiers semánticos: Luna/low para trabajo estructurado breve, Luna/medium para generación rutinaria, Sol/low para redacción enfocada, Sol/medium para juicio pedagógico y Astra/high para planificación profunda. Plan Anual usa Astra/high; Project, Unit, criterio, assessment y conclusión usan Sol/medium; Actividad usa Luna/medium; informe familiar usa Sol/low. El diagnóstico principal, evidencia y modo Hoy permanecen en código. Sus asistencias opcionales tienen workflows propios. Taller, materiales y tareas `decision` se declaran no disponibles hasta tener implementación real.
+
+**Fallback.** Solo Actividad puede realizar un segundo intento, de Luna/medium a Sol/low, cuando falla el schema o una validación curricular/de contenido. Orquestación conserva exactamente el mismo `AIContextBundle`, schema y Skill. Clave ausente, autenticación, rate limit, timeout y conectividad no escalan. `OpenAIProvider` continúa neutral, usa Responses API + Structured Outputs strict y mantiene `maxRetries: 0`.
+
+**Trazabilidad, evaluación y reversión.** La metadata interna añade versión de routing, intento primario, fallback y motivo seguro, sin llegar al navegador. La suite opt-in `evals/ai-routing-v4/` mide contratos, IDs, edad, grounding, repetición, tokens, latencia y costo mediante una tabla externa; la calidad pedagógica se registra de forma ciega. No hay migración de datos. Revertir a `973ea5c` restaura la política anterior sin cambiar propuestas confirmadas. Este ADR supera la política de modelos de ADR 024 y las asignaciones concretas de ADR 048–050, ADR 051, ADR 068–070; sus decisiones pedagógicas, de datos y privacidad siguen vigentes.
+
 ## ADR 071 Cobertura anual y propuesta de proyecto por fecha
 
 **Cobertura.** La Skill del Plan Maestro busca dos oportunidades pertinentes por competencia aplicable y exige al menos una en el resultado nuevo. TIC se exige solo cuando el aula confirma un medio digital disponible; sin ese recurso permanece visible en el mapa con la oportunidad pendiente, sin inventar dispositivos. La validación ocurre antes de la redacción del documento; si falta un ID exigible, Sol recibe una sola oportunidad de rehacer el Plan Maestro completo con los IDs faltantes. No se insertan competencias mediante código ni se alteran planes ya confirmados. La docente puede revisar y editar la propuesta. Este mínimo es una decisión de Ayni, no una regla del MINEDU. Las advertencias del mapa siguen siendo una proyección de los doce objetos del plan.
@@ -116,6 +124,8 @@
 
 **Estado.** Histórico: la misma arquitectura v4 también habilita `annual_plan` desde ADR 028.
 ## ADR 024 Política central de routing de modelos
+
+**Estado.** Superada en selección de modelos y fallback por ADR 072; se conserva la separación entre política, orquestación y proveedor.
 
 **Decisión.** `resolveAIExecutionPlan` decide de forma determinista el tier, provider, modelo y posibilidad de escalamiento antes de cualquier generación. Code resuelve tareas deterministas; TypeSafe queda reservado para decisiones estructuradas; Luna, Terra y Sol se asignan según complejidad. Ningún modelo ni provider puede escoger su propio routing.
 
@@ -396,17 +406,23 @@ La señal interna usa una cobertura mínima configurable de 50%, y requiere al m
 
 ## ADR 048 Skill para el Plan Maestro anual
 
+**Estado.** La Skill y los contratos siguen vigentes; Sol/Terra fueron sustituidos por Astra/high mediante ADR 072.
+
 **Decisión.** Separar la metodología pedagógica del primer prompt anual en la Skill de repositorio `skills/crear-plan-anual/`. `SKILL.md` conserva el alcance y las prohibiciones esenciales; `references/` detalla la lectura de fuentes, los criterios CNEB y el contrato pedagógico. El servidor carga únicamente esos archivos fijos y los envía como instrucciones del primer llamado, Sol/high. La petición docente permanece como dato filtrado en el `AIContextBundle`. El esquema `annual-plan-v2`, la validación contra competencias aplicables, el calendario, la redacción con Terra/low y la plantilla DOCX siguen bajo control de la aplicación.
 
 **Control y reversión.** No hay migración de datos ni cambio del formato guardado. Las pruebas verifican que la Skill llegue solo al Plan Maestro y que el segundo llamado conserve su contrato. Si se detecta una regresión, se puede restaurar el prompt anterior y retirar el cargador de Skill sin tocar borradores o documentos confirmados. La Knowledge Base CNEB versionada sigue siendo la autoridad curricular; la Skill no almacena una copia de su catálogo.
 
 ## ADR 049 Skill para proponer la síntesis diagnóstica grupal
 
+**Estado.** La Skill, privacidad y confirmación siguen vigentes; la ayuda se denomina `diagnostic_group_synthesis` y usa Sol/medium según ADR 072.
+
 **Decisión.** `skills/crear-evaluacion-diagnostica/` concentra la metodología de lectura de fuentes, cautelas CNEB y los tres campos de la propuesta grupal. En «Revisar aula», la docente puede pedir una sugerencia opcional cuando ya confirmó un comentario vigente por cada niño. El servidor entrega al modelo únicamente la edad, el número de niños y esos comentarios con nombres conocidos neutralizados; no envía entrevistas, registros de observación, fotos, archivos ni identificadores. La propuesta vuelve como `strengths`, `needs` y `planning_priorities`, se valida y aparece en el editor. La profesora corrige y confirma; la IA no guarda ni confirma resultados.
 
 **Control y reversión.** El router `diagnostic` conserva Terra/low y el proveedor estructurado existente. El servidor comprueba aula, docente, borrador y vigencia de las fuentes antes y después de la llamada. El Word diagnóstico y el Plan Anual siguen leyendo solo la versión grupal confirmada. No hay migración ni cambio del formato guardado; para revertir se retira el botón y la ruta de sugerencia, y la redacción manual permanece disponible.
 
 ## ADR 050 Cuatro hitos pedagógicos y evidencias anuales completas
+
+**Estado.** Los hitos y la separación producto/evidencia siguen vigentes; las asignaciones Sol/Terra fueron sustituidas por ADR 072.
 
 **Decisión.** En los planes nuevos de doce propuestas, la Skill reserva cuatro proyectos cercanos a Día del Niño Peruano, Día de la Educación Inicial, Fiestas Patrias y Navidad/cierre de año. El calendario entrega a Sol los espacios lectivos calculados; la Skill establece el vínculo pedagógico y deja los otros ocho proyectos guiados por diagnóstico, intereses y necesidades. El hito no sustituye una competencia ni convierte una celebración en producto obligatorio. Terra conserva el desarrollo; calendario, validación, guardado y DOCX permanecen en código.
 
@@ -545,6 +561,8 @@ La confirmación de la actividad y la inserción del criterio heredado se ejecut
 
 ## ADR 068 Modelos GPT-6 y registros multimedia docentes
 
+**Estado.** La multimedia y privacidad siguen vigentes; el reparto de modelos fue sustituido por la política central de ADR 072.
+
 **Modelos.** El router central usa GPT-6 Sol para el plan maestro anual, proyectos, unidades, análisis y conclusiones; GPT-6 Luna para redacción, diagnóstico, actividades, criterios, informes y desarrollo del plan. Las decisiones deterministas permanecen en código. El plan anual conserva dos llamadas y las Skill, contratos y plantillas existentes. La clasificación de observaciones espontáneas utiliza una llamada pequeña a GPT-6 Luna con el conjunto cerrado de competencias aplicables a la edad. La sugerencia nunca confirma una competencia ni asigna un nivel.
 
 **Audio y privacidad.** Un archivo de audio de hasta 60 segundos y 8 MB se valida en servidor antes de guardarse o enviarse. Solo el botón explícito «Transcribir y mejorar texto» envía el audio a `gpt-4o-mini-transcribe`; GPT-6 Luna corrige la transcripción con un contexto breve sin añadir hechos. La docente revisa el texto editable. Las fotos no se envían a IA. Los nombres de niños se neutralizan en las llamadas de redacción y clasificación; el audio puede contener voz identificable, por lo que la interfaz informa claramente del envío antes del clic.
@@ -571,6 +589,8 @@ La confirmación de la actividad y la inserción del criterio heredado se ejecut
 **Permisos y reversión.** Las rutas usan el `teacherId` verificado por petición y limitan cada lectura/escritura a su aula y año. Supabase concede al cliente solo lectura propia de las dos tablas nuevas, sin escrituras Data API. Las migraciones son aditivas. Volver a la pantalla anterior no borra planes ni prioridades; sus versiones confirmadas siguen disponibles. No se ha desplegado.
 
 ## ADR 070 Proyecto Master confirmado antes de desarrollar actividades
+
+**Estado.** El flujo y sus dependencias siguen vigentes; todas las etapas generativas de Project/Unit usan Sol/medium y Actividad Luna/medium según ADR 072.
 
 **Decisión.** El desarrollo de una propuesta anual se divide según sus dependencias. GPT-6 Luna prepara primero el contexto y dos o tres propósitos. Después de la elección o edición docente, otra llamada de Luna produce solo preguntas guía, recorrido flexible y criterios generales para las competencias elegidas. Cambiar contexto, propósito o competencias invalida y regenera esas secciones dependientes; las decisiones anuales confirmadas permanecen intactas.
 

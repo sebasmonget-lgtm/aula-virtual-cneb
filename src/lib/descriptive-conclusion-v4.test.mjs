@@ -249,9 +249,10 @@ test("StudentContext conserva únicamente la conclusión confirmada segura", asy
 });
 
 test("interfaz y migración sostienen reload, solo lectura y RLS", async () => {
-  const [ui, workspace, migration] = await Promise.all([
+  const [ui, workspace, periodEvaluation, migration] = await Promise.all([
     readFile(new URL("../features/dashboard/components/descriptive-conclusion-generator.tsx", import.meta.url), "utf8"),
     readFile(new URL("../features/dashboard/components/teacher-workspace.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../features/dashboard/components/period-evaluation.tsx", import.meta.url), "utf8"),
     readFile(new URL("../../supabase/migrations/202609220018_competency_descriptive_conclusions.sql", import.meta.url), "utf8"),
   ]);
   assert.match(ui, /api\/descriptive-conclusions\?/);
@@ -260,7 +261,7 @@ test("interfaz y migración sostienen reload, solo lectura y RLS", async () => {
   assert.match(ui, /solo lectura/);
   assert.match(ui, /Confirmar conclusión/);
   assert.match(workspace, /PeriodEvaluation/);
-  assert.match(workspace, /Evaluación del período/);
+  assert.match(periodEvaluation, /Evaluación del período/);
   assert.match(migration, /enable row level security/);
   assert.match(migration, /public\.owns_student\(student_id\)/);
   assert.match(migration, /where status = 'draft'/);
