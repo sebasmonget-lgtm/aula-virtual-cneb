@@ -8,8 +8,8 @@ import { assessmentMasterSourceSnapshot, validateAssessmentMaster } from "./asse
 const id = (value) => `00000000-0000-4000-8000-${String(value).padStart(12, "0")}`;
 const teacherA=id(1),teacherB=id(2),yearA=id(11),yearB=id(12),classA=id(21),classB=id(22),periodA=id(31),periodB=id(32);
 const proposal = { period_summary:"Durante el período se trabajó la comunicación oral en situaciones de juego.",competencies:[{
-  competency_id:"COM_ORAL",assessment_focus:"Cómo comunica ideas relacionadas con la situación.",
-  relevant_evidence:["Explicaciones registradas en actividades."],patterns_to_consider:["Respuesta en más de una situación."],
+  competency_id:"COM_ORAL",short_label:"Se comunica",area:"Comunicación",assessment_focus:"Cómo comunica ideas relacionadas con la situación.",
+  criteria_worked:["Explica una idea relacionada con el juego."],relevant_evidence:["Explicaciones registradas en actividades."],patterns_to_consider:["Respuesta en más de una situación."],
   progress_signals:["Amplía sus explicaciones."],support_signals:["Requiere preguntas abiertas para continuar."],
   insufficient_information_rules:["Una sola respuesta aislada no permite concluir."],
   contradiction_handling:"Conservar las diferencias y pedir a la docente que contraste las situaciones.",

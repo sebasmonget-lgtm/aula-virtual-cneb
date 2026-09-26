@@ -21,7 +21,7 @@ const criterion = "00000000-0000-4000-8000-000000000601";
 const firstEvidence = "00000000-0000-4000-8000-000000000701";
 const firstPeriod = "00000000-0000-4000-8000-000000000801";
 
-const mockAnalysis = () => ({ competency_id: "COM_ORAL", information_status: "sufficient", evidence_overview: "En dos juegos explicó sus ideas y escuchó al grupo.", observable_patterns: ["Explicó una decisión."], strengths_and_advances: ["Compartió ideas."], support_needs: [], next_opportunities: ["Conversar en grupos pequeños."], teacher_questions: [], insufficiency_reason: null, caution: "La docente debe contrastar los registros.", suggested_level: "A", suggestion_reason: "En las dos observaciones explicó sus ideas." });
+const mockAnalysis = () => ({ competency_id: "COM_ORAL", information_status: "sufficient", evidence_overview: "En dos juegos explicó sus ideas y escuchó al grupo.", observable_patterns: ["Explicó una decisión."], strengths_and_advances: ["Compartió ideas."], support_needs: [], next_opportunities: ["Conversar en grupos pequeños."], teacher_questions: [], insufficiency_reason: null, caution: "La docente debe contrastar los registros." });
 const mockConclusion = () => ({ competency_id: "COM_ORAL", information_status: "sufficient", conclusion_text: "Explica sus ideas durante el juego y escucha propuestas. Seguirá conversando en grupos pequeños.", progress_examples: ["Explicó una decisión."], support_or_conditions: [], next_steps: ["Dialogar en grupos pequeños."], insufficiency_reason: null, caution: "Revisado por la docente." });
 
 test("períodos formales separan cuatro bimestres o tres trimestres", () => {
@@ -153,7 +153,7 @@ async function fixture({ analysis = mockAnalysis() } = {}) {
     await db.query(`insert into evidences(id,student_id,activity_id,criterion_id,observed_at,observed_on,observation_text) values($1,$2,$3,$4,'2026-06-01T12:00:00Z',$5::date,$6)`, [id, studentA, activity, criterion, date, note]);
   }
   const masterSource=await loadAssessmentMasterSources(db,{id:classId},{id:firstPeriod,label:"Bimestre 1",starts_on:"2026-03-16",ends_on:"2026-05-15"});
-  const masterDetails={period_summary:"Se trabajó la comunicación oral en situaciones de juego.",competencies:[{competency_id:"COM_ORAL",assessment_focus:"Cómo explica ideas en las situaciones propuestas.",relevant_evidence:["Explicaciones registradas."],patterns_to_consider:["Respuestas en distintas oportunidades."],progress_signals:["Amplía sus explicaciones."],support_signals:["Necesita preguntas abiertas."],insufficient_information_rules:["Una respuesta aislada no es suficiente."],contradiction_handling:"Conservar diferencias y consultar a la docente.",context_considerations:["Apoyos ofrecidos."],teacher_questions:["¿Ocurrió en otra situación?"],prohibited_inferences:["No calificar una observación aislada."],assessment_guidance:"Revisar el conjunto antes de sugerir un nivel."}]};
+  const masterDetails={period_summary:"Se trabajó la comunicación oral en situaciones de juego.",competencies:[{competency_id:"COM_ORAL",short_label:"Se comunica",area:"Comunicación",assessment_focus:"Cómo explica ideas en las situaciones propuestas.",criteria_worked:["Explica sus ideas."],relevant_evidence:["Explicaciones registradas."],patterns_to_consider:["Respuestas en distintas oportunidades."],progress_signals:["Amplía sus explicaciones."],support_signals:["Necesita preguntas abiertas."],insufficient_information_rules:["Una respuesta aislada no es suficiente."],contradiction_handling:"Conservar diferencias y consultar a la docente.",context_considerations:["Apoyos ofrecidos."],teacher_questions:["¿Ocurrió en otra situación?"],prohibited_inferences:["No calificar una observación aislada."],assessment_guidance:"Revisar el conjunto antes de valorar."}]};
   await db.query(`insert into assessment_masters(id,classroom_id,evaluation_period_id,version,status,details,source_snapshot,created_by,teacher_confirmed_at) values(gen_random_uuid(),$1,$2,1,'active',$3::jsonb,$4::jsonb,$5,now())`,[classId,firstPeriod,JSON.stringify(masterDetails),JSON.stringify(masterSource.snapshot),teacher]);
   const pending = new Map(), calls = [];
   const handle = createPeriodEvaluationRouteHandler({ db, teacherId: teacher, readJson: async (request) => request.body, send: (response, status, payload) => { response.result={status,body:payload}; }, pending, metadataForAudit: (metadata) => metadata, refreshStudentContext: async () => {}, evidenceStorage: { read: async () => ({ data: Buffer.from("image"), mimeType: "image/png" }) }, createProvider: () => ({}), generate: async (input) => { calls.push(input); return { output: input.workflow === "assessment" ? analysis : mockConclusion(), metadata: { model: "mock" } }; } });
@@ -163,6 +163,19 @@ async function fixture({ analysis = mockAnalysis() } = {}) {
     return response.result ?? { status: response.status, body: response.data, headers: response.headers };
   }
   return { db, call, calls };
+}
+
+async function confirmGeneratedConclusion(f, periodId, studentId, competencyId = "COM_ORAL") {
+  const base = { classroomId: classId, periodId, studentId, competencyId };
+  const generated = await f.call("POST", "/api/period-evaluations/conclusion/suggest", base);
+  assert.equal(generated.status, 200, JSON.stringify(generated.body));
+  const confirmed = await f.call("POST", "/api/period-evaluations/conclusion/confirm", {
+    ...base,
+    generationId: generated.body.generation_id,
+    proposal: generated.body.proposal,
+  });
+  assert.equal(confirmed.status, 200, JSON.stringify(confirmed.body));
+  return confirmed.body;
 }
 
 test("ficha única, nivel docente, cierre, salidas derivadas y cambio posterior de evidencia", async () => {
@@ -183,32 +196,34 @@ test("ficha única, nivel docente, cierre, salidas derivadas y cambio posterior 
     assert.equal(detail.body.timeline[0].criterion_id, criterion);
     const suggestion = await f.call("POST", "/api/period-evaluations/suggest", { classroomId: classId, periodId: period.id, studentId: studentA, competencyId: "COM_ORAL" });
     assert.equal(suggestion.status, 200);
-    assert.equal(suggestion.body.analysis.suggested_level, "A");
+    assert.equal(Object.hasOwn(suggestion.body.analysis, "suggested_level"), false);
     assert.equal(f.calls.length, 1);
     assert.doesNotMatch(JSON.stringify(f.calls[0]),/teacher_confirmed_findings/);
     assert.match(f.calls[0].teacher_request, /Assessment Master confirmado/);
-    const decisionA = { classroomId: classId, periodId: period.id, studentId: studentA, competencyId: "COM_ORAL", evidenceFingerprint: detail.body.evidence_fingerprint, achievementLevel: "B", teacherAnalysis: "En distintos juegos explicó ideas y escuchó al grupo.", conclusionText: "Explica ideas en el juego y sigue aprendiendo a escuchar otras propuestas.", teacherJustification: "Mi revisión de los registros indica que sigue necesitando apoyo para escuchar." };
+    const decisionA = { classroomId: classId, periodId: period.id, studentId: studentA, competencyId: "COM_ORAL", evidenceFingerprint: detail.body.evidence_fingerprint, achievementLevel: "B", teacherAnalysis: "En distintos juegos explicó ideas y escuchó al grupo.", conclusionText: "", teacherJustification: "Mi revisión de los registros indica que sigue necesitando apoyo para escuchar." };
     assert.equal((await f.call("POST", "/api/period-evaluations/confirm", {...decisionA,expectedDraftRevision:suggestion.body.draft_revision})).status, 422);
     assert.equal((await f.call("POST", "/api/period-evaluations/save-draft", { ...decisionA, expectedDraftRevision:suggestion.body.draft_revision, provisionalLevel: decisionA.achievementLevel })).status, 200);
     const resumed = await f.call("GET", `/api/period-evaluations/detail?${query}&studentId=${studentA}&competencyId=COM_ORAL`);
     assert.equal(resumed.body.draft.provisional_level, "B");
-    assert.equal(resumed.body.draft.suggested_level, "A");
+    assert.equal(Object.hasOwn(resumed.body.draft, "suggested_level"), false);
     assert.equal((await f.db.query(`select achievement_level from competency_assessments where id=$1`,[resumed.body.draft.id])).rows[0].achievement_level,null);
     assert.equal((await f.call("POST", "/api/period-evaluations/confirm", {...decisionA,expectedDraftRevision:resumed.body.draft.revision,teacherAnalysis:"Cambio no guardado"})).status,422);
     const confirmed = await f.call("POST", "/api/period-evaluations/confirm", {...decisionA,expectedDraftRevision:resumed.body.draft.revision});
     assert.equal(confirmed.status, 200, JSON.stringify(confirmed.body));
     const persisted = (await f.db.query(`select achievement_level,suggested_level,teacher_justification,level_confirmed_by from competency_assessments where id=$1`, [confirmed.body.assessment_id])).rows[0];
-    assert.equal(persisted.achievement_level, "B"); assert.equal(persisted.suggested_level, "A"); assert.equal(persisted.level_confirmed_by, teacher); assert.match(persisted.teacher_justification, /sigue necesitando apoyo/);
+    assert.equal(persisted.achievement_level, "B"); assert.equal(persisted.suggested_level, null); assert.equal(persisted.level_confirmed_by, teacher); assert.match(persisted.teacher_justification, /sigue necesitando apoyo/);
+    await confirmGeneratedConclusion(f, period.id, studentA);
     const incomplete=await f.call("GET",`/api/period-evaluations/overview?${query}`);
     assert.equal((await f.call("POST", "/api/period-evaluations/close", { classroomId: classId, periodId: period.id,
       expectedCurrentVersionId:incomplete.body.closure.current_version_id,expectedSourceFingerprint:incomplete.body.closure.source_fingerprint })).status, 422);
     for (const [id, note] of [["00000000-0000-4000-8000-000000000703", "Explicó cómo jugar."], ["00000000-0000-4000-8000-000000000704", "Respondió a una propuesta."]]) await f.db.query(`insert into evidences(id,student_id,activity_id,criterion_id,observed_at,observed_on,observation_text) values($1,$2,$3,$4,now(),'2026-04-10',$5)`, [id, studentB, activity, criterion, note]);
     const second = await f.call("GET", `/api/period-evaluations/detail?${query}&studentId=${studentB}&competencyId=COM_ORAL`);
-    const decisionB={ classroomId: classId, periodId: period.id, studentId: studentB, competencyId: "COM_ORAL", evidenceFingerprint: second.body.evidence_fingerprint, achievementLevel: "A", teacherAnalysis: "Explicó su juego y respondió a un compañero.", conclusionText: "Explica sus ideas y escucha propuestas durante el juego." };
+    const decisionB={ classroomId: classId, periodId: period.id, studentId: studentB, competencyId: "COM_ORAL", evidenceFingerprint: second.body.evidence_fingerprint, achievementLevel: "A", teacherAnalysis: "Explicó su juego y respondió a un compañero.", conclusionText: "" };
     const savedSecond=await f.call("POST","/api/period-evaluations/save-draft",{...decisionB,expectedDraftRevision:null,provisionalLevel:"A"});
     assert.equal(savedSecond.status,200,JSON.stringify(savedSecond.body));
     const confirmedSecond = await f.call("POST", "/api/period-evaluations/confirm", {...decisionB,expectedDraftRevision:savedSecond.body.draft_revision});
     assert.equal(confirmedSecond.status, 200, JSON.stringify(confirmedSecond.body));
+    await confirmGeneratedConclusion(f, period.id, studentB);
     const beforeFirstClose=await f.call("GET",`/api/period-evaluations/overview?${query}`);
     const firstClose=await f.call("POST", "/api/period-evaluations/close", { classroomId: classId, periodId: period.id,
       expectedCurrentVersionId:beforeFirstClose.body.closure.current_version_id,expectedSourceFingerprint:beforeFirstClose.body.closure.source_fingerprint });
@@ -232,6 +247,7 @@ test("ficha única, nivel docente, cierre, salidas derivadas y cambio posterior 
     const savedV2=await f.call("POST","/api/period-evaluations/save-draft",{...decisionV2,expectedDraftRevision:revised.body.draft?.revision??null,provisionalLevel:"B"});
     assert.equal(savedV2.status,200,JSON.stringify(savedV2.body));
     assert.equal((await f.call("POST","/api/period-evaluations/confirm",{...decisionV2,expectedDraftRevision:savedV2.body.draft_revision})).status,200);
+    await confirmGeneratedConclusion(f, period.id, studentA);
     const beforeSecondClose=await f.call("GET",`/api/period-evaluations/overview?${query}`);
     const secondClose=await f.call("POST","/api/period-evaluations/close",{classroomId:classId,periodId:period.id,
       expectedCurrentVersionId:beforeSecondClose.body.closure.current_version_id,expectedSourceFingerprint:beforeSecondClose.body.closure.source_fingerprint});
@@ -263,14 +279,14 @@ test("una competencia del plan anual aparece sin evidencias y se puede excluir c
 });
 
 test("información insuficiente queda guardada sin nivel y no se convierte en C", async () => {
-  const analysis = { ...mockAnalysis(), information_status: "insufficient", suggested_level: null, suggestion_reason: null, insufficiency_reason: "Los registros todavía no muestran oportunidades variadas.", evidence_overview: "Hay dos registros de una misma situación.", observable_patterns: [], strengths_and_advances: [], support_needs: [], next_opportunities: ["Observar en otros juegos."], teacher_questions: [] };
+  const analysis = { ...mockAnalysis(), information_status: "insufficient", insufficiency_reason: "Los registros todavía no muestran oportunidades variadas.", evidence_overview: "Hay dos registros de una misma situación.", observable_patterns: [], strengths_and_advances: [], support_needs: [], next_opportunities: ["Observar en otros juegos."], teacher_questions: [] };
   const f = await fixture({ analysis });
   try {
     const period = (await f.call("GET", "/api/period-evaluations/workspace")).body.periods[0];
     const query = `classroomId=${classId}&periodId=${period.id}`;
     const suggestion = await f.call("POST", "/api/period-evaluations/suggest", { classroomId: classId, periodId: period.id, studentId: studentA, competencyId: "COM_ORAL" });
     assert.equal(suggestion.status, 200, JSON.stringify(suggestion.body));
-    assert.equal(suggestion.body.analysis.suggested_level, null);
+    assert.equal(Object.hasOwn(suggestion.body.analysis, "suggested_level"), false);
     assert.equal(f.calls.length, 1);
     const overview = await f.call("GET", `/api/period-evaluations/overview?${query}`);
     assert.equal(overview.body.rows.find((row) => row.student_id === studentA && row.competency_id === "COM_ORAL").state, "insufficient_information");
@@ -290,13 +306,15 @@ test("una observación sustantiva admite valoración docente justificada sin umb
     const input={classroomId:classId,periodId:period.id,studentId:studentA,competencyId:"COM_ORAL",
       evidenceFingerprint:detail.evidence_fingerprint,expectedDraftRevision:null,
       teacherAnalysis:"Durante el juego explicó con detalle su propuesta y respondió a las preguntas del grupo.",
-      conclusionText:"Explica sus ideas en el juego y puede seguir compartiéndolas en grupos pequeños.",
+      conclusionText:"",
       achievementLevel:"A",provisionalLevel:"A",
       teacherJustification:"La descripción concreta de esta situación permite valorar la comunicación observada."};
     const saved=await f.call("POST","/api/period-evaluations/save-draft",input);
     assert.equal(saved.status,200,JSON.stringify(saved.body));
     const confirmed=await f.call("POST","/api/period-evaluations/confirm",{...input,expectedDraftRevision:saved.body.draft_revision});
     assert.equal(confirmed.status,200,JSON.stringify(confirmed.body));
+    assert.equal((await f.call("GET",`/api/period-evaluations/detail?${query}`)).body.state,"conclusion_pending");
+    await confirmGeneratedConclusion(f, period.id, studentA);
     assert.equal((await f.call("GET",`/api/period-evaluations/detail?${query}`)).body.state,"confirmed");
   } finally { await f.db.close(); }
 });
@@ -309,7 +327,7 @@ test("dos confirmaciones de la misma revisión dejan una sola evaluación oficia
     const detail=(await f.call("GET",`/api/period-evaluations/detail?${query}`)).body;
     const body={classroomId:classId,periodId:period.id,studentId:studentA,competencyId:"COM_ORAL",
       evidenceFingerprint:detail.evidence_fingerprint,achievementLevel:"A",provisionalLevel:"A",
-      teacherAnalysis:"Explicó ideas en dos juegos.",conclusionText:"Explica sus ideas y escucha las propuestas del grupo.",expectedDraftRevision:null};
+      teacherAnalysis:"Explicó ideas en dos juegos.",conclusionText:"",expectedDraftRevision:null};
     const saved=await f.call("POST","/api/period-evaluations/save-draft",body);
     assert.equal(saved.status,200,JSON.stringify(saved.body));
     const attempts=await Promise.all([1,2].map(()=>f.call("POST","/api/period-evaluations/confirm",{
@@ -326,7 +344,7 @@ test("evidencia posterior invalida la huella y dos cierres simultáneos crean so
   try {
     const period=(await f.call("GET","/api/period-evaluations/workspace")).body.periods[0];
     const base={classroomId:classId,periodId:period.id,competencyId:"COM_ORAL",achievementLevel:"A",provisionalLevel:"A",
-      teacherAnalysis:"Comparó ideas durante el juego.",conclusionText:"Explica sus ideas en las conversaciones del aula.",
+      teacherAnalysis:"Comparó ideas durante el juego.",conclusionText:"",
       teacherJustification:"La docente revisó el contexto y confirmó esta valoración preliminar."};
     const detailA=(await f.call("GET",`/api/period-evaluations/detail?classroomId=${classId}&periodId=${period.id}&studentId=${studentA}&competencyId=COM_ORAL`)).body;
     const stale={...base,studentId:studentA,evidenceFingerprint:detailA.evidence_fingerprint,expectedDraftRevision:null};
@@ -347,6 +365,7 @@ test("evidencia posterior invalida la huella y dos cierres simultáneos crean so
       assert.equal(saved.status,200,JSON.stringify(saved.body));
       const confirmed=await f.call("POST","/api/period-evaluations/confirm",{...body,expectedDraftRevision:saved.body.draft_revision});
       assert.equal(confirmed.status,200,JSON.stringify(confirmed.body));
+      await confirmGeneratedConclusion(f, period.id, id);
     }
     await f.db.query(`insert into institution_profiles(owner_user_id,display_name,ugel) values($1,'Jardín del cierre','UGEL 01')`,[teacher]);
     const overview=(await f.call("GET",`/api/period-evaluations/overview?classroomId=${classId}&periodId=${period.id}`)).body;

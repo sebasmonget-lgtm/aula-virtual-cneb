@@ -549,3 +549,13 @@
 **Solución validada.** La migración deja `planned_date` nulo en actividades históricas y la lectura usa `occurs_on` como respaldo. Las actividades nuevas guardan ambos campos desde su creación. El trigger actualizado solo admite cambios auditados de fecha y estado de ejecución; título, propósito, contenido y relación pedagógica continúan inmutables. La paridad local/Supabase, la copia de versiones y los casos históricos pasaron sus pruebas.
 
 **Prevención.** Las migraciones aditivas no deben reescribir filas confirmadas cuando el valor puede derivarse de forma segura. Probar siempre una base con documentos históricos antes de dar por válida una migración.
+
+## 2026-09-26 El análisis individual incluía una recomendación de AD/A/B/C
+
+**Síntoma.** El contrato anterior del assessment pedía `suggested_level` y la misma generación preparaba texto de conclusión antes de que la profesora confirmara su valoración. Esto mezclaba análisis de evidencias, juicio docente y comunicación final.
+
+**Causa raíz.** El flujo trataba el nivel sugerido y la conclusión como campos auxiliares del borrador, aunque AD/A/B/C corresponde exclusivamente a la decisión docente sobre el conjunto de evidencias.
+
+**Solución validada.** `assessment-v3` elimina los campos de nivel del schema y el validador rechaza cualquier campo adicional. La profesora guarda y confirma su valoración sin preselección; después se habilita una llamada separada para la conclusión, ligada mediante snapshot a la valoración confirmada. Cero evidencias detiene el flujo antes del proveedor. Las pruebas comprueban que la salida de IA no contiene letras, que la conclusión requiere valoración y que evidencia nueva exige revisión.
+
+**Prevención.** Mantener análisis, valoración y conclusión como etapas y contratos separados. Cualquier modelo futuro para assessment debe pasar el schema estricto sin campos de calificación.

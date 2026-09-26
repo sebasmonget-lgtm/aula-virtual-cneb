@@ -126,7 +126,7 @@ export async function loadKnowledgeBaseV4(rootDir = KNOWLEDGE_BASE_V4_ROOT) {
   requireValid(Array.isArray(retrievalPolicy.layers) && retrievalPolicy.layers.length > 0, "capas de retrieval inválidas");
   requireValid(knowledgeUnits.length === 245 && manifest.counts?.combined_retrieval_units === 245, "se esperaban 245 unidades de retrieval");
   requireValid(competencyCards.length === 14 && manifest.counts?.competencies === 14, "se esperaban 14 tarjetas de competencia");
-  requireValid(Object.keys(workflowRequirements.workflows ?? {}).length === 15 && manifest.counts?.workflows === 15, "se esperaban 15 workflows");
+  requireValid(Object.keys(workflowRequirements.workflows ?? {}).length === 16 && manifest.counts?.workflows === 16, "se esperaban 16 workflows");
 
   const sourceIds = uniqueIds(sourceRegistry.sources ?? [], "fuentes");
   const cardIds = uniqueIds(competencyCards, "tarjetas");

@@ -18,6 +18,7 @@ const GENERATION_RULE_BY_WORKFLOW = {
   assessment: "assessment",
   descriptive_conclusion: "assessment",
   family_report: "reports",
+  classroom_period_report: "reports",
   material_generation: "reports",
   today_mode: "activity",
 };
@@ -288,7 +289,7 @@ function validateInput(input, knowledgeBase) {
     throw new TypeError("competency_ids debe ser una lista de IDs de competencia.");
   }
   const uniqueIds = uniqueStrings(competencyIds);
-  if (uniqueIds.length > 1 && !["family_report", "project", "unit", "assessment_master"].includes(input.workflow)) {
+  if (uniqueIds.length > 1 && !["family_report", "classroom_period_report", "project", "unit", "assessment_master"].includes(input.workflow)) {
     throw new RangeError("AIContextBundle acepta una sola competencia confirmada por llamada.");
   }
   const workflowRequirements = knowledgeBase.workflows[input.workflow];
@@ -306,7 +307,7 @@ export async function buildAIContext(input, knowledgeBase) {
   const workflowRequirements = knowledgeBase.workflows[input.workflow];
   const applicability = { castellanoL2Applicable: applicableL2(input), religionApplicable: applicableReligion(input) };
   const retrievalInput = (id) => ({ workflow: input.workflow, age: input.age, teacherRequest: input.teacher_request, confirmedCompetencyId: id, ...applicability, temporalContext: input.temporal_context });
-  const multiCompetencyWorkflow = ["family_report", "project", "unit", "assessment_master"].includes(input.workflow);
+  const multiCompetencyWorkflow = ["family_report", "classroom_period_report", "project", "unit", "assessment_master"].includes(input.workflow);
   const retrieval = multiCompetencyWorkflow && confirmedIds.length > 1
     ? mergeFamilyRetrievals(await Promise.all(confirmedIds.map((id) => retrieveKnowledgeV4(retrievalInput(id), knowledgeBase))), workflowRequirements)
     : await retrieveKnowledgeV4(retrievalInput(confirmedCompetencyId), knowledgeBase);

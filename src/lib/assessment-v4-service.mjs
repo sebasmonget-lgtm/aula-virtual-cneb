@@ -1,21 +1,15 @@
 import { createHash } from "node:crypto";
 
 const fields = ["competency_id", "information_status", "evidence_overview", "observable_patterns", "strengths_and_advances", "support_needs", "next_opportunities", "teacher_questions", "insufficiency_reason", "caution"];
-const suggestionFields = ["suggested_level", "suggestion_reason"];
 const listFields = ["observable_patterns", "strengths_and_advances", "support_needs", "next_opportunities", "teacher_questions"];
 
 export function validateAssessmentProposal(value, competencyId, evidenceCount) {
-  if (!value || typeof value !== "object" || Array.isArray(value) || fields.some((key) => !(key in value)) || Object.keys(value).some((key) => ![...fields, ...suggestionFields].includes(key))) throw new Error("La propuesta de análisis no cumple assessment-v2.");
+  if (!value || typeof value !== "object" || Array.isArray(value) || fields.some((key) => !(key in value)) || Object.keys(value).some((key) => !fields.includes(key))) throw new Error("La propuesta de análisis no cumple assessment-v3.");
   if (value.competency_id !== competencyId || !["sufficient", "insufficient"].includes(value.information_status)) throw new Error("La competencia o el estado informativo del análisis no coincide.");
   if (!["evidence_overview", "caution"].every((key) => typeof value[key] === "string" && value[key].trim())) throw new Error("Falta texto obligatorio del análisis.");
   if (listFields.some((key) => !Array.isArray(value[key]) || value[key].some((item) => typeof item !== "string" || !item.trim()))) throw new Error("Las listas del análisis deben contener solo texto no vacío.");
   if (value.information_status === "insufficient" ? typeof value.insufficiency_reason !== "string" || !value.insufficiency_reason.trim() : value.insufficiency_reason !== null) throw new Error("La razón de información insuficiente no coincide con el estado.");
   if (evidenceCount === 0 && value.information_status !== "insufficient") throw new Error("Sin observaciones la información debe declararse insuficiente.");
-  if (value.suggested_level !== undefined || value.suggestion_reason !== undefined) {
-    if (![null, "AD", "A", "B", "C"].includes(value.suggested_level) || (value.suggestion_reason !== null && (typeof value.suggestion_reason !== "string" || !value.suggestion_reason.trim()))) throw new Error("La sugerencia de nivel no es válida.");
-    if (value.information_status === "insufficient" && value.suggested_level !== null) throw new Error("La información insuficiente no puede convertirse en un nivel sugerido.");
-    if (value.suggested_level !== null && !value.suggestion_reason) throw new Error("Explica la sugerencia con las evidencias disponibles.");
-  }
   const prose = [value.evidence_overview, value.caution, value.insufficiency_reason, ...listFields.flatMap((key) => value[key])].filter(Boolean).join(" ");
   if (/\b(?:nivel\s*(?:AD|A|B|C)|calificaci[oó]n\s*(?:AD|A|B|C)|nota\s*(?:num[eé]rica|\d{1,2}(?:\/20)?)|ranking)\b|\d{1,3}\s*%\s*de\s*logro/i.test(prose)) throw new Error("El análisis no puede asignar niveles, notas ni porcentajes de logro.");
   return value;
@@ -39,7 +33,7 @@ export function sanitizeEvidenceForAssessment(evidence, knownNames = []) {
 }
 
 export function buildAssessmentInput({ age, competencyId, evidenceHistory, criteriaHistory = [], assessmentMaster, priorTeacherConclusions, contextChanges }) {
-  return { workflow: "assessment", age, student_id: "current_student", competency_ids: [competencyId], teacher_request: "Aplica el Assessment Master confirmado al conjunto de evidencias reales de esta competencia. Si hay información suficiente, puedes sugerir AD, A, B o C y explicar con hechos observados; si es insuficiente, suggested_level debe ser null. La profesora decidirá y confirmará el nivel definitivo. No califiques observaciones individuales ni reconstruyas el marco pedagógico.", evidence_history: evidenceHistory, criteria_history: criteriaHistory, assessment_master: assessmentMaster, ...(priorTeacherConclusions ? { prior_teacher_conclusions: priorTeacherConclusions } : {}), ...(contextChanges ? { context_changes: contextChanges } : {}) };
+  return { workflow: "assessment", age, student_id: "current_student", competency_ids: [competencyId], teacher_request: "Aplica el Assessment Master confirmado al conjunto de evidencias reales de esta competencia. Resume avances, aspectos en desarrollo, patrones, contradicciones e información faltante. No asignes, recomiendes, predigas ni menciones una valoración AD, A, B o C. La valoración pertenece exclusivamente a la profesora. No califiques observaciones individuales ni reconstruyas el marco pedagógico.", evidence_history: evidenceHistory, criteria_history: criteriaHistory, assessment_master: assessmentMaster, ...(priorTeacherConclusions ? { prior_teacher_conclusions: priorTeacherConclusions } : {}), ...(contextChanges ? { context_changes: contextChanges } : {}) };
 }
 
 export function validateAssessmentPeriod(start, end, calendar) {

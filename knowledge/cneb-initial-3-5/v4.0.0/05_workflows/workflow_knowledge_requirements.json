@@ -346,6 +346,32 @@
         "No comparar con pares."
       ]
     },
+    "classroom_period_report": {
+      "required_user_context": [
+        "age",
+        "classroom_context",
+        "period_statistics"
+      ],
+      "preferred_user_context": [
+        "evaluation_map_summary"
+      ],
+      "required_domains": [
+        "formative_assessment",
+        "curriculum_age_profile"
+      ],
+      "optional_domains": [
+        "evidence_and_criteria",
+        "planning"
+      ],
+      "curriculum_policy": "Interpretar solo competencias trabajadas y datos agregados calculados por código.",
+      "max_semantic_units": 9,
+      "max_source_claims": 4,
+      "output_guardrails": [
+        "No inventar estadísticas.",
+        "No confundir una competencia no trabajada con bajo desempeño.",
+        "No incluir nombres de estudiantes."
+      ]
+    },
     "material_generation": {
       "required_user_context": [
         "age",

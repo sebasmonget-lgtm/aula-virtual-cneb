@@ -625,3 +625,13 @@ La confirmación de la actividad y la inserción del criterio heredado se ejecut
 **Trazabilidad.** La reprogramación pasa por servidor, valida propiedad, calendario efectivo, intervalo del proyecto y conflictos. La operación actualiza actividad y horario en una transacción y crea `activity_schedule_changes`. Los registros confirmados continúan protegidos contra cambios pedagógicos; la excepción del trigger solo permite metadata de ejecución auditada.
 
 **IA.** No cambia el routing. Sol recibe las fechas confirmadas como restricción y produce exactamente un blueprint por día. Luna desarrolla después una sola actividad y la fecha se asigna por código, no por decisión del modelo.
+
+## ADR 072 Mapa acumulativo y cierre de evaluación por período
+
+**Decisión.** El cierre de cada bimestre o trimestre parte de `period_evaluation_map_versions` y `period_evaluation_map_entries`, una proyección normalizada y versionada que se recalcula por código antes de preparar o revisar la evaluación. Conserva IDs y revisiones de proyecto/unidad, contenido formal, blueprint, actividad y criterio; cuenta evidencias reales y distingue `planned`, `completed`, `skipped` y `rescheduled`. Una competencia es `worked` solo cuando existe una actividad realizada y `evidenced` cuando existe evidencia real. Los textos pedagógicos permanecen en sus fuentes canónicas.
+
+**Juicio docente e IA.** Assessment Master usa GPT-6 Sol/medium y solo competencias realmente trabajadas. El assessment individual usa GPT-6 Luna/medium únicamente si existe evidencia y devuelve análisis sin letras. El contrato rechaza cualquier `suggested_level`; AD/A/B/C se guarda solo desde la elección confirmada de la docente, con versión y snapshot de fuentes. La conclusión se genera después con GPT-6 Luna/medium y queda vinculada a esa valoración. Una evidencia nueva marca solo esa pareja niño–competencia y sus derivados como pendientes de revisión.
+
+**Consolidado y salidas.** La matriz, short labels, distribución AD/A/B/C, cobertura, pendientes y Excel genérico se calculan por código, sin convertir letras a promedios. El informe global del aula usa GPT-6 Sol/medium con datos agregados y anónimos; la narración no puede introducir cifras, que se muestran desde estadísticas deterministas. El cierre se guía en ocho pasos y exige valoración y conclusión vigentes. SIAGIE permanece explícitamente pendiente hasta recibir el formato oficial.
+
+**Seguridad y reversión.** Las tablas nuevas permiten lectura autenticada solo del aula propia mediante RLS y no admiten escrituras directas por Data API. Las migraciones son aditivas. Retirar la interfaz o el informe global no altera assessments, conclusiones, evidencias ni cierres históricos; el mapa puede reconstruirse desde las fuentes canónicas.

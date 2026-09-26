@@ -90,11 +90,12 @@ test("conclusiones e informes exigen guardar cambios antes de confirmar", async 
   assert.match(report, /Reintentar carga de informes/);
 });
 
-test("Evaluar reúne nivel y conclusión en una ficha y reconstruye el estado al recargar", async () => {
+test("Evaluar separa valoración docente y conclusión posterior y reconstruye el estado al recargar", async () => {
   const evaluation = await component("period-evaluation");
   const workspace = await component("teacher-workspace");
   assert.match(evaluation, /period-evaluations\/detail/);
-  assert.match(evaluation, /Nivel que confirmas/);
+  assert.match(evaluation, /Valoración que confirmas/);
+  assert.match(evaluation, /Ahora prepara la conclusión descriptiva/);
   assert.match(evaluation, /Conclusión descriptiva/);
   assert.match(evaluation, /reloadOverview\(\)/);
   assert.match(workspace, /<EvaluationHome dashboard=\{dashboard\}/);

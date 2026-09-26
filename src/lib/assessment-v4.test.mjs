@@ -19,18 +19,18 @@ const proposal = (status = "insufficient") => ({ competency_id: "COM_ORAL", info
 test("assessment routing, schema y provider reciben una sola tarjeta", async () => {
   const plan = resolveAIExecutionPlan({ workflow: "assessment" });
   assert.equal(plan.model, "gpt-6-luna"); assert.equal(plan.reasoning_effort, "medium");
-  assert.equal(ASSESSMENT_OUTPUT_SCHEMA.id, "assessment-v2"); assert.equal(ASSESSMENT_OUTPUT_SCHEMA.additionalProperties, false);
+  assert.equal(ASSESSMENT_OUTPUT_SCHEMA.id, "assessment-v3"); assert.equal(ASSESSMENT_OUTPUT_SCHEMA.additionalProperties, false);
   let captured;
   const evidence = [{ observed_on: "2026-09-20T12:00:00.000Z", activity_title: "Actividad", criterion_text: "Expresa ideas", observation_status: "with_support", observation_note: "Dijo algo", media_available: true }];
   const input = buildAssessmentInput({ age: 5, competencyId: "COM_ORAL", evidenceHistory: evidence });
   const result = await generateAIWorkflowV4(input, { provider: { id: "mock", async generate(request) { captured = request; return proposal(); } } });
   assert.equal(captured.workflow, "assessment"); assert.equal(captured.ai_context_bundle.curriculum.competency_cards.length, 1);
   assert.equal(captured.ai_context_bundle.curriculum.competency_cards[0].id, "COM_ORAL");
-  assert.equal(result.validation.schema, "assessment-v2");
+  assert.equal(result.validation.schema, "assessment-v3");
   assert.equal(captured.ai_context_bundle.context.student.id, "current_student");
 });
 
-test("assessment-v1 valida estructura, estado, competencia, niveles y cantidad de evidencia", () => {
+test("assessment-v3 valida estructura y nunca acepta una sugerencia de nivel", () => {
   assert.deepEqual(validateAssessmentProposal(proposal(), "COM_ORAL", 1), proposal());
   assert.deepEqual(validateAssessmentProposal(proposal("sufficient"), "COM_ORAL", 2), proposal("sufficient"));
   assert.deepEqual(validateAssessmentProposal(proposal(), "COM_ORAL", 3), proposal());
@@ -39,6 +39,7 @@ test("assessment-v1 valida estructura, estado, competencia, niveles y cantidad d
     { ...proposal(), observable_patterns: "texto" }, { ...proposal(), observable_patterns: [""] },
     { ...proposal(), insufficiency_reason: null }, { ...proposal("sufficient"), insufficiency_reason: "Texto" },
     { ...proposal("sufficient"), evidence_overview: "Nivel AD en la competencia." },
+    { ...proposal("sufficient"), suggested_level: "A" },
     { ...proposal(), caution: "Nota 18." }, { ...proposal(), support_needs: ["90% de logro"] },
   ]) assert.throws(() => validateAssessmentProposal(bad, "COM_ORAL", 2), JSON.stringify(bad));
   assert.deepEqual(validateAssessmentProposal(proposal("sufficient"), "COM_ORAL", 1), proposal("sufficient"));

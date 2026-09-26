@@ -27,7 +27,7 @@ test("descriptive_conclusion usa Luna/medium, schema strict y una tarjeta en el 
   assert.equal(DESCRIPTIVE_CONCLUSION_OUTPUT_SCHEMA.id, "descriptive-conclusion-v1");
   assert.equal(DESCRIPTIVE_CONCLUSION_OUTPUT_SCHEMA.additionalProperties, false);
   let captured;
-  const input = buildDescriptiveConclusionInput({ age: 5, competencyId: "COM_ORAL", assessment: { details: assessmentDetails }, evidenceRows: [{ observed_at: "2026-09-20T12:00:00Z", activity_title: "Relato", criterion_text: "Expresa ideas", observation_status: "with_support", observation_text: "Contó algo" }] });
+  const input = buildDescriptiveConclusionInput({ age: 5, competencyId: "COM_ORAL", assessment: { achievement_level: "A", details: assessmentDetails }, evidenceRows: [{ observed_at: "2026-09-20T12:00:00Z", activity_title: "Relato", criterion_text: "Expresa ideas", observation_status: "with_support", observation_text: "Contó algo" }] });
   const result = await generateAIWorkflowV4(input, { provider: { id: "mock", async generate(request) { captured = request; return conclusion(); } } });
   assert.equal(captured.workflow, "descriptive_conclusion"); assert.equal(captured.ai_context_bundle.curriculum.competency_cards.length, 1);
   assert.equal(captured.ai_context_bundle.curriculum.competency_cards[0].id, "COM_ORAL");
@@ -60,12 +60,12 @@ test("conclusión rechaza campos extra, otra competencia, notas, comparaciones y
   ]) assert.throws(() => validateDescriptiveConclusion(bad, "COM_ORAL", "sufficient"), JSON.stringify(bad));
   assert.throws(() => validateDescriptiveConclusion({ ...conclusion("insufficient"), insufficiency_reason: null }, "COM_ORAL", "insufficient"));
   assert.throws(() => validateDescriptiveConclusion({ ...conclusion("insufficient"), conclusion_text: "Logró plenamente la competencia.", progress_examples: ["Progreso firme."] }, "COM_ORAL", "insufficient"));
-  const input = buildDescriptiveConclusionInput({ age: 5, competencyId: "COM_ORAL", assessment: { details: assessmentDetails }, evidenceRows: [{ observed_at: "2026-09-20T12:00:00Z", observation_status: "with_support" }] });
+  const input = buildDescriptiveConclusionInput({ age: 5, competencyId: "COM_ORAL", assessment: { achievement_level: "A", details: assessmentDetails }, evidenceRows: [{ observed_at: "2026-09-20T12:00:00Z", observation_status: "with_support" }] });
   await assert.rejects(() => generateAIWorkflowV4(input, { provider: { async generate() { return { ...conclusion(), competency_id: "OTHER" }; } } }), InvalidAIGenerationError);
 });
 
 test("snapshot del assessment es estable y detecta versión, contenido y timestamps", () => {
-  const base = { id: assessmentId, version: 1, updated_at: new Date("2026-09-22T12:00:00Z"), teacher_confirmed_at: new Date("2026-09-22T11:00:00Z"), details: assessmentDetails };
+  const base = { id: assessmentId, version: 1, updated_at: new Date("2026-09-22T12:00:00Z"), teacher_confirmed_at: new Date("2026-09-22T11:00:00Z"), achievement_level: "A", details: assessmentDetails };
   const snapshot = sourceAssessmentSnapshot(base);
   assert.equal(snapshot.details_hash.length, 64);
   assert.doesNotMatch(JSON.stringify(snapshot), /Ana|evidence_overview/);
@@ -80,7 +80,7 @@ async function fixture({ status = "active", informationStatus = "sufficient" } =
     create table activities(id uuid primary key,title text);
     create table activity_criteria(id uuid primary key,activity_id uuid,competency_v4_id text,criterion_text text,details jsonb);
     create table evidences(id uuid primary key,student_id uuid,activity_id uuid,criterion_id uuid,observed_at timestamptz,observation_status text,observation_text text,media_path text);
-    create table competency_assessments(id uuid primary key,student_id uuid,competency_v4_id text,period_start date,period_end date,version integer,source_evidence_ids jsonb,source_evidence_snapshot jsonb,details jsonb,generation_metadata jsonb,status text,teacher_confirmed_at timestamptz,created_at timestamptz default now(),updated_at timestamptz default now());`);
+    create table competency_assessments(id uuid primary key,student_id uuid,competency_v4_id text,period_start date,period_end date,version integer,source_evidence_ids jsonb,source_evidence_snapshot jsonb,details jsonb,generation_metadata jsonb,status text,teacher_confirmed_at timestamptz,achievement_level text,created_at timestamptz default now(),updated_at timestamptz default now());`);
   const migration = await readFile(new URL("../../local-db/migrations/0021_competency_descriptive_conclusions.sql", import.meta.url), "utf8");
   await db.exec(migration);
   await db.query(`insert into students values($1,$2,'active','Ana','Pérez','Anita'),($3,$2,'active','Otro','Niño',null)`, [studentId, classroomId, otherStudentId]);
@@ -89,7 +89,7 @@ async function fixture({ status = "active", informationStatus = "sufficient" } =
   await db.query(`insert into evidences values($1,$2,$3,$4,'2026-09-20T12:00:00Z','with_support','Ana contó algo','/private/photo.jpg'),($5,$2,$3,$4,'2026-09-21T12:00:00Z','insufficient_information','Anita escuchó',null)`, [evidenceId, studentId, activityId, criterionId, evidenceId2]);
   const rows = await loadAssessmentEvidence(db, { studentId, competencyId: "COM_ORAL", periodStart, periodEnd });
   const details = { ...assessmentDetails, information_status: informationStatus, insufficiency_reason: informationStatus === "insufficient" ? "Pocas situaciones observadas." : null };
-  await db.query(`insert into competency_assessments(id,student_id,competency_v4_id,period_start,period_end,version,source_evidence_ids,source_evidence_snapshot,details,generation_metadata,status,teacher_confirmed_at) values($1,$2,'COM_ORAL',$3::date,$4::date,1,$5::jsonb,$6::jsonb,$7::jsonb,'{"secret":"metadata"}'::jsonb,$8,$9::timestamptz)`, [assessmentId, studentId, periodStart, periodEnd, JSON.stringify(rows.map((row) => row.id)), JSON.stringify(assessmentSourceSnapshot(rows)), JSON.stringify(details), status, status === "active" ? "2026-09-22T12:00:00Z" : null]);
+  await db.query(`insert into competency_assessments(id,student_id,competency_v4_id,period_start,period_end,version,source_evidence_ids,source_evidence_snapshot,details,generation_metadata,status,teacher_confirmed_at,achievement_level) values($1,$2,'COM_ORAL',$3::date,$4::date,1,$5::jsonb,$6::jsonb,$7::jsonb,'{"secret":"metadata"}'::jsonb,$8,$9::timestamptz,'A')`, [assessmentId, studentId, periodStart, periodEnd, JSON.stringify(rows.map((row) => row.id)), JSON.stringify(assessmentSourceSnapshot(rows)), JSON.stringify(details), status, status === "active" ? "2026-09-22T12:00:00Z" : null]);
   const pending = new Map(), captures = [], responses = [];
   const handler = createDescriptiveConclusionRouteHandler({ db, annualPlanningContext: async () => ({ id: classroomId, age: 5, castellano_l2_applicable: false, religion_applicable: false }), readJson: async (request) => request.body, send: (_res, statusCode, body) => responses.push({ status: statusCode, body }), pending, metadataForAudit: (value) => value, refreshStudentContext: async (_database, id) => captures.push({ refreshed: id }), createProvider: () => ({}), generate: async (input) => { captures.push({ input }); return { output: conclusion(informationStatus), metadata: { model: "mock" } }; } });
   async function call(method, pathname, body) { responses.length = 0; await handler({ request: { method, body }, url: new URL(`http://localhost${pathname}`), response: {}, origin: null }); return responses[0]; }

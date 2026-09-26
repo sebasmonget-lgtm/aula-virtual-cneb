@@ -14,7 +14,7 @@ test("carga la Knowledge Base v4 íntegra sin depender de PDF", async () => {
   assert.equal(knowledgeBase.version, "4.0.0");
   assert.equal(knowledgeBase.knowledgeUnits.length, 245);
   assert.equal(knowledgeBase.competencyCards.length, 14);
-  assert.equal(Object.keys(knowledgeBase.workflows).length, 15);
+  assert.equal(Object.keys(knowledgeBase.workflows).length, 16);
   assert.equal(knowledgeBase.retrievalPolicy.corpus, "06_retrieval/combined_knowledge_units.jsonl");
 
   const sourceRefs = new Set(knowledgeBase.knowledgeUnits.flatMap((unit) => unit.source_refs));
@@ -35,14 +35,14 @@ test("acepta solamente edades 3, 4 y 5", () => {
   }
 });
 
-test("expone los 15 workflows y rechaza uno desconocido", async () => {
+test("expone los 16 workflows y rechaza uno desconocido", async () => {
   const knowledgeBase = await loadKnowledgeBaseV4();
   const workflowNames = Object.keys(knowledgeBase.workflows);
 
   assert.deepEqual(workflowNames, [
     "diagnostic", "annual_plan", "project", "unit", "workshop", "activity",
     "criterion_and_evidence", "criterion_realignment", "evidence_capture", "assessment_master", "assessment", "descriptive_conclusion",
-    "family_report", "material_generation", "today_mode",
+    "family_report", "classroom_period_report", "material_generation", "today_mode",
   ]);
   assert.equal(knowledgeBase.getWorkflow("activity"), knowledgeBase.workflows.activity);
   assert.equal(validateKnowledgeBaseWorkflow("diagnostic", knowledgeBase.workflows), knowledgeBase.workflows.diagnostic);

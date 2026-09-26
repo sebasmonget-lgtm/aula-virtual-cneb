@@ -6,6 +6,13 @@ import { buildAssessmentMasterInput, assessmentMasterSourceSnapshot, validateAss
 import { loadKnowledgeBaseV4 } from "../src/lib/knowledge-base-v4.mjs";
 import { cardIsApplicable } from "../src/lib/ai-context-builder-v4.mjs";
 import { httpStatusForError, publicErrorMessage } from "../src/lib/version-integrity.mjs";
+import { stableCompetencyLabel, syncPeriodEvaluationMap } from "../src/lib/period-assessment-closure-service.mjs";
+
+const withCanonicalLabels = (proposal, labels) => ({ ...proposal, competencies: proposal.competencies.map((row) => ({
+  ...row,
+  short_label: labels[row.competency_id]?.short_label ?? row.short_label,
+  area: labels[row.competency_id]?.area ?? row.area,
+})) });
 
 const dateOnly = (value) => value instanceof Date ? value.toISOString().slice(0, 10) : String(value).slice(0, 10);
 const safe = (row, stale = false) => row ? ({ id: row.id, classroom_id: row.classroom_id,
@@ -14,6 +21,7 @@ const safe = (row, stale = false) => row ? ({ id: row.id, classroom_id: row.clas
   stale }) : null;
 
 export async function loadAssessmentMasterSources(db, context, period) {
+  const map = await syncPeriodEvaluationMap(db, { classroomId: context.id, schoolYearId: context.school_year_id, period });
   const experiences = (await db.query(`select id,revision,details from learning_experiences
     where classroom_id=$1 and status='active' and starts_on <= $3::date and ends_on >= $2::date order by starts_on,id`,
     [context.id, period.starts_on, period.ends_on])).rows;
@@ -21,18 +29,19 @@ export async function loadAssessmentMasterSources(db, context, period) {
     from activities a join learning_experiences e on e.id=a.experience_id
     where e.classroom_id=$1 and a.status='active' and a.occurs_on between $2::date and $3::date order by a.occurs_on,a.id`,
     [context.id, period.starts_on, period.ends_on])).rows;
-  const criteria = (await db.query(`select ac.id,ac.revision,ac.competency_v4_id,ac.criterion_text,ac.details,ac.activity_id
-    from activity_criteria ac join activities a on a.id=ac.activity_id join learning_experiences e on e.id=a.experience_id
-    where e.classroom_id=$1 and a.status='active' and ac.status='active' and a.occurs_on between $2::date and $3::date
-      and ac.competency_v4_id is not null order by ac.competency_v4_id,ac.id`, [context.id, period.starts_on, period.ends_on])).rows;
+  const workedCriterionIds=map.entries.filter((row)=>map.ephemeral||row.activity_state==="completed").map((row)=>row.criterion_id);
+  const criteria = workedCriterionIds.length ? (await db.query(`select ac.id,ac.revision,ac.competency_v4_id,ac.criterion_text,ac.details,ac.activity_id
+    from activity_criteria ac where ac.id=any($1::uuid[]) order by ac.competency_v4_id,ac.id`,[workedCriterionIds])).rows : [];
   const competencyIds = [...new Set(criteria.map((row) => row.competency_v4_id))].sort();
   const source = { evaluation_period_id: period.id, starts_on: dateOnly(period.starts_on), ends_on: dateOnly(period.ends_on),
     competency_ids: competencyIds, experience_revisions: experiences.map((row) => `${row.id}:${row.revision}`),
     activity_revisions: activities.map((row) => `${row.id}:${row.revision}`),
     criterion_revisions: criteria.map((row) => `${row.id}:${row.revision}`),
-    classroom_context_fingerprint: context.context_v4?.fingerprint ?? context.context_v4?.source_fingerprint ?? null };
+    classroom_context_fingerprint: context.context_v4?.fingerprint ?? context.context_v4?.source_fingerprint ?? null,
+    evaluation_map_version: map.version, evaluation_map_fingerprint: map.source_fingerprint };
   return { snapshot: assessmentMasterSourceSnapshot(source), competencyIds,
     sources: { period: { id: period.id, label: period.label, starts_on: source.starts_on, ends_on: source.ends_on },
+      evaluation_map: map.entries.filter((row) => row.activity_state === "completed"),
       confirmed_project_masters: experiences.map((row) => ({ id: row.id, flow_version: row.details?.flow_version ?? null,
         decisions: row.details?.decisions ?? null, activity_blueprints: row.details?.project_master?.activity_blueprints ?? row.details?.activity_route ?? [] })),
       activities: activities.map((row) => ({ id: row.id, occurs_on: dateOnly(row.occurs_on), experience_id: row.experience_id,
@@ -80,29 +89,32 @@ export function createAssessmentMasterRouteHandler({ db, teacherId, annualPlanni
           throw new Error("El marco vigente ya corresponde a las fuentes actuales. Puedes editarlo sin volver a generarlo.");
         const kb = await loadKnowledgeBase(), cards = new Map(kb.competencyCards.map((card) => [card.id, card]));
         for (const id of source.competencyIds) { const card = cards.get(id); if (!card?.runtime_selectable_by_age?.[String(context.age)] || !cardIsApplicable(card, { castellanoL2Applicable: context.castellano_l2_applicable === true, religionApplicable: context.religion_applicable === true })) throw new Error("Una competencia trabajada no es aplicable a la edad del aula."); }
+        const labels = Object.fromEntries(source.competencyIds.map((id) => [id, stableCompetencyLabel(cards.get(id))]));
+        source.sources.competency_labels = labels;
         const input = buildAssessmentMasterInput({ age: context.age, competencyIds: source.competencyIds,
-          classroomContext: { id: context.id, group_context: context.context_v4?.classroom_context ?? context.group_context,
+          classroomContext: { id: "current_classroom", group_context: context.context_v4?.classroom_context ?? context.group_context,
             diagnostic_summary: context.diagnostic_summary, religion_applicable: context.religion_applicable === true },
           calendar: context.calendar, sources: source.sources });
         const plan = resolveAIExecutionPlan({ workflow: "assessment_master", task: "generation" });
         const result = await generate(input, { provider: createProvider(plan), executionPlan: plan, knowledgeBase: kb });
         const generationId = randomUUID();
         await pending.set(generationId, { workflow: "assessment_master", classroom_id: context.id,
-          evaluation_period_id: period.id, competency_ids: source.competencyIds, source_snapshot: source.snapshot,
+          evaluation_period_id: period.id, competency_ids: source.competencyIds, competency_labels: labels, source_snapshot: source.snapshot,
           metadata: metadataForAudit(result.metadata), createdAt: Date.now() });
-        send(response, 200, { proposal: result.output, generation_id: generationId, source_snapshot: source.snapshot }, origin); return true;
+        send(response, 200, { proposal: withCanonicalLabels(result.output, labels), generation_id: generationId, source_snapshot: source.snapshot }, origin); return true;
       }
       if (request.method === "POST" && url.pathname === "/api/assessment-masters") {
         const body = await readJson(request), { context, period } = await scope(body.periodId), item = await pending.get(body.generationId);
         if (!item || item.workflow !== "assessment_master" || item.classroom_id !== context.id || item.evaluation_period_id !== period.id) throw new Error("La generación no corresponde a este período.");
-        validateAssessmentMaster(body.proposal, item.competency_ids);
+        const proposal=withCanonicalLabels(body.proposal,item.competency_labels??{});
+        validateAssessmentMaster(proposal, item.competency_ids);
         const latestSources = await loadAssessmentMasterSources(db, context, period);
         if (latestSources.snapshot.fingerprint !== item.source_snapshot.fingerprint) throw new Error("La planificación cambió. Vuelve a preparar el marco.");
         const draft = await current(context, period.id, "draft");
         const version = draft?.version ?? Number((await db.query(`select coalesce(max(version),0)+1 as version from assessment_masters where classroom_id=$1 and evaluation_period_id=$2`, [context.id, period.id])).rows[0].version);
         const id = draft?.id ?? randomUUID();
-        if (draft) await db.query(`update assessment_masters set details=$1::jsonb,source_snapshot=$2::jsonb,generation_metadata=$3::jsonb,updated_at=now() where id=$4`, [JSON.stringify(body.proposal), JSON.stringify(item.source_snapshot), JSON.stringify(item.metadata), id]);
-        else await db.query(`insert into assessment_masters(id,classroom_id,evaluation_period_id,version,status,details,source_snapshot,generation_metadata,created_by) values($1,$2,$3,$4,'draft',$5::jsonb,$6::jsonb,$7::jsonb,$8)`, [id, context.id, period.id, version, JSON.stringify(body.proposal), JSON.stringify(item.source_snapshot), JSON.stringify(item.metadata), teacherId]);
+        if (draft) await db.query(`update assessment_masters set details=$1::jsonb,source_snapshot=$2::jsonb,generation_metadata=$3::jsonb,updated_at=now() where id=$4`, [JSON.stringify(proposal), JSON.stringify(item.source_snapshot), JSON.stringify(item.metadata), id]);
+        else await db.query(`insert into assessment_masters(id,classroom_id,evaluation_period_id,version,status,details,source_snapshot,generation_metadata,created_by) values($1,$2,$3,$4,'draft',$5::jsonb,$6::jsonb,$7::jsonb,$8)`, [id, context.id, period.id, version, JSON.stringify(proposal), JSON.stringify(item.source_snapshot), JSON.stringify(item.metadata), teacherId]);
         await pending.delete(body.generationId); send(response, 200, { id, status: "draft", version }, origin); return true;
       }
       const copyMatch = url.pathname.match(/^\/api\/assessment-masters\/([^/]+)\/copy$/);

@@ -27,6 +27,7 @@ export const AI_ROUTING_POLICY = Object.freeze({
     descriptive_conclusion: Object.freeze({ tier: "routine_generation", fallback_tier: "focused_writing" }),
     descriptive_conclusion_deep_review: Object.freeze({ tier: "focused_writing" }),
     family_report: Object.freeze({ tier: "routine_generation" }),
+    classroom_period_report: Object.freeze({ tier: "judgment_generation" }),
     material_generation: Object.freeze({ execution: "unavailable", planned_tier: "structured_light", planned_fallback_tier: "focused_writing" }),
     today_mode: Object.freeze({ execution: "code" }),
     observation_rewrite: Object.freeze({ tier: "structured_light" }),

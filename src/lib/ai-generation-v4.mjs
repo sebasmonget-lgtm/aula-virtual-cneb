@@ -5,6 +5,7 @@ import { validateAssessmentProposal } from "./assessment-v4-service.mjs";
 import { CONCLUSION_FIELDS, validateDescriptiveConclusion } from "./descriptive-conclusion-v4-service.mjs";
 import { FAMILY_REPORT_FIELDS, FAMILY_REPORT_SECTION_FIELDS, validateFamilyReport } from "./family-report-v4-service.mjs";
 import { ASSESSMENT_MASTER_OUTPUT_SCHEMA, validateAssessmentMaster } from "./assessment-master-service.mjs";
+import { CLASSROOM_PERIOD_REPORT_SCHEMA, validateClassroomPeriodReport } from "./period-assessment-closure-service.mjs";
 import { ANNUAL_PLAN_DEVELOPMENT_SCHEMA, ANNUAL_PLAN_OUTPUT_SCHEMA, AnnualPlanValidationError, requiredAnnualCoverageIds, validateAnnualPlanDevelopment, validateAnnualPlanMaster, validateAnnualPlanMasterCoverage, validateAnnualPlanProposal } from "./annual-plan-contract.mjs";
 export { ANNUAL_PLAN_OUTPUT_SCHEMA } from "./annual-plan-contract.mjs";
 
@@ -53,8 +54,8 @@ export const PROJECT_OUTPUT_SCHEMA = experienceOutputSchema("project-v2", "trigg
 export const UNIT_OUTPUT_SCHEMA = experienceOutputSchema("unit-v2", "learning_need_or_context", "proposed_situations");
 const CRITERION_FIELDS=["competency_id","criterion_text","expected_evidence","acceptable_evidence_variations","observation_focus","evidence_scope","teacher_caution"];
 export const CRITERION_EVIDENCE_OUTPUT_SCHEMA={id:"criterion-evidence-v1",type:"object",additionalProperties:false,required:CRITERION_FIELDS,properties:{competency_id:{type:"string",minLength:1},criterion_text:{type:"string",minLength:1},expected_evidence:{type:"string",minLength:1},acceptable_evidence_variations:{type:"array",items:{type:"string",minLength:1}},observation_focus:{type:"array",items:{type:"string",minLength:1}},evidence_scope:{enum:["individual","group","mixed"]},teacher_caution:{type:"string",minLength:1}}};
-const ASSESSMENT_FIELDS=["competency_id","information_status","evidence_overview","observable_patterns","strengths_and_advances","support_needs","next_opportunities","teacher_questions","insufficiency_reason","caution","suggested_level","suggestion_reason"];
-export const ASSESSMENT_OUTPUT_SCHEMA={id:"assessment-v2",type:"object",additionalProperties:false,required:ASSESSMENT_FIELDS,properties:{competency_id:{type:"string",minLength:1},information_status:{enum:["sufficient","insufficient"]},evidence_overview:{type:"string",minLength:1},observable_patterns:{type:"array",items:{type:"string"}},strengths_and_advances:{type:"array",items:{type:"string"}},support_needs:{type:"array",items:{type:"string"}},next_opportunities:{type:"array",items:{type:"string"}},teacher_questions:{type:"array",items:{type:"string"}},insufficiency_reason:{type:["string","null"]},caution:{type:"string",minLength:1},suggested_level:{type:["string","null"],enum:["AD","A","B","C",null]},suggestion_reason:{type:["string","null"]}}};
+const ASSESSMENT_FIELDS=["competency_id","information_status","evidence_overview","observable_patterns","strengths_and_advances","support_needs","next_opportunities","teacher_questions","insufficiency_reason","caution"];
+export const ASSESSMENT_OUTPUT_SCHEMA={id:"assessment-v3",type:"object",additionalProperties:false,required:ASSESSMENT_FIELDS,properties:{competency_id:{type:"string",minLength:1},information_status:{enum:["sufficient","insufficient"]},evidence_overview:{type:"string",minLength:1},observable_patterns:{type:"array",items:{type:"string"}},strengths_and_advances:{type:"array",items:{type:"string"}},support_needs:{type:"array",items:{type:"string"}},next_opportunities:{type:"array",items:{type:"string"}},teacher_questions:{type:"array",items:{type:"string"}},insufficiency_reason:{type:["string","null"]},caution:{type:"string",minLength:1}}};
 export const DESCRIPTIVE_CONCLUSION_OUTPUT_SCHEMA = { id: "descriptive-conclusion-v1", type: "object", additionalProperties: false, required: CONCLUSION_FIELDS, properties: { competency_id: { type: "string", minLength: 1 }, information_status: { enum: ["sufficient", "insufficient"] }, conclusion_text: { type: "string", minLength: 1 }, progress_examples: { type: "array", items: { type: "string", minLength: 1 } }, support_or_conditions: { type: "array", items: { type: "string", minLength: 1 } }, next_steps: { type: "array", items: { type: "string", minLength: 1 } }, insufficiency_reason: { type: ["string", "null"] }, caution: { type: "string", minLength: 1 } } };
 export const FAMILY_REPORT_OUTPUT_SCHEMA = { id: "family-report-v1", type: "object", additionalProperties: false, required: FAMILY_REPORT_FIELDS, properties: {
   introduction: { type: "string", minLength: 1 }, closing_note: { type: "string", minLength: 1 },
@@ -199,6 +200,10 @@ function assertFamilyReportOutput(output, bundle, input) {
   try { return validateFamilyReport(output, selected, sourceStatuses); }
   catch (error) { throw new InvalidAIGenerationError("family_report_schema_mismatch", { message: error.message }); }
 }
+function assertClassroomPeriodReportOutput(output) {
+  try { return validateClassroomPeriodReport(output); }
+  catch (error) { throw new InvalidAIGenerationError("classroom_period_report_schema_mismatch", { message: error.message }); }
+}
 
 function validateWorkflowOutput(input, output, bundle, confirmedCompetencyId) {
   return input.workflow === "annual_plan" ? assertAnnualPlanStageOutput(output, bundle, input.annual_stage)
@@ -209,6 +214,7 @@ function validateWorkflowOutput(input, output, bundle, confirmedCompetencyId) {
     : input.workflow === "descriptive_conclusion" ? assertDescriptiveConclusionOutput(output, bundle, confirmedCompetencyId,
       input.analysis_status ?? input.student_context?.teacher_confirmed_findings?.information_status)
     : input.workflow === "family_report" ? assertFamilyReportOutput(output, bundle, input)
+    : input.workflow === "classroom_period_report" ? assertClassroomPeriodReportOutput(output)
     : assertActivityOutput(output, bundle, confirmedCompetencyId);
 }
 
@@ -268,7 +274,7 @@ export async function generateAIWorkflowV4(input, { provider, providerFactory, k
   if (plan.execution === "code") {
     throw new InvalidAIGenerationError("workflow_not_generation_enabled", { workflow: input?.workflow, execution_plan: plan });
   }
-  if (!["activity", "annual_plan", "project", "unit", "criterion_realignment", "assessment_master", "assessment", "descriptive_conclusion", "family_report"].includes(input?.workflow) || plan.execution !== "generation") {
+  if (!["activity", "annual_plan", "project", "unit", "criterion_realignment", "assessment_master", "assessment", "descriptive_conclusion", "family_report", "classroom_period_report"].includes(input?.workflow) || plan.execution !== "generation") {
     throw new InvalidAIGenerationError("unsupported_workflow", { workflow: input?.workflow, execution_plan: plan });
   }
   const skillAllowed = (input.workflow === "annual_plan" && input.annual_stage === "master") || ["project", "unit", "activity"].includes(input.workflow);
@@ -276,7 +282,7 @@ export async function generateAIWorkflowV4(input, { provider, providerFactory, k
     throw new InvalidAIGenerationError("skill_scope_invalid");
   }
   const prepared = await prepareAIRequestV4(input, knowledgeBase);
-  const outputSchema = input.workflow === "annual_plan" ? (input.annual_stage === "development" ? ANNUAL_PLAN_DEVELOPMENT_SCHEMA : ANNUAL_PLAN_OUTPUT_SCHEMA) : input.workflow === "project" ? PROJECT_OUTPUT_SCHEMA : input.workflow === "unit" ? UNIT_OUTPUT_SCHEMA : input.workflow === "criterion_realignment" ? CRITERION_EVIDENCE_OUTPUT_SCHEMA : input.workflow === "assessment_master" ? ASSESSMENT_MASTER_OUTPUT_SCHEMA : input.workflow === "assessment" ? ASSESSMENT_OUTPUT_SCHEMA : input.workflow === "descriptive_conclusion" ? DESCRIPTIVE_CONCLUSION_OUTPUT_SCHEMA : input.workflow === "family_report" ? FAMILY_REPORT_OUTPUT_SCHEMA : ACTIVITY_OUTPUT_SCHEMA;
+  const outputSchema = input.workflow === "annual_plan" ? (input.annual_stage === "development" ? ANNUAL_PLAN_DEVELOPMENT_SCHEMA : ANNUAL_PLAN_OUTPUT_SCHEMA) : input.workflow === "project" ? PROJECT_OUTPUT_SCHEMA : input.workflow === "unit" ? UNIT_OUTPUT_SCHEMA : input.workflow === "criterion_realignment" ? CRITERION_EVIDENCE_OUTPUT_SCHEMA : input.workflow === "assessment_master" ? ASSESSMENT_MASTER_OUTPUT_SCHEMA : input.workflow === "assessment" ? ASSESSMENT_OUTPUT_SCHEMA : input.workflow === "descriptive_conclusion" ? DESCRIPTIVE_CONCLUSION_OUTPUT_SCHEMA : input.workflow === "family_report" ? FAMILY_REPORT_OUTPUT_SCHEMA : input.workflow === "classroom_period_report" ? CLASSROOM_PERIOD_REPORT_SCHEMA : ACTIVITY_OUTPUT_SCHEMA;
   const confirmedCompetencyId = input.competency_ids?.length === 1 ? input.competency_ids[0] : null;
   const primaryProvider = provider ?? providerFactory?.(plan);
   let finalPlan = plan;

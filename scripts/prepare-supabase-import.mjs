@@ -20,8 +20,8 @@ const tableOrder = [
   "class_schedule_entries", "daily_execution_logs", "attendance_records", "calendar_exceptions", "calendar_blocks", "initial_stages",
   "school_calendar_holidays", "school_calendar_versions", "school_calendar_days", "classroom_calendar_overrides", "evaluation_periods",
   "student_context_snapshots",
-  "annual_plans", "annual_plan_formal_content", "project_slots", "project_calendar_selections", "project_instructional_dates", "activity_schedule_changes", "annual_plan_competencies", "annual_plan_changes", "period_competency_scope", "period_closure_versions", "period_closures",
-  "competency_assessments", "competency_descriptive_conclusions", "family_reports",
+  "annual_plans", "annual_plan_formal_content", "project_slots", "project_calendar_selections", "project_instructional_dates", "activity_schedule_changes", "annual_plan_competencies", "annual_plan_changes", "period_competency_scope", "competency_display_labels", "period_evaluation_map_versions", "period_evaluation_map_entries", "period_closure_versions", "period_closures", "period_closure_workflows",
+  "competency_assessments", "competency_descriptive_conclusions", "family_reports", "classroom_period_reports",
 ];
 const userFields = new Set(["user_id", "owner_id", "owner_user_id", "teacher_id", "created_by", "author_id", "confirmed_by", "level_confirmed_by", "changed_by", "reverted_by"]);
 const arrayFields = new Set(["official_performance_ids", "performance_ids"]);

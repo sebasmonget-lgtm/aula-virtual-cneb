@@ -26,10 +26,9 @@ export async function savePeriodEvaluationDraft(db, { studentId, competencyId, p
     const details=analysis ?? (previousCurrent && existing.generation_metadata?.analysis ? existing.details : {
       competency_id:competencyId,information_status:manualStatus,evidence_overview:clean(teacherAnalysis)||"Análisis pendiente de la docente.",observable_patterns:[],strengths_and_advances:[],
       support_needs:[],next_opportunities:[],teacher_questions:[],insufficiency_reason:manualStatus==="insufficient"?"La docente revisará más oportunidades de observación.":null,caution:"Borrador docente." });
-    const suggestedLevel=analysis ? (analysis.information_status==="sufficient" ? analysis.suggested_level ?? null : null)
-      : previousCurrent ? existing.suggested_level : null;
-    const suggestionReason=analysis ? (analysis.information_status==="sufficient" ? analysis.suggestion_reason ?? null : null)
-      : previousCurrent ? existing.suggestion_reason : null;
+    // Campos conservados solo por compatibilidad histórica. Las nuevas generaciones nunca sugieren AD/A/B/C.
+    const suggestedLevel=null;
+    const suggestionReason=null;
     const fields=[JSON.stringify(rows.map((row)=>row.id)),JSON.stringify(snapshot),JSON.stringify(details),
       JSON.stringify(metadata ?? (previousCurrent ? existing.generation_metadata : {})),suggestedLevel,suggestionReason,
       clean(teacherAnalysis),clean(conclusionText),provisionalLevel || null,clean(teacherJustification,1000)];

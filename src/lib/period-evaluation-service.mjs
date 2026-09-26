@@ -32,7 +32,7 @@ export function conclusionIsCurrent(conclusion, assessment) {
 export function evaluationState({ assessment, conclusion, draft, sourceRows }) {
   if (assessment && !evidenceIsCurrent(assessment, sourceRows)) return "needs_review";
   if (assessment && !assessment.achievement_level) return "level_pending";
-  if (assessment?.achievement_level && assessment.achievement_level !== "AD" && !conclusionIsCurrent(conclusion, assessment)) return "conclusion_pending";
+  if (assessment?.achievement_level && !conclusionIsCurrent(conclusion, assessment)) return "conclusion_pending";
   if (assessment?.achievement_level && conclusion && !conclusionIsCurrent(conclusion, assessment)) return "needs_review";
   if (assessment?.achievement_level && (!conclusion || conclusionIsCurrent(conclusion, assessment))) return "confirmed";
   if (draft?.details?.information_status === "insufficient" && evidenceIsCurrent(draft, sourceRows)) return "insufficient_information";

@@ -21,7 +21,7 @@
     "v3_semantic_units": 176,
     "source_claims": 13,
     "combined_retrieval_units": 245,
-    "workflows": 15,
+    "workflows": 16,
     "benchmark_cases": 50
   },
   "integrity": {
@@ -66,7 +66,7 @@
       "05_generation/project_unit_generation.json": "f61a7a2d2bf08e74a0a415811c8e4428f01a23de56ec837581b862a538376ff8",
       "05_generation/reports_and_documents_generation.json": "cbeb1ad8d6ef3186a8f23eb0d5519b57643e83429c5db9215106416180467ad4",
       "05_workflows/context_builder_contract.json": "53a6162e1d05e60dbb7188c8ef52d61515ba622b134c284aa0a812a57761dc5f",
-      "05_workflows/workflow_knowledge_requirements.json": "1761eed25ccd1ecd06ad8441ee3d0bdcc821942945c8e7a5614c76046b948ab9",
+      "05_workflows/workflow_knowledge_requirements.json": "c23dc0101b15b651c995f29e1e46670f8bdcfd4b8f80952ee84e5c2c7531982f",
       "06_retrieval/combined_knowledge_units.jsonl": "a6582273c73183f1d02f951ffeff2a6521a406840ff583dfc6b50b348bc7062f",
       "06_retrieval/retrieval_policy.json": "41f7ecc19e23d5d08cc0cabfb263ff803352ceadb15f475ed4bd6d8a558434cd",
       "07_quality/competency_selection_50.json": "b835f8eb429f610233b8b6b0b60013df6c87a3d6d3a64186dec4f9dd795e3140",

@@ -3,10 +3,10 @@ import { createHash } from "node:crypto";
 const string = { type: "string", minLength: 1 };
 const strings = { type: "array", items: string };
 const entry = { type: "object", additionalProperties: false,
-  required: ["competency_id", "assessment_focus", "relevant_evidence", "patterns_to_consider", "progress_signals",
+  required: ["competency_id", "short_label", "area", "assessment_focus", "criteria_worked", "relevant_evidence", "patterns_to_consider", "progress_signals",
     "support_signals", "insufficient_information_rules", "contradiction_handling", "context_considerations",
     "teacher_questions", "prohibited_inferences", "assessment_guidance"],
-  properties: { competency_id: string, assessment_focus: string, relevant_evidence: strings,
+  properties: { competency_id: string, short_label: string, area: string, assessment_focus: string, criteria_worked: strings, relevant_evidence: strings,
     patterns_to_consider: strings, progress_signals: strings, support_signals: strings,
     insufficient_information_rules: strings, contradiction_handling: string, context_considerations: strings,
     teacher_questions: strings, prohibited_inferences: strings, assessment_guidance: string } };
@@ -22,7 +22,9 @@ export function assessmentMasterSourceSnapshot(source) {
     experience_revisions: [...(source.experience_revisions ?? [])].sort(),
     activity_revisions: [...(source.activity_revisions ?? [])].sort(),
     criterion_revisions: [...(source.criterion_revisions ?? [])].sort(),
-    classroom_context_fingerprint: source.classroom_context_fingerprint ?? null };
+    classroom_context_fingerprint: source.classroom_context_fingerprint ?? null,
+    evaluation_map_version: source.evaluation_map_version ?? null,
+    evaluation_map_fingerprint: source.evaluation_map_fingerprint ?? null };
   return { ...canonical, fingerprint: createHash("sha256").update(normalized(canonical)).digest("hex") };
 }
 
@@ -34,9 +36,9 @@ export function validateAssessmentMaster(value, competencyIds) {
   for (const row of value.competencies) {
     if (!allowed.has(row?.competency_id) || seen.has(row.competency_id)) throw new Error("El marco contiene una competencia inválida o repetida.");
     seen.add(row.competency_id);
-    for (const key of ["assessment_focus", "contradiction_handling", "assessment_guidance"])
+    for (const key of ["short_label", "area", "assessment_focus", "contradiction_handling", "assessment_guidance"])
       if (typeof row[key] !== "string" || !row[key].trim()) throw new Error(`Falta ${key} en el marco de evaluación.`);
-    for (const key of ["relevant_evidence", "patterns_to_consider", "progress_signals", "support_signals",
+    for (const key of ["criteria_worked", "relevant_evidence", "patterns_to_consider", "progress_signals", "support_signals",
       "insufficient_information_rules", "context_considerations", "teacher_questions", "prohibited_inferences"])
       if (!Array.isArray(row[key]) || row[key].some((item) => typeof item !== "string" || !item.trim()))
         throw new Error(`El campo ${key} del marco es inválido.`);

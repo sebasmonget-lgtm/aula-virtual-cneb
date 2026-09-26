@@ -124,11 +124,12 @@ const workflowCases = [
   ["assessment", { age: 5, student_id: "student-assessment", competency_ids: ["COM_ORAL"], evidence_history: ["record-1"] }, "student_id", "record-1"],
   ["descriptive_conclusion", { age: 5, student_id: "student-conclusion", competency_ids: ["COM_ORAL"], multiple_evidence_records: ["record-1", "record-2"] }, "student_id", "record-2"],
   ["family_report", { age: 5, competency_ids: ["COM_ORAL"], student_context: { id: "student-family" }, teacher_confirmed_findings: "Avanza al conversar con pares." }, "student_context", "Avanza al conversar con pares."],
+  ["classroom_period_report", { age: 5, competency_ids: ["COM_ORAL"], classroom_context: { id: "current_classroom" }, period_statistics: { student_count: 18 } }, "period_statistics", "student_count"],
   ["material_generation", { age: 5, activity_purpose: "explorar semillas", requested_material_type: "tarjetas de clasificación" }, "activity_purpose", "tarjetas de clasificación"],
   ["today_mode", { age: 5, current_schedule_block: "actividad de exploración", active_plan: "plan semanal 1" }, "current_schedule_block", "actividad de exploración"],
 ];
 
-test("contrato mínimo y determinista de los 15 workflows", async () => {
+test("contrato mínimo y determinista de los 16 workflows", async () => {
   const knowledgeBase = await loadKnowledgeBaseV4();
   for (const [workflow, values, missingField, expectedValue] of workflowCases) {
     const input = { workflow, teacher_request: `Solicitud de ${workflow}.`, ...values, unrelated: "never-send", classroom_context: values.classroom_context ? { ...values.classroom_context, unrelated: "never-send" } : values.classroom_context };
