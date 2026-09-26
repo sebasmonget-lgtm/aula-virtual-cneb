@@ -1,0 +1,95 @@
+{
+  "proposed_version": "4.1.0",
+  "families": [
+    {
+      "id": "SIT_MAT_Q_DISTRIBUTE",
+      "competency_id": "MAT_CANTIDAD",
+      "age_scope": [
+        3,
+        4,
+        5
+      ],
+      "family": "distribuir_o_asegurar_suficiencia",
+      "trigger": "Existe una necesidad real de repartir o comprobar si algo alcanza para personas, grupos o lugares.",
+      "examples": [
+        "repartir materiales",
+        "preparar vasos/objetos para participantes",
+        "organizar piezas para equipos"
+      ],
+      "guardrail": "Evitar convertirlo en ejercicio de contar sin decisión.",
+      "semantic_status": "editorial_pattern_not_official_wording"
+    },
+    {
+      "id": "SIT_MAT_Q_ORGANIZE",
+      "competency_id": "MAT_CANTIDAD",
+      "age_scope": [
+        3,
+        4,
+        5
+      ],
+      "family": "organizar_colecciones",
+      "trigger": "El grupo necesita ordenar, agrupar o clasificar objetos para encontrarlos, usarlos o guardarlos.",
+      "examples": [
+        "ordenar materiales de un sector",
+        "agrupar elementos recolectados",
+        "crear colecciones con criterio"
+      ],
+      "guardrail": "El criterio debe tener sentido; no imponer siempre color/forma.",
+      "semantic_status": "editorial_pattern_not_official_wording"
+    },
+    {
+      "id": "SIT_MAT_Q_COMPARE",
+      "competency_id": "MAT_CANTIDAD",
+      "age_scope": [
+        3,
+        4,
+        5
+      ],
+      "family": "comparar_para_decidir",
+      "trigger": "Hay dos o más colecciones/cantidades y compararlas ayuda a tomar una decisión.",
+      "examples": [
+        "elegir dónde faltan materiales",
+        "comparar provisiones",
+        "decidir qué grupo necesita más/menos"
+      ],
+      "guardrail": "No depender de símbolos numéricos si la situación puede resolverse con objetos.",
+      "semantic_status": "editorial_pattern_not_official_wording"
+    },
+    {
+      "id": "SIT_MAT_S_ROUTE",
+      "competency_id": "MAT_FORMA",
+      "age_scope": [
+        3,
+        4,
+        5
+      ],
+      "family": "recorridos_y_ubicacion",
+      "trigger": "Llegar, encontrar, esconder o comunicar una ubicación exige relaciones espaciales.",
+      "examples": [
+        "buscar un objeto con pistas",
+        "planear recorrido",
+        "guiar a otra persona"
+      ],
+      "guardrail": "No confundir movimiento corporal por sí solo con matemática.",
+      "semantic_status": "editorial_pattern_not_official_wording"
+    },
+    {
+      "id": "SIT_MAT_S_BUILD",
+      "competency_id": "MAT_FORMA",
+      "age_scope": [
+        3,
+        4,
+        5
+      ],
+      "family": "construccion_y_configuracion",
+      "trigger": "Una construcción debe cumplir una condición espacial, de encaje o estabilidad.",
+      "examples": [
+        "construir puente/casa/refugio",
+        "hacer encajar piezas",
+        "reorganizar bloques para una finalidad"
+      ],
+      "guardrail": "Evitar modelo único para copiar.",
+      "semantic_status": "editorial_pattern_not_official_wording"
+    }
+  ]
+}

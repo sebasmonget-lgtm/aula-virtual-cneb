@@ -1,0 +1,75 @@
+{
+  "id": "didactics_communication_writing",
+  "proposed_version": "4.1.0",
+  "title": "Didáctica de escritura emergente",
+  "area": "Comunicación",
+  "competency_ids": [
+    "COM_ESCRITURA"
+  ],
+  "age_scope": [
+    3,
+    4,
+    5
+  ],
+  "semantic_status": "editorial_synthesis_minedu_grounded_not_verbatim",
+  "source_refs": [
+    "LITERACY_NAME_5_2022",
+    "LITERACY_STORIES_5_2022",
+    "LITERACY_INFORMATIONAL_5_2022",
+    "LITERACY_3_5_2022",
+    "PCI_INICIAL_CANONICAL"
+  ],
+  "workflow_scope": [
+    "annual_plan",
+    "project",
+    "unit",
+    "workshop",
+    "activity",
+    "criterion_and_evidence",
+    "material_generation",
+    "today_mode"
+  ],
+  "principles": [
+    "Escribir debe responder a una intención y destinatario comprensibles.",
+    "Aceptar escrituras según hipótesis infantiles y usar dictado al adulto cuando la situación requiera producir un texto más complejo.",
+    "La reflexión sobre lo escrito ocurre dentro de una producción con sentido, no como copia mecánica."
+  ],
+  "situation_families": [
+    "escribir una lista para organizar algo",
+    "crear etiquetas o nombres necesarios en el aula",
+    "registrar un hallazgo o dato para recordarlo",
+    "escribir un mensaje a una persona o grupo",
+    "elaborar cartel/invitación/acuerdo con destinatario real",
+    "dictar al adulto un texto colectivo y revisarlo juntos"
+  ],
+  "teacher_mediation": [
+    "¿Qué necesitamos escribir para no olvidarlo?",
+    "¿Quién va a leerlo? ¿Qué necesita entender?",
+    "¿Cómo podríamos empezar?",
+    "¿Qué quisiste poner aquí?",
+    "¿Falta algo para que nuestro mensaje cumpla su propósito?"
+  ],
+  "evidence_patterns": [
+    "produce marcas/escrituras con intención comunicativa acorde a edad",
+    "explica lo que quiso comunicar",
+    "participa en planificación o revisión de un texto colectivo",
+    "usa recursos disponibles del ambiente escrito sin limitarse a copiar"
+  ],
+  "avoid_patterns": [
+    "planas de letras como actividad central",
+    "exigir ortografía convencional para validar la producción",
+    "hacer copiar un modelo idéntico",
+    "presentar escritura sin destinatario o propósito"
+  ],
+  "age_adaptations": {
+    "3": [
+      "Dar valor a marcas, dibujos y primeras formas de representación; dictado al adulto y escritura colectiva tienen gran peso."
+    ],
+    "4": [
+      "Favorecer producciones breves con propósito, uso de nombres y consulta del ambiente escrito."
+    ],
+    "5": [
+      "Ampliar diversidad de textos, escritura por sí mismos y revisión con apoyo, sin escolarización prematura."
+    ]
+  }
+}

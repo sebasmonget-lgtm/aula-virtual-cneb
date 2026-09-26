@@ -1,0 +1,74 @@
+{
+  "id": "didactics_art_creation",
+  "proposed_version": "4.1.0",
+  "title": "Didáctica de creación desde lenguajes artísticos",
+  "area": "Comunicación",
+  "competency_ids": [
+    "COM_ARTE"
+  ],
+  "age_scope": [
+    3,
+    4,
+    5
+  ],
+  "semantic_status": "editorial_synthesis_minedu_grounded_not_verbatim",
+  "source_refs": [
+    "PCI_INICIAL_CANONICAL",
+    "ART_LANGUAGES_2013",
+    "ART_EXPERIENCE_2021"
+  ],
+  "workflow_scope": [
+    "annual_plan",
+    "project",
+    "unit",
+    "workshop",
+    "activity",
+    "criterion_and_evidence",
+    "material_generation",
+    "today_mode"
+  ],
+  "principles": [
+    "Priorizar proceso creativo, exploración y decisiones infantiles sobre el producto uniforme.",
+    "Ofrecer lenguajes diversos: visual, sonoro/musical, corporal, dramático y combinaciones pertinentes.",
+    "El adulto puede presentar materiales, referentes o desafíos sin imponer cómo debe quedar el producto.",
+    "Diversificar según edad, intereses y contexto cultural del grupo."
+  ],
+  "situation_families": [
+    "explorar posibilidades de un material y transformarlo",
+    "crear una representación a partir de una experiencia o idea propia",
+    "producir sonidos/ritmos y organizarlos con intención",
+    "crear con movimiento, gesto o dramatización",
+    "combinar materiales/lenguajes para comunicar algo",
+    "observar una manifestación artística y responder mediante una creación propia sin copiarla"
+  ],
+  "teacher_mediation": [
+    "¿Qué descubriste que puede hacer este material?",
+    "¿Qué quieres expresar/mostrar?",
+    "¿Qué podrías cambiar para acercarte a tu idea?",
+    "Cuéntame sobre lo que hiciste.",
+    "¿Qué parte quieres conservar o transformar?"
+  ],
+  "evidence_patterns": [
+    "explora materiales/lenguajes y toma decisiones",
+    "transforma ideas o experiencias en una producción/acción propia",
+    "explica o muestra aspectos de su proceso cuando desea hacerlo",
+    "revisa, combina o modifica su creación"
+  ],
+  "avoid_patterns": [
+    "manualidad con modelo único",
+    "plantilla idéntica para todos como producto final",
+    "corregir colores/formas por criterios adultos no vinculados al propósito",
+    "evaluar por limpieza o parecido al modelo"
+  ],
+  "age_adaptations": {
+    "3": [
+      "Mucho contacto sensorial y exploración libre con pocos materiales a la vez; procesos breves y abiertos."
+    ],
+    "4": [
+      "Sostener elecciones y combinaciones; conversar sobre lo que intentan expresar sin obligar a verbalizar todo."
+    ],
+    "5": [
+      "Mayor intención, planificación simple, combinación de lenguajes y revisión de la propia producción."
+    ]
+  }
+}

@@ -1,0 +1,138 @@
+{
+  "proposed_version": "4.1.0",
+  "principle": "El mismo conocimiento didáctico se reutiliza con diferente profundidad según workflow.",
+  "matrix": [
+    {
+      "workflow": "diagnostic",
+      "use": [
+        "situaciones naturales de observación",
+        "manifestaciones posibles",
+        "cautelas"
+      ],
+      "do_not_use": [
+        "secuencias de enseñanza completas"
+      ]
+    },
+    {
+      "workflow": "annual_plan",
+      "use": [
+        "familias de situaciones",
+        "contextos fértiles",
+        "tipo de organización sugerido",
+        "progresión de oportunidades"
+      ],
+      "do_not_use": [
+        "guion de actividad",
+        "detonante ficticio presentado como hecho"
+      ]
+    },
+    {
+      "workflow": "project",
+      "use": [
+        "tipos de detonante",
+        "preguntas/caminos posibles",
+        "agencia infantil",
+        "bifurcaciones",
+        "didáctica de competencias principales"
+      ],
+      "do_not_use": [
+        "secuencia cerrada inmutable"
+      ]
+    },
+    {
+      "workflow": "unit",
+      "use": [
+        "situaciones significativas",
+        "secuencia coherente",
+        "didáctica específica"
+      ],
+      "do_not_use": [
+        "hacer pasar toda unidad por proyecto"
+      ]
+    },
+    {
+      "workflow": "workshop",
+      "use": [
+        "didáctica del lenguaje/área",
+        "ambiente/materiales",
+        "recurrencia",
+        "mediación"
+      ],
+      "do_not_use": [
+        "ficha como producto obligatorio"
+      ]
+    },
+    {
+      "workflow": "activity",
+      "use": [
+        "situación concreta",
+        "acciones del niño",
+        "mediación",
+        "materiales",
+        "evidencia",
+        "adaptación por edad"
+      ],
+      "do_not_use": [
+        "cargar todos los dominios"
+      ]
+    },
+    {
+      "workflow": "criterion_and_evidence",
+      "use": [
+        "manifestaciones auténticas",
+        "familias de evidencia"
+      ],
+      "do_not_use": [
+        "copiar ejemplo como criterio"
+      ]
+    },
+    {
+      "workflow": "evidence_capture",
+      "use": [
+        "pistas breves de observación"
+      ],
+      "do_not_use": [
+        "inferir conclusión"
+      ]
+    },
+    {
+      "workflow": "assessment",
+      "use": [
+        "diversidad de manifestaciones",
+        "cautelas de interpretación"
+      ],
+      "do_not_use": [
+        "inventar evidencia esperada como si hubiera ocurrido"
+      ]
+    },
+    {
+      "workflow": "descriptive_conclusion",
+      "use": [
+        "mínimo; principalmente referentes curriculares"
+      ],
+      "do_not_use": [
+        "situaciones hipotéticas"
+      ]
+    },
+    {
+      "workflow": "material_generation",
+      "use": [
+        "función pedagógica del material",
+        "carga apropiada por edad",
+        "opciones concretas/no estructuradas"
+      ],
+      "do_not_use": [
+        "plantilla por defecto"
+      ]
+    },
+    {
+      "workflow": "today_mode",
+      "use": [
+        "mediación contingente corta"
+      ],
+      "do_not_use": [
+        "planificación larga"
+      ]
+    }
+  ]
+}

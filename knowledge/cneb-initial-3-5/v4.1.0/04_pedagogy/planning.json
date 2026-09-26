@@ -1,0 +1,51 @@
+{
+  "id": "planning",
+  "version": "3.0.0",
+  "purpose": "Convertir diagnóstico/contexto en planificación coherente para Ciclo II.",
+  "source_refs": [
+    "PLANIFICACION_INICIAL_2019",
+    "ORIENTACIONES_INICIAL_2025",
+    "PCI_INICIAL_CANONICAL"
+  ],
+  "rules": [
+    {
+      "id": "PLAN-01",
+      "rule": "Iniciar la planificación desde la observación y el análisis de intereses, necesidades de aprendizaje, características y contexto del grupo.",
+      "why": "La planificación responde al niño real, no a un tema elegido de forma aislada."
+    },
+    {
+      "id": "PLAN-02",
+      "rule": "Definir propósitos en términos de competencias pertinentes y seleccionar referentes por edad; no intentar trabajar todas las competencias en una misma actividad.",
+      "why": "La competencia principal debe corresponder al propósito central."
+    },
+    {
+      "id": "PLAN-03",
+      "rule": "Anticipar evidencia esperada y criterio antes de diseñar la secuencia de acciones.",
+      "why": "Permite coherencia entre propósito, experiencia y evaluación."
+    },
+    {
+      "id": "PLAN-04",
+      "rule": "Organizar espacios, materiales, tiempos, interacciones y participación de familias cuando sea pertinente.",
+      "why": "En Inicial las condiciones del entorno forman parte de la propuesta pedagógica."
+    },
+    {
+      "id": "PLAN-05",
+      "rule": "Diseñar experiencias con juego, exploración, interacción, movimiento, comunicación y toma de decisiones según propósito.",
+      "why": "El aprendizaje infantil es activo e integrado."
+    },
+    {
+      "id": "PLAN-06",
+      "rule": "Mantener la planificación flexible y ajustarla con información recogida durante la experiencia.",
+      "why": "Las respuestas e intereses emergentes modifican el camino pedagógico sin perder propósito."
+    },
+    {
+      "id": "PLAN-07",
+      "rule": "Usar registros de observación como insumo recurrente para volver a planificar.",
+      "why": "Planificación y evaluación formativa operan como un ciclo."
+    }
+  ],
+  "generation_implications": [
+    "Toda salida de planificación debe explicitar de qué información del grupo nace.",
+    "Si no hay diagnóstico suficiente, generar propuesta provisional y pedir/permitir ajuste docente."
+  ]
+}

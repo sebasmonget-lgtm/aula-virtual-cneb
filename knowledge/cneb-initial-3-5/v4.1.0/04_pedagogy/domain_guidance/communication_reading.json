@@ -1,0 +1,77 @@
+{
+  "id": "didactics_communication_reading",
+  "proposed_version": "4.1.0",
+  "title": "Didáctica de lectura emergente",
+  "area": "Comunicación",
+  "competency_ids": [
+    "COM_LECTURA"
+  ],
+  "age_scope": [
+    3,
+    4,
+    5
+  ],
+  "semantic_status": "editorial_synthesis_minedu_grounded_not_verbatim",
+  "source_refs": [
+    "READING_INITIAL_2020",
+    "LITERACY_NAME_5_2022",
+    "LITERACY_STORIES_5_2022",
+    "LITERACY_INFORMATIONAL_5_2022",
+    "LITERACY_3_5_2022",
+    "PCI_INICIAL_CANONICAL"
+  ],
+  "workflow_scope": [
+    "annual_plan",
+    "project",
+    "unit",
+    "workshop",
+    "activity",
+    "criterion_and_evidence",
+    "material_generation",
+    "today_mode"
+  ],
+  "principles": [
+    "El texto aparece porque existe un propósito real: disfrutar, saber, localizar información o hacer algo.",
+    "Reconocer que los niños elaboran hipótesis sobre textos e imágenes; la mediación ayuda a anticipar, verificar e interpretar.",
+    "La lectura por parte del adulto y la exploración infantil de textos pueden coexistir.",
+    "No reducir la competencia a reconocer letras, sílabas o palabras aisladas."
+  ],
+  "situation_families": [
+    "leer para disfrutar un cuento, poema, canción o adivinanza",
+    "leer para informarse sobre una pregunta del proyecto",
+    "leer instrucciones para realizar una acción",
+    "localizar nombres, etiquetas o información necesaria",
+    "comparar textos para decidir cuál sirve a un propósito",
+    "consultar carteles, listas o señales usados realmente en el aula"
+  ],
+  "teacher_mediation": [
+    "¿Qué crees que dice aquí? ¿Qué te hace pensar eso?",
+    "¿Dónde podríamos buscar la información que necesitamos?",
+    "Antes de leer, ¿de qué crees que tratará?",
+    "Después de leer, ¿qué descubrimos?",
+    "¿Qué parte del texto nos ayudó?"
+  ],
+  "evidence_patterns": [
+    "anticipa contenido usando pistas pertinentes",
+    "obtiene o infiere información acorde a edad y tipo de texto",
+    "relaciona texto con propósito o experiencia",
+    "explica con palabras/gestos qué comprendió o dónde encontró información"
+  ],
+  "avoid_patterns": [
+    "usar planas o decodificación como requisito para considerar lectura",
+    "preguntas de memoria como única interacción con el texto",
+    "mostrar textos sin propósito reconocible",
+    "corregir hipótesis infantiles sin permitir contraste con el texto"
+  ],
+  "age_adaptations": {
+    "3": [
+      "Predominan lectura compartida, imágenes y textos cercanos; aceptar respuestas corporales, señalamientos y expresiones breves."
+    ],
+    "4": [
+      "Ampliar anticipación, conversación sobre información y búsqueda en textos familiares."
+    ],
+    "5": [
+      "Diversificar textos y propósitos; aprovechar nombre propio, textos informativos/instructivos y lectura compartida para contrastar hipótesis."
+    ]
+  }
+}

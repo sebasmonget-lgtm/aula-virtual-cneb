@@ -1,0 +1,48 @@
+{
+  "version": "3.0.0",
+  "rule": "Aliases sirven solo para búsqueda/migración. La generación debe emitir canonical_name salvo que cite un documento histórico.",
+  "aliases": [
+    {
+      "alias": "Construye la noción de cantidad",
+      "canonical_id": "MAT_CANTIDAD",
+      "canonical_name": "Resuelve problemas de cantidad",
+      "reason": "denominación de versión de trabajo/antigua"
+    },
+    {
+      "alias": "Establece relaciones espaciales",
+      "canonical_id": "MAT_FORMA",
+      "canonical_name": "Resuelve problemas de forma, movimiento y localización",
+      "reason": "denominación de versión de trabajo/antigua"
+    },
+    {
+      "alias": "Crea proyectos a través del arte",
+      "canonical_id": "COM_ARTE",
+      "canonical_name": "Crea proyectos desde los lenguajes artísticos",
+      "reason": "denominación previa"
+    },
+    {
+      "alias": "Crea proyectos a través de los lenguajes artísticos",
+      "canonical_id": "COM_ARTE",
+      "canonical_name": "Crea proyectos desde los lenguajes artísticos",
+      "reason": "variante de denominación"
+    },
+    {
+      "alias": "Convive y participa democráticamente",
+      "canonical_id": "PS_CONVIVE",
+      "canonical_name": "Convive y participa democráticamente en la búsqueda del bien común",
+      "reason": "abreviación frecuente"
+    },
+    {
+      "alias": "Se desenvuelve en entornos virtuales generados por las TIC",
+      "canonical_id": "TRANS_TIC",
+      "canonical_name": "Se desenvuelve en los entornos virtuales generados por las TIC",
+      "reason": "variante sin artículo"
+    },
+    {
+      "alias": "Gestiona su aprendizaje",
+      "canonical_id": "TRANS_AUTONOMO",
+      "canonical_name": "Gestiona su aprendizaje de manera autónoma",
+      "reason": "abreviación"
+    }
+  ]
+}

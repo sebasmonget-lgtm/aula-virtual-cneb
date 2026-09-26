@@ -1,0 +1,345 @@
+{
+  "created_at": "2026-09-26T18:53:02.127Z",
+  "results": [
+    {
+      "id": "GEN-ANNUAL-01",
+      "workflow": "annual_plan",
+      "version": "4.0.0",
+      "status": "completed",
+      "model": "gpt-6-sol",
+      "reasoning_effort": "high",
+      "elapsed_ms": 14753,
+      "usage": {
+        "input_tokens": 18653,
+        "cached_input_tokens": 0,
+        "output_tokens": 732,
+        "total_tokens": 19385
+      },
+      "knowledge_unit_ids": [
+        "DIA-01",
+        "DIA-06",
+        "DIA-04",
+        "EVA-02",
+        "EVA-03",
+        "DIA-03",
+        "EVA-01",
+        "EVA-06",
+        "EVA-07",
+        "DIA-02",
+        "DIA-05",
+        "EVA-04",
+        "EVA-05",
+        "PLAN-04",
+        "PLAN-01",
+        "PLAN-02",
+        "SRC_DIAGNOSTIC_2023",
+        "SRC_PLAN_2019",
+        "SRC_PROJECTS_2019",
+        "SRC_TUTORING_2024",
+        "SRC_SPACES_2024"
+      ],
+      "output": {
+        "approach": "Bimestre 2 de 2026, 4 años: oportunidad inicial de juego para «Resuelve problemas de cantidad». Preparar materiales y averiguar si alcanza uno para cada participante.",
+        "child_actions": "Se espera que organicen materiales, prueben repartirlos uno a uno y comparen colecciones pequeñas para identificar si faltan o sobran.",
+        "teacher_mediation": "Ofrecer materiales de juego y preguntar: «¿Alcanzan para todos? ¿Cómo podemos averiguarlo?». Escuchar sus estrategias y ajustar la propuesta según sus respuestas.",
+        "evidence_or_interpretation": "Observado en el grupo: ensaya distintas formas de organizar materiales. Por recoger: cómo reparte, compara y explica sus decisiones; aún no hay evidencia individual de esas acciones.",
+        "caution": "Es una propuesta revisable, no una conclusión de logro. Trazabilidad: PLAN-01, PLAN-02 y EVA-02; PLANIFICACION_INICIAL_2019 y CNEB."
+      }
+    },
+    {
+      "id": "GEN-ANNUAL-01",
+      "workflow": "annual_plan",
+      "version": "4.1.0",
+      "status": "completed",
+      "model": "gpt-6-sol",
+      "reasoning_effort": "high",
+      "elapsed_ms": 13752,
+      "usage": {
+        "input_tokens": 21095,
+        "cached_input_tokens": 0,
+        "output_tokens": 727,
+        "total_tokens": 21822
+      },
+      "knowledge_unit_ids": [
+        "DIDACTICS_MATH_QUANTITY_SITUATIONS",
+        "DIDACTICS_PERSONAL_COEXISTENCE_SITUATIONS",
+        "DIDACTICS_PSYCHOMOTOR_SITUATIONS",
+        "DIDACTICS_ART_CREATION_SITUATIONS",
+        "DIDACTICS_MATH_SHAPE_SITUATIONS",
+        "DIDACTICS_COMMUNICATION_READING_SITUATIONS",
+        "DIDACTICS_COMMUNICATION_WRITING_SITUATIONS",
+        "DIDACTICS_ORALITY_EXTENSION_SITUATIONS",
+        "DIDACTICS_PERSONAL_IDENTITY_SITUATIONS",
+        "DIDACTICS_SCIENCE_INQUIRY_SITUATIONS",
+        "SIT_COM_O_EXPLAIN",
+        "SIT_COM_O_NARRATE",
+        "SIT_MAT_Q_COMPARE",
+        "SIT_MAT_Q_DISTRIBUTE",
+        "SIT_MAT_Q_ORGANIZE",
+        "SIT_MAT_S_BUILD",
+        "SIT_MAT_S_ROUTE",
+        "SIT_PS_CO_AGREEMENT",
+        "SIT_ART_MATERIAL",
+        "SIT_ART_SOUND",
+        "SRC_DIAGNOSTIC_2023",
+        "SRC_PLAN_2019",
+        "SRC_PROJECTS_2019",
+        "SRC_TUTORING_2024",
+        "SRC_SPACES_2024",
+        "SRC_MATH_INITIAL_2020",
+        "SRC_READING_INITIAL_2020"
+      ],
+      "output": {
+        "approach": "Oportunidad inicial y revisable para el bimestre 2: organizar materiales para el juego y averiguar si alcanzan. Prioridad confirmada para el grupo de 4 años: Resuelve problemas de cantidad.",
+        "child_actions": "Se espera que propongan cómo agrupar los materiales, comparen colecciones pequeñas y comprueben si alcanzan mediante correspondencia uno a uno o conteo funcional.",
+        "teacher_mediation": "Ofrecer materiales de juego y preguntar cómo podrían organizarlos y comprobar dónde faltan, sin imponer un único criterio; ajustar la propuesta según sus respuestas.",
+        "evidence_or_interpretation": "Dato disponible: el grupo ensaya varias formas de organizar materiales. Las comparaciones y explicaciones son evidencias esperadas, aún no observadas.",
+        "caution": "No inferir logros individuales ni cerrar el plan con esta oportunidad. Base interna: SIT_MAT_Q_ORGANIZE, SIT_MAT_Q_COMPARE; MATH_INITIAL_2020."
+      }
+    },
+    {
+      "id": "GEN-PROJECT-01",
+      "workflow": "project",
+      "version": "4.0.0",
+      "status": "completed",
+      "model": "gpt-6-sol",
+      "reasoning_effort": "medium",
+      "elapsed_ms": 7394,
+      "usage": {
+        "input_tokens": 6775,
+        "cached_input_tokens": 0,
+        "output_tokens": 386,
+        "total_tokens": 7161
+      },
+      "knowledge_unit_ids": [
+        "CRI-03",
+        "CRI-05",
+        "EVA-01",
+        "EVA-04",
+        "CRI-01",
+        "CRI-02",
+        "CRI-04",
+        "EVA-02",
+        "EVA-03",
+        "EVA-05",
+        "EVA-06",
+        "EVA-07",
+        "ORG-02",
+        "INT-03",
+        "SRC_PROJECTS_2019",
+        "SRC_INTERACTIONS_2019",
+        "SRC_ORALITY_2025",
+        "SRC_SPACES_2024"
+      ],
+      "output": {
+        "approach": "En el Project Master, registrar como punto de partida que el grupo de 5 años encontró un insecto en el patio y preguntó dónde vive. Mantener «Indaga mediante métodos científicos para construir sus conocimientos» como competencia confirmada y dejar abiertos los siguientes pasos según las preguntas y hallazgos infantiles.",
+        "child_actions": "Proponer posibles lugares donde vive, elegir cómo averiguarlo, observar el patio sin dañar al insecto, representar lo observado y comparar hallazgos con sus ideas iniciales. Son acciones posibles, aún no realizadas.",
+        "teacher_mediation": "Escuchar las preguntas, facilitar la exploración y preguntar: «¿Qué nos hace pensar eso?» o «¿Dónde podríamos buscar?». Revisar con el grupo qué conviene hacer después, sin adelantar la respuesta.",
+        "evidence_or_interpretation": "Hecho informado: apareció un insecto y el grupo preguntó dónde vive. Evidencia esperada: preguntas, propuestas de búsqueda, registros o explicaciones que relacionen observaciones e ideas iniciales; todavía no hay evidencia para valorar aprendizajes individuales.",
+        "caution": "No fijar toda la secuencia ni atribuir hallazgos o niveles de logro. La valoración individual requeriría oportunidades de observación propias y confirmación docente. Referencias internas: ORG-02, INT-03, CRI-03, CRI-05 y EVA-06; PROYECTOS_INICIAL_2019 y CNEB."
+      }
+    },
+    {
+      "id": "GEN-PROJECT-01",
+      "workflow": "project",
+      "version": "4.1.0",
+      "status": "completed",
+      "model": "gpt-6-sol",
+      "reasoning_effort": "medium",
+      "elapsed_ms": 8207,
+      "usage": {
+        "input_tokens": 8200,
+        "cached_input_tokens": 0,
+        "output_tokens": 322,
+        "total_tokens": 8522
+      },
+      "knowledge_unit_ids": [
+        "PAT_PROJECT_LIVING_GARDEN_AGE5",
+        "DIDACTICS_SCIENCE_INQUIRY_SITUATIONS",
+        "SIT_CYT_UNEXPECTED",
+        "SIT_CYT_LIVING",
+        "SIT_CYT_CHANGE",
+        "SIT_CYT_COMPARE_MATERIALS",
+        "PAT_PROJECT_TRANSFORMATION_MULTIAGE",
+        "CRI-03",
+        "CRI-05",
+        "EVA-01",
+        "EVA-04",
+        "CRI-01",
+        "CRI-02",
+        "CRI-04",
+        "EVA-02",
+        "EVA-03",
+        "EVA-05",
+        "EVA-06",
+        "SRC_PROJECTS_2019",
+        "SRC_INTERACTIONS_2019",
+        "SRC_SCIENCE_MODULE_2012",
+        "SRC_ORALITY_2025",
+        "SRC_SPACES_2024"
+      ],
+      "output": {
+        "approach": "Proyecto abierto para 5 años, centrado en CYT_INDAGA: partir de la pregunta «¿Dónde vive?» y decidir los siguientes pasos según lo que el grupo encuentre y pregunte.",
+        "child_actions": "Proponer posibles lugares, elegir cómo buscarlos, observar el patio sin dañar al insecto, registrar lo visto con dibujos o relatos y comparar los hallazgos con sus ideas iniciales.",
+        "teacher_mediation": "Escuchar las explicaciones, preguntar «¿Qué podríamos observar para averiguarlo?» y ofrecer tiempo y materiales para explorar. Si surgen otras preguntas, ajustar el recorrido con el grupo.",
+        "evidence_or_interpretation": "Dato disponible: el grupo encontró un insecto y preguntó dónde vive. Los registros, comparaciones y explicaciones son evidencias esperadas, no observadas aún.",
+        "caution": "No fijar de antemano la respuesta ni toda la secuencia; respetar al ser vivo y no atribuir desempeños individuales a partir del relato grupal."
+      }
+    },
+    {
+      "id": "GEN-ACT-MATH-01",
+      "workflow": "activity",
+      "version": "4.0.0",
+      "status": "completed",
+      "model": "gpt-6-luna",
+      "reasoning_effort": "medium",
+      "elapsed_ms": 4908,
+      "usage": {
+        "input_tokens": 5299,
+        "cached_input_tokens": 0,
+        "output_tokens": 424,
+        "total_tokens": 5723
+      },
+      "knowledge_unit_ids": [
+        "CRI-01",
+        "CRI-05",
+        "CRI-02",
+        "CRI-03",
+        "CRI-04",
+        "INT-04",
+        "INT-05",
+        "INT-01",
+        "INT-02",
+        "INT-03",
+        "SRC_INTERACTIONS_2019",
+        "SRC_ORALITY_2025",
+        "SRC_SPACES_2024"
+      ],
+      "output": {
+        "approach": "Actividad 2 de la secuencia: organizar y repartir los productos de la tienda para que alcancen a quienes participan. Para niñas y niños de 4 años, el foco es resolver una situación concreta de cantidad mediante correspondencia, comparación y conteo, sin anticipar una única estrategia.",
+        "child_actions": "Los niños pueden decidir cómo organizar los productos y probar maneras de repartirlos entre los participantes. Pueden contar, comparar si queda suficiente, ajustar el reparto y comunicar o mostrar cómo lo hicieron.",
+        "teacher_mediation": "Preparar el espacio de la tienda y los productos disponibles. Observar y escuchar sin resolver por ellos; preguntar, según lo que ocurra: «¿Cómo podemos hacer para que alcance?», «¿Cómo comprobaron que todos recibieron?» o «¿Qué podrían cambiar?». Dar tiempo para probar otras estrategias.",
+        "evidence_or_interpretation": "No se proporcionó evidencia observada del aula. Como evidencia esperada durante la actividad, podrían observarse acciones de reparto uno a uno, conteo o comparación de cantidades, y explicaciones o demostraciones de cómo verifican si alcanza. Interpretar solo lo efectivamente observado; la participación grupal no demuestra por sí sola el desempeño individual.",
+        "caution": "Mantener la situación, el propósito y su lugar como segunda actividad del proyecto. No imponer una forma única de repartir ni exigir escritura o registro formal. Las acciones descritas son oportunidades esperadas, no hechos ya observados ni citas literales de MINEDU."
+      }
+    },
+    {
+      "id": "GEN-ACT-MATH-01",
+      "workflow": "activity",
+      "version": "4.1.0",
+      "status": "completed",
+      "model": "gpt-6-luna",
+      "reasoning_effort": "medium",
+      "elapsed_ms": 4551,
+      "usage": {
+        "input_tokens": 6887,
+        "cached_input_tokens": 0,
+        "output_tokens": 374,
+        "total_tokens": 7261
+      },
+      "knowledge_unit_ids": [
+        "DIDACTICS_MATH_QUANTITY_AGE_4",
+        "DIDACTICS_MATH_QUANTITY_AVOID",
+        "DIDACTICS_MATH_QUANTITY_SITUATIONS",
+        "DIDACTICS_MATH_QUANTITY_PRINCIPLES",
+        "SIT_MAT_Q_DISTRIBUTE",
+        "SIT_MAT_Q_COMPARE",
+        "SIT_MAT_Q_ORGANIZE",
+        "DIDACTICS_MATH_QUANTITY_EVIDENCE",
+        "DIDACTICS_MATH_QUANTITY_MEDIATION",
+        "CRI-01",
+        "CRI-05",
+        "CRI-02",
+        "CRI-03",
+        "CRI-04",
+        "SRC_MATH_INITIAL_2020",
+        "SRC_INTERACTIONS_2019",
+        "SRC_ORALITY_2025",
+        "SRC_SPACES_2024"
+      ],
+      "output": {
+        "approach": "Actividad 2: organizar y repartir los productos de la tienda para que alcancen a quienes participan. Da continuidad a los acuerdos sobre la tienda y prepara su posterior prueba y ajuste.",
+        "child_actions": "Con los productos disponibles, las niñas y los niños pueden decidir cómo organizarlos, repartirlos entre quienes participan y comprobar si alcanza; pueden probar distintas maneras y mostrar o contar cómo lo hicieron.",
+        "teacher_mediation": "Observar y dar tiempo para que prueben. Si necesitan apoyo, preguntar: «¿Cómo podemos saber si alcanza?», «¿Cómo los organizaron?» o «¿Cómo podemos comprobarlo?», sin anticipar la solución.",
+        "evidence_or_interpretation": "No se aporta evidencia observada. Durante la actividad podrían observarse correspondencias, conteos o comparaciones que ayuden a repartir, y cómo muestran o explican su estrategia. Son oportunidades de observación, no resultados asegurados.",
+        "caution": "Ajustar la cantidad de productos y participantes a lo disponible y a la respuesta del grupo. No convertir el reparto en un ejercicio de conteo sin propósito ni atribuir a cada niña o niño un desempeño observado solo en grupo."
+      }
+    },
+    {
+      "id": "GEN-ASSESS-01",
+      "workflow": "assessment",
+      "version": "4.0.0",
+      "status": "completed",
+      "model": "gpt-6-luna",
+      "reasoning_effort": "medium",
+      "elapsed_ms": 5430,
+      "usage": {
+        "input_tokens": 4706,
+        "cached_input_tokens": 0,
+        "output_tokens": 451,
+        "total_tokens": 5157
+      },
+      "knowledge_unit_ids": [
+        "AGE_5_MAT_FORMA",
+        "EVA-01",
+        "CRI-02",
+        "CRI-05",
+        "CRI-03",
+        "CRI-04",
+        "EVA-02",
+        "EVA-03",
+        "EVA-06",
+        "EVA-07",
+        "SRC_DIAGNOSTIC_2023",
+        "SRC_TUTORING_2024",
+        "OFFREF_MAT_FORMA_A5"
+      ],
+      "output": {
+        "approach": "Interpretación integrada de las dos actuaciones registradas, considerando el referente semántico para 5 años de MAT_FORMA; no es una valoración formal. [AGE_5_MAT_FORMA; EVA-01, EVA-03]",
+        "child_actions": "El 12/05 indicó que la caja estaba detrás del banco y desplazó un objeto siguiendo esa indicación. El 19/05 explicó a una compañera cómo llegar desde la puerta hasta el rincón de bloques.",
+        "teacher_mediation": "Ofrecer otro juego de recorridos con distintos puntos de partida y destino, invitándole a explicar o mostrar cómo orientarse. Observar qué referencias espaciales usa y si ajusta su recorrido; aceptar distintas formas de expresarlo.",
+        "evidence_or_interpretation": "Son evidencias de ubicación y comunicación de relaciones espaciales en dos situaciones y fechas. Sugieren uso de referencias espaciales para orientar acciones y explicar un trayecto; no permiten afirmar por sí solas el dominio de todos los aspectos de la competencia. [EVA-02, EVA-03; CNEB]",
+        "caution": "Se limita a las actuaciones registradas: no se infieren otras habilidades ni se asigna nivel. La valoración descriptiva formal corresponde a la docente. [EVA-06]"
+      }
+    },
+    {
+      "id": "GEN-ASSESS-01",
+      "workflow": "assessment",
+      "version": "4.1.0",
+      "status": "completed",
+      "model": "gpt-6-luna",
+      "reasoning_effort": "medium",
+      "elapsed_ms": 4105,
+      "usage": {
+        "input_tokens": 5201,
+        "cached_input_tokens": 0,
+        "output_tokens": 335,
+        "total_tokens": 5536
+      },
+      "knowledge_unit_ids": [
+        "DIDACTICS_MATH_SHAPE_AGE_5",
+        "AGE_5_MAT_FORMA",
+        "DIDACTICS_MATH_SHAPE_EVIDENCE",
+        "EVA-01",
+        "CRI-02",
+        "CRI-05",
+        "CRI-03",
+        "CRI-04",
+        "EVA-02",
+        "EVA-03",
+        "EVA-06",
+        "EVA-07",
+        "SRC_DIAGNOSTIC_2023",
+        "SRC_TUTORING_2024",
+        "OFFREF_MAT_FORMA_A5"
+      ],
+      "output": {
+        "approach": "Interpretar las actuaciones registradas para MAT_FORMA, considerando la referencia de 5 años sobre orientación y relaciones espaciales más precisas.",
+        "child_actions": "Registrado: el 12 de mayo indicó que la caja estaba detrás del banco y desplazó un objeto siguiendo esa indicación. El 19 de mayo explicó a una compañera cómo llegar desde la puerta hasta el rincón de bloques.",
+        "teacher_mediation": "En nuevas situaciones, invitarle a explicar o mostrar el recorrido y observar cómo comunica posiciones y direcciones; estas son oportunidades futuras, no evidencia ya registrada.",
+        "evidence_or_interpretation": "Las dos actuaciones, en contextos distintos, muestran uso y comunicación de relaciones espaciales al ubicar un objeto y explicar un trayecto. Son evidencias pertinentes para la competencia; no permiten por sí solas una conclusión global.",
+        "caution": "No se asigna nivel AD/A/B/C ni se añaden actuaciones no observadas. La valoración formal corresponde a la docente."
+      }
+    }
+  ]
+}

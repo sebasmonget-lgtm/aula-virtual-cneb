@@ -1,0 +1,38 @@
+{
+  "id": "evidence_and_criteria",
+  "version": "3.0.0",
+  "purpose": "Construir criterios y evidencias coherentes para la evaluación formativa.",
+  "source_refs": [
+    "EVALUACION_RVM094_MOD048",
+    "PLANIFICACION_INICIAL_2019",
+    "CNEB"
+  ],
+  "rules": [
+    {
+      "id": "CRI-01",
+      "rule": "Derivar el criterio del sentido de la competencia, estándar del ciclo y desempeño pertinente por edad, contextualizado a la actividad.",
+      "why": "Evita criterios genéricos o desvinculados."
+    },
+    {
+      "id": "CRI-02",
+      "rule": "Redactar el criterio en términos de actuación observable e interpretable, no de conducta superficial de cumplimiento.",
+      "why": "Debe ayudar a analizar evidencia de competencia."
+    },
+    {
+      "id": "CRI-03",
+      "rule": "Describir evidencia esperada como actuación/producción/explicación concreta; no como 'foto' o 'ficha' únicamente.",
+      "why": "El soporte no es la evidencia pedagógica completa."
+    },
+    {
+      "id": "CRI-04",
+      "rule": "Permitir varias evidencias válidas para un mismo criterio si muestran el mismo aprendizaje.",
+      "why": "Respeta diversidad de expresión infantil."
+    },
+    {
+      "id": "CRI-05",
+      "rule": "No exigir una evidencia individual si la situación solo permite observar al grupo; diseñar oportunidades adicionales si se necesita juicio individual.",
+      "why": "Evita atribuir al niño lo que no se observó."
+    }
+  ],
+  "generation_implications": []
+}

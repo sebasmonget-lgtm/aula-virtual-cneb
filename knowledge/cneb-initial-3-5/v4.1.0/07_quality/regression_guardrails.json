@@ -1,0 +1,22 @@
+{
+  "target_base_version": "4.0.0",
+  "must_preserve": [
+    "14 competencias canónicas e IDs",
+    "age_reference oficial por 3/4/5",
+    "filtros de Castellano L2 y Religión",
+    "teacher authority",
+    "separación evidencia observada vs evidencia esperada",
+    "runtime sin lectura de PDF",
+    "provenance de source_refs/knowledge_unit_ids",
+    "overlay temporal 2026 solo cuando corresponde",
+    "una sola competencia confirmada por llamada salvo family_report, a menos que Codex implemente y pruebe extensión multi-competencia explícita"
+  ],
+  "must_not": [
+    "sobrescribir v4.0.0",
+    "promover fuentes 2012-2015 como autoridad curricular",
+    "copiar talleres/fichas concretas dentro del KB didáctico",
+    "usar Juega, crea, resuelve y aprende como corpus general si su destino es Biblioteca",
+    "introducir embeddings/vector DB en esta migración",
+    "cambiar modelos/routing de IA por efecto de esta KB"
+  ]
+}

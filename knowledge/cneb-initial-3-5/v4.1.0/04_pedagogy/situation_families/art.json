@@ -1,0 +1,61 @@
+{
+  "proposed_version": "4.1.0",
+  "families": [
+    {
+      "id": "SIT_ART_MATERIAL",
+      "competency_id": "COM_ARTE",
+      "age_scope": [
+        3,
+        4,
+        5
+      ],
+      "family": "exploracion_material",
+      "trigger": "Un material invita a descubrir posibilidades y luego tomar decisiones creativas.",
+      "examples": [
+        "arcilla/masa",
+        "papel",
+        "elementos naturales",
+        "pintura",
+        "material reutilizable"
+      ],
+      "guardrail": "Evitar producto modelo.",
+      "semantic_status": "editorial_pattern_not_official_wording"
+    },
+    {
+      "id": "SIT_ART_SOUND",
+      "competency_id": "COM_ARTE",
+      "age_scope": [
+        3,
+        4,
+        5
+      ],
+      "family": "exploracion_sonora",
+      "trigger": "Sonidos del cuerpo, objetos o instrumentos se exploran y organizan con intención.",
+      "examples": [
+        "ritmos",
+        "paisajes sonoros",
+        "acompañar relato"
+      ],
+      "guardrail": "No reducir a repetir patrón adulto.",
+      "semantic_status": "editorial_pattern_not_official_wording"
+    },
+    {
+      "id": "SIT_ART_DRAMA",
+      "competency_id": "COM_ARTE",
+      "age_scope": [
+        3,
+        4,
+        5
+      ],
+      "family": "dramatizacion_creativa",
+      "trigger": "Los niños transforman experiencias, relatos o ideas mediante roles, gesto, voz y espacio.",
+      "examples": [
+        "juego dramático",
+        "escenas inventadas",
+        "títeres"
+      ],
+      "guardrail": "Distinguir creación artística de juego simbólico libre cuando corresponda.",
+      "semantic_status": "editorial_pattern_not_official_wording"
+    }
+  ]
+}

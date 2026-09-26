@@ -1,0 +1,77 @@
+{
+  "id": "didactics_science_inquiry",
+  "proposed_version": "4.1.0",
+  "title": "Didáctica de indagación científica",
+  "area": "Ciencia y Tecnología",
+  "competency_ids": [
+    "CYT_INDAGA"
+  ],
+  "age_scope": [
+    3,
+    4,
+    5
+  ],
+  "semantic_status": "editorial_synthesis_minedu_grounded_not_verbatim",
+  "source_refs": [
+    "PCI_INICIAL_CANONICAL",
+    "SCIENCE_MODULE_2012",
+    "SCIENCE_ROUTES_2015",
+    "PROYECTOS_INICIAL_2019"
+  ],
+  "workflow_scope": [
+    "diagnostic",
+    "annual_plan",
+    "project",
+    "unit",
+    "activity",
+    "criterion_and_evidence",
+    "material_generation",
+    "today_mode"
+  ],
+  "principles": [
+    "Partir de curiosidad, fenómeno, pregunta o problema observable, no de una exposición temática.",
+    "La indagación infantil combina observar, preguntar, anticipar, explorar/probar, registrar de forma pertinente y comunicar hallazgos.",
+    "Las ideas infantiles son punto de partida para contrastar con la experiencia y nuevas fuentes de información.",
+    "Las fuentes históricas aportan didáctica compatible, nunca nomenclatura curricular actual."
+  ],
+  "situation_families": [
+    "algo inesperado aparece en el aula o patio",
+    "un ser vivo cambia o despierta preguntas",
+    "dos materiales se comportan de forma diferente",
+    "un cambio ocurre con el tiempo y requiere seguimiento",
+    "hay explicaciones distintas entre niños sobre un fenómeno",
+    "se necesita averiguar qué material/condición funciona para un propósito"
+  ],
+  "teacher_mediation": [
+    "¿Qué observaste exactamente?",
+    "¿Qué crees que podría pasar? ¿Por qué?",
+    "¿Cómo podríamos averiguarlo?",
+    "¿Qué deberíamos mantener igual/cambiar para comparar?",
+    "¿Qué cambió después de probar?",
+    "¿Qué podemos decir ahora y qué todavía no sabemos?"
+  ],
+  "evidence_patterns": [
+    "formula o reformula preguntas con apoyo",
+    "propone anticipaciones o posibles explicaciones",
+    "observa/compara y recoge información mediante acciones pertinentes",
+    "relaciona lo observado con su anticipación",
+    "comunica hallazgos con lenguaje, dibujo, objetos u otros registros acordes a edad"
+  ],
+  "avoid_patterns": [
+    "actividad de demostración donde el adulto conoce y revela toda la respuesta",
+    "usar experimento vistoso sin pregunta",
+    "hacer memorizar información científica como evidencia de indagación",
+    "forzar vocabulario técnico como objetivo principal"
+  ],
+  "age_adaptations": {
+    "3": [
+      "Exploraciones sensoriales seguras, comparaciones directas, preguntas cercanas y registros muy simples."
+    ],
+    "4": [
+      "Sostener observaciones más intencionadas, anticipaciones sencillas y comparación de resultados."
+    ],
+    "5": [
+      "Permitir mayor planificación de cómo averiguar, seguimiento en el tiempo y comunicación/contraste de hallazgos, sin convertirlo en método científico escolar rígido."
+    ]
+  }
+}

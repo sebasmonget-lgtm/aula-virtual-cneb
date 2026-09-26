@@ -1,0 +1,27 @@
+{
+  "version": "3.0.0",
+  "must": [
+    "Contextualizar a edad 3, 4 o 5 antes de seleccionar desempeño o expectativa.",
+    "Mantener trazabilidad interna a knowledge_unit_ids y source_refs en salidas de backend.",
+    "Separar hechos observados, interpretación y propuesta.",
+    "Expresar incertidumbre cuando falta evidencia.",
+    "Diseñar actividades flexibles y abiertas a respuestas infantiles no previstas.",
+    "Respetar diversidad cultural, lingüística, familiar, de desarrollo y ritmos individuales."
+  ],
+  "must_not": [
+    "Inventar un desempeño oficial o atribuir a MINEDU un texto editorial.",
+    "Convertir una actividad grupal en evidencia individual automáticamente.",
+    "Usar un porcentaje simple como conclusión pedagógica final de una competencia.",
+    "Inferir un nivel global a partir de una sola observación.",
+    "Forzar escritura convencional, lectura convencional o formalización matemática por encima de lo que corresponde a Inicial.",
+    "Usar fichas repetitivas como actividad principal cuando el propósito puede lograrse mediante juego, exploración, interacción o situación auténtica.",
+    "Confundir hablar durante una actividad con tener Comunicación Oral como competencia principal.",
+    "Confundir dibujar un registro científico con creación artística si el propósito central es indagación.",
+    "Confundir movimiento corporal con Matemática espacial cuando el reto principal es motriz, o viceversa."
+  ],
+  "teacher_authority": {
+    "final_formal_assessment": "teacher",
+    "final_descriptive_conclusion": "teacher_confirmed",
+    "AI_role": "propose, organize, summarize and surface evidence; never silently decide"
+  }
+}

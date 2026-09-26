@@ -38,6 +38,27 @@ function relevance(unit, tokens) {
   return tokens.reduce((score, token) => score + (searchable.includes(token) ? 1 : 0), 0);
 }
 
+function matchesConfirmedCompetency(unit, competencyId) {
+  if (competencyId === null) return true;
+  if (unit.competency_id === competencyId) return true;
+  if (unit.competency_id !== null) return false;
+  return unit.applicable_competency_ids === undefined || unit.applicable_competency_ids.includes(competencyId);
+}
+
+function matchesApplicability(unit, context = {}) {
+  const required = unit.applicability?.requires_any;
+  return !required?.length || required.some((key) => context[key] === true);
+}
+
+function matchesWorkflow(unit, workflow) {
+  return unit.workflow_scope === undefined || unit.workflow_scope.includes(workflow);
+}
+
+function matchesUnconfirmedDidactics(unit, workflow, competencyId) {
+  if (competencyId !== null || !unit.workflow_scope || unit.competency_id === null) return true;
+  return ["diagnostic", "annual_plan", "project", "unit"].includes(workflow);
+}
+
 function compareUnits(left, right) {
   for (const key of ["requiredDomain", "confirmedCompetency", "exactAge", "priority", "authority", "relevance"]) {
     if (left.rank[key] !== right.rank[key]) return right.rank[key] - left.rank[key];
@@ -77,17 +98,21 @@ export async function retrieveKnowledgeV4(input, knowledgeBase) {
   if (include2026Overlay) allowedDomains.add("school_year_start");
 
   const ranked = knowledgeBase.knowledgeUnits
-    .filter((unit) => allowedDomains.has(unit.domain))
+    .filter((unit) => matchesWorkflow(unit, workflow))
     .filter((unit) => unit.age_scope.includes(age))
+    .filter((unit) => matchesUnconfirmedDidactics(unit, workflow, confirmedCompetencyId))
+    .filter((unit) => matchesConfirmedCompetency(unit, confirmedCompetencyId))
+    .filter((unit) => matchesApplicability(unit, input?.applicabilityContext))
+    .filter((unit) => allowedDomains.has(unit.domain))
     .filter((unit) => include2026Overlay || unit.temporal_scope !== "2026")
     .filter((unit) => input?.castellanoL2Applicable === true || !isL2Unit(unit))
     .filter((unit) => input?.religionApplicable === true || !isReligionUnit(unit))
-    .filter((unit) => confirmedCompetencyId === null || unit.competency_id === null || unit.competency_id === confirmedCompetencyId)
     .map((unit) => ({
       unit,
       rank: {
         requiredDomain: Number(requiredDomains.has(unit.domain)),
-        confirmedCompetency: Number(confirmedCompetencyId !== null && unit.competency_id === confirmedCompetencyId),
+        confirmedCompetency: Number(Boolean(confirmedCompetencyId !== null
+          && (unit.competency_id === confirmedCompetencyId || unit.applicable_competency_ids?.includes(confirmedCompetencyId)))),
         exactAge: Number(unit.age_scope.length === 1 && unit.age_scope[0] === age),
         priority: unit.retrieval_priority,
         authority: -sourceAuthority(unit, sourceRanks),

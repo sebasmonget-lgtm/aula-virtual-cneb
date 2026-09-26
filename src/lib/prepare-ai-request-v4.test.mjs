@@ -15,10 +15,10 @@ test("prepareAIRequestV4 prepara un bundle v4 mediante buildAIContext", async ()
   }, knowledgeBase);
 
   assert.equal(prepared.aiContextBundle.workflow, "activity");
-  assert.equal(prepared.aiContextBundle.provenance.knowledge_base_version, "4.0.0");
+  assert.equal(prepared.aiContextBundle.provenance.knowledge_base_version, "4.1.0");
   assert.deepEqual(prepared.metadata, {
     workflow: "activity",
-    knowledge_base_version: "4.0.0",
+    knowledge_base_version: "4.1.0",
     knowledge_unit_count: prepared.aiContextBundle.provenance.knowledge_unit_ids.length,
     source_claim_count: prepared.aiContextBundle.provenance.source_claim_ids.length,
   });

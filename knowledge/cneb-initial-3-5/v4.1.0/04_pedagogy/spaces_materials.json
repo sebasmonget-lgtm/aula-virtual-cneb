@@ -1,0 +1,37 @@
+{
+  "id": "spaces_materials",
+  "version": "3.0.0",
+  "purpose": "Proponer espacios y materiales que favorezcan desarrollo y aprendizaje.",
+  "source_refs": [
+    "ESPACIOS_2024",
+    "ORIENTACIONES_INICIAL_2025"
+  ],
+  "rules": [
+    {
+      "id": "SPA-01",
+      "rule": "Mantener materiales pertinentes, seguros, visibles y al alcance para favorecer autonomía.",
+      "why": "El niño puede elegir, iniciar y reorganizar su actividad."
+    },
+    {
+      "id": "SPA-02",
+      "rule": "Permitir libre desplazamiento y evitar que mobiliario/almacenamiento bloquee sectores o recorridos.",
+      "why": "Seguridad y autonomía corporal."
+    },
+    {
+      "id": "SPA-03",
+      "rule": "Combinar materiales estructurados y no estructurados que admitan usos múltiples, juego, construcción, representación e indagación.",
+      "why": "Amplían posibilidades de exploración y creación."
+    },
+    {
+      "id": "SPA-04",
+      "rule": "Organizar sectores según intereses, edad y observación del grupo; evaluar su funcionamiento y reorganizar cuando dejan de responder.",
+      "why": "El espacio es dinámico, no decoración fija."
+    },
+    {
+      "id": "SPA-05",
+      "rule": "Evitar saturación visual y materiales inaccesibles o de uso solo adulto.",
+      "why": "Un ambiente legible facilita autonomía y atención."
+    }
+  ],
+  "generation_implications": []
+}

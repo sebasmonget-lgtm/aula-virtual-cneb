@@ -1,0 +1,126 @@
+{
+  "proposed_version": "4.1.0",
+  "cases": [
+    {
+      "id": "RET-01",
+      "workflow": "activity",
+      "age": 4,
+      "competency_id": "MAT_CANTIDAD",
+      "teacher_request": "Quiero una actividad para organizar y repartir materiales",
+      "must_include_any": [
+        "SIT_MAT_Q_DISTRIBUTE",
+        "DIDACTICS_MATH_QUANTITY_PRINCIPLES",
+        "DIDACTICS_MATH_QUANTITY_AGE_4"
+      ],
+      "must_exclude_competencies": [
+        "CYT_INDAGA",
+        "COM_ARTE"
+      ]
+    },
+    {
+      "id": "RET-02",
+      "workflow": "annual_plan",
+      "age": 5,
+      "teacher_request": "Prioridad: cantidad y convivencia",
+      "expected_domains": [
+        "situation_families"
+      ],
+      "must_not_require": "actividad completa"
+    },
+    {
+      "id": "RET-03",
+      "workflow": "project",
+      "age": 5,
+      "competency_id": "CYT_INDAGA",
+      "teacher_request": "Los niños encontraron lombrices en el huerto y preguntan qué hacen allí",
+      "must_include_any": [
+        "SIT_CYT_LIVING",
+        "PAT_PROJECT_LIVING_GARDEN_AGE5",
+        "DIDACTICS_SCIENCE_INQUIRY_PRINCIPLES"
+      ]
+    },
+    {
+      "id": "RET-04",
+      "workflow": "activity",
+      "age": 3,
+      "competency_id": "COM_LECTURA",
+      "teacher_request": "Leer un cuento por disfrute",
+      "must_include_any": [
+        "SIT_COM_R_ENJOY",
+        "DIDACTICS_COMMUNICATION_READING_AGE_3"
+      ],
+      "must_exclude_ids": [
+        "LITERACY_3_5_2022"
+      ]
+    },
+    {
+      "id": "RET-05",
+      "workflow": "workshop",
+      "age": 4,
+      "competency_id": "PSICO_MOTRICIDAD",
+      "teacher_request": "Taller psicomotor con cajas y telas",
+      "must_include_any": [
+        "SIT_PSY_OPEN_LANDSCAPE",
+        "DIDACTICS_PSYCHOMOTOR_AVOID"
+      ]
+    },
+    {
+      "id": "RET-06",
+      "workflow": "activity",
+      "age": 5,
+      "competency_id": "COM_ARTE",
+      "teacher_request": "Crear con materiales naturales",
+      "must_include_any": [
+        "SIT_ART_MATERIAL",
+        "DIDACTICS_ART_CREATION_PRINCIPLES"
+      ],
+      "must_not_contain": "modelo único"
+    },
+    {
+      "id": "RET-07",
+      "workflow": "assessment",
+      "age": 4,
+      "competency_id": "MAT_CANTIDAD",
+      "teacher_request": "Analizar evidencias de varias actividades",
+      "must_include_any": [
+        "DIDACTICS_MATH_QUANTITY_EVIDENCE",
+        "DIDACTICS_MATH_QUANTITY_AGE_4"
+      ],
+      "must_not_treat_expected_as_observed": true
+    },
+    {
+      "id": "RET-08",
+      "workflow": "annual_plan",
+      "age": 4,
+      "teacher_request": "Contexto rural con prácticas comunitarias confirmadas",
+      "context": {
+        "intercultural_context": true
+      },
+      "must_include_any": [
+        "KB41_INTERCULTURAL_CONTEXT"
+      ],
+      "guardrail": "No inventar práctica específica no informada."
+    },
+    {
+      "id": "RET-09",
+      "workflow": "descriptive_conclusion",
+      "age": 5,
+      "competency_id": "CYT_INDAGA",
+      "teacher_request": "Redactar conclusión",
+      "must_not_include_domains_by_default": [
+        "situation_families",
+        "exemplar_patterns"
+      ]
+    },
+    {
+      "id": "RET-10",
+      "workflow": "today_mode",
+      "age": 4,
+      "competency_id": "COM_ORAL",
+      "teacher_request": "Necesito una pregunta breve para que explique su idea",
+      "must_include_any": [
+        "DIDACTICS_ORALITY_EXTENSION_MEDIATION"
+      ]
+    }
+  ]
+}

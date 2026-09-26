@@ -1,0 +1,224 @@
+{
+  "name": "Ayni_KB_v4.1_Extension_Pack",
+  "extension_version": "4.1.0-extension.1",
+  "target_base_version": "4.0.0",
+  "proposed_integrated_version": "4.1.0",
+  "created_at": "2026-09-26",
+  "scope": {
+    "country": "Peru",
+    "level": "Educación Inicial",
+    "cycle": "II",
+    "ages": [
+      3,
+      4,
+      5
+    ]
+  },
+  "counts": {
+    "new_sources": 14,
+    "source_claim_additions": 9,
+    "domain_guidance_modules": 10,
+    "situation_family_records": 31,
+    "exemplar_patterns": 6,
+    "knowledge_unit_additions": 129,
+    "retrieval_test_cases": 10,
+    "generation_benchmarks": 7
+  },
+  "files": [
+    {
+      "path": "01_sources/source_claims_additions.jsonl",
+      "sha256": "0a9751545771ebd9d863dbcf5545db6796c7ef1cc1c242f1398f32a732ec69a9",
+      "bytes": 5148
+    },
+    {
+      "path": "01_sources/source_enrichment_existing.json",
+      "sha256": "4e625ddb3b9d46f2e2b9718f07c89eb0a61fd7a6c42c1d19cd10ed47abd2e89a",
+      "bytes": 2248
+    },
+    {
+      "path": "01_sources/source_registry_additions.json",
+      "sha256": "d8305b9d6e196ef9f2719d02ddf929f7c03b30bd930359eb98be43ef8ffc8ccb",
+      "bytes": 13776
+    },
+    {
+      "path": "04_pedagogy/context/family_partnership.json",
+      "sha256": "463cc62ae4ec8c063130a02cb889db6f02a2be1367b7da6417df8de426af3a17",
+      "bytes": 792
+    },
+    {
+      "path": "04_pedagogy/context/intercultural_context.json",
+      "sha256": "0733ebbf26a446123a6400eed168aafd95b3f56363d1846127344e3932d1f2ea",
+      "bytes": 998
+    },
+    {
+      "path": "04_pedagogy/context/tutoring_individual_2026.json",
+      "sha256": "6ecef36caf5c54872427d058676a7329de310116531b8be5ba4e0ce37fff7173",
+      "bytes": 795
+    },
+    {
+      "path": "04_pedagogy/domain_guidance/art_creation.json",
+      "sha256": "b848e95bb51275b9009d98cc6ce432b54bf722f112bc21ccf94cf845cec9e14a",
+      "bytes": 2676
+    },
+    {
+      "path": "04_pedagogy/domain_guidance/communication_orality_extension.json",
+      "sha256": "0e2b3981430bff5f1d3c9d1a7df1aba9b4e27d453c48009f9d12e7b413632f22",
+      "bytes": 2351
+    },
+    {
+      "path": "04_pedagogy/domain_guidance/communication_reading.json",
+      "sha256": "3f3eabb06c945aebc0fc696205a62e16393d7873181f5f418541b06c88dbb306",
+      "bytes": 2885
+    },
+    {
+      "path": "04_pedagogy/domain_guidance/communication_writing.json",
+      "sha256": "80a5ca61309a0c1f7e79e07f0011a85c6e322a8cf9ba4299c365f74ed32c0d6a",
+      "bytes": 2609
+    },
+    {
+      "path": "04_pedagogy/domain_guidance/math_quantity.json",
+      "sha256": "1a603253975e7d8fd876f6da32de7d77aabc6646a8aad3f50c44ed582718e984",
+      "bytes": 2972
+    },
+    {
+      "path": "04_pedagogy/domain_guidance/math_shape.json",
+      "sha256": "5ae5702ee25339814bca283cc9a884f2f74054ad410019fbab4b809ddd9912f0",
+      "bytes": 2610
+    },
+    {
+      "path": "04_pedagogy/domain_guidance/personal_coexistence.json",
+      "sha256": "b5b21fcbcdf57514bb9f92931143f001d417f943b1d18ed874fd310af148eb85",
+      "bytes": 2491
+    },
+    {
+      "path": "04_pedagogy/domain_guidance/personal_identity.json",
+      "sha256": "bbcb5e9a42f87e24a22b9a606f3fc8378320079fcda1abe3fcb6f8532d0a53b7",
+      "bytes": 2404
+    },
+    {
+      "path": "04_pedagogy/domain_guidance/psychomotor.json",
+      "sha256": "47236c99531cdeac2e70545ed0e521884bfe454b0203d12ccdc0a28e0912c06d",
+      "bytes": 2716
+    },
+    {
+      "path": "04_pedagogy/domain_guidance/science_inquiry.json",
+      "sha256": "a57e362561eca3631c346af9ab98cfec8cc013dee42c13f6b631146c71730ccd",
+      "bytes": 2952
+    },
+    {
+      "path": "04_pedagogy/exemplar_patterns/minedu_project_patterns.jsonl",
+      "sha256": "f9912a13956253c27ca45cb0e67b5f6e0b85d55593d7760b4f980b4c0a7cd5be",
+      "bytes": 3993
+    },
+    {
+      "path": "04_pedagogy/situation_families/art.json",
+      "sha256": "1378aabdea4911122492a5d5dc30f9a233b1c851cf1691cb4ed8b2b5b3cf333d",
+      "bytes": 1673
+    },
+    {
+      "path": "04_pedagogy/situation_families/communication.json",
+      "sha256": "438a87dc9806269ec513a0882408208429f84bbf5763ca305ace4aa83fc27695",
+      "bytes": 3774
+    },
+    {
+      "path": "04_pedagogy/situation_families/cross_domain_contexts.json",
+      "sha256": "ada332fd662f3546e16df69720706d7197a8491419b5b132200a1a05c2d45187",
+      "bytes": 2321
+    },
+    {
+      "path": "04_pedagogy/situation_families/mathematics.json",
+      "sha256": "ddff9121403c2eae3cd2e3277f5ed185938e093759420a1286a38eda77967e5b",
+      "bytes": 3031
+    },
+    {
+      "path": "04_pedagogy/situation_families/personal_social.json",
+      "sha256": "5452892e6508808f03237c25a3a039c61abdf370d7aae40b5a87f3a1b0940363",
+      "bytes": 2175
+    },
+    {
+      "path": "04_pedagogy/situation_families/psychomotor.json",
+      "sha256": "552c8d26bde98aa5f9c1d921a382940f3bd12129b527aec56bf14806e7c20f6f",
+      "bytes": 1718
+    },
+    {
+      "path": "04_pedagogy/situation_families/science.json",
+      "sha256": "36877756d0b5bbe8c52e783d93b388db62e5a3dd5f766e410c01cc0d83c9bea7",
+      "bytes": 2229
+    },
+    {
+      "path": "05_workflows/activity_reasoning_patch.json",
+      "sha256": "7ac65fb9f19ab9e61a31beb658b9b197e1b3dfd4554e35d946e4f3b1782f54d8",
+      "bytes": 705
+    },
+    {
+      "path": "05_workflows/annual_plan_reasoning_patch.json",
+      "sha256": "a370c8e774dc24a3f039b9c867f1cbcd1e965ad1cd85858726becd446bd2ff19",
+      "bytes": 1055
+    },
+    {
+      "path": "05_workflows/project_unit_reasoning_patch.json",
+      "sha256": "9e3467a88dd11efee7d7bb0f513b750a93d6f410c58d82b2df3bf30fc736be7f",
+      "bytes": 834
+    },
+    {
+      "path": "05_workflows/workflow_knowledge_requirements_patch.json",
+      "sha256": "b44f0d565d7a3ff01e1753189586250f59c3cb6e2cf84bce72742b0b426d740c",
+      "bytes": 4462
+    },
+    {
+      "path": "05_workflows/workflow_usage_matrix.json",
+      "sha256": "c73bae5835e9412947952ccb809576b8edad5f5a51bd37242f6f46e1c6d8cb73",
+      "bytes": 3103
+    },
+    {
+      "path": "06_retrieval/knowledge_units_additions.jsonl",
+      "sha256": "963cee3f8d6d28f05ecbc09d28d49a6d0aaa8f21c5307035a83a0841b7b55ec6",
+      "bytes": 113365
+    },
+    {
+      "path": "07_quality/generation_benchmarks.json",
+      "sha256": "c278dae94ed205a8fa92db365871a7a49ff1ae277fcc976a39d5c9acbc6fecd2",
+      "bytes": 2340
+    },
+    {
+      "path": "07_quality/regression_guardrails.json",
+      "sha256": "e65a6d07d34870c6a699931a76fe584d4e323f6133a2706a953233a247ea6deb",
+      "bytes": 941
+    },
+    {
+      "path": "07_quality/retrieval_cases.json",
+      "sha256": "5bd222efc540fc0255ffef298512296a4bbbd94d36c5ef9a188b6b46bd360209",
+      "bytes": 3418
+    },
+    {
+      "path": "07_quality/source_coverage_audit.json",
+      "sha256": "36833455a4ab6f1f202e8be433afeae9d5e2c48ecb12f7a800000e1f3af56278",
+      "bytes": 1495
+    },
+    {
+      "path": "CODEX_PROMPT.md",
+      "sha256": "e9264de19beff74a0f910cfab652f543f7d530a0f26cb3adcb3bd555f304915c",
+      "bytes": 2244
+    },
+    {
+      "path": "INTEGRATION_PLAN.md",
+      "sha256": "008edc274e1637166ccbd29b50965fbc966c3e1f0b9f1e724e0012392adafdaf",
+      "bytes": 6201
+    },
+    {
+      "path": "MIGRATION_CHECKLIST.md",
+      "sha256": "d3566321607f897c615b2c7578fa19b905c6316ecfa74f8fdaf0ddf8f4d9c512",
+      "bytes": 1018
+    },
+    {
+      "path": "README.md",
+      "sha256": "dce5d80b974ca3e7bf8afee8aef02cc53ce228da76656f80414e49b7e1e9018f",
+      "bytes": 2063
+    },
+    {
+      "path": "SOURCES_AND_TRACEABILITY.md",
+      "sha256": "b15a1d13f412e319653cbe8c401e29892ad516d3838ab2b4c8a783c46c309e9e",
+      "bytes": 2647
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "id": "tutoring_individual_2026_extension",
+  "proposed_version": "4.1.0",
+  "age_scope": [
+    3,
+    4,
+    5
+  ],
+  "source_refs": [
+    "TUTORING_INDIVIDUAL_2026",
+    "TUTORIA_INICIAL_2024"
+  ],
+  "rules": [
+    "Reservar tutoría individual para necesidades que requieren atención personal y no se resuelven adecuadamente en grupo.",
+    "Preparar condiciones de escucha, privacidad apropiada y vínculo seguro.",
+    "Registrar acuerdos o seguimiento pedagógico necesario sin convertir la conversación en interrogatorio.",
+    "Cuando corresponda una situación de protección o atención especializada, seguir protocolos institucionales y derivación; la IA no reemplaza dichos protocolos."
+  ],
+  "workflow_scope": [
+    "diagnostic",
+    "today_mode",
+    "family_report"
+  ]
+}

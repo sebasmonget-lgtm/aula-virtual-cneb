@@ -1,0 +1,73 @@
+{
+  "id": "didactics_psychomotor",
+  "proposed_version": "4.1.0",
+  "title": "Didáctica psicomotriz",
+  "area": "Psicomotriz",
+  "competency_ids": [
+    "PSICO_MOTRICIDAD"
+  ],
+  "age_scope": [
+    3,
+    4,
+    5
+  ],
+  "semantic_status": "editorial_synthesis_minedu_grounded_not_verbatim",
+  "source_refs": [
+    "PCI_INICIAL_CANONICAL",
+    "PSYCHOMOTOR_MODULE_2012",
+    "PSYCHOMOTOR_WORKSHOP_2016",
+    "ESPACIOS_2024"
+  ],
+  "workflow_scope": [
+    "annual_plan",
+    "workshop",
+    "activity",
+    "criterion_and_evidence",
+    "material_generation",
+    "today_mode"
+  ],
+  "principles": [
+    "Preparar un ambiente seguro y legible que invite a moverse, explorar y decidir.",
+    "El juego y la exploración motriz tienen valor propio; el adulto acompaña y observa más de lo que prescribe.",
+    "Los materiales deben admitir usos diversos y retos ajustables.",
+    "La recurrencia permite profundizar; repetir una propuesta puede ser válido si el grupo sigue encontrando posibilidades."
+  ],
+  "situation_families": [
+    "explorar un paisaje de movimiento con materiales abiertos",
+    "transportar, arrastrar, trepar o equilibrarse resolviendo un reto corporal",
+    "construir y transformar recorridos con grandes materiales",
+    "jugar con equilibrio, fuerza, velocidad y coordinación en situaciones abiertas",
+    "expresar una idea/emoción mediante movimiento",
+    "revisitar un reto motor buscando nuevas formas de resolverlo"
+  ],
+  "teacher_mediation": [
+    "¿Qué otra manera encontraste?",
+    "¿Qué necesitas mover/cambiar para sentirte seguro?",
+    "¿Cómo podrías pasar por aquí con este objeto?",
+    "¿Qué notaste en tu cuerpo?",
+    "¿Quieres volver a intentarlo de otra forma?"
+  ],
+  "evidence_patterns": [
+    "ajusta movimientos al espacio, objetos y otras personas",
+    "actúa con creciente autonomía y seguridad",
+    "combina movimientos/coordina acciones acorde a edad",
+    "reconoce sensaciones o comunica corporalmente ideas/emociones"
+  ],
+  "avoid_patterns": [
+    "circuito único obligatorio con ejecución idéntica para todos",
+    "el adulto mueve físicamente al niño para completar el reto",
+    "usar movimiento solo como premio o pausa",
+    "medir éxito por velocidad o competencia entre niños"
+  ],
+  "age_adaptations": {
+    "3": [
+      "Amplia exploración motriz global, materiales estables, retos simples y fuerte necesidad de seguridad/tiempo propio."
+    ],
+    "4": [
+      "Mayor combinación de movimientos y ajuste de fuerza/equilibrio; permitir transformar el ambiente."
+    ],
+    "5": [
+      "Retos más complejos y decisiones motrices; favorecer representación/expresión posterior cuando surja naturalmente."
+    ]
+  }
+}

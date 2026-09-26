@@ -1,0 +1,84 @@
+{
+  "proposed_version": "4.1.0",
+  "contexts": [
+    {
+      "id": "CTX_DAILY_NEED",
+      "age_scope": [
+        3,
+        4,
+        5
+      ],
+      "kind": "daily_need",
+      "description": "Necesidad cotidiana del aula que crea un propósito auténtico: organizar, repartir, cuidar, comunicar o registrar.",
+      "best_for": [
+        "annual_plan",
+        "unit",
+        "activity"
+      ],
+      "guardrail": "No fabricar una necesidad que no existe; en plan anual puede formularse como oportunidad prevista."
+    },
+    {
+      "id": "CTX_EMERGENT_INTEREST",
+      "age_scope": [
+        3,
+        4,
+        5
+      ],
+      "kind": "emergent_interest",
+      "description": "Interés, pregunta o acontecimiento que aparece en la vida del grupo y puede sostener exploración.",
+      "best_for": [
+        "project"
+      ],
+      "guardrail": "No afirmar que el interés ya ocurrió si solo es una posibilidad anual."
+    },
+    {
+      "id": "CTX_COMMUNITY_PRACTICE",
+      "age_scope": [
+        3,
+        4,
+        5
+      ],
+      "kind": "community_practice",
+      "description": "Práctica familiar/comunitaria confirmada que puede aportar contexto, interlocutores, saberes o problemas auténticos.",
+      "best_for": [
+        "annual_plan",
+        "project",
+        "unit"
+      ],
+      "guardrail": "Activar solo con contexto confirmado; evitar folklorizar o generalizar."
+    },
+    {
+      "id": "CTX_ENVIRONMENT_EVENT",
+      "age_scope": [
+        3,
+        4,
+        5
+      ],
+      "kind": "environment_event",
+      "description": "Fenómeno del entorno natural/social observable que puede provocar preguntas, decisiones o comunicación.",
+      "best_for": [
+        "annual_plan",
+        "project",
+        "science"
+      ],
+      "guardrail": "En plan anual describir como posibilidad si no ha ocurrido todavía."
+    },
+    {
+      "id": "CTX_SHARED_PROBLEM",
+      "age_scope": [
+        3,
+        4,
+        5
+      ],
+      "kind": "shared_problem",
+      "description": "Problema del grupo que requiere acordar, investigar, diseñar o reorganizar algo.",
+      "best_for": [
+        "project",
+        "unit",
+        "personal_social",
+        "mathematics"
+      ],
+      "guardrail": "Debe poder ser comprendido y parcialmente abordado por los niños."
+    }
+  ]
+}

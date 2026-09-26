@@ -1,0 +1,43 @@
+{
+  "id": "activity_design",
+  "version": "3.0.0",
+  "purpose": "Generar actividades de aprendizaje pertinentes para 3-5.",
+  "source_refs": [
+    "PLANIFICACION_INICIAL_2019",
+    "INTERACCIONES_2019",
+    "PROYECTOS_INICIAL_2019"
+  ],
+  "rules": [
+    {
+      "id": "ACT-01",
+      "rule": "Una actividad debe tener propósito comprensible para la docente y sentido para los niños; evitar cadenas de consignas desconectadas.",
+      "why": "La acción infantil debe responder a una situación significativa."
+    },
+    {
+      "id": "ACT-02",
+      "rule": "Definir una competencia principal; incluir secundaria solo cuando exista movilización auténtica y relevante.",
+      "why": "Previene sobreetiquetado curricular."
+    },
+    {
+      "id": "ACT-03",
+      "rule": "Incluir oportunidades para elegir, anticipar, explorar, probar, conversar, representar o revisar según la naturaleza del propósito.",
+      "why": "Favorece actuación competente y agencia."
+    },
+    {
+      "id": "ACT-04",
+      "rule": "La mediación docente usa observación, escucha, preguntas y aportes oportunos; no adelanta todas las respuestas.",
+      "why": "Sostiene pensamiento, lenguaje y autonomía."
+    },
+    {
+      "id": "ACT-05",
+      "rule": "El cierre no tiene que ser una ficha ni repetición; puede ser conversación, representación, socialización, comparación o registro de lo descubierto.",
+      "why": "El cierre ayuda a hacer visible el proceso sin escolarizar en exceso."
+    },
+    {
+      "id": "ACT-06",
+      "rule": "Ajustar tiempos y secuencia a la respuesta real del grupo; una actividad puede continuar o transformarse si el aprendizaje lo requiere.",
+      "why": "Planificación flexible."
+    }
+  ],
+  "generation_implications": []
+}

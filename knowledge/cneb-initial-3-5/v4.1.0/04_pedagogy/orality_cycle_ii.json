@@ -1,0 +1,33 @@
+{
+  "id": "orality_cycle_ii",
+  "version": "3.0.0",
+  "purpose": "Promover la competencia oral en 3-5.",
+  "source_refs": [
+    "ORALIDAD_CICLO_II_2025",
+    "INTERACCIONES_2019",
+    "PCI_INICIAL_CANONICAL"
+  ],
+  "rules": [
+    {
+      "id": "ORAL-01",
+      "rule": "Generar situaciones reales para narrar, explicar, preguntar, conversar, escuchar y responder a interlocutores.",
+      "why": "La oralidad se desarrolla en interacción con propósito."
+    },
+    {
+      "id": "ORAL-02",
+      "rule": "Dar tiempo de respuesta y repreguntar para ampliar ideas, no completar continuamente las frases del niño.",
+      "why": "Sostiene elaboración del discurso."
+    },
+    {
+      "id": "ORAL-03",
+      "rule": "Usar textos orales diversos, conversaciones, relatos, entrevistas, asambleas y explicación de procesos según contexto.",
+      "why": "Amplía propósitos y registros comunicativos."
+    },
+    {
+      "id": "ORAL-04",
+      "rule": "No seleccionar Comunicación Oral como principal solo porque los niños hablan durante Matemática, Ciencia, Arte o Convivencia.",
+      "why": "El propósito pedagógico define la competencia principal."
+    }
+  ],
+  "generation_implications": []
+}

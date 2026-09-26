@@ -1,0 +1,29 @@
+{
+  "id": "intercultural_context_extension",
+  "proposed_version": "4.1.0",
+  "age_scope": [
+    3,
+    4,
+    5
+  ],
+  "source_refs": [
+    "EIB_METHOD_2018",
+    "EIB_PLAN_ASSESS_2021",
+    "CNEB"
+  ],
+  "activation": "Solo cuando aula/comunidad aporta contexto intercultural, bilingüe o saberes comunitarios relevantes.",
+  "rules": [
+    "Partir de prácticas reales, lengua, calendario y saberes de la comunidad cuando sean pertinentes al propósito; no usarlos como decoración folklórica.",
+    "Distinguir lengua de aprendizaje, lengua materna y castellano L2; no activar CAST_L2_ORAL sin condición lingüística válida.",
+    "Incluir participación de familias/comunidad cuando agrega información, práctica auténtica o interlocutor real.",
+    "Evitar generalizar una práctica cultural a todas las familias; usar contexto confirmado por la docente."
+  ],
+  "workflow_scope": [
+    "diagnostic",
+    "annual_plan",
+    "project",
+    "unit",
+    "activity",
+    "assessment"
+  ]
+}

@@ -25,7 +25,7 @@
     "test:curriculum": "node scripts/validate-curriculum.mjs",
     "test:jev": "node --test src/lib/jev-decision.test.mjs",
     "test:knowledge-pack": "node --test src/lib/knowledge-pack.test.mjs",
-    "test:knowledge-base-v4": "node --test src/lib/knowledge-base-v4.test.mjs",
+    "test:knowledge-base-v4": "node --test src/lib/knowledge-base-v4.test.mjs src/lib/knowledge-base-v4-1.test.mjs",
     "test:knowledge-retrieval-v4": "node --test src/lib/knowledge-retrieval-v4.test.mjs",
     "test:ai-context-v4": "node --test src/lib/ai-context-builder-v4.test.mjs",
     "test:prepare-ai-v4": "node --test src/lib/prepare-ai-request-v4.test.mjs",

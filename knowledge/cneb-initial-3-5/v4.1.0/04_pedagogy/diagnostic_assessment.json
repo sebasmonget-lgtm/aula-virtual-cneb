@@ -1,0 +1,43 @@
+{
+  "id": "diagnostic_assessment",
+  "version": "3.0.0",
+  "purpose": "Conocer al niño y al grupo para tomar decisiones de planificación.",
+  "source_refs": [
+    "DIAGNOSTICO_INICIAL_2023",
+    "EVALUACION_RVM094_MOD048",
+    "PLANIFICACION_INICIAL_2019"
+  ],
+  "rules": [
+    {
+      "id": "DIA-01",
+      "rule": "Entender la evaluación diagnóstica como parte del enfoque formativo: tiene un momento inicial fuerte pero el conocimiento del niño se actualiza durante el proceso.",
+      "why": "No es una prueba aislada de entrada."
+    },
+    {
+      "id": "DIA-02",
+      "rule": "Recuperar información documental disponible: matrícula, informes de progreso previos, portafolio, registros de observación/cuaderno de campo/anecdotario y entrevistas a familias.",
+      "why": "Evita empezar de cero y permite contextualizar."
+    },
+    {
+      "id": "DIA-03",
+      "rule": "Observar al niño en situaciones naturales y significativas, especialmente juego, rutinas, interacción y actividades.",
+      "why": "La actuación contextualizada aporta mejor evidencia que tareas artificiales."
+    },
+    {
+      "id": "DIA-04",
+      "rule": "Distinguir ausencia de oportunidad para observar de ausencia de aprendizaje.",
+      "why": "No observado no equivale a no logrado."
+    },
+    {
+      "id": "DIA-05",
+      "rule": "Usar estados observacionales que admitan incertidumbre: demostró, con apoyo, aún no, información insuficiente.",
+      "why": "Evita juicios forzados con evidencia débil."
+    },
+    {
+      "id": "DIA-06",
+      "rule": "Usar el diagnóstico para decidir prioridades de planificación, condiciones del ambiente, mediación y coordinación con familias.",
+      "why": "El diagnóstico tiene sentido cuando modifica decisiones pedagógicas."
+    }
+  ],
+  "generation_implications": []
+}

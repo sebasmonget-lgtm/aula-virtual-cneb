@@ -1,0 +1,54 @@
+{
+  "proposed_version": "4.1.0",
+  "benchmarks": [
+    {
+      "id": "GEN-ANNUAL-01",
+      "workflow": "annual_plan",
+      "input": "Diagnóstico: interés por organizar materiales; prioridad MAT_CANTIDAD; 4 años.",
+      "good": "Propone oportunidades de organización/reparto como familias de situaciones y deja títulos/contexto concretos como provisionales.",
+      "bad": "Proyecto Los números divertidos con 10 actividades cerradas."
+    },
+    {
+      "id": "GEN-PROJECT-01",
+      "workflow": "project",
+      "input": "5 años: apareció un insecto y surgieron preguntas.",
+      "good": "Mantiene preguntas reales, caminos posibles y puntos de decisión según hallazgos.",
+      "bad": "Define desde el inicio ocho experimentos y una respuesta final que los niños deben descubrir."
+    },
+    {
+      "id": "GEN-ACT-MATH-01",
+      "workflow": "activity",
+      "input": "4 años MAT_CANTIDAD; repartir materiales.",
+      "good": "Necesidad real, objetos manipulables, estrategias infantiles, mediación condicional y evidencia de estrategia.",
+      "bad": "Contar hasta 20 y colorear 20 objetos."
+    },
+    {
+      "id": "GEN-ACT-READ-01",
+      "workflow": "activity",
+      "input": "4 años COM_LECTURA; investigar un animal del proyecto.",
+      "good": "Selecciona texto porque responde a pregunta, anticipa, busca información y conversa sobre hallazgos.",
+      "bad": "Ficha de vocales usando nombres de animales."
+    },
+    {
+      "id": "GEN-WORKSHOP-PSY-01",
+      "workflow": "workshop",
+      "input": "3 años PSICO_MOTRICIDAD.",
+      "good": "Ambiente seguro, materiales abiertos, exploración autónoma y observación docente.",
+      "bad": "Fila obligatoria de estaciones idénticas cronometradas."
+    },
+    {
+      "id": "GEN-ART-01",
+      "workflow": "activity",
+      "input": "5 años COM_ARTE.",
+      "good": "Exploración + intención + decisiones + revisión de creación.",
+      "bad": "Todos copian la misma mariposa siguiendo pasos."
+    },
+    {
+      "id": "GEN-ASSESS-01",
+      "workflow": "assessment",
+      "input": "Evidencias de MAT_FORMA 5 años.",
+      "good": "Interpreta solo actuaciones registradas y usa didáctica como marco de diversidad/cautela.",
+      "bad": "Afirma que construyó recorridos porque era evidencia esperada aunque no está registrado."
+    }
+  ]
+}

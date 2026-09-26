@@ -1,0 +1,79 @@
+{
+  "proposed_version": "4.1.0",
+  "families": [
+    {
+      "id": "SIT_PS_ID_CHOICE",
+      "competency_id": "PS_IDENTIDAD",
+      "age_scope": [
+        3,
+        4,
+        5
+      ],
+      "family": "eleccion_personal_real",
+      "trigger": "El niño puede decidir algo sobre sí mismo y expresar preferencia o razón.",
+      "examples": [
+        "material",
+        "rol",
+        "forma de participar",
+        "objeto personal"
+      ],
+      "guardrail": "La opción debe ser real, no elección aparente.",
+      "semantic_status": "editorial_pattern_not_official_wording"
+    },
+    {
+      "id": "SIT_PS_ID_EMOTION",
+      "competency_id": "PS_IDENTIDAD",
+      "age_scope": [
+        3,
+        4,
+        5
+      ],
+      "family": "emocion_en_contexto",
+      "trigger": "Una emoción real puede reconocerse y acompañarse con estrategias de co-regulación/autoregulación.",
+      "examples": [
+        "frustración",
+        "alegría",
+        "temor",
+        "separación"
+      ],
+      "guardrail": "No provocar emociones para evaluar.",
+      "semantic_status": "editorial_pattern_not_official_wording"
+    },
+    {
+      "id": "SIT_PS_CO_AGREEMENT",
+      "competency_id": "PS_CONVIVE",
+      "age_scope": [
+        3,
+        4,
+        5
+      ],
+      "family": "acuerdo_por_necesidad",
+      "trigger": "Una necesidad grupal hace útil construir/revisar un acuerdo.",
+      "examples": [
+        "uso de materiales",
+        "turnos",
+        "cuidado de espacio"
+      ],
+      "guardrail": "No crear normas abstractas sin problema real.",
+      "semantic_status": "editorial_pattern_not_official_wording"
+    },
+    {
+      "id": "SIT_PS_CO_COMMON",
+      "competency_id": "PS_CONVIVE",
+      "age_scope": [
+        4,
+        5
+      ],
+      "family": "accion_bien_comun",
+      "trigger": "El grupo detecta algo que puede cuidar/mejorar colectivamente.",
+      "examples": [
+        "orden/cuidado",
+        "huerto",
+        "residuo",
+        "bien compartido"
+      ],
+      "guardrail": "Evitar campañas adultas desconectadas de la experiencia infantil.",
+      "semantic_status": "editorial_pattern_not_official_wording"
+    }
+  ]
+}

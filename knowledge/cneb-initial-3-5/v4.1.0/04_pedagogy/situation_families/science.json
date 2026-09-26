@@ -1,0 +1,78 @@
+{
+  "proposed_version": "4.1.0",
+  "families": [
+    {
+      "id": "SIT_CYT_UNEXPECTED",
+      "competency_id": "CYT_INDAGA",
+      "age_scope": [
+        3,
+        4,
+        5
+      ],
+      "family": "fenomeno_inesperado",
+      "trigger": "Algo inesperado despierta preguntas que pueden explorarse.",
+      "examples": [
+        "insecto en aula",
+        "objeto que cambia",
+        "sonido o sombra inesperada"
+      ],
+      "guardrail": "No inventar que ocurrió: en plan anual presentarlo como posible detonante.",
+      "semantic_status": "editorial_pattern_not_official_wording"
+    },
+    {
+      "id": "SIT_CYT_CHANGE",
+      "competency_id": "CYT_INDAGA",
+      "age_scope": [
+        3,
+        4,
+        5
+      ],
+      "family": "cambio_en_el_tiempo",
+      "trigger": "Un cambio observable requiere seguimiento.",
+      "examples": [
+        "germinación",
+        "descomposición",
+        "secado/derretimiento seguro",
+        "cambios de luz/sombra"
+      ],
+      "guardrail": "No acelerar o falsear resultados para cerrar la actividad.",
+      "semantic_status": "editorial_pattern_not_official_wording"
+    },
+    {
+      "id": "SIT_CYT_COMPARE_MATERIALS",
+      "competency_id": "CYT_INDAGA",
+      "age_scope": [
+        4,
+        5
+      ],
+      "family": "comparar_materiales_condiciones",
+      "trigger": "Hay que descubrir qué material/condición funciona mejor para una finalidad.",
+      "examples": [
+        "absorber",
+        "flotar",
+        "resistir",
+        "dejar pasar luz/agua"
+      ],
+      "guardrail": "Evitar experimento receta sin decisión infantil.",
+      "semantic_status": "editorial_pattern_not_official_wording"
+    },
+    {
+      "id": "SIT_CYT_LIVING",
+      "competency_id": "CYT_INDAGA",
+      "age_scope": [
+        3,
+        4,
+        5
+      ],
+      "family": "seres_vivos_del_entorno",
+      "trigger": "Un ser vivo cercano genera preguntas observables y seguras.",
+      "examples": [
+        "plantas",
+        "lombrices/insectos observables",
+        "aves del entorno"
+      ],
+      "guardrail": "Respetar bienestar de seres vivos; no manipular de forma dañina.",
+      "semantic_status": "editorial_pattern_not_official_wording"
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "audit_date": "2026-09-26",
+  "base": "Ayni KB v4.0.0",
+  "finding": "La cobertura de currículo y pedagogía general es alta; la brecha principal es didáctica específica por competencia/edad y familias de situaciones.",
+  "base_observations": {
+    "sources_registered": 22,
+    "combined_units": 245,
+    "workflows": 16,
+    "underused_existing_sources": {
+      "MATH_QUANTITY_PLAY_5_2022": 2,
+      "MATH_SHAPE_PLAY_5_2022": 2,
+      "LITERACY_NAME_5_2022": 2,
+      "LITERACY_STORIES_5_2022": 0,
+      "LITERACY_INFORMATIONAL_5_2022": 2
+    }
+  },
+  "extension_adds": {
+    "new_sources": 14,
+    "new_flattened_units": 129,
+    "domain_guidance_files": 10,
+    "situation_family_files": 7,
+    "exemplar_patterns": 6
+  },
+  "highest_priority_gaps_closed": [
+    "matemática 3-5",
+    "lectura 3-5",
+    "escritura especialmente 5",
+    "ciencia/indagación 3-5",
+    "psicomotricidad 3-5",
+    "creación artística 3-5",
+    "familias de situaciones para plan anual/proyecto/actividad",
+    "contextualización intercultural condicionada"
+  ],
+  "remaining_for_future_review": [
+    "profundizar conocimiento específico de escritura para 3-4 con fuentes MINEDU adicionales si aparecen",
+    "auditar materiales oficiales más recientes posteriores a 2026-09-26",
+    "evaluar si PS_RELIGION requiere didáctica específica según alcance institucional",
+    "definir si competencias transversales necesitan módulos propios o deben seguir emergiendo de tareas auténticas"
+  ]
+}

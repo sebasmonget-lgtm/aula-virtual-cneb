@@ -1,0 +1,71 @@
+{
+  "id": "didactics_orality_extension",
+  "proposed_version": "4.1.0",
+  "title": "Extensión situacional para oralidad",
+  "area": "Comunicación",
+  "competency_ids": [
+    "COM_ORAL"
+  ],
+  "age_scope": [
+    3,
+    4,
+    5
+  ],
+  "semantic_status": "editorial_synthesis_minedu_grounded_not_verbatim",
+  "source_refs": [
+    "ORALIDAD_CICLO_II_2025",
+    "INTERACCIONES_2019",
+    "PCI_INICIAL_CANONICAL"
+  ],
+  "workflow_scope": [
+    "annual_plan",
+    "project",
+    "unit",
+    "activity",
+    "criterion_and_evidence",
+    "today_mode"
+  ],
+  "principles": [
+    "La oralidad se desarrolla al necesitar comprender y comunicar algo a interlocutores reales.",
+    "Variar finalidades: narrar, explicar, preguntar, entrevistar, acordar, describir y presentar.",
+    "Dar tiempo para elaborar ideas y usar repreguntas que amplíen, no interrogatorio de respuesta única."
+  ],
+  "situation_families": [
+    "contar un hecho o experiencia a otros",
+    "explicar cómo se hizo o descubrió algo",
+    "entrevistar a una persona para obtener información",
+    "planificar/acordar oralmente una acción",
+    "presentar hallazgos a otra clase/familia",
+    "escuchar un relato/mensaje para recuperar e inferir información"
+  ],
+  "teacher_mediation": [
+    "¿Qué ocurrió primero/después?",
+    "¿Cómo podrías explicárselo a alguien que no estuvo?",
+    "¿Qué quieres preguntarle para averiguarlo?",
+    "¿Qué entendiste de lo que dijo?",
+    "¿Puedes ampliar esa idea?"
+  ],
+  "evidence_patterns": [
+    "organiza mensajes comprensibles para su propósito",
+    "escucha y responde de forma pertinente",
+    "obtiene/infiere información de mensajes orales según edad",
+    "usa gestos, voz y lenguaje para sostener interacción"
+  ],
+  "avoid_patterns": [
+    "hacer repetir frases adultas",
+    "corregir constantemente la forma mientras el niño intenta comunicar",
+    "seleccionar COM_ORAL solo porque se habla durante otra competencia",
+    "usar rondas de preguntas cerradas como conversación"
+  ],
+  "age_adaptations": {
+    "3": [
+      "Intercambios breves y apoyados en contexto/gestos."
+    ],
+    "4": [
+      "Relatos y explicaciones más sostenidas; repreguntas sencillas."
+    ],
+    "5": [
+      "Mayor organización del mensaje, interacción con distintos interlocutores y finalidades comunicativas."
+    ]
+  }
+}

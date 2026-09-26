@@ -1,0 +1,40 @@
+{
+  "id": "play_and_sectors",
+  "version": "3.0.0",
+  "purpose": "Diseñar y acompañar juego libre/sectores.",
+  "source_refs": [
+    "JUEGO_SIMBOLICO_2019",
+    "ESPACIOS_2024",
+    "ORIENTACIONES_INICIAL_2025"
+  ],
+  "rules": [
+    {
+      "id": "PLAY-01",
+      "rule": "Tratar el juego libre en sectores como experiencia pedagógica central y cotidiana, no como espera, premio o relleno.",
+      "why": "El juego moviliza múltiples aprendizajes y desarrollo."
+    },
+    {
+      "id": "PLAY-02",
+      "rule": "Organizar sectores y materiales accesibles para que los niños inicien y sostengan proyectos de juego con autonomía.",
+      "why": "La disposición del ambiente condiciona la calidad del juego."
+    },
+    {
+      "id": "PLAY-03",
+      "rule": "Observar y escuchar el juego para conocer intereses, lenguaje, interacción, problemas y estrategias; intervenir de manera respetuosa y oportuna.",
+      "why": "El juego también produce información pedagógica valiosa."
+    },
+    {
+      "id": "PLAY-04",
+      "rule": "Evitar dirigir el juego hacia un producto predeterminado o usarlo como excusa para imponer una ficha.",
+      "why": "Preserva iniciativa, simbolización y creatividad."
+    },
+    {
+      "id": "PLAY-05",
+      "rule": "Cuando la organización institucional prioriza sectores, asegurar diversidad funcional; biblioteca, hogar y construcción son referencias recurrentes de la orientación MINEDU, adaptables al contexto.",
+      "why": "Favorecen diferentes tipos de juego y lenguaje."
+    }
+  ],
+  "generation_implications": [
+    "Si la consulta es sobre duración exacta o una norma anual, recuperar además ORIENTACIONES_INICIAL_2025/overlay vigente antes de fijar minutos."
+  ]
+}

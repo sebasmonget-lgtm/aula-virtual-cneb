@@ -1,0 +1,2 @@
+# Preserve LF bytes in the versioned KB; its manifest verifies SHA-256 hashes.
+knowledge/cneb-initial-3-5/v4.1.0/** text eol=lf

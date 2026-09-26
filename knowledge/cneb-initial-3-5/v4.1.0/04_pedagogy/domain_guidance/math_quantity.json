@@ -1,0 +1,75 @@
+{
+  "id": "didactics_math_quantity",
+  "proposed_version": "4.1.0",
+  "title": "Didáctica de cantidad en Inicial",
+  "area": "Matemática",
+  "competency_ids": [
+    "MAT_CANTIDAD"
+  ],
+  "age_scope": [
+    3,
+    4,
+    5
+  ],
+  "semantic_status": "editorial_synthesis_minedu_grounded_not_verbatim",
+  "source_refs": [
+    "MATH_INITIAL_2020",
+    "MATH_QUANTITY_PLAY_5_2022",
+    "PCI_INICIAL_CANONICAL"
+  ],
+  "workflow_scope": [
+    "annual_plan",
+    "project",
+    "unit",
+    "workshop",
+    "activity",
+    "criterion_and_evidence",
+    "material_generation",
+    "today_mode"
+  ],
+  "principles": [
+    "La matemática aparece como herramienta para resolver una necesidad o problema comprensible para el niño.",
+    "Priorizar objetos, acciones y relaciones antes que ejercicios simbólicos descontextualizados.",
+    "Permitir estrategias infantiles diversas y pedir que expliquen, muestren o representen cómo resolvieron.",
+    "La complejidad se ajusta usando el perfil curricular de la edad; este módulo no reemplaza los desempeños oficiales."
+  ],
+  "situation_families": [
+    "repartir o asegurar que alcance para todos",
+    "organizar y agrupar colecciones con un propósito",
+    "comparar colecciones o cantidades en una decisión real",
+    "preparar una cantidad necesaria para una acción o juego",
+    "ordenar objetos por una magnitud perceptible cuando tenga sentido",
+    "registrar o comunicar cantidades para recordar u organizar"
+  ],
+  "teacher_mediation": [
+    "¿Cómo podríamos saber si alcanza?",
+    "¿Cómo los organizaste?",
+    "¿Hay otra manera de hacerlo?",
+    "¿Cómo podemos comprobarlo?",
+    "¿Qué cambió cuando agregaste o quitaste?",
+    "Muéstrame cómo lo pensaste."
+  ],
+  "evidence_patterns": [
+    "establece relaciones entre objetos/colecciones para resolver la situación",
+    "usa conteo, correspondencia, comparación, agrupación u otra estrategia pertinente a su edad",
+    "explica o muestra la estrategia que utilizó",
+    "revisa su estrategia cuando el resultado no resuelve la necesidad"
+  ],
+  "avoid_patterns": [
+    "fichas de colorear cantidades como experiencia principal",
+    "hacer contar sin una finalidad comprensible",
+    "corregir de inmediato una estrategia antes de que el niño pueda probarla",
+    "subir arbitrariamente el rango numérico por parecer más avanzado"
+  ],
+  "age_adaptations": {
+    "3": [
+      "Situaciones breves, concretas y cercanas; colecciones pequeñas definidas por el perfil oficial de 3 años; aceptar mucha acción corporal y señalamiento como explicación."
+    ],
+    "4": [
+      "Aumentar oportunidades de comparar, organizar y explicar decisiones; sostener correspondencias y conteos en necesidades del aula sin convertirlos en prueba."
+    ],
+    "5": [
+      "Proponer problemas cotidianos con mayor necesidad de anticipar, comprobar, registrar o explicar; aprovechar las orientaciones específicas de 5 años ya registradas."
+    ]
+  }
+}

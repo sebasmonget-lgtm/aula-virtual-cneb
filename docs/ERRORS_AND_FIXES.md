@@ -559,3 +559,45 @@
 **Solución validada.** `assessment-v3` elimina los campos de nivel del schema y el validador rechaza cualquier campo adicional. La profesora guarda y confirma su valoración sin preselección; después se habilita una llamada separada para la conclusión, ligada mediante snapshot a la valoración confirmada. Cero evidencias detiene el flujo antes del proveedor. Las pruebas comprueban que la salida de IA no contiene letras, que la conclusión requiere valoración y que evidencia nueva exige revisión.
 
 **Prevención.** Mantener análisis, valoración y conclusión como etapas y contratos separados. Cualquier modelo futuro para assessment debe pasar el schema estricto sin campos de calificación.
+
+## 2026-09-26 La extensión de KB traía ámbitos incompatibles con el runtime vigente
+
+**Síntoma.** Algunas unidades v4.1 contenían `content` como lista y `workflow_scope` con nombres de áreas (`science`, `mathematics`, `personal_social`) o el workflow antiguo `materials`. La validación estricta rechazaba el corpus fusionado.
+
+**Causa raíz.** El paquete fue preparado para una matriz anterior de 13 workflows; Ayni ya tiene 16. Un ámbito de área no es un workflow.
+
+**Solución validada.** Se normalizaron las listas como texto y los ámbitos por los IDs vigentes, con `materials` mapeado a `material_generation`. El loader valida todo ámbito contra el registro actual y la suite recorre las unidades nuevas.
+
+**Prevención.** Compilar extensiones contra los contratos del repositorio en HEAD y validar los IDs antes de activar una versión de KB.
+
+## 2026-09-26 Una fuente de 5 años podía aparecer al recuperar didáctica para 3 años
+
+**Síntoma.** Una unidad transversal con alcance 3–5 referenciaba una guía específica para 5 años y podía enviarse al modelo en un contexto de 3 años.
+
+**Causa raíz.** El filtro por edad miraba `age_scope` de la unidad pero no la compatibilidad de las fuentes adicionales.
+
+**Solución validada.** En la compilación v4.1 se retiraron de cada unidad las referencias de fuentes incompatibles con su edad; cuando todas las fuentes eran específicas, se restringió el alcance de la unidad. Un caso de retrieval de 3 años verifica la exclusión.
+
+**Prevención.** Validar edad de unidad y procedencia de cada fuente al fusionar corpus nuevos.
+
+La revisión del corpus completo detectó además dos resúmenes de fuentes de lectura/escritura de v4.0 con `competency_id` nulo y sin ámbito de competencia. En v4.1 se les añadieron `COM_LECTURA` y `COM_ESCRITURA` como IDs aplicables, sin tocar v4.0. La prueba de integridad verifica ahora que todas las referencias con condición de edad o competencia la respeten.
+
+## 2026-09-26 El ordenamiento de unidades generales podía producir NaN
+
+**Síntoma.** Para una competencia confirmada, ciertas unidades generales sin `applicable_competency_ids` recibían `NaN` en la puntuación y alteraban el ranking.
+
+**Causa raíz.** `Number(undefined)` se aplicaba al resultado de una comprobación opcional.
+
+**Solución validada.** La comprobación se convierte primero a booleano y luego a número. Las pruebas de recuperación y contexto para competencias confirmadas pasan con orden determinista.
+
+**Prevención.** Exigir puntuaciones finitas para metadatos opcionales en nuevos componentes del ranking.
+
+## 2026-09-26 La normalización de líneas de Git podía invalidar el manifest de la KB
+
+**Síntoma.** El loader validaba los hashes del árbol de trabajo, pero algunos blobs preparados para el commit tenían bytes diferentes. En Windows, Git podía convertir finales de línea al preparar o extraer archivos.
+
+**Causa raíz.** El manifest verifica SHA-256 de bytes exactos y la nueva carpeta no tenía una política de finales de línea.
+
+**Solución validada.** Se normalizaron los archivos de v4.1 a LF y `.gitattributes` fija `eol=lf` solo para esa versión. Una comprobación independiente leyó los 80 blobs del índice de Git y comparó cada hash con el manifest; todos coincidieron.
+
+**Prevención.** Comprobar integridad tanto en el árbol de trabajo como en el índice antes de confirmar nuevas versiones de KB.

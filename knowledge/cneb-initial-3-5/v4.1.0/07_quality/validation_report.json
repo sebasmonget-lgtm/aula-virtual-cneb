@@ -1,0 +1,26 @@
+{
+  "version": "4.1.0",
+  "status": "PASS",
+  "checks": {
+    "source_ids_unique": true,
+    "sources": 36,
+    "source_claims": 22,
+    "competency_count": 14,
+    "competency_ids_unique": true,
+    "ages": [3, 4, 5],
+    "combined_retrieval_units": 374,
+    "all_retrieval_source_refs_registered": true,
+    "workflow_count": 16,
+    "retrieval_cases": 10,
+    "generation_benchmarks": 7,
+    "benchmark_cases_from_base": 50,
+    "runtime_pdf_dependency": false,
+    "v4_0_preserved": true,
+    "manifest_covers_all_files": true
+  },
+  "notes": [
+    "Las comparaciones v4.0/v4.1 verifican recuperación y contextos deterministas; no llaman al proveedor de IA.",
+    "Las fuentes anteriores de 2012–2015 se usan solo como didáctica compatible; el currículo canónico permanece en official_reference.",
+    "Los 16 workflows reales sustituyen la cifra de 13 indicada por el paquete de extensión."
+  ]
+}

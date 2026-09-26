@@ -1,0 +1,72 @@
+{
+  "id": "didactics_math_shape",
+  "proposed_version": "4.1.0",
+  "title": "Didáctica de forma, movimiento y localización",
+  "area": "Matemática",
+  "competency_ids": [
+    "MAT_FORMA"
+  ],
+  "age_scope": [
+    3,
+    4,
+    5
+  ],
+  "semantic_status": "editorial_synthesis_minedu_grounded_not_verbatim",
+  "source_refs": [
+    "MATH_INITIAL_2020",
+    "MATH_SHAPE_PLAY_5_2022",
+    "PCI_INICIAL_CANONICAL"
+  ],
+  "workflow_scope": [
+    "annual_plan",
+    "project",
+    "unit",
+    "activity",
+    "criterion_and_evidence",
+    "material_generation",
+    "today_mode"
+  ],
+  "principles": [
+    "La geometría inicial se construye actuando sobre objetos y espacio, no memorizando nombres de figuras.",
+    "Usar desplazamientos, construcciones y problemas de ubicación donde sea necesario tomar decisiones espaciales.",
+    "Favorecer representación y comunicación de recorridos, posiciones o construcciones cuando sea pertinente."
+  ],
+  "situation_families": [
+    "construir algo que debe sostenerse o encajar",
+    "buscar o esconder objetos usando relaciones espaciales",
+    "planear, seguir o comunicar un recorrido",
+    "reorganizar un espacio para cumplir una finalidad",
+    "comparar y transformar configuraciones con bloques u objetos",
+    "representar un espacio o recorrido con dibujo, maqueta o marcas"
+  ],
+  "teacher_mediation": [
+    "¿Dónde tendría que ir para que...?",
+    "¿Cómo podríamos llegar sin pasar por...?",
+    "¿Qué pieza podría servir aquí? ¿Por qué?",
+    "¿Cómo le explicarías a alguien dónde está?",
+    "¿Qué pasa si giramos/cambiamos esta parte?"
+  ],
+  "evidence_patterns": [
+    "usa relaciones espaciales para ubicarse u orientar objetos",
+    "ajusta desplazamientos o construcciones al problema",
+    "reconoce/describe rasgos de formas en contexto",
+    "representa o comunica posiciones, recorridos o configuraciones según edad"
+  ],
+  "avoid_patterns": [
+    "hojas de trazar figuras como experiencia central",
+    "confundir cualquier circuito motor con competencia matemática",
+    "enseñar vocabulario geométrico aislado de la acción",
+    "premiar una única construcción modelo"
+  ],
+  "age_adaptations": {
+    "3": [
+      "Predominan exploración corporal, ubicación cercana, encaje y construcción simple."
+    ],
+    "4": [
+      "Ampliar comparación de configuraciones, recorridos y relaciones espaciales; pedir explicaciones sencillas."
+    ],
+    "5": [
+      "Añadir anticipación, representación y comunicación más explícita de recorridos/configuraciones, según referentes oficiales de edad."
+    ]
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "proposed_version": "4.1.0",
+  "families": [
+    {
+      "id": "SIT_PSY_OPEN_LANDSCAPE",
+      "competency_id": "PSICO_MOTRICIDAD",
+      "age_scope": [
+        3,
+        4,
+        5
+      ],
+      "family": "paisaje_motriz_abierto",
+      "trigger": "Materiales y espacio permiten elegir trayectorias, acciones y retos corporales.",
+      "examples": [
+        "colchonetas",
+        "cajas grandes",
+        "aros/cuerdas",
+        "bloques blandos"
+      ],
+      "guardrail": "No imponer un único recorrido.",
+      "semantic_status": "editorial_pattern_not_official_wording"
+    },
+    {
+      "id": "SIT_PSY_TRANSPORT",
+      "competency_id": "PSICO_MOTRICIDAD",
+      "age_scope": [
+        3,
+        4,
+        5
+      ],
+      "family": "transportar_y_transformar",
+      "trigger": "Mover objetos o reorganizar el espacio plantea decisiones de equilibrio, fuerza y coordinación.",
+      "examples": [
+        "arrastrar",
+        "empujar",
+        "llevar",
+        "apilar"
+      ],
+      "guardrail": "Priorizar seguridad y autonomía.",
+      "semantic_status": "editorial_pattern_not_official_wording"
+    },
+    {
+      "id": "SIT_PSY_EXPRESS",
+      "competency_id": "PSICO_MOTRICIDAD",
+      "age_scope": [
+        3,
+        4,
+        5
+      ],
+      "family": "movimiento_expresivo",
+      "trigger": "El cuerpo se usa para explorar sensaciones, ritmos, ideas o emociones.",
+      "examples": [
+        "movimiento con música",
+        "gesto",
+        "posturas",
+        "secuencias propias"
+      ],
+      "guardrail": "No convertir en coreografía obligatoria si el propósito es motricidad autónoma.",
+      "semantic_status": "editorial_pattern_not_official_wording"
+    }
+  ]
+}

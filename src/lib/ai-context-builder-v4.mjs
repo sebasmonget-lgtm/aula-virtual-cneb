@@ -135,6 +135,7 @@ function buildConstraints(knowledgeBase, workflowRequirements, rules) {
   return {
     must: uniqueStrings([
       ...(knowledgeBase.generationGuardrails.must ?? []),
+      workflowRequirements.retrieval_rule,
       ...rules.flatMap((rule) => rule.must ?? []),
     ]),
     must_not: uniqueStrings([
@@ -153,6 +154,28 @@ function hasValue(value) {
   if (Array.isArray(value)) return value.some(hasValue);
   if (typeof value === "object") return Object.values(value).some(hasValue);
   return true;
+}
+
+function confirmedContextFlag(value) {
+  return value === true || (value && typeof value === "object" && value.confirmed === true);
+}
+
+function retrievalApplicabilityContext(input) {
+  return {
+    intercultural_context: confirmedContextFlag(input.intercultural_context)
+      || confirmedContextFlag(input.classroom_context?.intercultural_context),
+    bilingual_context: confirmedContextFlag(input.bilingual_context)
+      || confirmedContextFlag(input.language_context?.bilingual_context)
+      || confirmedContextFlag(input.classroom_context?.language_context?.bilingual_context),
+    community_knowledge_context: confirmedContextFlag(input.community_knowledge_context)
+      || confirmedContextFlag(input.classroom_context?.community_knowledge_context),
+    family_context: hasValue(input.family_context) || hasValue(input.classroom_context?.family_context)
+      || hasValue(input.student_context?.family_context),
+    family_report_workflow: input.workflow === "family_report",
+    tutoring_individual_context: confirmedContextFlag(input.tutoring_individual_applicable)
+      || confirmedContextFlag(input.tutoring_individual_context),
+    shared_community_problem: confirmedContextFlag(input.shared_community_problem),
+  };
 }
 
 function firstStructuredValue(input, field) {
@@ -306,7 +329,9 @@ export async function buildAIContext(input, knowledgeBase) {
   const confirmedCompetencyId = confirmedIds[0] ?? null;
   const workflowRequirements = knowledgeBase.workflows[input.workflow];
   const applicability = { castellanoL2Applicable: applicableL2(input), religionApplicable: applicableReligion(input) };
-  const retrievalInput = (id) => ({ workflow: input.workflow, age: input.age, teacherRequest: input.teacher_request, confirmedCompetencyId: id, ...applicability, temporalContext: input.temporal_context });
+  const retrievalInput = (id) => ({ workflow: input.workflow, age: input.age, teacherRequest: input.teacher_request,
+    confirmedCompetencyId: id, ...applicability, temporalContext: input.temporal_context,
+    applicabilityContext: retrievalApplicabilityContext(input) });
   const multiCompetencyWorkflow = ["family_report", "classroom_period_report", "project", "unit", "assessment_master"].includes(input.workflow);
   const retrieval = multiCompetencyWorkflow && confirmedIds.length > 1
     ? mergeFamilyRetrievals(await Promise.all(confirmedIds.map((id) => retrieveKnowledgeV4(retrievalInput(id), knowledgeBase))), workflowRequirements)

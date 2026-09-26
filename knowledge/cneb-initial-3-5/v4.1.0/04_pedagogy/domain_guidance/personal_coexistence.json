@@ -1,0 +1,72 @@
+{
+  "id": "didactics_personal_coexistence",
+  "proposed_version": "4.1.0",
+  "title": "Situaciones didácticas para convivencia y bien común",
+  "area": "Personal Social",
+  "competency_ids": [
+    "PS_CONVIVE"
+  ],
+  "age_scope": [
+    3,
+    4,
+    5
+  ],
+  "semantic_status": "editorial_synthesis_minedu_grounded_not_verbatim",
+  "source_refs": [
+    "PCI_INICIAL_CANONICAL",
+    "TUTORIA_INICIAL_2024",
+    "INTERACCIONES_2019",
+    "PERSONAL_SOCIAL_ROUTES_2013"
+  ],
+  "workflow_scope": [
+    "diagnostic",
+    "annual_plan",
+    "project",
+    "unit",
+    "activity",
+    "criterion_and_evidence",
+    "today_mode"
+  ],
+  "principles": [
+    "La convivencia se aprende participando en relaciones, acuerdos y problemas compartidos reales.",
+    "Los acuerdos tienen mayor sentido cuando responden a una necesidad reconocible del grupo.",
+    "El adulto media conflictos protegiendo derechos y ayudando a escuchar/considerar perspectivas."
+  ],
+  "situation_families": [
+    "surge un conflicto por materiales/espacio que requiere acuerdo",
+    "el grupo necesita organizar una responsabilidad compartida",
+    "hay que decidir cómo cuidar un bien común",
+    "se planifica una acción que beneficia al grupo",
+    "aparece una diferencia de costumbres/perspectivas que puede conocerse con respeto"
+  ],
+  "teacher_mediation": [
+    "¿Qué pasó desde el punto de vista de cada uno?",
+    "¿Qué necesitamos para que todos puedan participar?",
+    "¿Qué acuerdo nos ayudaría y cómo sabremos si funciona?",
+    "¿Quién puede asumir qué responsabilidad?",
+    "¿Cómo podemos cuidar esto que usamos todos?"
+  ],
+  "evidence_patterns": [
+    "participa en acuerdos/decisiones",
+    "coordina acciones y responsabilidades con otros",
+    "considera necesidades de compañeros con mediación acorde a edad",
+    "cuida recursos o espacios comunes con intención compartida"
+  ],
+  "avoid_patterns": [
+    "hacer copiar normas sin necesidad real",
+    "confundir estar sentado/en silencio con convivencia",
+    "forzar disculpas mecánicas como cierre de conflicto",
+    "usar votación para todo sin escuchar minorías o necesidades"
+  ],
+  "age_adaptations": {
+    "3": [
+      "Acuerdos muy concretos y apoyo adulto cercano en pequeños grupos."
+    ],
+    "4": [
+      "Mayor participación en acuerdos y responsabilidades simples."
+    ],
+    "5": [
+      "Propuestas de organización, explicación del sentido de acuerdos y acciones colectivas más sostenidas."
+    ]
+  }
+}

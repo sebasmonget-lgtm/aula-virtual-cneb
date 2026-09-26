@@ -1,0 +1,19 @@
+{
+  "version": "3.0.0",
+  "workflow": [
+    "Collect evidence records with dates/context/criterion/status.",
+    "Prefer latest and diverse evidence while retaining trajectory.",
+    "Group by competency and distinguish sufficient vs insufficient information.",
+    "Describe observable patterns before interpreting.",
+    "Compare cautiously to age/cycle references.",
+    "Generate proposed synthesis: strengths/advances, support needed, questions/next opportunities.",
+    "Require teacher confirmation for formal descriptive conclusion."
+  ],
+  "language_rules": [
+    "specific and descriptive",
+    "no personality labels",
+    "no deterministic diagnosis",
+    "state insufficient information when needed"
+  ],
+  "quantitative_rule": "Counts/coverage may support internal prioritization but cannot be the sole final evaluation."
+}

@@ -1,0 +1,73 @@
+{
+  "id": "didactics_personal_identity",
+  "proposed_version": "4.1.0",
+  "title": "Situaciones didácticas para identidad y autonomía",
+  "area": "Personal Social",
+  "competency_ids": [
+    "PS_IDENTIDAD"
+  ],
+  "age_scope": [
+    3,
+    4,
+    5
+  ],
+  "semantic_status": "editorial_synthesis_minedu_grounded_not_verbatim",
+  "source_refs": [
+    "PCI_INICIAL_CANONICAL",
+    "SOCIOEMOCIONAL_2021",
+    "TUTORIA_INICIAL_2024",
+    "PERSONAL_SOCIAL_ROUTES_2013",
+    "INTERACCIONES_2019"
+  ],
+  "workflow_scope": [
+    "diagnostic",
+    "annual_plan",
+    "project",
+    "unit",
+    "activity",
+    "criterion_and_evidence",
+    "today_mode"
+  ],
+  "principles": [
+    "La identidad se moviliza cuando el niño puede reconocerse, elegir, expresar preferencias/emociones y actuar con autonomía creciente.",
+    "No confundir autonomía con obediencia sin ayuda.",
+    "El adulto ofrece seguridad, opciones reales y co-regulación."
+  ],
+  "situation_families": [
+    "elegir y explicar preferencias en una decisión real",
+    "resolver una necesidad de autocuidado con creciente autonomía",
+    "reconocer/expresar emociones en experiencias reales",
+    "compartir aspectos de historia, familia o pertenencia",
+    "identificar algo que ya puede hacer y apoyo que todavía necesita"
+  ],
+  "teacher_mediation": [
+    "¿Qué prefieres y por qué?",
+    "¿Qué necesitas para hacerlo tú?",
+    "¿Cómo te sentiste? ¿Qué te ayudó?",
+    "¿Qué quieres contar sobre ti?",
+    "¿Quieres ayuda o prefieres intentarlo primero?"
+  ],
+  "evidence_patterns": [
+    "toma decisiones acordes a la situación",
+    "expresa características, preferencias o emociones",
+    "busca apoyo de forma pertinente",
+    "actúa con autonomía creciente en rutinas y decisiones"
+  ],
+  "avoid_patterns": [
+    "hacer que todos expresen la misma emoción esperada",
+    "usar premios/castigos como sustituto de autorregulación",
+    "confundir cumplimiento de órdenes con autonomía",
+    "forzar exposición de información familiar íntima"
+  ],
+  "age_adaptations": {
+    "3": [
+      "Opciones simples, co-regulación intensa y reconocimiento básico de sí y pertenencia."
+    ],
+    "4": [
+      "Más explicación de preferencias y causas emocionales simples; mayor iniciativa."
+    ],
+    "5": [
+      "Mayor autonomía, razones sobre elecciones y estrategias para pedir apoyo o regularse."
+    ]
+  }
+}

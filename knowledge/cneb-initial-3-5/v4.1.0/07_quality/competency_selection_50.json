@@ -1,0 +1,630 @@
+[
+  {
+    "id": "01",
+    "age": 5,
+    "situation": "Pregunta dónde viven los caracoles.",
+    "teacher_goal": "Averiguar información sobre caracoles desde una pregunta auténtica.",
+    "expected_primary_competency_id": "CYT_INDAGA",
+    "acceptable_secondary_ids": [],
+    "unacceptable_competency_ids": [],
+    "ambiguity": "low",
+    "explanation": "La decisión debe basarse en el propósito pedagógico, no en palabras clave del tema.",
+    "review_status": "semantic_fixture_needs_teacher_validation"
+  },
+  {
+    "id": "02",
+    "age": 5,
+    "situation": "Comenta un cuento escuchado.",
+    "teacher_goal": "Trabajar principalmente la competencia COM_ORAL en la situación descrita.",
+    "expected_primary_competency_id": "COM_ORAL",
+    "acceptable_secondary_ids": [
+      "COM_LECTURA"
+    ],
+    "unacceptable_competency_ids": [],
+    "ambiguity": "medium",
+    "explanation": "La decisión debe basarse en el propósito pedagógico, no en palabras clave del tema.",
+    "review_status": "semantic_fixture_needs_teacher_validation"
+  },
+  {
+    "id": "03",
+    "age": 5,
+    "situation": "Dibuja lo observado en el jardín.",
+    "teacher_goal": "Precisar si el dibujo es registro de indagación o creación artística.",
+    "expected_primary_competency_id": "COM_ARTE",
+    "acceptable_secondary_ids": [
+      "CYT_INDAGA"
+    ],
+    "unacceptable_competency_ids": [],
+    "ambiguity": "high",
+    "explanation": "La decisión debe basarse en el propósito pedagógico, no en palabras clave del tema.",
+    "review_status": "semantic_fixture_needs_teacher_validation"
+  },
+  {
+    "id": "04",
+    "age": 4,
+    "situation": "Compara quién tiene más frutas.",
+    "teacher_goal": "Trabajar principalmente la competencia MAT_CANTIDAD en la situación descrita.",
+    "expected_primary_competency_id": "MAT_CANTIDAD",
+    "acceptable_secondary_ids": [],
+    "unacceptable_competency_ids": [],
+    "ambiguity": "low",
+    "explanation": "La decisión debe basarse en el propósito pedagógico, no en palabras clave del tema.",
+    "review_status": "semantic_fixture_needs_teacher_validation"
+  },
+  {
+    "id": "05",
+    "age": 4,
+    "situation": "Sigue un recorrido hasta el patio.",
+    "teacher_goal": "Trabajar principalmente la competencia MAT_FORMA en la situación descrita.",
+    "expected_primary_competency_id": "MAT_FORMA",
+    "acceptable_secondary_ids": [],
+    "unacceptable_competency_ids": [],
+    "ambiguity": "low",
+    "explanation": "La decisión debe basarse en el propósito pedagógico, no en palabras clave del tema.",
+    "review_status": "semantic_fixture_needs_teacher_validation"
+  },
+  {
+    "id": "06",
+    "age": 5,
+    "situation": "Propone acuerdos para compartir materiales.",
+    "teacher_goal": "Trabajar principalmente la competencia PS_CONVIVE en la situación descrita.",
+    "expected_primary_competency_id": "PS_CONVIVE",
+    "acceptable_secondary_ids": [],
+    "unacceptable_competency_ids": [],
+    "ambiguity": "low",
+    "explanation": "La decisión debe basarse en el propósito pedagógico, no en palabras clave del tema.",
+    "review_status": "semantic_fixture_needs_teacher_validation"
+  },
+  {
+    "id": "07",
+    "age": 3,
+    "situation": "Expresa tristeza al despedirse.",
+    "teacher_goal": "Trabajar principalmente la competencia PS_IDENTIDAD en la situación descrita.",
+    "expected_primary_competency_id": "PS_IDENTIDAD",
+    "acceptable_secondary_ids": [],
+    "unacceptable_competency_ids": [],
+    "ambiguity": "low",
+    "explanation": "La decisión debe basarse en el propósito pedagógico, no en palabras clave del tema.",
+    "review_status": "semantic_fixture_needs_teacher_validation"
+  },
+  {
+    "id": "08",
+    "age": 4,
+    "situation": "Realiza saltos y equilibrios.",
+    "teacher_goal": "Trabajar principalmente la competencia PSICO_MOTRICIDAD en la situación descrita.",
+    "expected_primary_competency_id": "PSICO_MOTRICIDAD",
+    "acceptable_secondary_ids": [],
+    "unacceptable_competency_ids": [],
+    "ambiguity": "low",
+    "explanation": "La decisión debe basarse en el propósito pedagógico, no en palabras clave del tema.",
+    "review_status": "semantic_fixture_needs_teacher_validation"
+  },
+  {
+    "id": "09",
+    "age": 5,
+    "situation": "Inventa rimas con nombres.",
+    "teacher_goal": "Trabajar principalmente la competencia COM_ORAL en la situación descrita.",
+    "expected_primary_competency_id": "COM_ORAL",
+    "acceptable_secondary_ids": [],
+    "unacceptable_competency_ids": [],
+    "ambiguity": "low",
+    "explanation": "La decisión debe basarse en el propósito pedagógico, no en palabras clave del tema.",
+    "review_status": "semantic_fixture_needs_teacher_validation"
+  },
+  {
+    "id": "10",
+    "age": 5,
+    "situation": "Anticipa un texto desde un cartel.",
+    "teacher_goal": "Trabajar principalmente la competencia COM_LECTURA en la situación descrita.",
+    "expected_primary_competency_id": "COM_LECTURA",
+    "acceptable_secondary_ids": [],
+    "unacceptable_competency_ids": [],
+    "ambiguity": "low",
+    "explanation": "La decisión debe basarse en el propósito pedagógico, no en palabras clave del tema.",
+    "review_status": "semantic_fixture_needs_teacher_validation"
+  },
+  {
+    "id": "11",
+    "age": 5,
+    "situation": "Escribe una lista de materiales a su manera.",
+    "teacher_goal": "Trabajar principalmente la competencia COM_ESCRITURA en la situación descrita.",
+    "expected_primary_competency_id": "COM_ESCRITURA",
+    "acceptable_secondary_ids": [],
+    "unacceptable_competency_ids": [],
+    "ambiguity": "low",
+    "explanation": "La decisión debe basarse en el propósito pedagógico, no en palabras clave del tema.",
+    "review_status": "semantic_fixture_needs_teacher_validation"
+  },
+  {
+    "id": "12",
+    "age": 3,
+    "situation": "Crea un collage libre.",
+    "teacher_goal": "Trabajar principalmente la competencia COM_ARTE en la situación descrita.",
+    "expected_primary_competency_id": "COM_ARTE",
+    "acceptable_secondary_ids": [],
+    "unacceptable_competency_ids": [],
+    "ambiguity": "low",
+    "explanation": "La decisión debe basarse en el propósito pedagógico, no en palabras clave del tema.",
+    "review_status": "semantic_fixture_needs_teacher_validation"
+  },
+  {
+    "id": "13",
+    "age": 5,
+    "situation": "Dialoga brevemente en castellano como segunda lengua.",
+    "teacher_goal": "Trabajar principalmente la competencia CAST_L2_ORAL en la situación descrita.",
+    "expected_primary_competency_id": "CAST_L2_ORAL",
+    "acceptable_secondary_ids": [],
+    "unacceptable_competency_ids": [],
+    "ambiguity": "low",
+    "explanation": "La decisión debe basarse en el propósito pedagógico, no en palabras clave del tema.",
+    "review_status": "semantic_fixture_needs_teacher_validation"
+  },
+  {
+    "id": "14",
+    "age": 5,
+    "situation": "Registra un dibujo con tableta acompañada.",
+    "teacher_goal": "Trabajar principalmente la competencia TRANS_TIC en la situación descrita.",
+    "expected_primary_competency_id": "TRANS_TIC",
+    "acceptable_secondary_ids": [],
+    "unacceptable_competency_ids": [],
+    "ambiguity": "low",
+    "explanation": "La decisión debe basarse en el propósito pedagógico, no en palabras clave del tema.",
+    "review_status": "semantic_fixture_needs_teacher_validation"
+  },
+  {
+    "id": "15",
+    "age": 4,
+    "situation": "Elige materiales y termina su tarea.",
+    "teacher_goal": "Precisar si existe meta, estrategia y revisión; elegir materiales por sí solo no basta.",
+    "expected_primary_competency_id": "TRANS_AUTONOMO",
+    "acceptable_secondary_ids": [],
+    "unacceptable_competency_ids": [],
+    "ambiguity": "high",
+    "explanation": "La decisión debe basarse en el propósito pedagógico, no en palabras clave del tema.",
+    "review_status": "semantic_fixture_needs_teacher_validation"
+  },
+  {
+    "id": "16",
+    "age": 5,
+    "situation": "Participa respetuosamente en un agradecimiento.",
+    "teacher_goal": "Trabajar principalmente la competencia PS_RELIGION en la situación descrita.",
+    "expected_primary_competency_id": "PS_RELIGION",
+    "acceptable_secondary_ids": [],
+    "unacceptable_competency_ids": [],
+    "ambiguity": "low",
+    "explanation": "La decisión debe basarse en el propósito pedagógico, no en palabras clave del tema.",
+    "review_status": "semantic_fixture_needs_teacher_validation"
+  },
+  {
+    "id": "17",
+    "age": 3,
+    "situation": "Observa semillas y comunica cambios.",
+    "teacher_goal": "Trabajar principalmente la competencia CYT_INDAGA en la situación descrita.",
+    "expected_primary_competency_id": "CYT_INDAGA",
+    "acceptable_secondary_ids": [
+      "COM_ORAL"
+    ],
+    "unacceptable_competency_ids": [],
+    "ambiguity": "medium",
+    "explanation": "La decisión debe basarse en el propósito pedagógico, no en palabras clave del tema.",
+    "review_status": "semantic_fixture_needs_teacher_validation"
+  },
+  {
+    "id": "18",
+    "age": 3,
+    "situation": "Compara torres más altas.",
+    "teacher_goal": "Precisar si se compara altura/longitud (forma) o una cantidad.",
+    "expected_primary_competency_id": "MAT_CANTIDAD",
+    "acceptable_secondary_ids": [],
+    "unacceptable_competency_ids": [],
+    "ambiguity": "high",
+    "explanation": "La decisión debe basarse en el propósito pedagógico, no en palabras clave del tema.",
+    "review_status": "semantic_fixture_needs_teacher_validation"
+  },
+  {
+    "id": "19",
+    "age": 5,
+    "situation": "Representa el camino a la escuela.",
+    "teacher_goal": "Precisar si se resuelve una relación espacial o se crea una representación artística.",
+    "expected_primary_competency_id": "MAT_FORMA",
+    "acceptable_secondary_ids": [],
+    "unacceptable_competency_ids": [],
+    "ambiguity": "high",
+    "explanation": "La decisión debe basarse en el propósito pedagógico, no en palabras clave del tema.",
+    "review_status": "semantic_fixture_needs_teacher_validation"
+  },
+  {
+    "id": "20",
+    "age": 4,
+    "situation": "Resuelve turnos para usar un triciclo.",
+    "teacher_goal": "Trabajar principalmente la competencia PS_CONVIVE en la situación descrita.",
+    "expected_primary_competency_id": "PS_CONVIVE",
+    "acceptable_secondary_ids": [],
+    "unacceptable_competency_ids": [],
+    "ambiguity": "low",
+    "explanation": "La decisión debe basarse en el propósito pedagógico, no en palabras clave del tema.",
+    "review_status": "semantic_fixture_needs_teacher_validation"
+  },
+  {
+    "id": "21",
+    "age": 4,
+    "situation": "Hace un autorretrato y reconoce rasgos propios.",
+    "teacher_goal": "Trabajar principalmente la competencia PS_IDENTIDAD en la situación descrita.",
+    "expected_primary_competency_id": "PS_IDENTIDAD",
+    "acceptable_secondary_ids": [
+      "COM_ARTE"
+    ],
+    "unacceptable_competency_ids": [],
+    "ambiguity": "medium",
+    "explanation": "La decisión debe basarse en el propósito pedagógico, no en palabras clave del tema.",
+    "review_status": "semantic_fixture_needs_teacher_validation"
+  },
+  {
+    "id": "22",
+    "age": 5,
+    "situation": "Coordina movimientos en una danza.",
+    "teacher_goal": "Precisar si el foco es control motriz o creación artística mediante danza.",
+    "expected_primary_competency_id": "PSICO_MOTRICIDAD",
+    "acceptable_secondary_ids": [
+      "COM_ARTE"
+    ],
+    "unacceptable_competency_ids": [],
+    "ambiguity": "high",
+    "explanation": "La decisión debe basarse en el propósito pedagógico, no en palabras clave del tema.",
+    "review_status": "semantic_fixture_needs_teacher_validation"
+  },
+  {
+    "id": "23",
+    "age": 4,
+    "situation": "Relata algo que vio camino a la escuela.",
+    "teacher_goal": "Trabajar principalmente la competencia COM_ORAL en la situación descrita.",
+    "expected_primary_competency_id": "COM_ORAL",
+    "acceptable_secondary_ids": [],
+    "unacceptable_competency_ids": [],
+    "ambiguity": "low",
+    "explanation": "La decisión debe basarse en el propósito pedagógico, no en palabras clave del tema.",
+    "review_status": "semantic_fixture_needs_teacher_validation"
+  },
+  {
+    "id": "24",
+    "age": 5,
+    "situation": "Explora una receta con imágenes.",
+    "teacher_goal": "Trabajar principalmente la competencia COM_LECTURA en la situación descrita.",
+    "expected_primary_competency_id": "COM_LECTURA",
+    "acceptable_secondary_ids": [],
+    "unacceptable_competency_ids": [],
+    "ambiguity": "low",
+    "explanation": "La decisión debe basarse en el propósito pedagógico, no en palabras clave del tema.",
+    "review_status": "semantic_fixture_needs_teacher_validation"
+  },
+  {
+    "id": "25",
+    "age": 4,
+    "situation": "Produce una tarjeta para su familia.",
+    "teacher_goal": "Trabajar principalmente la competencia COM_ESCRITURA en la situación descrita.",
+    "expected_primary_competency_id": "COM_ESCRITURA",
+    "acceptable_secondary_ids": [],
+    "unacceptable_competency_ids": [],
+    "ambiguity": "low",
+    "explanation": "La decisión debe basarse en el propósito pedagógico, no en palabras clave del tema.",
+    "review_status": "semantic_fixture_needs_teacher_validation"
+  },
+  {
+    "id": "26",
+    "age": 3,
+    "situation": "Experimenta sonidos con objetos.",
+    "teacher_goal": "Trabajar principalmente la competencia COM_ARTE en la situación descrita.",
+    "expected_primary_competency_id": "COM_ARTE",
+    "acceptable_secondary_ids": [],
+    "unacceptable_competency_ids": [],
+    "ambiguity": "low",
+    "explanation": "La decisión debe basarse en el propósito pedagógico, no en palabras clave del tema.",
+    "review_status": "semantic_fixture_needs_teacher_validation"
+  },
+  {
+    "id": "27",
+    "age": 3,
+    "situation": "Responde saludos en castellano L2.",
+    "teacher_goal": "Trabajar principalmente la competencia CAST_L2_ORAL en la situación descrita.",
+    "expected_primary_competency_id": "CAST_L2_ORAL",
+    "acceptable_secondary_ids": [],
+    "unacceptable_competency_ids": [],
+    "ambiguity": "low",
+    "explanation": "La decisión debe basarse en el propósito pedagógico, no en palabras clave del tema.",
+    "review_status": "semantic_fixture_needs_teacher_validation"
+  },
+  {
+    "id": "28",
+    "age": 4,
+    "situation": "Registra una construcción con fotografía acompañada.",
+    "teacher_goal": "Trabajar principalmente la competencia TRANS_TIC en la situación descrita.",
+    "expected_primary_competency_id": "TRANS_TIC",
+    "acceptable_secondary_ids": [],
+    "unacceptable_competency_ids": [],
+    "ambiguity": "low",
+    "explanation": "La decisión debe basarse en el propósito pedagógico, no en palabras clave del tema.",
+    "review_status": "semantic_fixture_needs_teacher_validation"
+  },
+  {
+    "id": "29",
+    "age": 3,
+    "situation": "Guarda materiales con una secuencia visual.",
+    "teacher_goal": "Trabajar principalmente la competencia TRANS_AUTONOMO en la situación descrita.",
+    "expected_primary_competency_id": "TRANS_AUTONOMO",
+    "acceptable_secondary_ids": [],
+    "unacceptable_competency_ids": [],
+    "ambiguity": "low",
+    "explanation": "La decisión debe basarse en el propósito pedagógico, no en palabras clave del tema.",
+    "review_status": "semantic_fixture_needs_teacher_validation"
+  },
+  {
+    "id": "30",
+    "age": 4,
+    "situation": "Comparte una práctica familiar significativa.",
+    "teacher_goal": "Precisar si el foco es identidad familiar o experiencia religiosa.",
+    "expected_primary_competency_id": "PS_RELIGION",
+    "acceptable_secondary_ids": [
+      "PS_IDENTIDAD"
+    ],
+    "unacceptable_competency_ids": [],
+    "ambiguity": "high",
+    "explanation": "La decisión debe basarse en el propósito pedagógico, no en palabras clave del tema.",
+    "review_status": "semantic_fixture_needs_teacher_validation"
+  },
+  {
+    "id": "31",
+    "age": 5,
+    "situation": "Predice qué pasará con hielo al sol.",
+    "teacher_goal": "Trabajar principalmente la competencia CYT_INDAGA en la situación descrita.",
+    "expected_primary_competency_id": "CYT_INDAGA",
+    "acceptable_secondary_ids": [],
+    "unacceptable_competency_ids": [],
+    "ambiguity": "low",
+    "explanation": "La decisión debe basarse en el propósito pedagógico, no en palabras clave del tema.",
+    "review_status": "semantic_fixture_needs_teacher_validation"
+  },
+  {
+    "id": "32",
+    "age": 5,
+    "situation": "Reúne la cantidad indicada con dados.",
+    "teacher_goal": "Trabajar principalmente la competencia MAT_CANTIDAD en la situación descrita.",
+    "expected_primary_competency_id": "MAT_CANTIDAD",
+    "acceptable_secondary_ids": [],
+    "unacceptable_competency_ids": [],
+    "ambiguity": "low",
+    "explanation": "La decisión debe basarse en el propósito pedagógico, no en palabras clave del tema.",
+    "review_status": "semantic_fixture_needs_teacher_validation"
+  },
+  {
+    "id": "33",
+    "age": 3,
+    "situation": "Clasifica bloques por forma.",
+    "teacher_goal": "Trabajar principalmente la competencia MAT_FORMA en la situación descrita.",
+    "expected_primary_competency_id": "MAT_FORMA",
+    "acceptable_secondary_ids": [],
+    "unacceptable_competency_ids": [],
+    "ambiguity": "low",
+    "explanation": "La decisión debe basarse en el propósito pedagógico, no en palabras clave del tema.",
+    "review_status": "semantic_fixture_needs_teacher_validation"
+  },
+  {
+    "id": "34",
+    "age": 5,
+    "situation": "Vota una propuesta para el rincón.",
+    "teacher_goal": "Trabajar principalmente la competencia PS_CONVIVE en la situación descrita.",
+    "expected_primary_competency_id": "PS_CONVIVE",
+    "acceptable_secondary_ids": [],
+    "unacceptable_competency_ids": [],
+    "ambiguity": "low",
+    "explanation": "La decisión debe basarse en el propósito pedagógico, no en palabras clave del tema.",
+    "review_status": "semantic_fixture_needs_teacher_validation"
+  },
+  {
+    "id": "35",
+    "age": 5,
+    "situation": "Reconoce un logro y pide ayuda.",
+    "teacher_goal": "Precisar si el foco es autoconocimiento o regulación del aprendizaje.",
+    "expected_primary_competency_id": "PS_IDENTIDAD",
+    "acceptable_secondary_ids": [
+      "TRANS_AUTONOMO"
+    ],
+    "unacceptable_competency_ids": [],
+    "ambiguity": "high",
+    "explanation": "La decisión debe basarse en el propósito pedagógico, no en palabras clave del tema.",
+    "review_status": "semantic_fixture_needs_teacher_validation"
+  },
+  {
+    "id": "36",
+    "age": 3,
+    "situation": "Lanza y atrapa una pelota.",
+    "teacher_goal": "Trabajar principalmente la competencia PSICO_MOTRICIDAD en la situación descrita.",
+    "expected_primary_competency_id": "PSICO_MOTRICIDAD",
+    "acceptable_secondary_ids": [],
+    "unacceptable_competency_ids": [],
+    "ambiguity": "low",
+    "explanation": "La decisión debe basarse en el propósito pedagógico, no en palabras clave del tema.",
+    "review_status": "semantic_fixture_needs_teacher_validation"
+  },
+  {
+    "id": "37",
+    "age": 5,
+    "situation": "Pregunta a una visitante sobre su trabajo.",
+    "teacher_goal": "Precisar si preguntar es objetivo comunicativo o medio para investigar.",
+    "expected_primary_competency_id": "COM_ORAL",
+    "acceptable_secondary_ids": [
+      "CYT_INDAGA"
+    ],
+    "unacceptable_competency_ids": [],
+    "ambiguity": "high",
+    "explanation": "La decisión debe basarse en el propósito pedagógico, no en palabras clave del tema.",
+    "review_status": "semantic_fixture_needs_teacher_validation"
+  },
+  {
+    "id": "38",
+    "age": 3,
+    "situation": "Mira ilustraciones y anticipa un libro.",
+    "teacher_goal": "Trabajar principalmente la competencia COM_LECTURA en la situación descrita.",
+    "expected_primary_competency_id": "COM_LECTURA",
+    "acceptable_secondary_ids": [
+      "COM_ORAL"
+    ],
+    "unacceptable_competency_ids": [],
+    "ambiguity": "medium",
+    "explanation": "La decisión debe basarse en el propósito pedagógico, no en palabras clave del tema.",
+    "review_status": "semantic_fixture_needs_teacher_validation"
+  },
+  {
+    "id": "39",
+    "age": 5,
+    "situation": "Escribe el menú del juego de restaurante.",
+    "teacher_goal": "Trabajar principalmente la competencia COM_ESCRITURA en la situación descrita.",
+    "expected_primary_competency_id": "COM_ESCRITURA",
+    "acceptable_secondary_ids": [],
+    "unacceptable_competency_ids": [],
+    "ambiguity": "low",
+    "explanation": "La decisión debe basarse en el propósito pedagógico, no en palabras clave del tema.",
+    "review_status": "semantic_fixture_needs_teacher_validation"
+  },
+  {
+    "id": "40",
+    "age": 4,
+    "situation": "Representa un personaje con gestos y voz.",
+    "teacher_goal": "Trabajar principalmente la competencia COM_ARTE en la situación descrita.",
+    "expected_primary_competency_id": "COM_ARTE",
+    "acceptable_secondary_ids": [
+      "COM_ORAL"
+    ],
+    "unacceptable_competency_ids": [],
+    "ambiguity": "medium",
+    "explanation": "La decisión debe basarse en el propósito pedagógico, no en palabras clave del tema.",
+    "review_status": "semantic_fixture_needs_teacher_validation"
+  },
+  {
+    "id": "41",
+    "age": 5,
+    "situation": "Da instrucciones simples en castellano L2.",
+    "teacher_goal": "Trabajar principalmente la competencia CAST_L2_ORAL en la situación descrita.",
+    "expected_primary_competency_id": "CAST_L2_ORAL",
+    "acceptable_secondary_ids": [],
+    "unacceptable_competency_ids": [],
+    "ambiguity": "low",
+    "explanation": "La decisión debe basarse en el propósito pedagógico, no en palabras clave del tema.",
+    "review_status": "semantic_fixture_needs_teacher_validation"
+  },
+  {
+    "id": "42",
+    "age": 5,
+    "situation": "Escucha un audio y registra una idea digital.",
+    "teacher_goal": "Precisar si se evalúa uso digital o comprensión/expresión oral.",
+    "expected_primary_competency_id": "TRANS_TIC",
+    "acceptable_secondary_ids": [
+      "COM_ORAL"
+    ],
+    "unacceptable_competency_ids": [],
+    "ambiguity": "high",
+    "explanation": "La decisión debe basarse en el propósito pedagógico, no en palabras clave del tema.",
+    "review_status": "semantic_fixture_needs_teacher_validation"
+  },
+  {
+    "id": "43",
+    "age": 5,
+    "situation": "Planifica y ajusta una construcción.",
+    "teacher_goal": "Trabajar principalmente la competencia TRANS_AUTONOMO en la situación descrita.",
+    "expected_primary_competency_id": "TRANS_AUTONOMO",
+    "acceptable_secondary_ids": [],
+    "unacceptable_competency_ids": [],
+    "ambiguity": "low",
+    "explanation": "La decisión debe basarse en el propósito pedagógico, no en palabras clave del tema.",
+    "review_status": "semantic_fixture_needs_teacher_validation"
+  },
+  {
+    "id": "44",
+    "age": 3,
+    "situation": "Participa con respeto en una celebración comunitaria.",
+    "teacher_goal": "Precisar si el foco es experiencia religiosa o convivencia comunitaria.",
+    "expected_primary_competency_id": "PS_RELIGION",
+    "acceptable_secondary_ids": [
+      "PS_CONVIVE"
+    ],
+    "unacceptable_competency_ids": [],
+    "ambiguity": "high",
+    "explanation": "La decisión debe basarse en el propósito pedagógico, no en palabras clave del tema.",
+    "review_status": "semantic_fixture_needs_teacher_validation"
+  },
+  {
+    "id": "45",
+    "age": 4,
+    "situation": "Compara sombras en distintos momentos.",
+    "teacher_goal": "Trabajar principalmente la competencia CYT_INDAGA en la situación descrita.",
+    "expected_primary_competency_id": "CYT_INDAGA",
+    "acceptable_secondary_ids": [],
+    "unacceptable_competency_ids": [],
+    "ambiguity": "low",
+    "explanation": "La decisión debe basarse en el propósito pedagógico, no en palabras clave del tema.",
+    "review_status": "semantic_fixture_needs_teacher_validation"
+  },
+  {
+    "id": "46",
+    "age": 4,
+    "situation": "Entrega cantidades en el juego de mercado.",
+    "teacher_goal": "Precisar si el problema principal es cuantitativo o de convivencia.",
+    "expected_primary_competency_id": "MAT_CANTIDAD",
+    "acceptable_secondary_ids": [
+      "PS_CONVIVE"
+    ],
+    "unacceptable_competency_ids": [],
+    "ambiguity": "high",
+    "explanation": "La decisión debe basarse en el propósito pedagógico, no en palabras clave del tema.",
+    "review_status": "semantic_fixture_needs_teacher_validation"
+  },
+  {
+    "id": "47",
+    "age": 5,
+    "situation": "Describe recorridos para resolver un laberinto.",
+    "teacher_goal": "Trabajar principalmente la competencia MAT_FORMA en la situación descrita.",
+    "expected_primary_competency_id": "MAT_FORMA",
+    "acceptable_secondary_ids": [],
+    "unacceptable_competency_ids": [],
+    "ambiguity": "low",
+    "explanation": "La decisión debe basarse en el propósito pedagógico, no en palabras clave del tema.",
+    "review_status": "semantic_fixture_needs_teacher_validation"
+  },
+  {
+    "id": "48",
+    "age": 3,
+    "situation": "Espera un turno en un juego.",
+    "teacher_goal": "Trabajar principalmente la competencia PS_CONVIVE en la situación descrita.",
+    "expected_primary_competency_id": "PS_CONVIVE",
+    "acceptable_secondary_ids": [],
+    "unacceptable_competency_ids": [],
+    "ambiguity": "low",
+    "explanation": "La decisión debe basarse en el propósito pedagógico, no en palabras clave del tema.",
+    "review_status": "semantic_fixture_needs_teacher_validation"
+  },
+  {
+    "id": "49",
+    "age": 3,
+    "situation": "Nombra preferencias propias frente a un espejo.",
+    "teacher_goal": "Trabajar principalmente la competencia PS_IDENTIDAD en la situación descrita.",
+    "expected_primary_competency_id": "PS_IDENTIDAD",
+    "acceptable_secondary_ids": [],
+    "unacceptable_competency_ids": [],
+    "ambiguity": "low",
+    "explanation": "La decisión debe basarse en el propósito pedagógico, no en palabras clave del tema.",
+    "review_status": "semantic_fixture_needs_teacher_validation"
+  },
+  {
+    "id": "50",
+    "age": 5,
+    "situation": "Modela una figura y explica su proceso.",
+    "teacher_goal": "Precisar si el foco es creación artística o explicación oral del proceso.",
+    "expected_primary_competency_id": "COM_ARTE",
+    "acceptable_secondary_ids": [
+      "COM_ORAL"
+    ],
+    "unacceptable_competency_ids": [],
+    "ambiguity": "high",
+    "explanation": "La decisión debe basarse en el propósito pedagógico, no en palabras clave del tema.",
+    "review_status": "semantic_fixture_needs_teacher_validation"
+  }
+]

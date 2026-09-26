@@ -1,0 +1,10 @@
+{
+  "version": "3.0.0",
+  "artifact_types": {
+    "teacher_plan": "Use professional pedagogical language, explicit rationale and editable structure.",
+    "family_report": "Use clear nontechnical language, concrete examples and supportive next steps; avoid comparisons with peers.",
+    "internal_report": "May include coverage, frequency and operational indicators with warnings that they are not final pedagogical levels.",
+    "learning_material": "Align task to child agency, age and purpose; avoid excessive textual load for children."
+  },
+  "provenance_policy": "Backend should retain knowledge_unit_ids/source_refs used to produce every artifact, even if teacher-facing document hides citations."
+}

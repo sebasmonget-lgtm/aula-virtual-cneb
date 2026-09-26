@@ -1,0 +1,131 @@
+{
+  "proposed_version": "4.1.0",
+  "families": [
+    {
+      "id": "SIT_COM_O_NARRATE",
+      "competency_id": "COM_ORAL",
+      "age_scope": [
+        3,
+        4,
+        5
+      ],
+      "family": "narrar_para_otro",
+      "trigger": "Alguien necesita conocer una experiencia o hecho que no presenció.",
+      "examples": [
+        "contar lo ocurrido",
+        "relatar experiencia de proyecto",
+        "narrar a familia/otra aula"
+      ],
+      "guardrail": "No convertir en recital memorizado.",
+      "semantic_status": "editorial_pattern_not_official_wording"
+    },
+    {
+      "id": "SIT_COM_O_EXPLAIN",
+      "competency_id": "COM_ORAL",
+      "age_scope": [
+        4,
+        5
+      ],
+      "family": "explicar_proceso_o_idea",
+      "trigger": "El niño necesita hacer comprensible cómo hizo, descubrió o piensa algo.",
+      "examples": [
+        "explicar estrategia",
+        "presentar hallazgo",
+        "explicar reglas de juego"
+      ],
+      "guardrail": "Hablar es medio; usar COM_ORAL como principal solo si comunicar es parte central del propósito.",
+      "semantic_status": "editorial_pattern_not_official_wording"
+    },
+    {
+      "id": "SIT_COM_R_ENJOY",
+      "competency_id": "COM_LECTURA",
+      "age_scope": [
+        3,
+        4,
+        5
+      ],
+      "family": "leer_para_disfrutar",
+      "trigger": "El grupo elige o comparte textos por disfrute estético, humor, historia o lenguaje.",
+      "examples": [
+        "cuento",
+        "poema",
+        "adivinanza",
+        "canción escrita"
+      ],
+      "guardrail": "Evitar interrumpir constantemente con preguntas de control.",
+      "semantic_status": "editorial_pattern_not_official_wording"
+    },
+    {
+      "id": "SIT_COM_R_INFO",
+      "competency_id": "COM_LECTURA",
+      "age_scope": [
+        4,
+        5
+      ],
+      "family": "leer_para_informarse",
+      "trigger": "Una pregunta auténtica requiere consultar textos para saber más.",
+      "examples": [
+        "buscar información de animal",
+        "consultar afiche/libro",
+        "comparar fuentes simples"
+      ],
+      "guardrail": "No fingir búsqueda cuando el adulto ya entrega toda la información.",
+      "semantic_status": "editorial_pattern_not_official_wording"
+    },
+    {
+      "id": "SIT_COM_R_DO",
+      "competency_id": "COM_LECTURA",
+      "age_scope": [
+        4,
+        5
+      ],
+      "family": "leer_para_hacer",
+      "trigger": "Un texto guía una acción concreta.",
+      "examples": [
+        "receta",
+        "instrucciones",
+        "reglas",
+        "secuencia de armado"
+      ],
+      "guardrail": "El texto debe ser realmente necesario para actuar.",
+      "semantic_status": "editorial_pattern_not_official_wording"
+    },
+    {
+      "id": "SIT_COM_W_MESSAGE",
+      "competency_id": "COM_ESCRITURA",
+      "age_scope": [
+        3,
+        4,
+        5
+      ],
+      "family": "escribir_para_comunicar",
+      "trigger": "Existe un destinatario real y algo que comunicar.",
+      "examples": [
+        "mensaje",
+        "invitación",
+        "cartel",
+        "nota"
+      ],
+      "guardrail": "Aceptar escritura emergente y dictado al adulto.",
+      "semantic_status": "editorial_pattern_not_official_wording"
+    },
+    {
+      "id": "SIT_COM_W_RECORD",
+      "competency_id": "COM_ESCRITURA",
+      "age_scope": [
+        4,
+        5
+      ],
+      "family": "escribir_para_recordar_organizar",
+      "trigger": "Es necesario guardar información para usarla después.",
+      "examples": [
+        "lista",
+        "registro de hallazgo",
+        "etiquetas",
+        "acuerdos"
+      ],
+      "guardrail": "No convertir toda experiencia en hoja de escritura.",
+      "semantic_status": "editorial_pattern_not_official_wording"
+    }
+  ]
+}

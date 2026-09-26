@@ -1,0 +1,32 @@
+{
+  "id": "castellano_l2",
+  "version": "3.0.0",
+  "purpose": "Orientar enseñanza de castellano L2 cuando corresponda.",
+  "source_refs": [
+    "CASTELLANO_L2_EIB_2024",
+    "PCI_INICIAL_CANONICAL"
+  ],
+  "rules": [
+    {
+      "id": "L2-01",
+      "rule": "Aplicar la competencia de Castellano como Segunda Lengua cuando el castellano no es la lengua materna en el contexto educativo del niño.",
+      "why": "Evita etiquetar como L2 a niños castellanohablantes."
+    },
+    {
+      "id": "L2-02",
+      "rule": "Crear situaciones comunicativas significativas y funcionales, con apoyo de gestos, objetos, imágenes, rutinas y contexto.",
+      "why": "El lenguaje se desarrolla en uso con propósito."
+    },
+    {
+      "id": "L2-03",
+      "rule": "Fortalecer el castellano sin debilitar ni prohibir la lengua materna.",
+      "why": "La orientación EIB respeta características lingüísticas y socioculturales."
+    },
+    {
+      "id": "L2-04",
+      "rule": "Valorar progresos de comprensión e interacción funcional, no solo pronunciación o repetición de vocabulario.",
+      "why": "La competencia es comunicativa."
+    }
+  ],
+  "generation_implications": []
+}

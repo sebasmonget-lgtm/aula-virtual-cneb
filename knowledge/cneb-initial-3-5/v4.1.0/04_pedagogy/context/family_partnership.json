@@ -1,0 +1,26 @@
+{
+  "id": "family_partnership_extension",
+  "proposed_version": "4.1.0",
+  "age_scope": [
+    3,
+    4,
+    5
+  ],
+  "source_refs": [
+    "FAMILY_GUIDE_2013",
+    "DIAGNOSTICO_INICIAL_2023",
+    "ADAPTACION_2024"
+  ],
+  "rules": [
+    "Usar información familiar para contextualizar apoyos y oportunidades, no para inferir capacidades del niño.",
+    "Diseñar intercambios con familias que partan de preguntas/necesidades concretas y reconozcan sus saberes.",
+    "Cuando una experiencia requiere participación familiar, definir un aporte realista y no trasladar la enseñanza al hogar.",
+    "Comunicar avances mediante ejemplos concretos y siguientes pasos sin comparar con pares."
+  ],
+  "workflow_scope": [
+    "diagnostic",
+    "annual_plan",
+    "project",
+    "family_report"
+  ]
+}

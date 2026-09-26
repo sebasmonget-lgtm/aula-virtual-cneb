@@ -18,7 +18,7 @@ test("recupera solo dominios del workflow y respeta sus límites", async () => {
   assert.ok(result.sourceClaims.length <= workflow.max_source_claims);
   assert.deepEqual(result.provenance.knowledge_unit_ids, result.units.map((unit) => unit.id));
   assert.deepEqual(result.provenance.source_claim_ids, result.sourceClaims.map((unit) => unit.id));
-  assert.equal(result.provenance.knowledge_base_version, "4.0.0");
+  assert.equal(result.provenance.knowledge_base_version, "4.1.0");
 });
 
 test("aplica competencia confirmada y orden de ranking de forma estable", async () => {

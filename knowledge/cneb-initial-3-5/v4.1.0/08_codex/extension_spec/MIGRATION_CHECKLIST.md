@@ -1,0 +1,24 @@
+# Checklist de migración
+
+- [ ] v4.0.0 intacta.
+- [ ] commit de respaldo.
+- [ ] nueva carpeta v4.1.0.
+- [ ] fuentes nuevas fusionadas sin IDs duplicados.
+- [ ] fuentes existentes subutilizadas enriquecidas.
+- [ ] unidades antiguas + nuevas sin IDs duplicados.
+- [ ] todas las unidades productivas marcadas `knowledge_base_version: 4.1.0`.
+- [ ] workflows actualizados por dominio.
+- [ ] Plan Anual recupera `situation_families`.
+- [ ] Activity con competencia confirmada recupera didáctica específica.
+- [ ] 3 años no recibe unidades exclusivas de 5 años.
+- [ ] fuentes históricas no se muestran como texto CNEB vigente.
+- [ ] EIB solo se activa por contexto.
+- [ ] assessment separa esperado de observado.
+- [ ] descriptive conclusion no usa hipotéticos por defecto.
+- [ ] manifest con nuevos conteos.
+- [ ] hashes SHA-256 regenerados.
+- [ ] loader deja de exigir exactamente 245 unidades.
+- [ ] pruebas v4 previas pasan.
+- [ ] retrieval cases nuevos pasan.
+- [ ] typecheck/lint/build pasan.
+- [ ] sin deploy.
