@@ -1286,6 +1286,7 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
       const context = await annualPlanningContext();
       if (!context) { send(response, 404, { error: "No se encontró un aula activa." }, origin); return; }
       const plans = (await db.query(`select ap.id,ap.classroom_id,ap.version,ap.revision,ap.status,ap.proposal,ap.document_context,ap.supersedes_plan_id,ap.source_diagnostic_review_id,ap.source_priority_review_id,ap.source_context_fingerprint,ap.created_at,ap.updated_at,af.annual_plan_id is not null as formal_ready,
+        case when ap.generation_metadata->>'workflow'='bimester_replan' then ap.generation_metadata->>'source_period_label' else null end as adjustment_label,
         c.section as source_section,ag.age_years as source_age,p.display_name as source_teacher_name,
         coalesce(ip.display_name,c.institution_name) as source_institution_name,ip.institution_code as source_institution_code,
         ip.district as source_district,ip.ugel as source_ugel,sy.year as source_year,sy.starts_on as source_starts_on,sy.ends_on as source_ends_on
@@ -1295,7 +1296,7 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
         left join annual_plan_formal_content af on af.annual_plan_id=ap.id
         where ap.school_year_id=$1 and sy.owner_id=$2 order by ap.version desc`, [context.school_year_id, teacherId])).rows.map((row) => ({
           id: row.id, classroom_id: row.classroom_id, version: row.version, revision: Number(row.revision), status: row.status,
-          supersedes_plan_id: row.supersedes_plan_id, source_diagnostic_review_id: row.source_diagnostic_review_id, source_priority_review_id: row.source_priority_review_id, formal_ready: row.formal_ready,
+          supersedes_plan_id: row.supersedes_plan_id, source_diagnostic_review_id: row.source_diagnostic_review_id, source_priority_review_id: row.source_priority_review_id, formal_ready: row.formal_ready, adjustment_label: row.adjustment_label,
           proposal: row.proposal, created_at: row.created_at, updated_at: row.updated_at,
           document_context: Object.keys(row.document_context ?? {}).length ? row.document_context : annualDocumentContext({
             institution_name: row.source_institution_name, institution_code: row.source_institution_code,
@@ -1474,11 +1475,13 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
       try {
         const body = await readJson(request);
         const source = await projectFlowSource(body.annualPlanId, body.proposalId);
-        const previous = (await db.query(`select * from learning_experiences where annual_plan_id=$1
-          and (source_proposal_id=$2 or (source_proposal_id is null and source_proposal_index=$3))
+        const previous = (await db.query(`select * from learning_experiences where classroom_id=$1
+          and (source_proposal_id=$2 or (annual_plan_id=$3 and source_proposal_id is null and source_proposal_index=$4))
           and status in ('draft','active') order by version desc limit 1`,
-        [source.plan.id, body.proposalId,source.index])).rows[0];
-        if (previous) { const calendar_review=await ensureProjectCalendarSelection(previous,source);send(response, 200, { experience: previous, existing: true,
+        [source.classroom.id, body.proposalId,source.plan.id,source.index])).rows[0];
+        if (previous) { const previousSource = previous.annual_plan_id === source.plan.id ? source
+          : await projectFlowSource(previous.annual_plan_id, previous.source_proposal_id, true);
+          const calendar_review=await ensureProjectCalendarSelection(previous,previousSource);send(response, 200, { experience: previous, existing: true,
           available_dates: calendar_review.selected_dates,calendar_review }, origin); return; }
         const generated = await generateProjectPreview({ context: source.aiContext, workflow: source.source.experience_type });
         const id = randomUUID();

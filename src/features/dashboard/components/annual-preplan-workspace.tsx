@@ -14,7 +14,8 @@ type Row = { proposal_id: string; experience_type: "project" | "unit"; title: st
   planned_start_date?: string; planned_end_date?: string; planned_instructional_days?: number };
 type Preplan = { plan_format: "annual_preplan_v1"; title: string; school_year: string; proposed_experiences: Row[] };
 type Plan = { id: string; version: number; revision: number; status: "draft" | "active" | "archived";
-  proposal: Preplan | { plan_format?: string }; formal_ready?: boolean; supersedes_plan_id?: string | null };
+  proposal: Preplan | { plan_format?: string }; formal_ready?: boolean; supersedes_plan_id?: string | null;
+  adjustment_label?: string | null };
 type Plans = { draft: Plan | null; active: Plan | null; archived: Plan[] };
 type Block = { id?: string; type: string; label: string; start_date: string; end_date: string; editable: boolean; sort_order: number };
 type Calendar = { blocks: Block[]; initial_stage: { duration_weeks: number } & Record<string, unknown> };
@@ -188,6 +189,6 @@ export function AnnualPreplanWorkspace({ onConfirmed, onGoDiagnostic, onDevelop 
     </>}
     {plans && (plans.draft || plans.active || plans.archived.length > 0) && <section className="rounded-2xl border bg-white p-4"><h2 className="font-bold">Versiones de Mi año</h2><div className="mt-3 flex flex-wrap gap-2">{[plans.draft, plans.active, ...plans.archived].filter((item): item is Plan => Boolean(item)).map((item) =>
       <Button key={item.id} variant={item.id === selectedId ? "default" : "outline"} onClick={() => { setSelectedId(item.id); setProposal(isPreplan(item) ? item.proposal : null); }}>
-        Versión {item.version} · {item.status === "active" ? "vigente" : item.status === "draft" ? "borrador" : "anterior"}</Button>)}</div></section>}
+        {item.adjustment_label ? `Reajuste ${item.adjustment_label}` : `Versión ${item.version}`} · {item.status === "active" ? "vigente" : item.status === "draft" ? "borrador" : "anterior"}</Button>)}</div></section>}
   </section>;
 }

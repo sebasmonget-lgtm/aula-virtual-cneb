@@ -102,8 +102,8 @@ export function ProjectDevelopmentWorkspace({ initialProposalId, onConfirmed, on
     finally { setBusy(null); } }
   async function openProposal(proposalId: string) { if (!plan) return;
     const index = plan.proposal.proposed_experiences.findIndex((_, position) => proposalIdAt(position) === proposalId);
-    const existing = experiences.filter((item) => item.annual_plan_id === plan.id &&
-      (item.source_proposal_id === proposalId || (!item.source_proposal_id && item.source_proposal_index === index)) &&
+    const existing = experiences.filter((item) =>
+      (item.source_proposal_id === proposalId || (item.annual_plan_id === plan.id && !item.source_proposal_id && item.source_proposal_index === index)) &&
       item.status !== "archived")
       .sort((a, b) => b.version - a.version)[0];
     if (existing && ["project-master-v1","project-master-v2"].includes(existing.details.flow_version ?? "")) {
@@ -196,8 +196,8 @@ export function ProjectDevelopmentWorkspace({ initialProposalId, onConfirmed, on
     {!selected ? <><section className="space-y-3"><h2 className="text-xl font-bold">Elige qué desarrollar</h2>
       <p className="text-sm text-[#526b87]">Ayni sugiere la propuesta que corresponde por fecha. Puedes elegir otra.</p>
       {(plan?.proposal.proposed_experiences ?? []).map((item, index) => { const proposalId = proposalIdAt(index);
-        const found = experiences.find((row) => row.annual_plan_id === plan?.id &&
-          (row.source_proposal_id === proposalId || (!row.source_proposal_id && row.source_proposal_index === index)) && row.status !== "archived");
+        const found = experiences.find((row) =>
+          (row.source_proposal_id === proposalId || (row.annual_plan_id === plan?.id && !row.source_proposal_id && row.source_proposal_index === index)) && row.status !== "archived");
         return <article key={proposalId || index} className={`rounded-2xl border bg-white p-4 ${suggestedIndex === index + 1 ? "border-[#087d96]" : "border-[#d6e5ef]"}`}>
           <div className="flex flex-wrap items-start justify-between gap-2"><h3 className="font-bold">{item.title}</h3>{suggestedIndex === index + 1 && <span className="rounded-full bg-[#e8f6fa] px-3 py-1 text-xs font-bold text-[#087d96]">Te corresponde ahora</span>}</div>
           <p className="mt-1 text-sm text-[#526b87]">{item.period} · {item.rationale}</p>

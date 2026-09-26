@@ -9,6 +9,8 @@ import { buildDescriptiveConclusionInput, sourceAssessmentSnapshot, validateDesc
 import { dateOnly, defaultEvaluationPeriods, loadPeriodEvaluationRows, periodClosureFingerprint } from "../src/lib/period-evaluation-service.mjs";
 import { assertSavedEvaluationDraft, savePeriodEvaluationDraft } from "../src/lib/period-evaluation-draft-service.mjs";
 import { closePeriodWithManifest } from "../src/lib/period-closure-history.mjs";
+import { confirmBimesterReplan, loadBimesterReplanPreview, recommendWorkshops, replanSummary } from "../src/lib/bimester-replan-service.mjs";
+import { loadLibraryResources } from "./library-resources.mjs";
 import { loadDiagnosticCoverageRecords, projectPedagogicalCoverage } from "../src/lib/pedagogical-coverage.mjs";
 import { assessmentState, observeTodaySuggestions } from "../src/lib/evidence-coverage.mjs";
 import { AYNI_HEURISTICS } from "../src/lib/ayni-heuristics.mjs";
@@ -140,6 +142,38 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
         for (const year of years) periods.push(...await ensurePeriods(year));
         send(response, 200, { years: years.map((year) => ({ ...year, starts_on: dateOnly(year.starts_on), ends_on: dateOnly(year.ends_on) })), classrooms, periods }, origin);
         return true;
+      }
+      if (request.method === "GET" && url.pathname === "/api/period-evaluations/replan") {
+        const data = await context(url.searchParams.get("classroomId"), url.searchParams.get("periodId"));
+        const rows = publicRows(data.model, data.cards, data.labels);
+        const statistics = buildPeriodStatistics({ rows, mapEntries: data.evaluationMap.entries,
+          competencyMeta: data.labels, studentCount: data.model.students.length,
+          plannedCompetencyIds: await plannedCompetencyIds(data.classroom, data.period) });
+        const closure = await closureState(data.classroom, data.period, data.model);
+        send(response, 200, await loadBimesterReplanPreview(db, { teacherId, classroom: data.classroom,
+          period: data.period, statistics, model: data.model, closure,
+          competencyNames: new Map(data.cards.map((card) => [card.id, data.labels.find((label) => label.competency_id === card.id)?.short_label ?? card.official_name])),
+          workshopResources: await loadLibraryResources() }), origin); return true;
+      }
+      if (request.method === "POST" && url.pathname === "/api/period-evaluations/replan/confirm") {
+        const body = await readJson(request);
+        const data = await context(body.classroomId, body.periodId);
+        const closure = await closureState(data.classroom, data.period, data.model);
+        if (!closure.closed || !closure.current) throw new VersionConflictError("Revisa y cierra el período antes de reajustar el plan.");
+        const rows = publicRows(data.model, data.cards, data.labels);
+        const statistics = buildPeriodStatistics({ rows, mapEntries: data.evaluationMap.entries,
+          competencyMeta: data.labels, studentCount: data.model.students.length,
+          plannedCompetencyIds: await plannedCompetencyIds(data.classroom, data.period) });
+        const summary = replanSummary(statistics, data.model.students, data.period);
+        const resources = await loadLibraryResources();
+        const result = await confirmBimesterReplan(db, { teacherId, classroom: data.classroom,
+          period: data.period, applicableIds: data.cards.map((card) => card.id),
+          expected: body.expected, priorities: body.priorities,
+          adjustments: body.adjustments, workshops: body.workshops,
+          workshopOptions: recommendWorkshops(resources, data.classroom.age, summary.competencies),
+          libraryWorkshops: resources.filter((item) => item.kind === "workshop" && Number(item.age) === Number(data.classroom.age))
+            .map((item) => ({ resource_id: item.id })) });
+        send(response, 200, result, origin); return true;
       }
       if (request.method === "POST" && url.pathname === "/api/period-evaluations/configure") {
         const body = await readJson(request), year = await ownedYear(body.yearId);

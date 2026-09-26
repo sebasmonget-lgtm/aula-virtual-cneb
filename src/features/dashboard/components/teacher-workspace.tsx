@@ -36,6 +36,7 @@ import type { LibraryResource } from "@/src/lib/library-resource";
 import { ProjectDevelopmentWorkspace } from "./project-development-workspace";
 import { SchoolCalendarScreen } from "./school-calendar-screen";
 import { PeriodEvaluation } from "./period-evaluation";
+import { BimesterReplan } from "./bimester-replan";
 import { PlanningFeedbackOption } from "./planning-feedback-option";
 import { PilotSetup } from "./pilot-setup";
 import { AsyncButton, LoadingState, NextStepCard, PageIntro, ScreenSkeleton, WorkflowFeedback } from "./workflow-ui";
@@ -58,7 +59,7 @@ export function TeacherWorkspace() {
   const [planningTarget, setPlanningTarget] = useState<"activities" | null>(null);
   const [selectedResource, setSelectedResource] = useState<LibraryResource | null>(null);
   const [libraryFilter, setLibraryFilter] = useState<"for-you" | "workshops">("for-you");
-  const [evaluationEntry, setEvaluationEntry] = useState<"home" | "diagnostic">("home");
+  const [evaluationEntry, setEvaluationEntry] = useState<"home" | "diagnostic" | "replan">("home");
   const [diagnosticInitialStep, setDiagnosticInitialStep] = useState<1 | 2 | 3>(1);
   const [evidenceOpen, setEvidenceOpen] = useState(false);
   const [evidenceRevision, setEvidenceRevision] = useState(0);
@@ -246,9 +247,9 @@ export function TeacherWorkspace() {
           {guidanceError && <div className="mb-4 flex flex-wrap items-center gap-3"><WorkflowFeedback tone="error">No pudimos comprobar cuál es tu siguiente paso.</WorkflowFeedback><Button variant="outline" onClick={() => { setGuidanceError(false); setRetry((value) => value + 1); }}>Reintentar</Button></div>}
           {starting ? <ScreenSkeleton /> : active === "Perfil" ? dashboard ? <InstitutionProfile dashboard={dashboard} onSaved={setDashboard} /> : <ScreenSkeleton /> :
           active === "Calendario" ? <SchoolCalendarScreen onOpenPlanning={() => navigate("Planificar")} /> : active === "Biblioteca" ? dashboard ? <ResourceLibraryScreen age={dashboard.profile.age_years} initialFilter={libraryFilter} onUse={(resource) => { setSelectedResource(resource); setPlanningTarget("activities"); navigate("Planificar"); }} /> : <ScreenSkeleton /> :
-          active === "Evaluar" ? dashboard ? <EvaluationArea dashboard={dashboard} initialTarget={evaluationTarget} initialSection={evaluationEntry} initialDiagnosticStep={diagnosticInitialStep} onPlan={() => { setPlanningTarget(null); navigate("Planificar"); }} onPrepareActivity={() => { setPlanningTarget("activities"); navigate("Planificar"); }} onStudents={() => navigate("Aula")} /> : <ScreenSkeleton /> :
+          active === "Evaluar" ? dashboard ? <EvaluationArea dashboard={dashboard} initialTarget={evaluationTarget} initialSection={evaluationEntry} initialDiagnosticStep={diagnosticInitialStep} onPlan={() => { setPlanningTarget(null); navigate("Planificar"); }} onPrepareActivity={() => { setPlanningTarget("activities"); navigate("Planificar"); }} onStudents={() => navigate("Aula")} onToday={() => navigate("Hoy")} /> : <ScreenSkeleton /> :
           active === "Aula" ? dashboard ? <StudentsScreen students={students} onImported={setDashboard} onDiagnostic={() => { navigate("Evaluar"); setEvaluationEntry("diagnostic"); }} onEvaluate={(studentId, competencyId) => { navigate("Evaluar"); setEvaluationTarget({ studentId, competencyId }); }} onPlan={() => navigate("Planificar")} /> : <ScreenSkeleton /> : active === "Planificar" ? dashboard ? <PlanningArea dashboard={dashboard} initialTab={planningTarget} selectedResource={selectedResource} onGoToday={() => navigate("Hoy")} onGoDiagnostic={() => { navigate("Evaluar"); setEvaluationEntry("diagnostic"); }} onGoStudents={() => navigate("Aula")} onGoWorkshops={() => { setLibraryFilter("workshops"); navigate("Biblioteca"); }} /> : <ScreenSkeleton /> : <>
-          {activityRunBlock ? <ActivityRunView block={activityRunBlock} evidenceRevision={evidenceRevision} onBack={() => setActivityRunBlockId(null)} onEvidence={(suggestedStudentId) => openEvidenceFor(activityRunBlock,suggestedStudentId)} onStepChange={async (stepIndex) => updateExecution({ scheduleEntryId: activityRunBlock.id, action: "set_step", stepIndex })} onComplete={async () => { await updateExecution({ scheduleEntryId: activityRunBlock.id, action: "complete", closureType: "as_planned" }); setActivityRunBlockId(null); }} /> : active === "Hoy" && (dashboard ? <TodayHome dashboard={dashboard} openEvidence={openEvidenceFor} openAttendance={() => setAttendanceOpen(true)} updateExecution={updateExecution} openActivity={openActivity} onPlan={() => navigate("Planificar")} onPrepareActivity={() => { setPlanningTarget("activities"); navigate("Planificar"); }} onDiagnostic={() => { navigate("Evaluar"); setEvaluationEntry("diagnostic"); setDiagnosticInitialStep(2); }} /> : <ScreenSkeleton />)}
+          {activityRunBlock ? <ActivityRunView block={activityRunBlock} evidenceRevision={evidenceRevision} onBack={() => setActivityRunBlockId(null)} onEvidence={(suggestedStudentId) => openEvidenceFor(activityRunBlock,suggestedStudentId)} onStepChange={async (stepIndex) => updateExecution({ scheduleEntryId: activityRunBlock.id, action: "set_step", stepIndex })} onComplete={async () => { await updateExecution({ scheduleEntryId: activityRunBlock.id, action: "complete", closureType: "as_planned" }); setActivityRunBlockId(null); }} /> : active === "Hoy" && (dashboard ? <TodayHome dashboard={dashboard} openEvidence={openEvidenceFor} openAttendance={() => setAttendanceOpen(true)} updateExecution={updateExecution} openActivity={openActivity} onPlan={() => navigate("Planificar")} onPrepareActivity={() => { setPlanningTarget("activities"); navigate("Planificar"); }} onDiagnostic={() => { navigate("Evaluar"); setEvaluationEntry("diagnostic"); setDiagnosticInitialStep(2); }} onReplan={() => { navigate("Evaluar"); setEvaluationEntry("replan"); }} /> : <ScreenSkeleton />)}
           </>}
         </main>
 
@@ -304,14 +305,14 @@ function EvidenceDialog({ open, onOpenChange, students, studentId, setStudentId,
   </Dialog>;
 }
 
-function EvaluationArea({ dashboard, initialTarget, initialSection, initialDiagnosticStep, onPlan, onPrepareActivity, onStudents }: { dashboard: LocalDashboard; initialTarget: { studentId: string; competencyId: string } | null; initialSection: "home" | "diagnostic"; initialDiagnosticStep: 1 | 2 | 3; onPlan: () => void; onPrepareActivity: () => void; onStudents: () => void }) {
-  const [section, setSection] = useState<"home" | "diagnostic" | "period">(initialTarget ? "period" : initialSection);
+function EvaluationArea({ dashboard, initialTarget, initialSection, initialDiagnosticStep, onPlan, onPrepareActivity, onStudents, onToday }: { dashboard: LocalDashboard; initialTarget: { studentId: string; competencyId: string } | null; initialSection: "home" | "diagnostic" | "replan"; initialDiagnosticStep: 1 | 2 | 3; onPlan: () => void; onPrepareActivity: () => void; onStudents: () => void; onToday: () => void }) {
+  const [section, setSection] = useState<"home" | "diagnostic" | "period" | "replan">(initialTarget ? "period" : initialSection);
   const [target, setTarget] = useState(initialTarget);
   const [periodView, setPeriodView] = useState<"student" | "family" | "coverage">("student");
   return <section className="mx-auto max-w-5xl space-y-5">
-    {section === "home" ? <EvaluationHome dashboard={dashboard} onDiagnostic={() => setSection("diagnostic")} onPeriod={(view, nextTarget) => { setTarget(nextTarget ?? null); setPeriodView(view); setSection("period"); }} /> : <>
+    {section === "home" ? <EvaluationHome dashboard={dashboard} onDiagnostic={() => setSection("diagnostic")} onReplan={() => setSection("replan")} onPeriod={(view, nextTarget) => { setTarget(nextTarget ?? null); setPeriodView(view); setSection("period"); }} /> : <>
       <Button variant="ghost" className="-ml-3 min-h-11 text-[#07576c]" onClick={() => setSection("home")}>← Volver a Evaluar</Button>
-      {section === "diagnostic" ? <GuidedDiagnostic dashboard={dashboard} initialStep={initialDiagnosticStep} onPlan={onPlan} onStudents={onStudents} /> : <PeriodEvaluation key={`${target?.studentId ?? "all"}:${target?.competencyId ?? "all"}:${periodView}`} initialStudentId={target?.studentId} initialCompetencyId={target?.competencyId} initialView={periodView} onPlan={onPlan} onPrepareActivity={onPrepareActivity} />}
+      {section === "diagnostic" ? <GuidedDiagnostic dashboard={dashboard} initialStep={initialDiagnosticStep} onPlan={onPlan} onStudents={onStudents} /> : section === "replan" ? <BimesterReplan onEvaluation={() => setSection("period")} onFinish={onToday} /> : <PeriodEvaluation key={`${target?.studentId ?? "all"}:${target?.competencyId ?? "all"}:${periodView}`} initialStudentId={target?.studentId} initialCompetencyId={target?.competencyId} initialView={periodView} onPlan={onPlan} onPrepareActivity={onPrepareActivity} />}
     </>}
   </section>;
 }

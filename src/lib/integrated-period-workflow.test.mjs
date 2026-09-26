@@ -88,11 +88,24 @@ test("recorrido integrado conserva versiones y aísla aulas, años y documentos"
     const calls = [];
     const rawA = createPeriodEvaluationRouteHandler({ db, teacherId: teacherA, readJson: async (request) => request.body,
       send: (_response, status, body) => calls.push({ status, body }), pending, metadataForAudit: (value) => value,
-      refreshStudentContext: async () => {}, evidenceStorage: { read: async () => ({ data: Buffer.from(""), mimeType: "image/png" }) } });
+      refreshStudentContext: async () => {}, evidenceStorage: { read: async () => ({ data: Buffer.from(""), mimeType: "image/png" }) },
+      createProvider: () => ({}), generate: async () => ({ output: { competency_id: "COM_ORAL",
+        information_status: "sufficient", conclusion_text: "Explica sus ideas durante el juego y continúa escuchando al grupo.",
+        progress_examples: ["Explicó cómo organizar el juego."], support_or_conditions: ["Participación en grupos pequeños."],
+        next_steps: ["Conversar en nuevas situaciones."], insufficiency_reason: null,
+        caution: "Conclusión revisada por la docente." }, metadata: { model: "mock" } }) });
     const rawB = createPeriodEvaluationRouteHandler({ db, teacherId: teacherB, readJson: async (request) => request.body,
       send: (_response, status, body) => calls.push({ status, body }), pending, metadataForAudit: (value) => value,
       refreshStudentContext: async () => {}, evidenceStorage: { read: async () => ({ data: Buffer.from(""), mimeType: "image/png" }) } });
     async function call(handler, method, path, body) { calls.length = 0; await handler({ request: { method, body }, url: new URL(`http://localhost${path}`), response: {}, origin: null }); return calls[0]; }
+    async function confirmConclusion(studentId, periodId) {
+      const selection = { classroomId: a.classroomId, periodId, studentId, competencyId: "COM_ORAL" };
+      const suggested = await call(rawA, "POST", "/api/period-evaluations/conclusion/suggest", selection);
+      assert.equal(suggested.status, 200, JSON.stringify(suggested.body));
+      const confirmed = await call(rawA, "POST", "/api/period-evaluations/conclusion/confirm", {
+        ...selection, generationId: suggested.body.generation_id, proposal: suggested.body.proposal });
+      assert.equal(confirmed.status, 200, JSON.stringify(confirmed.body));
+    }
     const periodsA = await call(rawA, "GET", "/api/period-evaluations/workspace");
     const periodsB = await call(rawB, "GET", "/api/period-evaluations/workspace");
     const period = periodsA.body.periods.find((item) => item.school_year_id === a.schoolYearId && item.ordinal === 1);
@@ -112,10 +125,11 @@ test("recorrido integrado conserva versiones y aísla aulas, años y documentos"
       assert.equal(detail.status, 200);
       const body = { classroomId: a.classroomId, periodId: period.id, studentId, competencyId: "COM_ORAL",
         evidenceFingerprint: detail.body.evidence_fingerprint, expectedDraftRevision:detail.body.draft?.revision??null, teacherAnalysis: "En juegos compartidos explicó ideas.",
-        conclusionText: "Explica ideas y continúa aprendiendo a escuchar a sus compañeros.", provisionalLevel: "A", achievementLevel: "A", teacherJustification: "Registros revisados por la docente." };
+        conclusionText: "", provisionalLevel: "A", achievementLevel: "A", teacherJustification: "Registros revisados por la docente." };
       const savedDraft=await call(rawA, "POST", "/api/period-evaluations/save-draft", body);
       assert.equal(savedDraft.status, 200, JSON.stringify(savedDraft.body));
       assert.equal((await call(rawA, "POST", "/api/period-evaluations/confirm", {...body,expectedDraftRevision:savedDraft.body.draft_revision})).status, 200);
+      await confirmConclusion(studentId, period.id);
     }
     const beforeClose1=await call(rawA,"GET",`/api/period-evaluations/overview?${query}`);
     const close1 = await call(rawA, "POST", "/api/period-evaluations/close", { classroomId: a.classroomId, periodId: period.id,
@@ -129,10 +143,11 @@ test("recorrido integrado conserva versiones y aísla aulas, años y documentos"
     assert.equal(changed.body.state, "needs_review");
     const revised = { classroomId: a.classroomId, periodId: period.id, studentId: students[0], competencyId: "COM_ORAL",
       evidenceFingerprint: changed.body.evidence_fingerprint,expectedDraftRevision:changed.body.draft?.revision??null, teacherAnalysis: "En tres juegos explicó ideas.",
-      conclusionText: "Explica sus ideas y continúa escuchando nuevas propuestas.", provisionalLevel: "A", achievementLevel: "A", teacherJustification: "Tres registros revisados." };
+      conclusionText: "", provisionalLevel: "A", achievementLevel: "A", teacherJustification: "Tres registros revisados." };
     const savedRevised=await call(rawA, "POST", "/api/period-evaluations/save-draft", revised);
     assert.equal(savedRevised.status, 200,JSON.stringify(savedRevised.body));
     assert.equal((await call(rawA, "POST", "/api/period-evaluations/confirm", {...revised,expectedDraftRevision:savedRevised.body.draft_revision})).status, 200);
+    await confirmConclusion(students[0], period.id);
     const beforeClose2=await call(rawA,"GET",`/api/period-evaluations/overview?${query}`);
     const close2 = await call(rawA, "POST", "/api/period-evaluations/close", { classroomId: a.classroomId, periodId: period.id,
       expectedCurrentVersionId:beforeClose2.body.closure.current_version_id,expectedSourceFingerprint:beforeClose2.body.closure.source_fingerprint });
