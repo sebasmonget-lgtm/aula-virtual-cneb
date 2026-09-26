@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 
-const routeFields = ["title", "specific_purpose", "competency_id", "evaluation_criterion", "expected_evidence"];
+const routeFields = ["title", "specific_purpose", "competency_id", "evaluation_criterion", "expected_evidence", "pedagogical_intention", "acceptable_evidence_variations", "observation_focus", "materials", "mediation_notes", "continuity_from_previous", "continuity_to_next", "flexibility_notes"];
 
 /** Assign stable IDs only at the server boundary, preserving them on teacher edits. */
 export function saveExperienceDetails(proposal, previous = null, generated = null) {
@@ -49,8 +49,8 @@ export function saveActivityDetails(proposal, routeItem = null, previous = null)
 
 export function inheritedActivityCriterion(activity, routeItem) {
   if (!routeItem || activity?.competency_status !== "confirmed" || activity.competency_id !== routeItem.competency_id) return null;
-  return { competency_id: routeItem.competency_id, criterion_text: activity.evaluation_criterion || routeItem.evaluation_criterion,
-    expected_evidence: activity.expected_evidence || routeItem.expected_evidence, acceptable_evidence_variations: [],
-    observation_focus: activity.evidence_opportunities ? [activity.evidence_opportunities] : [],
+  return { competency_id: routeItem.criterion_competency_id || routeItem.competency_id, criterion_text: activity.evaluation_criterion || routeItem.evaluation_criterion,
+    expected_evidence: activity.expected_evidence || routeItem.expected_evidence, acceptable_evidence_variations: routeItem.acceptable_evidence_variations ?? [],
+    observation_focus: routeItem.observation_focus?.length ? routeItem.observation_focus : activity.evidence_opportunities ? [activity.evidence_opportunities] : [],
     evidence_scope: "individual", teacher_caution: "Registrar lo observado después de la actividad; no inferir desde un producto colectivo." };
 }

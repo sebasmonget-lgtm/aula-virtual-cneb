@@ -6,6 +6,7 @@ import { createPeriodEvaluationRouteHandler } from "../../scripts/period-evaluat
 import { defaultEvaluationPeriods } from "./period-evaluation-service.mjs";
 import { loadPlanningFeedback,planningFeedbackText } from "./planning-feedback.mjs";
 import { projectPeriodClosureDocument } from "./period-closure-history.mjs";
+import { loadAssessmentMasterSources } from "../../scripts/assessment-master-routes.mjs";
 
 const teacher = "00000000-0000-4000-8000-000000000001";
 const otherTeacher = "00000000-0000-4000-8000-000000000002";
@@ -18,6 +19,7 @@ const studentB = "00000000-0000-4000-8000-000000000402";
 const activity = "00000000-0000-4000-8000-000000000501";
 const criterion = "00000000-0000-4000-8000-000000000601";
 const firstEvidence = "00000000-0000-4000-8000-000000000701";
+const firstPeriod = "00000000-0000-4000-8000-000000000801";
 
 const mockAnalysis = () => ({ competency_id: "COM_ORAL", information_status: "sufficient", evidence_overview: "En dos juegos explicó sus ideas y escuchó al grupo.", observable_patterns: ["Explicó una decisión."], strengths_and_advances: ["Compartió ideas."], support_needs: [], next_opportunities: ["Conversar en grupos pequeños."], teacher_questions: [], insufficiency_reason: null, caution: "La docente debe contrastar los registros.", suggested_level: "A", suggestion_reason: "En las dos observaciones explicó sus ideas." });
 const mockConclusion = () => ({ competency_id: "COM_ORAL", information_status: "sufficient", conclusion_text: "Explica sus ideas durante el juego y escucha propuestas. Seguirá conversando en grupos pequeños.", progress_examples: ["Explicó una decisión."], support_or_conditions: [], next_steps: ["Dialogar en grupos pequeños."], insufficiency_reason: null, caution: "Revisado por la docente." });
@@ -107,9 +109,9 @@ async function fixture({ analysis = mockAnalysis() } = {}) {
     create table calendar_blocks(id uuid primary key,school_year_id uuid,type text,start_date date,end_date date);
     create table annual_plans(id uuid primary key,classroom_id uuid,status text,proposal jsonb);
     create table project_slots(id uuid primary key,annual_plan_id uuid,slot_index integer,starts_on date,ends_on date);
-    create table learning_experiences(id uuid primary key,classroom_id uuid);
-    create table activities(id uuid primary key,experience_id uuid references learning_experiences(id),occurs_on date,title text,status text);
-    create table activity_criteria(id uuid primary key,activity_id uuid references activities(id),competency_v4_id text,criterion_text text,details jsonb,status text,performance_id uuid);
+    create table learning_experiences(id uuid primary key,classroom_id uuid,status text,starts_on date,ends_on date,revision integer default 1,details jsonb default '{}'::jsonb);
+    create table activities(id uuid primary key,experience_id uuid references learning_experiences(id),occurs_on date,title text,status text,revision integer default 1,details jsonb default '{}'::jsonb);
+    create table activity_criteria(id uuid primary key,activity_id uuid references activities(id),competency_v4_id text,criterion_text text,details jsonb,status text,performance_id uuid,revision integer default 1);
     create table performances(id uuid primary key,age_grade_id uuid,official_text text,source_ref text);
     create table evidences(id uuid primary key,student_id uuid references students(id),activity_id uuid references activities(id),criterion_id uuid references activity_criteria(id),observed_at timestamptz,observation_status text,observation_text text,media_path text);
     create table competency_assessments(id uuid primary key,student_id uuid references students(id),competency_v4_id text,period_start date,period_end date,version integer,source_evidence_ids jsonb,source_evidence_snapshot jsonb,details jsonb,generation_metadata jsonb,status text,teacher_confirmed_at timestamptz,created_at timestamptz default now(),updated_at timestamptz default now());
@@ -125,6 +127,7 @@ async function fixture({ analysis = mockAnalysis() } = {}) {
     alter table competency_assessments add column revision bigint not null default 1;
     create function test_bump_revision() returns trigger as $$ begin new.revision=old.revision+1;return new;end $$ language plpgsql;
     create trigger assessment_revision before update on competency_assessments for each row execute function test_bump_revision();`);
+  await db.exec(await readFile(new URL("../../local-db/migrations/0054_assessment_masters.sql", import.meta.url), "utf8"));
   await db.exec(`create table diagnostic_experience_observations(id uuid primary key,classroom_id uuid,student_id uuid,
     competency_v4_id text,observed_at timestamptz,observation_text text,observation_status text,experience_id text,
     experience_title_snapshot text,aspect_prompt_snapshot text);
@@ -141,13 +144,17 @@ async function fixture({ analysis = mockAnalysis() } = {}) {
     ["2026-08-10", "2026-10-09"], ["2026-10-19", "2026-12-18"],
   ];
   for (const [start, end] of blocks) await db.query(`insert into calendar_blocks values(gen_random_uuid(),$1,'instructional',$2::date,$3::date)`, [year, start, end]);
-  await db.query(`insert into learning_experiences values(gen_random_uuid(),$1)`, [classId]);
+  await db.query(`insert into evaluation_periods(id,school_year_id,kind,ordinal,label,starts_on,ends_on) values($1,$2,'bimester',1,'Bimestre 1','2026-03-16','2026-05-15')`,[firstPeriod,year]);
+  await db.query(`insert into learning_experiences(id,classroom_id,status,starts_on,ends_on,details) values(gen_random_uuid(),$1,'active','2026-03-16','2026-05-15',$2::jsonb)`, [classId,JSON.stringify({flow_version:"project-master-v2",project_master:{activity_blueprints:[]}})]);
   const experienceId = (await db.query(`select id from learning_experiences where classroom_id=$1`, [classId])).rows[0].id;
-  await db.query(`insert into activities values($1,$2,'2026-04-10','Conversamos sobre nuestros juegos','active')`, [activity, experienceId]);
-  await db.query(`insert into activity_criteria values($1,$2,'COM_ORAL','Explica una idea durante el juego','{}'::jsonb,'active',null)`, [criterion, activity]);
+  await db.query(`insert into activities(id,experience_id,occurs_on,title,status,details) values($1,$2,'2026-04-10','Conversamos sobre nuestros juegos','active',$3::jsonb)`, [activity, experienceId,JSON.stringify({purpose:"Comunicar ideas durante el juego."})]);
+  await db.query(`insert into activity_criteria(id,activity_id,competency_v4_id,criterion_text,details,status,performance_id) values($1,$2,'COM_ORAL','Explica una idea durante el juego',$3::jsonb,'active',null)`, [criterion, activity,JSON.stringify({expected_evidence:"Explicación oral",observation_focus:["Relación entre su idea y el juego"]})]);
   for (const [id, date, note] of [[firstEvidence, "2026-04-10", "Propuso un juego y explicó su idea."], ["00000000-0000-4000-8000-000000000702", "2026-04-11", "Escuchó y respondió al grupo."]]) {
     await db.query(`insert into evidences(id,student_id,activity_id,criterion_id,observed_at,observed_on,observation_text) values($1,$2,$3,$4,'2026-06-01T12:00:00Z',$5::date,$6)`, [id, studentA, activity, criterion, date, note]);
   }
+  const masterSource=await loadAssessmentMasterSources(db,{id:classId},{id:firstPeriod,label:"Bimestre 1",starts_on:"2026-03-16",ends_on:"2026-05-15"});
+  const masterDetails={period_summary:"Se trabajó la comunicación oral en situaciones de juego.",competencies:[{competency_id:"COM_ORAL",assessment_focus:"Cómo explica ideas en las situaciones propuestas.",relevant_evidence:["Explicaciones registradas."],patterns_to_consider:["Respuestas en distintas oportunidades."],progress_signals:["Amplía sus explicaciones."],support_signals:["Necesita preguntas abiertas."],insufficient_information_rules:["Una respuesta aislada no es suficiente."],contradiction_handling:"Conservar diferencias y consultar a la docente.",context_considerations:["Apoyos ofrecidos."],teacher_questions:["¿Ocurrió en otra situación?"],prohibited_inferences:["No calificar una observación aislada."],assessment_guidance:"Revisar el conjunto antes de sugerir un nivel."}]};
+  await db.query(`insert into assessment_masters(id,classroom_id,evaluation_period_id,version,status,details,source_snapshot,created_by,teacher_confirmed_at) values(gen_random_uuid(),$1,$2,1,'active',$3::jsonb,$4::jsonb,$5,now())`,[classId,firstPeriod,JSON.stringify(masterDetails),JSON.stringify(masterSource.snapshot),teacher]);
   const pending = new Map(), calls = [];
   const handle = createPeriodEvaluationRouteHandler({ db, teacherId: teacher, readJson: async (request) => request.body, send: (response, status, payload) => { response.result={status,body:payload}; }, pending, metadataForAudit: (metadata) => metadata, refreshStudentContext: async () => {}, evidenceStorage: { read: async () => ({ data: Buffer.from("image"), mimeType: "image/png" }) }, createProvider: () => ({}), generate: async (input) => { calls.push(input); return { output: input.workflow === "assessment" ? analysis : mockConclusion(), metadata: { model: "mock" } }; } });
   async function call(method, route, body) {
@@ -177,9 +184,9 @@ test("ficha única, nivel docente, cierre, salidas derivadas y cambio posterior 
     const suggestion = await f.call("POST", "/api/period-evaluations/suggest", { classroomId: classId, periodId: period.id, studentId: studentA, competencyId: "COM_ORAL" });
     assert.equal(suggestion.status, 200);
     assert.equal(suggestion.body.analysis.suggested_level, "A");
-    assert.equal(f.calls.length, 2);
-    assert.equal(f.calls[1].student_context.teacher_confirmed_findings, undefined);
-    assert.match(f.calls[1].teacher_request, /preliminar/);
+    assert.equal(f.calls.length, 1);
+    assert.doesNotMatch(JSON.stringify(f.calls[0]),/teacher_confirmed_findings/);
+    assert.match(f.calls[0].teacher_request, /Assessment Master confirmado/);
     const decisionA = { classroomId: classId, periodId: period.id, studentId: studentA, competencyId: "COM_ORAL", evidenceFingerprint: detail.body.evidence_fingerprint, achievementLevel: "B", teacherAnalysis: "En distintos juegos explicó ideas y escuchó al grupo.", conclusionText: "Explica ideas en el juego y sigue aprendiendo a escuchar otras propuestas.", teacherJustification: "Mi revisión de los registros indica que sigue necesitando apoyo para escuchar." };
     assert.equal((await f.call("POST", "/api/period-evaluations/confirm", {...decisionA,expectedDraftRevision:suggestion.body.draft_revision})).status, 422);
     assert.equal((await f.call("POST", "/api/period-evaluations/save-draft", { ...decisionA, expectedDraftRevision:suggestion.body.draft_revision, provisionalLevel: decisionA.achievementLevel })).status, 200);

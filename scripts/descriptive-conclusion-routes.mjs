@@ -7,6 +7,7 @@ import { generateAIWorkflowV4 } from "../src/lib/ai-generation-v4.mjs";
 import { assessmentSourceSnapshot, loadAssessmentEvidence, sameEvidenceSourceSnapshot, sanitizeEvidenceForAssessment } from "../src/lib/assessment-v4-service.mjs";
 import { buildDescriptiveConclusionInput, sameAssessmentSnapshot, sourceAssessmentSnapshot, validateDescriptiveConclusion } from "../src/lib/descriptive-conclusion-v4-service.mjs";
 import { httpStatusForError, publicErrorMessage } from "../src/lib/version-integrity.mjs";
+import { assessmentMasterEntry } from "../src/lib/assessment-master-service.mjs";
 
 const dateOnly = (value) => value instanceof Date ? value.toISOString().slice(0, 10) : String(value).slice(0, 10);
 const safeConclusion = (row) => ({ id: row.id, competency_v4_id: row.competency_v4_id, assessment_id: row.assessment_id, period_start: dateOnly(row.period_start), period_end: dateOnly(row.period_end), version: row.version, details: row.details, status: row.status, teacher_confirmed_at: row.teacher_confirmed_at });
@@ -83,9 +84,10 @@ export function createDescriptiveConclusionRouteHandler({ db, annualPlanningCont
         const rows = await sourceEvidence(assessment);
         const prior = (await db.query(`select details from competency_descriptive_conclusions where student_id=$1 and competency_v4_id=$2 and status='active' and teacher_confirmed_at is not null and period_end < $3::date order by period_end desc,teacher_confirmed_at desc limit 1`, [student.id, assessment.competency_v4_id, assessment.period_start])).rows[0];
         const names = [student.first_name, student.last_name, student.preferred_name];
-        const input = buildDescriptiveConclusionInput({ age: context.age, competencyId: assessment.competency_v4_id, assessment, evidenceRows: rows, knownNames: names, priorConclusion: prior?.details?.conclusion_text, teacherNotes: typeof body.teacherNotes === "string" ? body.teacherNotes.slice(0, 2000) : "" });
-        const plan = resolveAIExecutionPlan({ workflow: "descriptive_conclusion", task: "generation" });
-        const result = await generate(input, { provider: createProvider(plan), executionPlan: plan });
+        const master = assessment.assessment_master_id ? (await db.query(`select * from assessment_masters where id=$1 and status in ('active','archived')`, [assessment.assessment_master_id])).rows[0] : null;
+        const input = buildDescriptiveConclusionInput({ age: context.age, competencyId: assessment.competency_v4_id, assessment, assessmentMaster: assessmentMasterEntry(master, assessment.competency_v4_id), evidenceRows: rows, knownNames: names, priorConclusion: prior?.details?.conclusion_text, teacherNotes: typeof body.teacherNotes === "string" ? body.teacherNotes.slice(0, 2000) : "" });
+        const plan = body.deepReview === true ? resolveAIExecutionPlan({ workflow: "descriptive_conclusion_deep_review", task: "generation" }) : resolveAIExecutionPlan({ workflow: "descriptive_conclusion", task: "generation" });
+        const result = await generate(input, { providerFactory: (executionPlan) => createProvider(executionPlan), executionPlan: plan });
         const generationId = randomUUID();
         await pending.set(generationId, { workflow: "descriptive_conclusion", classroom_id: context.id, student_id: student.id, competency_v4_id: assessment.competency_v4_id, assessment_id: assessment.id, period_start: dateOnly(assessment.period_start), period_end: dateOnly(assessment.period_end), source_assessment_snapshot: sourceAssessmentSnapshot(assessment), metadata: metadataForAudit(result.metadata), createdAt: Date.now() });
         send(response, 200, { proposal: result.output, generation_id: generationId }, origin);

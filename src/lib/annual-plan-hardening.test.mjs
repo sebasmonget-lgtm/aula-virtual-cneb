@@ -20,11 +20,11 @@ test("provider request conserva el workflow y el schema de cada salida", () => {
 });
 
 test("metadata anual preserva solo auditoría permitida", () => {
-  const saved = safeAnnualGenerationMetadata({ workflow: "annual_plan", provider: "openai", model: "gpt-6-astra",
+  const saved = safeAnnualGenerationMetadata({ workflow: "annual_plan", provider: "openai", model: "gpt-6-sol",
     reasoning_effort: "high", routing_policy_version: "2.0.0", response_id: "resp_1", fallback_used: false,
     usage: { input_tokens: 2, cached_input_tokens: 1, output_tokens: 3, total_tokens: 5, secret: "no" },
     provenance: { knowledge_base_version: "4.0.0", knowledge_unit_ids: ["KU-1"] }, prompt: "never" });
-  assert.deepEqual(saved, { workflow: "annual_plan", provider: "openai", model: "gpt-6-astra",
+  assert.deepEqual(saved, { workflow: "annual_plan", provider: "openai", model: "gpt-6-sol",
     reasoning_effort: "high", routing_policy_version: "2.0.0", response_id: "resp_1",
     usage: { input_tokens: 2, cached_input_tokens: 1, output_tokens: 3, total_tokens: 5 }, fallback_used: false,
     primary_model: null, fallback_model: null, fallback_reason: null,

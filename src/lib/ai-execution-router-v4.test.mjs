@@ -4,14 +4,15 @@ import { AI_ROUTING_POLICY, AIExecutionRoutingError, resolveAIFallbackPlan, reso
 
 test("aplica los tiers semánticos GPT-6 a los workflows productivos", () => {
   const cases = [
-    ["annual_plan", "deep_planning", "gpt-6-astra", "high"],
+    ["annual_plan", "global_planning", "gpt-6-sol", "high"],
     ["project", "judgment_generation", "gpt-6-sol", "medium"],
     ["unit", "judgment_generation", "gpt-6-sol", "medium"],
     ["activity", "routine_generation", "gpt-6-luna", "medium"],
-    ["criterion_and_evidence", "judgment_generation", "gpt-6-sol", "medium"],
-    ["assessment", "judgment_generation", "gpt-6-sol", "medium"],
-    ["descriptive_conclusion", "judgment_generation", "gpt-6-sol", "medium"],
-    ["family_report", "focused_writing", "gpt-6-sol", "low"],
+    ["criterion_realignment", "judgment_generation", "gpt-6-sol", "medium"],
+    ["assessment_master", "judgment_generation", "gpt-6-sol", "medium"],
+    ["assessment", "routine_generation", "gpt-6-luna", "medium"],
+    ["descriptive_conclusion", "routine_generation", "gpt-6-luna", "medium"],
+    ["family_report", "routine_generation", "gpt-6-luna", "medium"],
   ];
   for (const [workflow, tier, model, reasoning] of cases) {
     const plan = resolveAIExecutionPlan({ workflow, task: "generation" });
@@ -27,6 +28,25 @@ test("activity tiene un único fallback explícito de Luna medium a Sol low", ()
   const fallback = resolveAIFallbackPlan(primary);
   assert.deepEqual([fallback.tier, fallback.model, fallback.reasoning_effort, fallback.fallback],
     ["focused_writing", "gpt-6-sol", "low", null]);
+});
+
+test("el Plan Maestro usa Sol high y su redacción formal Sol low", () => {
+  const master = resolveAIExecutionPlan({ workflow: "annual_plan", task: "generation" });
+  const writing = resolveAIExecutionPlan({ workflow: "annual_plan", task: "document_development" });
+  assert.deepEqual([master.tier, master.model, master.reasoning_effort], ["global_planning", "gpt-6-sol", "high"]);
+  assert.deepEqual([writing.tier, writing.model, writing.reasoning_effort], ["focused_writing", "gpt-6-sol", "low"]);
+});
+
+test("assessment y conclusión tienen fallbacks de calidad explícitos; criterio normal no llama IA",()=>{
+  const assessment=resolveAIExecutionPlan({workflow:"assessment"});
+  assert.deepEqual([assessment.fallback.model,assessment.fallback.reasoning_effort,assessment.fallback.max_attempts],
+    ["gpt-6-sol","medium",1]);
+  const conclusion=resolveAIExecutionPlan({workflow:"descriptive_conclusion"});
+  assert.deepEqual([conclusion.fallback.model,conclusion.fallback.reasoning_effort,conclusion.fallback.max_attempts],
+    ["gpt-6-sol","low",1]);
+  const criterion=resolveAIExecutionPlan({workflow:"criterion_and_evidence"});
+  assert.deepEqual([criterion.execution,criterion.replacement_workflow],["unavailable","criterion_realignment"]);
+  assert.equal(JSON.stringify(AI_ROUTING_POLICY).includes("gpt-6-astra"),false);
 });
 
 test("diagnóstico principal, evidencia y modo Hoy se resuelven en código", () => {

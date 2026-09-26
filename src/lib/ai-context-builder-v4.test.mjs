@@ -25,6 +25,8 @@ test("A: activity de 5 años confirmada produce un bundle reducido, estable y tr
   const first = await buildAIContext(activityFive, knowledgeBase);
   const second = await buildAIContext(activityFive, knowledgeBase);
   assert.deepEqual(first, second);
+  assert.equal(first.curriculum.target_age, 5);
+  assert.deepEqual(first.curriculum.confirmed_competency_ids, ["COM_ORAL"]);
   assert.deepEqual(first.curriculum.competency_cards.map((card) => card.id), ["COM_ORAL"]);
   assert.deepEqual(first.curriculum.age_reference.map((reference) => reference.age), [5]);
   assert.deepEqual(first.knowledge.pedagogical_modules.map((module) => module.id), ["activity_design", "teacher_interaction_and_mediation", "evidence_and_criteria"]);
@@ -38,6 +40,8 @@ test("B: activity de 4 años sin competencia confirmada no rellena L2 ni Religi�
   const knowledgeBase = await loadKnowledgeBaseV4();
   const bundle = await buildAIContext({ workflow: "activity", age: 4, teacher_request: "Proponer una actividad de exploración.", activity_purpose: "Explorar materiales y compartir hallazgos." }, knowledgeBase);
   const ids = bundle.curriculum.competency_cards.map((card) => card.id);
+  assert.equal(bundle.curriculum.target_age, 4);
+  assert.deepEqual(bundle.curriculum.confirmed_competency_ids, []);
   assert.ok(ids.length <= 3);
   assert.ok(!ids.includes("CAST_L2_ORAL") && !ids.includes("PS_RELIGION"));
   assert.equal(Object.hasOwn(bundle.curriculum, "primary_competency_id"), false);
@@ -124,7 +128,7 @@ const workflowCases = [
   ["today_mode", { age: 5, current_schedule_block: "actividad de exploración", active_plan: "plan semanal 1" }, "current_schedule_block", "actividad de exploración"],
 ];
 
-test("contrato mínimo y determinista de los 13 workflows", async () => {
+test("contrato mínimo y determinista de los 15 workflows", async () => {
   const knowledgeBase = await loadKnowledgeBaseV4();
   for (const [workflow, values, missingField, expectedValue] of workflowCases) {
     const input = { workflow, teacher_request: `Solicitud de ${workflow}.`, ...values, unrelated: "never-send", classroom_context: values.classroom_context ? { ...values.classroom_context, unrelated: "never-send" } : values.classroom_context };

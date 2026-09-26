@@ -18,7 +18,7 @@ const proposal = (status = "insufficient") => ({ competency_id: "COM_ORAL", info
 
 test("assessment routing, schema y provider reciben una sola tarjeta", async () => {
   const plan = resolveAIExecutionPlan({ workflow: "assessment" });
-  assert.equal(plan.model, "gpt-6-sol"); assert.equal(plan.reasoning_effort, "medium");
+  assert.equal(plan.model, "gpt-6-luna"); assert.equal(plan.reasoning_effort, "medium");
   assert.equal(ASSESSMENT_OUTPUT_SCHEMA.id, "assessment-v2"); assert.equal(ASSESSMENT_OUTPUT_SCHEMA.additionalProperties, false);
   let captured;
   const evidence = [{ observed_on: "2026-09-20T12:00:00.000Z", activity_title: "Actividad", criterion_text: "Expresa ideas", observation_status: "with_support", observation_note: "Dijo algo", media_available: true }];
@@ -80,7 +80,9 @@ async function fixture({ twoEvidence = false } = {}) {
     create table activities(id uuid primary key,title text);
     create table activity_criteria(id uuid primary key,activity_id uuid,competency_v4_id text,criterion_text text,details jsonb);
     create table evidences(id uuid primary key,student_id uuid,activity_id uuid,criterion_id uuid,observed_at timestamptz,observation_status text,observation_text text,media_path text);
-    create table competency_assessments(id uuid primary key,student_id uuid,competency_v4_id text,period_start date,period_end date,version integer,source_evidence_ids jsonb,source_evidence_snapshot jsonb,details jsonb,generation_metadata jsonb,status text,teacher_confirmed_at timestamptz,created_at timestamptz default now(),updated_at timestamptz default now());`);
+    create table evaluation_periods(id uuid primary key,school_year_id uuid,label text,starts_on date,ends_on date);
+    create table assessment_masters(id uuid primary key,classroom_id uuid,evaluation_period_id uuid,version integer,status text,details jsonb,source_snapshot jsonb,generation_metadata jsonb,teacher_confirmed_at timestamptz);
+    create table competency_assessments(id uuid primary key,student_id uuid,competency_v4_id text,period_start date,period_end date,version integer,source_evidence_ids jsonb,source_evidence_snapshot jsonb,details jsonb,generation_metadata jsonb,status text,teacher_confirmed_at timestamptz,assessment_master_id uuid,assessment_master_snapshot jsonb,created_at timestamptz default now(),updated_at timestamptz default now());`);
   await db.query(`insert into students values ($1,$2,'active','Ana','Pérez','Anita'),($3,$2,'active','Otro','Niño',null)`, [studentId, classroomId, otherStudentId]);
   await db.query(`insert into activities values($1,'Relato de Ana')`, [activityId]);
   await db.query(`insert into activity_criteria values($1,$2,'COM_ORAL','Expresión de Ana','{"expected_evidence":"Ana cuenta algo"}'::jsonb)`, [criterionId, activityId]);

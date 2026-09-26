@@ -4,6 +4,7 @@ import { prepareAIRequestV4 } from "./prepare-ai-request-v4.mjs";
 import { validateAssessmentProposal } from "./assessment-v4-service.mjs";
 import { CONCLUSION_FIELDS, validateDescriptiveConclusion } from "./descriptive-conclusion-v4-service.mjs";
 import { FAMILY_REPORT_FIELDS, FAMILY_REPORT_SECTION_FIELDS, validateFamilyReport } from "./family-report-v4-service.mjs";
+import { ASSESSMENT_MASTER_OUTPUT_SCHEMA, validateAssessmentMaster } from "./assessment-master-service.mjs";
 import { ANNUAL_PLAN_DEVELOPMENT_SCHEMA, ANNUAL_PLAN_OUTPUT_SCHEMA, AnnualPlanValidationError, requiredAnnualCoverageIds, validateAnnualPlanDevelopment, validateAnnualPlanMaster, validateAnnualPlanMasterCoverage, validateAnnualPlanProposal } from "./annual-plan-contract.mjs";
 export { ANNUAL_PLAN_OUTPUT_SCHEMA } from "./annual-plan-contract.mjs";
 
@@ -182,6 +183,10 @@ function assertAssessmentOutput(output, bundle, competencyId, evidenceCount) {
   try { return validateAssessmentProposal(output, competencyId, evidenceCount); }
   catch (error) { throw new InvalidAIGenerationError("assessment_schema_mismatch", { message: error.message }); }
 }
+function assertAssessmentMasterOutput(output, bundle) {
+  try { return validateAssessmentMaster(output, bundle.curriculum.competency_cards.map((card) => card.id)); }
+  catch (error) { throw new InvalidAIGenerationError("assessment_master_schema_mismatch", { message: error.message }); }
+}
 function assertDescriptiveConclusionOutput(output, bundle, competencyId, informationStatus) {
   if (!bundle.curriculum.competency_cards.some((card) => card.id === competencyId)) throw new InvalidAIGenerationError("conclusion_competency_outside_bundle");
   try { return validateDescriptiveConclusion(output, competencyId, informationStatus); }
@@ -198,7 +203,8 @@ function assertFamilyReportOutput(output, bundle, input) {
 function validateWorkflowOutput(input, output, bundle, confirmedCompetencyId) {
   return input.workflow === "annual_plan" ? assertAnnualPlanStageOutput(output, bundle, input.annual_stage)
     : ["project", "unit"].includes(input.workflow) ? assertExperienceOutput(output, bundle, input.workflow)
-    : input.workflow === "criterion_and_evidence" ? assertCriterionEvidenceOutput(output, bundle, confirmedCompetencyId)
+    : ["criterion_and_evidence", "criterion_realignment"].includes(input.workflow) ? assertCriterionEvidenceOutput(output, bundle, confirmedCompetencyId)
+    : input.workflow === "assessment_master" ? assertAssessmentMasterOutput(output, bundle)
     : input.workflow === "assessment" ? assertAssessmentOutput(output, bundle, confirmedCompetencyId, input.evidence_history?.length ?? 0)
     : input.workflow === "descriptive_conclusion" ? assertDescriptiveConclusionOutput(output, bundle, confirmedCompetencyId,
       input.analysis_status ?? input.student_context?.teacher_confirmed_findings?.information_status)
@@ -262,7 +268,7 @@ export async function generateAIWorkflowV4(input, { provider, providerFactory, k
   if (plan.execution === "code") {
     throw new InvalidAIGenerationError("workflow_not_generation_enabled", { workflow: input?.workflow, execution_plan: plan });
   }
-  if (!["activity", "annual_plan", "project", "unit", "criterion_and_evidence", "assessment", "descriptive_conclusion", "family_report"].includes(input?.workflow) || plan.execution !== "generation") {
+  if (!["activity", "annual_plan", "project", "unit", "criterion_realignment", "assessment_master", "assessment", "descriptive_conclusion", "family_report"].includes(input?.workflow) || plan.execution !== "generation") {
     throw new InvalidAIGenerationError("unsupported_workflow", { workflow: input?.workflow, execution_plan: plan });
   }
   const skillAllowed = (input.workflow === "annual_plan" && input.annual_stage === "master") || ["project", "unit", "activity"].includes(input.workflow);
@@ -270,7 +276,7 @@ export async function generateAIWorkflowV4(input, { provider, providerFactory, k
     throw new InvalidAIGenerationError("skill_scope_invalid");
   }
   const prepared = await prepareAIRequestV4(input, knowledgeBase);
-  const outputSchema = input.workflow === "annual_plan" ? (input.annual_stage === "development" ? ANNUAL_PLAN_DEVELOPMENT_SCHEMA : ANNUAL_PLAN_OUTPUT_SCHEMA) : input.workflow === "project" ? PROJECT_OUTPUT_SCHEMA : input.workflow === "unit" ? UNIT_OUTPUT_SCHEMA : input.workflow === "criterion_and_evidence" ? CRITERION_EVIDENCE_OUTPUT_SCHEMA : input.workflow === "assessment" ? ASSESSMENT_OUTPUT_SCHEMA : input.workflow === "descriptive_conclusion" ? DESCRIPTIVE_CONCLUSION_OUTPUT_SCHEMA : input.workflow === "family_report" ? FAMILY_REPORT_OUTPUT_SCHEMA : ACTIVITY_OUTPUT_SCHEMA;
+  const outputSchema = input.workflow === "annual_plan" ? (input.annual_stage === "development" ? ANNUAL_PLAN_DEVELOPMENT_SCHEMA : ANNUAL_PLAN_OUTPUT_SCHEMA) : input.workflow === "project" ? PROJECT_OUTPUT_SCHEMA : input.workflow === "unit" ? UNIT_OUTPUT_SCHEMA : input.workflow === "criterion_realignment" ? CRITERION_EVIDENCE_OUTPUT_SCHEMA : input.workflow === "assessment_master" ? ASSESSMENT_MASTER_OUTPUT_SCHEMA : input.workflow === "assessment" ? ASSESSMENT_OUTPUT_SCHEMA : input.workflow === "descriptive_conclusion" ? DESCRIPTIVE_CONCLUSION_OUTPUT_SCHEMA : input.workflow === "family_report" ? FAMILY_REPORT_OUTPUT_SCHEMA : ACTIVITY_OUTPUT_SCHEMA;
   const confirmedCompetencyId = input.competency_ids?.length === 1 ? input.competency_ids[0] : null;
   const primaryProvider = provider ?? providerFactory?.(plan);
   let finalPlan = plan;

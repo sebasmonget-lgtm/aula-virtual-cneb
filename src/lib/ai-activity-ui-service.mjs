@@ -74,7 +74,7 @@ export function buildTeacherActivityGenerationInput({ request = {}, classroom, l
     ...(classroom.language_context || group?.language_context ? { language_context: { ...classroom.language_context, ...group?.language_context } } : {}),
     ...(group ? { context_snapshot: group.snapshot } : {}),
     ...(learningExperience ? { learning_experience_context: { id: learningExperience.id, type: learningExperience.type, title: learningExperience.title, purpose: learningExperience.purpose, trigger_or_interest: learningExperience.details?.trigger_or_interest ?? null, learning_need_or_context: learningExperience.details?.learning_need_or_context ?? null, starting_point: learningExperience.details?.starting_point ?? null, primary_competency_ids: learningExperience.details?.primary_competency_ids ?? [], possible_secondary_competency_ids: learningExperience.details?.possible_secondary_competency_ids ?? [], possible_pathways: learningExperience.details?.possible_pathways ?? [], proposed_situations: learningExperience.details?.proposed_situations ?? [], spaces_and_materials: learningExperience.details?.spaces_and_materials ?? [], evidence_opportunities: learningExperience.details?.evidence_opportunities ?? [], family_or_community_links: learningExperience.details?.family_or_community_links ?? [], adjustment_points: learningExperience.details?.adjustment_points ?? [], flexibility_notes: learningExperience.details?.flexibility_notes ?? null,
-      confirmed_project_master: learningExperience.details?.flow_version === "project-master-v1" ? {
+      confirmed_project_master: ["project-master-v1", "project-master-v2"].includes(learningExperience.details?.flow_version) ? {
         decisions: learningExperience.details.decisions, dependents: learningExperience.details.dependents,
         project_master: learningExperience.details.project_master, activity_route: route } : null,
       route_position: routePosition < 0 ? null : { number: routePosition + 1, total: route.length },
@@ -82,7 +82,14 @@ export function buildTeacherActivityGenerationInput({ request = {}, classroom, l
       next_map_item: routePosition >= 0 ? route[routePosition + 1] ?? null : null,
       inherited_route_item: routeItem ? { id: routeItem.id, number: routeItem.number, date: routeItem.date,
         title: routeItem.title, specific_purpose: routeItem.specific_purpose, competency_id: routeItem.competency_id,
-        evaluation_criterion: routeItem.evaluation_criterion, expected_evidence: routeItem.expected_evidence } : null,
+        primary_competency_id: routeItem.criterion_competency_id || routeItem.competency_id,
+        possible_secondary_competency_ids: (routeItem.competency_ids ?? []).filter((id) => id !== (routeItem.criterion_competency_id || routeItem.competency_id)),
+        pedagogical_intention: routeItem.pedagogical_intention ?? routeItem.role_in_project,
+        evaluation_criterion: routeItem.evaluation_criterion, expected_evidence: routeItem.expected_evidence,
+        acceptable_evidence_variations: routeItem.acceptable_evidence_variations ?? [], observation_focus: routeItem.observation_focus ?? [],
+        materials: routeItem.materials ?? [], mediation_notes: routeItem.mediation_notes ?? "",
+        continuity_from_previous: routeItem.continuity_from_previous ?? "", continuity_to_next: routeItem.continuity_to_next ?? "",
+        flexibility_notes: routeItem.flexibility_notes ?? "" } : null,
       prior_activities: learningExperience.prior_activities ?? [] } } : {}),
     ...(competencyId ? { competency_ids: [competencyId] } : {}),
   };

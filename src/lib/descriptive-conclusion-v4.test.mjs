@@ -21,9 +21,9 @@ const periodStart = "2026-03-01", periodEnd = "2026-09-22";
 const assessmentDetails = { competency_id: "COM_ORAL", information_status: "sufficient", evidence_overview: "Ana compartió sus ideas en dos ocasiones.", observable_patterns: ["Ana habló con apoyo."], strengths_and_advances: ["Expresó una idea."], support_needs: ["Apoyo con preguntas."], next_opportunities: ["Conversar en grupo pequeño."], teacher_questions: [], insufficiency_reason: null, caution: "Revisar con la docente." };
 const conclusion = (status = "sufficient") => ({ competency_id: "COM_ORAL", information_status: status, conclusion_text: status === "sufficient" ? "En las situaciones observadas compartió ideas y escuchó al grupo." : "En las situaciones observadas aún hay información limitada para describir un avance sostenido.", progress_examples: status === "sufficient" ? ["Explicó su propuesta."] : [], support_or_conditions: ["Con preguntas abiertas."], next_steps: ["Ofrecer nuevas conversaciones."], insufficiency_reason: status === "insufficient" ? "Se necesita observar más situaciones." : null, caution: "Revisar con la docente antes de comunicar." });
 
-test("descriptive_conclusion usa Sol/medium, schema strict y una tarjeta en el provider", async () => {
+test("descriptive_conclusion usa Luna/medium, schema strict y una tarjeta en el provider", async () => {
   const plan = resolveAIExecutionPlan({ workflow: "descriptive_conclusion", task: "generation" });
-  assert.equal(plan.model, "gpt-6-sol"); assert.equal(plan.reasoning_effort, "medium");
+  assert.equal(plan.model, "gpt-6-luna"); assert.equal(plan.reasoning_effort, "medium");
   assert.equal(DESCRIPTIVE_CONCLUSION_OUTPUT_SCHEMA.id, "descriptive-conclusion-v1");
   assert.equal(DESCRIPTIVE_CONCLUSION_OUTPUT_SCHEMA.additionalProperties, false);
   let captured;
@@ -32,7 +32,7 @@ test("descriptive_conclusion usa Sol/medium, schema strict y una tarjeta en el p
   assert.equal(captured.workflow, "descriptive_conclusion"); assert.equal(captured.ai_context_bundle.curriculum.competency_cards.length, 1);
   assert.equal(captured.ai_context_bundle.curriculum.competency_cards[0].id, "COM_ORAL");
   assert.equal(result.validation.schema, "descriptive-conclusion-v1");
-  assert.equal(captured.execution_plan.model, "gpt-6-sol");
+  assert.equal(captured.execution_plan.model, "gpt-6-luna");
   assert.equal(captured.ai_context_bundle.context.student.id, "current_student");
 });
 

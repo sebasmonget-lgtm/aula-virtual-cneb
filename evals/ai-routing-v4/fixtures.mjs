@@ -3,6 +3,7 @@ import { buildLearningExperienceGenerationInput } from "../../src/lib/ai-learnin
 import { buildTeacherActivityGenerationInput } from "../../src/lib/ai-activity-ui-service.mjs";
 import { buildCriterionEvidenceInput } from "../../src/lib/ai-criterion-evidence-ui-service.mjs";
 import { buildAssessmentInput } from "../../src/lib/assessment-v4-service.mjs";
+import { buildAssessmentMasterInput } from "../../src/lib/assessment-master-service.mjs";
 import { buildDescriptiveConclusionInput } from "../../src/lib/descriptive-conclusion-v4-service.mjs";
 import { buildFamilyReportInput } from "../../src/lib/family-report-v4-service.mjs";
 import { defaultInitialStage, nationalCalendarBlocks2026 } from "../../src/lib/annual-plan-calendar.mjs";
@@ -41,11 +42,20 @@ const assessment = Object.freeze({ details: { competency_id: "CYT_INDAGA", infor
 
 export async function modelEvalFixtures() {
   const annual = buildAnnualPlanGenerationInput({ classroom, request: { teacherRequest: "Considerar el patio sin convertir todo el año en un solo tema." } });
-  const project = buildLearningExperienceGenerationInput({ classroom, request: { workflow: "project", project_trigger_or_interest: "El grupo encontró brotes en el patio.", competencyIds: ["CYT_INDAGA", "COM_ORAL"] } });
-  const unit = buildLearningExperienceGenerationInput({ classroom, request: { workflow: "unit", learning_need_or_context: "El grupo necesita ampliar sus explicaciones sobre cambios observables.", competencyIds: ["CYT_INDAGA", "COM_ORAL"] } });
+  const project = buildLearningExperienceGenerationInput({ classroom, request: { workflow: "project", project_trigger_or_interest: "El grupo encontró brotes en el patio.", competency_ids: ["CYT_INDAGA", "COM_ORAL"] } });
+  const unit = buildLearningExperienceGenerationInput({ classroom, request: { workflow: "unit", learning_need_or_context: "El grupo necesita ampliar sus explicaciones sobre cambios observables.", competency_ids: ["CYT_INDAGA", "COM_ORAL"] } });
   const activityInput = buildTeacherActivityGenerationInput({ classroom, learningExperience: parent,
     request: { activityPurpose: "Comparar cambios observables en los brotes.", competencyId: "CYT_INDAGA", context: "Hoy volverán a observar los brotes." } });
   const criterion = buildCriterionEvidenceInput({ classroom, activity, parent });
+  const assessmentMaster = buildAssessmentMasterInput({ age: 5, competencyIds: ["CYT_INDAGA"],
+    classroomContext: classroom, calendar: classroom.calendar, sources: {
+      period: { id: "period-1", label: "Bimestre 1", starts_on: "2026-03-16", ends_on: "2026-05-15" },
+      confirmed_project_masters: [{ id: parent.id, activity_blueprints: [activity.details] }],
+      activities: [{ id: activity.id, purpose: activity.purpose }],
+      criteria: [{ id: "criterion-1", activity_id: activity.id, competency_id: "CYT_INDAGA",
+        criterion_text: "Explica un cambio que observa.", expected_evidence: "Explicación sobre el cambio observado.",
+        observation_focus: ["Compara lo observado en dos momentos."] }],
+    } });
   const assessmentInput = buildAssessmentInput({ age: 5, competencyId: "CYT_INDAGA", evidenceHistory: evidenceRows });
   const conclusion = buildDescriptiveConclusionInput({ age: 5, competencyId: "CYT_INDAGA", assessment, evidenceRows });
   const family = buildFamilyReportInput({ age: 5, competencyIds: ["CYT_INDAGA"], knownNames: [], conclusions: [{
@@ -62,8 +72,10 @@ export async function modelEvalFixtures() {
       skillInstructions: await loadLearningExperienceSkill(), allowedCompetencyIds: ["CYT_INDAGA", "COM_ORAL"], expectedGroundingTerms: ["cambios"] },
     { id: "activity-5y-compare-sprouts", workflow: "activity", input: activityInput,
       skillInstructions: await loadActivitySkill(), allowedCompetencyIds: ["CYT_INDAGA"], expectedGroundingTerms: ["brotes", "cambios"] },
-    { id: "criterion-5y-inquiry", workflow: "criterion_and_evidence", input: criterion,
+    { id: "criterion-realignment-5y-inquiry", workflow: "criterion_realignment", input: criterion,
       allowedCompetencyIds: ["CYT_INDAGA"], expectedGroundingTerms: ["cambio"] },
+    { id: "assessment-master-5y-first-period", workflow: "assessment_master", input: assessmentMaster,
+      allowedCompetencyIds: ["CYT_INDAGA"], expectedGroundingTerms: ["evidencia", "progreso"] },
     { id: "assessment-5y-two-observations", workflow: "assessment", input: assessmentInput,
       allowedCompetencyIds: ["CYT_INDAGA"], expectedGroundingTerms: ["brotes", "observ"] },
     { id: "conclusion-5y-confirmed-assessment", workflow: "descriptive_conclusion", input: conclusion,

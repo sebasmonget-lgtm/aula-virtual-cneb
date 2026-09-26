@@ -6,6 +6,8 @@ import { createAIProviderForPlan } from "../src/lib/ai-provider-factory.mjs";
 import { generateAIWorkflowV4 } from "../src/lib/ai-generation-v4.mjs";
 import { loadAssessmentEvidence, assessmentSourceSnapshot, sameEvidenceSourceSnapshot, sanitizeEvidenceForAssessment, neutralizeAssessmentText, buildAssessmentInput, validateAssessmentPeriod, validateAssessmentProposal } from "../src/lib/assessment-v4-service.mjs";
 import { httpStatusForError, publicErrorMessage } from "../src/lib/version-integrity.mjs";
+import { assessmentMasterEntry } from "../src/lib/assessment-master-service.mjs";
+import { loadAssessmentMasterSources } from "./assessment-master-routes.mjs";
 
 const dateOnly = (value) => value instanceof Date ? value.toISOString().slice(0, 10) : String(value).slice(0, 10);
 const safeAssessment = (row) => ({ id: row.id, competency_v4_id: row.competency_v4_id, period_start: dateOnly(row.period_start), period_end: dateOnly(row.period_end), version: row.version, details: row.details, status: row.status, teacher_confirmed_at: row.teacher_confirmed_at, evidence_count: Array.isArray(row.source_evidence_ids) ? row.source_evidence_ids.length : Number(row.evidence_count ?? 0) });
@@ -23,6 +25,18 @@ export function createAssessmentRouteHandler({ db, annualPlanningContext, readJs
     return { student };
   }
   const fail = (response, origin, error, status = 422) => send(response, httpStatusForError(error, status), { error: publicErrorMessage(error) }, origin);
+  async function activeMaster(context, periodStart, periodEnd, competencyId) {
+    const row = (await db.query(`select am.*,p.starts_on,p.ends_on,p.label from assessment_masters am
+      join evaluation_periods p on p.id=am.evaluation_period_id
+      where am.classroom_id=$1 and am.status='active' and p.starts_on=$2::date and p.ends_on=$3::date`,
+      [context.id, periodStart, periodEnd])).rows[0];
+    if (!row) return null;
+    const sources = await loadAssessmentMasterSources(db, context, row);
+    if (sources.snapshot.fingerprint !== row.source_snapshot?.fingerprint) throw new Error("El marco de evaluación requiere revisión porque cambió la planificación o un criterio.");
+    const entry = assessmentMasterEntry(row, competencyId);
+    if (!entry) throw new Error("La competencia no está incluida en el marco confirmado del período.");
+    return { row, entry };
+  }
   async function currentDraft(context, id) {
     const row = (await db.query(`select ca.* from competency_assessments ca join students s on s.id=ca.student_id where ca.id=$1 and ca.status='draft' and s.classroom_id=$2`, [id, context.id])).rows[0];
     if (!row) throw new Error("Borrador no disponible.");
@@ -68,12 +82,13 @@ export function createAssessmentRouteHandler({ db, annualPlanningContext, readJs
         validateAssessmentPeriod(body.periodStart, body.periodEnd, context.calendar);
         const rows = await loadAssessmentEvidence(db, { studentId: student.id, competencyId: card.id, periodStart: body.periodStart, periodEnd: body.periodEnd });
         if (!rows.length) throw new Error("No hay evidencias registradas para analizar esta competencia.");
+        const master = await activeMaster(context, body.periodStart, body.periodEnd, card.id);
         const names = [student.first_name, student.last_name, student.preferred_name];
-        const input = buildAssessmentInput({ age: context.age, competencyId: card.id, evidenceHistory: rows.map((row) => sanitizeEvidenceForAssessment(row, names)), criteriaHistory: rows.map((row) => ({ criterion_text: neutralizeAssessmentText(row.criterion_text, names), expected_evidence: neutralizeAssessmentText(row.details?.expected_evidence, names), observation_focus: (row.details?.observation_focus ?? []).map((text) => neutralizeAssessmentText(text, names)), evidence_scope: row.details?.evidence_scope ?? null })) });
+        const input = buildAssessmentInput({ age: context.age, competencyId: card.id, assessmentMaster: master?.entry, evidenceHistory: rows.map((row) => sanitizeEvidenceForAssessment(row, names)), criteriaHistory: rows.map((row) => ({ criterion_text: neutralizeAssessmentText(row.criterion_text, names), expected_evidence: neutralizeAssessmentText(row.details?.expected_evidence, names), observation_focus: (row.details?.observation_focus ?? []).map((text) => neutralizeAssessmentText(text, names)), evidence_scope: row.details?.evidence_scope ?? null })) });
         const plan = resolveAIExecutionPlan({ workflow: "assessment", task: "generation" });
-        const result = await generate(input, { provider: createProvider(plan), executionPlan: plan });
+        const result = await generate(input, { providerFactory: (executionPlan) => createProvider(executionPlan), executionPlan: body.deepReview === true ? resolveAIExecutionPlan({ workflow: "assessment_deep_review", task: "generation" }) : plan });
         const generationId = randomUUID();
-        await pending.set(generationId, { workflow: "assessment", classroom_id: context.id, student_id: student.id, competency_v4_id: card.id, period_start: body.periodStart, period_end: body.periodEnd, source_evidence_ids: rows.map((row) => row.id), source_evidence_snapshot: assessmentSourceSnapshot(rows), metadata: metadataForAudit(result.metadata), createdAt: Date.now() });
+        await pending.set(generationId, { workflow: "assessment", classroom_id: context.id, student_id: student.id, competency_v4_id: card.id, period_start: body.periodStart, period_end: body.periodEnd, assessment_master_id: master?.row.id ?? null, assessment_master_snapshot: master?.row.source_snapshot ?? null, source_evidence_ids: rows.map((row) => row.id), source_evidence_snapshot: assessmentSourceSnapshot(rows), metadata: metadataForAudit(result.metadata), createdAt: Date.now() });
         send(response, 200, { proposal: result.output, generation_id: generationId, evidence_count: rows.length }, origin);
         return true;
       }
@@ -86,11 +101,13 @@ export function createAssessmentRouteHandler({ db, annualPlanningContext, readJs
         validateAssessmentProposal(body.proposal, body.competencyId, item.source_evidence_ids.length);
         const rows = await loadAssessmentEvidence(db, { studentId: student.id, competencyId: body.competencyId, periodStart: body.periodStart, periodEnd: body.periodEnd });
         if (!sameEvidenceSourceSnapshot(item.source_evidence_snapshot, assessmentSourceSnapshot(rows))) throw new Error("Las evidencias cambiaron. Regenera el análisis.");
+        if(item.assessment_master_id){const master = await activeMaster(context, body.periodStart, body.periodEnd, body.competencyId);
+          if (!master||master.row.id !== item.assessment_master_id || master.row.source_snapshot?.fingerprint !== item.assessment_master_snapshot?.fingerprint) throw new Error("El marco de evaluación cambió. Regenera el análisis.");}
         const existing = (await db.query(`select id,version from competency_assessments where student_id=$1 and competency_v4_id=$2 and period_start=$3::date and period_end=$4::date and status='draft'`, [student.id, body.competencyId, body.periodStart, body.periodEnd])).rows[0];
         const version = existing?.version ?? Number((await db.query(`select coalesce(max(version),0)+1 as version from competency_assessments where student_id=$1 and competency_v4_id=$2 and period_start=$3::date and period_end=$4::date`, [student.id, body.competencyId, body.periodStart, body.periodEnd])).rows[0].version);
         const id = existing?.id ?? randomUUID();
-        if (existing) await db.query(`update competency_assessments set details=$1::jsonb,generation_metadata=$2::jsonb,source_evidence_ids=$3::jsonb,source_evidence_snapshot=$4::jsonb,updated_at=now() where id=$5`, [JSON.stringify(body.proposal), JSON.stringify(item.metadata), JSON.stringify(item.source_evidence_ids), JSON.stringify(item.source_evidence_snapshot), id]);
-        else await db.query(`insert into competency_assessments(id,student_id,competency_v4_id,period_start,period_end,version,source_evidence_ids,source_evidence_snapshot,details,generation_metadata,status) values($1,$2,$3,$4::date,$5::date,$6,$7::jsonb,$8::jsonb,$9::jsonb,$10::jsonb,'draft')`, [id, student.id, body.competencyId, body.periodStart, body.periodEnd, version, JSON.stringify(item.source_evidence_ids), JSON.stringify(item.source_evidence_snapshot), JSON.stringify(body.proposal), JSON.stringify(item.metadata)]);
+        if (existing) await db.query(`update competency_assessments set assessment_master_id=$1,assessment_master_snapshot=$2::jsonb,details=$3::jsonb,generation_metadata=$4::jsonb,source_evidence_ids=$5::jsonb,source_evidence_snapshot=$6::jsonb,updated_at=now() where id=$7`, [item.assessment_master_id, JSON.stringify(item.assessment_master_snapshot), JSON.stringify(body.proposal), JSON.stringify(item.metadata), JSON.stringify(item.source_evidence_ids), JSON.stringify(item.source_evidence_snapshot), id]);
+        else await db.query(`insert into competency_assessments(id,student_id,competency_v4_id,period_start,period_end,version,source_evidence_ids,source_evidence_snapshot,details,generation_metadata,status,assessment_master_id,assessment_master_snapshot) values($1,$2,$3,$4::date,$5::date,$6,$7::jsonb,$8::jsonb,$9::jsonb,$10::jsonb,'draft',$11,$12::jsonb)`, [id, student.id, body.competencyId, body.periodStart, body.periodEnd, version, JSON.stringify(item.source_evidence_ids), JSON.stringify(item.source_evidence_snapshot), JSON.stringify(body.proposal), JSON.stringify(item.metadata), item.assessment_master_id, JSON.stringify(item.assessment_master_snapshot)]);
         await pending.delete(body.generationId);
         send(response, 200, { id, status: "draft" }, origin);
         return true;
@@ -113,6 +130,8 @@ export function createAssessmentRouteHandler({ db, annualPlanningContext, readJs
         validateAssessmentProposal(current.details, current.competency_v4_id, current.source_evidence_ids.length);
         const rows = await loadAssessmentEvidence(db, { studentId: current.student_id, competencyId: current.competency_v4_id, periodStart: dateOnly(current.period_start), periodEnd: dateOnly(current.period_end) });
         if (!sameEvidenceSourceSnapshot(current.source_evidence_snapshot, assessmentSourceSnapshot(rows))) { fail(response, origin, new Error("Hay evidencia nueva o modificada desde que se preparó este análisis. Regenera la síntesis antes de confirmarla."), 409); return true; }
+        if (current.assessment_master_id) { const master = await activeMaster(context, dateOnly(current.period_start), dateOnly(current.period_end), current.competency_v4_id);
+          if (master.row.id !== current.assessment_master_id || master.row.source_snapshot?.fingerprint !== current.assessment_master_snapshot?.fingerprint) { fail(response, origin, new Error("El marco de evaluación cambió. Regenera la síntesis antes de confirmarla."), 409); return true; } }
         await db.exec("begin");
         let saved;
         try {

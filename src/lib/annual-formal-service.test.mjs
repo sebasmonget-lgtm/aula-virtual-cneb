@@ -16,7 +16,7 @@ const teacherA = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 const teacherB = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
 const calendar = { school_year: 2026, blocks: nationalCalendarBlocks2026(), initial_stage: defaultInitialStage() };
 
-test("Astra desarrolla solo el preplan confirmado de su docente, respetando las doce decisiones", async () => {
+test("Sol desarrolla solo el preplan confirmado de su docente, respetando las doce decisiones", async () => {
   const db = await PGlite.create();
   try {
     const dir = new URL("../../local-db/migrations/", import.meta.url);
@@ -67,8 +67,8 @@ test("Astra desarrolla solo el preplan confirmado de su docente, respetando las 
       createProvider: () => ({ generate: async (value) => { calls += 1; request = value; return { output: formal }; } }),
       loadSkill: async () => "Skill de prueba",
     });
-    assert.equal(request.execution_plan.model, "gpt-6-astra");
-    assert.equal(request.execution_plan.reasoning_effort, "high");
+    assert.equal(request.execution_plan.model, "gpt-6-sol");
+    assert.equal(request.execution_plan.reasoning_effort, "low");
     assert.equal(request.ai_context_bundle.confirmed_group.strengths, "Participan en juegos.");
     assert.equal(request.ai_context_bundle.confirmed_priorities.priorities[0].title, "Conversar en el juego");
     assert.equal(request.ai_context_bundle.curriculum.age, 5);

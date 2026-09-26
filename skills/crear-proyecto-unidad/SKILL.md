@@ -12,4 +12,6 @@ Recibe **una** propuesta anual o un motivo emergente, el diagnóstico grupal per
 3. Para el Plan Maestro, conserva las decisiones confirmadas y lee [contrato-ruta.md](references/contrato-ruta.md). Usa solo los días lectivos que entregue Ayni; propone el mapa completo sin desarrollar todavía las actividades. La docente revisará el mapa antes de confirmar el proyecto.
 4. Para redactar el documento formal, usa únicamente el Plan Maestro confirmado. La aplicación controla las fechas, los IDs y la plantilla DOCX.
 
+`curriculum.target_age` es la edad del aula y `curriculum.confirmed_competency_ids` contiene las competencias ya elegidas. Conserva esos IDs en las listas de competencias y usa en cada fila de `activity_route` solo uno de esos mismos IDs.
+
 No inventes intereses, observaciones, resultados, productos realizados ni desempeños oficiales. No conviertas el producto colectivo en evidencia individual. La planificación con los niños y la valoración posterior se registran cuando ocurran. Escribe en español claro para una profesora de Inicial.

@@ -13,7 +13,7 @@ test("la suite no consume API sin opt-in y clave explícitos", () => {
 test("hay fixtures separados para todos los workflows productivos", async () => {
   const fixtures = await modelEvalFixtures();
   assert.deepEqual(fixtures.map((item) => item.workflow), ["annual_plan", "project", "unit", "activity",
-    "criterion_and_evidence", "assessment", "descriptive_conclusion", "family_report"]);
+    "criterion_realignment", "assessment_master", "assessment", "descriptive_conclusion", "family_report"]);
   assert.equal(new Set(fixtures.map((item) => item.id)).size, fixtures.length);
   assert.ok(fixtures.every((item) => item.input.workflow === item.workflow));
   for (const fixture of fixtures) await assert.doesNotReject(() => prepareAIRequestV4(fixture.input));

@@ -23,7 +23,11 @@ export const PROJECT_DEPENDENTS_SCHEMA = schema("project-dependents-v1", {
 });
 const activitySchema = object({ date: string, title: string, purpose: string,
   competency_ids: { type: "array", minItems: 1, maxItems: 2, items: string },
-  criterion_competency_id: string, role_in_project: string, expected_progression: string,
+  criterion_competency_id: string, pedagogical_intention: string, criterion_text: string,
+  expected_evidence: string, acceptable_evidence_variations: strings, observation_focus: strings,
+  materials: strings, mediation_notes: string, continuity_from_previous: string,
+  continuity_to_next: string, flexibility_notes: string,
+  role_in_project: string, expected_progression: string,
   estimated_minutes: { type: "integer" } });
 export const PROJECT_MASTER_SCHEMA = schema("project-master-v1", {
   foundation: string, closing_description: string, closing_rationale: string, resources: strings,
@@ -96,20 +100,33 @@ export function validateProjectMaster(output, decisions, dependents, availableDa
     if (!dates.has(row.date) || seenDates.has(row.date) || !hasText(row.title, 180) || titles.has(normalized) ||
         !hasText(row.purpose, 500) || !Array.isArray(row.competency_ids) || !row.competency_ids.length ||
         row.competency_ids.length > 2 || row.competency_ids.some((id) => !selected.has(id)) ||
-        !row.competency_ids.includes(row.criterion_competency_id) || !hasText(row.role_in_project, 400) ||
+        !row.competency_ids.includes(row.criterion_competency_id) || !hasText(row.pedagogical_intention, 500) ||
+        !hasText(row.criterion_text, 500) || !hasText(row.expected_evidence, 500) ||
+        !Array.isArray(row.acceptable_evidence_variations) || row.acceptable_evidence_variations.some((value) => !hasText(value, 240)) ||
+        !Array.isArray(row.observation_focus) || !row.observation_focus.length || row.observation_focus.some((value) => !hasText(value, 240)) ||
+        !Array.isArray(row.materials) || row.materials.some((value) => !hasText(value, 160)) ||
+        !hasText(row.mediation_notes, 500) || !hasText(row.continuity_from_previous, 400) ||
+        !hasText(row.continuity_to_next, 400) || !hasText(row.flexibility_notes, 500) ||
+        !hasText(row.role_in_project, 400) ||
         !hasText(row.expected_progression, 400) || !Number.isInteger(row.estimated_minutes) ||
         row.estimated_minutes < 10 || row.estimated_minutes > 180)
       fail("invalid_activity_map", "Una actividad propuesta no coincide con el calendario o las competencias.");
     seenDates.add(row.date); titles.add(normalized);
   }
   const ordered = [...output.activities].sort((a, b) => a.date.localeCompare(b.date));
-  const criterion = new Map(dependents.general_criteria.map((item) => [item.competency_id, item]));
   return { ...output, activity_route: ordered.map((item, index) => ({
-    id: randomUUID(), number: index + 1, date: item.date, title: item.title,
+    id: randomUUID(), number: index + 1, position: index + 1, date: item.date, title: item.title,
     specific_purpose: item.purpose, competency_id: item.competency_ids[0],
     competency_ids: item.competency_ids, criterion_competency_id: item.criterion_competency_id,
-    evaluation_criterion: criterion.get(item.criterion_competency_id)?.criterion ?? "",
-    expected_evidence: criterion.get(item.criterion_competency_id)?.expected_evidence.join("; ") ?? "",
+    primary_competency_id: item.criterion_competency_id,
+    possible_secondary_competency_ids: item.competency_ids.filter((id) => id !== item.criterion_competency_id),
+    pedagogical_intention: item.pedagogical_intention,
+    evaluation_criterion: item.criterion_text, criterion_text: item.criterion_text,
+    expected_evidence: item.expected_evidence,
+    acceptable_evidence_variations: item.acceptable_evidence_variations,
+    observation_focus: item.observation_focus, materials: item.materials,
+    mediation_notes: item.mediation_notes, continuity_from_previous: item.continuity_from_previous,
+    continuity_to_next: item.continuity_to_next, flexibility_notes: item.flexibility_notes,
     role_in_project: item.role_in_project, expected_progression: item.expected_progression,
     estimated_minutes: item.estimated_minutes,
   })) };
@@ -119,9 +136,12 @@ export function validateProjectMaster(output, decisions, dependents, availableDa
 export function projectDetails({ source, preview, decisions, dependents, master, previous = null }) {
   const primary = decisions.competency_ids.filter((id) => source.primary_competency_ids?.includes(id));
   const secondary = decisions.competency_ids.filter((id) => !primary.includes(id));
-  const route = master.activity_route.map((item, index) => ({ ...item, id: item.id || randomUUID(), number: index + 1 }));
+  const route = master.activity_route.map((item, index) => ({ ...item, id: item.id || randomUUID(), number: index + 1,
+    position: index + 1, primary_competency_id: item.primary_competency_id ?? item.criterion_competency_id,
+    possible_secondary_competency_ids: item.possible_secondary_competency_ids ??
+      item.competency_ids.filter((id) => id !== item.criterion_competency_id) }));
   return {
-    flow_version: "project-master-v1", document_template_version: "experience-unified-v2",
+    flow_version: "project-master-v2", blueprint_version: "activity-blueprint-v1", document_template_version: "experience-unified-v2",
     title: source.title, purpose: decisions.purpose, starting_point: decisions.context_summary,
     ...(source.experience_type === "unit" ? { learning_need_or_context: decisions.context_summary,
       proposed_situations: dependents.journey.map((item) => ({ title: item.title, pedagogical_intention: item.description, possible_child_actions: item.description })) }
@@ -135,7 +155,7 @@ export function projectDetails({ source, preview, decisions, dependents, master,
     flexibility_notes: "El recorrido puede ajustarse según lo observado durante el proyecto.",
     preview, decisions, dependents,
     project_master: { foundation: master.foundation, closing_description: master.closing_description,
-      closing_rationale: master.closing_rationale, resources: master.resources },
+      closing_rationale: master.closing_rationale, resources: master.resources, activity_blueprints: route },
     activity_route: route, teacher_overrides: previous?.teacher_overrides ?? [],
   };
 }
@@ -145,7 +165,6 @@ export function validateEditedActivityMap(route, decisions, dependents, dates) {
     fail("invalid_activity_map", "Revisa la cantidad de actividades del mapa.");
   const allowedDates = new Set(dates), usedDates = new Set(), usedIds = new Set(), usedTitles = new Set();
   const allowedCompetencies = new Set(decisions.competency_ids);
-  const criteria = new Map(dependents.general_criteria.map((item) => [item.competency_id, item]));
   return route.map((row, index) => {
     const normalizedTitle = String(row.title ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
     if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(row.id ?? "") ||
@@ -153,13 +172,17 @@ export function validateEditedActivityMap(route, decisions, dependents, dates) {
         !hasText(row.title, 180) || !hasText(row.specific_purpose, 500) ||
         !Array.isArray(row.competency_ids) || !row.competency_ids.length || row.competency_ids.length > 2 ||
         row.competency_ids.some((id) => !allowedCompetencies.has(id)) ||
-        !row.competency_ids.includes(row.criterion_competency_id) ||
-        !hasText(row.role_in_project, 400) || !hasText(row.expected_progression, 400))
+        !row.competency_ids.includes(row.criterion_competency_id) || !hasText(row.evaluation_criterion, 500) ||
+        !hasText(row.expected_evidence, 500) || !Array.isArray(row.observation_focus) || !row.observation_focus.length ||
+        !hasText(row.pedagogical_intention, 500) || !hasText(row.mediation_notes, 500) ||
+        !hasText(row.continuity_from_previous, 400) || !hasText(row.continuity_to_next, 400) ||
+        !hasText(row.flexibility_notes, 500) || !hasText(row.role_in_project, 400) || !hasText(row.expected_progression, 400))
       fail("invalid_activity_map", `Revisa la actividad ${index + 1} del mapa.`);
     usedIds.add(row.id); usedDates.add(row.date); usedTitles.add(normalizedTitle);
-    return { ...row, number: index + 1, competency_id: row.competency_ids[0],
-      evaluation_criterion: criteria.get(row.criterion_competency_id)?.criterion ?? "",
-      expected_evidence: criteria.get(row.criterion_competency_id)?.expected_evidence.join("; ") ?? "" };
+    return { ...row, number: index + 1, position: index + 1, competency_id: row.competency_ids[0],
+      primary_competency_id: row.criterion_competency_id,
+      possible_secondary_competency_ids: row.competency_ids.filter((id) => id !== row.criterion_competency_id),
+      criterion_text: row.evaluation_criterion };
   });
 }
 
@@ -233,7 +256,7 @@ export async function generateProjectMaster({ context, decisions, dependents, av
     outputSchema: PROJECT_MASTER_SCHEMA, context: { ...context, confirmed_decisions: decisions,
       confirmed_questions: dependents.guiding_questions, confirmed_journey: dependents.journey,
       confirmed_general_criteria: dependents.general_criteria, available_instructional_dates: availableDates,
-      task: `Diseña TODO el proyecto como mapa razonable de 2 a ${Math.min(15, availableDates.length)} actividades. Propón como máximo una actividad principal por fecha lectiva: no fuerces una actividad en cada día disponible, pues puede haber continuidad, talleres u otros espacios pedagógicos. Usa solo las fechas disponibles y competencias confirmadas. No repitas títulos ni inventes observaciones. La última actividad conduce al cierre. Mantén las decisiones docentes intactas y devuelve solo los campos del esquema.` } });
+      task: `Diseña TODO el proyecto como mapa razonable de 2 a ${Math.min(15, availableDates.length)} actividades. Cada actividad debe ser un blueprint reutilizable con propósito, competencia principal, posibles competencias secundarias, intención pedagógica, criterio observable, evidencia esperada y variaciones aceptables, foco de observación, materiales, mediación, continuidad y flexibilidad. Propón como máximo una actividad principal por fecha lectiva: no fuerces una actividad en cada día disponible. Usa solo fechas lectivas y competencias confirmadas. No inventes observaciones ni niveles. La última actividad conduce al cierre. Mantén las decisiones docentes intactas y devuelve solo los campos del esquema.` } });
   return { ...result, output: validateProjectMaster(result.output, decisions, dependents, availableDates) };
 }
 

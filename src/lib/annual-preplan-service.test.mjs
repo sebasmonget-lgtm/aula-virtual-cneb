@@ -22,7 +22,7 @@ test("el paquete curricular anual contiene solo el referente de la edad del aula
   assert.ok(!cards.some((card) => card.id === "PS_RELIGION" || card.id === "CAST_L2_ORAL"));
 });
 
-test("Astra recibe diagnóstico y currículo filtrado; sus doce filas quedan editables", async () => {
+test("Sol recibe diagnóstico y currículo filtrado; sus doce filas quedan editables", async () => {
   const context = { id: "aula", year: 2026, age: 5, calendar: calendar(), source_diagnostic_review_id: "grupo",
     source_priority_review_id: "prioridad", diagnostic_group: { strengths: "Se comunican jugando." },
     confirmed_priorities: [{ title: "Más diálogo" }], annual_planning_context: { additional_notes: "Usar el huerto" },
@@ -31,7 +31,7 @@ test("Astra recibe diagnóstico y currículo filtrado; sus doce filas quedan edi
   const generated = await generateAnnualPreplan({ context, curriculum: [{ id: "COM_ORAL", name: "Se comunica oralmente", ages: { "5": {} } }],
     createProvider: () => ({ generate: async (value) => { request = value; return { output: { proposals: slots().map(row) }, provider_metadata: { usage: { input_tokens: 100 } } }; } }),
     loadSkill: async () => "Skill de prueba" });
-  assert.equal(request.execution_plan.model, "gpt-6-astra");
+  assert.equal(request.execution_plan.model, "gpt-6-sol");
   assert.equal(request.execution_plan.reasoning_effort, "high");
   assert.equal(request.ai_context_bundle.confirmed_group.strengths, "Se comunican jugando.");
   assert.equal(request.ai_context_bundle.confirmed_priorities[0].title, "Más diálogo");

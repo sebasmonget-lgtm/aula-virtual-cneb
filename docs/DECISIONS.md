@@ -1,6 +1,18 @@
 # Decisiones de arquitectura
 
+## ADR 073 Project Master, Assessment Master y routing económico
+
+**Routing.** ADR 073 sustituye las asignaciones de modelo de ADR 072. El router central v3 usa Sol/high para el Plan Anual Master y Sol/low para redactar su contenido formal desde las decisiones confirmadas; Sol/medium para Project/Unit Master, realineación excepcional de criterio y Assessment Master; Luna/medium para Actividad, valoración individual, conclusión descriptiva e informe familiar. Actividad puede escalar una vez a Sol/low; valoración a Sol/medium; conclusión a Sol/low, solo por validación de calidad o revisión profunda explícita. Astra queda fuera del flujo normal.
+
+**Project Master.** El mapa confirmado contiene blueprints completos de actividad. La actividad bajo demanda recibe el Master, su fila, vecinas y posición. El criterio y la evidencia esperada se materializan por código al confirmar la actividad; la llamada independiente normal desaparece. Los proyectos históricos conservan sus contratos y criterios.
+
+**Assessment Master.** Cada aula y período puede tener un borrador y un marco vigente versionado. Sol define cómo interpretar las competencias trabajadas sin analizar niños. Las fuentes confirmadas se guardan como snapshot y fingerprint; un cambio en proyectos, actividades o criterios marca el marco para revisión. Luna aplica el marco a evidencias anonimizadas por niño y competencia. La docente conserva la decisión del nivel. RLS permite lectura propia y bloquea escrituras directas desde Data API; las mutaciones pasan por el backend.
+
+**Reversión.** Las migraciones son aditivas y no se editan migraciones aplicadas. La UI puede ocultarse y el router volver a la política anterior sin borrar masters, valoraciones ni criterios históricos.
+
 ## ADR 072 Routing GPT-6 semántico y fallback explícito
+
+**Estado.** Sustituido por ADR 073 para las asignaciones de modelo. Conserva el principio de router único, Responses API, Structured Outputs, `AIContextBundle`, `maxRetries: 0` y fallback explícito.
 
 **Decisión.** `ai-execution-router-v4.mjs` es la única fuente de selección de modelos y usa cinco tiers semánticos: Luna/low para trabajo estructurado breve, Luna/medium para generación rutinaria, Sol/low para redacción enfocada, Sol/medium para juicio pedagógico y Astra/high para planificación profunda. Plan Anual usa Astra/high; Project, Unit, criterio, assessment y conclusión usan Sol/medium; Actividad usa Luna/medium; informe familiar usa Sol/low. El diagnóstico principal, evidencia y modo Hoy permanecen en código. Sus asistencias opcionales tienen workflows propios. Taller, materiales y tareas `decision` se declaran no disponibles hasta tener implementación real.
 
@@ -292,11 +304,15 @@ La señal interna usa una cobertura mínima configurable de 50%, y requiere al m
 
 ## ADR 030 Activities v4 derivadas de experiencias confirmadas
 
+**Estado.** La creación y persistencia continúan vigentes; ADR 073 sustituye la ausencia de criterio por herencia desde el blueprint confirmado.
+
 **Decisión.** Las nuevas actividades docentes se crean únicamente como hijas de un `learning_experience` activo de tipo `project` o `unit`. El servidor vuelve a comprobar propiedad del aula, estado del parent, aplicabilidad y pertenencia de la competencia v4, fechas de experiencia y año escolar en generación, guardado, edición y confirmación. La salida `activity-v1` se persiste íntegra en `activities.details`; `generation_metadata` queda en servidor y se asocia mediante un identificador opaco de generación.
 
 **Consecuencia.** La docente no vuelve a transcribir el contexto del Project o Unit. Los borradores se pueden reabrir y editar; las actividades activas son de solo lectura. `sequence` y `adaptations` se mantienen como arreglos vacíos y no se crean filas en `activity_criteria` ni evidencias: esos conceptos se resolverán en `criterion_and_evidence`, sin mapear IDs v4 al catálogo curricular legacy.
 
 ## ADR 031 Criterios v4 preparados desde actividades confirmadas
+
+**Estado.** Flujo histórico. ADR 073 incorpora el criterio normal al Project Master y conserva generación separada solo como `criterion_realignment` excepcional.
 
 **Decisión.** `criterion_and_evidence` se genera solo para una Activity activa con competencia v4 confirmada. Su salida estricta se persiste en `activity_criteria.details`, con `competency_v4_id` y sin UUID artificial en `competency_id` ni `performance_id`. La docente confirma el criterio antes de que pueda usarse en un flujo posterior.
 
@@ -406,7 +422,7 @@ La señal interna usa una cobertura mínima configurable de 50%, y requiere al m
 
 ## ADR 048 Skill para el Plan Maestro anual
 
-**Estado.** La Skill y los contratos siguen vigentes; Sol/Terra fueron sustituidos por Astra/high mediante ADR 072.
+**Estado.** La Skill y los contratos siguen vigentes; la asignación actual es Sol/high según ADR 073.
 
 **Decisión.** Separar la metodología pedagógica del primer prompt anual en la Skill de repositorio `skills/crear-plan-anual/`. `SKILL.md` conserva el alcance y las prohibiciones esenciales; `references/` detalla la lectura de fuentes, los criterios CNEB y el contrato pedagógico. El servidor carga únicamente esos archivos fijos y los envía como instrucciones del primer llamado, Sol/high. La petición docente permanece como dato filtrado en el `AIContextBundle`. El esquema `annual-plan-v2`, la validación contra competencias aplicables, el calendario, la redacción con Terra/low y la plantilla DOCX siguen bajo control de la aplicación.
 

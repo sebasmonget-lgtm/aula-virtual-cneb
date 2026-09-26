@@ -195,6 +195,25 @@
       "max_semantic_units": 7,
       "max_source_claims": 3
     },
+    "criterion_realignment": {
+      "required_user_context": [
+        "age",
+        "competency_id",
+        "learning_situation"
+      ],
+      "preferred_user_context": [
+        "age_reference",
+        "student_or_group_context"
+      ],
+      "required_domains": [
+        "evidence_and_criteria",
+        "formative_assessment"
+      ],
+      "optional_domains": [],
+      "curriculum_policy": "Realinear solo cuando una modificación docente vuelve incompatible el criterio heredado; no inventar desempeños oficiales.",
+      "max_semantic_units": 7,
+      "max_source_claims": 3
+    },
     "evidence_capture": {
       "required_user_context": [
         "age",
@@ -219,6 +238,32 @@
         "No observado no es fracaso."
       ]
     },
+    "assessment_master": {
+      "required_user_context": [
+        "age",
+        "classroom_context",
+        "assessment_master_sources"
+      ],
+      "preferred_user_context": [
+        "calendar"
+      ],
+      "required_domains": [
+        "formative_assessment",
+        "evidence_and_criteria",
+        "curriculum_age_profile"
+      ],
+      "optional_domains": [
+        "diagnostic_assessment"
+      ],
+      "curriculum_policy": "Cargar únicamente competencias realmente trabajadas y referentes aplicables a la edad.",
+      "max_semantic_units": 12,
+      "max_source_claims": 5,
+      "output_guardrails": [
+        "No evaluar alumnos individuales.",
+        "No asignar niveles de logro.",
+        "La docente revisa y confirma el marco del período."
+      ]
+    },
     "assessment": {
       "required_user_context": [
         "age",
@@ -228,6 +273,7 @@
       ],
       "preferred_user_context": [
         "criteria_history",
+        "assessment_master",
         "prior_teacher_conclusions",
         "context_changes"
       ],
@@ -256,6 +302,7 @@
         "multiple_evidence_records"
       ],
       "preferred_user_context": [
+        "assessment_master",
         "prior_conclusion",
         "supports_used",
         "teacher_notes"

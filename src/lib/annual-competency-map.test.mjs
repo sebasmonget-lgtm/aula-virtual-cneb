@@ -20,8 +20,8 @@ test("mapa anual deriva proyectos, roles y bimestres de los mismos objetos", () 
   assert.equal(proposal.proposed_experiences[0].primary_competency_ids.length, 1);
 });
 
-test("una competencia del ciclo sin desempeño de edad sigue visible sin forzarla en proyectos", () => {
+test("una competencia del ciclo sin desempeño de edad sigue visible y advierte sin forzarla", () => {
   const map = buildAnnualCompetencyMap({ proposed_experiences: [] }, [{ id: "COM_ESCRITURA", name: "Escribe", has_age_performance: false }]);
   assert.equal(map[0].project_count, 0);
-  assert.deepEqual(map[0].warnings, []);
+  assert.deepEqual(map[0].warnings, ["No hay una oportunidad explícita prevista."]);
 });

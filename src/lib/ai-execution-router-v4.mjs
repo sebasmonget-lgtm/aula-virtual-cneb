@@ -1,11 +1,11 @@
 export const AI_ROUTING_POLICY = Object.freeze({
-  version: "2.0.0",
+  version: "3.0.0",
   tiers: Object.freeze({
     structured_light: Object.freeze({ execution: "generation", provider: "openai", model: "gpt-6-luna", reasoning_effort: "low" }),
     routine_generation: Object.freeze({ execution: "generation", provider: "openai", model: "gpt-6-luna", reasoning_effort: "medium" }),
     focused_writing: Object.freeze({ execution: "generation", provider: "openai", model: "gpt-6-sol", reasoning_effort: "low" }),
     judgment_generation: Object.freeze({ execution: "generation", provider: "openai", model: "gpt-6-sol", reasoning_effort: "medium" }),
-    deep_planning: Object.freeze({ execution: "generation", provider: "openai", model: "gpt-6-astra", reasoning_effort: "high" }),
+    global_planning: Object.freeze({ execution: "generation", provider: "openai", model: "gpt-6-sol", reasoning_effort: "high" }),
     transcription: Object.freeze({ execution: "transcription", provider: "openai", model: "gpt-4o-mini-transcribe", reasoning_effort: null }),
   }),
   workflows: Object.freeze({
@@ -13,16 +13,20 @@ export const AI_ROUTING_POLICY = Object.freeze({
     diagnostic_individual_assist: Object.freeze({ tier: "judgment_generation" }),
     diagnostic_group_synthesis: Object.freeze({ tier: "judgment_generation" }),
     diagnostic_priority_assist: Object.freeze({ tier: "judgment_generation" }),
-    annual_plan: Object.freeze({ tier: "deep_planning" }),
+    annual_plan: Object.freeze({ tier: "global_planning", task_tiers: Object.freeze({ document_development: "focused_writing" }) }),
     project: Object.freeze({ tier: "judgment_generation" }),
     unit: Object.freeze({ tier: "judgment_generation" }),
     workshop: Object.freeze({ execution: "unavailable", planned_tier: "routine_generation" }),
     activity: Object.freeze({ tier: "routine_generation", fallback_tier: "focused_writing" }),
-    criterion_and_evidence: Object.freeze({ tier: "judgment_generation" }),
+    criterion_and_evidence: Object.freeze({ execution: "unavailable", replacement_workflow: "criterion_realignment" }),
+    criterion_realignment: Object.freeze({ tier: "judgment_generation" }),
+    assessment_master: Object.freeze({ tier: "judgment_generation" }),
     evidence_capture: Object.freeze({ execution: "code" }),
-    assessment: Object.freeze({ tier: "judgment_generation" }),
-    descriptive_conclusion: Object.freeze({ tier: "judgment_generation" }),
-    family_report: Object.freeze({ tier: "focused_writing" }),
+    assessment: Object.freeze({ tier: "routine_generation", fallback_tier: "judgment_generation" }),
+    assessment_deep_review: Object.freeze({ tier: "judgment_generation" }),
+    descriptive_conclusion: Object.freeze({ tier: "routine_generation", fallback_tier: "focused_writing" }),
+    descriptive_conclusion_deep_review: Object.freeze({ tier: "focused_writing" }),
+    family_report: Object.freeze({ tier: "routine_generation" }),
     material_generation: Object.freeze({ execution: "unavailable", planned_tier: "structured_light", planned_fallback_tier: "focused_writing" }),
     today_mode: Object.freeze({ execution: "code" }),
     observation_rewrite: Object.freeze({ tier: "structured_light" }),
@@ -111,9 +115,11 @@ export function resolveAIExecutionPlan({ workflow, task = null, context = null }
       planned_tier: workflowPolicy.planned_tier ?? null,
       planned_fallback_tier: workflowPolicy.planned_fallback_tier ?? null,
       unavailable_reason: "workflow_not_implemented",
+      replacement_workflow: workflowPolicy.replacement_workflow ?? null,
     });
   }
-  return planForTier(workflow, workflowPolicy.tier, `Política v${policy.version} para ${workflow}.`, workflowPolicy.fallback_tier, policy);
+  const tier = task && workflowPolicy.task_tiers?.[task] ? workflowPolicy.task_tiers[task] : workflowPolicy.tier;
+  return planForTier(workflow, tier, `Política v${policy.version} para ${workflow}.`, workflowPolicy.fallback_tier, policy);
 }
 
 /** Resolves the one permitted fallback without changing workflow, context, or schema. */

@@ -8,6 +8,7 @@ const grade = new Set(["AD","A","B","C"]);
 
 export async function savePeriodEvaluationDraft(db, { studentId, competencyId, period, sourceRows, analysis = null, metadata = null,
   teacherAnalysis = "", conclusionText = "", provisionalLevel = null, teacherJustification = "",
+  assessmentMasterId = null, assessmentMasterSnapshot = null,
   expectedDraftRevision = undefined, expectedEvidenceFingerprint = null, loadCurrent = null }) {
   if (provisionalLevel && !grade.has(provisionalLevel)) throw new Error("El nivel provisional no es válido.");
   return versionTransaction(db,`period:${period.id}`,async(tx)=>{
@@ -35,17 +36,18 @@ export async function savePeriodEvaluationDraft(db, { studentId, competencyId, p
     let saved;
     if(existing) saved=(await tx.query(`update competency_assessments set evaluation_period_id=$12,source_evidence_ids=$1::jsonb,source_evidence_snapshot=$2::jsonb,
       details=$3::jsonb,generation_metadata=$4::jsonb,suggested_level=$5,suggestion_reason=$6,draft_teacher_analysis=$7,
-      working_conclusion_text=$8,provisional_level=$9,draft_teacher_justification=$10,achievement_level=null,updated_at=now()
-      where id=$11 and revision=$13 returning id,updated_at,revision`,[...fields,existing.id,period.id,existing.revision])).rows[0];
+      working_conclusion_text=$8,provisional_level=$9,draft_teacher_justification=$10,achievement_level=null,
+      assessment_master_id=coalesce($14,assessment_master_id),assessment_master_snapshot=coalesce($15::jsonb,assessment_master_snapshot),updated_at=now()
+      where id=$11 and revision=$13 returning id,updated_at,revision`,[...fields,existing.id,period.id,existing.revision,assessmentMasterId,assessmentMasterSnapshot?JSON.stringify(assessmentMasterSnapshot):null])).rows[0];
     else {
       const version=Number((await tx.query(`select coalesce(max(version),0)+1 as version from competency_assessments
         where student_id=$1 and competency_v4_id=$2 and period_start=$3::date and period_end=$4::date`,
       [studentId,competencyId,period.starts_on,period.ends_on])).rows[0].version);
       saved=(await tx.query(`insert into competency_assessments(id,student_id,competency_v4_id,evaluation_period_id,period_start,period_end,
         version,source_evidence_ids,source_evidence_snapshot,details,generation_metadata,status,suggested_level,suggestion_reason,
-        draft_teacher_analysis,working_conclusion_text,provisional_level,draft_teacher_justification)
-        values($1,$2,$3,$4,$5::date,$6::date,$7,$8::jsonb,$9::jsonb,$10::jsonb,$11::jsonb,'draft',$12,$13,$14,$15,$16,$17)
-        returning id,updated_at,revision`,[randomUUID(),studentId,competencyId,period.id,period.starts_on,period.ends_on,version,...fields])).rows[0];
+        draft_teacher_analysis,working_conclusion_text,provisional_level,draft_teacher_justification,assessment_master_id,assessment_master_snapshot)
+        values($1,$2,$3,$4,$5::date,$6::date,$7,$8::jsonb,$9::jsonb,$10::jsonb,$11::jsonb,'draft',$12,$13,$14,$15,$16,$17,$18,$19::jsonb)
+        returning id,updated_at,revision`,[randomUUID(),studentId,competencyId,period.id,period.starts_on,period.ends_on,version,...fields,assessmentMasterId,assessmentMasterSnapshot?JSON.stringify(assessmentMasterSnapshot):null])).rows[0];
     }
     if(!saved) throw new VersionConflictError();
     return {id:saved.id,updated_at:saved.updated_at,revision:Number(saved.revision),evidence_fingerprint:fingerprint};

@@ -1,5 +1,23 @@
 # Errores y soluciones
 
+## 2026-09-26 La evaluación real trataba edad y competencia confirmada como ausentes
+
+**Síntoma.** Project, Unit y Activity devolvían propuestas prudentes pero pendientes; la validación rechazaba sus rutas o la competencia aunque el input interno sí tenía edad e IDs.
+
+**Causa raíz.** `AIContextBundle` filtraba correctamente las tarjetas por edad, pero no declaraba de forma explícita `target_age` ni `confirmed_competency_ids`. Además, el fixture comparativo de Project/Unit usaba el alias incorrecto `competencyIds`.
+
+**Solución validada.** Se añadieron ambos campos explícitos al bloque curricular autorizado, se corrigió el fixture y las Skills indican conservar esas decisiones. Una repetición real completó Project, Unit, Activity e Informe Familiar sin fallback.
+
+**Prevención.** Las pruebas del contrato verifican ahora edad objetivo e IDs confirmados; los evals reales usan los mismos nombres de campo que producción.
+
+## 2026-09-26 Assessment Master parecía desactualizado al intentar confirmarlo
+
+**Síntoma.** Un marco recién generado y guardado pasaba la consulta de estado, pero la confirmación respondía que la planificación o los criterios habían cambiado.
+
+**Causa raíz.** La confirmación recalculaba la huella usando el ID del registro `assessment_masters` como si fuera el ID de `evaluation_periods`. La fuente quedaba estructuralmente distinta aunque ningún criterio hubiera cambiado.
+
+**Solución validada.** La confirmación construye explícitamente el período con `evaluation_period_id`, fechas y etiqueta antes de recalcular el snapshot. Una prueba crea dos docentes y aulas, genera y confirma el marco propio, bloquea accesos cruzados y comprueba que cambiar la revisión de un criterio sí marca el marco como desactualizado.
+
 ## 2026-09-26 El router declaraba rutas que no podían ejecutarse
 
 **Síntoma.** Una tarea `decision` podía devolver `provider: "typesafe"` aunque el factory no implementaba ese proveedor. El booleano `allow_escalation` tampoco indicaba qué modelo usar, por qué motivo ni cuántos intentos estaban permitidos.

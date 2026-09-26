@@ -56,7 +56,7 @@ test("el harness usa datos ficticios, muestra usage y nunca imprime secretos", a
     now: (() => { const values = [100, 345]; return () => values.shift(); })(),
   });
   assert.equal(receivedPlan.model, "gpt-6-luna");
-  assert.equal(receivedPlan.reasoning_effort, "low");
+  assert.equal(receivedPlan.reasoning_effort, "medium");
   assert.deepEqual(receivedInput, OPENAI_ACTIVITY_SMOKE_INPUT);
   assert.equal(result.elapsedMs, 245);
   assert.match(logs[0], /Input tokens: 101/);
