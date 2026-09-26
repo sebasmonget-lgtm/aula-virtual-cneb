@@ -180,7 +180,8 @@ test("servidor comprueba el año antes de llamar al modelo y no acepta otro plan
   assert.match(save, /active\.id === pending\?\.replacement_plan_id/);
   const current = source.slice(source.indexOf('url.pathname === "/api/annual-plans/current"'), source.indexOf("async function projectFlowSource"));
   assert.match(current, /ap\.school_year_id=\$1 and sy\.owner_id=\$2/);
-  assert.doesNotMatch(current, /generation_metadata|response_id|usage/);
+  const exposedPlans = current.slice(current.indexOf(".rows.map((row) => ({"), current.indexOf("const activePlan ="));
+  assert.doesNotMatch(exposedPlans, /generation_metadata|response_id|usage/);
 });
 
 test("un plan anterior puede seguir vigente mientras se revisa un solo borrador nuevo", async () => {

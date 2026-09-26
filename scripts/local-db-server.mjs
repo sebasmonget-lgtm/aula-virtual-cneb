@@ -49,6 +49,10 @@ import { createAssessmentMasterRouteHandler } from "./assessment-master-routes.m
 import { createDescriptiveConclusionRouteHandler } from "./descriptive-conclusion-routes.mjs";
 import { createFamilyReportRouteHandler } from "./family-report-routes.mjs";
 import { createPeriodEvaluationRouteHandler } from "./period-evaluation-routes.mjs";
+import { createWorkshopRouteHandler } from "./workshop-routes.mjs";
+import { generateWorkshopDay } from "../src/lib/workshop-master-service.mjs";
+import { availableSheets } from "../src/lib/workshop-sheet-catalog.mjs";
+import { activeWorkshopForProject, insertDailyPair, linkedWorkshopDraft, updateDailyPair } from "./daily-workshop-persistence.mjs";
 import { createPendingAIGenerationsStore } from "../src/lib/pending-ai-generations-store.mjs";
 import { createPilotClassroom, importStudentsForTeacher, parseStudentCsv } from "../src/lib/pilot-onboarding-service.mjs";
 import { createLocalPrivateEvidenceStorage } from "../src/lib/private-evidence-storage.mjs";
@@ -321,7 +325,7 @@ async function dashboard() {
   try{effectiveCalendarDay=(await loadEffectiveCalendar(db,{teacherId,classroomId,from:today,to:today})).days[0]??null;}catch{}
   const todayBlocks = await db.query(`
     select se.id, se.start_time::text, se.end_time::text, se.block_type, coalesce(se.title, a.title) as title,
-           se.activity_id, a.purpose, le.title as experience_title,
+           se.activity_id, a.purpose, a.details as activity_details, le.title as experience_title,
            coalesce(criteria.criteria, '[]'::jsonb) as criteria,
            coalesce(a.preparation->'materials', '[]'::jsonb) as materials, coalesce(a.preparation->'steps', '[]'::jsonb) as steps,
            coalesce(del.status, 'planned') as status, coalesce(del.current_override, false) as current_override,
@@ -340,6 +344,9 @@ async function dashboard() {
       ) criteria on true
       left join daily_execution_logs del on del.schedule_entry_id = se.id and del.execution_date = $2::date
      where cl.teacher_id = $1 and (se.scheduled_on = $2::date or (se.scheduled_on is null and se.weekday = extract(dow from $2::date)))
+       and not (se.scheduled_on is null and se.block_type='workshop' and exists (
+         select 1 from class_schedule_entries exact where exact.classroom_id=se.classroom_id
+           and exact.scheduled_on=$2::date and exact.block_type='workshop'))
      order by se.start_time, se.sort_order
   `, [teacherId, today]);
   const rawBlocks = todayBlocks.rows.map((block) => ({ ...block, materials: block.materials ?? [], steps: block.steps ?? [], criteria: normalizeCriteria(block.criteria ?? []) }));
@@ -601,6 +608,7 @@ const handleAssessmentRoute = createAssessmentRouteHandler({ db, annualPlanningC
 const handleDescriptiveConclusionRoute = createDescriptiveConclusionRouteHandler({ db, annualPlanningContext, readJson, send, pending: pendingAIGenerations, metadataForAudit: safeAnnualGenerationMetadata, refreshStudentContext: refreshStudentContextSnapshot });
 const handleFamilyReportRoute = createFamilyReportRouteHandler({ db, teacherId, annualPlanningContext, readJson, send, pending: pendingAIGenerations, metadataForAudit: safeAnnualGenerationMetadata });
 const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStorage, mediaAvailable: dbMode === "local", readJson, send, pending: pendingAIGenerations, metadataForAudit: safeAnnualGenerationMetadata, refreshStudentContext: refreshStudentContextSnapshot });
+const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson, send });
 {
   const origin = request.headers.origin;
   const url = new URL(request.url ?? "/", `http://127.0.0.1:${port}`);
@@ -1712,6 +1720,10 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
       const context = await annualPlanningContext(); const experience = context && await existingLearningExperience(url.searchParams.get("experienceId"), context.id);
       if (!experience) { send(response, 404, { error: "Experiencia confirmada no disponible." }, origin); return; }
       const activities = (await db.query(`select a.id,a.occurs_on,a.title,a.purpose,a.status,a.details,a.preparation,a.teacher_confirmed_at,a.version,a.revision,a.lineage_id,a.supersedes_activity_id,a.superseded_at,
+        (select jsonb_build_object('id',w.id,'status',w.status,'revision',w.revision,'details',w.details)
+          from activities w join learning_experiences wm on wm.id=w.experience_id and wm.type='workshop'
+          where w.linked_main_activity_id=a.id and w.status in ('draft','active','archived')
+          order by case w.status when 'draft' then 0 when 'active' then 1 else 2 end,w.version desc limit 1) as workshop,
         (select coalesce(jsonb_agg(jsonb_build_object('id',se.id,'scheduled_on',se.scheduled_on) order by se.scheduled_on),'[]'::jsonb)
           from class_schedule_entries se where se.activity_id=a.id and se.scheduled_on > (now() at time zone 'America/Lima')::date
           and not exists(select 1 from daily_execution_logs del where del.schedule_entry_id=se.id)) as future_schedules
@@ -1720,6 +1732,11 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
     if (request.method === "POST" && /^\/api\/activities\/[^/]+\/copy$/.test(url.pathname)) {
       const id=url.pathname.split("/")[3],context=await annualPlanningContext();
       if (!context) { send(response,404,{error:"Aula no disponible."},origin); return; }
+      if (await db.query(`select 1 from activities wa join learning_experiences wm on wm.id=wa.experience_id
+        where wa.linked_main_activity_id=$1 and wm.classroom_id=$2 and wm.type='workshop'
+        and wa.status in ('draft','active') limit 1`, [id, context.id]).then((result) => result.rows.length)) {
+        send(response, 422, { error: "Este día tiene un taller vinculado. Prepara una nueva planificación del día desde el proyecto." }, origin); return;
+      }
       try { const body=await readJson(request);send(response,200,await copyConfirmedActivity(db,teacherId,context.id,id,expectedRevision(body.expectedRevision)),origin); }
       catch(error) { send(response,httpStatusForError(error,422),isVersionConflict(error)?conflictPayload(error):{error:publicErrorMessage(error)},origin); }
       return;
@@ -1744,18 +1761,82 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
       if ((experience.details?.activity_route?.length && !routeItem) || (body.routeItemId && !routeItem)) { send(response, 422, { error: "Elige una actividad de la ruta confirmada." }, origin); return; }
       const allowed = await activityAllowedCompetencies(experience, context);
       if ((routeItem?.competency_id || body.competencyId) && !allowed.has(routeItem?.competency_id || body.competencyId)) { send(response, 422, { error: "La competencia no pertenece a la experiencia." }, origin); return; }
+      if (experience.details?.activity_route?.length && !await activeWorkshopForProject(db, experience.id)) {
+        send(response, 422, { error: "Prepara y confirma los talleres del proyecto antes de preparar el día." }, origin); return;
+      }
       try { if(body.usePlanningFeedback===true){const feedback=await loadPlanningFeedback(db,{teacherId,classroomId:context.id,periodId:body.planningFeedbackPeriodId});const summary=planningFeedbackText(feedback);if(summary)body.context=`${String(body.context||"").slice(0,500)}\n${summary}`.slice(0,1000);}
-        const generated = await generateTeacherActivity({ request: body, classroom: context, learningExperience: await activityParentContext(experience) }); const generationId = randomUUID(); await pendingAIGenerations.set(generationId, { workflow: "activity", classroom_id: context.id, learning_experience_id: experience.id, route_item_id: routeItem?.id ?? null, metadata: safeAnnualGenerationMetadata(generated.internalMetadata), createdAt: Date.now() }); send(response, 200, { proposal: generated.proposal, generation_id: generationId }, origin); } catch (error) { send(response, httpStatusForError(error, 422), { error: publicErrorMessage(error) || "No se pudo generar la actividad." }, origin); } return;
+        const generated = await generateTeacherActivity({ request: body, classroom: context, learningExperience: await activityParentContext(experience) });
+        const routeIndex = routeItem ? experience.details.activity_route.findIndex((item) => item.id === routeItem.id) + 1 : null;
+        const master = routeIndex ? (await db.query(`select * from learning_experiences where parent_project_id=$1 and type='workshop' and status='active'`, [experience.id])).rows[0] : null;
+        let workshop = null;
+        if (master) {
+          const item = master.details.items?.[routeIndex - 1];
+          const sheet = item?.sheet_id ? (await availableSheets({ age: context.age, competencyId: item.competency_id }))
+            .find((candidate) => candidate.id === item.sheet_id) : null;
+          if (item?.sheet_id && !sheet) throw new Error("La ficha elegida para este día ya no está disponible.");
+          workshop = await generateWorkshopDay({ classroom: context, project: experience, master,
+            itemIndex: routeIndex, mainActivity: generated.proposal, sheet });
+        }
+        const generationId = randomUUID();
+        await pendingAIGenerations.set(generationId, { workflow: "activity", classroom_id: context.id,
+          learning_experience_id: experience.id, route_item_id: routeItem?.id ?? null,
+          workshop_master_id: master?.id ?? null, workshop_item_index: routeIndex,
+          workshop_metadata: workshop?.metadata ?? null,
+          metadata: safeAnnualGenerationMetadata(generated.internalMetadata), createdAt: Date.now() });
+        send(response, 200, { proposal: generated.proposal, workshop_proposal: workshop?.proposal ?? null,
+          generation_id: generationId }, origin); } catch (error) { send(response, httpStatusForError(error, 422), { error: publicErrorMessage(error) || "No se pudo generar la actividad." }, origin); } return;
     }
     if (request.method === "POST" && url.pathname === "/api/activities") {
       const context = await annualPlanningContext(); const body = await readJson(request); const experience = context && await activeLearningExperience(body.experienceId, context.id); const pending = await pendingAIGenerations.get(body.generationId);
       if (context && !(await db.query(`select 1 from annual_plans where classroom_id=$1 and school_year_id=$2 and status='active' limit 1`, [context.id, context.school_year_id])).rows.length) { send(response, 422, { error: "Confirma primero el plan anual antes de guardar una actividad." }, origin); return; }
       if (!experience || !pending || pending.workflow !== "activity" || pending.classroom_id !== context.id || pending.learning_experience_id !== experience.id) { send(response, 422, { error: "La generación de actividad no corresponde a esta experiencia." }, origin); return; }
-      try { const routeItem = routeItemFor(experience, pending.route_item_id); if (experience.details?.activity_route?.length && !routeItem) throw new Error("La actividad de origen ya no está en la ruta confirmada."); const occursOn=routeItem?.planned_date??routeItem?.date??body.occursOn;validateActivityDate(occursOn, experience, context); const calendar=await loadEffectiveCalendar(db,{teacherId,classroomId:context.id,from:occursOn,to:occursOn});validateSelectedInstructionalDates(calendar.days,[occursOn],String(experience.starts_on).slice(0,10),String(experience.ends_on).slice(0,10));validateActivityV4(body.proposal, await activityAllowedCompetencies(experience, context)); const conflict=(await db.query(`select 1 from activities where experience_id=$1 and occurs_on=$2::date and status in ('draft','active') limit 1`,[experience.id,occursOn])).rows[0];if(conflict)throw new Error("Ya existe una actividad del proyecto para esa fecha.");const details = saveActivityDetails(body.proposal, routeItem); const id=randomUUID(); await db.query(`insert into activities (id,experience_id,occurs_on,planned_date,title,purpose,sequence,preparation,adaptations,status,details,generation_metadata) values ($1,$2,$3::date,$3::date,$4,$5,'[]'::jsonb,$6::jsonb,'[]'::jsonb,'draft',$7::jsonb,$8::jsonb)`, [id,experience.id,occursOn,details.title,details.purpose,JSON.stringify({materials: normalizeActivityMaterials(body.materials)}),JSON.stringify(details),JSON.stringify(pending.metadata)]); await pendingAIGenerations.delete(body.generationId); send(response,200,{id,status:"draft",revision:1,occurs_on:occursOn},origin); } catch(error) { send(response,httpStatusForError(error,422),{error:publicErrorMessage(error)},origin); } return;
+      try {
+        const routeItem = routeItemFor(experience, pending.route_item_id);
+        if (experience.details?.activity_route?.length && !routeItem) throw new Error("La actividad de origen ya no está en la ruta confirmada.");
+        const occursOn = routeItem?.planned_date ?? routeItem?.date ?? body.occursOn;
+        validateActivityDate(occursOn, experience, context);
+        const calendar = await loadEffectiveCalendar(db, { teacherId, classroomId: context.id, from: occursOn, to: occursOn });
+        validateSelectedInstructionalDates(calendar.days, [occursOn], String(experience.starts_on).slice(0,10), String(experience.ends_on).slice(0,10));
+        validateActivityV4(body.proposal, await activityAllowedCompetencies(experience, context));
+        const master = await activeWorkshopForProject(db, experience.id);
+        if (pending.workshop_master_id !== (master?.id ?? null)) throw new VersionConflictError("El maestro de talleres cambió. Prepara nuevamente el día.");
+        const details = saveActivityDetails(body.proposal, routeItem, null, Boolean(master));
+        const id = randomUUID();
+        const pair = await insertDailyPair(db, { experience, occursOn, mainId: id, mainDetails: details,
+          materials: normalizeActivityMaterials(body.materials), mainMetadata: pending.metadata,
+          master, workshopIndex: pending.workshop_item_index, workshopProposal: body.workshopProposal,
+          workshopMetadata: pending.workshop_metadata });
+        await pendingAIGenerations.delete(body.generationId);
+        send(response, 200, { id, workshopId: pair.workshopId, status: "draft", revision: 1,
+          workshopRevision: pair.workshopId ? 1 : null, occurs_on: occursOn }, origin); } catch(error) { send(response,httpStatusForError(error,422),{error:publicErrorMessage(error)},origin); } return;
     }
     if (request.method === "PUT" && url.pathname.startsWith("/api/activities/")) {
       const id=url.pathname.split("/")[3]; const context=await annualPlanningContext(); const body=await readJson(request); const current=context&&(await db.query(`select a.*,e.classroom_id,e.status as experience_status,e.details as experience_details,e.starts_on as experience_starts_on,e.ends_on as experience_ends_on from activities a join learning_experiences e on e.id=a.experience_id where a.id=$1 and e.classroom_id=$2 and a.status='draft'`,[id,context.id])).rows[0];
-      if(!current||!["active","archived"].includes(current.experience_status)){send(response,404,{error:"Borrador no disponible."},origin);return;} const pending=typeof body.generationId==="string"?await pendingAIGenerations.get(body.generationId):null; if(body.generationId&&(!pending||pending.workflow!=="activity"||pending.classroom_id!==context.id||pending.learning_experience_id!==current.experience_id)){send(response,422,{error:"La regeneración no corresponde a esta actividad."},origin);return;} try { const revision=expectedRevision(body.expectedRevision);const parent={ details: current.experience_details }; const routeItem=routeItemFor(parent,current.details?.route_item_id); if(current.experience_details?.activity_route?.length&&!routeItem)throw new Error("La actividad ya no corresponde a la ruta del proyecto.");const occursOn=routeItem?.planned_date??routeItem?.date??String(current.planned_date??current.occurs_on).slice(0,10);validateActivityDate(occursOn,{starts_on:current.experience_starts_on,ends_on:current.experience_ends_on},context);const calendar=await loadEffectiveCalendar(db,{teacherId,classroomId:context.id,from:occursOn,to:occursOn});validateSelectedInstructionalDates(calendar.days,[occursOn],String(current.experience_starts_on).slice(0,10),String(current.experience_ends_on).slice(0,10)); validateActivityV4(body.proposal,await activityAllowedCompetencies(parent,context)); const details=saveActivityDetails(body.proposal,routeItem,current.details); const values=[occursOn,details.title,details.purpose,JSON.stringify(details),JSON.stringify({materials:normalizeActivityMaterials(body.materials)})];const saved=await versionTransaction(db,`activity:${current.lineage_id}`,async(tx)=>{const result=pending?await tx.query(`update activities set occurs_on=$1::date,planned_date=coalesce(planned_date,$1::date),title=$2,purpose=$3,details=$4::jsonb,preparation=$5::jsonb,generation_metadata=$6::jsonb,updated_at=now() where id=$7 and status='draft' and revision=$8 returning revision`,[...values,JSON.stringify(pending.metadata),id,revision]):await tx.query(`update activities set occurs_on=$1::date,planned_date=coalesce(planned_date,$1::date),title=$2,purpose=$3,details=$4::jsonb,preparation=$5::jsonb,updated_at=now() where id=$6 and status='draft' and revision=$7 returning revision`,[...values,id,revision]);if(!result.rows[0]){const now=(await tx.query(`select revision from activities where id=$1`,[id])).rows[0];throw new VersionConflictError(undefined,now?.revision??null);}return result.rows[0];});if(pending)await pendingAIGenerations.delete(body.generationId);send(response,200,{id,status:"draft",revision:Number(saved.revision),occurs_on:occursOn},origin);}catch(error){send(response,httpStatusForError(error,422),isVersionConflict(error)?conflictPayload(error):{error:publicErrorMessage(error)},origin);}return;
+      if(!current||!["active","archived"].includes(current.experience_status)){send(response,404,{error:"Borrador no disponible."},origin);return;} const pending=typeof body.generationId==="string"?await pendingAIGenerations.get(body.generationId):null; if(body.generationId&&(!pending||pending.workflow!=="activity"||pending.classroom_id!==context.id||pending.learning_experience_id!==current.experience_id)){send(response,422,{error:"La regeneración no corresponde a esta actividad."},origin);return;} try {
+        const revision = expectedRevision(body.expectedRevision);
+        const parent = { details: current.experience_details };
+        const routeItem = routeItemFor(parent, current.details?.route_item_id);
+        if (current.experience_details?.activity_route?.length && !routeItem) throw new Error("La actividad ya no corresponde a la ruta del proyecto.");
+        const occursOn = routeItem?.planned_date ?? routeItem?.date ?? String(current.planned_date ?? current.occurs_on).slice(0,10);
+        validateActivityDate(occursOn, { starts_on: current.experience_starts_on, ends_on: current.experience_ends_on }, context);
+        const calendar = await loadEffectiveCalendar(db, { teacherId, classroomId: context.id, from: occursOn, to: occursOn });
+        validateSelectedInstructionalDates(calendar.days, [occursOn], String(current.experience_starts_on).slice(0,10), String(current.experience_ends_on).slice(0,10));
+        validateActivityV4(body.proposal, await activityAllowedCompetencies(parent, context));
+        const workshopDraft = await linkedWorkshopDraft(db, id, context.id);
+        if (workshopDraft && pending && pending.workshop_master_id !== workshopDraft.experience_id)
+          throw new VersionConflictError("El taller generado corresponde a otra versión del maestro.");
+        const details = saveActivityDetails(body.proposal, routeItem, current.details, Boolean(workshopDraft));
+        const saved = await updateDailyPair(db, { mainId: id, lineageId: current.lineage_id, revision,
+          mainValues: [occursOn, details.title, details.purpose, JSON.stringify(details),
+            JSON.stringify({ materials: normalizeActivityMaterials(body.materials) })],
+          mainMetadata: pending?.metadata, workshopDraft,
+          workshopProposal: body.workshopProposal ?? workshopDraft?.details,
+          workshopRevision: workshopDraft ? expectedRevision(body.workshopRevision) : null,
+          workshopMetadata: pending?.workshop_metadata });
+        if (pending) await pendingAIGenerations.delete(body.generationId);
+        send(response, 200, { id, status: "draft", revision: saved.revision,
+          workshopRevision: saved.workshopRevision, occurs_on: occursOn }, origin);
+      }catch(error){send(response,httpStatusForError(error,422),isVersionConflict(error)?conflictPayload(error):{error:publicErrorMessage(error)},origin);}return;
     }
     if (request.method === "POST" && url.pathname.startsWith("/api/activities/") && url.pathname.endsWith("/confirm")) {
       const id = url.pathname.split("/")[3];
@@ -1773,7 +1854,13 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
         if (current.experience_details?.activity_route?.length && !routeItem) throw new Error("La actividad ya no pertenece a la ruta confirmada.");
         const criterion = inheritedActivityCriterion(current.details, routeItem);
         const body=await readJson(request);
-        const confirmed = await confirmActivityWithCriterion(db, id, criterion, randomUUID(), expectedRevision(body.expectedRevision));
+        const workshopDraft = await linkedWorkshopDraft(db, id, context.id);
+        if (current.details?.document_template_version === "activity-with-workshop-v1" && !workshopDraft)
+          throw new Error("El taller del día debe revisarse antes de confirmar la actividad.");
+        const workshop = workshopDraft ? { id: workshopDraft.id,
+          competencyId: workshopDraft.details.competency_id,
+          expectedRevision: expectedRevision(body.workshopRevision) } : null;
+        const confirmed = await confirmActivityWithCriterion(db, id, criterion, randomUUID(), expectedRevision(body.expectedRevision), workshop);
         send(response, 200, confirmed, origin);
       } catch (error) {
         send(response, httpStatusForError(error, 422), isVersionConflict(error)?conflictPayload(error):{ error: publicErrorMessage(error) }, origin);
@@ -1912,6 +1999,7 @@ const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, tea
       send(response, 201, { workspace: await diagnosticWorkspace() }, origin);
       return;
     }
+    if (await handleWorkshopRoute({ request, url, response, origin })) return;
     if (await handlePeriodEvaluationRoute({ request, url, response, origin })) return;
     if (await handleAssessmentMasterRoute({ request, url, response, origin })) return;
     if (await handleAssessmentRoute({ request, url, response, origin })) return;

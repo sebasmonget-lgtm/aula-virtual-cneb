@@ -154,14 +154,44 @@ async function insertLogo(archive, xml, logo) {
     });
 }
 
+async function appendPrintableImages(archive, xml, images) {
+  if (!images.length) return xml;
+  const relsFile = archive.file("word/_rels/document.xml.rels");
+  const typesFile = archive.file("[Content_Types].xml");
+  if (!relsFile || !typesFile) throw new Error("La plantilla no admite la ficha imprimible.");
+  let rels = await relsFile.async("string");
+  let types = await typesFile.async("string");
+  let nextRel = Math.max(0, ...[...rels.matchAll(/Id="rId(\d+)"/g)].map((match) => Number(match[1]))) + 1;
+  const paragraphs = [];
+  for (const [index, bytes] of images.entries()) {
+    const metadata = await sharp(bytes).metadata();
+    if (metadata.format !== "png" || !metadata.width || !metadata.height)
+      throw new Error("La ficha no tiene una página de imagen válida.");
+    const scale = Math.min(6.45 * 914400 / metadata.width, 8.8 * 914400 / metadata.height);
+    const cx = Math.round(metadata.width * scale), cy = Math.round(metadata.height * scale);
+    const relation = `rId${nextRel++}`, filename = `ayni-sheet-${index + 1}.png`;
+    archive.file(`word/media/${filename}`, bytes);
+    rels = rels.replace("</Relationships>", `<Relationship Id="${relation}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/${filename}"/></Relationships>`);
+    const pictureId = 8000 + index;
+    paragraphs.push(`<w:p><w:pPr><w:pageBreakBefore/></w:pPr><w:r><w:drawing><wp:inline xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/><wp:docPr id="${pictureId}" name="Ficha imprimible ${index + 1}"/><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="${pictureId}" name="${filename}"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="${relation}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>`);
+  }
+  if (!types.includes('Extension="png"')) types = types.replace("</Types>", '<Default Extension="png" ContentType="image/png"/></Types>');
+  archive.file("word/_rels/document.xml.rels", rels);
+  archive.file("[Content_Types].xml", types);
+  const insertAt = xml.lastIndexOf("<w:sectPr");
+  if (insertAt < 0) throw new Error("La plantilla no tiene cierre de sección para anexar la ficha.");
+  return xml.slice(0, insertAt) + paragraphs.join("") + xml.slice(insertAt);
+}
+
 /** The DOCX is a view of validated application data; this function makes no AI call. */
-export async function renderUnifiedWord({ templateUrl, values, logo = null, transform = (xml) => xml, transformPart = (_part, xml) => xml }) {
+export async function renderUnifiedWord({ templateUrl, values, logo = null, appendixImages = [], transform = (xml) => xml, transformPart = (_part, xml) => xml }) {
   const archive = await JSZip.loadAsync(await readFile(templateUrl));
   let xml = await archive.file("word/document.xml")?.async("string");
   if (!xml) throw new Error("La plantilla no tiene contenido Word.");
   xml = transform(xml);
   xml = await insertLogo(archive, xml, logo);
   xml = fillWordXml(xml, { ...values, LOGO_COLEGIO: "" });
+  xml = await appendPrintableImages(archive, xml, appendixImages);
   archive.file("word/document.xml", xml);
   for (const part of Object.keys(archive.files).filter((name) => /^word\/(header|footer)\d+\.xml$/.test(name))) {
     archive.file(part, fillWordXml(transformPart(part, await archive.file(part).async("string")), { ...values, LOGO_COLEGIO: "" }));

@@ -65,12 +65,14 @@ test("las ayudas diagnósticas opcionales tienen workflows explícitos", () => {
   }
 });
 
-test("decisiones, workshop y materiales quedan explícitamente no disponibles", () => {
+test("decisiones y materiales no disponibles; maestros y días de taller usan routing vigente", () => {
   const decision = resolveAIExecutionPlan({ workflow: "activity", task: "option_ranking" });
   assert.deepEqual([decision.execution, decision.provider, decision.unavailable_reason],
     ["unavailable", null, "decision_provider_not_implemented"]);
   const workshop = resolveAIExecutionPlan({ workflow: "workshop" });
-  assert.deepEqual([workshop.execution, workshop.planned_tier], ["unavailable", "routine_generation"]);
+  const master = resolveAIExecutionPlan({ workflow: "workshop_master" });
+  assert.deepEqual([master.model, master.reasoning_effort], ["gpt-6-sol", "medium"]);
+  assert.deepEqual([workshop.model, workshop.reasoning_effort], ["gpt-6-luna", "medium"]);
   const material = resolveAIExecutionPlan({ workflow: "material_generation" });
   assert.deepEqual([material.execution, material.planned_tier, material.planned_fallback_tier],
     ["unavailable", "structured_light", "focused_writing"]);

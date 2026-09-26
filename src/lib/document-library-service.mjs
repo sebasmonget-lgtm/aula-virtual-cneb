@@ -163,6 +163,10 @@ export async function loadSavedDocument(db, teacherId, kind, id) {
       join class_schedule_entries se on se.id=del.schedule_entry_id
       where se.activity_id=$1 and se.classroom_id=$2 and del.teacher_closure_note is not null
       order by del.execution_date desc limit 1`, [row.id, row.classroom_id])).rows[0];
+    const workshop = (await db.query(`select wa.id,wa.status,wa.details from activities wa
+      join learning_experiences wm on wm.id=wa.experience_id and wm.type='workshop'
+      where wa.linked_main_activity_id=$1 and wm.classroom_id=$2 and wa.status in ('active','archived')
+      order by case wa.status when 'active' then 0 else 1 end,wa.version desc limit 1`, [row.id, row.classroom_id])).rows[0];
     return { id: row.id, kind, title: row.title, status: row.status,
       school_year: Number(row.year), classroom: row.section, institution_name: row.institution_name,
       age: Number(row.age_years), teacher_name: row.teacher_name, ugel: row.ugel, district: row.district,
@@ -175,6 +179,7 @@ export async function loadSavedDocument(db, teacherId, kind, id) {
         student_name: item.student_name, observation_text: item.observation_text, observation_status: item.observation_status,
         type: item.type, observed_at: timestamp(item.observed_at), has_attachment: item.has_attachment })),
       teacher_closure_note: closure?.teacher_closure_note ?? null,
+      workshop: workshop ? { id: workshop.id, content: workshop.details } : null,
       content: { ...selectContent(row.details, ["meaningful_situation", "teacher_preparation", "child_actions", "mediation", "evidence_opportunities", "closure_or_continuity", "competency_status", "competency_id", "route_item_id", "evaluation_criterion", "expected_evidence", "document_template_version", "teacher_overrides"]), purpose: row.details?.purpose || row.purpose, materials: row.preparation?.materials ?? [] } };
   }
   const row = (await db.query(`select r.id,r.status,r.version,r.details,r.period_start,r.period_end,r.evaluation_period_id,r.teacher_confirmed_at,

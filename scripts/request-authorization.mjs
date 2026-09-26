@@ -32,7 +32,8 @@ const ownerSql = {
 const selectorFields = {
   classroomId: "classroom", studentId: "student", schoolYearId: "year", yearId: "year",
   periodId: "period", evaluationPeriodId: "period", annualPlanId: "plan", planId: "plan",
-  experienceId: "experience", activityId: "activity", criterionId: "criterion",
+  experienceId: "experience", projectId: "experience", masterId: "experience",
+  activityId: "activity", linkedMainActivityId: "activity", criterionId: "criterion",
   evidenceId: "evidence", assessmentId: "assessment", conclusionId: "conclusion",
   reportId: "report", scheduleEntryId: "schedule",
 };

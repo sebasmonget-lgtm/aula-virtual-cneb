@@ -34,7 +34,7 @@ const evidenceRows = Object.freeze([
   { observed_at: "2026-05-12T10:00:00Z", activity_title: "Volvemos a observar", criterion_text: "Explica un cambio que observa.", observation_status: "observed_without_judgment", observation_text: "Señaló una hoja nueva y contó cómo la encontró." },
 ]);
 
-const assessment = Object.freeze({ details: { competency_id: "CYT_INDAGA", information_status: "sufficient",
+const assessment = Object.freeze({ achievement_level: "A", details: { competency_id: "CYT_INDAGA", information_status: "sufficient",
   evidence_overview: "En dos situaciones observó cambios en brotes y comunicó lo encontrado.",
   observable_patterns: ["Compara cambios visibles."], strengths_and_advances: ["Explica lo que observa."],
   support_needs: ["Necesita preguntas abiertas para ampliar algunas explicaciones."], next_opportunities: ["Volver a observar en otra fecha."],

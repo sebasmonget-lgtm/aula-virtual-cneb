@@ -34,8 +34,8 @@ export function routeItemFor(experience, routeItemId) {
   return experience?.details?.activity_route?.find((item) => item.id === routeItemId) ?? null;
 }
 
-export function saveActivityDetails(proposal, routeItem = null, previous = null) {
-  if (!routeItem && previous?.document_template_version !== "activity-unified-v1") return { ...proposal };
+export function saveActivityDetails(proposal, routeItem = null, previous = null, withWorkshop = false) {
+  if (!routeItem && !["activity-unified-v1", "activity-with-workshop-v1"].includes(previous?.document_template_version)) return { ...proposal };
   const overrides = [...(previous?.teacher_overrides ?? [])];
   if (routeItem) {
     for (const [field, inherited] of [["purpose", routeItem.specific_purpose], ["competency_id", routeItem.competency_id], ["evaluation_criterion", routeItem.evaluation_criterion], ["expected_evidence", routeItem.expected_evidence]]) {
@@ -44,7 +44,7 @@ export function saveActivityDetails(proposal, routeItem = null, previous = null)
     }
   }
   return { ...proposal, route_item_id: routeItem?.id ?? previous?.route_item_id ?? null,
-    document_template_version: "activity-unified-v1", teacher_overrides: overrides };
+    document_template_version: withWorkshop ? "activity-with-workshop-v1" : (previous?.document_template_version ?? "activity-unified-v1"), teacher_overrides: overrides };
 }
 
 export function inheritedActivityCriterion(activity, routeItem) {

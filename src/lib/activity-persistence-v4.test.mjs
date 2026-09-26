@@ -35,15 +35,16 @@ test("D-H: Project y Unit llegan como contexto mínimo, con continuidad y sin da
 
 test("I: activity conserva límites de parent y persistencia", async () => {
   const server = await readFile(new URL("../../scripts/local-db-server.mjs", import.meta.url), "utf8");
+  const paired = await readFile(new URL("../../scripts/daily-workshop-persistence.mjs", import.meta.url), "utf8");
   assert.match(server, /activeLearningExperience\(body\.experienceId, context\.id\)/);
   assert.match(server, /activityAllowedCompetencies/);
   assert.match(server, /pending\.learning_experience_id !== experience\.id/);
-  assert.match(server, /sequence,preparation,adaptations,status,details,generation_metadata/);
-  assert.match(server, /'\[\]'::jsonb/);
+  assert.match(paired, /sequence,preparation,adaptations,status,details,generation_metadata/);
+  assert.match(paired, /'\[\]'::jsonb/);
   const activitySection = server.slice(server.indexOf('pathname === "/api/activities"'), server.indexOf('pathname === "/api/activity-criteria"'));
   assert.doesNotMatch(activitySection, /insert into evidences/);
   assert.match(activitySection, /inheritedActivityCriterion\(current\.details,\s*routeItem\)/);
-  assert.match(activitySection, /confirmActivityWithCriterion\(db,\s*id,\s*criterion,\s*randomUUID\(\),\s*expectedRevision\(body\.expectedRevision\)\)/);
+  assert.match(activitySection, /confirmActivityWithCriterion\(db,\s*id,\s*criterion,\s*randomUUID\(\),\s*expectedRevision\(body\.expectedRevision\),\s*workshop\)/);
 });
 
 test("A-C: OPTIONS permite PUT y el parent público no filtra metadata técnica", async () => {
@@ -59,10 +60,11 @@ test("A-C: OPTIONS permite PUT y el parent público no filtra metadata técnica"
 
 test("G-N: edición conserva metadata, regeneración validada la reemplaza y materiales se normalizan", async () => {
   const server = await readFile(new URL("../../scripts/local-db-server.mjs", import.meta.url), "utf8");
+  const paired = await readFile(new URL("../../scripts/daily-workshop-persistence.mjs", import.meta.url), "utf8");
   assert.match(server, /metadata: safeAnnualGenerationMetadata\(generated\.internalMetadata\)/);
   assert.match(server, /generation_metadata\) values/);
   assert.match(server, /pending\.learning_experience_id!==current\.experience_id/);
-  assert.match(server, /generation_metadata=\$6::jsonb[\s\S]*status='draft' and revision=\$8/);
+  assert.match(paired, /generation_metadata=coalesce\(\$6::jsonb,generation_metadata\)[\s\S]*status='draft' and revision=\$8/);
   assert.match(server, /pendingAIGenerations\.delete\(body\.generationId\)/);
   assert.match(server, /normalizeActivityMaterials\(body\.materials\)/);
   assert.match(server, /a\.status='draft'/);

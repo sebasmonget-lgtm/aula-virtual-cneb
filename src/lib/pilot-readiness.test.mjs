@@ -111,6 +111,9 @@ test("Supabase migrations cover reference RLS and private evidence bucket; trans
   const allSql = (await Promise.all((await readdir(migrations)).filter((name) => name.endsWith(".sql")).map((name) => readFile(new URL(name, migrations), "utf8")))).join("\n");
   const created = [...allSql.matchAll(/create table(?: if not exists)? public\.([a-z_]+)/gi)].map((match) => match[1]);
   const protectedTables = new Set([...allSql.matchAll(/alter table public\.([a-z_]+) enable row level security/gi)].map((match) => match[1]));
+  const periodSecurity = await readFile(new URL("../../supabase/migrations/202609260006_period_assessment_closure.sql", import.meta.url), "utf8");
+  const dynamicBlock = periodSecurity.match(/foreach table_name in array array\[([^\]]+)\] loop\s+execute format\('alter table public\.%I enable row level security'/i);
+  for (const name of dynamicBlock?.[1].match(/'([a-z_]+)'/g)?.map((value) => value.slice(1, -1)) ?? []) protectedTables.add(name);
   assert.deepEqual(created.filter((name) => !protectedTables.has(name)), []);
   assert.match(security, /'student-evidence', 'student-evidence', false/);
   assert.match(security, /public\.owns_student\(s\.id\)/);

@@ -21,7 +21,7 @@ async function fixture() {
     create table diagnostic_group_reviews(id uuid primary key,classroom_id uuid,status text,version int,details jsonb,updated_at timestamptz,teacher_confirmed_at timestamptz,source_snapshot jsonb);
     create table learning_experiences(id uuid primary key,classroom_id uuid,type text,title text,purpose text,status text,details jsonb,starts_on date,ends_on date,origin text,planning_reason text,source_proposal_index int);
     create table experience_formal_contents(id uuid primary key,experience_id uuid unique,content jsonb);
-    create table activities(id uuid primary key,experience_id uuid,title text,purpose text,status text,details jsonb,preparation jsonb,occurs_on date);
+    create table activities(id uuid primary key,experience_id uuid,title text,purpose text,status text,details jsonb,preparation jsonb,occurs_on date,linked_main_activity_id uuid,version int default 1);
     create table activity_criteria(id uuid primary key,activity_id uuid,competency_v4_id text,criterion_text text,details jsonb,status text,teacher_confirmed_at timestamptz);
     create table evidences(id uuid primary key,student_id uuid,activity_id uuid,criterion_id uuid,observation_text text,observation_status text,type text,observed_at timestamptz,media_path text,created_by uuid);
     create table class_schedule_entries(id uuid primary key,activity_id uuid,classroom_id uuid);

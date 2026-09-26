@@ -187,7 +187,7 @@ export async function renderSavedDocumentWord(document, competencyCards = [], { 
     throw new Error("Prepara primero el Word desde el proyecto confirmado.");
   if (document.kind === "experience" && ["experience-unified-v1", "experience-unified-v2"].includes(document.content?.document_template_version))
     return renderLearningExperienceUnifiedWord(document, competencyCards, { logo });
-  if (document.kind === "activity" && document.content?.document_template_version === "activity-unified-v1")
+  if (document.kind === "activity" && ["activity-unified-v1", "activity-with-workshop-v1"].includes(document.content?.document_template_version))
     return renderActivityUnifiedWord(document, competencyCards, { logo });
   const names = new Map(competencyCards.map((card) => [card.id, card.name]));
   const detail = document.kind === "annual_plan" ? contentForAnnual(document, names) :
