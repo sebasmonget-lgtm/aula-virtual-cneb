@@ -58,6 +58,7 @@ if (!selected) {
   selected = first;
   teacherFixtureEdit = true;
 }
+selected.day_decision = "accepted"; // Fixture: the teacher accepts this optional workshop.
 const master = { id: "33333333-3333-4333-8333-333333333333", parent_project_id: project.id,
   status: "active", version: 1, details: { schema: "workshop-master-v1", items: workshopItems } };
 const route = project.details.activity_route[selected.index - 1];

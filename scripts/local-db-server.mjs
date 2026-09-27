@@ -1832,10 +1832,9 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         const calendar = await loadEffectiveCalendar(db, { teacherId, classroomId: context.id, from: occursOn, to: occursOn });
         validateSelectedInstructionalDates(calendar.days, [occursOn], String(experience.starts_on).slice(0,10), String(experience.ends_on).slice(0,10));
         validateActivityV4(body.proposal, await activityAllowedCompetencies(experience, context));
-        const master = pending.workshop_master_id ? await activeWorkshopForProject(db, experience.id) : null;
-        if (pending.workshop_master_id && pending.workshop_master_id !== (master?.id ?? null)) throw new VersionConflictError("El maestro de talleres cambió. Prepara nuevamente el día.");
-        if (Boolean(body.workshopProposal) !== Boolean(pending.workshop_master_id))
-          throw new Error("El taller guardado no coincide con la propuesta preparada.");
+        const master = body.workshopProposal ? await activeWorkshopForProject(db, experience.id) : null;
+        if (body.workshopProposal && pending.workshop_master_id !== (master?.id ?? null))
+          throw new VersionConflictError("El maestro de talleres cambió. Puedes guardar solo la actividad o preparar de nuevo el día.");
         const details = saveActivityDetails(body.proposal, routeItem, null, Boolean(body.workshopProposal));
         const id = randomUUID();
         const pair = await insertDailyPair(db, { experience, occursOn, mainId: id, mainDetails: details,
