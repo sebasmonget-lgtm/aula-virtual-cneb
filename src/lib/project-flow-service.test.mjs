@@ -7,16 +7,16 @@ import { generateProjectPreview, generateProjectDependents, generateProjectMaste
 
 const calendar = { blocks: nationalCalendarBlocks2026(), exceptions: nationalSchoolHolidays2026() };
 const decisions = { context_summary: "El grupo pregunta por plantas cercanas.", purpose: "Investigar cómo cambian las plantas.",
-  competency_ids: ["SCI_INQUIRY"], additional_context: "" };
+  competency_ids: ["CYT_INDAGA"], additional_context: "" };
 const dependents = { guiding_questions: ["¿Qué vemos?", "¿Qué cambió?"], journey: [
   { title: "Preguntamos", description: "Formulamos preguntas." },
   { title: "Observamos", description: "Miramos y comparamos." }],
-  general_criteria: [{ competency_id: "SCI_INQUIRY", criterion: "Observa y compara cambios.",
+  general_criteria: [{ competency_id: "CYT_INDAGA", criterion: "Observa y compara cambios.",
     expected_evidence: ["Explicaciones", "Dibujos"] }] };
 const master = { foundation: "El grupo pregunta por cambios visibles.", closing_description: "Compartir lo observado.",
   closing_rationale: "Permite conversar sobre las preguntas iniciales.", resources: ["Plantas del patio"],
   activities: [{ date: "2026-04-13", title: "Miramos las plantas", purpose: "Observar cambios.",
-    competency_ids: ["SCI_INQUIRY"], criterion_competency_id: "SCI_INQUIRY",
+    competency_ids: ["CYT_INDAGA"], criterion_competency_id: "CYT_INDAGA",
     pedagogical_intention: "Abrir una indagación desde lo visible.", criterion_text: "Observa y compara cambios.",
     expected_evidence: "Explicaciones y dibujos sobre cambios.", acceptable_evidence_variations: ["Explicación oral", "Dibujo comentado"],
     observation_focus: ["Cómo compara lo observado"], materials: ["Plantas del patio"],
@@ -24,7 +24,7 @@ const master = { foundation: "El grupo pregunta por cambios visibles.", closing_
     continuity_to_next: "Las primeras observaciones orientan una comparación.", flexibility_notes: "Ajustar según las preguntas que aparezcan.",
     role_in_project: "Abrir la investigación.", expected_progression: "Recoger primeras preguntas.", estimated_minutes: 45 },
     { date: "2026-04-14", title: "Compartimos lo que vimos", purpose: "Comunicar hallazgos.",
-      competency_ids: ["SCI_INQUIRY"], criterion_competency_id: "SCI_INQUIRY",
+      competency_ids: ["CYT_INDAGA"], criterion_competency_id: "CYT_INDAGA",
       pedagogical_intention: "Comunicar y contrastar hallazgos.", criterion_text: "Explica cambios que observó.",
       expected_evidence: "Explicación apoyada en un registro.", acceptable_evidence_variations: ["Relato oral", "Dibujo comentado"],
       observation_focus: ["Cómo relaciona su registro con lo que explica"], materials: ["Registros del grupo"],
@@ -54,7 +54,7 @@ test("Sol prepara primero contexto y propósitos, después solo dependencias del
       assert.equal(request.ai_context_bundle.confirmed_decisions.purpose, decisions.purpose);
       assert.equal(request.execution_plan.model, "gpt-6-sol");
     }), loadSkill: async () => "Skill" });
-  assert.equal(next.output.general_criteria[0].competency_id, "SCI_INQUIRY");
+  assert.equal(next.output.general_criteria[0].competency_id, "CYT_INDAGA");
 });
 
 test("Sol devuelve mapa con fechas y competencias válidas; el servidor asigna IDs", async () => {
@@ -68,7 +68,7 @@ test("Sol devuelve mapa con fechas y competencias válidas; el servidor asigna I
   assert.equal(generated.output.activity_route[0].date, "2026-04-13");
   assert.ok(generated.output.activity_route[0].id);
   assert.equal(generated.output.activity_route[0].position,1);
-  assert.equal(generated.output.activity_route[0].primary_competency_id,"SCI_INQUIRY");
+  assert.equal(generated.output.activity_route[0].primary_competency_id,"CYT_INDAGA");
   assert.deepEqual(generated.output.activity_route[0].possible_secondary_competency_ids,[]);
   assert.equal(generated.output.activity_route[0].evaluation_criterion, "Observa y compara cambios.");
   assert.deepEqual(generated.output.activity_route[0].acceptable_evidence_variations,["Explicación oral","Dibujo comentado"]);
@@ -78,8 +78,8 @@ test("Sol devuelve mapa con fechas y competencias válidas; el servidor asigna I
 
 test("una regeneración localizada conserva el título editado por la docente en la misma fecha", () => {
   const old = [{ id: "11111111-1111-4111-8111-111111111111", date: "2026-04-13", title: "Título docente",
-    specific_purpose: "Observar", competency_ids: ["SCI_INQUIRY"], competency_id: "SCI_INQUIRY",
-    criterion_competency_id: "SCI_INQUIRY", role_in_project: "Inicio", expected_progression: "Preguntas" }];
+    specific_purpose: "Observar", competency_ids: ["CYT_INDAGA"], competency_id: "CYT_INDAGA",
+    criterion_competency_id: "CYT_INDAGA", role_in_project: "Inicio", expected_progression: "Preguntas" }];
   const generated = [{ ...old[0], id: "22222222-2222-4222-8222-222222222222", title: "Título nuevo" }];
   const merged = preserveTeacherMapEdits(generated, old, [{ route_item_id: old[0].id, field: "title" }], decisions);
   assert.equal(merged[0].title, "Título docente");

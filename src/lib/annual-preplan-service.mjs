@@ -5,6 +5,7 @@ import { buildProviderRequest } from "./ai-generation-v4.mjs";
 import { loadAnnualPreplanSkill } from "./annual-plan-skill.mjs";
 import { loadKnowledgeBaseV4 } from "./knowledge-base-v4.mjs";
 import { competencyApplicability } from "./competency-applicability.mjs";
+import { focusedKnowledgeForDirectWorkflow } from "./ai-focused-knowledge.mjs";
 import { AnnualCalendarError, buildEditableAnnualSchedule, buildFlexibleAnnualSchedule, suggestAnnualProjectDurations } from "./annual-plan-calendar.mjs";
 
 export const ANNUAL_PREPLAN_FORMAT = "annual_preplan_v1";
@@ -100,6 +101,12 @@ export async function generateAnnualPreplan({ context, curriculum, resolvePlan =
     interests: context.context_v4?.common_interests?.map((item) => item.label) ?? [],
     known_environment: context.group_context, calendar: context.calendar, initial_slots: initialSlots,
     curriculum: { age: context.age, competency_cards: curriculum },
+    didactic_knowledge: await focusedKnowledgeForDirectWorkflow({ workflow: "annual_plan", age: context.age,
+      competencyIds: [...new Set((context.confirmed_priorities ?? []).flatMap((item) =>
+        item.related_competency_ids ?? item.competency_ids ?? []))].filter((id) => curriculum.some((card) => card.id === id)),
+      request: [context.group_context, context.annual_planning_context?.additional_notes].filter(Boolean).join(" "),
+      castellanoL2Applicable: context.castellano_l2_applicable === true,
+      religionApplicable: context.religion_applicable === true }),
     task: `Propón exactamente doce filas editables. Copia el bimestre, mes y duración de initial_slots para cada índice, en orden; código ya comprobó que caben en el calendario. Vincula pedagógicamente la fila 1 al Día del Niño Peruano, la 4 al Día de la Educación Inicial, la 6 a Fiestas Patrias y la 12 a Navidad/cierre de año. Sitúalas en el contexto de sus fechas previstas sin convertirlas en manualidades ni celebraciones vacías. Distribuye competencias del CNEB según su pertinencia; procura al menos una oportunidad por competencia aplicable y dos cuando sea natural, sin forzar títulos. Usa solo los campos del esquema. No generes productos, criterios, evidencias ni actividades.`,
   };
   const provider = createProvider(plan, { timeoutMs: 180_000 });

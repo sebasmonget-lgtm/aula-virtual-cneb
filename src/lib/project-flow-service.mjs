@@ -3,6 +3,7 @@ import { resolveAIExecutionPlan } from "./ai-execution-router-v4.mjs";
 import { createAIProviderForPlan } from "./ai-provider-factory.mjs";
 import { buildProviderRequest } from "./ai-generation-v4.mjs";
 import { loadLearningExperienceSkill } from "./learning-experience-skill.mjs";
+import { focusedKnowledgeForDirectWorkflow } from "./ai-focused-knowledge.mjs";
 
 const string = { type: "string", minLength: 1 };
 const strings = { type: "array", items: string };
@@ -217,8 +218,17 @@ export function preserveTeacherMapEdits(generatedRoute, previousMap, overrides, 
 
 async function call({ workflow, task, context, outputSchema, resolvePlan, createProvider, loadSkill }) {
   const plan = resolvePlan({ workflow, task });
+  const selectedIds = context.confirmed_decisions?.competency_ids
+    ?? context.confirmed_project_master?.decisions?.competency_ids
+    ?? context.annual_proposal?.primary_competency_ids ?? [];
+  const didacticKnowledge = await focusedKnowledgeForDirectWorkflow({ workflow, age: context.age,
+    competencyIds: selectedIds, request: context.confirmed_decisions?.purpose ?? context.annual_proposal?.purpose
+      ?? context.teacher_request ?? context.group_context ?? "",
+    castellanoL2Applicable: context.castellano_l2_applicable === true,
+    religionApplicable: context.religion_applicable === true });
   const response = await createProvider(plan, { timeoutMs: 180_000 })
-    .generate(buildProviderRequest(workflow, context, plan, outputSchema, await loadSkill()));
+    .generate(buildProviderRequest(workflow, { ...context, didactic_knowledge: didacticKnowledge },
+      plan, outputSchema, await loadSkill()));
   return { output: response.output, metadata: { provider: response.provider_metadata?.provider ?? plan.provider,
     model: response.provider_metadata?.model ?? plan.model, reasoning_effort: plan.reasoning_effort,
     routing_policy_version: plan.routing_policy_version, usage: response.provider_metadata?.usage ?? null,

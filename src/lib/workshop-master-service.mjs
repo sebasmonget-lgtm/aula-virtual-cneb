@@ -4,6 +4,7 @@ import { createAIProviderForPlan } from "./ai-provider-factory.mjs";
 import { buildProviderRequest } from "./ai-generation-v4.mjs";
 import { selectWorkshopSheet, availableSheets, publicSheet } from "./workshop-sheet-catalog.mjs";
 import { versionTransaction, VersionConflictError } from "./version-integrity.mjs";
+import { focusedKnowledgeForDirectWorkflow } from "./ai-focused-knowledge.mjs";
 
 const types = ["gráfico-plástico", "psicomotricidad", "ciencia", "matemática", "lectura y escritura", "juego dramático", "música"];
 const itemFields = ["index", "linked_activity_index", "title", "workshop_type", "competency_id", "purpose", "rationale", "observation_focus", "materials", "brief_outline"];
@@ -76,6 +77,11 @@ export async function generateWorkshopMaster({ classroom, project, annualPlan, c
   confirmed_project: { id: project.id, title: project.title, purpose: project.purpose,
     project_master: project.details.project_master, decisions: project.details.decisions,
     activity_route: route }, curriculum: { age: classroom.age, competency_cards: cards }, coverage,
+  didactic_knowledge: await focusedKnowledgeForDirectWorkflow({ workflow: "workshop", age: classroom.age,
+    competencyIds: [...new Set(route.flatMap((item) => item.competency_ids ?? [item.competency_id]))]
+      .filter((id) => cards.some((card) => card.id === id)), request: project.purpose,
+    castellanoL2Applicable: classroom.castellano_l2_applicable === true,
+    religionApplicable: classroom.religion_applicable === true }),
   task: "Propón exactamente un taller por fila y fecha del mapa. Elige primero la competencia y la intención. Prioriza oportunidades poco cubiertas si son pertinentes para un taller; no fuerces cuotas. El taller es juego, exploración, creación o movimiento con mediación docente. No inventes observaciones. No conoces fichas todavía; no menciones una ficha concreta." };
   const result = await createProvider(plan).generate(buildProviderRequest("workshop_master", bundle, plan, WORKSHOP_MASTER_SCHEMA));
   const base = validateWorkshopMaster(result.output, route, cards.map((card) => card.id));
@@ -116,6 +122,10 @@ export async function generateWorkshopDay({ classroom, project, master, itemInde
   linked_activity: { index: itemIndex, title: mainActivity.title, purpose: mainActivity.purpose,
     child_actions: mainActivity.child_actions },
   selected_sheet: sheet ? publicSheet(sheet) : null,
+  didactic_knowledge: await focusedKnowledgeForDirectWorkflow({ workflow: "workshop", age: classroom.age,
+    competencyIds: [item.competency_id], request: item.purpose,
+    castellanoL2Applicable: classroom.castellano_l2_applicable === true,
+    religionApplicable: classroom.religion_applicable === true }),
   task: "Desarrolla el taller ya confirmado. Conserva tipo, competencia y ficha exactamente. Inicio: exploración o juego; desarrollo: acción real y conversación; la ficha, si existe, solo representa o registra después. Cierre breve. Sin observaciones inventadas." };
   const result = await createProvider(plan).generate(buildProviderRequest("workshop", bundle, plan, WORKSHOP_DAY_SCHEMA));
   return { proposal: validateWorkshopDay(result.output, item), metadata: { workflow: "workshop", model: plan.model,
