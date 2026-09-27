@@ -9,7 +9,9 @@ import { Textarea } from "@/components/ui/textarea";
 
 type Item = { index: number; linked_activity_index: number; title: string; workshop_type: string;
   competency_id: string; purpose: string; rationale: string; observation_focus: string;
-  materials: string[]; brief_outline: string; sheet_id: string | null; sheet_reason: string | null };
+  materials: string[]; brief_outline: string; sheet_id: string | null; sheet_reason: string | null;
+  day_decision?: "suggested" | "accepted" | "continued" | "changed" | "none";
+  continuation_of_index?: number };
 type Master = { id: string; status: "draft" | "active"; revision: number; details: { items: Item[] } };
 type Sheet = { id: string; title: string; intention: string };
 type Data = { master: Master | null; route: { index: number; title: string; date: string }[];
@@ -36,7 +38,6 @@ function SheetPreview({ projectId, competencyId, sheet }: { projectId: string; c
 export function WorkshopMasterPanel({ projectId, onConfirmed }: { projectId: string; onConfirmed?: () => void }) {
   const [data, setData] = useState<Data | null>(null);
   const [items, setItems] = useState<Item[]>([]);
-  const [accepted, setAccepted] = useState<number[]>([]);
   const [editing, setEditing] = useState<number | null>(null);
   const [choosing, setChoosing] = useState<number | null>(null);
   const [sheets, setSheets] = useState<Sheet[]>([]);
@@ -47,14 +48,12 @@ export function WorkshopMasterPanel({ projectId, onConfirmed }: { projectId: str
     const result = await response.json() as Data & { error?: string };
     if (!response.ok) throw new Error(result.error ?? "No se pudieron cargar los talleres.");
     setData(result); setItems(result.master?.details.items ?? []);
-    setAccepted(result.master?.status === "active" ? result.master.details.items.map((item) => item.index) : []);
   }
   useEffect(() => { let mounted = true;
     void apiFetch(`${endpoint}?projectId=${encodeURIComponent(projectId)}`).then(async (response) => {
       const result = await response.json() as Data & { error?: string };
       if (!response.ok) throw new Error(result.error ?? "No se pudieron cargar los talleres.");
-      if (mounted) { setData(result); setItems(result.master?.details.items ?? []);
-        setAccepted(result.master?.status === "active" ? result.master.details.items.map((item) => item.index) : []); }
+      if (mounted) { setData(result); setItems(result.master?.details.items ?? []); }
     }).catch((error: unknown) => { if (mounted) setMessage(error instanceof Error ? error.message : "No se pudieron cargar los talleres."); });
     return () => { mounted = false; };
   }, [projectId]);
@@ -70,8 +69,20 @@ export function WorkshopMasterPanel({ projectId, onConfirmed }: { projectId: str
     finally { setBusy(false); }
   }
   function change(index: number, patch: Partial<Item>) {
-    setItems((current) => current.map((item) => item.index === index ? { ...item, ...patch } : item));
-    setAccepted((current) => current.filter((value) => value !== index));
+    setItems((current) => current.map((item) => item.index === index
+      ? { ...item, ...patch, day_decision: patch.day_decision ?? "changed",
+        continuation_of_index: patch.day_decision === "continued" ? patch.continuation_of_index : undefined } : item));
+  }
+  function continuePrevious(item: Item) {
+    const previous = items[item.index - 2];
+    if (!previous || ["none", "suggested"].includes(previous.day_decision ?? "accepted")) return;
+    change(item.index, { title: `Continuamos: ${previous.title}`, workshop_type: previous.workshop_type,
+      competency_id: previous.competency_id, purpose: previous.purpose,
+      rationale: `Continuar la experiencia iniciada el día ${previous.index}.`,
+      observation_focus: previous.observation_focus, materials: previous.materials,
+      brief_outline: previous.brief_outline, sheet_id: previous.sheet_id,
+      sheet_reason: previous.sheet_reason, day_decision: "continued",
+      continuation_of_index: previous.index });
   }
   async function chooseSheet(item: Item) {
     setChoosing(item.index); setMessage("");
@@ -86,8 +97,8 @@ export function WorkshopMasterPanel({ projectId, onConfirmed }: { projectId: str
   const dirty = Boolean(master?.status === "draft" && JSON.stringify(items) !== JSON.stringify(master.details.items));
   const nameOf = (id: string) => data?.competencies.find((entry) => entry.id === id)?.name ?? id;
   return <section className="ayni-panel space-y-4 p-4 sm:p-5" aria-label="Talleres del proyecto">
-    <header><h2 className="ayni-section-title">{master?.status === "active" ? "Talleres listos ✓" : "Ahora preparemos los talleres"}</h2>
-      <p className="text-sm text-[#526b87]">Un taller por día del proyecto. Revisa la competencia, la propuesta y la ficha antes de confirmarlos.</p></header>
+    <header><h2 className="ayni-section-title">{master?.status === "active" ? "Talleres elegidos ✓" : "Talleres sugeridos · opcionales"}</h2>
+      <p className="text-sm text-[#526b87]">Ayni propone una opción por día. Puedes aceptarla, continuar un taller, cambiarla o dejar ese día sin taller. La actividad principal se prepara por separado.</p></header>
     {message && <p role="status" className="rounded-lg bg-[#eaf7fb] p-3 text-sm">{message}</p>}
     {!master && <Button disabled={busy} onClick={() => void request("/api/workshops/master/generate", "POST", {}).then((ok) => { if (ok) setMessage("Talleres preparados. Revísalos antes de confirmar."); })}>{busy ? "Preparando..." : "Preparar talleres"}</Button>}
     {master?.status === "active" && <Button variant="outline" disabled={busy} onClick={() => void request("/api/workshops/master/generate", "POST", {}).then((ok) => { if (ok) setMessage("Nueva versión preparada. Los días ya confirmados conservan su versión anterior."); })}>Proponer una nueva versión</Button>}
@@ -97,9 +108,12 @@ export function WorkshopMasterPanel({ projectId, onConfirmed }: { projectId: str
       <p className="mt-1 text-sm"><b>Propósito:</b> {item.purpose}</p>
       <p className="mt-1 text-sm"><b>¿Por qué?</b> {item.rationale}</p>
       <p className="mt-1 text-sm"><b>Ficha:</b> {item.sheet_id ? (sheets.find((sheet) => sheet.id === item.sheet_id)?.title ?? "Ficha seleccionada") : "Sin ficha"}</p>
+      <p className="mt-1 text-sm"><b>Decisión:</b> {{ suggested: "Por decidir", accepted: "Aceptado", continued: "Continuación", changed: "Cambiado", none: "Sin taller" }[item.day_decision ?? "accepted"]}</p>
       {master?.status === "draft" && <div className="mt-3 flex flex-wrap gap-2">
-        <Button variant="outline" onClick={() => setAccepted((current) => current.includes(item.index) ? current : [...current, item.index])}>{accepted.includes(item.index) ? "Aceptado ✓" : "Aceptar"}</Button>
+        <Button variant="outline" onClick={() => change(item.index, { day_decision: "accepted" })}>Aceptar</Button>
+        {item.index > 1 && <Button variant="outline" onClick={() => continuePrevious(item)}>Continuar anterior</Button>}
         <Button variant="outline" onClick={() => setEditing(editing === item.index ? null : item.index)}>Editar</Button>
+        <Button variant="outline" onClick={() => change(item.index, { day_decision: "none" })}>Sin taller</Button>
         <Button variant="outline" onClick={() => void chooseSheet(item)}>Cambiar ficha</Button>
       </div>}
       {editing === item.index && master?.status === "draft" && <div className="mt-3 space-y-2 rounded-lg bg-[#f4f8fb] p-3">
@@ -125,7 +139,7 @@ export function WorkshopMasterPanel({ projectId, onConfirmed }: { projectId: str
     </article>)}
     {master?.status === "draft" && <div className="flex flex-wrap gap-2">
       <Button variant="outline" disabled={busy || !dirty} onClick={() => void request("/api/workshops/master", "PUT", { masterId: master.id, expectedRevision: master.revision, items }).then((ok) => { if (ok) setMessage("Cambios guardados."); })}>Guardar cambios</Button>
-      <Button disabled={busy || dirty || accepted.length !== items.length} onClick={() => void request("/api/workshops/master/confirm", "POST", { masterId: master.id, expectedRevision: master.revision }).then((ok) => { if (ok) { setMessage("Talleres confirmados. Ya puedes preparar cada día."); onConfirmed?.(); } })}>Confirmar talleres</Button>
+      <Button disabled={busy || dirty} onClick={() => void request("/api/workshops/master/confirm", "POST", { masterId: master.id, expectedRevision: master.revision }).then((ok) => { if (ok) { setMessage("Decisiones de talleres guardadas. Puedes cambiarlas con una nueva versión."); onConfirmed?.(); } })}>Guardar talleres elegidos</Button>
     </div>}
   </section>;
 }

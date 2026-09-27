@@ -8,6 +8,7 @@ import { focusedKnowledgeForDirectWorkflow } from "./ai-focused-knowledge.mjs";
 
 const types = ["gráfico-plástico", "psicomotricidad", "ciencia", "matemática", "lectura y escritura", "juego dramático", "música"];
 const itemFields = ["index", "linked_activity_index", "title", "workshop_type", "competency_id", "purpose", "rationale", "observation_focus", "materials", "brief_outline"];
+const decisions = new Set(["suggested", "accepted", "continued", "changed", "none"]);
 const string = (value, max = 700) => typeof value === "string" && value.trim().length > 0 && value.length <= max;
 const dateOnly = (value) => String(value).slice(0, 10);
 
@@ -41,8 +42,13 @@ export function validateWorkshopMaster(output, route, applicableIds, sheetIds = 
     || output.items.length !== route.length) throw new Error("El mapa de talleres debe tener un taller por día del proyecto.");
   const allowed = new Set(applicableIds);
   for (const [index, item] of output.items.entries()) {
-    if (Object.keys(item).some((key) => ![...itemFields, "sheet_id", "sheet_reason"].includes(key))
+    if (Object.keys(item).some((key) => ![...itemFields, "sheet_id", "sheet_reason", "day_decision", "continuation_of_index"].includes(key))
       || item.index !== index + 1 || item.linked_activity_index !== index + 1
+      || (item.day_decision != null && !decisions.has(item.day_decision))
+      || (item.day_decision === "continued" && (index === 0 || item.continuation_of_index !== index
+        || !workshopItemIsSelected(output.items[index - 1])
+        || item.competency_id !== output.items[index - 1].competency_id
+        || item.workshop_type !== output.items[index - 1].workshop_type))
       || !allowed.has(item.competency_id) || !types.includes(item.workshop_type)
       || !["title", "purpose", "rationale", "observation_focus", "brief_outline"].every((field) => string(item[field]))
       || !Array.isArray(item.materials) || item.materials.length > 12 || !item.materials.every((value) => string(value, 150)))
@@ -58,9 +64,15 @@ export async function attachWorkshopSheets(master, route, age, { selectSheet = s
     // The competence and purpose are chosen before any sheet is inspected.
     const intention = [item.purpose, item.observation_focus, item.brief_outline, route[index]?.title].join(" ");
     const sheet = await selectSheet({ age, competencyId: item.competency_id, intention });
-    return { ...item, sheet_id: sheet?.id ?? null,
+    return { ...item, day_decision: "suggested", sheet_id: sheet?.id ?? null,
       sheet_reason: sheet ? `Apoya el registro de ${item.observation_focus.toLocaleLowerCase("es")}.` : null };
   })) };
+}
+
+/** Legacy confirmed masters implied acceptance of all items. New suggestions require an explicit choice. */
+export function workshopItemIsSelected(item) {
+  return Boolean(item && (item.day_decision == null
+    || ["accepted", "continued", "changed"].includes(item.day_decision)));
 }
 
 export async function generateWorkshopMaster({ classroom, project, annualPlan, cards, createProvider = createAIProviderForPlan,
@@ -111,7 +123,8 @@ export async function generateWorkshopDay({ classroom, project, master, itemInde
   if (master.status !== "active" || master.details?.schema !== "workshop-master-v1"
     || master.parent_project_id !== project.id) throw new Error("Confirma primero los talleres del proyecto.");
   const item = master.details.items[itemIndex - 1];
-  if (!item || item.index !== itemIndex) throw new Error("El taller elegido no corresponde al día.");
+  if (!item || item.index !== itemIndex || !workshopItemIsSelected(item))
+    throw new Error("No hay un taller elegido para este día.");
   const plan = resolvePlan({ workflow: "workshop", task: "generation" });
   const bundle = { workflow: "workshop", age: classroom.age, confirmed_project: { id: project.id,
     title: project.title, purpose: project.purpose, project_master: project.details.project_master },

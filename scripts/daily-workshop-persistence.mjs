@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { validateWorkshopDay } from "../src/lib/workshop-master-service.mjs";
+import { validateWorkshopDay, workshopItemIsSelected } from "../src/lib/workshop-master-service.mjs";
 import { VersionConflictError, versionTransaction } from "../src/lib/version-integrity.mjs";
 
 export async function activeWorkshopForProject(db, projectId) {
@@ -8,9 +8,11 @@ export async function activeWorkshopForProject(db, projectId) {
 }
 
 export function pairedWorkshop(master, index, proposal) {
-  if (!master) return null;
+  if (!proposal) return null;
+  if (!master) throw new Error("El taller elegido ya no está disponible.");
   const item = master.details?.items?.[index - 1];
-  if (!item || item.index !== index || !proposal) throw new Error("Prepara el taller del día con el maestro confirmado.");
+  if (!item || item.index !== index || !workshopItemIsSelected(item))
+    throw new Error("El taller elegido ya no corresponde a este día.");
   validateWorkshopDay(proposal, item);
   return { item, proposal };
 }

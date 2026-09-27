@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import JSZip from "jszip";
 import { loadKnowledgeBaseV4 } from "./knowledge-base-v4.mjs";
 import { renderActivityUnifiedWord } from "./activity-unified-word.mjs";
-import { attachWorkshopSheets, generateWorkshopDay, validateWorkshopMaster, workshopCoverage } from "./workshop-master-service.mjs";
+import { attachWorkshopSheets, generateWorkshopDay, validateWorkshopMaster, workshopCoverage, workshopItemIsSelected } from "./workshop-master-service.mjs";
 import { availableSheets, rankWorkshopSheets, verifiedSheetFile } from "./workshop-sheet-catalog.mjs";
 
 const route = [
@@ -25,6 +25,16 @@ test("dos maestros independientes: una fila de taller por día, edad y cobertura
   assert.throws(() => validateWorkshopMaster({ items: [item(1)] }, route, cards.map((card) => card.id)));
   assert.throws(() => validateWorkshopMaster({ items: [item(1, "OTRA_EDAD"), item(2)] }, route, cards.map((card) => card.id)));
   assert.deepEqual(route.map((row) => row.competency_id), ["CYT_INDAGA", "CYT_INDAGA"]);
+});
+
+test("la docente puede aceptar, continuar o dejar un día sin taller", () => {
+  const cards = ["MAT_CANTIDAD"];
+  const accepted = { ...item(1), day_decision: "accepted" };
+  const continued = { ...item(2), day_decision: "continued", continuation_of_index: 1 };
+  assert.deepEqual(validateWorkshopMaster({ items: [accepted, continued] }, route, cards).items.length, 2);
+  assert.equal(workshopItemIsSelected(continued), true);
+  assert.equal(workshopItemIsSelected({ ...item(2), day_decision: "none" }), false);
+  assert.throws(() => validateWorkshopMaster({ items: [{ ...accepted, day_decision: "none" }, continued] }, route, cards));
 });
 
 test("competencia e intención se fijan antes de buscar ficha; puede quedarse sin ficha", async () => {

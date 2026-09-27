@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { PGlite } from "@electric-sql/pglite";
-import { insertDailyPair } from "./daily-workshop-persistence.mjs";
+import { insertDailyPair, pairedWorkshop } from "./daily-workshop-persistence.mjs";
 import { confirmActivityWithCriterion } from "../src/lib/activity-confirmation.mjs";
 
 const classroom = "11111111-1111-4111-8111-111111111111";
@@ -49,6 +49,12 @@ test("actividad y taller se guardan y confirman juntos; Hoy recibe ambos bloques
       master, workshopIndex: 1, workshopProposal: workshop });
     assert.ok(saved.workshopId);
     assert.equal((await db.query("select count(*)::int as n from activities")).rows[0].n, 2);
+    const standaloneId = "66666666-6666-4666-8666-666666666666";
+    const standalone = await insertDailyPair(db, { experience, occursOn: "2026-04-14",
+      mainId: standaloneId, mainDetails: { title: "Seguimos explorando", purpose: "Comparar" },
+      materials: [], mainMetadata: {}, master: null, workshopProposal: null });
+    assert.equal(standalone.workshopId, null);
+    assert.equal((await db.query("select count(*)::int as n from activities")).rows[0].n, 3);
     await confirmActivityWithCriterion(db, activityId,
       { competency_id: "CYT_INDAGA", criterion_text: "Explica el cambio" },
       "55555555-5555-4555-8555-555555555555", 1,
@@ -57,4 +63,11 @@ test("actividad y taller se guardan y confirman juntos; Hoy recibe ambos bloques
     assert.deepEqual(blocks.map((row) => row.block_type), ["activity", "workshop"]);
     assert.equal((await db.query("select count(*)::int as n from activity_criteria")).rows[0].n, 2);
   } finally { await db.close(); }
+});
+
+test("el taller sugerido o marcado sin taller no bloquea la actividad principal", () => {
+  assert.equal(pairedWorkshop(null, 1, null), null);
+  assert.equal(pairedWorkshop({ details: { items: [{ ...item, day_decision: "suggested" }] } }, 1, null), null);
+  assert.throws(() => pairedWorkshop({ details: { items: [{ ...item, day_decision: "none" }] } }, 1, workshop));
+  assert.ok(pairedWorkshop({ details: { items: [{ ...item, day_decision: "accepted" }] } }, 1, workshop));
 });

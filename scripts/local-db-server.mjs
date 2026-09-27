@@ -50,7 +50,7 @@ import { createDescriptiveConclusionRouteHandler } from "./descriptive-conclusio
 import { createFamilyReportRouteHandler } from "./family-report-routes.mjs";
 import { createPeriodEvaluationRouteHandler } from "./period-evaluation-routes.mjs";
 import { createWorkshopRouteHandler } from "./workshop-routes.mjs";
-import { generateWorkshopDay } from "../src/lib/workshop-master-service.mjs";
+import { generateWorkshopDay, workshopItemIsSelected } from "../src/lib/workshop-master-service.mjs";
 import { availableSheets } from "../src/lib/workshop-sheet-catalog.mjs";
 import { activeWorkshopForProject, insertDailyPair, linkedWorkshopDraft, updateDailyPair } from "./daily-workshop-persistence.mjs";
 import { createPendingAIGenerationsStore } from "../src/lib/pending-ai-generations-store.mjs";
@@ -1761,29 +1761,30 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       if ((experience.details?.activity_route?.length && !routeItem) || (body.routeItemId && !routeItem)) { send(response, 422, { error: "Elige una actividad de la ruta confirmada." }, origin); return; }
       const allowed = await activityAllowedCompetencies(experience, context);
       if ((routeItem?.competency_id || body.competencyId) && !allowed.has(routeItem?.competency_id || body.competencyId)) { send(response, 422, { error: "La competencia no pertenece a la experiencia." }, origin); return; }
-      if (experience.details?.activity_route?.length && !await activeWorkshopForProject(db, experience.id)) {
-        send(response, 422, { error: "Prepara y confirma los talleres del proyecto antes de preparar el día." }, origin); return;
-      }
       try { if(body.usePlanningFeedback===true){const feedback=await loadPlanningFeedback(db,{teacherId,classroomId:context.id,periodId:body.planningFeedbackPeriodId});const summary=planningFeedbackText(feedback);if(summary)body.context=`${String(body.context||"").slice(0,500)}\n${summary}`.slice(0,1000);}
         const generated = await generateTeacherActivity({ request: body, classroom: context, learningExperience: await activityParentContext(experience) });
         const routeIndex = routeItem ? experience.details.activity_route.findIndex((item) => item.id === routeItem.id) + 1 : null;
         const master = routeIndex ? (await db.query(`select * from learning_experiences where parent_project_id=$1 and type='workshop' and status='active'`, [experience.id])).rows[0] : null;
         let workshop = null;
-        if (master) {
+        let workshopError = null;
+        if (master && workshopItemIsSelected(master.details.items?.[routeIndex - 1])) {
           const item = master.details.items?.[routeIndex - 1];
-          const sheet = item?.sheet_id ? (await availableSheets({ age: context.age, competencyId: item.competency_id }))
-            .find((candidate) => candidate.id === item.sheet_id) : null;
-          if (item?.sheet_id && !sheet) throw new Error("La ficha elegida para este día ya no está disponible.");
-          workshop = await generateWorkshopDay({ classroom: context, project: experience, master,
-            itemIndex: routeIndex, mainActivity: generated.proposal, sheet });
+          try {
+            const sheet = item?.sheet_id ? (await availableSheets({ age: context.age, competencyId: item.competency_id }))
+              .find((candidate) => candidate.id === item.sheet_id) : null;
+            if (item?.sheet_id && !sheet) throw new Error("La ficha elegida para este día ya no está disponible.");
+            workshop = await generateWorkshopDay({ classroom: context, project: experience, master,
+              itemIndex: routeIndex, mainActivity: generated.proposal, sheet });
+          } catch (error) { workshopError = publicErrorMessage(error) || "No se pudo preparar el taller opcional."; }
         }
         const generationId = randomUUID();
         await pendingAIGenerations.set(generationId, { workflow: "activity", classroom_id: context.id,
           learning_experience_id: experience.id, route_item_id: routeItem?.id ?? null,
-          workshop_master_id: master?.id ?? null, workshop_item_index: routeIndex,
+          workshop_master_id: workshop ? master.id : null, workshop_item_index: workshop ? routeIndex : null,
           workshop_metadata: workshop?.metadata ?? null,
           metadata: safeAnnualGenerationMetadata(generated.internalMetadata), createdAt: Date.now() });
         send(response, 200, { proposal: generated.proposal, workshop_proposal: workshop?.proposal ?? null,
+          workshop_error: workshopError,
           generation_id: generationId }, origin); } catch (error) { send(response, httpStatusForError(error, 422), { error: publicErrorMessage(error) || "No se pudo generar la actividad." }, origin); } return;
     }
     if (request.method === "POST" && url.pathname === "/api/activities") {
@@ -1798,9 +1799,11 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         const calendar = await loadEffectiveCalendar(db, { teacherId, classroomId: context.id, from: occursOn, to: occursOn });
         validateSelectedInstructionalDates(calendar.days, [occursOn], String(experience.starts_on).slice(0,10), String(experience.ends_on).slice(0,10));
         validateActivityV4(body.proposal, await activityAllowedCompetencies(experience, context));
-        const master = await activeWorkshopForProject(db, experience.id);
-        if (pending.workshop_master_id !== (master?.id ?? null)) throw new VersionConflictError("El maestro de talleres cambió. Prepara nuevamente el día.");
-        const details = saveActivityDetails(body.proposal, routeItem, null, Boolean(master));
+        const master = pending.workshop_master_id ? await activeWorkshopForProject(db, experience.id) : null;
+        if (pending.workshop_master_id && pending.workshop_master_id !== (master?.id ?? null)) throw new VersionConflictError("El maestro de talleres cambió. Prepara nuevamente el día.");
+        if (Boolean(body.workshopProposal) !== Boolean(pending.workshop_master_id))
+          throw new Error("El taller guardado no coincide con la propuesta preparada.");
+        const details = saveActivityDetails(body.proposal, routeItem, null, Boolean(body.workshopProposal));
         const id = randomUUID();
         const pair = await insertDailyPair(db, { experience, occursOn, mainId: id, mainDetails: details,
           materials: normalizeActivityMaterials(body.materials), mainMetadata: pending.metadata,
