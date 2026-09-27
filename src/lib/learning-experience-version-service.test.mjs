@@ -32,6 +32,8 @@ test("Proyecto V2 copia V1, archiva solo al confirmar y no reasigna actividades"
     [v1,classroomId,JSON.stringify(details),annualId]);
     await db.query(`insert into activities(id,experience_id,occurs_on,title,purpose,status)
       values($1,$2,'2026-04-02','Semillas','Explorar','draft')`,[activityId,v1]);
+    await db.query(`insert into project_calendar_selections(id,learning_experience_id,starts_on,ends_on,status,confirmed_at,confirmed_by)
+      values($1,$2,'2026-04-01','2026-04-24','confirmed',now(),$3)`,[randomUUID(),v1,teacher]);
     await db.query(`update annual_plans set status='archived',updated_at=now() where id=$1`,[annualId]);
     const copy=await copyConfirmedLearningExperience(db,teacher,classroomId,v1);
     const draft=(await db.query(`select * from learning_experiences where id=$1`,[copy.id])).rows[0];
@@ -41,6 +43,7 @@ test("Proyecto V2 copia V1, archiva solo al confirmar y no reasigna actividades"
     assert.equal(draft.annual_plan_id,annualId);
     assert.equal(draft.source_proposal_index,0);
     assert.deepEqual(draft.details,details);
+    assert.equal((await db.query(`select status from project_calendar_selections where learning_experience_id=$1`,[copy.id])).rows[0].status,"confirmed");
     assert.equal((await db.query(`select status from learning_experiences where id=$1`,[v1])).rows[0].status,"active");
     await assert.rejects(copyConfirmedLearningExperience(db,teacher,classroomId,v1),{reason:"draft_exists"});
     await assert.rejects(copyConfirmedLearningExperience(db,"bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",classroomId,v1),{reason:"source_unavailable"});

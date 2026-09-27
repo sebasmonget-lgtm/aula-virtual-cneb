@@ -54,6 +54,7 @@ export function ProjectDevelopmentWorkspace({ initialProposalId, onConfirmed, on
   const [calendarReview,setCalendarReview]=useState<CalendarReview|null>(null);
   const [step, setStep] = useState(0);
   const [dependents, setDependents] = useState<Dependents | null>(null), [route, setRoute] = useState<Route[]>([]);
+  const [protectedRouteIds, setProtectedRouteIds] = useState<string[]>([]);
   const [editingRoute, setEditingRoute] = useState<string | null>(null), [busy, setBusy] = useState<string | null>(null);
   const [showEmergent, setShowEmergent] = useState(false), [emergentSituation, setEmergentSituation] = useState("");
   const [emergent, setEmergent] = useState<{ title: string; rationale: string; purpose: string;
@@ -74,8 +75,10 @@ export function ProjectDevelopmentWorkspace({ initialProposalId, onConfirmed, on
     JSON.stringify(selected.details.activity_route) !== JSON.stringify(route));
   const depChanged = Boolean(selected?.details.dependents && dependents &&
     JSON.stringify(selected.details.dependents) !== JSON.stringify(dependents));
-  function showExperience(experience: Experience, availableDates: string[] = [],review:CalendarReview|null=null) {
+  function showExperience(experience: Experience, availableDates: string[] = [],review:CalendarReview|null=null,
+    protectedIds: string[] = []) {
     setSelected(experience); setDates(availableDates); setEditingRoute(null);
+    setProtectedRouteIds(protectedIds);
     setCalendarReview(review);
     setStep(experience.status === "active" ? 8 : experience.details.stage === "map_review" ? 7 :
       experience.details.stage === "dependents" ? 3 : 0);
@@ -107,8 +110,8 @@ export function ProjectDevelopmentWorkspace({ initialProposalId, onConfirmed, on
       item.status !== "archived")
       .sort((a, b) => b.version - a.version)[0];
     if (existing && ["project-master-v1","project-master-v2"].includes(existing.details.flow_version ?? "")) {
-      await act("open", async () => { const result = await json<{ experience: Experience; available_dates: string[];calendar_review:CalendarReview }>(`/api/project-flow/${existing.id}`);
-        showExperience(result.experience, result.available_dates,result.calendar_review); }); return;
+      await act("open", async () => { const result = await json<{ experience: Experience; available_dates: string[];calendar_review:CalendarReview;protected_route_ids:string[] }>(`/api/project-flow/${existing.id}`);
+        showExperience(result.experience, result.available_dates,result.calendar_review,result.protected_route_ids); }); return;
     }
     if (existing) { setLegacy(true); return; }
     await act("start", async () => { const result = await json<{ experience: Experience; available_dates: string[];calendar_review:CalendarReview }>(
@@ -154,8 +157,8 @@ export function ProjectDevelopmentWorkspace({ initialProposalId, onConfirmed, on
       setSelected(result.experience); setRoute(result.experience.details.activity_route ?? []); setNotice("Mapa guardado."); }); }
   async function confirm() { if (!selected || mapChanged || decisionsChanged || depChanged) return;
     await act("confirm", async () => { await json(`/api/project-flow/${selected.id}/confirm`, post({ expectedRevision: selected.revision }));
-      const result = await json<{ experience: Experience; available_dates: string[];calendar_review:CalendarReview }>(`/api/project-flow/${selected.id}`);
-      showExperience(result.experience, result.available_dates,result.calendar_review); await refresh(); onConfirmed?.();
+      const result = await json<{ experience: Experience; available_dates: string[];calendar_review:CalendarReview;protected_route_ids:string[] }>(`/api/project-flow/${selected.id}`);
+      showExperience(result.experience, result.available_dates,result.calendar_review,result.protected_route_ids); await refresh(); onConfirmed?.();
       setNotice("Proyecto confirmado. Las actividades se desarrollarán una por una desde este mapa."); }); }
   async function formalize() { if (!selected) return;
     await act("formal", async () => { await json(`/api/project-flow/${selected.id}/formalize`, post({}));
@@ -163,8 +166,8 @@ export function ProjectDevelopmentWorkspace({ initialProposalId, onConfirmed, on
   async function copyVersion() { if (!selected) return;
     await act("copy", async () => { const copied = await json<{ id: string }>(`/api/learning-experiences/${selected.id}/new-version`,
       post({ expectedRevision: selected.revision })); await refresh();
-      const result = await json<{ experience: Experience; available_dates: string[];calendar_review:CalendarReview }>(`/api/project-flow/${copied.id}`);
-      showExperience(result.experience, result.available_dates,result.calendar_review);
+      const result = await json<{ experience: Experience; available_dates: string[];calendar_review:CalendarReview;protected_route_ids:string[] }>(`/api/project-flow/${copied.id}`);
+      showExperience(result.experience, result.available_dates,result.calendar_review,result.protected_route_ids);
       setNotice("Nueva versión en revisión. La versión confirmada permanece disponible."); }); }
   async function suggestEmergent() { if (!plan) return;
     await act("emergent", async () => { const result = await json<{ proposal: { title: string; rationale: string; purpose: string;
@@ -178,9 +181,11 @@ export function ProjectDevelopmentWorkspace({ initialProposalId, onConfirmed, on
       expectedRevision: plan.revision, targetProposalId: emergentTargetId, mode: emergentMode, proposal: emergent }));
       setShowEmergent(false); setEmergent(null); setNotice("Nueva versión de «Mi año» lista para revisar y confirmar.");
       onGoAnnual?.(); }); }
-  function updateRoute(id: string, changes: Partial<Route>) { setRoute((before) => before.map((item) => item.id === id ? { ...item, ...changes } : item)); }
+  function updateRoute(id: string, changes: Partial<Route>) { if (protectedRouteIds.includes(id)) return;
+    setRoute((before) => before.map((item) => item.id === id ? { ...item, ...changes } : item)); }
   function moveRoute(index: number, delta: number) { const nextIndex = index + delta;
     if (nextIndex < 0 || nextIndex >= route.length) return;
+    if (protectedRouteIds.includes(route[index].id) || protectedRouteIds.includes(route[nextIndex].id)) return;
     const next = [...route], earlier = next[index], later = next[nextIndex];
     next[index] = { ...later, date: earlier.date, number: index + 1 };
     next[nextIndex] = { ...earlier, date: later.date, number: nextIndex + 1 }; setRoute(next); }
@@ -313,6 +318,7 @@ export function ProjectDevelopmentWorkspace({ initialProposalId, onConfirmed, on
       </section>}
       {selected.details.stage === "map_review" && !decisionsChanged && !depChanged && step === 7 && <section className="space-y-4 rounded-2xl border bg-white p-5"><h2 className="text-xl font-bold">8. Mapa de actividades</h2>
         <p className="text-sm text-[#526b87]">Este mapa organiza el proyecto. Las actividades completas se prepararán una por una cuando las necesites.</p>
+        {protectedRouteIds.length > 0 && <p className="rounded-lg bg-[#fff8eb] p-3 text-sm">Los días anteriores y los que ya tienen registros conservan la versión confirmada. Puedes modificar las actividades futuras sin registros.</p>}
         <p className="rounded-lg bg-[#eaf7fb] p-3 text-sm"><b>Cierre propuesto:</b> {selected.details.project_master?.closing_description}</p>
         {Boolean(selected.details.previous_map?.length) && <details className="rounded-lg border bg-[#fff8eb] p-3 text-sm"><summary className="cursor-pointer font-semibold">Ver el mapa anterior y sus cambios</summary>
           <p className="mt-2">Puedes recuperarlo si las decisiones nuevas todavía coinciden con sus competencias y fechas.</p>
@@ -320,11 +326,11 @@ export function ProjectDevelopmentWorkspace({ initialProposalId, onConfirmed, on
           <Button className="mt-2" variant="outline" onClick={() => setRoute(selected.details.previous_map ?? [])}>Recuperar mapa anterior</Button></details>}
         <div className="overflow-x-auto rounded-lg border"><table className="w-full min-w-[760px] text-left text-sm"><thead className="bg-[#edf5fa]"><tr>{["Fecha", "Actividad", "Propósito", "Competencia", "Acción"].map((label) => <th key={label} className="p-3">{label}</th>)}</tr></thead>
           <tbody>{route.map((item, index) => <tr key={item.id} className="border-t"><td className="p-3">{dateLabel(item.date)}</td>
-            <td className="p-3 font-semibold">{index + 1}. {item.title}</td><td className="p-3">{item.specific_purpose}</td>
+            <td className="p-3 font-semibold">{index + 1}. {item.title}{protectedRouteIds.includes(item.id) && <span className="ml-2 text-xs text-[#90631d]">Histórico</span>}</td><td className="p-3">{item.specific_purpose}</td>
             <td className="p-3">{item.competency_ids.map(name).join(" · ")}</td><td className="p-3"><div className="flex gap-1">
-              <Button variant="outline" size="sm" onClick={() => setEditingRoute(item.id)}>Editar</Button>
-              <Button variant="ghost" size="sm" aria-label={`Subir ${item.title}`} disabled={index === 0} onClick={() => moveRoute(index, -1)}>↑</Button>
-              <Button variant="ghost" size="sm" aria-label={`Bajar ${item.title}`} disabled={index === route.length - 1} onClick={() => moveRoute(index, 1)}>↓</Button>
+              <Button variant="outline" size="sm" disabled={protectedRouteIds.includes(item.id)} onClick={() => setEditingRoute(item.id)}>Editar</Button>
+              <Button variant="ghost" size="sm" aria-label={`Subir ${item.title}`} disabled={index === 0 || protectedRouteIds.includes(item.id) || protectedRouteIds.includes(route[index - 1]?.id)} onClick={() => moveRoute(index, -1)}>↑</Button>
+              <Button variant="ghost" size="sm" aria-label={`Bajar ${item.title}`} disabled={index === route.length - 1 || protectedRouteIds.includes(item.id) || protectedRouteIds.includes(route[index + 1]?.id)} onClick={() => moveRoute(index, 1)}>↓</Button>
             </div></td></tr>)}</tbody></table></div>
         {mapChanged && <AsyncButton busy={busy === "save"} busyLabel="Guardando mapa..." disabled={Boolean(busy)} onClick={() => void saveMap()}>Guardar mapa</AsyncButton>}
         {!mapChanged && <AsyncButton busy={busy === "confirm"} busyLabel="Confirmando proyecto..." disabled={Boolean(busy)} onClick={() => void confirm()}>Confirmar proyecto</AsyncButton>}
@@ -339,7 +345,13 @@ export function ProjectDevelopmentWorkspace({ initialProposalId, onConfirmed, on
       {currentEdit && selected.status === "draft" && <div role="dialog" aria-modal="true" aria-label="Editar actividad" className="fixed inset-0 z-50 flex justify-end bg-[#10233a]/45">
         <div className="h-full w-full max-w-xl space-y-4 overflow-y-auto bg-white p-5 shadow-2xl"><div className="flex items-center justify-between gap-2"><h2 className="text-xl font-bold">Editar actividad del mapa</h2>
           <Button variant="outline" onClick={() => setEditingRoute(null)}>Cerrar</Button></div>
-          <p className="rounded-lg bg-[#edf5fa] p-3 text-sm"><b>Fecha confirmada:</b> {dateLabel(currentEdit.date)}. Para cambiarla después, usa Reprogramar.</p>
+          {selected.version > 1 && !protectedRouteIds.includes(currentEdit.id) ?
+            <label className="block font-semibold">Fecha futura<select className="mt-2 min-h-11 w-full rounded-lg border px-3"
+              value={currentEdit.date} onChange={(event) => updateRoute(currentEdit.id, { date: event.target.value })}>
+              {[currentEdit.date, ...dates.filter((date) => !route.some((item) => item.id !== currentEdit.id && item.date === date))]
+                .filter((date, index, all) => all.indexOf(date) === index).sort().map((date) =>
+                  <option key={date} value={date}>{dateLabel(date)}</option>)}</select></label> :
+            <p className="rounded-lg bg-[#edf5fa] p-3 text-sm"><b>Fecha confirmada:</b> {dateLabel(currentEdit.date)}.</p>}
           <label className="block font-semibold">Título<Input className="mt-2" value={currentEdit.title} onChange={(event) => updateRoute(currentEdit.id, { title: event.target.value })} /></label>
           <label className="block font-semibold">Propósito<Textarea className="mt-2" value={currentEdit.specific_purpose} onChange={(event) => updateRoute(currentEdit.id, { specific_purpose: event.target.value })} /></label>
           <label className="block font-semibold">Función en el proyecto<Textarea className="mt-2" value={currentEdit.role_in_project} onChange={(event) => updateRoute(currentEdit.id, { role_in_project: event.target.value })} /></label>

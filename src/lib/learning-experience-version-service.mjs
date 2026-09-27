@@ -33,8 +33,9 @@ export async function copyConfirmedLearningExperience(db, teacherId, classroomId
     const calendar=(await tx.query(`select * from project_calendar_selections where learning_experience_id=$1`,[source.id])).rows[0];
     if(calendar){
       const selectionId=randomUUID();
-      await tx.query(`insert into project_calendar_selections(id,learning_experience_id,starts_on,ends_on,status,revision)
-        values($1,$2,$3,$4,'draft',1)`,[selectionId,id,calendar.starts_on,calendar.ends_on]);
+      await tx.query(`insert into project_calendar_selections(id,learning_experience_id,starts_on,ends_on,status,revision,confirmed_at,confirmed_by)
+        values($1,$2,$3,$4,$5,1,$6,$7)`,[selectionId,id,calendar.starts_on,calendar.ends_on,
+        calendar.status,calendar.confirmed_at,calendar.confirmed_by]);
       const days=(await tx.query(`select calendar_day_id,date,selected,exclusion_reason from project_instructional_dates where selection_id=$1`,[calendar.id])).rows;
       for(const day of days)await tx.query(`insert into project_instructional_dates(id,selection_id,calendar_day_id,date,selected,exclusion_reason)
         values($1,$2,$3,$4,$5,$6)`,[randomUUID(),selectionId,day.calendar_day_id,day.date,day.selected,day.exclusion_reason]);

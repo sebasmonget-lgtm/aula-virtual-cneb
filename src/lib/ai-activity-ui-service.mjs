@@ -1,4 +1,5 @@
 import { resolveAIExecutionPlan } from "./ai-execution-router-v4.mjs";
+import { confirmedProjectFoundation, confirmedDailyRouteContext } from "./direct-ai-context-contracts.mjs";
 import { generateAIWorkflowV4 } from "./ai-generation-v4.mjs";
 import { createAIProviderForPlan } from "./ai-provider-factory.mjs";
 import { buildActivityContext } from "./context-policy-v4.mjs";
@@ -51,6 +52,7 @@ export function buildTeacherActivityGenerationInput({ request = {}, classroom, l
   if (request.routeItemId && !routeItem) throw new ActivityGenerationUIError("route_item_missing", "La actividad elegida no pertenece a este proyecto.");
   const route = learningExperience?.details?.activity_route ?? [];
   const routePosition = routeItem ? route.findIndex((item) => item.id === routeItem.id) : -1;
+  const dailyRoute = routePosition >= 0 ? confirmedDailyRouteContext(route, routePosition) : null;
   const activityPurpose = text(routeItem?.specific_purpose ?? request.activityPurpose, MAX_PURPOSE_LENGTH);
   if (!activityPurpose) throw new ActivityGenerationUIError("missing_activity_purpose", teacherMessageForActivityGenerationError({ reason: "missing_activity_purpose" }));
   const context = text(request.context, MAX_CONTEXT_LENGTH);
@@ -74,12 +76,11 @@ export function buildTeacherActivityGenerationInput({ request = {}, classroom, l
     ...(classroom.language_context || group?.language_context ? { language_context: { ...classroom.language_context, ...group?.language_context } } : {}),
     ...(group ? { context_snapshot: group.snapshot } : {}),
     ...(learningExperience ? { learning_experience_context: { id: learningExperience.id, type: learningExperience.type, title: learningExperience.title, purpose: learningExperience.purpose, trigger_or_interest: learningExperience.details?.trigger_or_interest ?? null, learning_need_or_context: learningExperience.details?.learning_need_or_context ?? null, starting_point: learningExperience.details?.starting_point ?? null, primary_competency_ids: learningExperience.details?.primary_competency_ids ?? [], possible_secondary_competency_ids: learningExperience.details?.possible_secondary_competency_ids ?? [], possible_pathways: learningExperience.details?.possible_pathways ?? [], proposed_situations: learningExperience.details?.proposed_situations ?? [], spaces_and_materials: learningExperience.details?.spaces_and_materials ?? [], evidence_opportunities: learningExperience.details?.evidence_opportunities ?? [], family_or_community_links: learningExperience.details?.family_or_community_links ?? [], adjustment_points: learningExperience.details?.adjustment_points ?? [], flexibility_notes: learningExperience.details?.flexibility_notes ?? null,
-      confirmed_project_master: ["project-master-v1", "project-master-v2"].includes(learningExperience.details?.flow_version) ? {
-        decisions: learningExperience.details.decisions, dependents: learningExperience.details.dependents,
-        project_master: learningExperience.details.project_master, activity_route: route } : null,
-      route_position: routePosition < 0 ? null : { number: routePosition + 1, total: route.length },
-      previous_map_item: routePosition > 0 ? route[routePosition - 1] : null,
-      next_map_item: routePosition >= 0 ? route[routePosition + 1] ?? null : null,
+      confirmed_project_master: ["project-master-v1", "project-master-v2"].includes(learningExperience.details?.flow_version)
+        ? confirmedProjectFoundation(learningExperience) : null,
+      route_position: dailyRoute?.route_position ?? null,
+      previous_map_item: dailyRoute?.previous_map_item ?? null,
+      next_map_item: dailyRoute?.next_map_item ?? null,
       inherited_route_item: routeItem ? { id: routeItem.id, number: routeItem.number, date: routeItem.date,
         title: routeItem.title, specific_purpose: routeItem.specific_purpose, competency_id: routeItem.competency_id,
         primary_competency_id: routeItem.criterion_competency_id || routeItem.competency_id,

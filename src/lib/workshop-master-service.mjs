@@ -5,6 +5,7 @@ import { buildProviderRequest } from "./ai-generation-v4.mjs";
 import { selectWorkshopSheet, availableSheets, publicSheet } from "./workshop-sheet-catalog.mjs";
 import { versionTransaction, VersionConflictError } from "./version-integrity.mjs";
 import { focusedKnowledgeForDirectWorkflow } from "./ai-focused-knowledge.mjs";
+import { confirmedProjectFoundation } from "./direct-ai-context-contracts.mjs";
 
 const types = ["gráfico-plástico", "psicomotricidad", "ciencia", "matemática", "lectura y escritura", "juego dramático", "música"];
 const itemFields = ["index", "linked_activity_index", "title", "workshop_type", "competency_id", "purpose", "rationale", "observation_focus", "materials", "brief_outline"];
@@ -86,9 +87,8 @@ export async function generateWorkshopMaster({ classroom, project, annualPlan, c
     section: classroom.section, group_context: classroom.group_context, diagnostic_summary: classroom.diagnostic_summary,
     available_materials: project.details?.spaces_and_materials ?? [],
   }, annual_priorities: annualPlan?.proposal?.proposed_experiences?.find((item) => item.proposal_id === project.source_proposal_id)?.primary_competency_ids ?? [],
-  confirmed_project: { id: project.id, title: project.title, purpose: project.purpose,
-    project_master: project.details.project_master, decisions: project.details.decisions,
-    activity_route: route }, curriculum: { age: classroom.age, competency_cards: cards }, coverage,
+  confirmed_project: { ...confirmedProjectFoundation(project), activity_route: route },
+  curriculum: { age: classroom.age, competency_cards: cards }, coverage,
   didactic_knowledge: await focusedKnowledgeForDirectWorkflow({ workflow: "workshop", age: classroom.age,
     competencyIds: [...new Set(route.flatMap((item) => item.competency_ids ?? [item.competency_id]))]
       .filter((id) => cards.some((card) => card.id === id)), request: project.purpose,
@@ -126,10 +126,9 @@ export async function generateWorkshopDay({ classroom, project, master, itemInde
   if (!item || item.index !== itemIndex || !workshopItemIsSelected(item))
     throw new Error("No hay un taller elegido para este día.");
   const plan = resolvePlan({ workflow: "workshop", task: "generation" });
-  const bundle = { workflow: "workshop", age: classroom.age, confirmed_project: { id: project.id,
-    title: project.title, purpose: project.purpose, project_master: project.details.project_master },
-  workshop_master: { id: master.id, version: master.version, items: master.details.items.map((entry) => ({
-    index: entry.index, title: entry.title, competency_id: entry.competency_id, purpose: entry.purpose })) },
+  const bundle = { workflow: "workshop", age: classroom.age,
+  confirmed_project: confirmedProjectFoundation(project),
+  workshop_master: { id: master.id, version: master.version },
   current_workshop: item, previous_workshop: master.details.items[itemIndex - 2] ?? null,
   next_workshop: master.details.items[itemIndex] ?? null,
   linked_activity: { index: itemIndex, title: mainActivity.title, purpose: mainActivity.purpose,

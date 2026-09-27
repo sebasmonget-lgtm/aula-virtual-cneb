@@ -43,7 +43,8 @@ test("la actividad de una fila recibe el Project Master confirmado, sus vecinas 
       project_master: { foundation: "Pregunta del grupo" }, activity_route: route } };
   const input = buildTeacherActivityGenerationInput({ request: { ...request, routeItemId: "route-2", context: "Hoy apareció una hoja nueva." }, classroom, learningExperience });
   assert.equal(input.activity_purpose, "Comparar cambios");
-  assert.equal(input.learning_experience_context.confirmed_project_master.activity_route.length, 3);
+  assert.equal(input.learning_experience_context.confirmed_project_master.project_master.foundation, "Pregunta del grupo");
+  assert.equal(input.learning_experience_context.confirmed_project_master.activity_route, undefined);
   assert.deepEqual(input.learning_experience_context.route_position, { number: 2, total: 3 });
   assert.equal(input.learning_experience_context.previous_map_item.id, "route-1");
   assert.equal(input.learning_experience_context.next_map_item.id, "route-3");
