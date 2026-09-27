@@ -5,7 +5,8 @@ import { generateProjectMaster } from "../src/lib/project-flow-service.mjs";
 import { generateWorkshopMaster, generateWorkshopDay } from "../src/lib/workshop-master-service.mjs";
 import { generateTeacherActivity } from "../src/lib/ai-activity-ui-service.mjs";
 import { ageFilteredAnnualCurriculum } from "../src/lib/annual-preplan-service.mjs";
-import { selectWorkshopSheet, availableSheets } from "../src/lib/workshop-sheet-catalog.mjs";
+import { loadKnowledgeBaseV4 } from "../src/lib/knowledge-base-v4.mjs";
+import { availableSheets } from "../src/lib/workshop-sheet-catalog.mjs";
 import { saveActivityDetails } from "../src/lib/experience-lineage.mjs";
 import { renderActivityUnifiedWord } from "../src/lib/activity-unified-word.mjs";
 
@@ -41,23 +42,7 @@ const project = { id: "22222222-2222-4222-8222-222222222222", type: "project", s
 const workshopResult = await generateWorkshopMaster({ classroom, project, annualPlan: { proposal: {
   proposed_experiences: [{ proposal_id: "fixture-proposal", primary_competency_ids: decisions.competency_ids }] } }, cards });
 const workshopItems = structuredClone(workshopResult.proposal.items);
-let selected = workshopItems.find((item) => item.sheet_id);
-let teacherFixtureEdit = false;
-if (!selected) {
-  const first = workshopItems[0];
-  first.competency_id = "MAT_CANTIDAD";
-  first.workshop_type = "matemática";
-  first.title = "Comparamos objetos del patio";
-  first.purpose = "Comparar colecciones de objetos durante el juego y explicar estrategias.";
-  first.observation_focus = "Explica cómo compara las colecciones.";
-  const sheet = await selectWorkshopSheet({ age: 5, competencyId: first.competency_id,
-    intention: `${first.purpose} ${first.observation_focus}` }) ?? (await availableSheets({ age: 5, competencyId: first.competency_id }))[0];
-  if (!sheet) throw new Error("No existe ficha real disponible para completar la prueba.");
-  first.sheet_id = sheet.id;
-  first.sheet_reason = "Ayuda a representar y comentar la comparación después del juego.";
-  selected = first;
-  teacherFixtureEdit = true;
-}
+const selected = workshopItems.find((item) => item.sheet_id) ?? workshopItems[0];
 selected.day_decision = "accepted"; // Fixture: the teacher accepts this optional workshop.
 const master = { id: "33333333-3333-4333-8333-333333333333", parent_project_id: project.id,
   status: "active", version: 1, details: { schema: "workshop-master-v1", items: workshopItems } };
@@ -77,11 +62,13 @@ const doc = { kind: "activity", school_year: 2026, institution_name: "Instituci�
   active_criterion: { criterion_text: route.evaluation_criterion,
     observation_focus: route.observation_focus }, content: { ...details, materials: route.materials },
   workshop: { content: workshop.proposal } };
-const filename = path.join(output, "actividad-taller-con-ficha.docx");
-await writeFile(filename, await renderActivityUnifiedWord(doc, cards));
+const filename = path.join(output, selected.sheet_id ? "actividad-taller-con-ficha.docx" : "actividad-taller-sin-ficha.docx");
+const wordCards = (await loadKnowledgeBaseV4()).competencyCards.map((card) => ({ id: card.id,
+  name: card.official_name, capacities: card.capacities, ages: card.ages }));
+await writeFile(filename, await renderActivityUnifiedWord(doc, wordCards));
 await writeFile(path.join(output, "resultado.json"), JSON.stringify({
   fixture: "Solo datos ficticios; confirmaciones de proyecto y taller simuladas para esta prueba aislada.",
-  teacher_fixture_edit_to_add_sheet: teacherFixtureEdit,
+  teacher_fixture_edit_to_add_sheet: false,
   project_master: projectResult.output, workshop_master: master.details,
   activity: main.proposal, workshop: workshop.proposal,
   models: { project: "gpt-6-sol", workshop_master: workshopResult.metadata.model,
@@ -91,4 +78,4 @@ await writeFile(path.join(output, "resultado.json"), JSON.stringify({
     workshop: workshop.metadata.usage }, elapsed_ms: Date.now() - start,
 }, null, 2));
 console.log(JSON.stringify({ docx: filename, result: path.join(output, "resultado.json"),
-  elapsed_ms: Date.now() - start, sheet_id: selected.sheet_id, teacher_fixture_edit: teacherFixtureEdit }));
+  elapsed_ms: Date.now() - start, sheet_id: selected.sheet_id, teacher_fixture_edit: false }));

@@ -12,6 +12,8 @@ El Workshop Master se propone **después** del Project/Unit Master. Mantiene una
 
 “Preparar día” genera la actividad principal desde la fila confirmada. Solo genera el taller si hay un Workshop Master activo y la opción de ese día fue elegida. Si falla el taller opcional, se entrega la actividad principal con un aviso. Antes de guardar un borrador nuevo, la profesora puede escoger guardar solo la actividad. Si existen ambos borradores, se guardan y confirman juntos con sus propias relaciones; no se inventan registros posteriores.
 
+La selección automática de fichas es conservadora. El catálogo debe coincidir con la edad, competencia, acción didáctica y tema del proyecto; si no encuentra una ficha compatible, deja el taller sin ficha. En la prueba real, una coincidencia de palabras genéricas había asociado una ficha de secuenciar un cuento a un taller de colecciones. La selección por tema y acción corrigió esa asociación y una prueba de regresión impide repetirla.
+
 ## Contratos de contexto de IA
 
 | Workflow | Decisiones y contexto enviados | KB v4.1 y límites |

@@ -28,13 +28,8 @@ function transformActivity(xml, evidence, closure, withWorkshop) {
     (table) => xmlText(table).includes("Estos bloques se mantienen como base") ? "" : table);
   output = removeParagraphsContaining(output, ["Los campos {{...}}", "Esta sección se completa automáticamente con los registros creados desde"]);
   output = removePageBreakAfterTable(output, "{{COMPETENCIA_PRINCIPAL}}");
+  output = removePageBreakAfterTable(output, "JUEGO LIBRE");
   output = removePageBreakAfterTable(output, "{{INICIO}}");
-  if (withWorkshop) output = output.replace(/<w:p(?:\s[^>]*)?>[\s\S]*?<\/w:p>/g, (paragraph) => {
-    if (!xmlText(paragraph).includes("VIII. TALLER DEL DÍA")) return paragraph;
-    return paragraph.includes("<w:pPr>")
-      ? paragraph.replace("<w:pPr>", "<w:pPr><w:pageBreakBefore/>")
-      : paragraph.replace(/^(<w:p(?:\s[^>]*)?>)/, "$1<w:pPr><w:pageBreakBefore/></w:pPr>");
-  });
   return output;
 }
 

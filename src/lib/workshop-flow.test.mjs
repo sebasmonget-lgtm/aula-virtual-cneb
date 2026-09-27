@@ -53,6 +53,21 @@ test("competencia e intención se fijan antes de buscar ficha; puede quedarse si
   assert.ok((await verifiedSheetFile(source[0])).length > 1000);
 });
 
+test("la coincidencia verbal no vincula una ficha de cuento a un taller de colecciones", () => {
+  const sheets = [
+    { id: "cuento", age: 5, competency_id: "MAT_CANTIDAD", title: "Ordena la secuencia del cuento",
+      intention: "Volver a contar la historia", actions: ["contar el cuento"], description: "Juego para volver a contar" },
+    { id: "grupos", age: 5, competency_id: "MAT_CANTIDAD", title: "Agrupamos colecciones",
+      intention: "Agrupar colecciones según criterios propios", actions: ["agrupar objetos"], description: "Organizar grupos" },
+  ];
+  const ranked = rankWorkshopSheets(sheets, { age: 5, competencyId: "MAT_CANTIDAD",
+    intention: "Comparar y agrupar colecciones de objetos durante el juego, después contar cómo lo hicieron" });
+  assert.deepEqual(ranked.map((sheet) => sheet.id), ["grupos"]);
+  assert.deepEqual(rankWorkshopSheets(sheets, { age: 5, competencyId: "MAT_CANTIDAD",
+    intention: "Comparar y agrupar colecciones de objetos durante el juego",
+    topic: "Sombras y objetos" }), []);
+});
+
 test("el taller diario conserva tipo, competencia, ficha y maestro confirmado", async () => {
   const master = { id: "wm", parent_project_id: "p", status: "active", version: 1,
     details: { schema: "workshop-master-v1", items: [item(1), item(2)] } };

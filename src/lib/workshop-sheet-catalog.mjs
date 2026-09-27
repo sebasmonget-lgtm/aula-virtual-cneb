@@ -13,6 +13,12 @@ const printableCompetencies = new Set(["MAT_CANTIDAD", "MAT_FORMA", "CYT_INDAGA"
 const stop = new Set(["para", "como", "sobre", "entre", "desde", "donde", "cuando", "hacen", "hacer", "nuestro", "nuestra", "niños", "niñas", "taller", "proyecto", "actividad", "ficha", "observar", "representar"]);
 const words = (value) => new Set(String(value ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "")
   .toLocaleLowerCase("es").match(/[a-zñ]{4,}/g)?.filter((word) => !stop.has(word)) ?? []);
+const quantityTopics = ["cantid", "cuant", "colecci", "conjunt", "numero", "agrup", "emparej", "correspond", "repart"];
+const genericThemes = new Set(["exploramos", "explorar", "jugamos", "jugar", "juego", "objetos", "materiales",
+  "nuestro", "nuestra", "entorno", "pensamos", "aprendemos", "cantidad", "cantidades", "proyecto"]);
+const sharedTopic = (wanted, content) => quantityTopics.some((stem) =>
+  [...wanted].some((word) => word.startsWith(stem)) && [...content].some((word) => word.startsWith(stem)));
+const isStorySheet = (sheet) => /\b(cuento|historia|narraci[oó]n)\b/i.test(`${sheet.title} ${sheet.intention}`);
 const inside = (root, file) => file.startsWith(`${path.resolve(root)}${path.sep}`);
 let cache;
 
@@ -48,19 +54,24 @@ export async function availableSheets({ age, competencyId, root = defaultRoot() 
   return available;
 }
 
-export function rankWorkshopSheets(sheets, { age, competencyId, intention }) {
+export function rankWorkshopSheets(sheets, { age, competencyId, intention, topic = "" }) {
   const wanted = words(intention);
+  const topicWords = [...words(topic)].filter((word) => !genericThemes.has(word));
   return sheets.filter((sheet) => sheet.age === Number(age) && sheet.competency_id === competencyId)
     .map((sheet) => {
       const content = words([sheet.title, sheet.intention, sheet.description, ...sheet.actions].join(" "));
       const score = [...wanted].filter((word) => content.has(word)).length;
-      return { ...sheet, match_score: score };
-    }).filter((sheet) => sheet.match_score >= 2)
+      const topicCompatible = competencyId !== "MAT_CANTIDAD" || sharedTopic(wanted, content);
+      const storyCompatible = !isStorySheet(sheet) || /\b(cuento|historia|narraci[oó]n)\b/i.test(intention);
+      const themeCompatible = !topicWords.length || topicWords.some((word) => content.has(word));
+      return { sheet, match_score: score, topicCompatible, storyCompatible, themeCompatible };
+    }).filter((sheet) => sheet.match_score >= 2 && sheet.topicCompatible && sheet.storyCompatible && sheet.themeCompatible)
+    .map(({ sheet, match_score }) => ({ ...sheet, match_score }))
     .sort((a, b) => b.match_score - a.match_score || a.title.localeCompare(b.title, "es"));
 }
 
-export async function selectWorkshopSheet({ age, competencyId, intention, root }) {
-  return rankWorkshopSheets(await availableSheets({ age, competencyId, root }), { age, competencyId, intention })[0] ?? null;
+export async function selectWorkshopSheet({ age, competencyId, intention, topic, root }) {
+  return rankWorkshopSheets(await availableSheets({ age, competencyId, root }), { age, competencyId, intention, topic })[0] ?? null;
 }
 
 export async function verifiedSheetFile(sheet) {

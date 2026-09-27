@@ -60,11 +60,11 @@ export function validateWorkshopMaster(output, route, applicableIds, sheetIds = 
   return output;
 }
 
-export async function attachWorkshopSheets(master, route, age, { selectSheet = selectWorkshopSheet } = {}) {
+export async function attachWorkshopSheets(master, route, age, { selectSheet = selectWorkshopSheet, topic = "" } = {}) {
   return { items: await Promise.all(master.items.map(async (item, index) => {
     // The competence and purpose are chosen before any sheet is inspected.
     const intention = [item.purpose, item.observation_focus, item.brief_outline, route[index]?.title].join(" ");
-    const sheet = await selectSheet({ age, competencyId: item.competency_id, intention });
+    const sheet = await selectSheet({ age, competencyId: item.competency_id, intention, topic });
     return { ...item, day_decision: "suggested", sheet_id: sheet?.id ?? null,
       sheet_reason: sheet ? `Apoya el registro de ${item.observation_focus.toLocaleLowerCase("es")}.` : null };
   })) };
@@ -97,7 +97,7 @@ export async function generateWorkshopMaster({ classroom, project, annualPlan, c
   task: "Propón exactamente un taller por fila y fecha del mapa. Elige primero la competencia y la intención. Prioriza oportunidades poco cubiertas si son pertinentes para un taller; no fuerces cuotas. El taller es juego, exploración, creación o movimiento con mediación docente. No inventes observaciones. No conoces fichas todavía; no menciones una ficha concreta." };
   const result = await createProvider(plan).generate(buildProviderRequest("workshop_master", bundle, plan, WORKSHOP_MASTER_SCHEMA));
   const base = validateWorkshopMaster(result.output, route, cards.map((card) => card.id));
-  const proposal = await attachSheets(base, route, classroom.age);
+  const proposal = await attachSheets(base, route, classroom.age, { topic: project.title });
   return { proposal, metadata: { workflow: "workshop_master", model: plan.model,
     response_id: result.provider_metadata?.response_id ?? null, usage: result.provider_metadata?.usage ?? null } };
 }

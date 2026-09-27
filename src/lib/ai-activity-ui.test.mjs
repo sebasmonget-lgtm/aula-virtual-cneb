@@ -25,7 +25,7 @@ test("la pantalla Planificar usa Activities parent-aware y no el prototipo aisla
   assert.match(source, /active === "Planificar"/);
   assert.match(source, /ParentActivityGenerator/);
   assert.match(activityScreen, /¿En qué experiencia trabajarás\?/);
-  assert.match(activityScreen, /Prepara la próxima actividad/);
+  assert.match(activityScreen, /Preparar día/);
   assert.match(activityScreen, /\/api\/activities\?experienceId=/);
 });
 
