@@ -4,7 +4,7 @@ import { competencyApplicability } from "../src/lib/competency-applicability.mjs
 import { resolveAIExecutionPlan } from "../src/lib/ai-execution-router-v4.mjs";
 import { createAIProviderForPlan } from "../src/lib/ai-provider-factory.mjs";
 import { generateAIWorkflowV4 } from "../src/lib/ai-generation-v4.mjs";
-import { assessmentSourceSnapshot, buildAssessmentInput, neutralizeAssessmentText, sanitizeEvidenceForAssessment, validateAssessmentProposal } from "../src/lib/assessment-v4-service.mjs";
+import { assessmentSourceSnapshot, assessmentStudentNames, buildAssessmentInput, neutralizeAssessmentText, sanitizeEvidenceForAssessment, validateAssessmentProposal } from "../src/lib/assessment-v4-service.mjs";
 import { buildDescriptiveConclusionInput, sameAssessmentSnapshot, sourceAssessmentSnapshot, validateDescriptiveConclusion } from "../src/lib/descriptive-conclusion-v4-service.mjs";
 import { dateOnly, defaultEvaluationPeriods, loadPeriodEvaluationRows, periodClosureFingerprint } from "../src/lib/period-evaluation-service.mjs";
 import { assertSavedEvaluationDraft, savePeriodEvaluationDraft } from "../src/lib/period-evaluation-draft-service.mjs";
@@ -295,7 +295,8 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
       if (request.method === "POST" && url.pathname === "/api/period-evaluations/suggest") {
         const body = await readJson(request), data = await selectedRow(body);
         if (!data.row.sourceRows.length) throw new Error("Registra primero observaciones de esta competencia.");
-        const student = await studentForClass(data.classroom, body.studentId), names = [student.first_name, student.last_name, student.preferred_name];
+        const student = await studentForClass(data.classroom, body.studentId);
+        const names = assessmentStudentNames((await db.query('select first_name,last_name,preferred_name from students where classroom_id=$1',[data.classroom.id])).rows);
         const master = (await db.query(`select * from assessment_masters where classroom_id=$1 and evaluation_period_id=$2 and status='active'`, [data.classroom.id, data.period.id])).rows[0];
         if (!master) throw new Error("Confirma primero el marco de evaluación del período.");
         const contextV4 = await loadClassroomContext(data.classroom);
@@ -378,7 +379,8 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
         if (data.row.draft || data.row.state === "needs_review") throw new VersionConflictError("Confirma primero la revisión de la valoración docente.");
         if(!assessment?.achievement_level||!assessment.teacher_confirmed_at) throw new Error("Confirma primero la valoración docente.");
         if(!data.row.sourceRows.length) throw new Error("No hay evidencias para redactar una conclusión.");
-        const student=await studentForClass(data.classroom,body.studentId),names=[student.first_name,student.last_name,student.preferred_name];
+        const student=await studentForClass(data.classroom,body.studentId);
+        const names=assessmentStudentNames((await db.query('select first_name,last_name,preferred_name from students where classroom_id=$1',[data.classroom.id])).rows);
         const master=assessment.assessment_master_id?(await db.query(`select * from assessment_masters where id=$1 and status in ('active','archived')`,[assessment.assessment_master_id])).rows[0]:null;
         const prior=(await db.query(`select details from competency_descriptive_conclusions where student_id=$1 and competency_v4_id=$2 and status='active' and period_end<$3::date order by period_end desc limit 1`,[student.id,data.card.id,data.period.starts_on])).rows[0];
         const input=buildDescriptiveConclusionInput({age:data.classroom.age,competencyId:data.card.id,assessment,

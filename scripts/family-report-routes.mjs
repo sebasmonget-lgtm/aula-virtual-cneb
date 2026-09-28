@@ -6,6 +6,7 @@ import { createAIProviderForPlan } from "../src/lib/ai-provider-factory.mjs";
 import { generateAIWorkflowV4 } from "../src/lib/ai-generation-v4.mjs";
 import { buildFamilyReportInput, conclusionSourceSnapshot, sameConclusionSourceSnapshot, selectConfirmedConclusions, validateFamilyReport, validateFamilyReportPeriod } from "../src/lib/family-report-v4-service.mjs";
 import { httpStatusForError, publicErrorMessage } from "../src/lib/version-integrity.mjs";
+import { assessmentStudentNames } from "../src/lib/assessment-v4-service.mjs";
 
 const dateOnly = (value) => value instanceof Date ? value.toISOString().slice(0, 10) : String(value).slice(0, 10);
 const sameIds = (left, right) => Array.isArray(left) && Array.isArray(right) && left.length === right.length && left.every((id, index) => id === right[index]);
@@ -97,7 +98,8 @@ export function createFamilyReportRouteHandler({ db, teacherId, annualPlanningCo
         const student = await studentInClass(context, body.studentId);
         const period=await formalPeriod(context,body.periodId,body.periodStart,body.periodEnd);
         const { ids, rows } = await validatedSources(context, student.id, body.periodStart, body.periodEnd, body.competencyIds ?? [],period?.id);
-        const input = buildFamilyReportInput({ age: context.age, competencyIds: ids, conclusions: rows, knownNames: [student.first_name, student.last_name, student.preferred_name], castellanoL2Applicable: context.castellano_l2_applicable === true, religionApplicable: context.religion_applicable === true });
+        const classmates=(await db.query('select first_name,last_name,preferred_name from students where classroom_id=$1',[context.id])).rows;
+        const input = buildFamilyReportInput({ age: context.age, competencyIds: ids, conclusions: rows, knownNames: assessmentStudentNames(classmates), castellanoL2Applicable: context.castellano_l2_applicable === true, religionApplicable: context.religion_applicable === true });
         const plan = resolveAIExecutionPlan({ workflow: "family_report", task: "generation" });
         const result = await generate(input, { provider: createProvider(plan), executionPlan: plan });
         const generationId = randomUUID();

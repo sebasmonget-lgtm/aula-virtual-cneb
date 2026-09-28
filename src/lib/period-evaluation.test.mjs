@@ -173,6 +173,7 @@ async function fixture({ analysis = mockAnalysis(), jsonbPending = false } = {})
 test("conclusión confirma snapshot recargado de JSONB pero rechaza valores cambiados", async () => {
   const f = await fixture({ jsonbPending: true });
   try {
+    await f.db.query("update evidences set observation_text='Ana escucha a Luis y propone alternar.' where id=$1",[firstEvidence]);
     const base = { classroomId: classId, periodId: firstPeriod, studentId: studentA, competencyId: "COM_ORAL" };
     const detail = (await f.call("GET", `/api/period-evaluations/detail?classroomId=${classId}&periodId=${firstPeriod}&studentId=${studentA}&competencyId=COM_ORAL`)).body;
     const decision = { ...base, evidenceFingerprint: detail.evidence_fingerprint, provisionalLevel: "B", achievementLevel: "B",
@@ -182,6 +183,7 @@ test("conclusión confirma snapshot recargado de JSONB pero rechaza valores camb
     const assessment = await f.call("POST", "/api/period-evaluations/confirm", { ...decision, expectedDraftRevision: saved.body.draft_revision });
     assert.equal(assessment.status, 200, JSON.stringify(assessment.body));
     await confirmGeneratedConclusion(f, firstPeriod, studentA);
+    assert.doesNotMatch(JSON.stringify(f.calls.find(item=>item.workflow==='descriptive_conclusion')), /\b(?:Ana|Luis|Pérez|Rojas)\b/);
     const another = await f.call("POST", "/api/period-evaluations/conclusion/suggest", base);
     const item = f.pending.get(another.body.generation_id);
     item.source_assessment_snapshot.achievement_level = "A";
@@ -195,9 +197,11 @@ test("el análisis reutiliza la huella completa del aula y rechaza cambios reale
   const f = await fixture();
   try {
     const selection = { classroomId: classId, periodId: firstPeriod, studentId: studentA, competencyId: "COM_ORAL" };
+    await f.db.query("update evidences set observation_text='Ana escucha a Luis Rojas y acuerdan turnos.' where id=$1", [firstEvidence]);
     const current = await f.call("POST", "/api/period-evaluations/suggest", selection);
     assert.equal(current.status, 200, JSON.stringify(current.body));
     assert.equal(f.calls.length, 1);
+    assert.doesNotMatch(JSON.stringify(f.calls[0]), /\b(?:Ana|Luis|Pérez|Rojas)\b/);
     f.currentContext.source_fingerprint = "confirmed-classroom-context-2";
     const stale = await f.call("POST", "/api/period-evaluations/suggest", selection);
     assert.equal(stale.status, 422);

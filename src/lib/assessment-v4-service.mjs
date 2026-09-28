@@ -33,6 +33,14 @@ export function neutralizeAssessmentText(value, names) {
     .replace(/\b[A-Za-z0-9+/]{80,}={0,2}\b/g, "[archivo privado]");
 }
 
+/** Nombres conocidos del aula autorizada, incluidos pares mencionados en una nota. */
+export function assessmentStudentNames(students) {
+  return [...new Set(students.flatMap(student=>[student.first_name,student.last_name,student.preferred_name,
+    [student.first_name,student.last_name].filter(Boolean).join(' ')])
+    .filter(name=>typeof name==='string'&&name.trim().length>1)
+    .flatMap(name=>[name,name.normalize('NFD').replace(/\p{M}/gu,'')]))];
+}
+
 export function sanitizeEvidenceForAssessment(evidence, knownNames = []) {
   return { observed_on: evidenceDay(evidence), activity_title: neutralizeAssessmentText(evidence.activity_title, knownNames), criterion_text: neutralizeAssessmentText(evidence.criterion_text, knownNames), observation_status: evidence.observation_status, observation_note: neutralizeAssessmentText(evidence.observation_text, knownNames) ?? null, media_available: Boolean(evidence.media_available) };
 }

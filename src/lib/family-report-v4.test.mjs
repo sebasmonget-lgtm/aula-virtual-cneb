@@ -136,12 +136,13 @@ test("aplicabilidad L2 depende del aula y una fuente insuficiente conserva la in
 
 test("proveedor recibe hallazgos confirmados anonimizados, nunca fuentes internas, rutas ni fotos", async () => {
   const f = await fixture();
-  await f.db.query(`update competency_descriptive_conclusions set details=$1::jsonb where id=$2`, [JSON.stringify({ ...sourceDetails("COM_ORAL"), conclusion_text: `Ana observó /private/photo.jpg y ${studentId}`, progress_examples: ["Anita explicó algo."] }), oralId]);
+  await f.db.query("update students set first_name='Inés',last_name='Ventura' where id=$1",[otherStudentId]);
+  await f.db.query(`update competency_descriptive_conclusions set details=$1::jsonb where id=$2`, [JSON.stringify({ ...sourceDetails("COM_ORAL"), conclusion_text: `Ana acordó con Inés Ventura y observó /private/photo.jpg y ${studentId}`, progress_examples: ["Anita explicó algo a Ines."] }), oralId]);
   const generated = await f.generate(["COM_ORAL"]); assert.equal(generated.status, 200);
   const input = f.captures.find((item) => item.input).input;
   const payload = JSON.stringify(input);
   assert.match(payload, /current_student/);
-  assert.doesNotMatch(payload, /\b(?:Ana|Anita|Pérez)\b|00000000|photo\.jpg|base64|generation_metadata|source_conclusion_ids|fingerprint|audit-only/);
+  assert.doesNotMatch(payload, /\b(?:Ana|Anita|Pérez|Inés|Ines|Ventura)\b|00000000|photo\.jpg|base64|generation_metadata|source_conclusion_ids|fingerprint|audit-only/);
   assert.deepEqual(input.competency_ids, ["COM_ORAL"]);
   const pending = f.pending.get(generated.body.generation_id);
   assert.deepEqual(pending.source_conclusion_ids, [oralId]); assert.equal(pending.source_conclusion_snapshot[0].details_hash.length, 64);
