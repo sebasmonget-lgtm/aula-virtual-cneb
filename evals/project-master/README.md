@@ -22,6 +22,12 @@ Antes de piloto siguen pendientes seis casos desidentificados adjudicados por es
 
 ## Rollback
 
+## Reducción posterior por control de costos
+
+El usuario suspendió la expansión y fijó un techo de **USD 3 adicionales**, con 12–18 casos y máximo dos repeticiones seleccionadas por caso. `select-reduced.mjs` es una selección **sin API y sin modificar el checkpoint**: identifica diez casos con pares completos (26 repeticiones pareadas históricas), selecciona una por caso y exporta veinte salidas anónimas para revisión. Los otros 43 éxitos también se conservan. El plan mínimo para doce añade dos salidas A: `base-5-p4-baseline` y `hard-holiday`, reutilizando B. El número histórico de repetición 3 de `hard-holiday` no implica generar tres repeticiones: solo se seleccionaría esa pareja ya iniciada.
+
+El saldo sigue agotado: no se ejecutan esas completaciones ni la revisión independiente, no se cambia de proveedor y el gasto adicional es USD 0. No volver a usar el runner completo de 216. La rúbrica no cambia; el tamaño, cobertura y sesgo de disponibilidad sí limitan la conclusión. Sin revisión ciega no hay ganador: A continúa como fallback. Cualquier futura llamada requerirá control acumulado estricto del techo de USD 3, reserva previa del máximo de tokens por petición y no reintentar éxitos. Este selector **no** es un runner de llamadas con presupuesto; no autoriza ejecutarlas.
+
 La corrida corregida alcanzó 216 registros: 63 válidos y 153 fallidos por cuota (`credit_balance_exhausted`, HTTP 429), no por rechazo curricular. El usuario ordenó continuar sin pruebas API; se conserva A como fallback, sin ganador estadístico. Las dos revisiones ciegas completas quedan pendientes externas. No volver a invocar los scripts live hasta que cambie expresamente esa instrucción. Ver `docs/qa/f2-project-master-provisional-2026-09-28.md`; resultados válidos preservados, sin regeneración.
 
 No hay migración ni cambio productivo. Eliminar los archivos de preparación de F2 deja intacto el pipeline A y todo registro histórico. El respaldo QA de F1/F2 permanece en `.local/qa-backups/` (ignorado por Git); no se toca para ensayar modelos.

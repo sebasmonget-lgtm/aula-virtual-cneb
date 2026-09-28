@@ -40,3 +40,27 @@ Ninguno de tests/typecheck/lint estaba colgado: solo el generador seguía activo
 Se continúa la implementación local F3 con A conforme al fallback autorizado. La comparación A/B y sus dos revisiones independientes quedan **PENDIENTES EXTERNOS por saldo**, además de la revisión humana previa al piloto. No se cambiará el manifiesto ni se sobrescribirán resultados para forzar una decisión. Cualquier futura recuperación debe preservar éxitos y separar los intentos fallidos de cuota, sin presentarlos como un nuevo experimento desde cero ni como fallos semánticos.
 
 No se escribieron datos pedagógicos de QA ni históricos durante F2. El rollback mantiene el pipeline A existente y deja intacta la base. Las dos modificaciones ajenas `environment-api.json` y `environment-web.json` quedan fuera del checkpoint.
+
+## Reducción aprobada posterior: techo de USD 3 adicionales
+
+El usuario redujo F2 a 12–18 casos, máximo dos repeticiones seleccionadas por caso, sin repetir ninguna salida válida. La selección de menor costo usa **una repetición pareada por caso**. Hay **10 casos completos y 26 parejas históricas disponibles**: ocho casos de edad 3 en P1–P4, con/sin contexto nuevo, y dos de edad 4 en P1. Se exportaron veinte salidas codificadas y ordenadas por ID ciego; el archivo no revela brazo, costos ni latencias. Los 63 éxitos originales permanecen íntegros y no se descartaron los fallos del archivo fuente.
+
+Para alcanzar doce casos con edad 5 y dificultad adicional, faltan solo dos salidas A: `base-5-p4-baseline` repetición histórica 2 y `hard-holiday` repetición histórica 3; ambos B ya existen. El índice 3 del último es un identificador histórico, no una solicitud de generar tres repeticiones. No se generan casos adicionales que ya tienen una pareja suficiente.
+
+El saldo continúa agotado. No se invocaron modelos para completaciones ni revisión: **gasto adicional USD 0 / límite USD 3**. La evaluación independiente permanece pendiente; no se sustituyó por una rúbrica heurística presentada como juicio pedagógico. Se continúa F3–F12 con A como fallback, conforme a la instrucción de usar lo disponible cuando la comparación no sea concluyente.
+
+| Métrica del subconjunto pareado disponible | A (10 salidas) | B (10 salidas) |
+| --- | ---: | ---: |
+| Tokens entrada | 120.892 | 42.670 |
+| Tokens salida | 51.900 | 46.022 |
+| Costo medible acumulado USD | 0,622445 | 0,493808 |
+| Costo mediano medible USD | 0,059837 | 0,049629 |
+| Latencia P50 s | 115,45 | 108,34 |
+| Latencia P95 s | 141,49 | 293,78 |
+| Reintentos | 0 | 3 |
+| Intentos sin costo conocido | 0 | 3 |
+| Correcciones docentes/rúbrica | Pendientes | Pendientes |
+
+Los 80 fallos de proveedor A y 73 B de la corrida completa se registran separadamente: no se borran ni se reinterpretan como fallos curriculares. El subconjunto selecciona supervivientes por disponibilidad, no puntajes, y **no representa la matriz completa**. B tiene menor costo registrado pero tres intentos de costo desconocido y mayor P95; esto no permite afirmar eficiencia ni mejor pedagogía. La rúbrica/umbrales del Plan Maestro se conservan, pero no se aplican una decisión sin revisiones. El selector sin API pasó su regresión (12/12 tests F2 tras añadirla) y verificó que el archivo fuente no cambió durante la exportación.
+
+Artefactos locales: `.local/test-results/project-master-f2/reduced/protocol-and-metrics.json` y `blind-bundles.json`. No usar nuevamente el runner completo; cualquier futura ejecución reducida debe reservar un costo máximo por petición y descontarlo del techo acumulado antes de cada llamada, incluida revisión/reintentos. El selector no ejecuta llamadas.

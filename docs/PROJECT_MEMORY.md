@@ -288,6 +288,8 @@ Base `5efa58a`, rama `codex/nuevo-ayni-f1`. El ID de propuesta anual es la ident
 
 ## Plan Maestro F2: excepción de evaluación provisional (2026-09-28)
 
+**Reducción posterior por costo.** Usuario limita F2 a 12–18 casos, máximo dos repeticiones/caso y USD 3 adicionales. Selector sin API: 10 casos ya pareados, una repetición seleccionada/caso, veinte salidas ciegas; se conservan las 63 válidas. Faltan dos A para un set mínimo de doce con edad 5/feriado. Saldo agotado, gasto adicional USD 0 y revisión pendiente externa. No usar el runner completo ni afirmar ganador. La implementación local continúa con A como fallback.
+
 **Checkpoint de continuidad sin API.** El usuario informó saldo negativo y autorizó proseguir sin pruebas API. La corrida corregida conserva 216 registros (63 válidos, 153 fallos de proveedor por cuota); no tiene revisión ciega ni ganador. Estrategia conservada: A por fallback autorizado, no por superioridad medida. Tests focales 11/11, suite 524/524, typecheck/lint/build PASS. No migraciones ni activación B. Las llamadas externas quedan suspendidas; F3 continúa localmente. Ver `docs/qa/f2-project-master-provisional-2026-09-28.md`.
 
 La autorización posterior a F1 permite ejecutar el bake-off A/B sin especialistas humanos actuales: seis casos difíciles se construyen de CNEB/QA sin datos identificables y dos evaluaciones de IA independientes puntúan a ciegas. Rúbrica y umbrales del plan permanecen; ausencia de especialistas deja pendiente la validación humana antes de piloto. La estrategia conservadora es A si B no gana claramente. Los scripts de `evals/project-master/` no activan producción ni escriben la base; los resultados locales van a `.local/test-results/project-master-f2/`. Ver ADR 087.

@@ -1,0 +1,12 @@
+import { readFile, writeFile, mkdir } from "node:fs/promises";
+import { join } from "node:path";
+import { reducedExperiment } from "./reduced.mjs";
+const source = join(".local", "test-results", "project-master-f2", "full", "results.json");
+const original = await readFile(source, "utf8");
+const { report, bundles } = reducedExperiment(JSON.parse(original));
+const dir = join(".local", "test-results", "project-master-f2", "reduced");
+await mkdir(dir, { recursive: true });
+await writeFile(join(dir, "protocol-and-metrics.json"), `${JSON.stringify(report, null, 2)}\n`);
+await writeFile(join(dir, "blind-bundles.json"), `${JSON.stringify(bundles, null, 2)}\n`);
+if (await readFile(source, "utf8") !== original) throw new Error("Source changed during read-only selection.");
+console.log(JSON.stringify(report, null, 2));
