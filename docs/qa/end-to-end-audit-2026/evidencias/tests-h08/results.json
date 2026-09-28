@@ -1,0 +1,71 @@
+[
+  {
+    "name": "typecheck",
+    "command": [
+      "node",
+      "node_modules/typescript/bin/tsc",
+      "--noEmit"
+    ],
+    "startedAt": "2026-09-28T03:57:25.307Z",
+    "endedAt": "2026-09-28T03:57:32.126Z",
+    "exitCode": 0,
+    "counters": null
+  },
+  {
+    "name": "unit-tests",
+    "command": [
+      "node",
+      "--test",
+      "--test-concurrency=2",
+      "src/lib/annual-preplan-round-trip.test.mjs",
+      "src/lib/annual-preplan-service.test.mjs",
+      "src/lib/annual-plan-hardening.test.mjs",
+      "src/lib/annual-plan-calendar.test.mjs",
+      "src/lib/annual-plan-version-service.test.mjs",
+      "src/lib/annual-formal-service.test.mjs",
+      "src/lib/version-integrity.test.mjs",
+      "src/lib/planning-journey.test.mjs",
+      "src/lib/workflow-ui-continuity.test.mjs",
+      "src/lib/annual-plan-presentation.test.mjs"
+    ],
+    "startedAt": "2026-09-28T03:57:32.129Z",
+    "endedAt": "2026-09-28T03:57:54.217Z",
+    "exitCode": 0,
+    "counters": {
+      "tests": 63,
+      "pass": 63,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    }
+  },
+  {
+    "name": "lint",
+    "command": [
+      "node",
+      "node_modules/eslint/bin/eslint.js",
+      ".",
+      "--ignore-pattern",
+      "dist",
+      "--ignore-pattern",
+      ".next"
+    ],
+    "startedAt": "2026-09-28T03:57:54.220Z",
+    "endedAt": "2026-09-28T03:58:16.082Z",
+    "exitCode": 0,
+    "counters": null
+  },
+  {
+    "name": "build",
+    "command": [
+      "node",
+      "scripts/run-framework.mjs",
+      "build"
+    ],
+    "startedAt": "2026-09-28T03:58:16.084Z",
+    "endedAt": "2026-09-28T03:58:27.285Z",
+    "exitCode": 0,
+    "counters": null
+  }
+]

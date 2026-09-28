@@ -1,5 +1,13 @@
 # Decisiones de arquitectura
 
+## ADR 084 Preplan recargable con calendario derivado
+
+**Decisión (2026-09-27).** Las filas guardadas de `annual_preplan_v1` pueden transportar los cuatro metadatos de calendario calculados por servidor. El validador de edición/confirmación reconoce solo esos campos adicionales y los excluye de su salida editable. Guardar y confirmar vuelven a calcular fechas y días desde el calendario autorizado. El contrato estricto del modelo no admite metadatos de calendario ni campos arbitrarios. No cambian aplicabilidad, IDs, modelos ni permisos.
+
+**Integridad.** La proyección de calendario se actualiza solo cuando el JSONB cambia; una revalidación idéntica no incrementa la revisión optimista antes de confirmar. La función de persistencia compartida permite probar la misma ruta usada por el servidor con PGlite y migraciones completas. No requiere migración ni modifica documentos activos históricos.
+
+**Validación y reversión.** Las dos regresiones reprodujeron H08 antes del fix y ahora pasan: generar/persistir/recargar/confirmar intacto y editar/guardar/recargar/confirmar. 63 pruebas relacionadas, typecheck, lint y build PASS; confirmación por UI pendiente al registrar el commit. Revertir únicamente el commit lógico, sin borrar datos ni revertir migraciones. Evidencia histórica y continuación en `docs/qa/end-to-end-audit-2026/18_CORRECCIONES_DURANTE_E2E.md`.
+
 ## ADR 083 Revisión individual opcional y resumen docente fácil de completar
 
 **Decisión (2026-09-27).** Los nombres y el acceso «Ver registros» pasan a una sección visible debajo del mapa, sin columna de revisión al extremo derecho. El comentario individual es opcional y exclusivamente docente: se escribe o dicta y «Guardar comentario» guarda y confirma esa versión explícitamente. Se retira la sugerencia individual de la interfaz y su ruta responde `422 teacher_comment_only` sin llamar al proveedor. Las versiones ya confirmadas no se reescriben. Esta decisión sustituye el requisito de comentarios de todos los niños de ADR 037/049/069 y la asistencia individual activa de ADR 069; no elimina la confirmación de la visión grupal y las prioridades antes del plan nuevo.

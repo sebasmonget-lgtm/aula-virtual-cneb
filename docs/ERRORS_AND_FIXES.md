@@ -1,5 +1,15 @@
 # Errores y soluciones
 
+## 2026-09-27 El calendario persistido invalidaba el propio preplan anual (H08)
+
+**Síntoma.** Un preplan recién generado se recargaba con doce propuestas, pero guardar una edición válida o confirmar intacto devolvía «Revisa los datos de la propuesta 1».
+
+**Causa raíz.** Persistencia añadía cuatro campos derivados no reconocidos por el validador estricto de filas. La revalidación también ejecutaba un UPDATE idéntico que incrementaba la revisión optimista antes de confirmar.
+
+**Solución validada en regresión.** El validador del round-trip admite únicamente los metadatos derivados conocidos, devuelve campos editables y conserva el esquema del modelo estricto. Las fechas/días se recalculan desde el calendario de servidor; el UPDATE se omite cuando JSONB es igual. Las dos regresiones fallaron antes y pasan después sobre PGlite con todas las migraciones, incluyendo persistir/recargar/confirmar intacto y editar/guardar/recargar/confirmar. 63 tests relacionados, typecheck, lint y build PASS. La comprobación E2E por UI continúa después del commit; no se presenta aún como PASS funcional.
+
+**Prevención.** Probar el objeto enriquecido que vuelve de PostgreSQL, no solo el objeto inicial del modelo. Un recalculo sin cambios no debe mutar una revisión. Mantener rechazo de campos desconocidos, IDs no aplicables y revisiones obsoletas. Sin migración ni cambios en el aula original; ver ADR 084.
+
 ## 2026-09-27 La revisión opcional de cada niño seguía bloqueando el resumen del aula
 
 **Síntoma.** El acceso individual estaba al final de una tabla ancha, el resumen exigía comentarios confirmados de todos los niños y su información se recortaba dentro de un scroll. Mover solo el botón no habría permitido avanzar sin revisar a cada niño.

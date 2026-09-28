@@ -2,11 +2,16 @@
 import { execFileSync, spawn } from 'node:child_process';
 import { writeFile, mkdir } from 'node:fs/promises';
 import path from 'node:path';
-const output = path.resolve('docs/qa/end-to-end-audit-2026/evidencias/tests');
+const runLabel = process.argv[2] ?? '';
+if (runLabel && !/^[a-z0-9-]+$/.test(runLabel)) throw new Error('Etiqueta de validación inválida');
+const output = path.resolve(`docs/qa/end-to-end-audit-2026/evidencias/tests${runLabel ? `-${runLabel}` : ''}`);
 await mkdir(output, { recursive: true });
 const environment = { ...process.env };
 for (const key of Object.keys(environment)) if (/API_KEY|TOKEN|DATABASE_URL|SUPABASE|AYNI_/i.test(key)) delete environment[key];
-const files = execFileSync('rg', ['--files', 'src', 'scripts'], { encoding: 'utf8' }).trim().split(/\r?\n/).filter(file => /\.test\.mjs$/.test(file));
+const discovered = execFileSync('rg', ['--files', 'src', 'scripts'], { encoding: 'utf8' }).trim().split(/\r?\n/).filter(file => /\.test\.mjs$/.test(file));
+const requested = process.argv.slice(3).map(file => file.replaceAll('\\', '/'));
+if (requested.some(file => !discovered.some(found => found.replaceAll('\\', '/') === file))) throw new Error('Prueba desconocida');
+const files = requested.length ? requested : discovered;
 const commands = [
   { name: 'typecheck', args: ['node_modules/typescript/bin/tsc', '--noEmit'] },
   { name: 'unit-tests', args: ['--test', '--test-concurrency=2', ...files] },

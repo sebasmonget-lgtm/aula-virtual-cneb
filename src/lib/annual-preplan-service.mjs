@@ -11,6 +11,7 @@ import { AnnualCalendarError, buildEditableAnnualSchedule, buildFlexibleAnnualSc
 export const ANNUAL_PREPLAN_FORMAT = "annual_preplan_v1";
 const monthNames = ["", "", "", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
 const rowFields = ["proposal_id", "experience_type", "title", "period", "month", "duration_weeks", "rationale", "purpose", "primary_competency_ids"];
+const calendarFields = ["planned_start_date", "planned_end_date", "planned_instructional_days", "period_label"];
 const aiRowFields = rowFields.filter((field) => field !== "proposal_id");
 const rowProperties = { experience_type: { enum: ["project", "unit"] }, title: { type: "string" },
   period: { enum: ["Bimestre 1", "Bimestre 2", "Bimestre 3", "Bimestre 4"] }, month: { type: "integer" },
@@ -26,17 +27,21 @@ export class AnnualPreplanError extends Error {
 const fail = (reason, message) => { throw new AnnualPreplanError(reason, message); };
 const text = (value, limit) => typeof value === "string" && value.trim() && value.trim().length <= limit ? value.trim() : null;
 
-export function validateAnnualPreplan(proposal, allowedIds, expectedYear, { initial = false } = {}) {
+export function validateAnnualPreplan(proposal, allowedIds, expectedYear, { initial = false, allowCalendarMetadata = true } = {}) {
   if (proposal?.plan_format !== ANNUAL_PREPLAN_FORMAT || Number(proposal.school_year) !== Number(expectedYear)
     || !Array.isArray(proposal.proposed_experiences) || proposal.proposed_experiences.length < 1
     || proposal.proposed_experiences.length > 20 || (initial && proposal.proposed_experiences.length !== 12))
     fail("invalid", "El preplan debe tener propuestas válidas para este año escolar.");
   const allowed = new Set(allowedIds), seen = new Set();
+  // Reloaded rows include server-derived calendar metadata. Accept only these
+  // known transport fields and return editable fields only; callers recompute
+  // dates/counts from the authorized calendar before persisting or confirming.
+  const inputFields = allowCalendarMetadata ? [...rowFields, ...calendarFields] : rowFields;
   let previousPeriod = 1;
   const rows = proposal.proposed_experiences.map((item, index) => {
     const period = Number(String(item?.period ?? "").match(/^Bimestre ([1-4])$/)?.[1]);
     const ids = item?.primary_competency_ids;
-    if (!item || Object.keys(item).some((field) => !rowFields.includes(field)) ||
+    if (!item || Object.keys(item).some((field) => !inputFields.includes(field)) ||
       !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(item.proposal_id ?? "") || seen.has(item.proposal_id) ||
       !["project", "unit"].includes(item.experience_type) || !text(item.title, 180) ||
       !period || period < previousPeriod || !Number.isInteger(item.month) || item.month < 3 || item.month > 12 ||
@@ -58,7 +63,7 @@ export function validateGeneratedPreplan(output, allowedIds, year) {
     fail("invalid_ai", "Ayni no pudo preparar las doce propuestas iniciales.");
   const proposal = { plan_format: ANNUAL_PREPLAN_FORMAT, school_year: String(year),
     proposed_experiences: output.proposals.map((row) => ({ ...row, proposal_id: randomUUID() })) };
-  return validateAnnualPreplan(proposal, allowedIds, year, { initial: true });
+  return validateAnnualPreplan(proposal, allowedIds, year, { initial: true, allowCalendarMetadata: false });
 }
 
 export async function ageFilteredAnnualCurriculum(context) {
