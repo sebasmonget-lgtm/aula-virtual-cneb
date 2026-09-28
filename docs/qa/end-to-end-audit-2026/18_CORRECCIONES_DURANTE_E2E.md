@@ -51,3 +51,11 @@ El enlace local de dependencias del renderizador bajo `docs/qa/.../node_modules`
 **Solución.** Solo `bimester-replan-service.test.mjs`: día civil Lima, reloj controlado en las dos ventanas y regresión de cambio de año. No se modifica el servicio ni se permite reescribir pasado.
 
 **Validación.** 5/5 de reajuste; 16/16 combinadas con traslado. Suite integrada `tests-integrated-h08-h21-h18-h19`: 466/466, typecheck, lint y build PASS. Es una corrección de prueba, no un PASS de reajuste E2E. Commit pendiente. Rollback: revertir el test.
+
+## H19 — Ledger ausente en importador (HIGH, integridad de costos)
+
+**Causa.** Exportador incluía `ai_usage_events`, importador no. Se perdía historial al preparar una transferencia aunque el remapeo de docente ya estaba implementado.
+
+**Fix mínimo.** Añadir tabla después de perfiles en `prepare-supabase-import.mjs`; regresión en `pilot-readiness.test.mjs` ejecuta CLI offline, sin aplicar SQL, y verifica tokens/costo/fuente/versionado y docente nueva. La prueba usa directorios temporales propios; no datos QA/originales.
+
+**Validación.** 16/16 combinadas y suite integrada 466/466, typecheck, lint y build PASS. Importación real a Supabase NO PROBADA porque no se conectaron cuentas nuevas. Commit pendiente. Rollback: revertir importador y su regresión; no migración.

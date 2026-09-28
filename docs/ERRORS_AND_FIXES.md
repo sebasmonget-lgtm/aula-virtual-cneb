@@ -1,5 +1,15 @@
 # Errores y soluciones
 
+## 2026-09-27 El paquete de traslado omitía los costos de IA (H19)
+
+**Síntoma.** La paridad export/import fallaba porque `ai_usage_events` se exportaba pero no estaba en el orden de importación; un traslado perdería el ledger por docente.
+
+**Causa raíz.** Se añadió la tabla al exportador sin añadirla al importador. El remapeo de `teacher_id` ya existía.
+
+**Solución validada.** Añadir la tabla después de perfiles. Regresión CLI offline con evento ficticio verifica paquete SQL, conteo, identidad remapeada, tokens, importe y procedencia de costo. 16/16 combinadas, suite integrada 466/466, typecheck, lint y build PASS. No se aplicó SQL a Supabase ni se usaron cuentas existentes.
+
+**Prevención.** Probar paridad de tablas y contenido de una transferencia real, no solo nombres.
+
 ## 2026-09-27 La regresión de reajuste dependía de la medianoche UTC (H18)
 
 **Síntoma.** Un test de protección del pasado fallaba de noche en Lima, aunque el servicio aplicaba correctamente el día local.

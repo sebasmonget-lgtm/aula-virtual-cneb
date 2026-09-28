@@ -1,6 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFile, readdir, mkdtemp, mkdir, rm } from "node:fs/promises";
+import { readFile, readdir, mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
+import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { tmpdir } from "node:os";
 import { PGlite } from "@electric-sql/pglite";
@@ -189,4 +192,39 @@ test("Supabase migrations cover reference RLS and private evidence bucket; trans
   assert.deepEqual(new Set(exported), new Set(imported));
   assert.match(importer, /"confirmed_by", "level_confirmed_by"/);
   assert.match(server, /AYNI_ALLOW_LOCAL_EXPORT/);
+});
+
+test("el traslado conserva costos y remapea la docente del ledger sin aplicar SQL externo", async () => {
+  const temp = await mkdtemp(path.join(tmpdir(), "ayni-usage-transfer-"));
+  const projectRoot = fileURLToPath(new URL("../../", import.meta.url));
+  let packageDirectory;
+  try {
+    const server = await readFile(new URL("../../scripts/local-db-server.mjs", import.meta.url), "utf8");
+    const tableNames = server.match(/const exportTables = \[([\s\S]*?)\];/)[1].match(/"[a-z_]+"/g).map(JSON.parse);
+    const tables = Object.fromEntries(tableNames.map(name => [name, []]));
+    tables.profiles = [{ user_id: teacherA, display_name: "Docente ficticia" }];
+    tables.ai_usage_events = [{ id: "11111111-1111-4111-8111-111111111111", teacher_id: teacherA,
+      provider: "openai", workflow: "activity", model: "gpt-6-luna", input_tokens: 120, output_tokens: 20,
+      cost_usd: 0.000022, cost_source: "estimate", pricing_version: "2026-09-27-standard" }];
+    const source = path.join(temp, "export.json");
+    await writeFile(source, JSON.stringify({ format: "ayni-supabase-transfer-v1", tables }));
+    const { stdout } = await promisify(execFile)(process.execPath, ["scripts/prepare-supabase-import.mjs", source,
+      "--generate", "--new-user-id", teacherB], { cwd: projectRoot });
+    packageDirectory = stdout.match(/Paquete preparado: (.+)/)?.[1]?.trim();
+    assert.ok(packageDirectory);
+    assert.equal(path.dirname(path.resolve(packageDirectory)), path.join(projectRoot, ".local", "supabase-import"));
+    assert.match(path.basename(packageDirectory), /^[0-9a-f-]{36}$/);
+    const manifest = JSON.parse(await readFile(path.join(packageDirectory, "manifest.json"), "utf8"));
+    const sql = await readFile(path.join(packageDirectory, "import.sql"), "utf8");
+    assert.deepEqual(manifest.problems, []);
+    assert.equal(manifest.counts.ai_usage_events, 1);
+    assert.match(sql, /insert into public\.ai_usage_events/);
+    assert.ok(sql.includes(teacherB));
+    assert.ok(!sql.includes(teacherA));
+    assert.match(sql, /120, 20, 0\.000022, 'estimate', '2026-09-27-standard'/);
+  } finally {
+    await rm(temp, { recursive: true, force: true });
+    if (packageDirectory && path.dirname(path.resolve(packageDirectory)) === path.join(projectRoot, ".local", "supabase-import")
+      && /^[0-9a-f-]{36}$/.test(path.basename(packageDirectory))) await rm(packageDirectory, { recursive: true, force: true });
+  }
 });

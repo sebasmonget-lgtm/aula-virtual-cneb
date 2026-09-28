@@ -11,7 +11,7 @@ const userIndex = args.indexOf("--new-user-id");
 const newUserId = userIndex >= 0 ? args[userIndex + 1] : null;
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const tableOrder = [
-  "profiles", "curriculum_source_documents", "levels", "cycles", "curriculum_versions", "age_grades", "curriculum_areas",
+  "profiles", "ai_usage_events", "curriculum_source_documents", "levels", "cycles", "curriculum_versions", "age_grades", "curriculum_areas",
   "competencies", "capacities", "standards", "performances", "transversal_approaches", "school_years", "classrooms",
   "institution_assets", "institution_profiles", "students", "learning_experiences",
   "activities", "activity_criteria", "evidences", "competency_observation_guides",
