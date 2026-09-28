@@ -8,21 +8,29 @@ import { loadAnnualPreplanSkill } from "./annual-plan-skill.mjs";
 import { neutralizeAssessmentText } from "./assessment-v4-service.mjs";
 
 const templateUrl = new URL("../../assets/templates/planificacion-anual-inicial-unificada-v1.docx", import.meta.url);
+const formalText = { type: "string", pattern: "^[\\s\\S]{1,1000}$" };
+const formalList = (maxItems) => ({ type: "array", maxItems, items: formalText });
 const detailsSchema = { type: "object", additionalProperties: false,
   required: ["index", "context_or_trigger", "final_product", "materials", "what_to_observe"], properties: {
-    index: { type: "integer" }, context_or_trigger: { type: "string" }, final_product: { type: "string" },
-    materials: { type: "array", items: { type: "string" } }, what_to_observe: { type: "array", items: { type: "string" } },
+    index: { type: "integer", minimum: 1, maximum: 20 }, context_or_trigger: formalText, final_product: formalText,
+    materials: formalList(12), what_to_observe: formalList(8),
   } };
 export const ANNUAL_FORMAL_SCHEMA = { id: "annual-formal-v1", type: "object", additionalProperties: false,
   required: ["organization_criteria", "transversal_approaches", "teaching_strategies", "assessment_followup", "family_collaboration", "inclusive_supports", "project_details"],
-  properties: { organization_criteria: { type: "array", items: { type: "string" } },
-    transversal_approaches: { type: "array", items: { type: "string" } },
-    teaching_strategies: { type: "array", items: { type: "string" } },
-    assessment_followup: { type: "array", items: { type: "string" } },
-    family_collaboration: { type: "array", items: { type: "string" } },
-    inclusive_supports: { type: "array", items: { type: "string" } },
-    project_details: { type: "array", items: detailsSchema },
-  } };
+  properties: { organization_criteria: { ...formalList(4), minItems: 4 },
+    transversal_approaches: formalList(8),
+    teaching_strategies: formalList(8),
+    assessment_followup: formalList(8),
+    family_collaboration: formalList(8),
+    inclusive_supports: formalList(8),
+    project_details: { type: "array", minItems: 1, maxItems: 20, items: detailsSchema },
+} };
+
+export function annualFormalSchema(count) {
+  if (!Number.isInteger(count) || count < 1 || count > 20) throw new Error("Cantidad de propuestas inválida.");
+  return { ...ANNUAL_FORMAL_SCHEMA, properties: { ...ANNUAL_FORMAL_SCHEMA.properties,
+    project_details: { ...ANNUAL_FORMAL_SCHEMA.properties.project_details, minItems: count, maxItems: count } } };
+}
 
 function validText(value) { return typeof value === "string" && value.trim().length > 0 && value.length <= 1000; }
 function validList(value, max) { return Array.isArray(value) && value.length <= max && value.every(validText); }
@@ -112,10 +120,10 @@ export async function developConfirmedAnnualPlan(db, teacherId, planId, context,
     institution: { name: context.institution_name, teacher: context.teacher_name, age: context.age, section: context.section, year: context.year },
     calendar: plan.document_context?.calendar ?? context.calendar, curriculum: { age: context.age, competency_cards: curriculum },
     template_structure: await templateStructure(),
-    task: "Desarrolla la redacción formal sin modificar ninguna decisión confirmada. Devuelve exactamente un detalle por cada propuesta en el mismo orden. No inventes observaciones realizadas, criterios, niveles, estudiantes ni evidencias reales. La lista qué observar contiene solo oportunidades futuras. Productos posibles variados y pertinentes, no manualidades repetidas. Lenguaje sencillo para docentes.",
+    task: `Desarrolla la redacción formal sin modificar ninguna decisión confirmada. Devuelve exactamente cuatro criterios de organización y ${preplan.proposed_experiences.length} detalles, uno por propuesta en el mismo orden con índices consecutivos desde 1. Las listas generales tienen como máximo ocho elementos; materiales como máximo doce y qué observar como máximo ocho por propuesta. Cada texto tiene entre 1 y 1000 caracteres. No inventes observaciones realizadas, criterios de evaluación, niveles, estudiantes ni evidencias reales. La lista qué observar contiene solo oportunidades futuras. Productos posibles variados y pertinentes, no manualidades repetidas. Lenguaje sencillo para docentes.`,
   };
   const response = await createProvider(routing, { timeoutMs: 180_000 }).generate(buildProviderRequest("annual_plan", bundle,
-    routing, ANNUAL_FORMAL_SCHEMA, await loadSkill()));
+    routing, annualFormalSchema(preplan.proposed_experiences.length), await loadSkill()));
   const formal = validateAnnualFormal(response.output, preplan.proposed_experiences.length);
   const content = projectFormalAnnualContent(preplan, formal, safeGroup, safePriorities);
   await db.query(`insert into annual_plan_formal_content(annual_plan_id,content,ai_metadata,source_revision)

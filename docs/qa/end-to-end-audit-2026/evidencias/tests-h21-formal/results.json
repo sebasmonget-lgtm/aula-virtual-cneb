@@ -1,0 +1,67 @@
+[
+  {
+    "name": "typecheck",
+    "command": [
+      "node",
+      "node_modules/typescript/bin/tsc",
+      "--noEmit"
+    ],
+    "startedAt": "2026-09-28T04:01:11.248Z",
+    "endedAt": "2026-09-28T04:01:17.902Z",
+    "exitCode": 0,
+    "counters": null
+  },
+  {
+    "name": "unit-tests",
+    "command": [
+      "node",
+      "--test",
+      "--test-concurrency=2",
+      "src/lib/annual-formal-service.test.mjs",
+      "src/lib/annual-preplan-service.test.mjs",
+      "src/lib/annual-preplan-round-trip.test.mjs",
+      "src/lib/openai-provider.test.mjs",
+      "src/lib/annual-plan-hardening.test.mjs",
+      "src/lib/document-library-service.test.mjs"
+    ],
+    "startedAt": "2026-09-28T04:01:17.904Z",
+    "endedAt": "2026-09-28T04:01:37.741Z",
+    "exitCode": 0,
+    "counters": {
+      "tests": 37,
+      "pass": 37,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    }
+  },
+  {
+    "name": "lint",
+    "command": [
+      "node",
+      "node_modules/eslint/bin/eslint.js",
+      ".",
+      "--ignore-pattern",
+      "dist",
+      "--ignore-pattern",
+      ".next"
+    ],
+    "startedAt": "2026-09-28T04:01:37.743Z",
+    "endedAt": "2026-09-28T04:01:59.315Z",
+    "exitCode": 0,
+    "counters": null
+  },
+  {
+    "name": "build",
+    "command": [
+      "node",
+      "scripts/run-framework.mjs",
+      "build"
+    ],
+    "startedAt": "2026-09-28T04:01:59.316Z",
+    "endedAt": "2026-09-28T04:02:10.041Z",
+    "exitCode": 0,
+    "counters": null
+  }
+]

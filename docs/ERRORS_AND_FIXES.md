@@ -1,5 +1,15 @@
 # Errores y soluciones
 
+## 2026-09-27 El schema del documento anual permitía cardinalidades rechazadas después (H21)
+
+**Síntoma.** Después de confirmar correctamente el preplan QA, una llamada real para el Word terminó con desarrollo incompleto, sin perder el plan vigente.
+
+**Causa comprobada.** El esquema formal no incluía el mínimo/máximo de cuatro criterios, límites de listas/textos ni la cantidad exacta de detalles que exige `validateAnnualFormal`. La salida rechazada no se persistió; no se conoce cuál condición falló en aquel intento.
+
+**Solución validada técnicamente.** Esquema y prompt expresan los mismos límites, con cantidad dinámica de detalles desde el preplan confirmado. 37 pruebas relacionadas, typecheck, lint y build PASS; el reintento UI continúa tras el commit. Mismo modelo y validador, sin regeneración automática.
+
+**Prevención.** Toda restricción de cardinalidad local debe estar en Structured Outputs cuando sea compatible; probar cantidades editadas (1, 10, 12 y 20), no solo el formato inicial. Conservar el costo de llamadas rechazadas y distinguir plan confirmado de documento pendiente.
+
 ## 2026-09-27 El calendario persistido invalidaba el propio preplan anual (H08)
 
 **Síntoma.** Un preplan recién generado se recargaba con doce propuestas, pero guardar una edición válida o confirmar intacto devolvía «Revisa los datos de la propuesta 1».

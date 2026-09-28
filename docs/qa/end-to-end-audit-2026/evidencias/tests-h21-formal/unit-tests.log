@@ -1,0 +1,45 @@
+✔ el schema formal expresa las cardinalidades que exige la validación local (2.0992ms)
+✔ Sol desarrolla solo el preplan confirmado de su docente, respetando las doce decisiones (3450.2622ms)
+✔ provider request conserva el workflow y el schema de cada salida (2.6699ms)
+✔ metadata anual preserva solo auditoría permitida (1.2693ms)
+✔ servidor conserva metadata del pending generation, versiona y no crea experiencias reales (10.4858ms)
+✔ editor anual permite editar el schema completo y usa URL configurada (1.602ms)
+✔ annual_plan entrega workflow y schema annual-plan-v2 al provider y al resultado (51.9474ms)
+✔ contrato anual valida todos los campos, listas, año y competencias aplicables (1.5972ms)
+✔ el Plan Maestro nuevo detecta competencias sin oportunidades sin alterar planes anteriores (0.5558ms)
+✔ TIC solo es obligatoria en la cobertura cuando hay un medio digital confirmado (0.8009ms)
+✔ el schema nuevo exige secciones del documento y un plan guardado v1 sigue siendo editable (0.7988ms)
+✔ el modelo no puede devolver el schema histórico para una generación nueva (25.8324ms)
+✔ salida anual malformada del provider falla de forma controlada (25.535ms)
+✔ servidor valida POST y CONFIRM antes de persistir o activar el plan (3.0874ms)
+✔ migraciones local y Supabase impiden dos borradores anuales del mismo aula y año (3914.8021ms)
+✔ migraciones local y Supabase permiten un solo plan vigente por cuenta y año escolar (2831.4961ms)
+✔ servidor comprueba el año antes de llamar al modelo y no acepta otro plan de la misma cuenta (2.1474ms)
+✔ un plan anterior puede seguir vigente mientras se revisa un solo borrador nuevo (2692.2099ms)
+✔ generar → persistir calendario → recargar → confirmar sin editar conserva el contrato (2934.7904ms)
+✔ editar la fila recargada → guardar → recargar → confirmar recalcula metadatos no confiables (2351.7822ms)
+✔ el paquete curricular anual contiene solo el referente de la edad del aula (28.0941ms)
+✔ Sol recibe diagnóstico y currículo filtrado; sus doce filas quedan editables (92.6248ms)
+✔ el Word unificado usa exactamente las filas confirmadas, incluso si la docente conserva diez (165.8811ms)
+✔ la biblioteca lista registros canónicos de la docente y excluye contenido y filas legacy (1860.6117ms)
+✔ la biblioteca muestra el cierre histórico solo a la docente de su aula (1304.5409ms)
+✔ cada documento se abre solo para su docente y sin metadata técnica (1325.5037ms)
+✔ el Word de actividad recibe solo evidencia nominal real del aula autorizada (1361.0923ms)
+✔ un plan histórico completo obtiene el diagnóstico grupal confirmado que antes faltaba (1261.0609ms)
+✔ un borrador usa la UGEL y el nombre institucional guardados si su snapshot está vacío (1274.7629ms)
+✔ OpenAIProvider usa Responses API, el plan central y Structured Outputs strict (57.6051ms)
+✔ OpenAIProvider coloca la Skill en instrucciones y conserva el bundle como dato (0.5908ms)
+✔ el cliente real queda configurado sin reintentos automáticos (3.6922ms)
+✔ OpenAIProvider envía solamente el bundle filtrado e inmutable (28.0786ms)
+✔ OpenAIProvider falla antes de HTTP sin OPENAI_API_KEY (23.617ms)
+✔ OpenAIProvider clasifica respuestas y errores controlados (176.0439ms)
+✔ OpenAIProvider rechaza un modelo configurado que no coincide con el plan sin llamar HTTP (21.3617ms)
+✔ el provider no contiene modelos fijos, logs, PDFs ni llamadas externas fuera del SDK (1.6078ms)
+ℹ tests 37
+ℹ suites 0
+ℹ pass 37
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 19728.7463

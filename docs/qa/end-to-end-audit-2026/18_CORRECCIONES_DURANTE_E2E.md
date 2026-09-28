@@ -14,10 +14,20 @@ La auditoría inicial permanece en el checkpoint local `f506d0f` (`codex/e2e-ann
 
 **Regresión.** Base PGlite efímera con todas las migraciones: generar con proveedor simulado → persistir calendario real → recargar → confirmar intacto; y editar propósito → guardar → recargar → confirmar. Comprueba feriados, IDs, inmutabilidad, revisión obsoleta, recálculo de metadatos alterados, rechazo de competencias no aplicables/campos desconocidos y schema estricto del modelo. Estas bases de pruebas no son el aula QA; el E2E pedagógico continúa únicamente desde la interfaz.
 
-**Validación técnica.** 63/63 pruebas relacionadas, typecheck, lint y build PASS. Commit del fix y resultado UI pendientes al iniciar este registro. Logs separados en `evidencias/tests-h08/`, sin sobrescribir `evidencias/tests/` de la primera auditoría.
+**Validación técnica y UI.** 63/63 pruebas relacionadas, typecheck, lint y build PASS. Commit `60210c3`. La API QA se reinició manteniendo los 15 alumnos, 15 entrevistas, 29 notas y 49 eventos de uso. El mismo borrador se confirmó intacto desde la UI y mostró «Mi año vigente · versión 1»: PASS. Captura `screenshots/11-h08-plan-confirmado.png`, snapshot `evidencias/h08-confirmed-qa-snapshot.json`. El Word posterior falló como una etapa separada (H21); no deshizo la confirmación. Logs separados en `evidencias/tests-h08/`, sin sobrescribir `evidencias/tests/` de la primera auditoría.
 
 **Rollback.** Revertir únicamente el commit lógico de este fix; conservar checkpoint y datos. No requiere rollback de migraciones.
 
 ## Protección previa al checkpoint
 
 El enlace local de dependencias del renderizador bajo `docs/qa/.../node_modules` no estaba cubierto por el ignore de raíz. Se añadió `**/node_modules/` antes del checkpoint, sin borrar el enlace ni modificar el runtime. La revisión de los 1132 candidatos no detectó claves reales por patrones de secreto; `.env.local` y `.local` permanecen excluidos. El fingerprint del dashboard original sigue siendo `29b7c96d36bca81fc781fe36cd9fd9acecb334d468a4f85888454a05ed09a1e9`.
+
+## H21 — Contrato de desarrollo formal anual (HIGH, documento)
+
+**Antes.** La confirmación del preplan pasó; su desarrollo formal real consumió una llamada y terminó con «El desarrollo formal llegó incompleto». El plan siguió activo. Se conserva el intento en el snapshot `annual-formal-first-failed` y en el ledger (evento 50). No se almacenó la salida rechazada, por lo que no se atribuye retrospectivamente a un campo concreto.
+
+**Causa comprobada por código.** El validador local exigía cuatro criterios de organización, límites de listas/textos y un detalle por propuesta, pero el esquema enviado al modelo no expresaba esas cardinalidades. El contrato permitía respuestas que luego el producto rechazaba. El task tampoco indicaba los cuatro criterios.
+
+**Fix.** El mismo Sol/low recibe cardinalidades y límites coherentes; el esquema de detalles toma la cantidad real del preplan (1–20), y el prompt pide orden/índices y cantidades exactas. Se conserva la validación local, las decisiones confirmadas, la revisión docente y las plantillas. No se relaja el rechazo ni se añade reintento automático. La documentación oficial confirma `minItems`/`maxItems`: [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs).
+
+**Archivos.** `annual-formal-service.mjs` y su test. **Validación:** 37/37 relacionadas, typecheck, lint y build PASS en `evidencias/tests-h21-formal/`. Commit y reintento UI pendientes. Rollback: revertir el commit del contrato, sin transformar planes o contenido formal existente.

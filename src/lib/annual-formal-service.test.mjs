@@ -7,7 +7,7 @@ import { prepareDiagnosticStudentReview, saveDiagnosticStudentReview, confirmDia
   prepareDiagnosticGroupReview, saveDiagnosticGroupReview, confirmDiagnosticGroupReview } from "./diagnostic-assessment-v4.mjs";
 import { prepareDiagnosticPriorities, saveDiagnosticPriorities, confirmDiagnosticPriorities } from "./diagnostic-priority-service.mjs";
 import { ageFilteredAnnualCurriculum } from "./annual-preplan-service.mjs";
-import { developConfirmedAnnualPlan } from "./annual-formal-service.mjs";
+import { annualFormalSchema, developConfirmedAnnualPlan, validateAnnualFormal } from "./annual-formal-service.mjs";
 import { copyConfirmedAnnualPlan, confirmAnnualPlanVersion } from "./annual-plan-version-service.mjs";
 import { defaultInitialStage, nationalCalendarBlocks2026, buildFlexibleAnnualSchedule,
   suggestAnnualProjectDurations } from "./annual-plan-calendar.mjs";
@@ -15,6 +15,24 @@ import { defaultInitialStage, nationalCalendarBlocks2026, buildFlexibleAnnualSch
 const teacherA = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 const teacherB = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
 const calendar = { school_year: 2026, blocks: nationalCalendarBlocks2026(), initial_stage: defaultInitialStage() };
+
+test("el schema formal expresa las cardinalidades que exige la validación local", () => {
+  for (const count of [1, 10, 12, 20]) {
+    const schema = annualFormalSchema(count);
+    assert.equal(schema.properties.organization_criteria.minItems, 4);
+    assert.equal(schema.properties.organization_criteria.maxItems, 4);
+    assert.equal(schema.properties.project_details.minItems, count);
+    assert.equal(schema.properties.project_details.maxItems, count);
+    assert.equal(schema.properties.family_collaboration.maxItems, 8);
+    assert.equal(schema.properties.project_details.items.properties.materials.maxItems, 12);
+    assert.equal(schema.properties.project_details.items.properties.what_to_observe.maxItems, 8);
+  }
+  assert.throws(() => annualFormalSchema(0));
+  assert.throws(() => annualFormalSchema(21));
+  assert.throws(() => validateAnnualFormal({ organization_criteria: ["Uno", "Dos", "Tres"],
+    transversal_approaches: [], teaching_strategies: [], assessment_followup: [], family_collaboration: [],
+    inclusive_supports: [], project_details: [] }, 12), /incompleto/);
+});
 
 test("Sol desarrolla solo el preplan confirmado de su docente, respetando las doce decisiones", async () => {
   const db = await PGlite.create();
@@ -69,6 +87,8 @@ test("Sol desarrolla solo el preplan confirmado de su docente, respetando las do
     });
     assert.equal(request.execution_plan.model, "gpt-6-sol");
     assert.equal(request.execution_plan.reasoning_effort, "low");
+    assert.equal(request.output_schema.properties.project_details.minItems, 12);
+    assert.equal(request.output_schema.properties.organization_criteria.maxItems, 4);
     assert.equal(request.ai_context_bundle.confirmed_group.strengths, "Participan en juegos.");
     assert.equal(request.ai_context_bundle.confirmed_priorities.priorities[0].title, "Conversar en el juego");
     assert.equal(request.ai_context_bundle.curriculum.age, 5);
