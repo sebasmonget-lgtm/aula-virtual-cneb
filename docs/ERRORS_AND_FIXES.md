@@ -986,3 +986,13 @@ Síntoma: cuatro notas QA de la captura automatizada quedaron asociadas a la sel
 **Incidente externo posterior.** El generador recibió 153 fallos etiquetados `rate_limited`; una comprobación mínima del proveedor confirmó `credit_balance_exhausted` / `insufficient_quota` (429). El usuario confirmó saldo negativo y ordenó continuar sin pruebas API. Se canceló el lanzador de revisión ciega, se verificó un snapshot antes de detener el generador y se comprobó el checkpoint final: 216 registros, 63 válidos. Los 39 registros de control conservaron su SHA-256. A queda como fallback autorizado, no como ganador experimental; comparación y revisión ciega pendientes externas. El runner actual agrupa cuota agotada y rate limit temporal bajo el mismo código: no reintentar automáticamente una corrida con este síntoma ni eliminar sus fallos. No hubo cambio de manifiesto ni regeneración de éxitos.
 
 **Prevención.** Separar los validadores de las llamadas facturables, comunicar su finalización y revisar los checkpoints de generación. La evaluación ciega debe comenzar solo después de finalizar el generador: ambos escriben el mismo archivo y no deben ejecutarse simultáneamente.
+
+## 2026-09-28 — Avance diagnóstico desactualizado tras guardar desde el mapa
+
+**Síntoma.** En F12 QA se guardó por UI una observación para cada uno de seis niños. El mapa mostraba los seis registros, pero el paso «Observar» seguía en 1/6 hasta recargar la página; después mostró 6/6.
+
+**Causa raíz.** El mapa recargaba su propio `DiagnosticReviewWorkspace` tras guardar, pero no actualizaba el `DiagnosticWorkspace` del componente padre, del que depende el contador de pasos.
+
+**Corrección.** El guardado exitoso del mapa avisa al padre, que vuelve a cargar el diagnóstico, igual que ya hacía el flujo de observación espontánea. No cambia persistencia ni valoración. Typecheck, lint, build y suite completa 603/603 pasaron; falta repetir la actualización visual en un clon con un niño aún sin observación.
+
+**Prevención.** Los componentes que modifican registros usados por un indicador de progreso compartido deben invalidar también la lectura del indicador; probar el contador inmediatamente después de guardar, sin depender de recarga manual.

@@ -17,7 +17,29 @@ const server = createServer(async (request, response) => {
     const criterion = (id) => ({ competency_id: id, criterion: "Explica una idea relacionada con el propósito de la propuesta.",
       expected_evidence: ["Explicación registrada por la docente durante la actividad."] });
     let output;
-    if (schema === "project-preview-v1") output = {
+    if (schema === "annual-preplan-v1") output = {
+      proposals: context.initial_slots.map((slot, index) => {
+        const card = context.curriculum.competency_cards[index % context.curriculum.competency_cards.length];
+        return { experience_type: "project", title: `QA ficticia: propuesta ${String(index + 1).padStart(2, "0")}`,
+          period: slot.period, month: slot.month, duration_weeks: slot.duration_weeks,
+          rationale: "Fixture local para comprobar el recorrido; no es una recomendación pedagógica.",
+          purpose: `Explorar y comunicar ideas en la propuesta ${index + 1} mediante juegos del aula.`,
+          primary_competency_ids: [card.id] };
+      }),
+    };
+    else if (schema === "annual-formal-v1") output = {
+      organization_criteria: ["Partir del juego", "Escuchar a los niños", "Ofrecer materiales", "Revisar registros"],
+      transversal_approaches: ["Respeto y participación"], teaching_strategies: ["Juego y conversación"],
+      assessment_followup: ["Registrar hechos individuales sin asignar niveles automáticamente"],
+      family_collaboration: ["Compartir preguntas de exploración con las familias"],
+      inclusive_supports: ["Ofrecer distintas maneras de participar"],
+      project_details: context.confirmed_preplan.proposed_experiences.map((row, index) => ({
+        index: index + 1, context_or_trigger: row.rationale,
+        final_product: `Posible muestra de ideas de la propuesta ${index + 1}`,
+        materials: ["Materiales disponibles en el aula"], what_to_observe: ["Ideas y acciones expresadas durante el juego"],
+      })),
+    };
+    else if (schema === "project-preview-v1") output = {
       context_summary: context.annual_proposal.rationale, context_points: ["Fixture de flujo, no recomendación pedagógica real."],
       additional_context_example: "Podemos adaptar los materiales disponibles.",
       purpose_options: [context.annual_proposal.purpose, "Explorar y compartir ideas sobre la propuesta."] };
@@ -40,6 +62,15 @@ const server = createServer(async (request, response) => {
           flexibility_notes: "Adaptar los materiales disponibles.", role_in_project: index === context.instructional_dates.length - 1 ? "Cierre" : "Exploración",
           expected_progression: "De explorar a compartir ideas.", estimated_minutes: 35 };
       }) };
+    else if (schema === "project-formal-v1") output = {
+      situation: "Situación ficticia de juego para verificar el documento.",
+      foundation: "Fixture local de QA; no valida la pertinencia curricular.",
+      methodology: "Juego, exploración y conversación con mediación docente.",
+      assessment_followup: "Registrar hechos individuales y revisarlos antes de valorar.",
+      family_collaboration: "Compartir preguntas de exploración con las familias.",
+      diversity_support: "Ofrecer diversas maneras de participar.",
+      closing: "Recuperar las ideas expresadas durante el proyecto.",
+    };
     else if (schema === "activity-v1") {
       const inherited = context.context?.workflow_inputs?.learning_experience_context?.inherited_route_item;
       if (!inherited) throw new Error("El fixture de actividad exige un blueprint heredado.");

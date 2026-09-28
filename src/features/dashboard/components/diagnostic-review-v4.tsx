@@ -81,7 +81,7 @@ function interviewAnswer(interview: FamilyInterview, key: FamilyInterviewAnswerK
   return "";
 }
 
-export function DiagnosticReview({ onObserve, onPlan, onGroupConfirmed }: { onObserve: () => void; onPlan?: () => void; onGroupConfirmed?: () => void }) {
+export function DiagnosticReview({ onObserve, onPlan, onGroupConfirmed, onObservationSaved }: { onObserve: () => void; onPlan?: () => void; onGroupConfirmed?: () => void; onObservationSaved?: () => void }) {
   const [workspace, setWorkspace] = useState<DiagnosticReviewWorkspace | null>(null);
   const [studentId, setStudentId] = useState<string | null>(null);
   const [focusCompetencyId, setFocusCompetencyId] = useState<string | null>(null);
@@ -219,7 +219,7 @@ export function DiagnosticReview({ onObserve, onPlan, onGroupConfirmed }: { onOb
         <label className="block text-sm font-semibold">¿Dónde ocurrió?<select className="mt-1 min-h-11 w-full" value={matrixEditor.contextLabel} onChange={(event) => setMatrixEditor({ ...matrixEditor, contextLabel: event.target.value })}>{observationMoments.map((moment) => <option key={moment}>{moment}</option>)}</select></label>
         <label className="block text-sm font-semibold">¿Qué hizo o dijo?<Textarea className="mt-1 min-h-28 bg-white" maxLength={4000} value={matrixEditor.observationText} onChange={(event) => setMatrixEditor({ ...matrixEditor, observationText: event.target.value })} placeholder="Por ejemplo: Eligió bloques y explicó cómo quería construir una casa." /></label>
         {matrixObservations.length > 0 && <p className="text-xs text-[#526b87]">Ya hay {matrixObservations.length} {matrixObservations.length === 1 ? "observación" : "observaciones"} en esta celda. La nueva nota se añadirá sin borrar las anteriores.</p>}
-        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap"><AsyncButton className="min-h-11 w-full sm:w-auto" busy={busy} busyLabel="Guardando..." disabled={!matrixEditor.competencyId || !matrixEditor.observationText.trim()} onClick={() => void action(async () => { await saveMatrixDiagnosticObservation(matrixEditor); setMatrixEditor(null); setMessage("Observación guardada. Ya aparece en el mapa y podrás verla al revisar al niño."); })}>Guardar observación</AsyncButton><Button variant="outline" className="min-h-11 w-full sm:w-auto" disabled={busy} onClick={() => { setMatrixEditor(null); setError(""); }}>Cancelar</Button></div>
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap"><AsyncButton className="min-h-11 w-full sm:w-auto" busy={busy} busyLabel="Guardando..." disabled={!matrixEditor.competencyId || !matrixEditor.observationText.trim()} onClick={() => void action(async () => { await saveMatrixDiagnosticObservation(matrixEditor); onObservationSaved?.(); setMatrixEditor(null); setMessage("Observación guardada. Ya aparece en el mapa y podrás verla al revisar al niño."); })}>Guardar observación</AsyncButton><Button variant="outline" className="min-h-11 w-full sm:w-auto" disabled={busy} onClick={() => { setMatrixEditor(null); setError(""); }}>Cancelar</Button></div>
       </div>}
       {matrixCompetencies.length > 0 && <div className="hidden space-y-3 lg:block">
         <h3 className="text-xl font-bold">Mapa de observaciones</h3><p className="text-sm text-[#526b87]">Desliza la tabla hacia los lados para ver todas las competencias.</p>
