@@ -11,6 +11,7 @@ import { createLocalPrivateDocumentArtifactStorage,
   createSupabasePrivateDocumentArtifactStorage } from "./private-document-artifact-storage.mjs";
 import { listConfirmedDocumentArtifacts,prepareConfirmedDocumentArtifact,
   readConfirmedDocumentArtifact } from "./document-artifact-service.mjs";
+import { buildAuthorizedDocumentZip } from "./document-sync-package.mjs";
 
 const teacher = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 const foreign = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
@@ -116,4 +117,35 @@ test("Storage remoto privado no sobrescribe y nunca acepta clave de otro docente
   assert.equal((await storage.save(key,Buffer.from("primero"),teacher)).toString(),"primero");
   assert.equal((await storage.save(key,Buffer.from("segundo"),teacher)).toString(),"primero");
   await assert.rejects(storage.read(key,foreign),/privado/);
+});
+
+test("F11 ZIP conserva bytes y manifest de un aula, sin cruzar docentes",async()=>{
+  const f=await fixture();
+  try {
+    const plan=await prepareConfirmedDocumentArtifact(f.db,f.storage,teacher,"annual_plan",f.plan);
+    const project=await prepareConfirmedDocumentArtifact(f.db,f.storage,teacher,"experience",f.project);
+    const output=await buildAuthorizedDocumentZip(f.db,f.storage,teacher,[plan.id,project.id]);
+    assert.equal(output.entries.length,2);
+    const zip=await JSZip.loadAsync(output.bytes);
+    const manifest=JSON.parse(await zip.file("manifest.json").async("string"));
+    assert.equal(manifest.format,"ayni-document-sync-v1");
+    assert.equal(manifest.entries.length,2);
+    for(const entry of manifest.entries){
+      assert.match(entry.path,/^2026\/Aula-[^/]+\/(?:Plan-anual|Proyectos)\//);
+      const saved=await readConfirmedDocumentArtifact(f.db,f.storage,teacher,entry.document_id);
+      assert.deepEqual(await zip.file(entry.path).async("nodebuffer"),saved.bytes);
+      assert.equal(entry.sha256,saved.sha256);
+    }
+    assert.equal(await buildAuthorizedDocumentZip(f.db,f.storage,foreign,[plan.id]),null);
+    assert.equal(await buildAuthorizedDocumentZip(f.db,f.storage,teacher,[plan.id,randomUUID()]),null);
+  }finally{await f.db.close();await rm(f.root,{recursive:true,force:true});}
+});
+
+test("F11 ZIP rechaza mezclar dos aulas aun del mismo docente",async()=>{
+  const first=randomUUID(),second=randomUUID();
+  const row=(id,classroomId)=>({id,classroom_id:classroomId,school_year:2026,classroom:"A",
+    source_kind:"annual_plan",source_id:randomUUID(),artifact_version:1,source_version:1,
+    filename:"plan-12345678-v1.docx",sha256:"a".repeat(64),byte_length:4,status:"confirmed"});
+  const db={query:async()=>({rows:[row(first,randomUUID()),row(second,randomUUID())]})};
+  await assert.rejects(buildAuthorizedDocumentZip(db,null,teacher,[first,second]),/una sola aula/);
 });

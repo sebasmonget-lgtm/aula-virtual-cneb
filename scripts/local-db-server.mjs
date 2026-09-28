@@ -42,6 +42,7 @@ import { prepareConfirmedDocumentArtifact, listConfirmedDocumentArtifacts,
   readConfirmedDocumentArtifact } from "../src/lib/document-artifact-service.mjs";
 import { createLocalPrivateDocumentArtifactStorage,
   createSupabasePrivateDocumentArtifactStorage } from "../src/lib/private-document-artifact-storage.mjs";
+import { buildAuthorizedDocumentZip } from "../src/lib/document-sync-package.mjs";
 import { saveWordToLocalDownloads } from "../src/lib/local-word-save.mjs";
 import { buildInstitutionInitialsLogo, loadInstitutionLogoForDocuments, normalizeInstitutionLogoUpload } from "../src/lib/institution-logo.mjs";
 import { displayPersonName } from "../src/lib/person-name.mjs";
@@ -1215,6 +1216,23 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
           body?.kind,body?.sourceId,{cards,logo});
         if (!artifact) { send(response,404,{error:"Documento no disponible."},origin); return; }
         send(response,200,{artifact},origin);
+      } catch (error) { send(response,httpStatusForError(error,422),{error:publicErrorMessage(error)},origin); }
+      return;
+    }
+    if (process.env.AYNI_DOCUMENT_ARTIFACTS === "1" && process.env.AYNI_DOCUMENT_SYNC === "1"
+      && request.method === "POST" && url.pathname === "/api/documents/artifacts/zip") {
+      if (!documentArtifactStorage) { send(response,503,{error:"Storage documental privado no configurado."},origin); return; }
+      try {
+        const body = await readJson(request);
+        const result = await buildAuthorizedDocumentZip(db,documentArtifactStorage,teacherId,body?.artifactIds);
+        if (!result) { send(response,404,{error:"Documento no disponible."},origin); return; }
+        response.writeHead(200,{"content-type":"application/zip",
+          "content-disposition":"attachment; filename=ayni-documentos.zip",
+          "content-length":String(result.bytes.length),"cache-control":"private, no-store",
+          "x-content-type-options":"nosniff",...(origin && allowedOrigins.has(origin)
+            ? {"access-control-allow-origin":origin,"access-control-allow-credentials":"true",
+              "access-control-expose-headers":"content-disposition",vary:"Origin"} : {})});
+        response.end(result.bytes);
       } catch (error) { send(response,httpStatusForError(error,422),{error:publicErrorMessage(error)},origin); }
       return;
     }

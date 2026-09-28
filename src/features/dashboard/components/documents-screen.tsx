@@ -7,11 +7,14 @@ import { Button } from "@/components/ui/button";
 import { localDatabaseApiUrl } from "@/src/lib/local-database";
 import { AnnualPlanDocument, type DocumentContext, type Proposal } from "./annual-plan-generator";
 import { LoadingState, PageIntro, WorkflowFeedback } from "./workflow-ui";
+import { DocumentTree } from "./document-tree";
+import { DocumentSyncPanel } from "./document-sync-panel";
 
 type DocumentKind = "annual_plan" | "diagnostic_summary" | "experience" | "activity" | "family_report" | "period_closure";
 type DocumentEntry = {
   id: string; kind: DocumentKind; subtype?: "project" | "unit"; title: string;
-  status: string; version?: number; school_year: number; classroom: string; date: string; period_label?: string | null;
+  status: string; version?: number; school_year: number; classroom: string; classroom_id?:string;
+  parent_experience_id?:string; date: string; period_label?: string | null;
 };
 type OpenDocument = DocumentEntry & {
   institution_name?: string; document_context?: DocumentContext; content: Record<string, unknown>;
@@ -20,7 +23,7 @@ type OpenDocument = DocumentEntry & {
   period_start?: string; period_end?: string; competencies?: { id: string; name: string }[];
 };
 type Artifact = { id: string; source_kind: string; source_id: string; filename: string;
-  sha256: string; byte_length: number; version: number };
+  sha256: string; byte_length: number; version: number;school_year:number;classroom:string;classroom_id:string };
 
 const text = (value: unknown) => typeof value === "string" ? value.trim() : "";
 const items = (value: unknown) => Array.isArray(value) ? value.filter((item): item is string => typeof item === "string" && Boolean(item.trim())) : [];
@@ -140,6 +143,7 @@ export function DocumentsScreen() {
   const [error, setError] = useState("");
   const [revision, setRevision] = useState(0);
   const artifactFeature = process.env.NEXT_PUBLIC_AYNI_F10_ARTIFACTS === "1";
+  const syncFeature = artifactFeature && process.env.NEXT_PUBLIC_AYNI_F11_DOCUMENTS === "1";
 
   useEffect(() => {
     const controller = new AbortController();
@@ -255,10 +259,13 @@ export function DocumentsScreen() {
     {opened?.kind === "annual_plan" && opened.source_plan_format !== "annual_preplan_v1" && opened.content.plan_format !== "twelve_projects_flexible_weeks" &&
       <WorkflowFeedback tone="error">Este plan se creó antes del formato actual. Su Word conserva la plantilla anterior. Abre Plan para preparar una versión actualizada; el plan vigente seguirá guardado mientras la revisas.</WorkflowFeedback>}
     {opened && downloadUrl && <p className="text-sm text-[#526b87]">{authMode === "local" ? "Se guarda en la computadora donde corre Ayni. " : ""}<a className="underline" href={downloadUrl} download>Descargar en este dispositivo</a></p>}
+    {!selected && syncFeature && <DocumentSyncPanel artifacts={artifacts} />}
     {error && <div className="flex flex-wrap items-center gap-3"><WorkflowFeedback tone="error">{error}</WorkflowFeedback><Button variant="outline" onClick={() => { setLoading(!selected); setOpening(Boolean(selected)); setRevision((value) => value + 1); }}>Reintentar</Button></div>}
     {selected ? opening ? <LoadingState label="Abriendo documento..." /> : opened ? <DocumentContent document={opened} /> : null :
       loading ? <LoadingState label="Buscando tus documentos..." /> : error ? null : documents.length === 0 ?
         <div className="rounded-2xl border border-[#d6e5ef] bg-white p-6"><FileText className="size-8 text-[#087d96]" /><h2 className="mt-3 text-lg font-bold">Aún no hay documentos guardados</h2><p className="mt-1 text-[#526b87]">Cuando guardes tu diagnóstico, plan anual o una actividad, aparecerán aquí.</p></div> :
+        syncFeature ? <DocumentTree documents={documents} stableIds={new Set(artifacts.map(item=>item.source_id))}
+          onOpen={item=>{setOpened(null);setError("");setWordMessage("");setWordError("");setOpening(true);setSelected({kind:item.kind as DocumentKind,id:item.id});}} /> :
         years.map((year) => <section key={year} aria-label={`Documentos ${year}`} className="space-y-3"><h2 className="text-lg font-extrabold text-[#172b52]">Año escolar {year}</h2>
           <ul className="space-y-2">{documents.filter((item) => item.school_year === year).map((item) => <li key={`${item.kind}-${item.id}`} className="rounded-2xl border border-[#d6e5ef] bg-white p-4 shadow-sm sm:flex sm:items-center sm:justify-between sm:gap-5">
             <div className="min-w-0"><p className="text-xs font-bold uppercase tracking-wide text-[#087d96]">{labelFor(item)} · {statusFor(item.status)}</p><h3 className="mt-1 break-words text-lg font-bold text-[#172b52]">{item.title}</h3><p className="mt-1 text-sm text-[#526b87]">{item.classroom}{item.period_label ? ` · ${item.period_label}` : item.kind === "family_report" ? " · Informe histórico sin período formal" : ""}{item.date ? ` · ${dateFor(item.date)}` : ""}{item.version && item.version > 1 ? ` · Versión ${item.version}` : ""}</p></div>

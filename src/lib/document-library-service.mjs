@@ -11,45 +11,46 @@ const selectContent = (source, fields) => Object.fromEntries(fields.map((field) 
 
 /** A read-only catalog over canonical rows. No document copy or AI metadata is stored. */
 export async function listSavedDocuments(db, teacherId) {
-  const annual = (await db.query(`select ap.id,ap.status,ap.version,ap.proposal,ap.updated_at,sy.year,c.section
+  const annual = (await db.query(`select ap.id,ap.status,ap.version,ap.proposal,ap.updated_at,sy.year,c.id as classroom_id,c.section
     from annual_plans ap join classrooms c on c.id=ap.classroom_id join school_years sy on sy.id=ap.school_year_id
     where c.teacher_id=$1 and sy.owner_id=$1 and (ap.proposal ? 'title' or ap.proposal->>'plan_format'='annual_preplan_v1')`, [teacherId])).rows.map((row) => ({
       id: row.id, kind: "annual_plan", title: row.proposal?.title || "Plan anual", status: row.status,
-      version: Number(row.version), school_year: Number(row.year), classroom: row.section, date: timestamp(row.updated_at),
+      version: Number(row.version), school_year: Number(row.year), classroom_id: row.classroom_id, classroom: row.section, date: timestamp(row.updated_at),
     }));
-  const diagnostics = (await db.query(`select d.id,d.status,d.version,d.updated_at,sy.year,c.section
+  const diagnostics = (await db.query(`select d.id,d.status,d.version,d.updated_at,sy.year,c.id as classroom_id,c.section
     from diagnostic_group_reviews d join classrooms c on c.id=d.classroom_id join school_years sy on sy.id=c.school_year_id
     where c.teacher_id=$1 and sy.owner_id=$1`, [teacherId])).rows.map((row) => ({
       id: row.id, kind: "diagnostic_summary", title: "Resumen diagnóstico del aula", status: row.status,
-      version: Number(row.version), school_year: Number(row.year), classroom: row.section, date: timestamp(row.updated_at),
+      version: Number(row.version), school_year: Number(row.year), classroom_id: row.classroom_id, classroom: row.section, date: timestamp(row.updated_at),
     }));
-  const experiences = (await db.query(`select e.id,e.type,e.title,e.status,e.version,e.starts_on,sy.year,c.section
+  const experiences = (await db.query(`select e.id,e.type,e.title,e.status,e.version,e.starts_on,sy.year,c.id as classroom_id,c.section
     from learning_experiences e join classrooms c on c.id=e.classroom_id join school_years sy on sy.id=c.school_year_id
     where c.teacher_id=$1 and sy.owner_id=$1 and e.type in ('project','unit') and e.details ? 'starting_point'`, [teacherId])).rows.map((row) => ({
       id: row.id, kind: "experience", subtype: row.type, title: row.title, status: row.status, version: Number(row.version),
-      school_year: Number(row.year), classroom: row.section, date: dateOnly(row.starts_on),
+      school_year: Number(row.year), classroom_id: row.classroom_id, classroom: row.section, date: dateOnly(row.starts_on),
     }));
-  const activities = (await db.query(`select a.id,a.title,a.status,a.occurs_on,sy.year,c.section
+  const activities = (await db.query(`select a.id,a.title,a.status,a.occurs_on,e.id as parent_experience_id,sy.year,c.id as classroom_id,c.section
     from activities a join learning_experiences e on e.id=a.experience_id
     join classrooms c on c.id=e.classroom_id join school_years sy on sy.id=c.school_year_id
     where c.teacher_id=$1 and sy.owner_id=$1 and a.details ? 'meaningful_situation'`, [teacherId])).rows.map((row) => ({
       id: row.id, kind: "activity", title: row.title, status: row.status,
-      school_year: Number(row.year), classroom: row.section, date: dateOnly(row.occurs_on),
+      school_year: Number(row.year), classroom_id: row.classroom_id, parent_experience_id: row.parent_experience_id,
+      classroom: row.section, date: dateOnly(row.occurs_on),
     }));
-  const reports = (await db.query(`select r.id,r.status,r.version,r.updated_at,r.evaluation_period_id,p.label as period_label,s.first_name,s.preferred_name,sy.year,c.section
+  const reports = (await db.query(`select r.id,r.status,r.version,r.updated_at,r.evaluation_period_id,p.label as period_label,s.first_name,s.preferred_name,sy.year,c.id as classroom_id,c.section
     from family_reports r join students s on s.id=r.student_id join classrooms c on c.id=s.classroom_id
     join school_years sy on sy.id=c.school_year_id left join evaluation_periods p on p.id=r.evaluation_period_id
     where c.teacher_id=$1 and sy.owner_id=$1`, [teacherId])).rows.map((row) => ({
       id: row.id, kind: "family_report", title: `Informe a la familia de ${row.preferred_name || row.first_name}`,
-      status: row.status, version: Number(row.version), school_year: Number(row.year),
+      status: row.status, version: Number(row.version), school_year: Number(row.year), classroom_id: row.classroom_id,
       classroom: row.section, date: timestamp(row.updated_at), period_label:row.period_label??null,
     }));
-  const closures=(await db.query(`select v.id,v.version,v.confirmed_at,p.label,sy.year,c.section from period_closure_versions v
+  const closures=(await db.query(`select v.id,v.version,v.confirmed_at,p.label,sy.year,c.id as classroom_id,c.section from period_closure_versions v
     join classrooms c on c.id=v.classroom_id join school_years sy on sy.id=c.school_year_id
     join evaluation_periods p on p.id=v.evaluation_period_id and p.school_year_id=sy.id
     where c.teacher_id=$1 and sy.owner_id=$1`,[teacherId])).rows.map((row)=>({
       id:row.id,kind:"period_closure",title:`Cierre de evaluación · ${row.label}`,status:"confirmed",version:Number(row.version),
-      school_year:Number(row.year),classroom:row.section,date:timestamp(row.confirmed_at)}));
+      school_year:Number(row.year),classroom_id:row.classroom_id,classroom:row.section,date:timestamp(row.confirmed_at)}));
   return [...annual, ...diagnostics, ...experiences, ...activities, ...reports, ...closures]
     .sort((a, b) => b.school_year - a.school_year || b.date.localeCompare(a.date) || a.kind.localeCompare(b.kind) || a.id.localeCompare(b.id));
 }

@@ -97,7 +97,7 @@ export async function listConfirmedDocumentArtifacts(db, teacherId) {
 
 export async function readConfirmedDocumentArtifact(db, storage, teacherId, artifactId) {
   if (!uuid.test(artifactId ?? "")) return null;
-  const row = (await db.query(`select da.* from document_artifacts da
+  const row = (await db.query(`select da.*,c.section as classroom,sy.year as school_year from document_artifacts da
     join classrooms c on c.id=da.classroom_id join school_years sy on sy.id=c.school_year_id
     where da.id=$1 and da.teacher_id=$2 and c.teacher_id=$2 and sy.owner_id=$2
       and da.status='confirmed'`,[artifactId,teacherId])).rows[0];
