@@ -5,13 +5,15 @@ import { useState } from "react";
 export type TreeDocument = { id:string;kind:string;title:string;status:string;version?:number;
   school_year:number;classroom:string;classroom_id?:string;parent_experience_id?:string;
   period_label?:string|null };
+export type ArtifactState = {id:string;source_kind:string;source_id:string;source_version:number;
+  version:number;status:string};
 
 const sectionName = (kind:string) => ({ diagnostic_summary:"Diagnóstico",annual_plan:"Plan anual",
   experience:"Proyectos y unidades",activity:"Actividades y talleres",family_report:"Evaluación por período",
   period_closure:"Cierres del período" }[kind] ?? "Otros documentos");
 const order = ["diagnostic_summary","annual_plan","experience","activity","family_report","period_closure"];
 
-export function DocumentTree({documents,stableIds,onOpen}:{documents:TreeDocument[];stableIds:Set<string>;
+export function DocumentTree({documents,artifactStates,onOpen}:{documents:TreeDocument[];artifactStates:ArtifactState[];
   onOpen:(document:TreeDocument)=>void}) {
   const [showDrafts,setShowDrafts]=useState(false);
   const visible=documents.filter(item=>showDrafts || item.status!=="draft");
@@ -20,8 +22,18 @@ export function DocumentTree({documents,stableIds,onOpen}:{documents:TreeDocumen
     const key=`${item.school_year}:${item.classroom_id??item.classroom}`;
     groups.set(key,[...(groups.get(key)??[]),item]);
   }
+  const documentState=(item:TreeDocument)=>{
+    if(!["annual_plan","experience"].includes(item.kind))return "";
+    const states=artifactStates.filter(state=>state.source_kind===item.kind && state.source_id===item.id);
+    const exact=states.find(state=>state.source_version===item.version);
+    if(exact?.status==="confirmed")return " · Word listo";
+    if(exact?.status==="pending")return " · Preparando Word";
+    if(exact?.status==="failed")return " · Error al preparar Word";
+    if(states.some(state=>state.status==="confirmed"))return " · Nueva versión sin Word estable";
+    return " · Word aún no preparado";
+  };
   const row=(item:TreeDocument)=><li key={`${item.kind}-${item.id}`} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border bg-white p-3">
-    <div><p className="font-semibold">{item.title}</p><p className="text-xs text-[#526b87]">{item.version?`Versión ${item.version} · `:""}{item.status==="draft"?"Borrador":item.status==="archived"?"Versión anterior":"Confirmado"}{item.period_label?` · ${item.period_label}`:""}{stableIds.has(item.id)?" · Word estable":""}</p></div>
+    <div><p className="font-semibold">{item.title}</p><p className="text-xs text-[#526b87]">{item.version?`Versión ${item.version} · `:""}{item.status==="draft"?"Borrador":item.status==="archived"?"Versión anterior":"Confirmado"}{item.period_label?` · ${item.period_label}`:""}{documentState(item)}</p></div>
     <button type="button" className="min-h-11 rounded-xl border px-4 font-semibold text-[#07576c]" onClick={()=>onOpen(item)}>Abrir</button></li>;
   return <div className="space-y-4"><label className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold"><input type="checkbox" checked={showDrafts} onChange={event=>setShowDrafts(event.target.checked)} />Mostrar borradores</label>
     {[...groups.entries()].sort((a,b)=>b[0].localeCompare(a[0])).map(([key,items])=><details key={key} open className="rounded-2xl border bg-[#f5f9fc] p-4">

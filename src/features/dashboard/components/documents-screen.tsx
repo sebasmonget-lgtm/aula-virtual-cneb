@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { localDatabaseApiUrl } from "@/src/lib/local-database";
 import { AnnualPlanDocument, type DocumentContext, type Proposal } from "./annual-plan-generator";
 import { LoadingState, PageIntro, WorkflowFeedback } from "./workflow-ui";
-import { DocumentTree } from "./document-tree";
+import { DocumentTree, type ArtifactState } from "./document-tree";
 import { DocumentSyncPanel } from "./document-sync-panel";
 
 type DocumentKind = "annual_plan" | "diagnostic_summary" | "experience" | "activity" | "family_report" | "period_closure";
@@ -23,7 +23,8 @@ type OpenDocument = DocumentEntry & {
   period_start?: string; period_end?: string; competencies?: { id: string; name: string }[];
 };
 type Artifact = { id: string; source_kind: string; source_id: string; filename: string;
-  sha256: string; byte_length: number; version: number;school_year:number;classroom:string;classroom_id:string };
+  sha256: string; byte_length: number; version: number;source_version:number;
+  school_year:number;classroom:string;classroom_id:string };
 
 const text = (value: unknown) => typeof value === "string" ? value.trim() : "";
 const items = (value: unknown) => Array.isArray(value) ? value.filter((item): item is string => typeof item === "string" && Boolean(item.trim())) : [];
@@ -140,6 +141,7 @@ export function DocumentsScreen() {
   const [wordMessage, setWordMessage] = useState("");
   const [wordError, setWordError] = useState("");
   const [artifacts, setArtifacts] = useState<Artifact[]>([]);
+  const [artifactStates,setArtifactStates] = useState<ArtifactState[]>([]);
   const [error, setError] = useState("");
   const [revision, setRevision] = useState(0);
   const artifactFeature = process.env.NEXT_PUBLIC_AYNI_F10_ARTIFACTS === "1";
@@ -176,6 +178,15 @@ export function DocumentsScreen() {
   }, [artifactFeature,revision]);
 
   useEffect(() => {
+    if(!syncFeature)return;
+    const controller=new AbortController();
+    void apiFetch(`${localDatabaseApiUrl}/api/documents/artifacts/states`,{signal:controller.signal,cache:"no-store"})
+      .then(async response=>response.ok?response.json() as Promise<{states:ArtifactState[]}>:{states:[]})
+      .then(result=>{if(!controller.signal.aborted)setArtifactStates(result.states);}).catch(()=>{});
+    return()=>controller.abort();
+  },[syncFeature,revision,artifacts]);
+
+  useEffect(() => {
     if (!selected) return;
     const controller = new AbortController();
     apiFetch(`${localDatabaseApiUrl}/api/documents/${selected.kind}/${selected.id}`, { signal: controller.signal }).then(async (response) => {
@@ -192,7 +203,8 @@ export function DocumentsScreen() {
   const downloadUrl = downloadable
     ? `${localDatabaseApiUrl}/api/documents/${opened.kind}/${opened.id}/download`
     : null;
-  const stableArtifact = opened && artifacts.find(item => item.source_kind === opened.kind && item.source_id === opened.id);
+  const stableArtifact = opened && artifacts.find(item => item.source_kind === opened.kind &&
+    item.source_id === opened.id && item.source_version === opened.version);
   async function prepareArtifact() {
     if (!opened || savingWord) return;
     setSavingWord(true); setWordError(""); setWordMessage("");
@@ -264,7 +276,7 @@ export function DocumentsScreen() {
     {selected ? opening ? <LoadingState label="Abriendo documento..." /> : opened ? <DocumentContent document={opened} /> : null :
       loading ? <LoadingState label="Buscando tus documentos..." /> : error ? null : documents.length === 0 ?
         <div className="rounded-2xl border border-[#d6e5ef] bg-white p-6"><FileText className="size-8 text-[#087d96]" /><h2 className="mt-3 text-lg font-bold">Aún no hay documentos guardados</h2><p className="mt-1 text-[#526b87]">Cuando guardes tu diagnóstico, plan anual o una actividad, aparecerán aquí.</p></div> :
-        syncFeature ? <DocumentTree documents={documents} stableIds={new Set(artifacts.map(item=>item.source_id))}
+        syncFeature ? <DocumentTree documents={documents} artifactStates={artifactStates}
           onOpen={item=>{setOpened(null);setError("");setWordMessage("");setWordError("");setOpening(true);setSelected({kind:item.kind as DocumentKind,id:item.id});}} /> :
         years.map((year) => <section key={year} aria-label={`Documentos ${year}`} className="space-y-3"><h2 className="text-lg font-extrabold text-[#172b52]">Año escolar {year}</h2>
           <ul className="space-y-2">{documents.filter((item) => item.school_year === year).map((item) => <li key={`${item.kind}-${item.id}`} className="rounded-2xl border border-[#d6e5ef] bg-white p-4 shadow-sm sm:flex sm:items-center sm:justify-between sm:gap-5">

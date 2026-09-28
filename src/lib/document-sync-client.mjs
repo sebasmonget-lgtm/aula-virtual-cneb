@@ -26,7 +26,7 @@ async function verifiedWrite(directory,name,bytes,expected) {
 }
 
 async function readManifest(root) {
-  const handle=await existingFile(root,"ayni-manifest.json");
+  const handle=await existingFile(root,".ayni-sync.json");
   if(!handle) return {format:"ayni-document-sync-v1",entries:{}};
   let value;
   try { value=JSON.parse(await (await handle.getFile()).text()); }
@@ -36,7 +36,7 @@ async function readManifest(root) {
   return value;
 }
 async function writeManifest(root,manifest) {
-  const handle=await root.getFileHandle("ayni-manifest.json",{create:true});
+  const handle=await root.getFileHandle(".ayni-sync.json",{create:true});
   const stream=await handle.createWritable();
   await stream.write(JSON.stringify(manifest,null,2));await stream.close();
 }

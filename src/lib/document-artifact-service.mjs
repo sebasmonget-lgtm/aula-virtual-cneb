@@ -95,6 +95,18 @@ export async function listConfirmedDocumentArtifacts(db, teacherId) {
     order by sy.year desc,da.confirmed_at desc,da.id`,[teacherId])).rows.map(publicArtifact);
 }
 
+export async function listDocumentArtifactStates(db, teacherId) {
+  return (await db.query(`select da.id,da.source_kind,da.source_id,da.source_version,
+      da.artifact_version,da.status,da.created_at
+    from document_artifacts da join classrooms c on c.id=da.classroom_id
+    join school_years sy on sy.id=c.school_year_id
+    where da.teacher_id=$1 and c.teacher_id=$1 and sy.owner_id=$1
+    order by da.created_at desc,da.id desc`,[teacherId])).rows.map(row=>({
+      id:row.id,source_kind:row.source_kind,source_id:row.source_id,
+      source_version:Number(row.source_version),version:Number(row.artifact_version),status:row.status,
+    }));
+}
+
 export async function readConfirmedDocumentArtifact(db, storage, teacherId, artifactId) {
   if (!uuid.test(artifactId ?? "")) return null;
   const row = (await db.query(`select da.*,c.section as classroom,sy.year as school_year from document_artifacts da

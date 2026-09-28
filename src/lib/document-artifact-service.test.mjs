@@ -9,7 +9,7 @@ import JSZip from "jszip";
 import { createPilotClassroom } from "./pilot-onboarding-service.mjs";
 import { createLocalPrivateDocumentArtifactStorage,
   createSupabasePrivateDocumentArtifactStorage } from "./private-document-artifact-storage.mjs";
-import { listConfirmedDocumentArtifacts,prepareConfirmedDocumentArtifact,
+import { listConfirmedDocumentArtifacts,listDocumentArtifactStates,prepareConfirmedDocumentArtifact,
   readConfirmedDocumentArtifact } from "./document-artifact-service.mjs";
 import { buildAuthorizedDocumentZip } from "./document-sync-package.mjs";
 
@@ -148,4 +148,17 @@ test("F11 ZIP rechaza mezclar dos aulas aun del mismo docente",async()=>{
     filename:"plan-12345678-v1.docx",sha256:"a".repeat(64),byte_length:4,status:"confirmed"});
   const db={query:async()=>({rows:[row(first,randomUUID()),row(second,randomUUID())]})};
   await assert.rejects(buildAuthorizedDocumentZip(db,null,teacher,[first,second]),/una sola aula/);
+});
+
+test("F11 estados documentales muestran error y listo solo a su docente",async()=>{
+  const f=await fixture();
+  try {
+    await assert.rejects(prepareConfirmedDocumentArtifact(f.db,f.storage,teacher,"annual_plan",f.plan,
+      {render:async()=>{throw new Error("sin Word");}}),/sin Word/);
+    assert.equal((await listDocumentArtifactStates(f.db,teacher))[0].status,"failed");
+    assert.equal((await listDocumentArtifactStates(f.db,foreign)).length,0);
+    await prepareConfirmedDocumentArtifact(f.db,f.storage,teacher,"annual_plan",f.plan,
+      {render:async()=>({buffer:Buffer.from("PK:ok")})});
+    assert.equal((await listDocumentArtifactStates(f.db,teacher))[0].status,"confirmed");
+  }finally{await f.db.close();await rm(f.root,{recursive:true,force:true});}
 });

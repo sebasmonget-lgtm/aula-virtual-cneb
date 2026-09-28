@@ -38,7 +38,7 @@ import { candidateProjectDates, ensureSchoolCalendar, loadEffectiveCalendar, rep
   validateSelectedInstructionalDates } from "../src/lib/school-calendar-service.mjs";
 import { listSavedDocuments, loadSavedDocument } from "../src/lib/document-library-service.mjs";
 import { prepareWordDownload } from "../src/lib/document-word-export.mjs";
-import { prepareConfirmedDocumentArtifact, listConfirmedDocumentArtifacts,
+import { prepareConfirmedDocumentArtifact, listConfirmedDocumentArtifacts, listDocumentArtifactStates,
   readConfirmedDocumentArtifact } from "../src/lib/document-artifact-service.mjs";
 import { createLocalPrivateDocumentArtifactStorage,
   createSupabasePrivateDocumentArtifactStorage } from "../src/lib/private-document-artifact-storage.mjs";
@@ -1203,6 +1203,10 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
     }
     if (process.env.AYNI_DOCUMENT_ARTIFACTS === "1" && request.method === "GET" && url.pathname === "/api/documents/artifacts") {
       send(response,200,{ artifacts: await listConfirmedDocumentArtifacts(db,teacherId) },origin); return;
+    }
+    if (process.env.AYNI_DOCUMENT_ARTIFACTS === "1" && process.env.AYNI_DOCUMENT_SYNC === "1"
+      && request.method === "GET" && url.pathname === "/api/documents/artifacts/states") {
+      send(response,200,{ states: await listDocumentArtifactStates(db,teacherId) },origin); return;
     }
     if (process.env.AYNI_DOCUMENT_ARTIFACTS === "1" && request.method === "POST" && url.pathname === "/api/documents/artifacts/prepare") {
       if (!documentArtifactStorage) { send(response,503,{error:"Storage documental privado no configurado."},origin); return; }

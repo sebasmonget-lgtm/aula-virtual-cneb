@@ -40,7 +40,7 @@ test("F11 primera copia, repetición sin redescarga y nueva versión",async()=>{
   assert.equal(calls,1);
   assert.deepEqual((await syncDocumentArtifacts(root,[two],fetch)).written,[two.id]);
   assert.equal(calls,2);
-  const manifest=JSON.parse(await (await root.getFileHandle("ayni-manifest.json")).getFile().then(file=>file.text()));
+  const manifest=JSON.parse(await (await root.getFileHandle(".ayni-sync.json")).getFile().then(file=>file.text()));
   assert.equal(Object.keys(manifest.entries).length,2);
 });
 
