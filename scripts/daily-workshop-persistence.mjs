@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { validateWorkshopDay, workshopItemIsSelected } from "../src/lib/workshop-master-service.mjs";
 import { VersionConflictError, versionTransaction } from "../src/lib/version-integrity.mjs";
+import { activityPreparationV3 } from "../src/lib/activity-v3-snapshot.mjs";
 
 export async function activeWorkshopForProject(db, projectId) {
   return (await db.query(`select * from learning_experiences where parent_project_id=$1
@@ -29,7 +30,7 @@ export async function insertDailyPair(db, { experience, occursOn, mainId, mainDe
       preparation,adaptations,status,details,generation_metadata)
       values($1,$2,$3::date,$3::date,$4,$5,'[]'::jsonb,$6::jsonb,'[]'::jsonb,'draft',$7::jsonb,$8::jsonb)`,
     [mainId, experience.id, occursOn, mainDetails.title, mainDetails.purpose,
-      JSON.stringify({ materials }), JSON.stringify(mainDetails), JSON.stringify(mainMetadata)]);
+      JSON.stringify(activityPreparationV3(mainDetails, materials)), JSON.stringify(mainDetails), JSON.stringify(mainMetadata)]);
     if (pair) await tx.query(`insert into activities(id,experience_id,occurs_on,planned_date,title,purpose,
       sequence,preparation,adaptations,status,details,generation_metadata,linked_main_activity_id,workshop_item_index)
       values($1,$2,$3::date,$3::date,$4,$5,'[]'::jsonb,$6::jsonb,'[]'::jsonb,'draft',$7::jsonb,$8::jsonb,$9,$10)`,

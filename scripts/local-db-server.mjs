@@ -6,6 +6,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createDatabase } from "./database-adapter.mjs";
 import { resolveDailyState } from "../src/lib/daily-state.mjs";
+import { readQADailyClock } from "../src/lib/qa-daily-clock.mjs";
+const qaDailyClock = readQADailyClock();
 import { isValidStepIndex } from "../src/lib/activity-runner.mjs";
 import { buildStudentPedagogicalContext, refreshStudentContextSnapshot } from "../src/lib/student-context-service.mjs";
 import { getCurrentClassroomContext, publicClassroomContext } from "../src/lib/classroom-context-service.mjs";
@@ -40,7 +42,8 @@ import { buildInstitutionInitialsLogo, loadInstitutionLogoForDocuments, normaliz
 import { displayPersonName } from "../src/lib/person-name.mjs";
 import { validateLearningExperienceProposal } from "../src/lib/learning-experience-validation.mjs";
 import { inheritedActivityCriterion, routeItemFor, saveActivityDetails, saveExperienceDetails } from "../src/lib/experience-lineage.mjs";
-import { canonicalProjectDetails, canonicalProjectRoute, planningV3ReadEnabled, projectMasterV3, resolveAnnualProposal, validateProjectMasterV3 } from "../src/lib/planning-contract-v3.mjs";
+import { activityCriteriaV3, activityPreparationV3, inheritedActivityEnabled, stampActivityV3 } from "../src/lib/activity-v3-snapshot.mjs";
+import { activityV3, validateActivityV3, canonicalProjectDetails, canonicalProjectRoute, planningV3ReadEnabled, projectMasterV3, resolveAnnualProposal, validateProjectMasterV3 } from "../src/lib/planning-contract-v3.mjs";
 import { simpleProjectEnabled, stampProjectV3, retainProjectCriterionIds } from "../src/lib/project-v3-snapshot.mjs";
 import { confirmActivityWithCriterion } from "../src/lib/activity-confirmation.mjs";
 import { copyConfirmedActivity } from "../src/lib/activity-version-service.mjs";
@@ -325,8 +328,8 @@ async function dashboard() {
   `, [teacherId, classroomId]);
   const dateFormatter = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Lima", year: "numeric", month: "2-digit", day: "2-digit" });
   const timeFormatter = new Intl.DateTimeFormat("en-GB", { timeZone: "America/Lima", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
-  const today = dateFormatter.format(new Date());
-  const now = timeFormatter.format(new Date());
+  const today = qaDailyClock?.date ?? dateFormatter.format(new Date());
+  const now = qaDailyClock?.time ?? timeFormatter.format(new Date());
   const attendanceResult = await db.query(`
     select count(*)::int as recorded_count from attendance_records
      where classroom_id = $1 and attendance_date = $2::date
@@ -377,7 +380,7 @@ async function dashboard() {
   return {
     activity: activityResult.rows[0] ? { ...activityResult.rows[0], criteria: normalizeCriteria(activityResult.rows[0].criteria ?? []) } : null,
     today: {
-      date: today, now, blocks, attendance: { recorded: attendanceRecorded, recorded_count: Number(attendanceResult.rows[0]?.recorded_count ?? 0) },
+      date: today, now, ...(qaDailyClock ? { qa_clock: qaDailyClock } : {}), blocks, attendance: { recorded: attendanceRecorded, recorded_count: Number(attendanceResult.rows[0]?.recorded_count ?? 0) },
       calendar_exception: calendarException,
       journey: { mode: journey.mode, current_block_id: journey.currentBlock?.id ?? null, next_block_id: journey.nextBlock?.id ?? null, primary_action: journey.primaryAction, pending_items: journey.pendingItems },
     },
@@ -528,6 +531,14 @@ async function activityAllowedCompetencies(experience, classroom) {
   const parentIds = new Set([...(experience.details?.primary_competency_ids ?? []), ...(experience.details?.possible_secondary_competency_ids ?? [])]);
   const applicable = await applicableCompetencyIds("activity", classroom);
   return new Set([...parentIds].filter((id) => applicable.has(id)));
+}
+function persistInheritedActivity(activity, details, experience) {
+  const enabled = activity.details?.activity_contract?.contract_version === "activity-v3" ||
+    (inheritedActivityEnabled() && experience.details?.contract_version === "project-master-v3");
+  if (enabled) return stampActivityV3(activity, details, experience);
+  if (details.activity_contract) throw new Error("La actividad no puede declarar un contrato V3 por sí misma.");
+  if (details.additional_criteria?.length) throw new Error("Los criterios adicionales requieren una actividad V3 heredada.");
+  return details;
 }
 async function validateStoredActivityCriterion(current, classroom) {
   const competencyId = current.activity_details?.competency_id;
@@ -1975,7 +1986,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
           workshop_master_id: workshop ? master.id : null, workshop_item_index: workshop ? routeIndex : null,
           workshop_metadata: workshop?.metadata ?? null,
           metadata: safeAnnualGenerationMetadata(generated.internalMetadata), createdAt: Date.now() });
-        send(response, 200, { proposal: generated.proposal, workshop_proposal: workshop?.proposal ?? null,
+        send(response, 200, { proposal: inheritedActivityEnabled() ? { ...generated.proposal, teacher_context: cleanText(body.context, 1000) } : generated.proposal, workshop_proposal: workshop?.proposal ?? null,
           workshop_error: workshopError,
           generation_id: generationId }, origin); } catch (error) { send(response, httpStatusForError(error, 422), { error: publicErrorMessage(error) || "No se pudo generar la actividad." }, origin); } return;
     }
@@ -1994,10 +2005,11 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         const master = body.workshopProposal ? await activeWorkshopForProject(db, experience.id) : null;
         if (body.workshopProposal && pending.workshop_master_id !== (master?.id ?? null))
           throw new VersionConflictError("El maestro de talleres cambió. Puedes guardar solo la actividad o preparar de nuevo el día.");
-        const details = saveActivityDetails(body.proposal, routeItem, null, Boolean(body.workshopProposal));
         const id = randomUUID();
+        const details = persistInheritedActivity({ id, experience_id: experience.id, version: 1, status: "draft", occurs_on: occursOn },
+          saveActivityDetails(body.proposal, routeItem, null, Boolean(body.workshopProposal)), experience);
         const pair = await insertDailyPair(db, { experience, occursOn, mainId: id, mainDetails: details,
-          materials: normalizeActivityMaterials(body.materials), mainMetadata: pending.metadata,
+          materials: normalizeActivityMaterials([...(routeItem?.materials ?? []), ...normalizeActivityMaterials(body.materials)]), mainMetadata: pending.metadata,
           master, workshopIndex: pending.workshop_item_index, workshopProposal: body.workshopProposal,
           workshopMetadata: pending.workshop_metadata });
         await pendingAIGenerations.delete(body.generationId);
@@ -2005,10 +2017,10 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
           workshopRevision: pair.workshopId ? 1 : null, occurs_on: occursOn }, origin); } catch(error) { send(response,httpStatusForError(error,422),{error:publicErrorMessage(error)},origin); } return;
     }
     if (request.method === "PUT" && url.pathname.startsWith("/api/activities/")) {
-      const id=url.pathname.split("/")[3]; const context=await annualPlanningContext(); const body=await readJson(request); const current=context&&(await db.query(`select a.*,e.classroom_id,e.status as experience_status,e.details as experience_details,e.starts_on as experience_starts_on,e.ends_on as experience_ends_on from activities a join learning_experiences e on e.id=a.experience_id where a.id=$1 and e.classroom_id=$2 and a.status='draft'`,[id,context.id])).rows[0];
+      const id=url.pathname.split("/")[3]; const context=await annualPlanningContext(); const body=await readJson(request); const current=context&&(await db.query(`select a.*,e.classroom_id,e.version as experience_version,e.status as experience_status,e.details as experience_details,e.starts_on as experience_starts_on,e.ends_on as experience_ends_on from activities a join learning_experiences e on e.id=a.experience_id where a.id=$1 and e.classroom_id=$2 and a.status='draft'`,[id,context.id])).rows[0];
       if(!current||!["active","archived"].includes(current.experience_status)){send(response,404,{error:"Borrador no disponible."},origin);return;} const pending=typeof body.generationId==="string"?await pendingAIGenerations.get(body.generationId):null; if(body.generationId&&(!pending||pending.workflow!=="activity"||pending.classroom_id!==context.id||pending.learning_experience_id!==current.experience_id)){send(response,422,{error:"La regeneración no corresponde a esta actividad."},origin);return;} try {
         const revision = expectedRevision(body.expectedRevision);
-        const parent = { details: current.experience_details };
+        const parent = { id: current.experience_id, version: current.experience_version, status: current.experience_status, details: current.experience_details };
         const routeItem = routeItemFor(parent, current.details?.route_item_id);
         if (current.experience_details?.activity_route?.length && !routeItem) throw new Error("La actividad ya no corresponde a la ruta del proyecto.");
         const occursOn = routeItem?.planned_date ?? routeItem?.date ?? annualCalendarDay(current.planned_date ?? current.occurs_on);
@@ -2019,10 +2031,11 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         const workshopDraft = await linkedWorkshopDraft(db, id, context.id);
         if (workshopDraft && pending && pending.workshop_master_id !== workshopDraft.experience_id)
           throw new VersionConflictError("El taller generado corresponde a otra versión del maestro.");
-        const details = saveActivityDetails(body.proposal, routeItem, current.details, Boolean(workshopDraft));
+        const details = persistInheritedActivity({ ...current, occurs_on: occursOn },
+          saveActivityDetails(body.proposal, routeItem, current.details, Boolean(workshopDraft)), parent);
         const saved = await updateDailyPair(db, { mainId: id, lineageId: current.lineage_id, revision,
           mainValues: [occursOn, details.title, details.purpose, JSON.stringify(details),
-            JSON.stringify({ materials: normalizeActivityMaterials(body.materials) })],
+            JSON.stringify(activityPreparationV3(details, normalizeActivityMaterials([...(routeItem?.materials ?? []), ...normalizeActivityMaterials(body.materials)])))],
           mainMetadata: pending?.metadata, workshopDraft,
           workshopProposal: body.workshopProposal ?? workshopDraft?.details,
           workshopRevision: workshopDraft ? expectedRevision(body.workshopRevision) : null,
@@ -2035,7 +2048,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
     if (request.method === "POST" && url.pathname.startsWith("/api/activities/") && url.pathname.endsWith("/confirm")) {
       const id = url.pathname.split("/")[3];
       const context = await annualPlanningContext();
-      const current = context && (await db.query(`select a.*,e.classroom_id,e.status as experience_status,e.details as experience_details,e.starts_on as experience_starts_on,e.ends_on as experience_ends_on from activities a join learning_experiences e on e.id=a.experience_id where a.id=$1 and e.classroom_id=$2`, [id, context.id])).rows[0];
+      const current = context && (await db.query(`select a.*,e.classroom_id,e.version as experience_version,e.status as experience_status,e.details as experience_details,e.starts_on as experience_starts_on,e.ends_on as experience_ends_on from activities a join learning_experiences e on e.id=a.experience_id where a.id=$1 and e.classroom_id=$2`, [id, context.id])).rows[0];
       if (!current || !["active", "archived"].includes(current.experience_status)) {
         send(response, 404, { error: "Actividad no disponible." }, origin);
         return;
@@ -2046,7 +2059,12 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         validateActivityV4(current.details, await activityAllowedCompetencies({ details: current.experience_details }, context));
         const routeItem = routeItemFor({ details: current.experience_details }, current.details?.route_item_id);
         if (current.experience_details?.activity_route?.length && !routeItem) throw new Error("La actividad ya no pertenece a la ruta confirmada.");
-        const criterion = inheritedActivityCriterion(current.details, routeItem);
+        let criterion = inheritedActivityCriterion(current.details, routeItem);
+        if (current.details.activity_contract?.contract_version === "activity-v3") {
+          const parent = { id: current.experience_id, version: current.experience_version, status: current.experience_status, details: current.experience_details };
+          validateActivityV3(activityV3({ ...current, occurs_on: annualCalendarDay(current.occurs_on) }, parent), projectMasterV3(parent));
+          criterion = activityCriteriaV3(current.details);
+        }
         const body=await readJson(request);
         const workshopDraft = await linkedWorkshopDraft(db, id, context.id);
         if (current.details?.document_template_version === "activity-with-workshop-v1" && !workshopDraft)
@@ -2279,7 +2297,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         send(response, 400, { error: "La asistencia contiene estudiantes o estados no válidos." }, origin);
         return;
       }
-      const today = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Lima", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+      const today = qaDailyClock?.date ?? new Intl.DateTimeFormat("en-CA", { timeZone: "America/Lima", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
       await db.exec("begin");
       try {
         for (const record of records) await db.query(`insert into attendance_records
@@ -2308,7 +2326,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         send(response, 403, { error: "El bloque no pertenece al aula activa." }, origin);
         return;
       }
-      const today = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Lima", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+      const today = qaDailyClock?.date ?? new Intl.DateTimeFormat("en-CA", { timeZone: "America/Lima", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
       if (action === "set_step" && !isValidStepIndex(body.stepIndex, entry.total_steps)) {
         send(response, 400, { error: "El paso no pertenece a esta actividad." }, origin);
         return;

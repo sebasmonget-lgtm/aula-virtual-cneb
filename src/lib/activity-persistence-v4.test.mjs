@@ -74,7 +74,7 @@ test("A-C: OPTIONS permite PUT y el parent público no filtra metadata técnica"
   const parentContext = server.slice(server.indexOf("async function activityParentContext"), server.indexOf("async function activityAllowedCompetencies"));
   assert.match(parentContext, /return publicActivityParent\(experience, prior\)/);
   const publicParent = publicActivityParent({ id: "p1", type: "project", title: "Proyecto", purpose: "Propósito", starts_on: "2026-03-01", ends_on: "2026-03-30", origin: "planned", details: { primary_competency_ids: ["CYT_INDAGA"] }, generation_metadata: { model: "hidden", tokens: 9 }, teacher_confirmed_at: "hidden", response_id: "hidden" }, [{ occurs_on: "2026-03-02", title: "Anterior", purpose: "Probar", closure_or_continuity: "Continuar", model: "hidden" }]);
-  assert.deepEqual(Object.keys(publicParent).sort(), ["details", "ends_on", "id", "origin", "prior_activities", "purpose", "starts_on", "title", "type"]);
+  assert.deepEqual(Object.keys(publicParent).sort(), ["details", "ends_on", "id", "origin", "prior_activities", "purpose", "starts_on", "status", "title", "type", "version"]);
   assert.doesNotMatch(JSON.stringify(publicParent), /hidden|generation_metadata|response_id|tokens/);
 });
 

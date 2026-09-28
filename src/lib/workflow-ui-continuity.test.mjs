@@ -25,7 +25,7 @@ test("criterio no convierte un error de lectura en un formulario nuevo", async (
 });
 
 test("actividad y experiencia distinguen fallos de lectura y de refresco de un fallo de guardado", async () => {
-  const activity = await component("parent-activity-generator");
+  const activity = (await component("parent-activity-generator")).replace(/\s+/g, " ");
   const experience = await component("learning-experience-generator");
   assert.match(activity, /if \(!response\.ok\) throw new Error\("No se pudieron cargar las experiencias\."\)/);
   assert.match(activity, /Borrador guardado, pero no se pudo actualizar la lista de actividades/);

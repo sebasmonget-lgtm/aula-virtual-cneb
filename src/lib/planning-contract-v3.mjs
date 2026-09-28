@@ -155,6 +155,20 @@ export function activityV3(activity, experience) {
   const blueprintId = activity.details?.route_item_id;
   const blueprint = canonicalProjectRoute(experience.details).find((item) => item.id === blueprintId);
   if (!uuid(blueprintId) || !blueprint) return null;
+  const contract = activity.details?.activity_contract;
+  if (contract?.contract_version === ACTIVITY_CONTRACT_V3) {
+    const details = activity.details;
+    return { contract_version: ACTIVITY_CONTRACT_V3, id: activity.id, version: Number(activity.version ?? 1),
+      status: activity.status, project_id: contract.project_id, project_version: contract.project_version,
+      project_fingerprint: contract.project_fingerprint, kb_version: contract.kb_version,
+      blueprint_id: blueprintId, occurs_on: activity.occurs_on,
+      purpose: details.purpose, competency_ids: [details.competency_id, ...(details.additional_criteria ?? []).map(item => item.competency_id)],
+      criterion_refs: contract.criterion_refs,
+      evidence_opportunities: [details.expected_evidence, ...(details.additional_criteria ?? []).map(item => item.expected_evidence)],
+      sequence: [details.meaningful_situation, details.child_actions, details.closure_or_continuity],
+      preparation: [details.teacher_preparation], mediation: [details.mediation], adaptations: activity.adaptations ?? [],
+      teacher_context: details.teacher_context ?? "", teacher_overrides: details.teacher_overrides ?? [] };
+  }
   return { contract_version: ACTIVITY_CONTRACT_V3, compatibility_adapter: true,
     id: activity.id, version: Number(activity.version ?? 1),
     status: activity.status, project_id: experience.id, project_version: Number(experience.version ?? 1),
@@ -178,7 +192,15 @@ export function validateActivityV3(value, project) {
       !String(value.purpose ?? "").trim())
     throw new Error("La actividad V3 no corresponde al proyecto y blueprint confirmados.");
   const blueprint = project.activity_map.find((row) => row.blueprint_id === value.blueprint_id);
-  if (value.criterion_refs.some((ref) => !blueprint.criterion_refs.includes(ref)))
+  if (value.criterion_refs.some((ref) => !blueprint.criterion_refs.includes(ref) &&
+    !(project.criteria?.some(item => item.criterion_id === ref) && value.teacher_overrides.some(item =>
+      item.field === "criteria" && item.source === "teacher_review" && item.to?.criterion_ref === ref))))
     throw new Error("La actividad V3 no corresponde al criterio de su blueprint.");
+  if (value.competency_ids && (value.competency_ids.length !== value.criterion_refs.length ||
+    new Set(value.competency_ids).size !== value.competency_ids.length || value.competency_ids.some((id, index) =>
+      !project.criteria?.some(item => item.criterion_id === value.criterion_refs[index] && item.competency_id === id))))
+    throw new Error("Las competencias V3 no corresponden a los criterios confirmados.");
+  if (value.project_fingerprint && value.project_fingerprint !== project.source_fingerprint)
+    throw new Error("Cambió la fuente del proyecto de la actividad.");
   return value;
 }

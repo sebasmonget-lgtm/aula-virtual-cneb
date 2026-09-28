@@ -20,6 +20,14 @@ test("la confirmación y el criterio heredado se guardan juntos o se revierten j
     await assert.rejects(confirmActivityWithCriterion(db, "rollback", criterion, "criterion-ok"));
     assert.equal((await db.query("select status from activities where id='rollback'")).rows[0].status, "draft");
     assert.equal((await db.query("select count(*)::int as n from activity_criteria")).rows[0].n, 1);
+    await db.query("insert into activities(id,status) values('multi','draft'),('multi-rollback','draft')");
+    const secondary = { competency_id: "COM_ORAL", criterion_text: "Explica su propuesta" };
+    await confirmActivityWithCriterion(db, "multi", [criterion, secondary], ["multi-one", "multi-two"], 1);
+    assert.equal((await db.query("select count(*)::int as n from activity_criteria where activity_id='multi'")).rows[0].n, 2);
+    await assert.rejects(confirmActivityWithCriterion(db, "multi-rollback", [criterion, secondary], ["new-one", "multi-two"], 1));
+    assert.equal((await db.query("select status from activities where id='multi-rollback'")).rows[0].status, "draft");
+    assert.equal((await db.query("select count(*)::int as n from activity_criteria where activity_id='multi-rollback'")).rows[0].n, 0);
+    assert.equal((await db.query("select count(*)::int as n from class_schedule_entries where activity_id='multi-rollback'")).rows[0].n, 0);
   } finally {
     await db.close();
   }

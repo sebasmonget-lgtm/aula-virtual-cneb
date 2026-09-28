@@ -5,7 +5,9 @@ export function confirmedProjectFoundation(project) {
   const details = project?.details ?? {};
   const master = details.project_master ?? {};
   return {
-    id: project.id, title: project.title, purpose: project.purpose,
+    id: project.id, version: Number(project.version ?? 1), title: project.title, purpose: project.purpose,
+    source: details.source_refs ?? null, source_fingerprint: details.source_fingerprint ?? null,
+    kb_version: details.kb_version ?? null,
     decisions: details.decisions ?? null,
     guiding_questions: details.dependents?.guiding_questions ?? [],
     project_master: {

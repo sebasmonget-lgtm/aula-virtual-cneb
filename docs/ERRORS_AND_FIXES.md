@@ -1,5 +1,15 @@
 # Errores y soluciones
 
+## 2026-09-28 — F4: cotejo de clon con proyecciones reconstruibles
+
+**Síntoma.** La comparación inicial de todas las tablas contra el snapshot F3 falló tras confirmar una actividad QA; `ai_usage_events` añadió una fila fixture con costo cero, `competency_display_labels.updated_at` se refrescó al abrir la API y el mapa derivado de período agregó dos entradas/una versión y refrescó cinco filas anteriores.
+
+**Causa raíz.** La verificación trataba eventos de uso nuevos y proyecciones reconstruibles como fuentes históricas inmutables, mezclando semánticas de tablas. No hubo pérdida de las 26 actividades, evidencias, valoraciones ni cierres históricos.
+
+**Solución validada.** Cotejar las 69 tablas fuente/historia por contenido, los registros anteriores de actividad/criterio/agenda/ejecución y el nuevo ActivityV3 por IDs. Auditar por separado las dos proyecciones y el uso fixture, registrando altas/refrescos sin ocultarlos. Conservar el `updated_at` real del catálogo en DB y comparar solo etiqueta/área/ID para esta tabla de presentación. Reporte `.local/test-results/f4/history.json`.
+
+**Prevención.** Separar fuentes confirmadas, eventos aditivos y proyecciones recalculables en cada auditoría de fase; nunca inferir corrupción de datos pedagógicos por un contador de proyección distinto sin conciliar IDs.
+
 ## 2026-09-28 — F3: historial, recarga y harness QA
 
 **Síntoma/causa.** Regeneración sucesora podía sustituir filas históricas sin overrides explícitos; V3 debía conservar string `starting_point` para Word/copia. Volver a Mi año podía usar versiones obsoletas en memoria. `vinext dev` no abrió puerto; CLI ignora `--config`; preview rechazado por entorno. Primera restauración chocó con semillas demo de migraciones.

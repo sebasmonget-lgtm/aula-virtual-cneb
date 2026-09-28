@@ -34,7 +34,7 @@ test("reabrir y regenerar un draft conserva el ID y reinicia el estado de ediciÃ
   assert.match(source, /setPurpose\(activity\.details\.purpose\)/);
   assert.match(source, /setCompetencyId\(activity\.details\.competency_id \?\? ""\)/);
   assert.match(source, /setContext\(""\)/);
-  assert.match(source, /generationId,\s*expectedRevision:activities\.find\(\(item\)=>item\.id===draftId\)\?\.revision, materials/);
+  assert.match(source.replace(/\s+/g, ""), /generationId,expectedRevision:activities\.find\(\(item\)=>item\.id===draftId\)\?\.revision,materials/);
   assert.match(source, /setGenerationId\(data\.generation_id \?\? null\)/);
   assert.match(source, /setGenerationId\(null\)/);
 });

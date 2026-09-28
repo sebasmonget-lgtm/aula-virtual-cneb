@@ -40,7 +40,18 @@ const server = createServer(async (request, response) => {
           flexibility_notes: "Adaptar los materiales disponibles.", role_in_project: index === context.instructional_dates.length - 1 ? "Cierre" : "Exploración",
           expected_progression: "De explorar a compartir ideas.", estimated_minutes: 35 };
       }) };
-    else throw new Error(`Esquema no permitido en QA: ${schema}`);
+    else if (schema === "activity-v1") {
+      const inherited = context.context?.workflow_inputs?.learning_experience_context?.inherited_route_item;
+      if (!inherited) throw new Error("El fixture de actividad exige un blueprint heredado.");
+      output = { title: inherited.title, purpose: inherited.specific_purpose,
+        meaningful_situation: "Exploramos los materiales del aula relacionados con la propuesta.",
+        teacher_preparation: "Organizar los materiales en un espacio accesible.",
+        child_actions: "Los niños exploran, comparan y comparten una idea en parejas.",
+        mediation: "Escuchar las ideas y preguntar qué descubrieron, sin anticipar una respuesta.",
+        evidence_opportunities: "Registrar la explicación individual durante la exploración.",
+        closure_or_continuity: "Compartir lo observado y recuperar una pregunta para el siguiente día.",
+        competency_status: "confirmed", competency_id: inherited.competency_id };
+    } else throw new Error(`Esquema no permitido en QA: ${schema}`);
     calls++;
     response.writeHead(200, { "content-type": "application/json" });
     response.end(JSON.stringify({ id: `resp_qa_${randomUUID()}`, status: "completed", model: payload.model,

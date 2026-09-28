@@ -33,8 +33,14 @@ export async function confirmActivityWithCriterion(db, activityId, criterion, cr
     }
     const result = await transaction.query(`update activities set status='active',teacher_confirmed_at=now(),updated_at=now() where id=$1 and status='draft' and revision=$2 returning id,status,teacher_confirmed_at,revision`, [activityId,draft.revision]);
     if (!result.rows[0]) throw new VersionConflictError();
-    if (criterion) {
-      await transaction.query(`insert into activity_criteria(id,activity_id,competency_id,competency_v4_id,performance_id,criterion_text,details,status,teacher_confirmed_at) values($1,$2,null,$3,null,$4,$5::jsonb,'active',now())`, [criterionId, activityId, criterion.competency_id, criterion.criterion_text, JSON.stringify(criterion)]);
+    const criteria = Array.isArray(criterion) ? criterion : criterion ? [criterion] : [];
+    const seen = new Set();
+    for (const [index, item] of criteria.entries()) {
+      if (!item.competency_id || !String(item.criterion_text ?? "").trim() || seen.has(item.competency_id))
+        throw new Error("Los criterios de la actividad deben corresponder a competencias distintas.");
+      seen.add(item.competency_id);
+      const id = Array.isArray(criterionId) ? criterionId[index] : index === 0 ? criterionId : randomUUID();
+      await transaction.query(`insert into activity_criteria(id,activity_id,competency_id,competency_v4_id,performance_id,criterion_text,details,status,teacher_confirmed_at) values($1,$2,null,$3,null,$4,$5::jsonb,'active',now())`, [id, activityId, item.competency_id, item.criterion_text, JSON.stringify(item)]);
     }
     if (!draft.supersedes_activity_id) {
       const schedule = (await transaction.query(`select id from class_schedule_entries where activity_id=$1 and classroom_id=$2

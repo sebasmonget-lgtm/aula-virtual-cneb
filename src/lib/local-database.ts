@@ -47,6 +47,7 @@ export type LocalDashboard = {
   students: LocalStudent[];
   metrics: { students_total: number; evidences_week: number; students_observed: number };
   today: {
+    qa_clock?: { date: string; time: string };
     date: string; now: string;
     attendance: { recorded: boolean; recorded_count: number };
     calendar_exception: { type: string; label: string; is_instructional: boolean } | null;
