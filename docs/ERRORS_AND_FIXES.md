@@ -1,5 +1,15 @@
 # Errores y soluciones
 
+## 2026-09-27 Confirmar par diario bloqueado por orden JSONB (H26)
+
+**Síntoma.** Actividad+taller guardados mantenían «Guarda los cambios» y confirmación deshabilitada.
+
+**Causa raíz.** La comparación del taller usaba stringify bruto, no igualdad de contenido frente al objeto recargado.
+
+**Solución validada.** Reusar la igualdad semántica de H22; listas siguen ordenadas y editar/retirar taller exige guardar. JSONB real y contrato de integración + 11 relacionadas, typecheck, lint y build PASS. UI recargó el borrador guardado y confirmó el par diario sin regeneración.
+
+**Prevención.** No comparar objetos persistidos JSONB por orden de inserción de claves. Las pruebas de cambios deben cubrir también recursos vinculados.
+
 ## 2026-09-27 Talleres actualizaban una columna inexistente (H25)
 
 **Síntoma.** El maestro se generaba pero guardar las decisiones devolvía error genérico.

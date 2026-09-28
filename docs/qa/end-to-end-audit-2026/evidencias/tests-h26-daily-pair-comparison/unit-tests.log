@@ -1,0 +1,19 @@
+✔ la confirmación y el criterio heredado se guardan juntos o se revierten juntos (2026.3724ms)
+✔ fecha de actividad admite DATE real de PostgreSQL en guardar y confirmar, sin ampliar límites (1959.0181ms)
+✔ A-D, J-M y O-Q: activity-v1 exige parent permitido, competencia aplicable y coherencia (2.4127ms)
+✔ D-H: Project y Unit llegan como contexto mínimo, con continuidad y sin datos privados (51.7626ms)
+✔ I: activity conserva límites de parent y persistencia (2.4446ms)
+✔ A-C: OPTIONS permite PUT y el parent público no filtra metadata técnica (1.546ms)
+✔ G-N: edición conserva metadata, regeneración validada la reemplaza y materiales se normalizan (2.7946ms)
+✔ persistir y recargar JSONB no oculta preguntas ni bloquea confirmar un mapa intacto (1908.1576ms)
+✔ los cambios pedagógicos y el orden de listas/actividades siguen requiriendo revisión (1.3011ms)
+✔ el par diario no trata el reordenamiento JSONB del taller como una edición pendiente (1513.5432ms)
+✔ rutas reales guardan, confirman y versionan talleres con el esquema migrado (3463.4348ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 7052.9533

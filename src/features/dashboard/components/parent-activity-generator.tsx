@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { localDatabaseApiUrl } from "@/src/lib/local-database";
+import { jsonValuesDiffer } from "@/src/lib/project-draft-changes.mjs";
 import type { LibraryResource } from "@/src/lib/library-resource";
 import { CriterionEvidenceGenerator } from "./criterion-evidence-generator";
 import { WorkshopMasterPanel } from "./workshop-master-panel";
@@ -44,7 +45,7 @@ export function ParentActivityGenerator({ onConfirmed, onGoToday,feedbackPeriodI
   const setRouteItemId = (value: string) => { setRouteItemIdState(value);
     const selected = parent?.details.activity_route?.find((item) => item.id === value);
     if (selected?.planned_date||selected?.date) setDate(selected.planned_date??selected.date??""); };
-  const hasUnsavedChanges = Boolean(draftId && proposal && (generationId || snapshot(proposal, date, materials) !== savedSnapshot || JSON.stringify(workshopProposal) !== JSON.stringify(activities.find((item) => item.id === draftId)?.workshop?.details ?? null)));
+  const hasUnsavedChanges = Boolean(draftId && proposal && (generationId || snapshot(proposal, date, materials) !== savedSnapshot || jsonValuesDiffer(workshopProposal, activities.find((item) => item.id === draftId)?.workshop?.details ?? null)));
   const nameOf = (id: string) => competencies.find((item) => item.id === id)?.name ?? id;
   const reset = () => { setProposal(null); setWorkshopProposal(null); setDraftId(null); setGenerationId(null); setSavedSnapshot(null); setReadOnly(false); setDate(""); setPurpose(""); setCompetencyId(""); setRouteItemId(""); setMaterials(""); setContext(""); };
 

@@ -92,4 +92,20 @@ El enlace local de dependencias del renderizador bajo `docs/qa/.../node_modules`
 
 **Regresión.** Todas las migraciones en PGlite, rutas HTTP reales de guardar/confirmar, rechazo de revisión obsoleta, confirmar nueva versión y archivar anterior. Antes falla 0/1 al guardar; después 13/13 relacionadas, typecheck, lint y build PASS (`tests-h25-workshop-persistence`).
 
-**UI después.** PASS: mismo maestro guardado y confirmado, tres días aceptados y cinco sin taller, sin regenerar. Captura `screenshots/17-h25-talleres-confirmados.png`. Commit pendiente. Rollback: revertir este fix, sin migración.
+**UI después.** PASS: mismo maestro guardado y confirmado, tres días aceptados y cinco sin taller, sin regenerar. Captura `screenshots/17-h25-talleres-confirmados.png`. Commit `267a290`. Rollback: revertir este fix, sin migración.
+
+## H26 — El par diario guardado sigue indicando cambios (BLOCKER)
+
+**Antes.** Actividad y taller se generaron/revisaron/guardaron, pero «Confirmar actividad» quedaba deshabilitado. Snapshot `daily-pair-confirm-disabled`.
+
+**Causa.** La comparación del taller seguía usando `JSON.stringify` frente al JSONB recargado: distinto orden de claves, mismos valores. La comparación principal del borrador guardado en memoria no presenta este round-trip.
+
+**Fix.** Reusar la comparación semántica ya validada en H22 para la bandera del taller. Se mantienen las diferencias por contenido, materiales ordenados, eliminación del taller y revisión del servidor. Archivos: `parent-activity-generator.tsx`, export del helper `project-draft-changes.mjs` y test.
+
+**Regresión.** Contrato de integración de la bandera + JSONB real: valores idénticos no son cambios; propósito/materiales distintos o retirar el taller sí. Antes 2/3; después 11/11 relacionadas, typecheck, lint y build PASS (`tests-h26-daily-pair-comparison`).
+
+**UI después.** PASS: recargado el mismo borrador, el botón se habilitó y confirmó actividad+taller. Sin regeneración ni datos nuevos; captura `screenshots/18-h26-par-diario-confirmado.png`. Commit pendiente. Rollback: revertir este fix, sin migración.
+
+## Condición temporal de la simulación anual
+
+El launcher de auditoría ahora usa un preload de reloj de negocio **solo** en el proceso QA: exige puerto 8790, docente ficticia exacta, modo local y directorio QA exacto. Dos pruebas comprueban rechazo en el puerto original y conservación de fechas explícitas/UTC. No se importa desde producto. SQL conserva timestamps reales de auditoría/costos; se documenta el día simulado en cada etapa. Todos los registros pedagógicos siguen ingresándose por UI. Esto permite simular jornadas y semanas de gestión en una noche; no permite editar el pasado ni desactiva guardas. Las verificaciones de mapa protegido que usan `now()` SQL siguen con reloj real: cualquier limitación se señalará, no se declarará cubierta por el preload.

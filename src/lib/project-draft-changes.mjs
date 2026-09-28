@@ -7,6 +7,7 @@ function canonical(value) {
   return value;
 }
 const differs = (saved, edited) => JSON.stringify(canonical(saved)) !== JSON.stringify(canonical(edited));
+export { differs as jsonValuesDiffer };
 
 export function projectDraftChanges(details, decisions, dependents, route) {
   return {

@@ -1,7 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { PGlite } from "@electric-sql/pglite";
-import { projectDraftChanges } from "./project-draft-changes.mjs";
+import { readFile } from "node:fs/promises";
+import { projectDraftChanges, jsonValuesDiffer } from "./project-draft-changes.mjs";
 
 const decisions = { context_summary: "Acuerdos al jugar", purpose: "Compartir materiales",
   competency_ids: ["PS_CONVIVE", "COM_ORAL"], additional_context: "Participar en pareja" };
@@ -33,4 +34,21 @@ test("los cambios pedagógicos y el orden de listas/actividades siguen requirien
   assert.equal(projectDraftChanges(details, decisions, dependents, [...route].reverse()).mapChanged, true);
   assert.deepEqual(projectDraftChanges({}, decisions, dependents, []),
     { decisionsChanged: false, depChanged: false, mapChanged: false });
+});
+
+test("el par diario no trata el reordenamiento JSONB del taller como una edición pendiente", async () => {
+  const source = await readFile(new URL("../features/dashboard/components/parent-activity-generator.tsx", import.meta.url), "utf8");
+  assert.ok(/jsonValuesDiffer\(workshopProposal,\s*activities\.find/.test(source));
+  assert.doesNotMatch(source, /JSON\.stringify\(workshopProposal\)\s*!==/);
+  const db = await PGlite.create();
+  try {
+    const workshop = { title: "Construimos lugares", purpose: "Explorar posiciones", materials: ["bloques", "aros"], sheet_id: null, competency_id: "MAT_FORMA" };
+    const saved = (await db.query("select $1::jsonb as details", [JSON.stringify(workshop)])).rows[0].details;
+    assert.notEqual(JSON.stringify(saved), JSON.stringify(workshop));
+    assert.equal(jsonValuesDiffer(workshop, saved), false);
+    assert.equal(jsonValuesDiffer({ ...workshop, purpose: "Otro propósito" }, saved), true);
+    assert.equal(jsonValuesDiffer({ ...workshop, materials: [...workshop.materials].reverse() }, saved), true);
+    assert.equal(jsonValuesDiffer(workshop, null), true);
+    assert.equal(jsonValuesDiffer(null, null), false);
+  } finally { await db.close(); }
 });
