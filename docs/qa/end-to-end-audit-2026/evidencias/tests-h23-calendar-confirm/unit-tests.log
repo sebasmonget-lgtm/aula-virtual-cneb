@@ -1,0 +1,22 @@
+✔ Proyecto V2 copia V1, archiva solo al confirmar y no reasigna actividades (3088.668ms)
+✔ Unidad emergente conserva origen sin plan y la migración remota admite versiones de una propuesta (3245.3175ms)
+✔ las fechas útiles excluyen fines de semana, feriados y gestión (3.7503ms)
+✔ Sol prepara primero contexto y propósitos, después solo dependencias del propósito elegido (84.5617ms)
+✔ Sol devuelve mapa con fechas y competencias válidas; el servidor asigna IDs (26.3321ms)
+✔ una regeneración localizada conserva el título editado por la docente en la misma fecha (1.1342ms)
+✔ la nueva versión conserva días pasados y días con registros, pero permite revisar el futuro (3.0367ms)
+✔ el calendario conserva fechas históricas y permite cambiar una fecha futura (1.3304ms)
+✔ clasifica fin de semana, feriado, gestión y día lectivo sin IA (1.4781ms)
+✔ override y exclusión del proyecto son capas separadas (1.5558ms)
+✔ las fechas y blueprints mantienen correspondencia exacta (0.8845ms)
+✔ la consulta real de confirmación guarda la identidad UUID y permite volver a borrador (2868.9166ms)
+✔ calendario 2026 aplica feriados, gestión, overrides y conserva proyectos antiguos (2153.2118ms)
+✔ reprogramar valida calendario, evita conflictos y sincroniza Hoy (2019.6855ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 14
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 8374.1982

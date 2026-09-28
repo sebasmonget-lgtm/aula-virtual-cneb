@@ -34,6 +34,27 @@ test("las fechas y blueprints mantienen correspondencia exacta",()=>{
   assert.throws(()=>validateBlueprintDates([{planned_date:"2026-04-06"}],["2026-04-06","2026-04-07"]),/exactamente/);
 });
 
+test("la consulta real de confirmación guarda la identidad UUID y permite volver a borrador",async()=>{
+  const db=await database();try{
+    const setup=await createPilotClassroom(db,teacher,{teacherName:"Docente",institutionName:"Jardín",section:"A",age:5,year:2026,startsOn:"2026-03-02",endsOn:"2026-12-31",castellanoL2Applicable:false,religionApplicable:false});
+    const experience=randomUUID(),selection=randomUUID();
+    await db.query(`insert into learning_experiences(id,classroom_id,type,title,purpose,starts_on,ends_on,status,details)
+      values($1,$2,'project','Compartimos','Acuerdos','2026-03-30','2026-04-10','draft','{}')`,[experience,setup.classroomId]);
+    await db.query(`insert into project_calendar_selections(id,learning_experience_id,starts_on,ends_on)
+      values($1,$2,'2026-03-30','2026-04-10')`,[selection,experience]);
+    // Exercise the SQL used by the HTTP route, not a second copy with different casts.
+    const server=await readFile(new URL("../../scripts/local-db-server.mjs",import.meta.url),"utf8");
+    const sql=server.match(/update project_calendar_selections set status=\$1[\s\S]*?returning \*/)?.[0];
+    assert.ok(sql);
+    const confirmed=(await db.query(sql,["confirmed",teacher,selection])).rows[0];
+    assert.equal(confirmed.status,"confirmed");assert.equal(confirmed.confirmed_by,teacher);
+    assert.ok(confirmed.confirmed_at);assert.equal(confirmed.revision,2);
+    const draft=(await db.query(sql,["draft",teacher,selection])).rows[0];
+    assert.equal(draft.status,"draft");assert.equal(draft.confirmed_by,null);
+    assert.equal(draft.confirmed_at,null);assert.equal(draft.revision,3);
+  }finally{await db.close();}
+});
+
 test("calendario 2026 aplica feriados, gestión, overrides y conserva proyectos antiguos",{timeout:90000},async()=>{
   const db=await database();try{
     const setup=await createPilotClassroom(db,teacher,{teacherName:"Docente",institutionName:"Jardín",section:"A",age:5,year:2026,startsOn:"2026-03-02",endsOn:"2026-12-31",castellanoL2Applicable:false,religionApplicable:false});

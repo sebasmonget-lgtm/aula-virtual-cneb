@@ -42,7 +42,7 @@ El enlace local de dependencias del renderizador bajo `docs/qa/.../node_modules`
 
 **Regresión.** Round-trip real de JSONB con PGlite reproduce el orden distinto y comprueba que el borrador intacto no tiene cambios. Cambios de propósito, competencias, preguntas, fechas y orden de actividades sí activan revisión. 12/12 pruebas relacionadas, typecheck, lint y build PASS en `tests-h22-project-draft`.
 
-**UI después.** PASS del paso bloqueado: las cuatro preguntas ya aparecen en el mismo borrador, sin otra llamada de IA, y se pasó al recorrido. Captura `screenshots/13-h22-preguntas-visibles.png`. Confirmación del mapa todavía pendiente. Commit pendiente. Rollback: revertir el commit de comparación; no hay migración ni cambio de datos.
+**UI después.** PASS del paso bloqueado: las cuatro preguntas ya aparecen en el mismo borrador, sin otra llamada de IA, y se pasó al recorrido. Captura `screenshots/13-h22-preguntas-visibles.png`. Confirmación del mapa todavía pendiente. Commit `06f9c20`. Rollback: revertir el commit de comparación; no hay migración ni cambio de datos.
 
 ## H18 — Fixture UTC/Lima en reajuste (MEDIUM, pruebas)
 
@@ -50,7 +50,7 @@ El enlace local de dependencias del renderizador bajo `docs/qa/.../node_modules`
 
 **Solución.** Solo `bimester-replan-service.test.mjs`: día civil Lima, reloj controlado en las dos ventanas y regresión de cambio de año. No se modifica el servicio ni se permite reescribir pasado.
 
-**Validación.** 5/5 de reajuste; 16/16 combinadas con traslado. Suite integrada `tests-integrated-h08-h21-h18-h19`: 466/466, typecheck, lint y build PASS. Es una corrección de prueba, no un PASS de reajuste E2E. Commit pendiente. Rollback: revertir el test.
+**Validación.** 5/5 de reajuste; 16/16 combinadas con traslado. Suite integrada `tests-integrated-h08-h21-h18-h19`: 466/466, typecheck, lint y build PASS. Es una corrección de prueba, no un PASS de reajuste E2E. Commit `493e2c2`. Rollback: revertir el test.
 
 ## H19 — Ledger ausente en importador (HIGH, integridad de costos)
 
@@ -58,4 +58,12 @@ El enlace local de dependencias del renderizador bajo `docs/qa/.../node_modules`
 
 **Fix mínimo.** Añadir tabla después de perfiles en `prepare-supabase-import.mjs`; regresión en `pilot-readiness.test.mjs` ejecuta CLI offline, sin aplicar SQL, y verifica tokens/costo/fuente/versionado y docente nueva. La prueba usa directorios temporales propios; no datos QA/originales.
 
-**Validación.** 16/16 combinadas y suite integrada 466/466, typecheck, lint y build PASS. Importación real a Supabase NO PROBADA porque no se conectaron cuentas nuevas. Commit pendiente. Rollback: revertir importador y su regresión; no migración.
+**Validación.** 16/16 combinadas y suite integrada 466/466, typecheck, lint y build PASS. Importación real a Supabase NO PROBADA porque no se conectaron cuentas nuevas. Commit `59fcd26`. Rollback: revertir importador y su regresión; no migración.
+
+## H23 — Confirmación del calendario falla por UUID (BLOCKER)
+
+**Antes.** «Confirmar estos días» devolvía error genérico. Regresión ejecutando la consulta real sobre PGlite reprodujo SQLSTATE 42804: `confirmed_by` UUID frente a expresión CASE de tipo texto.
+
+**Causa/fix.** Inferencia de `$2` dentro de CASE/NULL. Cast `$2::uuid` en la misma consulta de `local-db-server.mjs`, sin cambiar migraciones, identidad autorizada, filas ni validación de fechas. Test en `school-calendar-service.test.mjs` verifica confirmar con identidad, fecha/revisión y regresar a borrador limpiando confirmación.
+
+**Validación.** Antes 5/6 (regresión falla); después 14/14 relacionadas, typecheck, lint y build PASS (`tests-h23-calendar-confirm`). Reinicio solo de API QA, mismos datos. UI PASS: «8 días confirmados. Ayni preparará 8 actividades». Master en preparación. Commit pendiente. Rollback: revertir cast/test, sin migración.

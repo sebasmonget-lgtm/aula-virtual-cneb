@@ -1449,7 +1449,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
           [randomUUID(),review.selection.id,day.id,day.date,selectedSet.has(day.date),selectedSet.has(day.date)?null:reason]);
         }
         const updated=(await db.query(`update project_calendar_selections set status=$1,confirmed_at=case when $1='confirmed' then now() else null end,
-          confirmed_by=case when $1='confirmed' then $2 else null end,revision=revision+1,updated_at=now() where id=$3 returning *`,
+          confirmed_by=case when $1='confirmed' then $2::uuid else null end,revision=revision+1,updated_at=now() where id=$3 returning *`,
         [body.confirm===true?"confirmed":"draft",teacherId,review.selection.id])).rows[0];
         send(response,200,{selection:updated,selected_dates:selected},origin);
       }catch(error){send(response,httpStatusForError(error,422),{error:publicErrorMessage(error)},origin);}return;

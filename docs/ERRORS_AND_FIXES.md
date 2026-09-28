@@ -1,5 +1,15 @@
 # Errores y soluciones
 
+## 2026-09-27 Confirmar días del proyecto fallaba por inferencia SQL (H23)
+
+**Síntoma.** Calendario mostraba ocho días válidos, pero confirmar devolvía error genérico.
+
+**Causa raíz.** CASE con parámetro y NULL infería texto, incompatible con `confirmed_by` UUID. Regresión reprodujo SQLSTATE 42804 antes del fix.
+
+**Solución validada.** Cast explícito `$2::uuid` en la consulta existente. Test con SQL real valida confirmación, identidad, revisión y vuelta a borrador. 14 relacionadas, typecheck, lint y build PASS; UI confirmó ocho días después de reiniciar solo QA.
+
+**Prevención.** Probar persistencia de ramas CASE con el tipo real de columna; no exponer detalles SQL en UI. No requiere migración ni cambio de permisos.
+
 ## 2026-09-27 El paquete de traslado omitía los costos de IA (H19)
 
 **Síntoma.** La paridad export/import fallaba porque `ai_usage_events` se exportaba pero no estaba en el orden de importación; un traslado perdería el ledger por docente.
