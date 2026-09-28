@@ -33,7 +33,11 @@ import { EvaluationHome } from "./evaluation-home";
 import { TodayHome } from "./today-home";
 import { MediaAttachmentInput } from "./media-attachment-input";
 import type { LibraryResource } from "@/src/lib/library-resource";
-import { ProjectDevelopmentWorkspace } from "./project-development-workspace";
+import { ProjectDevelopmentWorkspace as LegacyProjectDevelopmentWorkspace } from "./project-development-workspace";
+import { SimpleProjectWorkspace } from "./simple-project-workspace";
+
+const ProjectDevelopmentWorkspace = process.env.NEXT_PUBLIC_AYNI_PROJECT_SIMPLE === "1"
+  ? SimpleProjectWorkspace : LegacyProjectDevelopmentWorkspace;
 import { SchoolCalendarScreen } from "./school-calendar-screen";
 import { PeriodEvaluation } from "./period-evaluation";
 import { BimesterReplan } from "./bimester-replan";

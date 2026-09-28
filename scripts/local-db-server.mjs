@@ -26,7 +26,7 @@ import { generateProjectPreview, generateProjectDependents, generateProjectMaste
 import { nextAnnualPlanVersion, safeAnnualGenerationMetadata } from "../src/lib/annual-plan-persistence.mjs";
 import { copyConfirmedAnnualPlan, confirmAnnualPlanVersion } from "../src/lib/annual-plan-version-service.mjs";
 import { copyConfirmedLearningExperience, confirmLearningExperienceVersion } from "../src/lib/learning-experience-version-service.mjs";
-import { assertFutureProjectMapEdits, assertProtectedCalendarDates } from "../src/lib/project-map-version-guard.mjs";
+import { assertFutureProjectMapEdits, assertProtectedCalendarDates, retainProtectedProjectRows } from "../src/lib/project-map-version-guard.mjs";
 import { confirmedProjectFormalContext } from "../src/lib/direct-ai-context-contracts.mjs";
 import { ANNUAL_PLAN_TEMPLATE_FORMAT, validateAnnualPlanProposal } from "../src/lib/annual-plan-contract.mjs";
 import { annualCalendarDay } from "../src/lib/annual-plan-schedule.mjs";
@@ -40,7 +40,8 @@ import { buildInstitutionInitialsLogo, loadInstitutionLogoForDocuments, normaliz
 import { displayPersonName } from "../src/lib/person-name.mjs";
 import { validateLearningExperienceProposal } from "../src/lib/learning-experience-validation.mjs";
 import { inheritedActivityCriterion, routeItemFor, saveActivityDetails, saveExperienceDetails } from "../src/lib/experience-lineage.mjs";
-import { canonicalProjectDetails, canonicalProjectRoute, planningV3ReadEnabled, projectMasterV3, resolveAnnualProposal } from "../src/lib/planning-contract-v3.mjs";
+import { canonicalProjectDetails, canonicalProjectRoute, planningV3ReadEnabled, projectMasterV3, resolveAnnualProposal, validateProjectMasterV3 } from "../src/lib/planning-contract-v3.mjs";
+import { simpleProjectEnabled, stampProjectV3, retainProjectCriterionIds } from "../src/lib/project-v3-snapshot.mjs";
 import { confirmActivityWithCriterion } from "../src/lib/activity-confirmation.mjs";
 import { copyConfirmedActivity } from "../src/lib/activity-version-service.mjs";
 import { copyConfirmedCriterion, confirmCriterionVersion } from "../src/lib/criterion-version-service.mjs";
@@ -1660,7 +1661,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       try {
         const id = url.pathname.split("/")[3], body = await readJson(request);
         const { row } = await projectFlowRow(id);
-        if (!row || row.status !== "draft" || row.details?.flow_version !== "project-master-v1") { send(response, 404, { error: "Borrador no disponible." }, origin); return; }
+        if (!row || row.status !== "draft" || !["project-master-v1", ...(simpleProjectEnabled() ? ["project-master-v2"] : [])].includes(row.details?.flow_version)) { send(response, 404, { error: "Borrador no disponible." }, origin); return; }
         const source = await projectFlowSource(row.annual_plan_id, row.source_proposal_id, true, row.source_proposal_index);
         const allowed = (await ageFilteredAnnualCurriculum(source.classroom)).map((card) => card.id);
         const decisions = validateProjectDecisions(body.decisions, allowed);
@@ -1671,7 +1672,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
           curriculum: source.aiContext.curriculum.filter((card) => decisions.competency_ids.includes(card.id)) },
           decisions, workflow: row.type });
         const details = { flow_version: "project-master-v1", stage: "dependents", preview: row.details.preview,
-          decisions, dependents: result.output, planning_feedback: planningFeedback,
+          decisions, dependents: simpleProjectEnabled() ? retainProjectCriterionIds(result.output, row.details.dependents) : result.output, planning_feedback: planningFeedback,
           previous_map: row.details.activity_route ?? row.details.previous_map ?? null,
           teacher_overrides: row.details.teacher_overrides ?? [],
           ...(Object.hasOwn(row.details, "image_id") ? { image_id: row.details.image_id } : {}),
@@ -1688,7 +1689,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       try {
         const id = url.pathname.split("/")[3], body = await readJson(request);
         const { row } = await projectFlowRow(id);
-        if (!row || row.status !== "draft" || row.details?.flow_version !== "project-master-v1") { send(response, 404, { error: "Borrador no disponible." }, origin); return; }
+        if (!row || row.status !== "draft" || !["project-master-v1", ...(simpleProjectEnabled() ? ["project-master-v2"] : [])].includes(row.details?.flow_version)) { send(response, 404, { error: "Borrador no disponible." }, origin); return; }
         if (!row.details.decisions || !row.details.dependents) throw new Error("Elige primero el propósito y revisa las preguntas.");
         const source = await projectFlowSource(row.annual_plan_id, row.source_proposal_id, true, row.source_proposal_index);
         const calendarReview=await ensureProjectCalendarSelection(row,source);
@@ -1712,13 +1713,20 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
               age: source.classroom.age, knownNames: names });
           } catch { /* Image is optional; leave it unset for teacher review. */ }
         }
-        const route = preserveTeacherMapEdits(base.activity_route, row.details.previous_map ?? row.details.activity_route,
+        let route = preserveTeacherMapEdits(base.activity_route, row.details.previous_map ?? row.details.activity_route,
           row.details.teacher_overrides, row.details.decisions);
+        const protectedVersion = simpleProjectEnabled() ? await protectedProjectVersion(row) : null;
+        if (protectedVersion) {
+          route = retainProtectedProjectRows(protectedVersion.sourceRoute, route, protectedVersion);
+          assertFutureProjectMapEdits(protectedVersion.sourceRoute, route, protectedVersion);
+        }
         validateEditedActivityMap(route, row.details.decisions, dependents, calendarReview.selected_dates);
-        const details = { ...base, activity_route: route, previous_map: row.details.previous_map ?? null,
+        let details = { ...base, activity_route: route, previous_map: row.details.previous_map ?? null,
           image_id: Object.hasOwn(row.details, "image_id") ? row.details.image_id : imageSuggestion?.suggested_id ?? null,
           image_suggested_id: imageSuggestion?.suggested_id ?? row.details.image_suggested_id ?? null,
           stage: "map_review" };
+        if (simpleProjectEnabled()) details = stampProjectV3(row, details, source,
+          (await loadKnowledgeBaseV4()).version, calendarReview.selected_dates, protectedVersion);
         const saved = (await db.query(`update learning_experiences set title=$1,purpose=$2,details=$3::jsonb,
           generation_metadata=$4::jsonb where id=$5 and status='draft' and revision=$6 returning *`,
         [details.title,details.purpose,JSON.stringify(details),JSON.stringify({ workflow: "project_master", ...generated.metadata }),
@@ -1758,8 +1766,10 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
                 to: item[field] ?? null, source: "teacher_review", at: new Date().toISOString() });
           }
         }
-        const details = canonicalProjectDetails({ ...row.details, activity_route: route,
+        let details = canonicalProjectDetails({ ...row.details, activity_route: route,
           teacher_overrides: overrides });
+        if (row.details.contract_version === "project-master-v3") details = stampProjectV3(row, details, source,
+          row.details.kb_version, calendarReview.selected_dates, protectedVersion);
         const saved = (await db.query(`update learning_experiences set details=$1::jsonb
           where id=$2 and status='draft' and revision=$3 returning *`, [JSON.stringify(details),id,
           expectedRevision(body.expectedRevision)])).rows[0];
@@ -1777,6 +1787,10 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         const calendarReview=await ensureProjectCalendarSelection(row,source);
         if(calendarReview.selection.status!=="confirmed")throw new Error("Confirma primero los días del proyecto.");
         const route = validateEditedActivityMap(row.details.activity_route, row.details.decisions, row.details.dependents, calendarReview.selected_dates);
+        if (row.details.contract_version === "project-master-v3") validateProjectMasterV3(projectMasterV3(row), {
+          instructionalDates: calendarReview.selected_dates,
+          allowedCompetencyIds: (await ageFilteredAnnualCurriculum(source.classroom)).map((card) => card.id),
+        });
         const protectedVersion = await protectedProjectVersion(row);
         if (protectedVersion) assertFutureProjectMapEdits(protectedVersion.sourceRoute, route, protectedVersion);
         if (row.details.image_id && !(await eligibleProjectImages({ title: row.title, purpose: row.purpose,

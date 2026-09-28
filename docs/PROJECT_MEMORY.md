@@ -2,6 +2,8 @@
 
 ## Estado actual
 
+Plan Maestro: F2 reducida cerrada con A (ADR 088). F3 agrega Proyecto docente sencillo opt-in: propuesta por ID, contexto opcional, preparado y confirmación explícita, detalle estructurado y copia futura. Persistencia V3 conserva ruta única/procedencia e histórico por adaptador. Sin migraciones. Clon QA restaurado 71/71 tablas; V1 futuro y V2 slot 01 confirmados por UI con cinco respuestas fixture/cero llamadas pagadas. 26 actividades, 27 criterios, 138 evidencias, 68 valoraciones, 32 conclusiones, tres cierres/versiones, plan anual y contenido de proyectos anteriores cotejados sin cambios. Suite final 543/543, typecheck/lint/build PASS; gates detallados en `docs/qa/f3-simple-project-2026-09-28.md`. Flags apagados por defecto; no deploy ni staging real. F4–F12 aún pendientes, no aceptadas.
+
 Proyecto nuevo iniciado el 20 de septiembre de 2026. Existe un shell responsive de la pantalla Hoy con navegación corta, actividad del día, perfil institucional editable, logo SVG generado localmente, registro rápido de evidencia y diagnóstico por referente observable conectado a PostgreSQL local embebido mediante PGlite. La generación docente puede usar OpenAI mediante el proveedor aislado; no hay conexión con Supabase real ni despliegue.
 
 ## Alcance implementado

@@ -1,5 +1,13 @@
 # Errores y soluciones
 
+## 2026-09-28 — F3: historial, recarga y harness QA
+
+**Síntoma/causa.** Regeneración sucesora podía sustituir filas históricas sin overrides explícitos; V3 debía conservar string `starting_point` para Word/copia. Volver a Mi año podía usar versiones obsoletas en memoria. `vinext dev` no abrió puerto; CLI ignora `--config`; preview rechazado por entorno. Primera restauración chocó con semillas demo de migraciones.
+
+**Solución validada.** Retener fila completa pasada/con registro y proyectar refs V3 legacy sin reescribirla. Conservar string/snapshot. Recargar listado y limpiar avisos al elegir propuesta. Harness QA con Vite/config independiente sin emulador Cloudflare, misma app/plugin local, API autorizada sobre clon. En clon nuevo vaciar únicamente semillas antes de importar; 71/71 tablas cotejadas iguales. Clon fallido preservado y original intacto. UI confirma V1 futura y V2 legacy con cinco fixtures/cero llamadas pagadas; datos históricos cotejados intactos.
+
+**Prevención.** Comparar historia al añadir derivados y nunca normalizar confirmados. Validadores separados: primer lint bajo carga conjunta con build superó 120 s, detenido Ctrl+C y pasó aislado. Suite 541/541 en 131,5 s mantuvo progreso. No repetir resultados A/B por incidentes del harness ni confundirlos con corrupción de F2.
+
 ## 2026-09-28 Informes familiares P4 rechazados y recuperados (H49)
 
 **Síntoma.** Los primeros intentos reales de informe familiar de Alma y Omar devolvieron `family_report_schema_mismatch`; no se guardó una salida inválida. Cada segundo intento por UI produjo un informe revisado, confirmado y descargado. Las cuatro llamadas facturables permanecen en el ledger; no equiparar dos documentos finales con dos llamadas.

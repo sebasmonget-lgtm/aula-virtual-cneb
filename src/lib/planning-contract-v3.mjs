@@ -59,8 +59,9 @@ export function validateProjectMasterV3(value, { instructionalDates = null, allo
     if (!uuid(row.blueprint_id) || ids.has(row.blueprint_id) || typeof row.date !== "string" ||
         !/^\d{4}-\d{2}-\d{2}$/.test(row.date) || dates.has(row.date) ||
         !selected.has(row.competency_id) || !row.competency_ids?.includes(row.competency_id) ||
+        row.competency_ids.some((id) => !selected.has(id)) ||
         !Array.isArray(row.criterion_refs) || !row.criterion_refs.length ||
-        row.criterion_refs.some((ref) => !criteria.has(ref)) ||
+        row.criterion_refs.some((ref) => !criteria.has(ref) || !row.competency_ids.includes(criteria.get(ref).competency_id)) ||
         !Array.isArray(row.expected_evidence) || !row.expected_evidence.length ||
         !Array.isArray(row.resource_refs) ||
         !String(row.purpose ?? "").trim()) throw new Error("El mapa V3 tiene vínculos incompletos o duplicados.");
@@ -91,6 +92,32 @@ export function projectMasterV3(experience, { planVersion = null, slotId = null,
   const details = experience?.details ?? {};
   const route = canonicalProjectRoute(details);
   if (!Array.isArray(route) || !route.length || !route.every((item) => uuid(item.id))) return null;
+  if (details.contract_version === PROJECT_MASTER_CONTRACT_V3) {
+    const criteria = details.dependents?.general_criteria ?? [];
+    return { contract_version: PROJECT_MASTER_CONTRACT_V3, id: experience.id,
+      version: Number(experience.version ?? 1), status: experience.status,
+      source: details.source_refs, starting_point: { proposal: details.source_proposal_snapshot,
+        teacher_context: details.decisions?.additional_context, preview: details.decisions?.context_summary,
+        no_new_context: !String(details.decisions?.additional_context ?? "").trim() },
+      calendar_fingerprint: details.calendar_fingerprint, source_fingerprint: details.source_fingerprint,
+      kb_version: details.kb_version, purpose: details.decisions?.purpose,
+      competency_ids: details.decisions?.competency_ids ?? [],
+      guiding_questions: details.dependents?.guiding_questions ?? [],
+      criteria: criteria.map((item) => ({ criterion_id: item.criterion_id, competency_id: item.competency_id, text: item.criterion })),
+      expected_evidence: criteria.flatMap((item) => (item.expected_evidence ?? []).map((description) => ({ criterion_id: item.criterion_id, description }))),
+      progression: details.dependents?.journey ?? [],
+      mediation: route.map((item) => ({ blueprint_id: item.id, guidance: item.mediation_notes })),
+      resources: details.project_master?.resources ?? [], foundation: details.project_master?.foundation,
+      closing: { description: details.project_master?.closing_description, rationale: details.project_master?.closing_rationale },
+      teacher_overrides: details.teacher_overrides ?? [],
+      activity_map: route.map((item) => ({ ...item, blueprint_id: item.id,
+        competency_id: item.criterion_competency_id ?? item.competency_id,
+        criterion_refs: item.criterion_refs ?? [criteria.find(criterion =>
+          criterion.competency_id === (item.criterion_competency_id ?? item.competency_id))?.criterion_id],
+        purpose: item.specific_purpose, criterion_text: item.evaluation_criterion,
+        expected_evidence: [item.expected_evidence], resource_refs: item.materials ?? [],
+        mediation: item.mediation_notes, progression: item.expected_progression })) };
+  }
   const selected = details.decisions?.competency_ids ?? [
     ...(details.primary_competency_ids ?? []), ...(details.possible_secondary_competency_ids ?? [])];
   const criteria = details.dependents?.general_criteria ?? [];

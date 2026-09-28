@@ -780,6 +780,16 @@ La confirmación de la actividad y la inserción del criterio heredado se ejecut
 
 ## ADR 088 F2 reducida: A conservador y revisión del agente actual
 
+La implementación posterior de F3 se registra en ADR 089; no cambia la regla ni el carácter provisional de F2.
+
 **Decisión (2026-09-28).** La autorización de reducción por costo sustituye para esta decisión provisional tamaño/repeticiones/evaluadores de ADR 087, no pesos/umbrales. Solo dos A adicionales, 12 pares seleccionados por disponibilidad y dos pasadas enmascaradas del mismo agente sin API pagada. No se afirma independencia ni certificación curricular. Discrepancias se resuelven conservadoramente; edición es estimación, no medición docente. El gate completo original no se relaja: un evaluador específico reducido evita confundir los protocolos.
 
 **Resultado.** A 3,9542/4 y B 3,6917/4, B−A −0,2625; B no reduce P95 ni mediana registrada ≥25 %, tiene cuatro intentos con facturación desconocida y más correcciones estimadas. Elegir A para F3; mantener B experimental. US$0,1416364 adicionales por dos A/sesenta y tres outputs originales preservados. Sin migración, escritura pedagógica ni despliegue. F2 cerrada provisionalmente; especialistas y medición docente quedan pendientes antes de piloto. Ver informe reproducible `docs/qa/f2-reduced-decision-2026-09-28.md`.
+
+## ADR 089 F3: Proyecto sencillo sobre pipeline A y snapshot V3
+
+**Decisión (2026-09-28).** Preparar desde propuesta por ID sin repetir propósito/competencias ni exigir contexto adicional. Mantener decisiones docentes al reanudar y el último checkpoint ante fallo. Preparar confirma la selección de fechas lectivas resueltas, nunca el proyecto: requiere otro gesto docente. Cambiar feedback/contexto actualiza dependencias. Detalle editable legacy opcional; sin rediseño de arquitectura.
+
+**Persistencia.** Nuevos mapas `ProjectMasterV3` con criterios identificados, snapshot de propuesta, versión de plan/slot/KB y huellas idempotentes. `activity_route` sigue siendo mapa único. `starting_point` string mantiene compatibilidad con Word/copia; DTO estructurado derivado de decisiones/snapshot. Sucesor restaura íntegros blueprints pasados/con registros; refs V3 ausentes en legacy se proyectan al leer sin añadir campos a esa fila histórica. Actividades no se reasignan. H34 y notas finales intactos.
+
+**Reversión.** UI `NEXT_PUBLIC_AYNI_PROJECT_SIMPLE=1`, servidor `AYNI_PROJECT_SIMPLE=1`, apagados por defecto. `AYNI_PLANNING_V3_READ` conserva flag DTO. Apagar flags devuelve UI previa sin borrar versiones; mapas preparados V3 siguen legibles/editables/confirmables, regeneración de dependencias V2 requiere flag. Sin migración. QA mediante clon/fixture local, nunca API pagada ni mock productivo. No sustituye staging RLS ni evaluación experta.

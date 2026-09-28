@@ -11,9 +11,9 @@ import { AsyncButton, CompetencyChecklist, LoadingState, WorkflowFeedback } from
 import { LearningExperienceGenerator } from "./learning-experience-generator";
 import { projectDraftChanges } from "@/src/lib/project-draft-changes.mjs";
 
-type Proposal = { proposal_id?: string; experience_type: "project" | "unit"; title: string; purpose: string;
+export type Proposal = { proposal_id?: string; experience_type: "project" | "unit"; title: string; purpose: string;
   rationale: string; period: string; primary_competency_ids: string[] };
-type Plan = { id: string; revision: number; proposal: { plan_format?: string; proposed_experiences: Proposal[] }; project_slots: { id: string;
+export type Plan = { id: string; revision: number; proposal: { plan_format?: string; proposed_experiences: Proposal[] }; project_slots: { id: string;
   proposal_id?: string | null; slot_index: number;
   starts_on: string; ends_on: string }[] };
 type Decision = { context_summary: string; purpose: string; competency_ids: string[]; additional_context: string };
@@ -23,13 +23,13 @@ type Dependents = { guiding_questions: string[]; journey: { title: string; descr
 type Route = { id: string; number: number; date: string; title: string; specific_purpose: string;
   competency_id: string; competency_ids: string[]; criterion_competency_id: string;
   evaluation_criterion: string; expected_evidence: string; role_in_project: string;
-  expected_progression: string; estimated_minutes: number };
+  expected_progression: string; estimated_minutes: number; materials?: string[]; mediation_notes?: string };
 type Details = { flow_version?: string; stage?: string; preview?: { context_summary: string; context_points: string[];
   purpose_options: string[]; additional_context_example: string }; decisions?: Decision;
   planning_feedback?: { period_id: string; period_label: string; confirmed_assessments: number } | null;
-  dependents?: Dependents; project_master?: { foundation: string; closing_description: string; closing_rationale: string };
+  dependents?: Dependents; project_master?: { foundation: string; closing_description: string; closing_rationale: string; resources?: string[] };
   activity_route?: Route[]; previous_map?: Route[] | null; image_id?: string | null; image_suggested_id?: string | null };
-type Experience = { id: string; annual_plan_id: string; source_proposal_id: string | null;
+export type Experience = { id: string; annual_plan_id: string; source_proposal_id: string | null;
   source_proposal_index: number; title: string; type: "project" | "unit"; status: "draft" | "active" | "archived";
   version: number; revision: number; details: Details };
 type Competency = { id: string; name: string };

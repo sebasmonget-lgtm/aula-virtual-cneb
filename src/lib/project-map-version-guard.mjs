@@ -7,6 +7,14 @@ function authoredFields(item) {
   return Object.fromEntries(Object.entries(item ?? {}).filter(([key]) => !generatedFields.has(key)));
 }
 
+/** Regeneration of a future version cannot replace a past/recorded blueprint. */
+export function retainProtectedProjectRows(sourceRoute, nextRoute, { today, recordedRouteIds = [] }) {
+  const recorded = new Set(recordedRouteIds);
+  const protectedByDate = new Map((sourceRoute ?? []).filter(row => dateOnly(row.date) <= today || recorded.has(row.id))
+    .map(row => [dateOnly(row.date), row]));
+  return nextRoute.map(row => protectedByDate.get(dateOnly(row.date)) ?? row);
+}
+
 /** Keep past days and days with real records exactly as the confirmed source version. */
 export function assertFutureProjectMapEdits(sourceRoute, nextRoute, { today, recordedRouteIds = [] }) {
   const recorded = new Set(recordedRouteIds);
