@@ -21,7 +21,7 @@ export function reducedExperiment(state) {
   const selected = complete.map(({ item, repetitions }) => ({ case_id: item.id, age: item.age,
     period: item.period, kind: item.kind, repetitions: repetitions.slice(0, 1) }));
   // Smallest completion plan adds age 5 and an available hard case. No new B output is needed.
-  const targets = ["base-5-p4-baseline", "hard-holiday"].map((caseId) => {
+  const targets = ["base-5-p4-baseline", "hard-holiday"].filter((caseId) => !selected.some((item) => item.case_id === caseId)).map((caseId) => {
     const row = available.filter((run) => run.case_id === caseId).sort((a, b) => a.repetition - b.repetition)[0];
     if (!row) return null;
     return { case_id: caseId, repetition: row.repetition,
@@ -60,6 +60,7 @@ export function reducedExperiment(state) {
     additional_budget_usd: 3, additional_spent_usd: 0, rubric: DIMENSIONS,
     metrics, reviews_status: "pending_external_credit_balance_exhausted", winner: null, fallback: "A",
     limitations: ["Only available complete pairs; not the full matrix or certified curriculum accuracy.",
-      "Current paired cases cover ages 3/4 but not age 5 or hard cases; two missing A outputs would complete a diverse 12-case subset.",
-      "No independent blind reviews yet. No measured teacher corrections. Do not infer pedagogy from tokens or latency."] }, bundles };
+      "Availability-selected subset is not age/period balanced factorial coverage; original provider failures remain separately reported.",
+      "Two current-agent masked passes are not independent specialists; correction counts are estimates, not measured teacher work.",
+      "The two authorized A completions have output caps for budget safety. No additional repeats; historical runs remain unchanged."] }, bundles };
 }
