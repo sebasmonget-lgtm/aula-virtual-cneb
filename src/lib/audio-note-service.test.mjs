@@ -59,6 +59,17 @@ for (const purpose of ["teacher_comment", "group_summary"]) {
   });
 }
 
+test("raw_observation conserva exactamente la transcripción sin reescritura ni identidad inferida", async () => {
+  const literal = "  Ana dijo: soy Bruna.\n[Anha]  ";
+  let rewrites = 0;
+  const client = { audio: { transcriptions: { create: async () => ({ text: literal }) } },
+    responses: { create: async () => { rewrites++; throw new Error("No debe reescribir raw"); } } };
+  const result = await transcribeAndPolishAudio({ bytes: wav(1), mimeType: "audio/wav", purpose: "raw_observation", client });
+  assert.equal(result.transcript, literal);
+  assert.equal(result.improved_text, literal);
+  assert.equal(rewrites, 0);
+});
+
 test("un propósito de audio desconocido no llama al proveedor", async () => {
   await assert.rejects(transcribeAndPolishAudio({ bytes: wav(1), mimeType: "audio/wav", purpose: "automatic_assessment",
     client: { audio: { transcriptions: { create: async () => { throw new Error("No debe enviar audio"); } } } } }), TypeError);

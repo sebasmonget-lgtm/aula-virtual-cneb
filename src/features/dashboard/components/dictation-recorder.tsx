@@ -13,13 +13,13 @@ const recorderTypes = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "aud
 const fileExtensions: Record<string, string> = { "audio/webm": "webm", "audio/mp4": "m4a", "audio/ogg": "ogg" };
 type Status = "idle" | "requesting" | "recording" | "preparing" | "ready" | "transcribing";
 
-export function DictationRecorder({ studentId, classroomScope = false, context, currentText, onTranscribed, onBusyChange, purpose = "observation", disabled = false }: {
+export function DictationRecorder({ studentId, classroomScope = false, context, currentText, onTranscribed, onBusyChange, purpose = "observation", rawTranscript = false, disabled = false }: {
   studentId?: string; classroomScope?: boolean; context: string; currentText: string; onTranscribed: (text: string, saveNow: boolean) => Promise<void> | void;
-  onBusyChange?: (busy: boolean) => void; purpose?: "observation" | "interview" | "teacher_comment" | "group_summary"; disabled?: boolean;
+  onBusyChange?: (busy: boolean) => void; purpose?: "observation" | "raw_observation" | "interview" | "teacher_comment" | "group_summary"; rawTranscript?: boolean; disabled?: boolean;
 }) {
   const isInterview = purpose === "interview";
   const hasScope = Boolean(studentId) || (classroomScope && purpose === "group_summary");
-  const maxLength = isInterview ? 2000 : purpose === "observation" ? 4000 : 3000;
+  const maxLength = isInterview ? 2000 : ["observation", "raw_observation"].includes(purpose) ? 4000 : 3000;
   const recordingLabel = isInterview ? "Grabar respuesta" : purpose === "teacher_comment" ? "Dictar comentario" : purpose === "group_summary" ? "Dictar resumen" : "Dictar observación";
   const [status, setStatus] = useState<Status>("idle");
   const [seconds, setSeconds] = useState(0);
@@ -145,8 +145,11 @@ export function DictationRecorder({ studentId, classroomScope = false, context, 
     setStatus("transcribing"); setError("");
     try {
       const result = await transcribeShortAudio({ ...(classroomScope ? { scope: "classroom" as const } : { studentId }), context, audio: prepared, purpose });
-      const text = purpose === "observation" ? result.improvedText : result.transcript;
-      const combined = mergeDictationText(currentTextRef.current, text, maxLength);
+      const text = rawTranscript ? result.transcript : purpose === "observation" ? result.improvedText : result.transcript;
+      const combined = purpose === "raw_observation"
+        ? (currentTextRef.current ? `${currentTextRef.current}\n${text}` : text)
+        : mergeDictationText(currentTextRef.current, text, maxLength);
+      if (combined.length > maxLength) throw new Error(`El texto supera ${maxLength} caracteres.`);
       if (!mountedRef.current) return;
       await onTranscribed(combined, saveNow); clearPreview(); setStatus("idle");
     } catch (cause) {

@@ -1,5 +1,5 @@
 import { createServer } from "node:http";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { mkdir, readFile, readdir, unlink, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import path from "node:path";
@@ -53,6 +53,7 @@ import { validateCriterionEvidenceV4 } from "../src/lib/criterion-evidence-valid
 import { generateCriterionEvidence } from "../src/lib/ai-criterion-evidence-ui-service.mjs";
 import { criterionMatchesConfirmedActivity, validateEvidenceCaptureV4 } from "../src/lib/evidence-capture-v4.mjs";
 import { reassignEvidenceStudent } from "../src/lib/evidence-student-correction.mjs";
+import { listOrdinaryObservations, reviseOrdinaryObservation, saveOrdinaryObservation, validateOrdinaryObservation } from "../src/lib/ordinary-observation-service.mjs";
 import { createAssessmentRouteHandler } from "./assessment-routes.mjs";
 import { createAssessmentMasterRouteHandler } from "./assessment-master-routes.mjs";
 import { createDescriptiveConclusionRouteHandler } from "./descriptive-conclusion-routes.mjs";
@@ -65,6 +66,7 @@ import { activeWorkshopForProject, insertDailyPair, linkedWorkshopDraft, updateD
 import { createPendingAIGenerationsStore } from "../src/lib/pending-ai-generations-store.mjs";
 import { createPilotClassroom, importStudentsForTeacher, parseStudentCsv } from "../src/lib/pilot-onboarding-service.mjs";
 import { createLocalPrivateEvidenceStorage } from "../src/lib/private-evidence-storage.mjs";
+import { createSupabasePrivateObservationStorage } from "../src/lib/private-observation-storage.mjs";
 import { validateShortAudio, transcribeAndPolishAudio, AUDIO_MIME_TYPES } from "../src/lib/audio-note-service.mjs";
 import { buildClassifierOptions, createOpenAICompetencyClassifier } from "../src/lib/openai-competency-classifier.mjs";
 import { createJevCompetencySuggester, anonymousDecisionText } from "../src/lib/jev-competency-suggestion.mjs";
@@ -94,6 +96,9 @@ const interviewStorage = createLocalPrivateInterviewStorage(path.join(assetsDir,
 const port = Number(process.env.AYNI_LOCAL_DB_PORT ?? 8788);
 const authMode = process.env.AYNI_AUTH_MODE ?? "local";
 const dbMode = process.env.AYNI_DB_MODE ?? (authMode === "local" ? "local" : "postgres");
+const ordinaryStorage = dbMode === "local" ? evidenceStorage : process.env.AYNI_SUPABASE_SERVICE_ROLE_KEY
+  ? createSupabasePrivateObservationStorage({ url: process.env.AYNI_SUPABASE_URL,
+    serviceRoleKey: process.env.AYNI_SUPABASE_SERVICE_ROLE_KEY }) : null;
 const testAuthWithPglite = process.env.NODE_ENV === "test" && process.env.AYNI_TEST_AUTH_PGLITE === "1";
 if ((authMode === "local") !== (dbMode === "local") && !testAuthWithPglite) {
   throw new Error("Usa Auth local con PGlite o Auth Supabase con PostgreSQL.");
@@ -117,7 +122,7 @@ const exportTables = [
   "profiles", "curriculum_source_documents", "curriculum_versions", "levels", "cycles", "age_grades", "curriculum_areas",
   "competencies", "capacities", "standards", "performances", "transversal_approaches", "school_years", "classrooms",
   "institution_assets", "institution_profiles", "students", "learning_experiences", "ai_usage_events",
-  "activities", "activity_criteria", "evidences", "competency_observation_guides",
+  "activities", "activity_criteria", "evidences", "ordinary_observations", "ordinary_observation_revisions", "competency_observation_guides",
   "document_templates", "document_versions", "diagnostic_sessions",
   "diagnostic_entries", "observation_references", "student_observations", "diagnostic_experience_observations", "diagnostic_spontaneous_observations", "student_family_interviews", "student_family_interview_attachments", "diagnostic_competency_reviews", "diagnostic_student_reviews", "diagnostic_group_reviews", "diagnostic_priority_reviews",
   "class_schedule_entries", "daily_execution_logs", "attendance_records", "calendar_exceptions", "calendar_blocks", "initial_stages", "project_slots", "school_calendar_versions", "school_calendar_holidays", "school_calendar_days", "classroom_calendar_overrides", "project_calendar_selections", "project_instructional_dates", "activity_schedule_changes", "evaluation_periods", "period_competency_scope", "period_closures", "period_closure_versions", "period_evaluation_map_versions", "period_evaluation_map_entries", "competency_display_labels", "classroom_period_reports", "period_closure_workflows", "student_context_snapshots", "annual_plans", "annual_plan_formal_content", "annual_plan_competencies", "annual_plan_changes", "competency_assessments", "competency_descriptive_conclusions", "family_reports",
@@ -143,6 +148,14 @@ else {
   if (!permission?.backend_writes || !permission.usage_writes) {
     await database.close();
     throw new Error("La conexión PostgreSQL del backend necesita permiso de escritura.");
+  }
+  if (process.env.AYNI_ORDINARY_OBSERVATIONS === "1") {
+    const rawSchema = (await db.query(`select to_regclass('public.ordinary_observations') as observations,
+      to_regclass('public.ordinary_observation_revisions') as revisions`)).rows[0];
+    if (!rawSchema?.observations || !rawSchema?.revisions) {
+      await database.close();
+      throw new Error("Faltan migraciones F5 de observaciones; la captura nueva no puede iniciar.");
+    }
   }
 }
 const pendingAIGenerations = createPendingAIGenerationsStore(db);
@@ -634,7 +647,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       try {
         const body = await readJson(request);
         const purpose = body.purpose ?? "observation";
-        if (!["observation", "interview", "teacher_comment", "group_summary"].includes(purpose) ||
+        if (!["observation", "raw_observation", "interview", "teacher_comment", "group_summary"].includes(purpose) ||
           (body.scope !== undefined && body.scope !== "classroom") ||
           (body.scope === "classroom" && (purpose !== "group_summary" || body.studentId || body.classroomId)) ||
           (purpose === "group_summary" && body.scope !== "classroom"))
@@ -646,9 +659,9 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         if (!owned) { send(response, 404, { error: body.scope === "classroom" ? "Aula no encontrada." : "Niño no encontrado." }, origin); return; }
         const media = await decodePrivateMedia(body.audio);
         if (!media?.audio) throw new TypeError("Selecciona un audio de hasta un minuto.");
-        const names = (await db.query(`select s.first_name,s.last_name,s.preferred_name from students s
+        const names = purpose === "observation" ? (await db.query(`select s.first_name,s.last_name,s.preferred_name from students s
           join classrooms c on c.id=s.classroom_id where c.teacher_id=$1 and c.status='active'`, [teacherId])).rows
-          .flatMap((row) => [row.first_name,row.last_name,row.preferred_name]).filter(Boolean);
+          .flatMap((row) => [row.first_name,row.last_name,row.preferred_name]).filter(Boolean) : [];
         const result = await transcribeAndPolishAudio({ bytes: media.bytes, mimeType: media.mimeType,
           context: body.context, names, purpose });
         send(response, 200, { transcript: result.transcript, improved_text: result.improved_text }, origin);
@@ -2217,6 +2230,62 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
     if (await handleAssessmentRoute({ request, url, response, origin })) return;
     if (await handleDescriptiveConclusionRoute({ request, url, response, origin })) return;
     if (await handleFamilyReportRoute({ request, url, response, origin })) return;
+    if (url.pathname.startsWith("/api/ordinary-observations")) {
+      if (process.env.AYNI_ORDINARY_OBSERVATIONS !== "1") {
+        send(response, 404, { error: "Captura de observaciones no habilitada." }, origin); return;
+      }
+      try {
+        if (request.method === "GET" && url.pathname === "/api/ordinary-observations") {
+          send(response, 200, { observations: await listOrdinaryObservations(db, teacherId, url.searchParams.get("studentId")) }, origin);
+        } else if (request.method === "POST" && url.pathname === "/api/ordinary-observations") {
+          const body = await readJson(request);
+          validateOrdinaryObservation({ ...body, hasMedia: Boolean(body.photo) });
+          const owned = (await db.query(`select s.id from students s join classrooms c on c.id=s.classroom_id
+            where s.id=$1 and s.status='active' and c.status='active' and c.teacher_id=$2`, [body.studentId,teacherId])).rows[0];
+          if (!owned) { send(response, 403, { error: "El alumno no pertenece a tu aula." }, origin); return; }
+          if (!ordinaryStorage && body.photo) {
+            send(response, 503, { error: "La foto requiere Storage privado configurado; puedes guardar el texto." }, origin); return;
+          }
+          const media = await decodePrivateMedia(body.photo);
+          if (media?.audio) throw new TypeError("Adjunta una foto; el dictado se guarda como texto transcrito.");
+          if (media && !(media.mimeType === "image/png" && media.bytes.subarray(0, 8).equals(Buffer.from("89504e470d0a1a0a", "hex")))
+            && !(media && media.mimeType === "image/jpeg" && media.bytes.subarray(0, 3).equals(Buffer.from("ffd8ff", "hex")))
+            && !(media && media.mimeType === "image/webp" && media.bytes.toString("ascii", 0, 4) === "RIFF" && media.bytes.toString("ascii", 8, 12) === "WEBP"))
+            throw new TypeError("La foto no coincide con su formato declarado.");
+          let mediaPath = null;
+          try {
+            if (media) mediaPath = await ordinaryStorage.save({ teacherId, studentId: body.studentId,
+              mimeType: media.mimeType, bytes: media.bytes });
+            const result = await saveOrdinaryObservation(db, teacherId, body, {
+              mediaPath, mediaMimeType: media?.mimeType ?? null,
+              mediaFingerprint: media ? createHash("sha256").update(media.bytes).digest("hex") : null,
+              occurredAt: qaDailyClock ? new Date(`${qaDailyClock.date}T${qaDailyClock.time}:00-05:00`) : new Date(),
+            });
+            if (!result.created && mediaPath) await ordinaryStorage.delete(mediaPath, { teacherId, studentId: body.studentId });
+            send(response, result.created ? 201 : 200, result, origin);
+          } catch (error) {
+            if (mediaPath) await ordinaryStorage.delete(mediaPath, { teacherId, studentId: body.studentId }).catch(() => {});
+            throw error;
+          }
+        } else if (request.method === "POST" && /^\/api\/ordinary-observations\/[0-9a-f-]+\/revisions$/i.test(url.pathname)) {
+          const body = await readJson(request);
+          const observation = await reviseOrdinaryObservation(db, teacherId, url.pathname.split("/")[3], body);
+          send(response, 200, { observation }, origin);
+        } else if (request.method === "GET" && /^\/api\/ordinary-observations\/[0-9a-f-]+\/media$/i.test(url.pathname)) {
+          if (!ordinaryStorage) { send(response, 503, { error: "Storage privado no configurado." }, origin); return; }
+          const row = (await db.query(`select o.student_id,o.media_path from ordinary_observations o
+            join classrooms c on c.id=o.classroom_id where o.id=$1 and o.created_by=$2 and c.teacher_id=$2`,
+          [url.pathname.split("/")[3],teacherId])).rows[0];
+          if (!row?.media_path) { send(response, 404, { error: "Foto no encontrada." }, origin); return; }
+          const media = await ordinaryStorage.read(row.media_path, { teacherId, studentId: row.student_id });
+          sendAsset(response, 200, media.data, media.mimeType, origin, "private, no-store");
+        } else send(response, 404, { error: "Ruta no encontrada." }, origin);
+      } catch (error) {
+        send(response, error?.status ?? httpStatusForError(error, error instanceof TypeError ? 400 : 422),
+          { error: publicErrorMessage(error) }, origin);
+      }
+      return;
+    }
     if (request.method === "POST" && /^\/api\/evidences\/[^/]+\/reassign$/.test(url.pathname)) {
       try {
         const body = await readJson(request);

@@ -19,7 +19,7 @@ export async function validateShortAudio(bytes, mimeType) {
 }
 
 export async function transcribeAndPolishAudio({ bytes, mimeType, context = "", names = [], purpose = "observation", client = null }) {
-  if (!["observation", "interview", "teacher_comment", "group_summary"].includes(purpose))
+  if (!["observation", "raw_observation", "interview", "teacher_comment", "group_summary"].includes(purpose))
     throw new TypeError("El propósito de la grabación no es válido.");
   const { durationSeconds } = await validateShortAudio(bytes, mimeType);
   if (!process.env.OPENAI_API_KEY && !client) throw new Error("La transcripción no está configurada.");
@@ -31,8 +31,9 @@ export async function transcribeAndPolishAudio({ bytes, mimeType, context = "", 
   await recordAiUsage({ provider: "openai", workflow: "audio_transcription", model: transcriptionPlan.model,
     inputTokens: transcription.usage?.input_tokens, outputTokens: transcription.usage?.output_tokens,
     durationSeconds });
-  const transcript = typeof transcription.text === "string" ? transcription.text.trim().slice(0, 4000) : "";
-  if (!transcript) throw new Error("No se reconoció voz en el audio.");
+  const transcript = typeof transcription.text === "string"
+    ? (purpose === "raw_observation" ? transcription.text : transcription.text.trim().slice(0, 4000)) : "";
+  if (!transcript.trim() || transcript.length > 4000) throw new Error("No se reconoció voz válida en el audio.");
   if (purpose !== "observation") return { transcript, improved_text: transcript,
     transcription_model: transcriptionPlan.model, editing_model: null,
     routing_policy_version: transcriptionPlan.routing_policy_version };

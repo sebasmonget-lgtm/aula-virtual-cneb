@@ -47,6 +47,16 @@ test("fresh Supabase migrations retain the service-facing local table and column
       create function storage.foldername(p text) returns text[] language sql immutable as $$ select string_to_array(p,'/') $$;
     `);
     await apply(stagingDb, remote);
+    const rawSecurity = (await stagingDb.query(`select c.relrowsecurity as rls,
+      has_table_privilege('authenticated','public.ordinary_observations','INSERT') as teacher_insert,
+      has_table_privilege('authenticated','public.ordinary_observations','SELECT') as teacher_select
+      from pg_class c where c.oid='public.ordinary_observations'::regclass`)).rows[0];
+    assert.deepEqual(rawSecurity, { rls: true, teacher_insert: false, teacher_select: true });
+    const revisionsSecurity = (await stagingDb.query(`select c.relrowsecurity as rls,
+      has_table_privilege('authenticated','public.ordinary_observation_revisions','UPDATE') as teacher_update
+      from pg_class c where c.oid='public.ordinary_observation_revisions'::regclass`)).rows[0];
+    assert.deepEqual(revisionsSecurity, { rls: true, teacher_update: false });
+    assert.equal((await stagingDb.query("select public from storage.buckets where id='ayni-observation-media'")).rows[0]?.public, false);
     const localColumns = await columns(localDb);
     const stagingColumns = await columns(stagingDb);
     const differences = [];

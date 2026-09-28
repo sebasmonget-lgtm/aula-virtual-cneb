@@ -1,5 +1,13 @@
 # Decisiones de arquitectura
 
+## ADR 091 F5: identidad explícita y observación original inmutable
+
+**Decisión (2026-09-28).** Toda observación ordinaria nueva exige que la profesora seleccione un alumno antes de escribir, dictar o guardar. El `student_id` enviado y autorizado contra el aula es la única fuente de identidad: ni el texto, ni la transcripción literal, ni una sugerencia posterior de Jev extraen o cambian ese vínculo. La captura raw (`ordinary_observations`) no exige competencia ni actividad; si hay actividad, el servidor fija el snapshot proyecto/blueprint, no el cliente. El texto se persiste exactamente como llegó, incluyendo nombres contradictorios, errores, espacios y saltos. La corrección/anulación docente se agrega como revisión con CAS, sin overwrite del original ni cambio de alumno.
+
+**Privacidad y reversión.** La foto permanece privada y nunca se envía a IA por defecto. El dictado `raw_observation` hace solo transcripción literal, sin llamada de reescritura; exige el alumno seleccionado. API comprueba docente/aula/autor; Supabase concede lectura propia con RLS, niega escritura directa y usa bucket privado solo desde backend autorizado. Dos migraciones aditivas local/Supabase; flag `AYNI_ORDINARY_OBSERVATIONS` y `NEXT_PUBLIC_AYNI_ORDINARY_OBSERVATIONS` apagados por defecto. Apagarlos oculta el nuevo flujo pero conserva raw/revisiones, y el flujo legacy continúa leyendo sus registros anteriores. No backfill de `evidences` históricos ni modificación H34.
+
+**Límite.** La paridad SQL/RLS se ensayó en PGlite; falta staging en cuenta Supabase nueva y prueba de micrófono físico. El uso de un token service-role para Storage requiere secreto de servidor de la cuenta nueva, nunca en cliente o repositorio.
+
 ## ADR 087 Bake-off F2 provisional sin revisión humana previa a implementación
 
 **Decisión (2026-09-28).** Por autorización expresa, el gate de especialistas de `PLAN_MAESTRO_NUEVO_AYNI.md` §8 se traslada a antes del piloto, no bloquea la implementación local F2–F12. F2 conserva 36 casos, 3 repeticiones por brazo, rúbrica, validador común, hashes, métricas y regla cuantitativa. Los seis casos difíciles proceden de patrones CNEB/QA desidentificados. Dos evaluaciones de IA independientes y ciegas reemplazan provisionalmente a los dos especialistas; sus estimaciones de edición no son tiempos docentes observados. El resultado se denomina **validación provisional de ingeniería/pedagogía pendiente de validación humana posterior**, nunca validación especialista. Ante resultado ambiguo se conserva A. B solo puede seleccionarse si satisface el gate determinista y la regla preregistrada; A se mantiene como rollback. Ninguna rama se activa sin el resto de QA de su fase.

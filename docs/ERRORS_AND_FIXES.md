@@ -1,5 +1,25 @@
 # Errores y soluciones
 
+## 2026-09-28 — F5: exportación e importación de tablas raw desalineadas
+
+**Síntoma.** Dos pruebas de traslado fallaron después de añadir las tablas de observación al export local.
+
+**Causa raíz.** El importador de Supabase mantenía una lista cerrada y aún no incluía `ordinary_observations` ni `ordinary_observation_revisions`.
+
+**Solución validada.** Incorporar ambas tablas en orden de dependencia, sin tocar datos ni repetir capturas QA. Las 25 pruebas focales, la suite completa (580/580), typecheck, lint y build pasaron.
+
+**Prevención.** Cada tabla nueva de export debe actualizar el orden de importación y pasar la prueba de paridad antes del checkpoint.
+
+## 2026-09-28 — F5: identidad implícita y dictado reescrito en captura previa
+
+**Síntoma.** La ventana legacy de evidencia iniciaba con el tercer niño preseleccionado y «Guardar y siguiente» seleccionaba automáticamente otro. El propósito anterior de dictado de observación devolvía una versión reescrita por IA. Esto permitía asociar por descuido un texto a un niño no elegido expresamente y no conservaba la transcripción literal para el nuevo contrato raw.
+
+**Causa raíz.** La captura de evidencia antigua combinaba hecho observado, criterio e interacción rápida; el alumno quedaba como estado implícito de la vista. El servicio de audio compartía una etapa de edición con la nota de observación.
+
+**Solución validada.** F5 crea captura ordinaria separada con alumno obligatorio sin default, backend que valida `student_id` del aula y jamás extrae nombres del texto. `raw_observation` devuelve transcripción literal sin segunda llamada de reescritura; la ruta legacy también inicia sin alumno y exige reelección al continuar. Pruebas SQL/servicio y QA UI confirman el caso con nombre contradictorio, original intacto y revisión append-only.
+
+**Prevención.** Las futuras atribuciones Jev se referirán al ID de observación y a su `student_id` persistido; jamás reasignarán alumno por texto. Mantener test de contradicción nombre/texto y de micrófono con identidad seleccionada antes de habilitar un flujo nuevo.
+
 ## 2026-09-28 — F4: cotejo de clon con proyecciones reconstruibles
 
 **Síntoma.** La comparación inicial de todas las tablas contra el snapshot F3 falló tras confirmar una actividad QA; `ai_usage_events` añadió una fila fixture con costo cero, `competency_display_labels.updated_at` se refrescó al abrir la API y el mapa derivado de período agregó dos entradas/una versión y refrescó cinco filas anteriores.

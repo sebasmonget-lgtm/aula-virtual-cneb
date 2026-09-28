@@ -1,0 +1,22 @@
+# F5 — Observación raw con alumno explícito
+
+28/09/2026. Base F4 `ef4c307`, rama `codex/nuevo-ayni-f5`. Sin despliegue ni llamadas API pagadas. Los dos JSON de auditoría ya modificados por el usuario se conservaron fuera del checkpoint.
+
+## Contrato y rollback
+
+La profesora debe elegir alumno antes de guardar cualquier nueva observación ordinaria, espontánea o desde la actividad. El formulario abre sin alumno preseleccionado; texto/foto/micrófono y «Guardar» permanecen inactivos hasta elegirlo. El backend valida `student_id` activo del aula propia. Un nombre distinto dentro del texto o de la transcripción no se interpreta como identidad y jamás mueve el vínculo. Se guarda `raw_text` tal cual llegó (incluye espacios, saltos y errores). El audio de dictado se transcribe literalmente en una sola operación autorizada; la profesora puede revisar el texto y no se conserva el audio. No se llama a Jev ni se exige competencia para crear raw.
+
+La tabla `ordinary_observations` guarda texto/foto, alumno, autora, fecha, request idempotente, origen y snapshot de período y, cuando existe, actividad/proyecto/blueprint. `ordinary_observation_revisions` agrega correcciones/anulaciones con motivo y revisión optimista; trigger prohíbe reescribir o borrar el original y las revisiones. El historial se recupera por API y UI. En la ruta legacy de evidencias se quitó la preselección inicial y «siguiente» exige escoger otro alumno. Las evidencias anteriores no se convirtieron ni alteraron.
+
+Migraciones nuevas: local `0062_ordinary_observations.sql`, `0063_ordinary_observation_delete_guard.sql`; Supabase `202609280002_ordinary_observations.sql`, `202609280003_ordinary_observation_delete_guard.sql`. La segunda se creó tras aplicar la primera en un clon QA; no se editó la aplicada. Bucket `ayni-observation-media` privado y sin políticas de acceso directo para navegador; backend con secreto server-only en cuenta nueva. RLS de SELECT limita docente/aula/autora y la escritura directa authenticated/anon está revocada. Sin conexión ni despliegue Supabase real. Rollback: apagar `AYNI_ORDINARY_OBSERVATIONS` y `NEXT_PUBLIC_AYNI_ORDINARY_OBSERVATIONS`, conservar tablas y media; ningún `DROP`.
+El CLI de Supabase no está instalado en este equipo, por lo que los archivos nuevos se crearon manualmente y se aplicaron solo en bases PGlite de prueba; no se ejecutó una migración remota.
+
+## QA aislado
+
+Export F4 `.local/qa-backups/f4-checkpoint-full.json`, restauración nueva F5 `.local/qa-backups/f5-restored`: 71/71 tablas verificadas antes de migrar. Browser QA localhost:5176/API 8792 contra ese clon, sin claves IA. Por UI «Hoy» → captura espontánea abrió con seis alumnos sin selección, texto/foto/guardar deshabilitados. Se seleccionó Camila y escribió un texto que menciona Benjamín y una transcripción errónea; guardó Camila `90000000-0000-4000-8000-000000000003` y `raw_text` con espacios/salto exactos. Se corrigió por UI; tras recarga el historial mostró a Camila, original y corrección por separado. Luego desde «Registrar evidencia» de un taller se abrió la nueva captura guiada sin selección; se eligió Benjamín `...0002` y guardó una nota que también menciona Camila, con `activity_id` y `project_id` del taller. API con alumno ausente devolvió HTTP 400. `scripts/qa/verify-f5-observations.mjs` confirma dos raw, una revisión y 12 tablas históricas (incluidos evidencias, valoraciones, cierres y uso IA) idénticas a F4.
+
+Clon separado `.local/qa-backups/f5-restored-v2`: POST de una imagen PNG de 1 píxel (no menor real), sin texto y con alumno seleccionado, devolvió fila/media privados. GET autorizado devolvió `image/png`, 68 bytes; segundo POST con mismo request ID devolvió HTTP 200/`created:false` y quedó un solo archivo. Prueba de adaptador Supabase con fetch simulado verificó ruta privada, token solo servidor, denegación de estudiante distinto y limpieza. No se verificó micrófono físico móvil ni Storage real de una cuenta nueva.
+
+## Gates
+
+Pruebas focales de identidad/raw/idempotencia/aula/CAS/inmutabilidad/foto, transcripción raw sin reescritura, paridad SQL local/Supabase y exportación/importación: 25/25. Suite completa 580/580; `npx tsc --noEmit`, `npm run lint` y `npm run build` con exit 0. El build informó únicamente advertencias no bloqueantes de chunks grandes y análisis estático de rutas. La clasificación/atribución Jev y proyección a evidencia pertenecen a F6, no a esta fase. Ninguna observación QA implica valoración docente.

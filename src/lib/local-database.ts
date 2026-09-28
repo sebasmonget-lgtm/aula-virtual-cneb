@@ -337,7 +337,7 @@ export const correctSpontaneousClassification = (id: string, competencyIds: stri
 export const suggestSpontaneousCompetenciesWithAyni = (id: string) => diagnosticRequest<{ id: string; status: string; recommendation_state: ObservationRecommendationState }>(`spontaneous-observations/${encodeURIComponent(id)}/suggest`, "POST");
 export const spontaneousObservationMediaUrl = (id: string) => `${apiUrl}/api/diagnostics/spontaneous-observations/${encodeURIComponent(id)}/media`;
 export const evidenceMediaUrl = (id: string) => `${apiUrl}/api/period-evaluations/evidence/${encodeURIComponent(id)}/media`;
-export async function transcribeShortAudio(input: { studentId?: string; scope?: "classroom"; context: string; audio: PrivateMediaUpload; purpose?: "observation" | "interview" | "teacher_comment" | "group_summary" }) {
+export async function transcribeShortAudio(input: { studentId?: string; scope?: "classroom"; context: string; audio: PrivateMediaUpload; purpose?: "observation" | "raw_observation" | "interview" | "teacher_comment" | "group_summary" }) {
   const response = await apiFetch(`${apiUrl}/api/audio/transcribe`, {
     method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(input),
   });
