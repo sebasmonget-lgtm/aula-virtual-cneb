@@ -290,9 +290,9 @@ function EvidenceDialog({ open, onOpenChange, students, studentId, setStudentId,
   const criterion = criteria.find((item) => item.id === criterionId) ?? criteria[0];
   const scopeLabel = criterion?.details?.evidence_scope === "group" ? "Grupal" : criterion?.details?.evidence_scope === "mixed" ? "Individual y grupal" : "Individual";
   return <Dialog open={open} onOpenChange={onOpenChange}>
-    <DialogContent className="rounded-2xl p-0 sm:max-w-xl">
-      <DialogHeader className="border-b px-6 py-5"><DialogTitle>Registrar evidencia</DialogTitle><DialogDescription>Actividad: {activityTitle}</DialogDescription></DialogHeader>
-      <div className="space-y-5 px-6 py-1">
+    <DialogContent className="flex max-h-[90dvh] flex-col overflow-hidden rounded-2xl p-0 sm:max-w-xl">
+      <DialogHeader className="shrink-0 border-b px-6 py-5"><DialogTitle>Registrar evidencia</DialogTitle><DialogDescription>Actividad: {activityTitle}</DialogDescription></DialogHeader>
+      <div className="min-h-0 space-y-5 overflow-y-auto px-6 py-1">
         {!databaseConnected && <p className="rounded-xl bg-[#fff1d6] px-4 py-3 text-sm text-[#784a17]">La base local no está iniciada. Puedes revisar el formulario, pero debes ejecutar <strong>npm run db:local</strong> para guardar.</p>}
         <fieldset><legend className="mb-2 text-sm font-semibold">¿A quién observaste?</legend><div className="flex flex-wrap gap-2">{students.map((student) => <button key={student.id} type="button" aria-pressed={studentId === student.id} onClick={() => setStudentId(student.id)} className={`min-h-11 rounded-full border px-3 py-2 text-sm font-medium transition hover:border-[#9bcbd7] hover:bg-[#f0f9fc] ${studentId === student.id ? "border-[#087d96] bg-[#e8f6fb] text-[#126177]" : "bg-white"}`}>{studentId === student.id && <Check className="mr-1 inline size-3.5" />}{student.name}</button>)}</div></fieldset>
         {criteria.length > 1 && <fieldset><legend className="mb-2 text-sm font-semibold">¿Qué criterio observaste?</legend><div className="space-y-2">{criteria.map((item) => <button key={item.id} type="button" aria-pressed={criterionId === item.id} onClick={() => setCriterionId(item.id)} className={`min-h-11 w-full rounded-xl border p-3 text-left text-sm hover:border-[#9bcbd7] hover:bg-[#f0f9fc] ${criterionId === item.id ? "border-[#087d96] bg-[#e8f6fb]" : "bg-white"}`}><span className="font-semibold">{item.criterion_text}</span><span className="mt-1 block text-xs text-[#526b87]">{item.competency_text}</span></button>)}</div></fieldset>}
@@ -303,7 +303,7 @@ function EvidenceDialog({ open, onOpenChange, students, studentId, setStudentId,
         {saved && <WorkflowFeedback tone="success">Evidencia guardada. Puedes cerrar esta ventana.</WorkflowFeedback>}
         {saveError && <WorkflowFeedback tone="error">{saveError}</WorkflowFeedback>}
       </div>
-      <DialogFooter className="border-t px-6 py-4"><Button variant="ghost" onClick={() => onOpenChange(false)}>{saved ? "Cerrar" : "Cancelar"}</Button><AsyncButton variant="outline" busy={saving} busyLabel="Guardando..." disabled={!criterionId || (!note.trim() && !photo && !audio) || saved || !studentId || preparingPhoto} onClick={() => saveEvidence(true)}>Guardar y siguiente</AsyncButton><AsyncButton busy={saving} busyLabel="Guardando..." disabled={!criterionId || (!note.trim() && !photo && !audio) || saved || !studentId || preparingPhoto} onClick={() => saveEvidence()}>Guardar observación</AsyncButton></DialogFooter>
+      <DialogFooter className="shrink-0 border-t px-6 py-4"><Button variant="ghost" onClick={() => onOpenChange(false)}>{saved ? "Cerrar" : "Cancelar"}</Button><AsyncButton variant="outline" busy={saving} busyLabel="Guardando..." disabled={!criterionId || (!note.trim() && !photo && !audio) || saved || !studentId || preparingPhoto} onClick={() => saveEvidence(true)}>Guardar y siguiente</AsyncButton><AsyncButton busy={saving} busyLabel="Guardando..." disabled={!criterionId || (!note.trim() && !photo && !audio) || saved || !studentId || preparingPhoto} onClick={() => saveEvidence()}>Guardar observación</AsyncButton></DialogFooter>
     </DialogContent>
   </Dialog>;
 }
