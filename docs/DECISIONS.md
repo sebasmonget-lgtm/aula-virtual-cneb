@@ -1,5 +1,13 @@
 # Decisiones de arquitectura
 
+## ADR 093 — F7: cuatro destinos y agregado autorizado de Hoy
+
+**Decisión (2026-09-28).** Bajo `NEXT_PUBLIC_AYNI_F7_NAV=1`, la navegación principal ofrece Hoy, Planificar, Mi aula y Documentos. Calendario/Biblioteca siguen accesibles desde Planificar; Diagnóstico/Evaluación desde Mi aula. Los destinos legacy conservan su pantalla y enlace hash, sin migración ni reescritura de datos. Sin el flag se mantiene la navegación anterior.
+
+**Hoy.** `GET /api/teacher/today` resuelve aula del docente verificado, fecha civil Lima ya usada por el dashboard, cola de revisión de esa aula y próxima actividad programada, sin aceptar `teacher_id`/`classroom_id` del cliente. Solo devuelve acciones basadas en fuentes; una observación pendiente no es un déficit ni una valoración. La cola se actualiza al volver de la revisión. No hay llamadas IA ni nuevas tablas.
+
+**Reversión.** Apagar el flag restaura la navegación anterior; la ruta de lectura puede quedar sin consumidores. La seguridad del agregado permanece en servidor.
+
 ## ADR 092 F6: atribución curricular posterior y revisable
 
 **Decisión (2026-09-28).** La observación raw y su `student_id` nunca se reescriben al clasificar. Una tabla append-only registra cada sugerencia Jev, abstención o decisión docente con versión, revisión raw y procedencia. Choice propone la primaria y las preguntas independientes pueden proponer adicionales; ninguna se confirma sola. La profesora acepta, cambia, agrega, quita o deja sin clasificar. Una corrección posterior del texto invalida la vigencia de la atribución anterior y permite nueva revisión, sin borrar el historial.

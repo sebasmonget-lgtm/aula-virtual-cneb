@@ -100,7 +100,7 @@ export async function ordinaryAttributionHistory(db, teacherId, observationId) {
   return { observation, history, latest: history.at(-1) ?? null };
 }
 
-export async function ordinaryReviewQueue(db, teacherId) {
+export async function ordinaryReviewQueue(db, teacherId, classroomId = null) {
   return (await db.query(`select o.id,o.student_id,o.raw_text,r.corrected_text,o.source_kind,o.activity_id,o.captured_criterion_id,
       o.source_revision,o.status,a.version as attribution_version,a.state as attribution_state,
       a.candidate_competency_ids,a.confirmed_competency_ids,a.confirmed_criterion_ids,a.raw_revision as attribution_raw_revision
@@ -109,8 +109,8 @@ export async function ordinaryReviewQueue(db, teacherId) {
       where observation_id=o.id order by revision desc limit 1) r on true
     left join lateral (select * from ordinary_observation_attributions av where av.observation_id=o.id
       order by av.version desc limit 1) a on true
-    where c.teacher_id=$1 and o.created_by=$1 and o.status<>'voided'
+    where c.teacher_id=$1 and o.created_by=$1 and ($2::uuid is null or o.classroom_id=$2::uuid) and o.status<>'voided'
       and (a.id is null or a.state not in ('confirmed','unclassified') or a.raw_revision<>o.source_revision)
       and (o.captured_criterion_id is null or a.id is not null)
-    order by o.occurred_at desc,o.id desc`, [teacherId])).rows;
+    order by o.occurred_at desc,o.id desc`, [teacherId, classroomId])).rows;
 }

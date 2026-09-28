@@ -2,7 +2,7 @@
 
 ## Estado actual
 
-Plan Maestro: F2 reducida cerrada con A (ADR 088). F3 proyecto sencillo en `17e8556`; F4 `ef4c307` ActivityV3 heredada; F5 `99cd04e` raw con identidad canónica, revisión inmutable y foto privada. F6 atribución Jev/cola docente en rama `codex/nuevo-ayni-f6`: propuestas nunca finales, criterio elegido al capturar cuenta como atribución docente incluso si es legacy, historial append-only y raw intacto. QA clon y ADR 092 en `docs/qa/f6-curricular-review-2026-09-28.md`. Flags apagados por defecto; sin deploy, staging real ni llamadas pagadas F6. F7–F12 pendientes.
+Plan Maestro: F2 reducida cerrada con A (ADR 088). F3 proyecto sencillo en `17e8556`; F4 `ef4c307` ActivityV3 heredada; F5 `99cd04e` raw con identidad canónica, revisión inmutable y foto privada. F6 `b729fad` atribución Jev/cola docente: propuestas nunca finales, criterio elegido al capturar cuenta como atribución docente incluso si es legacy, historial append-only y raw intacto. F7 navegación cuatro destinos y agregado autorizado de Hoy bajo flag; ADR 093 y `docs/qa/f7-today-navigation-2026-09-28.md`. QA clon F7 restaurado 75/75; suite 588/588, typecheck/lint/build y UI escritorio/móvil 390 px PASS. Sin deploy, staging real ni llamadas pagadas F6/F7. F8–F12 pendientes.
 
 Proyecto nuevo iniciado el 20 de septiembre de 2026. Existe un shell responsive de la pantalla Hoy con navegación corta, actividad del día, perfil institucional editable, logo SVG generado localmente, registro rápido de evidencia y diagnóstico por referente observable conectado a PostgreSQL local embebido mediante PGlite. La generación docente puede usar OpenAI mediante el proveedor aislado; no hay conexión con Supabase real ni despliegue.
 

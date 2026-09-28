@@ -6,6 +6,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createDatabase } from "./database-adapter.mjs";
 import { resolveDailyState } from "../src/lib/daily-state.mjs";
+import { teacherTodayActions } from "../src/lib/teacher-today-actions.mjs";
 import { readQADailyClock } from "../src/lib/qa-daily-clock.mjs";
 const qaDailyClock = readQADailyClock();
 import { isValidStepIndex } from "../src/lib/activity-runner.mjs";
@@ -433,6 +434,7 @@ async function dashboard() {
   }));
 
   return {
+    classroom_id: classroomId,
     activity: activityResult.rows[0] ? { ...activityResult.rows[0], criteria: normalizeCriteria(activityResult.rows[0].criteria ?? []) } : null,
     today: {
       date: today, now, ...(qaDailyClock ? { qa_clock: qaDailyClock } : {}), blocks, attendance: { recorded: attendanceRecorded, recorded_count: Number(attendanceResult.rows[0]?.recorded_count ?? 0) },
@@ -747,6 +749,22 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
     if (request.method === "GET" && url.pathname === "/api/dashboard") {
       const current = await dashboard();
       send(response, current ? 200 : 409, current ?? { error: "Configura primero la institución y el aula." }, origin);
+      return;
+    }
+    if (request.method === "GET" && url.pathname === "/api/teacher/today") {
+      const current = await dashboard();
+      if (!current) { send(response, 409, { error: "Configura primero el aula." }, origin); return; }
+      const pending = curricularReviewEnabled ? (await ordinaryReviewQueue(db, teacherId, current.classroom_id)).length : 0;
+      const next = (await db.query(`select se.scheduled_on::text as date,
+          coalesce(se.title,a.title) as title, se.activity_id
+        from class_schedule_entries se join classrooms c on c.id=se.classroom_id
+        left join activities a on a.id=se.activity_id
+        where c.id=$1 and c.teacher_id=$2 and se.scheduled_on>$3::date
+          and se.activity_id is not null
+        order by se.scheduled_on,se.start_time limit 1`, [current.classroom_id, teacherId, current.today.date])).rows[0] ?? null;
+      send(response, 200, { date: current.today.date, classroom_id: current.classroom_id,
+        pending_observation_count: pending, next_activity: next,
+        actions: teacherTodayActions({ pendingObservations: pending, nextActivity: next }) }, origin);
       return;
     }
     if (request.method === "GET" && url.pathname === "/api/library/resources") {

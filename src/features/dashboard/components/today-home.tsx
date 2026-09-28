@@ -13,8 +13,9 @@ import { AsyncButton, WorkflowFeedback } from "./workflow-ui";
 type Block = LocalDashboard["today"]["blocks"][number];
 type Execution = { scheduleEntryId: string; action: "start" | "complete" | "skip" | "keep_current" | "set_step"; stepIndex?: number; closureType?: "as_planned" | "note"; closureNote?: string };
 
-export function TodayHome({ dashboard, openEvidence, openAttendance, updateExecution, openActivity, onPlan, onPrepareActivity, onDiagnostic, onReplan }: {
+export function TodayHome({ dashboard, refreshKey = 0, openEvidence, openAttendance, updateExecution, openActivity, onPlan, onPrepareActivity, onDiagnostic, onReplan, onReviewObservations }: {
   dashboard: LocalDashboard;
+  refreshKey?: number;
   openEvidence: (block: Block) => void;
   openAttendance: () => void;
   updateExecution: (input: Execution) => Promise<void>;
@@ -23,6 +24,7 @@ export function TodayHome({ dashboard, openEvidence, openAttendance, updateExecu
   onPrepareActivity: () => void;
   onDiagnostic: () => void;
   onReplan: () => void;
+  onReviewObservations?: () => void;
 }) {
   const [closing, setClosing] = useState(false);
   const [selected, setSelected] = useState<Block | null>(null);
@@ -30,6 +32,8 @@ export function TodayHome({ dashboard, openEvidence, openAttendance, updateExecu
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [bimester, setBimester] = useState<{ label: string; adjusted: boolean; ready: boolean; final: boolean; closed: boolean } | null>(null);
+  const [teacherTasks, setTeacherTasks] = useState<{ pending_observation_count: number;
+    next_activity: { date: string; title: string } | null; actions: { id: string; label: string }[] } | null>(null);
   useEffect(() => {
     const controller = new AbortController();
     void (async () => {
@@ -51,6 +55,17 @@ export function TodayHome({ dashboard, openEvidence, openAttendance, updateExecu
     })().catch(() => {});
     return () => controller.abort();
   }, []);
+  useEffect(() => {
+    if (process.env.NEXT_PUBLIC_AYNI_F7_NAV !== "1") return;
+    const controller = new AbortController();
+    void apiFetch(`${localDatabaseApiUrl}/api/teacher/today`, { signal: controller.signal, cache: "no-store" })
+      .then(async response => { if (!response.ok) throw new Error("Hoy no disponible"); return await response.json() as {
+        pending_observation_count: number; next_activity: { date: string; title: string } | null;
+        actions: { id: string; label: string }[] }; })
+      .then(data => { if (!controller.signal.aborted) setTeacherTasks(data); })
+      .catch(() => {});
+    return () => controller.abort();
+  }, [dashboard.today.date, refreshKey]);
   const { today, profile, metrics } = dashboard;
   const journey = today.journey;
   const current = today.blocks.find((block) => block.id === journey.current_block_id);
@@ -87,6 +102,16 @@ export function TodayHome({ dashboard, openEvidence, openAttendance, updateExecu
       {!bimester.adjusted && !(bimester.final && bimester.closed) && <button className="mt-3 min-h-11 rounded-xl bg-[#0b7891] px-5 font-bold text-white" onClick={onReplan}>Comenzar revisión</button>}</section>}
     {today.calendar_exception && !today.calendar_exception.is_instructional ? <section className="rounded-[1.5rem] border border-[#d4e1ed] bg-white p-5"><CalendarDays className="size-7 text-[#0b7891]" /><h2 className="mt-3 text-xl font-extrabold">{today.calendar_exception.label}</h2><p className="mt-1 text-sm text-[#566883]">Hoy no hay jornada lectiva programada.</p></section> : featured ? <section className="rounded-[1.5rem] border border-[#bce3ec] bg-white p-5 shadow-sm"><div className="flex items-center justify-between gap-3"><span className="rounded-full bg-[#0b7891] px-4 py-1 text-xs font-extrabold text-white">{current ? "AHORA" : "PRÓXIMO"}</span><span className="text-sm font-semibold text-[#566883]">{featured.start_time.slice(0, 5)} – {featured.end_time.slice(0, 5)}</span></div><h2 className="mt-5 text-2xl font-extrabold leading-tight text-[#1c2e50]">{featured.title}</h2><p className="mt-1 font-semibold text-[#07576c]">{featured.block_type === "workshop" ? `Taller del día · ${featured.activity_details?.workshop_type ?? ""}` : featured.experience_title ?? "Jornada de aula"}</p>{featured.purpose && <p className="mt-3 text-[#566883]">{featured.purpose}</p>}<div className="mt-5 grid grid-cols-2 gap-3"><button type="button" onClick={() => void primary()} className="min-h-12 rounded-xl bg-[#0b7891] px-3 text-sm font-bold text-white hover:bg-[#08677d]">{journey.primary_action === "attendance" ? "Marcar asistencia" : journey.primary_action === "close_block" ? "Cerrar bloque" : featured.block_type === "workshop" ? "Ver taller" : featured.activity_id ? "Abrir actividad" : "Ver bloque"}</button><button type="button" onClick={() => canObserve ? openEvidence(featured) : onDiagnostic()} className="min-h-12 rounded-xl border border-[#0b7891] px-3 text-sm font-bold text-[#07576c]">{canObserve ? "Registrar evidencia" : "Observar"}</button></div>{featured.status === "active" && journey.primary_action !== "close_block" && <button type="button" onClick={() => setClosing(true)} className="mt-3 min-h-11 text-sm font-bold text-[#07576c]">¿Cómo salió esta actividad? →</button>}</section> : <section className="rounded-[1.5rem] border border-[#d4e1ed] bg-white p-5"><Clock3 className="size-7 text-[#0b7891]" /><h2 className="mt-3 text-xl font-extrabold">Hoy no hay actividades programadas</h2><p className="mt-1 text-sm text-[#566883]">Puedes preparar la próxima actividad desde Planificar.</p><Button className="mt-4" onClick={onPlan}>Ir a Planificar</Button></section>}
     {error && <WorkflowFeedback tone="error">{error}</WorkflowFeedback>}
+    {teacherTasks && <section className="rounded-[1.5rem] border border-[#d4e1ed] bg-white p-5" aria-label="Para tener presente">
+      <h2 className="text-xl font-extrabold text-[#1c2e50]">Para tener presente</h2>
+      {teacherTasks.actions.length ? <div className="mt-3 space-y-2">{teacherTasks.actions.map(action =>
+        <button key={action.id} type="button" onClick={() => action.id === "review_observations" ? onReviewObservations?.()
+          : action.id === "review_period" ? onReplan() : onPrepareActivity()}
+          className="block min-h-11 w-full rounded-xl border border-[#cbdbe8] px-4 py-2 text-left font-semibold text-[#07576c] hover:bg-[#e8f7fa]">
+          {action.label}{action.id === "prepare_activity" && teacherTasks.next_activity
+            ? ` · ${teacherTasks.next_activity.title} (${teacherTasks.next_activity.date})` : ""} →</button>)}</div>
+        : <p className="mt-2 text-sm text-[#566883]">No hay tareas adicionales por revisar ahora.</p>}
+    </section>}
     <section><h2 className="mb-3 text-xl font-extrabold text-[#1c2e50]">Acciones rápidas</h2><div className="grid grid-cols-3 gap-2"><button type="button" onClick={openAttendance} className="min-h-28 rounded-2xl bg-[#eaf8f2] p-3 text-left"><Users className="size-5 text-[#287561]" /><b className="mt-2 block text-sm text-[#1c2e50]">Asistencia</b><small className="mt-2 block text-[#287561]">{today.attendance.recorded_count}/{metrics.students_total} registrados</small></button><button type="button" onClick={() => canObserve && featured ? openEvidence(featured) : onDiagnostic()} className="min-h-28 rounded-2xl bg-[#fff4df] p-3 text-left"><ClipboardCheck className="size-5 text-[#a16917]" /><b className="mt-2 block text-sm text-[#1c2e50]">Observar</b><small className="mt-2 block text-[#926329]">{canObserve ? "Anotar evidencia" : "Anotar observación"}</small></button><button type="button" onClick={() => canObserve && featured ? openEvidence(featured) : onPrepareActivity()} className="min-h-28 rounded-2xl bg-[#f1eaff] p-3 text-left"><Camera className="size-5 text-[#7952b8]" /><b className="mt-2 block text-sm text-[#1c2e50]">Foto</b><small className="mt-2 block text-[#7952b8]">{canObserve ? "Adjuntar evidencia" : "Preparar actividad"}</small></button></div></section>
     {today.blocks.length > 0 && <section><h2 className="mb-3 text-xl font-extrabold text-[#1c2e50]">Tu jornada</h2><div className="space-y-2">{today.blocks.map((block) => <button key={block.id} type="button" onClick={() => block.block_type === "workshop" ? setSelected(block) : block.activity_id ? void openActivity(block).catch(() => setError("No se pudo abrir la actividad.")) : setSelected(block)} className="flex min-h-16 w-full items-center gap-3 rounded-2xl border border-[#d4e1ed] bg-white p-4 text-left hover:border-[#8acbd8]"><span className="w-12 shrink-0 text-sm font-bold text-[#566883]">{block.start_time.slice(0, 5)}</span><span className="grid size-6 shrink-0 place-items-center text-[#0b7891]">{block.status === "completed" ? <Check className="size-4" /> : <Clock3 className="size-4" />}</span><span className="min-w-0 flex-1 truncate font-bold text-[#1c2e50]">{block.block_type === "workshop" ? "Taller · " : ""}{block.title}</span><span className="shrink-0 text-xs font-bold text-[#07576c]">{status(block)}</span></button>)}</div></section>}
     <aside className="rounded-[1.4rem] bg-[#edf9f5] p-5"><h2 className="font-extrabold text-[#286c5c]">Ayni te sugiere</h2><p className="mt-1 text-sm text-[#566883]">{metrics.students_total - metrics.students_observed > 0 ? `${metrics.students_total - metrics.students_observed} niños aún no tienen evidencias registradas. Puedes seguir observando durante las actividades.` : "Todos los niños tienen al menos una evidencia registrada. Sigue observando según lo que ocurra en el aula."}</p></aside>

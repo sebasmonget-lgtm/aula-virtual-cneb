@@ -1,5 +1,15 @@
 # Errores y soluciones
 
+## 2026-09-28 — F7: flags y URL incompletos en harness QA
+
+**Síntoma.** La página QA mostró desconexión pese a que la API local estaba disponible; después, «Hoy» contó una observación pendiente, pero la cola indicó que la captura no estaba habilitada.
+
+**Causa raíz.** El proceso Vite recibió `NEXT_PUBLIC_LOCAL_DB_URL` en vez del contrato real `NEXT_PUBLIC_AYNI_API_URL`; el backend se inició con la revisión F6 activada pero sin `AYNI_ORDINARY_OBSERVATIONS=1`.
+
+**Solución validada.** Reiniciar solo los procesos QA con URL y flags correctos. La UI cargó los cuatro destinos y «Hoy» abrió la observación pendiente real del clon. No se alteró código de producción para encubrir el error de configuración.
+
+**Prevención.** Los comandos de QA deben declarar ambos flags dependientes y usar el nombre de URL importado por `local-database.ts`; verificar ruta `/health` y la cola antes del recorrido visual.
+
 ## 2026-09-28 — F6: criterio histórico sin ID de competencia V4
 
 **Síntoma.** Una captura guiada QA con criterio activo de un taller histórico no podía conservar la atribución elegida porque la fila tenía `competency_v4_id` nulo.
