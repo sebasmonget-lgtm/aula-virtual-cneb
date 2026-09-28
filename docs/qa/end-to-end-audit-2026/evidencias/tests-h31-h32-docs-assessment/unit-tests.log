@@ -1,0 +1,34 @@
+✔ snapshot y contrato del Assessment Master son deterministas y cubren cada competencia (2.707ms)
+✔ versiona, confirma, detecta cambios y aísla dos docentes y aulas (2581.0032ms)
+✔ la migración remota limita lectura al aula propia y bloquea escrituras directas (4.7588ms)
+✔ el informe unificado conserva nombres autorizados, evidencia factual e información insuficiente (209.7016ms)
+✔ diagnóstico exportado respeta Lima, notas únicas y áreas no aplicables (182.2512ms)
+✔ seguimiento nominal conserva primer y último registro distinto, no duplicados de competencias (56.4448ms)
+✔ 1 y 12: criterio confirmado aparece en el mapa con IDs, versiones y etiqueta estable (2460.587ms)
+✔ 2, 3 y 4: actividad realizada, omitida y evidencia actualizan worked/evidenced por código (1553.4232ms)
+✔ 13, 14 y 15: estadísticas exactas, sin promediar niveles ni convertir no trabajado en C (2.3876ms)
+✔ 7: la profesora puede elegir exactamente AD, A, B o C y no existe una opción recomendada (0.2295ms)
+✔ 16 y 17: informe global usa Sol medium y no acepta cifras generadas por el modelo (1.4033ms)
+✔ 16: el workflow del informe global acepta el contrato y recibe solo contexto agregado (36.0306ms)
+✔ 18: el fingerprint del informe cambia únicamente al cambiar consolidado o mapa (0.475ms)
+✔ 19: las tablas privadas nuevas tienen RLS por aula y escrituras directas revocadas (1.3364ms)
+✔ 20: Excel genérico contiene valoración y conclusión confirmadas (22.5648ms)
+✔ 21: exportación SIAGIE permanece visible y no implementada (0.4223ms)
+✔ períodos formales separan cuatro bimestres o tres trimestres (12.3453ms)
+✔ cobertura deriva registros por niño y competencia sin convertir ausencias en niveles (2249.4946ms)
+✔ contexto para planificar verifica docente, aula y período y no expone expedientes (1351.4133ms)
+✔ la migración futura exige lectura propia y escritura mediante servidor (1.6179ms)
+✔ ficha única, nivel docente, cierre, salidas derivadas y cambio posterior de evidencia (2361.6936ms)
+✔ una competencia del plan anual aparece sin evidencias y se puede excluir con motivo (1405.7454ms)
+✔ información insuficiente queda guardada sin nivel y no se convierte en C (1397.4881ms)
+✔ una observación sustantiva admite valoración docente justificada sin umbral automático (1631.8283ms)
+✔ dos confirmaciones de la misma revisión dejan una sola evaluación oficial (1523.5049ms)
+✔ evidencia posterior invalida la huella y dos cierres simultáneos crean solo una versión (1822.9912ms)
+ℹ tests 26
+ℹ suites 0
+ℹ pass 26
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 17836.5217

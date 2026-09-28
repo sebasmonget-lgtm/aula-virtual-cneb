@@ -54,21 +54,23 @@ async function fixture(){
   const contexts=new Map([[teacherA,{id:classA,school_year_id:yearA,age:5,calendar:{},group_context:"Grupo A"}],
     [teacherB,{id:classB,school_year_id:yearB,age:5,calendar:{},group_context:"Grupo B"}]]);
   const handlers=new Map();
+  const providerOptions=[];
   for(const teacherId of [teacherA,teacherB]){
     const pending=new Map(),responses=[];
     const handler=createAssessmentMasterRouteHandler({db,teacherId,annualPlanningContext:async()=>contexts.get(teacherId),
       readJson:async(request)=>request.body,send:(_response,status,body)=>responses.push({status,body}),pending,
       metadataForAudit:(metadata)=>metadata,loadKnowledgeBase:async()=>({competencyCards:[{id:"COM_ORAL",runtime_selectable_by_age:{"5":true}}]}),
-      createProvider:()=>({}),generate:async()=>({output:proposal,metadata:{model:"mock-sol"}})});
+      createProvider:(_plan,options)=>{providerOptions.push(options);return {};},generate:async()=>({output:proposal,metadata:{model:"mock-sol"}})});
     handlers.set(teacherId,async(method,path,body)=>{responses.length=0;await handler({request:{method,body},url:new URL(`http://local${path}`),response:{},origin:null});return responses[0];});
   }
-  return {db,callA:handlers.get(teacherA),callB:handlers.get(teacherB)};
+  return {db,callA:handlers.get(teacherA),callB:handlers.get(teacherB),providerOptions};
 }
 
 test("versiona, confirma, detecta cambios y aísla dos docentes y aulas",async()=>{
   const f=await fixture();
   const generated=await f.callA("POST","/api/ai/assessment-masters/generate",{periodId:periodA});
   assert.equal(generated.status,200,JSON.stringify(generated.body));
+  assert.deepEqual(f.providerOptions,[{timeoutMs:180000}],"El marco multicompetencia requiere el plazo de planificación, no el de clasificación.");
   assert.equal((await f.callA("POST","/api/assessment-masters",{periodId:periodA,proposal:generationSafe(generated),generationId:generated.body.generation_id})).status,200);
   const draft=(await f.callA("GET",`/api/assessment-masters?periodId=${periodA}`)).body.current;
   assert.equal(draft.status,"draft");

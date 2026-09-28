@@ -96,7 +96,7 @@ export function createAssessmentMasterRouteHandler({ db, teacherId, annualPlanni
             diagnostic_summary: context.diagnostic_summary, religion_applicable: context.religion_applicable === true },
           calendar: context.calendar, sources: source.sources });
         const plan = resolveAIExecutionPlan({ workflow: "assessment_master", task: "generation" });
-        const result = await generate(input, { provider: createProvider(plan), executionPlan: plan, knowledgeBase: kb });
+        const result = await generate(input, { provider: createProvider(plan, { timeoutMs: 180000 }), executionPlan: plan, knowledgeBase: kb });
         const generationId = randomUUID();
         await pending.set(generationId, { workflow: "assessment_master", classroom_id: context.id,
           evaluation_period_id: period.id, competency_ids: source.competencyIds, competency_labels: labels, source_snapshot: source.snapshot,

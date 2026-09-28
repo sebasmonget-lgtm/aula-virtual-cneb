@@ -151,3 +151,19 @@ El mapa desarrolla acciones del niño, mediación y continuidad, visibles en Pla
 **Archivos y pruebas.** `project-flow-service`, `experience-lineage`, `criterion-version-service` y sus tests. Antes 7/9 con dos fallos reproducibles. Después 27/27 relacionadas, typecheck, lint y build PASS (`tests-h30-primary-criterion`). Regresión SQL real confirma un criterio alineado y conserva archivado el incompatible sin evidencia.
 
 **UI después.** PASS: preparar, guardar y confirmar criterio Indaga desde la interfaz, recargar Hoy y guardar las seis notas (Inés, Thiago, Camila, Mateo, Valeria y Bruno). La recuperación no regeneró actividad ni taller; sí tuvo una llamada adicional de criterio, registrada. Snapshot `h30-main-evidence-pass`, captura `screenshots/23-h30-evidencias-indaga-guardadas.png`. Los 25 registros previos permanecen. Rollback sin migración: revertir este cambio; los históricos permanecen.
+
+## H31 — Fidelidad del diagnóstico Word (HIGH; engloba H11/H12/H13/H16)
+
+**Antes y causa.** El render tomaba el día UTC de un instante; el listado de pendientes no filtraba las dos áreas condicionadas; contaba asociaciones competencia–nota como notas distintas; mostraba las primeras dos asociaciones en vez de registros distintos y evolución. Dos regresiones nuevas fallaron sobre el código anterior.
+
+**Fix localizado.** Instantes se proyectan a America/Lima, fechas civiles no se desplazan. Pendientes respetan las banderas del snapshot confirmado. Los conteos globales deduplican por estudiante/fuente/ID (los conteos por competencia conservan sus asociaciones). El seguimiento ordena cronológicamente y muestra primero/último registro distinto con aviso explícito N de M. No inventa síntesis ni cambia la prioridad histórica del diagnóstico por otra posterior.
+
+**Archivos y pruebas.** `diagnostic-unified-word.mjs` y test. 26/26 relacionadas, typecheck, lint y build PASS en `tests-h31-h32-docs-assessment`. Incluye banderas activadas/desactivadas, instante antes de medianoche Lima, fecha civil, nota multicompetencia y evolución con orden de entrada distinto. UI/descarga después: pendiente. Render visual: NO PROBADO, falta LibreOffice en runtime. Rollback: revertir fix sin migración.
+
+## H32 — Assessment Master multicompetencia agota plazo breve (HIGH / bloqueante)
+
+**Antes.** Preparar marco P1 con seis competencias trabajadas devolvió timeout; no quedó maestro ni usage del intento fallido. El costo de ese intento es desconocido, no cero.
+
+**Causa y fix.** La ruta creaba el proveedor con el plazo por defecto de 30 s, igual que H29. Solo Assessment Master pasa `timeoutMs:180000`; sin cambio de modelo, prompt, retry ni otras funciones.
+
+**Pruebas.** La regresión de handler SQL captura opciones: falló antes (undefined), pasa después. 26/26 relacionadas, typecheck/lint/build PASS. Archivos: `scripts/assessment-master-routes.mjs`, `assessment-master-service.test.mjs`. API QA reiniciada después de validar; original sin reiniciar. UI después: pendiente de reintento. Rollback sin migración.
