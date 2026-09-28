@@ -1,0 +1,26 @@
+{
+  "method": "UI profesora ficticia; no experto independiente",
+  "before": "H28: 4 intentos rechazados sin escritura",
+  "after": "4 notas guardadas tras fix",
+  "business_day": "2026-04-01",
+  "activity_id": "5b141d40-8b2a-4314-9377-75359de76897",
+  "expected_competence": "MAT_FORMA",
+  "cases": [
+    {
+      "student": "Inés",
+      "note": "Inés colocó el aro detrás de la casa y vio que no podía pasar. Lo movió al costado y separó dos bloques: «por aquí sí entro». Probó el camino y lo ajustó sin ayuda."
+    },
+    {
+      "student": "Thiago",
+      "note": "Thiago puso un aro delante de otro y marcó un recorrido. Cuando chocó con la cesta cambió el aro de sitio: «esto atrás, acá queda libre». Mostró dónde iniciar y terminar; no conté esto como evidencia de cantidad."
+    },
+    {
+      "student": "Hugo",
+      "note": "Hugo armó un puente con bloques. La tela cerraba el paso; la levantó y dijo «va arriba, por abajo camino». Probó pasar una muñeca y amplió la abertura al ver que no cabía."
+    },
+    {
+      "student": "Gabriela",
+      "note": "Gabi quería la tienda junto a la pared. Puso los bloques muy pegados y no pudo entrar. Después de «¿por dónde entrarías?» dejó una abertura y señaló «aquí». Requirió esa pregunta para ajustar."
+    }
+  ]
+}

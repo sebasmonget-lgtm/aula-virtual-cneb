@@ -1,0 +1,65 @@
+[
+  {
+    "name": "typecheck",
+    "command": [
+      "node",
+      "node_modules/typescript/bin/tsc",
+      "--noEmit"
+    ],
+    "startedAt": "2026-09-28T04:38:35.825Z",
+    "endedAt": "2026-09-28T04:38:42.173Z",
+    "exitCode": 0,
+    "counters": null
+  },
+  {
+    "name": "unit-tests",
+    "command": [
+      "node",
+      "--test",
+      "--test-concurrency=2",
+      "src/lib/evidence-capture-v4.test.mjs",
+      "scripts/daily-workshop-persistence.test.mjs",
+      "src/lib/activity-confirmation.test.mjs",
+      "src/lib/activity-persistence-v4.test.mjs"
+    ],
+    "startedAt": "2026-09-28T04:38:42.177Z",
+    "endedAt": "2026-09-28T04:38:47.656Z",
+    "exitCode": 0,
+    "counters": {
+      "tests": 15,
+      "pass": 15,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    }
+  },
+  {
+    "name": "lint",
+    "command": [
+      "node",
+      "node_modules/eslint/bin/eslint.js",
+      ".",
+      "--ignore-pattern",
+      "dist",
+      "--ignore-pattern",
+      ".next"
+    ],
+    "startedAt": "2026-09-28T04:38:47.658Z",
+    "endedAt": "2026-09-28T04:39:09.613Z",
+    "exitCode": 0,
+    "counters": null
+  },
+  {
+    "name": "build",
+    "command": [
+      "node",
+      "scripts/run-framework.mjs",
+      "build"
+    ],
+    "startedAt": "2026-09-28T04:39:09.618Z",
+    "endedAt": "2026-09-28T04:39:21.172Z",
+    "exitCode": 0,
+    "counters": null
+  }
+]

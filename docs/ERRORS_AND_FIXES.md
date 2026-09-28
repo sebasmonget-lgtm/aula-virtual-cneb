@@ -783,3 +783,13 @@ La revisión del corpus completo detectó además dos resúmenes de fuentes de l
 **Solución validada.** El finalizador carga primero todos los metadatos existentes y omite cualquier ID ya catalogado. Se retiraron los tres duplicados creados por el intento y el constructor del índice validó 61 IDs únicos.
 
 **Prevención.** Comprobar unicidad por ID y ruta en el constructor del índice; conservar nombres de JPEG y JSON homónimos aunque el ID sea más largo.
+
+## 2026-09-27 H28: evidencia del taller confirmado rechazada
+
+**Síntoma.** Registrar una nota de un taller confirmado devuelve que su criterio no coincide con la competencia; los IDs sí coinciden.
+
+**Causa raíz.** El guard exigía `competency_status`, presente en activity-v1 pero ausente por contrato en workshop-v1. La confirmación atómica ya había confirmado el taller y su propio criterio.
+
+**Solución validada.** El guard reconoce la confirmación del taller exclusivamente desde columnas del join autorizado (tipo, fecha de confirmación, actividad vinculada, índice e igualdad de competencia). Rechaza borradores, competencias distintas y estados explícitamente no confirmados. 15/15 pruebas relacionadas, typecheck, lint y build PASS. Sin cambio de esquema o notas históricas; la repetición UI queda registrada en el informe E2E.
+
+**Prevención.** Probar el recorrido persistir → confirmar par diario → admitir criterio para evidencia, no solo que existan los dos bloques en Hoy.

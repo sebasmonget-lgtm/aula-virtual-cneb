@@ -46,7 +46,7 @@ import { copyConfirmedCriterion, confirmCriterionVersion } from "../src/lib/crit
 import { normalizeActivityMaterials, publicActivityParent, validateActivityV4 } from "../src/lib/activity-v4-validation.mjs";
 import { validateCriterionEvidenceV4 } from "../src/lib/criterion-evidence-validation.mjs";
 import { generateCriterionEvidence } from "../src/lib/ai-criterion-evidence-ui-service.mjs";
-import { validateEvidenceCaptureV4 } from "../src/lib/evidence-capture-v4.mjs";
+import { criterionMatchesConfirmedActivity, validateEvidenceCaptureV4 } from "../src/lib/evidence-capture-v4.mjs";
 import { createAssessmentRouteHandler } from "./assessment-routes.mjs";
 import { createAssessmentMasterRouteHandler } from "./assessment-master-routes.mjs";
 import { createDescriptiveConclusionRouteHandler } from "./descriptive-conclusion-routes.mjs";
@@ -2167,7 +2167,9 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       let capture;
       try { capture = validateEvidenceCaptureV4(body); } catch (error) { send(response, httpStatusForError(error, 400), { error: publicErrorMessage(error) }, origin); return; }
       const allowed = await db.query(`
-        select ac.id, ac.competency_id, ac.competency_v4_id, a.details as activity_details, a.occurs_on
+        select ac.id, ac.competency_id, ac.competency_v4_id, a.details as activity_details, a.occurs_on,
+               a.teacher_confirmed_at as activity_confirmed_at, a.linked_main_activity_id,
+               a.workshop_item_index, le.type as experience_type
           from students s
           join classrooms cl on cl.id = s.classroom_id
           join learning_experiences le on le.classroom_id = cl.id
@@ -2185,7 +2187,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         return;
       }
       const criterion = allowed.rows[0];
-      if (criterion.competency_v4_id && (criterion.activity_details?.competency_status !== "confirmed" || criterion.activity_details?.competency_id !== criterion.competency_v4_id)) {
+      if (!criterionMatchesConfirmedActivity(criterion)) {
         send(response, 422, { error: "El criterio v4 ya no coincide con la competencia confirmada de la actividad." }, origin);
         return;
       }

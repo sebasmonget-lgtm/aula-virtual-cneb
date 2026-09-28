@@ -104,8 +104,26 @@ El enlace local de dependencias del renderizador bajo `docs/qa/.../node_modules`
 
 **Regresión.** Contrato de integración de la bandera + JSONB real: valores idénticos no son cambios; propósito/materiales distintos o retirar el taller sí. Antes 2/3; después 11/11 relacionadas, typecheck, lint y build PASS (`tests-h26-daily-pair-comparison`).
 
-**UI después.** PASS: recargado el mismo borrador, el botón se habilitó y confirmó actividad+taller. Sin regeneración ni datos nuevos; captura `screenshots/18-h26-par-diario-confirmado.png`. Commit pendiente. Rollback: revertir este fix, sin migración.
+**UI después.** PASS: recargado el mismo borrador, el botón se habilitó y confirmó actividad+taller. Sin regeneración ni datos nuevos; captura `screenshots/18-h26-par-diario-confirmado.png`. Commit `cae3770`. Rollback: revertir este fix, sin migración.
 
 ## Condición temporal de la simulación anual
 
-El launcher de auditoría ahora usa un preload de reloj de negocio **solo** en el proceso QA: exige puerto 8790, docente ficticia exacta, modo local y directorio QA exacto. Dos pruebas comprueban rechazo en el puerto original y conservación de fechas explícitas/UTC. No se importa desde producto. SQL conserva timestamps reales de auditoría/costos; se documenta el día simulado en cada etapa. Todos los registros pedagógicos siguen ingresándose por UI. Esto permite simular jornadas y semanas de gestión en una noche; no permite editar el pasado ni desactiva guardas. Las verificaciones de mapa protegido que usan `now()` SQL siguen con reloj real: cualquier limitación se señalará, no se declarará cubierta por el preload.
+El launcher de auditoría usa un preload de reloj de negocio **solo** en el proceso QA: exige puerto 8790, docente ficticia exacta, modo local y directorio QA exacto. Dos pruebas comprueban rechazo en el puerto original y conservación de fechas explícitas/UTC. No se importa desde producto. La comprobación del primer registro confirmó que **PGlite/WASM también usa el reloj simulado**: `observed_at` y eventos posteriores tienen fecha virtual, no la fecha real de facturación. Las acciones UI conservan por separado el timestamp real; el ledger conserva los eventos tal como se registraron y marca esta condición, sin prometer conciliación por fecha con una factura. Se documenta el día simulado por etapa. Todos los registros pedagógicos ingresan por UI. Esto permite simular jornadas y semanas de gestión en una noche; no permite editar el pasado del reloj de prueba ni desactiva guardas. La cabecera del navegador mantiene el reloj del equipo, diferencia esperada del fixture, no prueba del calendario real del cliente.
+
+## H27 — Actividad diaria sin pasos breves (MEDIUM, no bloqueante)
+
+El mapa desarrolla acciones del niño, mediación y continuidad, visibles en Planificar, pero el registro diario v4 guarda `sequence: []`. Hoy muestra «Esta actividad no tiene pasos breves registrados todavía» y no ofrece la propuesta completa. Registrar evidencia y terminar actividad funcionan; el taller sí muestra inicio/desarrollo/cierre. Se documenta y continúa, sin refactor mientras quede recorrido anual pendiente.
+
+## H28 — Evidencia de taller confirmado rechazada (BLOCKER)
+
+**Antes.** Las cuatro notas del taller de 01/04 no se guardaron: «El criterio v4 ya no coincide con la competencia confirmada de la actividad».
+
+**Causa raíz.** `workshop-v1` tiene competencia pero no el campo `competency_status` de `activity-v1`. La confirmación atómica del par ya había confirmado taller y criterio; el guard de evidencia exigía un campo que el contrato del taller no contiene. No era un desacuerdo de IDs ni una competencia de la actividad principal.
+
+**Fix mínimo.** Validación compartida reconoce la confirmación persistida del taller, exclusivamente desde el join autorizado: tipo workshop, fecha de confirmación, vínculo con actividad principal e índice válidos, ID del criterio igual al del taller. Un estado explícitamente no confirmado sigue rechazado. Actividades normales conservan su requisito `competency_status=confirmed`. No cambia el JSON estricto del taller, no migra ni modifica notas previas.
+
+**Archivos y regresión.** `evidence-capture-v4.mjs`, tests de evidencia/par diario, `local-db-server.mjs`. Regresión SQL real guarda y confirma un par con competencias distintas y comprueba que el criterio del taller es admitido; guardas negativas incluyen otra competencia, borrador, tipo project y vínculo ausente. Antes 1/2 del par diario; después 15/15 relacionadas, typecheck, lint y build PASS (`tests-h28-workshop-evidence`).
+
+**UI después.** PASS: cuatro notas guardadas desde la interfaz, sin regenerar taller ni cambiar datos confirmados. Captura `screenshots/19-h28-taller-evidencia-guardada.png`; snapshot `h28-workshop-evidence-pass`. Las 7 notas de convivencia y 5 de identidad anteriores permanecen separadas. El aula original conserva su fingerprint.
+
+**Rollback.** Revertir el commit lógico de esta validación; no hay migración. Commit pendiente de identificación.

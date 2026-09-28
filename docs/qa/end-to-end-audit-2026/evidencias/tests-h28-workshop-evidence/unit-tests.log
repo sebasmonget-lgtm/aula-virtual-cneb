@@ -1,0 +1,23 @@
+✔ actividad y taller se guardan y confirman juntos; Hoy recibe ambos bloques (2473.3413ms)
+✔ el taller sugerido o marcado sin taller no bloquea la actividad principal (1.3884ms)
+✔ la confirmación y el criterio heredado se guardan juntos o se revierten juntos (2471.2216ms)
+✔ fecha de actividad admite DATE real de PostgreSQL en guardar y confirmar, sin ampliar límites (1822.0665ms)
+✔ A-D, J-M y O-Q: activity-v1 exige parent permitido, competencia aplicable y coherencia (1.849ms)
+✔ D-H: Project y Unit llegan como contexto mínimo, con continuidad y sin datos privados (39.4558ms)
+✔ I: activity conserva límites de parent y persistencia (2.3325ms)
+✔ A-C: OPTIONS permite PUT y el parent público no filtra metadata técnica (1.4167ms)
+✔ G-N: edición conserva metadata, regeneración validada la reemplaza y materiales se normalizan (2.5446ms)
+✔ taller confirmado admite su criterio, no otro ni borradores o confirmación aportada por cliente (1.0654ms)
+✔ A-B: evidence_capture se resuelve en código sin provider (0.9077ms)
+✔ K-M: registra un hecho o foto sin exigir una marca de logro (0.5346ms)
+✔ P-Q: contexto conserva expected distinto de observed y scope sin bulk (0.2773ms)
+✔ C-J, N-O, R, S-T y Y: servidor exige relación activa, coherencia v4, foto válida y no usa IA (7.5054ms)
+✔ U-X: dashboard y StudentContext conservan competencias v4 sin UUID inventado (1.6111ms)
+ℹ tests 15
+ℹ suites 0
+ℹ pass 15
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5362.2482

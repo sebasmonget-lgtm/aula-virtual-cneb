@@ -4,6 +4,7 @@ import { readFile } from "node:fs/promises";
 import { PGlite } from "@electric-sql/pglite";
 import { insertDailyPair, pairedWorkshop } from "./daily-workshop-persistence.mjs";
 import { confirmActivityWithCriterion } from "../src/lib/activity-confirmation.mjs";
+import { criterionMatchesConfirmedActivity } from "../src/lib/evidence-capture-v4.mjs";
 
 const classroom = "11111111-1111-4111-8111-111111111111";
 const projectId = "22222222-2222-4222-8222-222222222222";
@@ -62,6 +63,14 @@ test("actividad y taller se guardan y confirman juntos; Hoy recibe ambos bloques
     const blocks = (await db.query(`select block_type from class_schedule_entries order by sort_order`)).rows;
     assert.deepEqual(blocks.map((row) => row.block_type), ["activity", "workshop"]);
     assert.equal((await db.query("select count(*)::int as n from activity_criteria")).rows[0].n, 2);
+    const confirmedWorkshop = (await db.query(`select ac.competency_v4_id,
+      a.details as activity_details,a.teacher_confirmed_at as activity_confirmed_at,
+      a.linked_main_activity_id,a.workshop_item_index,le.type as experience_type
+      from activity_criteria ac join activities a on a.id=ac.activity_id
+      join learning_experiences le on le.id=a.experience_id
+      where a.id=$1 and a.status='active' and ac.status='active'`, [saved.workshopId])).rows[0];
+    assert.equal(criterionMatchesConfirmedActivity(confirmedWorkshop), true,
+      "un taller confirmado debe poder registrar su propia evidencia");
   } finally { await db.close(); }
 });
 

@@ -5,6 +5,18 @@ export class EvidenceCaptureValidationError extends Error {
   constructor(message) { super(message); this.name = "EvidenceCaptureValidationError"; }
 }
 
+// Input must come from the authorized activity/criterion join, never the request body.
+// Workshop-v1 has no competency_status: its teacher confirmation is atomic with its criterion.
+export function criterionMatchesConfirmedActivity(criterion) {
+  if (!criterion.competency_v4_id) return true;
+  const details = criterion.activity_details;
+  if (details?.competency_id !== criterion.competency_v4_id) return false;
+  if (details.competency_status === "confirmed") return true;
+  return details.competency_status == null && criterion.experience_type === "workshop"
+    && Boolean(criterion.activity_confirmed_at) && Boolean(criterion.linked_main_activity_id)
+    && Number.isInteger(criterion.workshop_item_index) && criterion.workshop_item_index > 0;
+}
+
 export function validateEvidenceCaptureV4({ studentId, activityId, criterionId, observationStatus = null, observationText, photo, media } = {}) {
   if (![studentId, activityId, criterionId].every((value) => typeof value === "string" && value.trim())) throw new EvidenceCaptureValidationError("Selecciona estudiante, actividad y criterio.");
   if (observationStatus != null && !OBSERVATION_STATUSES.includes(observationStatus)) throw new EvidenceCaptureValidationError("Selecciona una marca observacional válida.");
