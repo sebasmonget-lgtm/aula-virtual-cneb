@@ -1,0 +1,68 @@
+[
+  {
+    "name": "typecheck",
+    "command": [
+      "node",
+      "node_modules/typescript/bin/tsc",
+      "--noEmit"
+    ],
+    "startedAt": "2026-09-28T04:59:28.196Z",
+    "endedAt": "2026-09-28T04:59:34.681Z",
+    "exitCode": 0,
+    "counters": null
+  },
+  {
+    "name": "unit-tests",
+    "command": [
+      "node",
+      "--test",
+      "--test-concurrency=2",
+      "src/lib/experience-lineage.test.mjs",
+      "src/lib/project-flow-service.test.mjs",
+      "src/lib/ai-activity-ui-service.test.mjs",
+      "src/lib/activity-persistence-v4.test.mjs",
+      "src/lib/activity-confirmation.test.mjs",
+      "src/lib/criterion-version-service.test.mjs",
+      "scripts/daily-workshop-persistence.test.mjs"
+    ],
+    "startedAt": "2026-09-28T04:59:34.683Z",
+    "endedAt": "2026-09-28T04:59:45.234Z",
+    "exitCode": 0,
+    "counters": {
+      "tests": 27,
+      "pass": 27,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    }
+  },
+  {
+    "name": "lint",
+    "command": [
+      "node",
+      "node_modules/eslint/bin/eslint.js",
+      ".",
+      "--ignore-pattern",
+      "dist",
+      "--ignore-pattern",
+      ".next"
+    ],
+    "startedAt": "2026-09-28T04:59:45.236Z",
+    "endedAt": "2026-09-28T05:00:07.836Z",
+    "exitCode": 0,
+    "counters": null
+  },
+  {
+    "name": "build",
+    "command": [
+      "node",
+      "scripts/run-framework.mjs",
+      "build"
+    ],
+    "startedAt": "2026-09-28T05:00:07.837Z",
+    "endedAt": "2026-09-28T05:00:19.223Z",
+    "exitCode": 0,
+    "counters": null
+  }
+]

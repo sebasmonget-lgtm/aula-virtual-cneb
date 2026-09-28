@@ -139,3 +139,15 @@ El mapa desarrolla acciones del niño, mediación y continuidad, visibles en Pla
 **Regresión.** `workshop-flow.test.mjs` inyecta proveedor y comprueba el plazo recibido y salida válida. Antes 6/7; después 20/20 relacionadas, typecheck, lint y build PASS (`tests-h29-workshop-timeout`). Sin migración ni transformación de planes.
 
 **UI después.** PASS: el reintento real preparó diez propuestas; la profesora eligió cantidad el día 2, su continuación el día 3 y comunicación oral el día 5, dejando los demás sin taller. Guardó y confirmó desde la interfaz. Captura `screenshots/22-h29-talleres-huerto-confirmados.png`, snapshot `h29-workshop-master-pass`. El intento inicial sin usage continúa separado como costo desconocido. Rollback: revertir el commit localizado.
+
+## H30 — Dos competencias del mapa generan un criterio incompatible (HIGH / bloqueante)
+
+**Antes.** La primera nota de indagación del 14/04 fue rechazada. Actividad confirmada `CYT_INDAGA`, criterio heredado guardado `TRANS_AUTONOMO`. No se insertó evidencia; snapshot `h30-main-evidence-rejected`.
+
+**Causa.** El mapa derivaba `competency_id` del primer elemento de la lista, pero `primary_competency_id` del ID del criterio; la herencia mezclaba ambos. La interfaz mostraba el primero y el criterio se guardaba con el segundo.
+
+**Fix.** Nuevos mapas, edición y conservación de modificaciones derivan su principal del ID del criterio. La herencia de una actividad conserva su competencia visible y confirmada, también para mapas legacy. No se reescriben mapas ni criterios históricos. Para recuperar el criterio incompatible ya guardado se utiliza la opción UI existente de preparar criterio. Su confirmación archiva únicamente criterios incompatibles **sin evidencias**, con la competencia actual confirmada en servidor; jamás mueve observaciones o borra históricos.
+
+**Archivos y pruebas.** `project-flow-service`, `experience-lineage`, `criterion-version-service` y sus tests. Antes 7/9 con dos fallos reproducibles. Después 27/27 relacionadas, typecheck, lint y build PASS (`tests-h30-primary-criterion`). Regresión SQL real confirma un criterio alineado y conserva archivado el incompatible sin evidencia.
+
+**UI después.** PASS: preparar, guardar y confirmar criterio Indaga desde la interfaz, recargar Hoy y guardar las seis notas (Inés, Thiago, Camila, Mateo, Valeria y Bruno). La recuperación no regeneró actividad ni taller; sí tuvo una llamada adicional de criterio, registrada. Snapshot `h30-main-evidence-pass`, captura `screenshots/23-h30-evidencias-indaga-guardadas.png`. Los 25 registros previos permanecen. Rollback sin migración: revertir este cambio; los históricos permanecen.

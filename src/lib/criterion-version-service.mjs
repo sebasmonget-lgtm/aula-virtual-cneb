@@ -39,6 +39,14 @@ export async function confirmCriterionVersion(db,criterionId,activityId,expected
       where id=$1 and activity_id=$2 and status='draft' for update`,[criterionId,activityId])).rows[0];
     if(!draft) throw new VersionConflictError("El criterio ya fue confirmado o reemplazado.");
     if(expectedDraftRevision!==null) assertRevision(draft,expectedDraftRevision);
+    // Recover unused, incompatible inherited criteria only after explicit teacher confirmation.
+    // Never rewrite a criterion or move evidence already linked to its historical identity.
+    await tx.query(`update activity_criteria ac set status='archived',superseded_at=now(),updated_at=now()
+      from activities a where ac.activity_id=$1 and a.id=ac.activity_id and ac.status='active'
+        and ac.competency_v4_id<>$2 and a.details->>'competency_status'='confirmed'
+        and a.details->>'competency_id'=$2
+        and not exists(select 1 from evidences e where e.criterion_id=ac.id)`,
+      [activityId,draft.competency_v4_id]);
     if(draft.supersedes_criterion_id) {
       const source=(await tx.query(`select id from activity_criteria where id=$1 and activity_id=$2 and competency_v4_id=$3 and lineage_id=$4 and status='active' for update`,
         [draft.supersedes_criterion_id,activityId,draft.competency_v4_id,draft.lineage_id])).rows[0];

@@ -70,3 +70,25 @@ test("la migración Supabase cambia el índice único sin perder criterios exist
     assert.equal((await db.query(`select count(*)::int as n from public.activity_criteria where activity_id=$1`,[activity])).rows[0].n,2);
   } finally {await db.close();}
 });
+
+test("confirmar el criterio principal recupera un heredado incompatible sin evidencias", async () => {
+  const db = await database();
+  try {
+    const { classroomId } = await createPilotClassroom(db, teacher, { teacherName: "Docente", institutionName: "Jardín",
+      section: "A", age: 5, year: 2026, startsOn: "2026-03-01", endsOn: "2026-12-18",
+      castellanoL2Applicable: false, religionApplicable: false });
+    const experience = randomUUID(), activity = randomUUID(), incompatible = randomUUID(), current = randomUUID();
+    await db.query(`insert into learning_experiences(id,classroom_id,type,title,purpose,starts_on,ends_on,status)
+      values($1,$2,'project','Huerto','Comparar','2026-04-13','2026-04-24','active')`, [experience,classroomId]);
+    await db.query(`insert into activities(id,experience_id,occurs_on,title,purpose,status,details)
+      values($1,$2,'2026-04-14','Comparar','Investigar','active',$3::jsonb)`,
+      [activity,experience,JSON.stringify({competency_id:"CYT_INDAGA",competency_status:"confirmed"})]);
+    await db.query(`insert into activity_criteria(id,activity_id,competency_v4_id,criterion_text,status)
+      values($1,$2,'TRANS_AUTONOMO','Planifica un paso','active'),($3,$2,'CYT_INDAGA','Propone cómo comparar','draft')`,
+      [incompatible,activity,current]);
+    await confirmCriterionVersion(db,current,activity,1);
+    assert.equal((await db.query('select status from activity_criteria where id=$1',[incompatible])).rows[0].status,'archived');
+    assert.equal((await db.query('select status from activity_criteria where id=$1',[current])).rows[0].status,'active');
+    assert.equal((await db.query('select criterion_text from activity_criteria where id=$1',[incompatible])).rows[0].criterion_text,'Planifica un paso');
+  } finally { await db.close(); }
+});

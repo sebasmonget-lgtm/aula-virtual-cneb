@@ -87,3 +87,14 @@ test("una regeneración localizada conserva el título editado por la docente en
   assert.throws(() => validateEditedActivityMap([{ ...old[0], id: "inventado" }, old[0]], decisions, dependents,
     ["2026-04-13", "2026-04-14"]));
 });
+
+test("el criterio, no el orden de dos competencias, determina la principal del mapa", () => {
+  const both = { ...decisions, competency_ids: ["CYT_INDAGA", "TRANS_AUTONOMO"] };
+  const output = { ...master, activities: master.activities.map((item) => ({ ...item,
+    competency_ids: both.competency_ids, criterion_competency_id: "TRANS_AUTONOMO" })) };
+  const validated = validateProjectMaster(output, both, dependents, ["2026-04-13", "2026-04-14"]);
+  assert.equal(validated.activity_route[0].competency_id, "TRANS_AUTONOMO");
+  const edited = validateEditedActivityMap(validated.activity_route, both, dependents, ["2026-04-13", "2026-04-14"]);
+  assert.equal(edited[0].competency_id, "TRANS_AUTONOMO");
+  assert.deepEqual(edited[0].possible_secondary_competency_ids, ["CYT_INDAGA"]);
+});

@@ -803,3 +803,6 @@ La revisión del corpus completo detectó además dos resúmenes de fuentes de l
 **Solución validada.** Solo `generateWorkshopMaster` recibe 180 segundos; modelos, reintentos, validaciones y talleres diarios se conservan. 20/20 pruebas relacionadas, typecheck, lint y build PASS. El intento sin usage se registra como costo desconocido, no cero.
 
 **Prevención.** Comprobar las opciones de proveedor de cada workflow largo, además del modelo y de la forma de salida.
+## 2026-09-28 — Criterio de otra competencia al confirmar actividad con dos competencias
+
+Síntoma: guardar evidencia falla porque actividad principal y criterio heredado tienen IDs diferentes. Causa: mapa mezcla primer elemento de `competency_ids` con `criterion_competency_id`. Solución: principal canónica del mapa deriva del criterio; herencia respeta el ID visible confirmado de la actividad. Recuperación docente explícita confirma un criterio alineado y archiva el incompatible solo si no tiene evidencias. Se preservan IDs, notas e históricos. Validación: 27/27 relacionadas, typecheck/lint/build; UI pendiente en H30 del registro de correcciones. Prevención: regresiones de mapa con dos IDs y persistencia SQL, no solo casos monocompetencia.

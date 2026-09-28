@@ -254,3 +254,6 @@ Proyecto nuevo iniciado el 20 de septiembre de 2026. Existe un shell responsive 
 
 - `assets/project-images/` contiene 61 escenas con PNG maestro, JPEG optimizado y JSON individual, más índice global validado. Ocho personajes están registrados con su referencia visual; Leo es el niño de verde y Luna la niña del lazo lila. Las seis referencias originales recibieron nombres legibles en la carpeta personal de plantillas; se añadieron Clara y Diego.
 - `src/lib/image-library.mjs` busca y selecciona escenas por metadatos con puntuación determinista y penalización por uso previo. Devuelve ruta e ID o `null`. La selección es independiente de Word; la inserción automática en documentos queda para una etapa posterior. Ver ADR 074 y `assets/project-images/README.md`.
+## Continuación E2E: principal del mapa (2026-09-28)
+
+La principal de una fila nueva/editar mapa es `criterion_competency_id`, no el orden de `competency_ids`. El criterio heredado conserva el ID visible y confirmado de la actividad; mapas antiguos no se reescriben. Si un criterio histórico incompatible no tiene evidencias, preparar y confirmar su reemplazo por UI permite archivarlo sin alterar su texto ni mover notas. Ver H30 del registro E2E y sus regresiones.

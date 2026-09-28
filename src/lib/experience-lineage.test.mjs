@@ -30,3 +30,13 @@ test("los borradores históricos siguen usando su exportador anterior", () => {
   assert.equal(saveExperienceDetails({ title: "Histórico" }).document_template_version, undefined);
   assert.equal(saveActivityDetails({ title: "Histórica" }).document_template_version, undefined);
 });
+
+test("dos competencias del mapa no cambian la competencia confirmada de la actividad heredada", () => {
+  const item = { ...route(1, "Comparamos"), id: "route-2", competency_id: "CYT_INDAGA",
+    competency_ids: ["CYT_INDAGA", "TRANS_AUTONOMO"], criterion_competency_id: "TRANS_AUTONOMO" };
+  const activity = { competency_status: "confirmed", competency_id: "CYT_INDAGA",
+    evaluation_criterion: "Propone cómo comparar semillas", expected_evidence: "Propuesta y explicación" };
+  const criterion = inheritedActivityCriterion(activity, item);
+  assert.equal(criterion.competency_id, activity.competency_id);
+  assert.equal(criterion.criterion_text, activity.evaluation_criterion);
+});

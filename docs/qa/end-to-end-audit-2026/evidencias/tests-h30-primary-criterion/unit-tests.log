@@ -1,0 +1,35 @@
+✔ actividad y taller se guardan y confirman juntos; Hoy recibe ambos bloques (2496.0045ms)
+✔ el taller sugerido o marcado sin taller no bloquea la actividad principal (1.7102ms)
+✔ la confirmación y el criterio heredado se guardan juntos o se revierten juntos (2419.4771ms)
+✔ fecha de actividad admite DATE real de PostgreSQL en guardar y confirmar, sin ampliar límites (1942.0889ms)
+✔ A-D, J-M y O-Q: activity-v1 exige parent permitido, competencia aplicable y coherencia (1.3237ms)
+✔ D-H: Project y Unit llegan como contexto mínimo, con continuidad y sin datos privados (33.678ms)
+✔ I: activity conserva límites de parent y persistencia (2.2298ms)
+✔ A-C: OPTIONS permite PUT y el parent público no filtra metadata técnica (1.3853ms)
+✔ G-N: edición conserva metadata, regeneración validada la reemplaza y materiales se normalizan (2.6127ms)
+✔ A y H: prepara activity sin competencia con aula y materiales precargados (1.9438ms)
+✔ B: conserva exactamente una competencia confirmada (0.1877ms)
+✔ D-G: conserva el contexto pedagógico mínimo del parent y su continuidad (0.244ms)
+✔ la actividad de una fila recibe el Project Master confirmado, sus vecinas y su posición (0.5167ms)
+✔ genera solo activity, conserva metadata interna y no envía datos privados (11.6548ms)
+✔ rechaza propósito ausente, workflows alternos y mapea errores amigables (4.6662ms)
+✔ Criterio V2 conserva evidencia V1 y el Word histórico lee el criterio de origen (2492.1871ms)
+✔ la migración Supabase cambia el índice único sin perder criterios existentes (1283.9163ms)
+✔ confirmar el criterio principal recupera un heredado incompatible sin evidencias (1754.5918ms)
+✔ los IDs de ruta sobreviven ediciones y se registran cambios explícitos (2.7205ms)
+✔ la actividad conserva el origen y registra una modificación docente del criterio (1.4671ms)
+✔ los borradores históricos siguen usando su exportador anterior (0.2257ms)
+✔ dos competencias del mapa no cambian la competencia confirmada de la actividad heredada (0.3142ms)
+✔ las fechas útiles excluyen fines de semana, feriados y gestión (3.6326ms)
+✔ Sol prepara primero contexto y propósitos, después solo dependencias del propósito elegido (72.4714ms)
+✔ Sol devuelve mapa con fechas y competencias válidas; el servidor asigna IDs (23.749ms)
+✔ una regeneración localizada conserva el título editado por la docente en la misma fecha (0.8348ms)
+✔ el criterio, no el orden de dos competencias, determina la principal del mapa (0.4392ms)
+ℹ tests 27
+ℹ suites 0
+ℹ pass 27
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 10397.0645

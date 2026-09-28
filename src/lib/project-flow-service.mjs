@@ -117,7 +117,7 @@ export function validateProjectMaster(output, decisions, dependents, availableDa
   const ordered = [...output.activities].sort((a, b) => a.date.localeCompare(b.date));
   return { ...output, activity_route: ordered.map((item, index) => ({
     id: randomUUID(), number: index + 1, position: index + 1, date: item.date, planned_date: item.date, title: item.title,
-    specific_purpose: item.purpose, competency_id: item.competency_ids[0],
+    specific_purpose: item.purpose, competency_id: item.criterion_competency_id,
     competency_ids: item.competency_ids, criterion_competency_id: item.criterion_competency_id,
     primary_competency_id: item.criterion_competency_id,
     possible_secondary_competency_ids: item.competency_ids.filter((id) => id !== item.criterion_competency_id),
@@ -137,7 +137,7 @@ export function validateProjectMaster(output, decisions, dependents, availableDa
 export function projectDetails({ source, preview, decisions, dependents, master, previous = null }) {
   const primary = decisions.competency_ids.filter((id) => source.primary_competency_ids?.includes(id));
   const secondary = decisions.competency_ids.filter((id) => !primary.includes(id));
-  const route = master.activity_route.map((item, index) => ({ ...item, id: item.id || randomUUID(), number: index + 1,
+  const route = master.activity_route.map((item, index) => ({ ...item, competency_id: item.criterion_competency_id ?? item.competency_id, id: item.id || randomUUID(), number: index + 1,
     position: index + 1, primary_competency_id: item.primary_competency_id ?? item.criterion_competency_id,
     possible_secondary_competency_ids: item.possible_secondary_competency_ids ??
       item.competency_ids.filter((id) => id !== item.criterion_competency_id) }));
@@ -180,7 +180,7 @@ export function validateEditedActivityMap(route, decisions, dependents, dates) {
         !hasText(row.flexibility_notes, 500) || !hasText(row.role_in_project, 400) || !hasText(row.expected_progression, 400))
       fail("invalid_activity_map", `Revisa la actividad ${index + 1} del mapa.`);
     usedIds.add(row.id); usedDates.add(row.date); usedTitles.add(normalizedTitle);
-    return { ...row, date: row.date, planned_date: row.date, number: index + 1, position: index + 1, competency_id: row.competency_ids[0],
+    return { ...row, date: row.date, planned_date: row.date, number: index + 1, position: index + 1, competency_id: row.criterion_competency_id,
       primary_competency_id: row.criterion_competency_id,
       possible_secondary_competency_ids: row.competency_ids.filter((id) => id !== row.criterion_competency_id),
       criterion_text: row.evaluation_criterion };
@@ -202,7 +202,7 @@ export function preserveTeacherMapEdits(generatedRoute, previousMap, overrides, 
       if ((edited.has(field) || edited.has("date")) && hasText(old[field], 500)) merged[field] = old[field];
     if (edited.has("competency_ids") && old.competency_ids?.every((id) => selected.has(id)) &&
         old.competency_ids.includes(old.criterion_competency_id)) {
-      merged.competency_ids = old.competency_ids; merged.competency_id = old.competency_ids[0];
+      merged.competency_ids = old.competency_ids; merged.competency_id = old.criterion_competency_id;
       merged.criterion_competency_id = old.criterion_competency_id;
     }
     return { ...merged, id: old.id };
