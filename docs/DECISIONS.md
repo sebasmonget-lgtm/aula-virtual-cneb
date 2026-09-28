@@ -1,5 +1,13 @@
 # Decisiones de arquitectura
 
+## ADR 094 — F8: trayectoria derivada y fuente ordinaria para H34
+
+**Decisión (2026-09-28).** Bajo `AYNI_F8_EVALUATION=1`, la evaluación por período agrega una proyección de observaciones ordinarias a la consulta de evidencias legacy sin cambiar las tablas históricas. Solo entran una atribución docente confirmada para la revisión raw vigente o un criterio V4 elegido explícitamente por la docente al capturar, salvo decisión posterior de dejar sin clasificar. El día civil Lima ubica la fuente en el período; el snapshot de contexto sigue como procedencia, no fija el período si el calendario cambia. Una corrección desactualiza la atribución anterior hasta reconfirmar. La proyección conserva texto, alumno y revisión, admite espontánea sin actividad y varias competencias. No genera niveles.
+
+**H34.** Scope, detalle, fingerprints, borradores, cierre y Excel usan el mismo modelo con la fuente nueva cuando el flag está activo. La regla prevista/trabajada/pendiente, la decisión docente AD/A/B/C y el bloqueo anual no cambian. La trayectoria es lectura autorizada por alumno; muestra diagnóstico, P1–P4, fuentes y próximas oportunidades que consten en una conclusión confirmada. Las observaciones sin atribución siguen en cola, no en evaluación. Apagar `AYNI_F8_EVALUATION` y `NEXT_PUBLIC_AYNI_F8_TRAJECTORY` devuelve rutas y vista anteriores sin eliminar registros.
+
+**Límite.** No se reescriben cierres ni documentos confirmados. La QA visual F8 quedó sin automatización de navegador en el host; PGlite/API, typecheck, lint, build y suite completa sí se comprobaron. F12 debe completar la revisión UI y staging nuevo.
+
 ## ADR 093 — F7: cuatro destinos y agregado autorizado de Hoy
 
 **Decisión (2026-09-28).** Bajo `NEXT_PUBLIC_AYNI_F7_NAV=1`, la navegación principal ofrece Hoy, Planificar, Mi aula y Documentos. Calendario/Biblioteca siguen accesibles desde Planificar; Diagnóstico/Evaluación desde Mi aula. Los destinos legacy conservan su pantalla y enlace hash, sin migración ni reescritura de datos. Sin el flag se mantiene la navegación anterior.

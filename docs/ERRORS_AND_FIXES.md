@@ -1,5 +1,15 @@
 # Errores y soluciones
 
+## 2026-09-28 — F8: navegador QA no disponible en el host
+
+**Síntoma.** El CLI `agent-browser` no estaba instalado; el navegador integrado agotó el tiempo al navegar y luego devolvió `User unavailable`.
+
+**Causa comprobada.** Fallo de disponibilidad de la superficie de automatización, no del servidor: Vite respondió `GET /` 200, la API QA respondió en 8796 y el build pasó. No se pudo inspeccionar visualmente el DOM.
+
+**Tratamiento.** Se registró el límite de QA y no se declaró verificación visual. Se ejecutaron pruebas de modelo/API en clon restaurado y la suite completa; F12 debe reintentar el recorrido de interfaz cuando el navegador esté disponible.
+
+**Prevención.** Distinguir la salud del servidor de la disponibilidad del controlador de navegador; no convertir un HTTP 200 en una afirmación de QA visual.
+
 ## 2026-09-28 — F7: flags y URL incompletos en harness QA
 
 **Síntoma.** La página QA mostró desconexión pese a que la API local estaba disponible; después, «Hoy» contó una observación pendiente, pero la cola indicó que la captura no estaba habilitada.

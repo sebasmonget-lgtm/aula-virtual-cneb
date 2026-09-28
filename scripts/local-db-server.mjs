@@ -77,6 +77,7 @@ import { jevFeatureEnabled } from "../src/lib/jev-openrouter-decision.mjs";
 import { eligibleProjectImages, publicProjectImage, suggestProjectImage } from "../src/lib/jev-project-image.mjs";
 import { createLocalPrivateInterviewStorage } from "../src/lib/private-interview-storage.mjs";
 import { recordOperationalEvent } from "../src/lib/operational-events.mjs";
+import { loadStudentTrajectory } from "../src/lib/student-trajectory-service.mjs";
 import { withAiUsageContext, loadTeacherAiUsage } from "../src/lib/ai-usage-service.mjs";
 import { completeDiagnosticReviewForTeacher, diagnosticProgressForTeacher, diagnosticStepProgressForTeacher, DiagnosticReviewError } from "../src/lib/diagnostic-review-service.mjs";
 import { DiagnosticExperienceError, loadDiagnosticExperienceWorkspace, recordDiagnosticExperienceObservation } from "../src/lib/diagnostic-experiences-v4.mjs";
@@ -1061,6 +1062,13 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
             { error: publicErrorMessage(error), reason: error.reason }, origin);
         } else throw error;
       }
+      return;
+    }
+    if (request.method === "GET" && /^\/api\/students\/[0-9a-f-]+\/trajectory$/i.test(url.pathname)) {
+      if (process.env.AYNI_F8_EVALUATION !== "1") { send(response, 404, { error: "Trayectoria no habilitada." }, origin); return; }
+      const studentId = url.pathname.split("/")[3];
+      const result = await loadStudentTrajectory(db, teacherId, studentId, { includeOrdinary: true });
+      send(response, result ? 200 : 404, result ?? { error: "Niño no encontrado en el aula activa." }, origin);
       return;
     }
     if (request.method === "GET" && url.pathname.startsWith("/api/students/")) {

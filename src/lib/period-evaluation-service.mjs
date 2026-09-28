@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { assessmentSourceSnapshot, sameEvidenceSourceSnapshot } from "./assessment-v4-service.mjs";
 import { sameAssessmentSnapshot, sourceAssessmentSnapshot } from "./descriptive-conclusion-v4-service.mjs";
+import { loadConfirmedOrdinaryEvaluationRows } from "./ordinary-evaluation-adapter.mjs";
 
 export const dateOnly = (value) => value instanceof Date ? value.toISOString().slice(0, 10) : String(value).slice(0, 10);
 const dayAfter = (value) => { const date = new Date(`${dateOnly(value)}T00:00:00Z`); date.setUTCDate(date.getUTCDate() + 1); return date.toISOString().slice(0, 10); };
@@ -52,14 +53,15 @@ export function periodClosureFingerprint(rows) {
   return createHash("sha256").update(JSON.stringify(normalized)).digest("hex");
 }
 
-export async function loadPeriodEvaluationRows(db, { classroomId, period, applicableIds, workEntries = null }) {
+export async function loadPeriodEvaluationRows(db, { classroomId, period, applicableIds, workEntries = null, includeOrdinary = false }) {
   const students = (await db.query(`select id,first_name,last_name,preferred_name from students where classroom_id=$1 and status='active' order by last_name,first_name,id`, [classroomId])).rows;
   const mapReady = (await db.query(`select to_regclass('period_evaluation_map_entries') is not null as ready`)).rows[0].ready;
   const worked = workEntries ? workEntries.filter((row)=>row.activity_state === "completed") : mapReady ? (await db.query(`select competency_v4_id,activity_id,criterion_id from period_evaluation_map_entries
     where classroom_id=$1 and evaluation_period_id=$2 and activity_state='completed'`, [classroomId, period.id])).rows : [];
   const overrides = (await db.query(`select competency_v4_id,included from period_competency_scope where classroom_id=$1 and evaluation_period_id=$2`, [classroomId, period.id])).rows;
   const scope = new Set(worked.map((row) => row.competency_v4_id).filter((id) => applicableIds.has(id)));
-  const evidence = (await db.query(`select e.id,e.student_id,e.observed_at,coalesce(e.observed_on,e.observed_at::date) as observed_on,e.observation_status,e.observation_text,(e.media_path is not null) as media_available,e.activity_id,e.criterion_id,a.title as activity_title,ac.competency_v4_id,ac.criterion_text,ac.details,ac.performance_id from evidences e join students s on s.id=e.student_id join activities a on a.id=e.activity_id join activity_criteria ac on ac.id=e.criterion_id where s.classroom_id=$1 and coalesce(e.observed_on,e.observed_at::date) between $2::date and $3::date and ac.competency_v4_id is not null order by coalesce(e.observed_on,e.observed_at::date),e.observed_at,e.id`, [classroomId, period.starts_on, period.ends_on])).rows;
+  const legacyEvidence = (await db.query(`select e.id,e.student_id,e.observed_at,coalesce(e.observed_on,e.observed_at::date) as observed_on,e.observation_status,e.observation_text,(e.media_path is not null) as media_available,e.activity_id,e.criterion_id,a.title as activity_title,ac.competency_v4_id,ac.criterion_text,ac.details,ac.performance_id from evidences e join students s on s.id=e.student_id join activities a on a.id=e.activity_id join activity_criteria ac on ac.id=e.criterion_id where s.classroom_id=$1 and coalesce(e.observed_on,e.observed_at::date) between $2::date and $3::date and ac.competency_v4_id is not null order by coalesce(e.observed_on,e.observed_at::date),e.observed_at,e.id`, [classroomId, period.starts_on, period.ends_on])).rows;
+  const evidence = includeOrdinary ? [...legacyEvidence, ...await loadConfirmedOrdinaryEvaluationRows(db, { classroomId, period })] : legacyEvidence;
   for (const row of overrides) if (applicableIds.has(row.competency_v4_id)) {
     if (row.included) scope.add(row.competency_v4_id);
     else scope.delete(row.competency_v4_id);
