@@ -1,0 +1,45 @@
+{
+  "id": "ciencia_mezclas_seguras_01",
+  "file": "ciencia/ciencia_mezclas_seguras_01.jpg",
+  "master": "masters/ciencia_mezclas_seguras_01.png",
+  "title": "Luna y Sofía mezclan materiales seguros",
+  "category": "ciencia",
+  "subcategory": "materiales",
+  "characters": [
+    "luna",
+    "sofia"
+  ],
+  "concepts": [
+    "ciencia",
+    "mezclas",
+    "materiales",
+    "cambios"
+  ],
+  "actions": [
+    "mezclar",
+    "observar"
+  ],
+  "objects": [
+    "agua",
+    "tierra",
+    "recipientes"
+  ],
+  "contexts": [
+    "proyecto",
+    "plan_anual",
+    "portada",
+    "ciencia",
+    "materiales"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "orientation": "landscape",
+  "aspect_ratio": "3:2",
+  "has_text": false,
+  "country_context": "PE",
+  "variant": 1,
+  "priority": 10
+}

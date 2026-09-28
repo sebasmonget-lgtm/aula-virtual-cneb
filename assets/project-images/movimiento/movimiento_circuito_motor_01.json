@@ -1,0 +1,44 @@
+{
+  "id": "movimiento_circuito_motor_01",
+  "file": "movimiento/movimiento_circuito_motor_01.jpg",
+  "master": "masters/movimiento_circuito_motor_01.png",
+  "title": "Leo recorre un circuito motor",
+  "category": "movimiento",
+  "subcategory": "circuito",
+  "characters": [
+    "leo",
+    "luna"
+  ],
+  "concepts": [
+    "movimiento",
+    "equilibrio",
+    "circuito"
+  ],
+  "actions": [
+    "saltar",
+    "equilibrar"
+  ],
+  "objects": [
+    "aros",
+    "línea",
+    "colchonetas"
+  ],
+  "contexts": [
+    "proyecto",
+    "plan_anual",
+    "portada",
+    "movimiento",
+    "circuito"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "orientation": "landscape",
+  "aspect_ratio": "3:2",
+  "has_text": false,
+  "country_context": "PE",
+  "variant": 1,
+  "priority": 10
+}

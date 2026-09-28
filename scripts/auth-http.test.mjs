@@ -89,10 +89,13 @@ test("the HTTP boundary protects every route and local PGlite remains usable", {
       ...init, headers: { ...(token ? { authorization: `Bearer ${token}` } : {}), ...init.headers },
     });
     const privateRoutes = [
-      "/api/pilot/setup", "/api/profile", "/api/diagnostics",
+      "/api/pilot/setup", "/api/profile", "/api/ai-usage", "/api/diagnostics",
       "/api/diagnostics/students/11111111-1111-4111-8111-111111111111/family-interview",
       "/api/diagnostics/students/11111111-1111-4111-8111-111111111111/family-interview/attachment",
+      "/api/diagnostics/students/11111111-1111-4111-8111-111111111111/family-interview/save-and-confirm",
       "/api/diagnostics/spontaneous-observations", "/api/audio/transcribe", "/api/ai/annual-plan/context",
+      "/api/diagnostics/student-reviews/suggest",
+      "/api/diagnostics/spontaneous-observations/11111111-1111-4111-8111-111111111111/suggest",
       "/api/annual-plans/current", "/api/school-calendar", "/api/learning-experiences", "/api/activities",
       "/api/activity-criteria", "/api/evidences", "/api/assessments",
       "/api/period-evaluations/years", "/api/family-reports",
@@ -105,6 +108,8 @@ test("the HTTP boundary protects every route and local PGlite remains usable", {
     assert.equal((await call("/api/pilot/setup", "invalid")).status, 401);
     assert.equal((await call("/api/pilot/setup", "expired")).status, 401);
     assert.equal((await call("/api/documents/family_report/11111111-1111-4111-8111-111111111111/download")).status, 401);
+    const audioRequest = (payload) => ({ method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) });
+    assert.equal((await call("/api/audio/transcribe", "token-a", audioRequest({ scope: "classroom", purpose: "group_summary" }))).status, 404);
     const login = await call("/api/auth/login", null, {
       method: "POST", headers: { origin: "http://localhost:5173", "content-type": "application/json" },
       body: JSON.stringify({ email: "a@example.test", password: "correcta" }),
@@ -123,9 +128,30 @@ test("the HTTP boundary protects every route and local PGlite remains usable", {
       });
       assert.equal(setup.status, 201, `setup ${label}: ${await setup.text()}`);
     }
+    for (const token of ["token-a", "token-b"]) {
+      const usage = await call("/api/ai-usage", token);
+      assert.equal(usage.status, 200);
+      assert.deepEqual((await usage.json()).total, { calls: 0, unpricedCalls: 0, estimatedCalls: 0, costUsd: 0 });
+    }
     const contextA = await (await call("/api/ai/annual-plan/context", "token-a")).json();
     const contextB = await (await call("/api/ai/annual-plan/context", "token-b")).json();
     assert(contextA.id && contextB.id && contextA.id !== contextB.id);
+    for (const payload of [
+      { scope: "classroom", purpose: "observation" },
+      { purpose: "group_summary" },
+      { scope: "classroom", purpose: "group_summary", studentId: teacherB },
+      { scope: "classroom", purpose: "group_summary", classroomId: contextB.id },
+      { scope: "foreign", purpose: "group_summary" },
+      { scope: "classroom", purpose: "automatic_assessment" },
+      { scope: "classroom", purpose: "group_summary", audio: { mimeType: "audio/wav", base64: "YQ==" } },
+    ]) {
+      const rejectedAudio = await call("/api/audio/transcribe", "token-a", audioRequest(payload));
+      const expected = payload.classroomId ? 403 : payload.studentId ? 404 : 422;
+      assert.equal(rejectedAudio.status, expected, `${JSON.stringify(payload)}: ${await rejectedAudio.text()}`);
+    }
+    const disabledIndividualAI = await call("/api/diagnostics/student-reviews/suggest", "token-a", audioRequest({}));
+    assert.equal(disabledIndividualAI.status, 422);
+    assert.equal((await disabledIndividualAI.json()).reason, "teacher_comment_only");
     const library = await (await call("/api/library/resources", "token-a")).json();
     assert.equal(library.resources.length, 7);
     assert(library.resources.every((resource) => !("download" in resource)));
@@ -143,11 +169,33 @@ test("the HTTP boundary protects every route and local PGlite remains usable", {
     });
     assert.equal(imported.status, 201);
     const studentB = (await imported.json()).dashboard.students[0].id;
+    const spontaneousB = await call("/api/diagnostics/spontaneous-observations", "token-b", {
+      method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ studentId: studentB, contextLabel: "Juego", observationText: "Su mamá contó lo que juega en casa." }),
+    });
+    assert.equal(spontaneousB.status, 201);
+    const observationB = (await spontaneousB.json()).id;
+    assert.equal((await call(`/api/diagnostics/spontaneous-observations/${observationB}/suggest`, "token-a", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" })).status, 404);
+    const blocked = await call(`/api/diagnostics/spontaneous-observations/${observationB}/suggest`, "token-b", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" });
+    assert.equal(blocked.status, 200);
+    assert.equal((await blocked.json()).recommendation_state, "privacy_blocked");
     const studentCard = (await (await call("/api/dashboard", "token-b")).json()).students[0];
     assert.equal(studentCard.full_name, "Alumna Ficticia");
     assert.equal(studentCard.evidence_count, 0);
     assert.equal((await call(`/api/students/${studentB}`, "token-a")).status, 404);
     assert.equal((await call(`/api/students/${studentB}`, "token-b")).status, 200);
+    const interviewPath = `/api/diagnostics/students/${studentB}/family-interview/save-and-confirm`;
+    const interviewRequest = { method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ details: { interests: "Datos ficticios: le gustan los bloques.", interest_tags: ["construction"] } }) };
+    assert.equal((await call(interviewPath, "token-a", interviewRequest)).status, 404);
+    const savedInterview = await call(interviewPath, "token-b", interviewRequest);
+    assert.equal(savedInterview.status, 200);
+    const confirmedInterview = await savedInterview.json();
+    assert.equal(confirmedInterview.status, "confirmed");
+    assert.equal((await (await call(interviewPath, "token-b", interviewRequest)).json()).id, confirmedInterview.id);
+    const interviewReload = await (await call(`/api/diagnostics/students/${studentB}/family-interview`, "token-b")).json();
+    assert.equal(interviewReload.draft, null);
+    assert.equal(interviewReload.confirmed.id, confirmedInterview.id);
     assert.equal((await call("/api/diagnostics/spontaneous-observations", "token-a", {
       method: "POST", headers: { "content-type": "application/json" },
       body: JSON.stringify({ studentId: studentB, teacherId: teacherA, contextLabel: "Juego", observationText: "Nota ficticia" }),

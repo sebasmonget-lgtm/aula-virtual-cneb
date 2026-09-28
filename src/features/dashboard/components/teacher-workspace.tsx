@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import {
-  BookOpen, CalendarDays, CalendarRange, Check, ClipboardCheck, Database,
+  BookOpen, CalendarDays, CalendarRange, Check, ClipboardCheck, ClipboardList, Database,
   Home, Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -42,12 +42,12 @@ import { PilotSetup } from "./pilot-setup";
 import { AsyncButton, LoadingState, NextStepCard, PageIntro, ScreenSkeleton, WorkflowFeedback } from "./workflow-ui";
 
 const nav = [
-  ["Hoy", Home], ["Calendario", CalendarRange], ["Planificar", CalendarDays], ["Aula", Users],
+  ["Hoy", Home], ["Calendario", CalendarRange], ["Diagnóstico", ClipboardList], ["Planificar", CalendarDays], ["Aula", Users],
   ["Evaluar", ClipboardCheck], ["Biblioteca", BookOpen],
 ] as const;
 
 const mobileNav = [
-  ["Hoy", "Hoy", Home], ["Calendario", "Calendario", CalendarRange], ["Planificar", "Planificar", CalendarDays], ["Aula", "Aula", Users],
+  ["Hoy", "Hoy", Home], ["Diagnóstico", "Diagnóstico", ClipboardList], ["Planificar", "Planificar", CalendarDays], ["Aula", "Aula", Users],
   ["Evaluar", "Evaluar", ClipboardCheck], ["Biblioteca", "Biblioteca", BookOpen],
 ] as const;
 const sentenceCase = (value: string) => value.charAt(0).toLocaleUpperCase("es-PE") + value.slice(1);
@@ -59,7 +59,7 @@ export function TeacherWorkspace() {
   const [planningTarget, setPlanningTarget] = useState<"activities" | null>(null);
   const [selectedResource, setSelectedResource] = useState<LibraryResource | null>(null);
   const [libraryFilter, setLibraryFilter] = useState<"for-you" | "workshops">("for-you");
-  const [evaluationEntry, setEvaluationEntry] = useState<"home" | "diagnostic" | "replan">("home");
+  const [evaluationEntry, setEvaluationEntry] = useState<"home" | "replan">("home");
   const [diagnosticInitialStep, setDiagnosticInitialStep] = useState<1 | 2 | 3>(1);
   const [evidenceOpen, setEvidenceOpen] = useState(false);
   const [evidenceRevision, setEvidenceRevision] = useState(0);
@@ -149,7 +149,8 @@ export function TeacherWorkspace() {
   const activity = dashboard?.activity;
   const metrics = dashboard?.metrics;
 
-  function navigate(section: string) { navigationTouched.current = true; setStarting(false); if (section !== "Planificar") { setPlanningTarget(null); setSelectedResource(null); } if (section === "Evaluar") { setEvaluationTarget(null); setEvaluationEntry("home"); setDiagnosticInitialStep(1); } setActive(section); }
+  function navigate(section: string) { navigationTouched.current = true; setStarting(false); if (section !== "Planificar") { setPlanningTarget(null); setSelectedResource(null); } if (section === "Evaluar") { setEvaluationTarget(null); setEvaluationEntry("home"); } if (section === "Diagnóstico") setDiagnosticInitialStep(1); setActive(section); }
+  function openDiagnostic(initialStep: 1 | 2 | 3 = 1) { navigate("Diagnóstico"); setDiagnosticInitialStep(initialStep); }
 
   function closeEvidence(open: boolean) {
     setEvidenceOpen(open);
@@ -231,10 +232,11 @@ export function TeacherWorkspace() {
         <header className="sticky top-0 z-20 flex min-h-20 items-center justify-between bg-[#f7faff]/95 px-4 backdrop-blur md:border-b md:border-[#e7edf7] md:bg-white/95 md:px-8">
           <div className="flex items-center gap-3">
             <span className="grid size-11 place-items-center rounded-2xl bg-[#e8f7fa] text-[#0b7891] md:hidden"><BookOpen className="size-5" aria-hidden="true" /></span>
-            <div className="md:hidden"><p className="text-xl font-extrabold leading-tight text-[#1c2e50]">Ayni Aula</p><p className="text-xs text-[#60718a]">{active === "Biblioteca" ? "Materiales reutilizables" : active === "Calendario" ? "Tu año, proyectos y actividades" : active === "Aula" ? "Tus niños y su seguimiento" : active === "Evaluar" ? "Evidencias y decisiones" : active === "Planificar" ? "Tu diagnóstico y el CNEB" : "Tu aliada en Inicial"}</p></div>
+            <div className="md:hidden"><p className="text-xl font-extrabold leading-tight text-[#1c2e50]">Ayni Aula</p><p className="text-xs text-[#60718a]">{active === "Biblioteca" ? "Materiales reutilizables" : active === "Calendario" ? "Tu año, proyectos y actividades" : active === "Diagnóstico" ? "Conocer, observar y resumir" : active === "Aula" ? "Tus niños y su seguimiento" : active === "Evaluar" ? "Evidencias y decisiones" : active === "Planificar" ? "Tu diagnóstico y el CNEB" : "Tu aliada en Inicial"}</p></div>
             <div className="hidden md:block"><p className="text-sm font-semibold md:text-base">{sentenceCase(today)}</p><p className="text-xs text-muted-foreground">{profile?.institution_name ?? "Institución por configurar"} · {profile?.section ?? "Aula"}</p></div>
           </div>
           <div className="flex items-center gap-2">
+            <button type="button" aria-label="Calendario" title="Calendario" aria-current={active === "Calendario" ? "page" : undefined} onClick={() => navigate("Calendario")} className={`grid size-11 place-items-center rounded-xl focus-visible:outline-2 focus-visible:outline-[#087d96] md:hidden ${active === "Calendario" ? "bg-[#dff3f6] text-[#087d96]" : "text-[#60718a] hover:bg-[#edf6fa]"}`}><CalendarRange className="size-5" /></button>
             <div className={`hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold sm:flex ${databaseState === "connected" ? "bg-[#e5f1ee] text-[#1f625c]" : "bg-muted text-muted-foreground"}`}>
               <Database className="size-3.5" />
               {databaseState === "connected" ? "Base conectada" : "Conectando"}
@@ -247,9 +249,10 @@ export function TeacherWorkspace() {
           {guidanceError && <div className="mb-4 flex flex-wrap items-center gap-3"><WorkflowFeedback tone="error">No pudimos comprobar cuál es tu siguiente paso.</WorkflowFeedback><Button variant="outline" onClick={() => { setGuidanceError(false); setRetry((value) => value + 1); }}>Reintentar</Button></div>}
           {starting ? <ScreenSkeleton /> : active === "Perfil" ? dashboard ? <InstitutionProfile dashboard={dashboard} onSaved={setDashboard} /> : <ScreenSkeleton /> :
           active === "Calendario" ? <SchoolCalendarScreen onOpenPlanning={() => navigate("Planificar")} /> : active === "Biblioteca" ? dashboard ? <ResourceLibraryScreen age={dashboard.profile.age_years} initialFilter={libraryFilter} onUse={(resource) => { setSelectedResource(resource); setPlanningTarget("activities"); navigate("Planificar"); }} /> : <ScreenSkeleton /> :
-          active === "Evaluar" ? dashboard ? <EvaluationArea dashboard={dashboard} initialTarget={evaluationTarget} initialSection={evaluationEntry} initialDiagnosticStep={diagnosticInitialStep} onPlan={() => { setPlanningTarget(null); navigate("Planificar"); }} onPrepareActivity={() => { setPlanningTarget("activities"); navigate("Planificar"); }} onStudents={() => navigate("Aula")} onToday={() => navigate("Hoy")} /> : <ScreenSkeleton /> :
-          active === "Aula" ? dashboard ? <StudentsScreen students={students} onImported={setDashboard} onDiagnostic={() => { navigate("Evaluar"); setEvaluationEntry("diagnostic"); }} onEvaluate={(studentId, competencyId) => { navigate("Evaluar"); setEvaluationTarget({ studentId, competencyId }); }} onPlan={() => navigate("Planificar")} /> : <ScreenSkeleton /> : active === "Planificar" ? dashboard ? <PlanningArea dashboard={dashboard} initialTab={planningTarget} selectedResource={selectedResource} onGoToday={() => navigate("Hoy")} onGoDiagnostic={() => { navigate("Evaluar"); setEvaluationEntry("diagnostic"); }} onGoStudents={() => navigate("Aula")} onGoWorkshops={() => { setLibraryFilter("workshops"); navigate("Biblioteca"); }} /> : <ScreenSkeleton /> : <>
-          {activityRunBlock ? <ActivityRunView block={activityRunBlock} evidenceRevision={evidenceRevision} onBack={() => setActivityRunBlockId(null)} onEvidence={(suggestedStudentId) => openEvidenceFor(activityRunBlock,suggestedStudentId)} onStepChange={async (stepIndex) => updateExecution({ scheduleEntryId: activityRunBlock.id, action: "set_step", stepIndex })} onComplete={async () => { await updateExecution({ scheduleEntryId: activityRunBlock.id, action: "complete", closureType: "as_planned" }); setActivityRunBlockId(null); }} /> : active === "Hoy" && (dashboard ? <TodayHome dashboard={dashboard} openEvidence={openEvidenceFor} openAttendance={() => setAttendanceOpen(true)} updateExecution={updateExecution} openActivity={openActivity} onPlan={() => navigate("Planificar")} onPrepareActivity={() => { setPlanningTarget("activities"); navigate("Planificar"); }} onDiagnostic={() => { navigate("Evaluar"); setEvaluationEntry("diagnostic"); setDiagnosticInitialStep(2); }} onReplan={() => { navigate("Evaluar"); setEvaluationEntry("replan"); }} /> : <ScreenSkeleton />)}
+          active === "Diagnóstico" ? dashboard ? <section className="mx-auto max-w-5xl"><GuidedDiagnostic dashboard={dashboard} initialStep={diagnosticInitialStep} onPlan={() => navigate("Planificar")} onStudents={() => navigate("Aula")} /></section> : <ScreenSkeleton /> :
+          active === "Evaluar" ? dashboard ? <EvaluationArea dashboard={dashboard} initialTarget={evaluationTarget} initialSection={evaluationEntry} onPlan={() => { setPlanningTarget(null); navigate("Planificar"); }} onPrepareActivity={() => { setPlanningTarget("activities"); navigate("Planificar"); }} onToday={() => navigate("Hoy")} /> : <ScreenSkeleton /> :
+          active === "Aula" ? dashboard ? <StudentsScreen students={students} onImported={setDashboard} onDiagnostic={() => openDiagnostic()} onEvaluate={(studentId, competencyId) => { navigate("Evaluar"); setEvaluationTarget({ studentId, competencyId }); }} onPlan={() => navigate("Planificar")} /> : <ScreenSkeleton /> : active === "Planificar" ? dashboard ? <PlanningArea dashboard={dashboard} initialTab={planningTarget} selectedResource={selectedResource} onGoToday={() => navigate("Hoy")} onGoDiagnostic={() => openDiagnostic()} onGoStudents={() => navigate("Aula")} onGoWorkshops={() => { setLibraryFilter("workshops"); navigate("Biblioteca"); }} /> : <ScreenSkeleton /> : <>
+          {activityRunBlock ? <ActivityRunView block={activityRunBlock} evidenceRevision={evidenceRevision} onBack={() => setActivityRunBlockId(null)} onEvidence={(suggestedStudentId) => openEvidenceFor(activityRunBlock,suggestedStudentId)} onStepChange={async (stepIndex) => updateExecution({ scheduleEntryId: activityRunBlock.id, action: "set_step", stepIndex })} onComplete={async () => { await updateExecution({ scheduleEntryId: activityRunBlock.id, action: "complete", closureType: "as_planned" }); setActivityRunBlockId(null); }} /> : active === "Hoy" && (dashboard ? <TodayHome dashboard={dashboard} openEvidence={openEvidenceFor} openAttendance={() => setAttendanceOpen(true)} updateExecution={updateExecution} openActivity={openActivity} onPlan={() => navigate("Planificar")} onPrepareActivity={() => { setPlanningTarget("activities"); navigate("Planificar"); }} onDiagnostic={() => openDiagnostic(2)} onReplan={() => { navigate("Evaluar"); setEvaluationEntry("replan"); }} /> : <ScreenSkeleton />)}
           </>}
         </main>
 
@@ -305,14 +308,14 @@ function EvidenceDialog({ open, onOpenChange, students, studentId, setStudentId,
   </Dialog>;
 }
 
-function EvaluationArea({ dashboard, initialTarget, initialSection, initialDiagnosticStep, onPlan, onPrepareActivity, onStudents, onToday }: { dashboard: LocalDashboard; initialTarget: { studentId: string; competencyId: string } | null; initialSection: "home" | "diagnostic" | "replan"; initialDiagnosticStep: 1 | 2 | 3; onPlan: () => void; onPrepareActivity: () => void; onStudents: () => void; onToday: () => void }) {
-  const [section, setSection] = useState<"home" | "diagnostic" | "period" | "replan">(initialTarget ? "period" : initialSection);
+function EvaluationArea({ dashboard, initialTarget, initialSection, onPlan, onPrepareActivity, onToday }: { dashboard: LocalDashboard; initialTarget: { studentId: string; competencyId: string } | null; initialSection: "home" | "replan"; onPlan: () => void; onPrepareActivity: () => void; onToday: () => void }) {
+  const [section, setSection] = useState<"home" | "period" | "replan">(initialTarget ? "period" : initialSection);
   const [target, setTarget] = useState(initialTarget);
   const [periodView, setPeriodView] = useState<"student" | "family" | "coverage">("student");
   return <section className="mx-auto max-w-5xl space-y-5">
-    {section === "home" ? <EvaluationHome dashboard={dashboard} onDiagnostic={() => setSection("diagnostic")} onReplan={() => setSection("replan")} onPeriod={(view, nextTarget) => { setTarget(nextTarget ?? null); setPeriodView(view); setSection("period"); }} /> : <>
+    {section === "home" ? <EvaluationHome dashboard={dashboard} onReplan={() => setSection("replan")} onPeriod={(view, nextTarget) => { setTarget(nextTarget ?? null); setPeriodView(view); setSection("period"); }} /> : <>
       <Button variant="ghost" className="-ml-3 min-h-11 text-[#07576c]" onClick={() => setSection("home")}>← Volver a Evaluar</Button>
-      {section === "diagnostic" ? <GuidedDiagnostic dashboard={dashboard} initialStep={initialDiagnosticStep} onPlan={onPlan} onStudents={onStudents} /> : section === "replan" ? <BimesterReplan onEvaluation={() => setSection("period")} onFinish={onToday} /> : <PeriodEvaluation key={`${target?.studentId ?? "all"}:${target?.competencyId ?? "all"}:${periodView}`} initialStudentId={target?.studentId} initialCompetencyId={target?.competencyId} initialView={periodView} onPlan={onPlan} onPrepareActivity={onPrepareActivity} />}
+      {section === "replan" ? <BimesterReplan onEvaluation={() => setSection("period")} onFinish={onToday} /> : <PeriodEvaluation key={`${target?.studentId ?? "all"}:${target?.competencyId ?? "all"}:${periodView}`} initialStudentId={target?.studentId} initialCompetencyId={target?.competencyId} initialView={periodView} onPlan={onPlan} onPrepareActivity={onPrepareActivity} />}
     </>}
   </section>;
 }

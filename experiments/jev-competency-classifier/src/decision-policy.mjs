@@ -17,3 +17,7 @@ export function decideClassification(choice, policy) {
   if (choice.confidence >= policy.review_threshold) return { status: "review", primary_competency_id: null, proposed_competency_id: choice.choice };
   return { status: "unclassified", primary_competency_id: null, proposed_competency_id: null };
 }
+export function applySufficiencyGate(decision, probability, policy) {
+  if (decision.status !== "classified" || probability == null || probability >= (policy.minimum_sufficiency_for_auto_accept ?? 0.8)) return decision;
+  return { status: "review", primary_competency_id: null, proposed_competency_id: decision.proposed_competency_id };
+}

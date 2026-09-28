@@ -95,5 +95,5 @@ export function ReadOnlyField({ label, value }: { label: string; value: string |
 }
 
 export function ScreenSkeleton() {
-  return <div className="mx-auto max-w-4xl space-y-5 p-1" role="status" aria-label="Cargando aula"><div className="ayni-skeleton h-24 rounded-3xl" /><div className="ayni-skeleton h-12 max-w-2xl rounded-xl" /><div className="ayni-skeleton h-64 rounded-2xl" /></div>;
+  return <div className="mx-auto max-w-4xl space-y-5 p-1" role="status"><p className="text-sm font-semibold text-[#126177]">Cargando información del aula…</p><div className="ayni-skeleton h-24 rounded-3xl" aria-hidden="true" /><div className="ayni-skeleton h-12 max-w-2xl rounded-xl" aria-hidden="true" /><div className="ayni-skeleton h-64 rounded-2xl" aria-hidden="true" /></div>;
 }

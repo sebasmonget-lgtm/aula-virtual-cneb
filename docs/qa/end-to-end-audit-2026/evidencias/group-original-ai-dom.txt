@@ -1,0 +1,92 @@
+- paragraph: Ayni Aula
+- paragraph: Tu aliada en Inicial
+- list:
+  - button "Hoy":
+    - generic: Hoy
+  - button "Calendario":
+    - generic: Calendario
+  - button "Diagnóstico":
+    - generic: Diagnóstico
+  - button "Planificar":
+    - generic: Planificar
+  - button "Aula":
+    - generic: Aula
+  - button "Evaluar":
+    - generic: Evaluar
+  - button "Biblioteca":
+    - generic: Biblioteca
+- paragraph: Exploradores · 5 años
+- paragraph: 2026 · 15 estudiantes
+- main:
+  - paragraph: Domingo, 27 de setiembre
+  - paragraph: IEI Semillas del Valle QA · Exploradores
+  - text: Base conectada
+  - button "Abrir perfil": LP
+  - main:
+    - paragraph: Conocer al grupo
+    - heading "Diagnóstico" [level=1]
+    - paragraph: Observa, registra y continúa cuando puedas.
+    - generic: 5 años · Exploradores
+    - navigation "Pasos del diagnóstico":
+      - button "1. Conocer Listo 15/15 entrevistas":
+        - generic: 1. Conocer
+        - img "Listo":
+        - generic: 15/15 entrevistas
+      - button "2. Observar Listo 15/15 niños":
+        - generic: 2. Observar
+        - img "Listo":
+        - generic: 15/15 niños
+      - button "3. Resumir Pendiente":
+        - generic: 3. Resumir
+        - generic: Pendiente
+    - paragraph: De las observaciones a tus decisiones
+    - heading "Resume lo que observaste" [level=2]
+    - status: Revisa la propuesta de Ayni antes de continuar.
+    - heading "Así está mi grupo" [level=3]
+    - paragraph: 15 niños en el aula · 1 con comentario guardado y vigente. Los comentarios individuales son opcionales.
+    - heading "Información del aula" [level=4]
+    - paragraph: Intereses contados por las familias
+    - paragraph: 15 entrevistas confirmadas
+    - list:
+      - listitem: Naturaleza · 11 familias
+    - paragraph: Competencias con registros pendientes
+    - paragraph: Sin registro significa información insuficiente, no dificultad.
+    - list:
+      - listitem: Gestiona su aprendizaje de manera autónoma · faltan registros de 15 de 15 niños
+      - listitem: Se desenvuelve en los entornos virtuales generados por las TIC · faltan registros de 15 de 15 niños
+      - listitem: Construye su identidad · faltan registros de 14 de 15 niños
+      - listitem: Escribe diversos tipos de textos en su lengua materna · faltan registros de 14 de 15 niños
+      - listitem: Indaga mediante métodos científicos para construir sus conocimientos · faltan registros de 14 de 15 niños
+      - listitem: Lee diversos tipos de textos escritos en su lengua materna · faltan registros de 14 de 15 niños
+      - listitem: Resuelve problemas de forma, movimiento y localización · faltan registros de 14 de 15 niños
+      - listitem: Se desenvuelve de manera autónoma a través de su motricidad · faltan registros de 14 de 15 niños
+      - listitem: Crea proyectos desde los lenguajes artísticos · faltan registros de 13 de 15 niños
+      - listitem: Resuelve problemas de cantidad · faltan registros de 13 de 15 niños
+      - listitem: Se comunica oralmente en su lengua materna · faltan registros de 13 de 15 niños
+      - listitem: Convive y participa democráticamente en la búsqueda del bien común · faltan registros de 6 de 15 niños
+    - heading "Tu resumen del aula" [level=4]
+    - text: ¿Qué fortalezas observaste?
+    - textbox "¿Qué fortalezas observaste?":
+      - /placeholder: "Por ejemplo: En los juegos, varios niños expresan sus ideas y comparten materiales."
+      - text: Los registros muestran iniciativas para explorar, crear y comunicar ideas en distintas actividades. También hay situaciones en las que se proponen acuerdos y se comparten tareas o materiales.
+    - button "Dictar resumen":
+      - text: Dictar resumen
+    - text: ¿Qué necesita más acompañamiento?
+    - textbox "¿Qué necesita más acompañamiento?":
+      - /placeholder: "Por ejemplo: Algunos niños necesitan más oportunidades para conversar y resolver desacuerdos con apoyo."
+      - text: Conviene ofrecer más ocasiones para acordar el uso de materiales, escuchar otras propuestas y sostener los turnos durante el juego. Es útil seguir observando la participación en distintas situaciones, sin interpretar la falta de registros como una dificultad.
+    - button "Dictar resumen":
+      - text: Dictar resumen
+    - text: ¿Qué tendrás en cuenta al planificar?
+    - textbox "¿Qué tendrás en cuenta al planificar?":
+      - /placeholder: "Por ejemplo: Propondré juegos en grupos pequeños y momentos para escuchar las ideas de todos."
+      - text: Organizar juegos en grupos pequeños con materiales compartidos, acuerdos claros y acompañamiento para retomarlos cuando sea necesario. Mantener oportunidades de exploración, creación y diálogo, recogiendo nuevas observaciones.
+    - button "Dictar resumen":
+      - text: Dictar resumen
+    - button "Descartar cambios"
+    - button "Guardar para después"
+    - navigation "Continuar el diagnóstico":
+      - button "Volver al mapa":
+        - text: Volver al mapa
+      - button "Confirmar y continuar":
+        - text: Confirmar y continuar

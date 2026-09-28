@@ -1,0 +1,43 @@
+{
+  "id": "escuela_juego_libre_01",
+  "file": "escuela/escuela_juego_libre_01.jpg",
+  "master": "masters/escuela_juego_libre_01.png",
+  "title": "Luna y Mateo juegan libremente",
+  "category": "escuela",
+  "subcategory": "juego",
+  "characters": [
+    "luna",
+    "mateo"
+  ],
+  "concepts": [
+    "escuela",
+    "juego",
+    "creatividad"
+  ],
+  "actions": [
+    "jugar",
+    "construir"
+  ],
+  "objects": [
+    "bloques",
+    "alfombra"
+  ],
+  "contexts": [
+    "proyecto",
+    "plan_anual",
+    "portada",
+    "escuela",
+    "juego"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "orientation": "landscape",
+  "aspect_ratio": "3:2",
+  "has_text": false,
+  "country_context": "PE",
+  "variant": 1,
+  "priority": 10
+}

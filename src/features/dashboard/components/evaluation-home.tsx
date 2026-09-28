@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { BookOpen, ClipboardCheck, FileText, Users } from "lucide-react";
+import { BookOpen, FileText, Users } from "lucide-react";
 import { apiFetch } from "@/src/lib/ayni-api-fetch";
 import { localDatabaseApiUrl, type LocalDashboard } from "@/src/lib/local-database";
 import { LoadingState, WorkflowFeedback } from "./workflow-ui";
@@ -18,25 +18,19 @@ async function json<T>(url: string, signal: AbortSignal): Promise<T> {
   return response.json() as Promise<T>;
 }
 
-export function EvaluationHome({ dashboard, onDiagnostic, onPeriod, onReplan }: {
+export function EvaluationHome({ dashboard, onPeriod, onReplan }: {
   dashboard: LocalDashboard;
-  onDiagnostic: () => void;
   onPeriod: (view: EvaluationView, target?: Target) => void;
   onReplan: () => void;
 }) {
   const [overview, setOverview] = useState<Overview | null>(null);
-  const [diagnostic, setDiagnostic] = useState("pending");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [retry, setRetry] = useState(0);
   const [replan, setReplan] = useState<{ label: string; adjusted: boolean; final: boolean; closed: boolean } | null>(null);
   useEffect(() => {
     const controller = new AbortController();
-    Promise.all([
-      json<{ reviewed: boolean; observation_count: number }>("/api/diagnostics/progress", controller.signal),
-      json<Workspace>("/api/period-evaluations/workspace", controller.signal),
-    ]).then(async ([progress, workspace]) => {
-      setDiagnostic(progress.reviewed ? "Revisado" : progress.observation_count > 0 ? "En curso" : "Por empezar");
+    json<Workspace>("/api/period-evaluations/workspace", controller.signal).then(async (workspace) => {
       const year = workspace.years[0];
       const classroom = workspace.classrooms.find((item) => item.school_year_id === year?.id);
       const now = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Lima", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
@@ -68,7 +62,6 @@ export function EvaluationHome({ dashboard, onDiagnostic, onPeriod, onReplan }: 
     return student ? `${student.preferred_name || student.first_name} ${student.last_name}` : "Niño del aula";
   };
   const actions = [
-    { title: "Diagnóstico", subtitle: diagnostic, Icon: ClipboardCheck, tint: "bg-[#e8f7fa] text-[#0b7891]", act: onDiagnostic },
     { title: "Analizar evidencias", subtitle: `${candidates.length} ${candidates.length === 1 ? "ficha por revisar" : "fichas por revisar"}`, Icon: BookOpen, tint: "bg-[#f1eaff] text-[#7952b8]", act: () => onPeriod("student", candidates[0] ? { studentId: candidates[0].student_id, competencyId: candidates[0].competency_id } : undefined) },
     { title: "Conclusiones", subtitle: `${confirmed} ${confirmed === 1 ? "valoración confirmada" : "valoraciones confirmadas"}`, Icon: FileText, tint: "bg-[#fff2d8] text-[#ad741f]", act: () => onPeriod("student") },
     { title: "Informe a familias", subtitle: "Desde valoraciones confirmadas", Icon: Users, tint: "bg-[#e9f8f2] text-[#287561]", act: () => onPeriod("family") },

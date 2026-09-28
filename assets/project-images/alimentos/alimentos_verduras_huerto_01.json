@@ -1,0 +1,44 @@
+{
+  "id": "alimentos_verduras_huerto_01",
+  "file": "alimentos/alimentos_verduras_huerto_01.jpg",
+  "master": "masters/alimentos_verduras_huerto_01.png",
+  "title": "Mateo cosecha verduras",
+  "category": "alimentos",
+  "subcategory": "verduras",
+  "characters": [
+    "mateo",
+    "mama_clara"
+  ],
+  "concepts": [
+    "verduras",
+    "huerto",
+    "alimentación"
+  ],
+  "actions": [
+    "cosechar",
+    "observar"
+  ],
+  "objects": [
+    "zanahoria",
+    "tierra",
+    "canasta"
+  ],
+  "contexts": [
+    "proyecto",
+    "plan_anual",
+    "portada",
+    "alimentos",
+    "verduras"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "orientation": "landscape",
+  "aspect_ratio": "3:2",
+  "has_text": false,
+  "country_context": "PE",
+  "variant": 1,
+  "priority": 10
+}

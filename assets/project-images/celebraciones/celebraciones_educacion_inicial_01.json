@@ -1,0 +1,44 @@
+{
+  "id": "celebraciones_educacion_inicial_01",
+  "file": "celebraciones/celebraciones_educacion_inicial_01.jpg",
+  "master": "masters/celebraciones_educacion_inicial_01.png",
+  "title": "Celebramos la Educación Inicial",
+  "category": "celebraciones",
+  "subcategory": "educacion_inicial",
+  "characters": [
+    "maestra_rosa",
+    "leo",
+    "luna"
+  ],
+  "concepts": [
+    "educación inicial",
+    "escuela",
+    "celebración"
+  ],
+  "actions": [
+    "jugar",
+    "celebrar"
+  ],
+  "objects": [
+    "banderines",
+    "juegos"
+  ],
+  "contexts": [
+    "proyecto",
+    "plan_anual",
+    "portada",
+    "celebraciones",
+    "educacion_inicial"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "orientation": "landscape",
+  "aspect_ratio": "3:2",
+  "has_text": false,
+  "country_context": "PE",
+  "variant": 1,
+  "priority": 10
+}

@@ -1,0 +1,44 @@
+{
+  "id": "comunidad_madre_cuidar_01",
+  "file": "comunidad/comunidad_madre_cuidar_01.jpg",
+  "master": "masters/comunidad_madre_cuidar_01.png",
+  "title": "Clara y Luna cuidan plantas juntas",
+  "category": "comunidad",
+  "subcategory": "familia",
+  "characters": [
+    "mama_clara",
+    "luna"
+  ],
+  "concepts": [
+    "madre",
+    "familia",
+    "cuidado",
+    "plantas"
+  ],
+  "actions": [
+    "regar",
+    "cuidar"
+  ],
+  "objects": [
+    "regadera",
+    "macetas"
+  ],
+  "contexts": [
+    "proyecto",
+    "plan_anual",
+    "portada",
+    "comunidad",
+    "familia"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "orientation": "landscape",
+  "aspect_ratio": "3:2",
+  "has_text": false,
+  "country_context": "PE",
+  "variant": 1,
+  "priority": 10
+}

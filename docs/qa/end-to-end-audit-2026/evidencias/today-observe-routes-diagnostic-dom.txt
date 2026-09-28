@@ -1,0 +1,69 @@
+- paragraph: Ayni Aula
+- paragraph: Tu aliada en Inicial
+- list:
+  - button "Hoy":
+    - generic: Hoy
+  - button "Calendario":
+    - generic: Calendario
+  - button "Diagnóstico":
+    - generic: Diagnóstico
+  - button "Planificar":
+    - generic: Planificar
+  - button "Aula":
+    - generic: Aula
+  - button "Evaluar":
+    - generic: Evaluar
+  - button "Biblioteca":
+    - generic: Biblioteca
+- paragraph: Exploradores · 5 años
+- paragraph: 2026 · 15 estudiantes
+- main:
+  - paragraph: Domingo, 27 de setiembre
+  - paragraph: IEI Semillas del Valle QA · Exploradores
+  - text: Base conectada
+  - button "Abrir perfil": LP
+  - main:
+    - paragraph: Conocer al grupo
+    - heading "Diagnóstico" [level=1]
+    - paragraph: Observa, registra y continúa cuando puedas.
+    - generic: 5 años · Exploradores
+    - navigation "Pasos del diagnóstico":
+      - button "1. Conocer Listo 15/15 entrevistas":
+        - generic: 1. Conocer
+        - img "Listo":
+        - generic: 15/15 entrevistas
+      - button "2. Observar Listo 15/15 niños":
+        - generic: 2. Observar
+        - img "Listo":
+        - generic: 15/15 niños
+      - button "3. Resumir Listo Confirmado":
+        - generic: 3. Resumir
+        - img "Listo":
+        - generic: Confirmado
+    - group "Forma de observar":
+      - button "Experiencias guiadas" [pressed]
+      - button "Observación espontánea"
+    - paragraph: Elige un juego sugerido y anota lo que observaste.
+    - heading "¿Qué experiencia realizaste?" [level=2]
+    - paragraph: Son ideas para observar en el juego y la jornada; puedes volver a cualquiera otro día.
+    - paragraph: "Guías de desarrollo: todavía no son la batería pedagógica definitiva de Ayni."
+    - button "Nos conocemos y organizamos el juego Ofrece espacios de juego, deja que elijan y conversa brevemente sobre cómo jugar juntos. 5 de 15 niños con registros":
+      - text: Nos conocemos y organizamos el juego
+      - generic: Ofrece espacios de juego, deja que elijan y conversa brevemente sobre cómo jugar juntos.
+      - generic: 5 de 15 niños con registros
+    - button "Nos movemos y creamos Invita a jugar con movimientos y materiales de expresión; observa lo que cada niño decide hacer. 0 de 15 niños con registros":
+      - text: Nos movemos y creamos
+      - generic: Invita a jugar con movimientos y materiales de expresión; observa lo que cada niño decide hacer.
+      - generic: 0 de 15 niños con registros
+    - button "Contamos y encontramos lugares Ofrece objetos y recorridos para que los niños resuelvan situaciones de juego a su manera. 0 de 15 niños con registros":
+      - text: Contamos y encontramos lugares
+      - generic: Ofrece objetos y recorridos para que los niños resuelvan situaciones de juego a su manera.
+      - generic: 0 de 15 niños con registros
+    - button "Exploramos nuestro entorno Deja que exploren materiales o elementos cercanos, hagan preguntas y cuenten lo que descubren. 0 de 15 niños con registros":
+      - text: Exploramos nuestro entorno
+      - generic: Deja que exploren materiales o elementos cercanos, hagan preguntas y cuenten lo que descubren.
+      - generic: 0 de 15 niños con registros
+    - button "Escuchamos y contamos historias Comparte un cuento y ofrece papel o materiales para que expresen sus ideas libremente. 0 de 15 niños con registros":
+      - text: Escuchamos y contamos historias
+      - generic: Comparte un cuento y ofrece papel o materiales para que expresen sus ideas libremente.
+      - generic: 0 de 15 niños con registros

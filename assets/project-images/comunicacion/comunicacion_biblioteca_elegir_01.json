@@ -1,0 +1,43 @@
+{
+  "id": "comunicacion_biblioteca_elegir_01",
+  "file": "comunicacion/comunicacion_biblioteca_elegir_01.jpg",
+  "master": "masters/comunicacion_biblioteca_elegir_01.png",
+  "title": "Sofía y Mateo eligen libros",
+  "category": "comunicacion",
+  "subcategory": "biblioteca",
+  "characters": [
+    "sofia",
+    "mateo"
+  ],
+  "concepts": [
+    "biblioteca",
+    "libros",
+    "lectura"
+  ],
+  "actions": [
+    "elegir",
+    "explorar"
+  ],
+  "objects": [
+    "libros",
+    "estante"
+  ],
+  "contexts": [
+    "proyecto",
+    "plan_anual",
+    "portada",
+    "comunicacion",
+    "biblioteca"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "orientation": "landscape",
+  "aspect_ratio": "3:2",
+  "has_text": false,
+  "country_context": "PE",
+  "variant": 1,
+  "priority": 10
+}

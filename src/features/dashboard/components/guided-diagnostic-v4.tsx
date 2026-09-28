@@ -12,6 +12,8 @@ import { AsyncButton, LoadingState } from "./workflow-ui";
 import { DiagnosticReview } from "./diagnostic-review-v4";
 import { FamilyInterviewEditor, FamilyInterviewStatusBadge, useFamilyInterviewStatusMap } from "./family-interview-v4";
 import { SpontaneousDiagnostic } from "./spontaneous-diagnostic-v4";
+import { displayPersonName } from "@/src/lib/person-name.mjs";
+import { DictationRecorder } from "./dictation-recorder";
 
 type Filter = "all" | "without" | "with" | "today";
 function isToday(value: string) { return new Date(value).toDateString() === new Date().toDateString(); }
@@ -29,8 +31,10 @@ export function GuidedDiagnostic({ dashboard, onPlan, onStudents, initialStep = 
   const [note, setNote] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
   const [working, setWorking] = useState(false);
+  const [audioBusy, setAudioBusy] = useState(false);
   const [error, setError] = useState("");
   const [feedback, setFeedback] = useState("");
+  const [interviewFeedback, setInterviewFeedback] = useState("");
   const [classroomContext, setClassroomContext] = useState<PublicClassroomContext | null>(null);
   const { statuses: interviewStatuses, error: interviewStatusError } = useFamilyInterviewStatusMap(`${interviewStudentId ?? "list"}:${data?.students.map((item) => item.id).join(",") ?? ""}`, Boolean(data?.students.length));
 
@@ -60,7 +64,7 @@ export function GuidedDiagnostic({ dashboard, onPlan, onStudents, initialStep = 
     setStudentId(id); setAspectId(""); setNote(""); setError(""); setFeedback("");
   }
   async function save() {
-    if (!studentId || !experienceId || !aspectId || !note.trim() || working) return;
+    if (!studentId || !experienceId || !aspectId || !note.trim() || working || audioBusy) return;
     setWorking(true); setError("");
     try {
       const updated = await saveDiagnosticExperienceObservation({ studentId, experienceId, aspectId, observationStatus: "observed_without_judgment", observationText: note });
@@ -85,19 +89,20 @@ export function GuidedDiagnostic({ dashboard, onPlan, onStudents, initialStep = 
 
   return <div className="diagnostic-shell space-y-5">
     <header className="flex flex-wrap items-center justify-between gap-4">
-      <div className="flex items-center gap-3"><span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-[#e9ddff] text-[#7652bc]"><ClipboardCheck /></span><div><p className="text-sm font-semibold text-[#087d96]">Paso 3 de 6 · Conocer al grupo</p><h1 className="text-2xl font-extrabold text-[#172b52]">Evaluación diagnóstica</h1><p className="text-sm text-[#61718e]">Observa, registra y continúa cuando puedas.</p></div></div>
+      <div className="flex items-center gap-3"><span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-[#e9ddff] text-[#7652bc]"><ClipboardCheck /></span><div><p className="text-sm font-semibold text-[#087d96]">Conocer al grupo</p><h1 className="text-2xl font-extrabold text-[#172b52]">Diagnóstico</h1><p className="text-sm text-[#61718e]">Observa, registra y continúa cuando puedas.</p></div></div>
       <span className="rounded-full bg-[#edf5fb] px-4 py-2 text-sm font-semibold text-[#1b5175]">{data.classroom.age_years} años · {data.classroom.section}</span>
     </header>
-    <nav className="grid grid-cols-3 gap-2" aria-label="Pasos del diagnóstico">{diagnosticSteps.map((item, index) => <button key={item.label} type="button" aria-current={step === index + 1 ? "step" : undefined} title={`${item.label}: ${item.status}`} onClick={() => { setStep((index + 1) as 1 | 2 | 3); setStudentId(null); setInterviewStudentId(null); }} className={`min-h-16 rounded-xl px-2 py-2 text-center text-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#087d96] ${step === index + 1 ? "bg-[#087d96] text-white" : item.done ? "border border-[#a8dbc1] bg-[#e6f7ed] text-[#176442]" : "bg-[#edf3f9] text-[#405c7e]"}`}><span className="flex items-center justify-center gap-1"><span>{index + 1}. {item.label}</span>{item.done && <span role="img" aria-label="Listo" className="grid size-5 shrink-0 place-items-center rounded-full bg-[#208653] text-white"><Check className="size-3.5" /></span>}</span><span className={`mt-0.5 block text-[11px] font-medium ${step === index + 1 ? "text-white/90" : item.done ? "text-[#176442]" : "text-[#61718e]"}`}>{item.status}</span></button>)}</nav>
+    <nav className="grid grid-cols-3 gap-2" aria-label="Pasos del diagnóstico">{diagnosticSteps.map((item, index) => <button key={item.label} type="button" disabled={working || audioBusy} aria-current={step === index + 1 ? "step" : undefined} title={`${item.label}: ${item.status}`} onClick={() => { setStep((index + 1) as 1 | 2 | 3); setStudentId(null); setInterviewStudentId(null); }} className={`min-h-16 rounded-xl px-2 py-2 text-center text-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#087d96] ${step === index + 1 ? "bg-[#087d96] text-white" : item.done ? "border border-[#a8dbc1] bg-[#e6f7ed] text-[#176442]" : "bg-[#edf3f9] text-[#405c7e]"}`}><span className="flex items-center justify-center gap-1"><span>{index + 1}. {item.label}</span>{item.done && <span role="img" aria-label="Listo" className="grid size-5 shrink-0 place-items-center rounded-full bg-[#208653] text-white"><Check className="size-3.5" /></span>}</span><span className={`mt-0.5 block text-[11px] font-medium ${step === index + 1 ? "text-white/90" : item.done ? "text-[#176442]" : "text-[#61718e]"}`}>{item.status}</span></button>)}</nav>
     {error && !student && <p role="alert" className="rounded-xl bg-[#fff1d6] p-3 text-sm">{error}</p>}
 
-    {step === 1 && interviewStudentId && <FamilyInterviewEditor studentId={interviewStudentId} studentName={data.students.find((item) => item.id === interviewStudentId)?.name ?? "este niño"} printContext={{ institution: dashboard.profile.institution_name, classroom: data.classroom.section }} onBack={() => setInterviewStudentId(null)} />}
+    {step === 1 && interviewStudentId && <FamilyInterviewEditor studentId={interviewStudentId} studentName={data.students.find((item) => item.id === interviewStudentId)?.name ?? "este niño"} printContext={{ institution: dashboard.profile.institution_name, classroom: data.classroom.section }} onSaved={() => setInterviewFeedback("Entrevista guardada. Puedes entrevistar a otro niño.")} onBack={() => setInterviewStudentId(null)} />}
     {step === 1 && !interviewStudentId && <section className="diagnostic-panel space-y-4 p-5 md:p-7">
       <h2 className="text-xl font-bold">Conoce a cada niño y su familia</h2>
       <p>{dashboard.profile.institution_name} · {data.classroom.section} · {data.students.length} niños</p>
-      <p className="text-sm text-[#526b87]">Registra una entrevista breve si ya conversaste con la familia. Puedes guardarla a medias o imprimirla para hacerla en papel.</p>
+      <p className="text-sm text-[#526b87]">Registra una entrevista breve si ya conversaste con la familia. Puedes responder solo lo necesario o imprimirla para hacerla en papel.</p>
+      {interviewFeedback && <p role="status" className="rounded-xl bg-[#e5f8ed] p-3 text-sm text-[#176442]">{interviewFeedback}</p>}
       {interviewStatusError && <p role="alert" className="text-sm text-[#88591d]">{interviewStatusError}</p>}
-      <div className="grid gap-2 sm:grid-cols-2">{data.students.map((item) => <button key={item.id} type="button" className={`flex min-h-16 items-center justify-between gap-2 rounded-xl border p-3 text-left font-semibold hover:border-[#087d96] ${interviewStatuses[item.id] === "confirmed" ? "border-[#a8dbc1] bg-[#f0faf4]" : interviewStatuses[item.id] === "partial" ? "border-[#ecd29a] bg-[#fff9ec]" : "bg-white"}`} onClick={() => setInterviewStudentId(item.id)}><span>Entrevista de {item.name} →</span><FamilyInterviewStatusBadge status={interviewStatuses[item.id]} /></button>)}</div>
+      <div className="grid gap-2 sm:grid-cols-2">{data.students.map((item) => <button key={item.id} type="button" className={`flex min-h-16 items-center justify-between gap-2 rounded-xl border p-3 text-left font-semibold hover:border-[#087d96] ${interviewStatuses[item.id] === "confirmed" ? "border-[#a8dbc1] bg-[#f0faf4]" : interviewStatuses[item.id] === "partial" ? "border-[#ecd29a] bg-[#fff9ec]" : "bg-white"}`} onClick={() => setInterviewStudentId(item.id)}><span>Entrevista de {displayPersonName(item.name)} →</span><FamilyInterviewStatusBadge status={interviewStatuses[item.id]} /></button>)}</div>
       {classroomContext && <div className="rounded-2xl bg-[#eef8fb] p-4 text-sm text-[#294b64]" aria-label="Panorama del grupo">
         <h3 className="font-bold text-[#172b52]">Así vamos conociendo al grupo</h3>
         <p className="mt-1">{classroomContext.confirmed_interviews} de {classroomContext.students_total} entrevistas confirmadas. Las respuestas de cada familia permanecen en el perfil de su niño.</p>
@@ -132,7 +137,7 @@ export function GuidedDiagnostic({ dashboard, onPlan, onStudents, initialStep = 
       <Button variant="outline" className="diagnostic-back-button" onClick={() => { setExperienceId(null); setFilter("all"); }}><ArrowLeft /> Volver a experiencias</Button>
       <div><h2 className="text-2xl font-extrabold">{experience.title}</h2><p className="mt-3 text-sm font-bold text-[#087d96]">1. Prepara el juego</p><p className="mt-1 text-[#526b87]">{experience.teacher_instructions}</p></div>
       <div><h3 className="text-lg font-bold">2. Mientras juegan, observa</h3><p className="mt-1 text-sm text-[#526b87]">Estas son ideas para orientar tu mirada. No tienes que observarlas todas ni registrar a todos los niños hoy.</p>
-        <ul className="mt-3 divide-y divide-[#e3ebf2]">{experience.aspects.map((aspect) => <li key={aspect.id} className="py-3"><p className="font-semibold text-[#173b58]">{aspect.label}</p><p className="text-sm text-[#526b87]">{aspect.prompt}</p><details className="mt-1 text-sm"><summary className="w-fit cursor-pointer font-semibold text-[#087d96]">Ver ejemplos</summary><ul className="mt-2 list-disc space-y-1 pl-5 text-[#526b87]">{aspect.examples.map((example) => <li key={example}>{example}</li>)}</ul></details></li>)}</ul>
+        <ul className="mt-3 divide-y divide-[#e3ebf2]">{experience.aspects.map((aspect) => <li key={aspect.id} className="py-3"><p className="font-semibold text-[#173b58]">{aspect.label}</p><p className="text-sm text-[#526b87]">{aspect.prompt}</p><ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-[#526b87]">{aspect.examples.map((example) => <li key={example}>{example}</li>)}</ul></li>)}</ul>
       </div>
       <div className="flex flex-wrap items-center justify-between gap-2"><div><h3 className="text-lg font-bold">3. Elige a un niño y anota lo que viste</h3><p className="text-sm text-[#526b87]">Toca su nombre cuando ocurra algo que quieras recordar. {coverage?.students_with_records ?? 0} de {data.students.length} con algún registro.</p></div><Button variant="outline" className="min-h-12" onClick={() => setStep(3)}>Pasar a resumir <ArrowRight /></Button></div>
       <div className="flex flex-wrap gap-2" aria-label="Filtrar niños">{([
@@ -142,20 +147,21 @@ export function GuidedDiagnostic({ dashboard, onPlan, onStudents, initialStep = 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{visibleStudents.map((item) => {
         const own = records.filter((record) => record.student_id === item.id);
         const today = own.some((record) => isToday(record.observed_at));
-        return <button key={item.id} type="button" onClick={() => selectStudent(item.id)} className="min-h-20 rounded-2xl border border-[#dce9f2] bg-white p-4 text-left hover:border-[#087d96] hover:bg-[#f4fbfd] focus-visible:outline-2 focus-visible:outline-[#087d96]"><span className="block text-base font-bold">{item.name}</span><span className="mt-1 block text-sm text-[#526b87]">{own.length === 0 ? "Sin observaciones en esta experiencia" : `${own.length} ${own.length === 1 ? "observación" : "observaciones"}`}</span>{today && <span className="mt-1 block text-xs font-semibold text-[#087d96]">✓ Observación registrada hoy</span>}</button>;
+        return <button key={item.id} type="button" onClick={() => selectStudent(item.id)} className="min-h-20 rounded-2xl border border-[#dce9f2] bg-white p-4 text-left hover:border-[#087d96] hover:bg-[#f4fbfd] focus-visible:outline-2 focus-visible:outline-[#087d96]"><span className="block text-base font-bold">{displayPersonName(item.name)}</span><span className="mt-1 block text-sm text-[#526b87]">{own.length === 0 ? "Sin observaciones en esta experiencia" : `${own.length} ${own.length === 1 ? "observación" : "observaciones"}`}</span>{today && <span className="mt-1 block text-xs font-semibold text-[#087d96]">✓ Observación registrada hoy</span>}</button>;
       })}</div>
       {visibleStudents.length === 0 && <p className="rounded-xl bg-[#f3f7fb] p-4 text-sm">No hay niños en este filtro. Puedes volver a “Todos”.</p>}
       <details className="border-t border-[#e3ebf2] pt-3 text-sm"><summary className="cursor-pointer font-semibold text-[#426079]">Relación curricular · {experience.competencies.length} {experience.competencies.length === 1 ? "competencia" : "competencias"}</summary><ul className="mt-2 list-disc space-y-1 pl-5 text-[#526b87]">{experience.competencies.map((item) => <li key={item.id}>{item.name}</li>)}</ul></details>
     </section>}
 
     {step === 2 && experience && student && <section className="diagnostic-panel space-y-5 p-4 md:p-7">
-      <Button variant="outline" className="diagnostic-back-button" onClick={() => setStudentId(null)}><ArrowLeft /> Volver a todos los niños</Button>
-      <div><p className="text-sm font-semibold text-[#087d96]">{experience.title}</p><h2 className="text-2xl font-extrabold">{student.name}</h2><p className="mt-1 text-sm text-[#526b87]">Registra solo lo que observaste. Puedes añadir más de una observación de este niño.</p></div>
-      <fieldset className="space-y-2"><legend className="font-bold">¿Con qué aspecto se relaciona?</legend><p className="text-sm text-[#526b87]">Elige uno para organizar tu nota; no estás calificando al niño.</p>{experience.aspects.map((aspect) => <label key={aspect.id} className={`flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border p-3 ${aspectId === aspect.id ? "border-[#087d96] bg-[#e8f7fa]" : "border-[#dce9f2]"}`}><input type="radio" name="diagnostic-aspect" checked={aspectId === aspect.id} onChange={() => setAspectId(aspect.id)} /><span className="font-semibold">{aspect.label}</span></label>)}</fieldset>
-      <label className="block text-sm font-semibold">¿Qué hizo o dijo?<span className="mt-1 block font-normal text-[#526b87]">Puedes anotar qué hizo, qué dijo, cómo lo hizo o si necesitó ayuda.</span><Textarea className="mt-2 min-h-24" maxLength={4000} value={note} onChange={(event) => setNote(event.target.value)} placeholder="Ej.: Probó saltar los bloques varias veces y cambió la distancia después de no lograrlo." /></label>
+      <Button variant="outline" className="diagnostic-back-button" disabled={working || audioBusy} onClick={() => setStudentId(null)}><ArrowLeft /> Volver a todos los niños</Button>
+      <div><p className="text-sm font-semibold text-[#087d96]">{experience.title}</p><h2 className="text-2xl font-extrabold">{displayPersonName(student.name)}</h2><p className="mt-1 text-sm text-[#526b87]">Registra solo lo que observaste. Puedes añadir más de una observación de este niño.</p></div>
+      <fieldset className="space-y-2" disabled={working || audioBusy}><legend className="font-bold">¿Con qué aspecto se relaciona?</legend><p className="text-sm text-[#526b87]">Elige uno para organizar tu nota; no estás calificando al niño.</p>{experience.aspects.map((aspect) => <label key={aspect.id} className={`flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border p-3 ${aspectId === aspect.id ? "border-[#087d96] bg-[#e8f7fa]" : "border-[#dce9f2]"}`}><input type="radio" name="diagnostic-aspect" checked={aspectId === aspect.id} onChange={() => setAspectId(aspect.id)} /><span className="font-semibold">{aspect.label}</span></label>)}</fieldset>
+      <label className="block text-sm font-semibold">¿Qué hizo o dijo?<span className="mt-1 block font-normal text-[#526b87]">Puedes anotar qué hizo, qué dijo, cómo lo hizo o si necesitó ayuda.</span><Textarea className="mt-2 min-h-24" disabled={working} maxLength={4000} value={note} onChange={(event) => setNote(event.target.value)} placeholder="Ej.: Probó saltar los bloques varias veces y cambió la distancia después de no lograrlo." /></label>
+      <DictationRecorder key={`${student.id}:${experience.id}`} studentId={student.id} context={`${experience.title}: ${experience.aspects.find((aspect) => aspect.id === aspectId)?.prompt ?? "observación durante el juego"}`} currentText={note} disabled={working} onBusyChange={setAudioBusy} onTranscribed={(text) => setNote(text)} />
       <p className="text-xs text-[#526b87]">Es una nota de observación. Podrás interpretarla más adelante.</p>
       {error && <p role="alert" className="rounded-xl bg-[#fff1d6] p-3 text-sm">{error}</p>}
-      <AsyncButton className="min-h-12 w-full sm:w-auto" busy={working} busyLabel="Guardando..." disabled={!aspectId || !note.trim()} onClick={() => void save()}><Save /> Guardar observación</AsyncButton>
+      <AsyncButton className="min-h-12 w-full sm:w-auto" busy={working} busyLabel="Guardando..." disabled={audioBusy || !aspectId || !note.trim()} onClick={() => void save()}><Save /> Guardar observación</AsyncButton>
     </section>}
 
     {step === 3 && <DiagnosticReview onObserve={() => { setStep(2); setStudentId(null); }} onPlan={onPlan} onGroupConfirmed={() => setData((current) => current ? { ...current, step_progress: { ...current.step_progress, group_review_confirmed: true } } : current)} />}

@@ -1,0 +1,43 @@
+{
+  "id": "cuerpo_lavado_manos_01",
+  "file": "cuerpo_salud/cuerpo_lavado_manos_01.jpg",
+  "master": "masters/cuerpo_lavado_manos_01.png",
+  "title": "Luna se lava las manos",
+  "category": "cuerpo_salud",
+  "subcategory": "higiene",
+  "characters": [
+    "luna"
+  ],
+  "concepts": [
+    "higiene",
+    "manos",
+    "salud"
+  ],
+  "actions": [
+    "lavar",
+    "cuidar"
+  ],
+  "objects": [
+    "agua",
+    "jabón",
+    "lavabo"
+  ],
+  "contexts": [
+    "proyecto",
+    "plan_anual",
+    "portada",
+    "cuerpo_salud",
+    "higiene"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "orientation": "landscape",
+  "aspect_ratio": "3:2",
+  "has_text": false,
+  "country_context": "PE",
+  "variant": 1,
+  "priority": 10
+}

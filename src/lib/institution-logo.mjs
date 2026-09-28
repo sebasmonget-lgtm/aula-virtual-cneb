@@ -4,6 +4,14 @@ import sharp from "sharp";
 
 const allowedUploads = new Map([["image/png", "png"], ["image/jpeg", "jpeg"], ["image/webp", "webp"]]);
 
+export function buildInstitutionInitialsLogo({ initials, primary, accent } = {}) {
+  const safeInitials = typeof initials === "string" ? initials.trim().toUpperCase().replace(/[^A-ZÁÉÍÓÚÑ0-9]/g, "").slice(0, 3) || "AA" : "AA";
+  const safeColor = (value, fallback) => typeof value === "string" && /^#[0-9a-f]{6}$/i.test(value) ? value : fallback;
+  const base = safeColor(primary, "#173d3a"), highlight = safeColor(accent, "#f6c85f");
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512"><rect width="512" height="512" rx="116" fill="${base}"/><circle cx="392" cy="120" r="54" fill="${highlight}"/><path d="M120 342c82-8 137-58 156-151 55 54 73 114 51 181-69 30-138 20-207-30Z" fill="${highlight}" opacity=".95"/><text x="126" y="280" font-family="Arial,sans-serif" font-size="132" font-weight="700" fill="white">${safeInitials}</text></svg>`;
+  return Buffer.from(svg);
+}
+
 /** Turn an untrusted upload into a small PNG without EXIF or other metadata. */
 export async function normalizeInstitutionLogoUpload(upload) {
   if (!upload || !allowedUploads.has(upload.mimeType) || typeof upload.base64 !== "string"

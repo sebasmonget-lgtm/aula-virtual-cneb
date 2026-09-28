@@ -7,8 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  completeDiagnosticReview, loadDiagnostics, saveDiagnosticObservation, saveLocalProfile,
-  type DiagnosticWorkspace, type LocalDashboard,
+  completeDiagnosticReview, loadAiUsageSummary, loadDiagnostics, saveDiagnosticObservation, saveLocalProfile,
+  type AiUsageSummary, type DiagnosticWorkspace, type LocalDashboard,
 } from "@/src/lib/local-database";
 import { AsyncButton, LoadingState, WorkflowFeedback } from "./workflow-ui";
 
@@ -47,6 +47,14 @@ export function InstitutionProfile({ dashboard, onSaved }: {
   const logoInputRef = useRef<HTMLInputElement>(null);
   const [working, setWorking] = useState(false);
   const [message, setMessage] = useState("");
+  const [aiUsage, setAiUsage] = useState<AiUsageSummary | null>(null);
+  const [aiUsageError, setAiUsageError] = useState("");
+  useEffect(() => {
+    let active = true;
+    loadAiUsageSummary().then((usage) => { if (active) setAiUsage(usage); })
+      .catch(() => { if (active) setAiUsageError("No se pudo consultar el gasto de IA."); });
+    return () => { active = false; };
+  }, []);
 
   async function save() {
     setWorking(true); setMessage("");
@@ -103,6 +111,19 @@ export function InstitutionProfile({ dashboard, onSaved }: {
         </div>}
       </aside>
     </div>
+    <section className="diagnostic-panel p-5 md:p-7" aria-labelledby="ai-cost-title">
+      <h2 id="ai-cost-title" className="text-xl font-bold">Uso de IA de esta docente</h2>
+      <p className="mt-1 text-sm text-[#526b87]">Costo aproximado de OpenAI y Jev en USD. Se registra desde esta versión; no incluye alojamiento ni almacenamiento.</p>
+      {aiUsage ? <>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <div className="rounded-xl border border-[#d4e1ed] bg-[#f8fbff] p-4"><p className="text-sm text-[#526b87]">Este mes ({aiUsage.month})</p><p className="text-2xl font-bold tabular-nums">US$ {aiUsage.currentMonth.costUsd.toFixed(4)}</p><p className="text-sm text-[#526b87]">{aiUsage.currentMonth.calls} llamadas</p></div>
+          <div className="rounded-xl border border-[#d4e1ed] bg-[#f8fbff] p-4"><p className="text-sm text-[#526b87]">Total registrado</p><p className="text-2xl font-bold tabular-nums">US$ {aiUsage.total.costUsd.toFixed(4)}</p><p className="text-sm text-[#526b87]">{aiUsage.total.calls} llamadas</p></div>
+        </div>
+        {aiUsage.breakdown.length > 0 && <details className="mt-4 rounded-xl border border-[#d4e1ed] bg-white p-4"><summary className="cursor-pointer font-semibold">Ver gasto por función</summary><div className="mt-3 space-y-2">{aiUsage.breakdown.filter((item) => item.monthCalls > 0).map((item) => <div key={`${item.provider}:${item.workflow}:${item.model}`} className="flex flex-wrap justify-between gap-2 border-t border-[#e9eef6] pt-2 text-sm"><span>{item.workflow.replaceAll("_", " ")} · {item.provider}</span><span className="tabular-nums">{item.monthCalls} llamadas · US$ {item.monthCostUsd.toFixed(4)}</span></div>)}</div></details>}
+        {aiUsage.currentMonth.unpricedCalls > 0 && <p className="mt-3 text-sm text-[#805a18]">{aiUsage.currentMonth.unpricedCalls} llamadas sin precio calculable: el total puede ser menor que el cargo real.</p>}
+        {aiUsage.currentMonth.estimatedCalls > 0 && <p className="mt-2 text-xs text-[#526b87]">{aiUsage.currentMonth.estimatedCalls} costos estimados con las tarifas vigentes al registrarse; el cobro del proveedor puede diferir.</p>}
+      </> : <p role={aiUsageError ? "alert" : "status"} className="mt-3 text-sm text-[#526b87]">{aiUsageError || "Cargando uso de IA…"}</p>}
+    </section>
   </div>;
 }
 

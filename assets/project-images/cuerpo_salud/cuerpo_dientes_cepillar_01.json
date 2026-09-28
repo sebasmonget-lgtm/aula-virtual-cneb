@@ -1,0 +1,43 @@
+{
+  "id": "cuerpo_dientes_cepillar_01",
+  "file": "cuerpo_salud/cuerpo_dientes_cepillar_01.jpg",
+  "master": "masters/cuerpo_dientes_cepillar_01.png",
+  "title": "Leo se cepilla los dientes",
+  "category": "cuerpo_salud",
+  "subcategory": "higiene",
+  "characters": [
+    "leo"
+  ],
+  "concepts": [
+    "higiene",
+    "dientes",
+    "salud"
+  ],
+  "actions": [
+    "cepillar",
+    "cuidar"
+  ],
+  "objects": [
+    "cepillo",
+    "espejo",
+    "vaso"
+  ],
+  "contexts": [
+    "proyecto",
+    "plan_anual",
+    "portada",
+    "cuerpo_salud",
+    "higiene"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "orientation": "landscape",
+  "aspect_ratio": "3:2",
+  "has_text": false,
+  "country_context": "PE",
+  "variant": 1,
+  "priority": 10
+}

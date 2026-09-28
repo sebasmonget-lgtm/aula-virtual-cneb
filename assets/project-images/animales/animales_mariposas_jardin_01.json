@@ -1,0 +1,42 @@
+{
+  "id": "animales_mariposas_jardin_01",
+  "file": "animales/animales_mariposas_jardin_01.jpg",
+  "master": "masters/animales_mariposas_jardin_01.png",
+  "title": "Luna observa mariposas en el jardín",
+  "category": "animales",
+  "subcategory": "mariposas",
+  "characters": [
+    "luna"
+  ],
+  "concepts": [
+    "mariposas",
+    "insectos",
+    "flores"
+  ],
+  "actions": [
+    "observar",
+    "comparar"
+  ],
+  "objects": [
+    "mariposas",
+    "flores"
+  ],
+  "contexts": [
+    "proyecto",
+    "plan_anual",
+    "portada",
+    "animales",
+    "mariposas"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "orientation": "landscape",
+  "aspect_ratio": "3:2",
+  "has_text": false,
+  "country_context": "PE",
+  "variant": 1,
+  "priority": 10
+}

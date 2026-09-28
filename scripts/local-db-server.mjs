@@ -17,7 +17,6 @@ import { generateTeacherAnnualPlan } from "../src/lib/ai-annual-plan-ui-service.
 import { ANNUAL_PREPLAN_FORMAT, AnnualPreplanError, ageFilteredAnnualCurriculum, generateAnnualPreplan, validateAnnualPreplan } from "../src/lib/annual-preplan-service.mjs";
 import { developConfirmedAnnualPlan } from "../src/lib/annual-formal-service.mjs";
 import { DiagnosticSuggestionError, suggestDiagnosticGroupReview } from "../src/lib/ai-diagnostic-evaluation-service.mjs";
-import { suggestDiagnosticStudentReview } from "../src/lib/ai-diagnostic-student-service.mjs";
 import { DiagnosticPriorityError, prepareDiagnosticPriorities, suggestDiagnosticPriorities, saveDiagnosticPriorities, confirmDiagnosticPriorities } from "../src/lib/diagnostic-priority-service.mjs";
 import { generateTeacherLearningExperience } from "../src/lib/ai-learning-experience-ui-service.mjs";
 import { generateProjectPreview, generateProjectDependents, generateProjectMaster, generateProjectFormal,
@@ -36,7 +35,8 @@ import { candidateProjectDates, ensureSchoolCalendar, loadEffectiveCalendar, rep
 import { listSavedDocuments, loadSavedDocument } from "../src/lib/document-library-service.mjs";
 import { prepareWordDownload } from "../src/lib/document-word-export.mjs";
 import { saveWordToLocalDownloads } from "../src/lib/local-word-save.mjs";
-import { loadInstitutionLogoForDocuments, normalizeInstitutionLogoUpload } from "../src/lib/institution-logo.mjs";
+import { buildInstitutionInitialsLogo, loadInstitutionLogoForDocuments, normalizeInstitutionLogoUpload } from "../src/lib/institution-logo.mjs";
+import { displayPersonName } from "../src/lib/person-name.mjs";
 import { validateLearningExperienceProposal } from "../src/lib/learning-experience-validation.mjs";
 import { inheritedActivityCriterion, routeItemFor, saveActivityDetails, saveExperienceDetails } from "../src/lib/experience-lineage.mjs";
 import { confirmActivityWithCriterion } from "../src/lib/activity-confirmation.mjs";
@@ -59,13 +59,17 @@ import { createPendingAIGenerationsStore } from "../src/lib/pending-ai-generatio
 import { createPilotClassroom, importStudentsForTeacher, parseStudentCsv } from "../src/lib/pilot-onboarding-service.mjs";
 import { createLocalPrivateEvidenceStorage } from "../src/lib/private-evidence-storage.mjs";
 import { validateShortAudio, transcribeAndPolishAudio, AUDIO_MIME_TYPES } from "../src/lib/audio-note-service.mjs";
-import { createOpenAICompetencyClassifier } from "../src/lib/openai-competency-classifier.mjs";
+import { buildClassifierOptions, createOpenAICompetencyClassifier } from "../src/lib/openai-competency-classifier.mjs";
+import { createJevCompetencySuggester, anonymousDecisionText } from "../src/lib/jev-competency-suggestion.mjs";
+import { jevFeatureEnabled } from "../src/lib/jev-openrouter-decision.mjs";
+import { eligibleProjectImages, publicProjectImage, suggestProjectImage } from "../src/lib/jev-project-image.mjs";
 import { createLocalPrivateInterviewStorage } from "../src/lib/private-interview-storage.mjs";
 import { recordOperationalEvent } from "../src/lib/operational-events.mjs";
+import { withAiUsageContext, loadTeacherAiUsage } from "../src/lib/ai-usage-service.mjs";
 import { completeDiagnosticReviewForTeacher, diagnosticProgressForTeacher, diagnosticStepProgressForTeacher, DiagnosticReviewError } from "../src/lib/diagnostic-review-service.mjs";
 import { DiagnosticExperienceError, loadDiagnosticExperienceWorkspace, recordDiagnosticExperienceObservation } from "../src/lib/diagnostic-experiences-v4.mjs";
 import { DiagnosticAssessmentError, loadDiagnosticAssessmentWorkspace, prepareDiagnosticSynthesis, saveDiagnosticSynthesis, confirmDiagnosticSynthesis, prepareDiagnosticStudentReview, saveDiagnosticStudentReview, confirmDiagnosticStudentReview, prepareDiagnosticGroupReview, saveDiagnosticGroupReview, confirmDiagnosticGroupReview, saveStudentInitialContext, diagnosticPlanningSummary } from "../src/lib/diagnostic-assessment-v4.mjs";
-import { DiagnosticSourceError, loadFamilyInterview, listFamilyInterviewStatuses, saveFamilyInterview, confirmFamilyInterview, attachFamilyInterview, familyInterviewAttachmentPath, recordSpontaneousObservation, recordMatrixDiagnosticObservation, loadSpontaneousObservations, correctSpontaneousClassification, suggestSpontaneousCompetencies, markSpontaneousNeedsReview } from "../src/lib/diagnostic-sources-v4.mjs";
+import { DiagnosticSourceError, loadFamilyInterview, listFamilyInterviewStatuses, saveFamilyInterview, confirmFamilyInterview, saveAndConfirmFamilyInterview, attachFamilyInterview, familyInterviewAttachmentPath, recordSpontaneousObservation, recordMatrixDiagnosticObservation, loadSpontaneousObservations, correctSpontaneousClassification, suggestSpontaneousCompetencies, markSpontaneousNeedsReview } from "../src/lib/diagnostic-sources-v4.mjs";
 import { neutralizeAssessmentText } from "../src/lib/assessment-v4-service.mjs";
 import { loadPlanningFeedback, planningFeedbackText } from "../src/lib/planning-feedback.mjs";
 import { expectedRevision, assertRevision, conflictPayload, httpStatusForError, isVersionConflict, versionTransaction, VersionConflictError, publicErrorMessage } from "../src/lib/version-integrity.mjs";
@@ -105,7 +109,7 @@ const allowedOrigins = new Set([
 const exportTables = [
   "profiles", "curriculum_source_documents", "curriculum_versions", "levels", "cycles", "age_grades", "curriculum_areas",
   "competencies", "capacities", "standards", "performances", "transversal_approaches", "school_years", "classrooms",
-  "institution_assets", "institution_profiles", "students", "learning_experiences",
+  "institution_assets", "institution_profiles", "students", "learning_experiences", "ai_usage_events",
   "activities", "activity_criteria", "evidences", "competency_observation_guides",
   "document_templates", "document_versions", "diagnostic_sessions",
   "diagnostic_entries", "observation_references", "student_observations", "diagnostic_experience_observations", "diagnostic_spontaneous_observations", "student_family_interviews", "student_family_interview_attachments", "diagnostic_competency_reviews", "diagnostic_student_reviews", "diagnostic_group_reviews", "diagnostic_priority_reviews",
@@ -121,13 +125,15 @@ if (dbMode === "local") await migrate();
 else {
   const schema = (await db.query(`select to_regclass('public.profiles') as profiles,
     to_regclass('public.ai_pending_generations') as generations,
-    to_regclass('public.period_closure_versions') as closures`)).rows[0];
-  if (!schema?.profiles || !schema.generations || !schema.closures) {
+    to_regclass('public.period_closure_versions') as closures,
+    to_regclass('public.ai_usage_events') as usage_events`)).rows[0];
+  if (!schema?.profiles || !schema.generations || !schema.closures || !schema.usage_events) {
     await database.close();
     throw new Error("Faltan migraciones Supabase; aplícalas antes de iniciar Ayni.");
   }
-  const permission = (await db.query(`select has_table_privilege(current_user, 'public.profiles', 'INSERT') as backend_writes`)).rows[0];
-  if (!permission?.backend_writes) {
+  const permission = (await db.query(`select has_table_privilege(current_user, 'public.profiles', 'INSERT') as backend_writes,
+    has_table_privilege(current_user, 'public.ai_usage_events', 'INSERT') as usage_writes`)).rows[0];
+  if (!permission?.backend_writes || !permission.usage_writes) {
     await database.close();
     throw new Error("La conexión PostgreSQL del backend necesita permiso de escritura.");
   }
@@ -137,19 +143,29 @@ await pendingAIGenerations.pruneExpired();
 let diagnosticClassificationQueue = Promise.resolve();
 const diagnosticClassificationInFlight = new Set();
 const diagnosticClassifier = createOpenAICompetencyClassifier();
+const jevCompetencySuggester = jevFeatureEnabled("competencies") ? createJevCompetencySuggester() : null;
+const jevProjectImageEnabled = jevFeatureEnabled("project_image");
+const preferredDiagnosticClassifier = jevCompetencySuggester ? { classify: async (input) => {
+  try { return await jevCompetencySuggester.classify(input); }
+  catch {
+    if (process.env.OPENAI_API_KEY) return diagnosticClassifier.classify(input);
+    throw new Error("No hay un clasificador disponible.");
+  }
+} } : diagnosticClassifier;
 function queueDiagnosticClassification(id, studentId, teacherId) {
   if (diagnosticClassificationInFlight.has(id)) return;
   diagnosticClassificationInFlight.add(id);
-  diagnosticClassificationQueue = diagnosticClassificationQueue.then(async () => {
+  diagnosticClassificationQueue = diagnosticClassificationQueue.then(() => withAiUsageContext({ teacherId, db }, async () => {
     try {
-      if (process.env.OPENAI_API_KEY) await suggestSpontaneousCompetencies(db, teacherId, id, diagnosticClassifier);
+      if (process.env.OPENAI_API_KEY || jevCompetencySuggester)
+        await suggestSpontaneousCompetencies(db, teacherId, id, preferredDiagnosticClassifier);
       else await markSpontaneousNeedsReview(db, teacherId, id);
       await refreshStudentContextSnapshot(db, studentId);
     } catch {
       await markSpontaneousNeedsReview(db, teacherId, id).catch(() => {});
       recordOperationalEvent("diagnostic_classification_failed", { workflow: "diagnostic" });
     } finally { diagnosticClassificationInFlight.delete(id); }
-  });
+  }));
 }
 const pendingDiagnosticRows = authMode === "local" ? (await db.query(`select o.id,o.student_id from diagnostic_spontaneous_observations o
   join classrooms c on c.id=o.classroom_id where c.teacher_id=$1 and o.classification_status='pending'
@@ -213,14 +229,6 @@ function sendAsset(response, status, body, mimeType, origin, cacheControl = "pri
 
 function cleanText(value, maximum = 200) {
   return typeof value === "string" ? value.trim().slice(0, maximum) : "";
-}
-
-function escapeXml(value) {
-  return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
-}
-
-function safeHex(value, fallback) {
-  return /^#[0-9a-f]{6}$/i.test(value ?? "") ? value : fallback;
 }
 
 const parsedBodies = new WeakMap();
@@ -369,7 +377,7 @@ async function dashboard() {
       calendar_exception: calendarException,
       journey: { mode: journey.mode, current_block_id: journey.currentBlock?.id ?? null, next_block_id: journey.nextBlock?.id ?? null, primary_action: journey.primaryAction, pending_items: journey.pendingItems },
     },
-    students: studentsResult.rows,
+    students: studentsResult.rows.map((student) => ({ ...student, name: displayPersonName(student.name), full_name: displayPersonName(student.full_name) })),
     metrics: metricsResult.rows[0],
     profile: profileResult.rows[0] ? {
       ...profileResult.rows[0],
@@ -387,9 +395,11 @@ async function studentProfile(studentId) {
   `, [studentId, teacherId]);
   if (!allowed.rows.length) return null;
   const context = await buildStudentPedagogicalContext(db, studentId);
+  const birthDate = (await db.query(`select birth_date::text as birth_date from students where id=$1`, [studentId])).rows[0]?.birth_date ?? null;
   const snapshot = (await db.query(`select generated_at, source_updated_at from student_context_snapshots
     where student_id = $1 and version = 1`, [studentId])).rows[0] ?? null;
-  return { ...context, snapshot };
+  return { ...context, student: { ...context.student, name: displayPersonName(context.student.name),
+    first_name: displayPersonName(context.student.first_name), last_name: displayPersonName(context.student.last_name), birth_date: birthDate }, snapshot };
 }
 
 async function activeClassroomForActivityGeneration() {
@@ -633,16 +643,24 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
     if (request.method === "POST" && url.pathname === "/api/audio/transcribe") {
       try {
         const body = await readJson(request);
-        const owned = (await db.query(`select s.id from students s join classrooms c on c.id=s.classroom_id
-          where s.id=$1 and s.status='active' and c.status='active' and c.teacher_id=$2`, [body.studentId,teacherId])).rows[0];
-        if (!owned) { send(response, 404, { error: "Niño no encontrado." }, origin); return; }
+        const purpose = body.purpose ?? "observation";
+        if (!["observation", "interview", "teacher_comment", "group_summary"].includes(purpose) ||
+          (body.scope !== undefined && body.scope !== "classroom") ||
+          (body.scope === "classroom" && (purpose !== "group_summary" || body.studentId || body.classroomId)) ||
+          (purpose === "group_summary" && body.scope !== "classroom"))
+          throw new TypeError("El propósito de la grabación no es válido.");
+        const owned = body.scope === "classroom"
+          ? (await db.query(`select id from classrooms where teacher_id=$1 and status='active' limit 1`, [teacherId])).rows[0]
+          : (await db.query(`select s.id from students s join classrooms c on c.id=s.classroom_id
+            where s.id=$1 and s.status='active' and c.status='active' and c.teacher_id=$2`, [body.studentId,teacherId])).rows[0];
+        if (!owned) { send(response, 404, { error: body.scope === "classroom" ? "Aula no encontrada." : "Niño no encontrado." }, origin); return; }
         const media = await decodePrivateMedia(body.audio);
         if (!media?.audio) throw new TypeError("Selecciona un audio de hasta un minuto.");
         const names = (await db.query(`select s.first_name,s.last_name,s.preferred_name from students s
           join classrooms c on c.id=s.classroom_id where c.teacher_id=$1 and c.status='active'`, [teacherId])).rows
           .flatMap((row) => [row.first_name,row.last_name,row.preferred_name]).filter(Boolean);
         const result = await transcribeAndPolishAudio({ bytes: media.bytes, mimeType: media.mimeType,
-          context: body.context, names });
+          context: body.context, names, purpose });
         send(response, 200, { transcript: result.transcript, improved_text: result.improved_text }, origin);
       } catch (error) {
         recordOperationalEvent("audio_transcription_failed", { requestId, workflow: "audio" });
@@ -662,7 +680,12 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
     }
     if (request.method === "POST" && url.pathname === "/api/pilot/setup") {
       try {
-        await createPilotClassroom(db, teacherId, await readJson(request));
+        const body = await readJson(request);
+        if (dbMode === "postgres" && (body.logoUpload || body.createLogo)) {
+          send(response, 503, { error: "La carga de logos estará disponible al conectar Storage." }, origin);
+          return;
+        }
+        await createPilotClassroom(db, teacherId, body, { assetsDir });
         send(response, 201, { dashboard: await dashboard() }, origin);
       } catch (error) { send(response, httpStatusForError(error, 422), { error: publicErrorMessage(error) }, origin); }
       return;
@@ -772,13 +795,10 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         } catch (error) { send(response, httpStatusForError(error, 400), { error: publicErrorMessage(error) }, origin); return; }
       }
       if (body.createLogo) {
-        const initials = cleanText(body.logoInitials, 3).toUpperCase().replace(/[^A-ZÁÉÍÓÚÑ0-9]/g, "") || "AA";
-        const primary = safeHex(body.logoPrimary, "#173d3a");
-        const accent = safeHex(body.logoAccent, "#f6c85f");
         const assetId = randomUUID();
         const relativePath = `.local/assets/${assetId}.svg`;
-        const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512"><rect width="512" height="512" rx="116" fill="${primary}"/><circle cx="392" cy="120" r="54" fill="${accent}"/><path d="M120 342c82-8 137-58 156-151 55 54 73 114 51 181-69 30-138 20-207-30Z" fill="${accent}" opacity=".95"/><text x="126" y="280" font-family="Arial,sans-serif" font-size="132" font-weight="700" fill="white">${escapeXml(initials)}</text></svg>`;
-        newLogo = { id: assetId, bytes: Buffer.from(svg), relativePath, mimeType: "image/svg+xml", width: 512, height: 512 };
+        newLogo = { id: assetId, bytes: buildInstitutionInitialsLogo({ initials: body.logoInitials,
+          primary: body.logoPrimary, accent: body.logoAccent }), relativePath, mimeType: "image/svg+xml", width: 512, height: 512 };
         logoAssetId = assetId;
       }
       await db.exec("begin");
@@ -829,6 +849,10 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
           const saved = await saveFamilyInterview(db, teacherId, studentId, (await readJson(request)).details);
           await refreshStudentContextSnapshot(db, studentId);
           send(response, 200, saved, origin);
+        } else if (request.method === "POST" && parts.length === 7 && parts[6] === "save-and-confirm") {
+          const saved = await saveAndConfirmFamilyInterview(db, teacherId, studentId, (await readJson(request)).details);
+          await refreshStudentContextSnapshot(db, studentId);
+          send(response, 200, saved, origin);
         } else if (request.method === "POST" && parts[6] === "confirm") {
           const saved = await confirmFamilyInterview(db, teacherId, studentId);
           await refreshStudentContextSnapshot(db, studentId);
@@ -855,7 +879,8 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
           sendAsset(response, 200, attachment.bytes, attachment.mimeType, origin, "private, no-store");
         } else send(response, 404, { error: "Ruta de entrevista no encontrada." }, origin);
       } catch (error) {
-        if (error instanceof DiagnosticSourceError || error instanceof TypeError) send(response, httpStatusForError(error, 422), { error: publicErrorMessage(error) }, origin);
+        if (isVersionConflict(error)) send(response, 409, conflictPayload(error), origin);
+        else if (error instanceof DiagnosticSourceError || error instanceof TypeError) send(response, httpStatusForError(error, 422), { error: publicErrorMessage(error) }, origin);
         else throw error;
       }
       return;
@@ -898,6 +923,24 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
           await refreshStudentContextSnapshot(db, saved.student_id);
           send(response, 201, saved, origin);
           setImmediate(() => queueDiagnosticClassification(saved.id, saved.student_id, teacherId));
+        } else if (request.method === "POST" && /^\/api\/diagnostics\/spontaneous-observations\/[0-9a-f-]+\/(?:suggest|suggest-jev)$/i.test(url.pathname)) {
+          await readJson(request);
+          const id = url.pathname.split("/")[4];
+          const target = (await db.query(`select o.student_id from diagnostic_spontaneous_observations o
+            join classrooms c on c.id=o.classroom_id where o.id=$1 and c.teacher_id=$2 and o.created_by=$2`, [id,teacherId])).rows[0];
+          if (!target) { send(response, 404, { error: "Observación no encontrada." }, origin); return; }
+          try {
+            const result = await suggestSpontaneousCompetencies(db, teacherId, id, preferredDiagnosticClassifier,
+              { allowReview: true });
+            await refreshStudentContextSnapshot(db, target.student_id);
+            send(response, 200, result, origin);
+          } catch (error) {
+            if (error instanceof DiagnosticSourceError) throw error;
+            await markSpontaneousNeedsReview(db, teacherId, id);
+            await refreshStudentContextSnapshot(db, target.student_id);
+            recordOperationalEvent("diagnostic_classification_failed", { workflow: "diagnostic" });
+            send(response, 503, { error: "Ayni no pudo preparar la recomendación. Puedes reintentar o elegir una competencia." }, origin);
+          }
         } else if (request.method === "PUT" && url.pathname.endsWith("/classification")) {
           const id = url.pathname.split("/")[4];
           const body = await readJson(request);
@@ -924,7 +967,9 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
           catch { recordOperationalEvent("student_context_refresh_failed", { workflow: "diagnostic" }); }
         }
         else if (request.method === "POST" && url.pathname === "/api/diagnostics/student-reviews/prepare") result = await prepareDiagnosticStudentReview(db, teacherId, (await readJson(request)).studentId);
-        else if (request.method === "POST" && url.pathname === "/api/diagnostics/student-reviews/suggest") result = await suggestDiagnosticStudentReview(db, teacherId, (await readJson(request)).draftId);
+        else if (request.method === "POST" && url.pathname === "/api/diagnostics/student-reviews/suggest") {
+          send(response, 422, { error: "El comentario individual lo escribe o dicta la docente.", reason: "teacher_comment_only" }, origin); return;
+        }
         else if (request.method === "PUT" && parts.length === 5 && parts[3] === "student-reviews") result = await saveDiagnosticStudentReview(db, teacherId, parts[4], (await readJson(request)).details);
         else if (request.method === "POST" && parts.length === 6 && parts[3] === "student-reviews" && parts[5] === "confirm") {
           result = await confirmDiagnosticStudentReview(db, teacherId, parts[4]);
@@ -1456,7 +1501,19 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
             priorities: classroom.confirmed_priorities.map((item) => ({ title: neutralizeAssessmentText(item.title, names),
               reason: neutralizeAssessmentText(item.reason, names), competency_ids: item.related_competency_ids })),
             curriculum } });
-        send(response, 200, { proposal: result.output }, origin);
+        let competency_suggestion = null;
+        if (jevCompetencySuggester) {
+          const anonymousSituation = anonymousDecisionText(situation, names);
+          if (anonymousSituation) {
+            try {
+              const options = buildClassifierOptions((await loadKnowledgeBaseV4()).competencyCards,
+                classroom.age, curriculum.map((card) => card.id));
+              competency_suggestion = (await jevCompetencySuggester.suggestPlanning({
+                situation: anonymousSituation, age: classroom.age, options })).candidate_ids;
+            } catch { /* The generated proposal remains available for teacher review. */ }
+          }
+        }
+        send(response, 200, { proposal: result.output, competency_suggestion }, origin);
       } catch (error) { send(response, httpStatusForError(error, 422), { error: publicErrorMessage(error) }, origin); }
       return;
     }
@@ -1496,6 +1553,72 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         send(response, 201, { id: copied.id, proposal_id: candidate.proposal_id,
           message: "Nueva versión de «Mi año» lista para revisar. Confírmala antes de desarrollar el proyecto." }, origin);
       } catch (error) { send(response, httpStatusForError(error, 422), isVersionConflict(error) ? conflictPayload(error) : { error: publicErrorMessage(error) }, origin); }
+      return;
+    }
+    if (request.method === "GET" && /^\/api\/project-flow\/[0-9a-f-]+\/image-options$/i.test(url.pathname)) {
+      const { classroom, row } = await projectFlowRow(url.pathname.split("/")[3]);
+      if (!row) { send(response, 404, { error: "Proyecto no disponible." }, origin); return; }
+      const images = await eligibleProjectImages({ title: row.title, purpose: row.purpose,
+        situation: row.details?.decisions?.context_summary }, classroom.age);
+      send(response, 200, { images: images.map(publicProjectImage), selected_id: row.details?.image_id ?? null,
+        suggested_id: row.details?.image_suggested_id ?? null }, origin); return;
+    }
+    if (request.method === "POST" && /^\/api\/project-flow\/[0-9a-f-]+\/image-suggestion$/i.test(url.pathname)) {
+      try {
+        const body = await readJson(request);
+        const { classroom, row } = await projectFlowRow(url.pathname.split("/")[3]);
+        if (!row || row.status !== "draft" || row.details?.stage !== "map_review") {
+          send(response, 404, { error: "Proyecto en revisión no disponible." }, origin); return;
+        }
+        if (!jevFeatureEnabled("project_image")) {
+          send(response, 503, { error: "Ayni no pudo recomendar una imagen. Puedes elegirla manualmente." }, origin); return;
+        }
+        if (Number(body.expectedRevision) !== Number(row.revision)) throw new VersionConflictError("El proyecto cambió. Vuelve a abrirlo.");
+        const names = (await db.query(`select first_name,last_name,preferred_name from students where classroom_id=$1`,
+          [classroom.id])).rows.flatMap((item) => [item.first_name,item.last_name,item.preferred_name]).filter(Boolean);
+        const suggested = await suggestProjectImage({ project: { title: row.title, purpose: row.purpose,
+          situation: row.details?.decisions?.context_summary }, age: classroom.age, knownNames: names });
+        send(response, 200, { suggested_id: suggested.suggested_id,
+          images: suggested.candidates, reason: suggested.reason }, origin);
+      } catch (error) { send(response, httpStatusForError(error, 422),
+        isVersionConflict(error) ? conflictPayload(error) : { error: publicErrorMessage(error, "Ayni no pudo recomendar una imagen.") }, origin); }
+      return;
+    }
+    if (request.method === "GET" && url.pathname === "/api/ai-usage") {
+      send(response, 200, await loadTeacherAiUsage(db, teacherId), origin);
+      return;
+    }
+    if (request.method === "GET" && /^\/api\/project-flow\/images\/[a-z0-9_]+$/i.test(url.pathname)) {
+      const { classroom, row } = await projectFlowRow(url.searchParams.get("projectId"));
+      if (!row) { send(response, 404, { error: "Proyecto no disponible." }, origin); return; }
+      const image = (await eligibleProjectImages({ title: row.title, purpose: row.purpose,
+        situation: row.details?.decisions?.context_summary }, classroom.age))
+        .find((entry) => entry.id === url.pathname.split("/")[4]);
+      if (!image) { send(response, 404, { error: "Imagen no disponible." }, origin); return; }
+      sendAsset(response, 200, await readFile(image.file), "image/jpeg", origin, "private, max-age=3600"); return;
+    }
+    if (request.method === "PUT" && /^\/api\/project-flow\/[0-9a-f-]+\/image$/i.test(url.pathname)) {
+      try {
+        const id = url.pathname.split("/")[3], body = await readJson(request);
+        const { classroom, row } = await projectFlowRow(id);
+        if (!row || row.status !== "draft" || row.details?.stage !== "map_review") {
+          send(response, 404, { error: "Proyecto en revisión no disponible." }, origin); return;
+        }
+        const images = await eligibleProjectImages({ title: row.title, purpose: row.purpose,
+          situation: row.details?.decisions?.context_summary }, classroom.age);
+        const selected = body.imageId ?? null;
+        if (selected !== null && !images.some((item) => item.id === selected))
+          throw new Error("La imagen no pertenece a las opciones elegibles del proyecto.");
+        const details = { ...row.details, image_id: selected,
+          teacher_overrides: [...(row.details.teacher_overrides ?? []), { field: "image_id",
+            from: row.details.image_id ?? null, to: selected, source: "teacher_review", at: new Date().toISOString() }] };
+        const saved = (await db.query(`update learning_experiences set details=$1::jsonb
+          where id=$2 and classroom_id=$3 and status='draft' and revision=$4 returning *`,
+        [JSON.stringify(details), id, classroom.id, expectedRevision(body.expectedRevision)])).rows[0];
+        if (!saved) throw new VersionConflictError("El borrador cambió. Vuelve a abrirlo.");
+        send(response, 200, { experience: saved }, origin);
+      } catch (error) { send(response, httpStatusForError(error, 422),
+        isVersionConflict(error) ? conflictPayload(error) : { error: publicErrorMessage(error) }, origin); }
       return;
     }
     if (request.method === "POST" && url.pathname === "/api/project-flow/start") {
@@ -1547,7 +1670,9 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
           decisions, workflow: row.type });
         const details = { flow_version: "project-master-v1", stage: "dependents", preview: row.details.preview,
           decisions, dependents: result.output, previous_map: row.details.activity_route ?? row.details.previous_map ?? null,
-          teacher_overrides: row.details.teacher_overrides ?? [] };
+          teacher_overrides: row.details.teacher_overrides ?? [],
+          ...(Object.hasOwn(row.details, "image_id") ? { image_id: row.details.image_id } : {}),
+          image_suggested_id: row.details.image_suggested_id ?? null };
         const saved = (await db.query(`update learning_experiences set purpose=$1,details=$2::jsonb
           where id=$3 and status='draft' and revision=$4 returning *`, [decisions.purpose,JSON.stringify(details),id,
           expectedRevision(body.expectedRevision)])).rows[0];
@@ -1572,10 +1697,23 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
           dependents, availableDates: calendarReview.selected_dates, workflow: row.type });
         const base = projectDetails({ source: source.source, preview: row.details.preview,
           decisions: row.details.decisions, dependents, master: generated.output, previous: row.details });
+        let imageSuggestion = null;
+        if (jevProjectImageEnabled && !Object.hasOwn(row.details, "image_id")) {
+          try {
+            const names = (await db.query(`select first_name,last_name,preferred_name from students where classroom_id=$1`,
+              [source.classroom.id])).rows.flatMap((item) =>
+              [item.first_name,item.last_name,item.preferred_name]).filter(Boolean);
+            imageSuggestion = await suggestProjectImage({ project: { title: source.source.title,
+              purpose: row.details.decisions.purpose, situation: row.details.decisions.context_summary },
+              age: source.classroom.age, knownNames: names });
+          } catch { /* Image is optional; leave it unset for teacher review. */ }
+        }
         const route = preserveTeacherMapEdits(base.activity_route, row.details.previous_map ?? row.details.activity_route,
           row.details.teacher_overrides, row.details.decisions);
         validateEditedActivityMap(route, row.details.decisions, dependents, calendarReview.selected_dates);
         const details = { ...base, activity_route: route, previous_map: row.details.previous_map ?? null,
+          image_id: Object.hasOwn(row.details, "image_id") ? row.details.image_id : imageSuggestion?.suggested_id ?? null,
+          image_suggested_id: imageSuggestion?.suggested_id ?? row.details.image_suggested_id ?? null,
           stage: "map_review" };
         const saved = (await db.query(`update learning_experiences set title=$1,purpose=$2,details=$3::jsonb,
           generation_metadata=$4::jsonb where id=$5 and status='draft' and revision=$6 returning *`,
@@ -1638,6 +1776,10 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         const route = validateEditedActivityMap(row.details.activity_route, row.details.decisions, row.details.dependents, calendarReview.selected_dates);
         const protectedVersion = await protectedProjectVersion(row);
         if (protectedVersion) assertFutureProjectMapEdits(protectedVersion.sourceRoute, route, protectedVersion);
+        if (row.details.image_id && !(await eligibleProjectImages({ title: row.title, purpose: row.purpose,
+          situation: row.details.decisions?.context_summary }, source.classroom.age))
+          .some((item) => item.id === row.details.image_id))
+          throw new Error("La imagen elegida ya no está disponible para este proyecto.");
         const confirmed = await confirmLearningExperienceVersion(db, source.classroom.id, id, expectedRevision(body.expectedRevision));
         send(response, 200, confirmed, origin);
       } catch (error) { send(response, httpStatusForError(error, 422), isVersionConflict(error) ? conflictPayload(error) : { error: publicErrorMessage(error) }, origin); }
@@ -2240,7 +2382,8 @@ const server = createServer(async (request, response) => {
       return;
     }
   }
-  await handleAuthenticatedRequest(context, request, response);
+  await withAiUsageContext({ teacherId: context.teacherId, db },
+    () => handleAuthenticatedRequest(context, request, response));
   } finally {
     if (dbMode === "postgres") {
       try { await requestDb.close(); }

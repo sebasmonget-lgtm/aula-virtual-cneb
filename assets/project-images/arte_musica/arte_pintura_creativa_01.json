@@ -1,0 +1,44 @@
+{
+  "id": "arte_pintura_creativa_01",
+  "file": "arte_musica/arte_pintura_creativa_01.jpg",
+  "master": "masters/arte_pintura_creativa_01.png",
+  "title": "Luna pinta libremente",
+  "category": "arte_musica",
+  "subcategory": "pintura",
+  "characters": [
+    "luna"
+  ],
+  "concepts": [
+    "arte",
+    "pintura",
+    "colores",
+    "creatividad"
+  ],
+  "actions": [
+    "pintar",
+    "crear"
+  ],
+  "objects": [
+    "pincel",
+    "papel",
+    "témperas"
+  ],
+  "contexts": [
+    "proyecto",
+    "plan_anual",
+    "portada",
+    "arte_musica",
+    "pintura"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "orientation": "landscape",
+  "aspect_ratio": "3:2",
+  "has_text": false,
+  "country_context": "PE",
+  "variant": 1,
+  "priority": 10
+}

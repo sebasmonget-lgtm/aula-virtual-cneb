@@ -1,0 +1,43 @@
+{
+  "id": "animales_insectos_lupa_01",
+  "file": "animales/animales_insectos_lupa_01.jpg",
+  "master": "masters/animales_insectos_lupa_01.png",
+  "title": "Sofía observa insectos con una lupa",
+  "category": "animales",
+  "subcategory": "insectos",
+  "characters": [
+    "sofia"
+  ],
+  "concepts": [
+    "insectos",
+    "mariquita",
+    "naturaleza"
+  ],
+  "actions": [
+    "observar",
+    "investigar"
+  ],
+  "objects": [
+    "mariquita",
+    "lupa",
+    "hoja"
+  ],
+  "contexts": [
+    "proyecto",
+    "plan_anual",
+    "portada",
+    "animales",
+    "insectos"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "orientation": "landscape",
+  "aspect_ratio": "3:2",
+  "has_text": false,
+  "country_context": "PE",
+  "variant": 1,
+  "priority": 10
+}

@@ -1,0 +1,2689 @@
+{
+  "version": 1,
+  "images": [
+    {
+      "id": "agua_arcoiris_observar_01",
+      "file": "agua/agua_arcoiris_observar_01.jpg",
+      "master": "masters/agua_arcoiris_observar_01.png",
+      "title": "Leo y Sofía descubren un arcoíris",
+      "category": "agua",
+      "subcategory": "clima",
+      "characters": [
+        "leo",
+        "sofia"
+      ],
+      "concepts": [
+        "arcoíris",
+        "clima",
+        "lluvia",
+        "colores"
+      ],
+      "actions": [
+        "observar",
+        "conversar"
+      ],
+      "objects": [
+        "arcoíris",
+        "nubes",
+        "gotas"
+      ],
+      "contexts": [
+        "proyecto",
+        "plan_anual",
+        "portada",
+        "agua",
+        "clima"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "orientation": "landscape",
+      "aspect_ratio": "3:2",
+      "has_text": false,
+      "country_context": "PE",
+      "variant": 1,
+      "priority": 10
+    },
+    {
+      "id": "agua_exploracion_flotar_01",
+      "file": "agua/agua_exploracion_flotar_01.jpg",
+      "master": "masters/agua_exploracion_flotar_01.png",
+      "title": "Leo y Luna exploran qué flota",
+      "category": "agua",
+      "subcategory": "experimentos",
+      "characters": [
+        "leo",
+        "luna"
+      ],
+      "concepts": [
+        "agua",
+        "flotar",
+        "hundirse",
+        "indagación"
+      ],
+      "actions": [
+        "explorar",
+        "observar",
+        "comparar"
+      ],
+      "objects": [
+        "tina",
+        "barco",
+        "piedra"
+      ],
+      "contexts": [
+        "proyecto",
+        "plan_anual",
+        "portada",
+        "agua",
+        "experimentos"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "orientation": "landscape",
+      "aspect_ratio": "3:2",
+      "has_text": false,
+      "country_context": "PE",
+      "variant": 1,
+      "priority": 10
+    },
+    {
+      "id": "agua_lluvia_observar_01",
+      "file": "agua/agua_lluvia_observar_01.jpg",
+      "master": "masters/agua_lluvia_observar_01.png",
+      "title": "Mateo observa la lluvia",
+      "category": "agua",
+      "subcategory": "clima",
+      "characters": [
+        "mateo"
+      ],
+      "concepts": [
+        "lluvia",
+        "clima",
+        "agua"
+      ],
+      "actions": [
+        "observar",
+        "comparar"
+      ],
+      "objects": [
+        "gotas",
+        "charcos",
+        "paraguas"
+      ],
+      "contexts": [
+        "proyecto",
+        "plan_anual",
+        "portada",
+        "agua",
+        "clima"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "orientation": "landscape",
+      "aspect_ratio": "3:2",
+      "has_text": false,
+      "country_context": "PE",
+      "variant": 1,
+      "priority": 10
+    },
+    {
+      "id": "agua_viento_explorar_01",
+      "file": "agua/agua_viento_explorar_01.jpg",
+      "master": "masters/agua_viento_explorar_01.png",
+      "title": "Luna explora el viento",
+      "category": "agua",
+      "subcategory": "clima",
+      "characters": [
+        "luna"
+      ],
+      "concepts": [
+        "viento",
+        "clima",
+        "movimiento"
+      ],
+      "actions": [
+        "observar",
+        "explorar"
+      ],
+      "objects": [
+        "molinillo",
+        "árboles"
+      ],
+      "contexts": [
+        "proyecto",
+        "plan_anual",
+        "portada",
+        "agua",
+        "clima"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "orientation": "landscape",
+      "aspect_ratio": "3:2",
+      "has_text": false,
+      "country_context": "PE",
+      "variant": 1,
+      "priority": 10
+    },
+    {
+      "id": "alimentos_frutas_explorar_01",
+      "file": "alimentos/alimentos_frutas_explorar_01.jpg",
+      "master": "masters/alimentos_frutas_explorar_01.png",
+      "title": "Leo y Luna exploran frutas",
+      "category": "alimentos",
+      "subcategory": "frutas",
+      "characters": [
+        "leo",
+        "luna"
+      ],
+      "concepts": [
+        "frutas",
+        "colores",
+        "formas",
+        "alimentación"
+      ],
+      "actions": [
+        "observar",
+        "comparar"
+      ],
+      "objects": [
+        "manzana",
+        "plátano",
+        "naranja"
+      ],
+      "contexts": [
+        "proyecto",
+        "plan_anual",
+        "portada",
+        "alimentos",
+        "frutas"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "orientation": "landscape",
+      "aspect_ratio": "3:2",
+      "has_text": false,
+      "country_context": "PE",
+      "variant": 1,
+      "priority": 10
+    },
+    {
+      "id": "alimentos_receta_sencilla_01",
+      "file": "alimentos/alimentos_receta_sencilla_01.jpg",
+      "master": "masters/alimentos_receta_sencilla_01.png",
+      "title": "Sofía prepara una receta sencilla",
+      "category": "alimentos",
+      "subcategory": "receta",
+      "characters": [
+        "sofia",
+        "papa_diego"
+      ],
+      "concepts": [
+        "receta",
+        "frutas",
+        "alimentación"
+      ],
+      "actions": [
+        "preparar",
+        "mezclar"
+      ],
+      "objects": [
+        "bol",
+        "frutas",
+        "cuchara"
+      ],
+      "contexts": [
+        "proyecto",
+        "plan_anual",
+        "portada",
+        "alimentos",
+        "receta"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "orientation": "landscape",
+      "aspect_ratio": "3:2",
+      "has_text": false,
+      "country_context": "PE",
+      "variant": 1,
+      "priority": 10
+    },
+    {
+      "id": "alimentos_verduras_huerto_01",
+      "file": "alimentos/alimentos_verduras_huerto_01.jpg",
+      "master": "masters/alimentos_verduras_huerto_01.png",
+      "title": "Mateo cosecha verduras",
+      "category": "alimentos",
+      "subcategory": "verduras",
+      "characters": [
+        "mateo",
+        "mama_clara"
+      ],
+      "concepts": [
+        "verduras",
+        "huerto",
+        "alimentación"
+      ],
+      "actions": [
+        "cosechar",
+        "observar"
+      ],
+      "objects": [
+        "zanahoria",
+        "tierra",
+        "canasta"
+      ],
+      "contexts": [
+        "proyecto",
+        "plan_anual",
+        "portada",
+        "alimentos",
+        "verduras"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "orientation": "landscape",
+      "aspect_ratio": "3:2",
+      "has_text": false,
+      "country_context": "PE",
+      "variant": 1,
+      "priority": 10
+    },
+    {
+      "id": "ambiente_agua_cuidar_01",
+      "file": "ambiente/ambiente_agua_cuidar_01.jpg",
+      "master": "masters/ambiente_agua_cuidar_01.png",
+      "title": "Mateo cuida el agua",
+      "category": "ambiente",
+      "subcategory": "agua",
+      "characters": [
+        "mateo"
+      ],
+      "concepts": [
+        "agua",
+        "ahorro",
+        "cuidado",
+        "ambiente"
+      ],
+      "actions": [
+        "cerrar",
+        "cuidar"
+      ],
+      "objects": [
+        "grifo",
+        "regadera",
+        "agua"
+      ],
+      "contexts": [
+        "proyecto",
+        "plan_anual",
+        "portada",
+        "ambiente",
+        "agua"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "orientation": "landscape",
+      "aspect_ratio": "3:2",
+      "has_text": false,
+      "country_context": "PE",
+      "variant": 1,
+      "priority": 10
+    },
+    {
+      "id": "ambiente_limpieza_parque_01",
+      "file": "ambiente/ambiente_limpieza_parque_01.jpg",
+      "master": "masters/ambiente_limpieza_parque_01.png",
+      "title": "Amigos limpian el parque",
+      "category": "ambiente",
+      "subcategory": "limpieza",
+      "characters": [
+        "leo",
+        "luna",
+        "mateo"
+      ],
+      "concepts": [
+        "limpieza",
+        "parque",
+        "ambiente",
+        "convivencia"
+      ],
+      "actions": [
+        "recoger",
+        "cuidar"
+      ],
+      "objects": [
+        "guantes",
+        "papeles",
+        "bolsa"
+      ],
+      "contexts": [
+        "proyecto",
+        "plan_anual",
+        "portada",
+        "ambiente",
+        "limpieza"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "orientation": "landscape",
+      "aspect_ratio": "3:2",
+      "has_text": false,
+      "country_context": "PE",
+      "variant": 1,
+      "priority": 10
+    },
+    {
+      "id": "ambiente_reciclaje_clasificar_01",
+      "file": "ambiente/ambiente_reciclaje_clasificar_01.jpg",
+      "master": "masters/ambiente_reciclaje_clasificar_01.png",
+      "title": "Leo y Luna clasifican materiales",
+      "category": "ambiente",
+      "subcategory": "reciclaje",
+      "characters": [
+        "leo",
+        "luna"
+      ],
+      "concepts": [
+        "reciclaje",
+        "residuos",
+        "ambiente"
+      ],
+      "actions": [
+        "clasificar",
+        "reutilizar"
+      ],
+      "objects": [
+        "papel",
+        "botellas",
+        "recipientes"
+      ],
+      "contexts": [
+        "proyecto",
+        "plan_anual",
+        "portada",
+        "ambiente",
+        "reciclaje"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "orientation": "landscape",
+      "aspect_ratio": "3:2",
+      "has_text": false,
+      "country_context": "PE",
+      "variant": 1,
+      "priority": 10
+    },
+    {
+      "id": "ambiente_reutilizar_materiales_01",
+      "file": "ambiente/ambiente_reutilizar_materiales_01.jpg",
+      "master": "masters/ambiente_reutilizar_materiales_01.png",
+      "title": "Sofía reutiliza materiales",
+      "category": "ambiente",
+      "subcategory": "reutilizacion",
+      "characters": [
+        "sofia",
+        "luna"
+      ],
+      "concepts": [
+        "reutilización",
+        "materiales",
+        "creatividad"
+      ],
+      "actions": [
+        "reutilizar",
+        "construir"
+      ],
+      "objects": [
+        "cajas",
+        "cartón",
+        "mesa"
+      ],
+      "contexts": [
+        "proyecto",
+        "plan_anual",
+        "portada",
+        "ambiente",
+        "reutilizacion"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "orientation": "landscape",
+      "aspect_ratio": "3:2",
+      "has_text": false,
+      "country_context": "PE",
+      "variant": 1,
+      "priority": 10
+    },
+    {
+      "id": "animales_granja_observar_01",
+      "file": "animales/animales_granja_observar_01.jpg",
+      "master": "masters/animales_granja_observar_01.png",
+      "title": "Leo y Mateo observan animales de granja",
+      "category": "animales",
+      "subcategory": "granja",
+      "characters": [
+        "leo",
+        "mateo"
+      ],
+      "concepts": [
+        "animales",
+        "granja",
+        "crías"
+      ],
+      "actions": [
+        "observar",
+        "comparar"
+      ],
+      "objects": [
+        "gallina",
+        "pollitos",
+        "oveja"
+      ],
+      "contexts": [
+        "proyecto",
+        "plan_anual",
+        "portada",
+        "animales",
+        "granja"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "orientation": "landscape",
+      "aspect_ratio": "3:2",
+      "has_text": false,
+      "country_context": "PE",
+      "variant": 1,
+      "priority": 10
+    },
+    {
+      "id": "animales_insectos_lupa_01",
+      "file": "animales/animales_insectos_lupa_01.jpg",
+      "master": "masters/animales_insectos_lupa_01.png",
+      "title": "Sofía observa insectos con una lupa",
+      "category": "animales",
+      "subcategory": "insectos",
+      "characters": [
+        "sofia"
+      ],
+      "concepts": [
+        "insectos",
+        "mariquita",
+        "naturaleza"
+      ],
+      "actions": [
+        "observar",
+        "investigar"
+      ],
+      "objects": [
+        "mariquita",
+        "lupa",
+        "hoja"
+      ],
+      "contexts": [
+        "proyecto",
+        "plan_anual",
+        "portada",
+        "animales",
+        "insectos"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "orientation": "landscape",
+      "aspect_ratio": "3:2",
+      "has_text": false,
+      "country_context": "PE",
+      "variant": 1,
+      "priority": 10
+    },
+    {
+      "id": "animales_marinos_observar_01",
+      "file": "animales/animales_marinos_observar_01.jpg",
+      "master": "masters/animales_marinos_observar_01.png",
+      "title": "Leo investiga animales marinos",
+      "category": "animales",
+      "subcategory": "marinos",
+      "characters": [
+        "leo",
+        "sofia"
+      ],
+      "concepts": [
+        "animales",
+        "mar",
+        "peces",
+        "hábitat"
+      ],
+      "actions": [
+        "observar",
+        "investigar"
+      ],
+      "objects": [
+        "peces",
+        "tortuga",
+        "acuario"
+      ],
+      "contexts": [
+        "proyecto",
+        "plan_anual",
+        "portada",
+        "animales",
+        "marinos"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "orientation": "landscape",
+      "aspect_ratio": "3:2",
+      "has_text": false,
+      "country_context": "PE",
+      "variant": 1,
+      "priority": 10
+    },
+    {
+      "id": "animales_mariposas_jardin_01",
+      "file": "animales/animales_mariposas_jardin_01.jpg",
+      "master": "masters/animales_mariposas_jardin_01.png",
+      "title": "Luna observa mariposas en el jardín",
+      "category": "animales",
+      "subcategory": "mariposas",
+      "characters": [
+        "luna"
+      ],
+      "concepts": [
+        "mariposas",
+        "insectos",
+        "flores"
+      ],
+      "actions": [
+        "observar",
+        "comparar"
+      ],
+      "objects": [
+        "mariposas",
+        "flores"
+      ],
+      "contexts": [
+        "proyecto",
+        "plan_anual",
+        "portada",
+        "animales",
+        "mariposas"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "orientation": "landscape",
+      "aspect_ratio": "3:2",
+      "has_text": false,
+      "country_context": "PE",
+      "variant": 1,
+      "priority": 10
+    },
+    {
+      "id": "animales_mascotas_cuidado_01",
+      "file": "animales/animales_mascotas_cuidado_01.jpg",
+      "master": "masters/animales_mascotas_cuidado_01.png",
+      "title": "Luna cuida a una mascota",
+      "category": "animales",
+      "subcategory": "mascotas",
+      "characters": [
+        "luna"
+      ],
+      "concepts": [
+        "mascotas",
+        "animales",
+        "cuidado",
+        "agua"
+      ],
+      "actions": [
+        "cuidar",
+        "observar"
+      ],
+      "objects": [
+        "perro",
+        "cuenco",
+        "agua"
+      ],
+      "contexts": [
+        "proyecto",
+        "plan_anual",
+        "portada",
+        "animales",
+        "mascotas"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "orientation": "landscape",
+      "aspect_ratio": "3:2",
+      "has_text": false,
+      "country_context": "PE",
+      "variant": 1,
+      "priority": 10
+    },
+    {
+      "id": "arte_musica_instrumentos_01",
+      "file": "arte_musica/arte_musica_instrumentos_01.jpg",
+      "master": "masters/arte_musica_instrumentos_01.png",
+      "title": "Leo y Mateo hacen música",
+      "category": "arte_musica",
+      "subcategory": "musica",
+      "characters": [
+        "leo",
+        "mateo"
+      ],
+      "concepts": [
+        "música",
+        "instrumentos",
+        "ritmo"
+      ],
+      "actions": [
+        "tocar",
+        "escuchar"
+      ],
+      "objects": [
+        "tambor",
+        "maracas"
+      ],
+      "contexts": [
+        "proyecto",
+        "plan_anual",
+        "portada",
+        "arte_musica",
+        "musica"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "orientation": "landscape",
+      "aspect_ratio": "3:2",
+      "has_text": false,
+      "country_context": "PE",
+      "variant": 1,
+      "priority": 10
+    },
+    {
+      "id": "arte_pintura_creativa_01",
+      "file": "arte_musica/arte_pintura_creativa_01.jpg",
+      "master": "masters/arte_pintura_creativa_01.png",
+      "title": "Luna pinta libremente",
+      "category": "arte_musica",
+      "subcategory": "pintura",
+      "characters": [
+        "luna"
+      ],
+      "concepts": [
+        "arte",
+        "pintura",
+        "colores",
+        "creatividad"
+      ],
+      "actions": [
+        "pintar",
+        "crear"
+      ],
+      "objects": [
+        "pincel",
+        "papel",
+        "témperas"
+      ],
+      "contexts": [
+        "proyecto",
+        "plan_anual",
+        "portada",
+        "arte_musica",
+        "pintura"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "orientation": "landscape",
+      "aspect_ratio": "3:2",
+      "has_text": false,
+      "country_context": "PE",
+      "variant": 1,
+      "priority": 10
+    },
+    {
+      "id": "arte_titeres_teatro_01",
+      "file": "arte_musica/arte_titeres_teatro_01.jpg",
+      "master": "masters/arte_titeres_teatro_01.png",
+      "title": "Sofía representa una historia",
+      "category": "arte_musica",
+      "subcategory": "teatro",
+      "characters": [
+        "sofia",
+        "luna"
+      ],
+      "concepts": [
+        "teatro",
+        "títeres",
+        "expresión"
+      ],
+      "actions": [
+        "representar",
+        "crear"
+      ],
+      "objects": [
+        "títeres",
+        "teatrino"
+      ],
+      "contexts": [
+        "proyecto",
+        "plan_anual",
+        "portada",
+        "arte_musica",
+        "teatro"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "orientation": "landscape",
+      "aspect_ratio": "3:2",
+      "has_text": false,
+      "country_context": "PE",
+      "variant": 1,
+      "priority": 10
+    },
+    {
+      "id": "celebraciones_educacion_inicial_01",
+      "file": "celebraciones/celebraciones_educacion_inicial_01.jpg",
+      "master": "masters/celebraciones_educacion_inicial_01.png",
+      "title": "Celebramos la Educación Inicial",
+      "category": "celebraciones",
+      "subcategory": "educacion_inicial",
+      "characters": [
+        "maestra_rosa",
+        "leo",
+        "luna"
+      ],
+      "concepts": [
+        "educación inicial",
+        "escuela",
+        "celebración"
+      ],
+      "actions": [
+        "jugar",
+        "celebrar"
+      ],
+      "objects": [
+        "banderines",
+        "juegos"
+      ],
+      "contexts": [
+        "proyecto",
+        "plan_anual",
+        "portada",
+        "celebraciones",
+        "educacion_inicial"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "orientation": "landscape",
+      "aspect_ratio": "3:2",
+      "has_text": false,
+      "country_context": "PE",
+      "variant": 1,
+      "priority": 10
+    },
+    {
+      "id": "celebraciones_fiestas_patrias_01",
+      "file": "celebraciones/celebraciones_fiestas_patrias_01.jpg",
+      "master": "masters/celebraciones_fiestas_patrias_01.png",
+      "title": "Leo y Luna celebran las Fiestas Patrias",
+      "category": "celebraciones",
+      "subcategory": "fiestas_patrias",
+      "characters": [
+        "leo",
+        "luna"
+      ],
+      "concepts": [
+        "Fiestas Patrias",
+        "Perú",
+        "celebración"
+      ],
+      "actions": [
+        "decorar",
+        "celebrar"
+      ],
+      "objects": [
+        "bandera",
+        "cintas"
+      ],
+      "contexts": [
+        "proyecto",
+        "plan_anual",
+        "portada",
+        "celebraciones",
+        "fiestas_patrias"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "orientation": "landscape",
+      "aspect_ratio": "3:2",
+      "has_text": false,
+      "country_context": "PE",
+      "variant": 1,
+      "priority": 10
+    },
+    {
+      "id": "celebraciones_navidad_01",
+      "file": "celebraciones/celebraciones_navidad_01.jpg",
+      "master": "masters/celebraciones_navidad_01.png",
+      "title": "Familia prepara una celebración navideña",
+      "category": "celebraciones",
+      "subcategory": "navidad",
+      "characters": [
+        "mama_clara",
+        "papa_diego",
+        "leo"
+      ],
+      "concepts": [
+        "Navidad",
+        "familia",
+        "celebración"
+      ],
+      "actions": [
+        "adornar",
+        "compartir"
+      ],
+      "objects": [
+        "árbol",
+        "adornos"
+      ],
+      "contexts": [
+        "proyecto",
+        "plan_anual",
+        "portada",
+        "celebraciones",
+        "navidad"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "orientation": "landscape",
+      "aspect_ratio": "3:2",
+      "has_text": false,
+      "country_context": "PE",
+      "variant": 1,
+      "priority": 10
+    },
+    {
+      "id": "celebraciones_primavera_01",
+      "file": "celebraciones/celebraciones_primavera_01.jpg",
+      "master": "masters/celebraciones_primavera_01.png",
+      "title": "Luna y Sofía celebran la primavera",
+      "category": "celebraciones",
+      "subcategory": "primavera",
+      "characters": [
+        "luna",
+        "sofia"
+      ],
+      "concepts": [
+        "primavera",
+        "flores",
+        "naturaleza"
+      ],
+      "actions": [
+        "observar",
+        "celebrar"
+      ],
+      "objects": [
+        "flores",
+        "mariposas"
+      ],
+      "contexts": [
+        "proyecto",
+        "plan_anual",
+        "portada",
+        "celebraciones",
+        "primavera"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "orientation": "landscape",
+      "aspect_ratio": "3:2",
+      "has_text": false,
+      "country_context": "PE",
+      "variant": 1,
+      "priority": 10
+    },
+    {
+      "id": "ciencia_iman_objetos_01",
+      "file": "ciencia/ciencia_iman_objetos_01.jpg",
+      "master": "masters/ciencia_iman_objetos_01.png",
+      "title": "Leo prueba qué atrae un imán",
+      "category": "ciencia",
+      "subcategory": "imanes",
+      "characters": [
+        "leo",
+        "luna"
+      ],
+      "concepts": [
+        "ciencia",
+        "imanes",
+        "materiales"
+      ],
+      "actions": [
+        "investigar",
+        "observar",
+        "comparar"
+      ],
+      "objects": [
+        "imán",
+        "clips",
+        "bloques"
+      ],
+      "contexts": [
+        "proyecto",
+        "plan_anual",
+        "portada",
+        "ciencia",
+        "imanes"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "orientation": "landscape",
+      "aspect_ratio": "3:2",
+      "has_text": false,
+      "country_context": "PE",
+      "variant": 1,
+      "priority": 10
+    },
+    {
+      "id": "ciencia_lupa_hojas_01",
+      "file": "ciencia/ciencia_lupa_hojas_01.jpg",
+      "master": "masters/ciencia_lupa_hojas_01.png",
+      "title": "Leo investiga hojas con una lupa",
+      "category": "ciencia",
+      "subcategory": "exploracion",
+      "characters": [
+        "leo"
+      ],
+      "concepts": [
+        "ciencia",
+        "hojas",
+        "indagación",
+        "naturaleza"
+      ],
+      "actions": [
+        "investigar",
+        "comparar"
+      ],
+      "objects": [
+        "lupa",
+        "hojas",
+        "mesa"
+      ],
+      "contexts": [
+        "proyecto",
+        "plan_anual",
+        "portada",
+        "ciencia",
+        "exploracion"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "orientation": "landscape",
+      "aspect_ratio": "3:2",
+      "has_text": false,
+      "country_context": "PE",
+      "variant": 1,
+      "priority": 10
+    },
+    {
+      "id": "ciencia_luz_sombras_01",
+      "file": "ciencia/ciencia_luz_sombras_01.jpg",
+      "master": "masters/ciencia_luz_sombras_01.png",
+      "title": "Mateo explora luz y sombras",
+      "category": "ciencia",
+      "subcategory": "luz",
+      "characters": [
+        "mateo"
+      ],
+      "concepts": [
+        "ciencia",
+        "luz",
+        "sombras"
+      ],
+      "actions": [
+        "explorar",
+        "observar"
+      ],
+      "objects": [
+        "linterna",
+        "figuras",
+        "sombras"
+      ],
+      "contexts": [
+        "proyecto",
+        "plan_anual",
+        "portada",
+        "ciencia",
+        "luz"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "orientation": "landscape",
+      "aspect_ratio": "3:2",
+      "has_text": false,
+      "country_context": "PE",
+      "variant": 1,
+      "priority": 10
+    },
+    {
+      "id": "ciencia_mezclas_seguras_01",
+      "file": "ciencia/ciencia_mezclas_seguras_01.jpg",
+      "master": "masters/ciencia_mezclas_seguras_01.png",
+      "title": "Luna y Sofía mezclan materiales seguros",
+      "category": "ciencia",
+      "subcategory": "materiales",
+      "characters": [
+        "luna",
+        "sofia"
+      ],
+      "concepts": [
+        "ciencia",
+        "mezclas",
+        "materiales",
+        "cambios"
+      ],
+      "actions": [
+        "mezclar",
+        "observar"
+      ],
+      "objects": [
+        "agua",
+        "tierra",
+        "recipientes"
+      ],
+      "contexts": [
+        "proyecto",
+        "plan_anual",
+        "portada",
+        "ciencia",
+        "materiales"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "orientation": "landscape",
+      "aspect_ratio": "3:2",
+      "has_text": false,
+      "country_context": "PE",
+      "variant": 1,
+      "priority": 10
+    },
+    {
+      "id": "comunicacion_biblioteca_elegir_01",
+      "file": "comunicacion/comunicacion_biblioteca_elegir_01.jpg",
+      "master": "masters/comunicacion_biblioteca_elegir_01.png",
+      "title": "Sofía y Mateo eligen libros",
+      "category": "comunicacion",
+      "subcategory": "biblioteca",
+      "characters": [
+        "sofia",
+        "mateo"
+      ],
+      "concepts": [
+        "biblioteca",
+        "libros",
+        "lectura"
+      ],
+      "actions": [
+        "elegir",
+        "explorar"
+      ],
+      "objects": [
+        "libros",
+        "estante"
+      ],
+      "contexts": [
+        "proyecto",
+        "plan_anual",
+        "portada",
+        "comunicacion",
+        "biblioteca"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "orientation": "landscape",
+      "aspect_ratio": "3:2",
+      "has_text": false,
+      "country_context": "PE",
+      "variant": 1,
+      "priority": 10
+    },
+    {
+      "id": "comunicacion_conversar_grupo_01",
+      "file": "comunicacion/comunicacion_conversar_grupo_01.jpg",
+      "master": "masters/comunicacion_conversar_grupo_01.png",
+      "title": "Niños conversan en grupo",
+      "category": "comunicacion",
+      "subcategory": "oralidad",
+      "characters": [
+        "leo",
+        "luna",
+        "sofia"
+      ],
+      "concepts": [
+        "conversación",
+        "escucha",
+        "grupo"
+      ],
+      "actions": [
+        "conversar",
+        "escuchar"
+      ],
+      "objects": [
+        "alfombra",
+        "cojines"
+      ],
+      "contexts": [
+        "proyecto",
+        "plan_anual",
+        "portada",
+        "comunicacion",
+        "oralidad"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "orientation": "landscape",
+      "aspect_ratio": "3:2",
+      "has_text": false,
+      "country_context": "PE",
+      "variant": 1,
+      "priority": 10
+    },
+    {
+      "id": "comunicacion_cuento_escuchar_01",
+      "file": "comunicacion/comunicacion_cuento_escuchar_01.jpg",
+      "master": "masters/comunicacion_cuento_escuchar_01.png",
+      "title": "La maestra Rosa cuenta una historia",
+      "category": "comunicacion",
+      "subcategory": "cuentos",
+      "characters": [
+        "maestra_rosa",
+        "leo",
+        "luna"
+      ],
+      "concepts": [
+        "cuento",
+        "escucha",
+        "historias",
+        "lectura"
+      ],
+      "actions": [
+        "escuchar",
+        "observar"
+      ],
+      "objects": [
+        "libro",
+        "alfombra"
+      ],
+      "contexts": [
+        "proyecto",
+        "plan_anual",
+        "portada",
+        "comunicacion",
+        "cuentos"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "orientation": "landscape",
+      "aspect_ratio": "3:2",
+      "has_text": false,
+      "country_context": "PE",
+      "variant": 1,
+      "priority": 10
+    },
+    {
+      "id": "comunicacion_titeres_narrar_01",
+      "file": "comunicacion/comunicacion_titeres_narrar_01.jpg",
+      "master": "masters/comunicacion_titeres_narrar_01.png",
+      "title": "Luna narra con títeres",
+      "category": "comunicacion",
+      "subcategory": "narracion",
+      "characters": [
+        "luna",
+        "leo"
+      ],
+      "concepts": [
+        "títeres",
+        "historias",
+        "expresión oral"
+      ],
+      "actions": [
+        "narrar",
+        "escuchar"
+      ],
+      "objects": [
+        "títere",
+        "teatrino"
+      ],
+      "contexts": [
+        "proyecto",
+        "plan_anual",
+        "portada",
+        "comunicacion",
+        "narracion"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "orientation": "landscape",
+      "aspect_ratio": "3:2",
+      "has_text": false,
+      "country_context": "PE",
+      "variant": 1,
+      "priority": 10
+    },
+    {
+      "id": "comunidad_familia_compartir_01",
+      "file": "comunidad/comunidad_familia_compartir_01.jpg",
+      "master": "masters/comunidad_familia_compartir_01.png",
+      "title": "Familia comparte un momento de juego",
+      "category": "comunidad",
+      "subcategory": "familia",
+      "characters": [
+        "mama_clara",
+        "papa_diego",
+        "luna"
+      ],
+      "concepts": [
+        "familia",
+        "juego",
+        "convivencia"
+      ],
+      "actions": [
+        "compartir",
+        "construir"
+      ],
+      "objects": [
+        "bloques",
+        "alfombra"
+      ],
+      "contexts": [
+        "proyecto",
+        "plan_anual",
+        "portada",
+        "comunidad",
+        "familia"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "orientation": "landscape",
+      "aspect_ratio": "3:2",
+      "has_text": false,
+      "country_context": "PE",
+      "variant": 1,
+      "priority": 10
+    },
+    {
+      "id": "comunidad_madre_cuidar_01",
+      "file": "comunidad/comunidad_madre_cuidar_01.jpg",
+      "master": "masters/comunidad_madre_cuidar_01.png",
+      "title": "Clara y Luna cuidan plantas juntas",
+      "category": "comunidad",
+      "subcategory": "familia",
+      "characters": [
+        "mama_clara",
+        "luna"
+      ],
+      "concepts": [
+        "madre",
+        "familia",
+        "cuidado",
+        "plantas"
+      ],
+      "actions": [
+        "regar",
+        "cuidar"
+      ],
+      "objects": [
+        "regadera",
+        "macetas"
+      ],
+      "contexts": [
+        "proyecto",
+        "plan_anual",
+        "portada",
+        "comunidad",
+        "familia"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "orientation": "landscape",
+      "aspect_ratio": "3:2",
+      "has_text": false,
+      "country_context": "PE",
+      "variant": 1,
+      "priority": 10
+    },
+    {
+      "id": "comunidad_mercado_explorar_01",
+      "file": "comunidad/comunidad_mercado_explorar_01.jpg",
+      "master": "masters/comunidad_mercado_explorar_01.png",
+      "title": "Sofía y Rosa exploran el mercado",
+      "category": "comunidad",
+      "subcategory": "mercado",
+      "characters": [
+        "sofia",
+        "maestra_rosa"
+      ],
+      "concepts": [
+        "mercado",
+        "barrio",
+        "comunidad",
+        "alimentos"
+      ],
+      "actions": [
+        "observar",
+        "comparar"
+      ],
+      "objects": [
+        "frutas",
+        "verduras",
+        "puestos"
+      ],
+      "contexts": [
+        "proyecto",
+        "plan_anual",
+        "portada",
+        "comunidad",
+        "mercado"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "orientation": "landscape",
+      "aspect_ratio": "3:2",
+      "has_text": false,
+      "country_context": "PE",
+      "variant": 1,
+      "priority": 10
+    },
+    {
+      "id": "comunidad_padre_cocinar_01",
+      "file": "comunidad/comunidad_padre_cocinar_01.jpg",
+      "master": "masters/comunidad_padre_cocinar_01.png",
+      "title": "Diego y Leo preparan alimentos",
+      "category": "comunidad",
+      "subcategory": "familia",
+      "characters": [
+        "papa_diego",
+        "leo"
+      ],
+      "concepts": [
+        "padre",
+        "familia",
+        "alimentos"
+      ],
+      "actions": [
+        "lavar",
+        "preparar"
+      ],
+      "objects": [
+        "frutas",
+        "agua",
+        "mesa"
+      ],
+      "contexts": [
+        "proyecto",
+        "plan_anual",
+        "portada",
+        "comunidad",
+        "familia"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "orientation": "landscape",
+      "aspect_ratio": "3:2",
+      "has_text": false,
+      "country_context": "PE",
+      "variant": 1,
+      "priority": 10
+    },
+    {
+      "id": "convivencia_ayudar_amigo_01",
+      "file": "convivencia/convivencia_ayudar_amigo_01.jpg",
+      "master": "masters/convivencia_ayudar_amigo_01.png",
+      "title": "Luna ayuda a un amigo",
+      "category": "convivencia",
+      "subcategory": "ayuda",
+      "characters": [
+        "luna",
+        "mateo"
+      ],
+      "concepts": [
+        "amistad",
+        "ayuda",
+        "convivencia"
+      ],
+      "actions": [
+        "ayudar",
+        "recoger"
+      ],
+      "objects": [
+        "lápices",
+        "caja"
+      ],
+      "contexts": [
+        "proyecto",
+        "plan_anual",
+        "portada",
+        "convivencia",
+        "ayuda"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "orientation": "landscape",
+      "aspect_ratio": "3:2",
+      "has_text": false,
+      "country_context": "PE",
+      "variant": 1,
+      "priority": 10
+    },
+    {
+      "id": "convivencia_compartir_materiales_01",
+      "file": "convivencia/convivencia_compartir_materiales_01.jpg",
+      "master": "masters/convivencia_compartir_materiales_01.png",
+      "title": "Sofía y Leo comparten materiales",
+      "category": "convivencia",
+      "subcategory": "compartir",
+      "characters": [
+        "sofia",
+        "leo"
+      ],
+      "concepts": [
+        "compartir",
+        "materiales",
+        "convivencia"
+      ],
+      "actions": [
+        "ofrecer",
+        "dibujar"
+      ],
+      "objects": [
+        "crayones",
+        "papel",
+        "mesa"
+      ],
+      "contexts": [
+        "proyecto",
+        "plan_anual",
+        "portada",
+        "convivencia",
+        "compartir"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "orientation": "landscape",
+      "aspect_ratio": "3:2",
+      "has_text": false,
+      "country_context": "PE",
+      "variant": 1,
+      "priority": 10
+    },
+    {
+      "id": "convivencia_emociones_alegria_01",
+      "file": "convivencia/convivencia_emociones_alegria_01.jpg",
+      "master": "masters/convivencia_emociones_alegria_01.png",
+      "title": "Leo y Luna reconocen la alegría",
+      "category": "convivencia",
+      "subcategory": "emociones",
+      "characters": [
+        "leo",
+        "luna"
+      ],
+      "concepts": [
+        "emociones",
+        "alegría",
+        "expresión"
+      ],
+      "actions": [
+        "reconocer",
+        "conversar"
+      ],
+      "objects": [
+        "bloques",
+        "torre"
+      ],
+      "contexts": [
+        "proyecto",
+        "plan_anual",
+        "portada",
+        "convivencia",
+        "emociones"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "orientation": "landscape",
+      "aspect_ratio": "3:2",
+      "has_text": false,
+      "country_context": "PE",
+      "variant": 1,
+      "priority": 10
+    },
+    {
+      "id": "convivencia_resolver_desacuerdo_01",
+      "file": "convivencia/convivencia_resolver_desacuerdo_01.jpg",
+      "master": "masters/convivencia_resolver_desacuerdo_01.png",
+      "title": "Leo y Mateo llegan a un acuerdo",
+      "category": "convivencia",
+      "subcategory": "acuerdos",
+      "characters": [
+        "leo",
+        "mateo",
+        "maestra_rosa"
+      ],
+      "concepts": [
+        "acuerdos",
+        "turnos",
+        "convivencia"
+      ],
+      "actions": [
+        "conversar",
+        "esperar"
+      ],
+      "objects": [
+        "pelota"
+      ],
+      "contexts": [
+        "proyecto",
+        "plan_anual",
+        "portada",
+        "convivencia",
+        "acuerdos"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "orientation": "landscape",
+      "aspect_ratio": "3:2",
+      "has_text": false,
+      "country_context": "PE",
+      "variant": 1,
+      "priority": 10
+    },
+    {
+      "id": "cuerpo_actividad_fisica_01",
+      "file": "cuerpo_salud/cuerpo_actividad_fisica_01.jpg",
+      "master": "masters/cuerpo_actividad_fisica_01.png",
+      "title": "Mateo cuida su cuerpo al moverse",
+      "category": "cuerpo_salud",
+      "subcategory": "movimiento",
+      "characters": [
+        "mateo",
+        "luna"
+      ],
+      "concepts": [
+        "cuerpo",
+        "salud",
+        "movimiento"
+      ],
+      "actions": [
+        "estirar",
+        "mover"
+      ],
+      "objects": [
+        "patio",
+        "colchonetas"
+      ],
+      "contexts": [
+        "proyecto",
+        "plan_anual",
+        "portada",
+        "cuerpo_salud",
+        "movimiento"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "orientation": "landscape",
+      "aspect_ratio": "3:2",
+      "has_text": false,
+      "country_context": "PE",
+      "variant": 1,
+      "priority": 10
+    },
+    {
+      "id": "cuerpo_dientes_cepillar_01",
+      "file": "cuerpo_salud/cuerpo_dientes_cepillar_01.jpg",
+      "master": "masters/cuerpo_dientes_cepillar_01.png",
+      "title": "Leo se cepilla los dientes",
+      "category": "cuerpo_salud",
+      "subcategory": "higiene",
+      "characters": [
+        "leo"
+      ],
+      "concepts": [
+        "higiene",
+        "dientes",
+        "salud"
+      ],
+      "actions": [
+        "cepillar",
+        "cuidar"
+      ],
+      "objects": [
+        "cepillo",
+        "espejo",
+        "vaso"
+      ],
+      "contexts": [
+        "proyecto",
+        "plan_anual",
+        "portada",
+        "cuerpo_salud",
+        "higiene"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "orientation": "landscape",
+      "aspect_ratio": "3:2",
+      "has_text": false,
+      "country_context": "PE",
+      "variant": 1,
+      "priority": 10
+    },
+    {
+      "id": "cuerpo_lavado_manos_01",
+      "file": "cuerpo_salud/cuerpo_lavado_manos_01.jpg",
+      "master": "masters/cuerpo_lavado_manos_01.png",
+      "title": "Luna se lava las manos",
+      "category": "cuerpo_salud",
+      "subcategory": "higiene",
+      "characters": [
+        "luna"
+      ],
+      "concepts": [
+        "higiene",
+        "manos",
+        "salud"
+      ],
+      "actions": [
+        "lavar",
+        "cuidar"
+      ],
+      "objects": [
+        "agua",
+        "jabón",
+        "lavabo"
+      ],
+      "contexts": [
+        "proyecto",
+        "plan_anual",
+        "portada",
+        "cuerpo_salud",
+        "higiene"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "orientation": "landscape",
+      "aspect_ratio": "3:2",
+      "has_text": false,
+      "country_context": "PE",
+      "variant": 1,
+      "priority": 10
+    },
+    {
+      "id": "cuerpo_sentidos_explorar_01",
+      "file": "cuerpo_salud/cuerpo_sentidos_explorar_01.jpg",
+      "master": "masters/cuerpo_sentidos_explorar_01.png",
+      "title": "Sofía explora los sentidos",
+      "category": "cuerpo_salud",
+      "subcategory": "sentidos",
+      "characters": [
+        "sofia"
+      ],
+      "concepts": [
+        "sentidos",
+        "olfato",
+        "vista",
+        "cuerpo"
+      ],
+      "actions": [
+        "oler",
+        "observar"
+      ],
+      "objects": [
+        "flor",
+        "fruta",
+        "mesa"
+      ],
+      "contexts": [
+        "proyecto",
+        "plan_anual",
+        "portada",
+        "cuerpo_salud",
+        "sentidos"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "orientation": "landscape",
+      "aspect_ratio": "3:2",
+      "has_text": false,
+      "country_context": "PE",
+      "variant": 1,
+      "priority": 10
+    },
+    {
+      "id": "cultura_costa_mar_01",
+      "file": "cultura/cultura_costa_mar_01.jpg",
+      "master": "masters/cultura_costa_mar_01.png",
+      "title": "Leo explora el mar peruano",
+      "category": "cultura",
+      "subcategory": "costa",
+      "characters": [
+        "leo",
+        "mateo",
+        "papa_diego"
+      ],
+      "concepts": [
+        "Perú",
+        "costa",
+        "mar",
+        "aves"
+      ],
+      "actions": [
+        "observar",
+        "explorar"
+      ],
+      "objects": [
+        "olas",
+        "aves",
+        "playa"
+      ],
+      "contexts": [
+        "proyecto",
+        "plan_anual",
+        "portada",
+        "cultura",
+        "costa"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "orientation": "landscape",
+      "aspect_ratio": "3:2",
+      "has_text": false,
+      "country_context": "PE",
+      "variant": 1,
+      "priority": 10
+    },
+    {
+      "id": "cultura_sierra_paisaje_01",
+      "file": "cultura/cultura_sierra_paisaje_01.jpg",
+      "master": "masters/cultura_sierra_paisaje_01.png",
+      "title": "Luna observa un paisaje andino",
+      "category": "cultura",
+      "subcategory": "sierra",
+      "characters": [
+        "luna",
+        "alpaca_inti"
+      ],
+      "concepts": [
+        "Perú",
+        "sierra",
+        "montañas",
+        "naturaleza"
+      ],
+      "actions": [
+        "observar",
+        "explorar"
+      ],
+      "objects": [
+        "montañas",
+        "alpaca",
+        "sendero"
+      ],
+      "contexts": [
+        "proyecto",
+        "plan_anual",
+        "portada",
+        "cultura",
+        "sierra"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "orientation": "landscape",
+      "aspect_ratio": "3:2",
+      "has_text": false,
+      "country_context": "PE",
+      "variant": 1,
+      "priority": 10
+    },
+    {
+      "id": "escuela_bienvenida_aula_01",
+      "file": "escuela/escuela_bienvenida_aula_01.jpg",
+      "master": "masters/escuela_bienvenida_aula_01.png",
+      "title": "Rosa recibe a los niños en el aula",
+      "category": "escuela",
+      "subcategory": "aula",
+      "characters": [
+        "maestra_rosa",
+        "leo",
+        "luna"
+      ],
+      "concepts": [
+        "escuela",
+        "bienvenida",
+        "aula"
+      ],
+      "actions": [
+        "saludar",
+        "entrar"
+      ],
+      "objects": [
+        "puerta",
+        "mochilas"
+      ],
+      "contexts": [
+        "proyecto",
+        "plan_anual",
+        "portada",
+        "escuela",
+        "aula"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "orientation": "landscape",
+      "aspect_ratio": "3:2",
+      "has_text": false,
+      "country_context": "PE",
+      "variant": 1,
+      "priority": 10
+    },
+    {
+      "id": "escuela_juego_libre_01",
+      "file": "escuela/escuela_juego_libre_01.jpg",
+      "master": "masters/escuela_juego_libre_01.png",
+      "title": "Luna y Mateo juegan libremente",
+      "category": "escuela",
+      "subcategory": "juego",
+      "characters": [
+        "luna",
+        "mateo"
+      ],
+      "concepts": [
+        "escuela",
+        "juego",
+        "creatividad"
+      ],
+      "actions": [
+        "jugar",
+        "construir"
+      ],
+      "objects": [
+        "bloques",
+        "alfombra"
+      ],
+      "contexts": [
+        "proyecto",
+        "plan_anual",
+        "portada",
+        "escuela",
+        "juego"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "orientation": "landscape",
+      "aspect_ratio": "3:2",
+      "has_text": false,
+      "country_context": "PE",
+      "variant": 1,
+      "priority": 10
+    },
+    {
+      "id": "escuela_organizar_materiales_01",
+      "file": "escuela/escuela_organizar_materiales_01.jpg",
+      "master": "masters/escuela_organizar_materiales_01.png",
+      "title": "Niños organizan materiales del aula",
+      "category": "escuela",
+      "subcategory": "materiales",
+      "characters": [
+        "leo",
+        "sofia"
+      ],
+      "concepts": [
+        "escuela",
+        "orden",
+        "materiales"
+      ],
+      "actions": [
+        "organizar",
+        "guardar"
+      ],
+      "objects": [
+        "bloques",
+        "libros",
+        "estantes"
+      ],
+      "contexts": [
+        "proyecto",
+        "plan_anual",
+        "portada",
+        "escuela",
+        "materiales"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "orientation": "landscape",
+      "aspect_ratio": "3:2",
+      "has_text": false,
+      "country_context": "PE",
+      "variant": 1,
+      "priority": 10
+    },
+    {
+      "id": "matematica_clasificar_colores_01",
+      "file": "matematica/matematica_clasificar_colores_01.jpg",
+      "master": "masters/matematica_clasificar_colores_01.png",
+      "title": "Leo clasifica bloques por color",
+      "category": "matematica",
+      "subcategory": "clasificacion",
+      "characters": [
+        "leo"
+      ],
+      "concepts": [
+        "matemática",
+        "clasificación",
+        "colores"
+      ],
+      "actions": [
+        "clasificar",
+        "agrupar"
+      ],
+      "objects": [
+        "bloques",
+        "alfombra"
+      ],
+      "contexts": [
+        "proyecto",
+        "plan_anual",
+        "portada",
+        "matematica",
+        "clasificacion"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "orientation": "landscape",
+      "aspect_ratio": "3:2",
+      "has_text": false,
+      "country_context": "PE",
+      "variant": 1,
+      "priority": 10
+    },
+    {
+      "id": "matematica_construir_bloques_01",
+      "file": "matematica/matematica_construir_bloques_01.jpg",
+      "master": "masters/matematica_construir_bloques_01.png",
+      "title": "Mateo construye con bloques",
+      "category": "matematica",
+      "subcategory": "formas",
+      "characters": [
+        "mateo",
+        "luna"
+      ],
+      "concepts": [
+        "matemática",
+        "formas",
+        "construcción",
+        "altura"
+      ],
+      "actions": [
+        "construir",
+        "comparar"
+      ],
+      "objects": [
+        "bloques",
+        "torre"
+      ],
+      "contexts": [
+        "proyecto",
+        "plan_anual",
+        "portada",
+        "matematica",
+        "formas"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "orientation": "landscape",
+      "aspect_ratio": "3:2",
+      "has_text": false,
+      "country_context": "PE",
+      "variant": 1,
+      "priority": 10
+    },
+    {
+      "id": "matematica_contar_objetos_01",
+      "file": "matematica/matematica_contar_objetos_01.jpg",
+      "master": "masters/matematica_contar_objetos_01.png",
+      "title": "Luna cuenta objetos cotidianos",
+      "category": "matematica",
+      "subcategory": "cantidades",
+      "characters": [
+        "luna"
+      ],
+      "concepts": [
+        "matemática",
+        "conteo",
+        "cantidades"
+      ],
+      "actions": [
+        "contar",
+        "agrupar"
+      ],
+      "objects": [
+        "piedras",
+        "mesa"
+      ],
+      "contexts": [
+        "proyecto",
+        "plan_anual",
+        "portada",
+        "matematica",
+        "cantidades"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "orientation": "landscape",
+      "aspect_ratio": "3:2",
+      "has_text": false,
+      "country_context": "PE",
+      "variant": 1,
+      "priority": 10
+    },
+    {
+      "id": "matematica_ordenar_tamanos_01",
+      "file": "matematica/matematica_ordenar_tamanos_01.jpg",
+      "master": "masters/matematica_ordenar_tamanos_01.png",
+      "title": "Sofía ordena objetos por tamaño",
+      "category": "matematica",
+      "subcategory": "tamanos",
+      "characters": [
+        "sofia"
+      ],
+      "concepts": [
+        "matemática",
+        "tamaños",
+        "orden"
+      ],
+      "actions": [
+        "ordenar",
+        "comparar"
+      ],
+      "objects": [
+        "macetas",
+        "plantas"
+      ],
+      "contexts": [
+        "proyecto",
+        "plan_anual",
+        "portada",
+        "matematica",
+        "tamanos"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "orientation": "landscape",
+      "aspect_ratio": "3:2",
+      "has_text": false,
+      "country_context": "PE",
+      "variant": 1,
+      "priority": 10
+    },
+    {
+      "id": "matematica_repartir_frutas_01",
+      "file": "matematica/repartir_frutas_01.jpg",
+      "master": "masters/matematica_repartir_frutas_01.png",
+      "title": "Leo reparte frutas y Luna compara cantidades",
+      "category": "matematica",
+      "subcategory": "cantidades",
+      "characters": [
+        "leo",
+        "luna"
+      ],
+      "concepts": [
+        "matemática",
+        "cantidades",
+        "reparto",
+        "comparación",
+        "frutas"
+      ],
+      "actions": [
+        "repartir",
+        "contar",
+        "comparar"
+      ],
+      "objects": [
+        "frutas",
+        "platos",
+        "cesta"
+      ],
+      "contexts": [
+        "proyecto",
+        "plan_anual",
+        "portada",
+        "matematica",
+        "alimentos"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "orientation": "landscape",
+      "aspect_ratio": "3:2",
+      "has_text": false,
+      "country_context": "PE",
+      "variant": 1,
+      "priority": 10
+    },
+    {
+      "id": "movimiento_baile_alegria_01",
+      "file": "movimiento/movimiento_baile_alegria_01.jpg",
+      "master": "masters/movimiento_baile_alegria_01.png",
+      "title": "Luna y Leo bailan",
+      "category": "movimiento",
+      "subcategory": "baile",
+      "characters": [
+        "luna",
+        "leo"
+      ],
+      "concepts": [
+        "baile",
+        "movimiento",
+        "música"
+      ],
+      "actions": [
+        "bailar",
+        "escuchar"
+      ],
+      "objects": [
+        "patio"
+      ],
+      "contexts": [
+        "proyecto",
+        "plan_anual",
+        "portada",
+        "movimiento",
+        "baile"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "orientation": "landscape",
+      "aspect_ratio": "3:2",
+      "has_text": false,
+      "country_context": "PE",
+      "variant": 1,
+      "priority": 10
+    },
+    {
+      "id": "movimiento_circuito_motor_01",
+      "file": "movimiento/movimiento_circuito_motor_01.jpg",
+      "master": "masters/movimiento_circuito_motor_01.png",
+      "title": "Leo recorre un circuito motor",
+      "category": "movimiento",
+      "subcategory": "circuito",
+      "characters": [
+        "leo",
+        "luna"
+      ],
+      "concepts": [
+        "movimiento",
+        "equilibrio",
+        "circuito"
+      ],
+      "actions": [
+        "saltar",
+        "equilibrar"
+      ],
+      "objects": [
+        "aros",
+        "línea",
+        "colchonetas"
+      ],
+      "contexts": [
+        "proyecto",
+        "plan_anual",
+        "portada",
+        "movimiento",
+        "circuito"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "orientation": "landscape",
+      "aspect_ratio": "3:2",
+      "has_text": false,
+      "country_context": "PE",
+      "variant": 1,
+      "priority": 10
+    },
+    {
+      "id": "movimiento_pelota_cooperar_01",
+      "file": "movimiento/movimiento_pelota_cooperar_01.jpg",
+      "master": "masters/movimiento_pelota_cooperar_01.png",
+      "title": "Mateo y Sofía juegan con pelota",
+      "category": "movimiento",
+      "subcategory": "juego",
+      "characters": [
+        "mateo",
+        "sofia"
+      ],
+      "concepts": [
+        "movimiento",
+        "juego",
+        "cooperación"
+      ],
+      "actions": [
+        "lanzar",
+        "atrapar"
+      ],
+      "objects": [
+        "pelota"
+      ],
+      "contexts": [
+        "proyecto",
+        "plan_anual",
+        "portada",
+        "movimiento",
+        "juego"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "orientation": "landscape",
+      "aspect_ratio": "3:2",
+      "has_text": false,
+      "country_context": "PE",
+      "variant": 1,
+      "priority": 10
+    },
+    {
+      "id": "naturaleza_plantas_flores_01",
+      "file": "naturaleza/naturaleza_plantas_flores_01.jpg",
+      "master": "masters/naturaleza_plantas_flores_01.png",
+      "title": "Luna y Sofía observan flores",
+      "category": "naturaleza",
+      "subcategory": "plantas",
+      "characters": [
+        "luna",
+        "sofia"
+      ],
+      "concepts": [
+        "flores",
+        "plantas",
+        "colores",
+        "naturaleza"
+      ],
+      "actions": [
+        "observar",
+        "comparar",
+        "cuidar"
+      ],
+      "objects": [
+        "flores",
+        "hojas",
+        "lupa"
+      ],
+      "contexts": [
+        "proyecto",
+        "plan_anual",
+        "portada",
+        "naturaleza",
+        "plantas"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "orientation": "landscape",
+      "aspect_ratio": "3:2",
+      "has_text": false,
+      "country_context": "PE",
+      "variant": 1,
+      "priority": 10
+    },
+    {
+      "id": "naturaleza_plantas_frutos_01",
+      "file": "naturaleza/naturaleza_plantas_frutos_01.jpg",
+      "master": "masters/naturaleza_plantas_frutos_01.png",
+      "title": "Leo descubre frutos en una planta",
+      "category": "naturaleza",
+      "subcategory": "plantas",
+      "characters": [
+        "leo"
+      ],
+      "concepts": [
+        "frutos",
+        "plantas",
+        "crecimiento",
+        "huerto"
+      ],
+      "actions": [
+        "observar",
+        "comparar"
+      ],
+      "objects": [
+        "tomates",
+        "planta",
+        "maceta"
+      ],
+      "contexts": [
+        "proyecto",
+        "plan_anual",
+        "portada",
+        "naturaleza",
+        "plantas"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "orientation": "landscape",
+      "aspect_ratio": "3:2",
+      "has_text": false,
+      "country_context": "PE",
+      "variant": 1,
+      "priority": 10
+    },
+    {
+      "id": "naturaleza_plantas_germinacion_01",
+      "file": "naturaleza/plantas_germinacion_01.jpg",
+      "master": "masters/naturaleza_plantas_germinacion_01.png",
+      "title": "Luna observa cómo germina una semilla",
+      "category": "naturaleza",
+      "subcategory": "plantas",
+      "characters": [
+        "luna"
+      ],
+      "concepts": [
+        "plantas",
+        "semillas",
+        "germinación",
+        "crecimiento",
+        "naturaleza",
+        "observación"
+      ],
+      "actions": [
+        "observar",
+        "comparar",
+        "investigar"
+      ],
+      "objects": [
+        "brote",
+        "lupa",
+        "maceta",
+        "semilla"
+      ],
+      "contexts": [
+        "proyecto",
+        "plan_anual",
+        "portada",
+        "ciencia",
+        "ambiente"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "orientation": "landscape",
+      "aspect_ratio": "3:2",
+      "has_text": false,
+      "country_context": "PE",
+      "variant": 2,
+      "priority": 9
+    },
+    {
+      "id": "naturaleza_plantas_huerto_01",
+      "file": "naturaleza/plantas_huerto_01.jpg",
+      "master": "masters/naturaleza_plantas_huerto_01.png",
+      "title": "Leo y Luna cuidan un pequeño huerto",
+      "category": "naturaleza",
+      "subcategory": "plantas",
+      "characters": [
+        "leo",
+        "luna"
+      ],
+      "concepts": [
+        "plantas",
+        "semillas",
+        "huerto",
+        "crecimiento",
+        "naturaleza",
+        "cuidado"
+      ],
+      "actions": [
+        "plantar",
+        "regar",
+        "cuidar"
+      ],
+      "objects": [
+        "semilla",
+        "maceta",
+        "regadera",
+        "brote"
+      ],
+      "contexts": [
+        "proyecto",
+        "plan_anual",
+        "portada",
+        "ciencia",
+        "ambiente"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "orientation": "landscape",
+      "aspect_ratio": "3:2",
+      "has_text": false,
+      "country_context": "PE",
+      "variant": 1,
+      "priority": 10
+    },
+    {
+      "id": "naturaleza_plantas_regar_02",
+      "file": "naturaleza/naturaleza_plantas_regar_02.jpg",
+      "master": "masters/naturaleza_plantas_regar_02.png",
+      "title": "Mateo y Sofía riegan plantas",
+      "category": "naturaleza",
+      "subcategory": "plantas",
+      "characters": [
+        "mateo",
+        "sofia"
+      ],
+      "concepts": [
+        "plantas",
+        "agua",
+        "jardín",
+        "cuidado"
+      ],
+      "actions": [
+        "regar",
+        "observar",
+        "cuidar"
+      ],
+      "objects": [
+        "regadera",
+        "plantas",
+        "hojas"
+      ],
+      "contexts": [
+        "proyecto",
+        "plan_anual",
+        "portada",
+        "naturaleza",
+        "plantas"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "orientation": "landscape",
+      "aspect_ratio": "3:2",
+      "has_text": false,
+      "country_context": "PE",
+      "variant": 2,
+      "priority": 10
+    }
+  ]
+}

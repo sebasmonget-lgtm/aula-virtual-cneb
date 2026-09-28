@@ -1,0 +1,45 @@
+{
+  "id": "ciencia_iman_objetos_01",
+  "file": "ciencia/ciencia_iman_objetos_01.jpg",
+  "master": "masters/ciencia_iman_objetos_01.png",
+  "title": "Leo prueba qué atrae un imán",
+  "category": "ciencia",
+  "subcategory": "imanes",
+  "characters": [
+    "leo",
+    "luna"
+  ],
+  "concepts": [
+    "ciencia",
+    "imanes",
+    "materiales"
+  ],
+  "actions": [
+    "investigar",
+    "observar",
+    "comparar"
+  ],
+  "objects": [
+    "imán",
+    "clips",
+    "bloques"
+  ],
+  "contexts": [
+    "proyecto",
+    "plan_anual",
+    "portada",
+    "ciencia",
+    "imanes"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "orientation": "landscape",
+  "aspect_ratio": "3:2",
+  "has_text": false,
+  "country_context": "PE",
+  "variant": 1,
+  "priority": 10
+}

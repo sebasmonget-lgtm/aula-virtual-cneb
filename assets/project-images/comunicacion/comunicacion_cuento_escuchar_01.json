@@ -1,0 +1,45 @@
+{
+  "id": "comunicacion_cuento_escuchar_01",
+  "file": "comunicacion/comunicacion_cuento_escuchar_01.jpg",
+  "master": "masters/comunicacion_cuento_escuchar_01.png",
+  "title": "La maestra Rosa cuenta una historia",
+  "category": "comunicacion",
+  "subcategory": "cuentos",
+  "characters": [
+    "maestra_rosa",
+    "leo",
+    "luna"
+  ],
+  "concepts": [
+    "cuento",
+    "escucha",
+    "historias",
+    "lectura"
+  ],
+  "actions": [
+    "escuchar",
+    "observar"
+  ],
+  "objects": [
+    "libro",
+    "alfombra"
+  ],
+  "contexts": [
+    "proyecto",
+    "plan_anual",
+    "portada",
+    "comunicacion",
+    "cuentos"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "orientation": "landscape",
+  "aspect_ratio": "3:2",
+  "has_text": false,
+  "country_context": "PE",
+  "variant": 1,
+  "priority": 10
+}

@@ -1,0 +1,44 @@
+{
+  "id": "ciencia_lupa_hojas_01",
+  "file": "ciencia/ciencia_lupa_hojas_01.jpg",
+  "master": "masters/ciencia_lupa_hojas_01.png",
+  "title": "Leo investiga hojas con una lupa",
+  "category": "ciencia",
+  "subcategory": "exploracion",
+  "characters": [
+    "leo"
+  ],
+  "concepts": [
+    "ciencia",
+    "hojas",
+    "indagación",
+    "naturaleza"
+  ],
+  "actions": [
+    "investigar",
+    "comparar"
+  ],
+  "objects": [
+    "lupa",
+    "hojas",
+    "mesa"
+  ],
+  "contexts": [
+    "proyecto",
+    "plan_anual",
+    "portada",
+    "ciencia",
+    "exploracion"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "orientation": "landscape",
+  "aspect_ratio": "3:2",
+  "has_text": false,
+  "country_context": "PE",
+  "variant": 1,
+  "priority": 10
+}

@@ -1,0 +1,43 @@
+{
+  "id": "agua_lluvia_observar_01",
+  "file": "agua/agua_lluvia_observar_01.jpg",
+  "master": "masters/agua_lluvia_observar_01.png",
+  "title": "Mateo observa la lluvia",
+  "category": "agua",
+  "subcategory": "clima",
+  "characters": [
+    "mateo"
+  ],
+  "concepts": [
+    "lluvia",
+    "clima",
+    "agua"
+  ],
+  "actions": [
+    "observar",
+    "comparar"
+  ],
+  "objects": [
+    "gotas",
+    "charcos",
+    "paraguas"
+  ],
+  "contexts": [
+    "proyecto",
+    "plan_anual",
+    "portada",
+    "agua",
+    "clima"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "orientation": "landscape",
+  "aspect_ratio": "3:2",
+  "has_text": false,
+  "country_context": "PE",
+  "variant": 1,
+  "priority": 10
+}

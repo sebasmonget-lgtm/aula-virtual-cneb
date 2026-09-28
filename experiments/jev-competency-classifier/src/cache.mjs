@@ -3,7 +3,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { EXPERIMENT_ROOT } from "./constants.mjs";
 
-const stable = (value) => JSON.stringify(value, Object.keys(value ?? {}).sort());
+const stable = (value) => JSON.stringify(value, (_key, current) => current && !Array.isArray(current) && typeof current === "object" ? Object.fromEntries(Object.entries(current).sort(([left], [right]) => left.localeCompare(right))) : current);
 export function cacheKey(value) { return createHash("sha256").update(stable(value)).digest("hex"); }
 
 export function createFileCache({ directory = path.join(EXPERIMENT_ROOT, ".cache") } = {}) {

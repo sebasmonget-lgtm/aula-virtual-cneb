@@ -1,0 +1,42 @@
+{
+  "id": "matematica_clasificar_colores_01",
+  "file": "matematica/matematica_clasificar_colores_01.jpg",
+  "master": "masters/matematica_clasificar_colores_01.png",
+  "title": "Leo clasifica bloques por color",
+  "category": "matematica",
+  "subcategory": "clasificacion",
+  "characters": [
+    "leo"
+  ],
+  "concepts": [
+    "matemática",
+    "clasificación",
+    "colores"
+  ],
+  "actions": [
+    "clasificar",
+    "agrupar"
+  ],
+  "objects": [
+    "bloques",
+    "alfombra"
+  ],
+  "contexts": [
+    "proyecto",
+    "plan_anual",
+    "portada",
+    "matematica",
+    "clasificacion"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "orientation": "landscape",
+  "aspect_ratio": "3:2",
+  "has_text": false,
+  "country_context": "PE",
+  "variant": 1,
+  "priority": 10
+}

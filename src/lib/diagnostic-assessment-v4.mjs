@@ -8,6 +8,7 @@ import { safeFamilyContext } from "./diagnostic-sources-v4.mjs";
 import { isDiagnosticScaffoldSummary } from "./diagnostic-review-copy.mjs";
 import { interviewInterestOptions } from "./family-interview-contract.mjs";
 import { normalizeFamilyInterviewDetails } from "./diagnostic-sources-v4.mjs";
+import { anonymousDecisionText } from "./jev-competency-suggestion.mjs";
 
 export class DiagnosticAssessmentError extends Error {
   constructor(reason, message) { super(message); this.name = "DiagnosticAssessmentError"; this.reason = reason; }
@@ -302,6 +303,7 @@ export async function loadDiagnosticAssessmentWorkspace(db, teacherId) {
   catch (error) {
     if (!(error instanceof DiagnosticAssessmentError) || !["incomplete_children", "stale_sources"].includes(error.reason)) throw error;
   }
+  const optionalGroupSnapshot = await optionalGroupSourceSnapshot(db, classroom, students, sourceSnapshots);
   const aspects = new Map(catalog.flatMap((experience) => experience.aspects.map((aspect) => [`${experience.id}:${aspect.id}`, { experience_title: experience.title, aspect_prompt: aspect.prompt }])));
   const availableCompetencies = await applicableDiagnosticCompetencies(classroom);
   const groupCoverage = summarizeDiagnosticGroup(students, observations, reviews,
@@ -317,7 +319,9 @@ export async function loadDiagnosticAssessmentWorkspace(db, teacherId) {
     sameDiagnosticSources(row.source_snapshot, sourceSnapshots.get(row.student_id)))),
   group_reviews: groupReviews.map((row) => ({ id: row.id, version: row.version, status: row.status, details: row.details,
     teacher_confirmed_at: row.teacher_confirmed_at,
-    is_current: currentGroupSnapshot !== null && sameDiagnosticSources(row.source_snapshot, currentGroupSnapshot) })),
+    is_current: row.source_snapshot?.some?.((source) => source.id === "group-sources:v2")
+      ? sameDiagnosticSources(row.source_snapshot, optionalGroupSnapshot)
+      : currentGroupSnapshot !== null && sameDiagnosticSources(row.source_snapshot, currentGroupSnapshot) })),
   priority_reviews: priorityReviews,
   group_coverage: groupCoverage,
   derived_group_information: derivedDiagnosticGroupInformation(familyRows, groupCoverage) };
@@ -450,10 +454,25 @@ async function confirmedSnapshot(db, classroomId, currentSnapshots = null) {
   return [...latest.values()].map((row) => ({ id: row.id, fingerprint: hash([row.version, row.details, row.teacher_confirmed_at]) })).sort((a,b) => a.id.localeCompare(b.id));
 }
 
+/** Facts are sources even when no child has an optional teacher comment. */
+async function optionalGroupSourceSnapshot(db, classroom, students, currentSnapshots = null) {
+  const snapshots = currentSnapshots ?? new Map(await Promise.all(students.map(async (student) =>
+    [student.id, (await studentReviewSources(db, classroom.id, student.id)).snapshot])));
+  const comments = (await db.query(`select distinct on (r.student_id) r.id,r.student_id,r.version,r.details,
+      r.source_snapshot,r.teacher_confirmed_at from diagnostic_student_reviews r join students s on s.id=r.student_id
+    where r.classroom_id=$1 and s.classroom_id=$1 and s.status='active' and r.status='confirmed'
+    order by r.student_id,r.version desc`, [classroom.id])).rows;
+  return [{ id: "group-sources:v2", fingerprint: hash([classroom.id, classroom.age_years,
+      classroom.castellano_l2_applicable, classroom.religion_applicable]) },
+    ...students.map((student) => ({ id: `student:${student.id}`, fingerprint: hash(snapshots.get(student.id)) })),
+    ...comments.filter((row) => sameDiagnosticSources(row.source_snapshot, snapshots.get(row.student_id)))
+      .map((row) => ({ id: row.id, fingerprint: hash([row.version, row.details, row.teacher_confirmed_at]) })),
+  ].sort((a, b) => a.id.localeCompare(b.id));
+}
+
 export async function prepareDiagnosticGroupReview(db, teacherId) {
-  const { classroom } = await scope(db, teacherId);
-  const snapshot = await confirmedSnapshot(db, classroom.id);
-  if (!snapshot.length) fail("no_confirmations", "Confirma al menos una síntesis individual antes de revisar el grupo.");
+  const { classroom, students } = await scope(db, teacherId);
+  const snapshot = await optionalGroupSourceSnapshot(db, classroom, students);
   const existing = (await db.query(`select id,details from diagnostic_group_reviews where classroom_id = $1 and status = 'draft'`, [classroom.id])).rows[0];
   if (existing) {
     await db.query(`update diagnostic_group_reviews set source_snapshot = $1::jsonb, updated_at = now() where id = $2`, [JSON.stringify(snapshot), existing.id]);
@@ -474,25 +493,44 @@ export async function diagnosticGroupProposalSources(db, teacherId, draftId) {
   const draft = (await db.query(`select source_snapshot from diagnostic_group_reviews
     where id=$1 and classroom_id=$2 and created_by=$3 and status='draft'`, [draftId, classroom.id, teacherId])).rows[0];
   if (!draft) fail("not_editable", "Prepara primero el borrador del aula.");
-  const sourceSnapshot = await confirmedSnapshot(db, classroom.id);
+  const sourceSnapshot = await optionalGroupSourceSnapshot(db, classroom, students);
   if (!sameDiagnosticSources(draft.source_snapshot, sourceSnapshot))
-    fail("stale_sources", "Los comentarios de los niños cambiaron. Actualiza el resumen del aula.");
-  const comments = (await db.query(`select distinct on (r.student_id) r.details
+    fail("stale_sources", "Las observaciones o comentarios cambiaron. Actualiza el resumen del aula.");
+  const comments = (await db.query(`select distinct on (r.student_id) r.student_id,r.source_snapshot,r.details
     from diagnostic_student_reviews r join students s on s.id=r.student_id
     where r.classroom_id=$1 and s.classroom_id=$1 and s.status='active' and r.status='confirmed'
     order by r.student_id,r.version desc`, [classroom.id])).rows;
-  if (comments.length !== students.length || !comments.length)
-    fail("incomplete_children", "Revisa el comentario de cada niño antes de preparar el resumen del aula.");
   const names = (await db.query(`select first_name,last_name,preferred_name from students
     where classroom_id=$1 and status='active'`, [classroom.id])).rows
     .flatMap((row) => [row.first_name, row.last_name, row.preferred_name,
       [row.first_name, row.last_name].filter(Boolean).join(" ")]).filter(Boolean);
   const competencyOptions = await applicableDiagnosticCompetencies(classroom);
+  const currentSources = new Map(await Promise.all(students.map(async (student) =>
+    [student.id, await studentReviewSources(db, classroom.id, student.id)])));
+  const childAliases = new Map(students.map((student, index) => [student.id, `niño_${index + 1}`]));
+  const perChildBudget = Math.floor(24_000 / Math.max(1, students.length));
+  const safeComments = comments.filter((row) => sameDiagnosticSources(row.source_snapshot, currentSources.get(row.student_id)?.snapshot))
+    .map((row) => ({ child: childAliases.get(row.student_id), information_status: row.details.information_status,
+      comment: anonymousDecisionText(row.details.comment_text, names)?.slice(0, Math.min(3000, perChildBudget)) })).filter((row) => row.comment);
+  // Group by a stable neutral alias so many records of one child do not imply a classroom pattern.
+  // No student IDs, family text, files or unvalidated competence suggestions enter this projection.
+  const allowed = new Set(competencyOptions.map((card) => card.id));
+  const observed = students.map((student) => {
+    const rows = currentSources.get(student.id).rows.map((row) => ({ row, text: anonymousDecisionText(row.observation_text, names) }))
+      .filter((item) => item.text).slice(-6);
+    const textLimit = Math.min(1200, Math.floor(perChildBudget / Math.max(1, rows.length)));
+    return { child: childAliases.get(student.id), notes: rows.map(({ row, text }) => ({
+      text: text.slice(0, textLimit), truncated: text.length > textLimit,
+      observation_status: row.observation_status,
+      competency_ids: (row.competency_v4_ids?.length ? row.competency_v4_ids : [row.competency_v4_id].filter(Boolean))
+        .filter((id) => allowed.has(id)),
+    })).filter((row) => row.text) };
+  }).filter((row) => row.notes.length);
+  if (!safeComments.length && !observed.length)
+    fail("insufficient_information", "Aún no hay información suficiente para sugerir un resumen. Puedes escribirlo o dictarlo.");
   return { age: classroom.age_years, student_count: students.length, competency_options: competencyOptions,
-    comments: comments.map((row) => ({
-      information_status: row.details.information_status,
-      comment: neutralizeAssessmentText(row.details.comment_text, names).slice(0, 3000),
-    })), known_names: names, source_snapshot: sourceSnapshot };
+    comments: safeComments, observed_records: observed,
+    known_names: names, source_snapshot: sourceSnapshot };
 }
 
 export async function saveDiagnosticGroupReview(db, teacherId, id, details) {
@@ -507,27 +545,26 @@ export async function saveDiagnosticGroupReview(db, teacherId, id, details) {
 }
 
 export async function confirmDiagnosticGroupReview(db, teacherId, id) {
-  const { classroom } = await scope(db, teacherId);
+  const { classroom, students } = await scope(db, teacherId);
   const row = (await db.query(`select * from diagnostic_group_reviews where id = $1 and classroom_id = $2
     and created_by = $3 and status = 'draft'`, [id,classroom.id,teacherId])).rows[0];
   if (!row) fail("not_editable", "La revisión del grupo ya está confirmada o no pertenece a tu aula.");
   await validateGroupCompetencyIds(validateGroupDetails(row.details), classroom);
-  if (!sameDiagnosticSources(row.source_snapshot, await confirmedSnapshot(db, classroom.id)))
-    fail("stale_sources", "Cambiaron los diagnósticos individuales. Vuelve a preparar la revisión grupal.");
+  if (!sameDiagnosticSources(row.source_snapshot, await optionalGroupSourceSnapshot(db, classroom, students)))
+    fail("stale_sources", "Cambió la información del aula. Vuelve a preparar el resumen.");
   const workspace = await loadDiagnosticAssessmentWorkspace(db, teacherId);
   const children = workspace.students.map((student) => {
     const review = workspace.student_reviews.find((item) => item.student_id === student.id && item.status === "confirmed" && item.is_current);
-    return review ? { student_id: student.id, name: student.name, review_id: review.id,
-      information_status: review.details.information_status, teacher_comment: review.details.comment_text,
+    return { student_id: student.id, name: student.name, review_id: review?.id ?? null,
+      information_status: review?.details.information_status ?? "insufficient_information", teacher_comment: review?.details.comment_text ?? "",
       has_confirmed_interview: Boolean(student.family_context),
       family_context: student.family_context ? Object.fromEntries(["language_context", "interests", "autonomy_context", "adaptation_context", "communication_emotional_context", "social_context"]
         .filter((key) => typeof student.family_context[key] === "string" && student.family_context[key].trim())
-        .map((key) => [key, student.family_context[key].slice(0, 500)])) : null } : null;
+        .map((key) => [key, student.family_context[key].slice(0, 500)])) : null };
   });
-  // Legacy group reviews were based on per-competency comments. They retain
-  // their original exporter; only the current one-comment-per-child flow uses
-  // the unified nominal report.
-  const details = children.every(Boolean) ? { ...row.details, document_format: "diagnostic-unified-v1",
+  // Newly confirmed reports include every active child without fabricating a comment.
+  // Existing immutable legacy reports retain their original format and source policy.
+  const details = { ...row.details, document_format: "diagnostic-unified-v1",
     report_snapshot: {
       version: "diagnostic-unified-v1", children,
       religion_applicable: classroom.religion_applicable === true,
@@ -537,7 +574,7 @@ export async function confirmDiagnosticGroupReview(db, teacherId, id) {
         observation_text: item.observation_text || "", aspect_prompt: item.aspect_prompt || "",
         observation_status: item.observation_status })),
       competency_coverage: workspace.group_coverage,
-    } } : row.details;
+    } };
   const confirmed = await db.query(`update diagnostic_group_reviews set status = 'confirmed', details=$2::jsonb,
     teacher_confirmed_at = now(), updated_at = now() where id = $1 and status = 'draft'
     returning id,version,status,details,teacher_confirmed_at`, [id, JSON.stringify(details)]);

@@ -1,0 +1,44 @@
+{
+  "id": "celebraciones_navidad_01",
+  "file": "celebraciones/celebraciones_navidad_01.jpg",
+  "master": "masters/celebraciones_navidad_01.png",
+  "title": "Familia prepara una celebración navideña",
+  "category": "celebraciones",
+  "subcategory": "navidad",
+  "characters": [
+    "mama_clara",
+    "papa_diego",
+    "leo"
+  ],
+  "concepts": [
+    "Navidad",
+    "familia",
+    "celebración"
+  ],
+  "actions": [
+    "adornar",
+    "compartir"
+  ],
+  "objects": [
+    "árbol",
+    "adornos"
+  ],
+  "contexts": [
+    "proyecto",
+    "plan_anual",
+    "portada",
+    "celebraciones",
+    "navidad"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "orientation": "landscape",
+  "aspect_ratio": "3:2",
+  "has_text": false,
+  "country_context": "PE",
+  "variant": 1,
+  "priority": 10
+}

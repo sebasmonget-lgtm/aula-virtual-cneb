@@ -1,0 +1,44 @@
+{
+  "id": "comunicacion_conversar_grupo_01",
+  "file": "comunicacion/comunicacion_conversar_grupo_01.jpg",
+  "master": "masters/comunicacion_conversar_grupo_01.png",
+  "title": "Niños conversan en grupo",
+  "category": "comunicacion",
+  "subcategory": "oralidad",
+  "characters": [
+    "leo",
+    "luna",
+    "sofia"
+  ],
+  "concepts": [
+    "conversación",
+    "escucha",
+    "grupo"
+  ],
+  "actions": [
+    "conversar",
+    "escuchar"
+  ],
+  "objects": [
+    "alfombra",
+    "cojines"
+  ],
+  "contexts": [
+    "proyecto",
+    "plan_anual",
+    "portada",
+    "comunicacion",
+    "oralidad"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "orientation": "landscape",
+  "aspect_ratio": "3:2",
+  "has_text": false,
+  "country_context": "PE",
+  "variant": 1,
+  "priority": 10
+}

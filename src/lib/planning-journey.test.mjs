@@ -19,7 +19,7 @@ test("un aula nueva comienza por diagnóstico y la falta de niños lleva a agreg
   const withoutStudents = await loadStartingGuidance(base, fetchFrom({ [planUrl]: plans, [diagnosticUrl]: empty }));
   assert.equal(withoutStudents.startingSection, "Niños");
   const withStudents = await loadStartingGuidance(base, fetchFrom({ [planUrl]: plans, [diagnosticUrl]: { ...empty, student_count: 1 } }));
-  assert.equal(withStudents.startingSection, "Evaluar");
+  assert.equal(withStudents.startingSection, "Diagnóstico");
   const journey = await loadPlanningJourney(base, fetchFrom({ [planUrl]: plans, [experienceUrl]: { experiences: [] }, [diagnosticUrl]: { ...empty, student_count: 1 } }));
   assert.equal(journey.recommended, "diagnostic");
   assert.equal(journey.diagnostic, "pending");
@@ -123,7 +123,7 @@ test("la interfaz abre el diagnóstico y ofrece continuar al plan solo tras guar
   assert.match(workspace, /guidance\.startingSection === "Niños" \? "Aula" : guidance\.startingSection/);
   assert.match(workspace, /id: "diagnostic" as const, label: "Diagnóstico"/);
   assert.match(workspace, /className="ayni-journey-link" onClick=\{onGoDiagnostic\}/);
-  assert.match(workspace, /section === "diagnostic" \? <GuidedDiagnostic/);
+  assert.match(workspace, /active === "Diagnóstico" \? dashboard \? <section.*<GuidedDiagnostic/);
   assert.match(workspace, /<EvaluationHome dashboard=\{dashboard\}/);
   assert.match(diagnostic, /disabled=\{index \+ 1 > maxStep\}/);
   assert.match(diagnostic, /setData\(await completeDiagnosticReview\(\)\); onPlan\?\.\(\)/);

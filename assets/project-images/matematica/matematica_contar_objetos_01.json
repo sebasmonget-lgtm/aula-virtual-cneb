@@ -1,0 +1,42 @@
+{
+  "id": "matematica_contar_objetos_01",
+  "file": "matematica/matematica_contar_objetos_01.jpg",
+  "master": "masters/matematica_contar_objetos_01.png",
+  "title": "Luna cuenta objetos cotidianos",
+  "category": "matematica",
+  "subcategory": "cantidades",
+  "characters": [
+    "luna"
+  ],
+  "concepts": [
+    "matemática",
+    "conteo",
+    "cantidades"
+  ],
+  "actions": [
+    "contar",
+    "agrupar"
+  ],
+  "objects": [
+    "piedras",
+    "mesa"
+  ],
+  "contexts": [
+    "proyecto",
+    "plan_anual",
+    "portada",
+    "matematica",
+    "cantidades"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "orientation": "landscape",
+  "aspect_ratio": "3:2",
+  "has_text": false,
+  "country_context": "PE",
+  "variant": 1,
+  "priority": 10
+}

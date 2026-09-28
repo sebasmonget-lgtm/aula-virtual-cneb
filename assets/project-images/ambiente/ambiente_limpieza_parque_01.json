@@ -1,0 +1,46 @@
+{
+  "id": "ambiente_limpieza_parque_01",
+  "file": "ambiente/ambiente_limpieza_parque_01.jpg",
+  "master": "masters/ambiente_limpieza_parque_01.png",
+  "title": "Amigos limpian el parque",
+  "category": "ambiente",
+  "subcategory": "limpieza",
+  "characters": [
+    "leo",
+    "luna",
+    "mateo"
+  ],
+  "concepts": [
+    "limpieza",
+    "parque",
+    "ambiente",
+    "convivencia"
+  ],
+  "actions": [
+    "recoger",
+    "cuidar"
+  ],
+  "objects": [
+    "guantes",
+    "papeles",
+    "bolsa"
+  ],
+  "contexts": [
+    "proyecto",
+    "plan_anual",
+    "portada",
+    "ambiente",
+    "limpieza"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "orientation": "landscape",
+  "aspect_ratio": "3:2",
+  "has_text": false,
+  "country_context": "PE",
+  "variant": 1,
+  "priority": 10
+}

@@ -3,7 +3,7 @@ export type LocalStudent = { id: string; name: string; full_name?: string; evide
 export type TeacherConfirmedAssessment = { id: string; period_start: string; period_end: string; information_status: "sufficient" | "insufficient"; evidence_overview: string; strengths_and_advances: string[]; support_needs: string[]; next_opportunities: string[]; teacher_confirmed_at: string };
 export type TeacherConfirmedConclusion = { id: string; period_start: string; period_end: string; information_status: "sufficient" | "insufficient"; conclusion_text: string; support_or_conditions: string[]; next_steps: string[]; teacher_confirmed_at: string };
 export type StudentPedagogicalProfile = {
-  student: { id: string; name: string; first_name: string; last_name: string; section: string; age_years: number; school_year: number };
+  student: { id: string; name: string; first_name: string; last_name: string; birth_date: string | null; section: string; age_years: number; school_year: number };
   diagnosis: { competency_id: string; teacher_interpretation: string | null; teacher_confirmed: boolean; updated_at: string }[];
   family_interview_context: ({ version: number; teacher_confirmed_at: string } & Record<string, string | number>) | null;
   diagnostic_observations: { id: string; experience_id: string; aspect_id: string; competency_v4_id: string | null; competency_name: string | null; observation_status: DiagnosticObservationStatus; observation_text: string | null; observed_at: string; context_label?: string; classification_status?: string; classification_source?: string }[];
@@ -123,9 +123,17 @@ export const familyContextLabels: Record<string, string> = {
   communication_emotional_context: "Comunicación y emociones", social_context: "Relación con otros",
   adaptation_context: "Rutinas que dan seguridad", previous_education: "Experiencias educativas anteriores",
 };
+export type AiUsageSummary = {
+  month: string; pricingVersion: string;
+  total: { calls: number; unpricedCalls: number; estimatedCalls: number; costUsd: number };
+  currentMonth: { calls: number; unpricedCalls: number; estimatedCalls: number; costUsd: number };
+  breakdown: { provider: string; workflow: string; model: string; calls: number; unpricedCalls: number; estimatedCalls: number;
+    costUsd: number; monthCalls: number; monthUnpricedCalls: number; monthEstimatedCalls: number; monthCostUsd: number }[];
+};
 export type FamilyInterview = { id: string; student_id: string; version: number; status: "draft" | "confirmed"; details: FamilyInterviewDetails; has_attachment: boolean; updated_at: string; teacher_confirmed_at: string | null };
 export type FamilyInterviewStatus = "not_started" | "partial" | "confirmed";
-export type SpontaneousObservation = { id: string; student_id: string; context_label: string; observation_text: string | null; support_status: "yes" | "no" | "unknown" | null; observed_at: string; classification_status: "pending" | "classified" | "needs_review"; classification_source: "jev" | "openai" | "teacher" | null; competency_v4_id: string | null; secondary_competency_v4_id: string | null; competency_v4_ids: string[]; suggested_competency_v4_ids: string[]; has_media: boolean; media_mime_type: string | null };
+export type ObservationRecommendationState = "pending" | "suggested" | "privacy_blocked" | "missing_text" | "insufficient_information" | "unavailable" | "teacher_confirmed" | "teacher_unclassified";
+export type SpontaneousObservation = { id: string; student_id: string; context_label: string; observation_text: string | null; support_status: "yes" | "no" | "unknown" | null; observed_at: string; classification_status: "pending" | "classified" | "needs_review"; classification_source: "jev" | "openai" | "teacher" | null; recommendation_state: ObservationRecommendationState; competency_v4_id: string | null; secondary_competency_v4_id: string | null; competency_v4_ids: string[]; suggested_competency_v4_ids: string[]; has_media: boolean; media_mime_type: string | null };
 
 export const localDatabaseApiUrl = process.env.NEXT_PUBLIC_AYNI_API_URL || process.env.NEXT_PUBLIC_LOCAL_DATABASE_URL || "http://127.0.0.1:8788";
 const apiUrl = localDatabaseApiUrl;
@@ -136,20 +144,26 @@ export async function loadLocalDashboard(signal?: AbortSignal): Promise<LocalDas
   return response.json();
 }
 
+export async function loadAiUsageSummary(): Promise<AiUsageSummary> {
+  const response = await apiFetch(`${apiUrl}/api/ai-usage`, { cache: "no-store" });
+  if (!response.ok) throw new Error("No se pudo consultar el uso de IA.");
+  return response.json();
+}
+
 export async function loadPilotSetup(): Promise<{ configured: boolean }> {
   const response = await apiFetch(`${apiUrl}/api/pilot/setup`, { cache: "no-store" });
   if (!response.ok) throw new Error("No se pudo consultar la configuración del aula.");
   return response.json();
 }
 
-export async function savePilotSetup(input: { teacherName: string; institutionName: string; section: string; age: number; year: number; startsOn: string; endsOn: string; castellanoL2Applicable: boolean; religionApplicable: boolean }): Promise<LocalDashboard> {
+export async function savePilotSetup(input: { teacherName: string; institutionName: string; section: string; institutionCode?: string; district?: string; ugel?: string; directorName?: string; age: number; year: number; startsOn: string; endsOn: string; castellanoL2Applicable: boolean; religionApplicable: boolean; createLogo?: boolean; logoInitials?: string; logoPrimary?: string; logoAccent?: string; logoUpload?: { mimeType: "image/png" | "image/jpeg" | "image/webp"; base64: string } }): Promise<LocalDashboard> {
   const response = await apiFetch(`${apiUrl}/api/pilot/setup`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(input) });
   const result = await response.json() as { dashboard?: LocalDashboard; error?: string };
   if (!response.ok || !result.dashboard) throw new Error(result.error ?? "No se pudo configurar el aula.");
   return result.dashboard;
 }
 
-export async function importPilotStudents(input: { csv: string } | { students: { firstName: string; lastName: string; preferredName?: string }[] }): Promise<LocalDashboard> {
+export async function importPilotStudents(input: { csv: string } | { students: { firstName: string; lastName: string; preferredName?: string; birthDate?: string }[] }): Promise<LocalDashboard> {
   const response = await apiFetch(`${apiUrl}/api/students/import`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(input) });
   const result = await response.json() as { dashboard?: LocalDashboard; error?: string };
   if (!response.ok || !result.dashboard) throw new Error(result.error ?? "No se pudieron cargar los niños.");
@@ -310,6 +324,7 @@ export const saveDiagnosticInitialContext = (studentId: string, initialContext: 
 export const loadFamilyInterview = (studentId: string) => diagnosticRequest<{ draft: FamilyInterview | null; confirmed: FamilyInterview | null }>(`students/${encodeURIComponent(studentId)}/family-interview`);
 export const loadFamilyInterviewStatuses = () => diagnosticRequest<{ students: { student_id: string; status: FamilyInterviewStatus }[] }>("family-interview-status");
 export const saveFamilyInterview = (studentId: string, details: FamilyInterviewDetails) => diagnosticRequest<FamilyInterview>(`students/${encodeURIComponent(studentId)}/family-interview`, "PUT", { details });
+export const saveAndConfirmFamilyInterview = (studentId: string, details: FamilyInterviewDetails) => diagnosticRequest<FamilyInterview>(`students/${encodeURIComponent(studentId)}/family-interview/save-and-confirm`, "POST", { details });
 export const confirmFamilyInterview = (studentId: string) => diagnosticRequest<FamilyInterview>(`students/${encodeURIComponent(studentId)}/family-interview/confirm`, "POST");
 export const attachFamilyInterview = (studentId: string, mimeType: string, base64: string) => diagnosticRequest<FamilyInterview>(`students/${encodeURIComponent(studentId)}/family-interview/attachment`, "POST", { mimeType, base64 });
 export const familyInterviewAttachmentUrl = (studentId: string) => `${apiUrl}/api/diagnostics/students/${encodeURIComponent(studentId)}/family-interview/attachment`;
@@ -317,9 +332,10 @@ export const loadSpontaneousObservations = () => diagnosticRequest<{ observation
 export const saveSpontaneousObservation = (input: { studentId: string; contextLabel: string; observationText: string; supportStatus?: "yes" | "no" | "unknown"; media?: PrivateMediaUpload }) => diagnosticRequest<{ id: string; student_id: string; classification_status: "pending" }>("spontaneous-observations", "POST", input);
 export const saveMatrixDiagnosticObservation = (input: { studentId: string; competencyId: string; contextLabel: string; observationText: string }) => diagnosticRequest<{ id: string; student_id: string; competency_v4_id: string }>("spontaneous-observations/matrix", "POST", input);
 export const correctSpontaneousClassification = (id: string, competencyIds: string[]) => diagnosticRequest(`spontaneous-observations/${encodeURIComponent(id)}/classification`, "PUT", { competencyIds });
+export const suggestSpontaneousCompetenciesWithAyni = (id: string) => diagnosticRequest<{ id: string; status: string; recommendation_state: ObservationRecommendationState }>(`spontaneous-observations/${encodeURIComponent(id)}/suggest`, "POST");
 export const spontaneousObservationMediaUrl = (id: string) => `${apiUrl}/api/diagnostics/spontaneous-observations/${encodeURIComponent(id)}/media`;
 export const evidenceMediaUrl = (id: string) => `${apiUrl}/api/period-evaluations/evidence/${encodeURIComponent(id)}/media`;
-export async function transcribeShortAudio(input: { studentId: string; context: string; audio: PrivateMediaUpload }) {
+export async function transcribeShortAudio(input: { studentId?: string; scope?: "classroom"; context: string; audio: PrivateMediaUpload; purpose?: "observation" | "interview" | "teacher_comment" | "group_summary" }) {
   const response = await apiFetch(`${apiUrl}/api/audio/transcribe`, {
     method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(input),
   });

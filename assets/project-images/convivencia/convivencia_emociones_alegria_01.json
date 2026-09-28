@@ -1,0 +1,43 @@
+{
+  "id": "convivencia_emociones_alegria_01",
+  "file": "convivencia/convivencia_emociones_alegria_01.jpg",
+  "master": "masters/convivencia_emociones_alegria_01.png",
+  "title": "Leo y Luna reconocen la alegría",
+  "category": "convivencia",
+  "subcategory": "emociones",
+  "characters": [
+    "leo",
+    "luna"
+  ],
+  "concepts": [
+    "emociones",
+    "alegría",
+    "expresión"
+  ],
+  "actions": [
+    "reconocer",
+    "conversar"
+  ],
+  "objects": [
+    "bloques",
+    "torre"
+  ],
+  "contexts": [
+    "proyecto",
+    "plan_anual",
+    "portada",
+    "convivencia",
+    "emociones"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "orientation": "landscape",
+  "aspect_ratio": "3:2",
+  "has_text": false,
+  "country_context": "PE",
+  "variant": 1,
+  "priority": 10
+}

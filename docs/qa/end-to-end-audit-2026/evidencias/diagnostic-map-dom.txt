@@ -1,0 +1,578 @@
+- paragraph: Ayni Aula
+- paragraph: Tu aliada en Inicial
+- list:
+  - button "Hoy":
+    - generic: Hoy
+  - button "Calendario":
+    - generic: Calendario
+  - button "Diagnóstico":
+    - generic: Diagnóstico
+  - button "Planificar":
+    - generic: Planificar
+  - button "Aula":
+    - generic: Aula
+  - button "Evaluar":
+    - generic: Evaluar
+  - button "Biblioteca":
+    - generic: Biblioteca
+- paragraph: Exploradores · 5 años
+- paragraph: 2026 · 15 estudiantes
+- main:
+  - paragraph: Domingo, 27 de setiembre
+  - paragraph: IEI Semillas del Valle QA · Exploradores
+  - text: Base conectada
+  - button "Abrir perfil": LP
+  - main:
+    - paragraph: Conocer al grupo
+    - heading "Diagnóstico" [level=1]
+    - paragraph: Observa, registra y continúa cuando puedas.
+    - generic: 5 años · Exploradores
+    - navigation "Pasos del diagnóstico":
+      - button "1. Conocer Listo 15/15 entrevistas":
+        - generic: 1. Conocer
+        - img "Listo":
+        - generic: 15/15 entrevistas
+      - button "2. Observar Listo 15/15 niños":
+        - generic: 2. Observar
+        - img "Listo":
+        - generic: 15/15 niños
+      - button "3. Resumir Pendiente" [active]:
+        - generic: 3. Resumir
+        - generic: Pendiente
+    - paragraph: De las observaciones a tus decisiones
+    - heading "Resume lo que observaste" [level=2]
+    - paragraph: Mapa de observaciones del aula
+    - paragraph: Toca una celda para añadir una observación. Debajo puedes consultar los registros de cada niño y, si deseas, agregar un comentario.
+    - heading "Mapa de observaciones" [level=3]
+    - paragraph: Desliza la tabla hacia los lados para ver todas las competencias.
+    - table:
+      - rowgroup:
+        - row "Niño Construye su identidad Convive y participa democráticamente en la búsqueda del bien común Se desenvuelve de manera autónoma a través de su motricidad Se comunica oralmente en su lengua materna Lee diversos tipos de textos escritos en su lengua materna Escribe diversos tipos de textos en su lengua materna Crea proyectos desde los lenguajes artísticos Resuelve problemas de cantidad Resuelve problemas de forma, movimiento y localización Indaga mediante métodos científicos para construir sus conocimientos Se desenvuelve en los entornos virtuales generados por las TIC Gestiona su aprendizaje de manera autónoma":
+          - columnheader "Niño"
+          - columnheader "Construye su identidad"
+          - columnheader "Convive y participa democráticamente en la búsqueda del bien común"
+          - columnheader "Se desenvuelve de manera autónoma a través de su motricidad"
+          - columnheader "Se comunica oralmente en su lengua materna"
+          - columnheader "Lee diversos tipos de textos escritos en su lengua materna"
+          - columnheader "Escribe diversos tipos de textos en su lengua materna"
+          - columnheader "Crea proyectos desde los lenguajes artísticos"
+          - columnheader "Resuelve problemas de cantidad"
+          - columnheader "Resuelve problemas de forma, movimiento y localización"
+          - columnheader "Indaga mediante métodos científicos para construir sus conocimientos"
+          - columnheader "Se desenvuelve en los entornos virtuales generados por las TIC"
+          - columnheader "Gestiona su aprendizaje de manera autónoma"
+      - rowgroup:
+        - row:
+          - rowheader "Alma"
+          - 'cell "Alma, Construye su identidad: sin observaciones. Añadir observación."':
+            - 'button "Alma, Construye su identidad: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Alma, Convive y participa democráticamente en la búsqueda del bien común: Alma agarro la lupa que usaba Kiara. Le dije que podían turnarse, la soltó un ratito pero volvió a tomarla antes del acuerdo.. Añadir observación."':
+            - 'button "Alma, Convive y participa democráticamente en la búsqueda del bien común: Alma agarro la lupa que usaba Kiara. Le dije que podían turnarse, la soltó un ratito pero volvió a tomarla antes del acuerdo.. Añadir observación."':
+              - generic: Alma agarro la lupa que usaba Kiara. Le dije que podían turnarse, la soltó un ratito pero volvió a tomarla antes del acuerdo.
+              - generic: +1 observación más
+          - 'cell "Alma, Se desenvuelve de manera autónoma a través de su motricidad: Alma probó saltar una línea y luego otra más lejos, movió sus brazos para equilibrarse y ajustó el salto cuando casi se cae.. Añadir observación."':
+            - 'button "Alma, Se desenvuelve de manera autónoma a través de su motricidad: Alma probó saltar una línea y luego otra más lejos, movió sus brazos para equilibrarse y ajustó el salto cuando casi se cae.. Añadir observación."':
+              - generic: Alma probó saltar una línea y luego otra más lejos, movió sus brazos para equilibrarse y ajustó el salto cuando casi se cae.
+          - 'cell "Alma, Se comunica oralmente en su lengua materna: sin observaciones. Añadir observación."':
+            - 'button "Alma, Se comunica oralmente en su lengua materna: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Alma, Lee diversos tipos de textos escritos en su lengua materna: sin observaciones. Añadir observación."':
+            - 'button "Alma, Lee diversos tipos de textos escritos en su lengua materna: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Alma, Escribe diversos tipos de textos en su lengua materna: sin observaciones. Añadir observación."':
+            - 'button "Alma, Escribe diversos tipos de textos en su lengua materna: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Alma, Crea proyectos desde los lenguajes artísticos: sin observaciones. Añadir observación."':
+            - 'button "Alma, Crea proyectos desde los lenguajes artísticos: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Alma, Resuelve problemas de cantidad: sin observaciones. Añadir observación."':
+            - 'button "Alma, Resuelve problemas de cantidad: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Alma, Resuelve problemas de forma, movimiento y localización: sin observaciones. Añadir observación."':
+            - 'button "Alma, Resuelve problemas de forma, movimiento y localización: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Alma, Indaga mediante métodos científicos para construir sus conocimientos: sin observaciones. Añadir observación."':
+            - 'button "Alma, Indaga mediante métodos científicos para construir sus conocimientos: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Alma, Se desenvuelve en los entornos virtuales generados por las TIC: sin observaciones. Añadir observación."':
+            - 'button "Alma, Se desenvuelve en los entornos virtuales generados por las TIC: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Alma, Gestiona su aprendizaje de manera autónoma: sin observaciones. Añadir observación."':
+            - 'button "Alma, Gestiona su aprendizaje de manera autónoma: sin observaciones. Añadir observación."': + Anotar
+        - row:
+          - rowheader "Bruno"
+          - 'cell "Bruno, Construye su identidad: sin observaciones. Añadir observación."':
+            - 'button "Bruno, Construye su identidad: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Bruno, Convive y participa democráticamente en la búsqueda del bien común: Bruno propuso que uno riegue mientras el otro sostiene la maceta; después cambiaron sin que yo se lo recuerde.. Añadir observación."':
+            - 'button "Bruno, Convive y participa democráticamente en la búsqueda del bien común: Bruno propuso que uno riegue mientras el otro sostiene la maceta; después cambiaron sin que yo se lo recuerde.. Añadir observación."':
+              - generic: Bruno propuso que uno riegue mientras el otro sostiene la maceta; después cambiaron sin que yo se lo recuerde.
+              - generic: +2 observaciones más
+          - 'cell "Bruno, Se desenvuelve de manera autónoma a través de su motricidad: sin observaciones. Añadir observación."':
+            - 'button "Bruno, Se desenvuelve de manera autónoma a través de su motricidad: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Bruno, Se comunica oralmente en su lengua materna: sin observaciones. Añadir observación."':
+            - 'button "Bruno, Se comunica oralmente en su lengua materna: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Bruno, Lee diversos tipos de textos escritos en su lengua materna: sin observaciones. Añadir observación."':
+            - 'button "Bruno, Lee diversos tipos de textos escritos en su lengua materna: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Bruno, Escribe diversos tipos de textos en su lengua materna: sin observaciones. Añadir observación."':
+            - 'button "Bruno, Escribe diversos tipos de textos en su lengua materna: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Bruno, Crea proyectos desde los lenguajes artísticos: sin observaciones. Añadir observación."':
+            - 'button "Bruno, Crea proyectos desde los lenguajes artísticos: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Bruno, Resuelve problemas de cantidad: sin observaciones. Añadir observación."':
+            - 'button "Bruno, Resuelve problemas de cantidad: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Bruno, Resuelve problemas de forma, movimiento y localización: sin observaciones. Añadir observación."':
+            - 'button "Bruno, Resuelve problemas de forma, movimiento y localización: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Bruno, Indaga mediante métodos científicos para construir sus conocimientos: sin observaciones. Añadir observación."':
+            - 'button "Bruno, Indaga mediante métodos científicos para construir sus conocimientos: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Bruno, Se desenvuelve en los entornos virtuales generados por las TIC: sin observaciones. Añadir observación."':
+            - 'button "Bruno, Se desenvuelve en los entornos virtuales generados por las TIC: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Bruno, Gestiona su aprendizaje de manera autónoma: sin observaciones. Añadir observación."':
+            - 'button "Bruno, Gestiona su aprendizaje de manera autónoma: sin observaciones. Añadir observación."': + Anotar
+        - row:
+          - rowheader "Camila"
+          - 'cell "Camila, Construye su identidad: sin observaciones. Añadir observación."':
+            - 'button "Camila, Construye su identidad: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Camila, Convive y participa democráticamente en la búsqueda del bien común: Camila quiere todas las palitas, no acepta prestarle una a Elena. Con ayuda eligen una cada una y continúan sembrando.. Añadir observación."':
+            - 'button "Camila, Convive y participa democráticamente en la búsqueda del bien común: Camila quiere todas las palitas, no acepta prestarle una a Elena. Con ayuda eligen una cada una y continúan sembrando.. Añadir observación."':
+              - generic: Camila quiere todas las palitas, no acepta prestarle una a Elena. Con ayuda eligen una cada una y continúan sembrando.
+              - generic: +1 observación más
+          - 'cell "Camila, Se desenvuelve de manera autónoma a través de su motricidad: sin observaciones. Añadir observación."':
+            - 'button "Camila, Se desenvuelve de manera autónoma a través de su motricidad: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Camila, Se comunica oralmente en su lengua materna: Camila dijo la mariposa estaba en la hoja y después voló al árbol. Explicó a Alma dónde la vio, escuchó su pregunta y añadió que era amarilla.. Añadir observación."':
+            - 'button "Camila, Se comunica oralmente en su lengua materna: Camila dijo la mariposa estaba en la hoja y después voló al árbol. Explicó a Alma dónde la vio, escuchó su pregunta y añadió que era amarilla.. Añadir observación."':
+              - generic: Camila dijo la mariposa estaba en la hoja y después voló al árbol. Explicó a Alma dónde la vio, escuchó su pregunta y añadió que era amarilla.
+          - 'cell "Camila, Lee diversos tipos de textos escritos en su lengua materna: sin observaciones. Añadir observación."':
+            - 'button "Camila, Lee diversos tipos de textos escritos en su lengua materna: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Camila, Escribe diversos tipos de textos en su lengua materna: sin observaciones. Añadir observación."':
+            - 'button "Camila, Escribe diversos tipos de textos en su lengua materna: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Camila, Crea proyectos desde los lenguajes artísticos: sin observaciones. Añadir observación."':
+            - 'button "Camila, Crea proyectos desde los lenguajes artísticos: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Camila, Resuelve problemas de cantidad: sin observaciones. Añadir observación."':
+            - 'button "Camila, Resuelve problemas de cantidad: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Camila, Resuelve problemas de forma, movimiento y localización: sin observaciones. Añadir observación."':
+            - 'button "Camila, Resuelve problemas de forma, movimiento y localización: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Camila, Indaga mediante métodos científicos para construir sus conocimientos: sin observaciones. Añadir observación."':
+            - 'button "Camila, Indaga mediante métodos científicos para construir sus conocimientos: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Camila, Se desenvuelve en los entornos virtuales generados por las TIC: sin observaciones. Añadir observación."':
+            - 'button "Camila, Se desenvuelve en los entornos virtuales generados por las TIC: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Camila, Gestiona su aprendizaje de manera autónoma: sin observaciones. Añadir observación."':
+            - 'button "Camila, Gestiona su aprendizaje de manera autónoma: sin observaciones. Añadir observación."': + Anotar
+        - row:
+          - rowheader "Diego"
+          - 'cell "Diego, Construye su identidad: sin observaciones. Añadir observación."':
+            - 'button "Diego, Construye su identidad: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Diego, Convive y participa democráticamente en la búsqueda del bien común: Diego toma el carro que tenía Fabio. Al proponer turnos se va del juego; vuelve cuando le mostramos de quién era cada turno.. Añadir observación."':
+            - 'button "Diego, Convive y participa democráticamente en la búsqueda del bien común: Diego toma el carro que tenía Fabio. Al proponer turnos se va del juego; vuelve cuando le mostramos de quién era cada turno.. Añadir observación."':
+              - generic: Diego toma el carro que tenía Fabio. Al proponer turnos se va del juego; vuelve cuando le mostramos de quién era cada turno.
+              - generic: +1 observación más
+          - 'cell "Diego, Se desenvuelve de manera autónoma a través de su motricidad: sin observaciones. Añadir observación."':
+            - 'button "Diego, Se desenvuelve de manera autónoma a través de su motricidad: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Diego, Se comunica oralmente en su lengua materna: sin observaciones. Añadir observación."':
+            - 'button "Diego, Se comunica oralmente en su lengua materna: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Diego, Lee diversos tipos de textos escritos en su lengua materna: sin observaciones. Añadir observación."':
+            - 'button "Diego, Lee diversos tipos de textos escritos en su lengua materna: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Diego, Escribe diversos tipos de textos en su lengua materna: sin observaciones. Añadir observación."':
+            - 'button "Diego, Escribe diversos tipos de textos en su lengua materna: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Diego, Crea proyectos desde los lenguajes artísticos: sin observaciones. Añadir observación."':
+            - 'button "Diego, Crea proyectos desde los lenguajes artísticos: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Diego, Resuelve problemas de cantidad: sin observaciones. Añadir observación."':
+            - 'button "Diego, Resuelve problemas de cantidad: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Diego, Resuelve problemas de forma, movimiento y localización: sin observaciones. Añadir observación."':
+            - 'button "Diego, Resuelve problemas de forma, movimiento y localización: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Diego, Indaga mediante métodos científicos para construir sus conocimientos: sin observaciones. Añadir observación."':
+            - 'button "Diego, Indaga mediante métodos científicos para construir sus conocimientos: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Diego, Se desenvuelve en los entornos virtuales generados por las TIC: sin observaciones. Añadir observación."':
+            - 'button "Diego, Se desenvuelve en los entornos virtuales generados por las TIC: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Diego, Gestiona su aprendizaje de manera autónoma: sin observaciones. Añadir observación."':
+            - 'button "Diego, Gestiona su aprendizaje de manera autónoma: sin observaciones. Añadir observación."': + Anotar
+        - row:
+          - rowheader "Elena"
+          - 'cell "Elena, Construye su identidad: sin observaciones. Añadir observación."':
+            - 'button "Elena, Construye su identidad: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Elena, Convive y participa democráticamente en la búsqueda del bien común: Elena quería que todas hagan de bebé. No escucha la propuesta de otra niña; con mi ayuda acepta que cambien los roles después.. Añadir observación."':
+            - 'button "Elena, Convive y participa democráticamente en la búsqueda del bien común: Elena quería que todas hagan de bebé. No escucha la propuesta de otra niña; con mi ayuda acepta que cambien los roles después.. Añadir observación."':
+              - generic: Elena quería que todas hagan de bebé. No escucha la propuesta de otra niña; con mi ayuda acepta que cambien los roles después.
+          - 'cell "Elena, Se desenvuelve de manera autónoma a través de su motricidad: sin observaciones. Añadir observación."':
+            - 'button "Elena, Se desenvuelve de manera autónoma a través de su motricidad: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Elena, Se comunica oralmente en su lengua materna: sin observaciones. Añadir observación."':
+            - 'button "Elena, Se comunica oralmente en su lengua materna: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Elena, Lee diversos tipos de textos escritos en su lengua materna: sin observaciones. Añadir observación."':
+            - 'button "Elena, Lee diversos tipos de textos escritos en su lengua materna: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Elena, Escribe diversos tipos de textos en su lengua materna: Elena hizo una lista con marcas y letras para recordar qué semillas traer. Dice aquí puse lentejas para que mamá se acuerde y la revisa antes de llevársela.. Añadir observación."':
+            - 'button "Elena, Escribe diversos tipos de textos en su lengua materna: Elena hizo una lista con marcas y letras para recordar qué semillas traer. Dice aquí puse lentejas para que mamá se acuerde y la revisa antes de llevársela.. Añadir observación."':
+              - generic: Elena hizo una lista con marcas y letras para recordar qué semillas traer. Dice aquí puse lentejas para que mamá se acuerde y la revisa antes de llevársela.
+          - 'cell "Elena, Crea proyectos desde los lenguajes artísticos: sin observaciones. Añadir observación."':
+            - 'button "Elena, Crea proyectos desde los lenguajes artísticos: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Elena, Resuelve problemas de cantidad: sin observaciones. Añadir observación."':
+            - 'button "Elena, Resuelve problemas de cantidad: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Elena, Resuelve problemas de forma, movimiento y localización: sin observaciones. Añadir observación."':
+            - 'button "Elena, Resuelve problemas de forma, movimiento y localización: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Elena, Indaga mediante métodos científicos para construir sus conocimientos: sin observaciones. Añadir observación."':
+            - 'button "Elena, Indaga mediante métodos científicos para construir sus conocimientos: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Elena, Se desenvuelve en los entornos virtuales generados por las TIC: sin observaciones. Añadir observación."':
+            - 'button "Elena, Se desenvuelve en los entornos virtuales generados por las TIC: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Elena, Gestiona su aprendizaje de manera autónoma: sin observaciones. Añadir observación."':
+            - 'button "Elena, Gestiona su aprendizaje de manera autónoma: sin observaciones. Añadir observación."': + Anotar
+        - row:
+          - rowheader "Fabio"
+          - 'cell "Fabio, Construye su identidad: sin observaciones. Añadir observación."':
+            - 'button "Fabio, Construye su identidad: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Fabio, Convive y participa democráticamente en la búsqueda del bien común: Fabio cogió los bloques del puente de Hugo. Conversamos sobre cómo usarlos sin desarmar lo del otro; todavía necesita recordatorios para cumplir el acuerdo.. Añadir observación."':
+            - 'button "Fabio, Convive y participa democráticamente en la búsqueda del bien común: Fabio cogió los bloques del puente de Hugo. Conversamos sobre cómo usarlos sin desarmar lo del otro; todavía necesita recordatorios para cumplir el acuerdo.. Añadir observación."':
+              - generic: Fabio cogió los bloques del puente de Hugo. Conversamos sobre cómo usarlos sin desarmar lo del otro; todavía necesita recordatorios para cumplir el acuerdo.
+          - 'cell "Fabio, Se desenvuelve de manera autónoma a través de su motricidad: sin observaciones. Añadir observación."':
+            - 'button "Fabio, Se desenvuelve de manera autónoma a través de su motricidad: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Fabio, Se comunica oralmente en su lengua materna: sin observaciones. Añadir observación."':
+            - 'button "Fabio, Se comunica oralmente en su lengua materna: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Fabio, Lee diversos tipos de textos escritos en su lengua materna: sin observaciones. Añadir observación."':
+            - 'button "Fabio, Lee diversos tipos de textos escritos en su lengua materna: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Fabio, Escribe diversos tipos de textos en su lengua materna: sin observaciones. Añadir observación."':
+            - 'button "Fabio, Escribe diversos tipos de textos en su lengua materna: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Fabio, Crea proyectos desde los lenguajes artísticos: sin observaciones. Añadir observación."':
+            - 'button "Fabio, Crea proyectos desde los lenguajes artísticos: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Fabio, Resuelve problemas de cantidad: sin observaciones. Añadir observación."':
+            - 'button "Fabio, Resuelve problemas de cantidad: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Fabio, Resuelve problemas de forma, movimiento y localización: sin observaciones. Añadir observación."':
+            - 'button "Fabio, Resuelve problemas de forma, movimiento y localización: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Fabio, Indaga mediante métodos científicos para construir sus conocimientos: sin observaciones. Añadir observación."':
+            - 'button "Fabio, Indaga mediante métodos científicos para construir sus conocimientos: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Fabio, Se desenvuelve en los entornos virtuales generados por las TIC: sin observaciones. Añadir observación."':
+            - 'button "Fabio, Se desenvuelve en los entornos virtuales generados por las TIC: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Fabio, Gestiona su aprendizaje de manera autónoma: sin observaciones. Añadir observación."':
+            - 'button "Fabio, Gestiona su aprendizaje de manera autónoma: sin observaciones. Añadir observación."': + Anotar
+        - row:
+          - rowheader "Gabriela"
+          - 'cell "Gabriela, Construye su identidad: sin observaciones. Añadir observación."':
+            - 'button "Gabriela, Construye su identidad: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Gabriela, Convive y participa democráticamente en la búsqueda del bien común: Gabi apartó los colores cuando Camila pidió uno. Con acompañamiento propuso usarlo primero ella y después Camila, pero lo retuvo al llegar el turno de Camila.. Añadir observación."':
+            - 'button "Gabriela, Convive y participa democráticamente en la búsqueda del bien común: Gabi apartó los colores cuando Camila pidió uno. Con acompañamiento propuso usarlo primero ella y después Camila, pero lo retuvo al llegar el turno de Camila.. Añadir observación."':
+              - generic: Gabi apartó los colores cuando Camila pidió uno. Con acompañamiento propuso usarlo primero ella y después Camila, pero lo retuvo al llegar el turno de Camila.
+          - 'cell "Gabriela, Se desenvuelve de manera autónoma a través de su motricidad: sin observaciones. Añadir observación."':
+            - 'button "Gabriela, Se desenvuelve de manera autónoma a través de su motricidad: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Gabriela, Se comunica oralmente en su lengua materna: sin observaciones. Añadir observación."':
+            - 'button "Gabriela, Se comunica oralmente en su lengua materna: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Gabriela, Lee diversos tipos de textos escritos en su lengua materna: sin observaciones. Añadir observación."':
+            - 'button "Gabriela, Lee diversos tipos de textos escritos en su lengua materna: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Gabriela, Escribe diversos tipos de textos en su lengua materna: sin observaciones. Añadir observación."':
+            - 'button "Gabriela, Escribe diversos tipos de textos en su lengua materna: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Gabriela, Crea proyectos desde los lenguajes artísticos: Gabi eligió papeles, los dobló y pintó para representar una mariposa. Cambió las alas porque quería que parezca volando y contó cómo lo hizo.. Añadir observación."':
+            - 'button "Gabriela, Crea proyectos desde los lenguajes artísticos: Gabi eligió papeles, los dobló y pintó para representar una mariposa. Cambió las alas porque quería que parezca volando y contó cómo lo hizo.. Añadir observación."':
+              - generic: Gabi eligió papeles, los dobló y pintó para representar una mariposa. Cambió las alas porque quería que parezca volando y contó cómo lo hizo.
+          - 'cell "Gabriela, Resuelve problemas de cantidad: sin observaciones. Añadir observación."':
+            - 'button "Gabriela, Resuelve problemas de cantidad: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Gabriela, Resuelve problemas de forma, movimiento y localización: sin observaciones. Añadir observación."':
+            - 'button "Gabriela, Resuelve problemas de forma, movimiento y localización: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Gabriela, Indaga mediante métodos científicos para construir sus conocimientos: sin observaciones. Añadir observación."':
+            - 'button "Gabriela, Indaga mediante métodos científicos para construir sus conocimientos: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Gabriela, Se desenvuelve en los entornos virtuales generados por las TIC: sin observaciones. Añadir observación."':
+            - 'button "Gabriela, Se desenvuelve en los entornos virtuales generados por las TIC: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Gabriela, Gestiona su aprendizaje de manera autónoma: sin observaciones. Añadir observación."':
+            - 'button "Gabriela, Gestiona su aprendizaje de manera autónoma: sin observaciones. Añadir observación."': + Anotar
+        - row:
+          - rowheader "Hugo"
+          - 'cell "Hugo, Construye su identidad: sin observaciones. Añadir observación."':
+            - 'button "Hugo, Construye su identidad: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Hugo, Convive y participa democráticamente en la búsqueda del bien común: Hugo reparte sin preguntar y deja a dos niños sin material. Le ayudamos a acordar una forma de repartir para que todos participen.. Añadir observación."':
+            - 'button "Hugo, Convive y participa democráticamente en la búsqueda del bien común: Hugo reparte sin preguntar y deja a dos niños sin material. Le ayudamos a acordar una forma de repartir para que todos participen.. Añadir observación."':
+              - generic: Hugo reparte sin preguntar y deja a dos niños sin material. Le ayudamos a acordar una forma de repartir para que todos participen.
+          - 'cell "Hugo, Se desenvuelve de manera autónoma a través de su motricidad: sin observaciones. Añadir observación."':
+            - 'button "Hugo, Se desenvuelve de manera autónoma a través de su motricidad: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Hugo, Se comunica oralmente en su lengua materna: sin observaciones. Añadir observación."':
+            - 'button "Hugo, Se comunica oralmente en su lengua materna: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Hugo, Lee diversos tipos de textos escritos en su lengua materna: sin observaciones. Añadir observación."':
+            - 'button "Hugo, Lee diversos tipos de textos escritos en su lengua materna: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Hugo, Escribe diversos tipos de textos en su lengua materna: sin observaciones. Añadir observación."':
+            - 'button "Hugo, Escribe diversos tipos de textos en su lengua materna: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Hugo, Crea proyectos desde los lenguajes artísticos: sin observaciones. Añadir observación."':
+            - 'button "Hugo, Crea proyectos desde los lenguajes artísticos: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Hugo, Resuelve problemas de cantidad: sin observaciones. Añadir observación."':
+            - 'button "Hugo, Resuelve problemas de cantidad: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Hugo, Resuelve problemas de forma, movimiento y localización: Hugo explicó que para llegar al huerto hay que pasar detrás del banco, girar y entrar por la puerta de al lado. Probó el recorrido y corrigió dónde girar.. Añadir observación."':
+            - 'button "Hugo, Resuelve problemas de forma, movimiento y localización: Hugo explicó que para llegar al huerto hay que pasar detrás del banco, girar y entrar por la puerta de al lado. Probó el recorrido y corrigió dónde girar.. Añadir observación."':
+              - generic: Hugo explicó que para llegar al huerto hay que pasar detrás del banco, girar y entrar por la puerta de al lado. Probó el recorrido y corrigió dónde girar.
+          - 'cell "Hugo, Indaga mediante métodos científicos para construir sus conocimientos: sin observaciones. Añadir observación."':
+            - 'button "Hugo, Indaga mediante métodos científicos para construir sus conocimientos: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Hugo, Se desenvuelve en los entornos virtuales generados por las TIC: sin observaciones. Añadir observación."':
+            - 'button "Hugo, Se desenvuelve en los entornos virtuales generados por las TIC: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Hugo, Gestiona su aprendizaje de manera autónoma: sin observaciones. Añadir observación."':
+            - 'button "Hugo, Gestiona su aprendizaje de manera autónoma: sin observaciones. Añadir observación."': + Anotar
+        - row:
+          - rowheader "Inés"
+          - 'cell "Inés, Construye su identidad: sin observaciones. Añadir observación."':
+            - 'button "Inés, Construye su identidad: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Inés, Convive y participa democráticamente en la búsqueda del bien común: sin observaciones. Añadir observación."':
+            - 'button "Inés, Convive y participa democráticamente en la búsqueda del bien común: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Inés, Se desenvuelve de manera autónoma a través de su motricidad: sin observaciones. Añadir observación."':
+            - 'button "Inés, Se desenvuelve de manera autónoma a través de su motricidad: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Inés, Se comunica oralmente en su lengua materna: sin observaciones. Añadir observación."':
+            - 'button "Inés, Se comunica oralmente en su lengua materna: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Inés, Lee diversos tipos de textos escritos en su lengua materna: sin observaciones. Añadir observación."':
+            - 'button "Inés, Lee diversos tipos de textos escritos en su lengua materna: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Inés, Escribe diversos tipos de textos en su lengua materna: sin observaciones. Añadir observación."':
+            - 'button "Inés, Escribe diversos tipos de textos en su lengua materna: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Inés, Crea proyectos desde los lenguajes artísticos: sin observaciones. Añadir observación."':
+            - 'button "Inés, Crea proyectos desde los lenguajes artísticos: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Inés, Resuelve problemas de cantidad: sin observaciones. Añadir observación."':
+            - 'button "Inés, Resuelve problemas de cantidad: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Inés, Resuelve problemas de forma, movimiento y localización: sin observaciones. Añadir observación."':
+            - 'button "Inés, Resuelve problemas de forma, movimiento y localización: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Inés, Indaga mediante métodos científicos para construir sus conocimientos: Inés pregunta si las semillas crecen sin luz. Propone poner dos vasitos con la misma agua, uno al sol y otro en una caja, y dibujar cada día qué cambia.. Añadir observación."':
+            - 'button "Inés, Indaga mediante métodos científicos para construir sus conocimientos: Inés pregunta si las semillas crecen sin luz. Propone poner dos vasitos con la misma agua, uno al sol y otro en una caja, y dibujar cada día qué cambia.. Añadir observación."':
+              - generic: Inés pregunta si las semillas crecen sin luz. Propone poner dos vasitos con la misma agua, uno al sol y otro en una caja, y dibujar cada día qué cambia.
+          - 'cell "Inés, Se desenvuelve en los entornos virtuales generados por las TIC: sin observaciones. Añadir observación."':
+            - 'button "Inés, Se desenvuelve en los entornos virtuales generados por las TIC: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Inés, Gestiona su aprendizaje de manera autónoma: sin observaciones. Añadir observación."':
+            - 'button "Inés, Gestiona su aprendizaje de manera autónoma: sin observaciones. Añadir observación."': + Anotar
+        - row:
+          - rowheader "Joaquín"
+          - 'cell "Joaquín, Construye su identidad: sin observaciones. Añadir observación."':
+            - 'button "Joaquín, Construye su identidad: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Joaquín, Convive y participa democráticamente en la búsqueda del bien común: sin observaciones. Añadir observación."':
+            - 'button "Joaquín, Convive y participa democráticamente en la búsqueda del bien común: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Joaquín, Se desenvuelve de manera autónoma a través de su motricidad: sin observaciones. Añadir observación."':
+            - 'button "Joaquín, Se desenvuelve de manera autónoma a través de su motricidad: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Joaquín, Se comunica oralmente en su lengua materna: sin observaciones. Añadir observación."':
+            - 'button "Joaquín, Se comunica oralmente en su lengua materna: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Joaquín, Lee diversos tipos de textos escritos en su lengua materna: sin observaciones. Añadir observación."':
+            - 'button "Joaquín, Lee diversos tipos de textos escritos en su lengua materna: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Joaquín, Escribe diversos tipos de textos en su lengua materna: sin observaciones. Añadir observación."':
+            - 'button "Joaquín, Escribe diversos tipos de textos en su lengua materna: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Joaquín, Crea proyectos desde los lenguajes artísticos: Joaquín inventa una canción de la tienda. Prueba sonidos con tapas y cambia el ritmo para que se escuche suave cuando entra el cliente.. Añadir observación."':
+            - 'button "Joaquín, Crea proyectos desde los lenguajes artísticos: Joaquín inventa una canción de la tienda. Prueba sonidos con tapas y cambia el ritmo para que se escuche suave cuando entra el cliente.. Añadir observación."':
+              - generic: Joaquín inventa una canción de la tienda. Prueba sonidos con tapas y cambia el ritmo para que se escuche suave cuando entra el cliente.
+          - 'cell "Joaquín, Resuelve problemas de cantidad: sin observaciones. Añadir observación."':
+            - 'button "Joaquín, Resuelve problemas de cantidad: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Joaquín, Resuelve problemas de forma, movimiento y localización: sin observaciones. Añadir observación."':
+            - 'button "Joaquín, Resuelve problemas de forma, movimiento y localización: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Joaquín, Indaga mediante métodos científicos para construir sus conocimientos: sin observaciones. Añadir observación."':
+            - 'button "Joaquín, Indaga mediante métodos científicos para construir sus conocimientos: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Joaquín, Se desenvuelve en los entornos virtuales generados por las TIC: sin observaciones. Añadir observación."':
+            - 'button "Joaquín, Se desenvuelve en los entornos virtuales generados por las TIC: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Joaquín, Gestiona su aprendizaje de manera autónoma: sin observaciones. Añadir observación."':
+            - 'button "Joaquín, Gestiona su aprendizaje de manera autónoma: sin observaciones. Añadir observación."': + Anotar
+        - row:
+          - rowheader "Kiara"
+          - 'cell "Kiara, Construye su identidad: sin observaciones. Añadir observación."':
+            - 'button "Kiara, Construye su identidad: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Kiara, Convive y participa democráticamente en la búsqueda del bien común: sin observaciones. Añadir observación."':
+            - 'button "Kiara, Convive y participa democráticamente en la búsqueda del bien común: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Kiara, Se desenvuelve de manera autónoma a través de su motricidad: sin observaciones. Añadir observación."':
+            - 'button "Kiara, Se desenvuelve de manera autónoma a través de su motricidad: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Kiara, Se comunica oralmente en su lengua materna: sin observaciones. Añadir observación."':
+            - 'button "Kiara, Se comunica oralmente en su lengua materna: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Kiara, Lee diversos tipos de textos escritos en su lengua materna: Kiara mira la portada y dice que el personaje va a buscar su casa. Señala la casita del dibujo para explicar por qué lo piensa.. Añadir observación."':
+            - 'button "Kiara, Lee diversos tipos de textos escritos en su lengua materna: Kiara mira la portada y dice que el personaje va a buscar su casa. Señala la casita del dibujo para explicar por qué lo piensa.. Añadir observación."':
+              - generic: Kiara mira la portada y dice que el personaje va a buscar su casa. Señala la casita del dibujo para explicar por qué lo piensa.
+          - 'cell "Kiara, Escribe diversos tipos de textos en su lengua materna: sin observaciones. Añadir observación."':
+            - 'button "Kiara, Escribe diversos tipos de textos en su lengua materna: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Kiara, Crea proyectos desde los lenguajes artísticos: sin observaciones. Añadir observación."':
+            - 'button "Kiara, Crea proyectos desde los lenguajes artísticos: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Kiara, Resuelve problemas de cantidad: sin observaciones. Añadir observación."':
+            - 'button "Kiara, Resuelve problemas de cantidad: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Kiara, Resuelve problemas de forma, movimiento y localización: sin observaciones. Añadir observación."':
+            - 'button "Kiara, Resuelve problemas de forma, movimiento y localización: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Kiara, Indaga mediante métodos científicos para construir sus conocimientos: sin observaciones. Añadir observación."':
+            - 'button "Kiara, Indaga mediante métodos científicos para construir sus conocimientos: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Kiara, Se desenvuelve en los entornos virtuales generados por las TIC: sin observaciones. Añadir observación."':
+            - 'button "Kiara, Se desenvuelve en los entornos virtuales generados por las TIC: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Kiara, Gestiona su aprendizaje de manera autónoma: sin observaciones. Añadir observación."':
+            - 'button "Kiara, Gestiona su aprendizaje de manera autónoma: sin observaciones. Añadir observación."': + Anotar
+        - row:
+          - rowheader "Mateo"
+          - 'cell "Mateo, Construye su identidad: Mateo dice me gusta construir pero el ruido me molesta, quiero hacerlo aquí con una amiga. Reconoce cómo se siente y pide un lugar tranquilo.. Añadir observación."':
+            - 'button "Mateo, Construye su identidad: Mateo dice me gusta construir pero el ruido me molesta, quiero hacerlo aquí con una amiga. Reconoce cómo se siente y pide un lugar tranquilo.. Añadir observación."':
+              - generic: Mateo dice me gusta construir pero el ruido me molesta, quiero hacerlo aquí con una amiga. Reconoce cómo se siente y pide un lugar tranquilo.
+          - 'cell "Mateo, Convive y participa democráticamente en la búsqueda del bien común: sin observaciones. Añadir observación."':
+            - 'button "Mateo, Convive y participa democráticamente en la búsqueda del bien común: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Mateo, Se desenvuelve de manera autónoma a través de su motricidad: sin observaciones. Añadir observación."':
+            - 'button "Mateo, Se desenvuelve de manera autónoma a través de su motricidad: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Mateo, Se comunica oralmente en su lengua materna: En grupo grande Mateo se alejó cuando todos hablaban. En pareja contó a Inés cómo armó la casa y respondió sus preguntas mirando el dibujo.. Añadir observación."':
+            - 'button "Mateo, Se comunica oralmente en su lengua materna: En grupo grande Mateo se alejó cuando todos hablaban. En pareja contó a Inés cómo armó la casa y respondió sus preguntas mirando el dibujo.. Añadir observación."':
+              - generic: En grupo grande Mateo se alejó cuando todos hablaban. En pareja contó a Inés cómo armó la casa y respondió sus preguntas mirando el dibujo.
+          - 'cell "Mateo, Lee diversos tipos de textos escritos en su lengua materna: sin observaciones. Añadir observación."':
+            - 'button "Mateo, Lee diversos tipos de textos escritos en su lengua materna: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Mateo, Escribe diversos tipos de textos en su lengua materna: sin observaciones. Añadir observación."':
+            - 'button "Mateo, Escribe diversos tipos de textos en su lengua materna: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Mateo, Crea proyectos desde los lenguajes artísticos: sin observaciones. Añadir observación."':
+            - 'button "Mateo, Crea proyectos desde los lenguajes artísticos: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Mateo, Resuelve problemas de cantidad: sin observaciones. Añadir observación."':
+            - 'button "Mateo, Resuelve problemas de cantidad: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Mateo, Resuelve problemas de forma, movimiento y localización: sin observaciones. Añadir observación."':
+            - 'button "Mateo, Resuelve problemas de forma, movimiento y localización: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Mateo, Indaga mediante métodos científicos para construir sus conocimientos: sin observaciones. Añadir observación."':
+            - 'button "Mateo, Indaga mediante métodos científicos para construir sus conocimientos: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Mateo, Se desenvuelve en los entornos virtuales generados por las TIC: sin observaciones. Añadir observación."':
+            - 'button "Mateo, Se desenvuelve en los entornos virtuales generados por las TIC: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Mateo, Gestiona su aprendizaje de manera autónoma: sin observaciones. Añadir observación."':
+            - 'button "Mateo, Gestiona su aprendizaje de manera autónoma: sin observaciones. Añadir observación."': + Anotar
+        - row:
+          - rowheader "Omar"
+          - 'cell "Omar, Construye su identidad: sin observaciones. Añadir observación."':
+            - 'button "Omar, Construye su identidad: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Omar, Convive y participa democráticamente en la búsqueda del bien común: sin observaciones. Añadir observación."':
+            - 'button "Omar, Convive y participa democráticamente en la búsqueda del bien común: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Omar, Se desenvuelve de manera autónoma a través de su motricidad: sin observaciones. Añadir observación."':
+            - 'button "Omar, Se desenvuelve de manera autónoma a través de su motricidad: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Omar, Se comunica oralmente en su lengua materna: sin observaciones. Añadir observación."':
+            - 'button "Omar, Se comunica oralmente en su lengua materna: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Omar, Lee diversos tipos de textos escritos en su lengua materna: sin observaciones. Añadir observación."':
+            - 'button "Omar, Lee diversos tipos de textos escritos en su lengua materna: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Omar, Escribe diversos tipos de textos en su lengua materna: sin observaciones. Añadir observación."':
+            - 'button "Omar, Escribe diversos tipos de textos en su lengua materna: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Omar, Crea proyectos desde los lenguajes artísticos: sin observaciones. Añadir observación."':
+            - 'button "Omar, Crea proyectos desde los lenguajes artísticos: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Omar, Resuelve problemas de cantidad: sin observaciones. Añadir observación."':
+            - 'button "Omar, Resuelve problemas de cantidad: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Omar, Resuelve problemas de forma, movimiento y localización: sin observaciones. Añadir observación."':
+            - 'button "Omar, Resuelve problemas de forma, movimiento y localización: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Omar, Indaga mediante métodos científicos para construir sus conocimientos: sin observaciones. Añadir observación."':
+            - 'button "Omar, Indaga mediante métodos científicos para construir sus conocimientos: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Omar, Se desenvuelve en los entornos virtuales generados por las TIC: sin observaciones. Añadir observación."':
+            - 'button "Omar, Se desenvuelve en los entornos virtuales generados por las TIC: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Omar, Gestiona su aprendizaje de manera autónoma: sin observaciones. Añadir observación."':
+            - 'button "Omar, Gestiona su aprendizaje de manera autónoma: sin observaciones. Añadir observación."': + Anotar
+        - row:
+          - rowheader "Thiago"
+          - 'cell "Thiago, Construye su identidad: sin observaciones. Añadir observación."':
+            - 'button "Thiago, Construye su identidad: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Thiago, Convive y participa democráticamente en la búsqueda del bien común: sin observaciones. Añadir observación."':
+            - 'button "Thiago, Convive y participa democráticamente en la búsqueda del bien común: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Thiago, Se desenvuelve de manera autónoma a través de su motricidad: sin observaciones. Añadir observación."':
+            - 'button "Thiago, Se desenvuelve de manera autónoma a través de su motricidad: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Thiago, Se comunica oralmente en su lengua materna: sin observaciones. Añadir observación."':
+            - 'button "Thiago, Se comunica oralmente en su lengua materna: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Thiago, Lee diversos tipos de textos escritos en su lengua materna: sin observaciones. Añadir observación."':
+            - 'button "Thiago, Lee diversos tipos de textos escritos en su lengua materna: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Thiago, Escribe diversos tipos de textos en su lengua materna: sin observaciones. Añadir observación."':
+            - 'button "Thiago, Escribe diversos tipos de textos en su lengua materna: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Thiago, Crea proyectos desde los lenguajes artísticos: sin observaciones. Añadir observación."':
+            - 'button "Thiago, Crea proyectos desde los lenguajes artísticos: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Thiago, Resuelve problemas de cantidad: Thiago cuenta 8 semillas para 4 macetas. Pone dos en cada una y vuelve a contar para ver si todas tienen lo mismo.. Añadir observación."':
+            - 'button "Thiago, Resuelve problemas de cantidad: Thiago cuenta 8 semillas para 4 macetas. Pone dos en cada una y vuelve a contar para ver si todas tienen lo mismo.. Añadir observación."':
+              - generic: Thiago cuenta 8 semillas para 4 macetas. Pone dos en cada una y vuelve a contar para ver si todas tienen lo mismo.
+          - 'cell "Thiago, Resuelve problemas de forma, movimiento y localización: sin observaciones. Añadir observación."':
+            - 'button "Thiago, Resuelve problemas de forma, movimiento y localización: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Thiago, Indaga mediante métodos científicos para construir sus conocimientos: sin observaciones. Añadir observación."':
+            - 'button "Thiago, Indaga mediante métodos científicos para construir sus conocimientos: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Thiago, Se desenvuelve en los entornos virtuales generados por las TIC: sin observaciones. Añadir observación."':
+            - 'button "Thiago, Se desenvuelve en los entornos virtuales generados por las TIC: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Thiago, Gestiona su aprendizaje de manera autónoma: sin observaciones. Añadir observación."':
+            - 'button "Thiago, Gestiona su aprendizaje de manera autónoma: sin observaciones. Añadir observación."': + Anotar
+        - row:
+          - rowheader "Valeria"
+          - 'cell "Valeria, Construye su identidad: sin observaciones. Añadir observación."':
+            - 'button "Valeria, Construye su identidad: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Valeria, Convive y participa democráticamente en la búsqueda del bien común: Valeria contó 6 semillas y acordó con Camila poner tres cada una. Escuchó cuando Camila pidió cambiar de palita y aceptó alternar.. Añadir observación."':
+            - 'button "Valeria, Convive y participa democráticamente en la búsqueda del bien común: Valeria contó 6 semillas y acordó con Camila poner tres cada una. Escuchó cuando Camila pidió cambiar de palita y aceptó alternar.. Añadir observación."':
+              - generic: Valeria contó 6 semillas y acordó con Camila poner tres cada una. Escuchó cuando Camila pidió cambiar de palita y aceptó alternar.
+              - generic: +2 observaciones más
+          - 'cell "Valeria, Se desenvuelve de manera autónoma a través de su motricidad: sin observaciones. Añadir observación."':
+            - 'button "Valeria, Se desenvuelve de manera autónoma a través de su motricidad: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Valeria, Se comunica oralmente en su lengua materna: sin observaciones. Añadir observación."':
+            - 'button "Valeria, Se comunica oralmente en su lengua materna: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Valeria, Lee diversos tipos de textos escritos en su lengua materna: sin observaciones. Añadir observación."':
+            - 'button "Valeria, Lee diversos tipos de textos escritos en su lengua materna: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Valeria, Escribe diversos tipos de textos en su lengua materna: sin observaciones. Añadir observación."':
+            - 'button "Valeria, Escribe diversos tipos de textos en su lengua materna: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Valeria, Crea proyectos desde los lenguajes artísticos: sin observaciones. Añadir observación."':
+            - 'button "Valeria, Crea proyectos desde los lenguajes artísticos: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Valeria, Resuelve problemas de cantidad: Valeria contó 6 semillas y acordó con Camila poner tres cada una. Escuchó cuando Camila pidió cambiar de palita y aceptó alternar.. Añadir observación."':
+            - 'button "Valeria, Resuelve problemas de cantidad: Valeria contó 6 semillas y acordó con Camila poner tres cada una. Escuchó cuando Camila pidió cambiar de palita y aceptó alternar.. Añadir observación."':
+              - generic: Valeria contó 6 semillas y acordó con Camila poner tres cada una. Escuchó cuando Camila pidió cambiar de palita y aceptó alternar.
+          - 'cell "Valeria, Resuelve problemas de forma, movimiento y localización: sin observaciones. Añadir observación."':
+            - 'button "Valeria, Resuelve problemas de forma, movimiento y localización: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Valeria, Indaga mediante métodos científicos para construir sus conocimientos: sin observaciones. Añadir observación."':
+            - 'button "Valeria, Indaga mediante métodos científicos para construir sus conocimientos: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Valeria, Se desenvuelve en los entornos virtuales generados por las TIC: sin observaciones. Añadir observación."':
+            - 'button "Valeria, Se desenvuelve en los entornos virtuales generados por las TIC: sin observaciones. Añadir observación."': + Anotar
+          - 'cell "Valeria, Gestiona su aprendizaje de manera autónoma: sin observaciones. Añadir observación."':
+            - 'button "Valeria, Gestiona su aprendizaje de manera autónoma: sin observaciones. Añadir observación."': + Anotar
+    - region "Registros y comentarios de cada niño (opcional)":
+      - heading "Registros y comentarios de cada niño (opcional)" [level=3]
+      - paragraph: Puedes continuar al resumen del aula sin escribir comentarios individuales.
+      - article:
+        - button "Alma 3 observaciones Ver registros":
+          - generic: Alma
+          - generic: 3 observaciones
+          - generic: Ver registros
+        - button "+ Añadir observación"
+      - article:
+        - button "Bruno 3 observaciones Ver registros":
+          - generic: Bruno
+          - generic: 3 observaciones
+          - generic: Ver registros
+        - button "+ Añadir observación"
+      - article:
+        - button "Camila 3 observaciones Ver registros":
+          - generic: Camila
+          - generic: 3 observaciones
+          - generic: Ver registros
+        - button "+ Añadir observación"
+      - article:
+        - button "Diego 2 observaciones Ver registros":
+          - generic: Diego
+          - generic: 2 observaciones
+          - generic: Ver registros
+        - button "+ Añadir observación"
+      - article:
+        - button "Elena 2 observaciones Ver registros":
+          - generic: Elena
+          - generic: 2 observaciones
+          - generic: Ver registros
+        - button "+ Añadir observación"
+      - article:
+        - button "Fabio 2 observaciones Ver registros":
+          - generic: Fabio
+          - generic: 2 observaciones
+          - generic: Ver registros
+        - button "+ Añadir observación"
+      - article:
+        - button "Gabriela 2 observaciones Ver registros":
+          - generic: Gabriela
+          - generic: 2 observaciones
+          - generic: Ver registros
+        - button "+ Añadir observación"
+      - article:
+        - button "Hugo 2 observaciones Ver registros":
+          - generic: Hugo
+          - generic: 2 observaciones
+          - generic: Ver registros
+        - button "+ Añadir observación"
+      - article:
+        - button "Inés 1 observación Ver registros":
+          - generic: Inés
+          - generic: 1 observación
+          - generic: Ver registros
+        - button "+ Añadir observación"
+      - article:
+        - button "Joaquín 1 observación Ver registros":
+          - generic: Joaquín
+          - generic: 1 observación
+          - generic: Ver registros
+        - button "+ Añadir observación"
+      - article:
+        - button "Kiara 1 observación Ver registros":
+          - generic: Kiara
+          - generic: 1 observación
+          - generic: Ver registros
+        - button "+ Añadir observación"
+      - article:
+        - button "Mateo 2 observaciones Ver registros":
+          - generic: Mateo
+          - generic: 2 observaciones
+          - generic: Ver registros
+        - button "+ Añadir observación"
+      - article:
+        - button "Omar 1 observación Ver registros":
+          - generic: Omar
+          - generic: 1 observación
+          - generic: Ver registros
+        - button "+ Añadir observación"
+      - article:
+        - button "Thiago 1 observación Ver registros":
+          - generic: Thiago
+          - generic: 1 observación
+          - generic: Ver registros
+        - button "+ Añadir observación"
+      - article:
+        - button "Valeria 3 observaciones Ver registros":
+          - generic: Valeria
+          - generic: 3 observaciones
+          - generic: Ver registros
+        - button "+ Añadir observación"
+    - navigation "Continuar el diagnóstico":
+      - button "Volver a observar":
+        - text: Volver a observar
+      - button "Revisar aula":
+        - text: Revisar aula

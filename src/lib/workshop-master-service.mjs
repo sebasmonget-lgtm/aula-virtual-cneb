@@ -97,7 +97,8 @@ export async function generateWorkshopMaster({ classroom, project, annualPlan, c
   task: "Propón exactamente un taller por fila y fecha del mapa. Elige primero la competencia y la intención. Prioriza oportunidades poco cubiertas si son pertinentes para un taller; no fuerces cuotas. El taller es juego, exploración, creación o movimiento con mediación docente. No inventes observaciones. No conoces fichas todavía; no menciones una ficha concreta." };
   const result = await createProvider(plan).generate(buildProviderRequest("workshop_master", bundle, plan, WORKSHOP_MASTER_SCHEMA));
   const base = validateWorkshopMaster(result.output, route, cards.map((card) => card.id));
-  const proposal = await attachSheets(base, route, classroom.age, { topic: project.title });
+  const proposal = await attachSheets(base, route, classroom.age, {
+    topic: project.title, knownNames: classroom.jev_known_names ?? [] });
   return { proposal, metadata: { workflow: "workshop_master", model: plan.model,
     response_id: result.provider_metadata?.response_id ?? null, usage: result.provider_metadata?.usage ?? null } };
 }

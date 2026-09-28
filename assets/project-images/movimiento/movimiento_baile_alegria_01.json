@@ -1,0 +1,42 @@
+{
+  "id": "movimiento_baile_alegria_01",
+  "file": "movimiento/movimiento_baile_alegria_01.jpg",
+  "master": "masters/movimiento_baile_alegria_01.png",
+  "title": "Luna y Leo bailan",
+  "category": "movimiento",
+  "subcategory": "baile",
+  "characters": [
+    "luna",
+    "leo"
+  ],
+  "concepts": [
+    "baile",
+    "movimiento",
+    "música"
+  ],
+  "actions": [
+    "bailar",
+    "escuchar"
+  ],
+  "objects": [
+    "patio"
+  ],
+  "contexts": [
+    "proyecto",
+    "plan_anual",
+    "portada",
+    "movimiento",
+    "baile"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "orientation": "landscape",
+  "aspect_ratio": "3:2",
+  "has_text": false,
+  "country_context": "PE",
+  "variant": 1,
+  "priority": 10
+}

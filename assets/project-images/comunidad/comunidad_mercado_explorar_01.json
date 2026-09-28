@@ -1,0 +1,45 @@
+{
+  "id": "comunidad_mercado_explorar_01",
+  "file": "comunidad/comunidad_mercado_explorar_01.jpg",
+  "master": "masters/comunidad_mercado_explorar_01.png",
+  "title": "Sofía y Rosa exploran el mercado",
+  "category": "comunidad",
+  "subcategory": "mercado",
+  "characters": [
+    "sofia",
+    "maestra_rosa"
+  ],
+  "concepts": [
+    "mercado",
+    "barrio",
+    "comunidad",
+    "alimentos"
+  ],
+  "actions": [
+    "observar",
+    "comparar"
+  ],
+  "objects": [
+    "frutas",
+    "verduras",
+    "puestos"
+  ],
+  "contexts": [
+    "proyecto",
+    "plan_anual",
+    "portada",
+    "comunidad",
+    "mercado"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "orientation": "landscape",
+  "aspect_ratio": "3:2",
+  "has_text": false,
+  "country_context": "PE",
+  "variant": 1,
+  "priority": 10
+}

@@ -1,0 +1,46 @@
+{
+  "id": "cultura_costa_mar_01",
+  "file": "cultura/cultura_costa_mar_01.jpg",
+  "master": "masters/cultura_costa_mar_01.png",
+  "title": "Leo explora el mar peruano",
+  "category": "cultura",
+  "subcategory": "costa",
+  "characters": [
+    "leo",
+    "mateo",
+    "papa_diego"
+  ],
+  "concepts": [
+    "Perú",
+    "costa",
+    "mar",
+    "aves"
+  ],
+  "actions": [
+    "observar",
+    "explorar"
+  ],
+  "objects": [
+    "olas",
+    "aves",
+    "playa"
+  ],
+  "contexts": [
+    "proyecto",
+    "plan_anual",
+    "portada",
+    "cultura",
+    "costa"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "orientation": "landscape",
+  "aspect_ratio": "3:2",
+  "has_text": false,
+  "country_context": "PE",
+  "variant": 1,
+  "priority": 10
+}

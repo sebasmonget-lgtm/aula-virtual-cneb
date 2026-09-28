@@ -1,0 +1,44 @@
+{
+  "id": "matematica_construir_bloques_01",
+  "file": "matematica/matematica_construir_bloques_01.jpg",
+  "master": "masters/matematica_construir_bloques_01.png",
+  "title": "Mateo construye con bloques",
+  "category": "matematica",
+  "subcategory": "formas",
+  "characters": [
+    "mateo",
+    "luna"
+  ],
+  "concepts": [
+    "matemática",
+    "formas",
+    "construcción",
+    "altura"
+  ],
+  "actions": [
+    "construir",
+    "comparar"
+  ],
+  "objects": [
+    "bloques",
+    "torre"
+  ],
+  "contexts": [
+    "proyecto",
+    "plan_anual",
+    "portada",
+    "matematica",
+    "formas"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "orientation": "landscape",
+  "aspect_ratio": "3:2",
+  "has_text": false,
+  "country_context": "PE",
+  "variant": 1,
+  "priority": 10
+}

@@ -1,0 +1,43 @@
+{
+  "id": "convivencia_ayudar_amigo_01",
+  "file": "convivencia/convivencia_ayudar_amigo_01.jpg",
+  "master": "masters/convivencia_ayudar_amigo_01.png",
+  "title": "Luna ayuda a un amigo",
+  "category": "convivencia",
+  "subcategory": "ayuda",
+  "characters": [
+    "luna",
+    "mateo"
+  ],
+  "concepts": [
+    "amistad",
+    "ayuda",
+    "convivencia"
+  ],
+  "actions": [
+    "ayudar",
+    "recoger"
+  ],
+  "objects": [
+    "lápices",
+    "caja"
+  ],
+  "contexts": [
+    "proyecto",
+    "plan_anual",
+    "portada",
+    "convivencia",
+    "ayuda"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "orientation": "landscape",
+  "aspect_ratio": "3:2",
+  "has_text": false,
+  "country_context": "PE",
+  "variant": 1,
+  "priority": 10
+}

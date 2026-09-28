@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { transcribeShortAudio, type PrivateMediaUpload } from "@/src/lib/local-database";
 import { AsyncButton } from "./workflow-ui";
 
@@ -34,11 +34,16 @@ export async function preparePrivateMedia(file: File): Promise<PrivateMediaUploa
   return { base64, mimeType, name: file.name };
 }
 
-export function MediaAttachmentInput({ studentId, context, media, onMedia, onTranscribed, disabled = false, audioOnly = false }: {
+export function MediaAttachmentInput({ studentId, context, media, onMedia, onTranscribed, disabled = false, audioOnly = false, onBusyChange }: {
   studentId: string; context: string; media: PrivateMediaUpload | null;
   onMedia: (value: PrivateMediaUpload | null) => void; onTranscribed: (text: string) => void; disabled?: boolean; audioOnly?: boolean;
+  onBusyChange?: (busy: boolean) => void;
 }) {
   const [busy, setBusy] = useState(false);
+  const busyCallbackRef = useRef(onBusyChange);
+  useEffect(() => { busyCallbackRef.current = onBusyChange; }, [onBusyChange]);
+  useEffect(() => { busyCallbackRef.current?.(busy); }, [busy]);
+  useEffect(() => () => { busyCallbackRef.current?.(false); }, []);
   const [error, setError] = useState("");
   const [transcript, setTranscript] = useState("");
   return <div className="space-y-2">

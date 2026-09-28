@@ -1,0 +1,44 @@
+{
+  "id": "convivencia_compartir_materiales_01",
+  "file": "convivencia/convivencia_compartir_materiales_01.jpg",
+  "master": "masters/convivencia_compartir_materiales_01.png",
+  "title": "Sofía y Leo comparten materiales",
+  "category": "convivencia",
+  "subcategory": "compartir",
+  "characters": [
+    "sofia",
+    "leo"
+  ],
+  "concepts": [
+    "compartir",
+    "materiales",
+    "convivencia"
+  ],
+  "actions": [
+    "ofrecer",
+    "dibujar"
+  ],
+  "objects": [
+    "crayones",
+    "papel",
+    "mesa"
+  ],
+  "contexts": [
+    "proyecto",
+    "plan_anual",
+    "portada",
+    "convivencia",
+    "compartir"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "orientation": "landscape",
+  "aspect_ratio": "3:2",
+  "has_text": false,
+  "country_context": "PE",
+  "variant": 1,
+  "priority": 10
+}

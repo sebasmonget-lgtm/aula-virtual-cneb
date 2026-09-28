@@ -1,0 +1,44 @@
+{
+  "id": "comunidad_padre_cocinar_01",
+  "file": "comunidad/comunidad_padre_cocinar_01.jpg",
+  "master": "masters/comunidad_padre_cocinar_01.png",
+  "title": "Diego y Leo preparan alimentos",
+  "category": "comunidad",
+  "subcategory": "familia",
+  "characters": [
+    "papa_diego",
+    "leo"
+  ],
+  "concepts": [
+    "padre",
+    "familia",
+    "alimentos"
+  ],
+  "actions": [
+    "lavar",
+    "preparar"
+  ],
+  "objects": [
+    "frutas",
+    "agua",
+    "mesa"
+  ],
+  "contexts": [
+    "proyecto",
+    "plan_anual",
+    "portada",
+    "comunidad",
+    "familia"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "orientation": "landscape",
+  "aspect_ratio": "3:2",
+  "has_text": false,
+  "country_context": "PE",
+  "variant": 1,
+  "priority": 10
+}

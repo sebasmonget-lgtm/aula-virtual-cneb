@@ -1,0 +1,43 @@
+{
+  "id": "ciencia_luz_sombras_01",
+  "file": "ciencia/ciencia_luz_sombras_01.jpg",
+  "master": "masters/ciencia_luz_sombras_01.png",
+  "title": "Mateo explora luz y sombras",
+  "category": "ciencia",
+  "subcategory": "luz",
+  "characters": [
+    "mateo"
+  ],
+  "concepts": [
+    "ciencia",
+    "luz",
+    "sombras"
+  ],
+  "actions": [
+    "explorar",
+    "observar"
+  ],
+  "objects": [
+    "linterna",
+    "figuras",
+    "sombras"
+  ],
+  "contexts": [
+    "proyecto",
+    "plan_anual",
+    "portada",
+    "ciencia",
+    "luz"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "orientation": "landscape",
+  "aspect_ratio": "3:2",
+  "has_text": false,
+  "country_context": "PE",
+  "variant": 1,
+  "priority": 10
+}

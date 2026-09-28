@@ -1,0 +1,45 @@
+{
+  "id": "alimentos_frutas_explorar_01",
+  "file": "alimentos/alimentos_frutas_explorar_01.jpg",
+  "master": "masters/alimentos_frutas_explorar_01.png",
+  "title": "Leo y Luna exploran frutas",
+  "category": "alimentos",
+  "subcategory": "frutas",
+  "characters": [
+    "leo",
+    "luna"
+  ],
+  "concepts": [
+    "frutas",
+    "colores",
+    "formas",
+    "alimentación"
+  ],
+  "actions": [
+    "observar",
+    "comparar"
+  ],
+  "objects": [
+    "manzana",
+    "plátano",
+    "naranja"
+  ],
+  "contexts": [
+    "proyecto",
+    "plan_anual",
+    "portada",
+    "alimentos",
+    "frutas"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "orientation": "landscape",
+  "aspect_ratio": "3:2",
+  "has_text": false,
+  "country_context": "PE",
+  "variant": 1,
+  "priority": 10
+}

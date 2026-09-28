@@ -1,0 +1,44 @@
+{
+  "id": "comunidad_familia_compartir_01",
+  "file": "comunidad/comunidad_familia_compartir_01.jpg",
+  "master": "masters/comunidad_familia_compartir_01.png",
+  "title": "Familia comparte un momento de juego",
+  "category": "comunidad",
+  "subcategory": "familia",
+  "characters": [
+    "mama_clara",
+    "papa_diego",
+    "luna"
+  ],
+  "concepts": [
+    "familia",
+    "juego",
+    "convivencia"
+  ],
+  "actions": [
+    "compartir",
+    "construir"
+  ],
+  "objects": [
+    "bloques",
+    "alfombra"
+  ],
+  "contexts": [
+    "proyecto",
+    "plan_anual",
+    "portada",
+    "comunidad",
+    "familia"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "orientation": "landscape",
+  "aspect_ratio": "3:2",
+  "has_text": false,
+  "country_context": "PE",
+  "variant": 1,
+  "priority": 10
+}

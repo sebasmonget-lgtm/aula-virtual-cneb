@@ -1,0 +1,30 @@
+{
+  "ndjson": "{\"kind\":\"workbook\",\"id\":\"wb/mh2mkn\",\"sheets\":1,\"tables\":1}\n{\"kind\":\"sheet\",\"id\":\"ws/3inagb\",\"name\":\"Consolidado\",\"index\":0,\"range\":\"A1:E1\",\"address\":\"A1:E1\",\"tables\":1}\n{\"kind\":\"table\",\"sheet\":\"Consolidado\",\"address\":\"A1:E1\",\"rows\":1,\"cols\":5,\"values\":[[\"Alumno\",\"Competencia\",\"Valoración\",\"Conclusión descriptiva\",\"Período\"]]}",
+  "metadata": {
+    "recordCount": 3,
+    "truncated": false,
+    "metadata": {
+      "revision": "t2l52e",
+      "target": {
+        "id": "wb/mh2mkn",
+        "beforeLines": 0,
+        "afterLines": 0
+      },
+      "kind": {
+        "requested": "workbook,sheet,table",
+        "tokens": [
+          "workbook",
+          "sheet",
+          "table"
+        ]
+      },
+      "include": {
+        "tokens": []
+      },
+      "exclude": {
+        "tokens": []
+      },
+      "notices": []
+    }
+  }
+}

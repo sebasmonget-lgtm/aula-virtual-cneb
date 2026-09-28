@@ -1,11 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFile, readdir, mkdtemp, rm } from "node:fs/promises";
+import { readFile, readdir, mkdtemp, mkdir, rm } from "node:fs/promises";
 import path from "node:path";
 import { tmpdir } from "node:os";
 import { PGlite } from "@electric-sql/pglite";
+import sharp from "sharp";
 import { createPendingAIGenerationsStore } from "./pending-ai-generations-store.mjs";
-import { createPilotClassroom, importStudentsForTeacher, parseStudentCsv, validatePilotSetup } from "./pilot-onboarding-service.mjs";
+import { createPilotClassroom, importStudentsForTeacher, parseStudentCsv, validatePilotSetup, validateStudentsForImport } from "./pilot-onboarding-service.mjs";
 import { createLocalPrivateEvidenceStorage } from "./private-evidence-storage.mjs";
 import { recordOperationalEvent } from "./operational-events.mjs";
 
@@ -55,6 +56,70 @@ test("two teachers can onboard and import pupils into separate classrooms; dupli
   await assert.rejects(() => createPilotClassroom(db, teacherA, setup("Docente A")), /aula activa/);
   assert.equal((await db.query(`select count(*)::int as n from classrooms where teacher_id=$1 and status='active'`, [teacherA])).rows[0].n, 1);
   await db.close();
+});
+
+test("el alta opcional con logo guarda PNG normalizado solo para la institución docente", async () => {
+  const temp = await mkdtemp(path.join(tmpdir(), "ayni-pilot-logo-"));
+  const assetsDir = path.join(temp, ".local", "assets");
+  const db = await database();
+  try {
+    await mkdir(assetsDir, { recursive: true });
+    const jpeg = await sharp({ create: { width: 600, height: 400, channels: 4,
+      background: "#087d96" } }).jpeg().toBuffer();
+    const logoUpload = { mimeType: "image/jpeg", base64: jpeg.toString("base64") };
+    await createPilotClassroom(db, teacherA, { ...setup("Docente A"), logoUpload }, { assetsDir });
+    const owner = (await db.query(`select ip.logo_asset_id, ia.owner_user_id, ia.original_path
+      from institution_profiles ip join institution_assets ia on ia.id=ip.logo_asset_id
+      where ip.owner_user_id=$1`, [teacherA])).rows[0];
+    assert.equal(owner.owner_user_id, teacherA);
+    assert.match(owner.original_path, /^\.local\/assets\/[0-9a-f-]+\.png$/);
+    assert.equal((await sharp(await readFile(path.join(assetsDir, `${owner.logo_asset_id}.png`))).metadata()).format, "png");
+    await assert.rejects(() => createPilotClassroom(db, teacherB,
+      { ...setup("Docente B"), logoUpload: { ...logoUpload, mimeType: "image/png" } }, { assetsDir }),
+    /no coincide/);
+    const failingDb = { exec: (...args) => db.exec(...args), query: (sql, ...args) =>
+      sql.includes("insert into classrooms(") ? Promise.reject(new Error("fallo simulado")) : db.query(sql, ...args) };
+    await assert.rejects(() => createPilotClassroom(failingDb, teacherB,
+      { ...setup("Docente B"), logoUpload }, { assetsDir }), /fallo simulado/);
+    assert.equal((await readdir(assetsDir)).length, 1);
+    assert.equal((await db.query(`select count(*)::int as n from classrooms where teacher_id=$1`, [teacherB])).rows[0].n, 0);
+  } finally {
+    await db.close();
+    await rm(temp, { recursive: true, force: true });
+  }
+});
+
+test("el alta inicial guarda el perfil completo y un logo de iniciales recuperable", async () => {
+  const temp = await mkdtemp(path.join(tmpdir(), "ayni-pilot-profile-"));
+  const assetsDir = path.join(temp, "assets");
+  const db = await database();
+  try {
+    await mkdir(assetsDir, { recursive: true });
+    await createPilotClassroom(db, teacherA, { ...setup("Docente A"), institutionCode: "1234567",
+      district: "Pampas", ugel: "UGEL Tayacaja", directorName: "Directora A", createLogo: true,
+      logoInitials: "JB", logoPrimary: "#087d96", logoAccent: "#f6c85f" }, { assetsDir });
+    const row = (await db.query(`select ip.institution_code,ip.district,ip.ugel,ip.director_name,
+      ia.mime_type,ia.original_path from institution_profiles ip join institution_assets ia on ia.id=ip.logo_asset_id
+      where ip.owner_user_id=$1`, [teacherA])).rows[0];
+    assert.deepEqual([row.institution_code, row.district, row.ugel, row.director_name],
+      ["1234567", "Pampas", "UGEL Tayacaja", "Directora A"]);
+    assert.equal(row.mime_type, "image/svg+xml");
+    assert.match((await readFile(path.join(assetsDir, path.basename(row.original_path)), "utf8")), />JB<\/text>/);
+  } finally { await db.close(); await rm(temp, { recursive: true, force: true }); }
+});
+
+test("fecha de nacimiento opcional y nombres normalizados se guardan por alumno", async () => {
+  const db = await database();
+  try {
+    await createPilotClassroom(db, teacherA, setup("Docente A"));
+    const rows = parseStudentCsv("first_name,last_name,preferred_name,birth_date\nANA MARÍA,DE LA CRUZ,,2021-05-14");
+    await importStudentsForTeacher(db, teacherA, rows);
+    const student = (await db.query(`select s.first_name,s.last_name,s.preferred_name,s.birth_date::text as birth_date
+      from students s join classrooms c on c.id=s.classroom_id where c.teacher_id=$1`, [teacherA])).rows[0];
+    assert.deepEqual(student, { first_name: "Ana María", last_name: "De la Cruz", preferred_name: null, birth_date: "2021-05-14" });
+    assert.throws(() => validateStudentsForImport([{ firstName: "Luz", lastName: "Paz", birthDate: "2030-01-01" }]), /no futura/);
+    assert.throws(() => parseStudentCsv("first_name,last_name,preferred_name,birth_date\nLuz,Paz,"), /columnas/);
+  } finally { await db.close(); }
 });
 
 test("pilot validation and CSV reject empty context, invalid dates and oversized classes", async () => {

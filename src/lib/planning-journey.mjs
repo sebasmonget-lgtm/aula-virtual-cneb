@@ -23,7 +23,7 @@ export async function loadStartingGuidance(apiUrl, fetcher = fetch) {
     plans,
     diagnostic: diagnosticStatus,
     studentCount: diagnostic.student_count ?? 0,
-    startingSection: !hasAnnual && diagnosticStatus !== "reviewed" ? (diagnostic.student_count ? "Evaluar" : "Niños") : "Hoy",
+    startingSection: !hasAnnual && diagnosticStatus !== "reviewed" ? (diagnostic.student_count ? "Diagnóstico" : "Niños") : "Hoy",
   };
 }
 

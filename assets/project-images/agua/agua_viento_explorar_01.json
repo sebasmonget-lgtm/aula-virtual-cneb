@@ -1,0 +1,42 @@
+{
+  "id": "agua_viento_explorar_01",
+  "file": "agua/agua_viento_explorar_01.jpg",
+  "master": "masters/agua_viento_explorar_01.png",
+  "title": "Luna explora el viento",
+  "category": "agua",
+  "subcategory": "clima",
+  "characters": [
+    "luna"
+  ],
+  "concepts": [
+    "viento",
+    "clima",
+    "movimiento"
+  ],
+  "actions": [
+    "observar",
+    "explorar"
+  ],
+  "objects": [
+    "molinillo",
+    "árboles"
+  ],
+  "contexts": [
+    "proyecto",
+    "plan_anual",
+    "portada",
+    "agua",
+    "clima"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "orientation": "landscape",
+  "aspect_ratio": "3:2",
+  "has_text": false,
+  "country_context": "PE",
+  "variant": 1,
+  "priority": 10
+}

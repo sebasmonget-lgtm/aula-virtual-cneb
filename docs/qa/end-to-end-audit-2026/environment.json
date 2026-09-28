@@ -1,0 +1,10 @@
+{
+  "startedAt": "2026-09-28T03:03:55.388Z",
+  "teacherId": "d97b5d03-b64d-405e-9de5-ae6e407bf126",
+  "dataDir": "C:\\Users\\ASUS\\Documents\\ChatGPT\\Asistente CNEB\\.local\\qa\\end-to-end-audit-2026\\pgdata",
+  "apiPort": 8790,
+  "webPort": 5175,
+  "launcherPid": 66476,
+  "apiPid": 62396,
+  "webPid": 73508
+}

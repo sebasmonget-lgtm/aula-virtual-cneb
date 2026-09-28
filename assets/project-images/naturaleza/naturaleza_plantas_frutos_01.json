@@ -1,0 +1,44 @@
+{
+  "id": "naturaleza_plantas_frutos_01",
+  "file": "naturaleza/naturaleza_plantas_frutos_01.jpg",
+  "master": "masters/naturaleza_plantas_frutos_01.png",
+  "title": "Leo descubre frutos en una planta",
+  "category": "naturaleza",
+  "subcategory": "plantas",
+  "characters": [
+    "leo"
+  ],
+  "concepts": [
+    "frutos",
+    "plantas",
+    "crecimiento",
+    "huerto"
+  ],
+  "actions": [
+    "observar",
+    "comparar"
+  ],
+  "objects": [
+    "tomates",
+    "planta",
+    "maceta"
+  ],
+  "contexts": [
+    "proyecto",
+    "plan_anual",
+    "portada",
+    "naturaleza",
+    "plantas"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "orientation": "landscape",
+  "aspect_ratio": "3:2",
+  "has_text": false,
+  "country_context": "PE",
+  "variant": 1,
+  "priority": 10
+}

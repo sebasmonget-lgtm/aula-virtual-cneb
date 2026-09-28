@@ -1,0 +1,43 @@
+{
+  "id": "cuerpo_actividad_fisica_01",
+  "file": "cuerpo_salud/cuerpo_actividad_fisica_01.jpg",
+  "master": "masters/cuerpo_actividad_fisica_01.png",
+  "title": "Mateo cuida su cuerpo al moverse",
+  "category": "cuerpo_salud",
+  "subcategory": "movimiento",
+  "characters": [
+    "mateo",
+    "luna"
+  ],
+  "concepts": [
+    "cuerpo",
+    "salud",
+    "movimiento"
+  ],
+  "actions": [
+    "estirar",
+    "mover"
+  ],
+  "objects": [
+    "patio",
+    "colchonetas"
+  ],
+  "contexts": [
+    "proyecto",
+    "plan_anual",
+    "portada",
+    "cuerpo_salud",
+    "movimiento"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "orientation": "landscape",
+  "aspect_ratio": "3:2",
+  "has_text": false,
+  "country_context": "PE",
+  "variant": 1,
+  "priority": 10
+}

@@ -1,0 +1,44 @@
+{
+  "id": "alimentos_receta_sencilla_01",
+  "file": "alimentos/alimentos_receta_sencilla_01.jpg",
+  "master": "masters/alimentos_receta_sencilla_01.png",
+  "title": "Sofía prepara una receta sencilla",
+  "category": "alimentos",
+  "subcategory": "receta",
+  "characters": [
+    "sofia",
+    "papa_diego"
+  ],
+  "concepts": [
+    "receta",
+    "frutas",
+    "alimentación"
+  ],
+  "actions": [
+    "preparar",
+    "mezclar"
+  ],
+  "objects": [
+    "bol",
+    "frutas",
+    "cuchara"
+  ],
+  "contexts": [
+    "proyecto",
+    "plan_anual",
+    "portada",
+    "alimentos",
+    "receta"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "orientation": "landscape",
+  "aspect_ratio": "3:2",
+  "has_text": false,
+  "country_context": "PE",
+  "variant": 1,
+  "priority": 10
+}

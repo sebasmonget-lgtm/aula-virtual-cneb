@@ -1,0 +1,20 @@
+{
+  "id": "matematica_repartir_frutas_01",
+  "file": "matematica/repartir_frutas_01.jpg",
+  "master": "masters/matematica_repartir_frutas_01.png",
+  "title": "Leo reparte frutas y Luna compara cantidades",
+  "category": "matematica",
+  "subcategory": "cantidades",
+  "characters": ["leo", "luna"],
+  "concepts": ["matemática", "cantidades", "reparto", "comparación", "frutas"],
+  "actions": ["repartir", "contar", "comparar"],
+  "objects": ["frutas", "platos", "cesta"],
+  "contexts": ["proyecto", "plan_anual", "portada", "matematica", "alimentos"],
+  "age_range": [3, 4, 5],
+  "orientation": "landscape",
+  "aspect_ratio": "3:2",
+  "has_text": false,
+  "country_context": "PE",
+  "variant": 1,
+  "priority": 10
+}

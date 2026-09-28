@@ -1,0 +1,97 @@
+- paragraph: Ayni Aula
+- paragraph: Tu aliada en Inicial
+- list:
+  - button "Hoy":
+    - generic: Hoy
+  - button "Calendario":
+    - generic: Calendario
+  - button "Diagnóstico":
+    - generic: Diagnóstico
+  - button "Planificar":
+    - generic: Planificar
+  - button "Aula":
+    - generic: Aula
+  - button "Evaluar":
+    - generic: Evaluar
+  - button "Biblioteca":
+    - generic: Biblioteca
+- paragraph: Exploradores · 5 años
+- paragraph: 2026 · 15 estudiantes
+- main:
+  - paragraph: Domingo, 27 de setiembre
+  - paragraph: IEI Semillas del Valle QA · Exploradores
+  - text: Base conectada
+  - button "Abrir perfil": LP
+  - main:
+    - button "← Volver a Planificar"
+    - paragraph: Organiza el aprendizaje
+    - heading "Planificar" [level=1]
+    - paragraph: Avanza un paso a la vez. Puedes guardar y continuar después.
+    - paragraph: ✓ 1. Aula configurada · ✓ 2. 15 alumnos registrados
+    - list "Siguientes pasos del recorrido":
+      - button "Volver al diagnóstico para revisarlo o cambiarlo":
+        - generic: Diagnóstico
+      - emphasis: Revisado
+      - generic: "4"
+      - generic: Plan anual
+      - emphasis: Pendiente
+      - generic: "5"
+      - generic: Proyecto o unidad
+      - emphasis: Pendiente
+      - generic: "6"
+      - generic: Actividad
+      - emphasis: Pendiente
+    - paragraph: Paso 4 de 6 · Plan anual
+    - heading "Mi año" [level=1]
+    - paragraph: Organiza las propuestas del año. Puedes ajustarlas y confirmar una nueva versión cuando cambie el grupo.
+    - heading "Contexto del año y del aula" [level=2]
+    - paragraph: Ayni utilizará esta información para proponerte los proyectos y unidades del año. Agrega cualquier situación o interés que te gustaría considerar.
+    - text: Intereses detectados
+    - paragraph: Cuentos, Naturaleza
+    - text: Así está mi grupo
+    - paragraph: Se observaron propuesta de comprobación con semillas, reparto con conteo, creación musical y visual, y lectura de indicios de una portada. Dos niños muestran iniciativas autónomas en exploración o cantidad. En pareja se han observado acuerdos que funcionan; son referencias puntuales, no niveles finales del grupo. En registros de 9 de 15 niños se necesita acompañar acuerdos, reparto de materiales y turnos. Hay desempeños variables según el contexto, no una dificultad igual en todos. Para un niño ofreceré participación en pareja y anticipación visual. Del recién incorporado hay información insuficiente; no se concluye dificultad por falta de registros.
+    - text: Prioridades confirmadas
+    - paragraph: Acuerdos y uso compartido de materiales · Exploración y cuidado del huerto · Observar desafíos de cantidad en distintos contextos
+    - text: Acontecimientos y entorno
+    - paragraph: Día del Niño Peruano, Día de la Educación Inicial, Fiestas Patrias y cierre del año. Aula Exploradores de 5 años
+    - text: Semanas iniciales de acogida y diagnóstico
+    - combobox "Semanas iniciales de acogida y diagnóstico":
+      - option "1 semana"
+      - option "2 semanas" [selected]
+      - option "3 semanas"
+      - option "4 semanas"
+    - paragraph: Ayni calcula las fechas con el calendario escolar y los feriados. Puedes ajustar las fechas de tu institución.
+    - generic "Mi colegio usa otras fechas" [active]
+    - generic: Gestión inicial
+    - textbox "Inicio de Gestión inicial": 2026-03-02
+    - textbox "Fin de Gestión inicial": 2026-03-13
+    - generic: Periodo lectivo 1
+    - textbox "Inicio de Periodo lectivo 1": 2026-03-16
+    - textbox "Fin de Periodo lectivo 1": 2026-05-15
+    - generic: Semana de gestión
+    - textbox "Inicio de Semana de gestión": 2026-05-18
+    - textbox "Fin de Semana de gestión": 2026-05-22
+    - generic: Periodo lectivo 2
+    - textbox "Inicio de Periodo lectivo 2": 2026-05-25
+    - textbox "Fin de Periodo lectivo 2": 2026-07-24
+    - generic: Semanas de gestión
+    - textbox "Inicio de Semanas de gestión": 2026-07-27
+    - textbox "Fin de Semanas de gestión": 2026-08-07
+    - generic: Periodo lectivo 3
+    - textbox "Inicio de Periodo lectivo 3": 2026-08-10
+    - textbox "Fin de Periodo lectivo 3": 2026-10-09
+    - generic: Semana de gestión
+    - textbox "Inicio de Semana de gestión": 2026-10-12
+    - textbox "Fin de Semana de gestión": 2026-10-16
+    - generic: Periodo lectivo 4
+    - textbox "Inicio de Periodo lectivo 4": 2026-10-19
+    - textbox "Fin de Periodo lectivo 4": 2026-12-18
+    - generic: Gestión final
+    - textbox "Inicio de Gestión final": 2026-12-21
+    - textbox "Fin de Gestión final": 2026-12-31
+    - text: Algo más que quieras considerar
+    - textbox "Algo más que quieras considerar":
+      - /placeholder: Por ejemplo, los niños muestran interés por el huerto de la escuela.
+    - button "Proponer mi año"
+    - navigation "Volver en la planificación":
+      - button "Ver paso anterior"

@@ -1,0 +1,50 @@
+- paragraph: Ayni Aula
+- paragraph: Tu aliada en Inicial
+- list:
+  - button "Hoy":
+    - generic: Hoy
+  - button "Calendario":
+    - generic: Calendario
+  - button "Diagnóstico":
+    - generic: Diagnóstico
+  - button "Planificar":
+    - generic: Planificar
+  - button "Aula":
+    - generic: Aula
+  - button "Evaluar":
+    - generic: Evaluar
+  - button "Biblioteca":
+    - generic: Biblioteca
+- paragraph: Exploradores · 5 años
+- paragraph: 2026 · 15 estudiantes
+- main:
+  - paragraph: Domingo, 27 de setiembre
+  - paragraph: IEI Semillas del Valle QA · Exploradores
+  - text: Base conectada
+  - button "Abrir perfil": LP
+  - main:
+    - tablist "Secciones de Biblioteca":
+      - tab "Recursos"
+      - tab "Mis documentos" [selected]
+    - paragraph: Tu trabajo guardado
+    - heading "Documentos" [level=1]
+    - paragraph: Encuentra aquí tus diagnósticos, planes, experiencias, actividades, cierres e informes.
+    - button "Volver a mis documentos":
+      - text: Volver a mis documentos
+    - button "Guardar Word en Descargas":
+      - text: Guardar Word en Descargas
+    - paragraph:
+      - text: Se guarda en la computadora donde corre Ayni.
+      - link "Descargar en este dispositivo":
+        - /url: http://127.0.0.1:8790/api/documents/diagnostic_summary/db655f48-62fd-4ca6-9517-563a1156d82d/download
+    - article "Diagnóstico del aula":
+      - paragraph: Diagnóstico del aula
+      - generic: Confirmado
+      - heading "Resumen diagnóstico del aula" [level=2]
+      - paragraph: IEI Semillas del Valle QA · Exploradores · 2026
+      - heading "Fortalezas del grupo" [level=3]
+      - paragraph: Se observaron propuesta de comprobación con semillas, reparto con conteo, creación musical y visual, y lectura de indicios de una portada. Dos niños muestran iniciativas autónomas en exploración o cantidad. En pareja se han observado acuerdos que funcionan; son referencias puntuales, no niveles finales del grupo.
+      - heading "Dónde acompañar más" [level=3]
+      - paragraph: En registros de 9 de 15 niños se necesita acompañar acuerdos, reparto de materiales y turnos. Hay desempeños variables según el contexto, no una dificultad igual en todos. Para un niño ofreceré participación en pareja y anticipación visual. Del recién incorporado hay información insuficiente; no se concluye dificultad por falta de registros.
+      - heading "Qué tendremos en cuenta al planificar" [level=3]
+      - paragraph: Las familias informan interés por naturaleza en 11 de 15 niños, especialmente insectos, semillas y plantas. Propondré investigar y cuidar un pequeño huerto con responsabilidades y acuerdos de uso de materiales. Mantendré cuentos, arte, movimiento y desafíos de cantidad. Registraré nuevas actuaciones en distintos contextos y revisaré avances antes de cerrar cada período.

@@ -1,0 +1,184 @@
+Browser tab: 3, Title: "Ayni Aula | Asistente CNEB", URL: "http://localhost:5175/".
+1 AXWebArea Ayni Aula | Asistente CNEB, URL: localhost:5175/
+	2 container
+		3 text Ayni Aula
+		4 text Tu aliada en Inicial
+		5 content list
+			6 button Hoy
+			7 button Calendario
+			8 button Diagnóstico
+			9 button Planificar
+			10 button Aula
+			11 button Evaluar
+			12 button Biblioteca
+		13 container
+			14 text Exploradores  ·  5 años
+		15 container
+			16 text 2026  ·  15  estudiantes
+		17 container
+			18 text Domingo, 27 de setiembre IEI Semillas del Valle QA  ·  Exploradores Base conectada
+			19 button Abrir perfil
+		20 container
+			21 button ← Volver a Evaluar
+			22 heading Evaluación del período, Value: 2
+				23 text Evaluación del período
+			24 text Revisa lo observado y confirma una valoración por niño y competencia.
+			25 container
+				26 text Año escolar
+				27 pop up button (collapsed, settable) Año escolar, Value: 2026, Secondary Actions: Expand
+					28 menu
+						29 Selecciona un año
+						30 (selected) 2026
+			31 container
+				32 text Aula
+				33 pop up button (collapsed, settable) Aula, Value: Exploradores · 5 años, Secondary Actions: Expand
+					34 menu
+						35 Selecciona un aula
+						36 (selected) Exploradores · 5 años
+			37 container
+				38 text Período
+				39 pop up button (collapsed, settable) Período, Value: Bimestre 4 · 19/10/2026 a 18/12/2026, Secondary Actions: Expand
+					40 menu
+						41 Selecciona un período
+						42 Bimestre 1 · 16/3/2026 a 15/5/2026
+						43 Bimestre 2 · 25/5/2026 a 24/7/2026
+						44 Bimestre 3 · 10/8/2026 a 9/10/2026
+						45 (selected) Bimestre 4 · 19/10/2026 a 18/12/2026
+			46 button (collapsed) Organización de períodos, Secondary Actions: Expand
+				47 text Organización de períodos
+			48 container
+				49 heading Marco de evaluación del período, Value: 3
+					50 text Marco de evaluación del período
+				51 text Ayni lo prepara una vez con las competencias realmente trabajadas. Luego lo aplica a cada niño; tú confirmas cada valoración. Aún no hay competencias trabajadas con criterios confirmados en este período.
+				52 button Preparar marco del período
+			53 container
+				54 text 0 / 15  niños completamente evaluados
+			55 container
+				56 text 0 / 0  valoraciones docentes registradas
+			57 container
+				58 heading Cierre de Bimestre 4, Value: 3
+					59 text Cierre de  Bimestre 4
+				60 text Continúa desde el primer paso pendiente. 1 /8 pasos
+				61 content list
+					62 container
+						63 text ✓ Revisar cobertura
+					64 container
+						65 text ○ Preparar marco de evaluación
+					66 container
+						67 text ○ Evaluar alumnos
+					68 container
+						69 text ○ Conclusiones descriptivas
+					70 container
+						71 text ○ Consolidado
+					72 container
+						73 text ○ Informes familiares
+					74 container
+						75 text ○ Informe del aula
+					76 container
+						77 text ○ Cerrar período
+			78 button Revisar un niño
+			79 button Revisar aula
+			80 button Cobertura
+			81 button Informe de progreso
+			82 button Informe a familias
+			83 heading Revisar aula · Bimestre 4, Value: 3
+				84 text Revisar aula ·  Bimestre 4
+			85 text Aparecen también las competencias previstas sin observaciones.
+			86 button (collapsed) Ajustar competencias trabajadas, Secondary Actions: Expand
+				87 text Ajustar competencias trabajadas
+			88 pop up button (collapsed, settable) Description: Filtrar por niño, Value: Todos los niños, Secondary Actions: Expand
+				89 menu
+					90 (selected) Todos los niños
+					91 Joaquín Arce
+					92 Hugo Benavides
+					93 Alma Carrasco
+					94 Omar Cárdenas
+					95 Camila Huamán
+					96 Kiara Ledesma
+					97 Fabio Medina
+					98 Diego Montalvo
+					99 Elena Paredes
+					100 Thiago Reátegui
+					101 Gabriela Ríos
+					102 Bruno Salcedo
+					103 Valeria Soto
+					104 Inés Ventura
+					105 Mateo Villalba
+			106 pop up button (collapsed, settable) Description: Filtrar por competencia, Value: Todas las competencias, Secondary Actions: Expand
+				107 menu
+					108 (selected) Todas las competencias
+			109 pop up button (collapsed, settable) Description: Filtrar por área, Value: Todas las áreas, Secondary Actions: Expand
+				110 menu
+					111 (selected) Todas las áreas
+			112 pop up button (collapsed, settable) Description: Filtrar por estado, Value: Todos los estados, Secondary Actions: Expand
+				113 menu
+					114 (selected) Todos los estados
+					115 Pendientes
+					116 Completas
+			117 table
+				118 row
+					119 cell
+						120 text Niño
+				121 row
+					122 cell
+						123 text Joaquín Arce
+				124 row
+					125 cell
+						126 text Hugo Benavides
+				127 row
+					128 cell
+						129 text Alma Carrasco
+				130 row
+					131 cell
+						132 text Omar Cárdenas
+				133 row
+					134 cell
+						135 text Camila Huamán
+				136 row
+					137 cell
+						138 text Kiara Ledesma
+				139 row
+					140 cell
+						141 text Fabio Medina
+				142 row
+					143 cell
+						144 text Diego Montalvo
+				145 row
+					146 cell
+						147 text Elena Paredes
+				148 row
+					149 cell
+						150 text Thiago Reátegui
+				151 row
+					152 cell
+						153 text Gabriela Ríos
+				154 row
+					155 cell
+						156 text Bruno Salcedo
+				157 row
+					158 cell
+						159 text Valeria Soto
+				160 row
+					161 cell
+						162 text Inés Ventura
+				163 row
+					164 cell
+						165 text Mateo Villalba
+			166 button (disabled) Cerrar período
+			167 heading Consolidado del período, Value: 4
+				168 text Consolidado del período
+			169 text Las letras son las valoraciones confirmadas por la profesora. “—” indica que aún no hay valoración.
+			170 button Ver detalle
+			171 link Description: Exportar Excel de Ayni, Value: 127.0.0.1:8790/api/period-evaluations/consolidated.xlsx?classroomId=cda4ce72-78a6-4b39-a680-b7811fe8a605&periodId=4392a3c5-ca59-42f7-954b-48975cb35a6e
+			172 button (disabled) Exportar para SIAGIE · Próximamente, Help: Próximamente: pendiente de configurar con el formato oficial del colegio.
+				173 text Exportar para SIAGIE  · Próximamente
+			174 container
+				175 heading Resumen del aula, Value: 4
+					176 text Resumen del aula
+				177 text Los números se calculan desde el consolidado; Ayni solo redacta su interpretación. 0 competencias trabajadas 0 valoraciones confirmadas 0 valoraciones pendientes 0 competencias con cobertura incompleta
+				178 button (collapsed) Ver estadísticas por competencia, Secondary Actions: Expand
+					179 text Ver estadísticas por competencia
+				180 button Ver informe del aula
+				181 button Preparar informe del aula
+
+The focused UI element is 79 button Revisar aula

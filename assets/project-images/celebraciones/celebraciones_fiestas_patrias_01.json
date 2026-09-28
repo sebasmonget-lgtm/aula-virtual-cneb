@@ -1,0 +1,43 @@
+{
+  "id": "celebraciones_fiestas_patrias_01",
+  "file": "celebraciones/celebraciones_fiestas_patrias_01.jpg",
+  "master": "masters/celebraciones_fiestas_patrias_01.png",
+  "title": "Leo y Luna celebran las Fiestas Patrias",
+  "category": "celebraciones",
+  "subcategory": "fiestas_patrias",
+  "characters": [
+    "leo",
+    "luna"
+  ],
+  "concepts": [
+    "Fiestas Patrias",
+    "Perú",
+    "celebración"
+  ],
+  "actions": [
+    "decorar",
+    "celebrar"
+  ],
+  "objects": [
+    "bandera",
+    "cintas"
+  ],
+  "contexts": [
+    "proyecto",
+    "plan_anual",
+    "portada",
+    "celebraciones",
+    "fiestas_patrias"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "orientation": "landscape",
+  "aspect_ratio": "3:2",
+  "has_text": false,
+  "country_context": "PE",
+  "variant": 1,
+  "priority": 10
+}

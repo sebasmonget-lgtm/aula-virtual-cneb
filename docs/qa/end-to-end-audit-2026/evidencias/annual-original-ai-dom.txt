@@ -1,0 +1,229 @@
+- paragraph: Ayni Aula
+- paragraph: Tu aliada en Inicial
+- list:
+  - button "Hoy":
+    - generic: Hoy
+  - button "Calendario":
+    - generic: Calendario
+  - button "Diagnóstico":
+    - generic: Diagnóstico
+  - button "Planificar":
+    - generic: Planificar
+  - button "Aula":
+    - generic: Aula
+  - button "Evaluar":
+    - generic: Evaluar
+  - button "Biblioteca":
+    - generic: Biblioteca
+- paragraph: Exploradores · 5 años
+- paragraph: 2026 · 15 estudiantes
+- main:
+  - paragraph: Domingo, 27 de setiembre
+  - paragraph: IEI Semillas del Valle QA · Exploradores
+  - text: Base conectada
+  - button "Abrir perfil": LP
+  - main:
+    - button "← Volver a Planificar"
+    - paragraph: Organiza el aprendizaje
+    - heading "Planificar" [level=1]
+    - paragraph: Avanza un paso a la vez. Puedes guardar y continuar después.
+    - paragraph: ✓ 1. Aula configurada · ✓ 2. 15 alumnos registrados
+    - list "Siguientes pasos del recorrido":
+      - button "Volver al diagnóstico para revisarlo o cambiarlo":
+        - generic: Diagnóstico
+      - emphasis: Revisado
+      - generic: "4"
+      - generic: Plan anual
+      - emphasis: Pendiente
+      - generic: "5"
+      - generic: Proyecto o unidad
+      - emphasis: Pendiente
+      - generic: "6"
+      - generic: Actividad
+      - emphasis: Pendiente
+    - paragraph: Paso 4 de 6 · Plan anual
+    - heading "Mi año" [level=1]
+    - paragraph: Organiza las propuestas del año. Puedes ajustarlas y confirmar una nueva versión cuando cambie el grupo.
+    - status:
+      - generic: Ya tienes doce propuestas iniciales. Puedes editarlas antes de confirmar.
+    - paragraph: Mi año en revisión · versión 1
+    - heading "Lista de proyectos y unidades" [level=2]
+    - paragraph: Son propuestas iniciales. Puedes cambiarlas antes de confirmar «Mi año».
+    - table:
+      - rowgroup:
+        - row "Proyecto / unidad Mes y duración ¿Por qué? Competencias previstas Acción":
+          - columnheader "Proyecto / unidad"
+          - columnheader "Mes y duración"
+          - columnheader "¿Por qué?"
+          - columnheader "Competencias previstas"
+          - columnheader "Acción"
+      - rowgroup:
+        - row "01En el Día del Niño Peruano, decidimos cómo jugar juntos Proyecto 30 mar.–10 abr. 8 días de clase · Bimestre 1 La cercanía del Día del Niño Peruano permite dar lugar a la voz y las decisiones de los niños. Los registros sobre acuerdos y turnos hacen pertinente acompañar la participación de todos sin suponer una misma necesidad en el grupo. Convive y participa democráticamente en la búsqueda del bien común · Se comunica oralmente en su lengua materna · Construye su identidad · Se desenvuelve de manera autónoma a través de su motricidad Editar Subir En el Día del Niño Peruano, decidimos cómo jugar juntos Bajar En el Día del Niño Peruano, decidimos cómo jugar juntos":
+          - cell "01En el Día del Niño Peruano, decidimos cómo jugar juntos Proyecto":
+            - text: 01En el Día del Niño Peruano, decidimos cómo jugar juntos
+            - paragraph: Proyecto
+          - cell "30 mar.–10 abr. 8 días de clase · Bimestre 1":
+            - text: 30 mar.–10 abr.
+            - paragraph: 8 días de clase · Bimestre 1
+          - cell "La cercanía del Día del Niño Peruano permite dar lugar a la voz y las decisiones de los niños. Los registros sobre acuerdos y turnos hacen pertinente acompañar la participación de todos sin suponer una misma necesidad en el grupo."
+          - cell "Convive y participa democráticamente en la búsqueda del bien común · Se comunica oralmente en su lengua materna · Construye su identidad · Se desenvuelve de manera autónoma a través de su motricidad"
+          - cell "Editar Subir En el Día del Niño Peruano, decidimos cómo jugar juntos Bajar En el Día del Niño Peruano, decidimos cómo jugar juntos":
+            - button "Editar"
+            - button "Subir En el Día del Niño Peruano, decidimos cómo jugar juntos" [disabled]: ↑
+            - button "Bajar En el Día del Niño Peruano, decidimos cómo jugar juntos": ↓
+        - row "02¿Cómo iniciamos y cuidamos un pequeño huerto? Proyecto 13 abr.–24 abr. 10 días de clase · Bimestre 1 Se observaron propuestas de comprobación con semillas y las familias informaron interés por la naturaleza. El huerto previsto ofrece un motivo para investigar y acordar responsabilidades compartidas. Indaga mediante métodos científicos para construir sus conocimientos · Convive y participa democráticamente en la búsqueda del bien común · Gestiona su aprendizaje de manera autónoma Editar Subir ¿Cómo iniciamos y cuidamos un pequeño huerto? Bajar ¿Cómo iniciamos y cuidamos un pequeño huerto?":
+          - cell "02¿Cómo iniciamos y cuidamos un pequeño huerto? Proyecto":
+            - text: 02¿Cómo iniciamos y cuidamos un pequeño huerto?
+            - paragraph: Proyecto
+          - cell "13 abr.–24 abr. 10 días de clase · Bimestre 1":
+            - text: 13 abr.–24 abr.
+            - paragraph: 10 días de clase · Bimestre 1
+          - cell "Se observaron propuestas de comprobación con semillas y las familias informaron interés por la naturaleza. El huerto previsto ofrece un motivo para investigar y acordar responsabilidades compartidas."
+          - cell "Indaga mediante métodos científicos para construir sus conocimientos · Convive y participa democráticamente en la búsqueda del bien común · Gestiona su aprendizaje de manera autónoma"
+          - cell "Editar Subir ¿Cómo iniciamos y cuidamos un pequeño huerto? Bajar ¿Cómo iniciamos y cuidamos un pequeño huerto?":
+            - button "Editar"
+            - button "Subir ¿Cómo iniciamos y cuidamos un pequeño huerto?": ↑
+            - button "Bajar ¿Cómo iniciamos y cuidamos un pequeño huerto?": ↓
+        - row "03Cuentos que nos invitan a imaginar y recomendar Proyecto 27 abr.–15 may. 14 días de clase · Bimestre 1 La lectura de indicios de una portada es una actuación observada y los cuentos figuran entre los intereses comunicados. La propuesta permitirá ampliar oportunidades de lectura y escritura sin dar por establecido un nivel grupal. Lee diversos tipos de textos escritos en su lengua materna · Se comunica oralmente en su lengua materna · Escribe diversos tipos de textos en su lengua materna Editar Subir Cuentos que nos invitan a imaginar y recomendar Bajar Cuentos que nos invitan a imaginar y recomendar":
+          - cell "03Cuentos que nos invitan a imaginar y recomendar Proyecto":
+            - text: 03Cuentos que nos invitan a imaginar y recomendar
+            - paragraph: Proyecto
+          - cell "27 abr.–15 may. 14 días de clase · Bimestre 1":
+            - text: 27 abr.–15 may.
+            - paragraph: 14 días de clase · Bimestre 1
+          - cell "La lectura de indicios de una portada es una actuación observada y los cuentos figuran entre los intereses comunicados. La propuesta permitirá ampliar oportunidades de lectura y escritura sin dar por establecido un nivel grupal."
+          - cell "Lee diversos tipos de textos escritos en su lengua materna · Se comunica oralmente en su lengua materna · Escribe diversos tipos de textos en su lengua materna"
+          - cell "Editar Subir Cuentos que nos invitan a imaginar y recomendar Bajar Cuentos que nos invitan a imaginar y recomendar":
+            - button "Editar"
+            - button "Subir Cuentos que nos invitan a imaginar y recomendar": ↑
+            - button "Bajar Cuentos que nos invitan a imaginar y recomendar": ↓
+        - row "04En el Día de la Educación Inicial, pensamos nuestro jardín Proyecto 25 may.–5 jun. 10 días de clase · Bimestre 2 El Día de la Educación Inicial ofrece una ocasión para valorar los espacios y relaciones del jardín. Revisar cómo se comparten sus ambientes responde a la prioridad de acompañar acuerdos. Convive y participa democráticamente en la búsqueda del bien común · Se comunica oralmente en su lengua materna · Resuelve problemas de forma, movimiento y localización · Gestiona su aprendizaje de manera autónoma Editar Subir En el Día de la Educación Inicial, pensamos nuestro jardín Bajar En el Día de la Educación Inicial, pensamos nuestro jardín":
+          - cell "04En el Día de la Educación Inicial, pensamos nuestro jardín Proyecto":
+            - text: 04En el Día de la Educación Inicial, pensamos nuestro jardín
+            - paragraph: Proyecto
+          - cell "25 may.–5 jun. 10 días de clase · Bimestre 2":
+            - text: 25 may.–5 jun.
+            - paragraph: 10 días de clase · Bimestre 2
+          - cell "El Día de la Educación Inicial ofrece una ocasión para valorar los espacios y relaciones del jardín. Revisar cómo se comparten sus ambientes responde a la prioridad de acompañar acuerdos."
+          - cell "Convive y participa democráticamente en la búsqueda del bien común · Se comunica oralmente en su lengua materna · Resuelve problemas de forma, movimiento y localización · Gestiona su aprendizaje de manera autónoma"
+          - cell "Editar Subir En el Día de la Educación Inicial, pensamos nuestro jardín Bajar En el Día de la Educación Inicial, pensamos nuestro jardín":
+            - button "Editar"
+            - button "Subir En el Día de la Educación Inicial, pensamos nuestro jardín": ↑
+            - button "Bajar En el Día de la Educación Inicial, pensamos nuestro jardín": ↓
+        - row "05Cantidades para repartir y jugar Unidad 8 jun.–19 jun. 10 días de clase · Bimestre 2 El reparto con conteo aparece en registros puntuales; conviene ofrecer nuevas situaciones de cantidad en distintos contextos. La necesidad de compartir durante el juego da sentido tanto a las decisiones matemáticas como a los acuerdos. Resuelve problemas de cantidad · Convive y participa democráticamente en la búsqueda del bien común Editar Subir Cantidades para repartir y jugar Bajar Cantidades para repartir y jugar":
+          - cell "05Cantidades para repartir y jugar Unidad":
+            - text: 05Cantidades para repartir y jugar
+            - paragraph: Unidad
+          - cell "8 jun.–19 jun. 10 días de clase · Bimestre 2":
+            - text: 8 jun.–19 jun.
+            - paragraph: 10 días de clase · Bimestre 2
+          - cell "El reparto con conteo aparece en registros puntuales; conviene ofrecer nuevas situaciones de cantidad en distintos contextos. La necesidad de compartir durante el juego da sentido tanto a las decisiones matemáticas como a los acuerdos."
+          - cell "Resuelve problemas de cantidad · Convive y participa democráticamente en la búsqueda del bien común"
+          - cell "Editar Subir Cantidades para repartir y jugar Bajar Cantidades para repartir y jugar":
+            - button "Editar"
+            - button "Subir Cantidades para repartir y jugar": ↑
+            - button "Bajar Cantidades para repartir y jugar": ↓
+        - 'row "06Fiestas Patrias: historias y expresiones de nuestra comunidad y del Perú Proyecto 6 jul.–24 jul. 14 días de clase · Bimestre 2 La proximidad de Fiestas Patrias permite conocer relatos y expresiones culturales sin reducir la experiencia a símbolos. Se partirá de lo que el grupo pueda compartir y conocer, sin atribuirle prácticas culturales no informadas. Se comunica oralmente en su lengua materna · Crea proyectos desde los lenguajes artísticos · Construye su identidad · Convive y participa democráticamente en la búsqueda del bien común Editar Subir Fiestas Patrias: historias y expresiones de nuestra comunidad y del Perú Bajar Fiestas Patrias: historias y expresiones de nuestra comunidad y del Perú"':
+          - 'cell "06Fiestas Patrias: historias y expresiones de nuestra comunidad y del Perú Proyecto"':
+            - text: "06Fiestas Patrias: historias y expresiones de nuestra comunidad y del Perú"
+            - paragraph: Proyecto
+          - cell "6 jul.–24 jul. 14 días de clase · Bimestre 2":
+            - text: 6 jul.–24 jul.
+            - paragraph: 14 días de clase · Bimestre 2
+          - cell "La proximidad de Fiestas Patrias permite conocer relatos y expresiones culturales sin reducir la experiencia a símbolos. Se partirá de lo que el grupo pueda compartir y conocer, sin atribuirle prácticas culturales no informadas."
+          - cell "Se comunica oralmente en su lengua materna · Crea proyectos desde los lenguajes artísticos · Construye su identidad · Convive y participa democráticamente en la búsqueda del bien común"
+          - 'cell "Editar Subir Fiestas Patrias: historias y expresiones de nuestra comunidad y del Perú Bajar Fiestas Patrias: historias y expresiones de nuestra comunidad y del Perú"':
+            - button "Editar"
+            - 'button "Subir Fiestas Patrias: historias y expresiones de nuestra comunidad y del Perú"': ↑
+            - 'button "Bajar Fiestas Patrias: historias y expresiones de nuestra comunidad y del Perú"': ↓
+        - row "07¿Qué cambios podemos descubrir al cuidar semillas? Proyecto 10 ago.–21 ago. 10 días de clase · Bimestre 3 Las semillas y el posible huerto ofrecen una oportunidad de seguir cambios a lo largo del tiempo. La propuesta se ajustará a lo que efectivamente pueda observarse y a la revisión docente del periodo anterior. Indaga mediante métodos científicos para construir sus conocimientos · Resuelve problemas de cantidad · Gestiona su aprendizaje de manera autónoma Editar Subir ¿Qué cambios podemos descubrir al cuidar semillas? Bajar ¿Qué cambios podemos descubrir al cuidar semillas?":
+          - cell "07¿Qué cambios podemos descubrir al cuidar semillas? Proyecto":
+            - text: 07¿Qué cambios podemos descubrir al cuidar semillas?
+            - paragraph: Proyecto
+          - cell "10 ago.–21 ago. 10 días de clase · Bimestre 3":
+            - text: 10 ago.–21 ago.
+            - paragraph: 10 días de clase · Bimestre 3
+          - cell "Las semillas y el posible huerto ofrecen una oportunidad de seguir cambios a lo largo del tiempo. La propuesta se ajustará a lo que efectivamente pueda observarse y a la revisión docente del periodo anterior."
+          - cell "Indaga mediante métodos científicos para construir sus conocimientos · Resuelve problemas de cantidad · Gestiona su aprendizaje de manera autónoma"
+          - cell "Editar Subir ¿Qué cambios podemos descubrir al cuidar semillas? Bajar ¿Qué cambios podemos descubrir al cuidar semillas?":
+            - button "Editar"
+            - button "Subir ¿Qué cambios podemos descubrir al cuidar semillas?": ↑
+            - button "Bajar ¿Qué cambios podemos descubrir al cuidar semillas?": ↓
+        - row "08Nos movemos y nos orientamos para jugar Unidad 24 ago.–4 set. 10 días de clase · Bimestre 3 Mantener oportunidades de movimiento y juego permite explorar maneras de ubicarse y desplazarse con otros. Los acuerdos sobre el espacio compartido siguen siendo pertinentes, según las actuaciones observadas. Se desenvuelve de manera autónoma a través de su motricidad · Resuelve problemas de forma, movimiento y localización · Convive y participa democráticamente en la búsqueda del bien común Editar Subir Nos movemos y nos orientamos para jugar Bajar Nos movemos y nos orientamos para jugar":
+          - cell "08Nos movemos y nos orientamos para jugar Unidad":
+            - text: 08Nos movemos y nos orientamos para jugar
+            - paragraph: Unidad
+          - cell "24 ago.–4 set. 10 días de clase · Bimestre 3":
+            - text: 24 ago.–4 set.
+            - paragraph: 10 días de clase · Bimestre 3
+          - cell "Mantener oportunidades de movimiento y juego permite explorar maneras de ubicarse y desplazarse con otros. Los acuerdos sobre el espacio compartido siguen siendo pertinentes, según las actuaciones observadas."
+          - cell "Se desenvuelve de manera autónoma a través de su motricidad · Resuelve problemas de forma, movimiento y localización · Convive y participa democráticamente en la búsqueda del bien común"
+          - cell "Editar Subir Nos movemos y nos orientamos para jugar Bajar Nos movemos y nos orientamos para jugar":
+            - button "Editar"
+            - button "Subir Nos movemos y nos orientamos para jugar": ↑
+            - button "Bajar Nos movemos y nos orientamos para jugar": ↓
+        - row "09La naturaleza que exploramos, contada con arte y palabras Proyecto 7 set.–25 set. 15 días de clase · Bimestre 3 El interés familiar informado por la naturaleza y las actuaciones observadas en creación visual y musical permiten abrir distintas formas de expresión. TIC queda pendiente de revisión docente porque no se ha confirmado disponibilidad de medios digitales. Crea proyectos desde los lenguajes artísticos · Escribe diversos tipos de textos en su lengua materna · Se comunica oralmente en su lengua materna Editar Subir La naturaleza que exploramos, contada con arte y palabras Bajar La naturaleza que exploramos, contada con arte y palabras":
+          - cell "09La naturaleza que exploramos, contada con arte y palabras Proyecto":
+            - text: 09La naturaleza que exploramos, contada con arte y palabras
+            - paragraph: Proyecto
+          - cell "7 set.–25 set. 15 días de clase · Bimestre 3":
+            - text: 7 set.–25 set.
+            - paragraph: 15 días de clase · Bimestre 3
+          - cell "El interés familiar informado por la naturaleza y las actuaciones observadas en creación visual y musical permiten abrir distintas formas de expresión. TIC queda pendiente de revisión docente porque no se ha confirmado disponibilidad de medios digitales."
+          - cell "Crea proyectos desde los lenguajes artísticos · Escribe diversos tipos de textos en su lengua materna · Se comunica oralmente en su lengua materna"
+          - cell "Editar Subir La naturaleza que exploramos, contada con arte y palabras Bajar La naturaleza que exploramos, contada con arte y palabras":
+            - button "Editar"
+            - button "Subir La naturaleza que exploramos, contada con arte y palabras": ↑
+            - button "Bajar La naturaleza que exploramos, contada con arte y palabras": ↓
+        - row "10Los cuentos se mueven con nosotros Proyecto 19 oct.–30 oct. 10 días de clase · Bimestre 4 Los cuentos son un interés informado y se ha observado la interpretación de indicios de una portada. Retomarlos desde el movimiento abre otra forma de comprenderlos y expresarlos; la docente podrá ajustar la propuesta según nuevas observaciones. Lee diversos tipos de textos escritos en su lengua materna · Se desenvuelve de manera autónoma a través de su motricidad · Crea proyectos desde los lenguajes artísticos Editar Subir Los cuentos se mueven con nosotros Bajar Los cuentos se mueven con nosotros":
+          - cell "10Los cuentos se mueven con nosotros Proyecto":
+            - text: 10Los cuentos se mueven con nosotros
+            - paragraph: Proyecto
+          - cell "19 oct.–30 oct. 10 días de clase · Bimestre 4":
+            - text: 19 oct.–30 oct.
+            - paragraph: 10 días de clase · Bimestre 4
+          - cell "Los cuentos son un interés informado y se ha observado la interpretación de indicios de una portada. Retomarlos desde el movimiento abre otra forma de comprenderlos y expresarlos; la docente podrá ajustar la propuesta según nuevas observaciones."
+          - cell "Lee diversos tipos de textos escritos en su lengua materna · Se desenvuelve de manera autónoma a través de su motricidad · Crea proyectos desde los lenguajes artísticos"
+          - cell "Editar Subir Los cuentos se mueven con nosotros Bajar Los cuentos se mueven con nosotros":
+            - button "Editar"
+            - button "Subir Los cuentos se mueven con nosotros": ↑
+            - button "Bajar Los cuentos se mueven con nosotros": ↓
+        - row "11Compartimos cuentos y recomendaciones Proyecto 2 nov.–13 nov. 10 días de clase · Bimestre 4 El interés por los cuentos permite dar un propósito comunicativo a la lectura y a la escritura inicial. Organizar su intercambio también ofrece una ocasión pertinente para revisar acuerdos de uso compartido. Lee diversos tipos de textos escritos en su lengua materna · Escribe diversos tipos de textos en su lengua materna · Convive y participa democráticamente en la búsqueda del bien común Editar Subir Compartimos cuentos y recomendaciones Bajar Compartimos cuentos y recomendaciones":
+          - cell "11Compartimos cuentos y recomendaciones Proyecto":
+            - text: 11Compartimos cuentos y recomendaciones
+            - paragraph: Proyecto
+          - cell "2 nov.–13 nov. 10 días de clase · Bimestre 4":
+            - text: 2 nov.–13 nov.
+            - paragraph: 10 días de clase · Bimestre 4
+          - cell "El interés por los cuentos permite dar un propósito comunicativo a la lectura y a la escritura inicial. Organizar su intercambio también ofrece una ocasión pertinente para revisar acuerdos de uso compartido."
+          - cell "Lee diversos tipos de textos escritos en su lengua materna · Escribe diversos tipos de textos en su lengua materna · Convive y participa democráticamente en la búsqueda del bien común"
+          - cell "Editar Subir Compartimos cuentos y recomendaciones Bajar Compartimos cuentos y recomendaciones":
+            - button "Editar"
+            - button "Subir Compartimos cuentos y recomendaciones": ↑
+            - button "Bajar Compartimos cuentos y recomendaciones": ↓
+        - row "12Recordamos nuestro año y preparamos un encuentro de cierre Proyecto 7 dic.–18 dic. 8 días de clase · Bimestre 4 El cierre lectivo de diciembre invita a revisar experiencias y reconocer decisiones tomadas durante el año. La Navidad puede considerarse como contexto cultural, sin exigir una práctica religiosa a las familias. Construye su identidad · Se comunica oralmente en su lengua materna · Gestiona su aprendizaje de manera autónoma · Convive y participa democráticamente en la búsqueda del bien común Editar Subir Recordamos nuestro año y preparamos un encuentro de cierre Bajar Recordamos nuestro año y preparamos un encuentro de cierre":
+          - cell "12Recordamos nuestro año y preparamos un encuentro de cierre Proyecto":
+            - text: 12Recordamos nuestro año y preparamos un encuentro de cierre
+            - paragraph: Proyecto
+          - cell "7 dic.–18 dic. 8 días de clase · Bimestre 4":
+            - text: 7 dic.–18 dic.
+            - paragraph: 8 días de clase · Bimestre 4
+          - cell "El cierre lectivo de diciembre invita a revisar experiencias y reconocer decisiones tomadas durante el año. La Navidad puede considerarse como contexto cultural, sin exigir una práctica religiosa a las familias."
+          - cell "Construye su identidad · Se comunica oralmente en su lengua materna · Gestiona su aprendizaje de manera autónoma · Convive y participa democráticamente en la búsqueda del bien común"
+          - cell "Editar Subir Recordamos nuestro año y preparamos un encuentro de cierre Bajar Recordamos nuestro año y preparamos un encuentro de cierre":
+            - button "Editar"
+            - button "Subir Recordamos nuestro año y preparamos un encuentro de cierre": ↑
+            - button "Bajar Recordamos nuestro año y preparamos un encuentro de cierre" [disabled]: ↓
+    - button "+ Agregar propuesta manual"
+    - paragraph: Puedes editar, mover, eliminar o agregar propuestas. Al mover una, adopta el mes y la duración de ese lugar. Máximo 20 por la plantilla Word.
+    - heading "Cobertura de competencias" [level=2]
+    - paragraph: Ayni señala oportunidades previstas; puedes decidir cómo ajustarlas.
+    - paragraph:
+      - text: Se desenvuelve en los entornos virtuales generados por las TIC · 0 oportunidades
+      - text: No hay una oportunidad explícita prevista.
+    - button "Confirmar Mi año"
+    - paragraph: Al confirmar, Ayni desarrollará el documento formal a partir de esta versión.
+    - heading "Versiones de Mi año" [level=2]
+    - button "Versión 1 · borrador"
+    - navigation "Volver en la planificación":
+      - button "Ver paso anterior"

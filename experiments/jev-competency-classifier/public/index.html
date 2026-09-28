@@ -1,8 +1,38 @@
 <!doctype html>
-<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Jev–CNEB · Experimento</title><link rel="stylesheet" href="/app.css"></head>
-<body><main><p class="eyebrow">EXPERIMENTO LOCAL · DATOS FICTICIOS</p><h1>Clasificador Jev–CNEB</h1><p id="configuration" class="notice"></p>
-<form id="form"><label>Edad<select id="age" name="age"><option value="3">3 años</option><option value="4">4 años</option><option value="5" selected>5 años</option></select></label>
-<label>Contexto<select id="context" name="context"><option value="">Sin contexto</option><option value="juego_libre">Juego libre</option><option value="recreo">Recreo</option><option value="lonchera">Lonchera</option><option value="asamblea">Asamblea</option><option value="rutina">Rutina</option><option value="exploracion">Exploración</option><option value="actividad">Actividad</option><option value="otro">Otro</option></select></label>
-<fieldset><legend>Aplicabilidad explícita</legend><label><input id="l2" type="checkbox"> Castellano como segunda lengua</label><label><input id="religion" type="checkbox"> Religión aplicable</label></fieldset>
-<label>Observación<textarea id="observation" name="observation" maxlength="2000" placeholder="Ej.: Contó los vasos antes de repartirlos y dijo que faltaba uno." required></textarea></label><button>Clasificar con Jev</button></form>
-<section id="result" hidden><h2>Resultado</h2><dl id="summary"></dl><h3>Probabilidades</h3><ol id="probabilities"></ol></section><p id="error" role="alert"></p></main><script type="module" src="/app.js"></script></body></html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Jev–CNEB · Comparar métodos</title>
+  <link rel="stylesheet" href="/app.css">
+</head>
+<body>
+  <main class="layout">
+    <section class="workspace" aria-labelledby="page-title">
+      <p class="eyebrow">EXPERIMENTO LOCAL · USA OBSERVACIONES FICTICIAS O ANONIMIZADAS</p>
+      <h1 id="page-title">Compara los dos métodos de Jev</h1>
+      <p class="intro">Escribe una observación una vez. Se harán dos consultas al mismo modelo: una selección única y una evaluación independiente de cada competencia aplicable.</p>
+      <p id="configuration" class="notice" role="status"></p>
+      <form id="form">
+        <div class="form-row">
+          <label>Edad<select id="age" name="age"><option value="3">3 años</option><option value="4">4 años</option><option value="5" selected>5 años</option></select></label>
+          <label>Contexto<select id="context" name="context"><option value="">Sin contexto</option><option value="juego_libre">Juego libre</option><option value="recreo">Recreo</option><option value="lonchera">Lonchera</option><option value="asamblea">Asamblea</option><option value="rutina">Rutina</option><option value="exploracion">Exploración</option><option value="actividad">Actividad</option><option value="otro">Otro</option></select></label>
+        </div>
+        <label>Información curricular<select id="criteria-profile" name="criteria_profile"><option value="compact">Resumen anterior</option><option value="enriched">KB enriquecida: patrones, ejemplos y distinciones</option><option value="focused" selected>Criterios enfocados + suficiencia experimental</option></select></label>
+        <fieldset><legend>Aplicabilidad explícita</legend><label><input id="l2" type="checkbox"> Castellano como segunda lengua</label><label><input id="religion" type="checkbox"> Religión aplicable</label></fieldset>
+        <label>Observación<textarea id="observation" name="observation" maxlength="2000" placeholder="Ej.: Contó los vasos antes de repartirlos y dijo que faltaba uno." required></textarea></label>
+        <button id="compare-button" type="submit">Probar ambos métodos</button>
+      </form>
+      <p id="error" class="error" role="alert"></p>
+      <p class="privacy-note">No ingreses nombres ni información que identifique a menores. Las respuestas son sugerencias para revisión docente, no evaluaciones ni niveles de logro.</p>
+    </section>
+    <aside class="sidepanel" aria-labelledby="sidepanel-title">
+      <div class="sidepanel-heading"><p class="eyebrow">COMPARACIÓN EN VIVO</p><h2 id="sidepanel-title">Respuestas de Jev</h2><p id="comparison-status" role="status">Completa la observación y pulsa «Probar ambos métodos».</p></div>
+      <section id="choice-result" class="method-card" aria-labelledby="choice-title"><h3 id="choice-title">1 · Choice</h3><p>Escoge una competencia o «no clasificable». Las probabilidades compiten entre sí y suman aproximadamente 100 %.</p><div class="method-content" aria-live="polite"></div></section>
+      <section id="parallel-result" class="method-card" aria-labelledby="parallel-title"><h3 id="parallel-title">2 · Noul paralelo</h3><p>Pregunta sí/no por cada competencia aplicable dentro de una sola llamada. Puede proponer varias; sus puntuaciones no suman 100 %.</p><div class="method-content" aria-live="polite"></div></section>
+      <p class="sidepanel-note">Una comparación utiliza dos llamadas a Jev en total y puede consumir créditos de OpenRouter.</p>
+    </aside>
+  </main>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

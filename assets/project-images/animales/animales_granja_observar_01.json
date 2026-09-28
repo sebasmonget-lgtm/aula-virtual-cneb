@@ -1,0 +1,44 @@
+{
+  "id": "animales_granja_observar_01",
+  "file": "animales/animales_granja_observar_01.jpg",
+  "master": "masters/animales_granja_observar_01.png",
+  "title": "Leo y Mateo observan animales de granja",
+  "category": "animales",
+  "subcategory": "granja",
+  "characters": [
+    "leo",
+    "mateo"
+  ],
+  "concepts": [
+    "animales",
+    "granja",
+    "crías"
+  ],
+  "actions": [
+    "observar",
+    "comparar"
+  ],
+  "objects": [
+    "gallina",
+    "pollitos",
+    "oveja"
+  ],
+  "contexts": [
+    "proyecto",
+    "plan_anual",
+    "portada",
+    "animales",
+    "granja"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "orientation": "landscape",
+  "aspect_ratio": "3:2",
+  "has_text": false,
+  "country_context": "PE",
+  "variant": 1,
+  "priority": 10
+}

@@ -1,0 +1,43 @@
+{
+  "id": "celebraciones_primavera_01",
+  "file": "celebraciones/celebraciones_primavera_01.jpg",
+  "master": "masters/celebraciones_primavera_01.png",
+  "title": "Luna y Sofía celebran la primavera",
+  "category": "celebraciones",
+  "subcategory": "primavera",
+  "characters": [
+    "luna",
+    "sofia"
+  ],
+  "concepts": [
+    "primavera",
+    "flores",
+    "naturaleza"
+  ],
+  "actions": [
+    "observar",
+    "celebrar"
+  ],
+  "objects": [
+    "flores",
+    "mariposas"
+  ],
+  "contexts": [
+    "proyecto",
+    "plan_anual",
+    "portada",
+    "celebraciones",
+    "primavera"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "orientation": "landscape",
+  "aspect_ratio": "3:2",
+  "has_text": false,
+  "country_context": "PE",
+  "variant": 1,
+  "priority": 10
+}

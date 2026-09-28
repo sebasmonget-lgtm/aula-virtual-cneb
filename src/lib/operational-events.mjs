@@ -1,4 +1,6 @@
-const allowed = new Set(["api_unexpected_failure", "ai_generation_rejected", "evidence_storage_failure"]);
+const allowed = new Set(["api_unexpected_failure", "ai_generation_rejected", "evidence_storage_failure",
+  "diagnostic_classification_failed", "audio_transcription_failed", "interview_attachment_cleanup_failed",
+  "student_context_refresh_failed", "db_request_cleanup_failed"]);
 
 /** Emits diagnostic codes only. Never forward error objects, prompts, child notes or credentials. */
 export function recordOperationalEvent(event, { requestId, workflow, status } = {}, sink = console.warn) {

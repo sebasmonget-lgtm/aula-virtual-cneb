@@ -1,0 +1,30 @@
+[
+  {
+    "period": 1,
+    "selectedLabel": "Bimestre 1 · 16/3/2026 a 15/5/2026",
+    "noEvidenceGuard": true,
+    "fullyLoaded": true,
+    "at": "2026-09-28T03:40:19.641Z"
+  },
+  {
+    "period": 2,
+    "selectedLabel": "Bimestre 2 · 25/5/2026 a 24/7/2026",
+    "noEvidenceGuard": true,
+    "fullyLoaded": true,
+    "at": "2026-09-28T03:40:20.171Z"
+  },
+  {
+    "period": 3,
+    "selectedLabel": "Bimestre 3 · 10/8/2026 a 9/10/2026",
+    "noEvidenceGuard": true,
+    "fullyLoaded": true,
+    "at": "2026-09-28T03:40:20.692Z"
+  },
+  {
+    "period": 4,
+    "selectedLabel": "Bimestre 4 · 19/10/2026 a 18/12/2026",
+    "noEvidenceGuard": true,
+    "fullyLoaded": true,
+    "at": "2026-09-28T03:40:21.205Z"
+  }
+]

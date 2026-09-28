@@ -1,0 +1,64 @@
+- paragraph: Ayni Aula
+- paragraph: Tu aliada en Inicial
+- list:
+  - button "Hoy":
+    - generic: Hoy
+  - button "Calendario":
+    - generic: Calendario
+  - button "Diagnóstico":
+    - generic: Diagnóstico
+  - button "Planificar":
+    - generic: Planificar
+  - button "Aula":
+    - generic: Aula
+  - button "Evaluar":
+    - generic: Evaluar
+  - button "Biblioteca":
+    - generic: Biblioteca
+- paragraph: Exploradores · 5 años
+- paragraph: 2026 · 15 estudiantes
+- main:
+  - paragraph: Domingo, 27 de setiembre
+  - paragraph: IEI Semillas del Valle QA · Exploradores
+  - text: Base conectada
+  - button "Abrir perfil": LP
+  - main:
+    - button "← Volver a Planificar"
+    - paragraph: Organiza el aprendizaje
+    - heading "Planificar" [level=1]
+    - paragraph: Avanza un paso a la vez. Puedes guardar y continuar después.
+    - paragraph: ✓ 1. Aula configurada · ✓ 2. 15 alumnos registrados
+    - list "Siguientes pasos del recorrido":
+      - button "Volver al diagnóstico para revisarlo o cambiarlo":
+        - generic: Diagnóstico
+      - emphasis: Revisado
+      - generic: "4"
+      - generic: Plan anual
+      - emphasis: Borrador
+      - generic: "5"
+      - generic: Proyecto o unidad
+      - emphasis: Pendiente
+      - generic: "6"
+      - generic: Actividad
+      - emphasis: Pendiente
+    - heading "Lo que muestran las evaluaciones del grupo" [level=3]
+    - paragraph: Puedes usar este resumen para orientar la propuesta. No cambiará ningún plan ni actividad guardada.
+    - text: Período
+    - combobox "Período":
+      - option "Bimestre 4" [selected]
+      - option "Bimestre 3"
+      - option "Bimestre 2"
+      - option "Bimestre 1"
+    - paragraph: 0 valoraciones confirmadas · 15 niños en el aula
+    - list
+    - checkbox "Usar este resumen al preparar la propuesta"
+    - text: Usar este resumen al preparar la propuesta
+    - generic: "Recurso elegido: Mural del lugar que compartimos"
+    - paragraph: Elige un proyecto o unidad. Ayni incorporará el contexto y los materiales del recurso a la actividad para que puedas revisarlos.
+    - region "Siguiente paso recomendado":
+      - paragraph: Completa el paso anterior
+      - paragraph: Confirma primero un proyecto o unidad.
+      - button "Abrir proyecto o unidad":
+        - text: Abrir proyecto o unidad
+    - navigation "Volver en la planificación":
+      - button "Ver paso anterior"

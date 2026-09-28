@@ -1,0 +1,44 @@
+{
+  "id": "ambiente_reutilizar_materiales_01",
+  "file": "ambiente/ambiente_reutilizar_materiales_01.jpg",
+  "master": "masters/ambiente_reutilizar_materiales_01.png",
+  "title": "Sofía reutiliza materiales",
+  "category": "ambiente",
+  "subcategory": "reutilizacion",
+  "characters": [
+    "sofia",
+    "luna"
+  ],
+  "concepts": [
+    "reutilización",
+    "materiales",
+    "creatividad"
+  ],
+  "actions": [
+    "reutilizar",
+    "construir"
+  ],
+  "objects": [
+    "cajas",
+    "cartón",
+    "mesa"
+  ],
+  "contexts": [
+    "proyecto",
+    "plan_anual",
+    "portada",
+    "ambiente",
+    "reutilizacion"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "orientation": "landscape",
+  "aspect_ratio": "3:2",
+  "has_text": false,
+  "country_context": "PE",
+  "variant": 1,
+  "priority": 10
+}

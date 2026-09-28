@@ -1,0 +1,9 @@
+{
+  "provider": "OpenRouter / TypeSafe",
+  "model_family": "Jev 1.13",
+  "consulted_on": "2026-09-27",
+  "source": "https://openrouter.ai/typesafe/jev-1.13",
+  "input_usd_per_million": 0.042,
+  "output_usd_per_million": 0,
+  "note": "Se prefiere usage.cost de OpenRouter cuando esté disponible; la tarifa sirve para estimar cuando falte."
+}

@@ -1,0 +1,46 @@
+{
+  "id": "naturaleza_plantas_regar_02",
+  "file": "naturaleza/naturaleza_plantas_regar_02.jpg",
+  "master": "masters/naturaleza_plantas_regar_02.png",
+  "title": "Mateo y Sofía riegan plantas",
+  "category": "naturaleza",
+  "subcategory": "plantas",
+  "characters": [
+    "mateo",
+    "sofia"
+  ],
+  "concepts": [
+    "plantas",
+    "agua",
+    "jardín",
+    "cuidado"
+  ],
+  "actions": [
+    "regar",
+    "observar",
+    "cuidar"
+  ],
+  "objects": [
+    "regadera",
+    "plantas",
+    "hojas"
+  ],
+  "contexts": [
+    "proyecto",
+    "plan_anual",
+    "portada",
+    "naturaleza",
+    "plantas"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "orientation": "landscape",
+  "aspect_ratio": "3:2",
+  "has_text": false,
+  "country_context": "PE",
+  "variant": 2,
+  "priority": 10
+}

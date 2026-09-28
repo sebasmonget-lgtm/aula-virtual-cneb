@@ -1,0 +1,107 @@
+Browser tab: 3, Title: "Ayni Aula | Asistente CNEB", URL: "http://localhost:5175/".
+1 AXWebArea Ayni Aula | Asistente CNEB, URL: localhost:5175/
+	2 container
+		3 text Ayni Aula
+		4 text Tu aliada en Inicial
+		5 content list
+			6 button Hoy
+			7 button Calendario
+			8 button Diagnóstico
+			9 button Planificar
+			10 button Aula
+			11 button Evaluar
+			12 button Biblioteca
+		13 container
+			14 text Exploradores  ·  5 años
+		15 container
+			16 text 2026  ·  15  estudiantes
+		17 container
+			18 text Domingo, 27 de setiembre IEI Semillas del Valle QA  ·  Exploradores Base conectada
+			19 button Abrir perfil
+		20 container
+			21 button ← Volver a Evaluar
+			22 heading Evaluación del período, Value: 2
+				23 text Evaluación del período
+			24 text Revisa lo observado y confirma una valoración por niño y competencia.
+			25 container
+				26 text Año escolar
+				27 pop up button (collapsed, settable) Año escolar, Value: 2026, Secondary Actions: Expand
+					28 menu
+						29 Selecciona un año
+						30 (selected) 2026
+			31 container
+				32 text Aula
+				33 pop up button (collapsed, settable) Aula, Value: Exploradores · 5 años, Secondary Actions: Expand
+					34 menu
+						35 Selecciona un aula
+						36 (selected) Exploradores · 5 años
+			37 container
+				38 text Período
+				39 pop up button (collapsed, settable) Período, Value: Bimestre 1 · 16/3/2026 a 15/5/2026, Secondary Actions: Expand
+					40 menu
+						41 Selecciona un período
+						42 (selected) Bimestre 1 · 16/3/2026 a 15/5/2026
+						43 Bimestre 2 · 25/5/2026 a 24/7/2026
+						44 Bimestre 3 · 10/8/2026 a 9/10/2026
+						45 Bimestre 4 · 19/10/2026 a 18/12/2026
+			46 button (collapsed) Organización de períodos, Secondary Actions: Expand
+				47 text Organización de períodos
+			48 container
+				49 heading Marco de evaluación del período, Value: 3
+					50 text Marco de evaluación del período
+				51 text Ayni lo prepara una vez con las competencias realmente trabajadas. Luego lo aplica a cada niño; tú confirmas cada valoración. Aún no hay competencias trabajadas con criterios confirmados en este período.
+				52 button Preparar marco del período
+			53 container
+				54 text 0 / 15  niños completamente evaluados
+			55 container
+				56 text 0 / 0  valoraciones docentes registradas
+			57 container
+				58 heading Cierre de Bimestre 1, Value: 3
+					59 text Cierre de  Bimestre 1
+				60 text Continúa desde el primer paso pendiente. 1 /8 pasos
+				61 content list
+					62 container
+						63 text ✓ Revisar cobertura
+					64 container
+						65 text ○ Preparar marco de evaluación
+					66 container
+						67 text ○ Evaluar alumnos
+					68 container
+						69 text ○ Conclusiones descriptivas
+					70 container
+						71 text ○ Consolidado
+					72 container
+						73 text ○ Informes familiares
+					74 container
+						75 text ○ Informe del aula
+					76 container
+						77 text ○ Cerrar período
+			78 button Revisar un niño
+			79 button Revisar aula
+			80 button Cobertura
+			81 button Informe de progreso
+			82 button Informe a familias
+			83 container
+				84 heading Niños, Value: 3
+					85 text Niños
+				86 button Joaquín Arce
+				87 button Hugo Benavides
+				88 button Alma Carrasco
+				89 button Omar Cárdenas
+				90 button Camila Huamán
+				91 button Kiara Ledesma
+				92 button Fabio Medina
+				93 button Diego Montalvo
+				94 button Elena Paredes
+				95 button Thiago Reátegui
+				96 button Gabriela Ríos
+				97 button Bruno Salcedo
+				98 button Valeria Soto
+				99 button Inés Ventura
+				100 button Mateo Villalba
+			101 heading Revisar a Joaquín Arce, Value: 3
+				102 text Revisar a Joaquín Arce
+			103 text Elige una competencia y revisa sus evidencias del período.
+			104 text Aún no hay competencias previstas para este período. Revisa las actividades o añade una competencia en “Revisar aula”.
+
+The focused UI element is 1 AXWebArea Ayni Aula | Asistente CNEB, URL: localhost:5175/

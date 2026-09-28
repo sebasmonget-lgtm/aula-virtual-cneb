@@ -1,0 +1,44 @@
+{
+  "id": "escuela_bienvenida_aula_01",
+  "file": "escuela/escuela_bienvenida_aula_01.jpg",
+  "master": "masters/escuela_bienvenida_aula_01.png",
+  "title": "Rosa recibe a los niños en el aula",
+  "category": "escuela",
+  "subcategory": "aula",
+  "characters": [
+    "maestra_rosa",
+    "leo",
+    "luna"
+  ],
+  "concepts": [
+    "escuela",
+    "bienvenida",
+    "aula"
+  ],
+  "actions": [
+    "saludar",
+    "entrar"
+  ],
+  "objects": [
+    "puerta",
+    "mochilas"
+  ],
+  "contexts": [
+    "proyecto",
+    "plan_anual",
+    "portada",
+    "escuela",
+    "aula"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "orientation": "landscape",
+  "aspect_ratio": "3:2",
+  "has_text": false,
+  "country_context": "PE",
+  "variant": 1,
+  "priority": 10
+}

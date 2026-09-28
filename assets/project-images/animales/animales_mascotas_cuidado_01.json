@@ -1,0 +1,44 @@
+{
+  "id": "animales_mascotas_cuidado_01",
+  "file": "animales/animales_mascotas_cuidado_01.jpg",
+  "master": "masters/animales_mascotas_cuidado_01.png",
+  "title": "Luna cuida a una mascota",
+  "category": "animales",
+  "subcategory": "mascotas",
+  "characters": [
+    "luna"
+  ],
+  "concepts": [
+    "mascotas",
+    "animales",
+    "cuidado",
+    "agua"
+  ],
+  "actions": [
+    "cuidar",
+    "observar"
+  ],
+  "objects": [
+    "perro",
+    "cuenco",
+    "agua"
+  ],
+  "contexts": [
+    "proyecto",
+    "plan_anual",
+    "portada",
+    "animales",
+    "mascotas"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "orientation": "landscape",
+  "aspect_ratio": "3:2",
+  "has_text": false,
+  "country_context": "PE",
+  "variant": 1,
+  "priority": 10
+}

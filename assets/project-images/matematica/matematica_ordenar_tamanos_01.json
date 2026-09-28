@@ -1,0 +1,42 @@
+{
+  "id": "matematica_ordenar_tamanos_01",
+  "file": "matematica/matematica_ordenar_tamanos_01.jpg",
+  "master": "masters/matematica_ordenar_tamanos_01.png",
+  "title": "Sofía ordena objetos por tamaño",
+  "category": "matematica",
+  "subcategory": "tamanos",
+  "characters": [
+    "sofia"
+  ],
+  "concepts": [
+    "matemática",
+    "tamaños",
+    "orden"
+  ],
+  "actions": [
+    "ordenar",
+    "comparar"
+  ],
+  "objects": [
+    "macetas",
+    "plantas"
+  ],
+  "contexts": [
+    "proyecto",
+    "plan_anual",
+    "portada",
+    "matematica",
+    "tamanos"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "orientation": "landscape",
+  "aspect_ratio": "3:2",
+  "has_text": false,
+  "country_context": "PE",
+  "variant": 1,
+  "priority": 10
+}

@@ -33,4 +33,15 @@ test("el informe unificado conserva nombres autorizados, evidencia factual e inf
   for (const value of ["Ana Pérez", "Luis Rojas", "En el aula:", "Eligió materiales", "Retomar Construye su identidad", "Información insuficiente", "UGEL 03"])
     assert.match(xml, new RegExp(value));
   assert.doesNotMatch(xml, /\{\{|SEGUIMIENTO_2|SEGUIMIENTO_3|EVID_RELIGION|EVID_CASTELLANO_L2/);
+  assert.match(xml, /2 comentarios individuales confirmados por la docente/);
+  const optional = structuredClone(document);
+  for (const child of optional.content.report_snapshot.children) { child.teacher_comment = ""; child.review_id = null; child.information_status = "insufficient_information"; }
+  const optionalZip = await JSZip.loadAsync(await renderDiagnosticUnifiedWord(optional, context, [{ id: "PS_IDENTIDAD", name: "Construye su identidad" }]));
+  const optionalXml = await optionalZip.file("word/document.xml").async("string");
+  assert.match(optionalXml, /0 comentarios individuales confirmados por la docente/);
+  assert.match(optionalXml, /Sin comentarios individuales registrados/);
+  assert.match(optionalXml, /Ana Pérez/);
+  assert.match(optionalXml, /Luis Rojas/);
+  assert.match(optionalXml, /Eligió materiales/);
+  assert.doesNotMatch(optionalXml, /2 comentarios individuales confirmados|Ana explicó cómo organizó/);
 });

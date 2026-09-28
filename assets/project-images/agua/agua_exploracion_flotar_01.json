@@ -1,0 +1,46 @@
+{
+  "id": "agua_exploracion_flotar_01",
+  "file": "agua/agua_exploracion_flotar_01.jpg",
+  "master": "masters/agua_exploracion_flotar_01.png",
+  "title": "Leo y Luna exploran qué flota",
+  "category": "agua",
+  "subcategory": "experimentos",
+  "characters": [
+    "leo",
+    "luna"
+  ],
+  "concepts": [
+    "agua",
+    "flotar",
+    "hundirse",
+    "indagación"
+  ],
+  "actions": [
+    "explorar",
+    "observar",
+    "comparar"
+  ],
+  "objects": [
+    "tina",
+    "barco",
+    "piedra"
+  ],
+  "contexts": [
+    "proyecto",
+    "plan_anual",
+    "portada",
+    "agua",
+    "experimentos"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "orientation": "landscape",
+  "aspect_ratio": "3:2",
+  "has_text": false,
+  "country_context": "PE",
+  "variant": 1,
+  "priority": 10
+}

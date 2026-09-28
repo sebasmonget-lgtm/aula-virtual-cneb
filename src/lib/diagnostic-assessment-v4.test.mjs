@@ -95,18 +95,21 @@ test("información insuficiente es explícita y la ausencia de registro no crea 
   } finally { await db.close(); }
 });
 
-test("vista grupal usa solo síntesis confirmadas; prioridades docentes llegan al plan", async () => {
+test("vista grupal admite observaciones sin comentarios; prioridades docentes llegan al plan", async () => {
   const db = await database();
   try {
     const workspace = await classroom(db, teacher, "A");
     const studentId = workspace.students[0].id;
     const competencyId = workspace.experiences[0].aspects[0].competency_id;
     await observe(db, teacher, workspace, studentId);
-    await assert.rejects(prepareDiagnosticGroupReview(db, teacher), { reason: "no_confirmations" });
+    const optionalGroup = await prepareDiagnosticGroupReview(db, teacher);
+    assert.equal(optionalGroup.status, "draft");
+    assert.equal((await db.query("select count(*)::int as n from diagnostic_student_reviews")).rows[0].n, 0);
     const individual = await prepareDiagnosticSynthesis(db, teacher, { studentId, competencyId });
     await saveDiagnosticSynthesis(db, teacher, individual.id, { information_status: "information_available", summary_text: "Eligió y explicó el juego.", next_observation: "" });
     await confirmDiagnosticSynthesis(db, teacher, individual.id);
     const group = await prepareDiagnosticGroupReview(db, teacher);
+    assert.equal(group.id, optionalGroup.id);
     await saveDiagnosticGroupReview(db, teacher, group.id, { strengths: "Interés por el juego.", needs: "Ofrecer más oportunidades de conversación.", planning_priorities: "Proponer juego compartido.",
       competency_priorities: [{ competency_id: competencyId, emphasis: "observe_more", reason: "Conviene recoger actuaciones en otros juegos." }] });
     const secondStudent = workspace.students[1].id;
@@ -119,6 +122,9 @@ test("vista grupal usa solo síntesis confirmadas; prioridades docentes llegan a
     assert.equal((await prepareDiagnosticGroupReview(db, teacher)).id, group.id);
     const confirmed = await confirmDiagnosticGroupReview(db, teacher, group.id);
     assert.equal(confirmed.status, "confirmed");
+    assert.equal(confirmed.details.document_format, "diagnostic-unified-v1");
+    assert.equal(confirmed.details.report_snapshot.children.length, 2);
+    assert.ok(confirmed.details.report_snapshot.children.every((child) => child.review_id === null && child.teacher_comment === ""));
     assert.equal((await diagnosticProgressForTeacher(db, teacher)).reviewed, true);
     await assert.rejects(saveDiagnosticGroupReview(db, teacher, group.id, confirmed.details), { reason: "not_editable" });
     const review = await loadDiagnosticAssessmentWorkspace(db, teacher);

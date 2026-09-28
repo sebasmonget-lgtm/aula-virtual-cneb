@@ -1,9 +1,12 @@
 import { randomUUID } from "node:crypto";
+import { isDeepStrictEqual } from "node:util";
+import { versionTransaction } from "./version-integrity.mjs";
 import { loadKnowledgeBaseV4 } from "./knowledge-base-v4.mjs";
 import { cardIsApplicable } from "./ai-context-builder-v4.mjs";
 import { competencyApplicability } from "./competency-applicability.mjs";
-import { neutralizeAssessmentText } from "./assessment-v4-service.mjs";
 import { buildClassifierOptions } from "./openai-competency-classifier.mjs";
+import { anonymousDecisionText } from "./jev-competency-suggestion.mjs";
+import { observationRecommendationState } from "./observation-recommendation.mjs";
 import { familyInterviewCategories, familyInterviewStructuredOptionsVersion, interviewLanguageOptions, interviewInterestOptions, interviewPreviousEducationOptions, interviewPreviousEducationTypeOptions } from "./family-interview-contract.mjs";
 
 export class DiagnosticSourceError extends Error {
@@ -132,7 +135,8 @@ export async function listFamilyInterviewStatuses(db, teacherId) {
     group by s.id order by s.id`, [classroom.id])).rows;
   return { students: rows };
 }
-export async function saveFamilyInterview(db, teacherId, studentId, details) {
+const interviewVersionKey = (teacherId, studentId) => `family-interview:${teacherId}:${studentId}`;
+async function saveFamilyInterviewWithin(db, teacherId, studentId, details) {
   const classroom = await scope(db, teacherId);
   await studentInScope(db, classroom.id, studentId);
   const validated = validateFamilyInterviewDetails(details);
@@ -148,7 +152,7 @@ export async function saveFamilyInterview(db, teacherId, studentId, details) {
     values($1,$2,$3,$4,'draft',$5::jsonb,$6) returning *`, [randomUUID(), classroom.id, studentId, version, JSON.stringify(validated), teacherId]);
   return publicInterview(saved.rows[0]);
 }
-export async function confirmFamilyInterview(db, teacherId, studentId) {
+async function confirmFamilyInterviewWithin(db, teacherId, studentId) {
   const classroom = await scope(db, teacherId);
   await studentInScope(db, classroom.id, studentId);
   const draft = await interviewRow(db, classroom.id, studentId, "draft");
@@ -158,6 +162,29 @@ export async function confirmFamilyInterview(db, teacherId, studentId) {
     where id=$1 and classroom_id=$2 and created_by=$3 and status='draft' returning *`, [draft.id, classroom.id, teacherId]);
   if (!confirmed.rows.length) fail("not_editable", "La entrevista ya no es editable.");
   return publicInterview({ ...confirmed.rows[0], has_attachment: draft.has_attachment });
+}
+export async function saveFamilyInterview(db, teacherId, studentId, details) {
+  return versionTransaction(db, interviewVersionKey(teacherId, studentId),
+    (tx) => saveFamilyInterviewWithin(tx, teacherId, studentId, details));
+}
+export async function confirmFamilyInterview(db, teacherId, studentId) {
+  return versionTransaction(db, interviewVersionKey(teacherId, studentId),
+    (tx) => confirmFamilyInterviewWithin(tx, teacherId, studentId));
+}
+/** The teacher's Save action is the confirmation; no model evaluates family answers. */
+export async function saveAndConfirmFamilyInterview(db, teacherId, studentId, details) {
+  const validated = validateFamilyInterviewDetails(details);
+  if (!Object.keys(validated).length) fail("empty_interview", "Añade al menos una respuesta antes de guardar la entrevista.");
+  return versionTransaction(db, interviewVersionKey(teacherId, studentId), async (tx) => {
+    const classroom = await scope(tx, teacherId);
+    await studentInScope(tx, classroom.id, studentId);
+    const draft = await interviewRow(tx, classroom.id, studentId, "draft");
+    const confirmed = await interviewRow(tx, classroom.id, studentId, "confirmed");
+    if (!draft && confirmed && isDeepStrictEqual(validateFamilyInterviewDetails(confirmed.details), validated))
+      return publicInterview(confirmed);
+    await saveFamilyInterviewWithin(tx, teacherId, studentId, validated);
+    return confirmFamilyInterviewWithin(tx, teacherId, studentId);
+  });
 }
 export async function attachFamilyInterview(db, teacherId, studentId, storagePath, mimeType) {
   const classroom = await scope(db, teacherId);
@@ -255,41 +282,56 @@ export async function classifySpontaneousObservation(db, teacherId, id, classifi
   fail("classifier_unavailable", "El clasificador Jev no está disponible. La docente puede clasificar manualmente la observación.");
 }
 
-export async function markSpontaneousNeedsReview(db, teacherId, id) {
+export async function markSpontaneousNeedsReview(db, teacherId, id, reason = "unavailable") {
+  if (!["unavailable", "privacy_blocked", "missing_text"].includes(reason))
+    throw new TypeError("Estado de recomendación inválido.");
   const classroom = await scope(db, teacherId);
   await db.query(`update diagnostic_spontaneous_observations set classification_status='needs_review',
-    classification_reason='Clasificador no disponible o respuesta inválida'
+    classification_reason=$4
     where id=$1 and classroom_id=$2 and created_by=$3 and classification_source is distinct from 'teacher'
-      and classification_status='pending'`, [id,classroom.id,teacherId]);
+      and classification_status in ('pending','needs_review')`, [id,classroom.id,teacherId,reason]);
 }
 
-export async function suggestSpontaneousCompetencies(db, teacherId, id, classifier) {
+export async function suggestSpontaneousCompetencies(db, teacherId, id, classifier, { allowReview = false } = {}) {
   const classroom = await scope(db, teacherId);
   const observation = (await db.query(`select * from diagnostic_spontaneous_observations
     where id=$1 and classroom_id=$2 and created_by=$3`, [id,classroom.id,teacherId])).rows[0];
   if (!observation) fail("not_found", "Observación no encontrada.");
-  if (observation.classification_source === "teacher") return { id, status: "teacher_preserved" };
-  if (observation.classification_status !== "pending") return { id, status: observation.classification_status };
+  if (observation.classification_source === "teacher") return { id, status: "teacher_preserved",
+    recommendation_state: observationRecommendationState(observation) };
+  if (observation.classification_status !== "pending" &&
+      !(allowReview && observation.classification_status === "needs_review"))
+    return { id, status: observation.classification_status, recommendation_state: observationRecommendationState(observation) };
   if (!observation.observation_text?.trim()) {
-    await markSpontaneousNeedsReview(db, teacherId, id);
-    return { id, status: "needs_review" };
+    await markSpontaneousNeedsReview(db, teacherId, id, "missing_text");
+    return { id, status: "needs_review", recommendation_state: "missing_text" };
   }
   const applicable = await applicableDiagnosticCompetencies(classroom);
   const options = buildClassifierOptions((await loadKnowledgeBaseV4()).competencyCards,
     classroom.age_years, applicable.map((item) => item.id));
   const names = (await db.query(`select first_name,last_name,preferred_name from students where classroom_id=$1`, [classroom.id])).rows
     .flatMap((row) => [row.first_name, row.last_name, row.preferred_name]).filter(Boolean);
-  const decision = await classifier.classify({ observation: neutralizeAssessmentText(observation.observation_text, names),
-    context: observation.context_label, age: classroom.age_years, options });
+  const anonymousText = anonymousDecisionText(observation.observation_text, names);
+  if (!anonymousText) {
+    await markSpontaneousNeedsReview(db, teacherId, id, "privacy_blocked");
+    return { id, status: "needs_review", recommendation_state: "privacy_blocked" };
+  }
+  const decision = await classifier.classify({ observation: anonymousText,
+    context: anonymousDecisionText(observation.context_label, names) ?? "", age: classroom.age_years, options });
   const allowed = new Set(options.map((item) => item.id));
   const candidateIds = decision?.candidate_ids;
   if (!Array.isArray(candidateIds) || candidateIds.length > 4 || candidateIds.some((item) => !allowed.has(item)))
     fail("invalid_classification", "El clasificador devolvió competencias inválidas.");
   const updated = await db.query(`update diagnostic_spontaneous_observations set classification_status='needs_review',
-    classification_source='openai',suggested_competency_v4_ids=$1::text[],classified_at=now()
-    where id=$2 and classroom_id=$3 and created_by=$4 and classification_source is distinct from 'teacher'
-      and classification_status='pending' returning id`, [[...new Set(candidateIds)],id,classroom.id,teacherId]);
-  return { id, status: updated.rows.length ? "needs_review" : "teacher_preserved" };
+    classification_source=$2,suggested_competency_v4_ids=$1::text[],classification_reason=null,classified_at=now()
+    where id=$3 and classroom_id=$4 and created_by=$5 and classification_source is distinct from 'teacher'
+      and classification_status=$6 returning id`, [[...new Set(candidateIds)],decision?.source === "jev" ? "jev" : "openai",
+      id,classroom.id,teacherId,observation.classification_status]);
+  return { id, status: updated.rows.length ? "needs_review" : "teacher_preserved",
+    recommendation_state: updated.rows.length ? (candidateIds.length ? "suggested" : "insufficient_information")
+      : observationRecommendationState((await db.query(`select classification_source,classification_status,
+        competency_v4_ids,suggested_competency_v4_ids,classification_reason from diagnostic_spontaneous_observations
+        where id=$1 and classroom_id=$2 and created_by=$3`, [id,classroom.id,teacherId])).rows[0] ?? {}) };
 }
 
 export async function correctSpontaneousClassification(db, teacherId, id, competencyIds) {
@@ -313,8 +355,12 @@ export async function loadSpontaneousObservations(db, teacherId) {
   const classroom = await scope(db, teacherId);
   const observations = (await db.query(`select o.id,o.student_id,o.context_label,o.observation_text,o.support_status,
     o.observed_at,o.classification_status,o.classification_source,o.competency_v4_id,o.secondary_competency_v4_id,
-    o.competency_v4_ids,o.suggested_competency_v4_ids,o.media_path is not null as has_media,o.media_mime_type
+    o.competency_v4_ids,o.suggested_competency_v4_ids,o.classification_reason,o.media_path is not null as has_media,o.media_mime_type
     from diagnostic_spontaneous_observations o join students s on s.id=o.student_id and s.classroom_id=o.classroom_id
     where o.classroom_id=$1 and s.status='active' order by o.observed_at desc,o.id desc`, [classroom.id])).rows;
-  return { observations, competencies: await applicableDiagnosticCompetencies(classroom) };
+  return { observations: observations.map((row) => {
+    const publicRow = { ...row };
+    delete publicRow.classification_reason;
+    return { ...publicRow, recommendation_state: observationRecommendationState(row) };
+  }), competencies: await applicableDiagnosticCompetencies(classroom) };
 }

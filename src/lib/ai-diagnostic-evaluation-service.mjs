@@ -51,12 +51,14 @@ export async function suggestDiagnosticGroupReview(db, teacherId, draftId, {
     const plan = resolvePlan({ workflow: "diagnostic_group_synthesis", task: "generation" });
     const provider = createProvider(plan, { timeoutMs: 120_000 });
     const bundle = { workflow: "diagnostic_group_synthesis", context: { age: sources.age, student_count: sources.student_count,
-      confirmed_teacher_comments: sources.comments }, curriculum: { competency_cards: sources.competency_options ?? [] },
-      constraints: { must: ["Basar cada afirmación en comentarios docentes confirmados.", "Expresar necesidades como oportunidades pedagógicas.",
-        "Redactar una visión breve del grupo, sin priorizar competencias todavía.", "No convertir ausencia de registro en dificultad."],
+      confirmed_teacher_comments: sources.comments, observed_records: sources.observed_records ?? [] }, curriculum: { competency_cards: sources.competency_options ?? [] },
+      constraints: { must: ["Basar cada afirmación en registros observados anonimizados y comentarios docentes confirmados disponibles.", "Los comentarios individuales son opcionales; no suponer que su ausencia indica dificultad.", "Expresar necesidades como oportunidades pedagógicas.",
+        "Redactar una visión breve del grupo, sin priorizar competencias todavía.", "No convertir ausencia de registro en dificultad.",
+        "Cada alias niño_N representa a un niño distinto; sus comentarios y notas no son niños adicionales.",
+        "Los registros son una selección reciente y pueden estar truncados. No completar lo que falte ni afirmar cobertura de todo el aula."],
         must_not: ["Inventar observaciones o niveles de logro.", "Nombrar o identificar a niños y familias.",
           "Concluir que todos los niños necesitan el mismo apoyo por una prioridad grupal."] },
-      provenance: { source_type: "confirmed_diagnostic_student_reviews", source_count: sources.comments.length } };
+      provenance: { source_type: "diagnostic_facts_and_optional_confirmed_comments", source_count: sources.comments.length + (sources.observed_records?.length ?? 0) } };
     const request = buildProviderRequest("diagnostic_group_synthesis", bundle, plan, OUTPUT_SCHEMA, await loadSkill());
     const response = await provider.generate(request);
     const details = validateSuggestion(response.output, sources.known_names);

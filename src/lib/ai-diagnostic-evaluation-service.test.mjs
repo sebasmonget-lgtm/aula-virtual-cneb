@@ -77,3 +77,42 @@ test("rechaza salida incompleta, niveles y fuentes que cambian durante la llamad
   await assert.rejects(run({ strengths: "Jugó.", needs: "Conversar.", planning_priorities: "Juegos." },
     async () => ++calls === 1 ? source : { ...source, source_snapshot: [{ id: "a", fingerprint: "dos" }] }), { reason: "stale_sources" });
 });
+
+test("Ayni puede proponer el resumen desde hechos anónimos sin comentarios individuales", async () => {
+  const db = await database();
+  try {
+    await createPilotClassroom(db, teacher, { teacherName: "Docente", institutionName: "Escuela", section: "A",
+      age: 5, year: 2026, startsOn: "2026-03-01", endsOn: "2026-12-18", castellanoL2Applicable: false, religionApplicable: false });
+    await importStudentsForTeacher(db, teacher, [{ firstName: "Ana", lastName: "Prueba" }]);
+    const workspace = await loadDiagnosticExperienceWorkspace(db, teacher);
+    const group = await prepareDiagnosticGroupReview(db, teacher);
+    let calls = 0;
+    const createProvider = () => ({ generate: async (request) => {
+      calls++;
+      const bundle = request.ai_context_bundle;
+      assert.deepEqual(bundle.context.confirmed_teacher_comments, []);
+      assert.equal(bundle.context.observed_records.length, 1);
+      assert.equal(bundle.context.observed_records[0].child, "niño_1");
+      assert.equal(bundle.context.observed_records[0].notes.length, 1);
+      assert.match(bundle.context.observed_records[0].notes[0].text, /eligió bloques/i);
+      assert.doesNotMatch(JSON.stringify(bundle), /\bAna\b|Prueba|student_id|teacher_id|domicilio|77777777/);
+      return { output: { strengths: "Hay un registro de elección de materiales.", needs: "Seguir recogiendo observaciones.", planning_priorities: "Ofrecer juegos con materiales variados." } };
+    } });
+    await assert.rejects(suggestDiagnosticGroupReview(db, teacher, group.id, { createProvider }), { reason: "insufficient_information" });
+    assert.equal(calls, 0);
+    await recordDiagnosticExperienceObservation(db, teacher, { studentId: workspace.students[0].id,
+      experienceId: workspace.experiences[0].id, aspectId: workspace.experiences[0].aspects[0].id,
+      observationStatus: "observed_without_judgment", observationText: "Ana eligió bloques y explicó su elección." });
+    await recordDiagnosticExperienceObservation(db, teacher, { studentId: workspace.students[0].id,
+      experienceId: workspace.experiences[0].id, aspectId: workspace.experiences[0].aspects[1].id,
+      observationStatus: "observed_without_judgment", observationText: "Su familia contó su domicilio y teléfono 77777777." });
+    await prepareDiagnosticGroupReview(db, teacher);
+    const result = await suggestDiagnosticGroupReview(db, teacher, group.id, { createProvider });
+    assert.equal(calls, 1);
+    assert.equal(result.details.strengths, "Hay un registro de elección de materiales.");
+    assert.equal((await db.query("select count(*)::int as n from diagnostic_student_reviews")).rows[0].n, 0);
+    const saved = (await db.query("select status,details from diagnostic_group_reviews where id=$1", [group.id])).rows[0];
+    assert.equal(saved.status, "draft");
+    assert.equal(saved.details.strengths, "");
+  } finally { await db.close(); }
+});

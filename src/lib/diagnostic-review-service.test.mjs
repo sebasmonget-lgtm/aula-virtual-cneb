@@ -87,7 +87,8 @@ test("el avance visible cuenta niños distintos y solo confirma Resumir con revi
     await saveDiagnosticStudentReview(db, teacher, synthesis.id, { information_status: "information_available",
       comment_text: "Eligió un juego y explicó su elección; seguiré observando cómo participa con otros." });
     await confirmDiagnosticStudentReview(db, teacher, synthesis.id);
-    await assert.rejects(prepareDiagnosticGroupReview(db, teacher), { reason: "incomplete_children" });
+    assert.equal((await prepareDiagnosticGroupReview(db, teacher)).status, "draft");
+    assert.deepEqual(await diagnosticStepProgressForTeacher(db, teacher), { observed_student_count: 2, group_review_confirmed: false });
     const second = await prepareDiagnosticStudentReview(db, teacher, workspace.students[1].id);
     await saveDiagnosticStudentReview(db, teacher, second.id, { information_status: "information_available",
       comment_text: "Durante el juego libre contó los bloques y pidió otro." });

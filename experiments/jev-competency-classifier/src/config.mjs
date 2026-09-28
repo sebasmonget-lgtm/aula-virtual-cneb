@@ -7,6 +7,6 @@ export async function loadJsonConfig(name) {
 }
 
 export async function loadExperimentConfig() {
-  const [classifier, pricing] = await Promise.all([loadJsonConfig("classifier.json"), loadJsonConfig("pricing.json")]);
-  return { classifier, pricing };
+  const [classifier, pricing, openrouterPricing] = await Promise.all([loadJsonConfig("classifier.json"), loadJsonConfig("pricing.json"), loadJsonConfig("pricing-openrouter.json")]);
+  return { classifier, pricing, openrouterPricing };
 }

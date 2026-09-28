@@ -1,0 +1,43 @@
+{
+  "id": "arte_musica_instrumentos_01",
+  "file": "arte_musica/arte_musica_instrumentos_01.jpg",
+  "master": "masters/arte_musica_instrumentos_01.png",
+  "title": "Leo y Mateo hacen música",
+  "category": "arte_musica",
+  "subcategory": "musica",
+  "characters": [
+    "leo",
+    "mateo"
+  ],
+  "concepts": [
+    "música",
+    "instrumentos",
+    "ritmo"
+  ],
+  "actions": [
+    "tocar",
+    "escuchar"
+  ],
+  "objects": [
+    "tambor",
+    "maracas"
+  ],
+  "contexts": [
+    "proyecto",
+    "plan_anual",
+    "portada",
+    "arte_musica",
+    "musica"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "orientation": "landscape",
+  "aspect_ratio": "3:2",
+  "has_text": false,
+  "country_context": "PE",
+  "variant": 1,
+  "priority": 10
+}

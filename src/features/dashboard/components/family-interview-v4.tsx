@@ -1,18 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, Printer, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { attachFamilyInterview, confirmFamilyInterview, familyInterviewAttachmentUrl,
+import { attachFamilyInterview, saveAndConfirmFamilyInterview, familyInterviewAttachmentUrl,
   loadFamilyInterview, loadFamilyInterviewStatuses, loadStudentPedagogicalProfile, saveFamilyInterview,
-  type FamilyInterview, type FamilyInterviewDetails, type FamilyInterviewAnswerKey, type FamilyInterviewStatus } from "@/src/lib/local-database";
+  type FamilyInterview, type FamilyInterviewDetails,
+  type FamilyInterviewAnswerKey, type FamilyInterviewStatus } from "@/src/lib/local-database";
 import { AsyncButton, LoadingState } from "./workflow-ui";
+import { InterviewAudioRecorder } from "./interview-audio-recorder";
 import { buildFamilyInterviewPrintHtml } from "@/src/lib/family-interview-print.mjs";
 import { familyInterviewQuestionGroups, interviewLanguageOptions, interviewInterestOptions, interviewPreviousEducationOptions, interviewPreviousEducationTypeOptions } from "@/src/lib/family-interview-contract.mjs";
 import { familyContextLabels } from "@/src/lib/local-database";
+import { displayPersonName } from "@/src/lib/person-name.mjs";
 
 type Question = { key: FamilyInterviewAnswerKey; label: string; hint?: string; placeholder: string };
+
 export function useFamilyInterviewStatusMap(refreshKey: string, enabled = true) {
   const [statuses, setStatuses] = useState<Record<string, FamilyInterviewStatus>>({});
   const [error, setError] = useState("");
@@ -45,15 +49,20 @@ function printInterview(name: string, details: FamilyInterviewDetails, context?:
   return true;
 }
 
-export function FamilyInterviewEditor({ studentId, studentName, onBack, printContext }: { studentId: string; studentName: string; onBack?: () => void; printContext?: { institution?: string; classroom?: string } }) {
+export function FamilyInterviewEditor({ studentId, studentName: rawStudentName, onBack, onSaved, printContext }: { studentId: string; studentName: string; onBack?: () => void; onSaved?: (interview: FamilyInterview) => void; printContext?: { institution?: string; classroom?: string } }) {
+  const studentName = displayPersonName(rawStudentName);
   const [draft, setDraft] = useState<FamilyInterview | null>(null);
   const [confirmed, setConfirmed] = useState<FamilyInterview | null>(null);
   const [details, setDetails] = useState<FamilyInterviewDetails>({});
+  const detailsRef = useRef(details);
+  useEffect(() => { detailsRef.current = details; }, [details]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [creatingVersion, setCreatingVersion] = useState(false);
+  const [activeAudioKeys, setActiveAudioKeys] = useState<string[]>([]);
+  const audioBusy = activeAudioKeys.length > 0;
   const readOnly = Boolean(confirmed && !draft && !creatingVersion);
 
   useEffect(() => {
@@ -71,8 +80,10 @@ export function FamilyInterviewEditor({ studentId, studentName, onBack, printCon
     finally { setBusy(false); }
   }
   async function save() {
-    const result = await saveFamilyInterview(studentId, details);
-    setDraft(result); setCreatingVersion(false); setDetails(result.details); setMessage("Entrevista guardada. Puedes continuar después.");
+    if (audioBusy) return;
+    const result = await saveAndConfirmFamilyInterview(studentId, details);
+    setConfirmed(result); setDraft(null); setCreatingVersion(false); setDetails(result.details); setMessage("Entrevista guardada.");
+    onSaved?.(result); onBack?.();
   }
   async function attach(file: File) {
     if (!draft && !confirmed) { setError("Guarda primero la entrevista antes de adjuntar el papel."); return; }
@@ -91,7 +102,7 @@ export function FamilyInterviewEditor({ studentId, studentName, onBack, printCon
   function questionField(question: Question) {
     const tags = question.key === "language_context" ? { field: "language_tags" as const, options: interviewLanguageOptions }
       : question.key === "interests" ? { field: "interest_tags" as const, options: interviewInterestOptions } : null;
-    return <div key={question.key} className="space-y-3"><p className="text-sm font-semibold">{question.label}{question.hint && <span className="block font-normal text-[#526b87]">{question.hint}</span>}</p>
+    return <div key={question.key} className="space-y-3"><p id={`interview-question-${question.key}`} className="text-base font-bold leading-snug text-[#19345b] sm:text-lg">{question.label}{question.hint && <span className="mt-1 block text-sm font-normal text-[#526b87]">{question.hint}</span>}</p>
       {tags && <fieldset><legend className="text-xs font-semibold text-[#526b87]">{question.key === "language_context" ? "Lenguas que usa o escucha (puedes elegir varias)" : "¿Qué temas le interesan? (puedes elegir varios)"}</legend><div className="mt-2 flex flex-wrap gap-2">{tags.options.map((option) => { const selected = (details[tags.field] ?? []).includes(option.id); return <button key={option.id} type="button" disabled={readOnly} aria-pressed={selected} onClick={() => setDetails((current) => {
         const wasSelected = (current[tags.field] ?? []).includes(option.id);
         const next = wasSelected ? (current[tags.field] ?? []).filter((id) => id !== option.id) : [...(current[tags.field] ?? []), option.id];
@@ -107,21 +118,33 @@ export function FamilyInterviewEditor({ studentId, studentName, onBack, printCon
         return { ...current, previous_education_status: next, previous_education_type: next === "yes" ? current.previous_education_type : undefined };
       })} className={`min-h-10 rounded-full border px-3 text-sm ${details.previous_education_status === option.id ? "border-[#087d96] bg-[#e4f7f9] text-[#075a6d]" : "border-[#d7e4ed] bg-white text-[#526b87]"}`}>{option.label}</button>)}</div></fieldset>}
       {question.key === "previous_education" && details.previous_education_status === "yes" && <label className="block text-xs font-semibold text-[#526b87]">¿En qué espacio? (opcional)<select disabled={readOnly} className="mt-2 min-h-11 w-full rounded-xl border border-[#d7e4ed] bg-white px-3 text-sm" value={details.previous_education_type ?? ""} onChange={(event) => setDetails((current) => ({ ...current, previous_education_type: event.target.value as FamilyInterviewDetails["previous_education_type"] || undefined }))}><option value="">Sin precisar</option>{interviewPreviousEducationTypeOptions.map((option) => <option key={option.id} value={option.id}>{option.label}</option>)}</select></label>}
-      <label className="block text-xs font-semibold text-[#526b87]">{tags || question.key === "previous_education" ? "Comentario de la familia (opcional)" : "Respuesta de la familia"}<Textarea className="mt-2 min-h-24 bg-white text-base placeholder:italic placeholder:text-slate-400" disabled={readOnly} maxLength={2000} placeholder={readOnly ? undefined : question.placeholder} value={details[question.key] ?? ""} onChange={(event) => setDetails((current) => ({ ...current, [question.key]: event.target.value }))} /></label>
+      <label className="block text-xs font-semibold text-[#526b87]">{tags || question.key === "previous_education" ? "Comentario de la familia (opcional)" : "Respuesta de la familia"}<Textarea aria-describedby={`interview-question-${question.key}`} className="mt-2 min-h-24 bg-white text-base placeholder:italic placeholder:text-slate-400" disabled={readOnly} maxLength={2000} placeholder={readOnly ? undefined : question.placeholder} value={details[question.key] ?? ""} onChange={(event) => setDetails((current) => ({ ...current, [question.key]: event.target.value }))} /></label>
+      {!readOnly && <InterviewAudioRecorder studentId={studentId} question={question.label} currentText={details[question.key] ?? ""} onBusyChange={(active) => setActiveAudioKeys((current) => {
+        if (current.includes(question.key) === active) return current;
+        return active ? [...current, question.key] : current.filter((key) => key !== question.key);
+      })} onTranscribed={async (text, saveNow) => {
+        const updated = { ...detailsRef.current, [question.key]: text };
+        detailsRef.current = updated; setDetails(updated);
+        if (saveNow) {
+          setBusy(true);
+          try { const result = await saveFamilyInterview(studentId, updated); setDraft(result); setCreatingVersion(false); setMessage("Respuesta guardada."); }
+          catch { setError("La respuesta está en el cuadro de texto, pero no se pudo guardar. Pulsa «Guardar entrevista» para intentarlo de nuevo."); }
+          finally { setBusy(false); }
+        }
+      }} />}
     </div>;
   }
 
   if (loading) return <LoadingState label="Abriendo entrevista..." />;
   return <section className="diagnostic-panel space-y-4 p-4 md:p-7">
-    {onBack && <Button variant="outline" className="diagnostic-back-button" onClick={onBack}><ArrowLeft /> Volver a los niños</Button>}
+    {onBack && <Button variant="outline" className="diagnostic-back-button" disabled={busy || audioBusy} onClick={onBack}><ArrowLeft /> Volver</Button>}
     <div><p className="text-sm font-semibold text-[#087d96]">Conocer al niño y su familia</p><h2 className="text-2xl font-extrabold">Conozcamos mejor a {studentName}</h2><p className="mt-1 text-sm text-[#526b87]">Esta información nos ayudará a acompañarlo/a durante sus primeras semanas y durante el año. Responde solo lo que consideres útil. Puedes dejar preguntas sin responder.</p><p className="mt-2 text-xs text-[#526b87]">Lo que comparte la familia es contexto para acompañar; no se considera una observación de competencia realizada por la docente.</p></div>
     {confirmed && <p className="rounded-xl bg-[#e5f8ed] p-3 text-sm">Entrevista confirmada · versión {confirmed.version}. {readOnly ? "Puedes corregir sus respuestas cuando lo necesites; la versión anterior se conservará." : draft ? "Hay una corrección en borrador; la versión anterior se conserva." : "Corrige las respuestas y guárdalas como una nueva versión."}</p>}
-    {familyInterviewQuestionGroups(studentName).map((group, index) => <details key={group.title} open={index === 0 ? true : undefined} className="rounded-xl border bg-white p-4"><summary className="cursor-pointer text-base font-bold">{group.title} <span className="font-normal text-[#526b87]">· {group.questions.length} preguntas opcionales</span></summary><div className="mt-4 grid gap-4 md:grid-cols-2">{group.questions.map((question) => questionField(question as Question))}</div></details>)}
+    <fieldset disabled={busy} className="space-y-4"><legend className="sr-only">Respuestas de la entrevista familiar</legend>{familyInterviewQuestionGroups(studentName).map((group, index) => <section key={group.title} aria-labelledby={`interview-group-${index}`} className="rounded-xl border bg-white p-4"><h3 id={`interview-group-${index}`} className="text-base font-bold">{group.title} <span className="font-normal text-[#526b87]">· {group.questions.length} preguntas opcionales</span></h3><div className="mt-5 max-w-3xl space-y-7">{group.questions.map((question) => questionField(question as Question))}</div></section>)}</fieldset>
     <div className="space-y-3 print:hidden">
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-        {readOnly ? <Button className="min-h-11 w-full sm:w-auto" onClick={() => setCreatingVersion(true)}>Corregir entrevista</Button> : <AsyncButton className="min-h-11 w-full sm:w-auto" busy={busy} busyLabel="Guardando..." onClick={() => void run(save)}><Save /> {creatingVersion ? "Guardar corrección" : "Guardar y continuar después"}</AsyncButton>}
-        {!readOnly && <AsyncButton variant="outline" className="min-h-11 w-full sm:w-auto" busy={busy} busyLabel="Procesando..." disabled={!draft || JSON.stringify(details) !== JSON.stringify(draft.details)} onClick={() => void run(async () => { const result = await confirmFamilyInterview(studentId); setConfirmed(result); setDraft(null); setMessage("Entrevista confirmada."); })}>Confirmar entrevista</AsyncButton>}
-        {creatingVersion && <Button variant="outline" className="min-h-11 w-full sm:w-auto" onClick={() => { setCreatingVersion(false); setDetails(confirmed?.details ?? {}); }}>Cancelar cambios</Button>}
+        {readOnly ? <Button className="min-h-11 w-full sm:w-auto" onClick={() => setCreatingVersion(true)}>Corregir entrevista</Button> : <AsyncButton className="min-h-11 w-full sm:w-auto" busy={busy} busyLabel="Guardando..." disabled={audioBusy} onClick={() => void run(save)}><Save /> {creatingVersion ? "Guardar corrección" : "Guardar entrevista"}</AsyncButton>}
+        {creatingVersion && <Button variant="outline" className="min-h-11 w-full sm:w-auto" disabled={busy || audioBusy} onClick={() => { setCreatingVersion(false); setDetails(confirmed?.details ?? {}); }}>Cancelar cambios</Button>}
       </div>
       <Button variant="ghost" className="min-h-11 w-full sm:w-auto" onClick={() => { if (!printInterview(studentName, details, printContext)) setError("El navegador bloqueó la hoja para imprimir. Permite ventanas emergentes para Ayni y vuelve a intentarlo."); }}><Printer /> Imprimir para papel</Button>
     </div>

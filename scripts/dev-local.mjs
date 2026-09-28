@@ -1,6 +1,8 @@
 import { spawn } from "node:child_process";
 
-const database = spawn(process.execPath, ["--env-file-if-exists=.env.local", "scripts/local-db-server.mjs"], { stdio: "inherit" });
+// Local-only bridge: reuse the ignored OpenRouter key from the Jev experiment without copying it into source.
+const database = spawn(process.execPath, ["--env-file-if-exists=experiments/jev-competency-classifier/.env.local",
+  "--env-file-if-exists=.env.local", "scripts/local-db-server.mjs"], { stdio: "inherit" });
 const web = spawn(process.execPath, ["scripts/run-framework.mjs", "dev", "--host", "127.0.0.1"], { stdio: "inherit" });
 const children = [database, web];
 

@@ -1,0 +1,20 @@
+{
+  "id": "naturaleza_plantas_germinacion_01",
+  "file": "naturaleza/plantas_germinacion_01.jpg",
+  "master": "masters/naturaleza_plantas_germinacion_01.png",
+  "title": "Luna observa cómo germina una semilla",
+  "category": "naturaleza",
+  "subcategory": "plantas",
+  "characters": ["luna"],
+  "concepts": ["plantas", "semillas", "germinación", "crecimiento", "naturaleza", "observación"],
+  "actions": ["observar", "comparar", "investigar"],
+  "objects": ["brote", "lupa", "maceta", "semilla"],
+  "contexts": ["proyecto", "plan_anual", "portada", "ciencia", "ambiente"],
+  "age_range": [3, 4, 5],
+  "orientation": "landscape",
+  "aspect_ratio": "3:2",
+  "has_text": false,
+  "country_context": "PE",
+  "variant": 2,
+  "priority": 9
+}

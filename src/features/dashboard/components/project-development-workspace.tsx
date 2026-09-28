@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { apiFetch } from "@/src/lib/ayni-api-fetch";
 import { localDatabaseApiUrl } from "@/src/lib/local-database";
 import { Button } from "@/components/ui/button";
@@ -25,7 +26,7 @@ type Route = { id: string; number: number; date: string; title: string; specific
 type Details = { flow_version?: string; stage?: string; preview?: { context_summary: string; context_points: string[];
   purpose_options: string[]; additional_context_example: string }; decisions?: Decision;
   dependents?: Dependents; project_master?: { foundation: string; closing_description: string; closing_rationale: string };
-  activity_route?: Route[]; previous_map?: Route[] | null };
+  activity_route?: Route[]; previous_map?: Route[] | null; image_id?: string | null; image_suggested_id?: string | null };
 type Experience = { id: string; annual_plan_id: string; source_proposal_id: string | null;
   source_proposal_index: number; title: string; type: "project" | "unit"; status: "draft" | "active" | "archived";
   version: number; revision: number; details: Details };
@@ -59,11 +60,16 @@ export function ProjectDevelopmentWorkspace({ initialProposalId, onConfirmed, on
   const [showEmergent, setShowEmergent] = useState(false), [emergentSituation, setEmergentSituation] = useState("");
   const [emergent, setEmergent] = useState<{ title: string; rationale: string; purpose: string;
     primary_competency_ids: string[]; duration_weeks: 2 | 3 } | null>(null);
+  const [emergentCompetencySuggestion, setEmergentCompetencySuggestion] = useState<string[] | null>(null);
   const [emergentMode, setEmergentMode] = useState<"keep" | "postpone" | "replace">("replace");
   const [emergentTargetId, setEmergentTargetId] = useState("");
+  const [imageOptions, setImageOptions] = useState<{ id: string; title: string; description: string }[]>([]);
+  const [imageSuggestedId, setImageSuggestedId] = useState<string | null>(null);
+  const [imageOptionsError, setImageOptionsError] = useState(false);
   const [loading, setLoading] = useState(true), [error, setError] = useState(""), [notice, setNotice] = useState("");
   const [legacy, setLegacy] = useState(false);
   const autoOpened = useRef<string | null>(null);
+  const imageLoadRequest = useRef(0);
   const proposal = plan?.proposal.proposed_experiences[selected?.source_proposal_index ?? -1];
   const proposalIdAt = (index: number) => plan?.proposal.proposed_experiences[index]?.proposal_id ??
     plan?.project_slots.find((slot) => slot.slot_index === index + 1)?.id ?? "";
@@ -89,6 +95,36 @@ export function ProjectDevelopmentWorkspace({ initialProposalId, onConfirmed, on
       additional_context: "" });
     setDependents(experience.details.dependents ?? null);
     setRoute(experience.details.activity_route ?? []);
+    setImageOptions([]);
+    setImageSuggestedId(experience.details.image_suggested_id ?? null);
+    setImageOptionsError(false);
+    const requestNumber = ++imageLoadRequest.current;
+    if (experience.details.stage === "map_review" || experience.status === "active") {
+      void json<{ images: { id: string; title: string; description: string }[] }>(
+        `/api/project-flow/${experience.id}/image-options`).then((result) => {
+          if (imageLoadRequest.current === requestNumber) setImageOptions(result.images);
+        }).catch(() => { if (imageLoadRequest.current === requestNumber) setImageOptionsError(true); });
+    }
+  }
+  async function chooseProjectImage(imageId: string | null) { if (!selected) return;
+    await act("image", async () => {
+      const result = await json<{ experience: Experience }>(`/api/project-flow/${selected.id}/image`, {
+        method: "PUT", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ imageId, expectedRevision: selected.revision }),
+      });
+      showExperience(result.experience, dates, calendarReview, protectedRouteIds);
+      setNotice(imageId ? "Imagen guardada para revisar con el proyecto." : "Proyecto guardado sin imagen.");
+    });
+  }
+  async function suggestProjectImageAgain() { if (!selected) return;
+    await act("image-suggestion", async () => {
+      const result = await json<{ suggested_id: string | null; images: { id: string; title: string; description: string }[] }>(
+        `/api/project-flow/${selected.id}/image-suggestion`, post({ expectedRevision: selected.revision }));
+      setImageOptions(result.images);
+      setImageSuggestedId(result.suggested_id);
+      setNotice(result.suggested_id ? "Ayni recomienda una imagen. Puedes elegirla o cambiarla."
+        : "Ayni no encontró una imagen adecuada. Puedes elegir una o continuar sin imagen.");
+    });
   }
   async function refresh() {
     const [plans, list, cards] = await Promise.all([
@@ -140,8 +176,7 @@ export function ProjectDevelopmentWorkspace({ initialProposalId, onConfirmed, on
   async function prepareMaster() { if (!selected || !dependents) return;
     await act("master", async () => { const result = await json<{ experience: Experience }>(`/api/project-flow/${selected.id}/master`,
       post({ dependents, expectedRevision: selected.revision }));
-      setSelected(result.experience); setRoute(result.experience.details.activity_route ?? []);
-      setStep(7);
+      showExperience(result.experience, dates, calendarReview, protectedRouteIds);
       setNotice("Mapa preparado. Revísalo y ajústalo antes de confirmar el proyecto."); }); }
   async function confirmCalendar(){if(!selected||!calendarReview)return;await act("calendar",async()=>{
     const selectedDates=calendarReview.days.filter((day)=>day.selected).map((day)=>day.date);
@@ -171,15 +206,17 @@ export function ProjectDevelopmentWorkspace({ initialProposalId, onConfirmed, on
       setNotice("Nueva versión en revisión. La versión confirmada permanece disponible."); }); }
   async function suggestEmergent() { if (!plan) return;
     await act("emergent", async () => { const result = await json<{ proposal: { title: string; rationale: string; purpose: string;
-      primary_competency_ids: string[] } }>("/api/project-flow/emergent-preview", post({ situation: emergentSituation }));
+      primary_competency_ids: string[] }; competency_suggestion: string[] | null }>("/api/project-flow/emergent-preview", post({ situation: emergentSituation }));
       setEmergent({ ...result.proposal, duration_weeks: 2 });
+      setEmergentCompetencySuggestion(result.competency_suggestion);
       setEmergentTargetId(plan.proposal.proposed_experiences[Math.min(suggestedIndex - 1,
         plan.proposal.proposed_experiences.length - 1)]?.proposal_id ?? "");
       setNotice("Revisa la propuesta y decide cómo incorporarla a «Mi año»."); }); }
   async function prepareEmergentAnnual() { if (!plan || !emergent) return;
     await act("emergent-save", async () => { await json("/api/project-flow/emergent-annual-draft", post({ annualPlanId: plan.id,
       expectedRevision: plan.revision, targetProposalId: emergentTargetId, mode: emergentMode, proposal: emergent }));
-      setShowEmergent(false); setEmergent(null); setNotice("Nueva versión de «Mi año» lista para revisar y confirmar.");
+      setShowEmergent(false); setEmergent(null); setEmergentCompetencySuggestion(null);
+      setNotice("Nueva versión de «Mi año» lista para revisar y confirmar.");
       onGoAnnual?.(); }); }
   function updateRoute(id: string, changes: Partial<Route>) { if (protectedRouteIds.includes(id)) return;
     setRoute((before) => before.map((item) => item.id === id ? { ...item, ...changes } : item)); }
@@ -226,6 +263,12 @@ export function ProjectDevelopmentWorkspace({ initialProposalId, onConfirmed, on
             <label className="block font-semibold">Propósito breve<Textarea className="mt-2" value={emergent.purpose} onChange={(event) => setEmergent({ ...emergent, purpose: event.target.value })} /></label>
             <CompetencyChecklist label="Competencias previstas" options={competencies} value={emergent.primary_competency_ids}
               onChange={(primary_competency_ids) => setEmergent({ ...emergent, primary_competency_ids })} />
+            {emergentCompetencySuggestion && <div className="rounded-lg border border-[#b9dce5] bg-white p-3 text-sm">
+              <p><b>Otra sugerencia para revisar:</b> {emergentCompetencySuggestion.length
+                ? emergentCompetencySuggestion.map(name).join(" · ") : "No hay una competencia suficientemente sustentada en la descripción."}</p>
+              {emergentCompetencySuggestion.length > 0 && <Button className="mt-2" variant="outline"
+                onClick={() => setEmergent({ ...emergent, primary_competency_ids: emergentCompetencySuggestion })}>Usar esta sugerencia</Button>}
+            </div>}
             <label className="block font-semibold">Duración<select className="mt-2 min-h-11 w-full rounded-lg border px-3" value={emergent.duration_weeks}
               onChange={(event) => setEmergent({ ...emergent, duration_weeks: Number(event.target.value) as 2 | 3 })}>
               <option value={2}>2 semanas lectivas</option><option value={3}>3 semanas lectivas</option></select></label>
@@ -318,6 +361,22 @@ export function ProjectDevelopmentWorkspace({ initialProposalId, onConfirmed, on
       </section>}
       {selected.details.stage === "map_review" && !decisionsChanged && !depChanged && step === 7 && <section className="space-y-4 rounded-2xl border bg-white p-5"><h2 className="text-xl font-bold">8. Mapa de actividades</h2>
         <p className="text-sm text-[#526b87]">Este mapa organiza el proyecto. Las actividades completas se prepararán una por una cuando las necesites.</p>
+        <div className="space-y-2 rounded-xl border border-[#b9dce5] bg-[#f7fbfd] p-4">
+          <h3 className="font-bold">Imagen del proyecto · opcional</h3>
+          <p className="text-sm text-[#526b87]">La sugerencia se basa en las descripciones de la biblioteca. Elige otra imagen o deja el proyecto sin imagen.</p>
+          <Button variant="outline" disabled={Boolean(busy)} onClick={() => void suggestProjectImageAgain()}>
+            {busy === "image-suggestion" ? "Ayni está buscando…" : "Recomendar imagen con Ayni"}</Button>
+          <div className="flex flex-wrap gap-3">{imageOptions.map((item) => <button key={item.id} type="button"
+            disabled={Boolean(busy)} onClick={() => void chooseProjectImage(item.id)}
+            className={`w-44 rounded-lg border p-2 text-left text-sm ${selected.details.image_id === item.id ? "border-[#087d96] bg-[#e7f5f7]" : "bg-white"}`}>
+            <Image unoptimized width={160} height={105} className="h-auto w-full rounded" alt={item.title}
+              src={api(`/api/project-flow/images/${item.id}?projectId=${selected.id}`)} />
+            <span className="mt-2 block font-semibold">{item.title}{imageSuggestedId === item.id ? " · recomendada por Ayni" : ""}</span>
+          </button>)}</div>
+          {imageOptionsError ? <p className="text-sm text-[#a56712]">No pudimos cargar la biblioteca de imágenes. Puedes continuar sin imagen y revisarla luego.</p> :
+            !imageOptions.length && <p className="text-sm text-[#526b87]">No hay imágenes de la biblioteca que coincidan con esta propuesta.</p>}
+          <Button variant="outline" disabled={Boolean(busy)} onClick={() => void chooseProjectImage(null)}>Sin imagen</Button>
+        </div>
         {protectedRouteIds.length > 0 && <p className="rounded-lg bg-[#fff8eb] p-3 text-sm">Los días anteriores y los que ya tienen registros conservan la versión confirmada. Puedes modificar las actividades futuras sin registros.</p>}
         <p className="rounded-lg bg-[#eaf7fb] p-3 text-sm"><b>Cierre propuesto:</b> {selected.details.project_master?.closing_description}</p>
         {Boolean(selected.details.previous_map?.length) && <details className="rounded-lg border bg-[#fff8eb] p-3 text-sm"><summary className="cursor-pointer font-semibold">Ver el mapa anterior y sus cambios</summary>
@@ -337,6 +396,7 @@ export function ProjectDevelopmentWorkspace({ initialProposalId, onConfirmed, on
         <p className="text-sm text-[#526b87]">El proyecto queda confirmado después de revisar este mapa.</p></section>}
       {selected.status === "active" && <section className="space-y-4 rounded-2xl border bg-white p-5"><h2 className="text-xl font-bold">Proyecto confirmado</h2>
         <p className="text-sm text-[#526b87]">Esta versión es la base del Word y de las próximas actividades.</p>
+        <p className="text-sm"><b>Imagen elegida:</b> {imageOptions.find((item) => item.id === selected.details.image_id)?.title ?? "Sin imagen"}. Para cambiarla, crea una nueva versión.</p>
         <div className="flex flex-wrap gap-2"><AsyncButton busy={busy === "formal"} busyLabel="Preparando Word..." disabled={Boolean(busy)} onClick={() => void formalize()}>Preparar Word</AsyncButton>
           <AsyncButton variant="outline" busy={busy === "copy"} busyLabel="Creando versión..." disabled={Boolean(busy)} onClick={() => void copyVersion()}>Revisar una nueva versión</AsyncButton></div>
         <div className="space-y-2">{route.map((item) => <article key={item.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border p-3">

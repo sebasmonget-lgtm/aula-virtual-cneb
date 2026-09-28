@@ -51,6 +51,7 @@ function valuesFor(document, context, cards) {
   const group = document.content;
   const observations = snapshot.observations;
   const children = snapshot.children;
+  const commentCount = children.filter((child) => clean(child.teacher_comment)).length;
   const observedIds = new Set(observations.map((item) => item.student_id));
   const dates = observations.map((item) => String(item.observed_at ?? "").slice(0, 10)).filter((item) => /^\d{4}-\d{2}-\d{2}$/.test(item)).sort();
   const observedFrom = dateLabel(dates[0]);
@@ -77,13 +78,13 @@ function valuesFor(document, context, cards) {
     N_EVIDENCIAS_REVISADAS: String(observations.length),
     PROPOSITO_DIAGNOSTICO: "Conocer cómo inicia el grupo para decidir cómo acompañar sus aprendizajes.",
     CONTEXTO_PERIODO_DIAGNOSTICO: dates.length
-      ? `Se revisaron registros del ${observedFrom} al ${observedTo} y los comentarios confirmados de la docente.`
-      : "Se revisaron los comentarios disponibles; aún faltan observaciones fechadas del aula.",
+      ? `Se revisaron registros del ${observedFrom} al ${observedTo}${commentCount ? " y los comentarios confirmados de la docente" : ""}.`
+      : "Aún faltan observaciones fechadas del aula; se continuará recogiendo información.",
     FOCOS_DIAGNOSTICOS: "El juego, la expresión, la convivencia, la exploración y las necesidades que aparecen en el aula.",
     CONDICIONES_RECOJO: "Las entrevistas describen el contexto familiar. Las observaciones docentes muestran lo ocurrido en el aula; una ausencia de registro no indica una dificultad.",
     ESTADO_ENTREV: `${children.filter((item) => item.has_confirmed_interview).length} de ${children.length} entrevistas confirmadas`,
     ESTADO_OBS: `${countLabel(observations.length, "registro", "registros")} de ${countLabel(observedIds.size, "niño", "niños")}`,
-    ESTADO_DOC: `${children.length} comentarios individuales confirmados por la docente`,
+    ESTADO_DOC: `${countLabel(commentCount, "comentario individual confirmado", "comentarios individuales confirmados")} por la docente`,
     ESTADO_PORT: "Producciones y portafolio: consultar los registros disponibles en Ayni.",
     INFORMACION_PENDIENTE: children.length > observedIds.size
       ? `${children.length - observedIds.size} niños aún no tienen observaciones docentes en este corte. Se continuará observando.`
@@ -108,7 +109,7 @@ function valuesFor(document, context, cards) {
     REFERENCIA_ENTREVISTAS: `${children.filter((item) => item.has_confirmed_interview).length} entrevistas confirmadas en Ayni Aula.`,
     REFERENCIA_OBSERVACIONES: `${countLabel(observations.length, "registro", "registros")} de observación incluidos en este corte.`,
     REFERENCIA_PORTAFOLIO: "Consultar el portafolio del aula si existen producciones vinculadas.",
-    REFERENCIA_OTROS: "Comentarios individuales confirmados por la docente.",
+    REFERENCIA_OTROS: commentCount ? "Comentarios individuales confirmados por la docente." : "Sin comentarios individuales registrados.",
     RESPONSABLE_REVISION: "Revisión interna del aula",
     ...competencyValues(snapshot, cards),
   };
@@ -145,7 +146,7 @@ function transformDiagnostic(xml, context, snapshot, followups) {
   if (skipSpecial.length) output = output.replace(/<w:tr(?:\s[^>]*)?>[\s\S]*?<\/w:tr>/g,
     (row) => skipSpecial.some((marker) => row.includes(marker)) ? "" : row);
   // The source design has three sample rows. Use one as a visual model and
-  // expand it to the number of confirmed children instead of truncating them.
+  // expand it to all children in the confirmed group snapshot, without requiring a comment.
   output = output.replace(/<w:tr(?:\s[^>]*)?>[\s\S]*?<\/w:tr>/g,
     (row) => /\{\{SEGUIMIENTO_[23]_ESTUDIANTE\}\}/.test(row) ? "" : row);
   const model = [...output.matchAll(/<w:tr(?:\s[^>]*)?>[\s\S]*?<\/w:tr>/g)]

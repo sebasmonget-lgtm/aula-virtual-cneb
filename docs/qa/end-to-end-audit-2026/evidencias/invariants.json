@@ -1,0 +1,378 @@
+{
+  "at": "2026-09-28T03:45:29.498Z",
+  "annual": {
+    "id": "bb5d30b0-18bc-406a-a788-2285af754e07",
+    "status": "draft",
+    "revision": 2,
+    "originalValidation": {
+      "accepted": false,
+      "reason": "invalid_row",
+      "message": "Revisa los datos de la propuesta 1."
+    },
+    "derivedExtraKeys": [
+      "period_label",
+      "planned_end_date",
+      "planned_start_date",
+      "planned_instructional_days"
+    ],
+    "memoryOnlyProjectionAccepted": true,
+    "note": "La proyección es una prueba diagnóstica, NO se guardó ni aplicó al producto.",
+    "plannedProjectDays": 129,
+    "coverage": {
+      "PS_CONVIVE": {
+        "proposals": 8,
+        "periods": [
+          "Bimestre 1",
+          "Bimestre 2",
+          "Bimestre 3",
+          "Bimestre 4"
+        ]
+      },
+      "COM_ORAL": {
+        "proposals": 6,
+        "periods": [
+          "Bimestre 1",
+          "Bimestre 2",
+          "Bimestre 3",
+          "Bimestre 4"
+        ]
+      },
+      "PS_IDENTIDAD": {
+        "proposals": 3,
+        "periods": [
+          "Bimestre 1",
+          "Bimestre 2",
+          "Bimestre 4"
+        ]
+      },
+      "PSICO_MOTRICIDAD": {
+        "proposals": 3,
+        "periods": [
+          "Bimestre 1",
+          "Bimestre 3",
+          "Bimestre 4"
+        ]
+      },
+      "CYT_INDAGA": {
+        "proposals": 2,
+        "periods": [
+          "Bimestre 1",
+          "Bimestre 3"
+        ]
+      },
+      "TRANS_AUTONOMO": {
+        "proposals": 4,
+        "periods": [
+          "Bimestre 1",
+          "Bimestre 2",
+          "Bimestre 3",
+          "Bimestre 4"
+        ]
+      },
+      "COM_LECTURA": {
+        "proposals": 3,
+        "periods": [
+          "Bimestre 1",
+          "Bimestre 4"
+        ]
+      },
+      "COM_ESCRITURA": {
+        "proposals": 3,
+        "periods": [
+          "Bimestre 1",
+          "Bimestre 3",
+          "Bimestre 4"
+        ]
+      },
+      "MAT_FORMA": {
+        "proposals": 2,
+        "periods": [
+          "Bimestre 2",
+          "Bimestre 3"
+        ]
+      },
+      "MAT_CANTIDAD": {
+        "proposals": 2,
+        "periods": [
+          "Bimestre 2",
+          "Bimestre 3"
+        ]
+      },
+      "COM_ARTE": {
+        "proposals": 3,
+        "periods": [
+          "Bimestre 2",
+          "Bimestre 3",
+          "Bimestre 4"
+        ]
+      }
+    },
+    "rows": [
+      {
+        "title": "En el Día del Niño Peruano, decidimos cómo jugar juntos",
+        "period": "Bimestre 1",
+        "type": "project",
+        "starts": "2026-03-30",
+        "ends": "2026-04-10",
+        "days": 8,
+        "competencies": [
+          "PS_CONVIVE",
+          "COM_ORAL",
+          "PS_IDENTIDAD",
+          "PSICO_MOTRICIDAD"
+        ]
+      },
+      {
+        "title": "¿Cómo iniciamos y cuidamos un pequeño huerto?",
+        "period": "Bimestre 1",
+        "type": "project",
+        "starts": "2026-04-13",
+        "ends": "2026-04-24",
+        "days": 10,
+        "competencies": [
+          "CYT_INDAGA",
+          "PS_CONVIVE",
+          "TRANS_AUTONOMO"
+        ]
+      },
+      {
+        "title": "Cuentos que nos invitan a imaginar y recomendar",
+        "period": "Bimestre 1",
+        "type": "project",
+        "starts": "2026-04-27",
+        "ends": "2026-05-15",
+        "days": 14,
+        "competencies": [
+          "COM_LECTURA",
+          "COM_ORAL",
+          "COM_ESCRITURA"
+        ]
+      },
+      {
+        "title": "En el Día de la Educación Inicial, pensamos nuestro jardín",
+        "period": "Bimestre 2",
+        "type": "project",
+        "starts": "2026-05-25",
+        "ends": "2026-06-05",
+        "days": 10,
+        "competencies": [
+          "PS_CONVIVE",
+          "COM_ORAL",
+          "MAT_FORMA",
+          "TRANS_AUTONOMO"
+        ]
+      },
+      {
+        "title": "Cantidades para repartir y jugar",
+        "period": "Bimestre 2",
+        "type": "unit",
+        "starts": "2026-06-08",
+        "ends": "2026-06-19",
+        "days": 10,
+        "competencies": [
+          "MAT_CANTIDAD",
+          "PS_CONVIVE"
+        ]
+      },
+      {
+        "title": "Fiestas Patrias: historias y expresiones de nuestra comunidad y del Perú",
+        "period": "Bimestre 2",
+        "type": "project",
+        "starts": "2026-07-06",
+        "ends": "2026-07-24",
+        "days": 14,
+        "competencies": [
+          "COM_ORAL",
+          "COM_ARTE",
+          "PS_IDENTIDAD",
+          "PS_CONVIVE"
+        ]
+      },
+      {
+        "title": "¿Qué cambios podemos descubrir al cuidar semillas?",
+        "period": "Bimestre 3",
+        "type": "project",
+        "starts": "2026-08-10",
+        "ends": "2026-08-21",
+        "days": 10,
+        "competencies": [
+          "CYT_INDAGA",
+          "MAT_CANTIDAD",
+          "TRANS_AUTONOMO"
+        ]
+      },
+      {
+        "title": "Nos movemos y nos orientamos para jugar",
+        "period": "Bimestre 3",
+        "type": "unit",
+        "starts": "2026-08-24",
+        "ends": "2026-09-04",
+        "days": 10,
+        "competencies": [
+          "PSICO_MOTRICIDAD",
+          "MAT_FORMA",
+          "PS_CONVIVE"
+        ]
+      },
+      {
+        "title": "La naturaleza que exploramos, contada con arte y palabras",
+        "period": "Bimestre 3",
+        "type": "project",
+        "starts": "2026-09-07",
+        "ends": "2026-09-25",
+        "days": 15,
+        "competencies": [
+          "COM_ARTE",
+          "COM_ESCRITURA",
+          "COM_ORAL"
+        ]
+      },
+      {
+        "title": "Los cuentos se mueven con nosotros",
+        "period": "Bimestre 4",
+        "type": "project",
+        "starts": "2026-10-19",
+        "ends": "2026-10-30",
+        "days": 10,
+        "competencies": [
+          "COM_LECTURA",
+          "PSICO_MOTRICIDAD",
+          "COM_ARTE"
+        ]
+      },
+      {
+        "title": "Compartimos cuentos y recomendaciones",
+        "period": "Bimestre 4",
+        "type": "project",
+        "starts": "2026-11-02",
+        "ends": "2026-11-13",
+        "days": 10,
+        "competencies": [
+          "COM_LECTURA",
+          "COM_ESCRITURA",
+          "PS_CONVIVE"
+        ]
+      },
+      {
+        "title": "Recordamos nuestro año y preparamos un encuentro de cierre",
+        "period": "Bimestre 4",
+        "type": "project",
+        "starts": "2026-12-07",
+        "ends": "2026-12-18",
+        "days": 8,
+        "competencies": [
+          "PS_IDENTIDAD",
+          "COM_ORAL",
+          "TRANS_AUTONOMO",
+          "PS_CONVIVE"
+        ]
+      }
+    ]
+  },
+  "diagnostic": {
+    "rawGuided": 5,
+    "rawSpontaneous": 24,
+    "curricularAssociationsInDocument": 28,
+    "uniqueCurricularNotes": 27,
+    "curricularChildren": 14,
+    "religionApplicable": false,
+    "castellanoL2Applicable": false,
+    "birthDatesPersisted": 0,
+    "recentContextCases": [
+      {
+        "name": "Bruno",
+        "firstTwoExcerpted": [
+          {
+            "id": "16a191ef-2bd3-4f84-bbc3-d50feb3e30fc",
+            "student_id": "a1f4e1c1-fe8a-40dd-99ab-1b9c938222fc",
+            "observed_at": "2026-09-28T03:09:15.935Z",
+            "aspect_prompt": "Propone o acepta una manera de compartir el juego.",
+            "competency_id": "PS_CONVIVE",
+            "observation_text": "Bruno no aceptó que Camila use una pieza del camino. Con mediación eligieron una caja para cada uno; tuve que recordar que había acordado compartir.",
+            "observation_status": "observed_without_judgment"
+          },
+          {
+            "id": "eb2cf953-626c-491c-a46a-0b306198b30e",
+            "student_id": "a1f4e1c1-fe8a-40dd-99ab-1b9c938222fc",
+            "observed_at": "2026-09-28T03:10:31.803Z",
+            "aspect_prompt": "Juego libre",
+            "competency_id": "PS_CONVIVE",
+            "observation_text": "Bruno dice esta pieza es mia y se la quita a Hugo. Después de conversar acepta repartir dos para cada uno, necesita que le recuerde el turno.",
+            "observation_status": "with_support"
+          }
+        ],
+        "laterRows": [
+          {
+            "id": "783aa899-9541-49b3-903c-86eb72621a60",
+            "student_id": "a1f4e1c1-fe8a-40dd-99ab-1b9c938222fc",
+            "observed_at": "2026-09-28T03:11:47.344Z",
+            "aspect_prompt": "Exploración",
+            "competency_id": "PS_CONVIVE",
+            "observation_text": "Bruno propuso que uno riegue mientras el otro sostiene la maceta; después cambiaron sin que yo se lo recuerde.",
+            "observation_status": "observed_without_judgment"
+          }
+        ]
+      },
+      {
+        "name": "Valeria",
+        "firstTwoExcerpted": [
+          {
+            "id": "4452dbc9-e30a-4426-b732-649d86a76696",
+            "student_id": "a17c17c4-7326-4499-9e58-004f343f6a44",
+            "observed_at": "2026-09-28T03:09:18.616Z",
+            "aspect_prompt": "Propone o acepta una manera de compartir el juego.",
+            "competency_id": "PS_CONVIVE",
+            "observation_text": "Valeria quería seguir de vendedora siempre. Con ayuda aceptó cambiar de rol cuando termine de atender a dos compradores.",
+            "observation_status": "observed_without_judgment"
+          },
+          {
+            "id": "de0ed36f-957d-451a-ac0b-f9ae6ada9021",
+            "student_id": "a17c17c4-7326-4499-9e58-004f343f6a44",
+            "observed_at": "2026-09-28T03:11:01.740Z",
+            "aspect_prompt": "Juego libre",
+            "competency_id": "PS_CONVIVE",
+            "observation_text": "Valeria jala la pala que usaba Alma. Conmigo conversa y dice después me toca, espera mientras le voy recordando el acuerdo.",
+            "observation_status": "with_support"
+          }
+        ],
+        "laterRows": [
+          {
+            "id": "17e55c9d-9c3c-424a-8139-e8f7167f234a",
+            "student_id": "a17c17c4-7326-4499-9e58-004f343f6a44",
+            "observed_at": "2026-09-28T03:11:44.450Z",
+            "aspect_prompt": "Exploración",
+            "competency_id": "MAT_CANTIDAD",
+            "observation_text": "Valeria contó 6 semillas y acordó con Camila poner tres cada una. Escuchó cuando Camila pidió cambiar de palita y aceptó alternar.",
+            "observation_status": "observed_without_judgment"
+          },
+          {
+            "id": "17e55c9d-9c3c-424a-8139-e8f7167f234a",
+            "student_id": "a17c17c4-7326-4499-9e58-004f343f6a44",
+            "observed_at": "2026-09-28T03:11:44.450Z",
+            "aspect_prompt": "Exploración",
+            "competency_id": "PS_CONVIVE",
+            "observation_text": "Valeria contó 6 semillas y acordó con Camila poner tres cada una. Escuchó cuando Camila pidió cambiar de palita y aceptó alternar.",
+            "observation_status": "observed_without_judgment"
+          }
+        ]
+      }
+    ]
+  },
+  "downstreamOwnData": {
+    "learning_experiences": 0,
+    "activities": 0,
+    "period_competency_scope": 0,
+    "period_closures": 0,
+    "classroom_period_reports": 0,
+    "competency_assessments": 0,
+    "competency_descriptive_conclusions": 0,
+    "family_reports": 0
+  },
+  "sourceIntegrity": {
+    "baselineAt": "2026-09-28T03:03:55.372Z",
+    "files": 1038,
+    "changed": [],
+    "missing": [],
+    "addedOutsideAudit": []
+  }
+}

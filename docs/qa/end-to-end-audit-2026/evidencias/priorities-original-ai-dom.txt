@@ -1,0 +1,150 @@
+- paragraph: Ayni Aula
+- paragraph: Tu aliada en Inicial
+- list:
+  - button "Hoy":
+    - generic: Hoy
+  - button "Calendario":
+    - generic: Calendario
+  - button "Diagnóstico":
+    - generic: Diagnóstico
+  - button "Planificar":
+    - generic: Planificar
+  - button "Aula":
+    - generic: Aula
+  - button "Evaluar":
+    - generic: Evaluar
+  - button "Biblioteca":
+    - generic: Biblioteca
+- paragraph: Exploradores · 5 años
+- paragraph: 2026 · 15 estudiantes
+- main:
+  - paragraph: Domingo, 27 de setiembre
+  - paragraph: IEI Semillas del Valle QA · Exploradores
+  - text: Base conectada
+  - button "Abrir perfil": LP
+  - main:
+    - paragraph: Conocer al grupo
+    - heading "Diagnóstico" [level=1]
+    - paragraph: Observa, registra y continúa cuando puedas.
+    - generic: 5 años · Exploradores
+    - navigation "Pasos del diagnóstico":
+      - button "1. Conocer Listo 15/15 entrevistas":
+        - generic: 1. Conocer
+        - img "Listo":
+        - generic: 15/15 entrevistas
+      - button "2. Observar Listo 15/15 niños":
+        - generic: 2. Observar
+        - img "Listo":
+        - generic: 15/15 niños
+      - button "3. Resumir Pendiente":
+        - generic: 3. Resumir
+        - generic: Pendiente
+    - paragraph: De las observaciones a tus decisiones
+    - heading "Resume lo que observaste" [level=2]
+    - status: Revisa la propuesta de Ayni antes de confirmar.
+    - heading "Prioridades del año" [level=3]
+    - paragraph: ¿Qué merece más atención en tu aula? Escribe una idea, cuenta por qué y elige la competencia relacionada. Trabajaremos todas las competencias durante el año.
+    - paragraph: Punto de partida confirmado
+    - paragraph: Se observaron propuesta de comprobación con semillas, reparto con conteo, creación musical y visual, y lectura de indicios de una portada. Dos niños muestran iniciativas autónomas en exploración o cantidad. En pareja se han observado acuerdos que funcionan; son referencias puntuales, no niveles finales del grupo. En registros de 9 de 15 niños se necesita acompañar acuerdos, reparto de materiales y turnos. Hay desempeños variables según el contexto, no una dificultad igual en todos. Para un niño ofreceré participación en pareja y anticipación visual. Del recién incorporado hay información insuficiente; no se concluye dificultad por falta de registros.
+    - heading "Lo que queremos acompañar este año" [level=4]
+    - heading "Prioridad 1" [level=5]
+    - text: 1. ¿Qué quieres acompañar?
+    - textbox "1. ¿Qué quieres acompañar?":
+      - /placeholder: "Por ejemplo: Que los niños expresen sus ideas y escuchen a sus compañeros."
+      - text: Acuerdos y uso compartido de materiales
+    - text: 2. ¿Qué observaste para elegirlo?
+    - textbox "2. ¿Qué observaste para elegirlo?":
+      - /placeholder: "Por ejemplo: En la asamblea varios niños necesitaron apoyo para esperar su turno y contar lo que pensaban."
+      - text: En varios registros se señala la necesidad de acompañar acuerdos, turnos y reparto de materiales, aunque las actuaciones varían según el contexto. El cuidado del huerto puede ofrecer ocasiones para practicarlos sin asumir la misma necesidad en todos los niños.
+    - text: 3. ¿Con qué competencia se relaciona?
+    - combobox "3. ¿Con qué competencia se relaciona?":
+      - option "Elige una competencia"
+      - option "Construye su identidad"
+      - option "Convive y participa democráticamente en la búsqueda del bien común" [selected]
+      - option "Se desenvuelve de manera autónoma a través de su motricidad"
+      - option "Se comunica oralmente en su lengua materna"
+      - option "Lee diversos tipos de textos escritos en su lengua materna"
+      - option "Escribe diversos tipos de textos en su lengua materna"
+      - option "Crea proyectos desde los lenguajes artísticos"
+      - option "Resuelve problemas de cantidad"
+      - option "Resuelve problemas de forma, movimiento y localización"
+      - option "Indaga mediante métodos científicos para construir sus conocimientos"
+      - option "Se desenvuelve en los entornos virtuales generados por las TIC"
+      - option "Gestiona su aprendizaje de manera autónoma"
+    - generic "Añadir otra competencia (opcional)"
+    - text: ¿Cómo lo acompañaremos?
+    - combobox "¿Cómo lo acompañaremos?":
+      - option "Daremos más oportunidades para practicar" [selected]
+      - option "Seguiremos aprovechando esta fortaleza"
+      - option "Primero observaremos para conocer mejor"
+    - button "Quitar prioridad"
+    - heading "Prioridad 2" [level=5]
+    - text: 1. ¿Qué quieres acompañar?
+    - textbox "1. ¿Qué quieres acompañar?":
+      - /placeholder: "Por ejemplo: Que los niños expresen sus ideas y escuchen a sus compañeros."
+      - text: Exploración y cuidado del huerto
+    - text: 2. ¿Qué observaste para elegirlo?
+    - textbox "2. ¿Qué observaste para elegirlo?":
+      - /placeholder: "Por ejemplo: En la asamblea varios niños necesitaron apoyo para esperar su turno y contar lo que pensaban."
+      - text: Se observaron propuestas de comprobación con semillas y las familias informan interés por la naturaleza. Investigar y cuidar un pequeño huerto puede ampliar esas oportunidades de exploración.
+    - text: 3. ¿Con qué competencia se relaciona?
+    - combobox "3. ¿Con qué competencia se relaciona?":
+      - option "Elige una competencia"
+      - option "Construye su identidad"
+      - option "Convive y participa democráticamente en la búsqueda del bien común"
+      - option "Se desenvuelve de manera autónoma a través de su motricidad"
+      - option "Se comunica oralmente en su lengua materna"
+      - option "Lee diversos tipos de textos escritos en su lengua materna"
+      - option "Escribe diversos tipos de textos en su lengua materna"
+      - option "Crea proyectos desde los lenguajes artísticos"
+      - option "Resuelve problemas de cantidad"
+      - option "Resuelve problemas de forma, movimiento y localización"
+      - option "Indaga mediante métodos científicos para construir sus conocimientos" [selected]
+      - option "Se desenvuelve en los entornos virtuales generados por las TIC"
+      - option "Gestiona su aprendizaje de manera autónoma"
+    - generic "Añadir otra competencia (opcional)"
+    - text: ¿Cómo lo acompañaremos?
+    - combobox "¿Cómo lo acompañaremos?":
+      - option "Daremos más oportunidades para practicar"
+      - option "Seguiremos aprovechando esta fortaleza" [selected]
+      - option "Primero observaremos para conocer mejor"
+    - button "Quitar prioridad"
+    - heading "Prioridad 3" [level=5]
+    - text: 1. ¿Qué quieres acompañar?
+    - textbox "1. ¿Qué quieres acompañar?":
+      - /placeholder: "Por ejemplo: Que los niños expresen sus ideas y escuchen a sus compañeros."
+      - text: Observar desafíos de cantidad en distintos contextos
+    - text: 2. ¿Qué observaste para elegirlo?
+    - textbox "2. ¿Qué observaste para elegirlo?":
+      - /placeholder: "Por ejemplo: En la asamblea varios niños necesitaron apoyo para esperar su turno y contar lo que pensaban."
+      - text: El reparto con conteo figura entre las actuaciones observadas, pero es una referencia puntual. Conviene mantener los desafíos de cantidad y registrar nuevas actuaciones antes de sacar conclusiones sobre el grupo.
+    - text: 3. ¿Con qué competencia se relaciona?
+    - combobox "3. ¿Con qué competencia se relaciona?":
+      - option "Elige una competencia"
+      - option "Construye su identidad"
+      - option "Convive y participa democráticamente en la búsqueda del bien común"
+      - option "Se desenvuelve de manera autónoma a través de su motricidad"
+      - option "Se comunica oralmente en su lengua materna"
+      - option "Lee diversos tipos de textos escritos en su lengua materna"
+      - option "Escribe diversos tipos de textos en su lengua materna"
+      - option "Crea proyectos desde los lenguajes artísticos"
+      - option "Resuelve problemas de cantidad" [selected]
+      - option "Resuelve problemas de forma, movimiento y localización"
+      - option "Indaga mediante métodos científicos para construir sus conocimientos"
+      - option "Se desenvuelve en los entornos virtuales generados por las TIC"
+      - option "Gestiona su aprendizaje de manera autónoma"
+    - generic "Añadir otra competencia (opcional)"
+    - text: ¿Cómo lo acompañaremos?
+    - combobox "¿Cómo lo acompañaremos?":
+      - option "Daremos más oportunidades para practicar"
+      - option "Seguiremos aprovechando esta fortaleza"
+      - option "Primero observaremos para conocer mejor" [selected]
+    - button "Quitar prioridad"
+    - button "+ Agregar otra prioridad"
+    - button "Guardar para después"
+    - button "Descartar cambios sin guardar"
+    - navigation "Continuar el diagnóstico":
+      - button "Así está mi grupo":
+        - text: Así está mi grupo
+      - button "Confirmar prioridades":
+        - text: Confirmar prioridades

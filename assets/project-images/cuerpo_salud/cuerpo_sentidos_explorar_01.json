@@ -1,0 +1,44 @@
+{
+  "id": "cuerpo_sentidos_explorar_01",
+  "file": "cuerpo_salud/cuerpo_sentidos_explorar_01.jpg",
+  "master": "masters/cuerpo_sentidos_explorar_01.png",
+  "title": "Sofía explora los sentidos",
+  "category": "cuerpo_salud",
+  "subcategory": "sentidos",
+  "characters": [
+    "sofia"
+  ],
+  "concepts": [
+    "sentidos",
+    "olfato",
+    "vista",
+    "cuerpo"
+  ],
+  "actions": [
+    "oler",
+    "observar"
+  ],
+  "objects": [
+    "flor",
+    "fruta",
+    "mesa"
+  ],
+  "contexts": [
+    "proyecto",
+    "plan_anual",
+    "portada",
+    "cuerpo_salud",
+    "sentidos"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "orientation": "landscape",
+  "aspect_ratio": "3:2",
+  "has_text": false,
+  "country_context": "PE",
+  "variant": 1,
+  "priority": 10
+}

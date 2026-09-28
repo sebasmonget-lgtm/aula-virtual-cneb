@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ayni.local/schemas/project-image-v1.json",
+  "title": "Imagen de la biblioteca visual Ayni",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "file", "master", "title", "category", "subcategory", "characters", "concepts", "actions", "objects", "contexts", "age_range", "orientation", "aspect_ratio", "has_text", "country_context", "variant", "priority"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-z0-9]+(?:_[a-z0-9]+)*$" },
+    "file": { "type": "string", "pattern": "^[a-z0-9_/-]+\\.(jpg|png)$" },
+    "master": { "type": "string", "pattern": "^[a-z0-9_/-]+\\.(jpg|png)$" },
+    "title": { "type": "string", "minLength": 8 },
+    "category": { "type": "string", "pattern": "^[a-z0-9]+(?:_[a-z0-9]+)*$" },
+    "subcategory": { "type": "string", "pattern": "^[a-z0-9]+(?:_[a-z0-9]+)*$" },
+    "characters": { "$ref": "#/$defs/slugs" },
+    "concepts": { "$ref": "#/$defs/terms" },
+    "actions": { "$ref": "#/$defs/terms" },
+    "objects": { "$ref": "#/$defs/terms" },
+    "contexts": { "$ref": "#/$defs/terms" },
+    "age_range": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "integer", "enum": [3, 4, 5] } },
+    "orientation": { "const": "landscape" },
+    "aspect_ratio": { "enum": ["3:2", "4:3"] },
+    "has_text": { "const": false },
+    "country_context": { "const": "PE" },
+    "variant": { "type": "integer", "minimum": 1 },
+    "priority": { "type": "integer", "minimum": 1, "maximum": 10 }
+  },
+  "$defs": {
+    "slugs": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "pattern": "^[a-z0-9]+(?:_[a-z0-9]+)*$" } },
+    "terms": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 2 } }
+  }
+}

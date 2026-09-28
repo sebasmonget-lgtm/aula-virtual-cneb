@@ -1,6 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { ageFilteredAnnualCurriculum } from "../src/lib/annual-preplan-service.mjs";
 import { availableSheets, publicSheet, renderSheetPages } from "../src/lib/workshop-sheet-catalog.mjs";
+import { attachWorkshopSheetsWithJev, suggestWorkshopSheet } from "../src/lib/jev-workshop-sheet.mjs";
+import { jevFeatureEnabled } from "../src/lib/jev-openrouter-decision.mjs";
 import { confirmWorkshopMaster, generateWorkshopMaster, newWorkshopMasterDetails, validateWorkshopMaster } from "../src/lib/workshop-master-service.mjs";
 import { VersionConflictError, httpStatusForError, publicErrorMessage, versionTransaction } from "../src/lib/version-integrity.mjs";
 
@@ -60,7 +62,12 @@ export function createWorkshopRouteHandler({ db, teacherId, readJson, send }) {
           throw new Error("Este proyecto requiere un mapa de actividades confirmado.");
         const existing = await currentMaster(project.id);
         if (existing?.status === "draft") throw new VersionConflictError("Ya hay un borrador de talleres. Revísalo antes de generar otro.");
-        const generated = await generateWorkshopMaster({ classroom, project, annualPlan: { proposal: project.annual_proposal }, cards });
+        const useJev = jevFeatureEnabled("workshop_sheet");
+        if (useJev) classroom.jev_known_names = (await db.query(`select first_name,last_name,preferred_name
+          from students where classroom_id=$1`, [classroom.id])).rows
+          .flatMap((item) => [item.first_name,item.last_name,item.preferred_name]).filter(Boolean);
+        const generated = await generateWorkshopMaster({ classroom, project, annualPlan: { proposal: project.annual_proposal }, cards,
+          attachSheets: useJev ? attachWorkshopSheetsWithJev : undefined });
         const id = randomUUID();
         const saved = await versionTransaction(db, `workshop-master:${project.id}`, async (tx) => {
           const competing = (await tx.query(`select id from learning_experiences where parent_project_id=$1 and type='workshop' and status='draft'`, [project.id])).rows[0];
@@ -74,6 +81,29 @@ export function createWorkshopRouteHandler({ db, teacherId, readJson, send }) {
             JSON.stringify(generated.metadata)])).rows[0];
         });
         send(response, 201, { master: publicMaster(saved) }, origin); return true;
+      }
+      if (request.method === "POST" && url.pathname === "/api/workshops/master/suggest-sheet") {
+        const master = await currentMaster(project.id);
+        if (!master || master.status !== "draft" || master.id !== body.masterId)
+          throw new VersionConflictError("Abre el borrador de talleres para revisar la ficha.");
+        if (!jevFeatureEnabled("workshop_sheet")) {
+          send(response, 503, { error: "Ayni no pudo recomendar una ficha. Puedes elegirla manualmente." }, origin); return true;
+        }
+        if (Number(body.expectedRevision) !== Number(master.revision))
+          throw new VersionConflictError("El borrador de talleres cambió. Vuelve a abrirlo.");
+        const item = master.details?.items?.find((entry) => entry.index === Number(body.itemIndex));
+        if (!item || !cards.some((card) => card.id === item.competency_id))
+          throw new Error("El taller no tiene una competencia aplicable.");
+        const names = (await db.query(`select first_name,last_name,preferred_name from students where classroom_id=$1`,
+          [classroom.id])).rows.flatMap((entry) =>
+          [entry.first_name,entry.last_name,entry.preferred_name]).filter(Boolean);
+        const route = project.details.activity_route ?? [];
+        const intention = [item.purpose, item.observation_focus, item.brief_outline,
+          route[item.index - 1]?.title].filter(Boolean).join(" ");
+        const suggested = await suggestWorkshopSheet({ age: classroom.age, competencyId: item.competency_id,
+          intention, topic: project.title, knownNames: names });
+        send(response, 200, { sheet: suggested.sheet ? publicSheet(suggested.sheet) : null,
+          reason: suggested.reason }, origin); return true;
       }
       if (request.method === "PUT" && url.pathname === "/api/workshops/master") {
         const current = await currentMaster(project.id);

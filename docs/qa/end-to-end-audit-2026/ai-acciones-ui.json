@@ -1,0 +1,20 @@
+[
+  {
+    "action": "diagnostic_group_synthesis",
+    "startedAt": "2026-09-28T03:13:49.096Z",
+    "resultObservedAt": "2026-09-28T03:15:10.480Z",
+    "note": "Observed time includes independent documentation work; not pure provider latency."
+  },
+  {
+    "workflow": "diagnostic_priorities",
+    "startedAt": "2026-09-28T03:15:27.028Z",
+    "observedAt": "2026-09-28T03:18:22.324Z",
+    "note": "Tiempo de observación posterior, no latencia del proveedor"
+  },
+  {
+    "workflow": "annual_plan_pipeline",
+    "startedAt": "2026-09-28T03:18:54.473Z",
+    "observedAt": "2026-09-28T03:19:56.528Z",
+    "elapsedToObservationMs": 62055
+  }
+]

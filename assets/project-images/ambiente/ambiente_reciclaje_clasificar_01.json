@@ -1,0 +1,44 @@
+{
+  "id": "ambiente_reciclaje_clasificar_01",
+  "file": "ambiente/ambiente_reciclaje_clasificar_01.jpg",
+  "master": "masters/ambiente_reciclaje_clasificar_01.png",
+  "title": "Leo y Luna clasifican materiales",
+  "category": "ambiente",
+  "subcategory": "reciclaje",
+  "characters": [
+    "leo",
+    "luna"
+  ],
+  "concepts": [
+    "reciclaje",
+    "residuos",
+    "ambiente"
+  ],
+  "actions": [
+    "clasificar",
+    "reutilizar"
+  ],
+  "objects": [
+    "papel",
+    "botellas",
+    "recipientes"
+  ],
+  "contexts": [
+    "proyecto",
+    "plan_anual",
+    "portada",
+    "ambiente",
+    "reciclaje"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "orientation": "landscape",
+  "aspect_ratio": "3:2",
+  "has_text": false,
+  "country_context": "PE",
+  "variant": 1,
+  "priority": 10
+}

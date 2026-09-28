@@ -1,0 +1,42 @@
+{
+  "id": "movimiento_pelota_cooperar_01",
+  "file": "movimiento/movimiento_pelota_cooperar_01.jpg",
+  "master": "masters/movimiento_pelota_cooperar_01.png",
+  "title": "Mateo y Sofía juegan con pelota",
+  "category": "movimiento",
+  "subcategory": "juego",
+  "characters": [
+    "mateo",
+    "sofia"
+  ],
+  "concepts": [
+    "movimiento",
+    "juego",
+    "cooperación"
+  ],
+  "actions": [
+    "lanzar",
+    "atrapar"
+  ],
+  "objects": [
+    "pelota"
+  ],
+  "contexts": [
+    "proyecto",
+    "plan_anual",
+    "portada",
+    "movimiento",
+    "juego"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "orientation": "landscape",
+  "aspect_ratio": "3:2",
+  "has_text": false,
+  "country_context": "PE",
+  "variant": 1,
+  "priority": 10
+}

@@ -1,0 +1,77 @@
+- paragraph: Ayni Aula
+- paragraph: Tu aliada en Inicial
+- list:
+  - button "Hoy":
+    - generic: Hoy
+  - button "Calendario":
+    - generic: Calendario
+  - button "Diagnóstico":
+    - generic: Diagnóstico
+  - button "Planificar":
+    - generic: Planificar
+  - button "Aula":
+    - generic: Aula
+  - button "Evaluar":
+    - generic: Evaluar
+  - button "Biblioteca":
+    - generic: Biblioteca
+- paragraph: Exploradores · 5 años
+- paragraph: 2026 · 15 estudiantes
+- main:
+  - paragraph: Domingo, 27 de setiembre
+  - paragraph: IEI Semillas del Valle QA · Exploradores
+  - text: Base conectada
+  - button "Abrir perfil" [active]: LP
+  - main:
+    - paragraph: Configuración
+    - heading "Datos del colegio" [level=1]
+    - paragraph: Escribe estos datos una vez. Aparecerán en tus documentos.
+    - text: Institución
+    - textbox "Institución":
+      - /placeholder: ""
+      - text: IEI Semillas del Valle QA
+    - text: Docente
+    - textbox "Docente":
+      - /placeholder: ""
+      - text: Lucía Palomino Quispe
+    - text: Sección
+    - textbox "Sección":
+      - /placeholder: ""
+      - text: Exploradores
+    - text: Código modular
+    - textbox "Código modular":
+      - /placeholder: Opcional
+    - text: Distrito
+    - textbox "Distrito":
+      - /placeholder: Opcional
+      - text: Valle Claro QA
+    - text: UGEL
+    - textbox "UGEL":
+      - /placeholder: Opcional
+      - text: UGEL de prueba
+    - text: Dirección
+    - textbox "Dirección":
+      - /placeholder: Nombre de la directora o director
+      - text: María Saavedra Torres
+    - button "Guardar datos":
+      - text: Guardar datos
+    - complementary:
+      - img "Logo del colegio"
+      - paragraph: Logo del colegio
+      - paragraph: Aparecerá en tus documentos Word.
+      - text: Subir una imagen del logo
+      - button "Subir una imagen del logo"
+      - paragraph: PNG, JPG o WebP. Hasta 2 MB. Se guarda en este equipo.
+      - checkbox "Prefiero crear uno con iniciales"
+      - text: Prefiero crear uno con iniciales
+    - region "Uso de IA de esta docente":
+      - heading "Uso de IA de esta docente" [level=2]
+      - paragraph: Costo aproximado de OpenAI y Jev en USD. Se registra desde esta versión; no incluye alojamiento ni almacenamiento.
+      - paragraph: Este mes (2026-09)
+      - paragraph: US$ 0.0874
+      - paragraph: 49 llamadas
+      - paragraph: Total registrado
+      - paragraph: US$ 0.0874
+      - paragraph: 49 llamadas
+      - generic "Ver gasto por función"
+      - paragraph: 3 costos estimados con las tarifas vigentes al registrarse; el cobro del proveedor puede diferir.

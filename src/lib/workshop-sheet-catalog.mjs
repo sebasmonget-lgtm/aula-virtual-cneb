@@ -46,10 +46,12 @@ export async function availableSheets({ age, competencyId, root = defaultRoot() 
     const pdf = path.resolve(root, `${folder}_desarmado`, pdfName);
     if (!inside(root, pdf)) continue;
     try { if (!(await stat(pdf)).isFile()) continue; } catch { continue; }
-    available.push({ id: item.id, title: item.titulo, age: Number(item.edad), competency_id: item.competencia_id,
+    const sheet = { id: item.id, title: item.titulo, age: Number(item.edad), competency_id: item.competencia_id,
       intention: item.proposito_o_intencion ?? "", actions: item.acciones ?? [], description: item.descripcion ?? "",
       source_pdf_sha256: source.fuente.sha256_pdf ?? null, pdf_path: pdf,
-      page_count: Number(source.fuente.paginas_en_ficha ?? 1) });
+      page_count: Number(source.fuente.paginas_en_ficha ?? 1) };
+    try { await verifiedSheetFile(sheet); } catch { continue; }
+    available.push(sheet);
   }
   return available;
 }

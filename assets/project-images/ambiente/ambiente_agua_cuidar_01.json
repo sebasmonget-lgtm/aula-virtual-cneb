@@ -1,0 +1,44 @@
+{
+  "id": "ambiente_agua_cuidar_01",
+  "file": "ambiente/ambiente_agua_cuidar_01.jpg",
+  "master": "masters/ambiente_agua_cuidar_01.png",
+  "title": "Mateo cuida el agua",
+  "category": "ambiente",
+  "subcategory": "agua",
+  "characters": [
+    "mateo"
+  ],
+  "concepts": [
+    "agua",
+    "ahorro",
+    "cuidado",
+    "ambiente"
+  ],
+  "actions": [
+    "cerrar",
+    "cuidar"
+  ],
+  "objects": [
+    "grifo",
+    "regadera",
+    "agua"
+  ],
+  "contexts": [
+    "proyecto",
+    "plan_anual",
+    "portada",
+    "ambiente",
+    "agua"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "orientation": "landscape",
+  "aspect_ratio": "3:2",
+  "has_text": false,
+  "country_context": "PE",
+  "variant": 1,
+  "priority": 10
+}

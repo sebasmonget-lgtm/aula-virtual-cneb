@@ -5,7 +5,7 @@ description: Proponer por separado la visión del grupo y las prioridades anuale
 
 # Crear Evaluación Diagnóstica
 
-La aplicación distingue tres tareas. Puede proponer un comentario individual desde las observaciones reales de un solo niño. Después propone **«Así está mi grupo»** a partir de comentarios individuales confirmados y sin nombres. La profesora corrige y confirma esa visión. Solo después, otra llamada propone **«Prioridades del año»** usando la visión confirmada y el CNEB filtrado a la edad. La aplicación conserva las fuentes, valida las propuestas y rellena la plantilla DOCX sin intervención de la Skill.
+La aplicación propone **«Así está mi grupo»** a partir de registros observados anonimizados y de los comentarios individuales confirmados y vigentes que estén disponibles. El comentario individual es opcional y lo escribe o dicta la profesora, sin sugerencia generativa en ese editor. La profesora corrige y confirma la visión grupal. Solo después, otra llamada propone **«Prioridades del año»** usando la visión confirmada y el CNEB filtrado a la edad. La aplicación conserva las fuentes, valida las propuestas y rellena la plantilla DOCX sin intervención de la Skill. La referencia histórica `student_review` solo conserva compatibilidad y no habilita recomendaciones individuales en el producto.
 
 1. Lee [fuentes-y-criterio.md](references/fuentes-y-criterio.md) para distinguir información familiar, observación y juicio docente.
 2. Aplica [lectura-pedagogica-cneb.md](references/lectura-pedagogica-cneb.md) al interpretar patrones sin convertir la ausencia de registros en un resultado.

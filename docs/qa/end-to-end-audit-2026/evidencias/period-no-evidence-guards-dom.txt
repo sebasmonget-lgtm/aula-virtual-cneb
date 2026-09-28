@@ -1,0 +1,167 @@
+- paragraph: Ayni Aula
+- paragraph: Tu aliada en Inicial
+- list:
+  - button "Hoy":
+    - generic: Hoy
+  - button "Calendario":
+    - generic: Calendario
+  - button "Diagnóstico":
+    - generic: Diagnóstico
+  - button "Planificar":
+    - generic: Planificar
+  - button "Aula":
+    - generic: Aula
+  - button "Evaluar":
+    - generic: Evaluar
+  - button "Biblioteca":
+    - generic: Biblioteca
+- paragraph: Exploradores · 5 años
+- paragraph: 2026 · 15 estudiantes
+- main:
+  - paragraph: Domingo, 27 de setiembre
+  - paragraph: IEI Semillas del Valle QA · Exploradores
+  - text: Base conectada
+  - button "Abrir perfil": LP
+  - main:
+    - button "← Volver a Evaluar"
+    - heading "Evaluación del período" [level=2]
+    - paragraph: Revisa lo observado y confirma una valoración por niño y competencia.
+    - text: Año escolar
+    - combobox "Año escolar":
+      - option "Selecciona un año"
+      - option "2026" [selected]
+    - text: Aula
+    - combobox "Aula":
+      - option "Selecciona un aula"
+      - option "Exploradores · 5 años" [selected]
+    - text: Período
+    - combobox "Período":
+      - option "Selecciona un período"
+      - option "Bimestre 1 · 16/3/2026 a 15/5/2026"
+      - option "Bimestre 2 · 25/5/2026 a 24/7/2026"
+      - option "Bimestre 3 · 10/8/2026 a 9/10/2026" [selected]
+      - option "Bimestre 4 · 19/10/2026 a 18/12/2026"
+    - generic "Organización de períodos"
+    - heading "Marco de evaluación del período" [level=3]
+    - paragraph: Ayni lo prepara una vez con las competencias realmente trabajadas. Luego lo aplica a cada niño; tú confirmas cada valoración.
+    - status:
+      - generic: Aún no hay competencias trabajadas con criterios confirmados en este período.
+    - button "Preparar marco del período"
+    - status: Confirma al menos la mitad de las valoraciones antes de preparar el informe del aula.
+    - generic: 0/15 niños completamente evaluados
+    - generic: 0/0 valoraciones docentes registradas
+    - heading "Cierre de Bimestre 3" [level=3]
+    - paragraph: Continúa desde el primer paso pendiente.
+    - generic: 1/8 pasos
+    - list:
+      - generic: ✓ Revisar cobertura
+      - generic: ○ Preparar marco de evaluación
+      - generic: ○ Evaluar alumnos
+      - generic: ○ Conclusiones descriptivas
+      - generic: ○ Consolidado
+      - generic: ○ Informes familiares
+      - generic: ○ Informe del aula
+      - generic: ○ Cerrar período
+    - button "Revisar un niño"
+    - button "Revisar aula"
+    - button "Cobertura"
+    - button "Informe de progreso"
+    - button "Informe a familias"
+    - heading "Revisar aula · Bimestre 3" [level=3]
+    - paragraph: Aparecen también las competencias previstas sin observaciones.
+    - generic "Ajustar competencias trabajadas"
+    - option "Elige una competencia" [selected]
+    - option "Construye su identidad"
+    - option "Convive y participa democráticamente en la búsqueda del bien común"
+    - option "Se desenvuelve de manera autónoma a través de su motricidad"
+    - option "Se comunica oralmente en su lengua materna"
+    - option "Lee diversos tipos de textos escritos en su lengua materna"
+    - option "Escribe diversos tipos de textos en su lengua materna"
+    - option "Crea proyectos desde los lenguajes artísticos"
+    - option "Resuelve problemas de cantidad"
+    - option "Resuelve problemas de forma, movimiento y localización"
+    - option "Indaga mediante métodos científicos para construir sus conocimientos"
+    - option "Se desenvuelve en los entornos virtuales generados por las TIC"
+    - option "Gestiona su aprendizaje de manera autónoma"
+    - option "Elige una competencia para retirar" [selected]
+    - combobox "Filtrar por niño":
+      - option "Todos los niños" [selected]
+      - option "Joaquín Arce"
+      - option "Hugo Benavides"
+      - option "Alma Carrasco"
+      - option "Omar Cárdenas"
+      - option "Camila Huamán"
+      - option "Kiara Ledesma"
+      - option "Fabio Medina"
+      - option "Diego Montalvo"
+      - option "Elena Paredes"
+      - option "Thiago Reátegui"
+      - option "Gabriela Ríos"
+      - option "Bruno Salcedo"
+      - option "Valeria Soto"
+      - option "Inés Ventura"
+      - option "Mateo Villalba"
+    - combobox "Filtrar por competencia":
+      - option "Todas las competencias" [selected]
+    - combobox "Filtrar por área":
+      - option "Todas las áreas" [selected]
+    - combobox "Filtrar por estado":
+      - option "Todos los estados" [selected]
+      - option "Pendientes"
+      - option "Completas"
+    - table:
+      - rowgroup:
+        - row "Niño":
+          - columnheader "Niño"
+      - rowgroup:
+        - row "Joaquín Arce":
+          - columnheader "Joaquín Arce"
+        - row "Hugo Benavides":
+          - columnheader "Hugo Benavides"
+        - row "Alma Carrasco":
+          - columnheader "Alma Carrasco"
+        - row "Omar Cárdenas":
+          - columnheader "Omar Cárdenas"
+        - row "Camila Huamán":
+          - columnheader "Camila Huamán"
+        - row "Kiara Ledesma":
+          - columnheader "Kiara Ledesma"
+        - row "Fabio Medina":
+          - columnheader "Fabio Medina"
+        - row "Diego Montalvo":
+          - columnheader "Diego Montalvo"
+        - row "Elena Paredes":
+          - columnheader "Elena Paredes"
+        - row "Thiago Reátegui":
+          - columnheader "Thiago Reátegui"
+        - row "Gabriela Ríos":
+          - columnheader "Gabriela Ríos"
+        - row "Bruno Salcedo":
+          - columnheader "Bruno Salcedo"
+        - row "Valeria Soto":
+          - columnheader "Valeria Soto"
+        - row "Inés Ventura":
+          - columnheader "Inés Ventura"
+        - row "Mateo Villalba":
+          - columnheader "Mateo Villalba"
+    - button "Cerrar período" [disabled]
+    - heading "Consolidado del período" [level=4]
+    - paragraph: Las letras son las valoraciones confirmadas por la profesora. “—” indica que aún no hay valoración.
+    - button "Ver detalle"
+    - link "Exportar Excel de Ayni":
+      - /url: http://127.0.0.1:8790/api/period-evaluations/consolidated.xlsx?classroomId=cda4ce72-78a6-4b39-a680-b7811fe8a605&periodId=b80c5a4b-a0ed-4626-be28-ef68ba6a4c07
+      - text: Exportar Excel de Ayni
+    - button "Exportar para SIAGIE · Próximamente" [disabled]
+    - heading "Resumen del aula" [level=4]
+    - paragraph: Los números se calculan desde el consolidado; Ayni solo redacta su interpretación.
+    - text: "0"
+    - paragraph: competencias trabajadas
+    - text: "0"
+    - paragraph: valoraciones confirmadas
+    - text: "0"
+    - paragraph: valoraciones pendientes
+    - text: "0"
+    - paragraph: competencias con cobertura incompleta
+    - generic "Ver estadísticas por competencia"
+    - button "Ver informe del aula"
+    - button "Preparar informe del aula"

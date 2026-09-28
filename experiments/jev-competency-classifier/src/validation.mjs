@@ -3,7 +3,8 @@ import { CONTEXTS } from "./constants.mjs";
 export function assert(condition, message) { if (!condition) throw new Error(message); }
 export function isFiniteProbability(value) { return typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= 1; }
 
-export function validateInput(input, { maximumObservationCharacters = 2000 } = {}) {
+export function validateInput(input, config = {}) {
+  const maximumObservationCharacters = config.maximum_observation_characters ?? config.maximumObservationCharacters ?? 2000;
   assert(input && typeof input === "object", "La clasificación requiere un objeto de entrada.");
   assert([3, 4, 5].includes(input.age), "La edad CNEB debe ser 3, 4 o 5 años.");
   assert(typeof input.observation === "string" && input.observation.trim(), "La observación no puede estar vacía.");

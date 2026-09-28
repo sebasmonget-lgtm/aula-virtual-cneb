@@ -1,0 +1,45 @@
+{
+  "id": "animales_marinos_observar_01",
+  "file": "animales/animales_marinos_observar_01.jpg",
+  "master": "masters/animales_marinos_observar_01.png",
+  "title": "Leo investiga animales marinos",
+  "category": "animales",
+  "subcategory": "marinos",
+  "characters": [
+    "leo",
+    "sofia"
+  ],
+  "concepts": [
+    "animales",
+    "mar",
+    "peces",
+    "hábitat"
+  ],
+  "actions": [
+    "observar",
+    "investigar"
+  ],
+  "objects": [
+    "peces",
+    "tortuga",
+    "acuario"
+  ],
+  "contexts": [
+    "proyecto",
+    "plan_anual",
+    "portada",
+    "animales",
+    "marinos"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "orientation": "landscape",
+  "aspect_ratio": "3:2",
+  "has_text": false,
+  "country_context": "PE",
+  "variant": 1,
+  "priority": 10
+}

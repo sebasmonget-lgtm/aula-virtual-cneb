@@ -1,6 +1,6 @@
 # Plan de implementación: clasificador experimental Jev–CNEB
 
-Estado: plan de diseño listo para revisión e implementación; sin código del experimento aún.
+Estado: experimento aislado implementado; se mantiene este documento como contrato de diseño histórico.
 Fecha de diseño: 2026-09-23.
 Responsabilidad de ejecución prevista: GPT-5.6 Terra, siguiendo este contrato.
 
@@ -212,6 +212,22 @@ Ejecutar `npm run typecheck`, `npm run lint`, `npm run build`, `npm test` y una 
 - La recomendación final distingue **prometedor**, **necesita ajustes** o **no suficientemente fiable**, y explica con casos y tamaños de muestra por qué. Si no hay API key o golden revisado, la conclusión queda explícitamente provisional.
 
 Rollback: retirar únicamente `experiments/jev-competency-classifier/`; no hay efectos sobre datos ni esquema de Ayni.
+
+## Actualización de pasarela (2026-09-27)
+
+El mismo contrato `state` + `questions.competency` puede enviarse también a Jev mediante OpenRouter Decisions API (`POST /api/alpha/decisions`). Para pruebas reproducibles se usa por defecto `typesafe/jev-1.13`; `JEV_GATEWAY=openrouter` selecciona esta pasarela y `OPENROUTER_API_KEY` queda solo en el servidor local. La respuesta se normaliza al contrato de resultados del experimento. Los reportes registran la pasarela y usan `usage.cost` real de OpenRouter cuando existe. La caché incluye la pasarela en su clave. El acceso directo a TypeSafe sigue disponible con `JEV_GATEWAY=typesafe`.
+
+## Extensión multietiqueta experimental (2026-09-27)
+
+Se añadió `parallel-noul` sin alterar el flujo `choice`: una pregunta sí/no por competencia aplicable, todas en un único `systemOne`, con los mismos datos de edad, contexto, observación y tarjetas KB. Cada pregunta incluye el nombre y criterios porque el identificador de pregunta no llega al modelo. La respuesta exige exactamente una probabilidad válida por competencia; una respuesta parcial falla cerrada. La caché distingue método y huella de preguntas. Los umbrales exploratorios `0.80`/`0.50` producen propuestas/posibles, siempre para revisión humana, nunca una asociación automática. Sus probabilidades son independientes y no se tratan como distribución `choice` ni como `confidence`. El rollback de esta extensión consiste en retirar selector, constructor de preguntas y normalizador `noul`; el método `choice` permanece.
+
+## Variante de criterios enriquecidos (2026-09-27)
+
+`--criteria-profile enriched` mantiene la misma KB v4.0, edad, observación y modelo, pero proyecta todos los observables de esa edad, límites de uso, dos ejemplos/contraejemplos y confusiones con opciones aplicables. `compact` conserva el prompt anterior como control. La UI expone ambos perfiles y la caché, reportes y huellas los distinguen. El lote real de 20 por método mostró mejora descriptiva, pero los mismos casos de desarrollo motivaron el cambio y sus etiquetas siguen siendo provisionales. No se modificaron Ayni, migraciones ni KB. Rollback: elegir `compact` o retirar esta proyección sin tocar las demás rutas.
+
+## Revisión integral y variante enfocada (2026-09-27)
+
+La variante `focused` añade un control de suficiencia `noul` en la misma solicitud, acorta el contexto al retirar ejemplos generales y corrige la regla negativa contradictoria del método multietiqueta. El control solo transforma una autoaceptación `choice` en revisión; no inventa una etiqueta ni modifica el ranking crudo. Se corrigieron la clave de configuración de longitud, la huella de caché para incluir instrucciones completas y la separación de precisión estricta de primaria frente a alternativas aceptables. Se creó `challenge-v1.jsonl` antes de las pruebas reales. Las etiquetas de ambos datasets son provisionales, no docentes. Ver [REVIEW_2026-09-27.md](REVIEW_2026-09-27.md) para resultados, errores, límites y rollback.
 
 ## 11. Fuentes a comprobar al implementar
 

@@ -1,5 +1,87 @@
 # Errores y soluciones
 
+## 2026-09-27 La revisión opcional de cada niño seguía bloqueando el resumen del aula
+
+**Síntoma.** El acceso individual estaba al final de una tabla ancha, el resumen exigía comentarios confirmados de todos los niños y su información se recortaba dentro de un scroll. Mover solo el botón no habría permitido avanzar sin revisar a cada niño.
+
+**Causa raíz.** Interfaz y servidor compartían una regla de completitud individual obligatoria. La huella grupal dependía de todos los comentarios, en vez de las fuentes disponibles. La síntesis de Ayni también asumía comentarios de cada niño como única fuente.
+
+**Solución validada.** Los accesos quedan debajo del mapa; el comentario es opcional y sin generación individual. El snapshot v2 usa padrón y fuentes actuales más comentarios vigentes disponibles. Pruebas aisladas confirman resumen y prioridades sin comentarios, preservan versiones confirmadas y rechazan confirmación tras cambiar fuentes o padrón. La sugerencia grupal usa una proyección anónima, acotada y solo por solicitud, con ausencia de información explícita. La información de aula crece con la página y la navegación coloca volver y avanzar en lados opuestos. La transcripción de comentario/resumen es literal y los permisos rechazan alumnos/aulas ajenas y scopes ambiguos antes de llamar al proveedor. Ver ADR 083.
+
+El exportador Word asumía además un comentario por cada niño. Ahora cuenta solo comentarios existentes; el test del XML verifica cero cuando no se registraron, mantiene todos los nombres autorizados y las observaciones, y no afirma que haya comentarios confirmados inexistentes. No se hizo revisión visual del Word en este cambio.
+
+**Prevención.** Cubrir la ruta vertical interfaz/servidor/exportación: algo descrito como opcional no debe ser una precondición oculta ni inflar conteos del informe. Los snapshots nuevos necesitan lectura compatible de versiones históricas y detección de fuentes nuevas, aun sin comentarios individuales. Mantener ejemplos como placeholders, no autocompletarlos como evaluaciones.
+
+## 2026-09-27 Reconsultar observaciones informaba éxito sin una recomendación
+
+**Síntoma.** «Sugerir con Jev» parecía no hacer nada; la UI seguía mostrando todas las competencias y podía informar una actualización exitosa aunque la nota hubiera sido bloqueada o el modelo se hubiera abstenido.
+
+**Causa raíz.** La presentación trataba HTTP 200 como clasificación exitosa, sin distinguir privacidad, suficiencia o indisponibilidad. Exponía el catálogo completo antes de obtener una candidata, pese a existir guardado y clasificación automáticos en segundo plano.
+
+**Solución validada.** Se deriva y expone un estado cerrado sin texto interno sensible. La tarjeta de Ayni presenta automáticamente principal/adicionales, carga y mensajes específicos; un error de consulta permite reintentar y el catálogo solo aparece al editar. La ruta genérica autorizada conserva el alias anterior y la respuesta tardía no sobrescribe una decisión docente. Las pruebas incluyen bloqueo de privacidad, abstención, error, acceso entre docentes y carrera con confirmación manual. Guardar una nota ficticia desde la UI produjo automáticamente `MAT_CANTIDAD`; abrir, añadir una segunda opción y cancelar no guardó cambios.
+
+**Prevención.** Probar resultados vacíos además del camino exitoso. Derivar feedback del resultado de dominio, no del código HTTP; mantener las selecciones locales durante el polling y condicionar escrituras asíncronas a no tener clasificación docente.
+
+## 2026-09-27 La etiqueta numérica de observaciones ficticias bloqueó su clasificación
+
+**Síntoma.** Las doce espontáneas del lote local se guardaron y proyectaron al perfil, pero permanecieron por revisar sin sugerencias ni fuente de clasificación. No demuestra un fallo o falta de precisión del modelo.
+
+**Causa raíz comprobada.** Su prefijo `[PRUEBA FICTICIA · OBS-20260927]` contiene un número de ocho dígitos. `anonymousDecisionText` rechaza números de siete o más dígitos como posibles identificadores antes de cualquier llamada externa. Una comprobación local aceptó 0/12 notas con el prefijo y 12/12 al retirarlo solamente en memoria, sin llamar a IA.
+
+**Solución validada.** Se retira únicamente el prefijo inicial conocido de prueba al construir el texto temporal del modelo; la nota guardada permanece idéntica. Todas las reglas de privacidad se aplican al cuerpo. Las pruebas mantienen bloqueados identificadores/información familiar incluso con la marca, marcas desconocidas y prefijos no iniciales. La reconsulta real de las 12 filas produjo 10 recomendaciones y 2 abstenciones de Jev, sin errores; ninguna competencia quedó confirmada por la prueba y las entrevistas se conservaron. Una nota nueva con marca ficticia obtuvo automáticamente `MAT_CANTIDAD` desde la UI. Estos resultados verifican conexión/flujo, no aciertos adjudicados por especialistas.
+
+**Prevención.** Mantener el filtro numérico general. En futuros fixtures preferir una marca visible no numérica y conservar fecha/identificador en el reporte local; comprobar admisibilidad con el mismo anonimizador antes de guardarlos. Nunca borrar la marca de las fuentes guardadas ni aceptar datos privados por pertenecer a un fixture.
+
+## 2026-09-27 Los nombres históricos conservaban caja irregular en las entrevistas
+
+**Síntoma.** La lista de entrevistas y sus preguntas seguían mostrando un nombre con mayúsculas mezcladas, aunque la lista principal de alumnos ya usaba capitalización legible.
+
+**Causa raíz.** Diagnóstico recibía el nombre histórico directamente y el editor familiar lo interpolaba sin pasar por la función compartida de presentación.
+
+**Solución validada.** La lista y los encabezados infantiles del diagnóstico, y el nombre usado en las preguntas y la impresión de la entrevista, reutilizan `displayPersonName`. No se reescriben alumnos ni entrevistas. Las pruebas de nombres y el contrato del flujo protegen esas llamadas; la lista se verificó en el navegador local.
+
+**Prevención.** Aplicar la función de presentación en cada nueva vista de nombres históricos, sin confundir el formato visible con una corrección de identidad.
+
+## 2026-09-27 Los campos editables parecían deshabilitados o texto plano
+
+**Síntoma.** En «Mi aula» los campos de nombre no tenían estilo de control. En el alta inicial, un equipo con preferencia de modo oscuro mostraba los `Input` en gris pese a que la página es clara.
+
+**Causa raíz.** El formulario de niños usaba elementos `<input>` sin clases fuera de `ayni-workflow`. Además, los componentes compartidos mantenían `dark:bg-input/30`, activado por la preferencia del sistema aunque Ayni no cambia su paleta; los bordes de entrada eran demasiado pálidos.
+
+**Solución validada.** «Mi aula» usa campos compartidos con etiquetas persistentes, bordes visibles, envío semántico y estado de carga. Se retiró el fondo oscuro heredado y se fijó el borde compartido a `#71869d`, con contraste calculado de 3,75:1 sobre blanco. En el navegador local, con preferencia oscura activa, el fondo efectivo pasó a blanco y el borde al color previsto. Typecheck, lint, build y el contrato del flujo deben pasar antes de cerrar el cambio.
+
+**Prevención.** Revisar el estilo computado con preferencias claras y oscuras cuando la app use una sola paleta. Proteger etiquetas, mensajes de carga y contraste de controles con pruebas de contrato; no depender del placeholder para identificar un campo.
+
+## 2026-09-27 OpenRouter impidió la nueva prueba real de Jev
+
+**Síntoma.** Al probar el nuevo flujo docente de dos decisiones con la clave del experimento, ambas solicitudes recibieron HTTP 402 y no devolvieron clasificaciones.
+
+**Causa observada.** OpenRouter rechazó la cuenta por crédito insuficiente o límite de gasto. No se infiere la configuración exacta de la cuenta solo a partir del código HTTP.
+
+**Solución validada.** Tras añadir crédito a la misma cuenta, la clave experimental volvió a responder con la versión efectiva `typesafe/jev-1.13-20260917`. El adaptador convierte 402 en `insufficient_credits` sin guardar ni mostrar la clave, la observación o el cuerpo de respuesta. Se completaron 154 llamadas clasificatorias de la nueva composición y pruebas reales de imagen y ficha con datos ficticios. La configuración Jev se habilitó solo en el backend local.
+
+**Prevención y pendiente.** Comprobar crédito y límite de la clave antes de otra evaluación; repetir con presupuesto explícito y etiquetas expertas nuevas. El proveedor no debe impedir guardar la observación ni la confirmación manual. El puerto 4179 pertenece al experimento; la app principal se abrió en `localhost:5173` con su API local en 8788.
+
+## 2026-09-27 El anonimizado de Jev ocultaba acciones observables
+
+**Síntoma.** Notas como «Dibujó círculos» o «Señaló tres bloques» llegaban al clasificador como «[persona] círculos» o «[persona] tres bloques». En 28 de 30 notas anonimizadas del conjunto difícil se introducía al menos un marcador, aunque la comparación previa había omitido esta capa.
+
+**Causa raíz.** Una expresión regular sustituía toda palabra capitalizada de tres o más letras que no estuviera en una lista breve de verbos; incluía verbos y conectores al inicio de frases.
+
+**Solución validada.** Se amplió una lista cerrada de actuaciones y conectores no identificadores, manteniendo la sustitución previa de nombres conocidos y la redacción de capitalizados desconocidos. En el mismo conjunto, los marcadores bajaron de 28 a 3 notas; una nota continúa rechazada por la regla de privacidad. Pruebas comprueban que se conservan verbos y conectores, que un nombre desconocido se oculta y que un nombre conocido coincidente con un verbo también se neutraliza. El resultado pedagógico necesita evaluación separada; esta prueba verifica el texto, no la exactitud de Jev.
+
+**Prevención.** Pasar los datasets de evaluación por el mismo anonimizador que usa el servidor y registrar por separado notas aceptadas, modificadas y enviadas a revisión. No ampliar vocabulario a partir de un caso real sin revisar la implicación de privacidad.
+
+## 2026-09-27 El límite de cuatro candidatas seguía el orden curricular, no las puntuaciones
+
+**Síntoma.** Si más de cuatro `noul` superaban el umbral, una competencia con puntuación mayor podía omitirse por aparecer después en la KB.
+
+**Causa raíz.** El código aplicaba `filter(...).slice(0, 4)` sobre los IDs en orden original.
+
+**Solución validada.** Ordena las candidatas por puntuación descendente y desempata por ID antes de limitar. Una prueba con cinco candidatas y puntuaciones ascendentes verifica que se conservan las cuatro mayores. Se aplica también al máximo de tres en planificación emergente. No se cambió el umbral ni se confirma ninguna competencia automáticamente.
+
+**Prevención.** Probar los límites de listas con más candidatos válidos que plazas disponibles; separar orden semántico de orden de almacenamiento.
+
 ## 2026-09-26 La evaluación real trataba edad y competencia confirmada como ausentes
 
 **Síntoma.** Project, Unit y Activity devolvían propuestas prudentes pero pendientes; la validación rechazaba sus rutas o la competencia aunque el input interno sí tenía edad e IDs.
@@ -601,3 +683,13 @@ La revisión del corpus completo detectó además dos resúmenes de fuentes de l
 **Solución validada.** Se normalizaron los archivos de v4.1 a LF y `.gitattributes` fija `eol=lf` solo para esa versión. Una comprobación independiente leyó los 80 blobs del índice de Git y comparó cada hash con el manifest; todos coincidieron.
 
 **Prevención.** Comprobar integridad tanto en el árbol de trabajo como en el índice antes de confirmar nuevas versiones de KB.
+
+## 2026-09-26 La finalización de escenas intentó duplicar tres metadatos
+
+**Síntoma.** Al procesar la primera colección, tres escenas de muestra con nombres de archivo cortos recibieron un segundo JSON con el mismo ID.
+
+**Causa raíz.** El script comprobaba únicamente si existía un JSON con el nombre derivado del ID; las muestras ya tenían JSON homónimos de sus JPEG, pero esos nombres eran diferentes.
+
+**Solución validada.** El finalizador carga primero todos los metadatos existentes y omite cualquier ID ya catalogado. Se retiraron los tres duplicados creados por el intento y el constructor del índice validó 61 IDs únicos.
+
+**Prevención.** Comprobar unicidad por ID y ruta en el constructor del índice; conservar nombres de JPEG y JSON homónimos aunque el ID sea más largo.

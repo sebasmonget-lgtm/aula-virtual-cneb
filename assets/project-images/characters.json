@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "characters": {
+    "leo": {
+      "name": "Leo",
+      "reference": "characters/leo.png",
+      "description": "Niño de cabello castaño oscuro, gafas redondas, casaca verde, camiseta blanca, pantalón azul y mochila azul."
+    },
+    "luna": {
+      "name": "Luna",
+      "reference": "characters/luna.png",
+      "description": "Niña de cabello castaño largo y ondulado, lazo lila, sudadera blanca con corazón lila, pantalón y zapatillas lilas."
+    },
+    "sofia": {
+      "name": "Sofía",
+      "reference": "characters/sofia.png",
+      "description": "Niña lectora con moño castaño, lazo amarillo, gafas redondas, suéter lila, pantalón azul y libros."
+    },
+    "mateo": {
+      "name": "Mateo",
+      "reference": "characters/mateo.png",
+      "description": "Niño pelirrojo con pecas, gorra azul, camiseta de arcoíris, mochila azul y zapatillas rojas."
+    },
+    "maestra_rosa": {
+      "name": "Maestra Rosa",
+      "reference": "characters/maestra_rosa.png",
+      "description": "Docente de cabello castaño largo, pasador de flor rosa, cárdigan rosa, pantalón beige y libros."
+    },
+    "alpaca_inti": {
+      "name": "Inti",
+      "reference": "characters/alpaca_inti.png",
+      "description": "Alpaca de pelaje crema y marrón con poncho andino multicolor."
+    },
+    "mama_clara": {
+      "name": "Clara",
+      "reference": "characters/mama_clara.png",
+      "description": "Madre de piel morena cálida, trenza negra, blusa turquesa, cárdigan mostaza y pantalón azul oscuro."
+    },
+    "papa_diego": {
+      "name": "Diego",
+      "reference": "characters/papa_diego.png",
+      "description": "Padre de piel trigueña, cabello negro ondulado, camisa azul claro y pantalón beige."
+    }
+  }
+}

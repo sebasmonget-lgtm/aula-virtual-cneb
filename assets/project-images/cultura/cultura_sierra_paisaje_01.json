@@ -1,0 +1,45 @@
+{
+  "id": "cultura_sierra_paisaje_01",
+  "file": "cultura/cultura_sierra_paisaje_01.jpg",
+  "master": "masters/cultura_sierra_paisaje_01.png",
+  "title": "Luna observa un paisaje andino",
+  "category": "cultura",
+  "subcategory": "sierra",
+  "characters": [
+    "luna",
+    "alpaca_inti"
+  ],
+  "concepts": [
+    "Perú",
+    "sierra",
+    "montañas",
+    "naturaleza"
+  ],
+  "actions": [
+    "observar",
+    "explorar"
+  ],
+  "objects": [
+    "montañas",
+    "alpaca",
+    "sendero"
+  ],
+  "contexts": [
+    "proyecto",
+    "plan_anual",
+    "portada",
+    "cultura",
+    "sierra"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "orientation": "landscape",
+  "aspect_ratio": "3:2",
+  "has_text": false,
+  "country_context": "PE",
+  "variant": 1,
+  "priority": 10
+}

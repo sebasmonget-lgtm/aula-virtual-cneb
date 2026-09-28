@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import { AIProvider } from "./ai-provider.mjs";
+import { recordAiUsage } from "./ai-usage-service.mjs";
 
 export class OpenAIProviderError extends Error {
   constructor(reason, details = {}) {
@@ -94,6 +95,9 @@ export class OpenAIProvider extends AIProvider {
         cause_name: error?.cause?.name ?? null,
       });
     }
+    await recordAiUsage({ provider: "openai", workflow: request.workflow ?? "generation", model: response.model ?? plan.model,
+      inputTokens: response.usage?.input_tokens, cachedInputTokens: response.usage?.input_tokens_details?.cached_tokens ?? 0,
+      outputTokens: response.usage?.output_tokens });
     if (response.status === "incomplete" || response.incomplete_details) {
       throw new OpenAIProviderError("response_incomplete");
     }

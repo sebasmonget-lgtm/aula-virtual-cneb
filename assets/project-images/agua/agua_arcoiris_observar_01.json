@@ -1,0 +1,45 @@
+{
+  "id": "agua_arcoiris_observar_01",
+  "file": "agua/agua_arcoiris_observar_01.jpg",
+  "master": "masters/agua_arcoiris_observar_01.png",
+  "title": "Leo y Sofía descubren un arcoíris",
+  "category": "agua",
+  "subcategory": "clima",
+  "characters": [
+    "leo",
+    "sofia"
+  ],
+  "concepts": [
+    "arcoíris",
+    "clima",
+    "lluvia",
+    "colores"
+  ],
+  "actions": [
+    "observar",
+    "conversar"
+  ],
+  "objects": [
+    "arcoíris",
+    "nubes",
+    "gotas"
+  ],
+  "contexts": [
+    "proyecto",
+    "plan_anual",
+    "portada",
+    "agua",
+    "clima"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "orientation": "landscape",
+  "aspect_ratio": "3:2",
+  "has_text": false,
+  "country_context": "PE",
+  "variant": 1,
+  "priority": 10
+}

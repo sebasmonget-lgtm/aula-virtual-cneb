@@ -1,0 +1,43 @@
+{
+  "id": "arte_titeres_teatro_01",
+  "file": "arte_musica/arte_titeres_teatro_01.jpg",
+  "master": "masters/arte_titeres_teatro_01.png",
+  "title": "Sofía representa una historia",
+  "category": "arte_musica",
+  "subcategory": "teatro",
+  "characters": [
+    "sofia",
+    "luna"
+  ],
+  "concepts": [
+    "teatro",
+    "títeres",
+    "expresión"
+  ],
+  "actions": [
+    "representar",
+    "crear"
+  ],
+  "objects": [
+    "títeres",
+    "teatrino"
+  ],
+  "contexts": [
+    "proyecto",
+    "plan_anual",
+    "portada",
+    "arte_musica",
+    "teatro"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "orientation": "landscape",
+  "aspect_ratio": "3:2",
+  "has_text": false,
+  "country_context": "PE",
+  "variant": 1,
+  "priority": 10
+}

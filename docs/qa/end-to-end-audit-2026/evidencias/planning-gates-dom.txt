@@ -1,0 +1,72 @@
+Browser tab: 3, Title: "Ayni Aula | Asistente CNEB", URL: "http://localhost:5175/".
+1 AXWebArea Ayni Aula | Asistente CNEB, URL: localhost:5175/
+	2 container
+		3 text Ayni Aula
+		4 text Tu aliada en Inicial
+		5 content list
+			6 button Hoy
+			7 button Calendario
+			8 button Diagnóstico
+			9 button Planificar
+			10 button Aula
+			11 button Evaluar
+			12 button Biblioteca
+		13 container
+			14 text Exploradores  ·  5 años
+		15 container
+			16 text 2026  ·  15  estudiantes
+		17 container
+			18 text Domingo, 27 de setiembre IEI Semillas del Valle QA  ·  Exploradores Base conectada
+			19 button Abrir perfil
+		20 container
+			21 heading Planificar, Value: 1
+				22 text Planificar
+			23 text Avanza un paso a la vez. Ayni completa lo repetitivo.
+			24 container Continuar planificación
+				25 heading Continúa donde lo dejaste, Value: 2
+					26 text Continúa donde lo dejaste
+				27 text Borrador guardado
+				28 text Prepara el plan anual
+				29 container
+					30 text 15  niños en el aula ·  5 años
+				31 content list Avance de planificación
+					32 button Abrir Diagnóstico
+					33 button Abrir Plan anual
+						34 text 2
+						35 text Plan anual
+					36 button (disabled) Abrir Proyecto
+						37 text 3 Proyecto
+					38 button (disabled) Abrir Actividad
+						39 text 4 Actividad
+				40 button Continuar plan anual
+					41 text Continuar 
+					42 text plan anual
+			43 heading ¿Qué quieres preparar?, Value: 2
+				44 text ¿Qué quieres preparar?
+			45 button Plan anual Borrador guardado Abrir →
+				46 text Plan anual
+				47 text Borrador guardado
+				48 text Abrir →
+			49 button (disabled) Proyecto o unidad Primero confirma el plan anual Pendiente
+				50 text Proyecto o unidad
+				51 text Primero confirma el plan anual
+				52 text Pendiente
+			53 button (disabled) Actividad Primero confirma un proyecto o unidad Pendiente
+				54 text Actividad
+				55 text Primero confirma un proyecto o unidad
+				56 text Pendiente
+			57 button Taller Elegir de Biblioteca Abrir →
+				58 text Taller
+				59 text Elegir de Biblioteca
+				60 text Abrir →
+			61 heading Lo que Ayni tiene a mano, Value: 2
+				62 text Lo que Ayni tiene a mano
+			63 content list
+				64 container
+					65 text  Aula ·  5 años  ·  15  niños
+				66 container
+					67 text ✓  Diagnóstico ·  Revisado
+				68 container
+					69 text  Currículo filtrado para  5 años
+
+The focused UI element is 9 button Planificar

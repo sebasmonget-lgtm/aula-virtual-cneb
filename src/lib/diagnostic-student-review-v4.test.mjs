@@ -10,6 +10,7 @@ import { confirmDiagnosticStudentReview, loadDiagnosticAssessmentWorkspace, prep
 import { buildStudentPedagogicalContext, buildSafeDiagnosticStudentContext } from "./student-context-service.mjs";
 import { getCurrentClassroomContext, publicClassroomContext } from "./classroom-context-service.mjs";
 import { buildAnnualPlanGenerationInput } from "./ai-annual-plan-ui-service.mjs";
+import { prepareDiagnosticPriorities, saveDiagnosticPriorities, confirmDiagnosticPriorities } from "./diagnostic-priority-service.mjs";
 
 const teacher = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 const other = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
@@ -57,7 +58,7 @@ test("un comentario por niño requiere palabras docentes, conserva fuentes y per
   } finally { await db.close(); }
 });
 
-test("entrevista y observaciones nuevas invalidan el borrador o comentario; aula espera a todos", async () => {
+test("las fuentes nuevas invalidan versiones; los comentarios individuales no bloquean al aula", async () => {
   const db = await database();
   try {
     const workspace = await classroom(db, teacher, "A");
@@ -76,7 +77,11 @@ test("entrevista y observaciones nuevas invalidan el borrador o comentario; aula
     await saveDiagnosticStudentReview(db, teacher, draft.id, { information_status: "information_available",
       comment_text: "En el aula eligió bloques y explicó su elección. La familia cuenta que también disfruta construir." });
     await confirmDiagnosticStudentReview(db, teacher, draft.id);
-    await assert.rejects(prepareDiagnosticGroupReview(db, teacher), { reason: "incomplete_children" });
+    const partialGroup = await prepareDiagnosticGroupReview(db, teacher);
+    await saveDiagnosticGroupReview(db, teacher, partialGroup.id, { strengths: "Se registró una elección de bloques.", needs: "Necesito observar más al grupo.", planning_priorities: "" });
+    const partialConfirmed = await confirmDiagnosticGroupReview(db, teacher, partialGroup.id);
+    assert.equal(partialConfirmed.details.report_snapshot.children.find((child) => child.student_id === bruno.id).teacher_comment, "");
+    assert.equal(partialConfirmed.details.report_snapshot.children.find((child) => child.student_id === ana.id).review_id, draft.id);
     const otherDraft = await prepareDiagnosticStudentReview(db, teacher, bruno.id);
     await saveDiagnosticStudentReview(db, teacher, otherDraft.id, { information_status: "insufficient_information",
       comment_text: "Aún necesito observar a Bruno en una experiencia de juego." });
@@ -91,7 +96,14 @@ test("entrevista y observaciones nuevas invalidan el borrador o comentario; aula
     assert.equal(loaded.group_reviews.find((row) => row.id === groupDraft.id).is_current, false);
     assert.equal((await buildStudentPedagogicalContext(db, ana.id)).confirmed_student_diagnostic_review.is_current, false);
     assert.equal((await buildSafeDiagnosticStudentContext(db, teacher, ana.id)).teacher_confirmed_student_comment, null);
-    await assert.rejects(prepareDiagnosticGroupReview(db, teacher), { reason: "stale_sources" });
+    await saveDiagnosticGroupReview(db, teacher, groupDraft.id, { strengths: "Se registró una elección de bloques.", needs: "Seguir observando.", planning_priorities: "" });
+    await assert.rejects(confirmDiagnosticGroupReview(db, teacher, groupDraft.id), { reason: "stale_sources" });
+    const refreshedGroup = await prepareDiagnosticGroupReview(db, teacher);
+    assert.equal(refreshedGroup.id, groupDraft.id);
+    assert.equal(refreshedGroup.details.strengths, "Se registró una elección de bloques.");
+    const refreshedConfirmed = await confirmDiagnosticGroupReview(db, teacher, groupDraft.id);
+    assert.equal(refreshedConfirmed.details.report_snapshot.children.find((child) => child.student_id === ana.id).teacher_comment, "");
+    assert.equal((await loadDiagnosticAssessmentWorkspace(db, teacher)).group_reviews.find((row) => row.id === groupDraft.id).is_current, true);
   } finally { await db.close(); }
 });
 
@@ -144,6 +156,30 @@ test("panorama grupal deriva intereses y vacíos; el plan usa solo fuentes vigen
     const continued = buildAnnualPlanGenerationInput({ classroom: { id: initial.classroom.id, age: 5,
       diagnostic_summary: stale.confirmed_diagnostic_summary, context_v4: stale, calendar: input.calendar_context } });
     assert.equal(continued.calendar_context.project_slots.length, 12);
+  } finally { await db.close(); }
+});
+
+test("sin comentarios ni registros se puede escribir el resumen; el padrón invalida el borrador", async () => {
+  const db = await database();
+  try {
+    const initial = await classroom(db, teacher, "A");
+    const group = await prepareDiagnosticGroupReview(db, teacher);
+    await saveDiagnosticGroupReview(db, teacher, group.id, { strengths: "", needs: "Todavía necesito recoger observaciones del aula.", planning_priorities: "" });
+    const confirmed = await confirmDiagnosticGroupReview(db, teacher, group.id);
+    assert.equal(confirmed.details.report_snapshot.children.length, 2);
+    assert.ok(confirmed.details.report_snapshot.children.every((child) => child.review_id === null && !child.teacher_comment));
+    assert.equal((await db.query("select count(*)::int as n from diagnostic_student_reviews")).rows[0].n, 0);
+    assert.equal((await loadDiagnosticAssessmentWorkspace(db, teacher)).group_reviews[0].is_current, true);
+    const next = await prepareDiagnosticGroupReview(db, teacher);
+    await saveDiagnosticGroupReview(db, teacher, next.id, { strengths: "", needs: "Seguiré recogiendo observaciones.", planning_priorities: "" });
+    await db.query("update students set status='inactive' where id=$1 and classroom_id=$2", [initial.students[1].id, initial.classroom.id]);
+    await assert.rejects(confirmDiagnosticGroupReview(db, teacher, next.id), { reason: "stale_sources" });
+    await prepareDiagnosticGroupReview(db, teacher);
+    const refreshed = await confirmDiagnosticGroupReview(db, teacher, next.id);
+    assert.equal(refreshed.details.report_snapshot.children.length, 1);
+    const priorities = await prepareDiagnosticPriorities(db, teacher);
+    await saveDiagnosticPriorities(db, teacher, priorities.id, { priorities: [] });
+    assert.equal((await confirmDiagnosticPriorities(db, teacher, priorities.id)).status, "confirmed");
   } finally { await db.close(); }
 });
 

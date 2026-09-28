@@ -19,7 +19,7 @@ import { familyInterviewCategories, familyInterviewQuestionGroups } from "./fami
 import { createDiagnosticJevAdapter } from "./diagnostic-jev-adapter.mjs";
 import { attachFamilyInterview, classifySpontaneousObservation, confirmFamilyInterview,
   correctSpontaneousClassification, familyInterviewAttachmentPath, loadFamilyInterview,
-  listFamilyInterviewStatuses, loadSpontaneousObservations, markSpontaneousNeedsReview, recordSpontaneousObservation, recordMatrixDiagnosticObservation, suggestSpontaneousCompetencies, safeFamilyContext, saveFamilyInterview,
+  listFamilyInterviewStatuses, loadSpontaneousObservations, markSpontaneousNeedsReview, recordSpontaneousObservation, recordMatrixDiagnosticObservation, suggestSpontaneousCompetencies, safeFamilyContext, saveFamilyInterview, saveAndConfirmFamilyInterview,
   validateClassifierDecision, validateFamilyInterviewDetails } from "./diagnostic-sources-v4.mjs";
 
 const teacher = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
@@ -76,6 +76,100 @@ test("una observación conserva varias competencias elegidas y la sugerencia nun
   } finally { await db.close(); }
 });
 
+test("Jev propone varias competencias sin confirmar y las notas familiares quedan en revisión", async () => {
+  const db = await database();
+  try {
+    const workspace = await setup(db, teacher, "J");
+    const studentId = workspace.students[0].id;
+    const allowed = (await loadSpontaneousObservations(db, teacher)).competencies;
+    const saved = await recordSpontaneousObservation(db, teacher, { studentId,
+      contextLabel: "Juego", observationText: "Camila contó vasos y explicó cómo los repartió." });
+    let sent = "";
+    await suggestSpontaneousCompetencies(db, teacher, saved.id, { classify: async ({ observation }) => {
+      sent = observation;
+      return { source: "jev", candidate_ids: allowed.slice(0, 2).map((item) => item.id) };
+    } });
+    const row = (await loadSpontaneousObservations(db, teacher)).observations.find((item) => item.id === saved.id);
+    assert.equal(sent.includes("Camila"), false);
+    assert.equal(row.classification_source, "jev");
+    assert.deepEqual(row.competency_v4_ids, []);
+    assert.equal(row.suggested_competency_v4_ids.length, 2);
+    await suggestSpontaneousCompetencies(db, teacher, saved.id, { classify: async () =>
+      ({ source: "jev", candidate_ids: [allowed[1].id] }) }, { allowReview: true });
+    assert.deepEqual((await loadSpontaneousObservations(db, teacher)).observations
+      .find((item) => item.id === saved.id).suggested_competency_v4_ids, [allowed[1].id]);
+    await correctSpontaneousClassification(db, teacher, saved.id, [allowed[0].id]);
+    assert.equal((await suggestSpontaneousCompetencies(db, teacher, saved.id, { classify: async () => {
+      throw new Error("No se debe sobrescribir una decisión docente.");
+    } }, { allowReview: true })).status, "teacher_preserved");
+    const privateNote = await recordSpontaneousObservation(db, teacher, { studentId,
+      contextLabel: "Conversación", observationText: "Su mamá Rosa dijo que jugó en casa." });
+    await suggestSpontaneousCompetencies(db, teacher, privateNote.id, { classify: async () => {
+      throw new Error("No se debe transmitir esta nota.");
+    } });
+    const privateRow = (await loadSpontaneousObservations(db, teacher)).observations.find((item) => item.id === privateNote.id);
+    assert.equal(privateRow.classification_status, "needs_review");
+    assert.equal(privateRow.classification_source, null);
+  } finally { await db.close(); }
+});
+
+test("etiqueta ficticia no bloquea Ayni; reconsulta distingue abstención, privacidad y multimedia sin texto", async () => {
+  const db = await database();
+  try {
+    const workspace = await setup(db, teacher, "R");
+    await setup(db, other, "S");
+    const studentId = workspace.students[0].id;
+    const saved = await recordSpontaneousObservation(db, teacher, { studentId,
+      contextLabel: "Juego", observationText: "[PRUEBA FICTICIA · OBS-20260927] Camila contó tres vasos." });
+    await markSpontaneousNeedsReview(db, teacher, saved.id);
+    let sent = "";
+    const classifier = { classify: async ({ observation }) => { sent = observation;
+      return { source: "jev", candidate_ids: ["MAT_CANTIDAD"] }; } };
+    const result = await suggestSpontaneousCompetencies(db, teacher, saved.id, classifier, { allowReview: true });
+    assert.equal(result.recommendation_state, "suggested");
+    assert.equal(sent.includes("PRUEBA FICTICIA"), false);
+    assert.equal(sent.includes("20260927"), false);
+    assert.equal(sent.includes("Camila"), false);
+    const row = (await loadSpontaneousObservations(db, teacher)).observations.find((item) => item.id === saved.id);
+    assert.equal(row.observation_text, "[PRUEBA FICTICIA · OBS-20260927] Camila contó tres vasos.");
+    assert.equal(row.recommendation_state, "suggested");
+    assert.deepEqual(row.competency_v4_ids, []);
+    assert.equal("classification_reason" in row, false);
+    const abstained = await suggestSpontaneousCompetencies(db, teacher, saved.id,
+      { classify: async () => ({ source: "jev", candidate_ids: [] }) }, { allowReview: true });
+    assert.equal(abstained.recommendation_state, "insufficient_information");
+    const privateNote = await recordSpontaneousObservation(db, teacher, { studentId,
+      contextLabel: "Juego", observationText: "[PRUEBA FICTICIA · OBS-20260927] Su DNI es 12345678." });
+    const neverSend = { classify: async () => { throw new Error("No se debe llamar al proveedor."); } };
+    assert.equal((await suggestSpontaneousCompetencies(db, teacher, privateNote.id, neverSend)).recommendation_state, "privacy_blocked");
+    assert.equal((await suggestSpontaneousCompetencies(db, teacher, privateNote.id, neverSend, { allowReview: true })).recommendation_state, "privacy_blocked");
+    const mediaOnly = await recordSpontaneousObservation(db, teacher, { studentId, contextLabel: "Juego", mediaPath: "private-test-path", mediaMimeType: "image/png" });
+    assert.equal((await suggestSpontaneousCompetencies(db, teacher, mediaOnly.id, neverSend)).recommendation_state, "missing_text");
+    await correctSpontaneousClassification(db, teacher, saved.id, []);
+    assert.equal((await suggestSpontaneousCompetencies(db, teacher, saved.id, neverSend, { allowReview: true })).recommendation_state, "teacher_unclassified");
+    await assert.rejects(suggestSpontaneousCompetencies(db, other, saved.id, classifier, { allowReview: true }), { reason: "not_found" });
+  } finally { await db.close(); }
+});
+
+test("una recomendación tardía no sobrescribe competencias que la docente acaba de elegir", async () => {
+  const db = await database();
+  try {
+    const workspace = await setup(db, teacher, "C");
+    const saved = await recordSpontaneousObservation(db, teacher, { studentId: workspace.students[0].id,
+      contextLabel: "Juego", observationText: "Contó tres vasos y explicó cómo los repartió." });
+    const result = await suggestSpontaneousCompetencies(db, teacher, saved.id, { classify: async () => {
+      await correctSpontaneousClassification(db, teacher, saved.id, ["COM_ORAL"]);
+      return { source: "jev", candidate_ids: ["MAT_CANTIDAD"] };
+    } });
+    assert.equal(result.status, "teacher_preserved");
+    assert.equal(result.recommendation_state, "teacher_confirmed");
+    await markSpontaneousNeedsReview(db, teacher, saved.id);
+    const row = (await loadSpontaneousObservations(db, teacher)).observations.find((item) => item.id === saved.id);
+    assert.equal(row.recommendation_state, "teacher_confirmed");
+    assert.deepEqual(row.competency_v4_ids, ["COM_ORAL"]);
+  } finally { await db.close(); }
+});
+
 test("un archivo privado queda ligado al niño y no puede leerse como otro docente", async () => {
   const dir = await mkdtemp(path.join(tmpdir(), "ayni-evidence-media-"));
   const storage = createLocalPrivateEvidenceStorage(dir);
@@ -103,9 +197,10 @@ test("adapter Jev es opt-in y solo recibe decisión cerrada sin proveedor real e
   assert.equal(calls, 1);
 });
 
-test("runtime mantiene Jev desconectado y prepara Storage privado en Supabase", async () => {
+test("runtime conecta Jev solo bajo bandera y prepara Storage privado en Supabase", async () => {
   const server = await readFile(new URL("../../scripts/local-db-server.mjs", import.meta.url), "utf8");
-  assert.doesNotMatch(server, /AYNI_JEV_|createDiagnosticJevAdapter|classifySpontaneousObservation/);
+  assert.match(server, /jevFeatureEnabled\("competencies"\)/);
+  assert.doesNotMatch(server, /createDiagnosticJevAdapter|classifySpontaneousObservation/);
   const migration = await readFile(new URL("../../supabase/migrations/202609230004_diagnostic_sources.sql", import.meta.url), "utf8");
   assert.match(migration, /'family-interviews', 'family-interviews', false/);
   assert.match(migration, /family_interview_storage_read_own/);
@@ -208,6 +303,36 @@ test("diez preguntas opcionales por categoría; la familia aporta contexto sin c
     assert.equal((await db.query("select count(*)::int as n from diagnostic_experience_observations")).rows[0].n, 0);
     const raw = (await db.query("select details from student_family_interviews where id=$1", [draft.id])).rows[0];
     assert.deepEqual(raw.details, {});
+  } finally { await db.close(); }
+});
+
+test("guardar entrevista confirma en una transacción, es idempotente y conserva historial", async () => {
+  const db = await database();
+  try {
+    const own = await setup(db, teacher, "A");
+    await setup(db, other, "B");
+    const studentId = own.students[0].id;
+    await assert.rejects(saveAndConfirmFamilyInterview(db, teacher, studentId, {}), { reason: "empty_interview" });
+    await assert.rejects(saveAndConfirmFamilyInterview(db, other, studentId, { interests: "Datos ficticios: bloques." }), { reason: "invalid_student" });
+    const details = { interests: "Datos ficticios: bloques.", interest_tags: ["construction"] };
+    const first = await saveAndConfirmFamilyInterview(db, teacher, studentId, details);
+    assert.equal(first.status, "confirmed");
+    assert.ok(first.teacher_confirmed_at);
+    assert.equal((await loadFamilyInterview(db, teacher, studentId)).draft, null);
+    assert.equal((await saveAndConfirmFamilyInterview(db, teacher, studentId, details)).id, first.id);
+    const failingDb = { transaction: (work) => db.transaction((tx) => work({ query: (sql, params) => {
+      if (sql.includes("set status='confirmed'")) throw new Error("Fallo simulado al confirmar");
+      return tx.query(sql, params);
+    } })) };
+    await assert.rejects(saveAndConfirmFamilyInterview(failingDb, teacher, studentId, { interests: "Datos ficticios: dibujos." }), /Fallo simulado/);
+    const afterFailure = await loadFamilyInterview(db, teacher, studentId);
+    assert.equal(afterFailure.confirmed.id, first.id);
+    assert.equal(afterFailure.draft, null);
+    const correction = await saveAndConfirmFamilyInterview(db, teacher, studentId, { interests: "Datos ficticios: dibujos." });
+    assert.equal(correction.version, 2);
+    assert.equal((await db.query("select details from student_family_interviews where id=$1", [first.id])).rows[0].details.interests, details.interests);
+    assert.equal((await db.query("select count(*)::int as n from evidences")).rows[0].n, 0);
+    assert.equal((await db.query("select count(*)::int as n from diagnostic_spontaneous_observations")).rows[0].n, 0);
   } finally { await db.close(); }
 });
 
