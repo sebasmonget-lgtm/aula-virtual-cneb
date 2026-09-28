@@ -1,5 +1,15 @@
 # Errores y soluciones
 
+## 2026-09-27 Talleres actualizaban una columna inexistente (H25)
+
+**Síntoma.** El maestro se generaba pero guardar las decisiones devolvía error genérico.
+
+**Causa raíz.** La tabla `learning_experiences` no tiene `updated_at`; tres UPDATE de talleres la asumían existente. El flujo de proyectos usa la revisión del trigger, sin esa columna.
+
+**Solución validada.** Retirar las tres asignaciones a `updated_at` en guardar, confirmar y archivar maestros. Una regresión usa todas las migraciones y los handlers reales: guarda, rechaza revisión obsoleta, confirma y archiva al confirmar una nueva versión. 13 relacionadas, typecheck, lint y build PASS. UI guardó y confirmó el mismo maestro sin otra generación.
+
+**Prevención.** Probar handlers de persistencia con el esquema migrado, no solo propuestas simuladas; conservar revisión optimista y transacción.
+
 ## 2026-09-27 DATE de PostgreSQL rechazado en actividades (H24)
 
 **Síntoma.** La propuesta del 30/03, dentro del proyecto 30/03–10/04, no se podía guardar.

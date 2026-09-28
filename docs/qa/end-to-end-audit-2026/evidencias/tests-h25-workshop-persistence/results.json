@@ -1,0 +1,65 @@
+[
+  {
+    "name": "typecheck",
+    "command": [
+      "node",
+      "node_modules/typescript/bin/tsc",
+      "--noEmit"
+    ],
+    "startedAt": "2026-09-28T04:22:44.011Z",
+    "endedAt": "2026-09-28T04:22:50.461Z",
+    "exitCode": 0,
+    "counters": null
+  },
+  {
+    "name": "unit-tests",
+    "command": [
+      "node",
+      "--test",
+      "--test-concurrency=2",
+      "src/lib/workshop-route-persistence.test.mjs",
+      "src/lib/workshop-flow.test.mjs",
+      "src/lib/jev-workshop-sheet.test.mjs",
+      "src/lib/activity-confirmation.test.mjs"
+    ],
+    "startedAt": "2026-09-28T04:22:50.464Z",
+    "endedAt": "2026-09-28T04:22:57.209Z",
+    "exitCode": 0,
+    "counters": {
+      "tests": 13,
+      "pass": 13,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    }
+  },
+  {
+    "name": "lint",
+    "command": [
+      "node",
+      "node_modules/eslint/bin/eslint.js",
+      ".",
+      "--ignore-pattern",
+      "dist",
+      "--ignore-pattern",
+      ".next"
+    ],
+    "startedAt": "2026-09-28T04:22:57.211Z",
+    "endedAt": "2026-09-28T04:23:19.235Z",
+    "exitCode": 0,
+    "counters": null
+  },
+  {
+    "name": "build",
+    "command": [
+      "node",
+      "scripts/run-framework.mjs",
+      "build"
+    ],
+    "startedAt": "2026-09-28T04:23:19.238Z",
+    "endedAt": "2026-09-28T04:23:30.495Z",
+    "exitCode": 0,
+    "counters": null
+  }
+]

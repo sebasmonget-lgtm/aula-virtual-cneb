@@ -78,6 +78,18 @@ El enlace local de dependencias del renderizador bajo `docs/qa/.../node_modules`
 
 **Regresión.** Consulta SQL DATE real, ejecución de la función real del servidor; acepta extremos inclusivos y fechas interiores, también strings ISO persistidos. Rechaza fuera del proyecto/año, vacío y timestamp recibido como fecha editable. Antes 5/6 (nueva prueba reproduce el rechazo); después 16/16 relacionadas, typecheck, lint y build PASS (`tests-h24-activity-dates`).
 
-**UI después.** PASS: guardar y confirmar la misma actividad, sin nueva llamada de IA. Captura `screenshots/16-h24-actividad-confirmada.png`. Commit pendiente.
+**UI después.** PASS: guardar y confirmar la misma actividad, sin nueva llamada de IA. Captura `screenshots/16-h24-actividad-confirmada.png`. Commit `a4d2d48`.
 
 **Rollback.** Revertir únicamente este commit; sin migración.
+
+## H25 — Guardar/confirmar talleres usa columna inexistente (BLOCKER)
+
+**Antes.** El maestro se generó y la profesora eligió tres talleres, pero guardar mostraba error genérico (`workshop-save-rejected`).
+
+**Causa.** Tres UPDATE de `learning_experiences` en edición, confirmación y archivo de maestro usaban `updated_at`, columna que no existe en el esquema migrado. El control de revisión sí existe y se incrementa mediante trigger.
+
+**Solución.** Retirar solo las tres asignaciones a la columna inexistente, conservando revisión optimista, transacción, identidad autorizada e inmutabilidad. No añadir una columna que el flujo no necesita ni editar migraciones aplicadas. Archivos: `workshop-routes.mjs`, `workshop-master-service.mjs`, nueva `workshop-route-persistence.test.mjs`.
+
+**Regresión.** Todas las migraciones en PGlite, rutas HTTP reales de guardar/confirmar, rechazo de revisión obsoleta, confirmar nueva versión y archivar anterior. Antes falla 0/1 al guardar; después 13/13 relacionadas, typecheck, lint y build PASS (`tests-h25-workshop-persistence`).
+
+**UI después.** PASS: mismo maestro guardado y confirmado, tres días aceptados y cinco sin taller, sin regenerar. Captura `screenshots/17-h25-talleres-confirmados.png`. Commit pendiente. Rollback: revertir este fix, sin migración.

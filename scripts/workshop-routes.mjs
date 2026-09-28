@@ -114,7 +114,7 @@ export function createWorkshopRouteHandler({ db, teacherId, readJson, send }) {
           if (item.sheet_id !== null && !sheets.some((sheet) => sheet.id === item.sheet_id))
             throw new Error("La ficha no pertenece a la edad o competencia del taller.");
         }
-        const updated = (await db.query(`update learning_experiences set details=$1::jsonb,updated_at=now()
+        const updated = (await db.query(`update learning_experiences set details=$1::jsonb
           where id=$2 and status='draft' and revision=$3 returning *`, [JSON.stringify(newWorkshopMasterDetails(items)), current.id,
           Number(body.expectedRevision)])).rows[0];
         if (!updated) throw new VersionConflictError("El borrador cambió. Vuelve a abrirlo.");

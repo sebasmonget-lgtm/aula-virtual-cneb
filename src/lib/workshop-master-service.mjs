@@ -162,9 +162,9 @@ export async function confirmWorkshopMaster(db, { teacherId, projectId, masterId
       if (item.sheet_id !== null && !sheets.some((sheet) => sheet.id === item.sheet_id))
         throw new Error("Una ficha elegida dejó de estar disponible o no corresponde a la competencia.");
     }
-    if (row.supersedes_experience_id) await tx.query(`update learning_experiences set status='archived',superseded_at=now(),updated_at=now()
+    if (row.supersedes_experience_id) await tx.query(`update learning_experiences set status='archived',superseded_at=now()
       where id=$1 and status='active'`, [row.supersedes_experience_id]);
-    const saved = (await tx.query(`update learning_experiences set status='active',teacher_confirmed_at=now(),updated_at=now()
+    const saved = (await tx.query(`update learning_experiences set status='active',teacher_confirmed_at=now()
       where id=$1 and status='draft' and revision=$2 returning id,status,version,revision`, [masterId, expectedRevision])).rows[0];
     if (!saved) throw new VersionConflictError("El borrador cambió durante la confirmación.");
     return saved;
