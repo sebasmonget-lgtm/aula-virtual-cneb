@@ -19,6 +19,8 @@ type OpenDocument = DocumentEntry & {
   starts_on?: string; ends_on?: string; occurs_on?: string; experience_title?: string;
   period_start?: string; period_end?: string; competencies?: { id: string; name: string }[];
 };
+type Artifact = { id: string; source_kind: string; source_id: string; filename: string;
+  sha256: string; byte_length: number; version: number };
 
 const text = (value: unknown) => typeof value === "string" ? value.trim() : "";
 const items = (value: unknown) => Array.isArray(value) ? value.filter((item): item is string => typeof item === "string" && Boolean(item.trim())) : [];
@@ -134,8 +136,10 @@ export function DocumentsScreen() {
   const [savingWord, setSavingWord] = useState(false);
   const [wordMessage, setWordMessage] = useState("");
   const [wordError, setWordError] = useState("");
+  const [artifacts, setArtifacts] = useState<Artifact[]>([]);
   const [error, setError] = useState("");
   const [revision, setRevision] = useState(0);
+  const artifactFeature = process.env.NEXT_PUBLIC_AYNI_F10_ARTIFACTS === "1";
 
   useEffect(() => {
     const controller = new AbortController();
@@ -158,6 +162,16 @@ export function DocumentsScreen() {
   }, [revision]);
 
   useEffect(() => {
+    if (!artifactFeature) return;
+    const controller = new AbortController();
+    void apiFetch(`${localDatabaseApiUrl}/api/documents/artifacts`, { signal:controller.signal,cache:"no-store" })
+      .then(async response => response.ok ? response.json() as Promise<{artifacts:Artifact[]}> : {artifacts:[]})
+      .then(result => { if (!controller.signal.aborted) setArtifacts(result.artifacts); })
+      .catch(() => {});
+    return () => controller.abort();
+  }, [artifactFeature,revision]);
+
+  useEffect(() => {
     if (!selected) return;
     const controller = new AbortController();
     apiFetch(`${localDatabaseApiUrl}/api/documents/${selected.kind}/${selected.id}`, { signal: controller.signal }).then(async (response) => {
@@ -174,6 +188,33 @@ export function DocumentsScreen() {
   const downloadUrl = downloadable
     ? `${localDatabaseApiUrl}/api/documents/${opened.kind}/${opened.id}/download`
     : null;
+  const stableArtifact = opened && artifacts.find(item => item.source_kind === opened.kind && item.source_id === opened.id);
+  async function prepareArtifact() {
+    if (!opened || savingWord) return;
+    setSavingWord(true); setWordError(""); setWordMessage("");
+    try {
+      const response = await apiFetch(`${localDatabaseApiUrl}/api/documents/artifacts/prepare`, {
+        method:"POST",headers:{"content-type":"application/json"},
+        body:JSON.stringify({kind:opened.kind,sourceId:opened.id}) });
+      const body = await response.json() as {artifact?:Artifact;error?:string};
+      if (!response.ok || !body.artifact) throw new Error(body.error ?? "No se pudo preparar la versión estable.");
+      setArtifacts(current => [...current.filter(item => item.id !== body.artifact!.id),body.artifact!]);
+      setWordMessage("Versión estable preparada. Puedes descargar el mismo archivo cuando lo necesites.");
+    } catch (cause) { setWordError(cause instanceof Error ? cause.message : "No se pudo preparar la versión estable."); }
+    finally { setSavingWord(false); }
+  }
+  async function downloadStableArtifact(artifact:Artifact) {
+    setSavingWord(true);setWordError("");
+    try {
+      const response = await apiFetch(`${localDatabaseApiUrl}/api/documents/artifacts/${artifact.id}/download`,{cache:"no-store"});
+      if (!response.ok) throw new Error("No se pudo descargar la versión estable.");
+      const blob = await response.blob(), url = URL.createObjectURL(blob), link = document.createElement("a");
+      link.href=url;link.download=artifact.filename;document.body.appendChild(link);link.click();link.remove();
+      window.setTimeout(()=>URL.revokeObjectURL(url),60000);
+      setWordMessage(`Versión estable descargada: ${artifact.filename}`);
+    } catch (cause) { setWordError(cause instanceof Error ? cause.message : "No se pudo descargar la versión estable."); }
+    finally { setSavingWord(false); }
+  }
   async function saveWordLocally() {
     if (!opened || savingWord) return;
     setSavingWord(true); setWordMessage(""); setWordError("");
@@ -205,7 +246,10 @@ export function DocumentsScreen() {
   return <section className="mx-auto max-w-5xl space-y-5">
     <PageIntro eyebrow="Tu trabajo guardado" title="Documentos" description="Encuentra aquí tus diagnósticos, planes, experiencias, actividades, cierres e informes." icon={BookOpen} />
     {selected && <div className="flex flex-wrap items-center justify-between gap-3"><Button variant="outline" className="min-h-11" onClick={() => { setSelected(null); setOpened(null); setError(""); setWordMessage(""); setWordError(""); }}><ArrowLeft className="mr-2 size-4" />Volver a mis documentos</Button>
-      {downloadable && <Button className="min-h-11" disabled={savingWord} onClick={() => void saveWordLocally()}><Download className="mr-2 size-4" />{savingWord ? "Preparando Word..." : authMode === "supabase" ? "Descargar Word" : "Guardar Word en Descargas"}</Button>}</div>}
+      <div className="flex flex-wrap gap-2">{artifactFeature && opened && ["annual_plan","experience"].includes(opened.kind) && ["active","archived"].includes(opened.status) && downloadable &&
+        (stableArtifact ? <Button className="min-h-11" disabled={savingWord} onClick={() => void downloadStableArtifact(stableArtifact)}><Download className="mr-2 size-4" />Descargar versión estable</Button>
+          : <Button className="min-h-11" disabled={savingWord} onClick={() => void prepareArtifact()}>{savingWord ? "Preparando..." : "Preparar versión estable"}</Button>)}
+      {downloadable && !stableArtifact && <Button variant={artifactFeature && ["annual_plan","experience"].includes(opened.kind) ? "outline" : "default"} className="min-h-11" disabled={savingWord} onClick={() => void saveWordLocally()}><Download className="mr-2 size-4" />{savingWord ? "Preparando Word..." : authMode === "supabase" ? "Descargar Word" : "Guardar Word en Descargas"}</Button>}</div></div>}
     {wordMessage && <WorkflowFeedback tone="success">{wordMessage}</WorkflowFeedback>}
     {wordError && <WorkflowFeedback tone="error">{wordError}</WorkflowFeedback>}
     {opened?.kind === "annual_plan" && opened.source_plan_format !== "annual_preplan_v1" && opened.content.plan_format !== "twelve_projects_flexible_weeks" &&

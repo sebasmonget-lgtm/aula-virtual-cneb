@@ -2,7 +2,7 @@ import { PGlite } from "@electric-sql/pglite";
 import { access, writeFile } from "node:fs/promises";
 import path from "node:path";
 const name = process.argv[2], output = process.argv[3];
-if (!/^f[3-9]-restored(?:-v[2-9][0-9]*)?$/.test(name ?? "") || !/^f[3-9]-checkpoint-full\.json$/.test(output ?? ""))
+if (!/^f(?:[3-9]|1[0-2])-restored(?:-v[2-9][0-9]*)?$/.test(name ?? "") || !/^f(?:[3-9]|1[0-2])-checkpoint-full\.json$/.test(output ?? ""))
   throw new Error("Solo se exportan clones QA explícitos.");
 const source = path.resolve(".local/qa-backups", name), target = path.resolve(".local/qa-backups", output);
 await access(source);

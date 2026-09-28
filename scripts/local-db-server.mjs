@@ -38,6 +38,10 @@ import { candidateProjectDates, ensureSchoolCalendar, loadEffectiveCalendar, rep
   validateSelectedInstructionalDates } from "../src/lib/school-calendar-service.mjs";
 import { listSavedDocuments, loadSavedDocument } from "../src/lib/document-library-service.mjs";
 import { prepareWordDownload } from "../src/lib/document-word-export.mjs";
+import { prepareConfirmedDocumentArtifact, listConfirmedDocumentArtifacts,
+  readConfirmedDocumentArtifact } from "../src/lib/document-artifact-service.mjs";
+import { createLocalPrivateDocumentArtifactStorage,
+  createSupabasePrivateDocumentArtifactStorage } from "../src/lib/private-document-artifact-storage.mjs";
 import { saveWordToLocalDownloads } from "../src/lib/local-word-save.mjs";
 import { buildInstitutionInitialsLogo, loadInstitutionLogoForDocuments, normalizeInstitutionLogoUpload } from "../src/lib/institution-logo.mjs";
 import { displayPersonName } from "../src/lib/person-name.mjs";
@@ -103,6 +107,11 @@ const dbMode = process.env.AYNI_DB_MODE ?? (authMode === "local" ? "local" : "po
 const ordinaryStorage = dbMode === "local" ? evidenceStorage : process.env.AYNI_SUPABASE_SERVICE_ROLE_KEY
   ? createSupabasePrivateObservationStorage({ url: process.env.AYNI_SUPABASE_URL,
     serviceRoleKey: process.env.AYNI_SUPABASE_SERVICE_ROLE_KEY }) : null;
+const documentArtifactStorage = dbMode === "local"
+  ? createLocalPrivateDocumentArtifactStorage(path.join(assetsDir,"document-artifacts"))
+  : process.env.AYNI_SUPABASE_SERVICE_ROLE_KEY
+    ? createSupabasePrivateDocumentArtifactStorage({ url: process.env.AYNI_SUPABASE_URL,
+      serviceRoleKey: process.env.AYNI_SUPABASE_SERVICE_ROLE_KEY }) : null;
 const curricularReviewEnabled = process.env.AYNI_CURRICULAR_REVIEW === "1";
 const testAuthWithPglite = process.env.NODE_ENV === "test" && process.env.AYNI_TEST_AUTH_PGLITE === "1";
 if ((authMode === "local") !== (dbMode === "local") && !testAuthWithPglite) {
@@ -1190,6 +1199,42 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         const feedback=selected?await loadPlanningFeedback(db,{teacherId,classroomId:context.id,periodId:selected}):null;
         send(response,200,{periods:periods.map((period)=>({id:period.id,label:period.label,starts_on:annualCalendarDay(period.starts_on),ends_on:annualCalendarDay(period.ends_on)})),feedback},origin);
       }catch(error){send(response,httpStatusForError(error,422),{error:publicErrorMessage(error)},origin);}return;
+    }
+    if (process.env.AYNI_DOCUMENT_ARTIFACTS === "1" && request.method === "GET" && url.pathname === "/api/documents/artifacts") {
+      send(response,200,{ artifacts: await listConfirmedDocumentArtifacts(db,teacherId) },origin); return;
+    }
+    if (process.env.AYNI_DOCUMENT_ARTIFACTS === "1" && request.method === "POST" && url.pathname === "/api/documents/artifacts/prepare") {
+      if (!documentArtifactStorage) { send(response,503,{error:"Storage documental privado no configurado."},origin); return; }
+      try {
+        const body = await readJson(request);
+        const knowledgeBase = await loadKnowledgeBaseV4();
+        const cards = knowledgeBase.competencyCards.map(card => ({ id:card.id,name:card.official_name,
+          area_name:card.area_name,capacities:card.capacities,ages:card.ages }));
+        const logo = dbMode === "local" ? await loadInstitutionLogoForDocuments(db,teacherId,assetsDir) : null;
+        const artifact = await prepareConfirmedDocumentArtifact(db,documentArtifactStorage,teacherId,
+          body?.kind,body?.sourceId,{cards,logo});
+        if (!artifact) { send(response,404,{error:"Documento no disponible."},origin); return; }
+        send(response,200,{artifact},origin);
+      } catch (error) { send(response,httpStatusForError(error,422),{error:publicErrorMessage(error)},origin); }
+      return;
+    }
+    const artifactDownload = process.env.AYNI_DOCUMENT_ARTIFACTS === "1"
+      && /^\/api\/documents\/artifacts\/[0-9a-f-]{36}\/download$/i.exec(url.pathname);
+    if (request.method === "GET" && artifactDownload) {
+      if (!documentArtifactStorage) { send(response,503,{error:"Storage documental privado no configurado."},origin); return; }
+      try {
+        const artifact = await readConfirmedDocumentArtifact(db,documentArtifactStorage,teacherId,
+          url.pathname.split("/")[4]);
+        if (!artifact) { send(response,404,{error:"Documento no disponible."},origin); return; }
+        response.writeHead(200,{ "content-type":artifact.mime_type,
+          "content-disposition":`attachment; filename="${artifact.filename}"`,
+          "content-length":String(artifact.bytes.length),"cache-control":"private, no-store",
+          "x-content-type-options":"nosniff",...(origin && allowedOrigins.has(origin)
+            ? {"access-control-allow-origin":origin,"access-control-allow-credentials":"true",
+              "access-control-expose-headers":"content-disposition",vary:"Origin"} : {}) });
+        response.end(artifact.bytes);
+      } catch (error) { send(response,httpStatusForError(error,422),{error:publicErrorMessage(error)},origin); }
+      return;
     }
     if (request.method === "GET" && url.pathname === "/api/documents") {
       send(response, 200, { documents: await listSavedDocuments(db, teacherId) }, origin); return;

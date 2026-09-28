@@ -3,10 +3,10 @@ import path from "node:path";
 import { createHash } from "node:crypto";
 import { PGlite } from "@electric-sql/pglite";
 const root = process.cwd(), sourceName = process.argv[3] ?? "f2-baseline-export-full.json";
-if (!/^(?:f2-baseline-export-full|f[3-9]-checkpoint-full)\.json$/.test(sourceName)) throw new Error("Checkpoint QA inválido.");
+if (!/^(?:f2-baseline-export-full|f(?:[3-9]|1[0-2])-checkpoint-full)\.json$/.test(sourceName)) throw new Error("Checkpoint QA inválido.");
 const backup = path.join(root, ".local/qa-backups", sourceName);
 const name = process.argv[2] ?? "f3-restored";
-if (!/^f[3-9]-restored(?:-v[2-9][0-9]*)?$/.test(name)) throw new Error("Destino QA inválido.");
+if (!/^f(?:[3-9]|1[0-2])-restored(?:-v[2-9][0-9]*)?$/.test(name)) throw new Error("Destino QA inválido.");
 const target = path.join(root, ".local/qa-backups", name);
 try { await access(target); throw new Error("El clon F3 ya existe; no se sobrescribe."); }
 catch (error) { if (error.code !== "ENOENT") throw error; }

@@ -111,9 +111,14 @@ try {
     const priority = await inserted(`insert into public.diagnostic_priority_reviews(classroom_id,group_review_id,version,status,details,created_by) values ($1,$2,1,'confirmed','{}',$3)`, [room, group, teacher]);
     const plan = await inserted(`insert into public.annual_plans(classroom_id,school_year_id,curriculum_version_id,version,status,source_diagnostic_review_id,source_priority_review_id) values ($1,$2,'00000000-0000-4000-8000-000000000001',1,'active',$3,$4)`, [room, year, group, priority]);
     await db.query(`insert into public.annual_plan_formal_content(annual_plan_id,content,source_revision) values ($1,'{}',1)`, [plan]);
+    const artifact = await inserted(`insert into public.document_artifacts(id,teacher_id,classroom_id,source_kind,
+      source_id,source_version,template_version,source_sha256,status,filename,storage_key,sha256,
+      byte_length,confirmed_at) values (gen_random_uuid(),$1,$2,'annual_plan',$3,1,'test-template',$4,'confirmed',
+      'plan.docx',$5,$6,4,now())`,[teacher,room,plan,'a'.repeat(64),`${teacher}/${plan}.docx`,'b'.repeat(64)]);
     await db.query(`insert into storage.objects(bucket_id,name) values ('family-interviews',$1)`, [`family-interview/${teacher}/${student}/file.pdf`]);
     await db.query(`insert into storage.objects(bucket_id,name) values ('student-evidence',$1)`, [`${teacher}/${student}/image.png`]);
-    sensitiveRows.push({ assessment, conclusion, report, closure, interview, attachment, document, diagnostic, group, priority, plan });
+    await db.query(`insert into storage.objects(bucket_id,name) values ('ayni-document-artifacts',$1)`, [`${teacher}/${plan}.docx`]);
+    sensitiveRows.push({ assessment, conclusion, report, closure, interview, attachment, document, diagnostic, group, priority, plan, artifact });
   }
 
   async function asTeacher(teacher, sql) {
@@ -132,6 +137,7 @@ try {
       ['student_family_interviews', 'interview'], ['student_family_interview_attachments', 'attachment'],
       ['document_versions', 'document'], ['diagnostic_student_reviews', 'diagnostic'],
       ['diagnostic_group_reviews', 'group'], ['diagnostic_priority_reviews', 'priority'], ['annual_plans', 'plan'],
+      ['document_artifacts','artifact'],
     ];
     for (const [table, key] of scopedRows) {
       const id = own[key];
@@ -155,6 +161,10 @@ try {
         assert.equal((await asTeacher(teacher, `update storage.objects set name=name where bucket_id='${bucket}' and name='${path}'`)).affectedRows, 0);
         assert.equal((await asTeacher(teacher, `delete from storage.objects where bucket_id='${bucket}' and name='${path}'`)).affectedRows, 0);
       }
+    }
+    for (const path of [`${teacher}/${own.plan}.docx`,`${teacher === teacherA ? teacherB : teacherA}/${other.plan}.docx`]) {
+      assert.equal((await asTeacher(teacher, `select id from storage.objects where bucket_id='ayni-document-artifacts' and name='${path}'`)).rows.length,0,'artifact bytes are server-only');
+      await assert.rejects(() => asTeacher(teacher, `insert into storage.objects(bucket_id,name) values ('ayni-document-artifacts','${path}')`),/row-level security|permission denied/);
     }
     for (const [table, ownId, otherId, column] of [
       ['students', own.student, other.student, 'preferred_name'],
@@ -181,7 +191,7 @@ try {
       await assert.rejects(() => asTeacher(teacher, `delete from public.annual_plan_formal_content where annual_plan_id='${planId}'`), /permission denied/);
     }
   }
-  console.log(`RLS: ${privateTables.length} private tables read-only; two teachers isolated across 15 sensitive tables and Storage; SELECT/INSERT/UPDATE/DELETE exercised`);
+  console.log(`RLS: ${privateTables.length} private tables read-only; two teachers isolated across 16 sensitive tables and Storage; SELECT/INSERT/UPDATE/DELETE exercised`);
 } finally {
   await db.close();
 }

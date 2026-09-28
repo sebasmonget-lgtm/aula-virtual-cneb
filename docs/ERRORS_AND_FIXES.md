@@ -1,5 +1,15 @@
 # Errores y soluciones
 
+## 2026-09-28 — F10: timeout del arranque HTTP con concurrencia libre
+
+**Síntoma.** `node --test` reportó 595/596; `auth-http.test.mjs` no observó al servidor iniciar dentro de su plazo mientras otras pruebas PGlite/Word corrían en paralelo.
+
+**Causa comprobada.** El test pasó aislado (1/1) y la suite completa pasó con `--test-concurrency=4` (596/596), sin cambio de código de producto. La saturación del runner es la explicación consistente con estos resultados; no se atribuye el timeout a F10.
+
+**Solución validada.** Limitar la concurrencia de la suite general a cuatro procesos en este host y mantener comandos por separado. No repetir ninguna llamada IA.
+
+**Prevención.** Ejecutar suites de integración que arrancan PGlite/servidores con concurrencia controlada y reportar por separado los fallos de infraestructura.
+
 ## 2026-09-28 — F9: reajuste incompatible con huella de evidencia F8
 
 **Síntoma.** Un cierre que incorporaba una observación ordinaria confirmada podía quedar rechazado como «nueva información» al aceptar un reajuste, aunque las fuentes no hubieran cambiado.

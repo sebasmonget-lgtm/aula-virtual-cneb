@@ -1,5 +1,13 @@
 # Decisiones de arquitectura
 
+## ADR 096 — F10: artefacto Word confirmado e inmutable
+
+**Decisión (2026-09-28).** Una acción docente explícita prepara un artefacto estable para una fuente confirmada de Mi año o proyecto/unidad. `document_artifacts` guarda identidad de fuente, versión, plantilla, huella de fuente, estado pending/failed/confirmed, tamaño, SHA-256 y ruta privada; no modifica ni rellena documentos históricos. El primer render guarda bytes en ruta privada con creación exclusiva y verifica el archivo leído antes de confirmar metadata. Una repetición devuelve el mismo ID y bytes. Si el materializador falla, la fuente pedagógica sigue confirmada y la fila puede reintentarse. Un cambio posterior de fuente exige nueva versión; no se reescribe un artefacto confirmado.
+
+**Acceso.** La preparación y cada descarga vuelven a verificar docente/aula/año en servidor. El bucket de Supabase es privado y sin políticas de lectura/escritura del navegador; solo el backend con clave de servicio puede usarlo después de verificar identidad. La clave nunca va al cliente. RLS de la metadata concede solo lectura propia y niega escritura directa. En local, archivos exclusivos bajo `.local/assets/document-artifacts` no usan `save-local` como sincronización. El API y UI están apagados por defecto (`AYNI_DOCUMENT_ARTIFACTS`, `NEXT_PUBLIC_AYNI_F10_ARTIFACTS`). El catálogo antiguo y descarga legacy siguen disponibles al apagarlos.
+
+**Límite.** Primera vertical: plan y proyecto/unidad. Diagnóstico, actividad e informe familiar conservan descarga histórica dinámica; el cierre sin plantilla no se anuncia como Word. Ampliar a otros tipos requiere política de versión/privacidad y migración aditiva. La herramienta CLI de Supabase no estaba instalada; la migración nueva se creó con el formato versionado del repositorio y se verificó por paridad y RLS en PGlite, no contra un staging remoto.
+
 ## ADR 095 — F9: reajuste futuro con diff explícito
 
 **Decisión (2026-09-28).** `NEXT_PUBLIC_AYNI_F9_REPLAN=1` presenta, tras un cierre vigente, hasta tres propuestas de reajuste con proyecto futuro, competencias antes/después y motivo basado en estadísticas calculadas. La profesora elige «Aceptar propuesta» o «Quiero cambiar algo»; esta segunda acción abre los controles de edición anteriores. Ningún cambio se confirma al abrir la pantalla. Si no hay propuesta futura elegible, no se crea una versión vacía desde la vista compacta.
