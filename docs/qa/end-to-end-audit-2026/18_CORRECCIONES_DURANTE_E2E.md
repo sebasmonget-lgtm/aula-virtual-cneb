@@ -188,4 +188,14 @@ El mapa desarrolla acciones del niño, mediación y continuidad, visibles en Pla
 
 **Fix mínimo.** Normalizar únicamente la fecha civil del driver con `toISOString().slice(0,10)` cuando es Date, conservando las cadenas civiles y el fallback legacy. La misma normalización se usa en el fingerprint para equivalencia Date/cadena; fechas realmente distintas siguen invalidando fuentes. Sin migración ni cambios en evidencias. Borradores con huellas anteriores deben revisarse/guardarse de nuevo, no se confirman por fuerza.
 
-**Regresión.** Consulta SQL DATE real bajo la zona local; copia para IA exactamente 2026-04-01, fingerprint igual para Date/cadena y distinto para otro día. Antes 0/1 («Tue Mar 31»); después 36/36 relacionadas de assessment, período y conclusión, typecheck/lint/build PASS. Archivos `assessment-v4-service.mjs`, `assessment-v4.test.mjs`. UI después: pendiente de reconsulta del mismo niño. Rollback sin migración.
+**Regresión.** Consulta SQL DATE real bajo la zona local; copia para IA exactamente 2026-04-01, fingerprint igual para Date/cadena y distinto para otro día. Antes 0/1 («Tue Mar 31»); después 36/36 relacionadas de assessment, período y conclusión, typecheck/lint/build PASS. Archivos `assessment-v4-service.mjs`, `assessment-v4.test.mjs`. UI después PASS: reconsulta describe 1 al 21 de abril; docente revisó cuatro notas, guardó y confirmó B contextualizado de Bruno. Commit `ebaec81`. Rollback sin migración.
+
+## H37 — Conclusión válida rechazada por orden del snapshot JSONB (BLOCKER)
+
+**Antes.** Preparar conclusión después del B confirmado funciona y el texto conserva pareja/grupo grande. Confirmarla falla «La valoración cambió», sin cambio real ni otra llamada IA.
+
+**Causa.** Comparación `JSON.stringify` de `sourceAssessmentSnapshot` recién construido contra la copia de `pending` persistida en JSONB. El orden de claves cambia al recargar, no los valores.
+
+**Solución.** Usar `sameAssessmentSnapshot`, comparación existente de todos los campos relevantes, incluidos nivel, versión, timestamps y hash de detalles. Conserva autorización, tokens de generación y conflicto ante cambios reales. No hay migración.
+
+**Regresión.** Nuevo fixture recarga `pending` con SQL `::jsonb` real. Antes 0/1 (409 vs 200); después admite una conclusión válida y rechaza un snapshot con nivel cambiado, conservando una sola activa. Archivos `period-evaluation-routes.mjs`, `period-evaluation.test.mjs`. 26/26 relacionadas, typecheck/lint/build PASS. UI después pendiente del reinicio QA; se reutilizará la conclusión guardada sin regenerar.

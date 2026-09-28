@@ -5,7 +5,7 @@ import { resolveAIExecutionPlan } from "../src/lib/ai-execution-router-v4.mjs";
 import { createAIProviderForPlan } from "../src/lib/ai-provider-factory.mjs";
 import { generateAIWorkflowV4 } from "../src/lib/ai-generation-v4.mjs";
 import { assessmentSourceSnapshot, buildAssessmentInput, neutralizeAssessmentText, sanitizeEvidenceForAssessment, validateAssessmentProposal } from "../src/lib/assessment-v4-service.mjs";
-import { buildDescriptiveConclusionInput, sourceAssessmentSnapshot, validateDescriptiveConclusion } from "../src/lib/descriptive-conclusion-v4-service.mjs";
+import { buildDescriptiveConclusionInput, sameAssessmentSnapshot, sourceAssessmentSnapshot, validateDescriptiveConclusion } from "../src/lib/descriptive-conclusion-v4-service.mjs";
 import { dateOnly, defaultEvaluationPeriods, loadPeriodEvaluationRows, periodClosureFingerprint } from "../src/lib/period-evaluation-service.mjs";
 import { assertSavedEvaluationDraft, savePeriodEvaluationDraft } from "../src/lib/period-evaluation-draft-service.mjs";
 import { closePeriodWithManifest } from "../src/lib/period-closure-history.mjs";
@@ -396,7 +396,7 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
         const body=await readJson(request),data=await selectedRow(body),assessment=data.row.assessment,item=await pending.get(body.generationId);
         if(!assessment?.achievement_level||!assessment.teacher_confirmed_at) throw new Error("Confirma primero la valoración docente.");
         if(!item||item.workflow!=="period_conclusion"||item.classroom_id!==data.classroom.id||item.period_id!==data.period.id||item.student_id!==body.studentId||item.competency_v4_id!==body.competencyId||item.assessment_id!==assessment.id) throw new Error("La generación no corresponde a esta valoración.");
-        if(JSON.stringify(sourceAssessmentSnapshot(assessment))!==JSON.stringify(item.source_assessment_snapshot)) throw new VersionConflictError("La valoración cambió. Genera otra conclusión.");
+        if(!sameAssessmentSnapshot(item.source_assessment_snapshot,sourceAssessmentSnapshot(assessment))) throw new VersionConflictError("La valoración cambió. Genera otra conclusión.");
         validateDescriptiveConclusion(body.proposal,data.card.id,assessment.details.information_status);
         const conclusion=await versionTransaction(db,`period:${data.period.id}`,async(tx)=>{
           await tx.query(`update competency_descriptive_conclusions set status='archived',updated_at=now() where student_id=$1 and competency_v4_id=$2 and period_start=$3::date and period_end=$4::date and status='active'`,[body.studentId,body.competencyId,data.period.starts_on,data.period.ends_on]);

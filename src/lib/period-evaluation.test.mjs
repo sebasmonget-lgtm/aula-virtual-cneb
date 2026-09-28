@@ -99,7 +99,7 @@ test("la migración futura exige lectura propia y escritura mediante servidor", 
   assert.match(sql, /El nivel definitivo requiere confirmación docente/);
 });
 
-async function fixture({ analysis = mockAnalysis() } = {}) {
+async function fixture({ analysis = mockAnalysis(), jsonbPending = false } = {}) {
   const db = await PGlite.create();
   await db.exec(`
     create table school_years(id uuid primary key,owner_id uuid,year integer,starts_on date,ends_on date);
@@ -157,14 +157,39 @@ async function fixture({ analysis = mockAnalysis() } = {}) {
   const masterDetails={period_summary:"Se trabajó la comunicación oral en situaciones de juego.",competencies:[{competency_id:"COM_ORAL",short_label:"Se comunica",area:"Comunicación",assessment_focus:"Cómo explica ideas en las situaciones propuestas.",criteria_worked:["Explica sus ideas."],relevant_evidence:["Explicaciones registradas."],patterns_to_consider:["Respuestas en distintas oportunidades."],progress_signals:["Amplía sus explicaciones."],support_signals:["Necesita preguntas abiertas."],insufficient_information_rules:["Una respuesta aislada no es suficiente."],contradiction_handling:"Conservar diferencias y consultar a la docente.",context_considerations:["Apoyos ofrecidos."],teacher_questions:["¿Ocurrió en otra situación?"],prohibited_inferences:["No calificar una observación aislada."],assessment_guidance:"Revisar el conjunto antes de valorar."}]};
   await db.query(`insert into assessment_masters(id,classroom_id,evaluation_period_id,version,status,details,source_snapshot,created_by,teacher_confirmed_at) values(gen_random_uuid(),$1,$2,1,'active',$3::jsonb,$4::jsonb,$5,now())`,[classId,firstPeriod,JSON.stringify(masterDetails),JSON.stringify(masterSource.snapshot),teacher]);
   const pending = new Map(), calls = [];
+  if (jsonbPending) pending.set = async (key, value) => {
+    const copy = (await db.query('select $1::jsonb as payload', [JSON.stringify(value)])).rows[0].payload;
+    return Map.prototype.set.call(pending, key, copy);
+  };
   const handle = createPeriodEvaluationRouteHandler({ db, teacherId: teacher, loadClassroomContext: async () => currentContext, readJson: async (request) => request.body, send: (response, status, payload) => { response.result={status,body:payload}; }, pending, metadataForAudit: (metadata) => metadata, refreshStudentContext: async () => {}, evidenceStorage: { read: async () => ({ data: Buffer.from("image"), mimeType: "image/png" }) }, createProvider: () => ({}), generate: async (input) => { calls.push(input); return { output: input.workflow === "assessment" ? analysis : mockConclusion(), metadata: { model: "mock" } }; } });
   async function call(method, route, body) {
     const response = { writeHead(status, headers) { this.status = status; this.headers = headers; }, end(data) { this.data = data; } };
     await handle({ request: { method, body }, url: new URL(`http://localhost${route}`), response, origin: null });
     return response.result ?? { status: response.status, body: response.data, headers: response.headers };
   }
-  return { db, call, calls, currentContext };
+  return { db, call, calls, currentContext, pending };
 }
+
+test("conclusión confirma snapshot recargado de JSONB pero rechaza valores cambiados", async () => {
+  const f = await fixture({ jsonbPending: true });
+  try {
+    const base = { classroomId: classId, periodId: firstPeriod, studentId: studentA, competencyId: "COM_ORAL" };
+    const detail = (await f.call("GET", `/api/period-evaluations/detail?classroomId=${classId}&periodId=${firstPeriod}&studentId=${studentA}&competencyId=COM_ORAL`)).body;
+    const decision = { ...base, evidenceFingerprint: detail.evidence_fingerprint, provisionalLevel: "B", achievementLevel: "B",
+      teacherAnalysis: "Explica sus ideas en dos situaciones con apoyos diferentes.", teacherJustification: "Dos registros contextualizados, contrastados por la docente.", expectedDraftRevision: null };
+    const saved = await f.call("POST", "/api/period-evaluations/save-draft", decision);
+    assert.equal(saved.status, 200, JSON.stringify(saved.body));
+    const assessment = await f.call("POST", "/api/period-evaluations/confirm", { ...decision, expectedDraftRevision: saved.body.draft_revision });
+    assert.equal(assessment.status, 200, JSON.stringify(assessment.body));
+    await confirmGeneratedConclusion(f, firstPeriod, studentA);
+    const another = await f.call("POST", "/api/period-evaluations/conclusion/suggest", base);
+    const item = f.pending.get(another.body.generation_id);
+    item.source_assessment_snapshot.achievement_level = "A";
+    const stale = await f.call("POST", "/api/period-evaluations/conclusion/confirm", { ...base, generationId: another.body.generation_id, proposal: another.body.proposal });
+    assert.equal(stale.status, 409, JSON.stringify(stale.body));
+    assert.equal((await f.db.query("select count(*)::int as n from competency_descriptive_conclusions where status='active'")).rows[0].n, 1);
+  } finally { await f.db.close(); }
+});
 
 test("el análisis reutiliza la huella completa del aula y rechaza cambios reales de contexto", async () => {
   const f = await fixture();
