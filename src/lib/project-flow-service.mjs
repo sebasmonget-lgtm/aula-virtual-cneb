@@ -154,7 +154,7 @@ export function projectDetails({ source, preview, decisions, dependents, master,
     evidence_opportunities: dependents.general_criteria.flatMap((item) => item.expected_evidence),
     family_or_community_links: [], adjustment_points: [],
     flexibility_notes: "El recorrido puede ajustarse según lo observado durante el proyecto.",
-    preview, decisions, dependents,
+    preview, decisions, dependents, planning_feedback: previous?.planning_feedback ?? null,
     project_master: { foundation: master.foundation, closing_description: master.closing_description,
       closing_rationale: master.closing_rationale, resources: master.resources, activity_blueprints: route },
     activity_route: route, teacher_overrides: previous?.teacher_overrides ?? [],
@@ -226,8 +226,12 @@ async function call({ workflow, task, context, outputSchema, resolvePlan, create
       ?? context.teacher_request ?? context.group_context ?? "",
     castellanoL2Applicable: context.castellano_l2_applicable === true,
     religionApplicable: context.religion_applicable === true });
+  const feedbackInstruction = context.planning_feedback
+    ? " Usa las valoraciones docentes confirmadas de planning_feedback para actualizar las oportunidades, mediación y progresión pertinentes a esta propuesta. Distingue esos resultados del diagnóstico inicial: no repitas automáticamente necesidades antiguas como si fueran actuales. Un nivel B o C no significa que todos necesiten el mismo apoyo; sin registro o sin valoración no es nivel C. Conserva fortalezas y no inventes hechos, niveles ni necesidades individuales."
+    : "";
   const response = await createProvider(plan, { timeoutMs: 180_000 })
-    .generate(buildProviderRequest(workflow, { ...context, didactic_knowledge: didacticKnowledge },
+    .generate(buildProviderRequest(workflow, { ...context, task: `${context.task}${feedbackInstruction}`,
+      didactic_knowledge: didacticKnowledge },
       plan, outputSchema, await loadSkill()));
   return { output: response.output, metadata: { provider: response.provider_metadata?.provider ?? plan.provider,
     model: response.provider_metadata?.model ?? plan.model, reasoning_effort: plan.reasoning_effort,

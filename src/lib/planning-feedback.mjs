@@ -70,3 +70,12 @@ export function planningFeedbackText(feedback){
   const suggestions=(feedback.suggested_adjustments??[]).map((item)=>`${item.reason} ${item.suggestion}`);
   return parts.length?`Registros y hallazgos confirmados del ${feedback.period_label}. Las ausencias de registro no indican bajo desempeño. Son orientativos; la docente decide cómo usarlos y el plan no cambia automáticamente. ${parts.join(" ")} ${suggestions.join(" ")}`:"";
 }
+
+/** A new decision loads authorized server data; a later stage keeps the reviewed snapshot. */
+export async function resolveProjectPlanningFeedback({request,persisted=null,loadFeedback}){
+  if(!request || !Object.hasOwn(request,'usePlanningFeedback'))return persisted;
+  if(request.usePlanningFeedback!==true)return null;
+  if(typeof request.planningFeedbackPeriodId!=='string'||!request.planningFeedbackPeriodId.trim())
+    throw new Error('Elige el período de las evaluaciones que deseas usar.');
+  return loadFeedback(request.planningFeedbackPeriodId);
+}

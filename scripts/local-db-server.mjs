@@ -72,7 +72,7 @@ import { DiagnosticExperienceError, loadDiagnosticExperienceWorkspace, recordDia
 import { DiagnosticAssessmentError, loadDiagnosticAssessmentWorkspace, prepareDiagnosticSynthesis, saveDiagnosticSynthesis, confirmDiagnosticSynthesis, prepareDiagnosticStudentReview, saveDiagnosticStudentReview, confirmDiagnosticStudentReview, prepareDiagnosticGroupReview, saveDiagnosticGroupReview, confirmDiagnosticGroupReview, saveStudentInitialContext, diagnosticPlanningSummary } from "../src/lib/diagnostic-assessment-v4.mjs";
 import { DiagnosticSourceError, loadFamilyInterview, listFamilyInterviewStatuses, saveFamilyInterview, confirmFamilyInterview, saveAndConfirmFamilyInterview, attachFamilyInterview, familyInterviewAttachmentPath, recordSpontaneousObservation, recordMatrixDiagnosticObservation, loadSpontaneousObservations, correctSpontaneousClassification, suggestSpontaneousCompetencies, markSpontaneousNeedsReview } from "../src/lib/diagnostic-sources-v4.mjs";
 import { neutralizeAssessmentText } from "../src/lib/assessment-v4-service.mjs";
-import { loadPlanningFeedback, planningFeedbackText } from "../src/lib/planning-feedback.mjs";
+import { loadPlanningFeedback, planningFeedbackText, resolveProjectPlanningFeedback } from "../src/lib/planning-feedback.mjs";
 import { expectedRevision, assertRevision, conflictPayload, httpStatusForError, isVersionConflict, versionTransaction, VersionConflictError, publicErrorMessage } from "../src/lib/version-integrity.mjs";
 import { createRequestAuth, RequestAuthError } from "./request-auth.mjs";
 import { authorizeRequestSelectors, RequestAccessError } from "./request-authorization.mjs";
@@ -1387,6 +1387,10 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         and type in ('project','unit')`, [id, classroom.id])).rows[0];
       return { classroom, row };
     }
+    async function projectFlowFeedback(source, body, persisted = null) {
+      return resolveProjectPlanningFeedback({request:body,persisted,loadFeedback:periodId=>
+        loadPlanningFeedback(db,{teacherId,classroomId:source.classroom.id,periodId})});
+    }
     async function protectedProjectVersion(row) {
       if (!row?.supersedes_experience_id) return null;
       const source = (await db.query(`select details from learning_experiences where id=$1 and classroom_id=$2
@@ -1605,13 +1609,28 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
           and (source_proposal_id=$2 or (annual_plan_id=$3 and source_proposal_id is null and source_proposal_index=$4))
           and status in ('draft','active') order by version desc limit 1`,
         [source.classroom.id, body.proposalId,source.plan.id,source.index])).rows[0];
+        if (previous && body.refreshPreview === true) {
+          if(previous.status!=='draft'||previous.details?.decisions||previous.details?.dependents||previous.details?.activity_route)
+            throw new Error("El contexto ya tiene decisiones revisadas. Actualízalas desde el propósito antes de preparar otro mapa.");
+          assertRevision(previous,expectedRevision(body.expectedRevision));
+          const planningFeedback = await projectFlowFeedback(source,body,previous.details?.planning_feedback);
+          const generated = await generateProjectPreview({context:{...source.aiContext,planning_feedback:planningFeedback},workflow:previous.type});
+          const details = {...previous.details,preview:generated.output,planning_feedback:planningFeedback};
+          const saved=(await db.query(`update learning_experiences set details=$1::jsonb,generation_metadata=$2::jsonb
+            where id=$3 and classroom_id=$4 and status='draft' and revision=$5 returning *`,
+            [JSON.stringify(details),JSON.stringify({workflow:'project_preview',...generated.metadata}),previous.id,source.classroom.id,expectedRevision(body.expectedRevision)])).rows[0];
+          if(!saved)throw new VersionConflictError("El borrador cambió. Vuelve a abrirlo.");
+          const calendar_review=await ensureProjectCalendarSelection(saved,source);
+          send(response,200,{experience:saved,existing:true,available_dates:calendar_review.selected_dates,calendar_review},origin);return;
+        }
         if (previous) { const previousSource = previous.annual_plan_id === source.plan.id ? source
           : await projectFlowSource(previous.annual_plan_id, previous.source_proposal_id, true);
           const calendar_review=await ensureProjectCalendarSelection(previous,previousSource);send(response, 200, { experience: previous, existing: true,
           available_dates: calendar_review.selected_dates,calendar_review }, origin); return; }
-        const generated = await generateProjectPreview({ context: source.aiContext, workflow: source.source.experience_type });
+        const planningFeedback = await projectFlowFeedback(source,body);
+        const generated = await generateProjectPreview({ context: {...source.aiContext,planning_feedback:planningFeedback}, workflow: source.source.experience_type });
         const id = randomUUID();
-        const details = { flow_version: "project-master-v1", stage: "decisions", preview: generated.output };
+        const details = { flow_version: "project-master-v1", stage: "decisions", preview: generated.output,planning_feedback:planningFeedback };
         const saved = (await db.query(`insert into learning_experiences(id,classroom_id,type,title,purpose,starts_on,ends_on,
           status,details,annual_plan_id,origin,source_proposal_index,source_proposal_id,generation_metadata)
           values($1,$2,$3,$4,$5,$6::date,$7::date,'draft',$8::jsonb,$9,'planned',$10,$11,$12::jsonb)
@@ -1641,11 +1660,15 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         const source = await projectFlowSource(row.annual_plan_id, row.source_proposal_id, true);
         const allowed = (await ageFilteredAnnualCurriculum(source.classroom)).map((card) => card.id);
         const decisions = validateProjectDecisions(body.decisions, allowed);
+        assertRevision(row,expectedRevision(body.expectedRevision));
+        const planningFeedback = await projectFlowFeedback(source,body,row.details.planning_feedback);
         const result = await generateProjectDependents({ context: { ...source.aiContext,
+          planning_feedback: planningFeedback,
           curriculum: source.aiContext.curriculum.filter((card) => decisions.competency_ids.includes(card.id)) },
           decisions, workflow: row.type });
         const details = { flow_version: "project-master-v1", stage: "dependents", preview: row.details.preview,
-          decisions, dependents: result.output, previous_map: row.details.activity_route ?? row.details.previous_map ?? null,
+          decisions, dependents: result.output, planning_feedback: planningFeedback,
+          previous_map: row.details.activity_route ?? row.details.previous_map ?? null,
           teacher_overrides: row.details.teacher_overrides ?? [],
           ...(Object.hasOwn(row.details, "image_id") ? { image_id: row.details.image_id } : {}),
           image_suggested_id: row.details.image_suggested_id ?? null };
@@ -1668,6 +1691,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         if(calendarReview.selection.status!=="confirmed")throw new Error("Confirma primero los días del proyecto.");
         const dependents = validateProjectDependents(body.dependents ?? row.details.dependents, row.details.decisions.competency_ids);
         const generated = await generateProjectMaster({ context: { ...source.aiContext,
+          planning_feedback: row.details.planning_feedback ?? null,
           curriculum: source.aiContext.curriculum.filter((card) => row.details.decisions.competency_ids.includes(card.id)) },
           decisions: row.details.decisions,
           dependents, availableDates: calendarReview.selected_dates, workflow: row.type });

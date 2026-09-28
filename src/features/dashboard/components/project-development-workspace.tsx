@@ -26,6 +26,7 @@ type Route = { id: string; number: number; date: string; title: string; specific
   expected_progression: string; estimated_minutes: number };
 type Details = { flow_version?: string; stage?: string; preview?: { context_summary: string; context_points: string[];
   purpose_options: string[]; additional_context_example: string }; decisions?: Decision;
+  planning_feedback?: { period_id: string; period_label: string; confirmed_assessments: number } | null;
   dependents?: Dependents; project_master?: { foundation: string; closing_description: string; closing_rationale: string };
   activity_route?: Route[]; previous_map?: Route[] | null; image_id?: string | null; image_suggested_id?: string | null };
 type Experience = { id: string; annual_plan_id: string; source_proposal_id: string | null;
@@ -46,8 +47,9 @@ const post = (value: unknown): RequestInit => ({ method: "POST", headers: { "con
 const dateLabel = (value: string) => /^\d{4}-\d{2}-\d{2}$/.test(value) ? `${value.slice(8)}/${value.slice(5, 7)}` : value;
 const localDay = () => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Lima", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
 
-export function ProjectDevelopmentWorkspace({ initialProposalId, onConfirmed, onDevelopActivity, onGoAnnual }: {
+export function ProjectDevelopmentWorkspace({ initialProposalId, onConfirmed, onDevelopActivity, onGoAnnual, feedbackPeriodId = null }: {
   initialProposalId?: string | null; onConfirmed?: () => void;
+  feedbackPeriodId?: string | null;
   onDevelopActivity?: (experienceId: string, routeItemId: string) => void;
   onGoAnnual?: () => void }) {
   const [plan, setPlan] = useState<Plan | null>(null), [experiences, setExperiences] = useState<Experience[]>([]);
@@ -76,7 +78,11 @@ export function ProjectDevelopmentWorkspace({ initialProposalId, onConfirmed, on
     plan?.project_slots.find((slot) => slot.slot_index === index + 1)?.id ?? "";
   const options = new Map(competencies.map((item) => [item.id, item.name]));
   const name = (id: string) => options.get(id) ?? id;
-  const { decisionsChanged, mapChanged, depChanged } = projectDraftChanges(selected?.details, decisions, dependents, route);
+  const { decisionsChanged: baseDecisionsChanged, mapChanged, depChanged } = projectDraftChanges(selected?.details, decisions, dependents, route);
+  const feedbackChanged = selected?.status === "draft" && Boolean(selected.details.decisions) &&
+    (selected.details.planning_feedback?.period_id ?? null) !== feedbackPeriodId;
+  const decisionsChanged = baseDecisionsChanged || feedbackChanged;
+  const feedbackRequest = { usePlanningFeedback: Boolean(feedbackPeriodId), planningFeedbackPeriodId: feedbackPeriodId };
   function showExperience(experience: Experience, availableDates: string[] = [],review:CalendarReview|null=null,
     protectedIds: string[] = []) {
     setSelected(experience); setDates(availableDates); setEditingRoute(null);
@@ -147,7 +153,7 @@ export function ProjectDevelopmentWorkspace({ initialProposalId, onConfirmed, on
     }
     if (existing) { setLegacy(true); return; }
     await act("start", async () => { const result = await json<{ experience: Experience; available_dates: string[];calendar_review:CalendarReview }>(
-      "/api/project-flow/start", post({ annualPlanId: plan.id, proposalId }));
+      "/api/project-flow/start", post({ annualPlanId: plan.id, proposalId, ...feedbackRequest }));
       const item = plan.proposal.proposed_experiences[index];
       setSelected(result.experience); setDates(result.available_dates);setCalendarReview(result.calendar_review);
       setStep(0);
@@ -163,9 +169,16 @@ export function ProjectDevelopmentWorkspace({ initialProposalId, onConfirmed, on
     autoOpened.current = initialProposalId;
     void openProposalRef.current(initialProposalId);
   }, [initialProposalId, plan, loading]);
+  async function refreshPreview() { if (!selected || !plan || selected.details.decisions) return;
+    await act("preview", async () => { const result = await json<{ experience: Experience; available_dates: string[]; calendar_review: CalendarReview }>(
+      "/api/project-flow/start", post({ annualPlanId: selected.annual_plan_id,
+        proposalId: selected.source_proposal_id ?? proposalIdAt(selected.source_proposal_index),
+        refreshPreview: true, expectedRevision: selected.revision, ...feedbackRequest }));
+      showExperience(result.experience, result.available_dates, result.calendar_review);
+      setNotice("Contexto actualizado. Revisa las opciones de propósito antes de continuar."); }); }
   async function prepareDependents() { if (!selected || !decisions) return;
     await act("dependents", async () => { const result = await json<{ experience: Experience }>(`/api/project-flow/${selected.id}/dependents`,
-      post({ decisions, expectedRevision: selected.revision }));
+      post({ decisions, expectedRevision: selected.revision, ...feedbackRequest }));
       setSelected(result.experience); setDependents(result.experience.details.dependents ?? null); setRoute([]);
       setStep(3);
       setNotice("Preguntas y criterios listos para revisar."); }); }
@@ -226,7 +239,7 @@ export function ProjectDevelopmentWorkspace({ initialProposalId, onConfirmed, on
   const suggestedIndex = plan?.project_slots.find((slot) => localDay() <= slot.ends_on.slice(0, 10))?.slot_index ?? 1;
   if (loading) return <LoadingState label="Abriendo proyectos y unidades..." />;
   if (legacy) return <div className="space-y-3"><Button variant="outline" onClick={() => setLegacy(false)}>← Volver a proyectos</Button>
-    <LearningExperienceGenerator onConfirmed={onConfirmed} /></div>;
+    <LearningExperienceGenerator onConfirmed={onConfirmed} feedbackPeriodId={feedbackPeriodId} /></div>;
   return <section className="ayni-workflow space-y-5"><header><p className="text-sm font-semibold text-[#087d96]">Paso 5 de 6 · Proyecto o unidad</p>
     <h1 className="text-3xl font-extrabold text-[#172b52]">Desarrolla una propuesta</h1>
     <p className="mt-2 text-[#526b87]">Primero decides el propósito. Después revisas las preguntas y el mapa de actividades antes de confirmar.</p></header>
@@ -289,6 +302,9 @@ export function ProjectDevelopmentWorkspace({ initialProposalId, onConfirmed, on
           onClick={() => setStep(index)}>{index + 1}. {label}</Button>)}</nav>}
       {selected.status === "draft" && decisions && step <= 2 && <section className="space-y-4 rounded-2xl border bg-white p-5"><h2 className="text-xl font-bold">{["1. Contexto que Ayni tendrá en cuenta", "2. ¿Qué buscamos con este proyecto?", "3. Competencias previstas"][step]}</h2>
         {step === 0 && <>
+        {selected.details.planning_feedback && <p className="text-sm text-[#526b87]">Evaluaciones incorporadas: {selected.details.planning_feedback.period_label} · {selected.details.planning_feedback.confirmed_assessments} valoraciones confirmadas.</p>}
+        {!selected.details.decisions && <AsyncButton variant="outline" busy={busy === "preview"} busyLabel="Actualizando contexto..."
+          disabled={Boolean(busy)} onClick={() => void refreshPreview()}>Actualizar contexto con las evaluaciones elegidas</AsyncButton>}
         <label className="block font-semibold">Contexto de este proyecto<Textarea className="mt-2" value={decisions.context_summary}
           onChange={(event) => setDecisions({ ...decisions, context_summary: event.target.value })} /></label>
         {selected.details.preview?.context_points?.length ? <p className="text-sm text-[#526b87]">Ayni tuvo en cuenta: {selected.details.preview.context_points.join(" · ")}</p> : null}
@@ -309,7 +325,7 @@ export function ProjectDevelopmentWorkspace({ initialProposalId, onConfirmed, on
         <AsyncButton busy={busy === "dependents"} busyLabel="Preparando preguntas..." disabled={Boolean(busy) || !decisions.context_summary.trim() || !decisions.purpose.trim() || !decisions.competency_ids.length}
           onClick={() => { if (!decisionsChanged && selected.details.dependents) setStep(3); else void prepareDependents(); }}>
           {decisionsChanged ? "Actualizar preguntas y recorrido" : "Continuar a preguntas"}</AsyncButton></>}
-        {decisionsChanged && <p className="text-sm text-[#a56712]">Cambiaste una decisión inicial. Ayni actualizará solo las secciones que dependen de ella.</p>}
+        {decisionsChanged && <p className="text-sm text-[#a56712]">Cambiaste una decisión inicial o las evaluaciones elegidas. Ayni actualizará las secciones que dependen de esa elección.</p>}
       </section>}
       {selected.status === "draft" && dependents && !decisionsChanged && step >= 3 && step <= 6 && <section className="space-y-4 rounded-2xl border bg-white p-5"><h2 className="text-xl font-bold">{["", "", "", "4. Preguntas para explorar", "5. Así podría desarrollarse", "6. Qué observaremos", "7. Resumen antes del mapa"][step]}</h2>
         <p className="text-sm text-[#526b87]">Revisa estas ideas antes de preparar el mapa. Puedes editarlas.</p>
