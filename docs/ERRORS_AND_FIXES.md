@@ -793,3 +793,13 @@ La revisión del corpus completo detectó además dos resúmenes de fuentes de l
 **Solución validada.** El guard reconoce la confirmación del taller exclusivamente desde columnas del join autorizado (tipo, fecha de confirmación, actividad vinculada, índice e igualdad de competencia). Rechaza borradores, competencias distintas y estados explícitamente no confirmados. 15/15 pruebas relacionadas, typecheck, lint y build PASS. Sin cambio de esquema o notas históricas; la repetición UI queda registrada en el informe E2E.
 
 **Prevención.** Probar el recorrido persistir → confirmar par diario → admitir criterio para evidencia, no solo que existan los dos bloques en Hoy.
+
+## 2026-09-27 H29: maestro de talleres con plazo demasiado breve
+
+**Síntoma.** Preparar diez sugerencias de taller termina en timeout sin guardar una propuesta.
+
+**Causa raíz.** El workflow largo de Sol heredaba el plazo predeterminado de 30 segundos del proveedor, mientras las demás planificaciones usan 120/180 segundos.
+
+**Solución validada.** Solo `generateWorkshopMaster` recibe 180 segundos; modelos, reintentos, validaciones y talleres diarios se conservan. 20/20 pruebas relacionadas, typecheck, lint y build PASS. El intento sin usage se registra como costo desconocido, no cero.
+
+**Prevención.** Comprobar las opciones de proveedor de cada workflow largo, además del modelo y de la forma de salida.

@@ -1,0 +1,65 @@
+[
+  {
+    "name": "typecheck",
+    "command": [
+      "node",
+      "node_modules/typescript/bin/tsc",
+      "--noEmit"
+    ],
+    "startedAt": "2026-09-28T04:48:22.273Z",
+    "endedAt": "2026-09-28T04:48:29.123Z",
+    "exitCode": 0,
+    "counters": null
+  },
+  {
+    "name": "unit-tests",
+    "command": [
+      "node",
+      "--test",
+      "--test-concurrency=2",
+      "src/lib/workshop-flow.test.mjs",
+      "src/lib/workshop-route-persistence.test.mjs",
+      "src/lib/openai-provider.test.mjs",
+      "src/lib/ai-provider-factory.test.mjs"
+    ],
+    "startedAt": "2026-09-28T04:48:29.126Z",
+    "endedAt": "2026-09-28T04:48:34.548Z",
+    "exitCode": 0,
+    "counters": {
+      "tests": 20,
+      "pass": 20,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    }
+  },
+  {
+    "name": "lint",
+    "command": [
+      "node",
+      "node_modules/eslint/bin/eslint.js",
+      ".",
+      "--ignore-pattern",
+      "dist",
+      "--ignore-pattern",
+      ".next"
+    ],
+    "startedAt": "2026-09-28T04:48:34.550Z",
+    "endedAt": "2026-09-28T04:48:57.172Z",
+    "exitCode": 0,
+    "counters": null
+  },
+  {
+    "name": "build",
+    "command": [
+      "node",
+      "scripts/run-framework.mjs",
+      "build"
+    ],
+    "startedAt": "2026-09-28T04:48:57.173Z",
+    "endedAt": "2026-09-28T04:49:08.874Z",
+    "exitCode": 0,
+    "counters": null
+  }
+]

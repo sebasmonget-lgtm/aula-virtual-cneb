@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import JSZip from "jszip";
 import { loadKnowledgeBaseV4 } from "./knowledge-base-v4.mjs";
 import { renderActivityUnifiedWord } from "./activity-unified-word.mjs";
-import { attachWorkshopSheets, generateWorkshopDay, validateWorkshopMaster, workshopCoverage, workshopItemIsSelected } from "./workshop-master-service.mjs";
+import { attachWorkshopSheets, generateWorkshopDay, generateWorkshopMaster, validateWorkshopMaster, workshopCoverage, workshopItemIsSelected } from "./workshop-master-service.mjs";
 import { availableSheets, rankWorkshopSheets, verifiedSheetFile } from "./workshop-sheet-catalog.mjs";
 
 const route = [
@@ -15,6 +15,18 @@ const item = (index, competency_id = "MAT_CANTIDAD") => ({ index, linked_activit
   purpose: "Comparar colecciones durante el juego", rationale: "Ofrece otra forma de resolver una situación",
   observation_focus: "Explica cómo comparó cantidades", materials: ["objetos concretos"],
   brief_outline: "Juego con objetos, conversación y representación", sheet_id: null, sheet_reason: null });
+
+test("el maestro de talleres usa el plazo de planificación, sin reintentos ni cambio de modelo", async () => {
+  let options;
+  const result = await generateWorkshopMaster({ classroom: { age: 5 },
+    project: { status: "active", type: "project", title: "Semillas", purpose: "Observar",
+      details: { activity_route: route } }, cards: [{ id: "MAT_CANTIDAD" }, { id: "CYT_INDAGA" }],
+    createProvider: (_plan, suppliedOptions) => { options = suppliedOptions;
+      return { generate: async () => ({ output: { items: [item(1), item(2)] } }) }; },
+    attachSheets: async value => value });
+  assert.equal(options?.timeoutMs, 180_000);
+  assert.equal(result.proposal.items.length, 2);
+});
 
 test("dos maestros independientes: una fila de taller por día, edad y cobertura sin cuota forzada", () => {
   const cards = [{ id: "CYT_INDAGA" }, { id: "MAT_CANTIDAD" }, { id: "PSICO_MOTRICIDAD" }];

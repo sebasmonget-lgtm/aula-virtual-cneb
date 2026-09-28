@@ -126,4 +126,16 @@ El mapa desarrolla acciones del niño, mediación y continuidad, visibles en Pla
 
 **UI después.** PASS: cuatro notas guardadas desde la interfaz, sin regenerar taller ni cambiar datos confirmados. Captura `screenshots/19-h28-taller-evidencia-guardada.png`; snapshot `h28-workshop-evidence-pass`. Las 7 notas de convivencia y 5 de identidad anteriores permanecen separadas. El aula original conserva su fingerprint.
 
-**Rollback.** Revertir el commit lógico de esta validación; no hay migración. Commit pendiente de identificación.
+**Rollback.** Revertir el commit `82b2379`; no hay migración.
+
+## H29 — Maestro largo de talleres agota plazo de clasificación (HIGH)
+
+**Antes.** Preparar diez talleres del huerto terminó «Proveedor OpenAI no disponible: timeout». No se guardó maestro ni se recibió usage: ese intento UI tiene costo desconocido, no se inventa cero ni se agrega una llamada ficticia al ledger facturable.
+
+**Causa.** `generateWorkshopMaster` creaba el proveedor sin opciones, heredando 30 segundos. Proyecto y desarrollo anual usan plazos de planificación de 120/180 segundos; el maestro de talleres también es una generación larga con Sol, no una clasificación breve.
+
+**Solución mínima.** Solo el maestro recibe `timeoutMs: 180000`, igual al mapa del proyecto. Conserva modelo, prompt, máximo de cero reintentos SDK y validación. No cambia los talleres diarios ni las clasificaciones.
+
+**Regresión.** `workshop-flow.test.mjs` inyecta proveedor y comprueba el plazo recibido y salida válida. Antes 6/7; después 20/20 relacionadas, typecheck, lint y build PASS (`tests-h29-workshop-timeout`). Sin migración ni transformación de planes.
+
+**UI después.** PASS: el reintento real preparó diez propuestas; la profesora eligió cantidad el día 2, su continuación el día 3 y comunicación oral el día 5, dejando los demás sin taller. Guardó y confirmó desde la interfaz. Captura `screenshots/22-h29-talleres-huerto-confirmados.png`, snapshot `h29-workshop-master-pass`. El intento inicial sin usage continúa separado como costo desconocido. Rollback: revertir el commit localizado.

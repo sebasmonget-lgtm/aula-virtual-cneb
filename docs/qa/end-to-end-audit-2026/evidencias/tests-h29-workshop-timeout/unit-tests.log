@@ -1,0 +1,28 @@
+✔ el factory crea OpenAIProvider sin decidir un modelo (1.3367ms)
+✔ el factory no crea provider para code (0.2579ms)
+✔ planes no disponibles no llegan a un proveedor (0.5029ms)
+✔ la transcripción usa su cliente especializado y no el provider de Responses (0.146ms)
+✔ OpenAIProvider usa Responses API, el plan central y Structured Outputs strict (62.1333ms)
+✔ OpenAIProvider coloca la Skill en instrucciones y conserva el bundle como dato (0.5739ms)
+✔ el cliente real queda configurado sin reintentos automáticos (3.1719ms)
+✔ OpenAIProvider envía solamente el bundle filtrado e inmutable (18.3714ms)
+✔ OpenAIProvider falla antes de HTTP sin OPENAI_API_KEY (23.0133ms)
+✔ OpenAIProvider clasifica respuestas y errores controlados (173.825ms)
+✔ OpenAIProvider rechaza un modelo configurado que no coincide con el plan sin llamar HTTP (22.1199ms)
+✔ el provider no contiene modelos fijos, logs, PDFs ni llamadas externas fuera del SDK (1.5122ms)
+✔ el maestro de talleres usa el plazo de planificación, sin reintentos ni cambio de modelo (46.4977ms)
+✔ dos maestros independientes: una fila de taller por día, edad y cobertura sin cuota forzada (1.3664ms)
+✔ la docente puede aceptar, continuar o dejar un día sin taller (0.3053ms)
+✔ competencia e intención se fijan antes de buscar ficha; puede quedarse sin ficha (179.5963ms)
+✔ la coincidencia verbal no vincula una ficha de cuento a un taller de colecciones (1.47ms)
+✔ el taller diario conserva tipo, competencia, ficha y maestro confirmado (23.8753ms)
+✔ el Word usa la nueva sección y solo anexa páginas cuando hay ficha (3776.901ms)
+✔ rutas reales guardan, confirman y versionan talleres con el esquema migrado (3609.0638ms)
+ℹ tests 20
+ℹ suites 0
+ℹ pass 20
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5332.7566
