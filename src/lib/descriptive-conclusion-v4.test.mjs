@@ -64,6 +64,16 @@ test("conclusión rechaza campos extra, otra competencia, notas, comparaciones y
   await assert.rejects(() => generateAIWorkflowV4(input, { provider: { async generate() { return { ...conclusion(), competency_id: "OTHER" }; } } }), InvalidAIGenerationError);
 });
 
+test("preposición A en español no es un nivel; calificaciones explícitas siguen prohibidas", () => {
+  for (const text of ["A partir del dibujo explica su decisión.", "A medida que comparte, consulta el acuerdo.", "A la familia se le propone conversar sobre el juego."]) {
+    const value = { ...conclusion(), next_steps: [text] };
+    assert.deepEqual(validateDescriptiveConclusion(value, "COM_ORAL", "sufficient"), value);
+  }
+  for (const text of ["Nivel A.", "Valoración A.", "Calificativo A.", "Obtuvo A.", "A", "Nivel B.", "Nivel C.", "Nivel AD."]) {
+    assert.throws(() => validateDescriptiveConclusion({ ...conclusion(), conclusion_text: text }, "COM_ORAL", "sufficient"), text);
+  }
+});
+
 test("snapshot del assessment es estable y detecta versión, contenido y timestamps", () => {
   const base = { id: assessmentId, version: 1, updated_at: new Date("2026-09-22T12:00:00Z"), teacher_confirmed_at: new Date("2026-09-22T11:00:00Z"), achievement_level: "A", details: assessmentDetails };
   const snapshot = sourceAssessmentSnapshot(base);

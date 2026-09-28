@@ -198,4 +198,18 @@ El mapa desarrolla acciones del niño, mediación y continuidad, visibles en Pla
 
 **Solución.** Usar `sameAssessmentSnapshot`, comparación existente de todos los campos relevantes, incluidos nivel, versión, timestamps y hash de detalles. Conserva autorización, tokens de generación y conflicto ante cambios reales. No hay migración.
 
-**Regresión.** Nuevo fixture recarga `pending` con SQL `::jsonb` real. Antes 0/1 (409 vs 200); después admite una conclusión válida y rechaza un snapshot con nivel cambiado, conservando una sola activa. Archivos `period-evaluation-routes.mjs`, `period-evaluation.test.mjs`. 26/26 relacionadas, typecheck/lint/build PASS. UI después pendiente del reinicio QA; se reutilizará la conclusión guardada sin regenerar.
+**Regresión.** Nuevo fixture recarga `pending` con SQL `::jsonb` real. Antes 0/1 (409 vs 200); después admite una conclusión válida y rechaza un snapshot con nivel cambiado, conservando una sola activa. Archivos `period-evaluation-routes.mjs`, `period-evaluation.test.mjs`. 26/26 relacionadas, typecheck/lint/build PASS. UI después PASS: la misma conclusión de Bruno se confirmó tras reiniciar solo QA, sin regeneración; Valeria completó también valoración y conclusión nuevas. Commit `e949f54`.
+
+## H38 — Marcador neutral en una conclusión (MEDIUM, no bloqueante)
+
+La propuesta de cantidad de Thiago incluyó «[estudiante]» en su texto. La docente lo retiró en la UI antes de confirmar; las actuaciones cuantitativas eran fieles. No se afirmó fidelidad sin esta revisión ni se regeneró por ese detalle. Registrar como salida editorial pendiente, no como una evaluación incorrecta confirmada.
+
+## H39 — Preposición española A rechazada como nivel (HIGH / bloqueante)
+
+**Antes.** Conclusión de Alma rechazada repetidamente con `descriptive_conclusion_schema_mismatch`, también tras fallback. Instrumentación temporal exclusiva QA registró solo el motivo estático del validador y el token «A», nunca salida del proveedor ni datos personales. Esa instrumentación se retiró del código antes del fix.
+
+**Causa.** Regex prohibía cualquier palabra A en todo texto. Una regresión con «A partir del dibujo…», «A medida que…» y «A la familia…» falla antes aunque no hay calificación.
+
+**Fix.** Distinguir preposición de nivel: se prohíben letras solas como contenido de un campo y expresiones explícitas de nivel/calificación/valoración/calificativo; también se conservan restricciones de notas, porcentajes y comparaciones. No se sustituye un estado informativo ni una letra docente por salida de IA. Archivos `descriptive-conclusion-v4-service.mjs`, `descriptive-conclusion-v4.test.mjs`.
+
+**Regresión.** Aceptación de redacción preposicional; rechazo de «Nivel A», «Valoración A», «Calificativo A», «Obtuvo A», campo A solo y niveles B/C/AD. 42/42 relacionadas, typecheck/lint/build PASS. UI después pendiente. Sin migración ni cambio de modelo. Los intentos anteriores con usage se conservan en el ledger, incluidos los fallbacks registrados; no son llamadas exitosas.
