@@ -3,6 +3,11 @@ import { createHash } from "node:crypto";
 const fields = ["competency_id", "information_status", "evidence_overview", "observable_patterns", "strengths_and_advances", "support_needs", "next_opportunities", "teacher_questions", "insufficiency_reason", "caution"];
 const listFields = ["observable_patterns", "strengths_and_advances", "support_needs", "next_opportunities", "teacher_questions"];
 
+// PostgreSQL DATE llega como Date UTC; no convertirlo a representación local.
+const evidenceDay = (evidence) => evidence.observed_on
+  ? evidence.observed_on instanceof Date ? evidence.observed_on.toISOString().slice(0, 10) : String(evidence.observed_on).slice(0, 10)
+  : new Date(evidence.observed_at).toISOString().slice(0, 10);
+
 export function validateAssessmentProposal(value, competencyId, evidenceCount) {
   if (!value || typeof value !== "object" || Array.isArray(value) || fields.some((key) => !(key in value)) || Object.keys(value).some((key) => !fields.includes(key))) throw new Error("La propuesta de análisis no cumple assessment-v3.");
   if (value.competency_id !== competencyId || !["sufficient", "insufficient"].includes(value.information_status)) throw new Error("La competencia o el estado informativo del análisis no coincide.");
@@ -29,7 +34,7 @@ export function neutralizeAssessmentText(value, names) {
 }
 
 export function sanitizeEvidenceForAssessment(evidence, knownNames = []) {
-  return { observed_on: evidence.observed_on ? String(evidence.observed_on).slice(0, 10) : new Date(evidence.observed_at).toISOString().slice(0, 10), activity_title: neutralizeAssessmentText(evidence.activity_title, knownNames), criterion_text: neutralizeAssessmentText(evidence.criterion_text, knownNames), observation_status: evidence.observation_status, observation_note: neutralizeAssessmentText(evidence.observation_text, knownNames) ?? null, media_available: Boolean(evidence.media_available) };
+  return { observed_on: evidenceDay(evidence), activity_title: neutralizeAssessmentText(evidence.activity_title, knownNames), criterion_text: neutralizeAssessmentText(evidence.criterion_text, knownNames), observation_status: evidence.observation_status, observation_note: neutralizeAssessmentText(evidence.observation_text, knownNames) ?? null, media_available: Boolean(evidence.media_available) };
 }
 
 export function buildAssessmentInput({ age, competencyId, evidenceHistory, criteriaHistory = [], assessmentMaster, priorTeacherConclusions, contextChanges }) {
@@ -44,7 +49,7 @@ export function validateAssessmentPeriod(start, end, calendar) {
 }
 
 export function evidenceFingerprint(evidence) {
-  const normalized = [evidence.id, evidence.observed_on ? String(evidence.observed_on).slice(0, 10) : new Date(evidence.observed_at).toISOString().slice(0, 10), new Date(evidence.observed_at).toISOString(), evidence.observation_status, evidence.observation_text ?? "", Boolean(evidence.media_available), evidence.activity_title ?? "", evidence.criterion_text ?? "", evidence.details ?? null, evidence.performance_id ?? null];
+  const normalized = [evidence.id, evidenceDay(evidence), new Date(evidence.observed_at).toISOString(), evidence.observation_status, evidence.observation_text ?? "", Boolean(evidence.media_available), evidence.activity_title ?? "", evidence.criterion_text ?? "", evidence.details ?? null, evidence.performance_id ?? null];
   return createHash("sha256").update(JSON.stringify(normalized)).digest("hex");
 }
 

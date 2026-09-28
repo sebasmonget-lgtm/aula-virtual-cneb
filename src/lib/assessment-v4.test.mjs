@@ -60,6 +60,26 @@ test("sanitización solo afecta copia provider y elimina identidad y rutas", () 
   assert.equal(copy.media_available, true);
 });
 
+test("fecha civil SQL DATE conserva día en copia para IA y fingerprint", async () => {
+  const db = await PGlite.create();
+  try {
+    const { day } = (await db.query("select '2026-04-01'::date as day")).rows[0];
+    assert.ok(day instanceof Date);
+    // El driver representa DATE a medianoche UTC, no como instante pedagógico.
+    const row = { id: evidenceId, observed_on: day, observed_at: new Date("2026-04-01T14:00:00Z"),
+      observation_status: "with_support", observation_text: "Compartió con mediación.",
+      activity_title: "Compartimos", criterion_text: "Participa en acuerdos", media_available: false };
+    assert.equal(sanitizeEvidenceForAssessment(row).observed_on, "2026-04-01");
+    assert.deepEqual(assessmentSourceSnapshot([row]), assessmentSourceSnapshot([{ ...row, observed_on: "2026-04-01" }]));
+    const localRepresentation = new Date("2026-04-01T00:00:00Z");
+    localRepresentation.toString = () => "Tue Mar 31 2026 19:00:00 GMT-0500 (Peru Standard Time)";
+    assert.equal(sanitizeEvidenceForAssessment({ ...row, observed_on: localRepresentation }).observed_on, "2026-04-01");
+    assert.notDeepEqual(assessmentSourceSnapshot([row]), assessmentSourceSnapshot([{ ...row, observed_on: "2026-04-02" }]));
+  } finally {
+    await db.close();
+  }
+});
+
 test("snapshot estable por orden/fecha y sensible a toda fuente relevante", () => {
   const a = { id: evidenceId, observed_at: new Date("2026-09-20T12:00:00Z"), observation_status: "with_support", observation_text: "Dijo algo", media_available: false, activity_title: "Actividad", criterion_text: "Expresa ideas", details: { expected_evidence: "Habla" } };
   const b = { ...a, id: evidenceId2 };

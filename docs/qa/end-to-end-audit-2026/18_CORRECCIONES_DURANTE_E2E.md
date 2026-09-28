@@ -176,6 +176,16 @@ El mapa desarrolla acciones del niño, mediación y continuidad, visibles en Pla
 
 **Solución localizada.** Después de autorizar aula y selección, la ruta obtiene la proyección pública del contexto para ese mismo ID/docente mediante el servicio existente y la pasa al mismo calculador de fuentes. No elimina la huella ni relaja validación. Sin migración ni cambio de modelos.
 
-**Regresión.** Fixture SQL incluye una huella no nula como en producto. Antes falla 422 vs 200; después admite el mismo contexto y rechaza un cambio real antes de facturar. 15/15 relacionadas PASS; typecheck/lint/build y UI posteriores en curso al registrar.
+**Regresión.** Fixture SQL incluye una huella no nula como en producto. Antes falla 422 vs 200; después admite el mismo contexto y rechaza un cambio real antes de facturar. 15/15 relacionadas, typecheck/lint/build PASS. UI después PASS: marco V2 confirmado y análisis real de Bruno generado; el contenido permitió detectar el siguiente error H36. Commit `551409f`.
 
 **Archivos.** `scripts/period-evaluation-routes.mjs`, `period-evaluation.test.mjs`. Rollback sin migración. Nota: preparar después el Word formal agrega una fuente real al mapa; esa posible obsolescencia sí debe revisarse, no confundirse con el falso bloqueo H35.
+
+## H36 — Assessment envía el día anterior al proveedor (HIGH, fidelidad)
+
+**Antes.** El primer análisis individual de Bruno interpretó «31 de marzo al 20 de abril»; Ver sustento muestra correctamente 01/04, 07/04, 15/04 y 21/04. No se confirmó la valoración contaminada. Snapshot `h36-assessment-date-before`.
+
+**Causa.** `sanitizeEvidenceForAssessment` y el fingerprint usaban `String(observed_on).slice(0,10)`. PGlite devuelve SQL DATE como Date a medianoche UTC y con TZ Lima se obtenía «Tue Mar 31», no una fecha civil ISO. La IA recibió esa representación local truncada.
+
+**Fix mínimo.** Normalizar únicamente la fecha civil del driver con `toISOString().slice(0,10)` cuando es Date, conservando las cadenas civiles y el fallback legacy. La misma normalización se usa en el fingerprint para equivalencia Date/cadena; fechas realmente distintas siguen invalidando fuentes. Sin migración ni cambios en evidencias. Borradores con huellas anteriores deben revisarse/guardarse de nuevo, no se confirman por fuerza.
+
+**Regresión.** Consulta SQL DATE real bajo la zona local; copia para IA exactamente 2026-04-01, fingerprint igual para Date/cadena y distinto para otro día. Antes 0/1 («Tue Mar 31»); después 36/36 relacionadas de assessment, período y conclusión, typecheck/lint/build PASS. Archivos `assessment-v4-service.mjs`, `assessment-v4.test.mjs`. UI después: pendiente de reconsulta del mismo niño. Rollback sin migración.
