@@ -90,7 +90,7 @@ export async function loadBimesterReplanPreview(db, { teacherId, classroom, peri
 }
 
 export async function confirmBimesterReplan(db, { teacherId, classroom, period, applicableIds, expected,
-  priorities, adjustments, workshops, workshopOptions = [], libraryWorkshops = [] }) {
+  priorities, adjustments, workshops, workshopOptions = [], libraryWorkshops = [], includeOrdinary = false }) {
   if (!expected || !Array.isArray(priorities) || !Array.isArray(adjustments) || !Array.isArray(workshops))
     throw new Error("Revisa las decisiones antes de actualizar la planificación.");
   const allowed = new Set(applicableIds);
@@ -117,7 +117,7 @@ export async function confirmBimesterReplan(db, { teacherId, classroom, period, 
       where pc.classroom_id=$1 and pc.evaluation_period_id=$2 for update`, [classroom.id, period.id])).rows[0];
     if (!closure?.current_version_id || closure.current_version_id !== expected.closure_version_id)
       throw new VersionConflictError("El cierre cambió. Revisa el resumen actualizado.");
-    const current = await loadPeriodEvaluationRows(tx, { classroomId: classroom.id, period, applicableIds: allowed });
+    const current = await loadPeriodEvaluationRows(tx, { classroomId: classroom.id, period, applicableIds: allowed, includeOrdinary });
     if (closure.source_fingerprint !== periodClosureFingerprint(current.rows))
       throw new VersionConflictError("Hay nueva información en la evaluación. Revisa el cierre antes de reajustar.");
     const source = (await tx.query(`select ap.* from annual_plans ap join school_years sy on sy.id=ap.school_year_id

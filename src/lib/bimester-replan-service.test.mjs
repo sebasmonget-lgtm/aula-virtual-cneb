@@ -143,6 +143,34 @@ test("reajuste crea versión y modifica solo una propuesta futura; bloquea pasad
   } finally { await db.close(); }
 });
 
+test("F9 conserva el fingerprint F8 al aceptar un reajuste después de una observación ordinaria", async (t) => {
+  t.mock.timers.enable({ apis: ["Date"], now: new Date("2026-09-28T06:30:00Z") });
+  const db = await database();
+  try {
+    const f = await seed(db, teacherA, "F8-F9");
+    const student = randomUUID(), observation = randomUUID();
+    await db.query(`insert into students(id,classroom_id,status,first_name,last_name)
+      values($1,$2,'active','Ana','Prueba')`,[student,f.classroom.id]);
+    await db.query(`insert into ordinary_observations(id,classroom_id,student_id,created_by,client_request_id,
+      request_fingerprint,occurred_at,raw_text,source_kind,context_snapshot)
+      values($1,$2,$3,$4,$5,$6,$7,'Agrupó objetos por color.','spontaneous','{}'::jsonb)`,
+    [observation,f.classroom.id,student,teacherA,randomUUID(),"a".repeat(64),`${day(-5)}T16:00:00Z`]);
+    await db.query(`insert into ordinary_observation_attributions(id,observation_id,version,state,source,
+      confirmed_competency_ids,raw_revision,created_by) values($1,$2,1,'confirmed','teacher',array[$3],1,$4)`,
+    [randomUUID(),observation,competenceB,teacherA]);
+    const model = await loadPeriodEvaluationRows(db,{ classroomId:f.classroom.id,period:f.period,
+      applicableIds:new Set([competenceA,competenceB]),includeOrdinary:true });
+    assert.equal(model.rows.find(row=>row.competency_v4_id===competenceB)?.sourceRows.length,1);
+    const fingerprint = periodClosureFingerprint(model.rows);
+    await db.query(`update period_closures set source_fingerprint=$1 where classroom_id=$2 and evaluation_period_id=$3`,
+    [fingerprint,f.classroom.id,f.period.id]);
+    await assert.rejects(confirmBimesterReplan(db,args(f)),/nueva información/);
+    const saved = await confirmBimesterReplan(db,{...args(f),includeOrdinary:true});
+    assert.equal(saved.version,2);
+    assert.equal((await db.query(`select count(*)::int as n from ordinary_observations where id=$1`,[observation])).rows[0].n,1);
+  } finally { await db.close(); }
+});
+
 test("la ruta de revisión usa la identidad verificada del docente y aísla las aulas", async (t) => {
   t.mock.timers.enable({ apis: ["Date"], now: new Date("2026-09-28T06:30:00Z") });
   const db = await database();

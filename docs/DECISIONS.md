@@ -1,5 +1,11 @@
 # Decisiones de arquitectura
 
+## ADR 095 — F9: reajuste futuro con diff explícito
+
+**Decisión (2026-09-28).** `NEXT_PUBLIC_AYNI_F9_REPLAN=1` presenta, tras un cierre vigente, hasta tres propuestas de reajuste con proyecto futuro, competencias antes/después y motivo basado en estadísticas calculadas. La profesora elige «Aceptar propuesta» o «Quiero cambiar algo»; esta segunda acción abre los controles de edición anteriores. Ningún cambio se confirma al abrir la pantalla. Si no hay propuesta futura elegible, no se crea una versión vacía desde la vista compacta.
+
+**Integridad.** El backend ya crea una nueva versión de Mi año con CAS y diff, conserva la versión archivada y no edita propuestas comenzadas, proyectos desarrollados, actividades ni cierres. F9 hace que su verificación transaccional del fingerprint use la misma fuente ordinaria F8 que produjo el cierre; sin ello una observación confirmada provocaba un falso conflicto. La priorización y el destino se vuelven a validar en servidor. No hay migración ni IA. Apagar el flag UI restaura el asistente anterior sin tocar versiones.
+
 ## ADR 094 — F8: trayectoria derivada y fuente ordinaria para H34
 
 **Decisión (2026-09-28).** Bajo `AYNI_F8_EVALUATION=1`, la evaluación por período agrega una proyección de observaciones ordinarias a la consulta de evidencias legacy sin cambiar las tablas históricas. Solo entran una atribución docente confirmada para la revisión raw vigente o un criterio V4 elegido explícitamente por la docente al capturar, salvo decisión posterior de dejar sin clasificar. El día civil Lima ubica la fuente en el período; el snapshot de contexto sigue como procedencia, no fija el período si el calendario cambia. Una corrección desactualiza la atribución anterior hasta reconfirmar. La proyección conserva texto, alumno y revisión, admite espontánea sin actividad y varias competencias. No genera niveles.

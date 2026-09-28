@@ -1,5 +1,15 @@
 # Errores y soluciones
 
+## 2026-09-28 — F9: reajuste incompatible con huella de evidencia F8
+
+**Síntoma.** Un cierre que incorporaba una observación ordinaria confirmada podía quedar rechazado como «nueva información» al aceptar un reajuste, aunque las fuentes no hubieran cambiado.
+
+**Causa raíz.** La ruta de cierre F8 usaba `includeOrdinary`, pero la verificación transaccional de reajuste llamaba al lector de períodos sin esa opción.
+
+**Solución validada.** Pasar el mismo flag a la transacción y probar con una observación ordinaria confirmada: el cálculo legacy rechaza la huella F8 y el cálculo corregido acepta la nueva versión sin tocar raw ni cierre.
+
+**Prevención.** Los consumidores de una huella de cierre deben usar exactamente la misma proyección de fuentes que la produjo; ampliar las pruebas cruzadas en cada nueva fuente evaluable.
+
 ## 2026-09-28 — F8: navegador QA no disponible en el host
 
 **Síntoma.** El CLI `agent-browser` no estaba instalado; el navegador integrado agotó el tiempo al navegar y luego devolvió `User unavailable`.

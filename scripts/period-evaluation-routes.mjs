@@ -192,6 +192,7 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
           period: data.period, applicableIds: data.cards.map((card) => card.id),
           expected: body.expected, priorities: body.priorities,
           adjustments: body.adjustments, workshops: body.workshops,
+          includeOrdinary,
           workshopOptions: recommendWorkshops(resources, data.classroom.age, summary.competencies),
           libraryWorkshops: resources.filter((item) => item.kind === "workshop" && Number(item.age) === Number(data.classroom.age))
             .map((item) => ({ resource_id: item.id })) });

@@ -19,7 +19,8 @@ type Preview = { classroom_id: string; period: { id: string; label: string; ends
     competencies_evaluated: number; students_needing_observation: number;
     observation_students: { id: string; name: string }[]; competencies: Competency[] };
   plan: { id: string; revision: number; version: number; proposals: { proposal_id: string; title: string;
-    competency_ids: string[]; competency_names: string[]; editable: boolean; reason_locked: string }[] } | null };
+    competency_ids: string[]; competency_names: string[]; starts_on: string; ends_on: string;
+    editable: boolean; reason_locked: string }[] } | null };
 type Workspace = { years: { id: string }[]; classrooms: { id: string; school_year_id: string }[];
   periods: { id: string; school_year_id: string; label: string; starts_on: string; ends_on: string }[] };
 type PriorityChoice = "prioritize" | "maintain" | "not_prioritize";
@@ -56,6 +57,8 @@ export function BimesterReplan({ onEvaluation, onFinish }: { onEvaluation: () =>
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [finished, setFinished] = useState(false);
+  const [simpleEditing, setSimpleEditing] = useState(false);
+  const simpleMode = process.env.NEXT_PUBLIC_AYNI_F9_REPLAN === "1";
 
   useEffect(() => { let live = true; api<Workspace>("/api/period-evaluations/workspace").then((data) => {
     if (!live) return;
@@ -78,7 +81,18 @@ export function BimesterReplan({ onEvaluation, onFinish }: { onEvaluation: () =>
 
   const candidates = useMemo(() => preview?.summary.competencies.filter((item) => item.tone !== "well") ?? [], [preview]);
   const chosen = candidates.filter((item) => (priorities[item.competency_id] ?? "maintain") === "prioritize");
-  const editable = preview?.plan?.proposals.filter((item) => item.editable) ?? [];
+  const editable = useMemo(() => preview?.plan?.proposals.filter((item) => item.editable) ?? [], [preview]);
+  const simpleDiff = useMemo(() => {
+    const capacity = new Map<string, number>();
+    return candidates.slice(0, 3).flatMap((competency) => {
+      const proposal = [...editable].sort((a, b) => a.starts_on.localeCompare(b.starts_on))
+        .find((item) => !item.competency_ids.includes(competency.competency_id)
+          && (capacity.get(item.proposal_id) ?? item.competency_ids.length) < 5);
+      if (!proposal) return [];
+      capacity.set(proposal.proposal_id, (capacity.get(proposal.proposal_id) ?? proposal.competency_ids.length) + 1);
+      return [{ competency, proposal }];
+    });
+  }, [candidates, editable]);
   const suggestions = chosen.map((competency, index) => {
     const available = editable.filter((proposal) => !proposal.competency_ids.includes(competency.competency_id)
       && proposal.competency_ids.length < 5);
@@ -106,25 +120,36 @@ export function BimesterReplan({ onEvaluation, onFinish }: { onEvaluation: () =>
       await reload(); setStep(1);
     } catch (cause) { setError((cause as Error).message); } finally { setBusy(false); }
   }
-  async function confirm() {
+  async function confirmWith(decisions: { priorities: { competency_id: string; choice: PriorityChoice }[];
+    adjustments: Adjustment[]; workshops: { competency_id: string; choice: WorkshopChoice; resource_id?: string }[] }) {
     if (!preview?.plan?.id || !preview.closure.current_version_id) return;
     setBusy(true); setError("");
     try {
       await api("/api/period-evaluations/replan/confirm", { classroomId, periodId,
         expected: { plan_id: preview.plan.id, plan_revision: preview.plan.revision,
           closure_version_id: preview.closure.current_version_id },
-        priorities: candidates.map((item) => ({ competency_id: item.competency_id,
-          choice: priorities[item.competency_id] ?? "maintain" })),
-        adjustments: suggestions.map(({ competency, proposal }) => ({ proposal_id: proposal!.proposal_id,
-          competency_id: competency.competency_id,
-          choice: adjustments[competency.competency_id]?.choice === "accept" ? "accept" : "keep" })),
-        workshops: chosen.map((item) => ({ competency_id: item.competency_id,
-          choice: workshops[item.competency_id] ?? "ignore",
-          resource_id: workshops[item.competency_id] === "recommended"
-            ? preview.workshop_options.find((option) => option.competency_id === item.competency_id)?.resource_id
-            : workshops[item.competency_id] === "library" ? libraryTargets[item.competency_id] : undefined })) });
+        ...decisions });
       setFinished(true); await reload();
     } catch (cause) { setError((cause as Error).message); } finally { setBusy(false); }
+  }
+  async function confirm() {
+    await confirmWith({ priorities: candidates.map((item) => ({ competency_id: item.competency_id,
+      choice: priorities[item.competency_id] ?? "maintain" })),
+      adjustments: suggestions.map(({ competency, proposal }) => ({ proposal_id: proposal!.proposal_id,
+        competency_id: competency.competency_id,
+        choice: adjustments[competency.competency_id]?.choice === "accept" ? "accept" : "keep" })),
+      workshops: chosen.map((item) => ({ competency_id: item.competency_id,
+        choice: workshops[item.competency_id] ?? "ignore",
+        resource_id: workshops[item.competency_id] === "recommended"
+          ? preview?.workshop_options.find((option) => option.competency_id === item.competency_id)?.resource_id
+          : workshops[item.competency_id] === "library" ? libraryTargets[item.competency_id] : undefined })) });
+  }
+  async function acceptSimpleDiff() {
+    const ids = new Set(simpleDiff.map((item) => item.competency.competency_id));
+    await confirmWith({ priorities: candidates.map((item) => ({ competency_id: item.competency_id,
+      choice: ids.has(item.competency_id) ? "prioritize" : "maintain" })),
+      adjustments: simpleDiff.map(({ competency, proposal }) => ({ proposal_id: proposal.proposal_id,
+        competency_id: competency.competency_id, choice: "accept" })), workshops: [] });
   }
   const priorityCard = (item: Competency) => <article key={item.competency_id} className="rounded-2xl border bg-white p-4"><h3 className="font-extrabold">{item.name}</h3><p className="mt-1 text-sm text-[#566883]">{item.reason}</p>
     <div className="mt-3 grid grid-cols-3 gap-1">{([["prioritize", "Priorizar"], ["maintain", "Mantener"], ["not_prioritize", "No priorizar"]] as const).map(([value, label]) =>
@@ -133,6 +158,22 @@ export function BimesterReplan({ onEvaluation, onFinish }: { onEvaluation: () =>
         className={`min-h-11 rounded-xl px-2 text-xs font-bold ${(priorities[item.competency_id] ?? "maintain") === value ? "bg-[#0b7891] text-white" : "bg-[#eef7fa] text-[#07576c]"}`}>{label}</button>)}</div></article>;
 
   if (!workspace || !preview) return <section className="mx-auto max-w-2xl">{error ? <WorkflowFeedback tone="error">{error}</WorkflowFeedback> : <LoadingState label="Revisando tu bimestre..." />}</section>;
+  if (simpleMode && !simpleEditing && preview.closure.closed && preview.closure.current && preview.next_period && preview.plan && !preview.adjusted && !finished) return <section className="mx-auto max-w-2xl space-y-5 pb-8">
+    <header><p className="text-sm font-bold text-[#087d96]">Reajuste después de {preview.period.label}</p>
+      <h1 className="mt-1 text-3xl font-extrabold text-[#1c2e50]">Lo que conviene ajustar</h1>
+      <p className="mt-2 text-[#526681]">El cierre y las actividades realizadas no cambiarán. Revisa la propuesta antes de decidir.</p></header>
+    {error && <WorkflowFeedback tone="error">{error}</WorkflowFeedback>}
+    {simpleDiff.length ? <div className="space-y-3">{simpleDiff.map(({ competency, proposal }) => <article key={competency.competency_id} className="rounded-2xl border bg-white p-5">
+      <h2 className="font-extrabold">{proposal.title}</h2><p className="text-sm text-[#526681]">{proposal.starts_on} – {proposal.ends_on}</p>
+      <p className="mt-3 text-xs font-bold text-[#526681]">ANTES</p><p className="text-sm">{proposal.competency_names.join(" · ") || "Sin competencias listadas"}</p>
+      <p className="mt-3 text-xs font-bold text-[#087d96]">PROPUESTA</p><p className="text-sm">Conservar lo anterior y añadir {competency.name}.</p>
+      <p className="mt-2 text-sm text-[#526681]">{competency.reason}</p></article>)}</div>
+      : <p className="rounded-2xl bg-[#eef7fa] p-5">No hay un proyecto futuro sin desarrollar al que proponer un cambio. Puedes mantener tu plan o revisar otras opciones.</p>}
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <button className="min-h-11 font-bold text-[#07576c]" onClick={onFinish}>Volver a Hoy</button>
+      <div className="flex flex-wrap gap-2"><Button variant="outline" onClick={() => { setSimpleEditing(true); setStep(2); }}>Quiero cambiar algo</Button>
+        {simpleDiff.length > 0 && <Button disabled={busy} onClick={() => void acceptSimpleDiff()}>{busy ? "Guardando..." : "Aceptar propuesta"}</Button>}</div></div>
+  </section>;
   return <section className="mx-auto max-w-2xl space-y-5 pb-8">
     <header><p className="text-sm font-bold text-[#087d96]">Cierre y reajuste</p><h1 className="mt-1 text-3xl font-extrabold text-[#1c2e50]">Un paso a la vez</h1>
       <p className="mt-1 text-[#566883]">Lo que ya ocurrió queda guardado. Solo revisaremos lo que viene.</p></header>
