@@ -4,7 +4,7 @@ import { writeFile } from 'node:fs/promises';
 import path from 'node:path';
 const root = process.cwd();
 const local = path.join(root, '.local/qa/end-to-end-audit-2026');
-const child = spawn(process.execPath, ['--env-file-if-exists=experiments/jev-competency-classifier/.env.local',
+const child = spawn(process.execPath, ['--import=./docs/qa/end-to-end-audit-2026/audit-business-clock.mjs', '--env-file-if-exists=experiments/jev-competency-classifier/.env.local',
   '--env-file-if-exists=.env.local', 'scripts/local-db-server.mjs'], { cwd: root, windowsHide: true,
   env: { ...process.env, AYNI_AUTH_MODE: 'local', AYNI_DB_MODE: 'local',
     AYNI_LOCAL_TEACHER_ID: 'd97b5d03-b64d-405e-9de5-ae6e407bf126',

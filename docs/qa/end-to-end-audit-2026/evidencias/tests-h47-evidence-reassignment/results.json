@@ -1,0 +1,66 @@
+[
+  {
+    "name": "typecheck",
+    "command": [
+      "node",
+      "node_modules/typescript/bin/tsc",
+      "--noEmit"
+    ],
+    "startedAt": "2026-09-28T06:35:57.787Z",
+    "endedAt": "2026-09-28T06:36:17.629Z",
+    "exitCode": 2,
+    "counters": null
+  },
+  {
+    "name": "unit-tests",
+    "command": [
+      "node",
+      "--test",
+      "--test-concurrency=2",
+      "src/lib/evidence-student-correction.test.mjs",
+      "src/lib/student-context-service.test.mjs",
+      "scripts/database-schema-parity.test.mjs",
+      "scripts/request-auth.test.mjs",
+      "src/lib/period-evaluation.test.mjs"
+    ],
+    "startedAt": "2026-09-28T06:36:17.633Z",
+    "endedAt": "2026-09-28T06:37:06.277Z",
+    "exitCode": 0,
+    "counters": {
+      "tests": 25,
+      "pass": 25,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    }
+  },
+  {
+    "name": "lint",
+    "command": [
+      "node",
+      "node_modules/eslint/bin/eslint.js",
+      ".",
+      "--ignore-pattern",
+      "dist",
+      "--ignore-pattern",
+      ".next"
+    ],
+    "startedAt": "2026-09-28T06:37:06.282Z",
+    "endedAt": "2026-09-28T06:37:48.772Z",
+    "exitCode": 0,
+    "counters": null
+  },
+  {
+    "name": "build",
+    "command": [
+      "node",
+      "scripts/run-framework.mjs",
+      "build"
+    ],
+    "startedAt": "2026-09-28T06:37:48.780Z",
+    "endedAt": "2026-09-28T06:38:11.337Z",
+    "exitCode": 0,
+    "counters": null
+  }
+]

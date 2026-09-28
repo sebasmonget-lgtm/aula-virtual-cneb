@@ -1,5 +1,11 @@
 # Correcciones durante el E2E — continuación autorizada
 
+## Verificación final tras el recorrido P4 (sin nuevo fix de producto)
+
+Se completó desde UI la muestra P4 con cinco días de actividad, 24 notas ordinarias, cinco valoraciones/conclusiones docentes y dos informes familiares. La conciliación exacta de las notas P2–P4 fue **64/64** y los cuatro consolidados se compararon celda por celda contra el export de solo lectura. En P4, 5/120 pares confirmados; cierre e informe narrativo del aula deshabilitados de forma coherente con H34. No se etiquetó ese estado como PASS anual. H49 registró dos primeros intentos de informe rechazados por contrato, recuperados en segundos intentos sin relajar validación; queda como hallazgo, **no fix**.
+
+El último snapshot `p4-family-final` mantiene la huella estable original `29b7c96d36bca81fc781fe36cd9fd9acecb334d468a4f85888454a05ed09a1e9`. Ledger acumulado 187 invocaciones con prefijo inicial de 49 idéntico. Catorce Word reales pasaron inspección ZIP/XML, sin marcadores pendientes; no se pudo renderizar su paginación. La suite fuente completa después de H47 fue 495/495; typecheck/lint/build exit 0. Esta etapa solo añade evidencias, scripts de auditoría y documentación; no hubo migración ni código de producto adicional, ni push/deploy. Los commits lógicos de fixes siguen identificados más abajo.
+
 La auditoría inicial permanece en el checkpoint local `f506d0f` (`codex/e2e-annual-cycle`). No hay push ni deployment. Se mantiene el aula QA de 15 alumnos y su ledger inicial de 49 llamadas. El aula original no se modifica.
 
 ## H08 — Round-trip del preplan y calendario (BLOCKER)
@@ -212,4 +218,62 @@ La propuesta de cantidad de Thiago incluyó «[estudiante]» en su texto. La doc
 
 **Fix.** Distinguir preposición de nivel: se prohíben letras solas como contenido de un campo y expresiones explícitas de nivel/calificación/valoración/calificativo; también se conservan restricciones de notas, porcentajes y comparaciones. No se sustituye un estado informativo ni una letra docente por salida de IA. Archivos `descriptive-conclusion-v4-service.mjs`, `descriptive-conclusion-v4.test.mjs`.
 
-**Regresión.** Aceptación de redacción preposicional; rechazo de «Nivel A», «Valoración A», «Calificativo A», «Obtuvo A», campo A solo y niveles B/C/AD. 42/42 relacionadas, typecheck/lint/build PASS. UI después pendiente. Sin migración ni cambio de modelo. Los intentos anteriores con usage se conservan en el ledger, incluidos los fallbacks registrados; no son llamadas exitosas.
+**Regresión.** Aceptación de redacción preposicional; rechazo de «Nivel A», «Valoración A», «Calificativo A», «Obtuvo A», campo A solo y niveles B/C/AD. 42/42 relacionadas, typecheck/lint/build PASS. UI después PASS: nueva propuesta de Alma describe sus apoyos visuales y recordatorios de reparto sin letras, revisada y confirmada por docente. Commit `c6921bb`. Sin migración ni cambio de modelo. Los intentos anteriores con usage se conservan en el ledger, incluidos los fallbacks registrados; no son llamadas exitosas.
+
+## H41 — Valoración confirmada sin acceso a corrección docente (HIGH, fidelidad)
+
+**Antes.** La docente QA introdujo «algodón» al sintetizar la nota de Camila del 15/4, que dice «recipiente». El texto confirmado no podía corregirse desde Evaluar: el campo parecía editable pero no había guardar/confirmar si existía un nivel. El servidor ya admitía versiones. No es un error atribuido al modelo ni se cambia la observación original.
+
+**Fix mínimo.** «Revisar valoración» crea un borrador mediante el endpoint existente; conserva la valoración/conclusión anteriores hasta confirmar una nueva versión. El campo confirmado pasa a solo lectura. El estado/fingerprint y progreso reconocen ese borrador, y el servidor no permite generar/confirmar una conclusión mientras la valoración está en revisión. Reconfirmar archiva la versión anterior y exige una nueva conclusión; no borra historial ni asigna un nivel automático.
+
+**Pruebas.** Dos regresiones fallaron antes; después 29/29 de período, conclusión e integración, typecheck/lint/build PASS. Revisión sin cambiar evidencia, historial intacto, cierre no completo durante el borrador, fingerprint cambiado, bloqueo de conclusión antigua y posterior confirmación. Archivos: `period-evaluation.tsx`, `period-evaluation-service.mjs`, `period-evaluation-routes.mjs`, `period-evaluation.test.mjs`. Sin migración. UI después PASS: Camila inició revisión, corrigió recipiente/no algodón, guardó y reconfirmó B; nueva conclusión revisada y confirmada, sin ese objeto erróneo. Snapshot `h41-valuation-reviewed`, original intacto. Commit `24afe53`. Rollback: revertir código; las versiones conservadas siguen legibles.
+
+## H40 — Planificación pierde resultados docentes y recorta competencias (HIGH, pedagógico)
+
+**Antes.** UI P1 recargada mostró quince decisiones, pero solo ausencia de registros de las primeras cinco competencias. No reflejó once B en convivencia ni las valoraciones A en cantidad/indagación. El código solo agregaba frases de IA exactamente repetidas; las síntesis docentes manuales tenían arrays vacíos. El texto para proveedor también usaba `slice(0,5)`.
+
+**Fix.** Agregar distribución AD/A/B/C y pendientes por competencia desde las valoraciones vigentes, separar registros del período de antecedentes, priorizar competencias valoradas y quitar truncamiento arbitrario. Con tres o más B/C se propone otra oportunidad de desarrollo, sin asumir un apoyo idéntico para todos; con pocos casos no se afirma necesidad grupal. La docente sigue eligiendo usar el resumen, no se modifica automáticamente el plan.
+
+**Pruebas.** Dos nuevas regresiones fallaron antes; después 26/26 de feedback, período y consolidado, typecheck/lint/build PASS. Once B/tres A/un pendiente en quince, fortalezas fuera de las primeras cinco, borradores excluidos, texto anónimo y cero ausencia=C. Archivos `planning-feedback.mjs`, `planning-feedback-option.tsx`, `planning-feedback.test.mjs`. Sin migración/modelos nuevos. UI después PASS para la agregación: dieciséis valoraciones, convivencia 3 A/11 B/1 pendiente y A de cantidad/indagación visibles. NO equivale a cierre formal: H45 encontró que el flujo nuevo no incorporaba este opt-in. Commit `1c8d536`; compatibilidad con respuesta previa durante HMR `d7d78f2` (3/3 focales y typecheck/lint/build PASS).
+
+## H42 — Informes familiares rechazados por calidad (MEDIUM, recuperable)
+
+Primeras propuestas de Thiago y Mateo: `family_report_schema_mismatch`, no se guardaron ni confirmaron. Segundo intento desde UI en cada caso generó un informe coherente con las conclusiones; la docente lo revisó, guardó y confirmó. No se atribuye una causa interna sin evidencia ni se relajó su validador. Las siete llamadas de los cinco informes se conservan en ledger. Word reales de cinco alumnos contrastantes; render visual pendiente.
+
+## H43 — Nombres de compañeros persisten en copia para IA y familia (HIGH, privacidad)
+
+**Antes.** Una conclusión y el informe de Thiago repitieron «Inés» desde ejemplos de las evidencias. La docente retiró el nombre antes de confirmar el informe, pero eso solo corregía la salida visible. El input anonimizaba al niño evaluado, no a compañeros citados. La muestra es enteramente ficticia; no se enviaron datos de menores reales.
+
+**Fix localizado.** Las rutas ya autorizadas obtienen únicamente nombres del mismo aula y anonimizan la copia para proveedor en assessment, conclusión y familia, también variantes sin tildes. La fuente pedagógica/historial no se reescribe. No cambia destinatarios, permisos, modelo ni contenido curricular. No se afirma un detector universal de PII o de nombres desconocidos fuera del aula.
+
+**Pruebas.** Regresiones SQL con nombre de compañero y variante sin tilde fallaron antes. Después 56/56 relacionadas, 3/3 focales finales, typecheck/lint/build PASS. Archivos `assessment-v4-service.mjs`, `period-evaluation-routes.mjs`, `family-report-routes.mjs`, tests de período/familia. UI después PASS: informes de Bruno y Valeria generados, revisados y confirmados sin nombres de compañeros. Commit `1a05025`. Sin migración; rollback revierte sanitización sin alterar datos.
+
+## H45 — Opt-in de evaluaciones ignorado por el flujo nuevo de proyecto/unidad (HIGH, bloqueante pedagógico)
+
+**Antes.** P2 «Cantidades para repartir y jugar» se abrió con P1 seleccionado y el opt-in marcado. El preview describió la necesidad inicial de 9/15, no los 11 B actuales ni fortalezas confirmadas. No se confirmó ni generó mapa desde ese contexto. Causa: `TeacherWorkspace` no pasaba el período a `ProjectDevelopmentWorkspace`; `/project-flow/start`, dependents y master no cargaban feedback aunque el flujo legado sí lo hacía.
+
+**Fix mínimo.** Transportar el opt-in al inicio y las decisiones; resolver sus datos de nuevo en servidor con autorización de aula/período existente, guardar snapshot agregado en `details.planning_feedback` y conservarlo al generar preguntas/mapa. El proveedor distingue resultados del período de antecedentes iniciales, ausencia de registro de C y necesidad individual de grupal. Si cambia el período elegido, la UI exige revisar dependencias. Un preview aún sin decisiones puede actualizarse desde la UI, con revisión optimista, sin borrar proyecto/mapa/evidencias. No se regenera un confirmado ni se modifica el plan anual.
+
+**Regresión.** Cuatro pruebas nuevas fallaron antes; después 19/19 relacionadas, typecheck/lint/build PASS (`tests-h45-project-feedback`). Opt-in/opt-out, período no autorizado, snapshot estable, input real al proveedor fake de unidad, distribución 11 B/3 A/1 pendiente y recuperación visible protegida. Archivos: `teacher-workspace.tsx`, `project-development-workspace.tsx`, `local-db-server.mjs`, `planning-feedback.mjs`, `project-flow-service.mjs`, `project-planning-feedback.test.mjs`. Commit `c16c5af`. UI después PASS: preview actualizado reconoce 11 B/3 A/1 pendiente, separa 9/15 inicial de resultados actuales; preguntas, maestro, mapa de diez fechas y unidad confirmados. El primer intento de dependents fue rechazado, el reintento validó sin relajar contrato; ambos facturados. Primera actividad confirmada y seis notas guardadas en Hoy. Snapshot `p2-day1-observed`. Rollback: revertir código; snapshot adicional es opcional y compatible con drafts históricos. Sin migración ni nuevos modelos.
+
+## H46 — Diálogo de evidencia deja botones fuera de pantalla (HIGH / bloqueante por clic)
+
+**Antes.** En P2, un criterio con orientaciones completas alargó el diálogo más allá de la pantalla de 1280×720. El scroll no desplazaba su contenido y «Guardar y siguiente» no podía pulsarse. La persistencia funcionó con teclado; la conciliación posterior detectó cuatro notas asignadas al alumno anterior durante esa captura automatizada. No se usaron para valorar: se repararon por UI con H47.
+
+**Causa/fix.** `EvidenceDialog` no limitaba su altura ni definía un cuerpo desplazable. Se mantiene la misma captura y autorización: contenedor flex de máximo 90dvh, cuerpo con min-height 0 y overflow vertical, cabecera/pie no contraíbles. No se oculta criterio ni se cambian datos, niveles o servicios.
+
+**Pruebas.** Regresión estructural falló antes; después 22/22 relacionadas y typecheck/lint/build PASS. UI después PASS en escritorio: criterio desplazable, botones visibles, sexto registro guardado por clic y feedback de éxito. Esa nota de Camila es deliberadamente vaga y no autoriza valoración. Captura `27-h46-guardar-evidencia-visible.png`. Archivos `teacher-workspace.tsx`, `evidence-dialog-layout.test.mjs`. Commit `5d98048`. Rollback: revertir solo layout, sin migración ni cambio de evidencia.
+
+## H47 — No se puede corregir el alumno de una evidencia sin evaluar (HIGH, integridad)
+
+**Antes.** La conciliación UI/export detectó que cuatro notas del 8/6 capturadas por automatización en el diálogo desbordado seguían asociadas a Valeria. No se atribuye a un defecto de selección no reproducido ni a la IA. La app carecía de corrección de alumno; repetir las notas sin retirar la asignación errónea contaminaría sus valoraciones.
+
+**Solución mínima.** En el perfil, «Corregir alumno de una observación» solicita nota, alumno correcto y motivo. El servidor autoriza propiedad, docente autora y misma aula activa; conserva texto/fecha y agrega historial con IDs anterior/nuevo, motivo, docente y fecha. Revisión optimista y el mismo bloqueo transaccional de período protegen concurrencia con evaluación. No permite adjuntos privados, período cerrado ni valoraciones confirmadas afectadas. Refresca los dos contextos; snapshots de evaluación se vuelven obsoletos al cambiar sus fuentes. No es edición general de evidencia ni traslado de media.
+
+**Regresión/validación.** Módulo ausente antes; 4 regresiones SQL/contrato nuevas. 25/25 relacionadas, lint/build PASS; typecheck inicial detectó `response.json()` unknown, corregido y repetición typecheck exit 0. Suite completa posterior: 495/495 PASS, typecheck/lint/build exit 0. Migraciones nuevas local 0061 y Supabase 202609280001 agregan una columna JSONB opcional para historial; RLS existente de evidencia permanece, sin ampliar acceso. Live Supabase NO PROBADO.
+
+**UI después PASS.** Cuatro correcciones reales desde el perfil a Omar, Bruno, Mateo y Alma, sin regenerar ni reescribir texto. Conciliación read-only `audit-period-evidence-continue.mjs`: 20/20 notas P2 asociadas al alumno, texto y día esperados; cuatro historiales. Original fingerprint intacto. Commit `919e381`. Archivos: servicio/pruebas de corrección, componente, perfil, contexto del alumno, tipos, servidor/autorización y dos migraciones. Rollback: revertir código manteniendo columna/historial; no revertir asignaciones correctas ni borrar historial.
+
+## H48 — Cambio de alumno mientras termina la confirmación (MEDIUM, no bloqueante)
+
+Al seleccionar Omar antes de que terminara la confirmación de la conclusión de Valeria, un `reloadDetail` de la acción anterior sustituyó el detalle cargado para Omar. La condición de identidad del artículo impidió mostrar o guardar datos de Valeria como Omar: quedó una ficha vacía, sin error visible. La selección normal de otra competencia y retorno permitió continuar. Causa observada en código: recarga imperativa sin invalidación de solicitudes en vuelo; la navegación de alumnos permanece habilitada durante `busy`. No se alteraron ni mezclaron valoraciones. Se conserva como hallazgo UX/concurrencia, sin refactor por no bloquear el recorrido. En la continuación se espera la confirmación visible antes de cambiar de alumno.

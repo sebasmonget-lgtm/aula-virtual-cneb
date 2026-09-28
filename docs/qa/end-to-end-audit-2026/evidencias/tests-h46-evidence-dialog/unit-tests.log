@@ -1,0 +1,30 @@
+✔ taller confirmado admite su criterio, no otro ni borradores o confirmación aportada por cliente (1.9051ms)
+✔ A-B: evidence_capture se resuelve en código sin provider (1.7824ms)
+✔ K-M: registra un hecho o foto sin exigir una marca de logro (1.0428ms)
+✔ P-Q: contexto conserva expected distinto de observed y scope sin bulk (0.5871ms)
+✔ C-J, N-O, R, S-T y Y: servidor exige relación activa, coherencia v4, foto válida y no usa IA (14.5346ms)
+✔ U-X: dashboard y StudentContext conservan competencias v4 sin UUID inventado (3.4158ms)
+✔ captura conserva cabecera y acciones visibles con criterio extenso (9.7624ms)
+✔ plan anual reabre el mismo borrador y no genera otro mientras existe (14.4152ms)
+✔ criterio no convierte un error de lectura en un formulario nuevo (2.7877ms)
+✔ actividad y experiencia distinguen fallos de lectura y de refresco de un fallo de guardado (3.6829ms)
+✔ la consulta real de experiencias usa columnas presentes en las migraciones locales (4708.0886ms)
+✔ el servidor rechaza una segunda creación anual cuando ya existe un draft (3.5825ms)
+✔ análisis no presenta evidencias inexistentes ante un error HTTP (1.608ms)
+✔ conclusiones e informes exigen guardar cambios antes de confirmar (4.9593ms)
+✔ Evaluar separa valoración docente y conclusión posterior y reconstruye el estado al recargar (2.8905ms)
+✔ el perfil propone solo acciones posibles para competencias v4 y los vacíos vuelven a planificar (1.7926ms)
+✔ Aula distingue campos, acciones y estado de carga al añadir niños (9.162ms)
+✔ alta y entrevista presentan datos completos, fecha opcional y audio por pregunta (7.5565ms)
+✔ Diagnóstico es un módulo propio y los accesos docentes llegan al mismo flujo (2.9315ms)
+✔ guiadas y espontáneas comparten dictado revisable sin autoguardar observaciones (3.9596ms)
+✔ Ayni presenta recomendación automática y abre el catálogo solo cuando la docente edita (5.9602ms)
+✔ el resumen tiene comentarios opcionales debajo del mapa, dictado y navegación ordenada (2.5538ms)
+ℹ tests 22
+ℹ suites 0
+ℹ pass 22
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5284.529

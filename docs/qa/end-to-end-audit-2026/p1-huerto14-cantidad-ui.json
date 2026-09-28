@@ -1,0 +1,22 @@
+{
+  "business_day": "2026-04-14",
+  "cases": [
+    [
+      "Thiago",
+      "Contó 10 semillas, puso dos en cada uno de cinco vasos y volvió a contar para comprobar. Dijo «no sobra, son dos todos». Con otro vaso propuso dar una a cada vaso y explicó que sobrarían cuatro."
+    ],
+    [
+      "Inés",
+      "Puso una semilla junto a cada vaso y dijo que faltaban dos vasos para las semillas sobrantes. Contó ambas colecciones y comprobó emparejando."
+    ],
+    [
+      "Hugo",
+      "Al repartir puso tres en un vaso y una en otro. Con la pregunta «¿tienen igual?» contó despacio y pasó una para dejar dos y dos."
+    ],
+    [
+      "Camila",
+      "Repartió una semilla a cada vaso de tres compañeros. Volvió a señalar cada vaso y dijo «todos tienen». Necesitó volver a contar para saber cuántas dio."
+    ]
+  ],
+  "method": "UI"
+}

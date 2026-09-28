@@ -1,0 +1,31 @@
+{
+  "business_day": "2026-04-14",
+  "method": "UI",
+  "competency": "CYT_INDAGA",
+  "cases": [
+    [
+      "Inés",
+      "Propuso dos vasos con el mismo frejol y algodon: uno con agua y otro sin. Dijo «así vemos si necesita agua» y pidió ponerlos en el mismo lugar."
+    ],
+    [
+      "Thiago",
+      "Quería saber si sale raíz en algodón o tierra. Eligió un vaso de cada uno y dijo que pondría igual agua para poder comparar."
+    ],
+    [
+      "Camila",
+      "Señaló el vaso con algodón, dijo «quiero ver adentro»; ante qué averiguar respondió «si se abre» y propuso mirarlo mañana."
+    ],
+    [
+      "Mateo",
+      "En pareja, con dibujos de las opciones, señaló dos vasos y dijo «este agua, este no, mirar después». No habló ante el grupo grande."
+    ],
+    [
+      "Valeria",
+      "Eligió semillas y agua. Tras preguntarle qué quiere averiguar dijo «si crece»; necesitó ayuda para precisar qué comparar."
+    ],
+    [
+      "Bruno",
+      "Tocó semillas y propuso taparlas con tierra para ver si sale una planta. No explicó aún cómo comparar con otra condición."
+    ]
+  ]
+}

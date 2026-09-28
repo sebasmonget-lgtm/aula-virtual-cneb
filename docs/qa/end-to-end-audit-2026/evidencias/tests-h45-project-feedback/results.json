@@ -1,0 +1,66 @@
+[
+  {
+    "name": "typecheck",
+    "command": [
+      "node",
+      "node_modules/typescript/bin/tsc",
+      "--noEmit"
+    ],
+    "startedAt": "2026-09-28T06:14:41.908Z",
+    "endedAt": "2026-09-28T06:14:52.154Z",
+    "exitCode": 0,
+    "counters": null
+  },
+  {
+    "name": "unit-tests",
+    "command": [
+      "node",
+      "--test",
+      "--test-concurrency=2",
+      "src/lib/project-planning-feedback.test.mjs",
+      "src/lib/planning-feedback.test.mjs",
+      "src/lib/project-flow-service.test.mjs",
+      "src/lib/project-draft-changes.test.mjs",
+      "src/lib/learning-experience-hardening.test.mjs"
+    ],
+    "startedAt": "2026-09-28T06:14:52.159Z",
+    "endedAt": "2026-09-28T06:14:59.077Z",
+    "exitCode": 0,
+    "counters": {
+      "tests": 19,
+      "pass": 19,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    }
+  },
+  {
+    "name": "lint",
+    "command": [
+      "node",
+      "node_modules/eslint/bin/eslint.js",
+      ".",
+      "--ignore-pattern",
+      "dist",
+      "--ignore-pattern",
+      ".next"
+    ],
+    "startedAt": "2026-09-28T06:14:59.082Z",
+    "endedAt": "2026-09-28T06:15:41.469Z",
+    "exitCode": 0,
+    "counters": null
+  },
+  {
+    "name": "build",
+    "command": [
+      "node",
+      "scripts/run-framework.mjs",
+      "build"
+    ],
+    "startedAt": "2026-09-28T06:15:41.474Z",
+    "endedAt": "2026-09-28T06:16:04.618Z",
+    "exitCode": 0,
+    "counters": null
+  }
+]

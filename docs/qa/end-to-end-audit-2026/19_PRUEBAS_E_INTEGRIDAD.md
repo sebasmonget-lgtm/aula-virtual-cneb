@@ -1,5 +1,29 @@
 # Pruebas técnicas e integridad
 
+## Corte final P1–P4: comprobaciones posteriores
+
+| Comprobación ejecutada | Resultado y alcance |
+| --- | --- |
+| Conciliación de evidencia P2/P3/P4 | **64/64 PASS** por alumno, día y texto predeclarado; P1 74 notas previas; total ordinario 138, diagnóstico 29 aparte. Capturas UI y `evidencias/period-evidence-ui-reconciliation.json` |
+| Consolidados P1/P2/P3/P4 | Cuatro XLSX reales, ámbito/celdas cotejados con export de solo lectura. P4: 8×15=120, 3 A/2 B/115 vacías; no se completaron celdas faltantes |
+| Word | Catorce `.docx` descargados, ZIP/XML legible, marcadores sin resolver cero, institución y docente en los documentos inspeccionados. **Paginación visual NO PROBADA** |
+| Costos | 187 eventos facturables; primeros 49 inalterados; USD 1.372454652 mixtos; 0 eventos registrados sin precio. Dos timeouts sin `usage` quedan desconocidos, no gratuitos |
+| QA vs original | Snapshot `p4-family-final`: fingerprint original `29b7c96d36bca81fc781fe36cd9fd9acecb334d468a4f85888454a05ed09a1e9`, idéntico al baseline. Solo export/dashboard GET para reconciliar |
+| Cierre P4/anual | **NO PASS**: 5/120 confirmados, 115 pendientes, 0/15 niños completos; botón Cerrar período e informe aula deshabilitados. H34 requiere decisión de dominio, no un bypass QA |
+| Fuente después de H47 | 104 archivos/495 tests PASS sin fail/skip; reloj QA 2/2 extra; typecheck, lint y build exit 0. La actividad P4 posterior no cambió código de producto |
+
+Evidencias: `evidencias/consolidado-p1-inspect.json` hasta `consolidado-p4-inspect.json`, `docx-after-inspect.json`, `cost-scenarios-after.json`, `p4-family-final-qa-snapshot.json` y capturas 29–31. Sin prueba de voz real, Word visual, Supabase/RLS live, SIAGIE/progreso ni año formal cerrado.
+
+## DESPUÉS DEL FIX — comprobación técnica al completar H47
+
+Ejecución `full-after-h47`: **104 archivos, 495 pruebas PASS, 0 FAIL, 0 canceladas, 0 omitidas**. Typecheck, lint y build finalizaron con exit 0. Los dos fallos de la auditoría inicial quedaron corregidos con regresión (H18 fecha civil Lima y H19 import/export de `ai_usage_events`). Logs completos: `evidencias/tests-full-after-h47/`.
+
+La protección del reloj de negocio del harness QA pasó **2/2 pruebas adicionales**: rechaza ejecutarse en el entorno original y conserva las fechas explícitas persistidas. Estas pruebas no forman parte de las 495 y no se suman como si fueran nuevas validaciones funcionales de la interfaz.
+
+H46 se verificó en la interfaz: el pie del diálogo de evidencia permite guardar con el contenido largo. H47 se verificó mediante cuatro correcciones docentes de atribución realizadas por UI; la conciliación de las veinte observaciones P2 es 20/20, conservando texto y fecha. La migración nueva se aplicó únicamente al entorno QA. RLS/Supabase real y el despliegue siguen NO PROBADOS.
+
+## ANTES DEL FIX — evidencia histórica
+
 Las pruebas de esta sección NO sustituyen la experiencia de la docente. Se ejecutaron sin claves de proveedor en los procesos de tests, con mocks/fixtures y bases temporales independientes; no se usaron para sembrar ni alterar el aula QA.
 
 | Comprobación | Resultado ejecutado |

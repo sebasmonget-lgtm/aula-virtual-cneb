@@ -1,0 +1,18 @@
+{
+  "period": "P1",
+  "file": "consolidado-p1-confirmado.xlsx",
+  "rows": 150,
+  "students": 15,
+  "competencies": 10,
+  "levels": {
+    "AD": 0,
+    "A": 5,
+    "B": 11,
+    "C": 0,
+    "pending": 134
+  },
+  "confirmedConclusions": 16,
+  "cellByCellReconciliation": "PASS",
+  "originalBlankCellsPreserved": true,
+  "visualRender": "NO PROBADO"
+}

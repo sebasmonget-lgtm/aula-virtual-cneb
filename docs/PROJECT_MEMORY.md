@@ -6,6 +6,12 @@ Proyecto nuevo iniciado el 20 de septiembre de 2026. Existe un shell responsive 
 
 ## Alcance implementado
 
+- **Corte de auditoría E2E P1–P4 (2026-09-28, QA aislado).** Cinco experiencias confirmadas, 138 evidencias ordinarias ingresadas por UI, 31 pares alumno–competencia valorados parcialmente entre cuatro períodos, nueve informes familiares confirmados y cuatro consolidados XLSX conciliados. P4: 5/120 pares, 115 pendientes; H34 impide cierre formal responsable sin decisión terminal para información insuficiente. No se forzó C ni se quitó ámbito. 187 invocaciones de IA registradas, USD 1.372454652 mixtos (proveedor Jev + estimación tarifaria OpenAI); dos timeouts sin uso tienen costo desconocido. Familia P4 tuvo dos primeros intentos `family_report_schema_mismatch`, ambos recuperados en segundo intento (H49, no fix). Suite final de fuente tras H47: 495/495, typecheck/lint/build PASS. Original fingerprint estable; sin push, deploy ni conexión Supabase real. Ver `docs/qa/end-to-end-audit-2026/01_RESUMEN_EJECUTIVO.md` y `15_COSTOS_IA.md`. Las notas anteriores de P1/P2/P3 son checkpoints históricos, no estado vigente.
+
+- Continuación E2E en P1: 74 evidencias UI, marco V2 revisado/confirmado y 16 valoraciones docentes para 14 estudiantes en criterios documentados; Omar permanece sin nivel. Cinco contrastes usan análisis IA, el resto análisis docente explícito; las conclusiones se revisan una por una. H35/H36/H37/H39 corrigen contexto de marco, fecha civil para IA, snapshot JSONB y falso rechazo de la preposición A. Validaciones relacionadas 15/36/26/42 PASS con typecheck/lint/build. P2–P4 y cierre anual siguen pendientes; no confundir estos avances con cierre completo. Datos originales intactos, commits locales sin deploy.
+
+- E2E continúa en QA aislado: 74 evidencias reales de período (ingresadas por UI, simulación ficticia), seis competencias trabajadas, Omar guardado sin nivel por información insuficiente. H31 corrige fechas Lima/aplicabilidad/conteos/progreso del Word diagnóstico; H32 corrige plazo del Assessment Master. 26/26 relacionadas, typecheck/lint/build PASS. Descargados diagnóstico, anual y actividad; XML sin placeholders y con logo institucional. Render visual no probado por falta de LibreOffice. Marco P1 generado después del fix; evaluaciones, P2–P4 y cierre todavía pendientes. Aula original intacta, sin despliegue.
+
 - Continuación E2E: primer proyecto P1 confirmado con ocho blueprints lectivos, imagen recomendada por Jev y primera actividad confirmada con criterio heredado. H23 añade cast UUID en confirmación del calendario; H24 normaliza DATE antes de validar actividades (16 relacionadas + typecheck/lint/build PASS). Se conservó el borrador generado y el aula original; todavía faltan evidencias/evaluación/P2–P4/cierre. Registro detallado en la auditoría, sin deployment.
 
 - Continuación E2E autorizada (2026-09-27): checkpoint local `f506d0f` conserva el estado auditado, sin deploy. H08 (`60210c3`) ya confirmó el mismo preplan intacto por UI; 63 pruebas relacionadas, typecheck, lint y build PASS. H21 (`87e0d32`) alinea cardinalidades del formal anual: 37 relacionadas y Word listo en UI, fidelidad/render pendiente. H22 corrige la comparación de cambios de proyecto ante claves reordenadas por JSONB: 12 relacionadas y preguntas visibles en el mismo borrador, sin regenerar. El aula original conserva su fingerprint. Ver ADR 084 y registro de correcciones E2E; el año completo aún no está validado.
@@ -257,3 +263,17 @@ Proyecto nuevo iniciado el 20 de septiembre de 2026. Existe un shell responsive 
 ## Continuación E2E: principal del mapa (2026-09-28)
 
 La principal de una fila nueva/editar mapa es `criterion_competency_id`, no el orden de `competency_ids`. El criterio heredado conserva el ID visible y confirmado de la actividad; mapas antiguos no se reescriben. Si un criterio histórico incompatible no tiene evidencias, preparar y confirmar su reemplazo por UI permite archivarlo sin alterar su texto ni mover notas. Ver H30 del registro E2E y sus regresiones.
+
+## Revisión docente versionada en Evaluar (2026-09-28)
+
+Una valoración confirmada se presenta solo lectura. «Revisar valoración» inicia un borrador con la API existente; la anterior sigue en historial hasta reconfirmar. Un borrador abierto deja el par pendiente y obsoleta la huella de cierre, sin transformar ausencia de evidencia en nivel. No se redacta ni confirma una conclusión durante esa revisión; la nueva valoración requiere una conclusión nueva. Ver H41 E2E.
+
+## Feedback opt-in de período para planificar (2026-09-28)
+
+El resumen agregado usa distribuciones docentes vigentes AD/A/B/C y pendientes, además de patrones compartidos revisables. No recorta las competencias valoradas a primeros IDs ni exige frases de IA repetidas para reconocer varios B/C. Los registros considerados son del período; antecedentes y ausencia de evidencia no asignan niveles. El opt-in orienta la propuesta pero no cierra el período ni sustituye el reajuste formal. Ver H40 E2E.
+
+El flujo actual de proyecto/unidad transporta esa elección al servidor. Guarda `details.planning_feedback` como snapshot agregado autorizado y lo mantiene en preguntas y mapa; no cambia planes anteriores. Cambiar la elección exige actualizar las dependencias antes de preparar/confirmar el mapa. Un preview sin decisiones tiene una acción UI para actualizar contexto; no se sobrescribe un mapa ni una versión confirmada. Ver H45 E2E.
+
+## Corrección acotada del alumno de una evidencia (2026-09-28)
+
+El perfil permite reasociar una nota sin adjunto de la misma aula antes de una valoración confirmada afectada. Servidor valida autora/propiedad, alumno activo, período abierto, motivo y revisión de asignación; conserva texto/día, agrega `evidences.student_reassignment_history` y refresca ambos contextos. No se mueve media ni se altera evaluación confirmada. Migraciones nuevas 0061/202609280001, RLS existente conservado. H47 E2E; pruebas SQL y UI con conciliación, no cambios directos a QA.

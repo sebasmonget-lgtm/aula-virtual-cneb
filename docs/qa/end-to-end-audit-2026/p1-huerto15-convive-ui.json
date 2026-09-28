@@ -1,0 +1,42 @@
+{
+  "business_day": "2026-04-15",
+  "cases": [
+    [
+      "Alma",
+      "Tomó el vaso de agua mientras Camila lo usaba. Con mediación acordó esperar la tarjeta de turno y luego le dejó el vaso. Necesitó recordatorio al siguiente reparto."
+    ],
+    [
+      "Elena",
+      "Quería toda la tierra para su vaso. Al escuchar lo que necesitaba otra niña y con mi pregunta, aceptó dividirla; volvió a pedir ayuda cuando faltó algodón."
+    ],
+    [
+      "Camila",
+      "Dijo «yo primero» y apartó el recipiente. Tras recordar el acuerdo lo cedió a Alma, pero me buscó para organizar el turno siguiente."
+    ],
+    [
+      "Diego",
+      "Se adelantó para coger la jarra. Miró la tarjeta con apoyo y esperó mientras Hugo regaba. Necesitó que señalara quién seguía."
+    ],
+    [
+      "Bruno",
+      "En el grupo pequeño del huerto dijo «tú pones algodón, yo paso agua» y cedió la jarra sin aviso. Cuando llegaron más compañeros, la retuvo y precisó mediación para devolverla."
+    ],
+    [
+      "Valeria",
+      "Recordó la tarjeta del juego anterior y dijo «después yo»; esperó la jarra sin que se lo dijera. Ante un desacuerdo nuevo sobre tierra necesitó ayuda para escuchar y aceptar otra propuesta."
+    ],
+    [
+      "Mateo",
+      "Con anticipación visual, en pareja, señaló el turno de su compañero y le pasó algodón al terminar. Permaneció en esa tarea; no se observó participación en grupo grande."
+    ],
+    [
+      "Joaquín",
+      "Propuso usar una cucharita por turno cuando otro niño pidió tierra. Cumplió el turno y acercó la cucharita a quien esperaba sin recordatorio."
+    ],
+    [
+      "Thiago",
+      "Acordó alternar el recipiente con Inés y se lo dio al terminar. Cuando faltó algodón propuso compartir el trozo y ambos aceptaron."
+    ]
+  ],
+  "method": "UI"
+}

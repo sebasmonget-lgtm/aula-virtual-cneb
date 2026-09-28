@@ -1,0 +1,18 @@
+{
+  "period": "P2",
+  "file": "consolidado-p2-confirmado.xlsx",
+  "rows": 105,
+  "students": 15,
+  "competencies": 7,
+  "levels": {
+    "AD": 0,
+    "A": 1,
+    "B": 4,
+    "C": 0,
+    "pending": 100
+  },
+  "confirmedConclusions": 5,
+  "cellByCellReconciliation": "PASS",
+  "originalBlankCellsPreserved": true,
+  "visualRender": "NO PROBADO"
+}

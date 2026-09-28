@@ -1,0 +1,37 @@
+{
+  "scope": "Casos ficticios predefinidos antes de captura UI. No son benchmark experto ni niveles automáticos.",
+  "reading": [
+    {"student":"Thiago","text":"Señaló las huellas en la portada y dijo que el oso iba a buscar a alguien. Al mirar otra página vio un osezno y dijo «era su hijo, no un amigo». Volvió a esa imagen para explicar por qué elegiría el cuento. No le indiqué esa respuesta."},
+    {"student":"Inés","text":"Pensó que el pájaro volaba por la portada. En las páginas encontró la jaula abierta y cambió: «están buscando su casa». Señaló dos imágenes para sostenerlo; no registré toda la lectura."},
+    {"student":"Hugo","text":"Miro el árbol de la portada, dijo bosque. Después señaló la huella del camino y el personaje con canasta para explicar «va donde su abuela». Escogió ese cuento por la historia del camino, no solo por el color."},
+    {"student":"Elena","text":"Miró la portada y estuvo atenta. No anoté qué anticipó ni qué pista usó; esto no muestra cómo interpretó el cuento."},
+    {"student":"Kiara","text":"Señaló la luna y el niño tapado de la portada: «creo que no puede dormir». Al ver la página siguiente explicó que buscaba a su perro y cambió su idea. Quiso recomendarlo porque al final lo encuentra; señaló esa imagen."}
+  ],
+  "sharing": [
+    {"student":"Valeria","text":"Con cuatro compañeros propuso mirar por parejas el cuento que dos querían: «luego lo cambiamos, así todos lo ven». Escuchó otra idea de dejarlo en el centro y la probaron. Esperó su turno y devolvió el cuento a la mesa sin mi recordatorio."},
+    {"student":"Omar","text":"Con una pareja nueva pidió mirar el mismo cuento y propuso leer juntos antes de cambiar. Escuchó que la otra niña quería empezar por el final y acordaron turnarse para pasar páginas. Esperó, le dio el libro y lo devolvieron sin pregunta docente individual."},
+    {"student":"Bruno","text":"En pareja compartió y alternó páginas sin aviso. Cuando llegaron cuatro más sujetó el cuento y dijo que ellos esperen. Con mi pregunta sobre cómo lo verían todos aceptó ponerlo en el centro y dejó que otra niña lo sostuviera. Distinto en grupo ampliado."},
+    {"student":"Mateo","text":"Con secuencia anticipada y señal de turno disponible, en grupo de tres propuso pasar el cuento después de una página. Escuchó que otro quería mirar la ilustración, esperó y se lo dio. Lo guardó con ellos sin indicación individual; no se observó asamblea grande."},
+    {"student":"Alma","text":"En pareja dijo una página cada uno, esperó mientras la miraban y dio el libro sin aviso. Al incorporarse otra niña propuso que también elija una página y aceptó mirar las dos que ella pidió. En este grupo pequeño no hizo falta pregunta docente."}
+  ],
+  "writing": [
+    {"student":"Elena","text":"Hizo marcas y escribió dos letras en su tarjeta. Dijo «es para los que quieren leer, dice que el oso encuentra a su hijo». Al releer con mi pregunta agregó una marca al lado y explicó que ahora también dice que busquen la huella. No copió un texto modelo."},
+    {"student":"Inés","text":"Escribió letras propias debajo del dibujo del pájaro para recomendar el cuento a otro grupo. Me explicó qué decía; al preguntarle si eso ayudaba a elegir agregó dos marcas y dijo que había puesto la jaula abierta. Es escritura a su manera, no convencional."},
+    {"student":"Omar","text":"Puso trazos en la recomendación y dijo que era para la pareja que leería después: «dice que miren al perro que se perdió». Con una pregunta volvió a su producción y decidió añadir una marca para el final. Se registra su explicación, no atribuyo escritura convencional."},
+    {"student":"Mateo","text":"Con la secuencia visual disponible escribió marcas y una letra en la tarjeta, señaló el cuento y explicó «para ellos, que vean la luna». Con ayuda para releer señaló qué parte quería mantener. El adulto no escribió la tarjeta por él; solo preguntó qué quería comunicar."}
+  ],
+  "loans": [
+    {"student":"Valeria","text":"Al decidir con cinco cómo prestar y devolver, propuso una cesta para lo ya leído y otra para lo que faltaba mirar. Escuchó que se podían confundir y acordó distinguirlas con dibujos. Probó el préstamo, esperó y dejó el libro en la cesta acordada sin recordatorio individual."},
+    {"student":"Omar","text":"Con cuatro propuso devolver a la mesa antes de elegir otro, «si no, los otros no encuentran». Aceptó la propuesta de una compañera de usar una cesta y probó el cambio. Cedió el cuento que quería a quien esperaba y lo devolvió sin pregunta ni aviso individual."},
+    {"student":"Bruno","text":"En tres acordó usar la cesta y devolvió sin aviso. Al juntarse dos grupos guardó dos cuentos para él y otro no podía elegir. Con mi pregunta escuchó que quedaba uno sin libro, puso uno en la cesta y sostuvo ese acuerdo durante la prueba. Aún mediación al ampliar."},
+    {"student":"Mateo","text":"Con anticipación y señales visuales a disposición, en cuatro indicó una cesta para devolver y aceptó otro lugar propuesto. Esperó mientras elegían, prestó a una pareja distinta y devolvió donde acordaron sin instrucción individual. Apoyos de acceso, no pregunta que le dé la solución."},
+    {"student":"Alma","text":"Con tres propuso devolver el cuento antes de elegir otro y lo hizo sin aviso. Cuando otra pareja quiso cambiar el orden escuchó, aceptó probar una vuelta más y entregó el libro. En esta organización pequeña mantuvo el acuerdo, aunque no se observó grupo numeroso."}
+  ],
+  "transfer": [
+    {"student":"Valeria","text":"Con una pareja distinta y otros cuatro acordó alternar dos cuentos porque querían el mismo. Escuchó a quien todavía no había elegido, propuso que comience y cedió su lugar. Al cambiar el punto de devolución preguntó al grupo dónde convenía, probaron y recogió con ellos sin mi aviso."},
+    {"student":"Omar","text":"En grupo de cinco, con compañeros distintos, vio que uno se quedó sin cuento. Propuso mirar juntos el suyo y después cambiar; escuchó otra opción de rotar, esperó y la probó. Cuando movieron la cesta la buscó, preguntó a sus pares y devolvió allí. Sin pregunta docente para incluir o devolver."},
+    {"student":"Bruno","text":"Con una pareja distinta dio el cuento al terminar sin aviso. Al reunirse seis retuvo el que pedía otra niña; con recordatorio de escuchar a los demás propuso esperar una página y luego se lo dio. No mantuvo igual autonomía en grupo grande; sí ajustó con mediación."},
+    {"student":"Mateo","text":"Con cuatro y otra pareja que esperaba, con tarjetas disponibles, propuso prestar primero a quienes no habían mirado. Escuchó la idea de rotar dos cuentos, la probó y devolvió el suyo al cambiar de lugar la cesta, sin indicación individual. No hay registro de grupo numeroso."},
+    {"student":"Alma","text":"En pareja devolvió al terminar sin aviso. Cuando se juntaron cinco quiso conservar dos cuentos y no esperó a otra niña. Con mi pregunta sobre quién no había elegido dejó uno, escuchó la propuesta de rotar y la aplicó. Los dos días más autónomos no bastan para afirmar consolidación ante este cambio."}
+  ]
+}

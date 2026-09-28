@@ -1,0 +1,1261 @@
+[
+  {
+    "action": "diagnostic_group_synthesis",
+    "startedAt": "2026-09-28T03:13:49.096Z",
+    "resultObservedAt": "2026-09-28T03:15:10.480Z",
+    "note": "Observed time includes independent documentation work; not pure provider latency."
+  },
+  {
+    "workflow": "diagnostic_priorities",
+    "startedAt": "2026-09-28T03:15:27.028Z",
+    "observedAt": "2026-09-28T03:18:22.324Z",
+    "note": "Tiempo de observación posterior, no latencia del proveedor"
+  },
+  {
+    "workflow": "annual_plan_pipeline",
+    "startedAt": "2026-09-28T03:18:54.473Z",
+    "observedAt": "2026-09-28T03:19:56.528Z",
+    "elapsedToObservationMs": 62055
+  },
+  {
+    "action": "annual_formal",
+    "period": "annual",
+    "started": "2026-09-28T03:59:17.536Z",
+    "observed": "2026-09-28T04:00:05.903Z",
+    "result": "invalid_formal_output",
+    "attempts": 1,
+    "regeneration": 0
+  },
+  {
+    "action": "annual_formal",
+    "period": "annual",
+    "started": "2026-09-28T04:03:01.809Z",
+    "observed": "2026-09-28T04:05:22.000Z",
+    "result": "Word listo",
+    "attempts": 1,
+    "regeneration": 1
+  },
+  {
+    "action": "project_preview",
+    "period": "P1",
+    "started": "2026-09-28T04:05:20.000Z",
+    "observed": "2026-09-28T04:06:22.000Z",
+    "result": "Contexto y tres propósitos",
+    "attempts": 1,
+    "regeneration": 0,
+    "note": "Marcas aproximadas de observación; no representan latencia exacta."
+  },
+  {
+    "action": "project_dependents",
+    "period": "P1",
+    "started": "2026-09-28T04:06:40.831Z",
+    "attempts": 1,
+    "regeneration": 0,
+    "observed": "2026-09-28T04:07:18.021Z"
+  },
+  {
+    "action": "project_master",
+    "period": "P1",
+    "started": "2026-09-28T04:13:02.573Z",
+    "attempts": 1,
+    "regeneration": 0,
+    "observed": "2026-09-28T04:14:32.114Z",
+    "note": "Incluye sugerencia automática Jev de imagen; las llamadas se distinguen por proveedor/workflow."
+  },
+  {
+    "action": "activity",
+    "period": "P1",
+    "startedAt": "2026-09-28T04:17:39.603Z",
+    "attempt": 1,
+    "regeneration": 0,
+    "note": "Preparación de la primera actividad desde Project Master confirmado; evidencia futura no observación inventada.",
+    "observed": "2026-09-28T04:17:56.847Z",
+    "started": "2026-09-28T04:17:39.603Z",
+    "attempts": 1,
+    "observed_status": "proposal_ready"
+  },
+  {
+    "action": "workshop_master",
+    "period": "P1",
+    "started": "2026-09-28T04:20:55.650Z",
+    "attempts": 1,
+    "regeneration": 0,
+    "note": "Talleres complementarios dentro del proyecto confirmado, con selección Jev de fichas por metadatos.",
+    "observed": "2026-09-28T04:21:32.862Z",
+    "observed_status": "8_talleres_preparados"
+  },
+  {
+    "action": "activity",
+    "period": "P1",
+    "started": "2026-09-28T04:25:44.337Z",
+    "attempts": 1,
+    "regeneration": 0,
+    "note": "Día 3 + taller Forma aceptado. Dos generaciones normales del par diario, no reintento.",
+    "observed": "2026-09-28T04:26:12.551Z",
+    "observed_status": "activity_and_workshop_ready"
+  },
+  {
+    "action": "activity",
+    "period": "P1",
+    "business_day": "2026-04-01",
+    "started": "2026-09-28T04:41:11.245Z",
+    "attempts": 1,
+    "regeneration": false,
+    "detail": "Actividad 5 del primer proyecto para 07/04",
+    "observed": "2026-09-28T04:41:27.661Z"
+  },
+  {
+    "action": "project_preview",
+    "period": "P1",
+    "business_day": "2026-04-07",
+    "observed": "2026-09-28T04:43:19.919Z",
+    "attempts": 1,
+    "regeneration": false,
+    "detail": "Huerto: apertura Desarrollar; inicio exacto no instrumentado, observación UI posterior"
+  },
+  {
+    "action": "project_dependents",
+    "period": "P1",
+    "business_day": "2026-04-07",
+    "started": "2026-09-28T04:43:31.640Z",
+    "attempts": 1,
+    "regeneration": false,
+    "detail": "Huerto: preguntas/recorrido/criterios tras propósito docente"
+  },
+  {
+    "action": "project_master",
+    "period": "P1",
+    "business_day": "2026-04-07",
+    "started": "2026-09-28T04:44:08.576Z",
+    "attempts": 1,
+    "regeneration": false,
+    "detail": "Huerto: master y mapa de diez fechas lectivas",
+    "observed": "2026-09-28T04:45:41.532Z"
+  },
+  {
+    "action": "jev_project_image",
+    "period": "P1",
+    "business_day": "2026-04-07",
+    "observed": "2026-09-28T04:45:41.532Z",
+    "attempts": 1,
+    "regeneration": false,
+    "detail": "Huerto: sugerencia automática metadatos de biblioteca, elegida por docente"
+  },
+  {
+    "action": "workshop_master",
+    "period": "P1",
+    "business_day": "2026-04-07",
+    "started": "2026-09-28T04:46:51.522Z",
+    "attempts": 1,
+    "regeneration": false,
+    "detail": "Huerto: talleres opcionales y fichas pertinentes",
+    "observed": "2026-09-28T04:49:29.728Z",
+    "observed_status": "timeout",
+    "usage_event_received": false,
+    "cost_usd": null
+  },
+  {
+    "action": "workshop_master",
+    "period": "P1",
+    "business_day": "2026-04-07",
+    "started": "2026-09-28T04:49:29.728Z",
+    "attempts": 1,
+    "regeneration": true,
+    "retry_of": "huerto_workshop_master_timeout",
+    "detail": "Reintento UI tras fix del plazo, no retry SDK",
+    "observed": "2026-09-28T04:54:54.679Z",
+    "result": "Maestro generado, revisado y confirmado; días 2 y 5 aceptados y día 3 continuación de cantidad."
+  },
+  {
+    "action": "activity",
+    "period": "P1",
+    "business_day": "2026-04-07",
+    "started": "2026-09-28T04:55:14.400Z",
+    "attempts": 1,
+    "regeneration": false,
+    "detail": "Huerto día 2 Apr14 Indaga y taller Cantidad",
+    "observed": "2026-09-28T04:56:04.113Z"
+  },
+  {
+    "action": "criterion_realignment",
+    "period": "P1",
+    "business_day": "2026-04-14",
+    "started": "2026-09-28T05:00:42.928Z",
+    "attempts": 1,
+    "regeneration": false,
+    "detail": "Recuperación UI H30 criterio incompatible sin evidencias"
+  },
+  {
+    "action": "activity",
+    "period": "P1",
+    "business_day": "2026-04-14",
+    "started": "2026-09-28T05:02:54.183Z",
+    "attempts": 1,
+    "regeneration": false,
+    "detail": "Huerto Apr15 Convive + continuación taller Cantidad",
+    "observed": "2026-09-28T05:03:48.753Z"
+  },
+  {
+    "action": "activity",
+    "period": "P1",
+    "business_day": "2026-04-15",
+    "started": "2026-09-28T05:05:33.308Z",
+    "attempts": 1,
+    "regeneration": false,
+    "detail": "Huerto Apr17 Indaga comparación + taller oral en pareja",
+    "observed": "2026-09-28T05:06:34.589Z"
+  },
+  {
+    "action": "activity",
+    "period": "P1",
+    "business_day": "2026-04-17",
+    "started": "2026-09-28T05:08:01.582Z",
+    "attempts": 1,
+    "regeneration": false,
+    "detail": "Huerto Apr22 contraste entre preguntas y registros, sin taller",
+    "observed": "2026-09-28T05:08:53.513Z"
+  },
+  {
+    "action": "activity",
+    "period": "P1",
+    "business_day": "2026-04-17",
+    "started": "2026-09-28T05:08:55.126Z",
+    "attempts": 1,
+    "regeneration": false,
+    "detail": "Huerto Apr21 revisar acuerdos en cuidado real, sin taller",
+    "observed": "2026-09-28T05:12:41.847Z"
+  },
+  {
+    "action": "assessment_master",
+    "period": "P1",
+    "business_day": "2026-05-18",
+    "started": "2026-09-28T05:14:59.444Z",
+    "attempts": 1,
+    "regeneration": false,
+    "detail": "Marco de seis competencias realmente evidenciadas; no convierte diagnóstico en P1",
+    "outcome": "timeout; sin usage; costo desconocido"
+  },
+  {
+    "action": "assessment_master",
+    "period": "P1",
+    "business_day": "2026-05-18",
+    "started": "2026-09-28T05:18:10.712Z",
+    "attempts": 1,
+    "regeneration": true,
+    "detail": "Reintento después de H32, mismo contexto P1 y seis competencias trabajadas",
+    "observed": "2026-09-28T05:19:32.676Z",
+    "outcome": "propuesta visible"
+  },
+  {
+    "action": "assessment",
+    "period": "P1",
+    "business_day": "2026-05-18",
+    "started": "2026-09-28T05:20:17.305Z",
+    "attempts": 1,
+    "regeneration": false,
+    "detail": "Bruno convivencia: cuatro fechas, pareja vs grupo; esperado mantener contraste, sin letras IA",
+    "outcome": "rechazado por H35 antes de llamar proveedor"
+  },
+  {
+    "action": "project_formal",
+    "period": "P1",
+    "business_day": "2026-05-18",
+    "started": "2026-09-28T05:20:17.884Z",
+    "attempts": 1,
+    "regeneration": false,
+    "detail": "Word del huerto derivado de versión confirmada sin cambiar mapa",
+    "observed": "2026-09-28T05:21:54.239Z",
+    "outcome": "Word listo"
+  },
+  {
+    "action": "assessment_master",
+    "period": "P1",
+    "business_day": "2026-05-18",
+    "started": "2026-09-28T05:23:03.878Z",
+    "attempts": 1,
+    "regeneration": true,
+    "detail": "Actualizar marco tras incorporar formal Word del proyecto al mapa de fuentes; obsolescencia real, no H35",
+    "observed_ready_at": "2026-09-28T05:27:33.320Z",
+    "outcome": "Marco V2 leído, corregida referencia a borrador archivado y confirmado por docente"
+  },
+  {
+    "action": "assessment",
+    "period": "P1",
+    "student": "Bruno Salcedo",
+    "competency": "PS_CONVIVE",
+    "business_day": "2026-05-18",
+    "started_at": "2026-09-28T05:27:51.009Z",
+    "attempts": 1,
+    "detail": "Reprueba H35 después de confirmar marco V2; análisis sin letras, decisión docente después de leer",
+    "observed_ready_at": "2026-09-28T05:30:11.216Z",
+    "outcome": "H35 PASS; H36 fechas civiles erróneas, análisis no confirmado"
+  },
+  {
+    "action": "assessment",
+    "period": "P1",
+    "student": "Bruno Salcedo",
+    "competency": "PS_CONVIVE",
+    "business_day": "2026-05-18",
+    "started_at": "2026-09-28T05:30:11.216Z",
+    "attempts": 1,
+    "regeneration": true,
+    "detail": "Reconsulta del mismo sustento después de H36",
+    "observed_ready_at": "2026-09-28T05:30:29.364Z",
+    "outcome": "H36 PASS: cuatro observaciones entre 1 y 21 de abril, sin nivel generado"
+  },
+  {
+    "action": "descriptive_conclusion",
+    "period": "P1",
+    "student": "Bruno Salcedo",
+    "competency": "PS_CONVIVE",
+    "business_day": "2026-05-18",
+    "started_at": "2026-09-28T05:30:53.989Z",
+    "attempts": 1,
+    "observed_ready_at": "2026-09-28T05:31:11.918Z",
+    "outcome": "Conclusión fiel: autonomía en pareja, mediación en grupo mayor; sin rasgo simplista"
+  },
+  {
+    "action": "assessment",
+    "period": "P1",
+    "student": "Valeria Soto",
+    "competency": "PS_CONVIVE",
+    "business_day": "2026-05-18",
+    "started_at": "2026-09-28T05:33:20.223Z",
+    "attempts": 1,
+    "observed_ready_at": "2026-09-28T05:33:40.017Z",
+    "outcome": "Análisis fiel; identifica apoyos y ausencia de explicación de bien común"
+  },
+  {
+    "action": "descriptive_conclusion",
+    "period": "P1",
+    "student": "Valeria Soto",
+    "competency": "PS_CONVIVE",
+    "business_day": "2026-05-18",
+    "started_at": "2026-09-28T05:33:56.169Z",
+    "attempts": 1,
+    "observed_ready_at": "2026-09-28T05:34:08.808Z",
+    "outcome": "Conclusión fiel a primeros avances y ayuda ante desacuerdos nuevos"
+  },
+  {
+    "action": "assessment",
+    "period": "P1",
+    "student": "Mateo Villalba",
+    "competency": "PS_CONVIVE",
+    "business_day": "2026-05-18",
+    "started_at": "2026-09-28T05:34:19.936Z",
+    "attempts": 1,
+    "observed_ready_at": "2026-09-28T05:34:51.520Z",
+    "outcome": "Fiel a tres actuaciones en pareja; no inventa participación en grupo grande"
+  },
+  {
+    "action": "descriptive_conclusion",
+    "period": "P1",
+    "student": "Mateo Villalba",
+    "competency": "PS_CONVIVE",
+    "business_day": "2026-05-18",
+    "started_at": "2026-09-28T05:35:00.449Z",
+    "attempts": 1,
+    "observed_ready_at": "2026-09-28T05:35:23.149Z",
+    "outcome": "Fiel a pareja; docente explicita apoyos visuales, sin inferencia sobre grupo grande"
+  },
+  {
+    "action": "assessment",
+    "period": "P1",
+    "student": "Inés Ventura",
+    "competency": "CYT_INDAGA",
+    "business_day": "2026-05-18",
+    "started_at": "2026-09-28T05:35:31.113Z",
+    "attempts": 1,
+    "observed_ready_at": "2026-09-28T05:36:06.709Z",
+    "outcome": "Secuencia pregunta-comparación-registro y vínculo inicial fiel en tres criterios"
+  },
+  {
+    "action": "descriptive_conclusion",
+    "period": "P1",
+    "student": "Inés Ventura",
+    "competency": "CYT_INDAGA",
+    "business_day": "2026-05-18",
+    "started_at": "2026-09-28T05:36:14.640Z",
+    "attempts": 1,
+    "observed_ready_at": "2026-09-28T05:36:33.692Z",
+    "outcome": "Conclusión fiel a registros y límites de las semillas observadas"
+  },
+  {
+    "action": "assessment",
+    "period": "P1",
+    "student": "Thiago Reátegui",
+    "competency": "MAT_CANTIDAD",
+    "business_day": "2026-05-18",
+    "started_at": "2026-09-28T05:36:39.492Z",
+    "attempts": 1,
+    "observed_ready_at": "2026-09-28T05:37:03.927Z",
+    "outcome": "Fiel a anticipación, conteo, comprobación y cambio de reparto en ambas fechas"
+  },
+  {
+    "action": "descriptive_conclusion",
+    "period": "P1",
+    "student": "Thiago Reátegui",
+    "competency": "MAT_CANTIDAD",
+    "business_day": "2026-05-18",
+    "started_at": "2026-09-28T05:37:33.763Z",
+    "attempts": 1,
+    "observed_ready_at": "2026-09-28T05:37:54.405Z",
+    "outcome": "Contenido fiel; docente retira el marcador neutral [estudiante] antes de confirmar"
+  },
+  {
+    "action": "descriptive_conclusion",
+    "period": "P1",
+    "student": "Alma Carrasco",
+    "competency": "PS_CONVIVE",
+    "business_day": "2026-05-18",
+    "started_at": "2026-09-28T05:39:10.848Z",
+    "attempts": 1,
+    "observed_ready_at": "2026-09-28T05:39:38.678Z",
+    "outcome": "Rechazada por schema de conclusión, no se confirmó ni guardó texto inválido"
+  },
+  {
+    "action": "descriptive_conclusion",
+    "period": "P1",
+    "student": "Alma Carrasco",
+    "competency": "PS_CONVIVE",
+    "business_day": "2026-05-18",
+    "started_at": "2026-09-28T05:39:38.678Z",
+    "attempts": 1,
+    "regeneration": true,
+    "detail": "Reintento de salida inválida aislada",
+    "outcome": "Segundo intento rechazado por schema; comprobar causa exacta"
+  },
+  {
+    "action": "descriptive_conclusion",
+    "period": "P1",
+    "student": "Alma Carrasco",
+    "competency": "PS_CONVIVE",
+    "business_day": "2026-05-18",
+    "started_at": "2026-09-28T05:41:31.602Z",
+    "attempts": 1,
+    "regeneration": true,
+    "detail": "Diagnóstico temporal QA registra únicamente mensaje estático del validador, no salida ni datos personales",
+    "outcome": "Rechazo repetido: validador de letras/niveles"
+  },
+  {
+    "action": "descriptive_conclusion",
+    "period": "P1",
+    "student": "Alma Carrasco",
+    "competency": "PS_CONVIVE",
+    "business_day": "2026-05-18",
+    "started_at": "2026-09-28T05:42:48.592Z",
+    "attempts": 1,
+    "regeneration": true,
+    "detail": "Diagnóstico registra solo token A/B/C/AD, nunca texto proveedor",
+    "outcome": "Antes H39: rechazo de token A, salida no aceptada"
+  },
+  {
+    "action": "descriptive_conclusion",
+    "period": "P1",
+    "student": "Alma Carrasco",
+    "competency": "PS_CONVIVE",
+    "business_day": "2026-05-18",
+    "started_at": "2026-09-28T05:44:45.187Z",
+    "attempts": 1,
+    "regeneration": true,
+    "detail": "Reprueba después de H39, sin instrumentación temporal",
+    "observed_ready_at": "2026-09-28T05:45:09.390Z",
+    "outcome": "H39 PASS: conclusión de Alma fiel y sin calificación dentro del texto"
+  },
+  {
+    "action": "descriptive_conclusion",
+    "period": "P1",
+    "student": "Camila Huamán",
+    "competency": "PS_CONVIVE",
+    "business_day": "2026-05-18",
+    "started_at": "2026-09-28T05:45:11.481Z",
+    "attempts": 1,
+    "observed_ready_at": "2026-09-28T05:45:45.612Z",
+    "outcome": "Docente precisa preguntas/mediación observadas, sin añadir recordatorios no registrados"
+  },
+  {
+    "action": "descriptive_conclusion",
+    "period": "P1",
+    "student": "Diego Montalvo",
+    "competency": "PS_CONVIVE",
+    "business_day": "2026-05-18",
+    "started_at": "2026-09-28T05:45:47.335Z",
+    "attempts": 1,
+    "observed_ready_at": "2026-09-28T05:46:03.756Z",
+    "outcome": "Fiel a tres situaciones y presencia/ausencia de apoyo visual"
+  },
+  {
+    "action": "descriptive_conclusion",
+    "period": "P1",
+    "student": "Elena Paredes",
+    "competency": "PS_CONVIVE",
+    "business_day": "2026-05-18",
+    "started_at": "2026-09-28T05:46:05.482Z",
+    "attempts": 1,
+    "observed_ready_at": "2026-09-28T05:46:34.172Z",
+    "outcome": "Docente conserva contraste entre cestas y preparación de semillas"
+  },
+  {
+    "action": "descriptive_conclusion",
+    "period": "P1",
+    "student": "Fabio Medina",
+    "competency": "PS_CONVIVE",
+    "business_day": "2026-05-18",
+    "started_at": "2026-09-28T05:46:35.875Z",
+    "attempts": 1,
+    "observed_ready_at": "2026-09-28T05:47:11.914Z",
+    "outcome": "Fiel a opciones y recordatorio; docente omite nombre de otro niño en la conclusión"
+  },
+  {
+    "action": "descriptive_conclusion",
+    "period": "P1",
+    "student": "Gabriela Ríos",
+    "competency": "PS_CONVIVE",
+    "business_day": "2026-05-18",
+    "started_at": "2026-09-28T05:47:13.557Z",
+    "attempts": 1,
+    "observed_ready_at": "2026-09-28T05:47:46.537Z",
+    "outcome": "Fiel al progreso reciente; docente retira marcador neutral y nombre de otra niña"
+  },
+  {
+    "action": "descriptive_conclusion",
+    "period": "P1",
+    "student": "Hugo Benavides",
+    "competency": "PS_CONVIVE",
+    "business_day": "2026-05-18",
+    "started_at": "2026-09-28T05:47:48.258Z",
+    "attempts": 1,
+    "observed_ready_at": "2026-09-28T05:48:01.953Z",
+    "outcome": "Fiel a comprensión de turnos con apoyo y recordatorios reiterados"
+  },
+  {
+    "action": "descriptive_conclusion",
+    "period": "P1",
+    "student": "Joaquín Arce",
+    "competency": "PS_CONVIVE",
+    "business_day": "2026-05-18",
+    "started_at": "2026-09-28T05:48:03.674Z",
+    "attempts": 1,
+    "observed_ready_at": "2026-09-28T05:49:03.936Z",
+    "outcome": "Fiel a propuesta de cucharita y contraste con recordatorios previos"
+  },
+  {
+    "action": "descriptive_conclusion",
+    "period": "P1",
+    "student": "Kiara Ledesma",
+    "competency": "PS_CONVIVE",
+    "business_day": "2026-05-18",
+    "started_at": "2026-09-28T05:49:05.769Z",
+    "attempts": 1,
+    "observed_ready_at": "2026-09-28T05:49:26.808Z",
+    "outcome": "Fiel a organización, dibujo y consideración de otra elección"
+  },
+  {
+    "action": "descriptive_conclusion",
+    "period": "P1",
+    "student": "Inés Ventura",
+    "competency": "PS_CONVIVE",
+    "business_day": "2026-05-18",
+    "started_at": "2026-09-28T05:49:28.671Z",
+    "attempts": 1,
+    "observed_ready_at": "2026-09-28T05:52:22.659Z",
+    "outcome": "Inés: propuesta fiel a escuchar, acordar turnos y mantener comparación compartida; confirmada tras revisión docente."
+  },
+  {
+    "action": "descriptive_conclusion",
+    "period": "P1",
+    "student": "Thiago Reátegui",
+    "competency": "PS_CONVIVE",
+    "business_date": "2026-05-18",
+    "attempt": 1,
+    "started_at": "2026-09-28T05:52:50.162Z"
+  },
+  {
+    "action": "descriptive_conclusion",
+    "period": "P1",
+    "student": "Camila Huamán",
+    "competency": "PS_CONVIVE",
+    "business_date": "2026-05-18",
+    "attempt": 2,
+    "regeneration_reason": "H41: corrección docente recipiente, no algodón; valoración versionada.",
+    "started_at": "2026-09-28T05:56:36.390Z",
+    "outcome": "H41 PASS: revisión docente B y nueva conclusión fiel; el texto ya no atribuye disputa al algodón.",
+    "observed_ready_at": "2026-09-28T05:57:00.515Z"
+  },
+  {
+    "action": "descriptive_conclusion",
+    "period": "P1",
+    "student": "Thiago Reátegui",
+    "competency": "PS_CONVIVE",
+    "business_day": "2026-05-18",
+    "attempts": 1,
+    "regeneration": 1,
+    "regeneration_reason": "Recuperación tras recarga de desarrollo y precisión docente de objetos/turnos.",
+    "started_at": "2026-09-28T05:57:41.999Z",
+    "outcome": "Fiel a diferencia contextual; docente sustituyó nombre de compañera por referencia general antes de confirmar.",
+    "observed_ready_at": "2026-09-28T05:57:59.636Z"
+  },
+  {
+    "action": "family_report",
+    "period": "P1",
+    "student": "Thiago Reátegui",
+    "business_day": "2026-05-18",
+    "attempts": 1,
+    "regeneration": 0,
+    "started_at": "2026-09-28T05:59:42.452Z",
+    "outcome": "Rechazo family_report_schema_mismatch; no se guardó ni confirmó.",
+    "observed_ready_at": "2026-09-28T06:00:19.838Z"
+  },
+  {
+    "action": "family_report",
+    "period": "P1",
+    "student": "Thiago Reátegui",
+    "business_day": "2026-05-18",
+    "attempts": 1,
+    "regeneration": 1,
+    "started_at": "2026-09-28T06:00:19.838Z",
+    "outcome": "Informe de Thiago fiel a fortaleza cuantitativa y avance no lineal en convivencia; nombre de compañera retirado por docente. Guardado y confirmado.",
+    "observed_ready_at": "2026-09-28T06:01:24.446Z"
+  },
+  {
+    "action": "family_report",
+    "period": "P1",
+    "student": "Bruno Salcedo",
+    "business_day": "2026-05-18",
+    "attempts": 1,
+    "regeneration": 0,
+    "started_at": "2026-09-28T06:06:04.057Z",
+    "outcome": "PASS: diferencia pareja/grupo pequeño vs numeroso preservada, sin nivel ni nombre de compañeros; revisado, guardado y confirmado.",
+    "observed_ready_at": "2026-09-28T06:06:43.520Z"
+  },
+  {
+    "action": "project_preview",
+    "period": "P2",
+    "proposal": "Cantidades para repartir y jugar",
+    "feedback_period": "P1",
+    "business_day": "2026-05-18",
+    "attempts": 1,
+    "regeneration": 0,
+    "started_at": "2026-09-28T06:07:07.291Z"
+  },
+  {
+    "action": "family_report",
+    "period": "P1",
+    "student": "Valeria Soto",
+    "business_day": "2026-05-18",
+    "attempts": 1,
+    "regeneration": 0,
+    "started_at": "2026-09-28T06:07:14.377Z"
+  },
+  {
+    "action": "family_report",
+    "period": "P1",
+    "student": "Mateo Villalba",
+    "business_day": "2026-05-18",
+    "started_at": "2026-09-28T06:14:10.584Z",
+    "attempts": 1,
+    "regeneration": 0
+  },
+  {
+    "action": "family_report",
+    "period": "P1",
+    "student": "Mateo Villalba",
+    "business_day": "2026-05-18",
+    "started_at": "2026-09-28T06:15:49.071Z",
+    "attempts": 1,
+    "regeneration": 1,
+    "previous_outcome": "family_report_schema_mismatch"
+  },
+  {
+    "action": "project_preview",
+    "period": "P2",
+    "proposal": "Cantidades para repartir y jugar",
+    "feedback_period": "P1",
+    "business_day": "2026-05-18",
+    "started_at": "2026-09-28T06:17:05.794Z",
+    "attempts": 1,
+    "regeneration": 1,
+    "reason": "H45 recuperación desde UI"
+  },
+  {
+    "action": "family_report",
+    "period": "P1",
+    "student": "Inés Ventura",
+    "business_day": "2026-05-18",
+    "started_at": "2026-09-28T06:17:12.983Z",
+    "attempts": 1,
+    "regeneration": 0
+  },
+  {
+    "action": "project_dependents",
+    "period": "P2",
+    "proposal": "Cantidades para repartir y jugar",
+    "feedback_period": "P1",
+    "business_day": "2026-05-18",
+    "started_at": "2026-09-28T06:18:24.891Z",
+    "attempts": 1,
+    "regeneration": 0
+  },
+  {
+    "action": "project_dependents",
+    "period": "P2",
+    "proposal": "Cantidades para repartir y jugar",
+    "feedback_period": "P1",
+    "business_day": "2026-05-18",
+    "started_at": "2026-09-28T06:19:34.976Z",
+    "attempts": 1,
+    "regeneration": 1,
+    "previous_outcome": "invalid_dependents_no_output_saved"
+  },
+  {
+    "action": "project_master",
+    "period": "P2",
+    "proposal": "Cantidades para repartir y jugar",
+    "feedback_period": "P1",
+    "business_day": "2026-05-18",
+    "started_at": "2026-09-28T06:21:23.448Z",
+    "attempts": 1,
+    "regeneration": 0
+  },
+  {
+    "action": "activity",
+    "period": "P2",
+    "day": "2026-06-08",
+    "business_day": "2026-06-08",
+    "started_at": "2026-09-28T06:24:16.508Z",
+    "attempts": 1,
+    "regeneration": 0
+  },
+  {
+    "action": "activity",
+    "period": "P2",
+    "business_day": "2026-06-10",
+    "started": "2026-09-28T06:30:30.414Z",
+    "activity": "Repartimos para empezar",
+    "attempts": 1,
+    "regeneration": 0
+  },
+  {
+    "action": "activity",
+    "period": "P2",
+    "business_day": "2026-06-15",
+    "started": "2026-09-28T06:40:41.736Z",
+    "activity": "Acordamos cómo usar los materiales",
+    "attempts": 1,
+    "regeneration": 0
+  },
+  {
+    "action": "activity",
+    "period": "P2",
+    "business_day": "2026-06-16",
+    "started": "2026-09-28T06:42:13.012Z",
+    "activity": "Jugamos con otros compañeros",
+    "attempts": 1,
+    "regeneration": 0
+  },
+  {
+    "action": "assessment_master",
+    "period": "P2",
+    "business_day": "2026-07-27",
+    "started": "2026-09-28T06:44:06.155Z",
+    "attempts": 1,
+    "regeneration": 0
+  },
+  {
+    "action": "assessment",
+    "period": "P2",
+    "student": "Valeria",
+    "attempt": 1,
+    "business_date": "2026-07-27",
+    "at": "2026-09-28T06:47:54.479Z"
+  },
+  {
+    "action": "descriptive_conclusion",
+    "period": "P2",
+    "student": "Valeria",
+    "attempt": 1,
+    "business_date": "2026-07-27",
+    "at": "2026-09-28T06:48:28.851Z"
+  },
+  {
+    "action": "assessment",
+    "period": "P2",
+    "student": "Omar",
+    "attempt": 1,
+    "business_date": "2026-07-27",
+    "at": "2026-09-28T06:49:31.824Z"
+  },
+  {
+    "action": "descriptive_conclusion",
+    "period": "P2",
+    "student": "Omar",
+    "attempt": 1,
+    "business_date": "2026-07-27",
+    "at": "2026-09-28T06:50:18.670Z"
+  },
+  {
+    "action": "assessment",
+    "period": "P2",
+    "student": "Bruno",
+    "attempt": 1,
+    "business_date": "2026-07-27",
+    "at": "2026-09-28T06:51:04.144Z"
+  },
+  {
+    "action": "project_preview",
+    "period": "P3",
+    "attempt": 1,
+    "business_date": "2026-07-27",
+    "at": "2026-09-28T06:51:18.702Z",
+    "note": "La apertura de propuesta genera preview; revisar y actualizar opt-in P2 antes de confirmar."
+  },
+  {
+    "action": "descriptive_conclusion",
+    "period": "P2",
+    "student": "Bruno",
+    "attempt": 1,
+    "business_date": "2026-07-27",
+    "at": "2026-09-28T06:51:49.278Z"
+  },
+  {
+    "action": "assessment",
+    "period": "P2",
+    "student": "Mateo",
+    "attempt": 1,
+    "business_date": "2026-07-27",
+    "at": "2026-09-28T06:52:16.713Z"
+  },
+  {
+    "action": "descriptive_conclusion",
+    "period": "P2",
+    "student": "Mateo",
+    "attempt": 1,
+    "business_date": "2026-07-27",
+    "at": "2026-09-28T06:52:47.804Z"
+  },
+  {
+    "action": "assessment",
+    "period": "P2",
+    "student": "Alma",
+    "attempt": 1,
+    "business_date": "2026-07-27",
+    "at": "2026-09-28T06:53:17.912Z"
+  },
+  {
+    "action": "descriptive_conclusion",
+    "period": "P2",
+    "student": "Alma",
+    "attempt": 1,
+    "business_date": "2026-07-27",
+    "at": "2026-09-28T06:53:59.734Z"
+  },
+  {
+    "action": "project_preview",
+    "period": "P3",
+    "attempt": 2,
+    "regeneration": true,
+    "business_date": "2026-07-27",
+    "at": "2026-09-28T06:54:00.409Z",
+    "note": "Actualizar preview con cinco valoraciones P2; no confirmar el contexto histórico P1."
+  },
+  {
+    "action": "project_preview",
+    "period": "P3",
+    "attempt": 3,
+    "regeneration": true,
+    "business_date": "2026-07-27",
+    "at": "2026-09-28T06:54:36.433Z",
+    "note": "El snapshot anterior capturó cuatro mientras se confirmaba Alma; refrescar tras confirmación de las cinco."
+  },
+  {
+    "action": "assessment",
+    "period": "P2",
+    "student": "Camila",
+    "attempt": 1,
+    "business_date": "2026-07-27",
+    "at": "2026-09-28T06:54:41.886Z",
+    "note": "Comentario vago: comprobar abstención de valoración."
+  },
+  {
+    "action": "project_dependents",
+    "period": "P3",
+    "attempt": 1,
+    "business_date": "2026-07-27",
+    "at": "2026-09-28T06:55:38.025Z"
+  },
+  {
+    "action": "family_report",
+    "period": "P2",
+    "student": "Omar",
+    "attempt": 1,
+    "business_date": "2026-07-27",
+    "at": "2026-09-28T06:56:05.657Z"
+  },
+  {
+    "action": "project_master",
+    "period": "P3",
+    "attempt": 1,
+    "business_date": "2026-07-27",
+    "at": "2026-09-28T06:56:38.317Z"
+  },
+  {
+    "action": "activity",
+    "period": "P3",
+    "activity": "Transformamos el espacio juntos",
+    "attempt": 1,
+    "business_date": "2026-08-31",
+    "at": "2026-09-28T06:59:41.059Z"
+  },
+  {
+    "action": "activity",
+    "period": "P3",
+    "activity": "Probamos los acuerdos al jugar",
+    "attempt": 1,
+    "business_date": "2026-09-01",
+    "at": "2026-09-28T07:03:34.171Z"
+  },
+  {
+    "action": "activity",
+    "period": "P3",
+    "activity": "Nuevas pistas para un recorrido",
+    "attempt": 1,
+    "business_date": "2026-09-02",
+    "at": "2026-09-28T07:05:13.022Z"
+  },
+  {
+    "action": "assessment_master",
+    "period": "P3",
+    "attempt": 1,
+    "business_date": "2026-10-12",
+    "at": "2026-09-28T07:07:15.832Z"
+  },
+  {
+    "action": "assessment",
+    "period": "P3",
+    "student": "Valeria",
+    "business_date": "2026-10-12",
+    "started": "2026-09-28T07:11:38.328Z",
+    "attempt": 1,
+    "regeneration": 0
+  },
+  {
+    "action": "descriptive_conclusion",
+    "period": "P3",
+    "student": "Valeria",
+    "business_date": "2026-10-12",
+    "started": "2026-09-28T07:12:07.781Z",
+    "attempt": 1,
+    "regeneration": 0
+  },
+  {
+    "action": "assessment",
+    "period": "P3",
+    "student": "Omar",
+    "business_date": "2026-10-12",
+    "started": "2026-09-28T07:12:28.209Z",
+    "attempt": 1,
+    "regeneration": 0
+  },
+  {
+    "action": "descriptive_conclusion",
+    "period": "P3",
+    "student": "Omar",
+    "business_date": "2026-10-12",
+    "started": "2026-09-28T07:13:06.424Z",
+    "attempt": 1,
+    "regeneration": 0
+  },
+  {
+    "action": "assessment",
+    "period": "P3",
+    "student": "Bruno",
+    "business_date": "2026-10-12",
+    "started": "2026-09-28T07:13:24.678Z",
+    "attempt": 1,
+    "regeneration": 0
+  },
+  {
+    "action": "descriptive_conclusion",
+    "period": "P3",
+    "student": "Bruno",
+    "business_date": "2026-10-12",
+    "started": "2026-09-28T07:13:55.058Z",
+    "attempt": 1,
+    "regeneration": 0
+  },
+  {
+    "action": "assessment",
+    "period": "P3",
+    "student": "Mateo",
+    "business_date": "2026-10-12",
+    "started": "2026-09-28T07:14:14.001Z",
+    "attempt": 1,
+    "regeneration": 0
+  },
+  {
+    "action": "descriptive_conclusion",
+    "period": "P3",
+    "student": "Mateo",
+    "business_date": "2026-10-12",
+    "started": "2026-09-28T07:15:02.277Z",
+    "attempt": 1,
+    "regeneration": 0
+  },
+  {
+    "action": "assessment",
+    "period": "P3",
+    "student": "Alma",
+    "business_date": "2026-10-12",
+    "started": "2026-09-28T07:15:25.458Z",
+    "attempt": 1,
+    "regeneration": 0
+  },
+  {
+    "action": "descriptive_conclusion",
+    "period": "P3",
+    "student": "Alma",
+    "business_date": "2026-10-12",
+    "started": "2026-09-28T07:16:12.850Z",
+    "attempt": 1,
+    "regeneration": 0
+  },
+  {
+    "action": "family_report",
+    "period": "P3",
+    "student": "Valeria",
+    "business_date": "2026-10-12",
+    "started": "2026-09-28T07:17:02.989Z",
+    "attempt": 1,
+    "regeneration": 0
+  },
+  {
+    "action": "project_preview",
+    "period": "P4",
+    "business_date": "2026-10-12",
+    "started": "2026-09-28T07:17:14.388Z",
+    "attempt": 1,
+    "regeneration": 0
+  },
+  {
+    "action": "project_dependents",
+    "period": "P4",
+    "business_date": "2026-10-12",
+    "started": "2026-09-28T07:18:04.110Z",
+    "attempt": 1,
+    "regeneration": 0
+  },
+  {
+    "action": "project_master",
+    "period": "P4",
+    "business_date": "2026-10-12",
+    "started": "2026-09-28T07:18:58.080Z",
+    "attempt": 1,
+    "regeneration": 0
+  },
+  {
+    "action": "project_formal",
+    "period": "P4",
+    "business_date": "2026-10-12",
+    "started": "2026-09-28T11:37:34.003Z",
+    "attempt": 1,
+    "regeneration": 0,
+    "observed_status": "UI_button_not_clicked_returned_to_Hoy_no_provider_call"
+  },
+  {
+    "action": "project_formal",
+    "period": "P4",
+    "business_date": "2026-10-12",
+    "started": "2026-09-28T11:38:02.750Z",
+    "attempt": 1,
+    "regeneration": 0
+  },
+  {
+    "action": "activity",
+    "period": "P4",
+    "activity": "Buscamos pistas en las portadas",
+    "business_date": "2026-11-03",
+    "started": "2026-09-28T11:39:17.049Z",
+    "attempt": 1,
+    "regeneration": 0
+  },
+  {
+    "action": "activity",
+    "period": "P4",
+    "activity": "Elegimos y compartimos los cuentos",
+    "business_date": "2026-11-05",
+    "started": "2026-09-28T11:41:06.162Z",
+    "attempt": 1,
+    "regeneration": 0
+  },
+  {
+    "action": "activity",
+    "period": "P4",
+    "activity": "Escribimos recomendaciones a nuestra manera",
+    "business_date": "2026-11-09",
+    "started": "2026-09-28T11:42:39.012Z",
+    "attempt": 1,
+    "regeneration": 0
+  },
+  {
+    "action": "activity",
+    "period": "P4",
+    "activity": "Organizamos préstamos y devoluciones",
+    "business_date": "2026-11-11",
+    "started": "2026-09-28T11:47:38.914Z",
+    "attempt": 1,
+    "regeneration": 0
+  },
+  {
+    "action": "activity",
+    "period": "P4",
+    "activity": "Probamos los acuerdos con otros compañeros",
+    "business_date": "2026-11-12",
+    "started": "2026-09-28T11:48:43.068Z",
+    "attempt": 1,
+    "regeneration": 0
+  },
+  {
+    "action": "assessment_master",
+    "period": "P4",
+    "business_date": "2026-12-21",
+    "started": "2026-09-28T11:49:54.587Z",
+    "attempt": 1,
+    "regeneration": 0
+  },
+  {
+    "action": "assessment",
+    "period": "P4",
+    "student": "Valeria",
+    "competency": "PS_CONVIVE",
+    "business_date": "2026-12-21",
+    "started": "2026-09-28T11:51:55.830Z",
+    "attempt": 1,
+    "regeneration": 0
+  },
+  {
+    "action": "descriptive_conclusion",
+    "period": "P4",
+    "student": "Valeria",
+    "competency": "PS_CONVIVE",
+    "business_date": "2026-12-21",
+    "started": "2026-09-28T11:52:44.988Z",
+    "attempt": 1,
+    "regeneration": 0
+  },
+  {
+    "action": "assessment",
+    "period": "P4",
+    "student": "Omar",
+    "competency": "PS_CONVIVE",
+    "business_date": "2026-12-21",
+    "started": "2026-09-28T11:53:13.223Z",
+    "attempt": 1,
+    "regeneration": 0
+  },
+  {
+    "action": "descriptive_conclusion",
+    "period": "P4",
+    "student": "Omar",
+    "competency": "PS_CONVIVE",
+    "business_date": "2026-12-21",
+    "started": "2026-09-28T11:53:45.569Z",
+    "attempt": 1,
+    "regeneration": 0
+  },
+  {
+    "action": "assessment",
+    "period": "P4",
+    "student": "Bruno",
+    "competency": "PS_CONVIVE",
+    "business_date": "2026-12-21",
+    "started": "2026-09-28T11:54:07.527Z",
+    "attempt": 1,
+    "regeneration": 0
+  },
+  {
+    "action": "descriptive_conclusion",
+    "period": "P4",
+    "student": "Bruno",
+    "competency": "PS_CONVIVE",
+    "business_date": "2026-12-21",
+    "started": "2026-09-28T11:54:42.314Z",
+    "attempt": 1,
+    "regeneration": 0
+  },
+  {
+    "action": "assessment",
+    "period": "P4",
+    "student": "Mateo",
+    "competency": "PS_CONVIVE",
+    "business_date": "2026-12-21",
+    "started": "2026-09-28T11:55:06.348Z",
+    "attempt": 1,
+    "regeneration": 0
+  },
+  {
+    "action": "descriptive_conclusion",
+    "period": "P4",
+    "student": "Mateo",
+    "competency": "PS_CONVIVE",
+    "business_date": "2026-12-21",
+    "started": "2026-09-28T11:55:30.785Z",
+    "attempt": 1,
+    "regeneration": 0
+  },
+  {
+    "action": "assessment",
+    "period": "P4",
+    "student": "Alma",
+    "competency": "PS_CONVIVE",
+    "business_date": "2026-12-21",
+    "started": "2026-09-28T11:55:56.591Z",
+    "attempt": 1,
+    "regeneration": 0
+  },
+  {
+    "action": "descriptive_conclusion",
+    "period": "P4",
+    "student": "Alma",
+    "competency": "PS_CONVIVE",
+    "business_date": "2026-12-21",
+    "started": "2026-09-28T11:56:27.006Z",
+    "attempt": 1,
+    "regeneration": 0
+  },
+  {
+    "action": "family_report",
+    "period": "P4",
+    "student": "Alma",
+    "business_date": "2026-12-21",
+    "started": "2026-09-28T11:57:21.197Z",
+    "attempt": 1,
+    "regeneration": 0
+  },
+  {
+    "action": "family_report",
+    "period": "P4",
+    "student": "Alma",
+    "business_date": "2026-12-21",
+    "started": "2026-09-28T11:57:39.501Z",
+    "attempt": 2,
+    "regeneration": 1
+  },
+  {
+    "action": "family_report",
+    "period": "P4",
+    "student": "Omar",
+    "business_date": "2026-12-21",
+    "started": "2026-09-28T11:58:22.441Z",
+    "attempt": 1,
+    "regeneration": 0
+  },
+  {
+    "action": "family_report",
+    "period": "P4",
+    "student": "Omar",
+    "business_date": "2026-12-21",
+    "started": "2026-09-28T11:58:41.567Z",
+    "attempt": 2,
+    "regeneration": 1
+  }
+]

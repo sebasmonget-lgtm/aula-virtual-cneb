@@ -1,0 +1,22 @@
+{
+  "business_day": "2026-04-15",
+  "cases": [
+    [
+      "Thiago",
+      "Con nueve semillas y cuatro vasos dijo «dos en cada vaso y queda una». Repartió de dos en dos, contó para revisar y mostró la sobrante. Cuando llegó otro compañero redistribuyó una por vaso y explicó el cambio."
+    ],
+    [
+      "Inés",
+      "Comparó cinco vasos con cuatro semillas alineándolos; señaló el vaso vacío y dijo «necesito una más». Probó usando otra semilla y comprobó que todos tenían una."
+    ],
+    [
+      "Hugo",
+      "Hoy contó seis semillas para tres vasos, pero repitió un número al moverlas. Con apoyo separó las ya contadas y repartió dos en cada vaso."
+    ],
+    [
+      "Valeria",
+      "Con cuatro semillas y dos vasos dio una a cada uno y dejó dos sin repartir. Tras preguntar si podían tener igual, añadió una a cada vaso y comprobó señalando de uno en uno."
+    ]
+  ],
+  "method": "UI"
+}

@@ -1,0 +1,123 @@
+[
+  {
+    "day": "2026-06-08",
+    "activity": "Elegimos un juego compartido",
+    "student": "Valeria",
+    "text": "Propuso que cada pareja use la cesta un rato y luego la entregue a la otra, «así todos jugamos». Esperó a que el compañero terminara y señaló cuándo podían cambiar, sin que yo le recordara el turno."
+  },
+  {
+    "day": "2026-06-08",
+    "activity": "Elegimos un juego compartido",
+    "student": "Omar",
+    "text": "Se incorporó al juego de tiendas. Después de preguntarle cómo compartirían la cesta dijo «uno y después otro»; al tomarla antes de tiempo necesitó que le señalara el acuerdo. Dio la cesta al compañero."
+  },
+  {
+    "day": "2026-06-08",
+    "activity": "Elegimos un juego compartido",
+    "student": "Bruno",
+    "text": "Con un compañero propuso usar el recipiente por turnos y dijo «cuando termino te lo paso». Lo entregó como acordaron. Esta nota corresponde a esa pareja, no al grupo grande."
+  },
+  {
+    "day": "2026-06-08",
+    "activity": "Elegimos un juego compartido",
+    "student": "Mateo",
+    "text": "Con su pareja y las tarjetas de turnos disponibles, señaló primero al compañero y luego a sí mismo; dijo «después yo». Esperó, recibió los bloques y al terminar dejó la cesta para el otro sin un recordatorio directo."
+  },
+  {
+    "day": "2026-06-08",
+    "activity": "Elegimos un juego compartido",
+    "student": "Alma",
+    "text": "Quería la cesta. Con la pregunta «¿cómo pueden usarla los dos?» propuso hacer dos turnos y dijo «para que él también compre». La pasó cuando terminó; fue con una pareja."
+  },
+  {
+    "day": "2026-06-08",
+    "activity": "Elegimos un juego compartido",
+    "student": "Camila",
+    "text": "le gusto el juego, estuvo contenta. No anoté cómo intervino en el acuerdo.",
+    "expected": "insufficient_specific_evidence"
+  },
+  {
+    "day": "2026-06-10",
+    "activity": "Repartimos para empezar",
+    "student": "Thiago",
+    "text": "Repartio diez fichas entre cinco compradores, una vuelta y otra; contó dos en cada cesta. Llegó otro compañero, retiró una ficha de cada cesta y dijo que con diez no podían tener dos los seis; mostró las fichas que faltaban."
+  },
+  {
+    "day": "2026-06-10",
+    "activity": "Repartimos para empezar",
+    "student": "Inés",
+    "text": "Puso un recipiente frente a cada una de cuatro parejas y contó que necesitaban cuatro. Había tres; señaló la pareja sin recipiente y buscó otro. Comprobó tocando cada pareja y su recipiente, sin ayuda."
+  },
+  {
+    "day": "2026-06-10",
+    "activity": "Repartimos para empezar",
+    "student": "Omar",
+    "text": "Entregó una ficha a cada uno de tres compañeros. Al preguntarle si alcanzaba, señaló al cuarto, que no tenía, y añadió una ficha de la caja. Fue con pregunta docente; no registré conteo independiente."
+  },
+  {
+    "day": "2026-06-10",
+    "activity": "Repartimos para empezar",
+    "student": "Valeria",
+    "text": "Armó colecciones de dos bloques para cuatro parejas. Contó cada colección para revisar, vio una con un solo bloque y la completó. Dijo «ahora todos tienen dos» y mostró las cuatro parejas con sus bloques."
+  },
+  {
+    "day": "2026-06-15",
+    "activity": "Acordamos cómo usar los materiales",
+    "student": "Valeria",
+    "text": "En el grupo de cuatro, propuso mover la caja al centro para que todos alcancen. Cuando dos quisieron el mismo recipiente esperó y sugirió otro turno; escuchó la propuesta de una compañera y cambió el orden. Para repartir tareas de recoger aún necesitó mi pregunta."
+  },
+  {
+    "day": "2026-06-15",
+    "activity": "Acordamos cómo usar los materiales",
+    "student": "Omar",
+    "text": "Recordó «uno y después otro» y pidió el recipiente antes de cogerlo. Al entrar un compañero nuevo no lo incluyó hasta que pregunté quién faltaba. Añadió su turno y devolvió las fichas; participó con esa mediación."
+  },
+  {
+    "day": "2026-06-15",
+    "activity": "Acordamos cómo usar los materiales",
+    "student": "Bruno",
+    "text": "En el grupo de cinco cogió el recipiente mientras otro lo usaba. Dijo «yo lo necesito». Tras recordar que el acuerdo era para todos, lo devolvió y aceptó esperar. En pareja, antes, sí lo había pasado sin aviso; no fue igual en este grupo."
+  },
+  {
+    "day": "2026-06-15",
+    "activity": "Acordamos cómo usar los materiales",
+    "student": "Mateo",
+    "text": "Con anticipación de los pasos y tarjetas disponibles, trabajó con otros dos niños. Propuso poner bloques al medio y mostró con la tarjeta que primero podían elegir ellos; cambió el turno cuando uno pidió terminar. Guardó lo compartido con ellos sin recordatorio directo."
+  },
+  {
+    "day": "2026-06-15",
+    "activity": "Acordamos cómo usar los materiales",
+    "student": "Alma",
+    "text": "En grupo de tres tomó las fichas antes de que termine el otro. Tras señalarle que no había terminado dijo «te las dejo», y propuso turnarse. Con el cambio a tres compañeros necesitó recordatorio, aunque el 8/6 había usado el acuerdo en pareja."
+  },
+  {
+    "day": "2026-06-16",
+    "activity": "Jugamos con otros compañeros",
+    "student": "Valeria",
+    "text": "Con tres compañeros distintos propuso que cada uno elija dos piezas y deje las otras al centro. Escuchó al que quería construir junto a ella y compartió su recipiente sin aviso. Al decidir quién recoge los bloques esperó mi pregunta y luego aceptó hacerlo entre dos."
+  },
+  {
+    "day": "2026-06-16",
+    "activity": "Jugamos con otros compañeros",
+    "student": "Omar",
+    "text": "Con dos compañeros pidió las fichas y esperó el turno sin cogerlas. Cuando se agregó un tercero necesitó «¿dónde entra su turno?»; señaló un lugar al final de la tarjeta y le pasó el recipiente. Al recoger devolvió las fichas a la caja sin otro aviso."
+  },
+  {
+    "day": "2026-06-16",
+    "activity": "Jugamos con otros compañeros",
+    "student": "Bruno",
+    "text": "Con una compañera alternó el recipiente sin aviso y le pidió las fichas. Al pasar al grupo de cinco se impacientó, interrumpió el turno y necesitó el recordatorio del acuerdo. Después esperó y devolvió la cesta. Se mantiene diferencia según tamaño del grupo."
+  },
+  {
+    "day": "2026-06-16",
+    "activity": "Jugamos con otros compañeros",
+    "student": "Mateo",
+    "text": "Con el juego anticipado y tarjeta disponible, coordinó con tres compañeros la cesta al centro. Señaló un turno para el compañero nuevo, esperó y aceptó cambiar el orden cuando él explicó que debía terminar. Participó en guardar bloques sin indicación individual; no observé grupo numeroso."
+  },
+  {
+    "day": "2026-06-16",
+    "activity": "Jugamos con otros compañeros",
+    "student": "Alma",
+    "text": "Con otra pareja retomo «ahora tú» y entregó la cesta sin aviso. Al juntarse dos parejas volvió a coger fichas de otra compañera; con mi pregunta sobre el acuerdo las devolvió y pidió su turno. La aplicación varía con la organización."
+  }
+]

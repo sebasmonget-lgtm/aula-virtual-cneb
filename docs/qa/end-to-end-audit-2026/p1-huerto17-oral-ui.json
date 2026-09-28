@@ -1,0 +1,26 @@
+{
+  "business_day": "2026-04-17",
+  "cases": [
+    [
+      "Mateo",
+      "En pareja dijo «primero no había blanco; hoy aquí». Miró a su compañero cuando preguntó dónde y señaló la punta. Con tiempo añadió «yo pensé planta, ahora solo puntita». No quiso repetir ante todos."
+    ],
+    [
+      "Kiara",
+      "Explicó a su pareja mirando los dos registros: «este dibujo es antes, hoy dibujé una rayita blanca». Escuchó la pregunta sobre el vaso seco y respondió que allí no la ve."
+    ],
+    [
+      "Joaquín",
+      "Contó que había pensado que todas las semillas cambiarían. Al preguntar su pareja, aclaró «este no lo veo distinto» y pidió acercar el vaso para mostrarlo."
+    ],
+    [
+      "Elena",
+      "Dijo «salió eso» señalando. Necesitó preguntas para explicar que antes no veía la punta. Escuchó a su pareja y pudo responder «en el otro no»."
+    ],
+    [
+      "Valeria",
+      "Se apresuró a decir «todas plantas». Escuchó la pregunta de su pareja y reformuló «una tiene blanco y otra no». Con apoyo ordenó primero lo que pensaba y luego lo que vio."
+    ]
+  ],
+  "method": "UI"
+}

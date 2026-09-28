@@ -1,0 +1,27 @@
+✔ revalida schemas editados y competencias v4 (3.2827ms)
+✔ server cierra ownership, parent, PUT, confirmación y aplicabilidad (12.2067ms)
+✔ editor reabre drafts, separa estados por plan e índice y no usa JSON crudo (2.7016ms)
+✔ la ruta de experiencias delega la generación sin construir una llamada directa a OpenAI (2.5947ms)
+✔ planificación conserva distribuciones docentes manuales y competencias fuera de las primeras cinco (10.3631ms)
+✔ borradores y revisiones no se cuentan como decisiones pedagógicas confirmadas (0.6214ms)
+✔ interfaz tolera respuestas anteriores durante actualización sin convertir campos ausentes en cero (11.3665ms)
+✔ persistir y recargar JSONB no oculta preguntas ni bloquea confirmar un mapa intacto (3656.5402ms)
+✔ los cambios pedagógicos y el orden de listas/actividades siguen requiriendo revisión (3.3569ms)
+✔ el par diario no trata el reordenamiento JSONB del taller como una edición pendiente (2576.7103ms)
+✔ las fechas útiles excluyen fines de semana, feriados y gestión (6.0164ms)
+✔ Sol prepara primero contexto y propósitos, después solo dependencias del propósito elegido (172.8457ms)
+✔ Sol devuelve mapa con fechas y competencias válidas; el servidor asigna IDs (74.8129ms)
+✔ una regeneración localizada conserva el título editado por la docente en la misma fecha (1.7265ms)
+✔ el criterio, no el orden de dos competencias, determina la principal del mapa (0.7717ms)
+✔ opt-in carga el período autorizado; opt-out no consulta ni reutiliza datos anteriores (4.3009ms)
+✔ el mapa reutiliza exactamente el snapshot ya revisado, sin recargar ni cambiar decisiones (2.4368ms)
+✔ preview y preguntas de una unidad reciben 11 B sin convertir al alumno sin evidencia en C (154.3555ms)
+✔ el flujo visible nuevo transporta el opt-in y permite recuperar un preview sin borrar un mapa (9.5969ms)
+ℹ tests 19
+ℹ suites 0
+ℹ pass 19
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 6751.9303

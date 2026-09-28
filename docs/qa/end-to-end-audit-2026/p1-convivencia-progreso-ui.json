@@ -1,0 +1,43 @@
+{
+  "business_day": "2026-04-07",
+  "expected_competence": "PS_CONVIVE",
+  "synthetic_teacher": true,
+  "cases": [
+    {
+      "student": "Bruno",
+      "note": "En pareja con Diego, Bruno dijo «dos bloques tú, dos yo» y esperó que eligiera primero. Sostuvo el acuerdo sin docente cerca. Es distinto al juego grupal del 1/4 donde tomó toda la caja; hoy eran sólo dos."
+    },
+    {
+      "student": "Valeria",
+      "note": "Valeria miró la tarjeta de turnos, dejó el aro a Kiara y dijo «yo después» antes de que se lo recordara. Esperó una vuelta; cuando otros llegaron volvió a pedir ayuda para organizarse. Primer avance, no constante aún."
+    },
+    {
+      "student": "Diego",
+      "note": "Diego preguntó dos veces «ya me toca?» y entró antes del turno. Con la docente señalando el acuerdo regresó a esperar. No lo sostuvo cuando la tarjeta quedó detrás de la cesta."
+    },
+    {
+      "student": "Fabio",
+      "note": "Fabio cogía bloques mientras Joaquín armaba. Con «mira lo que acordaron» devolvió uno, pero siguió sacando sin avisar. Necesitó acompañamiento para probar el reparto."
+    },
+    {
+      "student": "Hugo",
+      "note": "Hugo quería usar todas las telas para el puente. Al conversar con la docente aceptó dejar una; luego volvió a tomarla. No mantuvo todavía el reparto propuesto por su compañero."
+    },
+    {
+      "student": "Gabriela",
+      "note": "Gabriela esperó mientras Elena jugaba después del recordatorio. Al cambiar de juego ocupó ambos aros y requirió otra pregunta para ofrecer uno. Cumplió con apoyo, no por iniciativa en esta situación."
+    },
+    {
+      "student": "Joaquín",
+      "note": "Joaquín dijo «voy primero porque yo hice esto». Con mediación escuchó a Fabio y aceptó alternar; después de una vuelta hubo que recordarlo. No hubo acuerdo autónomo estable hoy."
+    },
+    {
+      "student": "Thiago",
+      "note": "Thiago repartió cuatro bloques para sí y uno para Camila. No aceptó cambiar al escucharla. Tras preguntas de la docente ofreció dos bloques y siguieron; su interés en contar no basta para decir que mantiene acuerdos."
+    },
+    {
+      "student": "Inés",
+      "note": "Inés notó que el turno de una sola persona dejaba a tres esperando y propuso «entran dos y después dos». Escuchó la propuesta de Kiara, probaron una vuelta y acordaron mantenerla. Sin indicación adulta."
+    }
+  ]
+}

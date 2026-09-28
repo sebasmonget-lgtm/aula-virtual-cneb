@@ -1,0 +1,33 @@
+✔ fresh Supabase migrations retain the service-facing local table and column contract (8664.2426ms)
+✔ identity is verified for every request and never comes from client IDs (53.5314ms)
+✔ email/password sign-in verifies the returned token and sets an HTTP-only cookie (2.2062ms)
+✔ local mode retains PGlite identity without any token (0.43ms)
+✔ request selectors are scoped to the verified classroom tree (3668.3732ms)
+✔ reasociación conserva texto/fecha e historial y refresca ambos alumnos (3618.4502ms)
+✔ no admite otra docente, otro aula, adjuntos ni cambio sin motivo (2561.6249ms)
+✔ bloquea período cerrado o valoración confirmada afectada, no otro período (2687.8823ms)
+✔ ruta y UI usan corrección autorizada y revisión de asignación, no reescritura de notas (10.5444ms)
+✔ períodos formales separan cuatro bimestres o tres trimestres (23.391ms)
+✔ cobertura deriva registros por niño y competencia sin convertir ausencias en niveles (4373.4724ms)
+✔ contexto para planificar verifica docente, aula y período y no expone expedientes (2669.713ms)
+✔ la migración futura exige lectura propia y escritura mediante servidor (3.3731ms)
+✔ conclusión confirma snapshot recargado de JSONB pero rechaza valores cambiados (3195.981ms)
+✔ el análisis reutiliza la huella completa del aula y rechaza cambios reales de contexto (2725.5662ms)
+✔ revisar una valoración confirmada conserva el historial y exige reconfirmar antes de cerrar (3841.4725ms)
+✔ la ficha permite revisión versionada y no edita silenciosamente la valoración confirmada (3.4582ms)
+✔ ficha única, nivel docente, cierre, salidas derivadas y cambio posterior de evidencia (5579.7648ms)
+✔ una competencia del plan anual aparece sin evidencias y se puede excluir con motivo (2903.4849ms)
+✔ información insuficiente queda guardada sin nivel y no se convierte en C (3033.9567ms)
+✔ una observación sustantiva admite valoración docente justificada sin umbral automático (3020.8304ms)
+✔ dos confirmaciones de la misma revisión dejan una sola evaluación oficial (2940.3712ms)
+✔ evidencia posterior invalida la huella y dos cierres simultáneos crean solo una versión (3877.4173ms)
+✔ la frescura del contexto usa el cambio pedagógico más reciente (4.0724ms)
+✔ un diagnóstico posterior actualiza la frescura aunque no haya nueva evidencia (0.4998ms)
+ℹ tests 25
+ℹ suites 0
+ℹ pass 25
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 48474.4982

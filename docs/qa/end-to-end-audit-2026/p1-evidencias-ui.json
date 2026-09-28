@@ -1,0 +1,48 @@
+[
+  {
+    "id": "P1_A01",
+    "student": "Alma",
+    "text": "Eligió bloques, dijo «yo quiero la casa» y señaló dónde quería empezar. Cuando se movió la tela pidió «déjala ahí para mi techo».",
+    "expected": [
+      "PS_IDENTIDAD"
+    ]
+  },
+  {
+    "id": "P1_A02",
+    "student": "Mateo",
+    "index": 20,
+    "text": "Miró los materiales desde el rincón tranquilo. Al ofrecerle una pareja señaló los aros y dijo bajito «con él, aquí»; se acercó con su compañero.",
+    "expected": [
+      "PS_IDENTIDAD"
+    ],
+    "support": "pareja y anticipación visual"
+  },
+  {
+    "id": "P1_A03",
+    "student": "Kiara",
+    "index": 19,
+    "text": "Dijo «primero quiero mirar». Luego eligió una tela y avisó «ahora sí juego, será mi tienda».",
+    "expected": [
+      "PS_IDENTIDAD"
+    ]
+  },
+  {
+    "id": "P1_A04",
+    "student": "Gabriela",
+    "index": 15,
+    "text": "Escogió los bloques azules y explicó que quería una casa pequeña, no el circuito. Cambió un bloque por uno más chico porque «este sí me gusta».",
+    "expected": [
+      "PS_IDENTIDAD"
+    ]
+  },
+  {
+    "id": "P1_A05",
+    "student": "Valeria",
+    "index": 23,
+    "text": "Siguió a Camila al inicio. Cuando le pregunté qué prefería señaló un aro; dijo «ese» y empezó su juego. Aun necesitó una invitación para elegir.",
+    "expected": [
+      "PS_IDENTIDAD"
+    ],
+    "support": "pregunta docente"
+  }
+]

@@ -15,3 +15,13 @@ El recorrido es acelerado: reloj real septiembre de 2026 y año pedagógico simu
 ## Restricciones de la medición
 
 No se graba audio del ambiente ni se usan voces, fotos o datos reales. La prueba de audio real requiere una fuente ficticia controlada y entrada de micrófono autorizada; mientras no se pueda ejecutar, no se declara validada. El control de texto está ejecutado.
+
+## Continuación después de los fixes
+
+QA conserva frontend 5175/API 8790 y `.local/qa/end-to-end-audit-2026/pgdata`; original 5173/API 8788 permanece separado. El harness `audit-business-clock.mjs` afecta solo ahora del proceso QA validando puerto, identidad y directorio exactos; nunca se importa en producto ni abre una segunda instancia de PGlite en el mismo directorio. Las fechas persistidas explícitas no se reescriben. Las fechas de P1 avanzaron por marzo/abril y gestión de mayo; P2 por 8, 10, 15, 16 de junio y gestión del 27 de julio. El diagnóstico inicial sigue fechado en septiembre: no se backdateó para aparentar un año cronológicamente perfecto desde marzo.
+
+H47 reinició únicamente la API QA para aplicar su migración nueva. Los PIDs actuales están en `environment-api.json`; el puerto original y su base no recibieron esa migración durante la auditoría. La huella del dashboard original permanece `29b7c96d36bca81fc781fe36cd9fd9acecb334d468a4f85888454a05ed09a1e9` en `p2-five-assessed-qa-snapshot` (comprobación GET, sin escrituras). La prueba sigue siendo local, de aula ficticia y sin despliegue, no una validación multiusuario o móvil real.
+
+P3 avanzó por 31/8 (dos episodios separados por hora), 1/9, 2/9 y gestión del 12/10. Tres cierres diarios fueron guardados explícitamente por UI. Durante gestión se confirmaron marco, cinco valoraciones/conclusiones y un informe familiar; se descargó Excel. `p3-five-assessed` confirma otra vez la misma huella del original. La interfaz cliente conserva el encabezado de fecha real: no se presenta el harness como una funcionalidad docente disponible ni se certifica cronología diagnóstica retroactiva.
+
+P4 avanzó por 3/11, 5/11, 9/11, 11/11 y 12/11 con cinco actividades y cierres diarios, luego al 21/12 para revisar valoración y familia. Las 24 notas P4 se ingresaron desde UI y se conciliaron con los casos escritos antes de capturarlas. El reloj de negocio afectó únicamente QA; el cliente original siguió mostrando la fecha real de septiembre (H44). El snapshot final `p4-family-final` confirmó la misma huella del aula original. Los datos ficticios se conservan y no equivalen a un año cronológicamente observado con una docente real.

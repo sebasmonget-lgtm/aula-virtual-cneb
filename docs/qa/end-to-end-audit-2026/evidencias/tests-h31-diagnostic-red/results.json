@@ -1,0 +1,62 @@
+[
+  {
+    "name": "typecheck",
+    "command": [
+      "node",
+      "node_modules/typescript/bin/tsc",
+      "--noEmit"
+    ],
+    "startedAt": "2026-09-28T05:15:27.931Z",
+    "endedAt": "2026-09-28T05:15:34.650Z",
+    "exitCode": 0,
+    "counters": null
+  },
+  {
+    "name": "unit-tests",
+    "command": [
+      "node",
+      "--test",
+      "--test-concurrency=2",
+      "src/lib/diagnostic-unified-word.test.mjs"
+    ],
+    "startedAt": "2026-09-28T05:15:34.652Z",
+    "endedAt": "2026-09-28T05:15:35.392Z",
+    "exitCode": 1,
+    "counters": {
+      "tests": 3,
+      "pass": 1,
+      "fail": 2,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    }
+  },
+  {
+    "name": "lint",
+    "command": [
+      "node",
+      "node_modules/eslint/bin/eslint.js",
+      ".",
+      "--ignore-pattern",
+      "dist",
+      "--ignore-pattern",
+      ".next"
+    ],
+    "startedAt": "2026-09-28T05:15:35.395Z",
+    "endedAt": "2026-09-28T05:15:57.944Z",
+    "exitCode": 0,
+    "counters": null
+  },
+  {
+    "name": "build",
+    "command": [
+      "node",
+      "scripts/run-framework.mjs",
+      "build"
+    ],
+    "startedAt": "2026-09-28T05:15:57.947Z",
+    "endedAt": "2026-09-28T05:16:09.486Z",
+    "exitCode": 0,
+    "counters": null
+  }
+]

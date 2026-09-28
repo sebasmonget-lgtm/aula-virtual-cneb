@@ -1,5 +1,36 @@
 # Auditoría integral de Ayni: resultado ejecutivo
 
+## DESPUÉS DEL FIX — veredicto del recorrido aislado P1–P4
+
+**No: todavía no se ha demostrado que una profesora nueva pueda completar correctamente el año entero en Ayni.** El bloqueo original H08 del plan anual sí quedó corregido, con regresiones, y la docente ficticia confirmó por UI el mismo plan que había fallado. Continuó por cinco experiencias pertinentes, actividades, talleres, 138 evidencias de período, evaluación parcial de los cuatro bimestres, informes familiares y cuatro consolidados Excel. El cierre formal sigue detenido por H34: exige letras y conclusiones para pares alumno–competencia sin evidencia suficiente, sin una resolución docente terminal de «información insuficiente». No se fabricaron C ni se retiraron competencias previstas para forzarlo. Reajuste formal dependiente del cierre y cierre anual permanecen sin validación E2E.
+
+La prueba se hizo solo en frontend QA `localhost:5175`, API QA `127.0.0.1:8790` y base ficticia separada. La huella estable del aula original permaneció idéntica en el último checkpoint `p4-family-final`. No se desplegó ni se hizo push. La cabecera del cliente seguía mostrando 28/09 aunque el reloj de negocio QA llegó al 21/12; se seleccionaron período y días explícitamente y se recargó Hoy entre fechas (H44), sin ocultar esta limitación.
+
+| Módulo / eslabón | Estado posterior | Evidencia y límite |
+| --- | --- | --- |
+| Onboarding | PARTIAL | Aula ficticia, perfil, logo y 15 niños; persistencia de fecha de nacimiento no certificada, producción multiusuario no probada |
+| Diagnóstico | PARTIAL | 15 entrevistas, 29 notas diagnósticas, 3 prioridades; intervención docente ante omisiones Jev y resumen de intereses |
+| Plan anual | PASS local | H08 round-trip y confirmación real; formal Word inspeccionado en XML |
+| Proyecto/unidad | PASS en muestra | Cinco experiencias confirmadas con Master/mapa/criterios; no las doce propuestas anuales |
+| Actividad | PARTIAL | Veinte generaciones registradas, muestra de días ejecutados; P4 cinco actividades con cierres y 24 notas, no diez días del mapa |
+| Taller | PARTIAL | Dos Masters y cuatro días de taller; ficha Jev se abstuvo, dependencia de experiencia mantenida |
+| Observaciones / Jev | PARTIAL | 138 notas de período conciliadas; Jev clasificó la muestra diagnóstica, **no** las notas con contexto de actividad |
+| Cobertura | PASS en distinción | Señala ausencia de registros sin convertirla en nivel C |
+| Assessment | PARTIAL | P1 16, P2 5, P3 5, P4 5 valoraciones/conclusiones confirmadas; restantes sin inventar |
+| Familia | PARTIAL | Nueve informes confirmados/Word; dos primeros intentos P4 rechazados por schema y recuperados en segundo intento |
+| Consolidado | PARTIAL | Cuatro XLSX conciliados celda por celda; informe narrativo del aula bloqueado por cobertura insuficiente |
+| Reajuste | PARTIAL | Resultados reales opt-in de P1→P2→P3→P4; reajuste formal exige período cerrado |
+| P1–P4 | PARTIAL | Trayectorias diferenciadas verificadas, ningún bimestre formalmente cerrado |
+| Cierre anual | FAIL para el objetivo | P4 5/120 valoraciones, 115 pendientes, botón Cerrar período deshabilitado; no año cerrado |
+| Documentos | PARTIAL | Word/Excel reales inspeccionados estructuralmente; paginación Word, progreso Word/PDF y SIAGIE no probados/disponibles |
+| Costos | PARTIAL | 187 invocaciones acumuladas, USD 1.372454652 mixtos; no factura conciliada ni audio real |
+
+P1: 150 pares, 5 A/11 B/134 pendientes. P2: 105, 1 A/4 B/100 pendientes. P3: 135, 2 A/3 B/130 pendientes. P4: 120, 3 A/2 B/115 pendientes. Cero C/AD en las cuatro muestras; no es una distribución representativa, sino decisión docente sobre evidencias ficticias predefinidas. Omar no tuvo letra en P1 y sí A en P4 por actuaciones actuales; Valeria B→B→A→A en convivencia, Bruno conserva variación por contexto, Mateo A se acota a apoyos de acceso y grupos observados, Alma no progresa linealmente.
+
+La suite tras H47 fue **104 archivos, 495 PASS, cero fallos/omitidas**; dos pruebas adicionales verificaron el aislamiento del reloj QA. Typecheck, lint y build terminaron con exit 0 (build avisa chunks grandes/clasificación estática Unknown). Las correcciones localizadas y commits están en `18_CORRECCIONES_DURANTE_E2E.md`; no equivalen a RLS/Supabase de producción. El ledger conserva sin alteración las primeras 49 llamadas BEFORE. El costo anual recalibrado con precios unitarios observados, pero volúmenes y audio supuestos, es bajo USD 3.75, «realista» USD 7.95 e intensivo USD 18.95 por profesora/aula de 15; no es costo real de un año medido ni incluye infraestructura. Detalle y límites en `15_COSTOS_IA.md`.
+
+## Resultados históricos antes de los fixes
+
 Fecha: noche del 27/09/2026, America/Lima. Producto local existente. Sin arreglos, cambios de arquitectura, despliegue ni datos reales de menores. Este documento reúne resultado, costos y prioridades; los informes 02–19 y evidencias permiten reproducirlos.
 
 ## Veredicto

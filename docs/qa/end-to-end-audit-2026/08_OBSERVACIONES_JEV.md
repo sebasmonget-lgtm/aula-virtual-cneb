@@ -1,5 +1,19 @@
 # Observaciones y Jev real
 
+## Corte posterior P4: 138 evidencias de período y límite Jev
+
+P4 añadió 24 notas desde la UI, cotejadas una a una por alumno/fecha/texto con exportación QA de solo lectura. Total de la continuación: P1 74 + P2 20 + P3 20 + P4 24 = **138** evidencias ordinarias de período, además de las notas diagnósticas iniciales. En P4, Elena tiene un registro de lectura vago («estuvo atenta») que permanece sin letra; la falta de dato no se llamó C. Se conservaron contextos contradictorios de Bruno y Alma y el uso de apoyos de acceso de Mateo.
+
+**La hipótesis Jev con actividad + propósito + criterio + proyecto + contexto continúa NO PROBADA.** Estas 138 notas se vinculan al criterio curricular confirmado por la profesora, sin pasar por el clasificador Jev. Los cinco usos reales de Jev para imagen y uno para ficha son tareas distintas basadas en metadatos. No se agregan a los 24 casos de clasificación diagnóstica ni se anuncia mejora de accuracy.
+
+## DESPUÉS DEL FIX — distinguir decisiones Jev de notas de actividad
+
+La muestra diagnóstica original se conserva íntegra debajo: 24 casos predefinidos, 46 llamadas, tres intervenciones docentes. No se reetiquetó retrospectivamente para mejorar el resultado. En la continuación hasta lectura P4 hay 119 evidencias ordinarias de período (P1 74/P2 20/P3 20/P4 5): su competencia procede del criterio confirmado de actividad/taller, **sin llamada clasificadora Jev**. Por tanto la prueba de mejora por añadir propósito/criterio/proyecto es **NO PROBADA**, no 119 aciertos de Jev.
+
+Jev sí se ejecutó cinco veces para imágenes de experiencias y una para ficha de taller (abstención). Decisiones sobre descripciones/metadatos, no análisis de píxeles de imágenes o PDF. La quinta recomendó «Sofía y Mateo eligen libros» para cuentos P4, se eligió en UI y se confirmó en el proyecto. Estas llamadas aparecen por separado en el ledger acumulativo; no certifican precisión curricular del clasificador de observaciones.
+
+Las notas ambiguas del período se conservaron como registros, no se convirtieron en niveles: Camila P2 recibió análisis IA explícitamente insuficiente; Elena P3/P4 no tiene letra desde «se divirtió/estuvo atenta». H47 corrige cuatro atribuciones de alumno de captura automatizada por UI antes del assessment; no fue fallo Jev ni se borró la historia.
+
 Se fijaron 24 casos antes de ejecutarlos (`jev-casos-previos.json`) y se ingresaron por la pantalla Observación espontánea. Se conservaron notas imperfectas, tildes, nombres ficticios, dos competencias, fortalezas, dificultades contextuales y hechos no clasificables. Resultados UI originales: `jev-resultados-ui.json`. No se cambiaron umbrales ni prompts para esta auditoría.
 
 La implementación existente ejecuta una Choice para competencia principal y Noul independientes para candidatos adicionales, en dos llamadas concurrentes por observación. Jev efectivo comprobado en logs: `typesafe/jev-1.13-20260917`, KB 4.1.0. No equivale a comparar los dos métodos por separado: se auditó el híbrido del flujo docente.

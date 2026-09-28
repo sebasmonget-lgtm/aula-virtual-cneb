@@ -1,0 +1,302 @@
+[
+  {
+    "name": "diagnostico-despues-h31.docx",
+    "bytes": 436764,
+    "unresolved": [],
+    "tables": 19,
+    "imageFiles": [
+      "word/media/image1.png",
+      "word/media/image2.png",
+      "word/media/image3.png",
+      "word/media/image4.png",
+      "word/media/image5.png",
+      "word/media/image6.png",
+      "word/media/image7.png",
+      "word/media/image8.png",
+      "word/media/image9.png",
+      "word/media/",
+      "word/media/ayni-logo.png"
+    ],
+    "institution": true,
+    "teacher": true,
+    "groupCount": true,
+    "uniqueDiagnosticCount": true,
+    "inactiveReligion": false,
+    "inactiveL2": false,
+    "activeCriterion": null,
+    "visualRender": "NO PROBADO: LibreOffice no disponible en runtime"
+  },
+  {
+    "name": "plan-anual-confirmado.docx",
+    "bytes": 464062,
+    "unresolved": [],
+    "tables": 72,
+    "imageFiles": [
+      "word/media/image1.png",
+      "word/media/image6.png",
+      "word/media/image10.png",
+      "word/media/image5.png",
+      "word/media/image9.png",
+      "word/media/image4.png",
+      "word/media/image8.png",
+      "word/media/image3.png",
+      "word/media/image2.png",
+      "word/media/image7.png",
+      "word/media/",
+      "word/media/ayni-logo.png"
+    ],
+    "institution": true,
+    "teacher": true,
+    "groupCount": true,
+    "uniqueDiagnosticCount": null,
+    "inactiveReligion": false,
+    "inactiveL2": false,
+    "activeCriterion": null,
+    "visualRender": "NO PROBADO: LibreOffice no disponible en runtime"
+  },
+  {
+    "name": "actividad-indaga22-ejecutada.docx",
+    "bytes": 424857,
+    "unresolved": [],
+    "tables": 9,
+    "imageFiles": [
+      "word/media/image1.png",
+      "word/media/image2.png",
+      "word/media/image3.png",
+      "word/media/image4.png",
+      "word/media/image5.png",
+      "word/media/image6.png",
+      "word/media/image7.png",
+      "word/media/image8.png",
+      "word/media/image9.png",
+      "word/media/",
+      "word/media/ayni-logo.png"
+    ],
+    "institution": true,
+    "teacher": true,
+    "groupCount": false,
+    "uniqueDiagnosticCount": null,
+    "inactiveReligion": false,
+    "inactiveL2": false,
+    "activeCriterion": true,
+    "visualRender": "NO PROBADO: LibreOffice no disponible en runtime"
+  },
+  {
+    "name": "proyecto-huerto-confirmado.docx",
+    "bytes": 447276,
+    "unresolved": [],
+    "tables": 12,
+    "imageFiles": [
+      "word/media/image1.png",
+      "word/media/image2.png",
+      "word/media/image3.png",
+      "word/media/image4.png",
+      "word/media/image5.png",
+      "word/media/image6.png",
+      "word/media/image7.png",
+      "word/media/image10.png",
+      "word/media/image8.png",
+      "word/media/image9.png",
+      "word/media/",
+      "word/media/ayni-logo.png"
+    ],
+    "institution": true,
+    "teacher": true,
+    "groupCount": true,
+    "uniqueDiagnosticCount": null,
+    "inactiveReligion": false,
+    "inactiveL2": false,
+    "activeCriterion": null,
+    "visualRender": "NO PROBADO: LibreOffice no disponible en runtime"
+  },
+  {
+    "name": "familia-thiago-p1.docx",
+    "bytes": 23041,
+    "unresolved": [],
+    "tables": 0,
+    "imageFiles": [
+      "word/media/",
+      "word/media/3fbbc2b7fdf9794657f5cecf609ab8ebc85363da.png"
+    ],
+    "institution": true,
+    "teacher": true,
+    "groupCount": true,
+    "uniqueDiagnosticCount": null,
+    "inactiveReligion": false,
+    "inactiveL2": false,
+    "activeCriterion": null,
+    "visualRender": "NO PROBADO: LibreOffice no disponible en runtime"
+  },
+  {
+    "name": "familia-bruno-p1.docx",
+    "bytes": 22348,
+    "unresolved": [],
+    "tables": 0,
+    "imageFiles": [
+      "word/media/",
+      "word/media/3fbbc2b7fdf9794657f5cecf609ab8ebc85363da.png"
+    ],
+    "institution": true,
+    "teacher": true,
+    "groupCount": true,
+    "uniqueDiagnosticCount": null,
+    "inactiveReligion": false,
+    "inactiveL2": false,
+    "activeCriterion": null,
+    "visualRender": "NO PROBADO: LibreOffice no disponible en runtime"
+  },
+  {
+    "name": "familia-valeria-p1.docx",
+    "bytes": 22223,
+    "unresolved": [],
+    "tables": 0,
+    "imageFiles": [
+      "word/media/",
+      "word/media/3fbbc2b7fdf9794657f5cecf609ab8ebc85363da.png"
+    ],
+    "institution": true,
+    "teacher": true,
+    "groupCount": true,
+    "uniqueDiagnosticCount": null,
+    "inactiveReligion": false,
+    "inactiveL2": false,
+    "activeCriterion": null,
+    "visualRender": "NO PROBADO: LibreOffice no disponible en runtime"
+  },
+  {
+    "name": "familia-mateo-p1.docx",
+    "bytes": 22222,
+    "unresolved": [],
+    "tables": 0,
+    "imageFiles": [
+      "word/media/",
+      "word/media/3fbbc2b7fdf9794657f5cecf609ab8ebc85363da.png"
+    ],
+    "institution": true,
+    "teacher": true,
+    "groupCount": true,
+    "uniqueDiagnosticCount": null,
+    "inactiveReligion": false,
+    "inactiveL2": false,
+    "activeCriterion": null,
+    "visualRender": "NO PROBADO: LibreOffice no disponible en runtime"
+  },
+  {
+    "name": "familia-ines-p1.docx",
+    "bytes": 22858,
+    "unresolved": [],
+    "tables": 0,
+    "imageFiles": [
+      "word/media/",
+      "word/media/3fbbc2b7fdf9794657f5cecf609ab8ebc85363da.png"
+    ],
+    "institution": true,
+    "teacher": true,
+    "groupCount": true,
+    "uniqueDiagnosticCount": null,
+    "inactiveReligion": false,
+    "inactiveL2": false,
+    "activeCriterion": null,
+    "visualRender": "NO PROBADO: LibreOffice no disponible en runtime"
+  },
+  {
+    "name": "familia-omar-p2.docx",
+    "bytes": 22308,
+    "unresolved": [],
+    "tables": 0,
+    "imageFiles": [
+      "word/media/",
+      "word/media/3fbbc2b7fdf9794657f5cecf609ab8ebc85363da.png"
+    ],
+    "institution": true,
+    "teacher": true,
+    "groupCount": true,
+    "uniqueDiagnosticCount": null,
+    "inactiveReligion": false,
+    "inactiveL2": false,
+    "activeCriterion": null,
+    "visualRender": "NO PROBADO: LibreOffice no disponible en runtime"
+  },
+  {
+    "name": "familia-valeria-p3.docx",
+    "bytes": 22438,
+    "unresolved": [],
+    "tables": 0,
+    "imageFiles": [
+      "word/media/",
+      "word/media/3fbbc2b7fdf9794657f5cecf609ab8ebc85363da.png"
+    ],
+    "institution": true,
+    "teacher": true,
+    "groupCount": false,
+    "uniqueDiagnosticCount": null,
+    "inactiveReligion": false,
+    "inactiveL2": false,
+    "activeCriterion": null,
+    "visualRender": "NO PROBADO: LibreOffice no disponible en runtime"
+  },
+  {
+    "name": "proyecto-cuentos-p4-confirmado.docx",
+    "bytes": 447622,
+    "unresolved": [],
+    "tables": 12,
+    "imageFiles": [
+      "word/media/image1.png",
+      "word/media/image2.png",
+      "word/media/image3.png",
+      "word/media/image4.png",
+      "word/media/image5.png",
+      "word/media/image6.png",
+      "word/media/image7.png",
+      "word/media/image10.png",
+      "word/media/image8.png",
+      "word/media/image9.png",
+      "word/media/",
+      "word/media/ayni-logo.png"
+    ],
+    "institution": true,
+    "teacher": true,
+    "groupCount": false,
+    "uniqueDiagnosticCount": null,
+    "inactiveReligion": false,
+    "inactiveL2": false,
+    "activeCriterion": null,
+    "visualRender": "NO PROBADO: LibreOffice no disponible en runtime"
+  },
+  {
+    "name": "familia-alma-p4.docx",
+    "bytes": 22304,
+    "unresolved": [],
+    "tables": 0,
+    "imageFiles": [
+      "word/media/",
+      "word/media/3fbbc2b7fdf9794657f5cecf609ab8ebc85363da.png"
+    ],
+    "institution": true,
+    "teacher": true,
+    "groupCount": false,
+    "uniqueDiagnosticCount": null,
+    "inactiveReligion": false,
+    "inactiveL2": false,
+    "activeCriterion": null,
+    "visualRender": "NO PROBADO: LibreOffice no disponible en runtime"
+  },
+  {
+    "name": "familia-omar-p4.docx",
+    "bytes": 22326,
+    "unresolved": [],
+    "tables": 0,
+    "imageFiles": [
+      "word/media/",
+      "word/media/3fbbc2b7fdf9794657f5cecf609ab8ebc85363da.png"
+    ],
+    "institution": true,
+    "teacher": true,
+    "groupCount": false,
+    "uniqueDiagnosticCount": null,
+    "inactiveReligion": false,
+    "inactiveL2": false,
+    "activeCriterion": null,
+    "visualRender": "NO PROBADO: LibreOffice no disponible en runtime"
+  }
+]

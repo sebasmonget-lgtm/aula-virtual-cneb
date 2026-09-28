@@ -1,0 +1,2 @@
+src/features/dashboard/components/evidence-student-correction.tsx(32,41): error TS18046: 'data' is of type 'unknown'.
+src/features/dashboard/components/evidence-student-correction.tsx(32,57): error TS18046: 'data' is of type 'unknown'.

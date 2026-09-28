@@ -1,0 +1,36 @@
+{
+  "method": "Profesora ficticia mediante interfaz; no experto independiente",
+  "business_day": "2026-04-01",
+  "activity_id": "3afc3a23-5a61-455d-b075-a7316b7fe1bf",
+  "expected_competence": "PS_CONVIVE",
+  "cases": [
+    {
+      "student": "Bruno",
+      "note": "Bruno jaló la caja de bloques cuando Camila la estaba usando. Dijo «es mía» y no aceptó su propuesta de sacar dos cada uno. Con la docente cerca entregó un bloque; volvió a tomar la caja cuando se alejó."
+    },
+    {
+      "student": "Camila",
+      "note": "Camila tomó tres telas mientras Elena esperaba. Al oír «¿cómo podrían usarlas las dos?» dejó una junto a Elena y dijo «ésta para ti». Necesitó esa pregunta; no propuso el reparto antes."
+    },
+    {
+      "student": "Diego",
+      "note": "Quería entrar al aro ya ocupado. Miró la tarjeta de turno que mostró la docente y repitió «ahora ella, después yo». Esperó unos segundos y entró cuando salió Gabriela. Con apoyo visual."
+    },
+    {
+      "student": "Elena",
+      "note": "Dos niños querían la misma cesta. Elena propuso «ponemos bloques acá y telas allá, así usamos los dos». Escuchó a Hugo y cambiaron juntos la ubicación de la cesta, sin indicación adulta."
+    },
+    {
+      "student": "Valeria",
+      "note": "Valeria cogió el aro que usaba Kiara. Tras la pregunta de la docente «¿qué necesita Kiara?» se lo devolvió y esperó junto a ella. Luego dijo «me toca después». Todavía requirió mediación."
+    },
+    {
+      "student": "Mateo",
+      "note": "Jugando en pareja en el rincón tranquilo, Mateo movió sus bloques para dejar sitio a Fabio y dijo «tú acá». Aceptó que Fabio pusiera una tela. Lo hizo sin recordatorio; no observé participación en grupo grande."
+    },
+    {
+      "student": "Kiara",
+      "note": "Kiara vio que no alcanzaban las telas para las tiendas. Ofreció «usamos esta las dos» a Gabriela; conversaron y dejaron una abertura para entrar. Mantuvieron el acuerdo durante este juego."
+    }
+  ]
+}

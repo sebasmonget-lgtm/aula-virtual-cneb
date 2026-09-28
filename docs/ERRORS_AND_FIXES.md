@@ -1,5 +1,29 @@
 # Errores y soluciones
 
+## 2026-09-28 Informes familiares P4 rechazados y recuperados (H49)
+
+**Síntoma.** Los primeros intentos reales de informe familiar de Alma y Omar devolvieron `family_report_schema_mismatch`; no se guardó una salida inválida. Cada segundo intento por UI produjo un informe revisado, confirmado y descargado. Las cuatro llamadas facturables permanecen en el ledger; no equiparar dos documentos finales con dos llamadas.
+
+**Causa conocida y límite.** La salida no superó el contrato local estricto `validateFamilyReport`; la subregla exacta no se conoce porque no se conservó texto rechazado con datos de menores. No atribuirlo a un campo, modelo o proveedor específico sin telemetría segura. No se modificó el validador ni hubo fix de producto en este corte.
+
+**Solución operativa validada y prevención.** Reintento explícito por docente bajo el **mismo contrato**: dos informes completos, sin marcadores pendientes en Word XML. Para reparar la recurrencia, instrumentar solo subcódigo no sensible/intento/uso, construir regresiones anonimizadas, mantener rechazo seguro y medir éxito/costo por informe final. La validación de contenido evitó persistir los dos intentos fallidos, pero no evitó su costo. Ver auditoría 10, 15 y 16.
+
+## 2026-09-28 Integridad del análisis y conclusión del período (H35/H36/H37/H39)
+
+**Causas y soluciones.** H35 (`551409f`) compara el contexto autorizado completo al validar el marco, no una proyección sin su fingerprint. H36 (`ebaec81`) conserva SQL DATE civil en la copia para IA y en la huella, evitando que medianoche UTC se trunque como el día anterior local. H37 (`e949f54`) compara los campos del snapshot, no el orden de claves JSONB. H39 (`c6921bb`) distingue la preposición española A de una calificación explícita, manteniendo prohibidos niveles, notas y comparaciones.
+
+**Validación.** Regresiones fallaron antes y pasaron después: respectivamente 15, 36, 26 y 42 relacionadas, con typecheck/lint/build PASS. UI: marco vigente admitido, análisis con fechas correctas, B docente de Bruno y su misma conclusión confirmados; conclusión de Alma antes rechazada y después confirmada. No se desactivaron fingerprints, ownership ni conflictos reales. Los intentos facturados rechazados se mantienen en el ledger; timeouts sin usage no se estiman como cero.
+
+**Prevención.** Fixtures con contexto no nulo, SQL DATE real y pending serializado en JSONB. Probar expresiones españolas positivas y menciones de calificación negativas. Los juicios docentes simulados no son adjudicación experta ni prueba de precisión del modelo. No penalizar apoyos de acceso como si fueran falta de logro.
+
+## 2026-09-28 Fidelidad diagnóstica y plazo del marco (H31/H32)
+
+**Síntomas y causas.** Word diagnóstico usaba el día UTC, contaba asociaciones como notas, incluía áreas no aplicables en pendientes y omitía el registro más reciente. El Assessment Master multicompetencia heredaba timeout de 30 s.
+
+**Soluciones validadas.** H31 (`223acbe`) convierte solo instantes a Lima, respeta fechas civiles y banderas, cuenta notas únicas y muestra primer/último registro con N de M. H32 (`e8cdbde`) pasa 180 s solo al maestro de evaluación. Regresiones fallaron antes; 26/26 relacionadas + typecheck/lint/build PASS. Descarga real diagnóstica después: 27 notas únicas, sin áreas desactivadas, sin placeholders; XML verificado, render visual NO PROBADO por ausencia de LibreOffice. El reintento UI produjo un marco de seis competencias, sin niveles ni actuaciones inventadas, luego guardado y confirmado por docente. El intento fallido sin usage conserva costo desconocido.
+
+**Prevención.** Distinguir instante y fecha civil; contar entidades por ID y asociaciones por competencia. Asignar timeout según duración del workflow, no heredar el de clasificación en maestros largos. No alterar snapshots históricos para hacerlos coincidir con decisiones posteriores.
+
 ## 2026-09-27 Confirmar par diario bloqueado por orden JSONB (H26)
 
 **Síntoma.** Actividad+taller guardados mantenían «Guarda los cambios» y confirmación deshabilitada.
@@ -806,3 +830,27 @@ La revisión del corpus completo detectó además dos resúmenes de fuentes de l
 ## 2026-09-28 — Criterio de otra competencia al confirmar actividad con dos competencias
 
 Síntoma: guardar evidencia falla porque actividad principal y criterio heredado tienen IDs diferentes. Causa: mapa mezcla primer elemento de `competency_ids` con `criterion_competency_id`. Solución: principal canónica del mapa deriva del criterio; herencia respeta el ID visible confirmado de la actividad. Recuperación docente explícita confirma un criterio alineado y archiva el incompatible solo si no tiene evidencias. Se preservan IDs, notas e históricos. Validación: 27/27 relacionadas, typecheck/lint/build; UI pendiente en H30 del registro de correcciones. Prevención: regresiones de mapa con dos IDs y persistencia SQL, no solo casos monocompetencia.
+
+## 2026-09-28 — Corrección docente de valoración confirmada inaccesible
+
+Síntoma: el campo de análisis confirmado permitía escribir pero no ofrecía guardar una revisión. Causa: la UI ocultaba las acciones ante cualquier nivel previo; el modelo priorizaba la valoración activa sobre un nuevo borrador. Solución: iniciar revisión por el endpoint existente, campo confirmado solo lectura, borrador prioritario, huella/progreso sensibles a revisión y conclusiones bloqueadas hasta reconfirmar. Historial anterior conservado/archivado, no reescrito. Validación: dos regresiones antes fallidas; 29/29 relacionadas y typecheck/lint/build PASS. Prevención: probar corregir interpretación sin cambiar evidencias, no solo evidencias nuevas. UI en H41 del registro E2E.
+
+## 2026-09-28 — Feedback para planificar omite niveles y competencias valoradas
+
+Síntoma: Evaluar contiene necesidad mayoritaria B y fortalezas A, pero Planificar solo muestra ausencias y cinco competencias iniciales. Causa: agregación por coincidencia literal de frases de IA y truncamiento posicional; decisiones manuales no aportaban arrays. Solución: distribución docente determinista, pendientes y registros reales del período, competencias valoradas primero y sin recorte arbitrario; una necesidad individual no se generaliza. 26/26 relacionadas y typecheck/lint/build PASS. Prevención: comprobar integración de decisiones manuales y fortalezas fuera de primeros IDs. UI en H40 E2E.
+
+## 2026-09-28 — Nombres de compañeros en copia de evaluación para proveedor
+
+Síntoma: conclusión e informe familiar repiten un nombre de compañero citado en los registros. Causa: sanitización conocía solo al niño evaluado. Solución: tras autorización, obtener nombres del mismo aula y neutralizarlos en copia para assessment/conclusión/familia, incluidas variantes sin tildes. No se reescriben fuentes ni historial. Regresiones con SQL y nombres de pares: 56/56 relacionadas, 3/3 focales finales, typecheck/lint/build PASS. Prevención: incluir compañeros en pruebas de privacidad; no afirmar anonimización universal de nombres desconocidos. UI en H43 E2E.
+
+## 2026-09-28 — El nuevo flujo de proyecto/unidad ignoraba las evaluaciones elegidas
+
+Síntoma: resumen P1 visible y opt-in marcado, pero preview P2 solo describe el diagnóstico inicial. Causa: el componente nuevo y sus tres rutas no transportaban/cargaban el período, a diferencia del flujo legado. Solución localizada: opt-in explícito, autorización de período en servidor, snapshot agregado conservado entre preview/decisiones/master e instrucciones que distinguen datos actuales del diagnóstico. Un preview sin decisiones puede actualizarse por UI y revisión optimista; un mapa/confirmado no se borra. Validación inicial: 4 regresiones rojas, 19/19 relacionadas verdes, typecheck/build PASS; logs y repetición UI en H45. Prevención: probar el input del proveedor desde el flujo actualmente visible, no solo el resumen agregado o el generador legado.
+
+## 2026-09-28 — Captura de evidencia con pie fuera de pantalla
+
+Síntoma: criterio extenso deja los botones fuera del viewport y el cuerpo no se desplaza. Causa: diálogo sin altura máxima ni scroll interno. Solución: flex, máximo 90dvh, cuerpo desplazable y cabecera/pie no contraíbles. 22/22 relacionadas, typecheck/lint/build PASS; guardado real por clic en QA. Prevención: probar criterios completos, no solo una línea. H46, commit 5d98048.
+
+## 2026-09-28 — Evidencia capturada al alumno equivocado sin recuperación por UI
+
+Síntoma: cuatro notas QA de la captura automatizada quedaron asociadas a la selección anterior. Causa de esa selección no reproducida; limitación confirmada: ninguna acción de corregir alumno. Solución mínima: reasociación docente de notas sin media/sin evaluación afectada, misma aula y propiedad verificadas, motivo e historial, revisión optimista/bloqueo de período y refresco de ambos contextos. 25/25 relacionadas, typecheck repetido/lint/build PASS; cuatro correcciones UI y conciliación 10/10. Prevención: conciliar alumno-texto-fecha después de captura, no solo contar filas; no corregir QA con SQL. H47, commit 919e381.

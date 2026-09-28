@@ -1,0 +1,27 @@
+// Reconciliación de solo lectura del XLSX descargado desde UI.
+import {readFile,writeFile} from 'node:fs/promises';
+import assert from 'node:assert/strict';
+import JSZip from 'jszip';
+const root=new URL('./evidencias/',import.meta.url);
+const period=(process.argv[2]??'P1').toUpperCase();
+const periods={P1:'3dbda539-cbfc-48bf-ab69-e44a912b7690',P2:'1842201e-7fb9-480f-a891-c789b17d4a1c',P3:'b80c5a4b-a0ed-4626-be28-ef68ba6a4c07',P4:'4392a3c5-ca59-42f7-954b-48975cb35a6e'};
+assert.ok(periods[period],'Período QA explícito');
+const filename=`consolidado-${period.toLowerCase()}-confirmado.xlsx`;
+const file=new URL(filename,root);
+const zip=await JSZip.loadAsync(await readFile(file));
+const xml=await zip.file('xl/worksheets/sheet1.xml').async('string');
+const decode=text=>text.replaceAll('&amp;','&').replaceAll('&lt;','<').replaceAll('&gt;','>').replaceAll('&quot;','"');
+const sheetRows=[...xml.matchAll(/<row\b[^>]*>(.*?)<\/row>/gs)].map(match=>[...match[1].matchAll(/<t\b[^>]*>(.*?)<\/t>/gs)].map(cell=>decode(cell[1])));
+assert.deepEqual(sheetRows[0],['Alumno','Competencia','Valoración','Conclusión descriptiva','Período']);
+const response=await fetch(`http://127.0.0.1:8790/api/period-evaluations/consolidated?classroomId=cda4ce72-78a6-4b39-a680-b7811fe8a605&periodId=${periods[period]}`);
+assert.equal(response.status,200);
+const data=await response.json();
+const sourceRows=data.rows.map(row=>[row.student_name,row.competency_name,row.achievement_level??'',row.conclusion??'',row.period_label??'']);
+assert.deepEqual(sheetRows.slice(1),sourceRows,'El archivo coincide celda por celda con la proyección confirmada');
+const levels={AD:0,A:0,B:0,C:0,pending:0};
+for(const row of sheetRows.slice(1)) levels[row[2]||'pending']++;
+if(period==='P1')assert.deepEqual(levels,{AD:0,A:5,B:11,C:0,pending:134});
+assert.equal(Object.values(levels).reduce((sum,n)=>sum+n,0),sourceRows.length);
+const summary={period,file:filename,rows:sourceRows.length,students:new Set(sourceRows.map(row=>row[0])).size,competencies:new Set(sourceRows.map(row=>row[1])).size,levels,confirmedConclusions:sourceRows.filter(row=>row[3]).length,cellByCellReconciliation:'PASS',originalBlankCellsPreserved:true,visualRender:'NO PROBADO'};
+await writeFile(new URL(`consolidado-${period.toLowerCase()}-inspect.json`,root),JSON.stringify(summary,null,2));
+console.log(JSON.stringify(summary,null,2));

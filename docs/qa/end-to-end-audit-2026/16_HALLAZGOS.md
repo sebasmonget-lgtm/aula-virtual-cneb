@@ -1,5 +1,40 @@
 # Hallazgos de la auditoría
 
+## Corte final después de P4
+
+H34 sigue siendo el bloqueo del objetivo anual: el ámbito confirmado de P4 fue 8 competencias × 15 niños = 120 pares; se confirmaron 5 valoraciones y conclusiones, quedaron 115 pendientes y `Cerrar período` permaneció deshabilitado. También faltan cierres P1–P3. El producto no ofrece aún una resolución terminal auditable de «información insuficiente» que permita distinguirla de C sin afirmar un nivel. No se fabricó esa decisión ni se redujo el ámbito para obtener un PASS. H44 (fecha cliente septiembre frente a reloj QA diciembre) y H48 (navegación durante confirmación) siguen abiertos, con workaround de selección/espera explícitos.
+
+**H49 — Rechazo recuperable de dos informes familiares P4 (MEDIUM, confiabilidad/costo).** Para Alma y Omar, el primer intento real de generar informe devolvió `family_report_schema_mismatch`, sin informe guardado. El segundo intento por UI fue aceptado, revisado, confirmado y descargado como Word en cada caso. Las cuatro invocaciones figuran en el ledger, aunque solo dos salidas fueron finales. La causa exacta dentro del validador no puede atribuirse a un campo sin la salida rechazada; el comportamiento comprobado es que la validación estricta impidió guardar una propuesta inválida. No se relajó el contrato ni se insertó texto manual para simular éxito. Recomendación: telemetría segura del código de subregla, regresión con muestras anonimizadas y reparación acotada bajo el mismo validador, midiendo costo por informe exitoso. No guardar prompts/respuestas con datos de menores por defecto.
+
+P1–P4 reúnen **138 evidencias ordinarias**, nueve informes familiares confirmados y cuatro Excel comprobados; la muestra de Jev directo fue diagnóstica, no una validación contextual de las 138 notas de actividad. Los 187 eventos de uso registrados suman USD 1.372454652 mixtos; los dos timeouts sin `usage` mantienen cargo desconocido. La suite H47 de 495 pruebas y typecheck/lint/build PASS no cambia el veredicto de cierre anual incompleto. Detalle reproducible en 15, 18 y 19.
+
+## Estado de correcciones en la continuación
+
+H08: reproducido → contrato/UPDATE idempotente → 63 relacionadas → mismo preplan confirmado por UI PASS (`60210c3`). H21: schema/prompt alineados → formal generado y Word real inspeccionado en XML (`87e0d32`), render visual NO PROBADO. H22: comparación de valores JSONB → preguntas visibles (`06f9c20`). H23: cast UUID → ocho días confirmados (`0a19612`). Los registros originales de abajo son BEFORE, no el estado vigente de estos arreglos.
+
+| Hallazgos corregidos | Resultado posterior y commits locales |
+| --- | --- |
+| H18/H19 | Fecha controlada Lima e import/export del ledger; `493e2c2`, `59fcd26` |
+| H24/H25/H26/H28 | Fecha de actividad, taller, snapshot y criterio de día persistidos; `a4d2d48`, `267a290`, `cae3770`, `82b2379` |
+| H29/H32 | Timeout acotado de maestros; propuestas reales obtenidas; `c946724`, `e8cdbde` |
+| H30 | Recuperación de criterio primario confirmado; evidencia curricular vuelve a capturarse sin forzar criterios secundarios; `18c24f5` |
+| H31 (H11/H12/H16) | Word diagnóstico con alcance, notas únicas, aplicabilidad y fechas Lima; `223acbe`. Inspección de contenido, no paginación |
+| H35/H36/H37 | Frescura del marco, fecha civil, confirmación de snapshot JSONB; `551409f`, `ebaec81`, `e949f54` |
+| H39/H41 | Falso rechazo de preposición «A» y revisión docente versionada; `c6921bb`, `24afe53` |
+| H40 | Agregados diferenciados de confirmadas/pendientes/antecedentes; Excel P1/P2 conciliados; `1c8d536`, `d7d78f2` |
+| H43 | Minimización de nombres conocidos de compañeros antes de IA; `1a05025`. No certifica anonimización universal |
+| H45 | Resultados confirmados del período seleccionado en contexto de proyecto/unidad por opt-in; `c16c5af` |
+| H46 | Diálogo de evidencia con pie visible/área desplazable; `5d98048`. Móvil no revalidado |
+| H47 | Corrección auditada de alumno de evidencia por UI; cuatro notas reconciliadas antes de valorar; `919e381` |
+
+Suite integrada posterior H47: **104 archivos, 495 PASS, cero FAIL/skip**, más dos tests del reloj QA. Typecheck/lint/build PASS. Cada causa, permiso, rollback, prueba y resultado UI se detalla en el registro 18; no se atribuye un PASS UI a tests aislados.
+
+H34 permanece HIGH: cierre exige letras/conclusiones para parejas sin información suficiente y no ofrece decisión terminal responsable de insuficiencia. No se forzaron C ni se excluyeron competencias previstas para obtener cierre. El reajuste formal y cierre anual no se certifican; sí continúa la planificación por snapshot parcial explícito. H48 es una carrera al navegar durante confirmación: guardas impiden mostrar/escribir detalle de otro niño, pero deja formulario vacío hasta reseleccionar; documentado, no refactorizado por no bloquear con espera del estado confirmado.
+
+H09 se reevaluó: los talleres subordinados a experiencia funcionan y producen evidencia; no se abrió una arquitectura de taller autónomo sin decisión de producto. H01/H03/H04/H05/H07/H10/H13/H14/H15/H17 y la mezcla de relojes H44 conservan limitaciones descritas; abrir módulos posteriores no prueba que esas limitaciones desaparecieron.
+
+## Registro histórico antes de los fixes
+
 Registro final. Solo se consideran comprobados los pasos ejecutados; se distingue causa reproducida de hipótesis. No se implementaron arreglos. Los hallazgos de tests no se presentan como acciones pedagógicas fallidas en la UI.
 
 ## H01 Respuesta de entrevista perdida al volver

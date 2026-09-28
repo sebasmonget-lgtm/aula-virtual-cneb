@@ -1,0 +1,90 @@
+[
+  {
+    "student": "Alma Carrasco",
+    "competency": "PS_CONVIVE",
+    "level": "B",
+    "analysis": "El 15/4 Alma necesitó la secuencia visual para organizar su turno con los vasos. El 21/4 consultó las tarjetas y explicó por qué no debía regar el vaso seco para conservar la comparación; aún requirió un recordatorio para prestar materiales. Hay avance en el cuidado común, con apoyo para sostener acuerdos de reparto.",
+    "observed_ready_at": "2026-09-28T05:38:33.817Z",
+    "confirmed": true
+  },
+  {
+    "student": "Camila Huamán",
+    "competency": "PS_CONVIVE",
+    "level": "B",
+    "analysis": "El 1/4 Camila propuso tres telas para tres participantes tras una pregunta de la docente. El 15/4 protestó inicialmente por el reparto del algodón y aceptó alternar con mediación. Participa en acuerdos con preguntas y apoyo; no hay autonomía estable registrada ante nuevas necesidades.",
+    "observed_ready_at": "2026-09-28T05:38:36.191Z",
+    "confirmed": true
+  },
+  {
+    "student": "Diego Montalvo",
+    "competency": "PS_CONVIVE",
+    "level": "B",
+    "analysis": "El 1/4 Diego esperó con tarjeta de turno. El 7/4 volvió a tomar materiales antes de tiempo cuando la tarjeta no estaba visible; el 15/4 necesitó la secuencia visual para pasar la jarra. Los apoyos facilitan su participación y conviene sostenerlos mientras prueba acuerdos en nuevas situaciones.",
+    "observed_ready_at": "2026-09-28T05:38:38.565Z",
+    "confirmed": true
+  },
+  {
+    "student": "Elena Paredes",
+    "competency": "PS_CONVIVE",
+    "level": "B",
+    "analysis": "El 1/4 Elena organizó cestas y escuchó a su compañero sin ayuda. El 15/4 quiso usar toda la tierra y necesitó mediación para escuchar y compartir. Conservo ambas actuaciones: muestra iniciativas de organización, pero el acuerdo se sostiene de manera diferente según la situación.",
+    "observed_ready_at": "2026-09-28T05:38:41.016Z",
+    "confirmed": true
+  },
+  {
+    "student": "Fabio Medina",
+    "competency": "PS_CONVIVE",
+    "level": "B",
+    "analysis": "El 7/4 Fabio tomó materiales y necesitó mediación para compartir. El 21/4 pidió regar todo y retuvo regadera y palos; con opciones eligió esperar que Hugo terminara y entregó materiales después de un recordatorio. Participa con apoyo y necesita otras oportunidades de acordar y sostener turnos.",
+    "observed_ready_at": "2026-09-28T05:38:43.030Z",
+    "confirmed": true
+  },
+  {
+    "student": "Gabriela Ríos",
+    "competency": "PS_CONVIVE",
+    "level": "B",
+    "analysis": "El 7/4 Gabriela compartió tras un recordatorio, pero en un juego nuevo volvió a retener materiales. El 21/4 propuso sostener el vaso y registrar para que no se cayera, escuchó a Camila y alternó sin aviso. Hay un avance contextual reciente que todavía debe contrastarse en otras oportunidades.",
+    "observed_ready_at": "2026-09-28T05:38:45.052Z",
+    "confirmed": true
+  },
+  {
+    "student": "Hugo Benavides",
+    "competency": "PS_CONVIVE",
+    "level": "B",
+    "analysis": "El 7/4 Hugo quiso todas las telas y compartió con recordatorio, volviendo a tomarlas después. El 21/4 devolvió la regadera al consultar la tarjeta y explicó que los demás también necesitaban turno, pero precisó nuevos recordatorios. Reconoce la finalidad del acuerdo con apoyos; aún no lo sostiene de manera consistente.",
+    "observed_ready_at": "2026-09-28T05:38:46.988Z",
+    "confirmed": true
+  },
+  {
+    "student": "Joaquín Arce",
+    "competency": "PS_CONVIVE",
+    "level": "B",
+    "analysis": "El 7/4 Joaquín insistió en ser primero y necesitó que repitieran el acuerdo. El 15/4 compartió la cuchara y aceptó turnos sin aviso. Hay un avance de una situación a otra, sin suficiente variedad posterior para afirmar que aplica autónomamente todo acuerdo nuevo.",
+    "observed_ready_at": "2026-09-28T05:38:49.019Z",
+    "confirmed": true
+  },
+  {
+    "student": "Kiara Ledesma",
+    "competency": "PS_CONVIVE",
+    "level": "A",
+    "analysis": "El 1/4 Kiara compartió telas y sostuvo el acuerdo sin recordatorio. El 21/4 explicó por qué no debían variar el agua de la comparación, se apoyó en el dibujo, propuso tareas en parejas y aceptó la elección de Gabriela. Dos registros detallados en contextos distintos sustentan los criterios trabajados; seguiremos ampliando oportunidades.",
+    "observed_ready_at": "2026-09-28T05:38:50.972Z",
+    "confirmed": true
+  },
+  {
+    "student": "Inés Ventura",
+    "competency": "PS_CONVIVE",
+    "level": "A",
+    "analysis": "El 7/4 Inés adaptó el reparto de bloques y escuchó a Kiara sin mediación. El 21/4 propuso llevar el registro sin mover el vaso para conservar la comparación, escuchó y acordó con otros. Sus acciones responden a necesidades reales de reparto y cuidado común en dos contextos documentados.",
+    "observed_ready_at": "2026-09-28T05:38:52.957Z",
+    "confirmed": true
+  },
+  {
+    "student": "Thiago Reátegui",
+    "competency": "PS_CONVIVE",
+    "level": "B",
+    "analysis": "El 7/4 Thiago retuvo cuatro bloques frente a uno de su compañero y necesitó mediación para revisar el reparto. El 15/4 organizó vasos y algodón y aceptó turnos sin aviso. Hay avance contextual, pero no se presume convivencia autónoma por su fortaleza en cantidad.",
+    "observed_ready_at": "2026-09-28T05:38:55.043Z",
+    "confirmed": true
+  }
+]

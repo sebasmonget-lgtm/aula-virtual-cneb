@@ -1,5 +1,57 @@
 # Costos: prueba observada y escenarios anuales
 
+## Corte final P1–P4: gasto observado, no factura
+
+El ledger acumulado tiene **187 invocaciones facturables registradas**: 49 originales BEFORE, preservadas con el mismo contenido y orden, y 138 posteriores. Total mixto **USD 1.372454652**: **USD 0.006984432** de costos de generación informados por OpenRouter (Jev) y **USD 1.365470220** calculados a partir de tokens reales y tarifas registradas para OpenAI. No hubo eventos registrados sin precio. **Dos timeouts anteriores sin `usage` mantienen un posible cargo desconocido**; no se tratan como gratuitos. Tampoco existe conciliación con facturas, impuestos, recarga o créditos de las cuentas.
+
+Hubo 13 invocaciones de informe familiar para 9 informes finales; cuatro propuestas rechazadas se pagaron igualmente. Los dos primeros intentos P4 (Alma y Omar) terminaron en `family_report_schema_mismatch`; el segundo intento de cada uno se confirmó. Este promedio de invocaciones incluye rechazos, pero **no** asegura una tasa futura de reintentos. La muestra no ejecutó transcripción de audio, reescritura de notas ni informe narrativo del aula.
+
+La siguiente tabla sustituye **solo las medias unitarias** históricas con medidas de esta auditoría. El volumen anual sigue siendo una hipótesis para una profesora/15 niños. Los importes de «anual realista» multiplican media × usos supuestos × 1.20 llamadas textuales/decisiones (20% adicional); no se multiplica audio. `Jev observación` tiene unidad **par de llamadas por nota**: 46 llamadas para 23 notas diagnósticas, sin prueba de clasificación con contexto de actividad.
+
+| Función | Invocaciones observadas | USD por invocación/salida base | Usos/año realista supuestos | USD/año con 20% adicional |
+| --- | ---: | ---: | ---: | ---: |
+| Síntesis diagnóstica | 1 | 0.012224 | 1 | 0.0147 |
+| Prioridades | 1 | 0.009980 | 1 | 0.0120 |
+| Preplan anual | 1 | 0.058488 | 1 | 0.0702 |
+| Desarrollo formal anual | 2 | 0.044380 | 1 | 0.0533 |
+| Proyecto/unidad: contexto | 8 | 0.019592 | 16 | 0.3762 |
+| Proyecto/unidad: preguntas y criterios | 6 | 0.019239 | 16 | 0.3694 |
+| Proyecto/unidad: mapa maestro | 5 | 0.061433 | 16 | 1.1795 |
+| Proyecto/unidad: documento | 2 | 0.031237 | 16 | 0.5998 |
+| Jev, imagen de proyecto | 5 | 0.0000384 | 16 | 0.0007 |
+| Actividad | 20 | 0.001471 | 150 | 0.2649 |
+| Maestro de talleres | 2 | 0.034728 | 12 | 0.5001 |
+| Taller del día | 4 | 0.000731 | 120 | 0.1052 |
+| Jev, ficha de taller | 1 | 0.0000616 | 120 | 0.0089 |
+| Marco de evaluación | 5 | 0.066248 | 4 | 0.3180 |
+| Assessment alumno–competencia | 22 | 0.001227 | 480 | 0.7069 |
+| Conclusión descriptiva | 42 | 0.001619 | 480 | 0.9323 |
+| Informe familiar | 13 | 0.000791 | 60 | 0.0570 |
+| Jev observación híbrida, dos llamadas/nota | 46 llamadas/23 notas | 0.0002926/nota | 900 notas | 0.3161 |
+| Informe del aula — **no medido** | 0 | 0.038 supuesto | 4 | 0.1824 |
+| Reescritura — **no medida** | 0 | 0.0004 supuesto | 180 | 0.0864 |
+| Reajuste, consolidado y descarga (código) | 0 | 0 adicional de IA | 4 | 0 |
+
+El uso de una media de **llamada** para 60 informes, más 20% extra, no implica 60 informes confirmados; el caso P4 demuestra por qué deben medirse intentos y resultados por separado. Los precios unitarios de Jev y fichas son muestras muy pequeñas, no límites de costo.
+
+| Escenario hipotético para 15 alumnos | Bajo | Realista | Intensivo |
+| --- | ---: | ---: | ---: |
+| Texto/decisiones, incluidos extras supuestos | $3.2072 | $6.1537 | $14.4497 |
+| Audio aproximado, **sin uso real observado** | $0.54 | $1.80 | $4.50 |
+| **Total API anual por profesora/aula** | **$3.7472** | **$7.9537** | **$18.9497** |
+| Mensual en 10 meses lectivos | $0.3747 | $0.7954 | $1.8950 |
+| Anual por alumno | $0.2498 | $0.5302 | $1.2633 |
+
+Fuente reproducible: `llamadas-ia-continuacion.json` y `evidencias/cost-scenarios-after.json`, calculados por `audit-costs-continue.mjs` y `audit-scenarios-continue.mjs`. Son **costos API proyectados**, no gasto real anual ni precio del producto. No incluyen infraestructura, almacenamiento, soporte, impuestos, comisiones, margen, variación de tarifa ni cambios de divisa. El escenario «realista» conserva volúmenes decididos **antes** de medir el recorrido; no es una muestra estadística de docentes.
+
+## Ledger acumulativo: checkpoint intermedio histórico
+
+Las 49 filas originales de `llamadas-ia.json`/`costos.csv` no se sobrescriben. `audit-costs-continue.mjs` añade por ID a `llamadas-ia-continuacion.json`, verifica que el prefijo histórico es idéntico y rechaza omisiones/duplicados. Conserva intento formal rechazado y reintento exitoso. Añade acción/período cuando la UI permite correlacionar, sin inventar intentos internos del proveedor.
+
+Corte provisional 04:11:56 UTC (27/09 en Lima): 53 llamadas, USD 0.213085552 mixtos; USD 0.006730752 reportados por OpenRouter y USD 0.2063548 estimados por tarifas sobre uso OpenAI. Nuevas funciones entonces: formal anual, 2 llamadas / USD 0.0887608 (incluye rechazo); contexto de proyecto, 1 / USD 0.017626; preguntas/criterios, 1 / USD 0.019276. No equivale a factura reconciliada. El **corte final de arriba**, no este checkpoint, incluye Masters y funciones siguientes; los escenarios de abajo son hipótesis BEFORE, no la estimación recalibrada.
+
+## Medición y escenarios históricos antes del fix
+
 Moneda USD. Fecha de tarifas 27/09/2026. NO son precio de venta ni costo total de operación. El ciclo anual no se completó; las proyecciones son un modelo de supuestos, no un año medido.
 
 ## 1. Gasto registrado durante esta auditoría

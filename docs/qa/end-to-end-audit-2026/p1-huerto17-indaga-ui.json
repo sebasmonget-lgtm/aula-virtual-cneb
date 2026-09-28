@@ -1,0 +1,30 @@
+{
+  "business_day": "2026-04-17",
+  "cases": [
+    [
+      "Inés",
+      "Puso su dibujo del día 15 junto al vaso: antes semilla lisa, hoy con una abertura y punta blanca. Señaló ambas y dijo «con agua se abrió; sin agua lo veo igual». Dibujó la punta sin decir todavía que todas crecerán."
+    ],
+    [
+      "Thiago",
+      "Miró los dos vasos y el registro inicial. Dijo que en algodón ve una punta pero en tierra no sabe porque está tapada. Propuso seguir mirando, no sacar la semilla."
+    ],
+    [
+      "Mateo",
+      "En pareja comparó la tarjeta de su vaso con el de hoy: señaló «igual» en el vaso sin agua y dibujó una raya en el de algodón húmedo. Explicó «aqui blanco» con apoyo de pregunta."
+    ],
+    [
+      "Camila",
+      "Vio una punta blanca y dijo «ya salió». Con el dibujo inicial señaló que antes no estaba. Dibujó la diferencia, aunque no relacionó todavía las condiciones."
+    ],
+    [
+      "Valeria",
+      "Primero dijo «creció todo». Al acercarse a cada vaso y mirar el dibujo precisó que uno tiene punta blanca y el otro parece igual. Necesitó preguntas para comparar ambos momentos."
+    ],
+    [
+      "Alma",
+      "Dijo «no cambia este» y señaló la semilla seca; buscó el dibujo inicial para mostrar que sigue igual. No explicó aún por qué."
+    ]
+  ],
+  "method": "UI"
+}
