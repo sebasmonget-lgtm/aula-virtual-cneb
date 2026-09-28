@@ -45,3 +45,54 @@ test("el informe unificado conserva nombres autorizados, evidencia factual e inf
   assert.match(optionalXml, /Eligió materiales/);
   assert.doesNotMatch(optionalXml, /2 comentarios individuales confirmados|Ana explicó cómo organizó/);
 });
+
+test("diagnóstico exportado respeta Lima, notas únicas y áreas no aplicables", async () => {
+  const cards = [
+    ["PS_IDENTIDAD", "Construye su identidad"], ["PS_CONVIVE", "Convive"],
+    ["PS_RELIGION", "Educación religiosa no aplicable"], ["CAST_L2_ORAL", "Castellano segunda lengua no aplicable"],
+  ].map(([id, name]) => ({ id, name }));
+  const snapshot = { version: "diagnostic-unified-v1", religion_applicable: false, castellano_l2_applicable: false,
+    children: [{ student_id: id(1), name: "Ana Pérez", information_status: "information_available" }],
+    observations: [
+      { id: id(3), student_id: id(1), competency_id: "PS_IDENTIDAD", observed_at: "2026-03-20T02:30:00.000Z", observation_text: "Eligió materiales." },
+      { id: id(3), student_id: id(1), competency_id: "PS_CONVIVE", observed_at: "2026-03-20T02:30:00.000Z", observation_text: "Eligió materiales." },
+    ], competency_coverage: [] };
+  const document = { school_year: 2026, content: { document_format: "diagnostic-unified-v1", report_snapshot: snapshot } };
+  const context = { school_year: 2026, institution_name: "Jardín Sol", teacher_name: "Marisol", age: 5, classroom: "Amarilla" };
+  const xmlOf = async () => (await JSZip.loadAsync(await renderDiagnosticUnifiedWord(document, context, cards))).file("word/document.xml").async("string");
+  const textOf = (xml) => xml.replace(/<[^>]*>/g, "");
+  const text = textOf(await xmlOf());
+  assert.match(text, /19\/03\/2026/);
+  assert.doesNotMatch(text, /20\/03\/2026/);
+  assert.match(text, /1 registro de observación incluidos en este corte/);
+  assert.doesNotMatch(text, /2 registros de observación incluidos/);
+  assert.doesNotMatch(text, /Educación religiosa no aplicable|Castellano segunda lengua no aplicable/);
+  snapshot.observations[0].observed_at = "2026-03-20";
+  snapshot.observations[1].observed_at = "2026-03-20";
+  assert.match(textOf(await xmlOf()), /20\/03\/2026/);
+  snapshot.religion_applicable = true;
+  snapshot.castellano_l2_applicable = true;
+  const enabled = textOf(await xmlOf());
+  assert.match(enabled, /Educación religiosa no aplicable/);
+  assert.match(enabled, /Castellano segunda lengua no aplicable/);
+});
+
+test("seguimiento nominal conserva primer y último registro distinto, no duplicados de competencias", async () => {
+  const snapshot = { version: "diagnostic-unified-v1", religion_applicable: false, castellano_l2_applicable: false,
+    children: [{ student_id: id(1), name: "Ana Pérez", information_status: "information_available" }],
+    observations: [
+      { id: id(5), student_id: id(1), competency_id: "PS_IDENTIDAD", observed_at: "2026-03-22", observation_text: "Último: ahora espera sin recordatorio." },
+      { id: id(3), student_id: id(1), competency_id: "PS_IDENTIDAD", observed_at: "2026-03-20", observation_text: "Primero: pide ayuda para esperar." },
+      { id: id(3), student_id: id(1), competency_id: "PS_CONVIVE", observed_at: "2026-03-20", observation_text: "Primero: pide ayuda para esperar." },
+      { id: id(4), student_id: id(1), competency_id: "PS_IDENTIDAD", observed_at: "2026-03-21", observation_text: "Intermedio: usa tarjeta." },
+    ], competency_coverage: [] };
+  const document = { school_year: 2026, content: { document_format: "diagnostic-unified-v1", report_snapshot: snapshot } };
+  const zip = await JSZip.loadAsync(await renderDiagnosticUnifiedWord(document, { school_year: 2026, age: 5 },
+    [{ id: "PS_IDENTIDAD", name: "Identidad" }, { id: "PS_CONVIVE", name: "Convive" }]));
+  const text = (await zip.file("word/document.xml").async("string")).replace(/<[^>]*>/g, "");
+  const nominal = text.slice(text.indexOf("En el aula:"));
+  assert.match(nominal, /Primero: pide ayuda/);
+  assert.match(nominal, /Último: ahora espera/);
+  assert.match(nominal, /2 de 3 registros/);
+  assert.doesNotMatch(nominal, /Intermedio: usa tarjeta/);
+});

@@ -15,6 +15,28 @@ const dateLabel = (value) => /^\d{4}-\d{2}-\d{2}/.test(String(value ?? ""))
   ? `${String(value).slice(8, 10)}/${String(value).slice(5, 7)}/${String(value).slice(0, 4)}` : "";
 const countLabel = (count, one, many) => `${count} ${count === 1 ? one : many}`;
 
+// Civil dates are already local. Instants must be projected into the school's
+// time zone before being used as calendar dates in a teacher-facing document.
+function observedDay(value) {
+  const raw = String(value ?? "");
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+  const instant = new Date(raw);
+  if (!raw || Number.isNaN(instant.getTime())) return "";
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Lima", year: "numeric", month: "2-digit", day: "2-digit" }).format(instant);
+}
+
+function uniqueObservations(observations) {
+  const seen = new Set();
+  return observations.filter((item) => {
+    // Legacy snapshots without IDs must not collapse unrelated equal text.
+    if (!item.id) return true;
+    const key = `${item.student_id}:${item.source_type ?? ""}:${item.id}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 function snapshotOf(document) {
   const snapshot = document?.content?.report_snapshot;
   if (document?.content?.document_format !== "diagnostic-unified-v1" || snapshot?.version !== "diagnostic-unified-v1" ||
@@ -50,10 +72,11 @@ function valuesFor(document, context, cards) {
   const snapshot = snapshotOf(document);
   const group = document.content;
   const observations = snapshot.observations;
+  const records = uniqueObservations(observations);
   const children = snapshot.children;
   const commentCount = children.filter((child) => clean(child.teacher_comment)).length;
   const observedIds = new Set(observations.map((item) => item.student_id));
-  const dates = observations.map((item) => String(item.observed_at ?? "").slice(0, 10)).filter((item) => /^\d{4}-\d{2}-\d{2}$/.test(item)).sort();
+  const dates = records.map((item) => observedDay(item.observed_at)).filter(Boolean).sort();
   const observedFrom = dateLabel(dates[0]);
   const observedTo = dateLabel(dates.at(-1));
   const needs = clean(group.needs);
@@ -61,7 +84,8 @@ function valuesFor(document, context, cards) {
   const priorities = clean(group.planning_priorities);
   const reportedInterests = [...new Set(children.map((child) => clean(child.family_context?.interests)).filter(Boolean))].slice(0, 4);
   const reportedLanguages = [...new Set(children.map((child) => clean(child.family_context?.language_context)).filter(Boolean))].slice(0, 4);
-  const missing = competencyFields.filter(([id]) => !observations.some((item) => item.competency_id === id))
+  const missing = competencyFields.filter(([id]) => (id !== "PS_RELIGION" || snapshot.religion_applicable) &&
+    (id !== "CAST_L2_ORAL" || snapshot.castellano_l2_applicable) && !observations.some((item) => item.competency_id === id))
     .map(([id]) => cards.find((card) => card.id === id)?.name || cards.find((card) => card.id === id)?.official_name)
     .filter(Boolean).slice(0, 4);
   const values = {
@@ -75,7 +99,7 @@ function valuesFor(document, context, cards) {
     N_ESTUDIANTES: String(children.length),
     N_OBSERVADOS: String(observedIds.size),
     N_ENTREVISTAS_COMPLETADAS: String(children.filter((item) => item.has_confirmed_interview).length),
-    N_EVIDENCIAS_REVISADAS: String(observations.length),
+    N_EVIDENCIAS_REVISADAS: String(records.length),
     PROPOSITO_DIAGNOSTICO: "Conocer cómo inicia el grupo para decidir cómo acompañar sus aprendizajes.",
     CONTEXTO_PERIODO_DIAGNOSTICO: dates.length
       ? `Se revisaron registros del ${observedFrom} al ${observedTo}${commentCount ? " y los comentarios confirmados de la docente" : ""}.`
@@ -83,7 +107,7 @@ function valuesFor(document, context, cards) {
     FOCOS_DIAGNOSTICOS: "El juego, la expresión, la convivencia, la exploración y las necesidades que aparecen en el aula.",
     CONDICIONES_RECOJO: "Las entrevistas describen el contexto familiar. Las observaciones docentes muestran lo ocurrido en el aula; una ausencia de registro no indica una dificultad.",
     ESTADO_ENTREV: `${children.filter((item) => item.has_confirmed_interview).length} de ${children.length} entrevistas confirmadas`,
-    ESTADO_OBS: `${countLabel(observations.length, "registro", "registros")} de ${countLabel(observedIds.size, "niño", "niños")}`,
+    ESTADO_OBS: `${countLabel(records.length, "registro", "registros")} de ${countLabel(observedIds.size, "niño", "niños")}`,
     ESTADO_DOC: `${countLabel(commentCount, "comentario individual confirmado", "comentarios individuales confirmados")} por la docente`,
     ESTADO_PORT: "Producciones y portafolio: consultar los registros disponibles en Ayni.",
     INFORMACION_PENDIENTE: children.length > observedIds.size
@@ -107,7 +131,7 @@ function valuesFor(document, context, cards) {
     CONCLUSION_DIAGNOSTICA_GRUPAL: [strengths && `Fortalezas: ${strengths}`, needs && `Oportunidades para acompañar: ${needs}`,
       priorities && `Primeras decisiones: ${priorities}`, "El diagnóstico se actualizará con nuevas observaciones."].filter(Boolean).join(" "),
     REFERENCIA_ENTREVISTAS: `${children.filter((item) => item.has_confirmed_interview).length} entrevistas confirmadas en Ayni Aula.`,
-    REFERENCIA_OBSERVACIONES: `${countLabel(observations.length, "registro", "registros")} de observación incluidos en este corte.`,
+    REFERENCIA_OBSERVACIONES: `${countLabel(records.length, "registro", "registros")} de observación incluidos en este corte.`,
     REFERENCIA_PORTAFOLIO: "Consultar el portafolio del aula si existen producciones vinculadas.",
     REFERENCIA_OTROS: commentCount ? "Comentarios individuales confirmados por la docente." : "Sin comentarios individuales registrados.",
     RESPONSABLE_REVISION: "Revisión interna del aula",
@@ -119,12 +143,14 @@ function valuesFor(document, context, cards) {
   const followups = children.map((child) => {
     const childObservations = observations.filter((item) => item.student_id === child.student_id && clean(item.observation_text));
     const observedCompetencies = [...new Set(childObservations.map((item) => competencyNames.get(item.competency_id)).filter(Boolean))].slice(0, 2);
-    const excerpts = childObservations.slice(0, 2).map((item) =>
+    const chronological = uniqueObservations(childObservations).sort((a, b) => String(a.observed_at ?? "").localeCompare(String(b.observed_at ?? "")));
+    const selected = chronological.length > 1 ? [chronological[0], chronological.at(-1)] : chronological;
+    const excerpts = selected.map((item) =>
       `${competencyNames.get(item.competency_id) || "Observación"}: “${clean(item.observation_text).slice(0, 180)}”`);
     return {
       name: child.name,
       situation: [clean(child.teacher_comment) && `Docente: ${clean(child.teacher_comment)}`,
-        excerpts.length && `En el aula: ${excerpts.join("; ")}`,
+        excerpts.length && `En el aula: ${excerpts.join("; ")}${chronological.length > selected.length ? ` (Se muestran ${selected.length} de ${chronological.length} registros; consultar los demás en Ayni).` : ""}`,
         clean(child.family_context?.adaptation_context) && `Familia informa: ${clean(child.family_context.adaptation_context)}`].filter(Boolean).join(" ") || "Información insuficiente.",
       support: child.information_status === "insufficient_information"
         ? "Continuar observando y precisar el acompañamiento con nuevos registros."
