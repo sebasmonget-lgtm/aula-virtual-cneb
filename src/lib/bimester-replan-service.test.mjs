@@ -12,7 +12,10 @@ const teacherA = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 const teacherB = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
 const competenceA = "10000000-0000-4000-8000-000000000001";
 const competenceB = "10000000-0000-4000-8000-000000000002";
-const day = (offset) => new Date(Date.now() + offset * 86_400_000).toISOString().slice(0, 10);
+const day = (offset, instant = new Date()) => {
+  const civilDate = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Lima", year: "numeric", month: "2-digit", day: "2-digit" }).format(instant);
+  return new Date(new Date(`${civilDate}T12:00:00Z`).getTime() + offset * 86_400_000).toISOString().slice(0, 10);
+};
 
 async function database() {
   const db = await PGlite.create();
@@ -22,7 +25,7 @@ async function database() {
   return db;
 }
 async function seed(db, teacher, section) {
-  const year = new Date().getUTCFullYear();
+  const year = Number(day(0).slice(0, 4));
   const { classroomId, schoolYearId } = await createPilotClassroom(db, teacher, { teacherName: `Docente ${section}`,
     institutionName: "Jardín de prueba", section, age: 5, year,
     startsOn: `${year}-01-01`, endsOn: `${year}-12-31`, castellanoL2Applicable: false, religionApplicable: false });
@@ -89,7 +92,8 @@ test("recomienda un taller del catálogo solo si corresponde a edad y competenci
   assert.deepEqual(options.map((item) => item.resource_id), ["arte-5"]);
 });
 
-test("reajuste crea versión y modifica solo una propuesta futura; bloquea pasado, repetición y aula ajena", async () => {
+test("reajuste crea versión y modifica solo una propuesta futura; bloquea pasado, repetición y aula ajena", async (t) => {
+  t.mock.timers.enable({ apis: ["Date"], now: new Date("2026-09-28T02:30:00Z") });
   const db = await database();
   try {
     const a = await seed(db, teacherA, "A"), b = await seed(db, teacherB, "B");
@@ -139,7 +143,8 @@ test("reajuste crea versión y modifica solo una propuesta futura; bloquea pasad
   } finally { await db.close(); }
 });
 
-test("la ruta de revisión usa la identidad verificada del docente y aísla las aulas", async () => {
+test("la ruta de revisión usa la identidad verificada del docente y aísla las aulas", async (t) => {
+  t.mock.timers.enable({ apis: ["Date"], now: new Date("2026-09-28T06:30:00Z") });
   const db = await database();
   try {
     const a = await seed(db, teacherA, "A"), b = await seed(db, teacherB, "B");
@@ -167,4 +172,11 @@ test("la ruta de revisión usa la identidad verificada del docente y aísla las 
     const foreignPeriod = await get(own, a.classroom.id, b.period.id);
     assert.notEqual(foreignPeriod.status, 200);
   } finally { await db.close(); }
+});
+
+test("los fixtures respetan el día Lima a ambos lados de medianoche UTC y cambio de año", () => {
+  assert.equal(day(-1, new Date("2026-09-28T02:30:00Z")), "2026-09-26");
+  assert.equal(day(-1, new Date("2026-09-28T06:30:00Z")), "2026-09-27");
+  assert.equal(day(0, new Date("2027-01-01T02:30:00Z")), "2026-12-31");
+  assert.equal(day(1, new Date("2027-01-01T02:30:00Z")), "2027-01-01");
 });

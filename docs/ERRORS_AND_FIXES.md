@@ -1,5 +1,15 @@
 # Errores y soluciones
 
+## 2026-09-27 La regresión de reajuste dependía de la medianoche UTC (H18)
+
+**Síntoma.** Un test de protección del pasado fallaba de noche en Lima, aunque el servicio aplicaba correctamente el día local.
+
+**Causa raíz.** El fixture creaba fechas relativas en UTC; antes de las 05:00 UTC «ayer» podía coincidir con hoy en Lima. También derivaba el año desde UTC.
+
+**Solución validada.** Fixtures relativos al día civil America/Lima y reloj controlado a ambos lados de medianoche y cambio de año. Los cinco tests de reajuste pasan; suite integrada 466/466, typecheck, lint y build PASS. No cambió la protección productiva de fechas pasadas.
+
+**Prevención.** Controlar reloj y zona en tests del dominio calendario. No debilitar una regla de integridad para adaptar un fixture.
+
 ## 2026-09-27 JSONB hacía parecer editadas las decisiones del proyecto (H22)
 
 **Síntoma.** Tras generar preguntas y criterios, la UI mostraba éxito pero ocultaba el paso de preguntas y bloqueaba el mapa.

@@ -43,3 +43,11 @@ El enlace local de dependencias del renderizador bajo `docs/qa/.../node_modules`
 **Regresión.** Round-trip real de JSONB con PGlite reproduce el orden distinto y comprueba que el borrador intacto no tiene cambios. Cambios de propósito, competencias, preguntas, fechas y orden de actividades sí activan revisión. 12/12 pruebas relacionadas, typecheck, lint y build PASS en `tests-h22-project-draft`.
 
 **UI después.** PASS del paso bloqueado: las cuatro preguntas ya aparecen en el mismo borrador, sin otra llamada de IA, y se pasó al recorrido. Captura `screenshots/13-h22-preguntas-visibles.png`. Confirmación del mapa todavía pendiente. Commit pendiente. Rollback: revertir el commit de comparación; no hay migración ni cambio de datos.
+
+## H18 — Fixture UTC/Lima en reajuste (MEDIUM, pruebas)
+
+**Causa.** El test calculaba ayer/hoy/año en UTC mientras el servicio usa America/Lima. Entre 00:00 y 04:59 UTC podía considerar pasado un día que para el servicio era hoy.
+
+**Solución.** Solo `bimester-replan-service.test.mjs`: día civil Lima, reloj controlado en las dos ventanas y regresión de cambio de año. No se modifica el servicio ni se permite reescribir pasado.
+
+**Validación.** 5/5 de reajuste; 16/16 combinadas con traslado. Suite integrada `tests-integrated-h08-h21-h18-h19`: 466/466, typecheck, lint y build PASS. Es una corrección de prueba, no un PASS de reajuste E2E. Commit pendiente. Rollback: revertir el test.
