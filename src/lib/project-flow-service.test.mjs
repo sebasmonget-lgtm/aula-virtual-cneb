@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { nationalCalendarBlocks2026, nationalSchoolHolidays2026 } from "./annual-plan-calendar.mjs";
 import { generateProjectPreview, generateProjectDependents, generateProjectMaster,
-  instructionalDates, validateProjectMaster, preserveTeacherMapEdits,
+  instructionalDates, validateProjectMaster, preserveTeacherMapEdits, projectDetails,
   validateEditedActivityMap } from "./project-flow-service.mjs";
 
 const calendar = { blocks: nationalCalendarBlocks2026(), exceptions: nationalSchoolHolidays2026() };
@@ -97,4 +97,15 @@ test("el criterio, no el orden de dos competencias, determina la principal del m
   const edited = validateEditedActivityMap(validated.activity_route, both, dependents, ["2026-04-13", "2026-04-14"]);
   assert.equal(edited[0].competency_id, "TRANS_AUTONOMO");
   assert.deepEqual(edited[0].possible_secondary_competency_ids, ["CYT_INDAGA"]);
+});
+
+test("un borrador nuevo persiste solo un mapa canónico y conserva preguntas y criterios", () => {
+  const validated = validateProjectMaster(master, decisions, dependents, ["2026-04-13", "2026-04-14"]);
+  const details = projectDetails({ source: { title: "El huerto", primary_competency_ids: ["CYT_INDAGA"] },
+    preview: { context_summary: "Hay plantas" }, decisions, dependents, master: validated });
+  assert.equal(details.flow_version, "project-master-v2");
+  assert.equal(details.project_master.activity_blueprints, undefined);
+  assert.equal(details.activity_route.length, 2);
+  assert.equal(details.dependents.guiding_questions[0], "¿Qué vemos?");
+  assert.equal(details.dependents.general_criteria[0].competency_id, "CYT_INDAGA");
 });

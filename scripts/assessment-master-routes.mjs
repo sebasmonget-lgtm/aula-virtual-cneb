@@ -7,6 +7,7 @@ import { loadKnowledgeBaseV4 } from "../src/lib/knowledge-base-v4.mjs";
 import { cardIsApplicable } from "../src/lib/ai-context-builder-v4.mjs";
 import { httpStatusForError, publicErrorMessage } from "../src/lib/version-integrity.mjs";
 import { stableCompetencyLabel, syncPeriodEvaluationMap } from "../src/lib/period-assessment-closure-service.mjs";
+import { canonicalProjectRoute } from "../src/lib/planning-contract-v3.mjs";
 
 const withCanonicalLabels = (proposal, labels) => ({ ...proposal, competencies: proposal.competencies.map((row) => ({
   ...row,
@@ -43,7 +44,7 @@ export async function loadAssessmentMasterSources(db, context, period) {
     sources: { period: { id: period.id, label: period.label, starts_on: source.starts_on, ends_on: source.ends_on },
       evaluation_map: map.entries.filter((row) => row.activity_state === "completed"),
       confirmed_project_masters: experiences.map((row) => ({ id: row.id, flow_version: row.details?.flow_version ?? null,
-        decisions: row.details?.decisions ?? null, activity_blueprints: row.details?.project_master?.activity_blueprints ?? row.details?.activity_route ?? [] })),
+        decisions: row.details?.decisions ?? null, activity_blueprints: canonicalProjectRoute(row.details) })),
       activities: activities.map((row) => ({ id: row.id, occurs_on: dateOnly(row.occurs_on), experience_id: row.experience_id,
         route_item_id: row.details?.route_item_id ?? null, purpose: row.details?.purpose ?? null })),
       criteria: criteria.map((row) => ({ id: row.id, activity_id: row.activity_id, competency_id: row.competency_v4_id,

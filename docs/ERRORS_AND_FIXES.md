@@ -874,3 +874,13 @@ Síntoma: cuatro notas QA de la captura automatizada quedaron asociadas a la sel
 **Recuperación validada.** Se preservaron ambos directorios, se creó un directorio QA nuevo desde el último export JSON de la auditoría y se conciliaron 138 evidencias, 68 versiones de valoración, 32 conclusiones y 24 actividades QA sin cambios de contenido. Dos actividades semilla regeneraron timestamps de instalación. El export no incluía todas las tablas, por lo que no se presenta como recuperación byte a byte ni como sustituto del directorio original. La API QA activa usa el directorio restaurado; 5173/8788 de la usuaria no se tocaron.
 
 **Prevención.** Para futuras pruebas con PGlite, detener mediante cierre limpio de la propia API y comprobar backup recuperable antes de reiniciar. No forzar el fin del proceso ni abrir el mismo directorio desde dos instancias.
+
+## 2026-09-28 — Fixture de Documentos incompleto al añadir procedencia F1
+
+**Síntoma.** La suite completa falló al abrir un proyecto de prueba con `column ps.proposal_id does not exist`.
+
+**Causa raíz.** El fixture reducido de `document-library-service.test.mjs` creaba `project_slots` sin una columna que sí existe en las migraciones local y Supabase vigentes. La consulta nueva de procedencia hizo visible esa divergencia.
+
+**Solución validada.** Se agregó `proposal_id` nullable al fixture; la prueba focal de Documentos y la suite completa volvieron a pasar (539/539 con concurrencia 4). No hubo migración ni cambio de datos.
+
+**Prevención.** Cuando un servicio incorpora una columna de una tabla ya migrada, actualizar y ejecutar también los fixtures mínimos que simulan esa tabla; comprobar la paridad de esquema antes de atribuir el fallo al servicio.

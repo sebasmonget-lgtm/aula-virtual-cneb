@@ -17,6 +17,7 @@ async function fixture() {
     create table age_grades(id uuid primary key,age_years int);
     create table classrooms(id uuid primary key,teacher_id uuid,school_year_id uuid,age_grade_id uuid,section text,institution_name text);
     create table annual_plans(id uuid primary key,classroom_id uuid,school_year_id uuid,status text,version int,proposal jsonb,document_context jsonb,updated_at timestamptz,teacher_confirmed_at timestamptz,generation_metadata jsonb);
+    create table project_slots(id uuid primary key,annual_plan_id uuid,slot_index int,proposal_id uuid);
     create table annual_plan_formal_content(annual_plan_id uuid primary key,content jsonb);
     create table diagnostic_group_reviews(id uuid primary key,classroom_id uuid,status text,version int,details jsonb,updated_at timestamptz,teacher_confirmed_at timestamptz,source_snapshot jsonb);
     create table learning_experiences(id uuid primary key,classroom_id uuid,type text,title text,purpose text,status text,details jsonb,starts_on date,ends_on date,origin text,planning_reason text,source_proposal_index int);
@@ -42,7 +43,9 @@ async function fixture() {
     [id(9), id(6), JSON.stringify({ strengths: "Juegan juntos", needs: "Más diálogo", planning_priorities: "Conversar", private_note: "hidden" }), JSON.stringify({ raw: "hidden" })]);
   await db.query(`insert into learning_experiences values($1,$2,'project','El huerto','Explorar plantas','active',$3::jsonb,'2026-04-01','2026-05-01','planned','Desde el plan',0),($4,$2,'workshop','Taller antiguo','Legacy','active','{}'::jsonb,'2026-04-01','2026-05-01','planned',null,null)`,
     [id(10), id(6), JSON.stringify({ starting_point: "Vimos semillas", possible_pathways: [], generation_metadata: { response_id: "hidden" } }), id(11)]);
-  await db.exec(`alter table learning_experiences add column version integer not null default 1`);
+  await db.exec(`alter table learning_experiences add column version integer not null default 1;
+    alter table learning_experiences add column source_proposal_id uuid;
+    alter table learning_experiences add column annual_plan_id uuid`);
   await db.query(`insert into activities values($1,$2,'Jugar con sombras','Observar luz','active',$3::jsonb,$4::jsonb,'2026-04-02')`,
     [id(12), id(10), JSON.stringify({ meaningful_situation: "El patio cambia", child_actions: ["Mueven la luz"], response_id: "hidden" }), JSON.stringify({ materials: ["linternas"], private_path: "hidden" })]);
   await db.query(`insert into activity_criteria values($1,$2,'CYT_INDAGA','Explica lo que observó',$3::jsonb,'active',now())`,

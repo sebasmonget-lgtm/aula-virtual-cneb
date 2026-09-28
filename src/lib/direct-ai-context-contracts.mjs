@@ -1,3 +1,5 @@
+import { canonicalProjectRoute } from "./planning-contract-v3.mjs";
+
 /** A confirmed project's stable decisions, without a second copy of the daily map. */
 export function confirmedProjectFoundation(project) {
   const details = project?.details ?? {};
@@ -38,6 +40,6 @@ export function confirmedProjectFormalContext(project) {
     proposed_situations: details.proposed_situations ?? [],
     spaces_and_materials: details.spaces_and_materials ?? [],
     evidence_opportunities: details.evidence_opportunities ?? [],
-    activity_route: details.activity_route ?? [],
+    activity_route: canonicalProjectRoute(details),
   };
 }

@@ -99,3 +99,26 @@ test("editar la fila recargada → guardar → recargar → confirmar recalcula 
     assert.throws(() => validateGeneratedPreplan(modelOutput, ["COM_ORAL"], 2026), { reason: "invalid_row" });
   } finally { await f.db.close(); }
 });
+
+test("recalcular slots conserva sus IDs y el ID de propuesta aunque cambien fechas u orden", async () => {
+  const f = await fixture();
+  try {
+    const before = (await f.db.query(`select id,slot_index,proposal_id from project_slots where annual_plan_id=$1 order by slot_index`, [f.id])).rows;
+    const draft = await f.reload();
+    const edited = structuredClone(draft.proposal);
+    [edited.proposed_experiences[0].proposal_id, edited.proposed_experiences[1].proposal_id] =
+      [edited.proposed_experiences[1].proposal_id, edited.proposed_experiences[0].proposal_id];
+    edited.proposed_experiences[0].title = "Primera propuesta reordenada";
+    edited.proposed_experiences[1].title = "Segunda propuesta reordenada";
+    const clean = validateAnnualPreplan(edited, ["COM_ORAL"], 2026);
+    await versionTransaction(f.db, `annual:${f.context.school_year_id}`, async (tx) => {
+      await tx.query(`update annual_plans set proposal=$1::jsonb where id=$2`, [JSON.stringify(clean), f.id]);
+      await persistAnnualProjectSlots(tx, f.id, buildEditableAnnualSchedule(f.context.calendar, clean.proposed_experiences));
+      await persistAnnualProjectSlots(tx, f.id, buildEditableAnnualSchedule(f.context.calendar, clean.proposed_experiences));
+    });
+    const after = (await f.db.query(`select id,slot_index,proposal_id from project_slots where annual_plan_id=$1 order by slot_index`, [f.id])).rows;
+    assert.deepEqual(after.map((item) => item.id), before.map((item) => item.id));
+    assert.equal(after[0].proposal_id, before[1].proposal_id);
+    assert.equal(after[1].proposal_id, before[0].proposal_id);
+  } finally { await f.db.close(); }
+});

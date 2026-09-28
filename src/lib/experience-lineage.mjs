@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { canonicalProjectRoute } from "./planning-contract-v3.mjs";
 
 const routeFields = ["title", "specific_purpose", "competency_id", "evaluation_criterion", "expected_evidence", "pedagogical_intention", "acceptable_evidence_variations", "observation_focus", "materials", "mediation_notes", "continuity_from_previous", "continuity_to_next", "flexibility_notes"];
 
@@ -31,7 +32,7 @@ export function saveExperienceDetails(proposal, previous = null, generated = nul
 
 export function routeItemFor(experience, routeItemId) {
   if (!routeItemId) return null;
-  return experience?.details?.activity_route?.find((item) => item.id === routeItemId) ?? null;
+  return canonicalProjectRoute(experience?.details).find((item) => item.id === routeItemId) ?? null;
 }
 
 export function saveActivityDetails(proposal, routeItem = null, previous = null, withWorkshop = false) {

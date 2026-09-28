@@ -40,6 +40,7 @@ import { buildInstitutionInitialsLogo, loadInstitutionLogoForDocuments, normaliz
 import { displayPersonName } from "../src/lib/person-name.mjs";
 import { validateLearningExperienceProposal } from "../src/lib/learning-experience-validation.mjs";
 import { inheritedActivityCriterion, routeItemFor, saveActivityDetails, saveExperienceDetails } from "../src/lib/experience-lineage.mjs";
+import { canonicalProjectDetails, canonicalProjectRoute, planningV3ReadEnabled, projectMasterV3, resolveAnnualProposal } from "../src/lib/planning-contract-v3.mjs";
 import { confirmActivityWithCriterion } from "../src/lib/activity-confirmation.mjs";
 import { copyConfirmedActivity } from "../src/lib/activity-version-service.mjs";
 import { copyConfirmedCriterion, confirmCriterionVersion } from "../src/lib/criterion-version-service.mjs";
@@ -1185,7 +1186,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
           if (!next || ["type", "label", "start_date", "end_date"].some((field) => next[field] !== original[field])) throw new Error("Hay un bloque del calendario que no se puede modificar.");
         }
         await db.exec("begin");
-        if (existing) await db.query(`delete from project_slots where annual_plan_id=$1`, [existing.id]);
+        if (existing) await db.query(`update project_slots set calendar_block_id=null where annual_plan_id=$1`, [existing.id]);
         await db.query(`delete from calendar_blocks where school_year_id=$1`, [context.school_year_id]);
         for (const [index, block] of valid.blocks.entries()) {
           await db.query(`insert into calendar_blocks(id,school_year_id,type,label,start_date,end_date,editable,sort_order)
@@ -1342,23 +1343,21 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         from project_slots where annual_plan_id=$1 order by slot_index`, [activePlan.id])).rows;
       send(response, 200, { active: activePlan, draft: plans.find((plan) => plan.status === "draft") ?? null, archived: plans.filter((plan) => plan.status === "archived") }, origin); return;
     }
-    async function projectFlowSource(planId, proposalId, allowArchived = false) {
+    async function projectFlowSource(planId, proposalId, allowArchived = false, fallbackIndex = null) {
       const classroom = await annualPlanningContext();
       if (!classroom) throw new Error("No se encontró un aula activa.");
-      const plan = (await db.query(`select id,status,proposal,document_context,source_priority_review_id from annual_plans
+      const plan = (await db.query(`select id,version,status,proposal,document_context,source_priority_review_id from annual_plans
         where id=$1 and classroom_id=$2 and school_year_id=$3 and status in ('active','archived')`,
       [planId, classroom.id, classroom.school_year_id])).rows[0];
       if (!plan || (!allowArchived && plan.status !== "active")) throw new Error("El plan anual vigente no está disponible.");
-      const directIndex = plan.proposal?.proposed_experiences?.findIndex((item) => item.proposal_id === proposalId) ?? -1;
-      const legacySlot = directIndex < 0 ? (await db.query(`select id,slot_index,starts_on::text,ends_on::text,duration_weeks
-        from project_slots where annual_plan_id=$1 and id=$2 limit 1`, [plan.id, proposalId])).rows[0] : null;
-      const index = directIndex >= 0 ? directIndex : legacySlot ? Number(legacySlot.slot_index) - 1 : -1;
-      const source = plan.proposal?.proposed_experiences?.[index];
-      if (index < 0 || !source || !["project", "unit"].includes(source.experience_type)) throw new Error("La propuesta no pertenece a este plan anual.");
-      const slot = legacySlot ?? (await db.query(`select id,starts_on::text,ends_on::text,duration_weeks from project_slots
-        where annual_plan_id=$1 and (proposal_id=$2 or (proposal_id is null and slot_index=$3)) limit 1`,
-      [plan.id, proposalId, index + 1])).rows[0];
-      if (!slot) throw new Error("El calendario de esta propuesta no está disponible.");
+      const slots = (await db.query(`select id,proposal_id,slot_index,starts_on::text,ends_on::text,duration_weeks
+        from project_slots where annual_plan_id=$1 order by slot_index`, [plan.id])).rows;
+      const sourceId = proposalId ?? (Number.isInteger(fallbackIndex)
+        ? slots.find((item) => Number(item.slot_index) === fallbackIndex + 1)?.id : null);
+      const resolved = resolveAnnualProposal(plan, slots, sourceId);
+      if (!resolved || !["project", "unit"].includes(resolved.proposal.experience_type))
+        throw new Error("La propuesta no pertenece a este plan anual.");
+      const { proposal: source, proposalId: canonicalProposalId, index, slot } = resolved;
       const curriculum = await ageFilteredAnnualCurriculum(classroom);
       const names = (await db.query(`select first_name,last_name,preferred_name from students where classroom_id=$1`, [classroom.id])).rows
         .flatMap((item) => [item.first_name, item.last_name, item.preferred_name]).filter(Boolean);
@@ -1374,12 +1373,13 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         group_interests: (plan.document_context?.group_interests ?? []).map(safe),
         annual_proposal: source, calendar: { starts_on: slot.starts_on, ends_on: slot.ends_on,
           duration_weeks: slot.duration_weeks }, curriculum };
-      const selection = (await db.query(`select id,status,revision from project_calendar_selections
-        where learning_experience_id in (select id from learning_experiences where annual_plan_id=$1 and source_proposal_id=$2)
-        order by updated_at desc limit 1`,[plan.id,proposalId])).rows[0];
+      const selection = (await db.query(`select pcs.id,pcs.status,pcs.revision from project_calendar_selections pcs
+        join learning_experiences e on e.id=pcs.learning_experience_id
+        where e.annual_plan_id=$1 and e.source_proposal_index=$2 and e.origin='planned'
+        order by pcs.updated_at desc limit 1`,[plan.id,index])).rows[0];
       const selectedDates = selection?.status === "confirmed" ? (await db.query(`select date::text from project_instructional_dates
         where selection_id=$1 and selected=true order by date`,[selection.id])).rows.map((item)=>item.date) : null;
-      return { classroom, plan, source, index, slot, aiContext, selection,
+      return { classroom, plan, source, proposalId: canonicalProposalId, index, slot, aiContext, selection,
         dates: selectedDates?.length ? selectedDates : instructionalDates(plan.document_context?.calendar ?? classroom.calendar, slot.starts_on, slot.ends_on) };
     }
     async function projectFlowRow(id) {
@@ -1404,7 +1404,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
           or exists(select 1 from class_schedule_entries se join daily_execution_logs d
             on d.schedule_entry_id=se.id where se.activity_id=a.id and d.status<>'planned'))`,
       [row.supersedes_experience_id])).rows;
-      return { sourceRoute: source.details?.activity_route ?? [], today,
+      return { sourceRoute: canonicalProjectRoute(source.details), today,
         recordedRouteIds: records.map((item) => item.route_item_id) };
     }
     async function ensureProjectCalendarSelection(row, source) {
@@ -1437,12 +1437,12 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
     }
     if(request.method==="GET"&&/^\/api\/project-flow\/[0-9a-f-]+\/calendar$/i.test(url.pathname)){
       try{const id=url.pathname.split("/")[3],{row}=await projectFlowRow(id);if(!row){send(response,404,{error:"Proyecto no disponible."},origin);return;}
-        const source=await projectFlowSource(row.annual_plan_id,row.source_proposal_id,true);send(response,200,await ensureProjectCalendarSelection(row,source),origin);}
+        const source=await projectFlowSource(row.annual_plan_id,row.source_proposal_id,true,row.source_proposal_index);send(response,200,await ensureProjectCalendarSelection(row,source),origin);}
       catch(error){send(response,httpStatusForError(error,422),{error:publicErrorMessage(error)},origin);}return;
     }
     if(request.method==="PUT"&&/^\/api\/project-flow\/[0-9a-f-]+\/calendar$/i.test(url.pathname)){
       try{const id=url.pathname.split("/")[3],body=await readJson(request),{row}=await projectFlowRow(id);if(!row||row.status!=="draft"){send(response,404,{error:"Borrador no disponible."},origin);return;}
-        const source=await projectFlowSource(row.annual_plan_id,row.source_proposal_id,true),review=await ensureProjectCalendarSelection(row,source);
+        const source=await projectFlowSource(row.annual_plan_id,row.source_proposal_id,true,row.source_proposal_index),review=await ensureProjectCalendarSelection(row,source);
         const calendar=await loadEffectiveCalendar(db,{teacherId,classroomId:source.classroom.id,from:source.slot.starts_on,to:source.slot.ends_on});
         const selected=validateSelectedInstructionalDates(calendar.days,body.selectedDates,source.slot.starts_on,source.slot.ends_on),selectedSet=new Set(selected);
         const protectedVersion = await protectedProjectVersion(row);
@@ -1607,9 +1607,9 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         const body = await readJson(request);
         const source = await projectFlowSource(body.annualPlanId, body.proposalId);
         const previous = (await db.query(`select * from learning_experiences where classroom_id=$1
-          and (source_proposal_id=$2 or (annual_plan_id=$3 and source_proposal_id is null and source_proposal_index=$4))
+          and annual_plan_id=$2 and source_proposal_index=$3 and origin='planned'
           and status in ('draft','active') order by version desc limit 1`,
-        [source.classroom.id, body.proposalId,source.plan.id,source.index])).rows[0];
+        [source.classroom.id,source.plan.id,source.index])).rows[0];
         if (previous && body.refreshPreview === true) {
           if(previous.status!=='draft'||previous.details?.decisions||previous.details?.dependents||previous.details?.activity_route)
             throw new Error("El contexto ya tiene decisiones revisadas. Actualízalas desde el propósito antes de preparar otro mapa.");
@@ -1625,7 +1625,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
           send(response,200,{experience:saved,existing:true,available_dates:calendar_review.selected_dates,calendar_review},origin);return;
         }
         if (previous) { const previousSource = previous.annual_plan_id === source.plan.id ? source
-          : await projectFlowSource(previous.annual_plan_id, previous.source_proposal_id, true);
+          : await projectFlowSource(previous.annual_plan_id, previous.source_proposal_id, true, previous.source_proposal_index);
           const calendar_review=await ensureProjectCalendarSelection(previous,previousSource);send(response, 200, { experience: previous, existing: true,
           available_dates: calendar_review.selected_dates,calendar_review }, origin); return; }
         const planningFeedback = await projectFlowFeedback(source,body);
@@ -1636,7 +1636,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
           status,details,annual_plan_id,origin,source_proposal_index,source_proposal_id,generation_metadata)
           values($1,$2,$3,$4,$5,$6::date,$7::date,'draft',$8::jsonb,$9,'planned',$10,$11,$12::jsonb)
           returning *`, [id,source.classroom.id,source.source.experience_type,source.source.title,source.source.purpose,
-          source.slot.starts_on,source.slot.ends_on,JSON.stringify(details),source.plan.id,source.index,body.proposalId,
+          source.slot.starts_on,source.slot.ends_on,JSON.stringify(details),source.plan.id,source.index,source.proposalId,
           JSON.stringify({ workflow: "project_preview", ...generated.metadata })])).rows[0];
         const calendar_review=await ensureProjectCalendarSelection(saved,source);
         send(response, 201, { experience: saved, existing: false, available_dates: calendar_review.selected_dates,calendar_review }, origin);
@@ -1645,12 +1645,15 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
     }
     if (request.method === "GET" && /^\/api\/project-flow\/[0-9a-f-]+$/i.test(url.pathname)) {
       const { row } = await projectFlowRow(url.pathname.split("/")[3]);
-      const source = row?.source_proposal_id ? await projectFlowSource(row.annual_plan_id, row.source_proposal_id, true) : null;
+      const source = row?.annual_plan_id ? await projectFlowSource(row.annual_plan_id, row.source_proposal_id, true, row.source_proposal_index) : null;
       const calendar_review=row&&source?await ensureProjectCalendarSelection(row,source):null;
       const protectedVersion = row ? await protectedProjectVersion(row) : null;
       const protected_route_ids = protectedVersion?.sourceRoute.filter((item) =>
         item.date <= protectedVersion.today || protectedVersion.recordedRouteIds.includes(item.id)).map((item) => item.id) ?? [];
-      send(response, row ? 200 : 404, row ? { experience: row, available_dates: calendar_review?.selected_dates ?? source?.dates ?? [],
+      send(response, row ? 200 : 404, row ? { experience: row,
+        ...(planningV3ReadEnabled() ? { project_master_v3: projectMasterV3(row,
+          {planVersion:source?.plan.version,slotId:source?.slot.id,proposalId:source?.proposalId}) } : {}),
+        available_dates: calendar_review?.selected_dates ?? source?.dates ?? [],
         calendar_review, protected_route_ids } : { error: "Proyecto no disponible." }, origin); return;
     }
     if (request.method === "POST" && /^\/api\/project-flow\/[0-9a-f-]+\/dependents$/i.test(url.pathname)) {
@@ -1658,7 +1661,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         const id = url.pathname.split("/")[3], body = await readJson(request);
         const { row } = await projectFlowRow(id);
         if (!row || row.status !== "draft" || row.details?.flow_version !== "project-master-v1") { send(response, 404, { error: "Borrador no disponible." }, origin); return; }
-        const source = await projectFlowSource(row.annual_plan_id, row.source_proposal_id, true);
+        const source = await projectFlowSource(row.annual_plan_id, row.source_proposal_id, true, row.source_proposal_index);
         const allowed = (await ageFilteredAnnualCurriculum(source.classroom)).map((card) => card.id);
         const decisions = validateProjectDecisions(body.decisions, allowed);
         assertRevision(row,expectedRevision(body.expectedRevision));
@@ -1687,7 +1690,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         const { row } = await projectFlowRow(id);
         if (!row || row.status !== "draft" || row.details?.flow_version !== "project-master-v1") { send(response, 404, { error: "Borrador no disponible." }, origin); return; }
         if (!row.details.decisions || !row.details.dependents) throw new Error("Elige primero el propósito y revisa las preguntas.");
-        const source = await projectFlowSource(row.annual_plan_id, row.source_proposal_id, true);
+        const source = await projectFlowSource(row.annual_plan_id, row.source_proposal_id, true, row.source_proposal_index);
         const calendarReview=await ensureProjectCalendarSelection(row,source);
         if(calendarReview.selection.status!=="confirmed")throw new Error("Confirma primero los días del proyecto.");
         const dependents = validateProjectDependents(body.dependents ?? row.details.dependents, row.details.decisions.competency_ids);
@@ -1730,7 +1733,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         const id = url.pathname.split("/")[3], body = await readJson(request);
         const { row } = await projectFlowRow(id);
         if (!row || row.status !== "draft" || row.details?.stage !== "map_review") { send(response, 404, { error: "Mapa no disponible." }, origin); return; }
-        const source = await projectFlowSource(row.annual_plan_id, row.source_proposal_id, true);
+        const source = await projectFlowSource(row.annual_plan_id, row.source_proposal_id, true, row.source_proposal_index);
         const calendarReview=await ensureProjectCalendarSelection(row,source);
         if(calendarReview.selection.status!=="confirmed")throw new Error("Confirma primero los días del proyecto.");
         const route = validateEditedActivityMap(body.activity_route, row.details.decisions, row.details.dependents, calendarReview.selected_dates);
@@ -1755,9 +1758,8 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
                 to: item[field] ?? null, source: "teacher_review", at: new Date().toISOString() });
           }
         }
-        const details = { ...row.details, activity_route: route,
-          project_master: { ...row.details.project_master, activity_blueprints: route },
-          teacher_overrides: overrides };
+        const details = canonicalProjectDetails({ ...row.details, activity_route: route,
+          teacher_overrides: overrides });
         const saved = (await db.query(`update learning_experiences set details=$1::jsonb
           where id=$2 and status='draft' and revision=$3 returning *`, [JSON.stringify(details),id,
           expectedRevision(body.expectedRevision)])).rows[0];
@@ -1771,7 +1773,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         const id = url.pathname.split("/")[3], body = await readJson(request);
         const { row } = await projectFlowRow(id);
         if (!row || row.status !== "draft" || row.details?.stage !== "map_review") { send(response, 404, { error: "Proyecto no disponible para confirmar." }, origin); return; }
-        const source = await projectFlowSource(row.annual_plan_id, row.source_proposal_id, true);
+        const source = await projectFlowSource(row.annual_plan_id, row.source_proposal_id, true, row.source_proposal_index);
         const calendarReview=await ensureProjectCalendarSelection(row,source);
         if(calendarReview.selection.status!=="confirmed")throw new Error("Confirma primero los días del proyecto.");
         const route = validateEditedActivityMap(row.details.activity_route, row.details.decisions, row.details.dependents, calendarReview.selected_dates);
@@ -1792,7 +1794,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         if (!row || row.status !== "active" || !["project-master-v1","project-master-v2"].includes(row.details?.flow_version)) { send(response, 404, { error: "Proyecto confirmado no disponible." }, origin); return; }
         const prior = (await db.query(`select id from experience_formal_contents where experience_id=$1`, [id])).rows[0];
         if (prior) { send(response, 200, { ready: true, already_ready: true }, origin); return; }
-        const source = await projectFlowSource(row.annual_plan_id, row.source_proposal_id, true);
+        const source = await projectFlowSource(row.annual_plan_id, row.source_proposal_id, true, row.source_proposal_index);
         const generated = await generateProjectFormal({ workflow: row.type, context: { ...source.aiContext,
           curriculum: source.aiContext.curriculum.filter((card) => row.details.decisions?.competency_ids.includes(card.id)),
           confirmed_project_master: confirmedProjectFormalContext(row) } });

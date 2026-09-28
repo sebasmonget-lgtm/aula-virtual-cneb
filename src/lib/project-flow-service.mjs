@@ -142,7 +142,8 @@ export function projectDetails({ source, preview, decisions, dependents, master,
     possible_secondary_competency_ids: item.possible_secondary_competency_ids ??
       item.competency_ids.filter((id) => id !== item.criterion_competency_id) }));
   return {
-    flow_version: "project-master-v2", blueprint_version: "activity-blueprint-v1", document_template_version: "experience-unified-v2",
+    flow_version: "project-master-v2",
+    blueprint_version: "activity-blueprint-v1", document_template_version: "experience-unified-v2",
     title: source.title, purpose: decisions.purpose, starting_point: decisions.context_summary,
     ...(source.experience_type === "unit" ? { learning_need_or_context: decisions.context_summary,
       proposed_situations: dependents.journey.map((item) => ({ title: item.title, pedagogical_intention: item.description, possible_child_actions: item.description })) }
@@ -156,7 +157,7 @@ export function projectDetails({ source, preview, decisions, dependents, master,
     flexibility_notes: "El recorrido puede ajustarse según lo observado durante el proyecto.",
     preview, decisions, dependents, planning_feedback: previous?.planning_feedback ?? null,
     project_master: { foundation: master.foundation, closing_description: master.closing_description,
-      closing_rationale: master.closing_rationale, resources: master.resources, activity_blueprints: route },
+      closing_rationale: master.closing_rationale, resources: master.resources },
     activity_route: route, teacher_overrides: previous?.teacher_overrides ?? [],
   };
 }

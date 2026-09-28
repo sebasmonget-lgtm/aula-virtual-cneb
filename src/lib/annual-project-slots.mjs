@@ -4,10 +4,21 @@ import { randomUUID } from "node:crypto";
 // the server calendar, never from the editable/client projection.
 export async function persistAnnualProjectSlots(db, planId, schedule) {
   const plan = (await db.query(`select proposal,classroom_id,school_year_id from annual_plans where id=$1`, [planId])).rows[0];
-  await db.query(`delete from project_slots where annual_plan_id=$1`, [planId]);
+  if (!plan) throw new Error("El plan anual no está disponible.");
+  const existing = (await db.query(`select id,slot_index from project_slots where annual_plan_id=$1`, [planId])).rows;
+  const byIndex = new Map(existing.map((item) => [Number(item.slot_index), item.id]));
+  const indices = new Set(schedule.projects.map((item) => item.index));
+  // Clear the partial unique key before proposals are reordered between stable calendar slots.
+  // Callers persist the proposal and slots in the same annual-plan transaction.
+  await db.query(`update project_slots set proposal_id=null where annual_plan_id=$1 and proposal_id is not null`, [planId]);
+  for (const item of existing) if (!indices.has(Number(item.slot_index)))
+    await db.query(`delete from project_slots where id=$1 and annual_plan_id=$2`, [item.id, planId]);
   for (const slot of schedule.projects) {
     const proposalId = plan?.proposal?.proposed_experiences?.[slot.index - 1]?.proposal_id ?? null;
-    await db.query(`insert into project_slots(id,annual_plan_id,slot_index,calendar_block_id,duration_weeks,starts_on,ends_on,proposal_id)
+    if (byIndex.has(slot.index)) await db.query(`update project_slots set calendar_block_id=$1,duration_weeks=$2,
+      starts_on=$3::date,ends_on=$4::date,proposal_id=$5 where id=$6 and annual_plan_id=$7`,
+    [slot.calendar_block_id, slot.duration_weeks, slot.starts_on, slot.ends_on, proposalId, byIndex.get(slot.index), planId]);
+    else await db.query(`insert into project_slots(id,annual_plan_id,slot_index,calendar_block_id,duration_weeks,starts_on,ends_on,proposal_id)
       values($1,$2,$3,$4,$5,$6::date,$7::date,$8)`, [randomUUID(), planId, slot.index, slot.calendar_block_id,
       slot.duration_weeks, slot.starts_on, slot.ends_on, proposalId]);
   }
