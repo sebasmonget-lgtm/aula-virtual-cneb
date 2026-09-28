@@ -17,6 +17,7 @@ import { AYNI_HEURISTICS } from "../src/lib/ayni-heuristics.mjs";
 import { VersionConflictError, conflictPayload, httpStatusForError, isVersionConflict, publicErrorMessage, versionTransaction } from "../src/lib/version-integrity.mjs";
 import { assessmentMasterEntry } from "../src/lib/assessment-master-service.mjs";
 import { loadAssessmentMasterSources } from "./assessment-master-routes.mjs";
+import { getCurrentClassroomContext, publicClassroomContext } from "../src/lib/classroom-context-service.mjs";
 import { buildClassroomPeriodReportInput, buildGenericAssessmentWorkbook, buildPeriodStatistics, classroomReportFingerprint,
   isTeacherAchievementLevel, SIAGIE_EXPORT_STATUS, stableCompetencyLabel, syncPeriodEvaluationMap, validateClassroomPeriodReport } from "../src/lib/period-assessment-closure-service.mjs";
 
@@ -25,7 +26,8 @@ const hash = (value) => createHash("sha256").update(JSON.stringify(value)).diges
 const clean = (value, limit = 4000) => typeof value === "string" ? value.trim().slice(0, limit) : "";
 const safeCsv = (value) => { const raw = String(value ?? ""); const safe = /^[=+@\-\t\r]/.test(raw) ? `'${raw}` : raw; return `"${safe.replaceAll('"', '""')}"`; };
 
-export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStorage, mediaAvailable = true, readJson, send, pending, metadataForAudit, refreshStudentContext, loadKnowledgeBase = loadKnowledgeBaseV4, generate = generateAIWorkflowV4, createProvider = createAIProviderForPlan }) {
+export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStorage, mediaAvailable = true, readJson, send, pending, metadataForAudit, refreshStudentContext, loadKnowledgeBase = loadKnowledgeBaseV4, generate = generateAIWorkflowV4, createProvider = createAIProviderForPlan,
+  loadClassroomContext = async (classroom) => publicClassroomContext(await getCurrentClassroomContext(db, teacherId, classroom.id)) }) {
   const fail = (response, origin, error, status = 422) => send(response, httpStatusForError(error, status),
     isVersionConflict(error)?conflictPayload(error):{ error: publicErrorMessage(error) }, origin);
 
@@ -296,7 +298,8 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
         const student = await studentForClass(data.classroom, body.studentId), names = [student.first_name, student.last_name, student.preferred_name];
         const master = (await db.query(`select * from assessment_masters where classroom_id=$1 and evaluation_period_id=$2 and status='active'`, [data.classroom.id, data.period.id])).rows[0];
         if (!master) throw new Error("Confirma primero el marco de evaluación del período.");
-        const masterSources = await loadAssessmentMasterSources(db, data.classroom, data.period);
+        const contextV4 = await loadClassroomContext(data.classroom);
+        const masterSources = await loadAssessmentMasterSources(db, { ...data.classroom, context_v4: contextV4 }, data.period);
         if (master.source_snapshot?.fingerprint !== masterSources.snapshot.fingerprint) throw new Error("El marco de evaluación requiere revisión porque cambió la planificación o un criterio.");
         const masterEntry = assessmentMasterEntry(master, data.card.id);
         if (!masterEntry) throw new Error("La competencia no está incluida en el marco de evaluación confirmado.");

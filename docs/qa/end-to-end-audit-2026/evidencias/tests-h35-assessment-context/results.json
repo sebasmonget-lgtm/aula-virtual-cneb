@@ -1,0 +1,64 @@
+[
+  {
+    "name": "typecheck",
+    "command": [
+      "node",
+      "node_modules/typescript/bin/tsc",
+      "--noEmit"
+    ],
+    "startedAt": "2026-09-28T05:21:35.285Z",
+    "endedAt": "2026-09-28T05:21:41.737Z",
+    "exitCode": 0,
+    "counters": null
+  },
+  {
+    "name": "unit-tests",
+    "command": [
+      "node",
+      "--test",
+      "--test-concurrency=2",
+      "src/lib/period-evaluation.test.mjs",
+      "src/lib/assessment-master-service.test.mjs",
+      "src/lib/integrated-period-workflow.test.mjs"
+    ],
+    "startedAt": "2026-09-28T05:21:41.740Z",
+    "endedAt": "2026-09-28T05:22:01.220Z",
+    "exitCode": 0,
+    "counters": {
+      "tests": 15,
+      "pass": 15,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    }
+  },
+  {
+    "name": "lint",
+    "command": [
+      "node",
+      "node_modules/eslint/bin/eslint.js",
+      ".",
+      "--ignore-pattern",
+      "dist",
+      "--ignore-pattern",
+      ".next"
+    ],
+    "startedAt": "2026-09-28T05:22:01.224Z",
+    "endedAt": "2026-09-28T05:22:23.189Z",
+    "exitCode": 0,
+    "counters": null
+  },
+  {
+    "name": "build",
+    "command": [
+      "node",
+      "scripts/run-framework.mjs",
+      "build"
+    ],
+    "startedAt": "2026-09-28T05:22:23.191Z",
+    "endedAt": "2026-09-28T05:22:34.447Z",
+    "exitCode": 0,
+    "counters": null
+  }
+]

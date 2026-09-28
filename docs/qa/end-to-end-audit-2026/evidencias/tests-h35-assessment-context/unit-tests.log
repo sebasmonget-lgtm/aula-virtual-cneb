@@ -1,0 +1,23 @@
+✔ snapshot y contrato del Assessment Master son deterministas y cubren cada competencia (3.2595ms)
+✔ versiona, confirma, detecta cambios y aísla dos docentes y aulas (2480.0295ms)
+✔ la migración remota limita lectura al aula propia y bloquea escrituras directas (4.7179ms)
+✔ recorrido integrado conserva versiones y aísla aulas, años y documentos (4473.866ms)
+✔ períodos formales separan cuatro bimestres o tres trimestres (12.7043ms)
+✔ cobertura deriva registros por niño y competencia sin convertir ausencias en niveles (2181.685ms)
+✔ contexto para planificar verifica docente, aula y período y no expone expedientes (1402.2406ms)
+✔ la migración futura exige lectura propia y escritura mediante servidor (1.8445ms)
+✔ el análisis reutiliza la huella completa del aula y rechaza cambios reales de contexto (1466.5732ms)
+✔ ficha única, nivel docente, cierre, salidas derivadas y cambio posterior de evidencia (2358.5848ms)
+✔ una competencia del plan anual aparece sin evidencias y se puede excluir con motivo (1635.2091ms)
+✔ información insuficiente queda guardada sin nivel y no se convierte en C (1469.8895ms)
+✔ una observación sustantiva admite valoración docente justificada sin umbral automático (1521.4894ms)
+✔ dos confirmaciones de la misma revisión dejan una sola evaluación oficial (1389.1899ms)
+✔ evidencia posterior invalida la huella y dos cierres simultáneos crean solo una versión (1913.9286ms)
+ℹ tests 15
+ℹ suites 0
+ℹ pass 15
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 19381.4487

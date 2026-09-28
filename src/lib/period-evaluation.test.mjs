@@ -152,18 +152,34 @@ async function fixture({ analysis = mockAnalysis() } = {}) {
   for (const [id, date, note] of [[firstEvidence, "2026-04-10", "Propuso un juego y explicó su idea."], ["00000000-0000-4000-8000-000000000702", "2026-04-11", "Escuchó y respondió al grupo."]]) {
     await db.query(`insert into evidences(id,student_id,activity_id,criterion_id,observed_at,observed_on,observation_text) values($1,$2,$3,$4,'2026-06-01T12:00:00Z',$5::date,$6)`, [id, studentA, activity, criterion, date, note]);
   }
-  const masterSource=await loadAssessmentMasterSources(db,{id:classId},{id:firstPeriod,label:"Bimestre 1",starts_on:"2026-03-16",ends_on:"2026-05-15"});
+  const currentContext = { source_fingerprint: "confirmed-classroom-context-1" };
+  const masterSource=await loadAssessmentMasterSources(db,{id:classId,context_v4:currentContext},{id:firstPeriod,label:"Bimestre 1",starts_on:"2026-03-16",ends_on:"2026-05-15"});
   const masterDetails={period_summary:"Se trabajó la comunicación oral en situaciones de juego.",competencies:[{competency_id:"COM_ORAL",short_label:"Se comunica",area:"Comunicación",assessment_focus:"Cómo explica ideas en las situaciones propuestas.",criteria_worked:["Explica sus ideas."],relevant_evidence:["Explicaciones registradas."],patterns_to_consider:["Respuestas en distintas oportunidades."],progress_signals:["Amplía sus explicaciones."],support_signals:["Necesita preguntas abiertas."],insufficient_information_rules:["Una respuesta aislada no es suficiente."],contradiction_handling:"Conservar diferencias y consultar a la docente.",context_considerations:["Apoyos ofrecidos."],teacher_questions:["¿Ocurrió en otra situación?"],prohibited_inferences:["No calificar una observación aislada."],assessment_guidance:"Revisar el conjunto antes de valorar."}]};
   await db.query(`insert into assessment_masters(id,classroom_id,evaluation_period_id,version,status,details,source_snapshot,created_by,teacher_confirmed_at) values(gen_random_uuid(),$1,$2,1,'active',$3::jsonb,$4::jsonb,$5,now())`,[classId,firstPeriod,JSON.stringify(masterDetails),JSON.stringify(masterSource.snapshot),teacher]);
   const pending = new Map(), calls = [];
-  const handle = createPeriodEvaluationRouteHandler({ db, teacherId: teacher, readJson: async (request) => request.body, send: (response, status, payload) => { response.result={status,body:payload}; }, pending, metadataForAudit: (metadata) => metadata, refreshStudentContext: async () => {}, evidenceStorage: { read: async () => ({ data: Buffer.from("image"), mimeType: "image/png" }) }, createProvider: () => ({}), generate: async (input) => { calls.push(input); return { output: input.workflow === "assessment" ? analysis : mockConclusion(), metadata: { model: "mock" } }; } });
+  const handle = createPeriodEvaluationRouteHandler({ db, teacherId: teacher, loadClassroomContext: async () => currentContext, readJson: async (request) => request.body, send: (response, status, payload) => { response.result={status,body:payload}; }, pending, metadataForAudit: (metadata) => metadata, refreshStudentContext: async () => {}, evidenceStorage: { read: async () => ({ data: Buffer.from("image"), mimeType: "image/png" }) }, createProvider: () => ({}), generate: async (input) => { calls.push(input); return { output: input.workflow === "assessment" ? analysis : mockConclusion(), metadata: { model: "mock" } }; } });
   async function call(method, route, body) {
     const response = { writeHead(status, headers) { this.status = status; this.headers = headers; }, end(data) { this.data = data; } };
     await handle({ request: { method, body }, url: new URL(`http://localhost${route}`), response, origin: null });
     return response.result ?? { status: response.status, body: response.data, headers: response.headers };
   }
-  return { db, call, calls };
+  return { db, call, calls, currentContext };
 }
+
+test("el análisis reutiliza la huella completa del aula y rechaza cambios reales de contexto", async () => {
+  const f = await fixture();
+  try {
+    const selection = { classroomId: classId, periodId: firstPeriod, studentId: studentA, competencyId: "COM_ORAL" };
+    const current = await f.call("POST", "/api/period-evaluations/suggest", selection);
+    assert.equal(current.status, 200, JSON.stringify(current.body));
+    assert.equal(f.calls.length, 1);
+    f.currentContext.source_fingerprint = "confirmed-classroom-context-2";
+    const stale = await f.call("POST", "/api/period-evaluations/suggest", selection);
+    assert.equal(stale.status, 422);
+    assert.match(stale.body.error, /marco de evaluación requiere revisión/);
+    assert.equal(f.calls.length, 1, "no facturar una llamada con marco obsoleto");
+  } finally { await f.db.close(); }
+});
 
 async function confirmGeneratedConclusion(f, periodId, studentId, competencyId = "COM_ORAL") {
   const base = { classroomId: classId, periodId, studentId, competencyId };

@@ -158,7 +158,7 @@ El mapa desarrolla acciones del niño, mediación y continuidad, visibles en Pla
 
 **Fix localizado.** Instantes se proyectan a America/Lima, fechas civiles no se desplazan. Pendientes respetan las banderas del snapshot confirmado. Los conteos globales deduplican por estudiante/fuente/ID (los conteos por competencia conservan sus asociaciones). El seguimiento ordena cronológicamente y muestra primero/último registro distinto con aviso explícito N de M. No inventa síntesis ni cambia la prioridad histórica del diagnóstico por otra posterior.
 
-**Archivos y pruebas.** `diagnostic-unified-word.mjs` y test. 26/26 relacionadas, typecheck, lint y build PASS en `tests-h31-h32-docs-assessment`. Incluye banderas activadas/desactivadas, instante antes de medianoche Lima, fecha civil, nota multicompetencia y evolución con orden de entrada distinto. UI/descarga después: pendiente. Render visual: NO PROBADO, falta LibreOffice en runtime. Rollback: revertir fix sin migración.
+**Archivos y pruebas.** `diagnostic-unified-word.mjs` y test. 26/26 relacionadas, typecheck, lint y build PASS en `tests-h31-h32-docs-assessment`. Incluye banderas activadas/desactivadas, instante antes de medianoche Lima, fecha civil, nota multicompetencia y evolución con orden de entrada distinto. UI/descarga después: PASS, `diagnostico-despues-h31.docx` cuenta 27 notas únicas, sin las dos áreas inactivas ni placeholders. Inspección XML en `docx-after-inspect.json`. Render visual: NO PROBADO, falta LibreOffice en runtime. Commit `223acbe`. Rollback: revertir fix sin migración.
 
 ## H32 — Assessment Master multicompetencia agota plazo breve (HIGH / bloqueante)
 
@@ -166,4 +166,16 @@ El mapa desarrolla acciones del niño, mediación y continuidad, visibles en Pla
 
 **Causa y fix.** La ruta creaba el proveedor con el plazo por defecto de 30 s, igual que H29. Solo Assessment Master pasa `timeoutMs:180000`; sin cambio de modelo, prompt, retry ni otras funciones.
 
-**Pruebas.** La regresión de handler SQL captura opciones: falló antes (undefined), pasa después. 26/26 relacionadas, typecheck/lint/build PASS. Archivos: `scripts/assessment-master-routes.mjs`, `assessment-master-service.test.mjs`. API QA reiniciada después de validar; original sin reiniciar. UI después: pendiente de reintento. Rollback sin migración.
+**Pruebas.** La regresión de handler SQL captura opciones: falló antes (undefined), pasa después. 26/26 relacionadas, typecheck/lint/build PASS. Archivos: `scripts/assessment-master-routes.mjs`, `assessment-master-service.test.mjs`. API QA reiniciada después de validar; original sin reiniciar. UI después: PASS, reintento generó marco de seis competencias sin letras ni actuaciones inventadas; la docente abrió/revisó las seis orientaciones, guardó y confirmó. Commit `e8cdbde`. Rollback sin migración.
+
+## H35 — Maestro vigente rechazado por contexto reducido en Evaluar (HIGH / bloqueante)
+
+**Antes.** Primer análisis de Bruno fue rechazado antes del proveedor: «El marco de evaluación requiere revisión porque cambió la planificación o un criterio». Snapshot `h35-assessment-stale-before-first-analysis`; no costo de assessment en ese intento.
+
+**Causa.** Crear/confirmar maestro usa `annualPlanningContext.context_v4.source_fingerprint`, pero verificar en Evaluar pasaba solo el aula de autorización (sin context_v4). Se comparaba huella real con null, aunque nada hubiera cambiado.
+
+**Solución localizada.** Después de autorizar aula y selección, la ruta obtiene la proyección pública del contexto para ese mismo ID/docente mediante el servicio existente y la pasa al mismo calculador de fuentes. No elimina la huella ni relaja validación. Sin migración ni cambio de modelos.
+
+**Regresión.** Fixture SQL incluye una huella no nula como en producto. Antes falla 422 vs 200; después admite el mismo contexto y rechaza un cambio real antes de facturar. 15/15 relacionadas PASS; typecheck/lint/build y UI posteriores en curso al registrar.
+
+**Archivos.** `scripts/period-evaluation-routes.mjs`, `period-evaluation.test.mjs`. Rollback sin migración. Nota: preparar después el Word formal agrega una fuente real al mapa; esa posible obsolescencia sí debe revisarse, no confundirse con el falso bloqueo H35.
