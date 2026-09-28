@@ -206,6 +206,52 @@ test("el análisis reutiliza la huella completa del aula y rechaza cambios reale
   } finally { await f.db.close(); }
 });
 
+test("revisar una valoración confirmada conserva el historial y exige reconfirmar antes de cerrar", async () => {
+  const f = await fixture();
+  try {
+    const query = `classroomId=${classId}&periodId=${firstPeriod}`;
+    const base = { classroomId: classId, periodId: firstPeriod, studentId: studentA, competencyId: "COM_ORAL" };
+    const detail = (await f.call("GET", `/api/period-evaluations/detail?${query}&studentId=${studentA}&competencyId=COM_ORAL`)).body;
+    const first = { ...base, evidenceFingerprint: detail.evidence_fingerprint, expectedDraftRevision: null,
+      provisionalLevel: "B", achievementLevel: "B", teacherAnalysis: "Explica una idea con preguntas de apoyo.", conclusionText: "" };
+    const saved = await f.call("POST", "/api/period-evaluations/save-draft", first);
+    const confirmed = await f.call("POST", "/api/period-evaluations/confirm", { ...first, expectedDraftRevision: saved.body.draft_revision });
+    assert.equal(confirmed.status, 200, JSON.stringify(confirmed.body));
+    await confirmGeneratedConclusion(f, firstPeriod, studentA);
+    const before = (await f.call("GET", `/api/period-evaluations/overview?${query}`)).body;
+    assert.equal(before.progress.competencies_complete, 1);
+    const proposal = await f.call("POST", "/api/period-evaluations/conclusion/suggest", base);
+    const revised = { ...first, teacherAnalysis: "Explica una idea en un juego; en otro responde a propuestas del grupo." };
+    const revision = await f.call("POST", "/api/period-evaluations/save-draft", revised);
+    assert.equal(revision.status, 200, JSON.stringify(revision.body));
+    const reviewing = (await f.call("GET", `/api/period-evaluations/overview?${query}`)).body;
+    assert.equal(reviewing.rows.find((row) => row.student_id === studentA).state, "draft");
+    assert.equal(reviewing.progress.competencies_complete, 0);
+    assert.notEqual(reviewing.closure.source_fingerprint, before.closure.source_fingerprint);
+    assert.equal((await f.db.query("select status from competency_assessments where id=$1", [confirmed.body.assessment_id])).rows[0].status, "active");
+    assert.equal((await f.call("POST", "/api/period-evaluations/conclusion/suggest", base)).status, 409);
+    assert.equal((await f.call("POST", "/api/period-evaluations/conclusion/confirm", { ...base, generationId: proposal.body.generation_id, proposal: proposal.body.proposal })).status, 409);
+    const second = await f.call("POST", "/api/period-evaluations/confirm", { ...revised, expectedDraftRevision: revision.body.draft_revision });
+    assert.equal(second.status, 200, JSON.stringify(second.body));
+    assert.notEqual(second.body.assessment_id, confirmed.body.assessment_id);
+    const history = (await f.db.query("select id,status,details from competency_assessments where student_id=$1 and status in ('active','archived')", [studentA])).rows;
+    assert.equal(history.find((row) => row.id === confirmed.body.assessment_id).status, "archived");
+    assert.equal(history.find((row) => row.id === confirmed.body.assessment_id).details.evidence_overview, first.teacherAnalysis);
+    assert.equal(history.filter((row) => row.status === "active").length, 1);
+    assert.equal((await f.db.query("select count(*)::int as n from competency_descriptive_conclusions where status='active'")).rows[0].n, 0);
+    await confirmGeneratedConclusion(f, firstPeriod, studentA);
+    assert.equal((await f.call("GET", `/api/period-evaluations/overview?${query}`)).body.progress.competencies_complete, 1);
+  } finally { await f.db.close(); }
+});
+
+test("la ficha permite revisión versionada y no edita silenciosamente la valoración confirmada", async () => {
+  const ui = await readFile(new URL("../features/dashboard/components/period-evaluation.tsx", import.meta.url), "utf8");
+  assert.match(ui, /Revisar valoración/);
+  assert.match(ui, /readOnly=\{assessmentReadOnly\}/);
+  assert.match(ui, /!assessmentReadOnly&&<label/);
+  assert.match(ui, /assessmentReadOnly&&<section/);
+});
+
 async function confirmGeneratedConclusion(f, periodId, studentId, competencyId = "COM_ORAL") {
   const base = { classroomId: classId, periodId, studentId, competencyId };
   const generated = await f.call("POST", "/api/period-evaluations/conclusion/suggest", base);

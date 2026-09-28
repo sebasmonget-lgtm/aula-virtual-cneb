@@ -250,7 +250,7 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
       if (request.method === "GET" && url.pathname === "/api/period-evaluations/overview") {
         const data = await context(url.searchParams.get("classroomId"), url.searchParams.get("periodId"));
         const rows = publicRows(data.model, data.cards, data.labels);
-        const completed = rows.filter((row) => isTeacherAchievementLevel(row.level) && row.conclusion);
+        const completed = rows.filter((row) => row.state === "confirmed" && isTeacherAchievementLevel(row.level) && row.conclusion);
         const studentCount = data.model.students.filter((student) => data.model.scope.length && data.model.scope.every((id) => completed.some((row) => row.student_id === student.id && row.competency_id === id))).length;
         const planned=await plannedCompetencyIds(data.classroom,data.period);
         const statistics=buildPeriodStatistics({rows,mapEntries:data.evaluationMap.entries,competencyMeta:data.labels,studentCount:data.model.students.length,plannedCompetencyIds:planned});
@@ -375,6 +375,7 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
       }
       if (request.method === "POST" && url.pathname === "/api/period-evaluations/conclusion/suggest") {
         const body=await readJson(request),data=await selectedRow(body),assessment=data.row.assessment;
+        if (data.row.draft || data.row.state === "needs_review") throw new VersionConflictError("Confirma primero la revisión de la valoración docente.");
         if(!assessment?.achievement_level||!assessment.teacher_confirmed_at) throw new Error("Confirma primero la valoración docente.");
         if(!data.row.sourceRows.length) throw new Error("No hay evidencias para redactar una conclusión.");
         const student=await studentForClass(data.classroom,body.studentId),names=[student.first_name,student.last_name,student.preferred_name];
@@ -394,6 +395,7 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
       }
       if (request.method === "POST" && url.pathname === "/api/period-evaluations/conclusion/confirm") {
         const body=await readJson(request),data=await selectedRow(body),assessment=data.row.assessment,item=await pending.get(body.generationId);
+        if (data.row.draft || data.row.state === "needs_review") throw new VersionConflictError("Confirma primero la revisión de la valoración docente.");
         if(!assessment?.achievement_level||!assessment.teacher_confirmed_at) throw new Error("Confirma primero la valoración docente.");
         if(!item||item.workflow!=="period_conclusion"||item.classroom_id!==data.classroom.id||item.period_id!==data.period.id||item.student_id!==body.studentId||item.competency_v4_id!==body.competencyId||item.assessment_id!==assessment.id) throw new Error("La generación no corresponde a esta valoración.");
         if(!sameAssessmentSnapshot(item.source_assessment_snapshot,sourceAssessmentSnapshot(assessment))) throw new VersionConflictError("La valoración cambió. Genera otra conclusión.");

@@ -31,18 +31,20 @@ export function conclusionIsCurrent(conclusion, assessment) {
 
 export function evaluationState({ assessment, conclusion, draft, sourceRows }) {
   if (assessment && !evidenceIsCurrent(assessment, sourceRows)) return "needs_review";
+  if (draft) {
+    if (!evidenceIsCurrent(draft, sourceRows)) return "needs_review";
+    return draft.details?.information_status === "insufficient" ? "insufficient_information" : "draft";
+  }
   if (assessment && !assessment.achievement_level) return "level_pending";
   if (assessment?.achievement_level && !conclusionIsCurrent(conclusion, assessment)) return "conclusion_pending";
   if (assessment?.achievement_level && conclusion && !conclusionIsCurrent(conclusion, assessment)) return "needs_review";
   if (assessment?.achievement_level && (!conclusion || conclusionIsCurrent(conclusion, assessment))) return "confirmed";
-  if (draft?.details?.information_status === "insufficient" && evidenceIsCurrent(draft, sourceRows)) return "insufficient_information";
-  if (draft && evidenceIsCurrent(draft, sourceRows)) return "draft";
   if (!sourceRows.length) return "no_evidence";
   return "pending";
 }
 
 export function periodClosureFingerprint(rows) {
-  const normalized = rows.map((row) => ({ student_id: row.student_id, competency_v4_id: row.competency_v4_id, assessment_id: row.assessment?.id ?? null, level: row.assessment?.achievement_level ?? null, assessment_updated_at: row.assessment?.updated_at ?? null, conclusion_id: row.conclusion?.id ?? null, conclusion_updated_at: row.conclusion?.updated_at ?? null, evidence: assessmentSourceSnapshot(row.sourceRows) })).sort((a, b) => `${a.student_id}:${a.competency_v4_id}`.localeCompare(`${b.student_id}:${b.competency_v4_id}`));
+  const normalized = rows.map((row) => ({ student_id: row.student_id, competency_v4_id: row.competency_v4_id, assessment_id: row.assessment?.id ?? null, level: row.assessment?.achievement_level ?? null, assessment_updated_at: row.assessment?.updated_at ?? null, conclusion_id: row.conclusion?.id ?? null, conclusion_updated_at: row.conclusion?.updated_at ?? null, ...(row.draft ? { draft_id: row.draft.id, draft_revision: Number(row.draft.revision) } : {}), evidence: assessmentSourceSnapshot(row.sourceRows) })).sort((a, b) => `${a.student_id}:${a.competency_v4_id}`.localeCompare(`${b.student_id}:${b.competency_v4_id}`));
   return createHash("sha256").update(JSON.stringify(normalized)).digest("hex");
 }
 
