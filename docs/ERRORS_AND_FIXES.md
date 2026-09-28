@@ -1,5 +1,15 @@
 # Errores y soluciones
 
+## 2026-09-27 DATE de PostgreSQL rechazado en actividades (H24)
+
+**Síntoma.** La propuesta del 30/03, dentro del proyecto 30/03–10/04, no se podía guardar.
+
+**Causa raíz.** Convertir DATE con `String(date).slice(0,10)` daba día de semana en lugar de fecha ISO; se comparaban rangos incompatibles. Regresión SQL real reprodujo el rechazo.
+
+**Solución validada.** Reusar `annualCalendarDay` en límites, edición/confirmación de actividad y calendario del proyecto. 16 pruebas relacionadas, typecheck, lint y build PASS. Tras reiniciar solo API QA, el mismo borrador se guardó y confirmó por UI sin regenerarlo.
+
+**Prevención.** Normalizar DATE con el helper existente antes de comparar o validar; probar objetos Date reales además de strings. No convertir UTC DATE a día local ni debilitar límites del calendario.
+
 ## 2026-09-27 Confirmar días del proyecto fallaba por inferencia SQL (H23)
 
 **Síntoma.** Calendario mostraba ocho días válidos, pero confirmar devolvía error genérico.

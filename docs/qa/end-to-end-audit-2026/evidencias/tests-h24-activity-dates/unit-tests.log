@@ -1,0 +1,24 @@
+✔ la confirmación y el criterio heredado se guardan juntos o se revierten juntos (2537.2402ms)
+✔ fecha de actividad admite DATE real de PostgreSQL en guardar y confirmar, sin ampliar límites (2476.7813ms)
+✔ A-D, J-M y O-Q: activity-v1 exige parent permitido, competencia aplicable y coherencia (1.393ms)
+✔ D-H: Project y Unit llegan como contexto mínimo, con continuidad y sin datos privados (34.2394ms)
+✔ I: activity conserva límites de parent y persistencia (2.3879ms)
+✔ A-C: OPTIONS permite PUT y el parent público no filtra metadata técnica (1.2646ms)
+✔ G-N: edición conserva metadata, regeneración validada la reemplaza y materiales se normalizan (2.9002ms)
+✔ los IDs de ruta sobreviven ediciones y se registran cambios explícitos (3.1446ms)
+✔ la actividad conserva el origen y registra una modificación docente del criterio (1.4361ms)
+✔ los borradores históricos siguen usando su exportador anterior (0.2381ms)
+✔ clasifica fin de semana, feriado, gestión y día lectivo sin IA (1.0605ms)
+✔ override y exclusión del proyecto son capas separadas (1.1769ms)
+✔ las fechas y blueprints mantienen correspondencia exacta (0.6874ms)
+✔ la consulta real de confirmación guarda la identidad UUID y permite volver a borrador (2302.7993ms)
+✔ calendario 2026 aplica feriados, gestión, overrides y conserva proyectos antiguos (2038.9489ms)
+✔ reprogramar valida calendario, evita conflictos y sincroniza Hoy (1939.931ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 16
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 9483.4728

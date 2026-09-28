@@ -1,0 +1,65 @@
+[
+  {
+    "name": "typecheck",
+    "command": [
+      "node",
+      "node_modules/typescript/bin/tsc",
+      "--noEmit"
+    ],
+    "startedAt": "2026-09-28T04:19:13.457Z",
+    "endedAt": "2026-09-28T04:19:20.064Z",
+    "exitCode": 0,
+    "counters": null
+  },
+  {
+    "name": "unit-tests",
+    "command": [
+      "node",
+      "--test",
+      "--test-concurrency=2",
+      "src/lib/activity-persistence-v4.test.mjs",
+      "src/lib/activity-confirmation.test.mjs",
+      "src/lib/experience-lineage.test.mjs",
+      "src/lib/school-calendar-service.test.mjs"
+    ],
+    "startedAt": "2026-09-28T04:19:20.066Z",
+    "endedAt": "2026-09-28T04:19:29.654Z",
+    "exitCode": 0,
+    "counters": {
+      "tests": 16,
+      "pass": 16,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    }
+  },
+  {
+    "name": "lint",
+    "command": [
+      "node",
+      "node_modules/eslint/bin/eslint.js",
+      ".",
+      "--ignore-pattern",
+      "dist",
+      "--ignore-pattern",
+      ".next"
+    ],
+    "startedAt": "2026-09-28T04:19:29.657Z",
+    "endedAt": "2026-09-28T04:19:51.962Z",
+    "exitCode": 0,
+    "counters": null
+  },
+  {
+    "name": "build",
+    "command": [
+      "node",
+      "scripts/run-framework.mjs",
+      "build"
+    ],
+    "startedAt": "2026-09-28T04:19:51.964Z",
+    "endedAt": "2026-09-28T04:20:03.330Z",
+    "exitCode": 0,
+    "counters": null
+  }
+]

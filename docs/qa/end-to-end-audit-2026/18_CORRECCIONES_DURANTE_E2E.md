@@ -42,7 +42,7 @@ El enlace local de dependencias del renderizador bajo `docs/qa/.../node_modules`
 
 **Regresión.** Round-trip real de JSONB con PGlite reproduce el orden distinto y comprueba que el borrador intacto no tiene cambios. Cambios de propósito, competencias, preguntas, fechas y orden de actividades sí activan revisión. 12/12 pruebas relacionadas, typecheck, lint y build PASS en `tests-h22-project-draft`.
 
-**UI después.** PASS del paso bloqueado: las cuatro preguntas ya aparecen en el mismo borrador, sin otra llamada de IA, y se pasó al recorrido. Captura `screenshots/13-h22-preguntas-visibles.png`. Confirmación del mapa todavía pendiente. Commit `06f9c20`. Rollback: revertir el commit de comparación; no hay migración ni cambio de datos.
+**UI después.** PASS: las cuatro preguntas aparecen en el mismo borrador, sin regeneración; posteriormente se revisó y confirmó el mapa de ocho días desde la UI. Capturas `screenshots/13-h22-preguntas-visibles.png` y `screenshots/15-p1-proyecto-confirmado.png`, snapshot `p1-project-map-confirmed`. Commit `06f9c20`. Rollback: revertir el commit de comparación; no hay migración ni cambio de datos.
 
 ## H18 — Fixture UTC/Lima en reajuste (MEDIUM, pruebas)
 
@@ -66,4 +66,18 @@ El enlace local de dependencias del renderizador bajo `docs/qa/.../node_modules`
 
 **Causa/fix.** Inferencia de `$2` dentro de CASE/NULL. Cast `$2::uuid` en la misma consulta de `local-db-server.mjs`, sin cambiar migraciones, identidad autorizada, filas ni validación de fechas. Test en `school-calendar-service.test.mjs` verifica confirmar con identidad, fecha/revisión y regresar a borrador limpiando confirmación.
 
-**Validación.** Antes 5/6 (regresión falla); después 14/14 relacionadas, typecheck, lint y build PASS (`tests-h23-calendar-confirm`). Reinicio solo de API QA, mismos datos. UI PASS: «8 días confirmados. Ayni preparará 8 actividades». Master en preparación. Commit pendiente. Rollback: revertir cast/test, sin migración.
+**Validación.** Antes 5/6 (regresión falla); después 14/14 relacionadas, typecheck, lint y build PASS (`tests-h23-calendar-confirm`). Reinicio solo de API QA, mismos datos. UI PASS: ocho días lectivos confirmados, mapa preparado y proyecto confirmado, sin feriados ni fines de semana. Commit `0a19612`. Rollback: revertir cast/test, sin migración.
+
+## H24 — Fechas SQL válidas rechazadas al guardar actividad (BLOCKER)
+
+**Antes.** La primera actividad se generó desde el mapa confirmado para 30/03/2026, pero guardar devolvió «La fecha debe estar dentro de la experiencia y del año escolar». Snapshot `h24-activity-date-rejected`. No se regeneró la propuesta.
+
+**Causa.** PGlite devuelve SQL DATE como objeto Date. `String(date).slice(0,10)` produce texto del día de semana, no YYYY-MM-DD; las comparaciones lexicográficas rechazaban el rango. El mismo patrón estaba en validación lectiva, edición/confirmación de actividad y lectura del calendario del proyecto.
+
+**Fix localizado.** Reusar `annualCalendarDay`, ya disponible, para esos límites/fechas almacenadas. No cambiar fechas, calendarios, modelo, permisos ni restricciones sobre el pasado. Archivos: `scripts/local-db-server.mjs` y `activity-persistence-v4.test.mjs`.
+
+**Regresión.** Consulta SQL DATE real, ejecución de la función real del servidor; acepta extremos inclusivos y fechas interiores, también strings ISO persistidos. Rechaza fuera del proyecto/año, vacío y timestamp recibido como fecha editable. Antes 5/6 (nueva prueba reproduce el rechazo); después 16/16 relacionadas, typecheck, lint y build PASS (`tests-h24-activity-dates`).
+
+**UI después.** PASS: guardar y confirmar la misma actividad, sin nueva llamada de IA. Captura `screenshots/16-h24-actividad-confirmada.png`. Commit pendiente.
+
+**Rollback.** Revertir únicamente este commit; sin migración.

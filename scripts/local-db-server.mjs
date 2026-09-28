@@ -535,7 +535,7 @@ async function validateStoredActivityCriterion(current, classroom) {
   if (!allowed.has(competencyId)) throw new Error("El criterio ya no corresponde a esta actividad.");
 }
 function validateActivityDate(occursOn, experience, classroom) {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(occursOn ?? "") || occursOn < String(experience.starts_on).slice(0,10) || occursOn > String(experience.ends_on).slice(0,10) || occursOn < classroom.starts_on || occursOn > classroom.ends_on) throw new Error("La fecha debe estar dentro de la experiencia y del año escolar.");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(occursOn ?? "") || occursOn < annualCalendarDay(experience.starts_on) || occursOn > annualCalendarDay(experience.ends_on) || occursOn < annualCalendarDay(classroom.starts_on) || occursOn > annualCalendarDay(classroom.ends_on)) throw new Error("La fecha debe estar dentro de la experiencia y del año escolar.");
 }
 
 async function diagnosticWorkspace() {
@@ -1417,7 +1417,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       const stored=(await db.query(`select id,date::text,selected,exclusion_reason from project_instructional_dates where selection_id=$1 order by date`,[selection.id])).rows;
       const exclusions=stored.filter((item)=>!item.selected);
       const days=candidateProjectDates(calendar.days,source.slot.starts_on,source.slot.ends_on,exclusions);
-      return { selection:{...selection,starts_on:String(selection.starts_on).slice(0,10),ends_on:String(selection.ends_on).slice(0,10)},days,
+      return { selection:{...selection,starts_on:annualCalendarDay(selection.starts_on),ends_on:annualCalendarDay(selection.ends_on)},days,
         selected_dates:stored.filter((item)=>item.selected).map((item)=>item.date) };
     }
     if(request.method==="GET"&&url.pathname==="/api/school-calendar"){
@@ -1860,7 +1860,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       if (!current) { send(response, 404, { error: "Experiencia no disponible para confirmar." }, origin); return; }
       if (current.status !== "draft") { send(response, 409, conflictPayload(new VersionConflictError("El proyecto o unidad ya fue confirmado o reemplazado.", current.revision)), origin); return; }
       try {
-        validateExperienceDates({ startsOn: String(current.starts_on).slice(0,10), endsOn: String(current.ends_on).slice(0,10) }, context); validateLearningExperienceProposal(current.type, current.details, await applicableCompetencyIds(current.type, context));
+        validateExperienceDates({ startsOn: annualCalendarDay(current.starts_on), endsOn: annualCalendarDay(current.ends_on) }, context); validateLearningExperienceProposal(current.type, current.details, await applicableCompetencyIds(current.type, context));
         if (current.origin === "emergent" && !cleanText(current.planning_reason, 500)) throw new Error("Explica la razón de esta experiencia emergente.");
         if (current.origin === "planned") { const parent = (await db.query(`select proposal from annual_plans where id=$1 and classroom_id=$2 and status in ('active','archived')`, [current.annual_plan_id, context.id])).rows[0]; const source = parent?.proposal?.proposed_experiences?.[current.source_proposal_index]; if (!source || source.experience_type !== current.type) throw new Error("La propuesta de origen ya no coincide con esta experiencia."); }
         const body=await readJson(request);
@@ -1948,7 +1948,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         const occursOn = routeItem?.planned_date ?? routeItem?.date ?? body.occursOn;
         validateActivityDate(occursOn, experience, context);
         const calendar = await loadEffectiveCalendar(db, { teacherId, classroomId: context.id, from: occursOn, to: occursOn });
-        validateSelectedInstructionalDates(calendar.days, [occursOn], String(experience.starts_on).slice(0,10), String(experience.ends_on).slice(0,10));
+        validateSelectedInstructionalDates(calendar.days, [occursOn], annualCalendarDay(experience.starts_on), annualCalendarDay(experience.ends_on));
         validateActivityV4(body.proposal, await activityAllowedCompetencies(experience, context));
         const master = body.workshopProposal ? await activeWorkshopForProject(db, experience.id) : null;
         if (body.workshopProposal && pending.workshop_master_id !== (master?.id ?? null))
@@ -1970,10 +1970,10 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         const parent = { details: current.experience_details };
         const routeItem = routeItemFor(parent, current.details?.route_item_id);
         if (current.experience_details?.activity_route?.length && !routeItem) throw new Error("La actividad ya no corresponde a la ruta del proyecto.");
-        const occursOn = routeItem?.planned_date ?? routeItem?.date ?? String(current.planned_date ?? current.occurs_on).slice(0,10);
+        const occursOn = routeItem?.planned_date ?? routeItem?.date ?? annualCalendarDay(current.planned_date ?? current.occurs_on);
         validateActivityDate(occursOn, { starts_on: current.experience_starts_on, ends_on: current.experience_ends_on }, context);
         const calendar = await loadEffectiveCalendar(db, { teacherId, classroomId: context.id, from: occursOn, to: occursOn });
-        validateSelectedInstructionalDates(calendar.days, [occursOn], String(current.experience_starts_on).slice(0,10), String(current.experience_ends_on).slice(0,10));
+        validateSelectedInstructionalDates(calendar.days, [occursOn], annualCalendarDay(current.experience_starts_on), annualCalendarDay(current.experience_ends_on));
         validateActivityV4(body.proposal, await activityAllowedCompetencies(parent, context));
         const workshopDraft = await linkedWorkshopDraft(db, id, context.id);
         if (workshopDraft && pending && pending.workshop_master_id !== workshopDraft.experience_id)
@@ -2001,7 +2001,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       }
       if (current.status !== "draft") { send(response, 409, conflictPayload(new VersionConflictError("La actividad ya fue confirmada o reemplazada.", current.revision)), origin); return; }
       try {
-        validateActivityDate(String(current.occurs_on).slice(0, 10), { starts_on: current.experience_starts_on, ends_on: current.experience_ends_on }, context);
+        validateActivityDate(annualCalendarDay(current.occurs_on), { starts_on: current.experience_starts_on, ends_on: current.experience_ends_on }, context);
         validateActivityV4(current.details, await activityAllowedCompetencies({ details: current.experience_details }, context));
         const routeItem = routeItemFor({ details: current.experience_details }, current.details?.route_item_id);
         if (current.experience_details?.activity_route?.length && !routeItem) throw new Error("La actividad ya no pertenece a la ruta confirmada.");

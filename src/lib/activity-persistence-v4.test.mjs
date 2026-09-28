@@ -5,11 +5,31 @@ import { normalizeActivityMaterials, publicActivityParent, validateActivityV4 } 
 import { buildTeacherActivityGenerationInput } from "./ai-activity-ui-service.mjs";
 import { buildAIContext } from "./ai-context-builder-v4.mjs";
 import { loadKnowledgeBaseV4 } from "./knowledge-base-v4.mjs";
+import { PGlite } from "@electric-sql/pglite";
+import { annualCalendarDay } from "./annual-plan-schedule.mjs";
 
 const proposal = { title: "Sombras que cambian", purpose: "Explorar la luz", meaningful_situation: "Una sombra se mueve", teacher_preparation: "Preparar linternas", child_actions: "Probar posiciones", mediation: "Preguntar qué cambia", evidence_opportunities: "Registrar explicaciones", closure_or_continuity: "Probar mañana", competency_status: "confirmed", competency_id: "CYT_INDAGA" };
 const classroom = { id: "class-5", section: "A", age: 5, calendar: { school_year: 2026 }, language_context: { castellano_l2_applicable: false }, religion_applicable: false };
 const project = { id: "project-1", type: "project", title: "Investigamos sombras", purpose: "Explorar fenómenos", details: { trigger_or_interest: "¿Por qué se mueve la sombra?", starting_point: "Linternas", primary_competency_ids: ["CYT_INDAGA"], possible_secondary_competency_ids: ["COM_ORAL"], possible_pathways: ["Cambiar la luz"], spaces_and_materials: ["linternas"], evidence_opportunities: ["Explican cambios"], family_or_community_links: ["Conversar en casa"], adjustment_points: ["Parejas"], flexibility_notes: "Seguir el interés" }, prior_activities: [{ occurs_on: "2026-04-01", title: "Primera luz", purpose: "Observar", closure_or_continuity: "Cambiar distancia" }] };
 const unit = { ...project, id: "unit-1", type: "unit", details: { ...project.details, trigger_or_interest: undefined, learning_need_or_context: "Necesitan explicar cambios", possible_pathways: [], proposed_situations: ["Luz y objetos"] } };
+
+test("fecha de actividad admite DATE real de PostgreSQL en guardar y confirmar, sin ampliar límites", async () => {
+  const db = await PGlite.create();
+  try {
+    const dates = (await db.query(`select '2026-03-30'::date as starts_on, '2026-04-10'::date as ends_on`)).rows[0];
+    assert.ok(dates.starts_on instanceof Date);
+    const source = await readFile(new URL("../../scripts/local-db-server.mjs", import.meta.url), "utf8");
+    const validateSource = source.match(/function validateActivityDate\([\s\S]*?\n\}/)?.[0];
+    assert.ok(validateSource);
+    const validate = new Function("annualCalendarDay", `${validateSource}; return validateActivityDate;`)(annualCalendarDay);
+    const school = { starts_on: "2026-03-02", ends_on: "2026-12-31" };
+    for (const stored of [dates, { starts_on: dates.starts_on.toISOString(), ends_on: dates.ends_on.toISOString() }]) {
+      for (const day of ["2026-03-30", "2026-04-01", "2026-04-10"]) assert.doesNotThrow(() => validate(day, stored, school));
+      for (const day of ["2026-03-29", "2026-04-11", "2026-03-30T00:00:00Z", ""]) assert.throws(() => validate(day, stored, school), /fecha/);
+      assert.throws(() => validate("2026-03-30", stored, { ...school, starts_on: "2026-03-31" }), /fecha/);
+    }
+  } finally { await db.close(); }
+});
 
 test("A-D, J-M y O-Q: activity-v1 exige parent permitido, competencia aplicable y coherencia", () => {
   assert.deepEqual(validateActivityV4(proposal, new Set(["CYT_INDAGA"])), proposal);
