@@ -36,6 +36,7 @@ import type { LibraryResource } from "@/src/lib/library-resource";
 import { ProjectDevelopmentWorkspace as LegacyProjectDevelopmentWorkspace } from "./project-development-workspace";
 import { SimpleProjectWorkspace } from "./simple-project-workspace";
 import { OrdinaryObservationDialog } from "./ordinary-observation-dialog";
+import { OrdinaryReviewDialog } from "./ordinary-review-dialog";
 
 const ProjectDevelopmentWorkspace = process.env.NEXT_PUBLIC_AYNI_PROJECT_SIMPLE === "1"
   ? SimpleProjectWorkspace : LegacyProjectDevelopmentWorkspace;
@@ -72,7 +73,8 @@ export function TeacherWorkspace() {
   const [activityRunBlockId, setActivityRunBlockId] = useState<string | null>(null);
   const [evidenceContext, setEvidenceContext] = useState<{ activityId: string; criteria: ActivityCriterion[]; title: string } | null>(null);
   const [studentId, setStudentId] = useState("");
-  const [ordinaryContext, setOrdinaryContext] = useState<{ id: string; title: string } | null | undefined>(undefined);
+  const [ordinaryContext, setOrdinaryContext] = useState<{ id: string; title: string; criteria: ActivityCriterion[] } | null | undefined>(undefined);
+  const [ordinaryReviewOpen, setOrdinaryReviewOpen] = useState(false);
   const [criterionId, setCriterionId] = useState("");
   const [note, setNote] = useState("");
   const [photo, setPhoto] = useState<{ base64: string; mimeType: "image/jpeg" | "image/png" | "image/webp"; name: string } | null>(null);
@@ -179,7 +181,7 @@ export function TeacherWorkspace() {
 
   function openEvidenceFor(block: LocalDashboard["today"]["blocks"][number], suggestedStudentId?: string) {
     if (process.env.NEXT_PUBLIC_AYNI_ORDINARY_OBSERVATIONS === "1" && block.activity_id) {
-      setOrdinaryContext({ id: block.activity_id, title: block.title }); return;
+      setOrdinaryContext({ id: block.activity_id, title: block.title, criteria: block.criteria }); return;
     }
     if (!block.activity_id || !block.criteria.length) return;
     setStudentId("");
@@ -246,6 +248,8 @@ export function TeacherWorkspace() {
           <div className="flex items-center gap-2">
             {process.env.NEXT_PUBLIC_AYNI_ORDINARY_OBSERVATIONS === "1" && (active === "Hoy" || active === "Aula") &&
               <Button type="button" variant="outline" className="min-h-11" onClick={() => setOrdinaryContext(null)}>Registrar observación</Button>}
+            {process.env.NEXT_PUBLIC_AYNI_CURRICULAR_REVIEW === "1" && (active === "Hoy" || active === "Aula") &&
+              <Button type="button" variant="outline" className="min-h-11" onClick={() => setOrdinaryReviewOpen(true)}>Revisar observaciones</Button>}
             <button type="button" aria-label="Calendario" title="Calendario" aria-current={active === "Calendario" ? "page" : undefined} onClick={() => navigate("Calendario")} className={`grid size-11 place-items-center rounded-xl focus-visible:outline-2 focus-visible:outline-[#087d96] md:hidden ${active === "Calendario" ? "bg-[#dff3f6] text-[#087d96]" : "text-[#60718a] hover:bg-[#edf6fa]"}`}><CalendarRange className="size-5" /></button>
             <div className={`hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold sm:flex ${databaseState === "connected" ? "bg-[#e5f1ee] text-[#1f625c]" : "bg-muted text-muted-foreground"}`}>
               <Database className="size-3.5" />
@@ -274,6 +278,7 @@ export function TeacherWorkspace() {
       <AttendanceDialog open={attendanceOpen} onOpenChange={setAttendanceOpen} students={students} onSave={markAttendance} />
       <EvidenceDialog open={evidenceOpen} onOpenChange={closeEvidence} students={students} studentId={studentId} setStudentId={setStudentId} criterionId={criterionId} setCriterionId={setCriterionId} criteria={evidenceContext?.criteria ?? activity?.criteria ?? []} note={note} setNote={setNote} photo={photo} setPhoto={setPhoto} audio={audio} setAudio={setAudio} saved={saved} saving={savingEvidence} saveError={saveError} saveEvidence={saveEvidence} activityTitle={evidenceContext?.title ?? activity?.title ?? "Actividad"} databaseConnected={databaseState === "connected"} />
       {ordinaryContext !== undefined && <OrdinaryObservationDialog students={students} activity={ordinaryContext} onClose={() => setOrdinaryContext(undefined)} />}
+      {ordinaryReviewOpen && <OrdinaryReviewDialog students={students} onClose={() => setOrdinaryReviewOpen(false)} />}
     </SidebarProvider>
   );
 }

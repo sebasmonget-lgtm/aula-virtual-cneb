@@ -54,6 +54,8 @@ import { generateCriterionEvidence } from "../src/lib/ai-criterion-evidence-ui-s
 import { criterionMatchesConfirmedActivity, validateEvidenceCaptureV4 } from "../src/lib/evidence-capture-v4.mjs";
 import { reassignEvidenceStudent } from "../src/lib/evidence-student-correction.mjs";
 import { listOrdinaryObservations, reviseOrdinaryObservation, saveOrdinaryObservation, validateOrdinaryObservation } from "../src/lib/ordinary-observation-service.mjs";
+import { confirmOrdinaryAttribution, ordinaryAttributionHistory, ordinaryReviewQueue,
+  recordOrdinarySuggestion } from "../src/lib/ordinary-attribution-service.mjs";
 import { createAssessmentRouteHandler } from "./assessment-routes.mjs";
 import { createAssessmentMasterRouteHandler } from "./assessment-master-routes.mjs";
 import { createDescriptiveConclusionRouteHandler } from "./descriptive-conclusion-routes.mjs";
@@ -99,6 +101,7 @@ const dbMode = process.env.AYNI_DB_MODE ?? (authMode === "local" ? "local" : "po
 const ordinaryStorage = dbMode === "local" ? evidenceStorage : process.env.AYNI_SUPABASE_SERVICE_ROLE_KEY
   ? createSupabasePrivateObservationStorage({ url: process.env.AYNI_SUPABASE_URL,
     serviceRoleKey: process.env.AYNI_SUPABASE_SERVICE_ROLE_KEY }) : null;
+const curricularReviewEnabled = process.env.AYNI_CURRICULAR_REVIEW === "1";
 const testAuthWithPglite = process.env.NODE_ENV === "test" && process.env.AYNI_TEST_AUTH_PGLITE === "1";
 if ((authMode === "local") !== (dbMode === "local") && !testAuthWithPglite) {
   throw new Error("Usa Auth local con PGlite o Auth Supabase con PostgreSQL.");
@@ -122,7 +125,7 @@ const exportTables = [
   "profiles", "curriculum_source_documents", "curriculum_versions", "levels", "cycles", "age_grades", "curriculum_areas",
   "competencies", "capacities", "standards", "performances", "transversal_approaches", "school_years", "classrooms",
   "institution_assets", "institution_profiles", "students", "learning_experiences", "ai_usage_events",
-  "activities", "activity_criteria", "evidences", "ordinary_observations", "ordinary_observation_revisions", "competency_observation_guides",
+  "activities", "activity_criteria", "evidences", "ordinary_observations", "ordinary_observation_revisions", "ordinary_observation_attributions", "ordinary_observation_criterion_links", "competency_observation_guides",
   "document_templates", "document_versions", "diagnostic_sessions",
   "diagnostic_entries", "observation_references", "student_observations", "diagnostic_experience_observations", "diagnostic_spontaneous_observations", "student_family_interviews", "student_family_interview_attachments", "diagnostic_competency_reviews", "diagnostic_student_reviews", "diagnostic_group_reviews", "diagnostic_priority_reviews",
   "class_schedule_entries", "daily_execution_logs", "attendance_records", "calendar_exceptions", "calendar_blocks", "initial_stages", "project_slots", "school_calendar_versions", "school_calendar_holidays", "school_calendar_days", "classroom_calendar_overrides", "project_calendar_selections", "project_instructional_dates", "activity_schedule_changes", "evaluation_periods", "period_competency_scope", "period_closures", "period_closure_versions", "period_evaluation_map_versions", "period_evaluation_map_entries", "competency_display_labels", "classroom_period_reports", "period_closure_workflows", "student_context_snapshots", "annual_plans", "annual_plan_formal_content", "annual_plan_competencies", "annual_plan_changes", "competency_assessments", "competency_descriptive_conclusions", "family_reports",
@@ -155,6 +158,10 @@ else {
     if (!rawSchema?.observations || !rawSchema?.revisions) {
       await database.close();
       throw new Error("Faltan migraciones F5 de observaciones; la captura nueva no puede iniciar.");
+    }
+    if (curricularReviewEnabled && !(await db.query(`select to_regclass('public.ordinary_observation_attributions') as attributions`)).rows[0]?.attributions) {
+      await database.close();
+      throw new Error("Falta la migración F6 de atribuciones; la revisión curricular no puede iniciar.");
     }
   }
 }
@@ -191,6 +198,41 @@ const pendingDiagnosticRows = authMode === "local" ? (await db.query(`select o.i
   join classrooms c on c.id=o.classroom_id where c.teacher_id=$1 and o.classification_status='pending'
   order by o.observed_at,o.id`, [localTeacherId])).rows : [];
 for (const row of pendingDiagnosticRows) queueDiagnosticClassification(row.id, row.student_id, localTeacherId);
+
+const ordinarySuggestionInFlight = new Set();
+async function suggestOrdinaryObservation(teacherId, observationId) {
+  const { observation, latest } = await ordinaryAttributionHistory(db, teacherId, observationId);
+  if (["confirmed", "unclassified"].includes(latest?.state) && latest.raw_revision === observation.source_revision) return latest;
+  const kb = await loadKnowledgeBaseV4();
+  const conditions = { castellanoL2Applicable: observation.castellano_l2_applicable === true,
+    religionApplicable: observation.religion_applicable === true };
+  const applicable = kb.competencyCards.filter(card =>
+    competencyApplicability(card, observation.age, conditions).planning_available);
+  const allowedIds = applicable.map(card => card.id);
+  const names = (await db.query(`select first_name,last_name,preferred_name from students where classroom_id=$1`,
+    [observation.classroom_id])).rows.flatMap(row => [row.first_name,row.last_name,row.preferred_name]).filter(Boolean);
+  const anonymousText = observation.status === "voided" ? null : anonymousDecisionText(observation.effective_text, names);
+  if (!anonymousText || !jevCompetencySuggester) {
+    if (observation.captured_criterion_id) return latest;
+    return recordOrdinarySuggestion(db, teacherId, observationId, { expectedVersion: latest?.version ?? 0,
+      allowedIds, unavailable: true, provenance: { reason: anonymousText ? "jev_unavailable" : "privacy_or_text_blocked" } });
+  }
+  const options = buildClassifierOptions(applicable, observation.age, allowedIds);
+  const decision = await withAiUsageContext({ teacherId, db }, () =>
+    jevCompetencySuggester.classify({ observation: anonymousText, age: observation.age, options }));
+  return recordOrdinarySuggestion(db, teacherId, observationId, { expectedVersion: latest?.version ?? 0,
+    candidateIds: decision.candidate_ids, allowedIds,
+    provenance: { source: "jev", kb_version: kb.version, decision_metadata: decision.decision_metadata ?? null } });
+}
+function queueOrdinarySuggestion(teacherId, observationId) {
+  if (ordinarySuggestionInFlight.has(observationId)) return;
+  ordinarySuggestionInFlight.add(observationId);
+  setImmediate(async () => {
+    try { await suggestOrdinaryObservation(teacherId, observationId); }
+    catch { recordOperationalEvent("ordinary_suggestion_failed", { workflow: "ordinary_observation" }); }
+    finally { ordinarySuggestionInFlight.delete(observationId); }
+  });
+}
 
 async function migrate() {
   await db.exec(`create table if not exists local_schema_migrations (
@@ -2235,7 +2277,35 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         send(response, 404, { error: "Captura de observaciones no habilitada." }, origin); return;
       }
       try {
-        if (request.method === "GET" && url.pathname === "/api/ordinary-observations") {
+        if (request.method === "GET" && url.pathname === "/api/ordinary-observations/queue" && curricularReviewEnabled) {
+          send(response, 200, { observations: await ordinaryReviewQueue(db, teacherId) }, origin);
+        } else if (request.method === "GET" && /^\/api\/ordinary-observations\/[0-9a-f-]+\/attributions$/i.test(url.pathname) && curricularReviewEnabled) {
+          const history = await ordinaryAttributionHistory(db, teacherId, url.pathname.split("/")[3]);
+          const kb = await loadKnowledgeBaseV4();
+          const conditions = { castellanoL2Applicable: history.observation.castellano_l2_applicable === true,
+            religionApplicable: history.observation.religion_applicable === true };
+          const competencies = kb.competencyCards.filter(card =>
+            competencyApplicability(card, history.observation.age, conditions).planning_available)
+            .map(card => ({ id: card.id, name: card.official_name }));
+          const criteria = history.observation.activity_id ? (await db.query(`select id,competency_id,competency_v4_id,criterion_text
+            from activity_criteria where activity_id=$1 and status='active'
+            order by teacher_confirmed_at,id`, [history.observation.activity_id])).rows : [];
+          send(response, 200, { ...history, competencies, criteria }, origin);
+        } else if (request.method === "POST" && /^\/api\/ordinary-observations\/[0-9a-f-]+\/suggest$/i.test(url.pathname) && curricularReviewEnabled) {
+          await readJson(request);
+          const result = await suggestOrdinaryObservation(teacherId, url.pathname.split("/")[3]);
+          send(response, 200, { attribution: result }, origin);
+        } else if (request.method === "POST" && /^\/api\/ordinary-observations\/[0-9a-f-]+\/attributions$/i.test(url.pathname) && curricularReviewEnabled) {
+          const observationId = url.pathname.split("/")[3], body = await readJson(request);
+          const { observation } = await ordinaryAttributionHistory(db, teacherId, observationId);
+          const kb = await loadKnowledgeBaseV4();
+          const conditions = { castellanoL2Applicable: observation.castellano_l2_applicable === true,
+            religionApplicable: observation.religion_applicable === true };
+          const allowedIds = kb.competencyCards.filter(card =>
+            competencyApplicability(card, observation.age, conditions).planning_available).map(card => card.id);
+          const attribution = await confirmOrdinaryAttribution(db, teacherId, observationId, { ...body, allowedIds });
+          send(response, 201, { attribution }, origin);
+        } else if (request.method === "GET" && url.pathname === "/api/ordinary-observations") {
           send(response, 200, { observations: await listOrdinaryObservations(db, teacherId, url.searchParams.get("studentId")) }, origin);
         } else if (request.method === "POST" && url.pathname === "/api/ordinary-observations") {
           const body = await readJson(request);
@@ -2263,6 +2333,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
             });
             if (!result.created && mediaPath) await ordinaryStorage.delete(mediaPath, { teacherId, studentId: body.studentId });
             send(response, result.created ? 201 : 200, result, origin);
+            if (result.created && curricularReviewEnabled) queueOrdinarySuggestion(teacherId, result.observation.id);
           } catch (error) {
             if (mediaPath) await ordinaryStorage.delete(mediaPath, { teacherId, studentId: body.studentId }).catch(() => {});
             throw error;

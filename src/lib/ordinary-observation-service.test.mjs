@@ -8,20 +8,28 @@ import { listOrdinaryObservations, reviseOrdinaryObservation, saveOrdinaryObserv
 async function fixture() {
   const db = await PGlite.create();
   await db.exec(`create table profiles(user_id uuid primary key);
-    create table classrooms(id uuid primary key,teacher_id uuid not null references profiles(user_id),school_year_id uuid not null,status text not null);
+    create table age_grades(id uuid primary key,age_years smallint not null);
+    create table classrooms(id uuid primary key,teacher_id uuid not null references profiles(user_id),school_year_id uuid not null,
+      age_grade_id uuid references age_grades(id),castellano_l2_applicable boolean not null default false,
+      religion_applicable boolean not null default false,status text not null);
     create table students(id uuid primary key,classroom_id uuid not null references classrooms(id),status text not null);
     create table learning_experiences(id uuid primary key,classroom_id uuid not null references classrooms(id),title text not null);
     create table activities(id uuid primary key,experience_id uuid not null references learning_experiences(id),
       title text not null,occurs_on date not null,status text not null,details jsonb not null default '{}'::jsonb);
+    create table activity_criteria(id uuid primary key,activity_id uuid not null references activities(id),
+      competency_id uuid,competency_v4_id text,criterion_text text,status text not null,teacher_confirmed_at timestamptz);
     create table evaluation_periods(id uuid primary key,school_year_id uuid not null,starts_on date not null,ends_on date not null);`);
   await db.exec(await readFile(new URL("../../local-db/migrations/0062_ordinary_observations.sql", import.meta.url), "utf8"));
   await db.exec(await readFile(new URL("../../local-db/migrations/0063_ordinary_observation_delete_guard.sql", import.meta.url), "utf8"));
+  await db.exec(await readFile(new URL("../../local-db/migrations/0064_ordinary_observation_attributions.sql", import.meta.url), "utf8"));
   const teacher = randomUUID(), otherTeacher = randomUUID(), classroom = randomUUID(), otherClassroom = randomUUID();
   const yearId = randomUUID(), periodId = randomUUID();
   const student = randomUUID(), secondStudent = randomUUID(), foreignStudent = randomUUID();
   const project = randomUUID(), activity = randomUUID(), blueprint = randomUUID();
+  const ageGrade = randomUUID();
   await db.query("insert into profiles(user_id) values($1),($2)", [teacher, otherTeacher]);
-  await db.query("insert into classrooms(id,teacher_id,school_year_id,status) values($1,$2,$3,'active'),($4,$5,$6,'active')", [classroom,teacher,yearId,otherClassroom,otherTeacher,randomUUID()]);
+  await db.query("insert into age_grades(id,age_years) values($1,4)", [ageGrade]);
+  await db.query("insert into classrooms(id,teacher_id,school_year_id,age_grade_id,status) values($1,$2,$3,$7,'active'),($4,$5,$6,$7,'active')", [classroom,teacher,yearId,otherClassroom,otherTeacher,randomUUID(),ageGrade]);
   await db.query("insert into evaluation_periods(id,school_year_id,starts_on,ends_on) values($1,$2,'2026-09-01','2026-12-31')", [periodId,yearId]);
   await db.query("insert into students(id,classroom_id,status) values($1,$2,'active'),($3,$2,'active'),($4,$5,'active')", [student,classroom,secondStudent,foreignStudent,otherClassroom]);
   await db.query("insert into learning_experiences(id,classroom_id,title) values($1,$2,'Proyecto')", [project,classroom]);
@@ -110,5 +118,41 @@ test("foto privada sin texto queda ligada al alumno y no exige competencia", asy
     assert.equal(retry.created, false);
     assert.equal(retry.observation.media_path, mediaPath);
     await assert.rejects(f.db.query('update ordinary_observations set media_path=$1 where id=$2', ['otro',observation.id]), /inmutable/);
+  } finally { await f.db.close(); }
+});
+
+test("un criterio elegido expresamente queda ligado al alumno y no se infiere del texto", async () => {
+  const f = await fixture();
+  try {
+    const criterionId = randomUUID();
+    await f.db.query(`insert into activity_criteria(id,activity_id,competency_v4_id,status,teacher_confirmed_at)
+      values($1,$2,'COM_ORAL','active',now())`, [criterionId,f.activity]);
+    const { observation } = await saveOrdinaryObservation(f.db, f.teacher, {
+      studentId: f.student, clientRequestId: randomUUID(), sourceKind: 'guided', activityId: f.activity,
+      criterionId, rawText: 'El audio dijo el nombre de otro niño.' });
+    assert.equal(observation.student_id, f.student);
+    assert.equal(observation.captured_criterion_id, criterionId);
+    assert.equal(observation.context_snapshot.captured_competency_id, 'COM_ORAL');
+    await assert.rejects(f.db.query(`update ordinary_observations set captured_criterion_id=null where id=$1`,
+      [observation.id]), /inmutable/);
+    await assert.rejects(saveOrdinaryObservation(f.db, f.teacher, {
+      studentId: f.student, clientRequestId: randomUUID(), sourceKind: 'guided', activityId: f.activity,
+      criterionId: randomUUID(), rawText: 'Prueba.' }), /no pertenecen/);
+  } finally { await f.db.close(); }
+});
+
+test("criterio histórico activo sigue siendo decisión docente sin inventar ID V4", async () => {
+  const f = await fixture();
+  try {
+    const criterionId = randomUUID(), legacyId = randomUUID();
+    await f.db.query(`insert into activity_criteria(id,activity_id,competency_id,criterion_text,status)
+      values($1,$2,$3,'Describe lo que observó','active')`, [criterionId,f.activity,legacyId]);
+    const { observation } = await saveOrdinaryObservation(f.db,f.teacher,{
+      studentId:f.student,clientRequestId:randomUUID(),sourceKind:'guided',activityId:f.activity,
+      criterionId,rawText:'Describió lo que vio.' });
+    assert.equal(observation.captured_criterion_id,criterionId);
+    assert.equal(observation.context_snapshot.captured_legacy_competency_id,legacyId);
+    assert.equal(observation.context_snapshot.captured_competency_id,null);
+    assert.equal(observation.context_snapshot.captured_criterion_text,'Describe lo que observó');
   } finally { await f.db.close(); }
 });

@@ -9,13 +9,15 @@ export function validateOrdinaryObservation(input) {
   if (!validId(input.clientRequestId)) throw new TypeError("La solicitud de observación no es válida.");
   if (!['guided', 'spontaneous'].includes(input.sourceKind)) throw new TypeError("Elige el tipo de observación.");
   if (input.activityId != null && !validId(input.activityId)) throw new TypeError("La actividad no es válida.");
+  if (input.criterionId != null && (!validId(input.criterionId) || !input.activityId)) throw new TypeError("El criterio requiere una actividad válida.");
   const rawText = input.rawText == null ? null : input.rawText;
   if (rawText !== null && (typeof rawText !== 'string' || !rawText.trim() || rawText.length > 4000))
     throw new TypeError("Escribe una observación de hasta 4000 caracteres.");
   if (!rawText && !input.hasMedia) throw new TypeError("Escribe un hecho o adjunta una foto.");
   // Raw text, including names, casing, line breaks and transcription mistakes, is never normalized.
   return { studentId: input.studentId, clientRequestId: input.clientRequestId,
-    sourceKind: input.sourceKind, activityId: input.activityId ?? null, rawText };
+    sourceKind: input.sourceKind, activityId: input.activityId ?? null,
+    criterionId: input.criterionId ?? null, rawText };
 }
 
 export async function saveOrdinaryObservation(db, teacherId, input, { mediaPath = null, mediaMimeType = null, mediaFingerprint = null, occurredAt = new Date() } = {}) {
@@ -43,6 +45,16 @@ export async function saveOrdinaryObservation(db, teacherId, input, { mediaPath 
       project_version: activity.details?.activity_contract?.project_version ?? null,
       project_fingerprint: activity.details?.activity_contract?.project_fingerprint ?? null };
   }
+  if (capture.criterionId) {
+    const criterion = (await db.query(`select ac.id,ac.competency_id,ac.competency_v4_id,ac.criterion_text from activity_criteria ac
+      where ac.id=$1 and ac.activity_id=$2 and ac.status='active'`,
+    [capture.criterionId,capture.activityId])).rows[0];
+    if (!criterion) throw new ObservationPermissionError();
+    context = { ...context, captured_criterion_id: criterion.id,
+      captured_criterion_text: criterion.criterion_text,
+      captured_competency_id: criterion.competency_v4_id,
+      captured_legacy_competency_id: criterion.competency_id };
+  }
   const eventTime = occurredAt instanceof Date ? occurredAt : new Date(occurredAt);
   if (Number.isNaN(eventTime.getTime())) throw new TypeError("La fecha de observación no es válida.");
   const civilDate = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Lima", year: "numeric", month: "2-digit", day: "2-digit" }).format(eventTime);
@@ -61,11 +73,11 @@ export async function saveOrdinaryObservation(db, teacherId, input, { mediaPath 
     }
     const observation = (await tx.query(`insert into ordinary_observations
       (id,classroom_id,student_id,created_by,client_request_id,request_fingerprint,occurred_at,
-       raw_text,media_path,media_mime_type,source_kind,context_snapshot,activity_id,project_id,blueprint_id)
-      values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12::jsonb,$13,$14,$15) returning *`,
+       raw_text,media_path,media_mime_type,source_kind,context_snapshot,activity_id,project_id,blueprint_id,captured_criterion_id)
+      values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12::jsonb,$13,$14,$15,$16) returning *`,
     [randomUUID(), student.classroom_id, capture.studentId, teacherId, capture.clientRequestId,
       fingerprint, eventTime, capture.rawText, mediaPath, mediaMimeType,
-      capture.sourceKind, JSON.stringify(context), capture.activityId, projectId, blueprintId])).rows[0];
+      capture.sourceKind, JSON.stringify(context), capture.activityId, projectId, blueprintId, capture.criterionId])).rows[0];
     return { observation, created: true };
   });
 }

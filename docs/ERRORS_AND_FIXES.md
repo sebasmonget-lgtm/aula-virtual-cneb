@@ -1,5 +1,15 @@
 # Errores y soluciones
 
+## 2026-09-28 — F6: criterio histórico sin ID de competencia V4
+
+**Síntoma.** Una captura guiada QA con criterio activo de un taller histórico no podía conservar la atribución elegida porque la fila tenía `competency_v4_id` nulo.
+
+**Causa raíz.** El primer validador de F6 suponía que todos los criterios de actividad ya habían migrado al catálogo V4. Los talleres anteriores conservan un UUID de competencia heredada válido y no deben recibir un mapeo V4 inventado.
+
+**Solución validada.** Admitir el criterio activo perteneciente a la actividad autorizada, guardar su ID y texto en el snapshot y conservar el UUID legacy sin transformarlo. La QA en clon verificó captura, recarga y visualización; el cotejo histórico permaneció intacto.
+
+**Prevención.** Probar criterios V4 y legacy en cada frontera de observación/evaluación y resolver equivalencias únicamente mediante fuente curricular autorizada, no por nombre ni por suposición.
+
 ## 2026-09-28 — F5: exportación e importación de tablas raw desalineadas
 
 **Síntoma.** Dos pruebas de traslado fallaron después de añadir las tablas de observación al export local.

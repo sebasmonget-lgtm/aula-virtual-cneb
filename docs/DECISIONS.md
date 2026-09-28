@@ -1,5 +1,13 @@
 # Decisiones de arquitectura
 
+## ADR 092 F6: atribución curricular posterior y revisable
+
+**Decisión (2026-09-28).** La observación raw y su `student_id` nunca se reescriben al clasificar. Una tabla append-only registra cada sugerencia Jev, abstención o decisión docente con versión, revisión raw y procedencia. Choice propone la primaria y las preguntas independientes pueden proponer adicionales; ninguna se confirma sola. La profesora acepta, cambia, agrega, quita o deja sin clasificar. Una corrección posterior del texto invalida la vigencia de la atribución anterior y permite nueva revisión, sin borrar el historial.
+
+**Criterio explícito.** Si la profesora elige un criterio activo al capturar dentro de una actividad propia, `captured_criterion_id` y su snapshot quedan inmutables como atribución docente de origen; Jev solo puede sugerir adicionales. Los criterios legacy activos sin ID V4 mantienen su UUID/leyenda histórica, sin inventar correspondencia curricular V4. Los vínculos de criterio de decisiones posteriores se proyectan de forma idempotente en una tabla append-only; solo la última decisión docente de la revisión raw vigente puede usarse como fuente de evaluación. La integración de esa fuente en H34 corresponde a F8.
+
+**Permisos y rollback.** API autoriza docente/aula/autor y valida IDs aplicables y criterios del mismo activity. Supabase concede lectura propia por RLS, prohíbe escrituras directas, y las migraciones F6 son aditivas. `AYNI_CURRICULAR_REVIEW` y `NEXT_PUBLIC_AYNI_CURRICULAR_REVIEW` quedan apagadas por defecto; desactivarlas restaura captura raw sin borrar atribuciones. Fotos/audio no se envían a Jev; solo copia textual anonimizada. Un fallo del proveedor deja la observación guardada y la cola manual disponible.
+
 ## ADR 091 F5: identidad explícita y observación original inmutable
 
 **Decisión (2026-09-28).** Toda observación ordinaria nueva exige que la profesora seleccione un alumno antes de escribir, dictar o guardar. El `student_id` enviado y autorizado contra el aula es la única fuente de identidad: ni el texto, ni la transcripción literal, ni una sugerencia posterior de Jev extraen o cambian ese vínculo. La captura raw (`ordinary_observations`) no exige competencia ni actividad; si hay actividad, el servidor fija el snapshot proyecto/blueprint, no el cliente. El texto se persiste exactamente como llegó, incluyendo nombres contradictorios, errores, espacios y saltos. La corrección/anulación docente se agrega como revisión con CAS, sin overwrite del original ni cambio de alumno.

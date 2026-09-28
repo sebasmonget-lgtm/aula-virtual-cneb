@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { apiFetch } from "@/src/lib/ayni-api-fetch";
-import { localDatabaseApiUrl, type LocalStudent, type PrivateMediaUpload } from "@/src/lib/local-database";
+import { localDatabaseApiUrl, type ActivityCriterion, type LocalStudent, type PrivateMediaUpload } from "@/src/lib/local-database";
 import { AsyncButton, WorkflowFeedback } from "./workflow-ui";
 import { DictationRecorder } from "./dictation-recorder";
 import { preparePrivateMedia } from "./media-attachment-input";
@@ -14,9 +14,10 @@ import { preparePrivateMedia } from "./media-attachment-input";
 type SavedObservation = { id: string; student_id: string; raw_text: string | null; corrected_text?: string | null; source_revision: number; status: string };
 
 export function OrdinaryObservationDialog({ students, activity, onClose }: {
-  students: LocalStudent[]; activity: { id: string; title: string } | null; onClose: () => void;
+  students: LocalStudent[]; activity: { id: string; title: string; criteria: ActivityCriterion[] } | null; onClose: () => void;
 }) {
   const [studentId, setStudentId] = useState("");
+  const [criterionId, setCriterionId] = useState("");
   const [rawText, setRawText] = useState("");
   const [photo, setPhoto] = useState<PrivateMediaUpload | null>(null);
   const [clientRequestId, setClientRequestId] = useState(() => crypto.randomUUID());
@@ -39,7 +40,7 @@ export function OrdinaryObservationDialog({ students, activity, onClose }: {
       const response = await apiFetch(`${localDatabaseApiUrl}/api/ordinary-observations`, {
         method: "POST", headers: { "content-type": "application/json" },
         body: JSON.stringify({ studentId, clientRequestId, sourceKind: activity ? "guided" : "spontaneous",
-          activityId: activity?.id ?? null, rawText: text || null,
+          activityId: activity?.id ?? null, criterionId: criterionId || null, rawText: text || null,
           photo: photo ? { base64: photo.base64, mimeType: photo.mimeType } : null }),
       });
       const data = await response.json() as { error?: string; observation: SavedObservation };
@@ -69,7 +70,7 @@ export function OrdinaryObservationDialog({ students, activity, onClose }: {
   }
 
   function startAnother() {
-    setStudentId(""); setRawText(""); setPhoto(null); setSaved(null); setEditMode(false);
+    setStudentId(""); setCriterionId(""); setRawText(""); setPhoto(null); setSaved(null); setEditMode(false);
     setCorrectedText(""); setReason(""); setMessage(""); setHistory(null); setClientRequestId(crypto.randomUUID());
   }
 
@@ -99,6 +100,15 @@ export function OrdinaryObservationDialog({ students, activity, onClose }: {
             {studentId === item.id && <Check className="mr-1 inline size-4" />}{item.name}</button>)}</div>
           {!studentId && <p className="mt-2 text-sm text-[#7a3c12]">Selecciona al alumno antes de escribir, dictar o guardar.</p>}
         </fieldset>
+        {!saved && activity && activity.criteria.length > 0 && <div>
+          <label htmlFor="ordinary-criterion" className="mb-2 block text-sm font-semibold">Criterio observado <span className="font-normal">(opcional)</span></label>
+          <select id="ordinary-criterion" value={criterionId} onChange={(event) => setCriterionId(event.target.value)}
+            disabled={!studentId || saving || recordingBusy} className="min-h-11 w-full rounded-xl border bg-white px-3">
+            <option value="">Todavía no elijo un criterio</option>
+            {activity.criteria.map((item) => <option key={item.id} value={item.id}>{item.criterion_text}</option>)}
+          </select>
+          {criterionId && <p className="mt-1 text-xs text-muted-foreground">El criterio elegido por ti quedará confirmado para esta observación.</p>}
+        </div>}
         {history && <section className="rounded-xl border bg-[#f6f9fd] p-3">
           <h3 className="font-semibold">Observaciones guardadas</h3>
           {history.length === 0 ? <p className="mt-2 text-sm">Todavía no hay observaciones.</p> :
