@@ -50,7 +50,7 @@ function pathSelector(pathname) {
   }
   const kind = {
     "annual-plans": "plan", "learning-experiences": "experience", activities: "activity",
-    "activity-criteria": "criterion", assessments: "assessment",
+    "activity-criteria": "criterion", evidences: "evidence", assessments: "assessment",
     "descriptive-conclusions": "conclusion", "family-reports": "report",
   }[parts[2]];
   if (kind && parts[3] && !["options", "context", "current"].includes(parts[3])) return [kind, parts[3]];

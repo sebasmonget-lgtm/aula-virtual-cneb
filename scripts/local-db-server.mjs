@@ -47,6 +47,7 @@ import { normalizeActivityMaterials, publicActivityParent, validateActivityV4 } 
 import { validateCriterionEvidenceV4 } from "../src/lib/criterion-evidence-validation.mjs";
 import { generateCriterionEvidence } from "../src/lib/ai-criterion-evidence-ui-service.mjs";
 import { criterionMatchesConfirmedActivity, validateEvidenceCaptureV4 } from "../src/lib/evidence-capture-v4.mjs";
+import { reassignEvidenceStudent } from "../src/lib/evidence-student-correction.mjs";
 import { createAssessmentRouteHandler } from "./assessment-routes.mjs";
 import { createAssessmentMasterRouteHandler } from "./assessment-master-routes.mjs";
 import { createDescriptiveConclusionRouteHandler } from "./descriptive-conclusion-routes.mjs";
@@ -2182,6 +2183,14 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
     if (await handleAssessmentRoute({ request, url, response, origin })) return;
     if (await handleDescriptiveConclusionRoute({ request, url, response, origin })) return;
     if (await handleFamilyReportRoute({ request, url, response, origin })) return;
+    if (request.method === "POST" && /^\/api\/evidences\/[^/]+\/reassign$/.test(url.pathname)) {
+      try {
+        const body = await readJson(request);
+        const evidence = await reassignEvidenceStudent(db, { ...body, evidenceId: url.pathname.split('/')[3], teacherId }, refreshStudentContextSnapshot);
+        send(response, 200, { evidence }, origin);
+      } catch (error) { send(response, httpStatusForError(error), { error: publicErrorMessage(error) }, origin); }
+      return;
+    }
     if (request.method === "POST" && url.pathname === "/api/evidences") {
       const body = await readJson(request);
       if (dbMode === "postgres" && (body.photo || body.media)) {

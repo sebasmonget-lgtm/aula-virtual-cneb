@@ -9,6 +9,7 @@ import { importPilotStudents, loadStudentPedagogicalProfile, type LocalDashboard
 import { recommendedStudentGuidance, studentCompetencyGuidance } from "@/src/lib/student-guidance.mjs";
 import { AsyncButton, EmptyState, LoadingState, NextStepCard, ScreenSkeleton, WorkflowFeedback, WorkflowTabs } from "./workflow-ui";
 import { FamilyInformationPanel, FamilyInterviewStatusBadge, useFamilyInterviewStatusMap } from "./family-interview-v4";
+import { EvidenceStudentCorrection } from "./evidence-student-correction";
 
 const statusLabels = {
   demonstrated: "Lo demostró",
@@ -72,7 +73,7 @@ export function StudentsScreen({ students, onImported, onEvaluate, onPlan, onDia
     return () => { active = false; };
   }, [selectedId]);
 
-  if (selectedId) return <StudentProfile profile={profile} loading={loading} error={profileError} onBack={() => { setSelectedId(null); setProfile(null); setProfileError(""); }} onEvaluate={onEvaluate} onPlan={onPlan} />;
+  if (selectedId) return <><EvidenceStudentCorrection profile={profile} students={students} onCorrected={async () => { setProfile(await loadStudentPedagogicalProfile(selectedId)); }} /><StudentProfile profile={profile} loading={loading} error={profileError} onBack={() => { setSelectedId(null); setProfile(null); setProfileError(""); }} onEvaluate={onEvaluate} onPlan={onPlan} /></>;
   return <section className="mx-auto max-w-5xl space-y-5">
     <header className="flex items-start justify-between gap-3"><div><h1 className="text-3xl font-extrabold tracking-tight text-[#1c2e50]">Mi aula</h1><p className="mt-1 text-[#566883]">Tus niños y sus registros</p></div><button type="button" onClick={() => setAddOpen((open) => !open)} aria-expanded={addOpen} className="flex min-h-11 shrink-0 items-center gap-2 rounded-xl border border-[#0b7891] bg-white px-4 font-bold text-[#07576c]"><Plus className="size-4" /> Añadir alumno</button></header>
     <div className="grid grid-cols-3 gap-2"><div className="rounded-2xl bg-[#eaf5fd] p-3"><strong className="block text-2xl text-[#0b7891]">{students.length}</strong><span className="text-xs font-semibold text-[#536681]">niños</span></div><div className="rounded-2xl bg-[#eaf8f2] p-3"><strong className="block text-2xl text-[#287561]">{observedCount}</strong><span className="text-xs font-semibold text-[#536681]">con evidencias de actividad</span></div><div className="rounded-2xl bg-[#fff4df] p-3"><strong className="block text-2xl text-[#a16917]">{students.length - observedCount}</strong><span className="text-xs font-semibold text-[#536681]">sin evidencias de actividad</span></div></div>

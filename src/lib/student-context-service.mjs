@@ -41,6 +41,7 @@ export async function buildStudentPedagogicalContext(db, studentId) {
   `, [studentId])).rows;
   const recentEvidence = (await db.query(`
     select e.id, e.observed_at, e.observation_status, e.observation_text,
+           jsonb_array_length(coalesce(to_jsonb(e)->'student_reassignment_history','[]'::jsonb)) as assignment_revision,
            a.title as activity_title, ac.criterion_text, ac.competency_id, ac.competency_v4_id,
            case when ac.competency_v4_id is null then concat('legacy:', ac.competency_id::text) else concat('v4:', ac.competency_v4_id) end as competency_key,
            (e.media_path is not null) as media_available

@@ -25,6 +25,7 @@ export type LocalEvidence = {
   observation_text: string | null;
   observation_status: ObservationStatus | null;
   observed_at: string;
+  assignment_revision?: number;
   media_path?: string | null;
 };
 export type PrivateMediaUpload = { base64: string; mimeType: string; name?: string };
