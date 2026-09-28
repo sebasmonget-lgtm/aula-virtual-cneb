@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
 import { projectPlanningFeedback, planningFeedbackText } from './planning-feedback.mjs';
 
 test('planificación conserva distribuciones docentes manuales y competencias fuera de las primeras cinco', () => {
@@ -34,4 +35,9 @@ test('borradores y revisiones no se cuentan como decisiones pedagógicas confirm
   assert.equal(feedback.confirmed_assessments,0);
   assert.deepEqual(feedback.competencies[0].levels,{AD:0,A:0,B:0,C:0});
   assert.equal(feedback.competencies[0].students_without_grade,1);
+});
+
+test('interfaz tolera respuestas anteriores durante actualización sin convertir campos ausentes en cero',async()=>{
+  const ui=await readFile(new URL('../features/dashboard/components/planning-feedback-option.tsx',import.meta.url),'utf8');
+  for(const level of ['AD','A','B','C']) assert.ok(ui.includes(`item.levels?.${level}??"—"`));
 });
