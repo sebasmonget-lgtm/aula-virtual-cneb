@@ -1,12 +1,22 @@
 # Errores y soluciones
 
+## 2026-09-27 JSONB hacía parecer editadas las decisiones del proyecto (H22)
+
+**Síntoma.** Tras generar preguntas y criterios, la UI mostraba éxito pero ocultaba el paso de preguntas y bloqueaba el mapa.
+
+**Causa raíz.** `JSON.stringify` dependía del orden de claves, que JSONB no conserva. La comparación semánticamente falsa afectaba decisiones, dependencias y mapa.
+
+**Solución validada.** Comparación canónica de objetos con listas ordenadas. Regresión con round-trip PGlite y cambios pedagógicos reales; 12 pruebas relacionadas, typecheck, lint y build PASS. El mismo borrador QA mostró cuatro preguntas sin regeneración y permitió pasar al recorrido.
+
+**Prevención.** Comparar valores JSON, no orden de inserción de claves. Conservar la detección de cambios de contenido y secuencia. Sin migración ni alteración del aula original.
+
 ## 2026-09-27 El schema del documento anual permitía cardinalidades rechazadas después (H21)
 
 **Síntoma.** Después de confirmar correctamente el preplan QA, una llamada real para el Word terminó con desarrollo incompleto, sin perder el plan vigente.
 
 **Causa comprobada.** El esquema formal no incluía el mínimo/máximo de cuatro criterios, límites de listas/textos ni la cantidad exacta de detalles que exige `validateAnnualFormal`. La salida rechazada no se persistió; no se conoce cuál condición falló en aquel intento.
 
-**Solución validada técnicamente.** Esquema y prompt expresan los mismos límites, con cantidad dinámica de detalles desde el preplan confirmado. 37 pruebas relacionadas, typecheck, lint y build PASS; el reintento UI continúa tras el commit. Mismo modelo y validador, sin regeneración automática.
+**Solución validada.** Esquema y prompt expresan los mismos límites, con cantidad dinámica de detalles desde el preplan confirmado. 37 pruebas relacionadas, typecheck, lint y build PASS; reintento UI PASS después de `87e0d32`, Word listo en Documentos. Mismo modelo y validador, sin regeneración automática. Fidelidad/render del archivo sigue pendiente.
 
 **Prevención.** Toda restricción de cardinalidad local debe estar en Structured Outputs cuando sea compatible; probar cantidades editadas (1, 10, 12 y 20), no solo el formato inicial. Conservar el costo de llamadas rechazadas y distinguir plan confirmado de documento pendiente.
 
@@ -16,7 +26,7 @@
 
 **Causa raíz.** Persistencia añadía cuatro campos derivados no reconocidos por el validador estricto de filas. La revalidación también ejecutaba un UPDATE idéntico que incrementaba la revisión optimista antes de confirmar.
 
-**Solución validada en regresión.** El validador del round-trip admite únicamente los metadatos derivados conocidos, devuelve campos editables y conserva el esquema del modelo estricto. Las fechas/días se recalculan desde el calendario de servidor; el UPDATE se omite cuando JSONB es igual. Las dos regresiones fallaron antes y pasan después sobre PGlite con todas las migraciones, incluyendo persistir/recargar/confirmar intacto y editar/guardar/recargar/confirmar. 63 tests relacionados, typecheck, lint y build PASS. La comprobación E2E por UI continúa después del commit; no se presenta aún como PASS funcional.
+**Solución validada en regresión y UI.** El validador del round-trip admite únicamente los metadatos derivados conocidos, devuelve campos editables y conserva el esquema del modelo estricto. Las fechas/días se recalculan desde el calendario de servidor; el UPDATE se omite cuando JSONB es igual. Las dos regresiones fallaron antes y pasan después sobre PGlite con todas las migraciones, incluyendo persistir/recargar/confirmar intacto y editar/guardar/recargar/confirmar. 63 tests relacionados, typecheck, lint y build PASS. El mismo preplan QA se confirmó intacto desde la UI después de `60210c3`: «Mi año vigente · versión 1».
 
 **Prevención.** Probar el objeto enriquecido que vuelve de PostgreSQL, no solo el objeto inicial del modelo. Un recalculo sin cambios no debe mutar una revisión. Mantener rechazo de campos desconocidos, IDs no aplicables y revisiones obsoletas. Sin migración ni cambios en el aula original; ver ADR 084.
 

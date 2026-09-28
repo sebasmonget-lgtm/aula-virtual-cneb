@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { AsyncButton, CompetencyChecklist, LoadingState, WorkflowFeedback } from "./workflow-ui";
 import { LearningExperienceGenerator } from "./learning-experience-generator";
+import { projectDraftChanges } from "@/src/lib/project-draft-changes.mjs";
 
 type Proposal = { proposal_id?: string; experience_type: "project" | "unit"; title: string; purpose: string;
   rationale: string; period: string; primary_competency_ids: string[] };
@@ -75,12 +76,7 @@ export function ProjectDevelopmentWorkspace({ initialProposalId, onConfirmed, on
     plan?.project_slots.find((slot) => slot.slot_index === index + 1)?.id ?? "";
   const options = new Map(competencies.map((item) => [item.id, item.name]));
   const name = (id: string) => options.get(id) ?? id;
-  const decisionsChanged = Boolean(selected?.details.decisions && decisions &&
-    JSON.stringify(selected.details.decisions) !== JSON.stringify(decisions));
-  const mapChanged = Boolean(selected?.details.activity_route &&
-    JSON.stringify(selected.details.activity_route) !== JSON.stringify(route));
-  const depChanged = Boolean(selected?.details.dependents && dependents &&
-    JSON.stringify(selected.details.dependents) !== JSON.stringify(dependents));
+  const { decisionsChanged, mapChanged, depChanged } = projectDraftChanges(selected?.details, decisions, dependents, route);
   function showExperience(experience: Experience, availableDates: string[] = [],review:CalendarReview|null=null,
     protectedIds: string[] = []) {
     setSelected(experience); setDates(availableDates); setEditingRoute(null);

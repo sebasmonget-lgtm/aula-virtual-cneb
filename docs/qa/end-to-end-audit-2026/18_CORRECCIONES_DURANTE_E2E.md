@@ -30,4 +30,16 @@ El enlace local de dependencias del renderizador bajo `docs/qa/.../node_modules`
 
 **Fix.** El mismo Sol/low recibe cardinalidades y límites coherentes; el esquema de detalles toma la cantidad real del preplan (1–20), y el prompt pide orden/índices y cantidades exactas. Se conserva la validación local, las decisiones confirmadas, la revisión docente y las plantillas. No se relaja el rechazo ni se añade reintento automático. La documentación oficial confirma `minItems`/`maxItems`: [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs).
 
-**Archivos.** `annual-formal-service.mjs` y su test. **Validación:** 37/37 relacionadas, typecheck, lint y build PASS en `evidencias/tests-h21-formal/`. Commit y reintento UI pendientes. Rollback: revertir el commit del contrato, sin transformar planes o contenido formal existente.
+**Archivos.** `annual-formal-service.mjs` y su test. **Validación:** 37/37 relacionadas, typecheck, lint y build PASS en `evidencias/tests-h21-formal/`. Commit `87e0d32`. Reintento UI PASS: «El Plan Anual formal está listo en Documentos»; captura `screenshots/12-plan-anual-formal-listo.png`, snapshot `annual-formal-retry-pass`. Se conserva el intento anterior facturado. Esto confirma preparación, no todavía fidelidad ni render del Word. Rollback: revertir el commit del contrato, sin transformar planes o contenido formal existente.
+
+## H22 — Preguntas guardadas pero ocultas en el proyecto (BLOCKER)
+
+**Antes.** El primer proyecto preparó y guardó preguntas/criterios con una llamada real, pero la UI no mostraba el contenido del paso 4 ni permitía llegar al mapa. Snapshot `project-questions-invisible`.
+
+**Causa raíz.** Las banderas de cambios comparaban objetos con `JSON.stringify`. PostgreSQL JSONB reordena claves; un objeto recargado semánticamente idéntico parecía editado. La condición `!decisionsChanged` ocultaba preguntas, recorrido y evaluación. La misma comparación afectaba mapa y dependencias.
+
+**Solución localizada.** Comparar JSON con claves de objeto ordenadas, conservando el orden significativo de listas/actividades. No se relajan validaciones ni se sustituyen decisiones docentes. Archivos: `project-draft-changes.mjs`, su test y las tres comparaciones en `project-development-workspace.tsx`.
+
+**Regresión.** Round-trip real de JSONB con PGlite reproduce el orden distinto y comprueba que el borrador intacto no tiene cambios. Cambios de propósito, competencias, preguntas, fechas y orden de actividades sí activan revisión. 12/12 pruebas relacionadas, typecheck, lint y build PASS en `tests-h22-project-draft`.
+
+**UI después.** PASS del paso bloqueado: las cuatro preguntas ya aparecen en el mismo borrador, sin otra llamada de IA, y se pasó al recorrido. Captura `screenshots/13-h22-preguntas-visibles.png`. Confirmación del mapa todavía pendiente. Commit pendiente. Rollback: revertir el commit de comparación; no hay migración ni cambio de datos.
