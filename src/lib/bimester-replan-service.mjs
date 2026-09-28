@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { periodClosureFingerprint, loadPeriodEvaluationRows } from "./period-evaluation-service.mjs";
+import { periodClosureFingerprint, loadPeriodEvaluationRows, periodRowResolved } from "./period-evaluation-service.mjs";
 import { VersionConflictError, versionTransaction } from "./version-integrity.mjs";
 
 const dateOnly = (value) => value instanceof Date ? value.toISOString().slice(0, 10) : String(value).slice(0, 10);
@@ -73,7 +73,12 @@ export async function loadBimesterReplanPreview(db, { teacherId, classroom, peri
       editable: dateOnly(slot.starts_on) > cutoff && !slot.developed,
       reason_locked: slot.developed ? "Este proyecto ya fue desarrollado. Sus decisiones se ajustan desde su propia versión." : "Este proyecto ya comenzó o pertenece al período cerrado." } : null;
   }).filter(Boolean);
-  const summary = replanSummary({ ...statistics, student_rows: model.rows.map((row) => ({ student_id: row.student_id, evidence_count: row.sourceRows?.length ?? 0 })) }, model.students, period);
+  const summary = { ...replanSummary({ ...statistics, student_rows: model.rows.map((row) => ({ student_id: row.student_id, evidence_count: row.sourceRows?.length ?? 0 })) }, model.students, period),
+    assessments_total:model.rows.length,
+    assessments_confirmed:model.rows.filter((row)=>row.state==="confirmed").length,
+    assessments_resolved:model.rows.filter(periodRowResolved).length,
+    observation_pending:model.rows.filter((row)=>["observation_pending","insufficient_information"].includes(row.state)).length,
+    review_pending:model.rows.filter((row)=>row.state==="pending").length };
   return { classroom_id: classroom.id, period: { id: period.id, label: period.label, ends_on: dateOnly(period.ends_on) },
     next_period: next ? { id: next.id, label: next.label, starts_on: dateOnly(next.starts_on) } : null,
     closure: { ...closure }, adjusted: Boolean(adjusted), summary,

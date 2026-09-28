@@ -854,3 +854,23 @@ Síntoma: criterio extenso deja los botones fuera del viewport y el cuerpo no se
 ## 2026-09-28 — Evidencia capturada al alumno equivocado sin recuperación por UI
 
 Síntoma: cuatro notas QA de la captura automatizada quedaron asociadas a la selección anterior. Causa de esa selección no reproducida; limitación confirmada: ninguna acción de corregir alumno. Solución mínima: reasociación docente de notas sin media/sin evaluación afectada, misma aula y propiedad verificadas, motivo e historial, revisión optimista/bloqueo de período y refresco de ambos contextos. 25/25 relacionadas, typecheck repetido/lint/build PASS; cuatro correcciones UI y conciliación 10/10. Prevención: conciliar alumno-texto-fecha después de captura, no solo contar filas; no corregir QA con SQL. H47, commit 919e381.
+
+## 2026-09-28 — H34 exigía letras por competencias solo previstas
+
+**Síntoma.** P1–P4 mostraban como obligatorios pares alumno–competencia nacidos de «Mi año» o de criterios aún no trabajados. El cierre pedía letras/conclusiones incluso sin evidencia suficiente.
+
+**Causa raíz.** El `scope` mezclaba planificación con ejecución y el manifiesto aceptaba únicamente filas calificadas. La interfaz de reajuste heredaba esa misma exigencia.
+
+**Solución validada.** Alcance basado en trabajo real, estados pendientes explícitos sin letra, cierre intermedio con `pending_entries`, cierre anual con comprobación de valoraciones vigentes de todos los pares aplicables, salidas separadas y seguimiento posterior. Un borrador docente también preserva el alcance y no puede ocultarse retirando la competencia. 38/38 pruebas focales, typecheck, lint y build PASS; P1/P2 cerraron por UI QA, P3 por API QA, P4 rechazó 163 pares nunca valorados. La interfaz no permite pulsar P3/P4 antes de su fecha de fin real; no se modificó esa guarda. Ver `docs/qa/end-to-end-audit-2026/21_H34_FASE_1.md`.
+
+**Prevención.** Probar previstas sin trabajo, pendientes con/sin evidencia, las cuatro letras, huella tras evidencia posterior, los cuatro períodos, Excel y seguimiento; mantener la decisión de nivel exclusivamente docente.
+
+## 2026-09-28 — Reinicio de PGlite QA dejó checkpoint inválido
+
+**Síntoma.** Al reiniciar la API QA para el E2E H34, PGlite no abrió el directorio QA anterior y reportó que no encontraba un checkpoint válido.
+
+**Causa raíz observada.** El proceso QA se detuvo mientras la base embebida aún necesitaba un cierre limpio; el directorio y una copia hecha tras detenerlo conservaron el mismo estado inválido. No se atribuye corrupción a las tablas de producto ni a la base original de la usuaria.
+
+**Recuperación validada.** Se preservaron ambos directorios, se creó un directorio QA nuevo desde el último export JSON de la auditoría y se conciliaron 138 evidencias, 68 versiones de valoración, 32 conclusiones y 24 actividades QA sin cambios de contenido. Dos actividades semilla regeneraron timestamps de instalación. El export no incluía todas las tablas, por lo que no se presenta como recuperación byte a byte ni como sustituto del directorio original. La API QA activa usa el directorio restaurado; 5173/8788 de la usuaria no se tocaron.
+
+**Prevención.** Para futuras pruebas con PGlite, detener mediante cierre limpio de la propia API y comprobar backup recuperable antes de reiniciar. No forzar el fin del proceso ni abrir el mismo directorio desde dos instancias.

@@ -1,14 +1,14 @@
 import { randomUUID } from "node:crypto";
-import { dateOnly, periodClosureFingerprint } from "./period-evaluation-service.mjs";
+import { dateOnly, periodClosureFingerprint, periodRowResolved } from "./period-evaluation-service.mjs";
 import { VersionConflictError, versionTransaction } from "./version-integrity.mjs";
 
 export function buildPeriodClosureManifest({period,students,rows,context=null,closedAt=null}) {
-  if(!rows.length || rows.some((row)=>row.state!=="confirmed" || !row.assessment?.id || !row.assessment?.achievement_level))
-    throw new Error("Todas las valoraciones deben estar confirmadas antes de cerrar el período.");
+  if(!rows.length || rows.some((row)=>!periodRowResolved(row)))
+    throw new Error("Revisa las valoraciones y las observaciones pendientes antes de cerrar el período.");
   const names=new Map(students.map((student)=>[student.id,[student.preferred_name||student.first_name,student.last_name].filter(Boolean).join(" ")]));
   return {period:{id:period.id,label:period.label,starts_on:dateOnly(period.starts_on),ends_on:dateOnly(period.ends_on)},
     ...(context ? {context:{...context,closed_at:closedAt}} : {}),
-    entries:rows.map((row)=>({student_id:row.student_id,student_name:names.get(row.student_id)??"Estudiante",
+    entries:rows.filter((row)=>row.state==="confirmed").map((row)=>({student_id:row.student_id,student_name:names.get(row.student_id)??"Estudiante",
       competency_id:row.competency_v4_id,assessment_id:row.assessment.id,assessment_version:Number(row.assessment.version),
       conclusion_id:row.conclusion?.id??null,achievement_level:row.assessment.achievement_level,
       assessment_details:row.assessment.details,conclusion_details:row.conclusion?.details??null,
@@ -16,13 +16,21 @@ export function buildPeriodClosureManifest({period,students,rows,context=null,cl
       evidence:row.sourceRows.map((item)=>({id:item.id,observed_on:dateOnly(item.observed_on),activity_id:item.activity_id,
         activity_title:item.activity_title,criterion_id:item.criterion_id,criterion_text:item.criterion_text,
         observation_text:item.observation_text,observation_status:item.observation_status,media_available:Boolean(item.media_available)}))
+    })).sort((a,b)=>`${a.student_id}:${a.competency_id}`.localeCompare(`${b.student_id}:${b.competency_id}`)),
+    pending_entries:rows.filter((row)=>row.state!=="confirmed").map((row)=>({
+      student_id:row.student_id,student_name:names.get(row.student_id)??"Estudiante",
+      competency_id:row.competency_v4_id,state:row.state,
+      reason:row.state==="insufficient_information" ? row.draft?.details?.insufficiency_reason??null :
+        row.state==="pending" ? "Hay evidencia del período, pendiente de revisión docente" : "Sin evidencia formativa del período",
+      source_evidence_ids:row.sourceRows.map((item)=>item.id),
     })).sort((a,b)=>`${a.student_id}:${a.competency_id}`.localeCompare(`${b.student_id}:${b.competency_id}`))};
 }
 
 export async function closePeriodWithManifest(db,{classroomId,period,teacherId,loadCurrent,
-  expectedCurrentVersionId=undefined,expectedSourceFingerprint=null}) {
+  expectedCurrentVersionId=undefined,expectedSourceFingerprint=null,validateCurrent=null}) {
   return versionTransaction(db,`period:${period.id}`,async(tx)=>{
     const current=await loadCurrent(tx);
+    if(validateCurrent) await validateCurrent(tx,current);
     const fingerprint=periodClosureFingerprint(current.rows);
     if(expectedSourceFingerprint!==null && expectedSourceFingerprint!==fingerprint)
       throw new VersionConflictError("Las valoraciones cambiaron. Revisa el aula antes de cerrar.");
@@ -65,5 +73,6 @@ export function projectPeriodClosureDocument(row) {
     teacher_id:row.manifest.context?.teacher_id??row.confirmed_by,teacher_name:row.manifest.context?.teacher_name??null,
     age_years:row.manifest.context?.age_years??null,ugel:row.manifest.context?.ugel??null,
     period_start:dateOnly(row.manifest.period?.starts_on??row.starts_on),period_end:dateOnly(row.manifest.period?.ends_on??row.ends_on),confirmed_at:row.manifest.context?.closed_at??(row.confirmed_at instanceof Date?row.confirmed_at.toISOString():String(row.confirmed_at)),
-    content:{format:"provisional_structured_projection",period:row.manifest.period,entries:row.manifest.entries}};
+    content:{format:"provisional_structured_projection",period:row.manifest.period,entries:row.manifest.entries,
+      pending_entries:row.manifest.pending_entries??[]}};
 }

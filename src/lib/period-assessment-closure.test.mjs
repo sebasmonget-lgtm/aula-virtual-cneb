@@ -100,6 +100,10 @@ test("13, 14 y 15: estadísticas exactas, sin promediar niveles ni convertir no 
   assert.deepEqual(oral.percentages, { AD: 50, A: 50, B: 0, C: 0 });
   assert.equal(quantity.worked, false);
   assert.deepEqual(quantity.levels, { AD: 0, A: 0, B: 0, C: 0 });
+  assert.equal(quantity.students_without_grade, 0, "solo prevista: no crea valoraciones faltantes");
+  assert.equal(quantity.students_without_evidence, 0, "solo prevista: no crea cobertura obligatoria");
+  assert.equal(oral.students_without_grade, 1);
+  assert.equal(oral.students_without_evidence, 1);
   assert.equal("average_grade" in result.classroom, false);
 });
 
@@ -147,13 +151,15 @@ test("19: las tablas privadas nuevas tienen RLS por aula y escrituras directas r
 });
 
 test("20: Excel genérico contiene valoración y conclusión confirmadas", async () => {
-  const workbook = await buildGenericAssessmentWorkbook([{ student_name: "Ana", competency_name: "Se comunica", achievement_level: "A", conclusion: "Explica sus ideas.", period_label: "Bimestre 1" }]);
+  const workbook = await buildGenericAssessmentWorkbook([{ student_name: "Ana", competency_name: "Se comunica", achievement_level: "A", conclusion: "Explica sus ideas.", period_label: "Bimestre 1", state: "confirmed" },{ student_name: "Luis", competency_name: "Se comunica", achievement_level: null, conclusion: "", period_label: "Bimestre 1", state: "observation_pending" }]);
   const zip = await JSZip.loadAsync(workbook);
   const sheet = await zip.file("xl/worksheets/sheet1.xml").async("string");
   assert.match(sheet, /Ana/);
   assert.match(sheet, />A</);
   assert.match(sheet, /Explica sus ideas/);
   assert.match(sheet, /Bimestre 1/);
+  assert.match(sheet, /Pendiente de observación/);
+  assert.doesNotMatch(sheet, />C</);
 });
 
 test("21: exportación SIAGIE permanece visible y no implementada", () => {

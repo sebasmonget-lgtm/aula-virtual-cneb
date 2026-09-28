@@ -6,7 +6,7 @@ import { createAIProviderForPlan } from "../src/lib/ai-provider-factory.mjs";
 import { generateAIWorkflowV4 } from "../src/lib/ai-generation-v4.mjs";
 import { assessmentSourceSnapshot, assessmentStudentNames, buildAssessmentInput, neutralizeAssessmentText, sanitizeEvidenceForAssessment, validateAssessmentProposal } from "../src/lib/assessment-v4-service.mjs";
 import { buildDescriptiveConclusionInput, sameAssessmentSnapshot, sourceAssessmentSnapshot, validateDescriptiveConclusion } from "../src/lib/descriptive-conclusion-v4-service.mjs";
-import { dateOnly, defaultEvaluationPeriods, loadPeriodEvaluationRows, periodClosureFingerprint } from "../src/lib/period-evaluation-service.mjs";
+import { conclusionRequiredForLevel, dateOnly, defaultEvaluationPeriods, loadPeriodEvaluationRows, periodClosureFingerprint, periodRowResolved } from "../src/lib/period-evaluation-service.mjs";
 import { assertSavedEvaluationDraft, savePeriodEvaluationDraft } from "../src/lib/period-evaluation-draft-service.mjs";
 import { closePeriodWithManifest } from "../src/lib/period-closure-history.mjs";
 import { confirmBimesterReplan, loadBimesterReplanPreview, recommendWorkshops, replanSummary } from "../src/lib/bimester-replan-service.mjs";
@@ -81,7 +81,7 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
     const period = await periodForClass(classroom, periodId);
     const evaluationMap = await syncPeriodEvaluationMap(db, { classroomId: classroom.id, schoolYearId: classroom.school_year_id, period });
     const { cards, knowledge } = await cardsForClass(classroom);
-    const model = await loadPeriodEvaluationRows(db, { classroomId: classroom.id, period, applicableIds: new Set(cards.map((card) => card.id)) });
+    const model = await loadPeriodEvaluationRows(db, { classroomId: classroom.id, period, applicableIds: new Set(cards.map((card) => card.id)), workEntries: evaluationMap.entries });
     const labels = cards.map(stableCompetencyLabel);
     const labelsReady=(await db.query(`select to_regclass('competency_display_labels') is not null as ready`)).rows[0].ready;
     if(labelsReady) for (const label of labels) await db.query(`insert into competency_display_labels(competency_v4_id,short_label,area) values($1,$2,$3)
@@ -109,13 +109,29 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
   function publicRows(model, cards, labels = []) {
     const names = new Map(cards.map((card) => [card.id, card.official_name]));
     const labelMap = new Map(labels.map((item) => [item.competency_id,item]));
-    return model.rows.map((row) => ({ student_id: row.student_id, competency_id: row.competency_v4_id, competency_name: names.get(row.competency_v4_id) ?? row.competency_v4_id, short_label: labelMap.get(row.competency_v4_id)?.short_label ?? names.get(row.competency_v4_id), area: labelMap.get(row.competency_v4_id)?.area ?? "Área curricular", evidence_count: row.sourceRows.length, level: row.assessment?.achievement_level ?? null, conclusion: row.conclusion?.details?.conclusion_text ?? null, state: row.state, assessment_id: row.assessment?.id ?? null }));
+    return model.rows.map((row) => ({ student_id: row.student_id, competency_id: row.competency_v4_id, competency_name: names.get(row.competency_v4_id) ?? row.competency_v4_id, short_label: labelMap.get(row.competency_v4_id)?.short_label ?? names.get(row.competency_v4_id), area: labelMap.get(row.competency_v4_id)?.area ?? "Área curricular", evidence_count: row.sourceRows.length, level: row.state === "confirmed" ? row.assessment?.achievement_level ?? null : null, conclusion: row.state === "confirmed" ? row.conclusion?.details?.conclusion_text ?? null : null, state: row.state, assessment_id: row.assessment?.id ?? null }));
   }
   async function closureState(classroom, period, model) {
     const row = (await db.query(`select * from period_closures where classroom_id=$1 and evaluation_period_id=$2`, [classroom.id, period.id])).rows[0];
     return row ? { closed: true, current: row.source_fingerprint === periodClosureFingerprint(model.rows), confirmed_at: row.confirmed_at,
       current_version_id:row.current_version_id,source_fingerprint:periodClosureFingerprint(model.rows) }
       : { closed: false, current: false, confirmed_at: null,current_version_id:null,source_fingerprint:periodClosureFingerprint(model.rows) };
+  }
+  async function annualValuationGaps(database, classroom, period, cards, currentModel = null) {
+    const periods = (await database.query(`select id,starts_on,ends_on,ordinal from evaluation_periods
+      where school_year_id=$1 and kind=$2 order by ordinal`, [classroom.school_year_id, period.kind])).rows;
+    if (periods.some((item) => Number(item.ordinal) > Number(period.ordinal))) return null;
+    const applicableIds = new Set(cards.map((card) => card.id));
+    const valued = new Set();
+    for (const item of periods) {
+      const model = item.id === period.id && currentModel ? currentModel : await loadPeriodEvaluationRows(database, {
+        classroomId: classroom.id, period: item, applicableIds });
+      for (const row of model.rows) if (row.state === "confirmed" && isTeacherAchievementLevel(row.assessment?.achievement_level))
+        valued.add(`${row.student_id}:${row.competency_v4_id}`);
+    }
+    const students = currentModel?.students ?? (await database.query(`select id from students where classroom_id=$1 and status='active'`, [classroom.id])).rows;
+    return students.flatMap((student) => cards.filter((card) => !valued.has(`${student.id}:${card.id}`))
+      .map((card) => ({ student_id: student.id, competency_id: card.id })));
   }
   async function selectedRow(body) {
     const data = await context(body.classroomId, body.periodId);
@@ -152,10 +168,12 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
           competencyMeta: data.labels, studentCount: data.model.students.length,
           plannedCompetencyIds: await plannedCompetencyIds(data.classroom, data.period) });
         const closure = await closureState(data.classroom, data.period, data.model);
-        send(response, 200, await loadBimesterReplanPreview(db, { teacherId, classroom: data.classroom,
+        const preview=await loadBimesterReplanPreview(db, { teacherId, classroom: data.classroom,
           period: data.period, statistics, model: data.model, closure,
           competencyNames: new Map(data.cards.map((card) => [card.id, data.labels.find((label) => label.competency_id === card.id)?.short_label ?? card.official_name])),
-          workshopResources: await loadLibraryResources() }), origin); return true;
+          workshopResources: await loadLibraryResources() });
+        const annualGaps=await annualValuationGaps(db,data.classroom,data.period,data.cards,data.model);
+        send(response, 200, {...preview,annual_unvalued:annualGaps?.length??null}, origin); return true;
       }
       if (request.method === "POST" && url.pathname === "/api/period-evaluations/replan/confirm") {
         const body = await readJson(request);
@@ -223,12 +241,25 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
         const criteria=(await db.query(`select id,competency_v4_id from activity_criteria where activity_id=$1 and status='active'`,[activity.id])).rows;
         const diagnostic=await loadDiagnosticCoverageRecords(db,classroom.id,period);
         const students=data.model.students.map((student)=>({id:student.id,name:[student.preferred_name||student.first_name,student.last_name].filter(Boolean).join(" ")}));
+        const priorClosures=(await db.query(`select v.manifest from period_closures pc
+          join period_closure_versions v on v.id=pc.current_version_id
+          join evaluation_periods ep on ep.id=pc.evaluation_period_id
+          where pc.classroom_id=$1 and ep.ends_on<$2::date order by ep.ends_on`,[classroom.id,activityDay])).rows;
+        const carryover=new Set();
+        for(const row of priorClosures){
+          for(const entry of row.manifest?.pending_entries??[]) carryover.add(`${entry.student_id}:${entry.competency_id}`);
+          for(const entry of row.manifest?.entries??[]) carryover.delete(`${entry.student_id}:${entry.competency_id}`);
+        }
+        for(const row of data.model.rows) if(row.state==="confirmed") carryover.delete(`${row.student_id}:${row.competency_v4_id}`);
         const suggestions=[...new Set(criteria.map((item)=>item.competency_v4_id))].flatMap((competencyId)=>{
           const criterionIds=criteria.filter((item)=>item.competency_v4_id===competencyId).map((item)=>item.id);
           const records=[...data.model.rows.filter((row)=>row.competency_v4_id===competencyId).flatMap((row)=>row.sourceRows.map((item)=>({...item,student_id:row.student_id,competency_id:competencyId,situation_id:item.activity_id,criterion_focus_key:item.criterion_id}))),
             ...diagnostic.filter((item)=>item.competency_id===competencyId)];
-          return observeTodaySuggestions(students,records,competencyId,criterionIds,{today:activityDay})
-            .map((item)=>({...item,competency_name:data.cards.find((card)=>card.id===competencyId)?.official_name??competencyId}));
+          return observeTodaySuggestions(students,records,competencyId,criterionIds,{today:activityDay,
+            policy:{...AYNI_HEURISTICS,observe_today_limit:students.length}})
+            .map((item)=>{const pending=carryover.has(`${item.student_id}:${competencyId}`);return {...item,
+              competency_name:data.cards.find((card)=>card.id===competencyId)?.official_name??competencyId,
+              ...(pending?{rank:-1,reason:"Quedó sin valoración en un período anterior. Revisa la evidencia o aprovecha una nueva oportunidad de observación; no asignes una letra automáticamente.",reason_code:"prior_period_pending"}:{})};});
         }).sort((a,b)=>a.rank-b.rank||a.student_name.localeCompare(b.student_name,"es"))
           .slice(0,AYNI_HEURISTICS.observe_today_limit);
         send(response,200,{period_id:period.id,suggestions},origin);return true;
@@ -250,8 +281,9 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
       if (request.method === "GET" && url.pathname === "/api/period-evaluations/overview") {
         const data = await context(url.searchParams.get("classroomId"), url.searchParams.get("periodId"));
         const rows = publicRows(data.model, data.cards, data.labels);
-        const completed = rows.filter((row) => row.state === "confirmed" && isTeacherAchievementLevel(row.level) && row.conclusion);
-        const studentCount = data.model.students.filter((student) => data.model.scope.length && data.model.scope.every((id) => completed.some((row) => row.student_id === student.id && row.competency_id === id))).length;
+        const completed = rows.filter((row) => row.state === "confirmed" && isTeacherAchievementLevel(row.level));
+        const resolved = rows.filter(periodRowResolved);
+        const studentCount = data.model.students.filter((student) => data.model.scope.length && data.model.scope.every((id) => resolved.some((row) => row.student_id === student.id && row.competency_id === id))).length;
         const planned=await plannedCompetencyIds(data.classroom,data.period);
         const statistics=buildPeriodStatistics({rows,mapEntries:data.evaluationMap.entries,competencyMeta:data.labels,studentCount:data.model.students.length,plannedCompetencyIds:planned});
         const master=(await db.query(`select id,status,source_snapshot from assessment_masters where classroom_id=$1 and evaluation_period_id=$2 and status='active'`,[data.classroom.id,data.period.id])).rows[0];
@@ -259,13 +291,14 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
         const reports=featureRelations.family_ready?Number((await db.query(`select count(distinct fr.student_id)::int as total from family_reports fr join students s on s.id=fr.student_id where s.classroom_id=$1 and fr.evaluation_period_id=$2 and fr.status='active'`,[data.classroom.id,data.period.id])).rows[0]?.total??0):0;
         const classReport=featureRelations.report_ready?(await db.query(`select id,status,source_fingerprint from classroom_period_reports where classroom_id=$1 and evaluation_period_id=$2 and status='active'`,[data.classroom.id,data.period.id])).rows[0]:null;
         const closure=await closureState(data.classroom,data.period,data.model);
+        const annualGaps=await annualValuationGaps(db,data.classroom,data.period,data.cards,data.model);
         const reportFingerprint=classroomReportFingerprint(statistics,data.evaluationMap.version);
         const steps=[
           {number:1,label:"Revisar cobertura",done:true},{number:2,label:"Preparar marco de evaluación",done:Boolean(master)&&master.source_snapshot?.evaluation_map_fingerprint===data.evaluationMap.source_fingerprint},
-          {number:3,label:"Evaluar alumnos",done:rows.length>0&&rows.every((row)=>isTeacherAchievementLevel(row.level))},{number:4,label:"Conclusiones descriptivas",done:rows.length>0&&rows.every((row)=>Boolean(row.conclusion))},
-          {number:5,label:"Consolidado",done:rows.length>0&&rows.every((row)=>isTeacherAchievementLevel(row.level))},{number:6,label:"Informes familiares",done:reports>=data.model.students.length&&data.model.students.length>0},
+          {number:3,label:"Revisar valoraciones y pendientes",done:rows.length>0&&rows.every(periodRowResolved)},{number:4,label:"Conclusiones descriptivas",done:rows.length>0&&rows.every((row)=>row.state!=="confirmed"||!conclusionRequiredForLevel(row.level)||Boolean(row.conclusion))},
+          {number:5,label:"Consolidado",done:rows.length>0&&rows.every(periodRowResolved)},{number:6,label:"Informes familiares",done:reports>=data.model.students.length&&data.model.students.length>0},
           {number:7,label:"Informe del aula",done:Boolean(classReport)&&classReport.source_fingerprint===reportFingerprint},{number:8,label:"Cerrar período",done:closure.closed&&closure.current}];
-        send(response, 200, { period: data.period, classroom: data.classroom, students: data.model.students, scope: data.model.scope.map((id) => ({ id, name: data.cards.find((card) => card.id === id)?.official_name ?? id, ...data.labels.find((item)=>item.competency_id===id) })), available_competencies: data.cards.map((card) => ({ id: card.id, name: card.official_name, ...stableCompetencyLabel(card) })), rows, evaluation_map:{version:data.evaluationMap.version,source_fingerprint:data.evaluationMap.source_fingerprint,entries:data.evaluationMap.entries},statistics,closure_steps:steps,siagie_export:SIAGIE_EXPORT_STATUS, progress: { students_complete: studentCount, students_total: data.model.students.length, competencies_complete: completed.length, competencies_total: rows.length }, closure }, origin);
+        send(response, 200, { period: data.period, classroom: data.classroom, students: data.model.students, scope: data.model.scope.map((id) => ({ id, name: data.cards.find((card) => card.id === id)?.official_name ?? id, ...data.labels.find((item)=>item.competency_id===id) })), available_competencies: data.cards.map((card) => ({ id: card.id, name: card.official_name, ...stableCompetencyLabel(card) })), rows, evaluation_map:{version:data.evaluationMap.version,source_fingerprint:data.evaluationMap.source_fingerprint,entries:data.evaluationMap.entries},statistics,closure_steps:steps,siagie_export:SIAGIE_EXPORT_STATUS, progress: { students_complete: studentCount, students_total: data.model.students.length, competencies_complete: completed.length, competencies_resolved: resolved.length, competencies_total: rows.length, observation_pending: rows.filter((row)=>["observation_pending","insufficient_information"].includes(row.state)).length, review_pending: rows.filter((row)=>row.state==="pending").length, annual_unvalued: annualGaps?.length??null }, closure }, origin);
         return true;
       }
       if (request.method === "POST" && url.pathname === "/api/period-evaluations/scope") {
@@ -276,7 +309,7 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
         await versionTransaction(db,`period:${period.id}`,async(tx)=>{
           if (!body.included) {
             const model = await loadPeriodEvaluationRows(tx, { classroomId: classroom.id, period, applicableIds: new Set(cards.map((card) => card.id)) });
-            if (model.rows.some((row) => row.competency_v4_id === body.competencyId && (row.sourceRows.length || row.assessment))) throw new Error("Esta competencia ya tiene observaciones o valoraciones. Revísalas antes de retirarla.");
+            if (model.workedCompetencyIds.includes(body.competencyId) || model.rows.some((row) => row.competency_v4_id === body.competencyId && (row.sourceRows.length || row.assessment || row.draft))) throw new Error("Esta competencia ya fue trabajada, observada o iniciada para valorar. Revísala antes de retirarla.");
           }
           await tx.query(`insert into period_competency_scope(id,classroom_id,evaluation_period_id,competency_v4_id,included,reason) values($1,$2,$3,$4,$5,$6) on conflict(classroom_id,evaluation_period_id,competency_v4_id) do update set included=excluded.included,reason=excluded.reason,updated_at=now()`, [randomUUID(), classroom.id, period.id, body.competencyId, body.included, clean(body.reason, 500)]);
         });
@@ -447,11 +480,13 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
         if(!Object.hasOwn(body,"expectedCurrentVersionId")||typeof body.expectedSourceFingerprint!=="string")
           throw new VersionConflictError("Recarga el estado del aula antes de cerrar el período.");
         if (!data.model.students.length || !data.model.scope.length) throw new Error("Incluye estudiantes y competencias trabajadas antes de cerrar.");
-        const pendingRows = data.model.rows.filter((row) => row.state !== "confirmed");
-        if (pendingRows.length) throw new Error(`Quedan ${pendingRows.length} evaluaciones por revisar o confirmar.`);
+        const pendingRows = data.model.rows.filter((row) => !periodRowResolved(row));
+        if (pendingRows.length) throw new Error(`Quedan ${pendingRows.length} valoraciones iniciadas u obsoletas por revisar, o conclusiones obligatorias por confirmar.`);
         const closed=await closePeriodWithManifest(db,{classroomId:data.classroom.id,period:data.period,teacherId,
           expectedCurrentVersionId:body.expectedCurrentVersionId,expectedSourceFingerprint:body.expectedSourceFingerprint,
-          loadCurrent:(tx)=>loadPeriodEvaluationRows(tx,{classroomId:data.classroom.id,period:data.period,applicableIds:new Set(data.cards.map((card)=>card.id))})});
+          loadCurrent:(tx)=>loadPeriodEvaluationRows(tx,{classroomId:data.classroom.id,period:data.period,applicableIds:new Set(data.cards.map((card)=>card.id))}),
+          validateCurrent:async(tx,current)=>{const gaps=await annualValuationGaps(tx,data.classroom,data.period,data.cards,current);
+            if(gaps?.length)throw new Error(`El cierre anual sigue pendiente: ${gaps.length} pares niño–competencia aplicables nunca tuvieron una valoración vigente. Ofrece evidencia y confirma la valoración docente antes de cerrar.`);}});
         send(response, 200, closed, origin); return true;
       }
       if (request.method === "GET" && url.pathname === "/api/period-evaluations/siagie-export") {
@@ -463,15 +498,15 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
         const finalOutput = url.pathname.endsWith("progress-report") || url.pathname.endsWith(".csv");
         if (finalOutput && (!closure.closed || !closure.current)) throw new Error("Revisa y cierra el período antes de preparar la salida.");
         const names = new Map(data.model.students.map((student) => [student.id, [student.preferred_name || student.first_name, student.last_name].filter(Boolean).join(" ")]));
-        let rows = data.model.rows.map((row) => ({ student_id: row.student_id, student_name: names.get(row.student_id), competency_id: row.competency_v4_id, competency_name: data.cards.find((card) => card.id === row.competency_v4_id)?.official_name ?? row.competency_v4_id, short_label:data.labels.find((item)=>item.competency_id===row.competency_v4_id)?.short_label??row.competency_v4_id,area:data.labels.find((item)=>item.competency_id===row.competency_v4_id)?.area??"Área curricular", achievement_level: row.assessment?.achievement_level ?? null, conclusion: row.conclusion?.details?.conclusion_text ?? "", assessment_id: row.assessment?.id ?? null, conclusion_id: row.conclusion?.id ?? null, state: row.state,period_label:data.period.label }));
+        let rows = data.model.rows.map((row) => ({ student_id: row.student_id, student_name: names.get(row.student_id), competency_id: row.competency_v4_id, competency_name: data.cards.find((card) => card.id === row.competency_v4_id)?.official_name ?? row.competency_v4_id, short_label:data.labels.find((item)=>item.competency_id===row.competency_v4_id)?.short_label??row.competency_v4_id,area:data.labels.find((item)=>item.competency_id===row.competency_v4_id)?.area??"Área curricular", achievement_level: row.state === "confirmed" ? row.assessment?.achievement_level ?? null : null, conclusion: row.state === "confirmed" ? row.conclusion?.details?.conclusion_text ?? "" : "", assessment_id: row.state === "confirmed" ? row.assessment?.id ?? null : null, conclusion_id: row.state === "confirmed" ? row.conclusion?.id ?? null : null, state: row.state,period_label:data.period.label }));
         const studentId = url.searchParams.get("studentId"), competencyId = url.searchParams.get("competencyId"), status = url.searchParams.get("status");
         if (studentId) { await studentForClass(data.classroom, studentId); rows = rows.filter((row) => row.student_id === studentId); }
         if (competencyId) rows = rows.filter((row) => row.competency_id === competencyId);
         if (status === "pending") rows = rows.filter((row) => row.state !== "confirmed");
         if (status === "complete") rows = rows.filter((row) => row.state === "confirmed");
-        if (finalOutput) rows = rows.filter((row) => row.state === "confirmed");
+        if (url.pathname.endsWith("progress-report")) rows = rows.filter((row) => row.state === "confirmed");
         if (url.pathname.endsWith(".csv")) {
-          const csv = "\uFEFF" + [["Estudiante", "Competencia", "Nivel", "Conclusión descriptiva"], ...rows.map((row) => [row.student_name, row.competency_name, row.achievement_level, row.conclusion])].map((line) => line.map(safeCsv).join(",")).join("\r\n");
+          const csv = "\uFEFF" + [["Estudiante", "Competencia", "Nivel", "Conclusión descriptiva", "Estado"], ...rows.map((row) => [row.student_name, row.competency_name, row.state === "confirmed" ? row.achievement_level : "", row.state === "confirmed" ? row.conclusion : "", row.state])].map((line) => line.map(safeCsv).join(",")).join("\r\n");
           response.writeHead(200, { "content-type": "text/csv; charset=utf-8", "content-disposition": `attachment; filename="consolidado-${data.classroom.year}-${data.period.kind}-${data.period.ordinal}.csv"`, ...(origin ? { "access-control-allow-origin": origin } : {}) });
           response.end(csv); return true;
         }

@@ -65,7 +65,7 @@ test("cobertura deriva registros por niño y competencia sin convertir ausencias
   assert.equal(onlyAntecedent.body.evidence_count,0);
   assert.equal(onlyAntecedent.body.timeline.length,0);
   assert.equal(onlyAntecedent.body.diagnostic_antecedents.length,1);
-  assert.equal(onlyAntecedent.body.state,"no_evidence");
+  assert.equal(onlyAntecedent.body.state,"observation_pending");
   await f.db.query(`insert into diagnostic_experience_observations values(gen_random_uuid(),$1,$2,'COM_ORAL','2026-03-12T12:00:00Z','Explicó otra idea.','demonstrated','asamblea','Asamblea de marzo','Cuenta una idea')`,[classId,studentA]);
   const withBoth=await f.call("GET",`/api/period-evaluations/detail?classroomId=${classId}&periodId=${period.id}&studentId=${studentA}&competencyId=COM_ORAL`);
   assert.equal(withBoth.body.evidence_count,2);
@@ -123,17 +123,21 @@ async function fixture({ analysis = mockAnalysis(), jsonbPending = false } = {})
   await db.exec(await readFile(new URL("../../local-db/migrations/0042_period_closure_history.sql", import.meta.url), "utf8"));
   await db.exec(`create table profiles(user_id uuid primary key,display_name text);
     create table institution_profiles(owner_user_id uuid primary key,display_name text,ugel text);
+    create table experience_formal_contents(id uuid primary key,experience_id uuid);
     alter table classrooms add column institution_name text not null default 'Jardín de prueba';
     alter table competency_assessments add column revision bigint not null default 1;
     create function test_bump_revision() returns trigger as $$ begin new.revision=old.revision+1;return new;end $$ language plpgsql;
     create trigger assessment_revision before update on competency_assessments for each row execute function test_bump_revision();`);
   await db.exec(await readFile(new URL("../../local-db/migrations/0054_assessment_masters.sql", import.meta.url), "utf8"));
+  await db.exec(await readFile(new URL("../../local-db/migrations/0057_period_assessment_closure.sql", import.meta.url), "utf8"));
   await db.exec(`create table diagnostic_experience_observations(id uuid primary key,classroom_id uuid,student_id uuid,
     competency_v4_id text,observed_at timestamptz,observation_text text,observation_status text,experience_id text,
     experience_title_snapshot text,aspect_prompt_snapshot text);
     create table diagnostic_spontaneous_observations(id uuid primary key,classroom_id uuid,student_id uuid,
     competency_v4_ids text[],observed_at timestamptz,observation_text text,context_label text,support_status text,
     classification_status text);`);
+  await db.exec(`create table class_schedule_entries(id uuid primary key,classroom_id uuid,activity_id uuid);
+    create table daily_execution_logs(id uuid primary key,schedule_entry_id uuid,execution_date date,status text);`);
   await db.query(`insert into profiles values($1,'Docente de prueba'),($2,'Otra docente')`,[teacher,otherTeacher]);
   await db.query(`insert into school_years values($1,$2,2026,'2026-03-01','2026-12-31')`, [year, teacher]);
   await db.query(`insert into age_grades values($1,5)`, [ageGrade]);
@@ -145,6 +149,8 @@ async function fixture({ analysis = mockAnalysis(), jsonbPending = false } = {})
   ];
   for (const [start, end] of blocks) await db.query(`insert into calendar_blocks values(gen_random_uuid(),$1,'instructional',$2::date,$3::date)`, [year, start, end]);
   await db.query(`insert into evaluation_periods(id,school_year_id,kind,ordinal,label,starts_on,ends_on) values($1,$2,'bimester',1,'Bimestre 1','2026-03-16','2026-05-15')`,[firstPeriod,year]);
+  for (const [ordinal,start,end] of [[2,"2026-05-25","2026-07-24"],[3,"2026-08-10","2026-10-09"],[4,"2026-10-19","2026-12-18"]])
+    await db.query(`insert into evaluation_periods(id,school_year_id,kind,ordinal,label,starts_on,ends_on) values(gen_random_uuid(),$1,'bimester',$2,$3,$4::date,$5::date)`,[year,ordinal,`Bimestre ${ordinal}`,start,end]);
   await db.query(`insert into learning_experiences(id,classroom_id,status,starts_on,ends_on,details) values(gen_random_uuid(),$1,'active','2026-03-16','2026-05-15',$2::jsonb)`, [classId,JSON.stringify({flow_version:"project-master-v2",project_master:{activity_blueprints:[]}})]);
   const experienceId = (await db.query(`select id from learning_experiences where classroom_id=$1`, [classId])).rows[0].id;
   await db.query(`insert into activities(id,experience_id,occurs_on,title,status,details) values($1,$2,'2026-04-10','Conversamos sobre nuestros juegos','active',$3::jsonb)`, [activity, experienceId,JSON.stringify({purpose:"Comunicar ideas durante el juego."})]);
@@ -153,7 +159,7 @@ async function fixture({ analysis = mockAnalysis(), jsonbPending = false } = {})
     await db.query(`insert into evidences(id,student_id,activity_id,criterion_id,observed_at,observed_on,observation_text) values($1,$2,$3,$4,'2026-06-01T12:00:00Z',$5::date,$6)`, [id, studentA, activity, criterion, date, note]);
   }
   const currentContext = { source_fingerprint: "confirmed-classroom-context-1" };
-  const masterSource=await loadAssessmentMasterSources(db,{id:classId,context_v4:currentContext},{id:firstPeriod,label:"Bimestre 1",starts_on:"2026-03-16",ends_on:"2026-05-15"});
+  const masterSource=await loadAssessmentMasterSources(db,{id:classId,school_year_id:year,context_v4:currentContext},{id:firstPeriod,label:"Bimestre 1",starts_on:"2026-03-16",ends_on:"2026-05-15"});
   const masterDetails={period_summary:"Se trabajó la comunicación oral en situaciones de juego.",competencies:[{competency_id:"COM_ORAL",short_label:"Se comunica",area:"Comunicación",assessment_focus:"Cómo explica ideas en las situaciones propuestas.",criteria_worked:["Explica sus ideas."],relevant_evidence:["Explicaciones registradas."],patterns_to_consider:["Respuestas en distintas oportunidades."],progress_signals:["Amplía sus explicaciones."],support_signals:["Necesita preguntas abiertas."],insufficient_information_rules:["Una respuesta aislada no es suficiente."],contradiction_handling:"Conservar diferencias y consultar a la docente.",context_considerations:["Apoyos ofrecidos."],teacher_questions:["¿Ocurrió en otra situación?"],prohibited_inferences:["No calificar una observación aislada."],assessment_guidance:"Revisar el conjunto antes de valorar."}]};
   await db.query(`insert into assessment_masters(id,classroom_id,evaluation_period_id,version,status,details,source_snapshot,created_by,teacher_confirmed_at) values(gen_random_uuid(),$1,$2,1,'active',$3::jsonb,$4::jsonb,$5,now())`,[classId,firstPeriod,JSON.stringify(masterDetails),JSON.stringify(masterSource.snapshot),teacher]);
   const pending = new Map(), calls = [];
@@ -279,7 +285,7 @@ test("ficha única, nivel docente, cierre, salidas derivadas y cambio posterior 
     const overview = await f.call("GET", `/api/period-evaluations/overview?${query}`);
     assert.equal(overview.status, 200, JSON.stringify(overview.body));
     assert.equal(overview.body.rows.length, 2);
-    assert.equal(overview.body.rows.find((row) => row.student_id === studentB).state, "no_evidence");
+    assert.equal(overview.body.rows.find((row) => row.student_id === studentB).state, "observation_pending");
     assert.equal(overview.body.rows.find((row) => row.student_id === studentA).evidence_count, 2);
     const detail = await f.call("GET", `/api/period-evaluations/detail?${query}&studentId=${studentA}&competencyId=COM_ORAL`);
     assert.equal(detail.status, 200);
@@ -305,8 +311,7 @@ test("ficha única, nivel docente, cierre, salidas derivadas y cambio posterior 
     assert.equal(persisted.achievement_level, "B"); assert.equal(persisted.suggested_level, null); assert.equal(persisted.level_confirmed_by, teacher); assert.match(persisted.teacher_justification, /sigue necesitando apoyo/);
     await confirmGeneratedConclusion(f, period.id, studentA);
     const incomplete=await f.call("GET",`/api/period-evaluations/overview?${query}`);
-    assert.equal((await f.call("POST", "/api/period-evaluations/close", { classroomId: classId, periodId: period.id,
-      expectedCurrentVersionId:incomplete.body.closure.current_version_id,expectedSourceFingerprint:incomplete.body.closure.source_fingerprint })).status, 422);
+    assert.equal(incomplete.body.progress.observation_pending, 1);
     for (const [id, note] of [["00000000-0000-4000-8000-000000000703", "Explicó cómo jugar."], ["00000000-0000-4000-8000-000000000704", "Respondió a una propuesta."]]) await f.db.query(`insert into evidences(id,student_id,activity_id,criterion_id,observed_at,observed_on,observation_text) values($1,$2,$3,$4,now(),'2026-04-10',$5)`, [id, studentB, activity, criterion, note]);
     const second = await f.call("GET", `/api/period-evaluations/detail?${query}&studentId=${studentB}&competencyId=COM_ORAL`);
     const decisionB={ classroomId: classId, periodId: period.id, studentId: studentB, competencyId: "COM_ORAL", evidenceFingerprint: second.body.evidence_fingerprint, achievementLevel: "A", teacherAnalysis: "Explicó su juego y respondió a un compañero.", conclusionText: "" };
@@ -349,7 +354,7 @@ test("ficha única, nivel docente, cierre, salidas derivadas y cambio posterior 
   } finally { await f.db.close(); }
 });
 
-test("una competencia del plan anual aparece sin evidencias y se puede excluir con motivo", async () => {
+test("una competencia solo prevista en Mi año no crea valoraciones obligatorias", async () => {
   const f = await fixture();
   try {
     await f.db.query(`insert into annual_plans values(gen_random_uuid(),$1,'active',$2::jsonb)`, [classId, JSON.stringify({ proposed_experiences: [{ primary_competency_ids: ["MAT_CANTIDAD"], possible_secondary_competency_ids: [] }] })]);
@@ -358,14 +363,31 @@ test("una competencia del plan anual aparece sin evidencias y se puede excluir c
     const query = `classroomId=${classId}&periodId=${period.id}`;
     const overview = await f.call("GET", `/api/period-evaluations/overview?${query}`);
     assert.equal(overview.status, 200);
-    assert.equal(overview.body.rows.filter((row) => row.competency_id === "MAT_CANTIDAD").length, 2);
-    assert.ok(overview.body.rows.filter((row) => row.competency_id === "MAT_CANTIDAD").every((row) => row.state === "no_evidence"));
+    assert.equal(overview.body.rows.filter((row) => row.competency_id === "MAT_CANTIDAD").length, 0);
     const excluded = await f.call("POST", "/api/period-evaluations/scope", { classroomId: classId, periodId: period.id, competencyId: "MAT_CANTIDAD", included: false, reason: "La propuesta se reprogramó." });
     assert.equal(excluded.status, 200);
     const after = await f.call("GET", `/api/period-evaluations/overview?${query}`);
     assert.ok(after.body.rows.every((row) => row.competency_id !== "MAT_CANTIDAD"));
     const cannotHideObserved = await f.call("POST", "/api/period-evaluations/scope", { classroomId: classId, periodId: period.id, competencyId: "COM_ORAL", included: false, reason: "No se evaluó." });
     assert.equal(cannotHideObserved.status, 422);
+  } finally { await f.db.close(); }
+});
+
+test("H34: un borrador docente iniciado no se puede ocultar retirando la competencia", async () => {
+  const f = await fixture();
+  try {
+    const period = (await f.call("GET", "/api/period-evaluations/workspace")).body.periods[0];
+    const target = { classroomId: classId, periodId: period.id, competencyId: "MAT_CANTIDAD" };
+    assert.equal((await f.call("POST", "/api/period-evaluations/scope", { ...target, included: true })).status, 200);
+    const detail = (await f.call("GET", `/api/period-evaluations/detail?classroomId=${classId}&periodId=${period.id}&studentId=${studentA}&competencyId=MAT_CANTIDAD`)).body;
+    const draft = await f.call("POST", "/api/period-evaluations/save-draft", { ...target, studentId: studentA,
+      evidenceFingerprint: detail.evidence_fingerprint, expectedDraftRevision: null,
+      teacherAnalysis: "Faltan oportunidades de observación.", conclusionText: "" });
+    assert.equal(draft.status, 200, JSON.stringify(draft.body));
+    const excluded = await f.call("POST", "/api/period-evaluations/scope", { ...target, included: false, reason: "Se reconsideró." });
+    assert.equal(excluded.status, 422);
+    const overview = (await f.call("GET", `/api/period-evaluations/overview?classroomId=${classId}&periodId=${period.id}`)).body;
+    assert.equal(overview.rows.find((row) => row.student_id === studentA && row.competency_id === "MAT_CANTIDAD").state, "insufficient_information");
   } finally { await f.db.close(); }
 });
 
@@ -482,5 +504,123 @@ test("evidencia posterior invalida la huella y dos cierres simultáneos crean so
     assert.equal(projection.ugel,"UGEL 01");
     assert.equal(projection.title,`Cierre de evaluación · ${period.label}`);
     assert.equal(projection.period_start,"2026-03-16");
+  } finally {await f.db.close();}
+});
+
+async function completedPeriodActivity(db, period, competencyId = "COM_ORAL") {
+  const experienceId = (await db.query(`insert into learning_experiences(id,classroom_id,status,starts_on,ends_on)
+    values(gen_random_uuid(),$1,'active',$2::date,$3::date) returning id`,[classId,period.starts_on,period.ends_on])).rows[0].id;
+  const activityId = (await db.query(`insert into activities(id,experience_id,occurs_on,title,status)
+    values(gen_random_uuid(),$1,$2::date,'Actividad QA','active') returning id`,[experienceId,period.starts_on])).rows[0].id;
+  await db.query(`insert into activity_criteria(id,activity_id,competency_v4_id,criterion_text,details,status)
+    values(gen_random_uuid(),$1,$2,'Criterio QA','{}'::jsonb,'active')`,[activityId,competencyId]);
+  const scheduleId=(await db.query(`insert into class_schedule_entries(id,classroom_id,activity_id)
+    values(gen_random_uuid(),$1,$2) returning id`,[classId,activityId])).rows[0].id;
+  await db.query(`insert into daily_execution_logs(id,schedule_entry_id,execution_date,status)
+    values(gen_random_uuid(),$1,$2::date,'completed')`,[scheduleId,period.starts_on]);
+  return activityId;
+}
+
+test("H34: una actividad trabajada sin evidencia queda pendiente de observación y una prevista sola no entra al scope",async()=>{
+  const f=await fixture();
+  try {
+    const period=(await f.call("GET","/api/period-evaluations/workspace")).body.periods[1];
+    await completedPeriodActivity(f.db,period,"MAT_CANTIDAD");
+    const overview=await f.call("GET",`/api/period-evaluations/overview?classroomId=${classId}&periodId=${period.id}`);
+    assert.equal(overview.status,200,JSON.stringify(overview.body));
+    assert.deepEqual(overview.body.scope.map((item)=>item.id),["MAT_CANTIDAD"]);
+    assert.equal(overview.body.progress.observation_pending,2);
+    assert.ok(overview.body.rows.every((row)=>row.state==="observation_pending"&&row.level===null));
+  } finally {await f.db.close();}
+});
+
+test("H34: AD puede cerrar sin conclusión, conserva el pendiente y lo prioriza después",async()=>{
+  const f=await fixture();
+  try {
+    const periods=(await f.call("GET","/api/period-evaluations/workspace")).body.periods;
+    const base={classroomId:classId,periodId:periods[0].id,studentId:studentA,competencyId:"COM_ORAL"};
+    const detail=(await f.call("GET",`/api/period-evaluations/detail?classroomId=${classId}&periodId=${periods[0].id}&studentId=${studentA}&competencyId=COM_ORAL`)).body;
+    assert.equal(detail.state,"pending","la evidencia queda lista para decisión docente sin letra automática");
+    const decision={...base,evidenceFingerprint:detail.evidence_fingerprint,expectedDraftRevision:null,
+      provisionalLevel:"AD",achievementLevel:"AD",teacherAnalysis:"La docente revisó dos observaciones de comunicación.",conclusionText:""};
+    const saved=await f.call("POST","/api/period-evaluations/save-draft",decision);
+    assert.equal(saved.status,200,JSON.stringify(saved.body));
+    const confirmed=await f.call("POST","/api/period-evaluations/confirm",{...decision,expectedDraftRevision:saved.body.draft_revision});
+    assert.equal(confirmed.status,200,JSON.stringify(confirmed.body));
+    const overview=(await f.call("GET",`/api/period-evaluations/overview?classroomId=${classId}&periodId=${periods[0].id}`)).body;
+    assert.equal(overview.rows.find((row)=>row.student_id===studentA).state,"confirmed");
+    assert.equal(overview.rows.find((row)=>row.student_id===studentA).conclusion,null);
+    assert.equal(overview.rows.find((row)=>row.student_id===studentB).state,"observation_pending");
+    assert.equal(overview.progress.competencies_resolved,2);
+    const closed=await f.call("POST","/api/period-evaluations/close",{...base,
+      expectedCurrentVersionId:overview.closure.current_version_id,expectedSourceFingerprint:overview.closure.source_fingerprint});
+    assert.equal(closed.status,200,JSON.stringify(closed.body));
+    const manifest=(await f.db.query(`select manifest from period_closure_versions where id=$1`,[closed.body.id])).rows[0].manifest;
+    assert.equal(manifest.entries.length,1);
+    assert.equal(manifest.entries[0].achievement_level,"AD");
+    assert.equal(manifest.pending_entries.length,1);
+    assert.equal(manifest.pending_entries[0].student_id,studentB);
+    const csv=await f.call("GET",`/api/period-evaluations/consolidated.csv?classroomId=${classId}&periodId=${periods[0].id}`);
+    assert.equal(csv.status,200);
+    assert.match(String(csv.body),/observation_pending/);
+    const nextActivity=await completedPeriodActivity(f.db,periods[1]);
+    const next=await f.call("GET",`/api/period-evaluations/observe-today?activityId=${nextActivity}`);
+    assert.equal(next.status,200,JSON.stringify(next.body));
+    assert.equal(next.body.suggestions[0].student_id,studentB);
+    assert.equal(next.body.suggestions[0].reason_code,"prior_period_pending");
+  } finally {await f.db.close();}
+});
+
+test("H34: evidencia aún sin revisión docente queda sin letra en cierre intermedio",async()=>{
+  const f=await fixture();
+  try {
+    const period=(await f.call("GET","/api/period-evaluations/workspace")).body.periods[0];
+    const overview=(await f.call("GET",`/api/period-evaluations/overview?classroomId=${classId}&periodId=${period.id}`)).body;
+    assert.equal(overview.rows.find((row)=>row.student_id===studentA).state,"pending");
+    assert.equal(overview.progress.review_pending,1);
+    const closed=await f.call("POST","/api/period-evaluations/close",{classroomId:classId,periodId:period.id,
+      expectedCurrentVersionId:overview.closure.current_version_id,expectedSourceFingerprint:overview.closure.source_fingerprint});
+    assert.equal(closed.status,200,JSON.stringify(closed.body));
+    const manifest=(await f.db.query('select manifest from period_closure_versions where id=$1',[closed.body.id])).rows[0].manifest;
+    assert.equal(manifest.entries.length,0);
+    assert.equal(manifest.pending_entries.length,2);
+    assert.match(manifest.pending_entries.find((row)=>row.student_id===studentA).reason,/pendiente de revisión docente/);
+    assert.equal((await f.db.query("select count(*)::int as n from competency_assessments where status='active'")).rows[0].n,0);
+  } finally {await f.db.close();}
+});
+
+for(const level of ["A","B","C"]) test(`H34: ${level} requiere conclusión descriptiva`,async()=>{
+  const f=await fixture();
+  try {
+    const detail=(await f.call("GET",`/api/period-evaluations/detail?classroomId=${classId}&periodId=${firstPeriod}&studentId=${studentA}&competencyId=COM_ORAL`)).body;
+    const decision={classroomId:classId,periodId:firstPeriod,studentId:studentA,competencyId:"COM_ORAL",
+      evidenceFingerprint:detail.evidence_fingerprint,expectedDraftRevision:null,provisionalLevel:level,
+      achievementLevel:level,teacherAnalysis:"La docente revisó el conjunto de observaciones.",conclusionText:""};
+    const saved=await f.call("POST","/api/period-evaluations/save-draft",decision);
+    assert.equal(saved.status,200,JSON.stringify(saved.body));
+    assert.equal((await f.call("POST","/api/period-evaluations/confirm",{...decision,expectedDraftRevision:saved.body.draft_revision})).status,200);
+    assert.equal((await f.call("GET",`/api/period-evaluations/detail?classroomId=${classId}&periodId=${firstPeriod}&studentId=${studentA}&competencyId=COM_ORAL`)).body.state,"conclusion_pending");
+    await confirmGeneratedConclusion(f,firstPeriod,studentA);
+    assert.equal((await f.call("GET",`/api/period-evaluations/detail?classroomId=${classId}&periodId=${firstPeriod}&studentId=${studentA}&competencyId=COM_ORAL`)).body.state,"confirmed");
+  } finally {await f.db.close();}
+});
+
+test("H34: P1–P3 cierran con pendientes sin notas inventadas; P4 bloquea los nunca valorados",async()=>{
+  const f=await fixture();
+  try {
+    const periods=(await f.call("GET","/api/period-evaluations/workspace")).body.periods;
+    await f.db.query(`delete from evidences where student_id=$1`,[studentA]);
+    for(const period of periods){
+      await completedPeriodActivity(f.db,period);
+      const overview=(await f.call("GET",`/api/period-evaluations/overview?classroomId=${classId}&periodId=${period.id}`)).body;
+      assert.equal(overview.progress.observation_pending,2);
+      assert.ok(overview.rows.every((row)=>row.level===null));
+      const result=await f.call("POST","/api/period-evaluations/close",{classroomId:classId,periodId:period.id,
+        expectedCurrentVersionId:overview.closure.current_version_id,expectedSourceFingerprint:overview.closure.source_fingerprint});
+      if(Number(period.ordinal)<4) assert.equal(result.status,200,`P${period.ordinal}: ${JSON.stringify(result.body)}`);
+      else {assert.equal(result.status,422);assert.match(result.body.error,/cierre anual.*nunca tuvieron una valoración/);}
+    }
+    assert.equal((await f.db.query(`select count(*)::int as n from period_closure_versions where classroom_id=$1`,[classId])).rows[0].n,3);
+    assert.equal((await f.db.query(`select count(*)::int as n from competency_assessments where status='active'`)).rows[0].n,0);
   } finally {await f.db.close();}
 });

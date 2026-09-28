@@ -11,10 +11,11 @@ type Competency = { competency_id: string; name: string; tone: "well" | "opportu
   reason: string; without_evidence: number; attention: number; developing: number; evidence_coverage: number };
 type Preview = { classroom_id: string; period: { id: string; label: string; ends_on: string };
   next_period: { id: string; label: string } | null;
+  annual_unvalued:number|null;
   closure: { closed: boolean; current: boolean; current_version_id: string | null; source_fingerprint: string };
   adjusted: boolean; workshop_options: { competency_id: string; resource_id: string; title: string; purpose: string; reason: string }[];
   available_workshops: { resource_id: string; title: string; purpose: string; area: string }[];
-  summary: { students_total: number; assessments_confirmed: number; assessments_total: number;
+  summary: { students_total: number; assessments_confirmed: number; assessments_total: number; assessments_resolved:number;observation_pending:number;review_pending:number;
     competencies_evaluated: number; students_needing_observation: number;
     observation_students: { id: string; name: string }[]; competencies: Competency[] };
   plan: { id: string; revision: number; version: number; proposals: { proposal_id: string; title: string;
@@ -91,6 +92,9 @@ export function BimesterReplan({ onEvaluation, onFinish }: { onEvaluation: () =>
   const selectedWorkshops = chosen.filter((item) => workshops[item.competency_id]
     && workshops[item.competency_id] !== "ignore").length;
   const period = workspace?.periods.find((item) => item.id === periodId);
+  const closureReady=Boolean(preview && preview.summary.assessments_total>0
+    && preview.summary.assessments_resolved===preview.summary.assessments_total
+    && (preview.annual_unvalued===null||preview.annual_unvalued===0));
 
   async function closePeriod() {
     if (!preview) return;
@@ -148,10 +152,11 @@ export function BimesterReplan({ onEvaluation, onFinish }: { onEvaluation: () =>
       <>
         {step === 0 && <div className="space-y-4 rounded-3xl border bg-white p-5"><h2 className="text-2xl font-extrabold">Terminamos {period?.label ?? preview.period.label}</h2>
           <p className="text-[#566883]">{preview.summary.assessments_confirmed} de {preview.summary.assessments_total} valoraciones confirmadas · {preview.summary.competencies_evaluated} competencias evaluadas · {preview.summary.students_total} niños</p>
-          {preview.summary.assessments_confirmed < preview.summary.assessments_total && <p className="rounded-xl bg-[#fff3da] p-3 text-sm">Aún hay valoraciones por revisar. Puedes volver a Evaluar y continuar aquí después.</p>}
+          {(preview.summary.observation_pending+preview.summary.review_pending)>0 && <p className="rounded-xl bg-[#fff3da] p-3 text-sm">{preview.summary.observation_pending} pendientes de observación o información suficiente y {preview.summary.review_pending} con evidencia por revisar. Quedarán sin letra, visibles para nuevas oportunidades; ninguna se convierte en C.</p>}
+          {preview.annual_unvalued!==null&&preview.annual_unvalued>0&&<p className="rounded-xl bg-[#fff3da] p-3 text-sm">Para cerrar el año faltan valoraciones docentes vigentes en {preview.annual_unvalued} pares niño–competencia aplicables.</p>}
           {preview.period.ends_on >= todayInPeru() && <p className="rounded-xl bg-[#fff3da] p-3 text-sm">Este período todavía está en curso. Regresa cuando termine para hacer el cierre.</p>}
           {preview.closure.closed && preview.closure.current ? <Button className="min-h-12 w-full" onClick={() => setStep(1)}>Ver cómo está mi aula <ChevronRight className="ml-2 size-4" /></Button>
-            : <><Button className="min-h-12 w-full" disabled={busy || preview.period.ends_on >= todayInPeru() || preview.summary.assessments_confirmed < preview.summary.assessments_total || !preview.summary.assessments_total} onClick={() => void closePeriod()}>{busy ? "Cerrando..." : "Revisar y cerrar bimestre"}</Button>
+            : <><Button className="min-h-12 w-full" disabled={busy || preview.period.ends_on >= todayInPeru() || !closureReady} onClick={() => void closePeriod()}>{busy ? "Cerrando..." : "Revisar y cerrar bimestre"}</Button>
               <button className="min-h-11 w-full font-bold text-[#07576c]" onClick={onEvaluation}>Revisar evaluaciones</button></>}</div>}
         {step === 1 && <div className="space-y-3"><h2 className="text-2xl font-extrabold">¿Cómo está mi aula?</h2><p className="text-[#566883]">Este resumen se basa en las valoraciones y evidencias registradas.</p>
           {(["attention", "opportunities", "well"] as const).map((tone) => { const items = preview.summary.competencies.filter((item) => item.tone === tone);

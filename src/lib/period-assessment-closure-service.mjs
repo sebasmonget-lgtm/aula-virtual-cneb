@@ -130,12 +130,12 @@ export function buildPeriodStatistics({ rows, mapEntries = [], competencyMeta = 
     const levels = Object.fromEntries(gradeOrder.map((level) => [level, relevantRows.filter((row) => (row.level ?? row.assessment?.achievement_level) === level).length]));
     const evaluated = gradeOrder.reduce((sum, level) => sum + levels[level], 0);
     const withEvidence = new Set(relevantRows.filter((row) => Number(row.evidence_count ?? row.sourceRows?.length ?? 0) > 0).map((row) => row.student_id)).size;
-    const noEvidence = Math.max(0, studentCount - withEvidence);
+    const noEvidence = Math.max(0, relevantRows.length - withEvidence);
     const work = competencyWorkState(relevantMap, planned.has(id));
     return { competency_id: id, short_label: meta.get(id)?.short_label ?? id, area: meta.get(id)?.area ?? "Área curricular",
       official_name: meta.get(id)?.official_name ?? id, ...work, evaluated, levels,
       percentages: Object.fromEntries(gradeOrder.map((level) => [level, evaluated ? Math.round(levels[level] * 1000 / evaluated) / 10 : 0])),
-      students_without_grade: Math.max(0, studentCount - evaluated), students_without_evidence: noEvidence,
+      students_without_grade: Math.max(0, relevantRows.length - evaluated), students_without_evidence: noEvidence,
       activity_count: new Set(relevantMap.filter((row) => row.activity_state === "completed").map((row) => row.activity_id)).size,
       criterion_count: new Set(relevantMap.map((row) => row.criterion_id)).size,
       evidence_count: relevantMap.reduce((sum, row) => sum + Number(row.evidence_count ?? 0), 0),
@@ -180,7 +180,8 @@ export function classroomReportFingerprint(statistics, mapVersion) { return hash
 const xml = (value) => String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
 const columnName = (index) => { let result = "", value = index + 1; while (value) { value--; result = String.fromCharCode(65 + value % 26) + result; value = Math.floor(value / 26); } return result; };
 export async function buildGenericAssessmentWorkbook(rows) {
-  const data = [["Alumno","Competencia","Valoración","Conclusión descriptiva","Período"], ...rows.map((row) => [row.student_name,row.competency_name,row.achievement_level ?? "",row.conclusion ?? "",row.period_label ?? ""])];
+  const states = { confirmed: "Valorada por la docente", observation_pending: "Pendiente de observación", insufficient_information: "Información insuficiente", needs_review: "Requiere revisión", conclusion_pending: "Falta conclusión descriptiva", pending: "Pendiente de revisión docente", draft: "Borrador por revisar" };
+  const data = [["Alumno","Competencia","Valoración","Conclusión descriptiva","Período","Estado"], ...rows.map((row) => [row.student_name,row.competency_name,row.state === "confirmed" ? row.achievement_level ?? "" : "",row.state === "confirmed" ? row.conclusion ?? "" : "",row.period_label ?? "",states[row.state] ?? row.state ?? "Sin valoración"])];
   const sheet = data.map((row, rowIndex) => `<row r="${rowIndex + 1}">${row.map((value, columnIndex) => `<c r="${columnName(columnIndex)}${rowIndex + 1}" t="inlineStr"><is><t xml:space="preserve">${xml(value)}</t></is></c>`).join("")}</row>`).join("");
   const zip = new JSZip();
   zip.file("[Content_Types].xml", `<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>`);

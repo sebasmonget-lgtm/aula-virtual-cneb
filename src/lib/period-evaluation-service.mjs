@@ -29,6 +29,10 @@ export function conclusionIsCurrent(conclusion, assessment) {
   return Boolean(conclusion && assessment && conclusion.assessment_id === assessment.id && sameAssessmentSnapshot(conclusion.source_assessment_snapshot, sourceAssessmentSnapshot(assessment)));
 }
 
+export const conclusionRequiredForLevel = (level) => ["A", "B", "C"].includes(level);
+export const periodRowResolved = (row) => row.state === "confirmed" ||
+  ["observation_pending", "insufficient_information", "pending"].includes(row.state);
+
 export function evaluationState({ assessment, conclusion, draft, sourceRows }) {
   if (assessment && !evidenceIsCurrent(assessment, sourceRows)) return "needs_review";
   if (draft) {
@@ -36,28 +40,25 @@ export function evaluationState({ assessment, conclusion, draft, sourceRows }) {
     return draft.details?.information_status === "insufficient" ? "insufficient_information" : "draft";
   }
   if (assessment && !assessment.achievement_level) return "level_pending";
-  if (assessment?.achievement_level && !conclusionIsCurrent(conclusion, assessment)) return "conclusion_pending";
   if (assessment?.achievement_level && conclusion && !conclusionIsCurrent(conclusion, assessment)) return "needs_review";
-  if (assessment?.achievement_level && (!conclusion || conclusionIsCurrent(conclusion, assessment))) return "confirmed";
-  if (!sourceRows.length) return "no_evidence";
+  if (assessment?.achievement_level && conclusionRequiredForLevel(assessment.achievement_level) && !conclusion) return "conclusion_pending";
+  if (assessment?.achievement_level) return "confirmed";
+  if (!sourceRows.length) return "observation_pending";
   return "pending";
 }
 
 export function periodClosureFingerprint(rows) {
-  const normalized = rows.map((row) => ({ student_id: row.student_id, competency_v4_id: row.competency_v4_id, assessment_id: row.assessment?.id ?? null, level: row.assessment?.achievement_level ?? null, assessment_updated_at: row.assessment?.updated_at ?? null, conclusion_id: row.conclusion?.id ?? null, conclusion_updated_at: row.conclusion?.updated_at ?? null, ...(row.draft ? { draft_id: row.draft.id, draft_revision: Number(row.draft.revision) } : {}), evidence: assessmentSourceSnapshot(row.sourceRows) })).sort((a, b) => `${a.student_id}:${a.competency_v4_id}`.localeCompare(`${b.student_id}:${b.competency_v4_id}`));
+  const normalized = rows.map((row) => ({ student_id: row.student_id, competency_v4_id: row.competency_v4_id, assessment_id: row.assessment?.id ?? null, level: row.assessment?.achievement_level ?? null, assessment_updated_at: row.assessment?.updated_at ?? null, conclusion_id: row.conclusion?.id ?? null, conclusion_updated_at: row.conclusion?.updated_at ?? null, ...(row.draft ? { draft_id: row.draft.id, draft_revision: Number(row.draft.revision) } : {}), evidence: assessmentSourceSnapshot(row.sourceRows), ...(periodRowResolved(row) && row.state !== "confirmed" ? { pending_state: row.state, work_refs: row.workRefs ?? [] } : {}) })).sort((a, b) => `${a.student_id}:${a.competency_v4_id}`.localeCompare(`${b.student_id}:${b.competency_v4_id}`));
   return createHash("sha256").update(JSON.stringify(normalized)).digest("hex");
 }
 
-export async function loadPeriodEvaluationRows(db, { classroomId, period, applicableIds }) {
+export async function loadPeriodEvaluationRows(db, { classroomId, period, applicableIds, workEntries = null }) {
   const students = (await db.query(`select id,first_name,last_name,preferred_name from students where classroom_id=$1 and status='active' order by last_name,first_name,id`, [classroomId])).rows;
-  const criteria = (await db.query(`select distinct ac.competency_v4_id from activity_criteria ac join activities a on a.id=ac.activity_id join learning_experiences le on le.id=a.experience_id where le.classroom_id=$1 and a.status='active' and ac.status='active' and a.occurs_on between $2::date and $3::date and ac.competency_v4_id is not null`, [classroomId, period.starts_on, period.ends_on])).rows;
-  const planned = (await db.query(`select ps.slot_index, ap.proposal from project_slots ps join annual_plans ap on ap.id=ps.annual_plan_id where ap.classroom_id=$1 and ap.status='active' and ps.starts_on<=$3::date and ps.ends_on>=$2::date`, [classroomId, period.starts_on, period.ends_on])).rows;
+  const mapReady = (await db.query(`select to_regclass('period_evaluation_map_entries') is not null as ready`)).rows[0].ready;
+  const worked = workEntries ? workEntries.filter((row)=>row.activity_state === "completed") : mapReady ? (await db.query(`select competency_v4_id,activity_id,criterion_id from period_evaluation_map_entries
+    where classroom_id=$1 and evaluation_period_id=$2 and activity_state='completed'`, [classroomId, period.id])).rows : [];
   const overrides = (await db.query(`select competency_v4_id,included from period_competency_scope where classroom_id=$1 and evaluation_period_id=$2`, [classroomId, period.id])).rows;
-  const scope = new Set(criteria.map((row) => row.competency_v4_id).filter((id) => applicableIds.has(id)));
-  for (const slot of planned) {
-    const proposal = slot.proposal?.proposed_experiences?.[Number(slot.slot_index) - 1];
-    for (const id of [...(proposal?.primary_competency_ids ?? []), ...(proposal?.possible_secondary_competency_ids ?? [])]) if (applicableIds.has(id)) scope.add(id);
-  }
+  const scope = new Set(worked.map((row) => row.competency_v4_id).filter((id) => applicableIds.has(id)));
   const evidence = (await db.query(`select e.id,e.student_id,e.observed_at,coalesce(e.observed_on,e.observed_at::date) as observed_on,e.observation_status,e.observation_text,(e.media_path is not null) as media_available,e.activity_id,e.criterion_id,a.title as activity_title,ac.competency_v4_id,ac.criterion_text,ac.details,ac.performance_id from evidences e join students s on s.id=e.student_id join activities a on a.id=e.activity_id join activity_criteria ac on ac.id=e.criterion_id where s.classroom_id=$1 and coalesce(e.observed_on,e.observed_at::date) between $2::date and $3::date and ac.competency_v4_id is not null order by coalesce(e.observed_on,e.observed_at::date),e.observed_at,e.id`, [classroomId, period.starts_on, period.ends_on])).rows;
   for (const row of overrides) if (applicableIds.has(row.competency_v4_id)) {
     if (row.included) scope.add(row.competency_v4_id);
@@ -68,6 +69,7 @@ export async function loadPeriodEvaluationRows(db, { classroomId, period, applic
   const assessments = (await db.query(`select ca.* from competency_assessments ca join students s on s.id=ca.student_id where s.classroom_id=$1 and ca.status='active' and (ca.evaluation_period_id=$2 or (ca.evaluation_period_id is null and ca.period_start=$3::date and ca.period_end=$4::date))`, [classroomId, period.id, period.starts_on, period.ends_on])).rows;
   const drafts = (await db.query(`select ca.* from competency_assessments ca join students s on s.id=ca.student_id where s.classroom_id=$1 and ca.status='draft' and (ca.evaluation_period_id=$2 or (ca.evaluation_period_id is null and ca.period_start=$3::date and ca.period_end=$4::date))`, [classroomId, period.id, period.starts_on, period.ends_on])).rows;
   for (const assessment of assessments) if (applicableIds.has(assessment.competency_v4_id)) scope.add(assessment.competency_v4_id);
+  for (const draft of drafts) if (applicableIds.has(draft.competency_v4_id)) scope.add(draft.competency_v4_id);
   const conclusions = (await db.query(`select dc.* from competency_descriptive_conclusions dc join students s on s.id=dc.student_id where s.classroom_id=$1 and dc.status='active' and (dc.evaluation_period_id=$2 or (dc.evaluation_period_id is null and dc.period_start=$3::date and dc.period_end=$4::date))`, [classroomId, period.id, period.starts_on, period.ends_on])).rows;
   const key = (studentId, competencyId) => `${studentId}:${competencyId}`;
   const evidenceByKey = new Map(), assessmentByKey = new Map(), conclusionByKey = new Map(), draftByKey = new Map();
@@ -75,9 +77,13 @@ export async function loadPeriodEvaluationRows(db, { classroomId, period, applic
   for (const row of assessments) assessmentByKey.set(key(row.student_id, row.competency_v4_id), row);
   for (const row of drafts) draftByKey.set(key(row.student_id, row.competency_v4_id), row);
   for (const row of conclusions) conclusionByKey.set(key(row.student_id, row.competency_v4_id), row);
-  return { students, scope: [...scope], rows: students.flatMap((student) => [...scope].map((competencyId) => {
+  const workByCompetency = new Map();
+  for (const row of worked) workByCompetency.set(row.competency_v4_id,
+    [...(workByCompetency.get(row.competency_v4_id) ?? []), `${row.activity_id}:${row.criterion_id}`]);
+  return { students, scope: [...scope], workedCompetencyIds: [...workByCompetency.keys()], rows: students.flatMap((student) => [...scope].map((competencyId) => {
     const id = key(student.id, competencyId), sourceRows = evidenceByKey.get(id) ?? [], assessment = assessmentByKey.get(id) ?? null, conclusion = conclusionByKey.get(id) ?? null, draft = draftByKey.get(id) ?? null;
-    return { student_id: student.id, competency_v4_id: competencyId, sourceRows, assessment, conclusion, draft, state: evaluationState({ sourceRows, assessment, conclusion, draft }) };
+    return { student_id: student.id, competency_v4_id: competencyId, sourceRows, assessment, conclusion, draft,
+      workRefs: (workByCompetency.get(competencyId) ?? []).sort(), state: evaluationState({ sourceRows, assessment, conclusion, draft }) };
   })) };
 }
 

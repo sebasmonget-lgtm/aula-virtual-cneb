@@ -277,3 +277,7 @@ El flujo actual de proyecto/unidad transporta esa elección al servidor. Guarda 
 ## Corrección acotada del alumno de una evidencia (2026-09-28)
 
 El perfil permite reasociar una nota sin adjunto de la misma aula antes de una valoración confirmada afectada. Servidor valida autora/propiedad, alumno activo, período abierto, motivo y revisión de asignación; conserva texto/día, agrega `evidences.student_reassignment_history` y refresca ambos contextos. No se mueve media ni se altera evaluación confirmada. Migraciones nuevas 0061/202609280001, RLS existente conservado. H47 E2E; pruebas SQL y UI con conciliación, no cambios directos a QA.
+
+## H34: cierre intermedio sin notas inventadas (2026-09-28)
+
+El alcance de evaluación de un período procede de competencias efectivamente trabajadas en actividades completadas, evidencias, valoraciones o inclusión docente explícita; una propuesta de «Mi año» por sí sola no crea quince obligaciones individuales. Cada par alumno–competencia trabajado queda confirmado con letra docente o pendiente sin letra, distinguiendo falta de observación, información insuficiente y evidencia todavía por revisar. P1–P3 pueden cerrarse con pendientes explícitos que pasan al seguimiento posterior; P4 exige que cada par aplicable del año tenga al menos una valoración docente vigente. AD puede cerrarse sin conclusión; A/B/C requieren conclusión descriptiva. Consolidado/CSV/Excel no convierten pendientes en C. Ver ADR 085 y `docs/qa/end-to-end-audit-2026/21_H34_FASE_1.md`.
