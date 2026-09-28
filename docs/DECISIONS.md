@@ -1,5 +1,11 @@
 # Decisiones de arquitectura
 
+## ADR 087 Bake-off F2 provisional sin revisión humana previa a implementación
+
+**Decisión (2026-09-28).** Por autorización expresa, el gate de especialistas de `PLAN_MAESTRO_NUEVO_AYNI.md` §8 se traslada a antes del piloto, no bloquea la implementación local F2–F12. F2 conserva 36 casos, 3 repeticiones por brazo, rúbrica, validador común, hashes, métricas y regla cuantitativa. Los seis casos difíciles proceden de patrones CNEB/QA desidentificados. Dos evaluaciones de IA independientes y ciegas reemplazan provisionalmente a los dos especialistas; sus estimaciones de edición no son tiempos docentes observados. El resultado se denomina **validación provisional de ingeniería/pedagogía pendiente de validación humana posterior**, nunca validación especialista. Ante resultado ambiguo se conserva A. B solo puede seleccionarse si satisface el gate determinista y la regla preregistrada; A se mantiene como rollback. Ninguna rama se activa sin el resto de QA de su fase.
+
+**Permisos y reversión.** La comparación usa exclusivamente casos ficticios, sin nombres, fotos ni audio de menores. Corre fuera del flujo de producción y guarda resultados privados bajo `.local/`; no modifica proyectos confirmados ni tablas. Revertir la preparación F2 no transforma datos. Antes de piloto debe repetirse la adjudicación curricular y la medición de edición con docentes/especialistas humanos.
+
 ## ADR 084 Preplan recargable con calendario derivado
 
 **Decisión (2026-09-27).** Las filas guardadas de `annual_preplan_v1` pueden transportar los cuatro metadatos de calendario calculados por servidor. El validador de edición/confirmación reconoce solo esos campos adicionales y los excluye de su salida editable. Guardar y confirmar vuelven a calcular fechas y días desde el calendario autorizado. El contrato estricto del modelo no admite metadatos de calendario ni campos arbitrarios. No cambian aplicabilidad, IDs, modelos ni permisos.

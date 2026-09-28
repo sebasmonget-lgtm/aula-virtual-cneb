@@ -884,3 +884,17 @@ Síntoma: cuatro notas QA de la captura automatizada quedaron asociadas a la sel
 **Solución validada.** Se agregó `proposal_id` nullable al fixture; la prueba focal de Documentos y la suite completa volvieron a pasar (539/539 con concurrencia 4). No hubo migración ni cambio de datos.
 
 **Prevención.** Cuando un servicio incorpora una columna de una tabla ya migrada, actualizar y ejecutar también los fixtures mínimos que simulan esa tabla; comprobar la paridad de esquema antes de atribuir el fallo al servicio.
+
+## 2026-09-28 — Espera de bake-off F2 confundida con validación técnica
+
+**Síntoma.** La ejecución prolongada parecía corresponder a tests/typecheck/lint bloqueados.
+
+**Diagnóstico.** La inspección de procesos mostró únicamente `run-bakeoff.mjs` activo (PID 73516); ninguno de los tres validadores estaba ejecutándose. No se detectó cuelgue técnico ni corrupción de resultados. No se detuvo el generador ni se repitieron parejas A/B guardadas.
+
+**Validación.** Se ejecutaron los comandos por separado: `node --test evals/project-master/*.test.mjs` (11/11, 1,3 s), `npx tsc --noEmit` (8,9 s), `npm run lint` (29,0 s), y build (15,6 s), todos con exit code 0. Las sesiones se observaron en ventanas de hasta 30 s; el límite operativo para detener exclusivamente un validador sin progreso es 120 s. Ninguno alcanzó ese límite. El build conserva advertencias no bloqueantes sobre tamaño de chunks y clasificación estática de rutas.
+
+**Regresión adicional.** La suite completa descubierta en `src`, `scripts` y `evals` pasó 524/524 con concurrencia 4 en 122,5 s; mantuvo progreso durante la ejecución. No se realizaron nuevas llamadas A/B desde los validadores.
+
+**Incidente externo posterior.** El generador recibió 153 fallos etiquetados `rate_limited`; una comprobación mínima del proveedor confirmó `credit_balance_exhausted` / `insufficient_quota` (429). El usuario confirmó saldo negativo y ordenó continuar sin pruebas API. Se canceló el lanzador de revisión ciega, se verificó un snapshot antes de detener el generador y se comprobó el checkpoint final: 216 registros, 63 válidos. Los 39 registros de control conservaron su SHA-256. A queda como fallback autorizado, no como ganador experimental; comparación y revisión ciega pendientes externas. El runner actual agrupa cuota agotada y rate limit temporal bajo el mismo código: no reintentar automáticamente una corrida con este síntoma ni eliminar sus fallos. No hubo cambio de manifiesto ni regeneración de éxitos.
+
+**Prevención.** Separar los validadores de las llamadas facturables, comunicar su finalización y revisar los checkpoints de generación. La evaluación ciega debe comenzar solo después de finalizar el generador: ambos escriben el mismo archivo y no deben ejecutarse simultáneamente.

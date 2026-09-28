@@ -285,3 +285,9 @@ El alcance de evaluación de un período procede de competencias efectivamente t
 ## Plan Maestro F1: contratos y procedencia (2026-09-28)
 
 Base `5efa58a`, rama `codex/nuevo-ayni-f1`. El ID de propuesta anual es la identidad canónica; el ID de slot queda estable y funciona como alias/compatibilidad. Un mapa de proyecto editable vive solo en `activity_route`; el mapa anidado anterior se lee como fallback sin actualizar filas confirmadas. Los adaptadores de lectura V3 enlazan plan, propuesta, slot, proyecto, actividad y blueprint sin atribuir un contrato V3 persistido a datos V2. La nueva proyección API está apagada por defecto (`AYNI_PLANNING_V3_READ=1` para QA). No se requirió migración. Ver ADR 086 y `docs/qa/f1-contracts-provenance-2026-09-28.md`.
+
+## Plan Maestro F2: excepción de evaluación provisional (2026-09-28)
+
+**Checkpoint de continuidad sin API.** El usuario informó saldo negativo y autorizó proseguir sin pruebas API. La corrida corregida conserva 216 registros (63 válidos, 153 fallos de proveedor por cuota); no tiene revisión ciega ni ganador. Estrategia conservada: A por fallback autorizado, no por superioridad medida. Tests focales 11/11, suite 524/524, typecheck/lint/build PASS. No migraciones ni activación B. Las llamadas externas quedan suspendidas; F3 continúa localmente. Ver `docs/qa/f2-project-master-provisional-2026-09-28.md`.
+
+La autorización posterior a F1 permite ejecutar el bake-off A/B sin especialistas humanos actuales: seis casos difíciles se construyen de CNEB/QA sin datos identificables y dos evaluaciones de IA independientes puntúan a ciegas. Rúbrica y umbrales del plan permanecen; ausencia de especialistas deja pendiente la validación humana antes de piloto. La estrategia conservadora es A si B no gana claramente. Los scripts de `evals/project-master/` no activan producción ni escriben la base; los resultados locales van a `.local/test-results/project-master-f2/`. Ver ADR 087.
