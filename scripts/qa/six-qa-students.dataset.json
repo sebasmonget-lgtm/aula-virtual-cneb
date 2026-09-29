@@ -1,0 +1,122 @@
+{
+  "dataset_id": "qa-six-students-age-five-classroom-2026-v1",
+  "fictional": true,
+  "observation_dates": [
+    "2026-09-30",
+    "2026-10-07",
+    "2026-10-19",
+    "2026-11-09"
+  ],
+  "students": [
+    {
+      "firstName": "Valentina",
+      "lastName": "Rojas",
+      "interview": {
+        "interests": "Le gustan especialmente los cuentos de animales y suele pedir que le lean el mismo cuento varias veces. Inventa situaciones con muñecos y personajes.",
+        "interest_tags": [
+          "animals",
+          "stories",
+          "pretend_play"
+        ],
+        "communication_emotional_context": "La madre comenta que Valentina conversa mucho en casa y suele contar historias sobre cosas que le ocurrieron durante el día. Pregunta con frecuencia qué significan palabras que escucha por primera vez.",
+        "social_context": "Con familiares cercanos conversa con facilidad, pero frente a adultos que no conoce suele responder con frases cortas o mantenerse callada inicialmente."
+      },
+      "observations": [
+        "Durante el juego libre, Valentina contó a dos compañeras que su muñeca había viajado al bosque y explicó qué animales había encontrado.",
+        "Cuando la profesora preguntó frente a todo el salón qué habían hecho el fin de semana, Valentina permaneció callada aunque varios compañeros participaron.",
+        "Durante la lectura de un cuento preguntó qué significaba la palabra “refugio” y luego la utilizó para explicar dónde vivía uno de los animales.",
+        "Tres semanas después levantó la mano para contar frente al grupo una historia sobre su mascota y respondió preguntas de sus compañeros."
+      ]
+    },
+    {
+      "firstName": "Mateo",
+      "lastName": "Quispe",
+      "interview": {
+        "interests": "El padre comenta que Mateo disfruta jugar con carros y suele ordenarlos por tamaño, color o tipo. También cuenta objetos cotidianos como cucharas, frutas o juguetes.",
+        "interest_tags": [
+          "vehicles"
+        ],
+        "communication_emotional_context": "Cuando juega y algo no sale como esperaba puede molestarse, dejar el juego o pedir que otro adulto lo haga por él.",
+        "social_context": "En reuniones familiares prefiere jugar solo o con su primo mayor antes que integrarse inmediatamente con niños que conoce poco."
+      },
+      "observations": [
+        "Durante una actividad libre agrupó tapas primero por color y después separó las grandes de las pequeñas sin indicación de la docente.",
+        "En un juego de construcción, su torre se cayó dos veces. Mateo empujó las piezas y dijo que ya no quería jugar.",
+        "La docente le preguntó qué podría cambiar para que la torre no se cayera. Mateo observó la base, colocó bloques más grandes debajo y volvió a intentarlo.",
+        "En una actividad en parejas escuchó la propuesta de otro niño para repartir ocho objetos entre ambos y aceptó probar su estrategia."
+      ]
+    },
+    {
+      "firstName": "Camila",
+      "lastName": "Torres",
+      "interview": {
+        "interests": "Le gusta bailar, escuchar música y aprender canciones, y suele recordar rápidamente letras y movimientos.",
+        "interest_tags": [
+          "music",
+          "movement"
+        ],
+        "autonomy_context": "La madre comenta que Camila quiere realizar muchas actividades sin ayuda. En casa ayuda a colocar los cubiertos, escoge algunas prendas y guarda sus juguetes cuando termina.",
+        "communication_emotional_context": "Cuando le preguntan cómo se siente suele responder solamente “bien”, “mal” o “molesta”, y pocas veces explica el motivo."
+      },
+      "observations": [
+        "Al terminar una actividad guardó sus materiales, limpió su mesa y colocó la caja en su lugar sin que la profesora se lo recordara.",
+        "Después de que una compañera no quiso prestarle un juguete dijo: “Estoy triste porque quería jugar con ella”.",
+        "Durante una canción propuso levantar los brazos cuando la música sonaba fuerte y agacharse cuando sonaba suave.",
+        "Después de una discusión explicó: “Me molesté porque yo estaba usando primero los bloques, pero después le presté algunos”."
+      ]
+    },
+    {
+      "firstName": "Thiago",
+      "lastName": "Mendoza",
+      "interview": {
+        "interests": "La familia comenta que Thiago disfruta mucho estar al aire libre. Suele detenerse a observar insectos, plantas, piedras y otros elementos que encuentra. Hace preguntas como por qué aparecen gusanos después de la lluvia, por qué algunas hojas cambian de color o cómo crecen las plantas.",
+        "interest_tags": [
+          "nature"
+        ],
+      "adaptation_context": "Le cuesta permanecer sentado durante períodos prolongados y suele levantarse cuando las actividades requieren estar mucho tiempo en una mesa."
+      },
+      "observations": [
+        "En el jardín encontró una hoja amarilla junto a varias verdes y preguntó: “¿Por qué esta cambió de color?”.",
+        "Comparó dos plantas y dijo que una tenía “más hojas y el tallo más alto”.",
+        "Durante una actividad de mesa se levantó tres veces y conversó con otros compañeros antes de terminar.",
+        "Durante la observación de hormigas permaneció aproximadamente quince minutos siguiendo su recorrido y comentó por dónde entraban y salían."
+      ]
+    },
+    {
+      "firstName": "Luciana",
+      "lastName": "Vargas",
+      "interview": {
+        "interests": "El padre comenta que Luciana disfruta mucho dibujar. Algunas veces intenta copiar letras que observa en carteles, envases o nombres de familiares aunque nadie se lo pida. En el juego simbólico suele proponer escenarios y personajes como mamá, médica, vendedora o profesora.",
+        "interest_tags": [
+          "drawing",
+          "pretend_play"
+        ],
+        "social_context": "Cuando juega con otros niños suele proponer el escenario del juego y repartir personajes. Puede molestarse cuando otros niños cambian las reglas que ella había propuesto."
+      },
+      "observations": [
+        "Dibujó a su familia y escribió debajo varias letras, incluyendo algunas correspondientes a su propio nombre.",
+        "Durante el juego de tienda repartió los roles de vendedor, comprador y encargado de ordenar los productos.",
+        "Cuando otro niño propuso que la tienda se convirtiera en restaurante respondió que “así no era el juego” y dejó de participar unos minutos.",
+        "Más tarde regresó y acordó con sus compañeros que una parte del espacio sería tienda y otra restaurante."
+      ]
+    },
+    {
+      "firstName": "Diego",
+      "lastName": "Salazar",
+      "interview": {
+        "interests": "Disfruta los rompecabezas y construir con bloques. Recuerda con mucha facilidad dónde están los objetos, cómo llegar a determinados lugares y dónde guardaron previamente algún material.",
+        "interest_tags": [
+          "construction"
+        ],
+        "communication_emotional_context": "La madre comenta que Diego suele hablar poco cuando le preguntan qué hizo durante el día, y normalmente responde utilizando frases breves.",
+        "adaptation_context": "Cuando se enfrenta a una actividad que no conoce suele observar primero lo que hacen otros niños antes de comenzar."
+      },
+      "observations": [
+        "Construyó un puente con bloques. Al caerse, ensanchó la base y volvió a colocar las piezas hasta mantenerlo estable.",
+        "Cuando un compañero preguntó por las tijeras indicó correctamente en qué estante y caja estaban guardadas.",
+        "Durante una actividad nueva observó a otros niños durante varios minutos antes de comenzar a manipular los materiales.",
+        "Al terminar su construcción explicó a otro niño: “Primero puse estos grandes abajo porque con los pequeños se caía”."
+      ]
+    }
+  ]
+}
