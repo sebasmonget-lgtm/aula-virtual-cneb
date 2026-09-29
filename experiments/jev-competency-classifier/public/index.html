@@ -32,7 +32,25 @@
       <section id="parallel-result" class="method-card" aria-labelledby="parallel-title"><h3 id="parallel-title">2 · Noul paralelo</h3><p>Pregunta sí/no por cada competencia aplicable dentro de una sola llamada. Puede proponer varias; sus puntuaciones no suman 100 %.</p><div class="method-content" aria-live="polite"></div></section>
       <p class="sidepanel-note">Una comparación utiliza dos llamadas a Jev en total y puede consumir créditos de OpenRouter.</p>
     </aside>
+    <section class="benchmark-panel" aria-labelledby="benchmark-title">
+      <h2 id="benchmark-title">Benchmark Luna</h2>
+      <p>Coloca un JSON o JSONL etiquetado en <code>datasets/luna-benchmark/</code>. La vista previa calcula llamadas y presupuesto antes de ejecutar.</p>
+      <form id="benchmark-form">
+        <label>Dataset<select name="dataset" id="benchmark-dataset" required></select></label>
+        <label>Métodos<select name="methods"><option value="both">CURRENT y PARALLEL</option><option value="current">Solo CURRENT</option><option value="parallel">Solo PARALLEL</option></select></label>
+        <label>CURRENT<select name="current_mode"><option value="product-teacher">Ayni actual: Choice + noul</option><option value="choice">Choice de la interfaz local</option></select></label>
+        <label>Perfil paralelo<select name="criteria_profile"><option value="focused">Focused (interfaz actual)</option><option value="compact">Compact</option><option value="enriched">Enriched</option></select></label>
+        <label><input type="checkbox" name="include_luna" checked> Comparar también con Luna</label>
+        <label>Repeticiones<select name="runs"><option value="1">1</option><option value="3">3</option><option value="5">5</option></select></label>
+        <button type="button" id="benchmark-preview">Calcular llamadas y costo</button>
+        <button type="button" id="benchmark-start" disabled>Ejecutar vista previa</button>
+      </form>
+      <p id="benchmark-plan" role="status"></p>
+      <p id="benchmark-progress" role="status"></p>
+      <pre id="benchmark-comparison"></pre>
+    </section>
   </main>
   <script type="module" src="/app.js"></script>
+  <script type="module" src="/benchmark.js"></script>
 </body>
 </html>

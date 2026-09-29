@@ -1,0 +1,7 @@
+{
+  "historical_jev_usd_per_call": 0.000164,
+  "historical_source": "REVIEW_PRODUCT_PATH_2026-09-27.md: USD 0.10697 / 655 Jev calls",
+  "planning_luna_input_tokens": 500,
+  "planning_luna_output_tokens": 150,
+  "note": "Solo presupuesto previo. Los resultados usan usage real y costo de proveedor cuando existe."
+}

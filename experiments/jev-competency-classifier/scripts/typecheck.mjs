@@ -5,8 +5,8 @@ import { EXPERIMENT_ROOT } from "../src/constants.mjs";
 
 async function files(directory) {
   const entries = await readdir(directory, { withFileTypes: true });
-  const nested = await Promise.all(entries.filter((entry) => entry.isDirectory() && !["reports", ".cache", "dist", "node_modules"].includes(entry.name)).map((entry) => files(path.join(directory, entry.name))));
-  return [...entries.filter((entry) => entry.isFile() && entry.name.endsWith(".mjs")).map((entry) => path.join(directory, entry.name)), ...nested.flat()];
+  const nested = await Promise.all(entries.filter((entry) => entry.isDirectory() && !["results", "reports", ".cache", "dist", "node_modules"].includes(entry.name)).map((entry) => files(path.join(directory, entry.name))));
+  return [...entries.filter((entry) => entry.isFile() && /\.(?:mjs|js)$/u.test(entry.name)).map((entry) => path.join(directory, entry.name)), ...nested.flat()];
 }
 const sourceFiles = await files(EXPERIMENT_ROOT);
 for (const filename of sourceFiles) {

@@ -4,9 +4,13 @@ Prototipo local para medir si Jev puede asociar observaciones espontáneas ficti
 
 Consulta [PLAN.md](PLAN.md) para el contrato, el alcance y las métricas.
 
+## Benchmark Luna
+
+El harness separado de cuatro brazos, UI local, JSON/JSONL etiquetado, repeticiones, costos y comparación se documenta en [BENCHMARK_LUNA.md](BENCHMARK_LUNA.md). `npm.cmd run eval:luna -- --dataset <archivo> --runs 3` muestra primero el presupuesto sin consultar modelos; exige `--execute --max-live-requests N` para ejecutar. No modifica Ayni.
+
 ## Requisitos
 
-Node 22.13 o superior. No hay dependencias externas ni instalación requerida. En PowerShell con ejecución de scripts deshabilitada, sustituir `npm` por `npm.cmd` en los comandos siguientes.
+Node 22.13 o superior. El harness que reutiliza `product-teacher` necesita las dependencias ya instaladas en la raíz del repositorio; no añade paquetes. En PowerShell con ejecución de scripts deshabilitada, sustituir `npm` por `npm.cmd` en los comandos siguientes.
 
 ```powershell
 cd "experiments/jev-competency-classifier"

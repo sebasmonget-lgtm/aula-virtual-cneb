@@ -3,6 +3,7 @@ import path from "node:path";
 import { EXPERIMENT_ROOT } from "../src/constants.mjs";
 
 const output = path.join(EXPERIMENT_ROOT, "dist");
+if (path.dirname(output) !== EXPERIMENT_ROOT || path.basename(output) !== "dist") throw new Error("Ruta de build inválida.");
 await rm(output, { recursive: true, force: true });
 await mkdir(output, { recursive: true });
 await cp(path.join(EXPERIMENT_ROOT, "public"), path.join(output, "public"), { recursive: true });
