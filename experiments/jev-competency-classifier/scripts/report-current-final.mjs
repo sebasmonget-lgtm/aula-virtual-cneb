@@ -81,7 +81,7 @@ await writeFile(path.join(lock.directory, "errors.md"), errorMarkdown("TEST_FINA
 const caseLines = ["# TEST final: los 28 casos, una sola pasada", "", "Datos privados; revisar localmente. No hay ajuste posterior de gold ni prompts.", "",
   "| ID | Expected / alternativas | Candidato | Secundarias | Correcto aceptable | Exact decision |",
   "|---|---|---|---|---:|---:|",
-  ...nowRaw.results[0].cases.map((item) => { const outcome = item.arms[candidate.arm]; return `| ${item.id} | ${item.expected.primary ?? (item.expected.should_abstain ? "ABSTAIN" : "PRIVACY")} / ${item.expected.acceptable_primary.join(", ")} | ${outcome.primary ?? outcome.status} | ${outcome.additional.join(", ") || "ninguna"} | ${outcome.score.acceptable_primary_correct} | ${outcome.score.success} |`; }), ""];
+  ...nowRaw.results[0].cases.map((item) => { const outcome = item.arms[candidate.arm]; return `| ${item.id} | ${item.expected.primary ?? (item.expected.should_abstain ? "ABSTAIN" : "PRIVACY")} / ${item.expected.acceptable_primary.join(", ")} | ${outcome.primary ?? outcome.status} | ${outcome.additional.join(", ") || "ninguna"} | ${item.expected.should_abstain || item.expected.should_privacy_block ? "N/A" : outcome.score.acceptable_primary_correct} | ${outcome.score.success} |`; }), ""];
 await writeFile(path.join(lock.directory, "all-28-cases.md"), caseLines.join("\n").trimEnd() + "\n");
 console.log(JSON.stringify({ candidate: candidate.name, dev: chosen.acceptable_primary_accuracy, test: test.acceptable_primary_accuracy,
   cost: test.cost_usd, latency: test.latency_average_ms, privacy_released: privacyReleased, report: path.join(root, "FINAL_REPORT.md") }));

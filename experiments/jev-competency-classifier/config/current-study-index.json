@@ -1,5 +1,5 @@
 {
-  "phase": "dev_optimization",
+  "phase": "dev_closed_before_test",
   "dev_gold_sha256": "3cc4f1f0cc09763bfae90f002d270dfc62d9597df0583e581283b143818ff320",
   "cycles": [
     {
@@ -13,7 +13,19 @@
     {
       "version": "V2.2",
       "directory": "C:\\Users\\ASUS\\.codex\\worktrees\\jev-luna-benchmark\\Asistente CNEB\\experiments\\jev-competency-classifier/results/current-dev-2026-09-29T05-32-39-991Z-091f0284"
+    },
+    {
+      "version": "V2.3",
+      "directory": "C:\\Users\\ASUS\\.codex\\worktrees\\jev-luna-benchmark\\Asistente CNEB\\experiments\\jev-competency-classifier/results/current-dev-2026-09-29T05-51-53-054Z-5ee378a1"
     }
   ],
-  "iterations_limit": 3
+  "iterations_limit": 3,
+  "optimization_closed": true,
+  "closed_at": "2026-09-29T11:58:44.390Z",
+  "selected_name": "V2.3/CURRENT_V2_LUNA_CLEAN",
+  "actual_prompt_revisions": 3,
+  "selection_reason": "Mayor primaria aceptable observada (203/204); una falsa abstención, cero sobreclasificaciones, Privacy FP/FN y errores secundarios. Se agotaron tres revisiones autorizadas. CLEAN gana por efectividad agregada según el orden acordado; no cumple el indicador previo de evidencia alineada (45 incidencias), no se promueve automáticamente.",
+  "luna_conclusion": "CLEAN es el mejor tratamiento observado en V2.3: +0.98 puntos de primaria aceptable vs RAW, dos correcciones y cero errores introducidos, ambas correcciones del mismo caso DEV057 en dos de tres repeticiones. IC bootstrap exploratorio 95% [0, 2.94] puntos: no demuestra ganancia poblacional. INTERPRET: +0.49 puntos vs RAW, tres correcciones y dos errores introducidos, peor que CLEAN. No hay evidencia de que la interpretación breve aporte por encima de CLEAN. CLEAN añade US$0.064007/1000 y 1687 ms/obs frente a RAW. La corrección interactúa con un verbo ocultado por anonimización: no equivale a limpieza puramente fiel. No mantener Luna en uso general basándose solo en esta pequeña mejora; someterla a una prueba supervisada con gold docente nuevo.",
+  "confidence_conclusion": "Confianza baja para generalización a registros reales: DEV sintético creado/adjudicado por Codex, ganancia Luna concentrada en un caso, una pasada externa pequeña y test usado históricamente. Los tres runs evalúan variación técnica, no tres datasets independientes. 45 evidencias CLEAN no alineadas y reconstrucción contextual observada requieren revisión de fidelidad.",
+  "integration_recommendation": "Vale la pena una prueba integrada pequeña y supervisada, como experimento posterior frente a V2.3 RAW, con gold docente nuevo y revisión de cada sugerencia/cita. No está lista para asignación automática ni se integra en esta entrega. Corregir o evaluar aparte la pérdida de verbos por anonimización y la fidelidad de limpieza antes de extrapolar a observaciones reales."
 }

@@ -23,3 +23,11 @@
 - Tratamiento en este experimento: se documenta la entrada dañada; no se cambia el filtro durante la optimización V2 y no se reconstruyen verbos ausentes mediante el gold. No se declara corregido.
 - Verificación: inspección local de `devInferenceInput` sobre DEV, sin llamadas ni apertura de TEST; los verbos listados no pertenecen a `SAFE_WORDS`. Los errores se analizan sobre lo que realmente recibe cada proveedor.
 - Prevención futura pendiente: revisar anonimizador con ejemplos de nombres y acciones antes de una prueba integrada, bajo solicitud nueva. Las métricas actuales corresponden al filtro medido y congelado.
+
+## Reconstrucción contextual por Luna y evidencia no alineada
+
+- Síntoma real: DEV057/V2.3/r1 perdió «Llevó» antes de Luna; CLEAN agregó «llevó» e INTERPRET «avanzó». En este caso coincidieron con el sentido del original, pero se infirieron desde una entrada incompleta. CLEAN acertó la competencia y su cita no se alineó por la reformulación.
+- Causa: interacción entre anonimización heredada y normalización generativa. JSON schema no garantiza fidelidad de hechos ni una cita literal. D−C tampoco es una ablación pura de una frase: ambos prompts generan limpiezas nuevas.
+- Tratamiento: documentado en `docs/current-study/LUNA_INPUT_FAITHFULNESS.md`; prompts/filtro sin cambios. Se conserva el acierto contra gold y se informa por separado el riesgo de contenido y evidencia. No se declara corregido.
+- Verificación: comparación local de entrada efectiva, salida Luna y resultado del ledger; ningún modelo decide el gold. En DEV075/V2.1/r3 la sobreclasificación D tuvo interpretación null y no se atribuye a una frase inexistente.
+- Prevención pendiente: en una fase futura revisar conservación de hechos y citas con docentes; no promover automáticamente una puntuación sintética alta a registros reales.

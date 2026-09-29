@@ -21,6 +21,7 @@ const pct = (n) => n == null ? "—" : (n * 100).toFixed(2) + "%";
 const usd = (n) => n == null ? "desconocido" : "$" + n.toFixed(6);
 const selected = ranking.find((row) => row.name === registry.selected_name);
 if (!selected) throw new Error("Candidato seleccionado no existe en las corridas completas.");
+const monthlyRows = rows.filter((row) => row.version === selected.version);
 const lines = ["# DEV_FINAL_REPORT", "", "## Cierre de optimización DEV", "",
   `Gold: ${registry.dev_gold_sha256}. Origen Codex por autorización del usuario, fijado antes de proveedores. 80 registros sintéticos; 68 clasificables, ocho abstenciones, cuatro formatos sensibles ficticios. El test final no se abrió durante DEV.`, "",
   `Candidato: **${selected.name}**. Criterio: primaria aceptable, falsas abstenciones, sobreclasificación, privacidad FP/FN, estabilidad; luego latencia y costo. Exact decision es secundaria. ${registry.selection_reason ?? ""}`, "",
@@ -32,9 +33,13 @@ const lines = ["# DEV_FINAL_REPORT", "", "## Cierre de optimización DEV", "",
   ...rows.map((row) => { const s = row.analysis.summary; return `| ${row.name} | ${pct(s.primary_accuracy)} | ${pct(s.acceptable_primary_accuracy)} | ${s.false_abstentions} | ${s.missed_abstentions_overclassification} | ${s.privacy_false_positives}/${s.missed_privacy_blocks} | ${pct(s.correct_total / s.total)} | ${usd(s.cost_per_1000_usd)} | ${s.latency_average_ms?.toFixed(0) ?? "—"} | ${row.analysis.unstable_primary_ids.length} |`; }), "",
   "Cada accuracy primaria usa 204 repeticiones clasificables (68×3), no 240 casos independientes. Primarias alternativas cuentan como aceptables. Otras decisiones y secundarias se evalúan por separado. El gold conservador tiene cero secundarias exigidas: missing_secondary=0 por construcción, no demuestra recuperación de secundarias. Evidence/reason de V1 no existen; no se inventan explicaciones retrospectivas.", "",
   "## Estabilidad por versión y brazo", "", ...rows.map((row) => `- ${row.name}: accuracy por repetición ${row.analysis.accuracy_by_run.map(pct).join(" / ")}; primaria inestable ${row.analysis.unstable_primary_ids.join(", ") || "ninguna"}; adicionales incorrectos ${row.analysis.summary.additional_incorrect}; secundarias ausentes ${row.summary.expected_secondary_missing}; evidencia no alineada ${row.summary.ungrounded_suggested_evidence}.`), "",
+  "## Indicadores operativos previos de revisión", "",
+  "Se informan los checks de la fase preparatoria (incluida evidencia alineada); no equivalen a una revisión docente independiente ni habilitan integración automática. La selección autónoma sigue los criterios posteriores del usuario.", "",
+  "```json", JSON.stringify(cycles.find((cycle) => cycle.version === selected.version).summary.candidate_review[selected.arm] ?? { baseline_reference: true }, null, 2), "```", "",
   "## Aporte de Luna y diferencias pareadas", "",
   "Los conteos de errores corregidos/introducidos excluyen fallos de proveedores. Accuracy y bootstrap miden el flujo completo y cuentan esos fallos como desaciertos. En V2.1 esto cambia el denominador pareado; no atribuir correcciones técnicas a capacidad pedagógica de Luna.", ""];
 lines.push("CLEAN e INTERPRET usan prompts Luna distintos y nuevas llamadas: no comparten un mismo texto limpio. D−C compara tratamientos completos (limpieza, interpretación cuando aparece e incertidumbre), no identifica perfectamente el efecto aislado de agregar una frase interpretativa. En DEV075/V2.1 hubo sobreclasificación D con brief_interpretation=null; ese error no prueba sesgo de una interpretación breve.", "");
+lines.push("DEV057/V2.3/r1: CLEAN agregó un verbo contextual ocultado por el filtro y acertó la competencia. El acierto no garantiza conservación de hechos. Evidencia y limitaciones verificadas en docs/current-study/LUNA_INPUT_FAITHFULNESS.md; no se modificaron prompts ni gold por ese hallazgo.", "");
 for (const cycle of cycles) {
   lines.push(`### ${cycle.version}`, "", "```json", JSON.stringify(cycle.summary.paired_comparisons, null, 2), "```", "");
   const analysisFile = path.join(EXPERIMENT_ROOT, "docs/current-study", cycle.summary.metadata.v2_prompt.version, "analysis.json");
@@ -88,9 +93,14 @@ lines.push("## Costos medidos y procedencia", "",
     known_cost_subtotal_usd: row.analysis.known_cost_subtotal_usd, effective_models: row.analysis.effective_models,
     missing_latency_observations: row.analysis.missing_latency_observations })}`), "",
   "### Proyección mensual: 20 observaciones/día ×20 días", "",
-  "| Profesoras | Obs/mes | " + rows.map((row) => row.name).join(" | ") + " |",
-  "|---:|---:|" + rows.map(() => "---:").join("|") + "|",
-  ...[1, 10, 50, 100].map((teachers) => `| ${teachers} | ${teachers * 400} | ${rows.map((row) => usd(row.analysis.summary.cost_per_observation_usd == null ? null : row.analysis.summary.cost_per_observation_usd * teachers * 400)).join(" | ")} |`), "",
+  "Se proyectan las cuatro variantes de la versión seleccionada; el consumo de versiones anteriores permanece en las tablas de costos.", "",
+  "| Profesoras | Obs/mes | " + monthlyRows.map((row) => row.name).join(" | ") + " |",
+  "|---:|---:|" + monthlyRows.map(() => "---:").join("|") + "|",
+  ...[1, 10, 50, 100].map((teachers) => `| ${teachers} | ${teachers * 400} | ${monthlyRows.map((row) => usd(row.analysis.summary.cost_per_observation_usd == null ? null : row.analysis.summary.cost_per_observation_usd * teachers * 400)).join(" | ")} |`), "",
+  "### Escenarios adicionales de 10 y 40 observaciones/día ×20 días", "",
+  "| Profesoras | Obs/día por profesora | Obs/mes totales | " + monthlyRows.map((row) => row.name).join(" | ") + " |",
+  "|---:|---:|---:|" + monthlyRows.map(() => "---:").join("|") + "|",
+  ...[1, 10, 50, 100].flatMap((teachers) => [10, 40].map((daily) => `| ${teachers} | ${daily} | ${teachers * daily * 20} | ${monthlyRows.map((row) => usd(row.analysis.summary.cost_per_observation_usd == null ? null : row.analysis.summary.cost_per_observation_usd * teachers * daily * 20)).join(" | ")} |`)), "",
   `Costo físico contabilizado de todas las corridas DEV (mixto: proveedor Jev + tarifa Luna): ${usd(cycles.every((cycle) => cycle.summary.physical.total_cost_usd != null) ? cycles.reduce((n, cycle) => n + cycle.summary.physical.total_cost_usd, 0) : null)}. Las dos modalidades Luna se invocaron separadamente en cada ciclo.`, "",
   `Subtotal conocido DEV: ${usd(cycles.reduce((n, cycle) => n + cycle.summary.physical.known_cost_subtotal_usd, 0))}; llamadas sin costo conocido: ${cycles.reduce((n, cycle) => n + cycle.summary.physical.unknown_cost_calls, 0)}. Es un subtotal, no un total completo ni costo cero para intentos fallidos.`, "",
   "## Errores por categoría y trazabilidad", "",

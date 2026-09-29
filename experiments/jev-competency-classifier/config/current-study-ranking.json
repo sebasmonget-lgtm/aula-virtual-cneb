@@ -1,0 +1,109 @@
+{
+  "selected": "V2.3/CURRENT_V2_LUNA_CLEAN",
+  "ranking": [
+    {
+      "name": "V2.3/CURRENT_V2_LUNA_CLEAN",
+      "directory": "C:\\Users\\ASUS\\.codex\\worktrees\\jev-luna-benchmark\\Asistente CNEB\\experiments\\jev-competency-classifier/results/current-dev-2026-09-29T05-51-53-054Z-5ee378a1",
+      "acceptable_accuracy": 0.9950980392156863,
+      "false_abstentions": 1,
+      "overclassification": 0,
+      "unstable_primary": 1
+    },
+    {
+      "name": "V2.3/CURRENT_V2_LUNA_INTERPRET",
+      "directory": "C:\\Users\\ASUS\\.codex\\worktrees\\jev-luna-benchmark\\Asistente CNEB\\experiments\\jev-competency-classifier/results/current-dev-2026-09-29T05-51-53-054Z-5ee378a1",
+      "acceptable_accuracy": 0.9901960784313726,
+      "false_abstentions": 1,
+      "overclassification": 0,
+      "unstable_primary": 1
+    },
+    {
+      "name": "V2.2/CURRENT_V2_RAW",
+      "directory": "C:\\Users\\ASUS\\.codex\\worktrees\\jev-luna-benchmark\\Asistente CNEB\\experiments\\jev-competency-classifier/results/current-dev-2026-09-29T05-32-39-991Z-091f0284",
+      "acceptable_accuracy": 0.9852941176470589,
+      "false_abstentions": 3,
+      "overclassification": 0,
+      "unstable_primary": 0
+    },
+    {
+      "name": "V2.3/CURRENT_V2_RAW",
+      "directory": "C:\\Users\\ASUS\\.codex\\worktrees\\jev-luna-benchmark\\Asistente CNEB\\experiments\\jev-competency-classifier/results/current-dev-2026-09-29T05-51-53-054Z-5ee378a1",
+      "acceptable_accuracy": 0.9852941176470589,
+      "false_abstentions": 3,
+      "overclassification": 0,
+      "unstable_primary": 0
+    },
+    {
+      "name": "V2.2/CURRENT_V2_LUNA_CLEAN",
+      "directory": "C:\\Users\\ASUS\\.codex\\worktrees\\jev-luna-benchmark\\Asistente CNEB\\experiments\\jev-competency-classifier/results/current-dev-2026-09-29T05-32-39-991Z-091f0284",
+      "acceptable_accuracy": 0.9852941176470589,
+      "false_abstentions": 3,
+      "overclassification": 0,
+      "unstable_primary": 0
+    },
+    {
+      "name": "V2.1/CURRENT_V2_LUNA_INTERPRET",
+      "directory": "C:\\Users\\ASUS\\.codex\\worktrees\\jev-luna-benchmark\\Asistente CNEB\\experiments\\jev-competency-classifier/results/current-dev-2026-09-29T05-12-18-668Z-46e6e4f9",
+      "acceptable_accuracy": 0.9852941176470589,
+      "false_abstentions": 3,
+      "overclassification": 1,
+      "unstable_primary": 3
+    },
+    {
+      "name": "V2.2/CURRENT_V2_LUNA_INTERPRET",
+      "directory": "C:\\Users\\ASUS\\.codex\\worktrees\\jev-luna-benchmark\\Asistente CNEB\\experiments\\jev-competency-classifier/results/current-dev-2026-09-29T05-32-39-991Z-091f0284",
+      "acceptable_accuracy": 0.9803921568627451,
+      "false_abstentions": 4,
+      "overclassification": 0,
+      "unstable_primary": 1
+    },
+    {
+      "name": "V2/CURRENT_V2_LUNA_INTERPRET",
+      "directory": "C:\\Users\\ASUS\\.codex\\worktrees\\jev-luna-benchmark\\Asistente CNEB\\experiments\\jev-competency-classifier\\results\\current-dev-2026-09-29T04-52-16-894Z-81d4fee8",
+      "acceptable_accuracy": 0.9558823529411765,
+      "false_abstentions": 6,
+      "overclassification": 0,
+      "unstable_primary": 2
+    },
+    {
+      "name": "V2.1/CURRENT_V2_RAW",
+      "directory": "C:\\Users\\ASUS\\.codex\\worktrees\\jev-luna-benchmark\\Asistente CNEB\\experiments\\jev-competency-classifier/results/current-dev-2026-09-29T05-12-18-668Z-46e6e4f9",
+      "acceptable_accuracy": 0.9509803921568627,
+      "false_abstentions": 9,
+      "overclassification": 0,
+      "unstable_primary": 1
+    },
+    {
+      "name": "V2.1/CURRENT_V2_LUNA_CLEAN",
+      "directory": "C:\\Users\\ASUS\\.codex\\worktrees\\jev-luna-benchmark\\Asistente CNEB\\experiments\\jev-competency-classifier/results/current-dev-2026-09-29T05-12-18-668Z-46e6e4f9",
+      "acceptable_accuracy": 0.946078431372549,
+      "false_abstentions": 11,
+      "overclassification": 0,
+      "unstable_primary": 3
+    },
+    {
+      "name": "V2/CURRENT_V1_RAW",
+      "directory": "C:\\Users\\ASUS\\.codex\\worktrees\\jev-luna-benchmark\\Asistente CNEB\\experiments\\jev-competency-classifier\\results\\current-dev-2026-09-29T04-52-16-894Z-81d4fee8",
+      "acceptable_accuracy": 0.9264705882352942,
+      "false_abstentions": 12,
+      "overclassification": 0,
+      "unstable_primary": 2
+    },
+    {
+      "name": "V2/CURRENT_V2_LUNA_CLEAN",
+      "directory": "C:\\Users\\ASUS\\.codex\\worktrees\\jev-luna-benchmark\\Asistente CNEB\\experiments\\jev-competency-classifier\\results\\current-dev-2026-09-29T04-52-16-894Z-81d4fee8",
+      "acceptable_accuracy": 0.9264705882352942,
+      "false_abstentions": 13,
+      "overclassification": 0,
+      "unstable_primary": 3
+    },
+    {
+      "name": "V2/CURRENT_V2_RAW",
+      "directory": "C:\\Users\\ASUS\\.codex\\worktrees\\jev-luna-benchmark\\Asistente CNEB\\experiments\\jev-competency-classifier\\results\\current-dev-2026-09-29T04-52-16-894Z-81d4fee8",
+      "acceptable_accuracy": 0.9117647058823529,
+      "false_abstentions": 18,
+      "overclassification": 0,
+      "unstable_primary": 0
+    }
+  ]
+}

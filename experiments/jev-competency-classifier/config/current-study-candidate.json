@@ -1,0 +1,31 @@
+{
+  "name": "V2.3/CURRENT_V2_LUNA_CLEAN",
+  "version": "V2.3",
+  "arm": "CURRENT_V2_LUNA_CLEAN",
+  "phase": "dev_closed_before_test",
+  "optimization_closed": true,
+  "final_test_runs": 1,
+  "closed_at": "2026-09-29T11:58:44.390Z",
+  "dev_gold_sha256": "3cc4f1f0cc09763bfae90f002d270dfc62d9597df0583e581283b143818ff320",
+  "dev_result_directories": [
+    "C:\\Users\\ASUS\\.codex\\worktrees\\jev-luna-benchmark\\Asistente CNEB\\experiments\\jev-competency-classifier\\results\\current-dev-2026-09-29T04-52-16-894Z-81d4fee8",
+    "C:\\Users\\ASUS\\.codex\\worktrees\\jev-luna-benchmark\\Asistente CNEB\\experiments\\jev-competency-classifier/results/current-dev-2026-09-29T05-12-18-668Z-46e6e4f9",
+    "C:\\Users\\ASUS\\.codex\\worktrees\\jev-luna-benchmark\\Asistente CNEB\\experiments\\jev-competency-classifier/results/current-dev-2026-09-29T05-32-39-991Z-091f0284",
+    "C:\\Users\\ASUS\\.codex\\worktrees\\jev-luna-benchmark\\Asistente CNEB\\experiments\\jev-competency-classifier/results/current-dev-2026-09-29T05-51-53-054Z-5ee378a1"
+  ],
+  "model_jev": "typesafe/jev-1.13",
+  "model_luna": "gpt-6-luna",
+  "source_sha256": {
+    "src/current-v2.mjs": "13afbb717ea5537e09fa25edfb7ae5b8e5ad93ebf0246413d78fe65f1f354a0b",
+    "config/current-v2-prompt.json": "2b7c25f35410db2761eb323a3ad4898f7c362f6621b8c1a247198d1462dcb908",
+    "src/jev-current-benchmark.mjs": "77ea846e3902cab2f050c845b56568a9b4d69dd71022ef3476dd95b899059ce9",
+    "src/luna-client.mjs": "bec0d4456e82cc32acdf72161840e8ef3157645944a7d6da081d21b30917b70b",
+    "src/luna-clean-client.mjs": "9446ac6bce33df261171e6330804be27f14b9577374eb02dad2118910d44d9e6",
+    "src/current-dev-privacy.mjs": "525d717555a246fb288a524fe3a60ae35463d0d3fcea36c4419655a9bf97585c",
+    "src/luna-benchmark-adapters.mjs": "508666b0b6c2c2079f0cda8bc2db2d6ea788b04830208e3b1dff9a5a4c22f8ba",
+    "config/pricing-luna.json": "954686ee99ff5e70c97bdca031edaf9dde3cff807bdf50abaa26d946ded8e55c",
+    "config/pricing-openrouter.json": "af4e6f5aa9c8cef3db56d2bc5a895660cebca453eff3b1790567f9ac0f2aca5b"
+  },
+  "selection_reason": "Mayor primaria aceptable observada (203/204); una falsa abstención, cero sobreclasificaciones, Privacy FP/FN y errores secundarios. Se agotaron tres revisiones autorizadas. CLEAN gana por efectividad agregada según el orden acordado; no cumple el indicador previo de evidencia alineada (45 incidencias), no se promueve automáticamente.",
+  "pricing_provenance": "Jev provider usage.cost; Luna measured usage with frozen configured tariff"
+}
