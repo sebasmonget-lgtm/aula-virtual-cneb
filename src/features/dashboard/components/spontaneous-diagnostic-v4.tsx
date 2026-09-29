@@ -27,19 +27,19 @@ function SupervisedV24Recommendation({ record, competencies, busy, onSave, onRet
   const teacherReviewed = record.classification_source === "teacher";
   const pending = record.classifier_status === "pending" && classifierEnabled;
   const statusText = record.classifier_status === "abstained"
-    ? "No encontré evidencia suficiente para sugerir una competencia."
+    ? "No se encontró una competencia suficientemente clara."
     : record.classifier_status === "privacy_blocked" || record.classifier_status === "failed"
-      ? "Ayni no pudo sugerir una competencia. Puedes elegirla tú."
+      ? "La observación se guardó. Puedes elegir la competencia manualmente."
       : "Puedes elegir una competencia para esta observación.";
   return <div className="mt-3 space-y-3 rounded-xl border border-[#c9e4e9] bg-white p-4">
     <p className="flex items-center gap-2 text-sm font-bold text-[#075d70]"><Sparkles className="size-4" />{teacherReviewed ? "Competencia confirmada por ti" : "Sugerencia de Ayni"}</p>
     {teacherReviewed ? <p className="text-base font-semibold">{confirmed?.name ?? "Sin competencia"}</p>
-      : primary ? <p className="text-base font-semibold">Ayni sugiere: {primary.name}</p>
+      : primary ? <p className="text-base font-semibold">Competencia sugerida: {primary.name}</p>
       : <p role="status" className="flex items-center gap-2 text-sm text-[#526b87]">{pending && <LoaderCircle className="size-4 animate-spin" />}{pending ? "Ayni está preparando la sugerencia…" : statusText}</p>}
     {!editing && <div className="flex flex-wrap gap-2">
       {!teacherReviewed && primary && <AsyncButton type="button" busy={busy} busyLabel="Guardando..." onClick={() => void onSave([primary.id])}>Confirmar</AsyncButton>}
       <Button type="button" variant="outline" disabled={busy} onClick={() => { setChoice(confirmed?.id ?? ""); setEditing(true); }}><Pencil className="size-4" />{primary || teacherReviewed ? "Cambiar" : "Elegir competencia"}</Button>
-      {!teacherReviewed && !pending && <AsyncButton type="button" busy={busy} busyLabel="Guardando..." onClick={() => void onSave([])}>{primary ? "Sin competencia" : "Guardar sin competencia"}</AsyncButton>}
+      {!teacherReviewed && !pending && <AsyncButton type="button" busy={busy} busyLabel="Guardando..." onClick={() => void onSave([])}>{primary ? "Dejar sin competencia" : "Guardar sin competencia"}</AsyncButton>}
       {!teacherReviewed && classifierEnabled && record.classifier_status === "failed" && <AsyncButton type="button" variant="ghost" busy={busy} busyLabel="Reintentando..." onClick={() => void onRetry()}>Reintentar</AsyncButton>}
     </div>}
     {editing && <div className="space-y-2"><label className="block text-sm font-semibold">Competencia elegida por ti

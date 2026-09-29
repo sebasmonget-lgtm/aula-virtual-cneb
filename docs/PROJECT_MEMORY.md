@@ -303,3 +303,6 @@ F11 proyecta catálogo autorizado en año/aula/proyecto→actividad sin cambiar 
 ## Clasificador V2.4 RAW supervisado de observaciones diagnósticas (2026-09-29)
 
 `CURRENT_V2_4_RAW` queda detrás de `AYNI_OBSERVATION_CLASSIFIER_V24=1` exclusivamente para nuevas observaciones diagnósticas espontáneas. La nota original permanece inmutable; Jev escribe sugerencia, y solo la profesora escribe competencia confirmada. Flag apagado permite clasificación manual sin llamar a Jev. Migraciones local 0066 / Supabase 202609290001 añaden estado, versión, acción docente, latencia y error técnico. Las métricas agregadas se consultan en `/api/diagnostics/spontaneous-observations/metrics`. Respaldo previo `ee4d21a`; ver `docs/OBSERVATION_CLASSIFIER_V24_SUPERVISED.md`.
+## Historial y métricas del piloto V2.4 (2026-09-29)
+
+Respaldo `pilot-v24-before-events-20260929` sobre `ba612ef`. Migraciones local 0067 / Supabase 202609290002 añaden eventos append-only de cada decisión docente, sin texto de niños ni payload IA. La decisión vigente y el evento se guardan atómicamente. El endpoint de métricas separa intentos/respuestas del clasificador, sugerencias revisadas y pendientes, tasas con denominadores explícitos, matriz de cambios y latencia. Meta exploratoria de 30; sin llamadas Jev ni despliegue en esta fase. Ver `docs/OBSERVATION_CLASSIFIER_V24_SUPERVISED.md` y ADR 099.
