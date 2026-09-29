@@ -70,7 +70,7 @@ export async function executeCurrentFinalTest({ candidate, preparedDev, testFile
           observation = arm.endsWith("_CLEAN") ? luna.clean_observation : jevObservationFromLuna(luna); observable = luna.clean_observation;
         }
         result = await classifier({ age: input.age, observation, observable_text: observable, applicability: input.applicability });
-        if (result.explanation && result.primary) {
+        if (result.explanation?.evidence) {
           const grounded = groundEvidence(result.explanation.evidence, item.raw_observation);
           result.explanation.evidence = grounded.evidence; result.evidence_grounded = grounded.grounded;
         }

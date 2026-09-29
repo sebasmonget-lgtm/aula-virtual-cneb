@@ -22,9 +22,9 @@ export function v2Requests({ input, kb, prompt }) {
   const fragments = observationFragments(input.observable_text ?? input.observation);
   const evidenceCriteria = Object.fromEntries(fragments.map((fragment, i) => [`E${i + 1}`, fragment]));
   evidenceCriteria.NONE = "No hay fragmento observable que sustente una competencia.";
-  const sufficiency = { type: "noul", instructions: "¿Hay una conducta, acción, expresión o producción observable suficiente, más allá de un estado circunstancial, sin inventar hechos?",
-    criteria: { true: "Hay una acción central concreta y un referente observable que sustenta alguna competencia.",
-      false: "Solo hay estado circunstancial, presencia, valoración vaga o información insuficiente." } };
+  const sufficiency = { type: "noul", instructions: prompt.evidence_sufficiency?.instructions ?? "¿Hay una conducta, acción, expresión o producción observable suficiente, más allá de un estado circunstancial, sin inventar hechos?",
+    criteria: { true: prompt.evidence_sufficiency?.true ?? "Hay una acción central concreta y un referente observable que sustenta alguna competencia.",
+      false: prompt.evidence_sufficiency?.false ?? "Solo hay estado circunstancial, presencia, valoración vaga o información insuficiente." } };
   const questions = Object.fromEntries(options.map((option) => [option.id, { type: "noul",
     instructions: `¿Hay evidencia observable propia de «${option.name}»? Si no es la acción central, exige OTRA conducta independiente. Una acción instrumental, hablar como medio o una simple mención no justifican una secundaria. ${prompt.disambiguation[option.id] ?? ""}`,
     criteria: { true: `${option.applies_when.join("; ")}; conducta específica e independiente descrita, sin inferir intención.`,
@@ -76,9 +76,9 @@ export function createCurrentV2({ kb, prompt, pricing, apiKey, model = "typesafe
       const fragmentId = answers.evidence_fragment.choice;
       const evidence = fragmentId === "NONE" ? "" : plan.fragments[Number(fragmentId.slice(1)) - 1];
       const explanation = { status: primary ? "suggested" : "abstain", primary, secondary,
-        evidence: primary ? evidence : "",
-        reason: primary ? `Acción central observada: ${plan.options.find((option) => option.id === primary).name}. Secundarias solo con conducta independiente.` :
-          "Jev eligió información insuficiente o no alcanzó confianza/suficiencia requeridas; no se fuerza una competencia." };
+        evidence,
+        reason: primary ? `Acción central: ${plan.options.find((option) => option.id === primary).name}; confianza ${answer.confidence.toFixed(2)}, suficiencia ${answers.evidence_sufficient.noul.toFixed(2)}.` :
+          `Abstención: elección ${answer.choice}, confianza ${answer.confidence.toFixed(2)} (mínimo 0.50), suficiencia ${answers.evidence_sufficient.noul.toFixed(2)} (mínimo 0.70).` };
       return { status: primary ? "review" : "unclassified", primary, additional: secondary,
         ranked: Object.entries(answer.probabilities).sort((a, b) => b[1] - a[1]).map(([id]) => id), explanation,
         evidence_selected_id: fragmentId, calls, latency_ms: Math.round(performance.now() - started),

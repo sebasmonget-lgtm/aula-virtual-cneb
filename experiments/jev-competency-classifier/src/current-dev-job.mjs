@@ -88,7 +88,7 @@ export async function executeCurrentDev(prepared, { maxLiveRequests, adapters: i
             if (arm.endsWith("_INTERPRET")) { lunaStarted = performance.now(); luna = await adapters.interpret.clean(safe); observation = jevObservationFromLuna(luna); observable = luna.clean_observation; }
             result = await adapters[arm === "CURRENT_V1_RAW" ? "v1" : "v2"]({ age: input.age, observation,
               observable_text: observable, applicability: input.applicability });
-            if (result.explanation && result.primary) {
+            if (result.explanation?.evidence) {
               const grounded = groundEvidence(result.explanation.evidence, item.raw_observation);
               result.explanation.evidence = grounded.evidence; result.evidence_grounded = grounded.grounded;
               if (!grounded.grounded) result.explanation.reason += " Evidencia literal no verificada: requiere revisión humana.";
