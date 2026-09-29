@@ -10,7 +10,20 @@ Compatibilidad mínima solo en experimento: null-age opt-in en validador local y
 
 Gates antes de proveedores: **43/43 pruebas PASS**; sintaxis JS **47 archivos PASS**; lint/ESLint **PASS**; build **PASS**. Pruebas nuevas de null en Jev/age omitida Luna, ausencia de patrones por edad, gold mutado sin cambiar ningún payload, snapshot original idéntico salvo adaptaciones mecánicas. Guardias de campos gold siguen activas en cada solicitud real.
 
-Vista previa real del dataset: 28 casos × 3 repeticiones, hasta 504 Jev + 84 Luna = 588 llamadas; USD 0.093156 orientativos. Corridas autorizadas: primero 3 casos × 1 repetición, luego 28 × 3 si schema/proveedores correctos; resultados pendientes en este checkpoint. No optimizar tras medir.
+Vista previa real del dataset: 28 casos × 3 repeticiones, hasta 504 Jev + 84 Luna = 588 llamadas; USD 0.093156 orientativos. Corridas autorizadas y completadas: primero 3 casos × 1 repetición, luego 28 × 3 tras schema correcto. No se optimizó tras medir.
+
+### Ejecuciones pagadas del gold
+
+Fuente congelada para ambas: commit **46212f4**, worktree limpio antes y durante la corrida. Ejecución por CLI con solo dos credenciales cargadas en memoria; sin copiar .env, BD ni flags de Ayni. Dataset age ausente exacto y copia con hashes idénticos antes/después. CURRENT product-teacher y PARALLEL focused noul, KB 4.1; modelos efectivos `typesafe/jev-1.13-20260917` y `gpt-6-luna`.
+
+- Smoke real primeros 3 casos: `results/2026-09-29T03-16-25-842Z-dd930b09/`, 12 Jev + 2 Luna = 14 llamadas. AG-02 bloqueado; los otros dos con JSON Luna y respuestas Jev válidos. Cero fallas/costos desconocidos. USD **0.001731592** (Jev **0.001580292**, Luna tarifaria **0.000151300**).
+- Completo: `results/2026-09-29T03-16-53-800Z-18ee8191/`, **3 repeticiones de 28**, 84/84, **468 Jev + 78 Luna = 546** llamadas, cero fallas/costos desconocidos. Dos bloques por corrida: **AG-02 y MN-01**, falsos según gold, 6/84 por brazo. Jev **USD 0.061497828** informado en usage de sus 468 llamadas. Luna **USD 0.005866100**, tarifa congelada sobre **27,831 input / 6,166 output**, reasoning 556 incluido en output; cache/writes cero. Total físico completo **USD 0.067363928**. Total con smoke: **USD 0.069095520**, 560 llamadas físicas.
+
+Accuracy primaria estricta: CURRENT RAW **69.70%**, LUNA **71.21%**; PARALLEL RAW **28.79%**, LUNA **19.70%**. Aceptable: **69.70/74.24/28.79/19.70%**. Decisión completa: **60.71/61.90/42.86/36.90%**. Primarias sobre 66 casos-repetición, decisiones sobre 84; no son 84 muestras independientes. CURRENT Luna: 3 IMPROVED, 2 WORSENED, neto +1; PARALLEL: 2 IMPROVED, 7 WORSENED, neto -5. Δ USD por 1000: **0.073642524 / 0.071723524**; Δ latencia: **1530.738 / 1517.131 ms**. No selección automática ni integración.
+
+Postprocesamiento sin proveedores creó `REVIEW_GOLD_V1.md`, `case-review.json`, `case-review.csv`: tabla principal, los 28 casos con respuestas y variación r1/r2/r3, grupos, categorías de error, totales y proyección 20 obs/día para 1/10/50/100 profesoras. Cost-analysis conserva además 12 escenarios y todos los 14 indicadores de costo. Resultados por repetición y raw permanecen intactos. Auditados 28 IDs por run, 84 registros, 546 ledger calls y diferencia cero entre costo físico recalculado y raw.costs. Sin verificación visual nueva de UI; ejecución y reportes verificados por CLI/archivos.
+
+Para revisión manual: `acceptable_secondary` sigue con semántica exacta existente, sin cambiar score al ver resultados. TE-03 permite Lectura primaria y la enumera secundaria; anotación para adjudicación docente posterior. Todas las secundarias esperadas faltaron (12 etiquetas por brazo); extras fuera de gold 6/7/2/1. El gold y prompts no se corrigieron después de la corrida.
 
 ## Ampliación de costos (2026-09-28)
 
