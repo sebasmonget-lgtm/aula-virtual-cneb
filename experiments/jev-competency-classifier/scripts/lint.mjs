@@ -15,6 +15,8 @@ sourceFiles.push("scripts/adjudicate-current-dev.mjs", "scripts/study-credential
 sourceFiles.push("src/current-study-analysis.mjs", "scripts/analyze-current-study.mjs", "src/current-final-test.mjs", "scripts/run-current-final-test.mjs");
 sourceFiles.push("scripts/report-current-study.mjs");
 sourceFiles.push("scripts/report-current-final.mjs");
+sourceFiles.push("src/last-optimization.mjs", "scripts/run-last-test2.mjs", "scripts/create-last-test2.mjs",
+  "scripts/last-optimization-autopsy.mjs", "scripts/create-last-v2-4.mjs", "scripts/analyze-last-threshold.mjs");
 for (const relativePath of sourceFiles) {
   const contents = await readFile(path.join(EXPERIMENT_ROOT, relativePath), "utf8");
   for (const pattern of forbidden) if (pattern.test(contents)) throw new Error(`Regla de secretos incumplida en ${relativePath}.`);

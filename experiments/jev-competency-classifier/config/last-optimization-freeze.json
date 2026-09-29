@@ -1,0 +1,56 @@
+{
+  "created_at": "2026-09-29T12:34:32.508Z",
+  "version": "CURRENT_V2_4",
+  "optimization_closed": true,
+  "no_more_prompt_edits": true,
+  "test2_sha256": "a206defd4c8f07b9d435e977f9e4894346f07aff1f05a771f5d91e79955f058d",
+  "prompt_sha256": "271b4b8298a5b8c2132160f7514d69c45f8f59cf686aa2a2a2edd0892cbd0867",
+  "source_sha256": {
+    "src/current-v2.mjs": "601254e3622cd26db927c465f153f2be9be9e54b27f223c5443bf3773c199d83",
+    "config/current-v2-prompt.json": "2b7c25f35410db2761eb323a3ad4898f7c362f6621b8c1a247198d1462dcb908",
+    "src/jev-current-benchmark.mjs": "77ea846e3902cab2f050c845b56568a9b4d69dd71022ef3476dd95b899059ce9",
+    "src/luna-client.mjs": "bec0d4456e82cc32acdf72161840e8ef3157645944a7d6da081d21b30917b70b",
+    "src/luna-clean-client.mjs": "9446ac6bce33df261171e6330804be27f14b9577374eb02dad2118910d44d9e6",
+    "src/current-dev-privacy.mjs": "525d717555a246fb288a524fe3a60ae35463d0d3fcea36c4419655a9bf97585c",
+    "src/luna-benchmark-adapters.mjs": "508666b0b6c2c2079f0cda8bc2db2d6ea788b04830208e3b1dff9a5a4c22f8ba",
+    "config/pricing-luna.json": "954686ee99ff5e70c97bdca031edaf9dde3cff807bdf50abaa26d946ded8e55c",
+    "config/pricing-openrouter.json": "af4e6f5aa9c8cef3db56d2bc5a895660cebca453eff3b1790567f9ac0f2aca5b",
+    "src/last-optimization.mjs": "caccf4446d18fee95673b10524f4547e21984c264e1ad165d32094874b9f6ddb",
+    "scripts/run-last-test2.mjs": "32418ebb12244a6b9b6c716cd12425570895c30b25114e99e9455e591972b551",
+    "src/luna-benchmark-score.mjs": "8479198718b1dc3a70e2c47d041b77dc575c46738ba7a5c8ac4a34328271183e",
+    "src/current-study-analysis.mjs": "3d30b2c78e7a9e6c42cfcf6648498e16848dbfd46eb96fbc02be34640222d3ae",
+    "src/current-dev-dataset.mjs": "4d75bacdacf3dea4c658ac70786d51fc479eba46f2d85932bc54673904d15ee4",
+    "src/luna-inference-boundary.mjs": "e9cbfab120c515445ceddb1427de7a722cc759d2fc1d955b37c46a8e26c54955",
+    "src/luna-benchmark-dataset.mjs": "f3e092ff758a70652cacacaed95f3f840d6e43c7f09301eb48c6076dd6ad304b"
+  },
+  "production_dependency_sha256": {
+    "src/lib/jev-openrouter-decision.mjs": "458bd8c1b21647311100c3a4931474166116f31321c56b2eef930e82cfb1998e",
+    "src/lib/openai-competency-classifier.mjs": "22b3009f1086c710cc0a1b1c79f0b63343041f6ad224379e7ba5f6785636b5b1",
+    "src/lib/competency-applicability.mjs": "7369189357b0e218b0f83e4fa2c44ec0f3472040c4871934b32751d9bf0ee0d2",
+    "src/lib/assessment-v4-service.mjs": "300811111d496f66e5b6d76373e5412f23e788375c5b2dae4dbccd33cf897a4e"
+  },
+  "autopsy_sha256": "8db6ce309ca88502796142abc3c9bbad402177144e439b56b589bbfce0316c98",
+  "baseline_v2": "V2.3 / CURRENT_V2_RAW; same immediately preceding prompt",
+  "models": {
+    "jev": "typesafe/jev-1.13",
+    "luna": "gpt-6-luna"
+  },
+  "thresholds": {
+    "primary_confidence": 0.5,
+    "sufficiency": 0.7,
+    "secondary": 0.8,
+    "max_secondary": 3
+  },
+  "threshold_review_sha256": "c5dc9b496dd468278b691b4951de940d66f0cc3ec74f05d521e4fadb32b8f8f7",
+  "threshold_selection_reason": "En V2.3 RAW y CLEAN, .45 y .40 reproducen exactamente las decisiones de .50. Todas las falsas abstenciones restantes tienen confianza .95–.96 y suficiencia .61–.63: el gate activo es suficiencia .70, no confianza. No hay beneficio DEV que justifique bajar confianza. En V2 inicial reducir confidence también habilita primarias incorrectas; no usar TEST1 para contradecir la elección DEV.",
+  "arms": [
+    "CURRENT_V1_RAW",
+    "CURRENT_V2_RAW",
+    "CURRENT_V2_4_RAW",
+    "CURRENT_V2_4_LUNA_CLEAN"
+  ],
+  "runs": 1,
+  "max_provider_calls": 360,
+  "optional_old_set_provider_calls": 0,
+  "note": "Una sola evaluación nueva. Sin INTERPRET ni reintentos pagados ni diagnósticos antiguos pagados. Claims durables impiden repetir TEST2."
+}

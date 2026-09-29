@@ -1,0 +1,28 @@
+{
+  "status": "frozen_before_model_evaluation",
+  "frozen_at": "2026-09-29T12:27:12.221Z",
+  "dataset_sha256": "a206defd4c8f07b9d435e977f9e4894346f07aff1f05a771f5d91e79955f058d",
+  "case_count": 40,
+  "classifiable": 28,
+  "abstention": 8,
+  "privacy": 4,
+  "gold_source": "codex_rubric",
+  "created_by": "Codex",
+  "gold_adjudicated_by": "Codex",
+  "authorization": "explicit_user_request",
+  "model_calls_for_gold": 0,
+  "synthetic": true,
+  "all_ages_null": true,
+  "runs": 1,
+  "limitations": "Nuevo respecto a DEV y TEST1 y no evaluado anteriormente. Autor y adjudicador conocen los patrones históricos y escribirán V2.4: no es gold humano independiente ni prueba externa de generalización. No se cambia tras respuestas.",
+  "criteria": {
+    "clear_baseline_gain_min_additional_correct_primaries": 2,
+    "false_abstentions_not_above_baseline": true,
+    "overclassification_increase_tolerance": 0,
+    "privacy_fp": 0,
+    "privacy_fn": 0,
+    "unnecessary_secondary_not_above_baseline": true,
+    "clean_gain_not_material_if_corrects_at_most_cases": 1
+  },
+  "authorization_reference": "attachment da00a4d0-a544-4fd1-8c04-11f41a9bcc8e; single V2.4 / 40 cases / four arms / one repetition"
+}

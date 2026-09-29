@@ -1,0 +1,58 @@
+{
+  "AG-01": {
+    "causes": ["gold_ambiguous", "jev_false_abstention", "prompt_rule_conflict"],
+    "analysis": "Suficiencia 0.95 pero elección Indaga con confianza 0.41. El gate de confianza, no la falta de acción, causa la abstención. Cantidad supone comparación por tamaño sin seriación explícita; Forma/localización es defendible por construcción y grandes abajo. Cambiar la base tras caídas tampoco prueba por sí solo un proceso científico. No hay daño semántico sustancial en anonimización ni CLEAN.",
+    "reasonable_alternative_primary": ["MAT_FORMA"],
+    "anonymizer": {"lost_verbs": [], "lost_subjects": [], "changed_relations": false, "lost_pedagogical_context": false, "placeholder_semantic_damage": false},
+    "gold_review": "Mantener Cantidad histórico, registrar ambigüedad con Forma; no convertir una reparación constructiva automáticamente en Indaga."
+  },
+  "AG-02": {
+    "causes": ["gold_ambiguous", "anonymizer_damage", "prompt_rule_conflict"],
+    "analysis": "Arte principal correcto. Oral noul 0.61, menor que 0.80. También queda reemplazado por [persona], que introduce un falso sujeto antes de dibujó; CLEAN lo retira sin añadir acción. Nombrar figuras de la propia representación puede ser parte del mismo acto artístico, no otra conducta independiente. El gold exige Oral mientras el prompt conservador permite omitir habla instrumental. No aumentar secundarias para ajustar este caso.",
+    "reasonable_alternative_primary": [],
+    "anonymizer": {"lost_verbs": [], "lost_subjects": [], "changed_relations": true, "lost_pedagogical_context": false, "placeholder_semantic_damage": true},
+    "gold_review": "Ambigüedad de secundaria requerida, no de principal. Mantener gold intacto; missed_secondary es correcto respecto al contrato histórico."
+  },
+  "MC-03": {
+    "causes": ["gold_ambiguous", "anonymizer_damage", "luna_distortion", "jev_false_abstention"],
+    "analysis": "Una se oculta como posible nombre y Marci se neutraliza correctamente. CLEAN elimina el segundo sujeto y reúne tomar el pañuelo y molestarse en La niña: se pierde quién realizó cada acción. Elección Oral 0.47 y suficiencia 0.57 bloquean la sugerencia. La protesta y solución individual pueden relacionarse con Convivencia, Identidad u Oral, pero no describen un acuerdo ni negociación explícita. No afirmar que el error provenga únicamente de Jev.",
+    "reasonable_alternative_primary": ["COM_ORAL", "PS_IDENTIDAD"],
+    "anonymizer": {"lost_verbs": [], "lost_subjects": ["Una (determinante de niña); Marci sustituido por [persona]"], "changed_relations": false, "lost_pedagogical_context": false, "placeholder_semantic_damage": true},
+    "gold_review": "Convivencia histórica discutible; no consta respuesta a un interlocutor ni negociación. La salida CLEAN introduce además una ambigüedad de sujetos que no estaba en el original."
+  },
+  "MN-03": {
+    "causes": ["gold_ambiguous", "anonymizer_damage", "luna_distortion", "jev_wrong_primary", "prompt_rule_conflict"],
+    "analysis": "Agarró queda oculto; No permanece intacto. CLEAN convierte [persona] un cuento... en [persona] contó un cuento: pierde la acción de tomar el soporte y reorganiza la narración, que sí estaba descrita. La narración mirando dibujos sostiene Lectura emergente, aunque el cuento conocido deja abierta memoria oral. Jev elige Oral 0.58 pese al soporte visual. La exigencia de Oral secundaria no siempre describe otra conducta independiente; si Oral es principal tampoco puede aparecer como secundaria.",
+    "reasonable_alternative_primary": ["COM_ORAL"],
+    "anonymizer": {"lost_verbs": ["Agarró"], "lost_subjects": [], "changed_relations": true, "lost_pedagogical_context": true, "placeholder_semantic_damage": true},
+    "gold_review": "Lectura es preferible por el indicio visual declarado; Oral también es razonable si predomina recuerdo de la historia. Mantener gold. No hay eliminación de la negación en este caso."
+  },
+  "RO-01": {
+    "causes": ["anonymizer_damage", "luna_distortion", "jev_unnecessary_secondary", "prompt_rule_conflict"],
+    "analysis": "Con se oculta, perdiendo una preposición; se conserva hizo y el cambio de inclinación con resultado. CLEAN reordena y sustituye singular no bajaba por plural no bajaban: resuelve el referente sin certeza. Indaga principal correcto; Forma noul 0.81 añade secundaria por la misma rampa/ajuste instrumental. Las instrucciones globales dicen conducta independiente, pero los criterios de Forma permiten activarla por relaciones espaciales sin hacer explícita esa subordinación.",
+    "reasonable_alternative_primary": [],
+    "anonymizer": {"lost_verbs": [], "lost_subjects": [], "changed_relations": true, "lost_pedagogical_context": false, "placeholder_semantic_damage": true},
+    "gold_review": "No se justifica Forma independiente: inclinación es variable del mismo proceso de comprobación. Gold conservador coherente."
+  },
+  "SE-01": {
+    "causes": ["gold_ambiguous", "anonymizer_damage", "jev_wrong_primary", "prompt_rule_conflict"],
+    "analysis": "Encontró se oculta y CLEAN conserva la frase sin verbo. Oral 0.52 vence a Indaga. Explicar el origen de una pluma y mirar árboles puede iniciar indagación, pero no consta explícitamente que la mirada busque verificar la explicación. Bajo la regla nueva observa-explica-busca, Indaga es preferible solo si búsqueda/verificación está descrita. Oral es defendible con este registro; no inventar comprobación para satisfacer el gold.",
+    "reasonable_alternative_primary": ["COM_ORAL"],
+    "anonymizer": {"lost_verbs": ["Encontró"], "lost_subjects": [], "changed_relations": false, "lost_pedagogical_context": true, "placeholder_semantic_damage": true},
+    "gold_review": "Indaga histórico frente a Oral razonable; la intención de comprobar no es inequívoca. Gold se conserva y se marca ambiguo."
+  },
+  "TE-02": {
+    "causes": ["gold_ambiguous", "anonymizer_damage", "jev_false_abstention", "prompt_rule_conflict"],
+    "analysis": "Con se oculta y Tendon se neutraliza; CLEAN interpreta una coordinación de dos sujetos, plausible pero no textual. Suficiencia 0.94 y confianza 0.41 en Convivencia producen abstención por dispersión frente a Forma 0.41. El dibujo de la curva representa espacio para comunicar una propuesta de juego. Forma principal defendible; Convivencia también por propuesta ante desacuerdo. Usar el dibujo como solución compartida no exige completar el acuerdo.",
+    "reasonable_alternative_primary": ["PS_CONVIVE"],
+    "anonymizer": {"lost_verbs": [], "lost_subjects": ["Tendon sustituido correctamente por [persona]"], "changed_relations": true, "lost_pedagogical_context": false, "placeholder_semantic_damage": true},
+    "gold_review": "Forma/Convivencia razonables según foco. Secundaria de convivencia puede ser la misma conducta comunicativa y no otra independiente. Conservar gold sin forzar dos etiquetas."
+  },
+  "TE-03": {
+    "causes": ["gold_ambiguous", "jev_false_abstention", "prompt_rule_conflict"],
+    "analysis": "Sin daño de anonimizador; CLEAN conserva incertidumbre y secuencia. Suficiencia 0.95 pero Oral 0.44 bloquea la sugerencia. Leer la secuencia visual es preferible a contar cuatro dibujos: cuatro es detalle, no conteo observado. Oral y Lectura ya son aceptables en el gold histórico. Ese gold requiere Lectura secundaria incluso si Lectura resulta principal; el runtime excluye duplicar la principal, haciendo imposible exact decision para esa alternativa.",
+    "reasonable_alternative_primary": ["COM_LECTURA"],
+    "anonymizer": {"lost_verbs": [], "lost_subjects": [], "changed_relations": false, "lost_pedagogical_context": false, "placeholder_semantic_damage": false},
+    "gold_review": "Ambigüedad ya registrada, más conflicto estructural de secundaria requerida que duplica una principal aceptable. No corregir gold ni scoring histórico; informar este límite."
+  }
+}

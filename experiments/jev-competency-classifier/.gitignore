@@ -3,3 +3,5 @@
 reports/
 dist/
 node_modules/
+# Historical user observations and reconstructed request bodies remain local.
+/LAST_OPTIMIZATION_ERROR_AUTOPSY.md

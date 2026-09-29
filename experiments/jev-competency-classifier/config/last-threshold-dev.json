@@ -1,0 +1,589 @@
+{
+  "created_at": "2026-09-29T12:30:49.261Z",
+  "scope": "stored_DEV_only_no_TEST_reads_no_provider_calls",
+  "provider_calls": 0,
+  "original_threshold": 0.5,
+  "tested_thresholds": [
+    0.5,
+    0.45,
+    0.4
+  ],
+  "scale": "confidence 0–1, inclusive >=",
+  "fixed_sufficiency_threshold": 0.7,
+  "fixed_secondary_threshold": 0.8,
+  "selected_threshold": 0.5,
+  "alternative_thresholds_selected": 0,
+  "decision_basis": "V2.3 RAW and CLEAN are the immediately preceding version; older versions provide sensitivity, not pooled independent observations.",
+  "reason": "En V2.3 RAW y CLEAN, .45 y .40 reproducen exactamente las decisiones de .50. Todas las falsas abstenciones restantes tienen confianza .95–.96 y suficiencia .61–.63: el gate activo es suficiencia .70, no confianza. No hay beneficio DEV que justifique bajar confianza. En V2 inicial reducir confidence también habilita primarias incorrectas; no usar TEST1 para contradecir la elección DEV.",
+  "limitations": "Replay condicional a outputs ya guardados, no estima cómo cambiará la distribución de confianza al modificar el prompt V2.4. DEV reutilizado y próximo al techo; repeticiones no son casos independientes. No variar suficiencia porque no está autorizado en esta comprobación.",
+  "provenance": [
+    {
+      "version": "V2",
+      "file": "C:\\Users\\ASUS\\.codex\\worktrees\\jev-luna-benchmark\\Asistente CNEB\\experiments\\jev-competency-classifier\\results\\current-dev-2026-09-29T04-52-16-894Z-81d4fee8\\raw-results.json",
+      "sha256": "a3adf69d33bef88fd1d6d240d58ec91bee90b6b030df1b375af39463264a9410",
+      "dataset_sha256": "3cc4f1f0cc09763bfae90f002d270dfc62d9597df0583e581283b143818ff320"
+    },
+    {
+      "version": "V2.1",
+      "file": "C:\\Users\\ASUS\\.codex\\worktrees\\jev-luna-benchmark\\Asistente CNEB\\experiments\\jev-competency-classifier\\results\\current-dev-2026-09-29T05-12-18-668Z-46e6e4f9\\raw-results.json",
+      "sha256": "188539dd895d7a44d47b6533a9fd23088b9ae4a81e2e378b8cf0b36857f30fb0",
+      "dataset_sha256": "3cc4f1f0cc09763bfae90f002d270dfc62d9597df0583e581283b143818ff320"
+    },
+    {
+      "version": "V2.2",
+      "file": "C:\\Users\\ASUS\\.codex\\worktrees\\jev-luna-benchmark\\Asistente CNEB\\experiments\\jev-competency-classifier\\results\\current-dev-2026-09-29T05-32-39-991Z-091f0284\\raw-results.json",
+      "sha256": "235a94af3d95e0bc30569888760c643da09304eae323c4fc13054cd3b8fea804",
+      "dataset_sha256": "3cc4f1f0cc09763bfae90f002d270dfc62d9597df0583e581283b143818ff320"
+    },
+    {
+      "version": "V2.3",
+      "file": "C:\\Users\\ASUS\\.codex\\worktrees\\jev-luna-benchmark\\Asistente CNEB\\experiments\\jev-competency-classifier\\results\\current-dev-2026-09-29T05-51-53-054Z-5ee378a1\\raw-results.json",
+      "sha256": "83a913a45463bd9181550d383d5f2d8c11f58cdee4da93a9443a3edfd26fd9d8",
+      "dataset_sha256": "3cc4f1f0cc09763bfae90f002d270dfc62d9597df0583e581283b143818ff320"
+    }
+  ],
+  "rows": [
+    {
+      "version": "V2",
+      "arm": "CURRENT_V2_RAW",
+      "threshold": 0.5,
+      "eligible_primary_observations": 204,
+      "acceptable_primary_accuracy": 0.9117647058823529,
+      "false_abstentions": 18,
+      "overclassification": 0,
+      "wrong_primary": 0,
+      "privacy_fp": 0,
+      "privacy_fn": 0,
+      "provider_failures": 0,
+      "missing_answers": [],
+      "changed_cases": []
+    },
+    {
+      "version": "V2",
+      "arm": "CURRENT_V2_RAW",
+      "threshold": 0.45,
+      "eligible_primary_observations": 204,
+      "acceptable_primary_accuracy": 0.9264705882352942,
+      "false_abstentions": 13,
+      "overclassification": 0,
+      "wrong_primary": 2,
+      "privacy_fp": 0,
+      "privacy_fn": 0,
+      "provider_failures": 0,
+      "missing_answers": [],
+      "changed_cases": [
+        {
+          "id": "DEV_042",
+          "run": 1,
+          "confidence": 0.48,
+          "sufficiency": 0.88,
+          "new_primary": "MAT_CANTIDAD",
+          "acceptable": false
+        },
+        {
+          "id": "DEV_051",
+          "run": 1,
+          "confidence": 0.46,
+          "sufficiency": 0.75,
+          "new_primary": "COM_ARTE",
+          "acceptable": true
+        },
+        {
+          "id": "DEV_042",
+          "run": 2,
+          "confidence": 0.49,
+          "sufficiency": 0.88,
+          "new_primary": "COM_ESCRITURA",
+          "acceptable": true
+        },
+        {
+          "id": "DEV_042",
+          "run": 3,
+          "confidence": 0.47,
+          "sufficiency": 0.88,
+          "new_primary": "MAT_CANTIDAD",
+          "acceptable": false
+        },
+        {
+          "id": "DEV_051",
+          "run": 3,
+          "confidence": 0.49,
+          "sufficiency": 0.75,
+          "new_primary": "COM_ARTE",
+          "acceptable": true
+        }
+      ]
+    },
+    {
+      "version": "V2",
+      "arm": "CURRENT_V2_RAW",
+      "threshold": 0.4,
+      "eligible_primary_observations": 204,
+      "acceptable_primary_accuracy": 0.9313725490196079,
+      "false_abstentions": 12,
+      "overclassification": 0,
+      "wrong_primary": 2,
+      "privacy_fp": 0,
+      "privacy_fn": 0,
+      "provider_failures": 0,
+      "missing_answers": [],
+      "changed_cases": [
+        {
+          "id": "DEV_042",
+          "run": 1,
+          "confidence": 0.48,
+          "sufficiency": 0.88,
+          "new_primary": "MAT_CANTIDAD",
+          "acceptable": false
+        },
+        {
+          "id": "DEV_051",
+          "run": 1,
+          "confidence": 0.46,
+          "sufficiency": 0.75,
+          "new_primary": "COM_ARTE",
+          "acceptable": true
+        },
+        {
+          "id": "DEV_042",
+          "run": 2,
+          "confidence": 0.49,
+          "sufficiency": 0.88,
+          "new_primary": "COM_ESCRITURA",
+          "acceptable": true
+        },
+        {
+          "id": "DEV_051",
+          "run": 2,
+          "confidence": 0.43,
+          "sufficiency": 0.74,
+          "new_primary": "COM_ARTE",
+          "acceptable": true
+        },
+        {
+          "id": "DEV_042",
+          "run": 3,
+          "confidence": 0.47,
+          "sufficiency": 0.88,
+          "new_primary": "MAT_CANTIDAD",
+          "acceptable": false
+        },
+        {
+          "id": "DEV_051",
+          "run": 3,
+          "confidence": 0.49,
+          "sufficiency": 0.75,
+          "new_primary": "COM_ARTE",
+          "acceptable": true
+        }
+      ]
+    },
+    {
+      "version": "V2",
+      "arm": "CURRENT_V2_LUNA_CLEAN",
+      "threshold": 0.5,
+      "eligible_primary_observations": 204,
+      "acceptable_primary_accuracy": 0.9264705882352942,
+      "false_abstentions": 13,
+      "overclassification": 0,
+      "wrong_primary": 2,
+      "privacy_fp": 0,
+      "privacy_fn": 0,
+      "provider_failures": 0,
+      "missing_answers": [],
+      "changed_cases": []
+    },
+    {
+      "version": "V2",
+      "arm": "CURRENT_V2_LUNA_CLEAN",
+      "threshold": 0.45,
+      "eligible_primary_observations": 204,
+      "acceptable_primary_accuracy": 0.9362745098039216,
+      "false_abstentions": 9,
+      "overclassification": 0,
+      "wrong_primary": 4,
+      "privacy_fp": 0,
+      "privacy_fn": 0,
+      "provider_failures": 0,
+      "missing_answers": [],
+      "changed_cases": [
+        {
+          "id": "DEV_042",
+          "run": 1,
+          "confidence": 0.47,
+          "sufficiency": 0.91,
+          "new_primary": "MAT_CANTIDAD",
+          "acceptable": false
+        },
+        {
+          "id": "DEV_051",
+          "run": 2,
+          "confidence": 0.46,
+          "sufficiency": 0.74,
+          "new_primary": "COM_ARTE",
+          "acceptable": true
+        },
+        {
+          "id": "DEV_059",
+          "run": 2,
+          "confidence": 0.45,
+          "sufficiency": 0.91,
+          "new_primary": "PSICO_MOTRICIDAD",
+          "acceptable": true
+        },
+        {
+          "id": "DEV_042",
+          "run": 3,
+          "confidence": 0.48,
+          "sufficiency": 0.91,
+          "new_primary": "MAT_CANTIDAD",
+          "acceptable": false
+        }
+      ]
+    },
+    {
+      "version": "V2",
+      "arm": "CURRENT_V2_LUNA_CLEAN",
+      "threshold": 0.4,
+      "eligible_primary_observations": 204,
+      "acceptable_primary_accuracy": 0.9362745098039216,
+      "false_abstentions": 8,
+      "overclassification": 0,
+      "wrong_primary": 5,
+      "privacy_fp": 0,
+      "privacy_fn": 0,
+      "provider_failures": 0,
+      "missing_answers": [],
+      "changed_cases": [
+        {
+          "id": "DEV_042",
+          "run": 1,
+          "confidence": 0.47,
+          "sufficiency": 0.91,
+          "new_primary": "MAT_CANTIDAD",
+          "acceptable": false
+        },
+        {
+          "id": "DEV_042",
+          "run": 2,
+          "confidence": 0.44,
+          "sufficiency": 0.93,
+          "new_primary": "MAT_CANTIDAD",
+          "acceptable": false
+        },
+        {
+          "id": "DEV_051",
+          "run": 2,
+          "confidence": 0.46,
+          "sufficiency": 0.74,
+          "new_primary": "COM_ARTE",
+          "acceptable": true
+        },
+        {
+          "id": "DEV_059",
+          "run": 2,
+          "confidence": 0.45,
+          "sufficiency": 0.91,
+          "new_primary": "PSICO_MOTRICIDAD",
+          "acceptable": true
+        },
+        {
+          "id": "DEV_042",
+          "run": 3,
+          "confidence": 0.48,
+          "sufficiency": 0.91,
+          "new_primary": "MAT_CANTIDAD",
+          "acceptable": false
+        }
+      ]
+    },
+    {
+      "version": "V2.1",
+      "arm": "CURRENT_V2_RAW",
+      "threshold": 0.5,
+      "eligible_primary_observations": 204,
+      "acceptable_primary_accuracy": 0.9509803921568627,
+      "false_abstentions": 9,
+      "overclassification": 0,
+      "wrong_primary": 0,
+      "privacy_fp": 0,
+      "privacy_fn": 0,
+      "provider_failures": 1,
+      "missing_answers": [
+        {
+          "id": "DEV_005",
+          "run": 3,
+          "reason": "provider_failure_no_complete_answers"
+        }
+      ],
+      "changed_cases": []
+    },
+    {
+      "version": "V2.1",
+      "arm": "CURRENT_V2_RAW",
+      "threshold": 0.45,
+      "eligible_primary_observations": 204,
+      "acceptable_primary_accuracy": 0.9509803921568627,
+      "false_abstentions": 9,
+      "overclassification": 0,
+      "wrong_primary": 0,
+      "privacy_fp": 0,
+      "privacy_fn": 0,
+      "provider_failures": 1,
+      "missing_answers": [
+        {
+          "id": "DEV_005",
+          "run": 3,
+          "reason": "provider_failure_no_complete_answers"
+        }
+      ],
+      "changed_cases": []
+    },
+    {
+      "version": "V2.1",
+      "arm": "CURRENT_V2_RAW",
+      "threshold": 0.4,
+      "eligible_primary_observations": 204,
+      "acceptable_primary_accuracy": 0.9509803921568627,
+      "false_abstentions": 9,
+      "overclassification": 0,
+      "wrong_primary": 0,
+      "privacy_fp": 0,
+      "privacy_fn": 0,
+      "provider_failures": 1,
+      "missing_answers": [
+        {
+          "id": "DEV_005",
+          "run": 3,
+          "reason": "provider_failure_no_complete_answers"
+        }
+      ],
+      "changed_cases": []
+    },
+    {
+      "version": "V2.1",
+      "arm": "CURRENT_V2_LUNA_CLEAN",
+      "threshold": 0.5,
+      "eligible_primary_observations": 204,
+      "acceptable_primary_accuracy": 0.946078431372549,
+      "false_abstentions": 11,
+      "overclassification": 0,
+      "wrong_primary": 0,
+      "privacy_fp": 0,
+      "privacy_fn": 0,
+      "provider_failures": 0,
+      "missing_answers": [],
+      "changed_cases": []
+    },
+    {
+      "version": "V2.1",
+      "arm": "CURRENT_V2_LUNA_CLEAN",
+      "threshold": 0.45,
+      "eligible_primary_observations": 204,
+      "acceptable_primary_accuracy": 0.946078431372549,
+      "false_abstentions": 11,
+      "overclassification": 0,
+      "wrong_primary": 0,
+      "privacy_fp": 0,
+      "privacy_fn": 0,
+      "provider_failures": 0,
+      "missing_answers": [],
+      "changed_cases": []
+    },
+    {
+      "version": "V2.1",
+      "arm": "CURRENT_V2_LUNA_CLEAN",
+      "threshold": 0.4,
+      "eligible_primary_observations": 204,
+      "acceptable_primary_accuracy": 0.946078431372549,
+      "false_abstentions": 11,
+      "overclassification": 0,
+      "wrong_primary": 0,
+      "privacy_fp": 0,
+      "privacy_fn": 0,
+      "provider_failures": 0,
+      "missing_answers": [],
+      "changed_cases": []
+    },
+    {
+      "version": "V2.2",
+      "arm": "CURRENT_V2_RAW",
+      "threshold": 0.5,
+      "eligible_primary_observations": 204,
+      "acceptable_primary_accuracy": 0.9852941176470589,
+      "false_abstentions": 3,
+      "overclassification": 0,
+      "wrong_primary": 0,
+      "privacy_fp": 0,
+      "privacy_fn": 0,
+      "provider_failures": 0,
+      "missing_answers": [],
+      "changed_cases": []
+    },
+    {
+      "version": "V2.2",
+      "arm": "CURRENT_V2_RAW",
+      "threshold": 0.45,
+      "eligible_primary_observations": 204,
+      "acceptable_primary_accuracy": 0.9852941176470589,
+      "false_abstentions": 3,
+      "overclassification": 0,
+      "wrong_primary": 0,
+      "privacy_fp": 0,
+      "privacy_fn": 0,
+      "provider_failures": 0,
+      "missing_answers": [],
+      "changed_cases": []
+    },
+    {
+      "version": "V2.2",
+      "arm": "CURRENT_V2_RAW",
+      "threshold": 0.4,
+      "eligible_primary_observations": 204,
+      "acceptable_primary_accuracy": 0.9852941176470589,
+      "false_abstentions": 3,
+      "overclassification": 0,
+      "wrong_primary": 0,
+      "privacy_fp": 0,
+      "privacy_fn": 0,
+      "provider_failures": 0,
+      "missing_answers": [],
+      "changed_cases": []
+    },
+    {
+      "version": "V2.2",
+      "arm": "CURRENT_V2_LUNA_CLEAN",
+      "threshold": 0.5,
+      "eligible_primary_observations": 204,
+      "acceptable_primary_accuracy": 0.9852941176470589,
+      "false_abstentions": 3,
+      "overclassification": 0,
+      "wrong_primary": 0,
+      "privacy_fp": 0,
+      "privacy_fn": 0,
+      "provider_failures": 0,
+      "missing_answers": [],
+      "changed_cases": []
+    },
+    {
+      "version": "V2.2",
+      "arm": "CURRENT_V2_LUNA_CLEAN",
+      "threshold": 0.45,
+      "eligible_primary_observations": 204,
+      "acceptable_primary_accuracy": 0.9852941176470589,
+      "false_abstentions": 3,
+      "overclassification": 0,
+      "wrong_primary": 0,
+      "privacy_fp": 0,
+      "privacy_fn": 0,
+      "provider_failures": 0,
+      "missing_answers": [],
+      "changed_cases": []
+    },
+    {
+      "version": "V2.2",
+      "arm": "CURRENT_V2_LUNA_CLEAN",
+      "threshold": 0.4,
+      "eligible_primary_observations": 204,
+      "acceptable_primary_accuracy": 0.9852941176470589,
+      "false_abstentions": 3,
+      "overclassification": 0,
+      "wrong_primary": 0,
+      "privacy_fp": 0,
+      "privacy_fn": 0,
+      "provider_failures": 0,
+      "missing_answers": [],
+      "changed_cases": []
+    },
+    {
+      "version": "V2.3",
+      "arm": "CURRENT_V2_RAW",
+      "threshold": 0.5,
+      "eligible_primary_observations": 204,
+      "acceptable_primary_accuracy": 0.9852941176470589,
+      "false_abstentions": 3,
+      "overclassification": 0,
+      "wrong_primary": 0,
+      "privacy_fp": 0,
+      "privacy_fn": 0,
+      "provider_failures": 0,
+      "missing_answers": [],
+      "changed_cases": []
+    },
+    {
+      "version": "V2.3",
+      "arm": "CURRENT_V2_RAW",
+      "threshold": 0.45,
+      "eligible_primary_observations": 204,
+      "acceptable_primary_accuracy": 0.9852941176470589,
+      "false_abstentions": 3,
+      "overclassification": 0,
+      "wrong_primary": 0,
+      "privacy_fp": 0,
+      "privacy_fn": 0,
+      "provider_failures": 0,
+      "missing_answers": [],
+      "changed_cases": []
+    },
+    {
+      "version": "V2.3",
+      "arm": "CURRENT_V2_RAW",
+      "threshold": 0.4,
+      "eligible_primary_observations": 204,
+      "acceptable_primary_accuracy": 0.9852941176470589,
+      "false_abstentions": 3,
+      "overclassification": 0,
+      "wrong_primary": 0,
+      "privacy_fp": 0,
+      "privacy_fn": 0,
+      "provider_failures": 0,
+      "missing_answers": [],
+      "changed_cases": []
+    },
+    {
+      "version": "V2.3",
+      "arm": "CURRENT_V2_LUNA_CLEAN",
+      "threshold": 0.5,
+      "eligible_primary_observations": 204,
+      "acceptable_primary_accuracy": 0.9950980392156863,
+      "false_abstentions": 1,
+      "overclassification": 0,
+      "wrong_primary": 0,
+      "privacy_fp": 0,
+      "privacy_fn": 0,
+      "provider_failures": 0,
+      "missing_answers": [],
+      "changed_cases": []
+    },
+    {
+      "version": "V2.3",
+      "arm": "CURRENT_V2_LUNA_CLEAN",
+      "threshold": 0.45,
+      "eligible_primary_observations": 204,
+      "acceptable_primary_accuracy": 0.9950980392156863,
+      "false_abstentions": 1,
+      "overclassification": 0,
+      "wrong_primary": 0,
+      "privacy_fp": 0,
+      "privacy_fn": 0,
+      "provider_failures": 0,
+      "missing_answers": [],
+      "changed_cases": []
+    },
+    {
+      "version": "V2.3",
+      "arm": "CURRENT_V2_LUNA_CLEAN",
+      "threshold": 0.4,
+      "eligible_primary_observations": 204,
+      "acceptable_primary_accuracy": 0.9950980392156863,
+      "false_abstentions": 1,
+      "overclassification": 0,
+      "wrong_primary": 0,
+      "privacy_fp": 0,
+      "privacy_fn": 0,
+      "provider_failures": 0,
+      "missing_answers": [],
+      "changed_cases": []
+    }
+  ]
+}

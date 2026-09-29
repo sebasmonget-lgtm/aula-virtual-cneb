@@ -26,7 +26,8 @@ export function v2Requests({ input, kb, prompt }) {
     criteria: { true: prompt.evidence_sufficiency?.true ?? "Hay una acción central concreta y un referente observable que sustenta alguna competencia.",
       false: prompt.evidence_sufficiency?.false ?? "Solo hay estado circunstancial, presencia, valoración vaga o información insuficiente." } };
   const questions = Object.fromEntries(options.map((option) => [option.id, { type: "noul",
-    instructions: `¿Hay evidencia observable propia de «${option.name}»? Si no es la acción central, exige OTRA conducta independiente. Una acción instrumental, hablar como medio o una simple mención no justifican una secundaria. ${prompt.disambiguation[option.id] ?? ""}`,
+    instructions: `¿Hay evidencia observable propia de «${option.name}»? Si no es la acción central, exige OTRA conducta independiente. Una acción instrumental, hablar como medio o una simple mención no justifican una secundaria. ${prompt.disambiguation[option.id] ?? ""}` +
+      (prompt.additional_instruction ? ` ${prompt.additional_instruction}` : ""),
     criteria: { true: `${option.applies_when.join("; ")}; conducta específica e independiente descrita, sin inferir intención.`,
       false: `No hay conducta propia suficiente, es solo medio/contexto/tema o un estado circunstancial. ${option.avoid_when.join("; ")}` } }]));
   const common = { state: `Edad: ${input.age ?? null}. Observación: ${input.observation}`, kbVersion: kb.version, candidateIds: options.map((option) => option.id) };

@@ -1,0 +1,46 @@
+import { readFile, writeFile } from "node:fs/promises";
+import path from "node:path";
+import { createHash } from "node:crypto";
+import { EXPERIMENT_ROOT } from "../src/constants.mjs";
+import { lastSourceHashes } from "../src/last-optimization.mjs";
+
+const autopsy = await readFile(path.join(EXPERIMENT_ROOT, "LAST_OPTIMIZATION_ERROR_AUTOPSY.md"), "utf8");
+const testFreeze = JSON.parse(await readFile(path.join(EXPERIMENT_ROOT, "datasets/last-optimization/freeze.json"), "utf8"));
+const thresholdReview = JSON.parse(await readFile(path.join(EXPERIMENT_ROOT, "config/last-threshold-dev.json"), "utf8"));
+if (thresholdReview.selected_threshold !== .5) throw new Error("Threshold alternativo necesita configuración explícita antes de freeze; no usar valor hardcoded por accidente.");
+if (testFreeze.status !== "frozen_before_model_evaluation" || testFreeze.case_count !== 40) throw new Error("TEST2 no congelado.");
+const prompt = JSON.parse(await readFile(path.join(EXPERIMENT_ROOT, "config/current-v2-prompt.json"), "utf8"));
+if (prompt.version !== "current-v2.3") throw new Error("Solo se permite V2.3 → V2.4.");
+prompt.version = "current-v2.4";
+prompt.status = "single_last_optimization_frozen";
+prompt.decision_rules[3] = "Elige UNA competencia principal cuando exista evidencia suficiente: la que explique más directamente la acción central observada. Decide por la fuente y función de la conducta, no por palabras sueltas, número de objetos, material o presencia de otras personas. Dos ámbitos posibles no equivalen a ausencia de evidencia: aplica las reglas de prioridad; no inventes certeza ni hechos para evitar abstención.";
+prompt.decision_rules[4] = "Si la principal explica suficientemente la evidencia, secondary = []. Solo añadir secundaria por OTRA conducta observable independiente, no por describir la misma acción con otra etiqueta. La verbalización de la acción, su representación auxiliar, la disposición de materiales y la interacción instrumental no son otra actuación por sí solas.";
+prompt.decision_rules.push("Una acción curricular observable clara más una verbalización que explica o acompaña esa acción puede ser suficiente. No exigir un paso adicional, resultado logrado, explicación larga ni confirmación de comprensión. La incertidumbre docente sobre el motivo no borra hechos observados. Esto no vuelve curricular el sueño, comida, distracción, proximidad pasiva, manipulación incidental o una negativa aislada.");
+prompt.disambiguation.MAT_CANTIDAD = "Conteo, correspondencia uno a uno, comparación de cantidades y seriación por tamaño/longitud sustentan Cantidad cuando esas relaciones se observan. Un número mencionado en una narración o construcción no es conteo observado. Tamaño para ordenar/comparar sustenta Cantidad; ubicación/distribución para representar espacio sustenta Forma. Construir o reparar una estructura no prueba por sí solo comparación cuantitativa ni indagación.";
+prompt.disambiguation.MAT_FORMA += " Representar cómo se ubica, conecta o recorre una construcción mediante trazos/dibujo puede ser actuación espacial, aunque sirva para comunicar una propuesta. No etiquetar Arte solo por dibujar una relación espacial. Una posición o inclinación usada únicamente como variable de una prueba de fenómeno es medio de Indagación, no otra actuación espacial independiente.";
+prompt.disambiguation.COM_ORAL = "Clasifica según la fuente principal de construcción de significado. Si el niño obtiene significado de imágenes, ilustraciones, símbolos, carteles, secuencias visuales o texto, prioriza LECTURA aunque responda oralmente. Si la información proviene principalmente de su propia experiencia, conversación o explicación sin apoyo textual/visual, prioriza COMUNICACIÓN ORAL. Tener un libro cerca o cerrado no convierte un relato de memoria en Lectura. Si habla para comunicar un conteo, lectura, hallazgo, dibujo, mensaje dictado o acuerdo, esa verbalización es medio de esa actuación; no elegir Oral automáticamente ni agregarla como secundaria. Un relato breve, aclaración, reformulación o respuesta significativa puede bastar sin discurso largo ni logro demostrado.";
+prompt.disambiguation.COM_LECTURA = "Clasifica según la fuente principal de construcción de significado. Si el niño obtiene significado de imágenes, ilustraciones, símbolos, carteles, secuencias visuales o texto, prioriza LECTURA aunque responda oralmente. Construir significado, anticipar, interpretar o reconstruir secuencias a partir de indicios gráficos es Lectura emergente, sin exigir lectura convencional. Ordenar ilustraciones para reconstruir sentido narrativo no es Cantidad por cuántas ilustraciones hay. Un cuento conocido puede leerse desde imágenes: conocerlo no anula la evidencia visual; si solo relata de memoria y no usa el soporte, prioriza Oral. Tener un libro, mirarlo sin atribuir significado descrito o nombrar material no basta.";
+prompt.disambiguation.CYT_INDAGA = "Prioriza INDAGACIÓN cuando exista un proceso observable: observa un hecho → plantea una explicación/pregunta → compara, busca, prueba o verifica. La búsqueda de indicios o comprobación visual descrita también cuenta; no exigir experimento formal ni explicación lograda. No elegir Oral solo porque verbaliza lo que observa/hace. Una explicación aislada de conocimiento previo, mirar alrededor sin búsqueda descrita, manipular incidentalmente o reparar una construcción sin comparación/comprobación de fenómeno no bastan. No inventes intención de verificar. Ajustar equilibrio, fuerza o posición para ejecutar un gesto corporal es Motricidad; modificar una representación expresiva es Arte. Inclinación, cantidades o conversación que sirven a la misma comprobación no son secundarias independientes.";
+prompt.disambiguation.PS_CONVIVE = "Negociación, propuesta de acuerdo, turno, resolución de desacuerdo, incorporación al juego, ayuda concreta o acción compartida observadas sustentan Convivencia. No exigir una secuencia larga, acuerdo terminado, participación de todo el grupo ni respuesta final del otro. Una propuesta dirigida a otra persona más una acción concreta para compartir o resolver el desacuerdo puede bastar. Estar cerca, observar pasivamente, jugar en paralelo sin interacción, emoción aislada o negativa puntual sin resolución/interacción descrita no bastan. Si un dibujo/explicación comunica una propuesta conjunta, evaluar la interacción efectivamente descrita sin asumir acuerdo inexistente.";
+prompt.evidence_sufficiency.instructions += " Una acción curricular clara acompañada de su explicación/verbalización ya puede bastar; no exigir que se complete o repita. Leer indicios visuales, representar espacio, proponer un turno o buscar un indicio para comprobar una explicación son acciones específicas, no mero hablar o usar material.";
+prompt.additional_instruction = "Evaluación adicional conservadora: si una competencia principal explica toda la actuación y esta competencia solo describe un medio, contexto o una faceta de esa MISMA acción, responder false. Para true debe describirse otra conducta independiente y con sustento propio, no inferirla del material, palabras dichas o tema. Si hay dos acciones separadas con sustento, sí puede haber secundaria; no vaciarla por defecto cuando esa otra acción está observada. Priorizar no añadir etiquetas redundantes.";
+const bytes = JSON.stringify(prompt, null, 2) + "\n";
+await writeFile(path.join(EXPERIMENT_ROOT, "config/current-v2-4-prompt.json"), bytes, { flag: "wx" });
+const hashes = await lastSourceHashes();
+const sourceFiles = ["src/lib/jev-openrouter-decision.mjs", "src/lib/openai-competency-classifier.mjs", "src/lib/competency-applicability.mjs", "src/lib/assessment-v4-service.mjs"];
+const production = Object.fromEntries(await Promise.all(sourceFiles.map(async (f) => [f,
+  createHash("sha256").update((await readFile(path.join(EXPERIMENT_ROOT, "../..", f), "utf8")).replaceAll("\r\n", "\n")).digest("hex")])));
+const frozen = { created_at: new Date().toISOString(), version: "CURRENT_V2_4", optimization_closed: true, no_more_prompt_edits: true,
+  test2_sha256: testFreeze.dataset_sha256, prompt_sha256: createHash("sha256").update(bytes).digest("hex"),
+  source_sha256: hashes, production_dependency_sha256: production,
+  autopsy_sha256: createHash("sha256").update(autopsy).digest("hex"),
+  baseline_v2: "V2.3 / CURRENT_V2_RAW; same immediately preceding prompt",
+  models: { jev: "typesafe/jev-1.13", luna: "gpt-6-luna" },
+  thresholds: { primary_confidence: .5, sufficiency: .7, secondary: .8, max_secondary: 3 },
+  threshold_review_sha256: createHash("sha256").update(await readFile(path.join(EXPERIMENT_ROOT, "config/last-threshold-dev.json"))).digest("hex"),
+  threshold_selection_reason: thresholdReview.reason,
+  arms: ["CURRENT_V1_RAW", "CURRENT_V2_RAW", "CURRENT_V2_4_RAW", "CURRENT_V2_4_LUNA_CLEAN"],
+  runs: 1, max_provider_calls: 360, optional_old_set_provider_calls: 0,
+  note: "Una sola evaluación nueva. Sin INTERPRET ni reintentos pagados ni diagnósticos antiguos pagados. Claims durables impiden repetir TEST2." };
+await writeFile(path.join(EXPERIMENT_ROOT, "config/last-optimization-freeze.json"), JSON.stringify(frozen, null, 2) + "\n", { flag: "wx" });
+console.log(JSON.stringify(frozen));
