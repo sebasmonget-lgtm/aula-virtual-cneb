@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { applicableCompetencyCards } from "../../../src/lib/competency-applicability.mjs";
 import { createJevCompetencySuggester } from "../../../src/lib/jev-competency-suggestion.mjs";
+import { createJevCompetencySuggester as createMissingAgeSuggester } from "./jev-current-benchmark.mjs";
 import { createJevOpenRouterDecision } from "../../../src/lib/jev-openrouter-decision.mjs";
 import { buildClassifierOptions } from "../../../src/lib/openai-competency-classifier.mjs";
 import { loadKnowledgeBaseV4 } from "../../../src/lib/knowledge-base-v4.mjs";
@@ -51,7 +52,8 @@ export async function createBenchmarkAdapters({ config, pricing, apiKey = proces
   async function local(method, input) {
     const calls = [];
     const started = performance.now();
-    const classifier = createJevCompetencyClassifier({ knowledgeBase: localKb, config, gateway: "openrouter",
+    const classifier = createJevCompetencyClassifier({ knowledgeBase: localKb,
+      config: input.age == null ? { ...config, benchmark_allow_missing_age: true } : config, gateway: "openrouter",
       method, criteriaProfile, apiKey, requestedModel: model,
       fetchImpl: trackedFetch(fetchImpl, calls, pricing), useCache: false });
     const result = await classifier.classifyObservation({ age: input.age, observation: input.observation,
@@ -72,12 +74,16 @@ export async function createBenchmarkAdapters({ config, pricing, apiKey = proces
       const started = performance.now();
       const client = createJevOpenRouterDecision({ apiKey, model,
         fetchImpl: trackedFetch(fetchImpl, calls, pricing), telemetry: () => {} });
-      const applicable = applicableCompetencyCards(kb.competencyCards, input.age, {
+      const applicable = input.age == null ? kb.competencyCards.filter((card) =>
+        Object.values(card.runtime_selectable_by_age).some(Boolean) &&
+        (card.id !== "CAST_L2_ORAL" || input.applicability.castellano_as_second_language) &&
+        (card.id !== "PS_RELIGION" || input.applicability.religion_applicable)) : applicableCompetencyCards(kb.competencyCards, input.age, {
         castellanoL2Applicable: input.applicability.castellano_as_second_language,
         religionApplicable: input.applicability.religion_applicable });
       const options = buildClassifierOptions(kb.competencyCards, input.age, applicable.map((card) => card.id));
       try {
-        const result = await createJevCompetencySuggester({ client, loadKb: async () => kb }).classify({
+        const suggester = input.age == null ? createMissingAgeSuggester : createJevCompetencySuggester;
+        const result = await suggester({ client, loadKb: async () => kb }).classify({
           observation: input.observation, age: input.age, options });
         return { status: result.candidate_ids.length ? "review" : "unclassified", primary: result.candidate_ids[0] ?? null,
           additional: result.candidate_ids.slice(1), ranked: Object.entries(calls.find((call) => call.answers?.competency)?.answers.competency.probabilities ?? {})

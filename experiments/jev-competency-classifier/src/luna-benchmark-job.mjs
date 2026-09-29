@@ -72,6 +72,8 @@ export async function executeBenchmark(prepared, { maxLiveRequests, onProgress =
     parallel_kb_fingerprint: adapters.metadata?.parallel_kb_fingerprint ?? null,
     model_jev_requested: adapters.metadata?.model_requested ?? process.env.JEV_MODEL ?? "typesafe/jev-1.13",
     model_luna_requested: "gpt-6-luna", pricing: { luna: lunaPricing, jev: openrouterPricing },
+    missing_age_cases: selected.filter((item) => item.age == null).length,
+    missing_age_policy: "null; existing general competency meanings only; no age-specific performances; same policy RAW/LUNA",
     preflight, options };
   let results = [], costs = null, stopped = null;
   try {

@@ -17,6 +17,8 @@ import { createJevOpenRouterDecision } from "../../../src/lib/jev-openrouter-dec
 import { applicableCompetencyCards } from "../../../src/lib/competency-applicability.mjs";
 import { buildClassifierOptions } from "../../../src/lib/openai-competency-classifier.mjs";
 import { loadKnowledgeBaseV4 } from "../../../src/lib/knowledge-base-v4.mjs";
+import { buildCriteria } from "../src/criteria-builder.mjs";
+import { validateInput } from "../src/validation.mjs";
 
 const kb = await loadKnowledgeBaseV4();
 const { classifier: config, openrouterPricing: pricing } = await loadExperimentConfig();
@@ -28,7 +30,7 @@ const record = { id: "T1", age: 5, type: "spontaneous", context: "Contó materia
 const item = normalizeBenchmarkCase(record, 0, dependencies);
 const cleanValue = { clean_observation: "Contó tres vasos y dijo que faltaba uno.",
   brief_interpretation: "Relacionó la cantidad de vasos con los que necesitaba.", uncertainty: null };
-test("aliases del gold docente se normalizan sin cambiar el texto ni inferir edad", () => {
+test("aliases del gold docente se normalizan sin cambiar el texto; edad ausente permanece null", () => {
   const aliases = { CANTIDAD: "MAT_CANTIDAD", ARTE: "COM_ARTE", CONVIVENCIA: "PS_CONVIVE",
     ESCRITURA: "COM_ESCRITURA", FORMA_LOCALIZACION: "MAT_FORMA", INDAGACION: "CYT_INDAGA", MOTRICIDAD: "PSICO_MOTRICIDAD" };
   for (const [label, id] of Object.entries(aliases)) {
@@ -36,7 +38,7 @@ test("aliases del gold docente se normalizan sin cambiar el texto ni inferir eda
     assert.equal(normalized.expected.primary, id);
     assert.equal(normalized.raw_observation, record.observation);
   }
-  assert.throws(() => normalizeBenchmarkCase({ ...record, age: undefined }, 0, dependencies), /exige edad/);
+  assert.equal(normalizeBenchmarkCase({ ...record, age: undefined }, 0, dependencies).age, null);
 });
 function mockJev(captured, chosen = "MAT_CANTIDAD") {
   return async (url, options) => {
@@ -62,6 +64,43 @@ function mockLuna(captured = []) {
         output_tokens_details: { reasoning_tokens: 20 } } });
   } });
 }
+
+test("snapshot CURRENT conserva todas las instrucciones y thresholds originales; solo guardia null e imports", async () => {
+  const original = (await readFile(path.join(EXPERIMENT_ROOT, "../../src/lib/jev-competency-suggestion.mjs"), "utf8"))
+    .replaceAll("\r\n", "\n");
+  const expectedSource = original.replace('"./knowledge-base-v4.mjs"', '"../../../src/lib/knowledge-base-v4.mjs"')
+    .replace('"./assessment-v4-service.mjs"', '"../../../src/lib/assessment-v4-service.mjs"')
+    .replace('"./jev-openrouter-decision.mjs"', '"../../../src/lib/jev-openrouter-decision.mjs"')
+    .replace('if (![3, 4, 5].includes(Number(age)) || typeof observation', 'if ((age != null && ![3, 4, 5].includes(Number(age))) || typeof observation');
+  const snapshot = (await readFile(path.join(EXPERIMENT_ROOT, "src/jev-current-benchmark.mjs"), "utf8")).replaceAll("\r\n", "\n");
+  assert.equal(snapshot.slice(snapshot.indexOf("\n") + 1), expectedSource);
+});
+
+test("benchmark sin edad: null en Jev, edad omitida en Luna, criterios generales y gold aislado", async () => {
+  const noAge = normalizeBenchmarkCase({ ...record, age: undefined }, 0, dependencies);
+  assert.throws(() => validateInput({ age: null, observation: "Contó objetos." }), /edad CNEB/);
+  const plan = buildCriteria(knowledgeBase, { age: null, observation: "Contó objetos." },
+    { ...config, benchmark_allow_missing_age: true }, "focused");
+  for (const option of plan.options) assert.deepEqual(option.criteria.aplica_cuando,
+    [kb.competencyCards.find((card) => card.id === option.id).ai_meaning]);
+  const captured = [], luna = [];
+  const adapters = await createBenchmarkAdapters({ config, pricing, apiKey: "mock", fetchImpl: mockJev(captured), loadKb: async () => kb });
+  const result = await runLunaBenchmark({ cases: [noAge], adapters, lunaClient: mockLuna(luna) });
+  assert.equal(captured.length, 6); assert.equal(luna.length, 1);
+  assert.ok(!Object.hasOwn(JSON.parse(luna[0].input[1].content), "age"));
+  for (const payload of captured) {
+    assertNoBenchmarkLabels(payload);
+    if (typeof payload.state === "string") assert.ok(payload.state.startsWith("Edad: null."));
+    else assert.equal(payload.state.age, null);
+  }
+  assert.equal(result.results[0].cases[0].arms.CURRENT_RAW.primary, "MAT_CANTIDAD");
+  const originalPayloads = [...captured];
+  captured.length = 0;
+  const changedGold = { ...noAge, expected: { ...noAge.expected, primary: "COM_ORAL", acceptable_primary: ["COM_ORAL"] } };
+  await runLunaBenchmark({ cases: [changedGold], adapters, lunaClient: mockLuna() });
+  assert.deepEqual(captured, originalPayloads);
+  for (const payload of captured) assertNoBenchmarkLabels(payload);
+});
 
 test("Luna recibe solo edad/tipo/contexto/texto; gold, nombres y metadata quedan fuera", () => {
   const enriched = { ...item, student_id: "STUDENT_SECRET", date: "DATE_SECRET", teacher: "TEACHER_SECRET",

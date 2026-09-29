@@ -54,7 +54,7 @@ Colocar el archivo privado en `datasets/luna-benchmark/`; esta carpeta está ign
 }
 ```
 
-- Edad obligatoria 3, 4 o 5: el Jev existente la necesita; Luna podría omitir edad, pero esta matriz no puede clasificar sin ella.
+- Edad 3/4/5 cuando exista; null/ausente admitida en el benchmark por instrucción del usuario. No se estima edad. Luna omite el campo; Jev recibe null y usa las descripciones generales existentes de competencias del ciclo, sin desempeños/patrones de una edad. Ambos RAW/LUNA usan la misma regla. El panel original mantiene su validación de edad obligatoria.
 - Tipo `spontaneous` o `guided`. Contexto libre de hasta 500 caracteres. Observación de hasta 2000.
 - Para varias primarias aceptables, usar `acceptable_primary` y omitir `primary` si no se quiere una métrica estricta. No se cuentan esos casos en el denominador de primaria estricta, sí en primaria aceptable.
 - Abstención: `primary:null`, `should_abstain:true`. Privacidad real: `should_privacy_block:true`. `discussable:true` identifica una adjudicación discutible; varias primarias también la identifican.
@@ -112,6 +112,12 @@ Las tasas incluyen en su denominador los fallos y bloqueos falsos; no se descart
 `IMPROVED`: RAW incumple el gold y Luna lo satisface. `WORSENED`: lo contrario. `SAME`: ambos satisfacen o ambos incumplen; el detalle muestra los errores distintos. `UNDETERMINED`: falta un resultado o hay falla de proveedor. Satisfacer significa abstenerse cuando corresponde, bloquear privacidad cuando corresponde, o proponer primaria aceptable con el conjunto secundario esperado y sin extras. No interviene otro LLM.
 
 ## Costo y latencia
+
+### Compatibilidad de entrada sin edad (v1)
+
+Los clientes originales rechazaban edad ausente antes de llamar. Solo en el benchmark se admite null. PARALLEL usa `benchmark_allow_missing_age` en el config en memoria; criterios toman `ai_meaning`, límites y distinciones existentes, sin `ai_focus` ni patrones de edad. El catálogo es la unión de competencias seleccionables del ciclo, con las mismas exclusiones de aplicabilidad especial. CURRENT usa `jev-current-benchmark.mjs`, copia congelada del módulo original con solo imports relativos y guardia de edad null modificados. Una prueba compara todo el código restante byte por byte tras normalizar saltos de línea: instrucciones, privacidad, abstención y thresholds idénticos. Cuando hay edad conocida sigue usándose el módulo original.
+
+No se modificó `src/lib/` ni el prompt de Luna. Esta corrida describe la variante con edad desconocida, no demuestra paridad pedagógica con una ejecución que sí usa los patrones específicos de edad. `metadata.missing_age_policy` deja registrada la condición. Reversión: revertir el commit de compatibilidad sin borrar resultados privados.
 
 Tarifa Luna centralizada en `config/pricing-luna.json`, fuente oficial y fecha. Procesamiento estándar y contexto breve: input US$0.10/M, cached input US$0.01/M, output US$0.50/M; cache writes US$0.125/M cuando usage expone ese campo. Se calcula sobre tokens reales, descontando cached/writes del input común. Reasoning tokens son parte de output y no se cobran dos veces. No se estima usage ausente.
 

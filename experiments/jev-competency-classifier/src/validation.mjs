@@ -6,7 +6,7 @@ export function isFiniteProbability(value) { return typeof value === "number" &&
 export function validateInput(input, config = {}) {
   const maximumObservationCharacters = config.maximum_observation_characters ?? config.maximumObservationCharacters ?? 2000;
   assert(input && typeof input === "object", "La clasificación requiere un objeto de entrada.");
-  assert([3, 4, 5].includes(input.age), "La edad CNEB debe ser 3, 4 o 5 años.");
+  assert([3, 4, 5].includes(input.age) || (config.benchmark_allow_missing_age === true && input.age == null), "La edad CNEB debe ser 3, 4 o 5 años.");
   assert(typeof input.observation === "string" && input.observation.trim(), "La observación no puede estar vacía.");
   assert(input.observation.length <= maximumObservationCharacters, `La observación supera ${maximumObservationCharacters} caracteres.`);
   if (input.context != null) assert(CONTEXTS.has(input.context), "El contexto no es válido.");

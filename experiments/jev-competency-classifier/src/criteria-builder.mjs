@@ -5,11 +5,11 @@ import { validateInput } from "./validation.mjs";
 const fingerprint = (value) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
 const isApplicable = (card, input) => !SPECIAL_COMPETENCIES[card.id] || input.applicability[SPECIAL_COMPETENCIES[card.id]] === true;
 function compactCriteria(card, age) {
-  const ageData = card.ages[String(age)];
+  const ageData = card.ages[String(age)] ?? {};
   return { competencia: card.official_name, aplica_cuando: [card.ai_meaning, ageData.ai_focus, ...(ageData.observable_patterns ?? []).slice(0, 3)], no_aplica_cuando: (card.do_not_use_when ?? card.avoid_when ?? []).slice(0, 2) };
 }
 function enrichedCriteria(card, age, applicableIds, names) {
-  const ageData = card.ages[String(age)];
+  const ageData = card.ages[String(age)] ?? {};
   return {
     competencia: card.official_name,
     aplica_cuando: [card.ai_meaning, ageData.ai_focus, ...(ageData.observable_patterns ?? [])].filter(Boolean),
@@ -20,7 +20,7 @@ function enrichedCriteria(card, age, applicableIds, names) {
   };
 }
 function focusedCriteria(card, age, applicableIds, names) {
-  const ageData = card.ages[String(age)];
+  const ageData = card.ages[String(age)] ?? {};
   return {
     competencia: card.official_name,
     aplica_cuando: [card.ai_meaning, ageData.ai_focus, ...(ageData.observable_patterns ?? [])].filter(Boolean),
@@ -31,7 +31,8 @@ function focusedCriteria(card, age, applicableIds, names) {
 export function buildCriteria(knowledgeBase, rawInput, config = {}, profile = "compact") {
   if (!["compact", "enriched", "focused"].includes(profile)) throw new Error("El perfil de criterios debe ser compact, enriched o focused.");
   const input = validateInput(rawInput, config);
-  const applicable = knowledgeBase.cards.filter((card) => card.runtime_selectable_by_age[input.age] && isApplicable(card, input));
+  const applicable = knowledgeBase.cards.filter((card) => (input.age == null && config.benchmark_allow_missing_age === true ?
+    Object.values(card.runtime_selectable_by_age).some(Boolean) : card.runtime_selectable_by_age[input.age]) && isApplicable(card, input));
   const applicableIds = new Set(applicable.map((card) => card.id));
   const names = new Map(applicable.map((card) => [card.id, card.official_name]));
   const options = applicable.map((card) => ({ id: card.id, name: card.official_name, criteria: profile === "enriched" ? enrichedCriteria(card, input.age, applicableIds, names) : profile === "focused" ? focusedCriteria(card, input.age, applicableIds, names) : compactCriteria(card, input.age) }));

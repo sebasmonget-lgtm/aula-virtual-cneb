@@ -21,7 +21,8 @@ function ids(value, label) {
 export function normalizeBenchmarkCase(record, index, { knowledgeBase, config }) {
   if (!record || typeof record !== "object" || Array.isArray(record)) throw new Error(`Caso ${index + 1} inválido.`);
   if (typeof record.id !== "string" || !/^[A-Za-z0-9_-]{1,100}$/u.test(record.id)) throw new Error(`Caso ${index + 1}: ID inválido.`);
-  if (![3, 4, 5].includes(Number(record.age))) throw new Error(`${record.id}: Jev exige edad de 3, 4 o 5 años.`);
+  const age = record.age == null ? null : Number(record.age);
+  if (age != null && ![3, 4, 5].includes(age)) throw new Error(`${record.id}: edad debe ser null, 3, 4 o 5 años.`);
   if (!["spontaneous", "guided"].includes(record.type)) throw new Error(`${record.id}: type debe ser spontaneous o guided.`);
   if (typeof record.observation !== "string" || !record.observation.trim() || record.observation.length > 2000)
     throw new Error(`${record.id}: observación ausente o demasiado larga.`);
@@ -46,11 +47,12 @@ export function normalizeBenchmarkCase(record, index, { knowledgeBase, config })
     castellano_as_second_language: Boolean(record.applicability?.castellano_as_second_language ?? record.applicability?.castellano_l2),
     religion_applicable: Boolean(record.applicability?.religion_applicable ?? record.applicability?.religion),
   };
-  const plan = buildCriteria(knowledgeBase, { age: Number(record.age), observation: "validación", applicability }, config);
+  const plan = buildCriteria(knowledgeBase, { age, observation: "validación", applicability },
+    { ...config, benchmark_allow_missing_age: true });
   for (const id of [primary, ...acceptablePrimary, ...acceptableSecondary].filter(Boolean))
     if (!plan.optionIds.has(id) || id === "NO_CLASIFICABLE") throw new Error(`${record.id}: ${id} no es aplicable para esta edad.`);
   return {
-    id: record.id, age: Number(record.age), type: record.type, context: record.context ?? null,
+    id: record.id, age, type: record.type, context: record.context ?? null,
     raw_observation: record.observation, applicability,
     known_names: [...new Set([record.name, ...(record.known_names ?? [])].filter((name) => typeof name === "string" && name.trim()))],
     expected: { primary, acceptable_primary: acceptablePrimary, acceptable_secondary: acceptableSecondary,

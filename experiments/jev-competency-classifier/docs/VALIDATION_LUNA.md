@@ -2,6 +2,16 @@
 
 Fecha civil: 2026-09-28 (Lima). Worktree y rama independientes `codex/jev-luna-benchmark`; base y etiqueta en [BENCHMARK_LUNA.md](../BENCHMARK_LUNA.md).
 
+## Gold v1 sin edad: preparación (2026-09-28)
+
+Por instrucción explícita del usuario se importaron los 28 casos exactamente, sin añadir edad. Copia privada `datasets/luna-benchmark/ayni_jev_gold_v1.jsonl`: SHA-256 idéntica al original `c8dcf899eaa4a7d15d6bee414a56e3f575f39bb81e38663766c83a52e4c483ef`. Mapping local de 9 alias validado contra la KB v4.1; sin cambiar adjudicación gold ni observaciones. Dos casos se bloquean por la privacidad original; se conservan en denominadores.
+
+Compatibilidad mínima solo en experimento: null-age opt-in en validador local y catálogo general del ciclo; snapshot CURRENT con imports relativos y guardia null diferentes, resto exacto al original (prueba de igualdad completa). Nada editado en Ayni ni en textos de instrucciones, thresholds, privacidad o abstención. Luna ya omitía edad ausente; su archivo no se cambió.
+
+Gates antes de proveedores: **43/43 pruebas PASS**; sintaxis JS **47 archivos PASS**; lint/ESLint **PASS**; build **PASS**. Pruebas nuevas de null en Jev/age omitida Luna, ausencia de patrones por edad, gold mutado sin cambiar ningún payload, snapshot original idéntico salvo adaptaciones mecánicas. Guardias de campos gold siguen activas en cada solicitud real.
+
+Vista previa real del dataset: 28 casos × 3 repeticiones, hasta 504 Jev + 84 Luna = 588 llamadas; USD 0.093156 orientativos. Corridas autorizadas: primero 3 casos × 1 repetición, luego 28 × 3 si schema/proveedores correctos; resultados pendientes en este checkpoint. No optimizar tras medir.
+
 ## Ampliación de costos (2026-09-28)
 
 Se añadió postprocesamiento de costos, sin modificar solicitudes de inferencia, modelos, umbrales, gold ni arquitectura de los cuatro brazos. Configuración mensual: `config/cost-scenarios.json`; precios siguen en los dos archivos existentes y se congelan en metadata. `cli/analyze-luna-costs.mjs` analiza resultados guardados sin credenciales ni llamadas. Cada ejecución escribe un directorio nuevo.
@@ -71,7 +81,7 @@ Se reutilizaron las dependencias ya instaladas mediante junction de `node_module
 
 ## Límites
 
-- La edad es obligatoria para los métodos Jev anteriores.
+- Los métodos anteriores exigen edad; esta matriz admite null por el adaptador documentado arriba.
 - Jev nuevo harness: OpenRouter; TypeSafe directo queda disponible solo en el panel anterior.
 - Filtro de privacidad conservador, compartido antes de RAW/Luna; Luna no puede reparar los textos bloqueados.
 - CURRENT top-2 se deriva de las probabilidades originales Choice; PARALLEL del ranking noul. Son rankings distintos; interpretar la métrica dentro de cada método.
