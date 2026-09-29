@@ -28,6 +28,16 @@ const record = { id: "T1", age: 5, type: "spontaneous", context: "Contó materia
 const item = normalizeBenchmarkCase(record, 0, dependencies);
 const cleanValue = { clean_observation: "Contó tres vasos y dijo que faltaba uno.",
   brief_interpretation: "Relacionó la cantidad de vasos con los que necesitaba.", uncertainty: null };
+test("aliases del gold docente se normalizan sin cambiar el texto ni inferir edad", () => {
+  const aliases = { CANTIDAD: "MAT_CANTIDAD", ARTE: "COM_ARTE", CONVIVENCIA: "PS_CONVIVE",
+    ESCRITURA: "COM_ESCRITURA", FORMA_LOCALIZACION: "MAT_FORMA", INDAGACION: "CYT_INDAGA", MOTRICIDAD: "PSICO_MOTRICIDAD" };
+  for (const [label, id] of Object.entries(aliases)) {
+    const normalized = normalizeBenchmarkCase({ ...record, expected: { primary: label } }, 0, dependencies);
+    assert.equal(normalized.expected.primary, id);
+    assert.equal(normalized.raw_observation, record.observation);
+  }
+  assert.throws(() => normalizeBenchmarkCase({ ...record, age: undefined }, 0, dependencies), /exige edad/);
+});
 function mockJev(captured, chosen = "MAT_CANTIDAD") {
   return async (url, options) => {
     assert.equal(url, "https://openrouter.ai/api/alpha/decisions");

@@ -5,7 +5,10 @@ import { anonymousDecisionText } from "../../../src/lib/jev-competency-suggestio
 import { buildCriteria } from "./criteria-builder.mjs";
 import { assertNoBenchmarkLabels } from "./luna-inference-boundary.mjs";
 
-const ALIASES = { INDAGA: "CYT_INDAGA", COMUNICACION_ORAL: "COM_ORAL", LEE_TEXTOS: "COM_LECTURA" };
+// Gold label aliases are normalized locally; they never enter provider inputs.
+const ALIASES = { INDAGA: "CYT_INDAGA", INDAGACION: "CYT_INDAGA", COMUNICACION_ORAL: "COM_ORAL",
+  LEE_TEXTOS: "COM_LECTURA", CANTIDAD: "MAT_CANTIDAD", ARTE: "COM_ARTE", CONVIVENCIA: "PS_CONVIVE",
+  ESCRITURA: "COM_ESCRITURA", FORMA_LOCALIZACION: "MAT_FORMA", MOTRICIDAD: "PSICO_MOTRICIDAD" };
 const canonical = (id) => ALIASES[id] ?? id;
 
 function ids(value, label) {

@@ -32,7 +32,7 @@ function trackedFetch(fetchImpl, calls, pricing) {
         call.answers = body.answers ?? null;
         call.model_effective = body.model ?? null;
         call.cost_usd = jevCost(call.usage, pricing);
-        call.cost_source = Number.isFinite(call.usage?.cost) ? "provider" : call.cost_usd != null ? "price_config" : "unknown";
+        call.cost_source = Number.isFinite(call.usage?.cost) || Number.isFinite(call.usage?.cost_usd) ? "provider" : call.cost_usd != null ? "price_config" : "unknown";
       } catch { /* An invalid body still represents an attempted call with unknown billing. */ }
       return response;
     } catch (error) { call.status = "network_error"; throw error; }

@@ -1,0 +1,7 @@
+{
+  "currency": "USD",
+  "school_days_per_month": 20,
+  "observations_per_teacher_per_day": [10, 20, 40],
+  "teachers": [1, 10, 50, 100],
+  "projection_note": "Extrapolación lineal del costo medido por observación, con la misma mezcla de textos, bloqueos, tokens, caché y tarifas. No es facturación mensual real. Incluye solo inferencia Jev/Luna, sin impuestos, infraestructura, almacenamiento ni audio."
+}

@@ -10,6 +10,7 @@ import { loadKnowledgeBaseV4 } from "../../../src/lib/knowledge-base-v4.mjs";
 import { loadKnowledgeBase } from "./kb-loader.mjs";
 import { comparisonMarkdown, errorsMarkdown, summarizeBenchmark } from "./luna-benchmark-score.mjs";
 import { plannedCalls, runLunaBenchmark } from "./luna-benchmark-runner.mjs";
+import { analyzeBenchmarkCosts, costAnalysisMarkdown, monthlyCostCsv } from "./luna-benchmark-costs.mjs";
 
 async function atomicWrite(filename, contents) {
   const temporary = `${filename}.${randomBytes(4).toString("hex")}.tmp`;
@@ -93,11 +94,15 @@ export async function executeBenchmark(prepared, { maxLiveRequests, onProgress =
     planned_case_repetitions: selected.length * options.runs,
     completed_case_repetitions: results.reduce((n, run) => n + run.cases.length, 0),
     costs, status: stopped ? "stopped" : "completed", error: stopped };
+  const costAnalysis = analyzeBenchmarkCosts({ metadata, results, status: summary.status }, await loadJsonConfig("cost-scenarios.json"));
   await Promise.all([
     atomicWrite(path.join(directory, "raw-results.json"), `${JSON.stringify({ metadata, results, costs, status: summary.status, error: stopped }, null, 2)}\n`),
     atomicWrite(path.join(directory, "summary.json"), `${JSON.stringify(summary, null, 2)}\n`),
     atomicWrite(path.join(directory, "comparison.md"), comparisonMarkdown(metadata, results, summary)),
     atomicWrite(path.join(directory, "errors.md"), errorsMarkdown(results)),
+    atomicWrite(path.join(directory, "cost-analysis.json"), `${JSON.stringify(costAnalysis, null, 2)}\n`),
+    atomicWrite(path.join(directory, "cost-analysis.md"), costAnalysisMarkdown(costAnalysis)),
+    atomicWrite(path.join(directory, "monthly-costs.csv"), monthlyCostCsv(costAnalysis)),
   ]);
   return { directory, runId, summary };
 }

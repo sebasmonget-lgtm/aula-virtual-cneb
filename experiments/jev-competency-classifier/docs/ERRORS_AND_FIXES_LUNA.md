@@ -29,3 +29,12 @@
 **Solución.** Observar las respuestas en el límite HTTP y mantener billing independiente de la validación pedagógica/schema. Usar el cliente original de CURRENT, sin reemplazar validación ni prompts. Las fallas adicionales permanecen visibles y su comparación se marca incompleta.
 
 **Prevención.** Tests con usage real y answers inválidos, JSON Luna inválido y fallas parciales. Distinguir gasto conocido de llamadas con costo desconocido; no sumarlas como cero.
+# 2026-09-28 — Procedencia de costo Jev con cost_usd
+
+**Síntoma detectado en revisión.** El monto `usage.cost_usd` podía calcularse correctamente y quedar marcado `price_config`, aunque había sido informado por el proveedor.
+
+**Causa raíz.** La selección de monto admitía `cost_usd` y `cost`, pero la marca de procedencia solo comprobaba `cost`.
+
+**Corrección validada.** La marca admite ambos campos. El análisis ampliado determina procedencia desde usage original y separa proveedor/tarifa/desconocido; 41/41 pruebas, sintaxis, lint y build PASS. No se repitieron llamadas ni se alteró el monto guardado del smoke.
+
+**Prevención.** Conservar usage completo por llamada y derivar procedencia de los mismos campos usados para seleccionar el monto.

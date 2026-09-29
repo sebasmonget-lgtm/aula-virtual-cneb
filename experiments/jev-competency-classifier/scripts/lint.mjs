@@ -6,7 +6,7 @@ import { ESLint } from "eslint";
 const sourceFiles = ["src/typesafe-client.mjs", "src/jev-classifier.mjs", "src/local-server.mjs", "cli/benchmark.mjs",
   "src/luna-client.mjs", "src/luna-benchmark-adapters.mjs", "src/luna-benchmark-job.mjs",
   "src/luna-benchmark-runner.mjs", "src/luna-benchmark-dataset.mjs", "src/luna-benchmark-score.mjs",
-  "src/luna-inference-boundary.mjs", "cli/benchmark-luna.mjs", "public/benchmark.js"];
+  "src/luna-inference-boundary.mjs", "src/luna-benchmark-costs.mjs", "cli/analyze-luna-costs.mjs", "cli/benchmark-luna.mjs", "public/benchmark.js"];
 const forbidden = [/console\.log\([^)]*TYPESAFE_API_KEY/, /authorization:\s*["'`]Bearer\s+[A-Za-z0-9]/, /apiKey:\s*["'`][^"'`]/];
 for (const relativePath of sourceFiles) {
   const contents = await readFile(path.join(EXPERIMENT_ROOT, relativePath), "utf8");
@@ -20,7 +20,7 @@ const eslint = new ESLint({ cwd: EXPERIMENT_ROOT, overrideConfigFile: true, over
   rules: { "no-unused-vars": ["error", { argsIgnorePattern: "^_" }], "no-constant-condition": "error",
     "no-dupe-keys": "error", "valid-typeof": "error" },
 } });
-const results = await eslint.lintFiles([...sourceFiles, "tests/luna-benchmark.test.mjs"]);
+const results = await eslint.lintFiles([...sourceFiles, "tests/luna-benchmark.test.mjs", "tests/luna-benchmark-costs.test.mjs"]);
 const formatter = await eslint.loadFormatter("stylish");
 const output = formatter.format(results);
 if (output) console.log(output);

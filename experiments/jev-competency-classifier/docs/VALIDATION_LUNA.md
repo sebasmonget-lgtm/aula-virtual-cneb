@@ -2,6 +2,18 @@
 
 Fecha civil: 2026-09-28 (Lima). Worktree y rama independientes `codex/jev-luna-benchmark`; base y etiqueta en [BENCHMARK_LUNA.md](../BENCHMARK_LUNA.md).
 
+## Ampliación de costos (2026-09-28)
+
+Se añadió postprocesamiento de costos, sin modificar solicitudes de inferencia, modelos, umbrales, gold ni arquitectura de los cuatro brazos. Configuración mensual: `config/cost-scenarios.json`; precios siguen en los dos archivos existentes y se congelan en metadata. `cli/analyze-luna-costs.mjs` analiza resultados guardados sin credenciales ni llamadas. Cada ejecución escribe un directorio nuevo.
+
+Validación ejecutada: **41/41 pruebas PASS**, `typecheck` **PASS (46 archivos, sintaxis JS)**, lint con ESLint **PASS**, build **PASS**. Nuevas pruebas verifican costo físico compartido frente a atribución por brazo, unknown sin reemplazar por cero, tarifa/proveedor separados, 12 escenarios, incremento/eficiencia, bloqueos sin llamadas, brazo ausente y aliases del gold sin inferir edad. Las pruebas de equivalencia exacta RAW y leakage anteriores siguen pasando.
+
+Prueba funcional: el CLI de costos procesó el `raw-results.json` del smoke anterior en dos directorios distintos, conservando el gasto físico USD **0.002025826** y sin nuevas llamadas pagadas. Informe final en `results/2026-09-29T01-48-37-390Z-78894070/cost-review-2026-09-29T02-46-32-012Z-cfd16f/`: `cost-analysis.md`, JSON con ledger y `monthly-costs.csv`. Las cifras por brazo y la suma física coinciden con usage y el reporte anterior. En esa plantilla, PARALLEL_RAW minimiza USD/clasificación correcta; no se generaliza al gold del usuario.
+
+Dataset aportado: `C:/Users/ASUS/Documents/ayni_jev_gold_v1.jsonl`, 28 casos, SHA-256 `c8dcf899eaa4a7d15d6bee414a56e3f575f39bb81e38663766c83a52e4c483ef`. Archivo original intacto; los 28 carecen de edad. Se solicitó ese dato al usuario y no se ejecutó el benchmark del gold ni se supuso edad. Sus etiquetas se tratan como datos docentes, no como instrucciones ni objetivos para modificar prompts.
+
+Rollback de la ampliación: revertir su commit vuelve al reporte previo; los resultados ignorados se conservan. No hay migración, escritura en BD, despliegue ni cambio de configuración Ayni.
+
 ## Archivos del cambio
 
 Todo el diff versionado pertenece a `experiments/jev-competency-classifier/`.

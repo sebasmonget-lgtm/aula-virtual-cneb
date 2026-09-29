@@ -59,7 +59,7 @@ Colocar el archivo privado en `datasets/luna-benchmark/`; esta carpeta está ign
 - Para varias primarias aceptables, usar `acceptable_primary` y omitir `primary` si no se quiere una métrica estricta. No se cuentan esos casos en el denominador de primaria estricta, sí en primaria aceptable.
 - Abstención: `primary:null`, `should_abstain:true`. Privacidad real: `should_privacy_block:true`. `discussable:true` identifica una adjudicación discutible; varias primarias también la identifican.
 - Para secundaria, listar los IDs en `acceptable_secondary`. Se informa cuántas propuestas coinciden y cuántas quedan fuera. El exact match exige primaria aceptable más **todo el conjunto secundario enumerado**, sin extras. Si las secundarias son solo posibilidades no exhaustivas, interpretar el exact match con esa limitación; cerrar etiquetas con docentes antes de evaluar.
-- IDs estables: `COM_ORAL`, `COM_LECTURA`, `CYT_INDAGA`, `MAT_CANTIDAD`, etc. Se aceptan los alias del ejemplo del pedido: `COMUNICACION_ORAL`, `LEE_TEXTOS`, `INDAGA`; se convierten a sus IDs canónicos antes del scoring. Se rechazan etiquetas no aplicables por edad/aplicabilidad.
+- IDs estables: `COM_ORAL`, `COM_LECTURA`, `CYT_INDAGA`, `MAT_CANTIDAD`, etc. Se aceptan `COMUNICACION_ORAL`, `LEE_TEXTOS`, `INDAGA` y los alias del gold v1: `CANTIDAD`, `ARTE`, `CONVIVENCIA`, `ESCRITURA`, `FORMA_LOCALIZACION`, `INDAGACION`, `MOTRICIDAD`. Se convierten localmente a sus IDs canónicos antes del scoring, nunca se envían al proveedor. Se rechazan etiquetas no aplicables por edad/aplicabilidad. No se infiere edad.
 - Compatibilidad: `expected_competency_id` y `acceptable_secondary_ids` anteriores. Se puede agregar `name` o `known_names` para neutralizar nombres presentes en la observación; esa metadata nunca se envía. No se conservan metadata ajenas innecesarias.
 
 La plantilla es sintética y no es un gold adjudicado por especialistas. No se ajustaron prompts mirando sus respuestas.
@@ -102,6 +102,9 @@ La sección **Benchmark Luna** permite elegir dataset, métodos, activar Luna y 
 - `summary.json`: agregado por brazo, deltas, repetición individual, versiones/precios, completados frente a previstos.
 - `comparison.md`: tabla, mejorados/empeorados/iguales/incompletos y todos los casos.
 - `errors.md`: fallas de API y diferencias respecto del gold, incluidas las desfavorables.
+- `cost-analysis.md`: costos completos por brazo, proveedores/tokens, incrementos, eficiencia y 12 escenarios mensuales.
+- `cost-analysis.json`: cifras sin redondear, procedencia y ledger por llamada con usage original. Luna física compartida se cuenta una vez.
+- `monthly-costs.csv`: escenarios mensuales para 1/10/50/100 profesoras y 10/20/40 observaciones diarias por profesora.
 - `runs/run-1.json`, `run-2.json`, etc.: cada repetición separada.
 
 Las tasas incluyen en su denominador los fallos y bloqueos falsos; no se descartan para mejorar resultados. Se separan primaria estricta, primaria aceptable, top-2, exact match, false abstention, overclassification, privacidad TP/FP, secundarias correctas/incorrectas y casos discutibles. Matriz de confusión cuando existen al menos 10 observaciones distintas; repetir un caso no aumenta ese tamaño.
@@ -117,6 +120,20 @@ Jev: primero `usage.cost`, después tarifa de `config/pricing-openrouter.json` a
 Por brazo: `cost_luna_usd`, `cost_jev_usd`, `total_cost_usd`, número de llamadas Jev y `total_latency_ms`. CURRENT mide duración real de sus dos llamadas concurrentes, no la suma; Luna se añade a esa duración secuencial. La comparación por método atribuye una Luna completa a cada brazo Luna. El gasto real conjunto solo cuenta **una** Luna compartida por caso/repetición. Los costos conocidos y el número de llamadas con costo desconocido se reportan por separado.
 
 También se informan costo medio, por 100/1000, por clasificación correcta, costo incremental y costo adicional por error corregido. Las proyecciones usan costos observados en esa corrida, incluyendo los bloqueos sin costo. El presupuesto previo usa `benchmark-planning.json`: promedio histórico Jev y hipótesis explícita de tokens Luna; no es una predicción precisa ni reemplaza usage real.
+
+### Análisis ampliado sin nuevas llamadas
+
+```powershell
+npm.cmd run costs:luna -- results/<run-id>/raw-results.json
+```
+
+Genera `cost-review-<timestamp>-<id>/` junto al resultado original sin sobrescribirlo. Usa la tarifa congelada en metadata de la corrida; no revaloriza el pasado con precios nuevos. `config/cost-scenarios.json` centraliza días lectivos, profesoras y observaciones/día. El módulo es postprocesamiento y no invoca proveedores.
+
+El informe distingue importe informado por Jev, estimación de Jev cuando falta ese importe y valoración tarifaria de tokens reales Luna (OpenAI no devuelve aquí un importe facturado). Un total con llamadas sin costo sigue desconocido; el subtotal conocido se conserva aparte. No sumar los cuatro totales de adopción: duplicaría la Luna compartida.
+
+Costo por clasificación correcta completa = gasto del brazo / casos con primaria aceptable y secundarias exactas; abstenciones y bloqueos no cuentan como clasificaciones. También se informa USD por primaria aceptable y accuracy de decisión completa (incluye abstención/privacidad). Errores corregidos netos descuentan casos empeorados; se conserva el costo por mejora bruta pedido. La ganancia pp/USD declara la exposición del benchmark y ofrece una normalización a 1,000 observaciones. El criterio económico de selección es menor costo por clasificación correcta completa, acompañado de frontera de Pareto costo/accuracy. Una corrida detenida no produce recomendación de ganador.
+
+La proyección mensual es una estimación lineal con la mezcla de casos/bloqueos, tokens, caché y precios observados. No incluye impuestos, hosting, almacenamiento ni audio. Las repeticiones no triplican el costo operativo por observación: se divide por el número de casos-repetición ejecutados.
 
 ## Validación y límites
 
