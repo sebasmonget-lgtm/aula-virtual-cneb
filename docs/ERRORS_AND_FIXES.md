@@ -1,5 +1,15 @@
 # Errores y soluciones
 
+## 2026-09-29 — QA diagnóstico sin sugerencias de Jev
+
+**Síntoma.** Las 12 observaciones diagnósticas del aula ficticia contaban para «Observar» (6/6), pero cada tarjeta solo ofrecía elegir una competencia manualmente.
+
+**Causa raíz.** La importación correctiva usó `classifierEnabled=false`, dejando las filas con `classifier_status='disabled'` y sin versión V2.4. El flujo V2.4 solo procesa automáticamente filas propias pendientes.
+
+**Solución validada.** Tras respaldar PGlite y comprobar los 12 IDs sin decisiones docentes, se marcaron únicamente esas filas como pendientes `CURRENT_V2_4_RAW`. La cola existente produjo 8 sugerencias y 4 abstenciones, visibles en la UI; ninguna se confirmó. Entrevistas 6/6, observados 6/6, Resumir pendiente y ordinarias 0. Ver `docs/qa/six-students-diagnostic-correction-2026-09-29.md`.
+
+**Prevención.** Cuando un QA debe probar recomendaciones, cargar la observación mediante el flujo diagnóstico con V2.4 activo y comprobar `classifier_status` además del contador de alumnos observados.
+
 ## 2026-09-29 — Dataset QA de 5 años cargado en observaciones ordinarias
 
 **Síntoma.** Había seis entrevistas confirmadas y 24 observaciones ordinarias, pero Diagnóstico → «2. Observar» mostraba 0/6.

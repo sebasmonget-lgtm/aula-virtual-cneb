@@ -1,5 +1,7 @@
 # Corrección QA: observaciones del Diagnóstico inicial, aula de 5 años
 
+> **Seguimiento de sugerencias, 2026-09-29:** La primera importación dejó las 12 notas con `classifier_status='disabled'`, por lo que la interfaz no mostró recomendaciones. Se corrigió únicamente el estado de esas 12 filas a `CURRENT_V2_4_RAW` pendiente y el flujo existente de Jev las procesó. Resultado: 8 `suggested`, 4 `abstained`, 0 decisiones docentes. Las seis entrevistas, los 12 textos originales, el 6/6 de Observar y el 0 de ordinarias permanecen. Ver sección final.
+
 Fecha: 2026-09-29. Aula local CELESTE, ID `92a0659e-ebdd-40da-9ab9-6a34542392fe`. Se corrigió el destino de las observaciones ficticias sin cambiar lógica, prompts, modelos ni migraciones.
 
 ## Investigación previa
@@ -35,3 +37,18 @@ El script de corrección y su manifiesto de 12 IDs quedan en `.local/qa-six-stud
 - UI local en `http://localhost:5174/`: «Conocer 6/6 entrevistas», «Observar 6/6 niños», «Resumir Pendiente». En «Observación espontánea» se ven las 12 notas recientes.
 - No se llamó a Jev, Assessment ni generación de síntesis durante la corrección.
 - Pruebas automatizadas relacionadas: 20/20 PASS (`diagnostic-review-service`, `diagnostic-review-progress`, `diagnostic-sources-v4`). `npx tsc --noEmit`, `npm run lint` y `npm run build`: PASS. Build emitió solo avisos de tamaño de chunk y clasificación dinámica de ruta.
+
+## Seguimiento: sugerencias V2.4
+
+La ausencia inicial de recomendaciones fue causada por la opción `classifierEnabled=false` usada en el script de importación, no por un fallo de Jev. Se respaldó de nuevo PGlite en `.local/qa-backups/before-jev-suggestions-2026-09-29/` (1431 archivos, 62 505 055 bytes). Se verificaron los 12 IDs del manifiesto y que ninguno tenía clasificación docente; una transacción marcó solo esas 12 filas como pendientes para `CURRENT_V2_4_RAW`. Al reiniciar la API con el clasificador V2.4 activo, su cola existente produjo las sugerencias. No se cambió el texto RAW, el modelo, prompt ni umbrales.
+
+| Alumno | O1 | O2 |
+| --- | --- | --- |
+| Valentina | `COM_ORAL` sugerida | Abstención |
+| Mateo | `MAT_CANTIDAD` sugerida | Abstención |
+| Camila | Abstención | Abstención |
+| Thiago | `CYT_INDAGA` sugerida | `MAT_CANTIDAD` sugerida |
+| Luciana | `COM_ESCRITURA` sugerida | `PS_CONVIVE` sugerida |
+| Diego | `MAT_FORMA` sugerida | `MAT_FORMA` sugerida |
+
+Comprobación por API y UI: 12 notas, 8 sugerencias visibles, 4 mensajes de evidencia insuficiente, 0 confirmaciones docentes, Conocer 6/6, Observar 6/6, Resumir pendiente y 0 observaciones ordinarias. Las sugerencias requieren revisión de la docente; no son evaluaciones ni niveles de logro.
