@@ -102,7 +102,7 @@ export function currentDevMarkdown(metadata, summary, results) {
     ["Jev", "jev_cost_usd", usd], ["Luna", "luna_cost_usd", usd], ["Latencia ms", "latency_average_ms", (n) => n?.toFixed(0) ?? "—"],
     ["Evidencia sugerida no verificada", "ungrounded_suggested_evidence", String]];
   const lines = ["# CURRENT DEV: cuatro variantes", "", `Dataset: ${metadata.dataset}; SHA-256: ${metadata.dataset_sha256}.`,
-    "Privacidad corregida común a A/B/C/D. V1 conserva su prompt, pero no equivale al filtro del baseline histórico. El gold fue adjudicado por una persona; no se usó un LLM evaluador. Priorizar primaria aceptable y errores de abstención/privacidad; exact decision es secundaria.", "",
+    `Privacidad corregida común a A/B/C/D. V1 conserva su prompt, pero no equivale al filtro del baseline histórico. Origen del gold: ${metadata.adjudication?.gold_source ?? "unspecified"}. Codex adjudica DEV solo con autorización expresa; no representa gold humano independiente. Jev/Luna nunca adjudican las etiquetas. Priorizar primaria aceptable y errores de abstención/privacidad; exact decision es secundaria.`, "",
     "| Métrica | V1 RAW | V2 RAW | V2 Luna CLEAN | V2 Luna INTERPRET |", "|---|---:|---:|---:|---:|",
     ...fields.map(([label, key, format]) => `| ${label} | ${DEV_ARMS.map((arm) => format(summary.arms[arm][key])).join(" | ")} |`), "",
     "## Incrementos frente a V1 RAW", "", "```json", JSON.stringify(summary.deltas, null, 2), "```", "",

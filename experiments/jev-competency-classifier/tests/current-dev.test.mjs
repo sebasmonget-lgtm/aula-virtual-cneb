@@ -105,6 +105,17 @@ test("V2 dos llamadas, thresholds originales, evidencia tipada y secundarias ind
     apiKey: "mock", fetchImpl: mockJev([], { confidence: .5, sufficiency: .7 }) })(input);
   assert.equal(boundary.primary, "MAT_CANTIDAD");
 });
+test("Codex se declara como gold DEV provisional solo con autorización expresa", async () => {
+  const f = await fixture(), manifest = JSON.parse(await readFile(f.adjudicationFile, "utf8"));
+  Object.assign(manifest, { gold_source: "codex_rubric", reviewed_by: "Codex" });
+  await writeFile(f.adjudicationFile, JSON.stringify(manifest));
+  const pending = await prepareCurrentDev({ dataset: f.dataset, adjudicationFile: f.adjudicationFile });
+  assert.equal(pending.loaded.adjudicated, false);
+  Object.assign(manifest, { authorization: "explicit_user_request", authorization_reference: "test-only-authorization" });
+  await writeFile(f.adjudicationFile, JSON.stringify(manifest));
+  const allowed = await prepareCurrentDev({ dataset: f.dataset, adjudicationFile: f.adjudicationFile });
+  assert.equal(allowed.loaded.review_status, "codex_rubric_adjudicated_dev");
+});
 test("gold y metadatos nunca llegan al proveedor; INTERPRET no suministra frases de evidencia", () => {
   const item = { ...preview.loaded.cases[0], expected: { primary: "GOLD_SENTINEL" }, coverage_tags: ["TAG_SENTINEL"], reviewer: "PERSON_SENTINEL" };
   const safe = devInferenceInput(item), plan = v2Requests({ input: { ...safe, observation: input.observation + "\nINTERPRETATION_SENTINEL", observable_text: input.observation }, kb: preview.kb, prompt: preview.prompt });

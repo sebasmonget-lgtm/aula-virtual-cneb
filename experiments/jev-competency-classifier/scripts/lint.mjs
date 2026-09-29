@@ -11,6 +11,7 @@ const forbidden = [/console\.log\([^)]*TYPESAFE_API_KEY/, /authorization:\s*["'`
 sourceFiles.push("src/current-dev-privacy.mjs", "src/current-dev-dataset.mjs", "src/current-dev-job.mjs",
   "src/current-dev-report.mjs", "src/current-v2.mjs", "src/luna-clean-client.mjs", "cli/benchmark-current-dev.mjs",
   "scripts/create-current-dev-proposal.mjs", "public/current-dev-review.js");
+sourceFiles.push("scripts/adjudicate-current-dev.mjs", "scripts/study-credentials.mjs", "scripts/run-current-study.mjs");
 for (const relativePath of sourceFiles) {
   const contents = await readFile(path.join(EXPERIMENT_ROOT, relativePath), "utf8");
   for (const pattern of forbidden) if (pattern.test(contents)) throw new Error(`Regla de secretos incumplida en ${relativePath}.`);

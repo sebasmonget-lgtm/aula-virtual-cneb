@@ -1,0 +1,13 @@
+{
+  "status": "adjudicated",
+  "gold_source": "codex_rubric",
+  "reviewed_by": "Codex",
+  "reviewed_at": "2026-09-29T04:50:25.555Z",
+  "authorization": "explicit_user_request",
+  "authorization_reference": "d41b502e-3a19-45d5-8002-a071e7ef4d8c/Pasted text.txt",
+  "dataset_sha256": "3cc4f1f0cc09763bfae90f002d270dfc62d9597df0583e581283b143818ff320",
+  "case_count": 80,
+  "proposal_version": "dev-proposal-v1",
+  "independent_human_gold": false,
+  "rubric": "User supplied rubric; observations read before Jev/Luna; secondary evidence conservative; frozen test excluded."
+}

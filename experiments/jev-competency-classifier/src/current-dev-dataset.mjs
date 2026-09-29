@@ -15,7 +15,9 @@ export async function loadCurrentDevDataset(filename, { knowledgeBase, config, a
   if (!records.length) throw new Error("Dev set vacío.");
   let manifest = null;
   if (adjudicationFile) manifest = JSON.parse(await readFile(adjudicationFile, "utf8"));
-  const approved = Boolean(manifest?.status === "adjudicated" && manifest?.gold_source === "human" &&
+  const sourceApproved = manifest?.gold_source === "human" || (manifest?.gold_source === "codex_rubric" &&
+    manifest?.reviewed_by === "Codex" && manifest?.authorization === "explicit_user_request" && typeof manifest?.authorization_reference === "string");
+  const approved = Boolean(manifest?.status === "adjudicated" && sourceApproved &&
     typeof manifest.reviewed_by === "string" && manifest.reviewed_by.trim() &&
     Number.isFinite(Date.parse(manifest.reviewed_at)) && manifest.dataset_sha256 === fingerprint && manifest.case_count === records.length);
   const cases = records.map((record, index) => {
@@ -28,7 +30,7 @@ export async function loadCurrentDevDataset(filename, { knowledgeBase, config, a
     if (approved) {
       if (record.adjudication?.status !== "adjudicated" || typeof record.adjudication.reviewed_by !== "string" || !record.adjudication.reviewed_by.trim() ||
         !record.expected || typeof record.expected.should_abstain !== "boolean" || typeof record.expected.should_privacy_block !== "boolean")
-        throw new Error(`${record.id}: falta adjudicación humana explícita.`);
+        throw new Error(`${record.id}: falta adjudicación humana explícita o adjudicación Codex autorizada.`);
       return { ...normalizeBenchmarkCase(record, index, { knowledgeBase, config }), coverage_tags: record.coverage_tags ?? [] };
     }
     return { id: record.id, age: record.age ?? null, type: record.type, context: record.context ?? null,
@@ -38,7 +40,7 @@ export async function loadCurrentDevDataset(filename, { knowledgeBase, config, a
   });
   if (new Set(cases.map((item) => item.id)).size !== cases.length) throw new Error("IDs DEV duplicados.");
   return { filename, fingerprint, cases, adjudicated: approved, manifest,
-    review_status: approved ? "human_adjudicated" : "pending_human_adjudication" };
+    review_status: approved ? manifest.gold_source === "human" ? "human_adjudicated" : "codex_rubric_adjudicated_dev" : "pending_human_adjudication" };
 }
 
 export function devInferenceInput(item) {
