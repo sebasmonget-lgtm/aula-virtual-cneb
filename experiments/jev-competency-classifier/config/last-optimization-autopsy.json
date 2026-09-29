@@ -15,9 +15,9 @@
   },
   "MC-03": {
     "causes": ["gold_ambiguous", "anonymizer_damage", "luna_distortion", "jev_false_abstention"],
-    "analysis": "Una se oculta como posible nombre y Marci se neutraliza correctamente. CLEAN elimina el segundo sujeto y reúne tomar el pañuelo y molestarse en La niña: se pierde quién realizó cada acción. Elección Oral 0.47 y suficiencia 0.57 bloquean la sugerencia. La protesta y solución individual pueden relacionarse con Convivencia, Identidad u Oral, pero no describen un acuerdo ni negociación explícita. No afirmar que el error provenga únicamente de Jev.",
+    "analysis": "Una se oculta como posible nombre y el nombre propio se neutraliza correctamente. CLEAN elimina el segundo sujeto y reúne tomar el pañuelo y molestarse en La niña: se pierde quién realizó cada acción. Elección Oral 0.47 y suficiencia 0.57 bloquean la sugerencia. La protesta y solución individual pueden relacionarse con Convivencia, Identidad u Oral, pero no describen un acuerdo ni negociación explícita. No afirmar que el error provenga únicamente de Jev.",
     "reasonable_alternative_primary": ["COM_ORAL", "PS_IDENTIDAD"],
-    "anonymizer": {"lost_verbs": [], "lost_subjects": ["Una (determinante de niña); Marci sustituido por [persona]"], "changed_relations": false, "lost_pedagogical_context": false, "placeholder_semantic_damage": true},
+    "anonymizer": {"lost_verbs": [], "lost_subjects": ["Una (determinante de niña); el nombre propio sustituido por [persona]"], "changed_relations": false, "lost_pedagogical_context": false, "placeholder_semantic_damage": true},
     "gold_review": "Convivencia histórica discutible; no consta respuesta a un interlocutor ni negociación. La salida CLEAN introduce además una ambigüedad de sujetos que no estaba en el original."
   },
   "MN-03": {
@@ -43,9 +43,9 @@
   },
   "TE-02": {
     "causes": ["gold_ambiguous", "anonymizer_damage", "jev_false_abstention", "prompt_rule_conflict"],
-    "analysis": "Con se oculta y Tendon se neutraliza; CLEAN interpreta una coordinación de dos sujetos, plausible pero no textual. Suficiencia 0.94 y confianza 0.41 en Convivencia producen abstención por dispersión frente a Forma 0.41. El dibujo de la curva representa espacio para comunicar una propuesta de juego. Forma principal defendible; Convivencia también por propuesta ante desacuerdo. Usar el dibujo como solución compartida no exige completar el acuerdo.",
+    "analysis": "Con se oculta y el nombre propio se neutraliza; CLEAN interpreta una coordinación de dos sujetos, plausible pero no textual. Suficiencia 0.94 y confianza 0.41 en Convivencia producen abstención por dispersión frente a Forma 0.41. El dibujo de la curva representa espacio para comunicar una propuesta de juego. Forma principal defendible; Convivencia también por propuesta ante desacuerdo. Usar el dibujo como solución compartida no exige completar el acuerdo.",
     "reasonable_alternative_primary": ["PS_CONVIVE"],
-    "anonymizer": {"lost_verbs": [], "lost_subjects": ["Tendon sustituido correctamente por [persona]"], "changed_relations": true, "lost_pedagogical_context": false, "placeholder_semantic_damage": true},
+    "anonymizer": {"lost_verbs": [], "lost_subjects": ["el nombre propio sustituido correctamente por [persona]"], "changed_relations": true, "lost_pedagogical_context": false, "placeholder_semantic_damage": true},
     "gold_review": "Forma/Convivencia razonables según foco. Secundaria de convivencia puede ser la misma conducta comunicativa y no otra independiente. Conservar gold sin forzar dos etiquetas."
   },
   "TE-03": {

@@ -1,0 +1,3 @@
+# These freezes verify exact bytes across Windows Git checkouts.
+current-v2-4-prompt.json text eol=lf
+last-threshold-dev.json text eol=lf

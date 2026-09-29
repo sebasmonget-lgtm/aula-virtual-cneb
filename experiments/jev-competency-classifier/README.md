@@ -95,3 +95,7 @@ La precisión de autoaceptación informa un intervalo Wilson del 95%; con muestr
 ## Límites actuales
 
 El resultado de una clasificación es una propuesta o una abstención. No es evaluación del niño, nivel de logro, conclusión pedagógica ni decisión que modifique Ayni. Los umbrales iniciales, incluido 0.82, se deben comparar con un golden revisado e independiente antes de cualquier integración.
+# Último intento V2.4 cerrado
+
+La fase final autorizada está en [LAST_OPTIMIZATION_FINAL.md](LAST_OPTIMIZATION_FINAL.md), con [40 casos para revisión](docs/last-optimization/ALL_40_CASES.md) y [threshold DEV offline](docs/LAST_THRESHOLD_DEV.md). TEST2 se ejecutó una sola vez: 324 llamadas, sin retry. La autopsia privada completa queda local en `LAST_OPTIMIZATION_ERROR_AUTOPSY.md`; no se publica en Git. RAW es preferible a CLEAN en esta muestra; recomendación: prueba supervisada, sin integración automática. No crear V2.5/V2.6 ni repetir TEST2. Los documentos anteriores describen fases históricas.
+

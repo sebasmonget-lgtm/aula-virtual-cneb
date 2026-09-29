@@ -31,3 +31,13 @@
 - Tratamiento: documentado en `docs/current-study/LUNA_INPUT_FAITHFULNESS.md`; prompts/filtro sin cambios. Se conserva el acierto contra gold y se informa por separado el riesgo de contenido y evidencia. No se declara corregido.
 - Verificación: comparación local de entrada efectiva, salida Luna y resultado del ledger; ningún modelo decide el gold. En DEV075/V2.1/r3 la sobreclasificación D tuvo interpretación null y no se atribuye a una frase inexistente.
 - Prevención pendiente: en una fase futura revisar conservación de hechos y citas con docentes; no promover automáticamente una puntuación sintética alta a registros reales.
+# Cierre del único V2.4 — 2026-09-29
+
+**Síntoma.** TEST1 V2.3 CLEAN tuvo ocho decisiones completas erróneas; algunas abstenciones tenían suficiencia alta. En TEST2, CLEAN volvió a abstenerse por confidence inferior a 0.50 en dos casos que RAW sí clasificó.
+
+**Causa observada.** Anonimizador de lista cerrada oculta verbos/conectores y puede crear falsos sujetos; CLEAN fusionó sujetos históricos y no garantiza conservación semántica. Gold histórico contiene ambigüedades y secundarias incompatibles con el criterio conservador. Son factores plausibles concurrentes, no causas aisladas mediante experimentos. Confidence y suficiencia son gates independientes: en DEV V2.3 bajar confidence offline de 0.50 a 0.45/0.40 no cambió ninguna salida porque las abstenciones restantes fallaban suficiencia 0.70.
+
+**Intervención validada.** Una sola corrección general de prompt V2.4, con prioridades fuente visual/lectura, proceso de indagación, propuesta de convivencia y secundarias independientes. Threshold 0.50 conservado y cerrado antes de TEST2. Cuatro brazos ×40×1, 324 intentos, cero fallos; V2.4 RAW 28/28 acceptable primary y 39/40 exact decision. Sin cambiar anonimizador ni Luna. CLEAN 26/28 y 37/40; no se corrigió después. 62 pruebas, lint, build y syntax/typecheck PASS.
+
+**Prevención / límites.** No inferir que formato JSON asegura fidelidad; no seleccionar threshold con TEST2 ni rellenar costo desconocido con cero. Mantener gold y freeze, conservar locks. La mejora V2.4 frente V2.3 depende de una primaria y pierde una secundaria; misma exact decision. No validar integración con un gold sintético creado por el propio autor. Cierre definitivo de prompt; recomendación de revisión docente supervisada, sin integración.
+

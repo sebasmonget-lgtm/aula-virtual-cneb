@@ -1,0 +1,4647 @@
+{
+  "completed_at": "2026-09-29T12:42:46.630Z",
+  "dataset_sha256": "a206defd4c8f07b9d435e977f9e4894346f07aff1f05a771f5d91e79955f058d",
+  "prompt_sha256": "271b4b8298a5b8c2132160f7514d69c45f8f59cf686aa2a2a2edd0892cbd0867",
+  "threshold": 0.5,
+  "summaries": {
+    "CURRENT_V1_RAW": {
+      "total": 40,
+      "primary_accuracy": 0.8571428571428571,
+      "acceptable_primary_accuracy": 0.8928571428571429,
+      "top2_accuracy": 1,
+      "exact_match": 0,
+      "denominators": {
+        "primary": 28,
+        "classified": 28,
+        "abstention": 8,
+        "exact": 2
+      },
+      "false_abstentions": 0,
+      "missed_abstentions_overclassification": 0,
+      "correct_abstentions": 8,
+      "privacy_true_positives": 4,
+      "privacy_false_positives": 0,
+      "missed_privacy_blocks": 0,
+      "additional_correct": 0,
+      "additional_incorrect": 2,
+      "discussable_cases": 0,
+      "errors_total": 6,
+      "correct_total": 34,
+      "provider_failures": 0,
+      "cost_usd": 0.008060556000000002,
+      "cost_per_observation_usd": 0.00020151390000000004,
+      "cost_per_100_usd": 0.020151390000000005,
+      "cost_per_1000_usd": 0.20151390000000005,
+      "cost_per_correct_usd": 0.00023707517647058828,
+      "correct_classifications": 22,
+      "cost_per_correct_classification_usd": 0.00036638890909090915,
+      "latency_average_ms": 338.325,
+      "confusion_matrix": {
+        "MAT_CANTIDAD": {
+          "MAT_CANTIDAD": 4
+        },
+        "COM_LECTURA": {
+          "COM_LECTURA": 2
+        },
+        "PS_CONVIVE": {
+          "PS_CONVIVE": 3
+        },
+        "CYT_INDAGA": {
+          "CYT_INDAGA": 3
+        },
+        "MAT_FORMA": {
+          "MAT_FORMA": 3
+        },
+        "COM_ESCRITURA": {
+          "COM_ESCRITURA": 2,
+          "COM_LECTURA": 1,
+          "PS_CONVIVE": 1
+        },
+        "COM_ORAL": {
+          "COM_ORAL": 2
+        },
+        "COM_ARTE": {
+          "COM_ARTE": 2,
+          "PSICO_MOTRICIDAD": 1,
+          "CYT_INDAGA": 1
+        },
+        "PSICO_MOTRICIDAD": {
+          "PSICO_MOTRICIDAD": 3
+        },
+        "NO_CLASIFICABLE": {
+          "NO_CLASIFICABLE": 8
+        },
+        "PRIVACY": {
+          "PRIVACY": 4
+        }
+      }
+    },
+    "CURRENT_V2_RAW": {
+      "total": 40,
+      "primary_accuracy": 0.9285714285714286,
+      "acceptable_primary_accuracy": 0.9642857142857143,
+      "top2_accuracy": 1,
+      "exact_match": 0.5,
+      "denominators": {
+        "primary": 28,
+        "classified": 28,
+        "abstention": 8,
+        "exact": 2
+      },
+      "false_abstentions": 1,
+      "missed_abstentions_overclassification": 0,
+      "correct_abstentions": 8,
+      "privacy_true_positives": 4,
+      "privacy_false_positives": 0,
+      "missed_privacy_blocks": 0,
+      "additional_correct": 1,
+      "additional_incorrect": 0,
+      "discussable_cases": 0,
+      "errors_total": 1,
+      "correct_total": 39,
+      "provider_failures": 0,
+      "cost_usd": 0.01178184,
+      "cost_per_observation_usd": 0.000294546,
+      "cost_per_100_usd": 0.0294546,
+      "cost_per_1000_usd": 0.29454600000000003,
+      "cost_per_correct_usd": 0.0003020984615384615,
+      "correct_classifications": 27,
+      "cost_per_correct_classification_usd": 0.0004363644444444444,
+      "latency_average_ms": 319.7,
+      "confusion_matrix": {
+        "MAT_CANTIDAD": {
+          "MAT_CANTIDAD": 4
+        },
+        "COM_LECTURA": {
+          "COM_LECTURA": 2
+        },
+        "PS_CONVIVE": {
+          "PS_CONVIVE": 3
+        },
+        "CYT_INDAGA": {
+          "CYT_INDAGA": 3
+        },
+        "MAT_FORMA": {
+          "MAT_FORMA": 3
+        },
+        "COM_ESCRITURA": {
+          "COM_ESCRITURA": 3,
+          "NO_CLASIFICABLE": 1
+        },
+        "COM_ORAL": {
+          "COM_ORAL": 2
+        },
+        "COM_ARTE": {
+          "COM_ARTE": 3,
+          "MAT_FORMA": 1
+        },
+        "PSICO_MOTRICIDAD": {
+          "PSICO_MOTRICIDAD": 3
+        },
+        "NO_CLASIFICABLE": {
+          "NO_CLASIFICABLE": 8
+        },
+        "PRIVACY": {
+          "PRIVACY": 4
+        }
+      }
+    },
+    "CURRENT_V2_4_RAW": {
+      "total": 40,
+      "primary_accuracy": 0.9642857142857143,
+      "acceptable_primary_accuracy": 1,
+      "top2_accuracy": 1,
+      "exact_match": 0.5,
+      "denominators": {
+        "primary": 28,
+        "classified": 28,
+        "abstention": 8,
+        "exact": 2
+      },
+      "false_abstentions": 0,
+      "missed_abstentions_overclassification": 0,
+      "correct_abstentions": 8,
+      "privacy_true_positives": 4,
+      "privacy_false_positives": 0,
+      "missed_privacy_blocks": 0,
+      "additional_correct": 1,
+      "additional_incorrect": 0,
+      "discussable_cases": 0,
+      "errors_total": 1,
+      "correct_total": 39,
+      "provider_failures": 0,
+      "cost_usd": 0.016538591999999998,
+      "cost_per_observation_usd": 0.00041346479999999994,
+      "cost_per_100_usd": 0.04134647999999999,
+      "cost_per_1000_usd": 0.41346479999999997,
+      "cost_per_correct_usd": 0.0004240664615384615,
+      "correct_classifications": 27,
+      "cost_per_correct_classification_usd": 0.0006125404444444443,
+      "latency_average_ms": 357.075,
+      "confusion_matrix": {
+        "MAT_CANTIDAD": {
+          "MAT_CANTIDAD": 4
+        },
+        "COM_LECTURA": {
+          "COM_LECTURA": 2
+        },
+        "PS_CONVIVE": {
+          "PS_CONVIVE": 3
+        },
+        "CYT_INDAGA": {
+          "CYT_INDAGA": 3
+        },
+        "MAT_FORMA": {
+          "MAT_FORMA": 3
+        },
+        "COM_ESCRITURA": {
+          "COM_ESCRITURA": 4
+        },
+        "COM_ORAL": {
+          "COM_ORAL": 2
+        },
+        "COM_ARTE": {
+          "COM_ARTE": 3,
+          "MAT_FORMA": 1
+        },
+        "PSICO_MOTRICIDAD": {
+          "PSICO_MOTRICIDAD": 3
+        },
+        "NO_CLASIFICABLE": {
+          "NO_CLASIFICABLE": 8
+        },
+        "PRIVACY": {
+          "PRIVACY": 4
+        }
+      }
+    },
+    "CURRENT_V2_4_LUNA_CLEAN": {
+      "total": 40,
+      "primary_accuracy": 0.8928571428571429,
+      "acceptable_primary_accuracy": 0.9285714285714286,
+      "top2_accuracy": 1,
+      "exact_match": 0,
+      "denominators": {
+        "primary": 28,
+        "classified": 28,
+        "abstention": 8,
+        "exact": 2
+      },
+      "false_abstentions": 2,
+      "missed_abstentions_overclassification": 0,
+      "correct_abstentions": 8,
+      "privacy_true_positives": 4,
+      "privacy_false_positives": 0,
+      "missed_privacy_blocks": 0,
+      "additional_correct": 0,
+      "additional_incorrect": 0,
+      "discussable_cases": 0,
+      "errors_total": 3,
+      "correct_total": 37,
+      "provider_failures": 0,
+      "cost_usd": 0.019525583999999995,
+      "cost_per_observation_usd": 0.0004881395999999999,
+      "cost_per_100_usd": 0.04881395999999999,
+      "cost_per_1000_usd": 0.4881395999999999,
+      "cost_per_correct_usd": 0.0005277184864864863,
+      "correct_classifications": 25,
+      "cost_per_correct_classification_usd": 0.0007810233599999998,
+      "latency_average_ms": 2324.775,
+      "confusion_matrix": {
+        "MAT_CANTIDAD": {
+          "MAT_CANTIDAD": 4
+        },
+        "COM_LECTURA": {
+          "COM_LECTURA": 2
+        },
+        "PS_CONVIVE": {
+          "PS_CONVIVE": 3
+        },
+        "CYT_INDAGA": {
+          "CYT_INDAGA": 3
+        },
+        "MAT_FORMA": {
+          "MAT_FORMA": 3
+        },
+        "COM_ESCRITURA": {
+          "COM_ESCRITURA": 3,
+          "NO_CLASIFICABLE": 1
+        },
+        "COM_ORAL": {
+          "COM_ORAL": 2
+        },
+        "COM_ARTE": {
+          "COM_ARTE": 2,
+          "NO_CLASIFICABLE": 1,
+          "MAT_FORMA": 1
+        },
+        "PSICO_MOTRICIDAD": {
+          "PSICO_MOTRICIDAD": 3
+        },
+        "NO_CLASIFICABLE": {
+          "NO_CLASIFICABLE": 8
+        },
+        "PRIVACY": {
+          "PRIVACY": 4
+        }
+      }
+    }
+  },
+  "analyses": {
+    "CURRENT_V1_RAW": {
+      "summary": {
+        "total": 40,
+        "primary_accuracy": 0.8571428571428571,
+        "acceptable_primary_accuracy": 0.8928571428571429,
+        "top2_accuracy": 1,
+        "exact_match": 0,
+        "denominators": {
+          "primary": 28,
+          "classified": 28,
+          "abstention": 8,
+          "exact": 2
+        },
+        "false_abstentions": 0,
+        "missed_abstentions_overclassification": 0,
+        "correct_abstentions": 8,
+        "privacy_true_positives": 4,
+        "privacy_false_positives": 0,
+        "missed_privacy_blocks": 0,
+        "additional_correct": 0,
+        "additional_incorrect": 2,
+        "discussable_cases": 0,
+        "errors_total": 6,
+        "correct_total": 34,
+        "provider_failures": 0,
+        "cost_usd": 0.008060556000000002,
+        "cost_per_observation_usd": 0.00020151390000000004,
+        "cost_per_100_usd": 0.020151390000000005,
+        "cost_per_1000_usd": 0.20151390000000005,
+        "cost_per_correct_usd": 0.00023707517647058828,
+        "correct_classifications": 22,
+        "cost_per_correct_classification_usd": 0.00036638890909090915,
+        "latency_average_ms": 338.325,
+        "confusion_matrix": {
+          "MAT_CANTIDAD": {
+            "MAT_CANTIDAD": 4
+          },
+          "COM_LECTURA": {
+            "COM_LECTURA": 2
+          },
+          "PS_CONVIVE": {
+            "PS_CONVIVE": 3
+          },
+          "CYT_INDAGA": {
+            "CYT_INDAGA": 3
+          },
+          "MAT_FORMA": {
+            "MAT_FORMA": 3
+          },
+          "COM_ESCRITURA": {
+            "COM_ESCRITURA": 2,
+            "COM_LECTURA": 1,
+            "PS_CONVIVE": 1
+          },
+          "COM_ORAL": {
+            "COM_ORAL": 2
+          },
+          "COM_ARTE": {
+            "COM_ARTE": 2,
+            "PSICO_MOTRICIDAD": 1,
+            "CYT_INDAGA": 1
+          },
+          "PSICO_MOTRICIDAD": {
+            "PSICO_MOTRICIDAD": 3
+          },
+          "NO_CLASIFICABLE": {
+            "NO_CLASIFICABLE": 8
+          },
+          "PRIVACY": {
+            "PRIVACY": 4
+          }
+        }
+      },
+      "unstable_primary_ids": [],
+      "unstable_output_ids": [],
+      "accuracy_by_run": [
+        0.8928571428571429
+      ],
+      "errors": [
+        {
+          "id": "TEST2_017",
+          "run": 1,
+          "category": "Arte",
+          "observation": "En la canción empezó a hacer pasos grandes y luego chiquitos, dijo así camina el gigante y así el ratón. Les mostró la parte del gigante otra vez porque quería que se viera pesado.",
+          "gold": {
+            "primary": "COM_ARTE",
+            "acceptable_primary": [
+              "PSICO_MOTRICIDAD"
+            ],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "response": {
+            "status": "review",
+            "primary": "PSICO_MOTRICIDAD",
+            "secondary": [
+              "MAT_FORMA"
+            ]
+          },
+          "evidence": null,
+          "reason": null,
+          "evidence_grounded": null,
+          "types": [
+            "unnecessary_secondary"
+          ],
+          "provider_error": null
+        },
+        {
+          "id": "TEST2_027",
+          "run": 1,
+          "category": "Escritura",
+          "observation": "Hizo tres marcas en el sobre de la foto, me dijo son para saber que es de mi hermano. Yo le pregunté qué decía y volvió a señalar las mismas marcas. No eran letras que yo reconociera.",
+          "gold": {
+            "primary": "COM_ESCRITURA",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "response": {
+            "status": "review",
+            "primary": "COM_LECTURA",
+            "secondary": []
+          },
+          "evidence": null,
+          "reason": null,
+          "evidence_grounded": null,
+          "types": [
+            "wrong_primary"
+          ],
+          "provider_error": null
+        },
+        {
+          "id": "TEST2_028",
+          "run": 1,
+          "category": "Arte",
+          "observation": "Con las cucharas empezó un sonido, luego paró y cambió a golpear despacito, decía es una lluvia pequeña. Invitó a escuchar cómo quedaba; la cucharita azul no sonaba mucho.",
+          "gold": {
+            "primary": "COM_ARTE",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "response": {
+            "status": "review",
+            "primary": "CYT_INDAGA",
+            "secondary": []
+          },
+          "evidence": null,
+          "reason": null,
+          "evidence_grounded": null,
+          "types": [
+            "wrong_primary"
+          ],
+          "provider_error": null
+        },
+        {
+          "id": "TEST2_038",
+          "run": 1,
+          "category": "Cantidad vs Forma",
+          "observation": "Repartió una ficha para cada bote y contó las que sobraban. Después, ya en la ronda sin los botes, contó que se había caído en la escalera de su casa y respondió cómo lo ayudó su tío. Ese relato duró un rato.",
+          "gold": {
+            "primary": "MAT_CANTIDAD",
+            "acceptable_primary": [],
+            "acceptable_secondary": [
+              "COM_ORAL"
+            ],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "response": {
+            "status": "review",
+            "primary": "MAT_CANTIDAD",
+            "secondary": []
+          },
+          "evidence": null,
+          "reason": null,
+          "evidence_grounded": null,
+          "types": [
+            "missed_secondary"
+          ],
+          "provider_error": null
+        },
+        {
+          "id": "TEST2_039",
+          "run": 1,
+          "category": "Escritura",
+          "observation": "Puso signos en una tarjeta y dijo esto es para invitar al juego. Más tarde discutieron por quién empezaba y propuso sacar una ficha cada uno para decidir, los dos aceptaron y lo hicieron. La tarjeta seguía sobre la mesa.",
+          "gold": {
+            "primary": "COM_ESCRITURA",
+            "acceptable_primary": [],
+            "acceptable_secondary": [
+              "PS_CONVIVE"
+            ],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "response": {
+            "status": "review",
+            "primary": "PS_CONVIVE",
+            "secondary": []
+          },
+          "evidence": null,
+          "reason": null,
+          "evidence_grounded": null,
+          "types": [
+            "wrong_primary",
+            "missed_secondary"
+          ],
+          "provider_error": null
+        },
+        {
+          "id": "TEST2_040",
+          "run": 1,
+          "category": "Arte",
+          "observation": "Armó algo con cajas: acá va la ventana y este es el techo, dijo. Cambió una caja de lugar para que se pareciera al castillo que imaginaba, no miraba un modelo. No sé si era más por la forma o por inventar la casa.",
+          "gold": {
+            "primary": "COM_ARTE",
+            "acceptable_primary": [
+              "MAT_FORMA"
+            ],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "response": {
+            "status": "review",
+            "primary": "COM_ARTE",
+            "secondary": [
+              "MAT_FORMA"
+            ]
+          },
+          "evidence": null,
+          "reason": null,
+          "evidence_grounded": null,
+          "types": [
+            "unnecessary_secondary"
+          ],
+          "provider_error": null
+        }
+      ],
+      "calls": 72,
+      "unknown_cost_calls": 0,
+      "known_cost_subtotal_usd": 0.008060556000000002,
+      "effective_models": {
+        "typesafe/jev-1.13-20260917": 72
+      },
+      "jev_cost_usd": 0.008060556000000002,
+      "luna_cost_usd": 0,
+      "jev_provider_cost_usd": 0.008060556000000002,
+      "jev_tariff_cost_usd": 0,
+      "tokens": {
+        "jev": {
+          "input_tokens": {
+            "measured": 191918,
+            "missing_calls": 0
+          },
+          "output_tokens": {
+            "measured": 15565,
+            "missing_calls": 0
+          },
+          "cached_input_tokens": {
+            "measured": 0,
+            "missing_calls": 72
+          },
+          "reasoning_tokens": {
+            "measured": 0,
+            "missing_calls": 72
+          }
+        },
+        "luna": {
+          "input_tokens": {
+            "measured": 0,
+            "missing_calls": 0
+          },
+          "output_tokens": {
+            "measured": 0,
+            "missing_calls": 0
+          },
+          "cached_input_tokens": {
+            "measured": 0,
+            "missing_calls": 0
+          },
+          "reasoning_tokens": {
+            "measured": 0,
+            "missing_calls": 0
+          }
+        }
+      },
+      "missing_latency_observations": 0,
+      "cases": [
+        {
+          "id": "TEST2_001",
+          "gold": {
+            "primary": "MAT_CANTIDAD",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "MAT_CANTIDAD",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_002",
+          "gold": {
+            "primary": "COM_LECTURA",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "COM_LECTURA",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_003",
+          "gold": {
+            "primary": "PS_CONVIVE",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "PS_CONVIVE",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_004",
+          "gold": {
+            "primary": "CYT_INDAGA",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "CYT_INDAGA",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_005",
+          "gold": {
+            "primary": "MAT_FORMA",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "MAT_FORMA",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_006",
+          "gold": {
+            "primary": "COM_ESCRITURA",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "COM_ESCRITURA",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_007",
+          "gold": {
+            "primary": "COM_ORAL",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "COM_ORAL",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_008",
+          "gold": {
+            "primary": "COM_ARTE",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "COM_ARTE",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_009",
+          "gold": {
+            "primary": "PSICO_MOTRICIDAD",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "PSICO_MOTRICIDAD",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_010",
+          "gold": {
+            "primary": null,
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": true,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": null,
+              "secondary": [],
+              "acceptable_correct": false,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_011",
+          "gold": {
+            "primary": "MAT_CANTIDAD",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "MAT_CANTIDAD",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_012",
+          "gold": {
+            "primary": "MAT_FORMA",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "MAT_FORMA",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_013",
+          "gold": {
+            "primary": "COM_ORAL",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "COM_ORAL",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_014",
+          "gold": {
+            "primary": "CYT_INDAGA",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "CYT_INDAGA",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_015",
+          "gold": {
+            "primary": "PS_CONVIVE",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "PS_CONVIVE",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_016",
+          "gold": {
+            "primary": "COM_ESCRITURA",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "COM_ESCRITURA",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_017",
+          "gold": {
+            "primary": "COM_ARTE",
+            "acceptable_primary": [
+              "PSICO_MOTRICIDAD"
+            ],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "PSICO_MOTRICIDAD",
+              "secondary": [
+                "MAT_FORMA"
+              ],
+              "acceptable_correct": true,
+              "decision_correct": false
+            }
+          ]
+        },
+        {
+          "id": "TEST2_018",
+          "gold": {
+            "primary": "PSICO_MOTRICIDAD",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "PSICO_MOTRICIDAD",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_019",
+          "gold": {
+            "primary": null,
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": true,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": null,
+              "secondary": [],
+              "acceptable_correct": false,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_020",
+          "gold": {
+            "primary": null,
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": true,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": null,
+              "secondary": [],
+              "acceptable_correct": false,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_021",
+          "gold": {
+            "primary": null,
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": true,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": null,
+              "secondary": [],
+              "acceptable_correct": false,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_022",
+          "gold": {
+            "primary": "MAT_CANTIDAD",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "MAT_CANTIDAD",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_023",
+          "gold": {
+            "primary": "COM_LECTURA",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "COM_LECTURA",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_024",
+          "gold": {
+            "primary": "CYT_INDAGA",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "CYT_INDAGA",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_025",
+          "gold": {
+            "primary": "PS_CONVIVE",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "PS_CONVIVE",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_026",
+          "gold": {
+            "primary": "MAT_FORMA",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "MAT_FORMA",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_027",
+          "gold": {
+            "primary": "COM_ESCRITURA",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "COM_LECTURA",
+              "secondary": [],
+              "acceptable_correct": false,
+              "decision_correct": false
+            }
+          ]
+        },
+        {
+          "id": "TEST2_028",
+          "gold": {
+            "primary": "COM_ARTE",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "CYT_INDAGA",
+              "secondary": [],
+              "acceptable_correct": false,
+              "decision_correct": false
+            }
+          ]
+        },
+        {
+          "id": "TEST2_029",
+          "gold": {
+            "primary": "PSICO_MOTRICIDAD",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "PSICO_MOTRICIDAD",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_030",
+          "gold": {
+            "primary": null,
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": true,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": null,
+              "secondary": [],
+              "acceptable_correct": false,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_031",
+          "gold": {
+            "primary": null,
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": true,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": null,
+              "secondary": [],
+              "acceptable_correct": false,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_032",
+          "gold": {
+            "primary": null,
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": true,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": null,
+              "secondary": [],
+              "acceptable_correct": false,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_033",
+          "gold": {
+            "primary": null,
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": true,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": null,
+              "secondary": [],
+              "acceptable_correct": false,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_034",
+          "gold": {
+            "primary": null,
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": true,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": null,
+              "secondary": [],
+              "acceptable_correct": false,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_035",
+          "gold": {
+            "primary": null,
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": true,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": null,
+              "secondary": [],
+              "acceptable_correct": false,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_036",
+          "gold": {
+            "primary": null,
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": true,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": null,
+              "secondary": [],
+              "acceptable_correct": false,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_037",
+          "gold": {
+            "primary": null,
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": true,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": null,
+              "secondary": [],
+              "acceptable_correct": false,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_038",
+          "gold": {
+            "primary": "MAT_CANTIDAD",
+            "acceptable_primary": [],
+            "acceptable_secondary": [
+              "COM_ORAL"
+            ],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "MAT_CANTIDAD",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": false
+            }
+          ]
+        },
+        {
+          "id": "TEST2_039",
+          "gold": {
+            "primary": "COM_ESCRITURA",
+            "acceptable_primary": [],
+            "acceptable_secondary": [
+              "PS_CONVIVE"
+            ],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "PS_CONVIVE",
+              "secondary": [],
+              "acceptable_correct": false,
+              "decision_correct": false
+            }
+          ]
+        },
+        {
+          "id": "TEST2_040",
+          "gold": {
+            "primary": "COM_ARTE",
+            "acceptable_primary": [
+              "MAT_FORMA"
+            ],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "COM_ARTE",
+              "secondary": [
+                "MAT_FORMA"
+              ],
+              "acceptable_correct": true,
+              "decision_correct": false
+            }
+          ]
+        }
+      ]
+    },
+    "CURRENT_V2_RAW": {
+      "summary": {
+        "total": 40,
+        "primary_accuracy": 0.9285714285714286,
+        "acceptable_primary_accuracy": 0.9642857142857143,
+        "top2_accuracy": 1,
+        "exact_match": 0.5,
+        "denominators": {
+          "primary": 28,
+          "classified": 28,
+          "abstention": 8,
+          "exact": 2
+        },
+        "false_abstentions": 1,
+        "missed_abstentions_overclassification": 0,
+        "correct_abstentions": 8,
+        "privacy_true_positives": 4,
+        "privacy_false_positives": 0,
+        "missed_privacy_blocks": 0,
+        "additional_correct": 1,
+        "additional_incorrect": 0,
+        "discussable_cases": 0,
+        "errors_total": 1,
+        "correct_total": 39,
+        "provider_failures": 0,
+        "cost_usd": 0.01178184,
+        "cost_per_observation_usd": 0.000294546,
+        "cost_per_100_usd": 0.0294546,
+        "cost_per_1000_usd": 0.29454600000000003,
+        "cost_per_correct_usd": 0.0003020984615384615,
+        "correct_classifications": 27,
+        "cost_per_correct_classification_usd": 0.0004363644444444444,
+        "latency_average_ms": 319.7,
+        "confusion_matrix": {
+          "MAT_CANTIDAD": {
+            "MAT_CANTIDAD": 4
+          },
+          "COM_LECTURA": {
+            "COM_LECTURA": 2
+          },
+          "PS_CONVIVE": {
+            "PS_CONVIVE": 3
+          },
+          "CYT_INDAGA": {
+            "CYT_INDAGA": 3
+          },
+          "MAT_FORMA": {
+            "MAT_FORMA": 3
+          },
+          "COM_ESCRITURA": {
+            "COM_ESCRITURA": 3,
+            "NO_CLASIFICABLE": 1
+          },
+          "COM_ORAL": {
+            "COM_ORAL": 2
+          },
+          "COM_ARTE": {
+            "COM_ARTE": 3,
+            "MAT_FORMA": 1
+          },
+          "PSICO_MOTRICIDAD": {
+            "PSICO_MOTRICIDAD": 3
+          },
+          "NO_CLASIFICABLE": {
+            "NO_CLASIFICABLE": 8
+          },
+          "PRIVACY": {
+            "PRIVACY": 4
+          }
+        }
+      },
+      "unstable_primary_ids": [],
+      "unstable_output_ids": [],
+      "accuracy_by_run": [
+        0.9642857142857143
+      ],
+      "errors": [
+        {
+          "id": "TEST2_039",
+          "run": 1,
+          "category": "Escritura",
+          "observation": "Puso signos en una tarjeta y dijo esto es para invitar al juego. Más tarde discutieron por quién empezaba y propuso sacar una ficha cada uno para decidir, los dos aceptaron y lo hicieron. La tarjeta seguía sobre la mesa.",
+          "gold": {
+            "primary": "COM_ESCRITURA",
+            "acceptable_primary": [],
+            "acceptable_secondary": [
+              "PS_CONVIVE"
+            ],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "response": {
+            "status": "unclassified",
+            "primary": null,
+            "secondary": []
+          },
+          "evidence": "Más tarde discutieron por quién empezaba y propuso sacar una ficha cada uno para decidir, los dos aceptaron y lo hicieron",
+          "reason": "Abstención: elección PS_CONVIVE, confianza 0.49 (mínimo 0.50), suficiencia 0.95 (mínimo 0.70).",
+          "evidence_grounded": true,
+          "types": [
+            "false_abstention",
+            "missed_secondary"
+          ],
+          "provider_error": null
+        }
+      ],
+      "calls": 72,
+      "unknown_cost_calls": 0,
+      "known_cost_subtotal_usd": 0.01178184,
+      "effective_models": {
+        "typesafe/jev-1.13-20260917": 72
+      },
+      "jev_cost_usd": 0.01178184,
+      "luna_cost_usd": 0,
+      "jev_provider_cost_usd": 0.01178184,
+      "jev_tariff_cost_usd": 0,
+      "tokens": {
+        "jev": {
+          "input_tokens": {
+            "measured": 280520,
+            "missing_calls": 0
+          },
+          "output_tokens": {
+            "measured": 17276,
+            "missing_calls": 0
+          },
+          "cached_input_tokens": {
+            "measured": 0,
+            "missing_calls": 72
+          },
+          "reasoning_tokens": {
+            "measured": 0,
+            "missing_calls": 72
+          }
+        },
+        "luna": {
+          "input_tokens": {
+            "measured": 0,
+            "missing_calls": 0
+          },
+          "output_tokens": {
+            "measured": 0,
+            "missing_calls": 0
+          },
+          "cached_input_tokens": {
+            "measured": 0,
+            "missing_calls": 0
+          },
+          "reasoning_tokens": {
+            "measured": 0,
+            "missing_calls": 0
+          }
+        }
+      },
+      "missing_latency_observations": 0,
+      "cases": [
+        {
+          "id": "TEST2_001",
+          "gold": {
+            "primary": "MAT_CANTIDAD",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "MAT_CANTIDAD",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_002",
+          "gold": {
+            "primary": "COM_LECTURA",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "COM_LECTURA",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_003",
+          "gold": {
+            "primary": "PS_CONVIVE",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "PS_CONVIVE",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_004",
+          "gold": {
+            "primary": "CYT_INDAGA",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "CYT_INDAGA",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_005",
+          "gold": {
+            "primary": "MAT_FORMA",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "MAT_FORMA",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_006",
+          "gold": {
+            "primary": "COM_ESCRITURA",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "COM_ESCRITURA",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_007",
+          "gold": {
+            "primary": "COM_ORAL",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "COM_ORAL",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_008",
+          "gold": {
+            "primary": "COM_ARTE",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "COM_ARTE",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_009",
+          "gold": {
+            "primary": "PSICO_MOTRICIDAD",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "PSICO_MOTRICIDAD",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_010",
+          "gold": {
+            "primary": null,
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": true,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": null,
+              "secondary": [],
+              "acceptable_correct": false,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_011",
+          "gold": {
+            "primary": "MAT_CANTIDAD",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "MAT_CANTIDAD",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_012",
+          "gold": {
+            "primary": "MAT_FORMA",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "MAT_FORMA",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_013",
+          "gold": {
+            "primary": "COM_ORAL",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "COM_ORAL",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_014",
+          "gold": {
+            "primary": "CYT_INDAGA",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "CYT_INDAGA",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_015",
+          "gold": {
+            "primary": "PS_CONVIVE",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "PS_CONVIVE",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_016",
+          "gold": {
+            "primary": "COM_ESCRITURA",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "COM_ESCRITURA",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_017",
+          "gold": {
+            "primary": "COM_ARTE",
+            "acceptable_primary": [
+              "PSICO_MOTRICIDAD"
+            ],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "COM_ARTE",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_018",
+          "gold": {
+            "primary": "PSICO_MOTRICIDAD",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "PSICO_MOTRICIDAD",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_019",
+          "gold": {
+            "primary": null,
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": true,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": null,
+              "secondary": [],
+              "acceptable_correct": false,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_020",
+          "gold": {
+            "primary": null,
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": true,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": null,
+              "secondary": [],
+              "acceptable_correct": false,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_021",
+          "gold": {
+            "primary": null,
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": true,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": null,
+              "secondary": [],
+              "acceptable_correct": false,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_022",
+          "gold": {
+            "primary": "MAT_CANTIDAD",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "MAT_CANTIDAD",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_023",
+          "gold": {
+            "primary": "COM_LECTURA",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "COM_LECTURA",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_024",
+          "gold": {
+            "primary": "CYT_INDAGA",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "CYT_INDAGA",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_025",
+          "gold": {
+            "primary": "PS_CONVIVE",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "PS_CONVIVE",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_026",
+          "gold": {
+            "primary": "MAT_FORMA",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "MAT_FORMA",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_027",
+          "gold": {
+            "primary": "COM_ESCRITURA",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "COM_ESCRITURA",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_028",
+          "gold": {
+            "primary": "COM_ARTE",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "COM_ARTE",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_029",
+          "gold": {
+            "primary": "PSICO_MOTRICIDAD",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "PSICO_MOTRICIDAD",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_030",
+          "gold": {
+            "primary": null,
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": true,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": null,
+              "secondary": [],
+              "acceptable_correct": false,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_031",
+          "gold": {
+            "primary": null,
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": true,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": null,
+              "secondary": [],
+              "acceptable_correct": false,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_032",
+          "gold": {
+            "primary": null,
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": true,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": null,
+              "secondary": [],
+              "acceptable_correct": false,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_033",
+          "gold": {
+            "primary": null,
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": true,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": null,
+              "secondary": [],
+              "acceptable_correct": false,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_034",
+          "gold": {
+            "primary": null,
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": true,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": null,
+              "secondary": [],
+              "acceptable_correct": false,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_035",
+          "gold": {
+            "primary": null,
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": true,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": null,
+              "secondary": [],
+              "acceptable_correct": false,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_036",
+          "gold": {
+            "primary": null,
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": true,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": null,
+              "secondary": [],
+              "acceptable_correct": false,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_037",
+          "gold": {
+            "primary": null,
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": true,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": null,
+              "secondary": [],
+              "acceptable_correct": false,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_038",
+          "gold": {
+            "primary": "MAT_CANTIDAD",
+            "acceptable_primary": [],
+            "acceptable_secondary": [
+              "COM_ORAL"
+            ],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "MAT_CANTIDAD",
+              "secondary": [
+                "COM_ORAL"
+              ],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_039",
+          "gold": {
+            "primary": "COM_ESCRITURA",
+            "acceptable_primary": [],
+            "acceptable_secondary": [
+              "PS_CONVIVE"
+            ],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": null,
+              "secondary": [],
+              "acceptable_correct": false,
+              "decision_correct": false
+            }
+          ]
+        },
+        {
+          "id": "TEST2_040",
+          "gold": {
+            "primary": "COM_ARTE",
+            "acceptable_primary": [
+              "MAT_FORMA"
+            ],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "MAT_FORMA",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        }
+      ]
+    },
+    "CURRENT_V2_4_RAW": {
+      "summary": {
+        "total": 40,
+        "primary_accuracy": 0.9642857142857143,
+        "acceptable_primary_accuracy": 1,
+        "top2_accuracy": 1,
+        "exact_match": 0.5,
+        "denominators": {
+          "primary": 28,
+          "classified": 28,
+          "abstention": 8,
+          "exact": 2
+        },
+        "false_abstentions": 0,
+        "missed_abstentions_overclassification": 0,
+        "correct_abstentions": 8,
+        "privacy_true_positives": 4,
+        "privacy_false_positives": 0,
+        "missed_privacy_blocks": 0,
+        "additional_correct": 1,
+        "additional_incorrect": 0,
+        "discussable_cases": 0,
+        "errors_total": 1,
+        "correct_total": 39,
+        "provider_failures": 0,
+        "cost_usd": 0.016538591999999998,
+        "cost_per_observation_usd": 0.00041346479999999994,
+        "cost_per_100_usd": 0.04134647999999999,
+        "cost_per_1000_usd": 0.41346479999999997,
+        "cost_per_correct_usd": 0.0004240664615384615,
+        "correct_classifications": 27,
+        "cost_per_correct_classification_usd": 0.0006125404444444443,
+        "latency_average_ms": 357.075,
+        "confusion_matrix": {
+          "MAT_CANTIDAD": {
+            "MAT_CANTIDAD": 4
+          },
+          "COM_LECTURA": {
+            "COM_LECTURA": 2
+          },
+          "PS_CONVIVE": {
+            "PS_CONVIVE": 3
+          },
+          "CYT_INDAGA": {
+            "CYT_INDAGA": 3
+          },
+          "MAT_FORMA": {
+            "MAT_FORMA": 3
+          },
+          "COM_ESCRITURA": {
+            "COM_ESCRITURA": 4
+          },
+          "COM_ORAL": {
+            "COM_ORAL": 2
+          },
+          "COM_ARTE": {
+            "COM_ARTE": 3,
+            "MAT_FORMA": 1
+          },
+          "PSICO_MOTRICIDAD": {
+            "PSICO_MOTRICIDAD": 3
+          },
+          "NO_CLASIFICABLE": {
+            "NO_CLASIFICABLE": 8
+          },
+          "PRIVACY": {
+            "PRIVACY": 4
+          }
+        }
+      },
+      "unstable_primary_ids": [],
+      "unstable_output_ids": [],
+      "accuracy_by_run": [
+        1
+      ],
+      "errors": [
+        {
+          "id": "TEST2_038",
+          "run": 1,
+          "category": "Cantidad vs Forma",
+          "observation": "Repartió una ficha para cada bote y contó las que sobraban. Después, ya en la ronda sin los botes, contó que se había caído en la escalera de su casa y respondió cómo lo ayudó su tío. Ese relato duró un rato.",
+          "gold": {
+            "primary": "MAT_CANTIDAD",
+            "acceptable_primary": [],
+            "acceptable_secondary": [
+              "COM_ORAL"
+            ],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "response": {
+            "status": "review",
+            "primary": "MAT_CANTIDAD",
+            "secondary": []
+          },
+          "evidence": "Repartió una ficha para cada bote y contó las que sobraban.",
+          "reason": "Acción central: Resuelve problemas de cantidad; confianza 0.97, suficiencia 0.95.",
+          "evidence_grounded": true,
+          "types": [
+            "missed_secondary"
+          ],
+          "provider_error": null
+        }
+      ],
+      "calls": 72,
+      "unknown_cost_calls": 0,
+      "known_cost_subtotal_usd": 0.016538592,
+      "effective_models": {
+        "typesafe/jev-1.13-20260917": 72
+      },
+      "jev_cost_usd": 0.016538591999999998,
+      "luna_cost_usd": 0,
+      "jev_provider_cost_usd": 0.016538592,
+      "jev_tariff_cost_usd": 0,
+      "tokens": {
+        "jev": {
+          "input_tokens": {
+            "measured": 393776,
+            "missing_calls": 0
+          },
+          "output_tokens": {
+            "measured": 17277,
+            "missing_calls": 0
+          },
+          "cached_input_tokens": {
+            "measured": 0,
+            "missing_calls": 72
+          },
+          "reasoning_tokens": {
+            "measured": 0,
+            "missing_calls": 72
+          }
+        },
+        "luna": {
+          "input_tokens": {
+            "measured": 0,
+            "missing_calls": 0
+          },
+          "output_tokens": {
+            "measured": 0,
+            "missing_calls": 0
+          },
+          "cached_input_tokens": {
+            "measured": 0,
+            "missing_calls": 0
+          },
+          "reasoning_tokens": {
+            "measured": 0,
+            "missing_calls": 0
+          }
+        }
+      },
+      "missing_latency_observations": 0,
+      "cases": [
+        {
+          "id": "TEST2_001",
+          "gold": {
+            "primary": "MAT_CANTIDAD",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "MAT_CANTIDAD",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_002",
+          "gold": {
+            "primary": "COM_LECTURA",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "COM_LECTURA",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_003",
+          "gold": {
+            "primary": "PS_CONVIVE",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "PS_CONVIVE",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_004",
+          "gold": {
+            "primary": "CYT_INDAGA",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "CYT_INDAGA",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_005",
+          "gold": {
+            "primary": "MAT_FORMA",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "MAT_FORMA",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_006",
+          "gold": {
+            "primary": "COM_ESCRITURA",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "COM_ESCRITURA",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_007",
+          "gold": {
+            "primary": "COM_ORAL",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "COM_ORAL",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_008",
+          "gold": {
+            "primary": "COM_ARTE",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "COM_ARTE",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_009",
+          "gold": {
+            "primary": "PSICO_MOTRICIDAD",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "PSICO_MOTRICIDAD",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_010",
+          "gold": {
+            "primary": null,
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": true,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": null,
+              "secondary": [],
+              "acceptable_correct": false,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_011",
+          "gold": {
+            "primary": "MAT_CANTIDAD",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "MAT_CANTIDAD",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_012",
+          "gold": {
+            "primary": "MAT_FORMA",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "MAT_FORMA",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_013",
+          "gold": {
+            "primary": "COM_ORAL",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "COM_ORAL",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_014",
+          "gold": {
+            "primary": "CYT_INDAGA",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "CYT_INDAGA",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_015",
+          "gold": {
+            "primary": "PS_CONVIVE",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "PS_CONVIVE",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_016",
+          "gold": {
+            "primary": "COM_ESCRITURA",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "COM_ESCRITURA",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_017",
+          "gold": {
+            "primary": "COM_ARTE",
+            "acceptable_primary": [
+              "PSICO_MOTRICIDAD"
+            ],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "COM_ARTE",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_018",
+          "gold": {
+            "primary": "PSICO_MOTRICIDAD",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "PSICO_MOTRICIDAD",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_019",
+          "gold": {
+            "primary": null,
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": true,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": null,
+              "secondary": [],
+              "acceptable_correct": false,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_020",
+          "gold": {
+            "primary": null,
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": true,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": null,
+              "secondary": [],
+              "acceptable_correct": false,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_021",
+          "gold": {
+            "primary": null,
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": true,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": null,
+              "secondary": [],
+              "acceptable_correct": false,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_022",
+          "gold": {
+            "primary": "MAT_CANTIDAD",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "MAT_CANTIDAD",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_023",
+          "gold": {
+            "primary": "COM_LECTURA",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "COM_LECTURA",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_024",
+          "gold": {
+            "primary": "CYT_INDAGA",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "CYT_INDAGA",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_025",
+          "gold": {
+            "primary": "PS_CONVIVE",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "PS_CONVIVE",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_026",
+          "gold": {
+            "primary": "MAT_FORMA",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "MAT_FORMA",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_027",
+          "gold": {
+            "primary": "COM_ESCRITURA",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "COM_ESCRITURA",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_028",
+          "gold": {
+            "primary": "COM_ARTE",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "COM_ARTE",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_029",
+          "gold": {
+            "primary": "PSICO_MOTRICIDAD",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "PSICO_MOTRICIDAD",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_030",
+          "gold": {
+            "primary": null,
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": true,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": null,
+              "secondary": [],
+              "acceptable_correct": false,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_031",
+          "gold": {
+            "primary": null,
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": true,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": null,
+              "secondary": [],
+              "acceptable_correct": false,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_032",
+          "gold": {
+            "primary": null,
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": true,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": null,
+              "secondary": [],
+              "acceptable_correct": false,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_033",
+          "gold": {
+            "primary": null,
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": true,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": null,
+              "secondary": [],
+              "acceptable_correct": false,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_034",
+          "gold": {
+            "primary": null,
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": true,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": null,
+              "secondary": [],
+              "acceptable_correct": false,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_035",
+          "gold": {
+            "primary": null,
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": true,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": null,
+              "secondary": [],
+              "acceptable_correct": false,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_036",
+          "gold": {
+            "primary": null,
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": true,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": null,
+              "secondary": [],
+              "acceptable_correct": false,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_037",
+          "gold": {
+            "primary": null,
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": true,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": null,
+              "secondary": [],
+              "acceptable_correct": false,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_038",
+          "gold": {
+            "primary": "MAT_CANTIDAD",
+            "acceptable_primary": [],
+            "acceptable_secondary": [
+              "COM_ORAL"
+            ],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "MAT_CANTIDAD",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": false
+            }
+          ]
+        },
+        {
+          "id": "TEST2_039",
+          "gold": {
+            "primary": "COM_ESCRITURA",
+            "acceptable_primary": [],
+            "acceptable_secondary": [
+              "PS_CONVIVE"
+            ],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "COM_ESCRITURA",
+              "secondary": [
+                "PS_CONVIVE"
+              ],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_040",
+          "gold": {
+            "primary": "COM_ARTE",
+            "acceptable_primary": [
+              "MAT_FORMA"
+            ],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "MAT_FORMA",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        }
+      ]
+    },
+    "CURRENT_V2_4_LUNA_CLEAN": {
+      "summary": {
+        "total": 40,
+        "primary_accuracy": 0.8928571428571429,
+        "acceptable_primary_accuracy": 0.9285714285714286,
+        "top2_accuracy": 1,
+        "exact_match": 0,
+        "denominators": {
+          "primary": 28,
+          "classified": 28,
+          "abstention": 8,
+          "exact": 2
+        },
+        "false_abstentions": 2,
+        "missed_abstentions_overclassification": 0,
+        "correct_abstentions": 8,
+        "privacy_true_positives": 4,
+        "privacy_false_positives": 0,
+        "missed_privacy_blocks": 0,
+        "additional_correct": 0,
+        "additional_incorrect": 0,
+        "discussable_cases": 0,
+        "errors_total": 3,
+        "correct_total": 37,
+        "provider_failures": 0,
+        "cost_usd": 0.019525583999999995,
+        "cost_per_observation_usd": 0.0004881395999999999,
+        "cost_per_100_usd": 0.04881395999999999,
+        "cost_per_1000_usd": 0.4881395999999999,
+        "cost_per_correct_usd": 0.0005277184864864863,
+        "correct_classifications": 25,
+        "cost_per_correct_classification_usd": 0.0007810233599999998,
+        "latency_average_ms": 2324.775,
+        "confusion_matrix": {
+          "MAT_CANTIDAD": {
+            "MAT_CANTIDAD": 4
+          },
+          "COM_LECTURA": {
+            "COM_LECTURA": 2
+          },
+          "PS_CONVIVE": {
+            "PS_CONVIVE": 3
+          },
+          "CYT_INDAGA": {
+            "CYT_INDAGA": 3
+          },
+          "MAT_FORMA": {
+            "MAT_FORMA": 3
+          },
+          "COM_ESCRITURA": {
+            "COM_ESCRITURA": 3,
+            "NO_CLASIFICABLE": 1
+          },
+          "COM_ORAL": {
+            "COM_ORAL": 2
+          },
+          "COM_ARTE": {
+            "COM_ARTE": 2,
+            "NO_CLASIFICABLE": 1,
+            "MAT_FORMA": 1
+          },
+          "PSICO_MOTRICIDAD": {
+            "PSICO_MOTRICIDAD": 3
+          },
+          "NO_CLASIFICABLE": {
+            "NO_CLASIFICABLE": 8
+          },
+          "PRIVACY": {
+            "PRIVACY": 4
+          }
+        }
+      },
+      "unstable_primary_ids": [],
+      "unstable_output_ids": [],
+      "accuracy_by_run": [
+        0.9285714285714286
+      ],
+      "errors": [
+        {
+          "id": "TEST2_017",
+          "run": 1,
+          "category": "Arte",
+          "observation": "En la canción empezó a hacer pasos grandes y luego chiquitos, dijo así camina el gigante y así el ratón. Les mostró la parte del gigante otra vez porque quería que se viera pesado.",
+          "gold": {
+            "primary": "COM_ARTE",
+            "acceptable_primary": [
+              "PSICO_MOTRICIDAD"
+            ],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "response": {
+            "status": "unclassified",
+            "primary": null,
+            "secondary": []
+          },
+          "evidence": "",
+          "reason": "Abstención: elección PSICO_MOTRICIDAD, confianza 0.48 (mínimo 0.50), suficiencia 0.94 (mínimo 0.70).",
+          "evidence_grounded": false,
+          "types": [
+            "false_abstention"
+          ],
+          "provider_error": null
+        },
+        {
+          "id": "TEST2_038",
+          "run": 1,
+          "category": "Cantidad vs Forma",
+          "observation": "Repartió una ficha para cada bote y contó las que sobraban. Después, ya en la ronda sin los botes, contó que se había caído en la escalera de su casa y respondió cómo lo ayudó su tío. Ese relato duró un rato.",
+          "gold": {
+            "primary": "MAT_CANTIDAD",
+            "acceptable_primary": [],
+            "acceptable_secondary": [
+              "COM_ORAL"
+            ],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "response": {
+            "status": "review",
+            "primary": "MAT_CANTIDAD",
+            "secondary": []
+          },
+          "evidence": "Repartió una ficha para cada bote y contó las que sobraban.",
+          "reason": "Acción central: Resuelve problemas de cantidad; confianza 0.97, suficiencia 0.96.",
+          "evidence_grounded": true,
+          "types": [
+            "missed_secondary"
+          ],
+          "provider_error": null
+        },
+        {
+          "id": "TEST2_039",
+          "run": 1,
+          "category": "Escritura",
+          "observation": "Puso signos en una tarjeta y dijo esto es para invitar al juego. Más tarde discutieron por quién empezaba y propuso sacar una ficha cada uno para decidir, los dos aceptaron y lo hicieron. La tarjeta seguía sobre la mesa.",
+          "gold": {
+            "primary": "COM_ESCRITURA",
+            "acceptable_primary": [],
+            "acceptable_secondary": [
+              "PS_CONVIVE"
+            ],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "response": {
+            "status": "unclassified",
+            "primary": null,
+            "secondary": []
+          },
+          "evidence": "",
+          "reason": "Abstención: elección PS_CONVIVE, confianza 0.46 (mínimo 0.50), suficiencia 0.96 (mínimo 0.70).",
+          "evidence_grounded": false,
+          "types": [
+            "false_abstention",
+            "missed_secondary"
+          ],
+          "provider_error": null
+        }
+      ],
+      "calls": 108,
+      "unknown_cost_calls": 0,
+      "known_cost_subtotal_usd": 0.019525584,
+      "effective_models": {
+        "typesafe/jev-1.13-20260917": 72,
+        "gpt-6-luna": 36
+      },
+      "jev_cost_usd": 0.016562783999999997,
+      "luna_cost_usd": 0.0029628000000000007,
+      "jev_provider_cost_usd": 0.016562784000000004,
+      "jev_tariff_cost_usd": 0,
+      "tokens": {
+        "jev": {
+          "input_tokens": {
+            "measured": 394352,
+            "missing_calls": 0
+          },
+          "output_tokens": {
+            "measured": 17470,
+            "missing_calls": 0
+          },
+          "cached_input_tokens": {
+            "measured": 0,
+            "missing_calls": 72
+          },
+          "reasoning_tokens": {
+            "measured": 0,
+            "missing_calls": 72
+          }
+        },
+        "luna": {
+          "input_tokens": {
+            "measured": 8468,
+            "missing_calls": 0
+          },
+          "output_tokens": {
+            "measured": 4232,
+            "missing_calls": 0
+          },
+          "cached_input_tokens": {
+            "measured": 0,
+            "missing_calls": 0
+          },
+          "reasoning_tokens": {
+            "measured": 1871,
+            "missing_calls": 0
+          }
+        }
+      },
+      "missing_latency_observations": 0,
+      "cases": [
+        {
+          "id": "TEST2_001",
+          "gold": {
+            "primary": "MAT_CANTIDAD",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "MAT_CANTIDAD",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_002",
+          "gold": {
+            "primary": "COM_LECTURA",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "COM_LECTURA",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_003",
+          "gold": {
+            "primary": "PS_CONVIVE",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "PS_CONVIVE",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_004",
+          "gold": {
+            "primary": "CYT_INDAGA",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "CYT_INDAGA",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_005",
+          "gold": {
+            "primary": "MAT_FORMA",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "MAT_FORMA",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_006",
+          "gold": {
+            "primary": "COM_ESCRITURA",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "COM_ESCRITURA",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_007",
+          "gold": {
+            "primary": "COM_ORAL",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "COM_ORAL",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_008",
+          "gold": {
+            "primary": "COM_ARTE",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "COM_ARTE",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_009",
+          "gold": {
+            "primary": "PSICO_MOTRICIDAD",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "PSICO_MOTRICIDAD",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_010",
+          "gold": {
+            "primary": null,
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": true,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": null,
+              "secondary": [],
+              "acceptable_correct": false,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_011",
+          "gold": {
+            "primary": "MAT_CANTIDAD",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "MAT_CANTIDAD",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_012",
+          "gold": {
+            "primary": "MAT_FORMA",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "MAT_FORMA",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_013",
+          "gold": {
+            "primary": "COM_ORAL",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "COM_ORAL",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_014",
+          "gold": {
+            "primary": "CYT_INDAGA",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "CYT_INDAGA",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_015",
+          "gold": {
+            "primary": "PS_CONVIVE",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "PS_CONVIVE",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_016",
+          "gold": {
+            "primary": "COM_ESCRITURA",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "COM_ESCRITURA",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_017",
+          "gold": {
+            "primary": "COM_ARTE",
+            "acceptable_primary": [
+              "PSICO_MOTRICIDAD"
+            ],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": null,
+              "secondary": [],
+              "acceptable_correct": false,
+              "decision_correct": false
+            }
+          ]
+        },
+        {
+          "id": "TEST2_018",
+          "gold": {
+            "primary": "PSICO_MOTRICIDAD",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "PSICO_MOTRICIDAD",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_019",
+          "gold": {
+            "primary": null,
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": true,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": null,
+              "secondary": [],
+              "acceptable_correct": false,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_020",
+          "gold": {
+            "primary": null,
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": true,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": null,
+              "secondary": [],
+              "acceptable_correct": false,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_021",
+          "gold": {
+            "primary": null,
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": true,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": null,
+              "secondary": [],
+              "acceptable_correct": false,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_022",
+          "gold": {
+            "primary": "MAT_CANTIDAD",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "MAT_CANTIDAD",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_023",
+          "gold": {
+            "primary": "COM_LECTURA",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "COM_LECTURA",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_024",
+          "gold": {
+            "primary": "CYT_INDAGA",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "CYT_INDAGA",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_025",
+          "gold": {
+            "primary": "PS_CONVIVE",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "PS_CONVIVE",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_026",
+          "gold": {
+            "primary": "MAT_FORMA",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "MAT_FORMA",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_027",
+          "gold": {
+            "primary": "COM_ESCRITURA",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "COM_ESCRITURA",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_028",
+          "gold": {
+            "primary": "COM_ARTE",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "COM_ARTE",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_029",
+          "gold": {
+            "primary": "PSICO_MOTRICIDAD",
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "PSICO_MOTRICIDAD",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_030",
+          "gold": {
+            "primary": null,
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": true,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": null,
+              "secondary": [],
+              "acceptable_correct": false,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_031",
+          "gold": {
+            "primary": null,
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": true,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": null,
+              "secondary": [],
+              "acceptable_correct": false,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_032",
+          "gold": {
+            "primary": null,
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": true,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": null,
+              "secondary": [],
+              "acceptable_correct": false,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_033",
+          "gold": {
+            "primary": null,
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": true,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": null,
+              "secondary": [],
+              "acceptable_correct": false,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_034",
+          "gold": {
+            "primary": null,
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": true,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": null,
+              "secondary": [],
+              "acceptable_correct": false,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_035",
+          "gold": {
+            "primary": null,
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": true,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": null,
+              "secondary": [],
+              "acceptable_correct": false,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_036",
+          "gold": {
+            "primary": null,
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": true,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": null,
+              "secondary": [],
+              "acceptable_correct": false,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_037",
+          "gold": {
+            "primary": null,
+            "acceptable_primary": [],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": true,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": null,
+              "secondary": [],
+              "acceptable_correct": false,
+              "decision_correct": true
+            }
+          ]
+        },
+        {
+          "id": "TEST2_038",
+          "gold": {
+            "primary": "MAT_CANTIDAD",
+            "acceptable_primary": [],
+            "acceptable_secondary": [
+              "COM_ORAL"
+            ],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "MAT_CANTIDAD",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": false
+            }
+          ]
+        },
+        {
+          "id": "TEST2_039",
+          "gold": {
+            "primary": "COM_ESCRITURA",
+            "acceptable_primary": [],
+            "acceptable_secondary": [
+              "PS_CONVIVE"
+            ],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": null,
+              "secondary": [],
+              "acceptable_correct": false,
+              "decision_correct": false
+            }
+          ]
+        },
+        {
+          "id": "TEST2_040",
+          "gold": {
+            "primary": "COM_ARTE",
+            "acceptable_primary": [
+              "MAT_FORMA"
+            ],
+            "acceptable_secondary": [],
+            "should_abstain": false,
+            "should_privacy_block": false,
+            "discussable": false
+          },
+          "observations": [
+            {
+              "run": 1,
+              "primary": "MAT_FORMA",
+              "secondary": [],
+              "acceptable_correct": true,
+              "decision_correct": true
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "pairs": [
+    {
+      "from": "CURRENT_V1_RAW",
+      "to": "CURRENT_V2_RAW",
+      "corrects_primary": [
+        "TEST2_027",
+        "TEST2_028"
+      ],
+      "introduces_primary": [],
+      "improves_full_decision": [
+        "TEST2_017",
+        "TEST2_027",
+        "TEST2_028",
+        "TEST2_038",
+        "TEST2_040"
+      ],
+      "worsens_full_decision": [],
+      "same_full_correctness": [
+        "TEST2_001",
+        "TEST2_002",
+        "TEST2_003",
+        "TEST2_004",
+        "TEST2_005",
+        "TEST2_006",
+        "TEST2_007",
+        "TEST2_008",
+        "TEST2_009",
+        "TEST2_010",
+        "TEST2_011",
+        "TEST2_012",
+        "TEST2_013",
+        "TEST2_014",
+        "TEST2_015",
+        "TEST2_016",
+        "TEST2_018",
+        "TEST2_019",
+        "TEST2_020",
+        "TEST2_021",
+        "TEST2_022",
+        "TEST2_023",
+        "TEST2_024",
+        "TEST2_025",
+        "TEST2_026",
+        "TEST2_029",
+        "TEST2_030",
+        "TEST2_031",
+        "TEST2_032",
+        "TEST2_033",
+        "TEST2_034",
+        "TEST2_035",
+        "TEST2_036",
+        "TEST2_037",
+        "TEST2_039"
+      ],
+      "unknown": [],
+      "acceptable_gain": 0.0714285714285714,
+      "cost_delta_usd": 0.0037212839999999983,
+      "cost_delta_per_1000_usd": 0.09303209999999998,
+      "latency_delta_ms": -18.625
+    },
+    {
+      "from": "CURRENT_V2_RAW",
+      "to": "CURRENT_V2_4_RAW",
+      "corrects_primary": [
+        "TEST2_039"
+      ],
+      "introduces_primary": [],
+      "improves_full_decision": [
+        "TEST2_039"
+      ],
+      "worsens_full_decision": [
+        "TEST2_038"
+      ],
+      "same_full_correctness": [
+        "TEST2_001",
+        "TEST2_002",
+        "TEST2_003",
+        "TEST2_004",
+        "TEST2_005",
+        "TEST2_006",
+        "TEST2_007",
+        "TEST2_008",
+        "TEST2_009",
+        "TEST2_010",
+        "TEST2_011",
+        "TEST2_012",
+        "TEST2_013",
+        "TEST2_014",
+        "TEST2_015",
+        "TEST2_016",
+        "TEST2_017",
+        "TEST2_018",
+        "TEST2_019",
+        "TEST2_020",
+        "TEST2_021",
+        "TEST2_022",
+        "TEST2_023",
+        "TEST2_024",
+        "TEST2_025",
+        "TEST2_026",
+        "TEST2_027",
+        "TEST2_028",
+        "TEST2_029",
+        "TEST2_030",
+        "TEST2_031",
+        "TEST2_032",
+        "TEST2_033",
+        "TEST2_034",
+        "TEST2_035",
+        "TEST2_036",
+        "TEST2_037",
+        "TEST2_040"
+      ],
+      "unknown": [],
+      "acceptable_gain": 0.0357142857142857,
+      "cost_delta_usd": 0.004756751999999998,
+      "cost_delta_per_1000_usd": 0.11891879999999994,
+      "latency_delta_ms": 37.375
+    },
+    {
+      "from": "CURRENT_V1_RAW",
+      "to": "CURRENT_V2_4_RAW",
+      "corrects_primary": [
+        "TEST2_027",
+        "TEST2_028",
+        "TEST2_039"
+      ],
+      "introduces_primary": [],
+      "improves_full_decision": [
+        "TEST2_017",
+        "TEST2_027",
+        "TEST2_028",
+        "TEST2_039",
+        "TEST2_040"
+      ],
+      "worsens_full_decision": [],
+      "same_full_correctness": [
+        "TEST2_001",
+        "TEST2_002",
+        "TEST2_003",
+        "TEST2_004",
+        "TEST2_005",
+        "TEST2_006",
+        "TEST2_007",
+        "TEST2_008",
+        "TEST2_009",
+        "TEST2_010",
+        "TEST2_011",
+        "TEST2_012",
+        "TEST2_013",
+        "TEST2_014",
+        "TEST2_015",
+        "TEST2_016",
+        "TEST2_018",
+        "TEST2_019",
+        "TEST2_020",
+        "TEST2_021",
+        "TEST2_022",
+        "TEST2_023",
+        "TEST2_024",
+        "TEST2_025",
+        "TEST2_026",
+        "TEST2_029",
+        "TEST2_030",
+        "TEST2_031",
+        "TEST2_032",
+        "TEST2_033",
+        "TEST2_034",
+        "TEST2_035",
+        "TEST2_036",
+        "TEST2_037",
+        "TEST2_038"
+      ],
+      "unknown": [],
+      "acceptable_gain": 0.1071428571428571,
+      "cost_delta_usd": 0.008478035999999996,
+      "cost_delta_per_1000_usd": 0.21195089999999991,
+      "latency_delta_ms": 18.75
+    },
+    {
+      "from": "CURRENT_V2_4_RAW",
+      "to": "CURRENT_V2_4_LUNA_CLEAN",
+      "corrects_primary": [],
+      "introduces_primary": [
+        "TEST2_017",
+        "TEST2_039"
+      ],
+      "improves_full_decision": [],
+      "worsens_full_decision": [
+        "TEST2_017",
+        "TEST2_039"
+      ],
+      "same_full_correctness": [
+        "TEST2_001",
+        "TEST2_002",
+        "TEST2_003",
+        "TEST2_004",
+        "TEST2_005",
+        "TEST2_006",
+        "TEST2_007",
+        "TEST2_008",
+        "TEST2_009",
+        "TEST2_010",
+        "TEST2_011",
+        "TEST2_012",
+        "TEST2_013",
+        "TEST2_014",
+        "TEST2_015",
+        "TEST2_016",
+        "TEST2_018",
+        "TEST2_019",
+        "TEST2_020",
+        "TEST2_021",
+        "TEST2_022",
+        "TEST2_023",
+        "TEST2_024",
+        "TEST2_025",
+        "TEST2_026",
+        "TEST2_027",
+        "TEST2_028",
+        "TEST2_029",
+        "TEST2_030",
+        "TEST2_031",
+        "TEST2_032",
+        "TEST2_033",
+        "TEST2_034",
+        "TEST2_035",
+        "TEST2_036",
+        "TEST2_037",
+        "TEST2_038",
+        "TEST2_040"
+      ],
+      "unknown": [],
+      "acceptable_gain": -0.0714285714285714,
+      "cost_delta_usd": 0.0029869919999999973,
+      "cost_delta_per_1000_usd": 0.07467479999999993,
+      "latency_delta_ms": 1967.7
+    }
+  ],
+  "preferred": "CURRENT_V2_4_RAW",
+  "passes_predeclared_criteria": {
+    "CURRENT_V2_4_RAW": true,
+    "CURRENT_V2_4_LUNA_CLEAN": false
+  },
+  "recommendation": "Hacer prueba supervisada; no integrar automáticamente.",
+  "physical": {
+    "attempts": 324,
+    "billed_records": 324,
+    "unknown_cost_calls": 0,
+    "total_cost_usd": 0.05590657199999996,
+    "known_cost_subtotal_usd": 0.05590657199999996
+  },
+  "provider_payload_count": 324,
+  "label_leaks": 0,
+  "privacy_validation": {
+    "CURRENT_V1_RAW": {
+      "true_positive": 4,
+      "positive_cases": 4,
+      "negatives": 36,
+      "protected_case_provider_calls": 0
+    },
+    "CURRENT_V2_RAW": {
+      "true_positive": 4,
+      "positive_cases": 4,
+      "negatives": 36,
+      "protected_case_provider_calls": 0
+    },
+    "CURRENT_V2_4_RAW": {
+      "true_positive": 4,
+      "positive_cases": 4,
+      "negatives": 36,
+      "protected_case_provider_calls": 0
+    },
+    "CURRENT_V2_4_LUNA_CLEAN": {
+      "true_positive": 4,
+      "positive_cases": 4,
+      "negatives": 36,
+      "protected_case_provider_calls": 0
+    }
+  },
+  "results_directory": "C:\\Users\\ASUS\\.codex\\worktrees\\jev-luna-benchmark\\Asistente CNEB\\experiments\\jev-competency-classifier\\results\\last-test2-2026-09-29T12-35-54-356Z"
+}
