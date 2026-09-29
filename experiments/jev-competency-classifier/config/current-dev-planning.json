@@ -1,0 +1,9 @@
+{
+  "v1_jev_usd_per_call_estimate": 0.000164,
+  "v1_source": "benchmark-planning.json, historical Jev average; not new DEV measured usage",
+  "v2_jev_input_tokens_per_call_estimate": 6000,
+  "v2_jev_output_tokens_per_call_estimate": 350,
+  "luna_input_tokens_per_call_estimate": 500,
+  "luna_output_tokens_per_call_estimate": 150,
+  "note": "Budget hypotheses only. V2 includes longer instructions/evidence questions; measured provider cost and Luna real tokens replace these hypotheses after human adjudication."
+}

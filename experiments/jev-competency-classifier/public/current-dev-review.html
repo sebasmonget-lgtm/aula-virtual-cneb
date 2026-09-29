@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Adjudicación humana · CURRENT DEV</title>
+<style>body{font:16px system-ui;background:#f5f6f3;color:#203026;margin:0}main{max-width:1000px;margin:auto;padding:24px}section{background:white;border:1px solid #d5ded6;border-radius:12px;padding:20px;margin:16px 0}h1{margin:0 0 10px}label{display:block;margin:14px 0 5px}input,select,textarea,button{font:inherit;padding:9px;box-sizing:border-box}select,textarea,input[type=text]{width:100%}button{cursor:pointer;border:1px solid #769780;border-radius:7px;background:#e8f2e9;margin:6px 8px 6px 0}button:disabled{opacity:.45;cursor:default}.choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:6px}.choices label{margin:0;font-size:14px}blockquote{font-size:20px;margin:16px 0;border-left:4px solid #638b6c;padding:16px;background:#f4f8f4;white-space:pre-wrap}.muted{color:#57645a}#message{color:#743a25}nav{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.compact{max-width:160px}input[type=checkbox]{accent-color:#42664b}</style>
+</head><body><main>
+<h1>Adjudicación humana del dev set</h1><p>80 registros ficticios nuevos. No hay gold asignado ni respuestas de modelos. El test final de 28 casos no se abre aquí.</p>
+<section><label for="reviewer">Persona que adjudica</label><input id="reviewer" type="text" placeholder="Nombre o identificador de revisión">
+<p id="progress">Cargando propuesta…</p><p class="muted">La primaria se evalúa independientemente de las secundarias. Etiqueta solo lo que se observa; no completes intención ni aprendizaje. Puedes dejar el caso pendiente y volver.</p></section>
+<section><nav><button id="previous">Anterior</button><label for="case-number">Caso</label><select id="case-number" class="compact"></select><button id="next">Siguiente</button></nav>
+<h2 id="case-id"></h2><blockquote id="observation"></blockquote><p id="input-metadata" class="muted"></p>
+<details><summary>Metas de cobertura del autor (no son gold)</summary><p id="coverage"></p></details>
+<label for="decision">Decisión esperada</label><select id="decision"><option value="pending">Sin adjudicar</option value="classify">Clasificar</option><option value="abstain">Abstenerse</option><option value="privacy">Bloquear por identificador/privacidad real</option></select>
+<label for="primary">Competencia principal</label><select id="primary"></select>
+<label>Otras primarias aceptables, si la evidencia es ambigua</label><div id="acceptable" class="choices"></div>
+<label>Secundarias esperadas, si hay otra conducta independiente</label><div id="secondary" class="choices"></div>
+<label for="notes">Fragmento observable y motivo de adjudicación / dudas</label><textarea id="notes" rows="3" placeholder="Opcional: justifica el caso o registra la ambigüedad para una segunda revisión"></textarea>
+<button id="mark">Marcar este caso como revisado</button><p id="case-review-state"></p><p id="message" role="status"></p>
+</section>
+<section><h2>Guardar y exportar</h2><p>El progreso queda solo en este navegador. Exporta un borrador para conservarlo o continuar en otro navegador. La exportación adjudicada se habilita únicamente con los 80 casos revisados y una persona identificada.</p>
+<button id="draft">Descargar borrador de revisión</button><label for="import-draft">Recuperar borrador</label><input id="import-draft" type="file" accept="application/json">
+<p><button id="export-data" disabled>Descargar DEV adjudicado.jsonl</button><button id="export-manifest" disabled>Descargar manifest de adjudicación</button></p>
+<p class="muted">Conserva ambos archivos exactos: el manifest contiene SHA-256 del JSONL. Esto no ejecuta proveedores ni adjudica automáticamente. Todas las notas y etiquetas quedan fuera de los prompts de inferencia.</p></section>
+</main><script type="module" src="/current-dev-review.js"></script></body></html>

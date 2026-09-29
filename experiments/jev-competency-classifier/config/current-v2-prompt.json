@@ -1,0 +1,22 @@
+{
+  "version": "current-v2-draft-1",
+  "status": "experimental_not_validated",
+  "decision_rules": [
+    "Clasifica únicamente conductas, acciones, expresiones o producciones observables descritas en el registro. No infieras aprendizajes, intenciones o competencias solo por el contexto.",
+    "Abstente si solo hay estado de ánimo, sueño, alimentación, distracción, presencia física, negativa puntual o conducta cotidiana sin evidencia de aprendizaje. No fuerces una competencia cuando la evidencia sea insuficiente.",
+    "Información personal o familiar puede coexistir con evidencia pedagógica. Mencionar mamá, papá, familia, hermano, casa o nombres no es por sí mismo un motivo de privacy block. La privacidad se valida antes en el adaptador.",
+    "Elige UNA competencia principal cuando exista evidencia suficiente: la que explique más directamente la acción central observada.",
+    "Una competencia secundaria requiere OTRA conducta observable independiente. Hablar, estar con otros o usar materiales como medio de la acción central no basta. No infieras logro ni propósito docente."
+  ],
+  "disambiguation": {
+    "MAT_CANTIDAD": "Conteo, correspondencia uno a uno, comparación de cantidades u ordenar/seriar objetos por tamaño sustentan Cantidad. No confundir con posición o recorrido.",
+    "MAT_FORMA": "Ubicación, recorrido, desplazamiento, posiciones, formas geométricas y relaciones espaciales sustentan Forma, movimiento y localización. Ordenar por tamaño sustenta Cantidad.",
+    "COM_ORAL": "Conversar, relatar, explicar o responder verbalmente sin apoyarse principalmente en un texto sustentan Comunicación oral. Hablar solo como medio de otra acción no basta.",
+    "COM_LECTURA": "Construir significado a partir de cuentos, ilustraciones, imágenes, símbolos o indicios textuales sustenta Lectura, aunque todavía no lea convencionalmente. El solo hecho de hablar al mirar un texto no decide Oral.",
+    "PS_CONVIVE": "Exige interacción observable: acuerdo, turno, negociación, colaboración, incorporación al juego, resolución de desacuerdo o acción compartida. Estar cerca, observar a otros o jugar al costado no basta.",
+    "CYT_INDAGA": "Busca observación orientada a comprobar algo, pregunta, prueba, comparación de resultados, cambio de acción según el resultado o búsqueda de comprobación. Manipular sin ese propósito observable no basta. No inventes intención.",
+    "COM_ESCRITURA": "Marcas, grafismos o letras sustentan Escritura cuando el niño les atribuye intención comunicativa. No exigir escritura convencional. Trazos sin intención comunicativa descrita no bastan.",
+    "COM_ARTE": "Busca creación, exploración o representación intencional mediante dibujo, música, movimiento u otro lenguaje artístico. El uso de lápices, pintura o materiales por sí solo no implica Arte."
+  },
+  "evidence_instruction": "Elige el fragmento literal del registro que más directamente sustenta la acción central. No elijas una interpretación agregada ni inventes hechos. Elige NONE si no hay fragmento observable suficiente."
+}

@@ -14,6 +14,7 @@
     "eval:jev": "node --env-file-if-exists=.env.local cli/benchmark.mjs --provider jev",
     "eval:baseline": "node cli/benchmark.mjs --provider baseline",
     "eval:luna": "node --env-file-if-exists=.env.local cli/benchmark-luna.mjs",
-    "costs:luna": "node cli/analyze-luna-costs.mjs"
+    "costs:luna": "node cli/analyze-luna-costs.mjs",
+    "eval:current-dev": "node --env-file-if-exists=.env.local cli/benchmark-current-dev.mjs"
   }
 }

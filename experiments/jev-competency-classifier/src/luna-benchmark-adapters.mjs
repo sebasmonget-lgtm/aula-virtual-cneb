@@ -16,7 +16,7 @@ export function jevCost(usage, pricing) {
 }
 
 // Observe the original provider boundary without changing prompts, validation, thresholds or retries.
-function trackedFetch(fetchImpl, calls, pricing) {
+export function trackedFetch(fetchImpl, calls, pricing) {
   return async (url, options) => {
     const payload = JSON.parse(options.body);
     assertNoBenchmarkLabels(payload);

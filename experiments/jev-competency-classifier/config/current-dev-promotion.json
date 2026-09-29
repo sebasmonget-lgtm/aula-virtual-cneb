@@ -1,0 +1,11 @@
+{
+  "status": "preregistered_engineering_criteria_requires_human_candidate_approval",
+  "indicative_acceptable_accuracy_target": 0.85,
+  "minimum_acceptable_accuracy_gain": 0.03,
+  "maximum_false_abstention_increase": 0,
+  "maximum_privacy_fp_increase": 0,
+  "maximum_overclassification_rate_increase": 0.02,
+  "maximum_accuracy_range_between_runs": 0.05,
+  "required_runs": 3,
+  "note": "Target 85% is indicative, not a tuning mandate. Thresholds above govern candidate review, not Jev classification. No automatic promotion or final-test execution."
+}

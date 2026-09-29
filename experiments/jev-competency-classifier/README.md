@@ -4,6 +4,10 @@ Prototipo local para medir si Jev puede asociar observaciones espontáneas ficti
 
 Consulta [PLAN.md](PLAN.md) para el contrato, el alcance y las métricas.
 
+## CURRENT DEV y adjudicación humana
+
+La nueva fase independiente de 80 observaciones, CURRENT V1/V2, Luna CLEAN/INTERPRET y adjudicación humana se documenta en [CURRENT_DEV.md](CURRENT_DEV.md). Abrir `/current-dev-review.html` para revisar la propuesta sin gold. No ejecutar el test final congelado durante esta fase.
+
 ## Benchmark Luna
 
 El harness separado de cuatro brazos, UI local, JSON/JSONL etiquetado, repeticiones, costos y comparación se documenta en [BENCHMARK_LUNA.md](BENCHMARK_LUNA.md). `npm.cmd run eval:luna -- --dataset <archivo> --runs 3` muestra primero el presupuesto sin consultar modelos; exige `--execute --max-live-requests N` para ejecutar. No modifica Ayni.
