@@ -1,5 +1,15 @@
 # Errores y soluciones
 
+## 2026-09-29 — Dataset QA de 5 años cargado en observaciones ordinarias
+
+**Síntoma.** Había seis entrevistas confirmadas y 24 observaciones ordinarias, pero Diagnóstico → «2. Observar» mostraba 0/6.
+
+**Causa raíz.** El script de carga usó `ordinary_observations`, mientras el contador diagnóstico consulta por alumno `diagnostic_experience_observations`, `diagnostic_spontaneous_observations` y observaciones de sesiones diagnósticas. Las notas ordinarias no alimentan ese paso.
+
+**Solución validada.** Con respaldo previo y comprobación de los 24 IDs/textos, se retiraron únicamente esas filas de QA y se registraron O1 y O2 de cada alumno como 12 observaciones espontáneas diagnósticas, sin clasificar ni invocar IA. Se conservaron las seis entrevistas. API e interfaz muestran Conocer 6/6, Observar 6/6, Resumir pendiente; ordinarias 0. Ver `docs/qa/six-students-diagnostic-correction-2026-09-29.md`.
+
+**Prevención.** Para QA del Diagnóstico inicial, verificar el predicado real de `diagnosticStepProgressForTeacher` antes de cargar datos. No reutilizar el script histórico de observaciones ordinarias para este fin.
+
 ## 2026-09-29 — Falsos bloqueos del filtro V2.4 ante verbos iniciales
 
 **Síntoma.** QA-JEV-01 («Estaba…») y QA-JEV-03 («Tomó…») quedaban `privacy_blocked` sin llegar a Jev, aunque eran observaciones ficticias curriculares.

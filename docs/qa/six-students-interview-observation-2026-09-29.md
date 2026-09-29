@@ -1,5 +1,7 @@
 # QA: seis alumnos ficticios en el aula local de 5 años
 
+> **Estado corregido, 2026-09-29:** Las 24 `ordinary_observations` descritas abajo se eliminaron de esta base de QA tras identificar que pertenecían al flujo equivocado. Las seis entrevistas confirmadas conservan sus IDs. El Diagnóstico inicial contiene ahora 12 notas en `diagnostic_spontaneous_observations` (O1 y O2 por alumno), sin clasificación docente ni síntesis. La interfaz muestra Conocer **6/6**, Observar **6/6** y Resumir **Pendiente**. Ver [corrección del diagnóstico inicial](./six-students-diagnostic-correction-2026-09-29.md). El resto de este documento conserva la descripción de la carga inicial errónea como registro histórico; **no es el estado actual**. No repetir `scripts/qa/seed-six-qa-students.mjs` para preparar el diagnóstico.
+
 Fecha de carga: 2026-09-29. La instrucción posterior de la usuaria cambió el destino del dataset: se añadió al aula **existente de 5 años** (`92a0659e-ebdd-40da-9ab9-6a34542392fe`) del checkout `jev-luna-benchmark`. No se creó otra aula, no se inventaron fechas de nacimiento y no se utilizó una cuenta remota. Antes de la carga, el aula tenía cero alumnos. Su perfil institucional y su logo no se modificaron.
 
 ## Datos cargados
