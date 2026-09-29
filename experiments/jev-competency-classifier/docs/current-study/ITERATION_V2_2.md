@@ -4,7 +4,7 @@
 
 V2.1 completo: RAW 95.10%, CLEAN 94.61%, INTERPRET 98.53% de primaria aceptable. RAW se abstuvo en DEV028, DEV065 y DEV067 en las tres repeticiones pese a elección/confianza principal alta; el noul de suficiencia cayó bajo 0.70. CLEAN también perdió lectura emergente. La definición positiva de V2.1 destacaba escritura, arte y motricidad, dejando otras áreas resumidas en «otra competencia».
 
-INTERPRET añadió una clasificación motriz en DEV075 (una sola manipulación de masa, gold abstención). Es una incidencia de sesgo interpretativo observable, no evidencia de que toda interpretación sea perjudicial. Tres llamadas de red sin usage/costo conocido afectaron V1/RAW en la tercera repetición; no se reintentan ni se imputan a US$0. Los conteos pareados de correcciones excluyen fallos; accuracy del flujo y su bootstrap incluyen fallos como decisiones fallidas.
+La modalidad INTERPRET añadió una clasificación motriz en DEV075 (una sola manipulación de masa, gold abstención). Al inspeccionar su salida, `brief_interpretation` fue null en las tres repeticiones: no se atribuye ese error a una interpretación breve. La limpieza y el envoltorio de la modalidad también pueden cambiar la decisión Jev. Tres llamadas de red sin usage/costo conocido afectaron V1/RAW en la tercera repetición; no se reintentan ni se imputan a US$0. Los conteos pareados de correcciones excluyen fallos; accuracy del flujo y su bootstrap incluyen fallos como decisiones fallidas.
 
 ## Cambio mínimo
 

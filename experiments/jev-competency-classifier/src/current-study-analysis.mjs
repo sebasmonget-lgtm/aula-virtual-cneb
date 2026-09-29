@@ -35,6 +35,7 @@ export function analyzeStudyArm(results, arm) {
     accuracy_by_run: results.map((run) => summarizeArm(scored.filter((row) => row.run === run.number)).acceptable_primary_accuracy),
     errors, calls: calls.length, unknown_cost_calls: calls.filter((call) => !Number.isFinite(call.cost_usd)).length,
     known_cost_subtotal_usd: calls.reduce((n, call) => n + (Number.isFinite(call.cost_usd) ? call.cost_usd : 0), 0),
+    effective_models: Object.fromEntries([...new Set(calls.map((call) => call.model_effective ?? "not_reported"))].map((model) => [model, calls.filter((call) => (call.model_effective ?? "not_reported") === model).length])),
     jev_cost_usd: sumKnown(scored.map((row) => row.outcome.cost_jev_usd)),
     luna_cost_usd: sumKnown(scored.map((row) => row.outcome.cost_luna_usd)),
     jev_provider_cost_usd: scored.flatMap((row) => row.outcome.calls).filter((call) => call.cost_source === "provider").reduce((n, call) => n + call.cost_usd, 0),
@@ -80,7 +81,8 @@ export function pairedClusterInterval(results, before, after, iterations = 3000)
     method: "paired case-cluster bootstrap; 3 repetitions averaged within each case; exploratory synthetic DEV" };
 }
 export function errorMarkdown(version, arm, analysis) {
-  const lines = [`# Errores DEV ${version} / ${arm}`, "", "Gold Codex fijado antes de proveedores. Primaria aceptable es el criterio principal; adicionales se informan aparte. V1 no genera evidence/reason: ausentes, sin explicación sintética atribuida al modelo.", "",
+  const testFinal = version === "TEST_FINAL";
+  const lines = [`# Errores ${testFinal ? "TEST" : "DEV"} ${version} / ${arm}`, "", `${testFinal ? "Gold entregado por el usuario, congelado antes de DEV; no se adjudicó ni ajustó en esta corrida." : "Gold Codex fijado antes de proveedores."} Primaria aceptable es el criterio principal; adicionales se informan aparte. V1 no genera evidence/reason: ausentes, sin explicación sintética atribuida al modelo.`, "",
     `Casos con primaria inestable: ${analysis.unstable_primary_ids.join(", ") || "ninguno"}.`, ""];
   for (const category of ["Cantidad vs Forma", "Oral vs Lectura", "Convivencia", "Indagación", "Escritura", "Arte", "Motricidad", "Abstención", "Privacidad"]) {
     lines.push(`## ${category}`, "");

@@ -26,6 +26,7 @@ const lines = ["# DEV_FINAL_REPORT", "", "## Cierre de optimización DEV", "",
   `Candidato: **${selected.name}**. Criterio: primaria aceptable, falsas abstenciones, sobreclasificación, privacidad FP/FN, estabilidad; luego latencia y costo. Exact decision es secundaria. ${registry.selection_reason ?? ""}`, "",
   "V1 conserva instrucciones en cada ciclo. Sus nuevas repeticiones se muestran como controles; para selección se usa la primera medición, evitando escoger un control idéntico por una fluctuación favorable.", "",
   "## Todas las versiones y variantes (tres repeticiones)", "",
+  "Los costos de brazos LUNA son mixtos: costo Jev del proveedor + cálculo tarifario Luna sobre tokens reales. No son una factura conjunta verificada. RAW usa costo Jev; procedencia y desconocidos se detallan por brazo en la sección de costos.", "",
   "| Versión / variante | Primary | Acceptable primary | False abst. | Overclass. | Privacy FP/FN | Exact decision | Cost/1000 | Latencia ms | Primarias inestables /80 |",
   "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
   ...rows.map((row) => { const s = row.analysis.summary; return `| ${row.name} | ${pct(s.primary_accuracy)} | ${pct(s.acceptable_primary_accuracy)} | ${s.false_abstentions} | ${s.missed_abstentions_overclassification} | ${s.privacy_false_positives}/${s.missed_privacy_blocks} | ${pct(s.correct_total / s.total)} | ${usd(s.cost_per_1000_usd)} | ${s.latency_average_ms?.toFixed(0) ?? "—"} | ${row.analysis.unstable_primary_ids.length} |`; }), "",
@@ -33,6 +34,7 @@ const lines = ["# DEV_FINAL_REPORT", "", "## Cierre de optimización DEV", "",
   "## Estabilidad por versión y brazo", "", ...rows.map((row) => `- ${row.name}: accuracy por repetición ${row.analysis.accuracy_by_run.map(pct).join(" / ")}; primaria inestable ${row.analysis.unstable_primary_ids.join(", ") || "ninguna"}; adicionales incorrectos ${row.analysis.summary.additional_incorrect}; secundarias ausentes ${row.summary.expected_secondary_missing}; evidencia no alineada ${row.summary.ungrounded_suggested_evidence}.`), "",
   "## Aporte de Luna y diferencias pareadas", "",
   "Los conteos de errores corregidos/introducidos excluyen fallos de proveedores. Accuracy y bootstrap miden el flujo completo y cuentan esos fallos como desaciertos. En V2.1 esto cambia el denominador pareado; no atribuir correcciones técnicas a capacidad pedagógica de Luna.", ""];
+lines.push("CLEAN e INTERPRET usan prompts Luna distintos y nuevas llamadas: no comparten un mismo texto limpio. D−C compara tratamientos completos (limpieza, interpretación cuando aparece e incertidumbre), no identifica perfectamente el efecto aislado de agregar una frase interpretativa. En DEV075/V2.1 hubo sobreclasificación D con brief_interpretation=null; ese error no prueba sesgo de una interpretación breve.", "");
 for (const cycle of cycles) {
   lines.push(`### ${cycle.version}`, "", "```json", JSON.stringify(cycle.summary.paired_comparisons, null, 2), "```", "");
   const analysisFile = path.join(EXPERIMENT_ROOT, "docs/current-study", cycle.summary.metadata.v2_prompt.version, "analysis.json");
@@ -42,7 +44,35 @@ for (const cycle of cycles) {
     const before = cycle.summary.arms[pair.before], after = cycle.summary.arms[pair.after];
     const changedCost = pair.incremental_cost_usd;
     lines.push(`- ${pair.after} vs ${pair.before}: corrige ${pair.corrected_primary}, introduce ${pair.introduced_primary_errors}, neto ${pair.net_primary_errors_corrected} errores por caso-repetición; incremento ${usd(changedCost)}; costo incremental/error corregido ${pair.corrected_primary && changedCost != null ? usd(changedCost / pair.corrected_primary) : "no definido"}; costo/error neto corregido ${pair.net_primary_errors_corrected > 0 && changedCost != null ? usd(changedCost / pair.net_primary_errors_corrected) : "no definido"}; Δ falsa abstención ${after.false_abstentions - before.false_abstentions}; Δ sobreclasificación ${after.missed_abstentions_overclassification - before.missed_abstentions_overclassification}; Δ Privacy FP/FN ${after.privacy_false_positives - before.privacy_false_positives}/${after.missed_privacy_blocks - before.missed_privacy_blocks}; Δ latencia ${pair.incremental_latency_ms?.toFixed(0)} ms.`, "");
+    if (pair.before === "CURRENT_V2_RAW" && before.cost_per_1000_usd != null && after.cost_per_1000_usd != null) {
+      const per1000 = pair.incremental_cost_per_1000_usd;
+      lines.push(`Costo incremental relativo: ${(100 * (after.cost_per_observation_usd / before.cost_per_observation_usd - 1)).toFixed(2)}%; incremento absoluto ${usd(per1000)}/1000 observaciones; ${per1000 > 0 ? (100 * pair.acceptable_accuracy_gain / per1000).toFixed(2) : "no definido"} puntos de accuracy por US$1 adicional en un lote de 1000. Este cociente depende del tamaño del lote declarado.`, "");
+    }
   }
+  const effects = [`# Efectos Luna ${cycle.version}`, "", "Gold inmutable; análisis posterior de resultados DEV, sin juez adicional. IMPROVED/WORSENED/SAME compara primaria aceptable solo en casos clasificables; decisiones completas se muestran por separado y también incluyen abstención/privacidad. Fallos de proveedor son UNDETERMINED para comparaciones pareadas.", ""];
+  for (const arm of DEV_ARMS.slice(2)) {
+    const outcomes = cycle.raw.results.flatMap((run) => run.cases.map((item) => item.arms[arm]));
+    const lunaOutcomes = outcomes.filter((outcome) => outcome.luna);
+    const stageMs = lunaOutcomes.every((outcome) => Number.isFinite(outcome.luna.latency_ms)) ? lunaOutcomes.reduce((n, outcome) => n + outcome.luna.latency_ms, 0) : null;
+    const counts = { IMPROVED: 0, WORSENED: 0, SAME: 0, UNDETERMINED: 0 };
+    effects.push(`## ${arm}`, "", `Luna: ${lunaOutcomes.length} llamadas; interpretación presente ${lunaOutcomes.filter((o) => o.luna.brief_interpretation).length}; incertidumbre presente ${lunaOutcomes.filter((o) => o.luna.uncertainty).length}. Latencia etapa Luna: ${stageMs == null ? "desconocida" : (stageMs / outcomes.length).toFixed(0) + " ms"}/registro de la mezcla DEV, ${stageMs == null ? "desconocida" : (stageMs / lunaOutcomes.length).toFixed(0) + " ms"}/llamada permitida.`, "");
+    for (const run of cycle.raw.results) for (const item of run.cases) {
+      const before = item.arms.CURRENT_V2_RAW, after = item.arms[arm];
+      const failed = [before, after].some((o) => o.status === "classification_failed" || o.score.reasons.includes("provider_partial_failure"));
+      const eligible = !item.expected.should_abstain && !item.expected.should_privacy_block;
+      const change = failed ? "UNDETERMINED" : before.score.acceptable_primary_correct === after.score.acceptable_primary_correct ? "SAME" : after.score.acceptable_primary_correct ? "IMPROVED" : "WORSENED";
+      if (eligible) counts[change]++;
+      if (!failed && change === "SAME" && before.score.success === after.score.success) continue;
+      effects.push(`### ${item.id}, r${run.number}: ${eligible ? change : "decisión no curricular/privacidad"}`, "", `Observación: ${item.raw_observation}`, "",
+        `Gold: ${JSON.stringify(item.expected)}`, "", `RAW: ${JSON.stringify({ status: before.status, primary: before.primary, secondary: before.additional, success: before.score.success })}`, "",
+        `Luna: ${JSON.stringify({ clean: after.luna?.clean_observation ?? null, interpretation: after.luna?.brief_interpretation ?? null, uncertainty: after.luna?.uncertainty ?? null })}`, "",
+        `Después: ${JSON.stringify({ status: after.status, primary: after.primary, secondary: after.additional, success: after.score.success, evidence: after.explanation?.evidence ?? null, reason: after.explanation?.reason ?? null })}`, "");
+    }
+    effects.push(`Conteos primaria aceptable: ${JSON.stringify(counts)}.`, "");
+  }
+  const effectPath = `docs/current-study/${cycle.summary.metadata.v2_prompt.version}/LUNA_EFFECTS.md`;
+  await writeFile(path.join(EXPERIMENT_ROOT, effectPath), effects.map((line) => line.trimEnd()).join("\n").trimEnd() + "\n", { flag: "wx" });
+  lines.push(`Limpiezas, interpretaciones y casos mejorados/empeorados/sin cambio: ${effectPath}.`, "");
 }
 lines.push("## Costos medidos y procedencia", "",
   "Jev: costo del proveedor cuando existe; fallback por tokens separado. Luna: tokens reales y costo calculado por tarifas congeladas, no factura del proveedor. Desconocidos permanecen desconocidos. Proyección usa la mezcla DEV, incluido 5% de bloqueos previos sin llamadas; extrapolación, no tarifa garantizada.", "",
@@ -55,7 +85,8 @@ lines.push("## Costos medidos y procedencia", "",
   "Tarifas congeladas y centralizadas: Luna entrada US$0.10/M, entrada cacheada US$0.01/M, escritura de caché US$0.125/M y salida US$0.50/M (config/pricing-luna.json). Jev fallback entrada US$0.042/M y salida US$0/M (config/pricing-openrouter.json); la suma de costo proveedor y fallback se identifica por separado. No se reprecifica después de medir.", "",
   "### Tokens y procedencia por variante", "", ...rows.map((row) => `- ${row.name}: ${JSON.stringify({ tokens: row.analysis.tokens,
     jev_provider: row.analysis.jev_provider_cost_usd, jev_tariff: row.analysis.jev_tariff_cost_usd, unknown_cost_calls: row.analysis.unknown_cost_calls,
-    known_cost_subtotal_usd: row.analysis.known_cost_subtotal_usd, missing_latency_observations: row.analysis.missing_latency_observations })}`), "",
+    known_cost_subtotal_usd: row.analysis.known_cost_subtotal_usd, effective_models: row.analysis.effective_models,
+    missing_latency_observations: row.analysis.missing_latency_observations })}`), "",
   "### Proyección mensual: 20 observaciones/día ×20 días", "",
   "| Profesoras | Obs/mes | " + rows.map((row) => row.name).join(" | ") + " |",
   "|---:|---:|" + rows.map(() => "---:").join("|") + "|",
@@ -63,7 +94,7 @@ lines.push("## Costos medidos y procedencia", "",
   `Costo físico contabilizado de todas las corridas DEV (mixto: proveedor Jev + tarifa Luna): ${usd(cycles.every((cycle) => cycle.summary.physical.total_cost_usd != null) ? cycles.reduce((n, cycle) => n + cycle.summary.physical.total_cost_usd, 0) : null)}. Las dos modalidades Luna se invocaron separadamente en cada ciclo.`, "",
   `Subtotal conocido DEV: ${usd(cycles.reduce((n, cycle) => n + cycle.summary.physical.known_cost_subtotal_usd, 0))}; llamadas sin costo conocido: ${cycles.reduce((n, cycle) => n + cycle.summary.physical.unknown_cost_calls, 0)}. Es un subtotal, no un total completo ni costo cero para intentos fallidos.`, "",
   "## Errores por categoría y trazabilidad", "",
-  ...cycles.flatMap((cycle) => DEV_ARMS.map((arm) => `- ${cycle.version} / ${arm}: docs/current-study/${cycle.summary.metadata.v2_prompt.version}/${arm}.md; ledger: ${cycle.directory}/raw-results.json.`)), "",
+  ...cycles.flatMap((cycle) => DEV_ARMS.map((arm) => `- ${cycle.version} / ${arm}: docs/current-study/${cycle.summary.metadata.v2_prompt.version}/${arm}.md; ledger: ${cycle.directory}/raw-results.json; detalle de los 80 casos en tres repeticiones y cuatro brazos: ${cycle.directory}/comparison.md.`)), "",
   "## Límites y paso al test", "",
   "DEV fue creado y adjudicado por Codex, es sintético y no representa prevalencias reales. Tres repeticiones evalúan variabilidad técnica, no amplían el tamaño pedagógico. El 85% es orientativo; no se ajustan etiquetas ni thresholds para alcanzarlo. Los criterios previos de revisión humana se informan, pero esta selección autónoma fue autorizada posteriormente. No hay promoción automática a Ayni.", "",
   "Privacidad corregida común permite aislar V2/Luna dentro de DEV. El delta con el baseline histórico del test incluye cambios de privacidad: una sola evaluación final de un candidato no permite repartir causalmente ese delta entre filtro, V2 y Luna. El test fue usado en el benchmark histórico y permanece cerrado durante este ajuste; no se describe como un conjunto jamás observado.", "",
