@@ -82,7 +82,15 @@ function valuesFor(document, context, cards) {
   const needs = clean(group.needs);
   const strengths = clean(group.strengths);
   const priorities = clean(group.planning_priorities);
-  const reportedInterests = [...new Set(children.map((child) => clean(child.family_context?.interests)).filter(Boolean))].slice(0, 4);
+  const reportedInterests = Array.isArray(context.reported_interests) ? context.reported_interests.filter((item) => clean(item)) : [];
+  const confirmedPriorities = Array.isArray(context.confirmed_priorities) ? context.confirmed_priorities
+    .filter((item) => clean(item?.title)) : [];
+  const competencyNames = new Map(cards.map((card) => [card.id, clean(card.name || card.official_name)]));
+  const priorityTitles = confirmedPriorities.map((item) => clean(item.title)).join("; ");
+  const priorityDecision = (item) => [clean(item?.reason),
+    Array.isArray(item?.related_competency_ids) && item.related_competency_ids.length
+      ? `Competencias relacionadas: ${item.related_competency_ids.map((id) => competencyNames.get(id)).filter(Boolean).join(", ")}.` : ""]
+    .filter(Boolean).join(" ") || "La docente precisará cómo acompañar esta prioridad.";
   const reportedLanguages = [...new Set(children.map((child) => clean(child.family_context?.language_context)).filter(Boolean))].slice(0, 4);
   const missing = competencyFields.filter(([id]) => (id !== "PS_RELIGION" || snapshot.religion_applicable) &&
     (id !== "CAST_L2_ORAL" || snapshot.castellano_l2_applicable) && !observations.some((item) => item.competency_id === id))
@@ -94,8 +102,8 @@ function valuesFor(document, context, cards) {
     EDAD_AULA: `${context.age} años · ${clean(context.classroom || document.classroom)}`,
     DOCENTE: clean(context.teacher_name) || "Docente del aula",
     UGEL: clean(context.ugel) || "No registrada",
-    FECHA_INICIO_DIAGNOSTICO: observedFrom || "Inicio del año escolar",
-    FECHA_FIN_DIAGNOSTICO: observedTo || "Fecha de confirmación del informe",
+    FECHA_INICIO_DIAGNOSTICO: dateLabel(context.diagnostic_period_start) || observedFrom || "Inicio del año escolar",
+    FECHA_FIN_DIAGNOSTICO: dateLabel(context.diagnostic_period_end) || observedTo || "Fecha de confirmación del informe",
     N_ESTUDIANTES: String(children.length),
     N_OBSERVADOS: String(observedIds.size),
     N_ENTREVISTAS_COMPLETADAS: String(children.filter((item) => item.has_confirmed_interview).length),
@@ -115,21 +123,21 @@ function valuesFor(document, context, cards) {
       : "La observación continúa durante el año; estas conclusiones son iniciales.",
     DIAGNOSTICO_FORTALEZAS: strengths || "Información insuficiente para describir una fortaleza grupal.",
     DIAGNOSTICO_NECESIDADES: needs || "Información insuficiente para precisar necesidades grupales.",
-    DIAGNOSTICO_INTERESES: reportedInterests.length ? `Las familias mencionaron estos intereses: ${reportedInterests.join("; ")}. Conviene retomarlos y comprobar cuáles aparecen en el juego.` : "Información insuficiente sobre intereses compartidos; se explorarán durante el juego y la conversación.",
+    DIAGNOSTICO_INTERESES: reportedInterests.length ? `Las familias mencionaron intereses como ${reportedInterests.join(", ")}. Conviene retomarlos y observar cuáles aparecen también en el juego y las experiencias del aula.` : "Las entrevistas no aportan intereses estructurados suficientes para resumirlos aquí; se seguirán explorando durante el juego y la conversación.",
     DIAGNOSTICO_CONTEXTO: reportedLanguages.length ? `Las familias informaron sobre las lenguas del hogar: ${reportedLanguages.join("; ")}. Este contexto ayuda a planificar formas de participación; no sustituye la observación docente.` : "Las entrevistas confirmadas aportan contexto para comprender a cada niño. Sus respuestas no se usan como observaciones docentes.",
     DIAGNOSTICO_ADAPTACION_BIENESTAR: "Revisar cómo se adapta y participa cada niño en distintas situaciones; aún no se establece una conclusión general sin evidencia suficiente.",
     DIAGNOSTICO_BARRERAS_APOYOS: "Ajustar materiales, tiempos e interacciones según las necesidades observadas y los comentarios confirmados de la docente.",
-    PRIORIDADES_DIAGNOSTICAS: priorities || "Seguir observando para precisar las primeras prioridades.",
-    PRIORIDAD_1: "Aprovechar las fortalezas observadas", DECISION_PRIORIDAD_1: strengths || "Seguir recogiendo registros para reconocer fortalezas.",
-    PRIORIDAD_2: "Ofrecer más oportunidades de aprendizaje", DECISION_PRIORIDAD_2: needs || "Precisar necesidades con nuevas observaciones.",
-    PRIORIDAD_3: "Ajustar las próximas experiencias", DECISION_PRIORIDAD_3: priorities || "Revisar lo observado antes de planificar.",
+    PRIORIDADES_DIAGNOSTICAS: priorityTitles || priorities || "Seguir observando para precisar las primeras prioridades.",
+    PRIORIDAD_1: confirmedPriorities[0]?.title || "Aprovechar las fortalezas observadas", DECISION_PRIORIDAD_1: confirmedPriorities[0] ? priorityDecision(confirmedPriorities[0]) : strengths || "Seguir recogiendo registros para reconocer fortalezas.",
+    PRIORIDAD_2: confirmedPriorities[1]?.title || "Ofrecer más oportunidades de aprendizaje", DECISION_PRIORIDAD_2: confirmedPriorities[1] ? priorityDecision(confirmedPriorities[1]) : needs || "Precisar necesidades con nuevas observaciones.",
+    PRIORIDAD_3: confirmedPriorities[2]?.title || "Ajustar las próximas experiencias", DECISION_PRIORIDAD_3: confirmedPriorities[2] ? priorityDecision(confirmedPriorities[2]) : priorities || "Revisar lo observado antes de planificar.",
     FORTALEZAS_A_POTENCIAR: strengths || "Información insuficiente.",
-    IMPLICANCIAS_PLAN_ANUAL: priorities || "El plan anual se ajustará con nuevas observaciones confirmadas.",
+    IMPLICANCIAS_PLAN_ANUAL: priorityTitles || priorities || "El plan anual se ajustará con nuevas observaciones confirmadas.",
     IMPLICANCIAS_PRIMERAS_EXPERIENCIAS: needs || "Ofrecer juego, conversación y exploración para seguir conociendo al grupo.",
     ASPECTOS_PENDIENTES_OBSERVAR: missing.length ? `Seguir observando, entre otras, estas competencias: ${missing.join("; ")}.` : "Continuar reuniendo evidencias en situaciones variadas.",
     FECHA_REVISION_DIAGNOSTICO: "Al revisar las siguientes experiencias del aula.",
     CONCLUSION_DIAGNOSTICA_GRUPAL: [strengths && `Fortalezas: ${strengths}`, needs && `Oportunidades para acompañar: ${needs}`,
-      priorities && `Primeras decisiones: ${priorities}`, "El diagnóstico se actualizará con nuevas observaciones."].filter(Boolean).join(" "),
+      (priorityTitles || priorities) && `Primeras decisiones: ${priorityTitles || priorities}`, "El diagnóstico se actualizará con nuevas observaciones."].filter(Boolean).join(" "),
     REFERENCIA_ENTREVISTAS: `${children.filter((item) => item.has_confirmed_interview).length} entrevistas confirmadas en Ayni Aula.`,
     REFERENCIA_OBSERVACIONES: `${countLabel(records.length, "registro", "registros")} de observación incluidos en este corte.`,
     REFERENCIA_PORTAFOLIO: "Consultar el portafolio del aula si existen producciones vinculadas.",
@@ -139,7 +147,6 @@ function valuesFor(document, context, cards) {
   };
   // The teacher's confirmed comments are the nominal interpretation. No model
   // invents a child-specific diagnosis or a future observation for this table.
-  const competencyNames = new Map(cards.map((card) => [card.id, clean(card.name || card.official_name)]));
   const followups = children.map((child) => {
     const childObservations = observations.filter((item) => item.student_id === child.student_id && clean(item.observation_text));
     const observedCompetencies = [...new Set(childObservations.map((item) => competencyNames.get(item.competency_id)).filter(Boolean))].slice(0, 2);

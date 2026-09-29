@@ -24,7 +24,13 @@ test("el informe unificado conserva nombres autorizados, evidencia factual e inf
           observation_status: "observed_without_judgment" }],
         competency_coverage: [] } } };
   const context = { school_year: 2026, institution_name: "Jardín Sol", teacher_name: "Marisol",
-    age: 5, classroom: "Sala Amarilla", ugel: "UGEL 03" };
+    age: 5, classroom: "Sala Amarilla", ugel: "UGEL 03",
+    diagnostic_period_start: "2026-03-16", diagnostic_period_end: "2026-03-27",
+    reported_interests: ["Animales", "Construcción", "Música"], confirmed_priorities: [
+      { title: "Explorar, construir y probar alternativas", reason: "Ensayan estructuras", related_competency_ids: ["PS_IDENTIDAD"] },
+      { title: "Observar la participación en conversaciones diversas", reason: "Registrar turnos", related_competency_ids: [] },
+      { title: "Acompañar la organización compartida del juego", reason: "Acordar materiales", related_competency_ids: [] },
+    ] };
   const rendered = await renderDiagnosticUnifiedWord(document, context,
     [{ id: "PS_IDENTIDAD", name: "Construye su identidad" }]);
   if (process.env.AYNI_QA_DOCX_DIR) await writeFile(path.join(process.env.AYNI_QA_DOCX_DIR, "diagnostic-unified-qa.docx"), rendered);
@@ -32,6 +38,11 @@ test("el informe unificado conserva nombres autorizados, evidencia factual e inf
   const xml = await zip.file("word/document.xml").async("string");
   for (const value of ["Ana Pérez", "Luis Rojas", "En el aula:", "Eligió materiales", "Retomar Construye su identidad", "Información insuficiente", "UGEL 03"])
     assert.match(xml, new RegExp(value));
+  assert.match(xml, /16\/03\/2026/);
+  assert.match(xml, /27\/03\/2026/);
+  for (const title of context.confirmed_priorities.map((item) => item.title)) assert.match(xml, new RegExp(title));
+  assert.match(xml, /Las familias mencionaron intereses como Animales, Construcción, Música/);
+  assert.doesNotMatch(xml, /estos intereses:|\.;|Animales; Construcción/);
   assert.doesNotMatch(xml, /\{\{|SEGUIMIENTO_2|SEGUIMIENTO_3|EVID_RELIGION|EVID_CASTELLANO_L2/);
   assert.match(xml, /2 comentarios individuales confirmados por la docente/);
   const optional = structuredClone(document);

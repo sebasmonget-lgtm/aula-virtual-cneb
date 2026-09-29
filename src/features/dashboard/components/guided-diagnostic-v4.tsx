@@ -112,7 +112,7 @@ export function GuidedDiagnostic({ dashboard, onPlan, onStudents, initialStep = 
         {classroomContext.confirmed_diagnostic_summary && <p className="mt-2">Síntesis diagnóstica confirmada: {classroomContext.confirmed_diagnostic_summary}</p>}
         <p className="mt-2 text-xs">Se muestran solo patrones suficientemente frecuentes. Las entrevistas aportan contexto; no son observaciones de la docente ni niveles de logro.</p>
       </div>}
-      <Button className="min-h-12" onClick={() => setStep(2)}>Continuar a observar <ArrowRight /></Button>
+      <div className="flex justify-end"><Button className="min-h-12" onClick={() => setStep(2)}>Continuar a observar <ArrowRight /></Button></div>
     </section>}
 
     {step === 2 && !experience && <div className="space-y-2">

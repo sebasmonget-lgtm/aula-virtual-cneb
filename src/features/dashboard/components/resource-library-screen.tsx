@@ -15,7 +15,7 @@ const filters: { id: Filter; label: string }[] = [
 ];
 
 export function ResourceLibraryScreen({ age, initialFilter = "for-you", onUse }: { age: number; initialFilter?: "for-you" | "workshops"; onUse: (resource: LibraryResource) => void }) {
-  const [view, setView] = useState<"resources" | "documents">("resources");
+  const [view, setView] = useState<"resources" | "documents">(initialFilter === "workshops" ? "resources" : "documents");
   const [filter, setFilter] = useState<Filter>(initialFilter);
   const [query, setQuery] = useState("");
   const [resources, setResources] = useState<LibraryResource[]>([]);
@@ -85,11 +85,11 @@ export function ResourceLibraryScreen({ age, initialFilter = "for-you", onUse }:
 
   return <section className="mx-auto max-w-5xl space-y-5">
     <div className="flex gap-2" role="tablist" aria-label="Secciones de Biblioteca">
-      <button type="button" role="tab" aria-selected={view === "resources"} onClick={() => setView("resources")} className={`min-h-11 rounded-full px-5 text-sm font-bold ${view === "resources" ? "bg-[#0b7891] text-white" : "border bg-white text-[#536681]"}`}>Recursos</button>
       <button type="button" role="tab" aria-selected={view === "documents"} onClick={() => setView("documents")} className={`min-h-11 rounded-full px-5 text-sm font-bold ${view === "documents" ? "bg-[#0b7891] text-white" : "border bg-white text-[#536681]"}`}>Mis documentos</button>
+      <button type="button" role="tab" aria-selected={view === "resources"} onClick={() => setView("resources")} className={`min-h-11 rounded-full px-5 text-sm font-bold ${view === "resources" ? "bg-[#0b7891] text-white" : "border bg-white text-[#536681]"}`}>Ideas y materiales</button>
     </div>
     {view === "documents" ? <DocumentsScreen /> : <>
-      <header><h1 className="text-3xl font-extrabold tracking-tight text-[#1c2e50]">Biblioteca</h1><p className="mt-1 text-[#566883]">Encuentra una idea y llévala a tu próxima actividad.</p></header>
+      <header><h1 className="text-3xl font-extrabold tracking-tight text-[#1c2e50]">Ideas y materiales</h1><p className="mt-1 text-[#566883]">Estos talleres y materiales son ejemplos incluidos en Ayni para distintas edades. No son actividades de tu aula: solo se incorporan si eliges «Usar en actividad».</p></header>
       <label className="flex min-h-14 items-center gap-3 rounded-2xl border border-[#d4e1ed] bg-white px-4 text-[#60718a]"><Search className="size-5" aria-hidden="true" /><span className="sr-only">Buscar recurso</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar taller o material" className="min-w-0 flex-1 border-0 bg-transparent text-[#1c2e50] outline-none" /></label>
       <div className="flex gap-2 overflow-x-auto pb-1" aria-label="Filtrar recursos">{filters.map((item) => <button type="button" key={item.id} aria-pressed={filter === item.id} onClick={() => setFilter(item.id)} className={`min-h-11 shrink-0 rounded-full px-5 text-sm font-semibold ${filter === item.id ? "bg-[#0b7891] text-white" : "border border-[#d4e1ed] bg-white text-[#536681]"}`}>{item.label}</button>)}</div>
       <h2 className="text-xl font-extrabold text-[#1c2e50]">{filter === "for-you" ? `Recomendado para ${age} años` : filters.find((item) => item.id === filter)?.label}</h2>

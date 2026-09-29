@@ -131,12 +131,12 @@ export async function loadEffectiveCalendar(db, { teacherId, classroomId = null,
     days,blocks,experiences,activities };
 }
 
-export async function saveClassroomOverride(db, { teacherId, classroomId, date, isInstructional, reason }) {
+export async function saveClassroomOverride(db, { teacherId, classroomId, date, isInstructional, reason, confirmOfficialException = false }) {
   if (!isDate(date) || !String(reason ?? "").trim()) throw new SchoolCalendarError("invalid_override", "Indica la fecha y el motivo del cambio.");
   const calendar = await loadEffectiveCalendar(db,{teacherId,classroomId,from:date,to:date});
   const day = calendar.days[0];
   if (!day) throw new SchoolCalendarError("date_outside_year", "La fecha está fuera del calendario escolar.");
-  if (isInstructional && ["national_holiday","management_week","weekend"].includes(day.calendar_type))
+  if (isInstructional && ["national_holiday","management_week","weekend"].includes(day.calendar_type) && confirmOfficialException !== true)
     throw new SchoolCalendarError("authorization_required", "Este día está bloqueado por el calendario oficial y requiere un flujo autorizado.");
   await db.query(`update classroom_calendar_overrides set reverted_at=now(),reverted_by=$1 where classroom_id=$2 and override_date=$3::date and reverted_at is null`,[teacherId,classroomId,date]);
   const inserted = (await db.query(`insert into classroom_calendar_overrides(id,classroom_id,override_date,previous_calendar_type,new_calendar_type,

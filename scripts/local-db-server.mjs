@@ -1599,7 +1599,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
     }
     if(request.method==="PUT"&&url.pathname==="/api/school-calendar/override"){
       try{const body=await readJson(request),classroom=await annualPlanningContext();if(!classroom){send(response,404,{error:"Aula no disponible."},origin);return;}
-        const value=await saveClassroomOverride(db,{teacherId,classroomId:classroom.id,date:body.date,isInstructional:body.isInstructional===true,reason:body.reason});send(response,200,value,origin);}
+        const value=await saveClassroomOverride(db,{teacherId,classroomId:classroom.id,date:body.date,isInstructional:body.isInstructional===true,reason:body.reason,confirmOfficialException:body.confirmOfficialException===true});send(response,200,value,origin);}
       catch(error){send(response,httpStatusForError(error,422),{error:publicErrorMessage(error)},origin);}return;
     }
     if(request.method==="GET"&&/^\/api\/project-flow\/[0-9a-f-]+\/calendar$/i.test(url.pathname)){
@@ -1948,6 +1948,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       try {
         const id = url.pathname.split("/")[3], body = await readJson(request);
         const { row } = await projectFlowRow(id);
+        if (row?.status === "active") { send(response, 200, { id: row.id, status: row.status, teacher_confirmed_at: row.teacher_confirmed_at, version: row.version, revision: row.revision, already_confirmed: true }, origin); return; }
         if (!row || row.status !== "draft" || row.details?.stage !== "map_review") { send(response, 404, { error: "Proyecto no disponible para confirmar." }, origin); return; }
         const source = await projectFlowSource(row.annual_plan_id, row.source_proposal_id, true, row.source_proposal_index);
         const calendarReview=await ensureProjectCalendarSelection(row,source);

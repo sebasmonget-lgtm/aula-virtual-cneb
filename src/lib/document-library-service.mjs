@@ -2,6 +2,8 @@ import { diagnosticPlanningSummary } from "./diagnostic-assessment-v4.mjs";
 import { getCurrentClassroomContext } from "./classroom-context-service.mjs";
 import { projectPeriodClosureDocument } from "./period-closure-history.mjs";
 import { activityV3, canonicalProjectRoute, planningV3ReadEnabled, projectMasterV3 } from "./planning-contract-v3.mjs";
+import { initialDiagnosticPeriod, nationalCalendarBlocks2026 } from "./annual-plan-calendar.mjs";
+import { interviewInterestOptions } from "./family-interview-contract.mjs";
 
 const dateOnly = (value) => value instanceof Date ? value.toISOString().slice(0, 10) : String(value ?? "").slice(0, 10);
 const timestamp = (value) => value instanceof Date ? value.toISOString() : String(value ?? "");
@@ -213,7 +215,7 @@ export async function loadSavedDocument(db, teacherId, kind, id) {
  */
 export async function loadDiagnosticWordContext(db, teacherId, reviewId) {
   if (!validId(reviewId)) return null;
-  const scope = (await db.query(`select d.classroom_id,c.section,sy.year,ag.age_years,
+  const scope = (await db.query(`select d.classroom_id,c.section,sy.id as school_year_id,sy.year,ag.age_years,
       coalesce(ip.display_name,c.institution_name) as institution_name,ip.ugel,p.display_name as teacher_name
     from diagnostic_group_reviews d join classrooms c on c.id=d.classroom_id
     join school_years sy on sy.id=c.school_year_id join age_grades ag on ag.id=c.age_grade_id
@@ -221,10 +223,19 @@ export async function loadDiagnosticWordContext(db, teacherId, reviewId) {
     left join institution_profiles ip on ip.owner_user_id=c.teacher_id
     where d.id=$2 and c.teacher_id=$1 and sy.owner_id=$1`, [teacherId, reviewId])).rows[0];
   if (!scope) return null;
+  const [calendarBlocks, initialStage] = await Promise.all([
+    db.query(`select type,start_date,end_date from calendar_blocks where school_year_id=$1 order by start_date`, [scope.school_year_id]),
+    db.query(`select duration_weeks from initial_stages where school_year_id=$1 limit 1`, [scope.school_year_id]),
+  ]);
+  const blocks = calendarBlocks.rows.length ? calendarBlocks.rows.map((block) => ({ ...block,
+    start_date: dateOnly(block.start_date), end_date: dateOnly(block.end_date) }))
+    : Number(scope.year) === 2026 ? nationalCalendarBlocks2026() : [];
+  const diagnosticPeriod = blocks.length ? initialDiagnosticPeriod({ school_year: Number(scope.year), blocks,
+    initial_stage: { duration_weeks: Number(initialStage.rows[0]?.duration_weeks ?? 2) } }) : null;
   const students = (await db.query(`select id,first_name,last_name,preferred_name
     from students where classroom_id=$1 and status='active'`, [scope.classroom_id])).rows;
   const activeIds = new Set(students.map((row) => row.id));
-  const [guided, spontaneous, legacy, interviews, childReviews] = await Promise.all([
+  const [guided, spontaneous, legacy, interviews, childReviews, familyInterests, priorityReview] = await Promise.all([
     db.query(`select o.student_id,o.competency_v4_id,o.observed_at from diagnostic_experience_observations o
       join students s on s.id=o.student_id and s.classroom_id=o.classroom_id
       where o.classroom_id=$1 and s.status='active'`, [scope.classroom_id]),
@@ -242,6 +253,13 @@ export async function loadDiagnosticWordContext(db, teacherId, reviewId) {
     db.query(`select distinct r.student_id from diagnostic_student_reviews r
       join students s on s.id=r.student_id and s.classroom_id=r.classroom_id
       where r.classroom_id=$1 and r.status='confirmed' and s.status='active'`, [scope.classroom_id]),
+    db.query(`select distinct on (i.student_id) i.details->'interest_tags' as interest_tags
+      from student_family_interviews i join students s on s.id=i.student_id and s.classroom_id=i.classroom_id
+      where i.classroom_id=$1 and i.status='confirmed' and s.status='active'
+      order by i.student_id,i.version desc`, [scope.classroom_id]),
+    db.query(`select details from diagnostic_priority_reviews
+      where classroom_id=$1 and group_review_id=$2 and status='confirmed'
+      order by version desc limit 1`, [scope.classroom_id, reviewId]),
   ]);
   const observations = [...guided.rows, ...spontaneous.rows, ...legacy.rows]
     .filter((row) => activeIds.has(row.student_id));
@@ -256,6 +274,9 @@ export async function loadDiagnosticWordContext(db, teacherId, reviewId) {
     coverage.set(row.competency_v4_id, item);
   }
   const dates = observations.map((row) => dateOnly(row.observed_at)).filter((value) => /^\d{4}-\d{2}-\d{2}$/.test(value)).sort();
+  const interestIds = new Set(familyInterests.rows.flatMap((row) => Array.isArray(row.interest_tags) ? row.interest_tags : []));
+  const reportedInterests = interviewInterestOptions.filter((option) => option.id !== "other" && interestIds.has(option.id))
+    .map((option) => option.label);
   return {
     institution_name: scope.institution_name, ugel: scope.ugel, teacher_name: scope.teacher_name,
     classroom: scope.section, age: Number(scope.age_years), school_year: Number(scope.year),
@@ -265,6 +286,10 @@ export async function loadDiagnosticWordContext(db, teacherId, reviewId) {
     observed_children: new Set(observations.map((row) => row.student_id)).size,
     observation_count: observations.length,
     observed_from: dates[0] ?? null, observed_to: dates.at(-1) ?? null,
+    diagnostic_period_start: diagnosticPeriod?.starts_on ?? null,
+    diagnostic_period_end: diagnosticPeriod?.ends_on ?? null,
+    reported_interests: reportedInterests,
+    confirmed_priorities: priorityReview.rows[0]?.details?.priorities ?? [],
     competency_coverage: [...coverage.values()].map((item) => ({ competency_id: item.competency_id,
       student_count: item.students.size, record_count: item.records })),
   };

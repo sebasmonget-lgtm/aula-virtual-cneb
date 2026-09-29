@@ -183,13 +183,45 @@ async function appendPrintableImages(archive, xml, images) {
   return xml.slice(0, insertAt) + paragraphs.join("") + xml.slice(insertAt);
 }
 
+async function insertInlineImages(archive, xml, images) {
+  if (!images.length) return xml;
+  const relsFile = archive.file("word/_rels/document.xml.rels");
+  const typesFile = archive.file("[Content_Types].xml");
+  if (!relsFile || !typesFile) throw new Error("La plantilla no admite imágenes de proyecto.");
+  let rels = await relsFile.async("string");
+  let types = await typesFile.async("string");
+  let nextRel = Math.max(0, ...[...rels.matchAll(/Id="rId(\d+)"/g)].map((match) => Number(match[1]))) + 1;
+  for (const [index, item] of images.entries()) {
+    const marker = `{{${item.marker}}}`;
+    const paragraph = (xml.match(paragraphPattern) ?? []).find((part) => part.includes(marker));
+    if (!paragraph) throw new Error(`Falta el lugar de imagen ${item.marker} en el Word.`);
+    if (!item.data) { xml = xml.replace(paragraph, ""); continue; }
+    const bytes = await sharp(item.data).resize({ width: 360, withoutEnlargement: true }).png().toBuffer();
+    const metadata = await sharp(bytes).metadata();
+    const width = Math.min(metadata.width ?? 360, 360), height = metadata.height ?? 240;
+    const cx = Math.round(1.45 * 914400), cy = Math.round(cx * height / width);
+    const relation = `rId${nextRel++}`, filename = `ayni-project-${String(index + 1).padStart(2, "0")}.png`;
+    const pictureId = 9000 + index;
+    archive.file(`word/media/${filename}`, bytes);
+    rels = rels.replace("</Relationships>", `<Relationship Id="${relation}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/${filename}"/></Relationships>`);
+    const alt = xmlEscape(item.alt ?? `Imagen del proyecto ${index + 1}`);
+    const drawing = `<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:drawing><wp:inline xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/><wp:docPr id="${pictureId}" name="${alt}" descr="${alt}"/><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="${pictureId}" name="${filename}"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="${relation}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>`;
+    xml = xml.replace(paragraph, drawing);
+  }
+  if (!types.includes('Extension="png"')) types = types.replace("</Types>", '<Default Extension="png" ContentType="image/png"/></Types>');
+  archive.file("word/_rels/document.xml.rels", rels);
+  archive.file("[Content_Types].xml", types);
+  return xml;
+}
+
 /** The DOCX is a view of validated application data; this function makes no AI call. */
-export async function renderUnifiedWord({ templateUrl, values, logo = null, appendixImages = [], transform = (xml) => xml, transformPart = (_part, xml) => xml }) {
+export async function renderUnifiedWord({ templateUrl, values, logo = null, appendixImages = [], inlineImages = [], transform = (xml) => xml, transformPart = (_part, xml) => xml }) {
   const archive = await JSZip.loadAsync(await readFile(templateUrl));
   let xml = await archive.file("word/document.xml")?.async("string");
   if (!xml) throw new Error("La plantilla no tiene contenido Word.");
   xml = transform(xml);
   xml = await insertLogo(archive, xml, logo);
+  xml = await insertInlineImages(archive, xml, inlineImages);
   xml = fillWordXml(xml, { ...values, LOGO_COLEGIO: "" });
   xml = await appendPrintableImages(archive, xml, appendixImages);
   archive.file("word/document.xml", xml);

@@ -1035,3 +1035,37 @@ Síntoma: cuatro notas QA de la captura automatizada quedaron asociadas a la sel
 **Corrección.** La ruta devuelve estado `unavailable` para ese intento y la lista muestra `classifier_enabled=false` y `classifier_status=disabled`; se mantiene la comprobación de acceso entre docentes. La prueba se actualizó para verificar ese contrato y el endpoint de métricas aislado por aula.
 
 **Prevención.** Probar explícitamente los modos encendido y apagado de flags de IA en el límite HTTP, además de los servicios.
+
+## 2026-09-29 — El Word diagnóstico confundía período planificado con fechas de registros
+
+**Síntoma.** El encabezado del diagnóstico mostraba «29/09/2026 – 29/09/2026» cuando todas las observaciones de QA se cargaron el mismo día, aunque la etapa inicial del año tenía dos semanas.
+
+**Causa raíz.** La exportación usaba la primera y la última fecha de observación como período formal. La duración elegida en `initial_stages` y el primer bloque lectivo de `calendar_blocks` no se consultaban.
+
+**Corrección.** El contexto autorizado de exportación calcula el período formal desde el calendario lectivo del año y la duración inicial elegida. Las fechas efectivas de observación siguen apareciendo como procedencia de registros, separadas del período formal. El cálculo reutiliza las reglas de semanas lectivas del plan anual.
+
+**Prevención.** Probar por separado la ventana planificada y la ventana de evidencias, especialmente cuando todos los registros comparten una fecha o fueron capturados después del período inicial.
+
+## 2026-09-29 — Exportación QA del diagnóstico y códigos de unidades
+
+**Síntomas.** El Word diagnóstico mostraba párrafos casi literales de entrevistas en «Intereses identificados» y una prioridad genérica en lugar de las tres confirmadas. El cronograma anual rotulaba las unidades 07 y 11 como P07 y P11.
+
+**Causas.** La exportación diagnóstica leía texto libre de entrevistas y el resumen general, pero no las etiquetas de interés ni la revisión de prioridades confirmada. La agenda flexible asignaba prefijo P a todas las propuestas antes de construir el Word.
+
+**Corrección.** La proyección autorizada del diagnóstico toma las etiquetas de intereses de las últimas entrevistas familiares confirmadas y las prioridades de la revisión confirmada asociada al resumen; el Word indica que los intereses provienen de las familias. La agenda y el Word anual usan el tipo real de cada propuesta para el código P/U. Los dos documentos del aula QA se regeneraron en `.local/qa-documents`, sin modificar los originales ni los datos pedagógicos.
+
+**Validación.** En el Word diagnóstico regenerado figuran las nueve etiquetas de interés y las tres prioridades confirmadas. El plan anual regenerado contiene U07 y U11 tres veces cada uno, y ninguna aparición de P07 o P11. Pasaron las pruebas focales de ambos exportadores.
+
+**Prevención.** Mantener el mismo dato confirmado como fuente del diagnóstico, la UI y Mi año; probar códigos de proyectos y unidades en el cronograma además de las fichas.
+
+## 2026-09-29 — Controles de Proyecto o Unidad y confirmación ambigua
+
+**Síntomas.** La selección mostraba las doce propuestas, una acción de evaluación anterior aunque no había valoraciones, códigos de competencias en contexto y preguntas que solo podían quitarse al final. El recorrido y los criterios aparecían como campos extensos. Un fallo de comunicación al confirmar se mostraba como `Failed to fetch` sin aclarar si se había guardado.
+
+**Causas.** La recomendación se basaba solo en fecha; el checkbox no consideraba el recuento; el contexto y la sugerencia compartían presentación; la selección de preguntas no filtraba elementos intermedios. El cliente exponía el error técnico de red y no consultaba el estado tras una respuesta perdida. La operación de confirmación ya usa una transacción en el servicio de versiones.
+
+**Corrección.** La UI recomienda una propuesta por orden y estado del plan; diferencia datos y sugerencias, pide una revisión única al alterar competencias, filtra preguntas desmarcadas antes del Master, muestra recorrido secuencial y criterios compactos. El calendario muestra meses y registra explícitamente las jornadas excepcionales del aula en una capa distinta de la oficial. Una confirmación repetida del mismo proyecto devuelve el estado activo; si falla la respuesta, el cliente consulta el estado antes de sugerir reintento.
+
+**Límite de reproducción.** La copia local del aula QA contiene un único proyecto en etapa `dependents`, todavía sin mapa confirmable. No se pudo reproducir la petición concreta que mostró `Failed to fetch` ni atribuirle una causa de red precisa sin modificar los datos. Las pruebas de servicio cubren atomicidad de versiones, autorización de calendario, filtro de preguntas y excepciones oficiales; queda pendiente repetir la confirmación en UI cuando exista un mapa listo.
+
+**Prevención.** Mostrar el estado verificado después de confirmaciones con respuesta incierta y probar doble clic/reintento sobre un proyecto listo para confirmar.

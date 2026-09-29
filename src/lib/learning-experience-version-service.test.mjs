@@ -52,6 +52,7 @@ test("Proyecto V2 copia V1, archiva solo al confirmar y no reasigna actividades"
       [JSON.stringify({...details,title:"El huerto renovado"}),copy.id]);
     const confirmed=await confirmLearningExperienceVersion(db,classroomId,copy.id);
     assert.equal(confirmed.status,"active");
+    await assert.rejects(confirmLearningExperienceVersion(db,classroomId,copy.id),/ya fue confirmado/);
     const rows=(await db.query(`select id,status,title,version from learning_experiences where id in ($1,$2) order by version`,[v1,copy.id])).rows;
     assert.deepEqual(rows.map((row)=>[row.id,row.status,row.version]),[[v1,"archived",1],[copy.id,"active",2]]);
     assert.equal(rows[0].title,"El huerto");

@@ -76,7 +76,7 @@ export function validateProjectDecisions(input, allowedIds) {
 }
 
 export function validateProjectDependents(output, competencyIds) {
-  if (!Array.isArray(output?.guiding_questions) || output.guiding_questions.length < 2 || output.guiding_questions.length > 8 ||
+  if (!Array.isArray(output?.guiding_questions) || output.guiding_questions.length < 1 || output.guiding_questions.length > 8 ||
       output.guiding_questions.some((value) => !hasText(value, 250)) ||
       !Array.isArray(output.journey) || output.journey.length < 2 || output.journey.length > 7 ||
       output.journey.some((row) => !hasText(row.title, 140) || !hasText(row.description, 500)) ||

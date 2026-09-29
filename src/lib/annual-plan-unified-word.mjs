@@ -1,4 +1,6 @@
 import { buildFlexibleAnnualSchedule, buildEditableAnnualSchedule } from "./annual-plan-calendar.mjs";
+import { readFile } from "node:fs/promises";
+import { eligibleProjectImages } from "./jev-project-image.mjs";
 import { ANNUAL_PLAN_TEMPLATE_FORMAT } from "./annual-plan-contract.mjs";
 import { annualFlexibleValues } from "./annual-plan-flexible-word.mjs";
 import { removePageBreakAfterTable, removePageBreakBeforeTable, removeParagraphsContaining, renderUnifiedWord, replaceWordText } from "./unified-word-template.mjs";
@@ -50,11 +52,22 @@ function transformAnnual(xml, schedule) {
     ["sesiones de aprendizaje", "actividades de aprendizaje"],
     ["Contexto familiar y sociocultural", "Contexto del grupo"],
   ]) output = replaceWordText(output, source, target);
+  for (const entry of schedule.projects.filter((item) => item.code.startsWith("U"))) {
+    output = replaceWordText(output, `P${entry.code.slice(1)}`, entry.code);
+  }
   output = removePageBreakAfterTable(output, "Prioridades del año:");
   output = removePageBreakBeforeTable(output, "V. CRONOGRAMA GENERAL DE PROYECTOS");
   output = output.replace(/<w:tbl(?:\s[^>]*)?>[\s\S]*?<\/w:tbl>/g, (table) => plainText(table).includes("Registra una fila por proyecto") ? "" : table);
   output = output.replace(/<w:tbl(?:\s[^>]*)?>[\s\S]*?<\/w:tbl>/g,
     (table) => table.includes("{{MARZO_N_PROYECTOS}}") ? table.replace(/<w:tblHeader(?:\s[^>]*)?\/>/g, "") : table);
+  let imagePlaces = 0;
+  output = output.replace(/<w:tbl(?:\s[^>]*)?>[\s\S]*?<\/w:tbl>/g, (table) => {
+    const match = table.match(/\{\{PROYECTO_(\d{2})_OBSERVACIONES\}\}/);
+    if (!match) return table;
+    imagePlaces += 1;
+    return `${table}<w:p><w:r><w:t>{{AYNI_PROJECT_IMAGE_${match[1]}}}</w:t></w:r></w:p>`;
+  });
+  if (imagePlaces !== schedule.projects.length) throw new Error("La plantilla anual no tiene espacio para las imágenes de cada proyecto.");
   return output;
 }
 
@@ -76,6 +89,17 @@ export async function renderAnnualPlanUnifiedWord(document, cards = [], { logo =
     values[`${month}_CODIGOS`] = projects.length ? projects.map((entry) => entry.code).join(", ") : "Sin inicio de proyecto previsto";
   }
   values.CRITERIO_4 ||= "Revisar las propuestas cuando cambien los intereses y necesidades del grupo.";
-  return renderUnifiedWord({ templateUrl, values, logo,
+  const usedIds = [];
+  const inlineImages = [];
+  for (const [index, project] of document.content.proposed_experiences.entries()) {
+    const candidates = await eligibleProjectImages({ title: project.title, purpose: project.purpose,
+      situation: project.meaningful_situation ?? project.situation ?? project.context_or_trigger },
+    document.document_context?.age, { usedIds });
+    const image = candidates[0];
+    if (image) usedIds.push(image.id);
+    inlineImages.push({ marker: `AYNI_PROJECT_IMAGE_${String(index + 1).padStart(2, "0")}`,
+      data: image ? await readFile(image.file) : null, alt: image?.title ?? project.title });
+  }
+  return renderUnifiedWord({ templateUrl, values, logo, inlineImages,
     transform: (xml) => transformAnnual(xml, schedule) });
 }

@@ -105,6 +105,21 @@ function weeksIn(block, exceptions) {
 const consecutive = (weeks) => weeks.every((week, index) => !index || week.monday.getTime() - weeks[index - 1].monday.getTime() === 7 * DAY_MS);
 const fits = (weeks, duration) => weeks.length === duration && consecutive(weeks) && weeks[0].canStart && weeks.at(-1).canEnd;
 
+/** Formal diagnostic window from the first teaching block and chosen initial duration. */
+export function initialDiagnosticPeriod(calendar) {
+  const valid = validateAnnualCalendar(calendar);
+  const firstBlock = valid.blocks.find((block) => block.type === "instructional");
+  const exceptions = [...(valid.exceptions ?? []), ...valid.blocks.filter((block) => block.type !== "instructional")];
+  const duration = Number(valid.initial_stage?.duration_weeks ?? defaultInitialStage().duration_weeks);
+  if (!Number.isInteger(duration) || duration < 1 || duration > 4) throw new AnnualCalendarError("invalid", { field: "initial_stage" });
+  const weeks = weeksIn(firstBlock, exceptions);
+  let start = 0;
+  while (start + duration <= weeks.length && !fits(weeks.slice(start, start + duration), duration)) start += 1;
+  const selected = weeks.slice(start, start + duration);
+  if (!fits(selected, duration)) throw new AnnualCalendarError("stage_does_not_fit");
+  return { starts_on: iso(selected[0].monday), ends_on: iso(selected.at(-1).friday), duration_weeks: duration };
+}
+
 /** Schedule twelve proposals in complete teaching weeks; never bridge a blocked week. */
 export function buildFlexibleAnnualSchedule(calendar, projects) {
   const valid = validateAnnualCalendar(calendar);
@@ -132,7 +147,7 @@ export function buildFlexibleAnnualSchedule(calendar, projects) {
       while (cursor + duration <= available.length && !fits(available.slice(cursor, cursor + duration), duration)) cursor += 1;
       const weeks = available.slice(cursor, cursor + duration);
       if (!fits(weeks, duration)) throw new AnnualCalendarError("project_does_not_fit", { index, block: blockIndex + 1, duration_weeks: duration });
-      schedule.push({ index: index + 1, code: `P${String(index + 1).padStart(2, "0")}`,
+      schedule.push({ index: index + 1, code: `${projects[index]?.experience_type === "unit" ? "U" : "P"}${String(index + 1).padStart(2, "0")}`,
         starts_on: iso(weeks[0].monday), ends_on: iso(weeks.at(-1).friday), duration_weeks: duration,
         period: `Bimestre ${blockIndex + 1}`, calendar_block_id: block.id ?? null });
       cursor += duration;

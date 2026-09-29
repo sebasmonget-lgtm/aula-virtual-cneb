@@ -22,8 +22,10 @@ function valuesFor(document, context) {
   const priorities = safe(group.planning_priorities);
   const total = context.student_count ?? 0;
   const count = context.observation_count ?? 0;
-  const periodStart = dateLabel(context.observed_from) || "Inicio del año escolar";
-  const periodEnd = dateLabel(context.observed_to) || "fecha de este informe";
+  const periodStart = dateLabel(context.diagnostic_period_start) || "Inicio del año escolar";
+  const periodEnd = dateLabel(context.diagnostic_period_end) || "fecha de este informe";
+  const observedStart = dateLabel(context.observed_from);
+  const observedEnd = dateLabel(context.observed_to);
   const availability = document.status === "confirmed" || document.status === "active" ?
     "Resumen confirmado por la docente." : "Borrador por revisar con la docente.";
   return {
@@ -32,7 +34,7 @@ function valuesFor(document, context) {
     EDAD_AULA: [context.age ? `${context.age} años` : "", clean(context.classroom) || clean(document.classroom)].filter(Boolean).join(" · "),
     DOCENTE: clean(context.teacher_name) || "Docente del aula",
     UGEL: clean(context.ugel) || "No registrada",
-    PERIODO_DIAGNOSTICO: count ? `${periodStart} – ${periodEnd}` : "Todavía sin registros fechados",
+    PERIODO_DIAGNOSTICO: `${periodStart} – ${periodEnd}`,
     N_ESTUDIANTES: String(total),
     N_OBSERVADOS: String(context.observed_children ?? 0),
     N_ENTREVISTAS_COMPLETADAS: String(context.interview_count ?? 0),
@@ -40,7 +42,7 @@ function valuesFor(document, context) {
     N_EVIDENCIAS_REVISADAS: String(count),
     PROPOSITO_DIAGNOSTICO: "Conocer al grupo para decidir cómo acompañar sus aprendizajes al empezar el año.",
     CONTEXTO_PERIODO_DIAGNOSTICO: count
-      ? `Observaciones registradas del ${periodStart} al ${periodEnd}. ${availability}`
+      ? `Observaciones registradas del ${observedStart} al ${observedEnd}. ${availability}`
       : `Todavía no hay observaciones fechadas. ${availability}`,
     FOCOS_DIAGNOSTICOS: "Cómo juegan, se expresan, exploran y conviven los niños en las experiencias del aula.",
     CONDICIONES_RECOJO: "Las entrevistas aportan contexto familiar. Solo los registros del aula cuentan como observación docente.",

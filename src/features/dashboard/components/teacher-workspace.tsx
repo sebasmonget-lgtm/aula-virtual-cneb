@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import {
-  BookOpen, CalendarDays, CalendarRange, Check, ClipboardCheck, ClipboardList, Database, Files,
+  BookOpen, CalendarDays, CalendarRange, Check, ClipboardCheck, ClipboardList, Database,
   Home, Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -59,7 +59,7 @@ const mobileNav = [
   ["Evaluar", "Evaluar", ClipboardCheck], ["Biblioteca", "Biblioteca", BookOpen],
 ] as const;
 const f7Nav = [["Hoy", "Hoy", Home], ["Planificar", "Planificar", CalendarDays],
-  ["Mi aula", "Aula", Users], ["Documentos", "Documentos", Files]] as const;
+  ["Mi aula", "Aula", Users], ["Biblioteca", "Biblioteca", BookOpen]] as const;
 const f7Enabled = process.env.NEXT_PUBLIC_AYNI_F7_NAV === "1";
 const sentenceCase = (value: string) => value.charAt(0).toLocaleUpperCase("es-PE") + value.slice(1);
 
@@ -171,6 +171,7 @@ export function TeacherWorkspace() {
   const profile = dashboard?.profile;
   const activity = dashboard?.activity;
   const metrics = dashboard?.metrics;
+  const selectedNavigation = f7Enabled && active !== "Biblioteca" ? primaryDestination(active) : active;
 
   function navigate(section: string) { navigationTouched.current = true; setStarting(false); if (section !== "Planificar") { setPlanningTarget(null); setSelectedResource(null); } if (section === "Evaluar") { setEvaluationTarget(null); setEvaluationEntry("home"); } if (section === "Diagnóstico") setDiagnosticInitialStep(1); setActive(section); if (f7Enabled) { const hash = hashForDestination(section); if (hash && window.location.hash !== hash) window.history.pushState(null, "", hash); } }
   function openDiagnostic(initialStep: 1 | 2 | 3 = 1) { navigate("Diagnóstico"); setDiagnosticInitialStep(initialStep); }
@@ -238,8 +239,8 @@ export function TeacherWorkspace() {
               <SidebarMenu className="gap-1.5">
                 {(f7Enabled ? f7Nav : nav.map(([label, Icon]) => [label, label, Icon] as const)).map(([label, destination, Icon]) => (
                   <SidebarMenuItem key={label}>
-                    <SidebarMenuButton asChild isActive={primaryDestination(active) === destination} className="h-11 rounded-xl px-3 text-[15px] transition-colors hover:bg-[#eaf6f9] focus-visible:ring-2 data-[active=true]:bg-[#087d96] data-[active=true]:font-semibold data-[active=true]:text-white">
-                      <button type="button" aria-current={primaryDestination(active) === destination ? "page" : undefined} onClick={() => navigate(destination)}><Icon /><span>{label}</span></button>
+                    <SidebarMenuButton asChild isActive={selectedNavigation === destination} className="h-11 rounded-xl px-3 text-[15px] transition-colors hover:bg-[#eaf6f9] focus-visible:ring-2 data-[active=true]:bg-[#087d96] data-[active=true]:font-semibold data-[active=true]:text-white">
+                      <button type="button" aria-current={selectedNavigation === destination ? "page" : undefined} onClick={() => navigate(destination)}><Icon /><span>{label}</span></button>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 ))}
@@ -259,7 +260,7 @@ export function TeacherWorkspace() {
         <header className="sticky top-0 z-20 flex min-h-20 items-center justify-between bg-[#f7faff]/95 px-4 backdrop-blur md:border-b md:border-[#e7edf7] md:bg-white/95 md:px-8">
           <div className="flex items-center gap-3">
             <span className="grid size-11 place-items-center rounded-2xl bg-[#e8f7fa] text-[#0b7891] md:hidden"><BookOpen className="size-5" aria-hidden="true" /></span>
-            <div className="md:hidden"><p className="text-xl font-extrabold leading-tight text-[#1c2e50]">Ayni Aula</p><p className="text-xs text-[#60718a]">{active === "Documentos" ? "Tus archivos y versiones" : active === "Biblioteca" ? "Materiales reutilizables" : active === "Calendario" ? "Tu año, proyectos y actividades" : active === "Diagnóstico" ? "Conocer, observar y resumir" : active === "Aula" ? "Tus niños y su seguimiento" : active === "Evaluar" ? "Evidencias y decisiones" : active === "Planificar" ? "Tu diagnóstico y el CNEB" : "Tu aliada en Inicial"}</p></div>
+            <div className="md:hidden"><p className="text-xl font-extrabold leading-tight text-[#1c2e50]">Ayni Aula</p><p className="text-xs text-[#60718a]">{active === "Documentos" || active === "Biblioteca" ? "Tus documentos, ideas y materiales" : active === "Calendario" ? "Tu año, proyectos y actividades" : active === "Diagnóstico" ? "Conocer, observar y resumir" : active === "Aula" ? "Tus niños y su seguimiento" : active === "Evaluar" ? "Evidencias y decisiones" : active === "Planificar" ? "Tu diagnóstico y el CNEB" : "Tu aliada en Inicial"}</p></div>
             <div className="hidden md:block"><p className="text-sm font-semibold md:text-base">{sentenceCase(today)}</p><p className="text-xs text-muted-foreground">{profile?.institution_name ?? "Institución por configurar"} · {profile?.section ?? "Aula"}</p></div>
           </div>
           <div className="flex items-center gap-2">
@@ -290,7 +291,7 @@ export function TeacherWorkspace() {
         </main>
 
         <nav className={`fixed inset-x-0 bottom-0 z-30 grid ${f7Enabled ? "grid-cols-4" : "grid-cols-6"} border-t border-[#e1e9f2] bg-white/97 px-1 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_rgba(24,45,80,.05)] backdrop-blur md:hidden`} aria-label="Navegación rápida">
-          {(f7Enabled ? f7Nav : mobileNav).map(([label, destination, Icon]) => <button key={label} type="button" aria-current={primaryDestination(active) === destination ? "page" : undefined} onClick={() => { if (destination === "Biblioteca") setLibraryFilter("for-you"); navigate(destination); }} className={`group mx-0.5 flex min-h-16 flex-col items-center justify-center gap-1 rounded-xl text-[11px] font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-[-3px] active:bg-[#d8f0f4] ${primaryDestination(active) === destination ? "text-[#087d96]" : "text-[#60718a]"}`}><span className={`grid h-7 w-11 place-items-center rounded-lg ${primaryDestination(active) === destination ? "bg-[#dff3f6]" : "group-hover:bg-[#edf6fa]"}`}><Icon className="size-5" /></span><span>{label}</span></button>)}
+          {(f7Enabled ? f7Nav : mobileNav).map(([label, destination, Icon]) => <button key={label} type="button" aria-current={selectedNavigation === destination ? "page" : undefined} onClick={() => { if (destination === "Biblioteca") setLibraryFilter("for-you"); navigate(destination); }} className={`group mx-0.5 flex min-h-16 flex-col items-center justify-center gap-1 rounded-xl text-[11px] font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-[-3px] active:bg-[#d8f0f4] ${selectedNavigation === destination ? "text-[#087d96]" : "text-[#60718a]"}`}><span className={`grid h-7 w-11 place-items-center rounded-lg ${selectedNavigation === destination ? "bg-[#dff3f6]" : "group-hover:bg-[#edf6fa]"}`}><Icon className="size-5" /></span><span>{label}</span></button>)}
         </nav>
       </SidebarInset>
       <AttendanceDialog open={attendanceOpen} onOpenChange={setAttendanceOpen} students={students} onSave={markAttendance} />

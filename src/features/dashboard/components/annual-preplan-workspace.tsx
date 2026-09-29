@@ -6,7 +6,7 @@ import { buildAnnualCompetencyMap } from "@/src/lib/annual-competency-map.mjs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { AsyncButton, CompetencyChecklist, LoadingState, WorkflowFeedback } from "./workflow-ui";
+import { AsyncButton, CompetencyChecklist, GenerationProgress, LoadingState, WorkflowFeedback } from "./workflow-ui";
 import { AnnualPlanGenerator as LegacyAnnualPlanGenerator } from "./annual-plan-generator";
 
 type Row = { proposal_id: string; experience_type: "project" | "unit"; title: string; period: string;
@@ -138,12 +138,12 @@ export function AnnualPreplanWorkspace({ onConfirmed, onGoDiagnostic, onDevelop 
     { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ proposal, expectedRevision: selected.revision }) });
     await reload(changed.id); setNotice("Cambios guardados. Revisa la tabla y confirma cuando esté lista."); });
   const formalize = (id: string) => void act("formal", async () => { await json(`/api/annual-preplans/${id}/formalize`, body({}));
-    await reload(id); setNotice("El Plan Anual formal está listo en Documentos para revisar y descargar en Word."); });
+    await reload(id); setNotice("El Plan Anual formal está listo en Biblioteca → Mis documentos para revisar y descargar en Word."); });
   const confirm = () => void act("confirm", async () => { if (!selected || dirty) return;
     await json(`/api/annual-plans/${selected.id}/confirm`, body({ expectedRevision: selected.revision }));
     await reload(selected.id); onConfirmed?.();
     try { await json(`/api/annual-preplans/${selected.id}/formalize`, body({})); await reload(selected.id);
-      setNotice("«Mi año» está confirmado y el Word formal está listo en Documentos."); }
+      setNotice("«Mi año» está confirmado y el Word formal está listo en Biblioteca → Mis documentos."); }
     catch (cause) { setError(`${cause instanceof Error ? cause.message : "No pudimos preparar el Word."} Tu año quedó confirmado; puedes reintentar el documento.`); }
   });
   const copy = () => void act("copy", async () => { if (!selected) return;
@@ -169,7 +169,8 @@ export function AnnualPreplanWorkspace({ onConfirmed, onGoDiagnostic, onDevelop 
           <Input type="date" aria-label={`Inicio de ${block.label}`} value={block.start_date} disabled={!block.editable} onChange={(event) => setCalendar({ ...calendar, blocks: calendar.blocks.map((item, i) => i === index ? { ...item, start_date: event.target.value } : item) })} />
           <Input type="date" aria-label={`Fin de ${block.label}`} value={block.end_date} disabled={!block.editable} onChange={(event) => setCalendar({ ...calendar, blocks: calendar.blocks.map((item, i) => i === index ? { ...item, end_date: event.target.value } : item) })} /></div>)}</div></details></div>}
       <label className="block font-semibold">Algo más que quieras considerar<Textarea className="mt-2" value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Por ejemplo, los niños muestran interés por el huerto de la escuela." /></label>
-      <AsyncButton className="min-h-12" busy={busy === "generate"} busyLabel="Preparando doce propuestas..." disabled={Boolean(busy) || Boolean(plans?.draft)} onClick={generate}>Proponer mi año</AsyncButton>
+      <div className="flex justify-end"><AsyncButton className="min-h-12" busy={busy === "generate"} busyLabel="Preparando doce propuestas..." disabled={Boolean(busy) || Boolean(plans?.draft)} onClick={generate}>Proponer mi año</AsyncButton></div>
+      {busy === "generate" && <GenerationProgress label="Preparando tu año" description="Ayni está redactando las propuestas. Esto puede tardar varios minutos; mantén esta pantalla abierta." />}
       {plans?.draft && <p className="text-sm text-[#526b87]">Ya tienes un borrador de este año. Ábrelo para continuar.</p>}</section>}
     {selected && !isPreplan(selected) && <section className="rounded-2xl border bg-white p-5"><h2 className="text-lg font-bold">Tienes un plan del formato anterior</h2><p className="mt-2 text-sm text-[#526b87]">La versión {selected.version} sigue guardada. Puedes abrirla o preparar un preplan nuevo con la tabla editable.</p>
       <div className="mt-4 flex flex-wrap gap-2"><Button variant="outline" onClick={() => setShowLegacy(true)}>Ver plan anterior</Button></div></section>}
@@ -181,11 +182,12 @@ export function AnnualPreplanWorkspace({ onConfirmed, onGoDiagnostic, onDevelop 
       <section className="rounded-2xl border bg-white p-4"><h2 className="font-bold">Cobertura de competencias</h2><p className="mt-1 text-sm text-[#526b87]">Ayni señala oportunidades previstas; puedes decidir cómo ajustarlas.</p>
         <div className="mt-3 grid gap-2 sm:grid-cols-2">{coverage.filter((item: { warnings: string[] }) => item.warnings.length).map((item: { competency_id: string; competency_name: string; project_count: number; warnings: string[] }) => <p key={item.competency_id} className="rounded-lg bg-[#fff5e4] p-3 text-sm"><b>{item.competency_name}</b> · {item.project_count} {item.project_count === 1 ? "oportunidad" : "oportunidades"}<br />{item.warnings.join(" ")}</p>)}
           {!coverage.some((item: { warnings: string[] }) => item.warnings.length) && <p className="text-sm">Las competencias del aula tienen oportunidades previstas en este preplan.</p>}</div></section>
-      {editable && <div className="flex flex-wrap gap-2 rounded-2xl border bg-white p-4">{dirty ? <AsyncButton busy={busy === "save"} busyLabel="Guardando..." disabled={Boolean(busy)} onClick={save}>Guardar cambios</AsyncButton>
-        : <AsyncButton busy={busy === "confirm"} busyLabel="Confirmando y preparando Word..." disabled={Boolean(busy)} onClick={confirm}>Confirmar Mi año</AsyncButton>}
+      {editable && <div className="flex flex-wrap items-center gap-2 rounded-2xl border bg-white p-4">{dirty ? <AsyncButton className="ml-auto" busy={busy === "save"} busyLabel="Guardando..." disabled={Boolean(busy)} onClick={save}>Guardar cambios</AsyncButton>
+        : <AsyncButton className="ml-auto" busy={busy === "confirm"} busyLabel="Confirmando y preparando Word..." disabled={Boolean(busy)} onClick={confirm}>Confirmar Mi año</AsyncButton>}
         <p className="w-full text-sm text-[#526b87]">Al confirmar, Ayni desarrollará el documento formal a partir de esta versión.</p></div>}
-      {selected.status !== "draft" && <div className="rounded-2xl border bg-white p-4"><p className="font-bold">Documento formal</p><p className="mt-1 text-sm">{selected.formal_ready ? "Word listo en Documentos para revisar y descargar." : "Falta preparar el Word de esta versión."}</p>
-        {!selected.formal_ready && <AsyncButton className="mt-3" busy={busy === "formal"} busyLabel="Preparando Word..." disabled={Boolean(busy)} onClick={() => formalize(selected.id)}>Preparar Word</AsyncButton>}</div>}
+      {(busy === "confirm" || busy === "formal") && <GenerationProgress label="Preparando el documento formal" description="El plan está guardado. Ayni está desarrollando el Word; esto puede tardar varios minutos." />}
+      {selected.status !== "draft" && <div className="rounded-2xl border bg-white p-4"><p className="font-bold">Word del plan anual</p><p className="mt-1 text-sm">{selected.formal_ready ? "Listo en Biblioteca → Mis documentos para revisar y descargar." : "Falta preparar el Word de esta versión. Cuando esté listo, lo encontrarás en Biblioteca → Mis documentos."}</p>
+        {!selected.formal_ready && <div className="mt-3 flex justify-end"><AsyncButton busy={busy === "formal"} busyLabel="Preparando Word..." disabled={Boolean(busy)} onClick={() => formalize(selected.id)}>Preparar Word</AsyncButton></div>}</div>}
     </>}
     {plans && (plans.draft || plans.active || plans.archived.length > 0) && <section className="rounded-2xl border bg-white p-4"><h2 className="font-bold">Versiones de Mi año</h2><div className="mt-3 flex flex-wrap gap-2">{[plans.draft, plans.active, ...plans.archived].filter((item): item is Plan => Boolean(item)).map((item) =>
       <Button key={item.id} variant={item.id === selectedId ? "default" : "outline"} onClick={() => { setSelectedId(item.id); setProposal(isPreplan(item) ? item.proposal : null); }}>

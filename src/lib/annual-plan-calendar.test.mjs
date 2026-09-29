@@ -2,12 +2,19 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { PGlite } from "@electric-sql/pglite";
-import { AnnualCalendarError, buildFlexibleAnnualSchedule, defaultInitialStage, nationalCalendarBlocks2026, nationalSchoolHolidays2026,
+import { AnnualCalendarError, buildFlexibleAnnualSchedule, defaultInitialStage, initialDiagnosticPeriod, nationalCalendarBlocks2026, nationalSchoolHolidays2026,
   suggestAnnualProjectDurations, validateAnnualCalendar } from "./annual-plan-calendar.mjs";
 
 const durations = [2, 2, 2, 2, 2, 3, 2, 2, 3, 2, 2, 3];
 const projects = durations.map((duration_weeks) => ({ duration_weeks }));
 const calendar = () => ({ school_year: 2026, blocks: nationalCalendarBlocks2026(), initial_stage: defaultInitialStage() });
+
+test("el período diagnóstico usa el inicio lectivo y la duración elegida", () => {
+  assert.deepEqual(initialDiagnosticPeriod(calendar()), { starts_on: "2026-03-16", ends_on: "2026-03-27", duration_weeks: 2 });
+  const threeWeeks = calendar();
+  threeWeeks.initial_stage.duration_weeks = 3;
+  assert.deepEqual(initialDiagnosticPeriod(threeWeeks), { starts_on: "2026-03-16", ends_on: "2026-04-03", duration_weeks: 3 });
+});
 
 test("la plantilla nacional 2026 ubica la etapa inicial fuera de P01 y solo doce proyectos lectivos", () => {
   const plan = buildFlexibleAnnualSchedule(calendar(), projects);

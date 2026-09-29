@@ -120,6 +120,12 @@ test("la plantilla unificada utiliza exactamente los mismos doce objetos en cron
   const zip = await JSZip.loadAsync(rendered);
   const xml = await zip.file("word/document.xml").async("string");
   assert.doesNotMatch(xml, /\{\{|PROYECTO_13_|P13 \||P20 \||Plantilla editable|Producto o evidencia final/);
+  const projectImages = Object.keys(zip.files).filter((name) => /^word\/media\/ayni-project-\d+\.png$/.test(name));
+  assert.ok(projectImages.length > 0, "al menos un proyecto con tema conocido lleva imagen de la biblioteca");
+  assert.match(xml, /<wp:docPr[^>]*name="Mateo y Sofía riegan plantas"/);
+  const plantImageAt = xml.indexOf("Mateo y Sofía riegan plantas");
+  assert.ok(plantImageAt > xml.lastIndexOf("Cuidamos las plantas del patio") &&
+    plantImageAt < xml.lastIndexOf("Construimos caminos y puentes"), "la imagen queda entre las fichas P04 y P05");
   for (let index = 1; index <= 12; index += 1) {
     const code = `P${String(index).padStart(2, "0")}`;
     assert.match(xml, new RegExp(code));
@@ -129,6 +135,19 @@ test("la plantilla unificada utiliza exactamente los mismos doce objetos en cron
   assert.match(documentText, /Diciembre/);
   assert.match(documentText, /Doce propuestas iniciales/);
   assert.doesNotMatch(documentText, /Producto o evidencia final/);
+});
+
+test("el Word unificado conserva U07 y U11 también en el cronograma", async () => {
+  const units = structuredClone(proposal);
+  units.proposed_experiences[6].experience_type = "unit";
+  units.proposed_experiences[10].experience_type = "unit";
+  const word = { ...saved, content: units, document_context: { ...documentContext, template_version: "annual-unified-v1" } };
+  const archive = await JSZip.loadAsync(await renderSavedDocumentWord(word, cards));
+  const xml = await archive.file("word/document.xml").async("string");
+  for (const code of ["07", "11"]) {
+    assert.doesNotMatch(xml, new RegExp(`\\bP${code}\\b`));
+    assert.ok((xml.match(new RegExp(`\\bU${code}\\b`, "g")) ?? []).length >= 2);
+  }
 });
 
 test("el Word resume párrafos extensos y completa orientaciones sin repetir instrucciones técnicas", async () => {

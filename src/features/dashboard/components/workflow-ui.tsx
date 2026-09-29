@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, type ComponentProps, type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ComponentProps, type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
 import { AlertCircle, ArrowRight, CheckCircle2, Inbox, LoaderCircle, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -37,7 +37,7 @@ export function WorkflowTabs<T extends string>({ tabs, value, onChange, label }:
 export function NextStepCard({ title, description, action, onAction }: { title: string; description: string; action: string; onAction: () => void }) {
   return <section className="ayni-next-step" aria-label="Siguiente paso recomendado">
     <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-[#287163]" aria-hidden="true" />
-    <div className="min-w-0 flex-1"><p className="font-bold">{title}</p><p className="mt-1 text-sm text-[#526b87]">{description}</p><Button className="mt-3" onClick={onAction}>{action}<ArrowRight className="size-4" /></Button></div>
+    <div className="min-w-0 flex-1"><p className="font-bold">{title}</p><p className="mt-1 text-sm text-[#526b87]">{description}</p><div className="mt-3 flex justify-end"><Button onClick={onAction}>{action}<ArrowRight className="size-4" /></Button></div></div>
   </section>;
 }
 
@@ -80,12 +80,19 @@ export function LoadingState({ label }: { label: string }) {
 }
 
 export function GenerationProgress({ label, description }: { label: string; description: string }) {
-  return <div className="ayni-generation-progress" role="status">
-    <p className="font-bold text-[#19345b]">{label}</p>
-    <p className="mt-1 text-sm text-[#526b87]">{description}</p>
-    <div className="ayni-generation-progress-track" role="progressbar" aria-label={label} aria-valuetext="En curso">
-      <span className="ayni-generation-progress-bar" />
-    </div>
+  const [seconds, setSeconds] = useState(0);
+  useEffect(() => {
+    const started = Date.now();
+    const timer = window.setInterval(() => setSeconds(Math.floor((Date.now() - started) / 1000)), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+  const elapsed = `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
+  return <div className="ayni-generation-progress" role="status" aria-live="polite">
+    <div className="ayni-generation-progress-ring" role="progressbar" aria-label={label} aria-valuetext={`En curso, ${elapsed} transcurridos`} aria-valuemin={0} />
+    <div><p className="font-bold text-[#19345b]">{label}</p>
+      <p className="mt-1 text-sm text-[#526b87]">{description}</p>
+      <p className="mt-2 text-sm font-semibold text-[#087d96]">Tiempo transcurrido: {elapsed}</p>
+      <p className="mt-1 text-xs text-[#526b87]">El tiempo restante depende de la respuesta de la IA.</p></div>
   </div>;
 }
 

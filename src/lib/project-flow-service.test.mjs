@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { nationalCalendarBlocks2026, nationalSchoolHolidays2026 } from "./annual-plan-calendar.mjs";
 import { generateProjectPreview, generateProjectDependents, generateProjectMaster,
   instructionalDates, validateProjectMaster, preserveTeacherMapEdits, projectDetails,
-  validateEditedActivityMap } from "./project-flow-service.mjs";
+  validateEditedActivityMap, validateProjectDependents } from "./project-flow-service.mjs";
 
 const calendar = { blocks: nationalCalendarBlocks2026(), exceptions: nationalSchoolHolidays2026() };
 const decisions = { context_summary: "El grupo pregunta por plantas cercanas.", purpose: "Investigar cómo cambian las plantas.",
@@ -34,6 +34,15 @@ const master = { foundation: "El grupo pregunta por cambios visibles.", closing_
 const provider = (output, check) => () => ({ generate: async (request) => {
   check?.(request); return { output, provider_metadata: { usage: { input_tokens: 10 } } };
 } });
+
+test("la docente puede conservar una sola pregunta y esa selección pasa al Master", async () => {
+  const oneQuestion = { ...dependents, guiding_questions: ["¿Qué vemos?"] };
+  assert.equal(validateProjectDependents(oneQuestion, decisions.competency_ids), oneQuestion);
+  await generateProjectMaster({ context: { age: 5 }, decisions, dependents: oneQuestion,
+    availableDates: ["2026-04-13", "2026-04-14"], createProvider: provider(master, (request) => {
+      assert.deepEqual(request.ai_context_bundle.confirmed_questions, ["¿Qué vemos?"]);
+    }), loadSkill: async () => "Skill" });
+});
 
 test("las fechas útiles excluyen fines de semana, feriados y gestión", () => {
   assert.deepEqual(instructionalDates(calendar, "2026-04-13", "2026-04-17"),
