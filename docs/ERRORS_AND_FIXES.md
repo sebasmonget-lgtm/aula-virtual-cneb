@@ -996,3 +996,12 @@ Síntoma: cuatro notas QA de la captura automatizada quedaron asociadas a la sel
 **Corrección.** El guardado exitoso del mapa avisa al padre, que vuelve a cargar el diagnóstico, igual que ya hacía el flujo de observación espontánea. No cambia persistencia ni valoración. Typecheck, lint, build y suite completa 603/603 pasaron; falta repetir la actualización visual en un clon con un niño aún sin observación.
 
 **Prevención.** Los componentes que modifican registros usados por un indicador de progreso compartido deben invalidar también la lectura del indicador; probar el contador inmediatamente después de guardar, sin depender de recarga manual.
+## 2026-09-29 — Contrato HTTP anterior asumía sugerencia automática con flag apagado
+
+**Síntoma.** `scripts/auth-http.test.mjs` esperaba `privacy_blocked` al pedir una sugerencia en una nota familiar mientras el flag V2.4 estaba apagado.
+
+**Causa raíz.** La prueba codificaba el flujo anterior, que podía llamar al clasificador aun sin el nuevo flag. El contrato del piloto exige guardar y clasificar manualmente sin Jev cuando el flag está apagado.
+
+**Corrección.** La ruta devuelve estado `unavailable` para ese intento y la lista muestra `classifier_enabled=false` y `classifier_status=disabled`; se mantiene la comprobación de acceso entre docentes. La prueba se actualizó para verificar ese contrato y el endpoint de métricas aislado por aula.
+
+**Prevención.** Probar explícitamente los modos encendido y apagado de flags de IA en el límite HTTP, además de los servicios.

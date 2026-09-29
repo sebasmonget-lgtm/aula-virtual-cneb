@@ -76,7 +76,7 @@ import { createPilotClassroom, importStudentsForTeacher, parseStudentCsv } from 
 import { createLocalPrivateEvidenceStorage } from "../src/lib/private-evidence-storage.mjs";
 import { createSupabasePrivateObservationStorage } from "../src/lib/private-observation-storage.mjs";
 import { validateShortAudio, transcribeAndPolishAudio, AUDIO_MIME_TYPES } from "../src/lib/audio-note-service.mjs";
-import { buildClassifierOptions, createOpenAICompetencyClassifier } from "../src/lib/openai-competency-classifier.mjs";
+import { buildClassifierOptions } from "../src/lib/openai-competency-classifier.mjs";
 import { createJevCompetencySuggester, anonymousDecisionText } from "../src/lib/jev-competency-suggestion.mjs";
 import { jevFeatureEnabled } from "../src/lib/jev-openrouter-decision.mjs";
 import { eligibleProjectImages, publicProjectImage, suggestProjectImage } from "../src/lib/jev-project-image.mjs";
@@ -87,7 +87,8 @@ import { withAiUsageContext, loadTeacherAiUsage } from "../src/lib/ai-usage-serv
 import { completeDiagnosticReviewForTeacher, diagnosticProgressForTeacher, diagnosticStepProgressForTeacher, DiagnosticReviewError } from "../src/lib/diagnostic-review-service.mjs";
 import { DiagnosticExperienceError, loadDiagnosticExperienceWorkspace, recordDiagnosticExperienceObservation } from "../src/lib/diagnostic-experiences-v4.mjs";
 import { DiagnosticAssessmentError, loadDiagnosticAssessmentWorkspace, prepareDiagnosticSynthesis, saveDiagnosticSynthesis, confirmDiagnosticSynthesis, prepareDiagnosticStudentReview, saveDiagnosticStudentReview, confirmDiagnosticStudentReview, prepareDiagnosticGroupReview, saveDiagnosticGroupReview, confirmDiagnosticGroupReview, saveStudentInitialContext, diagnosticPlanningSummary } from "../src/lib/diagnostic-assessment-v4.mjs";
-import { DiagnosticSourceError, loadFamilyInterview, listFamilyInterviewStatuses, saveFamilyInterview, confirmFamilyInterview, saveAndConfirmFamilyInterview, attachFamilyInterview, familyInterviewAttachmentPath, recordSpontaneousObservation, recordMatrixDiagnosticObservation, loadSpontaneousObservations, correctSpontaneousClassification, suggestSpontaneousCompetencies, markSpontaneousNeedsReview } from "../src/lib/diagnostic-sources-v4.mjs";
+import { DiagnosticSourceError, loadFamilyInterview, listFamilyInterviewStatuses, saveFamilyInterview, confirmFamilyInterview, saveAndConfirmFamilyInterview, attachFamilyInterview, familyInterviewAttachmentPath, recordSpontaneousObservation, recordMatrixDiagnosticObservation, loadSpontaneousObservations, correctSpontaneousClassification, markSpontaneousNeedsReview, suggestSpontaneousV24, loadSpontaneousV24Metrics } from "../src/lib/diagnostic-sources-v4.mjs";
+import { createObservationV24Classifier, observationV24Enabled } from "../src/lib/observation-v24-classifier.mjs";
 import { neutralizeAssessmentText } from "../src/lib/assessment-v4-service.mjs";
 import { loadPlanningFeedback, planningFeedbackText, resolveProjectPlanningFeedback } from "../src/lib/planning-feedback.mjs";
 import { expectedRevision, assertRevision, conflictPayload, httpStatusForError, isVersionConflict, versionTransaction, VersionConflictError, publicErrorMessage } from "../src/lib/version-integrity.mjs";
@@ -181,24 +182,21 @@ const pendingAIGenerations = createPendingAIGenerationsStore(db);
 await pendingAIGenerations.pruneExpired();
 let diagnosticClassificationQueue = Promise.resolve();
 const diagnosticClassificationInFlight = new Set();
-const diagnosticClassifier = createOpenAICompetencyClassifier();
 const jevCompetencySuggester = jevFeatureEnabled("competencies") ? createJevCompetencySuggester() : null;
+const observationV24Active = observationV24Enabled();
+let observationV24ClassifierPromise;
+const observationV24Classifier = { classify: async (input) => {
+  observationV24ClassifierPromise ??= createObservationV24Classifier();
+  return (await observationV24ClassifierPromise).classify(input);
+} };
 const jevProjectImageEnabled = jevFeatureEnabled("project_image");
-const preferredDiagnosticClassifier = jevCompetencySuggester ? { classify: async (input) => {
-  try { return await jevCompetencySuggester.classify(input); }
-  catch {
-    if (process.env.OPENAI_API_KEY) return diagnosticClassifier.classify(input);
-    throw new Error("No hay un clasificador disponible.");
-  }
-} } : diagnosticClassifier;
 function queueDiagnosticClassification(id, studentId, teacherId) {
+  if (!observationV24Active) return;
   if (diagnosticClassificationInFlight.has(id)) return;
   diagnosticClassificationInFlight.add(id);
   diagnosticClassificationQueue = diagnosticClassificationQueue.then(() => withAiUsageContext({ teacherId, db }, async () => {
     try {
-      if (process.env.OPENAI_API_KEY || jevCompetencySuggester)
-        await suggestSpontaneousCompetencies(db, teacherId, id, preferredDiagnosticClassifier);
-      else await markSpontaneousNeedsReview(db, teacherId, id);
+      await suggestSpontaneousV24(db, teacherId, id, observationV24Classifier);
       await refreshStudentContextSnapshot(db, studentId);
     } catch {
       await markSpontaneousNeedsReview(db, teacherId, id).catch(() => {});
@@ -206,8 +204,9 @@ function queueDiagnosticClassification(id, studentId, teacherId) {
     } finally { diagnosticClassificationInFlight.delete(id); }
   }));
 }
-const pendingDiagnosticRows = authMode === "local" ? (await db.query(`select o.id,o.student_id from diagnostic_spontaneous_observations o
+const pendingDiagnosticRows = observationV24Active && authMode === "local" ? (await db.query(`select o.id,o.student_id from diagnostic_spontaneous_observations o
   join classrooms c on c.id=o.classroom_id where c.teacher_id=$1 and o.classification_status='pending'
+  and o.classifier_version='CURRENT_V2_4_RAW'
   order by o.observed_at,o.id`, [localTeacherId])).rows : [];
 for (const row of pendingDiagnosticRows) queueDiagnosticClassification(row.id, row.student_id, localTeacherId);
 
@@ -970,9 +969,16 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
           const media = await evidenceStorage.read(row.media_path, { teacherId, studentId: row.student_id });
           sendAsset(response, 200, media.data, media.mimeType, origin, "private, no-store");
         }
+        else if (request.method === "GET" && url.pathname === "/api/diagnostics/spontaneous-observations/metrics") {
+          send(response, 200, await loadSpontaneousV24Metrics(db, teacherId), origin);
+        }
         else if (request.method === "GET" && url.pathname === "/api/diagnostics/spontaneous-observations") {
+          if (!observationV24Active) await db.query(`update diagnostic_spontaneous_observations o
+            set classification_status='needs_review',classifier_status='disabled',classification_reason='unavailable'
+            from classrooms c where o.classroom_id=c.id and c.teacher_id=$1 and o.created_by=$1
+              and o.classifier_version='CURRENT_V2_4_RAW' and o.classifier_status='pending'`, [teacherId]);
           const result = await loadSpontaneousObservations(db, teacherId);
-          send(response, 200, result, origin);
+          send(response, 200, { ...result, classifier_enabled: observationV24Active }, origin);
           for (const row of result.observations.filter((item) => item.classification_status === "pending"))
             setImmediate(() => queueDiagnosticClassification(row.id, row.student_id, teacherId));
         }
@@ -991,12 +997,12 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
           const mediaPath = media ? await evidenceStorage.save({ teacherId, studentId: body.studentId,
             mimeType: media.mimeType, bytes: media.bytes }) : null;
           let saved;
-          try { saved = await recordSpontaneousObservation(db, teacherId, { ...body,
+          try { saved = await recordSpontaneousObservation(db, teacherId, { ...body, classifierEnabled: observationV24Active,
             mediaPath, mediaMimeType: media?.mimeType }); }
           catch (error) { if (mediaPath) await evidenceStorage.delete(mediaPath).catch(() => {}); throw error; }
           await refreshStudentContextSnapshot(db, saved.student_id);
           send(response, 201, saved, origin);
-          setImmediate(() => queueDiagnosticClassification(saved.id, saved.student_id, teacherId));
+          if (observationV24Active) setImmediate(() => queueDiagnosticClassification(saved.id, saved.student_id, teacherId));
         } else if (request.method === "POST" && /^\/api\/diagnostics\/spontaneous-observations\/[0-9a-f-]+\/(?:suggest|suggest-jev)$/i.test(url.pathname)) {
           await readJson(request);
           const id = url.pathname.split("/")[4];
@@ -1004,8 +1010,9 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
             join classrooms c on c.id=o.classroom_id where o.id=$1 and c.teacher_id=$2 and o.created_by=$2`, [id,teacherId])).rows[0];
           if (!target) { send(response, 404, { error: "Observación no encontrada." }, origin); return; }
           try {
-            const result = await suggestSpontaneousCompetencies(db, teacherId, id, preferredDiagnosticClassifier,
-              { allowReview: true });
+            const result = observationV24Active
+              ? await suggestSpontaneousV24(db, teacherId, id, observationV24Classifier, { allowRetry: true })
+              : { id, status: "needs_review", recommendation_state: "unavailable" };
             await refreshStudentContextSnapshot(db, target.student_id);
             send(response, 200, result, origin);
           } catch (error) {

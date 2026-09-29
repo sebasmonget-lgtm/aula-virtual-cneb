@@ -300,3 +300,6 @@ La autorización posterior a F1 permite ejecutar el bake-off A/B sin especialist
 ## Plan Maestro F11: documentos y sync local (2026-09-28)
 
 F11 proyecta catálogo autorizado en año/aula/proyecto→actividad sin cambiar historia. Solo planes/proyectos con artefacto F10 confirmado participan en sincronización; File System Access comprueba hash real, conserva conflictos y actualiza manifiesto después de cada escritura verificada. El ZIP revalida docente/aula/hash y es fallback móvil. Flags `AYNI_DOCUMENT_SYNC` y `NEXT_PUBLIC_AYNI_F11_DOCUMENTS`, apagados por defecto. Sin migración; QA/restauración en clon y pruebas sin llamadas de IA. Ver ADR 097.
+## Clasificador V2.4 RAW supervisado de observaciones diagnósticas (2026-09-29)
+
+`CURRENT_V2_4_RAW` queda detrás de `AYNI_OBSERVATION_CLASSIFIER_V24=1` exclusivamente para nuevas observaciones diagnósticas espontáneas. La nota original permanece inmutable; Jev escribe sugerencia, y solo la profesora escribe competencia confirmada. Flag apagado permite clasificación manual sin llamar a Jev. Migraciones local 0066 / Supabase 202609290001 añaden estado, versión, acción docente, latencia y error técnico. Las métricas agregadas se consultan en `/api/diagnostics/spontaneous-observations/metrics`. Respaldo previo `ee4d21a`; ver `docs/OBSERVATION_CLASSIFIER_V24_SUPERVISED.md`.

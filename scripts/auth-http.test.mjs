@@ -178,7 +178,13 @@ test("the HTTP boundary protects every route and local PGlite remains usable", {
     assert.equal((await call(`/api/diagnostics/spontaneous-observations/${observationB}/suggest`, "token-a", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" })).status, 404);
     const blocked = await call(`/api/diagnostics/spontaneous-observations/${observationB}/suggest`, "token-b", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" });
     assert.equal(blocked.status, 200);
-    assert.equal((await blocked.json()).recommendation_state, "privacy_blocked");
+    assert.equal((await blocked.json()).recommendation_state, "unavailable");
+    const observationList = await (await call("/api/diagnostics/spontaneous-observations", "token-b")).json();
+    assert.equal(observationList.classifier_enabled, false);
+    assert.equal(observationList.observations.find((item) => item.id === observationB).classifier_status, "disabled");
+    const metricsA = await call("/api/diagnostics/spontaneous-observations/metrics", "token-a");
+    assert.equal(metricsA.status, 200, JSON.stringify(await metricsA.clone().json()));
+    assert.equal((await metricsA.json()).observations, 0);
     const studentCard = (await (await call("/api/dashboard", "token-b")).json()).students[0];
     assert.equal(studentCard.full_name, "Alumna Ficticia");
     assert.equal(studentCard.evidence_count, 0);

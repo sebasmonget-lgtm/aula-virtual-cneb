@@ -7,6 +7,7 @@ import { competencyApplicability } from "./competency-applicability.mjs";
 import { buildClassifierOptions } from "./openai-competency-classifier.mjs";
 import { anonymousDecisionText } from "./jev-competency-suggestion.mjs";
 import { observationRecommendationState } from "./observation-recommendation.mjs";
+import { sanitizeObservationV24 } from "./observation-v24-privacy.mjs";
 import { familyInterviewCategories, familyInterviewStructuredOptionsVersion, interviewLanguageOptions, interviewInterestOptions, interviewPreviousEducationOptions, interviewPreviousEducationTypeOptions } from "./family-interview-contract.mjs";
 
 export class DiagnosticSourceError extends Error {
@@ -229,9 +230,15 @@ export async function recordSpontaneousObservation(db, teacherId, input) {
     fail("invalid_observation", "Indica dónde ocurrió y qué hizo o dijo el niño.");
   const id = randomUUID();
   await db.query(`insert into diagnostic_spontaneous_observations
-    (id,classroom_id,student_id,context_label,observation_text,support_status,created_by,media_path,media_mime_type)
-    values($1,$2,$3,$4,$5,$6,$7,$8,$9)`, [id,classroom.id,input.studentId,context,note || null,input.supportStatus ?? null,teacherId,input.mediaPath ?? null,input.mediaMimeType ?? null]);
-  return { id, student_id: input.studentId, classification_status: "pending" };
+    (id,classroom_id,student_id,context_label,observation_text,support_status,created_by,media_path,media_mime_type,
+      classification_status,classifier_version,classifier_status)
+    values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`, [id,classroom.id,input.studentId,context,note || null,
+      input.supportStatus ?? null,teacherId,input.mediaPath ?? null,input.mediaMimeType ?? null,
+      input.classifierEnabled === false ? "needs_review" : "pending",
+      input.classifierEnabled ? "CURRENT_V2_4_RAW" : null,
+      input.classifierEnabled === false ? "disabled" : input.classifierEnabled ? "pending" : null]);
+  return { id, student_id: input.studentId, classification_status: input.classifierEnabled === false ? "needs_review" : "pending",
+    classifier_version: input.classifierEnabled ? "CURRENT_V2_4_RAW" : null };
 }
 
 function validatedSpontaneousNote(input, hasMedia = false) {
@@ -334,6 +341,55 @@ export async function suggestSpontaneousCompetencies(db, teacherId, id, classifi
         where id=$1 and classroom_id=$2 and created_by=$3`, [id,classroom.id,teacherId])).rows[0] ?? {}) };
 }
 
+/** Frozen V2.4 pilot: only new flagged observations, never a historical backfill. */
+export async function suggestSpontaneousV24(db, teacherId, id, classifier, { allowRetry = false } = {}) {
+  const classroom = await scope(db, teacherId);
+  const observation = (await db.query(`select * from diagnostic_spontaneous_observations
+    where id=$1 and classroom_id=$2 and created_by=$3`, [id,classroom.id,teacherId])).rows[0];
+  if (!observation) fail("not_found", "Observación no encontrada.");
+  if (observation.classifier_version !== "CURRENT_V2_4_RAW" || observation.classification_source === "teacher")
+    return { id, status: "teacher_preserved", recommendation_state: observationRecommendationState(observation) };
+  if (observation.classifier_status !== "pending" && !(allowRetry && observation.classifier_status === "failed"))
+    return { id, status: observation.classifier_status, recommendation_state: observationRecommendationState(observation) };
+  const persist = async (status, ids = [], latency = null, errorCode = null) => {
+    const updated = await db.query(`update diagnostic_spontaneous_observations set classification_status='needs_review',
+      classification_source=$1,suggested_competency_v4_ids=$2::text[],classification_reason=$3,
+      classifier_status=$4,classifier_latency_ms=$5,classifier_error_code=$6,classified_at=now()
+      where id=$7 and classroom_id=$8 and created_by=$9 and classifier_version='CURRENT_V2_4_RAW'
+        and classification_source is distinct from 'teacher' and classifier_status=$10 returning id`,
+    [["suggested", "abstained"].includes(status) ? "jev" : null, ids,
+      status === "privacy_blocked" ? "privacy_blocked" : status === "missing_text" ? "missing_text" : status === "failed" ? "unavailable" : null,
+      status, latency, errorCode, id,classroom.id,teacherId,observation.classifier_status]);
+    return { id, status: updated.rows.length ? "needs_review" : "teacher_preserved",
+      recommendation_state: updated.rows.length ? status === "suggested" ? "suggested" : status === "abstained" ? "insufficient_information" :
+        status === "privacy_blocked" ? "privacy_blocked" : status === "missing_text" ? "missing_text" : "unavailable" : "teacher_confirmed" };
+  };
+  if (!observation.observation_text?.trim()) return persist("missing_text");
+  const names = (await db.query(`select first_name,last_name,preferred_name from students where classroom_id=$1`, [classroom.id])).rows
+    .flatMap((row) => [row.first_name,row.last_name,row.preferred_name]).filter(Boolean);
+  const safe = sanitizeObservationV24(observation.observation_text, names);
+  if (safe.status !== "ok") return persist("privacy_blocked");
+  const allowed = new Set((await applicableDiagnosticCompetencies(classroom)).map((item) => item.id));
+  try {
+    const result = await classifier.classify({ observation: safe.text, age: classroom.age_years,
+      applicability: { castellano_as_second_language: classroom.castellano_l2_applicable,
+        religion_applicable: classroom.religion_applicable } });
+    if (result.status === "classification_failed") return persist("failed", [], result.latency_ms ?? null,
+      /^[a-z_]{1,60}$/u.test(result.error_code ?? "") ? result.error_code : "provider_error");
+    const additional = Array.isArray(result.additional) ? result.additional : null;
+    const ids = [result.primary, ...(additional ?? [])].filter(Boolean);
+    const latency = Number.isInteger(result.latency_ms) && result.latency_ms >= 0 ? result.latency_ms : null;
+    if (!["review", "unclassified"].includes(result.status) || !additional || ids.length > 4 ||
+        ids.some((item) => !allowed.has(item)) || (result.status === "review") !== Boolean(result.primary) ||
+        (result.status === "unclassified" && ids.length))
+      return persist("failed", [], latency, "invalid_classification");
+    return persist(result.primary ? "suggested" : "abstained", [...new Set(ids)], latency);
+  } catch (error) {
+    const code = /^[a-z_]{1,60}$/u.test(error?.code ?? "") ? error.code : "unexpected";
+    return persist("failed", [], null, code);
+  }
+}
+
 export async function correctSpontaneousClassification(db, teacherId, id, competencyIds) {
   const classroom = await scope(db, teacherId);
   const allowed = new Set((await applicableDiagnosticCompetencies(classroom)).map((item) => item.id));
@@ -344,7 +400,13 @@ export async function correctSpontaneousClassification(db, teacherId, id, compet
   const updated = await db.query(`update diagnostic_spontaneous_observations set classification_status=$1,
     classification_source='teacher',competency_v4_id=$2,secondary_competency_v4_id=$3,
     competency_v4_ids=$4::text[],
-    classification_confidence=null,classification_reason=null,classified_at=now()
+    classification_confidence=null,classification_reason=null,classified_at=now(),
+    classifier_status=case when classifier_status='pending' then 'disabled' else classifier_status end,
+    teacher_action=case when classifier_version <> 'CURRENT_V2_4_RAW' or classifier_version is null then null
+      when cardinality($4::text[])=0 and cardinality(suggested_competency_v4_ids)>0 then 'rejected'
+      when cardinality($4::text[])=0 then 'saved_without_competency'
+      when cardinality(suggested_competency_v4_ids)>0 and $4::text[]=array[suggested_competency_v4_ids[1]]::text[] then 'confirmed'
+      else 'changed' end
     where id=$5 and classroom_id=$6 and created_by=$7 returning id,student_id,classification_status,competency_v4_id,competency_v4_ids`,
     [ids.length ? "classified" : "needs_review",ids[0] ?? null,ids[1] ?? null,ids,id,classroom.id,teacherId]);
   if (!updated.rows.length) fail("not_found", "Observación no encontrada.");
@@ -355,7 +417,8 @@ export async function loadSpontaneousObservations(db, teacherId) {
   const classroom = await scope(db, teacherId);
   const observations = (await db.query(`select o.id,o.student_id,o.context_label,o.observation_text,o.support_status,
     o.observed_at,o.classification_status,o.classification_source,o.competency_v4_id,o.secondary_competency_v4_id,
-    o.competency_v4_ids,o.suggested_competency_v4_ids,o.classification_reason,o.media_path is not null as has_media,o.media_mime_type
+    o.competency_v4_ids,o.suggested_competency_v4_ids,o.classification_reason,o.classifier_version,o.classifier_status,
+    o.media_path is not null as has_media,o.media_mime_type
     from diagnostic_spontaneous_observations o join students s on s.id=o.student_id and s.classroom_id=o.classroom_id
     where o.classroom_id=$1 and s.status='active' order by o.observed_at desc,o.id desc`, [classroom.id])).rows;
   return { observations: observations.map((row) => {
@@ -363,4 +426,28 @@ export async function loadSpontaneousObservations(db, teacherId) {
     delete publicRow.classification_reason;
     return { ...publicRow, recommendation_state: observationRecommendationState(row) };
   }), competencies: await applicableDiagnosticCompetencies(classroom) };
+}
+
+/** Classroom-scoped aggregate only; no observation text or provider payloads. */
+export async function loadSpontaneousV24Metrics(db, teacherId) {
+  const classroom = await scope(db, teacherId);
+  const rows = (await db.query(`select classifier_status,teacher_action,classifier_latency_ms,
+    suggested_competency_v4_ids[1] as suggested,competency_v4_id as confirmed
+    from diagnostic_spontaneous_observations where classroom_id=$1 and created_by=$2
+      and classifier_version='CURRENT_V2_4_RAW'`, [classroom.id,teacherId])).rows;
+  const count = (field, value) => rows.filter((row) => row[field] === value).length;
+  const suggested = count("classifier_status", "suggested"), completed = rows.filter((row) =>
+    !["pending", "disabled"].includes(row.classifier_status)).length;
+  const distribution = (field) => Object.fromEntries([...new Set(rows.map((row) => row[field]).filter(Boolean))].sort()
+    .map((id) => [id,count(field,id)]));
+  const latencies = rows.map((row) => row.classifier_latency_ms).filter((value) => Number.isInteger(value));
+  return { classifier_version: "CURRENT_V2_4_RAW", observations: rows.length, suggestions: suggested,
+    teacher_actions: Object.fromEntries(["confirmed","changed","rejected","saved_without_competency"].map((value) => [value,count("teacher_action",value)])),
+    direct_confirmation_rate: suggested ? rows.filter((row) => row.classifier_status === "suggested" && row.teacher_action === "confirmed").length / suggested : null,
+    correction_rate: suggested ? rows.filter((row) => row.classifier_status === "suggested" && row.teacher_action === "changed").length / suggested : null,
+    rejection_rate: suggested ? rows.filter((row) => row.classifier_status === "suggested" && row.teacher_action === "rejected").length / suggested : null,
+    abstention_rate: completed ? count("classifier_status","abstained") / completed : null,
+    classifier_status: Object.fromEntries(["pending","suggested","abstained","privacy_blocked","missing_text","failed","disabled"].map((value) => [value,count("classifier_status",value)])),
+    suggested_distribution: distribution("suggested"), confirmed_distribution: distribution("confirmed"),
+    average_latency_ms: latencies.length ? latencies.reduce((sum,value) => sum + value,0) / latencies.length : null };
 }
