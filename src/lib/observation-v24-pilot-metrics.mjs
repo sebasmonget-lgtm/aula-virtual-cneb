@@ -48,7 +48,7 @@ export function summarizeSpontaneousV24Pilot(rows, events) {
   return {
     classifier_version: "CURRENT_V2_4_RAW", observations: rows.length,
     classifier: { attempted, attempt_calls: attemptCalls, suggested, abstained,
-      privacy_blocked: statusCount("privacy_blocked"), technical_failed: technicalFailed,
+      technical_failed: technicalFailed,
       technical_failure_attempts: technicalFailureAttempts, pending_classifier: statusCount("pending"),
       completed_classifier_attempts: completed, missing_text: statusCount("missing_text"),
       disabled: statusCount("disabled"),

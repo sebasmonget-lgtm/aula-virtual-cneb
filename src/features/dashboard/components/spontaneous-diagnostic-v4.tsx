@@ -28,7 +28,7 @@ function SupervisedV24Recommendation({ record, competencies, busy, onSave, onRet
   const pending = record.classifier_status === "pending" && classifierEnabled;
   const statusText = record.classifier_status === "abstained"
     ? "No se encontró una competencia suficientemente clara."
-    : record.classifier_status === "privacy_blocked" || record.classifier_status === "failed"
+    : record.classifier_status === "failed"
       ? "La observación se guardó. Puedes elegir la competencia manualmente."
       : "Puedes elegir una competencia para esta observación.";
   return <div className="mt-3 space-y-3 rounded-xl border border-[#c9e4e9] bg-white p-4">

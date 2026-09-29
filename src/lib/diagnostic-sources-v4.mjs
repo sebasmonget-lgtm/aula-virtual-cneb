@@ -7,7 +7,6 @@ import { competencyApplicability } from "./competency-applicability.mjs";
 import { buildClassifierOptions } from "./openai-competency-classifier.mjs";
 import { anonymousDecisionText } from "./jev-competency-suggestion.mjs";
 import { observationRecommendationState } from "./observation-recommendation.mjs";
-import { sanitizeObservationV24 } from "./observation-v24-privacy.mjs";
 import { summarizeSpontaneousV24Pilot } from "./observation-v24-pilot-metrics.mjs";
 import { familyInterviewCategories, familyInterviewStructuredOptionsVersion, interviewLanguageOptions, interviewInterestOptions, interviewPreviousEducationOptions, interviewPreviousEducationTypeOptions } from "./family-interview-contract.mjs";
 
@@ -226,7 +225,7 @@ export async function applicableDiagnosticCompetencies(classroom) {
 export async function recordSpontaneousObservation(db, teacherId, input) {
   const classroom = await scope(db, teacherId);
   await studentInScope(db, classroom.id, input?.studentId);
-  const { context, note } = validatedSpontaneousNote(input, Boolean(input?.mediaPath));
+  const { context, note } = validatedSpontaneousNote(input, Boolean(input?.mediaPath), input?.classifierEnabled === true);
   if (input.supportStatus != null && !["no", "yes", "unknown"].includes(input.supportStatus))
     fail("invalid_observation", "Indica dónde ocurrió y qué hizo o dijo el niño.");
   const id = randomUUID();
@@ -242,10 +241,11 @@ export async function recordSpontaneousObservation(db, teacherId, input) {
     classifier_version: input.classifierEnabled ? "CURRENT_V2_4_RAW" : null };
 }
 
-function validatedSpontaneousNote(input, hasMedia = false) {
+function validatedSpontaneousNote(input, hasMedia = false, preserveRaw = false) {
   const context = typeof input?.contextLabel === "string" ? input.contextLabel.trim() : "";
-  const note = typeof input?.observationText === "string" ? input.observationText.trim() : "";
-  if (!context || context.length > 120 || (!note && !hasMedia) || note.length > 4000)
+  const raw = typeof input?.observationText === "string" ? input.observationText : "";
+  const note = preserveRaw ? raw : raw.trim();
+  if (!context || context.length > 120 || (!note.trim() && !hasMedia) || note.length > 4000)
     fail("invalid_observation", "Indica dónde ocurrió y qué hizo o dijo el niño.");
   return { context, note };
 }
@@ -360,7 +360,7 @@ export async function suggestSpontaneousV24(db, teacherId, id, classifier, { all
       where id=$7 and classroom_id=$8 and created_by=$9 and classifier_version='CURRENT_V2_4_RAW'
         and classification_source is distinct from 'teacher' and classifier_status=$10 returning id`,
     [["suggested", "abstained"].includes(status) ? "jev" : null, ids,
-      status === "privacy_blocked" ? "privacy_blocked" : status === "missing_text" ? "missing_text" : status === "failed" ? "unavailable" : null,
+      status === "missing_text" ? "missing_text" : status === "failed" ? "unavailable" : null,
       status, latency, errorCode, id,classroom.id,teacherId,observation.classifier_status]);
     if (!updated.rows.length && status === "failed") await db.query(`update diagnostic_spontaneous_observations
       set classifier_technical_failure_count=classifier_technical_failure_count+1
@@ -368,13 +368,9 @@ export async function suggestSpontaneousV24(db, teacherId, id, classifier, { all
     [id,classroom.id,teacherId]);
     return { id, status: updated.rows.length ? "needs_review" : "teacher_preserved",
       recommendation_state: updated.rows.length ? status === "suggested" ? "suggested" : status === "abstained" ? "insufficient_information" :
-        status === "privacy_blocked" ? "privacy_blocked" : status === "missing_text" ? "missing_text" : "unavailable" : "teacher_confirmed" };
+        status === "missing_text" ? "missing_text" : "unavailable" : "teacher_confirmed" };
   };
   if (!observation.observation_text?.trim()) return persist("missing_text");
-  const names = (await db.query(`select first_name,last_name,preferred_name from students where classroom_id=$1`, [classroom.id])).rows
-    .flatMap((row) => [row.first_name,row.last_name,row.preferred_name]).filter(Boolean);
-  const safe = sanitizeObservationV24(observation.observation_text, names);
-  if (safe.status !== "ok") return persist("privacy_blocked");
   const allowed = new Set((await applicableDiagnosticCompetencies(classroom)).map((item) => item.id));
   const started = await db.query(`update diagnostic_spontaneous_observations
     set classifier_attempt_count=classifier_attempt_count+1
@@ -384,7 +380,7 @@ export async function suggestSpontaneousV24(db, teacherId, id, classifier, { all
   [id,classroom.id,teacherId,observation.classifier_status,observation.classifier_attempt_count]);
   if (!started.rows.length) return { id, status: "teacher_preserved", recommendation_state: "unavailable" };
   try {
-    const result = await classifier.classify({ observation: safe.text, age: classroom.age_years,
+    const result = await classifier.classify({ observation: observation.observation_text, age: classroom.age_years,
       applicability: { castellano_as_second_language: classroom.castellano_l2_applicable,
         religion_applicable: classroom.religion_applicable } });
     const latency = Number.isInteger(result?.latency_ms) && result.latency_ms >= 0 ? result.latency_ms : null;

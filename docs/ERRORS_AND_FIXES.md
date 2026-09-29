@@ -1,5 +1,15 @@
 # Errores y soluciones
 
+## 2026-09-29 — Falsos bloqueos del filtro V2.4 ante verbos iniciales
+
+**Síntoma.** QA-JEV-01 («Estaba…») y QA-JEV-03 («Tomó…») quedaban `privacy_blocked` sin llegar a Jev, aunque eran observaciones ficticias curriculares.
+
+**Causa raíz.** El filtro conservador de mayúsculas trataba verbos iniciales no incluidos en `SAFE_START` como posibles nombres. El producto decidió eliminar íntegramente el filtro previo para `CURRENT_V2_4_RAW`, no ampliar una lista de excepciones.
+
+**Solución validada.** Se retiró el filtro y el estado de este flujo, se conservó y envió RAW exacto, y las migraciones 0068 / 202609290003 transforman filas antiguas preservando decisiones docentes. Los cinco casos QA llegaron a Jev; 49 pruebas relacionadas, typecheck, lint y build pasaron. QA-JEV-05 sugirió PS_CONVIVE frente a MAT_FORMA aproximado; no se ajustó el clasificador.
+
+**Prevención.** Mantener una prueba de frontera que compare byte a byte el RAW persistido con el entregado al clasificador, incluidos nombres, mayúsculas, correo, dirección y espacios. Cualquier cambio futuro de tratamiento de datos debe ser una decisión de producto explícita y documentada.
+
 ## 2026-09-28 — F10: timeout del arranque HTTP con concurrencia libre
 
 **Síntoma.** `node --test` reportó 595/596; `auth-http.test.mjs` no observó al servidor iniciar dentro de su plazo mientras otras pruebas PGlite/Word corrían en paralelo.

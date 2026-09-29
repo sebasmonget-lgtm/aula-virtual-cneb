@@ -3,7 +3,6 @@ import assert from "node:assert/strict";
 import { readFile, readdir } from "node:fs/promises";
 import { PGlite } from "@electric-sql/pglite";
 import { createPilotClassroom, importStudentsForTeacher } from "./pilot-onboarding-service.mjs";
-import { sanitizeObservationV24 } from "./observation-v24-privacy.mjs";
 import { createObservationV24Classifier, observationV24Enabled } from "./observation-v24-classifier.mjs";
 import { correctSpontaneousClassification, loadSpontaneousObservations, loadSpontaneousV24Metrics,
   recordSpontaneousObservation, suggestSpontaneousV24 } from "./diagnostic-sources-v4.mjs";
@@ -17,10 +16,11 @@ const decisionEvents = (db, id) => db.query(`select decision_number,classifier_v
   selected_competency_v4_ids_snapshot,selected_primary_competency_id
   from diagnostic_spontaneous_observation_decision_events where observation_id=$1 order by decision_number`, [id]);
 
-async function fixture() {
+async function fixture({ beforeMigration = null } = {}) {
   const db = await PGlite.create();
   const migrations = new URL("../../local-db/migrations/", import.meta.url);
-  for (const file of (await readdir(migrations)).filter((name) => name.endsWith(".sql")).sort())
+  for (const file of (await readdir(migrations)).filter((name) => name.endsWith(".sql") &&
+    (!beforeMigration || name < beforeMigration)).sort())
     await db.exec(await readFile(new URL(file, migrations), "utf8"));
   await createPilotClassroom(db, teacher, { teacherName: "Docente", institutionName: "Escuela", section: "V24",
     age: 5, year: 2026, startsOn: "2026-03-01", endsOn: "2026-12-18",
@@ -34,16 +34,64 @@ async function fixture() {
   return { db, save, competencies };
 }
 
-test("privacidad V2.4 conserva verbos, conectores y familia; bloquea identificadores", () => {
-  const input = "Agarró una caja. Encontró tres bloques. Con mamá también contó en casa.";
-  assert.equal(sanitizeObservationV24(input).text, input);
-  assert.equal(sanitizeObservationV24("También explicó cómo jugó con su hermano.").status, "ok");
-  assert.equal(sanitizeObservationV24("Camila contó dos vasos.", ["Camila"]).text, "[estudiante] contó dos vasos.");
-  assert.equal(sanitizeObservationV24("Mariana contó dos vasos.").status, "blocked");
-  assert.equal(sanitizeObservationV24("Contó dos vasos. Contacto: profe@escuela.pe").status, "blocked");
-  assert.equal(sanitizeObservationV24("Vive en calle Lima 123. Dibujó una casa.").status, "blocked");
-  assert.equal(sanitizeObservationV24("Mi teléfono es 999 123 456. Dibujó una casa.").status, "blocked");
-  assert.equal(sanitizeObservationV24("Se llama lucía y contó dos vasos.").text, "[persona] y contó dos vasos.");
+test("V2.4 envía exactamente el RAW aunque contenga nombres, mayúsculas o identificadores", async () => {
+  const { db, save, competencies } = await fixture();
+  try {
+    const texts = [
+      "Estaba repartiendo una galleta a cada muñeco.",
+      "Tomó un cuento conocido y contó la historia.",
+      "Camila y Mariana contaron dos vasos.",
+      "Contó dos vasos. Contacto: profe@escuela.pe",
+      "Vive en calle Lima 123. Dibujó una casa.",
+      "Mi teléfono es 999 123 456. Dibujó una casa.",
+      "  Contó tres fichas.\nDespués las repartió.  ",
+    ];
+    const received = [];
+    for (const text of texts) {
+      const note = await save(text);
+      await suggestSpontaneousV24(db, teacher, note.id, { classify: async ({ observation }) => {
+        received.push(observation);
+        return { status: "review", primary: competencies[0].id, additional: [], latency_ms: 1 };
+      } });
+      const row = (await db.query(`select observation_text,classifier_status,competency_v4_ids
+        from diagnostic_spontaneous_observations where id=$1`, [note.id])).rows[0];
+      assert.equal(row.observation_text, text);
+      assert.equal(row.classifier_status, "suggested");
+      assert.deepEqual(row.competency_v4_ids, []);
+    }
+    assert.deepEqual(received, texts);
+  } finally { await db.close(); }
+});
+
+test("migración retira estados históricos de bloqueo sin perder RAW ni decisiones docentes", async () => {
+  const migration = "0068_v24_raw_without_privacy_filter.sql";
+  const { db, save, competencies } = await fixture({ beforeMigration: migration });
+  try {
+    const pendingText = "Estaba repartiendo una galleta a cada muñeco.";
+    const reviewedText = "Tomó un cuento conocido y contó la historia.";
+    const pending = await save(pendingText);
+    const reviewed = await save(reviewedText);
+    await db.query(`update diagnostic_spontaneous_observations
+      set classifier_status='privacy_blocked',classification_status='needs_review',
+        classification_reason='privacy_blocked' where id=any($1::uuid[])`, [[pending.id,reviewed.id]]);
+    await correctSpontaneousClassification(db,teacher,reviewed.id,[competencies[0].id]);
+    const decisionBefore = (await decisionEvents(db,reviewed.id)).rows;
+    await db.exec(await readFile(new URL(migration,new URL("../../local-db/migrations/",import.meta.url)),"utf8"));
+    const rows = (await db.query(`select id,observation_text,classifier_status,classification_status,
+      teacher_action,competency_v4_ids from diagnostic_spontaneous_observations where id=any($1::uuid[])`,
+    [[pending.id,reviewed.id]])).rows;
+    const pendingAfter = rows.find((row) => row.id === pending.id);
+    const reviewedAfter = rows.find((row) => row.id === reviewed.id);
+    assert.equal(pendingAfter.observation_text,pendingText);
+    assert.equal(pendingAfter.classifier_status,"pending");
+    assert.equal(pendingAfter.classification_status,"pending");
+    assert.equal(reviewedAfter.observation_text,reviewedText);
+    assert.equal(reviewedAfter.classifier_status,"disabled");
+    assert.deepEqual(reviewedAfter.competency_v4_ids,[competencies[0].id]);
+    assert.deepEqual((await decisionEvents(db,reviewed.id)).rows,decisionBefore);
+    await assert.rejects(db.query(`update diagnostic_spontaneous_observations
+      set classifier_status='privacy_blocked' where id=$1`, [pending.id]));
+  } finally { await db.close(); }
 });
 
 test("flag explícito y wrapper congelado no requieren Luna", async () => {
@@ -124,13 +172,16 @@ test("sugerencia V2.4 nunca confirma; docente confirma, cambia, rechaza y abstie
   } finally { await db.close(); }
 });
 
-test("fallo, privacidad y flag apagado preservan la nota y la elección manual", async () => {
+test("fallo y flag apagado preservan la nota y la elección manual", async () => {
   const { db, save, competencies } = await fixture();
   try {
     const failed = await save("Dibujó una casa.");
     await suggestSpontaneousV24(db, teacher, failed.id, { classify: async () => { throw Object.assign(new Error("offline"), { code: "network" }); } });
-    const blocked = await save("Dibujó una casa. contacto@ejemplo.pe");
-    await suggestSpontaneousV24(db, teacher, blocked.id, { classify: async () => { throw new Error("must not call provider"); } });
+    const unfiltered = await save("Dibujó una casa. contacto@ejemplo.pe");
+    await suggestSpontaneousV24(db, teacher, unfiltered.id, { classify: async ({ observation }) => {
+      assert.equal(observation, "Dibujó una casa. contacto@ejemplo.pe");
+      return { status: "review", primary: competencies[0].id, additional: [], latency_ms: 100 };
+    } });
     const disabled = await save("Dibujó una casa.", false);
     const malformed = await save("Dibujó una casa.");
     await suggestSpontaneousV24(db, teacher, malformed.id, { classify: async () =>
@@ -141,25 +192,25 @@ test("fallo, privacidad y flag apagado preservan la nota y la elección manual",
       ({ status: "review", primary: competencies[0].id, additional: [], latency_ms: 200 }) },{ allowRetry: true });
     const rows = (await loadSpontaneousObservations(db, teacher)).observations;
     assert.equal(rows.find((item) => item.id === failed.id).classifier_status, "failed");
-    assert.equal(rows.find((item) => item.id === blocked.id).classifier_status, "privacy_blocked");
+    assert.equal(rows.find((item) => item.id === unfiltered.id).classifier_status, "suggested");
     assert.equal(rows.find((item) => item.id === disabled.id).classifier_status, "disabled");
     assert.equal(rows.find((item) => item.id === malformed.id).classifier_status, "failed");
     assert.equal(rows.find((item) => item.id === recovered.id).classifier_status, "suggested");
     assert.deepEqual(rows.find((item) => item.id === malformed.id).suggested_competency_v4_ids, []);
     assert.equal(rows.find((item) => item.id === disabled.id).observation_text, "Dibujó una casa.");
     await correctSpontaneousClassification(db, teacher, failed.id, [competencies[0].id]);
-    await correctSpontaneousClassification(db, teacher, blocked.id, []);
+    await correctSpontaneousClassification(db, teacher, unfiltered.id, []);
     await correctSpontaneousClassification(db, teacher, disabled.id, [competencies[0].id]);
     assert.equal((await loadSpontaneousObservations(db, teacher)).observations.find((item) => item.id === failed.id).competency_v4_id, competencies[0].id);
     assert.equal((await decisionEvents(db,failed.id)).rows[0].action, "changed");
-    assert.equal((await decisionEvents(db,blocked.id)).rows[0].action, "saved_without_competency");
+    assert.equal((await decisionEvents(db,unfiltered.id)).rows[0].action, "rejected");
     assert.equal((await decisionEvents(db,disabled.id)).rows[0].classifier_version, null);
     const metrics = await loadSpontaneousV24Metrics(db,teacher);
-    assert.equal(metrics.classifier.attempted,3);
-    assert.equal(metrics.classifier.attempt_calls,4);
+    assert.equal(metrics.classifier.attempted,4);
+    assert.equal(metrics.classifier.attempt_calls,5);
     assert.equal(metrics.classifier.technical_failed,3);
     assert.equal(metrics.classifier.technical_failure_attempts,3);
-    assert.equal(metrics.classifier.privacy_blocked,1);
+    assert.equal(Object.hasOwn(metrics.classifier,"privacy_blocked"),false);
     const legacy = await recordSpontaneousObservation(db,teacher,{ studentId: (await db.query(`select student_id from diagnostic_spontaneous_observations where id=$1`, [failed.id])).rows[0].student_id,
       contextLabel: "Juego", observationText: "Dibujó una casa." });
     assert.equal((await suggestSpontaneousV24(db,teacher,legacy.id,{ classify: async () => {

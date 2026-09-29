@@ -306,3 +306,7 @@ F11 proyecta catálogo autorizado en año/aula/proyecto→actividad sin cambiar 
 ## Historial y métricas del piloto V2.4 (2026-09-29)
 
 Respaldo `pilot-v24-before-events-20260929` sobre `ba612ef`. Migraciones local 0067 / Supabase 202609290002 añaden eventos append-only de cada decisión docente, sin texto de niños ni payload IA. La decisión vigente y el evento se guardan atómicamente. El endpoint de métricas separa intentos/respuestas del clasificador, sugerencias revisadas y pendientes, tasas con denominadores explícitos, matriz de cambios y latencia. Meta exploratoria de 30; sin llamadas Jev ni despliegue en esta fase. Ver `docs/OBSERVATION_CLASSIFIER_V24_SUPERVISED.md` y ADR 099.
+
+## V2.4 RAW sin filtro previo a Jev (2026-09-29)
+
+ADR 100 sustituye únicamente la cláusula de privacidad de ADR 098. `CURRENT_V2_4_RAW` entrega a Jev el texto RAW de la profesora, sin anonimización ni bloqueo por nombres, mayúsculas o identificadores. Las migraciones 0068 / 202609290003 retiran el estado `privacy_blocked`; las filas antiguas sin decisión pasan a `pending` y las ya revisadas preservan la decisión. La revisión docente y Assessment no cambian. Cinco casos QA llegaron con RAW intacto: tres principales coincidieron con la expectativa aproximada, uno se abstuvo y QA-JEV-05 sugirió PS_CONVIVE frente a MAT_FORMA esperado. Ver `docs/qa/v24-raw-without-privacy-2026-09-29.md`. Estas llamadas no pertenecen al piloto real de 30.
