@@ -8,6 +8,8 @@ Consulta [PLAN.md](PLAN.md) para el contrato, el alcance y las métricas.
 
 La fase de 80 observaciones, CURRENT V1/V2 y Luna CLEAN/INTERPRET sigue el [protocolo autónomo autorizado](docs/CURRENT_STUDY_PLAN.md). El [gold DEV adjudicado por Codex](docs/CURRENT_DEV_GOLD_REVIEW.md) se congeló antes de consultar proveedores. Las versiones y errores se conservan en `docs/current-study/`. El test de 28 casos requiere cierre DEV y un lock de evaluación única.
 
+**Estudio completado y cerrado:** cuatro ciclos DEV (V2, V2.1, V2.2, V2.3), tres repeticiones de los cuatro brazos, y una única pasada del candidato sobre el test congelado. [DEV_FINAL_REPORT.md](DEV_FINAL_REPORT.md), [FINAL_REPORT.md](FINAL_REPORT.md) y [validación](docs/CURRENT_STUDY_FINAL_VALIDATION.md) conservan resultados, costos y límites. No ejecutar otro ciclo ni otra evaluación final de este estudio; el lock ya está reclamado. El alto desempeño DEV no se confirmó en TEST y no se recomienda integrar esta versión todavía.
+
 El procedimiento anterior de revisión humana permanece documentado en [CURRENT_DEV.md](CURRENT_DEV.md); su estado de preparación y presupuesto son históricos. La adjudicación autónoma DEV fue autorizada posteriormente y no se presenta como revisión docente independiente.
 
 ## Benchmark Luna
