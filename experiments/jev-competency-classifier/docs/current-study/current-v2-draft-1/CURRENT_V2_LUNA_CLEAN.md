@@ -30,7 +30,7 @@ Gold: {"primary":"COM_ESCRITURA","acceptable_primary":["COM_ESCRITURA"],"accepta
 
 Respuesta: {"status":"unclassified","primary":null,"secondary":[]}
 
-Evidence: 
+Evidence:
 
 Reason: Jev eligió información insuficiente o no alcanzó confianza/suficiencia requeridas; no se fuerza una competencia.
 
@@ -44,7 +44,7 @@ Gold: {"primary":"COM_ESCRITURA","acceptable_primary":["COM_ESCRITURA"],"accepta
 
 Respuesta: {"status":"unclassified","primary":null,"secondary":[]}
 
-Evidence: 
+Evidence:
 
 Reason: Jev eligió información insuficiente o no alcanzó confianza/suficiencia requeridas; no se fuerza una competencia.
 
@@ -58,7 +58,7 @@ Gold: {"primary":"COM_ESCRITURA","acceptable_primary":["COM_ESCRITURA"],"accepta
 
 Respuesta: {"status":"unclassified","primary":null,"secondary":[]}
 
-Evidence: 
+Evidence:
 
 Reason: Jev eligió información insuficiente o no alcanzó confianza/suficiencia requeridas; no se fuerza una competencia.
 
@@ -72,7 +72,7 @@ Gold: {"primary":"COM_ESCRITURA","acceptable_primary":["COM_ESCRITURA"],"accepta
 
 Respuesta: {"status":"unclassified","primary":null,"secondary":[]}
 
-Evidence: 
+Evidence:
 
 Reason: Jev eligió información insuficiente o no alcanzó confianza/suficiencia requeridas; no se fuerza una competencia.
 
@@ -86,7 +86,7 @@ Gold: {"primary":"COM_ESCRITURA","acceptable_primary":["COM_ESCRITURA"],"accepta
 
 Respuesta: {"status":"unclassified","primary":null,"secondary":[]}
 
-Evidence: 
+Evidence:
 
 Reason: Jev eligió información insuficiente o no alcanzó confianza/suficiencia requeridas; no se fuerza una competencia.
 
@@ -130,7 +130,7 @@ Gold: {"primary":"COM_ARTE","acceptable_primary":["COM_ARTE"],"acceptable_second
 
 Respuesta: {"status":"unclassified","primary":null,"secondary":[]}
 
-Evidence: 
+Evidence:
 
 Reason: Jev eligió información insuficiente o no alcanzó confianza/suficiencia requeridas; no se fuerza una competencia.
 
@@ -174,7 +174,7 @@ Gold: {"primary":"PSICO_MOTRICIDAD","acceptable_primary":["PSICO_MOTRICIDAD"],"a
 
 Respuesta: {"status":"unclassified","primary":null,"secondary":[]}
 
-Evidence: 
+Evidence:
 
 Reason: Jev eligió información insuficiente o no alcanzó confianza/suficiencia requeridas; no se fuerza una competencia.
 
@@ -188,7 +188,7 @@ Gold: {"primary":"PSICO_MOTRICIDAD","acceptable_primary":["PSICO_MOTRICIDAD"],"a
 
 Respuesta: {"status":"unclassified","primary":null,"secondary":[]}
 
-Evidence: 
+Evidence:
 
 Reason: Jev eligió información insuficiente o no alcanzó confianza/suficiencia requeridas; no se fuerza una competencia.
 
@@ -202,7 +202,7 @@ Gold: {"primary":"PSICO_MOTRICIDAD","acceptable_primary":["PSICO_MOTRICIDAD"],"a
 
 Respuesta: {"status":"unclassified","primary":null,"secondary":[]}
 
-Evidence: 
+Evidence:
 
 Reason: Jev eligió información insuficiente o no alcanzó confianza/suficiencia requeridas; no se fuerza una competencia.
 
@@ -216,7 +216,7 @@ Gold: {"primary":"PSICO_MOTRICIDAD","acceptable_primary":["PSICO_MOTRICIDAD"],"a
 
 Respuesta: {"status":"unclassified","primary":null,"secondary":[]}
 
-Evidence: 
+Evidence:
 
 Reason: Jev eligió información insuficiente o no alcanzó confianza/suficiencia requeridas; no se fuerza una competencia.
 
@@ -230,7 +230,7 @@ Gold: {"primary":"PSICO_MOTRICIDAD","acceptable_primary":["PSICO_MOTRICIDAD"],"a
 
 Respuesta: {"status":"unclassified","primary":null,"secondary":[]}
 
-Evidence: 
+Evidence:
 
 Reason: Jev eligió información insuficiente o no alcanzó confianza/suficiencia requeridas; no se fuerza una competencia.
 
@@ -258,7 +258,7 @@ Gold: {"primary":"PSICO_MOTRICIDAD","acceptable_primary":["PSICO_MOTRICIDAD"],"a
 
 Respuesta: {"status":"unclassified","primary":null,"secondary":[]}
 
-Evidence: 
+Evidence:
 
 Reason: Jev eligió información insuficiente o no alcanzó confianza/suficiencia requeridas; no se fuerza una competencia.
 
@@ -272,7 +272,7 @@ Gold: {"primary":"PSICO_MOTRICIDAD","acceptable_primary":["PSICO_MOTRICIDAD"],"a
 
 Respuesta: {"status":"unclassified","primary":null,"secondary":[]}
 
-Evidence: 
+Evidence:
 
 Reason: Jev eligió información insuficiente o no alcanzó confianza/suficiencia requeridas; no se fuerza una competencia.
 
@@ -285,4 +285,3 @@ Sin incidencias registradas.
 ## Privacidad
 
 Sin incidencias registradas.
-

@@ -4,9 +4,11 @@ Prototipo local para medir si Jev puede asociar observaciones espontáneas ficti
 
 Consulta [PLAN.md](PLAN.md) para el contrato, el alcance y las métricas.
 
-## CURRENT DEV y adjudicación humana
+## Experimento autónomo CURRENT DEV
 
-La nueva fase independiente de 80 observaciones, CURRENT V1/V2, Luna CLEAN/INTERPRET y adjudicación humana se documenta en [CURRENT_DEV.md](CURRENT_DEV.md). Abrir `/current-dev-review.html` para revisar la propuesta sin gold. No ejecutar el test final congelado durante esta fase.
+La fase de 80 observaciones, CURRENT V1/V2 y Luna CLEAN/INTERPRET sigue el [protocolo autónomo autorizado](docs/CURRENT_STUDY_PLAN.md). El [gold DEV adjudicado por Codex](docs/CURRENT_DEV_GOLD_REVIEW.md) se congeló antes de consultar proveedores. Las versiones y errores se conservan en `docs/current-study/`. El test de 28 casos requiere cierre DEV y un lock de evaluación única.
+
+El procedimiento anterior de revisión humana permanece documentado en [CURRENT_DEV.md](CURRENT_DEV.md); su estado de preparación y presupuesto son históricos. La adjudicación autónoma DEV fue autorizada posteriormente y no se presenta como revisión docente independiente.
 
 ## Benchmark Luna
 

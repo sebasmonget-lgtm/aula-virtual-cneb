@@ -30,7 +30,7 @@ Gold: {"primary":"COM_ESCRITURA","acceptable_primary":["COM_ESCRITURA"],"accepta
 
 Respuesta: {"status":"unclassified","primary":null,"secondary":[]}
 
-Evidence: 
+Evidence:
 
 Reason: Jev eligió información insuficiente o no alcanzó confianza/suficiencia requeridas; no se fuerza una competencia.
 
@@ -44,7 +44,7 @@ Gold: {"primary":"COM_ESCRITURA","acceptable_primary":["COM_ESCRITURA"],"accepta
 
 Respuesta: {"status":"review","primary":"COM_ESCRITURA","secondary":[]}
 
-Evidence: 
+Evidence:
 
 Reason: Acción central observada: Escribe diversos tipos de textos en su lengua materna. Secundarias solo con conducta independiente. Evidencia literal no verificada: requiere revisión humana.
 
@@ -58,7 +58,7 @@ Gold: {"primary":"COM_ESCRITURA","acceptable_primary":["COM_ESCRITURA"],"accepta
 
 Respuesta: {"status":"review","primary":"COM_ESCRITURA","secondary":[]}
 
-Evidence: 
+Evidence:
 
 Reason: Acción central observada: Escribe diversos tipos de textos en su lengua materna. Secundarias solo con conducta independiente. Evidencia literal no verificada: requiere revisión humana.
 
@@ -92,7 +92,7 @@ Gold: {"primary":"PSICO_MOTRICIDAD","acceptable_primary":["PSICO_MOTRICIDAD"],"a
 
 Respuesta: {"status":"unclassified","primary":null,"secondary":[]}
 
-Evidence: 
+Evidence:
 
 Reason: Jev eligió información insuficiente o no alcanzó confianza/suficiencia requeridas; no se fuerza una competencia.
 
@@ -106,7 +106,7 @@ Gold: {"primary":"PSICO_MOTRICIDAD","acceptable_primary":["PSICO_MOTRICIDAD"],"a
 
 Respuesta: {"status":"unclassified","primary":null,"secondary":[]}
 
-Evidence: 
+Evidence:
 
 Reason: Jev eligió información insuficiente o no alcanzó confianza/suficiencia requeridas; no se fuerza una competencia.
 
@@ -134,7 +134,7 @@ Gold: {"primary":"PSICO_MOTRICIDAD","acceptable_primary":["PSICO_MOTRICIDAD"],"a
 
 Respuesta: {"status":"unclassified","primary":null,"secondary":[]}
 
-Evidence: 
+Evidence:
 
 Reason: Jev eligió información insuficiente o no alcanzó confianza/suficiencia requeridas; no se fuerza una competencia.
 
@@ -148,7 +148,7 @@ Gold: {"primary":"PSICO_MOTRICIDAD","acceptable_primary":["PSICO_MOTRICIDAD"],"a
 
 Respuesta: {"status":"unclassified","primary":null,"secondary":[]}
 
-Evidence: 
+Evidence:
 
 Reason: Jev eligió información insuficiente o no alcanzó confianza/suficiencia requeridas; no se fuerza una competencia.
 
@@ -176,7 +176,7 @@ Gold: {"primary":"PSICO_MOTRICIDAD","acceptable_primary":["PSICO_MOTRICIDAD"],"a
 
 Respuesta: {"status":"review","primary":"PSICO_MOTRICIDAD","secondary":[]}
 
-Evidence: 
+Evidence:
 
 Reason: Acción central observada: Se desenvuelve de manera autónoma a través de su motricidad. Secundarias solo con conducta independiente. Evidencia literal no verificada: requiere revisión humana.
 
@@ -190,7 +190,7 @@ Gold: {"primary":"PSICO_MOTRICIDAD","acceptable_primary":["PSICO_MOTRICIDAD"],"a
 
 Respuesta: {"status":"unclassified","primary":null,"secondary":[]}
 
-Evidence: 
+Evidence:
 
 Reason: Jev eligió información insuficiente o no alcanzó confianza/suficiencia requeridas; no se fuerza una competencia.
 
@@ -203,4 +203,3 @@ Sin incidencias registradas.
 ## Privacidad
 
 Sin incidencias registradas.
-

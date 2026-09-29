@@ -1,6 +1,8 @@
 # CURRENT DEV: preparación y adjudicación humana
 
-Estado: **implementado, sin benchmark pagado ni candidata validada**. El test final de 28 casos permanece congelado. La nueva CLI rechaza su nombre y su SHA-256 antes de parsear etiquetas; no abre resultados históricos para ajustar V2.
+Documento histórico de preparación, anterior a la autorización autónoma. El usuario autorizó después adjudicación Codex DEV y optimización V2; el protocolo vigente está en [CURRENT_STUDY_PLAN.md](docs/CURRENT_STUDY_PLAN.md) y el gold congelado en [CURRENT_DEV_GOLD_REVIEW.md](docs/CURRENT_DEV_GOLD_REVIEW.md). Las referencias siguientes a revisión humana pendiente, gasto cero y test no ejecutado describen esa entrega inicial. La interfaz humana se conserva para revisión posterior; no se marcó una revisión docente ficticia.
+
+Estado en aquella entrega: **implementado, sin benchmark pagado ni candidata validada**. La CLI DEV rechaza nombre y SHA-256 del test final antes de parsear etiquetas; no abre resultados históricos para ajustar V2.
 
 ## Arquitectura
 
@@ -86,7 +88,7 @@ Solo después de revisar una candidata en DEV se planificará una única evaluac
 
 ## Costos
 
-**Gasto de API de esta fase: US$0.** Las pruebas son simuladas. No existen todavía costos ni latencias reales de estas cuatro variantes.
+**Gasto de API de la entrega preparatoria: US$0.** Sus pruebas fueron simuladas. Los costos siguientes eran estimaciones previas a las corridas autónomas.
 
 | Variante | Presupuesto estimado 80 × 3 |
 |---|---:|

@@ -34,6 +34,7 @@ export function analyzeStudyArm(results, arm) {
   return { summary, unstable_primary_ids: unstablePrimary, unstable_output_ids: unstable,
     accuracy_by_run: results.map((run) => summarizeArm(scored.filter((row) => row.run === run.number)).acceptable_primary_accuracy),
     errors, calls: calls.length, unknown_cost_calls: calls.filter((call) => !Number.isFinite(call.cost_usd)).length,
+    known_cost_subtotal_usd: calls.reduce((n, call) => n + (Number.isFinite(call.cost_usd) ? call.cost_usd : 0), 0),
     jev_cost_usd: sumKnown(scored.map((row) => row.outcome.cost_jev_usd)),
     luna_cost_usd: sumKnown(scored.map((row) => row.outcome.cost_luna_usd)),
     jev_provider_cost_usd: scored.flatMap((row) => row.outcome.calls).filter((call) => call.cost_source === "provider").reduce((n, call) => n + call.cost_usd, 0),
@@ -87,8 +88,8 @@ export function errorMarkdown(version, arm, analysis) {
     if (!errors.length) lines.push("Sin incidencias registradas.", "");
     for (const error of errors) lines.push(`### ${error.id}, repetición ${error.run}`, "", error.observation, "",
       `Gold: ${JSON.stringify(error.gold)}`, "", `Respuesta: ${JSON.stringify(error.response)}`, "",
-      `Evidence: ${error.evidence ?? "no disponible"}`, "", `Reason: ${error.reason ?? "no disponible"}`, "",
+      `Evidence: ${error.evidence || "no disponible"}`, "", `Reason: ${error.reason || "no disponible"}`, "",
       `Tipo: ${error.types.join(", ")}; evidence_grounded: ${error.evidence_grounded ?? "no disponible"}.`, "");
   }
-  return lines.join("\n") + "\n";
+  return lines.map((line) => line.trimEnd()).join("\n").trimEnd() + "\n";
 }

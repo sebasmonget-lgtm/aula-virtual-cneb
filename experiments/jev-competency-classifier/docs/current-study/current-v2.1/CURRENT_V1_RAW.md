@@ -1,8 +1,8 @@
-# Errores DEV current-v2-draft-1 / CURRENT_V1_RAW
+# Errores DEV current-v2.1 / CURRENT_V1_RAW
 
 Gold Codex fijado antes de proveedores. Primaria aceptable es el criterio principal; adicionales se informan aparte. V1 no genera evidence/reason: ausentes, sin explicación sintética atribuida al modelo.
 
-Casos con primaria inestable: DEV_005, DEV_046.
+Casos con primaria inestable: DEV_005, DEV_006, DEV_009, DEV_057.
 
 ## Cantidad vs Forma
 
@@ -12,13 +12,27 @@ A ver, eligió los lápices y los dejó del más cortito al más largo; cambió 
 
 Gold: {"primary":"MAT_CANTIDAD","acceptable_primary":["MAT_CANTIDAD"],"acceptable_secondary":[],"should_abstain":false,"should_privacy_block":false,"discussable":false}
 
-Respuesta: {"status":"unclassified","primary":null,"secondary":[]}
+Respuesta: {"status":"review","primary":"MAT_CANTIDAD","secondary":[]}
 
 Evidence: no disponible
 
 Reason: no disponible
 
-Tipo: false_abstention, unstable_output; evidence_grounded: no disponible.
+Tipo: unstable_output; evidence_grounded: no disponible.
+
+### DEV_006, repetición 1
+
+Dijo que necesitaban cuatro ruedas para el dibujo del autobús, dibujó tres y agregó una al volver a contar.
+
+Gold: {"primary":"MAT_CANTIDAD","acceptable_primary":["MAT_CANTIDAD"],"acceptable_secondary":[],"should_abstain":false,"should_privacy_block":false,"discussable":false}
+
+Respuesta: {"status":"review","primary":"MAT_CANTIDAD","secondary":[]}
+
+Evidence: no disponible
+
+Reason: no disponible
+
+Tipo: unstable_output; evidence_grounded: no disponible.
 
 ### DEV_009, repetición 1
 
@@ -32,11 +46,25 @@ Evidence: no disponible
 
 Reason: no disponible
 
-Tipo: false_abstention; evidence_grounded: no disponible.
+Tipo: false_abstention, unstable_output; evidence_grounded: no disponible.
 
 ### DEV_005, repetición 2
 
 A ver, eligió los lápices y los dejó del más cortito al más largo; cambió dos de lugar porque uno era más grande.
+
+Gold: {"primary":"MAT_CANTIDAD","acceptable_primary":["MAT_CANTIDAD"],"acceptable_secondary":[],"should_abstain":false,"should_privacy_block":false,"discussable":false}
+
+Respuesta: {"status":"unclassified","primary":null,"secondary":[]}
+
+Evidence: no disponible
+
+Reason: no disponible
+
+Tipo: false_abstention, unstable_output; evidence_grounded: no disponible.
+
+### DEV_006, repetición 2
+
+Dijo que necesitaban cuatro ruedas para el dibujo del autobús, dibujó tres y agregó una al volver a contar.
 
 Gold: {"primary":"MAT_CANTIDAD","acceptable_primary":["MAT_CANTIDAD"],"acceptable_secondary":[],"should_abstain":false,"should_privacy_block":false,"discussable":false}
 
@@ -60,7 +88,7 @@ Evidence: no disponible
 
 Reason: no disponible
 
-Tipo: false_abstention; evidence_grounded: no disponible.
+Tipo: false_abstention, unstable_output; evidence_grounded: no disponible.
 
 ### DEV_005, repetición 3
 
@@ -68,13 +96,27 @@ A ver, eligió los lápices y los dejó del más cortito al más largo; cambió 
 
 Gold: {"primary":"MAT_CANTIDAD","acceptable_primary":["MAT_CANTIDAD"],"acceptable_secondary":[],"should_abstain":false,"should_privacy_block":false,"discussable":false}
 
-Respuesta: {"status":"unclassified","primary":null,"secondary":[]}
+Respuesta: {"status":"review","primary":"MAT_CANTIDAD","secondary":[]}
 
 Evidence: no disponible
 
 Reason: no disponible
 
-Tipo: false_abstention, unstable_output; evidence_grounded: no disponible.
+Tipo: unstable_output; evidence_grounded: no disponible.
+
+### DEV_006, repetición 3
+
+Dijo que necesitaban cuatro ruedas para el dibujo del autobús, dibujó tres y agregó una al volver a contar.
+
+Gold: {"primary":"MAT_CANTIDAD","acceptable_primary":["MAT_CANTIDAD"],"acceptable_secondary":[],"should_abstain":false,"should_privacy_block":false,"discussable":false}
+
+Respuesta: {"status":"classification_failed","primary":null,"secondary":[]}
+
+Evidence: no disponible
+
+Reason: no disponible
+
+Tipo: unstable_output, provider_failure; evidence_grounded: no disponible.
 
 ### DEV_009, repetición 3
 
@@ -82,13 +124,13 @@ Indicó a la muñeca cómo llegar: "Pasa debajo de la silla y después gira haci
 
 Gold: {"primary":"MAT_FORMA","acceptable_primary":["MAT_FORMA"],"acceptable_secondary":[],"should_abstain":false,"should_privacy_block":false,"discussable":false}
 
-Respuesta: {"status":"unclassified","primary":null,"secondary":[]}
+Respuesta: {"status":"review","primary":"MAT_FORMA","secondary":[]}
 
 Evidence: no disponible
 
 Reason: no disponible
 
-Tipo: false_abstention; evidence_grounded: no disponible.
+Tipo: unstable_output; evidence_grounded: no disponible.
 
 ## Oral vs Lectura
 
@@ -256,20 +298,6 @@ Reason: no disponible
 
 Tipo: false_abstention; evidence_grounded: no disponible.
 
-### DEV_046, repetición 1
-
-Creo que quería dejar un mensaje: hizo dos líneas de signos, las señaló y dijo que avisaban que faltaba una pieza.
-
-Gold: {"primary":"COM_ESCRITURA","acceptable_primary":["COM_ESCRITURA"],"acceptable_secondary":[],"should_abstain":false,"should_privacy_block":false,"discussable":false}
-
-Respuesta: {"status":"review","primary":"COM_ESCRITURA","secondary":[]}
-
-Evidence: no disponible
-
-Reason: no disponible
-
-Tipo: unstable_output; evidence_grounded: no disponible.
-
 ### DEV_042, repetición 2
 
 Preparó entradas para un teatro de juego. Puso marcas distintas y explicó cuál correspondía a cada visitante.
@@ -297,20 +325,6 @@ Evidence: no disponible
 Reason: no disponible
 
 Tipo: false_abstention; evidence_grounded: no disponible.
-
-### DEV_046, repetición 2
-
-Creo que quería dejar un mensaje: hizo dos líneas de signos, las señaló y dijo que avisaban que faltaba una pieza.
-
-Gold: {"primary":"COM_ESCRITURA","acceptable_primary":["COM_ESCRITURA"],"acceptable_secondary":[],"should_abstain":false,"should_privacy_block":false,"discussable":false}
-
-Respuesta: {"status":"review","primary":"COM_ESCRITURA","secondary":[]}
-
-Evidence: no disponible
-
-Reason: no disponible
-
-Tipo: unstable_output; evidence_grounded: no disponible.
 
 ### DEV_042, repetición 3
 
@@ -340,11 +354,17 @@ Reason: no disponible
 
 Tipo: false_abstention; evidence_grounded: no disponible.
 
-### DEV_046, repetición 3
+## Arte
 
-Creo que quería dejar un mensaje: hizo dos líneas de signos, las señaló y dijo que avisaban que faltaba una pieza.
+Sin incidencias registradas.
 
-Gold: {"primary":"COM_ESCRITURA","acceptable_primary":["COM_ESCRITURA"],"acceptable_secondary":[],"should_abstain":false,"should_privacy_block":false,"discussable":false}
+## Motricidad
+
+### DEV_057, repetición 1
+
+Llevó una bolsita sobre la cabeza hasta el cono; cuando se inclinaba redujo la velocidad.
+
+Gold: {"primary":"PSICO_MOTRICIDAD","acceptable_primary":["PSICO_MOTRICIDAD"],"acceptable_secondary":[],"should_abstain":false,"should_privacy_block":false,"discussable":false}
 
 Respuesta: {"status":"unclassified","primary":null,"secondary":[]}
 
@@ -354,13 +374,33 @@ Reason: no disponible
 
 Tipo: false_abstention, unstable_output; evidence_grounded: no disponible.
 
-## Arte
+### DEV_057, repetición 2
 
-Sin incidencias registradas.
+Llevó una bolsita sobre la cabeza hasta el cono; cuando se inclinaba redujo la velocidad.
 
-## Motricidad
+Gold: {"primary":"PSICO_MOTRICIDAD","acceptable_primary":["PSICO_MOTRICIDAD"],"acceptable_secondary":[],"should_abstain":false,"should_privacy_block":false,"discussable":false}
 
-Sin incidencias registradas.
+Respuesta: {"status":"review","primary":"PSICO_MOTRICIDAD","secondary":[]}
+
+Evidence: no disponible
+
+Reason: no disponible
+
+Tipo: unstable_output; evidence_grounded: no disponible.
+
+### DEV_057, repetición 3
+
+Llevó una bolsita sobre la cabeza hasta el cono; cuando se inclinaba redujo la velocidad.
+
+Gold: {"primary":"PSICO_MOTRICIDAD","acceptable_primary":["PSICO_MOTRICIDAD"],"acceptable_secondary":[],"should_abstain":false,"should_privacy_block":false,"discussable":false}
+
+Respuesta: {"status":"review","primary":"PSICO_MOTRICIDAD","secondary":[]}
+
+Evidence: no disponible
+
+Reason: no disponible
+
+Tipo: unstable_output; evidence_grounded: no disponible.
 
 ## Abstención
 
