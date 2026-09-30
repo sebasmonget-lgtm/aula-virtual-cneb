@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { dniLoginAlias } from './dni-login.mjs';
 
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const cookieName = 'ayni_session';
@@ -29,11 +30,12 @@ function authUrl(base, path) {
   return new URL(path, `${base.replace(/\/$/, '')}/`).toString();
 }
 
-export function createRequestAuth({ mode = 'local', localTeacherId, supabaseUrl, publishableKey, fetchImpl = fetch, secureCookie = true } = {}) {
+export function createRequestAuth({ mode = 'local', localTeacherId, supabaseUrl, publishableKey, dniPepper, dniAliasDomain, fetchImpl = fetch, secureCookie = true } = {}) {
   if (!['local', 'supabase'].includes(mode)) throw new Error('AYNI_AUTH_MODE debe ser local o supabase.');
   if (mode === 'local' && !uuid.test(localTeacherId ?? '')) throw new Error('AYNI_LOCAL_TEACHER_ID debe ser UUID en modo local.');
   if (mode === 'supabase') {
     if (!supabaseUrl || !publishableKey) throw new Error('Falta AYNI_SUPABASE_URL o AYNI_SUPABASE_PUBLISHABLE_KEY.');
+    dniLoginAlias('00000000', dniPepper, dniAliasDomain);
     const endpoint = new URL(supabaseUrl);
     if (endpoint.protocol !== 'https:' && !['localhost', '127.0.0.1'].includes(endpoint.hostname)) {
       throw new Error('Supabase Auth requiere HTTPS.');
@@ -57,7 +59,7 @@ export function createRequestAuth({ mode = 'local', localTeacherId, supabaseUrl,
     let user;
     try { user = await response.json(); }
     catch { throw new RequestAuthError(); }
-    if (!uuid.test(user?.id ?? '') || user?.role !== 'authenticated') throw new RequestAuthError();
+    if (!uuid.test(user?.id ?? '') || user?.role !== 'authenticated' || user?.app_metadata?.ayni_role !== 'teacher') throw new RequestAuthError();
     return user;
   }
 
@@ -70,11 +72,12 @@ export function createRequestAuth({ mode = 'local', localTeacherId, supabaseUrl,
     return { teacherId: user.id, requestId, db, authMode: mode, tokenSource: credentials.source };
   }
 
-  async function signIn(email, password) {
+  async function signIn(dni, password) {
     if (mode !== 'supabase') throw new RequestAuthError('Inicio de sesión no disponible en modo local.', 404);
-    if (typeof email !== 'string' || typeof password !== 'string' || !email.includes('@') || email.length > 254 || password.length > 1024 || !password) {
-      throw new RequestAuthError('Correo o contraseña inválidos.');
+    if (typeof dni !== 'string' || !/^\d{8}$/.test(dni) || typeof password !== 'string' || password.length > 1024 || !password) {
+      throw new RequestAuthError('DNI o contraseña inválidos.');
     }
+    const email = dniLoginAlias(dni, dniPepper, dniAliasDomain);
     let response;
     try {
       response = await fetchImpl(authUrl(supabaseUrl, '/auth/v1/token?grant_type=password'), {
@@ -87,7 +90,7 @@ export function createRequestAuth({ mode = 'local', localTeacherId, supabaseUrl,
     } catch {
       throw new RequestAuthError('No se pudo iniciar sesión. Inténtalo de nuevo.', 503);
     }
-    if (!response.ok) throw new RequestAuthError('Correo o contraseña inválidos.');
+    if (!response.ok) throw new RequestAuthError('DNI o contraseña inválidos.');
     let session;
     try { session = await response.json(); }
     catch { throw new RequestAuthError(); }

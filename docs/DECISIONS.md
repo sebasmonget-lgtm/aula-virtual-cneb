@@ -1,5 +1,9 @@
 # Decisiones de arquitectura
 
+## ADR 097 — Acceso docente con DNI
+
+**Decisión (2026-09-30).** La profesora entra con DNI de ocho dígitos y contraseña; el administrador crea y restablece las cuentas, sin correo de recuperación ni registro público. El servidor deriva un alias técnico con HMAC y una clave privada estable, y usa Supabase Auth para verificar la contraseña. Solo acepta usuarios con `app_metadata.ayni_role=teacher`; el UUID Auth sigue siendo el propietario del aula. No se guarda el DNI en el alias ni en metadatos Auth. La pantalla toma como referencia una composición simple con cabecera, campos amplios y botón principal. La clave de derivación, el dominio del alias y el procedimiento administrativo se documentan en `docs/DNI_ACCESS.md`. El piloto requiere validar creación, reinicio y aislamiento de dos cuentas en Supabase real antes de publicar.
+
 ## ADR 096 — F10: artefacto Word confirmado e inmutable
 
 **Decisión (2026-09-28).** Una acción docente explícita prepara un artefacto estable para una fuente confirmada de Mi año o proyecto/unidad. `document_artifacts` guarda identidad de fuente, versión, plantilla, huella de fuente, estado pending/failed/confirmed, tamaño, SHA-256 y ruta privada; no modifica ni rellena documentos históricos. El primer render guarda bytes en ruta privada con creación exclusiva y verifica el archivo leído antes de confirmar metadata. Una repetición devuelve el mismo ID y bytes. Si el materializador falla, la fuente pedagógica sigue confirmada y la fila puede reintentarse. Un cambio posterior de fuente exige nueva versión; no se reescribe un artefacto confirmado.

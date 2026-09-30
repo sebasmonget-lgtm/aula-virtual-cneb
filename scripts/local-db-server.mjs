@@ -128,6 +128,8 @@ const localTeacherId = authMode === "local" ? (process.env.AYNI_LOCAL_TEACHER_ID
 const requestAuth = createRequestAuth({ mode: authMode, localTeacherId,
   supabaseUrl: process.env.AYNI_SUPABASE_URL,
   publishableKey: process.env.AYNI_SUPABASE_PUBLISHABLE_KEY,
+  dniPepper: process.env.AYNI_DNI_LOGIN_PEPPER,
+  dniAliasDomain: process.env.AYNI_DNI_ALIAS_DOMAIN,
   secureCookie: process.env.AYNI_AUTH_COOKIE_SECURE !== "0" });
 const corsMethods = "GET,POST,PUT,OPTIONS";
 const allowedOrigins = new Set([
@@ -2634,13 +2636,13 @@ const server = createServer(async (request, response) => {
   if (request.method === "POST" && url.pathname === "/api/auth/login") {
     try {
       const body = await readJson(request);
-      const session = await requestAuth.signIn(body.email, body.password);
+      const session = await requestAuth.signIn(body.dni, body.password);
       send(response, 200, { teacherId: session.teacherId }, origin, {
         "set-cookie": requestAuth.sessionCookie(session.token, session.expiresIn),
       });
     } catch (error) {
       const status = error instanceof RequestAuthError ? error.status : 401;
-      send(response, status, { error: status === 503 ? "No se pudo verificar el servicio de acceso." : "Correo o contraseña inválidos." }, origin);
+      send(response, status, { error: status === 503 ? "No se pudo verificar el servicio de acceso." : "DNI o contraseña inválidos." }, origin);
     }
     return;
   }

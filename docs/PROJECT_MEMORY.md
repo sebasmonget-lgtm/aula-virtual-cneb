@@ -2,6 +2,8 @@
 
 ## Estado actual
 
+Acceso docente preparado en código (2026-09-30): pantalla simple con DNI y contraseña, alias técnico derivado por HMAC solo en servidor, Supabase Auth con rol docente administrativo y herramienta interactiva de alta/reinicio sin correo. Las pruebas de Auth locales son simuladas; el alta y el aislamiento reales con dos docentes permanecen como requisito de staging. Ver ADR 097 y `docs/DNI_ACCESS.md`.
+
 Plan Maestro: F2 reducida cerrada con A (ADR 088). F3 proyecto sencillo en `17e8556`; F4 `ef4c307` ActivityV3 heredada; F5 `99cd04e` raw con identidad canónica, revisión inmutable y foto privada. F6 `b729fad` atribución Jev/cola docente; F7 `66f0789` navegación cuatro destinos/Hoy; F8 `62afd23` atribuciones docentes vigentes en H34/trayectoria; F9 `4efc3ac` diff futuro con fingerprint F8. F10 `a945c1a` artefacto Word estable de plan/proyecto confirmado, con bytes privados, SHA-256, RLS y reintento. F11 `3fca02c` más corrección `2e9a78e` árbol y sync explícita con carpeta/ZIP, sin migración. F12 es auditoría de salida parcial **no aceptada**: falta recorrido anual nuevo exclusivamente por UI, picker/móvil real y RLS/Storage en staging nuevo; ver `docs/qa/f12-final-e2e-2026-09-28.md`. Sin deploy, staging real ni llamadas pagadas F6–F12.
 
 Proyecto nuevo iniciado el 20 de septiembre de 2026. Existe un shell responsive de la pantalla Hoy con navegación corta, actividad del día, perfil institucional editable, logo SVG generado localmente, registro rápido de evidencia y diagnóstico por referente observable conectado a PostgreSQL local embebido mediante PGlite. La generación docente puede usar OpenAI mediante el proveedor aislado; no hay conexión con Supabase real ni despliegue.

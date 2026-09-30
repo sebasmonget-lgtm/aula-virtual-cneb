@@ -7,10 +7,13 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { PGlite } from "@electric-sql/pglite";
+import { dniLoginAlias } from "./dni-login.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const teacherA = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 const teacherB = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+const dniPepper = "test-only-secret-with-more-than-32-characters";
+const dniAliasDomain = "login.example.test";
 
 async function freePort() {
   const server = createServer();
@@ -57,14 +60,14 @@ test("the HTTP boundary protects every route and local PGlite remains usable", {
       const id = request.headers.authorization === "Bearer token-a" ? teacherA
         : request.headers.authorization === "Bearer token-b" ? teacherB : null;
       response.writeHead(id ? 200 : 401);
-      response.end(JSON.stringify(id ? { id, role: "authenticated" } : { error: "invalid_token" }));
+      response.end(JSON.stringify(id ? { id, role: "authenticated", app_metadata: { ayni_role: "teacher" } } : { error: "invalid_token" }));
       return;
     }
     if (request.url === "/auth/v1/token?grant_type=password") {
       let raw = "";
       for await (const chunk of request) raw += chunk;
       const value = JSON.parse(raw);
-      const valid = value.email === "a@example.test" && value.password === "correcta";
+      const valid = value.email === dniLoginAlias("12345678", dniPepper, dniAliasDomain) && value.password === "correcta";
       response.writeHead(valid ? 200 : 401);
       response.end(JSON.stringify(valid ? { access_token: "token-a", expires_in: 3600 } : { error: "invalid_grant" }));
       return;
@@ -81,6 +84,8 @@ test("the HTTP boundary protects every route and local PGlite remains usable", {
       AYNI_DB_MODE: "local", NODE_ENV: "test", AYNI_TEST_AUTH_PGLITE: "1",
       AYNI_SUPABASE_URL: `http://127.0.0.1:${authPort}`,
       AYNI_SUPABASE_PUBLISHABLE_KEY: "public-test-key",
+      AYNI_DNI_LOGIN_PEPPER: dniPepper,
+      AYNI_DNI_ALIAS_DOMAIN: dniAliasDomain,
       AYNI_AUTH_COOKIE_SECURE: "0",
       AYNI_ALLOWED_ORIGIN: "http://localhost:5173",
       AYNI_LOCAL_TEACHER_ID: "ignored-in-auth-mode",
@@ -112,7 +117,7 @@ test("the HTTP boundary protects every route and local PGlite remains usable", {
     assert.equal((await call("/api/audio/transcribe", "token-a", audioRequest({ scope: "classroom", purpose: "group_summary" }))).status, 404);
     const login = await call("/api/auth/login", null, {
       method: "POST", headers: { origin: "http://localhost:5173", "content-type": "application/json" },
-      body: JSON.stringify({ email: "a@example.test", password: "correcta" }),
+      body: JSON.stringify({ dni: "12345678", password: "correcta" }),
     });
     assert.equal(login.status, 200);
     const cookie = login.headers.get("set-cookie")?.split(";")[0];
@@ -236,6 +241,7 @@ test("the HTTP boundary protects every route and local PGlite remains usable", {
       AYNI_AUTH_MODE: "supabase", AYNI_DB_MODE: "local", NODE_ENV: "test", AYNI_TEST_AUTH_PGLITE: "1",
       AYNI_SUPABASE_URL: `http://127.0.0.1:${authPort}`,
       AYNI_SUPABASE_PUBLISHABLE_KEY: "public-test-key", AYNI_ALLOWED_ORIGIN: "http://localhost:5173",
+      AYNI_DNI_LOGIN_PEPPER: dniPepper, AYNI_DNI_ALIAS_DOMAIN: dniAliasDomain,
       AYNI_AUTH_COOKIE_SECURE: "0",
     });
     const ownDownload = await fetch(`${running.base}/api/documents/diagnostic_summary/${diagnosticId}/download`, {

@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { PGlite } from "@electric-sql/pglite";
 import { createRequestAuth, RequestAuthError } from "./request-auth.mjs";
+import { dniLoginAlias } from "./dni-login.mjs";
 import { authorizeRequestSelectors, RequestAccessError } from "./request-authorization.mjs";
 
 const teacherA = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
@@ -14,23 +15,27 @@ const yearA = "55555555-5555-4555-8555-555555555555";
 const yearB = "66666666-6666-4666-8666-666666666666";
 const periodA = "77777777-7777-4777-8777-777777777777";
 const periodB = "88888888-8888-4888-8888-888888888888";
+const dniPepper = "test-only-secret-with-more-than-32-characters";
+const dniAliasDomain = "login.example.test";
+const teacherADni = "12345678";
 
 function fakeAuthFetch(url, options) {
   if (url.includes("/auth/v1/token?")) {
     const body = JSON.parse(options.body);
-    return Promise.resolve(Response.json(body.email === "a@example.test" && body.password === "correcta"
+    const valid = body.email === dniLoginAlias(teacherADni, dniPepper, dniAliasDomain) && body.password === "correcta";
+    return Promise.resolve(Response.json(valid
       ? { access_token: "token-a", expires_in: 3600 }
-      : { error: "invalid_grant" }, { status: body.password === "correcta" ? 200 : 401 }));
+      : { error: "invalid_grant" }, { status: valid ? 200 : 401 }));
   }
   if (url.endsWith("/auth/v1/user")) {
     const token = options.headers.authorization;
-    const id = token === "Bearer token-a" ? teacherA : token === "Bearer token-b" ? teacherB : null;
-    return Promise.resolve(Response.json(id ? { id, role: "authenticated" } : { error: "invalid_token" }, { status: id ? 200 : 401 }));
+    const id = token === "Bearer token-a" || token === "Bearer token-unmarked" ? teacherA : token === "Bearer token-b" ? teacherB : null;
+    return Promise.resolve(Response.json(id ? { id, role: "authenticated", app_metadata: token === "Bearer token-unmarked" ? {} : { ayni_role: "teacher" } } : { error: "invalid_token" }, { status: id ? 200 : 401 }));
   }
   return Promise.resolve(new Response(null, { status: 204 }));
 }
 
-const auth = createRequestAuth({ mode: "supabase", supabaseUrl: "https://test.supabase.co", publishableKey: "public-test-key", fetchImpl: fakeAuthFetch });
+const auth = createRequestAuth({ mode: "supabase", supabaseUrl: "https://test.supabase.co", publishableKey: "public-test-key", dniPepper, dniAliasDomain, fetchImpl: fakeAuthFetch });
 const request = (token, extraHeaders = {}) => ({ headers: { ...(token ? { authorization: `Bearer ${token}` } : {}), ...extraHeaders } });
 
 test("identity is verified for every request and never comes from client IDs", async () => {
@@ -38,6 +43,7 @@ test("identity is verified for every request and never comes from client IDs", a
   await assert.rejects(() => auth.resolve(request(null), db), (error) => error instanceof RequestAuthError && error.status === 401);
   await assert.rejects(() => auth.resolve(request("invalid"), db), (error) => error instanceof RequestAuthError && error.status === 401);
   await assert.rejects(() => auth.resolve(request("expired"), db), (error) => error instanceof RequestAuthError && error.status === 401);
+  await assert.rejects(() => auth.resolve(request("token-unmarked"), db), (error) => error instanceof RequestAuthError && error.status === 401);
   const a = await auth.resolve(request("token-a", { "x-teacher-id": teacherB }), db);
   const b = await auth.resolve(request("token-b"), db);
   assert.equal(a.teacherId, teacherA);
@@ -47,11 +53,14 @@ test("identity is verified for every request and never comes from client IDs", a
   assert.equal((await auth.resolve({ headers: { cookie: "ayni_session=token-a" } }, db)).teacherId, teacherA);
 });
 
-test("email/password sign-in verifies the returned token and sets an HTTP-only cookie", async () => {
-  const session = await auth.signIn("a@example.test", "correcta");
+test("DNI/password sign-in verifies the returned token and sets an HTTP-only cookie", async () => {
+  const session = await auth.signIn(teacherADni, "correcta");
   assert.equal(session.teacherId, teacherA);
   assert.match(auth.sessionCookie(session.token, session.expiresIn), /HttpOnly; Path=\/api; SameSite=Lax; Secure/);
-  await assert.rejects(() => auth.signIn("a@example.test", "incorrecta"), (error) => error.status === 401);
+  await assert.rejects(() => auth.signIn(teacherADni, "incorrecta"), (error) => error.status === 401);
+  await assert.rejects(() => auth.signIn("123", "correcta"), (error) => error.status === 401);
+  assert.notEqual(dniLoginAlias(teacherADni, dniPepper, dniAliasDomain), dniLoginAlias("87654321", dniPepper, dniAliasDomain));
+  assert.doesNotMatch(dniLoginAlias(teacherADni, dniPepper, dniAliasDomain), /12345678/);
 });
 
 test("local mode retains PGlite identity without any token", async () => {

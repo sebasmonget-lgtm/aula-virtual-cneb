@@ -14,7 +14,7 @@
     "db:local": "node --env-file-if-exists=experiments/jev-competency-classifier/.env.local --env-file-if-exists=.env.local scripts/local-db-server.mjs",
     "db:export": "node scripts/export-local-data.mjs",
     "db:prepare-import": "node scripts/prepare-supabase-import.mjs",
-    "test:auth-request": "node --test scripts/request-auth.test.mjs scripts/auth-http.test.mjs",
+    "test:auth-request": "node --test scripts/request-auth.test.mjs scripts/auth-http.test.mjs scripts/teacher-account-admin-service.test.mjs",
     "test:postgres-adapter": "node --test scripts/database-adapter.test.mjs scripts/database-schema-parity.test.mjs",
     "test:daily-state": "node --test src/lib/daily-state.test.mjs",
     "test:statistics": "node --test src/lib/statistics-service.test.mjs",
