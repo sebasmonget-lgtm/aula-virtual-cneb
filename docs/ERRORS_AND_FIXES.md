@@ -14,7 +14,7 @@
 
 **Causa raíz.** La CLI no usó la exclusión de `.local/` de `.gitignore` al construir el paquete de archivos. La lista de exclusión propia de Vercel no cubría esa carpeta personalizada.
 
-**Solución validada.** Se añadió `.vercelignore` con `.local/`, secretos y artefactos de ejecución excluidos. El manifest posterior contiene 1632 archivos y cero rutas `.env*`, `.local/`, `.codex/`, `node_modules/`, `.next/` o `auth.json`; conserva los tres archivos de aplicación revisados. No se imprimió ni subió el contenido del archivo de autenticación.
+**Solución validada.** Se añadió `.vercelignore` con `.local/`, secretos y artefactos de ejecución excluidos. Un dry run posterior detectó todavía la entrada de directorio vacía `.local` (sin archivos); se excluyó también su nombre exacto. El manifest final contiene 1631 archivos y cero rutas `.env*`, `.local`, `.local/`, `.codex/`, `node_modules/`, `.next/` o `auth.json`; conserva los archivos de aplicación revisados. No se imprimió ni subió el contenido del archivo de autenticación.
 
 **Prevención.** Antes de cada despliegue CLI desde este checkout, ejecutar un dry run y rechazar cualquier manifest que incluya secretos o carpetas locales. Conservar `.vercelignore` al cambiar el proceso de publicación.
 
