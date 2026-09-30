@@ -56,6 +56,16 @@ export async function createFirstAdmin(config) {
   return { id: created.id };
 }
 
+export async function recoverFirstAdmin(config) {
+  const alias = accountInput(config);
+  const admins = (await listAuthUsers(config)).filter((user) => user.app_metadata?.ayni_role === "admin");
+  if (admins.length !== 1 || admins[0].last_sign_in_at) throw new Error("La recuperación inicial no está disponible.");
+  await adminRequest(config, `/auth/v1/admin/users/${encodeURIComponent(admins[0].id)}`, {
+    method: "PUT",
+    body: JSON.stringify({ email: alias, email_confirm: true, password: config.password }),
+  });
+}
+
 export async function resetPasswordByUserId(config, userId) {
   if (!/^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(userId)) throw new Error("Cuenta inválida.");
   if (typeof config.password !== "string" || config.password.length < 12) throw new Error("La contraseña debe tener al menos 12 caracteres.");

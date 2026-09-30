@@ -94,7 +94,7 @@ import { neutralizeAssessmentText } from "../src/lib/assessment-v4-service.mjs";
 import { loadPlanningFeedback, planningFeedbackText, resolveProjectPlanningFeedback } from "../src/lib/planning-feedback.mjs";
 import { expectedRevision, assertRevision, conflictPayload, httpStatusForError, isVersionConflict, versionTransaction, VersionConflictError, publicErrorMessage } from "../src/lib/version-integrity.mjs";
 import { createRequestAuth, RequestAuthError } from "./request-auth.mjs";
-import { createFirstAdmin, createTeacherAccount, listAuthUsers, resetPasswordByUserId } from "./teacher-account-admin-service.mjs";
+import { createFirstAdmin, createTeacherAccount, listAuthUsers, recoverFirstAdmin, resetPasswordByUserId } from "./teacher-account-admin-service.mjs";
 import { loadAdminDirectory } from "./admin-directory.mjs";
 import { timingSafeEqual } from "node:crypto";
 import { authorizeRequestSelectors, RequestAccessError } from "./request-authorization.mjs";
@@ -2694,12 +2694,16 @@ export async function handleApiRequest(request, response) {
     return;
   }
   if (request.method === "GET" && url.pathname === "/api/admin/setup-status") {
-    let available = false;
+    let available = false, recoverable = false;
     if (authMode === "supabase" && typeof process.env.AYNI_ADMIN_SETUP_KEY === "string" && process.env.AYNI_ADMIN_SETUP_KEY.length >= 32) {
-      try { available = !(await listAuthUsers(authAdminConfig)).some((user) => user.app_metadata?.ayni_role === "admin"); }
+      try {
+        const admins = (await listAuthUsers(authAdminConfig)).filter((user) => user.app_metadata?.ayni_role === "admin");
+        available = admins.length === 0;
+        recoverable = admins.length === 1 && !admins[0].last_sign_in_at;
+      }
       catch { /* Keep setup unavailable while Auth is unreachable. */ }
     }
-    send(response, 200, { available }, origin);
+    send(response, 200, { available, recoverable }, origin);
     return;
   }
   if (request.method === "POST" && url.pathname === "/api/admin/setup") {
@@ -2713,6 +2717,20 @@ export async function handleApiRequest(request, response) {
       send(response, 201, { ok: true }, origin);
     } catch {
       send(response, 400, { error: "No se pudo crear el administrador. Revisa los datos o si ya existe uno." }, origin);
+    }
+    return;
+  }
+  if (request.method === "POST" && url.pathname === "/api/admin/recover") {
+    if (authMode !== "supabase" || !origin || !allowedOrigins.has(origin)) {
+      send(response, 403, { error: "Operación no disponible." }, origin); return;
+    }
+    try {
+      const body = await readJson(request);
+      if (!validSetupKey(body.setupKey)) { send(response, 403, { error: "Clave de configuración inválida." }, origin); return; }
+      await recoverFirstAdmin({ ...authAdminConfig, dni: body.dni, password: body.password });
+      send(response, 200, { ok: true }, origin);
+    } catch {
+      send(response, 400, { error: "No se pudo restablecer el acceso inicial." }, origin);
     }
     return;
   }

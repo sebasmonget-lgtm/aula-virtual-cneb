@@ -112,6 +112,7 @@ test("the HTTP boundary protects every route and local PGlite remains usable", {
       AYNI_DNI_LOGIN_PEPPER: dniPepper,
       AYNI_DNI_ALIAS_DOMAIN: dniAliasDomain,
       AYNI_SESSION_SIGNING_KEY: sessionSigningKey,
+      AYNI_ADMIN_SETUP_KEY: "test-only-bootstrap-key-with-more-than-32-characters",
       AYNI_AUTH_COOKIE_SECURE: "0",
       AYNI_ALLOWED_ORIGIN: "http://localhost:5173",
       AYNI_LOCAL_TEACHER_ID: "ignored-in-auth-mode",
@@ -119,6 +120,14 @@ test("the HTTP boundary protects every route and local PGlite remains usable", {
     const call = async (pathname, token, init = {}) => fetch(`${running.base}${pathname}`, {
       ...init, headers: { ...(token ? { authorization: `Bearer ${token}` } : {}), ...init.headers },
     });
+    assert.deepEqual(await (await call("/api/admin/setup-status")).json(), { available: false, recoverable: true });
+    const recoveryRequest = (setupKey) => ({ method: "POST",
+      headers: { origin: "http://localhost:5173", "content-type": "application/json" },
+      body: JSON.stringify({ setupKey, dni: "12345678", password: "nueva clave segura 2026" }) });
+    assert.equal((await call("/api/admin/recover", null, recoveryRequest("wrong-key"))).status, 403);
+    assert.equal((await call("/api/admin/recover", null, { ...recoveryRequest("test-only-bootstrap-key-with-more-than-32-characters"),
+      headers: { "content-type": "application/json" } })).status, 403);
+    assert.equal((await call("/api/admin/recover", null, recoveryRequest("test-only-bootstrap-key-with-more-than-32-characters"))).status, 200);
     const privateRoutes = [
       "/api/pilot/setup", "/api/profile", "/api/ai-usage", "/api/admin/accounts", "/api/diagnostics",
       "/api/diagnostics/students/11111111-1111-4111-8111-111111111111/family-interview",

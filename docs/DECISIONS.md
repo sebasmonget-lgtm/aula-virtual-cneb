@@ -8,6 +8,8 @@
 
 **Validación y reversión.** Typecheck, lint, build y pruebas de Auth/HTTP/servicio administrativo son la puerta antes de staging. La reversión de código vuelve al commit anterior sin borrar las cuentas creadas; si ya se usó la clave de configuración, retirarla de Vercel. No hay migración.
 
+**Ajuste de recuperación inicial (2026-09-30).** Mientras exista `AYNI_ADMIN_SETUP_KEY`, haya exactamente un administrador y nunca haya iniciado sesión, el propietario puede sustituir su alias de DNI y contraseña desde Ayni con esa clave. La recuperación no crea otra cuenta ni permite cambiar el rol. Tras el primer ingreso deja de estar disponible; retirar la clave temporal y redesplegar cierra también la vía de recuperación. El navegador solo recibe la contraseña que la persona introduce en el formulario y no la guarda Ayni: «Recordar contraseña» solicita almacenamiento al gestor del navegador cuando es compatible.
+
 ## ADR 099 — Identificadores únicos de migración en staging nuevo
 
 **Decisión (2026-09-30).** Antes de aplicar por primera vez las migraciones al proyecto Supabase nuevo, se detectó que dos archivos diferentes usaban el identificador `202609250001`. La migración posterior de prioridades diagnósticas se renombró a `202609250003_diagnostic_priorities_preplan.sql`, sin cambiar su SQL. La migración de observaciones conserva `202609250001` y la formal anual conserva `202609250002`. Ninguna de las tres estaba aplicada al proyecto remoto. El orden nuevo se valida con `supabase db push --dry-run`, la prueba de paridad y RLS local; después se aplica en staging. No se modifica una migración ya aplicada.

@@ -1,5 +1,13 @@
 # Errores y soluciones
 
+## 2026-09-30 — Alta inicial completada pero acceso administrativo pendiente
+
+**Síntoma.** Supabase Auth muestra una cuenta «Sebastian» confirmada y sin ingresos previos, pero Ayni responde «Revisa tu DNI y contraseña». El primer intento usó el DNI ficticio preparado por QA, distinto del DNI que el propietario introdujo durante el alta. Un intento posterior con el DNI usado en el alta también falló; no se ha determinado todavía si la contraseña introducida al crear la cuenta coincide con la del ingreso.
+
+**Causa confirmada y tratamiento.** El formulario de alta regresaba al inicio sin mensaje de éxito, lo que ocultaba la diferencia entre la clave de configuración, el DNI del alta y la contraseña de ingreso. Se añadió un mensaje explícito tras crear la cuenta y una recuperación inicial con clave privada, limitada al único administrador que nunca ha ingresado. Permite sustituir DNI y contraseña sin duplicar cuentas. La recuperación real y el primer ingreso en staging aún deben verificarse; después se retira `AYNI_ADMIN_SETUP_KEY` y se redespliega.
+
+**Prevención.** Confirmar el DNI elegido y el mensaje de alta antes de probar el ingreso. Probar el caso completo en staging y no declarar el acceso resuelto solo porque Auth contiene un usuario confirmado.
+
 ## 2026-09-30 — Vercel CLI incluía archivos privados locales en el manifest
 
 **Síntoma.** `vercel deploy --dry --json` del staging nuevo incluyó más de siete mil archivos de `.local/`, entre ellos `.local/vercel-ayni-staging/auth.json`, aunque Git los ignoraba. No se ejecutó el despliegue con ese manifest.
