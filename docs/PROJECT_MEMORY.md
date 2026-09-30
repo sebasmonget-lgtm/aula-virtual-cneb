@@ -2,6 +2,8 @@
 
 ## Estado actual
 
+Staging nuevo (2026-09-30): se crearon proyectos vacíos e independientes en Supabase (`ayni-aula-staging`) y Vercel (`ayni-aula-staging`). La instancia Supabase está saludable, pero no tiene migraciones ni usuarios; Vercel no tiene Git ni despliegue. El build de Next.js quedó configurado en Vercel y se desactivó el uso del código para entrenamiento. La API independiente y los archivos privados aún bloquean el despliegue funcional. Ver `docs/STAGING_PROJECTS.md`.
+
 Sesión docente (2026-09-30): acceso por DNI con persistencia automática por 30 días desde la última actividad. Cookies HTTP-only firmadas conservan refresh token y actividad; el servidor renueva el token corto y verifica Auth/rol por petición. La prueba local usa Auth simulado; rotación y revocación reales siguen pendientes en staging nuevo. Ver ADR 098.
 
 Acceso docente preparado en código (2026-09-30): pantalla simple con DNI y contraseña, alias técnico derivado por HMAC solo en servidor, Supabase Auth con rol docente administrativo y herramienta interactiva de alta/reinicio sin correo. Las pruebas de Auth locales son simuladas; el alta y el aislamiento reales con dos docentes permanecen como requisito de staging. Ver ADR 097 y `docs/DNI_ACCESS.md`.
