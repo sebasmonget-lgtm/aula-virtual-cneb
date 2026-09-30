@@ -304,3 +304,7 @@ F11 proyecta catálogo autorizado en año/aula/proyecto→actividad sin cambiar 
 ## Estado de activación final F1–F11 (2026-09-28)
 
 Las notas de cada fase que dicen «apagado por defecto» describen su rollout inicial, no el estado actual. Tras la auditoría de runtime, F1 y F3–F11 están activas cuando sus flags faltan; `=0` es rollback explícito. F2 conserva el pipeline A provisional. La excepción es Jev externo de F6 (incluidas imagen/ficha), opt-in hasta evaluación experta; la cola y revisión manual funcionan sin él. Ver ADR 098 y `docs/qa/f1-f11-feature-flag-audit-2026-09-28.md`. La verificación visual de F9 llegó al acceso, pero el clon no tenía un cierre de período para mostrar su propuesta compacta; picker real y staging siguen pendientes de F12.
+
+## Preparación cloud bloqueada hasta paridad (2026-09-30)
+
+Commit de activación F1–F11 `815a4b9` limpio y validado (605/605 tests). Next.js nativo compila la página, pero no existe función `/api/*` para Vercel y Storage PostgreSQL devuelve 503 en varias rutas; un deploy ahora rompería flujos que funcionan en local. `vercel.json` ejecuta un preflight que falla explícitamente hasta resolver esos puntos. No hay cuentas nuevas vinculadas, migraciones remotas ni despliegue. Ver ADR 099 y `docs/VERCEL_SUPABASE_READINESS.md`.

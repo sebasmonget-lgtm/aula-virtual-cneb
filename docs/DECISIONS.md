@@ -860,3 +860,9 @@ La implementación posterior de F3 se registra en ADR 089; no cambia la regla ni
 **Decisión (2026-09-28).** Tras la implementación por fases, los flags de las funciones aprobadas F1 y F3–F11 toman `ausente = activo` y `=0` como rollback explícito. Esto incluye contratos V3, proyecto/actividad, captura/revisión ordinaria, navegación, trayectoria/evaluación, reajuste y Documentos. F2 eligió A provisionalmente y no tiene un flag de interfaz. Los adaptadores legacy siguen leyendo históricos y los flags `=0` siguen disponibles para reversión; ninguna migración ni dato confirmado se modifica. Ver `docs/qa/f1-f11-feature-flag-audit-2026-09-28.md`.
 
 **Excepción.** El proveedor externo Jev de F6 (y selectores experimentales de imagen/ficha) conserva opt-in hasta cumplir la validación experta preregistrada en el Plan Maestro. La cola manual y la revisión curricular están activas aunque Jev no lo esté. Flags de autenticación, exportación local y QA conservan sus defaults por seguridad.
+
+## ADR 099 Preparación Vercel/Supabase sin publicar una interfaz incompleta
+
+**Decisión (2026-09-30).** El build local usa Vinext/Cloudflare y el build Next.js nativo para Vercel compila solo la interfaz: no crea una función para la API local. `vercel.json` fija Next.js y ejecuta un preflight que falla mientras falten `/api/*`, adaptación del servidor persistente, Storage privado y una URL de API sin loopback. No se considera lista una versión por compilar el frontend. Ver `docs/VERCEL_SUPABASE_READINESS.md`.
+
+**Salida y reversión.** Completar cada adaptador conservando el contrato local, probar Auth/RLS/Storage con dos docentes ficticias en cuentas nuevas y hacer smoke del preview antes de producción. Hasta entonces Vercel no debe construir un deploy por accidente. La configuración puede revertirse junto con el commit de preparación; no hay migración, enlace de cuentas ni datos nuevos.

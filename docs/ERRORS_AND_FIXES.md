@@ -1016,3 +1016,13 @@ Síntoma: cuatro notas QA de la captura automatizada quedaron asociadas a la sel
 **Corrección.** El guardado exitoso del mapa avisa al padre, que vuelve a cargar el diagnóstico, igual que ya hacía el flujo de observación espontánea. No cambia persistencia ni valoración. Typecheck, lint, build y suite completa 603/603 pasaron; falta repetir la actualización visual en un clon con un niño aún sin observación.
 
 **Prevención.** Los componentes que modifican registros usados por un indicador de progreso compartido deben invalidar también la lectura del indicador; probar el contador inmediatamente después de guardar, sin depender de recarga manual.
+
+## 2026-09-30 — Build Vercel de la interfaz sin la API local
+
+**Síntoma.** `next build` finaliza correctamente, pero su manifiesto solo incluye la página y rutas auxiliares; no existe `/api/*`. La UI desplegada intentaría llamar a `127.0.0.1:8788` si no recibe una URL pública y fallaría el acceso y los datos.
+
+**Causa raíz.** El desarrollo local usa Vinext/Cloudflare para la interfaz y un proceso HTTP Node separado para la API. El build Next.js de Vercel no convierte ese proceso persistente en función. Además, el modo PostgreSQL conserva escrituras locales y rutas de archivos con 503.
+
+**Solución validada.** Se añadió `vercel.json` con un preflight que bloquea el build de despliegue y explica las brechas. `node scripts/verify-cloud-deploy.mjs` termina con exit code 1 y enumera cinco bloqueos; el build Next nativo de la interfaz sí pasó. Esto evita una publicación incompleta, pero aún no valida paridad cloud.
+
+**Prevención.** Exigir API y Storage funcionales, pruebas de Auth/RLS con dos docentes en Supabase nuevo y smoke de preview antes de quitar el bloqueo; ver `docs/VERCEL_SUPABASE_READINESS.md`.

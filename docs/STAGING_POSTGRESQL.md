@@ -34,6 +34,8 @@ Aplicar `supabase/migrations/*.sql` en orden lexicográfico en un proyecto vací
 1. URL del proyecto Supabase (`AYNI_SUPABASE_URL`) y publishable key (`AYNI_SUPABASE_PUBLISHABLE_KEY`).
 2. URL PostgreSQL del proyecto (`SUPABASE_DB_URL`) con usuario backend de escritura, obtenida de **Connect**. Entregarla por el mecanismo privado de variables de entorno, no en chat ni en el repositorio.
 3. Origen HTTPS exacto de la interfaz (`AYNI_ALLOWED_ORIGIN`) y URL pública HTTPS de la API (`NEXT_PUBLIC_AYNI_API_URL`), bajo el mismo sitio para la cookie.
-4. Dos cuentas docentes ficticias de staging, una por aula, para comprobar Auth y RLS. No se necesita `SUPABASE_SERVICE_ROLE_KEY` para este adaptador PostgreSQL.
+4. Dos cuentas docentes ficticias de staging, una por aula, para comprobar Auth y RLS. El adaptador PostgreSQL no necesita clave de servicio; los adaptadores actuales de observaciones y artefactos privados sí requieren `AYNI_SUPABASE_SERVICE_ROLE_KEY` solo en el backend. Esta clave evita RLS, por lo que cada ruta debe comprobar propiedad docente antes de operar en Storage.
+
+La conexión PostgreSQL y Auth no dan todavía equivalencia con el modo local: logos, adjuntos y fotos siguen pendientes de Storage. Ver `docs/VERCEL_SUPABASE_READINESS.md` antes de cualquier preview.
 
 Rollback del código: volver al commit anterior y usar `AYNI_DB_MODE=local`/`AYNI_AUTH_MODE=local` en desarrollo. No revertir migraciones aplicadas editando archivos históricos; usar una migración compensatoria o restaurar un respaldo probado.
