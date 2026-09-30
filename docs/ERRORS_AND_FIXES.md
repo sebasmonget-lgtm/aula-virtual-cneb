@@ -1,5 +1,15 @@
 # Errores y soluciones
 
+## 2026-09-29 — Fechas discordantes en el diagnóstico de QA
+
+**Síntoma.** El Word mostraba «Período de recojo: 16/03/2026–27/03/2026» y, más adelante, «Registros revisados: 28/09/2026». La diferencia no estaba señalada.
+
+**Causa raíz.** En la copia local de QA, el período previsto del diagnóstico quedó en marzo, mientras que las observaciones incluidas en el snapshot confirmado tienen fecha civil 28/09/2026. Es una discrepancia de datos de esa copia; el exportador anterior presentaba ambos rangos sin distinguir su significado.
+
+**Solución validada.** El Word separa «Período previsto de recojo» de «Registros revisados» y muestra una advertencia explícita cuando alguna observación cae fuera del período. No se cambiaron fechas ni observaciones. La prueba cubre un registro dentro y otro fuera del período; el PDF de la copia local muestra la advertencia.
+
+**Prevención.** Revisar la fecha civil de los registros del snapshot antes de usar el diagnóstico como documento final. Corregir una fecha de origen solo con confirmación y trazabilidad docente; la presentación no debe ocultar la discordancia.
+
 ## 2026-09-29 — El Word de actividad ocultaba el apartado de observaciones
 
 **Síntoma.** La actividad mostraba «Qué observar» en los referentes curriculares, pero el Word descargado antes de registrar evidencias no mostraba el apartado «Registro de observaciones y evidencias».

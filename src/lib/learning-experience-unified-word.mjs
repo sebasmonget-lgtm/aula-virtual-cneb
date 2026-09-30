@@ -1,4 +1,4 @@
-import { expandTableRow, insertCoverQuickView, removePageBreakAfterTable, removeParagraphsContaining, renderUnifiedWord, replaceWordText } from "./unified-word-template.mjs";
+import { insertCoverQuickView, removePageBreakAfterTable, removeParagraphsContaining, renderUnifiedWord, replaceWordText, xmlEscape } from "./unified-word-template.mjs";
 
 const templateUrl = new URL("../../assets/templates/proyecto-unidad-inicial-unificada-v1.docx", import.meta.url);
 const clean = (value) => typeof value === "string" ? value.trim() : "";
@@ -10,6 +10,24 @@ const durationWeeks = (startsOn, endsOn) => {
   return `${Math.max(1, Math.floor((end.getTime() - start.getTime()) / 604800000) + 1)} semanas lectivas previstas`;
 };
 const xmlText = (xml) => [...xml.matchAll(/<w:t(?:\s[^>]*)?>([\s\S]*?)<\/w:t>/g)].map((match) => match[1]).join("");
+
+function paragraph(text, bold = false, bullet = false) {
+  return `<w:p><w:pPr><w:spacing w:before="${bold ? 140 : 0}" w:after="${bold ? 75 : 55}"/>${bullet ? '<w:ind w:left="340" w:hanging="180"/>' : ""}${bold ? "<w:keepNext/>" : ""}</w:pPr><w:r><w:rPr>${bold ? "<w:b/>" : ""}<w:color w:val="173352"/><w:sz w:val="20"/></w:rPr><w:t xml:space="preserve">${xmlEscape(`${bullet ? "• " : ""}${text}`)}</w:t></w:r></w:p>`;
+}
+
+function block(label, value) {
+  const lines = Array.isArray(value) ? value.map(clean).filter(Boolean)
+    : clean(value).split(/(?<=[.!?])\s+(?=[A-ZÁÉÍÓÚÑ¿])|;\s*/u).map(clean).filter(Boolean);
+  return lines.length ? paragraph(label, true) + lines.map((line) => paragraph(line, false, true)).join("") : "";
+}
+
+function replaceSectionBody(xml, startText, endText, body) {
+  const paragraphs = [...xml.matchAll(/<w:p(?:\s[^>]*)?>[\s\S]*?<\/w:p>/g)];
+  const start = paragraphs.find((match) => xmlText(match[0]).includes(startText));
+  const end = paragraphs.find((match) => match.index > (start?.index ?? -1) && xmlText(match[0]).includes(endText));
+  if (!start || !end) throw new Error(`No se encontró la sección ${startText} en la plantilla del proyecto.`);
+  return xml.slice(0, start.index) + start[0] + body + xml.slice(end.index);
+}
 
 function removeBetween(xml, startText, endText = null) {
   const paragraphs = [...xml.matchAll(/<w:p(?:\s[^>]*)?>[\s\S]*?<\/w:p>/g)];
@@ -88,16 +106,52 @@ function valuesFor(document, cards) {
 export async function renderLearningExperienceUnifiedWord(document, cards = [], { logo = null } = {}) {
   const { values, competencyRows, routeRows } = valuesFor(document, cards);
   const content = document.content ?? {};
+  const origin = [
+    block("De dónde parte", values.ORIGEN_NECESIDAD_INTERES_PROBLEMA),
+    block("Situación para empezar", values.SITUACION_SIGNIFICATIVA),
+    block("Pregunta que guía", values.RETO_PREGUNTA),
+    block("Resultado que se espera", values.PRODUCTO_FINAL),
+    block("Qué podríamos observar durante el proceso", content.evidence_opportunities),
+  ].join("");
+  const preplan = [
+    block("Primeros pasos", (content.activity_route ?? []).slice(0, 3).map((item) => item.title)),
+    (content.activity_route?.length ?? 0) > 3 ? paragraph(`La ruta completa tiene ${content.activity_route.length} actividades; se muestra más adelante.`) : "",
+    block("Cómo acompañará la docente", values.PREPLAN_COMO),
+    block("Espacios y materiales", content.spaces_and_materials),
+  ].join("");
+  const competencies = competencyRows.map((row) => [
+    paragraph(row.COMPETENCIA, true),
+    paragraph(row.AREA),
+    block("Capacidades", row.CAPACIDADES),
+    block("Referente para observar", row.DESEMPENO_REFERENTE),
+    block("Criterio", row.CRITERIOS.split(/;\s*/).filter(Boolean)),
+    block("Evidencia esperada", row.EVIDENCIAS.split(/;\s*/).filter(Boolean)),
+  ].join("")).join("");
+  const assessment = [
+    block("Qué observar y registrar", values.ESTRATEGIA_RECOJO_EVIDENCIAS),
+    block("Dónde quedará registrado", values.INSTRUMENTOS_PROYECTO),
+    block("Cómo ajustar las próximas actividades", values.USO_EVIDENCIAS_PARA_AJUSTAR),
+  ].join("");
+  const route = routeRows.map((row) => [
+    paragraph(`${row.NRO_ACTIVIDAD}. ${row.TITULO_ACTIVIDAD}${row.FECHA_ACTIVIDAD ? ` · ${row.FECHA_ACTIVIDAD}` : ""}`, true),
+    block("Qué se hará", row.PROPOSITO_ESPECIFICO),
+    block("Competencia", row.COMPETENCIA_PRINCIPAL_ACTIVIDAD),
+    block("Qué observar", row.CRITERIO_ACTIVIDAD),
+    block("Evidencia esperada", row.EVIDENCIA_ACTIVIDAD),
+  ].join("")).join("");
   const overview = [
     ["Así podría empezar", (content.activity_route ?? []).slice(0, 3).map((item) => item.title).filter(Boolean).join(" · ")],
   ].filter(([, value]) => value);
   return renderUnifiedWord({ templateUrl, values, logo, transform(xml) {
     let output = removeBetween(xml, "XI. SEGUIMIENTO DEL PROYECTO / UNIDAD");
     output = removeBetween(output, "IV. PLANIFICACIÓN CON LOS NIÑOS", "V. PROPÓSITO GENERAL");
+    output = replaceSectionBody(output, "II. ORIGEN Y SITUACIÓN SIGNIFICATIVA", "III. PREPLANIFICACIÓN DOCENTE", origin);
+    output = replaceSectionBody(output, "III. PREPLANIFICACIÓN DOCENTE", "V. PROPÓSITO GENERAL", preplan);
+    output = replaceSectionBody(output, "VI. PROPÓSITOS DE APRENDIZAJE Y EVALUACIÓN", "VII. ENFOQUES", competencies);
+    output = replaceSectionBody(output, "VIII. ESTRATEGIA GENERAL DE EVALUACIÓN", "IX. RUTA DE ACTIVIDADES", assessment);
+    output = replaceSectionBody(output, "IX. RUTA DE ACTIVIDADES", "X. RECURSOS", route);
     output = output.replace(/<w:tbl(?:\s[^>]*)?>[\s\S]*?<\/w:tbl>/g, (table) => xmlText(table).includes("Regla para Ayni:") ? "" : table);
     output = removeParagraphsContaining(output, ["Los campos {{...}}", "Una fila por competencia", "Fila repetible:", "Esta sección es el puente directo", "Anexos opcionales"]);
-    output = expandTableRow(output, "{{AREA}}", competencyRows);
-    output = expandTableRow(output, "{{NRO_ACTIVIDAD}}", routeRows);
     output = output.replace(/<w:tr(?:\s[^>]*)?>[\s\S]*?<\/w:tr>/g, (row) =>
       ["Hitos o fechas del calendario", "Producto final / socialización"].some((label) => xmlText(row).includes(label)) ? "" : row);
     output = removePageBreakAfterTable(output, "Materiales y recursos base");

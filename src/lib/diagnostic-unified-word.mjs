@@ -1,4 +1,4 @@
-import { insertCoverQuickView, renderUnifiedWord, removeParagraphsContaining, xmlEscape } from "./unified-word-template.mjs";
+import { insertCoverQuickView, renderUnifiedWord, removeParagraphsContaining, replaceWordText, xmlEscape } from "./unified-word-template.mjs";
 
 const templateUrl = new URL("../../assets/templates/evaluacion-diagnostica-inicial-unificada-v1.docx", import.meta.url);
 const competencyFields = [
@@ -14,6 +14,28 @@ const clean = (value) => typeof value === "string" ? value.trim() : "";
 const dateLabel = (value) => /^\d{4}-\d{2}-\d{2}/.test(String(value ?? ""))
   ? `${String(value).slice(8, 10)}/${String(value).slice(5, 7)}/${String(value).slice(0, 4)}` : "";
 const countLabel = (count, one, many) => `${count} ${count === 1 ? one : many}`;
+const xmlText = (xml) => [...xml.matchAll(/<w:t(?:\s[^>]*)?>([\s\S]*?)<\/w:t>/g)].map((match) => match[1]).join("");
+
+function paragraph(value, bold = false, bullet = false) {
+  return `<w:p><w:pPr><w:spacing w:before="${bold ? 145 : 0}" w:after="${bold ? 75 : 55}"/>${bullet ? '<w:ind w:left="340" w:hanging="180"/>' : ""}${bold ? "<w:keepNext/>" : ""}</w:pPr><w:r><w:rPr>${bold ? "<w:b/>" : ""}<w:color w:val="173352"/><w:sz w:val="20"/></w:rPr><w:t xml:space="preserve">${xmlEscape(`${bullet ? "• " : ""}${value}`)}</w:t></w:r></w:p>`;
+}
+
+function replaceSectionBody(xml, startText, endText, body) {
+  const tables = [...xml.matchAll(/<w:tbl(?:\s[^>]*)?>[\s\S]*?<\/w:tbl>/g)];
+  const start = tables.find((match) => xmlText(match[0]).includes(startText));
+  const end = tables.find((match) => match.index > (start?.index ?? -1) && xmlText(match[0]).includes(endText));
+  if (!start || !end) throw new Error(`No se encontró la sección ${startText} en la plantilla diagnóstica.`);
+  return xml.slice(0, start.index) + body + xml.slice(end.index);
+}
+
+function replaceFromParagraphToTable(xml, startText, endText, body) {
+  const start = [...xml.matchAll(/<w:p(?:\s[^>]*)?>[\s\S]*?<\/w:p>/g)]
+    .find((match) => xmlText(match[0]).includes(startText));
+  const end = [...xml.matchAll(/<w:tbl(?:\s[^>]*)?>[\s\S]*?<\/w:tbl>/g)]
+    .find((match) => match.index > (start?.index ?? -1) && xmlText(match[0]).includes(endText));
+  if (!start || !end) throw new Error(`No se encontró el bloque ${startText} en la plantilla diagnóstica.`);
+  return xml.slice(0, start.index) + body + xml.slice(end.index);
+}
 
 // Civil dates are already local. Instants must be projected into the school's
 // time zone before being used as calendar dates in a teacher-facing document.
@@ -79,6 +101,10 @@ function valuesFor(document, context, cards) {
   const dates = records.map((item) => observedDay(item.observed_at)).filter(Boolean).sort();
   const observedFrom = dateLabel(dates[0]);
   const observedTo = dateLabel(dates.at(-1));
+  const plannedStart = String(context.diagnostic_period_start ?? "").slice(0, 10);
+  const plannedEnd = String(context.diagnostic_period_end ?? "").slice(0, 10);
+  const datesOutsidePeriod = /^\d{4}-\d{2}-\d{2}$/.test(plannedStart) && /^\d{4}-\d{2}-\d{2}$/.test(plannedEnd)
+    && dates.some((date) => date < plannedStart || date > plannedEnd);
   const needs = clean(group.needs);
   const strengths = clean(group.strengths);
   const priorities = clean(group.planning_priorities);
@@ -110,7 +136,7 @@ function valuesFor(document, context, cards) {
     N_EVIDENCIAS_REVISADAS: String(records.length),
     PROPOSITO_DIAGNOSTICO: "Conocer cómo inicia el grupo para decidir cómo acompañar sus aprendizajes.",
     CONTEXTO_PERIODO_DIAGNOSTICO: dates.length
-      ? `Se revisaron registros del ${observedFrom} al ${observedTo}${commentCount ? " y los comentarios confirmados de la docente" : ""}.`
+      ? `Registros revisados: del ${observedFrom} al ${observedTo}${commentCount ? ", junto con comentarios confirmados de la docente" : ""}.${datesOutsidePeriod ? ` Revisar fechas: hay registros fuera del período previsto (${dateLabel(plannedStart)} al ${dateLabel(plannedEnd)}).` : ""}`
       : "Aún faltan observaciones fechadas del aula; se continuará recogiendo información.",
     FOCOS_DIAGNOSTICOS: "El juego, la expresión, la convivencia, la exploración y las necesidades que aparecen en el aula.",
     CONDICIONES_RECOJO: "Las entrevistas describen el contexto familiar. Las observaciones docentes muestran lo ocurrido en el aula; una ausencia de registro no indica una dificultad.",
@@ -170,26 +196,64 @@ function valuesFor(document, context, cards) {
   return { values, followups };
 }
 
-function transformDiagnostic(xml, context, snapshot, followups) {
+function transformDiagnostic(xml, context, snapshot, followups, values) {
   let output = removeParagraphsContaining(xml, ["{{...", "Plantilla editable"]);
+  output = replaceSectionBody(output, "II. PROPÓSITO Y ALCANCE", "III. CÓMO SE RECOGIÓ LA INFORMACIÓN", [
+    paragraph("II. PROPÓSITO Y FECHAS", true),
+    paragraph(values.PROPOSITO_DIAGNOSTICO),
+    paragraph(`Período previsto de recojo: ${values.FECHA_INICIO_DIAGNOSTICO} al ${values.FECHA_FIN_DIAGNOSTICO}.`, true),
+    paragraph(values.CONTEXTO_PERIODO_DIAGNOSTICO),
+    paragraph(`Qué se buscó conocer: ${values.FOCOS_DIAGNOSTICOS}`),
+  ].join(""));
+  const records = uniqueObservations(snapshot.observations);
+  const observed = new Set(records.map((item) => item.student_id));
+  const comments = snapshot.children.filter((child) => clean(child.teacher_comment)).length;
+  const sources = [
+    paragraph(`Entrevistas familiares: ${snapshot.children.filter((child) => child.has_confirmed_interview).length} de ${snapshot.children.length} confirmadas. Aportan contexto; no sustituyen la observación del aula.`, false, true),
+    paragraph(`Observaciones docentes: ${countLabel(records.length, "registro", "registros")} de ${countLabel(observed.size, "niño", "niños")}. Describen lo que hicieron o dijeron.`, false, true),
+    paragraph(`${countLabel(comments, "comentario individual confirmado", "comentarios individuales confirmados")} por la docente.`, false, true),
+    paragraph("Producciones: consultar los registros disponibles en Ayni.", false, true),
+  ].join("");
+  output = replaceSectionBody(output, "III. CÓMO SE RECOGIÓ LA INFORMACIÓN", "IV. COBERTURA DEL DIAGNÓSTICO",
+    paragraph("III. FUENTES REVISADAS", true) + sources);
+  output = replaceSectionBody(output, "IV. COBERTURA DEL DIAGNÓSTICO", "V. SÍNTESIS DIAGNÓSTICA DEL GRUPO", [
+    paragraph("IV. COBERTURA DEL DIAGNÓSTICO", true),
+    paragraph(`Niñas y niños observados: ${values.N_OBSERVADOS} de ${values.N_ESTUDIANTES}.`, false, true),
+    paragraph(`Entrevistas familiares confirmadas: ${values.N_ENTREVISTAS_COMPLETADAS} de ${values.N_ESTUDIANTES}.`, false, true),
+    paragraph(`Registros revisados: ${values.N_EVIDENCIAS_REVISADAS}.`, false, true),
+    paragraph(`Información pendiente: ${values.INFORMACION_PENDIENTE}`, false, true),
+  ].join(""));
+  const cards = context.competencyCards ?? [];
+  const children = new Map(snapshot.children.map((child) => [child.student_id, child.name]));
+  const competencies = competencyFields.filter(([id]) =>
+    (id !== "PS_RELIGION" || snapshot.religion_applicable) && (id !== "CAST_L2_ORAL" || snapshot.castellano_l2_applicable))
+    .map(([id]) => {
+      const card = cards.find((item) => item.id === id);
+      const notes = snapshot.observations.filter((item) => item.competency_id === id);
+      if (!card && !notes.length) return "";
+      const name = clean(card?.name || card?.official_name) || id;
+      const excerpts = notes.filter((item) => clean(item.observation_text)).slice(0, 3)
+        .map((item) => paragraph(`${children.get(item.student_id) || "Niño del aula"}: “${clean(item.observation_text)}”`, false, true)).join("");
+      const rest = notes.filter((item) => clean(item.observation_text)).length - Math.min(3, notes.filter((item) => clean(item.observation_text)).length);
+      const evidence = excerpts || paragraph(notes.length ? `${countLabel(notes.length, "registro", "registros")} sin nota descriptiva.` : "Información insuficiente: aún no hay observaciones vinculadas.", false, true);
+      const reading = notes.length ? `Hay registros de ${countLabel(new Set(notes.map((item) => item.student_id)).size, "niño", "niños")}. Son un punto de partida, no una valoración final.` : "Información insuficiente para interpretar esta competencia en el grupo.";
+      const decision = notes.length ? "Observar esta competencia en otras situaciones antes de ajustar las actividades." : "Mantenerla en observación antes de tomar una decisión específica.";
+      return paragraph(name, true) + paragraph("Evidencias observadas", true) + evidence +
+        (rest > 0 ? paragraph(`${rest} registros más disponibles en Ayni.`, false, true) : "") +
+        paragraph(`Lectura inicial: ${reading}`) + paragraph(`Decisión inicial: ${decision}`, true);
+    }).join("");
+  output = replaceSectionBody(output, "VI. ANÁLISIS POR COMPETENCIAS", "VII. PRIORIDADES Y DECISIONES PEDAGÓGICAS",
+    paragraph("VI. ANÁLISIS POR COMPETENCIAS", true) + paragraph("Cada bloque muestra hechos registrados y una decisión inicial; no asigna un nivel de logro.") + competencies);
+  const individual = followups.map((child) => [
+    paragraph(child.name, true),
+    paragraph(`Registros y contexto: ${child.situation}`, false, true),
+    paragraph(`Apoyo o siguiente paso: ${child.support}`, false, true),
+  ].join("")).join("");
+  output = replaceFromParagraphToTable(output, "Seguimientos individuales o apoyos específicos", "VIII. USO DE LA INFORMACIÓN",
+    paragraph("Seguimiento por niña o niño", true) + individual);
+  output = replaceWordText(output, "Periodo de recojo", "Período previsto de recojo");
+  output = replaceWordText(output, "Periodo diagnóstico", "Período previsto del diagnóstico");
   if (Number(context.school_year) !== 2026) output = removeParagraphsContaining(output, ["Orientaciones para el inicio del año escolar 2026"]);
-  const skipSpecial = [];
-  if (!snapshot.religion_applicable) skipSpecial.push("{{EVID_RELIGION}}");
-  if (!snapshot.castellano_l2_applicable) skipSpecial.push("{{EVID_CASTELLANO_L2}}");
-  if (skipSpecial.length) output = output.replace(/<w:tr(?:\s[^>]*)?>[\s\S]*?<\/w:tr>/g,
-    (row) => skipSpecial.some((marker) => row.includes(marker)) ? "" : row);
-  // The source design has three sample rows. Use one as a visual model and
-  // expand it to all children in the confirmed group snapshot, without requiring a comment.
-  output = output.replace(/<w:tr(?:\s[^>]*)?>[\s\S]*?<\/w:tr>/g,
-    (row) => /\{\{SEGUIMIENTO_[23]_ESTUDIANTE\}\}/.test(row) ? "" : row);
-  const model = [...output.matchAll(/<w:tr(?:\s[^>]*)?>[\s\S]*?<\/w:tr>/g)]
-    .map((match) => match[0]).find((row) => row.includes("{{SEGUIMIENTO_1_ESTUDIANTE}}"));
-  if (!model) throw new Error("La plantilla diagnóstica no tiene la tabla nominal esperada.");
-  output = output.replace(model, followups.map((child) => model
-    .replace("{{SEGUIMIENTO_1_ESTUDIANTE}}", xmlEscape(child.name))
-    .replace("{{SEGUIMIENTO_1_SITUACION}}", xmlEscape(child.situation))
-    .replace("{{SEGUIMIENTO_1_APOYO}}", xmlEscape(child.support))
-    .replace("{{SEGUIMIENTO_1_FECHA}}", xmlEscape(child.date))).join(""));
   return output;
 }
 
@@ -202,5 +266,5 @@ export async function renderDiagnosticUnifiedWord(document, context, cards = [],
     ["Qué falta observar", clean(group.needs).split(/(?<=[.!?])\s+/u)[0]],
   ].filter(([, value]) => value);
   return renderUnifiedWord({ templateUrl, values, logo,
-    transform: (xml) => insertCoverQuickView(transformDiagnostic(xml, context, snapshot, followups), "El diagnóstico en una mirada", overview) });
+    transform: (xml) => insertCoverQuickView(transformDiagnostic(xml, { ...context, competencyCards: cards }, snapshot, followups, values), "El diagnóstico en una mirada", overview) });
 }

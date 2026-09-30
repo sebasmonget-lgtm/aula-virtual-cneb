@@ -1,4 +1,4 @@
-import { expandTableRow, insertCoverQuickView, removePageBreakAfterTable, removeParagraphsContaining, renderUnifiedWord, replaceWordText } from "./unified-word-template.mjs";
+import { expandTableRow, insertCoverQuickView, removePageBreakAfterTable, removeParagraphsContaining, renderUnifiedWord, replaceWordText, xmlEscape } from "./unified-word-template.mjs";
 import { availableSheets, renderSheetPages } from "./workshop-sheet-catalog.mjs";
 
 const oldTemplateUrl = new URL("../../assets/templates/actividad-aprendizaje-inicial-ayni-v2.docx", import.meta.url);
@@ -6,6 +6,54 @@ const workshopTemplateUrl = new URL("../../assets/templates/actividad-aprendizaj
 const clean = (value) => typeof value === "string" ? value.trim() : "";
 const list = (value) => Array.isArray(value) ? value.map(clean).filter(Boolean).join("; ") : "";
 const xmlText = (xml) => [...xml.matchAll(/<w:t(?:\s[^>]*)?>([\s\S]*?)<\/w:t>/g)].map((match) => match[1]).join("");
+const paragraphPattern = /<w:p(?:\s[^>]*)?>[\s\S]*?<\/w:p>/g;
+
+function readableSentences(value) {
+  return clean(value).split(/(?<=[.!?])\s+(?=[A-ZÁÉÍÓÚÑ¿])|;\s*/u).map((part) => part.trim()).filter(Boolean)
+    .map((part) => {
+      const capitalized = part.replace(/^[a-záéíóúñ]/u, (letter) => letter.toLocaleUpperCase("es-PE"));
+      return /[.!?]$/u.test(capitalized) ? capitalized : `${capitalized}.`;
+    });
+}
+
+function readableParagraph(value, { bold = false, bullet = false } = {}) {
+  const text = `${bullet ? "• " : ""}${value}`;
+  return `<w:p><w:pPr><w:spacing w:before="${bold ? 120 : 0}" w:after="${bold ? 70 : 55}"/>${bullet ? '<w:ind w:left="340" w:hanging="180"/>' : ""}${bold ? "<w:keepNext/>" : ""}</w:pPr><w:r><w:rPr>${bold ? "<w:b/>" : ""}<w:color w:val="173352"/><w:sz w:val="20"/></w:rPr><w:t xml:space="preserve">${xmlEscape(text)}</w:t></w:r></w:p>`;
+}
+
+function readableBlock(label, value) {
+  const lines = Array.isArray(value) ? value.map(clean).filter(Boolean) : readableSentences(value);
+  return lines.length ? readableParagraph(label, { bold: true }) + lines.map((line) => readableParagraph(line, { bullet: true })).join("") : "";
+}
+
+function replaceSectionBody(xml, startText, endText, body) {
+  const paragraphs = [...xml.matchAll(paragraphPattern)];
+  const start = paragraphs.find((match) => xmlText(match[0]).includes(startText));
+  const end = paragraphs.find((match) => match.index > (start?.index ?? -1) && xmlText(match[0]).includes(endText));
+  if (!start || !end) throw new Error(`No se encontró la sección ${startText} en la plantilla de actividad.`);
+  return xml.slice(0, start.index) + start[0] + body + xml.slice(end.index);
+}
+
+function activityGuide(content, whatToObserve) {
+  const questions = [...clean(content.mediation).matchAll(/¿[^?]+\?/g)].map((match) => match[0]);
+  const materials = Array.isArray(content.materials) ? content.materials : [];
+  return {
+    purpose: readableBlock("Propósito", content.purpose),
+    sequence: [
+      readableParagraph("INICIO", { bold: true }),
+      readableBlock("Situación para empezar", content.meaningful_situation),
+      readableBlock("Docente · antes de empezar", content.teacher_preparation),
+      readableParagraph("DESARROLLO", { bold: true }),
+      readableBlock("Niños · qué harán", content.child_actions),
+      readableBlock("Docente · cómo acompaña", content.mediation),
+      readableBlock("Preguntas para conversar", questions),
+      readableBlock("Materiales", materials),
+      readableParagraph("CIERRE", { bold: true }),
+      readableBlock("Para cerrar y continuar", content.closure_or_continuity),
+      readableBlock("Qué observar", whatToObserve),
+    ].join(""),
+  };
+}
 
 function removeSection(xml, startText, endText = null) {
   const paragraphs = [...xml.matchAll(/<w:p(?:\s[^>]*)?>[\s\S]*?<\/w:p>/g)];
@@ -15,8 +63,10 @@ function removeSection(xml, startText, endText = null) {
   return xml.slice(0, start.index) + xml.slice(end?.index ?? xml.lastIndexOf("<w:sectPr"));
 }
 
-function transformActivity(xml, evidence, closure, withWorkshop) {
+function transformActivity(xml, evidence, closure, withWorkshop, guide) {
   let output = xml;
+  output = replaceSectionBody(output, "II. PROPÓSITO DE APRENDIZAJE", "III. REFERENTES CURRICULARES", guide.purpose);
+  output = replaceSectionBody(output, "V. SECUENCIA DE LA ACTIVIDAD", withWorkshop ? "VI. CUADERNO DE CAMPO" : "VI. REGISTRO DE OBSERVACIONES", guide.sequence);
   if (!evidence.length) {
     output = output.replace(/<w:tbl(?:\s[^>]*)?>[\s\S]*?<\/w:tbl>/g,
       (table) => table.includes("{{EVIDENCIA_ESTUDIANTE}}") ? "" : table);
@@ -73,6 +123,7 @@ export async function renderActivityUnifiedWord(document, cards = [], { logo = n
     EVIDENCIA_SIGUIENTE_PASO: "Revisar junto con nuevos registros",
   }));
   const whatToObserve = list(criterion?.observation_focus) || clean(content.evidence_opportunities) || clean(content.expected_evidence || route?.expected_evidence);
+  const guide = activityGuide(content, whatToObserve);
   const date = String(document.occurs_on ?? "").slice(0, 10);
   const values = {
     "AÑO_ESCOLAR": String(document.school_year), TITULO_ACTIVIDAD: document.title,
@@ -120,6 +171,6 @@ export async function renderActivityUnifiedWord(document, cards = [], { logo = n
     ["Qué haremos hoy", clean(content.purpose)],
   ].filter(([, value]) => value);
   return renderUnifiedWord({ templateUrl: withWorkshop ? workshopTemplateUrl : oldTemplateUrl, values, logo, appendixImages,
-    transform: (xml) => insertCoverQuickView(transformActivity(xml, evidenceRows, closure, withWorkshop), "Hoy en el aula", overview),
+    transform: (xml) => insertCoverQuickView(transformActivity(xml, evidenceRows, closure, withWorkshop, guide), "Hoy en el aula", overview),
     transformPart: (part, xml) => part.includes("header") ? replaceWordText(xml, "PLANIFICACIÓN ANUAL", "ACTIVIDAD DE APRENDIZAJE") : xml });
 }

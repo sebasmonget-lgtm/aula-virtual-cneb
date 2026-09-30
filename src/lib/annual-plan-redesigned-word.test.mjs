@@ -134,7 +134,9 @@ test("la plantilla unificada utiliza exactamente los mismos doce objetos en cron
   const documentText = [...xml.matchAll(/<w:t(?:\s[^>]*)?>([\s\S]*?)<\/w:t>/g)].map((match) => match[1]).join("");
   assert.equal((documentText.match(/Así se podría vivir/g) ?? []).length, 12);
   assert.doesNotMatch(documentText, /CONTINUACI[ÓO]N/i);
-  assert.match(documentText, /Los niños podrían/);
+  assert.match(documentText, /Arman una pista o construcción/);
+  assert.match(documentText, /Marcan un recorrido con objetos o señales/);
+  assert.doesNotMatch(documentText, /Los niños podrían|Algo que podría quedar/);
   assert.match(documentText, /Diciembre/);
   assert.match(documentText, /Doce propuestas iniciales/);
   assert.doesNotMatch(documentText, /Producto o evidencia final/);

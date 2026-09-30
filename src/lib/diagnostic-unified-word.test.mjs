@@ -32,7 +32,7 @@ test("el informe unificado conserva nombres autorizados, evidencia factual e inf
       { title: "Acompañar la organización compartida del juego", reason: "Acordar materiales", related_competency_ids: [] },
     ] };
   const rendered = await renderDiagnosticUnifiedWord(document, context,
-    [{ id: "PS_IDENTIDAD", name: "Construye su identidad" }]);
+    [{ id: "PS_IDENTIDAD", name: "Construye su identidad" }, { id: "PS_CONVIVE", name: "Convive" }]);
   if (process.env.AYNI_QA_DOCX_DIR) await writeFile(path.join(process.env.AYNI_QA_DOCX_DIR, "diagnostic-unified-qa.docx"), rendered);
   const zip = await JSZip.loadAsync(rendered);
   const xml = await zip.file("word/document.xml").async("string");
@@ -40,6 +40,7 @@ test("el informe unificado conserva nombres autorizados, evidencia factual e inf
     assert.match(xml, new RegExp(value));
   assert.match(xml, /16\/03\/2026/);
   assert.match(xml, /27\/03\/2026/);
+  assert.doesNotMatch(xml, /Revisar fechas:/);
   for (const title of context.confirmed_priorities.map((item) => item.title)) assert.match(xml, new RegExp(title));
   assert.match(xml, /Las familias mencionaron intereses como Animales, Construcción, Música/);
   assert.doesNotMatch(xml, /estos intereses:|\.;|Animales; Construcción/);
@@ -47,7 +48,7 @@ test("el informe unificado conserva nombres autorizados, evidencia factual e inf
   assert.match(xml, /2 comentarios individuales confirmados por la docente/);
   const optional = structuredClone(document);
   for (const child of optional.content.report_snapshot.children) { child.teacher_comment = ""; child.review_id = null; child.information_status = "insufficient_information"; }
-  const optionalZip = await JSZip.loadAsync(await renderDiagnosticUnifiedWord(optional, context, [{ id: "PS_IDENTIDAD", name: "Construye su identidad" }]));
+  const optionalZip = await JSZip.loadAsync(await renderDiagnosticUnifiedWord(optional, context, [{ id: "PS_IDENTIDAD", name: "Construye su identidad" }, { id: "PS_CONVIVE", name: "Convive" }]));
   const optionalXml = await optionalZip.file("word/document.xml").async("string");
   assert.match(optionalXml, /0 comentarios individuales confirmados por la docente/);
   assert.match(optionalXml, /Sin comentarios individuales registrados/);
@@ -55,6 +56,12 @@ test("el informe unificado conserva nombres autorizados, evidencia factual e inf
   assert.match(optionalXml, /Luis Rojas/);
   assert.match(optionalXml, /Eligió materiales/);
   assert.doesNotMatch(optionalXml, /2 comentarios individuales confirmados|Ana explicó cómo organizó/);
+  const late = structuredClone(document);
+  late.content.report_snapshot.observations[0].observed_at = "2026-09-28";
+  const lateXml = await (await JSZip.loadAsync(await renderDiagnosticUnifiedWord(late, context,
+    [{ id: "PS_IDENTIDAD", name: "Construye su identidad" }]))).file("word/document.xml").async("string");
+  assert.match(lateXml, /Registros revisados: del 28\/09\/2026 al 28\/09\/2026/);
+  assert.match(lateXml, /Revisar fechas: hay registros fuera del período previsto \(16\/03\/2026 al 27\/03\/2026\)/);
 });
 
 test("diagnóstico exportado respeta Lima, notas únicas y áreas no aplicables", async () => {

@@ -17,7 +17,7 @@ test("la actividad distingue qué observar de las observaciones registradas", as
     content: { document_template_version: "activity-unified-v1", route_item_id: route.id, title: "Nos organizamos", purpose: route.specific_purpose,
       competency_id: route.competency_id, evaluation_criterion: route.evaluation_criterion, expected_evidence: route.expected_evidence,
       meaningful_situation: "Los niños quieren jugar", teacher_preparation: "Preparar objetos", child_actions: "Elegir y conversar",
-      mediation: "Preguntar cómo compartir", evidence_opportunities: "Escuchar acuerdos", closure_or_continuity: "Conversar sobre acuerdos", materials: ["bloques"] } };
+      mediation: "Preguntar: ¿Cómo podemos compartir?", evidence_opportunities: "Escuchar acuerdos", closure_or_continuity: "Conversar sobre acuerdos", materials: ["bloques"] } };
   const rendered = await renderActivityUnifiedWord(document, cards);
   if (process.env.AYNI_QA_DOCX_DIR) await writeFile(path.join(process.env.AYNI_QA_DOCX_DIR, "activity-unified-qa.docx"), rendered);
   const archive = await JSZip.loadAsync(rendered);
@@ -26,6 +26,9 @@ test("la actividad distingue qué observar de las observaciones registradas", as
   assert.match(xml, /Explica un acuerdo/);
   assert.match(xml, /Escuchar cómo propone los turnos/);
   assert.match(xml, /Síntesis orientativa para 5 años/);
+  for (const label of ["Niños · qué harán", "Docente · cómo acompaña", "Preguntas para conversar", "Materiales", "Qué observar"])
+    assert.match(xml, new RegExp(label));
+  assert.doesNotMatch(xml, /¿QUÉ\?|¿CÓMO\?|¿PARA QUÉ\?/);
   assert.doesNotMatch(xml, /\{\{/);
   assert.match(xml, /VI\. REGISTRO DE OBSERVACIONES Y EVIDENCIAS/);
   assert.match(xml, /Aún no hay observaciones registradas/);

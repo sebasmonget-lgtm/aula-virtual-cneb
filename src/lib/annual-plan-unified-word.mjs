@@ -15,13 +15,23 @@ function tableSlices(xml) {
 }
 
 function experienceSketch(project) {
-  const purpose = String(project.purpose ?? "").trim().replace(/[.!?]$/, "");
-  const actions = purpose.replace(/\s+y\s+(?=[\p{L}]+(?:ar|er|ir)\b)/gu, ", ")
-    .split(/,\s*/).map((part) => part.trim()).filter(Boolean).slice(0, project.final_product ? 2 : 3);
-  const steps = actions.map((action) => `Los niños podrían ${action.charAt(0).toLocaleLowerCase("es-PE")}${action.slice(1)}.`);
-  const product = String(project.final_product ?? "").trim().replace(/[.!?]$/, "");
-  if (product) steps.push(`Algo que podría quedar: ${product.charAt(0).toLocaleLowerCase("es-PE")}${product.slice(1)}.`);
-  return steps;
+  const topic = `${project.title ?? ""} ${project.context_or_trigger ?? ""}`.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("es-PE");
+  const paths = [
+    [/educacion inicial|jardin para jugar|mejorar.*espacio/, ["Recorren un espacio del jardín y cuentan cómo lo usan para jugar.", "Proponen un cambio pequeño y lo prueban allí.", "Conversan sobre si el cambio ayudó y qué ajustarían."]],
+    [/cierre de ano|navidad/, ["Vuelven a mirar experiencias vividas durante el año.", "Eligen una para contarla o mostrarla a otros.", "Conversan sobre lo que quisieran seguir explorando."]],
+    [/puente|construccion|bloque/, ["Arman una pista o construcción con los materiales disponibles.", "Prueban cómo funciona y cambian una parte.", "Comparan qué pasó antes y después del cambio."]],
+    [/huerto|planta|semilla|fruto/, ["Miran las plantas o semillas de cerca y cuentan qué notan.", "Prueban una forma de cuidarlas y vuelven a observarlas.", "Comparan los cambios que ven con el paso de los días."]],
+    [/agua|material/, ["Eligen materiales para probar qué ocurre al usarlos con agua.", "Comparan lo que pasa en cada prueba.", "Cuentan qué cambiarían para comprobar otra idea."]],
+    [/sombra|luz/, ["Buscan sombras en distintos lugares y momentos.", "Mueven un objeto o cambian de lugar para probar qué ocurre.", "Comparan las sombras y cuentan qué descubrieron."]],
+    [/mercado|tienda/, ["Organizan un espacio de tienda con objetos del aula.", "Acuerdan quiénes atenderán y quiénes comprarán durante el juego.", "Cambian los roles y conversan sobre lo que necesitaron."]],
+    [/cuento|historia|relato|comunidad/, ["Escuchan o cuentan una historia conocida.", "Eligen una parte para representarla con palabras, dibujos o juego.", "Comparten sus versiones y conversan sobre las diferencias."]],
+    [/ruta|camino|recorrido|circuito|movimiento/, ["Marcan un recorrido con objetos o señales.", "Lo siguen y prueban otra forma de llegar.", "Explican por dónde pasaron y ajustan el recorrido."]],
+    [/forma|tamano|cantidad|medir/, ["Agrupan objetos y explican cómo decidieron ordenarlos.", "Prueban otra manera de compararlos.", "Cuentan qué cambió al mover o agregar objetos."]],
+    [/musica|sonido|arte|imagen|dibujo/, ["Exploran sonidos, movimientos o imágenes con materiales del aula.", "Eligen una idea y la prueban de distintas maneras.", "Muestran lo que hicieron y cuentan cómo lo cambiaron."]],
+    [/jueg|acuerdo|conviv|nino peruano/, ["Proponen juegos y escuchan las opciones del grupo.", "Eligen una posibilidad y la prueban juntos.", "Conversan sobre cómo resultó y ajustan sus acuerdos."]],
+  ];
+  return paths.find(([pattern]) => pattern.test(topic))?.[1] ??
+    ["Miran los materiales y comparten ideas sobre cómo usarlos.", "Eligen una propuesta y la ponen a prueba.", "Cuentan qué ocurrió y qué cambiarían la próxima vez."];
 }
 
 function sketchTable(project, marker, hasImage) {
