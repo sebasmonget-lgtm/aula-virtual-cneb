@@ -5,11 +5,13 @@ Estos recursos se crearon en cuentas separadas de los proyectos anteriores. Son 
 | Servicio | Proyecto | Estado |
 | --- | --- | --- |
 | Supabase | [ayni-aula-staging](https://supabase.com/dashboard/project/eetdkmmspicboijcmnzv), organización `Ayni Aula` (Free), región São Paulo | 68 migraciones aplicadas exclusivamente a `eetdkmmspicboijcmnzv`; 78/78 tablas públicas con RLS. Cinco buckets privados revisados. Sin usuarios docentes ni pruebas reales de Auth/RLS/Storage de dos cuentas. |
-| Vercel | [ayni-aula-staging](https://vercel.com/ayni4/ayni-aula-staging), equipo `ayni` (Hobby) | Proyecto vacío; sin Git conectado ni despliegue. La compilación Next local ahora incluye la API. Preset Next.js y build `npx next build --webpack`. Uso del código para entrenamiento desactivado en este proyecto. |
+| Vercel | [ayni-aula-staging](https://vercel.com/ayni4/ayni-aula-staging), equipo `ayni` (Hobby) | Proyecto sin Git conectado ni despliegue. Se guardaron cuatro valores no secretos para Production: modos PostgreSQL y Supabase, URL de la instancia nueva y origen `https://project-0w0pq.vercel.app`. Faltan claves y URL de conexión privada. Preset Next.js y build `npx next build --webpack`. Uso del código para entrenamiento desactivado. |
 
 Supabase se creó con exposición automática de tablas desactivada y RLS automático activado. La CLI se enlazó solo al ref `eetdkmmspicboijcmnzv` y se verificó ese ref antes de cada `db push` o consulta. La contraseña inicial de base de datos no está disponible en este checkout; su restablecimiento corresponde al propietario de la cuenta nueva. Nunca copiarla a un commit, log o mensaje.
 
 La CLI global de Vercel en este equipo está autenticada en la cuenta anterior `direccion-7906` / `Jesus de Belen`, sin acceso al equipo `ayni4`. No usar esa sesión para este proyecto. La sesión web del equipo nuevo sí existe en el side panel; un intento aislado de autorizar otra sesión CLI se canceló sin conceder acceso.
+
+La rama `codex/qa-planning-ux` con el puente de API/Storage se subió a GitHub en `a7bd783`; su remoto coincide con el commit local. Vercel aún no tiene permiso GitHub para este repositorio: se cerró la solicitud de autorización sin aprobarla ni conectar el proyecto.
 
 La cuenta de Supabase del panel lateral era la anterior `Jesus de Belen`; se cerró esa sesión sin cambiar sus proyectos. El proyecto Ayni sigue visible en Chrome con la cuenta nueva, y el panel lateral quedó en el formulario de acceso hasta que el propietario ingrese con esa cuenta.
 
