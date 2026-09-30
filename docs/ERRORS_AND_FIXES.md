@@ -6,7 +6,7 @@
 
 **Causa raíz.** El adaptador exigía verificar TLS, pero Node en Vercel no tenía la CA raíz de Supabase entre sus autoridades de confianza. El build no abre una conexión y no detectó el problema.
 
-**Solución validada.** Se incorporó la CA pública descargada desde Database Settings del proyecto nuevo, con huella SHA-256 comprobada, y se aplica solo a hosts de Supabase con `rejectUnauthorized: true`. Una conexión de prueba al pooler con contraseña deliberadamente incorrecta llegó al rechazo PostgreSQL `28P01`, confirmando que superó la verificación TLS. La prueba del adaptador, typecheck, lint y build pasaron. El smoke remoto del despliegue corregido se comprueba por separado.
+**Solución validada.** Se incorporó la CA pública descargada desde Database Settings del proyecto nuevo, con huella SHA-256 comprobada, y se aplica solo a hosts de Supabase con `rejectUnauthorized: true`. Una conexión de prueba al pooler con contraseña deliberadamente incorrecta llegó al rechazo PostgreSQL `28P01`, confirmando que superó la verificación TLS. La prueba del adaptador, typecheck, lint y build pasaron. El despliegue corregido `dpl_GfYuLZak6ocGnqH63zGVQdaPAs5a` devolvió 200 en `/health` (`engine=postgres`), `/` y `/api/auth/config`; `/api/auth/session` sin credenciales devolvió 401. Los logs de esas peticiones no mostraron errores.
 
 **Prevención.** Probar `/health` en la Function desplegada y revisar logs antes de anunciar un despliegue funcional. Renovar la CA antes de su vencimiento de 2031, sin desactivar la verificación del certificado ni registrar credenciales.
 
