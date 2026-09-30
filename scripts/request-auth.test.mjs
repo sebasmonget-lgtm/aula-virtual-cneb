@@ -37,8 +37,8 @@ function fakeAuthFetch(url, options) {
   }
   if (url.endsWith("/auth/v1/user")) {
     const token = options.headers.authorization;
-    const id = ["Bearer token-a", "Bearer token-a-renewed", "Bearer token-unmarked"].includes(token) ? teacherA : token === "Bearer token-b" ? teacherB : null;
-    return Promise.resolve(Response.json(id ? { id, role: "authenticated", app_metadata: token === "Bearer token-unmarked" ? {} : { ayni_role: "teacher" } } : { error: "invalid_token" }, { status: id ? 200 : 401 }));
+    const id = ["Bearer token-a", "Bearer token-a-renewed", "Bearer token-unmarked"].includes(token) ? teacherA : ["Bearer token-b", "Bearer token-admin"].includes(token) ? teacherB : null;
+    return Promise.resolve(Response.json(id ? { id, role: "authenticated", app_metadata: token === "Bearer token-unmarked" ? {} : { ayni_role: token === "Bearer token-admin" ? "admin" : "teacher" } } : { error: "invalid_token" }, { status: id ? 200 : 401 }));
   }
   return Promise.resolve(new Response(null, { status: 204 }));
 }
@@ -55,7 +55,9 @@ test("identity is verified for every request and never comes from client IDs", a
   const a = await auth.resolve(request("token-a", { "x-teacher-id": teacherB }), db);
   const b = await auth.resolve(request("token-b"), db);
   assert.equal(a.teacherId, teacherA);
+  assert.equal(a.role, "teacher");
   assert.equal(b.teacherId, teacherB);
+  assert.equal((await auth.resolve(request("token-admin"), db)).role, "admin");
   assert.equal(a.db, db);
   assert.notEqual(a.requestId, b.requestId);
   const saved = auth.sessionCookies({ token: "token-a", refreshToken: "refresh-a", expiresIn: 3600 })

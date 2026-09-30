@@ -6,12 +6,18 @@ import { Eye, EyeOff } from "lucide-react";
 import { apiFetch } from "@/src/lib/ayni-api-fetch";
 import { localDatabaseApiUrl } from "@/src/lib/local-database";
 import { TeacherWorkspace } from "./teacher-workspace";
+import { AdminWorkspace } from "./admin-workspace";
 
 type AccessState = "checking" | "ready" | "login" | "unavailable";
 
 export function AuthGate() {
   const [state, setState] = useState<AccessState>("checking");
   const [mode, setMode] = useState<"local" | "supabase">("local");
+  const [role, setRole] = useState<"teacher" | "admin">("teacher");
+  const [setupAvailable, setSetupAvailable] = useState(false);
+  const [settingUp, setSettingUp] = useState(false);
+  const [setupKey, setSetupKey] = useState("");
+  const [setupName, setSetupName] = useState("");
   const [dni, setDni] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -29,7 +35,12 @@ export function AuthGate() {
         setMode(value.mode);
         if (value.mode === "local") { setState("ready"); return; }
         const session = await apiFetch(`${localDatabaseApiUrl}/api/auth/session`, { cache: "no-store" });
-        if (active) setState(session.ok ? "ready" : session.status === 401 ? "login" : "unavailable");
+        if (active) {
+          if (session.ok) setRole(((await session.json()) as { role: "teacher" | "admin" }).role);
+          setState(session.ok ? "ready" : session.status === 401 ? "login" : "unavailable");
+          if (!session.ok) void apiFetch(`${localDatabaseApiUrl}/api/admin/setup-status`)
+            .then((response) => response.json() as Promise<{ available: boolean }>).then((result) => { if (active) setSetupAvailable(result.available); }).catch(() => {});
+        }
       } catch { if (active) setState("unavailable"); }
     }
     void check();
@@ -53,6 +64,7 @@ export function AuthGate() {
         body: JSON.stringify({ dni: dni.trim(), password }),
       });
       if (!response.ok) throw new Error(response.status === 401 ? "Revisa tu DNI y contraseña." : "No se pudo iniciar sesión.");
+      setRole(((await response.json()) as { role: "teacher" | "admin" }).role);
       setPassword("");
       setState("ready");
     } catch (cause) { setError(cause instanceof Error ? cause.message : "No se pudo iniciar sesión."); }
@@ -64,11 +76,26 @@ export function AuthGate() {
     setState("login");
   }
 
+  async function setup(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault(); setBusy(true); setError("");
+    try {
+      const response = await apiFetch(`${localDatabaseApiUrl}/api/admin/setup`, {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ setupKey, name: setupName.trim(), dni, password }),
+      });
+      if (!response.ok) throw new Error("No se pudo crear el administrador. Revisa los datos y la clave de configuración.");
+      setSetupKey(""); setPassword(""); setSettingUp(false); setSetupAvailable(false);
+      setError("");
+    } catch (cause) { setError(cause instanceof Error ? cause.message : "No se pudo crear el administrador."); }
+    finally { setBusy(false); }
+  }
+
   if (state === "ready") return <>
+    {role === "admin" ? <AdminWorkspace onSignOut={() => void signOut()} /> : <>
     {mode === "supabase" && <div className="flex justify-end border-b border-[#dce7ef] bg-white px-5 py-2">
       <button type="button" onClick={() => void signOut()} className="rounded-lg px-3 py-2 text-sm font-semibold text-[#0a7890] hover:bg-[#eaf6f9]">Cerrar sesión</button>
     </div>}
-    <TeacherWorkspace />
+    <TeacherWorkspace /></>}
   </>;
   if (state === "checking") return <main className="grid min-h-screen place-items-center text-[#19334d]">Comprobando tu sesión…</main>;
   if (state === "unavailable") return <main className="grid min-h-screen place-items-center p-6 text-center text-[#19334d]">
@@ -81,11 +108,12 @@ export function AuthGate() {
         <div><p className="text-lg font-extrabold leading-tight">Ayni Aula</p><p className="text-sm font-semibold text-[#58718b]">Tu espacio docente</p></div>
       </div>
       <div className="mt-12 sm:mt-14">
-        <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-[#087d96]">Acceso docente</p>
-        <h1 className="mt-2 text-4xl font-extrabold tracking-tight text-[#172e49] sm:text-5xl">Bienvenida a Ayni</h1>
-        <p className="mt-3 max-w-2xl text-lg leading-relaxed text-[#526b87]">Ingresa con el DNI registrado por la administración y tu contraseña para continuar en tu aula.</p>
+        <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-[#087d96]">{settingUp ? "Configuración inicial" : "Acceso a Ayni"}</p>
+        <h1 className="mt-2 text-4xl font-extrabold tracking-tight text-[#172e49] sm:text-5xl">{settingUp ? "Primer administrador" : "Bienvenida a Ayni"}</h1>
+        <p className="mt-3 max-w-2xl text-lg leading-relaxed text-[#526b87]">{settingUp ? "Usa la clave privada de configuración que guardaste en Vercel." : "Ingresa con tu DNI registrado y contraseña para continuar."}</p>
       </div>
-      <form onSubmit={(event) => void signIn(event)} className="mt-6 rounded-3xl border border-[#d7e4ee] bg-white p-5 shadow-[0_12px_32px_rgba(24,50,76,0.05)] sm:p-7">
+      <form onSubmit={(event) => void (settingUp ? setup(event) : signIn(event))} className="mt-6 rounded-3xl border border-[#d7e4ee] bg-white p-5 shadow-[0_12px_32px_rgba(24,50,76,0.05)] sm:p-7">
+        {settingUp && <><label htmlFor="ayni-setup-key" className="block text-sm font-bold">Clave de configuración</label><input id="ayni-setup-key" type="password" autoComplete="off" required minLength={32} value={setupKey} onChange={(event) => setSetupKey(event.target.value)} className="mt-2 mb-5 w-full rounded-2xl border border-[#bdd0dd] px-4 py-4" /><label htmlFor="ayni-setup-name" className="block text-sm font-bold">Nombre del administrador</label><input id="ayni-setup-name" required minLength={2} maxLength={100} value={setupName} onChange={(event) => setSetupName(event.target.value)} className="mt-2 mb-5 w-full rounded-2xl border border-[#bdd0dd] px-4 py-4" /></>}
         <label htmlFor="ayni-login-dni" className="block text-sm font-bold text-[#19334d]">DNI</label>
         <input id="ayni-login-dni" type="text" inputMode="numeric" pattern="[0-9]{8}" maxLength={8} autoComplete="username" required value={dni} onChange={(event) => setDni(event.target.value.replace(/\D/g, ""))} className="mt-2 w-full rounded-2xl border border-[#bdd0dd] bg-white px-4 py-4 text-base outline-none transition focus:border-[#087d96] focus:ring-2 focus:ring-[#087d96]/15" />
         <label htmlFor="ayni-login-password" className="mt-5 block text-sm font-bold text-[#19334d]">Contraseña</label>
@@ -96,8 +124,9 @@ export function AuthGate() {
           </button>
         </div>
         {error && <p role="alert" className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
-        <button type="submit" disabled={busy} className="mt-7 w-full rounded-2xl bg-[#087d96] px-5 py-4 text-base font-bold text-white shadow-sm transition hover:bg-[#086d83] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#087d96] disabled:opacity-60">{busy ? "Ingresando…" : "Ingresar a mi aula"}</button>
+        <button type="submit" disabled={busy} className="mt-7 w-full rounded-2xl bg-[#087d96] px-5 py-4 text-base font-bold text-white shadow-sm transition hover:bg-[#086d83] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#087d96] disabled:opacity-60">{busy ? "Procesando…" : settingUp ? "Crear administrador" : "Ingresar"}</button>
       </form>
+      {setupAvailable && <button type="button" onClick={() => { setSettingUp((value) => !value); setError(""); setPassword(""); }} className="mt-5 text-sm font-semibold text-[#087d96] underline">{settingUp ? "Volver al inicio de sesión" : "Configurar primer administrador"}</button>}
       <p className="mt-6 text-center text-sm text-[#526b87]">¿Olvidaste tu contraseña? Solicita al administrador que la restablezca.</p>
       <p className="mt-2 text-center text-sm text-[#526b87]">Tu sesión se renueva al usar Ayni y vence tras 30 días sin actividad.</p>
     </div>

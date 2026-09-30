@@ -1,5 +1,13 @@
 # Decisiones de arquitectura
 
+## ADR 104 — Panel administrativo y alta inicial protegida
+
+**Decisión (2026-09-30).** Un usuario Auth con `app_metadata.ayni_role=admin` accede a un directorio de cuentas Ayni, crea docentes con DNI y contraseña inicial y restablece la contraseña de una docente seleccionada. El backend verifica el rol en cada petición antes de usar la clave de servicio. Las rutas docentes rechazan administradores. El DNI se transforma en alias HMAC solo en servidor; el directorio no expone alias ni contraseñas. El primer administrador se crea una vez mediante clave de configuración privada de 32+ caracteres, origen permitido y comprobación de que aún no existe administrador. El propietario retira esa clave tras el alta.
+
+**Gasto y límites.** El directorio agrega `ai_usage_events` por docente para el mes de Lima y el acumulado. Incluye llamadas sin precio y estimaciones separadas; no afirma ser factura ni cubre uso previo/infraestructura. No se agrega una política RLS amplia: solo el backend con rol verificado y conexión privada consulta la agregación; las lecturas directas de docente siguen restringidas por RLS.
+
+**Validación y reversión.** Typecheck, lint, build y pruebas de Auth/HTTP/servicio administrativo son la puerta antes de staging. La reversión de código vuelve al commit anterior sin borrar las cuentas creadas; si ya se usó la clave de configuración, retirarla de Vercel. No hay migración.
+
 ## ADR 099 — Identificadores únicos de migración en staging nuevo
 
 **Decisión (2026-09-30).** Antes de aplicar por primera vez las migraciones al proyecto Supabase nuevo, se detectó que dos archivos diferentes usaban el identificador `202609250001`. La migración posterior de prioridades diagnósticas se renombró a `202609250003_diagnostic_priorities_preplan.sql`, sin cambiar su SQL. La migración de observaciones conserva `202609250001` y la formal anual conserva `202609250002`. Ninguna de las tres estaba aplicada al proyecto remoto. El orden nuevo se valida con `supabase db push --dry-run`, la prueba de paridad y RLS local; después se aplica en staging. No se modifica una migración ya aplicada.

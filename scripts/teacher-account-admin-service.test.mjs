@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { dniLoginAlias } from "./dni-login.mjs";
-import { createTeacherAccount, resetTeacherPassword } from "./teacher-account-admin-service.mjs";
+import { createFirstAdmin, createTeacherAccount, listAuthUsers, resetPasswordByUserId, resetTeacherPassword } from "./teacher-account-admin-service.mjs";
 
 const base = { dni: "12345678", password: "una clave de prueba 2026", pepper: "test-only-secret-with-more-than-32-characters",
   domain: "login.example.test", url: "https://example.supabase.co", key: "private-test-key" };
@@ -37,4 +37,31 @@ test("opaque Supabase secret reaches Auth admin only in the apikey header", asyn
   } });
   assert.equal(headers.apikey, "sb_secret_test");
   assert.equal(headers.Authorization, undefined);
+});
+
+test("first administrator and teacher accounts are created with server-owned roles", async () => {
+  const calls = [];
+  const fetchImpl = async (url, options) => {
+    calls.push({ url: String(url), options });
+    return Response.json(String(url).includes("?page=") ? { users: [] } : { id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa" });
+  };
+  await createFirstAdmin({ ...base, name: "Admin Ayni", fetchImpl });
+  await createTeacherAccount({ ...base, dni: "87654321", name: "Docente Ficticia", fetchImpl });
+  assert.equal(JSON.parse(calls[1].options.body).app_metadata.ayni_role, "admin");
+  assert.equal(JSON.parse(calls[2].options.body).app_metadata.ayni_role, "teacher");
+  assert.equal(JSON.parse(calls[2].options.body).user_metadata.display_name, "Docente Ficticia");
+  assert.equal(calls.some((call) => call.options.body?.includes(base.dni)), false);
+});
+
+test("administrator creation is closed once an admin exists and reset is limited to teachers", async () => {
+  const admin = { id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", app_metadata: { ayni_role: "admin" } };
+  const teacher = { id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb", app_metadata: { ayni_role: "teacher" } };
+  const calls = [];
+  const fetchImpl = async (url, options) => { calls.push(options); return Response.json(String(url).includes("?page=")
+    ? { users: [admin, teacher] } : { id: teacher.id }); };
+  assert.equal((await listAuthUsers({ ...base, fetchImpl })).length, 2);
+  await assert.rejects(() => createFirstAdmin({ ...base, name: "Admin Ayni", fetchImpl }), /Ya existe/);
+  await assert.rejects(() => resetPasswordByUserId({ ...base, fetchImpl }, admin.id), /no disponible/);
+  await resetPasswordByUserId({ ...base, fetchImpl }, teacher.id);
+  assert.equal(calls.filter((call) => call.method === "PUT").length, 1);
 });

@@ -1,5 +1,9 @@
 # Memoria del proyecto Ayni Aula
 
+## Panel administrativo, 2026-09-30
+
+El código incluye panel exclusivo para rol `admin`: lista cuentas, crea docentes por DNI y contraseña, restablece contraseñas docentes y suma el consumo de IA registrado por cuenta. Nunca muestra contraseñas ni alias de DNI. El primer administrador necesita `AYNI_ADMIN_SETUP_KEY` privado de 32+ caracteres, elegido por el propietario y retirado después del alta; ver `docs/DNI_ACCESS.md`. La integración local simulada de roles y permisos pasó; alta real en staging y recorrido docente siguen pendientes.
+
 ## Primer despliegue de staging, 2026-09-30
 
 Vercel recibió un despliegue de `83b3029` con `SUPABASE_DB_URL` guardada por el propietario. La compilación quedó `READY`, pero `/health` devolvió 500 por `SELF_SIGNED_CERT_IN_CHAIN`. El adaptador ahora confía explícitamente en la CA pública de Supabase para sus hosts y mantiene la verificación TLS. La conexión de prueba con contraseña incorrecta llegó a `28P01`; el despliegue corregido del commit `0ce7213` pasó el smoke remoto: 200 en `/health`, `/` y `/api/auth/config`, 401 esperado en `/api/auth/session` sin sesión. Ver `docs/ERRORS_AND_FIXES.md`. Las pruebas reales entre dos docentes, RLS y archivos siguen pendientes.

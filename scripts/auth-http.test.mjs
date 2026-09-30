@@ -12,6 +12,7 @@ import { dniLoginAlias } from "./dni-login.mjs";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const teacherA = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 const teacherB = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+const adminId = "cccccccc-cccc-4ccc-8ccc-cccccccccccc";
 const dniPepper = "test-only-secret-with-more-than-32-characters";
 const dniAliasDomain = "login.example.test";
 const sessionSigningKey = "separate-test-session-key-over-32-characters";
@@ -59,10 +60,24 @@ test("the HTTP boundary protects every route and local PGlite remains usable", {
     response.setHeader("content-type", "application/json");
     if (request.url === "/auth/v1/user") {
       const id = request.headers.authorization === "Bearer token-a" ? teacherA
-        : request.headers.authorization === "Bearer token-b" ? teacherB : null;
+        : request.headers.authorization === "Bearer token-b" ? teacherB
+          : request.headers.authorization === "Bearer token-admin" ? adminId : null;
       response.writeHead(id ? 200 : 401);
-      response.end(JSON.stringify(id ? { id, role: "authenticated", app_metadata: { ayni_role: "teacher" } } : { error: "invalid_token" }));
+      response.end(JSON.stringify(id ? { id, role: "authenticated", app_metadata: { ayni_role: id === adminId ? "admin" : "teacher" } } : { error: "invalid_token" }));
       return;
+    }
+    if (request.url?.startsWith("/auth/v1/admin/users?page=")) {
+      response.writeHead(200); response.end(JSON.stringify({ users: [
+        { id: teacherA, app_metadata: { ayni_role: "teacher" }, user_metadata: { display_name: "Docente A" }, created_at: "2026-09-30T00:00:00Z" },
+        { id: teacherB, app_metadata: { ayni_role: "teacher" }, user_metadata: { display_name: "Docente B" }, created_at: "2026-09-30T00:00:00Z" },
+        { id: adminId, app_metadata: { ayni_role: "admin" }, user_metadata: { display_name: "Admin" }, created_at: "2026-09-30T00:00:00Z" },
+      ] })); return;
+    }
+    if (request.url === "/auth/v1/admin/users" && request.method === "POST") {
+      response.writeHead(200); response.end(JSON.stringify({ id: "dddddddd-dddd-4ddd-8ddd-dddddddddddd" })); return;
+    }
+    if (request.url?.startsWith("/auth/v1/admin/users/") && request.method === "PUT") {
+      response.writeHead(200); response.end(JSON.stringify({ id: teacherA })); return;
     }
     if (request.url === "/auth/v1/token?grant_type=password") {
       let raw = "";
@@ -93,6 +108,7 @@ test("the HTTP boundary protects every route and local PGlite remains usable", {
       AYNI_DB_MODE: "local", NODE_ENV: "test", AYNI_TEST_AUTH_PGLITE: "1",
       AYNI_SUPABASE_URL: `http://127.0.0.1:${authPort}`,
       AYNI_SUPABASE_PUBLISHABLE_KEY: "public-test-key",
+      AYNI_SUPABASE_SERVICE_ROLE_KEY: "private-test-key",
       AYNI_DNI_LOGIN_PEPPER: dniPepper,
       AYNI_DNI_ALIAS_DOMAIN: dniAliasDomain,
       AYNI_SESSION_SIGNING_KEY: sessionSigningKey,
@@ -104,7 +120,7 @@ test("the HTTP boundary protects every route and local PGlite remains usable", {
       ...init, headers: { ...(token ? { authorization: `Bearer ${token}` } : {}), ...init.headers },
     });
     const privateRoutes = [
-      "/api/pilot/setup", "/api/profile", "/api/ai-usage", "/api/diagnostics",
+      "/api/pilot/setup", "/api/profile", "/api/ai-usage", "/api/admin/accounts", "/api/diagnostics",
       "/api/diagnostics/students/11111111-1111-4111-8111-111111111111/family-interview",
       "/api/diagnostics/students/11111111-1111-4111-8111-111111111111/family-interview/attachment",
       "/api/diagnostics/students/11111111-1111-4111-8111-111111111111/family-interview/save-and-confirm",
@@ -119,6 +135,23 @@ test("the HTTP boundary protects every route and local PGlite remains usable", {
       "/api/documents/family_report/11111111-1111-4111-8111-111111111111/download",
     ];
     for (const route of privateRoutes) assert.equal((await call(route)).status, 401, route);
+    assert.equal((await call("/api/admin/accounts", "token-a")).status, 403);
+    assert.equal((await call("/api/dashboard", "token-admin")).status, 403);
+    const adminDirectory = await call("/api/admin/accounts", "token-admin");
+    assert.equal(adminDirectory.status, 200, await adminDirectory.clone().text());
+    const adminBody = await adminDirectory.json();
+    assert.equal(adminBody.accounts.length, 3);
+    assert.equal(adminBody.accounts[0].ai.costUsd, 0);
+    assert.equal(JSON.stringify(adminBody).includes("password"), false);
+    const teacherAccount = await call("/api/admin/accounts", "token-admin", { method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ name: "Nueva Docente", dni: "87654321", password: "clave segura de prueba" }) });
+    assert.equal(teacherAccount.status, 201);
+    assert.equal((await teacherAccount.json()).id, "dddddddd-dddd-4ddd-8ddd-dddddddddddd");
+    assert.equal((await call(`/api/admin/accounts/${teacherA}/password`, "token-a", { method: "PUT",
+      headers: { "content-type": "application/json" }, body: JSON.stringify({ password: "clave segura de prueba" }) })).status, 403);
+    assert.equal((await call(`/api/admin/accounts/${teacherA}/password`, "token-admin", { method: "PUT",
+      headers: { "content-type": "application/json" }, body: JSON.stringify({ password: "clave segura de prueba" }) })).status, 200);
     assert.equal((await call("/api/pilot/setup")).status, 401);
     assert.equal((await call("/api/pilot/setup", "invalid")).status, 401);
     assert.equal((await call("/api/pilot/setup", "expired")).status, 401);

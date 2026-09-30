@@ -94,6 +94,9 @@ import { neutralizeAssessmentText } from "../src/lib/assessment-v4-service.mjs";
 import { loadPlanningFeedback, planningFeedbackText, resolveProjectPlanningFeedback } from "../src/lib/planning-feedback.mjs";
 import { expectedRevision, assertRevision, conflictPayload, httpStatusForError, isVersionConflict, versionTransaction, VersionConflictError, publicErrorMessage } from "../src/lib/version-integrity.mjs";
 import { createRequestAuth, RequestAuthError } from "./request-auth.mjs";
+import { createFirstAdmin, createTeacherAccount, listAuthUsers, resetPasswordByUserId } from "./teacher-account-admin-service.mjs";
+import { loadAdminDirectory } from "./admin-directory.mjs";
+import { timingSafeEqual } from "node:crypto";
 import { authorizeRequestSelectors, RequestAccessError } from "./request-authorization.mjs";
 import { loadLibraryResources, publicLibraryResource, saveLibraryResourceToDownloads } from "./library-resources.mjs";
 
@@ -136,6 +139,14 @@ const requestAuth = createRequestAuth({ mode: authMode, localTeacherId,
   dniAliasDomain: process.env.AYNI_DNI_ALIAS_DOMAIN,
   sessionSigningKey: process.env.AYNI_SESSION_SIGNING_KEY,
   secureCookie: process.env.AYNI_AUTH_COOKIE_SECURE !== "0" });
+const authAdminConfig = { url: process.env.AYNI_SUPABASE_URL, key: process.env.AYNI_SUPABASE_SERVICE_ROLE_KEY,
+  pepper: process.env.AYNI_DNI_LOGIN_PEPPER, domain: process.env.AYNI_DNI_ALIAS_DOMAIN, fetchImpl: fetch };
+function validSetupKey(candidate) {
+  const expected = process.env.AYNI_ADMIN_SETUP_KEY;
+  if (typeof expected !== "string" || expected.length < 32 || typeof candidate !== "string") return false;
+  const a = Buffer.from(candidate), b = Buffer.from(expected);
+  return a.length === b.length && timingSafeEqual(a, b);
+}
 const corsMethods = "GET,POST,PUT,OPTIONS";
 const allowedOrigins = new Set([
   ...(authMode === "local" ? ["http://localhost:5173", "http://127.0.0.1:5173"] : []),
@@ -2673,12 +2684,35 @@ export async function handleApiRequest(request, response) {
     try {
       const body = await readJson(request);
       const session = await requestAuth.signIn(body.dni, body.password);
-      send(response, 200, { teacherId: session.teacherId }, origin, {
+      send(response, 200, { teacherId: session.teacherId, role: session.role }, origin, {
         "set-cookie": requestAuth.sessionCookies(session),
       });
     } catch (error) {
       const status = error instanceof RequestAuthError ? error.status : 401;
       send(response, status, { error: status === 503 ? "No se pudo verificar el servicio de acceso." : "DNI o contraseña inválidos." }, origin);
+    }
+    return;
+  }
+  if (request.method === "GET" && url.pathname === "/api/admin/setup-status") {
+    let available = false;
+    if (authMode === "supabase" && typeof process.env.AYNI_ADMIN_SETUP_KEY === "string" && process.env.AYNI_ADMIN_SETUP_KEY.length >= 32) {
+      try { available = !(await listAuthUsers(authAdminConfig)).some((user) => user.app_metadata?.ayni_role === "admin"); }
+      catch { /* Keep setup unavailable while Auth is unreachable. */ }
+    }
+    send(response, 200, { available }, origin);
+    return;
+  }
+  if (request.method === "POST" && url.pathname === "/api/admin/setup") {
+    if (authMode !== "supabase" || !origin || !allowedOrigins.has(origin)) {
+      send(response, 403, { error: "Operación no disponible." }, origin); return;
+    }
+    try {
+      const body = await readJson(request);
+      if (!validSetupKey(body.setupKey)) { send(response, 403, { error: "Clave de configuración inválida." }, origin); return; }
+      await createFirstAdmin({ ...authAdminConfig, dni: body.dni, password: body.password, name: body.name });
+      send(response, 201, { ok: true }, origin);
+    } catch {
+      send(response, 400, { error: "No se pudo crear el administrador. Revisa los datos o si ya existe uno." }, origin);
     }
     return;
   }
@@ -2707,8 +2741,37 @@ export async function handleApiRequest(request, response) {
     return;
   }
   if (request.method === "GET" && url.pathname === "/api/auth/session") {
-    send(response, 200, { teacherId: context.teacherId }, origin);
+    send(response, 200, { teacherId: context.teacherId, role: context.role }, origin);
     return;
+  }
+  if (url.pathname.startsWith("/api/admin/")) {
+    if (context.authMode !== "supabase" || context.role !== "admin") {
+      send(response, 403, { error: "Acceso reservado a administración." }, origin); return;
+    }
+    try {
+      if (request.method === "GET" && url.pathname === "/api/admin/accounts") {
+        send(response, 200, await loadAdminDirectory(context.db, authAdminConfig), origin); return;
+      }
+      if (request.method === "POST" && url.pathname === "/api/admin/accounts") {
+        const body = await readJson(request);
+        if (typeof body.name !== "string" || body.name.trim().length < 2 || body.name.trim().length > 100)
+          throw new Error("Nombre inválido.");
+        const result = await createTeacherAccount({ ...authAdminConfig, dni: body.dni, password: body.password, name: body.name });
+        send(response, 201, result, origin); return;
+      }
+      const reset = url.pathname.match(/^\/api\/admin\/accounts\/([0-9a-f-]{36})\/password$/i);
+      if (request.method === "PUT" && reset) {
+        const body = await readJson(request);
+        await resetPasswordByUserId({ ...authAdminConfig, password: body.password }, reset[1]);
+        send(response, 200, { ok: true }, origin); return;
+      }
+      send(response, 404, { error: "Ruta no disponible." }, origin); return;
+    } catch {
+      send(response, 422, { error: "No se pudo completar la operación. Revisa los datos y vuelve a intentar." }, origin); return;
+    }
+  }
+  if (context.role !== "teacher") {
+    send(response, 403, { error: "Esta sección es para docentes." }, origin); return;
   }
   if (context.authMode === "supabase") {
     try {

@@ -100,7 +100,7 @@ export function createRequestAuth({ mode = 'local', localTeacherId, supabaseUrl,
     let user;
     try { user = await response.json(); }
     catch { throw new RequestAuthError(); }
-    if (!uuid.test(user?.id ?? '') || user?.role !== 'authenticated' || user?.app_metadata?.ayni_role !== 'teacher') throw new RequestAuthError();
+    if (!uuid.test(user?.id ?? '') || user?.role !== 'authenticated' || !['teacher', 'admin'].includes(user?.app_metadata?.ayni_role)) throw new RequestAuthError();
     return user;
   }
 
@@ -137,11 +137,11 @@ export function createRequestAuth({ mode = 'local', localTeacherId, supabaseUrl,
 
   async function resolve(request, db) {
     const requestId = randomUUID();
-    if (mode === 'local') return { teacherId: localTeacherId, requestId, db, authMode: mode };
+    if (mode === 'local') return { teacherId: localTeacherId, role: 'teacher', requestId, db, authMode: mode };
     const credentials = requestToken(request);
     if (credentials?.source === 'bearer') {
       const user = await verifyToken(credentials.token);
-      return { teacherId: user.id, requestId, db, authMode: mode, tokenSource: 'bearer' };
+      return { teacherId: user.id, role: user.app_metadata.ayni_role, requestId, db, authMode: mode, tokenSource: 'bearer' };
     }
     const retained = readSignedRefresh(request.headers.cookie, sessionSigningKey);
     if (retained) readActivity(request.headers.cookie, sessionSigningKey, now(), retained.token);
@@ -159,7 +159,7 @@ export function createRequestAuth({ mode = 'local', localTeacherId, supabaseUrl,
       user = await verifyToken(token);
       cookies = sessionCookies(renewed);
     } else cookies = [refreshCookie(retained.token), activityCookie(retained.token)];
-    return { teacherId: user.id, requestId, db, authMode: mode, tokenSource: 'cookie', sessionCookies: cookies };
+    return { teacherId: user.id, role: user.app_metadata.ayni_role, requestId, db, authMode: mode, tokenSource: 'cookie', sessionCookies: cookies };
   }
 
   async function signIn(dni, password) {
@@ -188,7 +188,7 @@ export function createRequestAuth({ mode = 'local', localTeacherId, supabaseUrl,
       || !session.refresh_token) throw new RequestAuthError();
     const user = await verifyToken(session.access_token);
     return { token: session.access_token, refreshToken: session.refresh_token,
-      teacherId: user.id, expiresIn: Number(session.expires_in) || 3600 };
+      teacherId: user.id, role: user.app_metadata.ayni_role, expiresIn: Number(session.expires_in) || 3600 };
   }
 
   async function signOut(request) {
