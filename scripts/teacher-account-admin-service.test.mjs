@@ -28,3 +28,13 @@ test("the administrator cannot reset an account that was not provisioned", async
   await assert.rejects(() => resetTeacherPassword({ ...base, fetchImpl: async () => Response.json({ users: [] }) }),
     /No se encontró una cuenta/);
 });
+
+test("opaque Supabase secret reaches Auth admin only in the apikey header", async () => {
+  let headers;
+  await createTeacherAccount({ ...base, key: "sb_secret_test", fetchImpl: async (_url, options) => {
+    headers = options.headers;
+    return Response.json({ id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa" });
+  } });
+  assert.equal(headers.apikey, "sb_secret_test");
+  assert.equal(headers.Authorization, undefined);
+});

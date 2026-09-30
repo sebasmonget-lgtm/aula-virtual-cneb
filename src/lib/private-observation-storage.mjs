@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { supabaseServiceHeaders } from "./supabase-service-headers.mjs";
 
 const uuid = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
 const validPath = /^ordinary-observations\/([0-9a-f-]{36})\/([0-9a-f-]{36})\/([0-9a-f-]{36})\.(jpg|png|webp)$/i;
@@ -10,7 +11,7 @@ export function createSupabasePrivateObservationStorage({ url, serviceRoleKey, f
   const base = new URL(url ?? "https://invalid.example");
   if ((!/^https:$/.test(base.protocol) && !["localhost", "127.0.0.1"].includes(base.hostname)) ||
     !serviceRoleKey || typeof serviceRoleKey !== "string") throw new Error("Storage privado de observaciones no configurado.");
-  const headers = () => ({ apikey: serviceRoleKey, Authorization: `Bearer ${serviceRoleKey}` });
+  const headers = () => supabaseServiceHeaders(serviceRoleKey);
   const endpoint = key => `${base.origin}/storage/v1/object/ayni-observation-media/${key.split("/").map(encodeURIComponent).join("/")}`;
   const assertPath = (mediaPath, teacherId, studentId) => {
     const match = validPath.exec(mediaPath ?? "");

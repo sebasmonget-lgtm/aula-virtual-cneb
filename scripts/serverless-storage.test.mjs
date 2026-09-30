@@ -10,11 +10,19 @@ const studentId = "33333333-3333-4333-8333-333333333333";
 const assetId = "44444444-4444-4444-8444-444444444444";
 const calls = [];
 const fetchImpl = async (url, init = {}) => {
-  calls.push({ url, method: init.method ?? "GET" });
+  calls.push({ url, method: init.method ?? "GET", headers: init.headers });
   return new Response(init.method === "POST" || init.method === "DELETE" ? null : Buffer.from("private"),
     { status: init.method === "POST" || init.method === "DELETE" ? 200 : 200 });
 };
 const options = { url: "https://ayni.example", serviceRoleKey: "test-service-role", fetchImpl };
+
+test("opaque Supabase secret authenticates private Storage without a JWT bearer", async () => {
+  calls.length = 0;
+  const storage = createSupabasePrivateEvidenceStorage({ ...options, serviceRoleKey: "sb_secret_test" });
+  await storage.save({ teacherId, studentId, mimeType: "audio/webm", bytes: Buffer.from("audio") });
+  assert.equal(calls[0].headers.apikey, "sb_secret_test");
+  assert.equal(calls[0].headers.Authorization, undefined);
+});
 
 test("private evidence stays within the teacher and student prefix", async () => {
   calls.length = 0;

@@ -1,10 +1,11 @@
 import { dniLoginAlias } from "./dni-login.mjs";
+import { supabaseServiceHeaders } from "../src/lib/supabase-service-headers.mjs";
 
 async function adminRequest({ url, key, fetchImpl }, pathname, options = {}) {
   if (!url || new URL(url).protocol !== "https:" || !key) throw new Error("Falta la configuración privada de Supabase Auth.");
   const response = await fetchImpl(new URL(pathname, `${url.replace(/\/$/, "")}/`), {
     ...options,
-    headers: { apikey: key, authorization: `Bearer ${key}`, "content-type": "application/json" },
+    headers: { ...supabaseServiceHeaders(key), "content-type": "application/json" },
     signal: AbortSignal.timeout(10000),
   });
   if (!response.ok) throw new Error(`Supabase Auth rechazó la operación (${response.status}).`);

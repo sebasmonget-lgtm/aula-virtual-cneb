@@ -1,5 +1,15 @@
 # Errores y soluciones
 
+## 2026-09-30 — Clave nueva de Supabase enviada como JWT
+
+**Síntoma.** Al preparar staging se observó que los adaptadores de Storage y la herramienta administrativa enviaban la nueva clave `sb_secret_…` tanto en `apikey` como en `Authorization: Bearer`. Supabase documenta que esa cabecera Bearer se interpreta como JWT y puede devolver `Invalid JWT`.
+
+**Causa raíz.** El código se escribió para la clave `service_role` antigua, que sí es un JWT, antes de seleccionar las claves nuevas del proyecto Ayni.
+
+**Solución validada.** Un helper común envía las claves `sb_secret_…` solo en `apikey` y conserva Bearer para JWT antiguos. Las pruebas HTTP simuladas de Storage y Auth admin verifican ambas rutas; la verificación con la instancia real sigue pendiente del despliegue.
+
+**Prevención.** Al incorporar una clave nueva, probar las cabeceras y una operación real de Storage y Auth admin en staging. Nunca imprimir ni guardar claves en los tests o el repositorio.
+
 ## 2026-09-30 — Rutas de plantillas en el bundle de Next
 
 **Síntoma.** La página de Next compilaba, pero `/health` y `/api/auth/config` respondieron 500 en una prueba `next start` con identidad local.

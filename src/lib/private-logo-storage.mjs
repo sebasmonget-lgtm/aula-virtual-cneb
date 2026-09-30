@@ -1,3 +1,5 @@
+import { supabaseServiceHeaders } from "./supabase-service-headers.mjs";
+
 const uuid = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
 const validPath = /^institution-logos\/([0-9a-f-]{36})\/([0-9a-f-]{36})\.(png|svg)$/i;
 
@@ -7,7 +9,7 @@ export function createSupabasePrivateLogoStorage({ url, serviceRoleKey, fetchImp
   if ((base.protocol !== "https:" && !["localhost", "127.0.0.1"].includes(base.hostname)) || !serviceRoleKey) {
     throw new Error("Storage privado de logos no configurado.");
   }
-  const headers = () => ({ apikey: serviceRoleKey, Authorization: `Bearer ${serviceRoleKey}` });
+  const headers = () => supabaseServiceHeaders(serviceRoleKey);
   const endpoint = key => `${base.origin}/storage/v1/object/institution-logos/${key.split("/").map(encodeURIComponent).join("/")}`;
   const assertPath = (mediaPath, teacherId) => {
     const match = validPath.exec(mediaPath ?? "");

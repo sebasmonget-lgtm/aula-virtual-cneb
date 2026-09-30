@@ -1,5 +1,6 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { supabaseServiceHeaders } from "./supabase-service-headers.mjs";
 
 const keyPattern = /^([0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12})\/([0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12})\.docx$/i;
 const assertKey = (key, teacherId) => {
@@ -27,7 +28,7 @@ export function createSupabasePrivateDocumentArtifactStorage({ url, serviceRoleK
   const base = new URL(url ?? "https://invalid.example");
   if ((base.protocol !== "https:" && !["localhost", "127.0.0.1"].includes(base.hostname)) ||
     !serviceRoleKey) throw new Error("Storage documental privado no configurado.");
-  const headers = () => ({ apikey: serviceRoleKey, Authorization: `Bearer ${serviceRoleKey}` });
+  const headers = () => supabaseServiceHeaders(serviceRoleKey);
   const endpoint = key => `${base.origin}/storage/v1/object/ayni-document-artifacts/${key.split("/").map(encodeURIComponent).join("/")}`;
   return {
     async save(key, bytes, teacherId) {

@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { mkdir, writeFile, unlink, readFile } from "node:fs/promises";
 import path from "node:path";
+import { supabaseServiceHeaders } from "./supabase-service-headers.mjs";
 
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const extensions = new Map([["image/jpeg", "jpg"], ["image/png", "png"], ["image/webp", "webp"],
@@ -41,7 +42,7 @@ export function createSupabasePrivateEvidenceStorage({ url, serviceRoleKey, fetc
   if ((base.protocol !== "https:" && !["localhost", "127.0.0.1"].includes(base.hostname)) || !serviceRoleKey) {
     throw new Error("Storage privado de evidencias no configurado.");
   }
-  const headers = () => ({ apikey: serviceRoleKey, Authorization: `Bearer ${serviceRoleKey}` });
+  const headers = () => supabaseServiceHeaders(serviceRoleKey);
   const endpoint = key => `${base.origin}/storage/v1/object/student-evidence/${key.split("/").map(encodeURIComponent).join("/")}`;
   const assertPath = (mediaPath, teacherId, studentId) => {
     if (typeof mediaPath !== "string" || !validPath.test(mediaPath) ||

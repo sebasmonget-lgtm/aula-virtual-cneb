@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { mkdir, readFile, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { supabaseServiceHeaders } from "./supabase-service-headers.mjs";
 
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const types = new Map([["application/pdf", "pdf"], ["image/jpeg", "jpg"], ["image/png", "png"]]);
@@ -39,7 +40,7 @@ export function createSupabasePrivateInterviewStorage({ url, serviceRoleKey, fet
   if ((base.protocol !== "https:" && !["localhost", "127.0.0.1"].includes(base.hostname)) || !serviceRoleKey) {
     throw new Error("Storage privado de entrevistas no configurado.");
   }
-  const headers = () => ({ apikey: serviceRoleKey, Authorization: `Bearer ${serviceRoleKey}` });
+  const headers = () => supabaseServiceHeaders(serviceRoleKey);
   const endpoint = key => `${base.origin}/storage/v1/object/family-interviews/${key.split("/").map(encodeURIComponent).join("/")}`;
   const assertKey = (key, teacherId, studentId) => {
     const match = typeof key === "string" && key.match(keyPattern);
