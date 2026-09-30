@@ -17,8 +17,19 @@ function removeSection(xml, startText, endText = null) {
 
 function transformActivity(xml, evidence, closure, withWorkshop) {
   let output = xml;
-  if (!evidence.length) output = removeSection(output,
-    withWorkshop ? "VI. CUADERNO DE CAMPO" : "VI. REGISTRO DE OBSERVACIONES Y EVIDENCIAS", "VII. SÍNTESIS Y REFLEXIÓN DOCENTE");
+  if (!evidence.length) {
+    output = output.replace(/<w:tbl(?:\s[^>]*)?>[\s\S]*?<\/w:tbl>/g,
+      (table) => table.includes("{{EVIDENCIA_ESTUDIANTE}}") ? "" : table);
+    output = output.replace(/<w:p(?:\s[^>]*)?>[\s\S]*?<\/w:p>/g, (paragraph) => {
+      if (!xmlText(paragraph).startsWith("Esta sección se completa automáticamente")) return paragraph;
+      let first = true;
+      return paragraph.replace(/(<w:t(?:\s[^>]*)?>)[\s\S]*?(<\/w:t>)/g, (_match, open, close) => {
+        const value = first ? "Aún no hay observaciones registradas. Regístralas en Hoy para que aparezcan aquí." : "";
+        first = false;
+        return `${open}${value}${close}`;
+      });
+    });
+  }
   if (!closure) output = removeSection(output, "VII. SÍNTESIS Y REFLEXIÓN DOCENTE", "VIII. TALLER");
   if (!withWorkshop) output = removeSection(output, "VIII. TALLER");
   if (evidence.length) output = expandTableRow(output, "{{EVIDENCIA_ESTUDIANTE}}", evidence);
@@ -39,7 +50,7 @@ function observedDate(value) {
   return Number.isNaN(date.getTime()) ? "" : new Intl.DateTimeFormat("es-PE", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "America/Lima" }).format(date);
 }
 
-/** The planning document omits field notes and reflections until the teacher actually records them. */
+/** The planning document shows where observations will appear without inventing field notes or reflections. */
 export async function renderActivityUnifiedWord(document, cards = [], { logo = null } = {}) {
   const content = document.content ?? {};
   const withWorkshop = content.document_template_version === "activity-with-workshop-v1";

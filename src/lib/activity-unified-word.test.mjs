@@ -6,7 +6,7 @@ import path from "node:path";
 import { loadKnowledgeBaseV4 } from "./knowledge-base-v4.mjs";
 import { renderActivityUnifiedWord } from "./activity-unified-word.mjs";
 
-test("la actividad usa su fila heredada y oculta registros no realizados", async () => {
+test("la actividad distingue qué observar de las observaciones registradas", async () => {
   const cards = (await loadKnowledgeBaseV4()).competencyCards.map((card) => ({ id: card.id, name: card.official_name,
     capacities: card.capacities, ages: card.ages }));
   const route = { id: "route-1", number: 2, title: "Nos organizamos", specific_purpose: "Compartir juegos",
@@ -27,7 +27,9 @@ test("la actividad usa su fila heredada y oculta registros no realizados", async
   assert.match(xml, /Escuchar cómo propone los turnos/);
   assert.match(xml, /Síntesis orientativa para 5 años/);
   assert.doesNotMatch(xml, /\{\{/);
-  assert.doesNotMatch(xml, /VI\. REGISTRO DE OBSERVACIONES Y EVIDENCIAS/);
+  assert.match(xml, /VI\. REGISTRO DE OBSERVACIONES Y EVIDENCIAS/);
+  assert.match(xml, /Aún no hay observaciones registradas/);
+  assert.doesNotMatch(xml, /Nombre del estudiante/);
   const completed = { ...document, registered_evidence: [{ student_name: "Ana", criterion_id: "criterion-1", criterion_text: "Explica cómo acuerda un turno", competency_v4_id: "PS_CONVIVE", observed_at: "2026-04-14T15:00:00Z", observation_text: "Propuso esperar su turno.", observation_status: null, has_attachment: true }], teacher_closure_note: "El grupo propuso nuevos turnos." };
   const completedWord = await renderActivityUnifiedWord(completed, cards);
   if (process.env.AYNI_QA_DOCX_DIR) await writeFile(path.join(process.env.AYNI_QA_DOCX_DIR, "activity-with-observation-qa.docx"), completedWord);
@@ -35,10 +37,18 @@ test("la actividad usa su fila heredada y oculta registros no realizados", async
   const completedXml = await completedArchive.file("word/document.xml").async("string");
   assert.match(completedXml, /Ana/);
   assert.match(completedXml, /VI\. REGISTRO DE OBSERVACIONES Y EVIDENCIAS/);
+  assert.doesNotMatch(completedXml, /Aún no hay observaciones registradas/);
   assert.match(completedXml, /Explica cómo acuerda un turno/);
   assert.match(completedXml, /Propuso esperar su turno/);
   assert.match(completedXml, /14\/04\/2026/);
   assert.match(completedXml, /Guardada en Ayni/);
   assert.match(completedXml, /El grupo propuso nuevos turnos/);
   assert.doesNotMatch(completedXml, /VIII\. TALLER|\{\{/);
+  const withWorkshop = { ...document, content: { ...document.content, document_template_version: "activity-with-workshop-v1" },
+    workshop: { content: { workshop_type: "Arte", purpose: "Explorar formas", opening: "Mirar", development: "Crear", closure: "Compartir", materials: ["papel"] } } };
+  const workshopWord = await JSZip.loadAsync(await renderActivityUnifiedWord(withWorkshop, cards));
+  const workshopXml = await workshopWord.file("word/document.xml").async("string");
+  assert.match(workshopXml, /VI\. CUADERNO DE CAMPO/);
+  assert.match(workshopXml, /Aún no hay observaciones registradas/);
+  assert.doesNotMatch(workshopXml, /\{\{/);
 });

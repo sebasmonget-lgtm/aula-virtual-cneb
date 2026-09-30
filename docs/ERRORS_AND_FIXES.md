@@ -1,5 +1,15 @@
 # Errores y soluciones
 
+## 2026-09-29 — El Word de actividad ocultaba el apartado de observaciones
+
+**Síntoma.** La actividad mostraba «Qué observar» en los referentes curriculares, pero el Word descargado antes de registrar evidencias no mostraba el apartado «Registro de observaciones y evidencias».
+
+**Causa raíz.** El exportador eliminaba toda la sección VI cuando la actividad aún no tenía observaciones docentes, junto con la tabla vacía de la plantilla.
+
+**Solución validada.** Se conserva el título de la sección y se muestra «Aún no hay observaciones registradas» con la indicación de registrarlas en Hoy. La tabla solo aparece cuando existen registros reales; la reflexión docente sigue ausente hasta que se escriba. Se comprobó el DOCX sin marcadores, la variante con taller y el PDF de una actividad de prueba.
+
+**Prevención.** El test del exportador cubre actividades sin observaciones y con observaciones reales, además de la plantilla con taller. No se rellenan observaciones ni valoraciones por inferencia.
+
 ## 2026-09-29 — QA diagnóstico sin sugerencias de Jev
 
 **Síntoma.** Las 12 observaciones diagnósticas del aula ficticia contaban para «Observar» (6/6), pero cada tarjeta solo ofrecía elegir una competencia manualmente.

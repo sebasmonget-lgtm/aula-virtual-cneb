@@ -22,6 +22,7 @@ El título confirmado de P02, «Puentes y pistas que podemos cambiar», es compr
 - El resumen diagnóstico distingue necesidades de aprendizaje observadas de competencias aún sin evidencia suficiente. Su portada muestra qué se sabe y qué falta observar.
 - El informe familiar usa encabezados directos como «Lo que hemos visto», «Así lo vimos», «Qué haremos después» e «Ideas para casa»; mantiene literalmente el nombre oficial de la competencia.
 - Proyecto y actividad añaden una pista práctica en la portada, sin mover el CNEB oficial ni crear campos editables nuevos.
+- La actividad distingue «Qué observar» (planificado) de «Registro de observaciones y evidencias» (hechos registrados). Este último título permanece visible en el Word aunque todavía no haya registros, con una indicación para capturarlos en Hoy; no se genera una observación ficticia.
 - Cada propuesta anual conserva contexto, competencias, propósito, producto, materiales, observación y ajustes. Después aparece «Así se podría vivir», derivado del propósito confirmado; si hay imagen, queda en la celda contigua, con proporción conservada.
 - Se amplió el tamaño máximo de imágenes pertinentes y se redujo la altura decorativa del pie del plan. Se eliminaron una fila genérica redundante y saltos que dejaban una hoja aislada de firmas.
 - La planificación muestra una ruta principal y el proyecto activo da contexto a sus actividades y talleres. El paso de observación espontánea muestra el número pendiente y bloquea «Resumir» hasta que la docente decida en cada nota.
