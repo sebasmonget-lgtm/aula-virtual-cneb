@@ -26,6 +26,8 @@
 
 **Decisión (2026-09-28).** Bajo `NEXT_PUBLIC_AYNI_F7_NAV=1`, la navegación principal ofrece Hoy, Planificar, Mi aula y Documentos. Calendario/Biblioteca siguen accesibles desde Planificar; Diagnóstico/Evaluación desde Mi aula. Los destinos legacy conservan su pantalla y enlace hash, sin migración ni reescritura de datos. Sin el flag se mantiene la navegación anterior.
 
+**Activación final para QA (2026-09-28).** El flag ausente ahora equivale a `1`: la experiencia de cuatro destinos se muestra por defecto también en `localhost:5173`. Solo `NEXT_PUBLIC_AYNI_F7_NAV=0` restaura temporalmente la barra legacy. La decisión corrige que F7 estuviera implementada y verificada en un puerto QA, pero invisible en el entorno local final por no definir el flag.
+
 **Hoy.** `GET /api/teacher/today` resuelve aula del docente verificado, fecha civil Lima ya usada por el dashboard, cola de revisión de esa aula y próxima actividad programada, sin aceptar `teacher_id`/`classroom_id` del cliente. Solo devuelve acciones basadas en fuentes; una observación pendiente no es un déficit ni una valoración. La cola se actualiza al volver de la revisión. No hay llamadas IA ni nuevas tablas.
 
 **Reversión.** Apagar el flag restaura la navegación anterior; la ruta de lectura puede quedar sin consumidores. La seguridad del agregado permanece en servidor.
@@ -852,3 +854,9 @@ La implementación posterior de F3 se registra en ADR 089; no cambia la regla ni
 **Decisión (2026-09-28).** Documentos agrupa el catálogo existente por año/aula y relación proyecto→actividad; muestra confirmados por defecto y borradores solo a petición. El árbol no crea otra autoridad ni un Word ficticio. Solo los artefactos estables F10 de plan/proyecto pueden sincronizarse: el navegador compara el SHA-256 del archivo real con ID, versión y hash confirmado, escribe subcarpetas y manifiesto local, y nunca borra ni sobrescribe una edición local. El handle de carpeta en IndexedDB es comodidad revocable, no permiso persistente. ZIP es fallback explícito y exige IDs autorizados de una sola aula por paquete.
 
 **Seguridad y reversión.** ZIP reautoriza cada artefacto y verifica bytes/hash antes de añadirlo. No incluye rutas internas de Storage, tokens ni archivos de niños; no se envían carpetas locales al backend. No hay migración ni IA. `AYNI_DOCUMENT_SYNC=1` y `NEXT_PUBLIC_AYNI_F11_DOCUMENTS=1` (además de flags F10) activan el flujo; apagarlos conserva descargas individuales y documentos históricos. QA de carpeta se hizo con filesystem simulado; la inspección visual local solo cubrió catálogo vacío, no picker nativo ni móvil. Ver `docs/qa/f11-document-sync-2026-09-28.md`.
+
+## ADR 098 Activación final por defecto de F1–F11
+
+**Decisión (2026-09-28).** Tras la implementación por fases, los flags de las funciones aprobadas F1 y F3–F11 toman `ausente = activo` y `=0` como rollback explícito. Esto incluye contratos V3, proyecto/actividad, captura/revisión ordinaria, navegación, trayectoria/evaluación, reajuste y Documentos. F2 eligió A provisionalmente y no tiene un flag de interfaz. Los adaptadores legacy siguen leyendo históricos y los flags `=0` siguen disponibles para reversión; ninguna migración ni dato confirmado se modifica. Ver `docs/qa/f1-f11-feature-flag-audit-2026-09-28.md`.
+
+**Excepción.** El proveedor externo Jev de F6 (y selectores experimentales de imagen/ficha) conserva opt-in hasta cumplir la validación experta preregistrada en el Plan Maestro. La cola manual y la revisión curricular están activas aunque Jev no lo esté. Flags de autenticación, exportación local y QA conservan sus defaults por seguridad.

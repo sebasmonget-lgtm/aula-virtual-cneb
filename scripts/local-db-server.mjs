@@ -1,5 +1,6 @@
 import { createServer } from "node:http";
 import { createHash, randomUUID } from "node:crypto";
+import { newAyniFeatureEnabled } from "../src/lib/new-ayni-feature-flag.mjs";
 import { mkdir, readFile, readdir, unlink, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import path from "node:path";
@@ -113,7 +114,7 @@ const documentArtifactStorage = dbMode === "local"
   : process.env.AYNI_SUPABASE_SERVICE_ROLE_KEY
     ? createSupabasePrivateDocumentArtifactStorage({ url: process.env.AYNI_SUPABASE_URL,
       serviceRoleKey: process.env.AYNI_SUPABASE_SERVICE_ROLE_KEY }) : null;
-const curricularReviewEnabled = process.env.AYNI_CURRICULAR_REVIEW === "1";
+const curricularReviewEnabled = newAyniFeatureEnabled(process.env.AYNI_CURRICULAR_REVIEW);
 const testAuthWithPglite = process.env.NODE_ENV === "test" && process.env.AYNI_TEST_AUTH_PGLITE === "1";
 if ((authMode === "local") !== (dbMode === "local") && !testAuthWithPglite) {
   throw new Error("Usa Auth local con PGlite o Auth Supabase con PostgreSQL.");
@@ -164,7 +165,7 @@ else {
     await database.close();
     throw new Error("La conexión PostgreSQL del backend necesita permiso de escritura.");
   }
-  if (process.env.AYNI_ORDINARY_OBSERVATIONS === "1") {
+  if (newAyniFeatureEnabled(process.env.AYNI_ORDINARY_OBSERVATIONS)) {
     const rawSchema = (await db.query(`select to_regclass('public.ordinary_observations') as observations,
       to_regclass('public.ordinary_observation_revisions') as revisions`)).rows[0];
     if (!rawSchema?.observations || !rawSchema?.revisions) {
@@ -1075,7 +1076,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       return;
     }
     if (request.method === "GET" && /^\/api\/students\/[0-9a-f-]+\/trajectory$/i.test(url.pathname)) {
-      if (process.env.AYNI_F8_EVALUATION !== "1") { send(response, 404, { error: "Trayectoria no habilitada." }, origin); return; }
+      if (!newAyniFeatureEnabled(process.env.AYNI_F8_EVALUATION)) { send(response, 404, { error: "Trayectoria no habilitada." }, origin); return; }
       const studentId = url.pathname.split("/")[3];
       const result = await loadStudentTrajectory(db, teacherId, studentId, { includeOrdinary: true });
       send(response, result ? 200 : 404, result ?? { error: "Niño no encontrado en el aula activa." }, origin);
@@ -1201,14 +1202,14 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         send(response,200,{periods:periods.map((period)=>({id:period.id,label:period.label,starts_on:annualCalendarDay(period.starts_on),ends_on:annualCalendarDay(period.ends_on)})),feedback},origin);
       }catch(error){send(response,httpStatusForError(error,422),{error:publicErrorMessage(error)},origin);}return;
     }
-    if (process.env.AYNI_DOCUMENT_ARTIFACTS === "1" && request.method === "GET" && url.pathname === "/api/documents/artifacts") {
+    if (newAyniFeatureEnabled(process.env.AYNI_DOCUMENT_ARTIFACTS) && request.method === "GET" && url.pathname === "/api/documents/artifacts") {
       send(response,200,{ artifacts: await listConfirmedDocumentArtifacts(db,teacherId) },origin); return;
     }
-    if (process.env.AYNI_DOCUMENT_ARTIFACTS === "1" && process.env.AYNI_DOCUMENT_SYNC === "1"
+    if (newAyniFeatureEnabled(process.env.AYNI_DOCUMENT_ARTIFACTS) && newAyniFeatureEnabled(process.env.AYNI_DOCUMENT_SYNC)
       && request.method === "GET" && url.pathname === "/api/documents/artifacts/states") {
       send(response,200,{ states: await listDocumentArtifactStates(db,teacherId) },origin); return;
     }
-    if (process.env.AYNI_DOCUMENT_ARTIFACTS === "1" && request.method === "POST" && url.pathname === "/api/documents/artifacts/prepare") {
+    if (newAyniFeatureEnabled(process.env.AYNI_DOCUMENT_ARTIFACTS) && request.method === "POST" && url.pathname === "/api/documents/artifacts/prepare") {
       if (!documentArtifactStorage) { send(response,503,{error:"Storage documental privado no configurado."},origin); return; }
       try {
         const body = await readJson(request);
@@ -1223,7 +1224,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       } catch (error) { send(response,httpStatusForError(error,422),{error:publicErrorMessage(error)},origin); }
       return;
     }
-    if (process.env.AYNI_DOCUMENT_ARTIFACTS === "1" && process.env.AYNI_DOCUMENT_SYNC === "1"
+    if (newAyniFeatureEnabled(process.env.AYNI_DOCUMENT_ARTIFACTS) && newAyniFeatureEnabled(process.env.AYNI_DOCUMENT_SYNC)
       && request.method === "POST" && url.pathname === "/api/documents/artifacts/zip") {
       if (!documentArtifactStorage) { send(response,503,{error:"Storage documental privado no configurado."},origin); return; }
       try {
@@ -1240,7 +1241,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       } catch (error) { send(response,httpStatusForError(error,422),{error:publicErrorMessage(error)},origin); }
       return;
     }
-    const artifactDownload = process.env.AYNI_DOCUMENT_ARTIFACTS === "1"
+    const artifactDownload = newAyniFeatureEnabled(process.env.AYNI_DOCUMENT_ARTIFACTS)
       && /^\/api\/documents\/artifacts\/[0-9a-f-]{36}\/download$/i.exec(url.pathname);
     if (request.method === "GET" && artifactDownload) {
       if (!documentArtifactStorage) { send(response,503,{error:"Storage documental privado no configurado."},origin); return; }
@@ -2366,7 +2367,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
     if (await handleDescriptiveConclusionRoute({ request, url, response, origin })) return;
     if (await handleFamilyReportRoute({ request, url, response, origin })) return;
     if (url.pathname.startsWith("/api/ordinary-observations")) {
-      if (process.env.AYNI_ORDINARY_OBSERVATIONS !== "1") {
+      if (!newAyniFeatureEnabled(process.env.AYNI_ORDINARY_OBSERVATIONS)) {
         send(response, 404, { error: "Captura de observaciones no habilitada." }, origin); return;
       }
       try {

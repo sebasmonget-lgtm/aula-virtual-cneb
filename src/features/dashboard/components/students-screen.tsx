@@ -7,12 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { importPilotStudents, loadStudentPedagogicalProfile, type LocalDashboard, type LocalStudent, type StudentPedagogicalProfile } from "@/src/lib/local-database";
 import { recommendedStudentGuidance, studentCompetencyGuidance } from "@/src/lib/student-guidance.mjs";
+import { newAyniFeatureEnabled } from "@/src/lib/new-ayni-feature-flag.mjs";
 import { AsyncButton, EmptyState, LoadingState, NextStepCard, ScreenSkeleton, WorkflowFeedback, WorkflowTabs } from "./workflow-ui";
 import { FamilyInformationPanel, FamilyInterviewStatusBadge, useFamilyInterviewStatusMap } from "./family-interview-v4";
 import { EvidenceStudentCorrection } from "./evidence-student-correction";
 import { StudentTrajectory } from "./student-trajectory";
 
-const f8TrajectoryEnabled = process.env.NEXT_PUBLIC_AYNI_F8_TRAJECTORY === "1";
+const f8TrajectoryEnabled = newAyniFeatureEnabled(process.env.NEXT_PUBLIC_AYNI_F8_TRAJECTORY);
 
 const statusLabels = {
   demonstrated: "Lo demostró",

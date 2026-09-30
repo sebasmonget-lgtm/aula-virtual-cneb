@@ -1,4 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
+import { newAyniFeatureEnabled } from "../src/lib/new-ayni-feature-flag.mjs";
 import { loadKnowledgeBaseV4 } from "../src/lib/knowledge-base-v4.mjs";
 import { competencyApplicability } from "../src/lib/competency-applicability.mjs";
 import { resolveAIExecutionPlan } from "../src/lib/ai-execution-router-v4.mjs";
@@ -27,7 +28,7 @@ const clean = (value, limit = 4000) => typeof value === "string" ? value.trim().
 const safeCsv = (value) => { const raw = String(value ?? ""); const safe = /^[=+@\-\t\r]/.test(raw) ? `'${raw}` : raw; return `"${safe.replaceAll('"', '""')}"`; };
 
 export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStorage, mediaAvailable = true, readJson, send, pending, metadataForAudit, refreshStudentContext, loadKnowledgeBase = loadKnowledgeBaseV4, generate = generateAIWorkflowV4, createProvider = createAIProviderForPlan,
-  includeOrdinary = process.env.AYNI_F8_EVALUATION === "1",
+  includeOrdinary = newAyniFeatureEnabled(process.env.AYNI_F8_EVALUATION),
   loadClassroomContext = async (classroom) => publicClassroomContext(await getCurrentClassroomContext(db, teacherId, classroom.id)) }) {
   const loadRows = (database, args) => loadPeriodEvaluationRows(database, { ...args, includeOrdinary });
   const fail = (response, origin, error, status = 422) => send(response, httpStatusForError(error, status),

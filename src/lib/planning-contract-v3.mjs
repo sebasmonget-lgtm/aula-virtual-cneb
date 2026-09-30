@@ -1,7 +1,10 @@
+import { newAyniFeatureEnabled } from "./new-ayni-feature-flag.mjs";
+
 /** Stable, read-only contracts over the existing planning records. Confirmed legacy rows are never rewritten. */
 export const PROJECT_MASTER_CONTRACT_V3 = "project-master-v3";
 export const ACTIVITY_CONTRACT_V3 = "activity-v3";
-export const planningV3ReadEnabled = () => process.env.AYNI_PLANNING_V3_READ === "1";
+
+export const planningV3ReadEnabled = () => newAyniFeatureEnabled(process.env.AYNI_PLANNING_V3_READ);
 
 const uuid = (value) => typeof value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 

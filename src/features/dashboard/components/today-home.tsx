@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import type { LocalDashboard } from "@/src/lib/local-database";
 import { localDatabaseApiUrl } from "@/src/lib/local-database";
 import { apiFetch } from "@/src/lib/ayni-api-fetch";
+import { newAyniFeatureEnabled } from "@/src/lib/new-ayni-feature-flag.mjs";
 import { AsyncButton, WorkflowFeedback } from "./workflow-ui";
 
 type Block = LocalDashboard["today"]["blocks"][number];
@@ -56,7 +57,7 @@ export function TodayHome({ dashboard, refreshKey = 0, openEvidence, openAttenda
     return () => controller.abort();
   }, []);
   useEffect(() => {
-    if (process.env.NEXT_PUBLIC_AYNI_F7_NAV !== "1") return;
+    if (!newAyniFeatureEnabled(process.env.NEXT_PUBLIC_AYNI_F7_NAV)) return;
     const controller = new AbortController();
     void apiFetch(`${localDatabaseApiUrl}/api/teacher/today`, { signal: controller.signal, cache: "no-store" })
       .then(async response => { if (!response.ok) throw new Error("Hoy no disponible"); return await response.json() as {

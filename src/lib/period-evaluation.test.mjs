@@ -167,7 +167,9 @@ async function fixture({ analysis = mockAnalysis(), jsonbPending = false } = {})
     const copy = (await db.query('select $1::jsonb as payload', [JSON.stringify(value)])).rows[0].payload;
     return Map.prototype.set.call(pending, key, copy);
   };
-  const handle = createPeriodEvaluationRouteHandler({ db, teacherId: teacher, loadClassroomContext: async () => currentContext, readJson: async (request) => request.body, send: (response, status, payload) => { response.result={status,body:payload}; }, pending, metadataForAudit: (metadata) => metadata, refreshStudentContext: async () => {}, evidenceStorage: { read: async () => ({ data: Buffer.from("image"), mimeType: "image/png" }) }, createProvider: () => ({}), generate: async (input) => { calls.push(input); return { output: input.workflow === "assessment" ? analysis : mockConclusion(), metadata: { model: "mock" } }; } });
+  // This reduced-schema fixture exercises the historical period routes; the F5–F8
+  // ordinary-observation source has its own tests and tables in the full schema.
+  const handle = createPeriodEvaluationRouteHandler({ db, teacherId: teacher, includeOrdinary: false, loadClassroomContext: async () => currentContext, readJson: async (request) => request.body, send: (response, status, payload) => { response.result={status,body:payload}; }, pending, metadataForAudit: (metadata) => metadata, refreshStudentContext: async () => {}, evidenceStorage: { read: async () => ({ data: Buffer.from("image"), mimeType: "image/png" }) }, createProvider: () => ({}), generate: async (input) => { calls.push(input); return { output: input.workflow === "assessment" ? analysis : mockConclusion(), metadata: { model: "mock" } }; } });
   async function call(method, route, body) {
     const response = { writeHead(status, headers) { this.status = status; this.headers = headers; }, end(data) { this.data = data; } };
     await handle({ request: { method, body }, url: new URL(`http://localhost${route}`), response, origin: null });

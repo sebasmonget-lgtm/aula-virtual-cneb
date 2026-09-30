@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { localDatabaseApiUrl } from "@/src/lib/local-database";
 import { jsonValuesDiffer } from "@/src/lib/project-draft-changes.mjs";
+import { newAyniFeatureEnabled } from "@/src/lib/new-ayni-feature-flag.mjs";
 import type { LibraryResource } from "@/src/lib/library-resource";
 import { CriterionEvidenceGenerator } from "./criterion-evidence-generator";
 import { WorkshopMasterPanel } from "./workshop-master-panel";
@@ -141,7 +142,7 @@ export function ParentActivityGenerator({ onConfirmed, onGoToday, feedbackPeriod
     const automaticCompetencyId = parent && (parent.details.primary_competency_ids ?? []).filter((id) => ids.includes(id)).length === 1 ? (parent.details.primary_competency_ids ?? []).find((id) => ids.includes(id)) ?? "" : "";
     const effectiveCompetencyId = competencyId || automaticCompetencyId;
     const routeItem = parent?.details.activity_route?.find((item) => item.id === routeItemId);
-    const inheritedView = process.env.NEXT_PUBLIC_AYNI_ACTIVITY_INHERITED === "1" && parent?.details.contract_version === "project-master-v3";
+    const inheritedView = newAyniFeatureEnabled(process.env.NEXT_PUBLIC_AYNI_ACTIVITY_INHERITED) && parent?.details.contract_version === "project-master-v3";
     const setRouteItemId = (value: string) => {
         setRouteItemIdState(value);
         const selected = parent?.details.activity_route?.find((item) => item.id === value);

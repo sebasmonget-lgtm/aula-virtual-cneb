@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, BookOpen, Download, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { localDatabaseApiUrl } from "@/src/lib/local-database";
+import { newAyniFeatureEnabled } from "@/src/lib/new-ayni-feature-flag.mjs";
 import { AnnualPlanDocument, type DocumentContext, type Proposal } from "./annual-plan-generator";
 import { LoadingState, PageIntro, WorkflowFeedback } from "./workflow-ui";
 import { DocumentTree, type ArtifactState } from "./document-tree";
@@ -144,8 +145,8 @@ export function DocumentsScreen() {
   const [artifactStates,setArtifactStates] = useState<ArtifactState[]>([]);
   const [error, setError] = useState("");
   const [revision, setRevision] = useState(0);
-  const artifactFeature = process.env.NEXT_PUBLIC_AYNI_F10_ARTIFACTS === "1";
-  const syncFeature = artifactFeature && process.env.NEXT_PUBLIC_AYNI_F11_DOCUMENTS === "1";
+  const artifactFeature = newAyniFeatureEnabled(process.env.NEXT_PUBLIC_AYNI_F10_ARTIFACTS);
+  const syncFeature = artifactFeature && newAyniFeatureEnabled(process.env.NEXT_PUBLIC_AYNI_F11_DOCUMENTS);
 
   useEffect(() => {
     const controller = new AbortController();

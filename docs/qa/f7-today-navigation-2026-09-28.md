@@ -4,6 +4,8 @@
 
 Flag `NEXT_PUBLIC_AYNI_F7_NAV=1`, apagado por defecto. Cuatro destinos principales y hashes de enlace directo; rutas anteriores continúan accesibles. Calendario y Biblioteca están dentro de Planificar; Diagnóstico y Evaluación, desde Mi aula. `GET /api/teacher/today` usa la identidad verificada, aula activa, fecha civil Lima, observaciones pendientes de esa aula y próxima actividad; no acepta selectores de otro docente ni crea un diagnóstico de déficit. No hay migración ni IA.
 
+Nota posterior: el estado «apagado por defecto» corresponde a la prueba inicial F7. Para el QA final, el flag ausente activa ya los cuatro destinos y `=0` es la reversión explícita; ver ADR 093.
+
 QA en clon, API 8795, web 5176: escritorio mostró cuatro destinos; Hoy indicó una observación pendiente y abrió la cola con la nota de Camila; Planificar abrió Calendario; Documentos abrió su visor; Mi aula mostró Diagnóstico y Evaluación. En móvil 390 × 844, barra de cuatro botones y navegación táctil a Planificar; `scrollWidth=375` menor que viewport 390. El enlace directo `#documentos` abrió Documentos. Se usó Jev apagado, cero llamadas pagadas. El primer arranque QA usó el nombre de variable URL incorrecto y omitió el flag backend de observaciones; se corrigió el harness de ejecución sin cambio de producto.
 
 Pruebas: helpers de prioridad/enlaces y HTTP con propietario, otro docente, token ausente/expirado. Suite completa `node --test --test-concurrency=4`: 588/588 PASS; `npx tsc --noEmit`, `npm run lint`, `npm run build`: PASS. Build reporta advertencia no bloqueante de chunk >500 kB. PENDING EXTERNAL: revisión en dispositivo móvil físico, staging nuevo con RLS/Storage remoto y accesibilidad humana con docente. Rollback: apagar flag UI; no borrar datos.

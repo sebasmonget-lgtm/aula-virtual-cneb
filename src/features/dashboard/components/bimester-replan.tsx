@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Check, ChevronLeft, ChevronRight } from "lucide-react";
 import { apiFetch } from "@/src/lib/ayni-api-fetch";
 import { localDatabaseApiUrl } from "@/src/lib/local-database";
+import { newAyniFeatureEnabled } from "@/src/lib/new-ayni-feature-flag.mjs";
 import { Button } from "@/components/ui/button";
 import { LoadingState, WorkflowFeedback } from "./workflow-ui";
 
@@ -58,7 +59,7 @@ export function BimesterReplan({ onEvaluation, onFinish }: { onEvaluation: () =>
   const [error, setError] = useState("");
   const [finished, setFinished] = useState(false);
   const [simpleEditing, setSimpleEditing] = useState(false);
-  const simpleMode = process.env.NEXT_PUBLIC_AYNI_F9_REPLAN === "1";
+  const simpleMode = newAyniFeatureEnabled(process.env.NEXT_PUBLIC_AYNI_F9_REPLAN);
 
   useEffect(() => { let live = true; api<Workspace>("/api/period-evaluations/workspace").then((data) => {
     if (!live) return;

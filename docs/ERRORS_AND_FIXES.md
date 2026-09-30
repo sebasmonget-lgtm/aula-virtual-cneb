@@ -1,5 +1,25 @@
 # Errores y soluciones
 
+## 2026-09-28 — F7 completada pero navegación final seguía mostrando siete módulos
+
+**Síntoma.** `localhost:5173` mostraba Hoy, Calendario, Diagnóstico, Planificar, Aula, Evaluar y Biblioteca pese al contrato de cuatro destinos.
+
+**Causa raíz.** F7 había quedado detrás de `NEXT_PUBLIC_AYNI_F7_NAV=1`, ausente del entorno local. La prueba F7 sí lo había activado en un servidor QA distinto.
+
+**Solución.** La navegación nueva y las tareas contextuales de Hoy están activadas por defecto; `=0` conserva la reversión legacy. Los enlaces antiguos siguen legibles y los subflujos se abren desde Planificar o Mi aula.
+
+**Prevención.** Verificar la configuración predeterminada en el puerto que usa la profesora, además de probar el flag activado en un entorno aislado.
+
+## 2026-09-28 — F1–F11 implementadas pero parcialmente invisibles sin flags
+
+**Síntoma.** Tras corregir F7, la auditoría encontró más rutas y componentes de F1, F3–F11 condicionados a `=1`; `.env.local` no declaraba esos flags. Una build correcta no demostraba que la profesora recibiera la experiencia final.
+
+**Causa raíz.** Los flags se habían dejado opt-in para QA fase por fase y no se cambió el default al integrar el producto. Algunos fallbacks pasaban silenciosamente a UI/API legacy.
+
+**Solución validada.** Un helper compartido interpreta variable ausente como función aprobada activa y `=0` como rollback. Se aplicó en cliente y servidor, se probaron los contratos básicos, la suite, typecheck/lint/build y un recorrido visual sin flags de fase. El fixture H34 de esquema reducido desactiva expresamente la fuente ordinaria que no contiene; el servidor migrado la activa por defecto. Jev externo sigue opt-in por decisión curricular explícita, no por olvido. Ver ADR 098 y `docs/qa/f1-f11-feature-flag-audit-2026-09-28.md`.
+
+**Prevención.** Probar cada release con flags ausentes en el mismo puerto/entorno usado por la profesora, además de probar `=0` para rollback; no equiparar «componente implementado» con «visible por defecto».
+
 ## 2026-09-28 — F10: timeout del arranque HTTP con concurrencia libre
 
 **Síntoma.** `node --test` reportó 595/596; `auth-http.test.mjs` no observó al servidor iniciar dentro de su plazo mientras otras pruebas PGlite/Word corrían en paralelo.
