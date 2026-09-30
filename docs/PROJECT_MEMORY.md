@@ -2,11 +2,11 @@
 
 ## Preparación de staging, 2026-09-30
 
-El proyecto nuevo de Supabase `eetdkmmspicboijcmnzv` recibió 68 migraciones. Se comprobó RLS habilitado en 78/78 tablas públicas y cinco buckets privados; aún no hay prueba real de Auth, RLS entre dos docentes ni archivos. La API independiente se adaptó a rutas Next y Storage remoto en código. `npx next build --webpack`, typecheck, lint y pruebas de adaptadores pasaron; Vercel `ayni4/ayni-aula-staging` permanece sin despliegue hasta disponer de la contraseña de base nueva y credenciales privadas, validar dos docentes y completar smoke test. Ver `docs/STAGING_PROJECTS.md` y ADR 103.
+El proyecto nuevo de Supabase `eetdkmmspicboijcmnzv` recibió 68 migraciones. Se comprobó RLS habilitado en 78/78 tablas públicas y cinco buckets privados; aún no hay prueba real de Auth, RLS entre dos docentes ni archivos. La API independiente se adaptó a rutas Next y Storage remoto en código. `npx next build --webpack`, typecheck, lint y pruebas de adaptadores pasaron. Vercel `ayni4/ayni-aula-staging` tiene las claves Supabase y de IA como secretos, dos secretos internos nuevos y una CLI aislada enlazada; permanece sin despliegue hasta guardar `SUPABASE_DB_URL` con la contraseña que introducirá el propietario, validar dos docentes y completar smoke test. Ver `docs/STAGING_PROJECTS.md` y ADR 103.
 
 ## Estado actual
 
-Staging nuevo (2026-09-30): se crearon proyectos independientes en Supabase (`ayni-aula-staging`) y Vercel (`ayni-aula-staging`). Supabase ya tiene las migraciones y buckets privados, pero aún no tiene usuarios docentes ni QA real entre dos cuentas; Vercel sigue sin Git ni despliegue. El build Next local ya incluye la API. Ver `docs/STAGING_PROJECTS.md`.
+Staging nuevo (2026-09-30): se crearon proyectos independientes en Supabase (`ayni-aula-staging`) y Vercel (`ayni-aula-staging`). Supabase ya tiene las migraciones y buckets privados, pero aún no tiene usuarios docentes ni QA real entre dos cuentas; Vercel sigue sin Git ni despliegue, aunque la CLI aislada quedó enlazada. El build Next local ya incluye la API. Ver `docs/STAGING_PROJECTS.md`.
 
 Sesión docente (2026-09-30): acceso por DNI con persistencia automática por 30 días desde la última actividad. Cookies HTTP-only firmadas conservan refresh token y actividad; el servidor renueva el token corto y verifica Auth/rol por petición. La prueba local usa Auth simulado; rotación y revocación reales siguen pendientes en staging nuevo. Ver ADR 098.
 
