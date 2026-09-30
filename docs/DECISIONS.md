@@ -1,5 +1,9 @@
 # Decisiones de arquitectura
 
+## ADR 098 — Sesión docente renovable por 30 días de inactividad
+
+**Decisión (2026-09-30).** El acceso por DNI conserva el refresh token de Supabase en una cookie HTTP-only firmada; otra cookie firmada guarda la última actividad. Cada petición docente autenticada renueva el plazo de 30 días, sin casilla opcional. Si el JWT corto expiró, el servidor cambia el refresh token por un nuevo par y vuelve a validar el usuario y su rol. Una petición sin actividad durante 30 días, con firma alterada o con refresh token revocado exige iniciar sesión. Las cookies usan `Secure` en producción, `SameSite=Lax` y ruta `/api`; las respuestas que las renuevan no se almacenan en caché. El cierre de sesión las elimina y solicita revocación local a Supabase. `AYNI_SESSION_SIGNING_KEY` es una clave privada estable distinta de la usada para derivar el alias del DNI. La validación real de rotación y revocación en Supabase nuevo sigue siendo puerta de staging.
+
 ## ADR 097 — Acceso docente con DNI
 
 **Decisión (2026-09-30).** La profesora entra con DNI de ocho dígitos y contraseña; el administrador crea y restablece las cuentas, sin correo de recuperación ni registro público. El servidor deriva un alias técnico con HMAC y una clave privada estable, y usa Supabase Auth para verificar la contraseña. Solo acepta usuarios con `app_metadata.ayni_role=teacher`; el UUID Auth sigue siendo el propietario del aula. No se guarda el DNI en el alias ni en metadatos Auth. La pantalla toma como referencia una composición simple con cabecera, campos amplios y botón principal. La clave de derivación, el dominio del alias y el procedimiento administrativo se documentan en `docs/DNI_ACCESS.md`. El piloto requiere validar creación, reinicio y aislamiento de dos cuentas en Supabase real antes de publicar.

@@ -17,25 +17,33 @@ const periodA = "77777777-7777-4777-8777-777777777777";
 const periodB = "88888888-8888-4888-8888-888888888888";
 const dniPepper = "test-only-secret-with-more-than-32-characters";
 const dniAliasDomain = "login.example.test";
+const sessionSigningKey = "separate-test-session-key-over-32-characters";
 const teacherADni = "12345678";
+let clock = Date.UTC(2026, 8, 30);
 
 function fakeAuthFetch(url, options) {
+  if (url.includes("grant_type=refresh_token")) {
+    const body = JSON.parse(options.body);
+    return Promise.resolve(Response.json(body.refresh_token === "refresh-a"
+      ? { access_token: "token-a-renewed", refresh_token: "refresh-a-new", expires_in: 3600 }
+      : { error: "invalid_grant" }, { status: body.refresh_token === "refresh-a" ? 200 : 401 }));
+  }
   if (url.includes("/auth/v1/token?")) {
     const body = JSON.parse(options.body);
     const valid = body.email === dniLoginAlias(teacherADni, dniPepper, dniAliasDomain) && body.password === "correcta";
     return Promise.resolve(Response.json(valid
-      ? { access_token: "token-a", expires_in: 3600 }
+      ? { access_token: "token-a", refresh_token: "refresh-a", expires_in: 3600 }
       : { error: "invalid_grant" }, { status: valid ? 200 : 401 }));
   }
   if (url.endsWith("/auth/v1/user")) {
     const token = options.headers.authorization;
-    const id = token === "Bearer token-a" || token === "Bearer token-unmarked" ? teacherA : token === "Bearer token-b" ? teacherB : null;
+    const id = ["Bearer token-a", "Bearer token-a-renewed", "Bearer token-unmarked"].includes(token) ? teacherA : token === "Bearer token-b" ? teacherB : null;
     return Promise.resolve(Response.json(id ? { id, role: "authenticated", app_metadata: token === "Bearer token-unmarked" ? {} : { ayni_role: "teacher" } } : { error: "invalid_token" }, { status: id ? 200 : 401 }));
   }
   return Promise.resolve(new Response(null, { status: 204 }));
 }
 
-const auth = createRequestAuth({ mode: "supabase", supabaseUrl: "https://test.supabase.co", publishableKey: "public-test-key", dniPepper, dniAliasDomain, fetchImpl: fakeAuthFetch });
+const auth = createRequestAuth({ mode: "supabase", supabaseUrl: "https://test.supabase.co", publishableKey: "public-test-key", dniPepper, dniAliasDomain, sessionSigningKey, fetchImpl: fakeAuthFetch, now: () => clock });
 const request = (token, extraHeaders = {}) => ({ headers: { ...(token ? { authorization: `Bearer ${token}` } : {}), ...extraHeaders } });
 
 test("identity is verified for every request and never comes from client IDs", async () => {
@@ -50,17 +58,50 @@ test("identity is verified for every request and never comes from client IDs", a
   assert.equal(b.teacherId, teacherB);
   assert.equal(a.db, db);
   assert.notEqual(a.requestId, b.requestId);
-  assert.equal((await auth.resolve({ headers: { cookie: "ayni_session=token-a" } }, db)).teacherId, teacherA);
+  const saved = auth.sessionCookies({ token: "token-a", refreshToken: "refresh-a", expiresIn: 3600 })
+    .map((value) => value.split(";")[0]).join("; ");
+  assert.equal((await auth.resolve({ headers: { cookie: saved } }, db)).teacherId, teacherA);
 });
 
-test("DNI/password sign-in verifies the returned token and sets an HTTP-only cookie", async () => {
+test("DNI/password sign-in verifies the returned token and sets HTTP-only cookies", async () => {
   const session = await auth.signIn(teacherADni, "correcta");
   assert.equal(session.teacherId, teacherA);
-  assert.match(auth.sessionCookie(session.token, session.expiresIn), /HttpOnly; Path=\/api; SameSite=Lax; Secure/);
+  const cookies = auth.sessionCookies(session);
+  assert.equal(cookies.length, 3);
+  assert(cookies.every((cookie) => /HttpOnly; Path=\/api; SameSite=Lax; Secure/.test(cookie)));
+  assert.match(cookies[1], /Max-Age=2592000/);
   await assert.rejects(() => auth.signIn(teacherADni, "incorrecta"), (error) => error.status === 401);
   await assert.rejects(() => auth.signIn("123", "correcta"), (error) => error.status === 401);
   assert.notEqual(dniLoginAlias(teacherADni, dniPepper, dniAliasDomain), dniLoginAlias("87654321", dniPepper, dniAliasDomain));
   assert.doesNotMatch(dniLoginAlias(teacherADni, dniPepper, dniAliasDomain), /12345678/);
+});
+
+test("activity renews the 30-day window and an expired access token is refreshed", async () => {
+  clock = Date.UTC(2026, 8, 30);
+  const session = await auth.signIn(teacherADni, "correcta");
+  const cookieMap = Object.fromEntries(auth.sessionCookies(session).map((value) => value.split(";")[0].split(/=(.*)/s).slice(0, 2)));
+  const cookieHeader = (values) => Object.entries(values).map(([key, value]) => `${key}=${value}`).join("; ");
+  clock += 29 * 24 * 60 * 60 * 1000;
+  const active = await auth.resolve({ headers: { cookie: cookieHeader(cookieMap) } }, {});
+  assert.equal(active.teacherId, teacherA);
+  assert.equal(active.sessionCookies.length, 2);
+  cookieMap.ayni_refresh = active.sessionCookies[0].split(";")[0].split(/=(.*)/s)[1];
+  cookieMap.ayni_active = active.sessionCookies[1].split(";")[0].split(/=(.*)/s)[1];
+  const [seenAt, signature] = cookieMap.ayni_active.split(".");
+  await assert.rejects(() => auth.resolve({ headers: { cookie: cookieHeader({ ...cookieMap,
+    ayni_active: `${seenAt}.${signature[0] === "A" ? "B" : "A"}${signature.slice(1)}` }) } }, {}),
+  (error) => error instanceof RequestAuthError && error.status === 401);
+  clock += 2 * 24 * 60 * 60 * 1000;
+  delete cookieMap.ayni_session;
+  const renewed = await auth.resolve({ headers: { cookie: cookieHeader(cookieMap) } }, {});
+  assert.equal(renewed.teacherId, teacherA);
+  assert.equal(renewed.sessionCookies.length, 3);
+  assert.match(renewed.sessionCookies[0], /token-a-renewed/);
+  clock += 30 * 24 * 60 * 60 * 1000;
+  await assert.rejects(() => auth.resolve({ headers: { cookie: cookieHeader(cookieMap) } }, {}),
+    (error) => error instanceof RequestAuthError && error.status === 401);
+  assert.equal(auth.clearCookies().length, 3);
+  clock = Date.UTC(2026, 8, 30);
 });
 
 test("local mode retains PGlite identity without any token", async () => {

@@ -130,6 +130,7 @@ const requestAuth = createRequestAuth({ mode: authMode, localTeacherId,
   publishableKey: process.env.AYNI_SUPABASE_PUBLISHABLE_KEY,
   dniPepper: process.env.AYNI_DNI_LOGIN_PEPPER,
   dniAliasDomain: process.env.AYNI_DNI_ALIAS_DOMAIN,
+  sessionSigningKey: process.env.AYNI_SESSION_SIGNING_KEY,
   secureCookie: process.env.AYNI_AUTH_COOKIE_SECURE !== "0" });
 const corsMethods = "GET,POST,PUT,OPTIONS";
 const allowedOrigins = new Set([
@@ -290,7 +291,7 @@ function send(response, status, payload, origin, extraHeaders = {}) {
 function sendAsset(response, status, body, mimeType, origin, cacheControl = "private, max-age=60") {
   const headers = {
     "content-type": mimeType,
-    "cache-control": cacheControl,
+    "cache-control": response.hasHeader("set-cookie") ? "private, no-store" : cacheControl,
     "x-content-type-options": "nosniff",
   };
   if (origin && allowedOrigins.has(origin)) {
@@ -2638,7 +2639,7 @@ const server = createServer(async (request, response) => {
       const body = await readJson(request);
       const session = await requestAuth.signIn(body.dni, body.password);
       send(response, 200, { teacherId: session.teacherId }, origin, {
-        "set-cookie": requestAuth.sessionCookie(session.token, session.expiresIn),
+        "set-cookie": requestAuth.sessionCookies(session),
       });
     } catch (error) {
       const status = error instanceof RequestAuthError ? error.status : 401;
@@ -2648,7 +2649,7 @@ const server = createServer(async (request, response) => {
   }
   if (request.method === "POST" && url.pathname === "/api/auth/logout") {
     await requestAuth.signOut(request);
-    send(response, 200, { ok: true }, origin, { "set-cookie": requestAuth.clearCookie() });
+    send(response, 200, { ok: true }, origin, { "set-cookie": requestAuth.clearCookies() });
     return;
   }
   const requestDb = database.requestDb();
@@ -2657,8 +2658,13 @@ const server = createServer(async (request, response) => {
   try { context = await requestAuth.resolve(request, requestDb); }
   catch (error) {
     const status = error instanceof RequestAuthError ? error.status : 401;
-    send(response, status, { error: status === 503 ? "No se pudo verificar la sesión." : "Inicia sesión para continuar." }, origin);
+    send(response, status, { error: status === 503 ? "No se pudo verificar la sesión." : "Inicia sesión para continuar." }, origin,
+      status === 401 && authMode === "supabase" && !request.headers.authorization ? { "set-cookie": requestAuth.clearCookies() } : {});
     return;
+  }
+  if (context.sessionCookies) {
+    response.setHeader("set-cookie", context.sessionCookies);
+    response.setHeader("cache-control", "private, no-store");
   }
   if (context.authMode === "supabase" && context.tokenSource === "cookie" && !["GET", "HEAD"].includes(request.method) && !origin) {
     send(response, 403, { error: "Origen requerido para esta operación." }, origin);

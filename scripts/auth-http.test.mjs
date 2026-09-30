@@ -14,6 +14,7 @@ const teacherA = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 const teacherB = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
 const dniPepper = "test-only-secret-with-more-than-32-characters";
 const dniAliasDomain = "login.example.test";
+const sessionSigningKey = "separate-test-session-key-over-32-characters";
 
 async function freePort() {
   const server = createServer();
@@ -69,7 +70,15 @@ test("the HTTP boundary protects every route and local PGlite remains usable", {
       const value = JSON.parse(raw);
       const valid = value.email === dniLoginAlias("12345678", dniPepper, dniAliasDomain) && value.password === "correcta";
       response.writeHead(valid ? 200 : 401);
-      response.end(JSON.stringify(valid ? { access_token: "token-a", expires_in: 3600 } : { error: "invalid_grant" }));
+      response.end(JSON.stringify(valid ? { access_token: "token-a", refresh_token: "refresh-a", expires_in: 3600 } : { error: "invalid_grant" }));
+      return;
+    }
+    if (request.url === "/auth/v1/token?grant_type=refresh_token") {
+      let raw = "";
+      for await (const chunk of request) raw += chunk;
+      const valid = JSON.parse(raw).refresh_token === "refresh-a";
+      response.writeHead(valid ? 200 : 401);
+      response.end(JSON.stringify(valid ? { access_token: "token-a", refresh_token: "refresh-a-new", expires_in: 3600 } : { error: "invalid_grant" }));
       return;
     }
     response.writeHead(204); response.end();
@@ -86,6 +95,7 @@ test("the HTTP boundary protects every route and local PGlite remains usable", {
       AYNI_SUPABASE_PUBLISHABLE_KEY: "public-test-key",
       AYNI_DNI_LOGIN_PEPPER: dniPepper,
       AYNI_DNI_ALIAS_DOMAIN: dniAliasDomain,
+      AYNI_SESSION_SIGNING_KEY: sessionSigningKey,
       AYNI_AUTH_COOKIE_SECURE: "0",
       AYNI_ALLOWED_ORIGIN: "http://localhost:5173",
       AYNI_LOCAL_TEACHER_ID: "ignored-in-auth-mode",
@@ -120,9 +130,22 @@ test("the HTTP boundary protects every route and local PGlite remains usable", {
       body: JSON.stringify({ dni: "12345678", password: "correcta" }),
     });
     assert.equal(login.status, 200);
-    const cookie = login.headers.get("set-cookie")?.split(";")[0];
-    assert(cookie?.startsWith("ayni_session="));
-    assert.equal((await call("/api/auth/session", null, { headers: { cookie } })).status, 200);
+    const loginCookies = login.headers.getSetCookie().map((value) => value.split(";")[0]);
+    assert.equal(loginCookies.length, 3);
+    const cookie = loginCookies.join("; ");
+    assert(cookie.includes("ayni_session="));
+    const activeSession = await call("/api/auth/session", null, { headers: { cookie } });
+    assert.equal(activeSession.status, 200);
+    assert.equal(activeSession.headers.getSetCookie().length, 2);
+    assert(activeSession.headers.getSetCookie().every((value) => value.includes("Max-Age=2592000")));
+    assert.equal((await call("/api/auth/session", null, { headers: { cookie: loginCookies[0] } })).status, 401);
+    const retained = loginCookies.filter((value) => !value.startsWith("ayni_session="));
+    const refreshed = await call("/api/auth/session", null, { headers: { cookie: retained.join("; ") } });
+    assert.equal(refreshed.status, 200);
+    assert.equal(refreshed.headers.getSetCookie().length, 3);
+    const logout = await call("/api/auth/logout", null, { method: "POST", headers: { cookie: loginCookies.join("; ") } });
+    assert.equal(logout.status, 200);
+    assert(logout.headers.getSetCookie().every((value) => value.includes("Max-Age=0")));
     assert.equal((await call("/api/pilot/setup", null, { method: "POST", headers: { cookie, "content-type": "application/json" }, body: "{}" })).status, 403);
     for (const [token, label] of [["token-a", "A"], ["token-b", "B"]]) {
       const setup = await call("/api/pilot/setup", token, {
@@ -242,6 +265,7 @@ test("the HTTP boundary protects every route and local PGlite remains usable", {
       AYNI_SUPABASE_URL: `http://127.0.0.1:${authPort}`,
       AYNI_SUPABASE_PUBLISHABLE_KEY: "public-test-key", AYNI_ALLOWED_ORIGIN: "http://localhost:5173",
       AYNI_DNI_LOGIN_PEPPER: dniPepper, AYNI_DNI_ALIAS_DOMAIN: dniAliasDomain,
+      AYNI_SESSION_SIGNING_KEY: sessionSigningKey,
       AYNI_AUTH_COOKIE_SECURE: "0",
     });
     const ownDownload = await fetch(`${running.base}/api/documents/diagnostic_summary/${diagnosticId}/download`, {

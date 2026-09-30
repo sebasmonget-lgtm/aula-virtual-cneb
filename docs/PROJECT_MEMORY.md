@@ -2,6 +2,8 @@
 
 ## Estado actual
 
+Sesión docente (2026-09-30): acceso por DNI con persistencia automática por 30 días desde la última actividad. Cookies HTTP-only firmadas conservan refresh token y actividad; el servidor renueva el token corto y verifica Auth/rol por petición. La prueba local usa Auth simulado; rotación y revocación reales siguen pendientes en staging nuevo. Ver ADR 098.
+
 Acceso docente preparado en código (2026-09-30): pantalla simple con DNI y contraseña, alias técnico derivado por HMAC solo en servidor, Supabase Auth con rol docente administrativo y herramienta interactiva de alta/reinicio sin correo. Las pruebas de Auth locales son simuladas; el alta y el aislamiento reales con dos docentes permanecen como requisito de staging. Ver ADR 097 y `docs/DNI_ACCESS.md`.
 
 Plan Maestro: F2 reducida cerrada con A (ADR 088). F3 proyecto sencillo en `17e8556`; F4 `ef4c307` ActivityV3 heredada; F5 `99cd04e` raw con identidad canónica, revisión inmutable y foto privada. F6 `b729fad` atribución Jev/cola docente; F7 `66f0789` navegación cuatro destinos/Hoy; F8 `62afd23` atribuciones docentes vigentes en H34/trayectoria; F9 `4efc3ac` diff futuro con fingerprint F8. F10 `a945c1a` artefacto Word estable de plan/proyecto confirmado, con bytes privados, SHA-256, RLS y reintento. F11 `3fca02c` más corrección `2e9a78e` árbol y sync explícita con carpeta/ZIP, sin migración. F12 es auditoría de salida parcial **no aceptada**: falta recorrido anual nuevo exclusivamente por UI, picker/móvil real y RLS/Storage en staging nuevo; ver `docs/qa/f12-final-e2e-2026-09-28.md`. Sin deploy, staging real ni llamadas pagadas F6–F12.

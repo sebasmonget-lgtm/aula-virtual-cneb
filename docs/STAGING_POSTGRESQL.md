@@ -15,6 +15,8 @@ El servidor rechaza una combinación distinta. El test HTTP de Auth puede combin
 
 El flujo es Auth Supabase `/auth/v1/user` → `teacherId` verificado → `{teacherId,requestId,db}` → autorización de selectores → servicios existentes → PostgreSQL. No se ejecutan migraciones automáticamente al iniciar; el servidor verifica tablas y permiso de escritura. `AYNI_LOCAL_TEACHER_ID` no se lee en este modo.
 
+El acceso por DNI conserva un refresh token de Supabase en cookie HTTP-only firmada, con 30 días desde la última actividad. Configurar `AYNI_DNI_LOGIN_PEPPER`, `AYNI_DNI_ALIAS_DOMAIN` y `AYNI_SESSION_SIGNING_KEY` solo en el backend; ver `docs/DNI_ACCESS.md`. Comprobar en el proyecto nuevo que la política de sesiones de Supabase no impone un plazo menor al deseado, y probar rotación y cierre real antes de publicar.
+
 ## Rutas de datos
 
 - **A. Backend privilegiado:** altas, edición, generación, confirmación, evaluación, cierres, informes y descargas. Todos pasan por Auth y servicios que comprueban propiedad; la conexión backend no sustituye esa autorización.
@@ -34,6 +36,6 @@ Aplicar `supabase/migrations/*.sql` en orden lexicográfico en un proyecto vací
 1. URL del proyecto Supabase (`AYNI_SUPABASE_URL`) y publishable key (`AYNI_SUPABASE_PUBLISHABLE_KEY`).
 2. URL PostgreSQL del proyecto (`SUPABASE_DB_URL`) con usuario backend de escritura, obtenida de **Connect**. Entregarla por el mecanismo privado de variables de entorno, no en chat ni en el repositorio.
 3. Origen HTTPS exacto de la interfaz (`AYNI_ALLOWED_ORIGIN`) y URL pública HTTPS de la API (`NEXT_PUBLIC_AYNI_API_URL`), bajo el mismo sitio para la cookie.
-4. Dos cuentas docentes ficticias de staging, una por aula, para comprobar Auth y RLS. No se necesita `SUPABASE_SERVICE_ROLE_KEY` para este adaptador PostgreSQL.
+4. Dos cuentas docentes ficticias de staging, una por aula, para comprobar Auth, renovación de sesión y RLS. La herramienta administrativa de alta/reinicio usa `AYNI_SUPABASE_SERVICE_ROLE_KEY` en su terminal privada; el adaptador PostgreSQL no necesita esa clave para consultas normales.
 
 Rollback del código: volver al commit anterior y usar `AYNI_DB_MODE=local`/`AYNI_AUTH_MODE=local` en desarrollo. No revertir migraciones aplicadas editando archivos históricos; usar una migración compensatoria o restaurar un respaldo probado.

@@ -99,6 +99,7 @@ export function AuthGate() {
         <button type="submit" disabled={busy} className="mt-7 w-full rounded-2xl bg-[#087d96] px-5 py-4 text-base font-bold text-white shadow-sm transition hover:bg-[#086d83] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#087d96] disabled:opacity-60">{busy ? "Ingresando…" : "Ingresar a mi aula"}</button>
       </form>
       <p className="mt-6 text-center text-sm text-[#526b87]">¿Olvidaste tu contraseña? Solicita al administrador que la restablezca.</p>
+      <p className="mt-2 text-center text-sm text-[#526b87]">Tu sesión se renueva al usar Ayni y vence tras 30 días sin actividad.</p>
     </div>
   </main>;
 }
