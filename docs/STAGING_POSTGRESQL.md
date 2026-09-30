@@ -1,13 +1,13 @@
 # Backend PostgreSQL preparado para staging
 
-Este commit prepara la conexión. No crea un proyecto Supabase, no aplica migraciones externas y no despliega. Usar solo cuentas y datos ficticios nuevos.
+El proyecto nuevo `ayni-aula-staging` ya existe y sus 68 migraciones están aplicadas. Aún no hay despliegue ni pruebas reales con dos cuentas docentes. Usar solo cuentas y datos ficticios nuevos.
 
 ## Modos
 
 | Modo | Base | Identidad | Archivos |
 | --- | --- | --- | --- |
 | Local | `AYNI_DB_MODE=local`, PGlite | `AYNI_AUTH_MODE=local`, `AYNI_LOCAL_TEACHER_ID` | Disco local, solo loopback |
-| Staging | `AYNI_DB_MODE=postgres`, PostgreSQL Supabase | `AYNI_AUTH_MODE=supabase`, token comprobado por petición | Storage pendiente; fotos y adjuntos devuelven 503 |
+| Staging | `AYNI_DB_MODE=postgres`, PostgreSQL Supabase | `AYNI_AUTH_MODE=supabase`, token comprobado por petición | Buckets privados mediante adaptadores de servidor; devuelven 503 si falta configuración |
 
 El servidor rechaza una combinación distinta. El test HTTP de Auth puede combinar Auth simulado y PGlite únicamente con `NODE_ENV=test` y `AYNI_TEST_AUTH_PGLITE=1`; nunca se usa en staging.
 
@@ -23,7 +23,7 @@ El acceso por DNI conserva un refresh token de Supabase en cookie HTTP-only firm
 - **B. Data API directa:** solo `SELECT` autenticado en las tablas curriculares y filas propias permitidas por `202609240010_rls_hardening.sql`. Ayni usa su API propia para los flujos; la Data API es una superficie de lectura restringida por RLS.
 - **C. Sin acceso cliente directo:** `INSERT`, `UPDATE`, `DELETE` de datos docentes y alumnos, `ai_pending_generations`, funciones privadas no autorizadas y escritura en Storage. Nunca se envían `SUPABASE_DB_URL`, rol de servicio o clave OpenAI al navegador.
 
-La descarga DOCX requiere la sesión y vuelve a consultar la propiedad. `/api/export` y `/api/documents/*/save-local` no están disponibles en staging. Logos, fotos, adjuntos de entrevista y lectura de multimedia esperan el adaptador Storage; no se guardan silenciosamente en el disco del servidor. Las observaciones de texto siguen disponibles.
+La descarga DOCX requiere la sesión y vuelve a consultar la propiedad. `/api/export` y `/api/documents/*/save-local` no están disponibles en staging. Logos, fotos, adjuntos de entrevista y lectura de multimedia usan buckets privados cuando `AYNI_SUPABASE_SERVICE_ROLE_KEY` está configurada; no se guardan en el disco del servidor. La API Next usa la misma URL HTTPS que la interfaz; no configurar `NEXT_PUBLIC_AYNI_API_URL` para que las llamadas sean relativas.
 
 ## Migraciones y pruebas
 
@@ -35,7 +35,7 @@ Aplicar `supabase/migrations/*.sql` en orden lexicográfico en un proyecto vací
 
 1. URL del proyecto Supabase (`AYNI_SUPABASE_URL`) y publishable key (`AYNI_SUPABASE_PUBLISHABLE_KEY`).
 2. URL PostgreSQL del proyecto (`SUPABASE_DB_URL`) con usuario backend de escritura, obtenida de **Connect**. Entregarla por el mecanismo privado de variables de entorno, no en chat ni en el repositorio.
-3. Origen HTTPS exacto de la interfaz (`AYNI_ALLOWED_ORIGIN`) y URL pública HTTPS de la API (`NEXT_PUBLIC_AYNI_API_URL`), bajo el mismo sitio para la cookie.
+3. Origen HTTPS exacto de la interfaz (`AYNI_ALLOWED_ORIGIN`). En Vercel la API usa el mismo origen: dejar `NEXT_PUBLIC_AYNI_API_URL` sin configurar.
 4. Dos cuentas docentes ficticias de staging, una por aula, para comprobar Auth, renovación de sesión y RLS. La herramienta administrativa de alta/reinicio usa `AYNI_SUPABASE_SERVICE_ROLE_KEY` en su terminal privada; el adaptador PostgreSQL no necesita esa clave para consultas normales.
 
 Rollback del código: volver al commit anterior y usar `AYNI_DB_MODE=local`/`AYNI_AUTH_MODE=local` en desarrollo. No revertir migraciones aplicadas editando archivos históricos; usar una migración compensatoria o restaurar un respaldo probado.

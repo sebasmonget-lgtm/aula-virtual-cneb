@@ -1,8 +1,9 @@
+import path from "node:path";
 import { readFile } from "node:fs/promises";
 import JSZip from "jszip";
 import { buildAnnualPlanPresentation } from "./annual-plan-presentation.mjs";
 
-const templateUrl = new URL("../../assets/templates/plan-anual-inicial-cneb-v4.docx", import.meta.url);
+const templateUrl = path.join(process.cwd(), "assets/templates/plan-anual-inicial-cneb-v4.docx");
 const text = (value) => typeof value === "string" ? value.trim() : "";
 const list = (value) => Array.isArray(value) ? value.map(text).filter(Boolean) : [];
 const joined = (value) => list(value).join("; ");

@@ -1,6 +1,7 @@
+import path from "node:path";
 import { insertCoverQuickView, renderUnifiedWord, removeParagraphsContaining, replaceWordText, xmlEscape } from "./unified-word-template.mjs";
 
-const templateUrl = new URL("../../assets/templates/evaluacion-diagnostica-inicial-unificada-v1.docx", import.meta.url);
+const templateUrl = path.join(process.cwd(), "assets/templates/evaluacion-diagnostica-inicial-unificada-v1.docx");
 const competencyFields = [
   ["PS_IDENTIDAD", "CONSTRUYE_IDENTIDAD"], ["PS_CONVIVE", "CONVIVE"],
   ["PSICO_MOTRICIDAD", "MOTRICIDAD"], ["COM_ORAL", "ORALIDAD"],

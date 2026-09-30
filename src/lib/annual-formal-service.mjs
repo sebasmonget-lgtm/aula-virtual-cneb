@@ -1,3 +1,4 @@
+import path from "node:path";
 import { readFile } from "node:fs/promises";
 import JSZip from "jszip";
 import { ANNUAL_PREPLAN_FORMAT, AnnualPreplanError, ageFilteredAnnualCurriculum, validateAnnualPreplan } from "./annual-preplan-service.mjs";
@@ -7,7 +8,7 @@ import { buildProviderRequest } from "./ai-generation-v4.mjs";
 import { loadAnnualPreplanSkill } from "./annual-plan-skill.mjs";
 import { neutralizeAssessmentText } from "./assessment-v4-service.mjs";
 
-const templateUrl = new URL("../../assets/templates/planificacion-anual-inicial-unificada-v1.docx", import.meta.url);
+const templateUrl = path.join(process.cwd(), "assets/templates/planificacion-anual-inicial-unificada-v1.docx");
 const formalText = { type: "string", pattern: "^[\\s\\S]{1,1000}$" };
 const formalList = (maxItems) => ({ type: "array", maxItems, items: formalText });
 const detailsSchema = { type: "object", additionalProperties: false,

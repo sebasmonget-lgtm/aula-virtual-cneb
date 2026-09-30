@@ -40,10 +40,15 @@ export async function loadInstitutionLogoForDocuments(db, teacherId, assetsRoot)
     join institution_assets ia on ia.id=ip.logo_asset_id and ia.owner_user_id=ip.owner_user_id and ia.type='logo'
     where ip.owner_user_id=$1`, [teacherId])).rows[0];
   if (!row) return null;
-  const target = path.resolve(path.dirname(assetsRoot), "..", row.original_path);
-  if (!target.startsWith(path.resolve(assetsRoot) + path.sep)) throw new Error("Ruta de logo no permitida.");
   try {
-    const bytes = await readFile(target);
+    let bytes;
+    if (typeof assetsRoot === "string") {
+      const target = path.resolve(path.dirname(assetsRoot), "..", row.original_path);
+      if (!target.startsWith(path.resolve(assetsRoot) + path.sep)) throw new Error("Ruta de logo no permitida.");
+      bytes = await readFile(target);
+    } else {
+      bytes = await assetsRoot.read(row.original_path, teacherId);
+    }
     return await sharp(bytes, { limitInputPixels: 16_000_000 }).resize(384, 384,
       { fit: "contain", background: "#ffffff" }).png({ compressionLevel: 9 }).toBuffer();
   } catch {

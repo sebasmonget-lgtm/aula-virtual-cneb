@@ -7,7 +7,7 @@ import { tmpdir } from "node:os";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 
-const inventoryUrl = new URL("../../docs/auditoria-biblioteca-fichas-inventario.json", import.meta.url);
+const inventoryUrl = path.join(process.cwd(), "docs/auditoria-biblioteca-fichas-inventario.json");
 const defaultRoot = () => process.env.AYNI_SHEET_LIBRARY_DIR || path.join(os.homedir(), "Documents", "plantillas ayni", "Fichas_MINEDU_JSON_Ayni");
 const printableCompetencies = new Set(["MAT_CANTIDAD", "MAT_FORMA", "CYT_INDAGA", "COM_LECTURA", "COM_ESCRITURA"]);
 const stop = new Set(["para", "como", "sobre", "entre", "desde", "donde", "cuando", "hacen", "hacer", "nuestro", "nuestra", "niños", "niñas", "taller", "proyecto", "actividad", "ficha", "observar", "representar"]);

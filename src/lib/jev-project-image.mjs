@@ -1,12 +1,11 @@
 import { stat } from "node:fs/promises";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { searchProjectImages } from "./image-library.mjs";
 import { anonymousDecisionText } from "./jev-competency-suggestion.mjs";
 import { createJevOpenRouterDecision } from "./jev-openrouter-decision.mjs";
 import { loadKnowledgeBaseV4 } from "./knowledge-base-v4.mjs";
 
-const libraryRoot = fileURLToPath(new URL("../../assets/project-images/", import.meta.url));
+const libraryRoot = path.join(process.cwd(), "assets/project-images");
 export const NO_IMAGE = "SIN_COINCIDENCIA";
 
 export async function eligibleProjectImages(project, age, { usedIds = [], search = searchProjectImages,

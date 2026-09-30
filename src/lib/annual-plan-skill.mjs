@@ -1,12 +1,13 @@
+import path from "node:path";
 import { readFile } from "node:fs/promises";
 
 // Fixed, repository-owned files: no path or instruction can be supplied by a teacher request.
 const SKILL_FILES = [
-  ["SKILL.md", new URL("../../skills/crear-plan-anual/SKILL.md", import.meta.url)],
-  ["references/lectura-del-contexto.md", new URL("../../skills/crear-plan-anual/references/lectura-del-contexto.md", import.meta.url)],
-  ["references/criterios-cneb.md", new URL("../../skills/crear-plan-anual/references/criterios-cneb.md", import.meta.url)],
-  ["references/calendario-pedagogico.md", new URL("../../skills/crear-plan-anual/references/calendario-pedagogico.md", import.meta.url)],
-  ["references/estructura-plan-maestro.md", new URL("../../skills/crear-plan-anual/references/estructura-plan-maestro.md", import.meta.url)],
+  ["SKILL.md", path.join(process.cwd(), "skills/crear-plan-anual/SKILL.md")],
+  ["references/lectura-del-contexto.md", path.join(process.cwd(), "skills/crear-plan-anual/references/lectura-del-contexto.md")],
+  ["references/criterios-cneb.md", path.join(process.cwd(), "skills/crear-plan-anual/references/criterios-cneb.md")],
+  ["references/calendario-pedagogico.md", path.join(process.cwd(), "skills/crear-plan-anual/references/calendario-pedagogico.md")],
+  ["references/estructura-plan-maestro.md", path.join(process.cwd(), "skills/crear-plan-anual/references/estructura-plan-maestro.md")],
 ];
 
 export async function loadAnnualPlanSkill() {
@@ -23,5 +24,5 @@ export async function loadAnnualPreplanSkill() {
   const files = ["SKILL.md", "references/lectura-del-contexto.md", "references/criterios-cneb.md",
     "references/calendario-pedagogico.md", "references/preplan-editable.md"];
   return (await Promise.all(files.map(async (name) =>
-    `## ${name}\n${(await readFile(new URL(`../../skills/crear-plan-anual/${name}`, import.meta.url), "utf8")).trim()}`))).join("\n\n");
+    `## ${name}\n${(await readFile(path.join(process.cwd(), `skills/crear-plan-anual/${name}`), "utf8")).trim()}`))).join("\n\n");
 }

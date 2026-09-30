@@ -1,10 +1,11 @@
+import path from "node:path";
 import { readFile } from "node:fs/promises";
 
 const files = [
-  ["SKILL.md", new URL("../../skills/crear-proyecto-unidad/SKILL.md", import.meta.url)],
-  ["references/fuentes-cneb.md", new URL("../../skills/crear-proyecto-unidad/references/fuentes-cneb.md", import.meta.url)],
-  ["references/contrato-ruta.md", new URL("../../skills/crear-proyecto-unidad/references/contrato-ruta.md", import.meta.url)],
-  ["references/plantilla-unificada.md", new URL("../../skills/crear-proyecto-unidad/references/plantilla-unificada.md", import.meta.url)],
+  ["SKILL.md", path.join(process.cwd(), "skills/crear-proyecto-unidad/SKILL.md")],
+  ["references/fuentes-cneb.md", path.join(process.cwd(), "skills/crear-proyecto-unidad/references/fuentes-cneb.md")],
+  ["references/contrato-ruta.md", path.join(process.cwd(), "skills/crear-proyecto-unidad/references/contrato-ruta.md")],
+  ["references/plantilla-unificada.md", path.join(process.cwd(), "skills/crear-proyecto-unidad/references/plantilla-unificada.md")],
 ];
 
 export async function loadLearningExperienceSkill() {

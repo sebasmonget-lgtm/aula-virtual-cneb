@@ -1,9 +1,10 @@
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
+import path from "node:path";
 import { loadKnowledgeBaseV4 } from "./knowledge-base-v4.mjs";
 import { createCurrentV2 } from "../../experiments/jev-competency-classifier/src/current-v2.mjs";
 
-const ROOT = new URL("../../experiments/jev-competency-classifier/", import.meta.url);
+const ROOT = path.join(process.cwd(), "experiments/jev-competency-classifier");
 const PROMPT_SHA256 = "271b4b8298a5b8c2132160f7514d69c45f8f59cf686aa2a2a2edd0892cbd0867";
 const SOURCE_SHA256 = "601254e3622cd26db927c465f153f2be9be9e54b27f223c5443bf3773c199d83";
 export const OBSERVATION_V24_VERSION = "CURRENT_V2_4_RAW";
@@ -16,9 +17,9 @@ export function observationV24Enabled(env = process.env) {
 export async function createObservationV24Classifier({ apiKey = process.env.OPENROUTER_API_KEY,
   fetchImpl = fetch } = {}) {
   const [promptBytes, sourceBytes, pricingBytes, kb] = await Promise.all([
-    readFile(new URL("config/current-v2-4-prompt.json", ROOT)),
-    readFile(new URL("src/current-v2.mjs", ROOT)),
-    readFile(new URL("config/pricing-openrouter.json", ROOT)), loadKnowledgeBaseV4(),
+    readFile(path.join(ROOT, "config/current-v2-4-prompt.json")),
+    readFile(path.join(ROOT, "src/current-v2.mjs")),
+    readFile(path.join(ROOT, "config/pricing-openrouter.json")), loadKnowledgeBaseV4(),
   ]);
   if (createHash("sha256").update(promptBytes).digest("hex") !== PROMPT_SHA256 ||
       createHash("sha256").update(sourceBytes).digest("hex") !== SOURCE_SHA256)

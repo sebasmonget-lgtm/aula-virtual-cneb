@@ -1,8 +1,7 @@
 import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "biblioteca-talleres");
+const root = path.join(process.cwd(), "biblioteca-talleres");
 const ages = [3, 4, 5];
 const families = ["grafico-plastico", "psicomotricidad"];
 

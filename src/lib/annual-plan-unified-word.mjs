@@ -1,3 +1,4 @@
+import path from "node:path";
 import { buildFlexibleAnnualSchedule, buildEditableAnnualSchedule } from "./annual-plan-calendar.mjs";
 import { readFile } from "node:fs/promises";
 import { eligibleProjectImages } from "./jev-project-image.mjs";
@@ -5,7 +6,7 @@ import { ANNUAL_PLAN_TEMPLATE_FORMAT } from "./annual-plan-contract.mjs";
 import { annualFlexibleValues } from "./annual-plan-flexible-word.mjs";
 import { removePageBreakAfterTable, removePageBreakBeforeTable, removeParagraphsContaining, renderUnifiedWord, replaceWordText, xmlEscape } from "./unified-word-template.mjs";
 
-const templateUrl = new URL("../../assets/templates/planificacion-anual-inicial-unificada-v1.docx", import.meta.url);
+const templateUrl = path.join(process.cwd(), "assets/templates/planificacion-anual-inicial-unificada-v1.docx");
 const months = ["MARZO", "ABRIL", "MAYO", "JUNIO", "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"];
 const plainText = (xml) => [...xml.matchAll(/<w:t(?:\s[^>]*)?>([\s\S]*?)<\/w:t>/g)].map((match) => match[1]).join("");
 

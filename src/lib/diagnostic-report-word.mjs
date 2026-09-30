@@ -1,9 +1,10 @@
+import path from "node:path";
 import { readFile } from "node:fs/promises";
 import JSZip from "jszip";
 import sharp from "sharp";
 import { neutralizeAssessmentText } from "./assessment-v4-service.mjs";
 
-const templateUrl = new URL("../../assets/templates/evaluacion-diagnostica-inicial-ayni.docx", import.meta.url);
+const templateUrl = path.join(process.cwd(), "assets/templates/evaluacion-diagnostica-inicial-ayni.docx");
 const clean = (value) => typeof value === "string" ? value.trim() : "";
 const xmlEscape = (value) => String(value ?? "").replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "")
   .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");

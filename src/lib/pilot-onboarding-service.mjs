@@ -16,7 +16,7 @@ export function validatePilotSetup(value) {
   return result;
 }
 
-export async function createPilotClassroom(db, teacherId, input, { assetsDir } = {}) {
+export async function createPilotClassroom(db, teacherId, input, { assetsDir, logoStorage } = {}) {
   const value = validatePilotSetup(input);
   if (input?.createLogo && input?.logoUpload) throw new TypeError("Elige subir un logo o crearlo con iniciales.");
   const logoBytes = input?.logoUpload ? await normalizeInstitutionLogoUpload(input.logoUpload)
@@ -24,7 +24,7 @@ export async function createPilotClassroom(db, teacherId, input, { assetsDir } =
   const logoExtension = input?.createLogo ? "svg" : "png";
   const logoMimeType = input?.createLogo ? "image/svg+xml" : "image/png";
   const logoSize = input?.createLogo ? 512 : 384;
-  if (logoBytes && !assetsDir) throw new Error("No se puede guardar el logo en esta instalación.");
+  if (logoBytes && !assetsDir && !logoStorage) throw new Error("No se puede guardar el logo en esta instalación.");
   const logoAssetId = logoBytes ? randomUUID() : null;
   let createdLogoPath = null;
   await db.exec("begin");
@@ -44,10 +44,16 @@ export async function createPilotClassroom(db, teacherId, input, { assetsDir } =
       institution_code=excluded.institution_code,district=excluded.district,ugel=excluded.ugel,director_name=excluded.director_name,updated_at=now()`,
     [randomUUID(), teacherId, value.institutionName, value.institutionCode, value.district, value.ugel, value.directorName]);
     if (logoBytes) {
-      const relativePath = `.local/assets/${logoAssetId}.${logoExtension}`;
-      const filePath = path.join(assetsDir, `${logoAssetId}.${logoExtension}`);
-      await writeFile(filePath, logoBytes, { flag: "wx", mode: 0o600 });
-      createdLogoPath = filePath;
+      let relativePath;
+      if (logoStorage) {
+        relativePath = await logoStorage.save({ teacherId, assetId: logoAssetId, mimeType: logoMimeType, bytes: logoBytes });
+        createdLogoPath = relativePath;
+      } else {
+        relativePath = `.local/assets/${logoAssetId}.${logoExtension}`;
+        const filePath = path.join(assetsDir, `${logoAssetId}.${logoExtension}`);
+        await writeFile(filePath, logoBytes, { flag: "wx", mode: 0o600 });
+        createdLogoPath = filePath;
+      }
       await db.query(`insert into institution_assets
         (id, owner_user_id, type, original_path, normalized_path, mime_type, width, height)
         values ($1, $2, 'logo', $3, $3, $4, $5, $5)`, [logoAssetId, teacherId, relativePath, logoMimeType, logoSize]);
@@ -58,7 +64,10 @@ export async function createPilotClassroom(db, teacherId, input, { assetsDir } =
     return { classroomId, schoolYearId: actualYear.id };
   } catch (error) {
     await db.exec("rollback").catch(() => {});
-    if (createdLogoPath) await unlink(createdLogoPath).catch(() => {});
+    if (createdLogoPath) {
+      if (logoStorage) await logoStorage.remove(createdLogoPath, teacherId).catch(() => {});
+      else await unlink(createdLogoPath).catch(() => {});
+    }
     throw error;
   }
 }

@@ -1,6 +1,7 @@
+import path from "node:path";
 import { insertCoverQuickView, removePageBreakAfterTable, removeParagraphsContaining, renderUnifiedWord, replaceWordText, xmlEscape } from "./unified-word-template.mjs";
 
-const templateUrl = new URL("../../assets/templates/proyecto-unidad-inicial-unificada-v1.docx", import.meta.url);
+const templateUrl = path.join(process.cwd(), "assets/templates/proyecto-unidad-inicial-unificada-v1.docx");
 const clean = (value) => typeof value === "string" ? value.trim() : "";
 const list = (value) => Array.isArray(value) ? value.map(clean).filter(Boolean).join("; ") : "";
 const dateLabel = (value) => /^\d{4}-\d{2}-\d{2}$/.test(value ?? "") ? `${value.slice(8)}/${value.slice(5, 7)}/${value.slice(0, 4)}` : "";

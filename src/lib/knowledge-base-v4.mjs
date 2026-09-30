@@ -1,14 +1,9 @@
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
-import { fileURLToPath } from "node:url";
 import path from "node:path";
 
-export const KNOWLEDGE_BASE_V4_0_ROOT = fileURLToPath(
-  new URL("../../knowledge/cneb-initial-3-5/v4.0.0/", import.meta.url),
-);
-export const KNOWLEDGE_BASE_V4_ROOT = fileURLToPath(
-  new URL("../../knowledge/cneb-initial-3-5/v4.1.0/", import.meta.url),
-);
+export const KNOWLEDGE_BASE_V4_0_ROOT = path.join(process.cwd(), "knowledge/cneb-initial-3-5/v4.0.0");
+export const KNOWLEDGE_BASE_V4_ROOT = path.join(process.cwd(), "knowledge/cneb-initial-3-5/v4.1.0");
 const FILES = {
   policy: "06_retrieval/retrieval_policy.json",
   units: "06_retrieval/combined_knowledge_units.jsonl",

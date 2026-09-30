@@ -1,8 +1,9 @@
+import path from "node:path";
 import { expandTableRow, insertCoverQuickView, removePageBreakAfterTable, removeParagraphsContaining, renderUnifiedWord, replaceWordText, xmlEscape } from "./unified-word-template.mjs";
 import { availableSheets, renderSheetPages } from "./workshop-sheet-catalog.mjs";
 
-const oldTemplateUrl = new URL("../../assets/templates/actividad-aprendizaje-inicial-ayni-v2.docx", import.meta.url);
-const workshopTemplateUrl = new URL("../../assets/templates/actividad-aprendizaje-inicial-con-taller-v1.docx", import.meta.url);
+const oldTemplateUrl = path.join(process.cwd(), "assets/templates/actividad-aprendizaje-inicial-ayni-v2.docx");
+const workshopTemplateUrl = path.join(process.cwd(), "assets/templates/actividad-aprendizaje-inicial-con-taller-v1.docx");
 const clean = (value) => typeof value === "string" ? value.trim() : "";
 const list = (value) => Array.isArray(value) ? value.map(clean).filter(Boolean).join("; ") : "";
 const xmlText = (xml) => [...xml.matchAll(/<w:t(?:\s[^>]*)?>([\s\S]*?)<\/w:t>/g)].map((match) => match[1]).join("");

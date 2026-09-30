@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
-import { fileURLToPath } from "node:url";
+import path from "node:path";
 
-export const DEFAULT_DIAGNOSTIC_CATALOG_PATH = fileURLToPath(new URL("../../knowledge/diagnostic-experiences/catalog.json", import.meta.url));
+export const DEFAULT_DIAGNOSTIC_CATALOG_PATH = path.join(process.cwd(), "knowledge/diagnostic-experiences/catalog.json");
 
 export function validateDiagnosticCatalog(document, competencyCards) {
   if (!document || typeof document.version !== "string" || !/^[a-z0-9.-]+$/i.test(document.version)

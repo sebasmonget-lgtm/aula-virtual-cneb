@@ -1,10 +1,11 @@
+import path from "node:path";
 import { readFile } from "node:fs/promises";
 import JSZip from "jszip";
 import sharp from "sharp";
 import { buildAnnualProjectSchedule } from "./annual-plan-schedule.mjs";
 import { ANNUAL_PLAN_LEGACY_TEMPLATE_FORMAT } from "./annual-plan-contract.mjs";
 
-const templateUrl = new URL("../../assets/templates/planificacion-anual-inicial-redisenada.docx", import.meta.url);
+const templateUrl = path.join(process.cwd(), "assets/templates/planificacion-anual-inicial-redisenada.docx");
 const MONTHS = ["MARZO", "ABRIL", "MAYO", "JUNIO", "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"];
 const text = (value) => typeof value === "string" ? value.trim() : "";
 const list = (value) => Array.isArray(value) ? value.map(text).filter(Boolean) : [];

@@ -1,5 +1,15 @@
 # Errores y soluciones
 
+## 2026-09-30 — Rutas de plantillas en el bundle de Next
+
+**Síntoma.** La página de Next compilaba, pero `/health` y `/api/auth/config` respondieron 500 en una prueba `next start` con identidad local.
+
+**Causa y alcance.** Primero, rutas relativas a `import.meta.url` de módulos empaquetados ya no apuntaban al árbol fuente. Tras corregirlas, el servidor de producción rechazó deliberadamente `AYNI_AUTH_MODE=local`; esa protección no se desactivó. El segundo 500 no demuestra un fallo de staging, que aún carece de la conexión PostgreSQL y Auth real para probarlo.
+
+**Corrección comprobada.** Recursos curriculares, plantillas, guías e inventario se resuelven desde la raíz y se incluyen en el trace de Next. El build Next, typecheck, lint y las pruebas locales de documentos, plan anual y adaptadores pasaron. La invocación directa del puente con identidad local en `NODE_ENV=test` devolvió 200 en `/health`, `/api/auth/config` y `/api/auth/session`; todavía falta repetir en la Function real con PostgreSQL/Auth y descargar un Word.
+
+**Prevención.** Ejecutar smoke en el runtime final con sus variables reales; una compilación exitosa ni una prueba local demuestran que los archivos empaquetados o la autenticación de staging funcionan.
+
 ## 2026-09-29 — Fechas discordantes en el diagnóstico de QA
 
 **Síntoma.** El Word mostraba «Período de recojo: 16/03/2026–27/03/2026» y, más adelante, «Registros revisados: 28/09/2026». La diferencia no estaba señalada.

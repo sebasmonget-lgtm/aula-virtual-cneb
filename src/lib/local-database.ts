@@ -137,7 +137,8 @@ export type FamilyInterviewStatus = "not_started" | "partial" | "confirmed";
 export type ObservationRecommendationState = "pending" | "suggested" | "privacy_blocked" | "missing_text" | "insufficient_information" | "unavailable" | "teacher_confirmed" | "teacher_unclassified";
 export type SpontaneousObservation = { id: string; student_id: string; context_label: string; observation_text: string | null; support_status: "yes" | "no" | "unknown" | null; observed_at: string; classification_status: "pending" | "classified" | "needs_review"; classification_source: "jev" | "openai" | "teacher" | null; classifier_version: string | null; classifier_status: "pending" | "suggested" | "abstained" | "missing_text" | "failed" | "disabled" | null; recommendation_state: ObservationRecommendationState; competency_v4_id: string | null; secondary_competency_v4_id: string | null; competency_v4_ids: string[]; suggested_competency_v4_ids: string[]; has_media: boolean; media_mime_type: string | null };
 
-export const localDatabaseApiUrl = process.env.NEXT_PUBLIC_AYNI_API_URL || process.env.NEXT_PUBLIC_LOCAL_DATABASE_URL || "http://127.0.0.1:8788";
+export const localDatabaseApiUrl = process.env.NEXT_PUBLIC_AYNI_API_URL || process.env.NEXT_PUBLIC_LOCAL_DATABASE_URL ||
+  (process.env.NODE_ENV === "production" ? "" : "http://127.0.0.1:8788");
 const apiUrl = localDatabaseApiUrl;
 
 export async function loadLocalDashboard(signal?: AbortSignal): Promise<LocalDashboard> {

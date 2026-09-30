@@ -1,13 +1,14 @@
+import path from "node:path";
 import { readFile } from "node:fs/promises";
 
 // Only repository-owned files can become model instructions.
 const SKILL_FILES = [
-  ["SKILL.md", new URL("../../skills/crear-evaluacion-diagnostica/SKILL.md", import.meta.url)],
-  ["references/fuentes-y-criterio.md", new URL("../../skills/crear-evaluacion-diagnostica/references/fuentes-y-criterio.md", import.meta.url)],
-  ["references/lectura-pedagogica-cneb.md", new URL("../../skills/crear-evaluacion-diagnostica/references/lectura-pedagogica-cneb.md", import.meta.url)],
-  ["references/estructura-del-borrador.md", new URL("../../skills/crear-evaluacion-diagnostica/references/estructura-del-borrador.md", import.meta.url)],
-  ["references/prioridades-del-ano.md", new URL("../../skills/crear-evaluacion-diagnostica/references/prioridades-del-ano.md", import.meta.url)],
-  ["references/comentario-individual.md", new URL("../../skills/crear-evaluacion-diagnostica/references/comentario-individual.md", import.meta.url)],
+  ["SKILL.md", path.join(process.cwd(), "skills/crear-evaluacion-diagnostica/SKILL.md")],
+  ["references/fuentes-y-criterio.md", path.join(process.cwd(), "skills/crear-evaluacion-diagnostica/references/fuentes-y-criterio.md")],
+  ["references/lectura-pedagogica-cneb.md", path.join(process.cwd(), "skills/crear-evaluacion-diagnostica/references/lectura-pedagogica-cneb.md")],
+  ["references/estructura-del-borrador.md", path.join(process.cwd(), "skills/crear-evaluacion-diagnostica/references/estructura-del-borrador.md")],
+  ["references/prioridades-del-ano.md", path.join(process.cwd(), "skills/crear-evaluacion-diagnostica/references/prioridades-del-ano.md")],
+  ["references/comentario-individual.md", path.join(process.cwd(), "skills/crear-evaluacion-diagnostica/references/comentario-individual.md")],
 ];
 
 export async function loadDiagnosticEvaluationSkill() {

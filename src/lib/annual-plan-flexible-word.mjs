@@ -1,10 +1,11 @@
+import path from "node:path";
 import { readFile } from "node:fs/promises";
 import JSZip from "jszip";
 import sharp from "sharp";
 import { buildFlexibleAnnualSchedule } from "./annual-plan-calendar.mjs";
 import { ANNUAL_PLAN_TEMPLATE_FORMAT } from "./annual-plan-contract.mjs";
 
-const templateUrl = new URL("../../assets/templates/planificacion-anual-inicial-flexible.docx", import.meta.url);
+const templateUrl = path.join(process.cwd(), "assets/templates/planificacion-anual-inicial-flexible.docx");
 const text = (value) => typeof value === "string" ? value.trim() : "";
 const list = (value) => Array.isArray(value) ? value.map(text).filter(Boolean) : [];
 const joined = (value) => list(value).map((item) => item.replace(/[.;]+$/u, "")).join("; ");

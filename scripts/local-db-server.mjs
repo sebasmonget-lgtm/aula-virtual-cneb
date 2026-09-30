@@ -1,9 +1,9 @@
 import { createServer } from "node:http";
+import { AsyncLocalStorage } from "node:async_hooks";
 import { createHash, randomUUID } from "node:crypto";
 import { mkdir, readFile, readdir, unlink, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { createDatabase } from "./database-adapter.mjs";
 import { resolveDailyState } from "../src/lib/daily-state.mjs";
 import { teacherTodayActions } from "../src/lib/teacher-today-actions.mjs";
@@ -73,14 +73,15 @@ import { availableSheets } from "../src/lib/workshop-sheet-catalog.mjs";
 import { activeWorkshopForProject, insertDailyPair, linkedWorkshopDraft, updateDailyPair } from "./daily-workshop-persistence.mjs";
 import { createPendingAIGenerationsStore } from "../src/lib/pending-ai-generations-store.mjs";
 import { createPilotClassroom, importStudentsForTeacher, parseStudentCsv } from "../src/lib/pilot-onboarding-service.mjs";
-import { createLocalPrivateEvidenceStorage } from "../src/lib/private-evidence-storage.mjs";
+import { createLocalPrivateEvidenceStorage, createSupabasePrivateEvidenceStorage } from "../src/lib/private-evidence-storage.mjs";
 import { createSupabasePrivateObservationStorage } from "../src/lib/private-observation-storage.mjs";
 import { validateShortAudio, transcribeAndPolishAudio, AUDIO_MIME_TYPES } from "../src/lib/audio-note-service.mjs";
 import { buildClassifierOptions } from "../src/lib/openai-competency-classifier.mjs";
 import { createJevCompetencySuggester, anonymousDecisionText } from "../src/lib/jev-competency-suggestion.mjs";
 import { jevFeatureEnabled } from "../src/lib/jev-openrouter-decision.mjs";
 import { eligibleProjectImages, publicProjectImage, suggestProjectImage } from "../src/lib/jev-project-image.mjs";
-import { createLocalPrivateInterviewStorage } from "../src/lib/private-interview-storage.mjs";
+import { createLocalPrivateInterviewStorage, createSupabasePrivateInterviewStorage } from "../src/lib/private-interview-storage.mjs";
+import { createSupabasePrivateLogoStorage } from "../src/lib/private-logo-storage.mjs";
 import { recordOperationalEvent } from "../src/lib/operational-events.mjs";
 import { loadStudentTrajectory } from "../src/lib/student-trajectory-service.mjs";
 import { withAiUsageContext, loadTeacherAiUsage } from "../src/lib/ai-usage-service.mjs";
@@ -96,24 +97,27 @@ import { createRequestAuth, RequestAuthError } from "./request-auth.mjs";
 import { authorizeRequestSelectors, RequestAccessError } from "./request-authorization.mjs";
 import { loadLibraryResources, publicLibraryResource, saveLibraryResourceToDownloads } from "./library-resources.mjs";
 
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const root = process.cwd();
 const dataDir = process.env.AYNI_LOCAL_DATA_DIR ? path.resolve(process.env.AYNI_LOCAL_DATA_DIR) : path.join(root, ".local", "pgdata");
 const migrationsDir = path.join(root, "local-db", "migrations");
 const assetsDir = path.join(root, ".local", "assets");
 const evidenceAssetsDir = path.join(assetsDir, "evidences");
-const evidenceStorage = createLocalPrivateEvidenceStorage(evidenceAssetsDir);
-const interviewStorage = createLocalPrivateInterviewStorage(path.join(assetsDir, "family-interviews"));
 const port = Number(process.env.AYNI_LOCAL_DB_PORT ?? 8788);
 const authMode = process.env.AYNI_AUTH_MODE ?? "local";
 const dbMode = process.env.AYNI_DB_MODE ?? (authMode === "local" ? "local" : "postgres");
+const storageConfig = { url: process.env.AYNI_SUPABASE_URL, serviceRoleKey: process.env.AYNI_SUPABASE_SERVICE_ROLE_KEY };
+const evidenceStorage = dbMode === "local" ? createLocalPrivateEvidenceStorage(evidenceAssetsDir)
+  : process.env.AYNI_SUPABASE_SERVICE_ROLE_KEY ? createSupabasePrivateEvidenceStorage(storageConfig) : null;
+const interviewStorage = dbMode === "local" ? createLocalPrivateInterviewStorage(path.join(assetsDir, "family-interviews"))
+  : process.env.AYNI_SUPABASE_SERVICE_ROLE_KEY ? createSupabasePrivateInterviewStorage(storageConfig) : null;
+const logoStorage = dbMode === "local" ? null
+  : process.env.AYNI_SUPABASE_SERVICE_ROLE_KEY ? createSupabasePrivateLogoStorage(storageConfig) : null;
 const ordinaryStorage = dbMode === "local" ? evidenceStorage : process.env.AYNI_SUPABASE_SERVICE_ROLE_KEY
-  ? createSupabasePrivateObservationStorage({ url: process.env.AYNI_SUPABASE_URL,
-    serviceRoleKey: process.env.AYNI_SUPABASE_SERVICE_ROLE_KEY }) : null;
+  ? createSupabasePrivateObservationStorage(storageConfig) : null;
 const documentArtifactStorage = dbMode === "local"
   ? createLocalPrivateDocumentArtifactStorage(path.join(assetsDir,"document-artifacts"))
   : process.env.AYNI_SUPABASE_SERVICE_ROLE_KEY
-    ? createSupabasePrivateDocumentArtifactStorage({ url: process.env.AYNI_SUPABASE_URL,
-      serviceRoleKey: process.env.AYNI_SUPABASE_SERVICE_ROLE_KEY }) : null;
+    ? createSupabasePrivateDocumentArtifactStorage(storageConfig) : null;
 const curricularReviewEnabled = process.env.AYNI_CURRICULAR_REVIEW === "1";
 const testAuthWithPglite = process.env.NODE_ENV === "test" && process.env.AYNI_TEST_AUTH_PGLITE === "1";
 if ((authMode === "local") !== (dbMode === "local") && !testAuthWithPglite) {
@@ -147,11 +151,20 @@ const exportTables = [
   "class_schedule_entries", "daily_execution_logs", "attendance_records", "calendar_exceptions", "calendar_blocks", "initial_stages", "project_slots", "school_calendar_versions", "school_calendar_holidays", "school_calendar_days", "classroom_calendar_overrides", "project_calendar_selections", "project_instructional_dates", "activity_schedule_changes", "evaluation_periods", "period_competency_scope", "period_closures", "period_closure_versions", "period_evaluation_map_versions", "period_evaluation_map_entries", "competency_display_labels", "classroom_period_reports", "period_closure_workflows", "student_context_snapshots", "annual_plans", "annual_plan_formal_content", "annual_plan_competencies", "annual_plan_changes", "competency_assessments", "competency_descriptive_conclusions", "family_reports",
 ];
 
-if (dbMode === "local") await mkdir(path.dirname(dataDir), { recursive: true });
-await mkdir(assetsDir, { recursive: true });
-await mkdir(evidenceAssetsDir, { recursive: true });
+if (dbMode === "local") {
+  await mkdir(path.dirname(dataDir), { recursive: true });
+  await mkdir(assetsDir, { recursive: true });
+  await mkdir(evidenceAssetsDir, { recursive: true });
+}
 const database = await createDatabase({ mode: dbMode, dataDir, connectionString: process.env.SUPABASE_DB_URL });
-const db = database.db;
+const requestDatabaseScope = new AsyncLocalStorage();
+const db = new Proxy(database.db, {
+  get(target, property) {
+    const active = requestDatabaseScope.getStore() ?? target;
+    const value = active[property];
+    return typeof value === "function" ? value.bind(active) : value;
+  },
+});
 if (dbMode === "local") await migrate();
 else {
   const schema = (await db.query(`select to_regclass('public.profiles') as profiles,
@@ -206,6 +219,7 @@ function queueDiagnosticClassification(id, studentId, teacherId) {
       recordOperationalEvent("diagnostic_classification_failed", { workflow: "diagnostic" });
     } finally { diagnosticClassificationInFlight.delete(id); }
   }));
+  return diagnosticClassificationQueue;
 }
 const pendingDiagnosticRows = observationV24Active && authMode === "local" ? (await db.query(`select o.id,o.student_id from diagnostic_spontaneous_observations o
   join classrooms c on c.id=o.classroom_id where c.teacher_id=$1 and o.classification_status='pending'
@@ -239,13 +253,15 @@ async function suggestOrdinaryObservation(teacherId, observationId) {
     provenance: { source: "jev", kb_version: kb.version, decision_metadata: decision.decision_metadata ?? null } });
 }
 function queueOrdinarySuggestion(teacherId, observationId) {
-  if (ordinarySuggestionInFlight.has(observationId)) return;
+  if (ordinarySuggestionInFlight.has(observationId)) return Promise.resolve();
   ordinarySuggestionInFlight.add(observationId);
-  setImmediate(async () => {
+  const work = async () => {
     try { await suggestOrdinaryObservation(teacherId, observationId); }
     catch { recordOperationalEvent("ordinary_suggestion_failed", { workflow: "ordinary_observation" }); }
     finally { ordinarySuggestionInFlight.delete(observationId); }
-  });
+  };
+  if (process.env.AYNI_SERVERLESS === "1") return work();
+  setImmediate(work);
 }
 
 async function migrate() {
@@ -679,7 +695,7 @@ const handleAssessmentMasterRoute = createAssessmentMasterRouteHandler({ db, tea
 const handleAssessmentRoute = createAssessmentRouteHandler({ db, annualPlanningContext, readJson, send, pending: pendingAIGenerations, metadataForAudit: safeAnnualGenerationMetadata, refreshStudentContext: refreshStudentContextSnapshot });
 const handleDescriptiveConclusionRoute = createDescriptiveConclusionRouteHandler({ db, annualPlanningContext, readJson, send, pending: pendingAIGenerations, metadataForAudit: safeAnnualGenerationMetadata, refreshStudentContext: refreshStudentContextSnapshot });
 const handleFamilyReportRoute = createFamilyReportRouteHandler({ db, teacherId, annualPlanningContext, readJson, send, pending: pendingAIGenerations, metadataForAudit: safeAnnualGenerationMetadata });
-const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStorage, mediaAvailable: dbMode === "local", readJson, send, pending: pendingAIGenerations, metadataForAudit: safeAnnualGenerationMetadata, refreshStudentContext: refreshStudentContextSnapshot });
+const handlePeriodEvaluationRoute = createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStorage, mediaAvailable: Boolean(evidenceStorage), readJson, send, pending: pendingAIGenerations, metadataForAudit: safeAnnualGenerationMetadata, refreshStudentContext: refreshStudentContextSnapshot });
 const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson, send });
 {
   const origin = request.headers.origin;
@@ -741,11 +757,11 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
     if (request.method === "POST" && url.pathname === "/api/pilot/setup") {
       try {
         const body = await readJson(request);
-        if (dbMode === "postgres" && (body.logoUpload || body.createLogo)) {
+        if (!logoStorage && dbMode === "postgres" && (body.logoUpload || body.createLogo)) {
           send(response, 503, { error: "La carga de logos estará disponible al conectar Storage." }, origin);
           return;
         }
-        await createPilotClassroom(db, teacherId, body, { assetsDir });
+        await createPilotClassroom(db, teacherId, body, { assetsDir, logoStorage });
         send(response, 201, { dashboard: await dashboard() }, origin);
       } catch (error) { send(response, httpStatusForError(error, 422), { error: publicErrorMessage(error) }, origin); }
       return;
@@ -826,7 +842,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       return;
     }
     if (request.method === "GET" && url.pathname.startsWith("/api/assets/")) {
-      if (dbMode === "postgres") { send(response, 503, { error: "Los logos estarán disponibles al conectar Storage." }, origin); return; }
+      if (dbMode === "postgres" && !logoStorage) { send(response, 503, { error: "Storage privado no configurado." }, origin); return; }
       const assetId = url.pathname.split("/").at(-1);
       const assetResult = await db.query(`
         select original_path, mime_type from institution_assets
@@ -836,17 +852,22 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         send(response, 404, { error: "Logo no encontrado." }, origin);
         return;
       }
-      const filePath = path.resolve(root, assetResult.rows[0].original_path);
-      if (!filePath.startsWith(path.resolve(assetsDir) + path.sep)) {
-        send(response, 403, { error: "Ruta de logo no permitida." }, origin);
-        return;
+      let bytes;
+      if (logoStorage) bytes = await logoStorage.read(assetResult.rows[0].original_path, teacherId);
+      else {
+        const filePath = path.resolve(root, assetResult.rows[0].original_path);
+        if (!filePath.startsWith(path.resolve(assetsDir) + path.sep)) {
+          send(response, 403, { error: "Ruta de logo no permitida." }, origin);
+          return;
+        }
+        bytes = await readFile(filePath);
       }
-      sendAsset(response, 200, await readFile(filePath), assetResult.rows[0].mime_type, origin);
+      sendAsset(response, 200, bytes, assetResult.rows[0].mime_type, origin);
       return;
     }
     if (request.method === "POST" && url.pathname === "/api/profile") {
       const body = await readJson(request);
-      if (dbMode === "postgres" && (body.logoUpload || body.createLogo)) {
+      if (dbMode === "postgres" && !logoStorage && (body.logoUpload || body.createLogo)) {
         send(response, 503, { error: "La carga de logos estará disponible al conectar Storage." }, origin);
         return;
       }
@@ -881,8 +902,14 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       let createdLogoPath = null;
       try {
         if (newLogo) {
-          createdLogoPath = path.join(assetsDir, path.basename(newLogo.relativePath));
-          await writeFile(createdLogoPath, newLogo.bytes, { flag: "wx", mode: 0o600 });
+          if (logoStorage) {
+            createdLogoPath = await logoStorage.save({ teacherId, assetId: newLogo.id,
+              mimeType: newLogo.mimeType, bytes: newLogo.bytes });
+            newLogo.relativePath = createdLogoPath;
+          } else {
+            createdLogoPath = path.join(assetsDir, path.basename(newLogo.relativePath));
+            await writeFile(createdLogoPath, newLogo.bytes, { flag: "wx", mode: 0o600 });
+          }
           await db.query(`insert into institution_assets
             (id, owner_user_id, type, original_path, normalized_path, mime_type, width, height)
             values ($1, $2, 'logo', $3, $3, $4, $5, $6)`, [newLogo.id, teacherId, newLogo.relativePath,
@@ -898,7 +925,10 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         await db.exec("commit");
       } catch (error) {
         await db.exec("rollback");
-        if (createdLogoPath) await unlink(createdLogoPath).catch(() => {});
+        if (createdLogoPath) {
+          if (logoStorage) await logoStorage.remove(createdLogoPath, teacherId).catch(() => {});
+          else await unlink(createdLogoPath).catch(() => {});
+        }
         throw error;
       }
       send(response, 200, { dashboard: await dashboard() }, origin);
@@ -934,7 +964,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
           await refreshStudentContextSnapshot(db, studentId);
           send(response, 200, saved, origin);
         } else if (request.method === "POST" && parts[6] === "attachment") {
-          if (dbMode === "postgres") { send(response, 503, { error: "Los adjuntos estarán disponibles al conectar Storage." }, origin); return; }
+          if (!interviewStorage) { send(response, 503, { error: "Storage privado no configurado." }, origin); return; }
           const interview = await loadFamilyInterview(db, teacherId, studentId);
           if (!interview.draft && !interview.confirmed) throw new DiagnosticSourceError("invalid_attachment", "Guarda primero la entrevista.");
           const body = await readJson(request);
@@ -948,7 +978,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
             recordOperationalEvent("interview_attachment_cleanup_failed", { workflow: "diagnostic" }));
           send(response, 200, publicSaved, origin);
         } else if (request.method === "GET" && parts[6] === "attachment") {
-          if (dbMode === "postgres") { send(response, 503, { error: "Los adjuntos estarán disponibles al conectar Storage." }, origin); return; }
+          if (!interviewStorage) { send(response, 503, { error: "Storage privado no configurado." }, origin); return; }
           const storagePath = await familyInterviewAttachmentPath(db, teacherId, studentId);
           if (!storagePath) { send(response, 404, { error: "Adjunto no encontrado." }, origin); return; }
           const attachment = await interviewStorage.read(storagePath, teacherId, studentId);
@@ -964,7 +994,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
     if (url.pathname.startsWith("/api/diagnostics/spontaneous-observations")) {
       try {
         if (request.method === "GET" && /^\/api\/diagnostics\/spontaneous-observations\/[0-9a-f-]+\/media$/i.test(url.pathname)) {
-          if (dbMode === "postgres") { send(response, 503, { error: "Los archivos estarán disponibles al conectar Storage." }, origin); return; }
+          if (!evidenceStorage) { send(response, 503, { error: "Storage privado no configurado." }, origin); return; }
           const id = url.pathname.split("/")[4];
           const row = (await db.query(`select o.student_id,o.media_path from diagnostic_spontaneous_observations o
             join classrooms c on c.id=o.classroom_id where o.id=$1 and c.teacher_id=$2`, [id,teacherId])).rows[0];
@@ -982,8 +1012,10 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
               and o.classifier_version='CURRENT_V2_4_RAW' and o.classifier_status='pending'`, [teacherId]);
           const result = await loadSpontaneousObservations(db, teacherId);
           send(response, 200, { ...result, classifier_enabled: observationV24Active }, origin);
-          for (const row of result.observations.filter((item) => item.classification_status === "pending"))
-            setImmediate(() => queueDiagnosticClassification(row.id, row.student_id, teacherId));
+          for (const row of result.observations.filter((item) => item.classification_status === "pending")) {
+            if (process.env.AYNI_SERVERLESS === "1") await queueDiagnosticClassification(row.id, row.student_id, teacherId);
+            else setImmediate(() => queueDiagnosticClassification(row.id, row.student_id, teacherId));
+          }
         }
         else if (request.method === "POST" && url.pathname === "/api/diagnostics/spontaneous-observations/matrix") {
           const saved = await recordMatrixDiagnosticObservation(db, teacherId, await readJson(request));
@@ -992,7 +1024,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         }
         else if (request.method === "POST" && url.pathname === "/api/diagnostics/spontaneous-observations") {
           const body = await readJson(request);
-          if (dbMode === "postgres" && body.media) { send(response, 503, { error: "Los archivos estarán disponibles al conectar Storage." }, origin); return; }
+          if (!evidenceStorage && body.media) { send(response, 503, { error: "Storage privado no configurado." }, origin); return; }
           const owned = (await db.query(`select s.id from students s join classrooms c on c.id=s.classroom_id
             where s.id=$1 and s.status='active' and c.teacher_id=$2 and c.status='active'`, [body.studentId,teacherId])).rows[0];
           if (!owned) { send(response, 404, { error: "Niño no encontrado." }, origin); return; }
@@ -1005,7 +1037,10 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
           catch (error) { if (mediaPath) await evidenceStorage.delete(mediaPath).catch(() => {}); throw error; }
           await refreshStudentContextSnapshot(db, saved.student_id);
           send(response, 201, saved, origin);
-          if (observationV24Active) setImmediate(() => queueDiagnosticClassification(saved.id, saved.student_id, teacherId));
+          if (observationV24Active) {
+            if (process.env.AYNI_SERVERLESS === "1") await queueDiagnosticClassification(saved.id, saved.student_id, teacherId);
+            else setImmediate(() => queueDiagnosticClassification(saved.id, saved.student_id, teacherId));
+          }
         } else if (request.method === "POST" && /^\/api\/diagnostics\/spontaneous-observations\/[0-9a-f-]+\/(?:suggest|suggest-jev)$/i.test(url.pathname)) {
           await readJson(request);
           const id = url.pathname.split("/")[4];
@@ -1225,7 +1260,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         const knowledgeBase = await loadKnowledgeBaseV4();
         const cards = knowledgeBase.competencyCards.map(card => ({ id:card.id,name:card.official_name,
           area_name:card.area_name,capacities:card.capacities,ages:card.ages }));
-        const logo = dbMode === "local" ? await loadInstitutionLogoForDocuments(db,teacherId,assetsDir) : null;
+        const logo = await loadInstitutionLogoForDocuments(db, teacherId, logoStorage ?? assetsDir);
         const artifact = await prepareConfirmedDocumentArtifact(db,documentArtifactStorage,teacherId,
           body?.kind,body?.sourceId,{cards,logo});
         if (!artifact) { send(response,404,{error:"Documento no disponible."},origin); return; }
@@ -1282,7 +1317,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       const knowledgeBase = await loadKnowledgeBaseV4();
       const cards = knowledgeBase.competencyCards.map((card) => ({ id: card.id, name: card.official_name,
         area_name: card.area_name, capacities: card.capacities, ages: card.ages }));
-      const logo = dbMode === "local" ? await loadInstitutionLogoForDocuments(db, teacherId, assetsDir) : null;
+      const logo = await loadInstitutionLogoForDocuments(db, teacherId, logoStorage ?? assetsDir);
       const download = await prepareWordDownload(db, teacherId, parts[3], parts[4], cards, { logo });
       if (!download) { send(response, 404, { error: "Documento no disponible." }, origin); return; }
       const headers = {
@@ -1313,7 +1348,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       const knowledgeBase = await loadKnowledgeBaseV4();
       const cards = knowledgeBase.competencyCards.map((card) => ({ id: card.id, name: card.official_name,
         area_name: card.area_name, capacities: card.capacities, ages: card.ages }));
-      const logo = dbMode === "local" ? await loadInstitutionLogoForDocuments(db, teacherId, assetsDir) : null;
+      const logo = await loadInstitutionLogoForDocuments(db, teacherId, logoStorage ?? assetsDir);
       const download = await prepareWordDownload(db, teacherId, parts[3], parts[4], cards, { logo });
       if (!download) { send(response, 404, { error: "Documento no disponible." }, origin); return; }
       const saved = await saveWordToLocalDownloads(download, path.join(homedir(), "Downloads"));
@@ -2445,7 +2480,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
             });
             if (!result.created && mediaPath) await ordinaryStorage.delete(mediaPath, { teacherId, studentId: body.studentId });
             send(response, result.created ? 201 : 200, result, origin);
-            if (result.created && curricularReviewEnabled) queueOrdinarySuggestion(teacherId, result.observation.id);
+            if (result.created && curricularReviewEnabled) await queueOrdinarySuggestion(teacherId, result.observation.id);
           } catch (error) {
             if (mediaPath) await ordinaryStorage.delete(mediaPath, { teacherId, studentId: body.studentId }).catch(() => {});
             throw error;
@@ -2479,8 +2514,8 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
     }
     if (request.method === "POST" && url.pathname === "/api/evidences") {
       const body = await readJson(request);
-      if (dbMode === "postgres" && (body.photo || body.media)) {
-        send(response, 503, { error: "Los archivos estarán disponibles al conectar Storage. Guarda la observación como texto." }, origin);
+      if (!evidenceStorage && (body.photo || body.media)) {
+        send(response, 503, { error: "Storage privado no configurado. Guarda la observación como texto." }, origin);
         return;
       }
       let capture;
@@ -2606,7 +2641,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
 }
 }
 
-const server = createServer(async (request, response) => {
+export async function handleApiRequest(request, response) {
   const origin = request.headers.origin;
   const url = new URL(request.url ?? "/", `http://127.0.0.1:${port}`);
   if (origin && !allowedOrigins.has(origin)) {
@@ -2653,6 +2688,7 @@ const server = createServer(async (request, response) => {
     return;
   }
   const requestDb = database.requestDb();
+  return requestDatabaseScope.run(requestDb, async () => {
   try {
   let context;
   try { context = await requestAuth.resolve(request, requestDb); }
@@ -2692,16 +2728,19 @@ const server = createServer(async (request, response) => {
       catch { recordOperationalEvent("db_request_cleanup_failed", { requestId: context?.requestId, status: 500 }); }
     }
   }
-});
-
-server.listen(port, listenHost, () => {
-  console.log(`Ayni API ready at http://${listenHost}:${port} (${authMode})`);
-});
-
-for (const signal of ["SIGINT", "SIGTERM"]) {
-  process.on(signal, async () => {
-    await new Promise((resolve) => server.close(resolve));
-    await database.close();
-    process.exit(0);
   });
+}
+
+if (process.env.AYNI_SERVERLESS !== "1") {
+  const server = createServer(handleApiRequest);
+  server.listen(port, listenHost, () => {
+    console.log(`Ayni API ready at http://${listenHost}:${port} (${authMode})`);
+  });
+  for (const signal of ["SIGINT", "SIGTERM"]) {
+    process.on(signal, async () => {
+      await new Promise((resolve) => server.close(resolve));
+      await database.close();
+      process.exit(0);
+    });
+  }
 }
