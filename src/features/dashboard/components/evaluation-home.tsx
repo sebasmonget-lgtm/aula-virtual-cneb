@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { BookOpen, FileText, Users } from "lucide-react";
+import { BookOpen, FileText, TableProperties, Users } from "lucide-react";
 import { apiFetch } from "@/src/lib/ayni-api-fetch";
 import { localDatabaseApiUrl, type LocalDashboard } from "@/src/lib/local-database";
 import { LoadingState, WorkflowFeedback } from "./workflow-ui";
 
-type EvaluationView = "student" | "family" | "coverage";
+type EvaluationView = "student" | "family" | "coverage" | "consolidated";
 type Row = { student_id: string; competency_id: string; competency_name: string; evidence_count: number; state: string };
 type Overview = { students: { id: string; first_name: string; last_name: string; preferred_name: string | null }[]; rows: Row[] };
 type Workspace = { years: { id: string; year: number }[]; classrooms: { id: string; school_year_id: string }[]; periods: { id: string; school_year_id: string; label: string; starts_on: string; ends_on: string }[] };
@@ -65,6 +65,7 @@ export function EvaluationHome({ dashboard, onPeriod, onReplan }: {
     { title: "Analizar evidencias", subtitle: `${candidates.length} ${candidates.length === 1 ? "ficha por revisar" : "fichas por revisar"}`, Icon: BookOpen, tint: "bg-[#f1eaff] text-[#7952b8]", act: () => onPeriod("student", candidates[0] ? { studentId: candidates[0].student_id, competencyId: candidates[0].competency_id } : undefined) },
     { title: "Conclusiones", subtitle: `${confirmed} ${confirmed === 1 ? "valoración confirmada" : "valoraciones confirmadas"}`, Icon: FileText, tint: "bg-[#fff2d8] text-[#ad741f]", act: () => onPeriod("student") },
     { title: "Informe a familias", subtitle: "Desde valoraciones confirmadas", Icon: Users, tint: "bg-[#e9f8f2] text-[#287561]", act: () => onPeriod("family") },
+    { title: "Consolidado", subtitle: "Nivel y conclusión por niño y competencia", Icon: TableProperties, tint: "bg-[#e8f7fa] text-[#087d96]", act: () => onPeriod("consolidated") },
   ];
 
   return <div className="space-y-6">

@@ -310,6 +310,14 @@ test("ficha única, nivel docente, cierre, salidas derivadas y cambio posterior 
     const persisted = (await f.db.query(`select achievement_level,suggested_level,teacher_justification,level_confirmed_by from competency_assessments where id=$1`, [confirmed.body.assessment_id])).rows[0];
     assert.equal(persisted.achievement_level, "B"); assert.equal(persisted.suggested_level, null); assert.equal(persisted.level_confirmed_by, teacher); assert.match(persisted.teacher_justification, /sigue necesitando apoyo/);
     await confirmGeneratedConclusion(f, period.id, studentA);
+    const earlyConsolidated = await f.call("GET", `/api/period-evaluations/consolidated?${query}`);
+    assert.equal(earlyConsolidated.status, 200);
+    const earlyA = earlyConsolidated.body.rows.find((row) => row.student_id === studentA && row.competency_id === "COM_ORAL");
+    const earlyB = earlyConsolidated.body.rows.find((row) => row.student_id === studentB && row.competency_id === "COM_ORAL");
+    assert.equal(earlyA.achievement_level, "B");
+    assert.ok(earlyA.conclusion);
+    assert.equal(earlyB.achievement_level, null);
+    assert.equal(earlyB.conclusion, "");
     const incomplete=await f.call("GET",`/api/period-evaluations/overview?${query}`);
     assert.equal(incomplete.body.progress.observation_pending, 1);
     for (const [id, note] of [["00000000-0000-4000-8000-000000000703", "Explicó cómo jugar."], ["00000000-0000-4000-8000-000000000704", "Respondió a una propuesta."]]) await f.db.query(`insert into evidences(id,student_id,activity_id,criterion_id,observed_at,observed_on,observation_text) values($1,$2,$3,$4,now(),'2026-04-10',$5)`, [id, studentB, activity, criterion, note]);
@@ -335,6 +343,10 @@ test("ficha única, nivel docente, cierre, salidas derivadas y cambio posterior 
     await f.db.query(`update evidences set observation_text='Nota corregida' where id=$1`, [firstEvidence]);
     const stale = await f.call("GET", `/api/period-evaluations/overview?${query}`);
     assert.equal(stale.body.rows.find((row) => row.student_id === studentA).state, "needs_review");
+    const staleConsolidated = await f.call("GET", `/api/period-evaluations/consolidated?${query}`);
+    const staleA = staleConsolidated.body.rows.find((row) => row.student_id === studentA && row.competency_id === "COM_ORAL");
+    assert.equal(staleA.achievement_level, null);
+    assert.equal(staleA.conclusion, "");
     assert.equal(stale.body.closure.current, false);
     assert.equal((await f.call("GET", `/api/period-evaluations/progress-report?${query}&studentId=${studentA}`)).status, 422);
     assert.equal((await f.call("GET", `/api/period-evaluations/detail?classroomId=${otherClass}&periodId=${period.id}&studentId=${studentA}&competencyId=COM_ORAL`)).status, 422);

@@ -123,7 +123,8 @@ test("la interfaz abre el diagnóstico y ofrece continuar al plan solo tras guar
   assert.match(workspace, /guidance\.startingSection === "Niños" \? "Aula" : guidance\.startingSection/);
   assert.match(workspace, /id: "diagnostic" as const, label: "Diagnóstico"/);
   assert.match(workspace, /className="ayni-journey-link" onClick=\{onGoDiagnostic\}/);
-  assert.match(workspace, /active === "Diagnóstico" \? dashboard \? <section.*<GuidedDiagnostic/);
+  assert.match(workspace, /guidance\.startingSection === "Diagnóstico".*setPlanningTarget\("diagnostic"\).*setActive\("Planificar"\)/);
+  assert.match(workspace, /tab === "diagnostic" \? \(journey\?\.studentCount \? <GuidedDiagnostic/);
   assert.match(workspace, /<EvaluationHome dashboard=\{dashboard\}/);
   assert.match(diagnostic, /disabled=\{index \+ 1 > maxStep\}/);
   assert.match(diagnostic, /setData\(await completeDiagnosticReview\(\)\); onPlan\?\.\(\)/);
