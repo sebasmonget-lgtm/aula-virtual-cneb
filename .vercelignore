@@ -1,0 +1,15 @@
+.local/
+.codex/
+outputs/
+work/
+tmp/
+.env*
+.vercel/
+.next/
+node_modules/
+dist/
+.wrangler/
+supabase/.temp/
+evals/ai-routing-v4/results/
+library/materials/sources/**/private/
+library/materials/sources/**/internal/

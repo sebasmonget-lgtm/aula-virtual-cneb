@@ -1,5 +1,15 @@
 # Errores y soluciones
 
+## 2026-09-30 — Vercel CLI incluía archivos privados locales en el manifest
+
+**Síntoma.** `vercel deploy --dry --json` del staging nuevo incluyó más de siete mil archivos de `.local/`, entre ellos `.local/vercel-ayni-staging/auth.json`, aunque Git los ignoraba. No se ejecutó el despliegue con ese manifest.
+
+**Causa raíz.** La CLI no usó la exclusión de `.local/` de `.gitignore` al construir el paquete de archivos. La lista de exclusión propia de Vercel no cubría esa carpeta personalizada.
+
+**Solución validada.** Se añadió `.vercelignore` con `.local/`, secretos y artefactos de ejecución excluidos. El manifest posterior contiene 1632 archivos y cero rutas `.env*`, `.local/`, `.codex/`, `node_modules/`, `.next/` o `auth.json`; conserva los tres archivos de aplicación revisados. No se imprimió ni subió el contenido del archivo de autenticación.
+
+**Prevención.** Antes de cada despliegue CLI desde este checkout, ejecutar un dry run y rechazar cualquier manifest que incluya secretos o carpetas locales. Conservar `.vercelignore` al cambiar el proceso de publicación.
+
 ## 2026-09-30 — Vercel no reconocía la CA de PostgreSQL de Supabase
 
 **Síntoma.** El primer despliegue de `ayni4/ayni-aula-staging` compiló y quedó `READY`, pero `/health` devolvió HTTP 500. Los logs de la Function mostraron `SELF_SIGNED_CERT_IN_CHAIN` al conectar con PostgreSQL.
