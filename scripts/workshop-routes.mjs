@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { ageFilteredAnnualCurriculum } from "../src/lib/annual-preplan-service.mjs";
-import { availableSheets, publicSheet, renderSheetPages } from "../src/lib/workshop-sheet-catalog.mjs";
+import { availableSheets, publicSheet, renderSheetPages, selectWorkshopSheet } from "../src/lib/workshop-sheet-catalog.mjs";
 import { attachWorkshopSheetsWithJev, suggestWorkshopSheet } from "../src/lib/jev-workshop-sheet.mjs";
 import { jevFeatureEnabled } from "../src/lib/jev-openrouter-decision.mjs";
 import { confirmWorkshopMaster, generateWorkshopMaster, newWorkshopMasterDetails, validateWorkshopMaster } from "../src/lib/workshop-master-service.mjs";
@@ -86,9 +86,6 @@ export function createWorkshopRouteHandler({ db, teacherId, readJson, send }) {
         const master = await currentMaster(project.id);
         if (!master || master.status !== "draft" || master.id !== body.masterId)
           throw new VersionConflictError("Abre el borrador de talleres para revisar la ficha.");
-        if (!jevFeatureEnabled("workshop_sheet")) {
-          send(response, 503, { error: "Ayni no pudo recomendar una ficha. Puedes elegirla manualmente." }, origin); return true;
-        }
         if (Number(body.expectedRevision) !== Number(master.revision))
           throw new VersionConflictError("El borrador de talleres cambió. Vuelve a abrirlo.");
         const item = master.details?.items?.find((entry) => entry.index === Number(body.itemIndex));
@@ -100,8 +97,17 @@ export function createWorkshopRouteHandler({ db, teacherId, readJson, send }) {
         const route = project.details.activity_route ?? [];
         const intention = [item.purpose, item.observation_focus, item.brief_outline,
           route[item.index - 1]?.title].filter(Boolean).join(" ");
-        const suggested = await suggestWorkshopSheet({ age: classroom.age, competencyId: item.competency_id,
-          intention, topic: project.title, knownNames: names });
+        let suggested;
+        if (jevFeatureEnabled("workshop_sheet")) {
+          try { suggested = await suggestWorkshopSheet({ age: classroom.age, competencyId: item.competency_id,
+            intention, topic: project.title, knownNames: names }); }
+          catch { suggested = null; }
+        }
+        if (!suggested) {
+          const sheet = await selectWorkshopSheet({ age: classroom.age, competencyId: item.competency_id,
+            intention, topic: project.title });
+          suggested = { sheet, reason: sheet ? "catalog_match" : "no_eligible_sheets" };
+        }
         send(response, 200, { sheet: suggested.sheet ? publicSheet(suggested.sheet) : null,
           reason: suggested.reason }, origin); return true;
       }

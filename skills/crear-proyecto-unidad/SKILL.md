@@ -15,3 +15,5 @@ Recibe **una** propuesta anual o un motivo emergente, el diagnóstico grupal per
 `curriculum.target_age` es la edad del aula y `curriculum.confirmed_competency_ids` contiene las competencias ya elegidas. Conserva esos IDs en las listas de competencias y usa en cada fila de `activity_route` solo uno de esos mismos IDs.
 
 No inventes intereses, observaciones, resultados, productos realizados ni desempeños oficiales. No conviertas el producto colectivo en evidencia individual. La planificación con los niños y la valoración posterior se registran cuando ocurran. Escribe en español claro para una profesora de Inicial.
+
+En situación, propósito, recorrido, mediación, criterios y evidencias usa frases cortas, verbos concretos y una idea por oración. Explica qué podrían hacer los niños y qué acompañaría la docente; evita lenguaje burocrático. Mantén literalmente los nombres oficiales de competencias y capacidades. La ruta anticipa posibilidades, no predice lo que ocurrirá cada día.

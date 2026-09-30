@@ -118,6 +118,16 @@ export function removePageBreakBeforeTable(xml, tableText) {
     (full, paragraph, table) => /<w:br[^>]*w:type="page"/.test(paragraph) && textOf(table).includes(tableText) ? table : full);
 }
 
+/** A small, source-backed guide uses the unused space on a document cover. */
+export function insertCoverQuickView(xml, title, rows) {
+  const breakParagraph = (xml.match(paragraphPattern) ?? []).find((part) => /<w:br\b[^>]*w:type="page"/.test(part));
+  if (!breakParagraph || !rows.length) return xml;
+  const cell = (value, width, shaded = false) => `<w:tc><w:tcPr><w:tcW w:w="${width}" w:type="dxa"/>${shaded ? '<w:shd w:fill="EAF3F8"/>' : ""}<w:tcMar><w:top w:w="90" w:type="dxa"/><w:left w:w="130" w:type="dxa"/><w:bottom w:w="80" w:type="dxa"/><w:right w:w="130" w:type="dxa"/></w:tcMar></w:tcPr><w:p><w:r><w:rPr>${shaded ? "<w:b/>" : ""}<w:sz w:val="18"/><w:color w:val="173352"/></w:rPr><w:t>${xmlEscape(value)}</w:t></w:r></w:p></w:tc>`;
+  const heading = `<w:p><w:pPr><w:spacing w:before="180" w:after="90"/></w:pPr><w:r><w:rPr><w:b/><w:sz w:val="23"/><w:color w:val="075D70"/></w:rPr><w:t>${xmlEscape(title)}</w:t></w:r></w:p>`;
+  const table = `<w:tbl><w:tblPr><w:tblW w:w="10300" w:type="dxa"/><w:tblBorders><w:top w:val="single" w:sz="4" w:color="C9DFE9"/><w:bottom w:val="single" w:sz="4" w:color="C9DFE9"/></w:tblBorders></w:tblPr><w:tblGrid><w:gridCol w:w="2600"/><w:gridCol w:w="7700"/></w:tblGrid>${rows.map(([label, value]) => `<w:tr>${cell(label, 2600, true)}${cell(value, 7700)}</w:tr>`).join("")}</w:tbl>`;
+  return xml.replace(breakParagraph, `${heading}${table}${breakParagraph}`);
+}
+
 function logoDrawing(relId, imageId) {
   const size = 914400;
   return `<w:drawing><wp:inline xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${size}" cy="${size}"/><wp:docPr id="${imageId}" name="Logo institucional"/><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="${imageId}" name="logo-ayni.png"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="${relId}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${size}" cy="${size}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing>`;
@@ -196,10 +206,11 @@ async function insertInlineImages(archive, xml, images) {
     const paragraph = (xml.match(paragraphPattern) ?? []).find((part) => part.includes(marker));
     if (!paragraph) throw new Error(`Falta el lugar de imagen ${item.marker} en el Word.`);
     if (!item.data) { xml = xml.replace(paragraph, ""); continue; }
-    const bytes = await sharp(item.data).resize({ width: 360, withoutEnlargement: true }).png().toBuffer();
+    const bytes = await sharp(item.data).resize({ width: 720, withoutEnlargement: true }).png().toBuffer();
     const metadata = await sharp(bytes).metadata();
-    const width = Math.min(metadata.width ?? 360, 360), height = metadata.height ?? 240;
-    const cx = Math.round(1.45 * 914400), cy = Math.round(cx * height / width);
+    const width = metadata.width ?? 720, height = metadata.height ?? 480;
+    const scale = Math.min(2.3 * 914400 / width, 2.1 * 914400 / height);
+    const cx = Math.round(width * scale), cy = Math.round(height * scale);
     const relation = `rId${nextRel++}`, filename = `ayni-project-${String(index + 1).padStart(2, "0")}.png`;
     const pictureId = 9000 + index;
     archive.file(`word/media/${filename}`, bytes);

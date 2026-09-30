@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import { eligibleProjectImages } from "./jev-project-image.mjs";
 import { ANNUAL_PLAN_TEMPLATE_FORMAT } from "./annual-plan-contract.mjs";
 import { annualFlexibleValues } from "./annual-plan-flexible-word.mjs";
-import { removePageBreakAfterTable, removePageBreakBeforeTable, removeParagraphsContaining, renderUnifiedWord, replaceWordText } from "./unified-word-template.mjs";
+import { removePageBreakAfterTable, removePageBreakBeforeTable, removeParagraphsContaining, renderUnifiedWord, replaceWordText, xmlEscape } from "./unified-word-template.mjs";
 
 const templateUrl = new URL("../../assets/templates/planificacion-anual-inicial-unificada-v1.docx", import.meta.url);
 const months = ["MARZO", "ABRIL", "MAYO", "JUNIO", "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"];
@@ -14,7 +14,25 @@ function tableSlices(xml) {
     .map((match) => ({ start: match.index, end: match.index + match[0].length, xml: match[0], text: plainText(match[0]) }));
 }
 
-function transformAnnual(xml, schedule) {
+function experienceSketch(project) {
+  const purpose = String(project.purpose ?? "").trim().replace(/[.!?]$/, "");
+  const actions = purpose.replace(/\s+y\s+(?=[\p{L}]+(?:ar|er|ir)\b)/gu, ", ")
+    .split(/,\s*/).map((part) => part.trim()).filter(Boolean).slice(0, project.final_product ? 2 : 3);
+  const steps = actions.map((action) => `Los niños podrían ${action.charAt(0).toLocaleLowerCase("es-PE")}${action.slice(1)}.`);
+  const product = String(project.final_product ?? "").trim().replace(/[.!?]$/, "");
+  if (product) steps.push(`Algo que podría quedar: ${product.charAt(0).toLocaleLowerCase("es-PE")}${product.slice(1)}.`);
+  return steps;
+}
+
+function sketchTable(project, marker, hasImage) {
+  const paragraph = (value, title = false) => `<w:p><w:pPr><w:spacing w:after="${title ? 120 : 70}"/></w:pPr><w:r><w:rPr>${title ? "<w:b/>" : ""}<w:sz w:val="20"/><w:color w:val="173352"/></w:rPr><w:t>${xmlEscape(value)}</w:t></w:r></w:p>`;
+  const imageCell = hasImage ? `<w:tc><w:tcPr><w:tcW w:w="3600" w:type="dxa"/><w:shd w:fill="F2F8FC"/></w:tcPr><w:p><w:r><w:t>{{AYNI_PROJECT_IMAGE_${marker}}}</w:t></w:r></w:p></w:tc>` : "";
+  const body = [paragraph("Así se podría vivir", true), ...experienceSketch(project).map((step) => paragraph(`• ${step}`))].join("");
+  const width = hasImage ? 6700 : 10300;
+  return `<w:tbl><w:tblPr><w:tblW w:w="10300" w:type="dxa"/><w:tblBorders><w:top w:val="single" w:sz="4" w:color="D6E5EF"/><w:bottom w:val="single" w:sz="4" w:color="D6E5EF"/></w:tblBorders></w:tblPr><w:tblGrid>${hasImage ? '<w:gridCol w:w="3600"/>' : ""}<w:gridCol w:w="${width}"/></w:tblGrid><w:tr>${imageCell}<w:tc><w:tcPr><w:tcW w:w="${width}" w:type="dxa"/><w:shd w:fill="F2F8FC"/><w:tcMar><w:top w:w="150" w:type="dxa"/><w:left w:w="180" w:type="dxa"/><w:bottom w:w="100" w:type="dxa"/></w:tcMar></w:tcPr>${body}</w:tc></w:tr></w:tbl>`;
+}
+
+function transformAnnual(xml, schedule, projects, imagePresence) {
   let output = removeParagraphsContaining(xml, ["Plantilla editable", "Los campos {{ }}"]);
   const tables = tableSlices(output);
   const nextNumber = schedule.projects.length + 1;
@@ -65,10 +83,34 @@ function transformAnnual(xml, schedule) {
     const match = table.match(/\{\{PROYECTO_(\d{2})_OBSERVACIONES\}\}/);
     if (!match) return table;
     imagePlaces += 1;
-    return `${table}<w:p><w:r><w:t>{{AYNI_PROJECT_IMAGE_${match[1]}}}</w:t></w:r></w:p>`;
+    const index = Number(match[1]) - 1;
+    return `${table}${sketchTable(projects[index], match[1], imagePresence[index])}`;
   });
   if (imagePlaces !== schedule.projects.length) throw new Error("La plantilla anual no tiene espacio para las imágenes de cada proyecto.");
+  output = output.replace(/<w:tr(?:\s[^>]*)?>[\s\S]*?<\/w:tr>/g, (row) =>
+    plainText(row).includes("La planificación anual se articula con los proyectos") ? "" : row);
+  output = output.replace(/<w:p(?:\s[^>]*)?>[\s\S]*?<\/w:p>/g, (paragraph) =>
+    /<w:br\b[^>]*w:type="page"/.test(paragraph) && paragraph.includes("<w:pPr")
+      ? paragraph.replace("</w:pPr>", "<w:pageBreakBefore/></w:pPr>").replace(/<w:br\b[^>]*w:type="page"\s*\/>/g, "")
+      : paragraph);
+  output = output.replace(/(<w:pgMar\b[^>]*\bw:bottom=")1440("[^>]*\/>)/,
+    (_match, before, after) => `${before}1000${after}`);
+  const sectionAt = output.lastIndexOf("<w:sectPr");
+  if (sectionAt >= 0) {
+    const paragraphs = [...output.slice(0, sectionAt).matchAll(/<w:p(?:\s[^>]*)?>[\s\S]*?<\/w:p>/g)];
+    const lastParagraph = paragraphs.at(-1);
+    if (lastParagraph && lastParagraph.index + lastParagraph[0].length === sectionAt
+      && !plainText(lastParagraph[0]) && !lastParagraph[0].includes("<w:drawing"))
+      output = output.slice(0, lastParagraph.index) + output.slice(sectionAt);
+  }
   return output;
+}
+
+function compactAnnualFooter(part, xml) {
+  if (!/^word\/footer[12]\.xml$/.test(part)) return xml;
+  return xml.replace(/<(wp:extent|a:ext)\b([^>]*\bcx=")(\d+)("[^>]*\bcy=")(\d+)("[^>]*)\/>/g,
+    (_match, tag, before, width, middle, height, after) =>
+      `<${tag}${before}${width}${middle}${Math.round(Number(height) * 0.72)}${after}/>`);
 }
 
 /** The same confirmed proposals drive the monthly view, chronology and cards. */
@@ -91,15 +133,17 @@ export async function renderAnnualPlanUnifiedWord(document, cards = [], { logo =
   values.CRITERIO_4 ||= "Revisar las propuestas cuando cambien los intereses y necesidades del grupo.";
   const usedIds = [];
   const inlineImages = [];
+  const imagePresence = [];
   for (const [index, project] of document.content.proposed_experiences.entries()) {
     const candidates = await eligibleProjectImages({ title: project.title, purpose: project.purpose,
       situation: project.meaningful_situation ?? project.situation ?? project.context_or_trigger },
     document.document_context?.age, { usedIds });
     const image = candidates[0];
+    imagePresence.push(Boolean(image));
     if (image) usedIds.push(image.id);
-    inlineImages.push({ marker: `AYNI_PROJECT_IMAGE_${String(index + 1).padStart(2, "0")}`,
-      data: image ? await readFile(image.file) : null, alt: image?.title ?? project.title });
+    if (image) inlineImages.push({ marker: `AYNI_PROJECT_IMAGE_${String(index + 1).padStart(2, "0")}`,
+      data: await readFile(image.file), alt: image.title });
   }
   return renderUnifiedWord({ templateUrl, values, logo, inlineImages,
-    transform: (xml) => transformAnnual(xml, schedule) });
+    transform: (xml) => transformAnnual(xml, schedule, document.content.proposed_experiences, imagePresence), transformPart: compactAnnualFooter });
 }

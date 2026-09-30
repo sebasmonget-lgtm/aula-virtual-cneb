@@ -199,12 +199,27 @@ export function DocumentsScreen() {
   }, [selected, revision]);
 
   const years = [...new Set(documents.map((item) => item.school_year))].sort((a, b) => b - a);
-  const downloadable = opened && opened.kind !== "period_closure" && !(opened.source_plan_format === "annual_preplan_v1" && !opened.formal_ready);
+  const needsProjectWord = opened?.kind === "experience" && opened.content.document_template_version === "experience-unified-v2" && !opened.formal_ready;
+  const downloadable = opened && opened.kind !== "period_closure" && !needsProjectWord && !(opened.source_plan_format === "annual_preplan_v1" && !opened.formal_ready);
   const downloadUrl = downloadable
     ? `${localDatabaseApiUrl}/api/documents/${opened.kind}/${opened.id}/download`
     : null;
   const stableArtifact = opened && artifacts.find(item => item.source_kind === opened.kind &&
     item.source_id === opened.id && item.source_version === opened.version);
+  async function prepareProjectWord() {
+    if (!opened || savingWord) return;
+    setSavingWord(true); setWordError(""); setWordMessage("");
+    try {
+      const response = await apiFetch(`${localDatabaseApiUrl}/api/project-flow/${opened.id}/formalize`, { method: "POST", headers: { "content-type": "application/json" }, body: "{}" });
+      const result = await response.json() as { error?: string };
+      if (!response.ok) throw new Error(result.error ?? "No se pudo preparar el Word.");
+      const refreshed = await apiFetch(`${localDatabaseApiUrl}/api/documents/experience/${opened.id}`, { cache: "no-store" });
+      const body = await refreshed.json() as { document?: OpenDocument; error?: string };
+      if (!refreshed.ok || !body.document?.formal_ready) throw new Error(body.error ?? "El Word aún no está listo. Inténtalo de nuevo.");
+      setOpened(body.document); setWordMessage("Word preparado. Ya puedes guardarlo en Descargas.");
+    } catch (cause) { setWordError(cause instanceof Error ? cause.message : "No se pudo preparar el Word."); }
+    finally { setSavingWord(false); }
+  }
   async function prepareArtifact() {
     if (!opened || savingWord) return;
     setSavingWord(true); setWordError(""); setWordMessage("");
@@ -262,12 +277,13 @@ export function DocumentsScreen() {
   return <section className="mx-auto max-w-5xl space-y-5">
     <PageIntro eyebrow="Tu trabajo guardado" title="Documentos" description="Encuentra aquí tus diagnósticos, planes, experiencias, actividades, cierres e informes." icon={BookOpen} />
     {selected && <div className="flex flex-wrap items-center justify-between gap-3"><Button variant="outline" className="min-h-11" onClick={() => { setSelected(null); setOpened(null); setError(""); setWordMessage(""); setWordError(""); }}><ArrowLeft className="mr-2 size-4" />Volver a mis documentos</Button>
-      <div className="flex flex-wrap gap-2">{artifactFeature && opened && ["annual_plan","experience"].includes(opened.kind) && ["active","archived"].includes(opened.status) && downloadable &&
+      <div className="flex flex-wrap gap-2">{needsProjectWord && opened.status === "active" && <Button className="min-h-11" disabled={savingWord} onClick={() => void prepareProjectWord()}>{savingWord ? "Preparando Word..." : "Preparar Word del proyecto"}</Button>}{artifactFeature && opened && ["annual_plan","experience"].includes(opened.kind) && ["active","archived"].includes(opened.status) && downloadable &&
         (stableArtifact ? <Button className="min-h-11" disabled={savingWord} onClick={() => void downloadStableArtifact(stableArtifact)}><Download className="mr-2 size-4" />Descargar versión estable</Button>
           : <Button className="min-h-11" disabled={savingWord} onClick={() => void prepareArtifact()}>{savingWord ? "Preparando..." : "Preparar versión estable"}</Button>)}
       {downloadable && !stableArtifact && <Button variant={artifactFeature && ["annual_plan","experience"].includes(opened.kind) ? "outline" : "default"} className="min-h-11" disabled={savingWord} onClick={() => void saveWordLocally()}><Download className="mr-2 size-4" />{savingWord ? "Preparando Word..." : authMode === "supabase" ? "Descargar Word" : "Guardar Word en Descargas"}</Button>}</div></div>}
     {wordMessage && <WorkflowFeedback tone="success">{wordMessage}</WorkflowFeedback>}
     {wordError && <WorkflowFeedback tone="error">{wordError}</WorkflowFeedback>}
+    {needsProjectWord && <p className="rounded-xl bg-[#eaf7fb] p-4 text-sm">El proyecto está confirmado. Prepara su Word antes de guardarlo en Descargas.</p>}
     {opened?.kind === "annual_plan" && opened.source_plan_format !== "annual_preplan_v1" && opened.content.plan_format !== "twelve_projects_flexible_weeks" &&
       <WorkflowFeedback tone="error">Este plan se creó antes del formato actual. Su Word conserva la plantilla anterior. Abre Plan para preparar una versión actualizada; el plan vigente seguirá guardado mientras la revisas.</WorkflowFeedback>}
     {opened && downloadUrl && <p className="text-sm text-[#526b87]">{authMode === "local" ? "Se guarda en la computadora donde corre Ayni. " : ""}<a className="underline" href={downloadUrl} download>Descargar en este dispositivo</a></p>}

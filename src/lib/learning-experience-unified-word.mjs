@@ -1,4 +1,4 @@
-import { expandTableRow, removePageBreakAfterTable, removeParagraphsContaining, renderUnifiedWord, replaceWordText } from "./unified-word-template.mjs";
+import { expandTableRow, insertCoverQuickView, removePageBreakAfterTable, removeParagraphsContaining, renderUnifiedWord, replaceWordText } from "./unified-word-template.mjs";
 
 const templateUrl = new URL("../../assets/templates/proyecto-unidad-inicial-unificada-v1.docx", import.meta.url);
 const clean = (value) => typeof value === "string" ? value.trim() : "";
@@ -87,6 +87,10 @@ function valuesFor(document, cards) {
 /** Render the planning state only; actual evidence and reflections enter after implementation. */
 export async function renderLearningExperienceUnifiedWord(document, cards = [], { logo = null } = {}) {
   const { values, competencyRows, routeRows } = valuesFor(document, cards);
+  const content = document.content ?? {};
+  const overview = [
+    ["Así podría empezar", (content.activity_route ?? []).slice(0, 3).map((item) => item.title).filter(Boolean).join(" · ")],
+  ].filter(([, value]) => value);
   return renderUnifiedWord({ templateUrl, values, logo, transform(xml) {
     let output = removeBetween(xml, "XI. SEGUIMIENTO DEL PROYECTO / UNIDAD");
     output = removeBetween(output, "IV. PLANIFICACIÓN CON LOS NIÑOS", "V. PROPÓSITO GENERAL");
@@ -94,9 +98,17 @@ export async function renderLearningExperienceUnifiedWord(document, cards = [], 
     output = removeParagraphsContaining(output, ["Los campos {{...}}", "Una fila por competencia", "Fila repetible:", "Esta sección es el puente directo", "Anexos opcionales"]);
     output = expandTableRow(output, "{{AREA}}", competencyRows);
     output = expandTableRow(output, "{{NRO_ACTIVIDAD}}", routeRows);
+    output = output.replace(/<w:tr(?:\s[^>]*)?>[\s\S]*?<\/w:tr>/g, (row) =>
+      ["Hitos o fechas del calendario", "Producto final / socialización"].some((label) => xmlText(row).includes(label)) ? "" : row);
     output = removePageBreakAfterTable(output, "Materiales y recursos base");
+    let coverBreak = true;
+    output = output.replace(/<w:p(?:\s[^>]*)?>[\s\S]*?<\/w:p>/g, (paragraph) => {
+      if (!/<w:br\b[^>]*w:type="page"/.test(paragraph)) return paragraph;
+      if (coverBreak) { coverBreak = false; return paragraph; }
+      return xmlText(paragraph) ? paragraph.replace(/<w:br\b[^>]*w:type="page"\s*\/>/g, "") : "";
+    });
     output = replaceWordText(output, "RUTA DE ACTIVIDADES / SESIONES", "RUTA DE ACTIVIDADES");
     output = replaceWordText(output, "Desempeño / referente", "Referente para observar");
-    return output;
+    return insertCoverQuickView(output, "El proyecto en una mirada", overview);
   } });
 }

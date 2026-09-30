@@ -1,4 +1,4 @@
-import { expandTableRow, removePageBreakAfterTable, removeParagraphsContaining, renderUnifiedWord, replaceWordText } from "./unified-word-template.mjs";
+import { expandTableRow, insertCoverQuickView, removePageBreakAfterTable, removeParagraphsContaining, renderUnifiedWord, replaceWordText } from "./unified-word-template.mjs";
 import { availableSheets, renderSheetPages } from "./workshop-sheet-catalog.mjs";
 
 const oldTemplateUrl = new URL("../../assets/templates/actividad-aprendizaje-inicial-ayni-v2.docx", import.meta.url);
@@ -105,7 +105,10 @@ export async function renderActivityUnifiedWord(document, cards = [], { logo = n
     values.TALLER_FICHA = sheet.title;
     appendixImages = await renderSheetPages(sheet);
   }
+  const overview = [
+    ["Qué haremos hoy", clean(content.purpose)],
+  ].filter(([, value]) => value);
   return renderUnifiedWord({ templateUrl: withWorkshop ? workshopTemplateUrl : oldTemplateUrl, values, logo, appendixImages,
-    transform: (xml) => transformActivity(xml, evidenceRows, closure, withWorkshop),
+    transform: (xml) => insertCoverQuickView(transformActivity(xml, evidenceRows, closure, withWorkshop), "Hoy en el aula", overview),
     transformPart: (part, xml) => part.includes("header") ? replaceWordText(xml, "PLANIFICACIÓN ANUAL", "ACTIVIDAD DE APRENDIZAJE") : xml });
 }

@@ -154,16 +154,16 @@ function contentForFamilyReport(document, names) {
   const children = [
     ...labelled("Período de evaluación", document.period_label || "Informe histórico sin período formal"),
     ...labelled("Período", [dateLabel(document.period_start), dateLabel(document.period_end)].filter(Boolean).join(" al ")),
-    ...section("Para la familia", value.introduction),
+    ...section("En pocas palabras", value.introduction),
   ];
   for (const report of Array.isArray(value.sections) ? value.sections : []) {
     children.push(heading(names.get(clean(report?.competency_id)) ?? "Aprendizajes observados", 2),
-      ...section("Avances", report?.progress_summary, 2),
-      ...section("Ejemplos observados", report?.examples, 2),
+      ...section("Lo que hemos visto", report?.progress_summary, 2),
+      ...section("Así lo vimos", report?.examples, 2),
       ...section("Qué ayudó", report?.support_or_conditions, 2),
-      ...section("Próximos pasos", report?.next_steps, 2),
-      ...section("En casa", report?.family_suggestions, 2),
-      ...section("Información por completar", report?.insufficiency_note, 2));
+      ...section("Qué haremos después", report?.next_steps, 2),
+      ...section("Ideas para casa", report?.family_suggestions, 2),
+      ...section("Seguimos observando", report?.insufficiency_note, 2));
   }
   children.push(...section("Para seguir acompañando", value.closing_note));
   return children;

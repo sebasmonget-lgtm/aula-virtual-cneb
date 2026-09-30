@@ -345,27 +345,27 @@ export function ParentActivityGenerator({ onConfirmed, onGoToday, feedbackPeriod
     return <section className="ayni-workflow space-y-5">
 <header>
 <p className="text-sm font-semibold text-[#087d96]">{ongoing ? "Planificación continua · Actividad" : "Paso 6 de 6 · Actividad"}</p>
-<h1 className="text-3xl font-bold">Preparar día</h1>
-<p className="text-muted-foreground">Elige una actividad del mapa. La fecha ya viene confirmada desde el calendario del proyecto.</p>
+<h1 className="text-3xl font-bold">Actividades del proyecto</h1>
+<p className="text-muted-foreground">Primero elige el proyecto; luego selecciona una actividad de su mapa. Los talleres son opcionales y pertenecen al mismo proyecto.</p>
 </header>{operation === "load" && <LoadingState label="Cargando actividades..."/>}
 {message && <WorkflowFeedback tone={messageTone}>{message}</WorkflowFeedback>}
 {initialLoadError && <Button variant="outline" onClick={() => { setOperation("load"); setReload((value) => value + 1); }}>Reintentar carga</Button>}
 {!parent ? <section className="space-y-3">
-<h2 className="font-bold">¿En qué experiencia trabajarás?</h2>{operation !== "load" && !initialLoadError && experiences.length === 0 && <EmptyState title="Primero confirma un proyecto o unidad" description="Vuelve al paso anterior, confirma una experiencia y luego prepara aquí su primera actividad."/>}
+<h2 className="font-bold">1. Elige un proyecto o unidad</h2>{operation !== "load" && !initialLoadError && experiences.length === 0 && <EmptyState title="Primero confirma un proyecto o unidad" description="Vuelve al paso anterior, confirma una experiencia y luego prepara aquí su primera actividad."/>}
 {experiences.map((item) => <article key={item.id} className="rounded-xl border p-4">
 <b>{item.type === "project" ? "Proyecto" : "Unidad"}: {item.title} · versión {item.version} · {item.status === "archived" ? "Histórica" : "Vigente"}</b>
 <p className="mt-1 text-sm">{item.purpose}</p>
-<Button className="mt-3" onClick={() => void openParent(item)}>Elegir esta experiencia</Button>
+<Button className="mt-3" onClick={() => void openParent(item)}>Entrar y preparar actividades</Button>
 </article>)}</section> : <>
-<section className="rounded-xl border bg-[#f8fbff] p-4">
+<section className="sticky top-2 z-10 rounded-xl border border-[#9cced7] bg-[#f8fbff] p-4 shadow-sm" aria-label="Proyecto actual">
 <b>{parent.type === "project" ? "Proyecto" : "Unidad"}: {parent.title} · versión {parent.version}
 {parent.status === "archived" ? " · histórica" : ""}</b>
 <p className="mt-1 text-sm">{parent.purpose}</p>
-<Button className="mt-3" variant="ghost" onClick={startNew}>Elegir otra experiencia</Button>
-</section>{parent.status === "active" && Boolean(parent.details.activity_route?.length) && <WorkshopMasterPanel projectId={parent.id}/>}
+<Button className="mt-3" variant="outline" onClick={startNew}>Cambiar de proyecto</Button>
+</section>{parent.status === "active" && Boolean(parent.details.activity_route?.length) && <details className="rounded-xl border bg-[#f8fbff] p-4"><summary className="cursor-pointer font-bold text-[#07576c]">Talleres opcionales de este proyecto</summary><p className="mt-2 text-sm text-[#526b87]">Puedes decidirlos después de preparar las actividades. Cada taller queda vinculado a este proyecto.</p><div className="mt-3"><WorkshopMasterPanel projectId={parent.id}/></div></details>}
 {parent.status === "archived" && !proposal && <p className="rounded-xl bg-[#f2f8fc] p-3 text-sm">Esta versión es histórica. Puedes consultar y terminar sus actividades existentes; las actividades nuevas se preparan desde la versión vigente.</p>}
 {!proposal && parent.status === "active" && <section className="ayni-panel space-y-3 p-4 sm:p-5">
-<h2 className="ayni-section-title">Elige una actividad del mapa</h2>{Boolean(parent.details.activity_route?.length) && <label>Actividad<select value={routeItemId} onChange={(event) => { const item = parent.details.activity_route?.find((row) => row.id === event.target.value); setRouteItemId(event.target.value); setPurpose(item?.specific_purpose ?? ""); setCompetencyId(item?.competency_id ?? ""); }}>
+<h2 className="ayni-section-title">2. Elige una actividad del mapa de {parent.title}</h2>{Boolean(parent.details.activity_route?.length) && <label>Actividad<select value={routeItemId} onChange={(event) => { const item = parent.details.activity_route?.find((row) => row.id === event.target.value); setRouteItemId(event.target.value); setPurpose(item?.specific_purpose ?? ""); setCompetencyId(item?.competency_id ?? ""); }}>
 <option value="">Elige una actividad</option>{parent.details.activity_route?.map((item) => <option key={item.id} value={item.id}>{item.number}. {item.title}</option>)}</select>
 </label>}
 {routeItem && <>

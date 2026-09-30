@@ -1069,3 +1069,13 @@ Síntoma: cuatro notas QA de la captura automatizada quedaron asociadas a la sel
 **Límite de reproducción.** La copia local del aula QA contiene un único proyecto en etapa `dependents`, todavía sin mapa confirmable. No se pudo reproducir la petición concreta que mostró `Failed to fetch` ni atribuirle una causa de red precisa sin modificar los datos. Las pruebas de servicio cubren atomicidad de versiones, autorización de calendario, filtro de preguntas y excepciones oficiales; queda pendiente repetir la confirmación en UI cuando exista un mapa listo.
 
 **Prevención.** Mostrar el estado verificado después de confirmaciones con respuesta incierta y probar doble clic/reintento sobre un proyecto listo para confirmar.
+
+## 2026-09-29 — Descarga del proyecto y desbordes Word
+
+**Síntomas.** «Guardar Word» del proyecto 1 daba un error genérico cuando la formalización todavía no estaba lista. El plan anual tenía «CONTINUACIÓN» y hojas casi vacías tras propuestas o firmas; el resumen de portada del proyecto podía desbordarse.
+
+**Causas.** La biblioteca ofrecía descargar antes de `formal_ready`. Las plantillas anuales tenían dos tablas de cronograma, saltos manuales y un párrafo final vacío. Un resumen de portada demasiado largo empujaba contenido a una página nueva.
+
+**Solución validada.** API devuelve un 409 explicativo y la biblioteca permite preparar el Word. Se fusionó el cronograma y se compactó la portada; se corrigieron saltos y espaciados sin tocar el plan confirmado. El proyecto 1 se formalizó en la copia QA y descargó 446 kB. Word abrió los cuatro documentos reales; plan y proyecto cerraron en 18 y 8 páginas, sin hojas aisladas de desborde.
+
+**Prevención.** Probar la transición borrador→Word listo y renderizar muestras reales para detectar cortes que una prueba de XML no muestra.

@@ -13,3 +13,5 @@ Esta Skill guía la propuesta pedagógica estructurada. Recibe un `AIContextBund
 4. Para la nueva revisión de «Mi año», usa [preplan-editable.md](references/preplan-editable.md). Para planes históricos, usa [estructura-plan-maestro.md](references/estructura-plan-maestro.md). En ambos casos manda el `output_schema` recibido.
 
 No inventes hallazgos, intereses, características de niños, competencias, capacidades, desempeños ni citas MINEDU. Cuando el diagnóstico sea parcial, formula propuestas iniciales revisables y expresa la incertidumbre sin convertirla en déficit. Escribe en español claro para una profesora de Inicial.
+
+En todos los campos usa frases cortas, verbos concretos y palabras habituales en Inicial. Cada oración comunica una idea. Si el esquema pide listas, escribe una acción o decisión por elemento. Conserva literalmente los nombres oficiales del CNEB. Evita frases burocráticas como «favorecer oportunidades para» cuando puedas decir qué harán los niños o la docente. Da prioridad a lo que la docente necesita para imaginar el trabajo; el respaldo curricular sigue presente en sus campos propios.

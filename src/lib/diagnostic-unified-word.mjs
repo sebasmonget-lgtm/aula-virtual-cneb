@@ -1,4 +1,4 @@
-import { renderUnifiedWord, removeParagraphsContaining, xmlEscape } from "./unified-word-template.mjs";
+import { insertCoverQuickView, renderUnifiedWord, removeParagraphsContaining, xmlEscape } from "./unified-word-template.mjs";
 
 const templateUrl = new URL("../../assets/templates/evaluacion-diagnostica-inicial-unificada-v1.docx", import.meta.url);
 const competencyFields = [
@@ -196,6 +196,11 @@ function transformDiagnostic(xml, context, snapshot, followups) {
 export async function renderDiagnosticUnifiedWord(document, context, cards = [], { logo = null } = {}) {
   const snapshot = snapshotOf(document);
   const { values, followups } = valuesFor(document, context, cards);
+  const group = document.content ?? {};
+  const overview = [
+    ["Qué sabemos", clean(group.strengths).split(/(?<=[.!?])\s+/u)[0]],
+    ["Qué falta observar", clean(group.needs).split(/(?<=[.!?])\s+/u)[0]],
+  ].filter(([, value]) => value);
   return renderUnifiedWord({ templateUrl, values, logo,
-    transform: (xml) => transformDiagnostic(xml, context, snapshot, followups) });
+    transform: (xml) => insertCoverQuickView(transformDiagnostic(xml, context, snapshot, followups), "El diagnóstico en una mirada", overview) });
 }

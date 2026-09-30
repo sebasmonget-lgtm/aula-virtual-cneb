@@ -289,19 +289,19 @@ export function ProjectDevelopmentWorkspace({ initialProposalId, onConfirmed, on
   if (legacy) return <div className="space-y-3"><Button variant="outline" onClick={() => setLegacy(false)}>← Volver a proyectos</Button>
     <LearningExperienceGenerator onConfirmed={onConfirmed} feedbackPeriodId={feedbackPeriodId} /></div>;
   return <section className="ayni-workflow space-y-5"><header><p className="text-sm font-semibold text-[#087d96]">Paso 5 de 6 · Proyecto o unidad</p>
-    <h1 className="text-3xl font-extrabold text-[#172b52]">Desarrolla una propuesta</h1>
-    <p className="mt-2 text-[#526b87]">Primero decides el propósito. Después revisas las preguntas y el mapa de actividades antes de confirmar.</p></header>
+    <h1 className="text-3xl font-extrabold text-[#172b52]">Próximo proyecto de tu plan</h1>
+    <p className="mt-2 text-[#526b87]">Elige un proyecto de «Mi año». Dentro revisarás el propósito, las preguntas y el mapa; después podrás preparar sus actividades y talleres.</p></header>
     {error && <WorkflowFeedback tone="error">{error}</WorkflowFeedback>}{notice && <WorkflowFeedback tone="success">{notice}</WorkflowFeedback>}
     {!selected ? <><section className="space-y-3"><h2 className="text-xl font-bold">Elige qué desarrollar</h2>
-      <p className="text-sm text-[#526b87]">Siguiente según el orden de «Mi año» y las propuestas ya preparadas.</p>
+      <p className="text-sm text-[#526b87]">Ayni muestra primero una propuesta en preparación; si no la hay, sigue el orden de «Mi año». Revisa sus fechas antes de desarrollarla.</p>
       {(showAllProposals ? orderedProposals : orderedProposals.filter(({ index }) => index + 1 === suggestedIndex)).map(({ item, index, slot }) => { const proposalId = proposalIdAt(index);
         const found = experiences.find((row) =>
           (row.source_proposal_id === proposalId || (row.annual_plan_id === plan?.id && !row.source_proposal_id && row.source_proposal_index === index)) && row.status !== "archived");
         return <article key={proposalId || index} className={`rounded-2xl border bg-white p-4 ${suggestedIndex === index + 1 ? "border-[#087d96]" : "border-[#d6e5ef]"}`}>
-          <div className="flex flex-wrap items-start justify-between gap-2"><h3 className="font-bold">{item.experience_type === "unit" ? "U" : "P"}{String(index + 1).padStart(2, "0")} · {item.title}</h3>{suggestedIndex === index + 1 && <span className="rounded-full bg-[#e8f6fa] px-3 py-1 text-xs font-bold text-[#087d96]">Siguiente según tu plan</span>}</div>
+          <div className="flex flex-wrap items-start justify-between gap-2"><h3 className="font-bold">{item.experience_type === "unit" ? "U" : "P"}{String(index + 1).padStart(2, "0")} · {item.title}</h3>{suggestedIndex === index + 1 && <span className="rounded-full bg-[#e8f6fa] px-3 py-1 text-xs font-bold text-[#087d96]">Próxima propuesta del plan</span>}</div>
           <p className="mt-1 text-sm text-[#526b87]">{slot ? `${dateLabel(slot.starts_on.slice(0, 10))} – ${dateLabel(slot.ends_on.slice(0, 10))}` : item.period} · {item.experience_type === "unit" ? "Unidad" : "Proyecto"} · {proposalStatus(found)}</p>
           <p className="mt-1 text-sm text-[#526b87]">{item.rationale}</p>
-          <Button className="mt-3" disabled={Boolean(busy) || !proposalId} onClick={() => void openProposal(proposalId)}>{found ? "Continuar propuesta" : "Desarrollar propuesta"}</Button>
+          <Button className="mt-3" disabled={Boolean(busy) || !proposalId} onClick={() => void openProposal(proposalId)}>{found ? found.status === "active" ? "Entrar al proyecto" : "Continuar proyecto" : "Empezar este proyecto"}</Button>
         </article>; })}{Boolean(plan) && <Button variant="outline" onClick={() => setShowAllProposals(!showAllProposals)}>{showAllProposals ? "Mostrar solo la siguiente" : "Elegir otro"}</Button>}{!plan && <p>Confirma primero «Mi año» para continuar.</p>}</section>
       {plan?.proposal.plan_format !== "annual_preplan_v1" && <section className="rounded-2xl border border-[#d6e5ef] bg-[#f8fbff] p-4">
         <h3 className="font-bold">¿Surgió un interés nuevo en el grupo?</h3>
@@ -309,7 +309,8 @@ export function ProjectDevelopmentWorkspace({ initialProposalId, onConfirmed, on
         <Button className="mt-3" variant="outline" onClick={onGoAnnual}>Ir a Mi año</Button>
       </section>}
       {plan?.proposal.plan_format === "annual_preplan_v1" && <section className="space-y-3 rounded-2xl border border-[#d6e5ef] bg-white p-4"><Button variant="outline" onClick={() => setShowEmergent(!showEmergent)}>
-        + Nuevo proyecto por interés del grupo</Button>
+        + Crear un proyecto nuevo desde cero</Button>
+        <p className="text-sm text-[#526b87]">Úsalo si surgió un interés de los niños que no aparece en «Mi año». Ayni propondrá cómo incorporarlo; tú revisarás el cambio antes de confirmarlo.</p>
         {showEmergent && <div className="space-y-3"><p className="text-sm text-[#526b87]">Cuéntanos qué ha surgido. Ayni propondrá una fila para «Mi año» y tú decidirás si se incorpora.</p>
           <label className="block font-semibold">¿Qué ocurrió o qué preguntan los niños?<Textarea className="mt-2" value={emergentSituation}
             onChange={(event) => setEmergentSituation(event.target.value)} placeholder="Por ejemplo: encontraron un nido y preguntan por las aves." /></label>
@@ -341,7 +342,7 @@ export function ProjectDevelopmentWorkspace({ initialProposalId, onConfirmed, on
             <AsyncButton busy={busy === "emergent-save"} busyLabel="Preparando Mi año..." disabled={Boolean(busy) || !emergent.title.trim() || !emergent.purpose.trim() || !emergent.primary_competency_ids.length}
               onClick={() => void prepareEmergentAnnual()}>Revisar nueva versión de Mi año</AsyncButton></div>}
         </div>}</section>}
-      <Button variant="outline" onClick={() => setLegacy(true)}>Ver proyectos anteriores</Button></> : <>
+      <Button variant="outline" onClick={() => setLegacy(true)}>Ver todas las propuestas y proyectos</Button></> : <>
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-[#edf7fa] p-4"><div><b>{proposal?.title ?? selected.title}</b>
         <p className="text-sm">Versión {selected.version} · {selected.status === "active" ? "confirmada" : "en revisión"}</p></div>
         <Button variant="outline" onClick={() => setSelected(null)}>Elegir otra</Button></div>
@@ -374,7 +375,7 @@ export function ProjectDevelopmentWorkspace({ initialProposalId, onConfirmed, on
         <p className="text-sm text-[#526b87]">Competencias previstas en «Mi año»: {inheritedCompetencies.map(name).join(" · ")}. Puedes revisarlas si cambió el enfoque del proyecto.</p>
         <CompetencyChecklist label="Competencias que se trabajarán" value={decisions.competency_ids} options={competencies}
           onChange={(competency_ids) => { setDecisions({ ...decisions, competency_ids }); setReviewCompetencies(false); }} />
-        {competenciesModified && <p className="rounded-lg bg-[#fff8eb] p-3 text-sm">Estás modificando las competencias previstas para este proyecto. Elige solo las que realmente se trabajarán.</p>}
+        {competenciesModified && <p role="alert" className="rounded-lg border border-[#d8aa65] bg-[#fff8eb] p-3 text-sm"><b>Revisa este cambio curricular.</b> {addedCompetencies.length ? `Agregaste: ${addedCompetencies.map(name).join(" · ")}. ` : ""}Confirma que cada competencia se relaciona con el propósito y las actividades del proyecto. Antes de continuar te pediremos confirmar la selección.</p>}
         {reviewCompetencies && competenciesModified && <div role="alertdialog" aria-label="Revisa las competencias del proyecto" className="space-y-2 rounded-xl border border-[#d8aa65] bg-[#fff8eb] p-4 text-sm"><b>Revisa las competencias del proyecto</b>
           <p>Estos cambios influirán en las preguntas, el recorrido, los criterios y el mapa.</p>
           {addedCompetencies.length > 0 && <p>Añadidas: {addedCompetencies.map(name).join(" · ")}</p>}
@@ -404,8 +405,8 @@ export function ProjectDevelopmentWorkspace({ initialProposalId, onConfirmed, on
                 onChange={(event) => setDependents({ ...dependents, journey: dependents.journey.map((item, i) => i === index ? { ...item, description: event.target.value } : item) })} /></> : <p className="mt-2 text-sm text-[#526b87]">{part.description}</p>}</li>)}</ol>
         <Button onClick={() => setStep(5)}>Continuar a evaluación</Button></>}
         {step === 5 && <>
-        <div className="space-y-2"><h3 className="font-semibold">Criterios y evidencias sugeridas</h3><p className="text-sm text-[#526b87]">Ayni preparó estos criterios a partir del propósito, las competencias y el recorrido. Revísalos y edítalos solo si lo necesitas.</p>{dependents.general_criteria.map((criterion, index) =>
-          <article key={criterion.competency_id} className="rounded-lg border p-3"><div className="flex items-start justify-between gap-2"><b>{name(criterion.competency_id)}</b><Button size="sm" variant="outline" onClick={() => setEditingCriterion(editingCriterion === index ? null : index)}>{editingCriterion === index ? "Listo" : "Editar"}</Button></div>
+        <div className="space-y-2"><h3 className="font-semibold">Criterios y evidencias sugeridas</h3><p className="text-sm text-[#526b87]">El nombre de la competencia viene del CNEB y no se edita aquí. Ayni redactó el criterio específico para este proyecto a partir del propósito y el recorrido; puedes ajustarlo.</p>{dependents.general_criteria.map((criterion, index) =>
+          <article key={criterion.competency_id} className="rounded-lg border p-3"><div className="flex items-start justify-between gap-2"><b>{name(criterion.competency_id)}</b><Button size="sm" variant="outline" onClick={() => setEditingCriterion(editingCriterion === index ? null : index)}>{editingCriterion === index ? "Listo" : "Editar criterio"}</Button></div>
             {editingCriterion === index ? <Textarea className="mt-2" aria-label={`Criterio de ${name(criterion.competency_id)}`} value={criterion.criterion} onChange={(event) => setDependents({ ...dependents,
               general_criteria: dependents.general_criteria.map((item, i) => i === index ? { ...item, criterion: event.target.value } : item) })} /> : <p className="mt-2 text-sm">{criterion.criterion}</p>}
             <details className="mt-2 text-sm text-[#526b87]"><summary className="cursor-pointer">Evidencias posibles</summary><p className="mt-1">{criterion.expected_evidence.join(" · ")}</p></details></article>)}</div>
@@ -474,8 +475,8 @@ export function ProjectDevelopmentWorkspace({ initialProposalId, onConfirmed, on
         {mapChanged && <AsyncButton busy={busy === "save"} busyLabel="Guardando mapa..." disabled={Boolean(busy)} onClick={() => void saveMap()}>Guardar mapa</AsyncButton>}
         {!mapChanged && <AsyncButton busy={busy === "confirm"} busyLabel="Confirmando proyecto..." disabled={Boolean(busy)} onClick={() => void confirm()}>Confirmar proyecto</AsyncButton>}
         <p className="text-sm text-[#526b87]">El proyecto queda confirmado después de revisar este mapa.</p></section>}
-      {selected.status === "active" && <section className="space-y-4 rounded-2xl border bg-white p-5"><h2 className="text-xl font-bold">Proyecto confirmado</h2>
-        <p className="text-sm text-[#526b87]">Esta versión es la base del Word y de las próximas actividades.</p>
+      {selected.status === "active" && <section className="space-y-4 rounded-2xl border bg-white p-5"><h2 className="text-xl font-bold">Dentro del proyecto: {selected.title}</h2>
+        <p className="text-sm text-[#526b87]">Desde aquí preparas las actividades de este proyecto, en el orden del mapa. Los talleres opcionales aparecen junto a las actividades. Esta versión también es la base del Word.</p>
         <p className="text-sm"><b>Imagen elegida:</b> {imageOptions.find((item) => item.id === selected.details.image_id)?.title ?? "Sin imagen"}. Para cambiarla, crea una nueva versión.</p>
         <div className="flex flex-wrap gap-2"><AsyncButton busy={busy === "formal"} busyLabel="Preparando Word..." disabled={Boolean(busy)} onClick={() => void formalize()}>Preparar Word</AsyncButton>
           <AsyncButton variant="outline" busy={busy === "copy"} busyLabel="Creando versión..." disabled={Boolean(busy)} onClick={() => void copyVersion()}>Revisar una nueva versión</AsyncButton></div>

@@ -102,12 +102,12 @@ export function WorkshopMasterPanel({ projectId, onConfirmed }: { projectId: str
         body: JSON.stringify({ projectId, masterId: data.master.id, expectedRevision: data.master.revision,
           itemIndex: item.index }),
       });
-      const result = await response.json() as { sheet: Sheet | null; error?: string };
+      const result = await response.json() as { sheet: Sheet | null; reason?: string; error?: string };
       if (!response.ok) throw new Error(result.error ?? "Ayni no pudo recomendar una ficha.");
       if (result.sheet) {
         change(item.index, { sheet_id: result.sheet.id,
-          sheet_reason: "Recomendada por Ayni según la intención del taller y los datos de la ficha." });
-        setMessage(`Ayni recomienda «${result.sheet.title}». Puedes elegirla o cambiarla.`);
+          sheet_reason: result.reason === "catalog_match" ? "Sugerida por coincidencia del catálogo; revisa si complementa el taller." : "Recomendada por Ayni según la intención del taller y los datos de la ficha." });
+        setMessage(`Ficha sugerida: «${result.sheet.title}». Revísala y cámbiala si no corresponde al taller.`);
       } else setMessage("Ayni no encontró una ficha adecuada. Puedes elegirla o continuar sin ficha.");
     } catch (error) { setMessage(error instanceof Error ? error.message : "Ayni no pudo recomendar una ficha."); }
     finally { setBusy(false); }

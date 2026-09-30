@@ -1272,6 +1272,10 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       const parts = url.pathname.split("/");
       if (parts.length !== 6 || parts[5] !== "download") { send(response, 404, { error: "Documento no disponible." }, origin); return; }
       if (parts[3] === "period_closure") { send(response, 409, { error: "El Word del cierre estará disponible cuando se incorpore su plantilla definitiva." }, origin); return; }
+      const requestedDocument = await loadSavedDocument(db, teacherId, parts[3], parts[4]);
+      if (requestedDocument?.kind === "experience" && requestedDocument.content?.document_template_version === "experience-unified-v2" && !requestedDocument.formal_ready) {
+        send(response, 409, { error: "Prepara primero el Word de este proyecto. Puedes hacerlo desde esta página." }, origin); return;
+      }
       const knowledgeBase = await loadKnowledgeBaseV4();
       const cards = knowledgeBase.competencyCards.map((card) => ({ id: card.id, name: card.official_name,
         area_name: card.area_name, capacities: card.capacities, ages: card.ages }));
@@ -1299,6 +1303,10 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       const parts = url.pathname.split("/");
       if (parts.length !== 6 || parts[5] !== "save-local") { send(response, 404, { error: "Documento no disponible." }, origin); return; }
       if (parts[3] === "period_closure") { send(response, 409, { error: "El Word del cierre estará disponible cuando se incorpore su plantilla definitiva." }, origin); return; }
+      const requestedDocument = await loadSavedDocument(db, teacherId, parts[3], parts[4]);
+      if (requestedDocument?.kind === "experience" && requestedDocument.content?.document_template_version === "experience-unified-v2" && !requestedDocument.formal_ready) {
+        send(response, 409, { error: "Prepara primero el Word de este proyecto. Puedes hacerlo desde esta página." }, origin); return;
+      }
       const knowledgeBase = await loadKnowledgeBaseV4();
       const cards = knowledgeBase.competencyCards.map((card) => ({ id: card.id, name: card.official_name,
         area_name: card.area_name, capacities: card.capacities, ages: card.ages }));

@@ -14,3 +14,5 @@ Recibe el Plan Maestro confirmado, una fila de su mapa, las filas anterior y sig
 3. En `evidence_opportunities`, explica de forma concreta «¿Qué observar?» durante esta actividad: una actuación visible del niño, ligada al criterio heredado, al propósito y a la edad del aula. No afirmes que ocurrió ni inventes registros individuales, logros, dificultades o reflexión posterior.
 
 La actividad cotidiana es la unidad de trabajo. La plantilla DOCX y las fechas las controla la aplicación, no esta Skill.
+
+En cada campo usa frases cortas, acciones concretas y una idea por oración. Separa con claridad lo que harán los niños, la intervención de la docente, las preguntas que puede usar, los materiales y lo que observará. Evita párrafos largos en inicio, desarrollo y cierre. Conserva literalmente los nombres oficiales del CNEB cuando correspondan.
