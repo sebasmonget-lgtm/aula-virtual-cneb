@@ -20,8 +20,10 @@ export function AdminWorkspace({ onSignOut }: { onSignOut: () => void }) {
   const [name, setName] = useState("");
   const [dni, setDni] = useState("");
   const [password, setPassword] = useState("");
+  const [passwordConfirmation, setPasswordConfirmation] = useState("");
   const [resetId, setResetId] = useState<string | null>(null);
   const [newPassword, setNewPassword] = useState("");
+  const [newPasswordConfirmation, setNewPasswordConfirmation] = useState("");
 
   const reload = useCallback(async () => {
     const response = await apiFetch(`${localDatabaseApiUrl}/api/admin/accounts`, { cache: "no-store" });
@@ -45,12 +47,13 @@ export function AdminWorkspace({ onSignOut }: { onSignOut: () => void }) {
   async function create(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setBusy(true); setError(""); setNotice("");
     try {
+      if (password !== passwordConfirmation) throw new Error("Las contraseñas no coinciden.");
       const response = await apiFetch(`${localDatabaseApiUrl}/api/admin/accounts`, {
         method: "POST", headers: { "content-type": "application/json" },
         body: JSON.stringify({ name: name.trim(), dni, password }),
       });
       if (!response.ok) throw new Error("No se pudo crear la cuenta. Verifica el DNI, el nombre y si ya existe.");
-      setName(""); setDni(""); setPassword("");
+      setName(""); setDni(""); setPassword(""); setPasswordConfirmation("");
       await reload(); setNotice("Cuenta docente creada. Entrega la contraseña por un canal privado.");
     } catch (cause) { setError(cause instanceof Error ? cause.message : "No se pudo crear la cuenta."); }
     finally { setBusy(false); }
@@ -61,11 +64,12 @@ export function AdminWorkspace({ onSignOut }: { onSignOut: () => void }) {
     if (!resetId) return;
     setBusy(true); setError(""); setNotice("");
     try {
+      if (newPassword !== newPasswordConfirmation) throw new Error("Las contraseñas no coinciden.");
       const response = await apiFetch(`${localDatabaseApiUrl}/api/admin/accounts/${resetId}/password`, {
         method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ password: newPassword }),
       });
       if (!response.ok) throw new Error("No se pudo cambiar la contraseña.");
-      setNewPassword(""); setResetId(null); setNotice("Contraseña restablecida. Comunícala directamente a la docente.");
+      setNewPassword(""); setNewPasswordConfirmation(""); setResetId(null); setNotice("Contraseña restablecida. Comunícala directamente a la docente.");
     } catch (cause) { setError(cause instanceof Error ? cause.message : "No se pudo cambiar la contraseña."); }
     finally { setBusy(false); }
   }
@@ -91,8 +95,8 @@ export function AdminWorkspace({ onSignOut }: { onSignOut: () => void }) {
           <div className="border-b border-[#d7e4ee] p-5"><h2 className="text-xl font-bold">Usuarios</h2><p className="mt-1 text-sm text-[#526b87]">Las contraseñas actuales no se pueden consultar. Puedes restablecer las de las docentes.</p></div>
           {!directory ? <p className="p-5">Cargando cuentas…</p> : directory.accounts.length === 0 ? <p className="p-5">Aún no hay cuentas.</p> :
             <div className="divide-y divide-[#e6edf3]">{directory.accounts.map((account) => <article key={account.id} className="p-5">
-              <div className="flex flex-wrap justify-between gap-3"><div><h3 className="font-bold">{account.name}</h3><p className="text-sm text-[#526b87]">{account.role === "admin" ? "Administrador" : "Docente"} · Alta {date(account.createdAt)} · Último ingreso {date(account.lastSignInAt)}</p></div>
-                {account.role === "teacher" && <button type="button" onClick={() => { setResetId(account.id); setNewPassword(""); setError(""); }} className="rounded-xl border border-[#bdd0dd] px-3 py-2 text-sm font-semibold text-[#087d96]">Restablecer contraseña</button>}</div>
+              <div className="flex flex-wrap justify-between gap-3"><div><h3 className="font-bold">{account.name}</h3><p className="text-sm text-[#526b87]">{account.role === "admin" ? "Administrador" : "Docente"} · Cuenta {account.id.slice(0, 8)} · Alta {date(account.createdAt)} · Último ingreso {date(account.lastSignInAt)}</p></div>
+                {account.role === "teacher" && <button type="button" onClick={() => { setResetId(account.id); setNewPassword(""); setNewPasswordConfirmation(""); setError(""); }} className="rounded-xl border border-[#bdd0dd] px-3 py-2 text-sm font-semibold text-[#087d96]">Restablecer contraseña</button>}</div>
               {account.role === "teacher" && <p className="mt-3 text-sm">IA: <strong>{money(account.ai.monthCostUsd)}</strong> este mes · <strong>{money(account.ai.costUsd)}</strong> acumulado · {account.ai.calls} llamadas{account.ai.unpricedCalls ? ` · ${account.ai.unpricedCalls} sin precio` : ""}{account.ai.estimatedCalls ? ` · ${account.ai.estimatedCalls} estimadas` : ""}</p>}
             </article>)}</div>}
         </section>
@@ -101,6 +105,7 @@ export function AdminWorkspace({ onSignOut }: { onSignOut: () => void }) {
             <label className="block text-sm font-semibold">Nombre<input className={inputClass} value={name} onChange={(event) => setName(event.target.value)} minLength={2} maxLength={100} required autoComplete="off" /></label>
             <label className="block text-sm font-semibold">DNI<input className={inputClass} value={dni} onChange={(event) => setDni(event.target.value.replace(/\D/g, ""))} inputMode="numeric" pattern="[0-9]{8}" maxLength={8} required autoComplete="off" /></label>
             <label className="block text-sm font-semibold">Contraseña inicial<input className={inputClass} type="password" value={password} onChange={(event) => setPassword(event.target.value)} minLength={12} required autoComplete="new-password" /></label>
+            <label className="block text-sm font-semibold">Repite la contraseña<input className={inputClass} type="password" value={passwordConfirmation} onChange={(event) => setPasswordConfirmation(event.target.value)} minLength={12} required autoComplete="new-password" /></label>
             <button disabled={busy} className="w-full rounded-xl bg-[#087d96] px-4 py-3 font-bold text-white disabled:opacity-60">Crear cuenta</button>
           </form>
         </aside>
@@ -108,7 +113,8 @@ export function AdminWorkspace({ onSignOut }: { onSignOut: () => void }) {
       {resetId && <div className="fixed inset-0 z-50 grid place-items-center bg-[#10243b]/60 p-4"><section role="dialog" aria-modal="true" aria-labelledby="reset-heading" className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
         <h2 id="reset-heading" className="text-xl font-bold">Restablecer contraseña</h2><p className="mt-2 text-sm text-[#526b87]">Verifica la identidad de la docente antes de entregarle la nueva contraseña. Ayni no mostrará la contraseña anterior.</p>
         <form onSubmit={(event) => void reset(event)} className="mt-5"><label className="text-sm font-semibold">Nueva contraseña<input className={inputClass} type="password" minLength={12} required autoComplete="new-password" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} /></label>
-          <div className="mt-5 flex justify-end gap-3"><button type="button" onClick={() => { setResetId(null); setNewPassword(""); }} className="rounded-xl border border-[#bdd0dd] px-4 py-3 font-semibold">Cancelar</button><button disabled={busy} className="rounded-xl bg-[#087d96] px-4 py-3 font-bold text-white disabled:opacity-60">Guardar nueva contraseña</button></div>
+          <label className="mt-4 block text-sm font-semibold">Repite la contraseña<input className={inputClass} type="password" minLength={12} required autoComplete="new-password" value={newPasswordConfirmation} onChange={(event) => setNewPasswordConfirmation(event.target.value)} /></label>
+          <div className="mt-5 flex justify-end gap-3"><button type="button" onClick={() => { setResetId(null); setNewPassword(""); setNewPasswordConfirmation(""); }} className="rounded-xl border border-[#bdd0dd] px-4 py-3 font-semibold">Cancelar</button><button disabled={busy} className="rounded-xl bg-[#087d96] px-4 py-3 font-bold text-white disabled:opacity-60">Guardar nueva contraseña</button></div>
         </form>
       </section></div>}
     </div>

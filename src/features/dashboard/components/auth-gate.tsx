@@ -20,6 +20,7 @@ export function AuthGate() {
   const [setupName, setSetupName] = useState("");
   const [dni, setDni] = useState("");
   const [password, setPassword] = useState("");
+  const [passwordConfirmation, setPasswordConfirmation] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -79,12 +80,13 @@ export function AuthGate() {
   async function setup(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setBusy(true); setError("");
     try {
+      if (password !== passwordConfirmation) throw new Error("Las contraseñas no coinciden.");
       const response = await apiFetch(`${localDatabaseApiUrl}/api/admin/setup`, {
         method: "POST", headers: { "content-type": "application/json" },
         body: JSON.stringify({ setupKey, name: setupName.trim(), dni, password }),
       });
       if (!response.ok) throw new Error("No se pudo crear el administrador. Revisa los datos y la clave de configuración.");
-      setSetupKey(""); setPassword(""); setSettingUp(false); setSetupAvailable(false);
+      setSetupKey(""); setPassword(""); setPasswordConfirmation(""); setSettingUp(false); setSetupAvailable(false);
       setError("");
     } catch (cause) { setError(cause instanceof Error ? cause.message : "No se pudo crear el administrador."); }
     finally { setBusy(false); }
@@ -118,11 +120,12 @@ export function AuthGate() {
         <input id="ayni-login-dni" type="text" inputMode="numeric" pattern="[0-9]{8}" maxLength={8} autoComplete="username" required value={dni} onChange={(event) => setDni(event.target.value.replace(/\D/g, ""))} className="mt-2 w-full rounded-2xl border border-[#bdd0dd] bg-white px-4 py-4 text-base outline-none transition focus:border-[#087d96] focus:ring-2 focus:ring-[#087d96]/15" />
         <label htmlFor="ayni-login-password" className="mt-5 block text-sm font-bold text-[#19334d]">Contraseña</label>
         <div className="mt-2 flex overflow-hidden rounded-2xl border border-[#bdd0dd] bg-white transition focus-within:border-[#087d96] focus-within:ring-2 focus-within:ring-[#087d96]/15">
-          <input id="ayni-login-password" type={showPassword ? "text" : "password"} autoComplete="current-password" required value={password} onChange={(event) => setPassword(event.target.value)} className="min-w-0 flex-1 px-4 py-4 text-base outline-none" />
+          <input id="ayni-login-password" type={showPassword ? "text" : "password"} autoComplete={settingUp ? "new-password" : "current-password"} minLength={settingUp ? 12 : undefined} required value={password} onChange={(event) => setPassword(event.target.value)} className="min-w-0 flex-1 px-4 py-4 text-base outline-none" />
           <button type="button" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"} aria-pressed={showPassword} className="grid w-14 place-items-center border-l border-[#d7e4ee] text-[#526b87] hover:bg-[#f5f8fc] focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-[#087d96]">
             {showPassword ? <EyeOff size={21} aria-hidden="true" /> : <Eye size={21} aria-hidden="true" />}
           </button>
         </div>
+        {settingUp && <><label htmlFor="ayni-setup-confirm" className="mt-5 block text-sm font-bold text-[#19334d]">Repite la contraseña</label><input id="ayni-setup-confirm" type="password" autoComplete="new-password" required minLength={12} value={passwordConfirmation} onChange={(event) => setPasswordConfirmation(event.target.value)} className="mt-2 w-full rounded-2xl border border-[#bdd0dd] bg-white px-4 py-4" /></>}
         {error && <p role="alert" className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
         <button type="submit" disabled={busy} className="mt-7 w-full rounded-2xl bg-[#087d96] px-5 py-4 text-base font-bold text-white shadow-sm transition hover:bg-[#086d83] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#087d96] disabled:opacity-60">{busy ? "Procesando…" : settingUp ? "Crear administrador" : "Ingresar"}</button>
       </form>
