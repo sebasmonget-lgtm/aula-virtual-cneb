@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { X509Certificate } from "node:crypto";
 import { createDatabase, createPostgresSession, postgresPoolConfig } from "./database-adapter.mjs";
 import { expectedRevision, versionTransaction } from "../src/lib/version-integrity.mjs";
 
@@ -73,6 +74,12 @@ test("database selection validates connection settings and closes a shared pool"
   const config = postgresPoolConfig("postgresql://user:pass@db.example.com:5432/postgres");
   assert.equal(config.max, 5);
   assert.equal(config.ssl.rejectUnauthorized, true);
+  assert.equal(config.ssl.ca, undefined);
+  const supabase = postgresPoolConfig("postgresql://postgres.project:pass@aws-0-sa-east-1.pooler.supabase.com:5432/postgres");
+  assert.equal(supabase.ssl.rejectUnauthorized, true);
+  const ca = new X509Certificate(supabase.ssl.ca);
+  assert.equal(ca.ca, true);
+  assert.equal(ca.fingerprint256.replaceAll(":", "").toLowerCase(), "807025ad50d4ed219d2c9c7d299c004f824eb00cf7f65afef607d07b72e6cafa");
   const pool = fakePool();
   const database = await createDatabase({ mode: "postgres", connectionString: "postgresql://user:pass@db.example.com/postgres", poolFactory: () => pool });
   assert.notEqual(database.requestDb(), database.requestDb());

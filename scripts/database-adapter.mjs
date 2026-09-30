@@ -1,4 +1,5 @@
 import { PGlite } from "@electric-sql/pglite";
+import { supabaseRootCa2021 } from "./supabase-root-ca-2021.mjs";
 
 const transactionCommand = (sql) => String(sql).trim().replace(/;$/, "").toLowerCase();
 
@@ -80,6 +81,7 @@ export function postgresPoolConfig(connectionString, options = {}) {
     throw new Error("SUPABASE_DB_URL debe ser una URL PostgreSQL válida.");
   }
   const localHost = ["localhost", "127.0.0.1", "::1"].includes(url.hostname);
+  const supabaseHost = url.hostname.endsWith(".supabase.co") || url.hostname.endsWith(".supabase.com");
   return {
     connectionString,
     max: options.max ?? 5,
@@ -90,7 +92,7 @@ export function postgresPoolConfig(connectionString, options = {}) {
     statement_timeout: options.statementTimeoutMillis ?? 15000,
     idle_in_transaction_session_timeout: options.idleTransactionTimeoutMillis ?? 30000,
     keepAlive: true,
-    ssl: localHost ? false : { rejectUnauthorized: true },
+    ssl: localHost ? false : { rejectUnauthorized: true, ...(supabaseHost ? { ca: supabaseRootCa2021 } : {}) },
   };
 }
 

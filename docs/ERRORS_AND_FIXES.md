@@ -1,5 +1,15 @@
 # Errores y soluciones
 
+## 2026-09-30 — Vercel no reconocía la CA de PostgreSQL de Supabase
+
+**Síntoma.** El primer despliegue de `ayni4/ayni-aula-staging` compiló y quedó `READY`, pero `/health` devolvió HTTP 500. Los logs de la Function mostraron `SELF_SIGNED_CERT_IN_CHAIN` al conectar con PostgreSQL.
+
+**Causa raíz.** El adaptador exigía verificar TLS, pero Node en Vercel no tenía la CA raíz de Supabase entre sus autoridades de confianza. El build no abre una conexión y no detectó el problema.
+
+**Solución validada.** Se incorporó la CA pública descargada desde Database Settings del proyecto nuevo, con huella SHA-256 comprobada, y se aplica solo a hosts de Supabase con `rejectUnauthorized: true`. Una conexión de prueba al pooler con contraseña deliberadamente incorrecta llegó al rechazo PostgreSQL `28P01`, confirmando que superó la verificación TLS. La prueba del adaptador, typecheck, lint y build pasaron. El smoke remoto del despliegue corregido se comprueba por separado.
+
+**Prevención.** Probar `/health` en la Function desplegada y revisar logs antes de anunciar un despliegue funcional. Renovar la CA antes de su vencimiento de 2031, sin desactivar la verificación del certificado ni registrar credenciales.
+
 ## 2026-09-30 — Clave nueva de Supabase enviada como JWT
 
 **Síntoma.** Al preparar staging se observó que los adaptadores de Storage y la herramienta administrativa enviaban la nueva clave `sb_secret_…` tanto en `apikey` como en `Authorization: Bearer`. Supabase documenta que esa cabecera Bearer se interpreta como JWT y puede devolver `Invalid JWT`.

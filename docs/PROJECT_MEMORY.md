@@ -1,5 +1,9 @@
 # Memoria del proyecto Ayni Aula
 
+## Primer despliegue de staging, 2026-09-30
+
+Vercel recibió un despliegue de `83b3029` con `SUPABASE_DB_URL` guardada por el propietario. La compilación quedó `READY`, pero `/health` devolvió 500 por `SELF_SIGNED_CERT_IN_CHAIN`. El adaptador ahora confía explícitamente en la CA pública de Supabase para sus hosts y mantiene la verificación TLS. La conexión de prueba con contraseña incorrecta llegó a `28P01`; esto valida el certificado, no la contraseña real ni la aplicación completa. Ver `docs/ERRORS_AND_FIXES.md`. Las pruebas reales entre dos docentes, RLS y archivos siguen pendientes.
+
 ## Preparación de staging, 2026-09-30
 
 El proyecto nuevo de Supabase `eetdkmmspicboijcmnzv` recibió 68 migraciones. Se comprobó RLS habilitado en 78/78 tablas públicas y cinco buckets privados; aún no hay prueba real de Auth, RLS entre dos docentes ni archivos. La API independiente se adaptó a rutas Next y Storage remoto en código. `npx next build --webpack`, typecheck, lint y pruebas de adaptadores pasaron. Vercel `ayni4/ayni-aula-staging` tiene las claves Supabase y de IA como secretos, dos secretos internos nuevos y una CLI aislada enlazada; permanece sin despliegue hasta guardar `SUPABASE_DB_URL` con la contraseña que introducirá el propietario, validar dos docentes y completar smoke test. Ver `docs/STAGING_PROJECTS.md` y ADR 103.
