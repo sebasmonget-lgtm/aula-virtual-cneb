@@ -1026,3 +1026,5 @@ Síntoma: cuatro notas QA de la captura automatizada quedaron asociadas a la sel
 **Solución validada.** Se añadió `vercel.json` con un preflight que bloquea el build de despliegue y explica las brechas. `node scripts/verify-cloud-deploy.mjs` termina con exit code 1 y enumera cinco bloqueos; el build Next nativo de la interfaz sí pasó. Esto evita una publicación incompleta, pero aún no valida paridad cloud.
 
 **Prevención.** Exigir API y Storage funcionales, pruebas de Auth/RLS con dos docentes en Supabase nuevo y smoke de preview antes de quitar el bloqueo; ver `docs/VERCEL_SUPABASE_READINESS.md`.
+
+**Ensayo de adaptación descartado.** Al exponer el servidor completo con una API Route de Next.js, `next build` falló al resolver las raíces curriculares v4.0.0/v4.1.0. Turbopack advirtió además que las lecturas dinámicas podían incluir todo el repositorio en la función. La ruta experimental y sus cambios al servidor se retiraron; el checkout vuelve al build de interfaz sin API. La adaptación futura debe separar el handler de sus dependencias de filesystem y empaquetar solo los assets curriculares y plantillas requeridos.

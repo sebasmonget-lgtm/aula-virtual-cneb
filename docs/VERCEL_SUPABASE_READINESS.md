@@ -20,6 +20,8 @@ Estado al 30/09/2026, commit de funciones `815a4b9`: **despliegue bloqueado**. U
 | Base/Auth | Las migraciones y RLS se probaron en PostgreSQL emulado. | Proyecto Supabase **nuevo** con migraciones aplicadas en orden, Auth real y prueba de aislamiento con dos docentes ficticias. |
 | QA pedagógico | F12 sigue sin aceptación anual completa. | Recorrido de profesora desde alta hasta cierre sin inventar evidencias ni valoraciones, documentos, móvil y carpeta/ZIP conforme a `docs/qa/f12-final-e2e-2026-09-28.md`. |
 
+Un ensayo no publicado de importar el servidor entero desde `pages/api/[...path].js` falló en `next build`: Turbopack no resolvió las carpetas curriculares `knowledge/.../v4.0.0` y `v4.1.0`, y advirtió que accesos dinámicos al filesystem incluirían demasiados archivos del repositorio en la función. Se retiró ese ensayo antes del commit. La API requiere separar un núcleo apto para funciones y declarar explícitamente los assets de solo lectura que necesita; no basta con envolver el servidor actual.
+
 ## Secuencia para habilitar una publicación
 
 1. Terminar la función de API y Storage privado; retirar los bloqueos estáticos solo al reemplazar cada ruta. Añadir pruebas de contrato HTTP y archivos en modo PostgreSQL. Mantener el comportamiento local y sus flags `=0` como rollback.
