@@ -1176,6 +1176,18 @@ Síntoma: cuatro notas QA de la captura automatizada quedaron asociadas a la sel
 
 **Corrección.** `expectedRevision` admite cadenas decimales positivas provenientes del API y las convierte únicamente si caben en un entero seguro. Se siguen rechazando valores ambiguos, fraccionarios o inseguros. La pantalla del proyecto muestra el mensaje explicativo del servidor para conflictos reales.
 
-**Validación local.** Prueba de versiones con cadenas y entradas inválidas: 5/5. Pasaron `tsc --noEmit`, lint, build Vinext y build Next.js. Falta repetir el flujo en Vercel tras desplegar.
+**Validación.** Prueba de versiones con cadenas y entradas inválidas: 5/5. Pasaron `tsc --noEmit`, lint, build Vinext y build Next.js. El despliegue `dpl_7ZwGav2GxxUVcDCnWdAwSfCHd7rA` respondió en `/health` y `/api/auth/config`; en la sesión docente, la unidad U02 avanzó de competencias a tres preguntas, recorrido y criterios sin conflicto.
 
 **Prevención.** Probar un ciclo real PostgreSQL `bigint` → JSON → cliente → mutación; no asumir que el tipo estático de TypeScript transforma el valor recibido.
+
+## 2026-10-01 — Perfil del alumno sin apellido
+
+**Síntoma.** La lista del aula distinguía a Prueba Uno, Dos y Tres, pero el encabezado, resumen y entrevista del perfil de Uno decían solo «Prueba».
+
+**Causa raíz.** La respuesta de `/api/students/:id` devolvía el nombre corto del contexto pedagógico como `student.name` y omitía el apellido aunque `last_name` estaba disponible.
+
+**Corrección.** La proyección del perfil concatena el nombre preferido o nombre y el apellido para la identidad visible, sin cambiar el contexto pedagógico ni el registro fuente.
+
+**Validación local.** Pasaron `node --check`, `tsc --noEmit`, lint, build Vinext y build Next.js. Falta verificar el nombre visible en el aula QA tras desplegar.
+
+**Prevención.** Probar estudiantes con el mismo nombre de pila al entrar a sus perfiles, entrevistas y evidencias.

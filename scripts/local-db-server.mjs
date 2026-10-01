@@ -502,7 +502,8 @@ async function studentProfile(studentId) {
   const birthDate = (await db.query(`select birth_date::text as birth_date from students where id=$1`, [studentId])).rows[0]?.birth_date ?? null;
   const snapshot = (await db.query(`select generated_at, source_updated_at from student_context_snapshots
     where student_id = $1 and version = 1`, [studentId])).rows[0] ?? null;
-  return { ...context, student: { ...context.student, name: displayPersonName(context.student.name),
+  return { ...context, student: { ...context.student,
+    name: displayPersonName([context.student.name, context.student.last_name].filter(Boolean).join(" ")),
     first_name: displayPersonName(context.student.first_name), last_name: displayPersonName(context.student.last_name), birth_date: birthDate }, snapshot };
 }
 
