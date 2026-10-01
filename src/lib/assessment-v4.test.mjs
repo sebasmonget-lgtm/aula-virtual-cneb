@@ -30,6 +30,19 @@ test("assessment routing, schema y provider reciben una sola tarjeta", async () 
   assert.equal(captured.ai_context_bundle.context.student.id, "current_student");
 });
 
+test("Assessment entrega contexto familiar en un bloque separado y mantiene las evidencias intactas", async () => {
+  let captured;
+  const familyContext = { source: "family_interview", role: "context_only", interests: ["Animales"] };
+  const evidenceHistory = [{ observation_note: "Exploró hojas en el aula.", observation_status: "observed_without_judgment" }];
+  const input = buildAssessmentInput({ age: 5, competencyId: "CYT_INDAGA", evidenceHistory, familyContext });
+  await generateAIWorkflowV4(input, { provider: { async generate(request) {
+    captured = request; return { ...proposal(), competency_id: "CYT_INDAGA" };
+  } } });
+  assert.deepEqual(captured.ai_context_bundle.context.student.family_context, familyContext);
+  assert.deepEqual(input.evidence_history, evidenceHistory);
+  assert.equal(JSON.stringify(input.evidence_history).includes("Animales"), false);
+});
+
 test("assessment-v3 valida estructura y nunca acepta una sugerencia de nivel", () => {
   assert.deepEqual(validateAssessmentProposal(proposal(), "COM_ORAL", 1), proposal());
   assert.deepEqual(validateAssessmentProposal(proposal("sufficient"), "COM_ORAL", 2), proposal("sufficient"));
@@ -98,6 +111,7 @@ test("snapshot estable por orden/fecha y sensible a toda fuente relevante", () =
 async function fixture({ twoEvidence = false } = {}) {
   const db = await PGlite.create();
   await db.exec(`create table students(id uuid primary key,classroom_id uuid not null,status text not null,first_name text,last_name text,preferred_name text);
+    create table student_family_interviews(id uuid primary key,classroom_id uuid not null,student_id uuid not null,version integer not null,status text not null,details jsonb not null);
     create table activities(id uuid primary key,title text);
     create table activity_criteria(id uuid primary key,activity_id uuid,competency_v4_id text,criterion_text text,details jsonb);
     create table evidences(id uuid primary key,student_id uuid,activity_id uuid,criterion_id uuid,observed_at timestamptz,observation_status text,observation_text text,media_path text);

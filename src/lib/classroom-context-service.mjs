@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { interviewLanguageOptions, interviewInterestOptions } from "./family-interview-contract.mjs";
+import { interviewLanguageOptions, interviewInterestOptions, interviewCommunityOptions } from "./family-interview-contract.mjs";
 import { normalizeFamilyInterviewDetails } from "./diagnostic-sources-v4.mjs";
 import { diagnosticPlanningSummary, loadDiagnosticAssessmentWorkspace } from "./diagnostic-assessment-v4.mjs";
 
@@ -52,6 +52,7 @@ export async function getCurrentClassroomContext(db, teacherId, classroomId = nu
     languages: countTags(interviews, "language_tags", interviewLanguageOptions),
     primary_languages: countChoice(interviews, "primary_language_tag", interviewLanguageOptions),
     common_interests: countTags(interviews, "interest_tags", interviewInterestOptions),
+    community_opportunities: countTags(interviews, "community_tags", interviewCommunityOptions),
     previous_education: previous,
     confirmed_diagnostic_summary: group ? diagnosticPlanningSummary(group.details, names) : null,
     diagnostic_review_current: groupIsCurrent,
@@ -70,6 +71,14 @@ export function publicClassroomContext(current) {
   return { version: current.version, age_group: current.age_group,
     students_total: current.students_total, confirmed_interviews: current.confirmed_interviews,
     languages: visible(current.languages), common_interests: visible(current.common_interests),
+    community_opportunities: visible(current.community_opportunities ?? []),
+    planning_interests: current.common_interests.map((item) => item.label).slice(0, 12),
+    planning_opportunities: (current.community_opportunities ?? []).map((item) => item.label).slice(0, 12),
+    planning_language_context: current.students_total < 5 && current.languages.length
+      ? (current.languages.length > 1 ? "Hay varias lenguas en los hogares."
+        : current.languages[0].key === "es" ? "Se usa castellano en los hogares."
+          : "Se informó una lengua distinta del castellano en los hogares.")
+      : null,
     primary_languages: visible(current.primary_languages),
     previous_education: previous,
     confirmed_diagnostic_summary: current.confirmed_diagnostic_summary,

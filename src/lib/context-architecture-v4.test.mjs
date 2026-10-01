@@ -120,7 +120,8 @@ test("opciones de la entrevista se capturan al responder, sin clasificar despué
   assert.throws(() => validateFamilyInterviewDetails({ other_interest_text: "Origami" }), /Selecciona «Otro»/);
   assert.throws(() => validateFamilyInterviewDetails({ previous_education_status: "no", previous_education_type: "nursery" }), /requiere la respuesta/);
   const ui = await readFile(new URL("../features/dashboard/components/family-interview-v4.tsx", import.meta.url), "utf8");
-  assert.match(ui, /Lengua que utiliza principalmente/);
-  assert.match(ui, /¿Tuvo experiencia educativa previa\?/);
-  assert.match(ui, /Otro interés/);
+  assert.match(ui, /Pregunta \{step \+ 1\} de 9/);
+  assert.match(ui, /Guardar y continuar después/);
+  assert.match(ui, /¿Con quién usa/);
+  assert.match(ui, /¿Qué otro interés/);
 });

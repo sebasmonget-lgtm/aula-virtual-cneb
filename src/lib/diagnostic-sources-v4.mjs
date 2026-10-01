@@ -8,7 +8,7 @@ import { buildClassifierOptions } from "./openai-competency-classifier.mjs";
 import { anonymousDecisionText } from "./jev-competency-suggestion.mjs";
 import { observationRecommendationState } from "./observation-recommendation.mjs";
 import { summarizeSpontaneousV24Pilot } from "./observation-v24-pilot-metrics.mjs";
-import { familyInterviewCategories, familyInterviewStructuredOptionsVersion, interviewLanguageOptions, interviewInterestOptions, interviewPreviousEducationOptions, interviewPreviousEducationTypeOptions } from "./family-interview-contract.mjs";
+import { familyInterviewCategories, familyInterviewStructuredOptionsVersion, interviewLanguageOptions, interviewInterestOptions, interviewAutonomyOptions, interviewAutonomyLevels, interviewCommunicationOptions, interviewEmotionalSupportOptions, interviewSocialPlayOptions, interviewHomeActivityOptions, interviewCommunityOptions, interviewParticipationSupportOptions, interviewPreviousEducationOptions, interviewPreviousEducationTypeOptions } from "./family-interview-contract.mjs";
 
 export class DiagnosticSourceError extends Error {
   constructor(reason, message) { super(message); this.name = "DiagnosticSourceError"; this.reason = reason; }
@@ -41,10 +41,17 @@ export function normalizeFamilyInterviewDetails(value) {
 
 export function validateFamilyInterviewDetails(value) {
   if (!value || typeof value !== "object" || Array.isArray(value)) fail("invalid_interview", "La entrevista debe contener respuestas por campo.");
+  const tagFields = [
+    ["language_tags", interviewLanguageOptions], ["interest_tags", interviewInterestOptions],
+    ["communication_tags", interviewCommunicationOptions], ["emotional_support_tags", interviewEmotionalSupportOptions],
+    ["social_play_tags", interviewSocialPlayOptions], ["home_activity_tags", interviewHomeActivityOptions],
+    ["community_tags", interviewCommunityOptions], ["participation_support_tags", interviewParticipationSupportOptions],
+  ];
   if (Object.keys(value).some((key) => ![...familyInterviewCategories, ...legacyInterviewFields,
-    "language_tags", "primary_language_tag", "other_language_text", "interest_tags", "other_interest_text",
+    ...tagFields.map(([field]) => field), "primary_language_tag", "other_language_text", "other_interest_text",
+    "other_community_text", "home_language_uses", "autonomy_routines",
     "previous_education_status", "previous_education_type", "structured_options_version"].includes(key))) fail("invalid_interview", "La entrevista contiene un campo no permitido.");
-  if (value.structured_options_version != null && value.structured_options_version !== familyInterviewStructuredOptionsVersion)
+  if (value.structured_options_version != null && ![1, familyInterviewStructuredOptionsVersion].includes(value.structured_options_version))
     fail("invalid_interview", "La versión de opciones de la entrevista no es compatible.");
   const result = {};
   for (const field of [...familyInterviewCategories, ...legacyInterviewFields]) {
@@ -53,13 +60,32 @@ export function validateFamilyInterviewDetails(value) {
     if (typeof answer !== "string" || answer.trim().length > 2000) fail("invalid_interview", `Revisa la respuesta de ${field}.`);
     if (answer.trim()) result[field] = answer.trim();
   }
-  for (const [field, options] of [["language_tags", interviewLanguageOptions], ["interest_tags", interviewInterestOptions]]) {
+  for (const [field, options] of tagFields) {
     if (value[field] == null) continue;
     const allowed = new Set(options.map((item) => item.id));
     if (!Array.isArray(value[field]) || value[field].length > options.length || value[field].some((tag) => !allowed.has(tag)))
       fail("invalid_interview", `Revisa las opciones de ${field}.`);
     const tags = [...new Set(value[field])].sort();
     if (tags.length) result[field] = tags;
+  }
+  if (value.autonomy_routines != null) {
+    const allowed = new Set(interviewAutonomyOptions.map((item) => item.id));
+    const levels = new Set(interviewAutonomyLevels.map((item) => item.id));
+    if (!Array.isArray(value.autonomy_routines) || value.autonomy_routines.length > allowed.size ||
+      value.autonomy_routines.some((row) => !row || !allowed.has(row.id) || !levels.has(row.level)) ||
+      new Set(value.autonomy_routines.map((row) => row.id)).size !== value.autonomy_routines.length)
+      fail("invalid_interview", "Revisa las rutinas cotidianas.");
+    if (value.autonomy_routines.length) result.autonomy_routines = value.autonomy_routines.map(({ id, level }) => ({ id, level }));
+  }
+  if (value.home_language_uses != null) {
+    const allowed = new Set(interviewLanguageOptions.map((item) => item.id));
+    if (!Array.isArray(value.home_language_uses) || value.home_language_uses.length > 8 ||
+      value.home_language_uses.some((row) => !row || !allowed.has(row.language_tag) ||
+        !result.language_tags?.includes(row.language_tag) || typeof row.with_whom !== "string" ||
+        !row.with_whom.trim() || row.with_whom.trim().length > 100))
+      fail("invalid_interview", "Revisa con quién usa cada idioma.");
+    if (value.home_language_uses.length) result.home_language_uses = value.home_language_uses.map((row) =>
+      ({ language_tag: row.language_tag, with_whom: row.with_whom.trim() }));
   }
   if (value.previous_education_status != null) {
     if (!interviewPreviousEducationOptions.some((option) => option.id === value.previous_education_status))
@@ -71,7 +97,8 @@ export function validateFamilyInterviewDetails(value) {
       fail("invalid_interview", "La lengua principal debe estar entre las lenguas seleccionadas.");
     result.primary_language_tag = value.primary_language_tag;
   }
-  for (const [field, tagField] of [["other_language_text", "language_tags"], ["other_interest_text", "interest_tags"]]) {
+  for (const [field, tagField] of [["other_language_text", "language_tags"], ["other_interest_text", "interest_tags"],
+    ["other_community_text", "community_tags"]]) {
     const answer = value[field];
     if (answer == null || answer === "") continue;
     if (typeof answer !== "string" || answer.trim().length > 200 || !result[tagField]?.includes("other"))
@@ -83,16 +110,29 @@ export function validateFamilyInterviewDetails(value) {
       fail("invalid_interview", "El tipo de experiencia previa requiere la respuesta «Sí».");
     result.previous_education_type = value.previous_education_type;
   }
-  if (["language_tags", "primary_language_tag", "other_language_text", "interest_tags", "other_interest_text",
-    "previous_education_status", "previous_education_type"].some((field) => result[field] != null))
-    result.structured_options_version = familyInterviewStructuredOptionsVersion;
+  const newFields = ["communication_context", "emotional_support_context", "home_activity_example",
+    "family_community_context", "family_community_enjoyed", "participation_support_context", "family_expectation",
+    "communication_tags", "emotional_support_tags", "social_play_tags", "home_activity_tags", "community_tags",
+    "participation_support_tags", "other_community_text", "home_language_uses", "autonomy_routines"];
+  const hasNewFields = newFields.some((field) => result[field] != null);
+  if (value.structured_options_version === 1 && hasNewFields)
+    fail("invalid_interview", "La entrevista anterior no admite los campos nuevos.");
+  if ([...tagFields.map(([field]) => field), "primary_language_tag", "other_language_text", "other_interest_text",
+    "other_community_text", "home_language_uses", "autonomy_routines", "previous_education_status",
+    "previous_education_type"].some((field) => result[field] != null) || hasNewFields)
+    result.structured_options_version = value.structured_options_version ?? (hasNewFields ? familyInterviewStructuredOptionsVersion : 1);
   return normalizeFamilyInterviewDetails(result);
 }
 
 export function safeFamilyContext(details) {
   const normalized = normalizeFamilyInterviewDetails(details ?? {});
-  return Object.fromEntries([...permittedContextFields, "language_tags", "primary_language_tag", "other_language_text",
-    "interest_tags", "other_interest_text", "previous_education_status", "previous_education_type", "structured_options_version"]
+  return Object.fromEntries([...permittedContextFields, "communication_context", "emotional_support_context",
+    "home_activity_example", "family_community_context", "family_community_enjoyed",
+    "participation_support_context", "family_expectation", "language_tags", "primary_language_tag",
+    "other_language_text", "home_language_uses", "interest_tags", "other_interest_text",
+    "autonomy_routines", "communication_tags", "emotional_support_tags", "social_play_tags",
+    "home_activity_tags", "community_tags", "other_community_text", "participation_support_tags",
+    "previous_education_status", "previous_education_type", "structured_options_version"]
     .filter((field) => normalized[field]).map((field) => [field, normalized[field]]));
 }
 

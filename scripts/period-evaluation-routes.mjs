@@ -18,6 +18,7 @@ import { VersionConflictError, conflictPayload, httpStatusForError, isVersionCon
 import { assessmentMasterEntry } from "../src/lib/assessment-master-service.mjs";
 import { loadAssessmentMasterSources } from "./assessment-master-routes.mjs";
 import { getCurrentClassroomContext, publicClassroomContext } from "../src/lib/classroom-context-service.mjs";
+import { familyObservationHint, loadConfirmedFamilyContext, projectFamilyAssessmentContext } from "../src/lib/family-interview-projection.mjs";
 import { buildClassroomPeriodReportInput, buildGenericAssessmentWorkbook, buildPeriodStatistics, classroomReportFingerprint,
   isTeacherAchievementLevel, SIAGIE_EXPORT_STATUS, stableCompetencyLabel, syncPeriodEvaluationMap, validateClassroomPeriodReport } from "../src/lib/period-assessment-closure-service.mjs";
 
@@ -244,6 +245,11 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
         const criteria=(await db.query(`select id,competency_v4_id from activity_criteria where activity_id=$1 and status='active'`,[activity.id])).rows;
         const diagnostic=await loadDiagnosticCoverageRecords(db,classroom.id,period);
         const students=data.model.students.map((student)=>({id:student.id,name:[student.preferred_name||student.first_name,student.last_name].filter(Boolean).join(" ")}));
+        const familyRows=(await db.query(`select distinct on (i.student_id) i.student_id,i.details
+          from student_family_interviews i join students s on s.id=i.student_id and s.classroom_id=i.classroom_id
+          where i.classroom_id=$1 and i.status='confirmed' and s.status='active'
+          order by i.student_id,i.version desc`,[classroom.id])).rows;
+        const familyByStudent=new Map(familyRows.map((row)=>[row.student_id,row.details]));
         const priorClosures=(await db.query(`select v.manifest from period_closures pc
           join period_closure_versions v on v.id=pc.current_version_id
           join evaluation_periods ep on ep.id=pc.evaluation_period_id
@@ -260,9 +266,14 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
             ...diagnostic.filter((item)=>item.competency_id===competencyId)];
           return observeTodaySuggestions(students,records,competencyId,criterionIds,{today:activityDay,
             policy:{...AYNI_HEURISTICS,observe_today_limit:students.length}})
-            .map((item)=>{const pending=carryover.has(`${item.student_id}:${competencyId}`);return {...item,
+            .map((item)=>{const pending=carryover.has(`${item.student_id}:${competencyId}`);
+              const familyHint=familyObservationHint(familyByStudent.get(item.student_id),competencyId);
+              const baseReason=pending?"Quedó sin valoración en un período anterior. Revisa la evidencia o aprovecha una nueva oportunidad de observación; no asignes una letra automáticamente.":item.reason;
+              return {...item,
               competency_name:data.cards.find((card)=>card.id===competencyId)?.official_name??competencyId,
-              ...(pending?{rank:-1,reason:"Quedó sin valoración en un período anterior. Revisa la evidencia o aprovecha una nueva oportunidad de observación; no asignes una letra automáticamente.",reason_code:"prior_period_pending"}:{})};});
+              ...(pending?{rank:-1,reason_code:"prior_period_pending"}:{}),
+              reason:familyHint?`${baseReason} ${familyHint}`:baseReason,
+              ...(familyHint?{family_context_source:"family_interview"}:{})};});
         }).sort((a,b)=>a.rank-b.rank||a.student_name.localeCompare(b.student_name,"es"))
           .slice(0,AYNI_HEURISTICS.observe_today_limit);
         send(response,200,{period_id:period.id,suggestions},origin);return true;
@@ -340,7 +351,15 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
         if (master.source_snapshot?.fingerprint !== masterSources.snapshot.fingerprint) throw new Error("El marco de evaluación requiere revisión porque cambió la planificación o un criterio.");
         const masterEntry = assessmentMasterEntry(master, data.card.id);
         if (!masterEntry) throw new Error("La competencia no está incluida en el marco de evaluación confirmado.");
-        const input = buildAssessmentInput({ age: data.classroom.age, competencyId: data.card.id, assessmentMaster: masterEntry, evidenceHistory: data.row.sourceRows.map((row) => sanitizeEvidenceForAssessment(row, names)), criteriaHistory: data.row.sourceRows.map((row) => ({ criterion_text: neutralizeAssessmentText(row.criterion_text, names), expected_evidence: neutralizeAssessmentText(row.details?.expected_evidence, names), observation_focus: row.details?.observation_focus ?? [], evidence_scope: row.details?.evidence_scope ?? null })) });
+        const interview = await loadConfirmedFamilyContext(db, data.classroom.id, student.id);
+        const familyContext = interview ? projectFamilyAssessmentContext(interview.details,
+          (text) => neutralizeAssessmentText(text, names)) : null;
+        const input = buildAssessmentInput({ age: data.classroom.age, competencyId: data.card.id,
+          assessmentMaster: masterEntry, familyContext,
+          evidenceHistory: data.row.sourceRows.map((row) => sanitizeEvidenceForAssessment(row, names)),
+          criteriaHistory: data.row.sourceRows.map((row) => ({ criterion_text: neutralizeAssessmentText(row.criterion_text, names),
+            expected_evidence: neutralizeAssessmentText(row.details?.expected_evidence, names),
+            observation_focus: row.details?.observation_focus ?? [], evidence_scope: row.details?.evidence_scope ?? null })) });
         const analysisPlan = resolveAIExecutionPlan({ workflow: "assessment", task: "generation" });
         const analysis = await generate(input, { providerFactory: (plan) => createProvider(plan), executionPlan: body.deepReview === true ? resolveAIExecutionPlan({ workflow: "assessment_deep_review", task: "generation" }) : analysisPlan });
         validateAssessmentProposal(analysis.output, data.card.id, data.row.sourceRows.length);

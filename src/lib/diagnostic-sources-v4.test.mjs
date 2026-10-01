@@ -279,12 +279,14 @@ test("entrevista parcial, reload, confirmación, impresión y adjunto privado si
   } finally { await db.close(); await rm(temp, { recursive: true, force: true }); }
 });
 
-test("diez preguntas opcionales por categoría; la familia aporta contexto sin cobertura ni evidencia", async () => {
+test("nueve preguntas breves; la familia aporta contexto sin cobertura ni evidencia", async () => {
   const groups = familyInterviewQuestionGroups("Camila");
-  assert.deepEqual(groups.map((group) => group.title), ["Su entorno y día a día", "Cómo se siente y relaciona", "Lo que sería útil conocer"]);
-  assert.deepEqual(groups.flatMap((group) => group.questions.map((question) => question.key)), familyInterviewCategories);
-  assert.equal(groups.flatMap((group) => group.questions).length, 10);
-  assert.ok(groups.flatMap((group) => group.questions).every((question) => question.placeholder.startsWith("Por ejemplo:")));
+  assert.equal(groups.length, 1);
+  const questions = groups.flatMap((group) => group.questions);
+  assert.equal(questions.length, 9);
+  assert.ok(questions.every((question) => familyInterviewCategories.includes(question.key)));
+  assert.match(questions[0].label, /Camila/);
+  assert.match(questions[8].label, /opcional/);
   assert.deepEqual(validateFamilyInterviewDetails({}), {});
   assert.deepEqual(validateFamilyInterviewDetails({ home_languages: "Quechua" }), { language_context: "Quechua" });
   const db = await database();

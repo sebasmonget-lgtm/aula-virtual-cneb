@@ -116,6 +116,14 @@ export type FamilyInterviewAnswerKey = "family_context" | "language_context" | "
 export type FamilyInterviewDetails = Partial<Record<FamilyInterviewAnswerKey, string>> & {
   language_tags?: string[]; primary_language_tag?: string; other_language_text?: string;
   interest_tags?: string[]; other_interest_text?: string;
+  communication_context?: string; emotional_support_context?: string;
+  home_activity_example?: string; family_community_context?: string; family_community_enjoyed?: string;
+  participation_support_context?: string; family_expectation?: string;
+  autonomy_routines?: { id: string; level: "alone" | "sometimes" | "much_help" }[];
+  home_language_uses?: { language_tag: string; with_whom: string }[];
+  communication_tags?: string[]; emotional_support_tags?: string[]; social_play_tags?: string[];
+  home_activity_tags?: string[]; community_tags?: string[]; other_community_text?: string;
+  participation_support_tags?: string[];
   previous_education_status?: "yes" | "no" | "unknown";
   previous_education_type?: "nursery" | "kindergarten" | "daycare" | "other";
   structured_options_version?: number;
@@ -124,6 +132,10 @@ export const familyContextLabels: Record<string, string> = {
   language_context: "Lenguas en casa", interests: "Intereses", autonomy_context: "Autonomía",
   communication_emotional_context: "Comunicación y emociones", social_context: "Relación con otros",
   adaptation_context: "Rutinas que dan seguridad", previous_education: "Experiencias educativas anteriores",
+  communication_context: "Comunicación según la familia", emotional_support_context: "Qué le ayuda a sentirse mejor",
+  home_activity_example: "Ejemplo de juego en casa", family_community_context: "Vida familiar y comunitaria",
+  family_community_enjoyed: "Experiencia que disfruta", participation_support_context: "Apoyos para participar",
+  family_expectation: "Expectativa familiar",
 };
 export type AiUsageSummary = {
   month: string; pricingVersion: string;
@@ -191,6 +203,8 @@ export type PublicClassroomContext = {
   languages: { key: string; label: string; count: number }[];
   primary_languages: { key: string; label: string; count: number }[];
   common_interests: { key: string; label: string; count: number }[];
+  community_opportunities?: { key: string; label: string; count: number }[];
+  planning_interests?: string[]; planning_opportunities?: string[]; planning_language_context?: string | null;
   previous_education: Record<string, number>;
   confirmed_diagnostic_summary: string | null;
   diagnostic_coverage: { students_with_observations: number };

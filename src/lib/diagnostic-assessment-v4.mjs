@@ -158,8 +158,9 @@ export async function diagnosticStudentProposalSources(db, teacherId, draftId) {
       observed_at: row.observed_at, context: neutral(row.aspect_id ?? row.context_label ?? ""),
       observation_status: row.observation_status, text: neutral(row.observation_text).slice(0, 1200) }));
   const cards = await applicableDiagnosticCompetencies(classroom);
-  const family = Object.fromEntries(Object.entries(safeFamilyContext(current.interview?.details)).map(([key, value]) =>
-    [key, typeof value === "string" ? neutral(value).slice(0, 500) : value]));
+  const family = Object.fromEntries(Object.entries(safeFamilyContext(current.interview?.details))
+    .filter(([key]) => key !== "family_expectation")
+    .map(([key, value]) => [key, typeof value === "string" ? neutral(value).slice(0, 500) : value]));
   return { age: classroom.age_years, observations: observed, family_context: family,
     competency_cards: cards.filter((card) => observed.some((row) => row.competency_id === card.id)),
     source_snapshot: current.snapshot, student_id: draft.student_id };

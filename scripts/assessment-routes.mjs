@@ -4,10 +4,11 @@ import { cardIsApplicable } from "../src/lib/ai-context-builder-v4.mjs";
 import { resolveAIExecutionPlan } from "../src/lib/ai-execution-router-v4.mjs";
 import { createAIProviderForPlan } from "../src/lib/ai-provider-factory.mjs";
 import { generateAIWorkflowV4 } from "../src/lib/ai-generation-v4.mjs";
-import { loadAssessmentEvidence, assessmentSourceSnapshot, sameEvidenceSourceSnapshot, sanitizeEvidenceForAssessment, neutralizeAssessmentText, buildAssessmentInput, validateAssessmentPeriod, validateAssessmentProposal } from "../src/lib/assessment-v4-service.mjs";
+import { loadAssessmentEvidence, assessmentSourceSnapshot, assessmentStudentNames, sameEvidenceSourceSnapshot, sanitizeEvidenceForAssessment, neutralizeAssessmentText, buildAssessmentInput, validateAssessmentPeriod, validateAssessmentProposal } from "../src/lib/assessment-v4-service.mjs";
 import { httpStatusForError, publicErrorMessage } from "../src/lib/version-integrity.mjs";
 import { assessmentMasterEntry } from "../src/lib/assessment-master-service.mjs";
 import { loadAssessmentMasterSources } from "./assessment-master-routes.mjs";
+import { loadConfirmedFamilyContext, projectFamilyAssessmentContext } from "../src/lib/family-interview-projection.mjs";
 
 const dateOnly = (value) => value instanceof Date ? value.toISOString().slice(0, 10) : String(value).slice(0, 10);
 const safeAssessment = (row) => ({ id: row.id, competency_v4_id: row.competency_v4_id, period_start: dateOnly(row.period_start), period_end: dateOnly(row.period_end), version: row.version, details: row.details, status: row.status, teacher_confirmed_at: row.teacher_confirmed_at, evidence_count: Array.isArray(row.source_evidence_ids) ? row.source_evidence_ids.length : Number(row.evidence_count ?? 0) });
@@ -83,8 +84,17 @@ export function createAssessmentRouteHandler({ db, annualPlanningContext, readJs
         const rows = await loadAssessmentEvidence(db, { studentId: student.id, competencyId: card.id, periodStart: body.periodStart, periodEnd: body.periodEnd });
         if (!rows.length) throw new Error("No hay evidencias registradas para analizar esta competencia.");
         const master = await activeMaster(context, body.periodStart, body.periodEnd, card.id);
-        const names = [student.first_name, student.last_name, student.preferred_name];
-        const input = buildAssessmentInput({ age: context.age, competencyId: card.id, assessmentMaster: master?.entry, evidenceHistory: rows.map((row) => sanitizeEvidenceForAssessment(row, names)), criteriaHistory: rows.map((row) => ({ criterion_text: neutralizeAssessmentText(row.criterion_text, names), expected_evidence: neutralizeAssessmentText(row.details?.expected_evidence, names), observation_focus: (row.details?.observation_focus ?? []).map((text) => neutralizeAssessmentText(text, names)), evidence_scope: row.details?.evidence_scope ?? null })) });
+        const names = assessmentStudentNames((await db.query(
+          `select first_name,last_name,preferred_name from students where classroom_id=$1`, [context.id])).rows);
+        const interview = await loadConfirmedFamilyContext(db, context.id, student.id);
+        const familyContext = interview ? projectFamilyAssessmentContext(interview.details,
+          (text) => neutralizeAssessmentText(text, names)) : null;
+        const input = buildAssessmentInput({ age: context.age, competencyId: card.id, assessmentMaster: master?.entry,
+          familyContext, evidenceHistory: rows.map((row) => sanitizeEvidenceForAssessment(row, names)),
+          criteriaHistory: rows.map((row) => ({ criterion_text: neutralizeAssessmentText(row.criterion_text, names),
+            expected_evidence: neutralizeAssessmentText(row.details?.expected_evidence, names),
+            observation_focus: (row.details?.observation_focus ?? []).map((text) => neutralizeAssessmentText(text, names)),
+            evidence_scope: row.details?.evidence_scope ?? null })) });
         const plan = resolveAIExecutionPlan({ workflow: "assessment", task: "generation" });
         const result = await generate(input, { providerFactory: (executionPlan) => createProvider(executionPlan), executionPlan: body.deepReview === true ? resolveAIExecutionPlan({ workflow: "assessment_deep_review", task: "generation" }) : plan });
         const generationId = randomUUID();

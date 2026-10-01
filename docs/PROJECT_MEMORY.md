@@ -338,3 +338,7 @@ La interfaz de Planificar prioriza el siguiente paso, ubica actividades y taller
 ## Personalización previa a Mi año (2026-10-01)
 
 El flujo nuevo usa una sola confirmación «Así entendí tu aula», persiste el contrato versionado y produce doce propuestas con referencias a decisiones confirmadas. El calendario conserva posiciones lectivas sin fijar sus temas. Los planes históricos siguen abriendo; una nueva observación ofrece revisión, mantiene el plan vigente y requiere confirmación docente para activar otra versión. Migraciones local 0069 y Supabase 202610010001. Ver ADR 104 y `docs/qa/annual-personalization-2026-10-01.md`.
+
+## Entrevista familiar breve y estructurada (2026-10-01)
+
+La entrevista nueva tiene nueve preguntas conversacionales, selecciones rápidas y campos breves opcionales. Las respuestas v2 siguen en `student_family_interviews.details` JSONB; las entrevistas anteriores conservan versión, texto e historial. La proyección individual mantiene «Según la familia»; el Plan Anual, proyectos y actividades reciben solo temas agregados y la evaluación recibe un contexto acotado separado de las evidencias. Las señales familiares permiten sugerir qué observar, nunca un nivel AD/A/B/C ni una dificultad automática. No se requiere migración SQL. Ver ADR 105 y `docs/qa/family-interview-redesign-2026-10-01.md`.

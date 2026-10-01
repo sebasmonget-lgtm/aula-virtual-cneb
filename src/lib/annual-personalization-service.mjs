@@ -5,7 +5,7 @@ import { buildProviderRequest } from "./ai-generation-v4.mjs";
 import { ageFilteredAnnualCurriculum } from "./annual-preplan-service.mjs";
 import { neutralizeAssessmentText } from "./assessment-v4-service.mjs";
 import { anonymousDecisionText } from "./jev-competency-suggestion.mjs";
-import { interviewInterestOptions, interviewLanguageOptions } from "./family-interview-contract.mjs";
+import { interviewInterestOptions, interviewLanguageOptions, interviewCommunityOptions } from "./family-interview-contract.mjs";
 
 const hash = (value) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
 const topics = [
@@ -26,7 +26,7 @@ const opportunities = [
   ["Oficios de la comunidad", /oficios?|profesiones?|artesanos?|pescador/iu],
   ["Celebraciones y costumbres", /fiesta|celebraci[oó]n|costumbre|tradici[oó]n/iu],
 ];
-const sourceFields = ["family_context", "language_context", "interests", "social_context", "family_expectations"];
+const sourceFields = ["family_context", "language_context", "interests", "family_community_context", "family_community_enjoyed"];
 const conditionKinds = ["spaces", "outdoors", "materials", "technology", "schedule", "family_support", "restrictions", "institutional_projects", "events", "other"];
 const proposalSchema = { id: "annual-personalization-v1", type: "object", additionalProperties: false,
   required: ["group_profile", "priorities"], properties: {
@@ -102,6 +102,10 @@ export function projectPlanningSignals(sources, context) {
     for (const tag of details.interest_tags ?? []) {
       const label = interviewInterestOptions.find((item) => item.id === tag)?.label;
       if (label && tag !== "other") add(interestRows, label, ref, "family_report");
+    }
+    for (const tag of details.community_tags ?? []) {
+      const label = interviewCommunityOptions.find((item) => item.id === tag)?.label;
+      if (label && tag !== "other") add(contextRows, label, ref, "family_report");
     }
     const selected = sourceFields.map((field) => short(details[field], 800)).join(" ");
     for (const label of topicHits(selected, topics)) add(interestRows, label, ref, "family_report");

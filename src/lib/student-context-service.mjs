@@ -170,7 +170,9 @@ export async function buildSafeDiagnosticStudentContext(db, teacherId, studentId
     family_context_source: profile.family_interview_context ? "antecedente_informado_por_la_familia" : null,
     family_context: Object.fromEntries(["language_context", "language_tags", "primary_language_tag", "other_language_text",
       "interests", "interest_tags", "other_interest_text", "previous_education_status", "previous_education_type", "autonomy_context",
-      "communication_emotional_context", "social_context", "adaptation_context", "previous_education"]
+      "autonomy_routines", "communication_emotional_context", "communication_context", "communication_tags",
+      "emotional_support_tags", "social_context", "social_play_tags", "home_activity_tags",
+      "community_tags", "participation_support_tags", "adaptation_context", "previous_education"]
       .filter((key) => profile.family_interview_context?.[key])
       .map((key) => [key, clean(profile.family_interview_context[key])])),
     observations: profile.diagnostic_observations.filter((item) => item.competency_v4_id && item.observation_text)
