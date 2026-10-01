@@ -25,3 +25,10 @@ export async function loadAnnualPreplanSkill() {
   return (await Promise.all(files.map(async (name) =>
     `## ${name}\n${(await readFile(new URL(`../../skills/crear-plan-anual/${name}`, import.meta.url), "utf8")).trim()}`))).join("\n\n");
 }
+
+/** The confirmed classroom contract drives themes; dates still come from the authorized calendar. */
+export async function loadPersonalizedPreplanSkill() {
+  const files = ["references/criterios-cneb.md", "references/preplan-personalizado.md"];
+  return `Skill crear-plan-anual (propuestas desde decisiones docentes confirmadas):\n\n${(await Promise.all(files.map(async (name) =>
+    `## ${name}\n${(await readFile(new URL(`../../skills/crear-plan-anual/${name}`, import.meta.url), "utf8")).trim()}`))).join("\n\n")}`;
+}

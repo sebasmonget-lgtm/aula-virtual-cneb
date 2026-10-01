@@ -2,6 +2,8 @@
 
 ## Estado actual
 
+**Rediseño de Mi año en curso (2026-10-01, ADR 100).** Se añadió una sola pantalla «Así entendí tu aula» y contrato de personalización versionado antes del preplan nuevo. La ruta principal ya no exige confirmar por separado síntesis grupal y prioridades, y mantiene lectura histórica. Falta registrar la validación visual completa y cualquier limitación real de proveedor antes de dar el recorrido por cerrado; sin despliegue.
+
 Plan Maestro: F2 reducida cerrada con A (ADR 088). F3 proyecto sencillo en `17e8556`; F4 `ef4c307` ActivityV3 heredada; F5 `99cd04e` raw con identidad canónica, revisión inmutable y foto privada. F6 `b729fad` atribución Jev/cola docente; F7 `66f0789` navegación cuatro destinos/Hoy; F8 `62afd23` atribuciones docentes vigentes en H34/trayectoria; F9 `4efc3ac` diff futuro con fingerprint F8. F10 `a945c1a` artefacto Word estable de plan/proyecto confirmado, con bytes privados, SHA-256, RLS y reintento. F11 `3fca02c` más corrección `2e9a78e` árbol y sync explícita con carpeta/ZIP, sin migración. F12 es auditoría de salida parcial **no aceptada**: falta recorrido anual nuevo exclusivamente por UI, picker/móvil real y RLS/Storage en staging nuevo; ver `docs/qa/f12-final-e2e-2026-09-28.md`. Sin deploy, staging real ni llamadas pagadas F6–F12.
 
 Proyecto nuevo iniciado el 20 de septiembre de 2026. Existe un shell responsive de la pantalla Hoy con navegación corta, actividad del día, perfil institucional editable, logo SVG generado localmente, registro rápido de evidencia y diagnóstico por referente observable conectado a PostgreSQL local embebido mediante PGlite. La generación docente puede usar OpenAI mediante el proveedor aislado; no hay conexión con Supabase real ni despliegue.
@@ -175,7 +177,7 @@ Proyecto nuevo iniciado el 20 de septiembre de 2026. Existe un shell responsive 
 
 ## Hitos del calendario y evaluación del plan anual (2026-09-24)
 
-- `crear-plan-anual` orienta cuatro de las doce propuestas hacia Día del Niño Peruano, Día de la Educación Inicial, Fiestas Patrias y Navidad/cierre de año. Recibe los doce espacios lectivos ya calculados para situarlas cerca de los hitos sin inventar fechas ni transformar una celebración en manualidades. Las otras ocho se basan en el diagnóstico e intereses del grupo y todas siguen siendo revisables.
+- En la generación histórica, `crear-plan-anual` orienta cuatro de las doce propuestas hacia Día del Niño Peruano, Día de la Educación Inicial, Fiestas Patrias y Navidad/cierre de año. Desde el contrato «Así entendí tu aula» (ADR 100), las doce posiciones conservan las fechas calculadas y sus temas proceden de las decisiones confirmadas; una efeméride solo influye si la docente la incluyó como condición u oportunidad.
 - El Word flexible recoge una categoría de actuación individual de cada proyecto en «Evidencias principales», sin truncar la lista tras los primeros. «Criterios de cada actividad» deja de figurar como instrumento y el producto posible se distingue de la evidencia individual también en el editor. El esquema guardado, el calendario y la plantilla binaria no cambian; la política de modelos se actualizó después en ADR 072.
 
 ## Migración a cuatro plantillas unificadas (2026-09-24)
@@ -308,3 +310,7 @@ Las notas de cada fase que dicen «apagado por defecto» describen su rollout in
 ## Preparación cloud bloqueada hasta paridad (2026-09-30)
 
 Commit de activación F1–F11 `815a4b9` limpio y validado (605/605 tests). Next.js nativo compila la página, pero no existe función `/api/*` para Vercel y Storage PostgreSQL devuelve 503 en varias rutas; un deploy ahora rompería flujos que funcionan en local. `vercel.json` ejecuta un preflight que falla explícitamente hasta resolver esos puntos. No hay cuentas nuevas vinculadas, migraciones remotas ni despliegue. Ver ADR 099 y `docs/VERCEL_SUPABASE_READINESS.md`.
+
+## Personalización previa a Mi año (2026-10-01)
+
+«Así entendí tu aula» reúne cinco bloques en una decisión docente confirmada y versionada. La generación nueva requiere ese contrato y guarda su ID y las decisiones citadas por cada propuesta; el desarrollo formal usa la misma versión. El diagnóstico anterior continúa legible y los planes históricos mantienen referencias nullable. El calendario ubica, pero no fija, temas en el flujo nuevo. Ver ADR 100 y `docs/qa/annual-personalization-2026-10-01.md`.

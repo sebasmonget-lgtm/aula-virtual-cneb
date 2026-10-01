@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { resolveAIExecutionPlan } from "./ai-execution-router-v4.mjs";
 import { createAIProviderForPlan } from "./ai-provider-factory.mjs";
 import { buildProviderRequest } from "./ai-generation-v4.mjs";
-import { loadAnnualPreplanSkill } from "./annual-plan-skill.mjs";
+import { loadAnnualPreplanSkill, loadPersonalizedPreplanSkill } from "./annual-plan-skill.mjs";
 import { loadKnowledgeBaseV4 } from "./knowledge-base-v4.mjs";
 import { competencyApplicability } from "./competency-applicability.mjs";
 import { focusedKnowledgeForDirectWorkflow } from "./ai-focused-knowledge.mjs";
@@ -11,6 +11,7 @@ import { AnnualCalendarError, buildEditableAnnualSchedule, buildFlexibleAnnualSc
 export const ANNUAL_PREPLAN_FORMAT = "annual_preplan_v1";
 const monthNames = ["", "", "", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
 const rowFields = ["proposal_id", "experience_type", "title", "period", "month", "duration_weeks", "rationale", "purpose", "primary_competency_ids"];
+const traceFields = ["source_interest_ids", "source_priority_ids", "source_context_ids", "source_condition_ids"];
 const calendarFields = ["planned_start_date", "planned_end_date", "planned_instructional_days", "period_label"];
 const aiRowFields = rowFields.filter((field) => field !== "proposal_id");
 const rowProperties = { experience_type: { enum: ["project", "unit"] }, title: { type: "string" },
@@ -20,6 +21,12 @@ const rowProperties = { experience_type: { enum: ["project", "unit"] }, title: {
 export const ANNUAL_PREPLAN_OUTPUT_SCHEMA = { id: "annual-preplan-v1", type: "object", additionalProperties: false,
   required: ["proposals"], properties: { proposals: { type: "array", minItems: 12, maxItems: 12,
     items: { type: "object", additionalProperties: false, required: aiRowFields, properties: rowProperties } } } };
+const keyFields = ["source_interest_keys", "source_priority_keys", "source_context_keys", "source_condition_keys"];
+export const PERSONALIZED_PREPLAN_OUTPUT_SCHEMA = { id: "annual-preplan-personalized-v1", type: "object", additionalProperties: false,
+  required: ["proposals"], properties: { proposals: { type: "array", minItems: 12, maxItems: 12,
+    items: { type: "object", additionalProperties: false, required: [...aiRowFields, ...keyFields],
+      properties: { ...rowProperties, ...Object.fromEntries(keyFields.map((field) => [field,
+        { type: "array", items: { type: "string" } }])) } } } } };
 
 export class AnnualPreplanError extends Error {
   constructor(reason, message) { super(message); this.name = "AnnualPreplanError"; this.reason = reason; }
@@ -36,7 +43,7 @@ export function validateAnnualPreplan(proposal, allowedIds, expectedYear, { init
   // Reloaded rows include server-derived calendar metadata. Accept only these
   // known transport fields and return editable fields only; callers recompute
   // dates/counts from the authorized calendar before persisting or confirming.
-  const inputFields = allowCalendarMetadata ? [...rowFields, ...calendarFields] : rowFields;
+  const inputFields = allowCalendarMetadata ? [...rowFields, ...calendarFields, ...traceFields, "source_teacher_decision", "source_group_profile"] : [...rowFields, ...traceFields, "source_teacher_decision", "source_group_profile"];
   let previousPeriod = 1;
   const rows = proposal.proposed_experiences.map((item, index) => {
     const period = Number(String(item?.period ?? "").match(/^Bimestre ([1-4])$/)?.[1]);
@@ -51,7 +58,14 @@ export function validateAnnualPreplan(proposal, allowedIds, expectedYear, { init
     seen.add(item.proposal_id); previousPeriod = period;
     return { proposal_id: item.proposal_id, experience_type: item.experience_type, title: item.title.trim(),
       period: item.period, month: item.month, duration_weeks: item.duration_weeks,
-      rationale: item.rationale.trim(), purpose: item.purpose.trim(), primary_competency_ids: [...ids] };
+      rationale: item.rationale.trim(), purpose: item.purpose.trim(), primary_competency_ids: [...ids],
+      ...(item.source_teacher_decision === true ? { source_teacher_decision: true } : {}),
+      ...(item.source_group_profile === true ? { source_group_profile: true } : {}),
+      ...Object.fromEntries(traceFields.filter((field) => item[field] !== undefined).map((field) => {
+        if (!Array.isArray(item[field]) || item[field].length > 12 || item[field].some((id) => typeof id !== "string"))
+          fail("invalid_row", `Revisa las fuentes de la propuesta ${index + 1}.`);
+        return [field, [...new Set(item[field])]];
+      })) };
   });
   const titles = rows.map((item) => item.title.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("es").trim());
   if (new Set(titles).size !== titles.length) fail("repeated_titles", "Hay títulos repetidos. Da a cada propuesta un nombre propio.");
@@ -66,6 +80,25 @@ export function validateGeneratedPreplan(output, allowedIds, year) {
   return validateAnnualPreplan(proposal, allowedIds, year, { initial: true, allowCalendarMetadata: false });
 }
 
+export function validatePreplanTrace(proposal, personalization) {
+  if (!personalization) return proposal;
+  const groups = [personalization.interests, personalization.priorities,
+    personalization.context_opportunities, personalization.classroom_conditions];
+  const permitted = groups.map((items) => new Set(items.map((item) => item.id)));
+  for (const row of proposal.proposed_experiences) {
+    let cited = 0;
+    for (const [index, field] of traceFields.entries()) {
+      const values = row[field];
+      if (!Array.isArray(values) || values.some((id) => !permitted[index].has(id)))
+        fail("invalid_trace", "Una propuesta cita una decisión que no fue confirmada por la docente.");
+      cited += values.length;
+    }
+    if (!cited && !row.source_group_profile && !row.source_teacher_decision && groups.some((items) => items.length))
+      fail("invalid_trace", "Cada propuesta necesita al menos una decisión confirmada como origen.");
+  }
+  return proposal;
+}
+
 export async function ageFilteredAnnualCurriculum(context) {
   const kb = await loadKnowledgeBaseV4();
   const age = String(context.age);
@@ -78,18 +111,21 @@ export async function ageFilteredAnnualCurriculum(context) {
 }
 
 export async function generateAnnualPreplan({ context, curriculum, resolvePlan = resolveAIExecutionPlan,
-  createProvider = createAIProviderForPlan, loadSkill = loadAnnualPreplanSkill }) {
-  if (!context.source_diagnostic_review_id || !context.source_priority_review_id)
+  createProvider = createAIProviderForPlan, loadSkill }) {
+  const personalization = context.personalization?.details;
+  if (!personalization && (!context.source_diagnostic_review_id || !context.source_priority_review_id))
     fail("diagnostic_required", "Confirma primero «Así está mi grupo» y «Prioridades del año».");
   const plan = resolvePlan({ workflow: "annual_plan", task: "generation" });
   const durations = suggestAnnualProjectDurations(context.calendar);
   const baseline = buildFlexibleAnnualSchedule(context.calendar, durations.map((duration_weeks) => ({ duration_weeks }))).projects;
   const suggested = baseline.map((slot) => ({ experience_type: "project", period: slot.period,
     month: Number(slot.starts_on.slice(5, 7)), duration_weeks: slot.duration_weeks }));
-  // These four suggestions sit near their school-calendar dates when the institution's calendar permits it.
-  suggested[5].month = 7; // Fiestas Patrias: last teaching weeks before 28–29 July.
-  suggested[11].month = 12; // Christmas and year-end reflection: December.
-  suggested[11].duration_weeks = 2;
+  // New contracts keep calendar dates without forcing a theme. Historical generation keeps its prior schedule.
+  if (!personalization) {
+    suggested[5].month = 7;
+    suggested[11].month = 12;
+    suggested[11].duration_weeks = 2;
+  }
   let scheduled = baseline;
   try { scheduled = buildEditableAnnualSchedule(context.calendar, suggested).projects; }
   catch (error) {
@@ -100,11 +136,26 @@ export async function generateAnnualPreplan({ context, curriculum, resolvePlan =
     month: Number(slot.starts_on.slice(5, 7)), duration_weeks: slot.duration_weeks,
     starts_on: slot.starts_on, ends_on: slot.ends_on }));
   const bundle = { workflow: "annual_preplan", age: context.age,
-    confirmed_group: context.diagnostic_group,
-    confirmed_priorities: context.confirmed_priorities ?? context.diagnostic_group?.competency_priorities ?? [],
-    year_context: context.annual_planning_context ?? {},
-    interests: context.context_v4?.common_interests?.map((item) => item.label) ?? [],
-    known_environment: context.group_context, calendar: context.calendar, initial_slots: initialSlots,
+    confirmed_group: personalization ? { profile: personalization.group_profile } : context.diagnostic_group,
+    confirmed_priorities: personalization?.priorities ?? context.confirmed_priorities ?? context.diagnostic_group?.competency_priorities ?? [],
+    year_context: personalization ? { additional_notes: personalization.additional_notes,
+      conditions: personalization.classroom_conditions.map((item) => ({ kind: item.kind, value: item.value })) } : context.annual_planning_context ?? {},
+    interests: personalization?.interests?.map((item) => item.label) ?? context.context_v4?.common_interests?.map((item) => item.label) ?? [],
+    personalization: personalization ? {
+      interests: personalization.interests.map((item, index) => ({ key: `i${index + 1}`, label: item.label })),
+      priorities: personalization.priorities.map((item, index) => ({ key: `p${index + 1}`, title: item.title,
+        reason: item.reason, related_competency_ids: item.related_competency_ids,
+        evidence_status: item.evidence_status })),
+      context: personalization.context_opportunities.map((item, index) => ({ key: `c${index + 1}`, text: item.text })),
+      conditions: personalization.classroom_conditions.map((item, index) => ({ key: `r${index + 1}`, kind: item.kind, value: item.value })),
+      needs_more_observation: personalization.needs_more_observation,
+      evidence_coverage: personalization.evidence_coverage,
+    } : undefined,
+    known_environment: context.group_context,
+    calendar: personalization ? { school_year: context.calendar.school_year,
+      starts_on: context.calendar.starts_on, ends_on: context.calendar.ends_on,
+      blocks: context.calendar.blocks, initial_stage: context.calendar.initial_stage } : context.calendar,
+    initial_slots: initialSlots,
     curriculum: { age: context.age, competency_cards: curriculum },
     didactic_knowledge: await focusedKnowledgeForDirectWorkflow({ workflow: "annual_plan", age: context.age,
       competencyIds: [...new Set((context.confirmed_priorities ?? []).flatMap((item) =>
@@ -112,20 +163,48 @@ export async function generateAnnualPreplan({ context, curriculum, resolvePlan =
       request: [context.group_context, context.annual_planning_context?.additional_notes].filter(Boolean).join(" "),
       castellanoL2Applicable: context.castellano_l2_applicable === true,
       religionApplicable: context.religion_applicable === true }),
-    task: `Propón exactamente doce filas editables. Copia el bimestre, mes y duración de initial_slots para cada índice, en orden; código ya comprobó que caben en el calendario. Vincula pedagógicamente la fila 1 al Día del Niño Peruano, la 4 al Día de la Educación Inicial, la 6 a Fiestas Patrias y la 12 a Navidad/cierre de año. Sitúalas en el contexto de sus fechas previstas sin convertirlas en manualidades ni celebraciones vacías. Distribuye competencias del CNEB según su pertinencia; procura al menos una oportunidad por competencia aplicable y dos cuando sea natural, sin forzar títulos. Usa solo los campos del esquema. No generes productos, criterios, evidencias ni actividades.`,
+    task: personalization
+      ? `Propón exactamente doce filas editables y distintas para este grupo. Copia bimestre, mes y duración de initial_slots. Usa los intereses, prioridades y oportunidades confirmadas para variar materialmente temas, razones y competencias; no infieras dificultad desde datos ausentes. Los hitos del calendario se respetan como fechas pero no fuerzan temas. En cada fila devuelve keys que realmente influyeron; al menos una key válida si existe información confirmada. El servidor construirá el motivo visible desde esas keys. No generes actividades ni evidencias.`
+      : `Propón exactamente doce filas editables. Copia el bimestre, mes y duración de initial_slots para cada índice, en orden; código ya comprobó que caben en el calendario. Vincula pedagógicamente la fila 1 al Día del Niño Peruano, la 4 al Día de la Educación Inicial, la 6 a Fiestas Patrias y la 12 a Navidad/cierre de año. Sitúalas en el contexto de sus fechas previstas sin convertirlas en manualidades ni celebraciones vacías. Distribuye competencias del CNEB según su pertinencia; procura al menos una oportunidad por competencia aplicable y dos cuando sea natural, sin forzar títulos. Usa solo los campos del esquema. No generes productos, criterios, evidencias ni actividades.`,
   };
   const provider = createProvider(plan, { timeoutMs: 180_000 });
-  const response = await provider.generate(buildProviderRequest("annual_plan", bundle, plan, ANNUAL_PREPLAN_OUTPUT_SCHEMA, await loadSkill()));
+  const response = await provider.generate(buildProviderRequest("annual_plan", bundle, plan,
+    personalization ? PERSONALIZED_PREPLAN_OUTPUT_SCHEMA : ANNUAL_PREPLAN_OUTPUT_SCHEMA,
+    await (loadSkill ?? (personalization ? loadPersonalizedPreplanSkill : loadAnnualPreplanSkill))()));
   const alignedOutput = { ...response.output, proposals: response.output?.proposals?.map((row, index) =>
     ({ ...row, period: initialSlots[index]?.period, month: initialSlots[index]?.month,
       duration_weeks: initialSlots[index]?.duration_weeks })) };
-  const proposal = validateGeneratedPreplan(alignedOutput, curriculum.map((card) => card.id), context.year);
+  if (personalization) alignedOutput.proposals = alignedOutput.proposals?.map((row) => {
+    const groups = [personalization.interests, personalization.priorities,
+      personalization.context_opportunities, personalization.classroom_conditions];
+    const prefixes = ["i", "p", "c", "r"];
+    const fields = ["source_interest_ids", "source_priority_ids", "source_context_ids", "source_condition_ids"];
+    const traces = Object.fromEntries(fields.map((field, groupIndex) => {
+      const keys = row[keyFields[groupIndex]];
+      if (!Array.isArray(keys) || keys.some((key) => !new RegExp(`^${prefixes[groupIndex]}[1-9][0-9]*$`).test(key)
+        || !groups[groupIndex][Number(key.slice(1)) - 1])) fail("invalid_ai", "Una propuesta citó una decisión no confirmada.");
+      return [field, [...new Set(keys.map((key) => groups[groupIndex][Number(key.slice(1)) - 1].id))]];
+    }));
+    const cited = [
+      ...(traces.source_interest_ids.map((id) => personalization.interests.find((item) => item.id === id)?.label)),
+      ...(traces.source_priority_ids.map((id) => personalization.priorities.find((item) => item.id === id)?.title)),
+      ...(traces.source_context_ids.map((id) => personalization.context_opportunities.find((item) => item.id === id)?.text)),
+      ...(traces.source_condition_ids.map((id) => personalization.classroom_conditions.find((item) => item.id === id)?.value)),
+    ].filter(Boolean);
+    if (!cited.length && groups.some((items) => items.length)) fail("invalid_ai", "Cada propuesta necesita una razón basada en decisiones confirmadas.");
+    return { experience_type: row.experience_type, title: row.title, period: row.period, month: row.month,
+      duration_weeks: row.duration_weeks, purpose: row.purpose, primary_competency_ids: row.primary_competency_ids,
+      rationale: cited.length ? `Responde a ${cited.slice(0, 3).join(", ")}.` : "Propuesta inicial para seguir conociendo al grupo.",
+      ...(cited.length ? {} : { source_group_profile: true }), ...traces };
+  });
+  const proposal = validatePreplanTrace(validateGeneratedPreplan(alignedOutput, curriculum.map((card) => card.id), context.year), personalization);
   buildEditableAnnualSchedule(context.calendar, proposal.proposed_experiences);
   return { proposal, metadata: { provider: response.provider_metadata?.provider ?? plan.provider,
     model: response.provider_metadata?.model ?? plan.model, reasoning_effort: plan.reasoning_effort,
     routing_policy_version: plan.routing_policy_version, usage: response.provider_metadata?.usage ?? null,
     response_id: response.provider_metadata?.response_id ?? null, fallback_used: false },
-    source: { diagnostic_review_id: context.source_diagnostic_review_id, priority_review_id: context.source_priority_review_id } };
+    source: { diagnostic_review_id: context.source_diagnostic_review_id, priority_review_id: context.source_priority_review_id,
+      personalization_review_id: context.personalization?.id ?? null } };
 }
 
 export const annualMonthLabel = (month) => monthNames[month] ?? "";

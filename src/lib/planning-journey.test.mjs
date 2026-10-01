@@ -13,7 +13,7 @@ const fetchFrom = (responses) => async (url) => {
   return { ok: value !== null, json: async () => value };
 };
 
-test("un aula nueva comienza por diagnóstico y la falta de niños lleva a agregarlos", async () => {
+test("sin niños se empieza por el padrón; con niños ya se puede preparar Mi año", async () => {
   const plans = { active: null, draft: null };
   const empty = { reviewed: false, student_count: 0, observation_count: 0 };
   const withoutStudents = await loadStartingGuidance(base, fetchFrom({ [planUrl]: plans, [diagnosticUrl]: empty }));
@@ -21,26 +21,26 @@ test("un aula nueva comienza por diagnóstico y la falta de niños lleva a agreg
   const withStudents = await loadStartingGuidance(base, fetchFrom({ [planUrl]: plans, [diagnosticUrl]: { ...empty, student_count: 1 } }));
   assert.equal(withStudents.startingSection, "Diagnóstico");
   const journey = await loadPlanningJourney(base, fetchFrom({ [planUrl]: plans, [experienceUrl]: { experiences: [] }, [diagnosticUrl]: { ...empty, student_count: 1 } }));
-  assert.equal(journey.recommended, "diagnostic");
+  assert.equal(journey.recommended, "annual");
   assert.equal(journey.diagnostic, "pending");
 });
 
-test("una observación guardada deja el diagnóstico en curso hasta la revisión docente", async () => {
+test("una observación guardada no obliga a cerrar el diagnóstico antes de planificar", async () => {
   const plans = { active: null, draft: null };
   const diagnostic = { reviewed: false, student_count: 1, observation_count: 1 };
   const journey = await loadPlanningJourney(base, fetchFrom({ [planUrl]: plans, [experienceUrl]: { experiences: [] }, [diagnosticUrl]: diagnostic }));
   assert.equal(journey.diagnostic, "in_progress");
-  assert.equal(journey.recommended, "diagnostic");
+  assert.equal(journey.recommended, "annual");
   const next = await loadPlanningJourney(base, fetchFrom({ [planUrl]: plans, [experienceUrl]: { experiences: [] }, [diagnosticUrl]: { ...diagnostic, reviewed: true } }));
   assert.equal(next.diagnostic, "reviewed");
   assert.equal(next.recommended, "annual");
 });
 
-test("solo se abren pasos con el documento anterior confirmado", () => {
-  const journey = { diagnostic: "in_progress", hasConfirmedAnnual: false, hasConfirmedExperience: false };
+test("Mi año se abre con padrón; proyectos y actividades conservan sus guardas", () => {
+  const journey = { diagnostic: "in_progress", studentCount: 0, hasConfirmedAnnual: false, hasConfirmedExperience: false };
   assert.equal(canOpenPlanningStep(journey, "diagnostic"), true);
   assert.equal(canOpenPlanningStep(journey, "annual"), false);
-  journey.diagnostic = "reviewed";
+  journey.studentCount = 1;
   assert.equal(canOpenPlanningStep(journey, "annual"), true);
   assert.equal(canOpenPlanningStep(journey, "experiences"), false);
   journey.hasConfirmedAnnual = true;

@@ -1,0 +1,165 @@
+"use client";
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { apiFetch } from "@/src/lib/ayni-api-fetch";
+import { localDatabaseApiUrl } from "@/src/lib/local-database";
+import { AsyncButton, LoadingState, WorkflowFeedback } from "./workflow-ui";
+
+type Interest = { id: string; label: string; source_refs?: unknown[]; source_kinds?: string[] };
+type Priority = { id: string; title: string; reason: string; related_competency_ids: string[];
+  importance: "higher" | "normal" | "observe_more"; evidence_status: string; source_refs?: unknown[] };
+type Opportunity = { id: string; text: string; source_kind?: string; source_refs?: unknown[] };
+type Condition = { id: string; kind: string; value: string };
+type Details = { group_profile: string; interests: Interest[]; priorities: Priority[];
+  context_opportunities: Opportunity[]; classroom_conditions: Condition[];
+  evidence_coverage: { students?: number; interviews?: number; observed_students?: number; observations?: number };
+  needs_more_observation: string[]; additional_notes: string;
+  suggested_changes?: { new_interests: string[]; new_context: string[]; new_priorities?: string[];
+    group_profile_changed?: boolean; new_observations: number } };
+type Review = { id: string; status: "draft" | "confirmed"; version: number; details: Details };
+type Competency = { id: string; name: string };
+type Calendar = { blocks: { id?: string; label: string; start_date: string; end_date: string; editable: boolean; type: string }[];
+  initial_stage: { duration_weeks: number } & Record<string, unknown> };
+const conditionOptions = [
+  ["spaces", "Espacios del aula"], ["outdoors", "Patio y espacios exteriores"],
+  ["materials", "Materiales"], ["technology", "Tecnología"], ["schedule", "Horarios"],
+  ["family_support", "Apoyo de familias"], ["restrictions", "Restricciones"],
+  ["institutional_projects", "Proyectos institucionales"], ["events", "Eventos del colegio"],
+  ["other", "Otra condición"],
+] as const;
+const post = async <T,>(path: string, value: unknown): Promise<T> => {
+  const response = await apiFetch(`${localDatabaseApiUrl}${path}`, { method: "POST",
+    headers: { "content-type": "application/json" }, body: JSON.stringify(value) });
+  const data = await response.json() as T & { error?: string };
+  if (!response.ok) throw new Error(data.error || "No se pudo completar la acción.");
+  return data;
+};
+
+export function AnnualPersonalizationWorkspace({ onCreated, competencies, calendar, refresh = false }: {
+  onCreated: (id: string) => Promise<void>; competencies: Competency[]; calendar: Calendar; refresh?: boolean }) {
+  const [review, setReview] = useState<Review | null>(null);
+  const [details, setDetails] = useState<Details | null>(null);
+  const [editing, setEditing] = useState<string | null>(null);
+  const [confirmed, setConfirmed] = useState<string[]>([]);
+  const [busy, setBusy] = useState(false), [loading, setLoading] = useState(true), [error, setError] = useState("");
+  const [editedCalendar, setEditedCalendar] = useState<Calendar>(calendar);
+  useEffect(() => { let live = true;
+    post<Review>("/api/annual-personalization/prepare", { refresh }).then((value) => {
+      if (live) { setReview(value); setDetails(value.details); }
+    }).catch((cause) => { if (live) setError(cause instanceof Error ? cause.message : "No se pudo analizar el aula."); })
+      .finally(() => { if (live) setLoading(false); });
+    return () => { live = false; }; }, [refresh]);
+  if (loading) return <LoadingState label="Ayni está organizando la evidencia del aula..." />;
+  if (!review || !details) return <WorkflowFeedback tone="error">{error || "No se pudo preparar el aula."}</WorkflowFeedback>;
+  const set = (change: Partial<Details>) => setDetails({ ...details, ...change });
+  const mark = (key: string) => { setConfirmed((value) => value.includes(key) ? value : [...value, key]); setEditing(null); };
+  const card = (key: string, title: string, summary: React.ReactNode, editor: React.ReactNode) =>
+    <section key={key} className="rounded-2xl border border-[#d6e5ef] bg-white p-4 sm:p-5">
+      <div className="flex flex-wrap items-center justify-between gap-2"><h2 className="text-lg font-extrabold text-[#172b52]">{title}</h2>
+        {confirmed.includes(key) && <span className="rounded-full bg-[#e6f7ed] px-3 py-1 text-xs font-bold text-[#176442]">Confirmado</span>}</div>
+      {editing === key ? <div className="mt-3 space-y-3">{editor}<div className="flex gap-2"><Button onClick={() => mark(key)}>Listo</Button>
+        <Button variant="outline" onClick={() => setEditing(null)}>Cerrar</Button></div></div>
+        : <><div className="mt-2 text-sm leading-relaxed text-[#3d5874]">{summary}</div><div className="mt-4 flex gap-2">
+          {review.status === "draft" && <><Button variant="outline" onClick={() => mark(key)}>Confirmar</Button>
+          <Button variant="ghost" onClick={() => setEditing(key)}>Editar</Button></>}</div></>}</section>;
+  const updatePriority = (index: number, change: Partial<Priority>) => set({ priorities: details.priorities.map((item, i) =>
+    i === index ? { ...item, ...change, teacher_modified: true } as Priority : item) });
+  const create = async () => { if (busy) return; setBusy(true); setError("");
+    try { if (JSON.stringify(editedCalendar) !== JSON.stringify(calendar)) {
+        const response = await apiFetch(`${localDatabaseApiUrl}/api/annual-calendar`, { method: "PUT",
+          headers: { "content-type": "application/json" }, body: JSON.stringify({ ...editedCalendar, forPreplan: true }) });
+        if (!response.ok) { const payload = await response.json() as { error?: string };
+          throw new Error(payload.error || "No se pudo guardar el calendario."); }
+      }
+      if (review.status === "draft") setReview(await post<Review>("/api/annual-personalization/confirm", { id: review.id, details }));
+      const response = await post<{ id: string }>("/api/annual-preplan/generate", {});
+      await onCreated(response.id);
+    } catch (cause) { setError(cause instanceof Error ? cause.message : "No se pudo crear Mi año."); }
+    finally { setBusy(false); } };
+  const coverage = details.evidence_coverage;
+  return <div className="space-y-4"><header><p className="text-sm font-semibold text-[#087d96]">Antes de crear Mi año</p>
+    <h1 className="text-3xl font-extrabold text-[#172b52]">Así entendí tu aula</h1>
+    <p className="mt-2 text-sm text-[#526b87]">Ayni organizó la evidencia disponible. Confirma o corrige lo que influirá en tus propuestas del año.</p></header>
+    {error && <WorkflowFeedback tone="error">{error}</WorkflowFeedback>}
+    {refresh && details.suggested_changes && <p className="rounded-xl bg-[#fff7e8] p-3 text-sm">
+      Desde la decisión anterior hay {details.suggested_changes.new_observations} observaciones nuevas.
+      {details.suggested_changes.new_interests.length > 0 && ` Nuevos intereses posibles: ${details.suggested_changes.new_interests.join(", ")}.`}
+      {details.suggested_changes.new_context.length > 0 && ` Nuevas oportunidades: ${details.suggested_changes.new_context.join(", ")}.`}
+      {Boolean(details.suggested_changes.new_priorities?.length) && ` Prioridades para revisar: ${details.suggested_changes.new_priorities?.join(", ")}.`}
+      {details.suggested_changes.group_profile_changed && " Ayni propone actualizar la síntesis del grupo."}
+      {details.suggested_changes.new_observations === 0 && !details.suggested_changes.new_interests.length && !details.suggested_changes.new_context.length
+        && !details.suggested_changes.new_priorities?.length && !details.suggested_changes.group_profile_changed
+        && " Puedes actualizar condiciones o decisiones si cambió la realidad del aula."}</p>}
+    <p className="rounded-xl bg-[#edf7fa] p-3 text-sm">{coverage.observations
+      ? `Síntesis basada en ${coverage.observations} ${coverage.observations === 1 ? "observación" : "observaciones"} y ${coverage.interviews ?? 0} ${coverage.interviews === 1 ? "entrevista confirmada" : "entrevistas confirmadas"}.`
+      : "Hay aspectos que seguiremos observando durante las primeras semanas."} Ningún dato pendiente se interpreta como dificultad.</p>
+    {card("group", "Tu grupo", <p>{details.group_profile}</p>,
+      <label className="block text-sm font-semibold">Cómo es y cómo participa el grupo
+        <Textarea className="mt-2 min-h-28" value={details.group_profile} onChange={(event) => set({ group_profile: event.target.value })} /></label>)}
+    {card("interests", "Lo que les interesa", details.interests.length
+      ? <div className="flex flex-wrap gap-2">{details.interests.map((item) => <span key={item.id} className="rounded-full bg-[#e8f6fa] px-3 py-1">{item.label}</span>)}</div>
+      : <p>Aún no hay un interés recurrente identificado. Puedes agregar alguno que conozcas.</p>,
+      <div className="space-y-2">{details.interests.map((item) => <div key={item.id} className="flex gap-2">
+        <Input aria-label="Interés" value={item.label} onChange={(event) => set({ interests: details.interests.map((row) =>
+          row.id === item.id ? { ...row, label: event.target.value, source_refs: [] } : row) })} />
+        <Button variant="ghost" onClick={() => set({ interests: details.interests.filter((row) => row.id !== item.id) })}>Quitar</Button></div>)}
+        <Button variant="outline" onClick={() => set({ interests: [...details.interests, { id: crypto.randomUUID(), label: "", source_refs: [] }] })}>Agregar interés</Button></div>)}
+    {card("priorities", "Lo que conviene priorizar", details.priorities.length
+      ? <ol className="space-y-2">{details.priorities.map((item) => <li key={item.id}><b>{item.title}</b> · {item.related_competency_ids.map((id) => competencies.find((card) => card.id === id)?.name ?? id).join(", ")}
+        <p>{item.reason}</p><span className="text-xs">Fuente: {item.source_refs?.length ? "registros o decisión docente confirmada" : "decisión docente"}. {item.importance === "observe_more" ? "Necesitamos observar más." : "Hay evidencia para una primera propuesta."}</span></li>)}</ol>
+      : <p>Aún necesitamos observar más para justificar prioridades específicas. El plan incluirá oportunidades para seguir conociendo al grupo.</p>,
+      <div className="space-y-4">{details.priorities.map((item, index) => <div key={item.id} className="space-y-2 rounded-xl border p-3">
+        <Input aria-label={`Prioridad ${index + 1}`} value={item.title} onChange={(event) => updatePriority(index, { title: event.target.value })} />
+        <Textarea aria-label={`Motivo de prioridad ${index + 1}`} value={item.reason} onChange={(event) => updatePriority(index, { reason: event.target.value })} />
+        <select aria-label={`Competencia de prioridad ${index + 1}`} className="min-h-11 w-full rounded-lg border bg-white px-3"
+          value={item.related_competency_ids[0] ?? ""} onChange={(event) => updatePriority(index, { related_competency_ids: [event.target.value] })}>
+          <option value="">Elige una competencia</option>{competencies.map((option) => <option key={option.id} value={option.id}>{option.name}</option>)}</select>
+        <select aria-label={`Estado de prioridad ${index + 1}`} className="min-h-11 w-full rounded-lg border bg-white px-3"
+          value={item.importance} onChange={(event) => updatePriority(index, { importance: event.target.value as Priority["importance"] })}>
+          <option value="higher">Dar más oportunidades</option><option value="normal">Aprovechar fortaleza</option><option value="observe_more">Seguir observando</option></select>
+        <div className="flex gap-2"><Button variant="ghost" disabled={index === 0} onClick={() => { const next = [...details.priorities]; [next[index - 1], next[index]] = [next[index], next[index - 1]]; set({ priorities: next }); }}>↑</Button>
+          <Button variant="ghost" disabled={index === details.priorities.length - 1} onClick={() => { const next = [...details.priorities]; [next[index + 1], next[index]] = [next[index], next[index + 1]]; set({ priorities: next }); }}>↓</Button>
+          <Button variant="ghost" onClick={() => set({ priorities: details.priorities.filter((row) => row.id !== item.id) })}>Quitar</Button></div></div>)}
+        <Button variant="outline" disabled={details.priorities.length >= 6} onClick={() => set({ priorities: [...details.priorities,
+          { id: crypto.randomUUID(), title: "", reason: "", related_competency_ids: [], importance: "higher", evidence_status: "teacher_entry", source_refs: [] }] })}>Agregar prioridad</Button></div>)}
+    {card("context", "Su contexto y oportunidades", details.context_opportunities.length
+      ? <ul className="list-disc pl-5">{details.context_opportunities.map((item) => <li key={item.id}>{item.source_kind?.includes("family") ? "La familia cuenta: " : item.source_kind?.includes("observation") ? "En las observaciones se aprecia: " : "Contexto del aula: "}{item.text}</li>)}</ul>
+      : <p>Aún no se identificaron oportunidades del entorno. Puedes añadir las que conozcas.</p>,
+      <div className="space-y-2">{details.context_opportunities.map((item) => <div key={item.id} className="flex gap-2">
+        <Input aria-label="Oportunidad del entorno" value={item.text} onChange={(event) => set({ context_opportunities: details.context_opportunities.map((row) =>
+          row.id === item.id ? { ...row, text: event.target.value, source_kind: "teacher_entry", source_refs: [] } : row) })} />
+        <Button variant="ghost" onClick={() => set({ context_opportunities: details.context_opportunities.filter((row) => row.id !== item.id) })}>Quitar</Button></div>)}
+        <Button variant="outline" onClick={() => set({ context_opportunities: [...details.context_opportunities,
+          { id: crypto.randomUUID(), text: "", source_kind: "teacher_entry", source_refs: [] }] })}>Agregar oportunidad</Button></div>)}
+    {card("conditions", "Condiciones reales para planificar", details.classroom_conditions.length
+      ? <ul className="list-disc pl-5">{details.classroom_conditions.map((item) => <li key={item.id}>{item.value}</li>)}</ul>
+      : <p>Ayni aún no conoce tus espacios, materiales u horarios. Completa solo lo que afectará el plan.</p>,
+      <div className="grid gap-3 sm:grid-cols-2">{conditionOptions.map(([kind, label]) => <label key={kind} className="text-sm font-semibold">{label}
+        <Input className="mt-2" value={details.classroom_conditions.find((item) => item.kind === kind)?.value ?? ""}
+          onChange={(event) => { const existing = details.classroom_conditions.filter((item) => item.kind !== kind);
+            set({ classroom_conditions: event.target.value ? [...existing, { id: kind, kind, value: event.target.value }] : existing }); }} /></label>)}
+        <label className="block text-sm font-semibold sm:col-span-2">Semanas iniciales de acogida
+          <select className="mt-2 min-h-11 w-full rounded-lg border bg-white px-3" value={editedCalendar.initial_stage.duration_weeks}
+            onChange={(event) => setEditedCalendar({ ...editedCalendar, initial_stage: { ...editedCalendar.initial_stage, duration_weeks: Number(event.target.value) } })}>
+            {[1,2,3,4].map((value) => <option key={value} value={value}>{value} {value === 1 ? "semana" : "semanas"}</option>)}</select></label>
+        <details className="sm:col-span-2"><summary className="cursor-pointer text-sm font-semibold">Revisar fechas lectivas del colegio</summary>
+          <div className="mt-2 space-y-2">{editedCalendar.blocks.map((block, index) => <div key={block.id ?? index} className="grid gap-2 rounded-lg border p-2 sm:grid-cols-[1fr_10rem_10rem]">
+            <span>{block.label}</span><Input type="date" aria-label={`Inicio de ${block.label}`} disabled={!block.editable} value={block.start_date}
+              onChange={(event) => setEditedCalendar({ ...editedCalendar, blocks: editedCalendar.blocks.map((item, i) => i === index ? { ...item, start_date: event.target.value } : item) })} />
+            <Input type="date" aria-label={`Fin de ${block.label}`} disabled={!block.editable} value={block.end_date}
+              onChange={(event) => setEditedCalendar({ ...editedCalendar, blocks: editedCalendar.blocks.map((item, i) => i === index ? { ...item, end_date: event.target.value } : item) })} /></div>)}</div></details>
+        <label className="block text-sm font-semibold sm:col-span-2">Algo más que quieras considerar · opcional
+          <Textarea className="mt-2" value={details.additional_notes} onChange={(event) => set({ additional_notes: event.target.value })} /></label></div>)}
+    {details.needs_more_observation.length > 0 && <p className="rounded-xl bg-[#fff7e8] p-3 text-sm">{details.needs_more_observation.join(" ")}</p>}
+    <div className="rounded-2xl border bg-white p-4"><p className="text-sm text-[#526b87]">Al crear Mi año confirmarás estos cinco bloques como una sola versión. Podrás reajustar el plan más adelante.</p>
+      {review.status === "confirmed" && <Button className="mt-3" variant="outline" disabled={busy} onClick={() => void (async () => {
+        try { setBusy(true); const next = await post<Review>("/api/annual-personalization/prepare", { refresh: true });
+          setReview(next); setDetails(next.details); setConfirmed([]); }
+        catch (cause) { setError(cause instanceof Error ? cause.message : "No se pudo abrir una nueva revisión."); }
+        finally { setBusy(false); }
+      })()}>Editar la decisión confirmada</Button>}
+      <AsyncButton className="mt-3 min-h-12" busy={busy} busyLabel="Confirmando y preparando propuestas..." onClick={() => void create()}>Crear mi año</AsyncButton></div>
+  </div>;
+}

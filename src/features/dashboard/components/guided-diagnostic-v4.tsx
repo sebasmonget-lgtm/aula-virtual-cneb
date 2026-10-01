@@ -36,6 +36,7 @@ export function GuidedDiagnostic({ dashboard, onPlan, onStudents, initialStep = 
   const [feedback, setFeedback] = useState("");
   const [interviewFeedback, setInterviewFeedback] = useState("");
   const [classroomContext, setClassroomContext] = useState<PublicClassroomContext | null>(null);
+  const [legacyReviewOpen, setLegacyReviewOpen] = useState(false);
   const { statuses: interviewStatuses, error: interviewStatusError } = useFamilyInterviewStatusMap(`${interviewStudentId ?? "list"}:${data?.students.map((item) => item.id).join(",") ?? ""}`, Boolean(data?.students.length));
 
   useEffect(() => { loadDiagnostics().then(setData).catch((cause) => setError(cause instanceof Error ? cause.message : "No se pudo cargar el diagnóstico.")); }, []);
@@ -84,7 +85,7 @@ export function GuidedDiagnostic({ dashboard, onPlan, onStudents, initialStep = 
   const diagnosticSteps = [
     { label: "Conocer", done: interviewStatusKnown && confirmedInterviews === data.students.length, status: interviewStatusKnown ? `${confirmedInterviews}/${data.students.length} entrevistas` : interviewStatusError ? "Sin actualizar" : "Cargando..." },
     { label: "Observar", done: observedChildren === data.students.length, status: `${observedChildren}/${data.students.length} niños` },
-    { label: "Resumir", done: data.step_progress?.group_review_confirmed ?? false, status: data.step_progress?.group_review_confirmed ? "Confirmado" : "Pendiente" },
+    { label: "Planificar", done: data.step_progress?.group_review_confirmed ?? false, status: "Síntesis en Mi año" },
   ];
 
   return <div className="diagnostic-shell space-y-5">
@@ -164,6 +165,12 @@ export function GuidedDiagnostic({ dashboard, onPlan, onStudents, initialStep = 
       <AsyncButton className="min-h-12 w-full sm:w-auto" busy={working} busyLabel="Guardando..." disabled={audioBusy || !aspectId || !note.trim()} onClick={() => void save()}><Save /> Guardar observación</AsyncButton>
     </section>}
 
-    {step === 3 && <DiagnosticReview onObserve={() => { setStep(2); setStudentId(null); }} onPlan={onPlan} onObservationSaved={() => { void loadDiagnostics().then(setData).catch(() => setError("La observación se guardó, pero no se pudo actualizar el avance. Recarga la pantalla.")); }} onGroupConfirmed={() => setData((current) => current ? { ...current, step_progress: { ...current.step_progress, group_review_confirmed: true } } : current)} />}
+    {step === 3 && <section className="diagnostic-panel space-y-4 p-5"><h2 className="text-xl font-bold">Ayni organizará lo que ya conoces</h2>
+      <p className="text-sm text-[#526b87]">En «Así entendí tu aula» verás una propuesta basada en entrevistas y observaciones. Puedes corregirla antes de crear Mi año. Seguirás observando durante el año.</p>
+      {onPlan && <Button className="min-h-12" onClick={onPlan}>Ir a Así entendí tu aula <ArrowRight /></Button>}
+      <details open={legacyReviewOpen} onToggle={(event) => setLegacyReviewOpen(event.currentTarget.open)} className="rounded-xl border p-3">
+        <summary className="cursor-pointer text-sm font-semibold">Ver revisiones diagnósticas anteriores y registros individuales</summary>
+        {legacyReviewOpen && <DiagnosticReview onObserve={() => { setStep(2); setStudentId(null); }} onPlan={onPlan} onObservationSaved={() => { void loadDiagnostics().then(setData).catch(() => setError("La observación se guardó, pero no se pudo actualizar el avance. Recarga la pantalla.")); }} onGroupConfirmed={() => setData((current) => current ? { ...current, step_progress: { ...current.step_progress, group_review_confirmed: true } } : current)} />}
+      </details></section>}
   </div>;
 }

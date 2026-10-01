@@ -163,11 +163,12 @@ export async function confirmBimesterReplan(db, { teacherId, classroom, period, 
       applied_count: applied.length, confirmed_by: teacherId };
     await tx.query(`insert into annual_plans(id,classroom_id,school_year_id,curriculum_version_id,version,status,proposal,
       generation_metadata,document_context,supersedes_plan_id,source_diagnostic_review_id,source_priority_review_id,
-      source_context_fingerprint,teacher_confirmed_at,preplan_confirmed_at)
-      values($1,$2,$3,$4,$5,'draft',$6::jsonb,$7::jsonb,$8::jsonb,$9,$10,$11,$12,now(),now())`,
+      source_context_fingerprint,source_personalization_review_id,teacher_confirmed_at,preplan_confirmed_at)
+      values($1,$2,$3,$4,$5,'draft',$6::jsonb,$7::jsonb,$8::jsonb,$9,$10,$11,$12,$13,now(),now())`,
     [id, classroom.id, classroom.school_year_id, source.curriculum_version_id, version, JSON.stringify(proposal),
       JSON.stringify(metadata), JSON.stringify(source.document_context ?? {}), source.id,
-      source.source_diagnostic_review_id, source.source_priority_review_id, source.source_context_fingerprint]);
+      source.source_diagnostic_review_id, source.source_priority_review_id, source.source_context_fingerprint,
+      source.source_personalization_review_id]);
     for (const slot of slots) await tx.query(`insert into project_slots(id,annual_plan_id,slot_index,calendar_block_id,
       duration_weeks,starts_on,ends_on,proposal_id) values($1,$2,$3,$4,$5,$6,$7,$8)`,
     [randomUUID(), id, slot.slot_index, slot.calendar_block_id, slot.duration_weeks, slot.starts_on, slot.ends_on, slot.proposal_id]);
