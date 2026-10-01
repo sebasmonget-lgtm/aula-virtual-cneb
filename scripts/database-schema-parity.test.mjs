@@ -47,6 +47,25 @@ test("fresh Supabase migrations retain the service-facing local table and column
       create function storage.foldername(p text) returns text[] language sql immutable as $$ select string_to_array(p,'/') $$;
     `);
     await apply(stagingDb, remote);
+    const referenceColumnTypes = await Promise.all([localDb, stagingDb].map(async (db) =>
+      (await db.query(`select data_type from information_schema.columns
+        where table_schema = 'public' and table_name = 'observation_references'
+          and column_name = 'performance_ids'`)).rows[0]?.data_type));
+    assert.deepEqual(referenceColumnTypes, ["jsonb", "ARRAY"]);
+    await assert.rejects(
+      stagingDb.query("select jsonb_array_length(performance_ids) from observation_references limit 0"),
+      /jsonb_array_length/,
+    );
+    const apiSource = await readFile(path.join(root, "scripts", "local-db-server.mjs"), "utf8");
+    const listQuery = apiSource.match(/const references = \(await db\.query\(`([\s\S]*?)`, \[classroom\.age_years\]\)\)\.rows;/)?.[1];
+    const saveRoute = apiSource.slice(apiSource.indexOf('if (request.method === "POST" && url.pathname === "/api/diagnostics")'));
+    const saveQuery = saveRoute.match(/const allowed = await db\.query\(`([\s\S]*?)`, \[body\.studentId, body\.competencyId, body\.referenceId, teacherId\]\);/)?.[1];
+    assert.ok(listQuery && saveQuery, "diagnostic reference queries are present");
+    for (const db of [localDb, stagingDb]) {
+      // Prepare the actual diagnostic GET and legacy POST against both stored array types.
+      await db.query(listQuery, [5]);
+      await db.query(saveQuery, Array(4).fill("00000000-0000-4000-8000-000000000001"));
+    }
     const rawSecurity = (await stagingDb.query(`select c.relrowsecurity as rls,
       has_table_privilege('authenticated','public.ordinary_observations','INSERT') as teacher_insert,
       has_table_privilege('authenticated','public.ordinary_observations','SELECT') as teacher_select

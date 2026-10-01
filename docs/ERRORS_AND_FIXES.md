@@ -1,5 +1,15 @@
 # Errores y soluciones
 
+## 2026-09-30 — Diagnóstico no cargaba con el esquema PostgreSQL de staging
+
+**Síntoma.** La interfaz muestra «No se pudo cargar el diagnóstico local» y bloquea el recorrido natural hacia el plan anual. El cliente reemplaza cualquier fallo de `GET /api/diagnostics` por ese texto; el estado HTTP de la sesión docente publicada no se pudo recuperar todavía.
+
+**Causa reproducida.** `observation_references.performance_ids` es `jsonb` en las migraciones locales y `uuid[]` en las migraciones de Supabase. Dos consultas del API llamaban `jsonb_array_elements_text` y `jsonb_array_length` directamente sobre la columna. Una prueba con las migraciones Supabase reproduce el rechazo de la consulta anterior por tipo incompatible. La misma incompatibilidad afectaba la validación del POST diagnóstico heredado.
+
+**Solución validada en código.** Ambas consultas convierten la columna con `to_jsonb` antes de usar las funciones JSONB. La prueba de paridad ejecuta esas expresiones contra ambos esquemas. Pasaron la prueba de paridad, nueve pruebas funcionales de Auth/diagnóstico, typecheck, lint, build Vinext y build Next.js. No hay migración ni cambio de datos. **Falta desplegar en staging y repetir `GET /api/diagnostics` con la sesión docente** antes de declarar recuperada la aplicación publicada.
+
+**Prevención.** La paridad de esquema debe incluir tipos de columnas y consultas críticas, además de nombres de tablas y columnas. El mensaje cliente debe conservar un código seguro o `request_id` para distinguir autenticación de fallos internos en futuras incidencias.
+
 ## 2026-09-30 — Alta inicial completada pero acceso administrativo pendiente
 
 **Síntoma.** Supabase Auth muestra una cuenta «Sebastian» confirmada y sin ingresos previos, pero Ayni responde «Revisa tu DNI y contraseña». El primer intento usó el DNI ficticio preparado por QA, distinto del DNI que el propietario introdujo durante el alta. Un intento posterior con el DNI usado en el alta también falló; no se ha determinado todavía si la contraseña introducida al crear la cuenta coincide con la del ingreso.

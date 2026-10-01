@@ -668,14 +668,14 @@ async function diagnosticWorkspace() {
            bool_and(p.source_ref <> 'seed-local-no-oficial') as official_verified
       from observation_references r
       join competency_observation_guides g on g.id = r.guide_id
-      join lateral jsonb_array_elements_text(r.performance_ids) pid on true
+      join lateral jsonb_array_elements_text(to_jsonb(r.performance_ids)) pid on true
       join performances p on p.id = pid.value::uuid and p.competency_id = g.competency_id
      where r.is_active = true and r.reviewed_at is not null
        and g.is_active = true and g.age = $1 and p.age_grade_id = (
          select id from age_grades where age_years = $1 limit 1
        )
      group by r.id, g.competency_id
-     having count(*) = jsonb_array_length(r.performance_ids)
+     having count(*) = jsonb_array_length(to_jsonb(r.performance_ids))
      order by r.sort_order
   `, [classroom.age_years])).rows;
   const sessionResult = await db.query(`
@@ -2377,8 +2377,8 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         join competency_observation_guides g on g.competency_id = $2 and g.age = ag.age_years and g.is_active = true
         join observation_references r on r.guide_id = g.id and r.id = $3 and r.is_active = true and r.reviewed_at is not null
         where s.id = $1 and c.teacher_id = $4 and
-          jsonb_array_length(r.performance_ids) > 0 and not exists (
-            select 1 from jsonb_array_elements_text(r.performance_ids) pid
+          jsonb_array_length(to_jsonb(r.performance_ids)) > 0 and not exists (
+            select 1 from jsonb_array_elements_text(to_jsonb(r.performance_ids)) pid
             left join performances p on p.id = pid.value::uuid and p.competency_id = g.competency_id
               and p.age_grade_id = c.age_grade_id
             where p.id is null
