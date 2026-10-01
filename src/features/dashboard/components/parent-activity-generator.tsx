@@ -3,7 +3,7 @@ import { apiFetch } from "@/src/lib/ayni-api-fetch";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { localDatabaseApiUrl } from "@/src/lib/local-database";
+import { localDatabaseApiUrl, type ActivityCriterion } from "@/src/lib/local-database";
 import { jsonValuesDiffer } from "@/src/lib/project-draft-changes.mjs";
 import type { LibraryResource } from "@/src/lib/library-resource";
 import { CriterionEvidenceGenerator } from "./criterion-evidence-generator";
@@ -106,9 +106,10 @@ const fields: [
     string
 ][] = [["title", "Título"], ["purpose", "Propósito"], ["meaningful_situation", "Situación significativa"], ["teacher_preparation", "Preparación docente"], ["child_actions", "Acciones de los niños"], ["mediation", "Mediación"], ["evidence_opportunities", "Oportunidades de evidencia"], ["closure_or_continuity", "Cierre o continuidad"]];
 const snapshot = (proposal: Proposal, date: string, materials: string) => JSON.stringify({ proposal, date, materials: materials.split(",").map((item) => item.trim()).filter(Boolean) });
-export function ParentActivityGenerator({ onConfirmed, onGoToday, feedbackPeriodId, ongoing = false, initialResource, initialExperienceId, initialRouteItemId }: {
+export function ParentActivityGenerator({ onConfirmed, onGoToday, onRecordEvidence, feedbackPeriodId, ongoing = false, initialResource, initialExperienceId, initialRouteItemId }: {
     onConfirmed?: () => void;
     onGoToday?: () => void;
+    onRecordEvidence?: (input: { activityId: string; title: string; criterion: ActivityCriterion }) => void;
     feedbackPeriodId?: string | null;
     ongoing?: boolean;
     initialResource?: LibraryResource | null;
@@ -430,6 +431,6 @@ export function ParentActivityGenerator({ onConfirmed, onGoToday, feedbackPeriod
 <Button variant="outline" onClick={() => openActivity(item)}>{item.status === "draft" ? "Continuar borrador" : "Ver actividad"}</Button>{item.status === "active" && !item.workshop && parent.status === "active" && <Button className="ml-2" variant="outline" disabled={Boolean(operation)} onClick={() => void copyActivity(item)}>Preparar nueva versión</Button>}
 {item.status === "archived" && item.future_schedules?.length > 0 && <p className="mt-2 rounded-lg bg-amber-50 p-2 text-sm">Esta versión sigue programada en {item.future_schedules.length} bloque(s) futuros. Puedes mantenerla o cambiar cada bloque después de confirmar la versión nueva.</p>}
 {item.status === "active" && item.supersedes_activity_id && activities.find((source) => source.id === item.supersedes_activity_id)?.future_schedules?.map((entry) => <Button key={entry.id} className="ml-2 mt-2" variant="outline" disabled={Boolean(operation)} onClick={() => void switchFutureSchedule(item, entry.id)}>Usar V{item.version} el {entry.scheduled_on.slice(0, 10)}</Button>)}
-{item.status === "active" && item.details.competency_status === "confirmed" && item.details.competency_id && <div id={`criterion-${item.id}`}>{<CriterionEvidenceGenerator activityId={item.id} activityTitle={item.title} competencyName={nameOf(item.details.competency_id)} onGoToday={onGoToday}/>}</div>}</article>)}</section>
+{item.status === "active" && item.details.competency_status === "confirmed" && item.details.competency_id && <div id={`criterion-${item.id}`}>{<CriterionEvidenceGenerator activityId={item.id} activityTitle={item.title} activityDate={item.occurs_on} competencyName={nameOf(item.details.competency_id)} onGoToday={onGoToday} onRecordEvidence={onRecordEvidence}/>}</div>}</article>)}</section>
 </>}</section>;
 }

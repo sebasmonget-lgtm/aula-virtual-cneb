@@ -1203,3 +1203,15 @@ Síntoma: cuatro notas QA de la captura automatizada quedaron asociadas a la sel
 **Validación.** La prueba de tres sincronizaciones concurrentes conserva una sola versión del mapa. Pasaron las 11 pruebas del servicio, typecheck, lint y build Vinext. Falta registrar aquí el resultado de la comprobación funcional tras el despliegue.
 
 **Prevención.** Probar el cambio de período cuando varias tarjetas solicitan el mismo mapa y conservar un estado de error recuperable en toda carga asíncrona.
+
+## 2026-10-01 — Actividad confirmada de un día anterior sin acceso al registro de evidencia
+
+**Síntoma.** Una actividad confirmada del 13/04 remitía a «Hoy» para observar. El 01/10, «Hoy» no mostraba aquella actividad y no había forma visible de completar su evidencia desde la ficha.
+
+**Causa.** La acción de observación estaba conectada solo con los bloques de la jornada actual, aunque el servidor ya autoriza evidencias de actividades activas y las fecha según la actividad.
+
+**Corrección.** La ficha del criterio confirmado abre el mismo formulario de evidencia con su actividad y criterio, e informa la fecha a la que se vincula el registro. No se cambió la autorización del servidor ni se fabricó contenido observado.
+
+**Validación.** Typecheck, lint y builds pasaron. Pendiente de consignar el resultado de la prueba funcional en la web de QA.
+
+**Prevención.** Probar el registro tardío desde una actividad confirmada cuando ya no es el día actual.

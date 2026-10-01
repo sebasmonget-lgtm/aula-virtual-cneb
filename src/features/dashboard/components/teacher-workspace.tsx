@@ -214,6 +214,14 @@ export function TeacherWorkspace() {
     setEvidenceOpen(true);
   }
 
+  function openPlannedEvidence({ activityId, title, criterion }: { activityId: string; title: string; criterion: ActivityCriterion }) {
+    setStudentId("");
+    setEvidenceContext({ activityId, title, criteria: [criterion] });
+    setCriterionId(criterion.id);
+    setNote(""); setPhoto(null); setAudio(null); setSaved(false); setSaveError("");
+    setEvidenceOpen(true);
+  }
+
   async function openActivity(block: LocalDashboard["today"]["blocks"][number], start = false) {
     if (!block.activity_id) return;
     if (start) await updateExecution({ scheduleEntryId: block.id, action: "start" });
@@ -287,7 +295,7 @@ export function TeacherWorkspace() {
           active === "Documentos" ? <DocumentsScreen /> :
           active === "Calendario" ? <SchoolCalendarScreen onOpenPlanning={() => navigate("Planificar")} /> : active === "Biblioteca" ? dashboard ? <ResourceLibraryScreen age={dashboard.profile.age_years} initialFilter={libraryFilter} onUse={(resource) => { setSelectedResource(resource); setPlanningTarget("activities"); navigate("Planificar"); }} /> : <ScreenSkeleton /> :
           active === "Evaluar" ? dashboard ? <EvaluationArea dashboard={dashboard} initialTarget={evaluationTarget} initialSection={evaluationEntry} onPlan={() => { setPlanningTarget(null); navigate("Planificar"); }} onPrepareActivity={() => { setPlanningTarget("activities"); navigate("Planificar"); }} onToday={() => navigate("Hoy")} /> : <ScreenSkeleton /> :
-          active === "Aula" ? dashboard ? <><div className="mx-auto mb-4 flex max-w-5xl flex-wrap gap-2">{f7Enabled && <><Button variant="outline" onClick={() => openDiagnostic()}>Diagnóstico</Button><Button variant="outline" onClick={() => navigate("Evaluar")}>Evaluación</Button>{process.env.NEXT_PUBLIC_AYNI_CURRICULAR_REVIEW === "1" && <Button variant="outline" onClick={() => setOrdinaryReviewOpen(true)}>Observaciones por revisar</Button>}</>}</div><StudentsScreen students={students} onImported={setDashboard} onDiagnostic={() => openDiagnostic()} onEvaluate={(studentId, competencyId) => { navigate("Evaluar"); setEvaluationTarget({ studentId, competencyId }); }} onPlan={() => navigate("Planificar")} /></> : <ScreenSkeleton /> : active === "Planificar" ? dashboard ? <PlanningArea dashboard={dashboard} initialTab={planningTarget} diagnosticInitialStep={diagnosticInitialStep} selectedResource={selectedResource} onGoToday={() => navigate("Hoy")} onGoStudents={() => navigate("Aula")} onGoWorkshops={() => { setLibraryFilter("workshops"); navigate("Biblioteca"); }} onGoCalendar={() => navigate("Calendario")} onGoLibrary={() => { setLibraryFilter("for-you"); navigate("Biblioteca"); }} /> : <ScreenSkeleton /> : <>
+          active === "Aula" ? dashboard ? <><div className="mx-auto mb-4 flex max-w-5xl flex-wrap gap-2">{f7Enabled && <><Button variant="outline" onClick={() => openDiagnostic()}>Diagnóstico</Button><Button variant="outline" onClick={() => navigate("Evaluar")}>Evaluación</Button>{process.env.NEXT_PUBLIC_AYNI_CURRICULAR_REVIEW === "1" && <Button variant="outline" onClick={() => setOrdinaryReviewOpen(true)}>Observaciones por revisar</Button>}</>}</div><StudentsScreen students={students} onImported={setDashboard} onDiagnostic={() => openDiagnostic()} onEvaluate={(studentId, competencyId) => { navigate("Evaluar"); setEvaluationTarget({ studentId, competencyId }); }} onPlan={() => navigate("Planificar")} /></> : <ScreenSkeleton /> : active === "Planificar" ? dashboard ? <PlanningArea dashboard={dashboard} initialTab={planningTarget} diagnosticInitialStep={diagnosticInitialStep} selectedResource={selectedResource} onGoToday={() => navigate("Hoy")} onRecordEvidence={openPlannedEvidence} onGoStudents={() => navigate("Aula")} onGoWorkshops={() => { setLibraryFilter("workshops"); navigate("Biblioteca"); }} onGoCalendar={() => navigate("Calendario")} onGoLibrary={() => { setLibraryFilter("for-you"); navigate("Biblioteca"); }} /> : <ScreenSkeleton /> : <>
           {activityRunBlock ? <ActivityRunView block={activityRunBlock} evidenceRevision={evidenceRevision} onBack={() => setActivityRunBlockId(null)} onEvidence={(suggestedStudentId) => openEvidenceFor(activityRunBlock,suggestedStudentId)} onStepChange={async (stepIndex) => updateExecution({ scheduleEntryId: activityRunBlock.id, action: "set_step", stepIndex })} onComplete={async () => { await updateExecution({ scheduleEntryId: activityRunBlock.id, action: "complete", closureType: "as_planned" }); setActivityRunBlockId(null); }} /> : active === "Hoy" && (dashboard ? <TodayHome dashboard={dashboard} refreshKey={evidenceRevision} openEvidence={openEvidenceFor} openAttendance={() => setAttendanceOpen(true)} updateExecution={updateExecution} openActivity={openActivity} onPlan={() => navigate("Planificar")} onPrepareActivity={() => { setPlanningTarget("activities"); navigate("Planificar"); }} onDiagnostic={() => openDiagnostic(2)} onReplan={() => { navigate("Evaluar"); setEvaluationEntry("replan"); }} onReviewObservations={() => setOrdinaryReviewOpen(true)} /> : <ScreenSkeleton />)}
           </>}
         </main>
@@ -357,7 +365,7 @@ function EvaluationArea({ dashboard, initialTarget, initialSection, onPlan, onPr
     </>}
   </section>;
 }
-function PlanningArea({ dashboard, initialTab, diagnosticInitialStep, selectedResource, onGoToday, onGoStudents, onGoWorkshops, onGoCalendar, onGoLibrary }: { dashboard: LocalDashboard; initialTab?:"activities"|"diagnostic"|null; diagnosticInitialStep:1|2|3; selectedResource: LibraryResource | null; onGoToday: () => void; onGoStudents: () => void; onGoWorkshops: () => void; onGoCalendar: () => void; onGoLibrary: () => void }) {
+function PlanningArea({ dashboard, initialTab, diagnosticInitialStep, selectedResource, onGoToday, onRecordEvidence, onGoStudents, onGoWorkshops, onGoCalendar, onGoLibrary }: { dashboard: LocalDashboard; initialTab?:"activities"|"diagnostic"|null; diagnosticInitialStep:1|2|3; selectedResource: LibraryResource | null; onGoToday: () => void; onRecordEvidence: (input: { activityId: string; title: string; criterion: ActivityCriterion }) => void; onGoStudents: () => void; onGoWorkshops: () => void; onGoCalendar: () => void; onGoLibrary: () => void }) {
   const [tab, setTab] = useState<"home" | "diagnostic" | "annual" | "experiences" | "activities">(initialTab??"home");
   const [diagnosticStep, setDiagnosticStep] = useState<1 | 2 | 3>(diagnosticInitialStep);
   const [projectProposalId, setProjectProposalId] = useState<string | null>(null);
@@ -410,7 +418,7 @@ function PlanningArea({ dashboard, initialTab, diagnosticInitialStep, selectedRe
         onDevelopActivity={(experienceId, routeItemId) => {
           setActivitySelection({ experienceId, routeItemId }); setTab("activities"); }} /> : <ParentActivityGenerator ongoing={journey?.mode==="ongoing_cycle"} feedbackPeriodId={feedbackPeriodId} initialResource={selectedResource}
         initialExperienceId={activitySelection?.experienceId} initialRouteItemId={activitySelection?.routeItemId}
-        onConfirmed={() => void refreshJourney()} onGoToday={onGoToday} />}
+        onConfirmed={() => void refreshJourney()} onGoToday={onGoToday} onRecordEvidence={onRecordEvidence} />}
       {journey?.mode!=="ongoing_cycle"&&(status === "confirmed" || status === "reviewed") && stepIndex < steps.length - 1 && <NextStepCard title={tab === "diagnostic" ? "Revisión inicial guardada" : `${steps[stepIndex].label} listo`} description={tab === "diagnostic" ? "Puedes preparar el plan anual con la información disponible y seguir observando después." : "Ya puedes avanzar. Tu trabajo quedó guardado y podrás volver a verlo."} action={`Continuar: ${steps[stepIndex + 1].label}`} onAction={() => { setTab(steps[stepIndex + 1].id); void refreshJourney(); }} />}
       {tab === "annual" && status === "draft" && journey?.hasConfirmedAnnual && <Button variant="outline" onClick={() => setTab("experiences")}>Seguir con el plan confirmado anterior</Button>}
       {tab === "experiences" && status === "draft" && journey?.hasConfirmedExperience && <Button variant="outline" onClick={() => setTab("activities")}>Preparar actividad de una experiencia confirmada</Button>}
