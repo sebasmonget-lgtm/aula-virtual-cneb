@@ -342,3 +342,7 @@ El flujo nuevo usa una sola confirmación «Así entendí tu aula», persiste el
 ## Entrevista familiar breve y estructurada (2026-10-01)
 
 La entrevista nueva tiene nueve preguntas conversacionales, selecciones rápidas y campos breves opcionales. Las respuestas v2 siguen en `student_family_interviews.details` JSONB; las entrevistas anteriores conservan versión, texto e historial. La proyección individual mantiene «Según la familia»; el Plan Anual, proyectos y actividades reciben solo temas agregados y la evaluación recibe un contexto acotado separado de las evidencias. Las señales familiares permiten sugerir qué observar, nunca un nivel AD/A/B/C ni una dificultad automática. No se requiere migración SQL. Ver ADR 105 y `docs/qa/family-interview-redesign-2026-10-01.md`.
+
+## Mapa visual de Mi año (2026-10-01)
+
+«Mi año» prioriza un mapa horizontal marzo–diciembre con propuestas sobre fechas reales, semanas de gestión diferenciadas y feriados compactos. La lista editable sigue como vista secundaria del mismo `annual_preplan_v1`. Reorganizar crea un borrador de versión; mover, retirar, sustituir e incorporar propuestas modifica ese borrador, y confirmar sigue siendo una acción separada. La bandeja `available_experiences` se persiste dentro del JSONB existente, sin migración; planes anteriores sin esa propiedad conservan su lectura. Ver ADR 106 y `docs/qa/annual-year-map-2026-10-01.md`.
