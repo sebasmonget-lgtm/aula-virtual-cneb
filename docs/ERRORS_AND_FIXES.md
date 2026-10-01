@@ -6,7 +6,7 @@
 
 **Causa raíz.** Las consultas de los espacios diagnósticos devolvían solo `preferred_name` o `first_name` como `name`, aunque el apellido estaba guardado. La interfaz presentaba fielmente ese dato incompleto.
 
-**Solución.** Las lecturas autorizadas de experiencias y revisión diagnóstica componen el nombre visible con nombre preferido (o nombre) y apellido. No se modifican registros ni autorizaciones. Las pruebas de ambos servicios verifican nombres completos; el despliegue y smoke del aula QA se registrarán tras ejecutarlos.
+**Solución validada.** Las lecturas autorizadas de experiencias y revisión diagnóstica componen el nombre visible con nombre preferido (o nombre) y apellido. No se modifican registros ni autorizaciones. Pasaron diez pruebas de ambos servicios, typecheck, lint, build Vinext y build Next.js. El commit `4c67e25` se publicó en el despliegue `dpl_4tbGw2GVBdmVwaPBKJu2ZFeMxcPP`; `/health` y `/api/auth/config` respondieron 200, y `/api/diagnostics` sin sesión respondió 401 esperado. En la sesión docente, las entrevistas y la revisión diagnóstica muestran «Prueba Uno», «Prueba Dos» y «Prueba Tres».
 
 **Prevención.** Las pantallas donde se atribuyen entrevistas, observaciones o valoraciones deben distinguir alumnos con el mismo nombre de pila antes de habilitar el guardado.
 
