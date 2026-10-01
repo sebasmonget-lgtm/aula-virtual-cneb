@@ -102,7 +102,10 @@ export async function createDatabase({ mode, dataDir, connectionString, poolFact
     return { mode, db, requestDb: () => db, close: () => db.close() };
   }
   if (mode !== "postgres") throw new Error("AYNI_DB_MODE debe ser local o postgres.");
-  const config = postgresPoolConfig(connectionString);
+  // Each serverless instance has its own pool; keep its footprint below the
+  // small session-pool limit and release idle connections promptly.
+  const config = postgresPoolConfig(connectionString, process.env.AYNI_SERVERLESS === "1"
+    ? { max: 1, idleTimeoutMillis: 1000 } : {});
   const pg = poolFactory ? null : (await import("pg")).default;
   const pool = poolFactory ? poolFactory(config) : new pg.Pool(config);
   pool.on?.("error", () => { /* A future checkout will report a safe failure; never log credentials. */ });

@@ -1227,3 +1227,15 @@ Síntoma: cuatro notas QA de la captura automatizada quedaron asociadas a la sel
 **Validación.** La prueba HTTP del dashboard comprueba el nombre completo en ambos campos. Pendiente de consignar la comprobación visual tras el despliegue.
 
 **Prevención.** Probar toda selección de alumnos con dos o más niños que comparten nombre de pila.
+
+## 2026-10-01 — Límite de conexiones de PostgreSQL en Vercel
+
+**Síntoma.** Planificar y algunas consultas de actividades fallaban de forma intermitente. El log del despliegue mostró `EMAXCONNSESSION`: límite de 15 clientes del pool en modo sesión.
+
+**Causa.** Cada instancia serverless mantenía un pool propio de hasta cinco conexiones con 30 segundos de inactividad. Varias instancias simultáneas agotaban el límite de la base.
+
+**Corrección.** En modo serverless el adaptador usa como máximo una conexión por instancia y cierra la conexión inactiva tras un segundo. La configuración local conserva el comportamiento anterior.
+
+**Validación.** Pendiente de consignar el resultado de las pruebas y del recorrido en Vercel.
+
+**Prevención.** Dimensionar el pool por instancia según el límite agregado de la base y vigilar errores de capacidad de conexiones durante QA concurrente.
