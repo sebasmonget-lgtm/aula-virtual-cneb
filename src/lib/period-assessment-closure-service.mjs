@@ -1,5 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
 import JSZip from "jszip";
+import { versionTransaction } from "./version-integrity.mjs";
 
 const hash = (value) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
 const dateOnly = (value) => value == null ? null : value instanceof Date ? value.toISOString().slice(0, 10) : String(value).slice(0, 10);
@@ -84,13 +85,13 @@ export async function syncPeriodEvaluationMap(db, { classroomId, schoolYearId, p
   });
   const sourceFingerprint = hash(snapshot);
   if(!relations.map_ready) return { version: 1, source_fingerprint: sourceFingerprint, entries: snapshot, changed: true, ephemeral: true };
-  const latest = (await db.query(`select version,source_fingerprint from period_evaluation_map_versions
-    where classroom_id=$1 and evaluation_period_id=$2 order by version desc limit 1`, [classroomId, period.id])).rows[0];
-  if (latest?.source_fingerprint === sourceFingerprint) {
-    return { version: Number(latest.version), source_fingerprint: sourceFingerprint, entries: snapshot, changed: false };
-  }
-  const version = Number(latest?.version ?? 0) + 1;
-  await db.transaction(async (tx) => {
+  return versionTransaction(db, `period-evaluation-map:${classroomId}:${period.id}`, async (tx) => {
+    const latest = (await tx.query(`select version,source_fingerprint from period_evaluation_map_versions
+      where classroom_id=$1 and evaluation_period_id=$2 order by version desc limit 1`, [classroomId, period.id])).rows[0];
+    if (latest?.source_fingerprint === sourceFingerprint) {
+      return { version: Number(latest.version), source_fingerprint: sourceFingerprint, entries: snapshot, changed: false };
+    }
+    const version = Number(latest?.version ?? 0) + 1;
     await tx.query(`insert into period_evaluation_map_versions(id,classroom_id,evaluation_period_id,version,source_fingerprint,snapshot)
       values($1,$2,$3,$4,$5,$6::jsonb)`, [randomUUID(), classroomId, period.id, version, sourceFingerprint, JSON.stringify(snapshot)]);
     const ids = [];
@@ -116,8 +117,8 @@ export async function syncPeriodEvaluationMap(db, { classroomId, schoolYearId, p
     if(ids.length) await tx.query(`delete from period_evaluation_map_entries where classroom_id=$1 and evaluation_period_id=$2
       and not(criterion_id=any($3::uuid[]))`, [classroomId, period.id, ids]);
     else await tx.query(`delete from period_evaluation_map_entries where classroom_id=$1 and evaluation_period_id=$2`,[classroomId,period.id]);
+    return { version, source_fingerprint: sourceFingerprint, entries: snapshot, changed: true };
   });
-  return { version, source_fingerprint: sourceFingerprint, entries: snapshot, changed: true };
 }
 
 export function buildPeriodStatistics({ rows, mapEntries = [], competencyMeta = [], studentCount = 0, plannedCompetencyIds = [] }) {

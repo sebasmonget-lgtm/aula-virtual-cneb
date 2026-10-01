@@ -48,6 +48,8 @@ export function PeriodEvaluation({ initialStudentId = "", initialCompetencyId = 
   const [studentId, setStudentId] = useState(initialStudentId);
   const [competencyId, setCompetencyId] = useState(initialCompetencyId);
   const [overview, setOverview] = useState<Overview | null>(null);
+  const [overviewError, setOverviewError] = useState("");
+  const [overviewRetry, setOverviewRetry] = useState(0);
   const [detail, setDetail] = useState<Detail | null>(null);
   const [view, setView] = useState<"student" | "classroom" | "report" | "family" | "coverage" | "consolidated">(initialView);
   const [showSustento, setShowSustento] = useState(false);
@@ -81,6 +83,7 @@ export function PeriodEvaluation({ initialStudentId = "", initialCompetencyId = 
   }).catch((error) => setMessage(error.message)); }, []);
 
   const applyOverview = useCallback((result: Overview) => {
+    setOverviewError("");
     setOverview(result);
     setReport(null);
     setStudentId((current) => result.students.some((student) => student.id === current) ? current : result.students[0]?.id ?? "");
@@ -93,9 +96,9 @@ export function PeriodEvaluation({ initialStudentId = "", initialCompetencyId = 
   useEffect(() => {
     if (!classroomId || !periodId) return;
     let active = true;
-    void api<Overview>(`/api/period-evaluations/overview?classroomId=${classroomId}&periodId=${periodId}`).then((result) => { if (active) applyOverview(result); }).catch((error) => { if (active) setMessage(error.message); });
+    void api<Overview>(`/api/period-evaluations/overview?classroomId=${classroomId}&periodId=${periodId}`).then((result) => { if (active) applyOverview(result); }).catch((error) => { if (active) setOverviewError(error instanceof Error ? error.message : "No se pudieron cargar los registros."); });
     return () => { active = false; };
-  }, [classroomId, periodId, applyOverview]);
+  }, [classroomId, periodId, overviewRetry, applyOverview]);
 
   function applyDetail(result: Detail) {
     setDetail(result); setShowSustento(false);
@@ -110,7 +113,7 @@ export function PeriodEvaluation({ initialStudentId = "", initialCompetencyId = 
     setSuggestion(draft?.current ? {generation_id:"",evidence_fingerprint:result.evidence_fingerprint,analysis:draft.details,conclusion:null} : null);
   }
   async function reloadDetail() {
-    if (!classroomId || !periodId || !studentId || !competencyId) return;
+    if (!classroomId || !periodId || !studentId || !competencyId || !overview?.students.some((student) => student.id === studentId) || !overview.scope.some((item) => item.id === competencyId)) return;
     applyDetail(await api<Detail>(`/api/period-evaluations/detail?classroomId=${classroomId}&periodId=${periodId}&studentId=${studentId}&competencyId=${competencyId}`));
   }
   useEffect(() => {
@@ -118,7 +121,7 @@ export function PeriodEvaluation({ initialStudentId = "", initialCompetencyId = 
     let active = true;
     void api<Detail>(`/api/period-evaluations/detail?classroomId=${classroomId}&periodId=${periodId}&studentId=${studentId}&competencyId=${competencyId}`).then((result) => { if (active) applyDetail(result); }).catch((error) => { if (active) { setDetail(null); setMessage(error.message); } });
     return () => { active = false; };
-  }, [classroomId, periodId, studentId, competencyId]);
+  }, [classroomId, periodId, studentId, competencyId, overview]);
 
   async function act(work: () => Promise<void>) { setBusy(true); setMessage(""); try { await work(); } catch (error) { setMessage(error instanceof Error ? error.message : "Ocurrió un problema."); } finally { setBusy(false); } }
   const classrooms = workspace?.classrooms.filter((item) => item.school_year_id === yearId) ?? [];
@@ -141,15 +144,15 @@ export function PeriodEvaluation({ initialStudentId = "", initialCompetencyId = 
   return <section className="space-y-5">
     <div className="rounded-2xl border bg-white p-5"><h2 className="text-xl font-bold">Evaluación del período</h2><p className="mt-1 text-sm text-[#526b87]">Revisa lo observado y confirma una valoración por niño y competencia.</p>
       <div className="mt-4 grid gap-3 sm:grid-cols-3">
-        <label className="text-sm font-semibold">Año escolar<select className="mt-1 block min-h-11 w-full rounded-xl border bg-white px-3" value={yearId} onChange={(event) => { const id = event.target.value; setOverview(null); setDetail(null); setYearId(id); setClassroomId(workspace.classrooms.find((item) => item.school_year_id === id)?.id ?? ""); setPeriodId(workspace.periods.find((item) => item.school_year_id === id)?.id ?? ""); }}><option value="">Selecciona un año</option>{workspace.years.map((item) => <option key={item.id} value={item.id}>{item.year}</option>)}</select></label>
-        <label className="text-sm font-semibold">Aula<select className="mt-1 block min-h-11 w-full rounded-xl border bg-white px-3" value={classroomId} onChange={(event) => { setOverview(null); setDetail(null); setClassroomId(event.target.value); }}><option value="">Selecciona un aula</option>{classrooms.map((item) => <option key={item.id} value={item.id}>{item.section} · {item.age} años</option>)}</select></label>
-        <label className="text-sm font-semibold">Período<select className="mt-1 block min-h-11 w-full rounded-xl border bg-white px-3" value={periodId} onChange={(event) => { setOverview(null); setDetail(null); setPeriodId(event.target.value); }}><option value="">Selecciona un período</option>{periods.map((item) => <option key={item.id} value={item.id}>{item.label} · {formatDate(item.starts_on)} a {formatDate(item.ends_on)}</option>)}</select></label>
+        <label className="text-sm font-semibold">Año escolar<select className="mt-1 block min-h-11 w-full rounded-xl border bg-white px-3" value={yearId} onChange={(event) => { const id = event.target.value; setOverview(null); setOverviewError(""); setDetail(null); setYearId(id); setClassroomId(workspace.classrooms.find((item) => item.school_year_id === id)?.id ?? ""); setPeriodId(workspace.periods.find((item) => item.school_year_id === id)?.id ?? ""); }}><option value="">Selecciona un año</option>{workspace.years.map((item) => <option key={item.id} value={item.id}>{item.year}</option>)}</select></label>
+        <label className="text-sm font-semibold">Aula<select className="mt-1 block min-h-11 w-full rounded-xl border bg-white px-3" value={classroomId} onChange={(event) => { setOverview(null); setOverviewError(""); setDetail(null); setClassroomId(event.target.value); }}><option value="">Selecciona un aula</option>{classrooms.map((item) => <option key={item.id} value={item.id}>{item.section} · {item.age} años</option>)}</select></label>
+        <label className="text-sm font-semibold">Período<select className="mt-1 block min-h-11 w-full rounded-xl border bg-white px-3" value={periodId} onChange={(event) => { setOverview(null); setOverviewError(""); setDetail(null); setPeriodId(event.target.value); }}><option value="">Selecciona un período</option>{periods.map((item) => <option key={item.id} value={item.id}>{item.label} · {formatDate(item.starts_on)} a {formatDate(item.ends_on)}</option>)}</select></label>
       </div>
       {periods.length > 0 && <details className="mt-3 text-sm"><summary className="cursor-pointer font-semibold text-[#087d96]">Organización de períodos</summary><p className="mt-2 text-[#526b87]">Este año está organizado por {periods[0].kind === "bimester" ? "bimestres" : "trimestres"}. Puedes cambiarlo antes de registrar evaluaciones.</p><Button className="mt-2" size="sm" variant="outline" disabled={busy} onClick={() => void act(async () => { const result = await api<{ periods: Period[] }>("/api/period-evaluations/configure", { yearId, kind: periods[0].kind === "bimester" ? "trimester" : "bimester" }); setWorkspace({ ...workspace, periods: [...workspace.periods.filter((item) => item.school_year_id !== yearId), ...result.periods] }); setPeriodId(result.periods[0]?.id ?? ""); })}>Cambiar a {periods[0].kind === "bimester" ? "trimestres" : "bimestres"}</Button></details>}
     </div>
     {classroomId&&periodId&&<AssessmentMasterPanel key={`${classroomId}:${periodId}`} periodId={periodId} onReady={setAssessmentMasterReady}/>}
     {message && <p role="status" className="rounded-xl bg-[#eaf7fb] px-4 py-3 text-sm text-[#17475d]">{message}</p>}
-    {!overview ? <p>{classroomId && periodId ? "Cargando registros…" : "Selecciona un aula y un período para comenzar."}</p> : <>
+    {!overview ? overviewError ? <div role="alert" className="rounded-2xl border bg-white p-5"><p>No se pudieron cargar los registros. {overviewError}</p><Button className="mt-3" variant="outline" onClick={() => { setOverviewError(""); setOverviewRetry((count) => count + 1); }}>Reintentar</Button></div> : <p>{classroomId && periodId ? "Cargando registros…" : "Selecciona un aula y un período para comenzar."}</p> : <>
       <div className="grid gap-3 sm:grid-cols-2"><div className="rounded-2xl bg-[#eaf7fb] p-4"><b>{overview.progress.students_complete}/{overview.progress.students_total} niños con su período resuelto</b></div><div className="rounded-2xl bg-[#eff8f2] p-4"><b>{overview.statistics.classroom.confirmed_assessments}/{overview.statistics.classroom.total_assessments} valoraciones docentes registradas</b></div></div>
       {(overview.progress.observation_pending + overview.progress.review_pending) > 0 && <p className="rounded-xl bg-[#fff2d9] px-4 py-3 text-sm">{overview.progress.observation_pending} pares niño–competencia pendientes de observación o información suficiente y {overview.progress.review_pending} con evidencia pendiente de revisión docente. Se conservarán sin letra para próximas oportunidades; el cierre anual exigirá resolverlos.</p>}
       {overview.progress.annual_unvalued !== null && overview.progress.annual_unvalued > 0 && <p className="rounded-xl bg-[#fff2d9] px-4 py-3 text-sm">El cierre anual requiere resolver {overview.progress.annual_unvalued} pares niño–competencia aplicables que aún no tienen una valoración docente vigente.</p>}

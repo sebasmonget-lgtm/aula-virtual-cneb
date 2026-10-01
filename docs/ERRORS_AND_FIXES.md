@@ -1191,3 +1191,15 @@ Síntoma: cuatro notas QA de la captura automatizada quedaron asociadas a la sel
 **Validación.** Pasaron `node --check`, `tsc --noEmit`, lint, build Vinext y build Next.js. El candidato `dpl_ECovzoWmUdx3ezPEgbLi83uHELia` pasó smoke y se promovió; el perfil de «Prueba Uno» mostró el nombre completo en encabezado y resumen.
 
 **Prevención.** Probar estudiantes con el mismo nombre de pila al entrar a sus perfiles, entrevistas y evidencias.
+
+## 2026-10-01 — Evaluación quedaba cargando al cambiar de bimestre
+
+**Síntoma.** Al pasar del tercer al primer bimestre, la consulta general respondió 409 y la pantalla quedó en «Cargando registros…». Una consulta de detalle del período anterior también recibió 422.
+
+**Causa.** El mapa de evaluación se sincronizaba desde varias consultas simultáneas. La lectura de la última versión ocurría fuera de la transacción, de modo que dos solicitudes podían intentar insertar el mismo número de versión. La interfaz no distinguía un fallo de carga del estado de carga y pedía el detalle con la selección anterior antes de validar el nuevo alcance.
+
+**Corrección.** La lectura de versión y la escritura del mapa comparten un bloqueo transaccional por aula y período. La pantalla muestra el error con «Reintentar» y espera a que niño y competencia pertenezcan al alcance cargado antes de pedir el detalle.
+
+**Validación.** La prueba de tres sincronizaciones concurrentes conserva una sola versión del mapa. Pasaron las 11 pruebas del servicio, typecheck, lint y build Vinext. Falta registrar aquí el resultado de la comprobación funcional tras el despliegue.
+
+**Prevención.** Probar el cambio de período cuando varias tarjetas solicitan el mismo mapa y conservar un estado de error recuperable en toda carga asíncrona.

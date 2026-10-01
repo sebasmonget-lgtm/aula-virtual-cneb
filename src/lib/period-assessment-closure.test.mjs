@@ -69,6 +69,17 @@ test("1 y 12: criterio confirmado aparece en el mapa con IDs, versiones y etique
   } finally { await db.close(); }
 });
 
+test("lecturas simultáneas del mismo período comparten una sola versión del mapa", async () => {
+  const db = await mapFixture();
+  try {
+    const input = { classroomId, schoolYearId: yearId, period: { id: periodId, starts_on: "2026-03-01", ends_on: "2026-05-31" } };
+    const results = await Promise.all(Array.from({ length: 3 }, () => syncPeriodEvaluationMap(db, input)));
+    assert.deepEqual(results.map((result) => result.version), [1, 1, 1]);
+    const versions = (await db.query("select version from period_evaluation_map_versions where classroom_id=$1 and evaluation_period_id=$2", [classroomId, periodId])).rows;
+    assert.equal(versions.length, 1);
+  } finally { await db.close(); }
+});
+
 test("2, 3 y 4: actividad realizada, omitida y evidencia actualizan worked/evidenced por código", async () => {
   assert.equal(activityMapState({ executionStatus: "completed" }), "completed");
   assert.equal(activityMapState({ executionStatus: "skipped", evidenceCount: 0 }), "skipped");
