@@ -17,7 +17,8 @@ import { loadKnowledgeBaseV4 } from "../src/lib/knowledge-base-v4.mjs";
 import { competencyApplicability } from "../src/lib/competency-applicability.mjs";
 import { generateTeacherActivity } from "../src/lib/ai-activity-ui-service.mjs";
 import { generateTeacherAnnualPlan } from "../src/lib/ai-annual-plan-ui-service.mjs";
-import { ANNUAL_PREPLAN_FORMAT, AnnualPreplanError, ageFilteredAnnualCurriculum, generateAnnualPreplan, validateAnnualPreplan } from "../src/lib/annual-preplan-service.mjs";
+import { ANNUAL_PREPLAN_FORMAT, AnnualPreplanError, ageFilteredAnnualCurriculum, generateAnnualPreplan, validateAnnualPreplan, validatePreplanTrace } from "../src/lib/annual-preplan-service.mjs";
+import { preparePersonalization, confirmPersonalization, currentPersonalization } from "../src/lib/annual-personalization-service.mjs";
 import { persistAnnualProjectSlots } from "../src/lib/annual-project-slots.mjs";
 import { developConfirmedAnnualPlan } from "../src/lib/annual-formal-service.mjs";
 import { DiagnosticSuggestionError, suggestDiagnosticGroupReview } from "../src/lib/ai-diagnostic-evaluation-service.mjs";
@@ -158,7 +159,7 @@ const exportTables = [
   "institution_assets", "institution_profiles", "students", "learning_experiences", "ai_usage_events",
   "activities", "activity_criteria", "evidences", "ordinary_observations", "ordinary_observation_revisions", "ordinary_observation_attributions", "ordinary_observation_criterion_links", "competency_observation_guides",
   "document_templates", "document_versions", "diagnostic_sessions",
-  "diagnostic_entries", "observation_references", "student_observations", "diagnostic_experience_observations", "diagnostic_spontaneous_observations", "student_family_interviews", "student_family_interview_attachments", "diagnostic_competency_reviews", "diagnostic_student_reviews", "diagnostic_group_reviews", "diagnostic_priority_reviews",
+  "diagnostic_entries", "observation_references", "student_observations", "diagnostic_experience_observations", "diagnostic_spontaneous_observations", "student_family_interviews", "student_family_interview_attachments", "diagnostic_competency_reviews", "diagnostic_student_reviews", "diagnostic_group_reviews", "diagnostic_priority_reviews", "annual_personalization_reviews",
   "class_schedule_entries", "daily_execution_logs", "attendance_records", "calendar_exceptions", "calendar_blocks", "initial_stages", "project_slots", "school_calendar_versions", "school_calendar_holidays", "school_calendar_days", "classroom_calendar_overrides", "project_calendar_selections", "project_instructional_dates", "activity_schedule_changes", "evaluation_periods", "period_competency_scope", "period_closures", "period_closure_versions", "period_evaluation_map_versions", "period_evaluation_map_entries", "competency_display_labels", "classroom_period_reports", "period_closure_workflows", "student_context_snapshots", "annual_plans", "annual_plan_formal_content", "annual_plan_competencies", "annual_plan_changes", "competency_assessments", "competency_descriptive_conclusions", "family_reports",
 ];
 
@@ -577,6 +578,7 @@ async function annualPlanningContext() {
     calendar: await annualCalendarForClassroom(row), group_context: neutralizeAssessmentText((typeof row.context === "string" ? row.context : row.context?.group_context) || `Aula ${row.section} de ${row.age} años`, studentNames), school_context: row.institution_name || undefined, available_resources: Array.isArray(row.context?.available_resources) ? row.context.available_resources.filter((item) => typeof item === "string" && item.trim()).map((item) => neutralizeAssessmentText(item, studentNames)) : [], diagnostic_summary: groupSummary || undefined, diagnostic_group, confirmed_priorities: priorityReview?.details?.priorities ?? [], source_diagnostic_review_id: group?.id ?? null, source_priority_review_id: priorityReview?.id ?? null, annual_planning_context: row.annual_planning_context ?? {}, language_context: row.castellano_l2_applicable ? { castellano_l2_applicable: true } : undefined, context_v4: contextV4 };
 }
 function annualDocumentContext(context) {
+  const personalization = context.personalization?.details;
   return { template_version: "annual-unified-v1",
     source_diagnostic_review_id: context.source_diagnostic_review_id ?? null,
     source_priority_review_id: context.source_priority_review_id ?? null,
@@ -586,8 +588,10 @@ function annualDocumentContext(context) {
     classroom_section: context.section ?? "", age: context.age, school_year: context.year,
     starts_on: context.starts_on, ends_on: context.ends_on,
     student_count: context.context_v4?.students_total ?? null,
-    diagnostic_group: context.diagnostic_group ?? null,
-    group_interests: (context.context_v4?.common_interests ?? []).map((item) => item.label),
+    diagnostic_group: personalization ? { strengths: personalization.group_profile, needs: "", planning_priorities: "" } : context.diagnostic_group ?? null,
+    group_interests: personalization?.interests?.map((item) => item.label) ?? (context.context_v4?.common_interests ?? []).map((item) => item.label),
+    context_opportunities: personalization?.context_opportunities?.map((item) => item.text) ?? [],
+    classroom_conditions: personalization?.classroom_conditions?.map((item) => ({ kind: item.kind, value: item.value })) ?? [],
     calendar: context.calendar ? { ...context.calendar, initial_stage: context.calendar.initial_stage
       ? { ...context.calendar.initial_stage, teacher_notes: "" } : null } : null,
   };
@@ -1153,6 +1157,27 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       send(response, 200, await buildClassroomStatistics(db, classroom.id), origin);
       return;
     }
+    if (url.pathname === "/api/annual-personalization/current" && request.method === "GET") {
+      const context = await annualPlanningContext();
+      if (!context) { send(response, 404, { error: "Aula no disponible." }, origin); return; }
+      send(response, 200, { confirmed: await currentPersonalization(db, teacherId, context) }, origin); return;
+    }
+    if (url.pathname === "/api/annual-personalization/prepare" && request.method === "POST") {
+      const context = await annualPlanningContext();
+      if (!context) { send(response, 404, { error: "Aula no disponible." }, origin); return; }
+      try { const body = await readJson(request);
+        send(response, 200, await preparePersonalization(db, teacherId, context, { refresh: body?.refresh === true }), origin); }
+      catch (error) { send(response, httpStatusForError(error, 422), { error: publicErrorMessage(error) || "No se pudo preparar la síntesis del aula." }, origin); }
+      return;
+    }
+    if (url.pathname === "/api/annual-personalization/confirm" && request.method === "POST") {
+      const context = await annualPlanningContext();
+      if (!context) { send(response, 404, { error: "Aula no disponible." }, origin); return; }
+      try { const body = await readJson(request);
+        send(response, 200, await confirmPersonalization(db, teacherId, context, body.id, body.details), origin); }
+      catch (error) { send(response, httpStatusForError(error, 422), { error: publicErrorMessage(error) || "No se pudo confirmar el aula." }, origin); }
+      return;
+    }
     if (request.method === "GET" && url.pathname === "/api/ai/annual-plan/context") {
       const context = await annualPlanningContext(); send(response, context ? 200 : 404, context ?? { error: "No se encontró un aula activa." }, origin); return;
     }
@@ -1172,9 +1197,8 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
     if (request.method === "POST" && url.pathname === "/api/annual-preplan/generate") {
       const context = await annualPlanningContext();
       if (!context) { send(response, 404, { error: "Aula no disponible." }, origin); return; }
-      if (!context.source_diagnostic_review_id || !context.source_priority_review_id) {
-        send(response, 422, { error: "Confirma primero «Así está mi grupo» y «Prioridades del año»." }, origin); return;
-      }
+      const personalization = await currentPersonalization(db, teacherId, context);
+      if (!personalization) { send(response, 422, { error: "Confirma primero «Así entendí tu aula»." }, origin); return; }
       const prior = (await db.query(`select id from annual_plans where school_year_id=$1 and status='draft' limit 1`,
         [context.school_year_id])).rows[0];
       if (prior) { send(response, 409, { error: "Ya tienes un preplan en revisión. Ábrelo para continuar." }, origin); return; }
@@ -1183,7 +1207,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         const names = (await db.query(`select first_name,last_name,preferred_name from students where classroom_id=$1`, [context.id])).rows
           .flatMap((item) => [item.first_name, item.last_name, item.preferred_name,
             [item.first_name, item.last_name].filter(Boolean).join(" ")]).filter(Boolean);
-        const safeContext = { ...context, annual_planning_context: {
+        const safeContext = { ...context, personalization, annual_planning_context: {
           additional_notes: neutralizeAssessmentText(context.annual_planning_context?.additional_notes ?? "", names) },
           confirmed_priorities: (context.confirmed_priorities ?? []).map((item) => ({ ...item,
             title: neutralizeAssessmentText(item.title ?? "", names),
@@ -1199,12 +1223,13 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
             from annual_plans where school_year_id=$1`, [context.school_year_id])).rows[0].latest));
           const id = randomUUID();
           await tx.query(`insert into annual_plans(id,classroom_id,school_year_id,curriculum_version_id,version,status,
-            proposal,generation_metadata,document_context,supersedes_plan_id,source_diagnostic_review_id,source_priority_review_id,source_context_fingerprint)
-            values($1,$2,$3,$4,$5,'draft',$6::jsonb,$7::jsonb,$8::jsonb,$9,$10,$11,$12)`,
+            proposal,generation_metadata,document_context,supersedes_plan_id,source_diagnostic_review_id,source_priority_review_id,source_context_fingerprint,source_personalization_review_id)
+            values($1,$2,$3,$4,$5,'draft',$6::jsonb,$7::jsonb,$8::jsonb,$9,$10,$11,$12,$13)`,
           [id,context.id,context.school_year_id,context.curriculum_version_id,version,JSON.stringify(generated.proposal),
             JSON.stringify({ workflow: "annual_preplan", ...generated.metadata }),
-            JSON.stringify(annualDocumentContext(context)), active?.id ?? null,
-            context.source_diagnostic_review_id, context.source_priority_review_id, context.context_v4.source_fingerprint]);
+            JSON.stringify(annualDocumentContext({ ...context, personalization })), active?.id ?? null,
+            context.source_diagnostic_review_id, context.source_priority_review_id, context.context_v4.source_fingerprint,
+            personalization.id]);
           await replaceAnnualProjectSlots(id, schedule, tx);
           return { id, version, revision: 1, status: "draft", proposal: generated.proposal };
         });
@@ -1222,16 +1247,23 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         const schedule = buildEditableAnnualSchedule(context.calendar, proposal.proposed_experiences);
         const id = url.pathname.split("/")[3];
         const saved = await versionTransaction(db, `annual:${context.school_year_id}`, async (tx) => {
-          const row = (await tx.query(`select id,revision,source_priority_review_id from annual_plans
+          const row = (await tx.query(`select id,revision,source_priority_review_id,source_personalization_review_id from annual_plans
             where id=$1 and classroom_id=$2 and school_year_id=$3 and status='draft' for update`,
           [id,context.id,context.school_year_id])).rows[0];
           if (!row) throw new AnnualPreplanError("not_found", "Preplan no disponible.");
           assertRevision(row, expectedRevision(body.expectedRevision));
-          if (row.source_priority_review_id !== context.source_priority_review_id)
+          let personalizationForPlan = null;
+          if (row.source_personalization_review_id) {
+            const current = await currentPersonalization(tx, teacherId, context);
+            if (current?.id !== row.source_personalization_review_id)
+              throw new VersionConflictError("La comprensión confirmada del aula cambió. Revisa el plan antes de guardar.");
+            validatePreplanTrace(proposal, current.details);
+            personalizationForPlan = current;
+          } else if (row.source_priority_review_id !== context.source_priority_review_id)
             throw new VersionConflictError("Las prioridades confirmadas cambiaron. Revisa la nueva versión antes de guardar.");
           const updated = (await tx.query(`update annual_plans set proposal=$1::jsonb,document_context=$2::jsonb,updated_at=now()
             where id=$3 and revision=$4 and status='draft' returning revision`,
-          [JSON.stringify(proposal), JSON.stringify(annualDocumentContext(context)), id, row.revision])).rows[0];
+          [JSON.stringify(proposal), JSON.stringify(annualDocumentContext({ ...context, personalization: personalizationForPlan })), id, row.revision])).rows[0];
           if (!updated) throw new VersionConflictError();
           await replaceAnnualProjectSlots(id, schedule, tx);
           return { id, revision: Number(updated.revision), proposal };
@@ -1525,9 +1557,14 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         const body=await readJson(request),revision=expectedRevision(body.expectedRevision);
         const result=await confirmAnnualPlanVersion(db,context,id,revision,async(draft,tx)=>{
           const sourceDiagnosticId=draft.source_diagnostic_review_id??draft.document_context?.source_diagnostic_review_id;
-          if(!context.source_diagnostic_review_id || (sourceDiagnosticId&&sourceDiagnosticId!==context.source_diagnostic_review_id)) throw new VersionConflictError("Se confirmó un nuevo resumen diagnóstico. Revisa el plan antes de confirmar.",draft.revision);
+          if(!draft.source_personalization_review_id && (!context.source_diagnostic_review_id || (sourceDiagnosticId&&sourceDiagnosticId!==context.source_diagnostic_review_id))) throw new VersionConflictError("Se confirmó un nuevo resumen diagnóstico. Revisa el plan antes de confirmar.",draft.revision);
           if (draft.proposal.plan_format === ANNUAL_PREPLAN_FORMAT) {
-            if (!context.source_priority_review_id || draft.source_priority_review_id !== context.source_priority_review_id)
+            if (draft.source_personalization_review_id) {
+              const current = await currentPersonalization(tx, teacherId, context);
+              if (current?.id !== draft.source_personalization_review_id)
+                throw new VersionConflictError("La comprensión confirmada del aula cambió. Revisa el preplan antes de confirmar.", draft.revision);
+              validatePreplanTrace(draft.proposal, current.details);
+            } else if (!context.source_priority_review_id || draft.source_priority_review_id !== context.source_priority_review_id)
               throw new VersionConflictError("Las prioridades confirmadas cambiaron. Revisa el preplan antes de confirmar.", draft.revision);
             validateAnnualPreplan(draft.proposal, await applicableCompetencyIds("annual_plan", context), context.year);
             await replaceAnnualProjectSlots(id, buildEditableAnnualSchedule(context.calendar, draft.proposal.proposed_experiences), tx);

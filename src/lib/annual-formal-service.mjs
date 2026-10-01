@@ -90,7 +90,7 @@ export function projectFormalAnnualContent(preplan, formal, group, priorities) {
 export async function developConfirmedAnnualPlan(db, teacherId, planId, context, {
   resolvePlan = resolveAIExecutionPlan, createProvider = createAIProviderForPlan, loadSkill = loadAnnualPreplanSkill,
 } = {}) {
-  const plan = (await db.query(`select ap.id,ap.proposal,ap.document_context,ap.revision,ap.source_diagnostic_review_id,ap.source_priority_review_id
+  const plan = (await db.query(`select ap.id,ap.proposal,ap.document_context,ap.revision,ap.source_diagnostic_review_id,ap.source_priority_review_id,ap.source_personalization_review_id
     from annual_plans ap join school_years sy on sy.id=ap.school_year_id
     where ap.id=$1 and ap.classroom_id=$2 and ap.school_year_id=$3 and sy.owner_id=$4 and ap.status in ('active','archived')`,
   [planId, context.id, context.school_year_id, teacherId])).rows[0];
@@ -106,18 +106,25 @@ export async function developConfirmedAnnualPlan(db, teacherId, planId, context,
     db.query(`select details from diagnostic_priority_reviews where id=$1 and classroom_id=$2 and status='confirmed'`,
       [plan.source_priority_review_id, context.id]),
   ]);
-  if (!group.rows[0] || !priorities.rows[0]) throw new Error("Falta el diagnóstico confirmado que dio origen a este plan.");
+  const personalization = plan.source_personalization_review_id ? (await db.query(`select details from annual_personalization_reviews
+    where id=$1 and classroom_id=$2 and status='confirmed'`, [plan.source_personalization_review_id, context.id])).rows[0] : null;
+  if (!personalization && (!group.rows[0] || !priorities.rows[0]))
+    throw new Error("Falta la decisión confirmada que dio origen a este plan.");
   const studentNames = (await db.query(`select first_name,last_name,preferred_name from students where classroom_id=$1`, [context.id])).rows
     .flatMap((item) => [item.first_name, item.last_name, item.preferred_name,
       [item.first_name, item.last_name].filter(Boolean).join(" ")]).filter(Boolean);
-  const safeGroup = Object.fromEntries(["strengths", "needs", "planning_priorities"].map((field) =>
+  const safeGroup = personalization ? { strengths: personalization.details.group_profile, needs: "", planning_priorities: "" }
+    : Object.fromEntries(["strengths", "needs", "planning_priorities"].map((field) =>
     [field, neutralizeAssessmentText(group.rows[0].details?.[field] ?? "", studentNames)]));
-  const safePriorities = { priorities: (priorities.rows[0].details?.priorities ?? []).map((item) => ({ ...item,
+  const safePriorities = { priorities: (personalization?.details.priorities ?? priorities.rows[0]?.details?.priorities ?? []).map((item) => ({ ...item,
     title: neutralizeAssessmentText(item.title, studentNames),
     reason: neutralizeAssessmentText(item.reason, studentNames) })) };
   const routing = resolvePlan({ workflow: "annual_plan", task: "document_development" });
   const bundle = { workflow: "annual_formal_development", age: context.age,
     confirmed_preplan: preplan, confirmed_group: safeGroup, confirmed_priorities: safePriorities,
+    confirmed_interests: personalization?.details.interests?.map((item) => item.label) ?? [],
+    confirmed_context: personalization?.details.context_opportunities?.map((item) => item.text) ?? [],
+    confirmed_conditions: personalization?.details.classroom_conditions?.map((item) => ({ kind: item.kind, value: item.value })) ?? [],
     institution: { name: context.institution_name, teacher: context.teacher_name, age: context.age, section: context.section, year: context.year },
     calendar: plan.document_context?.calendar ?? context.calendar, curriculum: { age: context.age, competency_cards: curriculum },
     template_structure: await templateStructure(),

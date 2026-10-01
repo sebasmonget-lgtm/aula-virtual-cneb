@@ -8,9 +8,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { AsyncButton, CompetencyChecklist, GenerationProgress, LoadingState, WorkflowFeedback } from "./workflow-ui";
 import { AnnualPlanGenerator as LegacyAnnualPlanGenerator } from "./annual-plan-generator";
+import { AnnualPersonalizationWorkspace } from "./annual-personalization-workspace";
 
 type Row = { proposal_id: string; experience_type: "project" | "unit"; title: string; period: string;
   month: number; duration_weeks: 2 | 3; rationale: string; purpose: string; primary_competency_ids: string[];
+  source_interest_ids?: string[]; source_priority_ids?: string[]; source_context_ids?: string[];
+  source_condition_ids?: string[]; source_teacher_decision?: boolean; source_group_profile?: boolean;
   planned_start_date?: string; planned_end_date?: string; planned_instructional_days?: number };
 type Preplan = { plan_format: "annual_preplan_v1"; title: string; school_year: string; proposed_experiences: Row[] };
 type Plan = { id: string; version: number; revision: number; status: "draft" | "active" | "archived";
@@ -45,7 +48,15 @@ function PreplanTable({ rows, options, editable, onChange, onDevelop }: { rows: 
   const editingIndex = rows.findIndex((item) => item.proposal_id === editingId);
   const editing = editingIndex < 0 ? null : rows[editingIndex];
   const names = new Map(options.map((item) => [item.id, item.name]));
-  const patch = (change: Partial<Row>) => editing && onChange(rows.map((item) => item.proposal_id === editing.proposal_id ? { ...item, ...change } : item));
+  const patch = (change: Partial<Row>) => editing && onChange(rows.map((item) => {
+    if (item.proposal_id !== editing.proposal_id) return item;
+    const material = ["title", "purpose", "primary_competency_ids", "rationale"].some((key) => key in change);
+    if (!material) return { ...item, ...change };
+    return { ...item, ...change, source_interest_ids: [], source_priority_ids: [], source_context_ids: [],
+      source_condition_ids: [], source_group_profile: false, source_teacher_decision: true,
+      rationale: "rationale" in change ? change.rationale ?? "" : item.source_teacher_decision
+        ? item.rationale : "Ajuste de la docente sobre la propuesta inicial." };
+  }));
   const move = (index: number, delta: number) => {
     const target = index + delta;
     if (target < 0 || target >= rows.length) return;
@@ -67,7 +78,8 @@ function PreplanTable({ rows, options, editable, onChange, onDevelop }: { rows: 
         <td className="min-w-40 px-4 py-4">{row.planned_start_date && row.planned_end_date
           ? <>{compactDate(row.planned_start_date)}–{compactDate(row.planned_end_date)}<p className="mt-1 text-xs text-[#526b87]">{row.planned_instructional_days} días de clase · {row.period}</p></>
           : <>{monthLabel(row.month)} · {row.duration_weeks} semanas<p className="mt-1 text-xs text-[#526b87]">{row.period}</p></>}</td>
-        <td className="min-w-56 px-4 py-4 leading-relaxed">{row.rationale}</td>
+        <td className="min-w-56 px-4 py-4 leading-relaxed"><details><summary className="cursor-pointer font-semibold text-[#087d96]">¿Por qué está en Mi año?</summary>
+          <p className="mt-2">{row.rationale}</p>{row.source_teacher_decision && <p className="mt-1 text-xs">Propuesta ajustada o añadida por la docente.</p>}</details></td>
         <td className="min-w-56 px-4 py-4">{row.primary_competency_ids.map((id) => names.get(id) ?? id).join(" · ")}</td>
         <td className="sticky right-0 z-10 bg-white px-4 py-3 shadow-[-1px_0_0_#e3edf4] group-even:bg-[#f9fcfe]"><div className="flex flex-wrap gap-1">{editable && <><Button type="button" variant="outline" className="min-h-10" onClick={() => setEditingId(row.proposal_id)}>Editar</Button>
           <Button type="button" variant="ghost" size="sm" aria-label={`Subir ${row.title}`} disabled={index === 0} onClick={() => move(index, -1)}>↑</Button>
@@ -77,7 +89,8 @@ function PreplanTable({ rows, options, editable, onChange, onDevelop }: { rows: 
       </tr>)}</tbody></table></div>
     {editable && <div className="flex flex-wrap items-center justify-between gap-3"><Button type="button" variant="outline" className="min-h-11" disabled={rows.length >= 20}
       onClick={() => { const last = rows.at(-1); const created: Row = { proposal_id: crypto.randomUUID(), experience_type: "project", title: "",
-        period: last?.period ?? "Bimestre 1", month: last?.month ?? 3, duration_weeks: 2, rationale: "", purpose: "", primary_competency_ids: [] };
+        period: last?.period ?? "Bimestre 1", month: last?.month ?? 3, duration_weeks: 2, rationale: "", purpose: "", primary_competency_ids: [],
+        source_interest_ids: [], source_priority_ids: [], source_context_ids: [], source_condition_ids: [], source_teacher_decision: true };
         onChange([...rows, created]); setEditingId(created.proposal_id); }}>+ Agregar propuesta manual</Button>
       <p className="text-sm text-[#526b87]">Puedes editar, mover, eliminar o agregar propuestas. Al mover una, adopta el mes y la duración de ese lugar. Máximo 20 por la plantilla Word.</p></div>}
     {editable && editing && <div role="dialog" aria-modal="true" aria-label={`Editar ${editing.title || "propuesta"}`} className="fixed inset-0 z-50 flex justify-end bg-[#10233a]/45">
@@ -98,16 +111,15 @@ export function AnnualPreplanWorkspace({ onConfirmed, onGoDiagnostic, onDevelop 
   onDevelop?: (proposalId: string) => void }) {
   const [plans, setPlans] = useState<Plans | null>(null), [context, setContext] = useState<Context | null>(null);
   const [options, setOptions] = useState<Competency[]>([]), [selectedId, setSelectedId] = useState<string | null>(null);
-  const [proposal, setProposal] = useState<Preplan | null>(null), [notes, setNotes] = useState("");
-  const [calendar, setCalendar] = useState<Calendar | null>(null), [loading, setLoading] = useState(true);
+  const [proposal, setProposal] = useState<Preplan | null>(null), [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null), [error, setError] = useState(""), [notice, setNotice] = useState("");
   const [showLegacy, setShowLegacy] = useState(false);
+  const [reviewNewEvidence, setReviewNewEvidence] = useState(false);
   async function reload(select?: string) {
     const [loadedPlans, loadedContext, loadedOptions] = await Promise.all([
       json<Plans>("/api/annual-plans/current"), json<Context>("/api/ai/annual-plan/context"),
       json<{ competencies: Competency[] }>("/api/ai/competency-options?workflow=annual_plan")]);
     setPlans(loadedPlans); setContext(loadedContext); setOptions(loadedOptions.competencies);
-    setNotes(loadedContext.annual_planning_context?.additional_notes ?? ""); setCalendar(loadedContext.calendar);
     const current = [loadedPlans.draft, loadedPlans.active, ...loadedPlans.archived].find((item) => item?.id === select)
       ?? loadedPlans.draft ?? loadedPlans.active;
     setSelectedId(current?.id ?? null); setProposal(isPreplan(current) ? current.proposal : null);
@@ -125,15 +137,6 @@ export function AnnualPreplanWorkspace({ onConfirmed, onGoDiagnostic, onDevelop 
     try { await operation(); } catch (cause) { setError(cause instanceof Error ? cause.message : "No pudimos completar la acción."); }
     finally { setBusy(null); }
   }
-  async function saveContext() {
-    if (!context || !calendar) return;
-    if (notes !== (context.annual_planning_context?.additional_notes ?? ""))
-      await json("/api/annual-preplan/context", { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ additional_notes: notes }) });
-    if (JSON.stringify(calendar) !== JSON.stringify(context.calendar))
-      await json("/api/annual-calendar", { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ ...calendar, forPreplan: true }) });
-  }
-  const generate = () => void act("generate", async () => { await saveContext(); const created = await json<{ id: string }>("/api/annual-preplan/generate", body({}));
-    await reload(created.id); setNotice("Ya tienes doce propuestas iniciales. Puedes editarlas antes de confirmar."); });
   const save = () => void act("save", async () => { if (!selected || !proposal) return; const changed = await json<{ id: string }>(`/api/annual-preplans/${selected.id}`,
     { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ proposal, expectedRevision: selected.revision }) });
     await reload(changed.id); setNotice("Cambios guardados. Revisa la tabla y confirma cuando esté lista."); });
@@ -154,28 +157,13 @@ export function AnnualPreplanWorkspace({ onConfirmed, onGoDiagnostic, onDevelop 
   return <section className="ayni-workflow space-y-5"><header><p className="text-sm font-semibold text-[#087d96]">Paso 4 de 6 · Plan anual</p>
     <h1 className="text-3xl font-extrabold text-[#172b52]">Mi año</h1><p className="mt-2 text-[#526b87]">Organiza las propuestas del año. Puedes ajustarlas y confirmar una nueva versión cuando cambie el grupo.</p></header>
     {error && <WorkflowFeedback tone="error">{error}</WorkflowFeedback>}{notice && <WorkflowFeedback tone="success">{notice}</WorkflowFeedback>}
-    {!context?.source_priority_review_id && <section className="rounded-2xl border bg-white p-5"><h2 className="text-lg font-bold">Completa el diagnóstico para continuar</h2><p className="mt-2">Revisa «Así está mi grupo» y confirma «Prioridades del año». Ayni usará esas decisiones para proponerte el año.</p>
-      {onGoDiagnostic && <Button className="mt-4" onClick={onGoDiagnostic}>Ir a Diagnóstico</Button>}</section>}
-    {context?.source_priority_review_id && (!selected || !isPreplan(selected)) && <section className="space-y-5 rounded-2xl border border-[#d6e5ef] bg-white p-5"><h2 className="text-xl font-extrabold">Contexto del año y del aula</h2>
-      <p className="text-[#526b87]">Ayni utilizará esta información para proponerte los proyectos y unidades del año. Agrega cualquier situación o interés que te gustaría considerar.</p>
-      <div className="grid gap-3 sm:grid-cols-2"><div className="rounded-xl bg-[#f2f8fc] p-4"><b>Intereses detectados</b><p className="mt-2 text-sm">{context.context_v4?.common_interests?.map((item) => item.label).join(", ") || "Se seguirán conociendo durante el juego."}</p></div>
-        <div className="rounded-xl bg-[#f2f8fc] p-4"><b>Así está mi grupo</b><p className="mt-2 text-sm">{context.diagnostic_group?.strengths} {context.diagnostic_group?.needs}</p></div>
-        <div className="rounded-xl bg-[#f2f8fc] p-4"><b>Prioridades confirmadas</b><p className="mt-2 text-sm">{context.confirmed_priorities?.map((item) => item.title).join(" · ") || "Seguir observando al grupo."}</p></div>
-        <div className="rounded-xl bg-[#f2f8fc] p-4"><b>Acontecimientos y entorno</b><p className="mt-2 text-sm">Día del Niño Peruano, Día de la Educación Inicial, Fiestas Patrias y cierre del año. {context.group_context}</p></div></div>
-      {calendar && <div className="rounded-xl border p-4"><label className="font-semibold">Semanas iniciales de acogida y diagnóstico<select className="mt-2 block min-h-11 rounded-lg border bg-white px-3" value={calendar.initial_stage.duration_weeks}
-        onChange={(event) => setCalendar({ ...calendar, initial_stage: { ...calendar.initial_stage, duration_weeks: Number(event.target.value) } })}>{[1,2,3,4].map((number) => <option key={number} value={number}>{number} {number === 1 ? "semana" : "semanas"}</option>)}</select></label>
-        <p className="mt-2 text-sm text-[#526b87]">Ayni calcula las fechas con el calendario escolar y los feriados. Puedes ajustar las fechas de tu institución.</p>
-        <details className="mt-3"><summary className="cursor-pointer font-semibold text-[#087d96]">Mi colegio usa otras fechas</summary><div className="mt-3 space-y-3">{calendar.blocks.map((block, index) => <div key={block.id ?? index} className="grid gap-2 rounded-lg border p-3 sm:grid-cols-[1fr_10rem_10rem] sm:items-center"><b>{block.label}</b>
-          <Input type="date" aria-label={`Inicio de ${block.label}`} value={block.start_date} disabled={!block.editable} onChange={(event) => setCalendar({ ...calendar, blocks: calendar.blocks.map((item, i) => i === index ? { ...item, start_date: event.target.value } : item) })} />
-          <Input type="date" aria-label={`Fin de ${block.label}`} value={block.end_date} disabled={!block.editable} onChange={(event) => setCalendar({ ...calendar, blocks: calendar.blocks.map((item, i) => i === index ? { ...item, end_date: event.target.value } : item) })} /></div>)}</div></details></div>}
-      <label className="block font-semibold">Algo más que quieras considerar<Textarea className="mt-2" value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Por ejemplo, los niños muestran interés por el huerto de la escuela." /></label>
-      <div className="flex justify-end"><AsyncButton className="min-h-12" busy={busy === "generate"} busyLabel="Preparando doce propuestas..." disabled={Boolean(busy) || Boolean(plans?.draft)} onClick={generate}>Proponer mi año</AsyncButton></div>
-      {busy === "generate" && <GenerationProgress label="Preparando tu año" description="Ayni está redactando las propuestas. Esto puede tardar varios minutos; mantén esta pantalla abierta." />}
-      {plans?.draft && <p className="text-sm text-[#526b87]">Ya tienes un borrador de este año. Ábrelo para continuar.</p>}</section>}
+    {(!selected || reviewNewEvidence) && context && <AnnualPersonalizationWorkspace competencies={options} calendar={context.calendar} refresh={reviewNewEvidence} onCreated={async (id) => { await reload(id); setReviewNewEvidence(false);
+      setNotice("Ya tienes doce propuestas iniciales. Revisa sus razones y ajusta lo necesario antes de confirmar."); }} />}
     {selected && !isPreplan(selected) && <section className="rounded-2xl border bg-white p-5"><h2 className="text-lg font-bold">Tienes un plan del formato anterior</h2><p className="mt-2 text-sm text-[#526b87]">La versión {selected.version} sigue guardada. Puedes abrirla o preparar un preplan nuevo con la tabla editable.</p>
       <div className="mt-4 flex flex-wrap gap-2"><Button variant="outline" onClick={() => setShowLegacy(true)}>Ver plan anterior</Button></div></section>}
     {isPreplan(selected) && proposal && <><div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-[#edf7fa] p-4"><p className="font-bold">{selected.status === "active" ? "Mi año vigente" : selected.status === "draft" ? "Mi año en revisión" : "Versión anterior"} · versión {selected.version}</p>
-      {selected.status === "active" && !plans?.draft && <Button variant="outline" disabled={Boolean(busy)} onClick={copy}>Preparar nueva versión</Button>}</div>
+      {selected.status === "active" && !plans?.draft && <div className="flex flex-wrap gap-2"><Button variant="outline" disabled={Boolean(busy)} onClick={() => setReviewNewEvidence((value) => !value)}>
+        {reviewNewEvidence ? "Cerrar revisión" : "Revisar evidencia nueva"}</Button><Button variant="outline" disabled={Boolean(busy)} onClick={copy}>Preparar nueva versión</Button></div>}</div>
       <PreplanTable rows={proposal.proposed_experiences} options={options} editable={editable}
         onDevelop={selected.status === "active" ? onDevelop : undefined}
         onChange={(rows) => setProposal({ ...proposal, proposed_experiences: rows })} />

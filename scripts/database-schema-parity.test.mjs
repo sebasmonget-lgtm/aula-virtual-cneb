@@ -75,6 +75,13 @@ test("fresh Supabase migrations retain the service-facing local table and column
       has_table_privilege('authenticated','public.ordinary_observation_revisions','UPDATE') as teacher_update
       from pg_class c where c.oid='public.ordinary_observation_revisions'::regclass`)).rows[0];
     assert.deepEqual(revisionsSecurity, { rls: true, teacher_update: false });
+    const personalizationSecurity = (await stagingDb.query(`select c.relrowsecurity as rls,
+      has_table_privilege('authenticated','public.annual_personalization_reviews','SELECT') as teacher_select,
+      has_table_privilege('authenticated','public.annual_personalization_reviews','INSERT') as teacher_insert,
+      has_table_privilege('authenticated','public.annual_personalization_reviews','UPDATE') as teacher_update
+      from pg_class c where c.oid='public.annual_personalization_reviews'::regclass`)).rows[0];
+    assert.deepEqual(personalizationSecurity, { rls: true, teacher_select: true,
+      teacher_insert: false, teacher_update: false });
     assert.equal((await stagingDb.query("select public from storage.buckets where id='ayni-observation-media'")).rows[0]?.public, false);
     const localColumns = await columns(localDb);
     const stagingColumns = await columns(stagingDb);

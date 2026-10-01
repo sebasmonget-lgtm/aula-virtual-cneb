@@ -195,7 +195,7 @@ Proyecto nuevo iniciado el 20 de septiembre de 2026. Existe un shell responsive 
 
 ## Hitos del calendario y evaluación del plan anual (2026-09-24)
 
-- `crear-plan-anual` orienta cuatro de las doce propuestas hacia Día del Niño Peruano, Día de la Educación Inicial, Fiestas Patrias y Navidad/cierre de año. Recibe los doce espacios lectivos ya calculados para situarlas cerca de los hitos sin inventar fechas ni transformar una celebración en manualidades. Las otras ocho se basan en el diagnóstico e intereses del grupo y todas siguen siendo revisables.
+- En la generación histórica, `crear-plan-anual` orienta cuatro de las doce propuestas hacia Día del Niño Peruano, Día de la Educación Inicial, Fiestas Patrias y Navidad/cierre de año. Desde el contrato «Así entendí tu aula» (ADR 100), las doce posiciones conservan las fechas calculadas y sus temas proceden de las decisiones confirmadas; una efeméride solo influye si la docente la incluyó como condición u oportunidad.
 - El Word flexible recoge una categoría de actuación individual de cada proyecto en «Evidencias principales», sin truncar la lista tras los primeros. «Criterios de cada actividad» deja de figurar como instrumento y el producto posible se distingue de la evidencia individual también en el editor. El esquema guardado, el calendario y la plantilla binaria no cambian; la política de modelos se actualizó después en ADR 072.
 
 ## Migración a cuatro plantillas unificadas (2026-09-24)
@@ -334,3 +334,7 @@ ADR 100 sustituye únicamente la cláusula de privacidad de ADR 098. `CURRENT_V2
 ## QA de planificación y Word (2026-09-29)
 
 La interfaz de Planificar prioriza el siguiente paso, ubica actividades y talleres dentro del proyecto y exige revisar cada observación espontánea antes de pasar a Resumir. Los exportadores de plan, diagnóstico, proyecto y actividad muestran una orientación práctica breve sin cambiar los datos confirmados ni el CNEB oficial. El plan incorpora «Así se podría vivir» e imágenes más legibles; el cronograma anual ya no contiene «CONTINUACIÓN». La biblioteca prepara el Word de proyecto antes de descargar. Ver ADR 101 y `docs/qa/planificacion-documentos-2026-09-29.md`.
+
+## Personalización previa a Mi año (2026-10-01)
+
+El flujo nuevo usa una sola confirmación «Así entendí tu aula», persiste el contrato versionado y produce doce propuestas con referencias a decisiones confirmadas. El calendario conserva posiciones lectivas sin fijar sus temas. Los planes históricos siguen abriendo; una nueva observación ofrece revisión, mantiene el plan vigente y requiere confirmación docente para activar otra versión. Migraciones local 0069 y Supabase 202610010001. Ver ADR 104 y `docs/qa/annual-personalization-2026-10-01.md`.

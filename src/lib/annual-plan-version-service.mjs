@@ -10,8 +10,7 @@ export class AnnualPlanVersionError extends Error {
 }
 
 export async function copyConfirmedAnnualPlan(db, teacherId, context, sourcePlanId, documentContext, expectedSourceRevision = null) {
-  if (!context?.source_diagnostic_review_id)
-    throw new AnnualPlanVersionError("diagnostic_review_required", "Revisa y confirma el diagnóstico del aula antes de preparar una nueva versión.");
+  if (!context) throw new AnnualPlanVersionError("diagnostic_review_required", "No hay aula activa.");
   return versionTransaction(db, `annual:${context.school_year_id}`, async (tx) => {
     const source = (await tx.query(`select ap.* from annual_plans ap
       join school_years sy on sy.id=ap.school_year_id and sy.owner_id=$1
@@ -23,21 +22,22 @@ export async function copyConfirmedAnnualPlan(db, teacherId, context, sourcePlan
       throw new AnnualPlanVersionError("legacy_plan", "Este plan usa un formato anterior. Usa «Preparar versión actualizada» para convertirlo al formato de doce propuestas.");
     const existingDraft = (await tx.query(`select id from annual_plans where school_year_id=$1 and status='draft' limit 1`, [context.school_year_id])).rows[0];
     if (existingDraft) throw new VersionConflictError("Ya hay un borrador de este año. Ábrelo antes de crear otra versión.", source.revision, "draft_exists");
-    const diagnostic = (await tx.query(`select id from diagnostic_group_reviews
-      where id=$1 and classroom_id=$2 and status='confirmed'`, [context.source_diagnostic_review_id, context.id])).rows[0];
-    if (!diagnostic) throw new AnnualPlanVersionError("diagnostic_review_required", "El diagnóstico confirmado ya no corresponde a esta aula.");
+    const diagnostic = context.source_diagnostic_review_id ? (await tx.query(`select id from diagnostic_group_reviews
+      where id=$1 and classroom_id=$2 and status='confirmed'`, [context.source_diagnostic_review_id, context.id])).rows[0] : null;
+    if (!diagnostic && !source.source_personalization_review_id)
+      throw new AnnualPlanVersionError("diagnostic_review_required", "El diagnóstico confirmado ya no corresponde a esta aula.");
     const version = Number((await tx.query(`select coalesce(max(version),0)::int + 1 as next
       from annual_plans where classroom_id=$1 and school_year_id=$2`, [context.id, context.school_year_id])).rows[0].next);
     const id = randomUUID();
     await tx.query(`insert into annual_plans
       (id,classroom_id,school_year_id,curriculum_version_id,version,status,proposal,generation_metadata,document_context,
-       supersedes_plan_id,source_diagnostic_review_id,source_priority_review_id,source_context_fingerprint)
-      values ($1,$2,$3,$4,$5,'draft',$6::jsonb,$7::jsonb,$8::jsonb,$9,$10,$11,$12)`,
+       supersedes_plan_id,source_diagnostic_review_id,source_priority_review_id,source_context_fingerprint,source_personalization_review_id)
+      values ($1,$2,$3,$4,$5,'draft',$6::jsonb,$7::jsonb,$8::jsonb,$9,$10,$11,$12,$13)`,
     [id, context.id, context.school_year_id, source.curriculum_version_id, version,
       JSON.stringify(source.proposal), JSON.stringify({ workflow: "annual_plan_copy", source_plan_id: source.id }),
-      JSON.stringify({ ...documentContext, supersedes_plan_id: source.id }), source.id,
-      context.source_diagnostic_review_id, context.source_priority_review_id ?? source.source_priority_review_id,
-      context.context_v4.source_fingerprint]);
+      JSON.stringify({ ...(source.source_personalization_review_id ? source.document_context : documentContext), supersedes_plan_id: source.id }), source.id,
+      diagnostic?.id ?? source.source_diagnostic_review_id, context.source_priority_review_id ?? source.source_priority_review_id,
+      context.context_v4.source_fingerprint, source.source_personalization_review_id]);
     const sourceSlots = (await tx.query(`select slot_index,calendar_block_id,duration_weeks,starts_on,ends_on
       from project_slots where annual_plan_id=$1 order by slot_index`, [source.id])).rows;
     const slots = sourceSlots.length === source.proposal.proposed_experiences.length ? sourceSlots.map((slot) => ({
@@ -51,7 +51,7 @@ export async function copyConfirmedAnnualPlan(db, teacherId, context, sourcePlan
       values ($1,$2,$3,$4,$5,$6::date,$7::date,$8)`, [randomUUID(), id, slot.index,
       slot.calendar_block_id, slot.duration_weeks, slot.starts_on, slot.ends_on,
       source.proposal.proposed_experiences[slot.index - 1]?.proposal_id ?? null]);
-    return { id, version, revision: 1, status: "draft", supersedes_plan_id: source.id, source_diagnostic_review_id: diagnostic.id };
+    return { id, version, revision: 1, status: "draft", supersedes_plan_id: source.id, source_diagnostic_review_id: diagnostic?.id ?? null };
   });
 }
 
