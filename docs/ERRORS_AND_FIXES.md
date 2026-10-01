@@ -1,5 +1,15 @@
 # Errores y soluciones
 
+## 2026-10-01 — Tres alumnos indistinguibles al registrar el diagnóstico
+
+**Síntoma.** En el aula QA «Auditoría 5 años», las tarjetas de los tres alumnos, las entrevistas y la ficha de observación mostraban solo «Prueba». Una docente no podía identificar con seguridad a Prueba Uno, Dos o Tres antes de guardar evidencia.
+
+**Causa raíz.** Las consultas de los espacios diagnósticos devolvían solo `preferred_name` o `first_name` como `name`, aunque el apellido estaba guardado. La interfaz presentaba fielmente ese dato incompleto.
+
+**Solución.** Las lecturas autorizadas de experiencias y revisión diagnóstica componen el nombre visible con nombre preferido (o nombre) y apellido. No se modifican registros ni autorizaciones. Las pruebas de ambos servicios verifican nombres completos; el despliegue y smoke del aula QA se registrarán tras ejecutarlos.
+
+**Prevención.** Las pantallas donde se atribuyen entrevistas, observaciones o valoraciones deben distinguir alumnos con el mismo nombre de pila antes de habilitar el guardado.
+
 ## 2026-09-30 — Diagnóstico no cargaba con el esquema PostgreSQL de staging
 
 **Síntoma.** La interfaz muestra «No se pudo cargar el diagnóstico local» y bloquea el recorrido natural hacia el plan anual. Los eventos de Vercel registran `GET /api/diagnostics` con estado 500 bajo la sesión docente (por ejemplo, request ID `18b34d7e-2dca-4977-adc3-35c86919dc44`); las rutas vecinas de diagnóstico y planificación devolvieron 200. El cliente reemplaza el fallo por el mismo texto genérico.

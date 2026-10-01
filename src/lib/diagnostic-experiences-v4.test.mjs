@@ -70,6 +70,7 @@ test("la docente ve a todos, registra varias veces al mismo niño y continúa ot
       { firstName: "Ana", lastName: "Prueba" }, { firstName: "Bruno", lastName: "Prueba" }, { firstName: "Celia", lastName: "Prueba" },
     ]);
     const initial = await loadDiagnosticExperienceWorkspace(db, teacher);
+    assert.deepEqual(initial.students.map((student) => student.name), ["Ana Prueba", "Bruno Prueba", "Celia Prueba"]);
     assert.equal(initial.students.length, 3);
     assert.equal(initial.experience_observations.length, 0);
     const experience = initial.experiences[0];

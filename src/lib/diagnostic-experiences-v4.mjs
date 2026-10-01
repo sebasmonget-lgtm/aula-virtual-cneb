@@ -60,7 +60,7 @@ async function classroomForTeacher(db, teacherId) {
 export async function loadDiagnosticExperienceWorkspace(db, teacherId) {
   const classroom = await classroomForTeacher(db, teacherId);
   if (!classroom) throw new DiagnosticExperienceError("no_classroom", "No hay un aula activa.");
-  const students = (await db.query(`select id, coalesce(preferred_name, first_name) as name
+  const students = (await db.query(`select id, concat_ws(' ', coalesce(nullif(trim(preferred_name), ''), first_name), last_name) as name
     from students where classroom_id = $1 and status = 'active'
     order by coalesce(preferred_name, first_name), id`, [classroom.id])).rows;
   const knowledgeBase = await loadKnowledgeBaseV4();

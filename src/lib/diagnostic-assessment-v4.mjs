@@ -179,7 +179,7 @@ async function scope(db, teacherId) {
       c.religion_applicable from classrooms c join age_grades ag on ag.id = c.age_grade_id
       where c.teacher_id = $1 and c.status = 'active' limit 1`, [teacherId])).rows[0];
   if (!classroom) fail("no_classroom", "No hay un aula activa.");
-  const students = (await db.query(`select id, coalesce(preferred_name, first_name) as name, initial_context
+  const students = (await db.query(`select id, concat_ws(' ', coalesce(nullif(trim(preferred_name), ''), first_name), last_name) as name, initial_context
     from students where classroom_id = $1 and status = 'active'
     order by coalesce(preferred_name, first_name), id`, [classroom.id])).rows;
   const knowledgeBase = await loadKnowledgeBaseV4();

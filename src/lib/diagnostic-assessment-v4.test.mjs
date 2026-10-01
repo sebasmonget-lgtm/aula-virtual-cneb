@@ -89,6 +89,7 @@ test("información insuficiente es explícita y la ausencia de registro no crea 
     const confirmed = await confirmDiagnosticSynthesis(db, teacher, prepared.id);
     assert.equal(confirmed.details.information_status, "insufficient_information");
     const review = await loadDiagnosticAssessmentWorkspace(db, teacher);
+    assert.deepEqual(review.students.map((student) => student.name), ["Ana Prueba", "Bruno Prueba"]);
     assert.equal(review.observations.filter((item) => item.student_id === otherStudent).length, 0);
     assert.equal(review.reviews.filter((item) => item.student_id === otherStudent).length, 0);
     assert.equal(review.group_coverage.find((item) => item.competency_id === competencyId).children_without_observations, 1);
