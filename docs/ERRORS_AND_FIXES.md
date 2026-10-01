@@ -1,5 +1,15 @@
 # Errores y soluciones
 
+## 2026-10-01 — Reincorporación fallaba aunque quedaba un tramo lectivo libre
+
+**Síntoma.** Al retirar una propuesta de mitad de año, «Incorporar al final» fallaba si el último bimestre estaba lleno, pese a quedar libre el tramo de la propuesta retirada.
+
+**Causa raíz.** La bandeja intentaba agregar siempre la propuesta después de la última fila y le asignaba el bimestre de esa fila.
+
+**Solución validada.** «Incorporar al año» prueba posiciones del bimestre original y acepta la primera compatible con el calendario. El recorrido local volvió a retirar y reincorporar una propuesta, guardó, recargó y confirmó la nueva versión. La prueba focal de inserción, typecheck, lint y build pasaron.
+
+**Prevención.** La prueba de reincorporación cubre el caso de último bimestre lleno con un tramo anterior libre.
+
 ## 2026-10-01 — Tres alumnos indistinguibles al registrar el diagnóstico
 
 **Síntoma.** En el aula QA «Auditoría 5 años», las tarjetas de los tres alumnos, las entrevistas y la ficha de observación mostraban solo «Prueba». Una docente no podía identificar con seguridad a Prueba Uno, Dos o Tres antes de guardar evidencia.

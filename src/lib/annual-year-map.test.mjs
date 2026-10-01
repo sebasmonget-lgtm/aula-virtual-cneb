@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { annualMapHolidays, annualMapPercent, annualMapWidth, moveAnnualRow, scheduledAnnualRows } from "./annual-year-map.mjs";
+import { annualMapHolidays, annualMapPercent, annualMapWidth, insertAvailableAnnualRow, moveAnnualRow, scheduledAnnualRows } from "./annual-year-map.mjs";
 import { nationalCalendarBlocks2026, nationalSchoolHolidays2026 } from "./annual-plan-calendar.mjs";
 import { validateAnnualPreplan } from "./annual-preplan-service.mjs";
 
@@ -55,4 +55,11 @@ test("retirar conserva propuesta disponible en el contrato y una versión histó
   assert.equal(valid.available_experiences[0].proposal_id, rows[0].proposal_id);
   const legacy = validateAnnualPreplan({ ...proposal, proposed_experiences: rows, available_experiences: undefined }, ["CYT_INDAGA"], 2026);
   assert.equal("available_experiences" in legacy, false);
+});
+
+test("reincorporar usa el tramo libre del bimestre aunque el final del año esté lleno", () => {
+  const restored = insertAvailableAnnualRow(calendar, rows.slice(1), rows[0]);
+  assert.equal(restored.length, 12);
+  assert.equal(restored[0].proposal_id, rows[0].proposal_id);
+  assert.equal(scheduledAnnualRows(calendar, restored).length, 12);
 });

@@ -57,3 +57,19 @@ export function moveAnnualRow(rows, from, to) {
     duration_weeks: rows[index].duration_weeks, planned_start_date: undefined,
     planned_end_date: undefined, planned_instructional_days: undefined }));
 }
+
+export function insertAvailableAnnualRow(calendar, rows, row) {
+  const availablePeriod = Number(String(row.period).match(/^Bimestre ([1-4])$/)?.[1]);
+  const restored = { ...row, planned_start_date: undefined, planned_end_date: undefined,
+    planned_instructional_days: undefined };
+  let lastError;
+  for (let index = 0; index <= rows.length; index += 1) {
+    const before = Number(String(rows[index - 1]?.period).match(/^Bimestre ([1-4])$/)?.[1] ?? 0);
+    const after = Number(String(rows[index]?.period).match(/^Bimestre ([1-4])$/)?.[1] ?? 5);
+    if (availablePeriod < before || availablePeriod > after) continue;
+    const candidate = [...rows.slice(0, index), restored, ...rows.slice(index)];
+    try { buildEditableAnnualSchedule(calendar, candidate); return candidate; }
+    catch (error) { lastError = error; }
+  }
+  throw lastError ?? new Error("No hay un tramo lectivo disponible para esta propuesta.");
+}

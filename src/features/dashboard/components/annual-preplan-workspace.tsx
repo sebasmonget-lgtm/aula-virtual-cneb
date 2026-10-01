@@ -12,7 +12,7 @@ import { AnnualPlanGenerator as LegacyAnnualPlanGenerator } from "./annual-plan-
 import { AnnualPersonalizationWorkspace } from "./annual-personalization-workspace";
 import { AnnualYearMap } from "./annual-year-map";
 import { buildEditableAnnualSchedule } from "@/src/lib/annual-plan-calendar.mjs";
-import { moveAnnualRow } from "@/src/lib/annual-year-map.mjs";
+import { insertAvailableAnnualRow, moveAnnualRow } from "@/src/lib/annual-year-map.mjs";
 
 type Row = { proposal_id: string; experience_type: "project" | "unit"; title: string; period: string;
   month: number; duration_weeks: 2 | 3; rationale: string; purpose: string; primary_competency_ids: string[];
@@ -178,13 +178,9 @@ export function AnnualPreplanWorkspace({ onConfirmed, onGoDiagnostic, onDevelop 
     setSelectedProposalId(next[0]?.proposal_id ?? null); };
   const restore = (id: string) => { if (!proposal || !context || proposal.proposed_experiences.length >= 20) return;
     const row = available.find((item) => item.proposal_id === id); if (!row) return;
-    const last = proposal.proposed_experiences.at(-1);
-    const appended = { ...row, period: last?.period ?? row.period, month: last?.month ?? row.month,
-      planned_start_date: undefined, planned_end_date: undefined, planned_instructional_days: undefined };
-    const next = [...proposal.proposed_experiences, appended];
-    try { buildEditableAnnualSchedule(context.calendar, next); setProposal({ ...proposal, proposed_experiences: next,
+    try { const next = insertAvailableAnnualRow(context.calendar, proposal.proposed_experiences, row); setProposal({ ...proposal, proposed_experiences: next,
       available_experiences: available.filter((item) => item.proposal_id !== id) }); setSelectedProposalId(id); }
-    catch (cause) { setError(cause instanceof Error ? cause.message : "Esta propuesta no cabe al final del año."); } };
+    catch (cause) { setError(cause instanceof Error ? cause.message : "No hay un tramo lectivo disponible para esta propuesta."); } };
   const replace = (id: string) => { if (!proposal || !selectedProposalId) return;
     const incoming = available.find((item) => item.proposal_id === id);
     const index = proposal.proposed_experiences.findIndex((item) => item.proposal_id === selectedProposalId);

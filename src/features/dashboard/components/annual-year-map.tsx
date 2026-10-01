@@ -119,7 +119,7 @@ export function AnnualYearMap({ rows, available, calendar, effectiveCalendar, sl
         {editing && <Button type="button" variant="outline" onClick={onAddManual}><Plus className="size-4" /> Nueva propuesta</Button>}</div>
       {available.length ? <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">{available.map((row, index) => { const Icon = iconFor(row.title); return <article key={row.proposal_id} className={`rounded-xl border p-3 ${styles[index % styles.length]}`}>
         <div className="flex items-center gap-2"><Icon className="size-4 shrink-0" aria-hidden="true" /><h3 className="text-sm font-bold">{row.title}</h3></div><p className="mt-1 text-xs">{row.experience_type === "unit" ? "Unidad" : "Proyecto"} · {row.duration_weeks} semanas</p>
-        {editing && <Button type="button" size="sm" variant="outline" className="mt-2" onClick={() => onRestore(row.proposal_id)}><MoveHorizontal className="size-4" /> Incorporar al final</Button>}</article>; })}</div>
+        {editing && <Button type="button" size="sm" variant="outline" className="mt-2" onClick={() => onRestore(row.proposal_id)}><MoveHorizontal className="size-4" /> Incorporar al año</Button>}</article>; })}</div>
         : <p className="mt-3 rounded-xl bg-[#f6f9fc] p-3 text-sm text-[#526b87]">Todas las propuestas de esta versión están ubicadas en el año.</p>}
     </section>
   </div>;
