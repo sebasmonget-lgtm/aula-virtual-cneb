@@ -39,11 +39,11 @@ export async function listSavedDocuments(db, teacherId) {
       school_year: Number(row.year), classroom_id: row.classroom_id, parent_experience_id: row.parent_experience_id,
       classroom: row.section, date: dateOnly(row.occurs_on),
     }));
-  const reports = (await db.query(`select r.id,r.status,r.version,r.updated_at,r.evaluation_period_id,p.label as period_label,s.first_name,s.preferred_name,sy.year,c.id as classroom_id,c.section
+  const reports = (await db.query(`select r.id,r.status,r.version,r.updated_at,r.evaluation_period_id,p.label as period_label,s.first_name,s.last_name,s.preferred_name,sy.year,c.id as classroom_id,c.section
     from family_reports r join students s on s.id=r.student_id join classrooms c on c.id=s.classroom_id
     join school_years sy on sy.id=c.school_year_id left join evaluation_periods p on p.id=r.evaluation_period_id
     where c.teacher_id=$1 and sy.owner_id=$1`, [teacherId])).rows.map((row) => ({
-      id: row.id, kind: "family_report", title: `Informe a la familia de ${row.preferred_name || row.first_name}`,
+      id: row.id, kind: "family_report", title: `Informe a la familia de ${[row.preferred_name || row.first_name,row.last_name].filter(Boolean).join(" ")}`,
       status: row.status, version: Number(row.version), school_year: Number(row.year), classroom_id: row.classroom_id,
       classroom: row.section, date: timestamp(row.updated_at), period_label:row.period_label??null,
     }));
@@ -196,12 +196,12 @@ export async function loadSavedDocument(db, teacherId, kind, id) {
       content: { ...selectContent(row.details, ["meaningful_situation", "teacher_preparation", "child_actions", "mediation", "evidence_opportunities", "closure_or_continuity", "competency_status", "competency_id", "route_item_id", "evaluation_criterion", "expected_evidence", "document_template_version", "teacher_overrides"]), purpose: row.details?.purpose || row.purpose, materials: row.preparation?.materials ?? [] } };
   }
   const row = (await db.query(`select r.id,r.status,r.version,r.details,r.period_start,r.period_end,r.evaluation_period_id,r.teacher_confirmed_at,
-    p.label as period_label,s.first_name,s.preferred_name,sy.year,c.section,c.institution_name,profile.display_name as teacher_name from family_reports r
+    p.label as period_label,s.first_name,s.last_name,s.preferred_name,sy.year,c.section,c.institution_name,profile.display_name as teacher_name from family_reports r
     join students s on s.id=r.student_id join classrooms c on c.id=s.classroom_id
     join school_years sy on sy.id=c.school_year_id join profiles profile on profile.user_id=c.teacher_id
     left join evaluation_periods p on p.id=r.evaluation_period_id
     where r.id=$2 and c.teacher_id=$1 and sy.owner_id=$1`, [teacherId, id])).rows[0];
-  return row ? { id: row.id, kind, title: `Informe a la familia de ${row.preferred_name || row.first_name}`,
+  return row ? { id: row.id, kind, title: `Informe a la familia de ${[row.preferred_name || row.first_name,row.last_name].filter(Boolean).join(" ")}`,
     status: row.status, version: Number(row.version), school_year: Number(row.year),
     classroom: row.section, institution_name: row.institution_name,teacher_name:row.teacher_name,
     evaluation_period_id:row.evaluation_period_id??null,period_label:row.period_label??null,

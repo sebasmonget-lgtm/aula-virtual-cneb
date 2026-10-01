@@ -27,7 +27,7 @@ async function fixture() {
     create table evidences(id uuid primary key,student_id uuid,activity_id uuid,criterion_id uuid,observation_text text,observation_status text,type text,observed_at timestamptz,media_path text,created_by uuid);
     create table class_schedule_entries(id uuid primary key,activity_id uuid,classroom_id uuid);
     create table daily_execution_logs(id uuid primary key,schedule_entry_id uuid,execution_date date,teacher_closure_note text);
-    create table students(id uuid primary key,classroom_id uuid,first_name text,preferred_name text,status text default 'active');
+    create table students(id uuid primary key,classroom_id uuid,first_name text,last_name text,preferred_name text,status text default 'active');
     create table family_reports(id uuid primary key,student_id uuid,status text,version int,details jsonb,updated_at timestamptz,period_start date,period_end date,teacher_confirmed_at timestamptz,generation_metadata jsonb,evaluation_period_id uuid);
     create table evaluation_periods(id uuid primary key,school_year_id uuid,label text,starts_on date,ends_on date);
     create table period_closure_versions(id uuid primary key,classroom_id uuid,evaluation_period_id uuid,version int,confirmed_at timestamptz,manifest jsonb);
@@ -51,7 +51,7 @@ async function fixture() {
   await db.query(`insert into activity_criteria values($1,$2,'CYT_INDAGA','Explica lo que observó',$3::jsonb,'active',now())`,
     [id(20), id(12), JSON.stringify({ observation_focus: ["Pregunta por el cambio de luz"] })]);
   await db.exec(`alter table activity_criteria add column version integer not null default 1`);
-  await db.query(`insert into students values($1,$2,'Alessia',null)`, [id(13), id(6)]);
+  await db.query(`insert into students(id,classroom_id,first_name,last_name,preferred_name) values($1,$2,'Alessia','Pérez',null)`, [id(13), id(6)]);
   await db.query(`insert into family_reports(id,student_id,status,version,details,updated_at,period_start,period_end,teacher_confirmed_at,generation_metadata) values($1,$2,'active',1,$3::jsonb,now(),'2026-03-01','2026-06-01',now(),$4::jsonb)`,
     [id(14), id(13), JSON.stringify({ introduction: "Compartimos avances", sections: [], closing_note: "Seguimos juntos", source_snapshot: "hidden" }), JSON.stringify({ tokens: 300 })]);
   return db;
@@ -64,6 +64,7 @@ test("la biblioteca lista registros canónicos de la docente y excluye contenido
     assert.deepEqual(documents.map((row) => row.kind).sort(), ["activity", "annual_plan", "diagnostic_summary", "experience", "family_report"]);
     assert.ok(documents.every((row) => row.school_year === 2026 && row.classroom === "Sala Amarilla"));
     assert.ok(documents.every((row) => !Object.hasOwn(row, "content") && !Object.hasOwn(row, "generation_metadata")));
+    assert.equal(documents.find((row)=>row.kind==="family_report").title,"Informe a la familia de Alessia Pérez");
     assert.equal((await listSavedDocuments(db, id(2))).length, 1);
   } finally { await db.close(); }
 });
@@ -89,6 +90,7 @@ test("cada documento se abre solo para su docente y sin metadata técnica", asyn
       const document = await loadSavedDocument(db, id(1), kind, id(number));
       assert.equal(document.kind, kind);
       assert.equal(document.school_year, 2026);
+      if(kind==="family_report") assert.equal(document.title,"Informe a la familia de Alessia Pérez");
       assert.doesNotMatch(JSON.stringify(document), /generation_metadata|response_id|source_snapshot|private_note|private_path/);
       assert.equal(await loadSavedDocument(db, id(2), kind, id(number)), null);
     }

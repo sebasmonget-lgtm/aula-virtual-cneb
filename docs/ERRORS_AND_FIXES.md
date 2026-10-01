@@ -1263,3 +1263,15 @@ Síntoma: cuatro notas QA de la captura automatizada quedaron asociadas a la sel
 **Validación.** La prueba funcional simulada confirma que una salida inválida produce una propuesta válida desde fuentes confirmadas, conserva información insuficiente, no inventa ejemplos, permite guardar borrador y no hace una segunda llamada. También rechaza una conclusión fuente que contiene un nivel prohibido. Pasaron 18 pruebas de informe familiar e integración; la comprobación en Vercel se registrará tras el despliegue.
 
 **Prevención.** Tratar un fallo de contrato de IA como recuperable cuando existe una fuente docente validada, sin relajar las reglas de contenido ni ocultar la procedencia del borrador.
+
+## 2026-10-01 — Word familiar sin apellido en el título
+
+**Síntoma.** El Word de la familia de Prueba Uno se tituló «Informe a la familia de Prueba». En el aula QA hay tres alumnos cuyo nombre de pila es Prueba.
+
+**Causa raíz.** La proyección de documentos consultaba solo `first_name` y `preferred_name` para el informe familiar; omitía `last_name` tanto en Biblioteca como en el objeto enviado al generador Word.
+
+**Corrección.** Ambas consultas incluyen `last_name` y componen el título con nombre preferido o de pila más apellido.
+
+**Validación.** La prueba de biblioteca comprueba el título completo en listado y detalle; las 14 pruebas de documentos y exportación pasaron. Queda comprobar el Word en Vercel tras el despliegue. La inspección OOXML del Word anterior mostró ZIP íntegro y el texto QA sin marcadores; la paginación no pudo renderizarse porque falta `soffice.exe`.
+
+**Prevención.** Revisar identidad completa en títulos y encabezados de archivos cuando varios alumnos comparten nombre de pila.
