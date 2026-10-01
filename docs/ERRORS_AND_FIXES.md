@@ -1188,6 +1188,6 @@ Síntoma: cuatro notas QA de la captura automatizada quedaron asociadas a la sel
 
 **Corrección.** La proyección del perfil concatena el nombre preferido o nombre y el apellido para la identidad visible, sin cambiar el contexto pedagógico ni el registro fuente.
 
-**Validación local.** Pasaron `node --check`, `tsc --noEmit`, lint, build Vinext y build Next.js. Falta verificar el nombre visible en el aula QA tras desplegar.
+**Validación.** Pasaron `node --check`, `tsc --noEmit`, lint, build Vinext y build Next.js. El candidato `dpl_ECovzoWmUdx3ezPEgbLi83uHELia` pasó smoke y se promovió; el perfil de «Prueba Uno» mostró el nombre completo en encabezado y resumen.
 
 **Prevención.** Probar estudiantes con el mismo nombre de pila al entrar a sus perfiles, entrevistas y evidencias.
