@@ -206,12 +206,13 @@ async function insertInlineImages(archive, xml, images) {
     const paragraph = (xml.match(paragraphPattern) ?? []).find((part) => part.includes(marker));
     if (!paragraph) throw new Error(`Falta el lugar de imagen ${item.marker} en el Word.`);
     if (!item.data) { xml = xml.replace(paragraph, ""); continue; }
-    const bytes = await sharp(item.data).resize({ width: 720, withoutEnlargement: true }).png().toBuffer();
+    const bytes = await sharp(item.data).resize({ width: 720, withoutEnlargement: true })
+      .flatten({ background: "#ffffff" }).jpeg({ quality: 82, mozjpeg: true }).toBuffer();
     const metadata = await sharp(bytes).metadata();
     const width = metadata.width ?? 720, height = metadata.height ?? 480;
     const scale = Math.min(2.3 * 914400 / width, 2.1 * 914400 / height);
     const cx = Math.round(width * scale), cy = Math.round(height * scale);
-    const relation = `rId${nextRel++}`, filename = `ayni-project-${String(index + 1).padStart(2, "0")}.png`;
+    const relation = `rId${nextRel++}`, filename = `ayni-project-${String(index + 1).padStart(2, "0")}.jpg`;
     const pictureId = 9000 + index;
     archive.file(`word/media/${filename}`, bytes);
     rels = rels.replace("</Relationships>", `<Relationship Id="${relation}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/${filename}"/></Relationships>`);
@@ -219,7 +220,7 @@ async function insertInlineImages(archive, xml, images) {
     const drawing = `<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:drawing><wp:inline xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/><wp:docPr id="${pictureId}" name="${alt}" descr="${alt}"/><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="${pictureId}" name="${filename}"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="${relation}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>`;
     xml = xml.replace(paragraph, drawing);
   }
-  if (!types.includes('Extension="png"')) types = types.replace("</Types>", '<Default Extension="png" ContentType="image/png"/></Types>');
+  if (!types.includes('Extension="jpg"')) types = types.replace("</Types>", '<Default Extension="jpg" ContentType="image/jpeg"/></Types>');
   archive.file("word/_rels/document.xml.rels", rels);
   archive.file("[Content_Types].xml", types);
   return xml;

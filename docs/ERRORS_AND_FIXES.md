@@ -1,5 +1,15 @@
 # Errores y soluciones
 
+## 2026-10-01 — Calendario perdía la actividad y Hoy confundía observación cotidiana con diagnóstico
+
+**Síntoma.** «Ver actividad» abría la portada de Planificar; «Observar» podía abrir el diagnóstico inicial aunque la intención fuera registrar una observación cotidiana.
+
+**Causa raíz.** Calendario enviaba una función sin argumentos y descartaba el ID de actividad y experiencia. Hoy usaba Diagnóstico como destino alternativo para toda actividad sin criterio.
+
+**Solución validada.** El ID y la experiencia viajan hasta la ficha exacta; talleres se muestran en una ficha propia del Calendario. «Observar» abre el diálogo cotidiano existente cuando no hay actividad con criterio. Se verificaron en navegador local los dos tipos de actividad pasada y el diálogo cotidiano; faltan escenarios de hoy y futuro en un aula con esos datos. Tests focales, typecheck, lint y build pasaron.
+
+**Prevención.** Las pruebas de navegación deben conservar el ID seleccionado y cubrir experiencias de proyecto, unidad y taller; el destino de observación se decide por capacidad disponible, no por el nombre del botón.
+
 ## 2026-10-01 — Tres alumnos indistinguibles al registrar el diagnóstico
 
 **Síntoma.** En el aula QA «Auditoría 5 años», las tarjetas de los tres alumnos, las entrevistas y la ficha de observación mostraban solo «Prueba». Una docente no podía identificar con seguridad a Prueba Uno, Dos o Tres antes de guardar evidencia.

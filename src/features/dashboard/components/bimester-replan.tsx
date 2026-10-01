@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Check, ChevronLeft, ChevronRight } from "lucide-react";
 import { apiFetch } from "@/src/lib/ayni-api-fetch";
+import { displayDate } from "@/src/lib/display-date";
 import { localDatabaseApiUrl } from "@/src/lib/local-database";
 import { Button } from "@/components/ui/button";
 import { LoadingState, WorkflowFeedback } from "./workflow-ui";
@@ -164,7 +165,7 @@ export function BimesterReplan({ onEvaluation, onFinish }: { onEvaluation: () =>
       <p className="mt-2 text-[#526681]">El cierre y las actividades realizadas no cambiarán. Revisa la propuesta antes de decidir.</p></header>
     {error && <WorkflowFeedback tone="error">{error}</WorkflowFeedback>}
     {simpleDiff.length ? <div className="space-y-3">{simpleDiff.map(({ competency, proposal }) => <article key={competency.competency_id} className="rounded-2xl border bg-white p-5">
-      <h2 className="font-extrabold">{proposal.title}</h2><p className="text-sm text-[#526681]">{proposal.starts_on} – {proposal.ends_on}</p>
+      <h2 className="font-extrabold">{proposal.title}</h2><p className="text-sm text-[#526681]">{displayDate(proposal.starts_on)} – {displayDate(proposal.ends_on)}</p>
       <p className="mt-3 text-xs font-bold text-[#526681]">ANTES</p><p className="text-sm">{proposal.competency_names.join(" · ") || "Sin competencias listadas"}</p>
       <p className="mt-3 text-xs font-bold text-[#087d96]">PROPUESTA</p><p className="text-sm">Conservar lo anterior y añadir {competency.name}.</p>
       <p className="mt-2 text-sm text-[#526681]">{competency.reason}</p></article>)}</div>

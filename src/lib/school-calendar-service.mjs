@@ -120,7 +120,7 @@ export async function loadEffectiveCalendar(db, { teacherId, classroomId = null,
     ({ sort_order,type,label,start_date,end_date })) : [];
   const experiences = (await db.query(`select id,title,type,starts_on::text,ends_on::text,status,details from learning_experiences
     where classroom_id=$1 and status in ('active','draft') and starts_on<=$3::date and ends_on>=$2::date order by starts_on`,[classroom.id,start,end])).rows;
-  const activities = (await db.query(`select a.id,a.title,a.occurs_on::text,a.planned_date::text,a.schedule_status,a.status,
+  const activities = (await db.query(`select a.id,a.title,a.purpose,a.occurs_on::text,a.planned_date::text,a.schedule_status,a.status,
     a.experience_id,e.title as experience_title,e.type as experience_type,a.details,
     coalesce(se.start_time::text,'') as start_time
     from activities a join learning_experiences e on e.id=a.experience_id
