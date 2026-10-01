@@ -135,6 +135,9 @@ test("request selectors are scoped to the verified classroom tree", async () => 
     assert.equal((await db.query("select y.owner_id from evaluation_periods p join school_years y on y.id=p.school_year_id where p.id=$1", [periodA])).rows[0]?.owner_id, teacherA);
     await check(`/api/period-evaluations/coverage?classroomId=${roomA}&periodId=${periodA}`);
     await check(`/api/students/${studentA}`);
+    await check("/api/diagnostics/experience-observations", { studentId: studentA, experienceId: "DX-01", aspectId: "DX-01-A" });
+    await assert.rejects(() => check("/api/diagnostics/experience-observations", { studentId: studentB, experienceId: "DX-01" }), (error) => error instanceof RequestAccessError && error.status === 404);
+    await assert.rejects(() => check("/api/learning-experiences", { experienceId: "DX-01" }), (error) => error instanceof RequestAccessError && error.status === 404);
     await assert.rejects(() => check(`/api/period-evaluations/coverage?classroomId=${roomB}&periodId=${periodB}`), (error) => error instanceof RequestAccessError && error.status === 403);
     await assert.rejects(() => check(`/api/students/${studentB}`), (error) => error instanceof RequestAccessError && error.status === 404);
     await assert.rejects(() => check("/api/evidences", { studentId: studentB, teacherId: teacherA }), (error) => error instanceof RequestAccessError && error.status === 404);

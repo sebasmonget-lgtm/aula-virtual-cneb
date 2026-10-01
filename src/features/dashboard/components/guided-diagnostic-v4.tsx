@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
   loadDiagnostics, loadClassroomContext, loadSpontaneousObservations, saveDiagnosticExperienceObservation,
-  type DiagnosticWorkspace, type LocalDashboard, type PublicClassroomContext,
+  type DiagnosticWorkspace, type LocalDashboard, type PublicClassroomContext, type SpontaneousObservation,
 } from "@/src/lib/local-database";
 import { AsyncButton, LoadingState } from "./workflow-ui";
 import { DiagnosticReview } from "./diagnostic-review-v4";
@@ -27,6 +27,7 @@ export function GuidedDiagnostic({ dashboard, onPlan, onStudents, initialStep = 
   const [interviewStudentId, setInterviewStudentId] = useState<string | null>(null);
   const [observationMode, setObservationMode] = useState<"guided" | "spontaneous">("guided");
   const [pendingSpontaneous, setPendingSpontaneous] = useState<number | null>(null);
+  const [spontaneousRecords, setSpontaneousRecords] = useState<SpontaneousObservation[] | null>(null);
   const [reviewPrompt, setReviewPrompt] = useState(false);
   const [studentId, setStudentId] = useState<string | null>(null);
   const [aspectId, setAspectId] = useState("");
@@ -44,10 +45,12 @@ export function GuidedDiagnostic({ dashboard, onPlan, onStudents, initialStep = 
   async function refreshPendingSpontaneous() {
     try {
       const result = await loadSpontaneousObservations();
+      setSpontaneousRecords(result.observations);
       setPendingSpontaneous(result.observations.filter((item) => item.classification_source !== "teacher").length);
     } catch { setPendingSpontaneous(null); }
   }
   useEffect(() => { loadSpontaneousObservations().then((result) => {
+    setSpontaneousRecords(result.observations);
     const count = result.observations.filter((item) => item.classification_source !== "teacher").length;
     setPendingSpontaneous(count);
     if (initialStep === 3) { if (count) setReviewPrompt(true); else setStep(3); }
@@ -55,6 +58,7 @@ export function GuidedDiagnostic({ dashboard, onPlan, onStudents, initialStep = 
   function goToStep(next: 1 | 2 | 3) {
     if (next === 3) {
       void loadSpontaneousObservations().then((result) => {
+        setSpontaneousRecords(result.observations);
         const count = result.observations.filter((item) => item.classification_source !== "teacher").length;
         setPendingSpontaneous(count);
         if (count) setReviewPrompt(true);
@@ -74,13 +78,24 @@ export function GuidedDiagnostic({ dashboard, onPlan, onStudents, initialStep = 
   const student = data?.students.find((item) => item.id === studentId);
   const records = useMemo(() => data?.experience_observations.filter((item) => item.experience_id === experienceId) ?? [], [data, experienceId]);
   const coverage = data?.experience_coverage.find((item) => item.experience_id === experienceId);
+  const observedPairs = new Set([
+    ...(data?.experience_observations ?? []).map((item) => `${item.student_id}:${item.competency_v4_id}`),
+    ...(spontaneousRecords ?? []).filter((item) => item.classification_source === "teacher")
+      .flatMap((item) => item.competency_v4_ids.map((id) => `${item.student_id}:${id}`)),
+  ]);
+  const missingFor = (id: string, competencyIds: string[]) => competencyIds.filter((competencyId) =>
+    !observedPairs.has(`${id}:${competencyId}`));
+  const experienceGapScore = (competencyIds: string[]) => (data?.students ?? []).reduce((total, item) =>
+    total + missingFor(item.id, competencyIds).length, 0);
+  const highestGapScore = Math.max(0, ...(data?.experiences ?? []).map((item) => experienceGapScore(item.competencies.map((card) => card.id))));
   const visibleStudents = (data?.students ?? []).filter((item) => {
     const own = records.filter((record) => record.student_id === item.id);
-    if (filter === "without") return own.length === 0;
+    if (filter === "without") return missingFor(item.id, experience?.competencies.map((card) => card.id) ?? []).length > 0;
     if (filter === "with") return own.length > 0;
     if (filter === "today") return own.some((record) => isToday(record.observed_at));
     return true;
-  });
+  }).sort((a, b) => missingFor(b.id, experience?.competencies.map((card) => card.id) ?? []).length -
+    missingFor(a.id, experience?.competencies.map((card) => card.id) ?? []).length);
 
   function selectExperience(id: string) {
     setExperienceId(id); setStudentId(null); setFilter("all"); setFeedback(""); setError("");
@@ -149,13 +164,16 @@ export function GuidedDiagnostic({ dashboard, onPlan, onStudents, initialStep = 
       </div>
       <p className="px-1 text-sm text-[#526b87]">{observationMode === "guided" ? "Elige un juego sugerido y anota lo que observaste." : "Anota algo que ocurrió durante el juego o la jornada."}</p>
     </div>}
-    {step === 2 && !experience && observationMode === "spontaneous" && <SpontaneousDiagnostic students={data.students} onContinue={() => goToStep(3)} onSaved={() => { void refreshPendingSpontaneous(); void loadDiagnostics().then(setData).catch(() => setError("La observación se guardó, pero no se pudo actualizar el avance. Recarga la pantalla.")); }} />}
+    {step === 2 && !experience && observationMode === "spontaneous" && <SpontaneousDiagnostic students={data.students} onContinue={() => goToStep(3)} onDecisionSaved={() => void refreshPendingSpontaneous()} onSaved={() => { void refreshPendingSpontaneous(); void loadDiagnostics().then(setData).catch(() => setError("La observación se guardó, pero no se pudo actualizar el avance. Recarga la pantalla.")); }} />}
     {step === 2 && !experience && observationMode === "guided" && <section className="diagnostic-panel space-y-4 p-5 md:p-7">
       <div><h2 className="text-xl font-bold">¿Qué experiencia realizaste?</h2><p className="mt-1 text-sm text-[#526b87]">Son ideas para observar en el juego y la jornada; puedes volver a cualquiera otro día.</p></div>
       {data.experiences.some((item) => item.catalog_status === "development_fixture") && <p className="rounded-xl bg-[#fff5df] p-3 text-sm">Guías de desarrollo: todavía no son la batería pedagógica definitiva de Ayni.</p>}
+      {spontaneousRecords && <p className="rounded-xl bg-[#edf8f4] p-3 text-sm text-[#246554]">Las experiencias marcadas ofrecen oportunidades para competencias con menos registros. La ausencia de observaciones no indica una dificultad del niño.</p>}
       <div className="grid gap-3 md:grid-cols-2">{data.experiences.map((item) => {
         const progress = data.experience_coverage.find((value) => value.experience_id === item.id);
-        return <button key={item.id} type="button" onClick={() => selectExperience(item.id)} className="min-h-28 rounded-2xl border border-[#dce9f2] bg-white p-4 text-left hover:border-[#087d96] hover:bg-[#f4fbfd] focus-visible:outline-2 focus-visible:outline-[#087d96]"><span className="font-bold text-[#172b52]">{item.title}</span><span className="mt-1 block text-sm text-[#526b87]">{item.explanation}</span><span className="mt-2 block text-xs font-semibold text-[#087d96]">{progress?.students_with_records ?? 0} de {data.students.length} niños con registros</span></button>;
+        const score = experienceGapScore(item.competencies.map((card) => card.id));
+        const recommended = spontaneousRecords && score > 0 && score === highestGapScore;
+        return <button key={item.id} type="button" onClick={() => selectExperience(item.id)} className={`min-h-28 rounded-2xl border-2 bg-white p-4 text-left hover:bg-[#f4fbfd] focus-visible:outline-2 focus-visible:outline-[#087d96] ${recommended ? "border-[#54a98a]" : "border-[#dce9f2] hover:border-[#087d96]"}`}><span className="font-bold text-[#172b52]">{item.title}</span>{recommended && <span className="ml-2 inline-block rounded-full bg-[#e0f5e9] px-2 py-1 text-xs font-bold text-[#176442]">Recomendada para observar</span>}<span className="mt-1 block text-sm text-[#526b87]">{item.explanation}</span><span className="mt-2 block text-xs font-semibold text-[#087d96]">{progress?.students_with_records ?? 0} de {data.students.length} niños con registros</span></button>;
       })}</div>
     </section>}
 
@@ -165,7 +183,7 @@ export function GuidedDiagnostic({ dashboard, onPlan, onStudents, initialStep = 
       <div><h3 className="text-lg font-bold">2. Mientras juegan, observa</h3><p className="mt-1 text-sm text-[#526b87]">Estas son ideas para orientar tu mirada. No tienes que observarlas todas ni registrar a todos los niños hoy.</p>
         <ul className="mt-3 divide-y divide-[#e3ebf2]">{experience.aspects.map((aspect) => <li key={aspect.id} className="py-3"><p className="font-semibold text-[#173b58]">{aspect.label}</p><p className="text-sm text-[#526b87]">{aspect.prompt}</p><ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-[#526b87]">{aspect.examples.map((example) => <li key={example}>{example}</li>)}</ul></li>)}</ul>
       </div>
-      <div className="flex flex-wrap items-center justify-between gap-2"><div><h3 className="text-lg font-bold">3. Elige a un niño y anota lo que viste</h3><p className="text-sm text-[#526b87]">Toca su nombre cuando ocurra algo que quieras recordar. {coverage?.students_with_records ?? 0} de {data.students.length} con algún registro.</p></div><Button variant="outline" className="min-h-12" onClick={() => goToStep(3)}>Pasar a resumir <ArrowRight /></Button></div>
+      <div className="flex flex-wrap items-center justify-between gap-2"><div><h3 className="text-lg font-bold">3. Elige a un niño y anota lo que viste</h3><p className="text-sm text-[#526b87]">Toca su nombre cuando ocurra algo que quieras recordar. {coverage?.students_with_records ?? 0} de {data.students.length} con algún registro.</p>{spontaneousRecords && <p className="mt-1 text-sm text-[#176442]">Primero aparecen quienes aún no tienen registros de las competencias de esta experiencia.</p>}</div><Button variant="outline" className="min-h-12" onClick={() => goToStep(3)}>Pasar a resumir <ArrowRight /></Button></div>
       <div className="flex flex-wrap gap-2" aria-label="Filtrar niños">{([
         ["all", "Todos"], ["without", "Sin observaciones"], ["with", "Con observaciones"], ["today", "Observados hoy"],
       ] as const).map(([value, label]) => <button key={value} type="button" aria-pressed={filter === value} onClick={() => setFilter(value)} className={`min-h-11 rounded-full border px-3 text-sm font-semibold ${filter === value ? "border-[#087d96] bg-[#dff3f7] text-[#075d70]" : "border-[#dbe6ef] bg-white text-[#435a78]"}`}>{label}</button>)}</div>
@@ -173,7 +191,8 @@ export function GuidedDiagnostic({ dashboard, onPlan, onStudents, initialStep = 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{visibleStudents.map((item) => {
         const own = records.filter((record) => record.student_id === item.id);
         const today = own.some((record) => isToday(record.observed_at));
-        return <button key={item.id} type="button" onClick={() => selectStudent(item.id)} className="min-h-20 rounded-2xl border border-[#dce9f2] bg-white p-4 text-left hover:border-[#087d96] hover:bg-[#f4fbfd] focus-visible:outline-2 focus-visible:outline-[#087d96]"><span className="block text-base font-bold">{displayPersonName(item.name)}</span><span className="mt-1 block text-sm text-[#526b87]">{own.length === 0 ? "Sin observaciones en esta experiencia" : `${own.length} ${own.length === 1 ? "observación" : "observaciones"}`}</span>{today && <span className="mt-1 block text-xs font-semibold text-[#087d96]">✓ Observación registrada hoy</span>}</button>;
+        const missing = missingFor(item.id, experience.competencies.map((card) => card.id));
+        return <button key={item.id} type="button" onClick={() => selectStudent(item.id)} className={`min-h-20 rounded-2xl border bg-white p-4 text-left hover:bg-[#f4fbfd] focus-visible:outline-2 focus-visible:outline-[#087d96] ${spontaneousRecords && missing.length ? "border-[#54a98a]" : "border-[#dce9f2] hover:border-[#087d96]"}`}><span className="block text-base font-bold">{displayPersonName(item.name)}</span><span className="mt-1 block text-sm text-[#526b87]">{own.length === 0 ? "Sin observaciones en esta experiencia" : `${own.length} ${own.length === 1 ? "observación" : "observaciones"}`}</span>{spontaneousRecords && missing.length > 0 && <span className="mt-1 block text-xs font-semibold text-[#176442]">Por observar: {experience.competencies.filter((card) => missing.includes(card.id)).map((card) => card.name).join(" · ")}</span>}{today && <span className="mt-1 block text-xs font-semibold text-[#087d96]">✓ Observación registrada hoy</span>}</button>;
       })}</div>
       {visibleStudents.length === 0 && <p className="rounded-xl bg-[#f3f7fb] p-4 text-sm">No hay niños en este filtro. Puedes volver a “Todos”.</p>}
       <details className="border-t border-[#e3ebf2] pt-3 text-sm"><summary className="cursor-pointer font-semibold text-[#426079]">Relación curricular · {experience.competencies.length} {experience.competencies.length === 1 ? "competencia" : "competencias"}</summary><ul className="mt-2 list-disc space-y-1 pl-5 text-[#526b87]">{experience.competencies.map((item) => <li key={item.id}>{item.name}</li>)}</ul></details>

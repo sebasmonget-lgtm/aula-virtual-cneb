@@ -5,6 +5,7 @@ import { createAIProviderForPlan } from "./ai-provider-factory.mjs";
 import { buildProviderRequest } from "./ai-generation-v4.mjs";
 import { loadDiagnosticEvaluationSkill } from "./diagnostic-evaluation-skill.mjs";
 import { completeDiagnosticReviewForTeacher } from "./diagnostic-review-service.mjs";
+import { loadDiagnosticAssessmentWorkspace } from "./diagnostic-assessment-v4.mjs";
 
 const fingerprint = (value) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
 const schema = { id: "diagnostic-priorities-v1", type: "object", additionalProperties: false,
@@ -47,6 +48,12 @@ function validate(details, allowedIds) {
   }) };
 }
 
+export function orderPrioritiesByObservationGaps(priorities, coverage) {
+  const missing = new Map(coverage.map((item) => [item.competency_id, item.children_without_observations]));
+  const rank = (item) => Math.max(0, ...item.related_competency_ids.map((id) => missing.get(id) ?? 0));
+  return [...priorities].sort((a, b) => rank(b) - rank(a));
+}
+
 export async function listDiagnosticPriorities(db, teacherId) {
   const { classroom } = await scope(db, teacherId);
   return (await db.query(`select id,group_review_id,version,status,details,ai_snapshot,teacher_confirmed_at
@@ -81,20 +88,28 @@ export async function suggestDiagnosticPriorities(db, teacherId, draftId, {
   if (!draft) fail("not_found", "Abre primero las prioridades de este grupo.");
   if (draft.source_snapshot?.fingerprint !== source.fingerprint) fail("stale", "La visión del grupo cambió. Vuelve a preparar las prioridades.");
   const cards = await applicableDiagnosticCompetencies(classroom);
+  const review = await loadDiagnosticAssessmentWorkspace(db, teacherId);
+  const coverage = review.group_coverage.map((item) => ({ competency_id: item.competency_id,
+    children_with_observations: item.children_with_observations,
+    children_without_observations: item.children_without_observations }));
   const plan = resolvePlan({ workflow: "diagnostic_priority_assist", task: "generation" });
   const provider = createProvider(plan, { timeoutMs: 120_000 });
   const request = buildProviderRequest("diagnostic_priority_assist", {
     workflow: "diagnostic_priority_assist", stage: "annual_priorities", context: { age: classroom.age_years,
       confirmed_group: { strengths: group.details.strengths, needs: group.details.needs,
-        planning_notes: group.details.planning_priorities } },
+        planning_notes: group.details.planning_priorities }, observation_coverage: coverage },
     curriculum: { competency_cards: cards },
     constraints: { must: ["Todas las competencias aplicables siguen presentes durante el año.",
       "Propón solo prioridades respaldadas por la visión grupal confirmada.",
+      "Ordena primero las competencias sin observaciones del grupo con importancia observe_more; después las de menor cobertura.",
+      "Un registro de conteo de uno o dos niños no demuestra una necesidad del grupo ni justifica prioridad alta.",
       "Si faltan observaciones, usa observe_more; ausencia de registros no significa dificultad."],
-    must_not: ["Inventar observaciones, desempeños oficiales, niveles o necesidades de cada niño."] },
+    must_not: ["Inventar observaciones, desempeños oficiales, niveles o necesidades de cada niño.",
+      "Presentar una competencia ya observada como dificultad del grupo solo por tener registros positivos."] },
   }, plan, schema, await loadSkill());
   const response = await provider.generate(request);
   const details = validate(response.output, cards.map((card) => card.id));
+  details.priorities = orderPrioritiesByObservationGaps(details.priorities, coverage);
   const current = await scope(db, teacherId);
   if (current.source.fingerprint !== source.fingerprint) fail("stale", "La visión del grupo cambió durante el análisis.");
   await db.query(`update diagnostic_priority_reviews set ai_snapshot=$1::jsonb,updated_at=now()

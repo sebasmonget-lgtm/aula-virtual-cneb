@@ -46,16 +46,6 @@ function PreplanTable({ rows, options, editable, onChange, onDevelop }: { rows: 
   const editing = editingIndex < 0 ? null : rows[editingIndex];
   const names = new Map(options.map((item) => [item.id, item.name]));
   const patch = (change: Partial<Row>) => editing && onChange(rows.map((item) => item.proposal_id === editing.proposal_id ? { ...item, ...change } : item));
-  const move = (index: number, delta: number) => {
-    const target = index + delta;
-    if (target < 0 || target >= rows.length) return;
-    const next = [...rows];
-    const sourceTime = { period: rows[index].period, month: rows[index].month, duration_weeks: rows[index].duration_weeks };
-    const targetTime = { period: rows[target].period, month: rows[target].month, duration_weeks: rows[target].duration_weeks };
-    next[index] = { ...rows[target], ...sourceTime };
-    next[target] = { ...rows[index], ...targetTime };
-    onChange(next);
-  };
   return <section className="space-y-4 rounded-2xl border border-[#d6e5ef] bg-white p-4 sm:p-5">
     <div><h2 className="text-xl font-extrabold text-[#172b52]">Lista de proyectos y unidades</h2>
       <p className="mt-1 text-sm text-[#526b87]">Son propuestas iniciales. Puedes cambiarlas antes de confirmar «Mi año».</p></div>
@@ -70,8 +60,7 @@ function PreplanTable({ rows, options, editable, onChange, onDevelop }: { rows: 
         <td className="min-w-56 px-4 py-4 leading-relaxed">{row.rationale}</td>
         <td className="min-w-56 px-4 py-4">{row.primary_competency_ids.map((id) => names.get(id) ?? id).join(" · ")}</td>
         <td className="sticky right-0 z-10 bg-white px-4 py-3 shadow-[-1px_0_0_#e3edf4] group-even:bg-[#f9fcfe]"><div className="flex flex-wrap gap-1">{editable && <><Button type="button" variant="outline" className="min-h-10" onClick={() => setEditingId(row.proposal_id)}>Editar</Button>
-          <Button type="button" variant="ghost" size="sm" aria-label={`Subir ${row.title}`} disabled={index === 0} onClick={() => move(index, -1)}>↑</Button>
-          <Button type="button" variant="ghost" size="sm" aria-label={`Bajar ${row.title}`} disabled={index === rows.length - 1} onClick={() => move(index, 1)}>↓</Button></>}
+          </>}
           {!editable && (onDevelop ? <Button type="button" variant="outline" className="min-h-10" onClick={() => onDevelop(row.proposal_id)}>Desarrollar</Button>
             : <span className="text-xs text-[#526b87]">Confirmada</span>)}</div></td>
       </tr>)}</tbody></table></div>
@@ -79,7 +68,7 @@ function PreplanTable({ rows, options, editable, onChange, onDevelop }: { rows: 
       onClick={() => { const last = rows.at(-1); const created: Row = { proposal_id: crypto.randomUUID(), experience_type: "project", title: "",
         period: last?.period ?? "Bimestre 1", month: last?.month ?? 3, duration_weeks: 2, rationale: "", purpose: "", primary_competency_ids: [] };
         onChange([...rows, created]); setEditingId(created.proposal_id); }}>+ Agregar propuesta manual</Button>
-      <p className="text-sm text-[#526b87]">Puedes editar, mover, eliminar o agregar propuestas. Al mover una, adopta el mes y la duración de ese lugar. Máximo 20 por la plantilla Word.</p></div>}
+      <p className="text-sm text-[#526b87]">Puedes editar las fechas, eliminar o agregar propuestas. Máximo 20 por la plantilla Word.</p></div>}
     {editable && editing && <div role="dialog" aria-modal="true" aria-label={`Editar ${editing.title || "propuesta"}`} className="fixed inset-0 z-50 flex justify-end bg-[#10233a]/45">
       <div className="h-full w-full max-w-xl overflow-y-auto bg-white p-5 shadow-2xl sm:p-7"><div className="flex items-center justify-between gap-3"><h3 className="text-xl font-extrabold">Editar propuesta {editingIndex + 1}</h3><Button type="button" variant="outline" onClick={() => setEditingId(null)}>Cerrar</Button></div>
         <div className="mt-5 space-y-4"><label className="block font-semibold">Proyecto o unidad<select className="mt-2 min-h-11 w-full rounded-lg border px-3" value={editing.experience_type} onChange={(event) => patch({ experience_type: event.target.value as Row["experience_type"] })}><option value="project">Proyecto</option><option value="unit">Unidad</option></select></label>

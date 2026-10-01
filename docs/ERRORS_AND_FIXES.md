@@ -1,5 +1,15 @@
 # Errores y soluciones
 
+## 2026-10-01 — Una observación guiada devolvía «Recurso no encontrado»
+
+**Síntoma.** Al guardar una nota desde una experiencia guiada del diagnóstico, la API respondía 404 aunque la experiencia aparecía en la interfaz.
+
+**Causa raíz.** La autorización genérica interpretaba `experienceId` como UUID de `learning_experiences`. Las guías diagnósticas usan IDs editoriales del catálogo versionado. El rechazo ocurría antes de la validación específica de la guía.
+
+**Solución validada.** Solo en `/api/diagnostics/experience-observations` se omite esa interpretación genérica. La autorización sigue comprobando el alumno y el servicio verifica que experiencia y aspecto sean aplicables al aula. Una prueba cubre el ID editorial válido, un alumno ajeno y el rechazo del mismo ID en rutas de proyectos.
+
+**Prevención.** Distinguir los identificadores editoriales del catálogo de los UUID de recursos persistidos en el límite HTTP.
+
 ## 2026-10-01 — El clasificador V2.4 no cargaba en un checkout Windows
 
 **Síntoma.** La prueba del adaptador V2.4 fallaba con «V2.4 no coincide con la versión congelada» antes de llamar a Jev.
