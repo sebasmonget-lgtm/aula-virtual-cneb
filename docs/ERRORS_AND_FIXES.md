@@ -1,5 +1,15 @@
 # Errores y soluciones
 
+## 2026-10-01 — El clasificador V2.4 no cargaba en un checkout Windows
+
+**Síntoma.** La prueba del adaptador V2.4 fallaba con «V2.4 no coincide con la versión congelada» antes de llamar a Jev.
+
+**Causa raíz.** Git había convertido `current-v2.mjs` a CRLF en Windows. El SHA-256 esperado corresponde a los bytes LF del archivo versionado, sin cambio semántico del código.
+
+**Solución validada.** La verificación normaliza solo los finales de línea del código fuente a LF antes de calcular su hash; el prompt sigue verificándose en bytes. La prueba del adaptador volvió a pasar. El modelo, prompt y umbrales permanecen congelados.
+
+**Prevención.** Verificar los hashes de archivos de texto versionados sobre su representación LF canónica o fijar `eol=lf` en `.gitattributes` para los siguientes archivos congelados.
+
 ## 2026-10-01 — Calendario perdía la actividad y Hoy confundía observación cotidiana con diagnóstico
 
 **Síntoma.** «Ver actividad» abría la portada de Planificar; «Observar» podía abrir el diagnóstico inicial aunque la intención fuera registrar una observación cotidiana.

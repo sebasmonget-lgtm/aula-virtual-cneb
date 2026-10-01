@@ -159,10 +159,13 @@ export function AuthGate() {
         <Image src="/favicon.svg" alt="" width={48} height={48} className="h-12 w-12 rounded-2xl shadow-sm" />
         <div><p className="text-lg font-extrabold leading-tight">Ayni Aula</p><p className="text-sm font-semibold text-[#58718b]">Tu espacio docente</p></div>
       </div>
-      <div className="mt-12 sm:mt-14">
+      <div className="mt-10 flex items-end gap-3 sm:mt-12">
+        <div className="min-w-0 flex-1">
         <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-[#087d96]">{settingUp || recovering ? "Configuración inicial" : "Acceso a Ayni"}</p>
         <h1 className="mt-2 text-4xl font-extrabold tracking-tight text-[#172e49] sm:text-5xl">{settingUp ? "Primer administrador" : recovering ? "Recuperar acceso" : "Bienvenida a Ayni"}</h1>
         <p className="mt-3 max-w-2xl text-lg leading-relaxed text-[#526b87]">{recovering ? "Usa la clave privada de configuración para elegir un DNI y una contraseña nuevos para el administrador. Disponible solo antes de su primer ingreso." : settingUp ? "Usa la clave privada de configuración que guardaste en Vercel." : "Ingresa con tu DNI registrado y contraseña para continuar."}</p>
+        </div>
+        <Image src="/ayni-profesora.webp" alt="Ayni, profesora tecnológica con una tableta" width={200} height={133} className="hidden w-40 shrink-0 object-contain sm:block" priority />
       </div>
       <form onSubmit={(event) => void (settingUp ? setup(event) : recovering ? recoverAdmin(event) : signIn(event))} className="mt-6 rounded-3xl border border-[#d7e4ee] bg-white p-5 shadow-[0_12px_32px_rgba(24,50,76,0.05)] sm:p-7">
         {(settingUp || recovering) && <><label htmlFor="ayni-setup-key" className="block text-sm font-bold">Clave de configuración</label><input id="ayni-setup-key" type="password" autoComplete="off" required minLength={32} value={setupKey} onChange={(event) => setSetupKey(event.target.value)} className="mt-2 mb-5 w-full rounded-2xl border border-[#bdd0dd] px-4 py-4" />{settingUp && <><label htmlFor="ayni-setup-name" className="block text-sm font-bold">Nombre del administrador</label><input id="ayni-setup-name" required minLength={2} maxLength={100} value={setupName} onChange={(event) => setSetupName(event.target.value)} className="mt-2 mb-5 w-full rounded-2xl border border-[#bdd0dd] px-4 py-4" /></>}</>}

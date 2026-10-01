@@ -21,8 +21,10 @@ export async function createObservationV24Classifier({ apiKey = process.env.OPEN
     readFile(path.join(ROOT, "src/current-v2.mjs")),
     readFile(path.join(ROOT, "config/pricing-openrouter.json")), loadKnowledgeBaseV4(),
   ]);
+  // Git may check text files out with CRLF on Windows; verify canonical Git LF bytes.
+  const canonicalSource = sourceBytes.toString("utf8").replace(/\r\n/g, "\n");
   if (createHash("sha256").update(promptBytes).digest("hex") !== PROMPT_SHA256 ||
-      createHash("sha256").update(sourceBytes).digest("hex") !== SOURCE_SHA256)
+      createHash("sha256").update(canonicalSource).digest("hex") !== SOURCE_SHA256)
     throw new Error("V2.4 no coincide con la versión congelada.");
   const classify = createCurrentV2({ kb, prompt: JSON.parse(promptBytes), pricing: JSON.parse(pricingBytes),
     apiKey, model: "typesafe/jev-1.13", fetchImpl });

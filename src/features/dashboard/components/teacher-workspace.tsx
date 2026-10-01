@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import NextImage from "next/image";
 import {
   BookOpen, CalendarDays, CalendarRange, Check, ClipboardCheck, Database,
   Home, Users,
@@ -240,9 +241,7 @@ export function TeacherWorkspace() {
       <Sidebar collapsible="offcanvas" className="border-r border-[#e4eaf3] text-[#19345b]">
         <SidebarHeader className="px-5 pb-4 pt-6">
           <div className="flex items-center gap-3">
-            <div className="grid size-10 place-items-center rounded-xl bg-[#d9f2ef] text-[#138b8b]">
-              <BookOpen className="size-5" aria-hidden="true" />
-            </div>
+            <NextImage src="/favicon.svg" alt="" width={40} height={40} className="size-10 rounded-xl" />
             <div><p className="text-xl font-extrabold leading-tight tracking-tight">Ayni Aula</p><p className="text-xs text-[#63748d]">Tu aliada en Inicial</p></div>
           </div>
         </SidebarHeader>
@@ -272,7 +271,7 @@ export function TeacherWorkspace() {
       <SidebarInset className="min-w-0 bg-[#f7faff]">
         <header className="sticky top-0 z-20 flex min-h-20 items-center justify-between bg-[#f7faff]/95 px-4 backdrop-blur md:border-b md:border-[#e7edf7] md:bg-white/95 md:px-8">
           <div className="flex items-center gap-3">
-            <span className="grid size-11 place-items-center rounded-2xl bg-[#e8f7fa] text-[#0b7891] md:hidden"><BookOpen className="size-5" aria-hidden="true" /></span>
+            <NextImage src="/favicon.svg" alt="" width={44} height={44} className="size-11 rounded-2xl md:hidden" />
             <div className="md:hidden"><p className="text-xl font-extrabold leading-tight text-[#1c2e50]">Ayni Aula</p><p className="text-xs text-[#60718a]">{active === "Documentos" || active === "Biblioteca" ? "Tus documentos, ideas y materiales" : active === "Calendario" ? "Tu año, proyectos y actividades" : active === "Aula" ? "Tus niños y su seguimiento" : active === "Evaluar" ? "Evidencias y decisiones" : active === "Planificar" ? "Diagnóstico, proyectos y actividades" : "Tu aliada en Inicial"}</p></div>
             <div className="hidden md:block"><p className="text-sm font-semibold md:text-base">{sentenceCase(today)}</p><p className="text-xs text-muted-foreground">{profile?.institution_name ?? "Institución por configurar"} · {profile?.section ?? "Aula"}</p></div>
           </div>
