@@ -388,7 +388,7 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
         const suggestion={analysis:savedDraft.details,analysis_metadata:savedDraft.generation_metadata?.analysis??{},
           conclusion_metadata:savedDraft.generation_metadata?.conclusion??{}};
         if ((sourceRows.length < AYNI_HEURISTICS.assessment_low_records_for_explanation || suggestion?.analysis?.information_status === "insufficient") && !teacherJustification) throw new Error("Explica brevemente el criterio de tu decisión docente.");
-        const analysis = suggestion?.analysis ? { ...suggestion.analysis, information_status: "sufficient", evidence_overview: teacherAnalysis, insufficiency_reason: null } : { competency_id: data.card.id, information_status: "sufficient", evidence_overview: teacherAnalysis, observable_patterns: [], strengths_and_advances: [], support_needs: [], next_opportunities: [], teacher_questions: [], insufficiency_reason: null, caution: "Interpretación confirmada por la docente." };
+        const analysis = suggestion?.analysis ? { ...suggestion.analysis, evidence_overview: teacherAnalysis } : { competency_id: data.card.id, information_status: "sufficient", evidence_overview: teacherAnalysis, observable_patterns: [], strengths_and_advances: [], support_needs: [], next_opportunities: [], teacher_questions: [], insufficiency_reason: null, caution: "Interpretación confirmada por la docente." };
         validateAssessmentProposal(analysis, data.card.id, sourceRows.length);
         const assessment=await versionTransaction(db,`period:${data.period.id}`,async(tx)=>{
           const latestRows = await loadRows(tx, { classroomId: data.classroom.id, period: data.period, applicableIds: new Set(data.cards.map((card) => card.id)) });
@@ -432,18 +432,30 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
         send(response,200,{generation_id:generationId,proposal:result.output},origin);return true;
       }
       if (request.method === "POST" && url.pathname === "/api/period-evaluations/conclusion/confirm") {
-        const body=await readJson(request),data=await selectedRow(body),assessment=data.row.assessment,item=await pending.get(body.generationId);
+        const body=await readJson(request),data=await selectedRow(body),assessment=data.row.assessment;
         if (data.row.draft || data.row.state === "needs_review") throw new VersionConflictError("Confirma primero la revisión de la valoración docente.");
         if(!assessment?.achievement_level||!assessment.teacher_confirmed_at) throw new Error("Confirma primero la valoración docente.");
-        if(!item||item.workflow!=="period_conclusion"||item.classroom_id!==data.classroom.id||item.period_id!==data.period.id||item.student_id!==body.studentId||item.competency_v4_id!==body.competencyId||item.assessment_id!==assessment.id) throw new Error("La generación no corresponde a esta valoración.");
-        if(!sameAssessmentSnapshot(item.source_assessment_snapshot,sourceAssessmentSnapshot(assessment))) throw new VersionConflictError("La valoración cambió. Genera otra conclusión.");
-        validateDescriptiveConclusion(body.proposal,data.card.id,assessment.details.information_status);
+        const manual=body.manualText!==undefined;
+        const item=manual?null:await pending.get(body.generationId);
+        if(!manual&&(!item||item.workflow!=="period_conclusion"||item.classroom_id!==data.classroom.id||item.period_id!==data.period.id||item.student_id!==body.studentId||item.competency_v4_id!==body.competencyId||item.assessment_id!==assessment.id)) throw new Error("La generación no corresponde a esta valoración.");
+        const snapshot=sourceAssessmentSnapshot(assessment);
+        if(!manual&&!sameAssessmentSnapshot(item.source_assessment_snapshot,snapshot)) throw new VersionConflictError("La valoración cambió. Genera otra conclusión.");
+        const proposal=manual?{
+          competency_id:data.card.id,information_status:assessment.details.information_status,
+          conclusion_text:clean(body.manualText),progress_examples:[],support_or_conditions:[],next_steps:[],
+          insufficiency_reason:assessment.details.information_status==="insufficient"?(assessment.details.insufficiency_reason||"Se necesitan más oportunidades de observación."):null,
+          caution:"Conclusión redactada y confirmada por la docente; revisar su sustento antes de compartir."
+        }:body.proposal;
+        validateDescriptiveConclusion(proposal,data.card.id,assessment.details.information_status);
         const conclusion=await versionTransaction(db,`period:${data.period.id}`,async(tx)=>{
+          const current=(await tx.query(`select * from competency_assessments where id=$1 and status='active' for update`,[assessment.id])).rows[0];
+          if(!current||!sameAssessmentSnapshot(snapshot,sourceAssessmentSnapshot(current))) throw new VersionConflictError("La valoración cambió. Recarga antes de confirmar la conclusión.");
           await tx.query(`update competency_descriptive_conclusions set status='archived',updated_at=now() where student_id=$1 and competency_v4_id=$2 and period_start=$3::date and period_end=$4::date and status='active'`,[body.studentId,body.competencyId,data.period.starts_on,data.period.ends_on]);
           const version=Number((await tx.query(`select coalesce(max(version),0)+1 as version from competency_descriptive_conclusions where student_id=$1 and competency_v4_id=$2 and period_start=$3::date and period_end=$4::date`,[body.studentId,body.competencyId,data.period.starts_on,data.period.ends_on])).rows[0].version);
-          return (await tx.query(`insert into competency_descriptive_conclusions(id,student_id,competency_v4_id,assessment_id,evaluation_period_id,period_start,period_end,version,details,generation_metadata,source_assessment_snapshot,status,teacher_confirmed_at) values($1,$2,$3,$4,$5,$6::date,$7::date,$8,$9::jsonb,$10::jsonb,$11::jsonb,'active',now()) returning id,version`,[randomUUID(),body.studentId,body.competencyId,assessment.id,data.period.id,data.period.starts_on,data.period.ends_on,version,JSON.stringify(body.proposal),JSON.stringify(item.metadata),JSON.stringify(item.source_assessment_snapshot)])).rows[0];
+          return (await tx.query(`insert into competency_descriptive_conclusions(id,student_id,competency_v4_id,assessment_id,evaluation_period_id,period_start,period_end,version,details,generation_metadata,source_assessment_snapshot,status,teacher_confirmed_at) values($1,$2,$3,$4,$5,$6::date,$7::date,$8,$9::jsonb,$10::jsonb,$11::jsonb,'active',now()) returning id,version`,[randomUUID(),body.studentId,body.competencyId,assessment.id,data.period.id,data.period.starts_on,data.period.ends_on,version,JSON.stringify(proposal),JSON.stringify(manual?{source:"teacher_manual"}:item.metadata),JSON.stringify(snapshot)])).rows[0];
         });
-        await pending.delete(body.generationId);await refreshStudentContext(db,body.studentId);
+        if(!manual) await pending.delete(body.generationId);
+        await refreshStudentContext(db,body.studentId);
         send(response,200,{...conclusion,confirmed:true},origin);return true;
       }
       if (request.method === "GET" && url.pathname === "/api/period-evaluations/classroom-report") {

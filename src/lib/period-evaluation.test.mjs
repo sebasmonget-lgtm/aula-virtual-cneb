@@ -420,6 +420,35 @@ test("información insuficiente queda guardada sin nivel y no se convierte en C"
   } finally { await f.db.close(); }
 });
 
+test("confirmar nivel no transforma información insuficiente y permite conclusión docente cautelosa", async () => {
+  const analysis={...mockAnalysis(),information_status:"insufficient",insufficiency_reason:"Solo hay un registro de prueba.",evidence_overview:"El registro es una simulación sin niño real.",observable_patterns:[],strengths_and_advances:[],support_needs:[]};
+  const f=await fixture({analysis});
+  try {
+    const period=(await f.call("GET","/api/period-evaluations/workspace")).body.periods[0];
+    const selection={classroomId:classId,periodId:period.id,studentId:studentA,competencyId:"COM_ORAL"};
+    const suggested=await f.call("POST","/api/period-evaluations/suggest",selection);
+    assert.equal(suggested.status,200,JSON.stringify(suggested.body));
+    const detail=(await f.call("GET",`/api/period-evaluations/detail?classroomId=${classId}&periodId=${period.id}&studentId=${studentA}&competencyId=COM_ORAL`)).body;
+    const input={...selection,evidenceFingerprint:detail.evidence_fingerprint,expectedDraftRevision:detail.draft.revision,
+      teacherAnalysis:analysis.evidence_overview,conclusionText:"",provisionalLevel:"A",achievementLevel:"A",
+      teacherJustification:"Nivel usado únicamente para verificar el flujo con datos de prueba."};
+    const saved=await f.call("POST","/api/period-evaluations/save-draft",input);
+    assert.equal(saved.status,200,JSON.stringify(saved.body));
+    const confirmed=await f.call("POST","/api/period-evaluations/confirm",{...input,expectedDraftRevision:saved.body.draft_revision});
+    assert.equal(confirmed.status,200,JSON.stringify(confirmed.body));
+    const active=(await f.db.query("select details from competency_assessments where student_id=$1 and competency_v4_id='COM_ORAL' and status='active'",[studentA])).rows[0];
+    assert.equal(active.details.information_status,"insufficient");
+    assert.equal(active.details.insufficiency_reason,analysis.insufficiency_reason);
+    const bad=await f.call("POST","/api/period-evaluations/conclusion/confirm",{...selection,manualText:"Nivel A."});
+    assert.equal(bad.status,422);
+    const result=await f.call("POST","/api/period-evaluations/conclusion/confirm",{...selection,manualText:"Los registros de prueba no permiten describir avances reales. Se requieren nuevas observaciones."});
+    assert.equal(result.status,200,JSON.stringify(result.body));
+    const conclusion=(await f.db.query("select details,generation_metadata from competency_descriptive_conclusions where student_id=$1 and status='active'",[studentA])).rows[0];
+    assert.equal(conclusion.details.information_status,"insufficient");
+    assert.equal(conclusion.generation_metadata.source,"teacher_manual");
+  } finally { await f.db.close(); }
+});
+
 test("una observación sustantiva admite valoración docente justificada sin umbral automático", async () => {
   const f=await fixture();
   try {

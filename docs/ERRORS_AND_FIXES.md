@@ -1200,7 +1200,7 @@ Síntoma: cuatro notas QA de la captura automatizada quedaron asociadas a la sel
 
 **Corrección.** La lectura de versión y la escritura del mapa comparten un bloqueo transaccional por aula y período. La pantalla muestra el error con «Reintentar» y espera a que niño y competencia pertenezcan al alcance cargado antes de pedir el detalle.
 
-**Validación.** La prueba de tres sincronizaciones concurrentes conserva una sola versión del mapa. Pasaron las 11 pruebas del servicio, typecheck, lint y build Vinext. Falta registrar aquí el resultado de la comprobación funcional tras el despliegue.
+**Validación.** La prueba de tres sincronizaciones concurrentes conserva una sola versión del mapa. Pasaron las 11 pruebas del servicio, typecheck, lint y builds Vinext y Next.js. En Vercel, el cambio de B3 a B1 cargó registros y detalle sin quedarse en «Cargando registros…».
 
 **Prevención.** Probar el cambio de período cuando varias tarjetas solicitan el mismo mapa y conservar un estado de error recuperable en toda carga asíncrona.
 
@@ -1212,7 +1212,7 @@ Síntoma: cuatro notas QA de la captura automatizada quedaron asociadas a la sel
 
 **Corrección.** La ficha del criterio confirmado abre el mismo formulario de evidencia con su actividad y criterio, e informa la fecha a la que se vincula el registro. No se cambió la autorización del servidor ni se fabricó contenido observado.
 
-**Validación.** Typecheck, lint y builds pasaron. Pendiente de consignar el resultado de la prueba funcional en la web de QA.
+**Validación.** Typecheck, lint y builds pasaron. En la web de QA se abrió el formulario desde la actividad confirmada de 13/04, se guardó una observación ficticia para «Prueba Uno» y apareció como evidencia del B1.
 
 **Prevención.** Probar el registro tardío desde una actividad confirmada cuando ya no es el día actual.
 
@@ -1224,7 +1224,7 @@ Síntoma: cuatro notas QA de la captura automatizada quedaron asociadas a la sel
 
 **Corrección.** La proyección del dashboard usa el nombre completo para `name` y `full_name`, conservando el identificador estable de cada alumno.
 
-**Validación.** La prueba HTTP del dashboard comprueba el nombre completo en ambos campos. Pendiente de consignar la comprobación visual tras el despliegue.
+**Validación.** La prueba HTTP del dashboard comprueba el nombre completo en ambos campos. En la web de QA el formulario distinguió «Prueba Uno», «Prueba Dos» y «Prueba Tres».
 
 **Prevención.** Probar toda selección de alumnos con dos o más niños que comparten nombre de pila.
 
@@ -1236,6 +1236,18 @@ Síntoma: cuatro notas QA de la captura automatizada quedaron asociadas a la sel
 
 **Corrección.** En modo serverless el adaptador usa como máximo una conexión por instancia y cierra la conexión inactiva tras un segundo. La configuración local conserva el comportamiento anterior.
 
-**Validación.** Pendiente de consignar el resultado de las pruebas y del recorrido en Vercel.
+**Validación.** Pasaron las cinco pruebas del adaptador y autenticación, typecheck, lint y builds Vinext y Next.js. Tras promover el cambio, Planificar, la actividad, el formulario de evidencia y Evaluar cargaron durante el recorrido de QA. Esto demuestra el recorrido observado, no una garantía de capacidad bajo carga.
 
 **Prevención.** Dimensionar el pool por instancia según el límite agregado de la base y vigilar errores de capacidad de conexiones durante QA concurrente.
+
+## 2026-10-01 — Una valoración insuficiente se convertía en suficiente al confirmar
+
+**Síntoma.** La IA identificó correctamente que la única evidencia estaba marcada como simulación de QA y que no permitía valorar a un niño real. Tras una valoración docente explícitamente ficticia, «Preparar conclusión» devolvió `descriptive_conclusion_schema_mismatch`.
+
+**Causa raíz.** La confirmación sobrescribía siempre `information_status` con `sufficient` y borraba `insufficiency_reason`. Así la conclusión recibía una afirmación de suficiencia que contradecía el análisis guardado. El mensaje de error técnico no ofrecía una forma de redactar una conclusión cautelosa sin otra llamada de IA.
+
+**Corrección.** La valoración confirmada conserva el estado de información y su razón. Se añadió una opción «Escribir yo» para que la docente redacte y confirme una conclusión, validada por el servidor y guardada con procedencia `teacher_manual`. La opción no asigna nivel ni inventa ejemplos de progreso.
+
+**Validación.** La prueba integrada confirma que un análisis insuficiente sigue siendo insuficiente después de confirmar un nivel de QA, que se rechaza una conclusión con «Nivel A» y que se guarda una conclusión docente cautelosa con su procedencia. El conjunto de evaluación integrada pasó 24/24; typecheck, lint y build Vinext pasaron. La comprobación funcional en Vercel se registrará tras desplegar.
+
+**Prevención.** Separar el nivel elegido por la docente de la suficiencia de las evidencias. Probar el recorrido con información insuficiente y permitir redacción docente cuando una propuesta de IA no se puede validar.

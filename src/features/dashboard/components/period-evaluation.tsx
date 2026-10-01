@@ -61,6 +61,7 @@ export function PeriodEvaluation({ initialStudentId = "", initialCompetencyId = 
   const [suggestion, setSuggestion] = useState<Suggestion | null>(null);
   const [conclusionGenerationId,setConclusionGenerationId]=useState("");
   const [conclusionProposal,setConclusionProposal]=useState<ConclusionProposal|null>(null);
+  const [writingConclusion,setWritingConclusion]=useState(false);
   const [addingCompetencyId, setAddingCompetencyId] = useState("");
   const [excludingId, setExcludingId] = useState("");
   const [exclusionReason, setExclusionReason] = useState("");
@@ -110,6 +111,7 @@ export function PeriodEvaluation({ initialStudentId = "", initialCompetencyId = 
     setSavedDraftSnapshot(draft?.current ? formSnapshot(analysis,level,conclusion,justification) : null);
     setConclusionGenerationId("");
     setConclusionProposal(null);
+    setWritingConclusion(false);
     setSuggestion(draft?.current ? {generation_id:"",evidence_fingerprint:result.evidence_fingerprint,analysis:draft.details,conclusion:null} : null);
   }
   async function reloadDetail() {
@@ -181,7 +183,19 @@ export function PeriodEvaluation({ initialStudentId = "", initialCompetencyId = 
               {detail.draft && !detail.draft.current && <p className="mt-3 rounded-xl bg-[#fff2d9] p-3 text-sm">Las observaciones cambiaron desde este borrador. Revisa lo nuevo y guarda otra vez; la sugerencia anterior no se usará.</p>}
               {!assessmentReadOnly&&<div className="mt-4 flex flex-wrap gap-2"><Button variant="outline" disabled={busy} onClick={() => void act(async () => { await api("/api/period-evaluations/save-draft", { classroomId, periodId, studentId, competencyId, evidenceFingerprint: detail.evidence_fingerprint, expectedDraftRevision:detail.draft?.revision??null, provisionalLevel: achievementLevel || null, teacherAnalysis, conclusionText:"", teacherJustification }); await reloadOverview(); await reloadDetail(); setMessage("Borrador guardado. Puedes salir y volver más tarde."); })}>Guardar borrador</Button>
               <Button disabled={busy || hasUnsavedDraft || !detail.evidence_count || !achievementLevel || !teacherAnalysis.trim()} onClick={() => void act(async () => { await api("/api/period-evaluations/confirm", { classroomId, periodId, studentId, competencyId, evidenceFingerprint: detail.evidence_fingerprint, expectedDraftRevision:detail.draft?.revision??null, achievementLevel, teacherAnalysis, conclusionText:"", teacherJustification }); await reloadOverview(); await reloadDetail(); setMessage("Valoración confirmada por ti. Ahora prepara la conclusión descriptiva."); })}>Confirmar valoración <ArrowRight className="ml-2 size-4" /></Button></div>}{!assessmentReadOnly&&hasUnsavedDraft && <p className="mt-2 text-sm text-[#526b87]">Guarda los cambios antes de confirmar.</p>}
-              {assessmentReadOnly&&<section className="mt-5 rounded-xl bg-[#f4f8fb] p-4"><h5 className="font-bold">Conclusión descriptiva</h5><p className="mt-1 text-sm text-[#526b87]">Ayni redacta después de tu valoración. Tú puedes editar y confirmar el texto.</p><p className="mt-2 text-sm"><b>Valoración docente:</b> {detail.assessment?.achievement_level}</p>{!detail.conclusion&&<Button className="mt-3" variant="outline" disabled={busy} onClick={()=>void act(async()=>{const result=await api<{generation_id:string;proposal:ConclusionProposal}>("/api/period-evaluations/conclusion/suggest",{classroomId,periodId,studentId,competencyId});setConclusionGenerationId(result.generation_id);setConclusionProposal(result.proposal);setConclusionText(result.proposal.conclusion_text);setMessage("Conclusión preparada. Revísala antes de confirmar.");})}><Sparkles className="mr-2 size-4"/>Preparar conclusión</Button>} {(conclusionGenerationId||detail.conclusion)&&<><Textarea className="mt-3 min-h-24" value={conclusionText} onChange={(event)=>setConclusionText(event.target.value)} disabled={Boolean(detail.conclusion&&!conclusionGenerationId)}/>{conclusionGenerationId&&conclusionProposal&&<Button className="mt-3" disabled={busy||!conclusionText.trim()} onClick={()=>void act(async()=>{await api("/api/period-evaluations/conclusion/confirm",{classroomId,periodId,studentId,competencyId,generationId:conclusionGenerationId,proposal:{...conclusionProposal,conclusion_text:conclusionText}});setConclusionGenerationId("");setConclusionProposal(null);await reloadOverview();await reloadDetail();setMessage("Conclusión confirmada.");})}>Confirmar conclusión</Button>}</>}</section>}
+              {assessmentReadOnly&&<section className="mt-5 rounded-xl bg-[#f4f8fb] p-4">
+                <h5 className="font-bold">Conclusión descriptiva</h5>
+                <p className="mt-1 text-sm text-[#526b87]">Ayni puede proponerte un texto. También puedes escribirlo tú. Revísalo antes de confirmar.</p>
+                <p className="mt-2 text-sm"><b>Valoración docente:</b> {detail.assessment?.achievement_level}</p>
+                {!detail.conclusion&&<div className="mt-3 flex flex-wrap gap-2">
+                  <Button variant="outline" disabled={busy} onClick={()=>void act(async()=>{const result=await api<{generation_id:string;proposal:ConclusionProposal}>("/api/period-evaluations/conclusion/suggest",{classroomId,periodId,studentId,competencyId});setWritingConclusion(false);setConclusionGenerationId(result.generation_id);setConclusionProposal(result.proposal);setConclusionText(result.proposal.conclusion_text);setMessage("Conclusión preparada. Revísala antes de confirmar.");})}><Sparkles className="mr-2 size-4"/>Preparar con Ayni</Button>
+                  <Button variant="outline" disabled={busy} onClick={()=>{setWritingConclusion(true);setConclusionGenerationId("");setConclusionProposal(null);setConclusionText("");setMessage("");}}>Escribir yo</Button>
+                </div>}
+                {(writingConclusion||conclusionGenerationId||detail.conclusion)&&<><Textarea aria-label="Texto de la conclusión descriptiva" className="mt-3 min-h-24" value={conclusionText} onChange={(event)=>setConclusionText(event.target.value)} disabled={Boolean(detail.conclusion&&!conclusionGenerationId&&!writingConclusion)} placeholder="Describe solo lo sustentado por las observaciones. Si falta información, indícalo."/>
+                  {writingConclusion&&<Button className="mt-3" disabled={busy||!conclusionText.trim()} onClick={()=>void act(async()=>{await api("/api/period-evaluations/conclusion/confirm",{classroomId,periodId,studentId,competencyId,manualText:conclusionText});await reloadOverview();await reloadDetail();setMessage("Conclusión escrita y confirmada por ti.");})}>Confirmar mi conclusión</Button>}
+                  {conclusionGenerationId&&conclusionProposal&&<Button className="mt-3" disabled={busy||!conclusionText.trim()} onClick={()=>void act(async()=>{await api("/api/period-evaluations/conclusion/confirm",{classroomId,periodId,studentId,competencyId,generationId:conclusionGenerationId,proposal:{...conclusionProposal,conclusion_text:conclusionText}});setConclusionGenerationId("");setConclusionProposal(null);await reloadOverview();await reloadDetail();setMessage("Conclusión confirmada.");})}>Confirmar conclusión</Button>}
+                </>}
+              </section>}
             </div>
           </article>}
         </div>
