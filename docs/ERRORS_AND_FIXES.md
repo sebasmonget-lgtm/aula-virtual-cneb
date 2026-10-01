@@ -1251,3 +1251,15 @@ Síntoma: cuatro notas QA de la captura automatizada quedaron asociadas a la sel
 **Validación.** La prueba integrada confirma que un análisis insuficiente sigue siendo insuficiente después de confirmar un nivel de QA, que se rechaza una conclusión con «Nivel A» y que se guarda una conclusión docente cautelosa con su procedencia. El conjunto de evaluación integrada pasó 24/24; typecheck, lint y build Vinext pasaron. La comprobación funcional en Vercel se registrará tras desplegar.
 
 **Prevención.** Separar el nivel elegido por la docente de la suficiencia de las evidencias. Probar el recorrido con información insuficiente y permitir redacción docente cuando una propuesta de IA no se puede validar.
+
+## 2026-10-01 — Propuesta de informe familiar rechazada por validación
+
+**Síntoma.** Tras confirmar una conclusión de QA, «Generar propuesta» en Informe a familias devolvió `family_report_schema_mismatch` y dejó a la docente sin borrador.
+
+**Causa raíz.** La salida de IA no cumplió el contrato estricto del informe; el endpoint devolvía el error directamente. La valoración de QA anterior a la corrección de suficiencia también conserva un estado «suficiente» contradictorio con su texto, lo que dificulta una propuesta coherente. No se dispone del texto rechazado de IA, por lo que no se atribuye el incumplimiento a un campo específico.
+
+**Corrección.** Cuando la propuesta de IA falla específicamente por el esquema, el servidor prepara un borrador determinista con las conclusiones confirmadas, sus ejemplos y próximos pasos, sin inventar avances ni hacer otra llamada de IA. Mantiene el estado de información de la fuente, valida el mismo contrato y marca la procedencia. La interfaz explica el fallback antes de guardar.
+
+**Validación.** La prueba funcional simulada confirma que una salida inválida produce una propuesta válida desde fuentes confirmadas, conserva información insuficiente, no inventa ejemplos, permite guardar borrador y no hace una segunda llamada. También rechaza una conclusión fuente que contiene un nivel prohibido. Pasaron 18 pruebas de informe familiar e integración; la comprobación en Vercel se registrará tras el despliegue.
+
+**Prevención.** Tratar un fallo de contrato de IA como recuperable cuando existe una fuente docente validada, sin relajar las reglas de contenido ni ocultar la procedencia del borrador.

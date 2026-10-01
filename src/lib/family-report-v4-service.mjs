@@ -67,3 +67,23 @@ export function buildFamilyReportInput({ age, competencyIds, conclusions, knownN
   const findings = conclusions.filter((row) => competencyIds.includes(row.competency_v4_id)).map((row) => ({ competency_id: row.competency_v4_id, period_start: dateOnly(row.period_start), period_end: dateOnly(row.period_end), information_status: row.details.information_status, conclusion_text: clean(row.details.conclusion_text), progress_examples: (row.details.progress_examples ?? []).map(clean), support_or_conditions: (row.details.support_or_conditions ?? []).map(clean), next_steps: (row.details.next_steps ?? []).map(clean), insufficiency_reason: clean(row.details.insufficiency_reason), caution: clean(row.details.caution) }));
   return { workflow: "family_report", age, competency_ids: competencyIds, castellano_l2_applicable: castellanoL2Applicable, religion_applicable: religionApplicable, teacher_request: "Comunicar a la familia solo las conclusiones descriptivas confirmadas seleccionadas. Usar frases cortas, palabras habituales, una idea por oración y ejemplos concretos que una familia pueda reconocer. Explicar con claridad qué se observó, qué ayudó y qué se puede hacer después. Incluir los ejemplos confirmados disponibles, conservar el estado de información de cada competencia y evitar notas, niveles, comparaciones, diagnósticos, lenguaje burocrático y afirmaciones absolutas. Mantener literalmente los nombres oficiales de competencias cuando se usen.", student_context: { id: "current_student", teacher_confirmed_findings: findings } };
 }
+
+export function buildFamilyReportFallback(competencyIds, conclusions) {
+  const snapshot=conclusionSourceSnapshot(conclusions);
+  const sections=competencyIds.map((competencyId)=>{
+    const sources=conclusions.filter((row)=>row.competency_v4_id===competencyId);
+    const list=(field)=>[...new Set(sources.flatMap((row)=>row.details[field]??[]))];
+    const insufficient=reportInformationStatus(snapshot,competencyId)==="insufficient";
+    return {
+      competency_id:competencyId,information_status:insufficient?"insufficient":"sufficient",
+      progress_summary:sources.map((row)=>row.details.conclusion_text).join(" "),
+      examples:list("progress_examples"),support_or_conditions:list("support_or_conditions"),
+      next_steps:list("next_steps"),family_suggestions:[],
+      insufficiency_note:insufficient?sources.map((row)=>row.details.insufficiency_reason).find((text)=>typeof text==="string"&&text.trim())??"Se necesitan más oportunidades de observación.":null
+    };
+  });
+  return validateFamilyReport({
+    introduction:"Compartimos las conclusiones confirmadas para este período.",
+    sections,closing_note:"La docente debe revisar este informe antes de compartirlo con la familia."
+  },competencyIds,snapshot);
+}

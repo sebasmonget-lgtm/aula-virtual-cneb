@@ -80,7 +80,9 @@ export function FamilyReportGenerator({ students, initialStudentId = "", classro
     try {
       const result = await send("/api/ai/family-reports/generate", "POST", { studentId, classroomId, periodId:period?.id, periodStart:selectedStart, periodEnd:selectedEnd, competencyIds: selectedIds });
       setProposal(result.proposal as Report); setGenerationId(result.generation_id as string);
-      setMessage("Propuesta lista. Revísala y guárdala antes de confirmar."); setMessageTone("success");
+      setMessage(result.generation_source === "confirmed_conclusions"
+        ? "La propuesta de IA no pasó la revisión. Se preparó un borrador solo con las conclusiones confirmadas; revísalo antes de guardar."
+        : "Propuesta lista. Revísala y guárdala antes de confirmar."); setMessageTone("info");
     } catch (error) { setMessage((error as Error).message); setMessageTone("error"); } finally { setBusy(false); setOperation(null); }
   }
   async function save() {

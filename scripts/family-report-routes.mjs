@@ -4,7 +4,7 @@ import { cardIsApplicable } from "../src/lib/ai-context-builder-v4.mjs";
 import { resolveAIExecutionPlan } from "../src/lib/ai-execution-router-v4.mjs";
 import { createAIProviderForPlan } from "../src/lib/ai-provider-factory.mjs";
 import { generateAIWorkflowV4 } from "../src/lib/ai-generation-v4.mjs";
-import { buildFamilyReportInput, conclusionSourceSnapshot, sameConclusionSourceSnapshot, selectConfirmedConclusions, validateFamilyReport, validateFamilyReportPeriod } from "../src/lib/family-report-v4-service.mjs";
+import { buildFamilyReportFallback, buildFamilyReportInput, conclusionSourceSnapshot, sameConclusionSourceSnapshot, selectConfirmedConclusions, validateFamilyReport, validateFamilyReportPeriod } from "../src/lib/family-report-v4-service.mjs";
 import { httpStatusForError, publicErrorMessage } from "../src/lib/version-integrity.mjs";
 import { assessmentStudentNames } from "../src/lib/assessment-v4-service.mjs";
 
@@ -101,10 +101,16 @@ export function createFamilyReportRouteHandler({ db, teacherId, annualPlanningCo
         const classmates=(await db.query('select first_name,last_name,preferred_name from students where classroom_id=$1',[context.id])).rows;
         const input = buildFamilyReportInput({ age: context.age, competencyIds: ids, conclusions: rows, knownNames: assessmentStudentNames(classmates), castellanoL2Applicable: context.castellano_l2_applicable === true, religionApplicable: context.religion_applicable === true });
         const plan = resolveAIExecutionPlan({ workflow: "family_report", task: "generation" });
-        const result = await generate(input, { provider: createProvider(plan), executionPlan: plan });
+        let result,source="ai";
+        try { result=await generate(input, { provider: createProvider(plan), executionPlan: plan }); }
+        catch(error) {
+          if(error?.reason!=="family_report_schema_mismatch") throw error;
+          result={output:buildFamilyReportFallback(ids,rows),metadata:{source:"confirmed_conclusions_fallback",reason:error.reason}};
+          source="confirmed_conclusions";
+        }
         const generationId = randomUUID();
         await pending.set(generationId, { workflow: "family_report", classroom_id: context.id, student_id: student.id, period_id:period?.id??null, period_start: body.periodStart, period_end: body.periodEnd, selected_competency_ids: ids, source_conclusion_ids: rows.map((row) => row.id), source_conclusion_snapshot: conclusionSourceSnapshot(rows), metadata: metadataForAudit(result.metadata), createdAt: Date.now() });
-        send(response, 200, { proposal: result.output, generation_id: generationId }, origin);
+        send(response, 200, { proposal: result.output, generation_id: generationId, generation_source:source }, origin);
         return true;
       }
       if (request.method === "POST" && url.pathname === "/api/family-reports") {

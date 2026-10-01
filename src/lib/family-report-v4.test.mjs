@@ -4,7 +4,7 @@ import { readFile } from "node:fs/promises";
 import { PGlite } from "@electric-sql/pglite";
 import { resolveAIExecutionPlan } from "./ai-execution-router-v4.mjs";
 import { FAMILY_REPORT_OUTPUT_SCHEMA, generateAIWorkflowV4, InvalidAIGenerationError } from "./ai-generation-v4.mjs";
-import { buildFamilyReportInput, conclusionSourceSnapshot, sameConclusionSourceSnapshot, selectConfirmedConclusions, validateFamilyReport, validateFamilyReportPeriod } from "./family-report-v4-service.mjs";
+import { buildFamilyReportFallback, buildFamilyReportInput, conclusionSourceSnapshot, sameConclusionSourceSnapshot, selectConfirmedConclusions, validateFamilyReport, validateFamilyReportPeriod } from "./family-report-v4-service.mjs";
 import { createFamilyReportRouteHandler } from "../../scripts/family-report-routes.mjs";
 
 const classroomId = "00000000-0000-4000-8000-000000000211";
@@ -22,7 +22,7 @@ const section = (competencyId, informationStatus = "sufficient") => ({ competenc
 const report = (ids = ["COM_ORAL"], statuses = {}) => ({ introduction: "Compartimos algunos avances observados durante este periodo.", sections: ids.map((id) => section(id, statuses[id] ?? "sufficient")), closing_note: "Seguiremos observando y acompañando juntos." });
 const url = (path) => `http://localhost${path}`;
 
-async function fixture({ oralStatus = "active", mathStatus = "active", oralInformation = "sufficient" } = {}) {
+async function fixture({ oralStatus = "active", mathStatus = "active", oralInformation = "sufficient", failGeneration = false } = {}) {
   const db = await PGlite.create();
   await db.exec(`create table school_years(id uuid primary key,owner_id uuid,starts_on date,ends_on date);
     create table age_grades(id uuid primary key,age_years integer);
@@ -42,7 +42,7 @@ async function fixture({ oralStatus = "active", mathStatus = "active", oralInfor
   }
   const pending = new Map(), captures = [], responses = [];
   const context = { id: classroomId, school_year_id:schoolYearId, age: 5, castellano_l2_applicable: false, religion_applicable: false, calendar: { starts_on: "2026-03-01", ends_on: "2026-12-20" } };
-  const handler = createFamilyReportRouteHandler({ db, teacherId, annualPlanningContext: async () => context, readJson: async (request) => request.body, send: (_res, status, body) => responses.push({ status, body }), pending, metadataForAudit: (value) => value, createProvider: (plan) => { captures.push({ plan }); return {}; }, generate: async (input) => { captures.push({ input }); return { output: report(input.competency_ids, Object.fromEntries(input.student_context.teacher_confirmed_findings.map((finding) => [finding.competency_id, finding.information_status]))), metadata: { model: "mock", secret: "audit-only" } }; } });
+  const handler = createFamilyReportRouteHandler({ db, teacherId, annualPlanningContext: async () => context, readJson: async (request) => request.body, send: (_res, status, body) => responses.push({ status, body }), pending, metadataForAudit: (value) => value, createProvider: (plan) => { captures.push({ plan }); return {}; }, generate: async (input) => { captures.push({ input }); if(failGeneration) throw new InvalidAIGenerationError("family_report_schema_mismatch"); return { output: report(input.competency_ids, Object.fromEntries(input.student_context.teacher_confirmed_findings.map((finding) => [finding.competency_id, finding.information_status]))), metadata: { model: "mock", secret: "audit-only" } }; } });
   async function call(method, path, body) { responses.length = 0; await handler({ request: { method, body }, url: new URL(url(path)), response: {}, origin: null }); return responses[0]; }
   async function generate(ids = ["COM_ORAL"]) { return call("POST", "/api/ai/family-reports/generate", { studentId, periodStart: start, periodEnd: end, competencyIds: ids }); }
   async function save(generated, ids = ["COM_ORAL"]) { return call("POST", "/api/family-reports", { studentId, periodStart: start, periodEnd: end, competencyIds: ids, proposal: generated.body.proposal, generationId: generated.body.generation_id }); }
@@ -89,6 +89,22 @@ test("schema impide competencias ajenas, información falsa, notas, rankings y r
   ]) assert.throws(() => validateFamilyReport(bad, ["COM_ORAL"], snapshot));
   const input = buildFamilyReportInput({ age: 5, competencyIds: ["COM_ORAL"], conclusions: [{ competency_v4_id: "COM_ORAL", period_start: start, period_end: end, details: sourceDetails("COM_ORAL") }] });
   await assert.rejects(() => generateAIWorkflowV4(input, { provider: { async generate() { return report(["MAT_CANTIDAD"]); } } }), InvalidAIGenerationError);
+});
+
+test("si falla el esquema de IA, el borrador reutiliza solo conclusiones confirmadas", async () => {
+  const f=await fixture({oralInformation:"insufficient",failGeneration:true});
+  try {
+    const generated=await f.generate();
+    assert.equal(generated.status,200,JSON.stringify(generated.body));
+    assert.equal(generated.body.generation_source,"confirmed_conclusions");
+    assert.equal(generated.body.proposal.sections[0].information_status,"insufficient");
+    assert.equal(generated.body.proposal.sections[0].examples.length,0);
+    assert.match(generated.body.proposal.sections[0].progress_summary,/pocas situaciones/);
+    assert.equal((await f.save(generated)).status,200);
+    assert.equal(f.captures.filter((item)=>item.input).length,1);
+    const unsafe=[{competency_v4_id:"COM_ORAL",details:{...sourceDetails("COM_ORAL"),conclusion_text:"Nivel A."},id:oralId,period_start:start,period_end:end,version:1,updated_at:new Date(),teacher_confirmed_at:new Date()}];
+    assert.throws(()=>buildFamilyReportFallback(["COM_ORAL"],unsafe));
+  } finally { await f.db.close(); }
 });
 
 test("periodos y snapshots detectan cambio de contenido, estado y versión", () => {
