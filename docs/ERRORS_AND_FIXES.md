@@ -1260,7 +1260,7 @@ Síntoma: cuatro notas QA de la captura automatizada quedaron asociadas a la sel
 
 **Corrección.** Cuando la propuesta de IA falla específicamente por el esquema, el servidor prepara un borrador determinista con las conclusiones confirmadas, sus ejemplos y próximos pasos, sin inventar avances ni hacer otra llamada de IA. Mantiene el estado de información de la fuente, valida el mismo contrato y marca la procedencia. La interfaz explica el fallback antes de guardar.
 
-**Validación.** La prueba funcional simulada confirma que una salida inválida produce una propuesta válida desde fuentes confirmadas, conserva información insuficiente, no inventa ejemplos, permite guardar borrador y no hace una segunda llamada. También rechaza una conclusión fuente que contiene un nivel prohibido. Pasaron 18 pruebas de informe familiar e integración; la comprobación en Vercel se registrará tras el despliegue.
+**Validación.** La prueba funcional simulada confirma que una salida inválida produce una propuesta válida desde fuentes confirmadas, conserva información insuficiente, no inventa ejemplos, permite guardar borrador y no hace una segunda llamada. También rechaza una conclusión fuente que contiene un nivel prohibido. Pasaron 18 pruebas de informe familiar e integración, typecheck, lint y ambos builds. En Vercel, el fallback mostró su aviso, permitió guardar y confirmar un informe QA y descargar su Word.
 
 **Prevención.** Tratar un fallo de contrato de IA como recuperable cuando existe una fuente docente validada, sin relajar las reglas de contenido ni ocultar la procedencia del borrador.
 
@@ -1272,6 +1272,6 @@ Síntoma: cuatro notas QA de la captura automatizada quedaron asociadas a la sel
 
 **Corrección.** Ambas consultas incluyen `last_name` y componen el título con nombre preferido o de pila más apellido.
 
-**Validación.** La prueba de biblioteca comprueba el título completo en listado y detalle; las 14 pruebas de documentos y exportación pasaron. Queda comprobar el Word en Vercel tras el despliegue. La inspección OOXML del Word anterior mostró ZIP íntegro y el texto QA sin marcadores; la paginación no pudo renderizarse porque falta `soffice.exe`.
+**Validación.** La prueba de biblioteca comprueba el título completo en listado y detalle; las 14 pruebas de documentos y exportación, typecheck, lint y ambos builds pasaron. El despliegue `dpl_9ZuxMJp17jYyeccNfFc9MwXjhVEQ` pasó smoke y se promovió. El mismo informe descargado después mostró «Prueba Uno», ZIP íntegro, marca QA y ningún marcador. La paginación no pudo renderizarse porque falta `soffice.exe`.
 
 **Prevención.** Revisar identidad completa en títulos y encabezados de archivos cuando varios alumnos comparten nombre de pila.
