@@ -1215,3 +1215,15 @@ Síntoma: cuatro notas QA de la captura automatizada quedaron asociadas a la sel
 **Validación.** Typecheck, lint y builds pasaron. Pendiente de consignar el resultado de la prueba funcional en la web de QA.
 
 **Prevención.** Probar el registro tardío desde una actividad confirmada cuando ya no es el día actual.
+
+## 2026-10-01 — Evidencia con tres alumnos indistinguibles
+
+**Síntoma.** El formulario de evidencia mostraba tres opciones «Prueba» en el aula QA, aunque los apellidos Uno, Dos y Tres existían en los expedientes.
+
+**Causa.** El dashboard entregaba `name` como nombre de pila y `full_name` por separado; el formulario consumía `name`.
+
+**Corrección.** La proyección del dashboard usa el nombre completo para `name` y `full_name`, conservando el identificador estable de cada alumno.
+
+**Validación.** La prueba HTTP del dashboard comprueba el nombre completo en ambos campos. Pendiente de consignar la comprobación visual tras el despliegue.
+
+**Prevención.** Probar toda selección de alumnos con dos o más niños que comparten nombre de pila.

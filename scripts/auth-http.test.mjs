@@ -257,6 +257,7 @@ test("the HTTP boundary protects every route and local PGlite remains usable", {
     assert.equal((await metricsA.json()).observations, 0);
     const studentCard = (await (await call("/api/dashboard", "token-b")).json()).students[0];
     assert.equal(studentCard.full_name, "Alumna Ficticia");
+    assert.equal(studentCard.name, "Alumna Ficticia");
     assert.equal(studentCard.evidence_count, 0);
     assert.equal((await call("/api/teacher/today", null)).status, 401);
     assert.equal((await call("/api/teacher/today", "expired")).status, 401);

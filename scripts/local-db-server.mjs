@@ -481,7 +481,7 @@ async function dashboard() {
       calendar_exception: calendarException,
       journey: { mode: journey.mode, current_block_id: journey.currentBlock?.id ?? null, next_block_id: journey.nextBlock?.id ?? null, primary_action: journey.primaryAction, pending_items: journey.pendingItems },
     },
-    students: studentsResult.rows.map((student) => ({ ...student, name: displayPersonName(student.name), full_name: displayPersonName(student.full_name) })),
+    students: studentsResult.rows.map((student) => ({ ...student, name: displayPersonName(student.full_name), full_name: displayPersonName(student.full_name) })),
     metrics: metricsResult.rows[0],
     profile: profileResult.rows[0] ? {
       ...profileResult.rows[0],
