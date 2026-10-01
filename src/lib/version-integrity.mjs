@@ -8,8 +8,10 @@ export class VersionConflictError extends Error {
 }
 
 export function expectedRevision(value) {
-  if (!Number.isSafeInteger(value) || value < 1) throw new VersionConflictError("Recarga para obtener la revisión vigente.");
-  return value;
+  // PostgreSQL serializes bigint revisions as decimal strings in API responses.
+  const revision = typeof value === "string" && /^[1-9]\d*$/.test(value) ? Number(value) : value;
+  if (!Number.isSafeInteger(revision) || revision < 1) throw new VersionConflictError("Recarga para obtener la revisión vigente.");
+  return revision;
 }
 
 export function assertRevision(row, revision) {

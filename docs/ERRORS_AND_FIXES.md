@@ -1167,3 +1167,15 @@ Síntoma: cuatro notas QA de la captura automatizada quedaron asociadas a la sel
 **Solución validada.** API devuelve un 409 explicativo y la biblioteca permite preparar el Word. Se fusionó el cronograma y se compactó la portada; se corrigieron saltos y espaciados sin tocar el plan confirmado. El proyecto 1 se formalizó en la copia QA y descargó 446 kB. Word abrió los cuatro documentos reales; plan y proyecto cerraron en 18 y 8 páginas, sin hojas aisladas de desborde.
 
 **Prevención.** Probar la transición borrador→Word listo y renderizar muestras reales para detectar cortes que una prueba de XML no muestra.
+
+## 2026-10-01 — Proyecto bloqueado al preparar preguntas por revisión `bigint`
+
+**Síntoma.** «Continuar a preguntas» en la unidad QA devolvió `version_conflict` dos veces, incluso después de volver a abrir el borrador. La pantalla solo mostraba el código técnico.
+
+**Causa raíz.** PostgreSQL entrega `revision bigint` como cadena decimal. El cliente reenviaba esa cadena en `expectedRevision`, pero la validación del servidor exigía un número JavaScript. La petición se rechazaba antes de generar el contenido.
+
+**Corrección.** `expectedRevision` admite cadenas decimales positivas provenientes del API y las convierte únicamente si caben en un entero seguro. Se siguen rechazando valores ambiguos, fraccionarios o inseguros. La pantalla del proyecto muestra el mensaje explicativo del servidor para conflictos reales.
+
+**Validación local.** Prueba de versiones con cadenas y entradas inválidas: 5/5. Pasaron `tsc --noEmit`, lint, build Vinext y build Next.js. Falta repetir el flujo en Vercel tras desplegar.
+
+**Prevención.** Probar un ciclo real PostgreSQL `bigint` → JSON → cliente → mutación; no asumir que el tipo estático de TypeScript transforma el valor recibido.

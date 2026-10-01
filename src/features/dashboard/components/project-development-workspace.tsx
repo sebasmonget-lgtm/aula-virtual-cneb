@@ -43,8 +43,8 @@ async function json<T>(path: string, init?: RequestInit): Promise<T> {
   let response: Response;
   try { response = await apiFetch(api(path), init); }
   catch { throw new Error("No pudimos conectar con Ayni. Revisa la conexión y vuelve a intentarlo."); }
-  const result = await response.json() as T & { error?: string };
-  if (!response.ok) throw new Error(result.error || "No pudimos completar la acción.");
+  const result = await response.json() as T & { error?: string; message?: string };
+  if (!response.ok) throw new Error(result.message || result.error || "No pudimos completar la acción.");
   return result;
 }
 const post = (value: unknown): RequestInit => ({ method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(value) });

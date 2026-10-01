@@ -10,7 +10,15 @@ import { copyConfirmedLearningExperience } from "./learning-experience-version-s
 import { copyConfirmedActivity } from "./activity-version-service.mjs";
 import { confirmActivityWithCriterion } from "./activity-confirmation.mjs";
 import { copyConfirmedCriterion } from "./criterion-version-service.mjs";
-import { VersionConflictError, httpStatusForError, publicErrorMessage, versionTransaction } from "./version-integrity.mjs";
+import { VersionConflictError, expectedRevision, httpStatusForError, publicErrorMessage, versionTransaction } from "./version-integrity.mjs";
+
+test("acepta revisiones bigint serializadas sin admitir valores ambiguos o inseguros", () => {
+  assert.equal(expectedRevision("1"), 1);
+  assert.equal(expectedRevision("42"), 42);
+  assert.equal(expectedRevision(2), 2);
+  for (const value of ["0", "01", "2.0", " 2", "2 ", "1e3", "9007199254740992", 0, 1.5, null])
+    assert.throws(() => expectedRevision(value), VersionConflictError);
+});
 
 test("errores SQL no exponen nombres de tablas ni valores al cliente",()=>{
   assert.equal(publicErrorMessage({code:"23503",message:"Key (student_id)=(private-id) is not present in table students"}),
