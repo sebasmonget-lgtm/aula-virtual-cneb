@@ -1,5 +1,9 @@
 # Memoria del proyecto Ayni Aula
 
+## Bloqueo del smoke anual en Preview, 2026-10-02
+
+El Preview de `b94cd6e` cargó la revisión del aula, pero generar propuestas falló por la ruta de compilación capturada con `import.meta.url` en el cargador personalizado. Se corrigió únicamente la lectura de las mismas dos referencias desde `process.cwd()`, como los cargadores existentes; no se cambia contenido curricular ni negocio. 13 pruebas focales, typecheck, lint, build Next/webpack y trazado de ambas referencias PASS. Para avanzar a producción se requiere el commit correctivo y el smoke remoto con Mi año vigente; no tomar el READY de `b94cd6e` como validación de generación. Ver `ERRORS_AND_FIXES.md`.
+
 ## Estabilidad e ideas docentes previas a Mi año, 2026-10-02
 
 Trabajo local sobre `codex/annual-year-map`, HEAD base `f51fda5`; se conservaron las correcciones parciales anteriores y los cambios ajenos de Jev/OpenAI. Recuperación de evidencia desactualizada con conservación de ediciones, estados Revisado/pendiente/Confirmado persistido, snapshots para conflictos, navegación semanal sincronizada, entrada real a Conclusiones y ubicación por hash sin activar flags. La segunda fase añade ideas docentes opcionales en `planning_preferences` del contrato JSONB de preparación, separado del diagnóstico. El preplan conserva referencias y explicaciones; regenerar cambia solo el borrador autorizado y confirmar activa la versión. Sin migración ni despliegue. Ver ADR 107 y `docs/qa/functional-stability-teacher-ideas-2026-10-02.md` para pruebas, navegador real y límites.

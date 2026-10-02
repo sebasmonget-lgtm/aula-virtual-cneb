@@ -1,5 +1,15 @@
 # Errores y soluciones
 
+## 2026-10-02 — Bloqueo de generación anual en Preview por ruta de compilación
+
+**Síntoma registrado antes de corregir.** En el Preview de `b94cd6e`, Guardar y generar propuestas conserva la idea y la preparación QA, pero falla con `ENOENT` al abrir `/vercel/path0/skills/crear-plan-anual/references/criterios-cneb.md`; no se obtiene un plan vigente. Nota previa fuera del repositorio: `ayni-preview-annual-blocker-before-fix.md`.
+
+**Causa raíz.** El cargador personalizado usa `new URL(..., import.meta.url)`, convertido por el bundle Next en una ubicación del servidor de compilación. Los recursos ya están incluidos por `outputFileTracingIncludes`; los cargadores anuales anteriores usan el directorio de ejecución.
+
+**Corrección mínima y validación local.** Se resuelven las mismas dos referencias mediante `path.join(process.cwd(), ...)`, conservando archivos, textos, validación y reglas. La regresión ejecuta el módulo desde un directorio separado con referencias propias. 13 pruebas focales de cargador, personalización y preferencias PASS; typecheck, lint y build Next con webpack PASS. El trazado de la ruta API contiene ambas referencias y sus archivos existen. La validación remota posterior debe hacerse desde el commit correctivo; el commit original no se declara apto para producción. Reversión: revertir este cambio de resolución, sin alterar datos QA ni históricos.
+
+**Prevención.** Comprobar generación real desde el paquete desplegado y la lectura desde un directorio de ejecución distinto; build READY y carga del shell no garantizan que los recursos dinámicos sean legibles.
+
 ## 2026-10-01 — Publicación desde una rama que omitía correcciones aprobadas
 
 **Síntoma.** Después de publicar el mapa anual reaparecieron la ausencia de sugerencias de Jev y la sustitución de nombres al transcribir observaciones espontáneas.
