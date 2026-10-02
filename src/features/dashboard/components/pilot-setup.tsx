@@ -33,7 +33,7 @@ export function PilotSetup({ onReady }: { onReady: (dashboard: LocalDashboard) =
   const [district, setDistrict] = useState("");
   const [ugel, setUgel] = useState("");
   const [directorName, setDirectorName] = useState("");
-  const [age, setAge] = useState(5);
+  const [age, setAge] = useState<number | null>(null);
   const [year, setYear] = useState(currentYear);
   const [startsOn, setStartsOn] = useState(initialDates?.startsOn ?? "");
   const [endsOn, setEndsOn] = useState(initialDates?.endsOn ?? "");
@@ -60,6 +60,10 @@ export function PilotSetup({ onReady }: { onReady: (dashboard: LocalDashboard) =
   }
 
   async function save() {
+    if (age === null) {
+      setError("Elige la edad del aula para continuar.");
+      return;
+    }
     setBusy(true);
     setError("");
     try {
@@ -92,7 +96,7 @@ export function PilotSetup({ onReady }: { onReady: (dashboard: LocalDashboard) =
         </div>
         <h2 className="mt-6 border-t pt-5 text-lg font-bold text-[#19345b]">Aula y año escolar</h2>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
-          <label className="block text-sm font-semibold">Edad del aula<select className="mt-2 block min-h-11 w-full rounded-lg border border-input bg-white px-3" value={age} onChange={(event) => setAge(Number(event.target.value))}><option value={3}>3 años</option><option value={4}>4 años</option><option value={5}>5 años</option></select></label>
+          <label className="block text-sm font-semibold">Edad del aula<select required aria-describedby="classroom-age-help" className="mt-2 block min-h-11 w-full rounded-lg border border-input bg-white px-3" value={age ?? ""} onChange={(event) => setAge(event.target.value ? Number(event.target.value) : null)}><option value="">Elige la edad</option><option value={3}>3 años</option><option value={4}>4 años</option><option value={5}>5 años</option></select><span id="classroom-age-help" className="mt-1 block font-normal text-muted-foreground">Debes elegir la edad para continuar.</span></label>
           <label className="block text-sm font-semibold">Año escolar<Input className="mt-2" type="number" min={2020} max={2100} value={year} onChange={(event) => changeYear(Number(event.target.value))} /></label>
           <div className="rounded-xl bg-[#eef8fb] p-3 text-sm text-[#23475d] sm:col-span-2">
             {officialDates ? <p><strong>Calendario Minedu 2026:</strong> 36 semanas de clases y 8 de gestión. El año escolar va del 2 de marzo al 31 de diciembre; las clases, del 16 de marzo al 18 de diciembre. En las semanas de gestión el personal planifica y evalúa, sin clases regulares. Si tu DRE, UGEL o colegio aprobó otras fechas, puedes cambiarlas abajo.</p>
@@ -117,6 +121,6 @@ export function PilotSetup({ onReady }: { onReady: (dashboard: LocalDashboard) =
     </div>
     {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
     {busy && <LoadingState label="Guardando datos del colegio y del aula…" />}
-    <AsyncButton busy={busy} busyLabel="Guardando…" onClick={() => void save()}>Guardar aula y añadir alumnos</AsyncButton>
+    <AsyncButton disabled={age === null} busy={busy} busyLabel="Guardando…" onClick={() => void save()}>Guardar aula y añadir alumnos</AsyncButton>
   </main>;
 }

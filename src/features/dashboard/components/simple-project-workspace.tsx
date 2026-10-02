@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { apiFetch } from "@/src/lib/ayni-api-fetch";
 import { localDatabaseApiUrl } from "@/src/lib/local-database";
 import { prepareSimpleProject, combineProjectContext } from "@/src/lib/simple-project-flow.mjs";
+import { displayDate, limaToday } from "@/src/lib/display-date";
 import { AsyncButton, LoadingState, WorkflowFeedback } from "./workflow-ui";
 import { ProjectDevelopmentWorkspace, type Plan, type Proposal, type Experience } from "./project-development-workspace";
 
@@ -84,17 +85,24 @@ export function SimpleProjectWorkspace(props: Props) {
     <Button variant="outline" onClick={() => { setError(""); setReload(value => value + 1); }}>Volver a intentar</Button></WorkflowFeedback> : <LoadingState label="Abriendo el proyecto guardado…" />;
   const prepared = row?.details.stage === "map_review" || row?.status === "active";
   const name = (id: string) => names[id] ?? id;
+  const today = limaToday();
+  const proposals = (plan?.proposal.proposed_experiences ?? []).map((item, position) => ({ item, position,
+    slot: plan?.project_slots.find((slot) => slot.slot_index === position + 1) })).sort((a, b) =>
+      Number((a.slot?.ends_on ?? "") < today) - Number((b.slot?.ends_on ?? "") < today) ||
+      (a.slot?.starts_on ?? "9999").localeCompare(b.slot?.starts_on ?? "9999") || a.position - b.position);
   return <section className="ayni-workflow space-y-5"><header><p className="text-sm font-semibold text-[#087d96]">Mi año → Proyecto</p>
     <h1 className="text-3xl font-extrabold">{proposal?.title ?? "Elige una propuesta de Mi año"}</h1></header>
     {error && <WorkflowFeedback tone="error">{error}</WorkflowFeedback>}{notice && <WorkflowFeedback tone="success">{notice}</WorkflowFeedback>}
-    {!proposal ? <><div className="grid gap-3 sm:grid-cols-2">{plan?.proposal.proposed_experiences.map((item, position) => {
-      const id = idAt(item, position); const existing = experiences.find((entry) => entry.status !== "archived" && entry.annual_plan_id === plan.id &&
+    {!proposal ? <><p className="text-sm text-[#526b87]">Primero verás la planificación vigente o la próxima.</p><div className="grid gap-3 sm:grid-cols-2">{proposals.map(({ item, position, slot }) => {
+      const id = idAt(item, position); const existing = experiences.find((entry) => entry.status !== "archived" && entry.annual_plan_id === plan?.id &&
         (entry.source_proposal_id === id || (!entry.source_proposal_id && entry.source_proposal_index === position)));
       return <article key={id} className="rounded-2xl border bg-white p-5"><h2 className="text-lg font-bold">{position + 1}. {item.title}</h2>
-        <p className="my-2 text-sm text-[#526b87]">{item.period} · {item.purpose}</p>
+        <p className="my-2 text-sm text-[#526b87]">{slot ? `${displayDate(slot.starts_on)} – ${displayDate(slot.ends_on)}` : item.period} · {item.purpose}</p>
+        {slot && slot.ends_on < today && <p className="mb-2 text-sm text-[#916219]">Esta planificación corresponde a un período anterior. Puedes revisarla o continuar con la actual.</p>}
         <Button disabled={!id || busy} onClick={() => { setOpenedProposal(null); setRow(null); setContext(""); setContextExtras({}); setChanging(false); setError(""); setNotice(""); setChosen(id); }}>{existing?.status === "active" ? "Ver proyecto confirmado" : existing ? "Continuar proyecto" : "Usar esta propuesta"}</Button></article>;
     })}</div>{!plan && <Button onClick={props.onGoAnnual}>Completar Mi año</Button>}</> : <>
       <p className="text-sm text-[#526b87]">{row ? `Versión ${row.version} · ${row.status === "active" ? "confirmada" : "borrador"}` : proposal.period}</p>
+      {(plan?.project_slots.find((slot) => slot.slot_index === index + 1)?.ends_on ?? "9999") < today && <p className="rounded-xl bg-[#fff7e8] p-3 text-sm text-[#805819]">Esta planificación corresponde a un período anterior. Puedes revisarla o continuar con la actual.</p>}
       {(!prepared || changing) && <section className="space-y-4 rounded-2xl border bg-white p-5"><h2 className="text-xl font-bold">Punto de partida</h2>
         <p>{proposal.rationale}</p><p><b>Propósito previsto:</b> {proposal.purpose}</p>
         <p className="text-sm">{proposal.primary_competency_ids.map(name).join(" · ")}</p>
@@ -124,7 +132,7 @@ export function SimpleProjectWorkspace(props: Props) {
             <p><b>Sentido del cierre:</b> {row.details.project_master?.closing_rationale}</p>
           </div></details>
         <details className="rounded-xl border p-4"><summary className="cursor-pointer font-semibold">Ver mapa · {row.details.activity_route?.length ?? 0} actividades</summary>
-          <ol className="mt-4 space-y-3">{row.details.activity_route?.map((item) => <li key={item.id} className="rounded-lg border p-3"><b>{item.date} · {item.title}</b><p>{item.specific_purpose}</p>
+          <ol className="mt-4 space-y-3">{row.details.activity_route?.map((item) => <li key={item.id} className="rounded-lg border p-3"><b>{displayDate(item.date)} · {item.title}</b><p>{item.specific_purpose}</p>
             <p className="text-sm">{name(item.criterion_competency_id)} · {item.evaluation_criterion}</p><p className="text-sm">Evidencia: {item.expected_evidence}</p>
             <p className="text-sm"><b>Progresión:</b> {item.expected_progression}</p><p className="text-sm"><b>Papel en el proyecto:</b> {item.role_in_project}</p>
             <p className="text-sm"><b>Mediación:</b> {item.mediation_notes}</p><p className="text-sm"><b>Recursos:</b> {item.materials?.join(" · ")}</p>

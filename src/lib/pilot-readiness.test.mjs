@@ -17,6 +17,15 @@ const teacherA = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 const teacherB = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
 const setup = (name) => ({ teacherName: name, institutionName: "Escuela de prueba", section: "A", age: 5, year: 2026, startsOn: "2026-03-01", endsOn: "2026-12-18", castellanoL2Applicable: false, religionApplicable: false });
 
+test("el servidor exige una edad elegida de 3, 4 o 5 años sin asignar un valor por defecto", () => {
+  for (const age of [undefined, null, "", 0, 2, 6]) {
+    assert.throws(() => validatePilotSetup({ ...setup("Docente A"), age }), /edad 3\/4\/5/);
+  }
+  for (const age of [3, 4, 5]) {
+    assert.equal(validatePilotSetup({ ...setup("Docente A"), age }).age, age);
+  }
+});
+
 async function database(directory) {
   const db = await PGlite.create(directory);
   const base = new URL("../../local-db/migrations/", import.meta.url);

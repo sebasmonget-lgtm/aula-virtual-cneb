@@ -69,6 +69,9 @@ test("el Word V2 usa el mapa confirmado y las fechas reales sin inventar registr
   assert.match(xml, /2 semanas lectivas previstas/);
   assert.match(xml, /Partimos de preguntas del grupo/);
   assert.match(xml, /Compartir lo investigado/);
+  for (const heading of ["III. PREPLANIFICACIÓN DOCENTE", "IV. PROPÓSITO GENERAL", "V. PROPÓSITOS DE APRENDIZAJE Y EVALUACIÓN", "VI. ENFOQUES", "VII. ESTRATEGIA GENERAL DE EVALUACIÓN", "VIII. RUTA DE ACTIVIDADES", "IX. RECURSOS"])
+    assert.ok(xml.includes(heading), `Falta ${heading}`);
+  assert.ok(!xml.includes("<w:t>V. PROPÓSITO GENERAL</w:t>"), "No debe saltar el IV");
   assert.doesNotMatch(xml, /\{\{/);
   assert.doesNotMatch(xml, /Pendiente de completar por la docente/);
 });

@@ -27,6 +27,12 @@ type Artifact = { id: string; source_kind: string; source_id: string; filename: 
   school_year:number;classroom:string;classroom_id:string };
 
 const text = (value: unknown) => typeof value === "string" ? value.trim() : "";
+const sameVisibleText = (a: unknown, b: unknown) => {
+  const normalize = (value: unknown) => text(value).toLocaleLowerCase("es-PE").normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "").replace(/[^\p{L}\p{N}]+/gu, " ").trim().replace(/\s+/g, " ");
+  const left = normalize(a), right = normalize(b);
+  return Boolean(left && right && (left === right || (Math.min(left.length, right.length) / Math.max(left.length, right.length) > 0.9 && (left.includes(right) || right.includes(left)))));
+};
 const items = (value: unknown) => Array.isArray(value) ? value.filter((item): item is string => typeof item === "string" && Boolean(item.trim())) : [];
 const labelFor = (entry: DocumentEntry) => entry.kind === "annual_plan" ? "Plan anual" :
   entry.kind === "diagnostic_summary" ? "Diagnóstico del aula" : entry.kind === "experience" ?
@@ -61,7 +67,7 @@ function Pathways({ title, value }: { title: string; value: unknown }) {
       const path = raw && typeof raw === "object" ? raw as Record<string, unknown> : {};
       return <li key={index} className="rounded-xl bg-[#f3f8fb] p-4"><h4 className="font-bold">{text(path.title) || `Propuesta ${index + 1}`}</h4>
         {text(path.pedagogical_intention) && <p className="mt-1">{text(path.pedagogical_intention)}</p>}
-        {text(path.possible_child_actions) && <p className="mt-2 text-sm text-[#294b64]"><b>Qué podrían hacer los niños:</b> {text(path.possible_child_actions)}</p>}
+        {text(path.possible_child_actions) && !sameVisibleText(path.possible_child_actions, path.pedagogical_intention) && <p className="mt-2 text-sm text-[#294b64]"><b>Qué podrían hacer los niños:</b> {text(path.possible_child_actions)}</p>}
       </li>;
     })}</ol>
   </section>;
@@ -97,7 +103,7 @@ function DocumentContent({ document }: { document: OpenDocument }) {
       </>}
       {document.kind === "experience" && <>
         <Section title="Para qué la haremos" value={content.purpose} /><Section title="Nuestro punto de partida" value={content.starting_point} />
-        <Section title={document.subtype === "project" ? "Qué despertó el interés" : "Qué necesita el grupo"} value={document.subtype === "project" ? content.trigger_or_interest : content.learning_need_or_context} />
+        {!sameVisibleText(content.starting_point, document.subtype === "project" ? content.trigger_or_interest : content.learning_need_or_context) && <Section title={document.subtype === "project" ? "Qué despertó el interés" : "Qué necesita el grupo"} value={document.subtype === "project" ? content.trigger_or_interest : content.learning_need_or_context} />}
         <CompetencySection title="Competencias principales" value={content.primary_competency_ids} names={names} />
         <CompetencySection title="Otras competencias posibles" value={content.possible_secondary_competency_ids} names={names} />
         <Pathways title={document.subtype === "project" ? "Posibles caminos" : "Situaciones propuestas"} value={document.subtype === "project" ? content.possible_pathways : content.proposed_situations} />

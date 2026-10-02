@@ -6,10 +6,20 @@ import { createPilotClassroom, importStudentsForTeacher } from "./pilot-onboardi
 import { prepareDiagnosticStudentReview, saveDiagnosticStudentReview, confirmDiagnosticStudentReview,
   prepareDiagnosticGroupReview, saveDiagnosticGroupReview, confirmDiagnosticGroupReview } from "./diagnostic-assessment-v4.mjs";
 import { prepareDiagnosticPriorities, suggestDiagnosticPriorities, saveDiagnosticPriorities,
-  confirmDiagnosticPriorities, listDiagnosticPriorities } from "./diagnostic-priority-service.mjs";
+  confirmDiagnosticPriorities, listDiagnosticPriorities, orderPrioritiesByObservationGaps } from "./diagnostic-priority-service.mjs";
 
 const teacherA = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 const teacherB = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+
+test("las competencias sin observaciones preceden las que ya tienen registros", () => {
+  const observed = { title: "Más conteos", related_competency_ids: ["MAT_CANTIDAD"] };
+  const missing = { title: "Observar diálogo", related_competency_ids: ["COM_ORAL"] };
+  const ordered = orderPrioritiesByObservationGaps([observed, missing], [
+    { competency_id: "MAT_CANTIDAD", children_without_observations: 0 },
+    { competency_id: "COM_ORAL", children_without_observations: 5 },
+  ]);
+  assert.deepEqual(ordered, [missing, observed]);
+});
 
 test("prioridades usan la visión grupal confirmada, se editan aparte y quedan aisladas por docente", async () => {
   const db = await PGlite.create();
@@ -42,6 +52,8 @@ test("prioridades usan la visión grupal confirmada, se editan aparte y quedan a
     });
     assert.equal(requests[0].ai_context_bundle.context.confirmed_group.needs, "Conviene ofrecer más ocasiones para conversar.");
     assert.equal(requests[0].ai_context_bundle.context.age, 5);
+    assert.ok(requests[0].ai_context_bundle.context.observation_coverage.some((item) =>
+      item.competency_id === "COM_ORAL" && item.children_without_observations === 1));
     assert.equal(suggested.details.priorities[0].related_competency_ids[0], "COM_ORAL");
     await assert.rejects(saveDiagnosticPriorities(db, teacherB, draft.id, suggested.details));
     const edited = { priorities: [{ ...suggested.details.priorities[0], title: "Conversar y escuchar durante el juego" }] };

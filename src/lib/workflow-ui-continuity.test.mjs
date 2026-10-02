@@ -148,14 +148,13 @@ test("alta y entrevista presentan datos completos, fecha opcional y audio por pr
   assert.match(students, /id="student-birth-date" type="date"/);
   assert.match(students, /Importar lista CSV/);
   assert.match(students, /student\.birth_date &&/);
-  assert.match(interview, /max-w-3xl space-y-7/);
   assert.match(interview, /<InterviewAudioRecorder studentId=/);
-  assert.match(interview, /<section key=\{group\.title\} aria-labelledby=/);
-  assert.doesNotMatch(interview, /<details key=\{group\.title\}/);
-  assert.match(interview, /Guardar entrevista/);
+  assert.match(interview, /aria-live="polite"/);
+  assert.match(interview, /Guardar y continuar después/);
   assert.match(interview, /await saveAndConfirmFamilyInterview\(studentId, details\)/);
   assert.match(interview, /onSaved\?\.\(result\); onBack\?\.\(\)/);
-  assert.doesNotMatch(interview, />Confirmar entrevista<|>Guardar borrador</);
+  assert.match(interview, /step === 8/);
+  assert.match(interview, />Confirmar entrevista</);
   assert.match(interview, /disabled=\{audioBusy\}/);
   assert.match(interview, /displayPersonName\(rawStudentName\)/);
   assert.match(guided, /Entrevista de \{displayPersonName\(item.name\)\}/);
@@ -175,14 +174,12 @@ test("alta y entrevista presentan datos completos, fecha opcional y audio por pr
   assert.doesNotMatch(recorder, /type="file"/);
 });
 
-test("Diagnóstico es un módulo propio y los accesos docentes llegan al mismo flujo", async () => {
+test("los accesos docentes llegan al diagnóstico dentro de Planificar", async () => {
   const workspace = await component("teacher-workspace");
   const evaluation = await component("evaluation-home");
-  assert.match(workspace, /\["Diagnóstico", ClipboardList\]/);
-  assert.match(workspace, /\["Diagnóstico", "Diagnóstico", ClipboardList\]/);
-  assert.match(workspace, /function openDiagnostic.*navigate\("Diagnóstico"\)/);
-  assert.match(workspace, /active === "Diagnóstico" \? dashboard/);
-  assert.match(workspace, /onDiagnostic=\{\(\) => openDiagnostic\(2\)\}/);
+  assert.match(workspace, /function openDiagnostic.*setPlanningTarget\("diagnostic"\).*navigate\("Planificar"\)/);
+  assert.match(workspace, /<PlanningArea dashboard=\{dashboard\} initialTab=\{planningTarget\}/);
+  assert.match(workspace, /onDiagnostic=\{\(\) => openDiagnostic\(\)\}/);
   assert.match(workspace, /aria-label="Calendario" title="Calendario"/);
   assert.doesNotMatch(evaluation, /title: "Diagnóstico"|onDiagnostic/);
   assert.doesNotMatch(workspace, /setEvaluationEntry\("diagnostic"\)/);

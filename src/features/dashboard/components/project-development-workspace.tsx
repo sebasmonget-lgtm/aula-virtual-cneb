@@ -12,6 +12,7 @@ import { LearningExperienceGenerator } from "./learning-experience-generator";
 import { projectDraftChanges } from "@/src/lib/project-draft-changes.mjs";
 import { nextPlanProposalIndex, proposalStatus } from "@/src/lib/project-proposal-navigation.mjs";
 import { selectedProjectQuestions } from "@/src/lib/project-question-selection.mjs";
+import { limaToday } from "@/src/lib/display-date";
 
 export type Proposal = { proposal_id?: string; experience_type: "project" | "unit"; title: string; purpose: string;
   rationale: string; period: string; primary_competency_ids: string[] };
@@ -276,9 +277,13 @@ export function ProjectDevelopmentWorkspace({ initialProposalId, onConfirmed, on
     next[index] = { ...later, date: earlier.date, number: index + 1 };
     next[nextIndex] = { ...earlier, date: later.date, number: nextIndex + 1 }; setRoute(next); }
   const currentEdit = route.find((item) => item.id === editingRoute);
-  const suggestedIndex = nextPlanProposalIndex(plan?.proposal.proposed_experiences, experiences, plan?.id) + 1;
+  const today = limaToday();
+  const planIndex = nextPlanProposalIndex(plan?.proposal.proposed_experiences, experiences, plan?.id);
   const orderedProposals = (plan?.proposal.proposed_experiences ?? []).map((item, index) => ({ item, index,
-    slot: plan?.project_slots.find((row) => row.slot_index === index + 1) })).sort((a, b) => (a.slot?.slot_index ?? a.index + 1) - (b.slot?.slot_index ?? b.index + 1));
+    slot: plan?.project_slots.find((row) => row.slot_index === index + 1) })).sort((a, b) =>
+      Number((a.slot?.ends_on ?? "") < today) - Number((b.slot?.ends_on ?? "") < today) ||
+      (a.slot?.starts_on ?? "9999").localeCompare(b.slot?.starts_on ?? "9999") || a.index - b.index);
+  const suggestedIndex = orderedProposals.find(({ slot }) => slot && slot.ends_on >= today)?.index ?? planIndex;
   const calendarMonths = [...new Set(calendarReview?.days.map((day) => day.date.slice(0, 7)) ?? [])];
   const visibleMonth = calendarMonths.includes(calendarMonth) ? calendarMonth : calendarMonths[0];
   const visibleDays = calendarReview?.days.filter((day) => day.date.startsWith(visibleMonth)) ?? [];
@@ -293,13 +298,14 @@ export function ProjectDevelopmentWorkspace({ initialProposalId, onConfirmed, on
     <p className="mt-2 text-[#526b87]">Elige un proyecto de «Mi año». Dentro revisarás el propósito, las preguntas y el mapa; después podrás preparar sus actividades y talleres.</p></header>
     {error && <WorkflowFeedback tone="error">{error}</WorkflowFeedback>}{notice && <WorkflowFeedback tone="success">{notice}</WorkflowFeedback>}
     {!selected ? <><section className="space-y-3"><h2 className="text-xl font-bold">Elige qué desarrollar</h2>
-      <p className="text-sm text-[#526b87]">Ayni muestra primero una propuesta en preparación; si no la hay, sigue el orden de «Mi año». Revisa sus fechas antes de desarrollarla.</p>
-      {(showAllProposals ? orderedProposals : orderedProposals.filter(({ index }) => index + 1 === suggestedIndex)).map(({ item, index, slot }) => { const proposalId = proposalIdAt(index);
+      <p className="text-sm text-[#526b87]">Primero verás la planificación vigente o la próxima. Puedes revisar períodos anteriores sin cambiar sus fechas.</p>
+      {(showAllProposals ? orderedProposals : orderedProposals.filter(({ index }) => index === suggestedIndex)).map(({ item, index, slot }) => { const proposalId = proposalIdAt(index);
         const found = experiences.find((row) =>
           (row.source_proposal_id === proposalId || (row.annual_plan_id === plan?.id && !row.source_proposal_id && row.source_proposal_index === index)) && row.status !== "archived");
-        return <article key={proposalId || index} className={`rounded-2xl border bg-white p-4 ${suggestedIndex === index + 1 ? "border-[#087d96]" : "border-[#d6e5ef]"}`}>
-          <div className="flex flex-wrap items-start justify-between gap-2"><h3 className="font-bold">{item.experience_type === "unit" ? "U" : "P"}{String(index + 1).padStart(2, "0")} · {item.title}</h3>{suggestedIndex === index + 1 && <span className="rounded-full bg-[#e8f6fa] px-3 py-1 text-xs font-bold text-[#087d96]">Próxima propuesta del plan</span>}</div>
+        return <article key={proposalId || index} className={`rounded-2xl border bg-white p-4 ${suggestedIndex === index ? "border-[#087d96]" : "border-[#d6e5ef]"}`}>
+          <div className="flex flex-wrap items-start justify-between gap-2"><h3 className="font-bold">{item.experience_type === "unit" ? "U" : "P"}{String(index + 1).padStart(2, "0")} · {item.title}</h3>{suggestedIndex === index && slot && slot.ends_on >= today && <span className="rounded-full bg-[#e8f6fa] px-3 py-1 text-xs font-bold text-[#087d96]">{slot.starts_on <= today ? "Planificación vigente" : "Próxima planificación"}</span>}</div>
           <p className="mt-1 text-sm text-[#526b87]">{slot ? `${dateLabel(slot.starts_on.slice(0, 10))} – ${dateLabel(slot.ends_on.slice(0, 10))}` : item.period} · {item.experience_type === "unit" ? "Unidad" : "Proyecto"} · {proposalStatus(found)}</p>
+          {slot && slot.ends_on < today && <p className="mt-1 text-sm text-[#916219]">Esta planificación corresponde a un período anterior. Puedes revisarla o continuar con la actual.</p>}
           <p className="mt-1 text-sm text-[#526b87]">{item.rationale}</p>
           <Button className="mt-3" disabled={Boolean(busy) || !proposalId} onClick={() => void openProposal(proposalId)}>{found ? found.status === "active" ? "Entrar al proyecto" : "Continuar proyecto" : "Empezar este proyecto"}</Button>
         </article>; })}{Boolean(plan) && <Button variant="outline" onClick={() => setShowAllProposals(!showAllProposals)}>{showAllProposals ? "Mostrar solo la siguiente" : "Elegir otro"}</Button>}{!plan && <p>Confirma primero «Mi año» para continuar.</p>}</section>
@@ -428,7 +434,7 @@ export function ProjectDevelopmentWorkspace({ initialProposalId, onConfirmed, on
             const day = visibleDaysByDate.get(date);
             return day ? <button type="button" key={date}
             disabled={Boolean(busy) || (day.is_instructional && !day.editable)} onClick={() => void toggleCalendarDay(day)}
-            title={`${day.date} · ${day.reason || day.calendar_type}`}
+            title={`${dateLabel(day.date)} · ${day.reason || day.calendar_type}`}
             className={`min-h-16 rounded-lg border p-1 text-left text-xs ${day.selected ? "border-[#64b69d] bg-[#eaf7f1]" : day.is_instructional ? "border-[#e3c3c3] bg-[#fff1f1]" : "border-[#b9c7d4] bg-[#eef1f5]"}`}>
             <b className="block">{Number(day.date.slice(8))}</b><span className="block">{day.selected ? "✓ Actividad" : day.is_instructional ? "Sin actividad" : day.calendar_type === "national_holiday" ? "Feriado" : day.calendar_type === "management_week" ? "Gestión" : "No lectivo"}</span>
             {day.school_override && <span className="block text-[#087d96]">Reprogramado</span>}</button> : <span key={date} className="min-h-16 rounded-lg bg-[#f5f7f9] p-1 text-xs text-[#8997a5]">{index + 1}</span>; })}</div>

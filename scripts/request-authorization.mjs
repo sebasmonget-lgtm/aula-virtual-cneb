@@ -62,6 +62,8 @@ export async function authorizeRequestSelectors({ db, teacherId, url, body }) {
   const path = pathSelector(url.pathname);
   if (path) selectors.push(path);
   for (const [field, kind] of Object.entries(selectorFields)) {
+    // Diagnostic guide IDs come from the versioned catalog, not learning_experiences.
+    if (url.pathname === "/api/diagnostics/experience-observations" && field === "experienceId") continue;
     const queryValue = url.searchParams.get(field);
     if (queryValue) selectors.push([kind, queryValue]);
     if (body && typeof body[field] === "string") selectors.push([kind, body[field]]);

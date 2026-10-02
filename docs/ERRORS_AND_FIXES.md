@@ -1,5 +1,15 @@
 # Errores y soluciones
 
+## 2026-10-01 — Publicación desde una rama que omitía correcciones aprobadas
+
+**Síntoma.** Después de publicar el mapa anual reaparecieron la ausencia de sugerencias de Jev y la sustitución de nombres al transcribir observaciones espontáneas.
+
+**Causa raíz.** La rama del mapa partió de `af522a5` y no incorporó `2d251bb`, `f78b58b`, `e082f94` y `f8b2653`, existentes en otra rama/worktree. Faltaban la normalización LF del hash del clasificador en Windows y el uso de transcripción literal para archivos adjuntos espontáneos.
+
+**Solución validada.** Merge de ambas historias en `codex/annual-year-map`, conservando las trazas de personalización, el mapa y el acceso a actividades concretas. La prueba de continuidad antigua se ajustó a la entrevista de nueve pasos aprobada. Pasaron 55 pruebas focales, typecheck, lint y build. En navegador local, una observación ficticia obtuvo una sugerencia real de Jev para cantidad, quedó pendiente de decisión docente y conservó su nombre. La prueba de audio confirma RAW exacto sin reescritura ni reemplazo por marcadores. Además, el alta empieza sin edad: con otros datos completos sigue bloqueada y solo permite avanzar tras elegir; una prueba de servidor cubre ausencia, edades inválidas y 3/4/5.
+
+**Prevención.** Usar la rama consolidada en el checkout principal y verificar ancestros de los cambios aprobados antes de desplegar. Los worktrees anteriores son referencias históricas; no continuar producto desde sus bases. Mantener los experimentos no publicados fuera del commit. Reversión de código mediante el despliegue anterior; no hay migración ni modificación de datos remotos.
+
 ## 2026-10-01 — Reincorporación fallaba aunque quedaba un tramo lectivo libre
 
 **Síntoma.** Al retirar una propuesta de mitad de año, «Incorporar al final» fallaba si el último bimestre estaba lleno, pese a quedar libre el tramo de la propuesta retirada.
@@ -9,6 +19,36 @@
 **Solución validada.** «Incorporar al año» prueba posiciones del bimestre original y acepta la primera compatible con el calendario. El recorrido local volvió a retirar y reincorporar una propuesta, guardó, recargó y confirmó la nueva versión. La prueba focal de inserción, typecheck, lint y build pasaron.
 
 **Prevención.** La prueba de reincorporación cubre el caso de último bimestre lleno con un tramo anterior libre.
+
+## 2026-10-01 — Una observación guiada devolvía «Recurso no encontrado»
+
+**Síntoma.** Al guardar una nota desde una experiencia guiada del diagnóstico, la API respondía 404 aunque la experiencia aparecía en la interfaz.
+
+**Causa raíz.** La autorización genérica interpretaba `experienceId` como UUID de `learning_experiences`. Las guías diagnósticas usan IDs editoriales del catálogo versionado. El rechazo ocurría antes de la validación específica de la guía.
+
+**Solución validada.** Solo en `/api/diagnostics/experience-observations` se omite esa interpretación genérica. La autorización sigue comprobando el alumno y el servicio verifica que experiencia y aspecto sean aplicables al aula. Una prueba cubre el ID editorial válido, un alumno ajeno y el rechazo del mismo ID en rutas de proyectos.
+
+**Prevención.** Distinguir los identificadores editoriales del catálogo de los UUID de recursos persistidos en el límite HTTP.
+
+## 2026-10-01 — El clasificador V2.4 no cargaba en un checkout Windows
+
+**Síntoma.** La prueba del adaptador V2.4 fallaba con «V2.4 no coincide con la versión congelada» antes de llamar a Jev.
+
+**Causa raíz.** Git había convertido `current-v2.mjs` a CRLF en Windows. El SHA-256 esperado corresponde a los bytes LF del archivo versionado, sin cambio semántico del código.
+
+**Solución validada.** La verificación normaliza solo los finales de línea del código fuente a LF antes de calcular su hash; el prompt sigue verificándose en bytes. La prueba del adaptador volvió a pasar. El modelo, prompt y umbrales permanecen congelados.
+
+**Prevención.** Verificar los hashes de archivos de texto versionados sobre su representación LF canónica o fijar `eol=lf` en `.gitattributes` para los siguientes archivos congelados.
+
+## 2026-10-01 — Calendario perdía la actividad y Hoy confundía observación cotidiana con diagnóstico
+
+**Síntoma.** «Ver actividad» abría la portada de Planificar; «Observar» podía abrir el diagnóstico inicial aunque la intención fuera registrar una observación cotidiana.
+
+**Causa raíz.** Calendario enviaba una función sin argumentos y descartaba el ID de actividad y experiencia. Hoy usaba Diagnóstico como destino alternativo para toda actividad sin criterio.
+
+**Solución validada.** El ID y la experiencia viajan hasta la ficha exacta; talleres se muestran en una ficha propia del Calendario. «Observar» abre el diálogo cotidiano existente cuando no hay actividad con criterio. Se verificaron en navegador local los dos tipos de actividad pasada y el diálogo cotidiano; faltan escenarios de hoy y futuro en un aula con esos datos. Tests focales, typecheck, lint y build pasaron.
+
+**Prevención.** Las pruebas de navegación deben conservar el ID seleccionado y cubrir experiencias de proyecto, unidad y taller; el destino de observación se decide por capacidad disponible, no por el nombre del botón.
 
 ## 2026-10-01 — Tres alumnos indistinguibles al registrar el diagnóstico
 

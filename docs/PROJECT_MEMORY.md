@@ -1,5 +1,11 @@
 # Memoria del proyecto Ayni Aula
 
+## Fuente de trabajo consolidada, 2026-10-01
+
+La rama de referencia para el producto y staging es `codex/annual-year-map`. Incluye el mapa/personalización/entrevista de `fb5b816` y las cuatro correcciones UX que culminan en `f8b2653`, integradas con un merge para conservar ambas historias. Antes de desarrollar o publicar, comprobar rama, HEAD y que los últimos commits aprobados sean ancestros; no iniciar cambios desde `af522a5` ni desde los worktrees anteriores. El checkout principal `C:/Users/ASUS/Documents/ChatGPT/Asistente CNEB` debe quedar en esta rama; los cambios experimentales previos del árbol no forman parte de la publicación.
+
+El alta del aula exige elegir explícitamente 3, 4 o 5 años. Empieza con «Elige la edad» y bloquea continuar sin selección; la validación del servidor también rechaza ausencia o edad inválida. La captura espontánea conserva transcripción literal mediante `raw_observation`, y Jev V2.4 conserva el RAW. La comprobación local con proveedor real sugirió «Resuelve problemas de cantidad» para una observación ficticia sin confirmarla automáticamente. Ver el registro de regresión en `ERRORS_AND_FIXES.md`.
+
 ## Panel administrativo, 2026-09-30
 
 El código incluye panel exclusivo para rol `admin`: lista cuentas, crea docentes por DNI y contraseña, restablece contraseñas docentes y suma el consumo de IA registrado por cuenta. Nunca muestra contraseñas ni alias de DNI. El primer administrador necesita `AYNI_ADMIN_SETUP_KEY` privado de 32+ caracteres, elegido por el propietario y retirado después del alta; ver `docs/DNI_ACCESS.md`. La integración local simulada de roles y permisos pasó; alta real en staging y recorrido docente siguen pendientes.

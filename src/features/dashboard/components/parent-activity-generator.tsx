@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { localDatabaseApiUrl, type ActivityCriterion } from "@/src/lib/local-database";
 import { jsonValuesDiffer } from "@/src/lib/project-draft-changes.mjs";
+import { displayDate, limaToday } from "@/src/lib/display-date";
 import type { LibraryResource } from "@/src/lib/library-resource";
 import { CriterionEvidenceGenerator } from "./criterion-evidence-generator";
 import { WorkshopMasterPanel } from "./workshop-master-panel";
@@ -106,7 +107,7 @@ const fields: [
     string
 ][] = [["title", "Título"], ["purpose", "Propósito"], ["meaningful_situation", "Situación significativa"], ["teacher_preparation", "Preparación docente"], ["child_actions", "Acciones de los niños"], ["mediation", "Mediación"], ["evidence_opportunities", "Oportunidades de evidencia"], ["closure_or_continuity", "Cierre o continuidad"]];
 const snapshot = (proposal: Proposal, date: string, materials: string) => JSON.stringify({ proposal, date, materials: materials.split(",").map((item) => item.trim()).filter(Boolean) });
-export function ParentActivityGenerator({ onConfirmed, onGoToday, onRecordEvidence, feedbackPeriodId, ongoing = false, initialResource, initialExperienceId, initialRouteItemId }: {
+export function ParentActivityGenerator({ onConfirmed, onGoToday, onRecordEvidence, feedbackPeriodId, ongoing = false, initialResource, initialExperienceId, initialRouteItemId, initialActivityId }: {
     onConfirmed?: () => void;
     onGoToday?: () => void;
     onRecordEvidence?: (input: { activityId: string; title: string; criterion: ActivityCriterion }) => void;
@@ -115,6 +116,7 @@ export function ParentActivityGenerator({ onConfirmed, onGoToday, onRecordEviden
     initialResource?: LibraryResource | null;
     initialExperienceId?: string | null;
     initialRouteItemId?: string | null;
+    initialActivityId?: string | null;
 }) {
     const [experiences, setExperiences] = useState<Experience[]>([]);
     const [competencies, setCompetencies] = useState<Competency[]>([]);
@@ -163,12 +165,13 @@ export function ParentActivityGenerator({ onConfirmed, onGoToday, onRecordEviden
             }>; })]).then(([data, cards]) => {
             if (!live)
                 return;
-            const available = (data.experiences ?? []).filter((item) => (item.status === "active" || item.status === "archived") && (item.type === "project" || item.type === "unit") && typeof item.details?.starting_point === "string");
+            const available = (data.experiences ?? []).filter((item) => (item.status === "active" || item.status === "archived") && (item.type === "project" || item.type === "unit") &&
+                (typeof item.details?.starting_point === "string" || item.id === initialExperienceId));
             setExperiences(available);
             setCompetencies(cards.competencies ?? []);
             setInitialLoadError(false);
             setMessage("");
-            const selected = available.find((item) => item.id === initialExperienceId && item.status === "active");
+            const selected = available.find((item) => item.id === initialExperienceId);
             if (selected) {
                 setParent(selected);
                 const chosen = selected.details.activity_route?.find((item) => item.id === initialRouteItemId);
@@ -179,7 +182,26 @@ export function ParentActivityGenerator({ onConfirmed, onGoToday, onRecordEviden
                     if (chosen.planned_date || chosen.date)
                         setDate(chosen.planned_date ?? chosen.date ?? "");
                 }
-                void refreshActivities(selected).catch(() => setActivitiesLoadError(true));
+                void refreshActivities(selected).then((loaded) => {
+                    if (initialActivityId) {
+                        const activity = loaded.find((item) => item.id === initialActivityId);
+                        if (activity) {
+                            const activityDate = activity.occurs_on.slice(0, 10);
+                            const materialsText = (activity.preparation.materials ?? []).join(", ");
+                            setProposal({ ...activity.details, title: activity.details.title || activity.title, purpose: activity.details.purpose || activity.purpose });
+                            setWorkshopProposal(activity.workshop?.details ?? null);
+                            setDraftId(activity.id);
+                            setSavedSnapshot(snapshot(activity.details, activityDate, materialsText));
+                            setDate(activityDate);
+                            setPurpose(activity.details.purpose || activity.purpose);
+                            setCompetencyId(activity.details.competency_id ?? "");
+                            setRouteItemIdState(activity.details.route_item_id ?? "");
+                            setMaterials(materialsText);
+                            setReadOnly(activity.status !== "draft");
+                        }
+                        else { setMessage("No encontramos esta actividad en el proyecto. Revisa la lista de abajo."); setMessageTone("error"); }
+                    }
+                }).catch(() => setActivitiesLoadError(true));
             }
         }).catch(() => { if (live) {
             setInitialLoadError(true);
@@ -188,11 +210,11 @@ export function ParentActivityGenerator({ onConfirmed, onGoToday, onRecordEviden
         } }).finally(() => { if (live)
             setOperation(null); });
         return () => { live = false; };
-    }, [reload, initialExperienceId, initialRouteItemId]);
+    }, [reload, initialExperienceId, initialRouteItemId, initialActivityId]);
     async function refreshActivities(experience: Experience) { const response = await apiFetch(`${localDatabaseApiUrl}/api/activities?experienceId=${experience.id}`); if (!response.ok)
         throw new Error("No se pudieron cargar las actividades."); const data = await response.json() as {
         activities?: Activity[];
-    }; setActivities(data.activities ?? []); setActivitiesLoadError(false); }
+    }; setActivities(data.activities ?? []); setActivitiesLoadError(false); return data.activities ?? []; }
     async function openParent(experience: Experience) { if (operation)
         return; setParent(experience); setActivities([]); setActivitiesLoadError(false); reset(); if (initialResource) {
         setMaterials(initialResource.materials.join(", "));
@@ -341,7 +363,7 @@ export function ParentActivityGenerator({ onConfirmed, onGoToday, onRecordEviden
     finally {
         setOperation(null);
     } }
-    function openActivity(activity: Activity) { const materialsText = (activity.preparation.materials ?? []).join(", "); const activityDate = activity.occurs_on.slice(0, 10); setProposal(activity.details); setWorkshopProposal(activity.workshop?.details ?? null); setDraftId(activity.id); setGenerationId(null); setSavedSnapshot(snapshot(activity.details, activityDate, materialsText)); setDate(activityDate); setPurpose(activity.details.purpose); setCompetencyId(activity.details.competency_id ?? ""); setRouteItemId(activity.details.route_item_id ?? ""); setMaterials(materialsText); setContext(""); setReadOnly(activity.status !== "draft"); }
+    function openActivity(activity: Activity) { const materialsText = (activity.preparation.materials ?? []).join(", "); const activityDate = activity.occurs_on.slice(0, 10); setProposal({ ...activity.details, title: activity.details.title || activity.title, purpose: activity.details.purpose || activity.purpose }); setWorkshopProposal(activity.workshop?.details ?? null); setDraftId(activity.id); setGenerationId(null); setSavedSnapshot(snapshot(activity.details, activityDate, materialsText)); setDate(activityDate); setPurpose(activity.details.purpose || activity.purpose); setCompetencyId(activity.details.competency_id ?? ""); setRouteItemId(activity.details.route_item_id ?? ""); setMaterials(materialsText); setContext(""); setReadOnly(activity.status !== "draft"); }
     function startNew() { reset(); setCompetencyId(""); setParent(null); setActivities([]); setActivitiesLoadError(false); }
     return <section className="ayni-workflow space-y-5">
 <header>
@@ -353,8 +375,10 @@ export function ParentActivityGenerator({ onConfirmed, onGoToday, onRecordEviden
 {initialLoadError && <Button variant="outline" onClick={() => { setOperation("load"); setReload((value) => value + 1); }}>Reintentar carga</Button>}
 {!parent ? <section className="space-y-3">
 <h2 className="font-bold">1. Elige un proyecto o unidad</h2>{operation !== "load" && !initialLoadError && experiences.length === 0 && <EmptyState title="Primero confirma un proyecto o unidad" description="Vuelve al paso anterior, confirma una experiencia y luego prepara aquí su primera actividad."/>}
-{experiences.map((item) => <article key={item.id} className="rounded-xl border p-4">
-<b>{item.type === "project" ? "Proyecto" : "Unidad"}: {item.title} · versión {item.version} · {item.status === "archived" ? "Histórica" : "Vigente"}</b>
+{[...experiences].sort((a,b) => Number(a.ends_on.slice(0,10) < limaToday()) - Number(b.ends_on.slice(0,10) < limaToday()) || a.starts_on.localeCompare(b.starts_on)).map((item) => <article key={item.id} className="rounded-xl border p-4">
+<b>{item.type === "project" ? "Proyecto" : "Unidad"}: {item.title} · versión {item.version} · {item.status === "archived" ? "Versión anterior" : item.ends_on.slice(0,10) < limaToday() ? "Período anterior" : item.starts_on.slice(0,10) > limaToday() ? "Próximo" : "Vigente"}</b>
+<p className="mt-1 text-sm text-[#526b87]">{displayDate(item.starts_on)} – {displayDate(item.ends_on)}</p>
+{item.ends_on.slice(0,10) < limaToday() && <p className="mt-1 text-sm text-[#916219]">Esta planificación corresponde a un período anterior. Puedes revisarla o continuar con la actual.</p>}
 <p className="mt-1 text-sm">{item.purpose}</p>
 <Button className="mt-3" onClick={() => void openParent(item)}>Entrar y preparar actividades</Button>
 </article>)}</section> : <>
@@ -371,7 +395,7 @@ export function ParentActivityGenerator({ onConfirmed, onGoToday, onRecordEviden
 </label>}
 {routeItem && <>
 <p className="rounded-lg bg-[#e7f5f7] p-3 text-sm">
-<b>Fecha:</b> {date}<br />
+<b>Fecha:</b> {displayDate(date)}<br />
 <b>Propósito:</b> {routeItem.specific_purpose}<br /><b>Se hereda del proyecto:</b> {nameOf(routeItem.competency_id)} · Criterio: {routeItem.evaluation_criterion} · Evidencia esperada: {routeItem.expected_evidence}</p>
 </>} {!parent.details.activity_route?.length && <label>Fecha<input type="date" value={date} onChange={(event) => setDate(event.target.value)}/>
 </label>}{!(inheritedView && routeItem) && <><label>¿Qué quieres lograr en esta actividad?<Textarea value={purpose} disabled={Boolean(routeItem)} onChange={(event) => setPurpose(event.target.value)}/>
@@ -426,7 +450,7 @@ export function ParentActivityGenerator({ onConfirmed, onGoToday, onRecordEviden
         void refreshActivities(parent).then(() => setMessage("")).catch(() => { setMessage("No se pudieron cargar las actividades."); setMessageTone("error"); }); }}>Reintentar carga de actividades</Button>}
 {operation !== "load" && !activitiesLoadError && activities.length === 0 && <EmptyState title="Aún no hay actividades" description="Completa los datos de arriba para preparar la primera."/>}
 {activities.map((item) => <article key={item.id} className="mt-2 rounded-xl border p-3">
-<p>{item.occurs_on} · {item.title} · versión {item.version} · {item.status === "draft" ? "Borrador" : item.status === "archived" ? "Histórica" : "Confirmada"}</p>
+<p>{displayDate(item.occurs_on)} · {item.title} · versión {item.version} · {item.status === "draft" ? "Borrador" : item.status === "archived" ? "Histórica" : "Confirmada"}</p>
 <p className="text-sm">{item.details.competency_id ? nameOf(item.details.competency_id) : "Competencia sin confirmar"}</p>
 <Button variant="outline" onClick={() => openActivity(item)}>{item.status === "draft" ? "Continuar borrador" : "Ver actividad"}</Button>{item.status === "active" && !item.workshop && parent.status === "active" && <Button className="ml-2" variant="outline" disabled={Boolean(operation)} onClick={() => void copyActivity(item)}>Preparar nueva versión</Button>}
 {item.status === "archived" && item.future_schedules?.length > 0 && <p className="mt-2 rounded-lg bg-amber-50 p-2 text-sm">Esta versión sigue programada en {item.future_schedules.length} bloque(s) futuros. Puedes mantenerla o cambiar cada bloque después de confirmar la versión nueva.</p>}

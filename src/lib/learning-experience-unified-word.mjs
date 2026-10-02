@@ -164,6 +164,11 @@ export async function renderLearningExperienceUnifiedWord(document, cards = [], 
     });
     output = replaceWordText(output, "RUTA DE ACTIVIDADES / SESIONES", "RUTA DE ACTIVIDADES");
     output = replaceWordText(output, "Desempeño / referente", "Referente para observar");
+    for (const [from, to] of [["V", "IV"], ["VI", "V"], ["VII", "VI"], ["VIII", "VII"], ["IX", "VIII"], ["X", "IX"]]) {
+      const heading = { V: "PROPÓSITO GENERAL", VI: "PROPÓSITOS DE APRENDIZAJE Y EVALUACIÓN", VII: "ENFOQUES",
+        VIII: "ESTRATEGIA GENERAL DE EVALUACIÓN", IX: "RUTA DE ACTIVIDADES", X: "RECURSOS" }[from];
+      output = replaceWordText(output, `${from}. ${heading}`, `${to}. ${heading}`);
+    }
     return insertCoverQuickView(output, "El proyecto en una mirada", overview);
   } });
 }

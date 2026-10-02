@@ -120,8 +120,10 @@ test("la plantilla unificada utiliza exactamente los mismos doce objetos en cron
   const zip = await JSZip.loadAsync(rendered);
   const xml = await zip.file("word/document.xml").async("string");
   assert.doesNotMatch(xml, /\{\{|PROYECTO_13_|P13 \||P20 \||Plantilla editable|Producto o evidencia final/);
-  const projectImages = Object.keys(zip.files).filter((name) => /^word\/media\/ayni-project-\d+\.png$/.test(name));
+  const projectImages = Object.keys(zip.files).filter((name) => /^word\/media\/ayni-project-\d+\.jpg$/.test(name));
   assert.ok(projectImages.length > 0, "al menos un proyecto con tema conocido lleva imagen de la biblioteca");
+  for (const name of projectImages) assert.ok((await zip.file(name).async("nodebuffer")).length < 250_000,
+    "las imágenes del plan deben ajustarse al tamaño de impresión");
   assert.match(xml, /<wp:docPr[^>]*name="Mateo y Sofía riegan plantas"/);
   const plantImageAt = xml.indexOf("Mateo y Sofía riegan plantas");
   assert.ok(plantImageAt > xml.lastIndexOf("Cuidamos las plantas del patio") &&
