@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
 import { List, LayoutGrid, RotateCcw } from "lucide-react";
 import { apiFetch } from "@/src/lib/ayni-api-fetch";
 import { localDatabaseApiUrl } from "@/src/lib/local-database";
@@ -7,13 +7,14 @@ import { buildAnnualCompetencyMap } from "@/src/lib/annual-competency-map.mjs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { AsyncButton, CompetencyChecklist, GenerationProgress, LoadingState, WorkflowFeedback } from "./workflow-ui";
 import { AnnualPlanGenerator as LegacyAnnualPlanGenerator } from "./annual-plan-generator";
 import { AnnualPersonalizationWorkspace } from "./annual-personalization-workspace";
 import { AnnualYearMap } from "./annual-year-map";
 import { buildEditableAnnualSchedule } from "@/src/lib/annual-plan-calendar.mjs";
 import { insertAvailableAnnualRow, moveAnnualRow } from "@/src/lib/annual-year-map.mjs";
-import { useWorkspaceSubview, writeWorkspaceLocation } from "@/src/lib/workspace-location";
+import { canLeaveWorkspace, useWorkspaceSubview, writeWorkspaceLocation } from "@/src/lib/workspace-location";
 import { teacherIdeaPlacements } from "@/src/lib/annual-planning-preferences.mjs";
 import { ideaMonths, type PlanningPreferences } from "./annual-teacher-ideas";
 
@@ -56,10 +57,13 @@ const compactDate = (value: string) => new Intl.DateTimeFormat("es-PE", { day: "
   .format(new Date(`${value}T00:00:00Z`));
 const isPreplan = (plan: Plan | null | undefined): plan is Plan & { proposal: Preplan } => plan?.proposal?.plan_format === "annual_preplan_v1";
 
-function PreplanTable({ rows, options, calendar, editable, onChange, onDevelop, editRequestId, onRetire, readOnlyLabel = "Confirmada" }: { rows: Row[]; options: Competency[]; calendar?: Calendar;
+function PreplanTable({ rows, options, calendar, editable, onChange, onDevelop, editRequestId, onRetire, readOnlyLabel = "Confirmada", editorOnly = false, returnFocusRef, onEditorClose }: { rows: Row[]; options: Competency[]; calendar?: Calendar;
   editable: boolean; onChange: (rows: Row[]) => void; onDevelop?: (proposalId: string) => void;
-  editRequestId?: string | null; onRetire?: (proposalId: string) => void; readOnlyLabel?: string }) {
+  editRequestId?: string | null; onRetire?: (proposalId: string) => void; readOnlyLabel?: string; editorOnly?: boolean;
+  returnFocusRef: RefObject<HTMLElement | null>; onEditorClose: () => void }) {
   const [editingId, setEditingId] = useState<string | null>(editRequestId ?? null);
+  const titleRef = useRef<HTMLInputElement>(null);
+  const closeEditor = () => { setEditingId(null); onEditorClose(); };
   const editingIndex = rows.findIndex((item) => item.proposal_id === editingId);
   const editing = editingIndex < 0 ? null : rows[editingIndex];
   const tableSchedule = (() => { if (!calendar || !editable) return [];
@@ -79,7 +83,7 @@ function PreplanTable({ rows, options, calendar, editable, onChange, onDevelop, 
     if (target < 0 || target >= rows.length) return;
     onChange(moveAnnualRow(rows, index, target));
   };
-  return <section className="space-y-4 rounded-2xl border border-[#d6e5ef] bg-white p-4 sm:p-5">
+  return <><section hidden={editorOnly} className="space-y-4 rounded-2xl border border-[#d6e5ef] bg-white p-4 sm:p-5">
     <div><h2 className="text-xl font-extrabold text-[#172b52]">Lista de proyectos y unidades</h2>
       <p className="mt-1 text-sm text-[#526b87]">Son propuestas iniciales. Puedes cambiarlas antes de confirmar «Mi año».</p></div>
     <div className="overflow-x-auto rounded-xl border border-[#dce8f0]"><table className="w-full min-w-[900px] border-collapse text-left text-sm">
@@ -93,30 +97,35 @@ function PreplanTable({ rows, options, calendar, editable, onChange, onDevelop, 
         <td className="min-w-56 px-4 py-4 leading-relaxed"><details><summary className="cursor-pointer font-semibold text-[#087d96]">¿Por qué está en Mi año?</summary>
           <p className="mt-2">{row.rationale}</p>{row.source_teacher_decision && <p className="mt-1 text-xs">Propuesta ajustada o añadida por la docente.</p>}</details></td>
         <td className="min-w-56 px-4 py-4">{row.primary_competency_ids.map((id) => names.get(id) ?? id).join(" · ")}</td>
-        <td className="sticky right-0 z-10 bg-white px-4 py-3 shadow-[-1px_0_0_#e3edf4] group-even:bg-[#f9fcfe]"><div className="flex flex-wrap gap-1">{editable && <><Button type="button" variant="outline" className="min-h-10" onClick={() => setEditingId(row.proposal_id)}>Editar</Button>
+        <td className="sticky right-0 z-10 bg-white px-4 py-3 shadow-[-1px_0_0_#e3edf4] group-even:bg-[#f9fcfe]"><div className="flex flex-wrap gap-1">{editable && <><Button type="button" variant="outline" className="min-h-10" onClick={(event) => { returnFocusRef.current = event.currentTarget; setEditingId(row.proposal_id); }}>Editar</Button>
           <Button type="button" variant="ghost" size="sm" aria-label={`Subir ${row.title}`} disabled={index === 0} onClick={() => move(index, -1)}>↑</Button>
           <Button type="button" variant="ghost" size="sm" aria-label={`Bajar ${row.title}`} disabled={index === rows.length - 1} onClick={() => move(index, 1)}>↓</Button></>}
           {!editable && (onDevelop ? <Button type="button" variant="outline" className="min-h-10" onClick={() => onDevelop(row.proposal_id)}>Desarrollar</Button>
             : <span className="text-xs text-[#526b87]">{readOnlyLabel}</span>)}</div></td>
       </tr>)}</tbody></table></div>
     {editable && <div className="flex flex-wrap items-center justify-between gap-3"><Button type="button" variant="outline" className="min-h-11" disabled={rows.length >= 20}
-      onClick={() => { const last = rows.at(-1); const created: Row = { proposal_id: crypto.randomUUID(), experience_type: "project", title: "",
+      onClick={(event) => { returnFocusRef.current = event.currentTarget; const last = rows.at(-1); const created: Row = { proposal_id: crypto.randomUUID(), experience_type: "project", title: "",
         period: last?.period ?? "Bimestre 1", month: last?.month ?? 3, duration_weeks: 2, rationale: "", purpose: "", primary_competency_ids: [],
         source_interest_ids: [], source_priority_ids: [], source_context_ids: [], source_condition_ids: [], source_teacher_decision: true, planning_origin: "teacher_decision" };
         onChange([...rows, created]); setEditingId(created.proposal_id); }}>+ Agregar propuesta manual</Button>
       <p className="text-sm text-[#526b87]">Puedes editar, mover, eliminar o agregar propuestas. Al mover una, adopta el mes y la duración de ese lugar. Máximo 20 por la plantilla Word.</p></div>}
-    {editable && editing && <div role="dialog" aria-modal="true" aria-label={`Editar ${editing.title || "propuesta"}`} className="fixed inset-0 z-50 flex justify-end bg-[#10233a]/45">
-      <div className="h-full w-full max-w-xl overflow-y-auto bg-white p-5 shadow-2xl sm:p-7"><div className="flex items-center justify-between gap-3"><h3 className="text-xl font-extrabold">Editar propuesta {editingIndex + 1}</h3><Button type="button" variant="outline" onClick={() => setEditingId(null)}>Cerrar</Button></div>
+    </section><Dialog open={Boolean(editable && editing)} onOpenChange={(open) => { if (!open) closeEditor(); }}>
+      {editing && <DialogContent showCloseButton={false} aria-describedby={undefined}
+        className="inset-y-0 left-auto right-0 block h-full max-h-none w-full max-w-xl translate-x-0 translate-y-0 overflow-y-auto rounded-none border-0 bg-white p-5 shadow-2xl sm:max-w-xl sm:p-7"
+        onOpenAutoFocus={(event) => { event.preventDefault(); titleRef.current?.focus(); }}
+        onCloseAutoFocus={(event) => { event.preventDefault(); returnFocusRef.current?.focus(); }}>
+        <div className="flex items-center justify-between gap-3"><DialogTitle className="text-xl font-extrabold">Editar propuesta {editingIndex + 1}</DialogTitle><Button type="button" variant="outline" onClick={closeEditor}>Cerrar</Button></div>
         <div className="mt-5 space-y-4"><label className="block font-semibold">Proyecto o unidad<select className="mt-2 min-h-11 w-full rounded-lg border px-3" value={editing.experience_type} onChange={(event) => patch({ experience_type: event.target.value as Row["experience_type"] })}><option value="project">Proyecto</option><option value="unit">Unidad</option></select></label>
-          <label className="block font-semibold">Título<Input className="mt-2" value={editing.title} onChange={(event) => patch({ title: event.target.value })} /></label>
+          <label className="block font-semibold">Título<Input ref={titleRef} className="mt-2" value={editing.title} onChange={(event) => patch({ title: event.target.value })} /></label>
           <div className="grid grid-cols-2 gap-3"><label className="block font-semibold">Bimestre<select className="mt-2 min-h-11 w-full rounded-lg border px-3" value={editing.period} onChange={(event) => patch({ period: event.target.value })}>{[1,2,3,4].map((number) => <option key={number} value={`Bimestre ${number}`}>Bimestre {number}</option>)}</select></label>
             <label className="block font-semibold">Mes preferido<select className="mt-2 min-h-11 w-full rounded-lg border px-3" value={editing.month} onChange={(event) => patch({ month: Number(event.target.value) })}>{months.slice(3).map((label, index) => <option key={label} value={index + 3}>{label}</option>)}</select></label></div>
           <label className="block font-semibold">Duración<select className="mt-2 min-h-11 w-full rounded-lg border px-3" value={editing.duration_weeks} onChange={(event) => patch({ duration_weeks: Number(event.target.value) as 2 | 3 })}><option value={2}>2 semanas lectivas</option><option value={3}>3 semanas lectivas</option></select></label>
           <label className="block font-semibold">¿Por qué se propone?<Textarea className="mt-2" value={editing.rationale} onChange={(event) => patch({ rationale: event.target.value })} /></label>
           <label className="block font-semibold">Propósito breve<Textarea className="mt-2" value={editing.purpose} onChange={(event) => patch({ purpose: event.target.value })} /></label>
           <CompetencyChecklist label="Competencias previstas" value={editing.primary_competency_ids} options={options} onChange={(primary_competency_ids) => patch({ primary_competency_ids })} />
-          <div className="flex flex-wrap gap-2"><Button type="button" onClick={() => setEditingId(null)}>Listo</Button><Button type="button" variant="outline" disabled={rows.length <= 1} onClick={() => { if (onRetire) onRetire(editing.proposal_id); else onChange(rows.filter((item) => item.proposal_id !== editing.proposal_id)); setEditingId(null); }}>{onRetire ? "Retirar a disponibles" : "Eliminar propuesta"}</Button></div></div></div></div>}
-  </section>;
+          <div className="flex flex-wrap gap-2"><Button type="button" onClick={closeEditor}>Listo</Button><Button type="button" variant="outline" disabled={rows.length <= 1} onClick={() => { if (onRetire) onRetire(editing.proposal_id); else onChange(rows.filter((item) => item.proposal_id !== editing.proposal_id)); closeEditor(); }}>{onRetire ? "Retirar a disponibles" : "Eliminar propuesta"}</Button></div></div>
+      </DialogContent>}
+    </Dialog></>;
 }
 
 const preparationModes = ["no", "yes"] as const;
@@ -136,6 +145,7 @@ export function AnnualPreplanWorkspace({ onConfirmed, onGoDiagnostic, onDevelop 
   const setListOpen = (value: boolean) => setAnnualView(value ? "list" : "map");
   const [selectedProposalId, setSelectedProposalId] = useState<string | null>(null);
   const [editRequestId, setEditRequestId] = useState<string | null>(null);
+  const editorTriggerRef = useRef<HTMLElement | null>(null);
   async function reload(select?: string) {
     const [loadedPlans, loadedContext, loadedOptions] = await Promise.all([
       json<Plans>("/api/annual-plans/current"), json<Context>("/api/ai/annual-plan/context"),
@@ -155,6 +165,16 @@ export function AnnualPreplanWorkspace({ onConfirmed, onGoDiagnostic, onDevelop 
   const selected = [plans?.draft, plans?.active, ...(plans?.archived ?? [])].find((item) => item?.id === selectedId) ?? null;
   const editable = isPreplan(selected) && selected.status === "draft";
   const dirty = editable && proposal && JSON.stringify(proposal) !== JSON.stringify(selected.proposal);
+  useEffect(() => {
+    if (!dirty) return;
+    const beforeUnload = (event: BeforeUnloadEvent) => { event.preventDefault(); event.returnValue = ""; };
+    const beforeNavigation = (event: Event) => {
+      if (busy || !window.confirm("Tienes cambios pendientes en Mi año. Cancela para permanecer y guardarlos. ¿Quieres descartarlos y continuar?")) event.preventDefault();
+    };
+    window.addEventListener("beforeunload", beforeUnload);
+    window.addEventListener("ayni-before-navigation", beforeNavigation);
+    return () => { window.removeEventListener("beforeunload", beforeUnload); window.removeEventListener("ayni-before-navigation", beforeNavigation); };
+  }, [dirty, busy]);
   const available = proposal?.available_experiences ?? [];
   const mapScheduleError = editable && proposal && context ? (() => { try { buildEditableAnnualSchedule(context.calendar, proposal.proposed_experiences); return ""; }
     catch (cause) { return cause instanceof Error ? cause.message : "Revisa las fechas del año."; } })() : "";
@@ -212,7 +232,8 @@ export function AnnualPreplanWorkspace({ onConfirmed, onGoDiagnostic, onDevelop 
       primary_competency_ids: last?.primary_competency_ids.slice(0, 1) ?? [], source_interest_ids: [],
       source_priority_ids: [], source_context_ids: [], source_condition_ids: [], source_teacher_decision: true, planning_origin: "teacher_decision" };
     setProposal({ ...proposal, proposed_experiences: [...proposal.proposed_experiences, row] });
-    setListOpen(true); setEditRequestId(id); setSelectedProposalId(id); };
+    editorTriggerRef.current = document.activeElement as HTMLElement | null;
+    setEditRequestId(id); setSelectedProposalId(id); };
   if (loading) return <LoadingState label="Abriendo Mi año..." />;
   if (showLegacy) return <div className="space-y-3"><Button variant="outline" onClick={() => setShowLegacy(false)}>← Volver a Mi año</Button><LegacyAnnualPlanGenerator onConfirmed={onConfirmed} onGoDiagnostic={onGoDiagnostic} /></div>;
   return <section className="ayni-workflow !max-w-none space-y-5"><header className="flex flex-wrap items-start justify-between gap-3"><div className="min-w-0 flex-1"><p className="text-sm font-semibold text-[#087d96]">Paso 4 de 6 · Plan anual</p>
@@ -236,11 +257,12 @@ export function AnnualPreplanWorkspace({ onConfirmed, onGoDiagnostic, onDevelop 
         preferPlannedDates={!dirty}
         selectedId={selectedProposalId} onSelect={setSelectedProposalId} editing={editable && !reviewNewEvidence}
         onMove={move} onRetire={retire} onRestore={restore} onReplace={replace}
-        onEdit={(id) => { setListOpen(true); setEditRequestId(id); }} onDevelop={selected.status === "active" ? onDevelop : undefined}
+        onEdit={(id) => { editorTriggerRef.current = document.activeElement as HTMLElement | null; setEditRequestId(id); }} onDevelop={selected.status === "active" ? onDevelop : undefined}
         onAddManual={addManual} competencies={options} />}
-      {listOpen && <div className="space-y-3"><Button type="button" variant="outline" onClick={() => setListOpen(false)}><LayoutGrid className="size-4" /> Volver al mapa</Button>
+      {(listOpen || editRequestId) && <div className="space-y-3">{listOpen && <Button type="button" variant="outline" onClick={() => setListOpen(false)}><LayoutGrid className="size-4" /> Volver al mapa</Button>}
         <PreplanTable key={editRequestId ?? "list"} rows={proposal.proposed_experiences} options={options} calendar={context?.calendar} editable={editable && !reviewNewEvidence} readOnlyLabel={selected.status === "draft" ? "En revisión" : "Confirmada"}
           onDevelop={selected.status === "active" ? onDevelop : undefined} editRequestId={editRequestId} onRetire={retire}
+          editorOnly={!listOpen} returnFocusRef={editorTriggerRef} onEditorClose={() => setEditRequestId(null)}
           onChange={changeRows} /></div>}
       <details className="rounded-2xl border bg-white p-4"><summary className="cursor-pointer font-bold">Cobertura de competencias · {coverage.filter((item: { warnings: string[] }) => item.warnings.length).length} avisos</summary><p className="mt-1 text-sm text-[#526b87]">Ayni señala oportunidades previstas; puedes decidir cómo ajustarlas.</p>
         <div className="mt-3 grid gap-2 sm:grid-cols-2">{coverage.filter((item: { warnings: string[] }) => item.warnings.length).map((item: { competency_id: string; competency_name: string; project_count: number; warnings: string[] }) => <p key={item.competency_id} className="rounded-lg bg-[#fff5e4] p-3 text-sm"><b>{item.competency_name}</b> · {item.project_count} {item.project_count === 1 ? "oportunidad" : "oportunidades"}<br />{item.warnings.join(" ")}</p>)}
@@ -255,7 +277,7 @@ export function AnnualPreplanWorkspace({ onConfirmed, onGoDiagnostic, onDevelop 
         {!selected.formal_ready && <div className="mt-3 flex justify-end"><AsyncButton busy={busy === "formal"} busyLabel="Preparando Word..." disabled={Boolean(busy)} onClick={() => formalize(selected.id)}>Preparar Word</AsyncButton></div>}</div>}
     </>}
     {plans && (plans.draft || plans.active || plans.archived.length > 0) && <section className="rounded-2xl border bg-white p-4"><h2 className="font-bold">Versiones de Mi año</h2><div className="mt-3 flex flex-wrap gap-2">{[plans.draft, plans.active, ...plans.archived].filter((item): item is Plan => Boolean(item)).map((item) =>
-      <Button key={item.id} disabled={reviewNewEvidence || Boolean(busy)} variant={item.id === selectedId ? "default" : "outline"} onClick={() => { setSelectedId(item.id); setProposal(isPreplan(item) ? item.proposal : null); }}>
+      <Button key={item.id} disabled={reviewNewEvidence || Boolean(busy)} variant={item.id === selectedId ? "default" : "outline"} onClick={() => { if (item.id === selectedId || !canLeaveWorkspace()) return; setEditRequestId(null); setSelectedId(item.id); setProposal(isPreplan(item) ? item.proposal : null); }}>
         {item.adjustment_label ? `Reajuste ${item.adjustment_label}` : `Versión ${item.version}`} · {item.status === "active" ? "vigente" : item.status === "draft" ? "borrador" : "anterior"}</Button>)}</div></section>}
   </section>;
 }

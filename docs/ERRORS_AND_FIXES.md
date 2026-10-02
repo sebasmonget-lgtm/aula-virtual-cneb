@@ -1375,3 +1375,13 @@ Síntoma: cuatro notas QA de la captura automatizada quedaron asociadas a la sel
 **Corrección y validación.** La respuesta de generación anual indica que las ideas están guardadas, que el plan vigente se conserva y que se puede reintentar con la acción de generar/regenerar. Un HTTP 503 inyectado exclusivamente en transporte localhost confirmó igualdad del borrador, vigente e históricos; después de F5 el reintento regeneró el mismo borrador V3 sin activar ni alterar V2.
 
 **Prevención.** Comprobar la recuperación en navegador con fallo controlado, incluyendo persistencia y ausencia de escrituras en el plan vigente.
+
+## 2026-10-02 — P1 de cambios pendientes, foco anual y contexto accesible
+
+**Síntomas y causas.** El selector anual reemplazaba la propuesta local sin consultar la protección de navegación (D1). El editor era un overlay manual sin gestión de foco (D2). Los inputs de excepción/reprogramación dependían de placeholders y las alternativas de asistencia carecían de grupo nombrado por alumno (I6).
+
+**Corrección.** Reutilizar `ayni-before-navigation`/`canLeaveWorkspace` y la advertencia de recarga en el borrador anual; omitir el aviso para la misma versión. Usar Dialog compartido, foco inicial en Título y retorno al botón de apertura, manteniendo el mapa montado. Añadir labels vinculados y fieldset/legend, conservando reglas y callbacks.
+
+**Validación.** Dos pruebas focales mover/retirar, typecheck, lint, build y diff check pasan. Navegador: editor abierto por teclado en mapa/lista, contención Tab/Shift+Tab, Escape y retorno del foco pasan; asistencia y calendario guardan en copia QA aislada con semántica asociada. D1 conserva el borrador durante la recuperación y permite guardarlo; versiones limpias cambian sin aviso, histórico de solo lectura, vigente/históricos sin cambios según comparación completa. El control nativo de Cancelar/Descartar no se pudo validar de forma fiable. Por autorización del usuario, cierre con tres pruebas focales PASS que ejecutan el guard y manejador reales: Cancelar conserva, Aceptar cambia sin mutar planes y limpio/misma versión no avisa. Sin cambios adicionales de producto ni repetición E2E. Detalle en `docs/qa/p1-ux-validation-2026-10-02.md`.
+
+**Prevención.** Toda sustitución de un borrador debe consultar el guard compartido; usar Dialog para gestionar foco, mantener el disparador montado y nombrar campos/grupos con semántica nativa. Verificar el resultado de una interacción, no solo su intento.
