@@ -107,7 +107,7 @@ const fields: [
     string
 ][] = [["title", "Título"], ["purpose", "Propósito"], ["meaningful_situation", "Situación significativa"], ["teacher_preparation", "Preparación docente"], ["child_actions", "Acciones de los niños"], ["mediation", "Mediación"], ["evidence_opportunities", "Oportunidades de evidencia"], ["closure_or_continuity", "Cierre o continuidad"]];
 const snapshot = (proposal: Proposal, date: string, materials: string) => JSON.stringify({ proposal, date, materials: materials.split(",").map((item) => item.trim()).filter(Boolean) });
-export function ParentActivityGenerator({ onConfirmed, onGoToday, onRecordEvidence, feedbackPeriodId, ongoing = false, initialResource, initialExperienceId, initialRouteItemId, initialActivityId }: {
+export function ParentActivityGenerator({ onConfirmed, onGoToday, onRecordEvidence, feedbackPeriodId, initialResource, initialExperienceId, initialRouteItemId, initialActivityId }: {
     onConfirmed?: () => void;
     onGoToday?: () => void;
     onRecordEvidence?: (input: { activityId: string; title: string; criterion: ActivityCriterion }) => void;
@@ -365,11 +365,11 @@ export function ParentActivityGenerator({ onConfirmed, onGoToday, onRecordEviden
     } }
     function openActivity(activity: Activity) { const materialsText = (activity.preparation.materials ?? []).join(", "); const activityDate = activity.occurs_on.slice(0, 10); setProposal({ ...activity.details, title: activity.details.title || activity.title, purpose: activity.details.purpose || activity.purpose }); setWorkshopProposal(activity.workshop?.details ?? null); setDraftId(activity.id); setGenerationId(null); setSavedSnapshot(snapshot(activity.details, activityDate, materialsText)); setDate(activityDate); setPurpose(activity.details.purpose || activity.purpose); setCompetencyId(activity.details.competency_id ?? ""); setRouteItemId(activity.details.route_item_id ?? ""); setMaterials(materialsText); setContext(""); setReadOnly(activity.status !== "draft"); }
     function startNew() { reset(); setCompetencyId(""); setParent(null); setActivities([]); setActivitiesLoadError(false); }
-    return <section className="ayni-workflow space-y-5">
+    return <section className="ayni-workflow space-y-5 [&_button]:min-h-11 [&_button]:h-auto [&_button]:whitespace-normal [&_button]:py-3">
 <header>
-<p className="text-sm font-semibold text-[#087d96]">{ongoing ? "Planificación continua · Actividad" : "Paso 6 de 6 · Actividad"}</p>
+
 <h1 className="text-3xl font-bold">Actividades del proyecto</h1>
-<p className="text-muted-foreground">Primero elige el proyecto; luego selecciona una actividad de su mapa. Los talleres son opcionales y pertenecen al mismo proyecto.</p>
+<p className="text-muted-foreground">Elige una actividad del proyecto para preparar tu día.</p>
 </header>{operation === "load" && <LoadingState label="Cargando actividades..."/>}
 {message && <WorkflowFeedback tone={messageTone}>{message}</WorkflowFeedback>}
 {initialLoadError && <Button variant="outline" onClick={() => { setOperation("load"); setReload((value) => value + 1); }}>Reintentar carga</Button>}
@@ -382,28 +382,28 @@ export function ParentActivityGenerator({ onConfirmed, onGoToday, onRecordEviden
 <p className="mt-1 text-sm">{item.purpose}</p>
 <Button className="mt-3" onClick={() => void openParent(item)}>Entrar y preparar actividades</Button>
 </article>)}</section> : <>
-<section className="sticky top-2 z-10 rounded-xl border border-[#9cced7] bg-[#f8fbff] p-4 shadow-sm" aria-label="Proyecto actual">
+<section className="rounded-xl border border-[#9cced7] bg-[#f8fbff] p-3" aria-label="Proyecto actual">
 <b>{parent.type === "project" ? "Proyecto" : "Unidad"}: {parent.title} · versión {parent.version}
 {parent.status === "archived" ? " · histórica" : ""}</b>
-<p className="mt-1 text-sm">{parent.purpose}</p>
-<Button className="mt-3" variant="outline" onClick={startNew}>Cambiar de proyecto</Button>
-</section>{parent.status === "active" && Boolean(parent.details.activity_route?.length) && <details className="rounded-xl border bg-[#f8fbff] p-4"><summary className="cursor-pointer font-bold text-[#07576c]">Talleres opcionales de este proyecto</summary><p className="mt-2 text-sm text-[#526b87]">Puedes decidirlos después de preparar las actividades. Cada taller queda vinculado a este proyecto.</p><div className="mt-3"><WorkshopMasterPanel projectId={parent.id}/></div></details>}
+<details className="mt-1 text-sm"><summary className="min-h-11 cursor-pointer py-2 font-semibold text-[#07576c]">Propósito del proyecto</summary><p>{parent.purpose}</p></details>
+<Button className="mt-1 min-h-11" variant="ghost" onClick={startNew}>Cambiar de proyecto</Button>
+</section>
 {parent.status === "archived" && !proposal && <p className="rounded-xl bg-[#f2f8fc] p-3 text-sm">Esta versión es histórica. Puedes consultar y terminar sus actividades existentes; las actividades nuevas se preparan desde la versión vigente.</p>}
 {!proposal && parent.status === "active" && <section className="ayni-panel space-y-3 p-4 sm:p-5">
-<h2 className="ayni-section-title">2. Elige una actividad del mapa de {parent.title}</h2>{Boolean(parent.details.activity_route?.length) && <label>Actividad<select value={routeItemId} onChange={(event) => { const item = parent.details.activity_route?.find((row) => row.id === event.target.value); setRouteItemId(event.target.value); setPurpose(item?.specific_purpose ?? ""); setCompetencyId(item?.competency_id ?? ""); }}>
+<h2 className="ayni-section-title">Elige la actividad que prepararás</h2>{Boolean(parent.details.activity_route?.length) && <label>Actividad<select value={routeItemId} onChange={(event) => { const item = parent.details.activity_route?.find((row) => row.id === event.target.value); setRouteItemId(event.target.value); setPurpose(item?.specific_purpose ?? ""); setCompetencyId(item?.competency_id ?? ""); }}>
 <option value="">Elige una actividad</option>{parent.details.activity_route?.map((item) => <option key={item.id} value={item.id}>{item.number}. {item.title}</option>)}</select>
 </label>}
-{routeItem && <>
-<p className="rounded-lg bg-[#e7f5f7] p-3 text-sm">
-<b>Fecha:</b> {displayDate(date)}<br />
-<b>Propósito:</b> {routeItem.specific_purpose}<br /><b>Se hereda del proyecto:</b> {nameOf(routeItem.competency_id)} · Criterio: {routeItem.evaluation_criterion} · Evidencia esperada: {routeItem.expected_evidence}</p>
+{routeItem && <p className="text-sm font-semibold">Fecha: {displayDate(date)}</p>}
+<AsyncButton busy={operation === "generate"} busyLabel="Preparando la actividad..." disabled={Boolean(operation) || !date || !purpose || (Boolean(parent.details.activity_route?.length) && !routeItemId)} onClick={() => void generate()}>Preparar día</AsyncButton>
+{routeItem && <><details className="rounded-lg bg-[#e7f5f7] p-3 text-sm"><summary className="min-h-11 cursor-pointer py-2 font-semibold text-[#07576c]">Propósito, criterio y evidencia del proyecto</summary><p>
+<b>Propósito:</b> {routeItem.specific_purpose}<br /><b>Se hereda del proyecto:</b> {nameOf(routeItem.competency_id)} · Criterio: {routeItem.evaluation_criterion} · Evidencia esperada: {routeItem.expected_evidence}</p></details>
 </>} {!parent.details.activity_route?.length && <label>Fecha<input type="date" value={date} onChange={(event) => setDate(event.target.value)}/>
-</label>}{!(inheritedView && routeItem) && <><label>¿Qué quieres lograr en esta actividad?<Textarea value={purpose} disabled={Boolean(routeItem)} onChange={(event) => setPurpose(event.target.value)}/>
+</label>}{!(inheritedView && routeItem) && <details open={!routeItem} className="rounded-xl border p-3 text-sm"><summary className="min-h-11 cursor-pointer py-2 font-semibold text-[#07576c]">Propósito y competencia de la actividad</summary><label>¿Qué quieres lograr en esta actividad?<Textarea value={purpose} disabled={Boolean(routeItem)} onChange={(event) => setPurpose(event.target.value)}/>
 </label>
 <label>Competencia principal<select disabled={Boolean(routeItem)} value={effectiveCompetencyId} onChange={(event) => setCompetencyId(event.target.value)}>
 <option value="">Aún no la confirmo</option>{ids.map((id) => <option key={id} value={id}>{nameOf(id)}
 {(parent.details.possible_secondary_competency_ids ?? []).includes(id) ? " (posible secundaria)" : ""}</option>)}</select>
-</label></>}
+</label></details>}
 <details className="rounded-xl border bg-[#f8fbff] p-4">
 <summary className="font-bold">Agregar detalles opcionales</summary>
 <div className="mt-4 space-y-3">
@@ -413,10 +413,17 @@ export function ParentActivityGenerator({ onConfirmed, onGoToday, onRecordEviden
 </label>
 </div>
 </details>
-<AsyncButton busy={operation === "generate"} busyLabel="Preparando la actividad..." disabled={Boolean(operation) || !date || !purpose || (Boolean(parent.details.activity_route?.length) && !routeItemId)} onClick={() => void generate()}>Preparar día</AsyncButton>
+
 </section>}
-{proposal && <section className="ayni-panel space-y-3 p-4 sm:p-5">
-<WorkflowFeedback tone={readOnly ? "success" : "info"}>{readOnly ? "Actividad confirmada · solo lectura" : "Revisa el borrador. Puedes cambiar cualquier texto antes de confirmar."}</WorkflowFeedback>{fields.map(([key, label]) => readOnly ? <ReadOnlyField key={key} label={label} value={proposal[key]}/> : <label key={key}>{label}<Textarea disabled={Boolean(operation)} value={proposal[key]} onChange={(event) => setProposal({ ...proposal, [key]: event.target.value })}/>
+{readOnly && draftId && activities.some((item) => item.id === draftId && item.status === "active") && proposal?.competency_status === "confirmed" && proposal.competency_id && <NextStepCard title="Actividad confirmada" description="Revisa qué observarás durante esta actividad y prepara el criterio si aún falta." action="Ver qué observar" onAction={() => document.getElementById(`criterion-${draftId}`)?.scrollIntoView({ behavior: "smooth", block: "start" })}/>}{proposal && <section className="ayni-panel space-y-3 p-4 sm:p-5">
+<WorkflowFeedback tone={readOnly ? "success" : "info"}>{readOnly ? "Actividad confirmada · solo lectura" : "Revisa el borrador. Puedes cambiar cualquier texto antes de confirmar."}</WorkflowFeedback>{!readOnly && <>{hasUnsavedChanges && <p className="text-sm text-[#526b87]">Guarda los cambios antes de confirmar.</p>}<div className="flex flex-wrap gap-2">
+<AsyncButton variant={draftId && !hasUnsavedChanges ? "outline" : "default"} busy={operation === "save"} busyLabel="Guardando..." disabled={Boolean(operation)} onClick={() => void save()}>{draftId ? "Guardar cambios" : "Guardar borrador"}</AsyncButton>{draftId && <AsyncButton busy={operation === "confirm"} busyLabel="Confirmando..." disabled={Boolean(operation) || hasUnsavedChanges} onClick={() => void confirm()}>Confirmar actividad</AsyncButton>}<details className="w-full rounded-xl border bg-[#f8fbff] p-3">
+<summary className="text-sm font-bold">Otras acciones</summary>
+<div className="mt-3 flex flex-wrap gap-2">
+<Button variant="outline" onClick={startNew}>Descartar</Button>{parent.status === "active" && <AsyncButton variant="outline" busy={operation === "generate"} busyLabel="Preparando otra propuesta..." disabled={Boolean(operation)} onClick={() => void generate()}>Preparar otra propuesta</AsyncButton>}</div>
+</details>
+</div>
+</>}{fields.map(([key, label]) => readOnly ? <ReadOnlyField key={key} label={label} value={proposal[key]}/> : <label key={key}>{label}<Textarea disabled={Boolean(operation)} value={proposal[key]} onChange={(event) => setProposal({ ...proposal, [key]: event.target.value })}/>
 </label>)}
 {proposal.evaluation_criterion && (readOnly ? <div className="rounded-lg bg-[#e7f5f7] p-3 text-sm">
 <b>Criterio:</b> {proposal.evaluation_criterion}<br />
@@ -437,15 +444,9 @@ export function ParentActivityGenerator({ onConfirmed, onGoToday, onRecordEviden
 <p className="text-sm text-[#526b87]">Se guardará y confirmará junto con la actividad.</p>{([["title", "Título"], ["purpose", "Propósito"], ["criterion_or_observation_focus", "Qué observar"], ["opening", "Inicio"], ["development", "Desarrollo"], ["closure", "Cierre"], ["evidence_expected", "Evidencia esperada"]] as const).map(([key, label]) => readOnly ? <ReadOnlyField key={key} label={label} value={workshopProposal[key]}/> : <label key={key}>{label}<Textarea value={workshopProposal[key]} onChange={(event) => setWorkshopProposal({ ...workshopProposal, [key]: event.target.value })}/>
 </label>)}<p className="mt-2 text-sm">
 <b>Ficha:</b> {workshopProposal.sheet_id ? "Seleccionada en el maestro de talleres" : "Sin ficha imprimible"}</p>{!readOnly && !draftId && <Button variant="outline" onClick={() => setWorkshopProposal(null)}>Preparar solo la actividad</Button>}</div>}
-{!readOnly && <>{hasUnsavedChanges && <p className="text-sm text-[#526b87]">Guarda los cambios antes de confirmar.</p>}<div className="flex flex-wrap gap-2">
-<AsyncButton busy={operation === "save"} busyLabel="Guardando..." disabled={Boolean(operation)} onClick={() => void save()}>{draftId ? "Guardar cambios" : "Guardar borrador"}</AsyncButton>{draftId && <AsyncButton busy={operation === "confirm"} busyLabel="Confirmando..." disabled={Boolean(operation) || hasUnsavedChanges} onClick={() => void confirm()}>Confirmar actividad</AsyncButton>}<details className="w-full rounded-xl border bg-[#f8fbff] p-3">
-<summary className="text-sm font-bold">Otras acciones</summary>
-<div className="mt-3 flex flex-wrap gap-2">
-<Button variant="outline" onClick={startNew}>Descartar</Button>{parent.status === "active" && <AsyncButton variant="outline" busy={operation === "generate"} busyLabel="Preparando otra propuesta..." disabled={Boolean(operation)} onClick={() => void generate()}>Preparar otra propuesta</AsyncButton>}</div>
-</details>
-</div>
-</>}</section>}
-{readOnly && draftId && activities.some((item) => item.id === draftId && item.status === "active") && proposal?.competency_status === "confirmed" && proposal.competency_id && <NextStepCard title="Actividad confirmada" description="Revisa qué observarás durante esta actividad y prepara el criterio si aún falta." action="Ver qué observar" onAction={() => document.getElementById(`criterion-${draftId}`)?.scrollIntoView({ behavior: "smooth", block: "start" })}/>}<section>
+</section>}
+{parent.status === "active" && Boolean(parent.details.activity_route?.length) && <details className="rounded-xl border bg-[#f8fbff] p-4"><summary className="cursor-pointer font-bold text-[#07576c]">Talleres opcionales de este proyecto</summary><p className="mt-2 text-sm text-[#526b87]">Puedes decidirlos después de preparar las actividades. Cada taller queda vinculado a este proyecto.</p><div className="mt-3"><WorkshopMasterPanel projectId={parent.id}/></div></details>}
+<section>
 <h2 className="font-bold">Actividades de esta experiencia</h2>{activitiesLoadError && <Button variant="outline" onClick={() => { if (parent)
         void refreshActivities(parent).then(() => setMessage("")).catch(() => { setMessage("No se pudieron cargar las actividades."); setMessageTone("error"); }); }}>Reintentar carga de actividades</Button>}
 {operation !== "load" && !activitiesLoadError && activities.length === 0 && <EmptyState title="Aún no hay actividades" description="Completa los datos de arriba para preparar la primera."/>}

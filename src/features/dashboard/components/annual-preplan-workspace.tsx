@@ -85,8 +85,24 @@ function PreplanTable({ rows, options, calendar, editable, onChange, onDevelop, 
   };
   return <><section hidden={editorOnly} className="space-y-4 rounded-2xl border border-[#d6e5ef] bg-white p-4 sm:p-5">
     <div><h2 className="text-xl font-extrabold text-[#172b52]">Lista de proyectos y unidades</h2>
-      <p className="mt-1 text-sm text-[#526b87]">Son propuestas iniciales. Puedes cambiarlas antes de confirmar «Mi año».</p></div>
-    <div className="overflow-x-auto rounded-xl border border-[#dce8f0]"><table className="w-full min-w-[900px] border-collapse text-left text-sm">
+      <p className="mt-1 text-sm text-[#526b87]">Propuestas de la versión seleccionada, en el mismo orden del mapa.</p></div>
+    <div className="space-y-3 md:hidden">{rows.map((row, index) => <article key={row.proposal_id} className="rounded-xl border p-4">
+      <p className="text-sm font-semibold text-[#087d96]">{String(index + 1).padStart(2, "0")} · {row.experience_type === "unit" ? "Unidad" : "Proyecto"}</p>
+      <h3 className="mt-1 break-words text-base font-bold">{row.title || "Propuesta sin título"}</h3>
+      <p className="mt-2 text-sm text-[#526b87]">{(tableSchedule[index] || (row.planned_start_date && row.planned_end_date))
+        ? `${compactDate(tableSchedule[index]?.starts_on ?? row.planned_start_date ?? "")}–${compactDate(tableSchedule[index]?.ends_on ?? row.planned_end_date ?? "")}`
+        : monthLabel(row.month)} · {row.duration_weeks} semanas · {row.period}</p>
+      <div className="mt-3 flex flex-wrap gap-2">{editable ? <>
+        <Button variant="outline" className="min-h-11" onClick={(event) => { returnFocusRef.current = event.currentTarget; setEditingId(row.proposal_id); }}>Editar</Button>
+        <Button variant="ghost" className="min-h-11 min-w-11" aria-label={`Subir ${row.title}`} disabled={index === 0} onClick={() => move(index, -1)}>↑</Button>
+        <Button variant="ghost" className="min-h-11 min-w-11" aria-label={`Bajar ${row.title}`} disabled={index === rows.length - 1} onClick={() => move(index, 1)}>↓</Button>
+      </> : onDevelop ? <Button variant="outline" className="min-h-11" onClick={() => onDevelop(row.proposal_id)}>Desarrollar</Button> : <span className="text-sm">{readOnlyLabel}</span>}</div>
+      <details className="mt-2 text-sm"><summary className="min-h-11 cursor-pointer py-3 font-semibold text-[#087d96]">Propósito, procedencia y competencias</summary>
+        <p>{row.purpose}</p><p className="mt-2">{row.rationale}</p>{row.source_teacher_decision && <p className="mt-2">Propuesta ajustada o añadida por la docente.</p>}
+        <p className="mt-2">{row.primary_competency_ids.map((id) => names.get(id) ?? id).join(" · ")}</p>
+      </details>
+    </article>)}</div>
+    <div className="hidden overflow-x-auto rounded-xl border border-[#dce8f0] md:block"><table className="w-full min-w-[900px] border-collapse text-left text-sm">
       <thead className="bg-[#edf5fa] text-[#173352]"><tr>{["Proyecto / unidad", "Mes y duración", "¿Por qué?", "Competencias previstas", "Acción"].map((label) =>
         <th key={label} scope="col" className={`border-b border-[#dce8f0] px-4 py-3 font-bold ${label === "Acción" ? "sticky right-0 z-10 bg-[#edf5fa]" : ""}`}>{label}</th>)}</tr></thead>
       <tbody>{rows.map((row, index) => <tr key={row.proposal_id} className="group h-20 border-b border-[#e3edf4] align-top even:bg-[#f9fcfe]">
@@ -236,22 +252,28 @@ export function AnnualPreplanWorkspace({ onConfirmed, onGoDiagnostic, onDevelop 
     setEditRequestId(id); setSelectedProposalId(id); };
   if (loading) return <LoadingState label="Abriendo Mi año..." />;
   if (showLegacy) return <div className="space-y-3"><Button variant="outline" onClick={() => setShowLegacy(false)}>← Volver a Mi año</Button><LegacyAnnualPlanGenerator onConfirmed={onConfirmed} onGoDiagnostic={onGoDiagnostic} /></div>;
-  return <section className="ayni-workflow !max-w-none space-y-5"><header className="flex flex-wrap items-start justify-between gap-3"><div className="min-w-0 flex-1"><p className="text-sm font-semibold text-[#087d96]">Paso 4 de 6 · Plan anual</p>
-    <h1 className="text-3xl font-extrabold text-[#172b52]">Mi año{context?.year ? ` ${context.year}` : ""}</h1><p className="mt-2 max-w-xl text-[#526b87]">Organiza visualmente tus proyectos y unidades. Muévelos y revisa una nueva versión cuando cambie el grupo.</p></div>
+  const showPreparation = !selected || reviewNewEvidence;
+  return <section className="ayni-workflow !max-w-none space-y-4">{!showPreparation && <header className="flex flex-wrap items-start justify-between gap-3"><div className="min-w-0 flex-1">
+    <h1 className="text-3xl font-extrabold text-[#172b52]">Mi año{context?.year ? ` ${context.year}` : ""}</h1><p className="mt-2 max-w-xl text-[#526b87]">Selecciona una propuesta para revisar tu año.</p></div>
     {isPreplan(selected) && <div className="flex shrink-0 flex-wrap gap-2"><Button type="button" variant="outline" onClick={() => setListOpen(!listOpen)}>
       {listOpen ? <LayoutGrid className="size-4" /> : <List className="size-4" />}{listOpen ? "Ver mapa" : "Vista en lista"}</Button>
       {selected.status === "active" && !plans?.draft && <Button type="button" disabled={Boolean(busy) || reviewNewEvidence} onClick={copy}><RotateCcw className="size-4" /> Reorganizar</Button>}
-      {editable && <span className="rounded-lg bg-[#eaf7f2] px-3 py-2 text-sm font-semibold text-[#176442]">Reorganización en borrador</span>}</div>}</header>
+      {editable && <span className="rounded-lg bg-[#eaf7f2] px-3 py-2 text-sm font-semibold text-[#176442]">Reorganización en borrador</span>}</div>}</header>}
     {error && <WorkflowFeedback tone="error">{error}</WorkflowFeedback>}{notice && <WorkflowFeedback tone="success">{notice}</WorkflowFeedback>}
-    {(!selected || reviewNewEvidence) && context && <AnnualPersonalizationWorkspace competencies={options} calendar={context.calendar} refresh={reviewNewEvidence} replacingDraft={selected?.status === "draft" ? { id: selected.id, revision: selected.revision } : undefined} onCreated={async (id) => { await reload(id); writeWorkspaceLocation("Planificar", { preparing: "no", preparation: "" }, true);
+    {reviewNewEvidence && selected && <Button variant="ghost" className="min-h-11" onClick={() => setReviewNewEvidence(false)}>← Volver a Mi año</Button>}
+    {showPreparation && context && <AnnualPersonalizationWorkspace competencies={options} calendar={context.calendar} refresh={reviewNewEvidence} replacingDraft={selected?.status === "draft" ? { id: selected.id, revision: selected.revision } : undefined} onCreated={async (id) => { await reload(id); writeWorkspaceLocation("Planificar", { preparing: "no", preparation: "" }, true);
       setNotice("Ya tienes doce propuestas iniciales. Revisa sus razones y ajusta lo necesario antes de confirmar."); }} />}
     {selected && !isPreplan(selected) && <section className="rounded-2xl border bg-white p-5"><h2 className="text-lg font-bold">Tienes un plan del formato anterior</h2><p className="mt-2 text-sm text-[#526b87]">La versión {selected.version} sigue guardada. Puedes abrirla o preparar un preplan nuevo con la tabla editable.</p>
       <div className="mt-4 flex flex-wrap gap-2"><Button variant="outline" onClick={() => setShowLegacy(true)}>Ver plan anterior</Button></div></section>}
-    {isPreplan(selected) && proposal && <><div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-[#edf7fa] p-4"><p className="font-bold">{selected.status === "active" ? "Mi año vigente" : selected.status === "draft" ? "Mi año en revisión" : "Versión anterior"} · versión {selected.version}{dirty ? " · cambios sin guardar" : ""}</p>
+    {!showPreparation && isPreplan(selected) && proposal && <><div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-[#edf7fa] p-4"><p className="font-bold">{selected.status === "active" ? "Mi año vigente" : selected.status === "draft" ? "Mi año en revisión" : "Versión anterior"} · versión {selected.version}{dirty ? " · cambios sin guardar" : ""}</p>
       {selected.status === "active" && !plans?.draft && <Button variant="outline" disabled={Boolean(busy)} onClick={() => setReviewNewEvidence(!reviewNewEvidence)}>
         {reviewNewEvidence ? "Cerrar revisión" : "Revisar evidencia nueva"}</Button>}</div>
-      {editable && <div><Button variant="outline" disabled={Boolean(busy) || Boolean(dirty)} onClick={() => { setReviewNewEvidence(!reviewNewEvidence); if (!reviewNewEvidence) writeWorkspaceLocation("Planificar", { preparation: "ideas" }, true); }}>{reviewNewEvidence ? "Cerrar preparación" : "Editar ideas y regenerar"}</Button>{dirty && <p className="mt-2 text-sm">Guarda los cambios del mapa antes de editar las ideas.</p>}</div>}
-      {Boolean(proposal.planning_preferences?.teacher_ideas.length) && !reviewNewEvidence && <section className="space-y-3 rounded-2xl border bg-white p-4"><h2 className="text-lg font-bold">Cómo se consideraron tus ideas</h2>{teacherIdeaPlacements(proposal).map((idea: { id: string; title: string; outcome: string; requested_month: number | null; months: number[]; explanation: string }) => <div key={idea.id}><h3 className="font-semibold">{idea.title} · {idea.outcome === "incorporated" ? "Incorporada" : idea.outcome === "alternative" ? "Ubicación alternativa" : "Sin incorporar en el mapa"}</h3><p className="text-sm text-[#526b87]">{idea.requested_month ? `Mes solicitado: ${ideaMonths[idea.requested_month - 1]}. ` : "Sin mes solicitado. "}{idea.months.length ? `Ubicación actual en el mapa: ${idea.months.map((month) => ideaMonths[month - 1]).join(", ")}.` : ""}</p><p className="text-sm text-[#526b87]">Explicación de la propuesta inicial: {idea.explanation}</p></div>)}</section>}
+
+      {editable && <div className="flex flex-wrap items-center justify-between gap-2 [&_button]:min-h-11 [&_button]:whitespace-normal">{onGoDiagnostic && <Button variant="ghost" onClick={onGoDiagnostic}>Ver paso anterior</Button>}{dirty ? <AsyncButton busy={busy === "save"} busyLabel="Guardando..." disabled={Boolean(busy) || Boolean(mapScheduleError)} onClick={save}>Guardar cambios</AsyncButton>
+        : <AsyncButton className="ml-auto" busy={busy === "confirm"} busyLabel="Confirmando y preparando Word..." disabled={Boolean(busy) || reviewNewEvidence} onClick={confirm}>Confirmar Mi año</AsyncButton>}
+        {reviewNewEvidence && <p className="w-full text-sm">Termina o cierra la preparación de ideas antes de confirmar el mapa.</p>}
+        {mapScheduleError && <p role="alert" className="w-full text-sm text-amber-800">{mapScheduleError} Mueve o retira una propuesta antes de guardar.</p>}
+        <details className="w-full text-sm text-[#526b87]"><summary className="cursor-pointer py-2 font-semibold">Qué cambia al confirmar</summary><p>Los movimientos quedan en este borrador. Solo al confirmar cambiará el año vigente y Ayni desarrollará el documento formal.</p></details></div>}
       {context && !listOpen && <AnnualYearMap rows={proposal.proposed_experiences} available={available}
         calendar={context.calendar} effectiveCalendar={effectiveCalendar} slots={!dirty && selected.status === "active" ? selected.project_slots : []}
         preferPlannedDates={!dirty}
@@ -259,24 +281,21 @@ export function AnnualPreplanWorkspace({ onConfirmed, onGoDiagnostic, onDevelop 
         onMove={move} onRetire={retire} onRestore={restore} onReplace={replace}
         onEdit={(id) => { editorTriggerRef.current = document.activeElement as HTMLElement | null; setEditRequestId(id); }} onDevelop={selected.status === "active" ? onDevelop : undefined}
         onAddManual={addManual} competencies={options} />}
-      {(listOpen || editRequestId) && <div className="space-y-3">{listOpen && <Button type="button" variant="outline" onClick={() => setListOpen(false)}><LayoutGrid className="size-4" /> Volver al mapa</Button>}
+      {(listOpen || editRequestId) && <div className="space-y-3">
         <PreplanTable key={editRequestId ?? "list"} rows={proposal.proposed_experiences} options={options} calendar={context?.calendar} editable={editable && !reviewNewEvidence} readOnlyLabel={selected.status === "draft" ? "En revisión" : "Confirmada"}
           onDevelop={selected.status === "active" ? onDevelop : undefined} editRequestId={editRequestId} onRetire={retire}
           editorOnly={!listOpen} returnFocusRef={editorTriggerRef} onEditorClose={() => setEditRequestId(null)}
           onChange={changeRows} /></div>}
+      {editable && <div><Button variant="outline" disabled={Boolean(busy) || Boolean(dirty)} onClick={() => { setReviewNewEvidence(!reviewNewEvidence); if (!reviewNewEvidence) writeWorkspaceLocation("Planificar", { preparation: "ideas" }, true); }}>{reviewNewEvidence ? "Cerrar preparación" : "Editar ideas y regenerar"}</Button>{dirty && <p className="mt-2 text-sm">Guarda los cambios del mapa antes de editar las ideas.</p>}</div>}
+      {Boolean(proposal.planning_preferences?.teacher_ideas.length) && !reviewNewEvidence && <details className="space-y-3 rounded-xl border bg-white p-4"><summary className="min-h-11 cursor-pointer py-2 font-semibold">Cómo se consideraron tus ideas</summary>{teacherIdeaPlacements(proposal).map((idea: { id: string; title: string; outcome: string; requested_month: number | null; months: number[]; explanation: string }) => <div key={idea.id}><h3 className="font-semibold">{idea.title} · {idea.outcome === "incorporated" ? "Incorporada" : idea.outcome === "alternative" ? "Ubicación alternativa" : "Sin incorporar en el mapa"}</h3><p className="text-sm text-[#526b87]">{idea.requested_month ? `Mes solicitado: ${ideaMonths[idea.requested_month - 1]}. ` : "Sin mes solicitado. "}{idea.months.length ? `Ubicación actual en el mapa: ${idea.months.map((month) => ideaMonths[month - 1]).join(", ")}.` : ""}</p><p className="text-sm text-[#526b87]">Explicación de la propuesta inicial: {idea.explanation}</p></div>)}</details>}
       <details className="rounded-2xl border bg-white p-4"><summary className="cursor-pointer font-bold">Cobertura de competencias · {coverage.filter((item: { warnings: string[] }) => item.warnings.length).length} avisos</summary><p className="mt-1 text-sm text-[#526b87]">Ayni señala oportunidades previstas; puedes decidir cómo ajustarlas.</p>
         <div className="mt-3 grid gap-2 sm:grid-cols-2">{coverage.filter((item: { warnings: string[] }) => item.warnings.length).map((item: { competency_id: string; competency_name: string; project_count: number; warnings: string[] }) => <p key={item.competency_id} className="rounded-lg bg-[#fff5e4] p-3 text-sm"><b>{item.competency_name}</b> · {item.project_count} {item.project_count === 1 ? "oportunidad" : "oportunidades"}<br />{item.warnings.join(" ")}</p>)}
           {!coverage.some((item: { warnings: string[] }) => item.warnings.length) && <p className="text-sm">Las competencias del aula tienen oportunidades previstas en este preplan.</p>}</div></details>
-      {editable && <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border bg-white p-4">{onGoDiagnostic && <Button variant="outline" onClick={onGoDiagnostic}>Ver paso anterior</Button>}{dirty ? <AsyncButton busy={busy === "save"} busyLabel="Guardando..." disabled={Boolean(busy) || Boolean(mapScheduleError)} onClick={save}>Guardar cambios</AsyncButton>
-        : <AsyncButton className="ml-auto" busy={busy === "confirm"} busyLabel="Confirmando y preparando Word..." disabled={Boolean(busy) || reviewNewEvidence} onClick={confirm}>Confirmar Mi año</AsyncButton>}
-        {reviewNewEvidence && <p className="w-full text-sm">Termina o cierra la preparación de ideas antes de confirmar el mapa.</p>}
-        {mapScheduleError && <p role="alert" className="w-full text-sm text-amber-800">{mapScheduleError} Mueve o retira una propuesta antes de guardar.</p>}
-        <p className="w-full text-sm text-[#526b87]">Los movimientos quedan en este borrador. Solo al confirmar cambiará el año vigente y Ayni desarrollará el documento formal.</p></div>}
       {(busy === "confirm" || busy === "formal") && <GenerationProgress label="Preparando el documento formal" description="El plan está guardado. Ayni está desarrollando el Word; esto puede tardar varios minutos." />}
       {selected.status !== "draft" && <div className="rounded-2xl border bg-white p-4"><p className="font-bold">Word del plan anual</p><p className="mt-1 text-sm">{selected.formal_ready ? "Listo en Biblioteca → Mis documentos para revisar y descargar." : "Falta preparar el Word de esta versión. Cuando esté listo, lo encontrarás en Biblioteca → Mis documentos."}</p>
         {!selected.formal_ready && <div className="mt-3 flex justify-end"><AsyncButton busy={busy === "formal"} busyLabel="Preparando Word..." disabled={Boolean(busy)} onClick={() => formalize(selected.id)}>Preparar Word</AsyncButton></div>}</div>}
     </>}
-    {plans && (plans.draft || plans.active || plans.archived.length > 0) && <section className="rounded-2xl border bg-white p-4"><h2 className="font-bold">Versiones de Mi año</h2><div className="mt-3 flex flex-wrap gap-2">{[plans.draft, plans.active, ...plans.archived].filter((item): item is Plan => Boolean(item)).map((item) =>
+    {!showPreparation && plans && (plans.draft || plans.active || plans.archived.length > 0) && <section className="rounded-2xl border bg-white p-4"><h2 className="font-bold">Versiones de Mi año</h2><div className="mt-3 flex flex-wrap gap-2">{[plans.draft, plans.active, ...plans.archived].filter((item): item is Plan => Boolean(item)).map((item) =>
       <Button key={item.id} disabled={reviewNewEvidence || Boolean(busy)} variant={item.id === selectedId ? "default" : "outline"} onClick={() => { if (item.id === selectedId || !canLeaveWorkspace()) return; setEditRequestId(null); setSelectedId(item.id); setProposal(isPreplan(item) ? item.proposal : null); }}>
         {item.adjustment_label ? `Reajuste ${item.adjustment_label}` : `Versión ${item.version}`} · {item.status === "active" ? "vigente" : item.status === "draft" ? "borrador" : "anterior"}</Button>)}</div></section>}
   </section>;

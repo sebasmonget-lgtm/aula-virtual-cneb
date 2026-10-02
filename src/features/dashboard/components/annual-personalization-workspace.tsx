@@ -153,38 +153,34 @@ export function AnnualPersonalizationWorkspace({ onCreated, competencies, calend
   };
   const coverage = details.evidence_coverage;
   if (stage === "ideas") return <div className="space-y-4" aria-busy={busy}><fieldset disabled={busy} className="min-w-0 space-y-4">
-    <Button variant="ghost" onClick={() => changeStage("review")}>← Volver a Así entendí tu aula</Button>
-    <AnnualTeacherIdeas ideas={details.planning_preferences?.teacher_ideas ?? []} readOnly={review.status === "confirmed"}
-      onChange={(teacher_ideas) => set({ planning_preferences: { version: 1, teacher_ideas } })} />
-    {notice && <WorkflowFeedback tone="success">{notice}</WorkflowFeedback>}
+    <AnnualTeacherIdeas ideas={details.planning_preferences?.teacher_ideas ?? []} readOnly={review.status === "confirmed"} actions={<div className="space-y-2 [&_button]:min-h-11 [&_button]:h-auto [&_button]:whitespace-normal [&_button]:py-3">    {notice && <WorkflowFeedback tone="success">{notice}</WorkflowFeedback>}
     {review.sources_changed && <WorkflowFeedback>Hay registros nuevos. Actualiza la propuesta del aula antes de generar Mi año.</WorkflowFeedback>}
     {replacingDraft && <p className="text-sm text-[#526b87]">Regenerar reemplazará las propuestas de este borrador. El plan vigente se conserva hasta que confirmes la nueva versión.</p>}
     <p className="text-sm font-semibold text-[#526b87]">{dirty || calendarDirty ? "Cambios pendientes de guardar" : review.status === "confirmed" ? "Preparación confirmada y guardada" : "Borrador guardado · pendiente de confirmación"}</p>
-    <div ref={errorRef} tabIndex={-1}>{error && <WorkflowFeedback tone="error">{error}</WorkflowFeedback>}
-      {conflict && <Button className="mt-3 mr-3" variant="outline" onClick={() => void recoverReview()}>Abrir revisión guardada</Button>}
-      {review.sources_changed && !conflict && <Button className="mt-3 mr-3" variant="outline" onClick={() => void updateProposal()}>Actualizar propuesta</Button>}
-      {review.status === "draft" ? <Button className="mt-3 mr-3" variant="outline" onClick={() => void saveReview()}>Guardar ideas</Button> : <Button className="mt-3 mr-3" variant="outline" onClick={() => void openNewReview()}>Editar ideas</Button>}
-      {existingDraftId ? <Button className="mt-3" onClick={() => void onCreated(existingDraftId)}>Continuar borrador existente</Button> : <AsyncButton className="mt-3" busy={busy} busyLabel={generating ? "Preparando propuestas…" : "Guardando…"} disabled={review.sources_changed || conflict || (details.planning_preferences?.teacher_ideas ?? []).some((idea) => !idea.title.trim())} onClick={() => void create()}>
-        {details.planning_preferences?.teacher_ideas.length ? replacingDraft ? "Guardar y regenerar propuestas" : "Guardar y generar propuestas" : replacingDraft ? "Regenerar sin agregar ideas" : "Todavía no tengo ideas / Continuar sin agregar"}</AsyncButton>}
-    </div></fieldset>{busy && (generating ? <GenerationProgress label="Preparando tu año" description="Ayni está organizando las propuestas. Espera a que termine para continuar." /> : <LoadingState label="Guardando la preparación…" />)}</div>;
-  return <div className="space-y-4" aria-busy={busy}><header><p className="text-sm font-semibold text-[#087d96]">Antes de crear Mi año</p>
-    <h1 className="text-3xl font-extrabold text-[#172b52]">Así entendí tu aula</h1>
+    <div ref={errorRef} tabIndex={-1} className="flex flex-wrap items-center gap-2">{error && <WorkflowFeedback tone="error">{error}</WorkflowFeedback>}
+      {conflict && <Button variant="outline" onClick={() => void recoverReview()}>Abrir revisión guardada</Button>}
+      {review.sources_changed && !conflict && <Button variant="outline" onClick={() => void updateProposal()}>Actualizar propuesta</Button>}
+      {existingDraftId ? <Button className="w-full sm:w-auto" onClick={() => void onCreated(existingDraftId)}>Continuar borrador existente</Button> : <AsyncButton className="w-full sm:w-auto" busy={busy} busyLabel={generating ? "Preparando propuestas…" : "Guardando…"} disabled={review.sources_changed || conflict || (details.planning_preferences?.teacher_ideas ?? []).some((idea) => !idea.title.trim())} onClick={() => void create()}>
+        {details.planning_preferences?.teacher_ideas.length ? replacingDraft ? "Guardar y regenerar propuestas" : "Guardar y generar propuestas" : replacingDraft ? "Regenerar sin agregar ideas" : "Continuar sin ideas"}</AsyncButton>}
+      {review.status === "draft" ? <Button variant="outline" onClick={() => void saveReview()}>Guardar ideas</Button> : <Button variant="outline" onClick={() => void openNewReview()}>Editar ideas</Button>}
+    </div></div>}
+      onChange={(teacher_ideas) => set({ planning_preferences: { version: 1, teacher_ideas } })} />
+    <Button variant="ghost" onClick={() => changeStage("review")}>← Volver a Así entendí tu aula</Button>
+</fieldset>{busy && (generating ? <GenerationProgress label="Preparando tu año" description="Ayni está organizando las propuestas. Espera a que termine para continuar." /> : <LoadingState label="Guardando la preparación…" />)}</div>;
+  return <div className="space-y-4" aria-busy={busy}><header>
+    <h1 className="text-2xl font-extrabold text-[#172b52] sm:text-3xl">Así entendí tu aula</h1>
     <p className="mt-2 text-sm text-[#526b87]">Ayni organizó la evidencia disponible. Revisa o corrige lo que influirá en tus propuestas del año.</p></header>
     {notice && <WorkflowFeedback tone="success">{notice}</WorkflowFeedback>}
     {review.sources_changed && <WorkflowFeedback>Hay registros nuevos desde esta propuesta. Actualízala para revisarlos; tus correcciones se conservarán.</WorkflowFeedback>}
     <fieldset disabled={busy} aria-label="Revisión del aula" className="min-w-0 space-y-4">
-    {refresh && details.suggested_changes && <p className="rounded-xl bg-[#fff7e8] p-3 text-sm">
-      Desde la decisión anterior hay {details.suggested_changes.new_observations} observaciones nuevas.
-      {details.suggested_changes.new_interests.length > 0 && ` Nuevos intereses posibles: ${details.suggested_changes.new_interests.join(", ")}.`}
-      {details.suggested_changes.new_context.length > 0 && ` Nuevas oportunidades: ${details.suggested_changes.new_context.join(", ")}.`}
-      {Boolean(details.suggested_changes.new_priorities?.length) && ` Prioridades para revisar: ${details.suggested_changes.new_priorities?.join(", ")}.`}
-      {details.suggested_changes.group_profile_changed && " Ayni propone actualizar la síntesis del grupo."}
-      {details.suggested_changes.new_observations === 0 && !details.suggested_changes.new_interests.length && !details.suggested_changes.new_context.length
-        && !details.suggested_changes.new_priorities?.length && !details.suggested_changes.group_profile_changed
-        && " Puedes actualizar condiciones o decisiones si cambió la realidad del aula."}</p>}
-    <p className="rounded-xl bg-[#edf7fa] p-3 text-sm">{coverage.observations
-      ? `Síntesis basada en ${coverage.observations} ${coverage.observations === 1 ? "observación" : "observaciones"} y ${coverage.interviews ?? 0} ${coverage.interviews === 1 ? "entrevista confirmada" : "entrevistas confirmadas"}.`
-      : "Hay aspectos que seguiremos observando durante las primeras semanas."} Ningún dato pendiente se interpreta como dificultad.</p>
+    <div className="space-y-2 rounded-xl border bg-white p-3 [&_button]:min-h-11 [&_button]:h-auto [&_button]:whitespace-normal [&_button]:py-3"><details className="text-sm text-[#526b87]"><summary className="cursor-pointer font-semibold">Qué se guarda y qué confirmarás</summary><p className="mt-2">{review.status === "draft" ? "Los bloques revisados aún no están confirmados. Puedes guardar la revisión. Al generar propuestas confirmarás los cinco bloques como una sola versión y guardarás las fechas pendientes." : "La decisión del aula está confirmada. Puedes crear Mi año o abrir una nueva revisión."}</p></details>
+      <p className="mt-2 text-sm" role="status">{dirty || calendarDirty ? "Cambios pendientes de guardar" : review.status === "confirmed" ? "Confirmado y guardado" : "Borrador guardado · pendiente de confirmación"}</p>
+      {error && <div ref={errorRef} tabIndex={-1} className="mt-3"><WorkflowFeedback tone="error">{error}</WorkflowFeedback></div>}
+      {conflict ? <Button className="mt-3 mr-3" variant="outline" onClick={() => void recoverReview()}>Abrir revisión guardada</Button> : (review.sources_changed || error) && !existingDraftId && <Button className="mt-3 mr-3" variant="outline" onClick={() => void updateProposal()}>Actualizar propuesta</Button>}
+      {existingDraftId && <Button className="mt-3 mr-3" onClick={() => void onCreated(existingDraftId)}>Continuar borrador existente</Button>}
+      {review.status === "draft" && <Button className="mt-3 mr-3 min-h-12" variant="outline" onClick={() => void saveReview()}>Guardar revisión</Button>}
+      {review.status === "confirmed" && <Button className="mt-3" variant="outline" disabled={busy} onClick={() => void openNewReview()}>Editar la decisión confirmada</Button>}
+      <AsyncButton className="mt-3 min-h-12" disabled={review.sources_changed || conflict || Boolean(existingDraftId)} busy={busy} busyLabel="Guardando…" onClick={() => changeStage("ideas")}>Crear mi año</AsyncButton></div>
     {card("group", "Tu grupo", <p>{details.group_profile}</p>,
       <label className="block text-sm font-semibold">Cómo es y cómo participa el grupo
         <Textarea className="mt-2 min-h-28" value={details.group_profile} onChange={(event) => set({ group_profile: event.target.value })} /></label>)}
@@ -243,14 +239,19 @@ export function AnnualPersonalizationWorkspace({ onCreated, competencies, calend
         <label className="block text-sm font-semibold sm:col-span-2">Algo más que quieras considerar · opcional
           <Textarea className="mt-2" value={details.additional_notes} onChange={(event) => set({ additional_notes: event.target.value })} /></label></div>)}
     {details.needs_more_observation.length > 0 && <p className="rounded-xl bg-[#fff7e8] p-3 text-sm">{details.needs_more_observation.join(" ")}</p>}
-    <div className="rounded-2xl border bg-white p-4"><p className="text-sm text-[#526b87]">{review.status === "draft" ? "Los bloques revisados aún no están confirmados. Puedes guardar la revisión. Al generar propuestas confirmarás los cinco bloques como una sola versión y guardarás las fechas pendientes." : "La decisión del aula está confirmada. Puedes crear Mi año o abrir una nueva revisión."}</p>
-      <p className="mt-2 text-sm" role="status">{dirty || calendarDirty ? "Cambios pendientes de guardar" : review.status === "confirmed" ? "Confirmado y guardado" : "Borrador guardado · pendiente de confirmación"}</p>
-      {error && <div ref={errorRef} tabIndex={-1} className="mt-3"><WorkflowFeedback tone="error">{error}</WorkflowFeedback></div>}
-      {conflict ? <Button className="mt-3 mr-3" variant="outline" onClick={() => void recoverReview()}>Abrir revisión guardada</Button> : (review.sources_changed || error) && !existingDraftId && <Button className="mt-3 mr-3" variant="outline" onClick={() => void updateProposal()}>Actualizar propuesta</Button>}
-      {existingDraftId && <Button className="mt-3 mr-3" onClick={() => void onCreated(existingDraftId)}>Continuar borrador existente</Button>}
-      {review.status === "draft" && <Button className="mt-3 mr-3 min-h-12" variant="outline" onClick={() => void saveReview()}>Guardar revisión</Button>}
-      {review.status === "confirmed" && <Button className="mt-3" variant="outline" disabled={busy} onClick={() => void openNewReview()}>Editar la decisión confirmada</Button>}
-      <AsyncButton className="mt-3 min-h-12" disabled={review.sources_changed || conflict || Boolean(existingDraftId)} busy={busy} busyLabel="Guardando…" onClick={() => changeStage("ideas")}>Crear mi año</AsyncButton></div>
+    <details className="rounded-xl border bg-white p-3 text-sm"><summary className="min-h-11 cursor-pointer py-2 font-semibold text-[#07576c]">Evidencia utilizada y cambios desde la decisión anterior</summary><div className="mt-2 space-y-3">    {refresh && details.suggested_changes && <p className="rounded-xl bg-[#fff7e8] p-3 text-sm">
+      Desde la decisión anterior hay {details.suggested_changes.new_observations} observaciones nuevas.
+      {details.suggested_changes.new_interests.length > 0 && ` Nuevos intereses posibles: ${details.suggested_changes.new_interests.join(", ")}.`}
+      {details.suggested_changes.new_context.length > 0 && ` Nuevas oportunidades: ${details.suggested_changes.new_context.join(", ")}.`}
+      {Boolean(details.suggested_changes.new_priorities?.length) && ` Prioridades para revisar: ${details.suggested_changes.new_priorities?.join(", ")}.`}
+      {details.suggested_changes.group_profile_changed && " Ayni propone actualizar la síntesis del grupo."}
+      {details.suggested_changes.new_observations === 0 && !details.suggested_changes.new_interests.length && !details.suggested_changes.new_context.length
+        && !details.suggested_changes.new_priorities?.length && !details.suggested_changes.group_profile_changed
+        && " Puedes actualizar condiciones o decisiones si cambió la realidad del aula."}</p>}
+    <p className="rounded-xl bg-[#edf7fa] p-3 text-sm">{coverage.observations
+      ? `Síntesis basada en ${coverage.observations} ${coverage.observations === 1 ? "observación" : "observaciones"} y ${coverage.interviews ?? 0} ${coverage.interviews === 1 ? "entrevista confirmada" : "entrevistas confirmadas"}.`
+      : "Hay aspectos que seguiremos observando durante las primeras semanas."} Ningún dato pendiente se interpreta como dificultad.</p>
+</div></details>
     </fieldset>
     {busy && <LoadingState label="Guardando la revisión…" />}
   </div>;

@@ -293,9 +293,9 @@ export function ProjectDevelopmentWorkspace({ initialProposalId, onConfirmed, on
   if (loading) return <LoadingState label="Abriendo proyectos y unidades..." />;
   if (legacy) return <div className="space-y-3"><Button variant="outline" onClick={() => setLegacy(false)}>← Volver a proyectos</Button>
     <LearningExperienceGenerator onConfirmed={onConfirmed} feedbackPeriodId={feedbackPeriodId} /></div>;
-  return <section className="ayni-workflow space-y-5"><header><p className="text-sm font-semibold text-[#087d96]">Paso 5 de 6 · Proyecto o unidad</p>
-    <h1 className="text-3xl font-extrabold text-[#172b52]">Próximo proyecto de tu plan</h1>
-    <p className="mt-2 text-[#526b87]">Elige un proyecto de «Mi año». Dentro revisarás el propósito, las preguntas y el mapa; después podrás preparar sus actividades y talleres.</p></header>
+  return <section className="ayni-workflow space-y-5"><header>
+    <h1 className="text-2xl font-extrabold sm:text-3xl text-[#172b52]">{selected?.status === "active" ? "Tu proyecto o unidad" : "Próximo proyecto de tu plan"}</h1>
+    <p className="mt-2 text-[#526b87]">{selected?.status === "active" ? "Elige una actividad para preparar tu día." : "Elige una propuesta de Mi año para desarrollar sus actividades."}</p></header>
     {error && <WorkflowFeedback tone="error">{error}</WorkflowFeedback>}{notice && <WorkflowFeedback tone="success">{notice}</WorkflowFeedback>}
     {!selected ? <><section className="space-y-3"><h2 className="text-xl font-bold">Elige qué desarrollar</h2>
       <p className="text-sm text-[#526b87]">Primero verás la planificación vigente o la próxima. Puedes revisar períodos anteriores sin cambiar sus fechas.</p>
@@ -481,14 +481,14 @@ export function ProjectDevelopmentWorkspace({ initialProposalId, onConfirmed, on
         {mapChanged && <AsyncButton busy={busy === "save"} busyLabel="Guardando mapa..." disabled={Boolean(busy)} onClick={() => void saveMap()}>Guardar mapa</AsyncButton>}
         {!mapChanged && <AsyncButton busy={busy === "confirm"} busyLabel="Confirmando proyecto..." disabled={Boolean(busy)} onClick={() => void confirm()}>Confirmar proyecto</AsyncButton>}
         <p className="text-sm text-[#526b87]">El proyecto queda confirmado después de revisar este mapa.</p></section>}
-      {selected.status === "active" && <section className="space-y-4 rounded-2xl border bg-white p-5"><h2 className="text-xl font-bold">Dentro del proyecto: {selected.title}</h2>
-        <p className="text-sm text-[#526b87]">Desde aquí preparas las actividades de este proyecto, en el orden del mapa. Los talleres opcionales aparecen junto a las actividades. Esta versión también es la base del Word.</p>
-        <p className="text-sm"><b>Imagen elegida:</b> {imageOptions.find((item) => item.id === selected.details.image_id)?.title ?? "Sin imagen"}. Para cambiarla, crea una nueva versión.</p>
-        <div className="flex flex-wrap gap-2"><AsyncButton busy={busy === "formal"} busyLabel="Preparando Word..." disabled={Boolean(busy)} onClick={() => void formalize()}>Preparar Word</AsyncButton>
+      {selected.status === "active" && <section className="space-y-4 rounded-2xl border bg-white p-5"><h2 className="text-xl font-bold">Actividades del proyecto</h2>
+        <p className="text-sm text-[#526b87]">Actividades en el orden del mapa. El documento y las versiones están al final.</p>
+        <div className="space-y-2">{route.map((item) => <article key={item.id} className="flex flex-col items-start justify-between gap-3 rounded-lg border p-3 sm:flex-row sm:items-center">
+          <div className="min-w-0 w-full sm:flex-1"><b>{item.number}. {item.title}</b><p className="text-sm text-[#526b87]">{dateLabel(item.date)}</p><details className="mt-1 text-sm"><summary className="cursor-pointer py-2 font-semibold text-[#07576c]">Propósito</summary><p>{item.specific_purpose}</p></details></div>
+          <Button className="min-h-11" onClick={() => onDevelopActivity?.(selected.id, item.id)}>Desarrollar actividad</Button></article>)}</div><details className="text-sm"><summary className="min-h-11 cursor-pointer py-2 font-semibold text-[#07576c]">Documento, imagen y versiones del proyecto</summary><div className="mt-3 space-y-3">        <p className="text-sm"><b>Imagen elegida:</b> {imageOptions.find((item) => item.id === selected.details.image_id)?.title ?? "Sin imagen"}. Para cambiarla, crea una nueva versión.</p>
+        <div className="flex flex-wrap gap-2"><AsyncButton variant="outline" busy={busy === "formal"} busyLabel="Preparando Word..." disabled={Boolean(busy)} onClick={() => void formalize()}>Preparar Word</AsyncButton>
           <AsyncButton variant="outline" busy={busy === "copy"} busyLabel="Creando versión..." disabled={Boolean(busy)} onClick={() => void copyVersion()}>Revisar una nueva versión</AsyncButton></div>
-        <div className="space-y-2">{route.map((item) => <article key={item.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border p-3">
-          <div><b>{item.number}. {item.title}</b><p className="text-sm text-[#526b87]">{dateLabel(item.date)} · {item.specific_purpose}</p></div>
-          <Button onClick={() => onDevelopActivity?.(selected.id, item.id)}>Desarrollar actividad</Button></article>)}</div></section>}
+</div></details></section>}
       {currentEdit && selected.status === "draft" && <div role="dialog" aria-modal="true" aria-label="Editar actividad" className="fixed inset-0 z-50 flex justify-end bg-[#10233a]/45">
         <div className="h-full w-full max-w-xl space-y-4 overflow-y-auto bg-white p-5 shadow-2xl"><div className="flex items-center justify-between gap-2"><h2 className="text-xl font-bold">Editar actividad del mapa</h2>
           <Button variant="outline" onClick={() => setEditingRoute(null)}>Cerrar</Button></div>
