@@ -12,4 +12,7 @@ test("cuatro destinos y rutas antiguas conservan enlace directo", () => {
   assert.equal(primaryDestination("Calendario"), "Planificar");
   assert.equal(primaryDestination("Evaluar"), "Aula");
   assert.equal(destinationFromHash("#otro"), null);
+  for (const [hash, destination] of [["#biblioteca?view=resources&filter=workshops", "Biblioteca"],
+    ["#planificar?tab=annual", "Planificar"], ["#evaluar?section=period&view=conclusions", "Evaluar"],
+    ["#calendario?view=week", "Calendario"]]) assert.equal(destinationFromHash(hash), destination);
 });

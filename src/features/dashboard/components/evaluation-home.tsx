@@ -3,10 +3,11 @@
 import { useEffect, useState } from "react";
 import { BookOpen, FileText, TableProperties, Users } from "lucide-react";
 import { apiFetch } from "@/src/lib/ayni-api-fetch";
+import { readWorkspaceParams } from "@/src/lib/workspace-location";
 import { localDatabaseApiUrl, type LocalDashboard } from "@/src/lib/local-database";
 import { LoadingState, WorkflowFeedback } from "./workflow-ui";
 
-type EvaluationView = "student" | "family" | "coverage" | "consolidated";
+type EvaluationView = "student" | "conclusions" | "family" | "coverage" | "consolidated";
 type Row = { student_id: string; competency_id: string; competency_name: string; evidence_count: number; state: string };
 type Overview = { students: { id: string; first_name: string; last_name: string; preferred_name: string | null }[]; rows: Row[] };
 type Workspace = { years: { id: string; year: number }[]; classrooms: { id: string; school_year_id: string }[]; periods: { id: string; school_year_id: string; label: string; starts_on: string; ends_on: string }[] };
@@ -27,6 +28,7 @@ export function EvaluationHome({ dashboard, onPeriod, onReplan }: {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [retry, setRetry] = useState(0);
+  const [activePeriod, setActivePeriod] = useState<Workspace["periods"][number] | null>(null);
   const [replan, setReplan] = useState<{ label: string; adjusted: boolean; final: boolean; closed: boolean } | null>(null);
   useEffect(() => {
     const controller = new AbortController();
@@ -35,8 +37,10 @@ export function EvaluationHome({ dashboard, onPeriod, onReplan }: {
       const classroom = workspace.classrooms.find((item) => item.school_year_id === year?.id);
       const now = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Lima", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
       const periods = workspace.periods.filter((item) => item.school_year_id === year?.id);
-      const period = periods.find((item) => item.starts_on <= now && item.ends_on >= now) ?? periods[0];
+      const requestedPeriod = readWorkspaceParams("Evaluar").get("period");
+      const period = periods.find((item) => item.id === requestedPeriod) ?? periods.find((item) => item.starts_on <= now && item.ends_on >= now) ?? periods[0];
       if (!classroom || !period) { setOverview(null); return; }
+      setActivePeriod(period);
       setOverview(await json<Overview>(`/api/period-evaluations/overview?classroomId=${classroom.id}&periodId=${period.id}`, controller.signal));
       const ended = [...periods].reverse().find((item) => item.ends_on < now);
       if (ended) {
@@ -63,13 +67,14 @@ export function EvaluationHome({ dashboard, onPeriod, onReplan }: {
   };
   const actions = [
     { title: "Analizar evidencias", subtitle: `${candidates.length} ${candidates.length === 1 ? "ficha por revisar" : "fichas por revisar"}`, Icon: BookOpen, tint: "bg-[#f1eaff] text-[#7952b8]", act: () => onPeriod("student", candidates[0] ? { studentId: candidates[0].student_id, competencyId: candidates[0].competency_id } : undefined) },
-    { title: "Conclusiones", subtitle: `${confirmed} ${confirmed === 1 ? "valoración confirmada" : "valoraciones confirmadas"}`, Icon: FileText, tint: "bg-[#fff2d8] text-[#ad741f]", act: () => onPeriod("student") },
+    { title: "Conclusiones", subtitle: `${confirmed} ${confirmed === 1 ? "valoración confirmada" : "valoraciones confirmadas"}`, Icon: FileText, tint: "bg-[#fff2d8] text-[#ad741f]", act: () => onPeriod("conclusions") },
     { title: "Informe a familias", subtitle: "Desde valoraciones confirmadas", Icon: Users, tint: "bg-[#e9f8f2] text-[#287561]", act: () => onPeriod("family") },
     { title: "Consolidado", subtitle: "Nivel y conclusión por niño y competencia", Icon: TableProperties, tint: "bg-[#e8f7fa] text-[#087d96]", act: () => onPeriod("consolidated") },
   ];
 
   return <div className="space-y-6">
     <header><h1 className="text-3xl font-extrabold tracking-tight text-[#1c2e50]">Evaluar</h1><p className="mt-1 text-[#566883]">Ayni organiza la evidencia; tú confirmas la evaluación.</p></header>
+    {activePeriod && <p className="text-sm font-semibold">{activePeriod.label} · {new Date(`${activePeriod.starts_on}T12:00:00`).toLocaleDateString("es-PE")} a {new Date(`${activePeriod.ends_on}T12:00:00`).toLocaleDateString("es-PE")}</p>}
     {loading ? <LoadingState label="Revisando el avance..." /> : error ? <div className="space-y-2"><WorkflowFeedback tone="error">{error}</WorkflowFeedback><button type="button" className="font-bold text-[#0b7891] underline" onClick={() => { setLoading(true); setRetry((value) => value + 1); }}>Reintentar</button></div> : null}
     {replan && <section className="rounded-2xl bg-[#e9f8f2] p-5"><h2 className="font-extrabold text-[#1c2e50]">{replan.adjusted ? "✓ Plan reajustado" : replan.final && replan.closed ? "✓ Período final cerrado" : `Cierre de ${replan.label}`}</h2><p className="mt-1 text-sm text-[#526681]">{replan.adjusted ? "La nueva versión de tu plan está guardada." : replan.final && replan.closed ? "El cierre del año quedó guardado." : "Cierra el período y revisa juntos los próximos pasos."}</p>{!replan.adjusted && !(replan.final && replan.closed) && <button type="button" onClick={onReplan} className="mt-3 min-h-11 rounded-xl bg-[#0b7891] px-5 font-bold text-white">Comenzar revisión</button>}</section>}
     <section><h2 className="mb-3 text-xl font-extrabold text-[#1c2e50]">¿Qué quieres hacer?</h2><div className="grid grid-cols-2 gap-3">{actions.map(({ title, subtitle, Icon, tint, act }) => <button key={title} type="button" onClick={act} className="flex min-h-32 flex-col items-start rounded-[1.3rem] border border-[#d4e1ed] bg-white p-4 text-left hover:border-[#8acbd8] hover:shadow-sm"><span className={`grid size-10 place-items-center rounded-xl ${tint}`}><Icon className="size-5" /></span><b className="mt-2 leading-tight text-[#1c2e50]">{title}</b><small className="mt-1 text-[#536681]">{subtitle}</small><span className="mt-auto pt-2 text-sm font-bold text-[#07576c]">Abrir →</span></button>)}</div></section>

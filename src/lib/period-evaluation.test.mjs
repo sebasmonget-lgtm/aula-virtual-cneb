@@ -137,6 +137,7 @@ async function fixture({ analysis = mockAnalysis(), jsonbPending = false } = {})
     competency_v4_ids text[],observed_at timestamptz,observation_text text,context_label text,support_status text,
     classification_status text);`);
   await db.exec(`create table class_schedule_entries(id uuid primary key,classroom_id uuid,activity_id uuid);
+    create table student_family_interviews(id uuid primary key,classroom_id uuid,student_id uuid,status text,version integer,details jsonb);
     create table daily_execution_logs(id uuid primary key,schedule_entry_id uuid,execution_date date,status text);`);
   await db.query(`insert into profiles values($1,'Docente de prueba'),($2,'Otra docente')`,[teacher,otherTeacher]);
   await db.query(`insert into school_years values($1,$2,2026,'2026-03-01','2026-12-31')`, [year, teacher]);

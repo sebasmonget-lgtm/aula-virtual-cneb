@@ -1,5 +1,11 @@
 # Memoria del proyecto Ayni Aula
 
+## Estabilidad e ideas docentes previas a Mi año, 2026-10-02
+
+Trabajo local sobre `codex/annual-year-map`, HEAD base `f51fda5`; se conservaron las correcciones parciales anteriores y los cambios ajenos de Jev/OpenAI. Recuperación de evidencia desactualizada con conservación de ediciones, estados Revisado/pendiente/Confirmado persistido, snapshots para conflictos, navegación semanal sincronizada, entrada real a Conclusiones y ubicación por hash sin activar flags. La segunda fase añade ideas docentes opcionales en `planning_preferences` del contrato JSONB de preparación, separado del diagnóstico. El preplan conserva referencias y explicaciones; regenerar cambia solo el borrador autorizado y confirmar activa la versión. Sin migración ni despliegue. Ver ADR 107 y `docs/qa/functional-stability-teacher-ideas-2026-10-02.md` para pruebas, navegador real y límites.
+
+El cierre de validación del 2026-10-02 completó Conclusiones con valoración confirmada, continuidad V2 → proyecto → actividad y recuperación con HTTP 503 simulado en QA aislado. Se corrigieron únicamente la omisión del nivel docente en el paquete de conclusiones y el mensaje técnico de fallo anual. 88 pruebas focales, typecheck, lint, build y diff check pasan. El commit excluye experimentos y artefactos de QA; no autoriza push, merge ni despliegue. Ver el apartado de cierre del informe QA.
+
 ## Fuente de trabajo consolidada, 2026-10-01
 
 La rama de referencia para el producto y staging es `codex/annual-year-map`. Incluye el mapa/personalización/entrevista de `fb5b816` y las cuatro correcciones UX que culminan en `f8b2653`, integradas con un merge para conservar ambas historias. Antes de desarrollar o publicar, comprobar rama, HEAD y que los últimos commits aprobados sean ancestros; no iniciar cambios desde `af522a5` ni desde los worktrees anteriores. El checkout principal `C:/Users/ASUS/Documents/ChatGPT/Asistente CNEB` debe quedar en esta rama; los cambios experimentales previos del árbol no forman parte de la publicación.

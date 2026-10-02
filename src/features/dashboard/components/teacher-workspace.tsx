@@ -41,6 +41,7 @@ import { OrdinaryObservationDialog } from "./ordinary-observation-dialog";
 import { OrdinaryReviewDialog } from "./ordinary-review-dialog";
 import { DocumentsScreen } from "./documents-screen";
 import { destinationFromHash, hashForDestination, primaryDestination } from "@/src/lib/teacher-navigation.mjs";
+import { canLeaveWorkspace, useWorkspaceSubview, writeWorkspaceLocation } from "@/src/lib/workspace-location";
 
 const ProjectDevelopmentWorkspace = process.env.NEXT_PUBLIC_AYNI_PROJECT_SIMPLE === "1"
   ? SimpleProjectWorkspace : LegacyProjectDevelopmentWorkspace;
@@ -64,6 +65,9 @@ const f7Nav = [["Hoy", "Hoy", Home], ["Planificar", "Planificar", CalendarDays],
   ["Mi aula", "Aula", Users], ["Biblioteca", "Biblioteca", BookOpen]] as const;
 const f7Enabled = process.env.NEXT_PUBLIC_AYNI_F7_NAV === "1";
 const sentenceCase = (value: string) => value.charAt(0).toLocaleUpperCase("es-PE") + value.slice(1);
+const planningTabs = ["home", "diagnostic", "annual", "experiences", "activities"] as const;
+const evaluationSections = ["home", "period", "replan"] as const;
+const evaluationViews = ["student", "conclusions", "family", "coverage", "consolidated"] as const;
 
 export function TeacherWorkspace() {
   const [active, setActive] = useState("Hoy");
@@ -101,15 +105,21 @@ export function TeacherWorkspace() {
   }).format(new Date()), []);
 
   useEffect(() => {
-    if (!f7Enabled) return;
-    const syncHash = () => {
+    let acceptedHash = window.location.hash;
+    const syncHash = (event?: Event) => {
+      if ((event?.type === "popstate" || event?.type === "hashchange") && window.location.hash !== acceptedHash && !canLeaveWorkspace()) {
+        window.history.pushState(null, "", acceptedHash || window.location.pathname);
+        window.dispatchEvent(new Event("ayni-location-change")); return;
+      }
+      acceptedHash = window.location.hash;
       const destination = destinationFromHash(window.location.hash);
       if (destination) { navigationTouched.current = true; if (destination === "Diagnóstico") { setPlanningTarget("diagnostic"); setActive("Planificar"); } else setActive(destination); setStarting(false); }
     };
     syncHash();
     window.addEventListener("popstate", syncHash);
     window.addEventListener("hashchange", syncHash);
-    return () => { window.removeEventListener("popstate", syncHash); window.removeEventListener("hashchange", syncHash); };
+    window.addEventListener("ayni-location-change", syncHash);
+    return () => { window.removeEventListener("popstate", syncHash); window.removeEventListener("hashchange", syncHash); window.removeEventListener("ayni-location-change", syncHash); };
   }, []);
 
   useEffect(() => {
@@ -179,7 +189,7 @@ export function TeacherWorkspace() {
   const metrics = dashboard?.metrics;
   const selectedNavigation = f7Enabled && active !== "Biblioteca" ? primaryDestination(active) : active;
 
-  function navigate(section: string) { navigationTouched.current = true; setStarting(false); if (section !== "Planificar") { setPlanningTarget(null); setSelectedResource(null); setCalendarActivity(null); } if (section === "Evaluar") { setEvaluationTarget(null); setEvaluationEntry("home"); } setActive(section); if (f7Enabled) { const hash = hashForDestination(section); if (hash && window.location.hash !== hash) window.history.pushState(null, "", hash); } }
+  function navigate(section: string) { if (!canLeaveWorkspace()) return; navigationTouched.current = true; setStarting(false); if (section !== "Planificar") { setPlanningTarget(null); setSelectedResource(null); setCalendarActivity(null); } if (section === "Evaluar") { setEvaluationTarget(null); setEvaluationEntry("home"); } setActive(section); const hash = hashForDestination(section); if (hash && destinationFromHash(window.location.hash) !== section) { window.history.pushState(null, "", hash); window.dispatchEvent(new Event("ayni-location-change")); } }
   function openDiagnostic(initialStep: 1 | 2 | 3 = 1) { setPlanningTarget("diagnostic"); setDiagnosticInitialStep(initialStep); navigate("Planificar"); }
 
   function closeEvidence(open: boolean) {
@@ -356,18 +366,18 @@ function EvidenceDialog({ open, onOpenChange, students, studentId, setStudentId,
 }
 
 function EvaluationArea({ dashboard, initialTarget, initialSection, onPlan, onPrepareActivity, onToday }: { dashboard: LocalDashboard; initialTarget: { studentId: string; competencyId: string } | null; initialSection: "home" | "replan"; onPlan: () => void; onPrepareActivity: () => void; onToday: () => void }) {
-  const [section, setSection] = useState<"home" | "period" | "replan">(initialTarget ? "period" : initialSection);
+  const [section, setSection] = useWorkspaceSubview("Evaluar", "section", evaluationSections, initialTarget ? "period" : initialSection);
   const [target, setTarget] = useState(initialTarget);
-  const [periodView, setPeriodView] = useState<"student" | "family" | "coverage" | "consolidated">("student");
+  const [periodView, setPeriodView] = useWorkspaceSubview("Evaluar", "entry", evaluationViews, "student");
   return <section className="mx-auto max-w-5xl space-y-5">
-    {section === "home" ? <EvaluationHome dashboard={dashboard} onReplan={() => setSection("replan")} onPeriod={(view, nextTarget) => { setTarget(nextTarget ?? null); setPeriodView(view); setSection("period"); }} /> : <>
+    {section === "home" ? <EvaluationHome dashboard={dashboard} onReplan={() => setSection("replan")} onPeriod={(view, nextTarget) => { setTarget(nextTarget ?? null); setPeriodView(view); setSection("period"); writeWorkspaceLocation("Evaluar", { view, student: nextTarget?.studentId ?? "", competency: nextTarget?.competencyId ?? "" }, true); }} /> : <>
       <Button variant="ghost" className="-ml-3 min-h-11 text-[#07576c]" onClick={() => setSection("home")}>← Volver a Evaluar</Button>
       {section === "replan" ? <BimesterReplan onEvaluation={() => setSection("period")} onFinish={onToday} /> : <PeriodEvaluation key={`${target?.studentId ?? "all"}:${target?.competencyId ?? "all"}:${periodView}`} initialStudentId={target?.studentId} initialCompetencyId={target?.competencyId} initialView={periodView} onPlan={onPlan} onPrepareActivity={onPrepareActivity} />}
     </>}
   </section>;
 }
 function PlanningArea({ dashboard, initialTab, initialActivity, diagnosticInitialStep, selectedResource, onGoToday, onRecordEvidence, onGoStudents, onGoWorkshops, onGoCalendar, onGoLibrary }: { dashboard: LocalDashboard; initialTab?:"activities"|"diagnostic"|null; initialActivity?:{id:string;experience_id:string}|null; diagnosticInitialStep:1|2|3; selectedResource: LibraryResource | null; onGoToday: () => void; onRecordEvidence: (input: { activityId: string; title: string; criterion: ActivityCriterion }) => void; onGoStudents: () => void; onGoWorkshops: () => void; onGoCalendar: () => void; onGoLibrary: () => void }) {
-  const [tab, setTab] = useState<"home" | "diagnostic" | "annual" | "experiences" | "activities">(initialTab??"home");
+  const [tab, setTab] = useWorkspaceSubview("Planificar", "tab", planningTabs, initialTab??"home");
   const [diagnosticStep, setDiagnosticStep] = useState<1 | 2 | 3>(diagnosticInitialStep);
   const [projectProposalId, setProjectProposalId] = useState<string | null>(null);
   const [activitySelection, setActivitySelection] = useState<{ experienceId: string; routeItemId: string } | null>(null);

@@ -228,6 +228,10 @@ function workflowInputSubset(input, workflowRequirements) {
   if (input.workflow === "assessment_master" && hasValue(input.assessment_master_sources)) subset.assessment_master_sources = input.assessment_master_sources;
   if (input.workflow === "assessment" && hasValue(input.assessment_master)) subset.assessment_master = input.assessment_master;
   if (input.workflow === "descriptive_conclusion" && hasValue(input.assessment_master)) subset.assessment_master = input.assessment_master;
+  if (input.workflow === "descriptive_conclusion") {
+    if (hasValue(input.analysis_status)) subset.analysis_status = input.analysis_status;
+    if (hasValue(input.confirmed_achievement_level)) subset.confirmed_achievement_level = input.confirmed_achievement_level;
+  }
   return subset;
 }
 

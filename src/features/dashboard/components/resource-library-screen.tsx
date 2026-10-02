@@ -7,16 +7,19 @@ import { localDatabaseApiUrl } from "@/src/lib/local-database";
 import type { LibraryResource } from "@/src/lib/library-resource";
 import { DocumentsScreen } from "./documents-screen";
 import { EmptyState, LoadingState, WorkflowFeedback } from "./workflow-ui";
+import { useWorkspaceSubview } from "@/src/lib/workspace-location";
 
 type Filter = "for-you" | "worksheets" | "workshops" | "materials";
+const libraryViews = ["resources", "documents"] as const;
+const libraryFilters = ["for-you", "worksheets", "workshops", "materials"] as const;
 const filters: { id: Filter; label: string }[] = [
   { id: "for-you", label: "Para ti" }, { id: "worksheets", label: "Fichas" },
   { id: "workshops", label: "Talleres" }, { id: "materials", label: "Materiales" },
 ];
 
 export function ResourceLibraryScreen({ age, initialFilter = "for-you", onUse }: { age: number; initialFilter?: "for-you" | "workshops"; onUse: (resource: LibraryResource) => void }) {
-  const [view, setView] = useState<"resources" | "documents">(initialFilter === "workshops" ? "resources" : "documents");
-  const [filter, setFilter] = useState<Filter>(initialFilter);
+  const [view, setView] = useWorkspaceSubview("Biblioteca", "view", libraryViews, initialFilter === "workshops" ? "resources" : "documents");
+  const [filter, setFilter] = useWorkspaceSubview("Biblioteca", "filter", libraryFilters, initialFilter);
   const [query, setQuery] = useState("");
   const [resources, setResources] = useState<LibraryResource[]>([]);
   const [loading, setLoading] = useState(true);

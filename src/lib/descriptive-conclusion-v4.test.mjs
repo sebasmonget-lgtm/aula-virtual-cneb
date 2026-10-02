@@ -34,6 +34,8 @@ test("descriptive_conclusion usa Luna/medium, schema strict y una tarjeta en el 
   assert.equal(result.validation.schema, "descriptive-conclusion-v1");
   assert.equal(captured.execution_plan.model, "gpt-6-luna");
   assert.equal(captured.ai_context_bundle.context.student.id, "current_student");
+  assert.equal(captured.ai_context_bundle.context.workflow_inputs.confirmed_achievement_level, "A");
+  assert.equal(captured.ai_context_bundle.context.workflow_inputs.analysis_status, "sufficient");
 });
 
 test("la propuesta conjunta usa evidencias sin atribuir un análisis de IA a la docente", async () => {
@@ -43,6 +45,8 @@ test("la propuesta conjunta usa evidencias sin atribuir un análisis de IA a la 
   assert.equal(result.output.information_status, "sufficient");
   assert.equal(captured.ai_context_bundle.context.student.teacher_confirmed_findings, undefined);
   assert.match(captured.ai_context_bundle.context.teacher_request, /preliminar/);
+  assert.equal(captured.ai_context_bundle.context.workflow_inputs.confirmed_achievement_level, undefined);
+  assert.equal(captured.ai_context_bundle.context.workflow_inputs.analysis_status, "sufficient");
 });
 
 test("conclusión rechaza campos extra, otra competencia, notas, comparaciones y falsa certeza", async () => {

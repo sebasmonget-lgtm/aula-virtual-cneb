@@ -14,18 +14,21 @@ import { FamilyInterviewEditor, FamilyInterviewStatusBadge, useFamilyInterviewSt
 import { SpontaneousDiagnostic } from "./spontaneous-diagnostic-v4";
 import { displayPersonName } from "@/src/lib/person-name.mjs";
 import { DictationRecorder } from "./dictation-recorder";
+import { useWorkspaceSubview } from "@/src/lib/workspace-location";
 
 type Filter = "all" | "without" | "with" | "today";
+const diagnosticStepValues = [1, 2, 3] as const;
+const observationModes = ["guided", "spontaneous"] as const;
 function isToday(value: string) { return new Date(value).toDateString() === new Date().toDateString(); }
 
 export function GuidedDiagnostic({ dashboard, onPlan, onStudents, initialStep = 1 }: {
   dashboard: LocalDashboard; onPlan?: () => void; onStudents?: () => void; initialStep?: 1 | 2 | 3;
 }) {
   const [data, setData] = useState<DiagnosticWorkspace | null>(null);
-  const [step, setStep] = useState<1 | 2 | 3>(initialStep === 3 ? 2 : initialStep);
+  const [step, setStep] = useWorkspaceSubview("Planificar", "step", diagnosticStepValues, initialStep === 3 ? 2 : initialStep);
   const [experienceId, setExperienceId] = useState<string | null>(null);
   const [interviewStudentId, setInterviewStudentId] = useState<string | null>(null);
-  const [observationMode, setObservationMode] = useState<"guided" | "spontaneous">("guided");
+  const [observationMode, setObservationMode] = useWorkspaceSubview("Planificar", "mode", observationModes, "guided");
   const [pendingSpontaneous, setPendingSpontaneous] = useState<number | null>(null);
   const [spontaneousRecords, setSpontaneousRecords] = useState<SpontaneousObservation[] | null>(null);
   const [reviewPrompt, setReviewPrompt] = useState(false);
@@ -55,7 +58,7 @@ export function GuidedDiagnostic({ dashboard, onPlan, onStudents, initialStep = 
     const count = result.observations.filter((item) => item.classification_source !== "teacher").length;
     setPendingSpontaneous(count);
     if (initialStep === 3) { if (count) setReviewPrompt(true); else setStep(3); }
-  }).catch(() => { setPendingSpontaneous(null); if (initialStep === 3) setReviewPrompt(true); }); }, [initialStep]);
+  }).catch(() => { setPendingSpontaneous(null); if (initialStep === 3) setReviewPrompt(true); }); }, [initialStep, setStep]);
   function goToStep(next: 1 | 2 | 3) {
     if (next === 3) {
       void loadSpontaneousObservations().then((result) => {

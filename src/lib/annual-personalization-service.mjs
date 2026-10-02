@@ -6,6 +6,7 @@ import { ageFilteredAnnualCurriculum } from "./annual-preplan-service.mjs";
 import { neutralizeAssessmentText } from "./assessment-v4-service.mjs";
 import { anonymousDecisionText } from "./jev-competency-suggestion.mjs";
 import { interviewInterestOptions, interviewLanguageOptions, interviewCommunityOptions } from "./family-interview-contract.mjs";
+import { validatePlanningPreferences } from "./annual-planning-preferences.mjs";
 
 const hash = (value) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
 const topics = [
@@ -21,7 +22,7 @@ const topics = [
 ];
 const opportunities = [
   ["Agricultura y cultivos", /agricultur|chacra|cultivo|cosecha|huerto/iu],
-  ["Comercio local", /comercio|mercado|tienda|venta|negocio/iu],
+  ["Comercio local", /\b(?:comercio|mercado|tienda|ventas?|negocio)\b/iu],
   ["Naturaleza cercana", /r[ií]o|campo|bosque|monta[nñ]a|playa|parque|naturaleza/iu],
   ["Oficios de la comunidad", /oficios?|profesiones?|artesanos?|pescador/iu],
   ["Celebraciones y costumbres", /fiesta|celebraci[oó]n|costumbre|tradici[oó]n/iu],
@@ -215,15 +216,75 @@ export function validatePersonalization(details, curriculum) {
     context_opportunities: items(details.context_opportunities, "text"), classroom_conditions: conditions,
     evidence_coverage: details.evidence_coverage ?? {},
     needs_more_observation: Array.isArray(details.needs_more_observation) ? details.needs_more_observation.map((x) => short(x, 300)).filter(Boolean).slice(0, 10) : [],
-    additional_notes: short(details.additional_notes, 2000) };
+    additional_notes: short(details.additional_notes, 2000),
+    ...(details.planning_preferences === undefined ? {} : { planning_preferences: validatePlanningPreferences(details.planning_preferences) }) };
 }
 
-export async function preparePersonalization(db, teacherId, context, { refresh = false } = {}) {
+export function retainPersonalizationEdits(proposal, edited, fresh) {
+  const result = { ...fresh, ...(edited.planning_preferences === undefined ? {} : { planning_preferences: edited.planning_preferences }) };
+  // Coverage and source metadata always come from the refreshed server proposal.
+  const fields = { group_profile: null, additional_notes: null,
+    interests: ["id", "label"], priorities: ["id", "title", "reason", "related_competency_ids", "importance"],
+    context_opportunities: ["id", "text"], classroom_conditions: ["id", "kind", "value"] };
+  for (const [field, keys] of Object.entries(fields)) {
+    const comparable = (value) => keys && Array.isArray(value)
+      ? value.map((row) => keys.map((key) => row[key] ?? null)) : value;
+    if (JSON.stringify(comparable(edited[field])) !== JSON.stringify(comparable(proposal[field])))
+      result[field] = edited[field];
+  }
+  return result;
+}
+
+export const personalizationSnapshot = (row) => hash([row.id, row.status, row.source_fingerprint, row.details]);
+const withSnapshot = (row, extra = {}) => ({ ...row, snapshot: personalizationSnapshot(row), ...extra });
+const checkSnapshot = (row, expected) => {
+  if (expected !== undefined && expected !== personalizationSnapshot(row))
+    fail("conflict", "La revisión cambió en otra pestaña. Vuelve a abrir Mi año antes de guardar; tus cambios siguen en esta pantalla.");
+};
+
+export async function savePersonalizationDraft(db, teacherId, context, id, details, expectedSnapshot) {
+  const row = (await db.query(`select * from annual_personalization_reviews where id=$1 and classroom_id=$2
+    and school_year_id=$3 and created_by=$4 and status='draft'`, [id,context.id,context.school_year_id,teacherId])).rows[0];
+  if (!row) fail("not_found", "La revisión ya no está disponible como borrador.");
+  if (!expectedSnapshot) fail("conflict", "Vuelve a abrir la revisión antes de guardar.");
+  checkSnapshot(row, expectedSnapshot);
+  const validated = validatePersonalization(details, await ageFilteredAnnualCurriculum(context));
+  // Clients cannot manufacture evidence coverage or observation recommendations.
+  validated.evidence_coverage = row.proposal.evidence_coverage;
+  validated.needs_more_observation = row.proposal.needs_more_observation;
+  const saved = (await db.query(`update annual_personalization_reviews set details=$1::jsonb
+    where id=$2 and created_by=$3 and status='draft' and details=$4::jsonb and source_fingerprint=$5 returning *`,
+    [JSON.stringify(validated),id,teacherId,JSON.stringify(row.details),row.source_fingerprint])).rows[0];
+  if (!saved) fail("conflict", "La revisión cambió en otra pestaña. Conserva tus cambios y vuelve a abrir Mi año.");
+  const sources = await personalizationSources(db, teacherId, context);
+  return withSnapshot(saved, { sources_changed: saved.source_fingerprint !== sources.fingerprint });
+}
+
+export async function preparePersonalization(db, teacherId, context, { refresh = false, details, expectedSnapshot } = {}) {
   const existing = (await db.query(`select * from annual_personalization_reviews where classroom_id=$1 and school_year_id=$2
-    and status='draft'`, [context.id, context.school_year_id])).rows[0];
-  if (existing) return existing;
+    and created_by=$3 and status='draft'`, [context.id, context.school_year_id, teacherId])).rows[0];
+  if (existing) {
+    const sources = await personalizationSources(db, teacherId, context);
+    const changed = existing.source_fingerprint !== sources.fingerprint;
+    // Opening a preparation (including StrictMode/another tab) is a read. Only
+    // the explicit update action supplies details and can refresh an existing draft.
+    if (!refresh || details === undefined) return withSnapshot(existing, { sources_changed: changed });
+    if (details && !expectedSnapshot) fail("conflict", "Vuelve a abrir la revisión antes de actualizarla.");
+    checkSnapshot(existing, expectedSnapshot);
+    const curriculum = await ageFilteredAnnualCurriculum(context);
+    const edited = validatePersonalization(details ?? existing.details, curriculum);
+    const fresh = changed ? await proposePersonalization(sources, context, curriculum) : existing.proposal;
+    const retained = validatePersonalization(retainPersonalizationEdits(existing.proposal, edited, fresh), curriculum);
+    const updated = (await db.query(`update annual_personalization_reviews
+      set proposal=$1::jsonb,details=$2::jsonb,source_refs=$3::jsonb,source_fingerprint=$4
+      where id=$5 and created_by=$6 and status='draft' and source_fingerprint=$7 and details=$8::jsonb returning *`,
+      [JSON.stringify(fresh), JSON.stringify(retained), JSON.stringify(sources.references), sources.fingerprint,
+        existing.id, teacherId, existing.source_fingerprint, JSON.stringify(existing.details)])).rows[0];
+    if (!updated) fail("conflict", "La propuesta cambió en otra ventana. Abre la revisión guardada para continuar.");
+    return withSnapshot(updated, { sources_changed: false });
+  }
   const confirmed = await currentPersonalization(db, teacherId, context);
-  if (confirmed && !refresh) return confirmed;
+  if (confirmed && !refresh) return withSnapshot(confirmed);
   const sources = await personalizationSources(db, teacherId, context);
   const curriculum = await ageFilteredAnnualCurriculum(context);
   const fresh = confirmed?.source_fingerprint === sources.fingerprint ? null
@@ -256,15 +317,20 @@ export async function preparePersonalization(db, teacherId, context, { refresh =
   const result = await db.query(`insert into annual_personalization_reviews
     (id,classroom_id,school_year_id,version,status,proposal,details,source_refs,source_fingerprint,created_by)
     values($1,$2,$3,$4,'draft',$5::jsonb,$5::jsonb,$6::jsonb,$7,$8)
-    returning *`, [id,context.id,context.school_year_id,version,JSON.stringify(proposal),
+    on conflict do nothing returning *`, [id,context.id,context.school_year_id,version,JSON.stringify(proposal),
       JSON.stringify(sources.references),sources.fingerprint,teacherId]);
-  return result.rows[0];
+  const saved = result.rows[0] ?? (await db.query(`select * from annual_personalization_reviews
+    where classroom_id=$1 and school_year_id=$2 and created_by=$3 and status='draft'`,
+    [context.id,context.school_year_id,teacherId])).rows[0];
+  if (!saved) fail("conflict", "La preparación cambió en otra pestaña. Vuelve a abrir Mi año.");
+  return withSnapshot(saved, { sources_changed: saved.source_fingerprint !== sources.fingerprint });
 }
 
-export async function confirmPersonalization(db, teacherId, context, id, details) {
+export async function confirmPersonalization(db, teacherId, context, id, details, expectedSnapshot) {
   const row = (await db.query(`select * from annual_personalization_reviews where id=$1 and classroom_id=$2
     and school_year_id=$3 and created_by=$4 and status='draft'`, [id,context.id,context.school_year_id,teacherId])).rows[0];
   if (!row) fail("not_found", "La propuesta del aula ya no está disponible.");
+  checkSnapshot(row, expectedSnapshot);
   const sources = await personalizationSources(db, teacherId, context);
   if (sources.fingerprint !== row.source_fingerprint) fail("stale", "La evidencia cambió. Actualiza la propuesta antes de confirmarla.");
   const validated = validatePersonalization(details, await ageFilteredAnnualCurriculum(context));
@@ -288,9 +354,11 @@ export async function confirmPersonalization(db, teacherId, context, id, details
   validated.evidence_coverage = original.evidence_coverage ?? {};
   validated.needs_more_observation = original.needs_more_observation ?? [];
   const confirmed = (await db.query(`update annual_personalization_reviews set status='confirmed',details=$1::jsonb,
-    confirmed_at=now() where id=$2 and classroom_id=$3 and status='draft' returning *`,
-  [JSON.stringify(validated),id,context.id])).rows[0];
-  return confirmed;
+    confirmed_at=now() where id=$2 and classroom_id=$3 and status='draft' and details=$4::jsonb
+    and source_fingerprint=$5 returning *`,
+  [JSON.stringify(validated),id,context.id,JSON.stringify(row.details),row.source_fingerprint])).rows[0];
+  if (!confirmed) fail("conflict", "La revisión cambió en otra pestaña. Vuelve a abrir Mi año.");
+  return withSnapshot(confirmed);
 }
 
 export async function currentPersonalization(db, teacherId, context) {

@@ -1325,3 +1325,53 @@ Síntoma: cuatro notas QA de la captura automatizada quedaron asociadas a la sel
 **Validación.** La prueba de biblioteca comprueba el título completo en listado y detalle; las 14 pruebas de documentos y exportación, typecheck, lint y ambos builds pasaron. El despliegue `dpl_9ZuxMJp17jYyeccNfFc9MwXjhVEQ` pasó smoke y se promovió. El mismo informe descargado después mostró «Prueba Uno», ZIP íntegro, marca QA y ningún marcador. La paginación no pudo renderizarse porque falta `soffice.exe`.
 
 **Prevención.** Revisar identidad completa en títulos y encabezados de archivos cuando varios alumnos comparten nombre de pila.
+
+## 2026-10-02 — Crear Mi año sin recuperación y estados locales engañosos
+
+**Síntoma.** Evidencia nueva bloqueaba confirmación sin una acción clara en pantalla; los bloques revisados localmente parecían confirmados. Una recarga o cambio de módulo podía perder ubicación o cambios no guardados.
+
+**Causa raíz.** La interfaz no usaba la operación de actualización, no distinguía estado de sesión/persistencia y el hash estaba limitado por una bandera. Faltaba control de snapshot en escrituras de preparación.
+
+**Corrección y validación.** Actualizar propuesta conserva campos editados y revalida fuentes; guardado de borrador separado, etiquetas Revisado/pendiente/Confirmado, snapshot con escritura condicionada y recuperación de conflictos. Hash de módulo/subvista y advertencia de cambios pendientes. Chrome completó diagnóstico, evidencia nueva, actualización, generación y confirmación; las regresiones rechazan fuentes antiguas y snapshots de otra pestaña. Ver QA 2026-10-02.
+
+**Prevención.** Vincular Confirmado a estado persistido, representar ubicaciones en URL y acompañar errores recuperables con una acción.
+
+## 2026-10-02 — Semana y Conclusiones no correspondían a sus acciones
+
+**Síntoma.** Las flechas de Semana movían el mes; Conclusiones abría una revisión genérica de alumno.
+
+**Causa raíz.** Navegación compartida basada solo en cursor mensual y entrada de evaluación que no seleccionaba la tarea de conclusiones ni su requisito.
+
+**Corrección y validación.** Helpers de navegación por vista y semana de siete días con intervalo/selección sincronizados; Conclusiones selecciona la tarea lista o explica qué valoración/actividad falta. Regresiones de límites de mes/año y las 23 pruebas de evaluación pasan. Chrome comprobó semana/recarga y la rama sin valoraciones; la rama con valoración lista no se declara validada en navegador.
+
+**Prevención.** Cada entrada debe seleccionar la tarea que anuncia; mantener los requisitos pedagógicos explícitos.
+
+## 2026-10-02 — Falso Comercio local y conflictos de preparación/regeneración
+
+**Síntoma.** Una observación sobre una ventana generaba Comercio local; dos preparaciones iniciales concurrentes podían chocar. La revisión devuelta tras regenerar no correspondía a la persistida después de recalcular slots.
+
+**Causa raíz.** Subcadena `venta` sin límites de palabra, inserción inicial sin idempotencia y dos actualizaciones que incrementaban la revisión del plan.
+
+**Corrección y validación.** Extracción con límites de palabra; inserción idempotente y recuperación del mismo borrador propio; regeneración devuelve revisión/propuesta reales después de persistir slots. Los conflictos ofrecen el borrador autorizado para continuar. Mientras se prepara/regenera, el mapa no se confirma ni cambia de versión. Regresiones con PGlite completo y regeneración real en Chrome mantienen V1 vigente hasta confirmar V2; no se reescriben históricos.
+
+**Hallazgo en QA de dos pestañas.** Abrir un borrador con `refresh` también normalizaba y escribía detalles, causando conflicto entre aperturas simultáneas. La apertura ahora lee el borrador; actualizarlo requiere detalles de la acción explícita. Regresión de aperturas paralelas conserva detalles/snapshot. Dos pestañas reales comprobaron rechazo de un guardado antiguo y recuperación del texto vigente mediante Abrir revisión guardada.
+
+**Prevención.** Probar palabras similares, concurrencia y revisión final de una transacción completa; separar preparación de confirmación anual.
+
+## 2026-10-02 — Valoración omitida del paquete de generación de conclusiones
+
+**Síntoma.** La tarea de Conclusiones mostraba la valoración confirmada, pero el proveedor recibía los hallazgos sin el nivel docente correspondiente.
+
+**Causa raíz.** `buildDescriptiveConclusionInput` incluía `confirmed_achievement_level` y `analysis_status`; el filtro de inputs del workflow los descartaba antes del proveedor.
+
+**Corrección y validación.** Se conservan ambos campos solo en `descriptive_conclusion`. La regresión verifica el paquete real del proveedor y la ausencia de nivel confirmado en análisis preliminar. Chrome generó y confirmó una conclusión ficticia de Bimestre 4 desde valoración B; se verificaron el FK y snapshot de esa valoración, F5 y regreso a la lista. No cambia la autoridad docente ni permite letras de nivel en la conclusión.
+
+**Prevención.** Verificar los datos en la frontera del proveedor, además del input del servicio.
+
+## 2026-10-02 — Fallo de regeneración con mensaje técnico
+
+**Síntoma.** Un fallo del proveedor conservaba ideas y borrador, pero mostraba `provider_error` sin explicar cómo continuar.
+
+**Corrección y validación.** La respuesta de generación anual indica que las ideas están guardadas, que el plan vigente se conserva y que se puede reintentar con la acción de generar/regenerar. Un HTTP 503 inyectado exclusivamente en transporte localhost confirmó igualdad del borrador, vigente e históricos; después de F5 el reintento regeneró el mismo borrador V3 sin activar ni alterar V2.
+
+**Prevención.** Comprobar la recuperación en navegador con fallo controlado, incluyendo persistencia y ausencia de escrituras en el plan vigente.

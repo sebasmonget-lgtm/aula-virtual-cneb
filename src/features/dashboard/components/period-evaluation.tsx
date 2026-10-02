@@ -12,6 +12,7 @@ import { AYNI_HEURISTICS } from "@/src/lib/ayni-heuristics.mjs";
 import { diagnosticAntecedentLabel, periodEvidenceLabel } from "@/src/lib/record-language";
 import { AssessmentMasterPanel } from "./assessment-master-panel";
 import { PeriodConsolidated } from "./period-consolidated";
+import { readWorkspaceParams, useWorkspaceSubview, writeWorkspaceLocation } from "@/src/lib/workspace-location";
 
 type Year = { id: string; year: number };
 type Classroom = { id: string; school_year_id: string; section: string; age: number };
@@ -40,7 +41,9 @@ async function api<T>(path: string, body?: unknown): Promise<T> {
   return payload;
 }
 
-export function PeriodEvaluation({ initialStudentId = "", initialCompetencyId = "", initialView = "student", onPlan, onPrepareActivity }: { initialStudentId?: string; initialCompetencyId?: string; initialView?: "student" | "family" | "coverage" | "consolidated"; onPlan?:()=>void; onPrepareActivity?:()=>void }) {
+const periodViews = ["student", "conclusions", "classroom", "report", "family", "coverage", "consolidated"] as const;
+const periodFocuses = ["none", "conclusion"] as const;
+export function PeriodEvaluation({ initialStudentId = "", initialCompetencyId = "", initialView = "student", onPlan, onPrepareActivity }: { initialStudentId?: string; initialCompetencyId?: string; initialView?: "student" | "conclusions" | "family" | "coverage" | "consolidated"; onPlan?:()=>void; onPrepareActivity?:()=>void }) {
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [yearId, setYearId] = useState("");
   const [classroomId, setClassroomId] = useState("");
@@ -51,7 +54,13 @@ export function PeriodEvaluation({ initialStudentId = "", initialCompetencyId = 
   const [overviewError, setOverviewError] = useState("");
   const [overviewRetry, setOverviewRetry] = useState(0);
   const [detail, setDetail] = useState<Detail | null>(null);
-  const [view, setView] = useState<"student" | "classroom" | "report" | "family" | "coverage" | "consolidated">(initialView);
+  const [view, setView] = useWorkspaceSubview("Evaluar", "view", periodViews, initialView);
+  const [focus, setFocus] = useWorkspaceSubview("Evaluar", "focus", periodFocuses, "none");
+  useEffect(() => {
+    if (view === "student" && focus === "conclusion" && detail?.student_id === studentId && detail?.competency_id === competencyId) {
+      const target = document.getElementById("period-conclusion"); target?.scrollIntoView({ block: "center" }); target?.focus({ preventScroll: true });
+    }
+  }, [view, focus, detail, studentId, competencyId]);
   const [showSustento, setShowSustento] = useState(false);
   const [teacherAnalysis, setTeacherAnalysis] = useState("");
   const [achievementLevel, setAchievementLevel] = useState("");
@@ -77,11 +86,13 @@ export function PeriodEvaluation({ initialStudentId = "", initialCompetencyId = 
 
   useEffect(() => { void api<Workspace>("/api/period-evaluations/workspace").then((result) => {
     setWorkspace(result);
-    const year = result.years[0], classroom = result.classrooms.find((item) => item.school_year_id === year?.id);
+    const params = readWorkspaceParams("Evaluar");
+    const year = result.years.find((item) => item.id === params.get("year")) ?? result.years[0], classroom = result.classrooms.find((item) => item.id === params.get("classroom") && item.school_year_id === year?.id) ?? result.classrooms.find((item) => item.school_year_id === year?.id);
     const periods = result.periods.filter((item) => item.school_year_id === year?.id);
     const today = new Date().toISOString().slice(0, 10);
-    setYearId(year?.id ?? ""); setClassroomId(classroom?.id ?? ""); setPeriodId(periods.find((item) => item.starts_on <= today && item.ends_on >= today)?.id ?? periods[0]?.id ?? "");
-  }).catch((error) => setMessage(error.message)); }, []);
+    setYearId(year?.id ?? ""); setClassroomId(classroom?.id ?? ""); setPeriodId(periods.find((item) => item.id === params.get("period"))?.id ?? periods.find((item) => item.starts_on <= today && item.ends_on >= today)?.id ?? periods[0]?.id ?? "");
+    setStudentId(params.get("student") ?? initialStudentId); setCompetencyId(params.get("competency") ?? initialCompetencyId);
+  }).catch((error) => setMessage(error.message)); }, [initialStudentId, initialCompetencyId]);
 
   const applyOverview = useCallback((result: Overview) => {
     setOverviewError("");
@@ -90,6 +101,9 @@ export function PeriodEvaluation({ initialStudentId = "", initialCompetencyId = 
     setStudentId((current) => result.students.some((student) => student.id === current) ? current : result.students[0]?.id ?? "");
     setCompetencyId((current) => result.scope.some((item) => item.id === current) ? current : result.scope[0]?.id ?? "");
   }, []);
+  useEffect(() => {
+    if (yearId && classroomId && periodId) writeWorkspaceLocation("Evaluar", { year: yearId, classroom: classroomId, period: periodId, student: studentId, competency: competencyId }, true);
+  }, [yearId, classroomId, periodId, studentId, competencyId]);
   async function reloadOverview() {
     if (!classroomId || !periodId) return;
     applyOverview(await api<Overview>(`/api/period-evaluations/overview?classroomId=${classroomId}&periodId=${periodId}`));
@@ -161,6 +175,13 @@ export function PeriodEvaluation({ initialStudentId = "", initialCompetencyId = 
       <section className="rounded-2xl border bg-white p-5"><div className="flex flex-wrap items-center justify-between gap-2"><div><h3 className="font-bold">Cierre de {currentPeriod?.label}</h3><p className="text-sm text-[#526b87]">Continúa desde el primer paso pendiente.</p></div><b className="text-sm text-[#087d96]">{overview.closure_steps.filter((step)=>step.done).length}/8 pasos</b></div><ol className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">{overview.closure_steps.map((step)=><li key={step.number} className={`rounded-xl px-3 py-3 text-sm ${step.done?"bg-[#e8f7ef] text-green-800":"bg-[#f4f7fa] text-[#526b87]"}`}><b>{step.done?"✓":"○"} {step.label}</b></li>)}</ol></section>
       <div className="flex flex-wrap gap-2"><Button variant={view === "student" ? "default" : "outline"} onClick={() => setView("student")}>Revisar un niño</Button><Button variant={view === "classroom" ? "default" : "outline"} onClick={() => setView("classroom")}>Revisar aula</Button><Button variant={view === "consolidated" ? "default" : "outline"} onClick={() => setView("consolidated")}>Consolidado</Button><Button variant={view === "coverage" ? "default" : "outline"} onClick={() => setView("coverage")}>Cobertura</Button><Button variant={view === "report" ? "default" : "outline"} onClick={() => setView("report")}>Informe de progreso</Button><Button variant={view === "family" ? "default" : "outline"} onClick={() => setView("family")}>Informe a familias</Button></div>
       {view === "consolidated" && <PeriodConsolidated key={`${classroomId}:${periodId}`} classroomId={classroomId} periodId={periodId} periodLabel={currentPeriod?.label ?? "Período"} onReview={(student, competency) => { setStudentId(student); setCompetencyId(competency); setView("student"); }} />}
+      {view === "conclusions" && <section className="rounded-2xl border bg-white p-5"><h3 className="text-xl font-bold">Conclusiones descriptivas · {currentPeriod?.label}</h3>
+        <p className="mt-2 text-sm">Cada conclusión se prepara desde una valoración docente vigente. Revisa el texto antes de confirmarlo.</p>
+        {overview.rows.some((row) => row.state === "conclusion_pending" || row.state === "confirmed") ? <div className="mt-3 space-y-2">{overview.rows.filter((row) => row.state === "conclusion_pending" || row.state === "confirmed").map((row) => <Button key={`${row.student_id}:${row.competency_id}`} variant="outline" onClick={() => { setStudentId(row.student_id); setCompetencyId(row.competency_id); setFocus("conclusion"); setView("student"); }}>{studentName(overview.students.find((student) => student.id === row.student_id)!)} · {row.competency_name} · {row.conclusion ? "Ver conclusión" : "Preparar conclusión"}</Button>)}</div>
+          : <p className="mt-3 text-sm">Todavía no hay valoraciones vigentes para preparar conclusiones. Primero revisa las evidencias y confirma una valoración.</p>}
+        {overview.rows.some((row) => row.state !== "confirmed" && row.state !== "conclusion_pending") && <p className="mt-3 text-sm">Hay valoraciones pendientes. Sus conclusiones estarán disponibles después de confirmarlas.</p>}
+        {overview.rows.length ? <Button className="mt-3" variant="outline" onClick={() => { const next = overview.rows.find((row) => row.state !== "confirmed" && row.state !== "conclusion_pending"); if (next) { setStudentId(next.student_id); setCompetencyId(next.competency_id); } setFocus("none"); setView("student"); }}>Completar valoraciones</Button> : <><p className="mt-3 text-sm">Aún no hay competencias trabajadas en este período. Prepara una actividad y registra lo observado para poder valorarlas.</p>{onPrepareActivity && <Button className="mt-3" variant="outline" onClick={onPrepareActivity}>Preparar actividad</Button>}</>}
+      </section>}
       {view === "coverage" && <PedagogicalCoverage key={`${classroomId}:${periodId}`} classroomId={classroomId} periodId={periodId} onPlan={onPlan} onPrepareActivity={onPrepareActivity} onReview={(student, competency) => { setStudentId(student); setCompetencyId(competency); setView("student"); }} />}
       {view === "family" && currentPeriod && <FamilyReportGenerator key={`${classroomId}:${periodId}`} classroomId={classroomId} period={currentPeriod} students={overview.students.map((student) => ({ id:student.id,name:studentName(student) }))} initialStudentId={studentId} onConclusion={(id) => { setStudentId(id); setView("student"); }} />}
       {view === "student" && <div className="grid gap-5 lg:grid-cols-[240px_1fr]">
@@ -184,7 +205,7 @@ export function PeriodEvaluation({ initialStudentId = "", initialCompetencyId = 
               {detail.draft && !detail.draft.current && <p className="mt-3 rounded-xl bg-[#fff2d9] p-3 text-sm">Las observaciones cambiaron desde este borrador. Revisa lo nuevo y guarda otra vez; la sugerencia anterior no se usará.</p>}
               {!assessmentReadOnly&&<div className="mt-4 flex flex-wrap gap-2"><Button variant="outline" disabled={busy} onClick={() => void act(async () => { await api("/api/period-evaluations/save-draft", { classroomId, periodId, studentId, competencyId, evidenceFingerprint: detail.evidence_fingerprint, expectedDraftRevision:detail.draft?.revision??null, provisionalLevel: achievementLevel || null, teacherAnalysis, conclusionText:"", teacherJustification }); await reloadOverview(); await reloadDetail(); setMessage("Borrador guardado. Puedes salir y volver más tarde."); })}>Guardar borrador</Button>
               <Button disabled={busy || hasUnsavedDraft || !detail.evidence_count || !achievementLevel || !teacherAnalysis.trim()} onClick={() => void act(async () => { await api("/api/period-evaluations/confirm", { classroomId, periodId, studentId, competencyId, evidenceFingerprint: detail.evidence_fingerprint, expectedDraftRevision:detail.draft?.revision??null, achievementLevel, teacherAnalysis, conclusionText:"", teacherJustification }); await reloadOverview(); await reloadDetail(); setMessage("Valoración confirmada por ti. Ahora prepara la conclusión descriptiva."); })}>Confirmar valoración <ArrowRight className="ml-2 size-4" /></Button></div>}{!assessmentReadOnly&&hasUnsavedDraft && <p className="mt-2 text-sm text-[#526b87]">Guarda los cambios antes de confirmar.</p>}
-              {assessmentReadOnly&&<section className="mt-5 rounded-xl bg-[#f4f8fb] p-4">
+              {assessmentReadOnly&&<section id="period-conclusion" tabIndex={-1} className="mt-5 rounded-xl bg-[#f4f8fb] p-4">
                 <h5 className="font-bold">Conclusión descriptiva</h5>
                 <p className="mt-1 text-sm text-[#526b87]">Ayni puede proponerte un texto. También puedes escribirlo tú. Revísalo antes de confirmar.</p>
                 <p className="mt-2 text-sm"><b>Valoración docente:</b> {detail.assessment?.achievement_level}</p>

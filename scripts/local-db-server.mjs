@@ -18,7 +18,8 @@ import { competencyApplicability } from "../src/lib/competency-applicability.mjs
 import { generateTeacherActivity } from "../src/lib/ai-activity-ui-service.mjs";
 import { generateTeacherAnnualPlan } from "../src/lib/ai-annual-plan-ui-service.mjs";
 import { ANNUAL_PREPLAN_FORMAT, AnnualPreplanError, ageFilteredAnnualCurriculum, generateAnnualPreplan, validateAnnualPreplan, validatePreplanTrace } from "../src/lib/annual-preplan-service.mjs";
-import { preparePersonalization, confirmPersonalization, currentPersonalization } from "../src/lib/annual-personalization-service.mjs";
+import { saveRegeneratedAnnualDraft } from "../src/lib/annual-preplan-regeneration.mjs";
+import { preparePersonalization, confirmPersonalization, currentPersonalization, savePersonalizationDraft } from "../src/lib/annual-personalization-service.mjs";
 import { persistAnnualProjectSlots } from "../src/lib/annual-project-slots.mjs";
 import { developConfirmedAnnualPlan } from "../src/lib/annual-formal-service.mjs";
 import { DiagnosticSuggestionError, suggestDiagnosticGroupReview } from "../src/lib/ai-diagnostic-evaluation-service.mjs";
@@ -1166,16 +1167,24 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       const context = await annualPlanningContext();
       if (!context) { send(response, 404, { error: "Aula no disponible." }, origin); return; }
       try { const body = await readJson(request);
-        send(response, 200, await preparePersonalization(db, teacherId, context, { refresh: body?.refresh === true }), origin); }
-      catch (error) { send(response, httpStatusForError(error, 422), { error: publicErrorMessage(error) || "No se pudo preparar la síntesis del aula." }, origin); }
+        send(response, 200, await preparePersonalization(db, teacherId, context, { refresh: body?.refresh === true, details: body?.details, expectedSnapshot: body?.expectedSnapshot }), origin); }
+      catch (error) { send(response, httpStatusForError(error, 422), { error: publicErrorMessage(error) || "No se pudo preparar la síntesis del aula.", reason: error?.reason }, origin); }
+      return;
+    }
+    if (url.pathname === "/api/annual-personalization/save" && request.method === "POST") {
+      const context = await annualPlanningContext();
+      if (!context) { send(response, 404, { error: "Aula no disponible." }, origin); return; }
+      try { const body = await readJson(request);
+        send(response, 200, await savePersonalizationDraft(db, teacherId, context, body.id, body.details, body.expectedSnapshot), origin); }
+      catch (error) { send(response, httpStatusForError(error, 422), { error: publicErrorMessage(error), reason: error?.reason }, origin); }
       return;
     }
     if (url.pathname === "/api/annual-personalization/confirm" && request.method === "POST") {
       const context = await annualPlanningContext();
       if (!context) { send(response, 404, { error: "Aula no disponible." }, origin); return; }
       try { const body = await readJson(request);
-        send(response, 200, await confirmPersonalization(db, teacherId, context, body.id, body.details), origin); }
-      catch (error) { send(response, httpStatusForError(error, 422), { error: publicErrorMessage(error) || "No se pudo confirmar el aula." }, origin); }
+        send(response, 200, await confirmPersonalization(db, teacherId, context, body.id, body.details, body.expectedSnapshot), origin); }
+      catch (error) { send(response, httpStatusForError(error, 422), { error: publicErrorMessage(error) || "No se pudo confirmar el aula.", reason: error?.reason }, origin); }
       return;
     }
     if (request.method === "GET" && url.pathname === "/api/ai/annual-plan/context") {
@@ -1199,22 +1208,33 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       if (!context) { send(response, 404, { error: "Aula no disponible." }, origin); return; }
       const personalization = await currentPersonalization(db, teacherId, context);
       if (!personalization) { send(response, 422, { error: "Confirma primero «Así entendí tu aula»." }, origin); return; }
-      const prior = (await db.query(`select id from annual_plans where school_year_id=$1 and status='draft' limit 1`,
-        [context.school_year_id])).rows[0];
-      if (prior) { send(response, 409, { error: "Ya tienes un preplan en revisión. Ábrelo para continuar." }, origin); return; }
+      let recoveryDraftId = null;
       try {
+        const body = await readJson(request);
+        const prior = (await db.query(`select id,revision,classroom_id from annual_plans where school_year_id=$1 and status='draft' limit 1`, [context.school_year_id])).rows[0];
+        if (prior && (!body?.replaceDraftId || prior.id !== body.replaceDraftId || prior.classroom_id !== context.id)) {
+          send(response, 409, { error: "Ya tienes Mi año en revisión. Abre el borrador para continuar.", reason: "draft_exists", draft_id: prior.id }, origin); return;
+        }
+        recoveryDraftId = prior?.classroom_id === context.id ? prior.id : null;
+        if (body?.replaceDraftId) assertRevision(prior, expectedRevision(body.expectedRevision));
         const curriculum = await ageFilteredAnnualCurriculum(context);
         const names = (await db.query(`select first_name,last_name,preferred_name from students where classroom_id=$1`, [context.id])).rows
           .flatMap((item) => [item.first_name, item.last_name, item.preferred_name,
             [item.first_name, item.last_name].filter(Boolean).join(" ")]).filter(Boolean);
-        const safeContext = { ...context, personalization, annual_planning_context: {
+        const safeContext = { ...context, personalization, student_names: names, annual_planning_context: {
           additional_notes: neutralizeAssessmentText(context.annual_planning_context?.additional_notes ?? "", names) },
           confirmed_priorities: (context.confirmed_priorities ?? []).map((item) => ({ ...item,
             title: neutralizeAssessmentText(item.title ?? "", names),
             reason: neutralizeAssessmentText(item.reason ?? "", names) })) };
         const generated = await generateAnnualPreplan({ context: safeContext, curriculum });
         const schedule = buildEditableAnnualSchedule(context.calendar, generated.proposal.proposed_experiences);
+        if (body?.replaceDraftId) {
+          const saved = await saveRegeneratedAnnualDraft(db,teacherId,context,body.replaceDraftId,expectedRevision(body.expectedRevision),generated,annualDocumentContext({...context,personalization}));
+          send(response,200,saved,origin); return;
+        }
         const saved = await versionTransaction(db, `annual:${context.school_year_id}`, async (tx) => {
+          const currentPreparation = await currentPersonalization(tx, teacherId, context);
+          if (currentPreparation?.id !== personalization.id) throw new VersionConflictError("La preparación cambió mientras se generaban propuestas. Abre la revisión guardada y vuelve a generar.");
           if ((await tx.query(`select 1 from annual_plans where school_year_id=$1 and status='draft'`, [context.school_year_id])).rows.length)
             throw new VersionConflictError("Ya existe un preplan en revisión.");
           const active = (await tx.query(`select id from annual_plans where school_year_id=$1 and status='active'`,
@@ -1234,7 +1254,13 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
           return { id, version, revision: 1, status: "draft", proposal: generated.proposal };
         });
         send(response, 201, saved, origin);
-      } catch (error) { send(response, httpStatusForError(error, 422), { error: publicErrorMessage(error) || "No pudimos preparar el preplan." }, origin); }
+      } catch (error) {
+        if (isVersionConflict(error) && !recoveryDraftId) recoveryDraftId = (await db.query(`select id from annual_plans where school_year_id=$1 and classroom_id=$2 and status='draft' limit 1`, [context.school_year_id, context.id])).rows[0]?.id ?? null;
+        send(response, httpStatusForError(error, 422), { error: error?.name === "OpenAIProviderError"
+          ? "No pudimos generar las propuestas. Tus ideas están guardadas y el plan vigente se conserva. Vuelve a intentar con el botón de generar o regenerar propuestas."
+          : publicErrorMessage(error) || "No pudimos preparar el preplan.",
+          ...(isVersionConflict(error) ? { reason: "conflict", ...(recoveryDraftId ? { draft_id: recoveryDraftId } : {}) } : {}) }, origin);
+      }
       return;
     }
     if (request.method === "PUT" && /^\/api\/annual-preplans\/[0-9a-f-]+$/i.test(url.pathname)) {

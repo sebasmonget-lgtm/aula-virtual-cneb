@@ -928,6 +928,16 @@ La implementación posterior de F3 se registra en ADR 089; no cambia la regla ni
 
 **Permisos, reversión y pruebas.** La API existente comprueba docente, aula y alumno antes de leer o guardar; los adjuntos siguen privados y no se envían a IA. Revertir el código v2 restaura la interfaz anterior; los datos v2 permanecen en JSONB y las versiones históricas no se borran. Validación y QA local documentados en `docs/qa/family-interview-redesign-2026-10-01.md`. No se desplegó este cambio.
 
+## ADR 107: recuperación funcional y preferencias docentes de preparación
+
+**Decisión (2026-10-02).** La revisión del aula usa un snapshot de ID/estado/fuentes/detalles y escrituras condicionadas. Guardar borrador, revisar localmente y confirmar tienen estados diferentes. Actualizar evidencia reconstruye la propuesta y retiene los campos que la docente editó. La navegación usa el hash existente para módulo/subvista sin activar F7; Semana desplaza siete días. Conclusiones conserva sus dependencias y ofrece tareas o prerrequisitos concretos.
+
+**Preferencias separadas.** `planning_preferences.teacher_ideas` es opcional y se almacena dentro del JSONB de la preparación versionada, como campo hermano del diagnóstico, con versión 1, IDs estables, título, explicación y mes opcional. No son registros de niños ni prioridades; no duplica los proyectos institucionales. El preplan guarda una copia inmutable de esas preferencias y feedback por idea; cada fila admite referencias a ideas y procedencia principal. El esquema anterior de IA permanece para cero ideas. Con ideas, el generador explica incorporación, alternativa u omisión, y usa únicamente posiciones del calendario autorizado y CNEB de la edad.
+
+**Regeneración y permisos.** Requiere borrador propio seleccionado y revisión vigente, revalida preparación tras generar y persiste filas/slots en una transacción. Plan activo/historia no cambian hasta confirmación explícita. Se usan autorizaciones existentes de docente/aula/año; no hay migración ni modificación RLS. Los nombres conocidos de niños se neutralizan en las preferencias enviadas al proveedor, conservando el texto docente original guardado.
+
+**Reversión.** Revertir componentes restituye la entrada anterior. Mantener lectura y conservación de campos opcionales ya persistidos al retroceder un validador; no borrar preferencias, referencias ni históricos. QA aislado y límites en `docs/qa/functional-stability-teacher-ideas-2026-10-02.md`. No se publicó en esta tarea.
+
 ## ADR 106: mapa anual como proyección del preplan
 
 **Decisión (2026-10-01).** La vista principal de «Mi año» es una línea de tiempo marzo–diciembre. Los proyectos y unidades se ubican desde `project_slots` o fechas guardadas en planes vigentes e históricos, y desde el calendario autorizado del aula al editar un borrador. Los bloques de gestión del contexto anual ocupan su tramo lectivo; los feriados efectivos de `/api/school-calendar` se muestran como marcadores compactos con detalle accesible por clic. La tabla usa las mismas filas y queda como vista secundaria.

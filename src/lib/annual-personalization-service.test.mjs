@@ -6,7 +6,7 @@ import { defaultInitialStage, nationalCalendarBlocks2026 } from "./annual-plan-c
 import { readFile, readdir } from "node:fs/promises";
 import { PGlite } from "@electric-sql/pglite";
 import { createPilotClassroom, importStudentsForTeacher } from "./pilot-onboarding-service.mjs";
-import { preparePersonalization, confirmPersonalization, currentPersonalization } from "./annual-personalization-service.mjs";
+import { preparePersonalization, confirmPersonalization, currentPersonalization, savePersonalizationDraft } from "./annual-personalization-service.mjs";
 import { loadPersonalizedPreplanSkill } from "./annual-plan-skill.mjs";
 
 const id = (number) => `00000000-0000-4000-8000-${String(number).padStart(12, "0")}`;
@@ -34,6 +34,12 @@ test("poca evidencia permite contrato sin prioridades ni dificultad inventada", 
   assert.match(result.needs_more_observation.join(" "), /seguir observando/i);
   assert.doesNotMatch(result.group_profile, /dificultad|bajo logro/i);
   assert.deepEqual(validatePersonalization(result, curriculum).priorities, []);
+});
+
+test("una ventana construida no se interpreta como venta ni comercio", () => {
+  const context = { id: id(4), group_context: "", available_resources: [] };
+  assert.deepEqual(projectPlanningSignals(source(null, "Construyó una casa y agregó una ventana."), context).opportunities, []);
+  assert.ok(projectPlanningSignals(source(null, "Jugó a la venta en el mercado."), context).opportunities.some((row) => row.label === "Comercio local"));
 });
 
 test("la guía del contrato confirmado conserva fechas sin imponer efemérides como temas", async () => {
@@ -93,7 +99,9 @@ test("recorrido persistente con poca evidencia confirma V1 y conserva historia a
     await importStudentsForTeacher(db, teacher, [{ firstName: "Lucía", lastName: "Prueba", preferredName: "" }]);
     const context = { id: classroomId, school_year_id: schoolYearId, age: 5, group_context: "Aula A",
       available_resources: [], annual_planning_context: {} };
-    const draft = await preparePersonalization(db, teacher, context);
+    const [draft, concurrent] = await Promise.all([preparePersonalization(db, teacher, context), preparePersonalization(db, teacher, context)]);
+    assert.equal(draft.id, concurrent.id);
+    assert.equal((await db.query("select count(*)::int as total from annual_personalization_reviews where status='draft'")).rows[0].total, 1);
     assert.equal(draft.status, "draft");
     assert.deepEqual(draft.details.priorities, []);
     const confirmed = await confirmPersonalization(db, teacher, context, draft.id, { ...draft.details,
@@ -110,7 +118,39 @@ test("recorrido persistente con poca evidencia confirma V1 y conserva historia a
     const next = await preparePersonalization(db, teacher, context, { refresh: true });
     assert.equal(next.version, 2);
     assert.notEqual(next.id, confirmed.id);
+    const reopened = await Promise.all([preparePersonalization(db, teacher, context, { refresh: true }),
+      preparePersonalization(db, teacher, context, { refresh: true })]);
+    assert.deepEqual(reopened.map((review) => review.details), [next.details, next.details]);
+    assert.deepEqual(reopened.map((review) => review.snapshot), [next.snapshot, next.snapshot]);
     assert.equal((await currentPersonalization(db, teacher, context)).id, confirmed.id);
     assert.equal((await db.query("select status from annual_personalization_reviews where id=$1", [confirmed.id])).rows[0].status, "confirmed");
+    const edited = { ...next.details, group_profile: "El grupo disfruta construir y conversar durante el juego.",
+      classroom_conditions: [{ id: "materials", kind: "materials", value: "Bloques, cajas y cuentos." }],
+      evidence_coverage: { observations: 999 } };
+    const saved = await savePersonalizationDraft(db, teacher, context, next.id, edited, next.snapshot);
+    assert.equal(saved.status, "draft");
+    assert.notEqual(saved.details.evidence_coverage.observations, 999);
+    assert.deepEqual((await preparePersonalization(db, teacher, context)).details, saved.details);
+    await assert.rejects(savePersonalizationDraft(db, id(999), context, next.id, edited, saved.snapshot), { reason: "not_found" });
+    await assert.rejects(savePersonalizationDraft(db, teacher, context, next.id, next.details, next.snapshot), { reason: "conflict" });
+    await db.query(`insert into diagnostic_spontaneous_observations
+      (id,classroom_id,student_id,context_label,observation_text,created_by)
+      values($1,$2,$3,'Patio','Exploró las plantas del patio.', $4)`, [id(51), classroomId, studentId, teacher]);
+    await assert.rejects(confirmPersonalization(db, teacher, context, saved.id, saved.details, saved.snapshot), { reason: "stale" });
+    assert.equal((await preparePersonalization(db, teacher, context)).sources_changed, true);
+    const refreshed = await preparePersonalization(db, teacher, context, { refresh: true,
+      details: { ...saved.details, additional_notes: "Alternar juegos tranquilos y de movimiento." }, expectedSnapshot: saved.snapshot });
+    assert.equal(refreshed.id, saved.id);
+    assert.equal(refreshed.sources_changed, false);
+    assert.equal(refreshed.details.group_profile, edited.group_profile);
+    assert.deepEqual(refreshed.details.classroom_conditions, edited.classroom_conditions);
+    assert.equal(refreshed.details.additional_notes, "Alternar juegos tranquilos y de movimiento.");
+    assert.equal(refreshed.details.evidence_coverage.observations, 2);
+    await assert.rejects(confirmPersonalization(db, teacher, context, saved.id, saved.details, saved.snapshot), { reason: "conflict" });
+    assert.equal((await currentPersonalization(db, teacher, context)).id, confirmed.id);
+    const confirmedNext = await confirmPersonalization(db, teacher, context, refreshed.id, refreshed.details, refreshed.snapshot);
+    assert.equal(confirmedNext.status, "confirmed");
+    assert.equal((await currentPersonalization(db, teacher, context)).id, refreshed.id);
+    assert.deepEqual((await db.query("select details from annual_personalization_reviews where id=$1", [confirmed.id])).rows[0].details, confirmed.details);
   } finally { await db.close(); }
 });
