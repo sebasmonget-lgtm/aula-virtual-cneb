@@ -27,10 +27,13 @@ export function useWorkspaceSubview<T extends string | number>(destination: stri
   useEffect(() => { currentValue.current = value; }, [value]);
   useEffect(() => {
     const sync = () => {
+      if (!allowed.length) return;
       const raw = readWorkspaceParams(destination).get(key);
       const next = allowed.find((item) => String(item) === raw);
-      setValue(next ?? fallback);
-      if (raw === null && destinationFromHash(window.location.hash) === destination)
+      const nextValue = next ?? fallback;
+      currentValue.current = nextValue;
+      setValue(nextValue);
+      if (next === undefined && destinationFromHash(window.location.hash) === destination)
         writeWorkspaceLocation(destination, { [key]: String(fallback) }, true);
     };
     sync();
@@ -39,7 +42,24 @@ export function useWorkspaceSubview<T extends string | number>(destination: stri
   }, [destination, key, allowed, fallback]);
   const select = useCallback((next: T) => {
     if (next === currentValue.current || guard && !canLeaveWorkspace()) return;
+    currentValue.current = next;
     setValue(next); writeWorkspaceLocation(destination, { [key]: String(next) });
   }, [destination, key, guard]);
+  return [value, select] as const;
+}
+
+export function useWorkspaceParam(destination: string, key: string, fallback: string, validate: (raw: string) => string | undefined) {
+  const [value, setValue] = useState(fallback);
+  useEffect(() => {
+    const sync = () => setValue(validate(readWorkspaceParams(destination).get(key) ?? "") ?? fallback);
+    sync();
+    for (const event of [changedEvent, "hashchange", "popstate"]) window.addEventListener(event, sync);
+    return () => { for (const event of [changedEvent, "hashchange", "popstate"]) window.removeEventListener(event, sync); };
+  }, [destination, key, fallback, validate]);
+  const select = useCallback((next: string) => {
+    if (!validate(next)) return;
+    setValue(next);
+    writeWorkspaceLocation(destination, { [key]: next }, true);
+  }, [destination, key, validate]);
   return [value, select] as const;
 }

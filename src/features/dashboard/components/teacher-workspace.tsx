@@ -248,6 +248,7 @@ export function TeacherWorkspace() {
 
   return (
     <SidebarProvider style={{ "--sidebar-width": "13.5rem" } as CSSProperties}>
+      <a href="#ayni-main" onClick={(event) => { event.preventDefault(); document.getElementById("ayni-main")?.focus(); }} className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-xl focus:bg-white focus:px-4 focus:py-3 focus:font-bold focus:text-[#07576c] focus:shadow-lg">Saltar al contenido</a>
       <Sidebar collapsible="offcanvas" className="border-r border-[#e4eaf3] text-[#19345b]">
         <SidebarHeader className="px-5 pb-4 pt-6">
           <div className="flex items-center gap-3">
@@ -258,7 +259,7 @@ export function TeacherWorkspace() {
         <SidebarContent>
           <SidebarGroup>
             <SidebarGroupContent>
-              <SidebarMenu className="gap-1.5">
+              <nav aria-label="Navegación principal"><SidebarMenu className="gap-1.5">
                 {(f7Enabled ? f7Nav : nav.map(([label, Icon]) => [label, label, Icon] as const)).map(([label, destination, Icon]) => (
                   <SidebarMenuItem key={label}>
                     <SidebarMenuButton asChild isActive={selectedNavigation === destination} className="h-11 rounded-xl px-3 text-[15px] transition-colors hover:bg-[#eaf6f9] focus-visible:ring-2 data-[active=true]:bg-[#087d96] data-[active=true]:font-semibold data-[active=true]:text-white">
@@ -266,7 +267,7 @@ export function TeacherWorkspace() {
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 ))}
-              </SidebarMenu>
+              </SidebarMenu></nav>
             </SidebarGroupContent>
           </SidebarGroup>
         </SidebarContent>
@@ -299,12 +300,12 @@ export function TeacherWorkspace() {
           </div>
         </header>
 
-        <main className="mx-auto w-full max-w-[1450px] px-4 pb-28 pt-4 md:px-7 md:pt-8">
+        <main id="ayni-main" tabIndex={-1} className="mx-auto w-full max-w-[1450px] px-4 pb-28 pt-4 md:px-7 md:pt-8">
           {dashboard?.today.qa_clock && <p role="status" className="mb-4 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm">QA · reloj de prueba de la jornada: {displayDate(dashboard.today.qa_clock.date)} · {dashboard.today.qa_clock.time}. No cambia la fecha del equipo ni los cierres.</p>}
           {guidanceError && <div className="mb-4 flex flex-wrap items-center gap-3"><WorkflowFeedback tone="error">No pudimos comprobar cuál es tu siguiente paso.</WorkflowFeedback><Button variant="outline" onClick={() => { setGuidanceError(false); setRetry((value) => value + 1); }}>Reintentar</Button></div>}
           {starting ? <ScreenSkeleton /> : active === "Perfil" ? dashboard ? <InstitutionProfile dashboard={dashboard} onSaved={setDashboard} /> : <ScreenSkeleton /> :
-          active === "Documentos" ? <DocumentsScreen /> :
-          active === "Calendario" ? <SchoolCalendarScreen onOpenPlanning={() => navigate("Planificar")} onOpenActivity={(item) => { setCalendarActivity(item); setPlanningTarget("activities"); navigate("Planificar"); }} /> : active === "Biblioteca" ? dashboard ? <ResourceLibraryScreen age={dashboard.profile.age_years} initialFilter={libraryFilter} onUse={(resource) => { setSelectedResource(resource); setPlanningTarget("activities"); navigate("Planificar"); }} /> : <ScreenSkeleton /> :
+          active === "Documentos" ? <DocumentsScreen onPlan={() => navigate("Planificar")} /> :
+          active === "Calendario" ? <SchoolCalendarScreen onOpenPlanning={() => navigate("Planificar")} onOpenActivity={(item) => { setCalendarActivity(item); setPlanningTarget("activities"); navigate("Planificar"); }} /> : active === "Biblioteca" ? dashboard ? <ResourceLibraryScreen onPlan={() => navigate("Planificar")} age={dashboard.profile.age_years} initialFilter={libraryFilter} onUse={(resource) => { setSelectedResource(resource); setPlanningTarget("activities"); navigate("Planificar"); }} /> : <ScreenSkeleton /> :
           active === "Evaluar" ? dashboard ? <EvaluationArea dashboard={dashboard} initialTarget={evaluationTarget} initialSection={evaluationEntry} onPlan={() => { setPlanningTarget(null); navigate("Planificar"); }} onPrepareActivity={() => { setPlanningTarget("activities"); navigate("Planificar"); }} onToday={() => navigate("Hoy")} /> : <ScreenSkeleton /> :
           active === "Aula" ? dashboard ? <><div className="mx-auto mb-4 flex max-w-5xl flex-wrap gap-2">{f7Enabled && <><Button variant="outline" onClick={() => openDiagnostic()}>Diagnóstico</Button><Button variant="outline" onClick={() => navigate("Evaluar")}>Evaluación</Button>{process.env.NEXT_PUBLIC_AYNI_CURRICULAR_REVIEW === "1" && <Button variant="outline" onClick={() => setOrdinaryReviewOpen(true)}>Observaciones por revisar</Button>}</>}</div><StudentsScreen students={students} onImported={setDashboard} onDiagnostic={() => openDiagnostic()} onEvaluate={(studentId, competencyId) => { navigate("Evaluar"); setEvaluationTarget({ studentId, competencyId }); }} onPlan={() => navigate("Planificar")} /></> : <ScreenSkeleton /> : active === "Planificar" ? dashboard ? <PlanningArea dashboard={dashboard} initialTab={planningTarget} initialActivity={calendarActivity} diagnosticInitialStep={diagnosticInitialStep} selectedResource={selectedResource} onGoToday={() => navigate("Hoy")} onRecordEvidence={openPlannedEvidence} onGoStudents={() => navigate("Aula")} onGoWorkshops={() => { setLibraryFilter("workshops"); navigate("Biblioteca"); }} onGoCalendar={() => navigate("Calendario")} onGoLibrary={() => { setLibraryFilter("for-you"); navigate("Biblioteca"); }} /> : <ScreenSkeleton /> : <>
           {activityRunBlock ? <ActivityRunView block={activityRunBlock} evidenceRevision={evidenceRevision} onBack={() => setActivityRunBlockId(null)} onEvidence={(suggestedStudentId) => openEvidenceFor(activityRunBlock,suggestedStudentId)} onStepChange={async (stepIndex) => updateExecution({ scheduleEntryId: activityRunBlock.id, action: "set_step", stepIndex })} onComplete={async () => { await updateExecution({ scheduleEntryId: activityRunBlock.id, action: "complete", closureType: "as_planned" }); setActivityRunBlockId(null); }} /> : active === "Hoy" && (dashboard ? <TodayHome dashboard={dashboard} refreshKey={evidenceRevision} openEvidence={openEvidenceFor} openAttendance={() => setAttendanceOpen(true)} updateExecution={updateExecution} openActivity={openActivity} onPlan={() => navigate("Planificar")} onPrepareActivity={() => { setPlanningTarget("activities"); navigate("Planificar"); }} onObserveWithoutActivity={() => process.env.NEXT_PUBLIC_AYNI_ORDINARY_OBSERVATIONS === "1" ? setOrdinaryContext(null) : (setPlanningTarget("activities"), navigate("Planificar"))} onReplan={() => { navigate("Evaluar"); setEvaluationEntry("replan"); }} onReviewObservations={() => setOrdinaryReviewOpen(true)} /> : <ScreenSkeleton />)}

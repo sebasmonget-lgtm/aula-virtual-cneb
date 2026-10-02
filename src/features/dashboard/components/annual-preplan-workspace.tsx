@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState, type RefObject } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { List, LayoutGrid, RotateCcw } from "lucide-react";
 import { apiFetch } from "@/src/lib/ayni-api-fetch";
 import { localDatabaseApiUrl } from "@/src/lib/local-database";
@@ -14,7 +14,7 @@ import { AnnualPersonalizationWorkspace } from "./annual-personalization-workspa
 import { AnnualYearMap } from "./annual-year-map";
 import { buildEditableAnnualSchedule } from "@/src/lib/annual-plan-calendar.mjs";
 import { insertAvailableAnnualRow, moveAnnualRow } from "@/src/lib/annual-year-map.mjs";
-import { canLeaveWorkspace, useWorkspaceSubview, writeWorkspaceLocation } from "@/src/lib/workspace-location";
+import { canLeaveWorkspace, readWorkspaceParams, useWorkspaceSubview, writeWorkspaceLocation } from "@/src/lib/workspace-location";
 import { teacherIdeaPlacements } from "@/src/lib/annual-planning-preferences.mjs";
 import { ideaMonths, type PlanningPreferences } from "./annual-teacher-ideas";
 
@@ -148,8 +148,11 @@ const preparationModes = ["no", "yes"] as const;
 export function AnnualPreplanWorkspace({ onConfirmed, onGoDiagnostic, onDevelop }: { onConfirmed?: () => void; onGoDiagnostic?: () => void;
   onDevelop?: (proposalId: string) => void }) {
   const [plans, setPlans] = useState<Plans | null>(null), [context, setContext] = useState<Context | null>(null);
-  const [options, setOptions] = useState<Competency[]>([]), [selectedId, setSelectedId] = useState<string | null>(null);
+  const [options, setOptions] = useState<Competency[]>([]);
+  const planIds = useMemo(() => [plans?.draft, plans?.active, ...(plans?.archived ?? [])].filter((item): item is Plan => Boolean(item)).map((item) => item.id), [plans]);
+  const [selectedId, setSelectedId] = useWorkspaceSubview("Planificar", "annualPlan", planIds, plans?.draft?.id ?? plans?.active?.id ?? plans?.archived[0]?.id ?? "", false);
   const [proposal, setProposal] = useState<Preplan | null>(null), [loading, setLoading] = useState(true);
+  const [proposalPlanId, setProposalPlanId] = useState(selectedId);
   const [busy, setBusy] = useState<string | null>(null), [error, setError] = useState(""), [notice, setNotice] = useState("");
   const [showLegacy, setShowLegacy] = useState(false);
   const [preparing, setPreparing] = useWorkspaceSubview("Planificar", "preparing", preparationModes, "no");
@@ -162,23 +165,28 @@ export function AnnualPreplanWorkspace({ onConfirmed, onGoDiagnostic, onDevelop 
   const [selectedProposalId, setSelectedProposalId] = useState<string | null>(null);
   const [editRequestId, setEditRequestId] = useState<string | null>(null);
   const editorTriggerRef = useRef<HTMLElement | null>(null);
-  async function reload(select?: string) {
+  const reload = useCallback(async (select?: string) => {
     const [loadedPlans, loadedContext, loadedOptions] = await Promise.all([
       json<Plans>("/api/annual-plans/current"), json<Context>("/api/ai/annual-plan/context"),
       json<{ competencies: Competency[] }>("/api/ai/competency-options?workflow=annual_plan")]);
     setPlans(loadedPlans); setContext(loadedContext); setOptions(loadedOptions.competencies);
-    const current = [loadedPlans.draft, loadedPlans.active, ...loadedPlans.archived].find((item) => item?.id === select)
-      ?? loadedPlans.draft ?? loadedPlans.active;
-    setSelectedId(current?.id ?? null); setProposal(isPreplan(current) ? current.proposal : null);
+    const current = [loadedPlans.draft, loadedPlans.active, ...loadedPlans.archived].find((item) => item?.id === (select ?? readWorkspaceParams("Planificar").get("annualPlan")))
+      ?? loadedPlans.draft ?? loadedPlans.active ?? loadedPlans.archived[0];
+    setSelectedId(current?.id ?? ""); setProposalPlanId(current?.id ?? ""); setProposal(isPreplan(current) ? current.proposal : null);
     setSelectedProposalId((previous) => isPreplan(current) && current.proposal.proposed_experiences.some((row) => row.proposal_id === previous)
       ? previous : isPreplan(current) ? current.proposal.proposed_experiences[0]?.proposal_id ?? null : null);
-  }
+  }, [setSelectedId]);
   useEffect(() => { let active = true; json<EffectiveCalendar>("/api/school-calendar").then((value) => {
     if (active) setEffectiveCalendar(value);
   }).catch(() => { if (active) setEffectiveCalendar(null); }); return () => { active = false; }; }, []);
   useEffect(() => { let alive = true; Promise.resolve().then(() => reload()).catch((cause) => { if (alive) setError(cause instanceof Error ? cause.message : "No pudimos abrir el plan."); })
-    .finally(() => { if (alive) setLoading(false); }); return () => { alive = false; }; }, []);
+    .finally(() => { if (alive) setLoading(false); }); return () => { alive = false; }; }, [reload]);
   const selected = [plans?.draft, plans?.active, ...(plans?.archived ?? [])].find((item) => item?.id === selectedId) ?? null;
+  if (proposalPlanId !== selectedId) {
+    setProposalPlanId(selectedId);
+    setProposal(isPreplan(selected) ? selected.proposal : null);
+    setEditRequestId(null);
+  }
   const editable = isPreplan(selected) && selected.status === "draft";
   const dirty = editable && proposal && JSON.stringify(proposal) !== JSON.stringify(selected.proposal);
   useEffect(() => {
@@ -296,7 +304,7 @@ export function AnnualPreplanWorkspace({ onConfirmed, onGoDiagnostic, onDevelop 
         {!selected.formal_ready && <div className="mt-3 flex justify-end"><AsyncButton busy={busy === "formal"} busyLabel="Preparando Word..." disabled={Boolean(busy)} onClick={() => formalize(selected.id)}>Preparar Word</AsyncButton></div>}</div>}
     </>}
     {!showPreparation && plans && (plans.draft || plans.active || plans.archived.length > 0) && <section className="rounded-2xl border bg-white p-4"><h2 className="font-bold">Versiones de Mi año</h2><div className="mt-3 flex flex-wrap gap-2">{[plans.draft, plans.active, ...plans.archived].filter((item): item is Plan => Boolean(item)).map((item) =>
-      <Button key={item.id} disabled={reviewNewEvidence || Boolean(busy)} variant={item.id === selectedId ? "default" : "outline"} onClick={() => { if (item.id === selectedId || !canLeaveWorkspace()) return; setEditRequestId(null); setSelectedId(item.id); setProposal(isPreplan(item) ? item.proposal : null); }}>
+      <Button key={item.id} disabled={reviewNewEvidence || Boolean(busy)} aria-pressed={item.id === selectedId} variant={item.id === selectedId ? "default" : "outline"} onClick={() => { if (item.id === selectedId || !canLeaveWorkspace()) return; setEditRequestId(null); setSelectedId(item.id); setProposal(isPreplan(item) ? item.proposal : null); }}>
         {item.adjustment_label ? `Reajuste ${item.adjustment_label}` : `Versión ${item.version}`} · {item.status === "active" ? "vigente" : item.status === "draft" ? "borrador" : "anterior"}</Button>)}</div></section>}
   </section>;
 }

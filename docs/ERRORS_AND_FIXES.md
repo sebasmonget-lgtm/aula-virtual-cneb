@@ -1385,3 +1385,13 @@ Síntoma: cuatro notas QA de la captura automatizada quedaron asociadas a la sel
 **Validación.** Dos pruebas focales mover/retirar, typecheck, lint, build y diff check pasan. Navegador: editor abierto por teclado en mapa/lista, contención Tab/Shift+Tab, Escape y retorno del foco pasan; asistencia y calendario guardan en copia QA aislada con semántica asociada. D1 conserva el borrador durante la recuperación y permite guardarlo; versiones limpias cambian sin aviso, histórico de solo lectura, vigente/históricos sin cambios según comparación completa. El control nativo de Cancelar/Descartar no se pudo validar de forma fiable. Por autorización del usuario, cierre con tres pruebas focales PASS que ejecutan el guard y manejador reales: Cancelar conserva, Aceptar cambia sin mutar planes y limpio/misma versión no avisa. Sin cambios adicionales de producto ni repetición E2E. Detalle en `docs/qa/p1-ux-validation-2026-10-02.md`.
 
 **Prevención.** Toda sustitución de un borrador debe consultar el guard compartido; usar Dialog para gestionar foco, mantener el disparador montado y nombrar campos/grupos con semántica nativa. Verificar el resultado de una interacción, no solo su intento.
+
+## 2026-10-02 — Ubicación anual/calendario y retorno de Conclusiones
+
+**Síntoma y causa.** La recarga restablecía el día/mes de Calendario y la versión por defecto de Mi año porque estas selecciones eran locales. El detalle de Conclusiones carecía de retorno propio; su foco podía persistir al cambiar a otra vista.
+
+**Solución.** Reutilizar el hash de workspace para fechas civiles validadas y versiones devueltas por la API autorizada, esperando la carga antes de normalizar IDs. Sincronizar la propuesta al cambiar versión y mantener el guard existente de navegación sin un segundo aviso. Retorno a listado del mismo período y limpieza de foco al cambiar vista. El salto al contenido enfoca el main sin sobrescribir el hash del módulo.
+
+**Validación.** 33 pruebas focales PASS, typecheck/lint/build PASS; navegador confirma Semana/F5, V2/F5, V1/Atrás y retorno a Conclusiones de Bimestre 4 en copia QA aislada. Deshacer idea restaura contenido/posición y respeta máximo diez. Detalle y límites en docs/qa/p2p3-ux-closure-2026-10-02.md.
+
+**Prevención.** Persistir selección de presentación con parámetros validados; nunca introducir contenido pedagógico en URL. Mantener un solo guard por interacción y comprobar URL, selección y contenido visibles juntos.

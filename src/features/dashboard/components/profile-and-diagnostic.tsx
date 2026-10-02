@@ -93,7 +93,7 @@ export function InstitutionProfile({ dashboard, onSaved }: {
           <Field label="Código modular" value={institutionCode} onChange={setInstitutionCode} placeholder="Opcional" />
           <Field label="Distrito" value={district} onChange={setDistrict} placeholder="Opcional" />
           <Field label="UGEL" value={ugel} onChange={setUgel} placeholder="Opcional" />
-          <Field label="Dirección" value={directorName} onChange={setDirectorName} placeholder="Nombre de la directora o director" />
+          <Field label="Nombre de la directora o del director" value={directorName} onChange={setDirectorName} placeholder="Nombre de la directora o director" />
         </div>
         <div className="mt-6 flex flex-wrap items-center gap-3"><AsyncButton busy={working} busyLabel="Guardando datos..." onClick={save}><Save /> Guardar datos</AsyncButton>{message && <WorkflowFeedback tone={message.startsWith("Datos del colegio guardados") ? "success" : "error"}>{message}</WorkflowFeedback>}</div>
       </section>

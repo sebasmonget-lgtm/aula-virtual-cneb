@@ -358,3 +358,7 @@ La entrevista nueva tiene nueve preguntas conversacionales, selecciones rápidas
 ## Mapa visual de Mi año (2026-10-01)
 
 «Mi año» prioriza un mapa horizontal marzo–diciembre con propuestas sobre fechas reales, semanas de gestión diferenciadas y feriados compactos. La lista editable sigue como vista secundaria del mismo `annual_preplan_v1`. Reorganizar crea un borrador de versión; mover, retirar, sustituir e incorporar propuestas modifica ese borrador, y confirmar sigue siendo una acción separada. La bandeja `available_experiences` se persiste dentro del JSONB existente, sin migración; planes anteriores sin esa propiedad conservan su lectura. Ver ADR 106 y `docs/qa/annual-year-map-2026-10-01.md`.
+
+## Cierre P2/P3 de UX (2026-10-02)
+
+Tabs/paneles y estados seleccionados accesibles, salto al main único, encabezados de Evaluación, semana/versión anual persistentes en URL, deshacer última idea y retorno local de Conclusiones. Copy, fechas y vacíos corregidos con componentes existentes. No cambia dominio ni almacenamiento pedagógico. Guía heredada pendiente por fuente curricular; documentación focal en docs/qa/p2p3-ux-closure-2026-10-02.md. Sin publicación en esta fase.

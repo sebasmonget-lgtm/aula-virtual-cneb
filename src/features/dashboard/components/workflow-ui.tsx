@@ -12,7 +12,7 @@ export function PageIntro({ eyebrow, title, description, icon: Icon }: { eyebrow
 }
 
 export type WorkflowTab<T extends string> = { id: T; label: string; shortLabel?: string; icon?: LucideIcon };
-export function WorkflowTabs<T extends string>({ tabs, value, onChange, label }: { tabs: readonly WorkflowTab<T>[]; value: T; onChange: (value: T) => void; label: string }) {
+export function WorkflowTabs<T extends string>({ tabs, value, onChange, label, id, pills = false }: { tabs: readonly WorkflowTab<T>[]; value: T; onChange: (value: T) => void; label: string; id: string; pills?: boolean }) {
   const scroller = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const container = scroller.current;
@@ -27,11 +27,15 @@ export function WorkflowTabs<T extends string>({ tabs, value, onChange, label }:
     onChange(tabs[next].id);
     event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>("[role=tab]")[next]?.focus();
   }
-  return <div className="ayni-tabs-scroll" ref={scroller}><div className="ayni-tabs" role="tablist" aria-label={label} style={{ "--tab-count": tabs.length } as CSSProperties}>
-    {tabs.map((tab, index) => { const Icon = tab.icon; return <button key={tab.id} type="button" role="tab" aria-selected={value === tab.id} tabIndex={value === tab.id ? 0 : -1} onKeyDown={(event) => onKeyDown(event, index)} onClick={() => onChange(tab.id)} className="ayni-tab">
+  return <div className="ayni-tabs-scroll" ref={scroller}><div className={pills ? "flex gap-2" : "ayni-tabs"} role="tablist" aria-label={label} style={{ "--tab-count": tabs.length } as CSSProperties}>
+    {tabs.map((tab, index) => { const Icon = tab.icon; return <button key={tab.id} id={`${id}-tab-${tab.id}`} aria-controls={`${id}-panel`} type="button" role="tab" aria-selected={value === tab.id} tabIndex={value === tab.id ? 0 : -1} onKeyDown={(event) => onKeyDown(event, index)} onClick={() => onChange(tab.id)} className={pills ? `min-h-11 shrink-0 rounded-full px-5 text-sm font-bold ${value === tab.id ? "bg-[#0b7891] text-white" : "border bg-white text-[#536681]"}` : "ayni-tab"}>
       {Icon && <Icon aria-hidden="true" className="size-4 shrink-0" />}<span className="hidden sm:inline">{tab.label}</span><span className="sm:hidden">{tab.shortLabel ?? tab.label}</span>
     </button>; })}
   </div></div>;
+}
+
+export function WorkflowTabPanel({ id, value, children }: { id: string; value: string; children: ReactNode }) {
+  return <div id={`${id}-panel`} role="tabpanel" aria-labelledby={`${id}-tab-${value}`} tabIndex={0} className="space-y-5">{children}</div>;
 }
 
 export function NextStepCard({ title, description, action, onAction }: { title: string; description: string; action: string; onAction: () => void }) {

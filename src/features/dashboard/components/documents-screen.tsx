@@ -136,7 +136,7 @@ function DocumentContent({ document }: { document: OpenDocument }) {
   </article>;
 }
 
-export function DocumentsScreen() {
+export function DocumentsScreen({ onPlan }: { onPlan?: () => void } = {}) {
   const [authMode, setAuthMode] = useState<"local" | "supabase">("local");
   const [documents, setDocuments] = useState<DocumentEntry[]>([]);
   const [selected, setSelected] = useState<{ kind: DocumentKind; id: string } | null>(null);
@@ -292,12 +292,12 @@ export function DocumentsScreen() {
     {needsProjectWord && <p className="rounded-xl bg-[#eaf7fb] p-4 text-sm">El proyecto está confirmado. Prepara su Word antes de guardarlo en Descargas.</p>}
     {opened?.kind === "annual_plan" && opened.source_plan_format !== "annual_preplan_v1" && opened.content.plan_format !== "twelve_projects_flexible_weeks" &&
       <WorkflowFeedback tone="error">Este plan se creó antes del formato actual. Su Word conserva la plantilla anterior. Abre Plan para preparar una versión actualizada; el plan vigente seguirá guardado mientras la revisas.</WorkflowFeedback>}
-    {opened && downloadUrl && <p className="text-sm text-[#526b87]">{authMode === "local" ? "Se guarda en la computadora donde corre Ayni. " : ""}<a className="underline" href={downloadUrl} download>Descargar en este dispositivo</a></p>}
+    {opened && downloadUrl && authMode === "local" && !stableArtifact && <details className="text-sm text-[#526b87]"><summary className="min-h-11 cursor-pointer py-2 font-semibold">Opciones de descarga</summary><p>«Guardar Word en Descargas» lo guarda en el equipo que ejecuta Ayni. Si estás usando otro dispositivo, <a className="underline" href={downloadUrl} download>descarga el Word en este dispositivo</a>.</p></details>}
     {!selected && syncFeature && <DocumentSyncPanel artifacts={artifacts} />}
     {error && <div className="flex flex-wrap items-center gap-3"><WorkflowFeedback tone="error">{error}</WorkflowFeedback><Button variant="outline" onClick={() => { setLoading(!selected); setOpening(Boolean(selected)); setRevision((value) => value + 1); }}>Reintentar</Button></div>}
     {selected ? opening ? <LoadingState label="Abriendo documento..." /> : opened ? <DocumentContent document={opened} /> : null :
       loading ? <LoadingState label="Buscando tus documentos..." /> : error ? null : documents.length === 0 ?
-        <div className="rounded-2xl border border-[#d6e5ef] bg-white p-6"><FileText className="size-8 text-[#087d96]" /><h2 className="mt-3 text-lg font-bold">Aún no hay documentos guardados</h2><p className="mt-1 text-[#526b87]">Cuando guardes tu diagnóstico, plan anual o una actividad, aparecerán aquí.</p></div> :
+        <div className="rounded-2xl border border-[#d6e5ef] bg-white p-6"><FileText className="size-8 text-[#087d96]" /><h2 className="mt-3 text-lg font-bold">Aún no hay documentos guardados</h2><p className="mt-1 text-[#526b87]">Cuando guardes tu diagnóstico, plan anual o una actividad, aparecerán aquí.</p>{onPlan && <Button className="mt-3" onClick={onPlan}>Ir a Planificar</Button>}</div> :
         syncFeature ? <DocumentTree documents={documents} artifactStates={artifactStates}
           onOpen={item=>{setOpened(null);setError("");setWordMessage("");setWordError("");setOpening(true);setSelected({kind:item.kind as DocumentKind,id:item.id});}} /> :
         years.map((year) => <section key={year} aria-label={`Documentos ${year}`} className="space-y-3"><h2 className="text-lg font-extrabold text-[#172b52]">Año escolar {year}</h2>

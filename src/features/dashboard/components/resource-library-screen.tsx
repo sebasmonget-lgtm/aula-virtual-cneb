@@ -6,7 +6,7 @@ import { apiFetch } from "@/src/lib/ayni-api-fetch";
 import { localDatabaseApiUrl } from "@/src/lib/local-database";
 import type { LibraryResource } from "@/src/lib/library-resource";
 import { DocumentsScreen } from "./documents-screen";
-import { EmptyState, LoadingState, WorkflowFeedback } from "./workflow-ui";
+import { EmptyState, LoadingState, WorkflowFeedback, WorkflowTabs, WorkflowTabPanel } from "./workflow-ui";
 import { useWorkspaceSubview } from "@/src/lib/workspace-location";
 
 type Filter = "for-you" | "worksheets" | "workshops" | "materials";
@@ -17,7 +17,7 @@ const filters: { id: Filter; label: string }[] = [
   { id: "workshops", label: "Talleres" }, { id: "materials", label: "Materiales" },
 ];
 
-export function ResourceLibraryScreen({ age, initialFilter = "for-you", onUse }: { age: number; initialFilter?: "for-you" | "workshops"; onUse: (resource: LibraryResource) => void }) {
+export function ResourceLibraryScreen({ age, initialFilter = "for-you", onUse, onPlan }: { age: number; initialFilter?: "for-you" | "workshops"; onUse: (resource: LibraryResource) => void; onPlan?: () => void }) {
   const [view, setView] = useWorkspaceSubview("Biblioteca", "view", libraryViews, initialFilter === "workshops" ? "resources" : "documents");
   const [filter, setFilter] = useWorkspaceSubview("Biblioteca", "filter", libraryFilters, initialFilter);
   const [query, setQuery] = useState("");
@@ -87,11 +87,9 @@ export function ResourceLibraryScreen({ age, initialFilter = "for-you", onUse }:
   }
 
   return <section className="mx-auto max-w-5xl space-y-5">
-    <div className="flex gap-2" role="tablist" aria-label="Secciones de Biblioteca">
-      <button type="button" role="tab" aria-selected={view === "documents"} onClick={() => setView("documents")} className={`min-h-11 rounded-full px-5 text-sm font-bold ${view === "documents" ? "bg-[#0b7891] text-white" : "border bg-white text-[#536681]"}`}>Mis documentos</button>
-      <button type="button" role="tab" aria-selected={view === "resources"} onClick={() => setView("resources")} className={`min-h-11 rounded-full px-5 text-sm font-bold ${view === "resources" ? "bg-[#0b7891] text-white" : "border bg-white text-[#536681]"}`}>Ideas y materiales</button>
-    </div>
-    {view === "documents" ? <DocumentsScreen /> : <>
+    <WorkflowTabs id="library" pills label="Secciones de Biblioteca" value={view} onChange={setView} tabs={[{id:"documents",label:"Mis documentos"},{id:"resources",label:"Ideas y materiales"}]} />
+    <WorkflowTabPanel id="library" value={view}>
+    {view === "documents" ? <DocumentsScreen onPlan={onPlan} /> : <>
       <header><h1 className="text-3xl font-extrabold tracking-tight text-[#1c2e50]">Ideas y materiales</h1><p className="mt-1 text-[#566883]">Estos talleres y materiales son ejemplos incluidos en Ayni para distintas edades. No son actividades de tu aula: solo se incorporan si eliges «Usar en actividad».</p></header>
       <label className="flex min-h-14 items-center gap-3 rounded-2xl border border-[#d4e1ed] bg-white px-4 text-[#60718a]"><Search className="size-5" aria-hidden="true" /><span className="sr-only">Buscar recurso</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar taller o material" className="min-w-0 flex-1 border-0 bg-transparent text-[#1c2e50] outline-none" /></label>
       <div className="flex gap-2 overflow-x-auto pb-1" aria-label="Filtrar recursos">{filters.map((item) => <button type="button" key={item.id} aria-pressed={filter === item.id} onClick={() => setFilter(item.id)} className={`min-h-11 shrink-0 rounded-full px-5 text-sm font-semibold ${filter === item.id ? "bg-[#0b7891] text-white" : "border border-[#d4e1ed] bg-white text-[#536681]"}`}>{item.label}</button>)}</div>
@@ -103,6 +101,6 @@ export function ResourceLibraryScreen({ age, initialFilter = "for-you", onUse }:
         <div className="min-w-0 flex-1"><span className="inline-block rounded-full bg-[#e8f7fa] px-3 py-1 text-xs font-bold text-[#0b7891]">{resource.kind === "workshop" ? "Taller" : "Material para actividad"}</span><h3 className="mt-2 text-lg font-extrabold leading-tight text-[#1c2e50]">{resource.title}</h3><p className="mt-1 text-sm text-[#566883]">{resource.area} · {resource.age} años</p><p className="mt-2 line-clamp-2 text-sm text-[#566883]">{resource.purpose}</p><div className="mt-3 flex flex-wrap gap-2"><button type="button" onClick={() => onUse(resource)} className="min-h-11 rounded-xl bg-[#e8f7fa] px-5 text-sm font-bold text-[#07576c] hover:bg-[#cdebf0]">Usar en actividad →</button><button type="button" disabled={Boolean(downloadingId)} onClick={() => void download(resource)} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-[#cce2ea] px-4 text-sm font-semibold text-[#07576c] disabled:opacity-50"><Download className="size-4" aria-hidden="true" /> {downloadingId === resource.id ? "Guardando..." : authMode === "local" ? "Guardar en Descargas" : "Descargar"}</button></div></div>
       </article>)}</div> : <EmptyState title={filter === "worksheets" ? "Aún no hay fichas en la biblioteca" : "No encontramos recursos"} description={filter === "worksheets" ? "Los talleres y materiales disponibles están en las otras categorías." : "Prueba otra búsqueda o categoría."} />}
       <div className="rounded-2xl bg-[#eef8fc] p-5"><BookOpen className="mb-2 size-5 text-[#0b7891]" aria-hidden="true" /><h2 className="font-extrabold text-[#1c2e50]">Tu trabajo guardado</h2><p className="mt-1 text-sm text-[#566883]">Tus planes, actividades e informes están en Mis documentos.</p><button type="button" onClick={() => setView("documents")} className="mt-3 min-h-11 font-bold text-[#07576c]">Ver documentos →</button></div>
-    </>}
+    </>}</WorkflowTabPanel>
   </section>;
 }
