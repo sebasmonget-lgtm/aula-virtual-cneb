@@ -281,6 +281,27 @@ export async function recordSpontaneousObservation(db, teacherId, input) {
     classifier_version: input.classifierEnabled ? "CURRENT_V2_4_RAW" : null };
 }
 
+/** Atomic capture + teacher attribution. Client UUID makes a retried save idempotent. */
+export async function recordConfirmedSpontaneousObservation(db, teacherId, input) {
+  const classroom = await scope(db, teacherId);
+  await studentInScope(db, classroom.id, input?.studentId);
+  const allowed = new Set((await applicableDiagnosticCompetencies(classroom)).map(c=>c.id));
+  const ids = input.competencyIds;
+  if (!Array.isArray(ids) || ids.length>2 || new Set(ids).size!==ids.length || ids.some(id=>!allowed.has(id))) fail("invalid_competency","Elige hasta dos competencias aplicables o guarda sin competencia.");
+  const {context,note}=validatedSpontaneousNote(input,Boolean(input.mediaPath),true);
+  if (input.supportStatus!=null && !["yes","no","unknown"].includes(input.supportStatus)) fail("invalid_observation","Apoyo inválido.");
+  if (input.observedAt && (!/^\d{4}-\d{2}-\d{2}$/.test(input.observedAt) || !Number.isFinite(Date.parse(input.observedAt)) || new Date(input.observedAt).toISOString().slice(0,10)!==input.observedAt)) fail("invalid_observation","Elige una fecha válida.");
+  const id=input.clientRequestId??randomUUID();
+  if (!/^[0-9a-f-]{36}$/i.test(id)) fail("invalid_observation","Solicitud inválida.");
+  return versionTransaction(db,`spontaneous-decision:${id}`,async tx=>{
+    const old=(await tx.query('select * from diagnostic_spontaneous_observations where id=$1',[id])).rows[0];
+    if(old){if(old.created_by!==teacherId||old.student_id!==input.studentId||old.context_label!==context||old.observation_text!==(note||null)||old.support_status!==(input.supportStatus??null)||(input.observedAt&&new Date(old.observed_at).toISOString().slice(0,10)!==input.observedAt)||JSON.stringify([...(old.competency_v4_ids??[])].sort())!==JSON.stringify([...ids].sort())) fail("invalid_observation","La solicitud ya corresponde a otro registro. Recarga para revisar lo guardado.");return {id,student_id:old.student_id,classification_status:old.classification_status,competency_v4_ids:old.competency_v4_ids,replayed:true};}
+    await tx.query(`insert into diagnostic_spontaneous_observations(id,classroom_id,student_id,context_label,observation_text,support_status,created_by,media_path,media_mime_type,classifier_status,observed_at)
+      values($1,$2,$3,$4,$5,$6,$7,$8,$9,'disabled',coalesce($10::timestamptz,now()))`,[id,classroom.id,input.studentId,context,note||null,input.supportStatus??null,teacherId,input.mediaPath??null,input.mediaMimeType??null,input.observedAt?input.observedAt+'T12:00:00-05:00':null]);
+    return writeTeacherClassification(tx,teacherId,classroom,id,ids);
+  });
+}
+
 function validatedSpontaneousNote(input, hasMedia = false, preserveRaw = false) {
   const context = typeof input?.contextLabel === "string" ? input.contextLabel.trim() : "";
   const raw = typeof input?.observationText === "string" ? input.observationText : "";
@@ -447,6 +468,11 @@ export async function correctSpontaneousClassification(db, teacherId, id, compet
     fail("invalid_competency", "La competencia no es aplicable al aula.");
   const ids = [...new Set(selected)];
   return versionTransaction(db, `spontaneous-decision:${id}`, async (tx) => {
+    return writeTeacherClassification(tx, teacherId, classroom, id, ids);
+  });
+}
+
+async function writeTeacherClassification(tx, teacherId, classroom, id, ids) {
     const updated = await tx.query(`update diagnostic_spontaneous_observations set classification_status=$1,
       classification_source='teacher',competency_v4_id=$2,secondary_competency_v4_id=$3,
       competency_v4_ids=$4::text[],
@@ -475,7 +501,6 @@ export async function correctSpontaneousClassification(db, teacherId, id, compet
       row.competency_v4_ids,row.competency_v4_id]);
     return { id: row.id, student_id: row.student_id, classification_status: row.classification_status,
       competency_v4_id: row.competency_v4_id, competency_v4_ids: row.competency_v4_ids };
-  });
 }
 
 export async function loadSpontaneousObservations(db, teacherId) {

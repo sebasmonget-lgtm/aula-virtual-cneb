@@ -1430,3 +1430,19 @@ Síntoma: cuatro notas QA de la captura automatizada quedaron asociadas a la sel
 **Verificación.** Regresiones específicas con dos sujetos, razón dependiente, permisos, concurrencia, proveedor fallido, reanudación y CAS; calendario 172/172, XML Word y versiones conservados. Navegador real con fuentes QA reconstruidas y proveedor simulado: refresh → fallo → revisión recuperada → confirmar. La respuesta original no es recuperable y no se afirma reproducción exacta. Detalle y límites en docs/qa/annual-journey-v2-recovery-2026-10-03.md.
 
 **Prevención.** Persistir checkpoints privados antes de cambiar de etapa; no publicar conclusiones insuficientes ni promover su alcance. Telemetría limitada a categoría, etapa y conteos, sin datos pedagógicos ni secretos. Distinguir prueba de recuperación simulada de evaluación real del proveedor.
+
+## 2026-10-03 — Sugerencia bloqueada por transacción y foto incompatible con esquema local
+
+**Síntomas y causa.** La sugerencia previa al guardado quedaba esperando porque el IO del proveedor estaba dentro de una transacción PGlite y el registro de uso solicitaba la misma base. La foto devolvía 42703 porque intentaba actualizar students.updated_at, columna inexistente en ese esquema.
+
+**Solución validada.** Claim breve con lease, proveedor fuera de transacción y persistencia condicionada al token; cache sin otra llamada. Foto actualiza solo la columna real nueva, con comparación del path previo y limpieza privada ante conflicto. Regresión del clasificador consulta la misma base durante IO para detectar el deadlock. API y navegador confirmaron sugerencia antes de guardar; pruebas foto upload/read/replace/delete y permisos PASS, con archivo sintético. La migración nullable se verificó en staging conservando RLS y hashes de planes/entrevistas.
+
+**Prevención.** No mantener una transacción abierta durante requests de IA que registran uso en la misma conexión. Verificar contra migraciones y probar operaciones completas de Storage antes de declarar cámara/upload físico validado.
+
+## 2026-10-03 — Segunda competencia docente ausente del contexto anual
+
+**Síntoma y causa.** La captura guardaba dos competencias confirmadas, pero personalizationSources proyectaba únicamente la primary competency de una observación espontánea.
+
+**Solución validada.** El UNION de fuentes conserva competency_ids de cada tipo, incluyendo todo el array confirmado de la profesora. Snapshot, matriz y conversación leen la misma fuente canónica. Regresión captura dos IDs y comprueba ambos antes de editar; eventos mantienen trazabilidad. Navegador mostró comunicación y convivencia en la misma nota sin segunda confirmación.
+
+**Prevención.** Comprobar la proyección downstream además del JSON de guardado; conservar la distinción entre cantidades de registros y evaluación pedagógica.

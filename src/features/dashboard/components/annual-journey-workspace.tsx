@@ -7,6 +7,8 @@ import { apiFetch } from "@/src/lib/ayni-api-fetch";
 import { localDatabaseApiUrl } from "@/src/lib/local-database";
 import { canLeaveWorkspace, readWorkspaceParams, writeWorkspaceLocation } from "@/src/lib/workspace-location";
 import { AsyncButton, GenerationProgress, LoadingState, WorkflowFeedback } from "./workflow-ui";
+import { AnnualPlanningConversation } from "./annual-planning-conversation";
+import { AnnualPreparationProgress } from "./annual-preparation-progress";
 import { DictationRecorder } from "./dictation-recorder";
 
 type Fact = { key: string; kind: string; subject: string; scope: string; support_text: string; uncertainty: string; occurred_at: string | null; explicit_tags?: string[] };
@@ -29,9 +31,6 @@ type Plans = { draft: Plan | null; active: Plan | null; archived: Plan[] };
 type Start = { snapshot: Snapshot; curriculum: { id: string; name: string }[] };
 type Job = { id: string; draft_id: string; status: "queued" | "running" | "failed" | "interrupted" | "succeeded";
   stage: string; completed_stages: string[]; updated_at: string; error?: string | null };
-const stageLabels = [["sources", "Organicé la información de tu aula"], ["calendar", "Revisé el calendario"],
-  ["generation", "Preparar las 12 propuestas"], ["validation", "Comprobar oportunidades para las competencias"],
-  ["review", "Hacer una última revisión antes de mostrártelas"]] as const;
 const api = async <T,>(path: string, value?: unknown): Promise<T> => {
   const response = await apiFetch(`${localDatabaseApiUrl}${path}`, value === undefined ? undefined : {
     method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(value) });
@@ -66,7 +65,7 @@ export function AnnualJourneyWorkspace({ onConfirmed, onGoDiagnostic, onDevelop,
   const [plans, setPlans] = useState<Plans | null>(null), [start, setStart] = useState<Start | null>(null);
   const [selectedId, setSelectedId] = useState(""), [preparing, setPreparing] = useState(false);
   const [ideas, setIdeas] = useState(""), [message, setMessage] = useState(""), [scope, setScope] = useState<string | null>(null);
-  const [ideaDraft, setIdeaDraft] = useState(""), [addingIdea, setAddingIdea] = useState(true);
+  const [ideaDraft, setIdeaDraft] = useState("");
   const [job, setJob] = useState<Job | null>(null);
   const [busy, setBusy] = useState<string | null>(null), [audioBusy, setAudioBusy] = useState(false);
   const [error, setError] = useState(""), [notice, setNotice] = useState("");
@@ -78,7 +77,7 @@ export function AnnualJourneyWorkspace({ onConfirmed, onGoDiagnostic, onDevelop,
   const complete = modern && proposal?.proposed_experiences.length === 12;
   const editable = selected?.status === "draft";
   const generating = job?.status === "queued" || job?.status === "running";
-  const dirty = Boolean(message.trim() || ideaDraft.trim() || preparing && ideas.trim() && ideas !== proposal?.teacher_preferences);
+  const dirty = Boolean(message.trim() || ideaDraft.trim());
   const reload = useCallback(async (id?: string) => {
     const data = await api<Plans>("/api/annual-plans/current"); setPlans(data);
     const all = [data.draft, data.active, ...data.archived].filter((p): p is Plan => !!p);
@@ -104,7 +103,7 @@ export function AnnualJourneyWorkspace({ onConfirmed, onGoDiagnostic, onDevelop,
   }, [reload]);
   useEffect(() => { let live = true;
     Promise.resolve().then(() => Promise.all([reload(), loadStart()])).then(([next]) => { if (live) { setPreparing(!next || next.proposal.journey_version === 2 && !next.proposal.proposed_experiences.length);
-      setIdeas(next?.proposal.teacher_preferences ?? ""); setAddingIdea(!next?.proposal.teacher_preferences);
+      setIdeas(next?.proposal.teacher_preferences ?? "");
       if (next?.proposal.generation_job_id) void api<Job>(`/api/annual-journey/jobs/${next.proposal.generation_job_id}`).then(value => {
         if (live) { setJob(value); if (value.status !== "succeeded") setPreparing(true);
         }
@@ -160,9 +159,9 @@ export function AnnualJourneyWorkspace({ onConfirmed, onGoDiagnostic, onDevelop,
   const snapshot = preparing ? start?.snapshot : proposal?.classroom_snapshot;
   const disabled = !!busy || audioBusy || generating;
   return <section className="ayni-workflow space-y-6 !max-w-none">
-    <header className="flex flex-wrap items-start justify-between gap-4"><div><h1 className="text-3xl font-extrabold text-[#172b52]">Mi año</h1>
-      <p className="mt-2 text-[#526b87]">Conocemos al grupo y preparamos oportunidades para seguir aprendiendo.</p></div>
-      {selected && <label className="text-sm font-semibold">Versión del año<select className="mt-1 block min-h-11 rounded-lg border bg-white px-3" disabled={disabled}
+    <header className="flex flex-wrap items-start justify-between gap-4"><div><h1 className="text-3xl font-extrabold text-[#172b52]">{preparing?job&&job.status!=="succeeded"?"Preparando Mi año":"Conversar con Ayni":"Mi año"}</h1>
+      <p className="mt-2 text-[#526b87]">{preparing?"Ayni te acompaña a preparar una propuesta para tu aula.":"Conocemos al grupo y preparamos oportunidades para seguir aprendiendo."}</p></div>
+      {selected && !preparing && <label className="text-sm font-semibold">Versión del año<select className="mt-1 block min-h-11 rounded-lg border bg-white px-3" disabled={disabled}
         value={selectedId} onChange={(e) => { if (!canLeaveWorkspace()) return; setSelectedId(e.target.value); setPreparing(false); setMessage(""); setScope(null); setInterpretationsReviewed(false);
           writeWorkspaceLocation("Planificar", { annualPlan: e.target.value }, true); }}>
         {[plans?.draft, plans?.active, ...(plans?.archived ?? [])].filter((p): p is Plan => !!p).map((p) => <option key={p.id} value={p.id}>V{p.version} · {p.status === "draft" ? "Borrador" : p.status === "active" ? "Vigente" : "Histórica"}</option>)}
@@ -171,39 +170,8 @@ export function AnnualJourneyWorkspace({ onConfirmed, onGoDiagnostic, onDevelop,
     {error && <WorkflowFeedback tone="error">{error}<Button className="mt-3" variant="outline" disabled={disabled} onClick={() => void run("reload", async () => { await reload(); await loadStart(); })}>Abrir lo guardado y actualizar resumen</Button></WorkflowFeedback>}
     {notice && <p role="status" className="text-sm font-semibold text-[#176442]">{notice}</p>}
     {busy === "apply" ? <GenerationProgress label="Ayni está aplicando tus indicaciones" description="Revisa las propuestas que necesitan cambios y conserva las demás." /> : null}
-    {job && job.status !== "succeeded" && <section className="max-w-3xl rounded-xl border border-[#c9dce9] bg-[#edf5fa] p-5" aria-labelledby="annual-progress">
-      <h2 id="annual-progress" className="text-xl font-bold">Ayni está preparando tu año</h2>
-      <ol className="mt-4 space-y-3">{stageLabels.map(([key, label]) => <li key={key} className="flex items-start gap-3">
-        <span aria-hidden="true">{job.completed_stages.includes(key) ? "✓" : job.stage === key || job.stage === "repair" && key === "review" ? "●" : "○"}</span>
-        <span>{label}<span className="ml-2 text-sm text-[#526b87]">{job.completed_stages.includes(key) ? "Listo" : job.stage === key || job.stage === "repair" && key === "review" ? generating ? "En curso" : "Por continuar" : "Pendiente"}</span></span>
-      </li>)}</ol>
-      {generating ? <p role="status" className="mt-4 text-sm">Esto puede tardar algunos minutos. Puedes mantener esta página abierta o volver a Mi año para consultar el avance.</p>
-        : <div className="mt-4"><p role="alert">{job.error}</p><div className="mt-3 flex flex-wrap gap-3"><Button disabled={disabled} onClick={() => void continueSavedJob(job)}>Continuar desde lo guardado</Button><Button variant="outline" disabled={disabled} onClick={() => void run("reload",async()=>{await reload(job.draft_id);await loadStart();setJob(null);})}>Actualizar mi preparación</Button></div></div>}
-    </section>}
-    {preparing && !generating && (!job || job.status === "succeeded") && <div className="max-w-3xl space-y-5">
-      <nav aria-label="Recorrido inicial" className="text-sm font-semibold text-[#526b87]">1. Familias → 2. Observar → <span className="text-[#087d96]">3. Preparar mi año</span></nav>
-      <section className="rounded-xl bg-[#edf5fa] p-5"><div className="flex items-center gap-2"><MessageCircle aria-hidden="true" className="size-5 text-[#087d96]" /><h2 className="text-xl font-bold text-[#172b52]">Ayni</h2></div>
-        <p className="mt-3 leading-relaxed">Ya conozco un poco mejor a tu grupo. Esto es lo que compartieron las familias y lo que registraste; lo tendremos en cuenta al preparar tu año.</p>
-        {start && <><p className="mt-2 leading-relaxed">Tenemos {start.snapshot.facts.filter((f) => f.kind === "observed").length} actuaciones registradas y {start.snapshot.facts.filter((f) => f.kind === "family_report").length} reportes familiares para {start.snapshot.student_count} niños y niñas.</p>
-          <p className="mt-2 leading-relaxed">{start.snapshot.competency_information.filter((c) => c.recorded_performances === 0).length} competencias todavía tienen poca o ninguna información en estos registros. Eso no significa dificultad ni que no se hayan trabajado. Incluiré oportunidades para desarrollarlas y conocerlas mejor.</p>
-          <h3 className="mt-4 font-semibold">Lo que observaste</h3><ul className="mt-2 space-y-2 text-sm">{start.snapshot.facts.filter(f => f.kind === "observed").slice(0,3).map(f => <li key={f.key}><span className="font-semibold">{f.subject.replace("child_", "Niño ")}:</span> {f.support_text}</li>)}</ul>
-          <p className="mt-3 text-sm">Estos registros describen a cada niño. Los apoyos que proponga a partir de ellos se revisarán contigo antes de confirmar el año.</p>
-          <h3 className="mt-4 font-semibold">Lo que compartieron las familias</h3>
-          <ul className="mt-3 space-y-2 text-sm">{start.snapshot.facts.filter((f) => f.kind === "family_report").slice(0, 3).map((f) => <li key={f.key}>Una familia reporta: {f.support_text.split("\n").filter((line) => /^(interests|other_interest_text|language_context|other_language_text|family_community_context):/.test(line)).map((line) => line.replace(/^\w+: /, "")).join(" · ").slice(0, 240) || f.explicit_tags?.join(" · ") || "Información disponible en el detalle"}.</li>)}{start.snapshot.facts.filter((f) => f.kind === "teacher_context" || f.kind === "teacher_decision").slice(0, 3).map((f) => <li key={f.key}>{sourceLabels[f.kind]}: {f.support_text}</li>)}</ul>
-          <details className="mt-3"><summary className="min-h-11 cursor-pointer py-2 font-semibold">Ver lo que compartieron y observaron</summary><Facts snapshot={start.snapshot} /></details></>}
-      </section>
-      <p className="rounded-xl border bg-white p-5 text-lg font-semibold">¿Hay algún proyecto, actividad o idea que ya quieras realizar durante el año?</p>
-      {!!ideas.trim() && <section className="ml-4 rounded-xl border border-[#c9dce9] bg-white p-5"><h3 className="font-bold">Entendí esto</h3><ul className="mt-3 space-y-3">{ideas.split(/\n+|;\s*|\s+y\s+(?=en\s+navidad)/i).filter(text => text.trim()).map((text,i) => <li key={i}><span aria-hidden="true">✓ </span>Quieres tener en cuenta: <span className="whitespace-pre-wrap">{text.trim()}</span><span className="mt-1 block text-sm text-[#526b87]">Preferencia o decisión docente; no confirma un interés de todo el grupo.</span></li>)}</ul>
-        <Button className="mt-3" variant="ghost" disabled={disabled} onClick={() => setAddingIdea(true)}>Agregar otra idea</Button></section>}
-      {addingIdea && <div className="ml-4 rounded-xl border bg-white p-4"><label htmlFor="annual-ideas" className="font-semibold">Tu respuesta para Ayni</label>
-        <Textarea id="annual-ideas" className="mt-2 min-h-24" value={ideaDraft} maxLength={Math.max(0,2000-ideas.length-1)} disabled={disabled} onChange={e => setIdeaDraft(e.target.value)} placeholder="Cuéntame lo que te gustaría tener en cuenta." />
-        <DictationRecorder classroomScope purpose="group_summary" rawTranscript context="Ideas docentes para el año" currentText={ideaDraft} onTranscribed={text => setIdeaDraft(text.slice(0,Math.max(0,2000-ideas.length-1)))} onBusyChange={setAudioBusy} disabled={!!busy} />
-        <Button className="mt-3" variant="outline" disabled={disabled || !ideaDraft.trim()} onClick={() => { setIdeas([ideas,ideaDraft.trim()].filter(Boolean).join("\n")); setIdeaDraft(""); setAddingIdea(false); }}>Agregar a mi año</Button>
-        <p className="mt-2 text-sm text-[#526b87]">Puedes agregar varias ideas. Ayni las guardará con la preparación; este intercambio no consulta a la IA.</p>
-      </div>}
-      <div className="flex flex-wrap gap-3"><AsyncButton busyLabel="Guardando preparación…" busy={busy === "prepare"} disabled={disabled || !start || !!ideaDraft.trim()} onClick={generate}>Preparar mi año</AsyncButton>
-        <Button variant="outline" disabled={disabled || !start} onClick={() => { setIdeas(""); setIdeaDraft(""); setAddingIdea(false); setNotice("Prepararemos el año con el currículo y los registros disponibles. Pulsa Preparar mi año."); }}>Continuar sin agregar ideas</Button></div>
-    </div>}
+    {job && job.status !== "succeeded" && <AnnualPreparationProgress job={job} generating={generating} disabled={disabled} onContinue={()=>void continueSavedJob(job)} onRefresh={()=>void run("reload",async()=>{await reload(job.draft_id);await loadStart();setJob(null);})}/>}
+    {preparing && !generating && (!job || job.status === "succeeded") && start && <AnnualPlanningConversation observations={start.snapshot.facts.filter(f=>f.kind==="observed").length} families={start.snapshot.facts.filter(f=>f.kind==="family_report").length} unknown={start.snapshot.competency_information.filter(c=>c.recorded_performances===0).length} onIdeas={setIdeas} onDraft={setIdeaDraft} onGenerate={generate} disabled={disabled}/>}
     {!preparing && complete && selected && <>
       <div className="flex flex-wrap items-center justify-between gap-3"><p className="font-semibold text-[#526b87]">{editable ? "Borrador guardado · revisa antes de confirmar" : selected.status === "active" ? "Año confirmado · previsión flexible" : "Versión histórica"}</p>
         {editable ? <AsyncButton busyLabel="Confirmando…" busy={busy === "confirm"} disabled={disabled || !!message.trim() || !!proposal.pending_changes?.length || !!proposal.evidence_interpretations?.length && !interpretationsReviewed} onClick={() => void mutate("confirm")}>Confirmar mi año</AsyncButton>

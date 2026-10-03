@@ -191,3 +191,9 @@ button[data-slot="button"][data-variant="outline"] { border-color: var(--input);
   background: #f0f4fb;
   padding: 11px 13px;
 }
+
+/* The initial journey counts records, with a persistent horizontal affordance. */
+.journey-matrix-scroll { scrollbar-width: auto; scrollbar-color: #9bbac9 #edf5fa; }
+.journey-matrix-scroll::-webkit-scrollbar { height: 14px; }
+.journey-matrix-scroll::-webkit-scrollbar-track { background: #edf5fa; border-radius: 8px; }
+.journey-matrix-scroll::-webkit-scrollbar-thumb { background: #9bbac9; border: 3px solid #edf5fa; border-radius: 8px; }

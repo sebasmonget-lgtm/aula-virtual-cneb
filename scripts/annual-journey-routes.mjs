@@ -1,3 +1,4 @@
+import { handlePlanningConversation } from "../src/lib/initial-journey-service.mjs";
 import { randomUUID, createHash } from "node:crypto";
 import { ageFilteredAnnualCurriculum } from "../src/lib/annual-preplan-service.mjs";
 import { personalizationSources } from "../src/lib/annual-personalization-service.mjs";
@@ -57,9 +58,11 @@ export async function handleAnnualJourneyRoutes({ request, response, url, db, te
         classification_source:"teacher",competency_v4_ids:row.competency_ids ??
           (row.source_type === "guided_diagnostic_observation" || row.classification_source === "teacher" ? [row.competency_v4_id].filter(Boolean) : [])}));
       send(response,200,{curriculum,counts:observationCoverage([],records),
+        records:records.map(r=>({id:r.id,source_type:r.source_type,student_id:r.student_id,text:r.observation_text,date:r.observed_at??r.occurred_at,competency_ids:r.competency_v4_ids})),
         observed_students:new Set(records.filter(r=>r.observation_text?.trim()).map(r=>r.student_id)).size,
         unclassified:records.filter(r=>!r.competency_v4_ids.length).length},origin);return true;
     }
+    if (await handlePlanningConversation({request,response,url,db,context,teacherId,snapshot,curriculum,calendar,sources,send,origin,readJson,createProvider,resolvePlan})) return true;
     if (await handleJourneyJobs({ request,response,url,db,context,teacherId,sources,snapshot,curriculum,calendar,
       send,origin,readJson,load,write,protectedIds,annualDocumentContext,createProvider,resolvePlan })) return true;
     if (url.pathname === "/api/annual-journey/generate" && request.method === "POST") {

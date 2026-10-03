@@ -1,169 +1,55 @@
 "use client";
-
-import { useEffect, useState } from "react";
-import { LoaderCircle, Pencil, Sparkles } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Sparkles, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { correctSpontaneousClassification, loadSpontaneousObservations, spontaneousObservationMediaUrl,
-  saveSpontaneousObservation, suggestSpontaneousCompetenciesWithAyni,
-  type LocalStudent, type PrivateMediaUpload, type SpontaneousObservation } from "@/src/lib/local-database";
+import { correctSpontaneousClassification, loadSpontaneousObservations, spontaneousObservationMediaUrl, saveSpontaneousObservation, localDatabaseApiUrl, type LocalStudent, type PrivateMediaUpload, type SpontaneousObservation } from "@/src/lib/local-database";
+import { apiFetch } from "@/src/lib/ayni-api-fetch";
 import { AsyncButton, LoadingState } from "./workflow-ui";
 import { MediaAttachmentInput } from "./media-attachment-input";
 import { DictationRecorder } from "./dictation-recorder";
 import { displayPersonName } from "@/src/lib/person-name.mjs";
-import { buildObservationRecommendation, observationRecommendationMessage } from "@/src/lib/observation-recommendation.mjs";
-
-const moments = ["Juego libre", "Recreo", "Lonchera", "Asamblea", "Rutina", "Conversación", "Exploración", "Otro"];
-const matchesCompetency = (name: string, query: string) => name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("es")
-  .includes(query.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("es").trim());
-
-function SupervisedV24Recommendation({ record, competencies, busy, onSave, onRetry, classifierEnabled }: {
-  record: SpontaneousObservation; competencies: { id: string; name: string }[]; busy: boolean;
-  onSave: (ids: string[]) => Promise<boolean>; onRetry: () => Promise<boolean>; classifierEnabled: boolean;
-}) {
-  const [editing, setEditing] = useState(false);
-  const [choice, setChoice] = useState("");
-  const [query, setQuery] = useState("");
-  const [activeAction, setActiveAction] = useState<string | null>(null);
-  async function submit(ids: string[], action: string) {
-    setActiveAction(action);
-    try { return await onSave(ids); } finally { setActiveAction(null); }
-  }
-  const primaryId = record.suggested_competency_v4_ids[0];
-  const primary = competencies.find((item) => item.id === primaryId);
-  const confirmed = competencies.find((item) => item.id === record.competency_v4_id);
-  const teacherReviewed = record.classification_source === "teacher";
-  const pending = record.classifier_status === "pending" && classifierEnabled;
-  const statusText = record.classifier_status === "abstained"
-    ? "No se encontró una competencia suficientemente clara."
-    : record.classifier_status === "failed"
-      ? "La observación se guardó. Puedes elegir la competencia manualmente."
-      : "Puedes elegir una competencia para esta observación.";
-  return <div className="mt-3 space-y-3 rounded-xl border border-[#c9e4e9] bg-white p-4">
-    <p className="flex items-center gap-2 text-sm font-bold text-[#075d70]"><Sparkles className="size-4" />{teacherReviewed ? "Competencia confirmada por ti" : "Sugerencia de Ayni"}</p>
-    {teacherReviewed ? <p className="text-base font-semibold">{confirmed?.name ?? "Sin competencia"}</p>
-      : primary ? <p className="text-base font-semibold">Competencia sugerida: {primary.name}</p>
-      : <p role="status" className="flex items-center gap-2 text-sm text-[#526b87]">{pending && <LoaderCircle className="size-4 animate-spin" />}{pending ? "Ayni está preparando la sugerencia…" : statusText}</p>}
-    {!editing && <div className="flex flex-wrap gap-2">
-      {!teacherReviewed && primary && <AsyncButton type="button" busy={activeAction === "confirm"} busyLabel="Guardando..." disabled={busy} onClick={() => void submit([primary.id], "confirm")}>Confirmar</AsyncButton>}
-      <Button type="button" variant="outline" disabled={busy} onClick={() => { setChoice(confirmed?.id ?? ""); setEditing(true); }}><Pencil className="size-4" />{primary || teacherReviewed ? "Cambiar" : "Elegir competencia"}</Button>
-      {!teacherReviewed && !pending && <AsyncButton type="button" busy={activeAction === "empty"} busyLabel="Guardando..." disabled={busy} onClick={() => void submit([], "empty")}>{primary ? "Dejar sin competencia" : "Guardar sin competencia"}</AsyncButton>}
-      {!teacherReviewed && classifierEnabled && record.classifier_status === "failed" && <AsyncButton type="button" variant="ghost" busy={busy} busyLabel="Reintentando..." onClick={() => void onRetry()}>Reintentar</AsyncButton>}
-    </div>}
-    {editing && <div className="space-y-2"><label className="block text-sm font-semibold">Buscar competencia<input type="search" value={query} onChange={(event) => { setQuery(event.target.value); setChoice(""); }} placeholder="Escribe parte del nombre" className="mt-1 min-h-11 w-full rounded-xl border px-3" disabled={busy} /></label><label className="block text-sm font-semibold">Competencia elegida por ti
-      <select className="mt-1 min-h-11 w-full rounded-xl border px-3" value={choice} disabled={busy} onChange={(event) => setChoice(event.target.value)}>
-        <option value="">Elige una competencia</option>{competencies.filter((item) => matchesCompetency(item.name, query)).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
-      </select></label><div className="flex gap-2"><AsyncButton type="button" busy={activeAction === "choice"} busyLabel="Guardando..." disabled={busy || !choice} onClick={() => void submit([choice], "choice").then((saved) => { if (saved) setEditing(false); })}>Guardar elección</AsyncButton><Button type="button" variant="outline" disabled={busy} onClick={() => setEditing(false)}>Cancelar</Button></div></div>}
-  </div>;
+import { StudentPhoto } from "./student-photo";
+import { AyniMascot } from "./initial-journey-ui";
+const moments=["Juego libre","Recreo","Lonchera","Asamblea","Rutina","Conversación","Exploración","Otro"];
+type Competency={id:string;name:string};
+type PriorRecord={id:string;source_type:string;student_id:string;text:string;date:string;competency_ids:string[]};
+function CompetencyPicker({items,selected,onChange,disabled}:{items:Competency[];selected:string[];onChange:(ids:string[])=>void;disabled:boolean}) {
+  const [query,setQuery]=useState("");
+  return <fieldset disabled={disabled} className="space-y-3"><legend className="font-semibold">Elige hasta dos competencias (opcional)</legend><label className="block text-sm">Buscar competencia<input type="search" value={query} onChange={e=>setQuery(e.target.value)} className="mt-1 min-h-11 w-full rounded-xl border bg-white px-3" /></label><div className="grid max-h-64 gap-2 overflow-y-auto sm:grid-cols-2">{items.filter(c=>c.name.toLocaleLowerCase("es").includes(query.toLocaleLowerCase("es"))).map(c=><label key={c.id} className="flex min-h-12 items-center gap-3 rounded-xl border bg-white p-3 text-sm"><input type="checkbox" checked={selected.includes(c.id)} disabled={!selected.includes(c.id)&&selected.length>=2} onChange={e=>onChange(e.target.checked?[...selected,c.id]:selected.filter(id=>id!==c.id))}/>{c.name}</label>)}</div></fieldset>;
 }
-
-function ClassificationRecommendation({ record, competencies, busy, onSave, onRetry }: {
-  record: SpontaneousObservation; competencies: { id: string; name: string }[]; busy: boolean;
-  onSave: (ids: string[]) => Promise<boolean>; onRetry: () => Promise<boolean>;
-}) {
-  const recommendation = buildObservationRecommendation(record, competencies);
-  const [editing, setEditing] = useState(false);
-  const [selectedDraft, setSelectedDraft] = useState<string[] | null>(null);
-  const [query, setQuery] = useState("");
-  const [activeAction, setActiveAction] = useState<string | null>(null);
-  async function submit(ids: string[], action: string) {
-    setActiveAction(action);
-    try { return await onSave(ids); } finally { setActiveAction(null); }
-  }
-  const selected: string[] = selectedDraft ?? recommendation.initialSelection;
-  const isTeacherChoice = record.classification_source === "teacher";
-  return <div className="mt-3 space-y-3 rounded-xl border border-[#c9e4e9] bg-white p-4">
-    <p className="flex items-center gap-2 text-sm font-bold text-[#075d70]"><Sparkles className="size-4" />{isTeacherChoice ? "Competencias de esta observación" : "Recomendación de Ayni"}</p>
-    {isTeacherChoice ? recommendation.confirmed.length > 0
-      ? <ul className="space-y-1 text-sm font-semibold">{recommendation.confirmed.map((card: { id: string; name: string }) => <li key={card.id}>{card.name}</li>)}</ul>
-      : <p className="text-sm text-[#526b87]">{observationRecommendationMessage(recommendation.state)}</p>
-      : recommendation.state === "suggested" && recommendation.primary
-        ? <><p className="text-base font-semibold text-[#172b52]">{recommendation.primary.name}</p>
-          {recommendation.additional.length > 0 && <p className="text-sm text-[#526b87]">También podría relacionarse con: {recommendation.additional.map((card: { name: string }) => card.name).join("; ")}.</p>}</>
-        : <p role="status" className="flex items-start gap-2 text-sm text-[#526b87]">{recommendation.state === "pending" && <LoaderCircle className="mt-0.5 size-4 shrink-0 animate-spin" />}{observationRecommendationMessage(recommendation.state)}</p>}
-    {!editing && <div className="flex flex-wrap gap-2">
-      {!isTeacherChoice && recommendation.state === "suggested" && recommendation.primary && <AsyncButton type="button" busy={activeAction === "suggested"} busyLabel="Guardando..." disabled={busy} onClick={() => void submit([recommendation.primary.id], "suggested")}>Usar recomendación</AsyncButton>}
-      <Button type="button" variant="outline" disabled={busy} aria-expanded={editing} onClick={() => { setSelectedDraft(recommendation.initialSelection); setEditing(true); }}><Pencil className="size-4" />Cambiar o agregar competencia</Button>
-      {recommendation.state === "unavailable" && record.observation_text?.trim() && <AsyncButton type="button" variant="ghost" busy={busy} busyLabel="Ayni está revisando…" onClick={() => void onRetry()}>Reintentar con Ayni</AsyncButton>}
-    </div>}
-    {editing && <fieldset disabled={busy} className="space-y-3">
-      <legend className="text-sm font-semibold">Elige una o varias competencias</legend>
-      <label className="block text-sm font-semibold">Buscar competencia<input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Escribe parte del nombre" className="mt-1 min-h-11 w-full rounded-xl border px-3" /></label>
-      <div className="grid gap-2 sm:grid-cols-2">{competencies.filter((card) => matchesCompetency(card.name, query)).map((card) =>
-        <label key={card.id} className="flex min-h-12 items-center gap-2 rounded-xl border px-3 py-2 text-sm">
-          <input type="checkbox" checked={selected.includes(card.id)} onChange={(event) => setSelectedDraft(event.target.checked ? [...selected, card.id] : selected.filter((id) => id !== card.id))} />
-          <span>{card.name}</span>
-        </label>)}</div>
-      <div className="flex flex-wrap gap-2"><AsyncButton type="button" busy={activeAction === "selection"} busyLabel="Guardando..." disabled={busy} onClick={() => void submit(selected, "selection").then((saved) => { if (saved) { setEditing(false); setSelectedDraft(null); } })}>{selected.length ? "Guardar competencias" : "Dejar sin clasificar"}</AsyncButton><Button type="button" variant="outline" disabled={busy} onClick={() => { setEditing(false); setSelectedDraft(null); }}>Cancelar</Button></div>
-    </fieldset>}
-  </div>;
+function SavedClassification({record,items,onSave,busy}:{record:SpontaneousObservation;items:Competency[];onSave:(ids:string[])=>Promise<boolean>;busy:boolean}){
+ const [editing,setEditing]=useState(false),[ids,setIds]=useState(record.competency_v4_ids??[]);
+ return <div className="mt-3 space-y-3"><div className="flex flex-wrap items-center gap-2">{record.classification_source==="teacher"&&record.competency_v4_ids.length?record.competency_v4_ids.map(id=><span key={id} className="rounded-lg bg-[#e4f7f2] px-3 py-2 text-sm text-[#075d70]">{items.find(c=>c.id===id)?.name??id}</span>):<span className="text-sm text-[#526b87]">Sin competencia elegida</span>}<Button variant="ghost" size="sm" disabled={busy} onClick={()=>{setIds(record.competency_v4_ids??[]);setEditing(!editing);}}><Pencil className="size-4"/>Editar competencia</Button></div>{editing&&<><CompetencyPicker items={items} selected={ids} onChange={setIds} disabled={busy}/><AsyncButton busy={busy} busyLabel="Guardando…" onClick={()=>void onSave(ids).then(ok=>{if(ok)setEditing(false);})}>Guardar cambio</AsyncButton><Button variant="ghost" onClick={()=>setEditing(false)}>Cancelar</Button><p className="text-xs text-[#526b87]">La decisión anterior se conserva en el historial.</p></>}</div>;
 }
-
-export function SpontaneousDiagnostic({ students, initialStudentId = "", onSaved, onDecisionSaved, onContinue }: { students: LocalStudent[]; initialStudentId?: string; onSaved?: () => void; onDecisionSaved?: () => void; onContinue?: () => void }) {
-  const [studentId, setStudentId] = useState(initialStudentId);
-  const [contextLabel, setContextLabel] = useState("");
-  const [note, setNote] = useState("");
-  const [media, setMedia] = useState<PrivateMediaUpload | null>(null);
-  const [supportStatus, setSupportStatus] = useState<"yes" | "no" | "unknown" | "">("");
-  const [records, setRecords] = useState<SpontaneousObservation[] | null>(null);
-  const [competencies, setCompetencies] = useState<{ id: string; name: string }[]>([]);
-  const [classifierEnabled, setClassifierEnabled] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [busyRecordId, setBusyRecordId] = useState<string | null>(null);
-  const [recordingBusy, setRecordingBusy] = useState(false);
-  const [mediaBusy, setMediaBusy] = useState(false);
-  const [recordingRevision, setRecordingRevision] = useState(0);
-  const audioBusy = recordingBusy || mediaBusy;
-  const [error, setError] = useState("");
-  const [message, setMessage] = useState("");
-
-  async function reload() { const result = await loadSpontaneousObservations(); setRecords(result.observations); setCompetencies(result.competencies); setClassifierEnabled(result.classifier_enabled); }
-  useEffect(() => { loadSpontaneousObservations().then((result) => { setRecords(result.observations); setCompetencies(result.competencies); setClassifierEnabled(result.classifier_enabled); }).catch((cause) => setError(cause instanceof Error ? cause.message : "No se pudieron cargar las observaciones.")); }, []);
-  useEffect(() => {
-    if (busy || busyRecordId || !records?.some((record) => record.classification_status === "pending")) return;
-    const timeout = window.setTimeout(() => { void reload().catch(() => setError("No se pudo actualizar la clasificación. Puedes volver a abrir esta sección.")); }, 2000);
-    return () => window.clearTimeout(timeout);
-  }, [records, busy, busyRecordId]);
-  async function run(work: () => Promise<void>) {
-    if (busy || audioBusy) return false;
-    setBusy(true); setError(""); setMessage("");
-    try { await work(); await reload(); return true; } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "No se pudo guardar.");
-      await reload().catch(() => {});
-      return false;
-    }
-    finally { setBusy(false); }
-  }
-  async function saveDecision(record: SpontaneousObservation, ids: string[]) {
-    if (busy || busyRecordId || audioBusy) return false;
-    setBusyRecordId(record.id); setError(""); setMessage("");
-    try {
-      const saved = await correctSpontaneousClassification(record.id, ids);
-      setRecords((current) => current?.map((item) => item.id === record.id ? {
-        ...item, classification_status: saved.classification_status, classification_source: "teacher",
-        competency_v4_id: saved.competency_v4_id, competency_v4_ids: saved.competency_v4_ids,
-        secondary_competency_v4_id: saved.competency_v4_ids[1] ?? null,
-        classifier_status: item.classifier_status === "pending" ? "disabled" : item.classifier_status,
-        recommendation_state: saved.competency_v4_ids.length ? "teacher_confirmed" : "teacher_unclassified",
-      } : item) ?? null);
-      setMessage("Decisión guardada."); onDecisionSaved?.(); return true;
-    } catch (cause) { setError(cause instanceof Error ? cause.message : "No se pudo guardar la decisión."); return false; }
-    finally { setBusyRecordId(null); }
-  }
-  if (!records) return error ? <p role="alert">{error}</p> : <LoadingState label="Cargando observaciones..." />;
-  const pendingCount = records.filter((record) => record.classification_source !== "teacher").length;
-  return <section className="diagnostic-panel space-y-4 p-4 md:p-7">
-    <div><h2 className="text-xl font-bold">Registrar lo que ocurrió</h2><p className="text-sm text-[#526b87]">Escribe o dicta lo que hizo o dijo. {classifierEnabled ? "Ayni te sugerirá una competencia para que la confirmes o cambies." : "Después podrás elegir una competencia si corresponde."}</p></div>
-    {!classifierEnabled && <p role="status" className="rounded-xl border border-[#d6e7ed] bg-[#f2f9fb] px-4 py-3 text-sm text-[#315d70]">La sugerencia automática aún no está activada en este entorno. Guarda la observación y elige la competencia tú misma si corresponde.</p>}
-    <div className="grid gap-4 sm:grid-cols-2"><label className="block text-sm font-semibold">¿A quién observaste?<select className="mt-2 block min-h-12 w-full cursor-pointer rounded-xl border-2 border-[#9fb8cc] bg-white px-4 text-base font-medium text-[#19334d] shadow-sm outline-none focus:border-[#087d96] focus:ring-2 focus:ring-[#087d96]/20 disabled:opacity-60" disabled={busy || audioBusy} value={studentId} onChange={(event) => setStudentId(event.target.value)}><option value="">Elige un niño</option>{students.map((student) => <option key={student.id} value={student.id}>{displayPersonName(student.name)}</option>)}</select></label><label className="block text-sm font-semibold">¿Dónde ocurrió?<select className="mt-2 block min-h-12 w-full cursor-pointer rounded-xl border-2 border-[#9fb8cc] bg-white px-4 text-base font-medium text-[#19334d] shadow-sm outline-none focus:border-[#087d96] focus:ring-2 focus:ring-[#087d96]/20 disabled:opacity-60" disabled={busy || audioBusy} value={contextLabel} onChange={(event) => setContextLabel(event.target.value)}><option value="">Elige un momento</option>{moments.map((moment) => <option key={moment}>{moment}</option>)}</select></label></div>
-    <label className="block text-sm font-semibold">¿Qué hizo o dijo?<Textarea className="mt-1 min-h-24" disabled={busy} value={note} maxLength={4000} onChange={(event) => setNote(event.target.value)} placeholder="Por ejemplo: contó los vasos antes de repartirlos y dijo que faltaba uno" /></label>
-    <DictationRecorder key={`${studentId}:${recordingRevision}`} studentId={studentId} context={contextLabel} currentText={note} purpose="raw_observation" rawTranscript disabled={busy || mediaBusy || !contextLabel} onBusyChange={setRecordingBusy} onTranscribed={(text) => setNote(text)} />
-    <MediaAttachmentInput studentId={studentId} context={contextLabel} media={media} onMedia={setMedia} onTranscribed={setNote} rawTranscript disabled={busy || recordingBusy} onBusyChange={setMediaBusy} />
-    <fieldset className="space-y-2" disabled={busy || audioBusy}><legend className="text-sm font-semibold">¿Necesitó apoyo? (opcional)</legend><div className="flex flex-wrap gap-2">{([ ["no", "No"], ["yes", "Sí"], ["unknown", "No puedo determinarlo"] ] as const).map(([value,label]) => <label key={value} className="flex min-h-11 items-center gap-2 rounded-xl border px-3 py-2 text-sm"><input type="radio" checked={supportStatus === value} onChange={() => setSupportStatus(value)} />{label}</label>)}</div></fieldset>
-    <AsyncButton className="min-h-11" busy={busy} busyLabel="Guardando..." disabled={audioBusy || !studentId || !contextLabel || (!note.trim() && !media)} onClick={() => void run(async () => { await saveSpontaneousObservation({ studentId, contextLabel, observationText: note, media: media ?? undefined, ...(supportStatus ? { supportStatus } : {}) }); setNote(""); setMedia(null); setSupportStatus(""); setRecordingRevision((value) => value + 1); setMessage("Observación guardada."); onSaved?.(); })}>Guardar observación</AsyncButton>
-    {message && <p role="status" className="rounded-xl bg-[#e5f8ed] p-3 text-sm">{message}</p>}{error && <p role="alert" className="rounded-xl bg-[#fff1d6] p-3 text-sm">{error}</p>}
-    {records.length > 0 && <section aria-labelledby="spontaneous-observations-title" className="space-y-3 border-t pt-4"><h3 id="spontaneous-observations-title" className="text-lg font-bold">Observaciones recientes · {records.length}</h3>{pendingCount > 0 && <p role="status" className="rounded-xl bg-[#fff5df] p-3 text-sm font-semibold">{pendingCount} {pendingCount === 1 ? "observación pendiente" : "observaciones pendientes"} de tu decisión. Puedes confirmar una competencia, elegir otra o dejarla sin competencia.</p>}{records.map((record) => { const controls = { record, competencies, busy: busy || audioBusy || busyRecordId === record.id, classifierEnabled, onRetry: () => run(async () => { const result = await suggestSpontaneousCompetenciesWithAyni(record.id); setMessage(observationRecommendationMessage(result.recommendation_state)); }), onSave: (ids: string[]) => saveDecision(record, ids) }; return <article key={record.id} id={record.classification_source !== "teacher" && records.find((item) => item.classification_source !== "teacher")?.id === record.id ? "spontaneous-pending" : undefined} className="rounded-2xl bg-[#f3f7fb] p-4"><h4 className="font-semibold">{displayPersonName(students.find((student) => student.id === record.student_id)?.name ?? "")} · {record.context_label}</h4><p className="mt-2 text-sm leading-relaxed">{record.observation_text || "Archivo adjunto sin nota escrita."}</p>{record.has_media && <a className="mt-1 inline-block text-sm underline" href={spontaneousObservationMediaUrl(record.id)} target="_blank" rel="noreferrer">Abrir {record.media_mime_type?.startsWith("audio/") ? "audio" : "foto"} privado</a>}<p className="mt-2 text-xs text-[#526b87]">{new Date(record.observed_at).toLocaleDateString("es-PE")}</p>{record.classifier_version === "CURRENT_V2_4_RAW" || record.classifier_status === "disabled" ? <SupervisedV24Recommendation {...controls} /> : <ClassificationRecommendation {...controls} />}</article>; })}</section>}
-    {onContinue && <div className="flex justify-end"><Button onClick={onContinue}>Continuar a preparar mi año</Button></div>}
-    <p className="text-xs text-[#526b87]">{classifierEnabled ? "Para sugerir una competencia, Ayni envía a Jev el texto tal como lo escribes. La foto y el audio quedan privados y no se envían. Tú decides la competencia; esto no asigna niveles." : "Esta organización no evalúa al niño ni asigna niveles."}</p>
-  </section>;
+export function SpontaneousDiagnostic({students,initialStudentId="",onSaved,onDecisionSaved,onContinue}:{students:LocalStudent[];initialStudentId?:string;onSaved?:()=>void;onDecisionSaved?:()=>void;onContinue?:()=>void}) {
+ const [studentId,setStudentId]=useState(initialStudentId),[contextLabel,setContextLabel]=useState(""),[date,setDate]=useState(()=>new Date().toLocaleDateString("en-CA",{timeZone:"America/Lima"}));
+ const [note,setNote]=useState(""),[media,setMedia]=useState<PrivateMediaUpload|null>(null),[support,setSupport]=useState<"yes"|"no"|"unknown"|"">("");
+ const [records,setRecords]=useState<SpontaneousObservation[]|null>(null),[items,setItems]=useState<Competency[]>([]),[ids,setIds]=useState<string[]>([]);
+ const [analyzed,setAnalyzed]=useState(false),[picker,setPicker]=useState(false),[busy,setBusy]=useState<string|null>(null),[audio,setAudio]=useState(false),[mediaBusy,setMediaBusy]=useState(false),[error,setError]=useState(""),[message,setMessage]=useState("");
+ const [prior,setPrior]=useState<PriorRecord[]>([]);
+ const requestId=useRef(""); const disabled=!!busy||audio||mediaBusy;
+ async function readPrior(){const response=await apiFetch(`${localDatabaseApiUrl}/api/annual-journey/coverage`);if(!response.ok)throw new Error("No pude abrir los registros anteriores del aula.");const value=await response.json() as {records:PriorRecord[]};setPrior(value.records.filter(r=>r.source_type!=="diagnostic_observation"));}
+ async function reload(){const r=await loadSpontaneousObservations();setRecords(r.observations);setItems(r.competencies);await readPrior();}
+ useEffect(()=>{void apiFetch(`${localDatabaseApiUrl}/api/annual-journey/coverage`).then(async response=>{if(!response.ok)throw new Error("No pude abrir los registros anteriores del aula.");const value=await response.json() as {records:PriorRecord[]};setPrior(value.records.filter(r=>r.source_type!=="diagnostic_observation"));}).catch(e=>setError(e.message));loadSpontaneousObservations().then(r=>{setRecords(r.observations);setItems(r.competencies);}).catch(e=>setError(e.message));},[]);
+ function invalidate(){setAnalyzed(false);setIds([]);requestId.current="";}
+ async function work(key:string,fn:()=>Promise<void>){if(disabled)return;setBusy(key);setError("");setMessage("");try{await fn();}catch(e){setError(e instanceof Error?e.message:"No se pudo completar. Tus datos se conservan.");}finally{setBusy(null);}}
+ async function analyze(){await work("analyze",async()=>{const r=await apiFetch(`${localDatabaseApiUrl}/api/diagnostics/spontaneous-observations/preview`,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({studentId,contextLabel,observationText:note})});const result=await r.json() as {error?:string;competency_ids:string[]};if(!r.ok)throw new Error(result.error??"Puedes elegir una competencia manualmente.");setIds(result.competency_ids);setAnalyzed(true);});}
+ async function save(){await work("save",async()=>{requestId.current ||= crypto.randomUUID();await saveSpontaneousObservation({studentId,contextLabel,observationText:note,media:media??undefined,supportStatus:support||undefined,competencyIds:ids,observedAt:date,clientRequestId:requestId.current});setNote("");setMedia(null);setSupport("");invalidate();setPicker(false);setMessage("Observación guardada con tu selección docente.");await reload();onSaved?.();});}
+ async function edit(record:SpontaneousObservation,next:string[]){let ok=false;await work(record.id,async()=>{await correctSpontaneousClassification(record.id,next);await reload();setMessage("Cambio guardado en el historial.");onDecisionSaved?.();ok=true;});return ok;}
+ if(!records)return error?<p role="alert">{error}</p>:<LoadingState label="Cargando observaciones…"/>;
+ return <section className="space-y-6"><div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1fr)_260px]"><div className="diagnostic-panel min-w-0 space-y-5 p-5 md:p-7">
+ <fieldset disabled={disabled}><legend className="mb-3 font-bold">¿A quién observaste?</legend><div className="flex gap-3 overflow-x-auto pb-2">{students.map(s=><button key={s.id} type="button" aria-pressed={s.id===studentId} onClick={()=>{setStudentId(s.id);invalidate();}} className={`flex min-w-24 flex-col items-center gap-2 rounded-xl border p-3 text-sm ${studentId===s.id?"border-[#087d96] bg-[#e8f6f8] text-[#075d70]":"border-transparent bg-[#f5f8fb]"}`}><StudentPhoto id={s.id} name={displayPersonName(s.name)}/><span className="max-w-32 text-center">{displayPersonName(s.name)}</span></button>)}</div></fieldset>
+ <div className="grid gap-4 sm:grid-cols-2"><label className="text-sm font-semibold">¿Cuándo sucedió?<input aria-label="Fecha de observación" type="date" value={date} disabled={disabled} onChange={e=>setDate(e.target.value)} className="mt-2 block min-h-12 w-full rounded-xl border bg-white px-3"/></label><label className="text-sm font-semibold">Momento<select value={contextLabel} disabled={disabled} onChange={e=>{setContextLabel(e.target.value);invalidate();}} className="mt-2 block min-h-12 w-full rounded-xl border bg-white px-3"><option value="">Elige un momento</option>{moments.map(m=><option key={m}>{m}</option>)}</select></label></div>
+ <label className="block font-bold">¿Qué observaste?<Textarea value={note} maxLength={4000} disabled={disabled} onChange={e=>{setNote(e.target.value);invalidate();}} className="mt-2 min-h-28 text-base" placeholder="Cuenta lo que hizo o dijo, con un ejemplo concreto."/></label>
+ <DictationRecorder studentId={studentId} context={contextLabel} currentText={note} purpose="raw_observation" rawTranscript disabled={!!busy||mediaBusy||!contextLabel} onBusyChange={setAudio} onTranscribed={t=>{setNote(t);invalidate();}}/>
+ <MediaAttachmentInput studentId={studentId} context={contextLabel} media={media} onMedia={setMedia} onTranscribed={t=>{setNote(t);invalidate();}} rawTranscript disabled={!!busy||audio} onBusyChange={setMediaBusy}/>
+ <details><summary className="min-h-11 cursor-pointer py-2 text-sm font-semibold">¿Necesitó apoyo? (opcional)</summary><div className="flex flex-wrap gap-3">{([["no","No"],["yes","Sí"],["unknown","No puedo determinarlo"]] as const).map(([v,label])=><label key={v} className="flex min-h-11 items-center gap-2 text-sm"><input type="radio" name="support" checked={support===v} disabled={disabled} onChange={()=>setSupport(v)}/>{label}</label>)}</div></details>
+ <div className="space-y-3 rounded-xl bg-[#eff8f9] p-4"><p className="flex items-center gap-2 font-semibold text-[#075d70]"><Sparkles className="size-4"/>{analyzed?ids.length?"Ayni sugiere esta competencia:":"No encuentro una competencia clara para esta observación.":"Puedes relacionar esta observación con una competencia"}</p>{ids.map(id=><label key={id} className="flex items-center gap-3 rounded-lg border border-[#b9dce3] bg-white px-3 py-2 text-sm"><input type="checkbox" checked onChange={()=>setIds(ids.filter(v=>v!==id))} disabled={disabled}/>{items.find(c=>c.id===id)?.name}</label>)}<div className="flex flex-wrap gap-2"><AsyncButton variant="outline" busy={busy==="analyze"} busyLabel="Ayni está leyendo…" disabled={disabled||!studentId||!contextLabel||!note.trim()} onClick={()=>void analyze()}>{analyzed?"Volver a consultar":"Sugerir con Ayni"}</AsyncButton><Button variant="ghost" disabled={disabled} onClick={()=>setPicker(!picker)}>{ids.length?"Cambiar / agregar otra competencia":"Elegir competencia"}</Button>{ids.length>0&&<Button variant="ghost" disabled={disabled} onClick={()=>setIds([])}>Quitar todas</Button>}</div>{picker&&<CompetencyPicker items={items} selected={ids} onChange={setIds} disabled={disabled}/>}<p className="text-xs text-[#526b87]">Al guardar, tu selección queda confirmada. También puedes guardar sin competencia.</p></div>
+ <AsyncButton className="min-h-12" busy={busy==="save"} busyLabel="Guardando…" disabled={disabled||!studentId||!contextLabel||!date||(!note.trim()&&!media)} onClick={()=>void save()}>{analyzed&&!ids.length?"Guardar sin competencia":"Guardar observación"}</AsyncButton>
+ </div><aside className="self-start rounded-2xl bg-[#eff7fa] p-6"><h2 className="text-lg font-bold">Sugerencias de Ayni</h2><p className="mt-3 text-sm leading-relaxed text-[#526b87]">Escribe lo que ocurrió. Ayni puede sugerir una competencia; tú eliges su relación antes de guardar.</p><div className="my-5 flex justify-center"><AyniMascot/></div><p className="text-sm leading-relaxed">Una observación breve y concreta nos ayuda a conocer mejor a cada niño y niña.</p><p className="mt-4 text-xs text-[#526b87]">Fotos y audios son privados. No se envían a la IA para sugerir competencias. Esto no asigna niveles.</p></aside></div>
+ {message&&<p role="status" className="rounded-xl bg-[#e5f8ed] p-3 text-sm">{message}</p>}{error&&<p role="alert" className="rounded-xl bg-[#fff1d6] p-3 text-sm">{error}</p>}
+ <section className="space-y-3"><h2 className="text-xl font-bold">Mis observaciones registradas ({records.length+prior.length})</h2>{!records.length&&!prior.length&&<p className="rounded-xl bg-white p-5 text-sm text-[#526b87]">Aquí aparecerán tus observaciones. Puedes empezar con algo que ocurrió hoy.</p>}{records.map(r=>{const name=displayPersonName(students.find(s=>s.id===r.student_id)?.name??"");return <article key={r.id} className="rounded-2xl border border-[#dce7ee] bg-white p-4"><div className="flex items-start gap-3"><StudentPhoto id={r.student_id} name={name}/><div className="min-w-0 flex-1"><h3 className="font-semibold">{name}</h3><p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed">{r.observation_text||"Evidencia adjunta"}</p><p className="mt-2 text-xs text-[#526b87]">{new Date(r.observed_at).toLocaleDateString("es-PE")} · {r.context_label}</p>{r.has_media&&<a className="mt-2 inline-block text-sm text-[#087d96] underline" href={spontaneousObservationMediaUrl(r.id)} target="_blank" rel="noreferrer">Ver evidencia privada</a>}<SavedClassification record={r} items={items} busy={disabled} onSave={next=>edit(r,next)}/></div></div></article>;})}{prior.length>0&&<details className="rounded-2xl border bg-white p-4"><summary className="min-h-11 cursor-pointer py-2 font-semibold">Ver los {prior.length} registros anteriores y de experiencias</summary><div className="mt-3 space-y-3">{prior.map(r=><article key={`${r.source_type}:${r.id}`} className="rounded-xl bg-[#f4f8fb] p-4"><div className="flex items-start gap-3"><StudentPhoto id={r.student_id} name={students.find(s=>s.id===r.student_id)?.name??""}/><div><h3 className="font-semibold">{displayPersonName(students.find(s=>s.id===r.student_id)?.name??"")}</h3><p className="mt-1 whitespace-pre-wrap text-sm">{r.text}</p><p className="mt-2 text-xs text-[#526b87]">{r.date?new Date(r.date).toLocaleDateString("es-PE"):"Fecha no disponible"} · {r.source_type==="guided_diagnostic_observation"?"Experiencia para conocer mejor":"Registro del aula"}</p><div className="mt-2 flex flex-wrap gap-2">{r.competency_ids.map(id=><span key={id} className="rounded-lg bg-[#e4f7f2] px-3 py-2 text-sm">{items.find(c=>c.id===id)?.name??id}</span>)}{!r.competency_ids.length&&<span className="text-xs text-[#526b87]">Sin competencia elegida</span>}</div></div></div></article>)}</div></details>}</section>
+ {onContinue&&<Button onClick={onContinue}>Revisar matriz y continuar →</Button>}
+ </section>;
 }

@@ -46,7 +46,7 @@ function pathSelector(pathname) {
     if (parts[3] === "students" && parts[4]) return ["student", parts[4]];
     const kind = { reviews: "diagnostic_review", "student-reviews": "student_review",
       "group-review": "group_review", "spontaneous-observations": "spontaneous_observation" }[parts[3]];
-    if (kind && parts[4] && !["prepare", "suggest", "matrix", "metrics"].includes(parts[4])) return [kind, parts[4]];
+    if (kind && parts[4] && !["prepare", "suggest", "matrix", "metrics", "preview"].includes(parts[4])) return [kind, parts[4]];
   }
   const kind = {
     "annual-plans": "plan", "learning-experiences": "experience", activities: "activity",

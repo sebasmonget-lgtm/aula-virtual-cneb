@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, Printer, Save } from "lucide-react";
+import { ArrowLeft, ArrowRight, Printer, Save, Link as LinkIcon, Mic } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { attachFamilyInterview, saveAndConfirmFamilyInterview, familyInterviewAttachmentUrl,
   loadFamilyInterview, loadFamilyInterviewStatuses, loadStudentPedagogicalProfile, saveFamilyInterview,
@@ -16,6 +16,10 @@ import { familyInterviewQuestionGroups, familyInterviewStructuredOptionsVersion,
   interviewPreviousEducationTypeOptions } from "@/src/lib/family-interview-contract.mjs";
 import { familyContextLabels } from "@/src/lib/local-database";
 import { displayPersonName } from "@/src/lib/person-name.mjs";
+import { apiFetch } from "@/src/lib/ayni-api-fetch";
+import { localDatabaseApiUrl } from "@/src/lib/local-database";
+import { AyniMascot } from "./initial-journey-ui";
+import { StudentPhoto } from "./student-photo";
 import { summarizeFamilyInterview } from "@/src/lib/family-interview-projection.mjs";
 
 export function useFamilyInterviewStatusMap(refreshKey: string, enabled = true) {
@@ -52,7 +56,7 @@ type TagField = "interest_tags" | "language_tags" | "communication_tags" | "emot
   "social_play_tags" | "home_activity_tags" | "community_tags" | "participation_support_tags";
 type TextField = "interests" | "autonomy_context" | "communication_context" | "language_context" |
   "emotional_support_context" | "social_context" | "home_activity_example" | "family_community_context" |
-  "family_community_enjoyed" | "participation_support_context" | "family_expectation" | "family_context";
+  "family_community_enjoyed" | "participation_support_context" | "family_expectation" | "family_context" | "other_interest_text" | "other_language_text" | "other_community_text";
 
 export function FamilyInterviewEditor({ studentId, studentName: rawStudentName, onBack, onSaved, printContext }: {
   studentId: string; studentName: string; onBack?: () => void; onSaved?: (interview: FamilyInterview) => void;
@@ -65,6 +69,10 @@ export function FamilyInterviewEditor({ studentId, studentName: rawStudentName, 
   const detailsRef = useRef(details);
   useEffect(() => { detailsRef.current = details; }, [details]);
   const [step, setStep] = useState(0);
+  const [shareUrl,setShareUrl]=useState("");
+  const savedText=useRef("");
+  const autosave=useRef<Promise<void>|null>(null);
+  const [autosaveRevision, setAutosaveRevision] = useState(0);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -78,11 +86,37 @@ export function FamilyInterviewEditor({ studentId, studentName: rawStudentName, 
   useEffect(() => {
     let active = true;
     loadFamilyInterview(studentId).then((value) => {
-      if (active) { setDraft(value.draft); setConfirmed(value.confirmed); setDetails(value.draft?.details ?? value.confirmed?.details ?? {}); }
+      if (active) { setDraft(value.draft); setConfirmed(value.confirmed); setDetails(value.draft?.details ?? value.confirmed?.details ?? {}); savedText.current=JSON.stringify(value.draft?.details ?? value.confirmed?.details ?? {}); }
     }).catch((cause) => { if (active) setError(cause instanceof Error ? cause.message : "No se pudo abrir la entrevista."); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, [studentId]);
+  useEffect(()=>{
+    if(loading||readOnly||busy||audioBusy||JSON.stringify(details)===savedText.current)return;
+    const timer=window.setTimeout(()=>{if(autosave.current)return;const value=detailsRef.current;
+      autosave.current=saveFamilyInterview(studentId,value).then(result=>{setDraft(result);savedText.current=JSON.stringify(value);setMessage("Avance guardado automáticamente.");setAutosaveRevision(v=>v+1);}).catch(()=>setError("No pude guardar automáticamente. Usa Guardar y continuar después; tus respuestas siguen aquí.")).finally(()=>{autosave.current=null;});
+    },900);return()=>window.clearTimeout(timer);
+  },[details,loading,readOnly,busy,audioBusy,studentId,autosaveRevision]);
+  useEffect(() => {
+    if (loading || readOnly) return;
+    const guard = (event: BeforeUnloadEvent) => {
+      if (JSON.stringify(detailsRef.current) === savedText.current && !autosave.current) return;
+      event.preventDefault(); event.returnValue = "";
+    };
+    const navigation = (event: Event) => {
+      if (JSON.stringify(detailsRef.current) === savedText.current && !autosave.current) return;
+      if (!window.confirm("Hay respuestas pendientes de guardar. ¿Quieres salir sin guardarlas?")) event.preventDefault();
+    };
+    window.addEventListener("ayni-before-navigation", navigation);
+    window.addEventListener("beforeunload", guard);
+    return () => { window.removeEventListener("beforeunload", guard); window.removeEventListener("ayni-before-navigation", navigation); };
+  }, [loading, readOnly]);
+  const answerFields:Record<string,string[]>={interests:["interest_tags","interests","other_interest_text"],social_context:["social_play_tags","social_context"],home_activity_example:["home_activity_tags","home_activity_example"],communication_context:["language_tags","language_context","communication_tags","communication_context","other_language_text"],family_community_context:["community_tags","family_community_context","family_community_enjoyed","other_community_text"],participation_support_context:["participation_support_tags","participation_support_context"]};
+  const optionLabels = new Map(Object.entries({interest_tags:interviewInterestOptions,social_play_tags:interviewSocialPlayOptions,home_activity_tags:interviewHomeActivityOptions,language_tags:interviewLanguageOptions,communication_tags:interviewCommunicationOptions,community_tags:interviewCommunityOptions,participation_support_tags:interviewParticipationSupportOptions}).flatMap(([field,options]) => options.map(o => [`${field}:${o.id}`, o.label])));
+  const answerFor=(key:string)=>(answerFields[key]??[key]).flatMap(field=>{const v=(details as Record<string,unknown>)[field];return Array.isArray(v)?v.map(id=>optionLabels.get(`${field}:${id}`)??String(id)):typeof v==="string"&&v.trim()?[v]:[];}).join(" · ");
+  const answered=questions.filter(q=>answerFor(q.key)).length;
+  async function share(){await run(async()=>{const r=await apiFetch(`${localDatabaseApiUrl}/api/diagnostics/students/${studentId}/family-share`,{method:"POST",headers:{"content-type":"application/json"},body:"{}"});const result=await r.json() as {error?:string;token?:string;details?:FamilyInterviewDetails};if(!r.ok)throw new Error(result.error);setShareUrl(`${window.location.origin}/entrevista#token=${result.token}`);});}
+  async function reviewFamily(){await run(async()=>{const r=await apiFetch(`${localDatabaseApiUrl}/api/diagnostics/students/${studentId}/family-share`);const result=await r.json() as {error?:string;token?:string;details?:FamilyInterviewDetails};if(!r.ok)throw new Error(result.error);if(!result.details||!Object.keys(result.details).length){setMessage("La familia aún no ha registrado respuestas.");return;}setCreatingVersion(true);setDetails(result.details);setMessage("Respuestas de la familia cargadas para tu revisión. Confirma la entrevista cuando termines.");});}
   const changeText = (field: TextField, value: string) =>
     setDetails((current) => ({ ...current, [field]: value, structured_options_version: familyInterviewStructuredOptionsVersion }));
   function chips(field: TagField, options: readonly { id: string; label: string }[], label: string) {
@@ -105,33 +139,36 @@ export function FamilyInterviewEditor({ studentId, studentName: rawStudentName, 
           className={`min-h-11 rounded-full border px-4 text-sm font-medium ${selected ? "border-[#087d96] bg-[#e4f7f9] text-[#075a6d]" : "border-[#d7e4ed] bg-white text-[#405a73]"}`}>{option.label}</button>;
       })}</div></fieldset>;
   }
+  async function transcribeField(field: TextField, maxLength: number, text: string, saveNow: boolean) {
+    if (text.length > maxLength) throw new Error(`La respuesta debe tener hasta ${maxLength} caracteres. Puedes acortarla antes de guardar.`);
+    const updated = { ...detailsRef.current, [field]: text, structured_options_version: familyInterviewStructuredOptionsVersion };
+    detailsRef.current = updated; setDetails(updated);
+    if (saveNow) {
+      await autosave.current;
+      const result = await saveFamilyInterview(studentId, updated);
+      savedText.current = JSON.stringify(updated); setDraft(result);
+      setMessage("Respuesta guardada en borrador."); onSaved?.(result);
+    }
+  }
   function shortField(field: TextField, label: string, maxLength = 300) {
     return <div><label className="block text-sm font-semibold text-[#405a73]">{label}
-      <input className="mt-2 min-h-11 w-full rounded-xl border border-[#d7e4ed] bg-white px-3 text-base font-normal"
+      <textarea className="mt-2 min-h-24 w-full rounded-xl border border-[#d7e4ed] bg-white p-3 text-base font-normal"
         disabled={readOnly || busy} maxLength={maxLength} value={details[field] ?? ""}
         onChange={(event) => changeText(field, event.target.value)} /></label>
-      {!readOnly && <InterviewAudioRecorder studentId={studentId} question={questions[step].label}
+      {!readOnly && <InterviewAudioRecorder disabled={busy} studentId={studentId} question={questions[step].label}
         currentText={details[field] ?? ""} onBusyChange={(active) => setActiveAudioKeys((current) => {
           if (current.includes(field) === active) return current;
           return active ? [...current, field] : current.filter((key) => key !== field);
-        })} onTranscribed={async (text, saveNow) => {
-          if (text.length > maxLength) throw new Error(`La respuesta debe tener hasta ${maxLength} caracteres. Puedes acortarla antes de guardar.`);
-          const updated = { ...detailsRef.current, [field]: text, structured_options_version: familyInterviewStructuredOptionsVersion };
-          detailsRef.current = updated; setDetails(updated);
-          if (saveNow) {
-            const result = await saveFamilyInterview(studentId, updated);
-            setDraft(result); setDetails(result.details); setMessage("Respuesta guardada en borrador."); onSaved?.(result);
-          }
-        }} />}</div>;
+        })} onTranscribed={(text, saveNow) => transcribeField(field, maxLength, text, saveNow)} />}</div>;
   }
   async function run(work: () => Promise<void>) {
     if (busy || audioBusy) return;
     setBusy(true); setError(""); setMessage("");
-    try { await work(); } catch (cause) { setError(cause instanceof Error ? cause.message : "No se pudo guardar."); }
+    try { await autosave.current; await work(); } catch (cause) { setError(cause instanceof Error ? cause.message : "No se pudo guardar."); }
     finally { setBusy(false); }
   }
   async function saveDraft(exitAfter = false) {
-    const result = await saveFamilyInterview(studentId, details);
+    const result = await saveFamilyInterview(studentId, detailsRef.current); savedText.current=JSON.stringify(detailsRef.current);
     setDraft(result); setDetails(result.details); setMessage("Avance guardado. Puedes continuar después.");
     onSaved?.(result); if (exitAfter) onBack?.();
   }
@@ -156,25 +193,25 @@ export function FamilyInterviewEditor({ studentId, studentName: rawStudentName, 
     setMessage("Respaldo privado adjuntado. No se extrajo información del archivo.");
   }
   if (loading) return <LoadingState label="Abriendo entrevista..." />;
-  return <section className="diagnostic-panel space-y-5 p-4 md:p-7">
-    {onBack && <Button variant="outline" className="diagnostic-back-button" disabled={busy || audioBusy} onClick={onBack}><ArrowLeft /> Volver</Button>}
-    <header><p className="text-sm font-semibold text-[#087d96]">Conocer a la familia · unos 5–8 minutos</p>
-      <h2 className="text-2xl font-extrabold">Conozcamos mejor a {studentName}</h2>
-      <p className="mt-2 text-sm text-[#526b87]">Responde solo lo que te resulte cómodo compartir. Puedes dejar preguntas sin responder y volver después.</p>
-      <p className="mt-1 text-xs text-[#526b87]">Lo que cuenta la familia ayuda a conocer al niño; la profesora observará su participación en el aula.</p></header>
+  return <section className="diagnostic-panel space-y-4 p-4 md:p-6">
+    {onBack && <Button variant="outline" className="diagnostic-back-button" disabled={busy || audioBusy} onClick={() => { if(readOnly) onBack(); else void run(() => saveDraft(true)); }}><ArrowLeft /> Volver</Button>}
+    <header className="flex items-center gap-4"><AyniMascot/><div>
+      <h2 className="text-base font-semibold">Conozcamos a la familia de {studentName}</h2>
+      <p className="mt-1 hidden text-sm text-[#526b87] sm:block">Todas las respuestas son opcionales. Puedes volver después.</p>
+      </div></header>
     {confirmed && <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-[#e5f8ed] p-3 text-sm">
       <p>Entrevista confirmada · versión {confirmed.version}. {readOnly ? "Puedes corregirla; la versión anterior se conservará." : "Estás preparando una corrección."}</p>
       {readOnly && <Button variant="outline" onClick={() => setCreatingVersion(true)}>Corregir entrevista</Button>}
     </div>}
     <div className="flex items-center justify-between gap-3 text-sm font-semibold text-[#075a6d]">
-      <span>Pregunta {step + 1} de {questions.length}</span><span>{Math.round(((step + 1) / questions.length) * 100)} %</span>
+      <span>Pregunta {step + 1} de {questions.length}</span><span>{answered}/{questions.length} con información</span>
     </div>
     <div className="h-2 overflow-hidden rounded-full bg-[#e0edf3]"><div className="h-full rounded-full bg-[#087d96]" style={{ width: `${((step + 1) / questions.length) * 100}%` }} /></div>
-    <article className="min-h-72 space-y-5 rounded-2xl border bg-white p-5" aria-live="polite">
-      <h3 className="text-lg font-bold leading-snug text-[#19345b]">{questions[step].label}</h3>
+    <div className="grid min-w-0 items-start gap-5 xl:grid-cols-[minmax(0,1fr)_280px]"><article className="min-w-0 min-h-72 space-y-5 rounded-2xl border bg-white p-5" aria-live="polite">
+      <h3 className="text-xl font-bold leading-snug sm:text-2xl text-[#19345b]">{questions[step].label}</h3>
       {questions[step].hint && <p className="text-sm text-[#526b87]">{questions[step].hint}</p>}
       {questions[step].key === "interests" && <>{chips("interest_tags", interviewInterestOptions, "Elige lo que más le guste")}
-        {details.interest_tags?.includes("other") && <label className="block text-sm">¿Qué otro interés?<input className="mt-2 min-h-11 w-full rounded-xl border px-3" disabled={readOnly} maxLength={200} value={details.other_interest_text ?? ""} onChange={(e) => setDetails((v) => ({ ...v, other_interest_text: e.target.value }))} /></label>}
+        {details.interest_tags?.includes("other") && shortField("other_interest_text", "¿Qué otro interés?",200)}
         {shortField("interests", "Un ejemplo corto, si quieres")}</>}
       {questions[step].key === "autonomy_context" && <><p className="text-sm text-[#526b87]">Marca solo las rutinas que quieras contar. Esto no es una prueba.</p>
         <div className="space-y-3">{interviewAutonomyOptions.map((item) => <fieldset key={item.id} className="rounded-xl border p-3"><legend className="font-semibold">{item.label}</legend>
@@ -190,7 +227,7 @@ export function FamilyInterviewEditor({ studentId, studentName: rawStudentName, 
       {questions[step].key === "communication_context" && <>{chips("communication_tags", interviewCommunicationOptions, "¿Cómo suele comunicarse?")}
         {shortField("communication_context", "Algo más que quieras contar (opcional)")}
         {chips("language_tags", interviewLanguageOptions, "¿Qué idiomas escucha o usa en casa?")}
-        {details.language_tags?.includes("other") && <label className="block text-sm">¿Cuál otro idioma?<input className="mt-2 min-h-11 w-full rounded-xl border px-3" disabled={readOnly} maxLength={200} value={details.other_language_text ?? ""} onChange={(e) => setDetails((v) => ({ ...v, other_language_text: e.target.value }))} /></label>}
+        {details.language_tags?.includes("other") && shortField("other_language_text", "¿Cuál otro idioma?", 200)}
         {(details.language_tags ?? []).map((tag) => <label key={tag} className="block text-sm">¿Con quién usa {interviewLanguageOptions.find((item) => item.id === tag)?.label.toLowerCase()}? (opcional)
           <input className="mt-2 min-h-11 w-full rounded-xl border px-3" disabled={readOnly} maxLength={100}
             value={details.home_language_uses?.find((row) => row.language_tag === tag)?.with_whom ?? ""}
@@ -205,7 +242,7 @@ export function FamilyInterviewEditor({ studentId, studentName: rawStudentName, 
       {questions[step].key === "home_activity_example" && <>{chips("home_activity_tags", interviewHomeActivityOptions, "¿Qué has notado en sus juegos?")}
         {shortField("home_activity_example", "Si quieres, cuéntanos un ejemplo")}</>}
       {questions[step].key === "family_community_context" && <>{chips("community_tags", interviewCommunityOptions, "Personas, lugares y actividades cercanas")}
-        {details.community_tags?.includes("other") && <label className="block text-sm">¿Qué otra actividad o lugar?<input className="mt-2 min-h-11 w-full rounded-xl border px-3" disabled={readOnly} maxLength={200} value={details.other_community_text ?? ""} onChange={(e) => setDetails((v) => ({ ...v, other_community_text: e.target.value }))} /></label>}
+        {details.community_tags?.includes("other") && shortField("other_community_text", "¿Qué otra actividad o lugar?", 200)}
         {shortField("family_community_context", "Algo más sobre su vida familiar o comunidad (opcional)")}
         {shortField("family_community_enjoyed", "¿Hay alguna experiencia que disfrute especialmente? (opcional)")}</>}
       {questions[step].key === "participation_support_context" && <><p className="text-sm text-[#526b87]">Pregunta opcional. No necesitas compartir información privada.</p>
@@ -213,7 +250,6 @@ export function FamilyInterviewEditor({ studentId, studentName: rawStudentName, 
         {shortField("participation_support_context", "Algo más que deberíamos saber (opcional)")}</>}
       {questions[step].key === "family_expectation" && <><p className="text-sm text-[#526b87]">Tu deseo para este año es una expectativa familiar; no es una evaluación del niño.</p>
         {shortField("family_expectation", "Respuesta corta (opcional)")}</>}
-    </article>
     <div className="flex flex-wrap gap-2">
       <Button variant="outline" disabled={step === 0 || busy || audioBusy} onClick={() => setStep((v) => v - 1)}><ArrowLeft /> Anterior</Button>
       {step < questions.length - 1 && <Button disabled={busy || audioBusy} onClick={() => setStep((v) => v + 1)}>Siguiente <ArrowRight /></Button>}
@@ -221,6 +257,9 @@ export function FamilyInterviewEditor({ studentId, studentName: rawStudentName, 
       {(readOnly ? <Button onClick={() => setCreatingVersion(true)}>Corregir entrevista</Button> :
         <AsyncButton busy={busy} disabled={audioBusy} busyLabel="Guardando..." onClick={() => void run(save)}>Guardar entrevista</AsyncButton>)}
     </div>
+    </article><aside className="rounded-2xl bg-[#f1f7fa] p-5"><div className="flex items-center gap-3"><StudentPhoto id={studentId} name={studentName}/><p className="font-bold">{studentName}</p></div><h3 className="mt-5 font-bold">Respuestas ya registradas <span className="text-sm font-normal">{answered}/{questions.length}</span></h3><ul className="mt-3 space-y-2">{questions.map((q,i)=><li key={q.key}><button type="button" disabled={busy||audioBusy} aria-label={`${q.label} ${answerFor(q.key)||"Sin respuesta"}`} aria-current={step===i?"step":undefined} className={`flex min-h-12 w-full items-start gap-3 rounded-xl p-3 text-left text-sm ${step===i?"bg-white":"hover:bg-white"}`} onClick={()=>setStep(i)}><span aria-hidden="true" className={`mt-0.5 grid size-5 shrink-0 place-items-center rounded-full border ${answerFor(q.key)?"border-[#087d96] bg-[#087d96] text-white":"border-[#9fb8cc]"}`}>{answerFor(q.key)?"✓":""}</span><span><span className="block font-semibold">{["Intereses y gustos","Juego con otras personas","En casa","Lenguas y comunicación","Familia y comunidad","Acompañamiento"][i]}</span><span className="mt-1 line-clamp-2 block text-xs text-[#526b87]">{answerFor(q.key)||"Sin respuesta · opcional"}</span></span></button></li>)}</ul></aside></div>
+    <div className="flex flex-wrap gap-2"><Button variant="outline" disabled={busy||audioBusy} onClick={()=>setMessage("Puedes entrevistar a la familia y registrar aquí sus respuestas.")}><Mic className="size-4"/>Entrevistar yo</Button><Button variant="outline" disabled={busy||audioBusy} onClick={()=>void share()}><LinkIcon className="size-4"/>Compartir con la familia</Button><Button variant="ghost" disabled={busy||audioBusy} onClick={()=>void reviewFamily()}>Revisar respuestas de la familia</Button></div>
+    {shareUrl&&<div className="rounded-xl bg-[#edf5fa] p-4"><p className="text-sm">Enlace privado válido por 7 días. Comparte solo con esta familia. Crear otro reemplaza el anterior.</p><input aria-label="Enlace para la familia" readOnly value={shareUrl} className="mt-2 min-h-11 w-full rounded-lg border bg-white px-3 text-sm" onFocus={e=>e.target.select()}/><Button variant="outline" className="mt-2" onClick={()=>void navigator.clipboard.writeText(shareUrl).then(()=>setMessage("Enlace copiado."),()=>setMessage("Selecciona el enlace y cópialo."))}>Copiar enlace</Button></div>}
     {creatingVersion && <Button variant="ghost" disabled={busy} onClick={() => { setCreatingVersion(false); setDetails(confirmed?.details ?? {}); }}>Cancelar cambios</Button>}
     {(details.family_context || details.previous_education_status) && <details className="rounded-xl border p-4"><summary className="cursor-pointer font-semibold">Información de la entrevista anterior</summary><p className="mt-3 text-sm">{details.family_context}</p><p className="mt-2 text-sm">Experiencias previas: {interviewPreviousEducationOptions.find((option) => option.id === details.previous_education_status)?.label} {interviewPreviousEducationTypeOptions.find((option) => option.id === details.previous_education_type)?.label}</p></details>}
     {details.structured_options_version !== 2 && (["language_context", "communication_emotional_context", "adaptation_context", "daily_routine_context", "family_expectations", "previous_education"] as const).some((key) => details[key]) && <details className="rounded-xl border p-4"><summary className="cursor-pointer font-semibold">Respuestas de la entrevista anterior</summary>

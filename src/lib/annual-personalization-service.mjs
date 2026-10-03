@@ -25,16 +25,16 @@ export async function personalizationSources(db, teacherId, context) {
     where i.classroom_id=$1 and s.status='active' and i.status='confirmed'
     order by i.student_id,i.version desc`, [context.id])).rows;
   const observations = (await db.query(`select o.id,o.student_id,o.competency_v4_id,o.observation_text,o.observed_at,
-      'diagnostic_observation' as source_type, o.classification_source from diagnostic_spontaneous_observations o
+      'diagnostic_observation' as source_type, o.classification_source, case when o.classification_source='teacher' then o.competency_v4_ids else array[]::text[] end as competency_ids from diagnostic_spontaneous_observations o
       join students s on s.id=o.student_id and s.status='active' where o.classroom_id=$1
     union all
     select o.id,o.student_id,o.competency_v4_id,o.observation_text,o.observed_at,
-      'guided_diagnostic_observation' as source_type, null::text as classification_source from diagnostic_experience_observations o
+      'guided_diagnostic_observation' as source_type, null::text as classification_source, array[o.competency_v4_id]::text[] as competency_ids from diagnostic_experience_observations o
       join students s on s.id=o.student_id and s.status='active'
       where o.classroom_id=$1
     union all
     select so.id,de.student_id,null::text as competency_v4_id,coalesce(so.note,de.observation_text) as observation_text,
-      so.observed_at,'legacy_diagnostic_observation' as source_type, null::text as classification_source
+      so.observed_at,'legacy_diagnostic_observation' as source_type, null::text as classification_source,array[]::text[] as competency_ids
       from student_observations so join diagnostic_entries de on de.id=so.diagnostic_entry_id
       join diagnostic_sessions ds on ds.id=de.session_id
       join students s on s.id=de.student_id and s.status='active'

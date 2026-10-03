@@ -1,3 +1,4 @@
+import { previewSpontaneous, handleStudentPhoto, handleFamilyShare } from "./initial-journey-routes.mjs";
 import { handleAnnualJourneyRoutes } from "./annual-journey-routes.mjs";
 import { createServer } from "node:http";
 import { AsyncLocalStorage } from "node:async_hooks";
@@ -91,7 +92,7 @@ import { withAiUsageContext, loadTeacherAiUsage } from "../src/lib/ai-usage-serv
 import { completeDiagnosticReviewForTeacher, diagnosticProgressForTeacher, diagnosticStepProgressForTeacher, DiagnosticReviewError } from "../src/lib/diagnostic-review-service.mjs";
 import { DiagnosticExperienceError, loadDiagnosticExperienceWorkspace, recordDiagnosticExperienceObservation } from "../src/lib/diagnostic-experiences-v4.mjs";
 import { DiagnosticAssessmentError, loadDiagnosticAssessmentWorkspace, prepareDiagnosticSynthesis, saveDiagnosticSynthesis, confirmDiagnosticSynthesis, prepareDiagnosticStudentReview, saveDiagnosticStudentReview, confirmDiagnosticStudentReview, prepareDiagnosticGroupReview, saveDiagnosticGroupReview, confirmDiagnosticGroupReview, saveStudentInitialContext, diagnosticPlanningSummary } from "../src/lib/diagnostic-assessment-v4.mjs";
-import { DiagnosticSourceError, loadFamilyInterview, listFamilyInterviewStatuses, saveFamilyInterview, confirmFamilyInterview, saveAndConfirmFamilyInterview, attachFamilyInterview, familyInterviewAttachmentPath, recordSpontaneousObservation, recordMatrixDiagnosticObservation, loadSpontaneousObservations, correctSpontaneousClassification, markSpontaneousNeedsReview, suggestSpontaneousV24, loadSpontaneousV24Metrics } from "../src/lib/diagnostic-sources-v4.mjs";
+import { DiagnosticSourceError, loadFamilyInterview, listFamilyInterviewStatuses, saveFamilyInterview, confirmFamilyInterview, saveAndConfirmFamilyInterview, attachFamilyInterview, familyInterviewAttachmentPath, recordSpontaneousObservation, recordConfirmedSpontaneousObservation, recordMatrixDiagnosticObservation, loadSpontaneousObservations, correctSpontaneousClassification, markSpontaneousNeedsReview, suggestSpontaneousV24, loadSpontaneousV24Metrics } from "../src/lib/diagnostic-sources-v4.mjs";
 import { createObservationV24Classifier, observationV24Enabled } from "../src/lib/observation-v24-classifier.mjs";
 import { neutralizeAssessmentText } from "../src/lib/assessment-v4-service.mjs";
 import { loadPlanningFeedback, planningFeedbackText, resolveProjectPlanningFeedback } from "../src/lib/planning-feedback.mjs";
@@ -306,7 +307,7 @@ function send(response, status, payload, origin, extraHeaders = {}) {
     "content-type": "application/json; charset=utf-8",
     "cache-control": "no-store",
     "access-control-allow-methods": corsMethods,
-    "access-control-allow-headers": "content-type, authorization",
+    "access-control-allow-headers": "content-type, authorization, x-ayni-family-token",
   };
   if (origin && allowedOrigins.has(origin)) {
     headers["access-control-allow-origin"] = origin;
@@ -1009,6 +1010,8 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       }
       return;
     }
+    if(await handleStudentPhoto({request,response,url,db,teacherId,origin,send,sendAsset,readJson,storage:ordinaryStorage}))return;
+    if(await handleFamilyShare({request,response,url,db,teacherId,origin,send,readJson}))return;
     if (url.pathname.startsWith("/api/diagnostics/spontaneous-observations")) {
       try {
         if (request.method === "GET" && /^\/api\/diagnostics\/spontaneous-observations\/[0-9a-f-]+\/media$/i.test(url.pathname)) {
@@ -1035,6 +1038,9 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
             else setImmediate(() => queueDiagnosticClassification(row.id, row.student_id, teacherId));
           }
         }
+        else if (request.method === "POST" && url.pathname === "/api/diagnostics/spontaneous-observations/preview") {
+          send(response,200,await previewSpontaneous({db,teacherId,input:await readJson(request),v24:observationV24Active?observationV24Classifier:null}),origin);
+        }
         else if (request.method === "POST" && url.pathname === "/api/diagnostics/spontaneous-observations/matrix") {
           const saved = await recordMatrixDiagnosticObservation(db, teacherId, await readJson(request));
           await refreshStudentContextSnapshot(db, saved.student_id);
@@ -1050,12 +1056,13 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
           const mediaPath = media ? await evidenceStorage.save({ teacherId, studentId: body.studentId,
             mimeType: media.mimeType, bytes: media.bytes }) : null;
           let saved;
-          try { saved = await recordSpontaneousObservation(db, teacherId, { ...body, classifierEnabled: observationV24Active,
+          try { saved = await (Array.isArray(body.competencyIds)?recordConfirmedSpontaneousObservation:recordSpontaneousObservation)(db, teacherId, { ...body, classifierEnabled: observationV24Active,
             mediaPath, mediaMimeType: media?.mimeType }); }
           catch (error) { if (mediaPath) await evidenceStorage.delete(mediaPath).catch(() => {}); throw error; }
+          if(saved.replayed && mediaPath)await evidenceStorage.delete(mediaPath).catch(()=>{});
           await refreshStudentContextSnapshot(db, saved.student_id);
           send(response, 201, saved, origin);
-          if (observationV24Active) {
+          if (observationV24Active && !Array.isArray(body.competencyIds)) {
             if (process.env.AYNI_SERVERLESS === "1") await queueDiagnosticClassification(saved.id, saved.student_id, teacherId);
             else setImmediate(() => queueDiagnosticClassification(saved.id, saved.student_id, teacherId));
           }
@@ -2741,7 +2748,7 @@ export async function handleApiRequest(request, response) {
         "access-control-allow-credentials": "true",
       } : {}),
       "access-control-allow-methods": corsMethods,
-      "access-control-allow-headers": "content-type, authorization",
+      "access-control-allow-headers": "content-type, authorization, x-ayni-family-token",
       vary: "Origin",
     });
     response.end();
@@ -2812,6 +2819,13 @@ export async function handleApiRequest(request, response) {
   if (request.method === "POST" && url.pathname === "/api/auth/logout") {
     await requestAuth.signOut(request);
     send(response, 200, { ok: true }, origin, { "set-cookie": requestAuth.clearCookies() });
+    return;
+  }
+  if(url.pathname === "/api/family-share" && ["GET","PUT"].includes(request.method)) {
+    const familyDb=database.requestDb();
+    try { await handleFamilyShare({request,response,url,db:familyDb,origin,send,readJson}); }
+    catch {send(response,422,{error:"El enlace no está disponible o la respuesta no es válida."},origin);}
+    finally {if(dbMode==="postgres")await familyDb.close();}
     return;
   }
   const requestDb = database.requestDb();

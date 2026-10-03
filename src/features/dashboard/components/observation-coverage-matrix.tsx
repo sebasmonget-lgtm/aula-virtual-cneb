@@ -1,41 +1,21 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { coverageLabel } from "@/src/lib/observation-coverage.mjs";
 import type { DiagnosticWorkspace } from "@/src/lib/local-database";
 import { displayPersonName } from "@/src/lib/person-name.mjs";
-
-export function ObservationCoverageMatrix({ data, counts, unclassified, competencies, onRecord, onGuided, onContinue, onBack }: {
-  data: DiagnosticWorkspace; counts: Record<string,number>; unclassified:number; competencies: {id:string;name:string}[];
-  onRecord: (studentId:string,competencyId:string)=>void; onGuided:(studentId:string,experienceId:string)=>void;
-  onContinue:()=>void; onBack:()=>void;
-}) {
-  const [cell,setCell]=useState<{studentId:string;competencyId:string}|null>(null);
-  const heading=useRef<HTMLHeadingElement>(null);
-  useEffect(()=>{heading.current?.focus({preventScroll:true});heading.current?.scrollIntoView({block:"start"});},[]);
-  const student=data.students.find(s=>s.id===cell?.studentId), competency=competencies.find(c=>c.id===cell?.competencyId);
-  const guides=data.experiences.filter(e=>e.competencies.some(c=>c.id===cell?.competencyId));
-  return <section className="diagnostic-panel space-y-5 p-5 md:p-7">
-    <div className="flex flex-wrap justify-between gap-3"><Button variant="outline" onClick={onBack}>Volver a observar</Button><Button onClick={onContinue}>Continuar de todas formas →</Button></div>
-    <div><h2 ref={heading} tabIndex={-1} className="scroll-mt-28 text-xl font-bold text-[#172b52]">¿Quieres conocer algo más antes de continuar?</h2>
-      <p className="mt-2 text-[#526b87]">Cada celda cuenta observaciones relacionadas con una competencia por ti. Puedes registrar algo más o continuar ahora.</p>
-      <p className="mt-2 text-sm">Sin registros significa que todavía tenemos poca información registrada. No significa dificultad ni que esa competencia no se haya trabajado.</p></div>
-    <p className="text-sm text-[#526b87]">Sin registros · Pocos registros: uno · Hay registros: dos o más. Son cantidades, no calificaciones ni una medida de información suficiente.</p>
-    <div className="overflow-x-auto rounded-xl border border-[#d6e5ef]" tabIndex={0} role="region" aria-label="Observaciones por niño y competencia">
-      <table className="w-full border-collapse text-sm"><caption className="sr-only">Niños y niñas × competencias. Selecciona una celda para registrar o probar una experiencia.</caption>
-        <thead><tr><th scope="col" className="sticky left-0 z-10 min-w-36 border-b bg-white p-3 text-left">Niño o niña</th>{competencies.map(c=><th key={c.id} scope="col" className="min-w-44 border-b bg-[#f3f7fa] p-3 text-left font-semibold">{c.name}</th>)}</tr></thead>
-        <tbody>{data.students.map(s=><tr key={s.id}><th scope="row" className="sticky left-0 z-10 border-b bg-white p-3 text-left">{displayPersonName(s.name)}</th>{competencies.map(c=>{
-          const count=counts[`${s.id}:${c.id}`]??0;
-          return <td key={c.id} className="border-b p-1.5"><button type="button" aria-label={`${displayPersonName(s.name)}, ${c.name}: ${coverageLabel(count)}`} onClick={()=>setCell({studentId:s.id,competencyId:c.id})}
-            className={`min-h-12 w-full rounded-lg px-3 text-left focus-visible:outline-2 focus-visible:outline-[#087d96] ${count===0?"bg-[#f6f8fa] text-[#61718e]":count===1?"bg-[#edf3f9] text-[#405c7e]":"bg-[#dce9f2] text-[#173b58]"}`}>{coverageLabel(count)}</button></td>;
-        })}</tr>)}</tbody>
-      </table>
-    </div>
-    {cell && student && competency && <div className="rounded-xl border border-[#c9dce9] bg-[#edf5fa] p-4" role="region" aria-label="Acciones para esta observación">
-      <h3 className="font-bold">{displayPersonName(student.name)} · {competency.name}</h3><p className="mt-2 text-sm">Puedes anotar una actuación y decidir después con qué competencia se relaciona.</p>
-      <div className="mt-3 flex flex-wrap gap-3"><Button onClick={()=>onRecord(student.id,competency.id)}>Registrar observación</Button>{guides.map(e=><Button key={e.id} variant="outline" onClick={()=>onGuided(student.id,e.id)}>Probar una experiencia guiada: {e.title}</Button>)}<Button variant="ghost" onClick={()=>setCell(null)}>Cerrar</Button></div>
-    </div>}
-    {unclassified>0 && <p className="text-sm text-[#526b87]">También conservamos {unclassified} observaciones libres sin competencia elegida. Puedes continuar con ellas; no se cuentan en una celda hasta que decidas su relación.</p>}
-    <Button onClick={onContinue}>Continuar de todas formas →</Button>
-  </section>;
+import { StudentPhoto } from "./student-photo";
+const countLabel=(n:number)=>n===0?"Sin registros":n===1?"1 registro":`${n} registros`;
+function Dot({count}:{count:number}){return <span aria-hidden="true" className={`inline-block size-7 shrink-0 rounded-full border-2 ${count===0?"border-[#a4cbd7] bg-white":count===1?"border-[#e3ca78] bg-[#f7e8ad]":"border-[#087d96] bg-[#087d96]"}`}/>;}
+export function ObservationCoverageMatrix({data,counts,unclassified,competencies,records=[],onRecord,onGuided,onContinue,onBack}:{data:DiagnosticWorkspace;counts:Record<string,number>;unclassified:number;competencies:{id:string;name:string}[];records?:{student_id:string;text:string;date:string;competency_ids:string[]}[];onRecord:(studentId:string,competencyId:string)=>void;onGuided:(studentId:string,experienceId:string)=>void;onContinue:()=>void;onBack:()=>void}){
+ const [cell,setCell]=useState<{studentId:string;competencyId:string}|null>(null),[showRecords,setShowRecords]=useState(false);
+ const heading=useRef<HTMLHeadingElement>(null),table=useRef<HTMLDivElement>(null);
+ useEffect(()=>{heading.current?.focus({preventScroll:true});},[]);
+ const student=data.students.find(s=>s.id===cell?.studentId),competency=competencies.find(c=>c.id===cell?.competencyId),guides=data.experiences.filter(e=>e.competencies.some(c=>c.id===cell?.competencyId));
+ const selectedRecords=records.filter(r=>r.student_id===cell?.studentId&&r.competency_ids.includes(cell?.competencyId??""));
+ return <section className="diagnostic-panel min-w-0 space-y-5 p-5 md:p-7"><div><h2 ref={heading} tabIndex={-1} className="text-xl font-bold">¿Qué conocemos sobre cada niño o niña?</h2><p className="mt-2 text-sm text-[#526b87]">Esta matriz muestra la cantidad de registros por competencia. Elige una celda para ver o registrar más.</p></div><div className="flex flex-wrap gap-x-6 gap-y-3 text-sm">{[[0,"Sin registros"],[1,"1 registro"],[2,"2 o más registros"]].map(([n,label])=><span key={n} className="flex items-center gap-2"><Dot count={Number(n)}/>{label}</span>)}</div><p className="text-sm text-[#526b87]">La cantidad de registros no representa el nivel de desempeño.</p>
+ <div ref={table} className="journey-matrix-scroll max-w-full overflow-x-scroll rounded-xl border border-[#d6e5ef] pb-2" tabIndex={0} role="region" aria-label="Observaciones por niño y competencia; desplaza horizontalmente para ver todas"><table className="w-full border-collapse text-sm"><caption className="sr-only">Todas las competencias aplicables. Las celdas cuentan registros, no niveles.</caption><thead><tr><th scope="col" className="sticky left-0 z-20 min-w-40 border-b bg-white p-4 text-left sm:min-w-52">Niños y niñas</th>{competencies.map(c=><th key={c.id} scope="col" className="min-w-40 max-w-48 border-b border-l bg-[#f3f8fb] px-3 py-5 font-semibold" title={c.name}>{c.name}</th>)}</tr></thead><tbody>{data.students.map(s=><tr key={s.id}><th scope="row" className="sticky left-0 z-10 border-b bg-white p-3 text-left"><span className="flex items-center gap-3"><StudentPhoto id={s.id} name={displayPersonName(s.name)}/><span className="max-w-28">{displayPersonName(s.name)}</span></span></th>{competencies.map(c=>{const count=counts[`${s.id}:${c.id}`]??0;return <td key={c.id} className="border-b border-l border-[#e1eaf0] bg-white p-1"><button type="button" className="grid min-h-16 w-full place-items-center rounded-lg hover:bg-[#edf7fa] focus-visible:outline-2 focus-visible:outline-[#087d96]" aria-pressed={cell?.studentId===s.id&&cell?.competencyId===c.id} aria-label={`${displayPersonName(s.name)}, ${c.name}: ${countLabel(count)}`} onClick={()=>{setCell({studentId:s.id,competencyId:c.id});setShowRecords(false);}}><Dot count={count}/></button></td>;})}</tr>)}</tbody></table></div>
+ <div className="flex items-center justify-between gap-3"><Button variant="outline" size="icon" aria-label="Desplazar competencias a la izquierda" onClick={()=>table.current?.scrollBy({left:-320,behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"instant":"smooth"})}><ChevronLeft/></Button><p className="text-xs text-[#526b87]">Desliza para ver las {competencies.length} competencias</p><Button variant="outline" size="icon" aria-label="Desplazar competencias a la derecha" onClick={()=>table.current?.scrollBy({left:320,behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"instant":"smooth"})}><ChevronRight/></Button></div>
+ {cell&&student&&competency&&<div role="region" aria-label="Acciones de la celda seleccionada" className="rounded-xl bg-[#edf5fa] p-5"><h3 className="font-bold">{displayPersonName(student.name)} · {competency.name}</h3><div className="mt-4 flex flex-wrap gap-3"><Button variant="outline" onClick={()=>setShowRecords(!showRecords)}>Ver registros ({counts[`${student.id}:${competency.id}`]??0})</Button><Button variant="outline" onClick={()=>onRecord(student.id,competency.id)}>Registrar observación</Button><Button variant="ghost" onClick={()=>setCell(null)}>Cerrar</Button></div>{showRecords&&<ul className="mt-4 space-y-3">{selectedRecords.length?selectedRecords.map((r,i)=><li key={i} className="rounded-xl bg-white p-3 text-sm"><p className="whitespace-pre-wrap">{r.text}</p><p className="mt-2 text-xs text-[#526b87]">{r.date?new Date(r.date).toLocaleDateString("es-PE"):"Fecha no disponible"}</p></li>):<li className="text-sm">Todavía no hay registros relacionados con esta competencia.</li>}</ul>}{guides.length>0&&<details className="mt-4"><summary className="min-h-11 cursor-pointer py-2 font-semibold">Probar una experiencia para conocer mejor</summary><div className="mt-2 flex flex-wrap gap-2">{guides.map(g=><Button key={g.id} variant="outline" className="h-auto min-h-11 whitespace-normal text-left" onClick={()=>onGuided(student.id,g.id)}>{g.title}</Button>)}</div></details>}</div>}
+ {unclassified>0&&<p className="text-sm text-[#526b87]">También conservamos {unclassified} registros sin competencia elegida. Puedes avanzar con ellos.</p>}<div className="flex flex-wrap justify-between gap-3"><Button variant="outline" onClick={onBack}>Volver a observar</Button><Button className="min-h-12" onClick={onContinue}>Confirmar y continuar con Mi año →</Button></div></section>;
 }
