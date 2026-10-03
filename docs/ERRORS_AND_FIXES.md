@@ -1446,3 +1446,10 @@ Síntoma: cuatro notas QA de la captura automatizada quedaron asociadas a la sel
 **Solución validada.** El UNION de fuentes conserva competency_ids de cada tipo, incluyendo todo el array confirmado de la profesora. Snapshot, matriz y conversación leen la misma fuente canónica. Regresión captura dos IDs y comprueba ambos antes de editar; eventos mantienen trazabilidad. Navegador mostró comunicación y convivencia en la misma nota sin segunda confirmación.
 
 **Prevención.** Comprobar la proyección downstream además del JSON de guardado; conservar la distinción entre cantidades de registros y evaluación pedagógica.
+## 2026-10-03 — Unión de fuentes con revisión de distinta longitud
+
+**Síntoma/causa.** La primera pasada de regresiones del refinamiento falló en personalizationSources: source_revision se agregó a un brazo del UNION y una sustitución que suponía LF omitió los otros brazos en archivos CRLF.
+
+**Solución validada.** Misma proyección en todos los brazos (revisión efectiva espontánea, cero para fuentes sin revisión), IDs/procedencia originales y huella con revisión/texto. Suite de regresión pasó, incluyendo corrección, retiro, contexto anual y permisos. No fue desplegado el estado fallido.
+
+**Prevención.** Aplicar patches verificando coincidencias, normalizar terminadores para scripts locales y ejecutar lectores downstream además del test de escritura antes de publicar.

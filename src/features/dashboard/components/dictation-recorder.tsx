@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Mic, Square, Trash2 } from "lucide-react";
+import { Mic, Square, Trash2, LoaderCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { transcribeShortAudio, type PrivateMediaUpload } from "@/src/lib/local-database";
 import { preparePrivateMedia } from "./media-attachment-input";
@@ -13,9 +13,9 @@ const recorderTypes = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "aud
 const fileExtensions: Record<string, string> = { "audio/webm": "webm", "audio/mp4": "m4a", "audio/ogg": "ogg" };
 type Status = "idle" | "requesting" | "recording" | "preparing" | "ready" | "transcribing";
 
-export function DictationRecorder({ studentId, classroomScope = false, context, currentText, onTranscribed, onBusyChange, purpose = "observation", rawTranscript = false, disabled = false }: {
+export function DictationRecorder({ studentId, classroomScope = false, context, currentText, onTranscribed, onBusyChange, purpose = "observation", rawTranscript = false, disabled = false, iconOnly=false, autoTranscribe=false }: {
   studentId?: string; classroomScope?: boolean; context: string; currentText: string; onTranscribed: (text: string, saveNow: boolean) => Promise<void> | void;
-  onBusyChange?: (busy: boolean) => void; purpose?: "observation" | "raw_observation" | "interview" | "teacher_comment" | "group_summary"; rawTranscript?: boolean; disabled?: boolean;
+  onBusyChange?: (busy: boolean) => void; purpose?: "observation" | "raw_observation" | "interview" | "teacher_comment" | "group_summary"; rawTranscript?: boolean; disabled?: boolean; iconOnly?:boolean; autoTranscribe?:boolean;
 }) {
   const isInterview = purpose === "interview";
   const hasScope = Boolean(studentId) || (classroomScope && purpose === "group_summary");
@@ -76,7 +76,7 @@ export function DictationRecorder({ studentId, classroomScope = false, context, 
 
   async function startRecording(holdMode = false) {
     if (disabled || !hasScope) return;
-    autoTranscribeRef.current = false;
+    autoTranscribeRef.current = autoTranscribe;
     setError(""); clearPreview(); setSeconds(0); setStatus("requesting");
     if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
       setStatus("idle"); setError("Este navegador no permite grabar desde el micrófono. Puedes escribir la respuesta."); return;
@@ -119,7 +119,7 @@ export function DictationRecorder({ studentId, classroomScope = false, context, 
       recorder.start();
       const startedAt = Date.now();
       intervalRef.current = window.setInterval(() => setSeconds(Math.min(59, Math.floor((Date.now() - startedAt) / 1000))), 250);
-      limitRef.current = window.setTimeout(() => { if (recorder.state === "recording") { autoTranscribeRef.current = holdMode; recorder.stop(); } }, MAX_RECORDING_MS);
+      limitRef.current = window.setTimeout(() => { if (recorder.state === "recording") { autoTranscribeRef.current = holdMode||autoTranscribe; recorder.stop(); } }, MAX_RECORDING_MS);
       setStatus("recording");
     } catch (cause) {
       stream?.getTracks().forEach((track) => track.stop());
@@ -163,6 +163,7 @@ export function DictationRecorder({ studentId, classroomScope = false, context, 
     if (recorder?.state === "recording") { autoTranscribeRef.current = true; recorder.stop(); }
   }
 
+  if(iconOnly) return <div className="relative shrink-0 print:hidden"><Button type="button" size="icon" variant="ghost" className={`size-12 rounded-full ${status==="recording"?"bg-red-100 text-red-700":"bg-[#e1f3f5] text-[#087d96] hover:bg-[#ccebef]"}`} disabled={disabled||!hasScope||["requesting","preparing","transcribing"].includes(status)} aria-label={status==="recording"?"Detener dictado y transcribir":"Dictar"} title={status==="recording"?`Detener · ${seconds}s`:"Dictar: pulsa para empezar y otra vez para terminar"} onClick={()=>{if(status==="recording"){autoTranscribeRef.current=true;recorderRef.current?.stop();}else void startRecording();}}>{["requesting","preparing","transcribing"].includes(status)?<LoaderCircle className="size-5 motion-safe:animate-spin"/>:status==="recording"?<Square className="size-5"/>:<Mic className="size-5"/>}</Button><span role="status" className="sr-only">{status==="recording"?`Grabando ${seconds} segundos`:status==="transcribing"?"Transcribiendo":""}</span>{error&&<div className="absolute right-0 top-full z-30 mt-2 w-64 rounded-xl border bg-white p-3 shadow-lg"><p role="alert" className="text-xs text-red-700">{error}</p>{audio&&<Button size="sm" disabled={disabled||status==="transcribing"} onClick={()=>void transcribePrepared(audio)}>Reintentar transcripción</Button>}<Button variant="ghost" size="sm" onClick={cancelRecording}>Cerrar</Button></div>}</div>;
   return <div className="space-y-2 print:hidden">
     <div className="flex flex-wrap items-center gap-2">
       {(status === "idle" || status === "ready" || status === "requesting" || status === "recording") && <Button type="button" variant="outline" disabled={disabled || !hasScope} className={`min-h-12 touch-none select-none border-[#087d96] text-[#07576c] sm:hidden ${status === "recording" ? "border-red-600 bg-red-50 text-red-700" : ""}`} aria-label={isInterview ? "Dictar: mantén pulsado; suelta para guardar la respuesta" : `Mantén pulsado para ${recordingLabel.toLocaleLowerCase("es")}; suelta para añadir el texto`} onContextMenu={(event) => event.preventDefault()} onPointerDown={(event) => { if (disabled || !hasScope || (status !== "idle" && status !== "ready")) return; event.preventDefault(); event.currentTarget.setPointerCapture(event.pointerId); heldRef.current = true; void startRecording(true); }} onPointerUp={releaseHeldRecording} onPointerCancel={cancelRecording}><Mic className="size-4" /> {status === "recording" ? (isInterview ? "Suelta para guardar" : "Suelta para añadir") : (isInterview ? "Dictar · mantén pulsado" : "Dictar · mantén pulsado")}</Button>}

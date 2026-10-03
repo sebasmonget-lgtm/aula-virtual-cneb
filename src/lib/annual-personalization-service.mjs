@@ -24,17 +24,17 @@ export async function personalizationSources(db, teacherId, context) {
     from student_family_interviews i join students s on s.id=i.student_id and s.classroom_id=i.classroom_id
     where i.classroom_id=$1 and s.status='active' and i.status='confirmed'
     order by i.student_id,i.version desc`, [context.id])).rows;
-  const observations = (await db.query(`select o.id,o.student_id,o.competency_v4_id,o.observation_text,o.observed_at,
-      'diagnostic_observation' as source_type, o.classification_source, case when o.classification_source='teacher' then o.competency_v4_ids else array[]::text[] end as competency_ids from diagnostic_spontaneous_observations o
+  const observations = (await db.query(`select o.id,o.student_id,o.competency_v4_id,o.observation_text,o.observed_at,o.source_revision,
+      'diagnostic_observation' as source_type, o.classification_source, case when o.classification_source='teacher' then o.competency_v4_ids else array[]::text[] end as competency_ids from effective_diagnostic_spontaneous_observations o
       join students s on s.id=o.student_id and s.status='active' where o.classroom_id=$1
     union all
-    select o.id,o.student_id,o.competency_v4_id,o.observation_text,o.observed_at,
+    select o.id,o.student_id,o.competency_v4_id,o.observation_text,o.observed_at,0 as source_revision,
       'guided_diagnostic_observation' as source_type, null::text as classification_source, array[o.competency_v4_id]::text[] as competency_ids from diagnostic_experience_observations o
       join students s on s.id=o.student_id and s.status='active'
       where o.classroom_id=$1
     union all
     select so.id,de.student_id,null::text as competency_v4_id,coalesce(so.note,de.observation_text) as observation_text,
-      so.observed_at,'legacy_diagnostic_observation' as source_type, null::text as classification_source,array[]::text[] as competency_ids
+      so.observed_at,0 as source_revision,'legacy_diagnostic_observation' as source_type, null::text as classification_source,array[]::text[] as competency_ids
       from student_observations so join diagnostic_entries de on de.id=so.diagnostic_entry_id
       join diagnostic_sessions ds on ds.id=de.session_id
       join students s on s.id=de.student_id and s.status='active'
@@ -57,7 +57,7 @@ export async function personalizationSources(db, teacherId, context) {
   const prior = group ? (await db.query(`select id,version,details,teacher_confirmed_at from diagnostic_priority_reviews
     where classroom_id=$1 and group_review_id=$2 and status='confirmed' order by version desc limit 1`, [context.id, group.id])).rows[0] ?? null : null;
   const references = [...interviews.map((row) => ({ type: "family_interview", id: row.id, version: row.version })),
-    ...observations.map((row) => ({ type: row.source_type, id: row.id })),
+    ...observations.map((row) => ({ type: row.source_type, id: row.id, ...(row.source_revision>0?{version:Number(row.source_revision)}:{}) })),
     ...(group ? [{ type: "diagnostic_group", id: group.id, version: group.version }] : []),
     ...(prior ? [{ type: "diagnostic_priority", id: prior.id, version: prior.version }] : [])];
   const sourceContext = (await db.query("select c.context,sy.annual_planning_context,c.age_grade_id,c.castellano_l2_applicable,c.religion_applicable from classrooms c join school_years sy on sy.id=c.school_year_id where c.id=$1",[context.id])).rows[0];

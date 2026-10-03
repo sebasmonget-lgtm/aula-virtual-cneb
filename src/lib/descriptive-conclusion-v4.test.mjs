@@ -251,7 +251,7 @@ test("StudentContext conserva únicamente la conclusión confirmada segura", asy
     if (sql.includes("from competency_assessments")) return { rows: [] };
     if (sql.includes("from competency_descriptive_conclusions")) return { rows: [{ id: "conclusion-1", competency_v4_id: "COM_ORAL", period_start: periodStart, period_end: periodEnd, details: { ...conclusion(), extra_secret: "not-public" }, generation_metadata: { api_key: "not-public" }, teacher_confirmed_at: "2026-09-22T12:00:00Z" }] };
     if (sql.includes("from diagnostic_entries")) return { rows: [] };
-    if (sql.includes("from diagnostic_experience_observations") || sql.includes("from diagnostic_spontaneous_observations")
+    if (sql.includes("from diagnostic_experience_observations") || sql.includes("from effective_diagnostic_spontaneous_observations")
       || sql.includes("from student_family_interviews") || sql.includes("from diagnostic_competency_reviews")
       || sql.includes("from diagnostic_student_reviews")) return { rows: [] };
     throw new Error(`unexpected query: ${sql}`);

@@ -4,7 +4,7 @@ import { readFile, readdir } from "node:fs/promises";
 import { PGlite } from "@electric-sql/pglite";
 import { createPilotClassroom, importStudentsForTeacher } from "./pilot-onboarding-service.mjs";
 import { createObservationV24Classifier, observationV24Enabled } from "./observation-v24-classifier.mjs";
-import { correctSpontaneousClassification, loadSpontaneousObservations, loadSpontaneousV24Metrics,
+import { correctSpontaneousClassification, applicableDiagnosticCompetencies, loadSpontaneousObservations, loadSpontaneousV24Metrics,
   recordSpontaneousObservation, suggestSpontaneousV24 } from "./diagnostic-sources-v4.mjs";
 import { loadDiagnosticAssessmentWorkspace } from "./diagnostic-assessment-v4.mjs";
 
@@ -28,7 +28,8 @@ async function fixture({ beforeMigration = null } = {}) {
   await importStudentsForTeacher(db, teacher, [{ firstName: "Camila", lastName: "Prueba" }]);
   const studentId = (await db.query(`select s.id from students s join classrooms c on c.id=s.classroom_id
     where c.teacher_id=$1 and c.status='active' and s.status='active' limit 1`, [teacher])).rows[0].id;
-  const competencies = (await loadSpontaneousObservations(db, teacher)).competencies;
+  const competencies = beforeMigration ? await applicableDiagnosticCompetencies((await db.query(
+    'select c.*,ag.age_years from classrooms c join age_grades ag on ag.id=c.age_grade_id where c.teacher_id=$1',[teacher])).rows[0]) : (await loadSpontaneousObservations(db, teacher)).competencies;
   const save = (observationText, classifierEnabled = true) => recordSpontaneousObservation(db, teacher,
     { studentId, contextLabel: "Juego", observationText, classifierEnabled });
   return { db, save, competencies };

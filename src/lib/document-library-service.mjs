@@ -245,7 +245,7 @@ export async function loadDiagnosticWordContext(db, teacherId, reviewId) {
       join students s on s.id=o.student_id and s.classroom_id=o.classroom_id
       where o.classroom_id=$1 and s.status='active'`, [scope.classroom_id]),
     db.query(`select o.student_id,o.competency_v4_id,o.competency_v4_ids,o.classification_status,o.observed_at
-      from diagnostic_spontaneous_observations o join students s on s.id=o.student_id and s.classroom_id=o.classroom_id
+      from effective_diagnostic_spontaneous_observations o join students s on s.id=o.student_id and s.classroom_id=o.classroom_id
       where o.classroom_id=$1 and s.status='active'`, [scope.classroom_id]),
     db.query(`select de.student_id,so.observed_at from student_observations so
       join diagnostic_entries de on de.id=so.diagnostic_entry_id

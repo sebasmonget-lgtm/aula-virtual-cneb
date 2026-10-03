@@ -26,7 +26,7 @@ export async function loadStudentTrajectory(db, teacherId, studentId, { includeO
       kind: "guided",
     }));
   const diagnosticSpontaneous = (await db.query(`select id,competency_v4_ids,observed_at,
-      observation_text,context_label from diagnostic_spontaneous_observations
+      observation_text,context_label from effective_diagnostic_spontaneous_observations
     where classroom_id=$1 and student_id=$2 order by observed_at,id`,
   [owner.classroom_id,studentId])).rows.map(row => ({
     id: row.id, competency_ids: row.competency_v4_ids ?? [], date: dateOnly(row.observed_at),

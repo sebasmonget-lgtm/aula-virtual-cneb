@@ -4,7 +4,7 @@ import { PGlite } from "@electric-sql/pglite";
 import { readdir,readFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import { createPilotClassroom,importStudentsForTeacher } from "./pilot-onboarding-service.mjs";
-import { recordConfirmedSpontaneousObservation,correctSpontaneousClassification,loadSpontaneousObservations,applicableDiagnosticCompetencies } from "./diagnostic-sources-v4.mjs";
+import { recordConfirmedSpontaneousObservation,reviseSpontaneousObservation,correctSpontaneousClassification,loadSpontaneousObservations,applicableDiagnosticCompetencies } from "./diagnostic-sources-v4.mjs";
 import { previewSpontaneous,handleFamilyShare,handleStudentPhoto } from "../../scripts/initial-journey-routes.mjs";
 import { buildAnnualPlanningBrief,handlePlanningConversation } from "./initial-journey-service.mjs";
 import { resolveAIExecutionPlan } from "./ai-execution-router-v4.mjs";
@@ -39,6 +39,14 @@ test("initial journey: atomic decisions, private photos/invitations and bounded 
    await assert.rejects(previewSpontaneous({db,teacherId:other,input:data,classifier}));
    const empty=await previewSpontaneous({db,teacherId:teacher,input:{...data,observationText:"Se sentó en una silla."},classifier:{classify:async()=>({candidate_ids:[]})}});assert.deepEqual(empty.competency_ids,[]);
   });
+  await t.test("Jev preview accounts for its two decisions; cached preview and persistence do not reconsult",async()=>{
+   let analyses=0;const data={...input,observationText:"Explicó una idea durante la asamblea."};
+   const v24={classify:async()=>{analyses++;return {status:"classified",primary:ids[0],additional:[],provider_calls:2};}};
+   const a=await previewSpontaneous({db,teacherId:teacher,input:data,v24});assert.equal(a.calls,2);
+   const b=await previewSpontaneous({db,teacherId:teacher,input:data,v24});assert.equal(b.calls,0);assert.equal(b.original_calls,2);assert.equal(analyses,1);
+   await recordConfirmedSpontaneousObservation(db,teacher,{...data,clientRequestId:randomUUID(),competencyIds:a.competency_ids});assert.equal(analyses,1);
+   await assert.rejects(previewSpontaneous({db,teacherId:teacher,input:{...data,observationText:"Prueba de indisponibilidad."},v24:{classify:async()=>({status:"classification_failed",provider_calls:2})}}),/elegir/);
+  });
   const response={};let sent;
   const send=(_,status,value)=>{sent={status,value};};
   await t.test("invitation exposes only own answers; replacement/expiry invalidate token and teacher review stays separate",async()=>{
@@ -65,6 +73,23 @@ test("initial journey: atomic decisions, private photos/invitations and bounded 
    await handleStudentPhoto({...base,request:{method:'PUT'}});assert.equal(assets.size,1);
    await handleStudentPhoto({...base,request:{method:'DELETE'}});assert.equal(assets.size,0);assert.equal((await db.query('select profile_photo_path from students where id=$1',[student.id])).rows[0].profile_photo_path,null);
    assert.equal(Number((await db.query('select count(*) n from student_family_interviews')).rows[0].n),0);
+  });
+  await t.test("text correction and withdrawal preserve originals, CAS, permissions and current annual context",async()=>{
+   const original="Camila explicó cómo construir una torre.";
+   const saved=await recordConfirmedSpontaneousObservation(db,teacher,{studentId:student.id,contextLabel:"Juego libre",observationText:original,competencyIds:[ids[0]],clientRequestId:randomUUID()});
+   const text="Camila explicó cómo construir una torre. No eligió jugar con agua.";
+   const context={id:student.classroom_id,age:5};const before=(await personalizationSources(db,teacher,context)).fingerprint;
+   await assert.rejects(reviseSpontaneousObservation(db,other,saved.id,{expectedRevision:0,observationText:text,competencyIds:[]}),/disponible/);
+   await reviseSpontaneousObservation(db,teacher,saved.id,{expectedRevision:0,observationText:text,competencyIds:ids.slice(0,2)});
+   assert.equal((await db.query('select observation_text from diagnostic_spontaneous_observations where id=$1',[saved.id])).rows[0].observation_text,original);
+   const current=(await loadSpontaneousObservations(db,teacher)).observations.find(r=>r.id===saved.id);assert.equal(current.observation_text,text);assert.equal(Number(current.source_revision),1);
+   const sources=await personalizationSources(db,teacher,context);assert.notEqual(sources.fingerprint,before);assert.equal(sources.observations.find(r=>r.id===saved.id).observation_text,text);
+   await assert.rejects(reviseSpontaneousObservation(db,teacher,saved.id,{expectedRevision:0,observationText:"stale",competencyIds:[]}),/cambió/);
+   await assert.rejects(db.query('update diagnostic_spontaneous_observation_revisions set corrected_text=$1 where observation_id=$2',["mutated",saved.id]),/inmutable/);
+   await reviseSpontaneousObservation(db,teacher,saved.id,{expectedRevision:1},true);
+   assert.equal((await loadSpontaneousObservations(db,teacher)).observations.some(r=>r.id===saved.id),false);
+   assert.equal((await personalizationSources(db,teacher,context)).observations.some(r=>r.id===saved.id),false);
+   assert.equal(Number((await db.query('select count(*) n from diagnostic_spontaneous_observation_revisions where observation_id=$1',[saved.id])).rows[0].n),2);
   });
   const snapshot={source_fingerprint:"fresh",student_count:1,facts:[{key:"f1",kind:"family_report",subject:"child_1",scope:"individual",support_text:"private name",ai_support_text:"No le interesa el agua.",uncertainty:"reported_not_observed"}],competency_information:[{competency_id:ids[0],recorded_performances:0}]};
   const context={id:student.classroom_id,age:5,year:2026,starts_on:"2026-03-02",ends_on:"2026-12-31",annual_planning_context:{resources:"Sin piscina"}},calendar={blocks:[],days:[]};

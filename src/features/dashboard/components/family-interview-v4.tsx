@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, Printer, Save, Link as LinkIcon, Mic } from "lucide-react";
+import { ArrowLeft, ArrowRight, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { attachFamilyInterview, saveAndConfirmFamilyInterview, familyInterviewAttachmentUrl,
   loadFamilyInterview, loadFamilyInterviewStatuses, loadStudentPedagogicalProfile, saveFamilyInterview,
@@ -16,8 +16,6 @@ import { familyInterviewQuestionGroups, familyInterviewStructuredOptionsVersion,
   interviewPreviousEducationTypeOptions } from "@/src/lib/family-interview-contract.mjs";
 import { familyContextLabels } from "@/src/lib/local-database";
 import { displayPersonName } from "@/src/lib/person-name.mjs";
-import { apiFetch } from "@/src/lib/ayni-api-fetch";
-import { localDatabaseApiUrl } from "@/src/lib/local-database";
 import { AyniMascot } from "./initial-journey-ui";
 import { StudentPhoto } from "./student-photo";
 import { summarizeFamilyInterview } from "@/src/lib/family-interview-projection.mjs";
@@ -69,7 +67,6 @@ export function FamilyInterviewEditor({ studentId, studentName: rawStudentName, 
   const detailsRef = useRef(details);
   useEffect(() => { detailsRef.current = details; }, [details]);
   const [step, setStep] = useState(0);
-  const [shareUrl,setShareUrl]=useState("");
   const savedText=useRef("");
   const autosave=useRef<Promise<void>|null>(null);
   const [autosaveRevision, setAutosaveRevision] = useState(0);
@@ -94,7 +91,7 @@ export function FamilyInterviewEditor({ studentId, studentName: rawStudentName, 
   useEffect(()=>{
     if(loading||readOnly||busy||audioBusy||JSON.stringify(details)===savedText.current)return;
     const timer=window.setTimeout(()=>{if(autosave.current)return;const value=detailsRef.current;
-      autosave.current=saveFamilyInterview(studentId,value).then(result=>{setDraft(result);savedText.current=JSON.stringify(value);setMessage("Avance guardado automáticamente.");setAutosaveRevision(v=>v+1);}).catch(()=>setError("No pude guardar automáticamente. Usa Guardar y continuar después; tus respuestas siguen aquí.")).finally(()=>{autosave.current=null;});
+      autosave.current=saveFamilyInterview(studentId,value).then(result=>{setDraft(result);savedText.current=JSON.stringify(value);setMessage("Avance guardado automáticamente.");setAutosaveRevision(v=>v+1);}).catch(()=>setError("No pude guardar automáticamente. Tus respuestas siguen aquí; al volver o terminar intentaré guardarlas.")).finally(()=>{autosave.current=null;});
     },900);return()=>window.clearTimeout(timer);
   },[details,loading,readOnly,busy,audioBusy,studentId,autosaveRevision]);
   useEffect(() => {
@@ -115,8 +112,6 @@ export function FamilyInterviewEditor({ studentId, studentName: rawStudentName, 
   const optionLabels = new Map(Object.entries({interest_tags:interviewInterestOptions,social_play_tags:interviewSocialPlayOptions,home_activity_tags:interviewHomeActivityOptions,language_tags:interviewLanguageOptions,communication_tags:interviewCommunicationOptions,community_tags:interviewCommunityOptions,participation_support_tags:interviewParticipationSupportOptions}).flatMap(([field,options]) => options.map(o => [`${field}:${o.id}`, o.label])));
   const answerFor=(key:string)=>(answerFields[key]??[key]).flatMap(field=>{const v=(details as Record<string,unknown>)[field];return Array.isArray(v)?v.map(id=>optionLabels.get(`${field}:${id}`)??String(id)):typeof v==="string"&&v.trim()?[v]:[];}).join(" · ");
   const answered=questions.filter(q=>answerFor(q.key)).length;
-  async function share(){await run(async()=>{const r=await apiFetch(`${localDatabaseApiUrl}/api/diagnostics/students/${studentId}/family-share`,{method:"POST",headers:{"content-type":"application/json"},body:"{}"});const result=await r.json() as {error?:string;token?:string;details?:FamilyInterviewDetails};if(!r.ok)throw new Error(result.error);setShareUrl(`${window.location.origin}/entrevista#token=${result.token}`);});}
-  async function reviewFamily(){await run(async()=>{const r=await apiFetch(`${localDatabaseApiUrl}/api/diagnostics/students/${studentId}/family-share`);const result=await r.json() as {error?:string;token?:string;details?:FamilyInterviewDetails};if(!r.ok)throw new Error(result.error);if(!result.details||!Object.keys(result.details).length){setMessage("La familia aún no ha registrado respuestas.");return;}setCreatingVersion(true);setDetails(result.details);setMessage("Respuestas de la familia cargadas para tu revisión. Confirma la entrevista cuando termines.");});}
   const changeText = (field: TextField, value: string) =>
     setDetails((current) => ({ ...current, [field]: value, structured_options_version: familyInterviewStructuredOptionsVersion }));
   function chips(field: TagField, options: readonly { id: string; label: string }[], label: string) {
@@ -151,15 +146,15 @@ export function FamilyInterviewEditor({ studentId, studentName: rawStudentName, 
     }
   }
   function shortField(field: TextField, label: string, maxLength = 300) {
-    return <div><label className="block text-sm font-semibold text-[#405a73]">{label}
-      <textarea className="mt-2 min-h-24 w-full rounded-xl border border-[#d7e4ed] bg-white p-3 text-base font-normal"
+    return <div><label htmlFor={`family-${field}`} className="block text-sm font-semibold text-[#405a73]">{label}</label><div className="mt-2 flex items-start gap-2 rounded-xl border border-[#d7e4ed] bg-white p-2">
+      <textarea id={`family-${field}`} className="min-h-24 min-w-0 flex-1 resize-y bg-transparent p-2 text-base font-normal outline-none focus-visible:ring-2 focus-visible:ring-[#087d96]"
         disabled={readOnly || busy} maxLength={maxLength} value={details[field] ?? ""}
-        onChange={(event) => changeText(field, event.target.value)} /></label>
+        onChange={(event) => changeText(field, event.target.value)} />
       {!readOnly && <InterviewAudioRecorder disabled={busy} studentId={studentId} question={questions[step].label}
         currentText={details[field] ?? ""} onBusyChange={(active) => setActiveAudioKeys((current) => {
           if (current.includes(field) === active) return current;
           return active ? [...current, field] : current.filter((key) => key !== field);
-        })} onTranscribed={(text, saveNow) => transcribeField(field, maxLength, text, saveNow)} />}</div>;
+        })} onTranscribed={(text, saveNow) => transcribeField(field, maxLength, text, saveNow)} />}</div></div>;
   }
   async function run(work: () => Promise<void>) {
     if (busy || audioBusy) return;
@@ -194,8 +189,8 @@ export function FamilyInterviewEditor({ studentId, studentName: rawStudentName, 
   }
   if (loading) return <LoadingState label="Abriendo entrevista..." />;
   return <section className="diagnostic-panel space-y-4 p-4 md:p-6">
-    {onBack && <Button variant="outline" className="diagnostic-back-button" disabled={busy || audioBusy} onClick={() => { if(readOnly) onBack(); else void run(() => saveDraft(true)); }}><ArrowLeft /> Volver</Button>}
-    <header className="flex items-center gap-4"><AyniMascot/><div>
+    {onBack && <Button variant="outline" className="diagnostic-back-button" disabled={busy || audioBusy} onClick={() => { if(readOnly) onBack(); else void run(() => saveDraft(true)); }}><ArrowLeft /> Volver a entrevistar a otro alumno</Button>}
+    <header className="flex items-center gap-4"><AyniMascot size="medium" pose="interview"/><div>
       <h2 className="text-base font-semibold">Conozcamos a la familia de {studentName}</h2>
       <p className="mt-1 hidden text-sm text-[#526b87] sm:block">Todas las respuestas son opcionales. Puedes volver después.</p>
       </div></header>
@@ -250,21 +245,17 @@ export function FamilyInterviewEditor({ studentId, studentName: rawStudentName, 
         {shortField("participation_support_context", "Algo más que deberíamos saber (opcional)")}</>}
       {questions[step].key === "family_expectation" && <><p className="text-sm text-[#526b87]">Tu deseo para este año es una expectativa familiar; no es una evaluación del niño.</p>
         {shortField("family_expectation", "Respuesta corta (opcional)")}</>}
-    <div className="flex flex-wrap gap-2">
-      <Button variant="outline" disabled={step === 0 || busy || audioBusy} onClick={() => setStep((v) => v - 1)}><ArrowLeft /> Anterior</Button>
-      {step < questions.length - 1 && <Button disabled={busy || audioBusy} onClick={() => setStep((v) => v + 1)}>Siguiente <ArrowRight /></Button>}
-      {!readOnly && <AsyncButton variant="outline" busy={busy} disabled={audioBusy} busyLabel="Guardando..." onClick={() => void run(() => saveDraft(true))}><Save /> Guardar y continuar después</AsyncButton>}
-      {(readOnly ? <Button onClick={() => setCreatingVersion(true)}>Corregir entrevista</Button> :
-        <AsyncButton busy={busy} disabled={audioBusy} busyLabel="Guardando..." onClick={() => void run(save)}>Guardar entrevista</AsyncButton>)}
+    <div className="flex items-center justify-between gap-3 pt-2">
+      <Button variant="outline" disabled={step===0||busy||audioBusy} onClick={()=>setStep(v=>v-1)}><ArrowLeft/>Anterior</Button>
+      {step<questions.length-1?<Button className="min-h-12 bg-[#dfb447] px-6 text-[#352909] hover:bg-[#cfa139]" disabled={busy||audioBusy} onClick={()=>setStep(v=>v+1)}>Siguiente<ArrowRight/></Button>:readOnly?<Button onClick={onBack}>Volver a alumnos</Button>:<AsyncButton className="min-h-12 bg-[#dfb447] text-[#352909] hover:bg-[#cfa139]" busy={busy} disabled={audioBusy} busyLabel="Guardando…" onClick={()=>void run(save)}>Guardar y volver a alumnos</AsyncButton>}
     </div>
-    </article><aside className="rounded-2xl bg-[#f1f7fa] p-5"><div className="flex items-center gap-3"><StudentPhoto id={studentId} name={studentName}/><p className="font-bold">{studentName}</p></div><h3 className="mt-5 font-bold">Respuestas ya registradas <span className="text-sm font-normal">{answered}/{questions.length}</span></h3><ul className="mt-3 space-y-2">{questions.map((q,i)=><li key={q.key}><button type="button" disabled={busy||audioBusy} aria-label={`${q.label} ${answerFor(q.key)||"Sin respuesta"}`} aria-current={step===i?"step":undefined} className={`flex min-h-12 w-full items-start gap-3 rounded-xl p-3 text-left text-sm ${step===i?"bg-white":"hover:bg-white"}`} onClick={()=>setStep(i)}><span aria-hidden="true" className={`mt-0.5 grid size-5 shrink-0 place-items-center rounded-full border ${answerFor(q.key)?"border-[#087d96] bg-[#087d96] text-white":"border-[#9fb8cc]"}`}>{answerFor(q.key)?"✓":""}</span><span><span className="block font-semibold">{["Intereses y gustos","Juego con otras personas","En casa","Lenguas y comunicación","Familia y comunidad","Acompañamiento"][i]}</span><span className="mt-1 line-clamp-2 block text-xs text-[#526b87]">{answerFor(q.key)||"Sin respuesta · opcional"}</span></span></button></li>)}</ul></aside></div>
-    <div className="flex flex-wrap gap-2"><Button variant="outline" disabled={busy||audioBusy} onClick={()=>setMessage("Puedes entrevistar a la familia y registrar aquí sus respuestas.")}><Mic className="size-4"/>Entrevistar yo</Button><Button variant="outline" disabled={busy||audioBusy} onClick={()=>void share()}><LinkIcon className="size-4"/>Compartir con la familia</Button><Button variant="ghost" disabled={busy||audioBusy} onClick={()=>void reviewFamily()}>Revisar respuestas de la familia</Button></div>
-    {shareUrl&&<div className="rounded-xl bg-[#edf5fa] p-4"><p className="text-sm">Enlace privado válido por 7 días. Comparte solo con esta familia. Crear otro reemplaza el anterior.</p><input aria-label="Enlace para la familia" readOnly value={shareUrl} className="mt-2 min-h-11 w-full rounded-lg border bg-white px-3 text-sm" onFocus={e=>e.target.select()}/><Button variant="outline" className="mt-2" onClick={()=>void navigator.clipboard.writeText(shareUrl).then(()=>setMessage("Enlace copiado."),()=>setMessage("Selecciona el enlace y cópialo."))}>Copiar enlace</Button></div>}
+    </article><aside className="rounded-2xl bg-[#f1f7fa] p-5"><div className="flex items-center gap-3"><StudentPhoto id={studentId} name={studentName}/><p className="font-bold">{studentName}</p></div><h3 className="mt-5 font-bold">Respuestas ya registradas <span className="text-sm font-normal">{answered}/{questions.length}</span></h3><ul className="mt-3 space-y-2">{questions.map((q,i)=><li key={q.key}><button type="button" disabled={busy||audioBusy} aria-label={`${q.label}: ${answerFor(q.key)?"Con respuesta":"Sin respuesta"}`} aria-current={step===i?"step":undefined} className={`flex min-h-12 w-full items-start gap-3 rounded-xl p-3 text-left text-sm ${step===i?"bg-white":"hover:bg-white"}`} onClick={()=>setStep(i)}><span aria-hidden="true" className={`mt-0.5 grid size-5 shrink-0 place-items-center rounded-full border ${answerFor(q.key)?"border-[#087d96] bg-[#087d96] text-white":"border-[#9fb8cc]"}`}>{answerFor(q.key)?"✓":""}</span><span><span className="block font-semibold">{["Intereses y gustos","Juego con otras personas","En casa","Lenguas y comunicación","Familia y comunidad","Acompañamiento"][i]}</span><span className="mt-1 line-clamp-1 block text-xs text-[#526b87]">{answerFor(q.key)?answerFor(q.key).length>48?answerFor(q.key).slice(0,45)+"…":answerFor(q.key):"Opcional"}</span></span></button></li>)}</ul></aside></div>
     {creatingVersion && <Button variant="ghost" disabled={busy} onClick={() => { setCreatingVersion(false); setDetails(confirmed?.details ?? {}); }}>Cancelar cambios</Button>}
     {(details.family_context || details.previous_education_status) && <details className="rounded-xl border p-4"><summary className="cursor-pointer font-semibold">Información de la entrevista anterior</summary><p className="mt-3 text-sm">{details.family_context}</p><p className="mt-2 text-sm">Experiencias previas: {interviewPreviousEducationOptions.find((option) => option.id === details.previous_education_status)?.label} {interviewPreviousEducationTypeOptions.find((option) => option.id === details.previous_education_type)?.label}</p></details>}
     {details.structured_options_version !== 2 && (["language_context", "communication_emotional_context", "adaptation_context", "daily_routine_context", "family_expectations", "previous_education"] as const).some((key) => details[key]) && <details className="rounded-xl border p-4"><summary className="cursor-pointer font-semibold">Respuestas de la entrevista anterior</summary>
       <div className="mt-3 space-y-2">{(["language_context", "communication_emotional_context", "adaptation_context", "daily_routine_context", "family_expectations", "previous_education"] as const)
         .filter((key) => details[key]).map((key) => <p key={key} className="text-sm"><strong>{familyContextLabels[key] ?? key}:</strong> {details[key]}</p>)}</div></details>}
+    <details className="print:hidden"><summary className="cursor-pointer py-2 text-sm text-[#526b87]">Entrevista en papel (opcional)</summary>
     <div className="flex flex-wrap gap-2 print:hidden">
       <Button variant="ghost" onClick={() => { if (!printInterview(studentName, details, printContext)) setError("El navegador bloqueó la hoja para imprimir."); }}><Printer /> Imprimir para papel</Button>
       <label className="text-sm font-semibold">Adjuntar entrevista hecha en papel (opcional)
@@ -272,6 +263,7 @@ export function FamilyInterviewEditor({ studentId, studentName: rawStudentName, 
           const file = event.target.files?.[0]; if (file) void run(() => attach(file));
         }} /></label>
     </div>
+    </details>
     {(draft?.has_attachment || confirmed?.has_attachment) && <a className="text-sm font-semibold text-[#087d96] underline" href={familyInterviewAttachmentUrl(studentId)} target="_blank" rel="noreferrer">Ver respaldo privado</a>}
     {message && <p role="status" className="text-sm text-[#1e6040]">{message}</p>}
     {error && <p role="alert" className="text-sm text-red-700">{error}</p>}

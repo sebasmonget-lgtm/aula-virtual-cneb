@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Camera, FolderOpen, Mic, Square } from "lucide-react";
+import Image from "next/image";
+import { Camera, FolderOpen, Mic, Square, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { transcribeShortAudio, type PrivateMediaUpload } from "@/src/lib/local-database";
 import { AsyncButton } from "./workflow-ui";
@@ -13,20 +14,23 @@ export async function preparePrivateMedia(file: File): Promise<PrivateMediaUploa
   let mimeType = originalType === "audio/x-wav" ? "audio/wav" : originalType === "audio/x-m4a" ? "audio/mp4" : originalType;
   if (!supported.has(mimeType)) throw new Error("Usa una foto JPEG, PNG o WebP, o un audio WebM, MP3, M4A, WAV u OGG.");
   let prepared: Blob = file;
-  if (mimeType.startsWith("image/") && file.size > 3_000_000) {
-    const bitmap = await createImageBitmap(file);
+  if (mimeType.startsWith("image/")) {
+    if(file.size>25_000_000)throw new Error("Elige una foto de hasta 25 MB para prepararla.");
+    const bitmap=await createImageBitmap(file);
     try {
-      const scale = Math.min(1, 1600 / Math.max(bitmap.width, bitmap.height));
-      const canvas = document.createElement("canvas");
-      canvas.width = Math.max(1, Math.round(bitmap.width * scale));
-      canvas.height = Math.max(1, Math.round(bitmap.height * scale));
-      canvas.getContext("2d")?.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-      prepared = await new Promise<Blob>((resolve, reject) => canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error("No se pudo preparar la foto.")), "image/jpeg", 0.78));
-      mimeType = "image/jpeg";
-    } finally { bitmap.close(); }
+      let edge=1600;
+      for(const quality of [0.82,0.68,0.54,0.48]) {
+        const scale=Math.min(1,edge/Math.max(bitmap.width,bitmap.height));
+        const canvas=document.createElement("canvas");canvas.width=Math.max(1,Math.round(bitmap.width*scale));canvas.height=Math.max(1,Math.round(bitmap.height*scale));
+        const ctx=canvas.getContext("2d");if(!ctx)throw new Error("No se pudo preparar la foto.");ctx.fillStyle="#fff";ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(bitmap,0,0,canvas.width,canvas.height);
+        prepared=await new Promise<Blob>((resolve,reject)=>canvas.toBlob(blob=>blob?resolve(blob):reject(new Error("No se pudo preparar la foto.")),"image/jpeg",quality));
+        if(prepared.size<=1_000_000)break;edge=1280;
+      }
+      mimeType="image/jpeg";
+    }finally{bitmap.close();}
   }
-  if (!prepared.size || prepared.size > (mimeType.startsWith("audio/") ? 8_000_000 : 3_000_000))
-    throw new Error(mimeType.startsWith("audio/") ? "El audio debe pesar como máximo 8 MB." : "La foto debe pesar como máximo 3 MB.");
+  if (!prepared.size || prepared.size > (mimeType.startsWith("audio/") ? 8_000_000 : 1_000_000))
+    throw new Error(mimeType.startsWith("audio/") ? "El audio debe pesar como máximo 8 MB." : "No se pudo reducir la foto a 1 MB. Elige otra imagen.");
   const base64 = await new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(String(reader.result).split(",")[1] ?? "");
@@ -135,8 +139,9 @@ export function MediaAttachmentInput({ studentId, context, media, onMedia, onTra
       <Button type="button" variant="outline" className="min-h-12 border-[#9eb7ca] bg-white" disabled={disabled || busy} onClick={() => recording ? recorderRef.current?.stop() : void startRecording()}>{recording ? <Square className="size-4" /> : <Mic className="size-4" />}{recording ? `Detener · 0:${String(seconds).padStart(2, "0")}` : "Grabar audio"}</Button>
       <input ref={fileInput} type="file" accept={audioOnly ? "audio/webm,audio/mpeg,audio/mp4,audio/wav,audio/ogg" : "image/jpeg,image/png,image/webp,audio/webm,audio/mpeg,audio/mp4,audio/wav,audio/ogg"} className="sr-only" tabIndex={-1} onChange={(event) => { void chooseFile(event.currentTarget.files?.[0]); event.currentTarget.value = ""; }} />
       <Button type="button" variant="outline" className="min-h-12 border-[#9eb7ca] bg-white" disabled={disabled || busy || recording} onClick={() => fileInput.current?.click()}><FolderOpen className="size-4" />Elegir archivo</Button>
+      {media?.mimeType.startsWith("image/")&&<div className="relative"><Image src={`data:${media.mimeType};base64,${media.base64}`} alt="Vista previa de la foto adjunta" unoptimized width={88} height={64} className="h-16 w-22 rounded-xl object-cover"/><button type="button" aria-label="Quitar foto adjunta" disabled={disabled||busy||recording} className="absolute -right-2 -top-2 grid size-7 place-items-center rounded-full border bg-white text-[#087d96]" onClick={()=>onMedia(null)}><X className="size-4"/></button></div>}
     </div>
-    {media && <p role="status" className="text-sm text-[#126177]">Archivo listo: {media.name} <button type="button" className="font-semibold underline" onClick={() => { onMedia(null); setTranscript(""); clearPreview(); }}>Quitar</button></p>}
+    {media && !media.mimeType.startsWith("image/") && <p role="status" className="text-sm text-[#126177]">Archivo listo: {media.name} <button type="button" className="font-semibold underline" onClick={() => { onMedia(null); setTranscript(""); clearPreview(); }}>Quitar</button></p>}
     {previewUrl && <audio controls preload="metadata" src={previewUrl} className="w-full" aria-label="Escuchar audio adjunto" />}
     {media?.mimeType.startsWith("audio/") && <div className="space-y-2">
       <p className="text-xs text-muted-foreground">Máximo 1 minuto. El archivo se guarda privado. Solo al pulsar «Transcribir» se enviará el audio a OpenAI; revisa el texto antes de guardarlo.</p>
@@ -148,7 +153,7 @@ export function MediaAttachmentInput({ studentId, context, media, onMedia, onTra
         finally { setBusy(false); } }}>{rawTranscript ? "Transcribir audio" : "Transcribir y mejorar texto"}</AsyncButton>
       {transcript && <details className="text-xs text-muted-foreground"><summary>Ver transcripción literal</summary><p>{transcript}</p></details>}
     </div>}
-    {media && !media.mimeType.startsWith("audio/") && <p className="text-xs text-muted-foreground">La foto se guarda privada y no se envía a la IA.</p>}
+    {media && !media.mimeType.startsWith("audio/") && <p className="text-xs text-muted-foreground">Foto preparada hasta 1 MB. Se guarda privada y no se envía a la IA.</p>}
     {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
   </div>;
 }

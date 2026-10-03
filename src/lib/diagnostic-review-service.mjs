@@ -21,7 +21,7 @@ export async function diagnosticProgressForTeacher(db, teacherId) {
       +
       (select count(*) from diagnostic_experience_observations where classroom_id = $1)
       +
-      (select count(*) from diagnostic_spontaneous_observations where classroom_id = $1)
+      (select count(*) from effective_diagnostic_spontaneous_observations where classroom_id = $1)
     )::int as total`, [classroom.id]),
     db.query(`select exists(select 1 from diagnostic_group_reviews where classroom_id = $1 and status = 'confirmed') as value`, [classroom.id]),
   ]);
@@ -36,7 +36,7 @@ export async function diagnosticStepProgressForTeacher(db, teacherId) {
     db.query(`select count(*)::int as total from students s
       where s.classroom_id = $1 and s.status = 'active' and (
         exists(select 1 from diagnostic_experience_observations o where o.classroom_id = $1 and o.student_id = s.id)
-        or exists(select 1 from diagnostic_spontaneous_observations o where o.classroom_id = $1 and o.student_id = s.id)
+        or exists(select 1 from effective_diagnostic_spontaneous_observations o where o.classroom_id = $1 and o.student_id = s.id)
         or exists(select 1 from student_observations o
           join diagnostic_entries de on de.id = o.diagnostic_entry_id
           join diagnostic_sessions ds on ds.id = de.session_id

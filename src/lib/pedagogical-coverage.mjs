@@ -12,7 +12,7 @@ export async function loadDiagnosticCoverageRecords(db, classroomId, period) {
     [classroomId, period.starts_on, period.ends_on])).rows.map((row) => ({ ...row, source_type: "diagnostic_guided" }));
   const spontaneous = (await db.query(`select o.id,o.student_id,o.competency_v4_ids,o.observed_at,
       o.observation_text,o.context_label,o.support_status
-    from diagnostic_spontaneous_observations o join students s on s.id=o.student_id
+    from effective_diagnostic_spontaneous_observations o join students s on s.id=o.student_id
     where o.classroom_id=$1 and s.classroom_id=$1 and s.status='active' and o.classification_status='classified'
       and o.observed_at::date between $2::date and $3::date`,
     [classroomId, period.starts_on, period.ends_on])).rows.flatMap((row) => (row.competency_v4_ids ?? []).map((id) => ({

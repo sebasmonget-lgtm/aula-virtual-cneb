@@ -15,36 +15,37 @@ async function ownedStudent(db,teacherId,id) {
 export async function previewSpontaneous({db,teacherId,input,v24=null,classifier=createOpenAICompetencyClassifier()}) {
   const student=await ownedStudent(db,teacherId,input.studentId);
   if(typeof input.observationText!=="string"||!input.observationText.trim()||input.observationText.length>4000||typeof input.contextLabel!=="string"||input.contextLabel.length>120)throw new Error("Escribe una observación y el momento.");
-  const key=previewKey(teacherId,input),workflow="observation_capture_preview";
+  const key=previewKey(teacherId,input),workflow="observation_capture_preview_v2";
   let pending, cached;
   const lease=randomUUID();
   await versionTransaction(db,`preview:${key}`,async tx=>{
     pending=(await tx.query(`select id,payload from ai_pending_generations where classroom_id=$1 and workflow=$2 and payload->>'key'=$3 and payload->>'teacher_id'=$4 and expires_at>now()`,[student.classroom_id,workflow,key,teacherId])).rows[0];
-    if(pending?.payload.result){cached={...pending.payload.result,cached:true};return;}
+    if(pending?.payload.result){cached={...pending.payload.result,original_calls:pending.payload.result.calls,calls:0,cached:true};return;}
     if(pending?.payload.lease_until&&Date.parse(pending.payload.lease_until)>Date.now())throw new Error("Ayni ya está leyendo esta observación. Espera un momento y vuelve a consultar.");
     const payload={teacher_id:teacherId,key,lease_token:lease,lease_until:new Date(Date.now()+40000).toISOString(),attempts:(pending?.payload.attempts??0)+1};
     if(pending)await tx.query('update ai_pending_generations set payload=$1::jsonb where id=$2',[JSON.stringify(payload),pending.id]);
     else {pending={id:randomUUID()};await tx.query(`insert into ai_pending_generations(id,classroom_id,workflow,payload,created_at,expires_at) values($1,$2,$3,$4::jsonb,now(),now()+interval '1 day')`,[pending.id,student.classroom_id,workflow,JSON.stringify(payload)]);}
   });
   if(cached)return cached;
+  let providerCalls=0;
   try {
     const options=await applicableDiagnosticCompetencies({...student,id:student.classroom_id});
     const allowed=new Set(options.map(c=>c.id));
     let ids=[];
     // No database transaction around provider IO: usage recording may use the same local DB.
-    if(v24){const result=await v24.classify({observation:input.observationText,age:student.age_years,applicability:{castellano_as_second_language:student.castellano_l2_applicable,religion_applicable:student.religion_applicable}});if(result.status==="classification_failed")throw new Error("La sugerencia no está disponible. Puedes elegir una competencia o guardar sin competencia.");ids=[result.primary,...(result.additional??[])].filter(Boolean);}
+    if(v24){const result=await v24.classify({observation:input.observationText,age:student.age_years,applicability:{castellano_as_second_language:student.castellano_l2_applicable,religion_applicable:student.religion_applicable}});providerCalls=result.provider_calls??2;if(result.status==="classification_failed")throw new Error("La sugerencia no está disponible. Puedes elegir una competencia o guardar sin competencia.");ids=[result.primary,...(result.additional??[])].filter(Boolean);}
     else {const names=(await db.query('select first_name,last_name,preferred_name from students where classroom_id=$1',[student.classroom_id])).rows.flatMap(s=>[s.first_name,s.last_name,s.preferred_name]).filter(Boolean);
       const observation=annualJourneySafeText(input.observationText,names),context=annualJourneySafeText(input.contextLabel,names);
       if(!observation)throw new Error("Puedes elegir la competencia manualmente para esta nota.");
-      ids=(await classifier.classify({observation,context,age:student.age_years,options:buildClassifierOptions((await loadKnowledgeBaseV4()).competencyCards,student.age_years,[...allowed])})).candidate_ids;
+      providerCalls=1;ids=(await classifier.classify({observation,context,age:student.age_years,options:buildClassifierOptions((await loadKnowledgeBaseV4()).competencyCards,student.age_years,[...allowed])})).candidate_ids;
     }
     if(!Array.isArray(ids)||ids.some(id=>!allowed.has(id)))throw new Error("Sugerencia no válida. Elige la competencia manualmente.");
-    const result={competency_ids:[...new Set(ids)].slice(0,2),calls:1};
+    const result={competency_ids:[...new Set(ids)].slice(0,2),calls:providerCalls};
     const saved=await db.query(`update ai_pending_generations set payload=jsonb_set(jsonb_set(payload,'{result}',$1::jsonb),'{lease_until}','null'::jsonb) where id=$2 and payload->>'lease_token'=$3 returning id`,[JSON.stringify(result),pending.id,lease]);
     if(!saved.rows.length)throw new Error("La sugerencia cambió. Vuelve a consultar.");
-    console.info("[observation_preview]",JSON.stringify({calls:1,candidates:result.competency_ids.length}));return result;
+    console.info("[observation_preview]",JSON.stringify({calls:providerCalls,candidates:result.competency_ids.length}));return result;
   } catch(error) {
-    await db.query(`update ai_pending_generations set payload=jsonb_set(payload,'{lease_until}','null'::jsonb) where id=$1 and payload->>'lease_token'=$2`,[pending.id,lease]);throw error;
+    await db.query(`update ai_pending_generations set payload=jsonb_set(jsonb_set(payload,'{lease_until}','null'::jsonb),'{failed_provider_calls}',$3::jsonb) where id=$1 and payload->>'lease_token'=$2`,[pending.id,lease,JSON.stringify(providerCalls)]);throw error;
   }
 }
 export async function handleStudentPhoto({request,response,url,db,teacherId,origin,send,sendAsset,readJson,storage}) {

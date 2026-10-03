@@ -64,7 +64,7 @@ export async function buildStudentPedagogicalContext(db, studentId) {
   `, [studentId])).rows;
   const spontaneousObservations = (await db.query(`select id, context_label, observation_text,
       support_status, observed_at, classification_status, classification_source, competency_v4_id, competency_v4_ids
-    from diagnostic_spontaneous_observations where student_id=$1
+    from effective_diagnostic_spontaneous_observations where student_id=$1
     order by observed_at desc,id desc limit 30`, [studentId])).rows;
   const interview = (await db.query(`select id,version,details,teacher_confirmed_at from student_family_interviews
     where student_id=$1 and status='confirmed' order by version desc limit 1`, [studentId])).rows[0];

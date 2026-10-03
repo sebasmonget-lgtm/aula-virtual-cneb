@@ -92,7 +92,7 @@ import { withAiUsageContext, loadTeacherAiUsage } from "../src/lib/ai-usage-serv
 import { completeDiagnosticReviewForTeacher, diagnosticProgressForTeacher, diagnosticStepProgressForTeacher, DiagnosticReviewError } from "../src/lib/diagnostic-review-service.mjs";
 import { DiagnosticExperienceError, loadDiagnosticExperienceWorkspace, recordDiagnosticExperienceObservation } from "../src/lib/diagnostic-experiences-v4.mjs";
 import { DiagnosticAssessmentError, loadDiagnosticAssessmentWorkspace, prepareDiagnosticSynthesis, saveDiagnosticSynthesis, confirmDiagnosticSynthesis, prepareDiagnosticStudentReview, saveDiagnosticStudentReview, confirmDiagnosticStudentReview, prepareDiagnosticGroupReview, saveDiagnosticGroupReview, confirmDiagnosticGroupReview, saveStudentInitialContext, diagnosticPlanningSummary } from "../src/lib/diagnostic-assessment-v4.mjs";
-import { DiagnosticSourceError, loadFamilyInterview, listFamilyInterviewStatuses, saveFamilyInterview, confirmFamilyInterview, saveAndConfirmFamilyInterview, attachFamilyInterview, familyInterviewAttachmentPath, recordSpontaneousObservation, recordConfirmedSpontaneousObservation, recordMatrixDiagnosticObservation, loadSpontaneousObservations, correctSpontaneousClassification, markSpontaneousNeedsReview, suggestSpontaneousV24, loadSpontaneousV24Metrics } from "../src/lib/diagnostic-sources-v4.mjs";
+import { DiagnosticSourceError, loadFamilyInterview, listFamilyInterviewStatuses, saveFamilyInterview, confirmFamilyInterview, saveAndConfirmFamilyInterview, attachFamilyInterview, familyInterviewAttachmentPath, recordSpontaneousObservation, recordConfirmedSpontaneousObservation, reviseSpontaneousObservation, recordMatrixDiagnosticObservation, loadSpontaneousObservations, correctSpontaneousClassification, markSpontaneousNeedsReview, suggestSpontaneousV24, loadSpontaneousV24Metrics } from "../src/lib/diagnostic-sources-v4.mjs";
 import { createObservationV24Classifier, observationV24Enabled } from "../src/lib/observation-v24-classifier.mjs";
 import { neutralizeAssessmentText } from "../src/lib/assessment-v4-service.mjs";
 import { loadPlanningFeedback, planningFeedbackText, resolveProjectPlanningFeedback } from "../src/lib/planning-feedback.mjs";
@@ -151,7 +151,7 @@ function validSetupKey(candidate) {
   const a = Buffer.from(candidate), b = Buffer.from(expected);
   return a.length === b.length && timingSafeEqual(a, b);
 }
-const corsMethods = "GET,POST,PUT,OPTIONS";
+const corsMethods = "GET,POST,PUT,PATCH,DELETE,OPTIONS";
 const allowedOrigins = new Set([
   ...(authMode === "local" ? ["http://localhost:5173", "http://127.0.0.1:5173"] : []),
   ...(process.env.AYNI_ALLOWED_ORIGIN ? [process.env.AYNI_ALLOWED_ORIGIN] : []),
@@ -1038,8 +1038,12 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
             else setImmediate(() => queueDiagnosticClassification(row.id, row.student_id, teacherId));
           }
         }
+        else if (["PATCH","DELETE"].includes(request.method) && /^\/api\/diagnostics\/spontaneous-observations\/[0-9a-f-]{36}$/i.test(url.pathname)) {
+          const result=await reviseSpontaneousObservation(db,teacherId,url.pathname.split("/")[4],await readJson(request),request.method==="DELETE");
+          await refreshStudentContextSnapshot(db,result.student_id);send(response,200,result,origin);
+        }
         else if (request.method === "POST" && url.pathname === "/api/diagnostics/spontaneous-observations/preview") {
-          send(response,200,await previewSpontaneous({db,teacherId,input:await readJson(request),v24:observationV24Active?observationV24Classifier:null}),origin);
+          send(response,200,await previewSpontaneous({db,teacherId,input:await readJson(request),v24:observationV24Classifier??await createObservationV24Classifier()}),origin);
         }
         else if (request.method === "POST" && url.pathname === "/api/diagnostics/spontaneous-observations/matrix") {
           const saved = await recordMatrixDiagnosticObservation(db, teacherId, await readJson(request));

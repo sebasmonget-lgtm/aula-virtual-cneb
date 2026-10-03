@@ -130,7 +130,7 @@ async function studentReviewSources(db, classroomId, studentId) {
       where classroom_id=$1 and student_id=$2`, [classroomId, studentId])).rows;
   const spontaneous = (await db.query(`select id,student_id,competency_v4_id,competency_v4_ids,context_label,observation_text,
       support_status,observed_at,classification_source,classification_status
-      from diagnostic_spontaneous_observations where classroom_id=$1 and student_id=$2`, [classroomId, studentId])).rows
+      from effective_diagnostic_spontaneous_observations where classroom_id=$1 and student_id=$2`, [classroomId, studentId])).rows
     .map((row) => ({ ...row, experience_id: "spontaneous", aspect_id: row.context_label,
       catalog_version: "spontaneous-v1", observation_status: row.support_status === "yes" ? "with_support" : "observed_without_judgment" }));
   const interview = (await db.query(`select id,version,details,teacher_confirmed_at from student_family_interviews
@@ -211,7 +211,7 @@ async function sourceRows(db, classroomId, studentId, competencyId) {
     order by o.observed_at, o.id`, [classroomId, studentId, competencyId])).rows;
   const spontaneous = (await db.query(`select o.id,o.student_id,o.competency_v4_id,o.context_label,
       o.observation_text,o.support_status,o.observed_at,o.classification_source
-    from diagnostic_spontaneous_observations o join students s on s.id=o.student_id
+    from effective_diagnostic_spontaneous_observations o join students s on s.id=o.student_id
     where o.classroom_id=$1 and o.student_id=$2 and o.classification_status='classified'
       and $3=any(o.competency_v4_ids)
       and s.classroom_id=$1 and s.status='active'`, [classroomId, studentId, competencyId])).rows.map((row) => ({
@@ -265,7 +265,7 @@ export async function loadDiagnosticAssessmentWorkspace(db, teacherId) {
     order by i.student_id,i.version desc`, [classroom.id])).rows;
   const family = new Map(familyRows.map((row) => [row.student_id, { version: row.version, ...safeFamilyContext(row.details) }]));
   const unclassified = (await db.query(`select student_id,count(*)::int as total
-    from diagnostic_spontaneous_observations where classroom_id=$1 and classification_status <> 'classified'
+    from effective_diagnostic_spontaneous_observations where classroom_id=$1 and classification_status <> 'classified'
     group by student_id`, [classroom.id])).rows;
   const pending = new Map(unclassified.map((row) => [row.student_id, row.total]));
   const guided = (await db.query(`select o.id, o.student_id, o.competency_v4_id,
@@ -276,7 +276,7 @@ export async function loadDiagnosticAssessmentWorkspace(db, teacherId) {
     order by o.observed_at, o.id`, [classroom.id])).rows;
   const spontaneousAll = (await db.query(`select o.id,o.student_id,o.competency_v4_id,o.competency_v4_ids,o.context_label,o.observation_text,
       o.support_status,o.observed_at,o.classification_source,o.classification_status,o.media_path is not null as has_media
-    from diagnostic_spontaneous_observations o join students s on s.id=o.student_id and s.classroom_id=o.classroom_id
+    from effective_diagnostic_spontaneous_observations o join students s on s.id=o.student_id and s.classroom_id=o.classroom_id
     where o.classroom_id=$1 and s.status='active'`, [classroom.id])).rows.map((row) => ({ ...row,
       experience_id: "spontaneous", aspect_id: row.context_label, catalog_version: "spontaneous-v1",
       experience_title_snapshot: "Observación espontánea", aspect_prompt_snapshot: row.context_label,

@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
-import { versionTransaction } from "./version-integrity.mjs";
+import { versionTransaction, VersionConflictError } from "./version-integrity.mjs";
 import { loadKnowledgeBaseV4 } from "./knowledge-base-v4.mjs";
 import { cardIsApplicable } from "./ai-context-builder-v4.mjs";
 import { competencyApplicability } from "./competency-applicability.mjs";
@@ -503,13 +503,33 @@ async function writeTeacherClassification(tx, teacherId, classroom, id, ids) {
       competency_v4_id: row.competency_v4_id, competency_v4_ids: row.competency_v4_ids };
 }
 
+export async function reviseSpontaneousObservation(db, teacherId, id, input, withdraw=false) {
+  const classroom=await scope(db,teacherId);
+  const allowed=new Set((await applicableDiagnosticCompetencies(classroom)).map(c=>c.id));
+  const ids=input.competencyIds??[];
+  if(!withdraw&&(!Array.isArray(ids)||ids.length>2||ids.some(c=>!allowed.has(c))))fail('invalid_competency','Elige hasta dos competencias aplicables.');
+  if(!withdraw&&(typeof input.observationText!=='string'||input.observationText.length>4000))fail('invalid_observation','La observación debe tener hasta 4000 caracteres.');
+  return versionTransaction(db,`spontaneous-decision:${id}`,async tx=>{
+    const row=(await tx.query(`select o.* from effective_diagnostic_spontaneous_observations o join students s on s.id=o.student_id
+      where o.id=$1 and o.classroom_id=$2 and o.created_by=$3 and s.status='active'`,[id,classroom.id,teacherId])).rows[0];
+    if(!row)fail('not_found','Observación no disponible.');
+    if(!Number.isInteger(input.expectedRevision)||input.expectedRevision!==Number(row.source_revision))throw new VersionConflictError('La observación cambió. Actualiza la lista antes de editar.',row.source_revision);
+    const text=withdraw?row.observation_text??'':input.observationText.trim();
+    if(!withdraw&&!text&&!row.media_path)fail('invalid_observation','Conserva un texto o una evidencia.');
+    await tx.query(`insert into diagnostic_spontaneous_observation_revisions(id,observation_id,actor_id,revision,state,corrected_text)
+      values($1,$2,$3,$4,$5,$6)`,[randomUUID(),id,teacherId,Number(row.source_revision)+1,withdraw?'withdrawn':'active',text]);
+    if(!withdraw)await writeTeacherClassification(tx,teacherId,classroom,id,[...new Set(ids)]);
+    return {id,student_id:row.student_id,source_revision:Number(row.source_revision)+1};
+  });
+}
+
 export async function loadSpontaneousObservations(db, teacherId) {
   const classroom = await scope(db, teacherId);
   const observations = (await db.query(`select o.id,o.student_id,o.context_label,o.observation_text,o.support_status,
     o.observed_at,o.classification_status,o.classification_source,o.competency_v4_id,o.secondary_competency_v4_id,
     o.competency_v4_ids,o.suggested_competency_v4_ids,o.classification_reason,o.classifier_version,o.classifier_status,
-    o.media_path is not null as has_media,o.media_mime_type
-    from diagnostic_spontaneous_observations o join students s on s.id=o.student_id and s.classroom_id=o.classroom_id
+    o.media_path is not null as has_media,o.media_mime_type,o.source_revision
+    from effective_diagnostic_spontaneous_observations o join students s on s.id=o.student_id and s.classroom_id=o.classroom_id
     where o.classroom_id=$1 and s.status='active' order by o.observed_at desc,o.id desc`, [classroom.id])).rows;
   return { observations: observations.map((row) => {
     const publicRow = { ...row };

@@ -9,5 +9,5 @@ export function InterviewAudioRecorder({ studentId, question, currentText, onTra
   onBusyChange?: (busy: boolean) => void; disabled?:boolean;
 }) {
   return <DictationRecorder studentId={studentId} context={question} currentText={currentText}
-    purpose="interview" disabled={disabled} onTranscribed={onTranscribed} onBusyChange={onBusyChange} />;
+    purpose="interview" iconOnly autoTranscribe disabled={disabled} onTranscribed={onTranscribed} onBusyChange={onBusyChange} />;
 }

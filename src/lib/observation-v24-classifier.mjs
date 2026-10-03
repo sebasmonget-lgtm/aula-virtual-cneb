@@ -32,6 +32,6 @@ export async function createObservationV24Classifier({ apiKey = process.env.OPEN
     const result = await classify({ observation, age, applicability, observable_text: observation });
     // The benchmark wrapper holds raw provider answers in memory; never return or persist them.
     return { status: result.status, primary: result.primary, additional: result.additional,
-      latency_ms: result.latency_ms, error_code: result.error_code ?? null };
+      latency_ms: result.latency_ms, error_code: result.error_code ?? null, provider_calls: result.calls?.length??0 };
   } };
 }
