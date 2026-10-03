@@ -1,3 +1,4 @@
+import { handleAnnualJourneyRoutes } from "./annual-journey-routes.mjs";
 import { createServer } from "node:http";
 import { AsyncLocalStorage } from "node:async_hooks";
 import { createHash, randomUUID } from "node:crypto";
@@ -1158,6 +1159,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       send(response, 200, await buildClassroomStatistics(db, classroom.id), origin);
       return;
     }
+    if (await handleAnnualJourneyRoutes({ request, response, url, db, teacherId, origin, send, readJson, annualPlanningContext, annualDocumentContext })) return;
     if (url.pathname === "/api/annual-personalization/current" && request.method === "GET") {
       const context = await annualPlanningContext();
       if (!context) { send(response, 404, { error: "Aula no disponible." }, origin); return; }
@@ -1278,6 +1280,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
           [id,context.id,context.school_year_id])).rows[0];
           if (!row) throw new AnnualPreplanError("not_found", "Preplan no disponible.");
           assertRevision(row, expectedRevision(body.expectedRevision));
+          if ((await tx.query("select proposal from annual_plans where id=$1", [id])).rows[0]?.proposal?.journey_version === 2) throw new AnnualPreplanError("journey_required", "Usa Cambiar con Ayni para revisar esta versión.");
           let personalizationForPlan = null;
           if (row.source_personalization_review_id) {
             const current = await currentPersonalization(tx, teacherId, context);
@@ -1582,6 +1585,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       try {
         const body=await readJson(request),revision=expectedRevision(body.expectedRevision);
         const result=await confirmAnnualPlanVersion(db,context,id,revision,async(draft,tx)=>{
+          if (draft.proposal?.journey_version === 2) throw new AnnualPreplanError("journey_required", "Confirma este año desde el recorrido de Ayni para conservar todas sus garantías.");
           const sourceDiagnosticId=draft.source_diagnostic_review_id??draft.document_context?.source_diagnostic_review_id;
           if(!draft.source_personalization_review_id && (!context.source_diagnostic_review_id || (sourceDiagnosticId&&sourceDiagnosticId!==context.source_diagnostic_review_id))) throw new VersionConflictError("Se confirmó un nuevo resumen diagnóstico. Revisa el plan antes de confirmar.",draft.revision);
           if (draft.proposal.plan_format === ANNUAL_PREPLAN_FORMAT) {
@@ -1668,7 +1672,8 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       const selectedDates = selection?.status === "confirmed" ? (await db.query(`select date::text from project_instructional_dates
         where selection_id=$1 and selected=true order by date`,[selection.id])).rows.map((item)=>item.date) : null;
       return { classroom, plan, source, proposalId: canonicalProposalId, index, slot, aiContext, selection,
-        dates: selectedDates?.length ? selectedDates : instructionalDates(plan.document_context?.calendar ?? classroom.calendar, slot.starts_on, slot.ends_on) };
+        dates: selectedDates?.length ? selectedDates : plan.proposal?.journey_version === 2
+          ? [...source.instructional_dates] : instructionalDates(plan.document_context?.calendar ?? classroom.calendar, slot.starts_on, slot.ends_on) };
     }
     async function projectFlowRow(id) {
       const classroom = await annualPlanningContext();
@@ -1702,6 +1707,9 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
           values($1,$2,$3::date,$4::date) returning *`,[randomUUID(),row.id,source.slot.starts_on,source.slot.ends_on])).rows[0];
       }
       const calendar=await loadEffectiveCalendar(db,{teacherId,classroomId:source.classroom.id,from:source.slot.starts_on,to:source.slot.ends_on});
+      if (source.plan.proposal?.journey_version === 2 && (calendar.version.id !== source.plan.proposal.resolved_calendar.calendar_version.id
+        || JSON.stringify(calendar.days.filter((d) => d.is_instructional).map((d) => annualCalendarDay(d.date))) !== JSON.stringify(source.source.instructional_dates)))
+        throw new VersionConflictError("Cambió el calendario efectivo de esta propuesta. Revisa Mi año antes de desarrollarla.");
       const existing=(await db.query(`select id,date::text,selected,exclusion_reason from project_instructional_dates where selection_id=$1 order by date`,[selection.id])).rows;
       if(!existing.length){
         for(const day of calendar.days.filter((item)=>item.is_instructional))await db.query(`insert into project_instructional_dates(id,selection_id,calendar_day_id,date,selected)
@@ -1732,6 +1740,9 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       try{const id=url.pathname.split("/")[3],body=await readJson(request),{row}=await projectFlowRow(id);if(!row||row.status!=="draft"){send(response,404,{error:"Borrador no disponible."},origin);return;}
         const source=await projectFlowSource(row.annual_plan_id,row.source_proposal_id,true,row.source_proposal_index),review=await ensureProjectCalendarSelection(row,source);
         const calendar=await loadEffectiveCalendar(db,{teacherId,classroomId:source.classroom.id,from:source.slot.starts_on,to:source.slot.ends_on});
+      if (source.plan.proposal?.journey_version === 2 && (calendar.version.id !== source.plan.proposal.resolved_calendar.calendar_version.id
+        || JSON.stringify(calendar.days.filter((d) => d.is_instructional).map((d) => annualCalendarDay(d.date))) !== JSON.stringify(source.source.instructional_dates)))
+        throw new VersionConflictError("Cambió el calendario efectivo de esta propuesta. Revisa Mi año antes de desarrollarla.");
         const selected=validateSelectedInstructionalDates(calendar.days,body.selectedDates,source.slot.starts_on,source.slot.ends_on),selectedSet=new Set(selected);
         const protectedVersion = await protectedProjectVersion(row);
         if (protectedVersion) assertProtectedCalendarDates(protectedVersion.sourceRoute, selected, protectedVersion);

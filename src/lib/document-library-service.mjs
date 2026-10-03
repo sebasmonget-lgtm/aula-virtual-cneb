@@ -76,6 +76,11 @@ export async function loadSavedDocument(db, teacherId, kind, id) {
       left join annual_plan_formal_content af on af.annual_plan_id=ap.id
       where ap.id=$2 and c.teacher_id=$1 and sy.owner_id=$1 and (ap.proposal ? 'title' or ap.proposal->>'plan_format'='annual_preplan_v1')`, [teacherId, id])).rows[0];
     if (!row) return null;
+    if (row.proposal?.journey_version === 2) return { id: row.id, kind, title: row.proposal.title, status: row.status,
+      version: Number(row.version), school_year: Number(row.year), classroom: row.section,
+      confirmed_at: row.teacher_confirmed_at ? timestamp(row.teacher_confirmed_at) : null,
+      content: row.proposal, source_plan_format: row.proposal.plan_format, formal_ready: row.status !== "draft",
+      document_context: row.document_context };
     const fallback = { institution_name: row.institution_name, teacher_name: row.teacher_name,
       classroom_section: row.section, age: Number(row.age_years), school_year: Number(row.year),
       starts_on: dateOnly(row.starts_on), ends_on: dateOnly(row.ends_on) };

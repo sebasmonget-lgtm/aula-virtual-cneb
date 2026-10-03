@@ -96,6 +96,7 @@ export async function developConfirmedAnnualPlan(db, teacherId, planId, context,
   [planId, context.id, context.school_year_id, teacherId])).rows[0];
   if (!plan || plan.proposal?.plan_format !== ANNUAL_PREPLAN_FORMAT)
     throw new AnnualPreplanError("not_found", "El plan confirmado no está disponible para esta aula.");
+  if (plan.proposal?.journey_version === 2) return { content: plan.proposal, already_ready: true };
   const existing = (await db.query(`select content from annual_plan_formal_content where annual_plan_id=$1`, [planId])).rows[0];
   if (existing) return { content: existing.content, already_ready: true };
   const curriculum = await ageFilteredAnnualCurriculum(context);

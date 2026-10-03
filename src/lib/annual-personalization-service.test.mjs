@@ -18,13 +18,13 @@ const source = (interview, observation = "") => ({
   observations: observation ? [{ id: id(3), student_id: id(1), observation_text: observation, competency_v4_id: "COM_ORAL" }] : [],
 });
 
-test("extrae señales de texto libre sin ocultarlas en aulas pequeñas y distingue sus fuentes", () => {
-  const projected = projectPlanningSignals(source("Le gustan los animales y las plantas. La familia trabaja en agricultura.",
-    "Construyó una casa con bloques durante el juego."), { id: id(4), group_context: "", available_resources: [] });
-  assert.ok(projected.interests.some((item) => item.label === "Animales" && item.source_kinds.includes("family_report")));
-  assert.ok(projected.interests.some((item) => item.label === "Construcción" && item.source_kinds.includes("teacher_observation")));
-  assert.ok(projected.opportunities.some((item) => item.label === "Agricultura y cultivos"));
-  assert.equal(projected.interests[0].source_refs[0].id, id(2));
+test("texto libre no produce intereses inferidos ni generalizaciones; queda en snapshot literal", async () => {
+  const sources = source("No le interesan los animales; evita el agua.", "Construyó una casa con bloques durante el juego.");
+  const projected = projectPlanningSignals(sources);
+  assert.deepEqual(projected.interests, []);
+  const proposed = await proposePersonalization(sources, { id: id(4), age: 5, available_resources: [] }, curriculum);
+  assert.match(proposed.classroom_snapshot.facts.find((f) => f.kind === "family_report").support_text, /No le interesan los animales/);
+  assert.equal(proposed.classroom_snapshot.facts.find((f) => f.kind === "observed").scope, "individual");
 });
 
 test("poca evidencia permite contrato sin prioridades ni dificultad inventada", async () => {
@@ -39,7 +39,7 @@ test("poca evidencia permite contrato sin prioridades ni dificultad inventada", 
 test("una ventana construida no se interpreta como venta ni comercio", () => {
   const context = { id: id(4), group_context: "", available_resources: [] };
   assert.deepEqual(projectPlanningSignals(source(null, "Construyó una casa y agregó una ventana."), context).opportunities, []);
-  assert.ok(projectPlanningSignals(source(null, "Jugó a la venta en el mercado."), context).opportunities.some((row) => row.label === "Comercio local"));
+  assert.deepEqual(projectPlanningSignals(source(null, "Jugó a la venta en el mercado."), context).opportunities, []);
 });
 
 test("la guía del contrato confirmado conserva fechas sin imponer efemérides como temas", async () => {

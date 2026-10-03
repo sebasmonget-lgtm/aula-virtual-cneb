@@ -23,6 +23,9 @@ export async function persistAnnualProjectSlots(db, planId, schedule) {
       slot.duration_weeks, slot.starts_on, slot.ends_on, proposalId]);
   }
   if (!plan?.proposal?.proposed_experiences) return;
+  // Journey V2 already carries dates/counts from its single effective-calendar snapshot.
+  // Do not create a second projection or increment CAS after returning a saved revision.
+  if (plan.proposal.journey_version === 2) return;
   const counts = [];
   for (const slot of schedule.projects) {
     const count = (await db.query(`select count(*)::int as n from school_calendar_days d

@@ -1,45 +1,12 @@
 import { createHash, randomUUID } from "node:crypto";
-import { resolveAIExecutionPlan } from "./ai-execution-router-v4.mjs";
-import { createAIProviderForPlan } from "./ai-provider-factory.mjs";
-import { buildProviderRequest } from "./ai-generation-v4.mjs";
 import { ageFilteredAnnualCurriculum } from "./annual-preplan-service.mjs";
 import { neutralizeAssessmentText } from "./assessment-v4-service.mjs";
-import { anonymousDecisionText } from "./jev-competency-suggestion.mjs";
-import { interviewInterestOptions, interviewLanguageOptions, interviewCommunityOptions } from "./family-interview-contract.mjs";
 import { validatePlanningPreferences } from "./annual-planning-preferences.mjs";
+import { buildAnnualClassroomSnapshot, explicitPlanningSignals } from "./annual-classroom-snapshot.mjs";
 
 const hash = (value) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
-const topics = [
-  ["Animales", /animales?|mascotas?|perros?|gatos?|aves?|insectos?/iu],
-  ["Plantas", /plantas?|huertos?|semillas?|flores?|cultivos?/iu],
-  ["Construcción", /construir|construcci[oó]n|bloques?|armar/iu],
-  ["Agua", /agua|r[ií]os?|lluvia|charcos?/iu],
-  ["Transporte", /transportes?|carros?|veh[ií]culos?|buses?|trenes?/iu],
-  ["Cuentos", /cuentos?|historias?|libros?/iu],
-  ["Música", /m[uú]sica|cantar|canciones?|bailar/iu],
-  ["Movimiento", /correr|saltar|movimiento|pelotas?/iu],
-  ["Dibujo", /dibujar|pintar|dibujo|colores?/iu],
-];
-const opportunities = [
-  ["Agricultura y cultivos", /agricultur|chacra|cultivo|cosecha|huerto/iu],
-  ["Comercio local", /\b(?:comercio|mercado|tienda|ventas?|negocio)\b/iu],
-  ["Naturaleza cercana", /r[ií]o|campo|bosque|monta[nñ]a|playa|parque|naturaleza/iu],
-  ["Oficios de la comunidad", /oficios?|profesiones?|artesanos?|pescador/iu],
-  ["Celebraciones y costumbres", /fiesta|celebraci[oó]n|costumbre|tradici[oó]n/iu],
-];
-const sourceFields = ["family_context", "language_context", "interests", "family_community_context", "family_community_enjoyed"];
 const conditionKinds = ["spaces", "outdoors", "materials", "technology", "schedule", "family_support", "restrictions", "institutional_projects", "events", "other"];
-const proposalSchema = { id: "annual-personalization-v1", type: "object", additionalProperties: false,
-  required: ["group_profile", "priorities"], properties: {
-    group_profile: { type: "string" }, priorities: { type: "array", maxItems: 4, items: {
-      type: "object", additionalProperties: false, required: ["title", "reason", "related_competency_ids", "importance"],
-      properties: { title: { type: "string" }, reason: { type: "string" },
-        related_competency_ids: { type: "array", items: { type: "string" } },
-        importance: { enum: ["higher", "normal", "observe_more"] } },
-    } },
-  } };
 const short = (value, limit = 500) => typeof value === "string" ? value.trim().slice(0, limit) : "";
-const topicHits = (value, list) => list.filter(([, pattern]) => pattern.test(value ?? "")).map(([label]) => label);
 const unique = (items) => [...new Set(items)];
 const condition = (kind, value) => ({ id: kind, kind, value: short(value, 500) });
 
@@ -62,9 +29,9 @@ export async function personalizationSources(db, teacherId, context) {
       join students s on s.id=o.student_id and s.status='active' where o.classroom_id=$1
     union all
     select o.id,o.student_id,o.competency_v4_id,o.observation_text,o.observed_at,
-      'diagnostic_observation' as source_type from diagnostic_experience_observations o
+      'guided_diagnostic_observation' as source_type from diagnostic_experience_observations o
       join students s on s.id=o.student_id and s.status='active'
-      where o.classroom_id=$1 and o.observation_status <> 'insufficient_information'
+      where o.classroom_id=$1
     union all
     select so.id,de.student_id,null::text as competency_v4_id,coalesce(so.note,de.observation_text) as observation_text,
       so.observed_at,'legacy_diagnostic_observation' as source_type
@@ -73,6 +40,18 @@ export async function personalizationSources(db, teacherId, context) {
       join students s on s.id=de.student_id and s.status='active'
       where ds.classroom_id=$1 and so.status in ('observed','with_support')
     order by observed_at,id`, [context.id])).rows;
+  const ordinary = (await db.query(`select o.id,o.student_id,coalesce(r.corrected_text,o.raw_text) as observation_text,
+    o.occurred_at as observed_at,o.source_revision,o.source_kind,'ordinary_observation' as source_type,
+    case when a.state='confirmed' and a.source='teacher' and a.raw_revision=o.source_revision then a.confirmed_competency_ids
+      when a.id is null and o.source_revision=1 and ac.competency_v4_id is not null then array[ac.competency_v4_id]
+      else array[]::text[] end as competency_ids
+    from ordinary_observations o join students s on s.id=o.student_id and s.classroom_id=o.classroom_id
+    left join lateral(select corrected_text,action from ordinary_observation_revisions where observation_id=o.id order by revision desc limit 1)r on true
+    left join lateral(select * from ordinary_observation_attributions where observation_id=o.id order by version desc limit 1)a on true
+    left join activity_criteria ac on ac.id=o.captured_criterion_id
+    where o.classroom_id=$1 and o.created_by=$2 and s.status='active' and o.status<>'voided'
+      and coalesce(r.action,'correct')<>'void' order by o.occurred_at,o.id`,[context.id,teacherId])).rows;
+  observations.push(...ordinary);
   const group = (await db.query(`select id,version,details,teacher_confirmed_at from diagnostic_group_reviews
     where classroom_id=$1 and status='confirmed' order by version desc limit 1`, [context.id])).rows[0] ?? null;
   const prior = group ? (await db.query(`select id,version,details,teacher_confirmed_at from diagnostic_priority_reviews
@@ -81,49 +60,17 @@ export async function personalizationSources(db, teacherId, context) {
     ...observations.map((row) => ({ type: row.source_type, id: row.id })),
     ...(group ? [{ type: "diagnostic_group", id: group.id, version: group.version }] : []),
     ...(prior ? [{ type: "diagnostic_priority", id: prior.id, version: prior.version }] : [])];
-  const fingerprint = hash({ references, interviewFacts: interviews.map((row) => row.details),
-    observations: observations.map((row) => [row.id,row.observation_text,row.competency_v4_id]),
+  const sourceContext = (await db.query("select c.context,sy.annual_planning_context,c.age_grade_id,c.castellano_l2_applicable,c.religion_applicable from classrooms c join school_years sy on sy.id=c.school_year_id where c.id=$1",[context.id])).rows[0];
+  const fingerprint = hash({ sourceContext, references, roster: students.map((row) => row.id), applicability: [context.age, context.castellano_l2_applicable, context.religion_applicable], interviewFacts: interviews.map((row) => row.details),
+    observations: observations.map((row) => [row.id,row.observation_text,row.competency_v4_id,row.competency_ids,row.source_revision,row.observed_at]),
     group: group?.details, prior: prior?.details, context: context.group_context,
     resources: context.available_resources });
   return { students, interviews, observations, group, prior, names, references, fingerprint };
 }
 
 /** Extract only bounded planning signals; never send a full interview or student identity to a provider. */
-export function projectPlanningSignals(sources, context) {
-  const interestRows = new Map(), contextRows = new Map();
-  function add(map, label, ref, kind) {
-    const current = map.get(label) ?? { label, source_refs: [], source_kinds: [] };
-    if (!current.source_refs.some((item) => item.id === ref.id)) current.source_refs.push(ref);
-    if (!current.source_kinds.includes(kind)) current.source_kinds.push(kind);
-    map.set(label, current);
-  }
-  for (const row of sources.interviews) {
-    const details = row.details ?? {};
-    const ref = { type: "family_interview", id: row.id };
-    for (const tag of details.interest_tags ?? []) {
-      const label = interviewInterestOptions.find((item) => item.id === tag)?.label;
-      if (label && tag !== "other") add(interestRows, label, ref, "family_report");
-    }
-    for (const tag of details.community_tags ?? []) {
-      const label = interviewCommunityOptions.find((item) => item.id === tag)?.label;
-      if (label && tag !== "other") add(contextRows, label, ref, "family_report");
-    }
-    const selected = sourceFields.map((field) => short(details[field], 800)).join(" ");
-    for (const label of topicHits(selected, topics)) add(interestRows, label, ref, "family_report");
-    for (const label of topicHits(selected, opportunities)) add(contextRows, label, ref, "family_report");
-    for (const tag of details.language_tags ?? []) {
-      const label = interviewLanguageOptions.find((item) => item.id === tag)?.label;
-      if (label && tag !== "other") add(contextRows, `Lengua familiar: ${label}`, ref, "family_report");
-    }
-  }
-  for (const row of sources.observations) {
-    const ref = { type: row.source_type ?? "diagnostic_observation", id: row.id };
-    for (const label of topicHits(row.observation_text, topics)) add(interestRows, label, ref, "teacher_observation");
-    for (const label of topicHits(row.observation_text, opportunities)) add(contextRows, label, ref, "teacher_observation");
-  }
-  const known = [context.group_context, ...(context.available_resources ?? [])].filter(Boolean).join(" ");
-  for (const label of topicHits(known, opportunities)) add(contextRows, label, { type: "classroom_context", id: context.id }, "teacher_context");
-  return { interests: [...interestRows.values()], opportunities: [...contextRows.values()] };
+export function projectPlanningSignals(sources) {
+  return explicitPlanningSignals(sources);
 }
 
 function suggestedPriorities(sources, curriculum) {
@@ -137,8 +84,8 @@ function suggestedPriorities(sources, curriculum) {
   }));
 }
 
-export async function proposePersonalization(sources, context, curriculum, { createProvider = createAIProviderForPlan } = {}) {
-  const signals = projectPlanningSignals(sources, context);
+export async function proposePersonalization(sources, context, curriculum) {
+  const signals = projectPlanningSignals(sources);
   const observedChildren = new Set(sources.observations.map((row) => row.student_id)).size;
   const base = {
     group_profile: short([sources.group?.details?.strengths, sources.group?.details?.needs,
@@ -154,36 +101,7 @@ export async function proposePersonalization(sources, context, curriculum, { cre
     needs_more_observation: observedChildren < sources.students.length ? ["Seguir observando distintas formas de participación durante las primeras semanas."] : [],
     additional_notes: short(context.annual_planning_context?.additional_notes, 2000),
   };
-  if (sources.observations.length < 3 || sources.prior) return base;
-  const allowed = new Set(curriculum.map((card) => card.id));
-  const observed = sources.observations.slice(-36).map((row) => ({
-    text: anonymousDecisionText(short(row.observation_text, 260), sources.names),
-    competency_id: allowed.has(row.competency_v4_id) ? row.competency_v4_id : null,
-  })).filter((row) => row.text);
-  if (observed.length < 3) return base;
-  try {
-    const plan = resolveAIExecutionPlan({ workflow: "diagnostic_group_synthesis", task: "generation" });
-    const response = await createProvider(plan, { timeoutMs: 120_000 }).generate(buildProviderRequest("diagnostic_group_synthesis", {
-      workflow: "annual_personalization", age: context.age,
-      observed_records: observed, family_interest_topics: signals.interests.map((item) => item.label),
-      family_context_topics: signals.opportunities.map((item) => item.label),
-      curriculum: curriculum.map(({ id, name }) => ({ id, name })),
-      task: "Propón una síntesis breve del grupo y de cero a cuatro prioridades justificadas por los registros. Las familias aportan contexto, no desempeño. Si no hay base para prioridades, devuelve []. No infieras dificultad por ausencia de registro; usa observe_more. No nombres a estudiantes ni inventes observaciones.",
-    }, plan, proposalSchema, "Solo proponer desde señales reales; la docente decide."));
-    const output = response.output;
-    if (typeof output?.group_profile === "string" && output.group_profile.trim())
-      base.group_profile = neutralizeAssessmentText(short(output.group_profile, 900), sources.names);
-    if (Array.isArray(output?.priorities)) base.priorities = output.priorities.filter((row) =>
-      row.title?.trim() && row.reason?.trim() && Array.isArray(row.related_competency_ids)
-      && row.related_competency_ids.some((id) => allowed.has(id))).slice(0, 4).map((row) => ({
-      id: randomUUID(), title: short(row.title, 180), reason: short(row.reason, 500),
-      related_competency_ids: unique(row.related_competency_ids.filter((id) => allowed.has(id))).slice(0, 4),
-      importance: ["higher", "normal", "observe_more"].includes(row.importance) ? row.importance : "observe_more",
-      evidence_status: row.importance === "observe_more" ? "observe_more" : "supported",
-      source_refs: sources.observations.filter((item) => row.related_competency_ids.includes(item.competency_v4_id))
-        .slice(0, 12).map((item) => ({ type: item.source_type ?? "diagnostic_observation", id: item.id })),
-    })).filter((row) => row.source_refs.length || row.importance === "observe_more");
-  } catch { /* The deterministic proposal and explicit uncertainty remain usable without AI. */ }
+  base.classroom_snapshot = buildAnnualClassroomSnapshot(sources, context, curriculum);
   return base;
 }
 
@@ -212,7 +130,7 @@ export function validatePersonalization(details, curriculum) {
       fail("invalid", "Revisa las condiciones reales del aula.");
     return { id: item.id, kind: item.kind, value: short(item.value, 500) };
   }).filter((item) => item.value);
-  return { group_profile: profile, interests: items(details.interests, "label"), priorities,
+  return { ...(details.classroom_snapshot ? { classroom_snapshot: details.classroom_snapshot } : {}), group_profile: profile, interests: items(details.interests, "label"), priorities,
     context_opportunities: items(details.context_opportunities, "text"), classroom_conditions: conditions,
     evidence_coverage: details.evidence_coverage ?? {},
     needs_more_observation: Array.isArray(details.needs_more_observation) ? details.needs_more_observation.map((x) => short(x, 300)).filter(Boolean).slice(0, 10) : [],
@@ -250,6 +168,7 @@ export async function savePersonalizationDraft(db, teacherId, context, id, detai
   checkSnapshot(row, expectedSnapshot);
   const validated = validatePersonalization(details, await ageFilteredAnnualCurriculum(context));
   // Clients cannot manufacture evidence coverage or observation recommendations.
+  validated.classroom_snapshot = row.proposal.classroom_snapshot;
   validated.evidence_coverage = row.proposal.evidence_coverage;
   validated.needs_more_observation = row.proposal.needs_more_observation;
   const saved = (await db.query(`update annual_personalization_reviews set details=$1::jsonb
@@ -302,6 +221,7 @@ export async function preparePersonalization(db, teacherId, context, { refresh =
     context_opportunities: [...previous.context_opportunities, ...newContext],
     priorities: [...previous.priorities, ...newPriorities].slice(0, 6),
     group_profile: proposedGroupProfile ?? previous.group_profile,
+    classroom_snapshot: fresh?.classroom_snapshot ?? previous.classroom_snapshot,
     evidence_coverage: fresh?.evidence_coverage ?? previous.evidence_coverage,
     needs_more_observation: fresh?.needs_more_observation ?? previous.needs_more_observation,
     suggested_changes: { new_interests: newInterests.map((item) => item.label),
@@ -351,6 +271,7 @@ export async function confirmPersonalization(db, teacherId, context, id, details
   validated.context_opportunities = validated.context_opportunities.map((item) => ({ ...item,
     source_refs: opportunities.get(item.id)?.text === item.text ? opportunities.get(item.id).source_refs ?? [] : [],
     source_kind: opportunities.get(item.id)?.text === item.text ? opportunities.get(item.id).source_kind ?? "teacher_context" : "teacher_entry" }));
+  validated.classroom_snapshot = original.classroom_snapshot;
   validated.evidence_coverage = original.evidence_coverage ?? {};
   validated.needs_more_observation = original.needs_more_observation ?? [];
   const confirmed = (await db.query(`update annual_personalization_reviews set status='confirmed',details=$1::jsonb,

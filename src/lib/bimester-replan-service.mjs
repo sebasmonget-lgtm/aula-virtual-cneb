@@ -136,6 +136,7 @@ export async function confirmBimesterReplan(db, { teacherId, classroom, period, 
       throw new VersionConflictError("Ya hay un borrador del plan anual. Revísalo antes de reajustar.");
     const slots = (await tx.query(`select ps.* from project_slots ps where ps.annual_plan_id=$1 order by slot_index`, [source.id])).rows;
     const cutoff = [dateOnly(period.ends_on), todayInPeru()].sort().at(-1);
+    if (source.proposal?.journey_version === 2) throw new Error("Abre Mi año y Cambiar con Ayni para crear oportunidades completas desde las nuevas observaciones.");
     const proposal = structuredClone(source.proposal);
     const applied = [];
     for (const decision of adjustments.filter((item) => item.choice === "accept")) {
