@@ -61,4 +61,6 @@ Pendiente humano: voz/micrófono físico, cámara y permisos en Android/iOS, cal
 
 Solo staging QA V2 autorizado: commit limpio, push codex/qa-ayni-v2, preview en cuenta aislada ayni4, smoke de páginas/health/auth/permisos antes de alias y verificación SHA. Producción debe conservar 055c77efa63981a95e9b21e03e295e735b713cdf.
 
+Smoke adicional de 16 assets y PATCH/DELETE sin sesión detectó 405 en un primer preview que no se asignó al alias. Se añadieron los exports de ambos métodos en la entrada Next; deben devolver 401 mediante el bridge autorizado en el preview final. No se ampliaron permisos ni se modificaron datos.
+
 Rollback del alias QA al preview e09b16e https://ayni-aula-staging-mktm5gxi8-ayni4.vercel.app. Conservar tabla/vista/revisiones: si ya hay correcciones, mantener lectores efectivos para no reintroducir texto obsoleto ni retirados al revertir código. No DROP, borrado de evidencias ni cambio de planes congelados.

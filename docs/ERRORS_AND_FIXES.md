@@ -1453,3 +1453,11 @@ Síntoma: cuatro notas QA de la captura automatizada quedaron asociadas a la sel
 **Solución validada.** Misma proyección en todos los brazos (revisión efectiva espontánea, cero para fuentes sin revisión), IDs/procedencia originales y huella con revisión/texto. Suite de regresión pasó, incluyendo corrección, retiro, contexto anual y permisos. No fue desplegado el estado fallido.
 
 **Prevención.** Aplicar patches verificando coincidencias, normalizar terminadores para scripts locales y ejecutar lectores downstream además del test de escritura antes de publicar.
+
+## 2026-10-03 — Métodos de edición ausentes en la entrada Next
+
+**Síntoma/causa.** El smoke previo al alias detectó HTTP 405 en PATCH/DELETE del preview. La API Node local y su CORS aceptaban los métodos, pero app/api/[...path]/route.js exportaba solo GET/POST/PUT/OPTIONS.
+
+**Solución.** Exponer PATCH y DELETE hacia el mismo bridge/autorización, sin nuevos permisos. Rebuild de los dos runtimes y smoke remoto que exige 401 sin sesión para ambos métodos antes de mover el alias. El preview incompleto no se asignó al QA estable.
+
+**Prevención.** Comprobar los métodos en el deployment además de la API local, incluyendo guard de sesión y assets. No asumir que la prueba local equivale a la entrada serverless.
