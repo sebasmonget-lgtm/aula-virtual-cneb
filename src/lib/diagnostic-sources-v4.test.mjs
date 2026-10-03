@@ -279,14 +279,14 @@ test("entrevista parcial, reload, confirmación, impresión y adjunto privado si
   } finally { await db.close(); await rm(temp, { recursive: true, force: true }); }
 });
 
-test("nueve preguntas breves; la familia aporta contexto sin cobertura ni evidencia", async () => {
+test("seis preguntas breves; la familia aporta contexto sin cobertura ni evidencia", async () => {
   const groups = familyInterviewQuestionGroups("Camila");
   assert.equal(groups.length, 1);
   const questions = groups.flatMap((group) => group.questions);
-  assert.equal(questions.length, 9);
+  assert.equal(questions.length, 6);
   assert.ok(questions.every((question) => familyInterviewCategories.includes(question.key)));
   assert.match(questions[0].label, /Camila/);
-  assert.match(questions[8].label, /opcional/);
+  assert.match(questions[5].label, /profesora/);
   assert.deepEqual(validateFamilyInterviewDetails({}), {});
   assert.deepEqual(validateFamilyInterviewDetails({ home_languages: "Quechua" }), { language_context: "Quechua" });
   const db = await database();

@@ -48,7 +48,8 @@ test("dos familias producen contextos individuales y señales de aula distintos 
   assert.notDeepEqual(proposalA.context_opportunities.map((row) => row.text), proposalB.context_opportunities.map((row) => row.text));
   assert.deepEqual(proposalA.priorities, []);
   assert.deepEqual(proposalB.priorities, []);
-  assert.equal(JSON.stringify(proposalA).includes("Que disfrute mucho"), false);
+  assert.equal(proposalA.group_profile.includes("Que disfrute mucho"), false);
+  assert.ok(JSON.stringify(proposalA.classroom_snapshot).includes("Que disfrute mucho"));
 });
 
 test("aulas pequeñas conservan temas de planificación sin exponer nombres ni conteos de celdas pequeñas", () => {

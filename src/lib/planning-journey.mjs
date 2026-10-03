@@ -58,7 +58,7 @@ export async function loadPlanningJourney(apiUrl, fetcher = fetch) {
 /** Opening a step is based on confirmed parent records, never a completed screen. */
 export function canOpenPlanningStep(journey, step) {
   if (step === "diagnostic") return true;
-  if (step === "annual") return (journey?.studentCount ?? 0) > 0 || journey?.hasConfirmedAnnual === true;
+  if (step === "annual") return true;
   if (step === "experiences") return journey?.hasConfirmedAnnual === true;
   if (step === "activities") return journey?.hasConfirmedAnnual === true && journey?.hasConfirmedExperience === true;
   return false;

@@ -74,14 +74,11 @@ export const interviewPreviousEducationTypeOptions = Object.freeze([
   { id: "nursery", label: "Cuna" }, { id: "kindergarten", label: "Jardín" },
   { id: "daycare", label: "Guardería" }, { id: "other", label: "Otro espacio" },
 ]);
-export const familyInterviewQuestionGroups = (name) => [{ title: "Conozcamos a su niño o niña", questions: [
-  { key: "interests", label: "¿Qué le gusta mucho hacer a " + name + "?", hint: "¿A qué juega, qué le llama la atención o sobre qué conversa?" },
-  { key: "autonomy_context", label: "En un día normal, ¿qué hace por sí mismo/a y en qué pide ayuda?" },
-  { key: "communication_context", label: "¿Cómo se comunica cuando quiere contar o pedir algo? ¿Qué idiomas usa en casa y con quién?" },
-  { key: "emotional_support_context", label: "Cuando se alegra, se enoja, se frustra o se pone triste, ¿qué le ayuda a sentirse mejor?" },
-  { key: "social_context", label: "¿Cómo juega y se relaciona con otros niños y adultos?" },
-  { key: "home_activity_example", label: "Cuando juega en casa, ¿qué cosas hace que te llaman la atención?" },
-  { key: "family_community_context", label: "¿Qué personas, lugares, actividades o costumbres forman parte de la vida de " + name + "?" },
-  { key: "participation_support_context", label: "¿Hay algo que deberíamos saber para que " + name + " se sienta cómodo/a y participe mejor? (opcional)" },
-  { key: "family_expectation", label: "¿Hay algo que te gustaría que " + name + " fortalezca o disfrute este año? (opcional)" },
+export const familyInterviewQuestionGroups = (name) => [{ title: "La familia nos cuenta", questions: [
+  { key: "interests", label: "¿Qué disfruta hacer " + name + "?", hint: "Cuéntanos un ejemplo. También puedes decir qué no le interesa." },
+  { key: "social_context", label: "¿Cómo juega, solo/a o con otras personas?" },
+  { key: "home_activity_example", label: "¿Qué suele contar, preguntar, construir o explorar?", hint: "Una experiencia concreta nos ayuda a conocerlo mejor." },
+  { key: "communication_context", label: "¿Qué lenguas escucha o usa y cómo se comunica?" },
+  { key: "family_community_context", label: "¿Qué experiencias, actividades o costumbres de su familia o comunidad son significativas para " + name + "?" },
+  { key: "participation_support_context", label: "¿Hay algo más que quieras que la profesora conozca para acompañarlo y ayudarlo a participar?" },
 ] }];

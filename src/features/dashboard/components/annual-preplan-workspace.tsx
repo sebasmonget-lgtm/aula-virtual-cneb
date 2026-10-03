@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { AsyncButton, CompetencyChecklist, GenerationProgress, LoadingState, WorkflowFeedback } from "./workflow-ui";
 import { AnnualPlanGenerator as LegacyAnnualPlanGenerator } from "./annual-plan-generator";
 import { AnnualPersonalizationWorkspace } from "./annual-personalization-workspace";
+import { AnnualJourneyWorkspace } from "./annual-journey-workspace";
 import { AnnualYearMap } from "./annual-year-map";
 import { buildEditableAnnualSchedule } from "@/src/lib/annual-plan-calendar.mjs";
 import { insertAvailableAnnualRow, moveAnnualRow } from "@/src/lib/annual-year-map.mjs";
@@ -145,7 +146,7 @@ function PreplanTable({ rows, options, calendar, editable, onChange, onDevelop, 
 }
 
 const preparationModes = ["no", "yes"] as const;
-export function AnnualPreplanWorkspace({ onConfirmed, onGoDiagnostic, onDevelop }: { onConfirmed?: () => void; onGoDiagnostic?: () => void;
+function LegacyAnnualPreplanWorkspace({ onConfirmed, onGoDiagnostic, onDevelop }: { onConfirmed?: () => void; onGoDiagnostic?: () => void;
   onDevelop?: (proposalId: string) => void }) {
   const [plans, setPlans] = useState<Plans | null>(null), [context, setContext] = useState<Context | null>(null);
   const [options, setOptions] = useState<Competency[]>([]);
@@ -307,4 +308,10 @@ export function AnnualPreplanWorkspace({ onConfirmed, onGoDiagnostic, onDevelop 
       <Button key={item.id} disabled={reviewNewEvidence || Boolean(busy)} aria-pressed={item.id === selectedId} variant={item.id === selectedId ? "default" : "outline"} onClick={() => { if (item.id === selectedId || !canLeaveWorkspace()) return; setEditRequestId(null); setSelectedId(item.id); setProposal(isPreplan(item) ? item.proposal : null); }}>
         {item.adjustment_label ? `Reajuste ${item.adjustment_label}` : `Versión ${item.version}`} · {item.status === "active" ? "vigente" : item.status === "draft" ? "borrador" : "anterior"}</Button>)}</div></section>}
   </section>;
+}
+
+export function AnnualPreplanWorkspace(props: { onConfirmed?: () => void; onGoDiagnostic?: () => void; onDevelop?: (proposalId: string) => void }) {
+  const [legacy, setLegacy] = useState(process.env.NEXT_PUBLIC_AYNI_ANNUAL_JOURNEY === "0");
+  return legacy ? <><Button variant="ghost" onClick={() => setLegacy(false)}>Volver a Mi año con Ayni</Button><LegacyAnnualPreplanWorkspace {...props} /></>
+    : <AnnualJourneyWorkspace {...props} onLegacy={() => setLegacy(true)} />;
 }

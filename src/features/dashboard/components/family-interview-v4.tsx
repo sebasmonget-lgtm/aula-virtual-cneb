@@ -167,16 +167,16 @@ export function FamilyInterviewEditor({ studentId, studentName: rawStudentName, 
       {readOnly && <Button variant="outline" onClick={() => setCreatingVersion(true)}>Corregir entrevista</Button>}
     </div>}
     <div className="flex items-center justify-between gap-3 text-sm font-semibold text-[#075a6d]">
-      <span>Pregunta {step + 1} de 9</span><span>{Math.round(((step + 1) / 9) * 100)} %</span>
+      <span>Pregunta {step + 1} de {questions.length}</span><span>{Math.round(((step + 1) / questions.length) * 100)} %</span>
     </div>
-    <div className="h-2 overflow-hidden rounded-full bg-[#e0edf3]"><div className="h-full rounded-full bg-[#087d96]" style={{ width: `${((step + 1) / 9) * 100}%` }} /></div>
+    <div className="h-2 overflow-hidden rounded-full bg-[#e0edf3]"><div className="h-full rounded-full bg-[#087d96]" style={{ width: `${((step + 1) / questions.length) * 100}%` }} /></div>
     <article className="min-h-72 space-y-5 rounded-2xl border bg-white p-5" aria-live="polite">
       <h3 className="text-lg font-bold leading-snug text-[#19345b]">{questions[step].label}</h3>
       {questions[step].hint && <p className="text-sm text-[#526b87]">{questions[step].hint}</p>}
-      {step === 0 && <>{chips("interest_tags", interviewInterestOptions, "Elige lo que más le guste")}
+      {questions[step].key === "interests" && <>{chips("interest_tags", interviewInterestOptions, "Elige lo que más le guste")}
         {details.interest_tags?.includes("other") && <label className="block text-sm">¿Qué otro interés?<input className="mt-2 min-h-11 w-full rounded-xl border px-3" disabled={readOnly} maxLength={200} value={details.other_interest_text ?? ""} onChange={(e) => setDetails((v) => ({ ...v, other_interest_text: e.target.value }))} /></label>}
         {shortField("interests", "Un ejemplo corto, si quieres")}</>}
-      {step === 1 && <><p className="text-sm text-[#526b87]">Marca solo las rutinas que quieras contar. Esto no es una prueba.</p>
+      {questions[step].key === "autonomy_context" && <><p className="text-sm text-[#526b87]">Marca solo las rutinas que quieras contar. Esto no es una prueba.</p>
         <div className="space-y-3">{interviewAutonomyOptions.map((item) => <fieldset key={item.id} className="rounded-xl border p-3"><legend className="font-semibold">{item.label}</legend>
           <div className="mt-2 flex flex-wrap gap-2">{interviewAutonomyLevels.map((level) => {
             const selected = details.autonomy_routines?.some((row) => row.id === item.id && row.level === level.id);
@@ -187,7 +187,7 @@ export function FamilyInterviewEditor({ studentId, studentName: rawStudentName, 
               ], structured_options_version: familyInterviewStructuredOptionsVersion }))}
               className={`min-h-10 rounded-full border px-3 text-sm ${selected ? "border-[#087d96] bg-[#e4f7f9]" : "border-[#d7e4ed]"}`}>{level.label}</button>;
           })}</div></fieldset>)}</div>{shortField("autonomy_context", "¿Quieres comentar algo más? (opcional)")}</>}
-      {step === 2 && <>{chips("communication_tags", interviewCommunicationOptions, "¿Cómo suele comunicarse?")}
+      {questions[step].key === "communication_context" && <>{chips("communication_tags", interviewCommunicationOptions, "¿Cómo suele comunicarse?")}
         {shortField("communication_context", "Algo más que quieras contar (opcional)")}
         {chips("language_tags", interviewLanguageOptions, "¿Qué idiomas escucha o usa en casa?")}
         {details.language_tags?.includes("other") && <label className="block text-sm">¿Cuál otro idioma?<input className="mt-2 min-h-11 w-full rounded-xl border px-3" disabled={readOnly} maxLength={200} value={details.other_language_text ?? ""} onChange={(e) => setDetails((v) => ({ ...v, other_language_text: e.target.value }))} /></label>}
@@ -198,44 +198,31 @@ export function FamilyInterviewEditor({ studentId, studentName: rawStudentName, 
               ...(v.home_language_uses ?? []).filter((row) => row.language_tag !== tag),
               ...(e.target.value.trim() ? [{ language_tag: tag, with_whom: e.target.value }] : []),
             ] }))} /></label>)}</>}
-      {step === 3 && <>{chips("emotional_support_tags", interviewEmotionalSupportOptions, "¿Qué suele ayudarle?")}
+      {questions[step].key === "emotional_support_context" && <>{chips("emotional_support_tags", interviewEmotionalSupportOptions, "¿Qué suele ayudarle?")}
         {shortField("emotional_support_context", "¿Cómo suele reaccionar? Un ejemplo breve (opcional)")}</>}
-      {step === 4 && <>{chips("social_play_tags", interviewSocialPlayOptions, "Elige las formas de jugar que reconoces")}
+      {questions[step].key === "social_context" && <>{chips("social_play_tags", interviewSocialPlayOptions, "Elige las formas de jugar que reconoces")}
         {shortField("social_context", "Un ejemplo, si quieres")}</>}
-      {step === 5 && <>{chips("home_activity_tags", interviewHomeActivityOptions, "¿Qué has notado en sus juegos?")}
+      {questions[step].key === "home_activity_example" && <>{chips("home_activity_tags", interviewHomeActivityOptions, "¿Qué has notado en sus juegos?")}
         {shortField("home_activity_example", "Si quieres, cuéntanos un ejemplo")}</>}
-      {step === 6 && <>{chips("community_tags", interviewCommunityOptions, "Personas, lugares y actividades cercanas")}
+      {questions[step].key === "family_community_context" && <>{chips("community_tags", interviewCommunityOptions, "Personas, lugares y actividades cercanas")}
         {details.community_tags?.includes("other") && <label className="block text-sm">¿Qué otra actividad o lugar?<input className="mt-2 min-h-11 w-full rounded-xl border px-3" disabled={readOnly} maxLength={200} value={details.other_community_text ?? ""} onChange={(e) => setDetails((v) => ({ ...v, other_community_text: e.target.value }))} /></label>}
         {shortField("family_community_context", "Algo más sobre su vida familiar o comunidad (opcional)")}
         {shortField("family_community_enjoyed", "¿Hay alguna experiencia que disfrute especialmente? (opcional)")}</>}
-      {step === 7 && <><p className="text-sm text-[#526b87]">Pregunta opcional. No necesitas compartir información privada.</p>
+      {questions[step].key === "participation_support_context" && <><p className="text-sm text-[#526b87]">Pregunta opcional. No necesitas compartir información privada.</p>
         {chips("participation_support_tags", interviewParticipationSupportOptions, "¿Qué le ayuda a participar?")}
         {shortField("participation_support_context", "Algo más que deberíamos saber (opcional)")}</>}
-      {step === 8 && <><p className="text-sm text-[#526b87]">Tu deseo para este año es una expectativa familiar; no es una evaluación del niño.</p>
+      {questions[step].key === "family_expectation" && <><p className="text-sm text-[#526b87]">Tu deseo para este año es una expectativa familiar; no es una evaluación del niño.</p>
         {shortField("family_expectation", "Respuesta corta (opcional)")}</>}
     </article>
     <div className="flex flex-wrap gap-2">
       <Button variant="outline" disabled={step === 0 || busy || audioBusy} onClick={() => setStep((v) => v - 1)}><ArrowLeft /> Anterior</Button>
-      {step < 8 && <Button disabled={busy || audioBusy} onClick={() => setStep((v) => v + 1)}>Siguiente <ArrowRight /></Button>}
+      {step < questions.length - 1 && <Button disabled={busy || audioBusy} onClick={() => setStep((v) => v + 1)}>Siguiente <ArrowRight /></Button>}
       {!readOnly && <AsyncButton variant="outline" busy={busy} disabled={audioBusy} busyLabel="Guardando..." onClick={() => void run(() => saveDraft(true))}><Save /> Guardar y continuar después</AsyncButton>}
-      {step === 8 && (readOnly ? <Button onClick={() => setCreatingVersion(true)}>Corregir entrevista</Button> :
-        <AsyncButton busy={busy} disabled={audioBusy} busyLabel="Guardando..." onClick={() => void run(save)}>Confirmar entrevista</AsyncButton>)}
+      {(readOnly ? <Button onClick={() => setCreatingVersion(true)}>Corregir entrevista</Button> :
+        <AsyncButton busy={busy} disabled={audioBusy} busyLabel="Guardando..." onClick={() => void run(save)}>Guardar entrevista</AsyncButton>)}
     </div>
     {creatingVersion && <Button variant="ghost" disabled={busy} onClick={() => { setCreatingVersion(false); setDetails(confirmed?.details ?? {}); }}>Cancelar cambios</Button>}
-    <details className="rounded-xl border bg-[#f6f9fc] p-4"><summary className="cursor-pointer font-semibold">Datos breves del hogar y experiencias previas</summary>
-      <div className="mt-4 space-y-4">{shortField("family_context", "¿Con quién vive o pasa más tiempo? (opcional)")}
-        <fieldset><legend className="text-sm font-semibold">¿Asistió antes a cuna, jardín u otro espacio? (opcional)</legend>
-          <div className="mt-2 flex flex-wrap gap-2">{interviewPreviousEducationOptions.map((option) => <button key={option.id}
-            type="button" disabled={readOnly || busy} aria-pressed={details.previous_education_status === option.id}
-            className={`min-h-10 rounded-full border px-3 text-sm ${details.previous_education_status === option.id ? "border-[#087d96] bg-[#e4f7f9]" : "border-[#d7e4ed]"}`}
-            onClick={() => setDetails((v) => ({ ...v, previous_education_status: option.id as FamilyInterviewDetails["previous_education_status"],
-              previous_education_type: option.id === "yes" ? v.previous_education_type : undefined }))}>{option.label}</button>)}</div></fieldset>
-        {details.previous_education_status === "yes" && <label className="block text-sm">¿Qué tipo de espacio? (opcional)
-          <select className="mt-2 min-h-11 w-full rounded-xl border px-3" disabled={readOnly || busy}
-            value={details.previous_education_type ?? ""} onChange={(e) => setDetails((v) => ({ ...v,
-              previous_education_type: e.target.value as FamilyInterviewDetails["previous_education_type"] || undefined }))}>
-            <option value="">Sin precisar</option>{interviewPreviousEducationTypeOptions.map((option) => <option key={option.id} value={option.id}>{option.label}</option>)}
-          </select></label>}</div></details>
+    {(details.family_context || details.previous_education_status) && <details className="rounded-xl border p-4"><summary className="cursor-pointer font-semibold">Información de la entrevista anterior</summary><p className="mt-3 text-sm">{details.family_context}</p><p className="mt-2 text-sm">Experiencias previas: {interviewPreviousEducationOptions.find((option) => option.id === details.previous_education_status)?.label} {interviewPreviousEducationTypeOptions.find((option) => option.id === details.previous_education_type)?.label}</p></details>}
     {details.structured_options_version !== 2 && (["language_context", "communication_emotional_context", "adaptation_context", "daily_routine_context", "family_expectations", "previous_education"] as const).some((key) => details[key]) && <details className="rounded-xl border p-4"><summary className="cursor-pointer font-semibold">Respuestas de la entrevista anterior</summary>
       <div className="mt-3 space-y-2">{(["language_context", "communication_emotional_context", "adaptation_context", "daily_routine_context", "family_expectations", "previous_education"] as const)
         .filter((key) => details[key]).map((key) => <p key={key} className="text-sm"><strong>{familyContextLabels[key] ?? key}:</strong> {details[key]}</p>)}</div></details>}

@@ -28,10 +28,9 @@ export function GuidedDiagnostic({ dashboard, onPlan, onStudents, initialStep = 
   const [step, setStep] = useWorkspaceSubview("Planificar", "step", diagnosticStepValues, initialStep === 3 ? 2 : initialStep);
   const [experienceId, setExperienceId] = useState<string | null>(null);
   const [interviewStudentId, setInterviewStudentId] = useState<string | null>(null);
-  const [observationMode, setObservationMode] = useWorkspaceSubview("Planificar", "mode", observationModes, "guided");
+  const [observationMode, setObservationMode] = useWorkspaceSubview("Planificar", "mode", observationModes, "spontaneous");
   const [pendingSpontaneous, setPendingSpontaneous] = useState<number | null>(null);
   const [spontaneousRecords, setSpontaneousRecords] = useState<SpontaneousObservation[] | null>(null);
-  const [reviewPrompt, setReviewPrompt] = useState(false);
   const [studentId, setStudentId] = useState<string | null>(null);
   const [aspectId, setAspectId] = useState("");
   const [note, setNote] = useState("");
@@ -57,19 +56,10 @@ export function GuidedDiagnostic({ dashboard, onPlan, onStudents, initialStep = 
     setSpontaneousRecords(result.observations);
     const count = result.observations.filter((item) => item.classification_source !== "teacher").length;
     setPendingSpontaneous(count);
-    if (initialStep === 3) { if (count) setReviewPrompt(true); else setStep(3); }
-  }).catch(() => { setPendingSpontaneous(null); if (initialStep === 3) setReviewPrompt(true); }); }, [initialStep, setStep]);
+    if (initialStep === 3) setStep(3);
+  }).catch(() => { setPendingSpontaneous(null); if (initialStep === 3) setStep(3); }); }, [initialStep, setStep]);
   function goToStep(next: 1 | 2 | 3) {
-    if (next === 3) {
-      void loadSpontaneousObservations().then((result) => {
-        setSpontaneousRecords(result.observations);
-        const count = result.observations.filter((item) => item.classification_source !== "teacher").length;
-        setPendingSpontaneous(count);
-        if (count) setReviewPrompt(true);
-        else { setStep(3); setStudentId(null); setInterviewStudentId(null); }
-      }).catch(() => { setPendingSpontaneous(null); setReviewPrompt(true); });
-      return;
-    }
+    if (next === 3 && onPlan) { onPlan(); return; }
     setStep(next); setStudentId(null); setInterviewStudentId(null);
   }
   useEffect(() => {
@@ -126,18 +116,17 @@ export function GuidedDiagnostic({ dashboard, onPlan, onStudents, initialStep = 
   const confirmedInterviews = data.students.filter((item) => interviewStatuses[item.id] === "confirmed").length;
   const observedChildren = data.step_progress?.observed_student_count ?? 0;
   const diagnosticSteps = [
-    { label: "Conocer", done: interviewStatusKnown && confirmedInterviews === data.students.length, status: interviewStatusKnown ? `${confirmedInterviews}/${data.students.length} entrevistas` : interviewStatusError ? "Sin actualizar" : "Cargando..." },
+    { label: "Familias", done: interviewStatusKnown && confirmedInterviews === data.students.length, status: interviewStatusKnown ? `${confirmedInterviews}/${data.students.length} entrevistas` : interviewStatusError ? "Sin actualizar" : "Cargando..." },
     { label: "Observar", done: observedChildren === data.students.length && pendingSpontaneous === 0, status: `${observedChildren}/${data.students.length} niños${pendingSpontaneous ? ` · ${pendingSpontaneous} por revisar` : ""}` },
-    { label: "Planificar", done: data.step_progress?.group_review_confirmed ?? false, status: "Síntesis en Mi año" },
+    { label: "Planificar", done: data.step_progress?.group_review_confirmed ?? false, status: "Conversar con Ayni" },
   ];
 
   return <div className="diagnostic-shell space-y-5">
     <header className="flex flex-wrap items-center justify-between gap-4">
-      <div className="flex items-center gap-3"><span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-[#e9ddff] text-[#7652bc]"><ClipboardCheck /></span><div><p className="text-sm font-semibold text-[#087d96]">Conocer al grupo</p><h1 className="text-2xl font-extrabold text-[#172b52]">Diagnóstico</h1><p className="text-sm text-[#61718e]">Observa, registra y continúa cuando puedas.</p></div></div>
+      <div className="flex items-center gap-3"><span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-[#e9ddff] text-[#7652bc]"><ClipboardCheck /></span><div><p className="text-sm font-semibold text-[#087d96]">Conocer al grupo</p><h1 className="text-2xl font-extrabold text-[#172b52]">Conocer mi aula</h1><p className="text-sm text-[#61718e]">Observa, registra y continúa cuando puedas.</p></div></div>
       <span className="rounded-full bg-[#edf5fb] px-4 py-2 text-sm font-semibold text-[#1b5175]">{data.classroom.age_years} años · {data.classroom.section}</span>
     </header>
     <nav className="grid grid-cols-3 gap-2" aria-label="Pasos del diagnóstico">{diagnosticSteps.map((item, index) => <button key={item.label} type="button" disabled={working || audioBusy} aria-current={step === index + 1 ? "step" : undefined} title={`${item.label}: ${item.status}`} onClick={() => goToStep((index + 1) as 1 | 2 | 3)} className={`min-h-16 rounded-xl px-2 py-2 text-center text-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#087d96] ${step === index + 1 ? "bg-[#087d96] text-white" : item.done ? "border border-[#a8dbc1] bg-[#e6f7ed] text-[#176442]" : "bg-[#edf3f9] text-[#405c7e]"}`}><span className="flex items-center justify-center gap-1"><span>{index + 1}. {item.label}</span>{item.done && <span role="img" aria-label="Listo" className="grid size-5 shrink-0 place-items-center rounded-full bg-[#208653] text-white"><Check className="size-3.5" /></span>}</span><span className={`mt-0.5 block text-[11px] font-medium ${step === index + 1 ? "text-white/90" : item.done ? "text-[#176442]" : "text-[#61718e]"}`}>{item.status}</span></button>)}</nav>
-    {reviewPrompt && <div role="alertdialog" aria-modal="true" aria-label="Revisa las observaciones espontáneas" className="fixed inset-0 z-50 grid place-items-center bg-[#10233a]/55 p-4"><div className="w-full max-w-md space-y-3 rounded-2xl bg-white p-6 shadow-xl"><h2 className="text-xl font-bold">Falta revisar observaciones</h2><p className="text-sm">{pendingSpontaneous === null ? "No se pudo comprobar la revisión. Actualiza las observaciones antes de continuar." : `${pendingSpontaneous} ${pendingSpontaneous === 1 ? "observación espontánea espera" : "observaciones espontáneas esperan"} tu decisión.`} Confirma la competencia sugerida, elige otra o déjala sin competencia.</p><div className="flex flex-wrap gap-2"><Button onClick={() => { setReviewPrompt(false); setStep(2); setExperienceId(null); setObservationMode("spontaneous"); window.setTimeout(() => document.getElementById("spontaneous-pending")?.scrollIntoView({ behavior: "smooth", block: "center" }), 150); }}>Ir a revisar</Button><Button variant="outline" onClick={() => { void refreshPendingSpontaneous(); setReviewPrompt(false); }}>Volver</Button></div></div></div>}
     {error && !student && <p role="alert" className="rounded-xl bg-[#fff1d6] p-3 text-sm">{error}</p>}
 
     {step === 1 && interviewStudentId && <FamilyInterviewEditor studentId={interviewStudentId} studentName={data.students.find((item) => item.id === interviewStudentId)?.name ?? "este niño"} printContext={{ institution: dashboard.profile.institution_name, classroom: data.classroom.section }} onSaved={() => setInterviewFeedback("Entrevista guardada. Puedes entrevistar a otro niño.")} onBack={() => setInterviewStudentId(null)} />}
@@ -187,7 +176,7 @@ export function GuidedDiagnostic({ dashboard, onPlan, onStudents, initialStep = 
       <div><h3 className="text-lg font-bold">2. Mientras juegan, observa</h3><p className="mt-1 text-sm text-[#526b87]">Estas son ideas para orientar tu mirada. No tienes que observarlas todas ni registrar a todos los niños hoy.</p>
         <ul className="mt-3 divide-y divide-[#e3ebf2]">{experience.aspects.map((aspect) => <li key={aspect.id} className="py-3"><p className="font-semibold text-[#173b58]">{aspect.label}</p><p className="text-sm text-[#526b87]">{aspect.prompt}</p><ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-[#526b87]">{aspect.examples.map((example) => <li key={example}>{example}</li>)}</ul></li>)}</ul>
       </div>
-      <div className="flex flex-wrap items-center justify-between gap-2"><div><h3 className="text-lg font-bold">3. Elige a un niño y anota lo que viste</h3><p className="text-sm text-[#526b87]">Toca su nombre cuando ocurra algo que quieras recordar. {coverage?.students_with_records ?? 0} de {data.students.length} con algún registro.</p>{spontaneousRecords && <p className="mt-1 text-sm text-[#176442]">Primero aparecen quienes aún no tienen registros de las competencias de esta experiencia.</p>}</div><Button variant="outline" className="min-h-12" onClick={() => goToStep(3)}>Pasar a resumir <ArrowRight /></Button></div>
+      <div className="flex flex-wrap items-center justify-between gap-2"><div><h3 className="text-lg font-bold">3. Elige a un niño y anota lo que viste</h3><p className="text-sm text-[#526b87]">Toca su nombre cuando ocurra algo que quieras recordar. {coverage?.students_with_records ?? 0} de {data.students.length} con algún registro.</p>{spontaneousRecords && <p className="mt-1 text-sm text-[#176442]">Primero aparecen quienes aún no tienen registros de las competencias de esta experiencia.</p>}</div><Button variant="outline" className="min-h-12" onClick={() => goToStep(3)}>Conversar con Ayni <ArrowRight /></Button></div>
       <div className="flex flex-wrap gap-2" aria-label="Filtrar niños">{([
         ["all", "Todos"], ["without", "Sin observaciones"], ["with", "Con observaciones"], ["today", "Observados hoy"],
       ] as const).map(([value, label]) => <button key={value} type="button" aria-pressed={filter === value} onClick={() => setFilter(value)} className={`min-h-11 rounded-full border px-3 text-sm font-semibold ${filter === value ? "border-[#087d96] bg-[#dff3f7] text-[#075d70]" : "border-[#dbe6ef] bg-white text-[#435a78]"}`}>{label}</button>)}</div>
@@ -215,7 +204,7 @@ export function GuidedDiagnostic({ dashboard, onPlan, onStudents, initialStep = 
 
     {step === 3 && <section className="diagnostic-panel space-y-4 p-5"><h2 className="text-xl font-bold">Ayni organizará lo que ya conoces</h2>
       <p className="text-sm text-[#526b87]">En «Así entendí tu aula» verás una propuesta basada en entrevistas y observaciones. Puedes corregirla antes de crear Mi año. Seguirás observando durante el año.</p>
-      {onPlan && <Button className="min-h-12" onClick={onPlan}>Ir a Así entendí tu aula <ArrowRight /></Button>}
+      {onPlan && <Button className="min-h-12" onClick={onPlan}>Conversar con Ayni <ArrowRight /></Button>}
       <details open={legacyReviewOpen} onToggle={(event) => setLegacyReviewOpen(event.currentTarget.open)} className="rounded-xl border p-3">
         <summary className="cursor-pointer text-sm font-semibold">Ver revisiones diagnósticas anteriores y registros individuales</summary>
         {legacyReviewOpen && <DiagnosticReview onObserve={() => { setStep(2); setStudentId(null); }} onPlan={onPlan} onObservationSaved={() => { void loadDiagnostics().then(setData).catch(() => setError("La observación se guardó, pero no se pudo actualizar el avance. Recarga la pantalla.")); }} onGroupConfirmed={() => setData((current) => current ? { ...current, step_progress: { ...current.step_progress, group_review_confirmed: true } } : current)} />}

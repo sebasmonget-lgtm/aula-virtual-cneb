@@ -36,10 +36,10 @@ test("una observación guardada no obliga a cerrar el diagnóstico antes de plan
   assert.equal(next.recommended, "annual");
 });
 
-test("Mi año se abre con padrón; proyectos y actividades conservan sus guardas", () => {
+test("Mi año se abre sin exigir padrón; proyectos y actividades conservan sus guardas", () => {
   const journey = { diagnostic: "in_progress", studentCount: 0, hasConfirmedAnnual: false, hasConfirmedExperience: false };
   assert.equal(canOpenPlanningStep(journey, "diagnostic"), true);
-  assert.equal(canOpenPlanningStep(journey, "annual"), false);
+  assert.equal(canOpenPlanningStep(journey, "annual"), true);
   journey.studentCount = 1;
   assert.equal(canOpenPlanningStep(journey, "annual"), true);
   assert.equal(canOpenPlanningStep(journey, "experiences"), false);
