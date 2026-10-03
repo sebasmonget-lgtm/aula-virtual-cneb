@@ -19,7 +19,7 @@ export class AnnualCalendarError extends Error {
       invalid: "Revisa los bloques y las fechas del calendario escolar.",
       stage_does_not_fit: "La acogida y el diagnóstico no caben al inicio del primer periodo lectivo.",
       project_does_not_fit: "Un proyecto no cabe en su periodo lectivo. Muévelo o cambia su duración entre dos y tres semanas.",
-      incompatible_constraints: "El calendario del aula no permite distribuir doce propuestas de dos o tres semanas con límites lunes–viernes y cubrir todas las fechas. Ayni necesita revisar la incidencia del calendario antes de continuar.",
+      incompatible_constraints: "El calendario del aula no permite distribuir los tramos completos de dos o tres semanas y cubrir todas las fechas. Ayni necesita revisar la incidencia del calendario antes de continuar.",
     };
     super(messages[reason] ?? messages.invalid);
     this.name = "AnnualCalendarError";

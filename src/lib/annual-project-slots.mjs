@@ -14,7 +14,7 @@ export async function persistAnnualProjectSlots(db, planId, schedule) {
   for (const item of existing) if (!indices.has(Number(item.slot_index)))
     await db.query(`delete from project_slots where id=$1 and annual_plan_id=$2`, [item.id, planId]);
   for (const slot of schedule.projects) {
-    const proposalId = plan?.proposal?.proposed_experiences?.[slot.index - 1]?.proposal_id ?? null;
+    const proposalId = plan?.proposal?.editor_version === 3 ? slot.proposal_id : plan?.proposal?.proposed_experiences?.[slot.index - 1]?.proposal_id ?? null;
     if (byIndex.has(slot.index)) await db.query(`update project_slots set calendar_block_id=$1,duration_weeks=$2,
       starts_on=$3::date,ends_on=$4::date,proposal_id=$5 where id=$6 and annual_plan_id=$7`,
     [slot.calendar_block_id, slot.duration_weeks, slot.starts_on, slot.ends_on, proposalId, byIndex.get(slot.index), planId]);

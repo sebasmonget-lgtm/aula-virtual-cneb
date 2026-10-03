@@ -1,3 +1,4 @@
+import { annualDisplayTitle } from "./annual-year-editor.mjs";
 import { Document, HeadingLevel, Paragraph, Packer, TextRun } from "docx";
 
 /** A pure rendering of the confirmed object. No title regex, inference, prompt or enrichment. */
@@ -13,8 +14,8 @@ export function annualJourneyDocumentSections(plan, names = new Map()) {
     ...stage.suggested_experiences, ...stage.what_to_observe, ...(stage.family_actions ?? []), ...(stage.diagnostic_focus ?? []),
     ...(stage.teacher_notes ? [stage.teacher_notes] : [])] });
   for (const [index, row] of plan.proposed_experiences.entries()) {
-    sections.push({ title: `${index + 1}. ${row.title}`, lines: [row.rationale, row.purpose, row.invitation,
-      ...row.children_actions, `${row.planned_start_date} al ${row.planned_end_date}`] });
+    sections.push({ title: `${index + 1}. ${annualDisplayTitle(row.title)}`, lines: [row.rationale, row.purpose, row.invitation,
+      ...row.children_actions, `${row.planned_start_date} al ${row.planned_end_date} · ${row.duration_weeks} semanas · ${row.planned_instructional_days} días lectivos`] });
     for (const opportunity of row.opportunities) sections.push(opportunitySection(opportunity, names));
     sections.push({ title: "Materiales, apoyos y flexibilidad", lines: [...row.materials, ...row.supports, row.flexibility] });
     sections.push({ title: "Fuentes pertinentes", lines: row.source_fact_keys.map((key) => {

@@ -1485,3 +1485,19 @@ Síntoma: cuatro notas QA de la captura automatizada quedaron asociadas a la sel
 **Solución validada.** Coincidencias de frases completas, normalización de plurales y apoyo de IDs curriculares existentes. Narración y lectura tienen dibujos diferenciados; el tema explícito mantiene prioridad y el fallback curricular exige un rol curado. Las pruebas cubren cuerpo/movimiento, cuentos oral/lectura, agua con escritura, Navidad/solidaridad y IDs desconocidos. 28 pruebas focales PASS y mapa ficticio de doce proyectos verificado en escritorio/móvil sin modificar el plan.
 
 **Prevención.** Probar empates semánticos con competencias reales además del título. No convertir cualquier coincidencia curricular en un tema textual pertinente; mantener imágenes neutrales para casos desconocidos y verificar peso/transparencia de cada nuevo asset.
+
+## 2026-10-03 — Feriado en extremo de semana impedía construir un tramo
+
+**Síntoma y causa.** El solver anterior exigía que el primer lunes y último viernes fueran días lectivos. Un feriado en un extremo invalidaba una semana calendario válida. Reemplazar ciegamente doce por quince también podía reinterpretar calendarios/jobs ya guardados.
+
+**Solución validada.** El editor nuevo construye quince posiciones a partir de semanas calendario dentro de bloques lectivos y mantiene por separado las fechas efectivamente lectivas. El solver/lector histórico de doce se conserva para sus contratos y recuperación; upgrade requiere una acción explícita sobre borrador compatible. Pruebas de feriado interior/lunes/viernes y override conservan límites/duración, comprueban asignación única y el caso de dos semanas/nueve días. Suite focal final 65/65 PASS; HTTP local verifica fechas y swaps sin requests IA.
+
+**Prevención.** Probar límites de semana además de conteos, distinguir versión de editor/contrato y no recalcular históricos al leer. Si ya se persistieron quince tramos, mantener sus lectores/exportadores en cualquier rollback. Ver ADR 113 y docs/qa/annual-year-editor-v3-2026-10-03.md.
+
+## 2026-10-03 — Revisión final requería preview completo y trazabilidad de sustitución
+
+**Síntoma y causa.** La candidata nueva enseñaba acciones y motivo pero omitía campos pedagógicos necesarios para una aprobación informada. El evento estructural inicial identificaba insuficientemente a la propuesta desplazada en un swap/sustitución.
+
+**Solución validada.** El preview incluye competencias y detalles completos del contrato con fuentes pertinentes antes de Guardar en Biblioteca. El historial incluye IDs entrante/desplazado y slots origen/destino; la regresión de swap comprueba esos campos y la suite focal final conserva 65/65 PASS. La captura final del preview queda pendiente; el resultado de las pruebas no equivale a aprobación visual.
+
+**Prevención.** Revisar todos los campos que la docente aprueba y registrar ambos lados de una operación estructural. Mantener separado QA de servidor, primeras capturas y QA final: la recaptura móvil/Biblioteca/matriz/filtro/chat y el drag genuino quedaron bloqueados por conectividad local/política de URL, y no deben declararse ejecutados. Pasos de cierre en docs/qa/annual-year-editor-v3-2026-10-03.md.

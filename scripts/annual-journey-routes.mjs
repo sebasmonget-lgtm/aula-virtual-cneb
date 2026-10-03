@@ -12,7 +12,9 @@ import { persistAnnualProjectSlots } from "../src/lib/annual-project-slots.mjs";
 import { confirmAnnualPlanVersion } from "../src/lib/annual-plan-version-service.mjs";
 import { annualJourneySafeText } from "../src/lib/annual-journey-privacy.mjs";
 import { handleJourneyJobs } from "../src/lib/annual-journey-jobs.mjs";
+import { assignAnnualSlots, editAnnualStructure } from "../src/lib/annual-year-editor.mjs";
 import { observationCoverage } from "../src/lib/observation-coverage.mjs";
+import { handleAnnualProposalCreation } from "../src/lib/annual-proposal-creation.mjs";
 
 export async function handleAnnualJourneyRoutes({ request, response, url, db, teacherId, origin, send, readJson,
   annualPlanningContext, annualDocumentContext, createProvider, resolvePlan }) {
@@ -106,7 +108,10 @@ export async function handleAnnualJourneyRoutes({ request, response, url, db, te
       });
       send(response, 201, result, origin); return true;
     }
-    const match = /^\/api\/annual-journey\/([0-9a-f-]{36})\/(intent|remove-intent|apply|keep|move|confirm|copy|refresh)$/i.exec(url.pathname);
+    const editorMatch=/^\/api\/annual-journey\/([0-9a-f-]{36})\/editor-state$/i.exec(url.pathname);
+    if(editorMatch && request.method==="GET") { const row=await load(editorMatch[1],db,false);send(response,200,{protected_ids:await protectedIds(row),today:new Date().toLocaleDateString("en-CA",{timeZone:"America/Lima"})},origin);return true; }
+    if(await handleAnnualProposalCreation({request,response,url,db,context,teacherId,sources,curriculum,send,origin,readJson,load,write,createProvider,resolvePlan}))return true;
+    const match = /^\/api\/annual-journey\/([0-9a-f-]{36})\/(intent|remove-intent|apply|keep|move|structure|upgrade|confirm|copy|refresh)$/i.exec(url.pathname);
     if (!match || request.method !== "POST") { send(response, 404, { error: "Acción no disponible." }, origin); return true; }
     const [, id, operation] = match, body = await readJson(request), revision = expectedRevision(body.expectedRevision);
     draftId = id;
@@ -151,7 +156,7 @@ export async function handleAnnualJourneyRoutes({ request, response, url, db, te
     }
     const base = await load(id); assertRevision(base, revision);
     let proposal = base.proposal;
-    if (proposal.proposed_experiences.length !== 12) journeyFail("preparation_only", "Tu preparación está guardada. Reintenta «Preparar mi año».");
+    if (!proposal.resolved_calendar?.projects?.length) journeyFail("preparation_only", "Tu preparación está guardada. Reintenta «Preparar mi año».");
     if (operation === "apply") {
       if (snapshot.source_fingerprint !== proposal.classroom_snapshot.source_fingerprint || effectiveCalendarFingerprint(calendar) !== proposal.resolved_calendar.calendar_fingerprint)
         throw new VersionConflictError("Las fuentes o el calendario cambiaron. Actualiza la preparación antes de aplicar.");
@@ -169,14 +174,24 @@ export async function handleAnnualJourneyRoutes({ request, response, url, db, te
       if (operation === "remove-intent") proposal = { ...proposal, pending_changes: proposal.pending_changes.filter((c) => c.id !== body.changeId) };
       if (operation === "keep") proposal = { ...proposal, proposed_experiences: proposal.proposed_experiences.map((r) =>
         r.proposal_id === body.proposalId ? { ...r, teacher_protected: !r.teacher_protected } : r) };
-      if (operation === "move") {
+      if (operation === "move" && proposal.editor_version !== 3) {
         const from = proposal.proposed_experiences.findIndex((r) => r.proposal_id === body.proposalId), to = Number(body.to);
         if (from < 0 || !Number.isInteger(to) || to < 0 || to >= 12) journeyFail("invalid", "Revisa la posición de la propuesta.");
         const rows = [...proposal.proposed_experiences], [moving] = rows.splice(from, 1); rows.splice(to, 0, moving);
         const schedule = solveAnnualJourneyCalendar(calendar, rows);
         proposal = { ...proposal, resolved_calendar: schedule, proposed_experiences: materializeJourneyRows(rows, schedule) };
       }
-      if (operation === "apply" || operation === "move") {
+      if (["structure","upgrade"].includes(operation) || operation==="move" && proposal.editor_version===3) {
+        const freshCalendar={...await loadEffectiveCalendar(tx,{teacherId,classroomId:context.id}),initial_stage:context.calendar.initial_stage};
+        if(effectiveCalendarFingerprint(freshCalendar)!==proposal.resolved_calendar.calendar_fingerprint)throw new VersionConflictError("Cambió el calendario. Actualiza la preparación antes de organizar el año.");
+        if(operation==="upgrade") {
+          if(protectedRows.length)journeyFail("protected_proposal","Este año contiene trabajo protegido. Conserva sus fechas; prepara un año nuevo para usar los 15 tramos.");
+          if(proposal.editor_version===3)journeyFail("invalid","Este año ya utiliza 15 tramos.");
+          const schedule=solveAnnualJourneyCalendar(freshCalendar,Array.from({length:15},(_,i)=>({proposal_id:proposal.proposed_experiences[i]?.proposal_id ?? null})));
+          proposal=assignAnnualSlots({...proposal,resolved_calendar:schedule},schedule.projects,proposal.proposed_experiences);
+        } else proposal=editAnnualStructure(proposal,operation==="move"?{kind:"place",proposalId:body.proposalId,targetSlotId:proposal.resolved_calendar.projects[Number(body.to)]?.slot_id}:body.action,{protectedIds:protectedRows,today:new Date().toLocaleDateString("en-CA",{timeZone:"America/Lima"})});
+      }
+      if (["apply","move","structure","upgrade"].includes(operation)) {
         for (const protectedId of protectedRows) {
           const before = row.proposal.proposed_experiences.find((r) => r.proposal_id === protectedId), after = proposal.proposed_experiences.find((r) => r.proposal_id === protectedId);
           if (JSON.stringify(before) !== JSON.stringify(after)) journeyFail("protected_proposal", "Este cambio afectaría trabajo iniciado o una decisión mantenida. El borrador se conserva.");
@@ -184,9 +199,9 @@ export async function handleAnnualJourneyRoutes({ request, response, url, db, te
         if (operation === "apply" && (snapshot.source_fingerprint !== proposal.classroom_snapshot.source_fingerprint
           || effectiveCalendarFingerprint(calendar) !== proposal.resolved_calendar.calendar_fingerprint)) throw new VersionConflictError("Las fuentes o el calendario cambiaron. Actualiza la preparación antes de aplicar.");
       }
-      validateAnnualJourney(proposal, curriculum);
+      validateAnnualJourney(proposal, curriculum, { requireCoverage:operation==="apply" });
       const next = await write(row, proposal, tx);
-      if (operation === "move") await persistAnnualProjectSlots(tx, id, proposal.resolved_calendar);
+      if (["move","structure","upgrade"].includes(operation)) await persistAnnualProjectSlots(tx, id, proposal.resolved_calendar);
       return next;
     });
     send(response, 200, result, origin);

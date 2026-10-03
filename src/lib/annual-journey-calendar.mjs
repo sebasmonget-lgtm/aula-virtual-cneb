@@ -11,7 +11,7 @@ export const effectiveCalendarFingerprint = (calendar) => createHash("sha256").u
 })).digest("hex");
 
 /** Global dynamic program over all teaching weeks. An impossible boundary never skips days. */
-export function solveAnnualJourneyCalendar(calendar, rows = Array.from({ length: 12 }, (_, i) => ({ proposal_id: `slot_${i}` }))) {
+function solveLegacyAnnualJourneyCalendar(calendar, rows) {
   if (rows.length !== 12 || !Array.isArray(calendar.days)) throw new AnnualCalendarError("invalid", { field: "effective_calendar" });
   const eligible = calendar.days.filter((d) => d.is_instructional).map((d) => calendarDay(d.date)).sort();
   if (!eligible.length || new Set(eligible).size !== eligible.length) throw new AnnualCalendarError("invalid", { field: "instructional_dates" });
@@ -66,4 +66,54 @@ export function solveAnnualJourneyCalendar(calendar, rows = Array.from({ length:
   return { version: 2, calendar_version: calendar.version ?? calendar.effective_version,
     calendar_fingerprint: fingerprint, initial_stage, projects: result.slots, assignments,
     integrity: { eligible: eligible.length, assigned: assignments.length, gaps: 0, overlaps: 0 } };
+}
+
+export const ANNUAL_SLOT_COUNT = 15;
+export const ANNUAL_SLOT_PATTERN = [[2, 2, 3], [2, 2, 2, 3], [2, 2, 2, 3], [2, 2, 2, 3]];
+
+/** Calendar weeks define positions; holidays change instructional dates, never duration. */
+export function solveAnnualJourneyCalendar(calendar, rows = Array.from({ length: ANNUAL_SLOT_COUNT }, (_, i) => ({ proposal_id: `slot_${i + 1}` }))) {
+  if (rows.length === 12) return solveLegacyAnnualJourneyCalendar(calendar, rows);
+  if (rows.length !== ANNUAL_SLOT_COUNT || !Array.isArray(calendar.days)) throw new AnnualCalendarError("invalid", { field: "effective_calendar" });
+  const eligible = calendar.days.filter(day => day.is_instructional).map(day => calendarDay(day.date)).sort();
+  if (!eligible.length || new Set(eligible).size !== eligible.length) throw new AnnualCalendarError("invalid", { field: "instructional_dates" });
+  const blocks = (calendar.blocks ?? []).filter(block => block.type === "instructional").sort((a,b) => calendarDay(a.start_date).localeCompare(calendarDay(b.start_date)));
+  if (blocks.length !== 4) throw new AnnualCalendarError("incompatible_constraints", { field: "instructional_blocks", proposals: ANNUAL_SLOT_COUNT });
+  const stage = calendar.initial_stage ?? defaultInitialStage();
+  if (Number(stage.duration_weeks) !== 2) throw new AnnualCalendarError("stage_does_not_fit", { duration_weeks: stage.duration_weeks });
+  const byDate = new Map(calendar.days.map(day => [calendarDay(day.date), day]));
+  const weeksByBlock = blocks.map(block => {
+    const weeks = [];
+    for (let monday = date(block.start_date); monday <= date(block.end_date); monday = new Date(monday.getTime() + 7 * DAY)) {
+      const friday = new Date(monday.getTime() + 4 * DAY);
+      if (monday.getUTCDay() !== 1 || iso(friday) > calendarDay(block.end_date)) throw new AnnualCalendarError("incompatible_constraints", { field: "whole_calendar_weeks" });
+      const dates = [];
+      for (let offset=0; offset<5; offset++) {
+        const key=iso(new Date(monday.getTime()+offset*DAY)), day=byDate.get(key);
+        if (!day) throw new AnnualCalendarError("incompatible_constraints", { field: "missing_calendar_day", date: key, proposals:15 });
+        if (day.calendar_type === "management_week" && day.is_instructional) throw new AnnualCalendarError("invalid", { field: "management_instructional", date: key });
+        if (day.is_instructional) dates.push(key);
+      }
+      weeks.push({ starts_on: iso(monday), ends_on: iso(friday), dates });
+    }
+    return weeks;
+  });
+  if (weeksByBlock.some(weeks=>weeks.length!==9)) throw new AnnualCalendarError("incompatible_constraints", { proposals: ANNUAL_SLOT_COUNT, available_weeks: weeksByBlock.reduce((n,w)=>n+w.length,0)-2, required_weeks:34 });
+  const initialWeeks=weeksByBlock[0].slice(0,2), projects=[];
+  for (let period=0;period<4;period++) {
+    let cursor=period===0?2:0;
+    for (const duration_weeks of ANNUAL_SLOT_PATTERN[period]) {
+      const weeks=weeksByBlock[period].slice(cursor,cursor+duration_weeks), index=projects.length;
+      projects.push({ index:index+1, slot_id:`tramo_${index+1}`, proposal_id:rows[index]?.proposal_id ?? null,
+        calendar_block_id:blocks[period].id ?? null, period:`Bimestre ${period+1}`, duration_weeks,
+        starts_on:weeks[0].starts_on, ends_on:weeks.at(-1).ends_on, instructional_dates:weeks.flatMap(w=>w.dates) });
+      cursor+=duration_weeks;
+    }
+  }
+  const initial_stage={...stage,starts_on:initialWeeks[0].starts_on,ends_on:initialWeeks.at(-1).ends_on,instructional_dates:initialWeeks.flatMap(w=>w.dates)};
+  const assignments=[...initial_stage.instructional_dates.map(day=>({date:day,owner:"initial_stage"})),...projects.flatMap(slot=>slot.instructional_dates.map(day=>({date:day,owner:slot.proposal_id ?? slot.slot_id})))];
+  if (assignments.length!==eligible.length || new Set(assignments.map(a=>a.date)).size!==eligible.length || eligible.some(day=>!assignments.some(a=>a.date===day)))
+    throw new AnnualCalendarError("incompatible_constraints",{field:"assignment_integrity"});
+  return {version:3,calendar_version:calendar.version ?? calendar.effective_version,calendar_fingerprint:effectiveCalendarFingerprint(calendar),
+    initial_stage,projects,assignments,integrity:{eligible:eligible.length,assigned:assignments.length,gaps:0,overlaps:0}};
 }

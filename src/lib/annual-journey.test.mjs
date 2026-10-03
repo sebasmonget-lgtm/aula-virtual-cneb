@@ -33,10 +33,10 @@ const provider = (calls, cards = curriculum, reviewIssues = []) => (routing) => 
   return { output: generationFixture(cards) };
 } });
 
-test("regresión Astra: 172/172, doce propuestas, cero huecos/solapamientos y lunes–viernes", () => {
+test("regresión Astra: 172/172, quince propuestas, cero huecos/solapamientos y lunes–viernes", () => {
   const c = fixtureCalendar(), result = solveAnnualJourneyCalendar(c);
   assert.deepEqual(result.integrity, { eligible: 172, assigned: 172, gaps: 0, overlaps: 0 });
-  assert.equal(result.projects.length, 12);
+  assert.equal(result.projects.length, 15);
   for (const row of result.projects) { assert.equal(new Date(row.starts_on).getUTCDay(), 1); assert.equal(new Date(row.ends_on).getUTCDay(), 5); }
   for (const d of nationalSchoolHolidays2026()) assert.ok(!result.assignments.some((a) => a.date === d.exception_date));
 });
@@ -49,9 +49,9 @@ test("feriados lunes/viernes interiores, gestión y excepción institucional nun
 });
 test("calendario imposible devuelve incidencia concreta y no salta fechas", () => {
   const c = fixtureCalendar(); c.days = c.days.filter((d) => d.date < "2026-07-01");
-  assert.throws(() => solveAnnualJourneyCalendar(c), (e) => e.reason === "incompatible_constraints" && e.details.proposals === 12);
+  assert.throws(() => solveAnnualJourneyCalendar(c), (e) => e.reason === "incompatible_constraints" && e.details.proposals === 15);
   const b = fixtureCalendar(); b.days.find((d) => d.date === "2026-03-16").is_instructional = false;
-  assert.throws(() => solveAnnualJourneyCalendar(b), (e) => e.reason === "stage_does_not_fit");
+  assert.equal(solveAnnualJourneyCalendar(b).initial_stage.instructional_dates.length, 9);
 });
 test("snapshot conserva negación, otro, lengua minoritaria y contradicción sin generalizar", () => {
   const source = { students: [{ id: "one" }, { id: "two" }], names: [], fingerprint: "source", prior: null,
@@ -68,7 +68,7 @@ test("generación completa usa dos llamadas y cobertura concreta incluyendo mome
   const calls = [], plan = await generateAnnualJourney({ context: { year: 2026, age: 5 }, snapshot: snapshot(), curriculum,
     calendar: fixtureCalendar(), createProvider: provider(calls) });
   validateAnnualJourney(plan, curriculum, { confirmation: true });
-  assert.equal(calls.length, 2); assert.equal(plan.proposed_experiences.length, 12);
+  assert.equal(calls.length, 2); assert.equal(plan.proposed_experiences.length, 15);
   const broken = structuredClone(plan); broken.everyday_opportunities = [];
   assert.throws(() => validateAnnualJourney(broken, curriculum), (e) => e.reason === "coverage_missing");
   const nominal = structuredClone(plan); nominal.proposed_experiences[0].primary_competency_ids.push("COM_ORAL");
@@ -165,7 +165,7 @@ test("vertical en PostgreSQL: preparar → cambios → confirmar → Word idént
     const context = { id: created.classroomId, school_year_id: created.schoolYearId, curriculum_version_id: version,
       year: 2026, age: 5, group_context: "Aula de prueba ficticia", available_resources: [], calendar: { initial_stage: defaultInitialStage() } };
     const calls = [];
-    let failing = false;
+    let failing = false, failNewReview = false;
     const route = async (path, body = {}, user = teacherId) => {
       let result;
       await handleAnnualJourneyRoutes({ request: { method: path.endsWith("start") ? "GET" : "POST" }, response: {},
@@ -174,6 +174,9 @@ test("vertical en PostgreSQL: preparar → cambios → confirmar → Word idént
         annualDocumentContext: () => ({ teacher_name: "Docente QA", template_version: "annual-journey-v2" }),
         createProvider: (routing) => ({ generate: async (request) => {
           if (failing) throw Object.assign(new Error("Simulated provider failure"), { name: "OpenAIProviderError" });
+          if(failNewReview && request.workflow==="annual_journey_review") {failNewReview=false;throw Object.assign(new Error("Simulated row review interruption"),{name:"OpenAIProviderError"});}
+          if(request.output_schema.id==="annual-proposal-row-v3") {calls.push({routing,request});const row=generationFixture(request.ai_context_bundle.curriculum.competency_cards).proposals[0];return {output:{...row,title:"Exploramos nuestro mercado",source_fact_keys:[request.ai_context_bundle.classroom.facts.find(f=>f.key.startsWith("proposal_intent_")).key]}};}
+          if(request.workflow==="annual_journey_conversation") {calls.push({routing,request});const ready=request.ai_context_bundle.teacher_intentions.length>0;return {output:{status:ready?"ready":"needs_clarification",message:ready?"Prepararemos una propuesta sobre el mercado.":"¿Qué propuesta quieres crear?",question:"",chips:[]}};}
           return provider(calls, request.ai_context_bundle.curriculum.competency_cards)(routing).generate(request);
         } }) });
       return result;
@@ -189,7 +192,7 @@ test("vertical en PostgreSQL: preparar → cambios → confirmar → Word idént
     assert.equal(generated.status, 201, JSON.stringify(generated.data));
     let current = generated.data;
     assert.equal(current.proposal.resolved_calendar.integrity.assigned, 172);
-    const target = current.proposal.proposed_experiences[0].proposal_id;
+    const target = current.proposal.proposed_experiences.at(-1).proposal_id;
     const add = await route(`${current.id}/intent`, { expectedRevision: current.revision, proposalId: target, text: "Quiero plantas" });
     assert.equal(add.status, 200, JSON.stringify(add.data));
     assert.equal(calls.length, 2);
@@ -202,11 +205,27 @@ test("vertical en PostgreSQL: preparar → cambios → confirmar → Word idént
     failing = false;
     const apply = await route(`${current.id}/apply`, { expectedRevision: current.revision }); assert.equal(apply.status, 200, JSON.stringify(apply.data));
     current = apply.data;
-    const move = await route(`${current.id}/move`,{expectedRevision:current.revision,proposalId:current.proposal.proposed_experiences[0].proposal_id,to:1});
+    const move = await route(`${current.id}/move`,{expectedRevision:current.revision,proposalId:current.proposal.proposed_experiences.at(-1).proposal_id,to:13});
     assert.equal(move.status,200,JSON.stringify(move.data));assert.deepEqual(move.data.proposal.resolved_calendar.integrity,current.proposal.resolved_calendar.integrity);
     assert.equal(calls.length,4);current=move.data;
     const forbidden = await route(`${current.id}/intent`, { expectedRevision: current.revision, text: "Música" }, randomUUID());
     assert.equal(forbidden.status, 404);
+    const structuralCalls=calls.length,future=current.proposal.proposed_experiences.at(-1),slotId=future.slot_id;
+    const removed=await route(`${current.id}/structure`,{expectedRevision:current.revision,action:{kind:"remove",proposalId:future.proposal_id}});assert.equal(removed.status,200,JSON.stringify(removed.data));current=removed.data;
+    const emptyConfirm=await route(`${current.id}/confirm`,{expectedRevision:current.revision});assert.equal(emptyConfirm.status,422);assert.equal(emptyConfirm.data.reason,"empty_slots");
+    const restored=await route(`${current.id}/structure`,{expectedRevision:current.revision,action:{kind:"place",proposalId:future.proposal_id,targetSlotId:slotId}});assert.equal(restored.status,200,JSON.stringify(restored.data));current=restored.data;
+    assert.equal(calls.length,structuralCalls);
+    const conversation=await route(`${current.id}/new-proposal/conversation`,{expectedRevision:current.revision});assert.equal(conversation.status,200,JSON.stringify(conversation.data));
+    const answer=await route(`${current.id}/new-proposal/conversation`,{expectedRevision:current.revision,id:conversation.data.id,revision:conversation.data.revision,text:"Quiero crear un proyecto sobre el mercado"});assert.equal(answer.data.status,"ready");
+    failNewReview=true;
+    const interruptedProposal=await route(`${current.id}/new-proposal/generate`,{expectedRevision:current.revision,id:answer.data.id,revision:answer.data.revision});assert.equal(interruptedProposal.status,503);
+    const rowCalls=calls.filter(c=>c.request.output_schema.id==="annual-proposal-row-v3").length;
+    const createdProposal=await route(`${current.id}/new-proposal/generate`,{expectedRevision:current.revision,id:answer.data.id,revision:answer.data.revision});assert.equal(createdProposal.status,200,JSON.stringify(createdProposal.data));assert.ok(createdProposal.data.candidate);assert.equal(calls.length,structuralCalls+4);
+    assert.equal(calls.filter(c=>c.request.output_schema.id==="annual-proposal-row-v3").length,rowCalls,"Retry reviews the stored row without regenerating it");
+    const illegal=await route(`${current.id}/new-proposal/approve`,{expectedRevision:current.revision,id:answer.data.id},randomUUID());assert.equal(illegal.status,404);
+    const approved=await route(`${current.id}/new-proposal/approve`,{expectedRevision:current.revision,id:answer.data.id,revision:createdProposal.data.revision});assert.equal(approved.status,201,JSON.stringify(approved.data));current=approved.data;
+    assert.equal(current.proposal.available_experiences.length,1);assert.equal(current.proposal.available_experiences[0].planned_start_date,undefined);assert.equal(current.proposal.proposed_experiences.length,15);assert.equal(calls.length,structuralCalls+4);
+    const reusedApproval=await route(`${current.id}/new-proposal/approve`,{expectedRevision:current.revision,id:answer.data.id});assert.equal(reusedApproval.status,422);
     const confirm = await route(`${current.id}/confirm`, { expectedRevision: current.revision }); assert.equal(confirm.status, 200, JSON.stringify(confirm.data));
     const beforeCalls = calls.length, doc = await loadSavedDocument(db, teacherId, "annual_plan", current.id);
     assert.deepEqual(doc.content, current.proposal);

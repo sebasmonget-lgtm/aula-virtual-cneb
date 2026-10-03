@@ -1,4 +1,5 @@
 "use client";
+import { annualDisplayTitle } from "@/src/lib/annual-year-editor.mjs";
 
 import { useMemo, useState } from "react";
 import { ArrowLeft, ArrowRight, CalendarDays, MoveHorizontal, Plus, Trash2 } from "lucide-react";
@@ -63,12 +64,12 @@ export function AnnualYearTimeline({ rows, calendar, effectiveCalendar, selected
             className="absolute inset-y-0 flex items-center justify-center overflow-hidden rounded-md border border-[#cce9e9] bg-[#e7f8f8] px-2 text-center text-xs font-bold text-[#07576c]"
             style={{ left: `${annualMapPercent(initialStage.starts_on, window)}%`, width: `${annualMapWidth(initialStage.starts_on, initialStage.ends_on, window)}%` }}>Acogida</div>}
           {rows.map((row, index) => <button key={row.proposal_id} type="button" aria-pressed={selectedId === row.proposal_id}
-            aria-label={`${index + 1}. ${row.title}, ${row.experience_type === "unit" ? "unidad" : "proyecto"}, ${compact(row.start)} al ${compact(row.end)}`}
+            aria-label={`${index + 1}. ${annualDisplayTitle(row.title)}, ${row.experience_type === "unit" ? "unidad" : "proyecto"}, ${compact(row.start)} al ${compact(row.end)}`}
             onClick={() => onSelect(row.proposal_id)}
             className={`absolute inset-y-0 z-10 flex min-w-0 flex-col items-center justify-center overflow-hidden rounded-md border px-1 text-center text-[#173352] transition-transform hover:-translate-y-1 focus-visible:z-20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#087d96] ${styles[index % styles.length]} ${selectedId === row.proposal_id ? "ring-2 ring-[#087d96] ring-offset-1" : ""}`}
             style={{ left: `${annualMapPercent(row.start, window)}%`, width: `${annualMapWidth(row.start, row.end, window)}%` }}>
             <ProjectPictogram project={row} className="mb-1 size-16 max-w-full" />
-            <span className="mb-1 text-xs font-bold">{String(index + 1).padStart(2, "0")}</span><span className="w-full min-w-0 break-words text-xs font-bold leading-4" title={row.title}>{row.title}</span>
+            <span className="mb-1 text-xs font-bold">{String(index + 1).padStart(2, "0")}</span><span className="w-full min-w-0 break-words text-xs font-bold leading-4" title={annualDisplayTitle(row.title)}>{annualDisplayTitle(row.title)}</span>
             <span className="mt-2 rounded-full bg-white/75 px-1 text-xs">{row.experience_type === "unit" ? "Unidad" : "Proyecto"}</span>
             <span className="text-xs">{row.duration_weeks} sem</span></button>)}
           {holidays.map((holiday) => <div key={holiday.start} aria-hidden="true" className="pointer-events-none absolute inset-y-0 z-30 w-px bg-[#d83f4b]"
@@ -121,13 +122,13 @@ export function AnnualYearMap({ rows, available, calendar, effectiveCalendar, sl
       </div>
       <details className="mt-3 text-sm lg:hidden"><summary className="min-h-11 cursor-pointer py-3 font-semibold text-[#07576c]">Competencias y fechas de la propuesta</summary><ul className="space-y-2">{selected.primary_competency_ids.map((id) => <li key={id}>{names.get(id) ?? id}</li>)}</ul><p className="mt-3">Inicio: {compact(selected.start)} {calendar.school_year} · Fin: {compact(selected.end)} {calendar.school_year}</p><p>{selected.period} · {selected.days != null ? `${selected.days} días de clase` : `${selected.duration_weeks} semanas`}</p></details>
       {editing && replacementOpen && <div className="mt-3 flex flex-wrap gap-2 rounded-xl bg-[#f3f8fb] p-3 text-sm"><b className="w-full">Sustituir por una propuesta disponible</b>
-        {available.map((row) => <Button key={row.proposal_id} type="button" variant="outline" onClick={() => { onReplace(row.proposal_id); setReplacementOpen(false); }}>{row.title}</Button>)}</div>}
+        {available.map((row) => <Button key={row.proposal_id} type="button" variant="outline" onClick={() => { onReplace(row.proposal_id); setReplacementOpen(false); }}>{annualDisplayTitle(row.title)}</Button>)}</div>}
     </section>}
     <section className="rounded-2xl border border-[#d8e8f0] bg-white p-4 shadow-sm" aria-label="Propuestas disponibles">
       <div className="flex flex-wrap items-center justify-between gap-2"><div><h2 className="font-extrabold text-[#172b52]">Propuestas disponibles</h2><p className="text-xs text-[#526b87]">Ideas retiradas o pendientes para incorporar al año.</p></div>
         {editing && <Button type="button" variant="outline" onClick={onAddManual}><Plus className="size-4" /> Nueva propuesta</Button>}</div>
       {available.length ? <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">{available.map((row, index) => <article key={row.proposal_id} className={`rounded-xl border p-3 ${styles[index % styles.length]}`}>
-        <div className="flex items-center gap-2"><ProjectPictogram project={row} className="size-10" /><h3 className="text-sm font-bold">{row.title}</h3></div><p className="mt-1 text-xs">{row.experience_type === "unit" ? "Unidad" : "Proyecto"} · {row.duration_weeks} semanas</p>
+        <div className="flex items-center gap-2"><ProjectPictogram project={row} className="size-10" /><h3 className="text-sm font-bold">{annualDisplayTitle(row.title)}</h3></div><p className="mt-1 text-xs">{row.experience_type === "unit" ? "Unidad" : "Proyecto"} · {row.duration_weeks} semanas</p>
         {editing && <Button type="button" size="sm" variant="outline" className="mt-2" onClick={() => onRestore(row.proposal_id)}><MoveHorizontal className="size-4" /> Incorporar al año</Button>}</article>)}</div>
         : <p className="mt-3 rounded-xl bg-[#f6f9fc] p-3 text-sm text-[#526b87]">Todas las propuestas de esta versión están ubicadas en el año.</p>}
     </section>
