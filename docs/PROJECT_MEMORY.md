@@ -1,5 +1,12 @@
 # Memoria del proyecto Ayni Aula
 
+## Recorrido inicial de Ayni V2, 2026-10-03
+
+Implementado sobre el último remoto consolidado 055c77e (fetch inicial y de cierre). Familias queda en seis preguntas opcionales; Observar abre espontánea y permite llegar al año sin trámites de revisión. Mi año usa snapshot literal y anonimizador independiente, ideas docentes opcionales, doce tarjetas completas, un asistente contextual y ChangeSet persistido. Generación normal: Sol high + revisión Sol medium. Cambio contextual: dos llamadas por lote; alcance global añade Luna low. Reparación localizada acotada, sin regeneraciones por mensaje.
+
+El calendario efectivo compartido se optimiza globalmente: regresión 172/172, cero huecos y solapamientos. Confirmación valida fuentes/calendario/CAS y congela el objeto; Word V2 solo lo renderiza. Se preservan históricos, rutas y exportadores antiguos mediante adaptadores; feature flag de presentación NEXT_PUBLIC_AYNI_ANNUAL_JOURNEY=0. Sin migración ni despliegue. Arquitectura, rollback y preguntas: docs/annual-journey-v2.md; pruebas y límites: docs/qa/annual-journey-v2-2026-10-03.md. 87 casos distintos PASS, typecheck/lint/build PASS y recorrido de navegador con proveedor simulado y datos ficticios. Calidad del proveedor real y piloto docente aún no evaluados.
+
+
 ## Bloqueo del smoke anual en Preview, 2026-10-02
 
 El Preview de `b94cd6e` cargó la revisión del aula, pero generar propuestas falló por la ruta de compilación capturada con `import.meta.url` en el cargador personalizado. Se corrigió únicamente la lectura de las mismas dos referencias desde `process.cwd()`, como los cargadores existentes; no se cambia contenido curricular ni negocio. 13 pruebas focales, typecheck, lint, build Next/webpack y trazado de ambas referencias PASS. Para avanzar a producción se requiere el commit correctivo y el smoke remoto con Mi año vigente; no tomar el READY de `b94cd6e` como validación de generación. Ver `ERRORS_AND_FIXES.md`.

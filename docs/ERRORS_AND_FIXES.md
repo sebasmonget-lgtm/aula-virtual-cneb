@@ -1405,3 +1405,16 @@ Síntoma: cuatro notas QA de la captura automatizada quedaron asociadas a la sel
 **Validación.** 33 pruebas focales PASS, typecheck/lint/build PASS; navegador confirma Semana/F5, V2/F5, V1/Atrás y retorno a Conclusiones de Bimestre 4 en copia QA aislada. Deshacer idea restaura contenido/posición y respeta máximo diez. Detalle y límites en docs/qa/p2p3-ux-closure-2026-10-02.md.
 
 **Prevención.** Persistir selección de presentación con parámetros validados; nunca introducir contenido pedagógico en URL. Mantener un solo guard por interacción y comprobar URL, selección y contenido visibles juntos.
+
+
+## 2026-10-03 — Interpretación de fuentes y calendario incompleto en el recorrido anual
+
+**Síntoma.** La auditoría encontró negaciones convertidas en intereses, pérdida de respuestas libres/otro, generalización por conteos y 26 fechas sin asignar entre 172 elegibles. La formalización posterior podía introducir contenido que la docente no había confirmado.
+
+**Causa raíz.** Extracción por palabras clave, agregación sin sujeto, asignación greedy independiente por bimestre y dos contratos pedagógicos antes/después de confirmar. El anonimizador de clasificación descartaba además textos familiares enteros y palabras útiles capitalizadas al reutilizarlo para el contexto anual.
+
+**Solución validada.** Snapshot literal por fuente y sujeto, señalización explícita sin inferencia regex, copia anonimizada propia que conserva las lenguas probadas; resolución global sobre calendario efectivo y validación de cada asignación; contrato pedagógico completo antes de confirmación; exportación pura del mismo objeto. La navegación ya no exige confirmar atribuciones individuales. Se conserva contenido histórico y evidencia original privada.
+
+**Validación.** Regresión 172/172, cero huecos/solapamientos; negación, otro, Shipibo-konibo, contradicción, muchos registros de un sujeto, estados de evidencia y reparaciones acotadas; dos Word con XML pedagógico igual y cero nuevas llamadas. Recorrido real de navegador con datos ficticios y proveedor simulado. 87 casos distintos y typecheck/lint/build PASS; límites en informe QA V2.
+
+**Prevención.** No inferir intereses por temas sueltos; conservar fuente/alcance e incertidumbre. Validar estructura, IDs, oportunidades y asignaciones en servidor. Separar copia privada de payload a IA. Toda decisión pedagógica debe existir antes de confirmar. Los errores de SQL se muestran mediante publicErrorMessage y la telemetría de incidencias omite contenido privado.
