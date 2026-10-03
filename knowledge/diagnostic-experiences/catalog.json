@@ -1,5 +1,5 @@
 {
-  "version": "diagnostic-v4.3",
+  "version": "diagnostic-v4.4",
   "status": "development_fixture",
   "experiences": [
     {
@@ -10,33 +10,45 @@
         {
           "id": "choice",
           "competencyId": "PS_IDENTIDAD",
-          "label": "Elige un juego",
+          "label": "Elige dónde jugar o qué material usar.",
           "prompt": "Elige dónde jugar y muestra qué le interesa.",
-          "examples": ["Se acerca por iniciativa propia a un espacio de juego.", "Señala o dice qué material quiere usar."],
+          "examples": [
+            "Se acerca por iniciativa propia a un espacio de juego.",
+            "Señala o dice qué material quiere usar."
+          ],
           "patternIndex": 0
         },
         {
           "id": "conversation",
           "competencyId": "COM_ORAL",
-          "label": "Comparte una idea",
+          "label": "Cuenta cómo quiere jugar y responde a otro niño.",
           "prompt": "Cuenta lo que quiere hacer y atiende a la respuesta de otro niño.",
-          "examples": ["Explica cómo quiere jugar.", "Responde a una propuesta de otro niño."],
+          "examples": [
+            "Explica cómo quiere jugar.",
+            "Responde a una propuesta de otro niño."
+          ],
           "patternIndex": 1
         },
         {
           "id": "agreements",
           "competencyId": "PS_CONVIVE",
-          "label": "Acuerda cómo jugar",
+          "label": "Propone cómo compartir materiales o turnarse.",
           "prompt": "Propone o acepta una manera de compartir el juego.",
-          "examples": ["Espera su turno después de conversarlo.", "Propone repartir materiales."],
+          "examples": [
+            "Espera su turno después de conversarlo.",
+            "Propone repartir materiales."
+          ],
           "patternIndex": 1
         },
         {
           "id": "joins_game",
           "competencyId": "PS_CONVIVE",
-          "label": "Se incorpora al grupo",
+          "label": "Se acerca a otros niños y se suma al juego.",
           "prompt": "Se acerca a otros niños y participa en el juego a su manera.",
-          "examples": ["Observa y luego se suma al juego.", "Invita a otro niño a participar."],
+          "examples": [
+            "Observa y luego se suma al juego.",
+            "Invita a otro niño a participar."
+          ],
           "patternIndex": 1
         }
       ],
@@ -58,33 +70,45 @@
         {
           "id": "movement",
           "competencyId": "PSICO_MOTRICIDAD",
-          "label": "Explora movimientos",
+          "label": "Prueba correr, girar, saltar o agacharse.",
           "prompt": "Prueba distintas maneras de moverse durante el juego.",
-          "examples": ["Corre, gira o se agacha al explorar.", "Cambia de dirección al encontrar un obstáculo."],
+          "examples": [
+            "Corre, gira o se agacha al explorar.",
+            "Cambia de dirección al encontrar un obstáculo."
+          ],
           "patternIndex": 0
         },
         {
           "id": "creation",
           "competencyId": "COM_ARTE",
-          "label": "Prueba materiales",
+          "label": "Combina papel, pintura u otros materiales para crear.",
           "prompt": "Combina materiales para crear algo propio.",
-          "examples": ["Prueba varias formas de usar papel o pintura.", "Une materiales para representar una idea."],
+          "examples": [
+            "Prueba varias formas de usar papel o pintura.",
+            "Une materiales para representar una idea."
+          ],
           "patternIndex": 0
         },
         {
           "id": "adjust_movement",
           "competencyId": "PSICO_MOTRICIDAD",
-          "label": "Ajusta su movimiento",
+          "label": "Cambia cómo se mueve para pasar un obstáculo.",
           "prompt": "Cambia cómo se mueve cuando el juego lo requiere.",
-          "examples": ["Pasa por debajo o alrededor de un objeto.", "Vuelve a intentarlo de otra manera."],
+          "examples": [
+            "Pasa por debajo o alrededor de un objeto.",
+            "Vuelve a intentarlo de otra manera."
+          ],
           "patternIndex": 0
         },
         {
           "id": "express_idea",
           "competencyId": "COM_ARTE",
-          "label": "Expresa una idea",
+          "label": "Representa algo con su cuerpo o con materiales.",
           "prompt": "Usa movimientos o materiales para mostrar lo que imagina.",
-          "examples": ["Representa un animal con el cuerpo.", "Cuenta qué quiso crear con sus materiales."],
+          "examples": [
+            "Representa un animal con el cuerpo.",
+            "Cuenta qué quiso crear con sus materiales."
+          ],
           "patternIndex": 0
         }
       ],
@@ -106,33 +130,45 @@
         {
           "id": "quantity",
           "competencyId": "MAT_CANTIDAD",
-          "label": "Reúne objetos",
+          "label": "Cuenta o reúne objetos que necesita para jugar.",
           "prompt": "Cuenta o reúne objetos para resolver una situación de juego.",
-          "examples": ["Busca las piezas que faltan.", "Cuenta objetos para repartirlos."],
+          "examples": [
+            "Busca las piezas que faltan.",
+            "Cuenta objetos para repartirlos."
+          ],
           "patternIndex": 0
         },
         {
           "id": "space",
           "competencyId": "MAT_FORMA",
-          "label": "Ubica objetos",
+          "label": "Coloca objetos o explica por dónde pasar.",
           "prompt": "Coloca objetos o explica por dónde pasar en el recorrido.",
-          "examples": ["Pone un objeto dentro o detrás de otro.", "Señala un camino para llegar a un lugar."],
+          "examples": [
+            "Pone un objeto dentro o detrás de otro.",
+            "Señala un camino para llegar a un lugar."
+          ],
           "patternIndex": 0
         },
         {
           "id": "compare_groups",
           "competencyId": "MAT_CANTIDAD",
-          "label": "Compara cantidades",
+          "label": "Compara si hay más, menos o igual cantidad de objetos.",
           "prompt": "Nota si un grupo de objetos tiene más, menos o la misma cantidad.",
-          "examples": ["Acerca dos grupos de fichas para compararlos.", "Dice que faltan piezas para completar el juego."],
+          "examples": [
+            "Acerca dos grupos de fichas para compararlos.",
+            "Dice que faltan piezas para completar el juego."
+          ],
           "patternIndex": 0
         },
         {
           "id": "change_route",
           "competencyId": "MAT_FORMA",
-          "label": "Cambia el recorrido",
+          "label": "Busca otro camino cuando no puede pasar.",
           "prompt": "Prueba otro camino cuando algo impide pasar.",
-          "examples": ["Rodea un obstáculo.", "Mueve una pieza para abrir paso."],
+          "examples": [
+            "Rodea un obstáculo.",
+            "Mueve una pieza para abrir paso."
+          ],
           "patternIndex": 0
         }
       ],
@@ -154,33 +190,45 @@
         {
           "id": "question",
           "competencyId": "CYT_INDAGA",
-          "label": "Hace una pregunta",
+          "label": "Pregunta por algo que ve y le llama la atención.",
           "prompt": "Pregunta por algo que ve o le llama la atención.",
-          "examples": ["Pregunta por qué flota un objeto.", "Se pregunta qué hay debajo de una hoja."],
+          "examples": [
+            "Pregunta por qué flota un objeto.",
+            "Se pregunta qué hay debajo de una hoja."
+          ],
           "patternIndex": 0
         },
         {
           "id": "tell_discovery",
           "competencyId": "COM_ORAL",
-          "label": "Cuenta un hallazgo",
+          "label": "Cuenta a otro niño o a la profesora lo que encontró.",
           "prompt": "Describe a otro niño o a la docente lo que observó.",
-          "examples": ["Explica qué pasó al mezclar materiales.", "Muestra algo que encontró y lo describe."],
+          "examples": [
+            "Explica qué pasó al mezclar materiales.",
+            "Muestra algo que encontró y lo describe."
+          ],
           "patternIndex": 0
         },
         {
           "id": "compare_materials",
           "competencyId": "CYT_INDAGA",
-          "label": "Compara materiales",
+          "label": "Mira o toca dos materiales y dice en qué se diferencian.",
           "prompt": "Mira o toca dos materiales y nota alguna diferencia.",
-          "examples": ["Distingue cuál está seco o mojado.", "Compara el tamaño de dos hojas."],
+          "examples": [
+            "Distingue cuál está seco o mojado.",
+            "Compara el tamaño de dos hojas."
+          ],
           "patternIndex": 0
         },
         {
           "id": "tries_again",
           "competencyId": "CYT_INDAGA",
-          "label": "Prueba otra vez",
+          "label": "Cambia algo de lo que está probando y mira qué ocurre.",
           "prompt": "Cambia algo de su exploración para ver qué ocurre.",
-          "examples": ["Usa otra cantidad de agua.", "Prueba un material diferente."],
+          "examples": [
+            "Usa otra cantidad de agua.",
+            "Prueba un material diferente."
+          ],
           "patternIndex": 0
         }
       ],
@@ -202,33 +250,45 @@
         {
           "id": "reading",
           "competencyId": "COM_LECTURA",
-          "label": "Anticipa la historia",
+          "label": "Dice qué cree que ocurrirá en la historia.",
           "prompt": "Dice qué cree que pasará al mirar el cuento.",
-          "examples": ["Señala una imagen y anticipa una acción.", "Comenta qué podría hacer un personaje."],
+          "examples": [
+            "Señala una imagen y dice qué cree que hará un personaje.",
+            "Comenta qué podría hacer un personaje."
+          ],
           "patternIndex": 0
         },
         {
           "id": "writing",
           "competencyId": "COM_ESCRITURA",
-          "label": "Hace marcas propias",
-          "prompt": "Dibuja o traza marcas para comunicar algo de la historia.",
-          "examples": ["Dibuja un personaje.", "Hace marcas y cuenta qué significan."],
+          "label": "Hace dibujos, trazos o escrituras para representar una idea.",
+          "prompt": "Dibuja, hace trazos o intenta escribir para contar algo de la historia.",
+          "examples": [
+            "Dibuja un personaje.",
+            "Hace trazos o intenta escribir y cuenta qué significan."
+          ],
           "patternIndex": 0
         },
         {
           "id": "retelling",
           "competencyId": "COM_ORAL",
-          "label": "Cuenta una parte",
+          "label": "Cuenta con sus palabras una parte de la historia.",
           "prompt": "Relata con sus palabras algo que ocurrió en el cuento.",
-          "examples": ["Cuenta qué hizo un personaje.", "Relaciona dos momentos de la historia."],
+          "examples": [
+            "Cuenta qué hizo un personaje.",
+            "Relaciona dos momentos de la historia."
+          ],
           "patternIndex": 2
         },
         {
           "id": "shares_marks",
           "competencyId": "COM_ESCRITURA",
-          "label": "Explica sus marcas",
-          "prompt": "Muestra sus trazos y dice qué quiso comunicar.",
-          "examples": ["Señala un dibujo y cuenta qué representa.", "Explica a otro niño sus marcas."],
+          "label": "Explica qué significan sus dibujos, trazos o escrituras.",
+          "prompt": "Muestra sus dibujos, trazos o escrituras y cuenta lo que quiso comunicar.",
+          "examples": [
+            "Señala un dibujo y cuenta qué representa.",
+            "Explica a otro niño lo que representan sus dibujos, trazos o escrituras."
+          ],
           "patternIndex": 0
         }
       ],
@@ -250,9 +310,12 @@
         {
           "id": "l2_oral",
           "competencyId": "CAST_L2_ORAL",
-          "label": "Participa en castellano",
+          "label": "Responde o dice algo en castellano mientras juega.",
           "prompt": "Responde o se expresa en castellano durante un juego cercano.",
-          "examples": ["Responde a una invitación breve.", "Nombra un material que quiere usar."],
+          "examples": [
+            "Responde a una invitación breve.",
+            "Nombra un material que quiere usar."
+          ],
           "patternIndex": 0
         }
       ],
@@ -272,9 +335,12 @@
         {
           "id": "religion",
           "competencyId": "PS_RELIGION",
-          "label": "Comparte una vivencia",
+          "label": "Cuenta cómo cuidan o celebran algo en su familia, si desea hacerlo.",
           "prompt": "Cuenta una experiencia familiar de cuidado o creencias, si desea hacerlo.",
-          "examples": ["Relata una acción de cuidado que conoce.", "Escucha con respeto lo que comparte otro niño."],
+          "examples": [
+            "Relata una acción de cuidado que conoce.",
+            "Escucha con respeto lo que comparte otro niño."
+          ],
           "patternIndex": 0
         }
       ],

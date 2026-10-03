@@ -4,7 +4,7 @@ import { resolveAIExecutionPlan } from "./ai-execution-router-v4.mjs";
 import { createAIProviderForPlan } from "./ai-provider-factory.mjs";
 import { buildProviderRequest } from "./ai-generation-v4.mjs";
 import { JOURNEY_GENERATION_SCHEMA, JOURNEY_PATCH_SCHEMA, JOURNEY_REVIEW_SCHEMA, assertJourneySchema,
-  journeyFail, validateAnnualJourney } from "./annual-journey-contract.mjs";
+  JOURNEY_GENERAL_PROPERTIES, journeyFail, separateUnsupportedInterpretations, validateAnnualJourney } from "./annual-journey-contract.mjs";
 import { solveAnnualJourneyCalendar } from "./annual-journey-calendar.mjs";
 
 export const JOURNEY_RULES = `Eres Ayni, acompañante pedagógico de Educación Inicial. Produce previsiones flexibles, nunca experiencias realizadas.
@@ -16,6 +16,8 @@ Cada competencia requiere acciones infantiles concretas, condiciones, mediación
 Usa solo IDs y capacidades oficiales del currículo recibido. TRANS_TIC permite prever acceso gradual acompañado, sin afirmar que existe equipamiento.
 Solo cita fact_keys existentes que realmente sustenten la razón. Si no hay fuente contextual usa razones curriculares honestas y source_fact_keys vacío.
 Interpreta actuaciones con significado advance, support_needed o ambiguous y alcance individual/subgrupo. No asigna competencia lograda/no lograda.
+Cada interpretación individual cita exclusivamente actuaciones de UN MISMO sujeto child_N. Nunca combines niños bajo scope individual.
+Subgrupo requiere actuaciones de al menos dos sujetos distintos y no equivale al aula entera. Ante duda omite la interpretación.
 Incluye evidence_interpretations solo si orientan materialmente una decisión o apoyo del año; en otro caso conserva las actuaciones sin concluir.
 Una necesidad material debe exponerse como interpretación pendiente de revisión docente; no como hecho ni nivel. No exijas productos finales.
 Todas las decisiones pedagógicas deben aparecer ahora, antes de confirmar. Los documentos posteriores solo renderizan este contenido.
@@ -68,16 +70,28 @@ export function materializeJourneyRows(rows, schedule) {
 
 /** Two normal model calls; bounded local repair only when a validator/reviewer finds a concrete issue. */
 export async function generateAnnualJourney({ context, snapshot, curriculum, calendar, teacherIdeas = "",
-  createProvider = createAIProviderForPlan, resolvePlan = resolveAIExecutionPlan }) {
-  const started = Date.now(), slots = Array.from({ length: 12 }, () => ({ proposal_id: randomUUID() }));
-  const schedule = solveAnnualJourneyCalendar(calendar, slots), events = [];
+  createProvider = createAIProviderForPlan, resolvePlan = resolveAIExecutionPlan, checkpoint = {}, onCheckpoint = async () => {} }) {
+  const started = checkpoint.started ?? Date.now(), slots = checkpoint.slots ?? Array.from({ length: 12 }, () => ({ proposal_id: randomUUID() }));
+  const schedule = checkpoint.schedule ?? solveAnnualJourneyCalendar(calendar, slots), events = checkpoint.events ?? [];
+  const state = { ...checkpoint, started, slots, schedule, events, outputs: checkpoint.outputs ?? [], attempts: checkpoint.attempts ?? [] };
+  const persist = async (stage) => { state.stage = stage; if(stage === "review")state.validation_passed=true;
+    await onCheckpoint(structuredClone(state)); };
+  await persist("calendar");
+  let callIndex = 0;
   const call = async (workflow, bundle, schema, affected) => {
+    const index = callIndex++;
+    if (state.outputs[index]) return assertJourneySchema(state.outputs[index], schema);
+    state.attempts.push({workflow,started_at:new Date().toISOString()});
+    await persist(workflow === "annual_plan" ? "generation" : workflow === "annual_journey_review" ? "review" : state.validation_passed ? "repair" : "validation");
     const routing = resolvePlan({ workflow, task: "generation" });
     const begin = Date.now();
     const response = await createProvider(routing, { timeoutMs: 180000 }).generate(buildProviderRequest(workflow,
       { ...bundle, curriculum: { age: context.age, competency_cards: curriculum }, classroom: providerSnapshot(snapshot) }, routing, schema, JOURNEY_RULES));
     events.push({ ...metadata(response, routing, workflow, affected), duration_ms: Date.now() - begin });
-    return assertJourneySchema(response.output, schema);
+    const output = assertJourneySchema(response.output, schema);
+    state.outputs[index] = output;
+    await persist(state.stage);
+    return output;
   };
   const output = await call("annual_plan", { task: "Genera el año completo. Devuelve las doce propuestas en el orden de las ventanas.",
     teacher_preferences: teacherIdeas, calendar: schedule.projects.map(({ index, starts_on, ends_on }) => ({ index, starts_on, ends_on })) }, JOURNEY_GENERATION_SCHEMA, 12);
@@ -87,12 +101,17 @@ export async function generateAnnualJourney({ context, snapshot, curriculum, cal
       materializeJourneyRows(proposals.map((row, i) => ({ ...row, proposal_id: slots[i].proposal_id })), schedule),
     resolved_calendar: schedule, pending_changes: [], change_history: [], pedagogical_review: { status: "pending" },
     metrics: { started_at: new Date(started).toISOString(), generation_ms: Date.now() - started, corrections: 0, regenerations: 1, operations: [] } };
-  plan = await reviewAndRepair(plan, curriculum, call);
+  state.candidate = plan; await persist("validation");
+  plan = await reviewAndRepair(plan, curriculum, call, [], async (candidate, stage) => {
+    state.candidate = candidate; await persist(stage);
+  });
   plan.metrics.operations = events; plan.metrics.generation_ms = Date.now() - started;
   return plan;
 }
 
-async function reviewAndRepair(plan, curriculum, call, protectedIds = []) {
+async function reviewAndRepair(plan, curriculum, call, protectedIds = [], onStage = async () => {}) {
+  plan = separateUnsupportedInterpretations(plan);
+  await onStage(plan, "validation");
   let deterministicRepair = false;
   try { validateAnnualJourney(plan, curriculum); }
   catch (error) {
@@ -100,19 +119,34 @@ async function reviewAndRepair(plan, curriculum, call, protectedIds = []) {
     if (!id || protectedIds.includes(id) || !plan.proposed_experiences.some((r) => r.proposal_id === id)) throw error;
     const patch = await call("annual_journey_repair", { task: "Repara únicamente la incidencia determinística señalada. No cambies otras propuestas.",
       plan: providerPlan(plan), issues: [{ proposal_id: id, reason: error.message }], affected_proposal_ids: [id] }, JOURNEY_PATCH_SCHEMA, 1);
-    plan = applyJourneyPatch(plan, patch, new Set([id])); validateAnnualJourney(plan, curriculum);
+    plan = separateUnsupportedInterpretations(applyJourneyPatch(plan, patch, new Set([id]))); validateAnnualJourney(plan, curriculum);
     deterministicRepair = true;
   }
-  const review = await call("annual_journey_review", { task: "Revisa sustento semántico, negaciones, alcance, diversidad, viabilidad, relación de oportunidades/capacidades. Emite solo incidencias concretas; proposal_id vacío indica una incidencia global.",
+  await onStage(plan, "review");
+  const review = await call("annual_journey_review", { task: "Revisa sustento semántico, negaciones, alcance, diversidad, viabilidad, relación de oportunidades/capacidades. Comprueba que ninguna razón o apoyo retenga una conclusión cuyo sustento figura en insufficient_interpretations. Esos registros son desconocimiento, no necesidades ni avances. Emite solo incidencias concretas; proposal_id vacío indica una incidencia global.",
     plan: providerPlan(plan) }, JOURNEY_REVIEW_SCHEMA, plan.proposed_experiences.length);
   if (review.issues.length) {
     if (deterministicRepair) journeyFail("repair_failed", "La reparación todavía presenta incidencias. El borrador guardado se conserva.", { issues: review.issues });
-    const ids = [...new Set(review.issues.map((x) => x.proposal_id))];
-    if (ids.some((id) => !id || protectedIds.includes(id) || !plan.proposed_experiences.some((r) => r.proposal_id === id)))
+    const ids = [...new Set(review.issues.map((x) => x.proposal_id).filter(Boolean))];
+    if (ids.some((id) => protectedIds.includes(id) || !plan.proposed_experiences.some((r) => r.proposal_id === id)))
       journeyFail("semantic_review", "Ayni encontró una incidencia global. El borrador se conserva; revisa o vuelve a preparar el año.", { issues: review.issues });
+    const global = review.issues.some(x => !x.proposal_id);
+    // Global prose can be repaired without regenerating the twelve rows. Protected rows remain immutable.
+    const repairSchema = global ? { id: "annual-journey-global-repair-v2", type: "object", additionalProperties: false,
+      required: ["replacements", ...Object.keys(JOURNEY_GENERAL_PROPERTIES)], properties: {
+        ...JOURNEY_GENERAL_PROPERTIES, replacements: { ...JOURNEY_PATCH_SCHEMA.properties.replacements, minItems: 0 } } } : JOURNEY_PATCH_SCHEMA;
     const patch = await call("annual_journey_repair", { task: "Repara solo las propuestas señaladas; conserva todas las demás decisiones.",
-      plan: providerPlan(plan), issues: review.issues, affected_proposal_ids: ids }, JOURNEY_PATCH_SCHEMA, ids.length);
-    plan = applyJourneyPatch(plan, patch, new Set(ids)); validateAnnualJourney(plan, curriculum);
+      plan: providerPlan(plan), issues: review.issues, affected_proposal_ids: ids,
+      global_prose_repair: global }, repairSchema, ids.length);
+    const localPatch = Object.fromEntries(Object.keys(JOURNEY_PATCH_SCHEMA.properties).map(key => [key, patch[key]]));
+    if (global && !ids.length && localPatch.replacements.length === 0) {
+      plan = { ...plan, ...Object.fromEntries(Object.keys(JOURNEY_GENERAL_PROPERTIES).map(key => [key, patch[key]])) };
+    } else {
+      plan = applyJourneyPatch(plan, localPatch, new Set(ids));
+      if (global) plan = { ...plan, ...Object.fromEntries(Object.keys(JOURNEY_GENERAL_PROPERTIES).map(key => [key, patch[key]])) };
+    }
+    plan = separateUnsupportedInterpretations(plan); validateAnnualJourney(plan, curriculum);
+    await onStage(plan, "review");
     const second = await call("annual_journey_review", { task: "Verifica las incidencias originales y el plan reparado.", plan: providerPlan(plan),
       original_issues: review.issues }, JOURNEY_REVIEW_SCHEMA, ids.length);
     if (second.issues.length) journeyFail("repair_failed", "La reparación necesita otra revisión. No se confirmó ni cambió el año vigente.", { issues: second.issues });

@@ -25,7 +25,7 @@ export function validateDiagnosticCatalog(document, competencyCards) {
     const aspects = new Set();
     for (const aspect of experience.aspects) {
       if (!/^[a-z0-9_]+$/.test(aspect.id ?? "") || aspects.has(aspect.id)
-        || !aspect.label?.trim() || aspect.label.length > 55
+        || !aspect.label?.trim() || aspect.label.length > 100
         || !aspect.prompt?.trim() || aspect.prompt.length > 120 || /^\s*[¿?]/.test(aspect.prompt)
         || !Array.isArray(aspect.examples) || aspect.examples.length < 2 || aspect.examples.length > 3
         || aspect.examples.some((example) => typeof example !== "string" || !example.trim() || example.length > 150)

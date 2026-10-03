@@ -1,5 +1,11 @@
 # Memoria del proyecto Ayni Aula
 
+## Recuperación y UX del QA V2, 2026-10-03
+
+Base comprobada: Preview, checkout y remoto QA en b142a90; referencia consolidada en 055c77e. Datos QA conservados. Las hipótesis opcionales con alcance incompatible quedan como información insuficiente sin relajar el contrato ni generalizar; el revisor verifica razones dependientes y puede reparar prosa global sin regenerar filas. Jobs privados reutilizan ai_pending_generations con checkpoints, una llamada por run, leases y CAS. Refresh recupera progreso; reintentar una revisión conserva las doce propuestas.
+
+Matriz opcional de registros por niño/competencia, CTA explícito, conversación breve sin IA por mensaje y lenguaje cotidiano en las 22 opciones de diagnostic-v4.4. Sin modificar corpus oficial, calendario, migraciones, cuentas ajenas o producción. Reproducción, pruebas, capturas y rollback: docs/qa/annual-journey-v2-recovery-2026-10-03.md. La respuesta original del fallo no se guardó y no puede atribuirse retrospectivamente a fact_keys exactos.
+
 ## Recorrido inicial de Ayni V2, 2026-10-03
 
 Implementado sobre el último remoto consolidado 055c77e (fetch inicial y de cierre). Familias queda en seis preguntas opcionales; Observar abre espontánea y permite llegar al año sin trámites de revisión. Mi año usa snapshot literal y anonimizador independiente, ideas docentes opcionales, doce tarjetas completas, un asistente contextual y ChangeSet persistido. Generación normal: Sol high + revisión Sol medium. Cambio contextual: dos llamadas por lote; alcance global añade Luna low. Reparación localizada acotada, sin regeneraciones por mensaje.

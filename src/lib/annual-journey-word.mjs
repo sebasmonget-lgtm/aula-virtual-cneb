@@ -26,6 +26,8 @@ export function annualJourneyDocumentSections(plan, names = new Map()) {
     title: `${opportunity.moment} · ${names.get(opportunity.competency_id) ?? opportunity.competency_id}` });
   sections.push({ title: "Interpretaciones revisadas por la docente", lines: plan.evidence_interpretations.map((x) =>
     `${x.scope} · ${x.meaning}: ${x.interpretation}`) });
+  if (plan.insufficient_interpretations?.length) sections.push({title:"Información que todavía necesitamos conocer",lines:[
+    `En ${plan.insufficient_interpretations.length} posibles interpretaciones todavía faltaba sustento. Conservamos los registros sin concluir que exista un avance o una dificultad.`]});
   sections.push({ title: "Lo que sabemos del aula y su procedencia", lines: plan.classroom_snapshot.facts.map((f) =>
     `${f.kind} · ${f.subject} · ${f.scope} · ${f.occurred_at ?? "fecha desconocida"} · ${f.uncertainty}: ${f.support_text}${f.explicit_tags?.length ? `; selecciones: ${f.explicit_tags.join(", ")}` : ""}`) });
   sections.push({ title: "Calendario efectivo", lines: [`Versión: ${plan.resolved_calendar.calendar_version.version}`,

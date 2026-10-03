@@ -10,6 +10,8 @@ import { assertRevision, expectedRevision, versionTransaction, VersionConflictEr
 import { persistAnnualProjectSlots } from "../src/lib/annual-project-slots.mjs";
 import { confirmAnnualPlanVersion } from "../src/lib/annual-plan-version-service.mjs";
 import { annualJourneySafeText } from "../src/lib/annual-journey-privacy.mjs";
+import { handleJourneyJobs } from "../src/lib/annual-journey-jobs.mjs";
+import { observationCoverage } from "../src/lib/observation-coverage.mjs";
 
 export async function handleAnnualJourneyRoutes({ request, response, url, db, teacherId, origin, send, readJson,
   annualPlanningContext, annualDocumentContext, createProvider, resolvePlan }) {
@@ -20,6 +22,9 @@ export async function handleAnnualJourneyRoutes({ request, response, url, db, te
     if (!context || !(await db.query(`select 1 from classrooms c join school_years sy on sy.id=c.school_year_id
       where c.id=$1 and c.teacher_id=$2 and sy.owner_id=$2 and c.status='active'`, [context.id, teacherId])).rows.length)
       journeyFail("not_found", "Aula no disponible.");
+    if(request.method==="GET" && /^\/api\/annual-journey\/jobs\/[0-9a-f-]{36}$/i.test(url.pathname)) {
+      await handleJourneyJobs({request,response,url,db,context,teacherId,send,origin});return true;
+    }
     const curriculum = await ageFilteredAnnualCurriculum(context);
     const calendar = { ...await loadEffectiveCalendar(db, { teacherId, classroomId: context.id }), initial_stage: context.calendar.initial_stage };
     const sources = await personalizationSources(db, teacherId, context);
@@ -47,6 +52,16 @@ export async function handleAnnualJourneyRoutes({ request, response, url, db, te
     if (url.pathname === "/api/annual-journey/start" && request.method === "GET") {
       send(response, 200, { snapshot, curriculum, calendar_integrity: solveAnnualJourneyCalendar(calendar).integrity }, origin); return true;
     }
+    if (url.pathname === "/api/annual-journey/coverage" && request.method === "GET") {
+      const records = sources.observations.map(row => ({...row,
+        classification_source:"teacher",competency_v4_ids:row.competency_ids ??
+          (row.source_type === "guided_diagnostic_observation" || row.classification_source === "teacher" ? [row.competency_v4_id].filter(Boolean) : [])}));
+      send(response,200,{curriculum,counts:observationCoverage([],records),
+        observed_students:new Set(records.filter(r=>r.observation_text?.trim()).map(r=>r.student_id)).size,
+        unclassified:records.filter(r=>!r.competency_v4_ids.length).length},origin);return true;
+    }
+    if (await handleJourneyJobs({ request,response,url,db,context,teacherId,sources,snapshot,curriculum,calendar,
+      send,origin,readJson,load,write,protectedIds,annualDocumentContext,createProvider,resolvePlan })) return true;
     if (url.pathname === "/api/annual-journey/generate" && request.method === "POST") {
       const body = await readJson(request);
       if (typeof body.teacherIdeas !== "string" || body.teacherIdeas.length > 2000) journeyFail("invalid", "Cuenta tus ideas en menos de 2000 caracteres.");

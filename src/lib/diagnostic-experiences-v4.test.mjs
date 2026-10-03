@@ -28,7 +28,7 @@ test("guías por edad usan tarjetas v4 y solo muestran competencias especiales a
   for (const age of [3, 4, 5]) {
     const experiences = buildDiagnosticExperienceCatalog(kb, { age });
     assert.equal(experiences.length, 5);
-    assert.equal(experiences[0].catalog_version, "diagnostic-v4.3");
+    assert.equal(experiences[0].catalog_version, "diagnostic-v4.4");
     assert.match(experiences[0].teacher_instructions, /Prepara dos o tres opciones sencillas/);
     assert.ok(experiences.every((item) => item.aspects.length >= 2 && item.aspects.length <= 4));
     if (age === 3) assert.equal(experiences.find((item) => item.id === "stories_and_marks").aspects.length, 2);
@@ -36,7 +36,7 @@ test("guías por edad usan tarjetas v4 y solo muestran competencias especiales a
       const card = kb.competencyCards.find((item) => item.id === aspect.competency_id);
       assert.equal(aspect.competency_name, card.official_name);
       assert.ok(card.ages[String(age)].observable_patterns.includes(aspect.age_reference));
-      assert.ok(aspect.label.length <= 55 && aspect.prompt.length <= 120);
+      assert.ok(aspect.label.length <= 100 && aspect.prompt.length <= 120);
       assert.ok(aspect.examples.length >= 2 && aspect.examples.length <= 3);
       assert.doesNotMatch(aspect.prompt, /^\s*¿/);
     }

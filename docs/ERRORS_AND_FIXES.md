@@ -1418,3 +1418,15 @@ Síntoma: cuatro notas QA de la captura automatizada quedaron asociadas a la sel
 **Validación.** Regresión 172/172, cero huecos/solapamientos; negación, otro, Shipibo-konibo, contradicción, muchos registros de un sujeto, estados de evidencia y reparaciones acotadas; dos Word con XML pedagógico igual y cero nuevas llamadas. Recorrido real de navegador con datos ficticios y proveedor simulado. 87 casos distintos y typecheck/lint/build PASS; límites en informe QA V2.
 
 **Prevención.** No inferir intereses por temas sueltos; conservar fuente/alcance e incertidumbre. Validar estructura, IDs, oportunidades y asignaciones en servidor. Separar copia privada de payload a IA. Toda decisión pedagógica debe existir antes de confirmar. Los errores de SQL se muestran mediante publicErrorMessage y la telemetría de incidencias omite contenido privado.
+
+## 2026-10-03 — Hipótesis opcional bloqueaba el año y generación sin recuperación
+
+**Síntoma.** QA reportó «La interpretación debe conservar el alcance de sus actuaciones». Repetir con las mismas fuentes llegó a una incidencia global del revisor, sin repetir el texto original. El borrador preservaba ideas, pero no respuestas intermedias.
+
+**Causa raíz.** El validador rechaza scope individual con sujetos distintos/desconocidos. La validación previa a revisión solo reparaba errores con proposal_id; una incidencia de interpretación carecía de ese ID y bloqueaba el plan completo. No se persistía la respuesta que permitiría atribuir el fallo original a fact_keys exactos. Una única petición larga también perdía trabajo completado ante error o corte.
+
+**Solución validada.** Mantener el validador; separar hipótesis incompatibles como información insuficiente sin aumentar alcance y revisar razones dependientes. Jobs privados con etapas, salidas y candidatos guardados; una llamada real por run, exclusión por lease/token, CAS y huellas. Refresh recupera la cola; proveedor fallido reintenta revisión sin otra generación. Un CAS/fingerprint cambiado se marca como fallo recuperable para evitar reintentos automáticos en bucle.
+
+**Verificación.** Regresiones específicas con dos sujetos, razón dependiente, permisos, concurrencia, proveedor fallido, reanudación y CAS; calendario 172/172, XML Word y versiones conservados. Navegador real con fuentes QA reconstruidas y proveedor simulado: refresh → fallo → revisión recuperada → confirmar. La respuesta original no es recuperable y no se afirma reproducción exacta. Detalle y límites en docs/qa/annual-journey-v2-recovery-2026-10-03.md.
+
+**Prevención.** Persistir checkpoints privados antes de cambiar de etapa; no publicar conclusiones insuficientes ni promover su alcance. Telemetría limitada a categoría, etapa y conteos, sin datos pedagógicos ni secretos. Distinguir prueba de recuperación simulada de evaluación real del proveedor.

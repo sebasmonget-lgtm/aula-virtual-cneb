@@ -4,7 +4,7 @@ import { cardIsApplicable } from "./ai-context-builder-v4.mjs";
 import { loadDiagnosticCatalog } from "./diagnostic-catalog-v4.mjs";
 import developmentCatalog from "../../knowledge/diagnostic-experiences/catalog.json" with { type: "json" };
 
-export const DIAGNOSTIC_CATALOG_VERSION = "diagnostic-v4.3";
+export const DIAGNOSTIC_CATALOG_VERSION = "diagnostic-v4.4";
 
 // The versioned JSON is the single editorial source; fixtures are explicitly marked development-only.
 export const DIAGNOSTIC_DEVELOPMENT_TEMPLATES = Object.freeze(developmentCatalog.experiences);

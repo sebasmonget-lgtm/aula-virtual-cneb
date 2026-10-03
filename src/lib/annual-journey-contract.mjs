@@ -84,12 +84,13 @@ export function validateAnnualJourney(plan, curriculum, { confirmation = false }
       journeyFail("nominal_competency", "Cada competencia necesita una oportunidad concreta, con acción, mediación y observación.", { proposal_id: row.proposal_id });
   }
   for (const { moment, ...item } of plan.everyday_opportunities) { if (!moment?.trim()) journeyFail("incomplete", "Falta el momento cotidiano."); validateOpportunity(item, ""); }
-  for (const interpretation of plan.evidence_interpretations) {
+  for (const [index, interpretation] of plan.evidence_interpretations.entries()) {
     const facts = interpretation.fact_keys.map((key) => plan.classroom_snapshot.facts.find((f) => f.key === key));
     if (facts.some((f) => !f || f.kind !== "observed" || !f.support_text)) journeyFail("invalid_interpretation", "La interpretación necesita actuaciones registradas; una familia o un vacío no demuestra desempeño.");
     const children = new Set(facts.map((f) => f.subject));
     if (children.has("unknown") || interpretation.scope === "individual" && children.size !== 1)
-      journeyFail("invalid_scope", "La interpretación debe conservar el alcance de sus actuaciones.");
+      journeyFail("invalid_scope", "Necesitamos revisar una interpretación de los registros. Tus observaciones se conservan.",
+        { interpretation_index: index, fact_keys: interpretation.fact_keys, subjects: [...children], requested_scope: interpretation.scope });
     if (interpretation.scope === "subgroup" && children.size < 2) journeyFail("invalid_scope", "Varias observaciones del mismo niño siguen siendo individuales.");
   }
   const missing = curriculum.filter((card) => !covered.has(card.id)).map((card) => card.id);
@@ -115,4 +116,25 @@ export function validateAnnualJourney(plan, curriculum, { confirmation = false }
     || calendar.integrity.gaps !== 0 || calendar.integrity.overlaps !== 0)
     journeyFail("invalid_calendar", "Hay huecos, solapamientos o asignaciones incoherentes.");
   return plan;
+}
+
+/** Optional hypotheses are never promoted to a wider scope to make validation pass.
+ * Rejected wording stays in a server checkpoint for audit, outside pedagogical conclusions.
+ * The semantic reviewer still checks all remaining reasons/supports against the literal sources.
+ */
+export function separateUnsupportedInterpretations(plan) {
+  const accepted = [], insufficient = [...(plan.insufficient_interpretations ?? [])];
+  for (const interpretation of plan.evidence_interpretations) {
+    const facts = interpretation.fact_keys.map(key => plan.classroom_snapshot.facts.find(f => f.key === key));
+    const subjects = [...new Set(facts.filter(Boolean).map(f => f.subject))];
+    const validSources = facts.length > 0 && facts.every(f => f?.kind === "observed" && f.support_text && f.scope === "individual");
+    const validScope = !subjects.includes("unknown") && (interpretation.scope === "individual" ? subjects.length === 1 : subjects.length >= 2);
+    if (validSources && validScope) accepted.push(interpretation);
+    else {
+      const entry = { fact_keys: interpretation.fact_keys, subjects, attempted_scope: interpretation.scope,
+        information_status: "insufficient_information", reason: validSources ? "incompatible_scope" : "unsupported_sources" };
+      if (!insufficient.some(x => JSON.stringify(x) === JSON.stringify(entry))) insufficient.push(entry);
+    }
+  }
+  return { ...plan, evidence_interpretations: accepted, insufficient_interpretations: insufficient };
 }

@@ -25,6 +25,8 @@ const provider = (calls, cards = curriculum, reviewIssues = []) => (routing) => 
   calls.push({ routing, request });
   if (request.workflow === "annual_journey_review") return { output: { issues: reviewIssues } };
   if (request.workflow === "annual_journey_intent") return { output: { proposal_ids: [request.ai_context_bundle.proposals[0].proposal_id] } };
+  if (request.ai_context_bundle.global_prose_repair) { const {proposals,...general}=generationFixture(cards);void proposals;
+    return {output:{...general,replacements:[]}}; }
   if (request.workflow === "annual_journey_repair") return { output: { replacements: request.ai_context_bundle.proposals.map((row, i) => ({
     proposal_id: row.proposal_id, change_reason: "Cambio docente", ...generationFixture(cards).proposals[i], title: `Plantas y juego ${i + 1}` })),
     everyday_opportunities: request.ai_context_bundle.everyday_opportunities, evidence_interpretations: request.ai_context_bundle.evidence_interpretations ?? [] } };
@@ -99,7 +101,7 @@ test("salida incompleta y reparación fallida no se aceptan", async () => {
   await assert.rejects(() => generateAnnualJourney({ context: { year: 2026, age: 5 }, snapshot: snapshot(), curriculum,
     calendar: fixtureCalendar(), createProvider: () => ({ generate: async () => ({ output: { proposals: [] } }) }) }), (e) => e.reason === "incomplete");
   await assert.rejects(() => generateAnnualJourney({ context: { year: 2026, age: 5 }, snapshot: snapshot(), curriculum,
-    calendar: fixtureCalendar(), createProvider: provider([], curriculum, [{ proposal_id: "", reason: "Faltan condiciones viables" }]) }), (e) => e.reason === "semantic_review");
+    calendar: fixtureCalendar(), createProvider: provider([], curriculum, [{ proposal_id: "", reason: "Faltan condiciones viables" }]) }), (e) => e.reason === "repair_failed");
 });
 
 test("avances, acompañamiento y ambigüedad conservan actuaciones individuales; un vacío o reporte familiar no se interpreta como desempeño", async () => {

@@ -1,5 +1,13 @@
 # Decisiones de arquitectura
 
+## ADR 109 — Interpretaciones insuficientes y preparación anual recuperable
+
+**Decisión (2026-10-03).** Mantener la validación estricta de alcance y separar hipótesis opcionales incompatibles como información insuficiente; revisar también cualquier razón/apoyo dependiente. Reutilizar ai_pending_generations para jobs privados del aula, checkpoints de salidas, etapas reales y una llamada por petición. La página consulta estados y despacha pasos en cola; una lease con token cerca ejecuciones concurrentes/tardías. Las huellas y el CAS se vuelven a comprobar antes de guardar. No se añaden workers ni migraciones ni porcentajes ficticios.
+
+**Permisos.** Identidad, aula activa y propietario del año se verifican en servidor; cada lectura/escritura de job filtra aula, workflow y docente. El navegador recibe metadatos, nunca el checkpoint ni sus fuentes privadas. Los secretos y textos no aparecen en telemetría. La matriz cuenta atribuciones docentes y mantiene los registros sin competencia fuera de celdas, sin exigir completar nada.
+
+**Reversión y límites.** Revertir el Preview/alias conserva datos y documentos. Jobs expiran a las 24 horas sin purga global. Una función interrumpida permite retomar tras vencer su lease; se necesita una página que continúe despachando pasos. Informe: docs/qa/annual-journey-v2-recovery-2026-10-03.md.
+
 ## ADR 104 — Panel administrativo y alta inicial protegida
 
 **Decisión (2026-09-30).** Un usuario Auth con `app_metadata.ayni_role=admin` accede a un directorio de cuentas Ayni, crea docentes con DNI y contraseña inicial y restablece la contraseña de una docente seleccionada. El backend verifica el rol en cada petición antes de usar la clave de servicio. Las rutas docentes rechazan administradores. El DNI se transforma en alias HMAC solo en servidor; el directorio no expone alias ni contraseñas. El primer administrador se crea una vez mediante clave de configuración privada de 32+ caracteres, origen permitido y comprobación de que aún no existe administrador. El propietario retira esa clave tras el alta.
