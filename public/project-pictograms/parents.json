@@ -1,0 +1,43 @@
+{
+  "id": "parents",
+  "file": "parents.svg",
+  "title": "Personas cuidadoras",
+  "description": "Personas cuidadoras. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+  "category": "personas",
+  "subcategory": "parents",
+  "concepts": [
+    "padres",
+    "madre",
+    "padre",
+    "mamá",
+    "papá",
+    "cuidador",
+    "cuidadora",
+    "mamas",
+    "papas"
+  ],
+  "actions": [],
+  "objects": [
+    "padres",
+    "madre",
+    "padre",
+    "mamá",
+    "papá",
+    "cuidador",
+    "cuidadora",
+    "mamas",
+    "papas"
+  ],
+  "contexts": [
+    "educación inicial",
+    "proyecto de aula"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "bytes": 757,
+  "path": "/project-pictograms/parents.svg"
+}

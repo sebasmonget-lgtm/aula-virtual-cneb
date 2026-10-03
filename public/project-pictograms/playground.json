@@ -1,0 +1,37 @@
+{
+  "id": "playground",
+  "file": "playground.svg",
+  "title": "Juegos del parque",
+  "description": "Juegos del parque. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+  "category": "juego",
+  "subcategory": "playground",
+  "concepts": [
+    "parque",
+    "juegos al aire libre",
+    "columpio",
+    "tobogán",
+    "patio",
+    "recreo"
+  ],
+  "actions": [],
+  "objects": [
+    "parque",
+    "juegos al aire libre",
+    "columpio",
+    "tobogán",
+    "patio",
+    "recreo"
+  ],
+  "contexts": [
+    "educación inicial",
+    "proyecto de aula"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "bytes": 464,
+  "path": "/project-pictograms/playground.svg"
+}

@@ -1,0 +1,39 @@
+{
+  "id": "market",
+  "file": "market.svg",
+  "title": "Mercado",
+  "description": "Mercado. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+  "category": "comunidad",
+  "subcategory": "market",
+  "concepts": [
+    "mercado",
+    "tienda",
+    "comprar",
+    "vender",
+    "comercio",
+    "dinero",
+    "feria"
+  ],
+  "actions": [],
+  "objects": [
+    "mercado",
+    "tienda",
+    "comprar",
+    "vender",
+    "comercio",
+    "dinero",
+    "feria"
+  ],
+  "contexts": [
+    "educación inicial",
+    "proyecto de aula"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "bytes": 522,
+  "path": "/project-pictograms/market.svg"
+}

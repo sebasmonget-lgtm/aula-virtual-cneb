@@ -1,0 +1,41 @@
+{
+  "id": "numbers",
+  "file": "numbers.svg",
+  "title": "Cantidades y conteo",
+  "description": "Cantidades y conteo. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+  "category": "matemática",
+  "subcategory": "numbers",
+  "concepts": [
+    "cantidad",
+    "cantidades",
+    "contar",
+    "conteo",
+    "número",
+    "números",
+    "repartir",
+    "comparar"
+  ],
+  "actions": [],
+  "objects": [
+    "cantidad",
+    "cantidades",
+    "contar",
+    "conteo",
+    "número",
+    "números",
+    "repartir",
+    "comparar"
+  ],
+  "contexts": [
+    "educación inicial",
+    "proyecto de aula"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "bytes": 699,
+  "path": "/project-pictograms/numbers.svg"
+}

@@ -1,0 +1,43 @@
+{
+  "id": "friendship",
+  "file": "friendship.svg",
+  "title": "Juego y colaboración",
+  "description": "Juego y colaboración. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+  "category": "personas",
+  "subcategory": "friendship",
+  "concepts": [
+    "colaborar",
+    "colaboración",
+    "compartir",
+    "cooperar",
+    "cooperación",
+    "juntos",
+    "juntas",
+    "acuerdos",
+    "convivir"
+  ],
+  "actions": [],
+  "objects": [
+    "colaborar",
+    "colaboración",
+    "compartir",
+    "cooperar",
+    "cooperación",
+    "juntos",
+    "juntas",
+    "acuerdos",
+    "convivir"
+  ],
+  "contexts": [
+    "educación inicial",
+    "proyecto de aula"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "bytes": 854,
+  "path": "/project-pictograms/friendship.svg"
+}

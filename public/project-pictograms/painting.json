@@ -1,0 +1,43 @@
+{
+  "id": "painting",
+  "file": "painting.svg",
+  "title": "Pincel y acuarelas",
+  "description": "Pincel y acuarelas. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+  "category": "expresión",
+  "subcategory": "painting",
+  "concepts": [
+    "pincel",
+    "pinceles",
+    "acuarela",
+    "acuarelas",
+    "pintar",
+    "pintura",
+    "colores",
+    "arte",
+    "artes"
+  ],
+  "actions": [],
+  "objects": [
+    "pincel",
+    "pinceles",
+    "acuarela",
+    "acuarelas",
+    "pintar",
+    "pintura",
+    "colores",
+    "arte",
+    "artes"
+  ],
+  "contexts": [
+    "educación inicial",
+    "proyecto de aula"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "bytes": 795,
+  "path": "/project-pictograms/painting.svg"
+}

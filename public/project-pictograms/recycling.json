@@ -1,0 +1,39 @@
+{
+  "id": "recycling",
+  "file": "recycling.svg",
+  "title": "Reciclaje",
+  "description": "Reciclaje. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+  "category": "ambiente",
+  "subcategory": "recycling",
+  "concepts": [
+    "reciclaje",
+    "reciclar",
+    "residuos",
+    "basura",
+    "reutilizar",
+    "reducir",
+    "clasificar residuos"
+  ],
+  "actions": [],
+  "objects": [
+    "reciclaje",
+    "reciclar",
+    "residuos",
+    "basura",
+    "reutilizar",
+    "reducir",
+    "clasificar residuos"
+  ],
+  "contexts": [
+    "educación inicial",
+    "proyecto de aula"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "bytes": 492,
+  "path": "/project-pictograms/recycling.svg"
+}

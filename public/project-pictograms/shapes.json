@@ -1,0 +1,41 @@
+{
+  "id": "shapes",
+  "file": "shapes.svg",
+  "title": "Formas geométricas",
+  "description": "Formas geométricas. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+  "category": "matemática",
+  "subcategory": "shapes",
+  "concepts": [
+    "forma",
+    "formas",
+    "figura",
+    "figuras",
+    "círculo",
+    "cuadrado",
+    "triángulo",
+    "geometría"
+  ],
+  "actions": [],
+  "objects": [
+    "forma",
+    "formas",
+    "figura",
+    "figuras",
+    "círculo",
+    "cuadrado",
+    "triángulo",
+    "geometría"
+  ],
+  "contexts": [
+    "educación inicial",
+    "proyecto de aula"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "bytes": 392,
+  "path": "/project-pictograms/shapes.svg"
+}

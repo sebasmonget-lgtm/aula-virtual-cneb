@@ -1,0 +1,33 @@
+{
+  "id": "butterfly",
+  "file": "butterfly.svg",
+  "title": "Mariposa",
+  "description": "Mariposa. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+  "category": "animales",
+  "subcategory": "butterfly",
+  "concepts": [
+    "mariposa",
+    "mariposas",
+    "alas",
+    "metamorfosis"
+  ],
+  "actions": [],
+  "objects": [
+    "mariposa",
+    "mariposas",
+    "alas",
+    "metamorfosis"
+  ],
+  "contexts": [
+    "educación inicial",
+    "proyecto de aula"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 6,
+  "bytes": 439,
+  "path": "/project-pictograms/butterfly.svg"
+}

@@ -1,0 +1,39 @@
+{
+  "id": "teeth",
+  "file": "teeth.svg",
+  "title": "Dientes y cepillo",
+  "description": "Dientes y cepillo. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+  "category": "bienestar",
+  "subcategory": "teeth",
+  "concepts": [
+    "diente",
+    "dientes",
+    "dental",
+    "cepillo",
+    "cepillar",
+    "boca",
+    "dentista"
+  ],
+  "actions": [],
+  "objects": [
+    "diente",
+    "dientes",
+    "dental",
+    "cepillo",
+    "cepillar",
+    "boca",
+    "dentista"
+  ],
+  "contexts": [
+    "educación inicial",
+    "proyecto de aula"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "bytes": 546,
+  "path": "/project-pictograms/teeth.svg"
+}

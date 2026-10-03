@@ -1,0 +1,45 @@
+{
+  "id": "book",
+  "file": "book.svg",
+  "title": "Libro de cuentos",
+  "description": "Libro de cuentos. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+  "category": "expresión",
+  "subcategory": "book",
+  "concepts": [
+    "libro",
+    "libros",
+    "cuento",
+    "cuentos",
+    "historia",
+    "historias",
+    "lectura",
+    "leer",
+    "biblioteca",
+    "relato"
+  ],
+  "actions": [],
+  "objects": [
+    "libro",
+    "libros",
+    "cuento",
+    "cuentos",
+    "historia",
+    "historias",
+    "lectura",
+    "leer",
+    "biblioteca",
+    "relato"
+  ],
+  "contexts": [
+    "educación inicial",
+    "proyecto de aula"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "bytes": 408,
+  "path": "/project-pictograms/book.svg"
+}

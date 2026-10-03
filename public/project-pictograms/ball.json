@@ -1,0 +1,47 @@
+{
+  "id": "ball",
+  "file": "ball.svg",
+  "title": "Pelota y movimiento",
+  "description": "Pelota y movimiento. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+  "category": "juego",
+  "subcategory": "ball",
+  "concepts": [
+    "pelota",
+    "balón",
+    "deporte",
+    "mover",
+    "movimiento",
+    "correr",
+    "saltar",
+    "bailar",
+    "danza",
+    "motricidad",
+    "equilibrio"
+  ],
+  "actions": [],
+  "objects": [
+    "pelota",
+    "balón",
+    "deporte",
+    "mover",
+    "movimiento",
+    "correr",
+    "saltar",
+    "bailar",
+    "danza",
+    "motricidad",
+    "equilibrio"
+  ],
+  "contexts": [
+    "educación inicial",
+    "proyecto de aula"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "bytes": 368,
+  "path": "/project-pictograms/ball.svg"
+}

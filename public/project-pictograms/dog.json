@@ -1,0 +1,37 @@
+{
+  "id": "dog",
+  "file": "dog.svg",
+  "title": "Perro",
+  "description": "Perro. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+  "category": "animales",
+  "subcategory": "dog",
+  "concepts": [
+    "perro",
+    "perros",
+    "perrito",
+    "can",
+    "mascota",
+    "mascotas"
+  ],
+  "actions": [],
+  "objects": [
+    "perro",
+    "perros",
+    "perrito",
+    "can",
+    "mascota",
+    "mascotas"
+  ],
+  "contexts": [
+    "educación inicial",
+    "proyecto de aula"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 6,
+  "bytes": 483,
+  "path": "/project-pictograms/dog.svg"
+}

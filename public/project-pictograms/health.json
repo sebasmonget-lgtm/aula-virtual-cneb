@@ -1,0 +1,41 @@
+{
+  "id": "health",
+  "file": "health.svg",
+  "title": "Salud y cuidados",
+  "description": "Salud y cuidados. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+  "category": "bienestar",
+  "subcategory": "health",
+  "concepts": [
+    "salud",
+    "saludable",
+    "médico",
+    "doctor",
+    "enfermera",
+    "hospital",
+    "cuidado del cuerpo",
+    "botiquín"
+  ],
+  "actions": [],
+  "objects": [
+    "salud",
+    "saludable",
+    "médico",
+    "doctor",
+    "enfermera",
+    "hospital",
+    "cuidado del cuerpo",
+    "botiquín"
+  ],
+  "contexts": [
+    "educación inicial",
+    "proyecto de aula"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "bytes": 345,
+  "path": "/project-pictograms/health.svg"
+}

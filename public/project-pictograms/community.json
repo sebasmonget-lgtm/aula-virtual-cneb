@@ -1,0 +1,41 @@
+{
+  "id": "community",
+  "file": "community.svg",
+  "title": "Comunidad y barrio",
+  "description": "Comunidad y barrio. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+  "category": "comunidad",
+  "subcategory": "community",
+  "concepts": [
+    "comunidad",
+    "vecinos",
+    "vecinas",
+    "barrio",
+    "ciudad",
+    "pueblo",
+    "oficios",
+    "trabajadores"
+  ],
+  "actions": [],
+  "objects": [
+    "comunidad",
+    "vecinos",
+    "vecinas",
+    "barrio",
+    "ciudad",
+    "pueblo",
+    "oficios",
+    "trabajadores"
+  ],
+  "contexts": [
+    "educación inicial",
+    "proyecto de aula"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "bytes": 723,
+  "path": "/project-pictograms/community.svg"
+}

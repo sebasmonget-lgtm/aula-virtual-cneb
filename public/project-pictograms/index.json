@@ -1,0 +1,2008 @@
+{
+  "version": 1,
+  "style": "trazo_suave_pastel",
+  "format": "svg",
+  "view_box": "0 0 128 128",
+  "images": [
+    {
+      "id": "peru_flag",
+      "file": "peru_flag.svg",
+      "title": "Bandera del Perú",
+      "description": "Bandera del Perú. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+      "category": "cultura",
+      "subcategory": "peru_flag",
+      "concepts": [
+        "bandera",
+        "Perú",
+        "patria",
+        "patrias",
+        "peruana",
+        "peruano",
+        "identidad nacional",
+        "independencia"
+      ],
+      "actions": [
+        "celebrar"
+      ],
+      "objects": [
+        "bandera",
+        "Perú",
+        "patria",
+        "patrias",
+        "peruana",
+        "peruano",
+        "identidad nacional",
+        "independencia"
+      ],
+      "contexts": [
+        "educación inicial",
+        "proyecto de aula"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "bytes": 405,
+      "path": "/project-pictograms/peru_flag.svg"
+    },
+    {
+      "id": "water_drop",
+      "file": "water_drop.svg",
+      "title": "Gota de agua",
+      "description": "Gota de agua. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+      "category": "ambiente",
+      "subcategory": "water_drop",
+      "concepts": [
+        "agua",
+        "gota",
+        "lluvia",
+        "río",
+        "rios",
+        "mar",
+        "océano",
+        "flotar",
+        "hundirse"
+      ],
+      "actions": [
+        "cuidar",
+        "ahorrar"
+      ],
+      "objects": [
+        "agua",
+        "gota",
+        "lluvia",
+        "río",
+        "rios",
+        "mar",
+        "océano",
+        "flotar",
+        "hundirse"
+      ],
+      "contexts": [
+        "educación inicial",
+        "proyecto de aula"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "bytes": 303,
+      "path": "/project-pictograms/water_drop.svg"
+    },
+    {
+      "id": "tree",
+      "file": "tree.svg",
+      "title": "Árbol",
+      "description": "Árbol. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+      "category": "naturaleza",
+      "subcategory": "tree",
+      "concepts": [
+        "árbol",
+        "árboles",
+        "bosque",
+        "bosques",
+        "hojas",
+        "sombra"
+      ],
+      "actions": [],
+      "objects": [
+        "árbol",
+        "árboles",
+        "bosque",
+        "bosques",
+        "hojas",
+        "sombra"
+      ],
+      "contexts": [
+        "educación inicial",
+        "proyecto de aula"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "bytes": 405,
+      "path": "/project-pictograms/tree.svg"
+    },
+    {
+      "id": "plant",
+      "file": "plant.svg",
+      "title": "Planta en maceta",
+      "description": "Planta en maceta. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+      "category": "naturaleza",
+      "subcategory": "plant",
+      "concepts": [
+        "planta",
+        "plantas",
+        "jardín",
+        "jardinería",
+        "maceta",
+        "vegetal",
+        "sembrar",
+        "plantar"
+      ],
+      "actions": [
+        "regar",
+        "germinación"
+      ],
+      "objects": [
+        "planta",
+        "plantas",
+        "jardín",
+        "jardinería",
+        "maceta",
+        "vegetal",
+        "sembrar",
+        "plantar"
+      ],
+      "contexts": [
+        "educación inicial",
+        "proyecto de aula"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "bytes": 635,
+      "path": "/project-pictograms/plant.svg"
+    },
+    {
+      "id": "seed",
+      "file": "seed.svg",
+      "title": "Semilla y brote",
+      "description": "Semilla y brote. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+      "category": "naturaleza",
+      "subcategory": "seed",
+      "concepts": [
+        "semilla",
+        "semillas",
+        "brote",
+        "germinación",
+        "germinar",
+        "siembra",
+        "crecer"
+      ],
+      "actions": [],
+      "objects": [
+        "semilla",
+        "semillas",
+        "brote",
+        "germinación",
+        "germinar",
+        "siembra",
+        "crecer"
+      ],
+      "contexts": [
+        "educación inicial",
+        "proyecto de aula"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "bytes": 424,
+      "path": "/project-pictograms/seed.svg"
+    },
+    {
+      "id": "flower",
+      "file": "flower.svg",
+      "title": "Flor",
+      "description": "Flor. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+      "category": "naturaleza",
+      "subcategory": "flower",
+      "concepts": [
+        "flor",
+        "flores",
+        "primavera",
+        "pétalo",
+        "pétalos"
+      ],
+      "actions": [],
+      "objects": [
+        "flor",
+        "flores",
+        "primavera",
+        "pétalo",
+        "pétalos"
+      ],
+      "contexts": [
+        "educación inicial",
+        "proyecto de aula"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "bytes": 665,
+      "path": "/project-pictograms/flower.svg"
+    },
+    {
+      "id": "dog",
+      "file": "dog.svg",
+      "title": "Perro",
+      "description": "Perro. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+      "category": "animales",
+      "subcategory": "dog",
+      "concepts": [
+        "perro",
+        "perros",
+        "perrito",
+        "can",
+        "mascota",
+        "mascotas"
+      ],
+      "actions": [],
+      "objects": [
+        "perro",
+        "perros",
+        "perrito",
+        "can",
+        "mascota",
+        "mascotas"
+      ],
+      "contexts": [
+        "educación inicial",
+        "proyecto de aula"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 6,
+      "bytes": 483,
+      "path": "/project-pictograms/dog.svg"
+    },
+    {
+      "id": "cat",
+      "file": "cat.svg",
+      "title": "Gato",
+      "description": "Gato. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+      "category": "animales",
+      "subcategory": "cat",
+      "concepts": [
+        "gato",
+        "gatos",
+        "gatito",
+        "felino"
+      ],
+      "actions": [],
+      "objects": [
+        "gato",
+        "gatos",
+        "gatito",
+        "felino"
+      ],
+      "contexts": [
+        "educación inicial",
+        "proyecto de aula"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 6,
+      "bytes": 372,
+      "path": "/project-pictograms/cat.svg"
+    },
+    {
+      "id": "bird",
+      "file": "bird.svg",
+      "title": "Ave",
+      "description": "Ave. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+      "category": "animales",
+      "subcategory": "bird",
+      "concepts": [
+        "ave",
+        "aves",
+        "pájaro",
+        "pájaros",
+        "pajarito",
+        "nido",
+        "plumas"
+      ],
+      "actions": [],
+      "objects": [
+        "ave",
+        "aves",
+        "pájaro",
+        "pájaros",
+        "pajarito",
+        "nido",
+        "plumas"
+      ],
+      "contexts": [
+        "educación inicial",
+        "proyecto de aula"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 6,
+      "bytes": 487,
+      "path": "/project-pictograms/bird.svg"
+    },
+    {
+      "id": "fish",
+      "file": "fish.svg",
+      "title": "Pez",
+      "description": "Pez. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+      "category": "animales",
+      "subcategory": "fish",
+      "concepts": [
+        "pez",
+        "peces",
+        "pescado",
+        "pecera",
+        "acuario",
+        "marino",
+        "marinos"
+      ],
+      "actions": [],
+      "objects": [
+        "pez",
+        "peces",
+        "pescado",
+        "pecera",
+        "acuario",
+        "marino",
+        "marinos"
+      ],
+      "contexts": [
+        "educación inicial",
+        "proyecto de aula"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 6,
+      "bytes": 534,
+      "path": "/project-pictograms/fish.svg"
+    },
+    {
+      "id": "rabbit",
+      "file": "rabbit.svg",
+      "title": "Conejo",
+      "description": "Conejo. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+      "category": "animales",
+      "subcategory": "rabbit",
+      "concepts": [
+        "conejo",
+        "conejos",
+        "conejito"
+      ],
+      "actions": [],
+      "objects": [
+        "conejo",
+        "conejos",
+        "conejito"
+      ],
+      "contexts": [
+        "educación inicial",
+        "proyecto de aula"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 6,
+      "bytes": 570,
+      "path": "/project-pictograms/rabbit.svg"
+    },
+    {
+      "id": "turtle",
+      "file": "turtle.svg",
+      "title": "Tortuga",
+      "description": "Tortuga. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+      "category": "animales",
+      "subcategory": "turtle",
+      "concepts": [
+        "tortuga",
+        "tortugas",
+        "caparazón"
+      ],
+      "actions": [],
+      "objects": [
+        "tortuga",
+        "tortugas",
+        "caparazón"
+      ],
+      "contexts": [
+        "educación inicial",
+        "proyecto de aula"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 6,
+      "bytes": 522,
+      "path": "/project-pictograms/turtle.svg"
+    },
+    {
+      "id": "butterfly",
+      "file": "butterfly.svg",
+      "title": "Mariposa",
+      "description": "Mariposa. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+      "category": "animales",
+      "subcategory": "butterfly",
+      "concepts": [
+        "mariposa",
+        "mariposas",
+        "alas",
+        "metamorfosis"
+      ],
+      "actions": [],
+      "objects": [
+        "mariposa",
+        "mariposas",
+        "alas",
+        "metamorfosis"
+      ],
+      "contexts": [
+        "educación inicial",
+        "proyecto de aula"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 6,
+      "bytes": 439,
+      "path": "/project-pictograms/butterfly.svg"
+    },
+    {
+      "id": "bee",
+      "file": "bee.svg",
+      "title": "Abeja",
+      "description": "Abeja. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+      "category": "animales",
+      "subcategory": "bee",
+      "concepts": [
+        "abeja",
+        "abejas",
+        "miel",
+        "colmena",
+        "polinización",
+        "insecto",
+        "insectos"
+      ],
+      "actions": [],
+      "objects": [
+        "abeja",
+        "abejas",
+        "miel",
+        "colmena",
+        "polinización",
+        "insecto",
+        "insectos"
+      ],
+      "contexts": [
+        "educación inicial",
+        "proyecto de aula"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 6,
+      "bytes": 518,
+      "path": "/project-pictograms/bee.svg"
+    },
+    {
+      "id": "hen",
+      "file": "hen.svg",
+      "title": "Gallina",
+      "description": "Gallina. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+      "category": "animales",
+      "subcategory": "hen",
+      "concepts": [
+        "gallina",
+        "gallinas",
+        "pollo",
+        "pollito",
+        "huevo",
+        "corral",
+        "granja"
+      ],
+      "actions": [],
+      "objects": [
+        "gallina",
+        "gallinas",
+        "pollo",
+        "pollito",
+        "huevo",
+        "corral",
+        "granja"
+      ],
+      "contexts": [
+        "educación inicial",
+        "proyecto de aula"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 6,
+      "bytes": 557,
+      "path": "/project-pictograms/hen.svg"
+    },
+    {
+      "id": "cow",
+      "file": "cow.svg",
+      "title": "Vaca",
+      "description": "Vaca. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+      "category": "animales",
+      "subcategory": "cow",
+      "concepts": [
+        "vaca",
+        "vacas",
+        "leche",
+        "ganado",
+        "animales de granja"
+      ],
+      "actions": [],
+      "objects": [
+        "vaca",
+        "vacas",
+        "leche",
+        "ganado",
+        "animales de granja"
+      ],
+      "contexts": [
+        "educación inicial",
+        "proyecto de aula"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 6,
+      "bytes": 659,
+      "path": "/project-pictograms/cow.svg"
+    },
+    {
+      "id": "boy",
+      "file": "boy.svg",
+      "title": "Niño",
+      "description": "Niño. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+      "category": "personas",
+      "subcategory": "boy",
+      "concepts": [
+        "niño",
+        "niños",
+        "niñez",
+        "infancia",
+        "yo",
+        "identidad",
+        "autonomía"
+      ],
+      "actions": [],
+      "objects": [
+        "niño",
+        "niños",
+        "niñez",
+        "infancia",
+        "yo",
+        "identidad",
+        "autonomía"
+      ],
+      "contexts": [
+        "educación inicial",
+        "proyecto de aula"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "bytes": 463,
+      "path": "/project-pictograms/boy.svg"
+    },
+    {
+      "id": "girl",
+      "file": "girl.svg",
+      "title": "Niña",
+      "description": "Niña. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+      "category": "personas",
+      "subcategory": "girl",
+      "concepts": [
+        "niña",
+        "niñas",
+        "niñez",
+        "infancia",
+        "identidad",
+        "autonomía"
+      ],
+      "actions": [],
+      "objects": [
+        "niña",
+        "niñas",
+        "niñez",
+        "infancia",
+        "identidad",
+        "autonomía"
+      ],
+      "contexts": [
+        "educación inicial",
+        "proyecto de aula"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "bytes": 465,
+      "path": "/project-pictograms/girl.svg"
+    },
+    {
+      "id": "parents",
+      "file": "parents.svg",
+      "title": "Personas cuidadoras",
+      "description": "Personas cuidadoras. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+      "category": "personas",
+      "subcategory": "parents",
+      "concepts": [
+        "padres",
+        "madre",
+        "padre",
+        "mamá",
+        "papá",
+        "cuidador",
+        "cuidadora",
+        "mamas",
+        "papas"
+      ],
+      "actions": [],
+      "objects": [
+        "padres",
+        "madre",
+        "padre",
+        "mamá",
+        "papá",
+        "cuidador",
+        "cuidadora",
+        "mamas",
+        "papas"
+      ],
+      "contexts": [
+        "educación inicial",
+        "proyecto de aula"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "bytes": 757,
+      "path": "/project-pictograms/parents.svg"
+    },
+    {
+      "id": "family",
+      "file": "family.svg",
+      "title": "Familia",
+      "description": "Familia. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+      "category": "personas",
+      "subcategory": "family",
+      "concepts": [
+        "familia",
+        "familias",
+        "hogar",
+        "abuelos",
+        "abuela",
+        "abuelo",
+        "hermanos",
+        "hermanas"
+      ],
+      "actions": [],
+      "objects": [
+        "familia",
+        "familias",
+        "hogar",
+        "abuelos",
+        "abuela",
+        "abuelo",
+        "hermanos",
+        "hermanas"
+      ],
+      "contexts": [
+        "educación inicial",
+        "proyecto de aula"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "bytes": 1043,
+      "path": "/project-pictograms/family.svg"
+    },
+    {
+      "id": "home",
+      "file": "home.svg",
+      "title": "Casa",
+      "description": "Casa. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+      "category": "comunidad",
+      "subcategory": "home",
+      "concepts": [
+        "casa",
+        "casas",
+        "vivienda",
+        "viviendas",
+        "hogar",
+        "barrio"
+      ],
+      "actions": [],
+      "objects": [
+        "casa",
+        "casas",
+        "vivienda",
+        "viviendas",
+        "hogar",
+        "barrio"
+      ],
+      "contexts": [
+        "educación inicial",
+        "proyecto de aula"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "bytes": 482,
+      "path": "/project-pictograms/home.svg"
+    },
+    {
+      "id": "school",
+      "file": "school.svg",
+      "title": "Jardín y escuela",
+      "description": "Jardín y escuela. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+      "category": "comunidad",
+      "subcategory": "school",
+      "concepts": [
+        "escuela",
+        "colegio",
+        "aula",
+        "jardín escolar",
+        "jardín infantil",
+        "acogida",
+        "adaptación"
+      ],
+      "actions": [],
+      "objects": [
+        "escuela",
+        "colegio",
+        "aula",
+        "jardín escolar",
+        "jardín infantil",
+        "acogida",
+        "adaptación"
+      ],
+      "contexts": [
+        "educación inicial",
+        "proyecto de aula"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "bytes": 537,
+      "path": "/project-pictograms/school.svg"
+    },
+    {
+      "id": "community",
+      "file": "community.svg",
+      "title": "Comunidad y barrio",
+      "description": "Comunidad y barrio. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+      "category": "comunidad",
+      "subcategory": "community",
+      "concepts": [
+        "comunidad",
+        "vecinos",
+        "vecinas",
+        "barrio",
+        "ciudad",
+        "pueblo",
+        "oficios",
+        "trabajadores"
+      ],
+      "actions": [],
+      "objects": [
+        "comunidad",
+        "vecinos",
+        "vecinas",
+        "barrio",
+        "ciudad",
+        "pueblo",
+        "oficios",
+        "trabajadores"
+      ],
+      "contexts": [
+        "educación inicial",
+        "proyecto de aula"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "bytes": 723,
+      "path": "/project-pictograms/community.svg"
+    },
+    {
+      "id": "friendship",
+      "file": "friendship.svg",
+      "title": "Juego y colaboración",
+      "description": "Juego y colaboración. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+      "category": "personas",
+      "subcategory": "friendship",
+      "concepts": [
+        "colaborar",
+        "colaboración",
+        "compartir",
+        "cooperar",
+        "cooperación",
+        "juntos",
+        "juntas",
+        "acuerdos",
+        "convivir"
+      ],
+      "actions": [],
+      "objects": [
+        "colaborar",
+        "colaboración",
+        "compartir",
+        "cooperar",
+        "cooperación",
+        "juntos",
+        "juntas",
+        "acuerdos",
+        "convivir"
+      ],
+      "contexts": [
+        "educación inicial",
+        "proyecto de aula"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "bytes": 854,
+      "path": "/project-pictograms/friendship.svg"
+    },
+    {
+      "id": "pencil",
+      "file": "pencil.svg",
+      "title": "Lápiz",
+      "description": "Lápiz. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+      "category": "expresión",
+      "subcategory": "pencil",
+      "concepts": [
+        "lápiz",
+        "lápices",
+        "escribir",
+        "escritura",
+        "trazo",
+        "trazos",
+        "dibujar",
+        "dibujo"
+      ],
+      "actions": [],
+      "objects": [
+        "lápiz",
+        "lápices",
+        "escribir",
+        "escritura",
+        "trazo",
+        "trazos",
+        "dibujar",
+        "dibujo"
+      ],
+      "contexts": [
+        "educación inicial",
+        "proyecto de aula"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "bytes": 471,
+      "path": "/project-pictograms/pencil.svg"
+    },
+    {
+      "id": "painting",
+      "file": "painting.svg",
+      "title": "Pincel y acuarelas",
+      "description": "Pincel y acuarelas. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+      "category": "expresión",
+      "subcategory": "painting",
+      "concepts": [
+        "pincel",
+        "pinceles",
+        "acuarela",
+        "acuarelas",
+        "pintar",
+        "pintura",
+        "colores",
+        "arte",
+        "artes"
+      ],
+      "actions": [],
+      "objects": [
+        "pincel",
+        "pinceles",
+        "acuarela",
+        "acuarelas",
+        "pintar",
+        "pintura",
+        "colores",
+        "arte",
+        "artes"
+      ],
+      "contexts": [
+        "educación inicial",
+        "proyecto de aula"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "bytes": 795,
+      "path": "/project-pictograms/painting.svg"
+    },
+    {
+      "id": "book",
+      "file": "book.svg",
+      "title": "Libro de cuentos",
+      "description": "Libro de cuentos. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+      "category": "expresión",
+      "subcategory": "book",
+      "concepts": [
+        "libro",
+        "libros",
+        "cuento",
+        "cuentos",
+        "historia",
+        "historias",
+        "lectura",
+        "leer",
+        "biblioteca",
+        "relato"
+      ],
+      "actions": [],
+      "objects": [
+        "libro",
+        "libros",
+        "cuento",
+        "cuentos",
+        "historia",
+        "historias",
+        "lectura",
+        "leer",
+        "biblioteca",
+        "relato"
+      ],
+      "contexts": [
+        "educación inicial",
+        "proyecto de aula"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "bytes": 408,
+      "path": "/project-pictograms/book.svg"
+    },
+    {
+      "id": "music",
+      "file": "music.svg",
+      "title": "Instrumentos y música",
+      "description": "Instrumentos y música. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+      "category": "expresión",
+      "subcategory": "music",
+      "concepts": [
+        "música",
+        "musica",
+        "instrumento",
+        "instrumentos",
+        "canción",
+        "canciones",
+        "cantar",
+        "sonido",
+        "sonidos",
+        "ritmo"
+      ],
+      "actions": [],
+      "objects": [
+        "música",
+        "musica",
+        "instrumento",
+        "instrumentos",
+        "canción",
+        "canciones",
+        "cantar",
+        "sonido",
+        "sonidos",
+        "ritmo"
+      ],
+      "contexts": [
+        "educación inicial",
+        "proyecto de aula"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "bytes": 522,
+      "path": "/project-pictograms/music.svg"
+    },
+    {
+      "id": "ideas",
+      "file": "ideas.svg",
+      "title": "Idea para explorar",
+      "description": "Idea para explorar. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+      "category": "general",
+      "subcategory": "ideas",
+      "concepts": [
+        "idea",
+        "ideas",
+        "proyecto",
+        "proyectos",
+        "exploración",
+        "investigar",
+        "descubrir",
+        "preguntas",
+        "indagar"
+      ],
+      "actions": [],
+      "objects": [
+        "idea",
+        "ideas",
+        "proyecto",
+        "proyectos",
+        "exploración",
+        "investigar",
+        "descubrir",
+        "preguntas",
+        "indagar"
+      ],
+      "contexts": [
+        "educación inicial",
+        "proyecto de aula"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "bytes": 425,
+      "path": "/project-pictograms/ideas.svg"
+    },
+    {
+      "id": "puppets",
+      "file": "puppets.svg",
+      "title": "Títeres",
+      "description": "Títeres. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+      "category": "expresión",
+      "subcategory": "puppets",
+      "concepts": [
+        "títere",
+        "títeres",
+        "teatro",
+        "dramatizar",
+        "dramatización",
+        "representar"
+      ],
+      "actions": [],
+      "objects": [
+        "títere",
+        "títeres",
+        "teatro",
+        "dramatizar",
+        "dramatización",
+        "representar"
+      ],
+      "contexts": [
+        "educación inicial",
+        "proyecto de aula"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "bytes": 458,
+      "path": "/project-pictograms/puppets.svg"
+    },
+    {
+      "id": "blocks",
+      "file": "blocks.svg",
+      "title": "Bloques de construcción",
+      "description": "Bloques de construcción. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+      "category": "juego",
+      "subcategory": "blocks",
+      "concepts": [
+        "bloque",
+        "bloques",
+        "construcción",
+        "construir",
+        "torre",
+        "torres",
+        "armar",
+        "crear",
+        "juego"
+      ],
+      "actions": [],
+      "objects": [
+        "bloque",
+        "bloques",
+        "construcción",
+        "construir",
+        "torre",
+        "torres",
+        "armar",
+        "crear",
+        "juego"
+      ],
+      "contexts": [
+        "educación inicial",
+        "proyecto de aula"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "bytes": 543,
+      "path": "/project-pictograms/blocks.svg"
+    },
+    {
+      "id": "shapes",
+      "file": "shapes.svg",
+      "title": "Formas geométricas",
+      "description": "Formas geométricas. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+      "category": "matemática",
+      "subcategory": "shapes",
+      "concepts": [
+        "forma",
+        "formas",
+        "figura",
+        "figuras",
+        "círculo",
+        "cuadrado",
+        "triángulo",
+        "geometría"
+      ],
+      "actions": [],
+      "objects": [
+        "forma",
+        "formas",
+        "figura",
+        "figuras",
+        "círculo",
+        "cuadrado",
+        "triángulo",
+        "geometría"
+      ],
+      "contexts": [
+        "educación inicial",
+        "proyecto de aula"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "bytes": 392,
+      "path": "/project-pictograms/shapes.svg"
+    },
+    {
+      "id": "numbers",
+      "file": "numbers.svg",
+      "title": "Cantidades y conteo",
+      "description": "Cantidades y conteo. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+      "category": "matemática",
+      "subcategory": "numbers",
+      "concepts": [
+        "cantidad",
+        "cantidades",
+        "contar",
+        "conteo",
+        "número",
+        "números",
+        "repartir",
+        "comparar"
+      ],
+      "actions": [],
+      "objects": [
+        "cantidad",
+        "cantidades",
+        "contar",
+        "conteo",
+        "número",
+        "números",
+        "repartir",
+        "comparar"
+      ],
+      "contexts": [
+        "educación inicial",
+        "proyecto de aula"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "bytes": 699,
+      "path": "/project-pictograms/numbers.svg"
+    },
+    {
+      "id": "measure",
+      "file": "measure.svg",
+      "title": "Regla para medir",
+      "description": "Regla para medir. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+      "category": "matemática",
+      "subcategory": "measure",
+      "concepts": [
+        "medir",
+        "medida",
+        "medidas",
+        "longitud",
+        "tamaño",
+        "tamaños",
+        "regla",
+        "largo",
+        "corto"
+      ],
+      "actions": [],
+      "objects": [
+        "medir",
+        "medida",
+        "medidas",
+        "longitud",
+        "tamaño",
+        "tamaños",
+        "regla",
+        "largo",
+        "corto"
+      ],
+      "contexts": [
+        "educación inicial",
+        "proyecto de aula"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "bytes": 363,
+      "path": "/project-pictograms/measure.svg"
+    },
+    {
+      "id": "market",
+      "file": "market.svg",
+      "title": "Mercado",
+      "description": "Mercado. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+      "category": "comunidad",
+      "subcategory": "market",
+      "concepts": [
+        "mercado",
+        "tienda",
+        "comprar",
+        "vender",
+        "comercio",
+        "dinero",
+        "feria"
+      ],
+      "actions": [],
+      "objects": [
+        "mercado",
+        "tienda",
+        "comprar",
+        "vender",
+        "comercio",
+        "dinero",
+        "feria"
+      ],
+      "contexts": [
+        "educación inicial",
+        "proyecto de aula"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "bytes": 522,
+      "path": "/project-pictograms/market.svg"
+    },
+    {
+      "id": "fruit",
+      "file": "fruit.svg",
+      "title": "Frutas",
+      "description": "Frutas. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+      "category": "alimentación",
+      "subcategory": "fruit",
+      "concepts": [
+        "fruta",
+        "frutas",
+        "manzana",
+        "plátano",
+        "banana",
+        "pera",
+        "mandarina",
+        "naranja"
+      ],
+      "actions": [],
+      "objects": [
+        "fruta",
+        "frutas",
+        "manzana",
+        "plátano",
+        "banana",
+        "pera",
+        "mandarina",
+        "naranja"
+      ],
+      "contexts": [
+        "educación inicial",
+        "proyecto de aula"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "bytes": 432,
+      "path": "/project-pictograms/fruit.svg"
+    },
+    {
+      "id": "vegetables",
+      "file": "vegetables.svg",
+      "title": "Verduras",
+      "description": "Verduras. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+      "category": "alimentación",
+      "subcategory": "vegetables",
+      "concepts": [
+        "verdura",
+        "verduras",
+        "vegetales",
+        "zanahoria",
+        "lechuga",
+        "huerto",
+        "hortaliza"
+      ],
+      "actions": [],
+      "objects": [
+        "verdura",
+        "verduras",
+        "vegetales",
+        "zanahoria",
+        "lechuga",
+        "huerto",
+        "hortaliza"
+      ],
+      "contexts": [
+        "educación inicial",
+        "proyecto de aula"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "bytes": 579,
+      "path": "/project-pictograms/vegetables.svg"
+    },
+    {
+      "id": "cooking",
+      "file": "cooking.svg",
+      "title": "Cocina",
+      "description": "Cocina. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+      "category": "alimentación",
+      "subcategory": "cooking",
+      "concepts": [
+        "cocina",
+        "cocinar",
+        "preparar alimentos",
+        "receta",
+        "recetas",
+        "comida",
+        "alimentos",
+        "pan",
+        "panadería"
+      ],
+      "actions": [],
+      "objects": [
+        "cocina",
+        "cocinar",
+        "preparar alimentos",
+        "receta",
+        "recetas",
+        "comida",
+        "alimentos",
+        "pan",
+        "panadería"
+      ],
+      "contexts": [
+        "educación inicial",
+        "proyecto de aula"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "bytes": 425,
+      "path": "/project-pictograms/cooking.svg"
+    },
+    {
+      "id": "health",
+      "file": "health.svg",
+      "title": "Salud y cuidados",
+      "description": "Salud y cuidados. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+      "category": "bienestar",
+      "subcategory": "health",
+      "concepts": [
+        "salud",
+        "saludable",
+        "médico",
+        "doctor",
+        "enfermera",
+        "hospital",
+        "cuidado del cuerpo",
+        "botiquín"
+      ],
+      "actions": [],
+      "objects": [
+        "salud",
+        "saludable",
+        "médico",
+        "doctor",
+        "enfermera",
+        "hospital",
+        "cuidado del cuerpo",
+        "botiquín"
+      ],
+      "contexts": [
+        "educación inicial",
+        "proyecto de aula"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "bytes": 345,
+      "path": "/project-pictograms/health.svg"
+    },
+    {
+      "id": "hands",
+      "file": "hands.svg",
+      "title": "Lavado de manos",
+      "description": "Lavado de manos. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+      "category": "bienestar",
+      "subcategory": "hands",
+      "concepts": [
+        "manos",
+        "lavar",
+        "lavado",
+        "higiene",
+        "jabón",
+        "limpieza"
+      ],
+      "actions": [],
+      "objects": [
+        "manos",
+        "lavar",
+        "lavado",
+        "higiene",
+        "jabón",
+        "limpieza"
+      ],
+      "contexts": [
+        "educación inicial",
+        "proyecto de aula"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "bytes": 608,
+      "path": "/project-pictograms/hands.svg"
+    },
+    {
+      "id": "teeth",
+      "file": "teeth.svg",
+      "title": "Dientes y cepillo",
+      "description": "Dientes y cepillo. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+      "category": "bienestar",
+      "subcategory": "teeth",
+      "concepts": [
+        "diente",
+        "dientes",
+        "dental",
+        "cepillo",
+        "cepillar",
+        "boca",
+        "dentista"
+      ],
+      "actions": [],
+      "objects": [
+        "diente",
+        "dientes",
+        "dental",
+        "cepillo",
+        "cepillar",
+        "boca",
+        "dentista"
+      ],
+      "contexts": [
+        "educación inicial",
+        "proyecto de aula"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "bytes": 546,
+      "path": "/project-pictograms/teeth.svg"
+    },
+    {
+      "id": "heart",
+      "file": "heart.svg",
+      "title": "Emociones y buen trato",
+      "description": "Emociones y buen trato. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+      "category": "bienestar",
+      "subcategory": "heart",
+      "concepts": [
+        "emociones",
+        "emoción",
+        "sentimientos",
+        "sentir",
+        "afecto",
+        "amor",
+        "amistad",
+        "convivencia",
+        "respeto",
+        "buen trato",
+        "paz"
+      ],
+      "actions": [],
+      "objects": [
+        "emociones",
+        "emoción",
+        "sentimientos",
+        "sentir",
+        "afecto",
+        "amor",
+        "amistad",
+        "convivencia",
+        "respeto",
+        "buen trato",
+        "paz"
+      ],
+      "contexts": [
+        "educación inicial",
+        "proyecto de aula"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "bytes": 311,
+      "path": "/project-pictograms/heart.svg"
+    },
+    {
+      "id": "ball",
+      "file": "ball.svg",
+      "title": "Pelota y movimiento",
+      "description": "Pelota y movimiento. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+      "category": "juego",
+      "subcategory": "ball",
+      "concepts": [
+        "pelota",
+        "balón",
+        "deporte",
+        "mover",
+        "movimiento",
+        "correr",
+        "saltar",
+        "bailar",
+        "danza",
+        "motricidad",
+        "equilibrio"
+      ],
+      "actions": [],
+      "objects": [
+        "pelota",
+        "balón",
+        "deporte",
+        "mover",
+        "movimiento",
+        "correr",
+        "saltar",
+        "bailar",
+        "danza",
+        "motricidad",
+        "equilibrio"
+      ],
+      "contexts": [
+        "educación inicial",
+        "proyecto de aula"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "bytes": 368,
+      "path": "/project-pictograms/ball.svg"
+    },
+    {
+      "id": "playground",
+      "file": "playground.svg",
+      "title": "Juegos del parque",
+      "description": "Juegos del parque. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+      "category": "juego",
+      "subcategory": "playground",
+      "concepts": [
+        "parque",
+        "juegos al aire libre",
+        "columpio",
+        "tobogán",
+        "patio",
+        "recreo"
+      ],
+      "actions": [],
+      "objects": [
+        "parque",
+        "juegos al aire libre",
+        "columpio",
+        "tobogán",
+        "patio",
+        "recreo"
+      ],
+      "contexts": [
+        "educación inicial",
+        "proyecto de aula"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "bytes": 464,
+      "path": "/project-pictograms/playground.svg"
+    },
+    {
+      "id": "car",
+      "file": "car.svg",
+      "title": "Auto",
+      "description": "Auto. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+      "category": "transporte",
+      "subcategory": "car",
+      "concepts": [
+        "auto",
+        "autos",
+        "carro",
+        "carros",
+        "carrito",
+        "vehículo",
+        "vehículos",
+        "transporte",
+        "ruedas"
+      ],
+      "actions": [],
+      "objects": [
+        "auto",
+        "autos",
+        "carro",
+        "carros",
+        "carrito",
+        "vehículo",
+        "vehículos",
+        "transporte",
+        "ruedas"
+      ],
+      "contexts": [
+        "educación inicial",
+        "proyecto de aula"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "bytes": 601,
+      "path": "/project-pictograms/car.svg"
+    },
+    {
+      "id": "bus",
+      "file": "bus.svg",
+      "title": "Bus",
+      "description": "Bus. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+      "category": "transporte",
+      "subcategory": "bus",
+      "concepts": [
+        "bus",
+        "buses",
+        "ómnibus",
+        "autobús",
+        "viajar",
+        "viaje",
+        "pasajeros"
+      ],
+      "actions": [],
+      "objects": [
+        "bus",
+        "buses",
+        "ómnibus",
+        "autobús",
+        "viajar",
+        "viaje",
+        "pasajeros"
+      ],
+      "contexts": [
+        "educación inicial",
+        "proyecto de aula"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "bytes": 730,
+      "path": "/project-pictograms/bus.svg"
+    },
+    {
+      "id": "recycling",
+      "file": "recycling.svg",
+      "title": "Reciclaje",
+      "description": "Reciclaje. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+      "category": "ambiente",
+      "subcategory": "recycling",
+      "concepts": [
+        "reciclaje",
+        "reciclar",
+        "residuos",
+        "basura",
+        "reutilizar",
+        "reducir",
+        "clasificar residuos"
+      ],
+      "actions": [],
+      "objects": [
+        "reciclaje",
+        "reciclar",
+        "residuos",
+        "basura",
+        "reutilizar",
+        "reducir",
+        "clasificar residuos"
+      ],
+      "contexts": [
+        "educación inicial",
+        "proyecto de aula"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "bytes": 492,
+      "path": "/project-pictograms/recycling.svg"
+    },
+    {
+      "id": "earth",
+      "file": "earth.svg",
+      "title": "Planeta Tierra",
+      "description": "Planeta Tierra. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+      "category": "ambiente",
+      "subcategory": "earth",
+      "concepts": [
+        "planeta tierra",
+        "tierra",
+        "planeta",
+        "mundo",
+        "ambiente",
+        "naturaleza",
+        "contaminación",
+        "cuidar el planeta"
+      ],
+      "actions": [],
+      "objects": [
+        "planeta tierra",
+        "tierra",
+        "planeta",
+        "mundo",
+        "ambiente",
+        "naturaleza",
+        "contaminación",
+        "cuidar el planeta"
+      ],
+      "contexts": [
+        "educación inicial",
+        "proyecto de aula"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "bytes": 376,
+      "path": "/project-pictograms/earth.svg"
+    },
+    {
+      "id": "weather",
+      "file": "weather.svg",
+      "title": "Sol y nubes",
+      "description": "Sol y nubes. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+      "category": "naturaleza",
+      "subcategory": "weather",
+      "concepts": [
+        "sol",
+        "clima",
+        "tiempo atmosférico",
+        "nube",
+        "nubes",
+        "lluvia",
+        "viento",
+        "calor",
+        "frío",
+        "estaciones"
+      ],
+      "actions": [],
+      "objects": [
+        "sol",
+        "clima",
+        "tiempo atmosférico",
+        "nube",
+        "nubes",
+        "lluvia",
+        "viento",
+        "calor",
+        "frío",
+        "estaciones"
+      ],
+      "contexts": [
+        "educación inicial",
+        "proyecto de aula"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "bytes": 449,
+      "path": "/project-pictograms/weather.svg"
+    },
+    {
+      "id": "space",
+      "file": "space.svg",
+      "title": "Estrellas y espacio",
+      "description": "Estrellas y espacio. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+      "category": "naturaleza",
+      "subcategory": "space",
+      "concepts": [
+        "estrella",
+        "estrellas",
+        "espacio",
+        "universo",
+        "luna",
+        "cielo",
+        "astronomía",
+        "planetas"
+      ],
+      "actions": [],
+      "objects": [
+        "estrella",
+        "estrellas",
+        "espacio",
+        "universo",
+        "luna",
+        "cielo",
+        "astronomía",
+        "planetas"
+      ],
+      "contexts": [
+        "educación inicial",
+        "proyecto de aula"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "bytes": 454,
+      "path": "/project-pictograms/space.svg"
+    }
+  ]
+}

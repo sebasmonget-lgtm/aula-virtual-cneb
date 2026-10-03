@@ -1,0 +1,41 @@
+{
+  "id": "space",
+  "file": "space.svg",
+  "title": "Estrellas y espacio",
+  "description": "Estrellas y espacio. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+  "category": "naturaleza",
+  "subcategory": "space",
+  "concepts": [
+    "estrella",
+    "estrellas",
+    "espacio",
+    "universo",
+    "luna",
+    "cielo",
+    "astronomía",
+    "planetas"
+  ],
+  "actions": [],
+  "objects": [
+    "estrella",
+    "estrellas",
+    "espacio",
+    "universo",
+    "luna",
+    "cielo",
+    "astronomía",
+    "planetas"
+  ],
+  "contexts": [
+    "educación inicial",
+    "proyecto de aula"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "bytes": 454,
+  "path": "/project-pictograms/space.svg"
+}

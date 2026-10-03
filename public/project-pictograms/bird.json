@@ -1,0 +1,39 @@
+{
+  "id": "bird",
+  "file": "bird.svg",
+  "title": "Ave",
+  "description": "Ave. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+  "category": "animales",
+  "subcategory": "bird",
+  "concepts": [
+    "ave",
+    "aves",
+    "pájaro",
+    "pájaros",
+    "pajarito",
+    "nido",
+    "plumas"
+  ],
+  "actions": [],
+  "objects": [
+    "ave",
+    "aves",
+    "pájaro",
+    "pájaros",
+    "pajarito",
+    "nido",
+    "plumas"
+  ],
+  "contexts": [
+    "educación inicial",
+    "proyecto de aula"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 6,
+  "bytes": 487,
+  "path": "/project-pictograms/bird.svg"
+}

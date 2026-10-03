@@ -1,0 +1,45 @@
+{
+  "id": "weather",
+  "file": "weather.svg",
+  "title": "Sol y nubes",
+  "description": "Sol y nubes. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+  "category": "naturaleza",
+  "subcategory": "weather",
+  "concepts": [
+    "sol",
+    "clima",
+    "tiempo atmosférico",
+    "nube",
+    "nubes",
+    "lluvia",
+    "viento",
+    "calor",
+    "frío",
+    "estaciones"
+  ],
+  "actions": [],
+  "objects": [
+    "sol",
+    "clima",
+    "tiempo atmosférico",
+    "nube",
+    "nubes",
+    "lluvia",
+    "viento",
+    "calor",
+    "frío",
+    "estaciones"
+  ],
+  "contexts": [
+    "educación inicial",
+    "proyecto de aula"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "bytes": 449,
+  "path": "/project-pictograms/weather.svg"
+}

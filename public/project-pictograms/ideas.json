@@ -1,0 +1,43 @@
+{
+  "id": "ideas",
+  "file": "ideas.svg",
+  "title": "Idea para explorar",
+  "description": "Idea para explorar. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+  "category": "general",
+  "subcategory": "ideas",
+  "concepts": [
+    "idea",
+    "ideas",
+    "proyecto",
+    "proyectos",
+    "exploración",
+    "investigar",
+    "descubrir",
+    "preguntas",
+    "indagar"
+  ],
+  "actions": [],
+  "objects": [
+    "idea",
+    "ideas",
+    "proyecto",
+    "proyectos",
+    "exploración",
+    "investigar",
+    "descubrir",
+    "preguntas",
+    "indagar"
+  ],
+  "contexts": [
+    "educación inicial",
+    "proyecto de aula"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "bytes": 425,
+  "path": "/project-pictograms/ideas.svg"
+}

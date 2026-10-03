@@ -1,0 +1,35 @@
+{
+  "id": "cow",
+  "file": "cow.svg",
+  "title": "Vaca",
+  "description": "Vaca. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+  "category": "animales",
+  "subcategory": "cow",
+  "concepts": [
+    "vaca",
+    "vacas",
+    "leche",
+    "ganado",
+    "animales de granja"
+  ],
+  "actions": [],
+  "objects": [
+    "vaca",
+    "vacas",
+    "leche",
+    "ganado",
+    "animales de granja"
+  ],
+  "contexts": [
+    "educación inicial",
+    "proyecto de aula"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 6,
+  "bytes": 659,
+  "path": "/project-pictograms/cow.svg"
+}

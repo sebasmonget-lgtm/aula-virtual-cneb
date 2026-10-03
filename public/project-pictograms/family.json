@@ -1,0 +1,41 @@
+{
+  "id": "family",
+  "file": "family.svg",
+  "title": "Familia",
+  "description": "Familia. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+  "category": "personas",
+  "subcategory": "family",
+  "concepts": [
+    "familia",
+    "familias",
+    "hogar",
+    "abuelos",
+    "abuela",
+    "abuelo",
+    "hermanos",
+    "hermanas"
+  ],
+  "actions": [],
+  "objects": [
+    "familia",
+    "familias",
+    "hogar",
+    "abuelos",
+    "abuela",
+    "abuelo",
+    "hermanos",
+    "hermanas"
+  ],
+  "contexts": [
+    "educación inicial",
+    "proyecto de aula"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "bytes": 1043,
+  "path": "/project-pictograms/family.svg"
+}

@@ -1,0 +1,44 @@
+{
+  "id": "plant",
+  "file": "plant.svg",
+  "title": "Planta en maceta",
+  "description": "Planta en maceta. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+  "category": "naturaleza",
+  "subcategory": "plant",
+  "concepts": [
+    "planta",
+    "plantas",
+    "jardín",
+    "jardinería",
+    "maceta",
+    "vegetal",
+    "sembrar",
+    "plantar"
+  ],
+  "actions": [
+    "regar",
+    "germinación"
+  ],
+  "objects": [
+    "planta",
+    "plantas",
+    "jardín",
+    "jardinería",
+    "maceta",
+    "vegetal",
+    "sembrar",
+    "plantar"
+  ],
+  "contexts": [
+    "educación inicial",
+    "proyecto de aula"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "bytes": 635,
+  "path": "/project-pictograms/plant.svg"
+}

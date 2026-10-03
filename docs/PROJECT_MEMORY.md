@@ -394,3 +394,7 @@ Secuencia única Familias / Observar / Revisar / Conversar / Preparando / Mi añ
 ## Mapa de Mi año conectado a V2 (2026-10-03)
 
 Se detectó que V2 omitía el mapa acordado en ADR 106, cuya última mejora visual era 904eb8d. Se comparte la misma línea de tiempo como vista principal: proyectos, gestión y feriados, lista secundaria y detalle seleccionado con acciones V2. Fechas y gestión de la versión guardada; feriados efectivos mediante la ruta autorizada existente. Abrir el mapa nunca recalcula el año con el scheduler legacy ni genera contenido. Sin cambios de arquitectura, permisos o migraciones. Ver docs/qa/annual-year-map-v2-restoration-2026-10-03.md.
+
+## Pictogramas pastel para proyectos (2026-10-03)
+
+Biblioteca de 50 SVG originales «Trazo suave», sin rostros, con JSON individual, índice y galería pública. Total 26.080 bytes de SVG. Mi año elige por tema del título y propósito/situación, sin IA ni escrituras; tema desconocido usa bombilla neutral. Se comparte solo el puntuador con Word/Jev, cuyo catálogo y exportación se conservan. Generador reproducible con modo check, 26 pruebas focales y QA visual ficticio aislado; plan conservado y cero llamadas al proveedor. Solo staging QA autorizado. Detalle y rollback en docs/qa/project-pictograms-2026-10-03.md.

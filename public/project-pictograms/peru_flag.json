@@ -1,0 +1,43 @@
+{
+  "id": "peru_flag",
+  "file": "peru_flag.svg",
+  "title": "Bandera del Perú",
+  "description": "Bandera del Perú. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+  "category": "cultura",
+  "subcategory": "peru_flag",
+  "concepts": [
+    "bandera",
+    "Perú",
+    "patria",
+    "patrias",
+    "peruana",
+    "peruano",
+    "identidad nacional",
+    "independencia"
+  ],
+  "actions": [
+    "celebrar"
+  ],
+  "objects": [
+    "bandera",
+    "Perú",
+    "patria",
+    "patrias",
+    "peruana",
+    "peruano",
+    "identidad nacional",
+    "independencia"
+  ],
+  "contexts": [
+    "educación inicial",
+    "proyecto de aula"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "bytes": 405,
+  "path": "/project-pictograms/peru_flag.svg"
+}

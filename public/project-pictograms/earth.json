@@ -1,0 +1,41 @@
+{
+  "id": "earth",
+  "file": "earth.svg",
+  "title": "Planeta Tierra",
+  "description": "Planeta Tierra. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+  "category": "ambiente",
+  "subcategory": "earth",
+  "concepts": [
+    "planeta tierra",
+    "tierra",
+    "planeta",
+    "mundo",
+    "ambiente",
+    "naturaleza",
+    "contaminación",
+    "cuidar el planeta"
+  ],
+  "actions": [],
+  "objects": [
+    "planeta tierra",
+    "tierra",
+    "planeta",
+    "mundo",
+    "ambiente",
+    "naturaleza",
+    "contaminación",
+    "cuidar el planeta"
+  ],
+  "contexts": [
+    "educación inicial",
+    "proyecto de aula"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "bytes": 376,
+  "path": "/project-pictograms/earth.svg"
+}

@@ -1,0 +1,46 @@
+{
+  "id": "water_drop",
+  "file": "water_drop.svg",
+  "title": "Gota de agua",
+  "description": "Gota de agua. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+  "category": "ambiente",
+  "subcategory": "water_drop",
+  "concepts": [
+    "agua",
+    "gota",
+    "lluvia",
+    "río",
+    "rios",
+    "mar",
+    "océano",
+    "flotar",
+    "hundirse"
+  ],
+  "actions": [
+    "cuidar",
+    "ahorrar"
+  ],
+  "objects": [
+    "agua",
+    "gota",
+    "lluvia",
+    "río",
+    "rios",
+    "mar",
+    "océano",
+    "flotar",
+    "hundirse"
+  ],
+  "contexts": [
+    "educación inicial",
+    "proyecto de aula"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "bytes": 303,
+  "path": "/project-pictograms/water_drop.svg"
+}

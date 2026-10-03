@@ -1,0 +1,39 @@
+{
+  "id": "bus",
+  "file": "bus.svg",
+  "title": "Bus",
+  "description": "Bus. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+  "category": "transporte",
+  "subcategory": "bus",
+  "concepts": [
+    "bus",
+    "buses",
+    "ómnibus",
+    "autobús",
+    "viajar",
+    "viaje",
+    "pasajeros"
+  ],
+  "actions": [],
+  "objects": [
+    "bus",
+    "buses",
+    "ómnibus",
+    "autobús",
+    "viajar",
+    "viaje",
+    "pasajeros"
+  ],
+  "contexts": [
+    "educación inicial",
+    "proyecto de aula"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "bytes": 730,
+  "path": "/project-pictograms/bus.svg"
+}

@@ -1,0 +1,39 @@
+{
+  "id": "school",
+  "file": "school.svg",
+  "title": "Jardín y escuela",
+  "description": "Jardín y escuela. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+  "category": "comunidad",
+  "subcategory": "school",
+  "concepts": [
+    "escuela",
+    "colegio",
+    "aula",
+    "jardín escolar",
+    "jardín infantil",
+    "acogida",
+    "adaptación"
+  ],
+  "actions": [],
+  "objects": [
+    "escuela",
+    "colegio",
+    "aula",
+    "jardín escolar",
+    "jardín infantil",
+    "acogida",
+    "adaptación"
+  ],
+  "contexts": [
+    "educación inicial",
+    "proyecto de aula"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "bytes": 537,
+  "path": "/project-pictograms/school.svg"
+}

@@ -1,0 +1,43 @@
+{
+  "id": "cooking",
+  "file": "cooking.svg",
+  "title": "Cocina",
+  "description": "Cocina. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+  "category": "alimentación",
+  "subcategory": "cooking",
+  "concepts": [
+    "cocina",
+    "cocinar",
+    "preparar alimentos",
+    "receta",
+    "recetas",
+    "comida",
+    "alimentos",
+    "pan",
+    "panadería"
+  ],
+  "actions": [],
+  "objects": [
+    "cocina",
+    "cocinar",
+    "preparar alimentos",
+    "receta",
+    "recetas",
+    "comida",
+    "alimentos",
+    "pan",
+    "panadería"
+  ],
+  "contexts": [
+    "educación inicial",
+    "proyecto de aula"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "bytes": 425,
+  "path": "/project-pictograms/cooking.svg"
+}

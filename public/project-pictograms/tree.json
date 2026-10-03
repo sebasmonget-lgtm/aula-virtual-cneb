@@ -1,0 +1,37 @@
+{
+  "id": "tree",
+  "file": "tree.svg",
+  "title": "Árbol",
+  "description": "Árbol. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+  "category": "naturaleza",
+  "subcategory": "tree",
+  "concepts": [
+    "árbol",
+    "árboles",
+    "bosque",
+    "bosques",
+    "hojas",
+    "sombra"
+  ],
+  "actions": [],
+  "objects": [
+    "árbol",
+    "árboles",
+    "bosque",
+    "bosques",
+    "hojas",
+    "sombra"
+  ],
+  "contexts": [
+    "educación inicial",
+    "proyecto de aula"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "bytes": 405,
+  "path": "/project-pictograms/tree.svg"
+}

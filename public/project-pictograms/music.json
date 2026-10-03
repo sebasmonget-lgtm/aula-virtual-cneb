@@ -1,0 +1,45 @@
+{
+  "id": "music",
+  "file": "music.svg",
+  "title": "Instrumentos y música",
+  "description": "Instrumentos y música. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+  "category": "expresión",
+  "subcategory": "music",
+  "concepts": [
+    "música",
+    "musica",
+    "instrumento",
+    "instrumentos",
+    "canción",
+    "canciones",
+    "cantar",
+    "sonido",
+    "sonidos",
+    "ritmo"
+  ],
+  "actions": [],
+  "objects": [
+    "música",
+    "musica",
+    "instrumento",
+    "instrumentos",
+    "canción",
+    "canciones",
+    "cantar",
+    "sonido",
+    "sonidos",
+    "ritmo"
+  ],
+  "contexts": [
+    "educación inicial",
+    "proyecto de aula"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "bytes": 522,
+  "path": "/project-pictograms/music.svg"
+}

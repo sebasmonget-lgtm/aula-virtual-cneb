@@ -1,0 +1,39 @@
+{
+  "id": "boy",
+  "file": "boy.svg",
+  "title": "Niño",
+  "description": "Niño. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+  "category": "personas",
+  "subcategory": "boy",
+  "concepts": [
+    "niño",
+    "niños",
+    "niñez",
+    "infancia",
+    "yo",
+    "identidad",
+    "autonomía"
+  ],
+  "actions": [],
+  "objects": [
+    "niño",
+    "niños",
+    "niñez",
+    "infancia",
+    "yo",
+    "identidad",
+    "autonomía"
+  ],
+  "contexts": [
+    "educación inicial",
+    "proyecto de aula"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "bytes": 463,
+  "path": "/project-pictograms/boy.svg"
+}

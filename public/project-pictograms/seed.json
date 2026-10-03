@@ -1,0 +1,39 @@
+{
+  "id": "seed",
+  "file": "seed.svg",
+  "title": "Semilla y brote",
+  "description": "Semilla y brote. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+  "category": "naturaleza",
+  "subcategory": "seed",
+  "concepts": [
+    "semilla",
+    "semillas",
+    "brote",
+    "germinación",
+    "germinar",
+    "siembra",
+    "crecer"
+  ],
+  "actions": [],
+  "objects": [
+    "semilla",
+    "semillas",
+    "brote",
+    "germinación",
+    "germinar",
+    "siembra",
+    "crecer"
+  ],
+  "contexts": [
+    "educación inicial",
+    "proyecto de aula"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "bytes": 424,
+  "path": "/project-pictograms/seed.svg"
+}

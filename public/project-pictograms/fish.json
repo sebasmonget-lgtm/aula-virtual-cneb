@@ -1,0 +1,39 @@
+{
+  "id": "fish",
+  "file": "fish.svg",
+  "title": "Pez",
+  "description": "Pez. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+  "category": "animales",
+  "subcategory": "fish",
+  "concepts": [
+    "pez",
+    "peces",
+    "pescado",
+    "pecera",
+    "acuario",
+    "marino",
+    "marinos"
+  ],
+  "actions": [],
+  "objects": [
+    "pez",
+    "peces",
+    "pescado",
+    "pecera",
+    "acuario",
+    "marino",
+    "marinos"
+  ],
+  "contexts": [
+    "educación inicial",
+    "proyecto de aula"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 6,
+  "bytes": 534,
+  "path": "/project-pictograms/fish.svg"
+}

@@ -1,0 +1,35 @@
+{
+  "id": "flower",
+  "file": "flower.svg",
+  "title": "Flor",
+  "description": "Flor. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+  "category": "naturaleza",
+  "subcategory": "flower",
+  "concepts": [
+    "flor",
+    "flores",
+    "primavera",
+    "pétalo",
+    "pétalos"
+  ],
+  "actions": [],
+  "objects": [
+    "flor",
+    "flores",
+    "primavera",
+    "pétalo",
+    "pétalos"
+  ],
+  "contexts": [
+    "educación inicial",
+    "proyecto de aula"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "bytes": 665,
+  "path": "/project-pictograms/flower.svg"
+}

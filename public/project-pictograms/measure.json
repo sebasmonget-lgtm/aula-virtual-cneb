@@ -1,0 +1,43 @@
+{
+  "id": "measure",
+  "file": "measure.svg",
+  "title": "Regla para medir",
+  "description": "Regla para medir. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+  "category": "matemática",
+  "subcategory": "measure",
+  "concepts": [
+    "medir",
+    "medida",
+    "medidas",
+    "longitud",
+    "tamaño",
+    "tamaños",
+    "regla",
+    "largo",
+    "corto"
+  ],
+  "actions": [],
+  "objects": [
+    "medir",
+    "medida",
+    "medidas",
+    "longitud",
+    "tamaño",
+    "tamaños",
+    "regla",
+    "largo",
+    "corto"
+  ],
+  "contexts": [
+    "educación inicial",
+    "proyecto de aula"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "bytes": 363,
+  "path": "/project-pictograms/measure.svg"
+}

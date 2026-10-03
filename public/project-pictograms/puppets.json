@@ -1,0 +1,37 @@
+{
+  "id": "puppets",
+  "file": "puppets.svg",
+  "title": "Títeres",
+  "description": "Títeres. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+  "category": "expresión",
+  "subcategory": "puppets",
+  "concepts": [
+    "títere",
+    "títeres",
+    "teatro",
+    "dramatizar",
+    "dramatización",
+    "representar"
+  ],
+  "actions": [],
+  "objects": [
+    "títere",
+    "títeres",
+    "teatro",
+    "dramatizar",
+    "dramatización",
+    "representar"
+  ],
+  "contexts": [
+    "educación inicial",
+    "proyecto de aula"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "bytes": 458,
+  "path": "/project-pictograms/puppets.svg"
+}

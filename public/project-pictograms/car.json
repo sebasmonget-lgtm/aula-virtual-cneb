@@ -1,0 +1,43 @@
+{
+  "id": "car",
+  "file": "car.svg",
+  "title": "Auto",
+  "description": "Auto. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+  "category": "transporte",
+  "subcategory": "car",
+  "concepts": [
+    "auto",
+    "autos",
+    "carro",
+    "carros",
+    "carrito",
+    "vehículo",
+    "vehículos",
+    "transporte",
+    "ruedas"
+  ],
+  "actions": [],
+  "objects": [
+    "auto",
+    "autos",
+    "carro",
+    "carros",
+    "carrito",
+    "vehículo",
+    "vehículos",
+    "transporte",
+    "ruedas"
+  ],
+  "contexts": [
+    "educación inicial",
+    "proyecto de aula"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "bytes": 601,
+  "path": "/project-pictograms/car.svg"
+}

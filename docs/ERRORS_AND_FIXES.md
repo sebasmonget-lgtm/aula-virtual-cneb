@@ -1469,3 +1469,11 @@ Síntoma: cuatro notas QA de la captura automatizada quedaron asociadas a la sel
 **Solución validada.** Compartir la presentación temporal existente y conectarla a las filas y fechas V2 guardadas. El mapa es principal y la lista secundaria; las acciones siguen siendo V2. La proyección V2 rechaza fechas ausentes o discrepantes sin invocar el scheduler anterior. Pruebas focales 25/25 y navegador ficticio escritorio/móvil verifican selección, feriados, scroll y persistencia de la vista, sin llamadas nuevas al proveedor. Informe: docs/qa/annual-year-map-v2-restoration-2026-10-03.md.
 
 **Prevención.** Verificar también la llegada a Mi año al probar un nuevo recorrido, comparándola con el acuerdo visual vigente. Reutilizar la presentación sin sustituir los contratos ni recalcular fechas congeladas.
+
+## 2026-10-03 — Ilustraciones genéricas o ajenas al tema del proyecto
+
+**Síntoma y causa.** El mapa usaba una hoja como fallback para numerosos proyectos. Al probar la biblioteca nueva, verbos genéricos compartidos («cuidamos», «exploramos») y contexto del aula podían puntuar un dibujo ajeno al sustantivo principal, por ejemplo Tierra en un proyecto del agua.
+
+**Solución validada.** Catálogo de 50 temas, prioridad del título sobre el contexto, omisión de verbos genéricos/materiales y fallback neutral de ideas. Pruebas con 23 títulos y una línea de tiempo ficticia de doce temas verifican imágenes diferenciadas. La extracción del puntuador compartido conserva las pruebas de Word y Jev.
+
+**Prevención.** Ampliar ejemplos de títulos reales anonimizados al agregar vocabulario; comprobar que el propósito genérico no desplaza el tema específico y que un tema desconocido no recibe una imagen arbitraria. Mantener el check de archivos y tamaño del catálogo.

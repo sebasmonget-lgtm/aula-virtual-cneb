@@ -1,0 +1,39 @@
+{
+  "id": "bee",
+  "file": "bee.svg",
+  "title": "Abeja",
+  "description": "Abeja. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+  "category": "animales",
+  "subcategory": "bee",
+  "concepts": [
+    "abeja",
+    "abejas",
+    "miel",
+    "colmena",
+    "polinización",
+    "insecto",
+    "insectos"
+  ],
+  "actions": [],
+  "objects": [
+    "abeja",
+    "abejas",
+    "miel",
+    "colmena",
+    "polinización",
+    "insecto",
+    "insectos"
+  ],
+  "contexts": [
+    "educación inicial",
+    "proyecto de aula"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 6,
+  "bytes": 518,
+  "path": "/project-pictograms/bee.svg"
+}

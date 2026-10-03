@@ -1,0 +1,41 @@
+{
+  "id": "pencil",
+  "file": "pencil.svg",
+  "title": "Lápiz",
+  "description": "Lápiz. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+  "category": "expresión",
+  "subcategory": "pencil",
+  "concepts": [
+    "lápiz",
+    "lápices",
+    "escribir",
+    "escritura",
+    "trazo",
+    "trazos",
+    "dibujar",
+    "dibujo"
+  ],
+  "actions": [],
+  "objects": [
+    "lápiz",
+    "lápices",
+    "escribir",
+    "escritura",
+    "trazo",
+    "trazos",
+    "dibujar",
+    "dibujo"
+  ],
+  "contexts": [
+    "educación inicial",
+    "proyecto de aula"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "bytes": 471,
+  "path": "/project-pictograms/pencil.svg"
+}

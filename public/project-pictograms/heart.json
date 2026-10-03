@@ -1,0 +1,47 @@
+{
+  "id": "heart",
+  "file": "heart.svg",
+  "title": "Emociones y buen trato",
+  "description": "Emociones y buen trato. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+  "category": "bienestar",
+  "subcategory": "heart",
+  "concepts": [
+    "emociones",
+    "emoción",
+    "sentimientos",
+    "sentir",
+    "afecto",
+    "amor",
+    "amistad",
+    "convivencia",
+    "respeto",
+    "buen trato",
+    "paz"
+  ],
+  "actions": [],
+  "objects": [
+    "emociones",
+    "emoción",
+    "sentimientos",
+    "sentir",
+    "afecto",
+    "amor",
+    "amistad",
+    "convivencia",
+    "respeto",
+    "buen trato",
+    "paz"
+  ],
+  "contexts": [
+    "educación inicial",
+    "proyecto de aula"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "bytes": 311,
+  "path": "/project-pictograms/heart.svg"
+}

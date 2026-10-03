@@ -1,0 +1,31 @@
+{
+  "id": "turtle",
+  "file": "turtle.svg",
+  "title": "Tortuga",
+  "description": "Tortuga. Dibujo simple en pastel, contorno suave, sin rostro y fondo transparente.",
+  "category": "animales",
+  "subcategory": "turtle",
+  "concepts": [
+    "tortuga",
+    "tortugas",
+    "caparazón"
+  ],
+  "actions": [],
+  "objects": [
+    "tortuga",
+    "tortugas",
+    "caparazón"
+  ],
+  "contexts": [
+    "educación inicial",
+    "proyecto de aula"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 6,
+  "bytes": 522,
+  "path": "/project-pictograms/turtle.svg"
+}
