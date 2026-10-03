@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import NextImage from "next/image";
 import {
-  BookOpen, CalendarDays, CalendarRange, Check, ClipboardCheck, Database,
+  ArrowRight, BookOpen, CalendarDays, CalendarRange, Check, ClipboardCheck, Database,
   Home, Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -280,7 +280,7 @@ export function TeacherWorkspace() {
       </Sidebar>
 
       <SidebarInset className="min-w-0 bg-[#f7faff]">
-        <header className="sticky top-0 z-20 flex min-h-20 items-center justify-between bg-[#f7faff]/95 px-4 backdrop-blur md:border-b md:border-[#e7edf7] md:bg-white/95 md:px-8">
+        <header className="sticky top-0 z-30 flex min-h-20 items-center justify-between bg-[#f7faff] px-4 md:border-b md:border-[#e7edf7] md:bg-white md:px-8">
           <div className="flex items-center gap-3">
             <NextImage src="/favicon.svg" alt="" width={44} height={44} className="size-11 rounded-2xl md:hidden" />
             <div className="md:hidden"><p className="text-xl font-extrabold leading-tight text-[#1c2e50]">Ayni Aula</p><p className="text-xs text-[#60718a]">{active === "Documentos" || active === "Biblioteca" ? "Tus documentos, ideas y materiales" : active === "Calendario" ? "Tu año, proyectos y actividades" : active === "Aula" ? "Tus niños y su seguimiento" : active === "Evaluar" ? "Evidencias y decisiones" : active === "Planificar" ? "Diagnóstico, proyectos y actividades" : "Tu aliada en Inicial"}</p></div>
@@ -423,14 +423,14 @@ function PlanningArea({ dashboard, initialTab, initialActivity, diagnosticInitia
       {tab === "annual" && status === "draft" && journey?.hasConfirmedAnnual && <Button variant="outline" onClick={() => setTab("experiences")}>Seguir con el plan confirmado anterior</Button>}
       {tab === "experiences" && status === "draft" && journey?.hasConfirmedExperience && <Button variant="outline" onClick={() => setTab("activities")}>Preparar actividad de una experiencia confirmada</Button>}
       <details className="text-sm"><summary className="min-h-11 cursor-pointer py-2 font-semibold text-[#07576c]">Tu recorrido y otras etapas</summary><div className="mt-2">
-      {journey?.mode==="ongoing_cycle"?<div className="flex flex-wrap gap-2 rounded-xl bg-[#eaf7fb] p-3 text-sm"><span className="mr-auto font-semibold">Ir a:</span><Button variant="outline" onClick={()=>setTab("annual")}>Mi año</Button><Button variant="outline" onClick={()=>setTab("experiences")}>Proyectos</Button><Button variant="outline" onClick={()=>setTab("activities")}>Actividades y talleres</Button></div>:<><p className="text-sm text-[#526b87]">✓ 1. Aula configurada · {journey?.studentCount ? `✓ 2. ${journey.studentCount} alumnos registrados` : "2. Añadir alumnos: pendiente"}</p>
+      {journey?.mode==="ongoing_cycle"?<div className="flex flex-wrap gap-2 rounded-xl bg-[#eaf7fb] p-3 text-sm"><span className="mr-auto font-semibold">Ir a:</span><Button variant="outline" onClick={()=>setTab("annual")}>Mi año</Button><Button variant="outline" onClick={()=>setTab("experiences")}>Proyectos</Button><Button variant="outline" onClick={()=>setTab("activities")}>Actividades y talleres</Button></div>:<><p className="text-sm text-[#526b87]">{process.env.NEXT_PUBLIC_AYNI_ANNUAL_JOURNEY==="1" ? `Aula configurada · ${journey?.studentCount ?? 0} alumnos registrados` : `✓ 1. Aula configurada · ${journey?.studentCount ? `✓ 2. ${journey.studentCount} alumnos registrados` : "2. Añadir alumnos: pendiente"}`}</p>
       <ol className="ayni-journey" aria-label="Siguientes pasos del recorrido">{steps.map((step, index) => {
         const saved = journey && (step.id === "diagnostic" ? journey.diagnostic : step.id === "annual" ? journey.annual : step.id === "experiences" ? journey.experience : journey.activity);
         const hasConfirmed = journey && (step.id === "diagnostic" ? journey.diagnostic === "reviewed" : step.id === "annual" ? journey.hasConfirmedAnnual : step.id === "experiences" ? journey.hasConfirmedExperience : journey.hasConfirmedActivity);
         return <li key={step.id} aria-current={tab === step.id ? "step" : undefined} className={saved === "confirmed" || saved === "reviewed" ? "is-complete" : saved === "draft" || saved === "in_progress" ? "is-draft" : ""}>
           {step.id === "diagnostic" ? <button type="button" className="ayni-journey-link" onClick={onGoDiagnostic} aria-label="Volver al diagnóstico para revisarlo o cambiarlo">
-            <span>{saved === "confirmed" || saved === "reviewed" ? <Check aria-hidden="true" /> : index + 3}</span><small>{step.label}</small>
-          </button> : <><span>{saved === "confirmed" || saved === "reviewed" ? <Check aria-hidden="true" /> : index + 3}</span><small>{step.label}</small></>}
+            <span>{saved === "confirmed" || saved === "reviewed" ? <Check aria-hidden="true" /> : process.env.NEXT_PUBLIC_AYNI_ANNUAL_JOURNEY==="1" ? <ArrowRight aria-hidden="true" /> : index + 3}</span><small>{step.label}</small>
+          </button> : <><span>{saved === "confirmed" || saved === "reviewed" ? <Check aria-hidden="true" /> : process.env.NEXT_PUBLIC_AYNI_ANNUAL_JOURNEY==="1" ? <ArrowRight aria-hidden="true" /> : index + 3}</span><small>{step.label}</small></>}
           <em>{saved === "reviewed" ? "Revisado" : saved === "in_progress" ? "En curso" : saved === "confirmed" ? "Confirmado" : saved === "draft" ? hasConfirmed ? "Confirmado + borrador" : "Borrador" : saved === "pending" ? "Pendiente" : ""}</em>
         </li>;
       })}</ol></>}

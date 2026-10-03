@@ -162,6 +162,11 @@ button[data-slot="button"][data-variant="outline"] { border-color: var(--input);
 
 .diagnostic-shell .grid > * { min-width: 0; }
 
+/* Keep focused fields and anchor targets clear of the sticky header and mobile nav. */
+#ayni-main, #ayni-main :is(button, input, textarea, select, [tabindex]) {
+  scroll-margin-block: 6rem;
+}
+
 .diagnostic-shell .diagnostic-back-button {
   min-height: 48px;
   width: fit-content;

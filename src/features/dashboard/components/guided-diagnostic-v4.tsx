@@ -77,7 +77,7 @@ export function GuidedDiagnostic({ dashboard, onPlan, onStudents, initialStep = 
   }).catch(() => { setPendingSpontaneous(null); if (initialStep === 3) setStep(3); }); }, [initialStep, setStep]);
   function goToStep(next: 1 | 2 | 3) {
     if (next === 3 && onPlan) { setMatrixOpen(true); setStep(2); return; }
-    setStep(next); setStudentId(null); setInterviewStudentId(null);
+    setMatrixOpen(false); setStep(next); setStudentId(null); setInterviewStudentId(null);
   }
   useEffect(() => {
     if (interviewStudentId || step !== 1) return;
@@ -131,7 +131,7 @@ export function GuidedDiagnostic({ dashboard, onPlan, onStudents, initialStep = 
 
   return <div className="diagnostic-shell space-y-5">
     <header className="flex flex-wrap items-center justify-between gap-4">
-      <div className="flex items-center gap-4"><span className="grid size-10 sm:size-14 shrink-0 place-items-center rounded-full bg-[#087d96] text-2xl font-bold text-white">{matrixOpen?3:step}</span><div><h1 className="text-2xl sm:text-3xl font-extrabold text-[#172b52]">{matrixOpen?"Matriz alumnos × competencias":step===1?"Familias":"Observar"}</h1><p className="mt-2 text-sm text-[#526b87]">{matrixOpen?"Lo que ya conocemos y oportunidades para registrar más.":step===1?"Una pregunta a la vez, con ejemplos y progreso.":"Registra lo que observas o prueba una experiencia para conocer mejor."}</p></div></div>
+      <div className="flex items-center gap-4"><span className="grid size-10 sm:size-14 shrink-0 place-items-center rounded-full bg-[#087d96] text-2xl font-bold text-white">{matrixOpen?3:step}</span><div><h1 className="text-2xl sm:text-3xl font-extrabold text-[#172b52]">{matrixOpen?"Revisar lo que conocemos":step===1?"Familias":"Observar"}</h1><p className="mt-2 text-sm text-[#526b87]">{matrixOpen?"Alumnos × competencias":step===1?"Una pregunta a la vez, con ejemplos y progreso.":"Registra lo que observas o prueba una experiencia para conocer mejor."}</p></div></div>
       <span className="hidden sm:block rounded-full bg-[#edf5fb] px-4 py-2 text-sm font-semibold text-[#1b5175]">{data.classroom.age_years} años · {data.classroom.section}</span>
     </header>
     <JourneySteps active={matrixOpen?3:step} onStep={n=>goToStep(n as 1|2|3)}/>

@@ -10,6 +10,7 @@ import { AsyncButton, GenerationProgress, LoadingState, WorkflowFeedback } from 
 import { AnnualPlanningConversation } from "./annual-planning-conversation";
 import { AnnualPreparationProgress } from "./annual-preparation-progress";
 import { DictationRecorder } from "./dictation-recorder";
+import { JourneySteps } from "./initial-journey-ui";
 
 type Fact = { key: string; kind: string; subject: string; scope: string; support_text: string; uncertainty: string; occurred_at: string | null; explicit_tags?: string[] };
 type Snapshot = { source_fingerprint: string; student_count: number; facts: Fact[]; resources: string[];
@@ -173,6 +174,7 @@ export function AnnualJourneyWorkspace({ onConfirmed, onGoDiagnostic, onDevelop,
     {job && job.status !== "succeeded" && <AnnualPreparationProgress job={job} generating={generating} disabled={disabled} onContinue={()=>void continueSavedJob(job)} onRefresh={()=>void run("reload",async()=>{await reload(job.draft_id);await loadStart();setJob(null);})}/>}
     {preparing && !generating && (!job || job.status === "succeeded") && start && <AnnualPlanningConversation observations={start.snapshot.facts.filter(f=>f.kind==="observed").length} families={start.snapshot.facts.filter(f=>f.kind==="family_report").length} unknown={start.snapshot.competency_information.filter(c=>c.recorded_performances===0).length} onIdeas={setIdeas} onDraft={setIdeaDraft} onGenerate={generate} disabled={disabled}/>}
     {!preparing && complete && selected && <>
+      <JourneySteps active={6}/>
       <div className="flex flex-wrap items-center justify-between gap-3"><p className="font-semibold text-[#526b87]">{editable ? "Borrador guardado · revisa antes de confirmar" : selected.status === "active" ? "Año confirmado · previsión flexible" : "Versión histórica"}</p>
         {editable ? <AsyncButton busyLabel="Confirmando…" busy={busy === "confirm"} disabled={disabled || !!message.trim() || !!proposal.pending_changes?.length || !!proposal.evidence_interpretations?.length && !interpretationsReviewed} onClick={() => void mutate("confirm")}>Confirmar mi año</AsyncButton>
           : selected.status === "active" ? <Button disabled={disabled || !!plans?.draft} onClick={() => void mutate("copy")}>Revisar mi año con Ayni</Button> : null}
