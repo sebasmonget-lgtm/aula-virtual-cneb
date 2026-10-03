@@ -1,0 +1,48 @@
+{
+  "id": "ball",
+  "title": "Pelota y movimiento",
+  "category": "juego",
+  "subcategory": "ball",
+  "description": "Pelota y movimiento. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+  "concepts": [
+    "pelota",
+    "balón",
+    "deporte",
+    "mover",
+    "movimiento",
+    "correr",
+    "saltar",
+    "motricidad",
+    "equilibrio"
+  ],
+  "actions": [],
+  "objects": [
+    "pelota",
+    "balón",
+    "deporte",
+    "mover",
+    "movimiento",
+    "correr",
+    "saltar",
+    "motricidad",
+    "equilibrio"
+  ],
+  "contexts": [],
+  "match_phrases": [],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "competency_ids": [
+    "PSICO_MOTRICIDAD"
+  ],
+  "fallback_competency_ids": [],
+  "file": "ball.webp",
+  "path": "/project-illustrations/ball.webp",
+  "width": 160,
+  "height": 160,
+  "bytes": 5532,
+  "sha256": "6c2ce49f232d36c587d664a47657d9b425cbe6975fa8ad4f99cf523d6e4db9e5"
+}

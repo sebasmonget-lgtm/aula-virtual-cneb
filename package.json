@@ -46,6 +46,8 @@
     "check:image-library": "node scripts/build-image-library-index.mjs --check",
     "build:project-pictograms": "node scripts/build-project-pictograms.mjs",
     "check:project-pictograms": "node scripts/build-project-pictograms.mjs --check",
+    "build:project-illustrations": "node scripts/build-project-illustrations.mjs",
+    "check:project-illustrations": "node scripts/build-project-illustrations.mjs --check",
     "test:project-pictograms": "node --test src/lib/project-pictograms.test.mjs",
     "build:image-library-index": "node scripts/build-image-library-index.mjs",
     "test:documents-v4": "node --test src/lib/document-library-service.test.mjs src/lib/document-word-export.test.mjs src/lib/diagnostic-report-word.test.mjs src/lib/institution-logo.test.mjs",

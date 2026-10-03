@@ -1,0 +1,44 @@
+{
+  "id": "vegetables",
+  "title": "Verduras",
+  "category": "alimentación",
+  "subcategory": "vegetables",
+  "description": "Verduras. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+  "concepts": [
+    "verdura",
+    "verduras",
+    "vegetales",
+    "zanahoria",
+    "lechuga",
+    "huerto",
+    "hortaliza"
+  ],
+  "actions": [],
+  "objects": [
+    "verdura",
+    "verduras",
+    "vegetales",
+    "zanahoria",
+    "lechuga",
+    "huerto",
+    "hortaliza"
+  ],
+  "contexts": [],
+  "match_phrases": [],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "competency_ids": [
+    "CYT_INDAGA"
+  ],
+  "fallback_competency_ids": [],
+  "file": "vegetables.webp",
+  "path": "/project-illustrations/vegetables.webp",
+  "width": 160,
+  "height": 160,
+  "bytes": 6022,
+  "sha256": "ec5f675c64f54175e4b349829a9d35ed507530d56474a7d996623b8c52f309b4"
+}

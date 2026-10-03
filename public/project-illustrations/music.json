@@ -1,0 +1,50 @@
+{
+  "id": "music",
+  "title": "Instrumentos y música",
+  "category": "expresión",
+  "subcategory": "music",
+  "description": "Instrumentos y música. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+  "concepts": [
+    "música",
+    "musica",
+    "instrumento",
+    "instrumentos",
+    "canción",
+    "canciones",
+    "cantar",
+    "sonido",
+    "sonidos",
+    "ritmo"
+  ],
+  "actions": [],
+  "objects": [
+    "música",
+    "musica",
+    "instrumento",
+    "instrumentos",
+    "canción",
+    "canciones",
+    "cantar",
+    "sonido",
+    "sonidos",
+    "ritmo"
+  ],
+  "contexts": [],
+  "match_phrases": [],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "competency_ids": [
+    "COM_ARTE"
+  ],
+  "fallback_competency_ids": [],
+  "file": "music.webp",
+  "path": "/project-illustrations/music.webp",
+  "width": 160,
+  "height": 160,
+  "bytes": 5710,
+  "sha256": "d5b19451fd23441b303a279385de43e4ed438fb6f8b96d9bb1f0673b8458a236"
+}

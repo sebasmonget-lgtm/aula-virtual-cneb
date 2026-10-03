@@ -1,0 +1,38 @@
+{
+  "id": "cat",
+  "title": "Gato",
+  "category": "animales",
+  "subcategory": "cat",
+  "description": "Gato. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+  "concepts": [
+    "gato",
+    "gatos",
+    "gatito",
+    "felino"
+  ],
+  "actions": [],
+  "objects": [
+    "gato",
+    "gatos",
+    "gatito",
+    "felino"
+  ],
+  "contexts": [],
+  "match_phrases": [],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 6,
+  "competency_ids": [
+    "CYT_INDAGA"
+  ],
+  "fallback_competency_ids": [],
+  "file": "cat.webp",
+  "path": "/project-illustrations/cat.webp",
+  "width": 160,
+  "height": 160,
+  "bytes": 5802,
+  "sha256": "5ba02160342a4d11b0ed65cec784fce4819f30c4a0b9fbe638a3d2692a607a3c"
+}

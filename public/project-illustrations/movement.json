@@ -1,0 +1,45 @@
+{
+  "id": "movement",
+  "title": "Movimiento y recorridos",
+  "category": "juego",
+  "subcategory": "movement",
+  "description": "Movimiento y recorridos. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+  "concepts": [
+    "movimiento",
+    "movimientos",
+    "motricidad",
+    "recorridos",
+    "recorrer",
+    "caminos",
+    "desplazamientos",
+    "expresión corporal",
+    "equilibrio",
+    "cuerpo"
+  ],
+  "actions": [],
+  "objects": [],
+  "contexts": [],
+  "match_phrases": [
+    "desplazamientos",
+    "motricidad",
+    "recorridos"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 7,
+  "competency_ids": [
+    "PSICO_MOTRICIDAD"
+  ],
+  "fallback_competency_ids": [
+    "PSICO_MOTRICIDAD"
+  ],
+  "file": "movement.webp",
+  "path": "/project-illustrations/movement.webp",
+  "width": 160,
+  "height": 160,
+  "bytes": 6058,
+  "sha256": "32a355bff81b2ad20f783b133105a81b02613b211bedb9dc1efcbe2feb04f5e1"
+}

@@ -1477,3 +1477,11 @@ Síntoma: cuatro notas QA de la captura automatizada quedaron asociadas a la sel
 **Solución validada.** Catálogo de 50 temas, prioridad del título sobre el contexto, omisión de verbos genéricos/materiales y fallback neutral de ideas. Pruebas con 23 títulos y una línea de tiempo ficticia de doce temas verifican imágenes diferenciadas. La extracción del puntuador compartido conserva las pruebas de Word y Jev.
 
 **Prevención.** Ampliar ejemplos de títulos reales anonimizados al agregar vocabulario; comprobar que el propósito genérico no desplaza el tema específico y que un tema desconocido no recibe una imagen arbitraria. Mantener el check de archivos y tamaño del catálogo.
+
+## 2026-10-03 — Tema parcial confundido con salud y títulos ambiguos
+
+**Síntoma y causa.** El mapa podía elegir botiquín para movimiento porque «cuerpo» coincidía parcialmente con «cuidado del cuerpo». Dos proyectos de cuentos recibían el mismo libro pese a enfatizar oralidad y lectura respectivamente. El selector anterior no usaba las competencias del proyecto.
+
+**Solución validada.** Coincidencias de frases completas, normalización de plurales y apoyo de IDs curriculares existentes. Narración y lectura tienen dibujos diferenciados; el tema explícito mantiene prioridad y el fallback curricular exige un rol curado. Las pruebas cubren cuerpo/movimiento, cuentos oral/lectura, agua con escritura, Navidad/solidaridad y IDs desconocidos. 28 pruebas focales PASS y mapa ficticio de doce proyectos verificado en escritorio/móvil sin modificar el plan.
+
+**Prevención.** Probar empates semánticos con competencias reales además del título. No convertir cualquier coincidencia curricular en un tema textual pertinente; mantener imágenes neutrales para casos desconocidos y verificar peso/transparencia de cada nuevo asset.

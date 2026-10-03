@@ -55,7 +55,7 @@ export function AnnualYearTimeline({ rows, calendar, effectiveCalendar, selected
             title={holiday.labels.join(" · ")}>{holidayShort(holiday.labels[0], holiday.start, holiday.end)}</button>
             {holidayOpen === holiday.start && <div role="status" className="absolute left-1/2 top-11 z-30 w-52 -translate-x-1/2 rounded-lg border bg-white p-2 text-xs shadow-lg">
               <b>{compact(holiday.start)}{holiday.start !== holiday.end ? `–${compact(holiday.end)}` : ""}</b><br />{holiday.labels.join(" · ")}</div>}</div>)}</div>
-        <div className="relative h-48 rounded-xl bg-[#f7fafc]">
+        <div className="relative h-64 rounded-xl bg-[#f7fafc]">
           {blocks.map((block) => <div key={`${block.start_date}-${block.end_date}`} aria-label={`${block.label}: ${compact(block.start_date)} al ${compact(block.end_date)}, sin clases`} className="absolute inset-y-0 z-20 flex flex-col items-center justify-center overflow-hidden rounded-md border-2 border-[#8faac3] bg-[#dce8f2] px-1 text-center text-[#264869]"
             style={{ left: `${annualMapPercent(block.start_date, window)}%`, width: `${annualMapWidth(block.start_date, block.end_date, window)}%` }} title={`${block.label}: ${compact(block.start_date)}–${compact(block.end_date)} · Sin clases`}>
             <CalendarDays className="mb-1 size-4 shrink-0" aria-hidden="true" />{annualMapWidth(block.start_date, block.end_date, window) >= 3 && <><span className="text-xs font-extrabold leading-tight">Gestión</span><span className="text-xs">Sin clases</span></>}</div>)}
@@ -67,7 +67,7 @@ export function AnnualYearTimeline({ rows, calendar, effectiveCalendar, selected
             onClick={() => onSelect(row.proposal_id)}
             className={`absolute inset-y-0 z-10 flex min-w-0 flex-col items-center justify-center overflow-hidden rounded-md border px-1 text-center text-[#173352] transition-transform hover:-translate-y-1 focus-visible:z-20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#087d96] ${styles[index % styles.length]} ${selectedId === row.proposal_id ? "ring-2 ring-[#087d96] ring-offset-1" : ""}`}
             style={{ left: `${annualMapPercent(row.start, window)}%`, width: `${annualMapWidth(row.start, row.end, window)}%` }}>
-            <ProjectPictogram project={row} className="mb-1 size-12 max-w-full" />
+            <ProjectPictogram project={row} className="mb-1 size-16 max-w-full" />
             <span className="mb-1 text-xs font-bold">{String(index + 1).padStart(2, "0")}</span><span className="w-full min-w-0 break-words text-xs font-bold leading-4" title={row.title}>{row.title}</span>
             <span className="mt-2 rounded-full bg-white/75 px-1 text-xs">{row.experience_type === "unit" ? "Unidad" : "Proyecto"}</span>
             <span className="text-xs">{row.duration_weeks} sem</span></button>)}

@@ -1,0 +1,49 @@
+{
+  "id": "measure",
+  "title": "Regla para medir",
+  "category": "matemática",
+  "subcategory": "measure",
+  "description": "Regla para medir. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+  "concepts": [
+    "medir",
+    "medida",
+    "medidas",
+    "longitud",
+    "tamaño",
+    "tamaños",
+    "regla",
+    "largo",
+    "corto"
+  ],
+  "actions": [],
+  "objects": [
+    "medir",
+    "medida",
+    "medidas",
+    "longitud",
+    "tamaño",
+    "tamaños",
+    "regla",
+    "largo",
+    "corto"
+  ],
+  "contexts": [],
+  "match_phrases": [],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "competency_ids": [
+    "MAT_CANTIDAD",
+    "MAT_FORMA"
+  ],
+  "fallback_competency_ids": [],
+  "file": "measure.webp",
+  "path": "/project-illustrations/measure.webp",
+  "width": 160,
+  "height": 160,
+  "bytes": 5938,
+  "sha256": "212d2623c684c91a1fcd15fa1c43acee62854aae1a3c7370998f03f752a7dc31"
+}

@@ -1,0 +1,48 @@
+{
+  "id": "painting",
+  "title": "Pincel y acuarelas",
+  "category": "expresión",
+  "subcategory": "painting",
+  "description": "Pincel y acuarelas. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+  "concepts": [
+    "pincel",
+    "pinceles",
+    "acuarela",
+    "acuarelas",
+    "pintar",
+    "pintura",
+    "colores",
+    "arte",
+    "artes"
+  ],
+  "actions": [],
+  "objects": [
+    "pincel",
+    "pinceles",
+    "acuarela",
+    "acuarelas",
+    "pintar",
+    "pintura",
+    "colores",
+    "arte",
+    "artes"
+  ],
+  "contexts": [],
+  "match_phrases": [],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "competency_ids": [
+    "COM_ARTE"
+  ],
+  "fallback_competency_ids": [],
+  "file": "painting.webp",
+  "path": "/project-illustrations/painting.webp",
+  "width": 160,
+  "height": 160,
+  "bytes": 6004,
+  "sha256": "2a27ac2ddb9662a3c724ee3aec87f9c37c72188c385f2dc0960866c7553eaf9a"
+}

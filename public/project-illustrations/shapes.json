@@ -1,0 +1,48 @@
+{
+  "id": "shapes",
+  "title": "Formas geométricas",
+  "category": "matemática",
+  "subcategory": "shapes",
+  "description": "Formas geométricas. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+  "concepts": [
+    "forma",
+    "formas",
+    "figura",
+    "figuras",
+    "círculo",
+    "cuadrado",
+    "triángulo",
+    "geometría"
+  ],
+  "actions": [],
+  "objects": [
+    "forma",
+    "formas",
+    "figura",
+    "figuras",
+    "círculo",
+    "cuadrado",
+    "triángulo",
+    "geometría"
+  ],
+  "contexts": [],
+  "match_phrases": [],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "competency_ids": [
+    "MAT_FORMA"
+  ],
+  "fallback_competency_ids": [
+    "MAT_FORMA"
+  ],
+  "file": "shapes.webp",
+  "path": "/project-illustrations/shapes.webp",
+  "width": 160,
+  "height": 160,
+  "bytes": 5050,
+  "sha256": "b91096132c2a6766e4f1ff4ab4a8cdc9c8f5e8e5b4e46e63353e99901eb3b187"
+}

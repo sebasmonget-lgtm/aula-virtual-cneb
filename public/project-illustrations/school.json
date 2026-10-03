@@ -1,0 +1,44 @@
+{
+  "id": "school",
+  "title": "Jardín y escuela",
+  "category": "comunidad",
+  "subcategory": "school",
+  "description": "Jardín y escuela. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+  "concepts": [
+    "escuela",
+    "colegio",
+    "aula",
+    "jardín escolar",
+    "jardín infantil",
+    "acogida",
+    "adaptación"
+  ],
+  "actions": [],
+  "objects": [
+    "escuela",
+    "colegio",
+    "aula",
+    "jardín escolar",
+    "jardín infantil",
+    "acogida",
+    "adaptación"
+  ],
+  "contexts": [],
+  "match_phrases": [],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "competency_ids": [
+    "PS_CONVIVE"
+  ],
+  "fallback_competency_ids": [],
+  "file": "school.webp",
+  "path": "/project-illustrations/school.webp",
+  "width": 160,
+  "height": 160,
+  "bytes": 5956,
+  "sha256": "e41cf0cff8035fb538b334ddf2451646fcf7aebaeb6be0bc320b3191549a292a"
+}

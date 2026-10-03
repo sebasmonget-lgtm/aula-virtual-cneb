@@ -1,0 +1,42 @@
+{
+  "id": "planning_play",
+  "title": "Planeamos y probamos un juego",
+  "category": "juego",
+  "subcategory": "planning_play",
+  "description": "Planeamos y probamos un juego. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+  "concepts": [
+    "planeamos",
+    "planear",
+    "planificar un juego",
+    "probamos y ajustamos",
+    "meta de juego",
+    "organizar acciones",
+    "ajustamos un juego"
+  ],
+  "actions": [],
+  "objects": [],
+  "contexts": [],
+  "match_phrases": [
+    "planeamos",
+    "probamos y ajustamos"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 7,
+  "competency_ids": [
+    "PS_CONVIVE",
+    "TRANS_AUTONOMO"
+  ],
+  "fallback_competency_ids": [
+    "TRANS_AUTONOMO"
+  ],
+  "file": "planning_play.webp",
+  "path": "/project-illustrations/planning_play.webp",
+  "width": 160,
+  "height": 160,
+  "bytes": 6066,
+  "sha256": "598e5b472a57b369f523b4c3abef7ab2f5a02b4ac87991ca95d4fddeca6620e2"
+}

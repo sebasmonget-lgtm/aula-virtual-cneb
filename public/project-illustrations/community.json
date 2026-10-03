@@ -1,0 +1,47 @@
+{
+  "id": "community",
+  "title": "Comunidad y barrio",
+  "category": "comunidad",
+  "subcategory": "community",
+  "description": "Comunidad y barrio. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+  "concepts": [
+    "comunidad",
+    "vecinos",
+    "vecinas",
+    "barrio",
+    "ciudad",
+    "pueblo",
+    "oficios",
+    "trabajadores"
+  ],
+  "actions": [],
+  "objects": [
+    "comunidad",
+    "vecinos",
+    "vecinas",
+    "barrio",
+    "ciudad",
+    "pueblo",
+    "oficios",
+    "trabajadores"
+  ],
+  "contexts": [],
+  "match_phrases": [],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "competency_ids": [
+    "PS_CONVIVE",
+    "COM_ORAL"
+  ],
+  "fallback_competency_ids": [],
+  "file": "community.webp",
+  "path": "/project-illustrations/community.webp",
+  "width": 160,
+  "height": 160,
+  "bytes": 5780,
+  "sha256": "f9436bb2047931b19fbcb0815eeb70c2af1f711d1c3a6ae65698b51388a466c2"
+}

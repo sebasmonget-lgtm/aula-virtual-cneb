@@ -398,3 +398,7 @@ Se detectó que V2 omitía el mapa acordado en ADR 106, cuya última mejora visu
 ## Pictogramas pastel para proyectos (2026-10-03)
 
 Biblioteca de 50 SVG originales «Trazo suave», sin rostros, con JSON individual, índice y galería pública. Total 26.080 bytes de SVG. Mi año elige por tema del título y propósito/situación, sin IA ni escrituras; tema desconocido usa bombilla neutral. Se comparte solo el puntuador con Word/Jev, cuyo catálogo y exportación se conservan. Generador reproducible con modo check, 26 pruebas focales y QA visual ficticio aislado; plan conservado y cero llamadas al proveedor. Solo staging QA autorizado. Detalle y rollback en docs/qa/project-pictograms-2026-10-03.md.
+
+## Ilustraciones pequeñas y selección curricular (2026-10-03)
+
+Biblioteca aprobada de 63 dibujos infantiles cálidos y simples, WebP transparentes de 160 px hasta 6 KiB; total 357066 bytes. Mi año elige por título y contexto con apoyo de competencias principales/oportunidades, mediante metadatos decorativos de los IDs existentes del paquete 4.1.0. Frases completas, plurales y fallback curricular explícito evitan imágenes ajenas. Sin nuevas llamadas pedagógicas, escrituras, migraciones o cambios de Word/Jev. Galería y JSON en `/project-illustrations/`; SVG previos conservados. 28 pruebas, typecheck, lint y ambos builds PASS; QA ficticio escritorio/móvil con hash de plan conservado. Solo staging QA. Ver ADR 112 y docs/qa/project-illustrations-competencies-2026-10-03.md.

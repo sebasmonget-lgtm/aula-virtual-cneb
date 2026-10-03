@@ -1,0 +1,51 @@
+{
+  "id": "blocks",
+  "title": "Bloques de construcción",
+  "category": "juego",
+  "subcategory": "blocks",
+  "description": "Bloques de construcción. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+  "concepts": [
+    "bloque",
+    "bloques",
+    "construcción",
+    "construir",
+    "torre",
+    "torres",
+    "armar",
+    "crear",
+    "juego",
+    "construimos",
+    "ubicamos",
+    "construcciones"
+  ],
+  "actions": [],
+  "objects": [
+    "bloque",
+    "bloques",
+    "construcción",
+    "construir",
+    "torre",
+    "torres",
+    "armar",
+    "crear",
+    "juego"
+  ],
+  "contexts": [],
+  "match_phrases": [],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "competency_ids": [
+    "MAT_FORMA"
+  ],
+  "fallback_competency_ids": [],
+  "file": "blocks.webp",
+  "path": "/project-illustrations/blocks.webp",
+  "width": 160,
+  "height": 160,
+  "bytes": 3346,
+  "sha256": "001f7e29f07ed17837816b99ee2856cccb2a400de8dbfe8636a3e225cdbae1cc"
+}

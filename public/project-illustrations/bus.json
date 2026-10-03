@@ -1,0 +1,44 @@
+{
+  "id": "bus",
+  "title": "Bus",
+  "category": "transporte",
+  "subcategory": "bus",
+  "description": "Bus. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+  "concepts": [
+    "bus",
+    "buses",
+    "ómnibus",
+    "autobús",
+    "viajar",
+    "viaje",
+    "pasajeros"
+  ],
+  "actions": [],
+  "objects": [
+    "bus",
+    "buses",
+    "ómnibus",
+    "autobús",
+    "viajar",
+    "viaje",
+    "pasajeros"
+  ],
+  "contexts": [],
+  "match_phrases": [],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "competency_ids": [
+    "MAT_FORMA"
+  ],
+  "fallback_competency_ids": [],
+  "file": "bus.webp",
+  "path": "/project-illustrations/bus.webp",
+  "width": 160,
+  "height": 160,
+  "bytes": 5804,
+  "sha256": "250c96ee2e4f7d9cb40a28cf501411a61477e0d2c82847a0a7e81515bdee987f"
+}

@@ -1,0 +1,49 @@
+{
+  "id": "parents",
+  "title": "Personas cuidadoras",
+  "category": "personas",
+  "subcategory": "parents",
+  "description": "Personas cuidadoras. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+  "concepts": [
+    "padres",
+    "madre",
+    "padre",
+    "mamá",
+    "papá",
+    "cuidador",
+    "cuidadora",
+    "mamas",
+    "papas"
+  ],
+  "actions": [],
+  "objects": [
+    "padres",
+    "madre",
+    "padre",
+    "mamá",
+    "papá",
+    "cuidador",
+    "cuidadora",
+    "mamas",
+    "papas"
+  ],
+  "contexts": [],
+  "match_phrases": [],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "competency_ids": [
+    "PS_IDENTIDAD",
+    "PS_CONVIVE"
+  ],
+  "fallback_competency_ids": [],
+  "file": "parents.webp",
+  "path": "/project-illustrations/parents.webp",
+  "width": 160,
+  "height": 160,
+  "bytes": 6098,
+  "sha256": "038e3ec9dc31483f7a0b1eebfef579e9454a11ffdcdb5e9eef551e077c4f2640"
+}

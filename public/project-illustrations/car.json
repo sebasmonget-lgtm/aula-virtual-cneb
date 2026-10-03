@@ -1,0 +1,48 @@
+{
+  "id": "car",
+  "title": "Auto",
+  "category": "transporte",
+  "subcategory": "car",
+  "description": "Auto. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+  "concepts": [
+    "auto",
+    "autos",
+    "carro",
+    "carros",
+    "carrito",
+    "vehículo",
+    "vehículos",
+    "transporte",
+    "ruedas"
+  ],
+  "actions": [],
+  "objects": [
+    "auto",
+    "autos",
+    "carro",
+    "carros",
+    "carrito",
+    "vehículo",
+    "vehículos",
+    "transporte",
+    "ruedas"
+  ],
+  "contexts": [],
+  "match_phrases": [],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "competency_ids": [
+    "MAT_FORMA"
+  ],
+  "fallback_competency_ids": [],
+  "file": "car.webp",
+  "path": "/project-illustrations/car.webp",
+  "width": 160,
+  "height": 160,
+  "bytes": 5622,
+  "sha256": "95aaf56b4c8c1bdf601c049681470221119989a585d32a0d5a24bdec9c0756bf"
+}

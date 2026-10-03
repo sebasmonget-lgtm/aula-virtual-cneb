@@ -1,0 +1,42 @@
+{
+  "id": "home",
+  "title": "Casa",
+  "category": "comunidad",
+  "subcategory": "home",
+  "description": "Casa. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+  "concepts": [
+    "casa",
+    "casas",
+    "vivienda",
+    "viviendas",
+    "hogar",
+    "barrio"
+  ],
+  "actions": [],
+  "objects": [
+    "casa",
+    "casas",
+    "vivienda",
+    "viviendas",
+    "hogar",
+    "barrio"
+  ],
+  "contexts": [],
+  "match_phrases": [],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "competency_ids": [
+    "MAT_FORMA"
+  ],
+  "fallback_competency_ids": [],
+  "file": "home.webp",
+  "path": "/project-illustrations/home.webp",
+  "width": 160,
+  "height": 160,
+  "bytes": 6094,
+  "sha256": "7b31f0b37a4b38f324b4d70cec2b4ace81d674ecc152e411dd2d80042f00c72a"
+}

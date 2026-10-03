@@ -1,0 +1,44 @@
+{
+  "id": "market",
+  "title": "Mercado",
+  "category": "comunidad",
+  "subcategory": "market",
+  "description": "Mercado. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+  "concepts": [
+    "mercado",
+    "tienda",
+    "comprar",
+    "vender",
+    "comercio",
+    "dinero",
+    "feria"
+  ],
+  "actions": [],
+  "objects": [
+    "mercado",
+    "tienda",
+    "comprar",
+    "vender",
+    "comercio",
+    "dinero",
+    "feria"
+  ],
+  "contexts": [],
+  "match_phrases": [],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "competency_ids": [
+    "MAT_CANTIDAD"
+  ],
+  "fallback_competency_ids": [],
+  "file": "market.webp",
+  "path": "/project-illustrations/market.webp",
+  "width": 160,
+  "height": 160,
+  "bytes": 6034,
+  "sha256": "f99fbf3e2c2c2df066e685d440a9941f05ecbb881fa0014b5c564970c7ab5d08"
+}

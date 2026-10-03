@@ -1,0 +1,42 @@
+{
+  "id": "tree",
+  "title": "Árbol",
+  "category": "naturaleza",
+  "subcategory": "tree",
+  "description": "Árbol. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+  "concepts": [
+    "árbol",
+    "árboles",
+    "bosque",
+    "bosques",
+    "hojas",
+    "sombra"
+  ],
+  "actions": [],
+  "objects": [
+    "árbol",
+    "árboles",
+    "bosque",
+    "bosques",
+    "hojas",
+    "sombra"
+  ],
+  "contexts": [],
+  "match_phrases": [],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "competency_ids": [
+    "CYT_INDAGA"
+  ],
+  "fallback_competency_ids": [],
+  "file": "tree.webp",
+  "path": "/project-illustrations/tree.webp",
+  "width": 160,
+  "height": 160,
+  "bytes": 5608,
+  "sha256": "17bd46635451cf6d7149d53cff6ab68cb58e4717b18cdbe385ceccecf4ac5d4b"
+}

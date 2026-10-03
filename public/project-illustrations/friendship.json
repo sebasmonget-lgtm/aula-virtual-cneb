@@ -1,0 +1,52 @@
+{
+  "id": "friendship",
+  "title": "Juego y colaboración",
+  "category": "personas",
+  "subcategory": "friendship",
+  "description": "Juego y colaboración. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+  "concepts": [
+    "colaborar",
+    "colaboración",
+    "compartir",
+    "cooperar",
+    "cooperación",
+    "juntos",
+    "juntas",
+    "acuerdos",
+    "convivir",
+    "acordamos",
+    "acuerdos para jugar"
+  ],
+  "actions": [],
+  "objects": [
+    "colaborar",
+    "colaboración",
+    "compartir",
+    "cooperar",
+    "cooperación",
+    "juntos",
+    "juntas",
+    "acuerdos",
+    "convivir"
+  ],
+  "contexts": [],
+  "match_phrases": [],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "competency_ids": [
+    "PS_CONVIVE"
+  ],
+  "fallback_competency_ids": [
+    "PS_CONVIVE"
+  ],
+  "file": "friendship.webp",
+  "path": "/project-illustrations/friendship.webp",
+  "width": 160,
+  "height": 160,
+  "bytes": 5968,
+  "sha256": "60b4c3e24d130e481a8969be608f3ae2bc3b73527eb9845b1718b6fc1f94a9da"
+}

@@ -1,0 +1,44 @@
+{
+  "id": "teeth",
+  "title": "Dientes y cepillo",
+  "category": "bienestar",
+  "subcategory": "teeth",
+  "description": "Dientes y cepillo. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+  "concepts": [
+    "diente",
+    "dientes",
+    "dental",
+    "cepillo",
+    "cepillar",
+    "boca",
+    "dentista"
+  ],
+  "actions": [],
+  "objects": [
+    "diente",
+    "dientes",
+    "dental",
+    "cepillo",
+    "cepillar",
+    "boca",
+    "dentista"
+  ],
+  "contexts": [],
+  "match_phrases": [],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "competency_ids": [
+    "PS_IDENTIDAD"
+  ],
+  "fallback_competency_ids": [],
+  "file": "teeth.webp",
+  "path": "/project-illustrations/teeth.webp",
+  "width": 160,
+  "height": 160,
+  "bytes": 5766,
+  "sha256": "f9d56df43a393813235427ae458ca7bf8008287c1df76da0666952b98b3d07b0"
+}

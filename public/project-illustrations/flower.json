@@ -1,0 +1,40 @@
+{
+  "id": "flower",
+  "title": "Flor",
+  "category": "naturaleza",
+  "subcategory": "flower",
+  "description": "Flor. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+  "concepts": [
+    "flor",
+    "flores",
+    "primavera",
+    "pétalo",
+    "pétalos"
+  ],
+  "actions": [],
+  "objects": [
+    "flor",
+    "flores",
+    "primavera",
+    "pétalo",
+    "pétalos"
+  ],
+  "contexts": [],
+  "match_phrases": [],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "competency_ids": [
+    "CYT_INDAGA"
+  ],
+  "fallback_competency_ids": [],
+  "file": "flower.webp",
+  "path": "/project-illustrations/flower.webp",
+  "width": 160,
+  "height": 160,
+  "bytes": 6112,
+  "sha256": "bea03aeadaafb7e3afc19f5b6ae6f46aef73a6aa48848744acc340f97f01e1b1"
+}

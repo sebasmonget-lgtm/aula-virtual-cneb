@@ -1,0 +1,42 @@
+{
+  "id": "playground",
+  "title": "Juegos del parque",
+  "category": "juego",
+  "subcategory": "playground",
+  "description": "Juegos del parque. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+  "concepts": [
+    "parque",
+    "juegos al aire libre",
+    "columpio",
+    "tobogán",
+    "patio",
+    "recreo"
+  ],
+  "actions": [],
+  "objects": [
+    "parque",
+    "juegos al aire libre",
+    "columpio",
+    "tobogán",
+    "patio",
+    "recreo"
+  ],
+  "contexts": [],
+  "match_phrases": [],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "competency_ids": [
+    "PSICO_MOTRICIDAD"
+  ],
+  "fallback_competency_ids": [],
+  "file": "playground.webp",
+  "path": "/project-illustrations/playground.webp",
+  "width": 160,
+  "height": 160,
+  "bytes": 5902,
+  "sha256": "04913089fef66c3d52235f8b2d9595cc8ea0bb13d21160ac3ab49379ab2481a0"
+}

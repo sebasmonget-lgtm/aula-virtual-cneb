@@ -1,0 +1,46 @@
+{
+  "id": "earth",
+  "title": "Planeta Tierra",
+  "category": "ambiente",
+  "subcategory": "earth",
+  "description": "Planeta Tierra. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+  "concepts": [
+    "planeta tierra",
+    "tierra",
+    "planeta",
+    "mundo",
+    "ambiente",
+    "naturaleza",
+    "contaminación",
+    "cuidar el planeta"
+  ],
+  "actions": [],
+  "objects": [
+    "planeta tierra",
+    "tierra",
+    "planeta",
+    "mundo",
+    "ambiente",
+    "naturaleza",
+    "contaminación",
+    "cuidar el planeta"
+  ],
+  "contexts": [],
+  "match_phrases": [],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "competency_ids": [
+    "CYT_INDAGA"
+  ],
+  "fallback_competency_ids": [],
+  "file": "earth.webp",
+  "path": "/project-illustrations/earth.webp",
+  "width": 160,
+  "height": 160,
+  "bytes": 5818,
+  "sha256": "1b29431c05d94cbe62525a5f75e7c988391be3ce215ad62e383f4937b7fdaa99"
+}

@@ -1,0 +1,45 @@
+{
+  "id": "identity",
+  "title": "Así soy y me cuido",
+  "category": "bienestar",
+  "subcategory": "identity",
+  "description": "Así soy y me cuido. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+  "concepts": [
+    "identidad",
+    "autoconocimiento",
+    "así soy",
+    "soy y",
+    "me cuido",
+    "autocuidado",
+    "decisiones cotidianas",
+    "expresión emocional",
+    "cómo me siento"
+  ],
+  "actions": [],
+  "objects": [],
+  "contexts": [],
+  "match_phrases": [
+    "así soy",
+    "me cuido",
+    "autocuidado"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 7,
+  "competency_ids": [
+    "PS_IDENTIDAD",
+    "TRANS_AUTONOMO"
+  ],
+  "fallback_competency_ids": [
+    "PS_IDENTIDAD"
+  ],
+  "file": "identity.webp",
+  "path": "/project-illustrations/identity.webp",
+  "width": 160,
+  "height": 160,
+  "bytes": 6056,
+  "sha256": "9f1b742ad8319b70ee2569cf26d8628728a2c400581a08d3e9cef23b1c7da3e4"
+}

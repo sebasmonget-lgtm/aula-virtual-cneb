@@ -1,0 +1,48 @@
+{
+  "id": "ideas",
+  "title": "Idea para explorar",
+  "category": "general",
+  "subcategory": "ideas",
+  "description": "Idea para explorar. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+  "concepts": [
+    "idea",
+    "ideas",
+    "proyecto",
+    "proyectos",
+    "exploración",
+    "investigar",
+    "descubrir",
+    "preguntas",
+    "indagar"
+  ],
+  "actions": [],
+  "objects": [
+    "idea",
+    "ideas",
+    "proyecto",
+    "proyectos",
+    "exploración",
+    "investigar",
+    "descubrir",
+    "preguntas",
+    "indagar"
+  ],
+  "contexts": [],
+  "match_phrases": [],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "competency_ids": [
+    "TRANS_AUTONOMO"
+  ],
+  "fallback_competency_ids": [],
+  "file": "ideas.webp",
+  "path": "/project-illustrations/ideas.webp",
+  "width": 160,
+  "height": 160,
+  "bytes": 5108,
+  "sha256": "e9db9680e1dfb7bec85af0cbd1162e0201338b19c5179016eac50fba30e11ff4"
+}

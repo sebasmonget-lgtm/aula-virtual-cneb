@@ -1,0 +1,44 @@
+{
+  "id": "puppets",
+  "title": "Títeres",
+  "category": "expresión",
+  "subcategory": "puppets",
+  "description": "Títeres. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+  "concepts": [
+    "títere",
+    "títeres",
+    "teatro",
+    "dramatizar",
+    "dramatización",
+    "representar"
+  ],
+  "actions": [],
+  "objects": [
+    "títere",
+    "títeres",
+    "teatro",
+    "dramatizar",
+    "dramatización",
+    "representar"
+  ],
+  "contexts": [],
+  "match_phrases": [],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "competency_ids": [
+    "COM_ORAL",
+    "COM_ARTE",
+    "CAST_L2_ORAL"
+  ],
+  "fallback_competency_ids": [],
+  "file": "puppets.webp",
+  "path": "/project-illustrations/puppets.webp",
+  "width": 160,
+  "height": 160,
+  "bytes": 5860,
+  "sha256": "012ef3277d53be9fdb9416f6d82a65d401c83f8e017d3cd1c3eb602411a42784"
+}

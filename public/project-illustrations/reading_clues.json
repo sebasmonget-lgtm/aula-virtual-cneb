@@ -1,0 +1,46 @@
+{
+  "id": "reading_clues",
+  "title": "Pistas en los cuentos",
+  "category": "expresión",
+  "subcategory": "reading_clues",
+  "description": "Pistas en los cuentos. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+  "concepts": [
+    "pistas",
+    "buscar pistas",
+    "pistas dentro",
+    "anticipar",
+    "anticipamos",
+    "revisar ideas durante la lectura",
+    "ilustraciones del texto",
+    "comprensión lectora",
+    "cuento",
+    "cuentos",
+    "historia",
+    "historias"
+  ],
+  "actions": [],
+  "objects": [],
+  "contexts": [],
+  "match_phrases": [
+    "pistas dentro de los cuentos",
+    "pistas en los cuentos"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 7,
+  "competency_ids": [
+    "COM_LECTURA"
+  ],
+  "fallback_competency_ids": [
+    "COM_LECTURA"
+  ],
+  "file": "reading_clues.webp",
+  "path": "/project-illustrations/reading_clues.webp",
+  "width": 160,
+  "height": 160,
+  "bytes": 5848,
+  "sha256": "f2cb63cd5d030195be646fb3b80f5cc0f841407aa88e94be9a051b657b04748b"
+}

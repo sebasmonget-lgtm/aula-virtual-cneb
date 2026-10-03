@@ -1,0 +1,46 @@
+{
+  "id": "technology",
+  "title": "Tecnología",
+  "category": "exploración",
+  "subcategory": "technology",
+  "description": "Tecnología. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+  "concepts": [
+    "tecnología",
+    "digital",
+    "digitales",
+    "tableta",
+    "tablet",
+    "computadora",
+    "pantalla"
+  ],
+  "actions": [],
+  "objects": [],
+  "contexts": [],
+  "match_phrases": [
+    "tecnología",
+    "digital",
+    "digitales",
+    "tableta",
+    "tablet",
+    "computadora",
+    "pantalla"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 7,
+  "competency_ids": [
+    "TRANS_TIC"
+  ],
+  "fallback_competency_ids": [
+    "TRANS_TIC"
+  ],
+  "file": "technology.webp",
+  "path": "/project-illustrations/technology.webp",
+  "width": 160,
+  "height": 160,
+  "bytes": 5822,
+  "sha256": "c475bb98638ac0ef4cd913d747e517336095c2efcf9aa753abafc266ae1c6a48"
+}

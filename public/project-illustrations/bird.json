@@ -1,0 +1,44 @@
+{
+  "id": "bird",
+  "title": "Ave",
+  "category": "animales",
+  "subcategory": "bird",
+  "description": "Ave. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+  "concepts": [
+    "ave",
+    "aves",
+    "pájaro",
+    "pájaros",
+    "pajarito",
+    "nido",
+    "plumas"
+  ],
+  "actions": [],
+  "objects": [
+    "ave",
+    "aves",
+    "pájaro",
+    "pájaros",
+    "pajarito",
+    "nido",
+    "plumas"
+  ],
+  "contexts": [],
+  "match_phrases": [],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 6,
+  "competency_ids": [
+    "CYT_INDAGA"
+  ],
+  "fallback_competency_ids": [],
+  "file": "bird.webp",
+  "path": "/project-illustrations/bird.webp",
+  "width": 160,
+  "height": 160,
+  "bytes": 6008,
+  "sha256": "101f944f3aca68ddc999ac0be41ce2f3b92f5dfc3e2bd7d3f7b29459bad9172b"
+}

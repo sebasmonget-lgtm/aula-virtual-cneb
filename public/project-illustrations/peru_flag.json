@@ -1,0 +1,45 @@
+{
+  "id": "peru_flag",
+  "title": "Bandera del Perú",
+  "category": "cultura",
+  "subcategory": "peru_flag",
+  "description": "Bandera del Perú. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+  "concepts": [
+    "bandera",
+    "Perú",
+    "patria",
+    "patrias",
+    "peruana",
+    "peruano",
+    "identidad nacional",
+    "independencia",
+    "fiestas patrias"
+  ],
+  "actions": [],
+  "objects": [
+    "bandera",
+    "Perú",
+    "patria",
+    "patrias",
+    "peruana",
+    "peruano",
+    "identidad nacional",
+    "independencia"
+  ],
+  "contexts": [],
+  "match_phrases": [],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "competency_ids": [],
+  "fallback_competency_ids": [],
+  "file": "peru_flag.webp",
+  "path": "/project-illustrations/peru_flag.webp",
+  "width": 160,
+  "height": 160,
+  "bytes": 4438,
+  "sha256": "640f6f1222506d369c61dbfd1f33ae76b13ed48f30caafec8ee17a20875963bc"
+}

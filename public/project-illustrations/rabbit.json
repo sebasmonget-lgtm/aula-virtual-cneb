@@ -1,0 +1,36 @@
+{
+  "id": "rabbit",
+  "title": "Conejo",
+  "category": "animales",
+  "subcategory": "rabbit",
+  "description": "Conejo. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+  "concepts": [
+    "conejo",
+    "conejos",
+    "conejito"
+  ],
+  "actions": [],
+  "objects": [
+    "conejo",
+    "conejos",
+    "conejito"
+  ],
+  "contexts": [],
+  "match_phrases": [],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 6,
+  "competency_ids": [
+    "CYT_INDAGA"
+  ],
+  "fallback_competency_ids": [],
+  "file": "rabbit.webp",
+  "path": "/project-illustrations/rabbit.webp",
+  "width": 160,
+  "height": 160,
+  "bytes": 5930,
+  "sha256": "909c359e6e541b12f616c01a2473d81c65269f6197ad10341c9fa8caa244160a"
+}

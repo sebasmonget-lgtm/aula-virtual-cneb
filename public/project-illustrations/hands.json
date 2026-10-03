@@ -1,0 +1,42 @@
+{
+  "id": "hands",
+  "title": "Lavado de manos",
+  "category": "bienestar",
+  "subcategory": "hands",
+  "description": "Lavado de manos. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+  "concepts": [
+    "manos",
+    "lavar",
+    "lavado",
+    "higiene",
+    "jabón",
+    "limpieza"
+  ],
+  "actions": [],
+  "objects": [
+    "manos",
+    "lavar",
+    "lavado",
+    "higiene",
+    "jabón",
+    "limpieza"
+  ],
+  "contexts": [],
+  "match_phrases": [],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "competency_ids": [
+    "PS_IDENTIDAD"
+  ],
+  "fallback_competency_ids": [],
+  "file": "hands.webp",
+  "path": "/project-illustrations/hands.webp",
+  "width": 160,
+  "height": 160,
+  "bytes": 6080,
+  "sha256": "ddacce1fc37d444fbd8fabe18cffb12045b67d8605553fdecc931416f4c51ca9"
+}

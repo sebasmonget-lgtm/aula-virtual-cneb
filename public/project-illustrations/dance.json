@@ -1,0 +1,41 @@
+{
+  "id": "dance",
+  "title": "Baile y expresión corporal",
+  "category": "expresión",
+  "subcategory": "dance",
+  "description": "Baile y expresión corporal. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+  "concepts": [
+    "baile",
+    "bailar",
+    "bailamos",
+    "danza",
+    "danzas"
+  ],
+  "actions": [],
+  "objects": [],
+  "contexts": [],
+  "match_phrases": [
+    "baile",
+    "bailar",
+    "bailamos",
+    "danza",
+    "danzas"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 7,
+  "competency_ids": [
+    "PSICO_MOTRICIDAD",
+    "COM_ARTE"
+  ],
+  "fallback_competency_ids": [],
+  "file": "dance.webp",
+  "path": "/project-illustrations/dance.webp",
+  "width": 160,
+  "height": 160,
+  "bytes": 6048,
+  "sha256": "23e8baa653f667469d98c56e7d5c9efdf6df27b427b8d71eae80ac68e86315fc"
+}

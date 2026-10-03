@@ -1,0 +1,52 @@
+{
+  "id": "book",
+  "title": "Libro de cuentos",
+  "category": "expresión",
+  "subcategory": "book",
+  "description": "Libro de cuentos. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+  "concepts": [
+    "libro",
+    "libros",
+    "cuento",
+    "cuentos",
+    "historia",
+    "historias",
+    "lectura",
+    "leer",
+    "biblioteca",
+    "relato",
+    "leemos"
+  ],
+  "actions": [],
+  "objects": [
+    "libro",
+    "libros",
+    "cuento",
+    "cuentos",
+    "historia",
+    "historias",
+    "lectura",
+    "leer",
+    "biblioteca",
+    "relato"
+  ],
+  "contexts": [],
+  "match_phrases": [],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 8,
+  "competency_ids": [
+    "COM_ORAL",
+    "COM_LECTURA"
+  ],
+  "fallback_competency_ids": [],
+  "file": "book.webp",
+  "path": "/project-illustrations/book.webp",
+  "width": 160,
+  "height": 160,
+  "bytes": 5620,
+  "sha256": "bde345cf6fd92f973b8af6260d788addbb48fd2bfc7073fd968ca2e5e2363f6a"
+}

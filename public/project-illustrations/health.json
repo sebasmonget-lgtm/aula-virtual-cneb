@@ -1,0 +1,46 @@
+{
+  "id": "health",
+  "title": "Salud y cuidados",
+  "category": "bienestar",
+  "subcategory": "health",
+  "description": "Salud y cuidados. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+  "concepts": [
+    "salud",
+    "saludable",
+    "médico",
+    "doctor",
+    "enfermera",
+    "hospital",
+    "cuidado del cuerpo",
+    "botiquín"
+  ],
+  "actions": [],
+  "objects": [
+    "salud",
+    "saludable",
+    "médico",
+    "doctor",
+    "enfermera",
+    "hospital",
+    "cuidado del cuerpo",
+    "botiquín"
+  ],
+  "contexts": [],
+  "match_phrases": [],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "competency_ids": [
+    "PS_IDENTIDAD"
+  ],
+  "fallback_competency_ids": [],
+  "file": "health.webp",
+  "path": "/project-illustrations/health.webp",
+  "width": 160,
+  "height": 160,
+  "bytes": 4904,
+  "sha256": "e7efe493a234a69b9a602e9f53aeae74256a2d6aefcc137dd4e371d4170cff42"
+}

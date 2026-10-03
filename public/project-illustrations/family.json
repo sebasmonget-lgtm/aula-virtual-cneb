@@ -1,0 +1,48 @@
+{
+  "id": "family",
+  "title": "Familia",
+  "category": "personas",
+  "subcategory": "family",
+  "description": "Familia. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+  "concepts": [
+    "familia",
+    "familias",
+    "hogar",
+    "abuelos",
+    "abuela",
+    "abuelo",
+    "hermanos",
+    "hermanas"
+  ],
+  "actions": [],
+  "objects": [
+    "familia",
+    "familias",
+    "hogar",
+    "abuelos",
+    "abuela",
+    "abuelo",
+    "hermanos",
+    "hermanas"
+  ],
+  "contexts": [],
+  "match_phrases": [],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "competency_ids": [
+    "PS_IDENTIDAD",
+    "PS_CONVIVE",
+    "COM_ORAL"
+  ],
+  "fallback_competency_ids": [],
+  "file": "family.webp",
+  "path": "/project-illustrations/family.webp",
+  "width": 160,
+  "height": 160,
+  "bytes": 6120,
+  "sha256": "39e57e92f8ac3b6878b6dff69e629fbddd6c35b70e14d287f1b365587f4cec6e"
+}

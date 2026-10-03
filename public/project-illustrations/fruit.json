@@ -1,0 +1,46 @@
+{
+  "id": "fruit",
+  "title": "Frutas",
+  "category": "alimentación",
+  "subcategory": "fruit",
+  "description": "Frutas. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+  "concepts": [
+    "fruta",
+    "frutas",
+    "manzana",
+    "plátano",
+    "banana",
+    "pera",
+    "mandarina",
+    "naranja"
+  ],
+  "actions": [],
+  "objects": [
+    "fruta",
+    "frutas",
+    "manzana",
+    "plátano",
+    "banana",
+    "pera",
+    "mandarina",
+    "naranja"
+  ],
+  "contexts": [],
+  "match_phrases": [],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "competency_ids": [
+    "MAT_CANTIDAD"
+  ],
+  "fallback_competency_ids": [],
+  "file": "fruit.webp",
+  "path": "/project-illustrations/fruit.webp",
+  "width": 160,
+  "height": 160,
+  "bytes": 5690,
+  "sha256": "1ef65c2f7b0782d82995d80976cabc06216c7d1a3a83db668b231d1953263a21"
+}

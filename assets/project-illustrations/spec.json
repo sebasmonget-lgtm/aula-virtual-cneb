@@ -1,0 +1,2532 @@
+{
+  "version": 2,
+  "style": "infantil_calido_simple",
+  "width": 160,
+  "height": 160,
+  "max_bytes": 6144,
+  "images": [
+    {
+      "id": "plant",
+      "title": "Planta en maceta",
+      "category": "naturaleza",
+      "subcategory": "plant",
+      "description": "Planta en maceta. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "planta",
+        "plantas",
+        "jardín",
+        "jardinería",
+        "maceta",
+        "vegetal",
+        "sembrar",
+        "plantar"
+      ],
+      "actions": [],
+      "objects": [
+        "planta",
+        "plantas",
+        "jardín",
+        "jardinería",
+        "maceta",
+        "vegetal",
+        "sembrar",
+        "plantar"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: one healthy small leafy plant with three rounded green leaves, in a lavender terracotta flowerpot, no face, no children",
+      "competency_ids": [
+        "CYT_INDAGA"
+      ],
+      "fallback_competency_ids": []
+    },
+    {
+      "id": "dog",
+      "title": "Perro",
+      "category": "animales",
+      "subcategory": "dog",
+      "description": "Perro. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "perro",
+        "perros",
+        "perrito",
+        "can",
+        "mascota",
+        "mascotas"
+      ],
+      "actions": [],
+      "objects": [
+        "perro",
+        "perros",
+        "perrito",
+        "can",
+        "mascota",
+        "mascotas"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 6,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: one friendly sitting golden-brown puppy with floppy ears, expressive gentle eyes and a small wagging tail, no accessories, no people",
+      "competency_ids": [
+        "CYT_INDAGA"
+      ],
+      "fallback_competency_ids": []
+    },
+    {
+      "id": "identity",
+      "title": "Así soy y me cuido",
+      "category": "bienestar",
+      "subcategory": "identity",
+      "description": "Así soy y me cuido. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "identidad",
+        "autoconocimiento",
+        "así soy",
+        "soy y",
+        "me cuido",
+        "autocuidado",
+        "decisiones cotidianas",
+        "expresión emocional",
+        "cómo me siento"
+      ],
+      "actions": [],
+      "objects": [],
+      "contexts": [],
+      "match_phrases": [
+        "así soy",
+        "me cuido",
+        "autocuidado"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 7,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: one fictional preschool girl with warm brown curly hair, smiling with hands over her chest, one small heart nearby, feelings and identity, not medical care",
+      "competency_ids": [
+        "PS_IDENTIDAD",
+        "TRANS_AUTONOMO"
+      ],
+      "fallback_competency_ids": [
+        "PS_IDENTIDAD"
+      ]
+    },
+    {
+      "id": "movement",
+      "title": "Movimiento y recorridos",
+      "category": "juego",
+      "subcategory": "movement",
+      "description": "Movimiento y recorridos. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "movimiento",
+        "movimientos",
+        "motricidad",
+        "recorridos",
+        "recorrer",
+        "caminos",
+        "desplazamientos",
+        "expresión corporal",
+        "equilibrio",
+        "cuerpo"
+      ],
+      "actions": [],
+      "objects": [],
+      "contexts": [],
+      "match_phrases": [
+        "desplazamientos",
+        "motricidad",
+        "recorridos"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 7,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: one fictional preschool child stepping along three large colorful rounded stepping stones, playful body movement, no vehicles",
+      "competency_ids": [
+        "PSICO_MOTRICIDAD"
+      ],
+      "fallback_competency_ids": [
+        "PSICO_MOTRICIDAD"
+      ]
+    },
+    {
+      "id": "peru_flag",
+      "title": "Bandera del Perú",
+      "category": "cultura",
+      "subcategory": "peru_flag",
+      "description": "Bandera del Perú. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "bandera",
+        "Perú",
+        "patria",
+        "patrias",
+        "peruana",
+        "peruano",
+        "identidad nacional",
+        "independencia",
+        "fiestas patrias"
+      ],
+      "actions": [],
+      "objects": [
+        "bandera",
+        "Perú",
+        "patria",
+        "patrias",
+        "peruana",
+        "peruano",
+        "identidad nacional",
+        "independencia"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: a simple gently waving national civil flag of Peru on a short wooden pole: three vertical stripes RED WHITE RED, no crest, no text, no face, no people",
+      "competency_ids": [],
+      "fallback_competency_ids": []
+    },
+    {
+      "id": "water_drop",
+      "title": "Gota de agua",
+      "category": "ambiente",
+      "subcategory": "water_drop",
+      "description": "Gota de agua. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "agua",
+        "gota",
+        "lluvia",
+        "río",
+        "rios",
+        "mar",
+        "océano",
+        "flotar",
+        "hundirse",
+        "experimentos con agua"
+      ],
+      "actions": [],
+      "objects": [
+        "agua",
+        "gota",
+        "lluvia",
+        "río",
+        "rios",
+        "mar",
+        "océano",
+        "flotar",
+        "hundirse"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: one large fresh sky-blue water droplet with soft rounded highlights, no face, no surrounding splashes",
+      "competency_ids": [
+        "CYT_INDAGA"
+      ],
+      "fallback_competency_ids": []
+    },
+    {
+      "id": "tree",
+      "title": "Árbol",
+      "category": "naturaleza",
+      "subcategory": "tree",
+      "description": "Árbol. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "árbol",
+        "árboles",
+        "bosque",
+        "bosques",
+        "hojas",
+        "sombra"
+      ],
+      "actions": [],
+      "objects": [
+        "árbol",
+        "árboles",
+        "bosque",
+        "bosques",
+        "hojas",
+        "sombra"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: one small tree with a warm brown trunk and rounded clusters of green foliage, no face, no people",
+      "competency_ids": [
+        "CYT_INDAGA"
+      ],
+      "fallback_competency_ids": []
+    },
+    {
+      "id": "seed",
+      "title": "Semilla y brote",
+      "category": "naturaleza",
+      "subcategory": "seed",
+      "description": "Semilla y brote. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "semilla",
+        "semillas",
+        "brote",
+        "germinación",
+        "germinar",
+        "siembra",
+        "crecer"
+      ],
+      "actions": [],
+      "objects": [
+        "semilla",
+        "semillas",
+        "brote",
+        "germinación",
+        "germinar",
+        "siembra",
+        "crecer"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: one large brown seed opening into a two-leaf green seedling, small bit of soil, simple germination symbol, no face",
+      "competency_ids": [
+        "CYT_INDAGA"
+      ],
+      "fallback_competency_ids": []
+    },
+    {
+      "id": "flower",
+      "title": "Flor",
+      "category": "naturaleza",
+      "subcategory": "flower",
+      "description": "Flor. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "flor",
+        "flores",
+        "primavera",
+        "pétalo",
+        "pétalos"
+      ],
+      "actions": [],
+      "objects": [
+        "flor",
+        "flores",
+        "primavera",
+        "pétalo",
+        "pétalos"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: one sunny yellow flower with pink accents, large round petals and two green leaves, no face",
+      "competency_ids": [
+        "CYT_INDAGA"
+      ],
+      "fallback_competency_ids": []
+    },
+    {
+      "id": "cat",
+      "title": "Gato",
+      "category": "animales",
+      "subcategory": "cat",
+      "description": "Gato. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "gato",
+        "gatos",
+        "gatito",
+        "felino"
+      ],
+      "actions": [],
+      "objects": [
+        "gato",
+        "gatos",
+        "gatito",
+        "felino"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 6,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: one friendly sitting orange tabby kitten with gentle expressive eyes and curled tail, no clothing, no people",
+      "competency_ids": [
+        "CYT_INDAGA"
+      ],
+      "fallback_competency_ids": []
+    },
+    {
+      "id": "bird",
+      "title": "Ave",
+      "category": "animales",
+      "subcategory": "bird",
+      "description": "Ave. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "ave",
+        "aves",
+        "pájaro",
+        "pájaros",
+        "pajarito",
+        "nido",
+        "plumas"
+      ],
+      "actions": [],
+      "objects": [
+        "ave",
+        "aves",
+        "pájaro",
+        "pájaros",
+        "pajarito",
+        "nido",
+        "plumas"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 6,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: one small friendly blue bird perched on a short twig, soft rounded shape, gentle eyes, no people",
+      "competency_ids": [
+        "CYT_INDAGA"
+      ],
+      "fallback_competency_ids": []
+    },
+    {
+      "id": "fish",
+      "title": "Pez",
+      "category": "animales",
+      "subcategory": "fish",
+      "description": "Pez. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "pez",
+        "peces",
+        "pescado",
+        "pecera",
+        "acuario",
+        "marino",
+        "marinos"
+      ],
+      "actions": [],
+      "objects": [
+        "pez",
+        "peces",
+        "pescado",
+        "pecera",
+        "acuario",
+        "marino",
+        "marinos"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 6,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: one friendly small goldfish with orange-and-yellow fins, gentle eyes, not in a bowl, no water backdrop",
+      "competency_ids": [
+        "CYT_INDAGA"
+      ],
+      "fallback_competency_ids": []
+    },
+    {
+      "id": "rabbit",
+      "title": "Conejo",
+      "category": "animales",
+      "subcategory": "rabbit",
+      "description": "Conejo. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "conejo",
+        "conejos",
+        "conejito"
+      ],
+      "actions": [],
+      "objects": [
+        "conejo",
+        "conejos",
+        "conejito"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 6,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: one sitting cream-colored bunny with long soft ears and gentle eyes, simple rounded shape, no people",
+      "competency_ids": [
+        "CYT_INDAGA"
+      ],
+      "fallback_competency_ids": []
+    },
+    {
+      "id": "turtle",
+      "title": "Tortuga",
+      "category": "animales",
+      "subcategory": "turtle",
+      "description": "Tortuga. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "tortuga",
+        "tortugas",
+        "caparazón"
+      ],
+      "actions": [],
+      "objects": [
+        "tortuga",
+        "tortugas",
+        "caparazón"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 6,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: one small friendly green turtle with domed shell and four legs, gentle eyes, three-quarter profile, no people",
+      "competency_ids": [
+        "CYT_INDAGA"
+      ],
+      "fallback_competency_ids": []
+    },
+    {
+      "id": "butterfly",
+      "title": "Mariposa",
+      "category": "animales",
+      "subcategory": "butterfly",
+      "description": "Mariposa. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "mariposa",
+        "mariposas",
+        "alas",
+        "metamorfosis"
+      ],
+      "actions": [],
+      "objects": [
+        "mariposa",
+        "mariposas",
+        "alas",
+        "metamorfosis"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 6,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: one butterfly with pastel pink and lavender rounded wings and small brown body, no face or people",
+      "competency_ids": [
+        "CYT_INDAGA"
+      ],
+      "fallback_competency_ids": []
+    },
+    {
+      "id": "bee",
+      "title": "Abeja",
+      "category": "animales",
+      "subcategory": "bee",
+      "description": "Abeja. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "abeja",
+        "abejas",
+        "miel",
+        "colmena",
+        "polinización",
+        "insecto",
+        "insectos"
+      ],
+      "actions": [],
+      "objects": [
+        "abeja",
+        "abejas",
+        "miel",
+        "colmena",
+        "polinización",
+        "insecto",
+        "insectos"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 6,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: one friendly bee with round yellow-and-brown body, two translucent small wings and gentle eyes, no stinger focus, no people",
+      "competency_ids": [
+        "CYT_INDAGA"
+      ],
+      "fallback_competency_ids": []
+    },
+    {
+      "id": "hen",
+      "title": "Gallina",
+      "category": "animales",
+      "subcategory": "hen",
+      "description": "Gallina. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "gallina",
+        "gallinas",
+        "pollo",
+        "pollito",
+        "huevo",
+        "corral",
+        "granja"
+      ],
+      "actions": [],
+      "objects": [
+        "gallina",
+        "gallinas",
+        "pollo",
+        "pollito",
+        "huevo",
+        "corral",
+        "granja"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 6,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: one plump cream-colored hen with red comb and yellow beak, simple gentle eyes, no people",
+      "competency_ids": [
+        "CYT_INDAGA"
+      ],
+      "fallback_competency_ids": []
+    },
+    {
+      "id": "cow",
+      "title": "Vaca",
+      "category": "animales",
+      "subcategory": "cow",
+      "description": "Vaca. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "vaca",
+        "vacas",
+        "leche",
+        "ganado",
+        "animales de granja"
+      ],
+      "actions": [],
+      "objects": [
+        "vaca",
+        "vacas",
+        "leche",
+        "ganado",
+        "animales de granja"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 6,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: one friendly small black-and-white cow standing in three-quarter view, gentle eyes, pastel pink nose, no people",
+      "competency_ids": [
+        "CYT_INDAGA"
+      ],
+      "fallback_competency_ids": []
+    },
+    {
+      "id": "boy",
+      "title": "Niño",
+      "category": "personas",
+      "subcategory": "boy",
+      "description": "Niño. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "niño",
+        "niños",
+        "niñez",
+        "infancia",
+        "yo",
+        "identidad",
+        "autonomía"
+      ],
+      "actions": [],
+      "objects": [
+        "niño",
+        "niños",
+        "niñez",
+        "infancia",
+        "yo",
+        "identidad",
+        "autonomía"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: one fictional smiling preschool boy with dark brown hair, light blue shirt and warm yellow shorts, simple standing pose, full body",
+      "competency_ids": [
+        "PS_IDENTIDAD"
+      ],
+      "fallback_competency_ids": []
+    },
+    {
+      "id": "girl",
+      "title": "Niña",
+      "category": "personas",
+      "subcategory": "girl",
+      "description": "Niña. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "niña",
+        "niñas",
+        "niñez",
+        "infancia",
+        "identidad",
+        "autonomía"
+      ],
+      "actions": [],
+      "objects": [
+        "niña",
+        "niñas",
+        "niñez",
+        "infancia",
+        "identidad",
+        "autonomía"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: one fictional smiling preschool girl with dark brown hair, purple bow and lavender outfit, simple standing pose, full body",
+      "competency_ids": [
+        "PS_IDENTIDAD"
+      ],
+      "fallback_competency_ids": []
+    },
+    {
+      "id": "parents",
+      "title": "Personas cuidadoras",
+      "category": "personas",
+      "subcategory": "parents",
+      "description": "Personas cuidadoras. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "padres",
+        "madre",
+        "padre",
+        "mamá",
+        "papá",
+        "cuidador",
+        "cuidadora",
+        "mamas",
+        "papas"
+      ],
+      "actions": [],
+      "objects": [
+        "padres",
+        "madre",
+        "padre",
+        "mamá",
+        "papá",
+        "cuidador",
+        "cuidadora",
+        "mamas",
+        "papas"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: two fictional warm adult caregivers standing together, one woman and one man in casual pastel clothing, friendly rounded faces, no children",
+      "competency_ids": [
+        "PS_IDENTIDAD",
+        "PS_CONVIVE"
+      ],
+      "fallback_competency_ids": []
+    },
+    {
+      "id": "family",
+      "title": "Familia",
+      "category": "personas",
+      "subcategory": "family",
+      "description": "Familia. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "familia",
+        "familias",
+        "hogar",
+        "abuelos",
+        "abuela",
+        "abuelo",
+        "hermanos",
+        "hermanas"
+      ],
+      "actions": [],
+      "objects": [
+        "familia",
+        "familias",
+        "hogar",
+        "abuelos",
+        "abuela",
+        "abuelo",
+        "hermanos",
+        "hermanas"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: a fictional loving family: two adult caregivers and one preschool child close together, warm simple portrait from waist up, no background",
+      "competency_ids": [
+        "PS_IDENTIDAD",
+        "PS_CONVIVE",
+        "COM_ORAL"
+      ],
+      "fallback_competency_ids": []
+    },
+    {
+      "id": "home",
+      "title": "Casa",
+      "category": "comunidad",
+      "subcategory": "home",
+      "description": "Casa. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "casa",
+        "casas",
+        "vivienda",
+        "viviendas",
+        "hogar",
+        "barrio"
+      ],
+      "actions": [],
+      "objects": [
+        "casa",
+        "casas",
+        "vivienda",
+        "viviendas",
+        "hogar",
+        "barrio"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: one cozy small house with warm peach walls, teal roof and purple front door, no face, no people",
+      "competency_ids": [
+        "MAT_FORMA"
+      ],
+      "fallback_competency_ids": []
+    },
+    {
+      "id": "school",
+      "title": "Jardín y escuela",
+      "category": "comunidad",
+      "subcategory": "school",
+      "description": "Jardín y escuela. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "escuela",
+        "colegio",
+        "aula",
+        "jardín escolar",
+        "jardín infantil",
+        "acogida",
+        "adaptación"
+      ],
+      "actions": [],
+      "objects": [
+        "escuela",
+        "colegio",
+        "aula",
+        "jardín escolar",
+        "jardín infantil",
+        "acogida",
+        "adaptación"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: one small inviting preschool building with yellow walls, blue door and two big windows, NO signage or text, no people",
+      "competency_ids": [
+        "PS_CONVIVE"
+      ],
+      "fallback_competency_ids": []
+    },
+    {
+      "id": "community",
+      "title": "Comunidad y barrio",
+      "category": "comunidad",
+      "subcategory": "community",
+      "description": "Comunidad y barrio. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "comunidad",
+        "vecinos",
+        "vecinas",
+        "barrio",
+        "ciudad",
+        "pueblo",
+        "oficios",
+        "trabajadores"
+      ],
+      "actions": [],
+      "objects": [
+        "comunidad",
+        "vecinos",
+        "vecinas",
+        "barrio",
+        "ciudad",
+        "pueblo",
+        "oficios",
+        "trabajadores"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: a compact group of three small colorful neighborhood houses with one simple leafy tree, no street background, no people, no text",
+      "competency_ids": [
+        "PS_CONVIVE",
+        "COM_ORAL"
+      ],
+      "fallback_competency_ids": []
+    },
+    {
+      "id": "friendship",
+      "title": "Juego y colaboración",
+      "category": "personas",
+      "subcategory": "friendship",
+      "description": "Juego y colaboración. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "colaborar",
+        "colaboración",
+        "compartir",
+        "cooperar",
+        "cooperación",
+        "juntos",
+        "juntas",
+        "acuerdos",
+        "convivir",
+        "acordamos",
+        "acuerdos para jugar"
+      ],
+      "actions": [],
+      "objects": [
+        "colaborar",
+        "colaboración",
+        "compartir",
+        "cooperar",
+        "cooperación",
+        "juntos",
+        "juntas",
+        "acuerdos",
+        "convivir"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: two friendly fictional preschool children, shown only from chest up, kindly passing ONE large yellow toy block between them, simple round faces and one-color shirts, only two heads, two hands and one block, no tower or extra toys",
+      "competency_ids": [
+        "PS_CONVIVE"
+      ],
+      "fallback_competency_ids": [
+        "PS_CONVIVE"
+      ]
+    },
+    {
+      "id": "pencil",
+      "title": "Lápiz",
+      "category": "expresión",
+      "subcategory": "pencil",
+      "description": "Lápiz. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "lápiz",
+        "lápices",
+        "escribir",
+        "escritura",
+        "trazo",
+        "trazos",
+        "dibujar",
+        "dibujo"
+      ],
+      "actions": [],
+      "objects": [
+        "lápiz",
+        "lápices",
+        "escribir",
+        "escritura",
+        "trazo",
+        "trazos",
+        "dibujar",
+        "dibujo"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: one large lavender-and-yellow wooden pencil angled diagonally, rounded shiny form and simple dark tip, no face, no text",
+      "competency_ids": [
+        "COM_ESCRITURA"
+      ],
+      "fallback_competency_ids": []
+    },
+    {
+      "id": "painting",
+      "title": "Pincel y acuarelas",
+      "category": "expresión",
+      "subcategory": "painting",
+      "description": "Pincel y acuarelas. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "pincel",
+        "pinceles",
+        "acuarela",
+        "acuarelas",
+        "pintar",
+        "pintura",
+        "colores",
+        "arte",
+        "artes"
+      ],
+      "actions": [],
+      "objects": [
+        "pincel",
+        "pinceles",
+        "acuarela",
+        "acuarelas",
+        "pintar",
+        "pintura",
+        "colores",
+        "arte",
+        "artes"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: one large paintbrush alongside a small watercolor paint palette with six bright gentle colors, simple chunky forms, no face or text",
+      "competency_ids": [
+        "COM_ARTE"
+      ],
+      "fallback_competency_ids": []
+    },
+    {
+      "id": "book",
+      "title": "Libro de cuentos",
+      "category": "expresión",
+      "subcategory": "book",
+      "description": "Libro de cuentos. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "libro",
+        "libros",
+        "cuento",
+        "cuentos",
+        "historia",
+        "historias",
+        "lectura",
+        "leer",
+        "biblioteca",
+        "relato",
+        "leemos"
+      ],
+      "actions": [],
+      "objects": [
+        "libro",
+        "libros",
+        "cuento",
+        "cuentos",
+        "historia",
+        "historias",
+        "lectura",
+        "leer",
+        "biblioteca",
+        "relato"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 8,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: one open chunky picture book with a simple tree illustration on one page and a bird on the other, no lettering, no faces on the book",
+      "competency_ids": [
+        "COM_ORAL",
+        "COM_LECTURA"
+      ],
+      "fallback_competency_ids": []
+    },
+    {
+      "id": "music",
+      "title": "Instrumentos y música",
+      "category": "expresión",
+      "subcategory": "music",
+      "description": "Instrumentos y música. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "música",
+        "musica",
+        "instrumento",
+        "instrumentos",
+        "canción",
+        "canciones",
+        "cantar",
+        "sonido",
+        "sonidos",
+        "ritmo"
+      ],
+      "actions": [],
+      "objects": [
+        "música",
+        "musica",
+        "instrumento",
+        "instrumentos",
+        "canción",
+        "canciones",
+        "cantar",
+        "sonido",
+        "sonidos",
+        "ritmo"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: one small warm wooden drum with two rounded drumsticks and one simple tambourine, compact arrangement, no text or faces",
+      "competency_ids": [
+        "COM_ARTE"
+      ],
+      "fallback_competency_ids": []
+    },
+    {
+      "id": "ideas",
+      "title": "Idea para explorar",
+      "category": "general",
+      "subcategory": "ideas",
+      "description": "Idea para explorar. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "idea",
+        "ideas",
+        "proyecto",
+        "proyectos",
+        "exploración",
+        "investigar",
+        "descubrir",
+        "preguntas",
+        "indagar"
+      ],
+      "actions": [],
+      "objects": [
+        "idea",
+        "ideas",
+        "proyecto",
+        "proyectos",
+        "exploración",
+        "investigar",
+        "descubrir",
+        "preguntas",
+        "indagar"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: one softly rounded golden light bulb with a lavender base and three short clear rays, NO face, no glow or backdrop",
+      "competency_ids": [
+        "TRANS_AUTONOMO"
+      ],
+      "fallback_competency_ids": []
+    },
+    {
+      "id": "puppets",
+      "title": "Títeres",
+      "category": "expresión",
+      "subcategory": "puppets",
+      "description": "Títeres. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "títere",
+        "títeres",
+        "teatro",
+        "dramatizar",
+        "dramatización",
+        "representar"
+      ],
+      "actions": [],
+      "objects": [
+        "títere",
+        "títeres",
+        "teatro",
+        "dramatizar",
+        "dramatización",
+        "representar"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: one friendly dog hand puppet with floppy ears and expressive eyes, soft felt appearance, standalone puppet, no visible human hands",
+      "competency_ids": [
+        "COM_ORAL",
+        "COM_ARTE",
+        "CAST_L2_ORAL"
+      ],
+      "fallback_competency_ids": []
+    },
+    {
+      "id": "blocks",
+      "title": "Bloques de construcción",
+      "category": "juego",
+      "subcategory": "blocks",
+      "description": "Bloques de construcción. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "bloque",
+        "bloques",
+        "construcción",
+        "construir",
+        "torre",
+        "torres",
+        "armar",
+        "crear",
+        "juego",
+        "construimos",
+        "ubicamos",
+        "construcciones"
+      ],
+      "actions": [],
+      "objects": [
+        "bloque",
+        "bloques",
+        "construcción",
+        "construir",
+        "torre",
+        "torres",
+        "armar",
+        "crear",
+        "juego"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: a small tower of six chunky colorful toy blocks, including one triangle and one arch, no people or faces",
+      "competency_ids": [
+        "MAT_FORMA"
+      ],
+      "fallback_competency_ids": []
+    },
+    {
+      "id": "shapes",
+      "title": "Formas geométricas",
+      "category": "matemática",
+      "subcategory": "shapes",
+      "description": "Formas geométricas. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "forma",
+        "formas",
+        "figura",
+        "figuras",
+        "círculo",
+        "cuadrado",
+        "triángulo",
+        "geometría"
+      ],
+      "actions": [],
+      "objects": [
+        "forma",
+        "formas",
+        "figura",
+        "figuras",
+        "círculo",
+        "cuadrado",
+        "triángulo",
+        "geometría"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: four large chunky preschool geometry pieces: circle square triangle and diamond in warm bright colors, compact arrangement, no face or text",
+      "competency_ids": [
+        "MAT_FORMA"
+      ],
+      "fallback_competency_ids": [
+        "MAT_FORMA"
+      ]
+    },
+    {
+      "id": "numbers",
+      "title": "Cantidades y conteo",
+      "category": "matemática",
+      "subcategory": "numbers",
+      "description": "Cantidades y conteo. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "cantidad",
+        "cantidades",
+        "contar",
+        "conteo",
+        "número",
+        "números",
+        "repartir",
+        "comparar",
+        "contamos"
+      ],
+      "actions": [],
+      "objects": [
+        "cantidad",
+        "cantidades",
+        "contar",
+        "conteo",
+        "número",
+        "números",
+        "repartir",
+        "comparar"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: five chunky colored counting counters in two neat small groups, clearly distinct pieces, no numerals, letters or faces",
+      "competency_ids": [
+        "MAT_CANTIDAD"
+      ],
+      "fallback_competency_ids": [
+        "MAT_CANTIDAD"
+      ]
+    },
+    {
+      "id": "measure",
+      "title": "Regla para medir",
+      "category": "matemática",
+      "subcategory": "measure",
+      "description": "Regla para medir. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "medir",
+        "medida",
+        "medidas",
+        "longitud",
+        "tamaño",
+        "tamaños",
+        "regla",
+        "largo",
+        "corto"
+      ],
+      "actions": [],
+      "objects": [
+        "medir",
+        "medida",
+        "medidas",
+        "longitud",
+        "tamaño",
+        "tamaños",
+        "regla",
+        "largo",
+        "corto"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: one chunky wooden ruler and simple measuring tape curled beside it, tick marks only, absolutely no numbers or text, no faces",
+      "competency_ids": [
+        "MAT_CANTIDAD",
+        "MAT_FORMA"
+      ],
+      "fallback_competency_ids": []
+    },
+    {
+      "id": "market",
+      "title": "Mercado",
+      "category": "comunidad",
+      "subcategory": "market",
+      "description": "Mercado. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "mercado",
+        "tienda",
+        "comprar",
+        "vender",
+        "comercio",
+        "dinero",
+        "feria"
+      ],
+      "actions": [],
+      "objects": [
+        "mercado",
+        "tienda",
+        "comprar",
+        "vender",
+        "comercio",
+        "dinero",
+        "feria"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: one small friendly fruit-market stall with mint-and-peach canopy and three clearly recognizable fruits, no vendor, no signs or text",
+      "competency_ids": [
+        "MAT_CANTIDAD"
+      ],
+      "fallback_competency_ids": []
+    },
+    {
+      "id": "fruit",
+      "title": "Frutas",
+      "category": "alimentación",
+      "subcategory": "fruit",
+      "description": "Frutas. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "fruta",
+        "frutas",
+        "manzana",
+        "plátano",
+        "banana",
+        "pera",
+        "mandarina",
+        "naranja"
+      ],
+      "actions": [],
+      "objects": [
+        "fruta",
+        "frutas",
+        "manzana",
+        "plátano",
+        "banana",
+        "pera",
+        "mandarina",
+        "naranja"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: one red apple, one curved yellow banana and one pear in a compact arrangement, no faces",
+      "competency_ids": [
+        "MAT_CANTIDAD"
+      ],
+      "fallback_competency_ids": []
+    },
+    {
+      "id": "vegetables",
+      "title": "Verduras",
+      "category": "alimentación",
+      "subcategory": "vegetables",
+      "description": "Verduras. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "verdura",
+        "verduras",
+        "vegetales",
+        "zanahoria",
+        "lechuga",
+        "huerto",
+        "hortaliza"
+      ],
+      "actions": [],
+      "objects": [
+        "verdura",
+        "verduras",
+        "vegetales",
+        "zanahoria",
+        "lechuga",
+        "huerto",
+        "hortaliza"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: one orange carrot with green leafy top and one small broccoli beside it, rounded chunky preschool illustration, no faces",
+      "competency_ids": [
+        "CYT_INDAGA"
+      ],
+      "fallback_competency_ids": []
+    },
+    {
+      "id": "cooking",
+      "title": "Cocina",
+      "category": "alimentación",
+      "subcategory": "cooking",
+      "description": "Cocina. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "cocina",
+        "cocinar",
+        "preparar alimentos",
+        "receta",
+        "recetas",
+        "comida",
+        "alimentos",
+        "pan",
+        "panadería"
+      ],
+      "actions": [],
+      "objects": [
+        "cocina",
+        "cocinar",
+        "preparar alimentos",
+        "receta",
+        "recetas",
+        "comida",
+        "alimentos",
+        "pan",
+        "panadería"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: one rounded teal cooking pot with one wooden spoon, a small warm curl of steam, no face or people",
+      "competency_ids": [],
+      "fallback_competency_ids": []
+    },
+    {
+      "id": "health",
+      "title": "Salud y cuidados",
+      "category": "bienestar",
+      "subcategory": "health",
+      "description": "Salud y cuidados. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "salud",
+        "saludable",
+        "médico",
+        "doctor",
+        "enfermera",
+        "hospital",
+        "cuidado del cuerpo",
+        "botiquín"
+      ],
+      "actions": [],
+      "objects": [
+        "salud",
+        "saludable",
+        "médico",
+        "doctor",
+        "enfermera",
+        "hospital",
+        "cuidado del cuerpo",
+        "botiquín"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: one small lavender first-aid kit with a plain white cross and warm rounded edges, no face or people",
+      "competency_ids": [
+        "PS_IDENTIDAD"
+      ],
+      "fallback_competency_ids": []
+    },
+    {
+      "id": "hands",
+      "title": "Lavado de manos",
+      "category": "bienestar",
+      "subcategory": "hands",
+      "description": "Lavado de manos. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "manos",
+        "lavar",
+        "lavado",
+        "higiene",
+        "jabón",
+        "limpieza"
+      ],
+      "actions": [],
+      "objects": [
+        "manos",
+        "lavar",
+        "lavado",
+        "higiene",
+        "jabón",
+        "limpieza"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: two fictional child hands washing with a small bar of soap and three blue bubbles, clear simplified hands, no faucet or room backdrop",
+      "competency_ids": [
+        "PS_IDENTIDAD"
+      ],
+      "fallback_competency_ids": []
+    },
+    {
+      "id": "teeth",
+      "title": "Dientes y cepillo",
+      "category": "bienestar",
+      "subcategory": "teeth",
+      "description": "Dientes y cepillo. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "diente",
+        "dientes",
+        "dental",
+        "cepillo",
+        "cepillar",
+        "boca",
+        "dentista"
+      ],
+      "actions": [],
+      "objects": [
+        "diente",
+        "dientes",
+        "dental",
+        "cepillo",
+        "cepillar",
+        "boca",
+        "dentista"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: one smooth white tooth and one lavender toothbrush beside it, no face or person",
+      "competency_ids": [
+        "PS_IDENTIDAD"
+      ],
+      "fallback_competency_ids": []
+    },
+    {
+      "id": "heart",
+      "title": "Emociones y buen trato",
+      "category": "bienestar",
+      "subcategory": "heart",
+      "description": "Emociones y buen trato. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "emociones",
+        "emoción",
+        "sentimientos",
+        "sentir",
+        "afecto",
+        "amor",
+        "amistad",
+        "convivencia",
+        "respeto",
+        "buen trato",
+        "paz"
+      ],
+      "actions": [],
+      "objects": [
+        "emociones",
+        "emoción",
+        "sentimientos",
+        "sentir",
+        "afecto",
+        "amor",
+        "amistad",
+        "convivencia",
+        "respeto",
+        "buen trato",
+        "paz"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: one large warm pink heart held gently by two small fictional hands, no face or person",
+      "competency_ids": [
+        "PS_IDENTIDAD",
+        "PS_CONVIVE",
+        "PS_RELIGION"
+      ],
+      "fallback_competency_ids": [
+        "PS_RELIGION"
+      ]
+    },
+    {
+      "id": "ball",
+      "title": "Pelota y movimiento",
+      "category": "juego",
+      "subcategory": "ball",
+      "description": "Pelota y movimiento. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "pelota",
+        "balón",
+        "deporte",
+        "mover",
+        "movimiento",
+        "correr",
+        "saltar",
+        "motricidad",
+        "equilibrio"
+      ],
+      "actions": [],
+      "objects": [
+        "pelota",
+        "balón",
+        "deporte",
+        "mover",
+        "movimiento",
+        "correr",
+        "saltar",
+        "motricidad",
+        "equilibrio"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: one colorful soft preschool ball with blue teal and yellow panels, no people or face",
+      "competency_ids": [
+        "PSICO_MOTRICIDAD"
+      ],
+      "fallback_competency_ids": []
+    },
+    {
+      "id": "playground",
+      "title": "Juegos del parque",
+      "category": "juego",
+      "subcategory": "playground",
+      "description": "Juegos del parque. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "parque",
+        "juegos al aire libre",
+        "columpio",
+        "tobogán",
+        "patio",
+        "recreo"
+      ],
+      "actions": [],
+      "objects": [
+        "parque",
+        "juegos al aire libre",
+        "columpio",
+        "tobogán",
+        "patio",
+        "recreo"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: one small chunky pastel slide with three steps and green base, compact object, no scenery or children",
+      "competency_ids": [
+        "PSICO_MOTRICIDAD"
+      ],
+      "fallback_competency_ids": []
+    },
+    {
+      "id": "car",
+      "title": "Auto",
+      "category": "transporte",
+      "subcategory": "car",
+      "description": "Auto. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "auto",
+        "autos",
+        "carro",
+        "carros",
+        "carrito",
+        "vehículo",
+        "vehículos",
+        "transporte",
+        "ruedas"
+      ],
+      "actions": [],
+      "objects": [
+        "auto",
+        "autos",
+        "carro",
+        "carros",
+        "carrito",
+        "vehículo",
+        "vehículos",
+        "transporte",
+        "ruedas"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: one small toy-like sky-blue car with two big clear wheels and yellow headlights, no face or driver, three-quarter profile",
+      "competency_ids": [
+        "MAT_FORMA"
+      ],
+      "fallback_competency_ids": []
+    },
+    {
+      "id": "bus",
+      "title": "Bus",
+      "category": "transporte",
+      "subcategory": "bus",
+      "description": "Bus. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "bus",
+        "buses",
+        "ómnibus",
+        "autobús",
+        "viajar",
+        "viaje",
+        "pasajeros"
+      ],
+      "actions": [],
+      "objects": [
+        "bus",
+        "buses",
+        "ómnibus",
+        "autobús",
+        "viajar",
+        "viaje",
+        "pasajeros"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: one small friendly yellow school bus with clear windows and two large wheels, no faces or passengers, no signage, three-quarter view",
+      "competency_ids": [
+        "MAT_FORMA"
+      ],
+      "fallback_competency_ids": []
+    },
+    {
+      "id": "recycling",
+      "title": "Reciclaje",
+      "category": "ambiente",
+      "subcategory": "recycling",
+      "description": "Reciclaje. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "reciclaje",
+        "reciclar",
+        "residuos",
+        "basura",
+        "reutilizar",
+        "reducir",
+        "clasificar residuos"
+      ],
+      "actions": [],
+      "objects": [
+        "reciclaje",
+        "reciclar",
+        "residuos",
+        "basura",
+        "reutilizar",
+        "reducir",
+        "clasificar residuos"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: one rounded green recycling bin with a clear simple three-arrow recycling symbol, no text or faces",
+      "competency_ids": [
+        "CYT_INDAGA"
+      ],
+      "fallback_competency_ids": []
+    },
+    {
+      "id": "earth",
+      "title": "Planeta Tierra",
+      "category": "ambiente",
+      "subcategory": "earth",
+      "description": "Planeta Tierra. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "planeta tierra",
+        "tierra",
+        "planeta",
+        "mundo",
+        "ambiente",
+        "naturaleza",
+        "contaminación",
+        "cuidar el planeta"
+      ],
+      "actions": [],
+      "objects": [
+        "planeta tierra",
+        "tierra",
+        "planeta",
+        "mundo",
+        "ambiente",
+        "naturaleza",
+        "contaminación",
+        "cuidar el planeta"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: one blue-and-green globe with simplified continents, NO face, no rings or background",
+      "competency_ids": [
+        "CYT_INDAGA"
+      ],
+      "fallback_competency_ids": []
+    },
+    {
+      "id": "weather",
+      "title": "Sol y nubes",
+      "category": "naturaleza",
+      "subcategory": "weather",
+      "description": "Sol y nubes. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "sol",
+        "clima",
+        "tiempo atmosférico",
+        "nube",
+        "nubes",
+        "lluvia",
+        "viento",
+        "calor",
+        "frío",
+        "estaciones"
+      ],
+      "actions": [],
+      "objects": [
+        "sol",
+        "clima",
+        "tiempo atmosférico",
+        "nube",
+        "nubes",
+        "lluvia",
+        "viento",
+        "calor",
+        "frío",
+        "estaciones"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: one warm yellow sun partly behind a soft sky-blue cloud with two small raindrops, no faces or people",
+      "competency_ids": [
+        "CYT_INDAGA"
+      ],
+      "fallback_competency_ids": []
+    },
+    {
+      "id": "space",
+      "title": "Estrellas y espacio",
+      "category": "naturaleza",
+      "subcategory": "space",
+      "description": "Estrellas y espacio. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "estrella",
+        "estrellas",
+        "espacio",
+        "universo",
+        "luna",
+        "cielo",
+        "astronomía",
+        "planetas"
+      ],
+      "actions": [],
+      "objects": [
+        "estrella",
+        "estrellas",
+        "espacio",
+        "universo",
+        "luna",
+        "cielo",
+        "astronomía",
+        "planetas"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: one lavender crescent moon beside two golden rounded stars, no faces or background",
+      "competency_ids": [
+        "CYT_INDAGA"
+      ],
+      "fallback_competency_ids": []
+    },
+    {
+      "id": "storytelling",
+      "title": "Contamos historias",
+      "category": "expresión",
+      "subcategory": "storytelling",
+      "description": "Contamos historias. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "narrar",
+        "narración",
+        "contar historias",
+        "contamos historias",
+        "historias para contarnos",
+        "relato oral",
+        "escuchar y narrar",
+        "conversar",
+        "contarnos",
+        "cuento",
+        "cuentos",
+        "historia",
+        "historias"
+      ],
+      "actions": [],
+      "objects": [],
+      "contexts": [],
+      "match_phrases": [
+        "historias para contarnos",
+        "relato oral",
+        "narrar"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 7,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: two fictional preschool children telling a story together with one simple dog hand puppet, friendly expressive faces, close compact scene",
+      "competency_ids": [
+        "COM_ORAL",
+        "CAST_L2_ORAL"
+      ],
+      "fallback_competency_ids": [
+        "COM_ORAL",
+        "CAST_L2_ORAL"
+      ]
+    },
+    {
+      "id": "reading_clues",
+      "title": "Pistas en los cuentos",
+      "category": "expresión",
+      "subcategory": "reading_clues",
+      "description": "Pistas en los cuentos. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "pistas",
+        "buscar pistas",
+        "pistas dentro",
+        "anticipar",
+        "anticipamos",
+        "revisar ideas durante la lectura",
+        "ilustraciones del texto",
+        "comprensión lectora",
+        "cuento",
+        "cuentos",
+        "historia",
+        "historias"
+      ],
+      "actions": [],
+      "objects": [],
+      "contexts": [],
+      "match_phrases": [
+        "pistas dentro de los cuentos",
+        "pistas en los cuentos"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 7,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: one fictional preschool child inspecting a large picture book with a rounded magnifying glass, gentle curious face, compact scene",
+      "competency_ids": [
+        "COM_LECTURA"
+      ],
+      "fallback_competency_ids": [
+        "COM_LECTURA"
+      ]
+    },
+    {
+      "id": "writing",
+      "title": "Mensajes y escritura",
+      "category": "expresión",
+      "subcategory": "writing",
+      "description": "Mensajes y escritura. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "mensajes",
+        "mensaje",
+        "escritura",
+        "escribir",
+        "escribimos",
+        "escrito",
+        "escritos",
+        "nota",
+        "notas",
+        "carta",
+        "cartas",
+        "cartel",
+        "carteles",
+        "comunicar una decisión"
+      ],
+      "actions": [],
+      "objects": [],
+      "contexts": [],
+      "match_phrases": [
+        "mensajes",
+        "escritura"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 7,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: one fictional preschool girl drawing a short pretend note with a large lavender pencil, one envelope beside her, paper has simple strokes NO actual words",
+      "competency_ids": [
+        "COM_ESCRITURA"
+      ],
+      "fallback_competency_ids": [
+        "COM_ESCRITURA"
+      ]
+    },
+    {
+      "id": "artistic_expression",
+      "title": "Expresamos ideas con arte",
+      "category": "expresión",
+      "subcategory": "artistic_expression",
+      "description": "Expresamos ideas con arte. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "formas de mostrar",
+        "mostrar una idea",
+        "representar ideas",
+        "expresión artística",
+        "expresarnos",
+        "expresar ideas",
+        "crear con arte"
+      ],
+      "actions": [],
+      "objects": [],
+      "contexts": [],
+      "match_phrases": [
+        "formas de mostrar una idea",
+        "representar ideas"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 7,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: one fictional preschool child proudly holding a colorful painting of a flower, one chunky paintbrush beside them, no words, simple close scene",
+      "competency_ids": [
+        "COM_ARTE"
+      ],
+      "fallback_competency_ids": [
+        "COM_ARTE"
+      ]
+    },
+    {
+      "id": "sharing",
+      "title": "Repartimos cantidades",
+      "category": "juego",
+      "subcategory": "sharing",
+      "description": "Repartimos cantidades. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "repartimos",
+        "repartir",
+        "repartos",
+        "reparto",
+        "compartir cantidades",
+        "distribuir",
+        "distribuimos"
+      ],
+      "actions": [],
+      "objects": [],
+      "contexts": [],
+      "match_phrases": [
+        "repartimos",
+        "repartos"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 7,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: two simple fictional child hands dividing SIX large colorful counters into two small groups of three, just hands and round counters, three colors only, no full people, faces, table, bowls or background",
+      "competency_ids": [
+        "MAT_CANTIDAD"
+      ],
+      "fallback_competency_ids": []
+    },
+    {
+      "id": "planning_play",
+      "title": "Planeamos y probamos un juego",
+      "category": "juego",
+      "subcategory": "planning_play",
+      "description": "Planeamos y probamos un juego. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "planeamos",
+        "planear",
+        "planificar un juego",
+        "probamos y ajustamos",
+        "meta de juego",
+        "organizar acciones",
+        "ajustamos un juego"
+      ],
+      "actions": [],
+      "objects": [],
+      "contexts": [],
+      "match_phrases": [
+        "planeamos",
+        "probamos y ajustamos"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 7,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: two fictional preschool children planning a simple play challenge with three colorful blocks and a ball, one child pointing to the next piece, no signs or text",
+      "competency_ids": [
+        "PS_CONVIVE",
+        "TRANS_AUTONOMO"
+      ],
+      "fallback_competency_ids": [
+        "TRANS_AUTONOMO"
+      ]
+    },
+    {
+      "id": "solidarity",
+      "title": "Compartimos y ayudamos",
+      "category": "comunidad",
+      "subcategory": "solidarity",
+      "description": "Compartimos y ayudamos. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "colecta",
+        "donación",
+        "donaciones",
+        "donar",
+        "solidaridad",
+        "solidaria",
+        "solidario",
+        "ayudar a otros",
+        "ayudamos",
+        "bienestar común"
+      ],
+      "actions": [],
+      "objects": [],
+      "contexts": [],
+      "match_phrases": [
+        "colecta",
+        "donación"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 7,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: two fictional preschool children kindly placing one book and one simple toy in a small donation box, caring faces, no signage or text",
+      "competency_ids": [
+        "PS_CONVIVE",
+        "PS_RELIGION"
+      ],
+      "fallback_competency_ids": []
+    },
+    {
+      "id": "dance",
+      "title": "Baile y expresión corporal",
+      "category": "expresión",
+      "subcategory": "dance",
+      "description": "Baile y expresión corporal. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "baile",
+        "bailar",
+        "bailamos",
+        "danza",
+        "danzas"
+      ],
+      "actions": [],
+      "objects": [],
+      "contexts": [],
+      "match_phrases": [
+        "baile",
+        "bailar",
+        "bailamos",
+        "danza",
+        "danzas"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 7,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: one fictional preschool child dancing happily with arms raised, one clear playful dance pose and one simple musical note nearby, no ball or stepping stones",
+      "competency_ids": [
+        "PSICO_MOTRICIDAD",
+        "COM_ARTE"
+      ],
+      "fallback_competency_ids": []
+    },
+    {
+      "id": "christmas",
+      "title": "Navidad",
+      "category": "cultura",
+      "subcategory": "christmas",
+      "description": "Navidad. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "navidad",
+        "navideño",
+        "navideña",
+        "navideños",
+        "navideñas",
+        "nacimiento",
+        "árbol navideño"
+      ],
+      "actions": [],
+      "objects": [],
+      "contexts": [],
+      "match_phrases": [
+        "navidad",
+        "navideño",
+        "navideña",
+        "navideños",
+        "navideñas",
+        "nacimiento",
+        "árbol navideño"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 7,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: one small simple rounded green Christmas tree with three large colorful baubles and one golden star on top, one tiny wrapped gift beside it, no faces, no snow or winter scene",
+      "competency_ids": [
+        "PS_RELIGION"
+      ],
+      "fallback_competency_ids": []
+    },
+    {
+      "id": "inquiry",
+      "title": "Exploramos y preguntamos",
+      "category": "indagación",
+      "subcategory": "inquiry",
+      "description": "Exploramos y preguntamos. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "indagar",
+        "indagación",
+        "investigar",
+        "investigamos",
+        "experimentos",
+        "preguntas",
+        "lupa"
+      ],
+      "actions": [],
+      "objects": [],
+      "contexts": [],
+      "match_phrases": [
+        "indagar",
+        "indagación",
+        "investigar",
+        "investigamos",
+        "experimentos",
+        "preguntas",
+        "lupa"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 7,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: one large simple magnifying glass with a green leaf visible inside the lens, one tiny seed beside it, preschool scientific exploration, no person or book",
+      "competency_ids": [
+        "CYT_INDAGA"
+      ],
+      "fallback_competency_ids": [
+        "CYT_INDAGA"
+      ]
+    },
+    {
+      "id": "technology",
+      "title": "Tecnología",
+      "category": "exploración",
+      "subcategory": "technology",
+      "description": "Tecnología. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "tecnología",
+        "digital",
+        "digitales",
+        "tableta",
+        "tablet",
+        "computadora",
+        "pantalla"
+      ],
+      "actions": [],
+      "objects": [],
+      "contexts": [],
+      "match_phrases": [
+        "tecnología",
+        "digital",
+        "digitales",
+        "tableta",
+        "tablet",
+        "computadora",
+        "pantalla"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 7,
+      "generation_prompt": "Use case: illustration-story. Create ONE SMALL SIMPLE 2D preschool cartoon sticker, based on the reference's friendly round characters and warm colors but MUCH SIMPLER. This is a 64px timeline pictogram, NOT a detailed painting or large scene. Use only 5–7 flat color fills, one simple soft shaded area per shape, clean thick warm-brown outline, chunky rounded silhouette. NO textures, fur strands, hair strands, brush grain, photorealism, gloss, intricate shading, detailed fabric or lighting. Reduce secondary details strongly. Only one focal subject and at most the essential props. Faces only on people and animals, never objects/plants. True transparent background, no ground, shadow, gradient, haze, halo or glow. Square canvas, centered subject fills 80%, small safe margin. No text, letters, numbers, watermark, border, label or decorative sparkles. The reference is STYLE ONLY, do not copy its room or make a contact sheet.\nSUBJECT: one small rounded sky-blue tablet with three large simple colored shapes on its plain screen, no text or numbers, no face or people",
+      "competency_ids": [
+        "TRANS_TIC"
+      ],
+      "fallback_competency_ids": [
+        "TRANS_TIC"
+      ]
+    }
+  ],
+  "curriculum_version": "4.1.0"
+}

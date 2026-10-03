@@ -1,0 +1,49 @@
+{
+  "id": "numbers",
+  "title": "Cantidades y conteo",
+  "category": "matemática",
+  "subcategory": "numbers",
+  "description": "Cantidades y conteo. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+  "concepts": [
+    "cantidad",
+    "cantidades",
+    "contar",
+    "conteo",
+    "número",
+    "números",
+    "repartir",
+    "comparar",
+    "contamos"
+  ],
+  "actions": [],
+  "objects": [
+    "cantidad",
+    "cantidades",
+    "contar",
+    "conteo",
+    "número",
+    "números",
+    "repartir",
+    "comparar"
+  ],
+  "contexts": [],
+  "match_phrases": [],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "competency_ids": [
+    "MAT_CANTIDAD"
+  ],
+  "fallback_competency_ids": [
+    "MAT_CANTIDAD"
+  ],
+  "file": "numbers.webp",
+  "path": "/project-illustrations/numbers.webp",
+  "width": 160,
+  "height": 160,
+  "bytes": 4238,
+  "sha256": "c976e7369ead1eb4c01a8470f1670fbf25168b9dc8fa76a35fdd592a8b0ec7de"
+}

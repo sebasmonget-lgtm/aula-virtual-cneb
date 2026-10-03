@@ -1,0 +1,38 @@
+{
+  "id": "butterfly",
+  "title": "Mariposa",
+  "category": "animales",
+  "subcategory": "butterfly",
+  "description": "Mariposa. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+  "concepts": [
+    "mariposa",
+    "mariposas",
+    "alas",
+    "metamorfosis"
+  ],
+  "actions": [],
+  "objects": [
+    "mariposa",
+    "mariposas",
+    "alas",
+    "metamorfosis"
+  ],
+  "contexts": [],
+  "match_phrases": [],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 6,
+  "competency_ids": [
+    "CYT_INDAGA"
+  ],
+  "fallback_competency_ids": [],
+  "file": "butterfly.webp",
+  "path": "/project-illustrations/butterfly.webp",
+  "width": 160,
+  "height": 160,
+  "bytes": 6038,
+  "sha256": "4c3596e835e4688c14809de7668b330e6f9d6bbbd63cb1e3f957bc35815ad1ae"
+}

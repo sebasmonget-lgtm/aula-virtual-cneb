@@ -1,0 +1,46 @@
+{
+  "id": "cooking",
+  "title": "Cocina",
+  "category": "alimentación",
+  "subcategory": "cooking",
+  "description": "Cocina. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+  "concepts": [
+    "cocina",
+    "cocinar",
+    "preparar alimentos",
+    "receta",
+    "recetas",
+    "comida",
+    "alimentos",
+    "pan",
+    "panadería"
+  ],
+  "actions": [],
+  "objects": [
+    "cocina",
+    "cocinar",
+    "preparar alimentos",
+    "receta",
+    "recetas",
+    "comida",
+    "alimentos",
+    "pan",
+    "panadería"
+  ],
+  "contexts": [],
+  "match_phrases": [],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "competency_ids": [],
+  "fallback_competency_ids": [],
+  "file": "cooking.webp",
+  "path": "/project-illustrations/cooking.webp",
+  "width": 160,
+  "height": 160,
+  "bytes": 5706,
+  "sha256": "bbd6c4291efd4bc5c3e8378b7e275bd8c8eb50d3189db9ec83877dd73530f922"
+}

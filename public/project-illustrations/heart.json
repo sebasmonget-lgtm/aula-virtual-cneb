@@ -1,0 +1,56 @@
+{
+  "id": "heart",
+  "title": "Emociones y buen trato",
+  "category": "bienestar",
+  "subcategory": "heart",
+  "description": "Emociones y buen trato. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+  "concepts": [
+    "emociones",
+    "emoción",
+    "sentimientos",
+    "sentir",
+    "afecto",
+    "amor",
+    "amistad",
+    "convivencia",
+    "respeto",
+    "buen trato",
+    "paz"
+  ],
+  "actions": [],
+  "objects": [
+    "emociones",
+    "emoción",
+    "sentimientos",
+    "sentir",
+    "afecto",
+    "amor",
+    "amistad",
+    "convivencia",
+    "respeto",
+    "buen trato",
+    "paz"
+  ],
+  "contexts": [],
+  "match_phrases": [],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "competency_ids": [
+    "PS_IDENTIDAD",
+    "PS_CONVIVE",
+    "PS_RELIGION"
+  ],
+  "fallback_competency_ids": [
+    "PS_RELIGION"
+  ],
+  "file": "heart.webp",
+  "path": "/project-illustrations/heart.webp",
+  "width": 160,
+  "height": 160,
+  "bytes": 4844,
+  "sha256": "3306c9b05a9f1591aaec0cf744eca843c5d2cecbc46384de9ceb01002edee52e"
+}

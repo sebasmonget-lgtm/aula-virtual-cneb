@@ -1,0 +1,50 @@
+{
+  "id": "weather",
+  "title": "Sol y nubes",
+  "category": "naturaleza",
+  "subcategory": "weather",
+  "description": "Sol y nubes. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+  "concepts": [
+    "sol",
+    "clima",
+    "tiempo atmosférico",
+    "nube",
+    "nubes",
+    "lluvia",
+    "viento",
+    "calor",
+    "frío",
+    "estaciones"
+  ],
+  "actions": [],
+  "objects": [
+    "sol",
+    "clima",
+    "tiempo atmosférico",
+    "nube",
+    "nubes",
+    "lluvia",
+    "viento",
+    "calor",
+    "frío",
+    "estaciones"
+  ],
+  "contexts": [],
+  "match_phrases": [],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "competency_ids": [
+    "CYT_INDAGA"
+  ],
+  "fallback_competency_ids": [],
+  "file": "weather.webp",
+  "path": "/project-illustrations/weather.webp",
+  "width": 160,
+  "height": 160,
+  "bytes": 5996,
+  "sha256": "52e4792f0b477c1ce9f19966d3e1f8407e251f683f6e9ec13b08ac65e99335be"
+}

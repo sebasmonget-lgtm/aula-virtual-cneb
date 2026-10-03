@@ -1,0 +1,44 @@
+{
+  "id": "boy",
+  "title": "Niño",
+  "category": "personas",
+  "subcategory": "boy",
+  "description": "Niño. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+  "concepts": [
+    "niño",
+    "niños",
+    "niñez",
+    "infancia",
+    "yo",
+    "identidad",
+    "autonomía"
+  ],
+  "actions": [],
+  "objects": [
+    "niño",
+    "niños",
+    "niñez",
+    "infancia",
+    "yo",
+    "identidad",
+    "autonomía"
+  ],
+  "contexts": [],
+  "match_phrases": [],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "competency_ids": [
+    "PS_IDENTIDAD"
+  ],
+  "fallback_competency_ids": [],
+  "file": "boy.webp",
+  "path": "/project-illustrations/boy.webp",
+  "width": 160,
+  "height": 160,
+  "bytes": 6060,
+  "sha256": "4c46c5679a527d0c3250f811d4aec2eb570937867187df3baed3513730c735dc"
+}

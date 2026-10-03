@@ -1,0 +1,46 @@
+{
+  "id": "space",
+  "title": "Estrellas y espacio",
+  "category": "naturaleza",
+  "subcategory": "space",
+  "description": "Estrellas y espacio. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+  "concepts": [
+    "estrella",
+    "estrellas",
+    "espacio",
+    "universo",
+    "luna",
+    "cielo",
+    "astronomía",
+    "planetas"
+  ],
+  "actions": [],
+  "objects": [
+    "estrella",
+    "estrellas",
+    "espacio",
+    "universo",
+    "luna",
+    "cielo",
+    "astronomía",
+    "planetas"
+  ],
+  "contexts": [],
+  "match_phrases": [],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "competency_ids": [
+    "CYT_INDAGA"
+  ],
+  "fallback_competency_ids": [],
+  "file": "space.webp",
+  "path": "/project-illustrations/space.webp",
+  "width": 160,
+  "height": 160,
+  "bytes": 6020,
+  "sha256": "cf207dc2a4cb5a97986ef6d57b0d75c58cae32d0fb9dd2638befda49eb591c12"
+}

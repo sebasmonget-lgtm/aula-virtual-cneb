@@ -1,0 +1,40 @@
+{
+  "id": "cow",
+  "title": "Vaca",
+  "category": "animales",
+  "subcategory": "cow",
+  "description": "Vaca. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+  "concepts": [
+    "vaca",
+    "vacas",
+    "leche",
+    "ganado",
+    "animales de granja"
+  ],
+  "actions": [],
+  "objects": [
+    "vaca",
+    "vacas",
+    "leche",
+    "ganado",
+    "animales de granja"
+  ],
+  "contexts": [],
+  "match_phrases": [],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 6,
+  "competency_ids": [
+    "CYT_INDAGA"
+  ],
+  "fallback_competency_ids": [],
+  "file": "cow.webp",
+  "path": "/project-illustrations/cow.webp",
+  "width": 160,
+  "height": 160,
+  "bytes": 6098,
+  "sha256": "7d5f6222378ee3f5e6d4f88dbbb9ce5b5753b3284202d721fd0d83d425f0a1c7"
+}

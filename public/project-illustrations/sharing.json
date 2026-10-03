@@ -1,0 +1,39 @@
+{
+  "id": "sharing",
+  "title": "Repartimos cantidades",
+  "category": "juego",
+  "subcategory": "sharing",
+  "description": "Repartimos cantidades. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+  "concepts": [
+    "repartimos",
+    "repartir",
+    "repartos",
+    "reparto",
+    "compartir cantidades",
+    "distribuir",
+    "distribuimos"
+  ],
+  "actions": [],
+  "objects": [],
+  "contexts": [],
+  "match_phrases": [
+    "repartimos",
+    "repartos"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 7,
+  "competency_ids": [
+    "MAT_CANTIDAD"
+  ],
+  "fallback_competency_ids": [],
+  "file": "sharing.webp",
+  "path": "/project-illustrations/sharing.webp",
+  "width": 160,
+  "height": 160,
+  "bytes": 5922,
+  "sha256": "9f5df34852e69af188ecb11f99cb07d312046c9da6f1ed4df684dc64fe8db565"
+}

@@ -1,0 +1,42 @@
+{
+  "id": "dog",
+  "title": "Perro",
+  "category": "animales",
+  "subcategory": "dog",
+  "description": "Perro. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+  "concepts": [
+    "perro",
+    "perros",
+    "perrito",
+    "can",
+    "mascota",
+    "mascotas"
+  ],
+  "actions": [],
+  "objects": [
+    "perro",
+    "perros",
+    "perrito",
+    "can",
+    "mascota",
+    "mascotas"
+  ],
+  "contexts": [],
+  "match_phrases": [],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 6,
+  "competency_ids": [
+    "CYT_INDAGA"
+  ],
+  "fallback_competency_ids": [],
+  "file": "dog.webp",
+  "path": "/project-illustrations/dog.webp",
+  "width": 160,
+  "height": 160,
+  "bytes": 5948,
+  "sha256": "5385f6c0812c3d8d5916a3281ce7fbd1d0a62ced79e676f10d6abab75133e009"
+}

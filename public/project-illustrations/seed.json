@@ -1,0 +1,44 @@
+{
+  "id": "seed",
+  "title": "Semilla y brote",
+  "category": "naturaleza",
+  "subcategory": "seed",
+  "description": "Semilla y brote. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+  "concepts": [
+    "semilla",
+    "semillas",
+    "brote",
+    "germinación",
+    "germinar",
+    "siembra",
+    "crecer"
+  ],
+  "actions": [],
+  "objects": [
+    "semilla",
+    "semillas",
+    "brote",
+    "germinación",
+    "germinar",
+    "siembra",
+    "crecer"
+  ],
+  "contexts": [],
+  "match_phrases": [],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "competency_ids": [
+    "CYT_INDAGA"
+  ],
+  "fallback_competency_ids": [],
+  "file": "seed.webp",
+  "path": "/project-illustrations/seed.webp",
+  "width": 160,
+  "height": 160,
+  "bytes": 5744,
+  "sha256": "8ae41e0079bf0138572149309fc6e539773dbd1afcd4493a2d3701a78b25ca73"
+}

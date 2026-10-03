@@ -1,0 +1,41 @@
+{
+  "id": "artistic_expression",
+  "title": "Expresamos ideas con arte",
+  "category": "expresión",
+  "subcategory": "artistic_expression",
+  "description": "Expresamos ideas con arte. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+  "concepts": [
+    "formas de mostrar",
+    "mostrar una idea",
+    "representar ideas",
+    "expresión artística",
+    "expresarnos",
+    "expresar ideas",
+    "crear con arte"
+  ],
+  "actions": [],
+  "objects": [],
+  "contexts": [],
+  "match_phrases": [
+    "formas de mostrar una idea",
+    "representar ideas"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 7,
+  "competency_ids": [
+    "COM_ARTE"
+  ],
+  "fallback_competency_ids": [
+    "COM_ARTE"
+  ],
+  "file": "artistic_expression.webp",
+  "path": "/project-illustrations/artistic_expression.webp",
+  "width": 160,
+  "height": 160,
+  "bytes": 6074,
+  "sha256": "8d0347ba1908dac08fb5d00644f8f45f11af7a7119df33f896dcb6bae0f3f610"
+}

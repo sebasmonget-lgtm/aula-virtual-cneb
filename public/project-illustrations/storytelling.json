@@ -1,0 +1,50 @@
+{
+  "id": "storytelling",
+  "title": "Contamos historias",
+  "category": "expresión",
+  "subcategory": "storytelling",
+  "description": "Contamos historias. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+  "concepts": [
+    "narrar",
+    "narración",
+    "contar historias",
+    "contamos historias",
+    "historias para contarnos",
+    "relato oral",
+    "escuchar y narrar",
+    "conversar",
+    "contarnos",
+    "cuento",
+    "cuentos",
+    "historia",
+    "historias"
+  ],
+  "actions": [],
+  "objects": [],
+  "contexts": [],
+  "match_phrases": [
+    "historias para contarnos",
+    "relato oral",
+    "narrar"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 7,
+  "competency_ids": [
+    "COM_ORAL",
+    "CAST_L2_ORAL"
+  ],
+  "fallback_competency_ids": [
+    "COM_ORAL",
+    "CAST_L2_ORAL"
+  ],
+  "file": "storytelling.webp",
+  "path": "/project-illustrations/storytelling.webp",
+  "width": 160,
+  "height": 160,
+  "bytes": 6136,
+  "sha256": "90c1b88e3af053ac7ab5b333a9024fcdff6ecb3244a055ea1efec536c315b344"
+}

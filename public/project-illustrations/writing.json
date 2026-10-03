@@ -1,0 +1,48 @@
+{
+  "id": "writing",
+  "title": "Mensajes y escritura",
+  "category": "expresión",
+  "subcategory": "writing",
+  "description": "Mensajes y escritura. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+  "concepts": [
+    "mensajes",
+    "mensaje",
+    "escritura",
+    "escribir",
+    "escribimos",
+    "escrito",
+    "escritos",
+    "nota",
+    "notas",
+    "carta",
+    "cartas",
+    "cartel",
+    "carteles",
+    "comunicar una decisión"
+  ],
+  "actions": [],
+  "objects": [],
+  "contexts": [],
+  "match_phrases": [
+    "mensajes",
+    "escritura"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 7,
+  "competency_ids": [
+    "COM_ESCRITURA"
+  ],
+  "fallback_competency_ids": [
+    "COM_ESCRITURA"
+  ],
+  "file": "writing.webp",
+  "path": "/project-illustrations/writing.webp",
+  "width": 160,
+  "height": 160,
+  "bytes": 5976,
+  "sha256": "bb57641d57b15c8e193f9c9c50af6657608e6d46745c7022df5ee6ac4d3124ae"
+}

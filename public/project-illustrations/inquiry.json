@@ -1,0 +1,46 @@
+{
+  "id": "inquiry",
+  "title": "Exploramos y preguntamos",
+  "category": "indagación",
+  "subcategory": "inquiry",
+  "description": "Exploramos y preguntamos. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+  "concepts": [
+    "indagar",
+    "indagación",
+    "investigar",
+    "investigamos",
+    "experimentos",
+    "preguntas",
+    "lupa"
+  ],
+  "actions": [],
+  "objects": [],
+  "contexts": [],
+  "match_phrases": [
+    "indagar",
+    "indagación",
+    "investigar",
+    "investigamos",
+    "experimentos",
+    "preguntas",
+    "lupa"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 7,
+  "competency_ids": [
+    "CYT_INDAGA"
+  ],
+  "fallback_competency_ids": [
+    "CYT_INDAGA"
+  ],
+  "file": "inquiry.webp",
+  "path": "/project-illustrations/inquiry.webp",
+  "width": 160,
+  "height": 160,
+  "bytes": 5626,
+  "sha256": "719476be1379c597edd8bc3c32bf3e4719c9da0122102af878a03029a5da0720"
+}

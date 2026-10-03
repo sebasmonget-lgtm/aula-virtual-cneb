@@ -1,0 +1,43 @@
+{
+  "id": "solidarity",
+  "title": "Compartimos y ayudamos",
+  "category": "comunidad",
+  "subcategory": "solidarity",
+  "description": "Compartimos y ayudamos. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+  "concepts": [
+    "colecta",
+    "donación",
+    "donaciones",
+    "donar",
+    "solidaridad",
+    "solidaria",
+    "solidario",
+    "ayudar a otros",
+    "ayudamos",
+    "bienestar común"
+  ],
+  "actions": [],
+  "objects": [],
+  "contexts": [],
+  "match_phrases": [
+    "colecta",
+    "donación"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 7,
+  "competency_ids": [
+    "PS_CONVIVE",
+    "PS_RELIGION"
+  ],
+  "fallback_competency_ids": [],
+  "file": "solidarity.webp",
+  "path": "/project-illustrations/solidarity.webp",
+  "width": 160,
+  "height": 160,
+  "bytes": 5958,
+  "sha256": "8bab7690285fac42fc3bf4971c6d175c62c52550a3bcd1dbcd60aeb90a7a590e"
+}

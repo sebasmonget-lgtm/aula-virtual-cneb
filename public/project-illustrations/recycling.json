@@ -1,0 +1,44 @@
+{
+  "id": "recycling",
+  "title": "Reciclaje",
+  "category": "ambiente",
+  "subcategory": "recycling",
+  "description": "Reciclaje. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+  "concepts": [
+    "reciclaje",
+    "reciclar",
+    "residuos",
+    "basura",
+    "reutilizar",
+    "reducir",
+    "clasificar residuos"
+  ],
+  "actions": [],
+  "objects": [
+    "reciclaje",
+    "reciclar",
+    "residuos",
+    "basura",
+    "reutilizar",
+    "reducir",
+    "clasificar residuos"
+  ],
+  "contexts": [],
+  "match_phrases": [],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "competency_ids": [
+    "CYT_INDAGA"
+  ],
+  "fallback_competency_ids": [],
+  "file": "recycling.webp",
+  "path": "/project-illustrations/recycling.webp",
+  "width": 160,
+  "height": 160,
+  "bytes": 4222,
+  "sha256": "23a5b4ac38aa1a2f10290841b2e073ab5e966101c30955c69487d1c6c440d2f6"
+}

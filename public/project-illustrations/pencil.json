@@ -1,0 +1,46 @@
+{
+  "id": "pencil",
+  "title": "Lápiz",
+  "category": "expresión",
+  "subcategory": "pencil",
+  "description": "Lápiz. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+  "concepts": [
+    "lápiz",
+    "lápices",
+    "escribir",
+    "escritura",
+    "trazo",
+    "trazos",
+    "dibujar",
+    "dibujo"
+  ],
+  "actions": [],
+  "objects": [
+    "lápiz",
+    "lápices",
+    "escribir",
+    "escritura",
+    "trazo",
+    "trazos",
+    "dibujar",
+    "dibujo"
+  ],
+  "contexts": [],
+  "match_phrases": [],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "competency_ids": [
+    "COM_ESCRITURA"
+  ],
+  "fallback_competency_ids": [],
+  "file": "pencil.webp",
+  "path": "/project-illustrations/pencil.webp",
+  "width": 160,
+  "height": 160,
+  "bytes": 4114,
+  "sha256": "ffe8ab47ce2645e76a42b04a20ea8e43b695e2e07e421e96ad666bdd15e888cc"
+}

@@ -1,0 +1,44 @@
+{
+  "id": "christmas",
+  "title": "Navidad",
+  "category": "cultura",
+  "subcategory": "christmas",
+  "description": "Navidad. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+  "concepts": [
+    "navidad",
+    "navideño",
+    "navideña",
+    "navideños",
+    "navideñas",
+    "nacimiento",
+    "árbol navideño"
+  ],
+  "actions": [],
+  "objects": [],
+  "contexts": [],
+  "match_phrases": [
+    "navidad",
+    "navideño",
+    "navideña",
+    "navideños",
+    "navideñas",
+    "nacimiento",
+    "árbol navideño"
+  ],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 7,
+  "competency_ids": [
+    "PS_RELIGION"
+  ],
+  "fallback_competency_ids": [],
+  "file": "christmas.webp",
+  "path": "/project-illustrations/christmas.webp",
+  "width": 160,
+  "height": 160,
+  "bytes": 5444,
+  "sha256": "568a007dc65dd4f52e24e08cf0d6a7c7d8824ef65730b52aad0f1d532e3b27d3"
+}

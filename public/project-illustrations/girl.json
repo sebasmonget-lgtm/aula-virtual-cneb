@@ -1,0 +1,42 @@
+{
+  "id": "girl",
+  "title": "Niña",
+  "category": "personas",
+  "subcategory": "girl",
+  "description": "Niña. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+  "concepts": [
+    "niña",
+    "niñas",
+    "niñez",
+    "infancia",
+    "identidad",
+    "autonomía"
+  ],
+  "actions": [],
+  "objects": [
+    "niña",
+    "niñas",
+    "niñez",
+    "infancia",
+    "identidad",
+    "autonomía"
+  ],
+  "contexts": [],
+  "match_phrases": [],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "competency_ids": [
+    "PS_IDENTIDAD"
+  ],
+  "fallback_competency_ids": [],
+  "file": "girl.webp",
+  "path": "/project-illustrations/girl.webp",
+  "width": 160,
+  "height": 160,
+  "bytes": 6022,
+  "sha256": "9a55595c8f5e53f62ed1dd5ea1b4e109004115cc068b8cda9bed6cd52daff875"
+}

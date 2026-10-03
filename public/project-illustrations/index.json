@@ -1,0 +1,2845 @@
+{
+  "version": 2,
+  "style": "infantil_calido_simple",
+  "format": "webp",
+  "curriculum_version": "4.1.0",
+  "images": [
+    {
+      "id": "plant",
+      "title": "Planta en maceta",
+      "category": "naturaleza",
+      "subcategory": "plant",
+      "description": "Planta en maceta. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "planta",
+        "plantas",
+        "jardín",
+        "jardinería",
+        "maceta",
+        "vegetal",
+        "sembrar",
+        "plantar"
+      ],
+      "actions": [],
+      "objects": [
+        "planta",
+        "plantas",
+        "jardín",
+        "jardinería",
+        "maceta",
+        "vegetal",
+        "sembrar",
+        "plantar"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "competency_ids": [
+        "CYT_INDAGA"
+      ],
+      "fallback_competency_ids": [],
+      "file": "plant.webp",
+      "path": "/project-illustrations/plant.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 5752,
+      "sha256": "9c8535778b9fddbeaac6f2a154b2ed2182cbc94a5863311e2d443a518e1f5f88"
+    },
+    {
+      "id": "dog",
+      "title": "Perro",
+      "category": "animales",
+      "subcategory": "dog",
+      "description": "Perro. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "perro",
+        "perros",
+        "perrito",
+        "can",
+        "mascota",
+        "mascotas"
+      ],
+      "actions": [],
+      "objects": [
+        "perro",
+        "perros",
+        "perrito",
+        "can",
+        "mascota",
+        "mascotas"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 6,
+      "competency_ids": [
+        "CYT_INDAGA"
+      ],
+      "fallback_competency_ids": [],
+      "file": "dog.webp",
+      "path": "/project-illustrations/dog.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 5948,
+      "sha256": "5385f6c0812c3d8d5916a3281ce7fbd1d0a62ced79e676f10d6abab75133e009"
+    },
+    {
+      "id": "identity",
+      "title": "Así soy y me cuido",
+      "category": "bienestar",
+      "subcategory": "identity",
+      "description": "Así soy y me cuido. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "identidad",
+        "autoconocimiento",
+        "así soy",
+        "soy y",
+        "me cuido",
+        "autocuidado",
+        "decisiones cotidianas",
+        "expresión emocional",
+        "cómo me siento"
+      ],
+      "actions": [],
+      "objects": [],
+      "contexts": [],
+      "match_phrases": [
+        "así soy",
+        "me cuido",
+        "autocuidado"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 7,
+      "competency_ids": [
+        "PS_IDENTIDAD",
+        "TRANS_AUTONOMO"
+      ],
+      "fallback_competency_ids": [
+        "PS_IDENTIDAD"
+      ],
+      "file": "identity.webp",
+      "path": "/project-illustrations/identity.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 6056,
+      "sha256": "9f1b742ad8319b70ee2569cf26d8628728a2c400581a08d3e9cef23b1c7da3e4"
+    },
+    {
+      "id": "movement",
+      "title": "Movimiento y recorridos",
+      "category": "juego",
+      "subcategory": "movement",
+      "description": "Movimiento y recorridos. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "movimiento",
+        "movimientos",
+        "motricidad",
+        "recorridos",
+        "recorrer",
+        "caminos",
+        "desplazamientos",
+        "expresión corporal",
+        "equilibrio",
+        "cuerpo"
+      ],
+      "actions": [],
+      "objects": [],
+      "contexts": [],
+      "match_phrases": [
+        "desplazamientos",
+        "motricidad",
+        "recorridos"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 7,
+      "competency_ids": [
+        "PSICO_MOTRICIDAD"
+      ],
+      "fallback_competency_ids": [
+        "PSICO_MOTRICIDAD"
+      ],
+      "file": "movement.webp",
+      "path": "/project-illustrations/movement.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 6058,
+      "sha256": "32a355bff81b2ad20f783b133105a81b02613b211bedb9dc1efcbe2feb04f5e1"
+    },
+    {
+      "id": "peru_flag",
+      "title": "Bandera del Perú",
+      "category": "cultura",
+      "subcategory": "peru_flag",
+      "description": "Bandera del Perú. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "bandera",
+        "Perú",
+        "patria",
+        "patrias",
+        "peruana",
+        "peruano",
+        "identidad nacional",
+        "independencia",
+        "fiestas patrias"
+      ],
+      "actions": [],
+      "objects": [
+        "bandera",
+        "Perú",
+        "patria",
+        "patrias",
+        "peruana",
+        "peruano",
+        "identidad nacional",
+        "independencia"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "competency_ids": [],
+      "fallback_competency_ids": [],
+      "file": "peru_flag.webp",
+      "path": "/project-illustrations/peru_flag.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 4438,
+      "sha256": "640f6f1222506d369c61dbfd1f33ae76b13ed48f30caafec8ee17a20875963bc"
+    },
+    {
+      "id": "water_drop",
+      "title": "Gota de agua",
+      "category": "ambiente",
+      "subcategory": "water_drop",
+      "description": "Gota de agua. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "agua",
+        "gota",
+        "lluvia",
+        "río",
+        "rios",
+        "mar",
+        "océano",
+        "flotar",
+        "hundirse",
+        "experimentos con agua"
+      ],
+      "actions": [],
+      "objects": [
+        "agua",
+        "gota",
+        "lluvia",
+        "río",
+        "rios",
+        "mar",
+        "océano",
+        "flotar",
+        "hundirse"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "competency_ids": [
+        "CYT_INDAGA"
+      ],
+      "fallback_competency_ids": [],
+      "file": "water_drop.webp",
+      "path": "/project-illustrations/water_drop.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 3952,
+      "sha256": "e56489e0ad6db9c6a62b759aff726978a0363395be75caceba297712c94b4e6a"
+    },
+    {
+      "id": "tree",
+      "title": "Árbol",
+      "category": "naturaleza",
+      "subcategory": "tree",
+      "description": "Árbol. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "árbol",
+        "árboles",
+        "bosque",
+        "bosques",
+        "hojas",
+        "sombra"
+      ],
+      "actions": [],
+      "objects": [
+        "árbol",
+        "árboles",
+        "bosque",
+        "bosques",
+        "hojas",
+        "sombra"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "competency_ids": [
+        "CYT_INDAGA"
+      ],
+      "fallback_competency_ids": [],
+      "file": "tree.webp",
+      "path": "/project-illustrations/tree.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 5608,
+      "sha256": "17bd46635451cf6d7149d53cff6ab68cb58e4717b18cdbe385ceccecf4ac5d4b"
+    },
+    {
+      "id": "seed",
+      "title": "Semilla y brote",
+      "category": "naturaleza",
+      "subcategory": "seed",
+      "description": "Semilla y brote. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "semilla",
+        "semillas",
+        "brote",
+        "germinación",
+        "germinar",
+        "siembra",
+        "crecer"
+      ],
+      "actions": [],
+      "objects": [
+        "semilla",
+        "semillas",
+        "brote",
+        "germinación",
+        "germinar",
+        "siembra",
+        "crecer"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "competency_ids": [
+        "CYT_INDAGA"
+      ],
+      "fallback_competency_ids": [],
+      "file": "seed.webp",
+      "path": "/project-illustrations/seed.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 5744,
+      "sha256": "8ae41e0079bf0138572149309fc6e539773dbd1afcd4493a2d3701a78b25ca73"
+    },
+    {
+      "id": "flower",
+      "title": "Flor",
+      "category": "naturaleza",
+      "subcategory": "flower",
+      "description": "Flor. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "flor",
+        "flores",
+        "primavera",
+        "pétalo",
+        "pétalos"
+      ],
+      "actions": [],
+      "objects": [
+        "flor",
+        "flores",
+        "primavera",
+        "pétalo",
+        "pétalos"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "competency_ids": [
+        "CYT_INDAGA"
+      ],
+      "fallback_competency_ids": [],
+      "file": "flower.webp",
+      "path": "/project-illustrations/flower.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 6112,
+      "sha256": "bea03aeadaafb7e3afc19f5b6ae6f46aef73a6aa48848744acc340f97f01e1b1"
+    },
+    {
+      "id": "cat",
+      "title": "Gato",
+      "category": "animales",
+      "subcategory": "cat",
+      "description": "Gato. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "gato",
+        "gatos",
+        "gatito",
+        "felino"
+      ],
+      "actions": [],
+      "objects": [
+        "gato",
+        "gatos",
+        "gatito",
+        "felino"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 6,
+      "competency_ids": [
+        "CYT_INDAGA"
+      ],
+      "fallback_competency_ids": [],
+      "file": "cat.webp",
+      "path": "/project-illustrations/cat.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 5802,
+      "sha256": "5ba02160342a4d11b0ed65cec784fce4819f30c4a0b9fbe638a3d2692a607a3c"
+    },
+    {
+      "id": "bird",
+      "title": "Ave",
+      "category": "animales",
+      "subcategory": "bird",
+      "description": "Ave. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "ave",
+        "aves",
+        "pájaro",
+        "pájaros",
+        "pajarito",
+        "nido",
+        "plumas"
+      ],
+      "actions": [],
+      "objects": [
+        "ave",
+        "aves",
+        "pájaro",
+        "pájaros",
+        "pajarito",
+        "nido",
+        "plumas"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 6,
+      "competency_ids": [
+        "CYT_INDAGA"
+      ],
+      "fallback_competency_ids": [],
+      "file": "bird.webp",
+      "path": "/project-illustrations/bird.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 6008,
+      "sha256": "101f944f3aca68ddc999ac0be41ce2f3b92f5dfc3e2bd7d3f7b29459bad9172b"
+    },
+    {
+      "id": "fish",
+      "title": "Pez",
+      "category": "animales",
+      "subcategory": "fish",
+      "description": "Pez. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "pez",
+        "peces",
+        "pescado",
+        "pecera",
+        "acuario",
+        "marino",
+        "marinos"
+      ],
+      "actions": [],
+      "objects": [
+        "pez",
+        "peces",
+        "pescado",
+        "pecera",
+        "acuario",
+        "marino",
+        "marinos"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 6,
+      "competency_ids": [
+        "CYT_INDAGA"
+      ],
+      "fallback_competency_ids": [],
+      "file": "fish.webp",
+      "path": "/project-illustrations/fish.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 5948,
+      "sha256": "9a364c64cff5c1a3f0514bc5f66765847f31c4b445caf53921e1e4d09dcafced"
+    },
+    {
+      "id": "rabbit",
+      "title": "Conejo",
+      "category": "animales",
+      "subcategory": "rabbit",
+      "description": "Conejo. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "conejo",
+        "conejos",
+        "conejito"
+      ],
+      "actions": [],
+      "objects": [
+        "conejo",
+        "conejos",
+        "conejito"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 6,
+      "competency_ids": [
+        "CYT_INDAGA"
+      ],
+      "fallback_competency_ids": [],
+      "file": "rabbit.webp",
+      "path": "/project-illustrations/rabbit.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 5930,
+      "sha256": "909c359e6e541b12f616c01a2473d81c65269f6197ad10341c9fa8caa244160a"
+    },
+    {
+      "id": "turtle",
+      "title": "Tortuga",
+      "category": "animales",
+      "subcategory": "turtle",
+      "description": "Tortuga. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "tortuga",
+        "tortugas",
+        "caparazón"
+      ],
+      "actions": [],
+      "objects": [
+        "tortuga",
+        "tortugas",
+        "caparazón"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 6,
+      "competency_ids": [
+        "CYT_INDAGA"
+      ],
+      "fallback_competency_ids": [],
+      "file": "turtle.webp",
+      "path": "/project-illustrations/turtle.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 5730,
+      "sha256": "ea839fd266bf977340db5e3a5df176077e68138663071022b6767fce3f32fe96"
+    },
+    {
+      "id": "butterfly",
+      "title": "Mariposa",
+      "category": "animales",
+      "subcategory": "butterfly",
+      "description": "Mariposa. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "mariposa",
+        "mariposas",
+        "alas",
+        "metamorfosis"
+      ],
+      "actions": [],
+      "objects": [
+        "mariposa",
+        "mariposas",
+        "alas",
+        "metamorfosis"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 6,
+      "competency_ids": [
+        "CYT_INDAGA"
+      ],
+      "fallback_competency_ids": [],
+      "file": "butterfly.webp",
+      "path": "/project-illustrations/butterfly.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 6038,
+      "sha256": "4c3596e835e4688c14809de7668b330e6f9d6bbbd63cb1e3f957bc35815ad1ae"
+    },
+    {
+      "id": "bee",
+      "title": "Abeja",
+      "category": "animales",
+      "subcategory": "bee",
+      "description": "Abeja. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "abeja",
+        "abejas",
+        "miel",
+        "colmena",
+        "polinización",
+        "insecto",
+        "insectos"
+      ],
+      "actions": [],
+      "objects": [
+        "abeja",
+        "abejas",
+        "miel",
+        "colmena",
+        "polinización",
+        "insecto",
+        "insectos"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 6,
+      "competency_ids": [
+        "CYT_INDAGA"
+      ],
+      "fallback_competency_ids": [],
+      "file": "bee.webp",
+      "path": "/project-illustrations/bee.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 5892,
+      "sha256": "e9893b77e7e17545aaa13531f11be3b832ee21e0fc9630ed9bb18231931677c8"
+    },
+    {
+      "id": "hen",
+      "title": "Gallina",
+      "category": "animales",
+      "subcategory": "hen",
+      "description": "Gallina. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "gallina",
+        "gallinas",
+        "pollo",
+        "pollito",
+        "huevo",
+        "corral",
+        "granja"
+      ],
+      "actions": [],
+      "objects": [
+        "gallina",
+        "gallinas",
+        "pollo",
+        "pollito",
+        "huevo",
+        "corral",
+        "granja"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 6,
+      "competency_ids": [
+        "CYT_INDAGA"
+      ],
+      "fallback_competency_ids": [],
+      "file": "hen.webp",
+      "path": "/project-illustrations/hen.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 5984,
+      "sha256": "151176ecba13f6d2a4c473f0aa6b9992b2924506841fdb1ef6896d17eb6d2011"
+    },
+    {
+      "id": "cow",
+      "title": "Vaca",
+      "category": "animales",
+      "subcategory": "cow",
+      "description": "Vaca. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "vaca",
+        "vacas",
+        "leche",
+        "ganado",
+        "animales de granja"
+      ],
+      "actions": [],
+      "objects": [
+        "vaca",
+        "vacas",
+        "leche",
+        "ganado",
+        "animales de granja"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 6,
+      "competency_ids": [
+        "CYT_INDAGA"
+      ],
+      "fallback_competency_ids": [],
+      "file": "cow.webp",
+      "path": "/project-illustrations/cow.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 6098,
+      "sha256": "7d5f6222378ee3f5e6d4f88dbbb9ce5b5753b3284202d721fd0d83d425f0a1c7"
+    },
+    {
+      "id": "boy",
+      "title": "Niño",
+      "category": "personas",
+      "subcategory": "boy",
+      "description": "Niño. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "niño",
+        "niños",
+        "niñez",
+        "infancia",
+        "yo",
+        "identidad",
+        "autonomía"
+      ],
+      "actions": [],
+      "objects": [
+        "niño",
+        "niños",
+        "niñez",
+        "infancia",
+        "yo",
+        "identidad",
+        "autonomía"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "competency_ids": [
+        "PS_IDENTIDAD"
+      ],
+      "fallback_competency_ids": [],
+      "file": "boy.webp",
+      "path": "/project-illustrations/boy.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 6060,
+      "sha256": "4c46c5679a527d0c3250f811d4aec2eb570937867187df3baed3513730c735dc"
+    },
+    {
+      "id": "girl",
+      "title": "Niña",
+      "category": "personas",
+      "subcategory": "girl",
+      "description": "Niña. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "niña",
+        "niñas",
+        "niñez",
+        "infancia",
+        "identidad",
+        "autonomía"
+      ],
+      "actions": [],
+      "objects": [
+        "niña",
+        "niñas",
+        "niñez",
+        "infancia",
+        "identidad",
+        "autonomía"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "competency_ids": [
+        "PS_IDENTIDAD"
+      ],
+      "fallback_competency_ids": [],
+      "file": "girl.webp",
+      "path": "/project-illustrations/girl.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 6022,
+      "sha256": "9a55595c8f5e53f62ed1dd5ea1b4e109004115cc068b8cda9bed6cd52daff875"
+    },
+    {
+      "id": "parents",
+      "title": "Personas cuidadoras",
+      "category": "personas",
+      "subcategory": "parents",
+      "description": "Personas cuidadoras. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "padres",
+        "madre",
+        "padre",
+        "mamá",
+        "papá",
+        "cuidador",
+        "cuidadora",
+        "mamas",
+        "papas"
+      ],
+      "actions": [],
+      "objects": [
+        "padres",
+        "madre",
+        "padre",
+        "mamá",
+        "papá",
+        "cuidador",
+        "cuidadora",
+        "mamas",
+        "papas"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "competency_ids": [
+        "PS_IDENTIDAD",
+        "PS_CONVIVE"
+      ],
+      "fallback_competency_ids": [],
+      "file": "parents.webp",
+      "path": "/project-illustrations/parents.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 6098,
+      "sha256": "038e3ec9dc31483f7a0b1eebfef579e9454a11ffdcdb5e9eef551e077c4f2640"
+    },
+    {
+      "id": "family",
+      "title": "Familia",
+      "category": "personas",
+      "subcategory": "family",
+      "description": "Familia. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "familia",
+        "familias",
+        "hogar",
+        "abuelos",
+        "abuela",
+        "abuelo",
+        "hermanos",
+        "hermanas"
+      ],
+      "actions": [],
+      "objects": [
+        "familia",
+        "familias",
+        "hogar",
+        "abuelos",
+        "abuela",
+        "abuelo",
+        "hermanos",
+        "hermanas"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "competency_ids": [
+        "PS_IDENTIDAD",
+        "PS_CONVIVE",
+        "COM_ORAL"
+      ],
+      "fallback_competency_ids": [],
+      "file": "family.webp",
+      "path": "/project-illustrations/family.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 6120,
+      "sha256": "39e57e92f8ac3b6878b6dff69e629fbddd6c35b70e14d287f1b365587f4cec6e"
+    },
+    {
+      "id": "home",
+      "title": "Casa",
+      "category": "comunidad",
+      "subcategory": "home",
+      "description": "Casa. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "casa",
+        "casas",
+        "vivienda",
+        "viviendas",
+        "hogar",
+        "barrio"
+      ],
+      "actions": [],
+      "objects": [
+        "casa",
+        "casas",
+        "vivienda",
+        "viviendas",
+        "hogar",
+        "barrio"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "competency_ids": [
+        "MAT_FORMA"
+      ],
+      "fallback_competency_ids": [],
+      "file": "home.webp",
+      "path": "/project-illustrations/home.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 6094,
+      "sha256": "7b31f0b37a4b38f324b4d70cec2b4ace81d674ecc152e411dd2d80042f00c72a"
+    },
+    {
+      "id": "school",
+      "title": "Jardín y escuela",
+      "category": "comunidad",
+      "subcategory": "school",
+      "description": "Jardín y escuela. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "escuela",
+        "colegio",
+        "aula",
+        "jardín escolar",
+        "jardín infantil",
+        "acogida",
+        "adaptación"
+      ],
+      "actions": [],
+      "objects": [
+        "escuela",
+        "colegio",
+        "aula",
+        "jardín escolar",
+        "jardín infantil",
+        "acogida",
+        "adaptación"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "competency_ids": [
+        "PS_CONVIVE"
+      ],
+      "fallback_competency_ids": [],
+      "file": "school.webp",
+      "path": "/project-illustrations/school.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 5956,
+      "sha256": "e41cf0cff8035fb538b334ddf2451646fcf7aebaeb6be0bc320b3191549a292a"
+    },
+    {
+      "id": "community",
+      "title": "Comunidad y barrio",
+      "category": "comunidad",
+      "subcategory": "community",
+      "description": "Comunidad y barrio. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "comunidad",
+        "vecinos",
+        "vecinas",
+        "barrio",
+        "ciudad",
+        "pueblo",
+        "oficios",
+        "trabajadores"
+      ],
+      "actions": [],
+      "objects": [
+        "comunidad",
+        "vecinos",
+        "vecinas",
+        "barrio",
+        "ciudad",
+        "pueblo",
+        "oficios",
+        "trabajadores"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "competency_ids": [
+        "PS_CONVIVE",
+        "COM_ORAL"
+      ],
+      "fallback_competency_ids": [],
+      "file": "community.webp",
+      "path": "/project-illustrations/community.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 5780,
+      "sha256": "f9436bb2047931b19fbcb0815eeb70c2af1f711d1c3a6ae65698b51388a466c2"
+    },
+    {
+      "id": "friendship",
+      "title": "Juego y colaboración",
+      "category": "personas",
+      "subcategory": "friendship",
+      "description": "Juego y colaboración. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "colaborar",
+        "colaboración",
+        "compartir",
+        "cooperar",
+        "cooperación",
+        "juntos",
+        "juntas",
+        "acuerdos",
+        "convivir",
+        "acordamos",
+        "acuerdos para jugar"
+      ],
+      "actions": [],
+      "objects": [
+        "colaborar",
+        "colaboración",
+        "compartir",
+        "cooperar",
+        "cooperación",
+        "juntos",
+        "juntas",
+        "acuerdos",
+        "convivir"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "competency_ids": [
+        "PS_CONVIVE"
+      ],
+      "fallback_competency_ids": [
+        "PS_CONVIVE"
+      ],
+      "file": "friendship.webp",
+      "path": "/project-illustrations/friendship.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 5968,
+      "sha256": "60b4c3e24d130e481a8969be608f3ae2bc3b73527eb9845b1718b6fc1f94a9da"
+    },
+    {
+      "id": "pencil",
+      "title": "Lápiz",
+      "category": "expresión",
+      "subcategory": "pencil",
+      "description": "Lápiz. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "lápiz",
+        "lápices",
+        "escribir",
+        "escritura",
+        "trazo",
+        "trazos",
+        "dibujar",
+        "dibujo"
+      ],
+      "actions": [],
+      "objects": [
+        "lápiz",
+        "lápices",
+        "escribir",
+        "escritura",
+        "trazo",
+        "trazos",
+        "dibujar",
+        "dibujo"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "competency_ids": [
+        "COM_ESCRITURA"
+      ],
+      "fallback_competency_ids": [],
+      "file": "pencil.webp",
+      "path": "/project-illustrations/pencil.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 4114,
+      "sha256": "ffe8ab47ce2645e76a42b04a20ea8e43b695e2e07e421e96ad666bdd15e888cc"
+    },
+    {
+      "id": "painting",
+      "title": "Pincel y acuarelas",
+      "category": "expresión",
+      "subcategory": "painting",
+      "description": "Pincel y acuarelas. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "pincel",
+        "pinceles",
+        "acuarela",
+        "acuarelas",
+        "pintar",
+        "pintura",
+        "colores",
+        "arte",
+        "artes"
+      ],
+      "actions": [],
+      "objects": [
+        "pincel",
+        "pinceles",
+        "acuarela",
+        "acuarelas",
+        "pintar",
+        "pintura",
+        "colores",
+        "arte",
+        "artes"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "competency_ids": [
+        "COM_ARTE"
+      ],
+      "fallback_competency_ids": [],
+      "file": "painting.webp",
+      "path": "/project-illustrations/painting.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 6004,
+      "sha256": "2a27ac2ddb9662a3c724ee3aec87f9c37c72188c385f2dc0960866c7553eaf9a"
+    },
+    {
+      "id": "book",
+      "title": "Libro de cuentos",
+      "category": "expresión",
+      "subcategory": "book",
+      "description": "Libro de cuentos. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "libro",
+        "libros",
+        "cuento",
+        "cuentos",
+        "historia",
+        "historias",
+        "lectura",
+        "leer",
+        "biblioteca",
+        "relato",
+        "leemos"
+      ],
+      "actions": [],
+      "objects": [
+        "libro",
+        "libros",
+        "cuento",
+        "cuentos",
+        "historia",
+        "historias",
+        "lectura",
+        "leer",
+        "biblioteca",
+        "relato"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 8,
+      "competency_ids": [
+        "COM_ORAL",
+        "COM_LECTURA"
+      ],
+      "fallback_competency_ids": [],
+      "file": "book.webp",
+      "path": "/project-illustrations/book.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 5620,
+      "sha256": "bde345cf6fd92f973b8af6260d788addbb48fd2bfc7073fd968ca2e5e2363f6a"
+    },
+    {
+      "id": "music",
+      "title": "Instrumentos y música",
+      "category": "expresión",
+      "subcategory": "music",
+      "description": "Instrumentos y música. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "música",
+        "musica",
+        "instrumento",
+        "instrumentos",
+        "canción",
+        "canciones",
+        "cantar",
+        "sonido",
+        "sonidos",
+        "ritmo"
+      ],
+      "actions": [],
+      "objects": [
+        "música",
+        "musica",
+        "instrumento",
+        "instrumentos",
+        "canción",
+        "canciones",
+        "cantar",
+        "sonido",
+        "sonidos",
+        "ritmo"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "competency_ids": [
+        "COM_ARTE"
+      ],
+      "fallback_competency_ids": [],
+      "file": "music.webp",
+      "path": "/project-illustrations/music.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 5710,
+      "sha256": "d5b19451fd23441b303a279385de43e4ed438fb6f8b96d9bb1f0673b8458a236"
+    },
+    {
+      "id": "ideas",
+      "title": "Idea para explorar",
+      "category": "general",
+      "subcategory": "ideas",
+      "description": "Idea para explorar. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "idea",
+        "ideas",
+        "proyecto",
+        "proyectos",
+        "exploración",
+        "investigar",
+        "descubrir",
+        "preguntas",
+        "indagar"
+      ],
+      "actions": [],
+      "objects": [
+        "idea",
+        "ideas",
+        "proyecto",
+        "proyectos",
+        "exploración",
+        "investigar",
+        "descubrir",
+        "preguntas",
+        "indagar"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "competency_ids": [
+        "TRANS_AUTONOMO"
+      ],
+      "fallback_competency_ids": [],
+      "file": "ideas.webp",
+      "path": "/project-illustrations/ideas.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 5108,
+      "sha256": "e9db9680e1dfb7bec85af0cbd1162e0201338b19c5179016eac50fba30e11ff4"
+    },
+    {
+      "id": "puppets",
+      "title": "Títeres",
+      "category": "expresión",
+      "subcategory": "puppets",
+      "description": "Títeres. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "títere",
+        "títeres",
+        "teatro",
+        "dramatizar",
+        "dramatización",
+        "representar"
+      ],
+      "actions": [],
+      "objects": [
+        "títere",
+        "títeres",
+        "teatro",
+        "dramatizar",
+        "dramatización",
+        "representar"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "competency_ids": [
+        "COM_ORAL",
+        "COM_ARTE",
+        "CAST_L2_ORAL"
+      ],
+      "fallback_competency_ids": [],
+      "file": "puppets.webp",
+      "path": "/project-illustrations/puppets.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 5860,
+      "sha256": "012ef3277d53be9fdb9416f6d82a65d401c83f8e017d3cd1c3eb602411a42784"
+    },
+    {
+      "id": "blocks",
+      "title": "Bloques de construcción",
+      "category": "juego",
+      "subcategory": "blocks",
+      "description": "Bloques de construcción. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "bloque",
+        "bloques",
+        "construcción",
+        "construir",
+        "torre",
+        "torres",
+        "armar",
+        "crear",
+        "juego",
+        "construimos",
+        "ubicamos",
+        "construcciones"
+      ],
+      "actions": [],
+      "objects": [
+        "bloque",
+        "bloques",
+        "construcción",
+        "construir",
+        "torre",
+        "torres",
+        "armar",
+        "crear",
+        "juego"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "competency_ids": [
+        "MAT_FORMA"
+      ],
+      "fallback_competency_ids": [],
+      "file": "blocks.webp",
+      "path": "/project-illustrations/blocks.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 3346,
+      "sha256": "001f7e29f07ed17837816b99ee2856cccb2a400de8dbfe8636a3e225cdbae1cc"
+    },
+    {
+      "id": "shapes",
+      "title": "Formas geométricas",
+      "category": "matemática",
+      "subcategory": "shapes",
+      "description": "Formas geométricas. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "forma",
+        "formas",
+        "figura",
+        "figuras",
+        "círculo",
+        "cuadrado",
+        "triángulo",
+        "geometría"
+      ],
+      "actions": [],
+      "objects": [
+        "forma",
+        "formas",
+        "figura",
+        "figuras",
+        "círculo",
+        "cuadrado",
+        "triángulo",
+        "geometría"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "competency_ids": [
+        "MAT_FORMA"
+      ],
+      "fallback_competency_ids": [
+        "MAT_FORMA"
+      ],
+      "file": "shapes.webp",
+      "path": "/project-illustrations/shapes.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 5050,
+      "sha256": "b91096132c2a6766e4f1ff4ab4a8cdc9c8f5e8e5b4e46e63353e99901eb3b187"
+    },
+    {
+      "id": "numbers",
+      "title": "Cantidades y conteo",
+      "category": "matemática",
+      "subcategory": "numbers",
+      "description": "Cantidades y conteo. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "cantidad",
+        "cantidades",
+        "contar",
+        "conteo",
+        "número",
+        "números",
+        "repartir",
+        "comparar",
+        "contamos"
+      ],
+      "actions": [],
+      "objects": [
+        "cantidad",
+        "cantidades",
+        "contar",
+        "conteo",
+        "número",
+        "números",
+        "repartir",
+        "comparar"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "competency_ids": [
+        "MAT_CANTIDAD"
+      ],
+      "fallback_competency_ids": [
+        "MAT_CANTIDAD"
+      ],
+      "file": "numbers.webp",
+      "path": "/project-illustrations/numbers.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 4238,
+      "sha256": "c976e7369ead1eb4c01a8470f1670fbf25168b9dc8fa76a35fdd592a8b0ec7de"
+    },
+    {
+      "id": "measure",
+      "title": "Regla para medir",
+      "category": "matemática",
+      "subcategory": "measure",
+      "description": "Regla para medir. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "medir",
+        "medida",
+        "medidas",
+        "longitud",
+        "tamaño",
+        "tamaños",
+        "regla",
+        "largo",
+        "corto"
+      ],
+      "actions": [],
+      "objects": [
+        "medir",
+        "medida",
+        "medidas",
+        "longitud",
+        "tamaño",
+        "tamaños",
+        "regla",
+        "largo",
+        "corto"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "competency_ids": [
+        "MAT_CANTIDAD",
+        "MAT_FORMA"
+      ],
+      "fallback_competency_ids": [],
+      "file": "measure.webp",
+      "path": "/project-illustrations/measure.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 5938,
+      "sha256": "212d2623c684c91a1fcd15fa1c43acee62854aae1a3c7370998f03f752a7dc31"
+    },
+    {
+      "id": "market",
+      "title": "Mercado",
+      "category": "comunidad",
+      "subcategory": "market",
+      "description": "Mercado. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "mercado",
+        "tienda",
+        "comprar",
+        "vender",
+        "comercio",
+        "dinero",
+        "feria"
+      ],
+      "actions": [],
+      "objects": [
+        "mercado",
+        "tienda",
+        "comprar",
+        "vender",
+        "comercio",
+        "dinero",
+        "feria"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "competency_ids": [
+        "MAT_CANTIDAD"
+      ],
+      "fallback_competency_ids": [],
+      "file": "market.webp",
+      "path": "/project-illustrations/market.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 6034,
+      "sha256": "f99fbf3e2c2c2df066e685d440a9941f05ecbb881fa0014b5c564970c7ab5d08"
+    },
+    {
+      "id": "fruit",
+      "title": "Frutas",
+      "category": "alimentación",
+      "subcategory": "fruit",
+      "description": "Frutas. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "fruta",
+        "frutas",
+        "manzana",
+        "plátano",
+        "banana",
+        "pera",
+        "mandarina",
+        "naranja"
+      ],
+      "actions": [],
+      "objects": [
+        "fruta",
+        "frutas",
+        "manzana",
+        "plátano",
+        "banana",
+        "pera",
+        "mandarina",
+        "naranja"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "competency_ids": [
+        "MAT_CANTIDAD"
+      ],
+      "fallback_competency_ids": [],
+      "file": "fruit.webp",
+      "path": "/project-illustrations/fruit.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 5690,
+      "sha256": "1ef65c2f7b0782d82995d80976cabc06216c7d1a3a83db668b231d1953263a21"
+    },
+    {
+      "id": "vegetables",
+      "title": "Verduras",
+      "category": "alimentación",
+      "subcategory": "vegetables",
+      "description": "Verduras. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "verdura",
+        "verduras",
+        "vegetales",
+        "zanahoria",
+        "lechuga",
+        "huerto",
+        "hortaliza"
+      ],
+      "actions": [],
+      "objects": [
+        "verdura",
+        "verduras",
+        "vegetales",
+        "zanahoria",
+        "lechuga",
+        "huerto",
+        "hortaliza"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "competency_ids": [
+        "CYT_INDAGA"
+      ],
+      "fallback_competency_ids": [],
+      "file": "vegetables.webp",
+      "path": "/project-illustrations/vegetables.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 6022,
+      "sha256": "ec5f675c64f54175e4b349829a9d35ed507530d56474a7d996623b8c52f309b4"
+    },
+    {
+      "id": "cooking",
+      "title": "Cocina",
+      "category": "alimentación",
+      "subcategory": "cooking",
+      "description": "Cocina. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "cocina",
+        "cocinar",
+        "preparar alimentos",
+        "receta",
+        "recetas",
+        "comida",
+        "alimentos",
+        "pan",
+        "panadería"
+      ],
+      "actions": [],
+      "objects": [
+        "cocina",
+        "cocinar",
+        "preparar alimentos",
+        "receta",
+        "recetas",
+        "comida",
+        "alimentos",
+        "pan",
+        "panadería"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "competency_ids": [],
+      "fallback_competency_ids": [],
+      "file": "cooking.webp",
+      "path": "/project-illustrations/cooking.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 5706,
+      "sha256": "bbd6c4291efd4bc5c3e8378b7e275bd8c8eb50d3189db9ec83877dd73530f922"
+    },
+    {
+      "id": "health",
+      "title": "Salud y cuidados",
+      "category": "bienestar",
+      "subcategory": "health",
+      "description": "Salud y cuidados. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "salud",
+        "saludable",
+        "médico",
+        "doctor",
+        "enfermera",
+        "hospital",
+        "cuidado del cuerpo",
+        "botiquín"
+      ],
+      "actions": [],
+      "objects": [
+        "salud",
+        "saludable",
+        "médico",
+        "doctor",
+        "enfermera",
+        "hospital",
+        "cuidado del cuerpo",
+        "botiquín"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "competency_ids": [
+        "PS_IDENTIDAD"
+      ],
+      "fallback_competency_ids": [],
+      "file": "health.webp",
+      "path": "/project-illustrations/health.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 4904,
+      "sha256": "e7efe493a234a69b9a602e9f53aeae74256a2d6aefcc137dd4e371d4170cff42"
+    },
+    {
+      "id": "hands",
+      "title": "Lavado de manos",
+      "category": "bienestar",
+      "subcategory": "hands",
+      "description": "Lavado de manos. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "manos",
+        "lavar",
+        "lavado",
+        "higiene",
+        "jabón",
+        "limpieza"
+      ],
+      "actions": [],
+      "objects": [
+        "manos",
+        "lavar",
+        "lavado",
+        "higiene",
+        "jabón",
+        "limpieza"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "competency_ids": [
+        "PS_IDENTIDAD"
+      ],
+      "fallback_competency_ids": [],
+      "file": "hands.webp",
+      "path": "/project-illustrations/hands.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 6080,
+      "sha256": "ddacce1fc37d444fbd8fabe18cffb12045b67d8605553fdecc931416f4c51ca9"
+    },
+    {
+      "id": "teeth",
+      "title": "Dientes y cepillo",
+      "category": "bienestar",
+      "subcategory": "teeth",
+      "description": "Dientes y cepillo. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "diente",
+        "dientes",
+        "dental",
+        "cepillo",
+        "cepillar",
+        "boca",
+        "dentista"
+      ],
+      "actions": [],
+      "objects": [
+        "diente",
+        "dientes",
+        "dental",
+        "cepillo",
+        "cepillar",
+        "boca",
+        "dentista"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "competency_ids": [
+        "PS_IDENTIDAD"
+      ],
+      "fallback_competency_ids": [],
+      "file": "teeth.webp",
+      "path": "/project-illustrations/teeth.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 5766,
+      "sha256": "f9d56df43a393813235427ae458ca7bf8008287c1df76da0666952b98b3d07b0"
+    },
+    {
+      "id": "heart",
+      "title": "Emociones y buen trato",
+      "category": "bienestar",
+      "subcategory": "heart",
+      "description": "Emociones y buen trato. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "emociones",
+        "emoción",
+        "sentimientos",
+        "sentir",
+        "afecto",
+        "amor",
+        "amistad",
+        "convivencia",
+        "respeto",
+        "buen trato",
+        "paz"
+      ],
+      "actions": [],
+      "objects": [
+        "emociones",
+        "emoción",
+        "sentimientos",
+        "sentir",
+        "afecto",
+        "amor",
+        "amistad",
+        "convivencia",
+        "respeto",
+        "buen trato",
+        "paz"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "competency_ids": [
+        "PS_IDENTIDAD",
+        "PS_CONVIVE",
+        "PS_RELIGION"
+      ],
+      "fallback_competency_ids": [
+        "PS_RELIGION"
+      ],
+      "file": "heart.webp",
+      "path": "/project-illustrations/heart.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 4844,
+      "sha256": "3306c9b05a9f1591aaec0cf744eca843c5d2cecbc46384de9ceb01002edee52e"
+    },
+    {
+      "id": "ball",
+      "title": "Pelota y movimiento",
+      "category": "juego",
+      "subcategory": "ball",
+      "description": "Pelota y movimiento. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "pelota",
+        "balón",
+        "deporte",
+        "mover",
+        "movimiento",
+        "correr",
+        "saltar",
+        "motricidad",
+        "equilibrio"
+      ],
+      "actions": [],
+      "objects": [
+        "pelota",
+        "balón",
+        "deporte",
+        "mover",
+        "movimiento",
+        "correr",
+        "saltar",
+        "motricidad",
+        "equilibrio"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "competency_ids": [
+        "PSICO_MOTRICIDAD"
+      ],
+      "fallback_competency_ids": [],
+      "file": "ball.webp",
+      "path": "/project-illustrations/ball.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 5532,
+      "sha256": "6c2ce49f232d36c587d664a47657d9b425cbe6975fa8ad4f99cf523d6e4db9e5"
+    },
+    {
+      "id": "playground",
+      "title": "Juegos del parque",
+      "category": "juego",
+      "subcategory": "playground",
+      "description": "Juegos del parque. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "parque",
+        "juegos al aire libre",
+        "columpio",
+        "tobogán",
+        "patio",
+        "recreo"
+      ],
+      "actions": [],
+      "objects": [
+        "parque",
+        "juegos al aire libre",
+        "columpio",
+        "tobogán",
+        "patio",
+        "recreo"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "competency_ids": [
+        "PSICO_MOTRICIDAD"
+      ],
+      "fallback_competency_ids": [],
+      "file": "playground.webp",
+      "path": "/project-illustrations/playground.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 5902,
+      "sha256": "04913089fef66c3d52235f8b2d9595cc8ea0bb13d21160ac3ab49379ab2481a0"
+    },
+    {
+      "id": "car",
+      "title": "Auto",
+      "category": "transporte",
+      "subcategory": "car",
+      "description": "Auto. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "auto",
+        "autos",
+        "carro",
+        "carros",
+        "carrito",
+        "vehículo",
+        "vehículos",
+        "transporte",
+        "ruedas"
+      ],
+      "actions": [],
+      "objects": [
+        "auto",
+        "autos",
+        "carro",
+        "carros",
+        "carrito",
+        "vehículo",
+        "vehículos",
+        "transporte",
+        "ruedas"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "competency_ids": [
+        "MAT_FORMA"
+      ],
+      "fallback_competency_ids": [],
+      "file": "car.webp",
+      "path": "/project-illustrations/car.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 5622,
+      "sha256": "95aaf56b4c8c1bdf601c049681470221119989a585d32a0d5a24bdec9c0756bf"
+    },
+    {
+      "id": "bus",
+      "title": "Bus",
+      "category": "transporte",
+      "subcategory": "bus",
+      "description": "Bus. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "bus",
+        "buses",
+        "ómnibus",
+        "autobús",
+        "viajar",
+        "viaje",
+        "pasajeros"
+      ],
+      "actions": [],
+      "objects": [
+        "bus",
+        "buses",
+        "ómnibus",
+        "autobús",
+        "viajar",
+        "viaje",
+        "pasajeros"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "competency_ids": [
+        "MAT_FORMA"
+      ],
+      "fallback_competency_ids": [],
+      "file": "bus.webp",
+      "path": "/project-illustrations/bus.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 5804,
+      "sha256": "250c96ee2e4f7d9cb40a28cf501411a61477e0d2c82847a0a7e81515bdee987f"
+    },
+    {
+      "id": "recycling",
+      "title": "Reciclaje",
+      "category": "ambiente",
+      "subcategory": "recycling",
+      "description": "Reciclaje. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "reciclaje",
+        "reciclar",
+        "residuos",
+        "basura",
+        "reutilizar",
+        "reducir",
+        "clasificar residuos"
+      ],
+      "actions": [],
+      "objects": [
+        "reciclaje",
+        "reciclar",
+        "residuos",
+        "basura",
+        "reutilizar",
+        "reducir",
+        "clasificar residuos"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "competency_ids": [
+        "CYT_INDAGA"
+      ],
+      "fallback_competency_ids": [],
+      "file": "recycling.webp",
+      "path": "/project-illustrations/recycling.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 4222,
+      "sha256": "23a5b4ac38aa1a2f10290841b2e073ab5e966101c30955c69487d1c6c440d2f6"
+    },
+    {
+      "id": "earth",
+      "title": "Planeta Tierra",
+      "category": "ambiente",
+      "subcategory": "earth",
+      "description": "Planeta Tierra. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "planeta tierra",
+        "tierra",
+        "planeta",
+        "mundo",
+        "ambiente",
+        "naturaleza",
+        "contaminación",
+        "cuidar el planeta"
+      ],
+      "actions": [],
+      "objects": [
+        "planeta tierra",
+        "tierra",
+        "planeta",
+        "mundo",
+        "ambiente",
+        "naturaleza",
+        "contaminación",
+        "cuidar el planeta"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "competency_ids": [
+        "CYT_INDAGA"
+      ],
+      "fallback_competency_ids": [],
+      "file": "earth.webp",
+      "path": "/project-illustrations/earth.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 5818,
+      "sha256": "1b29431c05d94cbe62525a5f75e7c988391be3ce215ad62e383f4937b7fdaa99"
+    },
+    {
+      "id": "weather",
+      "title": "Sol y nubes",
+      "category": "naturaleza",
+      "subcategory": "weather",
+      "description": "Sol y nubes. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "sol",
+        "clima",
+        "tiempo atmosférico",
+        "nube",
+        "nubes",
+        "lluvia",
+        "viento",
+        "calor",
+        "frío",
+        "estaciones"
+      ],
+      "actions": [],
+      "objects": [
+        "sol",
+        "clima",
+        "tiempo atmosférico",
+        "nube",
+        "nubes",
+        "lluvia",
+        "viento",
+        "calor",
+        "frío",
+        "estaciones"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "competency_ids": [
+        "CYT_INDAGA"
+      ],
+      "fallback_competency_ids": [],
+      "file": "weather.webp",
+      "path": "/project-illustrations/weather.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 5996,
+      "sha256": "52e4792f0b477c1ce9f19966d3e1f8407e251f683f6e9ec13b08ac65e99335be"
+    },
+    {
+      "id": "space",
+      "title": "Estrellas y espacio",
+      "category": "naturaleza",
+      "subcategory": "space",
+      "description": "Estrellas y espacio. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "estrella",
+        "estrellas",
+        "espacio",
+        "universo",
+        "luna",
+        "cielo",
+        "astronomía",
+        "planetas"
+      ],
+      "actions": [],
+      "objects": [
+        "estrella",
+        "estrellas",
+        "espacio",
+        "universo",
+        "luna",
+        "cielo",
+        "astronomía",
+        "planetas"
+      ],
+      "contexts": [],
+      "match_phrases": [],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 5,
+      "competency_ids": [
+        "CYT_INDAGA"
+      ],
+      "fallback_competency_ids": [],
+      "file": "space.webp",
+      "path": "/project-illustrations/space.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 6020,
+      "sha256": "cf207dc2a4cb5a97986ef6d57b0d75c58cae32d0fb9dd2638befda49eb591c12"
+    },
+    {
+      "id": "storytelling",
+      "title": "Contamos historias",
+      "category": "expresión",
+      "subcategory": "storytelling",
+      "description": "Contamos historias. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "narrar",
+        "narración",
+        "contar historias",
+        "contamos historias",
+        "historias para contarnos",
+        "relato oral",
+        "escuchar y narrar",
+        "conversar",
+        "contarnos",
+        "cuento",
+        "cuentos",
+        "historia",
+        "historias"
+      ],
+      "actions": [],
+      "objects": [],
+      "contexts": [],
+      "match_phrases": [
+        "historias para contarnos",
+        "relato oral",
+        "narrar"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 7,
+      "competency_ids": [
+        "COM_ORAL",
+        "CAST_L2_ORAL"
+      ],
+      "fallback_competency_ids": [
+        "COM_ORAL",
+        "CAST_L2_ORAL"
+      ],
+      "file": "storytelling.webp",
+      "path": "/project-illustrations/storytelling.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 6136,
+      "sha256": "90c1b88e3af053ac7ab5b333a9024fcdff6ecb3244a055ea1efec536c315b344"
+    },
+    {
+      "id": "reading_clues",
+      "title": "Pistas en los cuentos",
+      "category": "expresión",
+      "subcategory": "reading_clues",
+      "description": "Pistas en los cuentos. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "pistas",
+        "buscar pistas",
+        "pistas dentro",
+        "anticipar",
+        "anticipamos",
+        "revisar ideas durante la lectura",
+        "ilustraciones del texto",
+        "comprensión lectora",
+        "cuento",
+        "cuentos",
+        "historia",
+        "historias"
+      ],
+      "actions": [],
+      "objects": [],
+      "contexts": [],
+      "match_phrases": [
+        "pistas dentro de los cuentos",
+        "pistas en los cuentos"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 7,
+      "competency_ids": [
+        "COM_LECTURA"
+      ],
+      "fallback_competency_ids": [
+        "COM_LECTURA"
+      ],
+      "file": "reading_clues.webp",
+      "path": "/project-illustrations/reading_clues.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 5848,
+      "sha256": "f2cb63cd5d030195be646fb3b80f5cc0f841407aa88e94be9a051b657b04748b"
+    },
+    {
+      "id": "writing",
+      "title": "Mensajes y escritura",
+      "category": "expresión",
+      "subcategory": "writing",
+      "description": "Mensajes y escritura. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "mensajes",
+        "mensaje",
+        "escritura",
+        "escribir",
+        "escribimos",
+        "escrito",
+        "escritos",
+        "nota",
+        "notas",
+        "carta",
+        "cartas",
+        "cartel",
+        "carteles",
+        "comunicar una decisión"
+      ],
+      "actions": [],
+      "objects": [],
+      "contexts": [],
+      "match_phrases": [
+        "mensajes",
+        "escritura"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 7,
+      "competency_ids": [
+        "COM_ESCRITURA"
+      ],
+      "fallback_competency_ids": [
+        "COM_ESCRITURA"
+      ],
+      "file": "writing.webp",
+      "path": "/project-illustrations/writing.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 5976,
+      "sha256": "bb57641d57b15c8e193f9c9c50af6657608e6d46745c7022df5ee6ac4d3124ae"
+    },
+    {
+      "id": "artistic_expression",
+      "title": "Expresamos ideas con arte",
+      "category": "expresión",
+      "subcategory": "artistic_expression",
+      "description": "Expresamos ideas con arte. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "formas de mostrar",
+        "mostrar una idea",
+        "representar ideas",
+        "expresión artística",
+        "expresarnos",
+        "expresar ideas",
+        "crear con arte"
+      ],
+      "actions": [],
+      "objects": [],
+      "contexts": [],
+      "match_phrases": [
+        "formas de mostrar una idea",
+        "representar ideas"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 7,
+      "competency_ids": [
+        "COM_ARTE"
+      ],
+      "fallback_competency_ids": [
+        "COM_ARTE"
+      ],
+      "file": "artistic_expression.webp",
+      "path": "/project-illustrations/artistic_expression.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 6074,
+      "sha256": "8d0347ba1908dac08fb5d00644f8f45f11af7a7119df33f896dcb6bae0f3f610"
+    },
+    {
+      "id": "sharing",
+      "title": "Repartimos cantidades",
+      "category": "juego",
+      "subcategory": "sharing",
+      "description": "Repartimos cantidades. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "repartimos",
+        "repartir",
+        "repartos",
+        "reparto",
+        "compartir cantidades",
+        "distribuir",
+        "distribuimos"
+      ],
+      "actions": [],
+      "objects": [],
+      "contexts": [],
+      "match_phrases": [
+        "repartimos",
+        "repartos"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 7,
+      "competency_ids": [
+        "MAT_CANTIDAD"
+      ],
+      "fallback_competency_ids": [],
+      "file": "sharing.webp",
+      "path": "/project-illustrations/sharing.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 5922,
+      "sha256": "9f5df34852e69af188ecb11f99cb07d312046c9da6f1ed4df684dc64fe8db565"
+    },
+    {
+      "id": "planning_play",
+      "title": "Planeamos y probamos un juego",
+      "category": "juego",
+      "subcategory": "planning_play",
+      "description": "Planeamos y probamos un juego. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "planeamos",
+        "planear",
+        "planificar un juego",
+        "probamos y ajustamos",
+        "meta de juego",
+        "organizar acciones",
+        "ajustamos un juego"
+      ],
+      "actions": [],
+      "objects": [],
+      "contexts": [],
+      "match_phrases": [
+        "planeamos",
+        "probamos y ajustamos"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 7,
+      "competency_ids": [
+        "PS_CONVIVE",
+        "TRANS_AUTONOMO"
+      ],
+      "fallback_competency_ids": [
+        "TRANS_AUTONOMO"
+      ],
+      "file": "planning_play.webp",
+      "path": "/project-illustrations/planning_play.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 6066,
+      "sha256": "598e5b472a57b369f523b4c3abef7ab2f5a02b4ac87991ca95d4fddeca6620e2"
+    },
+    {
+      "id": "solidarity",
+      "title": "Compartimos y ayudamos",
+      "category": "comunidad",
+      "subcategory": "solidarity",
+      "description": "Compartimos y ayudamos. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "colecta",
+        "donación",
+        "donaciones",
+        "donar",
+        "solidaridad",
+        "solidaria",
+        "solidario",
+        "ayudar a otros",
+        "ayudamos",
+        "bienestar común"
+      ],
+      "actions": [],
+      "objects": [],
+      "contexts": [],
+      "match_phrases": [
+        "colecta",
+        "donación"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 7,
+      "competency_ids": [
+        "PS_CONVIVE",
+        "PS_RELIGION"
+      ],
+      "fallback_competency_ids": [],
+      "file": "solidarity.webp",
+      "path": "/project-illustrations/solidarity.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 5958,
+      "sha256": "8bab7690285fac42fc3bf4971c6d175c62c52550a3bcd1dbcd60aeb90a7a590e"
+    },
+    {
+      "id": "dance",
+      "title": "Baile y expresión corporal",
+      "category": "expresión",
+      "subcategory": "dance",
+      "description": "Baile y expresión corporal. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "baile",
+        "bailar",
+        "bailamos",
+        "danza",
+        "danzas"
+      ],
+      "actions": [],
+      "objects": [],
+      "contexts": [],
+      "match_phrases": [
+        "baile",
+        "bailar",
+        "bailamos",
+        "danza",
+        "danzas"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 7,
+      "competency_ids": [
+        "PSICO_MOTRICIDAD",
+        "COM_ARTE"
+      ],
+      "fallback_competency_ids": [],
+      "file": "dance.webp",
+      "path": "/project-illustrations/dance.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 6048,
+      "sha256": "23e8baa653f667469d98c56e7d5c9efdf6df27b427b8d71eae80ac68e86315fc"
+    },
+    {
+      "id": "christmas",
+      "title": "Navidad",
+      "category": "cultura",
+      "subcategory": "christmas",
+      "description": "Navidad. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "navidad",
+        "navideño",
+        "navideña",
+        "navideños",
+        "navideñas",
+        "nacimiento",
+        "árbol navideño"
+      ],
+      "actions": [],
+      "objects": [],
+      "contexts": [],
+      "match_phrases": [
+        "navidad",
+        "navideño",
+        "navideña",
+        "navideños",
+        "navideñas",
+        "nacimiento",
+        "árbol navideño"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 7,
+      "competency_ids": [
+        "PS_RELIGION"
+      ],
+      "fallback_competency_ids": [],
+      "file": "christmas.webp",
+      "path": "/project-illustrations/christmas.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 5444,
+      "sha256": "568a007dc65dd4f52e24e08cf0d6a7c7d8824ef65730b52aad0f1d532e3b27d3"
+    },
+    {
+      "id": "inquiry",
+      "title": "Exploramos y preguntamos",
+      "category": "indagación",
+      "subcategory": "inquiry",
+      "description": "Exploramos y preguntamos. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "indagar",
+        "indagación",
+        "investigar",
+        "investigamos",
+        "experimentos",
+        "preguntas",
+        "lupa"
+      ],
+      "actions": [],
+      "objects": [],
+      "contexts": [],
+      "match_phrases": [
+        "indagar",
+        "indagación",
+        "investigar",
+        "investigamos",
+        "experimentos",
+        "preguntas",
+        "lupa"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 7,
+      "competency_ids": [
+        "CYT_INDAGA"
+      ],
+      "fallback_competency_ids": [
+        "CYT_INDAGA"
+      ],
+      "file": "inquiry.webp",
+      "path": "/project-illustrations/inquiry.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 5626,
+      "sha256": "719476be1379c597edd8bc3c32bf3e4719c9da0122102af878a03029a5da0720"
+    },
+    {
+      "id": "technology",
+      "title": "Tecnología",
+      "category": "exploración",
+      "subcategory": "technology",
+      "description": "Tecnología. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+      "concepts": [
+        "tecnología",
+        "digital",
+        "digitales",
+        "tableta",
+        "tablet",
+        "computadora",
+        "pantalla"
+      ],
+      "actions": [],
+      "objects": [],
+      "contexts": [],
+      "match_phrases": [
+        "tecnología",
+        "digital",
+        "digitales",
+        "tableta",
+        "tablet",
+        "computadora",
+        "pantalla"
+      ],
+      "age_range": [
+        3,
+        4,
+        5
+      ],
+      "priority": 7,
+      "competency_ids": [
+        "TRANS_TIC"
+      ],
+      "fallback_competency_ids": [
+        "TRANS_TIC"
+      ],
+      "file": "technology.webp",
+      "path": "/project-illustrations/technology.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 5822,
+      "sha256": "c475bb98638ac0ef4cd913d747e517336095c2efcf9aa753abafc266ae1c6a48"
+    }
+  ]
+}

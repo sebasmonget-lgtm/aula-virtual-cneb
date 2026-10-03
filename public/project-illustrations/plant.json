@@ -1,0 +1,46 @@
+{
+  "id": "plant",
+  "title": "Planta en maceta",
+  "category": "naturaleza",
+  "subcategory": "plant",
+  "description": "Planta en maceta. Ilustración infantil sencilla, formas redondeadas, colores cálidos y fondo transparente.",
+  "concepts": [
+    "planta",
+    "plantas",
+    "jardín",
+    "jardinería",
+    "maceta",
+    "vegetal",
+    "sembrar",
+    "plantar"
+  ],
+  "actions": [],
+  "objects": [
+    "planta",
+    "plantas",
+    "jardín",
+    "jardinería",
+    "maceta",
+    "vegetal",
+    "sembrar",
+    "plantar"
+  ],
+  "contexts": [],
+  "match_phrases": [],
+  "age_range": [
+    3,
+    4,
+    5
+  ],
+  "priority": 5,
+  "competency_ids": [
+    "CYT_INDAGA"
+  ],
+  "fallback_competency_ids": [],
+  "file": "plant.webp",
+  "path": "/project-illustrations/plant.webp",
+  "width": 160,
+  "height": 160,
+  "bytes": 5752,
+  "sha256": "9c8535778b9fddbeaac6f2a154b2ed2182cbc94a5863311e2d443a518e1f5f88"
+}
