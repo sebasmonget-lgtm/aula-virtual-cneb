@@ -390,3 +390,7 @@ QA posterior e09b16e: Familias docente con anterior/siguiente y guardar final/re
 ## Ajustes pequeños UX V2 (2026-10-03)
 
 Secuencia única Familias / Observar / Revisar / Conversar / Preparando / Mi año, numerada 1–6. Finalizar entrevista conserva autosave; competencia con Cambiar / Agregar otra / Quitar. Matriz conserva colores y columna fija, nombre oficial consultable con mouse/tacto/teclado. Conversación sin telemetría técnica visible, cierre ready claro con decisiones literales y Preparar mi año. Header opaco y margen de scroll para controles. Sin cambios de arquitectura, migraciones o permisos. 51 pruebas focales, typecheck/lint y ambos builds PASS; QA local ficticio con proveedores simulados. Solo staging QA autorizado. Ver docs/qa/initial-journey-small-ux-2026-10-03.md.
+
+## Mapa de Mi año conectado a V2 (2026-10-03)
+
+Se detectó que V2 omitía el mapa acordado en ADR 106, cuya última mejora visual era 904eb8d. Se comparte la misma línea de tiempo como vista principal: proyectos, gestión y feriados, lista secundaria y detalle seleccionado con acciones V2. Fechas y gestión de la versión guardada; feriados efectivos mediante la ruta autorizada existente. Abrir el mapa nunca recalcula el año con el scheduler legacy ni genera contenido. Sin cambios de arquitectura, permisos o migraciones. Ver docs/qa/annual-year-map-v2-restoration-2026-10-03.md.

@@ -8,9 +8,9 @@ import { annualMapHolidays, annualMapPercent, annualMapWidth, annualMapWindow, s
 export type AnnualMapRow = { proposal_id: string; experience_type: "project" | "unit"; title: string; period: string;
   month: number; duration_weeks: 2 | 3; rationale: string; purpose: string; primary_competency_ids: string[];
   planned_start_date?: string; planned_end_date?: string; planned_instructional_days?: number };
-type Calendar = { school_year: number; blocks: { type: string; label: string; start_date: string; end_date: string }[]; initial_stage?: { duration_weeks: number } };
-type EffectiveCalendar = { days: { date: string; calendar_type: string; reason: string; is_instructional: boolean }[];
-  blocks: Calendar["blocks"] };
+export type AnnualMapCalendar = { school_year: number; blocks: { type: string; label: string; start_date: string; end_date: string }[]; initial_stage?: { duration_weeks: number } };
+export type AnnualMapEffectiveCalendar = { days: { date: string; calendar_type: string; reason: string; is_instructional: boolean }[];
+  blocks: AnnualMapCalendar["blocks"] };
 type Slot = { slot_index: number; starts_on: string; ends_on: string; duration_weeks: number; proposal_id?: string };
 type Competency = { id: string; name: string };
 const months = ["Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
@@ -21,7 +21,7 @@ const styles = [
 const day = (value: string) => new Date(`${value}T00:00:00Z`);
 const compact = (value: string) => new Intl.DateTimeFormat("es-PE", { day: "numeric", month: "short", timeZone: "UTC" }).format(day(value));
 const holidayShort = (label: string, start: string, end: string) => {
-  if (/santo|pascua/i.test(label)) return "SS";
+  if (/(jueves|viernes) santo|semana santa|pascua/i.test(label)) return "SS";
   if (/fiestas patrias/i.test(label)) return "FP";
   if (start !== end) return `${day(start).getUTCDate()}–${day(end).getUTCDate()}`;
   return String(day(start).getUTCDate());
@@ -33,30 +33,19 @@ const iconFor = (title: string) => /animal/i.test(title) ? PawPrint : /planta|ja
         : /crecemos|juntos/i.test(title) ? Users : /historias|cuentos/i.test(title) ? BookOpen
           : /música/i.test(title) ? Music2 : Leaf;
 
-export function AnnualYearMap({ rows, available, calendar, effectiveCalendar, slots = [], preferPlannedDates = false, selectedId, onSelect,
-  editing, onMove, onRetire, onRestore, onReplace, onEdit, onDevelop, onAddManual, competencies }: {
-  rows: AnnualMapRow[]; available: AnnualMapRow[]; calendar: Calendar; effectiveCalendar?: EffectiveCalendar | null;
-  slots?: Slot[]; preferPlannedDates?: boolean; selectedId: string | null; onSelect: (id: string) => void; editing: boolean;
-  onMove: (index: number, delta: number) => void; onRetire: (id: string) => void;
-  onRestore: (id: string) => void; onReplace: (id: string) => void; onEdit: (id: string) => void;
-  onDevelop?: (id: string) => void; onAddManual: () => void; competencies: Competency[];
+export function AnnualYearTimeline({ rows, calendar, effectiveCalendar, selectedId, onSelect, initialStage }: {
+  rows: (AnnualMapRow & { start: string; end: string })[]; calendar: AnnualMapCalendar;
+  effectiveCalendar?: AnnualMapEffectiveCalendar | null; selectedId: string | null; onSelect: (id: string) => void;
+  initialStage?: { name: string; starts_on: string; ends_on: string };
 }) {
   const window = annualMapWindow(calendar);
-  const projected = useMemo<{ rows: (AnnualMapRow & { start: string; end: string; days: number | null })[]; error: string }>(() => {
-    try { return { rows: scheduledAnnualRows(calendar, rows, slots, preferPlannedDates), error: "" }; }
-    catch (cause) { return { rows: [], error: cause instanceof Error ? cause.message : "No se pudieron calcular las fechas." }; }
-  }, [calendar, rows, slots, preferPlannedDates]);
-  const selected = projected.rows.find((row) => row.proposal_id === selectedId) ?? projected.rows[0];
-  const selectedIndex = projected.rows.findIndex((row) => row.proposal_id === selected?.proposal_id);
-  const names = new Map(competencies.map((item) => [item.id, item.name]));
   const blocks = calendar.blocks.filter((block) => block.type === "management");
   const holidays = annualMapHolidays(effectiveCalendar?.days ?? []);
   const [holidayOpen, setHolidayOpen] = useState<string | null>(null);
-  const [replacementOpen, setReplacementOpen] = useState(false);
   const monthStart = (index: number) => `${calendar.school_year}-${String(index + 3).padStart(2, "0")}-01`;
   const monthEnd = (index: number) => new Date(Date.UTC(calendar.school_year, index + 3, 0)).toISOString().slice(0, 10);
   return <div className="space-y-3">
-    <section aria-label="Mapa del año escolar" className="overflow-x-auto rounded-2xl border border-[#d8e8f0] bg-white shadow-sm">
+    <section aria-label="Mapa del año escolar" tabIndex={0} className="journey-matrix-scroll overflow-x-auto rounded-2xl border border-[#d8e8f0] bg-white shadow-sm">
       <div className="relative min-w-[1920px] px-4 pb-4 pt-4">
         <div className="relative h-9 border-b border-[#dbe8f0]">{months.map((month, index) => <span key={month}
           className="absolute top-0 border-l border-[#e0eaf1] pl-2 text-xs font-bold text-[#304a70]"
@@ -75,10 +64,13 @@ export function AnnualYearMap({ rows, available, calendar, effectiveCalendar, sl
           {blocks.map((block) => <div key={`${block.start_date}-${block.end_date}`} aria-label={`${block.label}: ${compact(block.start_date)} al ${compact(block.end_date)}, sin clases`} className="absolute inset-y-0 z-20 flex flex-col items-center justify-center overflow-hidden rounded-md border-2 border-[#8faac3] bg-[#dce8f2] px-1 text-center text-[#264869]"
             style={{ left: `${annualMapPercent(block.start_date, window)}%`, width: `${annualMapWidth(block.start_date, block.end_date, window)}%` }} title={`${block.label}: ${compact(block.start_date)}–${compact(block.end_date)} · Sin clases`}>
             <CalendarDays className="mb-1 size-4 shrink-0" aria-hidden="true" />{annualMapWidth(block.start_date, block.end_date, window) >= 3 && <><span className="text-xs font-extrabold leading-tight">Gestión</span><span className="text-xs">Sin clases</span></>}</div>)}
-          {projected.rows.map((row, index) => { const Icon = iconFor(row.title); return <button key={row.proposal_id} type="button" aria-pressed={selected?.proposal_id === row.proposal_id}
+          {initialStage && <div aria-label={initialStage.name} title={initialStage.name}
+            className="absolute inset-y-0 flex items-center justify-center overflow-hidden rounded-md border border-[#cce9e9] bg-[#e7f8f8] px-2 text-center text-xs font-bold text-[#07576c]"
+            style={{ left: `${annualMapPercent(initialStage.starts_on, window)}%`, width: `${annualMapWidth(initialStage.starts_on, initialStage.ends_on, window)}%` }}>Acogida</div>}
+          {rows.map((row, index) => { const Icon = iconFor(row.title); return <button key={row.proposal_id} type="button" aria-pressed={selectedId === row.proposal_id}
             aria-label={`${index + 1}. ${row.title}, ${row.experience_type === "unit" ? "unidad" : "proyecto"}, ${compact(row.start)} al ${compact(row.end)}`}
             onClick={() => onSelect(row.proposal_id)}
-            className={`absolute inset-y-0 z-10 flex min-w-0 flex-col items-center justify-center overflow-hidden rounded-md border px-1 text-center text-[#173352] transition-transform hover:-translate-y-1 focus-visible:z-20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#087d96] ${styles[index % styles.length]} ${selected?.proposal_id === row.proposal_id ? "ring-2 ring-[#087d96] ring-offset-1" : ""}`}
+            className={`absolute inset-y-0 z-10 flex min-w-0 flex-col items-center justify-center overflow-hidden rounded-md border px-1 text-center text-[#173352] transition-transform hover:-translate-y-1 focus-visible:z-20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#087d96] ${styles[index % styles.length]} ${selectedId === row.proposal_id ? "ring-2 ring-[#087d96] ring-offset-1" : ""}`}
             style={{ left: `${annualMapPercent(row.start, window)}%`, width: `${annualMapWidth(row.start, row.end, window)}%` }}>
             <span className="mb-1 flex items-center gap-1 text-xs font-bold"><Icon className="size-4 shrink-0" aria-hidden="true" />{String(index + 1).padStart(2, "0")}</span><span className="w-full min-w-0 break-words text-xs font-bold leading-4" title={row.title}>{row.title}</span>
             <span className="mt-2 rounded-full bg-white/75 px-1 text-xs">{row.experience_type === "unit" ? "Unidad" : "Proyecto"}</span>
@@ -89,6 +81,27 @@ export function AnnualYearMap({ rows, available, calendar, effectiveCalendar, sl
       </div>
     </section>
     <p className="text-xs leading-relaxed text-[#586f89]">Desliza para ver el año completo. Gestión: sin clases. Marcadores rojos: feriados; púlsalos para ver el detalle.</p>
+  </div>;
+}
+
+export function AnnualYearMap({ rows, available, calendar, effectiveCalendar, slots = [], preferPlannedDates = false, selectedId, onSelect,
+  editing, onMove, onRetire, onRestore, onReplace, onEdit, onDevelop, onAddManual, competencies }: {
+  rows: AnnualMapRow[]; available: AnnualMapRow[]; calendar: AnnualMapCalendar; effectiveCalendar?: AnnualMapEffectiveCalendar | null;
+  slots?: Slot[]; preferPlannedDates?: boolean; selectedId: string | null; onSelect: (id: string) => void; editing: boolean;
+  onMove: (index: number, delta: number) => void; onRetire: (id: string) => void;
+  onRestore: (id: string) => void; onReplace: (id: string) => void; onEdit: (id: string) => void;
+  onDevelop?: (id: string) => void; onAddManual: () => void; competencies: Competency[];
+}) {
+  const projected = useMemo<{ rows: (AnnualMapRow & { start: string; end: string; days: number | null })[]; error: string }>(() => {
+    try { return { rows: scheduledAnnualRows(calendar, rows, slots, preferPlannedDates), error: "" }; }
+    catch (cause) { return { rows: [], error: cause instanceof Error ? cause.message : "No se pudieron calcular las fechas." }; }
+  }, [calendar, rows, slots, preferPlannedDates]);
+  const selected = projected.rows.find((row) => row.proposal_id === selectedId) ?? projected.rows[0];
+  const selectedIndex = projected.rows.findIndex((row) => row.proposal_id === selected?.proposal_id);
+  const names = new Map(competencies.map((item) => [item.id, item.name]));
+  const [replacementOpen, setReplacementOpen] = useState(false);
+  return <div className="space-y-3">
+    <AnnualYearTimeline rows={projected.rows} calendar={calendar} effectiveCalendar={effectiveCalendar} selectedId={selected?.proposal_id ?? null} onSelect={onSelect} />
     {projected.error && <p role="alert" className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">{projected.error}</p>}
     {selected && <section className="rounded-2xl border border-[#d8e8f0] bg-white p-4 shadow-sm sm:p-5" aria-label={`Detalle de ${selected.title}`}>
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,.9fr)]">

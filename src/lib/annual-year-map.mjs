@@ -48,6 +48,23 @@ export function scheduledAnnualRows(calendar, rows, storedSlots = [], usePlanned
   return result;
 }
 
+// V2 already resolved its calendar. Opening the map must never run the legacy scheduler.
+export function savedJourneyAnnualRows(proposal) {
+  const rows = proposal?.proposed_experiences ?? [];
+  if (proposal?.journey_version !== 2 || !rows.length || rows.some((row) =>
+    !/^\d{4}-\d{2}-\d{2}$/.test(row.planned_start_date ?? "") ||
+    !/^\d{4}-\d{2}-\d{2}$/.test(row.planned_end_date ?? "") ||
+    row.planned_start_date > row.planned_end_date))
+    throw new Error("Esta versión no tiene fechas guardadas válidas. Puedes consultar las propuestas en la lista.");
+  const slots = proposal.resolved_calendar?.projects ?? [];
+  for (const row of rows) {
+    const slot = slots.find((item) => item.proposal_id === row.proposal_id);
+    if (slot && (slot.starts_on !== row.planned_start_date || slot.ends_on !== row.planned_end_date))
+      throw new Error("Las fechas de esta versión no coinciden con su calendario guardado. Puedes consultar las propuestas en la lista.");
+  }
+  return scheduledAnnualRows(null, rows, [], true);
+}
+
 export function moveAnnualRow(rows, from, to) {
   if (from < 0 || to < 0 || from >= rows.length || to >= rows.length || from === to) return rows;
   const result = [...rows];

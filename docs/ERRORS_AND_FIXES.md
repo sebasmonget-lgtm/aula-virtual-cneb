@@ -1461,3 +1461,11 @@ Síntoma: cuatro notas QA de la captura automatizada quedaron asociadas a la sel
 **Solución.** Exponer PATCH y DELETE hacia el mismo bridge/autorización, sin nuevos permisos. Rebuild de los dos runtimes y smoke remoto que exige 401 sin sesión para ambos métodos antes de mover el alias. El preview incompleto no se asignó al QA estable.
 
 **Prevención.** Comprobar los métodos en el deployment además de la API local, incluyendo guard de sesión y assets. No asumir que la prueba local equivale a la entrada serverless.
+
+## 2026-10-03 — Mi año V2 omitía la línea de tiempo acordada
+
+**Síntoma y causa.** QA mostraba doce tarjetas en Mi año aunque ADR 106 había establecido el mapa horizontal con proyectos, feriados y gestión. AnnualJourneyWorkspace no reutilizaba AnnualYearMap, que seguía conectado únicamente al workspace legacy; las afirmaciones anteriores de «Mi año conservado» no cubrían la vista V2 final.
+
+**Solución validada.** Compartir la presentación temporal existente y conectarla a las filas y fechas V2 guardadas. El mapa es principal y la lista secundaria; las acciones siguen siendo V2. La proyección V2 rechaza fechas ausentes o discrepantes sin invocar el scheduler anterior. Pruebas focales 25/25 y navegador ficticio escritorio/móvil verifican selección, feriados, scroll y persistencia de la vista, sin llamadas nuevas al proveedor. Informe: docs/qa/annual-year-map-v2-restoration-2026-10-03.md.
+
+**Prevención.** Verificar también la llegada a Mi año al probar un nuevo recorrido, comparándola con el acuerdo visual vigente. Reutilizar la presentación sin sustituir los contratos ni recalcular fechas congeladas.

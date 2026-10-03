@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { annualMapHolidays, annualMapPercent, annualMapWidth, insertAvailableAnnualRow, moveAnnualRow, scheduledAnnualRows } from "./annual-year-map.mjs";
+import { annualMapHolidays, annualMapPercent, annualMapWidth, insertAvailableAnnualRow, moveAnnualRow, savedJourneyAnnualRows, scheduledAnnualRows } from "./annual-year-map.mjs";
 import { nationalCalendarBlocks2026, nationalSchoolHolidays2026 } from "./annual-plan-calendar.mjs";
 import { validateAnnualPreplan } from "./annual-preplan-service.mjs";
 
@@ -62,4 +62,31 @@ test("reincorporar usa el tramo libre del bimestre aunque el final del aÃ±o estÃ
   assert.equal(restored.length, 12);
   assert.equal(restored[0].proposal_id, rows[0].proposal_id);
   assert.equal(scheduledAnnualRows(calendar, restored).length, 12);
+});
+
+test("el mapa V2 conserva las fechas resueltas incluso sin calendario para recalcular", () => {
+  const proposal = { journey_version: 2, proposed_experiences: rows.slice(0, 2).map((row, i) => ({ ...row,
+    planned_start_date: `2026-04-${i ? "20" : "06"}`, planned_end_date: `2026-04-${i ? "30" : "17"}`,
+    planned_instructional_days: i ? 9 : 10 })), resolved_calendar: { projects: [
+      { proposal_id: uuid(1), starts_on: "2026-04-06", ends_on: "2026-04-17" },
+      { proposal_id: uuid(2), starts_on: "2026-04-20", ends_on: "2026-04-30" },
+    ] } };
+  const original = structuredClone(proposal);
+  const mapped = savedJourneyAnnualRows(proposal);
+  assert.deepEqual(mapped.map(row => [row.proposal_id, row.start, row.end, row.days]), [
+    [uuid(1), "2026-04-06", "2026-04-17", 10], [uuid(2), "2026-04-20", "2026-04-30", 9],
+  ]);
+  assert.deepEqual(proposal, original);
+  const mismatched = structuredClone(proposal);
+  mismatched.resolved_calendar.projects[0].starts_on = "2026-04-07";
+  assert.throws(() => savedJourneyAnnualRows(mismatched), /no coinciden/);
+});
+
+test("el mapa V2 no inventa fechas ausentes, invertidas o superpuestas", () => {
+  assert.throws(() => savedJourneyAnnualRows({ journey_version: 2, proposed_experiences: rows }), /fechas guardadas/);
+  const dated = rows.slice(0, 2).map(row => ({ ...row, planned_start_date: "2026-04-06", planned_end_date: "2026-04-17" }));
+  assert.throws(() => savedJourneyAnnualRows({ journey_version: 2, proposed_experiences: dated }), /superponen/);
+  assert.throws(() => savedJourneyAnnualRows({ journey_version: 2, proposed_experiences: [
+    { ...dated[0], planned_start_date: "2026-04-18" },
+  ] }), /fechas guardadas/);
 });

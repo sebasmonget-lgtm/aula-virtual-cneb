@@ -1,11 +1,13 @@
 "use client";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowDown, ArrowUp, Check, MessageCircle } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ArrowDown, ArrowUp, Check, List, Map as MapIcon, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { apiFetch } from "@/src/lib/ayni-api-fetch";
 import { localDatabaseApiUrl } from "@/src/lib/local-database";
-import { canLeaveWorkspace, readWorkspaceParams, writeWorkspaceLocation } from "@/src/lib/workspace-location";
+import { canLeaveWorkspace, readWorkspaceParams, useWorkspaceSubview, writeWorkspaceLocation } from "@/src/lib/workspace-location";
+import { savedJourneyAnnualRows } from "@/src/lib/annual-year-map.mjs";
+import { AnnualYearTimeline, type AnnualMapRow, type AnnualMapCalendar, type AnnualMapEffectiveCalendar } from "./annual-year-map";
 import { AsyncButton, GenerationProgress, LoadingState, WorkflowFeedback } from "./workflow-ui";
 import { AnnualPlanningConversation } from "./annual-planning-conversation";
 import { AnnualPreparationProgress } from "./annual-preparation-progress";
@@ -16,7 +18,7 @@ type Fact = { key: string; kind: string; subject: string; scope: string; support
 type Snapshot = { source_fingerprint: string; student_count: number; facts: Fact[]; resources: string[];
   competency_information: { competency_id: string; recorded_performances: number; distinct_children: number; information_status: string }[] };
 type Opportunity = { competency_id: string; capacity_names: string[]; child_action: string; conditions: string; mediation: string; observation: string; supports: string; moment?: string };
-type Row = { proposal_id: string; title: string; rationale: string; purpose: string; invitation: string; children_actions: string[];
+type Row = AnnualMapRow & { invitation: string; children_actions: string[];
   materials: string[]; supports: string[]; flexibility: string; source_fact_keys: string[]; opportunities: Opportunity[];
   teacher_protected?: boolean; planned_start_date?: string; planned_end_date?: string };
 type Change = { id: string; proposal_id: string | null; text: string };
@@ -27,7 +29,7 @@ type Proposal = { curriculum_reference?: {id: string; name: string}[]; journey_v
   organization_criteria?: string[]; transversal_approaches?: string[]; teaching_strategies?: string[]; assessment_followup?: string[];
   family_collaboration?: string[]; inclusive_supports?: string[];
   resolved_calendar?: { integrity: { eligible: number; assigned: number; gaps: number; overlaps: number }; initial_stage: { purpose: string; name: string; suggested_experiences: string[]; what_to_observe: string[]; family_actions?: string[]; diagnostic_focus?: string[]; teacher_notes?: string; starts_on: string; ends_on: string } } };
-type Plan = { id: string; status: string; revision: number; version: number; proposal: Proposal };
+type Plan = { id: string; status: string; revision: number; version: number; proposal: Proposal; document_context?: { calendar?: AnnualMapCalendar } };
 type Plans = { draft: Plan | null; active: Plan | null; archived: Plan[] };
 type Start = { snapshot: Snapshot; curriculum: { id: string; name: string }[] };
 type Job = { id: string; draft_id: string; status: "queued" | "running" | "failed" | "interrupted" | "succeeded";
@@ -43,6 +45,8 @@ const generalLabels = { organization_criteria: "Cómo organizaremos el año", tr
   teaching_strategies: "Cómo acompañaremos", assessment_followup: "Cómo seguiremos conociendo al grupo",
   family_collaboration: "Familias y comunidad", inclusive_supports: "Apoyos para participar" } as const;
 const sourceLabels: Record<string, string> = { family_report: "La familia reporta", observed: "La profesora registró", teacher_context: "Contexto docente", teacher_decision: "Decisión docente" };
+const annualViews = ["map", "list"] as const;
+const compactDate = (value: string) => new Intl.DateTimeFormat("es-PE", { day: "numeric", month: "short", timeZone: "UTC" }).format(new Date(`${value}T00:00:00Z`));
 
 function Facts({ snapshot }: { snapshot: Snapshot }) {
   return <div className="space-y-4">{snapshot.facts.length ? snapshot.facts.map((fact) => <div key={fact.key}>
@@ -71,11 +75,25 @@ export function AnnualJourneyWorkspace({ onConfirmed, onGoDiagnostic, onDevelop,
   const [busy, setBusy] = useState<string | null>(null), [audioBusy, setAudioBusy] = useState(false);
   const [error, setError] = useState(""), [notice, setNotice] = useState("");
   const [interpretationsReviewed, setInterpretationsReviewed] = useState(false);
+  const [annualView, setAnnualView] = useWorkspaceSubview("Planificar", "annualView", annualViews, "map", false);
+  const [selectedProposalId, setSelectedProposalId] = useState<string | null>(null);
+  const [effectiveCalendar, setEffectiveCalendar] = useState<AnnualMapEffectiveCalendar | null>(null);
+  const [calendarUnavailable, setCalendarUnavailable] = useState(false);
   const messageRef = useRef<HTMLTextAreaElement>(null);
   const runningJobRef = useRef(false);
   const selected = [plans?.draft, plans?.active, ...(plans?.archived ?? [])].find((p) => p?.id === selectedId) ?? null;
   const proposal = selected?.proposal, modern = proposal?.journey_version === 2;
   const complete = modern && proposal?.proposed_experiences.length === 12;
+  const calendar = selected?.document_context?.calendar;
+  const mapProjection = useMemo<{ rows: (Row & { start: string; end: string })[]; error: string }>(() => {
+    if (!complete) return { rows: [], error: "" };
+    try {
+      if (!calendar) throw new Error("Esta versión no tiene un calendario guardado. Puedes consultar las propuestas en la lista.");
+      return { rows: savedJourneyAnnualRows(proposal), error: "" };
+    } catch (cause) { return { rows: [], error: cause instanceof Error ? cause.message : "No se pudo abrir el mapa guardado." }; }
+  }, [calendar, complete, proposal]);
+  const selectedProposal = proposal?.proposed_experiences.find(row => row.proposal_id === selectedProposalId) ?? proposal?.proposed_experiences[0];
+  const listOpen = annualView === "list" || !!mapProjection.error;
   const editable = selected?.status === "draft";
   const generating = job?.status === "queued" || job?.status === "running";
   const dirty = Boolean(message.trim() || ideaDraft.trim());
@@ -112,6 +130,10 @@ export function AnnualJourneyWorkspace({ onConfirmed, onGoDiagnostic, onDevelop,
     } }).catch((e) => { if (live) setError(e.message); });
     return () => { live = false; };
   }, [reload, loadStart, continueSavedJob]);
+  useEffect(() => { let live = true;
+    void api<AnnualMapEffectiveCalendar>("/api/school-calendar").then(value => { if (live) setEffectiveCalendar(value); }).catch(() => { if (live) setCalendarUnavailable(true); });
+    return () => { live = false; };
+  }, []);
   useEffect(() => { let live=true;
     if (job?.status === "queued") void Promise.resolve().then(()=>{if(live)void continueSavedJob(job);});
     return()=>{live=false;};
@@ -180,20 +202,19 @@ export function AnnualJourneyWorkspace({ onConfirmed, onGoDiagnostic, onDevelop,
           : selected.status === "active" ? <Button disabled={disabled || !!plans?.draft} onClick={() => void mutate("copy")}>Revisar mi año con Ayni</Button> : null}
       </div>
       {editable && !!proposal.evidence_interpretations?.length && <div className="rounded-xl border border-[#d6e5ef] p-4"><p>Revisa las interpretaciones y sus actuaciones en «El año completo» antes de confirmar; pueden orientar los apoyos previstos.</p><label className="mt-3 flex min-h-11 items-center gap-3"><input type="checkbox" checked={interpretationsReviewed} onChange={(e) => setInterpretationsReviewed(e.target.checked)} />Revisé estas interpretaciones para esta versión del año.</label></div>}
-      <section className="rounded-xl bg-[#edf5fa] p-5" aria-labelledby="ayni-assistant"><div className="flex items-center gap-2"><MessageCircle aria-hidden="true" className="size-5 text-[#087d96]" /><h2 id="ayni-assistant" className="text-xl font-bold">Hablar con Ayni</h2></div>
-        <p className="mt-2 text-sm">{scope ? `Sobre «${proposal.proposed_experiences.find((r) => r.proposal_id === scope)?.title}»` : "Sobre tu año completo"}</p>
-        {scope && <Button variant="ghost" disabled={disabled} onClick={() => setScope(null)}>Volver al año completo</Button>}
-        {editable && <><Button variant="ghost" disabled={disabled} onClick={() => void mutate("refresh")}>Considerar nuevos registros del aula</Button><label htmlFor="annual-message" className="mt-3 block font-semibold">¿Qué quieres cambiar?</label><Textarea id="annual-message" ref={messageRef} className="mt-2 min-h-24" value={message} disabled={disabled} maxLength={1600} onChange={(e) => setMessage(e.target.value)} />
-          <DictationRecorder classroomScope purpose="group_summary" rawTranscript context="Indicación docente para cambiar el año" currentText={message} onTranscribed={(text) => setMessage(text.slice(0, 1600))} onBusyChange={setAudioBusy} disabled={!!busy} />
-          <Button className="mt-3" variant="outline" disabled={disabled || !message.trim()} onClick={() => void mutate("intent", { text: message, proposalId: scope })}>Agregar indicación</Button>
-          {!!proposal.pending_changes?.length && <div className="mt-4"><h3 className="font-bold">Tus cambios pendientes</h3><ol className="mt-2 list-decimal space-y-3 pl-5">{proposal.pending_changes.map((c) => <li key={c.id}><span className="whitespace-pre-wrap">{c.text}</span>
-            <span className="ml-2 text-sm text-[#526b87]">{c.proposal_id ? `Propuesta ${proposal.proposed_experiences.findIndex((r) => r.proposal_id === c.proposal_id) + 1}` : "Año completo"}</span><Button variant="ghost" disabled={disabled} onClick={() => void mutate("remove-intent", { changeId: c.id })}>Retirar</Button></li>)}</ol>
-            <AsyncButton busyLabel="Aplicando…" className="mt-3" busy={busy === "apply"} disabled={disabled} onClick={() => void mutate("apply")}>Aplicar cambios</AsyncButton></div>}
-        </>}
-        <details className="mt-3"><summary className="min-h-11 cursor-pointer py-2 font-semibold">Qué tuvo en cuenta Ayni</summary>{snapshot && <Facts snapshot={snapshot} />}</details>
-      </section>
-      <div className="grid gap-5 lg:grid-cols-2">{proposal.proposed_experiences.map((row, index) => <article key={row.proposal_id} className="rounded-xl border border-[#d6e5ef] bg-white p-5 sm:p-6">
+      <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-xl font-bold text-[#172b52]">Tu año en el tiempo</h2>
+        <div className="flex gap-2" role="group" aria-label="Vista de Mi año">
+          <Button variant={annualView === "map" ? "default" : "outline"} aria-pressed={annualView === "map"} onClick={() => setAnnualView("map")}><MapIcon aria-hidden="true" className="size-4" />Mapa del año</Button>
+          <Button variant={annualView === "list" ? "default" : "outline"} aria-pressed={annualView === "list"} onClick={() => setAnnualView("list")}><List aria-hidden="true" className="size-4" />Lista de propuestas</Button>
+        </div>
+      </div>
+      {mapProjection.error && <p role="alert" className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">{mapProjection.error}</p>}
+      {!listOpen && calendarUnavailable && <p role="status" className="text-sm text-[#526b87]">No pudimos consultar los feriados. Vuelve a abrir Mi año para cargarlos; las fechas de tus propuestas siguen guardadas.</p>}
+      {!listOpen && calendar && <AnnualYearTimeline rows={mapProjection.rows} calendar={calendar} effectiveCalendar={effectiveCalendar}
+        selectedId={selectedProposal?.proposal_id ?? null} onSelect={setSelectedProposalId} initialStage={proposal.resolved_calendar?.initial_stage} />}
+      <div className={listOpen ? "grid gap-5 lg:grid-cols-2" : "space-y-5"}>{proposal.proposed_experiences.map((row, index) => listOpen || row.proposal_id === selectedProposal?.proposal_id ? <article key={row.proposal_id} className="rounded-xl border border-[#d6e5ef] bg-white p-5 sm:p-6">
         <h2 className="text-xl font-bold leading-snug text-[#172b52]">{index + 1}. {row.title}</h2>
+        {row.planned_start_date && row.planned_end_date && <p className="mt-2 text-sm font-semibold text-[#526b87]">{compactDate(row.planned_start_date)} – {compactDate(row.planned_end_date)} · {row.duration_weeks} semanas · {row.period}</p>}
         <p className="mt-4 font-semibold">Qué podrían hacer los niños</p><ul className="mt-2 list-disc space-y-1 pl-5 text-[#3d5874]">{row.children_actions.map((text, i) => <li key={i}>{text}</li>)}</ul>
         <p className="mt-4 font-semibold">Por qué tiene sentido para esta aula</p><p className="mt-2 leading-relaxed text-[#3d5874]">{row.rationale}</p>
         <div className="mt-4 flex flex-wrap gap-2">{editable && <><Button variant="outline" disabled={disabled} onClick={() => void mutate("keep", { proposalId: row.proposal_id })}>{row.teacher_protected && <Check aria-hidden="true" />} {row.teacher_protected ? "Mantenida · permitir cambios" : "Mantener"}</Button>
@@ -210,7 +231,20 @@ export function AnnualJourneyWorkspace({ onConfirmed, onGoDiagnostic, onDevelop,
             {!!row.source_fact_keys.length && <div><h3 className="font-bold">Fuentes pertinentes</h3>{row.source_fact_keys.map((key) => <p key={key} className="mt-2">{snapshot?.facts.find((f) => f.key === key)?.support_text ?? key}</p>)}</div>}
           </div>
         </details>
-      </article>)}</div>
+      </article> : null)}</div>
+      <section className="rounded-xl bg-[#edf5fa] p-5" aria-labelledby="ayni-assistant"><div className="flex items-center gap-2"><MessageCircle aria-hidden="true" className="size-5 text-[#087d96]" /><h2 id="ayni-assistant" className="text-xl font-bold">Hablar con Ayni</h2></div>
+        <p className="mt-2 text-sm">{scope ? `Sobre «${proposal.proposed_experiences.find((r) => r.proposal_id === scope)?.title}»` : "Sobre tu año completo"}</p>
+        {scope && <Button variant="ghost" disabled={disabled} onClick={() => setScope(null)}>Volver al año completo</Button>}
+        {editable && <><Button variant="ghost" disabled={disabled} onClick={() => void mutate("refresh")}>Considerar nuevos registros del aula</Button><label htmlFor="annual-message" className="mt-3 block font-semibold">¿Qué quieres cambiar?</label><Textarea id="annual-message" ref={messageRef} className="mt-2 min-h-24" value={message} disabled={disabled} maxLength={1600} onChange={(e) => setMessage(e.target.value)} />
+          <DictationRecorder classroomScope purpose="group_summary" rawTranscript context="Indicación docente para cambiar el año" currentText={message} onTranscribed={(text) => setMessage(text.slice(0, 1600))} onBusyChange={setAudioBusy} disabled={!!busy} />
+          <Button className="mt-3" variant="outline" disabled={disabled || !message.trim()} onClick={() => void mutate("intent", { text: message, proposalId: scope })}>Agregar indicación</Button>
+          {!!proposal.pending_changes?.length && <div className="mt-4"><h3 className="font-bold">Tus cambios pendientes</h3><ol className="mt-2 list-decimal space-y-3 pl-5">{proposal.pending_changes.map((c) => <li key={c.id}><span className="whitespace-pre-wrap">{c.text}</span>
+            <span className="ml-2 text-sm text-[#526b87]">{c.proposal_id ? `Propuesta ${proposal.proposed_experiences.findIndex((r) => r.proposal_id === c.proposal_id) + 1}` : "Año completo"}</span><Button variant="ghost" disabled={disabled} onClick={() => void mutate("remove-intent", { changeId: c.id })}>Retirar</Button></li>)}</ol>
+            <AsyncButton busyLabel="Aplicando…" className="mt-3" busy={busy === "apply"} disabled={disabled} onClick={() => void mutate("apply")}>Aplicar cambios</AsyncButton></div>}
+        </>}
+        <details className="mt-3"><summary className="min-h-11 cursor-pointer py-2 font-semibold">Qué tuvo en cuenta Ayni</summary>{snapshot && <Facts snapshot={snapshot} />}</details>
+      </section>
+
       <details className="rounded-xl border bg-white p-5"><summary className="min-h-11 cursor-pointer font-semibold">El año completo: momentos cotidianos, acompañamiento y observación</summary>
         <div className="mt-4 space-y-5">{Object.entries(generalLabels).map(([key, label]) => <section key={key}><h3 className="font-bold">{label}</h3><ul className="mt-2 list-disc pl-5">{proposal[key as keyof typeof generalLabels]?.map((text, i) => <li key={i}>{text}</li>)}</ul></section>)}
           <h3 className="font-bold">Oportunidades en la jornada</h3>{proposal.everyday_opportunities?.map((value, i) => <section key={i}><h4 className="font-semibold">{value.moment}</h4><OpportunityDetails value={value} names={names} /></section>)}
