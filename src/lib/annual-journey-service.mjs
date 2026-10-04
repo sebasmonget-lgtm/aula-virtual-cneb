@@ -6,6 +6,7 @@ import { buildProviderRequest } from "./ai-generation-v4.mjs";
 import { JOURNEY_GENERATION_SCHEMA, JOURNEY_PATCH_SCHEMA, JOURNEY_REVIEW_SCHEMA, assertJourneySchema,
   JOURNEY_GENERAL_PROPERTIES, journeyFail, separateUnsupportedInterpretations, validateAnnualJourney } from "./annual-journey-contract.mjs";
 import { solveAnnualJourneyCalendar } from "./annual-journey-calendar.mjs";
+import { scopedAnnualChanges, annualCalendarCriteria } from "./annual-change-scope.mjs";
 
 export const JOURNEY_RULES = `Eres Ayni, acompañante pedagógico de Educación Inicial. Produce previsiones flexibles, nunca experiencias realizadas.
 Quince tramos fijos es una decisión de Ayni, no del MINEDU. Currículo, necesidades sustentadas y aspectos poco conocidos son responsabilidades independientes.
@@ -27,7 +28,7 @@ const providerSnapshot = (snapshot) => ({ ...snapshot, source_fingerprint: undef
   facts: snapshot.facts.map(({ source_refs, ai_support_text, support_text, ...fact }) => { void source_refs; return { ...fact,
     support_text: ai_support_text ?? support_text }; }), curriculum_version: undefined });
 const providerPlan = (plan) => ({ ...plan, classroom_snapshot: providerSnapshot(plan.classroom_snapshot),
-  teacher_preferences: undefined, metrics: undefined, change_history: undefined, resolved_calendar: {
+  teacher_preferences: undefined, pending_changes: undefined, metrics: undefined, change_history: undefined, resolved_calendar: {
     calendar_version: plan.resolved_calendar.calendar_version?.version,
     projects: plan.resolved_calendar.projects.map(({ proposal_id, starts_on, ends_on }) => ({ proposal_id, starts_on, ends_on })),
   } });
@@ -103,15 +104,18 @@ export async function generateAnnualJourney({ context, snapshot, curriculum, cal
       materializeJourneyRows(proposals.map((row, i) => ({ ...row, proposal_id: slots[i].proposal_id })), schedule),
     resolved_calendar: schedule, pending_changes: [], change_history: [], pedagogical_review: { status: "pending" },
     metrics: { started_at: new Date(started).toISOString(), generation_ms: Date.now() - started, corrections: 0, regenerations: 1, operations: [] } };
+  if (!legacy) plan.organization_criteria = annualCalendarCriteria(plan);
   state.candidate = plan; await persist("validation");
   plan = await reviewAndRepair(plan, curriculum, call, [], async (candidate, stage) => {
     state.candidate = candidate; await persist(stage);
   });
+  if (!legacy) plan.organization_criteria = annualCalendarCriteria(plan);
   plan.metrics.operations = events; plan.metrics.generation_ms = Date.now() - started;
   return plan;
 }
 
-async function reviewAndRepair(plan, curriculum, call, protectedIds = [], onStage = async () => {}) {
+async function reviewAndRepair(plan, curriculum, call, protectedIds = [], onStage = async () => {}, reviewIds = null) {
+  const reviewPlan = value => providerPlan(reviewIds ? {...value,proposed_experiences:value.proposed_experiences.filter(row=>reviewIds.includes(row.proposal_id))} : value);
   plan = separateUnsupportedInterpretations(plan);
   await onStage(plan, "validation");
   let deterministicRepair = false;
@@ -126,14 +130,15 @@ async function reviewAndRepair(plan, curriculum, call, protectedIds = [], onStag
   }
   await onStage(plan, "review");
   const review = await call("annual_journey_review", { task: "Revisa sustento semántico, negaciones, alcance, diversidad, viabilidad, relación de oportunidades/capacidades. Comprueba que ninguna razón o apoyo retenga una conclusión cuyo sustento figura en insufficient_interpretations. Esos registros son desconocimiento, no necesidades ni avances. Emite solo incidencias concretas; proposal_id vacío indica una incidencia global.",
-    plan: providerPlan(plan) }, JOURNEY_REVIEW_SCHEMA, plan.proposed_experiences.length);
+    plan: reviewPlan(plan), ...(reviewIds ? {review_scope:reviewIds} : {}) }, JOURNEY_REVIEW_SCHEMA, reviewIds?.length ?? plan.proposed_experiences.length);
   if (review.issues.length) {
     if (deterministicRepair) journeyFail("repair_failed", "La reparación todavía presenta incidencias. El borrador guardado se conserva.", { issues: review.issues });
     const ids = [...new Set(review.issues.map((x) => x.proposal_id).filter(Boolean))];
     if (ids.some((id) => protectedIds.includes(id) || !plan.proposed_experiences.some((r) => r.proposal_id === id)))
       journeyFail("semantic_review", "Ayni encontró una incidencia global. El borrador se conserva; revisa o vuelve a preparar el año.", { issues: review.issues });
     const global = review.issues.some(x => !x.proposal_id);
-    // Global prose can be repaired without regenerating the twelve rows. Protected rows remain immutable.
+    if (reviewIds && global) journeyFail("invalid_scope", "La revisión propone cambios del año completo. Conservamos el borrador y sus pendientes.");
+    // Global prose can be repaired without regenerating proposals. Protected rows remain immutable.
     const repairSchema = global ? { id: "annual-journey-global-repair-v2", type: "object", additionalProperties: false,
       required: ["replacements", ...Object.keys(JOURNEY_GENERAL_PROPERTIES)], properties: {
         ...JOURNEY_GENERAL_PROPERTIES, replacements: { ...JOURNEY_PATCH_SCHEMA.properties.replacements, minItems: 0 } } } : JOURNEY_PATCH_SCHEMA;
@@ -149,7 +154,7 @@ async function reviewAndRepair(plan, curriculum, call, protectedIds = [], onStag
     }
     plan = separateUnsupportedInterpretations(plan); validateAnnualJourney(plan, curriculum);
     await onStage(plan, "review");
-    const second = await call("annual_journey_review", { task: "Verifica las incidencias originales y el plan reparado.", plan: providerPlan(plan),
+    const second = await call("annual_journey_review", { task: "Verifica las incidencias originales y el plan reparado.", plan: reviewPlan(plan),
       original_issues: review.issues }, JOURNEY_REVIEW_SCHEMA, ids.length);
     if (second.issues.length) journeyFail("repair_failed", "La reparación necesita otra revisión. No se confirmó ni cambió el año vigente.", { issues: second.issues });
   }
@@ -168,12 +173,14 @@ export function applyJourneyPatch(plan, patch, affected) {
     everyday_opportunities: patch.everyday_opportunities, evidence_interpretations: patch.evidence_interpretations };
 }
 
-export async function applyAnnualJourneyChanges(plan, { context, curriculum, protectedIds = [],
+export async function applyAnnualJourneyChanges(plan, { context, curriculum, protectedIds = [], proposalId,
   createProvider = createAIProviderForPlan, resolvePlan = resolveAIExecutionPlan } = {}) {
-  if (!plan.pending_changes.length) return plan;
-  const explicit = new Set(plan.pending_changes.map((x) => x.proposal_id).filter(Boolean));
+  const changes = scopedAnnualChanges(plan, proposalId);
+  if (!changes.length) return plan;
+  const processed = new Set(changes.map(change => change.id));
+  const explicit = new Set(changes.map((x) => x.proposal_id).filter(Boolean));
   // A global instruction is interpreted by Luna once, then the stronger model receives only its affected subtree.
-  const global = plan.pending_changes.some((x) => !x.proposal_id), events = [];
+  const global = changes.some((x) => !x.proposal_id), events = [];
   const call = async (workflow, bundle, schema, affected) => {
     const routing = resolvePlan({ workflow, task: "generation" }), begin = Date.now();
     const response = await createProvider(routing, { timeoutMs: 180000 }).generate(buildProviderRequest(workflow,
@@ -185,18 +192,28 @@ export async function applyAnnualJourneyChanges(plan, { context, curriculum, pro
     const schema = { id: "annual-journey-intent-v2", type: "object", additionalProperties: false, required: ["proposal_ids"], properties: {
       proposal_ids: { type: "array", minItems: 1, maxItems: 15, items: { type: "string" } } } };
     const selection = await call("annual_journey_intent", { task: "Elige el conjunto mínimo de propuestas afectadas por estas intenciones. No generes contenido pedagógico. No selecciones propuestas protegidas.",
-      changes: plan.pending_changes, proposals: plan.proposed_experiences.map(({ proposal_id, title, rationale }) => ({ proposal_id, title, rationale })), protectedIds }, schema, 0);
+      changes, proposals: plan.proposed_experiences.map(({ proposal_id, title, rationale }) => ({ proposal_id, title, rationale })), protectedIds }, schema, 0);
     selection.proposal_ids.forEach((id) => explicit.add(id));
   }
   if ([...explicit].some((id) => protectedIds.includes(id) || !plan.proposed_experiences.some((r) => r.proposal_id === id)))
     journeyFail("protected_proposal", "Una propuesta iniciada, vinculada a trabajo o mantenida por ti está protegida. Elige una propuesta futura.");
-  const patch = await call("annual_journey_repair", { task: "Aplica juntas las indicaciones docentes solo a las propuestas autorizadas. Sustituye oportunidades completas; no agregues competencias nominales.",
-    changes: plan.pending_changes, affected_proposal_ids: [...explicit],
+  const patch = await call("annual_journey_repair", { task: "Aplica juntas las indicaciones docentes solo a las propuestas autorizadas. Sustituye oportunidades completas; no agregues competencias nominales." + (proposalId ? " Conserva literalmente everyday_opportunities y evidence_interpretations: esta indicación modifica solo la propuesta seleccionada." : ""),
+    changes, affected_proposal_ids: [...explicit],
     proposals: plan.proposed_experiences.filter((r) => explicit.has(r.proposal_id)), everyday_opportunities: plan.everyday_opportunities, evidence_interpretations: plan.evidence_interpretations,
     other_proposals: plan.proposed_experiences.filter((r) => !explicit.has(r.proposal_id)).map(({ title, primary_competency_ids }) => ({ title, primary_competency_ids })) }, JOURNEY_PATCH_SCHEMA, explicit.size);
   let next = applyJourneyPatch(plan, patch, explicit);
-  next = await reviewAndRepair(next, curriculum, call, protectedIds);
-  return { ...next, pending_changes: [], change_history: [...plan.change_history, { changes: plan.pending_changes,
+  if (proposalId) {
+    if (JSON.stringify(patch.everyday_opportunities) !== JSON.stringify(plan.everyday_opportunities) ||
+        JSON.stringify(patch.evidence_interpretations) !== JSON.stringify(plan.evidence_interpretations))
+      journeyFail("invalid_scope", "Este cambio incluye decisiones del año completo. Ajusta solo la propuesta seleccionada.");
+  }
+  const reviewLocks = proposalId ? [...new Set([...protectedIds, ...plan.proposed_experiences.filter(row => row.proposal_id !== proposalId).map(row => row.proposal_id)])] : protectedIds;
+  next = await reviewAndRepair(next, curriculum, call, reviewLocks, undefined, proposalId ? [proposalId] : null);
+  if (proposalId && (JSON.stringify(next.everyday_opportunities) !== JSON.stringify(plan.everyday_opportunities) ||
+    JSON.stringify(next.evidence_interpretations) !== JSON.stringify(plan.evidence_interpretations)))
+    journeyFail("invalid_scope", "La revisión afectaría decisiones del año completo. Conservamos el borrador.");
+  if (next.editor_version === 3) next.organization_criteria = annualCalendarCriteria(next);
+  return { ...next, pending_changes: plan.pending_changes.filter(change => !processed.has(change.id)), change_history: [...plan.change_history, { changes,
     affected_proposal_ids: [...explicit], change_reasons: patch.replacements.map((r) => ({ proposal_id: r.proposal_id, reason: r.change_reason })), applied_at: new Date().toISOString() }], metrics: { ...plan.metrics,
-    corrections: (plan.metrics.corrections ?? 0) + plan.pending_changes.length, operations: [...(plan.metrics.operations ?? []), ...events] } };
+    corrections: (plan.metrics.corrections ?? 0) + changes.length, operations: [...(plan.metrics.operations ?? []), ...events] } };
 }

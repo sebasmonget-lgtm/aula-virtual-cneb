@@ -16,6 +16,7 @@ import { handleAnnualJourneyRoutes } from "../../scripts/annual-journey-routes.m
 import { loadSavedDocument } from "./document-library-service.mjs";
 import { renderSavedDocumentWord } from "./document-word-export.mjs";
 import { annualJourneyDocumentSections } from "./annual-journey-word.mjs";
+import { scopedAnnualChanges, annualCalendarCriteria } from "./annual-change-scope.mjs";
 
 const curriculum = [{ id: "MAT_CANTIDAD", name: "Cantidad", capacities: ["Comunica su comprensión"] },
   { id: "COM_ORAL", name: "Comunicación oral", capacities: ["Interactúa estratégicamente"] }];
@@ -32,6 +33,45 @@ const provider = (calls, cards = curriculum, reviewIssues = []) => (routing) => 
     everyday_opportunities: request.ai_context_bundle.everyday_opportunities, evidence_interpretations: request.ai_context_bundle.evidence_interpretations ?? [] } };
   return { output: generationFixture(cards) };
 } });
+
+test("aplicar una propuesta conserva los pendientes globales/ajenos y no interpreta el año", async () => {
+  const calls=[], base=await generateAnnualJourney({context:{year:2026,age:5},snapshot:snapshot(),curriculum,calendar:fixtureCalendar(),createProvider:provider(calls)});
+  const id=base.proposed_experiences[0].proposal_id, other=base.proposed_experiences[1].proposal_id;
+  const plan=appendJourneyIntent(appendJourneyIntent(appendJourneyIntent(base,"Más naturaleza en el año · NOMBRE_PRIVADO_123"),"Más movimiento",id),"Incluir familias · DNI_PRIVADO_456",other);
+  calls.length=0;
+  const result=await applyAnnualJourneyChanges(plan,{context:{year:2026,age:5},curriculum,proposalId:id,createProvider:provider(calls)});
+  assert.deepEqual(result.pending_changes,plan.pending_changes.filter(c=>c.proposal_id!==id));
+  assert.deepEqual(result.proposed_experiences.slice(1),plan.proposed_experiences.slice(1));
+  assert.deepEqual(result.change_history.at(-1).changes,scopedAnnualChanges(plan,id));
+  assert.equal(result.metrics.corrections,1);
+  assert.equal(calls.length,2);assert.ok(calls.every(c=>c.request.workflow!=="annual_journey_intent"));
+  assert.deepEqual(calls[0].request.ai_context_bundle.changes.map(c=>c.text),["Más movimiento"]);
+  assert.deepEqual(calls[1].request.ai_context_bundle.plan.proposed_experiences.map(row=>row.proposal_id),[id]);
+  assert.ok(calls.every(call=>!JSON.stringify(call.request).includes("NOMBRE_PRIVADO_123") && !JSON.stringify(call.request).includes("DNI_PRIVADO_456")),"Los pendientes ajenos nunca salen al proveedor");
+  const noPending=await applyAnnualJourneyChanges(result,{context:{year:2026,age:5},curriculum,proposalId:id,createProvider:provider(calls)});
+  assert.equal(noPending,result);assert.equal(calls.length,2);
+  await assert.rejects(()=>applyAnnualJourneyChanges(plan,{proposalId:randomUUID()}),e=>e.reason==="invalid_scope");
+});
+
+test("aplicar un cambio global deja pendientes las indicaciones de propuestas", async () => {
+  const calls=[],base=await generateAnnualJourney({context:{year:2026,age:5},snapshot:snapshot(),curriculum,calendar:fixtureCalendar(),createProvider:provider(calls)});
+  const plan=appendJourneyIntent(appendJourneyIntent(base,"Más naturaleza"),"Más movimiento",base.proposed_experiences[1].proposal_id);
+  calls.length=0;
+  const result=await applyAnnualJourneyChanges(plan,{context:{year:2026,age:5},curriculum,proposalId:null,createProvider:provider(calls)});
+  assert.deepEqual(result.pending_changes,plan.pending_changes.filter(c=>c.proposal_id));
+  assert.equal(calls.filter(c=>c.request.workflow==="annual_journey_intent").length,1);
+  assert.deepEqual(calls[0].request.ai_context_bundle.changes.map(c=>c.text),["Más naturaleza"]);
+});
+
+test("el cambio de una propuesta no autoriza reparación de otra ni cambios cotidianos", async () => {
+  const calls=[],base=await generateAnnualJourney({context:{year:2026,age:5},snapshot:snapshot(),curriculum,calendar:fixtureCalendar(),createProvider:provider(calls)});
+  const id=base.proposed_experiences[0].proposal_id,plan=appendJourneyIntent(base,"Más movimiento",id);
+  await assert.rejects(()=>applyAnnualJourneyChanges(plan,{context:{year:2026,age:5},curriculum,proposalId:id,createProvider:provider(calls,curriculum,[{proposal_id:base.proposed_experiences[1].proposal_id,reason:"Cambiar otra propuesta"}])}),e=>e.reason==="semantic_review");
+  const normal=provider([]);
+  await assert.rejects(()=>applyAnnualJourneyChanges(plan,{context:{year:2026,age:5},curriculum,proposalId:id,createProvider:routing=>({generate:async request=>{const result=await normal(routing).generate(request);if(request.workflow==="annual_journey_repair")result.output.everyday_opportunities=[];return result;}})}),e=>e.reason==="invalid_scope");
+  assert.deepEqual(annualCalendarCriteria({...base,organization_criteria:["Doce propuestas flexibles","Ventanas de marzo"]}),annualCalendarCriteria(base));
+  assert.match(annualCalendarCriteria(base)[0],/15 tramos/);
+});
 
 test("regresión Astra: 172/172, quince propuestas, cero huecos/solapamientos y lunes–viernes", () => {
   const c = fixtureCalendar(), result = solveAnnualJourneyCalendar(c);

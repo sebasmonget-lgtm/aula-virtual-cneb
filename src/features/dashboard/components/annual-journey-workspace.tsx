@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { AnnualSlotEditor, type EditorPlan } from "./annual-slot-editor";
 import { annualDisplayTitle, annualCoverage } from "@/src/lib/annual-year-editor.mjs";
+import { scopedAnnualChanges, annualCalendarCriteria } from "@/src/lib/annual-change-scope.mjs";
 import { Textarea } from "@/components/ui/textarea";
 import { apiFetch } from "@/src/lib/ayni-api-fetch";
 import { localDatabaseApiUrl } from "@/src/lib/local-database";
@@ -98,6 +99,14 @@ export function AnnualJourneyWorkspace({ onConfirmed, onGoDiagnostic, onDevelop,
     } catch (cause) { return { rows: [], error: cause instanceof Error ? cause.message : "No se pudo abrir el mapa guardado." }; }
   })();
   const selectedProposal = proposal?.proposed_experiences.find(row => row.proposal_id === selectedProposalId) ?? proposal?.proposed_experiences[0];
+  const panelProposal = proposal?.proposed_experiences.find(row => row.proposal_id === scope);
+  const panelChanges: Change[] = proposal && (!scope || panelProposal) ? scopedAnnualChanges(proposal, scope) : [];
+  const globalChanges: Change[] = proposal ? scopedAnnualChanges(proposal, null) : [];
+  const libraryChanges = (proposal?.pending_changes ?? []).filter(change => change.proposal_id && !proposal?.proposed_experiences.some(row => row.proposal_id === change.proposal_id));
+  const changeScope = (next: string | null) => {
+    if (message.trim() && !window.confirm("Hay una indicación sin agregar. ¿Quieres descartarla y cambiar de alcance?")) return;
+    setMessage(""); setScope(next); setPanelOpen(true);
+  };
   const listOpen = annualView === "list" || !!mapProjection.error;
   const editable = selected?.status === "draft";
   const generating = job?.status === "queued" || job?.status === "running";
@@ -107,6 +116,7 @@ export function AnnualJourneyWorkspace({ onConfirmed, onGoDiagnostic, onDevelop,
     const all = [data.draft, data.active, ...data.archived].filter((p): p is Plan => !!p);
     const next = all.find((p) => p.id === (id ?? readWorkspaceParams("Planificar").get("annualPlan"))) ?? data.draft ?? data.active;
     setSelectedId(next?.id ?? "");
+    setScope(current => current && !next?.proposal.proposed_experiences.some(row => row.proposal_id === current) ? null : current);
     if (next) writeWorkspaceLocation("Planificar", { annualPlan: next.id }, true);
     return next;
   }, []);
@@ -192,7 +202,7 @@ export function AnnualJourneyWorkspace({ onConfirmed, onGoDiagnostic, onDevelop,
         <p className="mt-4 font-semibold">Qué podrían hacer los niños</p><ul className="mt-2 list-disc space-y-1 pl-5 text-[#3d5874]">{row.children_actions.map((text, i) => <li key={i}>{text}</li>)}</ul>
         <p className="mt-4 font-semibold">Por qué tiene sentido para esta aula</p><p className="mt-2 leading-relaxed text-[#3d5874]">{row.rationale}</p>
         <div className="mt-4 flex flex-wrap gap-2">{editable && <><Button variant="outline" disabled={disabled} onClick={() => void mutate("keep", { proposalId: row.proposal_id })}>{row.teacher_protected && <Check aria-hidden="true" />} {row.teacher_protected ? "Mantenida · permitir cambios" : "Dejar como está"}</Button>
-          <Button variant="outline" disabled={disabled || row.teacher_protected} onClick={() => { setScope(row.proposal_id); setPanelOpen(true); }}>Cambiar con Ayni</Button>
+          <Button variant="outline" disabled={disabled || row.teacher_protected} onClick={() => changeScope(row.proposal_id)}>Cambiar con Ayni</Button>
           </>}
           {selected!.status === "active" && onDevelop && <Button variant="outline" onClick={() => onDevelop(row.proposal_id)}>Preparar esta propuesta</Button>}
         </div>
@@ -226,9 +236,11 @@ export function AnnualJourneyWorkspace({ onConfirmed, onGoDiagnostic, onDevelop,
           : selected.status === "active" ? <Button disabled={disabled || !!plans?.draft} onClick={() => void mutate("copy")}>Revisar mi año con Ayni</Button> : null}
       </div>
       {editable && !!proposal.evidence_interpretations?.length && <div className="rounded-xl border border-[#d6e5ef] p-4"><p>Revisa las interpretaciones y sus actuaciones en «El año completo» antes de confirmar; pueden orientar los apoyos previstos.</p><label className="mt-3 flex min-h-11 items-center gap-3"><input type="checkbox" checked={interpretationsReviewed} onChange={(e) => setInterpretationsReviewed(e.target.checked)} />Revisé estas interpretaciones para esta versión del año.</label></div>}
-      {editable && <div className="flex flex-wrap items-center gap-3"><Button variant="outline" disabled={disabled} onClick={()=>{setScope(null);setPanelOpen(true);}}><MessageCircle className="size-4"/>Ajustar Mi año con Ayni{proposal.pending_changes?.length ? " · "+proposal.pending_changes.length+" pendientes" : ""}</Button><Button variant="ghost" disabled={disabled} onClick={()=>void mutate("refresh")}>Actualizar con nuevas observaciones</Button>{proposal.editor_version!==3 && <Button variant="outline" disabled={disabled} onClick={()=>void mutate("upgrade")}>Organizar borrador en 15 tramos</Button>}</div>}
+      {editable && <div className="flex flex-wrap items-center gap-3"><Button variant="outline" disabled={disabled} onClick={()=>changeScope(null)}><MessageCircle className="size-4"/>Ajustar Mi año con Ayni{globalChanges.length ? " · "+globalChanges.length+" pendientes" : ""}</Button><Button variant="ghost" disabled={disabled} onClick={()=>void mutate("refresh")}>Actualizar con nuevas observaciones</Button>{proposal.editor_version!==3 && <Button variant="outline" disabled={disabled} onClick={()=>void mutate("upgrade")}>Organizar borrador en 15 tramos</Button>}</div>}
+      {proposal.editor_version!==3 && <p className="rounded-lg bg-slate-100 p-3 text-sm text-[#3d5874]">Estás viendo una versión anterior de {proposal.proposed_experiences.length} propuestas, con sus fechas conservadas. Organizar un borrador compatible en 15 tramos activa Biblioteca, matriz curricular y arrastre; el contenido pedagógico se conserva. Si contiene trabajo protegido, usa un año QA separado.</p>}
       {proposal.editor_version===3 && proposal.proposed_experiences.length!==15 && <p role="status" className="rounded-lg bg-amber-50 p-3 text-sm text-amber-950">Hay {15-proposal.proposed_experiences.length} tramos vacíos. Coloca una propuesta en cada uno antes de confirmar.</p>}
       {proposal.editor_version===3 && annualCoverage(proposal).some((c:{total:number;everyday:boolean})=>!c.total&&!c.everyday) && <p role="alert" className="rounded-lg bg-amber-50 p-3 text-sm text-amber-950">Hay competencias sin oportunidad anual ni cotidiana. Revisa la matriz antes de confirmar.</p>}
+      {editable && libraryChanges.length>0 && <section className="rounded-xl border border-amber-200 bg-amber-50 p-4"><h3 className="font-bold">Indicaciones de propuestas en Biblioteca</h3><p className="mt-1 text-sm">Puedes quitar estas indicaciones o volver a colocar la propuesta en el año para aplicarlas.</p><ul className="mt-3 space-y-3">{libraryChanges.map(change=><li key={change.id}><p className="font-semibold">{annualDisplayTitle(proposal.available_experiences?.find(row=>row.proposal_id===change.proposal_id)?.title ?? "Propuesta retirada")}</p><span>{change.text}</span><Button variant="ghost" disabled={disabled} onClick={()=>void mutate("remove-intent",{changeId:change.id})}>Quitar indicación</Button></li>)}</ul></section>}
       <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-xl font-bold text-[#172b52]">Tu año en el tiempo</h2>
         <div className="flex gap-2" role="group" aria-label="Vista de Mi año">
           <Button variant={annualView === "map" ? "default" : "outline"} aria-pressed={annualView === "map"} onClick={() => setAnnualView("map")}><MapIcon aria-hidden="true" className="size-4" />Mapa del año</Button>
@@ -240,21 +252,21 @@ export function AnnualJourneyWorkspace({ onConfirmed, onGoDiagnostic, onDevelop,
       {!listOpen && calendar && proposal.editor_version!==3 && <AnnualYearTimeline rows={mapProjection.rows} calendar={calendar} effectiveCalendar={effectiveCalendar}
         selectedId={selectedProposal?.proposal_id ?? null} onSelect={setSelectedProposalId} initialStage={proposal.resolved_calendar?.initial_stage} />}
       {proposal.editor_version===3 && calendar && !listOpen ? <AnnualSlotEditor plan={proposal as unknown as EditorPlan} planId={selected.id} revision={selected.revision} calendar={calendar} effectiveCalendar={effectiveCalendar} selectedId={selectedProposal?.proposal_id ?? null} onSelect={setSelectedProposalId} editable={!!editable} disabled={disabled} onAction={action=>void mutate("structure",{action})} onReload={reload}>{proposalDetails}</AnnualSlotEditor> : proposalDetails}
-      <Sheet open={panelOpen} onOpenChange={value=>{if(!value&&disabled)return;if(!value&&message.trim()&&!window.confirm("Hay texto sin guardar. ¿Quieres cerrar el panel?"))return;setPanelOpen(value);}}><SheetContent className="w-full overflow-y-auto p-5 sm:max-w-xl"><SheetHeader><SheetTitle>{scope?"Cambiar propuesta con Ayni":"Ajustar Mi año con Ayni"}</SheetTitle><SheetDescription>Reúne tus indicaciones y aplícalas juntas. Las propuestas protegidas se conservan.</SheetDescription></SheetHeader>
-        <p className="mt-2 text-sm">{scope ? `Sobre «${proposal.proposed_experiences.find((r) => r.proposal_id === scope)?.title}»` : "Sobre tu año completo"}</p>
-        {scope && <Button variant="ghost" disabled={disabled} onClick={() => setScope(null)}>Volver al año completo</Button>}
-        {editable && <><label htmlFor="annual-message" className="mt-3 block font-semibold">¿Qué quieres cambiar?</label><Textarea id="annual-message" ref={messageRef} className="mt-2 min-h-24" value={message} disabled={disabled} maxLength={1600} onChange={(e) => setMessage(e.target.value)} />
-          <DictationRecorder classroomScope purpose="group_summary" rawTranscript context="Indicación docente para cambiar el año" currentText={message} onTranscribed={(text) => setMessage(text.slice(0, 1600))} onBusyChange={setAudioBusy} disabled={!!busy} />
-          <Button className="mt-3" variant="outline" disabled={disabled || !message.trim()} onClick={() => void mutate("intent", { text: message, proposalId: scope })}>Agregar indicación</Button>
-          {!!proposal.pending_changes?.length && <div className="mt-4"><h3 className="font-bold">Tus cambios pendientes</h3><ol className="mt-2 list-decimal space-y-3 pl-5">{proposal.pending_changes.map((c) => <li key={c.id}><span className="whitespace-pre-wrap">{c.text}</span>
-            <span className="ml-2 text-sm text-[#526b87]">{c.proposal_id ? `Propuesta ${proposal.proposed_experiences.findIndex((r) => r.proposal_id === c.proposal_id) + 1}` : "Año completo"}</span><Button variant="ghost" disabled={disabled} onClick={() => void mutate("remove-intent", { changeId: c.id })}>Retirar</Button></li>)}</ol>
-            <AsyncButton busyLabel="Aplicando…" className="mt-3" busy={busy === "apply"} disabled={disabled} onClick={() => void mutate("apply")}>Aplicar cambios</AsyncButton></div>}
+      <Sheet open={panelOpen} onOpenChange={value=>{if(!value&&disabled)return;if(!value&&message.trim()&&!window.confirm("Hay texto sin guardar. ¿Quieres cerrar el panel?"))return;setPanelOpen(value);}}><SheetContent className="w-full overflow-y-auto p-5 sm:max-w-xl"><SheetHeader><SheetTitle>{scope?"Cambiar propuesta con Ayni":"Ajustar Mi año con Ayni"}</SheetTitle><SheetDescription>{scope?"Cuéntame qué quisieras cambiar. Puedes pedir otro enfoque, tema, materiales, competencias u otra experiencia.":"Reúne cambios para todo tu año: temas, propuestas futuras u oportunidades curriculares. Las propuestas protegidas se conservan."}</SheetDescription></SheetHeader>
+        {panelProposal && <p className="mt-3 font-semibold">{annualDisplayTitle(panelProposal.title)}{panelProposal.planned_start_date && panelProposal.planned_end_date?` · ${compactDate(panelProposal.planned_start_date)}–${compactDate(panelProposal.planned_end_date)}`:""}</p>}
+        {scope && <button type="button" className="mt-2 min-h-11 text-sm text-[#087d96] underline underline-offset-4 disabled:opacity-50" disabled={disabled} onClick={()=>changeScope(null)}>← Ajustar todo Mi año</button>}
+        {editable && <>
+          <p className="mt-4 text-sm font-semibold">Ejemplos</p><div className="mt-2 flex flex-wrap gap-2">{(scope?["Quiero que tenga más movimiento","Quiero incluir a las familias","Prefiero otra idea para trabajar esta competencia"]:["Quiero más oportunidades en la naturaleza","Quiero ajustar varias propuestas futuras","Quiero revisar las oportunidades curriculares"]).map(example=><Button key={example} variant="outline" size="sm" disabled={disabled} onClick={()=>setMessage(example)}>{example}</Button>)}</div>
+          <label htmlFor="annual-message" className="mt-4 block font-semibold">¿Qué quieres cambiar?</label><div className="relative mt-2"><Textarea id="annual-message" ref={messageRef} placeholder="Escribe o dicta tu indicación…" className="min-h-24 pr-16" value={message} disabled={disabled} maxLength={1600} onChange={(e) => setMessage(e.target.value)} /><div className="absolute top-2 right-2"><DictationRecorder iconOnly autoTranscribe classroomScope purpose="group_summary" rawTranscript context={scope?"Indicación docente para cambiar esta propuesta":"Indicación docente para cambiar el año"} currentText={message} onTranscribed={(text) => setMessage(text.slice(0, 1600))} onBusyChange={setAudioBusy} disabled={!!busy} /></div></div>
+          <Button className="mt-3" variant="outline" disabled={disabled || !message.trim()} onClick={() => void mutate("intent", { text: message, proposalId: scope })}>Agregar cambio</Button>
+          <div className="mt-6"><h3 className="font-bold">{scope?"Cambios para esta propuesta":"Cambios para Mi año"}</h3>{panelChanges.length?<ol className="mt-2 list-decimal space-y-3 pl-5">{panelChanges.map(c=><li key={c.id}><span className="whitespace-pre-wrap">{c.text}</span><Button variant="ghost" disabled={disabled} onClick={()=>void mutate("remove-intent",{changeId:c.id})}>Quitar</Button></li>)}</ol>:<p className="mt-2 text-sm text-[#526b87]">{scope?"Aún no has agregado cambios para esta propuesta.":"Aún no has agregado cambios para Mi año."}</p>}
+          {panelChanges.length>0 && <AsyncButton busyLabel="Aplicando…" className="mt-3" busy={busy === "apply"} disabled={disabled || !!message.trim()} onClick={() => void mutate("apply",{proposalId:scope})}>Aplicar cambios</AsyncButton>}</div>
         </>}
-        <details className="mt-3"><summary className="min-h-11 cursor-pointer py-2 font-semibold">Qué tuvo en cuenta Ayni</summary>{snapshot && <Facts snapshot={snapshot} />}</details>
+        <details className="mt-5"><summary className="min-h-11 cursor-pointer py-2 font-semibold">{scope?"Por qué Ayni propuso esta experiencia":"Qué sabemos del aula para ajustar Mi año"}</summary>{scope&&panelProposal?<div className="space-y-3 text-sm"><p>{panelProposal.rationale}</p>{panelProposal.source_fact_keys.map(key=>{const fact=snapshot?.facts.find(f=>f.key===key);return fact?<p key={key}>{fact.support_text || "Registro conservado en su fuente privada."}</p>:null;})}</div>:snapshot?<Facts snapshot={snapshot}/>:null}</details>
       </SheetContent></Sheet>
 
       <details className="rounded-xl border bg-white p-5"><summary className="min-h-11 cursor-pointer font-semibold">El año completo: momentos cotidianos, acompañamiento y observación</summary>
-        <div className="mt-4 space-y-5">{Object.entries(generalLabels).map(([key, label]) => <section key={key}><h3 className="font-bold">{label}</h3><ul className="mt-2 list-disc pl-5">{proposal[key as keyof typeof generalLabels]?.map((text, i) => <li key={i}>{text}</li>)}</ul></section>)}
+        <div className="mt-4 space-y-5">{Object.entries(generalLabels).map(([key, label]) => <section key={key}><h3 className="font-bold">{label}</h3><ul className="mt-2 list-disc pl-5">{(key==="organization_criteria" && proposal.editor_version===3?annualCalendarCriteria(proposal):proposal[key as keyof typeof generalLabels])?.map((text:string, i:number) => <li key={i}>{text}</li>)}</ul></section>)}
           <h3 className="font-bold">Oportunidades en la jornada</h3>{proposal.everyday_opportunities?.map((value, i) => <section key={i}><h4 className="font-semibold">{value.moment}</h4><OpportunityDetails value={value} names={names} /></section>)}
           <h3 className="font-bold">Interpretaciones que revisarás al confirmar</h3><p className="text-sm">Son propuestas de interpretación de actuaciones concretas. No declaran una competencia lograda ni describen automáticamente a todo el grupo.</p>
           {!!proposal.insufficient_interpretations?.length && <p className="text-sm">En {proposal.insufficient_interpretations.length} posibles interpretaciones todavía faltaba sustento. Conservamos los registros sin concluir que exista un avance o una dificultad.</p>}

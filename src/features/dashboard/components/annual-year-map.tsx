@@ -16,18 +16,9 @@ export type AnnualMapEffectiveCalendar = { days: { date: string; calendar_type: 
 type Slot = { slot_index: number; starts_on: string; ends_on: string; duration_weeks: number; proposal_id?: string };
 type Competency = { id: string; name: string };
 const months = ["Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-const styles = [
-  "bg-[#e8f7ec] border-[#c9ead5]", "bg-[#eaf2fc] border-[#d3e2f8]", "bg-[#fff1df] border-[#f3dfbd]",
-  "bg-[#f1eafd] border-[#e1d4f8]", "bg-[#e7f8f8] border-[#cce9e9]", "bg-[#fff0f3] border-[#f3d6df]",
-];
+const rowStyle = (row: AnnualMapRow) => row.experience_type === "unit" ? "bg-violet-50 border-violet-200" : "bg-teal-50 border-teal-200";
 const day = (value: string) => new Date(`${value}T00:00:00Z`);
 const compact = (value: string) => new Intl.DateTimeFormat("es-PE", { day: "numeric", month: "short", timeZone: "UTC" }).format(day(value));
-const holidayShort = (label: string, start: string, end: string) => {
-  if (/(jueves|viernes) santo|semana santa|pascua/i.test(label)) return "SS";
-  if (/fiestas patrias/i.test(label)) return "FP";
-  if (start !== end) return `${day(start).getUTCDate()}–${day(end).getUTCDate()}`;
-  return String(day(start).getUTCDate());
-};
 
 export function AnnualYearTimeline({ rows, calendar, effectiveCalendar, selectedId, onSelect, initialStage }: {
   rows: (AnnualMapRow & { start: string; end: string })[]; calendar: AnnualMapCalendar;
@@ -38,24 +29,25 @@ export function AnnualYearTimeline({ rows, calendar, effectiveCalendar, selected
   const blocks = calendar.blocks.filter((block) => block.type === "management");
   const holidays = annualMapHolidays(effectiveCalendar?.days ?? []);
   const [holidayOpen, setHolidayOpen] = useState<string | null>(null);
+  const today = new Date().toLocaleDateString("en-CA", { timeZone:"America/Lima" });
   const monthStart = (index: number) => `${calendar.school_year}-${String(index + 3).padStart(2, "0")}-01`;
   const monthEnd = (index: number) => new Date(Date.UTC(calendar.school_year, index + 3, 0)).toISOString().slice(0, 10);
   return <div className="space-y-3">
     <section aria-label="Mapa del año escolar" tabIndex={0} className="journey-matrix-scroll overflow-x-auto rounded-2xl border border-[#d8e8f0] bg-white shadow-sm">
-      <div className="relative min-w-[1920px] px-4 pb-4 pt-4">
+      <div className="relative min-w-[3060px] px-4 pb-4 pt-4">
         <div className="relative h-9 border-b border-[#dbe8f0]">{months.map((month, index) => <span key={month}
           className="absolute top-0 border-l border-[#e0eaf1] pl-2 text-xs font-bold text-[#304a70]"
           style={{ left: `${annualMapPercent(monthStart(index), window)}%`, width: `${annualMapWidth(monthStart(index), monthEnd(index), window)}%` }}>{month}</span>)}</div>
         <div className="relative h-7">{months.map((month, index) => [1, 15].map((date) => <span key={`${month}-${date}`}
           className="absolute top-1 text-xs text-[#526b87]" style={{ left: `${annualMapPercent(`${calendar.school_year}-${String(index + 3).padStart(2, "0")}-${String(date).padStart(2, "0")}`, window)}%` }}>{date}</span>))}</div>
-        <div className="relative h-24">{holidays.map((holiday, index) => <div key={holiday.start} className="absolute z-20"
-          style={{ left: `${annualMapPercent(holiday.start, window)}%`, top: index > 0 && annualMapPercent(holiday.start, window) - annualMapPercent(holidays[index - 1].start, window) < 2.5 ? 48 : 0 }}><button type="button" aria-expanded={holidayOpen === holiday.start}
+        <div className="relative h-11">{holidays.map(holiday => <div key={holiday.start} className="absolute z-20"
+          style={{ left: `${annualMapPercent(holiday.start, window)}%` }}><button type="button" aria-expanded={holidayOpen === holiday.start}
             aria-label={`Feriado: ${holiday.labels.join(" y ")}, ${compact(holiday.start)}${holiday.start === holiday.end ? "" : ` al ${compact(holiday.end)}`}`}
             onClick={() => setHolidayOpen(holidayOpen === holiday.start ? null : holiday.start)}
-            className="min-h-11 min-w-11 -translate-x-1/2 rounded border border-[#e6a1a5] bg-[#fff5f5] px-1 py-1 text-xs font-bold text-[#b8303b] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#b8303b]"
-            title={holiday.labels.join(" · ")}>{holidayShort(holiday.labels[0], holiday.start, holiday.end)}</button>
+            className="relative min-h-11 min-w-11 -translate-x-1/2 text-[#b8303b] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#b8303b]"
+            title={`${compact(holiday.start)} · ${holiday.labels.join(" · ")} · Feriado nacional`}><span aria-hidden="true" className="absolute top-3 left-1/2 h-0 w-0 border-y-[6px] border-l-[10px]" style={{borderTopColor:"transparent",borderBottomColor:"transparent",borderLeftColor:"#dc2626"}}/></button>
             {holidayOpen === holiday.start && <div role="status" className="absolute left-1/2 top-11 z-30 w-52 -translate-x-1/2 rounded-lg border bg-white p-2 text-xs shadow-lg">
-              <b>{compact(holiday.start)}{holiday.start !== holiday.end ? `–${compact(holiday.end)}` : ""}</b><br />{holiday.labels.join(" · ")}</div>}</div>)}</div>
+              <b>{compact(holiday.start)}{holiday.start !== holiday.end ? `–${compact(holiday.end)}` : ""}</b><br />{holiday.labels.join(" · ")}<p>Feriado nacional</p></div>}</div>)}</div>
         <div className="relative h-64 rounded-xl bg-[#f7fafc]">
           {blocks.map((block) => <div key={`${block.start_date}-${block.end_date}`} aria-label={`${block.label}: ${compact(block.start_date)} al ${compact(block.end_date)}, sin clases`} className="absolute inset-y-0 z-20 flex flex-col items-center justify-center overflow-hidden rounded-md border-2 border-[#8faac3] bg-[#dce8f2] px-1 text-center text-[#264869]"
             style={{ left: `${annualMapPercent(block.start_date, window)}%`, width: `${annualMapWidth(block.start_date, block.end_date, window)}%` }} title={`${block.label}: ${compact(block.start_date)}–${compact(block.end_date)} · Sin clases`}>
@@ -66,14 +58,16 @@ export function AnnualYearTimeline({ rows, calendar, effectiveCalendar, selected
           {rows.map((row, index) => <button key={row.proposal_id} type="button" aria-pressed={selectedId === row.proposal_id}
             aria-label={`${index + 1}. ${annualDisplayTitle(row.title)}, ${row.experience_type === "unit" ? "unidad" : "proyecto"}, ${compact(row.start)} al ${compact(row.end)}`}
             onClick={() => onSelect(row.proposal_id)}
-            className={`absolute inset-y-0 z-10 flex min-w-0 flex-col items-center justify-center overflow-hidden rounded-md border px-1 text-center text-[#173352] transition-transform hover:-translate-y-1 focus-visible:z-20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#087d96] ${styles[index % styles.length]} ${selectedId === row.proposal_id ? "ring-2 ring-[#087d96] ring-offset-1" : ""}`}
+            className={`absolute inset-y-0 z-10 flex min-w-0 flex-col items-center justify-center overflow-hidden rounded-xl border px-2 text-center text-[#173352] transition-transform hover:-translate-y-1 focus-visible:z-20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#087d96] ${rowStyle(row)} ${selectedId === row.proposal_id ? "ring-2 ring-[#087d96] ring-offset-1" : ""}`}
             style={{ left: `${annualMapPercent(row.start, window)}%`, width: `${annualMapWidth(row.start, row.end, window)}%` }}>
             <ProjectPictogram project={row} className="mb-1 size-16 max-w-full" />
-            <span className="mb-1 text-xs font-bold">{String(index + 1).padStart(2, "0")}</span><span className="w-full min-w-0 break-words text-xs font-bold leading-4" title={annualDisplayTitle(row.title)}>{annualDisplayTitle(row.title)}</span>
+            <span className="mb-1 text-sm font-bold">{String(index + 1).padStart(2, "0")}</span><span className="line-clamp-2 w-full min-w-0 text-sm font-bold leading-5" title={annualDisplayTitle(row.title)}>{annualDisplayTitle(row.title)}</span>
+            <span className="mt-2 text-xs">{compact(row.start)}–{compact(row.end)}</span>
             <span className="mt-2 rounded-full bg-white/75 px-1 text-xs">{row.experience_type === "unit" ? "Unidad" : "Proyecto"}</span>
             <span className="text-xs">{row.duration_weeks} sem</span></button>)}
           {holidays.map((holiday) => <div key={holiday.start} aria-hidden="true" className="pointer-events-none absolute inset-y-0 z-30 w-px bg-[#d83f4b]"
             style={{ left: `${annualMapPercent(holiday.start, window)}%` }} />)}
+          {today>=window.start&&today<=window.end&&<div className="pointer-events-none absolute -top-11 bottom-0 z-30 w-px bg-amber-500" style={{left:`${annualMapPercent(today,window)}%`,backgroundColor:"#d97706"}}><span className="absolute -top-6 left-1 whitespace-nowrap text-xs font-bold text-amber-800">HOY · {compact(today)}</span></div>}
         </div>
       </div>
     </section>
@@ -127,7 +121,7 @@ export function AnnualYearMap({ rows, available, calendar, effectiveCalendar, sl
     <section className="rounded-2xl border border-[#d8e8f0] bg-white p-4 shadow-sm" aria-label="Propuestas disponibles">
       <div className="flex flex-wrap items-center justify-between gap-2"><div><h2 className="font-extrabold text-[#172b52]">Propuestas disponibles</h2><p className="text-xs text-[#526b87]">Ideas retiradas o pendientes para incorporar al año.</p></div>
         {editing && <Button type="button" variant="outline" onClick={onAddManual}><Plus className="size-4" /> Nueva propuesta</Button>}</div>
-      {available.length ? <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">{available.map((row, index) => <article key={row.proposal_id} className={`rounded-xl border p-3 ${styles[index % styles.length]}`}>
+      {available.length ? <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">{available.map(row => <article key={row.proposal_id} className={`rounded-xl border p-3 ${rowStyle(row)}`}>
         <div className="flex items-center gap-2"><ProjectPictogram project={row} className="size-10" /><h3 className="text-sm font-bold">{annualDisplayTitle(row.title)}</h3></div><p className="mt-1 text-xs">{row.experience_type === "unit" ? "Unidad" : "Proyecto"} · {row.duration_weeks} semanas</p>
         {editing && <Button type="button" size="sm" variant="outline" className="mt-2" onClick={() => onRestore(row.proposal_id)}><MoveHorizontal className="size-4" /> Incorporar al año</Button>}</article>)}</div>
         : <p className="mt-3 rounded-xl bg-[#f6f9fc] p-3 text-sm text-[#526b87]">Todas las propuestas de esta versión están ubicadas en el año.</p>}

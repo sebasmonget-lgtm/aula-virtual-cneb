@@ -1501,3 +1501,19 @@ Síntoma: cuatro notas QA de la captura automatizada quedaron asociadas a la sel
 **Solución validada.** El preview incluye competencias y detalles completos del contrato con fuentes pertinentes antes de Guardar en Biblioteca. El historial incluye IDs entrante/desplazado y slots origen/destino; la regresión de swap comprueba esos campos y la suite focal final conserva 65/65 PASS. La captura final del preview queda pendiente; el resultado de las pruebas no equivale a aprobación visual.
 
 **Prevención.** Revisar todos los campos que la docente aprueba y registrar ambos lados de una operación estructural. Mantener separado QA de servidor, primeras capturas y QA final: la recaptura móvil/Biblioteca/matriz/filtro/chat y el drag genuino quedaron bloqueados por conectividad local/política de URL, y no deben declararse ejecutados. Pasos de cierre en docs/qa/annual-year-editor-v3-2026-10-03.md.
+
+## 2026-10-03 — Panel de una propuesta podía aplicar pendientes de otros alcances
+
+**Síntoma y causa.** «Cambiar propuesta con Ayni» reutilizaba pendientes/aplicación de lote completo. Un contexto visual local no se trasladaba de forma explícita al filtro del servidor ni al revisor; podían consumirse indicaciones globales/ajenas.
+
+**Solución validada.** Selección exacta por proposal_id o null en UI/servidor, revisión limitada al ID local y rechazo de cambios fuera de alcance. Solo se retiran pendientes aplicados y solo ellos pasan al historial. La proyección del revisor omite pendientes ajenos (hallazgo P1 de privacidad); recargar limpia el scope desaparecido sin excepción y recupera las indicaciones retiradas por separado (P2). Regresiones de aplicación local/global, pendientes conservados y reparación ajena PASS dentro de la suite corregida final 68/68. Typecheck/lint/Next (`npx next build`)/Vinext finales PASS, exit 0; sin QA visual final.
+
+**Prevención.** Transportar el alcance hasta proveedor, validación, revisión y persistencia; no asumir autorización por el título del panel. Probar pendientes locales de dos propuestas junto con uno global y comprobar qué queda sin aplicar. Si una propuesta se retira, conservar su indicación en una sección independiente con «Quitar indicación»: limpiar un scope inválido no autoriza descartar decisiones docentes.
+
+## 2026-10-03 — Copia histórica de doce confundida con el editor nuevo de quince
+
+**Síntoma y causa.** Una copia preservaba el contrato/calendario anterior de doce y criterios generados que mencionaban esa cantidad. La presentación nueva podía hacer pensar que abrir/copiar equivalía a convertirla en quince.
+
+**Solución y estado.** Criterios nuevos de organización determinísticos solo para editor_version 3; el histórico mantiene sus criterios originales visibles. Banner de doce y presentación semántica compartida sin mutar su JSON literal. Upgrade únicamente explícito del borrador compatible. Se preparó una copia QA recuperable con tres alternativas sin IA y guard transaccional de hashes del activo V1/otros planes; el upgrade por UI sigue pendiente tras deployment. Pruebas actuales PASS acreditan lógica/compatibilidad, no conversión visual ya ejecutada.
+
+**Prevención.** Verificar editor_version y resolved_calendar antes de atribuir cantidad/funcionalidad; distinguir copia, upgrade y confirmación. Mantener el original recuperable y lectores de quince en rollback. La fase integral en cola se retoma tras estabilizar este cierre. Ver ADR 114 y docs/qa/annual-year-scope-closure-2026-10-03.md.

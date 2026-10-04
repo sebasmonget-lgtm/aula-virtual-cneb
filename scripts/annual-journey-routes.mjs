@@ -15,6 +15,7 @@ import { handleJourneyJobs } from "../src/lib/annual-journey-jobs.mjs";
 import { assignAnnualSlots, editAnnualStructure } from "../src/lib/annual-year-editor.mjs";
 import { observationCoverage } from "../src/lib/observation-coverage.mjs";
 import { handleAnnualProposalCreation } from "../src/lib/annual-proposal-creation.mjs";
+import { scopedAnnualChanges, annualCalendarCriteria } from "../src/lib/annual-change-scope.mjs";
 
 export async function handleAnnualJourneyRoutes({ request, response, url, db, teacherId, origin, send, readJson,
   annualPlanningContext, annualDocumentContext, createProvider, resolvePlan }) {
@@ -160,11 +161,15 @@ export async function handleAnnualJourneyRoutes({ request, response, url, db, te
     if (operation === "apply") {
       if (snapshot.source_fingerprint !== proposal.classroom_snapshot.source_fingerprint || effectiveCalendarFingerprint(calendar) !== proposal.resolved_calendar.calendar_fingerprint)
         throw new VersionConflictError("Las fuentes o el calendario cambiaron. Actualiza la preparación antes de aplicar.");
-      const changes = proposal.pending_changes.map((c) => ({ ...c, text: annualJourneySafeText(c.text, sources.names) }));
+      const scoped = scopedAnnualChanges(proposal, body.proposalId);
+      if (!scoped.length) journeyFail("no_pending_changes", "Aún no has agregado cambios para este alcance.");
+      const appliedIds = new Set(scoped.map(change => change.id));
+      const changes = scoped.map((c) => ({ ...c, text: annualJourneySafeText(c.text, sources.names) }));
       if (changes.some((c) => !c.text)) journeyFail("private_text", "Reformula la indicación sin datos privados antes de aplicar. Conservamos los cambios pendientes.");
-      proposal = await applyAnnualJourneyChanges({ ...proposal, pending_changes: changes }, { context, curriculum,
-        protectedIds: await protectedIds(base), createProvider, resolvePlan });
-      if (changes.length) proposal.change_history.at(-1).changes = base.proposal.pending_changes;
+      const safeById = new Map(changes.map(change => [change.id,change]));
+      proposal = await applyAnnualJourneyChanges({ ...proposal, pending_changes: proposal.pending_changes.map(change => safeById.get(change.id) ?? change) }, { context, curriculum,
+        proposalId: body.proposalId, protectedIds: await protectedIds(base), createProvider, resolvePlan });
+      proposal.change_history.at(-1).changes = base.proposal.pending_changes.filter(change => appliedIds.has(change.id));
     }
     const result = await versionTransaction(db, `annual:${context.school_year_id}`, async (tx) => {
       const row = await load(id, tx); assertRevision(row, revision);
@@ -189,6 +194,7 @@ export async function handleAnnualJourneyRoutes({ request, response, url, db, te
           if(proposal.editor_version===3)journeyFail("invalid","Este año ya utiliza 15 tramos.");
           const schedule=solveAnnualJourneyCalendar(freshCalendar,Array.from({length:15},(_,i)=>({proposal_id:proposal.proposed_experiences[i]?.proposal_id ?? null})));
           proposal=assignAnnualSlots({...proposal,resolved_calendar:schedule},schedule.projects,proposal.proposed_experiences);
+          proposal={...proposal,organization_criteria:annualCalendarCriteria(proposal),change_history:[...(proposal.change_history ?? []),{kind:"calendar_upgrade",previous_organization_criteria:row.proposal.organization_criteria,applied_at:new Date().toISOString(),ai_calls:0}]};
         } else proposal=editAnnualStructure(proposal,operation==="move"?{kind:"place",proposalId:body.proposalId,targetSlotId:proposal.resolved_calendar.projects[Number(body.to)]?.slot_id}:body.action,{protectedIds:protectedRows,today:new Date().toLocaleDateString("en-CA",{timeZone:"America/Lima"})});
       }
       if (["apply","move","structure","upgrade"].includes(operation)) {
