@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { versionTransaction, assertRevision, expectedRevision, VersionConflictError } from "./version-integrity.mjs";
 import { generateAnnualJourney } from "./annual-journey-service.mjs";
 import { journeyFail } from "./annual-journey-contract.mjs";
-import { annualJourneySafeText } from "./annual-journey-privacy.mjs";
+import { annualJourneySafeText, annualJourneyCurriculumTerms } from "./annual-journey-privacy.mjs";
 import { effectiveCalendarFingerprint } from "./annual-journey-calendar.mjs";
 import { personalizationSources } from "./annual-personalization-service.mjs";
 import { loadEffectiveCalendar } from "./school-calendar-service.mjs";
@@ -44,7 +44,7 @@ export async function handleJourneyJobs({ request, response, url, db, context, t
     const body = await readJson(request);
     if (typeof body.teacherIdeas !== "string" || body.teacherIdeas.length > 2000) journeyFail("invalid", "Cuenta tus ideas en menos de 2000 caracteres.");
     if (body.sourceFingerprint !== snapshot.source_fingerprint) throw new VersionConflictError("Hay registros nuevos. Actualiza el resumen antes de preparar tu año.");
-    const safeIdeas = annualJourneySafeText(body.teacherIdeas, sources.names);
+    const safeIdeas = annualJourneySafeText(body.teacherIdeas, sources.names, annualJourneyCurriculumTerms(curriculum));
     if (body.teacherIdeas.trim() && !safeIdeas) journeyFail("private_text", "Escribe tus ideas sin datos personales. Tus registros se conservan.");
     const result = await versionTransaction(db, lock, async tx => {
       let row;

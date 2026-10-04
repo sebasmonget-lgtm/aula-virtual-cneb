@@ -97,9 +97,11 @@ test("job persistido: refresh, exclusión concurrente, permisos y proveedor fall
     };
     const start=await route("start");assert.equal(start.status,200);
     const coverage=await route("coverage");assert.equal(coverage.status,200);assert.deepEqual(coverage.data.counts,{});assert.equal(coverage.data.observed_students,0);
-    const prepared=await route("prepare",{teacherIdeas:"Agua\nColecta navideña",sourceFingerprint:start.data.snapshot.source_fingerprint});
+    const prepared=await route("prepare",{teacherIdeas:"Quiero priorizar Indaga y Crea\nColecta navideña",sourceFingerprint:start.data.snapshot.source_fingerprint});
     assert.equal(prepared.status,202,JSON.stringify(prepared.data));assert.equal(generations,0);
     const id=prepared.data.id;
+    const intent=(await db.query("select payload from ai_pending_generations where id=$1",[id])).rows[0].payload;
+    assert.match(intent.safeIdeas,/Indaga y Crea/);
     assert.equal((await route(`jobs/${id}/run`,{})).status,202);
     const running=route(`jobs/${id}/run`,{});await reachedReview;
     const progress=await route(`jobs/${id}`);assert.equal(progress.data.stage,"review");

@@ -10,7 +10,7 @@ import { journeyFail, validateAnnualJourney } from "../src/lib/annual-journey-co
 import { assertRevision, expectedRevision, versionTransaction, VersionConflictError, httpStatusForError, publicErrorMessage } from "../src/lib/version-integrity.mjs";
 import { persistAnnualProjectSlots } from "../src/lib/annual-project-slots.mjs";
 import { confirmAnnualPlanVersion } from "../src/lib/annual-plan-version-service.mjs";
-import { annualJourneySafeText } from "../src/lib/annual-journey-privacy.mjs";
+import { annualJourneySafeText, annualJourneyCurriculumTerms } from "../src/lib/annual-journey-privacy.mjs";
 import { handleJourneyJobs } from "../src/lib/annual-journey-jobs.mjs";
 import { assignAnnualSlots, editAnnualStructure } from "../src/lib/annual-year-editor.mjs";
 import { observationCoverage } from "../src/lib/observation-coverage.mjs";
@@ -90,7 +90,7 @@ export async function handleAnnualJourneyRoutes({ request, response, url, db, te
       });
       draftId = row.id;
       if ((await protectedIds(row)).length) journeyFail("protected_proposal", "Este borrador conserva decisiones o trabajo iniciado. Usa Cambiar con Ayni para modificar solo propuestas futuras.");
-      const safeIdeas = annualJourneySafeText(body.teacherIdeas, sources.names);
+      const safeIdeas = annualJourneySafeText(body.teacherIdeas, sources.names, annualJourneyCurriculumTerms(curriculum));
       if (body.teacherIdeas.trim() && !safeIdeas) journeyFail("private_text", "La indicación incluye información privada. Conservamos tu preparación; escribe la idea sin nombres ni datos personales.");
       const generatedSnapshot = { ...snapshot, facts: [...snapshot.facts, ...(safeIdeas ? [{ key: "teacher_preferences", kind: "teacher_decision",
         subject: "teacher", scope: "classroom_preference", uncertainty: "preference_not_observed_interest", support_text: body.teacherIdeas, ai_support_text: safeIdeas,
@@ -164,7 +164,7 @@ export async function handleAnnualJourneyRoutes({ request, response, url, db, te
       const scoped = scopedAnnualChanges(proposal, body.proposalId);
       if (!scoped.length) journeyFail("no_pending_changes", "Aún no has agregado cambios para este alcance.");
       const appliedIds = new Set(scoped.map(change => change.id));
-      const changes = scoped.map((c) => ({ ...c, text: annualJourneySafeText(c.text, sources.names) }));
+      const changes = scoped.map((c) => ({ ...c, text: annualJourneySafeText(c.text, sources.names, annualJourneyCurriculumTerms(curriculum)) }));
       if (changes.some((c) => !c.text)) journeyFail("private_text", "Reformula la indicación sin datos privados antes de aplicar. Conservamos los cambios pendientes.");
       const safeById = new Map(changes.map(change => [change.id,change]));
       proposal = await applyAnnualJourneyChanges({ ...proposal, pending_changes: proposal.pending_changes.map(change => safeById.get(change.id) ?? change) }, { context, curriculum,

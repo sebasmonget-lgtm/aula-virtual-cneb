@@ -1,7 +1,7 @@
 import { randomUUID, createHash } from "node:crypto";
 import { versionTransaction, VersionConflictError } from "./version-integrity.mjs";
 import { journeyFail } from "./annual-journey-contract.mjs";
-import { annualJourneySafeText } from "./annual-journey-privacy.mjs";
+import { annualJourneySafeText, annualJourneyCurriculumTerms } from "./annual-journey-privacy.mjs";
 import { resolveAIExecutionPlan } from "./ai-execution-router-v4.mjs";
 import { createAIProviderForPlan } from "./ai-provider-factory.mjs";
 import { buildProviderRequest } from "./ai-generation-v4.mjs";
@@ -35,7 +35,7 @@ export async function handlePlanningConversation({request,response,url,db,contex
   if(!["POST","GET"].includes(request.method))return false;
   const body=request.method==="POST"?await readJson(request):{};
   if(body.text!=null&&(typeof body.text!=="string"||!body.text.trim()||body.text.length>1600))journeyFail("invalid","Escribe una respuesta de hasta 1600 caracteres.");
-  const safe=body.text?annualJourneySafeText(body.text,sources.names):"";
+  const safe=body.text?annualJourneySafeText(body.text,sources.names,annualJourneyCurriculumTerms(curriculum)):"";
   if(body.text&&!safe)journeyFail("private_text","Escribe la decisión sin datos personales.");
   const id=body.id??url.searchParams.get("id");
   let row,payload;

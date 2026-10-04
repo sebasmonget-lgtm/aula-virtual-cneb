@@ -1525,3 +1525,11 @@ Síntoma: cuatro notas QA de la captura automatizada quedaron asociadas a la sel
 **Solución validada.** El catch del panel intenta GET de la conversación existente; una candidata guardada se recupera y muestra sin IA nueva. La integración comprueba identidad exacta de candidata, mismo contador de calls y 404 para otra cuenta. Suite final 69/69, typecheck/lint/Next/Vinext PASS. La ronda real sobre plantas confirmó que la candidata guardada podía continuar a Biblioteca; la revisión humana de su omisión de Crea sigue pendiente y no se atribuye aprobación semántica al recovery.
 
 **Prevención.** Consultar estado persistido antes de interpretar un error de transporte como falta de resultado. Separar requests de la sesión nueva de métricas heredadas y conservar permisos en recuperación; no repetir una generación únicamente por una respuesta fallida. Detalle y QA integral en docs/qa/annual-year-integral-qa-2026-10-03.md.
+
+## 2026-10-04 — La candidata omitía competencias elegidas por la docente
+
+**Síntoma y causa raíz.** La unidad real de plantas conservó Indaga/Lee, pero omitió Crea solicitado en QA. El filtro de privacidad ocultaba Indaga y Crea como nombres propios; la revisión validaba currículo sin exigir los IDs elegidos.
+
+**Solución validada.** Vocabulario confiable del currículo efectivo en conversación/preparación/cambios; nombres personales y contactos permanecen protegidos. Selección docente explícita de hasta cinco competencias, obligatorias en generación/revisión/reparación de una candidata. El servidor exige oportunidad real, bloquea aprobación incompleta (incluidas candidatas antiguas) y repara solo esa fila. Integración comprueba cero mutaciones del año ante omisión/fallo, revisión cached y permisos; 76/76 focales PASS. La prueba real y los deployments se acreditan separadamente en el recibo posterior al commit, no mediante mocks.
+
+**Prevención.** Comparar intención literal/selección curricular con oportunidades reales antes de aprobar; no confundir revisión formal con cumplimiento de una preferencia. No permitir que aprobar cambie IDs para saltarse el control. Detalles y rollback en docs/qa/annual-proposal-competency-intent-2026-10-04.md.

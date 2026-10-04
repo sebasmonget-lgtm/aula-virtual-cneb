@@ -101,6 +101,13 @@ test("initial journey: atomic decisions, private photos/invitations and bounded 
   await t.test("no ideas / one / several ideas reach ready, refresh costs zero, CAS rejects repeated turn",async()=>{
    for(const text of ["No tengo una idea todavía","Proyecto con agua","Agua y una actividad con las familias"]){await db.query(`update ai_pending_generations set expires_at=now() where workflow='annual_journey_conversation'`);const before=calls,start=await conversation("POST");assert.equal(start.status,"needs_clarification");assert.equal((await conversation("GET")).id,start.id);assert.equal((await conversation("POST")).id,start.id);assert.equal(calls,before+1);const end=await conversation("POST",{id:start.id,expectedRevision:start.revision,text});assert.equal(end.status,"ready");assert.equal(end.teacherIdeas,text);assert.equal(end.chips.length,0);assert.equal(calls,before+2);await assert.rejects(conversation("POST",{id:start.id,expectedRevision:start.revision,text}));}
   });
+  await t.test("la conversación conserva Indaga y Crea y oculta nombres privados",async()=>{
+   await db.query(`update ai_pending_generations set expires_at=now() where workflow='annual_journey_conversation'`);
+   const c=await conversation("POST");
+   await conversation("POST",{id:c.id,expectedRevision:c.revision,text:"Quiero priorizar Indaga y Crea. Camila y Aurelio participarán."});
+   assert.match(lastBundle.teacher_decisions[0],/Indaga y Crea/);
+   assert.ok(!lastBundle.teacher_decisions[0].includes("Camila"));assert.ok(!lastBundle.teacher_decisions[0].includes("Aurelio"));
+  });
   await t.test("one material clarification, provider failure recovery, literal preferences never become observations",async()=>{
    await db.query(`update ai_pending_generations set expires_at=now() where workflow='annual_journey_conversation'`);let c=await conversation("POST");failNext=true;await assert.rejects(conversation("POST",{id:c.id,expectedRevision:c.revision,text:"Quiero comunidad"}));assert.equal((await conversation("GET")).revision,c.revision);
    c=await conversation("POST",{id:c.id,expectedRevision:c.revision,text:"Quiero comunidad"});assert.equal(c.status,"needs_clarification");c=await conversation("POST",{id:c.id,expectedRevision:c.revision,text:"Invitar a las familias a construir juguetes"});assert.equal(c.status,"ready");const before=calls;c=await conversation("POST",{id:c.id,expectedRevision:c.revision,text:"Solo con materiales reciclados"});assert.equal(calls,before);assert.equal(c.status,"ready");assert.equal(snapshot.facts.length,1);assert.equal(lastBundle.AnnualPlanningBrief.sources[0].kind,"family_report");
