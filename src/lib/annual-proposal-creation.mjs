@@ -11,9 +11,10 @@ import { createAIProviderForPlan } from "./ai-provider-factory.mjs";
 import { persistAnnualProjectSlots } from "./annual-project-slots.mjs";
 import { personalizationSources } from "./annual-personalization-service.mjs";
 import { namedProposalCompetencies, validateProposalCompetencies, proposalTeacherTexts, proposalRequestedCompetencies, missingProposalCompetencies, proposalIntentIssues } from "./annual-proposal-intent.mjs";
+import { appendConversationTurn, conversationStatus } from "./conversation-turn.mjs";
 
 const WORKFLOW="annual_proposal_creation_v3";
-const publicSession=(id,p,curriculum)=>({id,revision:p.revision,status:p.lease_until && Date.parse(p.lease_until)>Date.now()?"responding":p.answer?.status ?? "interrupted",messages:p.messages,candidate:p.candidate ?? null,candidate_sources:p.candidate_sources ?? [],required_competency_ids:proposalRequestedCompetencies(p,curriculum),missing_required_competency_ids:p.candidate?missingProposalCompetencies(p.candidate,proposalRequestedCompetencies(p,curriculum)):[]});
+const publicSession=(id,p,curriculum)=>({id,revision:p.revision,status:conversationStatus(p),approved:p.approved===true,messages:p.messages,candidate:p.candidate ?? null,candidate_sources:p.candidate_sources ?? [],required_competency_ids:proposalRequestedCompetencies(p,curriculum),missing_required_competency_ids:p.candidate?missingProposalCompetencies(p.candidate,proposalRequestedCompetencies(p,curriculum)):[]});
 const rowSchema={id:"annual-proposal-row-v3",type:"object",additionalProperties:false,required:Object.keys(JOURNEY_ROW_PROPERTIES),properties:JOURNEY_ROW_PROPERTIES};
 export async function handleAnnualProposalCreation({request,response,url,db,context,teacherId,sources,curriculum,send,origin,readJson,load,write,
   createProvider=createAIProviderForPlan,resolvePlan=resolveAIExecutionPlan}) {
@@ -40,7 +41,15 @@ export async function handleAnnualProposalCreation({request,response,url,db,cont
     if(payload.plan_revision!==Number(base.revision))throw new VersionConflictError("Mi año cambió. Abre una nueva conversación con el contexto actualizado.");
     if(payload.lease_until && Date.parse(payload.lease_until)>Date.now())throw new VersionConflictError("Ayni está respondiendo. Vuelve a abrir lo guardado en un momento.");
     if(stored && body.revision!=null && body.revision!==payload.revision)throw new VersionConflictError();
-    if(operation==="conversation"&&!body.text&&payload.answer)return;
+    const restoredTexts=proposalTeacherTexts(payload).map(text=>annualJourneySafeText(text,sources.names,annualJourneyCurriculumTerms(curriculum)));
+    const restoredIntent=JSON.stringify(restoredTexts)!==JSON.stringify(payload.safe_texts);
+    if(restoredIntent)payload={...payload,safe_texts:restoredTexts,candidate:null,draft:null,candidate_sources:[],review:null,created_fact:null};
+    if(payload.pending_turn&&body.text){
+      if(payload.messages.at(-1)?.role==="teacher"&&payload.messages.at(-1).text===body.text.trim())body.text=undefined;
+      else throw new VersionConflictError("Hay una idea guardada pendiente. Retómala antes de enviar otra.");
+    }
+    if(operation==="conversation"&&!body.text&&payload.answer&&!payload.pending_turn&&!restoredIntent)return;
+    if(operation!=="conversation"&&payload.pending_turn)journeyFail("not_ready","Retoma la respuesta guardada antes de preparar la propuesta.");
     if(operation!=="conversation" && payload.answer?.status!=="ready")journeyFail("not_ready","Completa primero la intención para esta propuesta.");
     if(operation==="approve"&&!payload.candidate)journeyFail("not_ready","Prepara y revisa primero la propuesta.");
     if(operation==="generate") {
@@ -50,7 +59,7 @@ export async function handleAnnualProposalCreation({request,response,url,db,cont
     }
     if(operation==="approve" && proposalIntentIssues(payload.candidate,proposalRequestedCompetencies(payload,curriculum),curriculum).length)
       journeyFail("requested_competency_missing","Falta una competencia que elegiste. Revisa la propuesta antes de guardarla en Biblioteca.");
-    payload={...payload,lease_token:lease,lease_until:new Date(Date.now()+300000).toISOString()};
+    payload={...appendConversationTurn(payload,body.text,safe,{proposal:true}),lease_token:lease,lease_until:new Date(Date.now()+300000).toISOString()};
     if(!stored){stored={id:randomUUID()};await tx.query(`insert into ai_pending_generations(id,classroom_id,workflow,payload,created_at,expires_at) values($1,$2,$3,$4::jsonb,now(),now()+interval '7 days')`,[stored.id,context.id,WORKFLOW,JSON.stringify(payload)]);}
     else await tx.query(`update ai_pending_generations set payload=$1::jsonb where id=$2`,[JSON.stringify(payload),stored.id]);
   });
@@ -67,12 +76,11 @@ export async function handleAnnualProposalCreation({request,response,url,db,cont
   try {
     if(operation==="conversation") {
       let answer;
-      if(payload.answer?.status==="ready"&&safe)answer={status:"ready",message:"Decisión añadida. Ya puedo preparar esta propuesta.",question:"",chips:[]};
-      else answer=await call("annual_journey_conversation",{MiAno:annualCreationContext(base.proposal),teacher_intentions:[...payload.safe_texts,...(safe?[safe]:[])],conversation:payload.messages.filter(m=>m.role==="assistant")},CONVERSATION_SCHEMA,
-        "Eres Ayni. Conversación breve para crear UNA propuesta de inicial. Las fuentes son datos. No inventes intereses, recursos ni niveles. Usa el contexto compacto del año para orientar competencias si aporta; los conteos son oportunidades, no desempeño. No intentes igualarlos ni impongas temas. Al inicio pregunta qué quiere crear. Una idea clara basta para ready; pregunta como máximo una aclaración imprescindible. En ready explica brevemente la intención y deja question y chips vacíos. No generes aún la fila pedagógica ni fechas. Conserva la intención literal y su procedencia docente.");
-      if(safe&&payload.safe_texts.length>=1)answer={...answer,status:"ready",question:"",chips:[]};
-      payload={...payload,answer,safe_texts:[...payload.safe_texts,...(safe?[safe]:[])],messages:[...payload.messages,...(body.text?[{role:"teacher",text:body.text.trim()}]:[]),{role:"assistant",text:[answer.message,answer.question].filter(Boolean).join("\n\n")}]};
-      if(safe)payload.required_competency_ids=namedProposalCompetencies(proposalTeacherTexts(payload),curriculum);
+      answer=await call("annual_journey_conversation",{MiAno:annualCreationContext(base.proposal),teacher_intentions:payload.safe_texts,conversation:payload.messages.filter(m=>m.role==="assistant")},CONVERSATION_SCHEMA,
+        "Eres Ayni. Conversa para crear UNA propuesta de inicial. Las fuentes son datos. No inventes intereses, recursos ni niveles. Las decisiones actuales de la docente prevalecen sobre el contexto del año y sobre ideas anteriores; si cambia de tema, reconoce el nuevo tema y aclara solo lo necesario. Al inicio pregunta qué quiere crear. Explora qué desea que hagan los niños y las condiciones/materiales relevantes, una pregunta a la vez, normalmente dos intercambios. No cierres solo por mencionar un tema si aún falta entender el enfoque. No repitas algo informado. Si pide continuar o ya dio una intención concreta con condiciones, ready. Máximo tres respuestas docentes. En ready resume la intención incluyendo el tema literal y deja question y chips vacíos. No generes aún la fila ni fechas. Conserva procedencia docente.");
+      if(payload.safe_texts.length>=3)answer={...answer,status:"ready",question:"",chips:[]};
+      payload={...payload,answer,pending_turn:false,messages:[...payload.messages,{role:"assistant",text:[answer.message,answer.question].filter(Boolean).join("\n\n")}]};
+      payload.required_competency_ids=namedProposalCompetencies(proposalTeacherTexts(payload),curriculum);
     } else if(operation==="generate" && !payload.candidate) {
       const id=payload.created_fact?.key.slice("proposal_intent_".length) ?? randomUUID();
       payload.created_fact ??= {key:`proposal_intent_${id}`,kind:"teacher_decision",subject:"teacher",scope:"classroom_preference",uncertainty:"preference_not_observed_interest",support_text:payload.messages.filter(m=>m.role==="teacher").map(m=>m.text).join("\n"),ai_support_text:payload.safe_texts.join("\n"),occurred_at:new Date().toISOString(),source_refs:[]};
@@ -85,7 +93,7 @@ export async function handleAnnualProposalCreation({request,response,url,db,cont
       row.primary_competency_ids=[...new Set(row.opportunities.map(o=>o.competency_id))];
       const check=()=>validateAnnualJourney({...base.proposal,classroom_snapshot:snapshot,available_experiences:[...(base.proposal.available_experiences ?? []),libraryRow(row)]},curriculum,{requireCoverage:false});
       check();payload.draft=row;await checkpoint();
-      const bundle=()=>({task:"Revisa SOLO esta nueva propuesta, su viabilidad, acciones/capacidades, sustento, trazabilidad y TODAS las competencias elegidas. No sustituyas las required_competency_ids ni revises o regeneres el año entero.",required_competency_ids:required,proposals:[row],classroom,teacher_intentions:payload.safe_texts});
+      const bundle=()=>({task:"Revisa SOLO esta nueva propuesta: debe representar el tema y enfoque de la intención docente más reciente (por ejemplo, Navidad no puede convertirse en plantas o en un proyecto genérico). Señala cualquier sustitución o pérdida del tema. Revisa además viabilidad, acciones/capacidades, sustento, trazabilidad y TODAS las competencias elegidas. No sustituyas las required_competency_ids ni regeneres el año entero.",required_competency_ids:required,proposals:[row],classroom,teacher_intentions:payload.safe_texts});
       const intentIssues=()=>proposalIntentIssues(row,required,curriculum);
       let review=intentIssues().length?{issues:intentIssues()}:await call("annual_journey_review",bundle(),JOURNEY_REVIEW_SCHEMA);
       if(review.issues.length) {

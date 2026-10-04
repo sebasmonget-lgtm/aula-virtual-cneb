@@ -11,7 +11,7 @@ export function namedProposalCompetencies(texts, curriculum) {
   for (const text of texts ?? []) for (const sentence of normalized(text).split(/[.;\n]/u)) {
     if (!/\b(?:competencias?|prioriz\w*|trabaj\w*|fortalec\w*|desarroll\w*|enfoc\w*)\b/u.test(sentence)) continue;
     for (const card of curriculum) {
-      const names = [card.id, card.name, competencyLabels[card.id]].filter(Boolean);
+      const names = [card.id, card.name, competencyLabels[card.id],...(card.id==="COM_ARTE"?["Crea"]:[])].filter(Boolean);
       for (const name of names) {
         const match = new RegExp(`(?:^|[^a-z0-9_])(${escaped(normalized(name))})(?=$|[^a-z0-9_])`, "u").exec(sentence);
         if (!match) continue;

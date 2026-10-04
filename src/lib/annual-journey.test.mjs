@@ -218,7 +218,7 @@ test("vertical en PostgreSQL: preparar → cambios → confirmar → Word idént
           if(request.output_schema.id==="annual-proposal-row-v3") {calls.push({routing,request});const fixture=generationFixture(request.ai_context_bundle.curriculum.competency_cards),row=fixture.proposals[0],required=request.ai_context_bundle.required_competency_ids??[];
             const ids=failRequired||request.ai_context_bundle.task.startsWith("Crea")?required.filter(id=>id!=="COM_ARTE"):required;
             const opportunities=ids.length?ids.map(id=>{const {moment,...opportunity}=fixture.everyday_opportunities.find(o=>o.competency_id===id);void moment;return opportunity;}):row.opportunities;
-            return {output:{...row,opportunities,title:required.length?"Exploramos semillas con arte":"Exploramos nuestro mercado",source_fact_keys:[request.ai_context_bundle.classroom.facts.findLast(f=>f.key.startsWith("proposal_intent_")).key]}};}
+            return {output:{...row,opportunities,title:request.ai_context_bundle.teacher_intentions.at(-1)?.includes("Navidad")?"Navidad con las familias":request.ai_context_bundle.teacher_intentions.at(-1)?.includes("otra alternativa")?"Otra idea para explorar el mercado":required.length?"Exploramos semillas con arte":"Exploramos nuestro mercado",source_fact_keys:[request.ai_context_bundle.classroom.facts.findLast(f=>f.key.startsWith("proposal_intent_")).key]}};}
           if(request.workflow==="annual_journey_conversation") {calls.push({routing,request});const ready=request.ai_context_bundle.teacher_intentions.length>0;return {output:{status:ready?"ready":"needs_clarification",message:ready?"Prepararemos una propuesta sobre el mercado.":"¿Qué propuesta quieres crear?",question:"",chips:[]}};}
           return provider(calls, request.ai_context_bundle.curriculum.competency_cards)(routing).generate(request);
         } }) });
@@ -300,6 +300,17 @@ test("vertical en PostgreSQL: preparar → cambios → confirmar → Word idént
     assert.equal(calls.length,beforeApproval);assert.equal(current.proposal.available_experiences.length,2);assert.deepEqual(current.proposal.proposed_experiences,beforeNamed.proposed_experiences);assert.deepEqual(current.proposal.resolved_calendar,beforeNamed.resolved_calendar);
     assert.deepEqual(new Set(current.proposal.change_history.at(-1).review.required_competency_ids),new Set(["CYT_INDAGA","COM_ARTE"]));
     for(const item of calls.filter(c=>c.request.output_schema.id==="annual-proposal-row-v3" && c.request.ai_context_bundle.required_competency_ids?.length))assert.match(item.request.ai_context_bundle.teacher_intentions.join("\n"),/Indaga y Crea/);
+    const reopened=await route(`${current.id}/new-proposal/conversation`,{expectedRevision:current.revision});
+    const oldIdea=await route(`${current.id}/new-proposal/conversation`,{expectedRevision:current.revision,id:reopened.data.id,revision:reopened.data.revision,text:"Quiero otra alternativa para un proyecto diferente sobre el mercado"});
+    const oldCandidate=await route(`${current.id}/new-proposal/generate`,{expectedRevision:current.revision,id:oldIdea.data.id,revision:oldIdea.data.revision});assert.equal(oldCandidate.status,200,JSON.stringify(oldCandidate.data));assert.ok(oldCandidate.data.candidate);
+    failing=true;
+    const disconnected=await route(`${current.id}/new-proposal/conversation`,{expectedRevision:current.revision,id:oldIdea.data.id,revision:oldCandidate.data.revision,text:"Ahora quiero un proyecto de Navidad con las familias"});assert.equal(disconnected.status,503);
+    const savedIdea=await route(`${current.id}/new-proposal/conversation?id=${oldIdea.data.id}`,{},teacherId,"GET");assert.equal(savedIdea.data.candidate,null);assert.equal(savedIdea.data.status,"interrupted");assert.match(savedIdea.data.messages.at(-1).text,/Navidad/);
+    const storedIdea=(await db.query("select payload from ai_pending_generations where id=$1",[oldIdea.data.id])).rows[0].payload;assert.equal(storedIdea.draft,null);assert.equal(storedIdea.created_fact,null);assert.match(storedIdea.safe_texts.at(-1),/Navidad/);
+    failing=false;
+    const resumed=await route(`${current.id}/new-proposal/conversation`,{expectedRevision:current.revision,id:oldIdea.data.id,revision:savedIdea.data.revision});assert.equal(resumed.status,200);assert.equal(resumed.data.messages.filter(m=>m.role==="teacher"&&m.text.includes("Navidad")).length,1);
+    const christmas=await route(`${current.id}/new-proposal/generate`,{expectedRevision:current.revision,id:oldIdea.data.id,revision:resumed.data.revision});assert.equal(christmas.status,200,JSON.stringify(christmas.data));assert.match(christmas.data.candidate.title,/Navidad/);assert.notEqual(christmas.data.candidate.proposal_id,oldCandidate.data.candidate.proposal_id);
+    assert.deepEqual((await db.query("select proposal from annual_plans where id=$1",[current.id])).rows[0].proposal,current.proposal,"Changing a library conversation does not rewrite the year");
     const confirm = await route(`${current.id}/confirm`, { expectedRevision: current.revision }); assert.equal(confirm.status, 200, JSON.stringify(confirm.data));
     const beforeCalls = calls.length, doc = await loadSavedDocument(db, teacherId, "annual_plan", current.id);
     assert.deepEqual(doc.content, current.proposal);

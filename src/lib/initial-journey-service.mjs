@@ -5,6 +5,7 @@ import { annualJourneySafeText, annualJourneyCurriculumTerms } from "./annual-jo
 import { resolveAIExecutionPlan } from "./ai-execution-router-v4.mjs";
 import { createAIProviderForPlan } from "./ai-provider-factory.mjs";
 import { buildProviderRequest } from "./ai-generation-v4.mjs";
+import { appendConversationTurn, conversationStatus } from "./conversation-turn.mjs";
 
 const WORKFLOW="annual_journey_conversation";
 export const CONVERSATION_SCHEMA={id:"annual-planning-conversation-v1",type:"object",additionalProperties:false,required:["status","message","question","chips"],properties:{status:{type:"string",enum:["ready","needs_clarification","insufficient_core_information"]},message:{type:"string"},question:{type:"string"},chips:{type:"array",items:{type:"string"},maxItems:5}}};
@@ -12,7 +13,7 @@ export const PLANNING_CONVERSATION_RULES=`Eres Ayni. Conversación breve antes d
 Lee AnnualPlanningBrief completo: no preguntes algo ya conocido. No diagnostiques, no inventes intereses, apoyos, recursos ni niveles.
 Conserva sujeto, fuente, negación e incertidumbre. Familia no equivale a observación. Ausencia de evidencia no es dificultad.
 Haz solo la pregunta docente que puede mejorar materialmente el plan: proyectos previstos, restricciones o decisiones concretas.
-Una respuesta sin ideas también basta: ready. Una o varias ideas claras: ready. Solo aclara ambigüedad material, máximo una aclaración; después ready con lo explícito.
+Explora las decisiones de la docente: prioridades o temas previstos, participación de familias y recursos/restricciones relevantes. Haz una pregunta a la vez, normalmente dos o tres intercambios útiles. No cierres solo porque mencionó un tema si falta entender qué quiere lograr o qué condiciones necesita. No repitas información conocida. Si declara que no tiene ideas o desea continuar, ready; si su respuesta ya cubre decisiones y condiciones, también ready. Máximo tres respuestas docentes; después ready con lo explícito.
 No preguntes por hobbies, edad, lenguas o calendario ya informados. No exijas observaciones para continuar.
 insufficient_core_information solo si faltan edad/aula/currículo (no si hay competencias sin registros).
 Al inicio, si no hay decisiones previas, saluda brevemente y pregunta por proyectos/experiencias previstas. Chips opcionales neutrales, nunca intereses inventados.
@@ -27,7 +28,7 @@ export function buildAnnualPlanningBrief({context,snapshot,curriculum,calendar})
     unknowns:snapshot.competency_information.filter(c=>!c.recorded_performances).map(c=>c.competency_id),
     source_policy:"individual evidence remains individual; preferences are teacher decisions, missing records are unknown"};
 }
-const publicConversation=(id,p)=>({id,revision:p.revision,status:p.lease_until&&Date.parse(p.lease_until)>Date.now()?"responding":p.answer?.status??"interrupted",messages:p.messages,
+const publicConversation=(id,p)=>({id,revision:p.revision,status:conversationStatus(p),messages:p.messages,
   question:p.answer?.question??"",chips:p.answer?.chips??[],teacherIdeas:p.teacher_texts.join("\n"),calls:p.calls,attempts:p.attempts??p.calls});
 export async function handlePlanningConversation({request,response,url,db,context,teacherId,snapshot,curriculum,calendar,sources,send,origin,readJson,
   createProvider=createAIProviderForPlan,resolvePlan=resolveAIExecutionPlan}) {
@@ -49,11 +50,15 @@ export async function handlePlanningConversation({request,response,url,db,contex
     if(request.method==="GET")return;
     payload=row?.payload??{teacher_id:teacherId,source_fingerprint:snapshot.source_fingerprint,revision:0,messages:[],teacher_texts:[],safe_texts:[],calls:0};
     if(payload.source_fingerprint!==snapshot.source_fingerprint)throw new VersionConflictError("Hay nuevos registros. Vuelve a abrir la conversación para actualizar el contexto.");
-    if(row&&!body.text&&payload.answer)return;
+    if(payload.pending_turn&&body.text){
+      if(payload.messages.at(-1)?.role==="teacher"&&payload.messages.at(-1).text===body.text.trim())body.text=undefined;
+      else throw new VersionConflictError("Hay una respuesta guardada pendiente. Retómala antes de enviar otra.");
+    }
+    if(row&&!body.text&&payload.answer&&!payload.pending_turn)return;
     if(body.text&&[...payload.teacher_texts,body.text.trim()].join("\n").length>2000)journeyFail("invalid","Las decisiones pueden reunir hasta 2000 caracteres. Acorta esta respuesta.");
     if(body.text&&Number(body.expectedRevision)!==payload.revision)throw new VersionConflictError("La respuesta ya se guardó. Abre la conversación para continuar.");
     if(payload.lease_until&&Date.parse(payload.lease_until)>Date.now())throw new VersionConflictError("Ayni está respondiendo. Espera un momento y vuelve a abrir la conversación.");
-    payload={...payload,attempts:(payload.attempts??payload.calls)+(payload.answer?.status==="ready"&&body.text?0:1),lease_token:lease,lease_until:new Date(Date.now()+65000).toISOString()};
+    payload={...appendConversationTurn(payload,body.text,safe),attempts:(payload.attempts??payload.calls)+(payload.answer?.status==="ready"&&body.text?0:1),lease_token:lease,lease_until:new Date(Date.now()+65000).toISOString()};
     if(!row){row={id:randomUUID()};await tx.query(`insert into ai_pending_generations(id,classroom_id,workflow,payload,created_at,expires_at) values($1,$2,$3,$4::jsonb,now(),now()+interval '7 days')`,[row.id,context.id,WORKFLOW,JSON.stringify(payload)]);}
     else await tx.query(`update ai_pending_generations set payload=$1::jsonb where id=$2`,[JSON.stringify(payload),row.id]);
   });
@@ -65,17 +70,15 @@ export async function handlePlanningConversation({request,response,url,db,contex
     called=true;
     const plan=resolvePlan({workflow:WORKFLOW,task:"generation"});
     const result=await createProvider(plan,{timeoutMs:55000}).generate(buildProviderRequest(WORKFLOW,{AnnualPlanningBrief:buildAnnualPlanningBrief({context,snapshot,curriculum,calendar}),
-      conversation:payload.messages.filter(m=>m.role==="assistant").map(m=>m.text),teacher_decisions:[...payload.safe_texts,...(safe?[safe]:[])]},plan,CONVERSATION_SCHEMA,PLANNING_CONVERSATION_RULES));
+      conversation:payload.messages.filter(m=>m.role==="assistant").map(m=>m.text),teacher_decisions:payload.safe_texts},plan,CONVERSATION_SCHEMA,PLANNING_CONVERSATION_RULES));
     answer=result.output;
     if(!["ready","needs_clarification","insufficient_core_information"].includes(answer?.status)||typeof answer.message!=="string"||typeof answer.question!=="string"||!Array.isArray(answer.chips)||answer.chips.some(c=>typeof c!=="string")||answer.chips.length>5)journeyFail("invalid","No pude preparar una respuesta clara. Tu conversación se conserva.");
     if(answer.status==="ready")answer={...answer,question:"",chips:[]};
-    // Bounded conversation: no third request for another open question. Retain literal decisions only.
-    if(body.text&&payload.safe_texts.length>=1)answer={status:"ready",message:"Ya tengo suficiente información para preparar tu año.",question:"",chips:[]};
+    if(payload.safe_texts.length>=3)answer={status:"ready",message:"Ya tengo suficiente información para preparar tu año.",question:"",chips:[]};
     }
   }catch(error){await db.query(`update ai_pending_generations set payload=jsonb_set(payload,'{lease_until}','null'::jsonb) where id=$1 and payload->>'lease_token'=$2`,[row.id,lease]);throw error;}
-  const next={...payload,answer,revision:payload.revision+1,calls:payload.calls+(called?1:0),lease_until:null,
-    teacher_texts:[...payload.teacher_texts,...(body.text?[body.text.trim()]:[])],safe_texts:[...payload.safe_texts,...(safe?[safe]:[])],
-    messages:[...payload.messages,...(body.text?[{role:"teacher",text:body.text.trim()}]:[]),{role:"assistant",text:[answer.message,answer.question].filter(Boolean).join("\n\n")}]};
+  const next={...payload,answer,revision:payload.revision+1,calls:payload.calls+(called?1:0),lease_until:null,pending_turn:false,
+    messages:[...payload.messages,{role:"assistant",text:[answer.message,answer.question].filter(Boolean).join("\n\n")}]};
   const updated=await db.query(`update ai_pending_generations set payload=$1::jsonb where id=$2 and classroom_id=$3 and payload->>'lease_token'=$4 returning id`,[JSON.stringify(next),row.id,context.id,lease]);
   if(!updated.rows.length)throw new VersionConflictError();
   console.info("[annual_conversation]",JSON.stringify({calls:next.calls,attempts:next.attempts,status:answer.status}));

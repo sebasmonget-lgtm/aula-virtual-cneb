@@ -52,6 +52,8 @@ export function GuidedDiagnostic({ dashboard, onPlan, onStudents, initialStep = 
   const [matrixCoverage,setMatrixCoverage]=useState<{counts:Record<string,number>;unclassified:number;observed_students:number;records?:{student_id:string;text:string;date:string;competency_ids:string[]}[]}|null>(null);
   const [matrixError,setMatrixError]=useState("");
   const [freeStudentId,setFreeStudentId]=useState("");
+  const [freeCompetencyId,setFreeCompetencyId]=useState("");
+  async function refreshObservationProgress(){await refreshPendingSpontaneous();try{setData(await loadDiagnostics());setError("");}catch{setFeedback("Observación guardada. El resumen se actualizará al abrir la matriz.");}}
   const { statuses: interviewStatuses, error: interviewStatusError } = useFamilyInterviewStatusMap(`${interviewStudentId ?? "list"}:${data?.students.map((item) => item.id).join(",") ?? ""}`, Boolean(data?.students.length));
 
   useEffect(() => { loadDiagnostics().then(setData).catch((cause) => setError(cause instanceof Error ? cause.message : "No se pudo cargar el diagnóstico.")); }, []);
@@ -159,14 +161,14 @@ export function GuidedDiagnostic({ dashboard, onPlan, onStudents, initialStep = 
 
     {step === 2 && matrixOpen && matrixCoverage && <ObservationCoverageMatrix data={data} counts={matrixCoverage.counts} unclassified={matrixCoverage.unclassified} competencies={matrixCompetencies} records={matrixCoverage.records}
       onBack={()=>setMatrixOpen(false)} onContinue={()=>onPlan?.()}
-      onRecord={(id)=>{setMatrixOpen(false);setExperienceId(null);setFreeStudentId(id);setObservationMode("spontaneous");}}
+      onRecord={(id,competencyId)=>{setMatrixOpen(false);setExperienceId(null);setFreeStudentId(id);setFreeCompetencyId(competencyId);setObservationMode("spontaneous");}}
       onGuided={(id,experience)=>{setMatrixOpen(false);setObservationMode("guided");selectExperience(experience);selectStudent(id);}} />}
     {step === 2 && matrixOpen && !matrixCoverage && <section className="diagnostic-panel space-y-4 p-5">{matrixError?<p role="alert">{matrixError}</p>:<LoadingState label="Consultando las observaciones de tu aula…" />}<Button variant="outline" onClick={()=>setMatrixOpen(false)}>Volver a observar</Button><Button onClick={()=>onPlan?.()}>Continuar de todas formas →</Button></section>}
-    {step === 2 && !matrixOpen && !experience && <div className="space-y-2">
-      <div role="group" aria-label="Forma de observar" className="grid gap-2 rounded-2xl border border-[#c9dce9] bg-white p-2 sm:grid-cols-2">{([["spontaneous","Registrar algo que observé"],["guided","Probar una experiencia para conocer mejor"]] as const).map(([mode,label])=><button key={mode} type="button" aria-pressed={observationMode===mode} onClick={()=>setObservationMode(mode)} className={`min-h-14 rounded-xl px-4 py-3 text-sm font-bold sm:text-base ${observationMode===mode?"bg-[#e4f3f7] text-[#075d70]":"text-[#526b87] hover:bg-[#f5f8fb]"}`}>{label}</button>)}</div>
+    {step === 2 && !matrixOpen && !experience && !freeCompetencyId && <div className="space-y-2">
+      <div role="group" aria-label="Forma de observar" className="grid gap-2 rounded-2xl border border-[#c9dce9] bg-white p-2 sm:grid-cols-2">{([["spontaneous","Registrar algo que observé"],["guided","Probar una experiencia para conocer mejor"]] as const).map(([mode,label])=><button key={mode} type="button" aria-pressed={observationMode===mode} onClick={()=>{setFreeCompetencyId("");setObservationMode(mode);}} className={`min-h-14 rounded-xl px-4 py-3 text-sm font-bold sm:text-base ${observationMode===mode?"bg-[#e4f3f7] text-[#075d70]":"text-[#526b87] hover:bg-[#f5f8fb]"}`}>{label}</button>)}</div>
       <p className="px-1 text-sm text-[#526b87]">{observationMode === "guided" ? "Elige un juego sugerido y anota lo que observaste." : "Anota algo que ocurrió durante el juego o la jornada."}</p>
     </div>}
-    {step === 2 && !matrixOpen && !experience && observationMode === "spontaneous" && <SpontaneousDiagnostic key={freeStudentId} initialStudentId={freeStudentId} students={data.students} onDecisionSaved={() => void refreshPendingSpontaneous()} onSaved={() => { void refreshPendingSpontaneous(); void loadDiagnostics().then(setData).catch(() => setError("La observación se guardó, pero no se pudo actualizar el avance. Recarga la pantalla.")); }} />}
+    {step === 2 && !matrixOpen && !experience && observationMode === "spontaneous" && <SpontaneousDiagnostic key={`${freeStudentId}:${freeCompetencyId}`} initialStudentId={freeStudentId} initialCompetencyId={freeCompetencyId} onBack={()=>{setFreeCompetencyId("");setMatrixOpen(true);}} students={data.students} onDecisionSaved={() => void refreshPendingSpontaneous()} onSaved={() => void refreshObservationProgress()} />}
     {step === 2 && !matrixOpen && !experience && observationMode === "guided" && <section className="diagnostic-panel space-y-4 p-5 md:p-7">
       <div><h2 className="text-xl font-bold">¿Qué experiencia realizaste?</h2><p className="mt-1 text-sm text-[#526b87]">Son ideas para observar en el juego y la jornada; puedes volver a cualquiera otro día.</p></div>
       {data.experiences.some((item) => item.catalog_status === "development_fixture") && <p className="rounded-xl bg-[#fff5df] p-3 text-sm">Guías de desarrollo: todavía no son la batería pedagógica definitiva de Ayni.</p>}
@@ -217,7 +219,7 @@ export function GuidedDiagnostic({ dashboard, onPlan, onStudents, initialStep = 
       {onPlan && <Button className="min-h-12" onClick={onPlan}>Revisar matriz y continuar <ArrowRight /></Button>}
       <details open={legacyReviewOpen} onToggle={(event) => setLegacyReviewOpen(event.currentTarget.open)} className="rounded-xl border p-3">
         <summary className="cursor-pointer text-sm font-semibold">Ver revisiones diagnósticas anteriores y registros individuales</summary>
-        {legacyReviewOpen && <DiagnosticReview onObserve={() => { setStep(2); setStudentId(null); }} onPlan={onPlan} onObservationSaved={() => { void loadDiagnostics().then(setData).catch(() => setError("La observación se guardó, pero no se pudo actualizar el avance. Recarga la pantalla.")); }} onGroupConfirmed={() => setData((current) => current ? { ...current, step_progress: { ...current.step_progress, group_review_confirmed: true } } : current)} />}
+        {legacyReviewOpen && <DiagnosticReview onObserve={() => { setStep(2); setStudentId(null); }} onPlan={onPlan} onObservationSaved={() => void refreshObservationProgress()} onGroupConfirmed={() => setData((current) => current ? { ...current, step_progress: { ...current.step_progress, group_review_confirmed: true } } : current)} />}
       </details></section>}
   </div>;
 }

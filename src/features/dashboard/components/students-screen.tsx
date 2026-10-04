@@ -1,12 +1,12 @@
 "use client";
-import { StudentPhoto, StudentPhotoEditor } from "./student-photo";
+import { StudentPhoto, StudentPhotoEditor, EnrollmentPhoto, uploadStudentPhoto } from "./student-photo";
 
 import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, Plus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { importPilotStudents, loadStudentPedagogicalProfile, type LocalDashboard, type LocalStudent, type StudentPedagogicalProfile } from "@/src/lib/local-database";
+import { importPilotStudents, loadStudentPedagogicalProfile, type LocalDashboard, type LocalStudent, type PrivateMediaUpload, type StudentPedagogicalProfile } from "@/src/lib/local-database";
 import { recommendedStudentGuidance, studentCompetencyGuidance } from "@/src/lib/student-guidance.mjs";
 import { AsyncButton, EmptyState, LoadingState, NextStepCard, ScreenSkeleton, WorkflowFeedback, WorkflowTabs, WorkflowTabPanel } from "./workflow-ui";
 import { FamilyInformationPanel, FamilyInterviewStatusBadge, useFamilyInterviewStatusMap } from "./family-interview-v4";
@@ -33,6 +33,9 @@ export function StudentsScreen({ students, onImported, onEvaluate, onPlan, onDia
   const [lastName, setLastName] = useState("");
   const [preferredName, setPreferredName] = useState("");
   const [birthDate, setBirthDate] = useState("");
+  const [photo,setPhoto]=useState<PrivateMediaUpload|null>(null);
+  const [photoBusy,setPhotoBusy]=useState(false);
+  const [photoRetry,setPhotoRetry]=useState<{id:string;media:PrivateMediaUpload}|null>(null);
   const [csv, setCsv] = useState("");
   const [importBusy, setImportBusy] = useState(false);
   const [importAction, setImportAction] = useState<"single" | "csv">("single");
@@ -54,12 +57,14 @@ export function StudentsScreen({ students, onImported, onEvaluate, onPlan, onDia
   };
 
   async function addStudents(useCsv: boolean) {
-    if (importBusy) return;
+    if (importBusy || photoBusy) return;
     setImportAction(useCsv ? "csv" : "single"); setImportBusy(true); setImportMessage("");
     try {
       const dashboard = await importPilotStudents(useCsv ? { csv } : { students: [{ firstName, lastName, preferredName, birthDate }] });
-      onImported(dashboard); setFirstName(""); setLastName(""); setPreferredName(""); setBirthDate(""); setCsv("");
+      setFirstName(""); setLastName(""); setPreferredName(""); setBirthDate(""); setCsv("");
       setImportMessage(useCsv ? "Lista de alumnos importada al aula." : "Alumno añadido al aula."); setImportTone("success");
+      if(!useCsv && photo){const added=dashboard.students.find(s=>!students.some(old=>old.id===s.id));if(added){setPhoto(null);try{await uploadStudentPhoto(added.id,photo);setPhotoRetry(null);}catch{setPhotoRetry({id:added.id,media:photo});setImportMessage("Alumno añadido. La foto aún no se guardó; puedes reintentar sin inscribirlo de nuevo.");setImportTone("error");}}}
+      onImported(dashboard);
     } catch (error) { setImportMessage(error instanceof Error ? error.message : "No se pudieron añadir los niños."); setImportTone("error"); }
     finally { setImportBusy(false); }
   }
@@ -93,7 +98,8 @@ export function StudentsScreen({ students, onImported, onEvaluate, onPlan, onDia
           <label htmlFor="student-preferred-name" className="block text-sm font-semibold text-[#244260]">Nombre preferido <span className="font-normal text-[#526b87]">(opcional)</span><Input id="student-preferred-name" className="mt-2" value={preferredName} onChange={(event) => setPreferredName(event.target.value)} autoComplete="off" /></label>
           <label htmlFor="student-birth-date" className="block text-sm font-semibold text-[#244260]">Fecha de nacimiento <span className="font-normal text-[#526b87]">(opcional)</span><Input id="student-birth-date" type="date" className="mt-2" max={new Date().toISOString().slice(0, 10)} value={birthDate} onChange={(event) => setBirthDate(event.target.value)} /></label>
         </div>
-        <AsyncButton type="submit" className="mt-4 min-h-11" busy={importBusy && importAction === "single"} busyLabel="Añadiendo niño…" disabled={importBusy || !firstName.trim() || !lastName.trim()}>Añadir niño</AsyncButton>
+        <EnrollmentPhoto media={photo} onChange={setPhoto} onBusy={setPhotoBusy} disabled={importBusy||photoBusy}/>
+        <AsyncButton type="submit" className="mt-4 min-h-11" busy={importBusy && importAction === "single"} busyLabel="Añadiendo niño…" disabled={importBusy || photoBusy || !firstName.trim() || !lastName.trim()}>Añadir niño</AsyncButton>
       </form>
       <details className="mt-4">
         <summary className="ml-auto w-fit rounded-lg border border-input bg-white px-3 py-2 text-xs font-semibold text-[#244260]">Importar lista CSV</summary>
@@ -106,6 +112,7 @@ export function StudentsScreen({ students, onImported, onEvaluate, onPlan, onDia
       </details>
       {importBusy && <div className="mt-4"><LoadingState label={importAction === "csv" ? "Importando la lista de niños…" : "Guardando al niño en el aula…"} /></div>}
       {importMessage && <div className="mt-4"><WorkflowFeedback tone={importTone}>{importMessage}</WorkflowFeedback></div>}
+      {photoRetry&&<Button disabled={importBusy} className="mt-3" variant="outline" onClick={()=>{setImportBusy(true);void uploadStudentPhoto(photoRetry.id,photoRetry.media).then(()=>{setPhotoRetry(null);setImportTone("success");setImportMessage("Foto privada guardada.");}).catch(()=>setImportMessage("La foto sigue pendiente. El alumno ya está inscrito.")).finally(()=>setImportBusy(false));}}>Reintentar guardar foto</Button>}
       {importTone === "success" && importMessage && onDiagnostic && <Button className="mt-3 min-h-11" onClick={onDiagnostic}>Continuar: evaluación diagnóstica</Button>}
     </section>}
     <div className="space-y-2">{visibleStudents.length ? visibleStudents.map((student) => <button key={student.id} type="button" onClick={() => { setProfile(null); setLoading(true); setSelectedId(student.id); }} className="flex min-h-24 w-full items-center gap-3 rounded-[1.3rem] border border-[#d4e1ed] bg-white p-4 text-left hover:border-[#8acbd8] hover:shadow-sm"><StudentPhoto id={student.id} name={student.full_name ?? student.name}/><span className="min-w-0 flex-1"><strong className="block truncate text-[#1c2e50]">{student.full_name ?? student.name}</strong>{Boolean(student.evidence_count) && <small className="mt-1 block text-[#566883]">{recordSummary(student)}</small>}<FamilyInterviewStatusBadge status={interviewStatuses[student.id]} /></span><span className="shrink-0 text-right"><span className={`block rounded-full px-2 py-1 text-xs font-bold ${student.evidence_count ? "bg-[#eaf8f2] text-[#287561]" : "bg-[#fff4df] text-[#9a641a]"}`}>{student.evidence_count ? "Con evidencias" : "Sin evidencias de actividad"}</span><span className="mt-2 block text-xs font-bold text-[#07576c]">Ver perfil →</span></span></button>) : <EmptyState title={students.length ? "No encontramos niños" : "Aún no hay niños en el aula"} description={students.length ? "Prueba con otro nombre o filtro." : "Añade un niño para empezar a acompañar su progreso."} />}</div>

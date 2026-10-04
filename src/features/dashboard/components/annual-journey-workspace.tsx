@@ -7,7 +7,7 @@ import { AnnualSlotEditor, type EditorPlan } from "./annual-slot-editor";
 import { annualDisplayTitle, annualCoverage } from "@/src/lib/annual-year-editor.mjs";
 import { scopedAnnualChanges, annualCalendarCriteria } from "@/src/lib/annual-change-scope.mjs";
 import { Textarea } from "@/components/ui/textarea";
-import { apiFetch } from "@/src/lib/ayni-api-fetch";
+import { apiFetch, apiJson } from "@/src/lib/ayni-api-fetch";
 import { localDatabaseApiUrl } from "@/src/lib/local-database";
 import { canLeaveWorkspace, readWorkspaceParams, useWorkspaceSubview, writeWorkspaceLocation } from "@/src/lib/workspace-location";
 import { savedJourneyAnnualRows } from "@/src/lib/annual-year-map.mjs";
@@ -16,7 +16,7 @@ import { AsyncButton, GenerationProgress, LoadingState, WorkflowFeedback } from 
 import { AnnualPlanningConversation } from "./annual-planning-conversation";
 import { AnnualPreparationProgress } from "./annual-preparation-progress";
 import { DictationRecorder } from "./dictation-recorder";
-import { JourneySteps } from "./initial-journey-ui";
+import { AyniMascot, JourneySteps } from "./initial-journey-ui";
 
 type Fact = { key: string; kind: string; subject: string; scope: string; support_text: string; uncertainty: string; occurred_at: string | null; explicit_tags?: string[] };
 type Snapshot = { source_fingerprint: string; student_count: number; facts: Fact[]; resources: string[];
@@ -41,7 +41,7 @@ type Job = { id: string; draft_id: string; status: "queued" | "running" | "faile
 const api = async <T,>(path: string, value?: unknown): Promise<T> => {
   const response = await apiFetch(`${localDatabaseApiUrl}${path}`, value === undefined ? undefined : {
     method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(value) });
-  const data = await response.json() as T & { message?: string; error?: string; draft_id?: string };
+  const data = await apiJson<T & { message?: string; error?: string; draft_id?: string }>(response);
   if (!response.ok) throw Object.assign(new Error(data.message || data.error || "No se pudo completar la acción."), { draftId: data.draft_id });
   return data;
 };
@@ -126,13 +126,14 @@ export function AnnualJourneyWorkspace({ onConfirmed, onGoDiagnostic, onDevelop,
     runningJobRef.current = true;
     setBusy("generate"); setError(""); setJob({ ...value, status: "running" });
     try {
-      let result = await api<Job>(`/api/annual-journey/jobs/${value.id}/run`, {}); setJob(result);
-      while(result.status === "queued") { result = await api<Job>(`/api/annual-journey/jobs/${value.id}/run`, {}); setJob(result); }
+      let result = await api<Job>(`/api/annual-journey/jobs/${value.id}/run`, {});
+      while(result.status === "queued") { setJob(result);result = await api<Job>(`/api/annual-journey/jobs/${value.id}/run`, {}); }
       if (result.status === "succeeded") { await reload(result.draft_id); setPreparing(false); setNotice("Quince propuestas listas para revisar."); }
+      setJob(result);
     } catch {
       // Read server truth, including a recoverable checkpoint, instead of replacing it with a generic HTTP error.
-      try { setJob(await api<Job>(`/api/annual-journey/jobs/${value.id}`)); }
-      catch { setError("No puedo consultar el avance ahora. Puedes volver a abrir Mi año; el trabajo queda guardado."); }
+      try { const saved=await api<Job>(`/api/annual-journey/jobs/${value.id}`);if(saved.status==="succeeded"){await reload(saved.draft_id);setPreparing(false);setNotice("Quince propuestas listas para revisar.");}setJob(saved); }
+      catch { setNotice("La conexión está tardando. Ayni sigue preparando tu año; recuperaremos el avance automáticamente."); }
     } finally { runningJobRef.current = false; setBusy(null); }
   }, [reload]);
   useEffect(() => { let live = true;
@@ -160,20 +161,24 @@ export function AnnualJourneyWorkspace({ onConfirmed, onGoDiagnostic, onDevelop,
     window.addEventListener("beforeunload", unload); window.addEventListener("ayni-before-navigation", navigation);
     return () => { window.removeEventListener("beforeunload", unload); window.removeEventListener("ayni-before-navigation", navigation); };
   }, [dirty, busy, audioBusy, generating]);
+  const jobId=job?.id,jobStatus=job?.status;
   useEffect(() => {
-    if (!job || !["queued", "running"].includes(job.status)) return;
+    if (!jobId || !["queued", "running"].includes(jobStatus??"")) return;
     let live = true;
+    let timer:number;
     const poll = async () => {
       try {
-        const value = await api<Job>(`/api/annual-journey/jobs/${job.id}`);
-        if (!live) return; setJob(value);
-        if (value.status === "succeeded") { await reload(value.draft_id); if (live) { setPreparing(false); setBusy(null); setNotice("Quince propuestas listas para revisar."); } }
+        const value = await api<Job>(`/api/annual-journey/jobs/${jobId}`);
+        if (!live) return;
+        if (value.status === "succeeded") { await reload(value.draft_id); if (live) { setJob(value);setPreparing(false); setBusy(null); setError("");setNotice("Quince propuestas listas para revisar."); }return; }
+        setJob(value);
         if (["failed", "interrupted"].includes(value.status)) setBusy(null);
-      } catch { /* The persisted job can still be opened after a temporary connection loss. */ }
+      } catch { /* Read again without regenerating the saved job. */ }
+      if(live)timer=window.setTimeout(()=>void poll(),3000);
     };
-    const interval = window.setInterval(() => void poll(), 2500);
-    return () => { live = false; window.clearInterval(interval); };
-  }, [job, reload]);
+    timer=window.setTimeout(()=>void poll(),2500);
+    return () => { live = false; window.clearTimeout(timer); };
+  }, [jobId, jobStatus, reload]);
   const run = async (action: string, work: () => Promise<void>) => {
     if (busy || audioBusy) return; setBusy(action); setError(""); setNotice("");
     try { await work(); } catch (e) { const cause = e as Error & { draftId?: string }; setError(cause.message);
@@ -188,9 +193,18 @@ export function AnnualJourneyWorkspace({ onConfirmed, onGoDiagnostic, onDevelop,
   });
   const generate = () => run("prepare", async () => {
     if (!start) throw new Error("Actualiza el resumen antes de preparar el año.");
-    const result = await api<Job>("/api/annual-journey/prepare", { teacherIdeas: ideas, sourceFingerprint: start.snapshot.source_fingerprint,
-      ...(editable && modern ? { draftId: selected.id, expectedRevision: selected.revision } : {}) });
-    setJob(result); await reload(result.draft_id);
+    try {
+      const result = await api<Job>("/api/annual-journey/prepare", { teacherIdeas: ideas, sourceFingerprint: start.snapshot.source_fingerprint,
+        ...(editable && modern ? { draftId: selected.id, expectedRevision: selected.revision } : {}) });
+      setJob(result); await reload(result.draft_id);
+    } catch(error) {
+      const saved=await reload().catch(()=>null);
+      if(saved?.proposal.generation_job_id&&saved.proposal.teacher_preferences===ideas){
+        const recovered=await api<Job>(`/api/annual-journey/jobs/${saved.proposal.generation_job_id}`).catch(()=>null);
+        if(recovered){setJob(recovered);if(recovered.status==="succeeded")setPreparing(false);else setPreparing(true);return;}
+      }
+      throw error;
+    }
   });
   if (!plans && !error) return <LoadingState label="Abriendo Mi año…" />;
   const names = new Map((proposal?.curriculum_reference ?? start?.curriculum ?? []).map((c) => [c.id, c.name]));
@@ -253,6 +267,7 @@ export function AnnualJourneyWorkspace({ onConfirmed, onGoDiagnostic, onDevelop,
         selectedId={selectedProposal?.proposal_id ?? null} onSelect={setSelectedProposalId} initialStage={proposal.resolved_calendar?.initial_stage} />}
       {proposal.editor_version===3 && calendar && !listOpen ? <AnnualSlotEditor plan={proposal as unknown as EditorPlan} planId={selected.id} revision={selected.revision} calendar={calendar} effectiveCalendar={effectiveCalendar} selectedId={selectedProposal?.proposal_id ?? null} onSelect={setSelectedProposalId} editable={!!editable} disabled={disabled} onAction={action=>void mutate("structure",{action})} onReload={reload}>{proposalDetails}</AnnualSlotEditor> : proposalDetails}
       <Sheet open={panelOpen} onOpenChange={value=>{if(!value&&disabled)return;if(!value&&message.trim()&&!window.confirm("Hay texto sin guardar. ¿Quieres cerrar el panel?"))return;setPanelOpen(value);}}><SheetContent className="w-full overflow-y-auto p-5 sm:max-w-xl"><SheetHeader><SheetTitle>{scope?"Cambiar propuesta con Ayni":"Ajustar Mi año con Ayni"}</SheetTitle><SheetDescription>{scope?"Cuéntame qué quisieras cambiar. Puedes pedir otro enfoque, tema, materiales, competencias u otra experiencia.":"Reúne cambios para todo tu año: temas, propuestas futuras u oportunidades curriculares. Las propuestas protegidas se conservan."}</SheetDescription></SheetHeader>
+        <div className="mt-4 flex items-center gap-3 rounded-xl bg-[#edf7fa] p-3"><span className="w-16 shrink-0"><AyniMascot/></span><p className="text-sm leading-relaxed">{scope?"¿Qué enfoque quieres cambiar y qué deseas que hagan los niños? Agrega tus indicaciones; las revisaremos juntas antes de aplicar el cambio.":"Cuéntame qué quieres priorizar y qué condiciones debo considerar para ajustar tu año."}</p></div>
         {panelProposal && <p className="mt-3 font-semibold">{annualDisplayTitle(panelProposal.title)}{panelProposal.planned_start_date && panelProposal.planned_end_date?` · ${compactDate(panelProposal.planned_start_date)}–${compactDate(panelProposal.planned_end_date)}`:""}</p>}
         {scope && <button type="button" className="mt-2 min-h-11 text-sm text-[#087d96] underline underline-offset-4 disabled:opacity-50" disabled={disabled} onClick={()=>changeScope(null)}>← Ajustar todo Mi año</button>}
         {editable && <>

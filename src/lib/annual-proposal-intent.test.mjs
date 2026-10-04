@@ -39,3 +39,10 @@ test("vocabulario curricular no se oculta como persona, sin exponer nombres ni c
   assert.match(result,/Indaga y Crea/);assert.ok(!result.includes("Aurelio"));assert.ok(!result.includes("Mariana"));assert.ok(!result.includes("docente@example.com"));
   assert.deepEqual(proposalRequestedCompetencies({safe_texts:["Quiero priorizar [persona] y [persona]"],messages:[{role:"teacher",text:"Quiero priorizar Indaga y Crea"}]},cards),["CYT_INDAGA","COM_ARTE"]);
 });
+test("Navidad y Perú conservan el tema de la propuesta sin liberar nombres de alumnos",()=>{
+ const text=annualJourneySafeText("Quiero un proyecto de Navidad con las familias en Perú. Camila y Aurelio dibujarán.",["Camila"],cards.map(c=>c.name));
+ assert.match(text,/Navidad/);assert.match(text,/Perú/);assert.ok(!text.includes("Camila"));assert.ok(!text.includes("Aurelio"));
+ assert.deepEqual(namedProposalCompetencies(["Quiero priorizar Lenguajes artísticos."],cards),["COM_ARTE"]);
+ // A word in the allowed vocabulary that is an actual child's name is still neutralized first.
+ assert.ok(!annualJourneySafeText("Luna dibujó estrellas",["Luna"]).includes("Luna"));
+});

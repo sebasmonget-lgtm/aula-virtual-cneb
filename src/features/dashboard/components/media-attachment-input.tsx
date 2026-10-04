@@ -9,7 +9,7 @@ import { AsyncButton } from "./workflow-ui";
 
 const supported = new Set(["image/jpeg", "image/png", "image/webp", "audio/webm", "audio/mpeg", "audio/mp4", "audio/wav", "audio/ogg"]);
 
-export async function preparePrivateMedia(file: File): Promise<PrivateMediaUpload> {
+export async function preparePrivateMedia(file: File, {maxEdge=1600,maxBytes=1_000_000}:{maxEdge?:number;maxBytes?:number}={}): Promise<PrivateMediaUpload> {
   const originalType = file.type.split(";")[0];
   let mimeType = originalType === "audio/x-wav" ? "audio/wav" : originalType === "audio/x-m4a" ? "audio/mp4" : originalType;
   if (!supported.has(mimeType)) throw new Error("Usa una foto JPEG, PNG o WebP, o un audio WebM, MP3, M4A, WAV u OGG.");
@@ -18,19 +18,19 @@ export async function preparePrivateMedia(file: File): Promise<PrivateMediaUploa
     if(file.size>25_000_000)throw new Error("Elige una foto de hasta 25 MB para prepararla.");
     const bitmap=await createImageBitmap(file);
     try {
-      let edge=1600;
+      let edge=maxEdge;
       for(const quality of [0.82,0.68,0.54,0.48]) {
         const scale=Math.min(1,edge/Math.max(bitmap.width,bitmap.height));
         const canvas=document.createElement("canvas");canvas.width=Math.max(1,Math.round(bitmap.width*scale));canvas.height=Math.max(1,Math.round(bitmap.height*scale));
         const ctx=canvas.getContext("2d");if(!ctx)throw new Error("No se pudo preparar la foto.");ctx.fillStyle="#fff";ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(bitmap,0,0,canvas.width,canvas.height);
         prepared=await new Promise<Blob>((resolve,reject)=>canvas.toBlob(blob=>blob?resolve(blob):reject(new Error("No se pudo preparar la foto.")),"image/jpeg",quality));
-        if(prepared.size<=1_000_000)break;edge=1280;
+        if(prepared.size<=maxBytes)break;edge=Math.round(edge*0.8);
       }
       mimeType="image/jpeg";
     }finally{bitmap.close();}
   }
-  if (!prepared.size || prepared.size > (mimeType.startsWith("audio/") ? 8_000_000 : 1_000_000))
-    throw new Error(mimeType.startsWith("audio/") ? "El audio debe pesar como máximo 8 MB." : "No se pudo reducir la foto a 1 MB. Elige otra imagen.");
+  if (!prepared.size || prepared.size > (mimeType.startsWith("audio/") ? 8_000_000 : maxBytes))
+    throw new Error(mimeType.startsWith("audio/") ? "El audio debe pesar como máximo 8 MB." : "No se pudo reducir la foto. Elige otra imagen.");
   const base64 = await new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(String(reader.result).split(",")[1] ?? "");

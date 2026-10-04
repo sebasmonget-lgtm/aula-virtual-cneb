@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { PGlite } from "@electric-sql/pglite";
 import { readdir,readFile } from "node:fs/promises";
-import { randomUUID } from "node:crypto";
+import { randomUUID, randomBytes } from "node:crypto";
 import { createPilotClassroom,importStudentsForTeacher } from "./pilot-onboarding-service.mjs";
 import { recordConfirmedSpontaneousObservation,reviseSpontaneousObservation,correctSpontaneousClassification,loadSpontaneousObservations,applicableDiagnosticCompetencies } from "./diagnostic-sources-v4.mjs";
 import { previewSpontaneous,handleFamilyShare,handleStudentPhoto } from "../../scripts/initial-journey-routes.mjs";
@@ -38,6 +38,7 @@ test("initial journey: atomic decisions, private photos/invitations and bounded 
    await recordConfirmedSpontaneousObservation(db,teacher,{...data,clientRequestId:randomUUID(),competencyIds:a.competency_ids});assert.equal(calls,1);
    await assert.rejects(previewSpontaneous({db,teacherId:other,input:data,classifier}));
    const empty=await previewSpontaneous({db,teacherId:teacher,input:{...data,observationText:"Se sentó en una silla."},classifier:{classify:async()=>({candidate_ids:[]})}});assert.deepEqual(empty.competency_ids,[]);
+   await assert.rejects(previewSpontaneous({db,teacherId:teacher,input:{...data,contextLabel:" "},classifier}));assert.equal(calls,1,"No calls when the required moment is missing");
   });
   await t.test("Jev preview accounts for its two decisions; cached preview and persistence do not reconsult",async()=>{
    let analyses=0;const data={...input,observationText:"Explicó una idea durante la asamblea."};
@@ -64,12 +65,13 @@ test("initial journey: atomic decisions, private photos/invitations and bounded 
    let touched=false;const storage={read:async()=>{touched=true;}};await assert.rejects(handleStudentPhoto({request:{method:"GET"},response,url:new URL(`http://localhost/api/students/${foreign.id}/photo`),db,teacherId:teacher,send,storage}));assert.equal(touched,false);
   });
   await t.test("profile photo is normalized, privately read, replaced and removed without changing interviews",async()=>{
-   const sharp=(await import('sharp')).default,bytes=await sharp({create:{width:24,height:24,channels:3,background:'#087d96'}}).png().toBuffer();
+   const sharp=(await import('sharp')).default,bytes=await sharp(randomBytes(1024*1024*3),{raw:{width:1024,height:1024,channels:3}}).jpeg({quality:90}).toBuffer();
    const assets=new Map();let sequence=0,assetResponse;
    const storage={save:async({teacherId,studentId,mimeType,bytes})=>{assert.equal(teacherId,teacher);assert.equal(studentId,student.id);const path=`private/${++sequence}`;assets.set(path,{mimeType,data:bytes});return path;},read:async path=>assets.get(path),delete:async path=>assets.delete(path)};
    const base={response,db,teacherId:teacher,send,storage,url:new URL(`http://localhost/api/students/${student.id}/photo`),readJson:async()=>({media:{base64:bytes.toString('base64'),mimeType:'image/png'}}),sendAsset:(_,status,data,mime,origin,cache)=>{assetResponse={status,mime,cache,bytes:data.length};}};
    await handleStudentPhoto({...base,request:{method:'PUT'}});assert.equal(sent.status,200);
-   await handleStudentPhoto({...base,request:{method:'GET'}});assert.equal(assetResponse.status,200);assert.equal(assetResponse.mime,'image/jpeg');assert.equal(assetResponse.cache,'private, no-store');
+   const size=await sharp([...assets.values()][0].data).metadata();assert.equal(size.width,320);assert.equal(size.height,320);
+   await handleStudentPhoto({...base,request:{method:'GET'}});assert.equal(assetResponse.status,200);assert.equal(assetResponse.mime,'image/jpeg');assert.equal(assetResponse.cache,'private, no-store');assert.ok(assetResponse.bytes<=100_000);
    await handleStudentPhoto({...base,request:{method:'PUT'}});assert.equal(assets.size,1);
    await handleStudentPhoto({...base,request:{method:'DELETE'}});assert.equal(assets.size,0);assert.equal((await db.query('select profile_photo_path from students where id=$1',[student.id])).rows[0].profile_photo_path,null);
    assert.equal(Number((await db.query('select count(*) n from student_family_interviews')).rows[0].n),0);
@@ -108,9 +110,13 @@ test("initial journey: atomic decisions, private photos/invitations and bounded 
    assert.match(lastBundle.teacher_decisions[0],/Indaga y Crea/);
    assert.ok(!lastBundle.teacher_decisions[0].includes("Camila"));assert.ok(!lastBundle.teacher_decisions[0].includes("Aurelio"));
   });
-  await t.test("one material clarification, provider failure recovery, literal preferences never become observations",async()=>{
+  await t.test("three useful answers, saved turn recovery without duplication, literal preferences never become observations",async()=>{
    await db.query(`update ai_pending_generations set expires_at=now() where workflow='annual_journey_conversation'`);let c=await conversation("POST");failNext=true;await assert.rejects(conversation("POST",{id:c.id,expectedRevision:c.revision,text:"Quiero comunidad"}));assert.equal((await conversation("GET")).revision,c.revision);
-   c=await conversation("POST",{id:c.id,expectedRevision:c.revision,text:"Quiero comunidad"});assert.equal(c.status,"needs_clarification");c=await conversation("POST",{id:c.id,expectedRevision:c.revision,text:"Invitar a las familias a construir juguetes"});assert.equal(c.status,"ready");const before=calls;c=await conversation("POST",{id:c.id,expectedRevision:c.revision,text:"Solo con materiales reciclados"});assert.equal(calls,before);assert.equal(c.status,"ready");assert.equal(snapshot.facts.length,1);assert.equal(lastBundle.AnnualPlanningBrief.sources[0].kind,"family_report");
+   const persisted=await conversation("GET");assert.equal(persisted.status,"interrupted");assert.equal(persisted.messages.at(-1).text,"Quiero comunidad");
+   c=await conversation("POST",{id:c.id,expectedRevision:c.revision,text:"Quiero comunidad"});assert.equal(c.status,"needs_clarification");assert.equal(c.messages.filter(m=>m.role==="teacher").length,1);
+   c=await conversation("POST",{id:c.id,expectedRevision:c.revision,text:"Invitar a las familias a construir juguetes"});assert.equal(c.status,"needs_clarification");
+   c=await conversation("POST",{id:c.id,expectedRevision:c.revision,text:"Solo con materiales reciclados"});assert.equal(c.status,"ready");const before=calls;
+   c=await conversation("POST",{id:c.id,expectedRevision:c.revision,text:"Sin pedir compras"});assert.equal(calls,before);assert.equal(c.status,"ready");assert.equal(snapshot.facts.length,1);assert.equal(lastBundle.AnnualPlanningBrief.sources[0].kind,"family_report");
    const oldId=c.id;snapshot.source_fingerprint="changed";await assert.rejects(conversation("GET"));c=await conversation("POST");assert.notEqual(c.id,oldId);
   });
  }finally{await db.close();}

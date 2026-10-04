@@ -14,7 +14,7 @@ async function ownedStudent(db,teacherId,id) {
 }
 export async function previewSpontaneous({db,teacherId,input,v24=null,classifier=createOpenAICompetencyClassifier()}) {
   const student=await ownedStudent(db,teacherId,input.studentId);
-  if(typeof input.observationText!=="string"||!input.observationText.trim()||input.observationText.length>4000||typeof input.contextLabel!=="string"||input.contextLabel.length>120)throw new Error("Escribe una observación y el momento.");
+  if(typeof input.observationText!=="string"||!input.observationText.trim()||input.observationText.length>4000||typeof input.contextLabel!=="string"||!input.contextLabel.trim()||input.contextLabel.length>120)throw new Error("Escribe una observación y el momento.");
   const key=previewKey(teacherId,input),workflow="observation_capture_preview_v2";
   let pending, cached;
   const lease=randomUUID();
@@ -58,7 +58,8 @@ export async function handleStudentPhoto({request,response,url,db,teacherId,orig
   if(request.method==="PUT"){
     const {media}=await readJson(request),bytes=Buffer.from(media?.base64??"","base64");
     const sharp=(await import("sharp")).default;let normalized;
-    try{if(!["image/jpeg","image/png","image/webp"].includes(media?.mimeType)||bytes.length>3000000)throw new Error();normalized=await sharp(bytes,{limitInputPixels:16000000}).rotate().resize(512,512,{fit:"cover",withoutEnlargement:true}).jpeg({quality:85}).toBuffer();}catch{send(response,422,{error:"Usa una foto JPG, PNG o WebP válida de hasta 3 MB."},origin);return true;}
+    try{if(!["image/jpeg","image/png","image/webp"].includes(media?.mimeType)||bytes.length>3000000)throw new Error();normalized=await sharp(bytes,{limitInputPixels:16000000}).rotate().resize(320,320,{fit:"cover",withoutEnlargement:true}).jpeg({quality:75}).toBuffer();}catch{send(response,422,{error:"Usa una foto JPG, PNG o WebP válida de hasta 3 MB."},origin);return true;}
+    if(normalized.length>100_000){send(response,422,{error:"No se pudo reducir la foto. Elige otra imagen."},origin);return true;}
     path=await storage.save({teacherId,studentId:student.id,mimeType:"image/jpeg",bytes:normalized});
   }
   try{const changed=await db.query('update students set profile_photo_path=$1 where id=$2 and classroom_id=$3 and profile_photo_path is not distinct from $4 returning id',[path,student.id,student.classroom_id,student.profile_photo_path]);if(!changed.rows.length)throw new Error('La foto cambió en otra pestaña. Recarga el perfil.');}
