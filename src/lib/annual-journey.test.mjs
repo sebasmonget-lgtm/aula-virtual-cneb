@@ -206,9 +206,9 @@ test("vertical en PostgreSQL: preparar → cambios → confirmar → Word idént
       year: 2026, age: 5, group_context: "Aula de prueba ficticia", available_resources: [], calendar: { initial_stage: defaultInitialStage() } };
     const calls = [];
     let failing = false, failNewReview = false;
-    const route = async (path, body = {}, user = teacherId) => {
+    const route = async (path, body = {}, user = teacherId, method = path.endsWith("start") ? "GET" : "POST") => {
       let result;
-      await handleAnnualJourneyRoutes({ request: { method: path.endsWith("start") ? "GET" : "POST" }, response: {},
+      await handleAnnualJourneyRoutes({ request: { method }, response: {},
         url: new URL(`http://localhost/api/annual-journey/${path}`), db, teacherId: user, readJson: async () => body,
         send: (_r, status, data) => { result = { status, data }; }, annualPlanningContext: async () => context,
         annualDocumentContext: () => ({ teacher_name: "Docente QA", template_version: "annual-journey-v2" }),
@@ -262,6 +262,9 @@ test("vertical en PostgreSQL: preparar → cambios → confirmar → Word idént
     const rowCalls=calls.filter(c=>c.request.output_schema.id==="annual-proposal-row-v3").length;
     const createdProposal=await route(`${current.id}/new-proposal/generate`,{expectedRevision:current.revision,id:answer.data.id,revision:answer.data.revision});assert.equal(createdProposal.status,200,JSON.stringify(createdProposal.data));assert.ok(createdProposal.data.candidate);assert.equal(calls.length,structuralCalls+4);
     assert.equal(calls.filter(c=>c.request.output_schema.id==="annual-proposal-row-v3").length,rowCalls,"Retry reviews the stored row without regenerating it");
+    const recovered=await route(`${current.id}/new-proposal/conversation?id=${answer.data.id}`,{},teacherId,"GET");
+    assert.equal(recovered.status,200);assert.deepEqual(recovered.data.candidate,createdProposal.data.candidate);assert.equal(calls.length,structuralCalls+4,"Recuperar la candidata guardada no llama a IA");
+    const foreignRecovery=await route(`${current.id}/new-proposal/conversation?id=${answer.data.id}`,{},randomUUID(),"GET");assert.equal(foreignRecovery.status,404);
     const illegal=await route(`${current.id}/new-proposal/approve`,{expectedRevision:current.revision,id:answer.data.id},randomUUID());assert.equal(illegal.status,404);
     const approved=await route(`${current.id}/new-proposal/approve`,{expectedRevision:current.revision,id:answer.data.id,revision:createdProposal.data.revision});assert.equal(approved.status,201,JSON.stringify(approved.data));current=approved.data;
     assert.equal(current.proposal.available_experiences.length,1);assert.equal(current.proposal.available_experiences[0].planned_start_date,undefined);assert.equal(current.proposal.proposed_experiences.length,15);assert.equal(calls.length,structuralCalls+4);

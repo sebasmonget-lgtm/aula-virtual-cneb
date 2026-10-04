@@ -1517,3 +1517,11 @@ Síntoma: cuatro notas QA de la captura automatizada quedaron asociadas a la sel
 **Solución y estado.** Criterios nuevos de organización determinísticos solo para editor_version 3; el histórico mantiene sus criterios originales visibles. Banner de doce y presentación semántica compartida sin mutar su JSON literal. Upgrade únicamente explícito del borrador compatible. Se preparó una copia QA recuperable con tres alternativas sin IA y guard transaccional de hashes del activo V1/otros planes; el upgrade por UI sigue pendiente tras deployment. Pruebas actuales PASS acreditan lógica/compatibilidad, no conversión visual ya ejecutada.
 
 **Prevención.** Verificar editor_version y resolved_calendar antes de atribuir cantidad/funcionalidad; distinguir copia, upgrade y confirmación. Mantener el original recuperable y lectores de quince en rollback. La fase integral en cola se retoma tras estabilizar este cierre. Ver ADR 114 y docs/qa/annual-year-scope-closure-2026-10-03.md.
+
+## 2026-10-03 — Respuesta fallida ocultaba una candidata ya guardada
+
+**Síntoma y causa.** El panel mostraba un fallo de generación aunque la candidata ya se había persistido. El estado de la respuesta HTTP se trataba como ausencia de resultado y podía invitar a reiniciar/generar otra vez sin consultar la sesión guardada.
+
+**Solución validada.** El catch del panel intenta GET de la conversación existente; una candidata guardada se recupera y muestra sin IA nueva. La integración comprueba identidad exacta de candidata, mismo contador de calls y 404 para otra cuenta. Suite final 69/69, typecheck/lint/Next/Vinext PASS. La ronda real sobre plantas confirmó que la candidata guardada podía continuar a Biblioteca; la revisión humana de su omisión de Crea sigue pendiente y no se atribuye aprobación semántica al recovery.
+
+**Prevención.** Consultar estado persistido antes de interpretar un error de transporte como falta de resultado. Separar requests de la sesión nueva de métricas heredadas y conservar permisos en recuperación; no repetir una generación únicamente por una respuesta fallida. Detalle y QA integral en docs/qa/annual-year-integral-qa-2026-10-03.md.

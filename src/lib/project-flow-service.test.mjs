@@ -1,6 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { nationalCalendarBlocks2026, nationalSchoolHolidays2026 } from "./annual-plan-calendar.mjs";
+import { fixtureCalendar } from "./test-fixtures/annual-journey.mjs";
+import { solveAnnualJourneyCalendar } from "./annual-journey-calendar.mjs";
+import { candidateProjectDates, validateSelectedInstructionalDates } from "./school-calendar-service.mjs";
 import { generateProjectPreview, generateProjectDependents, generateProjectMaster,
   instructionalDates, validateProjectMaster, preserveTeacherMapEdits, projectDetails,
   validateEditedActivityMap, validateProjectDependents } from "./project-flow-service.mjs";
@@ -48,6 +51,26 @@ test("las fechas útiles excluyen fines de semana, feriados y gestión", () => {
   assert.deepEqual(instructionalDates(calendar, "2026-04-13", "2026-04-17"),
     ["2026-04-13", "2026-04-14", "2026-04-15", "2026-04-16", "2026-04-17"]);
   assert.deepEqual(instructionalDates(calendar, "2026-05-15", "2026-05-25"), ["2026-05-15", "2026-05-25"]);
+});
+
+test("Mi año entrega al Project Master ocho días reales: dos semanas con dos feriados", async () => {
+  const effective = fixtureCalendar(), slot = solveAnnualJourneyCalendar(effective).projects[0];
+  const selected = candidateProjectDates(effective.days,slot.starts_on,slot.ends_on).filter(day=>day.selected).map(day=>day.date);
+  const dates = validateSelectedInstructionalDates(effective.days,selected,slot.starts_on,slot.ends_on);
+  assert.equal(slot.duration_weeks,2);
+  assert.deepEqual([slot.starts_on,slot.ends_on],["2026-03-30","2026-04-10"]);
+  assert.equal(dates.length,8); assert.deepEqual(dates,slot.instructional_dates);
+  assert.ok(!dates.includes("2026-04-02") && !dates.includes("2026-04-03"));
+  const output = {...master,activities:dates.map((date,index)=>({...master.activities[index%2],title:`Exploración de plantas ${index+1}`,date}))};
+  const generated = await generateProjectMaster({context:{age:5},decisions,dependents,availableDates:dates,
+    createProvider:provider(output,request=>{
+      assert.equal(request.ai_context_bundle.total_activities,8);
+      assert.deepEqual(request.ai_context_bundle.instructional_dates,dates);
+      assert.match(request.ai_context_bundle.task,/exactamente 8 actividades/);
+    }),loadSkill:async()=>"Skill"});
+  assert.equal(generated.output.activity_route.length,8);
+  assert.deepEqual(generated.output.activity_route.map(item=>item.date),dates);
+  assert.equal(generated.output.activity_blueprints,undefined);
 });
 
 test("Sol prepara primero contexto y propósitos, después solo dependencias del propósito elegido", async () => {

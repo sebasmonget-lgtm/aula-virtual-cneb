@@ -24,7 +24,16 @@ export function NewAnnualProposal({open,onOpenChange,planId,revision,onApproved,
     if(busy||audio)return;setBusy(true);setError("");
     try {const r=await apiFetch(`${localDatabaseApiUrl}/api/annual-journey/${planId}/new-proposal/${operation}`,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({expectedRevision:revision,...(!restart&&session?{id:session.id,revision:session.revision}:{}),...(operation==="conversation"&&text.trim()?{text}:{}),experienceType:type,restart})});const data=await r.json() as Session & {error?:string};if(!r.ok)throw Error(data.error ?? "No se completó la propuesta.");
       if(operation==="approve"){await onApproved(data.id);setSession(null);setText("");onOpenChange(false);}else {setSession(data);if(operation==="conversation")setText("");}
-    }catch(e){setError(e instanceof Error?e.message:"No se completó la propuesta.");}finally{setBusy(false);}
+    }catch(e){
+      // A slow response can fail after the candidate was saved. Read server truth before asking to generate again.
+      if(operation==="generate" && session){
+        try {
+          const saved=await apiFetch(`${localDatabaseApiUrl}/api/annual-journey/${planId}/new-proposal/conversation?id=${session.id}`);
+          if(saved.ok){const recovered=await saved.json() as Session;if(recovered.candidate){setSession(recovered);setError("");return;}}
+        }catch{ /* Preserve the original error when recovery is unavailable. */ }
+      }
+      setError(e instanceof Error?e.message:"No se completó la propuesta.");
+    }finally{setBusy(false);}
   };
   const competencyName=(id:string)=>curriculumReference.find(c=>c.id===id)?.name ?? id;
   return <Sheet open={open} onOpenChange={value=>{if(!value&&(busy||audio))return;if(!value&&text.trim()&&!window.confirm("Hay una respuesta sin enviar. ¿Quieres cerrar este panel?"))return;onOpenChange(value);}}><SheetContent className="w-full overflow-y-auto sm:max-w-xl"><SheetHeader><SheetTitle>Nueva propuesta con Ayni</SheetTitle><SheetDescription>Una conversación breve para preparar una alternativa. Aparecerá en Biblioteca cuando la revises y apruebes.</SheetDescription></SheetHeader><div className="space-y-5 px-5 pb-6">
