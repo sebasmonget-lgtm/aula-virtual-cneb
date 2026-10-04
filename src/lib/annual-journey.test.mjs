@@ -205,7 +205,7 @@ test("vertical en PostgreSQL: preparar → cambios → confirmar → Word idént
     const context = { id: created.classroomId, school_year_id: created.schoolYearId, curriculum_version_id: version,
       year: 2026, age: 5, group_context: "Aula de prueba ficticia", available_resources: [], calendar: { initial_stage: defaultInitialStage() } };
     const calls = [];
-    let failing = false, failNewReview = false, failRequired = false;
+    let failing = false, failNewReview = false, failRequired = false, rejectNewReview = false;
     const route = async (path, body = {}, user = teacherId, method = path.endsWith("start") ? "GET" : "POST") => {
       let result;
       await handleAnnualJourneyRoutes({ request: { method }, response: {},
@@ -215,6 +215,7 @@ test("vertical en PostgreSQL: preparar → cambios → confirmar → Word idént
         createProvider: (routing) => ({ generate: async (request) => {
           if (failing) throw Object.assign(new Error("Simulated provider failure"), { name: "OpenAIProviderError" });
           if(failNewReview && request.workflow==="annual_journey_review") {failNewReview=false;throw Object.assign(new Error("Simulated row review interruption"),{name:"OpenAIProviderError"});}
+          if(rejectNewReview && request.workflow==="annual_journey_review"){calls.push({routing,request});return {output:{issues:[{proposal_id:request.ai_context_bundle.proposals[0].proposal_id,reason:"Aclara la mediación para que los niños elijan sus propias decoraciones."}]}};}
           if(request.output_schema.id==="annual-proposal-row-v3") {calls.push({routing,request});const fixture=generationFixture(request.ai_context_bundle.curriculum.competency_cards),row=fixture.proposals[0],required=request.ai_context_bundle.required_competency_ids??[];
             const ids=failRequired||request.ai_context_bundle.task.startsWith("Crea")?required.filter(id=>id!=="COM_ARTE"):required;
             const opportunities=ids.length?ids.map(id=>{const {moment,...opportunity}=fixture.everyday_opportunities.find(o=>o.competency_id===id);void moment;return opportunity;}):row.opportunities;
@@ -309,7 +310,13 @@ test("vertical en PostgreSQL: preparar → cambios → confirmar → Word idént
     const storedIdea=(await db.query("select payload from ai_pending_generations where id=$1",[oldIdea.data.id])).rows[0].payload;assert.equal(storedIdea.draft,null);assert.equal(storedIdea.created_fact,null);assert.match(storedIdea.safe_texts.at(-1),/Navidad/);
     failing=false;
     const resumed=await route(`${current.id}/new-proposal/conversation`,{expectedRevision:current.revision,id:oldIdea.data.id,revision:savedIdea.data.revision});assert.equal(resumed.status,200);assert.equal(resumed.data.messages.filter(m=>m.role==="teacher"&&m.text.includes("Navidad")).length,1);
-    const christmas=await route(`${current.id}/new-proposal/generate`,{expectedRevision:current.revision,id:oldIdea.data.id,revision:resumed.data.revision});assert.equal(christmas.status,200,JSON.stringify(christmas.data));assert.match(christmas.data.candidate.title,/Navidad/);assert.notEqual(christmas.data.candidate.proposal_id,oldCandidate.data.candidate.proposal_id);
+    rejectNewReview=true;
+    const reviewBlocked=await route(`${current.id}/new-proposal/generate`,{expectedRevision:current.revision,id:oldIdea.data.id,revision:resumed.data.revision});assert.notEqual(reviewBlocked.status,200);
+    const reviewSaved=await route(`${current.id}/new-proposal/conversation?id=${oldIdea.data.id}`,{},teacherId,"GET");assert.equal(reviewSaved.data.candidate,null);assert.match(reviewSaved.data.review_feedback[0],/mediación/);
+    assert.ok((await db.query("select payload from ai_pending_generations where id=$1",[oldIdea.data.id])).rows[0].payload.draft);
+    rejectNewReview=false;const beforeReviewRetry=calls.length;
+    const christmas=await route(`${current.id}/new-proposal/generate`,{expectedRevision:current.revision,id:oldIdea.data.id,revision:reviewSaved.data.revision});assert.equal(christmas.status,200,JSON.stringify(christmas.data));assert.match(christmas.data.candidate.title,/Navidad/);assert.notEqual(christmas.data.candidate.proposal_id,oldCandidate.data.candidate.proposal_id);
+    assert.match(calls[beforeReviewRetry].request.ai_context_bundle.issues[0].reason,/mediación/);assert.equal(christmas.data.review_feedback.length,0);
     assert.deepEqual((await db.query("select proposal from annual_plans where id=$1",[current.id])).rows[0].proposal,current.proposal,"Changing a library conversation does not rewrite the year");
     const confirm = await route(`${current.id}/confirm`, { expectedRevision: current.revision }); assert.equal(confirm.status, 200, JSON.stringify(confirm.data));
     const beforeCalls = calls.length, doc = await loadSavedDocument(db, teacherId, "annual_plan", current.id);
