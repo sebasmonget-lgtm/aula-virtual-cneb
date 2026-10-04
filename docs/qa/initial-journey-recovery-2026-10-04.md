@@ -15,9 +15,9 @@ Base: último `origin/codex/qa-ayni-v2`, `071e8a89a420225ee31098ed99782d9a87a724
 
 ## Verificación
 
-Suite focal: transporte, turnos, intención, fotos/observaciones, creación de propuesta, año y recuperación de jobs, fuentes diagnósticas. Incluye proveedor fallido entre dos temas (mercado → Navidad), candidata anterior descartada, intención literal recuperable y año intacto; fotografía sintética 1024 × 1024 reducida a 320 × 320 y menos de 100 KB, aislamiento de otra docente, momento vacío sin IA, CAS e idempotencia.
+Suite focal 60/60 PASS: transporte, turnos, intención, fotos/observaciones, creación de propuesta, año y recuperación de jobs, fuentes diagnósticas. Incluye proveedor fallido entre dos temas (mercado → Navidad), candidata anterior descartada, intención literal recuperable y año intacto; fotografía sintética 1024 × 1024 reducida a 320 × 320 y menos de 100 KB, aislamiento de otra docente, momento vacío sin IA, CAS e idempotencia.
 
-Typecheck, lint, Vinext y Next webpack requeridos antes de publicar. Recibo de comandos, conteos y deployment posterior en `.local/qa-fixes-*`; no equiparar integración con proveedor simulado a revisión semántica de IA real. Los errores históricos `Failed to fetch` no aportaron un evento recuperable en los logs de Vercel consultados; se corrigen huecos de recuperación reproducibles, sin atribuir una causa de infraestructura no demostrada.
+Typecheck, lint, Vinext y Next webpack PASS antes de publicar. QA real en staging: preview de foto sintética 512 × 512 de 2298 bytes (sin inscribir un alumno adicional), validación roja/foco del momento, sugerencia real de Lenguajes artísticos, guardado único, conteo actualizado de 1 registro y captura contextual Indaga. Abrir la matriz limpia el conteo anterior mientras consulta los registros actuales; evita mostrar una celda antigua vacía después de guardar. Mascota móvil y turno optimista comprobados en conversación real de Navidad. Recibo de comandos, conteos y deployment posterior en `.local/qa-fixes-*`; no equiparar integración con proveedor simulado a revisión semántica de IA real. Los errores históricos `Failed to fetch` no aportaron un evento recuperable en los logs de Vercel consultados; se corrigen huecos de recuperación reproducibles, sin atribuir una causa de infraestructura no demostrada.
 
 ## Publicación y rollback
 

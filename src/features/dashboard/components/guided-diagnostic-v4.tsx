@@ -77,8 +77,9 @@ export function GuidedDiagnostic({ dashboard, onPlan, onStudents, initialStep = 
     setPendingSpontaneous(count);
     if (initialStep === 3) setStep(3);
   }).catch(() => { setPendingSpontaneous(null); if (initialStep === 3) setStep(3); }); }, [initialStep, setStep]);
+  function openMatrix(){setMatrixCoverage(null);setMatrixError("");setMatrixOpen(true);}
   function goToStep(next: 1 | 2 | 3) {
-    if (next === 3 && onPlan) { setMatrixOpen(true); setStep(2); return; }
+    if (next === 3 && onPlan) { openMatrix(); setStep(2); return; }
     setMatrixOpen(false); setStep(next); setStudentId(null); setInterviewStudentId(null);
   }
   useEffect(() => {
@@ -168,7 +169,7 @@ export function GuidedDiagnostic({ dashboard, onPlan, onStudents, initialStep = 
       <div role="group" aria-label="Forma de observar" className="grid gap-2 rounded-2xl border border-[#c9dce9] bg-white p-2 sm:grid-cols-2">{([["spontaneous","Registrar algo que observé"],["guided","Probar una experiencia para conocer mejor"]] as const).map(([mode,label])=><button key={mode} type="button" aria-pressed={observationMode===mode} onClick={()=>{setFreeCompetencyId("");setObservationMode(mode);}} className={`min-h-14 rounded-xl px-4 py-3 text-sm font-bold sm:text-base ${observationMode===mode?"bg-[#e4f3f7] text-[#075d70]":"text-[#526b87] hover:bg-[#f5f8fb]"}`}>{label}</button>)}</div>
       <p className="px-1 text-sm text-[#526b87]">{observationMode === "guided" ? "Elige un juego sugerido y anota lo que observaste." : "Anota algo que ocurrió durante el juego o la jornada."}</p>
     </div>}
-    {step === 2 && !matrixOpen && !experience && observationMode === "spontaneous" && <SpontaneousDiagnostic key={`${freeStudentId}:${freeCompetencyId}`} initialStudentId={freeStudentId} initialCompetencyId={freeCompetencyId} onBack={()=>{setFreeCompetencyId("");setMatrixOpen(true);}} students={data.students} onDecisionSaved={() => void refreshPendingSpontaneous()} onSaved={() => void refreshObservationProgress()} />}
+    {step === 2 && !matrixOpen && !experience && observationMode === "spontaneous" && <SpontaneousDiagnostic key={`${freeStudentId}:${freeCompetencyId}`} initialStudentId={freeStudentId} initialCompetencyId={freeCompetencyId} onBack={()=>{setFreeCompetencyId("");openMatrix();}} students={data.students} onDecisionSaved={() => void refreshPendingSpontaneous()} onSaved={() => void refreshObservationProgress()} />}
     {step === 2 && !matrixOpen && !experience && observationMode === "guided" && <section className="diagnostic-panel space-y-4 p-5 md:p-7">
       <div><h2 className="text-xl font-bold">¿Qué experiencia realizaste?</h2><p className="mt-1 text-sm text-[#526b87]">Son ideas para observar en el juego y la jornada; puedes volver a cualquiera otro día.</p></div>
       {data.experiences.some((item) => item.catalog_status === "development_fixture") && <p className="rounded-xl bg-[#fff5df] p-3 text-sm">Guías de desarrollo: todavía no son la batería pedagógica definitiva de Ayni.</p>}
@@ -212,7 +213,7 @@ export function GuidedDiagnostic({ dashboard, onPlan, onStudents, initialStep = 
       {error && <p role="alert" className="rounded-xl bg-[#fff1d6] p-3 text-sm">{error}</p>}
       <AsyncButton className="min-h-12 w-full sm:w-auto" busy={working} busyLabel="Guardando..." disabled={audioBusy || !aspectId || !note.trim()} onClick={() => void save()}><Save /> Guardar observación</AsyncButton>
     </section>}
-    {step === 2 && !matrixOpen && !student && <section className="rounded-xl border border-[#c9dce9] bg-[#edf5fa] p-5"><h2 className="text-xl font-bold">¿Listo para preparar tu año?</h2><p className="mt-2 text-[#526b87]">No necesitas observar todas las competencias para continuar. Podrás seguir conociendo al grupo durante todo el año.</p><div className="mt-4 flex flex-wrap gap-3"><Button onClick={()=>goToStep(3)}>Revisar matriz y continuar →</Button><Button variant="outline" onClick={()=>setMatrixOpen(true)}>Ver niños × competencias</Button></div></section>}
+    {step === 2 && !matrixOpen && !student && <section className="rounded-xl border border-[#c9dce9] bg-[#edf5fa] p-5"><h2 className="text-xl font-bold">¿Listo para preparar tu año?</h2><p className="mt-2 text-[#526b87]">No necesitas observar todas las competencias para continuar. Podrás seguir conociendo al grupo durante todo el año.</p><div className="mt-4 flex flex-wrap gap-3"><Button onClick={()=>goToStep(3)}>Revisar matriz y continuar →</Button><Button variant="outline" onClick={openMatrix}>Ver niños × competencias</Button></div></section>}
 
     {step === 3 && <section className="diagnostic-panel space-y-4 p-5"><h2 className="text-xl font-bold">Ayni organizará lo que ya conoces</h2>
       <p className="text-sm text-[#526b87]">En «Así entendí tu aula» verás una propuesta basada en entrevistas y observaciones. Puedes corregirla antes de crear Mi año. Seguirás observando durante el año.</p>
