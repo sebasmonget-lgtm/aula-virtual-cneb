@@ -96,7 +96,8 @@ export function validateAnnualJourney(plan, curriculum, { confirmation = false, 
     if (interpretation.scope === "subgroup" && children.size < 2) journeyFail("invalid_scope", "Varias observaciones del mismo niño siguen siendo individuales.");
   }
   const missing = curriculum.filter((card) => !covered.has(card.id)).map((card) => card.id);
-  if (missing.length && (plan.editor_version !== 3 || confirmation || requireCoverage)) journeyFail("coverage_missing", "Faltan oportunidades reales en las propuestas o momentos cotidianos.", { missing_competency_ids: missing });
+  const lateStart=plan.experience_context?.version===1 && plan.experience_context.starts_on > plan.resolved_calendar?.initial_stage.starts_on;
+  if (missing.length && !lateStart && (plan.editor_version !== 3 || confirmation || requireCoverage)) journeyFail("coverage_missing", "Faltan oportunidades reales en las propuestas o momentos cotidianos.", { missing_competency_ids: missing });
   if (!Array.isArray(plan.pending_changes) || plan.pending_changes.length > 20 || !Array.isArray(plan.change_history))
     journeyFail("invalid_changes", "Los cambios pendientes no son válidos.");
   if (confirmation && plan.pending_changes.length) journeyFail("pending_changes", "Aplica o retira los cambios pendientes antes de confirmar.");
@@ -105,10 +106,14 @@ export function validateAnnualJourney(plan, curriculum, { confirmation = false, 
   if (!calendar?.calendar_fingerprint || calendar.projects?.length !== (plan.editor_version === 3 ? 15 : 12) || !Array.isArray(calendar.assignments))
     journeyFail("invalid_calendar", "Falta resolver íntegramente el calendario.");
   const expected = [...calendar.initial_stage.instructional_dates.map((date) => ({ date, owner: "initial_stage" }))];
-  if (confirmation && calendar.projects.some(slot=>!slot.proposal_id)) journeyFail("empty_slots","Coloca una propuesta en cada tramo antes de confirmar.");
+  if (confirmation && calendar.projects.some(slot=>!slot.proposal_id && !(lateStart && slot.occupancy==="past_unrecorded" && slot.instructional_dates.every(date=>date<plan.experience_context.starts_on)))) journeyFail("empty_slots","Coloca una propuesta en cada tramo futuro antes de confirmar.");
   if (plan.editor_version===3 && (calendar.projects.filter(s=>s.duration_weeks===2).length!==11 || calendar.projects.filter(s=>s.duration_weeks===3).length!==4 || new Set(calendar.projects.map(s=>s.slot_id)).size!==15)) journeyFail("invalid_calendar","Los 15 tramos necesitan conservar sus duraciones e identificadores.");
   const used=new Set();
   calendar.projects.forEach((slot,index) => {
+    if(slot.historical_dates?.length){
+      if(!lateStart || slot.historical_dates.some(date=>date>=plan.experience_context.starts_on || date>=slot.starts_on)) journeyFail("invalid_calendar","Revisa las fechas históricas del tramo parcial.");
+      expected.push(...slot.historical_dates.map(date=>({date,owner:slot.slot_id})));
+    }
     const row=plan.proposed_experiences.find(r=>r.proposal_id===slot.proposal_id);
     if (!row) { if(slot.proposal_id) journeyFail("invalid_calendar","Una propuesta del tramo no está disponible."); expected.push(...slot.instructional_dates.map(date=>({date,owner:slot.slot_id})));return; }
     if(used.has(row.proposal_id))journeyFail("invalid_calendar","Una propuesta ocupa más de un tramo.");used.add(row.proposal_id);

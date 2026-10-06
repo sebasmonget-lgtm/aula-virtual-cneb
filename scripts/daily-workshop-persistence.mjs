@@ -19,7 +19,7 @@ export function pairedWorkshop(master, index, proposal) {
 }
 
 export async function insertDailyPair(db, { experience, occursOn, mainId, mainDetails, materials,
-  mainMetadata, master, workshopIndex, workshopProposal, workshopMetadata }) {
+  mainMetadata, master, workshopIndex, workshopProposal, workshopMetadata, preparationItemId = null }) {
   const pair = pairedWorkshop(master, workshopIndex, workshopProposal);
   const workshopId = pair ? randomUUID() : null;
   await versionTransaction(db, `daily-pair:${experience.id}:${occursOn}`, async (tx) => {
@@ -27,10 +27,10 @@ export async function insertDailyPair(db, { experience, occursOn, mainId, mainDe
       and status in ('draft','active') limit 1`, [experience.id, occursOn])).rows[0];
     if (conflict) throw new VersionConflictError("Ya existe una actividad del proyecto para esa fecha.");
     await tx.query(`insert into activities(id,experience_id,occurs_on,planned_date,title,purpose,sequence,
-      preparation,adaptations,status,details,generation_metadata)
-      values($1,$2,$3::date,$3::date,$4,$5,'[]'::jsonb,$6::jsonb,'[]'::jsonb,'draft',$7::jsonb,$8::jsonb)`,
+      preparation,adaptations,status,details,generation_metadata${preparationItemId ? ",preparation_item_id" : ""})
+      values($1,$2,$3::date,$3::date,$4,$5,'[]'::jsonb,$6::jsonb,'[]'::jsonb,'draft',$7::jsonb,$8::jsonb${preparationItemId ? ",$9" : ""})`,
     [mainId, experience.id, occursOn, mainDetails.title, mainDetails.purpose,
-      JSON.stringify(activityPreparationV3(mainDetails, materials)), JSON.stringify(mainDetails), JSON.stringify(mainMetadata)]);
+      JSON.stringify(activityPreparationV3(mainDetails, materials)), JSON.stringify(mainDetails), JSON.stringify(mainMetadata),...(preparationItemId?[preparationItemId]:[])]);
     if (pair) await tx.query(`insert into activities(id,experience_id,occurs_on,planned_date,title,purpose,
       sequence,preparation,adaptations,status,details,generation_metadata,linked_main_activity_id,workshop_item_index)
       values($1,$2,$3::date,$3::date,$4,$5,'[]'::jsonb,$6::jsonb,'[]'::jsonb,'draft',$7::jsonb,$8::jsonb,$9,$10)`,

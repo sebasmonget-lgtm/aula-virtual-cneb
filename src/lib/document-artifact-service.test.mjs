@@ -131,7 +131,7 @@ test("F11 ZIP conserva bytes y manifest de un aula, sin cruzar docentes",async()
     assert.equal(manifest.format,"ayni-document-sync-v1");
     assert.equal(manifest.entries.length,2);
     for(const entry of manifest.entries){
-      assert.match(entry.path,/^2026\/Aula-[^/]+\/(?:Plan-anual|Proyectos)\//);
+      assert.match(entry.path,/^2026\/Aula-[^/]+\/(?:Plan-anual|Proyectos-y-actividades)\//);
       const saved=await readConfirmedDocumentArtifact(f.db,f.storage,teacher,entry.document_id);
       assert.deepEqual(await zip.file(entry.path).async("nodebuffer"),saved.bytes);
       assert.equal(entry.sha256,saved.sha256);

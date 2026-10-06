@@ -7,6 +7,8 @@ import { effectiveCalendarFingerprint } from "./annual-journey-calendar.mjs";
 import { personalizationSources } from "./annual-personalization-service.mjs";
 import { loadEffectiveCalendar } from "./school-calendar-service.mjs";
 import { persistAnnualProjectSlots } from "./annual-project-slots.mjs";
+import { validateExperienceContext } from "./annual-experience-context.mjs";
+import { limaToday } from "./activity-schedule-integrity.mjs";
 
 const WORKFLOW = "annual_journey_v2_job", LEASE_MS = 210000;
 export const JOURNEY_STAGES = ["sources", "calendar", "generation", "validation", "review"];
@@ -42,6 +44,8 @@ export async function handleJourneyJobs({ request, response, url, db, context, t
   };
   if (url.pathname === "/api/annual-journey/prepare" && request.method === "POST") {
     const body = await readJson(request);
+    const experienceContext=body.experienceContract===true ? validateExperienceContext(body,curriculum,limaToday()) : null;
+    if(experienceContext) body.teacherIdeas=experienceContext.context_items.map(item=>item.text).join("\n");
     if (typeof body.teacherIdeas !== "string" || body.teacherIdeas.length > 2000) journeyFail("invalid", "Cuenta tus ideas en menos de 2000 caracteres.");
     if (body.sourceFingerprint !== snapshot.source_fingerprint) throw new VersionConflictError("Hay registros nuevos. Actualiza el resumen antes de preparar tu año.");
     const safeIdeas = annualJourneySafeText(body.teacherIdeas, sources.names, annualJourneyCurriculumTerms(curriculum));
@@ -72,13 +76,21 @@ export async function handleJourneyJobs({ request, response, url, db, context, t
       const id = randomUUID(), token = randomUUID();
       const messages = body.teacherIdeas.split(/\n+|;\s*|\s+y\s+(?=en\s+navidad)/i).map(text=>text.trim()).filter(Boolean)
         .map(text=>({kind:"teacher_preference",text,scope:"teacher_decision_not_observed_interest"}));
+      let preparationConversation=null;
+      if(experienceContext && body.conversationId){
+        const conversation=(await tx.query(`select payload from ai_pending_generations where id=$1 and classroom_id=$2 and workflow='annual_journey_conversation' and expires_at>now()`,[body.conversationId,context.id])).rows[0];
+        if(!conversation || conversation.payload.teacher_id!==teacherId || conversation.payload.source_fingerprint!==snapshot.source_fingerprint) journeyFail("not_found","Actualiza la conversación antes de preparar tu año.");
+        preparationConversation={id:body.conversationId,messages:conversation.payload.messages,source_fingerprint:snapshot.source_fingerprint};
+      }
       const saved = await write(row, {...row.proposal,teacher_preferences:body.teacherIdeas,teacher_idea_messages:messages,
+        ...(experienceContext?{experience_context:experienceContext,preparation_conversation:preparationConversation}:{}),
         generation_job_id:id,preparation_status:"saved"},tx);
       const generatedSnapshot = { ...snapshot, facts:[...snapshot.facts,...(safeIdeas ? [{key:"teacher_preferences",kind:"teacher_decision",subject:"teacher",
         scope:"classroom_preference",uncertainty:"preference_not_observed_interest",support_text:body.teacherIdeas,ai_support_text:safeIdeas,
         occurred_at:new Date().toISOString(),competency_id:null,source_refs:[]}] : [])] };
       const payload = {teacher_id:teacherId,draft_id:row.id,revision:saved.revision,status:"queued",stage:"sources",completed_stages:["sources"],
         updated_at:new Date().toISOString(),lease_token:token,teacherIdeas:body.teacherIdeas,safeIdeas,messages,snapshot:generatedSnapshot,
+        experienceContext,preparationConversation,
         sourceFingerprint:snapshot.source_fingerprint,calendarFingerprint:effectiveCalendarFingerprint(calendar),checkpoint:{}};
       await tx.query(`insert into ai_pending_generations(id,classroom_id,workflow,payload,created_at,expires_at)
         values($1,$2,$3,$4::jsonb,now(),now()+interval '24 hours')`,[id,context.id,WORKFLOW,JSON.stringify(payload)]);
@@ -113,6 +125,8 @@ export async function handleJourneyJobs({ request, response, url, db, context, t
   let completedCalls = payload.checkpoint.outputs?.length ?? 0;
   try {
     const proposal = await generateAnnualJourney({context,snapshot:payload.snapshot,curriculum,calendar,teacherIdeas:payload.safeIdeas,
+      experienceContext:payload.experienceContext ? {...payload.experienceContext,
+        context_items:[],historical_projects:payload.experienceContext.historical_projects.map(item=>({...item,title:annualJourneySafeText(item.title,sources.names,annualJourneyCurriculumTerms(curriculum)) || "Proyecto anterior declarado por docente"}))}:null,
       createProvider,resolvePlan,checkpoint:payload.checkpoint,onCheckpoint:async checkpoint => {
         payload.checkpoint=checkpoint;payload.stage=checkpoint.stage;
         payload.lease_until=new Date(Date.now()+LEASE_MS).toISOString();
@@ -136,6 +150,7 @@ export async function handleJourneyJobs({ request, response, url, db, context, t
       const freshCalendar={...await loadEffectiveCalendar(tx,{teacherId,classroomId:context.id}),initial_stage:context.calendar.initial_stage};
       if(effectiveCalendarFingerprint(freshCalendar)!==payload.calendarFingerprint)throw new VersionConflictError("El calendario cambió. Actualiza la preparación.");
       proposal.teacher_preferences=payload.teacherIdeas;proposal.teacher_idea_messages=payload.messages;proposal.generation_job_id=id;
+      if(payload.experienceContext){proposal.experience_context=payload.experienceContext;proposal.preparation_conversation=payload.preparationConversation;}
       proposal.metrics={...proposal.metrics,started_at:row.proposal.metrics.started_at,
         regenerations:(row.proposal.metrics.regenerations??0)+1,operations:[...(row.proposal.metrics.operations??[]),...proposal.metrics.operations]};
       const saved=await write(row,proposal,tx);await persistAnnualProjectSlots(tx,row.id,proposal.resolved_calendar);

@@ -85,7 +85,7 @@ function DocumentContent({ document }: { document: OpenDocument }) {
   if (document.kind === "period_closure") {
     const entries=Array.isArray(document.content.entries)?document.content.entries as Record<string,unknown>[]:[];
     const names=new Map((document.competencies??[]).map((card)=>[card.id,card.name]));
-    return <article className="rounded-3xl border bg-white p-5 sm:p-8"><p className="text-xs font-bold uppercase tracking-wide text-[#087d96]">Proyección provisional · cierre V{document.version}</p><h2 className="mt-2 text-2xl font-extrabold">{document.title}</h2><p className="mt-2 text-sm text-[#526b87]">{document.classroom} · {document.school_year} · {dateFor(document.period_start??"")} a {dateFor(document.period_end??"")}</p><p className="mt-4 rounded-xl bg-[#eaf7fb] p-3 text-sm">Esta vista conserva los datos del cierre. El Word final se preparará cuando esté disponible su plantilla.</p><div className="mt-5 space-y-3">{entries.map((entry,index)=>{const assessment=(entry.assessment_details??{}) as Record<string,unknown>,conclusion=(entry.conclusion_details??{}) as Record<string,unknown>,evidence=Array.isArray(entry.evidence)?entry.evidence:[];return <section key={`${entry.assessment_id??index}`} className="rounded-xl border p-4"><h3 className="font-bold">{text(entry.student_name)} · {names.get(text(entry.competency_id))??text(entry.competency_id)}</h3><p className="mt-1 text-sm">Nivel confirmado por la docente: <b>{text(entry.achievement_level)}</b> · {evidence.length} registros</p>{text(assessment.evidence_overview)&&<p className="mt-2 text-sm">{text(assessment.evidence_overview)}</p>}{text(conclusion.conclusion_text)&&<p className="mt-2 text-sm"><b>Conclusión:</b> {text(conclusion.conclusion_text)}</p>}</section>;})}</div></article>;
+    return <article className="rounded-3xl border bg-white p-5 sm:p-8"><p className="text-xs font-bold uppercase tracking-wide text-[#087d96]">Proyección provisional · cierre V{document.version}</p><h2 className="mt-2 text-2xl font-extrabold">{document.title}</h2><p className="mt-2 text-sm text-[#526b87]">{document.classroom} · {document.school_year} · {dateFor(document.period_start??"")} a {dateFor(document.period_end??"")}</p><p className="mt-4 rounded-xl bg-[#eaf7fb] p-3 text-sm">Puedes descargar el registro del cierre confirmado. Esta exportación conserva sus datos y no se presenta como una plantilla oficial adicional.</p><div className="mt-5 space-y-3">{entries.map((entry,index)=>{const assessment=(entry.assessment_details??{}) as Record<string,unknown>,conclusion=(entry.conclusion_details??{}) as Record<string,unknown>,evidence=Array.isArray(entry.evidence)?entry.evidence:[];return <section key={`${entry.assessment_id??index}`} className="rounded-xl border p-4"><h3 className="font-bold">{text(entry.student_name)} · {names.get(text(entry.competency_id))??text(entry.competency_id)}</h3><p className="mt-1 text-sm">Nivel confirmado por la docente: <b>{text(entry.achievement_level)}</b> · {evidence.length} registros</p>{text(assessment.evidence_overview)&&<p className="mt-2 text-sm">{text(assessment.evidence_overview)}</p>}{text(conclusion.conclusion_text)&&<p className="mt-2 text-sm"><b>Conclusión:</b> {text(conclusion.conclusion_text)}</p>}</section>;})}</div></article>;
   }
   const content = document.content;
   const names = new Map((document.competencies ?? []).map((card) => [card.id, card.name]));
@@ -136,7 +136,9 @@ function DocumentContent({ document }: { document: OpenDocument }) {
   </article>;
 }
 
-export function DocumentsScreen({ onPlan }: { onPlan?: () => void } = {}) {
+export type DocumentFolder = "diagnostic"|"annual"|"experiences"|"evaluation";
+const folderKinds:Record<DocumentFolder,DocumentKind[]>={diagnostic:["diagnostic_summary"],annual:["annual_plan"],experiences:["experience","activity"],evaluation:["family_report","period_closure"]};
+export function DocumentsScreen({ onPlan, folder }: { onPlan?: () => void;folder?:DocumentFolder } = {}) {
   const [authMode, setAuthMode] = useState<"local" | "supabase">("local");
   const [documents, setDocuments] = useState<DocumentEntry[]>([]);
   const [selected, setSelected] = useState<{ kind: DocumentKind; id: string } | null>(null);
@@ -150,7 +152,7 @@ export function DocumentsScreen({ onPlan }: { onPlan?: () => void } = {}) {
   const [artifactStates,setArtifactStates] = useState<ArtifactState[]>([]);
   const [error, setError] = useState("");
   const [revision, setRevision] = useState(0);
-  const artifactFeature = process.env.NEXT_PUBLIC_AYNI_F10_ARTIFACTS === "1";
+  const artifactFeature = process.env.NEXT_PUBLIC_AYNI_EXPERIENCE !== "0" || process.env.NEXT_PUBLIC_AYNI_F10_ARTIFACTS === "1";
   const syncFeature = artifactFeature && process.env.NEXT_PUBLIC_AYNI_F11_DOCUMENTS === "1";
 
   useEffect(() => {
@@ -167,11 +169,11 @@ export function DocumentsScreen({ onPlan }: { onPlan?: () => void } = {}) {
     apiFetch(`${localDatabaseApiUrl}/api/documents`, { signal: controller.signal }).then(async (response) => {
       if (!response.ok) throw new Error("No pudimos cargar tus documentos.");
       return response.json() as Promise<{ documents: DocumentEntry[] }>;
-    }).then((result) => { setDocuments(result.documents); setError(""); })
+    }).then((result) => { if(!controller.signal.aborted){setDocuments(folder?result.documents.filter(row=>folderKinds[folder].includes(row.kind)):result.documents); setError("");} })
       .catch(() => { if (!controller.signal.aborted) setError("No pudimos cargar tus documentos. Inténtalo otra vez."); })
       .finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
-  }, [revision]);
+  }, [revision,folder]);
 
   useEffect(() => {
     if (!artifactFeature) return;
@@ -206,11 +208,11 @@ export function DocumentsScreen({ onPlan }: { onPlan?: () => void } = {}) {
 
   const years = [...new Set(documents.map((item) => item.school_year))].sort((a, b) => b - a);
   const needsProjectWord = opened?.kind === "experience" && opened.content.document_template_version === "experience-unified-v2" && !opened.formal_ready;
-  const downloadable = opened && opened.kind !== "period_closure" && !needsProjectWord && !(opened.source_plan_format === "annual_preplan_v1" && !opened.formal_ready);
+  const downloadable = opened && !needsProjectWord && !(opened.source_plan_format === "annual_preplan_v1" && !opened.formal_ready);
   const downloadUrl = downloadable
     ? `${localDatabaseApiUrl}/api/documents/${opened.kind}/${opened.id}/download`
     : null;
-  const stableArtifact = opened && artifacts.find(item => item.source_kind === opened.kind &&
+  const stableArtifact = opened && ["annual_plan","experience"].includes(opened.kind) && artifacts.find(item => item.source_kind === opened.kind &&
     item.source_id === opened.id && item.source_version === opened.version);
   async function prepareProjectWord() {
     if (!opened || savingWord) return;
@@ -281,7 +283,7 @@ export function DocumentsScreen({ onPlan }: { onPlan?: () => void } = {}) {
     finally { setSavingWord(false); }
   }
   return <section className="mx-auto max-w-5xl space-y-5">
-    <PageIntro eyebrow="Tu trabajo guardado" title="Documentos" description="Encuentra aquí tus diagnósticos, planes, experiencias, actividades, cierres e informes." icon={BookOpen} />
+    <PageIntro eyebrow="Tu trabajo guardado" title={folder?{diagnostic:"Evaluación diagnóstica",annual:"Plan anual",experiences:"Proyectos y actividades",evaluation:"Evaluación"}[folder]:"Documentos"} description={folder?"Consulta y descarga los documentos de esta carpeta, con su fuente y versión.":"Encuentra aquí tus diagnósticos, planes, experiencias, actividades, cierres e informes."} icon={BookOpen} />
     {selected && <div className="flex flex-wrap items-center justify-between gap-3"><Button variant="outline" className="min-h-11" onClick={() => { setSelected(null); setOpened(null); setError(""); setWordMessage(""); setWordError(""); }}><ArrowLeft className="mr-2 size-4" />Volver a mis documentos</Button>
       <div className="flex flex-wrap gap-2">{needsProjectWord && opened.status === "active" && <Button className="min-h-11" disabled={savingWord} onClick={() => void prepareProjectWord()}>{savingWord ? "Preparando Word..." : "Preparar Word del proyecto"}</Button>}{artifactFeature && opened && ["annual_plan","experience"].includes(opened.kind) && ["active","archived"].includes(opened.status) && downloadable &&
         (stableArtifact ? <Button className="min-h-11" disabled={savingWord} onClick={() => void downloadStableArtifact(stableArtifact)}><Download className="mr-2 size-4" />Descargar versión estable</Button>
@@ -290,7 +292,7 @@ export function DocumentsScreen({ onPlan }: { onPlan?: () => void } = {}) {
     {wordMessage && <WorkflowFeedback tone="success">{wordMessage}</WorkflowFeedback>}
     {wordError && <WorkflowFeedback tone="error">{wordError}</WorkflowFeedback>}
     {needsProjectWord && <p className="rounded-xl bg-[#eaf7fb] p-4 text-sm">El proyecto está confirmado. Prepara su Word antes de guardarlo en Descargas.</p>}
-    {opened?.kind === "annual_plan" && opened.source_plan_format !== "annual_preplan_v1" && opened.content.plan_format !== "twelve_projects_flexible_weeks" &&
+    {opened?.kind === "annual_plan" && opened.content.journey_version !== 2 && opened.source_plan_format !== "annual_preplan_v1" && opened.content.plan_format !== "twelve_projects_flexible_weeks" &&
       <WorkflowFeedback tone="error">Este plan se creó antes del formato actual. Su Word conserva la plantilla anterior. Abre Plan para preparar una versión actualizada; el plan vigente seguirá guardado mientras la revisas.</WorkflowFeedback>}
     {opened && downloadUrl && authMode === "local" && !stableArtifact && <details className="text-sm text-[#526b87]"><summary className="min-h-11 cursor-pointer py-2 font-semibold">Opciones de descarga</summary><p>«Guardar Word en Descargas» lo guarda en el equipo que ejecuta Ayni. Si estás usando otro dispositivo, <a className="underline" href={downloadUrl} download>descarga el Word en este dispositivo</a>.</p></details>}
     {!selected && syncFeature && <DocumentSyncPanel artifacts={artifacts} />}

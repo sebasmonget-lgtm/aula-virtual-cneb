@@ -40,13 +40,15 @@ import { annualCalendarDay } from "../src/lib/annual-plan-schedule.mjs";
 import { buildFlexibleAnnualSchedule, buildEditableAnnualSchedule, defaultInitialStage, nationalCalendarBlocks2026, nationalSchoolHolidays2026, validateAnnualCalendar } from "../src/lib/annual-plan-calendar.mjs";
 import { candidateProjectDates, ensureSchoolCalendar, loadEffectiveCalendar, reprogramActivity, saveClassroomOverride,
   validateSelectedInstructionalDates } from "../src/lib/school-calendar-service.mjs";
+import { lockClassroomSchedule } from "../src/lib/activity-schedule-integrity.mjs";
 import { listSavedDocuments, loadSavedDocument } from "../src/lib/document-library-service.mjs";
 import { prepareWordDownload } from "../src/lib/document-word-export.mjs";
 import { prepareConfirmedDocumentArtifact, listConfirmedDocumentArtifacts, listDocumentArtifactStates,
   readConfirmedDocumentArtifact } from "../src/lib/document-artifact-service.mjs";
 import { createLocalPrivateDocumentArtifactStorage,
   createSupabasePrivateDocumentArtifactStorage } from "../src/lib/private-document-artifact-storage.mjs";
-import { buildAuthorizedDocumentZip } from "../src/lib/document-sync-package.mjs";
+import { buildAuthorizedDocumentZip, partitionDocumentArtifacts } from "../src/lib/document-sync-package.mjs";
+import { handleDocumentExportRoutes } from "./document-export-routes.mjs";
 import { saveWordToLocalDownloads } from "../src/lib/local-word-save.mjs";
 import { buildInstitutionInitialsLogo, loadInstitutionLogoForDocuments, normalizeInstitutionLogoUpload } from "../src/lib/institution-logo.mjs";
 import { displayPersonName } from "../src/lib/person-name.mjs";
@@ -95,12 +97,22 @@ import { DiagnosticAssessmentError, loadDiagnosticAssessmentWorkspace, prepareDi
 import { DiagnosticSourceError, loadFamilyInterview, listFamilyInterviewStatuses, saveFamilyInterview, confirmFamilyInterview, saveAndConfirmFamilyInterview, attachFamilyInterview, familyInterviewAttachmentPath, recordSpontaneousObservation, recordConfirmedSpontaneousObservation, reviseSpontaneousObservation, recordMatrixDiagnosticObservation, loadSpontaneousObservations, correctSpontaneousClassification, markSpontaneousNeedsReview, suggestSpontaneousV24, loadSpontaneousV24Metrics } from "../src/lib/diagnostic-sources-v4.mjs";
 import { createObservationV24Classifier, observationV24Enabled } from "../src/lib/observation-v24-classifier.mjs";
 import { neutralizeAssessmentText } from "../src/lib/assessment-v4-service.mjs";
+import { annualJourneySafeText, annualJourneyCurriculumTerms } from "../src/lib/annual-journey-privacy.mjs";
+import { limaToday } from "../src/lib/activity-schedule-integrity.mjs";
 import { loadPlanningFeedback, planningFeedbackText, resolveProjectPlanningFeedback } from "../src/lib/planning-feedback.mjs";
 import { expectedRevision, assertRevision, conflictPayload, httpStatusForError, isVersionConflict, versionTransaction, VersionConflictError, publicErrorMessage } from "../src/lib/version-integrity.mjs";
 import { createRequestAuth, RequestAuthError } from "./request-auth.mjs";
 import { createFirstAdmin, createTeacherAccount, listAuthUsers, recoverFirstAdmin, resetPasswordByUserId } from "./teacher-account-admin-service.mjs";
 import { loadAdminDirectory } from "./admin-directory.mjs";
 import { timingSafeEqual } from "node:crypto";
+import { Readable } from "node:stream";
+import { enqueueActivityBlock, publicPreparationJob, runPreparationStep, acceptPreparationDispatch } from "../src/lib/preparation-jobs.mjs";
+import { preparationExecutor } from "../src/lib/preparation-executor.mjs";
+import { assertProjectAnnualAuthority } from "../src/lib/project-annual-authority.mjs";
+import { handlePreparationRoutes } from "./preparation-routes.mjs";
+import { rebaseProject, projectSourceDiscrepancy } from "../src/lib/project-rebase-service.mjs";
+import { swapActivityDates } from "../src/lib/activity-swap-service.mjs";
+import { loadPeriodFutureReview } from "../src/lib/period-future-review.mjs";
 import { authorizeRequestSelectors, RequestAccessError } from "./request-authorization.mjs";
 import { loadLibraryResources, publicLibraryResource, saveLibraryResourceToDownloads } from "./library-resources.mjs";
 
@@ -367,7 +379,7 @@ async function decodePrivateMedia(value) {
   return { bytes, mimeType, audio };
 }
 
-async function handleAuthenticatedRequest({ teacherId, requestId, db }, request, response) {
+async function handleAuthenticatedRequest({ teacherId, requestId, db, preparationItemId, jobClassroomId }, request, response) {
 async function dashboard() {
   const classroomResult = await db.query(`select id from classrooms where teacher_id = $1 and status = 'active' limit 1`, [teacherId]);
   const classroomId = classroomResult.rows[0]?.id;
@@ -557,7 +569,7 @@ async function annualPlanningContext() {
   const row = (await db.query(`select c.id, c.section, c.context, c.castellano_l2_applicable, c.religion_applicable, ag.age_years as age, sy.id as school_year_id, sy.year, sy.starts_on, sy.ends_on, sy.annual_planning_context, cv.id as curriculum_version_id,
       p.display_name as teacher_name, coalesce(ip.display_name,c.institution_name) as institution_name, ip.institution_code, ip.district, ip.ugel
     from classrooms c join age_grades ag on ag.id=c.age_grade_id join school_years sy on sy.id=c.school_year_id join profiles p on p.user_id=c.teacher_id join curriculum_versions cv on cv.active=true left join institution_profiles ip on ip.owner_user_id=c.teacher_id
-    where c.teacher_id=$1 and sy.owner_id=$1 and c.status='active' limit 1`, [teacherId])).rows[0];
+    where c.teacher_id=$1 and sy.owner_id=$1 and c.status='active' and ($2::uuid is null or c.id=$2) limit 1`, [teacherId,jobClassroomId??null])).rows[0];
   if (!row) return null;
   await ensureSchoolCalendar(db,row.school_year_id);
   const group = (await db.query(`select id,version,details from diagnostic_group_reviews where classroom_id=$1 and status='confirmed' order by version desc limit 1`, [row.id])).rows[0];
@@ -639,7 +651,7 @@ async function activityAllowedCompetencies(experience, classroom) {
 }
 function persistInheritedActivity(activity, details, experience) {
   const enabled = activity.details?.activity_contract?.contract_version === "activity-v3" ||
-    (inheritedActivityEnabled() && experience.details?.contract_version === "project-master-v3");
+    ((inheritedActivityEnabled() || experience.details?.experience_contract===1) && experience.details?.contract_version === "project-master-v3");
   if (enabled) return stampActivityV3(activity, details, experience);
   if (details.activity_contract) throw new Error("La actividad no puede declarar un contrato V3 por sí misma.");
   if (details.additional_criteria?.length) throw new Error("Los criterios adicionales requieren una actividad V3 heredada.");
@@ -1170,6 +1182,12 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       send(response, 200, await buildClassroomStatistics(db, classroom.id), origin);
       return;
     }
+    if(request.method==="GET"&&url.pathname==="/api/period-review"){
+      try{const classroom=await annualPlanningContext();if(!classroom)throw new Error("Aula no disponible.");
+        send(response,200,await loadPeriodFutureReview(db,{teacherId,classroomId:classroom.id,periodId:url.searchParams.get("periodId"),curriculum:await ageFilteredAnnualCurriculum(classroom)}),origin);
+      }catch(error){send(response,httpStatusForError(error,422),{error:publicErrorMessage(error)},origin);}return;
+    }
+    if (await handlePreparationRoutes({request,response,url,db,teacherId,origin,send,readJson,annualPlanningContext,projectFlowSource,projectFlowRow,domainRequest:preparationDomainRequest}))return;
     if (await handleAnnualJourneyRoutes({ request, response, url, db, teacherId, origin, send, readJson, annualPlanningContext, annualDocumentContext })) return;
     if (url.pathname === "/api/annual-personalization/current" && request.method === "GET") {
       const context = await annualPlanningContext();
@@ -1330,14 +1348,15 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         send(response,200,{periods:periods.map((period)=>({id:period.id,label:period.label,starts_on:annualCalendarDay(period.starts_on),ends_on:annualCalendarDay(period.ends_on)})),feedback},origin);
       }catch(error){send(response,httpStatusForError(error,422),{error:publicErrorMessage(error)},origin);}return;
     }
-    if (process.env.AYNI_DOCUMENT_ARTIFACTS === "1" && request.method === "GET" && url.pathname === "/api/documents/artifacts") {
+    if(await handleDocumentExportRoutes({request,response,url,db,teacherId,origin,send,annualPlanningContext,storage:documentArtifactStorage}))return;
+    if ((process.env.AYNI_DOCUMENT_ARTIFACTS === "1" || process.env.AYNI_EXPERIENCE !== "0") && request.method === "GET" && url.pathname === "/api/documents/artifacts") {
       send(response,200,{ artifacts: await listConfirmedDocumentArtifacts(db,teacherId) },origin); return;
     }
-    if (process.env.AYNI_DOCUMENT_ARTIFACTS === "1" && process.env.AYNI_DOCUMENT_SYNC === "1"
+    if ((process.env.AYNI_DOCUMENT_ARTIFACTS === "1" && process.env.AYNI_DOCUMENT_SYNC === "1" || process.env.AYNI_EXPERIENCE !== "0")
       && request.method === "GET" && url.pathname === "/api/documents/artifacts/states") {
       send(response,200,{ states: await listDocumentArtifactStates(db,teacherId) },origin); return;
     }
-    if (process.env.AYNI_DOCUMENT_ARTIFACTS === "1" && request.method === "POST" && url.pathname === "/api/documents/artifacts/prepare") {
+    if ((process.env.AYNI_DOCUMENT_ARTIFACTS === "1" || process.env.AYNI_EXPERIENCE !== "0") && request.method === "POST" && url.pathname === "/api/documents/artifacts/prepare") {
       if (!documentArtifactStorage) { send(response,503,{error:"Storage documental privado no configurado."},origin); return; }
       try {
         const body = await readJson(request);
@@ -1352,7 +1371,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       } catch (error) { send(response,httpStatusForError(error,422),{error:publicErrorMessage(error)},origin); }
       return;
     }
-    if (process.env.AYNI_DOCUMENT_ARTIFACTS === "1" && process.env.AYNI_DOCUMENT_SYNC === "1"
+    if ((process.env.AYNI_DOCUMENT_ARTIFACTS === "1" && process.env.AYNI_DOCUMENT_SYNC === "1" || process.env.AYNI_EXPERIENCE !== "0")
       && request.method === "POST" && url.pathname === "/api/documents/artifacts/zip") {
       if (!documentArtifactStorage) { send(response,503,{error:"Storage documental privado no configurado."},origin); return; }
       try {
@@ -1369,7 +1388,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       } catch (error) { send(response,httpStatusForError(error,422),{error:publicErrorMessage(error)},origin); }
       return;
     }
-    const artifactDownload = process.env.AYNI_DOCUMENT_ARTIFACTS === "1"
+    const artifactDownload = (process.env.AYNI_DOCUMENT_ARTIFACTS === "1" || process.env.AYNI_EXPERIENCE !== "0")
       && /^\/api\/documents\/artifacts\/[0-9a-f-]{36}\/download$/i.exec(url.pathname);
     if (request.method === "GET" && artifactDownload) {
       if (!documentArtifactStorage) { send(response,503,{error:"Storage documental privado no configurado."},origin); return; }
@@ -1393,7 +1412,6 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
     if (request.method === "GET" && url.pathname.startsWith("/api/documents/") && url.pathname.endsWith("/download")) {
       const parts = url.pathname.split("/");
       if (parts.length !== 6 || parts[5] !== "download") { send(response, 404, { error: "Documento no disponible." }, origin); return; }
-      if (parts[3] === "period_closure") { send(response, 409, { error: "El Word del cierre estará disponible cuando se incorpore su plantilla definitiva." }, origin); return; }
       const requestedDocument = await loadSavedDocument(db, teacherId, parts[3], parts[4]);
       if (requestedDocument?.kind === "experience" && requestedDocument.content?.document_template_version === "experience-unified-v2" && !requestedDocument.formal_ready) {
         send(response, 409, { error: "Prepara primero el Word de este proyecto. Puedes hacerlo desde esta página." }, origin); return;
@@ -1424,7 +1442,6 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       if (authMode !== "local") { send(response, 404, { error: "Ruta local no disponible." }, origin); return; }
       const parts = url.pathname.split("/");
       if (parts.length !== 6 || parts[5] !== "save-local") { send(response, 404, { error: "Documento no disponible." }, origin); return; }
-      if (parts[3] === "period_closure") { send(response, 409, { error: "El Word del cierre estará disponible cuando se incorpore su plantilla definitiva." }, origin); return; }
       const requestedDocument = await loadSavedDocument(db, teacherId, parts[3], parts[4]);
       if (requestedDocument?.kind === "experience" && requestedDocument.content?.document_template_version === "experience-unified-v2" && !requestedDocument.formal_ready) {
         send(response, 409, { error: "Prepara primero el Word de este proyecto. Puedes hacerlo desde esta página." }, origin); return;
@@ -1649,7 +1666,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
     async function projectFlowSource(planId, proposalId, allowArchived = false, fallbackIndex = null) {
       const classroom = await annualPlanningContext();
       if (!classroom) throw new Error("No se encontró un aula activa.");
-      const plan = (await db.query(`select id,version,status,proposal,document_context,source_priority_review_id from annual_plans
+      const plan = (await db.query(`select id,version,revision,status,proposal,document_context,source_priority_review_id from annual_plans
         where id=$1 and classroom_id=$2 and school_year_id=$3 and status in ('active','archived')`,
       [planId, classroom.id, classroom.school_year_id])).rows[0];
       if (!plan || (!allowArchived && plan.status !== "active")) throw new Error("El plan anual vigente no está disponible.");
@@ -1682,7 +1699,8 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         order by pcs.updated_at desc limit 1`,[plan.id,index])).rows[0];
       const selectedDates = selection?.status === "confirmed" ? (await db.query(`select date::text from project_instructional_dates
         where selection_id=$1 and selected=true order by date`,[selection.id])).rows.map((item)=>item.date) : null;
-      return { classroom, plan, source, proposalId: canonicalProposalId, index, slot, aiContext, selection,
+      const safeDecisions=decisions=>Object.fromEntries(Object.entries(decisions).map(([key,value])=>[key,typeof value==="string"?annualJourneySafeText(value,names,annualJourneyCurriculumTerms(curriculum)):value]));
+      return { classroom, plan, source, proposalId: canonicalProposalId, index, slot, aiContext, selection, safeDecisions,
         dates: selectedDates?.length ? selectedDates : plan.proposal?.journey_version === 2
           ? [...source.instructional_dates] : instructionalDates(plan.document_context?.calendar ?? classroom.calendar, slot.starts_on, slot.ends_on) };
     }
@@ -1697,6 +1715,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         loadPlanningFeedback(db,{teacherId,classroomId:source.classroom.id,periodId})});
     }
     async function protectedProjectVersion(row) {
+      if(row?.details?.rebased_from)return null;
       if (!row?.supersedes_experience_id) return null;
       const source = (await db.query(`select details from learning_experiences where id=$1 and classroom_id=$2
         and type in ('project','unit')`, [row.supersedes_experience_id, row.classroom_id])).rows[0];
@@ -1723,8 +1742,9 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         throw new VersionConflictError("Cambió el calendario efectivo de esta propuesta. Revisa Mi año antes de desarrollarla.");
       const existing=(await db.query(`select id,date::text,selected,exclusion_reason from project_instructional_dates where selection_id=$1 order by date`,[selection.id])).rows;
       if(!existing.length){
-        for(const day of calendar.days.filter((item)=>item.is_instructional))await db.query(`insert into project_instructional_dates(id,selection_id,calendar_day_id,date,selected)
-          values($1,$2,$3,$4::date,true)`,[randomUUID(),selection.id,day.id,day.date]);
+        const cutoff=source.plan.proposal.experience_context?limaToday():"";
+        for(const day of calendar.days.filter((item)=>item.is_instructional))await db.query(`insert into project_instructional_dates(id,selection_id,calendar_day_id,date,selected,exclusion_reason)
+          values($1,$2,$3,$4::date,$5,$6)`,[randomUUID(),selection.id,day.id,day.date,!cutoff||day.date>=cutoff,cutoff&&day.date<cutoff?"Fecha anterior al inicio de la preparación; no generar retrospectivamente":null]);
       }
       const stored=(await db.query(`select id,date::text,selected,exclusion_reason from project_instructional_dates where selection_id=$1 order by date`,[selection.id])).rows;
       const exclusions=stored.filter((item)=>!item.selected);
@@ -1755,6 +1775,8 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         || JSON.stringify(calendar.days.filter((d) => d.is_instructional).map((d) => annualCalendarDay(d.date))) !== JSON.stringify(source.source.instructional_dates)))
         throw new VersionConflictError("Cambió el calendario efectivo de esta propuesta. Revisa Mi año antes de desarrollarla.");
         const selected=validateSelectedInstructionalDates(calendar.days,body.selectedDates,source.slot.starts_on,source.slot.ends_on),selectedSet=new Set(selected);
+        if(source.plan.proposal.experience_context && !row.details.project_master && selected.some(date=>date<limaToday()))
+          throw new VersionConflictError("La preparación nueva utiliza solo los días restantes. No se generan actividades retrospectivas.");
         const protectedVersion = await protectedProjectVersion(row);
         if (protectedVersion) assertProtectedCalendarDates(protectedVersion.sourceRoute, selected, protectedVersion);
         for(const day of calendar.days.filter((item)=>item.is_instructional)){
@@ -1770,7 +1792,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       }catch(error){send(response,httpStatusForError(error,422),{error:publicErrorMessage(error)},origin);}return;
     }
     if(request.method==="POST"&&/^\/api\/activities\/[0-9a-f-]+\/reschedule$/i.test(url.pathname)){
-      try{const body=await readJson(request);send(response,200,await reprogramActivity(db,{teacherId,activityId:url.pathname.split("/")[3],newDate:body.newDate,reason:body.reason,changeType:body.changeType}),origin);}
+      try{const body=await readJson(request);send(response,200,await reprogramActivity(db,{teacherId,activityId:url.pathname.split("/")[3],newDate:body.newDate,reason:body.reason,changeType:body.changeType,revision:body.revision}, {today:qaDailyClock?.date}),origin);}
       catch(error){send(response,httpStatusForError(error,422),{error:publicErrorMessage(error)},origin);}return;
     }
     if (request.method === "POST" && url.pathname === "/api/project-flow/emergent-preview") {
@@ -1912,6 +1934,14 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         isVersionConflict(error) ? conflictPayload(error) : { error: publicErrorMessage(error) }, origin); }
       return;
     }
+    if(request.method==="POST" && /^\/api\/project-flow\/[0-9a-f-]{36}\/rebase$/i.test(url.pathname)){
+      try { const {row}=await projectFlowRow(url.pathname.split("/")[3]),body=await readJson(request);
+        if(!row)throw new VersionConflictError("Proyecto no disponible.");
+        const source=await projectFlowSource(body.annualPlanId,row.source_proposal_id);assertProjectAnnualAuthority(source);
+        const rebased=await rebaseProject(db,teacherId,row,source,expectedRevision(body.expectedRevision));
+        await ensureProjectCalendarSelection(rebased,source);send(response,201,{experience:rebased},origin);
+      }catch(error){send(response,httpStatusForError(error,422),{error:publicErrorMessage(error)},origin);}return;
+    }
     if (request.method === "POST" && url.pathname === "/api/project-flow/start") {
       try {
         const body = await readJson(request);
@@ -1939,7 +1969,9 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
           const calendar_review=await ensureProjectCalendarSelection(previous,previousSource);send(response, 200, { experience: previous, existing: true,
           available_dates: calendar_review.selected_dates,calendar_review }, origin); return; }
         const planningFeedback = await projectFlowFeedback(source,body);
-        const generated = await generateProjectPreview({ context: {...source.aiContext,planning_feedback:planningFeedback}, workflow: source.source.experience_type });
+        assertProjectAnnualAuthority(source);
+        const generated = source.plan.proposal.experience_context ? {output:{context_summary:source.source.rationale,context_points:[],purpose_options:[source.source.purpose],additional_context_example:"Puedes mencionar materiales, una visita o un espacio disponible."},metadata:{workflow:"annual_source_preview"}}
+          : await generateProjectPreview({ context: {...source.aiContext,planning_feedback:planningFeedback}, workflow: source.source.experience_type });
         const id = randomUUID();
         const details = { flow_version: "project-master-v1", stage: "decisions", preview: generated.output,planning_feedback:planningFeedback };
         const saved = (await db.query(`insert into learning_experiences(id,classroom_id,type,title,purpose,starts_on,ends_on,
@@ -1958,9 +1990,13 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       const source = row?.annual_plan_id ? await projectFlowSource(row.annual_plan_id, row.source_proposal_id, true, row.source_proposal_index) : null;
       const calendar_review=row&&source?await ensureProjectCalendarSelection(row,source):null;
       const protectedVersion = row ? await protectedProjectVersion(row) : null;
+      const current= row?.source_proposal_id ? (await db.query(`select id,proposal from annual_plans where classroom_id=$1 and status='active'`,[row.classroom_id])).rows[0]:null;
+      const currentSlot=current?(await db.query(`select starts_on::text,ends_on::text from project_slots where annual_plan_id=$1 and proposal_id=$2`,[current.id,row.source_proposal_id])).rows[0]:null;
+      const currentProposal=current?.proposal.proposed_experiences?.find(item=>item.proposal_id===row.source_proposal_id);
+      const discrepancy=currentSlot&&currentProposal?projectSourceDiscrepancy(row,{planId:current.id,proposal:currentProposal},currentSlot):{changed:!!row&&row.annual_plan_id!==current?.id,reason:"La propuesta ya no ocupa un tramo de Mi año. Conservamos esta preparación histórica."};
       const protected_route_ids = protectedVersion?.sourceRoute.filter((item) =>
         item.date <= protectedVersion.today || protectedVersion.recordedRouteIds.includes(item.id)).map((item) => item.id) ?? [];
-      send(response, row ? 200 : 404, row ? { experience: row,
+      send(response, row ? 200 : 404, row ? { experience: row,discrepancy,
         ...(planningV3ReadEnabled() ? { project_master_v3: projectMasterV3(row,
           {planVersion:source?.plan.version,slotId:source?.slot.id,proposalId:source?.proposalId}) } : {}),
         available_dates: calendar_review?.selected_dates ?? source?.dates ?? [],
@@ -1970,17 +2006,19 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       try {
         const id = url.pathname.split("/")[3], body = await readJson(request);
         const { row } = await projectFlowRow(id);
-        if (!row || row.status !== "draft" || !["project-master-v1", ...(simpleProjectEnabled() ? ["project-master-v2"] : [])].includes(row.details?.flow_version)) { send(response, 404, { error: "Borrador no disponible." }, origin); return; }
+        if (!row || row.status !== "draft" || !["project-master-v1", ...(simpleProjectEnabled() || row?.details?.experience_contract===1 ? ["project-master-v2"] : [])].includes(row.details?.flow_version)) { send(response, 404, { error: "Borrador no disponible." }, origin); return; }
         const source = await projectFlowSource(row.annual_plan_id, row.source_proposal_id, true, row.source_proposal_index);
         const allowed = (await ageFilteredAnnualCurriculum(source.classroom)).map((card) => card.id);
         const decisions = validateProjectDecisions(body.decisions, allowed);
+        assertProjectAnnualAuthority(source,decisions);
         assertRevision(row,expectedRevision(body.expectedRevision));
         const planningFeedback = await projectFlowFeedback(source,body,row.details.planning_feedback);
         const result = await generateProjectDependents({ context: { ...source.aiContext,
           planning_feedback: planningFeedback,
           curriculum: source.aiContext.curriculum.filter((card) => decisions.competency_ids.includes(card.id)) },
-          decisions, workflow: row.type });
+          decisions, providerDecisions: source.plan.proposal.experience_context ? source.safeDecisions(decisions) : decisions, workflow: row.type });
         const details = { flow_version: "project-master-v1", stage: "dependents", preview: row.details.preview,
+          ...(row.details.rebased_from?{rebased_from:row.details.rebased_from}:{}),
           decisions, dependents: simpleProjectEnabled() ? retainProjectCriterionIds(result.output, row.details.dependents) : result.output, planning_feedback: planningFeedback,
           previous_map: row.details.activity_route ?? row.details.previous_map ?? null,
           teacher_overrides: row.details.teacher_overrides ?? [],
@@ -1998,16 +2036,18 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       try {
         const id = url.pathname.split("/")[3], body = await readJson(request);
         const { row } = await projectFlowRow(id);
-        if (!row || row.status !== "draft" || !["project-master-v1", ...(simpleProjectEnabled() ? ["project-master-v2"] : [])].includes(row.details?.flow_version)) { send(response, 404, { error: "Borrador no disponible." }, origin); return; }
+        if (!row || row.status !== "draft" || !["project-master-v1", ...(simpleProjectEnabled() || row?.details?.experience_contract===1 ? ["project-master-v2"] : [])].includes(row.details?.flow_version)) { send(response, 404, { error: "Borrador no disponible." }, origin); return; }
         if (!row.details.decisions || !row.details.dependents) throw new Error("Elige primero el propósito y revisa las preguntas.");
         const source = await projectFlowSource(row.annual_plan_id, row.source_proposal_id, true, row.source_proposal_index);
         const calendarReview=await ensureProjectCalendarSelection(row,source);
+        assertProjectAnnualAuthority(source,row.details.decisions);
         if(calendarReview.selection.status!=="confirmed")throw new Error("Confirma primero los días del proyecto.");
         const dependents = validateProjectDependents(body.dependents ?? row.details.dependents, row.details.decisions.competency_ids);
         const generated = await generateProjectMaster({ context: { ...source.aiContext,
           planning_feedback: row.details.planning_feedback ?? null,
           curriculum: source.aiContext.curriculum.filter((card) => row.details.decisions.competency_ids.includes(card.id)) },
           decisions: row.details.decisions,
+          providerDecisions: source.plan.proposal.experience_context ? source.safeDecisions(row.details.decisions) : row.details.decisions,
           dependents, availableDates: calendarReview.selected_dates, workflow: row.type });
         const base = projectDetails({ source: source.source, preview: row.details.preview,
           decisions: row.details.decisions, dependents, master: generated.output, previous: row.details });
@@ -2034,7 +2074,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
           image_id: Object.hasOwn(row.details, "image_id") ? row.details.image_id : imageSuggestion?.suggested_id ?? null,
           image_suggested_id: imageSuggestion?.suggested_id ?? row.details.image_suggested_id ?? null,
           stage: "map_review" };
-        if (simpleProjectEnabled()) details = stampProjectV3(row, details, source,
+        if (simpleProjectEnabled() || source.plan.proposal.experience_context) details = stampProjectV3(row, details, source,
           (await loadKnowledgeBaseV4()).version, calendarReview.selected_dates, protectedVersion);
         const saved = (await db.query(`update learning_experiences set title=$1,purpose=$2,details=$3::jsonb,
           generation_metadata=$4::jsonb where id=$5 and status='draft' and revision=$6 returning *`,
@@ -2087,16 +2127,23 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       } catch (error) { send(response, httpStatusForError(error, 422), isVersionConflict(error) ? conflictPayload(error) : { error: publicErrorMessage(error) }, origin); }
       return;
     }
+    if(request.method==="POST"&&url.pathname==="/api/activities/swap-dates"){
+      try{send(response,200,await swapActivityDates(db,teacherId,await readJson(request),{today:qaDailyClock?.date}),origin);}
+      catch(error){send(response,httpStatusForError(error,422),{error:publicErrorMessage(error)},origin);}return;
+    }
     if (request.method === "POST" && /^\/api\/project-flow\/[0-9a-f-]+\/confirm$/i.test(url.pathname)) {
       try {
         const id = url.pathname.split("/")[3], body = await readJson(request);
         const { row } = await projectFlowRow(id);
-        if (row?.status === "active") { send(response, 200, { id: row.id, status: row.status, teacher_confirmed_at: row.teacher_confirmed_at, version: row.version, revision: row.revision, already_confirmed: true }, origin); return; }
+        if (row?.status === "active") { const source=await projectFlowSource(row.annual_plan_id,row.source_proposal_id,true,row.source_proposal_index);
+          const block=source.plan.proposal.experience_context?publicPreparationJob(await enqueueActivityBlock(db,teacherId,row)):null;
+          send(response, 200, { id: row.id, status: row.status, teacher_confirmed_at: row.teacher_confirmed_at, version: row.version, revision: row.revision, already_confirmed: true,block_job:block }, origin); return; }
         if (!row || row.status !== "draft" || row.details?.stage !== "map_review") { send(response, 404, { error: "Proyecto no disponible para confirmar." }, origin); return; }
         const source = await projectFlowSource(row.annual_plan_id, row.source_proposal_id, true, row.source_proposal_index);
         const calendarReview=await ensureProjectCalendarSelection(row,source);
         if(calendarReview.selection.status!=="confirmed")throw new Error("Confirma primero los días del proyecto.");
         const route = validateEditedActivityMap(row.details.activity_route, row.details.decisions, row.details.dependents, calendarReview.selected_dates);
+        assertProjectAnnualAuthority(source,row.details.decisions);
         if (row.details.contract_version === "project-master-v3") validateProjectMasterV3(projectMasterV3(row), {
           instructionalDates: calendarReview.selected_dates,
           allowedCompetencyIds: (await ageFilteredAnnualCurriculum(source.classroom)).map((card) => card.id),
@@ -2108,7 +2155,9 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
           .some((item) => item.id === row.details.image_id))
           throw new Error("La imagen elegida ya no está disponible para este proyecto.");
         const confirmed = await confirmLearningExperienceVersion(db, source.classroom.id, id, expectedRevision(body.expectedRevision));
-        send(response, 200, confirmed, origin);
+        const active=source.plan.proposal.experience_context?(await projectFlowRow(id)).row:null;
+        const block=active?publicPreparationJob(await enqueueActivityBlock(db,teacherId,active)):null;
+        send(response, 200, {...confirmed,block_job:block}, origin);
       } catch (error) { send(response, httpStatusForError(error, 422), isVersionConflict(error) ? conflictPayload(error) : { error: publicErrorMessage(error) }, origin); }
       return;
     }
@@ -2148,6 +2197,8 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       const classroom = await annualPlanningContext(); if (!classroom) { send(response, 404, { error: "No se encontró un aula activa." }, origin); return; }
       try {
         const body = await readJson(request); let parent = null;
+        if(["project","unit"].includes(body.workflow) && (await db.query(`select 1 from annual_plans where classroom_id=$1 and status='active' and proposal ? 'experience_context'`,[classroom.id])).rows.length)
+          throw new VersionConflictError("Prepara los proyectos desde Mi año y su Plan Maestro. Para cambiar una propuesta, vuelve a Mi año.");
         const revision = body.sourceExperienceId ? (await db.query(`select * from learning_experiences where id=$1 and classroom_id=$2 and status='draft' and supersedes_experience_id is not null and type in ('project','unit')`, [body.sourceExperienceId, classroom.id])).rows[0] : null;
         if (body.sourceExperienceId && (!revision || revision.type !== body.workflow)) throw new Error("La versión que quieres regenerar ya no está disponible.");
         if (!revision && !(await db.query(`select 1 from annual_plans where classroom_id=$1 and school_year_id=$2 and status='active' limit 1`, [classroom.id, classroom.school_year_id])).rows.length)
@@ -2217,6 +2268,13 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         const body=await readJson(request);
         send(response, 200, await confirmLearningExperienceVersion(db, context.id, id,expectedRevision(body.expectedRevision)), origin);
       } catch (error) { send(response, httpStatusForError(error, 422), isVersionConflict(error)?conflictPayload(error):{ error: publicErrorMessage(error) }, origin); } return;
+    }
+    if(request.method==="GET" && /^\/api\/activities\/[0-9a-f-]{36}\/companions$/i.test(url.pathname)){
+      const context=await annualPlanningContext(),activity=context&&(await db.query(`select a.experience_id from activities a join learning_experiences e on e.id=a.experience_id
+        where a.id=$1 and e.classroom_id=$2`,[url.pathname.split("/")[3],context.id])).rows[0];
+      if(!activity){send(response,404,{error:"Actividad no disponible."},origin);return;}
+      const activities=(await db.query(`select id,revision,title,occurs_on::text,details from activities where experience_id=$1 and status='active' and linked_main_activity_id is null order by occurs_on,id`,[activity.experience_id])).rows;
+      send(response,200,{activities},origin);return;
     }
     if (request.method === "GET" && url.pathname === "/api/activities") {
       const context = await annualPlanningContext(); const experience = context && await existingLearningExperience(url.searchParams.get("experienceId"), context.id);
@@ -2310,7 +2368,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         const pair = await insertDailyPair(db, { experience, occursOn, mainId: id, mainDetails: details,
           materials: normalizeActivityMaterials([...(routeItem?.materials ?? []), ...normalizeActivityMaterials(body.materials)]), mainMetadata: pending.metadata,
           master, workshopIndex: pending.workshop_item_index, workshopProposal: body.workshopProposal,
-          workshopMetadata: pending.workshop_metadata });
+          workshopMetadata: pending.workshop_metadata,preparationItemId });
         await pendingAIGenerations.delete(body.generationId);
         send(response, 200, { id, workshopId: pair.workshopId, status: "draft", revision: 1,
           workshopRevision: pair.workshopId ? 1 : null, occurs_on: occursOn }, origin); } catch(error) { send(response,httpStatusForError(error,422),{error:publicErrorMessage(error)},origin); } return;
@@ -2656,14 +2714,19 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       const period=(await db.query(`select ep.id from evaluation_periods ep join classrooms c on c.school_year_id=ep.school_year_id
         join students s on s.classroom_id=c.id where s.id=$1 and $2::date between ep.starts_on and ep.ends_on
         order by ep.starts_on limit 1`,[capture.studentId,criterion.occurs_on])).rows[0];
-      const insert=async(runner)=>runner.query(`
+      const insert=async(runner)=>{
+        const owner = (await runner.query(`select e.classroom_id from activities a join learning_experiences e on e.id=a.experience_id where a.id=$1`,[capture.activityId])).rows[0];
+        await lockClassroomSchedule(runner,owner.classroom_id);
+        const current = (await runner.query(`select occurs_on::text from activities where id=$1`,[capture.activityId])).rows[0];
+        if(current.occurs_on!==criterion.occurs_on) throw new VersionConflictError("La fecha de la actividad cambió. Revisa el calendario antes de guardar.");
+        return runner.query(`
         insert into evidences (
           id, student_id, activity_id, criterion_id, type,
           observation_text, observation_status, media_path, observed_on, source, created_by
         ) values ($1, $2, $3, $4, 'observation', $5, $6, $7, $8::date, 'teacher', $9)
         returning id, student_id, observation_text, observation_status, media_path, observed_at, observed_on
-      `, [randomUUID(), capture.studentId, capture.activityId, capture.criterionId, capture.observationText || null, capture.observationStatus, mediaPath, criterion.occurs_on, teacherId]);
-      result=period?await versionTransaction(db,`period:${period.id}`,insert):await insert(db);
+      `, [randomUUID(), capture.studentId, capture.activityId, capture.criterionId, capture.observationText || null, capture.observationStatus, mediaPath, criterion.occurs_on, teacherId]);};
+      result=await versionTransaction(db,period?`period:${period.id}`:`evidence:${capture.activityId}`,insert);
       } catch (error) { if (mediaPath) await evidenceStorage.delete(mediaPath); throw error; }
       await refreshStudentContextSnapshot(db, capture.studentId);
       send(response, 201, { evidence: result.rows[0] }, origin);
@@ -2705,7 +2768,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         send(response, 400, { error: "La acción de jornada no es válida." }, origin);
         return;
       }
-      const entry = (await db.query(`select se.id, coalesce(jsonb_array_length(a.preparation->'steps'), 0)::int as total_steps from class_schedule_entries se join classrooms c on c.id = se.classroom_id left join activities a on a.id = se.activity_id where se.id = $1 and c.teacher_id = $2`, [body.scheduleEntryId, teacherId])).rows[0];
+      const entry = (await db.query(`select se.id,se.classroom_id, coalesce(jsonb_array_length(a.preparation->'steps'), 0)::int as total_steps from class_schedule_entries se join classrooms c on c.id = se.classroom_id left join activities a on a.id = se.activity_id where se.id = $1 and c.teacher_id = $2`, [body.scheduleEntryId, teacherId])).rows[0];
       if (!entry) {
         send(response, 403, { error: "El bloque no pertenece al aula activa." }, origin);
         return;
@@ -2718,7 +2781,12 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       const status = action === "complete" ? "completed" : action === "skip" ? "skipped" : action === "set_step" ? "active" : "active";
       const closureType = action === "complete" ? (body.closureType === "note" ? "note" : "as_planned") : action === "skip" ? "cancelled" : null;
       const closureNote = cleanText(body.closureNote, 800) || null;
-      await db.query(`insert into daily_execution_logs
+      await db.transaction(async tx => {
+      await lockClassroomSchedule(tx,entry.classroom_id);
+      const current=(await tx.query(`select scheduled_on::text,weekday from class_schedule_entries where id=$1`,[entry.id])).rows[0];
+      if(current.scheduled_on ? current.scheduled_on!==today : Number(current.weekday)!==new Date(`${today}T00:00:00Z`).getUTCDay())
+        throw new VersionConflictError("El bloque cambió de fecha. Recarga Hoy antes de comenzar.");
+      await tx.query(`insert into daily_execution_logs
         (id, schedule_entry_id, execution_date, status, actual_started_at, actual_ended_at, teacher_closure_note, closure_type, current_override, current_step_index)
         values ($1,$2,$3::date,$4,case when $4 = 'active' then now() else null end,case when $4 in ('completed','skipped') then now() else null end,$5,$6,$7,$8)
         on conflict (schedule_entry_id, execution_date) do update set
@@ -2727,15 +2795,42 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
           closure_type = excluded.closure_type, current_override = excluded.current_override,
           current_step_index = case when $9 = 'set_step' then excluded.current_step_index else daily_execution_logs.current_step_index end
       `, [randomUUID(), entry.id, today, status, closureNote, closureType, action === "keep_current", body.stepIndex ?? 0, action]);
+      });
       send(response, 200, { dashboard: await dashboard() }, origin);
       return;
     }
     send(response, 404, { error: "Ruta local no encontrada." }, origin);
-  } catch {
+  } catch (error) {
+    if(isVersionConflict(error)){send(response,409,conflictPayload(error),origin);return;}
     recordOperationalEvent("api_unexpected_failure", { requestId, status: 500 });
     send(response, 500, { error: "No se pudo completar la operación.", request_id: requestId }, origin);
   }
 }
+}
+
+async function preparationDomainRequest(job,pathname,body,method="POST",extra={}) {
+  if(!(/^\/api\/project-flow\/[0-9a-f-]{36}(?:\/(dependents|calendar|master))?$/.test(pathname) ||
+    pathname==="/api/project-flow/start" || pathname==="/api/ai/activities/generate" || pathname==="/api/activities" ||
+    /^\/api\/activities\/[0-9a-f-]{36}\/confirm$/.test(pathname)))throw new Error("Unsupported preparation step");
+  const activeDb=job.db ?? requestDatabaseScope.getStore() ?? database.db;
+  const request=Readable.from(body===undefined?[]:[JSON.stringify(body)]);
+  request.method=body===undefined?"GET":method;request.url=pathname;request.headers={};
+  let status,result;
+  const response={writeHead(value){status=value;},end(value){result=JSON.parse(value);},setHeader(){},hasHeader(){return false;}};
+  await requestDatabaseScope.run(activeDb,()=>withAiUsageContext({teacherId:job.teacher_id,db:activeDb},()=>handleAuthenticatedRequest({teacherId:job.teacher_id,
+    requestId:job.id,db:activeDb,jobClassroomId:job.classroom_id,preparationItemId:extra.preparationItemId},request,response)));
+  if(status>=400 || !status)throw Object.assign(new Error(result?.message ?? result?.error ?? "Preparation step failed"),{status});
+  return result;
+}
+async function runPreparationWorker() {
+  return runPreparationStep(db,preparationExecutor({db,request:preparationDomainRequest,pending:pendingAIGenerations,
+    partitionDocuments:partitionDocumentArtifacts,
+    prepareDocument:async(job,item)=>{
+      const knowledge=await loadKnowledgeBaseV4();
+      const logo=await loadInstitutionLogoForDocuments(db,job.teacher_id,logoStorage??assetsDir);
+      return prepareConfirmedDocumentArtifact(db,documentArtifactStorage,job.teacher_id,item.kind,item.source_id,
+        {cards:knowledge.competencyCards.map(card=>({...card,name:card.official_name})),logo,expectedSourceHash:item.source_hash});
+    }}));
 }
 
 export async function handleApiRequest(request, response) {
@@ -2760,6 +2855,17 @@ export async function handleApiRequest(request, response) {
   }
   if (request.method === "GET" && url.pathname === "/health") {
     send(response, 200, { ok: true, engine: dbMode, ...(dbMode === "local" ? { storage: ".local/pgdata" } : {}) }, origin);
+    return;
+  }
+  if(url.pathname==="/api/internal/preparation/run") {
+    const workerDb=database.requestDb();
+    try { await requestDatabaseScope.run(workerDb,async()=>{
+      if(request.method!=="POST" || !await acceptPreparationDispatch(workerDb,request.headers,process.env.AYNI_PREPARATION_DISPATCH_SECRET)){
+        send(response,401,{error:"Acceso no autorizado."});return;
+      }
+      const job=await runPreparationWorker();send(response,200,{processed:!!job});
+    }); }catch{send(response,503,{error:"No se pudo procesar la cola."});}
+    finally{if(dbMode==="postgres")await workerDb.close();}
     return;
   }
   if (request.method === "GET" && url.pathname === "/api/auth/config") {
@@ -2910,8 +3016,16 @@ if (process.env.AYNI_SERVERLESS !== "1") {
   server.listen(port, listenHost, () => {
     console.log(`Ayni API ready at http://${listenHost}:${port} (${authMode})`);
   });
+  let preparationRunning=false;
+  const preparationTimer=setInterval(async()=>{
+    if(preparationRunning)return;preparationRunning=true;
+    try{await runPreparationWorker();}catch{/* Persisted jobs recover on the next tick; no private data in logs. */}
+    finally{preparationRunning=false;}
+  },2000);
+  preparationTimer.unref();
   for (const signal of ["SIGINT", "SIGTERM"]) {
     process.on(signal, async () => {
+      clearInterval(preparationTimer);
       await new Promise((resolve) => server.close(resolve));
       await database.close();
       process.exit(0);

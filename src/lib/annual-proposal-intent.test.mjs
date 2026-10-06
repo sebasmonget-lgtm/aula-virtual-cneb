@@ -46,3 +46,9 @@ test("Navidad y Perú conservan el tema de la propuesta sin liberar nombres de a
  // A word in the allowed vocabulary that is an actual child's name is still neutralized first.
  assert.ok(!annualJourneySafeText("Luna dibujó estrellas",["Luna"]).includes("Luna"));
 });
+
+
+test("propósito y contexto pedagógico conservan verbos sin liberar nombres conocidos",()=>{
+  const result=annualJourneySafeText("Explorar y compartir decisiones. Tenemos bloques. Aurelio visitará el huerto con Luna.",["Luna"],cards.map(card=>card.name));
+  assert.match(result,/Explorar y compartir decisiones/);assert.match(result,/Tenemos bloques/);assert.ok(!result.includes("Aurelio"));assert.ok(!result.includes("Luna"));
+});

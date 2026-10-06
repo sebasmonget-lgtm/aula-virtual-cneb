@@ -10,12 +10,16 @@ import { journeyFail, validateAnnualJourney } from "../src/lib/annual-journey-co
 import { assertRevision, expectedRevision, versionTransaction, VersionConflictError, httpStatusForError, publicErrorMessage } from "../src/lib/version-integrity.mjs";
 import { persistAnnualProjectSlots } from "../src/lib/annual-project-slots.mjs";
 import { confirmAnnualPlanVersion } from "../src/lib/annual-plan-version-service.mjs";
+import { lockClassroomSchedule } from "../src/lib/activity-schedule-integrity.mjs";
 import { annualJourneySafeText, annualJourneyCurriculumTerms } from "../src/lib/annual-journey-privacy.mjs";
 import { handleJourneyJobs } from "../src/lib/annual-journey-jobs.mjs";
 import { assignAnnualSlots, editAnnualStructure } from "../src/lib/annual-year-editor.mjs";
 import { observationCoverage } from "../src/lib/observation-coverage.mjs";
 import { handleAnnualProposalCreation } from "../src/lib/annual-proposal-creation.mjs";
 import { scopedAnnualChanges, annualCalendarCriteria } from "../src/lib/annual-change-scope.mjs";
+import { annualFutureGaps } from "../src/lib/annual-experience-context.mjs";
+import { limaToday } from "../src/lib/activity-schedule-integrity.mjs";
+import { loadPeriodFutureReview } from "../src/lib/period-future-review.mjs";
 
 export async function handleAnnualJourneyRoutes({ request, response, url, db, teacherId, origin, send, readJson,
   annualPlanningContext, annualDocumentContext, createProvider, resolvePlan }) {
@@ -41,10 +45,16 @@ export async function handleAnnualJourneyRoutes({ request, response, url, db, te
       return row;
     };
     const protectedIds = async (row, tx = db) => {
-      const linked = (await tx.query(`select source_proposal_id,source_proposal_index from learning_experiences where annual_plan_id=$1`, [row.supersedes_plan_id ?? row.id])).rows;
-      const today = new Date().toLocaleDateString("en-CA", { timeZone: "America/Lima" });
-      return row.proposal.proposed_experiences.filter((r, i) => r.teacher_protected || row.supersedes_plan_id && r.planned_start_date <= today || linked.some((x) =>
-        x.source_proposal_id === r.proposal_id || Number(x.source_proposal_index) === i)).map((r) => r.proposal_id);
+      const today=limaToday();
+      const linked=(await tx.query(`select coalesce(e.source_proposal_id::text,p.proposal->'proposed_experiences'->e.source_proposal_index->>'proposal_id') as proposal_id
+        from learning_experiences e join annual_plans p on p.id=e.annual_plan_id
+        where p.classroom_id=$1 and p.school_year_id=$2 and (e.starts_on<$3::date or exists(
+          select 1 from activities a join learning_experiences version on version.id=a.experience_id
+          where (version.lineage_id=e.lineage_id or version.parent_project_id in (select id from learning_experiences where lineage_id=e.lineage_id)) and (exists(select 1 from evidences evidence where evidence.activity_id=a.id)
+            or exists(select 1 from ordinary_observations o where o.activity_id=a.id)
+            or exists(select 1 from class_schedule_entries s join daily_execution_logs execution on execution.schedule_entry_id=s.id
+              where s.activity_id=a.id and (execution.status<>'planned' or execution.actual_started_at is not null or execution.actual_ended_at is not null)))))`,[row.classroom_id,row.school_year_id,today])).rows;
+      return row.proposal.proposed_experiences.filter(r=>r.teacher_protected || r.planned_start_date<today || linked.some(x=>x.proposal_id===r.proposal_id)).map(r=>r.proposal_id);
     };
     const write = async (row, proposal, tx) => {
       const next = (await tx.query(`update annual_plans set proposal=$1::jsonb,source_context_fingerprint=$4,updated_at=now()
@@ -54,7 +64,7 @@ export async function handleAnnualJourneyRoutes({ request, response, url, db, te
       return { ...next, revision: Number(next.revision) };
     };
     if (url.pathname === "/api/annual-journey/start" && request.method === "GET") {
-      send(response, 200, { snapshot, curriculum, calendar_integrity: solveAnnualJourneyCalendar(calendar).integrity }, origin); return true;
+      send(response, 200, { snapshot, curriculum, today:limaToday(),calendar_integrity: solveAnnualJourneyCalendar(calendar).integrity }, origin); return true;
     }
     if (url.pathname === "/api/annual-journey/coverage" && request.method === "GET") {
       const records = sources.observations.map(row => ({...row,
@@ -111,15 +121,29 @@ export async function handleAnnualJourneyRoutes({ request, response, url, db, te
     }
     const editorMatch=/^\/api\/annual-journey\/([0-9a-f-]{36})\/editor-state$/i.exec(url.pathname);
     if(editorMatch && request.method==="GET") { const row=await load(editorMatch[1],db,false);send(response,200,{protected_ids:await protectedIds(row),today:new Date().toLocaleDateString("en-CA",{timeZone:"America/Lima"})},origin);return true; }
-    if(await handleAnnualProposalCreation({request,response,url,db,context,teacherId,sources,curriculum,send,origin,readJson,load,write,createProvider,resolvePlan}))return true;
+    if(await handleAnnualProposalCreation({request,response,url,db,context,teacherId,sources,curriculum,send,origin,readJson,load,write,createProvider,resolvePlan,
+      loadReviewContext:periodId=>loadPeriodFutureReview(db,{teacherId,classroomId:context.id,periodId,curriculum})}))return true;
     const match = /^\/api\/annual-journey\/([0-9a-f-]{36})\/(intent|remove-intent|apply|keep|move|structure|upgrade|confirm|copy|refresh)$/i.exec(url.pathname);
     if (!match || request.method !== "POST") { send(response, 404, { error: "Acción no disponible." }, origin); return true; }
     const [, id, operation] = match, body = await readJson(request), revision = expectedRevision(body.expectedRevision);
     draftId = id;
     if (operation === "confirm") {
       const result = await confirmAnnualPlanVersion(db, context, id, revision, async (row, tx) => {
+        await lockClassroomSchedule(tx,context.id);
+        if(row.supersedes_plan_id){
+          const parent=await load(row.supersedes_plan_id,tx,false);
+          const frozen=await protectedIds(parent,tx);
+          const comparable=proposal=>{if(!proposal)return null;const copy={...proposal};delete copy.teacher_protected;return copy;};
+          for(const proposalId of frozen){
+            const before=comparable(parent.proposal.proposed_experiences.find(item=>item.proposal_id===proposalId));
+            const after=comparable(row.proposal.proposed_experiences.find(item=>item.proposal_id===proposalId));
+            if(JSON.stringify(before)!==JSON.stringify(after))throw new VersionConflictError("Apareció trabajo protegido después de abrir el borrador. Conserva ese proyecto y revisa los cambios futuros.");
+          }
+        }
         if (row.proposal?.journey_version !== 2) journeyFail("invalid", "Usa el recorrido de esta versión.");
         validateAnnualJourney(row.proposal, curriculum, { confirmation: true });
+        if(row.proposal.experience_context && annualFutureGaps(row.proposal,curriculum).length && body.futureCoverageAcknowledged!==true)
+          journeyFail("teacher_review_required","Revisa las competencias sin oportunidad futura antes de confirmar este año parcial.");
         if (row.proposal.evidence_interpretations.length && body.interpretationsReviewed !== true) journeyFail("teacher_review_required", "Revisa las interpretaciones de actuaciones antes de confirmar este año.");
         if (row.proposal.classroom_snapshot.source_fingerprint !== (await personalizationSources(tx, teacherId, context)).fingerprint)
           throw new VersionConflictError("Hay información nueva del aula. Vuelve a preparar el borrador antes de confirmar.");

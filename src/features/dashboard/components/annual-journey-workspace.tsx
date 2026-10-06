@@ -13,6 +13,7 @@ import { canLeaveWorkspace, readWorkspaceParams, useWorkspaceSubview, writeWorks
 import { savedJourneyAnnualRows } from "@/src/lib/annual-year-map.mjs";
 import { AnnualYearTimeline, type AnnualMapRow, type AnnualMapCalendar, type AnnualMapEffectiveCalendar } from "./annual-year-map";
 import { AsyncButton, GenerationProgress, LoadingState, WorkflowFeedback } from "./workflow-ui";
+import { ExperienceContextForm, type ExperienceContextInput } from "./experience-context-form";
 import { AnnualPlanningConversation } from "./annual-planning-conversation";
 import { AnnualPreparationProgress } from "./annual-preparation-progress";
 import { DictationRecorder } from "./dictation-recorder";
@@ -27,15 +28,15 @@ type Row = AnnualMapRow & { invitation: string; children_actions: string[];
   teacher_protected?: boolean; planned_start_date?: string; planned_end_date?: string };
 type Change = { id: string; proposal_id: string | null; text: string };
 type Proposal = { editor_version?: number; available_experiences?: Row[]; curriculum_reference?: {id: string; name: string}[]; journey_version?: number; proposed_experiences: Row[]; classroom_snapshot?: Snapshot; teacher_preferences?: string;
-  generation_job_id?: string; insufficient_interpretations?: { information_status: string }[];
+  experience_context?: {version:number;starts_on:string;context_items:{text:string}[];historical_projects:{title:string;competency_ids:string[];period:number|null}[]}; future_coverage_gaps?:string[]; generation_job_id?: string; insufficient_interpretations?: { information_status: string }[];
   pending_changes?: Change[]; everyday_opportunities?: Opportunity[];
   evidence_interpretations?: { interpretation: string; meaning: string; scope: string; fact_keys: string[] }[];
   organization_criteria?: string[]; transversal_approaches?: string[]; teaching_strategies?: string[]; assessment_followup?: string[];
   family_collaboration?: string[]; inclusive_supports?: string[];
-  resolved_calendar?: { projects?: {proposal_id:string|null;slot_id:string;starts_on:string;ends_on:string;duration_weeks:2|3;period:string;instructional_dates:string[]}[]; integrity: { eligible: number; assigned: number; gaps: number; overlaps: number }; initial_stage: { purpose: string; name: string; suggested_experiences: string[]; what_to_observe: string[]; family_actions?: string[]; diagnostic_focus?: string[]; teacher_notes?: string; starts_on: string; ends_on: string } } };
+  resolved_calendar?: { projects?: {historical_dates?:string[];proposal_id:string|null;slot_id:string;starts_on:string;ends_on:string;duration_weeks:2|3;period:string;instructional_dates:string[]}[]; integrity: { eligible: number; assigned: number; gaps: number; overlaps: number }; initial_stage: { purpose: string; name: string; suggested_experiences: string[]; what_to_observe: string[]; family_actions?: string[]; diagnostic_focus?: string[]; teacher_notes?: string; starts_on: string; ends_on: string } } };
 type Plan = { id: string; status: string; revision: number; version: number; proposal: Proposal; document_context?: { calendar?: AnnualMapCalendar } };
 type Plans = { draft: Plan | null; active: Plan | null; archived: Plan[] };
-type Start = { snapshot: Snapshot; curriculum: { id: string; name: string }[] };
+type Start = { today?:string; snapshot: Snapshot; curriculum: { id: string; name: string }[] };
 type Job = { id: string; draft_id: string; status: "queued" | "running" | "failed" | "interrupted" | "succeeded";
   stage: string; completed_stages: string[]; updated_at: string; error?: string | null };
 const api = async <T,>(path: string, value?: unknown): Promise<T> => {
@@ -75,6 +76,11 @@ export function AnnualJourneyWorkspace({ onConfirmed, onGoDiagnostic, onDevelop,
   const [selectedId, setSelectedId] = useState(""), [preparing, setPreparing] = useState(false);
   const [ideas, setIdeas] = useState(""), [message, setMessage] = useState(""), [scope, setScope] = useState<string | null>(null);
   const [ideaDraft, setIdeaDraft] = useState("");
+  const [experienceInput,setExperienceInput]=useState<ExperienceContextInput>({contextItems:[],historicalProjects:[]});
+  const [conversationId,setConversationId]=useState<string>();
+  const contextEdited=useRef(false);
+  const [contextDirty,setContextDirty]=useState(false);
+  const captureConversation=useCallback((value:{id:string;messages:{role:string;text:string}[]})=>{setConversationId(value.id);if(!contextEdited.current)setExperienceInput(previous=>({...previous,contextItems:value.messages.flatMap((m,index)=>m.role==="teacher"?m.text.split(/\n+|;\s*/).filter(Boolean).map(text=>({text,source_turn:index})):[])}));},[]);
   const [panelOpen,setPanelOpen]=useState(false);
   const [job, setJob] = useState<Job | null>(null);
   const [busy, setBusy] = useState<string | null>(null), [audioBusy, setAudioBusy] = useState(false);
@@ -110,7 +116,7 @@ export function AnnualJourneyWorkspace({ onConfirmed, onGoDiagnostic, onDevelop,
   const listOpen = annualView === "list" || !!mapProjection.error;
   const editable = selected?.status === "draft";
   const generating = job?.status === "queued" || job?.status === "running";
-  const dirty = Boolean(message.trim() || ideaDraft.trim());
+  const dirty = Boolean(message.trim() || ideaDraft.trim() || preparing && contextDirty);
   const reload = useCallback(async (id?: string) => {
     const data = await api<Plans>("/api/annual-plans/current"); setPlans(data);
     const all = [data.draft, data.active, ...data.archived].filter((p): p is Plan => !!p);
@@ -128,17 +134,18 @@ export function AnnualJourneyWorkspace({ onConfirmed, onGoDiagnostic, onDevelop,
     try {
       let result = await api<Job>(`/api/annual-journey/jobs/${value.id}/run`, {});
       while(result.status === "queued") { setJob(result);result = await api<Job>(`/api/annual-journey/jobs/${value.id}/run`, {}); }
-      if (result.status === "succeeded") { await reload(result.draft_id); setPreparing(false); setNotice("Quince propuestas listas para revisar."); }
+      if (result.status === "succeeded") { await reload(result.draft_id); setPreparing(false); setNotice("Mi año está listo para revisar."); }
       setJob(result);
     } catch {
       // Read server truth, including a recoverable checkpoint, instead of replacing it with a generic HTTP error.
-      try { const saved=await api<Job>(`/api/annual-journey/jobs/${value.id}`);if(saved.status==="succeeded"){await reload(saved.draft_id);setPreparing(false);setNotice("Quince propuestas listas para revisar.");}setJob(saved); }
+      try { const saved=await api<Job>(`/api/annual-journey/jobs/${value.id}`);if(saved.status==="succeeded"){await reload(saved.draft_id);setPreparing(false);setNotice("Mi año está listo para revisar.");}setJob(saved); }
       catch { setNotice("La conexión está tardando. Ayni sigue preparando tu año; recuperaremos el avance automáticamente."); }
     } finally { runningJobRef.current = false; setBusy(null); }
   }, [reload]);
   useEffect(() => { let live = true;
     Promise.resolve().then(() => Promise.all([reload(), loadStart()])).then(([next]) => { if (live) { setPreparing(!next || next.proposal.journey_version === 2 && !next.proposal.proposed_experiences.length);
       setIdeas(next?.proposal.teacher_preferences ?? "");
+      if(next?.proposal.experience_context) setExperienceInput({contextItems:next.proposal.experience_context.context_items,historicalProjects:next.proposal.experience_context.historical_projects});
       if (next?.proposal.generation_job_id) void api<Job>(`/api/annual-journey/jobs/${next.proposal.generation_job_id}`).then(value => {
         if (live) { setJob(value); if (value.status !== "succeeded") setPreparing(true);
         }
@@ -170,7 +177,7 @@ export function AnnualJourneyWorkspace({ onConfirmed, onGoDiagnostic, onDevelop,
       try {
         const value = await api<Job>(`/api/annual-journey/jobs/${jobId}`);
         if (!live) return;
-        if (value.status === "succeeded") { await reload(value.draft_id); if (live) { setJob(value);setPreparing(false); setBusy(null); setError("");setNotice("Quince propuestas listas para revisar."); }return; }
+        if (value.status === "succeeded") { await reload(value.draft_id); if (live) { setJob(value);setPreparing(false); setBusy(null); setError("");setNotice("Mi año está listo para revisar."); }return; }
         setJob(value);
         if (["failed", "interrupted"].includes(value.status)) setBusy(null);
       } catch { /* Read again without regenerating the saved job. */ }
@@ -186,7 +193,7 @@ export function AnnualJourneyWorkspace({ onConfirmed, onGoDiagnostic, onDevelop,
     } finally { setBusy(null); }
   };
   const mutate = (operation: string, extra: unknown = {}) => selected && run(operation, async () => {
-    const result = await api<Plan>(`/api/annual-journey/${selected.id}/${operation}`, { expectedRevision: selected.revision, interpretationsReviewed, ...(extra as object) });
+    const result = await api<Plan>(`/api/annual-journey/${selected.id}/${operation}`, { expectedRevision: selected.revision, interpretationsReviewed, futureCoverageAcknowledged:!!proposal?.experience_context, ...(extra as object) });
     if (operation === "intent") { setMessage(""); setNotice("Indicación guardada. Puedes agregar otra o aplicar los cambios juntos."); }
     if (operation === "confirm") { setNotice("Tu año está confirmado. El Word contiene esta misma versión."); onConfirmed?.(); }
     setInterpretationsReviewed(false); await reload(result.id);
@@ -194,12 +201,12 @@ export function AnnualJourneyWorkspace({ onConfirmed, onGoDiagnostic, onDevelop,
   const generate = () => run("prepare", async () => {
     if (!start) throw new Error("Actualiza el resumen antes de preparar el año.");
     try {
-      const result = await api<Job>("/api/annual-journey/prepare", { teacherIdeas: ideas, sourceFingerprint: start.snapshot.source_fingerprint,
+      const result = await api<Job>("/api/annual-journey/prepare", { teacherIdeas: ideas, sourceFingerprint: start.snapshot.source_fingerprint, ...(process.env.NEXT_PUBLIC_AYNI_EXPERIENCE!=="0"?{experienceContract:true,conversationId,...experienceInput}:{}),
         ...(editable && modern ? { draftId: selected.id, expectedRevision: selected.revision } : {}) });
-      setJob(result); await reload(result.draft_id);
+      contextEdited.current=false;setContextDirty(false);setJob(result); await reload(result.draft_id);
     } catch(error) {
       const saved=await reload().catch(()=>null);
-      if(saved?.proposal.generation_job_id&&saved.proposal.teacher_preferences===ideas){
+      if(saved?.proposal.generation_job_id&&saved.proposal.teacher_preferences===(process.env.NEXT_PUBLIC_AYNI_EXPERIENCE!=="0"?experienceInput.contextItems.map(item=>item.text.trim()).join("\n"):ideas)){
         const recovered=await api<Job>(`/api/annual-journey/jobs/${saved.proposal.generation_job_id}`).catch(()=>null);
         if(recovered){setJob(recovered);if(recovered.status==="succeeded")setPreparing(false);else setPreparing(true);return;}
       }
@@ -212,7 +219,7 @@ export function AnnualJourneyWorkspace({ onConfirmed, onGoDiagnostic, onDevelop,
   const disabled = !!busy || audioBusy || generating;
   const proposalDetails = complete ? (<div className={listOpen ? "grid gap-5 lg:grid-cols-2" : "space-y-5"}>{proposal!.proposed_experiences.map((row, index) => listOpen || row.proposal_id === selectedProposal?.proposal_id ? <article key={row.proposal_id} className="rounded-xl border border-[#d6e5ef] bg-white p-5 sm:p-6">
         <h2 className="text-xl font-bold leading-snug text-[#172b52]">{proposal!.editor_version===3 ? (proposal!.resolved_calendar?.projects?.findIndex((slot:{proposal_id:string|null})=>slot.proposal_id===row.proposal_id) ?? index)+1 : index+1} · {annualDisplayTitle(row.title)}</h2>
-        {row.planned_start_date && row.planned_end_date && <p className="mt-2 text-sm font-semibold text-[#526b87]">{compactDate(row.planned_start_date)} – {compactDate(row.planned_end_date)} · {row.duration_weeks} semanas · {row.period} · {row.planned_instructional_days} días lectivos</p>}
+        {row.planned_start_date && row.planned_end_date && <p className="mt-2 text-sm font-semibold text-[#526b87]">{compactDate(row.planned_start_date)} – {compactDate(row.planned_end_date)} · {proposal?.resolved_calendar?.projects?.some(slot=>slot.proposal_id===row.proposal_id&&!!slot.historical_dates?.length)?"Tramo parcial":`${row.duration_weeks} semanas`} · {row.period} · {row.planned_instructional_days} días lectivos</p>}
         <p className="mt-4 font-semibold">Qué podrían hacer los niños</p><ul className="mt-2 list-disc space-y-1 pl-5 text-[#3d5874]">{row.children_actions.map((text, i) => <li key={i}>{text}</li>)}</ul>
         <p className="mt-4 font-semibold">Por qué tiene sentido para esta aula</p><p className="mt-2 leading-relaxed text-[#3d5874]">{row.rationale}</p>
         <div className="mt-4 flex flex-wrap gap-2">{editable && <><Button variant="outline" disabled={disabled} onClick={() => void mutate("keep", { proposalId: row.proposal_id })}>{row.teacher_protected && <Check aria-hidden="true" />} {row.teacher_protected ? "Mantenida · permitir cambios" : "Dejar como está"}</Button>
@@ -242,18 +249,18 @@ export function AnnualJourneyWorkspace({ onConfirmed, onGoDiagnostic, onDevelop,
     {notice && <p role="status" className="text-sm font-semibold text-[#176442]">{notice}</p>}
     {busy === "apply" ? <GenerationProgress label="Ayni está aplicando tus indicaciones" description="Revisa las propuestas que necesitan cambios y conserva las demás." /> : null}
     {job && job.status !== "succeeded" && <AnnualPreparationProgress job={job} generating={generating} disabled={disabled} onContinue={()=>void continueSavedJob(job)} onRefresh={()=>void run("reload",async()=>{await reload(job.draft_id);await loadStart();setJob(null);})}/>}
-    {preparing && !generating && (!job || job.status === "succeeded") && start && <AnnualPlanningConversation observations={start.snapshot.facts.filter(f=>f.kind==="observed").length} families={start.snapshot.facts.filter(f=>f.kind==="family_report").length} unknown={start.snapshot.competency_information.filter(c=>c.recorded_performances===0).length} onIdeas={setIdeas} onDraft={setIdeaDraft} onGenerate={generate} disabled={disabled}/>}
+    {preparing && !generating && (!job || job.status === "succeeded") && start && <>{process.env.NEXT_PUBLIC_AYNI_EXPERIENCE !== "0" && <ExperienceContextForm value={experienceInput} onChange={value=>{contextEdited.current=true;setContextDirty(true);setExperienceInput(value);}} curriculum={start.curriculum} today={start.today??new Date().toLocaleDateString("en-CA",{timeZone:"America/Lima"})} disabled={disabled}/>}<AnnualPlanningConversation observations={start.snapshot.facts.filter(f=>f.kind==="observed").length} families={start.snapshot.facts.filter(f=>f.kind==="family_report").length} unknown={start.snapshot.competency_information.filter(c=>c.recorded_performances===0).length} onIdeas={setIdeas} onDraft={setIdeaDraft} onGenerate={generate} onConversation={captureConversation} disabled={disabled}/></>}
     {!preparing && complete && selected && <>
-      <JourneySteps active={6}/>
+      {!proposal.experience_context && <JourneySteps active={6}/>}{proposal.experience_context&&<section className="space-y-3 rounded-xl bg-[#edf7fa] p-4"><h2 className="font-bold">Tu inicio en Ayni · {proposal.experience_context.starts_on}</h2><p className="text-sm">El pasado sin registro permanece explícito. El primer proyecto se prepara para los días lectivos restantes.</p><details><summary className="min-h-11 cursor-pointer py-2 font-semibold">Contexto confirmado e historia declarada</summary><ul className="space-y-2">{proposal.experience_context.context_items.map((item,i)=><li key={i}>{item.text}</li>)}</ul><ul className="mt-4 space-y-2">{proposal.experience_context.historical_projects.map((item,i)=><li key={i}>{item.title} · {item.period?`Bimestre ${item.period}`:"Período no precisado"} · Historia declarada</li>)}</ul></details></section>}
       <div className="flex flex-wrap items-center justify-between gap-3"><p className="font-semibold text-[#526b87]">{editable ? "Borrador guardado · revisa antes de confirmar" : selected.status === "active" ? "Año confirmado · previsión flexible" : "Versión histórica"}</p>
-        {editable ? <AsyncButton busyLabel="Confirmando…" busy={busy === "confirm"} disabled={disabled || !!message.trim() || !!proposal.pending_changes?.length || proposal.editor_version===3 && (proposal.proposed_experiences.length!==15 || annualCoverage(proposal).some((c:{total:number;everyday:boolean})=>!c.total&&!c.everyday)) || !!proposal.evidence_interpretations?.length && !interpretationsReviewed} onClick={() => void mutate("confirm")}>Confirmar mi año</AsyncButton>
+        {editable ? <AsyncButton busyLabel="Confirmando…" busy={busy === "confirm"} disabled={disabled || !!message.trim() || !!proposal.pending_changes?.length || proposal.editor_version===3 && !proposal.experience_context && (proposal.proposed_experiences.length!==15 || annualCoverage(proposal).some((c:{total:number;everyday:boolean})=>!c.total&&!c.everyday)) || !!proposal.evidence_interpretations?.length && !interpretationsReviewed} onClick={() => void mutate("confirm")}>Confirmar mi año</AsyncButton>
           : selected.status === "active" ? <Button disabled={disabled || !!plans?.draft} onClick={() => void mutate("copy")}>Revisar mi año con Ayni</Button> : null}
       </div>
       {editable && !!proposal.evidence_interpretations?.length && <div className="rounded-xl border border-[#d6e5ef] p-4"><p>Revisa las interpretaciones y sus actuaciones en «El año completo» antes de confirmar; pueden orientar los apoyos previstos.</p><label className="mt-3 flex min-h-11 items-center gap-3"><input type="checkbox" checked={interpretationsReviewed} onChange={(e) => setInterpretationsReviewed(e.target.checked)} />Revisé estas interpretaciones para esta versión del año.</label></div>}
       {editable && <div className="flex flex-wrap items-center gap-3"><Button variant="outline" disabled={disabled} onClick={()=>changeScope(null)}><MessageCircle className="size-4"/>Ajustar Mi año con Ayni{globalChanges.length ? " · "+globalChanges.length+" pendientes" : ""}</Button><Button variant="ghost" disabled={disabled} onClick={()=>void mutate("refresh")}>Actualizar con nuevas observaciones</Button>{proposal.editor_version!==3 && <Button variant="outline" disabled={disabled} onClick={()=>void mutate("upgrade")}>Organizar borrador en 15 tramos</Button>}</div>}
       {proposal.editor_version!==3 && <p className="rounded-lg bg-slate-100 p-3 text-sm text-[#3d5874]">Estás viendo una versión anterior de {proposal.proposed_experiences.length} propuestas, con sus fechas conservadas. Organizar un borrador compatible en 15 tramos activa Biblioteca, matriz curricular y arrastre; el contenido pedagógico se conserva. Si contiene trabajo protegido, usa un año QA separado.</p>}
-      {proposal.editor_version===3 && proposal.proposed_experiences.length!==15 && <p role="status" className="rounded-lg bg-amber-50 p-3 text-sm text-amber-950">Hay {15-proposal.proposed_experiences.length} tramos vacíos. Coloca una propuesta en cada uno antes de confirmar.</p>}
-      {proposal.editor_version===3 && annualCoverage(proposal).some((c:{total:number;everyday:boolean})=>!c.total&&!c.everyday) && <p role="alert" className="rounded-lg bg-amber-50 p-3 text-sm text-amber-950">Hay competencias sin oportunidad anual ni cotidiana. Revisa la matriz antes de confirmar.</p>}
+      {proposal.editor_version===3 && !proposal.experience_context && proposal.proposed_experiences.length!==15 && <p role="status" className="rounded-lg bg-amber-50 p-3 text-sm text-amber-950">Hay {15-proposal.proposed_experiences.length} tramos vacíos. Coloca una propuesta en cada uno antes de confirmar.</p>}
+      {proposal.editor_version===3 && annualCoverage(proposal).some((c:{total:number;everyday:boolean})=>!c.total&&!c.everyday) && <p role="alert" className="rounded-lg bg-amber-50 p-3 text-sm text-amber-950">Hay competencias sin oportunidad anual ni cotidiana. Revisa la matriz antes de confirmar. {proposal.experience_context?"Al confirmar este año parcial aceptas las oportunidades futuras indicadas; no se presume qué se trabajó antes.":""}</p>}
       {editable && libraryChanges.length>0 && <section className="rounded-xl border border-amber-200 bg-amber-50 p-4"><h3 className="font-bold">Indicaciones de propuestas en Biblioteca</h3><p className="mt-1 text-sm">Puedes quitar estas indicaciones o volver a colocar la propuesta en el año para aplicarlas.</p><ul className="mt-3 space-y-3">{libraryChanges.map(change=><li key={change.id}><p className="font-semibold">{annualDisplayTitle(proposal.available_experiences?.find(row=>row.proposal_id===change.proposal_id)?.title ?? "Propuesta retirada")}</p><span>{change.text}</span><Button variant="ghost" disabled={disabled} onClick={()=>void mutate("remove-intent",{changeId:change.id})}>Quitar indicación</Button></li>)}</ul></section>}
       <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-xl font-bold text-[#172b52]">Tu año en el tiempo</h2>
         <div className="flex gap-2" role="group" aria-label="Vista de Mi año">

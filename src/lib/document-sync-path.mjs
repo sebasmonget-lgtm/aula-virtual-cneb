@@ -5,9 +5,9 @@ const safe = value => String(value ?? "").normalize("NFKD").replace(/[\u0300-\u0
 export function artifactRelativePath(artifact) {
   if (!uuid.test(artifact.id) || !uuid.test(artifact.classroom_id) ||
     !Number.isInteger(Number(artifact.school_year)) || Number(artifact.school_year)<2000 || Number(artifact.school_year)>2100 ||
-    !["annual_plan","experience"].includes(artifact.source_kind) ||
-    !/^(?:plan|proyecto)-[0-9a-f]{8}-v\d+\.docx$/.test(artifact.filename))
+    !["annual_plan","experience","diagnostic_summary","activity","family_report","period_closure"].includes(artifact.source_kind) ||
+    !/^(?:plan|proyecto|diagnostico|actividad|informe|cierre)-[0-9a-f]{8}-v\d+\.docx$/.test(artifact.filename))
     throw new Error("Identidad documental inválida.");
-  const kind = artifact.source_kind === "annual_plan" ? "Plan-anual" : "Proyectos";
+  const kind = {annual_plan:"Plan-anual",experience:"Proyectos-y-actividades",activity:"Proyectos-y-actividades",diagnostic_summary:"Evaluacion-diagnostica",family_report:"Evaluacion",period_closure:"Evaluacion"}[artifact.source_kind];
   return `${artifact.school_year}/Aula-${safe(artifact.classroom)}-${artifact.classroom_id.slice(0,8)}/${kind}/${artifact.id}/${artifact.filename}`;
 }

@@ -27,7 +27,7 @@ const typeLabel = (document) => ({ annual_plan: "Plan anual", diagnostic_summary
 /** The filename has no student name or teacher-controlled text. */
 export function wordFilenameFor(document) {
   const kind = ({ annual_plan: "plan-anual", diagnostic_summary: "diagnostico-aula", experience: document.subtype === "project" ? "proyecto" : "unidad",
-    activity: "actividad", family_report: "informe-familia" })[document.kind] ?? "documento";
+    activity: "actividad", family_report: "informe-familia", period_closure: "cierre-periodo" })[document.kind] ?? "documento";
   return `${kind}-${Number(document.school_year) || "sin-anio"}-${String(document.id ?? "").slice(-8)}.docx`;
 }
 
@@ -172,7 +172,7 @@ function contentForFamilyReport(document, names) {
 
 /** Render only the authorized, presentable projection returned by loadSavedDocument. */
 export async function renderSavedDocumentWord(document, competencyCards = [], { logo = null } = {}) {
-  if (!document || !["annual_plan", "diagnostic_summary", "experience", "activity", "family_report"].includes(document.kind)) {
+  if (!document || !["annual_plan", "diagnostic_summary", "experience", "activity", "family_report", "period_closure"].includes(document.kind)) {
     throw new Error("Documento no disponible para Word.");
   }
   if (document.kind === "annual_plan" && document.content?.journey_version === 2) return renderAnnualJourneyWord(document, competencyCards);
@@ -195,7 +195,16 @@ export async function renderSavedDocumentWord(document, competencyCards = [], { 
   const detail = document.kind === "annual_plan" ? contentForAnnual(document, names) :
     document.kind === "diagnostic_summary" ? contentForDiagnostic(document) :
     document.kind === "experience" ? contentForExperience(document, names) :
-    document.kind === "activity" ? contentForActivity(document, names) : contentForFamilyReport(document, names);
+    document.kind === "activity" ? contentForActivity(document, names) : document.kind === "period_closure" ? [
+      bodyParagraph("Exportación del cierre confirmado. Conserva las valoraciones y conclusiones guardadas; no es una plantilla oficial adicional."),
+      ...labelled("Período", document.content.period?.label),
+      ...(document.content.entries ?? []).flatMap(entry => [heading(entry.student_name, 2),
+        ...labelled("Competencia", names.get(entry.competency_id) ?? entry.competency_id),
+        ...labelled("Nivel confirmado", entry.achievement_level),
+        ...section("Conclusión confirmada", entry.conclusion_details?.conclusion_text ?? entry.conclusion_details?.conclusion ?? entry.conclusion_details?.text),
+        ...section("Evidencia del cierre", (entry.evidence ?? []).map(e => `${e.observed_on}: ${e.observation_text ?? ""}`))]),
+      ...section("Pendientes declarados en el cierre", (document.content.pending_entries ?? []).map(entry => `${entry.student_name} · ${names.get(entry.competency_id) ?? entry.competency_id}: ${entry.reason ?? entry.state}`)),
+    ] : contentForFamilyReport(document, names);
   const doc = new Document({
     title: clean(document.title), subject: typeLabel(document), creator: "Ayni Aula",
     styles: { paragraphStyles: [{ id: "Normal", name: "Normal", run: { font: "Aptos", size: 22, color: "000000" },

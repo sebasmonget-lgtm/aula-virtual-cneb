@@ -5,7 +5,7 @@ import { versionTransaction, VersionConflictError } from "./version-integrity.mj
 
 const uuid = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
 const hash = value => createHash("sha256").update(value).digest("hex");
-const supported = new Set(["annual_plan", "experience"]);
+const supported = new Set(["annual_plan", "experience", "diagnostic_summary", "activity", "family_report", "period_closure"]);
 const publicArtifact = row => ({ id: row.id, source_kind: row.source_kind, source_id: row.source_id,
   source_version: Number(row.source_version), version: Number(row.artifact_version),
   status: row.status, filename: row.filename, sha256: row.sha256,
@@ -15,20 +15,23 @@ const publicArtifact = row => ({ id: row.id, source_kind: row.source_kind, sourc
   title: row.title ?? null, confirmed_at: row.confirmed_at });
 
 async function sourceScope(db, teacherId, kind, sourceId) {
-  const relation = kind === "annual_plan" ? "annual_plans" : "learning_experiences";
-  return (await db.query(`select source.id,source.version,source.status,source.teacher_confirmed_at,
+  const relation = {annual_plan:"annual_plans",experience:"learning_experiences",diagnostic_summary:"diagnostic_group_reviews",activity:"activities",family_report:"family_reports",period_closure:"period_closure_versions"}[kind];
+  const joins = kind === "activity" ? "join learning_experiences e on e.id=source.experience_id join classrooms c on c.id=e.classroom_id" :
+    kind === "family_report" ? "join students s on s.id=source.student_id join classrooms c on c.id=s.classroom_id" : "join classrooms c on c.id=source.classroom_id";
+  const confirmation = kind === "period_closure" ? "'confirmed' as status,source.confirmed_at as teacher_confirmed_at" : "source.status,source.teacher_confirmed_at";
+  return (await db.query(`select source.id,source.version,${confirmation},
       c.id as classroom_id,c.section as classroom,sy.year
-    from ${relation} source join classrooms c on c.id=source.classroom_id
+    from ${relation} source ${joins}
     join school_years sy on sy.id=c.school_year_id
     where source.id=$1 and c.teacher_id=$2 and sy.owner_id=$2`, [sourceId,teacherId])).rows[0] ?? null;
 }
 
 export async function prepareConfirmedDocumentArtifact(db, storage, teacherId, kind, sourceId,
-  { cards = [], logo = null, render = prepareWordDownload } = {}) {
+  { cards = [], logo = null, render = prepareWordDownload, expectedSourceHash = null } = {}) {
   if (!supported.has(kind) || !uuid.test(sourceId ?? "")) return null;
   const scope = await sourceScope(db,teacherId,kind,sourceId);
   if (!scope) return null;
-  if (!scope.teacher_confirmed_at || !["active","archived"].includes(scope.status))
+  if (!scope.teacher_confirmed_at || !["active","archived","confirmed"].includes(scope.status))
     throw new Error("Confirma primero la fuente para preparar una versión estable.");
   const document = await loadSavedDocument(db,teacherId,kind,sourceId);
   if (!document) return null;
@@ -36,9 +39,11 @@ export async function prepareConfirmedDocumentArtifact(db, storage, teacherId, k
     throw new Error("Prepara primero el contenido formal del plan.");
   if (kind === "experience" && document.content?.document_template_version === "experience-unified-v2" && !document.formal_ready)
     throw new Error("Prepara primero el Word del proyecto confirmado.");
-  const templateVersion = kind === "annual_plan" ? document.document_context?.template_version ?? "annual-legacy-v1"
-    : document.content?.document_template_version ?? "experience-legacy-v1";
   const sourceHash = hash(JSON.stringify(document));
+  if(expectedSourceHash && sourceHash!==expectedSourceHash)throw new VersionConflictError("El documento cambió durante la descarga. Prepara una descarga nueva; los archivos anteriores se conservan.");
+  const templateVersion = kind === "annual_plan" ? document.content?.experience_context ? "annual-experience-v1" : document.document_context?.template_version ?? "annual-legacy-v1"
+    : kind === "experience" ? document.content?.document_template_version ?? "experience-legacy-v1"
+    : `${document.content?.document_template_version ?? document.content?.document_format ?? kind}-snapshot-${sourceHash.slice(0,16)}`;
   const row = await versionTransaction(db,`artifact:${kind}:${sourceId}`,async tx => {
     const current = (await tx.query(`select * from document_artifacts where source_kind=$1 and source_id=$2
       and source_version=$3 and artifact_version=1 and template_version=$4`,
@@ -50,7 +55,8 @@ export async function prepareConfirmedDocumentArtifact(db, storage, teacherId, k
     }
     const id = randomUUID();
     // Filename is fixed at creation; bytes and checksum are committed only after storage verification.
-    const filename = `${kind === "annual_plan" ? "plan" : "proyecto"}-${sourceId.slice(0,8)}-v${scope.version}.docx`;
+    const prefix = {annual_plan:"plan",experience:"proyecto",diagnostic_summary:"diagnostico",activity:"actividad",family_report:"informe",period_closure:"cierre"}[kind];
+    const filename = `${prefix}-${sourceId.slice(0,8)}-v${scope.version}.docx`;
     return (await tx.query(`insert into document_artifacts(id,teacher_id,classroom_id,source_kind,
       source_id,source_version,template_version,source_sha256,filename)
       values($1,$2,$3,$4,$5,$6,$7,$8,$9) returning *`,

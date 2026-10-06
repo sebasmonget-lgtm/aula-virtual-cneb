@@ -5,7 +5,9 @@ import { destinationFromHash, hashForDestination } from "./teacher-navigation.mj
 const changedEvent = "ayni-location-change";
 export function readWorkspaceParams(destination: string) {
   if (typeof window === "undefined" || destinationFromHash(window.location.hash) !== destination) return new URLSearchParams();
-  return new URLSearchParams(window.location.hash.split("?")[1] ?? "");
+  const params=new URLSearchParams(window.location.hash.split("?")[1] ?? "");
+  if(window.location.hash.split("?")[0].toLowerCase()==="#mi-ano")params.set("tab","annual");
+  return params;
 }
 export function canLeaveWorkspace() {
   return window.dispatchEvent(new Event("ayni-before-navigation", { cancelable: true }));

@@ -31,11 +31,11 @@ export async function listSavedDocuments(db, teacherId) {
       id: row.id, kind: "experience", subtype: row.type, title: row.title, status: row.status, version: Number(row.version),
       school_year: Number(row.year), classroom_id: row.classroom_id, classroom: row.section, date: dateOnly(row.starts_on),
     }));
-  const activities = (await db.query(`select a.id,a.title,a.status,a.occurs_on,e.id as parent_experience_id,sy.year,c.id as classroom_id,c.section
+  const activities = (await db.query(`select a.id,a.version,a.title,a.status,a.occurs_on,e.id as parent_experience_id,sy.year,c.id as classroom_id,c.section
     from activities a join learning_experiences e on e.id=a.experience_id
     join classrooms c on c.id=e.classroom_id join school_years sy on sy.id=c.school_year_id
     where c.teacher_id=$1 and sy.owner_id=$1 and a.details ? 'meaningful_situation'`, [teacherId])).rows.map((row) => ({
-      id: row.id, kind: "activity", title: row.title, status: row.status,
+      id: row.id, kind: "activity", title: row.title, status: row.status, version: Number(row.version),
       school_year: Number(row.year), classroom_id: row.classroom_id, parent_experience_id: row.parent_experience_id,
       classroom: row.section, date: dateOnly(row.occurs_on),
     }));
@@ -151,12 +151,20 @@ export async function loadSavedDocument(db, teacherId, kind, id) {
       age: Number(row.age_years), teacher_name: row.teacher_name, ugel: row.ugel, district: row.district,
       starts_on: dateOnly(row.starts_on), ends_on: dateOnly(row.ends_on), origin: row.origin,
       source_proposal_index: Number.isInteger(row.source_proposal_index) ? row.source_proposal_index : null,
-      formal_ready: Boolean(row.formal_content),
+      formal_ready: Boolean(row.formal_content) || row.details?.experience_contract === 1,
       ...(planningV3ReadEnabled() ? { project_master_v3: projectMasterV3(row,
         { planVersion: row.source_plan_version, slotId: row.source_slot_id,
           proposalId: row.canonical_proposal_id }) } : {}),
       content: { ...selectContent(row.details, ["starting_point", "trigger_or_interest", "learning_need_or_context", "primary_competency_ids", "possible_secondary_competency_ids", "possible_pathways", "proposed_situations", "spaces_and_materials", "evidence_opportunities", "family_or_community_links", "adjustment_points", "flexibility_notes", "document_template_version", "teacher_overrides", "project_master", "dependents", "decisions"]), activity_route: canonicalProjectRoute(row.details), purpose: row.details?.purpose || row.purpose, planning_reason: row.planning_reason,
-        formal_content: row.formal_content ?? null } } : null;
+        formal_content: row.formal_content ?? (row.details?.experience_contract === 1 ? {
+          situation: row.details.decisions?.context_summary,
+          foundation: row.details.project_master?.foundation,
+          methodology: (row.details.dependents?.journey ?? []).map(part => `${part.title}: ${part.description}`).join("\n"),
+          diversity_support: (row.details.source_proposal_snapshot?.supports ?? []).join("\n"),
+          family_collaboration: (row.details.family_or_community_links ?? []).join("\n"),
+          assessment_followup: (row.details.dependents?.general_criteria ?? []).map(item => `${item.criterion}\n${item.expected_evidence.join("; ")}`).join("\n"),
+          closing: row.details.project_master?.closing_description,
+        } : null) } } : null;
   }
   if (kind === "activity") {
     const row = (await db.query(`select a.id,a.version,a.title,a.purpose,a.status,a.details,a.preparation,a.occurs_on,e.title as experience_title,
@@ -183,7 +191,7 @@ export async function loadSavedDocument(db, teacherId, kind, id) {
       join learning_experiences wm on wm.id=wa.experience_id and wm.type='workshop'
       where wa.linked_main_activity_id=$1 and wm.classroom_id=$2 and wa.status in ('active','archived')
       order by case wa.status when 'active' then 0 else 1 end,wa.version desc limit 1`, [row.id, row.classroom_id])).rows[0];
-    return { id: row.id, kind, title: row.title, status: row.status,
+    return { id: row.id, kind, title: row.title, status: row.status, version: Number(row.version),
       ...(planningV3ReadEnabled() ? { activity_v3: activityV3({ ...row, experience_id: row.experience_id },
         { id: row.experience_id, version: row.experience_version, details: row.experience_details }) } : {}),
       school_year: Number(row.year), classroom: row.section, institution_name: row.institution_name,

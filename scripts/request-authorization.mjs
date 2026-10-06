@@ -33,7 +33,7 @@ const selectorFields = {
   classroomId: "classroom", studentId: "student", schoolYearId: "year", yearId: "year",
   periodId: "period", evaluationPeriodId: "period", annualPlanId: "plan", planId: "plan",
   experienceId: "experience", projectId: "experience", masterId: "experience",
-  activityId: "activity", linkedMainActivityId: "activity", criterionId: "criterion",
+  activityId: "activity", otherActivityId:"activity", linkedMainActivityId: "activity", criterionId: "criterion",
   evidenceId: "evidence", assessmentId: "assessment", conclusionId: "conclusion",
   reportId: "report", scheduleEntryId: "schedule",
 };
@@ -53,7 +53,7 @@ function pathSelector(pathname) {
     "activity-criteria": "criterion", evidences: "evidence", assessments: "assessment",
     "descriptive-conclusions": "conclusion", "family-reports": "report",
   }[parts[2]];
-  if (kind && parts[3] && !["options", "context", "current"].includes(parts[3])) return [kind, parts[3]];
+  if (kind && parts[3] && !["options", "context", "current", "swap-dates"].includes(parts[3])) return [kind, parts[3]];
   return null;
 }
 

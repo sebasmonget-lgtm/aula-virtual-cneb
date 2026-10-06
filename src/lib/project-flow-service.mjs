@@ -156,6 +156,7 @@ export function projectDetails({ source, preview, decisions, dependents, master,
     family_or_community_links: [], adjustment_points: [],
     flexibility_notes: "El recorrido puede ajustarse según lo observado durante el proyecto.",
     preview, decisions, dependents, planning_feedback: previous?.planning_feedback ?? null,
+    ...(previous?.rebased_from?{rebased_from:previous.rebased_from}:{}),
     project_master: { foundation: master.foundation, closing_description: master.closing_description,
       closing_rationale: master.closing_rationale, resources: master.resources },
     activity_route: route, teacher_overrides: previous?.teacher_overrides ?? [],
@@ -253,22 +254,22 @@ export async function generateProjectPreview({ context, workflow = "project", re
   return result;
 }
 
-export async function generateProjectDependents({ context, decisions, workflow = "project",
+export async function generateProjectDependents({ context, decisions, providerDecisions = decisions, workflow = "project",
   resolvePlan = resolveAIExecutionPlan, createProvider = createAIProviderForPlan,
   loadSkill = loadLearningExperienceSkill }) {
   const result = await call({ workflow, task: "dependents", resolvePlan, createProvider, loadSkill,
-    outputSchema: PROJECT_DEPENDENTS_SCHEMA, context: { ...context, confirmed_decisions: decisions,
+    outputSchema: PROJECT_DEPENDENTS_SCHEMA, context: { ...context, confirmed_decisions: providerDecisions,
       task: "Propón preguntas guía, recorrido flexible y un criterio general con evidencias esperadas para CADA competencia elegida. Derívalos del propósito y contexto que la docente acaba de elegir. No cambies las competencias ni inventes observaciones. No son todavía actividades diarias." } });
   validateProjectDependents(result.output, decisions.competency_ids);
   return result;
 }
 
-export async function generateProjectMaster({ context, decisions, dependents, availableDates,
+export async function generateProjectMaster({ context, decisions, providerDecisions = decisions, dependents, availableDates,
   workflow = "project", resolvePlan = resolveAIExecutionPlan, createProvider = createAIProviderForPlan,
   loadSkill = loadLearningExperienceSkill }) {
   validateProjectDependents(dependents, decisions.competency_ids);
   const result = await call({ workflow, task: "generation", resolvePlan, createProvider, loadSkill,
-    outputSchema: PROJECT_MASTER_SCHEMA, context: { ...context, confirmed_decisions: decisions,
+    outputSchema: PROJECT_MASTER_SCHEMA, context: { ...context, confirmed_decisions: providerDecisions,
       confirmed_questions: dependents.guiding_questions, confirmed_journey: dependents.journey,
       confirmed_general_criteria: dependents.general_criteria, available_instructional_dates: availableDates,
       project_start_date: availableDates[0], project_end_date: availableDates.at(-1),

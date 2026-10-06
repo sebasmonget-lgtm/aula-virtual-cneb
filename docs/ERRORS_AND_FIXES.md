@@ -1,5 +1,15 @@
 # Errores y soluciones
 
+## 2026-10-05 — Reprogramación de actividad completada desalineó agenda y ejecución (pendiente de corrección)
+
+**Síntoma reproducido.** `reprogramActivity` aceptó mover una actividad ficticia completada del 7 al 8 de abril: cambiaron fecha de actividad y agenda, pero el log completed conservó ejecución el 7. La ruta de calendario llama directamente al servicio. Solo base PGlite en memoria; ningún dato docente modificado.
+
+**Causa raíz.** El servicio valida propiedad, día lectivo, límites y conflicto de fecha, pero no comprueba pasado, ejecución ni evidencias. Los guards de versiones del mapa no protegen esta entrada independiente.
+
+**Solución propuesta, todavía no implementada ni validada.** Centralizar protección en servidor, consultar registros reales dentro de la operación transaccional y rechazar cambios de actividades pasadas/ejecutadas/con evidencia, incluyendo cambios de estado. El futuro intercambio debe validar ambas actividades y persistir ambas fechas/agenda/historial de forma atómica. No quitar controles del mapa para reutilizar esta ruta.
+
+**Verificación y prevención.** Reproducción ejecutada en `.local/experience-audit-2026-10-05/probe-past-calendar.mjs` y recibo JSON del mismo nombre. Las 161 regresiones seleccionadas pasan, pero no cubrían este contraejemplo; no acreditan solución. Añadir regresión de calendario/HTTP con completed, evidencia, fecha pasada, concurrencia y aislamiento al corregir. Auditoría y transición en `docs/REDISENO_EXPERIENCIA_AUDITORIA_2026-10-05.md`.
+
 ## 2026-10-02 — Bloqueo de generación anual en Preview por ruta de compilación
 
 **Síntoma registrado antes de corregir.** En el Preview de `b94cd6e`, Guardar y generar propuestas conserva la idea y la preparación QA, pero falla con `ENOENT` al abrir `/vercel/path0/skills/crear-plan-anual/references/criterios-cneb.md`; no se obtiene un plan vigente. Nota previa fuera del repositorio: `ayni-preview-annual-blocker-before-fix.md`.
@@ -1541,3 +1551,14 @@ Síntoma: cuatro notas QA de la captura automatizada quedaron asociadas a la sel
 **Corrección.** Vocabulario temático cerrado seguro, con neutralización previa de nombres conocidos/contactos; intención literal recuperable, invalidación de candidata/draft/revisión/procedencia en nuevo turno y revisión del tema reciente. Turno guardado antes de IO, GET/reanudación sin duplicación. Captura contextual alumno/competencia, momento requerido y consulta claramente separada de Guardar. Retry acotado solo de lecturas, poll secuencial y cierre tras recuperar el plan. Foto de inscripción normalizada privada de hasta 100 KB. Checkpoints animados desde estados reales, mascota y escritura visibles en móvil.
 
 **Validación y prevención.** Suite focal 60/60 en servidor con proveedores simulados: corte entre mercado y Navidad descarta candidata anterior, conserva el turno/tema y deja intacto el año; fotos sintéticas y aislamiento docente, momento vacío sin IA, idempotencia/CAS y recuperación de jobs. Typecheck/lint y builds verificados antes de publicar; recibo final y QA visual separados en `.local/qa-fixes-*`. Logs históricos consultados no devolvieron el evento de `Failed to fetch`: no atribuir infraestructura sin evidencia. Mantener pruebas de intención nueva, pending turn y carga final; no repetir POST automáticamente ni tratar `ready` antiguo como respuesta al nuevo turno. Detalle/rollback: `docs/qa/initial-journey-recovery-2026-10-04.md`.
+
+
+## 2026-10-05 — El worker interno recuperable resolvía el proxy de base de datos dentro de sí mismo
+
+**Síntoma.** El recorrido HTTP ficticio creó Mi año pero la preparación backend del proyecto falló al resolver la conexión de base de datos.
+
+**Causa raíz.** El adaptador interno colocaba el proxy contextual db como conexión en AsyncLocalStorage. Leer db dentro de ese contexto volvía a resolver el mismo proxy de forma recursiva.
+
+**Solución validada.** Usar job.db transaccional cuando existe y, en caso contrario, la conexión real del contexto o database.db. El recorrido HTTP completo volvió a funcionar desde sus checkpoints: proyecto, cuatro actividades, aprobación atómica, seis Word y ZIP; ocho llamadas simuladas y cero pagadas. Su repetición conservó ese contador. Pruebas PostgreSQL de checkpoints/aprobación y suite final 109/109 PASS.
+
+**Prevención.** Nunca registrar un proxy de resolución contextual como su propia conexión. Verificar un flujo vertical con el servidor y worker reales, además de probar el executor con adaptadores de fixture.

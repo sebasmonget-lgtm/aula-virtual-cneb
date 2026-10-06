@@ -1,5 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { assertRevision, versionTransaction, VersionConflictError } from "./version-integrity.mjs";
+import { assertProjectUnstarted,assertAnnualDescendant } from "./project-rebase-service.mjs";
+import { lockClassroomSchedule } from "./activity-schedule-integrity.mjs";
 
 export class LearningExperienceVersionError extends Error {
   constructor(reason, message) { super(message); this.name = "LearningExperienceVersionError"; this.reason = reason; }
@@ -48,15 +50,22 @@ export async function confirmLearningExperienceVersion(db, classroomId, draftId,
   const identity = (await db.query(`select lineage_id from learning_experiences where id=$1`, [draftId])).rows[0];
   if (!identity) throw new LearningExperienceVersionError("draft_unavailable", "El borrador ya no está disponible.");
   return versionTransaction(db, `experience:${identity.lineage_id}`, async (tx) => {
+    await lockClassroomSchedule(tx,classroomId);
     const draft = (await tx.query(`select id,revision,lineage_id,supersedes_experience_id,annual_plan_id,origin,source_proposal_index,type
+      ,source_proposal_id,details
       from learning_experiences where id=$1 and classroom_id=$2 and status='draft' for update`, [draftId, classroomId])).rows[0];
     if (!draft) throw new VersionConflictError("El borrador ya fue confirmado o reemplazado.");
     if (expectedDraftRevision !== null) assertRevision(draft, expectedDraftRevision);
     if (draft.supersedes_experience_id) {
-      const parent = (await tx.query(`select id,annual_plan_id,origin,source_proposal_index,type from learning_experiences
+      const parent = (await tx.query(`select id,annual_plan_id,origin,source_proposal_index,type,source_proposal_id,lineage_id,starts_on from learning_experiences
         where id=$1 and classroom_id=$2 and lineage_id=$3 and status='active' for update`, [draft.supersedes_experience_id, classroomId, draft.lineage_id])).rows[0];
-      if (!parent || parent.annual_plan_id !== draft.annual_plan_id || parent.origin !== draft.origin ||
-          parent.source_proposal_index !== draft.source_proposal_index || parent.type !== draft.type)
+      const rebase=draft.details?.rebased_from;
+      if(rebase && parent){
+        if(rebase.experience_id!==parent.id || rebase.annual_plan_id!==parent.annual_plan_id || !draft.source_proposal_id || draft.source_proposal_id!==parent.source_proposal_id)
+          throw new VersionConflictError("El origen de la nueva preparación no coincide.");
+        await assertProjectUnstarted(tx,parent);await assertAnnualDescendant(tx,draft.annual_plan_id,parent.annual_plan_id,classroomId);
+      }
+      if (!parent || (!rebase && (parent.annual_plan_id !== draft.annual_plan_id || parent.source_proposal_index !== draft.source_proposal_index)) || parent.origin !== draft.origin || parent.type !== draft.type)
         throw new VersionConflictError("La versión original ya no coincide con este borrador.", draft.revision);
       await tx.query(`update learning_experiences set status='archived',superseded_at=now() where id=$1 and status='active'`, [parent.id]);
     }

@@ -12,7 +12,7 @@ export function resolveAnnualProposal(plan, slots, requestedId) {
   for (const slot of slots ?? []) {
     if (slot.annual_plan_id && slot.annual_plan_id !== plan.id) continue;
     const index = Number(slot.slot_index) - 1;
-    const proposal = rows[index];
+    const proposal = slot.proposal_id ? rows.find(row=>row.proposal_id===slot.proposal_id) : plan.proposal.editor_version===3 ? null : rows[index];
     if (!proposal || !uuid(slot.id)) continue;
     const proposalId = uuid(proposal.proposal_id) ? proposal.proposal_id : slot.id;
     if (slot.proposal_id && slot.proposal_id !== proposal.proposal_id) continue;

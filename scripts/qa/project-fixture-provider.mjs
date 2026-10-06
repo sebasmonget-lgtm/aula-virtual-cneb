@@ -1,6 +1,7 @@
 // QA transport fixture, not a production provider. Never connects to an external API.
 import { createServer } from "node:http";
 import { randomUUID } from "node:crypto";
+import { generationFixture } from "../../src/lib/test-fixtures/annual-journey.mjs";
 if (process.env.NODE_ENV !== "test" || process.env.AYNI_QA_FIXTURE_PROVIDER !== "1")
   throw new Error("El proveedor fixture requiere un proceso QA explícito.");
 let calls = 0;
@@ -17,7 +18,9 @@ const server = createServer(async (request, response) => {
     const criterion = (id) => ({ competency_id: id, criterion: "Explica una idea relacionada con el propósito de la propuesta.",
       expected_evidence: ["Explicación registrada por la docente durante la actividad."] });
     let output;
-    if (schema === "annual-preplan-v1") output = {
+    if (schema.startsWith("annual-journey-slots")) {output=generationFixture(context.curriculum.competency_cards);output.proposals=output.proposals.slice(0,context.calendar.length);}
+    else if (schema === "annual-journey-review-v2") output={issues:[]};
+    else if (schema === "annual-preplan-v1") output = {
       proposals: context.initial_slots.map((slot, index) => {
         const card = context.curriculum.competency_cards[index % context.curriculum.competency_cards.length];
         return { experience_type: "project", title: `QA ficticia: propuesta ${String(index + 1).padStart(2, "0")}`,

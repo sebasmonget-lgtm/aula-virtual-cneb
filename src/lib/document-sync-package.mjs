@@ -3,6 +3,17 @@ import { listConfirmedDocumentArtifacts, readConfirmedDocumentArtifact } from ".
 import { artifactRelativePath } from "./document-sync-path.mjs";
 
 const uuid = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
+export const ZIP_MAX_BYTES = 50 * 1024 * 1024;
+export function partitionDocumentArtifacts(artifacts) {
+  const parts=[]; let current=[], bytes=0;
+  for(const artifact of artifacts){
+    if(Number(artifact.byte_length)>ZIP_MAX_BYTES)throw new Error("Un documento supera el límite de la descarga conjunta.");
+    if(current.length && (current.length>=100 || bytes+Number(artifact.byte_length)>ZIP_MAX_BYTES)){parts.push(current);current=[];bytes=0;}
+    current.push(artifact.id);bytes+=Number(artifact.byte_length);
+  }
+  if(current.length)parts.push(current);
+  return parts;
+}
 
 export async function buildAuthorizedDocumentZip(db, storage, teacherId, artifactIds) {
   if (!Array.isArray(artifactIds) || !artifactIds.length || artifactIds.length > 100 ||
@@ -12,6 +23,8 @@ export async function buildAuthorizedDocumentZip(db, storage, teacherId, artifac
   if (artifactIds.some(id => !allowed.has(id))) return null;
   if (new Set(artifactIds.map(id=>allowed.get(id).classroom_id)).size !== 1)
     throw new Error("Selecciona documentos de una sola aula por ZIP.");
+  if(artifactIds.reduce((sum,id)=>sum+Number(allowed.get(id).byte_length),0)>ZIP_MAX_BYTES)
+    throw new Error("Divide la descarga en partes de hasta 50 MiB.");
   const zip = new JSZip(), entries = [];
   for (const id of artifactIds) {
     const artifact = await readConfirmedDocumentArtifact(db,storage,teacherId,id);

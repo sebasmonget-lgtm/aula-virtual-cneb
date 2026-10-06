@@ -39,15 +39,18 @@ import { ProjectDevelopmentWorkspace as LegacyProjectDevelopmentWorkspace } from
 import { SimpleProjectWorkspace } from "./simple-project-workspace";
 import { OrdinaryObservationDialog } from "./ordinary-observation-dialog";
 import { OrdinaryReviewDialog } from "./ordinary-review-dialog";
-import { DocumentsScreen } from "./documents-screen";
+import { DocumentsScreen, type DocumentFolder } from "./documents-screen";
+import { PlanningDownload } from "./planning-download";
 import { destinationFromHash, hashForDestination, primaryDestination } from "@/src/lib/teacher-navigation.mjs";
-import { canLeaveWorkspace, useWorkspaceSubview, writeWorkspaceLocation } from "@/src/lib/workspace-location";
+import { canLeaveWorkspace, readWorkspaceParams, useWorkspaceSubview, writeWorkspaceLocation } from "@/src/lib/workspace-location";
 
-const ProjectDevelopmentWorkspace = process.env.NEXT_PUBLIC_AYNI_PROJECT_SIMPLE === "1"
+const ProjectDevelopmentWorkspace = process.env.NEXT_PUBLIC_AYNI_PROJECT_SIMPLE === "1" || process.env.NEXT_PUBLIC_AYNI_EXPERIENCE!=="0"
   ? SimpleProjectWorkspace : LegacyProjectDevelopmentWorkspace;
 import { SchoolCalendarScreen } from "./school-calendar-screen";
 import { PeriodEvaluation } from "./period-evaluation";
-import { BimesterReplan } from "./bimester-replan";
+import { BimesterReplan as LegacyBimesterReplan } from "./bimester-replan";
+import { PeriodFutureReview } from "./period-future-review";
+const BimesterReplan=process.env.NEXT_PUBLIC_AYNI_EXPERIENCE!=="0"?PeriodFutureReview:LegacyBimesterReplan;
 import { PlanningFeedbackOption } from "./planning-feedback-option";
 import { PilotSetup } from "./pilot-setup";
 import { AsyncButton, LoadingState, NextStepCard, ScreenSkeleton, WorkflowFeedback } from "./workflow-ui";
@@ -63,7 +66,9 @@ const mobileNav = [
 ] as const;
 const f7Nav = [["Hoy", "Hoy", Home], ["Planificar", "Planificar", CalendarDays],
   ["Mi aula", "Aula", Users], ["Biblioteca", "Biblioteca", BookOpen]] as const;
-const f7Enabled = process.env.NEXT_PUBLIC_AYNI_F7_NAV === "1";
+const redesigned = process.env.NEXT_PUBLIC_AYNI_EXPERIENCE !== "0";
+const experienceNav = [["Mi año","Mi año",CalendarDays],["Hoy","Hoy",Home],["Calendario","Calendario",CalendarRange],["Evaluar","Evaluar",ClipboardCheck],["Planificación","Planificar",BookOpen]] as const;
+const f7Enabled = !redesigned && process.env.NEXT_PUBLIC_AYNI_F7_NAV === "1";
 const sentenceCase = (value: string) => value.charAt(0).toLocaleUpperCase("es-PE") + value.slice(1);
 const planningTabs = ["home", "diagnostic", "annual", "experiences", "activities"] as const;
 const evaluationSections = ["home", "period", "replan"] as const;
@@ -71,6 +76,7 @@ const evaluationViews = ["student", "conclusions", "family", "coverage", "consol
 
 export function TeacherWorkspace() {
   const [active, setActive] = useState("Hoy");
+  const [annualDestination, setAnnualDestination] = useState(false);
   const navigationTouched = useRef(false);
   const [evaluationTarget, setEvaluationTarget] = useState<{ studentId: string; competencyId: string } | null>(null);
   const [planningTarget, setPlanningTarget] = useState<"activities" | "diagnostic" | null>(null);
@@ -112,6 +118,7 @@ export function TeacherWorkspace() {
         window.dispatchEvent(new Event("ayni-location-change")); return;
       }
       acceptedHash = window.location.hash;
+      setAnnualDestination(readWorkspaceParams("Planificar").get("tab") === "annual");
       const destination = destinationFromHash(window.location.hash);
       if (destination) { navigationTouched.current = true; if (destination === "Diagnóstico") { setPlanningTarget("diagnostic"); setActive("Planificar"); } else setActive(destination); setStarting(false); }
     };
@@ -137,7 +144,8 @@ export function TeacherWorkspace() {
         try {
           const guidance = await loadStartingGuidance(localDatabaseApiUrl);
           if (!controller.signal.aborted && !navigationTouched.current) {
-            if (guidance.startingSection === "Diagnóstico") { setPlanningTarget("diagnostic"); setDiagnosticInitialStep(1); setActive("Planificar"); }
+            if(redesigned && guidance.startingSection!=="Hoy"){setActive("Planificar");writeWorkspaceLocation("Planificar",{tab:"annual"});}
+            else if (guidance.startingSection === "Diagnóstico") { setPlanningTarget("diagnostic"); setDiagnosticInitialStep(1); setActive("Planificar"); }
             else setActive(guidance.startingSection === "Niños" ? "Aula" : guidance.startingSection);
           }
           if (!controller.signal.aborted) {
@@ -187,9 +195,10 @@ export function TeacherWorkspace() {
   const profile = dashboard?.profile;
   const activity = dashboard?.activity;
   const metrics = dashboard?.metrics;
-  const selectedNavigation = f7Enabled && active !== "Biblioteca" ? primaryDestination(active) : active;
+  const selectedNavigation = redesigned && active==="Planificar" && annualDestination ? "Mi año" : f7Enabled && active !== "Biblioteca" ? primaryDestination(active) : active;
 
-  function navigate(section: string) { if (!canLeaveWorkspace()) return; navigationTouched.current = true; setStarting(false); if (section !== "Planificar") { setPlanningTarget(null); setSelectedResource(null); setCalendarActivity(null); } if (section === "Evaluar") { setEvaluationTarget(null); setEvaluationEntry("home"); } setActive(section); const hash = hashForDestination(section); if (hash && destinationFromHash(window.location.hash) !== section) { window.history.pushState(null, "", hash); window.dispatchEvent(new Event("ayni-location-change")); } }
+  function navigate(section: string) { if (!canLeaveWorkspace()) return false; navigationTouched.current = true; setStarting(false); if (section !== "Planificar") { setPlanningTarget(null); setSelectedResource(null); setCalendarActivity(null); } if (section === "Evaluar") { setEvaluationTarget(null); setEvaluationEntry("home"); } setActive(section); const hash = hashForDestination(section); if (hash && destinationFromHash(window.location.hash) !== section) { window.history.pushState(null, "", hash); window.dispatchEvent(new Event("ayni-location-change")); } return true; }
+  function navigatePrimary(section:string) { if(!navigate(section==="Mi año"?"Planificar":section))return; if(section==="Mi año" || section==="Planificar") writeWorkspaceLocation("Planificar",{tab:section==="Mi año"?"annual":"home"}); }
   function openDiagnostic(initialStep: 1 | 2 | 3 = 1) { setPlanningTarget("diagnostic"); setDiagnosticInitialStep(initialStep); navigate("Planificar"); }
 
   function closeEvidence(open: boolean) {
@@ -260,10 +269,10 @@ export function TeacherWorkspace() {
           <SidebarGroup>
             <SidebarGroupContent>
               <nav aria-label="Navegación principal"><SidebarMenu className="gap-1.5">
-                {(f7Enabled ? f7Nav : nav.map(([label, Icon]) => [label, label, Icon] as const)).map(([label, destination, Icon]) => (
+                {(redesigned ? experienceNav : f7Enabled ? f7Nav : nav.map(([label, Icon]) => [label, label, Icon] as const)).map(([label, destination, Icon]) => (
                   <SidebarMenuItem key={label}>
                     <SidebarMenuButton asChild isActive={selectedNavigation === destination} className="h-11 rounded-xl px-3 text-[15px] transition-colors hover:bg-[#eaf6f9] focus-visible:ring-2 data-[active=true]:bg-[#087d96] data-[active=true]:font-semibold data-[active=true]:text-white">
-                      <button type="button" aria-current={selectedNavigation === destination ? "page" : undefined} onClick={() => navigate(destination)}><Icon /><span>{label}</span></button>
+                      <button type="button" aria-current={selectedNavigation === destination ? "page" : undefined} onClick={() => navigatePrimary(destination)}><Icon /><span>{label}</span></button>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 ))}
@@ -307,13 +316,13 @@ export function TeacherWorkspace() {
           active === "Documentos" ? <DocumentsScreen onPlan={() => navigate("Planificar")} /> :
           active === "Calendario" ? <SchoolCalendarScreen onOpenPlanning={() => navigate("Planificar")} onOpenActivity={(item) => { setCalendarActivity(item); setPlanningTarget("activities"); navigate("Planificar"); }} /> : active === "Biblioteca" ? dashboard ? <ResourceLibraryScreen onPlan={() => navigate("Planificar")} age={dashboard.profile.age_years} initialFilter={libraryFilter} onUse={(resource) => { setSelectedResource(resource); setPlanningTarget("activities"); navigate("Planificar"); }} /> : <ScreenSkeleton /> :
           active === "Evaluar" ? dashboard ? <EvaluationArea dashboard={dashboard} initialTarget={evaluationTarget} initialSection={evaluationEntry} onPlan={() => { setPlanningTarget(null); navigate("Planificar"); }} onPrepareActivity={() => { setPlanningTarget("activities"); navigate("Planificar"); }} onToday={() => navigate("Hoy")} /> : <ScreenSkeleton /> :
-          active === "Aula" ? dashboard ? <><div className="mx-auto mb-4 flex max-w-5xl flex-wrap gap-2">{f7Enabled && <><Button variant="outline" onClick={() => openDiagnostic()}>Diagnóstico</Button><Button variant="outline" onClick={() => navigate("Evaluar")}>Evaluación</Button>{process.env.NEXT_PUBLIC_AYNI_CURRICULAR_REVIEW === "1" && <Button variant="outline" onClick={() => setOrdinaryReviewOpen(true)}>Observaciones por revisar</Button>}</>}</div><StudentsScreen students={students} onImported={setDashboard} onDiagnostic={() => openDiagnostic()} onEvaluate={(studentId, competencyId) => { navigate("Evaluar"); setEvaluationTarget({ studentId, competencyId }); }} onPlan={() => navigate("Planificar")} /></> : <ScreenSkeleton /> : active === "Planificar" ? dashboard ? <PlanningArea dashboard={dashboard} initialTab={planningTarget} initialActivity={calendarActivity} diagnosticInitialStep={diagnosticInitialStep} selectedResource={selectedResource} onGoToday={() => navigate("Hoy")} onRecordEvidence={openPlannedEvidence} onGoStudents={() => navigate("Aula")} onGoWorkshops={() => { setLibraryFilter("workshops"); navigate("Biblioteca"); }} onGoCalendar={() => navigate("Calendario")} onGoLibrary={() => { setLibraryFilter("for-you"); navigate("Biblioteca"); }} /> : <ScreenSkeleton /> : <>
-          {activityRunBlock ? <ActivityRunView block={activityRunBlock} evidenceRevision={evidenceRevision} onBack={() => setActivityRunBlockId(null)} onEvidence={(suggestedStudentId) => openEvidenceFor(activityRunBlock,suggestedStudentId)} onStepChange={async (stepIndex) => updateExecution({ scheduleEntryId: activityRunBlock.id, action: "set_step", stepIndex })} onComplete={async () => { await updateExecution({ scheduleEntryId: activityRunBlock.id, action: "complete", closureType: "as_planned" }); setActivityRunBlockId(null); }} /> : active === "Hoy" && (dashboard ? <TodayHome dashboard={dashboard} refreshKey={evidenceRevision} openEvidence={openEvidenceFor} openAttendance={() => setAttendanceOpen(true)} updateExecution={updateExecution} openActivity={openActivity} onPlan={() => navigate("Planificar")} onPrepareActivity={() => { setPlanningTarget("activities"); navigate("Planificar"); }} onObserveWithoutActivity={() => process.env.NEXT_PUBLIC_AYNI_ORDINARY_OBSERVATIONS === "1" ? setOrdinaryContext(null) : (setPlanningTarget("activities"), navigate("Planificar"))} onReplan={() => { navigate("Evaluar"); setEvaluationEntry("replan"); }} onReviewObservations={() => setOrdinaryReviewOpen(true)} /> : <ScreenSkeleton />)}
+          active === "Aula" ? dashboard ? <><div className="mx-auto mb-4 flex max-w-5xl flex-wrap gap-2">{f7Enabled && <><Button variant="outline" onClick={() => openDiagnostic()}>Diagnóstico</Button><Button variant="outline" onClick={() => navigate("Evaluar")}>Evaluación</Button>{process.env.NEXT_PUBLIC_AYNI_CURRICULAR_REVIEW === "1" && <Button variant="outline" onClick={() => setOrdinaryReviewOpen(true)}>Observaciones por revisar</Button>}</>}</div><StudentsScreen students={students} onImported={setDashboard} onDiagnostic={() => openDiagnostic()} onEvaluate={(studentId, competencyId) => { navigate("Evaluar"); setEvaluationTarget({ studentId, competencyId }); }} onPlan={() => navigate("Planificar")} /></> : <ScreenSkeleton /> : active === "Planificar" ? dashboard ? <PlanningArea dashboard={dashboard} initialTab={planningTarget} initialActivity={calendarActivity} diagnosticInitialStep={diagnosticInitialStep} selectedResource={selectedResource} onGoToday={() => navigate("Hoy")} onRecordEvidence={openPlannedEvidence} onGoStudents={() => navigate("Aula")} onGoWorkshops={() => { setLibraryFilter("workshops"); navigate("Biblioteca"); }} onGoCalendar={() => navigate("Calendario")} onGoLibrary={() => { setLibraryFilter("for-you"); navigate("Biblioteca"); }} onGoEvaluation={()=>navigate("Evaluar")} onGoDocuments={()=>navigate("Documentos")} /> : <ScreenSkeleton /> : <>
+          {activityRunBlock ? <ActivityRunView block={activityRunBlock} evidenceRevision={evidenceRevision} onBack={() => setActivityRunBlockId(null)} onEvidence={(suggestedStudentId) => openEvidenceFor(activityRunBlock,suggestedStudentId)} onStepChange={async (stepIndex) => updateExecution({ scheduleEntryId: activityRunBlock.id, action: "set_step", stepIndex })} onComplete={async () => { await updateExecution({ scheduleEntryId: activityRunBlock.id, action: "complete", closureType: "as_planned" }); setActivityRunBlockId(null); }} /> : active === "Hoy" && (dashboard ? <TodayHome onActivitiesChanged={async()=>setDashboard(await loadLocalDashboard())} dashboard={dashboard} refreshKey={evidenceRevision} openEvidence={openEvidenceFor} openAttendance={() => setAttendanceOpen(true)} updateExecution={updateExecution} openActivity={openActivity} onPlan={() => navigate("Planificar")} onPrepareActivity={() => { setPlanningTarget("activities"); navigate("Planificar"); }} onObserveWithoutActivity={() => process.env.NEXT_PUBLIC_AYNI_ORDINARY_OBSERVATIONS === "1" ? setOrdinaryContext(null) : (setPlanningTarget("activities"), navigate("Planificar"))} onReplan={() => { navigate("Evaluar"); setEvaluationEntry("replan"); }} onReviewObservations={() => setOrdinaryReviewOpen(true)} /> : <ScreenSkeleton />)}
           </>}
         </main>
 
         <nav className={`fixed inset-x-0 bottom-0 z-30 grid ${f7Enabled ? "grid-cols-4" : "grid-cols-5"} border-t border-[#e1e9f2] bg-white/97 px-1 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_rgba(24,45,80,.05)] backdrop-blur md:hidden`} aria-label="Navegación rápida">
-          {(f7Enabled ? f7Nav : mobileNav).map(([label, destination, Icon]) => <button key={label} type="button" aria-current={selectedNavigation === destination ? "page" : undefined} onClick={() => { if (destination === "Biblioteca") setLibraryFilter("for-you"); navigate(destination); }} className={`group mx-0.5 flex min-h-16 flex-col items-center justify-center gap-1 rounded-xl text-[11px] font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-[-3px] active:bg-[#d8f0f4] ${selectedNavigation === destination ? "text-[#087d96]" : "text-[#60718a]"}`}><span className={`grid h-7 w-11 place-items-center rounded-lg ${selectedNavigation === destination ? "bg-[#dff3f6]" : "group-hover:bg-[#edf6fa]"}`}><Icon className="size-5" /></span><span>{label}</span></button>)}
+          {(redesigned ? experienceNav : f7Enabled ? f7Nav : mobileNav).map(([label, destination, Icon]) => <button key={label} type="button" aria-current={selectedNavigation === destination ? "page" : undefined} onClick={() => { if (destination === "Biblioteca") setLibraryFilter("for-you"); navigatePrimary(destination); }} className={`group mx-0.5 flex min-h-16 flex-col items-center justify-center gap-1 rounded-xl text-[11px] font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-[-3px] active:bg-[#d8f0f4] ${selectedNavigation === destination ? "text-[#087d96]" : "text-[#60718a]"}`}><span className={`grid h-7 w-11 place-items-center rounded-lg ${selectedNavigation === destination ? "bg-[#dff3f6]" : "group-hover:bg-[#edf6fa]"}`}><Icon className="size-5" /></span><span>{label}</span></button>)}
         </nav>
       </SidebarInset>
       <AttendanceDialog open={attendanceOpen} onOpenChange={setAttendanceOpen} students={students} onSave={markAttendance} />
@@ -377,12 +386,13 @@ function EvaluationArea({ dashboard, initialTarget, initialSection, onPlan, onPr
     </>}
   </section>;
 }
-function PlanningArea({ dashboard, initialTab, initialActivity, diagnosticInitialStep, selectedResource, onGoToday, onRecordEvidence, onGoStudents, onGoWorkshops, onGoCalendar, onGoLibrary }: { dashboard: LocalDashboard; initialTab?:"activities"|"diagnostic"|null; initialActivity?:{id:string;experience_id:string}|null; diagnosticInitialStep:1|2|3; selectedResource: LibraryResource | null; onGoToday: () => void; onRecordEvidence: (input: { activityId: string; title: string; criterion: ActivityCriterion }) => void; onGoStudents: () => void; onGoWorkshops: () => void; onGoCalendar: () => void; onGoLibrary: () => void }) {
+function PlanningArea({ dashboard, initialTab, initialActivity, diagnosticInitialStep, selectedResource, onGoToday, onRecordEvidence, onGoStudents, onGoWorkshops, onGoCalendar, onGoLibrary, onGoEvaluation, onGoDocuments }: { dashboard: LocalDashboard; initialTab?:"activities"|"diagnostic"|null; initialActivity?:{id:string;experience_id:string}|null; diagnosticInitialStep:1|2|3; selectedResource: LibraryResource | null; onGoToday: () => void; onRecordEvidence: (input: { activityId: string; title: string; criterion: ActivityCriterion }) => void; onGoStudents: () => void; onGoWorkshops: () => void; onGoCalendar: () => void; onGoLibrary: () => void;onGoEvaluation:()=>void;onGoDocuments:()=>void }) {
   const [tab, setTab] = useWorkspaceSubview("Planificar", "tab", planningTabs, initialTab??"home");
   const [diagnosticStep, setDiagnosticStep] = useState<1 | 2 | 3>(diagnosticInitialStep);
   const [projectProposalId, setProjectProposalId] = useState<string | null>(null);
   const [activitySelection, setActivitySelection] = useState<{ experienceId: string; routeItemId: string } | null>(null);
   const [feedbackPeriodId,setFeedbackPeriodId]=useState<string|null>(null);
+  const [documentFolder,setDocumentFolder]=useState<DocumentFolder|null>(null);
   const [journey, setJourney] = useState<Awaited<ReturnType<typeof loadPlanningJourney>> | null>(null);
   const [loading, setLoading] = useState(true);
   const [progressError, setProgressError] = useState(false);
@@ -406,6 +416,8 @@ function PlanningArea({ dashboard, initialTab, initialActivity, diagnosticInitia
     catch { setJourney(null); setProgressError(true); }
   }
 
+  if(redesigned && tab === "home" && documentFolder)return <section className="mx-auto max-w-5xl space-y-5"><Button variant="ghost" onClick={()=>setDocumentFolder(null)}>← Planificación</Button><div className="flex flex-wrap gap-3"><Button onClick={()=>{if(documentFolder==="evaluation")onGoEvaluation();else setTab(documentFolder);setDocumentFolder(null);}}>{documentFolder==="diagnostic"?"Continuar diagnóstico":documentFolder==="annual"?"Abrir Mi año":documentFolder==="experiences"?"Abrir proyectos y actividades":"Abrir Evaluar"}</Button></div><DocumentsScreen key={documentFolder} folder={documentFolder}/></section>;
+  if (redesigned && tab === "home") return <section className="mx-auto max-w-5xl space-y-6"><header><h1 className="text-3xl font-bold text-[#172b52]">Planificación</h1><p className="mt-2 text-[#526b87]">Tu trabajo organizado en cuatro carpetas. Cada documento conserva su fuente y versión.</p></header><div className="divide-y divide-[#d6e5ef]">{[{title:"Evaluación diagnóstica",description:"Entrevistas, observaciones y diagnóstico. Puedes continuar sin completarlo.",open:()=>setDocumentFolder("diagnostic")},{title:"Plan anual",description:"El mismo Mi año, con sus proyectos, contexto e historia.",open:()=>setDocumentFolder("annual")},{title:"Proyectos y actividades",description:"Prepara y consulta el desarrollo de tus próximos días.",open:()=>setDocumentFolder("experiences")},{title:"Evaluación",description:"Informes, conclusiones, consolidado y cierre.",open:()=>setDocumentFolder("evaluation")}].map(folder=><button key={folder.title} type="button" onClick={folder.open} className="flex min-h-24 w-full items-center gap-4 py-5 text-left focus-visible:outline-2 focus-visible:outline-[#087d96]"><BookOpen aria-hidden="true" className="size-7 shrink-0 text-[#087d96]"/><span><strong className="text-lg">{folder.title}</strong><span className="mt-1 block text-sm text-[#526b87]">{folder.description}</span></span><ArrowRight aria-hidden="true" className="ml-auto size-5 shrink-0"/></button>)}</div><div className="flex flex-wrap gap-3"><Button variant="outline" onClick={onGoStudents}>Mi aula</Button><Button variant="outline" onClick={onGoLibrary}>Ideas y recursos</Button><Button variant="outline" onClick={onGoDocuments}>Consultar y descargar documentos</Button></div><PlanningDownload/></section>;
   if (tab === "home") return <section className="mx-auto max-w-5xl space-y-4">{f7Enabled && <div className="flex flex-wrap gap-2" aria-label="Herramientas de planificación"><Button variant="outline" onClick={onGoCalendar}>Calendario</Button><Button variant="outline" onClick={onGoLibrary}>Biblioteca</Button></div>}{loading ? <LoadingState label="Buscando dónde continuar..." /> : progressError || !journey ? <div className="space-y-3"><WorkflowFeedback tone="error">No se pudo cargar tu planificación.</WorkflowFeedback><Button variant="outline" onClick={() => void refreshJourney()}>Reintentar</Button></div> : <PlanningHome journey={journey} dashboard={dashboard} onOpen={(step) => { if (!canOpenPlanningStep(journey, step)) return; if (step === "diagnostic") onGoDiagnostic(); else setTab(step); }} onWorkshops={onGoWorkshops} />}</section>;
 
   return <section className={`mx-auto space-y-5 ${tab === "annual" ? "max-w-7xl" : "max-w-5xl"}`}>

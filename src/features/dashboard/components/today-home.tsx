@@ -11,11 +11,12 @@ import { localDatabaseApiUrl } from "@/src/lib/local-database";
 import { apiFetch } from "@/src/lib/ayni-api-fetch";
 import { displayDate } from "@/src/lib/display-date";
 import { AsyncButton, WorkflowFeedback } from "./workflow-ui";
+import { ProjectActivitiesBrowser } from "./project-activities-browser";
 
 type Block = LocalDashboard["today"]["blocks"][number];
 type Execution = { scheduleEntryId: string; action: "start" | "complete" | "skip" | "keep_current" | "set_step"; stepIndex?: number; closureType?: "as_planned" | "note"; closureNote?: string };
 
-export function TodayHome({ dashboard, refreshKey = 0, openEvidence, openAttendance, updateExecution, openActivity, onPlan, onPrepareActivity, onObserveWithoutActivity, onReplan, onReviewObservations }: {
+export function TodayHome({ dashboard, refreshKey = 0, openEvidence, openAttendance, updateExecution, openActivity, onPlan, onPrepareActivity, onObserveWithoutActivity, onReplan, onReviewObservations,onActivitiesChanged }: {
   dashboard: LocalDashboard;
   refreshKey?: number;
   openEvidence: (block: Block) => void;
@@ -27,7 +28,10 @@ export function TodayHome({ dashboard, refreshKey = 0, openEvidence, openAttenda
   onObserveWithoutActivity: () => void;
   onReplan: () => void;
   onReviewObservations?: () => void;
+  onActivitiesChanged?:()=>Promise<void>;
 }) {
+  const modern=process.env.NEXT_PUBLIC_AYNI_EXPERIENCE!=="0";
+  const [periodReviewDismissed,setPeriodReviewDismissed]=useState(false);
   const [closing, setClosing] = useState(false);
   const [selected, setSelected] = useState<Block | null>(null);
   const [closureNote, setClosureNote] = useState("");
@@ -47,6 +51,7 @@ export function TodayHome({ dashboard, refreshKey = 0, openEvidence, openAttenda
       const today = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Lima", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
       const period = [...data.periods].reverse().find((item) => item.school_year_id === classroom?.school_year_id && item.ends_on < today);
       if (!classroom || !period) return;
+      if(modern){if(!controller.signal.aborted)setBimester({label:period.label,adjusted:false,ready:false,final:false,closed:false});return;}
       const review = await apiFetch(`${localDatabaseApiUrl}/api/period-evaluations/replan?classroomId=${classroom.id}&periodId=${period.id}`, { signal: controller.signal });
       if (!review.ok) return;
       const result = await review.json() as { adjusted: boolean; plan: unknown; next_period: unknown;
@@ -56,7 +61,7 @@ export function TodayHome({ dashboard, refreshKey = 0, openEvidence, openAttenda
         ready: result.summary.assessments_total > 0 && result.summary.assessments_confirmed === result.summary.assessments_total });
     })().catch(() => {});
     return () => controller.abort();
-  }, []);
+  }, [modern]);
   useEffect(() => {
     if (process.env.NEXT_PUBLIC_AYNI_F7_NAV !== "1") return;
     const controller = new AbortController();
@@ -101,10 +106,13 @@ export function TodayHome({ dashboard, refreshKey = 0, openEvidence, openAttenda
 
   return <div className="mx-auto max-w-5xl space-y-6">
     <header><h1 className="text-3xl font-extrabold tracking-tight text-[#1c2e50]">{greeting}, {teacher}</h1><p className="mt-1 text-[#566883]">{profile.age_label} · {profile.section} · {metrics.students_total} estudiantes</p></header>
-    {bimester && <section className="rounded-[1.5rem] bg-[#e9f8f2] p-5"><h2 className="text-lg font-extrabold text-[#1c2e50]">{bimester.adjusted ? "✓ Plan reajustado" : bimester.final && bimester.closed ? "✓ Período final cerrado" : `Cierre de ${bimester.label}`}</h2>
+    {modern&&bimester&&!periodReviewDismissed&&<section className="rounded-2xl bg-[#e9f8f2] p-5"><h2 className="text-lg font-bold">Después de {bimester.label}</h2><p className="mt-2 text-sm">Antes de continuar, puedo revisar lo que aprendiste del aula este período y ayudarte a decidir si conviene cambiar alguno de los próximos proyectos.</p><div className="mt-3 flex flex-wrap gap-3"><Button onClick={onReplan}>Revisar con Ayni</Button><Button variant="outline" onClick={()=>setPeriodReviewDismissed(true)}>Mantener Mi año como está</Button></div></section>}
+    {!modern&&bimester && <section className="rounded-[1.5rem] bg-[#e9f8f2] p-5"><h2 className="text-lg font-extrabold text-[#1c2e50]">{bimester.adjusted ? "✓ Plan reajustado" : bimester.final && bimester.closed ? "✓ Período final cerrado" : `Cierre de ${bimester.label}`}</h2>
       <p className="mt-1 text-sm text-[#526681]">{bimester.adjusted ? "Tu planificación actualizada está lista para continuar." : bimester.final && bimester.closed ? "El cierre del año quedó guardado." : bimester.ready ? bimester.final ? "Tus evaluaciones están listas para cerrar el año." : "Tus evaluaciones están listas. Revisemos qué conviene ajustar para el siguiente período." : "Revisa las valoraciones pendientes para cerrar el período."}</p>
       {!bimester.adjusted && !(bimester.final && bimester.closed) && <button className="mt-3 min-h-11 rounded-xl bg-[#0b7891] px-5 font-bold text-white" onClick={onReplan}>Comenzar revisión</button>}</section>}
     {today.calendar_exception && !today.calendar_exception.is_instructional ? <section className="rounded-[1.5rem] border border-[#d4e1ed] bg-white p-5"><CalendarDays className="size-7 text-[#0b7891]" /><h2 className="mt-3 text-xl font-extrabold">{today.calendar_exception.label}</h2><p className="mt-1 text-sm text-[#566883]">Hoy no hay jornada lectiva programada.</p></section> : featured ? <section className="rounded-[1.5rem] border border-[#bce3ec] bg-white p-5 shadow-sm"><div className="flex items-center justify-between gap-3"><span className="rounded-full bg-[#0b7891] px-4 py-1 text-xs font-extrabold text-white">{current ? "AHORA" : "PRÓXIMO"}</span><span className="text-sm font-semibold text-[#566883]">{featured.start_time.slice(0, 5)} – {featured.end_time.slice(0, 5)}</span></div><h2 className="mt-5 text-2xl font-extrabold leading-tight text-[#1c2e50]">{featured.title}</h2><p className="mt-1 font-semibold text-[#07576c]">{featured.block_type === "workshop" ? `Taller del día · ${featured.activity_details?.workshop_type ?? ""}` : featured.experience_title ?? "Jornada de aula"}</p>{featured.purpose && <p className="mt-3 text-[#566883]">{featured.purpose}</p>}<div className="mt-5 grid grid-cols-2 gap-3"><button type="button" onClick={() => void primary()} className="min-h-12 rounded-xl bg-[#0b7891] px-3 text-sm font-bold text-white hover:bg-[#08677d]">{journey.primary_action === "attendance" ? "Marcar asistencia" : journey.primary_action === "close_block" ? "Cerrar bloque" : featured.block_type === "workshop" ? "Ver taller" : featured.activity_id ? "Abrir actividad" : "Ver bloque"}</button><button type="button" onClick={observe} className="min-h-12 rounded-xl border border-[#0b7891] px-3 text-sm font-bold text-[#07576c]">{canObserve ? "Registrar evidencia" : canObserveWithoutActivity ? "Registrar observación" : "Preparar actividad"}</button></div>{featured.status === "active" && journey.primary_action !== "close_block" && <button type="button" onClick={() => setClosing(true)} className="mt-3 min-h-11 text-sm font-bold text-[#07576c]">¿Cómo salió esta actividad? →</button>}</section> : <section className="rounded-[1.5rem] border border-[#d4e1ed] bg-white p-5"><Clock3 className="size-7 text-[#0b7891]" /><h2 className="mt-3 text-xl font-extrabold">Hoy no hay actividades programadas</h2><p className="mt-1 text-sm text-[#566883]">{canObserveWithoutActivity ? "Puedes registrar una observación cotidiana o preparar la próxima actividad." : "Prepara una actividad para registrar evidencia de lo que observes."}</p><div className="mt-4 flex flex-wrap gap-2"><Button onClick={observe}>{canObserveWithoutActivity ? "Registrar observación" : "Preparar actividad"}</Button><Button variant="outline" onClick={onPlan}>Ir a Planificar</Button></div></section>}
+    {featured?.activity_id&&modern&&<Button variant="outline" onClick={()=>void openActivity(featured,false).catch(()=>setError("No se pudo abrir la actividad. Inténtalo de nuevo."))}>Abrir actividad prevista</Button>}
+    {featured?.activity_id&&featured.block_type!=="workshop"&&onActivitiesChanged&&process.env.NEXT_PUBLIC_AYNI_EXPERIENCE!=="0"&&<ProjectActivitiesBrowser key={featured.activity_id} activityId={featured.activity_id} today={today.date} onChanged={onActivitiesChanged}/>}
     {error && <WorkflowFeedback tone="error">{error}</WorkflowFeedback>}
     {teacherTasks && <section className="rounded-[1.5rem] border border-[#d4e1ed] bg-white p-5" aria-label="Para tener presente">
       <h2 className="text-xl font-extrabold text-[#1c2e50]">Para tener presente</h2>

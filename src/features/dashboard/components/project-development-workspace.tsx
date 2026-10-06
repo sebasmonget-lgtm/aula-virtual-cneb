@@ -16,7 +16,7 @@ import { limaToday } from "@/src/lib/display-date";
 
 export type Proposal = { proposal_id?: string; experience_type: "project" | "unit"; title: string; purpose: string;
   rationale: string; period: string; primary_competency_ids: string[] };
-export type Plan = { id: string; revision: number; proposal: { plan_format?: string; proposed_experiences: Proposal[] }; project_slots: { id: string;
+export type Plan = { id: string; revision: number; proposal: { experience_context?:{version:number}; plan_format?: string; proposed_experiences: Proposal[] }; project_slots: { id: string;
   proposal_id?: string | null; slot_index: number;
   starts_on: string; ends_on: string }[] };
 type Decision = { context_summary: string; purpose: string; competency_ids: string[]; additional_context: string };

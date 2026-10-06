@@ -1,5 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
 import { VersionConflictError, versionTransaction } from "./version-integrity.mjs";
+import { lockClassroomSchedule } from "./activity-schedule-integrity.mjs";
 
 const uuid = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
 const validId = value => typeof value === "string" && uuid.test(value);
@@ -31,7 +32,7 @@ export async function saveOrdinaryObservation(db, teacherId, input, { mediaPath 
   let projectId = null;
   let blueprintId = null;
   if (capture.activityId) {
-    const activity = (await db.query(`select a.id,a.title,a.occurs_on,a.details,le.id as project_id,le.title as project_title
+    const activity = (await db.query(`select a.id,a.title,a.occurs_on::text,a.details,le.id as project_id,le.title as project_title
       from activities a join learning_experiences le on le.id=a.experience_id
       where a.id=$1 and le.classroom_id=$2 and a.status in ('active','archived')`,
     [capture.activityId, student.classroom_id])).rows[0];
@@ -65,11 +66,17 @@ export async function saveOrdinaryObservation(db, teacherId, input, { mediaPath 
   context = { ...context, evaluation_period_id: period?.id ?? null };
   const fingerprint = createHash('sha256').update(JSON.stringify({ ...capture, mediaMimeType, mediaFingerprint })).digest('hex');
   return versionTransaction(db, `raw:${teacherId}:${capture.clientRequestId}`, async tx => {
+    await lockClassroomSchedule(tx, student.classroom_id);
     const existing = (await tx.query(`select * from ordinary_observations where created_by=$1 and client_request_id=$2`,
       [teacherId, capture.clientRequestId])).rows[0];
     if (existing) {
       if (existing.request_fingerprint !== fingerprint) throw new VersionConflictError("La solicitud ya se usó con otro contenido.");
       return { observation: existing, created: false };
+    }
+    if (capture.activityId) {
+      const current = (await tx.query("select occurs_on::text from activities where id=$1", [capture.activityId])).rows[0];
+      if (!current || current.occurs_on !== context.activity_date)
+        throw new VersionConflictError("La fecha de la actividad cambió. Revisa su ubicación antes de guardar la observación.");
     }
     const observation = (await tx.query(`insert into ordinary_observations
       (id,classroom_id,student_id,created_by,client_request_id,request_fingerprint,occurred_at,

@@ -1,4 +1,5 @@
 import { journeyFail } from "./annual-journey-contract.mjs";
+import { horizonAssignments } from "./annual-experience-context.mjs";
 
 // Display only: preserve the literal stored title, including historical numbering/dates.
 export const annualDisplayTitle = title => String(title ?? "").replace(/^\s*\d{1,2}\s*[.)·:-]\s*/u, "").replace(/\s*·\s*\d{1,2}\/\d{1,2}\s*[–-]\s*\d{1,2}\/\d{1,2}\s*$/u, "").trim();
@@ -31,7 +32,7 @@ export function assignAnnualSlots(plan, slots, rows, library=plan.available_expe
   const byId=new Map(rows.map(row=>[row.proposal_id,row]));
   const proposed_experiences=slots.filter(slot=>slot.proposal_id).map(slot=>rowInSlot(byId.get(slot.proposal_id),slot));
   const initial=plan.resolved_calendar.initial_stage;
-  const assignments=[...initial.instructional_dates.map(date=>({date,owner:"initial_stage"})),...slots.flatMap(slot=>slot.instructional_dates.map(date=>({date,owner:slot.proposal_id ?? slot.slot_id})))];
+  const assignments=horizonAssignments(initial,slots);
   return {...plan,editor_version:3,proposed_experiences,available_experiences:library,
     resolved_calendar:{...plan.resolved_calendar,version:3,projects:slots,assignments}};
 }
@@ -50,8 +51,8 @@ export function editAnnualStructure(plan, action, { protectedIds=[], today="" }=
   const displacedId=target?.proposal_id;
   const affectedIds=[...new Set([incoming.proposal_id,displacedId].filter(Boolean))];
   if(action.kind!=="remove" && !target) journeyFail("invalid_slot","Suelta la propuesta en uno de los tramos del año.");
-  const blocked=row=>row&&(row.teacher_protected || protectedIds.includes(row.proposal_id) || today && row.planned_start_date<=today);
-  if(blocked(incoming) || blocked(rows.find(row=>row.proposal_id===target?.proposal_id)) || target && today && target.starts_on<=today)
+  const blocked=row=>row&&(row.teacher_protected || protectedIds.includes(row.proposal_id) || today && row.planned_start_date<today);
+  if(blocked(incoming) || blocked(rows.find(row=>row.proposal_id===target?.proposal_id)) || target && today && target.starts_on<today)
     journeyFail("protected_proposal","Este cambio afectaría una propuesta pasada, protegida o vinculada a trabajo. Elige un tramo futuro disponible.");
   if(action.kind==="remove") {
     if(!source) journeyFail("invalid_scope","Esta propuesta ya está en Biblioteca.");

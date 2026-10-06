@@ -1,5 +1,13 @@
 # Memoria del proyecto Ayni Aula
 
+## Auditoría previa de experiencia, 2026-10-05
+
+Solicitud `ayni_rediseño_experiencia.md`: revisar el producto actual y explicar la transición antes de implementar cambios grandes. Fetch comprobó HEAD `2624348` idéntico a `origin/codex/qa-ayni-v2`; `origin/codex/annual-year-map` conserva `055c77e`, 18 commits atrás. Auditoría y propuesta en `docs/REDISENO_EXPERIENCIA_AUDITORIA_2026-10-05.md`. No se modificó producto, datos, cuentas, migraciones ni plantillas, ni se publicó. La propuesta no es una decisión arquitectónica adoptada.
+
+Reutilizar año V2/editor V3 de quince, conversación, Plan Maestro, actividades heredadas, versiones y exportadores. Faltan historial declarado sin pedagogía inventada, contexto confirmado editable independiente, generación durable de todas las actividades, discrepancia de futuro preparado y revisión de período cruzada con proyectos futuros. Proteger pasado requiere corregir una brecha comprobada: reprogramación del calendario acepta actividad completada y desalineó agenda/ejecución en una base ficticia en memoria. Corrección pendiente, ver memoria de errores.
+
+Checks actuales: typecheck/lint/Vinext/Next webpack PASS y 161/161 regresiones seleccionadas PASS. Recibos en `.local/experience-audit-2026-10-05/`; no equivalen a nuevo QA visual, proveedor real, RLS remoto o smoke. Inicio tardío, slot actual parcial, confirmación del bloque y cobertura documental completa tienen decisiones propuestas explícitas en el informe; no habilitar todos los flags ni reescribir históricos al implementar.
+
 ## Recuperación y UX del QA V2, 2026-10-03
 
 Base comprobada: Preview, checkout y remoto QA en b142a90; referencia consolidada en 055c77e. Datos QA conservados. Las hipótesis opcionales con alcance incompatible quedan como información insuficiente sin relajar el contrato ni generalizar; el revisor verifica razones dependientes y puede reparar prosa global sin regenerar filas. Jobs privados reutilizan ai_pending_generations con checkpoints, una llamada por run, leases y CAS. Refresh recupera progreso; reintentar una revisión conserva las doce propuestas.
@@ -436,3 +444,12 @@ Corrección de la omisión de Crea detectada en QA real: el filtro privado conse
 Partimos de `071e8a8`, verificado en remoto y alias QA. Foto opcional al inscribir con cámara/archivo, preview y hasta 100 KB; servidor normaliza 320 × 320 y mantiene Storage privado sin IA. Observación exige momento con indicación roja, diferencia consulta de guardado, y matriz conserva alumno/competencia sin reclasificar. Alias visual Lenguajes artísticos mantiene el ID CNEB y reconocimiento histórico de Crea.
 
 Transporte recupera lecturas transitorias sin replay de escrituras. Turnos docentes se persisten antes del proveedor y se retoman sin duplicar; nueva intención descarta candidata/draft/revisión anteriores. Filtro preserva Navidad/Perú y vocabulario acotado, aún neutralizando nombres/contactos. Conversaciones normalmente exploran dos/tres respuestas útiles; cierre no exige inventar datos. Mensaje inmediato, escritura animada y mascota móvil. Preparación consulta checkpoints secuencialmente y carga el plan terminado antes de detener el poll. Sin migraciones/RLS/arquitectura nueva. QA y rollback en `docs/qa/initial-journey-recovery-2026-10-04.md`; recibo de publicación posterior en `.local/qa-fixes-*`.
+
+
+## Ejecución del rediseño de experiencia (2026-10-05)
+
+Tras auditoría y plan, el usuario pidió ejecutar. Implementación local sobre 2624348: cinco destinos y cuatro carpetas canónicas, diagnóstico opcional, contexto/historia declarada y horizonte restante con quince tramos; proyecto simple con autoridad anual, preparación durable, bloque revisable/aprobación atómica; discrepancias/sucesores explícitos; consulta/intercambio protegido en Hoy; revisión opcional de período con futura continuidad; Word/ZIP granular de seis fuentes. No se reemplazan las reglas pedagógicas ni los lectores históricos.
+
+109/109 pruebas focales finales PASS; recorrido HTTP ficticio: quince tramos, cinco propuestas futuras, cuatro actividades aprobadas, seis Word y ZIP, ocho llamadas simuladas/cero pagadas. UI escritorio/móvil comprobada. Typecheck/lint y builds Next/Vinext PASS; ver documento de implementación para limitaciones. Migraciones nuevas locales 0072/0073 y remotas equivalentes; remotas/dispatcher pendientes. AGENTS.md vigente exige cuentas nuevas, staging/commit limpio/smoke y solicitud expresa antes de publicar. No se reutilizó ni mutó Supabase/Vercel remoto en esta ejecución. La autorización de publicación del 4 de octubre corresponde al trabajo histórico descrito arriba. No autoriza esta nueva infraestructura.
+
+Detalle, rutas de activación y rollback: docs/REDISENO_EXPERIENCIA_IMPLEMENTACION.md. Preservar datos/checkpoints y lectores de quince al desactivar presentación; detener cron no borra el trabajo.

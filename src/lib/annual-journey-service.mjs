@@ -7,6 +7,7 @@ import { JOURNEY_GENERATION_SCHEMA, JOURNEY_PATCH_SCHEMA, JOURNEY_REVIEW_SCHEMA,
   JOURNEY_GENERAL_PROPERTIES, journeyFail, separateUnsupportedInterpretations, validateAnnualJourney } from "./annual-journey-contract.mjs";
 import { solveAnnualJourneyCalendar } from "./annual-journey-calendar.mjs";
 import { scopedAnnualChanges, annualCalendarCriteria } from "./annual-change-scope.mjs";
+import { applyPlanningHorizon, annualFutureGaps } from "./annual-experience-context.mjs";
 
 export const JOURNEY_RULES = `Eres Ayni, acompañante pedagógico de Educación Inicial. Produce previsiones flexibles, nunca experiencias realizadas.
 Quince tramos fijos es una decisión de Ayni, no del MINEDU. Currículo, necesidades sustentadas y aspectos poco conocidos son responsabilidades independientes.
@@ -28,6 +29,7 @@ const providerSnapshot = (snapshot) => ({ ...snapshot, source_fingerprint: undef
   facts: snapshot.facts.map(({ source_refs, ai_support_text, support_text, ...fact }) => { void source_refs; return { ...fact,
     support_text: ai_support_text ?? support_text }; }), curriculum_version: undefined });
 const providerPlan = (plan) => ({ ...plan, classroom_snapshot: providerSnapshot(plan.classroom_snapshot),
+  experience_context:undefined, preparation_conversation:undefined,teacher_idea_messages:undefined,
   teacher_preferences: undefined, pending_changes: undefined, metrics: undefined, change_history: undefined, resolved_calendar: {
     calendar_version: plan.resolved_calendar.calendar_version?.version,
     projects: plan.resolved_calendar.projects.map(({ proposal_id, starts_on, ends_on }) => ({ proposal_id, starts_on, ends_on })),
@@ -71,9 +73,9 @@ export function materializeJourneyRows(rows, schedule) {
 
 /** Two normal model calls; bounded local repair only when a validator/reviewer finds a concrete issue. */
 export async function generateAnnualJourney({ context, snapshot, curriculum, calendar, teacherIdeas = "",
-  createProvider = createAIProviderForPlan, resolvePlan = resolveAIExecutionPlan, checkpoint = {}, onCheckpoint = async () => {} }) {
+  experienceContext = null, createProvider = createAIProviderForPlan, resolvePlan = resolveAIExecutionPlan, checkpoint = {}, onCheckpoint = async () => {} }) {
   const started = checkpoint.started ?? Date.now(), slots = checkpoint.slots ?? Array.from({ length: 15 }, () => ({ proposal_id: randomUUID() }));
-  const schedule = checkpoint.schedule ?? solveAnnualJourneyCalendar(calendar, slots), events = checkpoint.events ?? [];
+  const schedule = checkpoint.schedule ?? (experienceContext ? applyPlanningHorizon(solveAnnualJourneyCalendar(calendar, slots),experienceContext) : solveAnnualJourneyCalendar(calendar, slots)), events = checkpoint.events ?? [];
   const state = { ...checkpoint, started, slots, schedule, events, outputs: checkpoint.outputs ?? [], attempts: checkpoint.attempts ?? [] };
   const persist = async (stage) => { state.stage = stage; if(stage === "review")state.validation_passed=true;
     await onCheckpoint(structuredClone(state)); };
@@ -95,20 +97,26 @@ export async function generateAnnualJourney({ context, snapshot, curriculum, cal
     return output;
   };
   const legacy=slots.length===12;
-  const generationSchema=legacy?{...JOURNEY_GENERATION_SCHEMA,id:"annual-journey-v2",properties:{...JOURNEY_GENERATION_SCHEMA.properties,proposals:{...JOURNEY_GENERATION_SCHEMA.properties.proposals,minItems:12,maxItems:12}}}:JOURNEY_GENERATION_SCHEMA;
-  const output = await call("annual_plan", { task: `Genera el año completo. Devuelve ${slots.length} propuestas en el orden de los tramos. Los títulos no incluyen números ni fechas.`,
-    teacher_preferences: teacherIdeas, calendar: schedule.projects.map(({ index, starts_on, ends_on, period, duration_weeks, instructional_dates }) => ({ index, starts_on, ends_on, period, duration_weeks, instructional_days:instructional_dates.length })) }, generationSchema, slots.length);
+  const futureSlots=schedule.projects.filter(slot=>slot.proposal_id);
+  const count=futureSlots.length;
+  const generationSchema={...JOURNEY_GENERATION_SCHEMA,id:legacy?"annual-journey-v2":"annual-journey-slots-v3",properties:{...JOURNEY_GENERATION_SCHEMA.properties,proposals:{...JOURNEY_GENERATION_SCHEMA.properties.proposals,minItems:count,maxItems:count}}};
+  const output = count ? await call("annual_plan", { task: `Devuelve ${count} propuestas futuras en el orden de los tramos recibidos. No generes trabajo retrospectivo. Adapta el desarrollo a los días realmente disponibles, incluso si el primer tramo es parcial. Los títulos no incluyen números ni fechas.`,
+    teacher_preferences: teacherIdeas, ...(experienceContext ? {historical_projects:experienceContext.historical_projects.map(({title,competency_ids,period})=>({title,competency_ids,period})),source_policy:"Historia declarada, no evidencia ni ejecución."}:{}),
+    calendar: futureSlots.map(({ index, starts_on, ends_on, period, duration_weeks, instructional_dates }) => ({ index, starts_on, ends_on, period, duration_weeks, instructional_days:instructional_dates.length })) }, generationSchema, count)
+    : { ...Object.fromEntries(Object.keys(JOURNEY_GENERAL_PROPERTIES).map(key=>[key, ["everyday_opportunities","evidence_interpretations"].includes(key)?[]:["El período disponible ha terminado. Se conserva el historial declarado sin generar trabajo retrospectivo."]])),proposals:[] };
   const { proposals, ...general } = output;
   let plan = { plan_format: "annual_preplan_v1", journey_version: 2, ...(!legacy?{editor_version:3,available_experiences:[]}:{}), title: "Mi año", school_year: String(context.year),
     ...general, classroom_snapshot: snapshot, curriculum_reference: curriculum.map((card) => ({ id: card.id, name: card.name ?? card.official_name, capacities: card.capacities })), teacher_preferences: teacherIdeas, proposed_experiences:
-      materializeJourneyRows(proposals.map((row, i) => ({ ...row, proposal_id: slots[i].proposal_id })), schedule),
+      materializeJourneyRows(proposals.map((row, i) => ({ ...row, proposal_id: futureSlots[i].proposal_id })), {...schedule,projects:futureSlots}),
+    ...(experienceContext ? {experience_context:experienceContext}:{}),
     resolved_calendar: schedule, pending_changes: [], change_history: [], pedagogical_review: { status: "pending" },
     metrics: { started_at: new Date(started).toISOString(), generation_ms: Date.now() - started, corrections: 0, regenerations: 1, operations: [] } };
   if (!legacy) plan.organization_criteria = annualCalendarCriteria(plan);
   state.candidate = plan; await persist("validation");
-  plan = await reviewAndRepair(plan, curriculum, call, [], async (candidate, stage) => {
+  plan = count ? await reviewAndRepair(plan, curriculum, call, [], async (candidate, stage) => {
     state.candidate = candidate; await persist(stage);
-  });
+  }) : {...plan,pedagogical_review:{status:"passed",policy:"history_only_no_generation"},insufficient_interpretations:[]};
+  if(experienceContext) plan.future_coverage_gaps=annualFutureGaps(plan,curriculum);
   if (!legacy) plan.organization_criteria = annualCalendarCriteria(plan);
   plan.metrics.operations = events; plan.metrics.generation_ms = Date.now() - started;
   return plan;

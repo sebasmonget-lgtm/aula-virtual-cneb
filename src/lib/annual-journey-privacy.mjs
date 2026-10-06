@@ -5,7 +5,7 @@ export const annualJourneyCurriculumTerms = curriculum => curriculum.flatMap(car
 
 // Closed pedagogical vocabulary: preserve languages and common sentence starts,
 // while unknown proper names and direct identifiers stay out of provider input.
-const safeWords = new Set(("Quechua Aymara Aimara Shipibo Konibo Asháninka Ashaninka Awajún Awajun Shawi Matsigenka Yanesha Castellano Español Sombras Tejidos Animales " +
+const safeWords = new Set(("Explorar Comparar Comunicar Compartir Observar Indagar Construir Representar Organizar Crear Descubrir Escuchar Participar Aprender Cuidar Explicar Tenemos Usar Ofrecer Registrar Permitir Invitar Recuperar Juego Docente Niños Niñas Acompañar Mediar Preguntar Patio Feria Lego LEGO Expresión Inicial " + "Quechua Aymara Aimara Shipibo Konibo Asháninka Ashaninka Awajún Awajun Shawi Matsigenka Yanesha Castellano Español Sombras Tejidos Animales " +
   "Navidad Navideño Navideña Navideños Navideñas Nochebuena Pascua Perú Peru Fiestas Patrias Bandera Agua Plantas Semillas Árbol Arbol Árboles Arboles Flores Huerto Tierra Sol Luna Estrellas Planetas Mascotas Perros Gatos Aves Peces Ovejas Mariposas Insectos Mercado Colegio Escuela Biblioteca Libros Cuentos Pintura Colores Acuarelas Baile Música Musica Bloques Juguetes Reciclaje Ambiente Transporte Autos Alimentos Cocina Emociones Ideas Juegos " +
   "Quiero Siempre Me No Sí Si Le La El Los Las Una Un En Con Durante Cuando También Puede Prefiere Disfruta Necesita Familia Familias Juega Hace Hizo Construyó Explicó Observó Preguntó Se Su Para Hay Estamos Todavía").split(" "));
 export function annualJourneySafeText(value, names = [], curriculumTerms = []) {

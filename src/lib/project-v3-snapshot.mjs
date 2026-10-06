@@ -19,6 +19,7 @@ export function stampProjectV3(experience, details, source, kbVersion, dates, pr
   const protectedIds = new Set((protectedVersion?.sourceRoute ?? []).filter(row =>
     String(row.date).slice(0, 10) <= protectedVersion.today || protectedVersion.recordedRouteIds.includes(row.id)).map(row => row.id));
   const stamped = { ...canonical, contract_version: "project-master-v3",
+    ...(source.plan.proposal?.experience_context?{experience_contract:1}:{}),
     dependents: { ...canonical.dependents, general_criteria: criteria },
     source_refs: { annual_plan_id: source.plan.id, annual_plan_version: Number(source.plan.version),
       proposal_id: source.proposalId, slot_id: source.slot.id },

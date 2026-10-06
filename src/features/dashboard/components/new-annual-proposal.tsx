@@ -14,32 +14,33 @@ import { competencyLabel } from "@/src/lib/competency-presentation";
 import { MAX_PROPOSAL_COMPETENCIES } from "@/src/lib/annual-proposal-intent.mjs";
 type Candidate={purpose:string;invitation:string;materials:string[];supports:string[];flexibility:string;source_fact_keys:string[];opportunities:{competency_id:string;capacity_names:string[];child_action:string;conditions:string;mediation:string;observation:string;supports:string}[];proposal_id:string;title:string;rationale:string;children_actions:string[];primary_competency_ids:string[]};
 type Session={id:string;revision:number;status:string;approved?:boolean;review_feedback?:string[];messages:{role:string;text:string}[];candidate:Candidate|null;candidate_sources:{key:string;text:string}[];required_competency_ids?:string[];missing_required_competency_ids?:string[]};
-export function NewAnnualProposal({open,onOpenChange,planId,revision,onApproved,curriculumReference=[]}:{open:boolean;onOpenChange:(open:boolean)=>void;planId:string;revision:number;onApproved:(id:string)=>Promise<unknown>;curriculumReference?:{id:string;name:string}[]}) {
+export function NewAnnualProposal({open,onOpenChange,planId,revision,onApproved,curriculumReference=[],reviewPeriodId}:{reviewPeriodId?:string;open:boolean;onOpenChange:(open:boolean)=>void;planId:string;revision:number;onApproved:(id:string)=>Promise<unknown>;curriculumReference?:{id:string;name:string}[]}) {
   const [session,setSession]=useState<Session|null>(null),[text,setText]=useState(""),[busy,setBusy]=useState(false),[audio,setAudio]=useState(false),[error,setError]=useState(""),[type,setType]=useState("project");
   const [required,setRequired]=useState<string[]>([]);
   const [pending,setPending]=useState("");
   const [pendingIndex,setPendingIndex]=useState(0);
   const baseUrl=`${localDatabaseApiUrl}/api/annual-journey/${planId}/new-proposal`;
+  const conversationUrl=`${baseUrl}/conversation${reviewPeriodId?`?reviewPeriodId=${reviewPeriodId}`:""}`;
   useEffect(()=>{if(!open)return;let live=true;
     const start=async()=>{
       setBusy(true);setError("");setSession(null);setRequired([]);setPending("");
       try {
-        let r=await apiFetch(`${localDatabaseApiUrl}/api/annual-journey/${planId}/new-proposal/conversation`,{cache:"no-store"});
+        let r=await apiFetch(conversationUrl,{cache:"no-store"});
         let data=await apiJson<Session & {error?:string}>(r);
         if(r.status===404 || r.ok&&(data.status==="interrupted"||data.approved)){
-          r=await apiFetch(`${localDatabaseApiUrl}/api/annual-journey/${planId}/new-proposal/conversation`,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({expectedRevision:revision,...(r.ok&&!data.approved?{id:data.id,revision:data.revision}:{})})});data=await apiJson<Session & {error?:string}>(r);
+          r=await apiFetch(conversationUrl,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({expectedRevision:revision,reviewPeriodId,...(r.ok&&!data.approved?{id:data.id,revision:data.revision}:{})})});data=await apiJson<Session & {error?:string}>(r);
         }
         if(!r.ok)throw Error(data.error ?? "No pudimos abrir la conversación.");if(live){setSession(data);setRequired(data.required_competency_ids??[]);}
       }catch(e){if(live)setError(e instanceof Error?e.message:"No pudimos abrir la conversación.");}finally{if(live)setBusy(false);}
     };void start();return()=>{live=false;};
-  },[open,planId,revision]);
+  },[open,planId,revision,reviewPeriodId,conversationUrl]);
   useEffect(()=>{if(!open||session?.status!=="responding")return;let live=true;let timer:number;
     const poll=async()=>{try{const response=await apiFetch(`${baseUrl}/conversation?id=${session.id}`);if(response.ok&&live){const saved=await apiJson<Session>(response);setSession(saved);if(saved.status!=="responding"){setRequired(saved.required_competency_ids??[]);if(saved.status==="interrupted")setError("La idea quedó guardada. Retoma la respuesta para continuar.");return;}}}catch{/* Keep consulting the owned saved session. */}if(live)timer=window.setTimeout(()=>void poll(),3000);};timer=window.setTimeout(()=>void poll(),2000);return()=>{live=false;window.clearTimeout(timer);};
   },[open,session?.id,session?.status,baseUrl]);
   const call=async(operation:string,restart=false,resume=false)=>{
     if(busy||audio||session?.status==="responding")return;const sent=operation==="conversation"&&!resume?text.trim():"";setBusy(true);setError("");
     if(sent){setPendingIndex(session?.messages.length??0);setPending(sent);setText("");setSession(value=>value?{...value,status:"responding",candidate:null}:value);}
-    try {const r=await apiFetch(`${baseUrl}/${operation}`,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({expectedRevision:revision,...(!restart&&session?{id:session.id,revision:session.revision}:{}),...(sent?{text:sent}:{}),...(operation==="generate"?{requiredCompetencyIds:required}:{}),experienceType:type,restart})});const data=await apiJson<Session & {error?:string}>(r);if(!r.ok)throw Error(data.error ?? "No se completó la propuesta.");
+    try {const r=await apiFetch(`${baseUrl}/${operation}`,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({expectedRevision:revision,reviewPeriodId,...(!restart&&session?{id:session.id,revision:session.revision}:{}),...(sent?{text:sent}:{}),...(operation==="generate"?{requiredCompetencyIds:required}:{}),experienceType:type,restart})});const data=await apiJson<Session & {error?:string}>(r);if(!r.ok)throw Error(data.error ?? "No se completó la propuesta.");
       if(operation==="approve"){await onApproved(data.id);setSession(null);setRequired([]);setText("");onOpenChange(false);}else {setSession(data);setRequired(data.required_competency_ids??[]);}setPending("");
     }catch(e){
       if(session&&!restart){

@@ -5,17 +5,25 @@ import { Document, HeadingLevel, Paragraph, Packer, TextRun } from "docx";
 export function annualJourneyDocumentSections(plan, names = new Map()) {
   if (plan.curriculum_reference) names = new Map(plan.curriculum_reference.map((card) => [card.id, card.name]));
   const sections = [{ title: "Ideas y decisiones docentes", lines: [plan.teacher_preferences].filter(Boolean) }];
+  if(plan.experience_context){
+    sections.push({title:"Contexto aprobado por la profesora",lines:plan.experience_context.context_items.map(item=>item.text)});
+    sections.push({title:"Proyectos anteriores declarados",lines:plan.experience_context.historical_projects.length ? plan.experience_context.historical_projects.map(item=>`${item.title} · ${item.period?`Bimestre ${item.period}`:"Período no precisado"} · ${item.competency_ids.length?item.competency_ids.map(id=>names.get(id)??id).join("; "):"Competencias no declaradas"}. Declaración docente; no representa evidencias ni evaluaciones.`) : ["No se declararon proyectos anteriores."]});
+    sections.push({title:"Pasado sin registro en Ayni",lines:plan.resolved_calendar.projects.filter(slot=>slot.occupancy==="past_unrecorded").map(slot=>`Tramo ${slot.index}: ${slot.starts_on} al ${slot.ends_on}. No se generó trabajo retrospectivo.`)});
+    sections.push({title:"Preparación desde el inicio en Ayni",lines:[`Se preparan únicamente fechas desde ${plan.experience_context.starts_on}. El primer tramo puede tener menos días disponibles.`, ...(plan.future_coverage_gaps ?? []).map(id=>`${names.get(id)??id}: sin oportunidad futura prevista; no implica nivel ni ausencia de trabajo anterior.`)]});
+  }
   const general = { organization_criteria: "Organización del año", transversal_approaches: "Enfoques transversales",
     teaching_strategies: "Acompañamiento", assessment_followup: "Observación y seguimiento",
     family_collaboration: "Familias y comunidad", inclusive_supports: "Apoyos para participar" };
   for (const [key, title] of Object.entries(general)) sections.push({ title, lines: plan[key] });
   const stage = plan.resolved_calendar.initial_stage;
-  sections.push({ title: stage.name, lines: [stage.purpose, `${stage.starts_on} al ${stage.ends_on}`,
+  sections.push({ title: stage.name, lines: [...(plan.experience_context?.starts_on>stage.ends_on ? ["Período pasado: esta previsión no acredita ejecución ni diagnóstico registrado."]:[]),stage.purpose, `${stage.starts_on} al ${stage.ends_on}`,
     ...stage.suggested_experiences, ...stage.what_to_observe, ...(stage.family_actions ?? []), ...(stage.diagnostic_focus ?? []),
     ...(stage.teacher_notes ? [stage.teacher_notes] : [])] });
   for (const [index, row] of plan.proposed_experiences.entries()) {
-    sections.push({ title: `${index + 1}. ${annualDisplayTitle(row.title)}`, lines: [row.rationale, row.purpose, row.invitation,
-      ...row.children_actions, `${row.planned_start_date} al ${row.planned_end_date} · ${row.duration_weeks} semanas · ${row.planned_instructional_days} días lectivos`] });
+    const slot=plan.resolved_calendar.projects.find(slot=>slot.proposal_id===row.proposal_id);
+    const duration=slot?.historical_dates?.length?`${row.planned_instructional_days} días restantes del tramo`: `${row.duration_weeks} semanas · ${row.planned_instructional_days} días lectivos`;
+    sections.push({ title: `${slot?.index ?? index + 1}. ${annualDisplayTitle(row.title)}`, lines: [row.rationale, row.purpose, row.invitation,
+      ...row.children_actions, `${row.planned_start_date} al ${row.planned_end_date} · ${duration}`] });
     for (const opportunity of row.opportunities) sections.push(opportunitySection(opportunity, names));
     sections.push({ title: "Materiales, apoyos y flexibilidad", lines: [...row.materials, ...row.supports, row.flexibility] });
     sections.push({ title: "Fuentes pertinentes", lines: row.source_fact_keys.map((key) => {

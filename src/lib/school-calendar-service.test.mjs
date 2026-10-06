@@ -89,10 +89,54 @@ test("reprogramar valida calendario, evita conflictos y sincroniza Hoy",{timeout
     const experience=randomUUID(),activity=randomUUID();await db.query(`insert into learning_experiences(id,classroom_id,type,title,purpose,starts_on,ends_on,status,details) values($1,$2,'project','Plantas','Explorar','2026-04-06','2026-04-17','active','{}')`,[experience,setup.classroomId]);
     await db.query(`insert into activities(id,experience_id,occurs_on,planned_date,title,purpose,status,details) values($1,$2,'2026-04-07','2026-04-07','Semillas','Observar','active','{}')`,[activity,experience]);
     await db.query(`insert into class_schedule_entries(id,classroom_id,scheduled_on,start_time,end_time,block_type,activity_id,title) values($1,$2,'2026-04-07','09:00','09:45','activity',$3,'Semillas')`,[randomUUID(),setup.classroomId,activity]);
-    await assert.rejects(reprogramActivity(db,{teacherId:teacher,activityId:activity,newDate:"2026-04-11",reason:"Cambio"}),/no es un día/);
-    const changed=await reprogramActivity(db,{teacherId:teacher,activityId:activity,newDate:"2026-04-08",reason:"Suspensión"});assert.equal(changed.occurs_on,"2026-04-08");
+    await assert.rejects(reprogramActivity(db,{teacherId:teacher,activityId:activity,newDate:"2026-04-11",reason:"Cambio"},{today:"2026-04-06"}),/no es un día/);
+    const changed=await reprogramActivity(db,{teacherId:teacher,activityId:activity,newDate:"2026-04-08",reason:"Suspensión"},{today:"2026-04-06"});assert.equal(changed.occurs_on,"2026-04-08");
     const pair=(await db.query(`select a.occurs_on::text,se.scheduled_on::text from activities a join class_schedule_entries se on se.activity_id=a.id where a.id=$1`,[activity])).rows[0];
     assert.equal(pair.occurs_on,pair.scheduled_on);assert.equal(pair.occurs_on,"2026-04-08");
     assert.equal(Number((await db.query(`select count(*) as n from activity_schedule_changes where activity_id=$1`,[activity])).rows[0].n),1);
+  }finally{await db.close();}
+});
+
+test("el calendario conserva pasado, ejecución, evidencias y rollback",{timeout:90000},async()=>{
+  const db=await database();try{
+    const setup=await createPilotClassroom(db,teacher,{teacherName:"Docente",institutionName:"Jardín",section:"A",age:5,year:2026,startsOn:"2026-03-02",endsOn:"2026-12-31"});
+    await ensureSchoolCalendar(db,setup.schoolYearId);
+    const project=randomUUID(),student=randomUUID();
+    await db.query(`insert into learning_experiences(id,classroom_id,type,title,purpose,starts_on,ends_on,status,details)
+      values($1,$2,'project','Plantas','Explorar','2026-04-06','2026-04-30','active','{}')`,[project,setup.classroomId]);
+    await db.query(`insert into students(id,classroom_id,first_name,last_name) values($1,$2,'Niña','Ficticia')`,[student,setup.classroomId]);
+    const make=async()=>{
+      const id=randomUUID(),schedule=randomUUID();
+      await db.query(`insert into activities(id,experience_id,occurs_on,planned_date,title,purpose,status,details) values($1,$2,'2026-04-07','2026-04-07','Semillas','Observar','active','{}')`,[id,project]);
+      await db.query(`insert into class_schedule_entries(id,classroom_id,scheduled_on,start_time,end_time,block_type,activity_id,title) values($1,$2,'2026-04-07','09:00','09:45','activity',$3,'Semillas')`,[schedule,setup.classroomId,id]);
+      return {id,schedule};
+    };
+    const move=(id,options={})=>reprogramActivity(db,{teacherId:teacher,activityId:id,newDate:"2026-04-08",...options},{today:"2026-04-07"});
+    const completed=await make();
+    await db.query(`insert into daily_execution_logs(id,schedule_entry_id,execution_date,status) values($1,$2,'2026-04-07','completed')`,[randomUUID(),completed.schedule]);
+    await assert.rejects(move(completed.id),{reason:"activity_history_protected"});
+    await assert.rejects(move(completed.id,{changeType:"cancelled"}),{reason:"activity_history_protected"});
+    const past=await make();
+    await assert.rejects(reprogramActivity(db,{teacherId:teacher,activityId:past.id,newDate:"2026-04-09"},{today:"2026-04-08"}),{reason:"activity_history_protected"});
+    const evidence=await make();
+    await db.query(`insert into evidences(id,student_id,activity_id,observation_text,created_by) values($1,$2,$3,'Observación real registrada',$4)`,[randomUUID(),student,evidence.id,teacher]);
+    await assert.rejects(move(evidence.id),{reason:"activity_history_protected"});
+    const ordinary=await make();
+    await db.query(`insert into ordinary_observations(id,classroom_id,student_id,created_by,client_request_id,request_fingerprint,occurred_at,raw_text,source_kind,activity_id)
+      values($1,$2,$3,$4,$5,$6,'2026-04-07','Observación','spontaneous',$7)`,[randomUUID(),setup.classroomId,student,teacher,randomUUID(),"a".repeat(64),ordinary.id]);
+    await assert.rejects(move(ordinary.id),{reason:"activity_history_protected"});
+    const pending=await make();
+    await assert.rejects(move(pending.id,{changeType:"active"}),{reason:"invalid_change_type"});
+    await assert.rejects(move(pending.id,{newDate:"2026-04-06"}),{reason:"past_date"});
+    await assert.rejects(move(pending.id,{revision:999}),{reason:"version_conflict"});
+    const failing={query:db.query.bind(db),transaction:work=>db.transaction(tx=>work({query:async(sql,params)=>{
+      if(sql.includes("insert into activity_schedule_changes")) throw new Error("fallo auditado simulado");
+      return tx.query(sql,params);
+    }}))};
+    await assert.rejects(reprogramActivity(failing,{teacherId:teacher,activityId:pending.id,newDate:"2026-04-08"},{today:"2026-04-07"}),/fallo auditado/);
+    const state=(await db.query(`select a.occurs_on::text,a.planned_date::text,se.scheduled_on::text from activities a join class_schedule_entries se on se.activity_id=a.id where a.id=$1`,[pending.id])).rows[0];
+    assert.deepEqual(state,{occurs_on:"2026-04-07",planned_date:"2026-04-07",scheduled_on:"2026-04-07"});
+    assert.equal(Number((await db.query("select count(*) as n from activity_schedule_changes where activity_id=$1",[pending.id])).rows[0].n),0);
+    await assert.rejects(reprogramActivity(db,{teacherId:"bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",activityId:pending.id,newDate:"2026-04-08"},{today:"2026-04-07"}),{reason:"activity_missing"});
   }finally{await db.close();}
 });

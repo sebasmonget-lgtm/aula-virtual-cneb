@@ -1,4 +1,6 @@
 import { randomUUID } from "node:crypto";
+import { assertActivityScheduleMutable, limaToday, lockClassroomSchedule } from "./activity-schedule-integrity.mjs";
+import { assertRevision, expectedRevision } from "./version-integrity.mjs";
 
 const iso = (value) => {
   if (value instanceof Date) return value.toISOString().slice(0,10);
@@ -157,27 +159,34 @@ export async function syncActivitySchedule(db, { activityId, classroomId, title,
   return id;
 }
 
-export async function reprogramActivity(db,{teacherId,activityId,newDate,reason,changeType="rescheduled"}) {
-  const row=(await db.query(`select a.id,a.title,a.occurs_on::text,a.experience_id,e.classroom_id,e.starts_on::text,e.ends_on::text
+export async function reprogramActivity(db,{teacherId,activityId,newDate,reason,changeType="rescheduled",revision}, {today=limaToday()} = {}) {
+  if (!["rescheduled","cancelled","not_worked"].includes(changeType))
+    throw new SchoolCalendarError("invalid_change_type", "El cambio de calendario no es válido.");
+  const owner=(await db.query(`select e.classroom_id from activities a join learning_experiences e on e.id=a.experience_id
+    join classrooms c on c.id=e.classroom_id where a.id=$1 and c.teacher_id=$2`, [activityId,teacherId])).rows[0];
+  if(!owner)throw new SchoolCalendarError("activity_missing","No se encontró la actividad.");
+  return db.transaction(async tx => {
+  await lockClassroomSchedule(tx, owner.classroom_id);
+  const row=(await tx.query(`select a.id,a.title,a.status,a.lineage_id,a.revision,a.occurs_on::text,a.experience_id,e.classroom_id,e.starts_on::text,e.ends_on::text
     from activities a join learning_experiences e on e.id=a.experience_id join classrooms c on c.id=e.classroom_id
-    where a.id=$1 and c.teacher_id=$2`,[activityId,teacherId])).rows[0];
+    where a.id=$1 and c.teacher_id=$2 for update of a`,[activityId,teacherId])).rows[0];
   if(!row)throw new SchoolCalendarError("activity_missing","No se encontró la actividad.");
+  if (revision != null) assertRevision(row, expectedRevision(revision));
+  await assertActivityScheduleMutable(tx, row, today);
   if(changeType!=="rescheduled"){
-    await db.query(`update activities set schedule_status=$1 where id=$2`,[changeType,activityId]);
-    await db.query(`insert into activity_schedule_changes(id,activity_id,previous_date,new_date,change_type,reason,changed_by) values($1,$2,$3::date,null,$4,$5,$6)`,[randomUUID(),activityId,row.occurs_on,changeType,String(reason??"").trim()||"Decisión docente",teacherId]);
+    await tx.query(`update activities set schedule_status=$1,updated_at=now() where id=$2`,[changeType,activityId]);
+    await tx.query(`insert into activity_schedule_changes(id,activity_id,previous_date,new_date,change_type,reason,changed_by) values($1,$2,$3::date,null,$4,$5,$6)`,[randomUUID(),activityId,row.occurs_on,changeType,String(reason??"").trim()||"Decisión docente",teacherId]);
     return {id:activityId,occurs_on:row.occurs_on,schedule_status:changeType};
   }
-  const calendar=await loadEffectiveCalendar(db,{teacherId,classroomId:row.classroom_id,from:newDate,to:newDate});
+  if (!isDate(newDate) || newDate < today) throw new SchoolCalendarError("past_date", "Elige una fecha disponible desde hoy.");
+  const calendar=await loadEffectiveCalendar(tx,{teacherId,classroomId:row.classroom_id,from:newDate,to:newDate});
   validateSelectedInstructionalDates(calendar.days,[newDate],row.starts_on,row.ends_on);
-  const conflict=(await db.query(`select a.id,a.title from activities a join learning_experiences e on e.id=a.experience_id
+  const conflict=(await tx.query(`select a.id,a.title from activities a join learning_experiences e on e.id=a.experience_id
     where e.classroom_id=$1 and a.occurs_on=$2::date and a.id<>$3 and a.status in ('draft','active') limit 1`,[row.classroom_id,newDate,activityId])).rows[0];
   if(conflict)throw new SchoolCalendarError("date_conflict",`Ya existe una actividad ese día: ${conflict.title}.`);
-  await db.query("begin");
-  try{
-    await db.query(`update activities set occurs_on=$1::date,schedule_status='rescheduled',updated_at=now() where id=$2`,[newDate,activityId]);
-    await syncActivitySchedule(db,{activityId,classroomId:row.classroom_id,title:row.title,occursOn:newDate});
-    await db.query(`insert into activity_schedule_changes(id,activity_id,previous_date,new_date,change_type,reason,changed_by) values($1,$2,$3::date,$4::date,'rescheduled',$5,$6)`,[randomUUID(),activityId,row.occurs_on,newDate,String(reason??"").trim()||"Reprogramación docente",teacherId]);
-    await db.query("commit");
-  }catch(error){await db.query("rollback");throw error;}
+    await tx.query(`update activities set occurs_on=$1::date,schedule_status='rescheduled',updated_at=now() where id=$2`,[newDate,activityId]);
+    await syncActivitySchedule(tx,{activityId,classroomId:row.classroom_id,title:row.title,occursOn:newDate});
+    await tx.query(`insert into activity_schedule_changes(id,activity_id,previous_date,new_date,change_type,reason,changed_by) values($1,$2,$3::date,$4::date,'rescheduled',$5,$6)`,[randomUUID(),activityId,row.occurs_on,newDate,String(reason??"").trim()||"Reprogramación docente",teacherId]);
   return {id:activityId,occurs_on:newDate,schedule_status:"rescheduled"};
+  });
 }
