@@ -59,6 +59,7 @@ test("la descarga toma recuentos autorizados sin incluir respuestas ni nombres d
       create table students(id uuid,classroom_id uuid,first_name text,last_name text,preferred_name text,status text);
       create table diagnostic_experience_observations(student_id uuid,classroom_id uuid,competency_v4_id text,observed_at timestamptz,observation_text text);
       create table diagnostic_spontaneous_observations(student_id uuid,classroom_id uuid,competency_v4_id text,competency_v4_ids text[] default '{}',classification_status text,observed_at timestamptz,observation_text text);
+      create view effective_diagnostic_spontaneous_observations as select * from diagnostic_spontaneous_observations;
       create table diagnostic_sessions(id uuid,classroom_id uuid);
       create table diagnostic_entries(id uuid,student_id uuid,session_id uuid);
       create table student_observations(diagnostic_entry_id uuid,observed_at timestamptz);

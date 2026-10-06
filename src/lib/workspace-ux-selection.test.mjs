@@ -30,7 +30,7 @@ function locationFlow(hash, {allowed=["draft","active","history"], guardAnswer=t
   const exports={};
   vm.runInNewContext(compiled,{exports,window,Event,URLSearchParams,destinationFromHash,hashForDestination,
     useState:()=>[state.value,value=>{state.value=value;}],useRef:value=>({current:value}),useEffect:effect=>effect(),useCallback:callback=>callback});
-  vm.runInNewContext(compiledShell,{window,Event,destinationFromHash,canLeaveWorkspace:exports.canLeaveWorkspace,navigationTouched:{current:false},setPlanningTarget:()=>{},setActive:()=>{},setStarting:()=>{}});
+  vm.runInNewContext(compiledShell,{window,Event,destinationFromHash,canLeaveWorkspace:exports.canLeaveWorkspace,navigationTouched:{current:false},readWorkspaceParams:exports.readWorkspaceParams,setAnnualDestination:value=>{state.annualDestination=value;},setPlanningTarget:()=>{},setActive:()=>{},setStarting:()=>{}});
   const select=param?exports.useWorkspaceParam("Calendario","date",state.value,calendarLocationDate)[1]
     :exports.useWorkspaceSubview("Planificar","annualPlan",allowed,"draft",false)[1];
   return {state,window,select,back(hash){window.location.hash=hash;events.dispatchEvent(new Event("popstate"));}};

@@ -3,6 +3,10 @@
 -- Match the secret to the server-only AYNI_PREPARATION_DISPATCH_SECRET environment variable.
 -- Never put its value in this file, terminal output or documentation.
 -- Requires pg_cron, pg_net and pgcrypto enabled by the project owner.
+-- Protect queued signed headers from client SQL roles as well as the Data API.
+revoke usage on schema net,cron from public,anon,authenticated;
+revoke all on all tables in schema net from public,anon,authenticated;
+revoke all on all sequences in schema net from public,anon,authenticated;
 create or replace function private.dispatch_preparation_tick() returns bigint
 language plpgsql security definer set search_path='' as $$
 declare
@@ -14,7 +18,7 @@ declare
 begin
   select decrypted_secret into endpoint from vault.decrypted_secrets where name='ayni_preparation_endpoint';
   select decrypted_secret into dispatch_secret from vault.decrypted_secrets where name='ayni_preparation_dispatch_secret';
-  if endpoint is null or endpoint !~ '^https://[^/]+/api/internal/preparation/run$' or length(dispatch_secret)<32 then
+  if endpoint is null or endpoint !~ '^https://[^/]+/api/internal/preparation/run$' or coalesce(length(dispatch_secret),0)<32 then
     raise exception 'Private preparation dispatcher configuration is missing';
   end if;
   signature_text:=encode(extensions.hmac(timestamp_text||'.'||nonce_text,dispatch_secret,'sha256'),'hex');

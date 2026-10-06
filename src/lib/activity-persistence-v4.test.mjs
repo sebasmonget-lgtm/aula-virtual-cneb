@@ -69,7 +69,7 @@ test("I: activity conserva límites de parent y persistencia", async () => {
 
 test("A-C: OPTIONS permite PUT y el parent público no filtra metadata técnica", async () => {
   const server = await readFile(new URL("../../scripts/local-db-server.mjs", import.meta.url), "utf8");
-  assert.match(server, /const corsMethods = "GET,POST,PUT,OPTIONS"/);
+  assert.match(server, /const corsMethods = "GET,POST,PUT,PATCH,DELETE,OPTIONS"/);
   assert.match(server, /"access-control-allow-methods": corsMethods/);
   const parentContext = server.slice(server.indexOf("async function activityParentContext"), server.indexOf("async function activityAllowedCompetencies"));
   assert.match(parentContext, /return publicActivityParent\(experience, prior\)/);

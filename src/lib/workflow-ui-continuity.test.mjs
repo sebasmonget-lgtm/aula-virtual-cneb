@@ -148,13 +148,13 @@ test("alta y entrevista presentan datos completos, fecha opcional y audio por pr
   assert.match(students, /id="student-birth-date" type="date"/);
   assert.match(students, /Importar lista CSV/);
   assert.match(students, /student\.birth_date &&/);
-  assert.match(interview, /<InterviewAudioRecorder studentId=/);
+  assert.match(interview, /<InterviewAudioRecorder[^>]*studentId=/);
   assert.match(interview, /aria-live="polite"/);
-  assert.match(interview, /Guardar y continuar después/);
+  assert.match(interview, /saveDraft\(true\)/);
   assert.match(interview, /await saveAndConfirmFamilyInterview\(studentId, details\)/);
   assert.match(interview, /onSaved\?\.\(result\); onBack\?\.\(\)/);
-  assert.match(interview, /step === 8/);
-  assert.match(interview, />Confirmar entrevista</);
+  assert.match(interview, /step<questions\.length-1/);
+  assert.match(interview, />Finalizar entrevista</);
   assert.match(interview, /disabled=\{audioBusy\}/);
   assert.match(interview, /displayPersonName\(rawStudentName\)/);
   assert.match(guided, /Entrevista de \{displayPersonName\(item.name\)\}/);
@@ -165,7 +165,7 @@ test("alta y entrevista presentan datos completos, fecha opcional y audio por pr
   assert.match(recorder, /MAX_RECORDING_MS = 59_000/);
   assert.match(interviewRecorder, /purpose="interview"/);
   assert.match(recorder, /purpose === "observation" \? result\.improvedText : result\.transcript/);
-  assert.match(recorder, /Grabar respuesta/);
+  assert.match(recorder, /const recordingLabel = "Dictar"/);
   assert.match(recorder, /Aceptar grabación/);
   assert.match(recorder, /Rehacer grabación/);
   assert.doesNotMatch(recorder, /Transcribir grabación/);
@@ -185,44 +185,37 @@ test("los accesos docentes llegan al diagnóstico dentro de Planificar", async (
   assert.doesNotMatch(workspace, /setEvaluationEntry\("diagnostic"\)/);
 });
 
-test("guiadas y espontáneas comparten dictado revisable sin autoguardar observaciones", async () => {
+test("guiadas y espontáneas conservan dictado revisable y guardado explícito", async () => {
   const guided = await component("guided-diagnostic-v4");
   const spontaneous = await component("spontaneous-diagnostic-v4");
   const recorder = await component("dictation-recorder");
   for (const source of [guided, spontaneous]) {
-    assert.match(source, /<DictationRecorder key=/);
+    assert.match(source, /<DictationRecorder/);
     assert.match(source, /currentText=\{note\}/);
-    assert.match(source, /onTranscribed=\{\(text\) => setNote\(text\)\}/);
-    assert.match(source, /disabled=\{audioBusy \|\|/);
+    assert.match(source, /Guardar observación/);
   }
+  assert.match(guided, /onTranscribed=\{\(text\) => setNote\(text\)\}/);
   assert.match(guided, /disabled=\{working \|\| audioBusy\}/);
-  assert.match(spontaneous, /setRecordingRevision\(\(value\) => value \+ 1\)/);
-  assert.match(recorder, /purpose = "observation"/);
+  assert.match(spontaneous, /purpose="raw_observation" rawTranscript/);
+  assert.match(spontaneous, /onTranscribed=\{dictated\}/);
+  assert.match(spontaneous, /todavía no guarda/);
   assert.match(recorder, /mergeDictationText\(currentTextRef\.current, text, maxLength\)/);
-  assert.match(recorder, /Dictar observación/);
-  assert.match(recorder, /Mantén pulsado para \$\{recordingLabel\.toLocaleLowerCase\("es"\)\}; suelta para añadir el texto/);
+  assert.match(recorder, /const recordingLabel = "Dictar"/);
   assert.doesNotMatch(recorder, /saveSpontaneousObservation|saveDiagnosticExperienceObservation/);
-  assert.doesNotMatch(guided, /Ver ejemplos/);
 });
 
-test("Ayni presenta recomendación automática y abre el catálogo solo cuando la docente edita", async () => {
+test("consultar la competencia no guarda; la docente revisa antes de registrar", async () => {
   const source = await component("spontaneous-diagnostic-v4");
-  assert.match(source, /Recomendación de Ayni/);
-  assert.match(source, /Cambiar o agregar competencia/);
-  assert.match(source, /\{editing && <fieldset/);
-  assert.match(source, /Usar recomendación/);
-  assert.match(source, /observationRecommendationMessage\(result.recommendation_state\)/);
-  assert.match(source, /recommendation.state === "unavailable"/);
-  assert.match(source, /classification_status === "pending"/);
-  assert.match(source, /<section aria-labelledby="spontaneous-observations-title"/);
+  const analyze = source.slice(source.indexOf("async function analyze"), source.indexOf("async function save"));
+  assert.match(analyze, /spontaneous-observations\/preview/);
+  assert.doesNotMatch(analyze, /saveSpontaneousObservation/);
+  assert.match(source, /Ayni sugiere:/);
+  assert.match(source, /picker&&<CompetencyPicker/);
+  assert.match(source, /Guardar sin competencia/);
+  assert.match(source, /competencyIds:ids/);
+  assert.match(source, /Mis observaciones registradas/);
+  assert.match(source, /Fotos y audios son privados/);
   assert.doesNotMatch(source, /Sugerir con Jev|Consultando Jev|Jev actualizó|Jev propone/);
-  assert.doesNotMatch(source, /<details|ClassificationChoices/);
-  const server = await readFile(new URL("../../scripts/local-db-server.mjs", import.meta.url), "utf8");
-  assert.match(server, /queueDiagnosticClassification\(saved.id, saved.student_id, teacherId\)/);
-  for (const name of ["project-development-workspace", "workshop-master-panel"]) {
-    const componentSource = await component(name);
-    assert.doesNotMatch(componentSource, /con Jev|por Jev|Consultando Jev|Jev sugirió|Jev señaló/);
-  }
 });
 
 test("el resumen tiene comentarios opcionales debajo del mapa, dictado y navegación ordenada", async () => {

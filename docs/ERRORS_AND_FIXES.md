@@ -1562,3 +1562,12 @@ Síntoma: cuatro notas QA de la captura automatizada quedaron asociadas a la sel
 **Solución validada.** Usar job.db transaccional cuando existe y, en caso contrario, la conexión real del contexto o database.db. El recorrido HTTP completo volvió a funcionar desde sus checkpoints: proyecto, cuatro actividades, aprobación atómica, seis Word y ZIP; ocho llamadas simuladas y cero pagadas. Su repetición conservó ese contador. Pruebas PostgreSQL de checkpoints/aprobación y suite final 109/109 PASS.
 
 **Prevención.** Nunca registrar un proxy de resolución contextual como su propia conexión. Verificar un flujo vertical con el servidor y worker reales, además de probar el executor con adaptadores de fixture.
+
+
+## 2026-10-05 — Integración de ramas y fixtures anteriores al rediseño
+
+**Síntoma y causa raíz.** El merge automático añadió por segunda vez loadPersonalizedPreplanSkill, aunque las ramas implementaban la misma función con rutas diferentes. Next y Vinext rechazaron el módulo. Las pruebas antiguas también conservaban textos anteriores, un contexto VM sin el nuevo setter de navegación y fixtures sin effective_diagnostic_spontaneous_observations; esto produjo errores SQL y conflictos derivados de respuestas incompletas.
+
+**Solución validada.** Una sola función conserva las rutas desde process.cwd() para el empaquetado serverless. Comprobación sintáctica de 375 módulos PASS y ambas compilaciones PASS. Las fixtures incluyen la vista efectiva, los hooks reciben sus dependencias reales y las aserciones reflejan el dictado/consulta/guardado explícitos actuales. Pruebas focales de evaluación/versiones/navegación 36/36, continuidad UI 15/15, contratos anteriores corregidos 12/12 e informe diagnóstico 3/3 PASS. La corrida completa se registra en el documento de consolidación cuando termine.
+
+**Prevención.** Tras integrar historiales divergentes, comprobar sintaxis de módulos .mjs además de TypeScript; usar fixtures alineadas con el esquema efectivo y conservar controles de propiedad, CAS y confirmación docente al actualizar textos. Nunca aceptar un fallo de infraestructura como ausencia de información pedagógica.

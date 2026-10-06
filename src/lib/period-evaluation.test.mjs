@@ -135,7 +135,8 @@ async function fixture({ analysis = mockAnalysis(), jsonbPending = false } = {})
     experience_title_snapshot text,aspect_prompt_snapshot text);
     create table diagnostic_spontaneous_observations(id uuid primary key,classroom_id uuid,student_id uuid,
     competency_v4_ids text[],observed_at timestamptz,observation_text text,context_label text,support_status text,
-    classification_status text);`);
+    classification_status text);
+    create view effective_diagnostic_spontaneous_observations as select * from diagnostic_spontaneous_observations;`);
   await db.exec(`create table class_schedule_entries(id uuid primary key,classroom_id uuid,activity_id uuid);
     create table student_family_interviews(id uuid primary key,classroom_id uuid,student_id uuid,status text,version integer,details jsonb);
     create table daily_execution_logs(id uuid primary key,schedule_entry_id uuid,execution_date date,status text);`);
