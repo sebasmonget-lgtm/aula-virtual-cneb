@@ -1,4 +1,6 @@
 "use client";
+import { newAyniFeatureEnabled } from "@/src/lib/new-ayni-feature-flag.mjs";
+
 import { apiFetch } from "@/src/lib/ayni-api-fetch";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -144,7 +146,7 @@ export function ParentActivityGenerator({ onConfirmed, onGoToday, onRecordEviden
     const automaticCompetencyId = parent && (parent.details.primary_competency_ids ?? []).filter((id) => ids.includes(id)).length === 1 ? (parent.details.primary_competency_ids ?? []).find((id) => ids.includes(id)) ?? "" : "";
     const effectiveCompetencyId = competencyId || automaticCompetencyId;
     const routeItem = parent?.details.activity_route?.find((item) => item.id === routeItemId);
-    const inheritedView = process.env.NEXT_PUBLIC_AYNI_ACTIVITY_INHERITED === "1" && parent?.details.contract_version === "project-master-v3";
+    const inheritedView = newAyniFeatureEnabled(process.env.NEXT_PUBLIC_AYNI_ACTIVITY_INHERITED) && parent?.details.contract_version === "project-master-v3";
     const setRouteItemId = (value: string) => {
         setRouteItemIdState(value);
         const selected = parent?.details.activity_route?.find((item) => item.id === value);

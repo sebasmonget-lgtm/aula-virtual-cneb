@@ -8,5 +8,6 @@
 - [ ] Flujos de autenticación, aula y evidencia probados en móvil y escritorio.
 - [ ] Revisión de secretos y datos de menores.
 - [ ] Commit limpio identificado antes del deploy.
+- [ ] `node scripts/verify-cloud-deploy.mjs` correcto; API `/api/*` y Storage privado equivalentes a local.
 - [ ] Preview/staging validado.
 - [ ] Smoke test posterior y rollback documentado.

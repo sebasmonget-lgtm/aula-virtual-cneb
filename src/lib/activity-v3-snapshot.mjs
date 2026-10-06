@@ -1,7 +1,8 @@
 import { ACTIVITY_CONTRACT_V3, activityV3, projectMasterV3, validateActivityV3 } from "./planning-contract-v3.mjs";
 import { annualCalendarDay } from "./annual-plan-schedule.mjs";
+import { newAyniFeatureEnabled } from "./new-ayni-feature-flag.mjs";
 
-export const inheritedActivityEnabled = () => process.env.AYNI_ACTIVITY_INHERITED === "1";
+export const inheritedActivityEnabled = () => newAyniFeatureEnabled(process.env.AYNI_ACTIVITY_INHERITED);
 
 export function activityPreparationV3(details, materials) {
   return { materials, ...(details.activity_contract?.contract_version === ACTIVITY_CONTRACT_V3 ? {

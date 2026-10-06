@@ -1,3 +1,4 @@
+import { newAyniFeatureEnabled } from "../src/lib/new-ayni-feature-flag.mjs";
 import { previewSpontaneous, handleStudentPhoto, handleFamilyShare } from "./initial-journey-routes.mjs";
 import { handleAnnualJourneyRoutes } from "./annual-journey-routes.mjs";
 import { createServer } from "node:http";
@@ -137,7 +138,7 @@ const documentArtifactStorage = dbMode === "local"
   ? createLocalPrivateDocumentArtifactStorage(path.join(assetsDir,"document-artifacts"))
   : process.env.AYNI_SUPABASE_SERVICE_ROLE_KEY
     ? createSupabasePrivateDocumentArtifactStorage(storageConfig) : null;
-const curricularReviewEnabled = process.env.AYNI_CURRICULAR_REVIEW === "1";
+const curricularReviewEnabled = newAyniFeatureEnabled(process.env.AYNI_CURRICULAR_REVIEW);
 const testAuthWithPglite = process.env.NODE_ENV === "test" && process.env.AYNI_TEST_AUTH_PGLITE === "1";
 if ((authMode === "local") !== (dbMode === "local") && !testAuthWithPglite) {
   throw new Error("Usa Auth local con PGlite o Auth Supabase con PostgreSQL.");
@@ -208,7 +209,7 @@ else {
     await database.close();
     throw new Error("La conexión PostgreSQL del backend necesita permiso de escritura.");
   }
-  if (process.env.AYNI_ORDINARY_OBSERVATIONS === "1") {
+  if (newAyniFeatureEnabled(process.env.AYNI_ORDINARY_OBSERVATIONS)) {
     const rawSchema = (await db.query(`select to_regclass('public.ordinary_observations') as observations,
       to_regclass('public.ordinary_observation_revisions') as revisions`)).rows[0];
     if (!rawSchema?.observations || !rawSchema?.revisions) {
@@ -1349,14 +1350,14 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       }catch(error){send(response,httpStatusForError(error,422),{error:publicErrorMessage(error)},origin);}return;
     }
     if(await handleDocumentExportRoutes({request,response,url,db,teacherId,origin,send,annualPlanningContext,storage:documentArtifactStorage}))return;
-    if ((process.env.AYNI_DOCUMENT_ARTIFACTS === "1" || process.env.AYNI_EXPERIENCE !== "0") && request.method === "GET" && url.pathname === "/api/documents/artifacts") {
+    if ((newAyniFeatureEnabled(process.env.AYNI_DOCUMENT_ARTIFACTS) || process.env.AYNI_EXPERIENCE !== "0") && request.method === "GET" && url.pathname === "/api/documents/artifacts") {
       send(response,200,{ artifacts: await listConfirmedDocumentArtifacts(db,teacherId) },origin); return;
     }
-    if ((process.env.AYNI_DOCUMENT_ARTIFACTS === "1" && process.env.AYNI_DOCUMENT_SYNC === "1" || process.env.AYNI_EXPERIENCE !== "0")
+    if ((newAyniFeatureEnabled(process.env.AYNI_DOCUMENT_ARTIFACTS) && newAyniFeatureEnabled(process.env.AYNI_DOCUMENT_SYNC) || process.env.AYNI_EXPERIENCE !== "0")
       && request.method === "GET" && url.pathname === "/api/documents/artifacts/states") {
       send(response,200,{ states: await listDocumentArtifactStates(db,teacherId) },origin); return;
     }
-    if ((process.env.AYNI_DOCUMENT_ARTIFACTS === "1" || process.env.AYNI_EXPERIENCE !== "0") && request.method === "POST" && url.pathname === "/api/documents/artifacts/prepare") {
+    if ((newAyniFeatureEnabled(process.env.AYNI_DOCUMENT_ARTIFACTS) || process.env.AYNI_EXPERIENCE !== "0") && request.method === "POST" && url.pathname === "/api/documents/artifacts/prepare") {
       if (!documentArtifactStorage) { send(response,503,{error:"Storage documental privado no configurado."},origin); return; }
       try {
         const body = await readJson(request);
@@ -1371,7 +1372,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       } catch (error) { send(response,httpStatusForError(error,422),{error:publicErrorMessage(error)},origin); }
       return;
     }
-    if ((process.env.AYNI_DOCUMENT_ARTIFACTS === "1" && process.env.AYNI_DOCUMENT_SYNC === "1" || process.env.AYNI_EXPERIENCE !== "0")
+    if ((newAyniFeatureEnabled(process.env.AYNI_DOCUMENT_ARTIFACTS) && newAyniFeatureEnabled(process.env.AYNI_DOCUMENT_SYNC) || process.env.AYNI_EXPERIENCE !== "0")
       && request.method === "POST" && url.pathname === "/api/documents/artifacts/zip") {
       if (!documentArtifactStorage) { send(response,503,{error:"Storage documental privado no configurado."},origin); return; }
       try {
@@ -1388,7 +1389,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       } catch (error) { send(response,httpStatusForError(error,422),{error:publicErrorMessage(error)},origin); }
       return;
     }
-    const artifactDownload = (process.env.AYNI_DOCUMENT_ARTIFACTS === "1" || process.env.AYNI_EXPERIENCE !== "0")
+    const artifactDownload = (newAyniFeatureEnabled(process.env.AYNI_DOCUMENT_ARTIFACTS) || process.env.AYNI_EXPERIENCE !== "0")
       && /^\/api\/documents\/artifacts\/[0-9a-f-]{36}\/download$/i.exec(url.pathname);
     if (request.method === "GET" && artifactDownload) {
       if (!documentArtifactStorage) { send(response,503,{error:"Storage documental privado no configurado."},origin); return; }

@@ -1,4 +1,6 @@
 "use client";
+import { newAyniFeatureEnabled } from "@/src/lib/new-ayni-feature-flag.mjs";
+
 import { apiFetch } from "@/src/lib/ayni-api-fetch";
 
 import { useEffect, useState } from "react";
@@ -152,8 +154,8 @@ export function DocumentsScreen({ onPlan, folder }: { onPlan?: () => void;folder
   const [artifactStates,setArtifactStates] = useState<ArtifactState[]>([]);
   const [error, setError] = useState("");
   const [revision, setRevision] = useState(0);
-  const artifactFeature = process.env.NEXT_PUBLIC_AYNI_EXPERIENCE !== "0" || process.env.NEXT_PUBLIC_AYNI_F10_ARTIFACTS === "1";
-  const syncFeature = artifactFeature && process.env.NEXT_PUBLIC_AYNI_F11_DOCUMENTS === "1";
+  const artifactFeature = process.env.NEXT_PUBLIC_AYNI_EXPERIENCE !== "0" || newAyniFeatureEnabled(process.env.NEXT_PUBLIC_AYNI_F10_ARTIFACTS);
+  const syncFeature = artifactFeature && newAyniFeatureEnabled(process.env.NEXT_PUBLIC_AYNI_F11_DOCUMENTS);
 
   useEffect(() => {
     const controller = new AbortController();

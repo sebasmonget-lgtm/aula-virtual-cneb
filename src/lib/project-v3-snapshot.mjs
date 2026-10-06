@@ -1,8 +1,10 @@
 import { createHash, randomUUID } from "node:crypto";
 import { canonicalProjectDetails, projectMasterV3, validateProjectMasterV3 } from "./planning-contract-v3.mjs";
+import { newAyniFeatureEnabled } from "./new-ayni-feature-flag.mjs";
 
 const hash = (value) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
-export const simpleProjectEnabled = () => process.env.AYNI_PROJECT_SIMPLE === "1";
+
+export const simpleProjectEnabled = () => newAyniFeatureEnabled(process.env.AYNI_PROJECT_SIMPLE);
 export const retainProjectCriterionIds = (next, previous) => ({ ...next,
   general_criteria: next.general_criteria.map((item) => ({ ...item,
     ...(previous?.general_criteria?.find((old) => old.competency_id === item.competency_id)?.criterion_id ?

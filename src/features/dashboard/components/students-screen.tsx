@@ -1,4 +1,6 @@
 "use client";
+import { newAyniFeatureEnabled } from "@/src/lib/new-ayni-feature-flag.mjs";
+
 import { StudentPhoto, StudentPhotoEditor, EnrollmentPhoto, uploadStudentPhoto } from "./student-photo";
 
 import { useEffect, useMemo, useState } from "react";
@@ -13,7 +15,7 @@ import { FamilyInformationPanel, FamilyInterviewStatusBadge, useFamilyInterviewS
 import { EvidenceStudentCorrection } from "./evidence-student-correction";
 import { StudentTrajectory } from "./student-trajectory";
 
-const f8TrajectoryEnabled = process.env.NEXT_PUBLIC_AYNI_F8_TRAJECTORY === "1";
+const f8TrajectoryEnabled = newAyniFeatureEnabled(process.env.NEXT_PUBLIC_AYNI_F8_TRAJECTORY);
 
 const statusLabels = {
   demonstrated: "Lo demostró",

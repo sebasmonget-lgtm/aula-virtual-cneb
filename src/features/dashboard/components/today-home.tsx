@@ -1,4 +1,6 @@
 "use client";
+import { newAyniFeatureEnabled } from "@/src/lib/new-ayni-feature-flag.mjs";
+
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
@@ -81,7 +83,7 @@ export function TodayHome({ dashboard, refreshKey = 0, openEvidence, openAttenda
   const greeting = Number(today.now.slice(0, 2)) < 12 ? "Buenos días" : Number(today.now.slice(0, 2)) < 19 ? "Buenas tardes" : "Buenas noches";
   const teacher = profile.teacher_name?.trim().split(/\s+/)[0] ?? "profesora";
   const canObserve = Boolean(featured?.activity_id && featured.criteria.length);
-  const canObserveWithoutActivity = process.env.NEXT_PUBLIC_AYNI_ORDINARY_OBSERVATIONS === "1";
+  const canObserveWithoutActivity = newAyniFeatureEnabled(process.env.NEXT_PUBLIC_AYNI_ORDINARY_OBSERVATIONS);
   const observe = () => canObserve && featured ? openEvidence(featured) : onObserveWithoutActivity();
   const status = (block: Block) => block.status === "completed" ? "Listo" : block.id === current?.id ? "Ahora" : block.display_status === "ready_to_close" ? "Por cerrar" : "Después";
 

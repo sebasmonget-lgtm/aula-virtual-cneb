@@ -4,7 +4,7 @@ Asistente de planificación, organización y seguimiento pedagógico para docent
 
 ## Estado
 
-La entrega inicial implementa el shell responsive y el primer flujo vertical de registro rápido de evidencia. Los datos persisten en PostgreSQL local embebido; no existe conexión con Vercel, Supabase ni OpenAI.
+La app local usa PostgreSQL embebido (PGlite) y un servidor API separado. Hay un adaptador PostgreSQL y Auth Supabase para staging, pero el despliegue Vercel/Supabase sigue bloqueado: faltan una función para la API y paridad de archivos privados. Ver [preparación cloud](docs/VERCEL_SUPABASE_READINESS.md) antes de publicar.
 
 ## Uso local
 
@@ -23,7 +23,11 @@ La app se abre en `http://localhost:5173`. La base local se guarda en `.local/pg
 npx tsc --noEmit
 npm run lint
 npm run build
+npm run test:postgres-adapter
+node scripts/test-supabase-rls.mjs
 ```
+
+`node scripts/verify-cloud-deploy.mjs` debe terminar con error mientras las brechas de Vercel/Storage sigan abiertas. El build de Vercel ejecuta ese control automáticamente.
 
 ## Configuración futura
 
@@ -45,4 +49,5 @@ npm run db:export
 - `docs/AI_PROMPTS.md`: contratos previstos para IA.
 - `docs/ERRORS_AND_FIXES.md`: memoria de errores.
 - `docs/RELEASE_CHECKLIST.md`: controles antes de publicar.
+- `docs/VERCEL_SUPABASE_READINESS.md`: brechas y prueba de equivalencia con local.
 - `docs/LOCAL_DATABASE.md`: operación local y futura migración a Supabase.
