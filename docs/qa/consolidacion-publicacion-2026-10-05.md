@@ -15,7 +15,7 @@ Solicitud expresa del usuario: subir todos los cambios y commits de todas las ra
 
 Migraciones 20261006015005 y 20261006021437 aplicadas en una transacción con lock y registros en supabase_migrations.schema_migrations. Solo DDL aditivo/constraints e historial de migración; ningún DML sobre planes, actividades, evidencias ni evaluaciones. Las dos tablas nuevas tienen RLS; authenticated solo SELECT propio sobre jobs, sin lectura/escritura de recibos. Prueba transaccional con identidad propietaria y otra identidad: lectura 1/0 y rollback de la fila ficticia. Es una prueba SQL de políticas, no dos inicios de sesión Auth reales.
 
-Secreto HMAC guardado exclusivamente en Vercel preview/production y Vault. pg_cron y pg_net instalados; función private.dispatch_preparation_tick sin permiso EXECUTE para cliente. Dispatcher sin schedule durante esta validación. Una firma vigente y un nonce único son obligatorios; los resultados de las llamadas y replay se registran tras el despliegue.
+Secreto HMAC guardado exclusivamente en Vercel preview/production y Vault. pg_cron y pg_net instalados; función private.dispatch_preparation_tick sin permiso EXECUTE para cliente. Vault no permite lectura a authenticated. net conserva permisos administrados por Supabase para roles NOLOGIN y está fuera de la Data API; no se atribuye una revocación del schema que el rol postgres no puede realizar. Dispatcher sin schedule durante esta validación. Una firma vigente y un nonce único son obligatorios; los resultados de las llamadas y replay se registran tras el despliegue.
 
 ## Publicación y recibo posterior
 
