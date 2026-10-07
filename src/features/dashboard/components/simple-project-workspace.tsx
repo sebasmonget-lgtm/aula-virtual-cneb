@@ -20,14 +20,15 @@ async function request<T>(path: string, body?: unknown, method?: string): Promis
   const response = await apiFetch(`${localDatabaseApiUrl}${path}`, body === undefined ? undefined : {
     method: method ?? "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body),
   });
-  const result = await response.json() as T & { error?: string };
-  if (!response.ok) throw new Error(result.error || "No pudimos completar la acción.");
+  const result = await response.json() as T & { error?: string; message?: string };
+  if (!response.ok) throw new Error(result.message || result.error || "No pudimos completar la acción.");
   return result;
 }
 export function SimpleProjectWorkspace(props: Props) {
   const [plan, setPlan] = useState<Plan | null>(null), [experiences, setExperiences] = useState<Experience[]>([]);
   const [chosen, setChosen] = useState<string | null>(props.initialProposalId ?? null);
   const [row, setRow] = useState<Experience | null>(null), [context, setContext] = useState("");
+  const [conversation,setConversation]=useState<{messages:{role:string;text:string}[];ready:boolean}|null>(null);
   const [dictating,setDictating]=useState(false);
   const [calendar,setCalendar]=useState<ProjectCalendarDay[]>([]),[selectedDates,setSelectedDates]=useState<string[]>([]);
   const [calendarError,setCalendarError]=useState("");
@@ -74,7 +75,7 @@ export function SimpleProjectWorkspace(props: Props) {
       (item.source_proposal_id === chosen || (!item.source_proposal_id && item.source_proposal_index === selectedIndex)))
       .sort((a, b) => b.version - a.version)[0];
     if (found) void request<{ experience: Experience;discrepancy:{changed:boolean;reason:string|null} }>(`/api/project-flow/${found.id}`).then((result) => {
-      if (live) { setDiscrepancy(result.discrepancy);setRow(result.experience); setContext(result.experience.details.decisions?.additional_context ?? ""); setOpenedProposal(chosen); }
+      if (live) { setDiscrepancy(result.discrepancy);setRow(result.experience);setConversation(result.experience.details.project_context??null); setContext(result.experience.details.project_context?"":result.experience.details.decisions?.additional_context ?? ""); setOpenedProposal(chosen); }
     }).catch((cause: Error) => { if (live) setError(cause.message); });
     return () => { live = false; };
   }, [plan, chosen, experiences]);
@@ -82,6 +83,11 @@ export function SimpleProjectWorkspace(props: Props) {
     try { await job(); } catch (cause) { setError(cause instanceof Error ? cause.message : "No pudimos completar la acción."); }
     finally { setBusy(false); }
   }
+  async function converse(){if(!plan||!proposal||!chosen)return;await act(async()=>{
+    let current=row;if(!current){current=(await request<{experience:Experience}>("/api/project-flow/start",{annualPlanId:plan.id,proposalId:chosen})).experience;setRow(current);}
+    const result=await request<{experience:Experience;conversation:{messages:{role:string;text:string}[];ready:boolean}}>(`/api/project-flow/${current.id}/conversation`,{text:context,turnId:crypto.randomUUID(),expectedRevision:current.revision});
+    setRow(result.experience);setConversation(result.conversation);setContext("");
+  });}
   async function prepare() { if (!plan || !proposal || !chosen || !selectedDates.length || calendarError) return;
     await act(async()=>{
       let current=row;
@@ -89,7 +95,7 @@ export function SimpleProjectWorkspace(props: Props) {
       await request(`/api/project-flow/${current.id}/calendar`,{selectedDates,
         exclusions:Object.fromEntries(calendar.filter(day=>day.is_instructional&&!selectedDates.includes(day.date)).map(day=>[day.date,"No se utilizará en este proyecto"])),confirm:true},"PUT");
       current=(await request<{experience:Experience}>(`/api/project-flow/${current.id}`)).experience;setRow(current);
-      if(modern){const job=await request<PreparationJob>("/api/preparation/projects",{annualPlanId:plan.id,proposalId:chosen,additionalContext:context.trim()});setPreparation(job);setChanging(false);return;}
+      if(modern){const job=await request<PreparationJob>("/api/preparation/projects",{annualPlanId:plan.id,proposalId:chosen,additionalContext:[...(conversation?.messages.filter(message=>message.role==="teacher").map(message=>message.text)??[]),context.trim()].filter(Boolean).join("\n").slice(0,1000)});setPreparation(job);setChanging(false);return;}
       const result=await prepareSimpleProject({request,planId:plan.id,proposalId:chosen,proposal,additionalContext:context.trim(),experience:current,
         feedback:{usePlanningFeedback:Boolean(props.feedbackPeriodId),planningFeedbackPeriodId:props.feedbackPeriodId},onCheckpoint:(saved:Experience)=>setRow(saved)});
       setRow(result);setChanging(false);setNotice("Proyecto preparado. Revísalo antes de confirmar.");
@@ -153,7 +159,7 @@ export function SimpleProjectWorkspace(props: Props) {
         {(id===currentId||id===nextId)&&<p className="mt-2 text-sm font-bold text-[#087d96]">{id===currentId?"Corresponde ahora":"Próximo proyecto"}</p>}
         <p className="my-2 text-sm text-[#526b87]">{slot ? `${displayDate(slot.starts_on)} – ${displayDate(slot.ends_on)}` : item.period} · {item.purpose}</p>
         {slot && slot.ends_on < today && <p className="mb-2 text-sm text-[#916219]">Esta planificación corresponde a un período anterior. Puedes revisarla o continuar con la actual.</p>}
-        <Button disabled={!id || busy} onClick={() => { setPreparation(null);setOpenedProposal(null); setRow(null); setContext("");  setChanging(false); setError(""); setNotice(""); setChosen(id); }}>{existing?.status === "active" ? "Ver proyecto confirmado" : existing ? "Continuar proyecto" : "Usar esta propuesta"}</Button></article>;
+        <Button disabled={!id || busy} onClick={() => { setPreparation(null);setOpenedProposal(null); setRow(null); setContext(""); setConversation(null);  setChanging(false); setError(""); setNotice(""); setChosen(id); }}>{existing?.status === "active" ? "Ver proyecto confirmado" : existing ? "Continuar proyecto" : "Usar esta propuesta"}</Button></article>;
     })}</div>{!plan && <Button onClick={props.onGoAnnual}>Completar Mi año</Button>}</> : <>
       <p className="text-sm text-[#526b87]">{row?.status === "active" ? "Confirmado" : "Por preparar"} · {selectedSlot ? `${displayDate(selectedSlot.starts_on)} al ${displayDate(selectedSlot.ends_on)}` : proposal.period}</p>
       {(slotFor(proposal,index)?.ends_on ?? "9999") < today && <p className="rounded-xl bg-[#fff7e8] p-3 text-sm text-[#805819]">Esta planificación corresponde a un período anterior. Puedes revisarla o continuar con la actual.</p>}
@@ -161,9 +167,11 @@ export function SimpleProjectWorkspace(props: Props) {
         <div className="flex flex-col gap-5 sm:flex-row"><ProjectPictogram project={proposal} className="size-40 sm:size-48" /><p className="leading-relaxed"><b>Qué buscamos:</b> {proposal.purpose}</p></div>
         <p className="text-sm">{proposal.primary_competency_ids.map(name).join(" · ")}</p>
         {futureNotice}
+        {modern&&<div className="space-y-3"><p className="text-sm text-[#526b87]">Ayni ya conoce la tarjeta y las fechas. Puedes conversar sobre cómo quieres desarrollar este proyecto.</p>{conversation?.messages.map((message,index)=><p key={index} className={message.role==="teacher"?"text-sm":"font-semibold"}>{message.role==="teacher"?"Tu decisión: ":"Ayni: "}{message.text}</p>)}</div>}
         <label className="block font-semibold">¿Hay algo que quieras que tenga en cuenta? (opcional)
           <Textarea className="mt-2" value={context} maxLength={1000} onChange={(event) => setContext(event.target.value)}
             placeholder="Por ejemplo: podemos usar el patio o invitar a las familias al cierre." /></label>
+        {modern&&!conversation?.ready&&<AsyncButton variant="outline" busy={busy} busyLabel="Preparando una pregunta…" onClick={()=>void converse()}>Conversar con Ayni</AsyncButton>}
         <p className="text-sm text-[#526b87]">Puedes añadir pequeños ajustes. Para cambiar lo que buscamos o las competencias, revisa el proyecto en Mi año.</p>
         <div className="flex flex-wrap gap-2">{["Tenemos bloques grandes", "Podemos usar el patio", "Tenemos lupas", "Podemos visitar el huerto", "Quiero invitar a las familias al cierre"].map(idea=><Button key={idea} variant="outline" className="max-w-full whitespace-normal" disabled={busy||dictating} onClick={()=>setContext(value=>[value,idea].filter(Boolean).join("\n").slice(0,1000))}>{idea}</Button>)}</div>
         <DictationRecorder classroomScope purpose="group_summary" rawTranscript context="Ajustes para este proyecto" currentText={context} onTranscribed={value=>setContext(value.slice(0,1000))} onBusyChange={setDictating} disabled={busy}/>

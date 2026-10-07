@@ -68,14 +68,14 @@ test("aulas pequeñas conservan temas de planificación sin exponer nombres ni c
   assert.doesNotMatch(JSON.stringify(project), /Niña QA|student_id|family_expectation/);
 });
 
-test("Assessment mantiene contexto familiar separado de evidencia y solo sugiere situaciones de observación", () => {
+test("Assessment excluye familia; las pistas familiares se usan antes para observar", () => {
   const assessment = projectFamilyAssessmentContext(familyB);
   assert.equal(assessment.role, "context_only");
   assert.equal("family_expectation" in assessment, false);
   const input = buildAssessmentInput({ age: 5, competencyId: "MAT_FORMA", evidenceHistory: [], familyContext: assessment });
   assert.deepEqual(input.evidence_history, []);
-  assert.equal(input.student_context.family_context.source, "family_interview");
-  assert.match(input.teacher_request, /no evidencia observada/);
+  assert.equal(input.student_context?.family_context, undefined);
+  assert.match(input.teacher_request, /observaciones reales/);
   assert.match(familyObservationHint(familyA, "CYT_INDAGA"), /Según la familia/);
   assert.match(familyObservationHint(familyB, "MAT_FORMA"), /observa cómo/);
   assert.match(familyObservationHint(familyB, "MAT_CANTIDAD"), /observa cómo/);

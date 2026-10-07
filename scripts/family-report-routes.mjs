@@ -1,3 +1,6 @@
+import { familyRecommendationFingerprint, currentFamilyRecommendationFingerprint } from "../src/lib/family-recommendation-fingerprint.mjs";
+import { loadConfirmedFamilyContext, summarizeFamilyInterview } from "../src/lib/family-interview-projection.mjs";
+import { neutralizeAssessmentText } from "../src/lib/assessment-v4-service.mjs";
 import { assertPeriodDatesOpen } from "../src/lib/period-edit-guard.mjs";
 import { randomUUID } from "node:crypto";
 import { loadKnowledgeBaseV4 } from "../src/lib/knowledge-base-v4.mjs";
@@ -5,7 +8,7 @@ import { cardIsApplicable } from "../src/lib/ai-context-builder-v4.mjs";
 import { resolveAIExecutionPlan } from "../src/lib/ai-execution-router-v4.mjs";
 import { createAIProviderForPlan } from "../src/lib/ai-provider-factory.mjs";
 import { generateAIWorkflowV4 } from "../src/lib/ai-generation-v4.mjs";
-import { buildFamilyReportFallback, buildFamilyReportInput, conclusionSourceSnapshot, sameConclusionSourceSnapshot, selectConfirmedConclusions, validateFamilyReport, validateFamilyReportPeriod } from "../src/lib/family-report-v4-service.mjs";
+import { preserveConfirmedFamilySections, buildFamilyReportFallback, buildFamilyReportInput, conclusionSourceSnapshot, sameConclusionSourceSnapshot, selectConfirmedConclusions, validateFamilyReport, validateFamilyReportPeriod } from "../src/lib/family-report-v4-service.mjs";
 import { httpStatusForError, publicErrorMessage } from "../src/lib/version-integrity.mjs";
 import { assessmentStudentNames } from "../src/lib/assessment-v4-service.mjs";
 
@@ -53,7 +56,8 @@ export function createFamilyReportRouteHandler({ db, teacherId, annualPlanningCo
     }
     return { ids, rows: selectConfirmedConclusions(await sources(studentId, periodStart, periodEnd,Boolean(periodId)), ids, periodStart, periodEnd) };
   }
-  function checkPending(item, context, studentId, start, end,periodId=null) {
+  async function checkPending(item, context, studentId, start, end,periodId=null) {
+    if (item?.metadata?.family_context_fingerprint && item.metadata.family_context_fingerprint !== await currentFamilyRecommendationFingerprint(db, context.id, studentId)) throw new Error("La entrevista familiar cambió. Prepara de nuevo las recomendaciones.");
     if (!item || item.workflow !== "family_report" || item.classroom_id !== context.id || item.student_id !== studentId || item.period_start !== start || item.period_end !== end || (item.period_id??null)!==(periodId??null)) throw new Error("La generación no corresponde a este informe.");
   }
   async function draft(context, id) {
@@ -101,7 +105,10 @@ export function createFamilyReportRouteHandler({ db, teacherId, annualPlanningCo
         const period=await formalPeriod(context,body.periodId,body.periodStart,body.periodEnd);
         const { ids, rows } = await validatedSources(context, student.id, body.periodStart, body.periodEnd, body.competencyIds ?? [],period?.id);
         const classmates=(await db.query('select first_name,last_name,preferred_name from students where classroom_id=$1',[context.id])).rows;
-        const input = buildFamilyReportInput({ age: context.age, competencyIds: ids, conclusions: rows, knownNames: assessmentStudentNames(classmates), castellanoL2Applicable: context.castellano_l2_applicable === true, religionApplicable: context.religion_applicable === true });
+        const interview = await loadConfirmedFamilyContext(db, context.id, student.id);
+        const familyRecommendationContext = interview ? { source_type: "family_reported_context", version: interview.version,
+          summary: neutralizeAssessmentText(summarizeFamilyInterview(interview.details), assessmentStudentNames(classmates)) } : null;
+        const input = buildFamilyReportInput({ age: context.age, competencyIds: ids, conclusions: rows, knownNames: assessmentStudentNames(classmates), familyRecommendationContext, castellanoL2Applicable: context.castellano_l2_applicable === true, religionApplicable: context.religion_applicable === true });
         const plan = resolveAIExecutionPlan({ workflow: "family_report", task: "generation" });
         let result,source="ai";
         try { result=await generate(input, { provider: createProvider(plan), executionPlan: plan }); }
@@ -110,8 +117,11 @@ export function createFamilyReportRouteHandler({ db, teacherId, annualPlanningCo
           result={output:buildFamilyReportFallback(ids,rows),metadata:{source:"confirmed_conclusions_fallback",reason:error.reason}};
           source="confirmed_conclusions";
         }
+        result.output = preserveConfirmedFamilySections(result.output, rows);
+        const familyFingerprint = familyRecommendationFingerprint(interview);
+        if (familyFingerprint !== await currentFamilyRecommendationFingerprint(db, context.id, student.id)) throw new Error("La entrevista familiar cambió. Prepara de nuevo las recomendaciones.");
         const generationId = randomUUID();
-        await pending.set(generationId, { workflow: "family_report", classroom_id: context.id, student_id: student.id, period_id:period?.id??null, period_start: body.periodStart, period_end: body.periodEnd, selected_competency_ids: ids, source_conclusion_ids: rows.map((row) => row.id), source_conclusion_snapshot: conclusionSourceSnapshot(rows), metadata: metadataForAudit(result.metadata), createdAt: Date.now() });
+        await pending.set(generationId, { workflow: "family_report", classroom_id: context.id, student_id: student.id, period_id:period?.id??null, period_start: body.periodStart, period_end: body.periodEnd, selected_competency_ids: ids, source_conclusion_ids: rows.map((row) => row.id), source_conclusion_snapshot: conclusionSourceSnapshot(rows), metadata: { ...metadataForAudit(result.metadata), family_context_fingerprint: familyFingerprint }, createdAt: Date.now() });
         send(response, 200, { proposal: result.output, generation_id: generationId, generation_source:source }, origin);
         return true;
       }
@@ -120,7 +130,7 @@ export function createFamilyReportRouteHandler({ db, teacherId, annualPlanningCo
         await assertPeriodDatesOpen(db,context.id,body.periodStart,body.periodEnd);
         const item = await pending.get(body.generationId);
         const period=await formalPeriod(context,body.periodId,body.periodStart,body.periodEnd);
-        checkPending(item, context, student.id, body.periodStart, body.periodEnd,period?.id);
+        await checkPending(item, context, student.id, body.periodStart, body.periodEnd,period?.id);
         if (!sameIds(Array.isArray(body.competencyIds) ? [...body.competencyIds].sort() : [], item.selected_competency_ids)) throw new Error("La selección no corresponde a la generación.");
         const { rows } = await validatedSources(context, student.id, body.periodStart, body.periodEnd, item.selected_competency_ids,period?.id);
         if (!sameConclusionSourceSnapshot(item.source_conclusion_snapshot, conclusionSourceSnapshot(rows))) throw new Error(staleMessage);
@@ -140,7 +150,7 @@ export function createFamilyReportRouteHandler({ db, teacherId, annualPlanningCo
         await assertPeriodDatesOpen(db,context.id,row.period_start,row.period_end);
         await formalPeriod(context,row.evaluation_period_id,dateOnly(row.period_start),dateOnly(row.period_end));
         const item = body.generationId ? await pending.get(body.generationId) : null;
-        if (body.generationId) checkPending(item, context, row.student_id, dateOnly(row.period_start), dateOnly(row.period_end),row.evaluation_period_id);
+        if (body.generationId) await checkPending(item, context, row.student_id, dateOnly(row.period_start), dateOnly(row.period_end),row.evaluation_period_id);
         const ids = item?.selected_competency_ids ?? row.selected_competency_ids;
         const snapshot = item?.source_conclusion_snapshot ?? row.source_conclusion_snapshot;
         validateFamilyReport(body.proposal, ids, snapshot);
@@ -163,6 +173,7 @@ export function createFamilyReportRouteHandler({ db, teacherId, annualPlanningCo
         let saved;
         try {
           await assertPeriodDatesOpen(db,context.id,row.period_start,row.period_end,{lock:true});
+          if (row.generation_metadata?.family_context_fingerprint && row.generation_metadata.family_context_fingerprint !== await currentFamilyRecommendationFingerprint(db, context.id, row.student_id)) throw new Error("La entrevista familiar cambió. Prepara de nuevo las recomendaciones.");
           await db.query(`update family_reports set status='archived',updated_at=now() where student_id=$1 and period_start=$2::date and period_end=$3::date and status='active'`, [row.student_id, row.period_start, row.period_end]);
           saved = (await db.query(`update family_reports set status='active',teacher_confirmed_at=now(),updated_at=now() where id=$1 and status='draft' returning id,status,teacher_confirmed_at`, [row.id])).rows[0];
           if (!saved) throw new Error("Borrador no disponible.");

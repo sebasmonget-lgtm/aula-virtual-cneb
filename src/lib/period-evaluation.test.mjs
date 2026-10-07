@@ -206,7 +206,7 @@ test("conclusión confirma snapshot recargado de JSONB pero rechaza valores camb
   } finally { await f.db.close(); }
 });
 
-test("el análisis reutiliza la huella completa del aula y rechaza cambios reales de contexto", async () => {
+test("el análisis se cachea por evidencia y contexto pedagógico sin depender de entrevistas familiares", async () => {
   const f = await fixture();
   try {
     const selection = { classroomId: classId, periodId: firstPeriod, studentId: studentA, competencyId: "COM_ORAL" };
@@ -217,8 +217,8 @@ test("el análisis reutiliza la huella completa del aula y rechaza cambios reale
     assert.doesNotMatch(JSON.stringify(f.calls[0]), /\b(?:Ana|Luis|Pérez|Rojas)\b/);
     f.currentContext.source_fingerprint = "confirmed-classroom-context-2";
     const stale = await f.call("POST", "/api/period-evaluations/suggest", selection);
-    assert.equal(stale.status, 422);
-    assert.match(stale.body.error, /marco de evaluación requiere revisión/);
+    assert.equal(stale.status, 200);
+    assert.equal(stale.body.cached,true);
     assert.equal(f.calls.length, 1, "no facturar una llamada con marco obsoleto");
   } finally { await f.db.close(); }
 });
@@ -303,7 +303,7 @@ test("ficha única, nivel docente, cierre, salidas derivadas y cambio posterior 
     assert.equal(Object.hasOwn(suggestion.body.analysis, "suggested_level"), false);
     assert.equal(f.calls.length, 1);
     assert.doesNotMatch(JSON.stringify(f.calls[0]),/teacher_confirmed_findings/);
-    assert.match(f.calls[0].teacher_request, /Assessment Master confirmado/);
+    assert.match(f.calls[0].teacher_request, /observaciones reales/);
     const decisionA = { classroomId: classId, periodId: period.id, studentId: studentA, competencyId: "COM_ORAL", evidenceFingerprint: detail.body.evidence_fingerprint, achievementLevel: "B", teacherAnalysis: "En distintos juegos explicó ideas y escuchó al grupo.", conclusionText: "", teacherJustification: "Mi revisión de los registros indica que sigue necesitando apoyo para escuchar." };
     assert.equal((await f.call("POST", "/api/period-evaluations/confirm", {...decisionA,expectedDraftRevision:suggestion.body.draft_revision})).status, 422);
     assert.equal((await f.call("POST", "/api/period-evaluations/save-draft", { ...decisionA, expectedDraftRevision:suggestion.body.draft_revision, provisionalLevel: decisionA.achievementLevel })).status, 200);

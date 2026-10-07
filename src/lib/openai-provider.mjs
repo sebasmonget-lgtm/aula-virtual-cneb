@@ -1,3 +1,4 @@
+import { beginAIQATrace, endAIQATrace } from "./ai-qa-trace.mjs";
 import OpenAI from "openai";
 import { AIProvider } from "./ai-provider.mjs";
 import { recordAiUsage } from "./ai-usage-service.mjs";
@@ -47,12 +48,16 @@ function classifyError(error) {
 }
 
 export class OpenAIProvider extends AIProvider {
-  constructor({ apiKey = process.env.OPENAI_API_KEY, client = null, timeoutMs = 30_000, model = null } = {}) {
+  constructor({ apiKey = process.env.OPENAI_API_KEY, client = null, timeoutMs = 30_000, model = null,
+    background = false, resumeResponseId = null, onResponseStarted = async () => {} } = {}) {
     super({ id: "openai", model: null });
     this.apiKey = apiKey;
     this.client = client;
     this.timeoutMs = timeoutMs;
     this.configuredModel = model;
+    this.background = background;
+    this.resumeResponseId = resumeResponseId;
+    this.onResponseStarted = onResponseStarted;
   }
 
   getClient() {
@@ -70,9 +75,11 @@ export class OpenAIProvider extends AIProvider {
     }
     const client = this.getClient();
     let response;
+    let trace;
     try {
-      response = await client.responses.create({
+      const payload = {
         model: plan.model,
+        ...(this.background ? { background: true, store: false } : {}),
         ...(plan.reasoning_effort ? { reasoning: { effort: plan.reasoning_effort } } : {}),
         instructions: ["Actúa como asistente pedagógico de Educación Inicial. Usa exclusivamente el AIContextBundle entregado; respeta constraints.must y constraints.must_not; no inventes hechos sobre estudiantes ni presentes paráfrasis semánticas como citas literales MINEDU. Respeta edad, propósito, contexto, materiales y estado de competencia. Produce únicamente el objeto requerido por el schema.", request.skill_instructions].filter(Boolean).join("\n\n"),
         input: [{ role: "user", content: [{ type: "input_text", text: JSON.stringify(request.ai_context_bundle) }] }],
@@ -84,9 +91,22 @@ export class OpenAIProvider extends AIProvider {
             schema: activityJsonSchema(request.output_schema),
           },
         },
-      }, { timeout: this.timeoutMs, maxRetries: 0 });
+      };
+      trace = await beginAIQATrace(request, payload, this.resumeResponseId);
+      response = this.resumeResponseId
+        ? await client.responses.retrieve(this.resumeResponseId, {}, { timeout: this.timeoutMs, maxRetries: 0 })
+        : await client.responses.create(payload, { timeout: this.timeoutMs, maxRetries: 0 });
+      if (this.background && !this.resumeResponseId) {
+        if (!response.id) throw new OpenAIProviderError("response_incomplete");
+        if (trace) trace.openai_response_id = response.id;
+        await this.onResponseStarted(response.id);
+      }
+      if (["queued", "in_progress"].includes(response.status)) throw new OpenAIProviderError("response_pending");
+      if (["failed", "cancelled"].includes(response.status)) throw new OpenAIProviderError("response_failed");
     } catch (error) {
+      await endAIQATrace(trace, null, { reason: error instanceof OpenAIProviderError ? error.reason : classifyError(error) });
       if (error instanceof OpenAIProviderError) throw error;
+      if (this.resumeResponseId && error?.status === 404) throw new OpenAIProviderError("response_expired");
       throw new OpenAIProviderError(classifyError(error), {
         status: error?.status ?? null,
         name: error?.name ?? null,
@@ -98,6 +118,7 @@ export class OpenAIProvider extends AIProvider {
     await recordAiUsage({ provider: "openai", workflow: request.workflow ?? "generation", model: response.model ?? plan.model,
       inputTokens: response.usage?.input_tokens, cachedInputTokens: response.usage?.input_tokens_details?.cached_tokens ?? 0,
       outputTokens: response.usage?.output_tokens });
+    try {
     if (response.status === "incomplete" || response.incomplete_details) {
       throw new OpenAIProviderError("response_incomplete");
     }
@@ -114,7 +135,7 @@ export class OpenAIProvider extends AIProvider {
     if (actualModel !== plan.model) {
       throw new OpenAIProviderError("model_mismatch", { execution_plan_model: plan.model });
     }
-    return {
+    const result = {
       output,
       provider_metadata: {
         provider: "openai",
@@ -123,5 +144,11 @@ export class OpenAIProvider extends AIProvider {
         usage: normalizeUsage(response.usage),
       },
     };
+    await endAIQATrace(trace, result);
+    return result;
+    } catch (error) {
+      await endAIQATrace(trace, { provider_metadata: { model: response.model ?? plan.model, usage: normalizeUsage(response.usage) } }, error);
+      throw error;
+    }
   }
 }

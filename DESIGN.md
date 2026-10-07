@@ -16,4 +16,15 @@ Los lotes muestran avance, textos listos y excepciones Conviene revisar en ámba
 
 Planificación funciona como cuatro carpetas: Evaluación diagnóstica, Plan anual, Proyectos y actividades, Evaluación. Detalles técnicos quedan en herramientas avanzadas; la biblioteca documental conserva historial y descargas.
 
-QA mínimo: escritorio 1366 y móvil 390 con datos ficticios. Las capturas describen el estado comprobado y no sustituyen la revisión humana ni certifican todo Ayni. Esta ronda se detiene después de Preview READY, smoke y handoff; no cambia producción.
+QA mínimo: escritorio 1366 y móvil 390 con datos ficticios. Las capturas describen el estado comprobado y no sustituyen la revisión humana ni certifican todo Ayni. Preview y Production deben compartir exactamente el mismo SHA y pasar sus verificaciones. La promoción queda bloqueada si falla un gate.
+
+
+## Recorrido moderno de IA · 2026-10-07
+
+La síntesis diagnóstica ofrece Preparar síntesis con Ayni, texto editable y fuentes por afirmación en un detalle secundario. Se distingue observación directa, según la familia y comentario docente. No se añade revisión individual ni confirmación de prioridades al recorrido principal.
+
+Mi año conserva sus quince tramos y movimientos por código. El editor nuevo no ofrece intención global libre como acción principal. Biblioteca conversa antes de preparar una tarjeta. El proyecto ofrece conversación breve, calendario revisable y una preparación completa; sus actividades se desarrollan cuando se necesitan. Loading conserva avance y permite salir y volver.
+
+Dentro de una actividad se ofrece + Añadir taller. No hay pantalla obligatoria de talleres del proyecto. Actualizar qué observar requiere elegir un cambio del propósito o de lo que harán los niños y explicar el cambio; los ajustes de tiempo, lugar o materiales se editan normalmente.
+
+Evaluar abre sin generar IA y muestra observaciones originales junto a la revisión docente. El contexto calculado no requiere confirmar un Assessment Master de IA. Informe a familias conserva las conclusiones guardadas y permite escribir acuerdos opcionales. Consolidado muestra información calculada; la generación de informe narrativo del aula queda fuera del recorrido moderno. Los históricos conservan consulta y Word.

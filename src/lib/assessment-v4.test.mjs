@@ -31,7 +31,7 @@ test("assessment routing, schema y provider reciben una sola tarjeta", async () 
   assert.equal(captured.ai_context_bundle.context.student.id, "current_student");
 });
 
-test("Assessment entrega contexto familiar en un bloque separado y mantiene las evidencias intactas", async () => {
+test("Assessment excluye contexto familiar y mantiene las observaciones intactas", async () => {
   let captured;
   const familyContext = { source: "family_interview", role: "context_only", interests: ["Animales"] };
   const evidenceHistory = [{ observation_note: "Exploró hojas en el aula.", observation_status: "observed_without_judgment" }];
@@ -39,7 +39,8 @@ test("Assessment entrega contexto familiar en un bloque separado y mantiene las 
   await generateAIWorkflowV4(input, { provider: { async generate(request) {
     captured = request; return { ...proposal(), competency_id: "CYT_INDAGA" };
   } } });
-  assert.deepEqual(captured.ai_context_bundle.context.student.family_context, familyContext);
+  assert.equal(captured.ai_context_bundle.context.student.family_context, undefined);
+  assert.equal(JSON.stringify(captured).includes("Animales"),false);
   assert.deepEqual(input.evidence_history, evidenceHistory);
   assert.equal(JSON.stringify(input.evidence_history).includes("Animales"), false);
 });

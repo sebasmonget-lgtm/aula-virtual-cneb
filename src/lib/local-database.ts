@@ -98,7 +98,7 @@ export type DiagnosticWorkspace = {
 export type DiagnosticSynthesisDetails = { information_status: "information_available" | "insufficient_information"; summary_text: string; next_observation: string };
 export type DiagnosticStudentReviewDetails = { information_status: "information_available" | "insufficient_information"; comment_text: string };
 export type DiagnosticCompetencyPriority = { competency_id: string; emphasis: "prioritize" | "maintain" | "observe_more"; reason: string };
-export type DiagnosticGroupDetails = { strengths: string; needs: string; planning_priorities: string; competency_priorities?: DiagnosticCompetencyPriority[] };
+export type DiagnosticGroupDetails = { strengths: string; needs: string; planning_priorities: string; competency_priorities?: DiagnosticCompetencyPriority[]; claims?: { text: string; scope: string; sources: { child: string; source_type: string; source_id: string }[] }[] };
 export type DiagnosticAnnualPriority = { title: string; reason: string; related_competency_ids: string[]; importance: "higher" | "normal" | "observe_more" };
 export type DiagnosticPriorityDetails = { priorities: DiagnosticAnnualPriority[] };
 export type DiagnosticReviewWorkspace = {
@@ -108,7 +108,7 @@ export type DiagnosticReviewWorkspace = {
   reviews: { id: string; student_id: string; competency_v4_id: string; version: number; status: "draft" | "confirmed"; details: DiagnosticSynthesisDetails; teacher_confirmed_at: string | null; updated_at: string }[];
   student_reviews: { id: string; student_id: string; version: number; status: "draft" | "confirmed"; details: DiagnosticStudentReviewDetails; teacher_confirmed_at: string | null; is_current: boolean }[];
   pending_observations: { id: string; student_id: string; context_label: string; observation_text: string | null; observed_at: string; has_media?: boolean }[];
-  group_reviews: { id: string; version: number; status: "draft" | "confirmed"; details: DiagnosticGroupDetails; teacher_confirmed_at: string | null; is_current: boolean }[];
+  group_reviews: { id: string; version: number; status: "draft" | "confirmed"; details: DiagnosticGroupDetails; ai_suggestion?: DiagnosticGroupDetails | null; teacher_confirmed_at: string | null; is_current: boolean }[];
   priority_reviews: { id: string; group_review_id: string; version: number; status: "draft" | "confirmed"; details: DiagnosticPriorityDetails; teacher_confirmed_at: string | null }[];
   group_coverage: { competency_id: string; competency_name: string; children_with_observations: number; confirmed_with_information: number; confirmed_insufficient: number; children_without_observations: number }[];
   derived_group_information: { confirmed_interviews: number; interests: { key: string; label: string; count: number }[]; observation_gaps: { competency_id: string; competency_name: string; children_with_observations: number; children_without_observations: number }[] };

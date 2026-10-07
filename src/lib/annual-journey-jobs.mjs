@@ -17,6 +17,7 @@ export function publicJourneyJob(id, payload, now = Date.now()) {
   return { id, draft_id: payload.draft_id, status: stalled ? "interrupted" : payload.status,
     stage: payload.stage, completed_stages: payload.completed_stages, updated_at: payload.updated_at,
     error: stalled ? "La preparación se interrumpió. Puedes continuar desde el trabajo guardado." : payload.error ?? null,
+    poll_after_ms: Math.max(0, Date.parse(payload.next_poll_at ?? "1970-01-01") - now),
     calls_completed: payload.checkpoint?.events?.length ?? 0, calls_attempted:payload.checkpoint?.attempts?.length??0 };
 }
 
@@ -105,6 +106,7 @@ export async function handleJourneyJobs({ request, response, url, db, context, t
   const payload = await versionTransaction(db,lock,async tx => {
     const job = await get(id,tx);
     if (job.status === "succeeded") return job;
+    if (job.status === "queued" && Date.parse(job.next_poll_at) > Date.now()) return job;
     if (job.status === "running" && Date.parse(job.lease_until) > Date.now())
       throw new VersionConflictError("Ayni sigue preparando tu año. Puedes consultar el avance aquí.");
     try {
@@ -116,9 +118,16 @@ export async function handleJourneyJobs({ request, response, url, db, context, t
       await update(id,job,job.lease_token,tx);return job;
     }
     const token = randomUUID(), priorToken = job.lease_token;
+    // This branch is reached only by an explicit retry of a failed job, never automatic polling.
+    if (job.status === "failed" && ["response_expired", "response_failed"].includes(job.provider_error_reason))
+      delete job.checkpoint.provider_responses?.[job.checkpoint.outputs?.length ?? 0];
+    delete job.next_poll_at; delete job.provider_error_reason;
     job.lease_token=token; job.lease_until=new Date(Date.now()+LEASE_MS).toISOString();job.status="running";job.error=null;
     await update(id,job,priorToken,tx);return job;
   });
+  if (payload.status === "queued" && Date.parse(payload.next_poll_at) > Date.now()) {
+    send(response,202,publicJourneyJob(id,payload),origin);return true;
+  }
   if (payload.status === "succeeded") { send(response,200,publicJourneyJob(id,payload),origin);return true; }
   if (payload.status === "failed") { send(response,409,publicJourneyJob(id,payload),origin);return true; }
   const token = payload.lease_token;
@@ -127,7 +136,7 @@ export async function handleJourneyJobs({ request, response, url, db, context, t
     const proposal = await generateAnnualJourney({context,snapshot:payload.snapshot,curriculum,calendar,teacherIdeas:payload.safeIdeas,
       experienceContext:payload.experienceContext ? {...payload.experienceContext,
         context_items:[],historical_projects:payload.experienceContext.historical_projects.map(item=>({...item,title:annualJourneySafeText(item.title,sources.names,annualJourneyCurriculumTerms(curriculum)) || "Proyecto anterior declarado por docente"}))}:null,
-      createProvider,resolvePlan,checkpoint:payload.checkpoint,onCheckpoint:async checkpoint => {
+      createProvider,resolvePlan,backgroundExecution:true,checkpoint:payload.checkpoint,onCheckpoint:async checkpoint => {
         payload.checkpoint=checkpoint;payload.stage=checkpoint.stage;
         payload.lease_until=new Date(Date.now()+LEASE_MS).toISOString();
         const done = new Set(payload.completed_stages);
@@ -161,16 +170,23 @@ export async function handleJourneyJobs({ request, response, url, db, context, t
       calls_attempted:payload.checkpoint.attempts.length,insufficient_interpretations:proposal.insufficient_interpretations.length}));
     send(response,201,{...publicJourneyJob(id,payload),plan_id:result.id},origin);
   } catch(error) {
+    if (error.reason === "response_pending") {
+      payload.status="queued";payload.next_poll_at=new Date(Date.now()+2000).toISOString();
+      payload.lease_until=new Date().toISOString();await update(id,payload,token);
+      send(response,202,publicJourneyJob(id,payload),origin);return true;
+    }
     if(error.name==="JourneyCheckpointReady") {
       payload.status="queued";payload.lease_until=new Date().toISOString();await update(id,payload,token);
       send(response,202,publicJourneyJob(id,payload),origin);return true;
     }
     payload.status="failed";
+    payload.provider_error_reason = error.reason ?? null;
     console.warn(JSON.stringify({event:"annual_journey_checkpoint_failed",stage:payload.stage,
       reason:/^[a-z_]{1,50}$/.test(error.reason??"")?error.reason:"operation_failed",calls_attempted:payload.checkpoint.attempts?.length??0}));
     payload.error=error.name==="VersionConflictError" ? error.message : payload.stage==="review"||payload.stage==="repair"
       ? "No pude terminar la última revisión. Las propuestas están guardadas. Puedes reintentar esa revisión."
       : "La preparación se interrumpió. Tus ideas y las etapas completadas están guardadas. Puedes continuar.";
+    if (["response_expired", "response_failed"].includes(error.reason)) payload.error="El proveedor ya no conserva esta preparación. Al reintentar se hará una generación nueva; tus ideas y resultados guardados se conservan.";
     // A failed semantic verdict may be reviewed again on an explicit retry, never regenerate the twelve proposals.
     if(["repair_failed","semantic_review"].includes(error.reason))payload.checkpoint.outputs=payload.checkpoint.outputs.slice(0,1);
     await update(id,payload,token).catch(()=>{});

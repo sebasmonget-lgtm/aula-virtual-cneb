@@ -2,8 +2,9 @@ import { AsyncLocalStorage } from "node:async_hooks";
 import { randomUUID } from "node:crypto";
 
 // Snapshot of Standard API prices on 2026-09-27. Existing events keep their calculated cost.
-export const AI_USAGE_PRICING_VERSION = "2026-09-27-standard";
+export const AI_USAGE_PRICING_VERSION = "2026-10-07-standard";
 const OPENAI_TEXT_RATES = Object.freeze({
+  "gpt-6.1-sol": { short: [2, 0.1, 10], long: [4, 0.2, 15] },
   "gpt-6-sol": { short: [2, 0.2, 10], long: [4, 0.4, 15] },
   "gpt-6-luna": { short: [0.1, 0.01, 0.5], long: [0.2, 0.02, 0.75] },
 });

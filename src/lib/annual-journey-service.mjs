@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { recordAIQAResult } from "./ai-qa-trace.mjs";
 import { estimateTextCost, AI_USAGE_PRICING_VERSION } from "./ai-usage-service.mjs";
 import { resolveAIExecutionPlan } from "./ai-execution-router-v4.mjs";
 import { createAIProviderForPlan } from "./ai-provider-factory.mjs";
@@ -23,7 +24,8 @@ Subgrupo requiere actuaciones de al menos dos sujetos distintos y no equivale al
 Incluye evidence_interpretations solo si orientan materialmente una decisión o apoyo del año; en otro caso conserva las actuaciones sin concluir.
 Una necesidad material debe exponerse como interpretación pendiente de revisión docente; no como hecho ni nivel. No exijas productos finales.
 Todas las decisiones pedagógicas deben aparecer ahora, antes de confirmar. Los documentos posteriores solo renderizan este contenido.
-Respeta la versión del calendario y todos los campos protegidos. Lenguaje sencillo, conciso, acciones realizables y participación infantil.`;
+Respeta la versión del calendario y todos los campos protegidos. Lenguaje sencillo, conciso, acciones realizables y participación infantil.
+La tarjeta anual es una previsión breve, no el desarrollo del proyecto. Por propuesta: rationale hasta 30 palabras, purpose hasta 20, invitation una pregunta, children_actions entre 2 y 4 acciones breves, supports entre 1 y 2 y flexibility hasta 25 palabras. En cada oportunidad usa una frase breve por campo y solo las capacidades oficiales pertinentes. Evita repetir el calendario, las competencias o el fundamento en la prosa. Conserva toda la cobertura y el sustento; el desarrollo detallado se prepara después en el proyecto.`;
 
 const providerSnapshot = (snapshot) => ({ ...snapshot, source_fingerprint: undefined,
   facts: snapshot.facts.map(({ source_refs, ai_support_text, support_text, ...fact }) => { void source_refs; return { ...fact,
@@ -71,9 +73,10 @@ export function materializeJourneyRows(rows, schedule) {
   }));
 }
 
-/** Two normal model calls; bounded local repair only when a validator/reviewer finds a concrete issue. */
+/** One normal model call; bounded local repair only when a validator/reviewer finds a concrete issue. */
 export async function generateAnnualJourney({ context, snapshot, curriculum, calendar, teacherIdeas = "",
-  experienceContext = null, createProvider = createAIProviderForPlan, resolvePlan = resolveAIExecutionPlan, checkpoint = {}, onCheckpoint = async () => {} }) {
+  experienceContext = null, createProvider = createAIProviderForPlan, resolvePlan = resolveAIExecutionPlan,
+  backgroundExecution = false, checkpoint = {}, onCheckpoint = async () => {} }) {
   const started = checkpoint.started ?? Date.now(), slots = checkpoint.slots ?? Array.from({ length: 15 }, () => ({ proposal_id: randomUUID() }));
   const schedule = checkpoint.schedule ?? (experienceContext ? applyPlanningHorizon(solveAnnualJourneyCalendar(calendar, slots),experienceContext) : solveAnnualJourneyCalendar(calendar, slots)), events = checkpoint.events ?? [];
   const state = { ...checkpoint, started, slots, schedule, events, outputs: checkpoint.outputs ?? [], attempts: checkpoint.attempts ?? [] };
@@ -84,26 +87,40 @@ export async function generateAnnualJourney({ context, snapshot, curriculum, cal
   const call = async (workflow, bundle, schema, affected) => {
     const index = callIndex++;
     if (state.outputs[index]) return assertJourneySchema(state.outputs[index], schema);
-    state.attempts.push({workflow,started_at:new Date().toISOString()});
+    if (!state.provider_responses?.[index]) state.attempts.push({workflow,started_at:new Date().toISOString()});
     await persist(workflow === "annual_plan" ? "generation" : workflow === "annual_journey_review" ? "review" : state.validation_passed ? "repair" : "validation");
     const routing = resolvePlan({ workflow, task: "generation" });
     const begin = Date.now();
-    const response = await createProvider(routing, { timeoutMs: 180000 }).generate(buildProviderRequest(workflow,
+    const background = backgroundExecution && workflow === "annual_plan" && slots.length !== 12;
+    const response = await createProvider(routing, { timeoutMs: background ? 30000 : 180000,
+      background, resumeResponseId: state.provider_responses?.[index], onResponseStarted: async responseId => {
+        state.provider_responses ??= {}; state.provider_responses[index] = responseId; await persist(state.stage);
+      } }).generate(buildProviderRequest(workflow,
       { ...bundle, curriculum: { age: context.age, competency_cards: curriculum }, classroom: providerSnapshot(snapshot) }, routing, schema, JOURNEY_RULES));
     events.push({ ...metadata(response, routing, workflow, affected), duration_ms: Date.now() - begin });
-    const output = assertJourneySchema(response.output, schema);
+    const output = response.output;
     state.outputs[index] = output;
     await persist(state.stage);
-    return output;
+    return assertJourneySchema(output, schema);
   };
   const legacy=slots.length===12;
   const futureSlots=schedule.projects.filter(slot=>slot.proposal_id);
   const count=futureSlots.length;
   const generationSchema={...JOURNEY_GENERATION_SCHEMA,id:legacy?"annual-journey-v2":"annual-journey-slots-v3",properties:{...JOURNEY_GENERATION_SCHEMA.properties,proposals:{...JOURNEY_GENERATION_SCHEMA.properties.proposals,minItems:count,maxItems:count}}};
-  const output = count ? await call("annual_plan", { task: `Devuelve ${count} propuestas futuras en el orden de los tramos recibidos. No generes trabajo retrospectivo. Adapta el desarrollo a los días realmente disponibles, incluso si el primer tramo es parcial. Los títulos no incluyen números ni fechas.`,
-    teacher_preferences: teacherIdeas, ...(experienceContext ? {historical_projects:experienceContext.historical_projects.map(({title,competency_ids,period})=>({title,competency_ids,period})),source_policy:"Historia declarada, no evidencia ni ejecución."}:{}),
-    calendar: futureSlots.map(({ index, starts_on, ends_on, period, duration_weeks, instructional_dates }) => ({ index, starts_on, ends_on, period, duration_weeks, instructional_days:instructional_dates.length })) }, generationSchema, count)
-    : { ...Object.fromEntries(Object.keys(JOURNEY_GENERAL_PROPERTIES).map(key=>[key, ["everyday_opportunities","evidence_interpretations"].includes(key)?[]:["El período disponible ha terminado. Se conserva el historial declarado sin generar trabajo retrospectivo."]])),proposals:[] };
+  const generationBundle = { task: `Devuelve ${count} propuestas futuras en el orden de los tramos recibidos. No generes trabajo retrospectivo. Adapta el desarrollo a los días realmente disponibles, incluso si el primer tramo es parcial. Los títulos no incluyen números ni fechas.`,
+    teacher_preferences: teacherIdeas, ...(experienceContext ? {preparation_date:experienceContext.starts_on,historical_projects:experienceContext.historical_projects.map(({title,competency_ids,period})=>({title,competency_ids,period})),source_policy:"Historia declarada, no evidencia ni ejecución."}:{}),
+    calendar: futureSlots.map(({ index, starts_on, ends_on, period, duration_weeks, instructional_dates }) => ({ index, starts_on, ends_on, period, duration_weeks, instructional_days:instructional_dates.length })) };
+  let output, schemaRepair = false;
+  if (count) {
+    try { output = await call("annual_plan", generationBundle, generationSchema, count); }
+    catch (error) {
+      if (legacy || error.reason !== "incomplete") throw error;
+      schemaRepair = true;
+      output = await call("annual_journey_repair", { ...generationBundle,
+        task: "Corrige solo la estructura inválida. Conserva todas las fuentes, fechas y competencias recibidas. Devuelve la planificación completa con el esquema requerido.",
+        invalid_output: state.outputs[0], validation_error: error.details }, generationSchema, count);
+    }
+  } else output = { ...Object.fromEntries(Object.keys(JOURNEY_GENERAL_PROPERTIES).map(key=>[key, ["everyday_opportunities","evidence_interpretations"].includes(key)?[]:["El período disponible ha terminado. Se conserva el historial declarado sin generar trabajo retrospectivo."]])),proposals:[] };
   const { proposals, ...general } = output;
   let plan = { plan_format: "annual_preplan_v1", journey_version: 2, ...(!legacy?{editor_version:3,available_experiences:[]}:{}), title: "Mi año", school_year: String(context.year),
     ...general, classroom_snapshot: snapshot, curriculum_reference: curriculum.map((card) => ({ id: card.id, name: card.name ?? card.official_name, capacities: card.capacities })), teacher_preferences: teacherIdeas, proposed_experiences:
@@ -115,14 +132,15 @@ export async function generateAnnualJourney({ context, snapshot, curriculum, cal
   state.candidate = plan; await persist("validation");
   plan = count ? await reviewAndRepair(plan, curriculum, call, [], async (candidate, stage) => {
     state.candidate = candidate; await persist(stage);
-  }) : {...plan,pedagogical_review:{status:"passed",policy:"history_only_no_generation"},insufficient_interpretations:[]};
+  }, null, schemaRepair) : {...plan,pedagogical_review:{status:"passed",policy:"history_only_no_generation"},insufficient_interpretations:[]};
   if(experienceContext) plan.future_coverage_gaps=annualFutureGaps(plan,curriculum);
   if (!legacy) plan.organization_criteria = annualCalendarCriteria(plan);
   plan.metrics.operations = events; plan.metrics.generation_ms = Date.now() - started;
+  await recordAIQAResult(events.at(-1)?.operation ?? "annual_plan", plan, { validators: ["annual_schema", "15_slots_calendar", "official_curriculum", "source_scope"], downstream: ["project_master"] });
   return plan;
 }
 
-async function reviewAndRepair(plan, curriculum, call, protectedIds = [], onStage = async () => {}, reviewIds = null) {
+async function reviewAndRepair(plan, curriculum, call, protectedIds = [], onStage = async () => {}, reviewIds = null, alreadyRepaired = false) {
   const reviewPlan = value => providerPlan(reviewIds ? {...value,proposed_experiences:value.proposed_experiences.filter(row=>reviewIds.includes(row.proposal_id))} : value);
   plan = separateUnsupportedInterpretations(plan);
   await onStage(plan, "validation");
@@ -130,11 +148,16 @@ async function reviewAndRepair(plan, curriculum, call, protectedIds = [], onStag
   try { validateAnnualJourney(plan, curriculum, { requireCoverage:true }); }
   catch (error) {
     const id = error.details?.proposal_id;
-    if (!id || protectedIds.includes(id) || !plan.proposed_experiences.some((r) => r.proposal_id === id)) throw error;
+    if (alreadyRepaired || !id || protectedIds.includes(id) || !plan.proposed_experiences.some((r) => r.proposal_id === id)) throw error;
     const patch = await call("annual_journey_repair", { task: "Repara únicamente la incidencia determinística señalada. No cambies otras propuestas.",
       plan: providerPlan(plan), issues: [{ proposal_id: id, reason: error.message }], affected_proposal_ids: [id] }, JOURNEY_PATCH_SCHEMA, 1);
     plan = separateUnsupportedInterpretations(applyJourneyPatch(plan, patch, new Set([id]))); validateAnnualJourney(plan, curriculum);
     deterministicRepair = true;
+  }
+  if (plan.editor_version === 3) {
+    await onStage(plan, "review");
+    return { ...plan, pedagogical_review: { status: "passed", issues_found: Number(deterministicRepair),
+      reviewed_at: new Date().toISOString(), policy: "deterministic-v3" } };
   }
   await onStage(plan, "review");
   const review = await call("annual_journey_review", { task: "Revisa sustento semántico, negaciones, alcance, diversidad, viabilidad, relación de oportunidades/capacidades. Comprueba que ninguna razón o apoyo retenga una conclusión cuyo sustento figura en insufficient_interpretations. Esos registros son desconocimiento, no necesidades ni avances. Emite solo incidencias concretas; proposal_id vacío indica una incidencia global.",

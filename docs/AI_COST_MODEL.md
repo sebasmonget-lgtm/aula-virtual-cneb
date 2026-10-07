@@ -1,5 +1,17 @@
 # Medición de costo de IA por docente
 
+## Política vigente y muestra medida — 2026-10-07
+
+GPT-6.1 Sol usa USD 2/0.10/10 por millón de tokens de entrada/caché/salida corta y 4/0.20/15 para entrada larga, según `ai-usage-service.mjs`. GPT-6 Luna mantiene 0.10/0.01/0.50 corta. Cada registro conserva modelo y versión de tarifa. Consultas de Responses background no son generaciones nuevas y la usage se registra al completar la respuesta.
+
+La muestra ficticia de siete etapas aprobadas costó aproximadamente USD 0.2274068: diagnóstico 0.040592, año con cinco propuestas futuras 0.092292, proyecto 0.090730, actividad 0.0013179, análisis 0.0009772, conclusión 0.0007453 e informe familiar 0.0007524. Otra muestra anual sin observaciones preparó las quince propuestas en una sola generación high: USD 0.143516 y 319466 ms, con 56 consultas de avance. La conversación de proyecto adicional Luna medium costó USD 0.0001176 (3904 ms). Total de nueve respuestas completadas medidas: USD 0.3710404. Los intentos que terminaron en timeout no devolvieron usage; su posible cargo no está incluido ni se declara cero. No es una proyección mensual ni una factura.
+
+Las trazas completas contienen únicamente datos ficticios, quedan en `.local/modern-ai-qa` y no se publican ni se habilitan para docentes reales. Ver el handoff corregido del 7 de octubre para modelos, fuentes, validadores y límites.
+
+## Escenario histórico — 2026-09-27
+
+El presupuesto inferior corresponde a doce proyectos y la antigua cadena de masters. Se conserva como historia y no representa la arquitectura vigente de quince tramos.
+
 Fecha de tarifas consultadas: 2026-09-27. Los importes del perfil son USD, no soles ni una factura. Se registran desde la migración `0060`/`202609270002`; no se estiman llamadas antiguas. El servidor atribuye cada llamada a la docente autenticada y guarda solo números y nombres técnicos de flujo/modelo. Las respuestas de menores y los audios no se guardan en este libro.
 
 Fuentes: [precios oficiales de OpenAI](https://developers.openai.com/api/docs/pricing), [gpt-4o-mini-transcribe](https://developers.openai.com/api/docs/models/gpt-4o-mini-transcribe) y [Jev 1.13 en OpenRouter](https://openrouter.ai/typesafe/jev-1.13/). Tarifas Standard empleadas: GPT-6 Sol, entrada/caché/salida corta US$2/0.20/10 por millón de tokens; GPT-6 Luna US$0.10/0.01/0.50. Para entradas largas se usan las tarifas de cada modelo registradas en `ai-usage-service.mjs`. La transcripción se aproxima a US$0.003 por minuto; Jev a US$0.042 por millón de tokens de entrada y salida gratuita. Las tarifas pueden cambiar; cada fila conserva la versión de cálculo aplicada.

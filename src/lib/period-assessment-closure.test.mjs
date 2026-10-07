@@ -125,7 +125,7 @@ test("7: la profesora puede elegir exactamente AD, A, B o C y no existe una opci
 
 test("16 y 17: informe global usa Sol medium y no acepta cifras generadas por el modelo", () => {
   const plan = resolveAIExecutionPlan({ workflow: "classroom_period_report" });
-  assert.equal(plan.model, "gpt-6-sol");
+  assert.equal(plan.model, "gpt-6.1-sol");
   assert.equal(plan.reasoning_effort, "medium");
   const report = { general_overview: "El aula muestra avances diversos.", developed_competencies: ["Comunicación oral"], group_strengths: ["Participación"], competencies_needing_development: ["Indagación"], little_or_not_worked: ["Cantidad"], evidence_coverage: "La cobertura requiere revisión.", follow_up_summary: "Conviene observar en nuevas situaciones.", next_period_findings: ["Ofrecer más oportunidades"] };
   assert.deepEqual(validateClassroomPeriodReport(report), report);
@@ -141,7 +141,7 @@ test("16: el workflow del informe global acepta el contrato y recibe solo contex
   let captured;
   const result = await generateAIWorkflowV4(input, { provider: { id: "mock", async generate(request) { captured = request; return report; } } });
   assert.deepEqual(result.output, report);
-  assert.equal(captured.execution_plan.model, "gpt-6-sol");
+  assert.equal(captured.execution_plan.model, "gpt-6.1-sol");
   assert.doesNotMatch(JSON.stringify(captured.ai_context_bundle), /student_name|first_name|last_name/);
 });
 

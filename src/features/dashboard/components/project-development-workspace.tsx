@@ -27,7 +27,7 @@ type Route = { id: string; number: number; date: string; title: string; specific
   competency_id: string; competency_ids: string[]; criterion_competency_id: string;
   evaluation_criterion: string; expected_evidence: string; role_in_project: string;
   expected_progression: string; estimated_minutes: number; materials?: string[]; mediation_notes?: string };
-type Details = { flow_version?: string; stage?: string; preview?: { context_summary: string; context_points: string[];
+type Details = { project_context?: {messages:{role:string;text:string}[];ready:boolean;pending?:string|null}; flow_version?: string; stage?: string; preview?: { context_summary: string; context_points: string[];
   purpose_options: string[]; additional_context_example: string }; decisions?: Decision;
   planning_feedback?: { period_id: string; period_label: string; confirmed_assessments: number } | null;
   dependents?: Dependents; project_master?: { foundation: string; closing_description: string; closing_rationale: string; resources?: string[] };

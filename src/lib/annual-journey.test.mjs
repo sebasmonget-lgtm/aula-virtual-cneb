@@ -44,12 +44,12 @@ test("aplicar una propuesta conserva los pendientes globales/ajenos y no interpr
   assert.deepEqual(result.proposed_experiences.slice(1),plan.proposed_experiences.slice(1));
   assert.deepEqual(result.change_history.at(-1).changes,scopedAnnualChanges(plan,id));
   assert.equal(result.metrics.corrections,1);
-  assert.equal(calls.length,2);assert.ok(calls.every(c=>c.request.workflow!=="annual_journey_intent"));
+  assert.equal(calls.length,1);assert.ok(calls.every(c=>c.request.workflow!=="annual_journey_intent"));
   assert.deepEqual(calls[0].request.ai_context_bundle.changes.map(c=>c.text),["Más movimiento"]);
-  assert.deepEqual(calls[1].request.ai_context_bundle.plan.proposed_experiences.map(row=>row.proposal_id),[id]);
+  assert.deepEqual(calls[0].request.ai_context_bundle.proposals.map(row=>row.proposal_id),[id]);
   assert.ok(calls.every(call=>!JSON.stringify(call.request).includes("NOMBRE_PRIVADO_123") && !JSON.stringify(call.request).includes("DNI_PRIVADO_456")),"Los pendientes ajenos nunca salen al proveedor");
   const noPending=await applyAnnualJourneyChanges(result,{context:{year:2026,age:5},curriculum,proposalId:id,createProvider:provider(calls)});
-  assert.equal(noPending,result);assert.equal(calls.length,2);
+  assert.equal(noPending,result);assert.equal(calls.length,1);
   await assert.rejects(()=>applyAnnualJourneyChanges(plan,{proposalId:randomUUID()}),e=>e.reason==="invalid_scope");
 });
 
@@ -66,7 +66,8 @@ test("aplicar un cambio global deja pendientes las indicaciones de propuestas", 
 test("el cambio de una propuesta no autoriza reparación de otra ni cambios cotidianos", async () => {
   const calls=[],base=await generateAnnualJourney({context:{year:2026,age:5},snapshot:snapshot(),curriculum,calendar:fixtureCalendar(),createProvider:provider(calls)});
   const id=base.proposed_experiences[0].proposal_id,plan=appendJourneyIntent(base,"Más movimiento",id);
-  await assert.rejects(()=>applyAnnualJourneyChanges(plan,{context:{year:2026,age:5},curriculum,proposalId:id,createProvider:provider(calls,curriculum,[{proposal_id:base.proposed_experiences[1].proposal_id,reason:"Cambiar otra propuesta"}])}),e=>e.reason==="semantic_review");
+  const scoped=provider([]);
+  await assert.rejects(()=>applyAnnualJourneyChanges(plan,{context:{year:2026,age:5},curriculum,proposalId:id,createProvider:routing=>({generate:async request=>{const result=await scoped(routing).generate(request);result.output.replacements[0].proposal_id=base.proposed_experiences[1].proposal_id;return result;}})}),e=>e.reason==="invalid_patch");
   const normal=provider([]);
   await assert.rejects(()=>applyAnnualJourneyChanges(plan,{context:{year:2026,age:5},curriculum,proposalId:id,createProvider:routing=>({generate:async request=>{const result=await normal(routing).generate(request);if(request.workflow==="annual_journey_repair")result.output.everyday_opportunities=[];return result;}})}),e=>e.reason==="invalid_scope");
   assert.deepEqual(annualCalendarCriteria({...base,organization_criteria:["Doce propuestas flexibles","Ventanas de marzo"]}),annualCalendarCriteria(base));
@@ -104,27 +105,27 @@ test("snapshot conserva negación, otro, lengua minoritaria y contradicción sin
   assert.equal(s.competency_information[0].distinct_children, 1); assert.equal(s.competency_information[1].information_status, "unknown");
   assert.ok(s.facts.every((f) => f.scope === "individual"));
 });
-test("generación completa usa dos llamadas y cobertura concreta incluyendo momentos recurrentes", async () => {
+test("generación moderna usa una llamada y cobertura concreta incluyendo momentos recurrentes", async () => {
   const calls = [], plan = await generateAnnualJourney({ context: { year: 2026, age: 5 }, snapshot: snapshot(), curriculum,
     calendar: fixtureCalendar(), createProvider: provider(calls) });
   validateAnnualJourney(plan, curriculum, { confirmation: true });
-  assert.equal(calls.length, 2); assert.equal(plan.proposed_experiences.length, 15);
+  assert.equal(calls.length, 1); assert.equal(plan.proposed_experiences.length, 15);
   const broken = structuredClone(plan); broken.everyday_opportunities = [];
   assert.throws(() => validateAnnualJourney(broken, curriculum), (e) => e.reason === "coverage_missing");
   const nominal = structuredClone(plan); nominal.proposed_experiences[0].primary_competency_ids.push("COM_ORAL");
   assert.throws(() => validateAnnualJourney(nominal, curriculum), (e) => e.reason === "nominal_competency");
-  assert.ok(!JSON.stringify(calls[1].request).includes("source_refs"));
+  assert.ok(!JSON.stringify(calls[0].request).includes("source_refs"));
 });
-test("varios mensajes no consultan IA; aplicación contextual agrupa cambios y preserva once propuestas", async () => {
+test("varios mensajes no consultan IA; aplicación contextual agrupa cambios y preserva las demás propuestas", async () => {
   const calls = [], plan = await generateAnnualJourney({ context: { year: 2026, age: 5 }, snapshot: snapshot(), curriculum,
     calendar: fixtureCalendar(), createProvider: provider(calls) });
   const id = plan.proposed_experiences[0].proposal_id;
   let changed = appendJourneyIntent(plan, "Quiero incluir plantas", id);
   changed = appendJourneyIntent(changed, "También música", id);
-  assert.equal(calls.length, 2); assert.equal(changed.pending_changes.length, 2);
+  assert.equal(calls.length, 1); assert.equal(changed.pending_changes.length, 2);
   assert.throws(() => validateAnnualJourney(changed, curriculum, { confirmation: true }), (e) => e.reason === "pending_changes");
   const result = await applyAnnualJourneyChanges(changed, { context: { age: 5 }, curriculum, createProvider: provider(calls) });
-  assert.equal(calls.length, 4); assert.equal(result.pending_changes.length, 0);
+  assert.equal(calls.length, 2); assert.equal(result.pending_changes.length, 0);
   assert.deepEqual(result.proposed_experiences.slice(1), plan.proposed_experiences.slice(1));
   assert.deepEqual(result.resolved_calendar, plan.resolved_calendar);
 });
@@ -133,7 +134,7 @@ test("cambio global usa Luna para alcance mínimo y rechaza propuesta protegida"
     calendar: fixtureCalendar(), createProvider: provider(calls) });
   const changed = appendJourneyIntent(plan, "Incluye plantas en el año");
   await applyAnnualJourneyChanges(changed, { context: { age: 5 }, curriculum, createProvider: provider(calls) });
-  assert.equal(calls[2].routing.model, "gpt-6-luna"); assert.equal(calls[3].request.ai_context_bundle.proposals.length, 1);
+  assert.equal(calls[1].routing.model, "gpt-6-luna"); assert.equal(calls[2].request.ai_context_bundle.proposals.length, 1);
   await assert.rejects(() => applyAnnualJourneyChanges(changed, { context: { age: 5 }, curriculum,
     protectedIds: [plan.proposed_experiences[0].proposal_id], createProvider: provider([]) }), (e) => e.reason === "protected_proposal");
 });
@@ -141,7 +142,7 @@ test("salida incompleta y reparación fallida no se aceptan", async () => {
   await assert.rejects(() => generateAnnualJourney({ context: { year: 2026, age: 5 }, snapshot: snapshot(), curriculum,
     calendar: fixtureCalendar(), createProvider: () => ({ generate: async () => ({ output: { proposals: [] } }) }) }), (e) => e.reason === "incomplete");
   await assert.rejects(() => generateAnnualJourney({ context: { year: 2026, age: 5 }, snapshot: snapshot(), curriculum,
-    calendar: fixtureCalendar(), createProvider: provider([], curriculum, [{ proposal_id: "", reason: "Faltan condiciones viables" }]) }), (e) => e.reason === "repair_failed");
+    calendar: fixtureCalendar(), checkpoint:{slots:Array.from({length:12},()=>({proposal_id:randomUUID()}))}, createProvider: routing=>({generate:async request=>{const result=await provider([],curriculum,[{proposal_id:"",reason:"Faltan condiciones viables"}])(routing).generate(request);if(result.output.proposals)result.output.proposals=result.output.proposals.slice(0,12);return result;}}) }), (e) => e.reason === "repair_failed");
 });
 
 test("avances, acompañamiento y ambigüedad conservan actuaciones individuales; un vacío o reporte familiar no se interpreta como desempeño", async () => {
@@ -167,15 +168,15 @@ test("integridad valida asignaciones reales; refrescar fuentes guarda intención
   const corrupt=structuredClone(plan);corrupt.resolved_calendar.assignments.pop();
   assert.throws(()=>validateAnnualJourney(corrupt,curriculum),e=>e.reason==="invalid_calendar");
   const refreshed=refreshJourneySnapshot(plan,{...snapshot(),source_fingerprint:"updated"});
-  assert.equal(calls.length,2);assert.deepEqual(refreshed.proposed_experiences,plan.proposed_experiences);
+  assert.equal(calls.length,1);assert.deepEqual(refreshed.proposed_experiences,plan.proposed_experiences);
   assert.equal(refreshed.pending_changes.length,1);assert.equal(refreshed.pedagogical_review.status,"pending");
 });
 
 test("reparación semántica es localizada y acotada; fallo de la segunda revisión no publica",async()=>{
   let repairs=0,reviews=0;
-  await assert.rejects(()=>generateAnnualJourney({context:{year:2026,age:5},snapshot:snapshot(),curriculum,calendar:fixtureCalendar(),
+  await assert.rejects(()=>generateAnnualJourney({context:{year:2026,age:5},snapshot:snapshot(),curriculum,calendar:fixtureCalendar(),checkpoint:{slots:Array.from({length:12},()=>({proposal_id:randomUUID()}))},
     createProvider:()=>({generate:async(request)=>{const b=request.ai_context_bundle;
-      if(request.workflow==="annual_plan")return{output:generationFixture()};
+      if(request.workflow==="annual_plan")return{output:{...generationFixture(),proposals:generationFixture().proposals.slice(0,12)}};
       if(request.workflow==="annual_journey_review"){reviews++;return{output:{issues:[{proposal_id:b.plan.proposed_experiences[0].proposal_id,reason:"La oportunidad sigue siendo incoherente"}]}};}
       repairs++; const row=b.plan.proposed_experiences[0];return{output:{replacements:[{proposal_id:row.proposal_id,change_reason:"Revisión",...generationFixture().proposals[0]}],everyday_opportunities:b.plan.everyday_opportunities,evidence_interpretations:[]}};
     }})}),e=>e.reason==="repair_failed");
@@ -190,7 +191,7 @@ test("una incidencia determinística de una fila admite solo reparación localiz
       if(request.workflow==="annual_journey_review")return{output:{issues:[]}};
       return{output:{replacements:[{proposal_id:b.affected_proposal_ids[0],change_reason:"ID oficial",...generationFixture().proposals[0]}],everyday_opportunities:b.plan.everyday_opportunities,evidence_interpretations:[]}};
     }})});
-  assert.equal(calls.length,3);assert.equal(calls[1].ai_context_bundle.affected_proposal_ids.length,1);validateAnnualJourney(plan,curriculum,{confirmation:true});
+  assert.equal(calls.length,2);assert.equal(calls[1].ai_context_bundle.affected_proposal_ids.length,1);validateAnnualJourney(plan,curriculum,{confirmation:true});
 });
 
 test("vertical en PostgreSQL: preparar → cambios → confirmar → Word idéntico; CAS, permisos, versiones y fallo", async () => {
@@ -205,7 +206,7 @@ test("vertical en PostgreSQL: preparar → cambios → confirmar → Word idént
     const context = { id: created.classroomId, school_year_id: created.schoolYearId, curriculum_version_id: version,
       year: 2026, age: 5, group_context: "Aula de prueba ficticia", available_resources: [], calendar: { initial_stage: defaultInitialStage() } };
     const calls = [];
-    let failing = false, failNewReview = false, failRequired = false, rejectNewReview = false;
+    let failing = false, failRequired = false;
     const route = async (path, body = {}, user = teacherId, method = path.endsWith("start") ? "GET" : "POST") => {
       let result;
       await handleAnnualJourneyRoutes({ request: { method }, response: {},
@@ -214,13 +215,11 @@ test("vertical en PostgreSQL: preparar → cambios → confirmar → Word idént
         annualDocumentContext: () => ({ teacher_name: "Docente QA", template_version: "annual-journey-v2" }),
         createProvider: (routing) => ({ generate: async (request) => {
           if (failing) throw Object.assign(new Error("Simulated provider failure"), { name: "OpenAIProviderError" });
-          if(failNewReview && request.workflow==="annual_journey_review") {failNewReview=false;throw Object.assign(new Error("Simulated row review interruption"),{name:"OpenAIProviderError"});}
-          if(rejectNewReview && request.workflow==="annual_journey_review"){calls.push({routing,request});return {output:{issues:[{proposal_id:request.ai_context_bundle.proposals[0].proposal_id,reason:"Aclara la mediación para que los niños elijan sus propias decoraciones."}]}};}
           if(request.output_schema.id==="annual-proposal-row-v3") {calls.push({routing,request});const fixture=generationFixture(request.ai_context_bundle.curriculum.competency_cards),row=fixture.proposals[0],required=request.ai_context_bundle.required_competency_ids??[];
             const ids=failRequired||request.ai_context_bundle.task.startsWith("Crea")?required.filter(id=>id!=="COM_ARTE"):required;
             const opportunities=ids.length?ids.map(id=>{const {moment,...opportunity}=fixture.everyday_opportunities.find(o=>o.competency_id===id);void moment;return opportunity;}):row.opportunities;
             return {output:{...row,opportunities,title:request.ai_context_bundle.teacher_intentions.at(-1)?.includes("Navidad")?"Navidad con las familias":request.ai_context_bundle.teacher_intentions.at(-1)?.includes("otra alternativa")?"Otra idea para explorar el mercado":required.length?"Exploramos semillas con arte":"Exploramos nuestro mercado",source_fact_keys:[request.ai_context_bundle.classroom.facts.findLast(f=>f.key.startsWith("proposal_intent_")).key]}};}
-          if(request.workflow==="annual_journey_conversation") {calls.push({routing,request});const ready=request.ai_context_bundle.teacher_intentions.length>0;return {output:{status:ready?"ready":"needs_clarification",message:ready?"Prepararemos una propuesta sobre el mercado.":"¿Qué propuesta quieres crear?",question:"",chips:[]}};}
+          if(request.workflow==="new_project_card_conversation") {calls.push({routing,request});const ready=request.ai_context_bundle.teacher_intentions.length>0;return {output:{status:ready?"ready":"needs_clarification",message:ready?"Prepararemos una propuesta sobre el mercado.":"¿Qué propuesta quieres crear?",question:"",chips:[]}};}
           return provider(calls, request.ai_context_bundle.curriculum.competency_cards)(routing).generate(request);
         } }) });
       return result;
@@ -240,7 +239,7 @@ test("vertical en PostgreSQL: preparar → cambios → confirmar → Word idént
     const target = current.proposal.proposed_experiences.at(-1).proposal_id;
     const add = await route(`${current.id}/intent`, { expectedRevision: current.revision, proposalId: target, text: "Quiero plantas y priorizar Indaga y Crea" });
     assert.equal(add.status, 200, JSON.stringify(add.data));
-    assert.equal(calls.length, 2);
+    assert.equal(calls.length, 1);
     const stale = await route(`${current.id}/intent`, { expectedRevision: current.revision, text: "Música" });
     assert.equal(stale.status, 409);
     current = add.data;
@@ -249,11 +248,11 @@ test("vertical en PostgreSQL: preparar → cambios → confirmar → Word idént
     assert.deepEqual((await db.query("select proposal from annual_plans where id=$1", [current.id])).rows[0].proposal, current.proposal);
     failing = false;
     const apply = await route(`${current.id}/apply`, { expectedRevision: current.revision }); assert.equal(apply.status, 200, JSON.stringify(apply.data));
-    assert.match(calls[2].request.ai_context_bundle.changes[0].text,/Indaga y Crea/);
+    assert.match(calls[1].request.ai_context_bundle.changes[0].text,/Indaga y Crea/);
     current = apply.data;
     const move = await route(`${current.id}/move`,{expectedRevision:current.revision,proposalId:current.proposal.proposed_experiences.at(-1).proposal_id,to:13});
     assert.equal(move.status,200,JSON.stringify(move.data));assert.deepEqual(move.data.proposal.resolved_calendar.integrity,current.proposal.resolved_calendar.integrity);
-    assert.equal(calls.length,4);current=move.data;
+    assert.equal(calls.length,2);current=move.data;
     const forbidden = await route(`${current.id}/intent`, { expectedRevision: current.revision, text: "Música" }, randomUUID());
     assert.equal(forbidden.status, 404);
     const structuralCalls=calls.length,future=current.proposal.proposed_experiences.at(-1),slotId=future.slot_id;
@@ -263,17 +262,15 @@ test("vertical en PostgreSQL: preparar → cambios → confirmar → Word idént
     assert.equal(calls.length,structuralCalls);
     const conversation=await route(`${current.id}/new-proposal/conversation`,{expectedRevision:current.revision});assert.equal(conversation.status,200,JSON.stringify(conversation.data));
     const answer=await route(`${current.id}/new-proposal/conversation`,{expectedRevision:current.revision,id:conversation.data.id,revision:conversation.data.revision,text:"Quiero crear un proyecto sobre el mercado"});assert.equal(answer.data.status,"ready");
-    failNewReview=true;
-    const interruptedProposal=await route(`${current.id}/new-proposal/generate`,{expectedRevision:current.revision,id:answer.data.id,revision:answer.data.revision});assert.equal(interruptedProposal.status,503);
+    const createdProposal=await route(`${current.id}/new-proposal/generate`,{expectedRevision:current.revision,id:answer.data.id,revision:answer.data.revision});assert.equal(createdProposal.status,200,JSON.stringify(createdProposal.data));assert.ok(createdProposal.data.candidate);assert.equal(calls.length,structuralCalls+3);
     const rowCalls=calls.filter(c=>c.request.output_schema.id==="annual-proposal-row-v3").length;
-    const createdProposal=await route(`${current.id}/new-proposal/generate`,{expectedRevision:current.revision,id:answer.data.id,revision:answer.data.revision});assert.equal(createdProposal.status,200,JSON.stringify(createdProposal.data));assert.ok(createdProposal.data.candidate);assert.equal(calls.length,structuralCalls+4);
-    assert.equal(calls.filter(c=>c.request.output_schema.id==="annual-proposal-row-v3").length,rowCalls,"Retry reviews the stored row without regenerating it");
+    const cachedProposal=await route(`${current.id}/new-proposal/generate`,{expectedRevision:current.revision,id:answer.data.id,revision:createdProposal.data.revision});assert.equal(cachedProposal.status,200);assert.equal(calls.filter(c=>c.request.output_schema.id==="annual-proposal-row-v3").length,rowCalls);
     const recovered=await route(`${current.id}/new-proposal/conversation?id=${answer.data.id}`,{},teacherId,"GET");
-    assert.equal(recovered.status,200);assert.deepEqual(recovered.data.candidate,createdProposal.data.candidate);assert.equal(calls.length,structuralCalls+4,"Recuperar la candidata guardada no llama a IA");
+    assert.equal(recovered.status,200);assert.deepEqual(recovered.data.candidate,createdProposal.data.candidate);assert.equal(calls.length,structuralCalls+3,"Recuperar la candidata guardada no llama a IA");
     const foreignRecovery=await route(`${current.id}/new-proposal/conversation?id=${answer.data.id}`,{},randomUUID(),"GET");assert.equal(foreignRecovery.status,404);
     const illegal=await route(`${current.id}/new-proposal/approve`,{expectedRevision:current.revision,id:answer.data.id},randomUUID());assert.equal(illegal.status,404);
-    const approved=await route(`${current.id}/new-proposal/approve`,{expectedRevision:current.revision,id:answer.data.id,revision:createdProposal.data.revision});assert.equal(approved.status,201,JSON.stringify(approved.data));current=approved.data;
-    assert.equal(current.proposal.available_experiences.length,1);assert.equal(current.proposal.available_experiences[0].planned_start_date,undefined);assert.equal(current.proposal.proposed_experiences.length,15);assert.equal(calls.length,structuralCalls+4);
+    const approved=await route(`${current.id}/new-proposal/approve`,{expectedRevision:current.revision,id:answer.data.id,revision:cachedProposal.data.revision});assert.equal(approved.status,201,JSON.stringify(approved.data));current=approved.data;
+    assert.equal(current.proposal.available_experiences.length,1);assert.equal(current.proposal.available_experiences[0].planned_start_date,undefined);assert.equal(current.proposal.proposed_experiences.length,15);assert.equal(calls.length,structuralCalls+3);
     const reusedApproval=await route(`${current.id}/new-proposal/approve`,{expectedRevision:current.revision,id:answer.data.id});assert.equal(reusedApproval.status,422);
     const beforeNamed=structuredClone(current.proposal), newConversation=await route(`${current.id}/new-proposal/conversation`,{expectedRevision:current.revision});
     const named=await route(`${current.id}/new-proposal/conversation`,{expectedRevision:current.revision,id:newConversation.data.id,revision:newConversation.data.revision,text:"Quiero priorizar Indaga y Crea en una unidad sobre plantas."});
@@ -287,7 +284,7 @@ test("vertical en PostgreSQL: preparar → cambios → confirmar → Word idént
     const forgedChoices=await route(`${current.id}/new-proposal/approve`,{...namedBody,requiredCompetencyIds:[]});assert.equal(forgedChoices.status,422);
     const premature=await route(`${current.id}/new-proposal/approve`,namedBody);assert.equal(premature.status,422);
     failRequired=false;
-    const beforeRetry=calls.length, corrected=await route(`${current.id}/new-proposal/generate`,namedBody);assert.equal(corrected.status,200,JSON.stringify(corrected.data));assert.equal(calls.length-beforeRetry,2);
+    const beforeRetry=calls.length, corrected=await route(`${current.id}/new-proposal/generate`,namedBody);assert.equal(corrected.status,200,JSON.stringify(corrected.data));assert.equal(calls.length-beforeRetry,1);
     assert.ok(corrected.data.candidate.opportunities.some(o=>o.competency_id==="COM_ARTE"));assert.ok(corrected.data.candidate.opportunities.some(o=>o.competency_id==="CYT_INDAGA"));
     assert.ok(corrected.data.candidate_sources.some(f=>f.text.includes("Competencias elegidas antes de generar")));
     // Legacy candidates that already passed review still cannot bypass the new server guard.
@@ -310,13 +307,9 @@ test("vertical en PostgreSQL: preparar → cambios → confirmar → Word idént
     const storedIdea=(await db.query("select payload from ai_pending_generations where id=$1",[oldIdea.data.id])).rows[0].payload;assert.equal(storedIdea.draft,null);assert.equal(storedIdea.created_fact,null);assert.match(storedIdea.safe_texts.at(-1),/Navidad/);
     failing=false;
     const resumed=await route(`${current.id}/new-proposal/conversation`,{expectedRevision:current.revision,id:oldIdea.data.id,revision:savedIdea.data.revision});assert.equal(resumed.status,200);assert.equal(resumed.data.messages.filter(m=>m.role==="teacher"&&m.text.includes("Navidad")).length,1);
-    rejectNewReview=true;
-    const reviewBlocked=await route(`${current.id}/new-proposal/generate`,{expectedRevision:current.revision,id:oldIdea.data.id,revision:resumed.data.revision});assert.notEqual(reviewBlocked.status,200);
-    const reviewSaved=await route(`${current.id}/new-proposal/conversation?id=${oldIdea.data.id}`,{},teacherId,"GET");assert.equal(reviewSaved.data.candidate,null);assert.match(reviewSaved.data.review_feedback[0],/mediación/);
-    assert.ok((await db.query("select payload from ai_pending_generations where id=$1",[oldIdea.data.id])).rows[0].payload.draft);
-    rejectNewReview=false;const beforeReviewRetry=calls.length;
-    const christmas=await route(`${current.id}/new-proposal/generate`,{expectedRevision:current.revision,id:oldIdea.data.id,revision:reviewSaved.data.revision});assert.equal(christmas.status,200,JSON.stringify(christmas.data));assert.match(christmas.data.candidate.title,/Navidad/);assert.notEqual(christmas.data.candidate.proposal_id,oldCandidate.data.candidate.proposal_id);
-    assert.match(calls[beforeReviewRetry].request.ai_context_bundle.issues[0].reason,/mediación/);assert.equal(christmas.data.review_feedback.length,0);
+    const beforeGenerate=calls.length;
+    const christmas=await route(`${current.id}/new-proposal/generate`,{expectedRevision:current.revision,id:oldIdea.data.id,revision:resumed.data.revision});assert.equal(christmas.status,200,JSON.stringify(christmas.data));assert.match(christmas.data.candidate.title,/Navidad/);assert.notEqual(christmas.data.candidate.proposal_id,oldCandidate.data.candidate.proposal_id);
+    assert.equal(calls.length-beforeGenerate,1);assert.equal(christmas.data.review_feedback.length,0);
     assert.deepEqual((await db.query("select proposal from annual_plans where id=$1",[current.id])).rows[0].proposal,current.proposal,"Changing a library conversation does not rewrite the year");
     const confirm = await route(`${current.id}/confirm`, { expectedRevision: current.revision }); assert.equal(confirm.status, 200, JSON.stringify(confirm.data));
     const beforeCalls = calls.length, doc = await loadSavedDocument(db, teacherId, "annual_plan", current.id);
@@ -341,4 +334,18 @@ test("vertical en PostgreSQL: preparar → cambios → confirmar → Word idént
     const refreshed=await route(`${copy.data.id}/refresh`,{expectedRevision:Number(copy.data.revision)});
     assert.equal(refreshed.status,200,JSON.stringify(refreshed.data));assert.equal(refreshed.data.proposal.pending_changes.length,1);
   } finally { await db.close(); }
+});
+
+
+test("generación anual pendiente conserva response ID y no cuenta los sondeos como generaciones",async()=>{
+ let checkpoint={},created=0,retrieved=0;
+ const createProvider=(routing,options)=>({generate:async()=>{
+  assert.equal(routing.model,"gpt-6.1-sol");assert.equal(options.background,true);
+  if(!options.resumeResponseId){created++;await options.onResponseStarted("resp_fictional_year");throw Object.assign(new Error("Pending"),{reason:"response_pending"});}
+  retrieved++;assert.equal(options.resumeResponseId,"resp_fictional_year");return{output:generationFixture()};
+ }});
+ const args={context:{year:2026,age:5},snapshot:snapshot(),curriculum,calendar:fixtureCalendar(),backgroundExecution:true,createProvider,onCheckpoint:async state=>{checkpoint=state;}};
+ await assert.rejects(()=>generateAnnualJourney(args),error=>error.reason==="response_pending");
+ const result=await generateAnnualJourney({...args,checkpoint});assert.equal(result.resolved_calendar.projects.length,15);
+ assert.equal(created,1);assert.equal(retrieved,1);assert.equal(checkpoint.attempts.length,1);
 });

@@ -5,9 +5,11 @@ import { PGlite } from "@electric-sql/pglite";
 import { createPilotClassroom, importStudentsForTeacher } from "./pilot-onboarding-service.mjs";
 import { loadDiagnosticExperienceWorkspace, recordDiagnosticExperienceObservation } from "./diagnostic-experiences-v4.mjs";
 import { prepareDiagnosticStudentReview, saveDiagnosticStudentReview, confirmDiagnosticStudentReview,
-  prepareDiagnosticGroupReview, diagnosticGroupProposalSources } from "./diagnostic-assessment-v4.mjs";
+  prepareDiagnosticGroupReview, diagnosticGroupProposalSources, loadDiagnosticAssessmentWorkspace } from "./diagnostic-assessment-v4.mjs";
 import { DiagnosticSuggestionError, suggestDiagnosticGroupReview } from "./ai-diagnostic-evaluation-service.mjs";
 import { neutralizeAssessmentText } from "./assessment-v4-service.mjs";
+
+const cited = (output, refs=[]) => ({...output,claims:["strengths","needs","planning_priorities"].map(field=>({field,text:output[field],scope:field==="strengths"&&refs.length?"individual":field==="needs"?"information_gap":"planning_decision",source_refs:refs}))});
 
 const teacher = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 const otherTeacher = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
@@ -45,16 +47,21 @@ test("Skill diagnóstica sugiere un borrador editable sin enviar nombres, entrev
       needs: "Conviene ofrecer más momentos para conversar y seguir observando al grupo.",
       planning_priorities: "Organizar juegos en pequeños grupos y escuchar sus ideas." };
     const suggestion = await suggestDiagnosticGroupReview(db, teacher, group.id, {
-      createProvider: (plan) => ({ generate: async (request) => { requests.push({ plan, request }); return { output }; } }),
+      createProvider: (plan) => ({ generate: async (request) => { requests.push({ plan, request }); return { output:cited(output,[request.ai_context_bundle.context.confirmed_teacher_comments[0].source_id]) }; } }),
     });
-    assert.deepEqual(suggestion.details, { ...output, competency_priorities: [] });
+    assert.deepEqual(Object.fromEntries(Object.keys(output).map(key=>[key,suggestion.details[key]])),output);
+    assert.equal(suggestion.details.claims[0].sources[0].source_type,"teacher_interpretation");
     assert.equal(requests.length, 1);
-    assert.equal(requests[0].request.output_schema.id, "diagnostic-group-suggestion-v2");
+    assert.equal(requests[0].request.output_schema.id, "diagnostic-group-suggestion-v3");
     assert.match(requests[0].request.skill_instructions, /Skill crear-evaluacion-diagnostica/);
     const bundle = requests[0].request.ai_context_bundle;
     assert.equal(bundle.context.confirmed_teacher_comments.length, 2);
     assert.doesNotMatch(JSON.stringify(bundle), /Ana|Bruno|Prueba|student_id|interview|observation_text|OBSERVACION_PRIVADA_DE_PRUEBA/);
     assert.equal((await db.query("select details from diagnostic_group_reviews where id=$1", [group.id])).rows[0].details.strengths, "");
+    const recovered=(await loadDiagnosticAssessmentWorkspace(db,teacher)).group_reviews.find(row=>row.id===group.id);
+    assert.deepEqual(recovered.ai_suggestion,suggestion.details);
+    assert.equal(recovered.details.strengths,"");
+    assert.equal(requests.length,1);
     assert.deepEqual((await diagnosticGroupProposalSources(db, teacher, group.id)).comments.length, 2);
     await assert.rejects(diagnosticGroupProposalSources(db, otherTeacher, group.id), { reason: "no_classroom" });
   } finally { await db.close(); }
@@ -74,7 +81,7 @@ test("rechaza salida incompleta, niveles y fuentes que cambian durante la llamad
   await assert.rejects(run({ strengths: "Ana juega.", needs: "Conversar.", planning_priorities: "Juegos." },
     async () => ({ ...source, known_names: ["Ana"] })), { reason: "proposal_invalid" });
   let calls = 0;
-  await assert.rejects(run({ strengths: "Jugó.", needs: "Conversar.", planning_priorities: "Juegos." },
+  await assert.rejects(run(cited({ strengths: "Jugó.", needs: "Conversar.", planning_priorities: "Juegos." }),
     async () => ++calls === 1 ? source : { ...source, source_snapshot: [{ id: "a", fingerprint: "dos" }] }), { reason: "stale_sources" });
 });
 
@@ -92,11 +99,11 @@ test("Ayni puede proponer el resumen desde hechos anónimos sin comentarios indi
       const bundle = request.ai_context_bundle;
       assert.deepEqual(bundle.context.confirmed_teacher_comments, []);
       assert.equal(bundle.context.observed_records.length, 1);
-      assert.equal(bundle.context.observed_records[0].child, "niño_1");
+      assert.equal(bundle.context.observed_records[0].child, "child_1");
       assert.equal(bundle.context.observed_records[0].notes.length, 1);
       assert.match(bundle.context.observed_records[0].notes[0].text, /eligió bloques/i);
       assert.doesNotMatch(JSON.stringify(bundle), /\bAna\b|Prueba|student_id|teacher_id|domicilio|77777777/);
-      return { output: { strengths: "Hay un registro de elección de materiales.", needs: "Seguir recogiendo observaciones.", planning_priorities: "Ofrecer juegos con materiales variados." } };
+      return { output:cited({ strengths: "Hay un registro de elección de materiales.", needs: "Seguir recogiendo observaciones.", planning_priorities: "Ofrecer juegos con materiales variados." },[bundle.context.observed_records[0].notes[0].source_id]) };
     } });
     await assert.rejects(suggestDiagnosticGroupReview(db, teacher, group.id, { createProvider }), { reason: "insufficient_information" });
     assert.equal(calls, 0);

@@ -31,7 +31,7 @@ test("Sol recibe diagnóstico y currículo filtrado; sus doce filas quedan edita
   const generated = await generateAnnualPreplan({ context, curriculum: [{ id: "COM_ORAL", name: "Se comunica oralmente", ages: { "5": {} } }],
     createProvider: () => ({ generate: async (value) => { request = value; return { output: { proposals: slots().map(row) }, provider_metadata: { usage: { input_tokens: 100 } } }; } }),
     loadSkill: async () => "Skill de prueba" });
-  assert.equal(request.execution_plan.model, "gpt-6-sol");
+  assert.equal(request.execution_plan.model, "gpt-6.1-sol");
   assert.equal(request.execution_plan.reasoning_effort, "high");
   assert.equal(request.ai_context_bundle.confirmed_group.strengths, "Se comunican jugando.");
   assert.equal(request.ai_context_bundle.confirmed_priorities[0].title, "Más diálogo");

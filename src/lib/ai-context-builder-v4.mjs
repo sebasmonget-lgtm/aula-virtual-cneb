@@ -200,7 +200,7 @@ export function resolveRequiredUserContext(input, requiredFields) {
     observed_status: input.observed_status ?? input.evidence?.observed_status,
     evidence_history: input.evidence_history ?? input.student_context?.evidence_history ?? input.evidence?.evidence_history,
     multiple_evidence_records: input.multiple_evidence_records ?? input.evidence?.multiple_evidence_records,
-    teacher_confirmed_findings: input.teacher_confirmed_findings ?? input.student_context?.teacher_confirmed_findings,
+    teacher_confirmed_findings: input.student_context?.previous_ai_analysis_auxiliary ?? input.teacher_confirmed_findings ?? input.student_context?.teacher_confirmed_findings,
   };
   for (const field of requiredFields) values[field] ??= firstStructuredValue(input, field);
   const missingFields = requiredFields.filter((field) => !hasValue(values[field]));
@@ -229,9 +229,11 @@ function workflowInputSubset(input, workflowRequirements) {
   if (input.workflow === "assessment" && hasValue(input.assessment_master)) subset.assessment_master = input.assessment_master;
   if (input.workflow === "descriptive_conclusion" && hasValue(input.assessment_master)) subset.assessment_master = input.assessment_master;
   if (input.workflow === "descriptive_conclusion") {
+    if (hasValue(input.student_context?.previous_ai_analysis_auxiliary)) subset.previous_ai_analysis_auxiliary = input.student_context.previous_ai_analysis_auxiliary;
     if (hasValue(input.analysis_status)) subset.analysis_status = input.analysis_status;
     if (hasValue(input.confirmed_achievement_level)) subset.confirmed_achievement_level = input.confirmed_achievement_level;
   }
+  if (input.workflow === "family_report" && hasValue(input.family_recommendation_context)) subset.family_recommendation_context = input.family_recommendation_context;
   return subset;
 }
 

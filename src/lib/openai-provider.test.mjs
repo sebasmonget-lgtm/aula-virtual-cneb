@@ -163,3 +163,21 @@ test("el provider no contiene modelos fijos, logs, PDFs ni llamadas externas fue
   assert.match(source, /client\.responses\.create/);
   assert.match(source, /OPENAI_API_KEY/);
 });
+
+
+test("background guarda el ID y polling recupera sin crear otra generación",async()=>{
+ let created=0,retrieved=0,savedId;
+ const client={responses:{create:async payload=>{created++;assert.equal(payload.background,true);assert.equal(payload.store,false);return{id:"resp_fictional_background",status:"queued"};},retrieve:async id=>{retrieved++;assert.equal(id,savedId);return validResponse();}}};
+ const pending=new OpenAIProvider({apiKey:"test-key",client,background:true,onResponseStarted:async id=>{savedId=id;}});
+ const kb=await loadKnowledgeBaseV4();
+ await assert.rejects(()=>generateAIWorkflowV4(activityInput,{provider:pending,knowledgeBase:kb}),error=>error.reason==="response_pending");
+ const resumed=new OpenAIProvider({apiKey:"test-key",client,background:true,resumeResponseId:savedId});
+ const result=await generateAIWorkflowV4(activityInput,{provider:resumed,knowledgeBase:kb});
+ assert.equal(result.output.title,activityOutput.title);assert.equal(created,1);assert.equal(retrieved,1);
+});
+
+test("una respuesta background expirada no genera automáticamente",async()=>{
+ let created=0;
+ const provider=new OpenAIProvider({apiKey:"test-key",background:true,resumeResponseId:"resp_fictional_expired",client:{responses:{create:async()=>{created++;},retrieve:async()=>{throw Object.assign(new Error("Missing"),{status:404});}}}});
+ await assert.rejects(async()=>generateAIWorkflowV4(activityInput,{provider,knowledgeBase:await loadKnowledgeBaseV4()}),error=>error.reason==="response_expired");assert.equal(created,0);
+});

@@ -114,7 +114,7 @@ test("H: el provider solo recibe AIContextBundle sin datos privados", async () =
   await generateAIWorkflowV4(confirmedInput, { provider, knowledgeBase });
   const serializedRequest = JSON.stringify(provider.requests[0]);
   assert.doesNotMatch(serializedRequest, /private_path|photo_path|private\/photo|binary/);
-  assert.deepEqual(Object.keys(provider.requests[0]).sort(), ["ai_context_bundle", "execution_plan", "output_schema", "workflow"]);
+  assert.deepEqual(Object.keys(provider.requests[0]).sort(), ["ai_context_bundle", "execution_plan", "output_schema", "skill_instructions", "workflow"]);
 });
 
 test("las instrucciones de Skill no se pueden aplicar a otro workflow", async () => {
@@ -167,12 +167,12 @@ test("activity escala una sola vez de Luna medium a Sol low por calidad", async 
   const result = await generateAIWorkflowV4(confirmedInput, { providerFactory, knowledgeBase });
   assert.equal(calls.length, 2);
   assert.deepEqual(calls.map((request) => [request.execution_plan.model, request.execution_plan.reasoning_effort]),
-    [["gpt-6-luna", "medium"], ["gpt-6-sol", "low"]]);
+    [["gpt-6-luna", "medium"], ["gpt-6.1-sol", "low"]]);
   assert.deepEqual(calls[1].ai_context_bundle, calls[0].ai_context_bundle);
   assert.deepEqual(calls[1].output_schema, calls[0].output_schema);
   assert.equal(result.metadata.fallback_used, true);
   assert.equal(result.metadata.primary_model, "gpt-6-luna");
-  assert.equal(result.metadata.fallback_model, "gpt-6-sol");
+  assert.equal(result.metadata.fallback_model, "gpt-6.1-sol");
   assert.equal(result.metadata.fallback_reason, "content_validation_failed");
   assert.equal(result.metadata.attempts.length, 2);
 });

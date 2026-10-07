@@ -1,13 +1,24 @@
 import { randomUUID } from "node:crypto";
-import { resolveAIExecutionPlan } from "../src/lib/ai-execution-router-v4.mjs";
-import { createAIProviderForPlan } from "../src/lib/ai-provider-factory.mjs";
-import { generateAIWorkflowV4 } from "../src/lib/ai-generation-v4.mjs";
-import { buildAssessmentMasterInput, assessmentMasterSourceSnapshot, validateAssessmentMaster } from "../src/lib/assessment-master-service.mjs";
+import { buildAssessmentContext, assessmentMasterSourceSnapshot, validateAssessmentMaster } from "../src/lib/assessment-master-service.mjs";
 import { loadKnowledgeBaseV4 } from "../src/lib/knowledge-base-v4.mjs";
 import { cardIsApplicable } from "../src/lib/ai-context-builder-v4.mjs";
 import { httpStatusForError, publicErrorMessage } from "../src/lib/version-integrity.mjs";
 import { stableCompetencyLabel, syncPeriodEvaluationMap } from "../src/lib/period-assessment-closure-service.mjs";
 import { canonicalProjectRoute } from "../src/lib/planning-contract-v3.mjs";
+import { neutralizeAssessmentText } from "../src/lib/assessment-v4-service.mjs";
+
+export async function loadComputedAssessmentContext(db, classroom, period, cards, evidenceRows = [], competencyId = null, names = []) {
+  const source = await loadAssessmentMasterSources(db, classroom, period);
+  const evidenceCriteria = evidenceRows.map(row => ({ id: row.criterion_id, activity_id: row.activity_id,
+    competency_id: competencyId ?? row.competency_v4_id, criterion_text: row.criterion_text || "Qué hizo o dijo el niño",
+    expected_evidence: row.details?.expected_evidence, observation_focus: row.details?.observation_focus ?? [] }));
+  const criteria = [...source.sources.criteria, ...evidenceCriteria].map(row => ({ ...row,
+    criterion_text: neutralizeAssessmentText(row.criterion_text, names),
+    expected_evidence: neutralizeAssessmentText(row.expected_evidence, names),
+    observation_focus: (row.observation_focus ?? []).map(text => neutralizeAssessmentText(text, names)) }));
+  return buildAssessmentContext({ age: classroom.age, snapshot: source.snapshot, competencyCards: cards,
+    sources: { ...source.sources, criteria, competency_labels: Object.fromEntries(cards.map(card => [card.id, stableCompetencyLabel(card)])) } });
+}
 
 const withCanonicalLabels = (proposal, labels) => ({ ...proposal, competencies: proposal.competencies.map((row) => ({
   ...row,
@@ -38,7 +49,7 @@ export async function loadAssessmentMasterSources(db, context, period) {
     competency_ids: competencyIds, experience_revisions: experiences.map((row) => `${row.id}:${row.revision}`),
     activity_revisions: activities.map((row) => `${row.id}:${row.revision}`),
     criterion_revisions: criteria.map((row) => `${row.id}:${row.revision}`),
-    classroom_context_fingerprint: context.context_v4?.fingerprint ?? context.context_v4?.source_fingerprint ?? null,
+    classroom_context_fingerprint: null,
     evaluation_map_version: map.version, evaluation_map_fingerprint: map.source_fingerprint };
   return { snapshot: assessmentMasterSourceSnapshot(source), competencyIds,
     sources: { period: { id: period.id, label: period.label, starts_on: source.starts_on, ends_on: source.ends_on },
@@ -53,8 +64,7 @@ export async function loadAssessmentMasterSources(db, context, period) {
 }
 
 export function createAssessmentMasterRouteHandler({ db, teacherId, annualPlanningContext, readJson, send,
-  pending, metadataForAudit, loadKnowledgeBase = loadKnowledgeBaseV4, generate = generateAIWorkflowV4,
-  createProvider = createAIProviderForPlan }) {
+  pending, metadataForAudit, loadKnowledgeBase = loadKnowledgeBaseV4 }) {
   const fail = (response, origin, error, status = 422) => send(response, httpStatusForError(error, status), { error: publicErrorMessage(error) }, origin);
   async function scope(periodId) {
     const context = await annualPlanningContext();
@@ -92,12 +102,9 @@ export function createAssessmentMasterRouteHandler({ db, teacherId, annualPlanni
         for (const id of source.competencyIds) { const card = cards.get(id); if (!card?.runtime_selectable_by_age?.[String(context.age)] || !cardIsApplicable(card, { castellanoL2Applicable: context.castellano_l2_applicable === true, religionApplicable: context.religion_applicable === true })) throw new Error("Una competencia trabajada no es aplicable a la edad del aula."); }
         const labels = Object.fromEntries(source.competencyIds.map((id) => [id, stableCompetencyLabel(cards.get(id))]));
         source.sources.competency_labels = labels;
-        const input = buildAssessmentMasterInput({ age: context.age, competencyIds: source.competencyIds,
-          classroomContext: { id: "current_classroom", group_context: context.context_v4?.classroom_context ?? context.group_context,
-            diagnostic_summary: context.diagnostic_summary, religion_applicable: context.religion_applicable === true },
-          calendar: context.calendar, sources: source.sources });
-        const plan = resolveAIExecutionPlan({ workflow: "assessment_master", task: "generation" });
-        const result = await generate(input, { provider: createProvider(plan, { timeoutMs: 180000 }), executionPlan: plan, knowledgeBase: kb });
+        const deterministic = buildAssessmentContext({ age: context.age, sources: source.sources,
+          snapshot: source.snapshot, competencyCards: kb.competencyCards });
+        const result = { output: deterministic.details, metadata: deterministic.generation_metadata };
         const generationId = randomUUID();
         await pending.set(generationId, { workflow: "assessment_master", classroom_id: context.id,
           evaluation_period_id: period.id, competency_ids: source.competencyIds, competency_labels: labels, source_snapshot: source.snapshot,

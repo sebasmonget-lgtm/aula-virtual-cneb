@@ -168,6 +168,7 @@ function contentForFamilyReport(document, names) {
       ...section("Seguimos observando", report?.insufficiency_note, 2));
   }
   children.push(...section("Para seguir acompañando", value.closing_note));
+  if (clean(value.family_agreements)) children.push(...section("Acuerdos con la familia", value.family_agreements));
   return children;
 }
 

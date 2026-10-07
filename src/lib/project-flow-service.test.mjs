@@ -6,7 +6,7 @@ import { solveAnnualJourneyCalendar } from "./annual-journey-calendar.mjs";
 import { candidateProjectDates, validateSelectedInstructionalDates } from "./school-calendar-service.mjs";
 import { generateProjectPreview, generateProjectDependents, generateProjectMaster,
   instructionalDates, validateProjectMaster, preserveTeacherMapEdits, projectDetails,
-  validateEditedActivityMap, validateProjectDependents } from "./project-flow-service.mjs";
+  validateEditedActivityMap, validateProjectDependents, generateProjectFormal } from "./project-flow-service.mjs";
 
 const calendar = { blocks: nationalCalendarBlocks2026(), exceptions: nationalSchoolHolidays2026() };
 const decisions = { context_summary: "El grupo pregunta por plantas cercanas.", purpose: "Investigar cómo cambian las plantas.",
@@ -77,14 +77,14 @@ test("Sol prepara primero contexto y propósitos, después solo dependencias del
   const preview = await generateProjectPreview({ context: { age: 5 }, createProvider: provider({
     context_summary: "Hay plantas cercanas.", context_points: ["Hay un patio."],
     additional_context_example: "Hay árboles junto al aula.", purpose_options: ["Observar plantas.", "Comparar cambios."]
-  }, (request) => { assert.equal(request.execution_plan.model, "gpt-6-sol");
+  }, (request) => { assert.equal(request.execution_plan.model, "gpt-6.1-sol");
     assert.equal(request.execution_plan.reasoning_effort, "medium");
     assert.equal(request.ai_context_bundle.confirmed_questions, undefined); }), loadSkill: async () => "Skill" });
   assert.equal(preview.output.purpose_options.length, 2);
   const next = await generateProjectDependents({ context: { age: 5 }, decisions,
     createProvider: provider(dependents, (request) => {
       assert.equal(request.ai_context_bundle.confirmed_decisions.purpose, decisions.purpose);
-      assert.equal(request.execution_plan.model, "gpt-6-sol");
+      assert.equal(request.execution_plan.model, "gpt-6.1-sol");
     }), loadSkill: async () => "Skill" });
   assert.equal(next.output.general_criteria[0].competency_id, "CYT_INDAGA");
 });
@@ -93,7 +93,7 @@ test("Sol devuelve mapa con fechas y competencias válidas; el servidor asigna I
   const generated = await generateProjectMaster({ context: { age: 5 }, decisions, dependents,
     availableDates: ["2026-04-13", "2026-04-14"],
     createProvider: provider(master, (request) => {
-      assert.equal(request.execution_plan.model, "gpt-6-sol");
+      assert.equal(request.execution_plan.model, "gpt-6.1-sol");
       assert.equal(request.execution_plan.reasoning_effort, "medium");
       assert.deepEqual(request.ai_context_bundle.confirmed_questions, dependents.guiding_questions);
     }), loadSkill: async () => "Skill" });
@@ -140,4 +140,28 @@ test("un borrador nuevo persiste solo un mapa canónico y conserva preguntas y c
   assert.equal(details.activity_route.length, 2);
   assert.equal(details.dependents.guiding_questions[0], "¿Qué vemos?");
   assert.equal(details.dependents.general_criteria[0].competency_id, "CYT_INDAGA");
+});
+
+
+test("proyecto moderno: una generación high, calendario exacto y formal por código", async () => {
+  const calls=[];
+  const context={modern:true,age:5};
+  const generated=await generateProjectMaster({context,decisions,availableDates:["2026-04-13","2026-04-14"],createProvider:provider({...master,...dependents},request=>calls.push(request)),loadSkill:async()=>"Skill"});
+  assert.equal(calls.length,1);
+  assert.equal(calls[0].execution_plan.model,"gpt-6.1-sol");
+  assert.equal(calls[0].execution_plan.reasoning_effort,"high");
+  assert.equal(generated.dependents.general_criteria.length,1);
+  const details=projectDetails({source:{title:"Plantas",primary_competency_ids:["CYT_INDAGA"]},preview:{context_summary:"Propuesta docente"},decisions,dependents:generated.dependents,master:generated.output});
+  const formal=await generateProjectFormal({context:{modern:true,confirmed_project_master:details},createProvider:()=>{throw new Error("Formal no debe facturar");}});
+  assert.equal(formal.metadata.provider_calls,0);
+  assert.ok(formal.output.foundation);
+});
+
+test("proyecto moderno: repara una sola vez fechas inválidas y conserva decisiones", async()=>{
+  const calls=[];
+  const createProvider=()=>({generate:async request=>{calls.push(request);return {output:calls.length===1?{...master,...dependents,activities:master.activities.slice(0,1)}:{...master,...dependents}};}});
+  const result=await generateProjectMaster({context:{modern:true,age:5},decisions,availableDates:["2026-04-13","2026-04-14"],createProvider,loadSkill:async()=>"Skill"});
+  assert.equal(calls.length,2);assert.equal(result.metadata.repair_used,true);
+  assert.deepEqual(calls[1].ai_context_bundle.confirmed_decisions,decisions);
+  await assert.rejects(()=>generateProjectMaster({context:{modern:true,age:5},decisions,availableDates:["2026-04-13","2026-04-14"],createProvider:provider({...master,...dependents,activities:[]}),loadSkill:async()=>"Skill"}));
 });

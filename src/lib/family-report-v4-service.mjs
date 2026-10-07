@@ -38,9 +38,10 @@ export function reportInformationStatus(snapshot, competencyId) {
 }
 
 export function validateFamilyReport(output, competencyIds, sourceSnapshot) {
-  if (!output || typeof output !== "object" || Array.isArray(output) || FAMILY_REPORT_FIELDS.some((field) => !(field in output)) || Object.keys(output).some((field) => !FAMILY_REPORT_FIELDS.includes(field))) throw new Error("El informe no cumple family-report-v1.");
+  if (!output || typeof output !== "object" || Array.isArray(output) || FAMILY_REPORT_FIELDS.some((field) => !(field in output)) || Object.keys(output).some((field) => ![...FAMILY_REPORT_FIELDS,"family_agreements"].includes(field))) throw new Error("El informe no cumple family-report-v1.");
   if (!["introduction", "closing_note"].every((field) => typeof output[field] === "string" && output[field].trim())) throw new Error("La introducción y la nota final son obligatorias.");
   if (!Array.isArray(output.sections) || output.sections.length !== competencyIds.length) throw new Error("El informe debe incluir exactamente las competencias seleccionadas.");
+  if (output.family_agreements !== undefined && (typeof output.family_agreements !== "string" || output.family_agreements.length > 1200)) throw new Error("Escribe acuerdos breves con la familia.");
   const seen = new Set();
   for (const section of output.sections) {
     if (!section || typeof section !== "object" || Array.isArray(section) || FAMILY_REPORT_SECTION_FIELDS.some((field) => !(field in section)) || Object.keys(section).some((field) => !FAMILY_REPORT_SECTION_FIELDS.includes(field))) throw new Error("Una sección no cumple family-report-v1.");
@@ -62,10 +63,10 @@ export function validateFamilyReport(output, competencyIds, sourceSnapshot) {
   return output;
 }
 
-export function buildFamilyReportInput({ age, competencyIds, conclusions, knownNames = [], castellanoL2Applicable = false, religionApplicable = false }) {
+export function buildFamilyReportInput({ age, competencyIds, conclusions, knownNames = [], castellanoL2Applicable = false, religionApplicable = false, familyRecommendationContext = null }) {
   const clean = (value) => neutralizeAssessmentText(value, knownNames);
   const findings = conclusions.filter((row) => competencyIds.includes(row.competency_v4_id)).map((row) => ({ competency_id: row.competency_v4_id, period_start: dateOnly(row.period_start), period_end: dateOnly(row.period_end), information_status: row.details.information_status, conclusion_text: clean(row.details.conclusion_text), progress_examples: (row.details.progress_examples ?? []).map(clean), support_or_conditions: (row.details.support_or_conditions ?? []).map(clean), next_steps: (row.details.next_steps ?? []).map(clean), insufficiency_reason: clean(row.details.insufficiency_reason), caution: clean(row.details.caution) }));
-  return { workflow: "family_report", age, competency_ids: competencyIds, castellano_l2_applicable: castellanoL2Applicable, religion_applicable: religionApplicable, teacher_request: "Comunicar a la familia solo las conclusiones descriptivas confirmadas seleccionadas. Usar frases cortas, palabras habituales, una idea por oración y ejemplos concretos que una familia pueda reconocer. Explicar con claridad qué se observó, qué ayudó y qué se puede hacer después. Incluir los ejemplos confirmados disponibles, conservar el estado de información de cada competencia y evitar notas, niveles, comparaciones, diagnósticos, lenguaje burocrático y afirmaciones absolutas. Mantener literalmente los nombres oficiales de competencias cuando se usen.", student_context: { id: "current_student", teacher_confirmed_findings: findings } };
+  return { workflow: "family_report", age, competency_ids: competencyIds, castellano_l2_applicable: castellanoL2Applicable, religion_applicable: religionApplicable, teacher_request: "Usa family_recommendation_context solo para una o dos recomendaciones prácticas para casa, nunca para alterar el progreso, ejemplos, condiciones, siguientes pasos, nivel o conclusión confirmados. Comunicar a la familia solo las conclusiones descriptivas confirmadas seleccionadas. Usar frases cortas, palabras habituales, una idea por oración y ejemplos concretos que una familia pueda reconocer. Explicar con claridad qué se observó, qué ayudó y qué se puede hacer después. Incluir los ejemplos confirmados disponibles, conservar el estado de información de cada competencia y evitar notas, niveles, comparaciones, diagnósticos, lenguaje burocrático y afirmaciones absolutas. Mantener literalmente los nombres oficiales de competencias cuando se usen.", family_recommendation_context: familyRecommendationContext, student_context: { id: "current_student", teacher_confirmed_findings: findings } };
 }
 
 export function buildFamilyReportFallback(competencyIds, conclusions) {
@@ -86,4 +87,18 @@ export function buildFamilyReportFallback(competencyIds, conclusions) {
     introduction:"Compartimos las conclusiones confirmadas para este período.",
     sections,closing_note:"La docente debe revisar este informe antes de compartirlo con la familia."
   },competencyIds,snapshot);
+}
+
+/** A family report composes recommendations; confirmed pedagogical text is immutable. */
+export function preserveConfirmedFamilySections(proposal, conclusions) {
+  return { ...proposal, sections: proposal.sections.map(section => {
+    const rows = conclusions.filter(row => row.competency_v4_id === section.competency_id);
+    if (!rows.length) throw new Error("Falta una conclusión confirmada para este informe.");
+    const clean = value => neutralizeAssessmentText(value, []);
+    const list = field => [...new Set(rows.flatMap(row => (row.details[field] ?? []).map(clean)))];
+    return { ...section, progress_summary: rows.map(row => clean(row.details.conclusion_text)).join(" "),
+      examples: list("progress_examples"), support_or_conditions: list("support_or_conditions"), next_steps: list("next_steps"),
+      information_status: rows.every(row => row.details.information_status === "sufficient") ? "sufficient" : "insufficient",
+      insufficiency_note: rows.every(row => row.details.information_status === "sufficient") ? null : rows.map(row => clean(row.details.insufficiency_reason)).find(Boolean) || "Se necesitan más observaciones." };
+  }) };
 }

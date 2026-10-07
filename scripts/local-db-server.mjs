@@ -1,3 +1,6 @@
+import { criterionRealignmentEligibility } from "../src/lib/criterion-realignment-policy.mjs";
+import { handleDirectWorkshop } from "./direct-workshop-routes.mjs";
+import { projectConversation } from "../src/lib/project-conversation.mjs";
 import { newAyniFeatureEnabled } from "../src/lib/new-ayni-feature-flag.mjs";
 import { previewSpontaneous, handleStudentPhoto, handleFamilyShare } from "./initial-journey-routes.mjs";
 import { handleAnnualJourneyRoutes } from "./annual-journey-routes.mjs";
@@ -111,7 +114,7 @@ import { createFirstAdmin, createTeacherAccount, listAuthUsers, recoverFirstAdmi
 import { loadAdminDirectory } from "./admin-directory.mjs";
 import { timingSafeEqual } from "node:crypto";
 import { Readable } from "node:stream";
-import { enqueueActivityBlock, publicPreparationJob, runPreparationStep, acceptPreparationDispatch } from "../src/lib/preparation-jobs.mjs";
+import { runPreparationStep, acceptPreparationDispatch } from "../src/lib/preparation-jobs.mjs";
 import { preparationExecutor } from "../src/lib/preparation-executor.mjs";
 import { assertProjectAnnualAuthority } from "../src/lib/project-annual-authority.mjs";
 import { handlePreparationRoutes } from "./preparation-routes.mjs";
@@ -228,7 +231,7 @@ await pendingAIGenerations.pruneExpired();
 let diagnosticClassificationQueue = Promise.resolve();
 const diagnosticClassificationInFlight = new Set();
 const jevCompetencySuggester = jevFeatureEnabled("competencies") ? createJevCompetencySuggester() : null;
-const observationV24Active = observationV24Enabled();
+const observationV24Active = observationV24Enabled() && process.env.AYNI_JEV_RAW_PRIVACY_ACCEPTED === "1";
 let observationV24ClassifierPromise;
 const observationV24Classifier = { classify: async (input) => {
   observationV24ClassifierPromise ??= createObservationV24Classifier();
@@ -1968,7 +1971,9 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
             throw new Error("El contexto ya tiene decisiones revisadas. Actualízalas desde el propósito antes de preparar otro mapa.");
           assertRevision(previous,expectedRevision(body.expectedRevision));
           const planningFeedback = await projectFlowFeedback(source,body,previous.details?.planning_feedback);
-          const generated = await generateProjectPreview({context:{...source.aiContext,planning_feedback:planningFeedback},workflow:previous.type});
+          const generated = source.plan.proposal.editor_version === 3 || source.plan.proposal.experience_context
+            ? {output:{context_summary:source.source.rationale,context_points:[],purpose_options:[source.source.purpose],additional_context_example:"Puedes mencionar materiales, una visita o un espacio disponible."},metadata:{workflow:"annual_source_preview"}}
+            : await generateProjectPreview({context:{...source.aiContext,planning_feedback:planningFeedback},workflow:previous.type});
           const details = {...previous.details,preview:generated.output,planning_feedback:planningFeedback};
           const saved=(await db.query(`update learning_experiences set details=$1::jsonb,generation_metadata=$2::jsonb
             where id=$3 and classroom_id=$4 and status='draft' and revision=$5 returning *`,
@@ -1983,7 +1988,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
           available_dates: calendar_review.selected_dates,calendar_review }, origin); return; }
         const planningFeedback = await projectFlowFeedback(source,body);
         assertProjectAnnualAuthority(source);
-        const generated = source.plan.proposal.experience_context ? {output:{context_summary:source.source.rationale,context_points:[],purpose_options:[source.source.purpose],additional_context_example:"Puedes mencionar materiales, una visita o un espacio disponible."},metadata:{workflow:"annual_source_preview"}}
+        const generated = source.plan.proposal.editor_version === 3 || source.plan.proposal.experience_context ? {output:{context_summary:source.source.rationale,context_points:[],purpose_options:[source.source.purpose],additional_context_example:"Puedes mencionar materiales, una visita o un espacio disponible."},metadata:{workflow:"annual_source_preview"}}
           : await generateProjectPreview({ context: {...source.aiContext,planning_feedback:planningFeedback}, workflow: source.source.experience_type });
         const id = randomUUID();
         const details = { flow_version: "project-master-v1", stage: "decisions", preview: generated.output,planning_feedback:planningFeedback };
@@ -1997,6 +2002,28 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         send(response, 201, { experience: saved, existing: false, available_dates: calendar_review.selected_dates,calendar_review }, origin);
       } catch (error) { send(response, httpStatusForError(error, 422), { error: publicErrorMessage(error) }, origin); }
       return;
+    }
+    if (request.method === "POST" && /^\/api\/project-flow\/[0-9a-f-]+\/conversation$/i.test(url.pathname)) {
+      try {
+        const id=url.pathname.split("/")[3],body=await readJson(request),{row}=await projectFlowRow(id);
+        if(!row || row.status!=="draft")throw new Error("Abre un proyecto en preparación para conversar.");
+        const source=await projectFlowSource(row.annual_plan_id,row.source_proposal_id,true,row.source_proposal_index);
+        if(!source.plan.proposal.experience_context)throw new Error("Esta conversación está disponible en el recorrido nuevo.");
+        if(typeof body.text!=="string" || body.text.length>1000 || typeof body.turnId!=="string" || !/^[0-9a-f-]{36}$/i.test(body.turnId))throw new Error("Escribe una respuesta breve.");
+        const prior=row.details.project_context??{messages:[],ready:false};
+        if(prior.completed_turns?.includes(body.turnId)){send(response,200,{experience:row,conversation:prior},origin);return;}
+        if(prior.pending)throw new Error("La respuesta anterior no pudo recuperarse. Puedes preparar el proyecto con tus decisiones guardadas.");
+        assertRevision(row,expectedRevision(body.expectedRevision));
+        const conversation={...prior,messages:[...prior.messages,...(body.text.trim()?[{id:body.turnId,role:"teacher",text:body.text.trim(),source_turn:body.turnId,support_text:body.text.trim()}]:[])],pending:body.turnId};
+        const saved=(await db.query(`update learning_experiences set details=$1::jsonb where id=$2 and status='draft' and revision=$3 returning *`,[JSON.stringify({...row.details,project_context:conversation}),id,body.expectedRevision])).rows[0];
+        if(!saved)throw new VersionConflictError("El proyecto cambió. Vuelve a abrirlo.");
+        const names=(await db.query(`select first_name,last_name,preferred_name from students where classroom_id=$1`,[row.classroom_id])).rows.flatMap(child=>[child.first_name,child.last_name,child.preferred_name]).filter(Boolean);
+        const answer=await projectConversation({card:source.source,knownContext:source.safeDecisions({additional_context:source.source.rationale}).additional_context,messages:conversation.messages,names});
+        const completed={...conversation,pending:null,completed_turns:[...(prior.completed_turns??[]),body.turnId],ready:answer.ready,messages:[...conversation.messages,{id:randomUUID(),role:"assistant",text:answer.question}],metadata:answer.metadata};
+        const updated=(await db.query(`update learning_experiences set details=$1::jsonb where id=$2 and status='draft' and revision=$3 returning *`,[JSON.stringify({...saved.details,project_context:completed}),id,saved.revision])).rows[0];
+        if(!updated)throw new VersionConflictError("El proyecto cambió mientras conversábamos. Tus respuestas permanecen guardadas.");
+        send(response,200,{experience:updated,conversation:completed},origin);
+      }catch(error){send(response,httpStatusForError(error,422),{error:publicErrorMessage(error)},origin);}return;
     }
     if (request.method === "GET" && /^\/api\/project-flow\/[0-9a-f-]+$/i.test(url.pathname)) {
       const { row } = await projectFlowRow(url.pathname.split("/")[3]);
@@ -2026,11 +2053,12 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         assertProjectAnnualAuthority(source,decisions);
         assertRevision(row,expectedRevision(body.expectedRevision));
         const planningFeedback = await projectFlowFeedback(source,body,row.details.planning_feedback);
-        const result = await generateProjectDependents({ context: { ...source.aiContext,
+        const result = source.plan.proposal.experience_context ? { output: { guiding_questions: [], journey: [], general_criteria: [] }, metadata: { execution: "code", provider_calls: 0 } } : await generateProjectDependents({ context: { ...source.aiContext,
           planning_feedback: planningFeedback,
           curriculum: source.aiContext.curriculum.filter((card) => decisions.competency_ids.includes(card.id)) },
           decisions, providerDecisions: source.plan.proposal.experience_context ? source.safeDecisions(decisions) : decisions, workflow: row.type });
         const details = { flow_version: "project-master-v1", stage: "dependents", preview: row.details.preview,
+          ...(row.details.project_context ? { project_context: row.details.project_context } : {}),
           ...(row.details.rebased_from?{rebased_from:row.details.rebased_from}:{}),
           decisions, dependents: simpleProjectEnabled() ? retainProjectCriterionIds(result.output, row.details.dependents) : result.output, planning_feedback: planningFeedback,
           previous_map: row.details.activity_route ?? row.details.previous_map ?? null,
@@ -2055,15 +2083,18 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         const calendarReview=await ensureProjectCalendarSelection(row,source);
         assertProjectAnnualAuthority(source,row.details.decisions);
         if(calendarReview.selection.status!=="confirmed")throw new Error("Confirma primero los días del proyecto.");
-        const dependents = validateProjectDependents(body.dependents ?? row.details.dependents, row.details.decisions.competency_ids);
-        const generated = await generateProjectMaster({ context: { ...source.aiContext,
+        let dependents = source.plan.proposal.experience_context ? row.details.dependents : validateProjectDependents(body.dependents ?? row.details.dependents, row.details.decisions.competency_ids);
+        const generated = await generateProjectMaster({ context: { ...source.aiContext, modern: Boolean(source.plan.proposal.experience_context),
+          teacher_context_sources: (row.details.project_context?.messages ?? []).filter(message=>message.role==="teacher").map(message=>({source_turn:message.source_turn,support_text:source.safeDecisions({additional_context:message.support_text}).additional_context,source_type:"teacher_decision"})),
           planning_feedback: row.details.planning_feedback ?? null,
           curriculum: source.aiContext.curriculum.filter((card) => row.details.decisions.competency_ids.includes(card.id)) },
           decisions: row.details.decisions,
           providerDecisions: source.plan.proposal.experience_context ? source.safeDecisions(row.details.decisions) : row.details.decisions,
           dependents, availableDates: calendarReview.selected_dates, workflow: row.type });
+        if (generated.dependents) dependents = generated.dependents;
         const base = projectDetails({ source: source.source, preview: row.details.preview,
           decisions: row.details.decisions, dependents, master: generated.output, previous: row.details });
+        if (row.details.project_context) base.project_context = row.details.project_context;
         let imageSuggestion = null;
         if (jevProjectImageEnabled && !Object.hasOwn(row.details, "image_id")) {
           try {
@@ -2148,8 +2179,8 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       try {
         const id = url.pathname.split("/")[3], body = await readJson(request);
         const { row } = await projectFlowRow(id);
-        if (row?.status === "active") { const source=await projectFlowSource(row.annual_plan_id,row.source_proposal_id,true,row.source_proposal_index);
-          const block=source.plan.proposal.experience_context?publicPreparationJob(await enqueueActivityBlock(db,teacherId,row)):null;
+        if (row?.status === "active") {
+          const block=null;
           send(response, 200, { id: row.id, status: row.status, teacher_confirmed_at: row.teacher_confirmed_at, version: row.version, revision: row.revision, already_confirmed: true,block_job:block }, origin); return; }
         if (!row || row.status !== "draft" || row.details?.stage !== "map_review") { send(response, 404, { error: "Proyecto no disponible para confirmar." }, origin); return; }
         const source = await projectFlowSource(row.annual_plan_id, row.source_proposal_id, true, row.source_proposal_index);
@@ -2168,8 +2199,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
           .some((item) => item.id === row.details.image_id))
           throw new Error("La imagen elegida ya no está disponible para este proyecto.");
         const confirmed = await confirmLearningExperienceVersion(db, source.classroom.id, id, expectedRevision(body.expectedRevision));
-        const active=source.plan.proposal.experience_context?(await projectFlowRow(id)).row:null;
-        const block=active?publicPreparationJob(await enqueueActivityBlock(db,teacherId,active)):null;
+        const block=null;
         send(response, 200, {...confirmed,block_job:block}, origin);
       } catch (error) { send(response, httpStatusForError(error, 422), isVersionConflict(error) ? conflictPayload(error) : { error: publicErrorMessage(error) }, origin); }
       return;
@@ -2183,7 +2213,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         const source = await projectFlowSource(row.annual_plan_id, row.source_proposal_id, true, row.source_proposal_index);
         const generated = await generateProjectFormal({ workflow: row.type, context: { ...source.aiContext,
           curriculum: source.aiContext.curriculum.filter((card) => row.details.decisions?.competency_ids.includes(card.id)),
-          confirmed_project_master: confirmedProjectFormalContext(row) } });
+          modern: row.details?.experience_contract === 1, confirmed_project_master: confirmedProjectFormalContext(row) } });
         await db.query(`insert into experience_formal_contents(id,experience_id,content,source_revision,generation_metadata)
           values($1,$2,$3::jsonb,$4,$5::jsonb) on conflict (experience_id) do nothing`,
         [randomUUID(),id,JSON.stringify(generated.output),row.revision,JSON.stringify(generated.metadata)]);
@@ -2326,6 +2356,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       if (!changed.rows[0]) { send(response,422,{error:"El bloque no es futuro, pertenece a otra actividad o ya tiene ejecución. No se cambió."},origin); return; }
       send(response,200,{id:changed.rows[0].id,activity_id:id},origin); return;
     }
+    if (await handleDirectWorkshop({request,url,response,origin,db,teacherId,annualPlanningContext,readJson,send,pending:pendingAIGenerations}))return;
     if (request.method === "POST" && url.pathname === "/api/ai/activities/generate") {
       const context = await annualPlanningContext(); const body = await readJson(request); const experience = context && await activeLearningExperience(body.experienceId, context.id);
       if (context && !(await db.query(`select 1 from annual_plans where classroom_id=$1 and school_year_id=$2 and status='active' limit 1`, [context.id, context.school_year_id])).rows.length) { send(response, 422, { error: "Confirma primero el plan anual antes de preparar una actividad." }, origin); return; }
@@ -2340,7 +2371,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         const master = routeIndex ? (await db.query(`select * from learning_experiences where parent_project_id=$1 and type='workshop' and status='active'`, [experience.id])).rows[0] : null;
         let workshop = null;
         let workshopError = null;
-        if (master && workshopItemIsSelected(master.details.items?.[routeIndex - 1])) {
+        if (!experience.details?.experience_contract && master && workshopItemIsSelected(master.details.items?.[routeIndex - 1])) {
           const item = master.details.items?.[routeIndex - 1];
           try {
             const sheet = item?.sheet_id ? (await availableSheets({ age: context.age, competencyId: item.competency_id }))
@@ -2450,7 +2481,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       return;
     }
     if (request.method === "GET" && url.pathname === "/api/activity-criteria") {
-      const context=await annualPlanningContext();const activity=context&&(await db.query(`select a.*,e.details as experience_details,e.title as experience_title,e.purpose as experience_purpose from activities a join learning_experiences e on e.id=a.experience_id where a.id=$1 and e.classroom_id=$2 and a.status='active'`,[url.searchParams.get("activityId"),context.id])).rows[0];if(!activity){send(response,404,{error:"Actividad confirmada no disponible."},origin);return;}const criteria=(await db.query(`select id,activity_id,competency_v4_id,criterion_text,details,status,teacher_confirmed_at,version,revision,lineage_id,supersedes_criterion_id,superseded_at from activity_criteria where activity_id=$1 and competency_v4_id=$2 order by case status when 'draft' then 0 when 'active' then 1 else 2 end,version desc`,[activity.id,activity.details?.competency_id])).rows;send(response,200,{activity:{id:activity.id,title:activity.title,details:activity.details},criteria},origin);return;
+      const context=await annualPlanningContext();const activity=context&&(await db.query(`select a.*,e.details as experience_details,e.title as experience_title,e.purpose as experience_purpose from activities a join learning_experiences e on e.id=a.experience_id where a.id=$1 and e.classroom_id=$2 and a.status='active'`,[url.searchParams.get("activityId"),context.id])).rows[0];if(!activity){send(response,404,{error:"Actividad confirmada no disponible."},origin);return;}const criteria=(await db.query(`select id,activity_id,competency_v4_id,criterion_text,details,status,teacher_confirmed_at,version,revision,lineage_id,supersedes_criterion_id,superseded_at from activity_criteria where activity_id=$1 and competency_v4_id=$2 order by case status when 'draft' then 0 when 'active' then 1 else 2 end,version desc`,[activity.id,activity.details?.competency_id])).rows;send(response,200,{activity:{id:activity.id,title:activity.title,details:activity.details,modern:activity.experience_details?.experience_contract===1},criteria},origin);return;
     }
     if(request.method==="POST" && /^\/api\/activity-criteria\/[^/]+\/copy$/.test(url.pathname)) {
       const id=url.pathname.split("/")[3],context=await annualPlanningContext();
@@ -2460,7 +2491,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       return;
     }
     if(request.method==="POST"&&url.pathname==="/api/ai/activity-criteria/generate"){
-      const context=await annualPlanningContext();const body=await readJson(request);const activity=context&&(await db.query(`select a.*,e.id as parent_id,e.type as parent_type,e.title as parent_title,e.purpose as parent_purpose,e.details as parent_details from activities a join learning_experiences e on e.id=a.experience_id where a.id=$1 and e.classroom_id=$2 and a.status='active'`,[body.activityId,context.id])).rows[0];if(!activity||activity.details?.competency_status!=="confirmed"||!activity.details?.competency_id){send(response,422,{error:"Confirma la competencia de la actividad antes de preparar el criterio."},origin);return;}const allowed=await activityAllowedCompetencies({details:activity.parent_details},context);if(!allowed.has(activity.details.competency_id)){send(response,422,{error:"El criterio ya no corresponde a esta actividad."},origin);return;}try{const generated=await generateCriterionEvidence({classroom:context,activity,parent:{id:activity.parent_id,type:activity.parent_type,title:activity.parent_title,purpose:activity.parent_purpose,details:activity.parent_details},note:cleanText(body.note,1000)});const generationId=randomUUID();await pendingAIGenerations.set(generationId,{workflow:"criterion_realignment",classroom_id:context.id,activity_id:activity.id,competency_v4_id:activity.details.competency_id,metadata:safeAnnualGenerationMetadata(generated.internalMetadata),createdAt:Date.now()});send(response,200,{proposal:generated.proposal,generation_id:generationId},origin);}catch{send(response,422,{error:"No pudimos generar un criterio válido."},origin);}return;
+      const context=await annualPlanningContext();const body=await readJson(request);const activity=context&&(await db.query(`select a.*,e.id as parent_id,e.type as parent_type,e.title as parent_title,e.purpose as parent_purpose,e.details as parent_details from activities a join learning_experiences e on e.id=a.experience_id where a.id=$1 and e.classroom_id=$2 and a.status='active'`,[body.activityId,context.id])).rows[0];if(!activity||activity.details?.competency_status!=="confirmed"||!activity.details?.competency_id){send(response,422,{error:"Confirma la competencia de la actividad antes de preparar el criterio."},origin);return;}if(activity.parent_details?.experience_contract===1){const eligibility=criterionRealignmentEligibility({changeKind:body.changeKind,reason:body.note});if(!eligibility.allowed){send(response,422,{error:eligibility.message},origin);return;}}const allowed=await activityAllowedCompetencies({details:activity.parent_details},context);if(!allowed.has(activity.details.competency_id)){send(response,422,{error:"El criterio ya no corresponde a esta actividad."},origin);return;}try{const generated=await generateCriterionEvidence({classroom:context,activity,parent:{id:activity.parent_id,type:activity.parent_type,title:activity.parent_title,purpose:activity.parent_purpose,details:activity.parent_details},note:cleanText(body.note,1000)});const generationId=randomUUID();await pendingAIGenerations.set(generationId,{workflow:"criterion_realignment",classroom_id:context.id,activity_id:activity.id,competency_v4_id:activity.details.competency_id,metadata:safeAnnualGenerationMetadata(generated.internalMetadata),createdAt:Date.now()});send(response,200,{proposal:generated.proposal,generation_id:generationId},origin);}catch{send(response,422,{error:"No pudimos generar un criterio válido."},origin);}return;
     }
     if(request.method==="POST"&&url.pathname==="/api/activity-criteria"){
       const context=await annualPlanningContext();const body=await readJson(request);const pending=await pendingAIGenerations.get(body.generationId);const activity=context&&(await db.query(`select a.*,e.details as parent_details from activities a join learning_experiences e on e.id=a.experience_id where a.id=$1 and e.classroom_id=$2 and a.status='active'`,[body.activityId,context.id])).rows[0];if(!activity||!pending||pending.workflow!=="criterion_realignment"||pending.classroom_id!==context.id||pending.activity_id!==activity.id||pending.competency_v4_id!==activity.details?.competency_id){send(response,422,{error:"El criterio ya no corresponde a esta actividad."},origin);return;}try{const allowed=await activityAllowedCompetencies({details:activity.parent_details},context);if(activity.details?.competency_status!=="confirmed"||!allowed.has(activity.details.competency_id))throw new Error("El criterio ya no corresponde a esta actividad.");validateCriterionEvidenceV4(body.proposal,activity.details.competency_id);const existing=(await db.query(`select id,revision,lineage_id,status from activity_criteria where activity_id=$1 and competency_v4_id=$2 and status='draft'`,[activity.id,activity.details.competency_id])).rows[0];const active=(await db.query(`select id from activity_criteria where activity_id=$1 and competency_v4_id=$2 and status='active'`,[activity.id,activity.details.competency_id])).rows[0];if(active&&!existing)throw new Error("Prepara una nueva versión del criterio confirmado antes de regenerarlo.");const id=existing?.id??randomUUID();let revision=1;if(existing){const expected=expectedRevision(body.expectedRevision);const saved=await versionTransaction(db,`criterion:${existing.lineage_id}`,async(tx)=>{const result=(await tx.query(`update activity_criteria set criterion_text=$1,details=$2::jsonb,generation_metadata=$3::jsonb,updated_at=now() where id=$4 and status='draft' and revision=$5 returning revision`,[body.proposal.criterion_text,JSON.stringify(body.proposal),JSON.stringify(pending.metadata),id,expected])).rows[0];if(!result)throw new VersionConflictError(undefined,(await tx.query(`select revision from activity_criteria where id=$1`,[id])).rows[0]?.revision??null);return result;});revision=Number(saved.revision);}else await db.query(`insert into activity_criteria(id,activity_id,competency_id,competency_v4_id,performance_id,criterion_text,details,generation_metadata,status) values($1,$2,null,$3,null,$4,$5::jsonb,$6::jsonb,'draft')`,[id,activity.id,activity.details.competency_id,body.proposal.criterion_text,JSON.stringify(body.proposal),JSON.stringify(pending.metadata)]);await pendingAIGenerations.delete(body.generationId);send(response,200,{id,status:"draft",revision},origin);}catch(error){send(response,httpStatusForError(error,422),isVersionConflict(error)?conflictPayload(error):{error:publicErrorMessage(error)},origin);}return;

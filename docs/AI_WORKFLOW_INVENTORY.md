@@ -1,6 +1,32 @@
 # Inventario de workflows de IA
 
-Fecha de auditoría: 2026-09-26. Política: `AI_ROUTING_POLICY` v3.0.0.
+## Recorrido vigente — 2026-10-07
+
+Política `AI_ROUTING_POLICY` v4.0.0; ADR 119. Los contratos históricos de abajo conservan lectores y recuperación, pero no describen la experiencia moderna.
+
+| Operación moderna | Ejecución efectiva |
+| --- | --- |
+| Síntesis diagnóstica con afirmaciones trazables | GPT-6.1 Sol high; observación, reporte familiar y comentario docente separados |
+| Conversación anual, conversación de proyecto y conversación de tarjeta nueva | GPT-6 Luna medium; hasta tres respuestas docentes |
+| Mi año | Una generación GPT-6.1 Sol high; quince tramos y validación por código; una reparación condicional medium |
+| Nueva tarjeta | GPT-6.1 Sol medium; una reparación condicional, sin revisión rutinaria |
+| Movimiento, intercambio, retiro, asignación de fechas y cobertura | Código; cero llamadas |
+| Project Master | Una generación GPT-6.1 Sol high que incluye criterios, recorrido y blueprints; una reparación condicional |
+| Preview, Dependents y documento formal del proyecto | Código; no son pasos IA modernos |
+| Actividad desde blueprint confirmado | GPT-6 Luna medium; fallback GPT-6.1 Sol low solo por validación |
+| Taller opcional solicitado | GPT-6 Luna medium directo; fallback GPT-6.1 Sol low solo por validación; sin Workshop Master |
+| Realineación del criterio | GPT-6.1 Sol medium únicamente por cambio confirmado de propósito/acciones infantiles; logística no habilita IA |
+| Assessment Context | Código determinista, con actividades realizadas, criterios y CNEB; sin familia ni calificación |
+| Análisis de evidencia | GPT-6 Luna medium; actuaciones de aula originales, sin reporte familiar ni nota final |
+| Conclusión descriptiva | GPT-6 Luna medium; evidencia original y nivel confirmado por docente; análisis previo auxiliar |
+| Informe familiar | GPT-6 Luna medium; secciones de logro copiadas por código, familia solo en recomendaciones; acuerdos escritos por docente |
+| Consolidado y cierre | Código; se conserva lectura de informes históricos del aula |
+
+Las generaciones anuales modernas usan Responses background con `store:false`. El job guarda el ID únicamente en servidor y recupera la misma respuesta en consultas separadas. Una consulta pendiente no incrementa generaciones ni repite la petición inicial. La expiración requiere un reintento docente explícito con aviso de generación nueva. QA detallado solo registra fixtures ficticias explícitas fuera de Production.
+
+## Inventario histórico — 2026-09-26
+
+Auditoría anterior con política v3.0.0. No usar esta tabla para presupuestar ni activar el recorrido moderno.
 
 | Workflow | Estado | Modelo | Contrato y notas |
 | --- | --- | --- | --- |

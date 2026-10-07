@@ -50,6 +50,38 @@ export function assessmentMasterEntry(master, competencyId) {
   return master?.details?.competencies?.find((item) => item.competency_id === competencyId) ?? null;
 }
 
+/** Planning describes opportunities, never a child's performance. No provider is used. */
+export function buildAssessmentContext({ age, sources, competencyCards = [], snapshot }) {
+  const criteria = sources.criteria ?? [];
+  const ids = [...new Set(criteria.map(row => row.competency_id))].sort();
+  const details = {
+    period_summary: "Organiza lo que se trabajó en este período. Las observaciones reales y la decisión de la profesora permiten evaluar.",
+    competencies: ids.map(id => {
+      const card = competencyCards.find(row => row.id === id);
+      const rows = criteria.filter(row => row.competency_id === id);
+      const texts = key => [...new Set(rows.flatMap(row => Array.isArray(row[key]) ? row[key] : row[key] ? [row[key]] : []))];
+      return {
+        competency_id: id, short_label: sources.competency_labels?.[id]?.short_label ?? card?.official_name ?? id,
+        area: sources.competency_labels?.[id]?.area ?? card?.area ?? "Competencia",
+        assessment_focus: texts("observation_focus").join("; ") || texts("criterion_text").join("; "),
+        criteria_worked: texts("criterion_text"), relevant_evidence: texts("expected_evidence"),
+        patterns_to_consider: ["Comparar qué hizo o dijo el niño en situaciones distintas."],
+        progress_signals: ["Contrastar las observaciones iniciales con las más recientes."],
+        support_signals: ["Distinguir las acciones del niño de los apoyos que recibió."],
+        insufficient_information_rules: ["Sin observaciones no se puede concluir un logro ni asignar C.", "Lo previsto no es lo ocurrido."],
+        contradiction_handling: "Conservar las diferencias entre observaciones y explicar qué falta contrastar.",
+        context_considerations: [], teacher_questions: ["¿Qué falta observar en otra situación?"],
+        prohibited_inferences: ["No usar información familiar como evidencia de aprendizaje.", "No asignar ni sugerir AD/A/B/C."],
+        assessment_guidance: "Organizar solo observaciones reales; la profesora elige la valoración.",
+        curriculum_reference: card ? { id: card.id, age, capacities: card.capacities, standard: card.cycle_ii_standard_ai } : null,
+        activities: (sources.evaluation_map ?? []).filter(row => row.competency_v4_id === id && row.activity_state === "completed"),
+      };
+    }),
+  };
+  validateAssessmentMaster(details, ids);
+  return { id: null, details, source_snapshot: { ...snapshot, construction: "deterministic-v1" }, generation_metadata: { execution: "code", provider_calls: 0 } };
+}
+
 export function buildAssessmentMasterInput({ age, competencyIds, classroomContext, calendar, sources }) {
   return { workflow: "assessment_master", age,
     teacher_request: "Construye un marco reutilizable para interpretar las evidencias del período. No analices estudiantes ni asignes niveles.",

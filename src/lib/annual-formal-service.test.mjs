@@ -85,7 +85,7 @@ test("Sol desarrolla solo el preplan confirmado de su docente, respetando las do
       createProvider: () => ({ generate: async (value) => { calls += 1; request = value; return { output: formal }; } }),
       loadSkill: async () => "Skill de prueba",
     });
-    assert.equal(request.execution_plan.model, "gpt-6-sol");
+    assert.equal(request.execution_plan.model, "gpt-6.1-sol");
     assert.equal(request.execution_plan.reasoning_effort, "low");
     assert.equal(request.output_schema.properties.project_details.minItems, 12);
     assert.equal(request.output_schema.properties.organization_criteria.maxItems, 4);

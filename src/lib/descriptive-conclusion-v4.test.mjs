@@ -136,7 +136,7 @@ test("provider recibe assessment y evidencias seguras sin identidad, foto ni met
   assert.equal(generated.status, 200);
   const payload = JSON.stringify(f.captures[0].input);
   assert.match(payload, /current_student/);
-  assert.match(payload, /teacher_confirmed_findings/);
+  assert.match(payload, /previous_ai_analysis_auxiliary/);
   assert.doesNotMatch(payload, /\b(?:Ana|Anita|Pérez)\b|00000000|media_path|photo\.jpg|base64|generation_metadata|source_evidence_ids|source_assessment_snapshot|fingerprint|secret/);
   assert.equal(f.captures[0].input.multiple_evidence_records.length, 2);
   assert.equal(f.captures[0].input.prior_conclusion, "[estudiante] participó antes.");

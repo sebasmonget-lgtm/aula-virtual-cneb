@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
-import { resolveAIExecutionPlan } from "./ai-execution-router-v4.mjs";
+import { resolveAIExecutionPlan, resolveAIFallbackPlan } from "./ai-execution-router-v4.mjs";
+import { neutralizeAssessmentText } from "./assessment-v4-service.mjs";
 import { createAIProviderForPlan } from "./ai-provider-factory.mjs";
 import { buildProviderRequest } from "./ai-generation-v4.mjs";
 import { selectWorkshopSheet, availableSheets, publicSheet } from "./workshop-sheet-catalog.mjs";
@@ -144,6 +145,31 @@ export async function generateWorkshopDay({ classroom, project, master, itemInde
   const result = await createProvider(plan).generate(buildProviderRequest("workshop", bundle, plan, WORKSHOP_DAY_SCHEMA));
   return { proposal: validateWorkshopDay(result.output, item), metadata: { workflow: "workshop", model: plan.model,
     response_id: result.provider_metadata?.response_id ?? null, usage: result.provider_metadata?.usage ?? null } };
+}
+
+/** One requested workshop. No workshop master, previous day or automatic generation. */
+export async function generateDirectWorkshop({ age, activity, materials = [], preference = "", names = [], createProvider = createAIProviderForPlan }) {
+  const clean = value => neutralizeAssessmentText(String(value ?? ""), names);
+  const bundle = { age, activity: { title: clean(activity.title), purpose: clean(activity.purpose),
+    child_actions: clean(activity.details.child_actions), competency_id: activity.details.competency_id },
+    materials: materials.map(clean), teacher_preference: clean(preference),
+    task: "Propón UN taller opcional para este día. Conserva la competencia recibida. Explica con palabras sencillas qué harán los niños, cómo acompañarlos, materiales, qué observar y cierre. No inventes observaciones ni logros. La ficha no es necesaria: sheet_id debe ser null. Elige un tipo de taller de gráfico-plástico, psicomotricidad, ciencia, matemática, lectura y escritura, juego dramático o música." };
+  const validate = output => {
+    if (!types.includes(output?.workshop_type)) throw new Error("El tipo de taller no es válido.");
+    validateWorkshopDay(output, { competency_id: activity.details.competency_id, workshop_type: output.workshop_type, sheet_id: null });
+    if (Object.values(output).flat().some(value => typeof value === "string" && clean(value) !== value)) throw new Error("El taller contiene información privada.");
+    return output;
+  };
+  let plan = resolveAIExecutionPlan({ workflow: "workshop" });
+  let result = await createProvider(plan).generate(buildProviderRequest("workshop", bundle, plan, WORKSHOP_DAY_SCHEMA));
+  let fallback = false;
+  try { validate(result.output); } catch {
+    plan = resolveAIFallbackPlan(plan); fallback = true;
+    result = await createProvider(plan).generate(buildProviderRequest("workshop", bundle, plan, WORKSHOP_DAY_SCHEMA));
+    validate(result.output);
+  }
+  return { proposal: result.output, metadata: { workflow: "workshop", model: plan.model,
+    reasoning_effort: plan.reasoning_effort, fallback_used: fallback, usage: result.provider_metadata?.usage } };
 }
 
 export async function confirmWorkshopMaster(db, { teacherId, projectId, masterId, expectedRevision, age, applicableIds }) {

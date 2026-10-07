@@ -1,4 +1,5 @@
 "use client";
+import { DirectWorkshopPanel } from "./direct-workshop-panel";
 import { newAyniFeatureEnabled } from "@/src/lib/new-ayni-feature-flag.mjs";
 
 import { apiFetch } from "@/src/lib/ayni-api-fetch";
@@ -447,7 +448,7 @@ export function ParentActivityGenerator({ onConfirmed, onGoToday, onRecordEviden
 </label>)}<p className="mt-2 text-sm">
 <b>Ficha:</b> {workshopProposal.sheet_id ? "Seleccionada en el maestro de talleres" : "Sin ficha imprimible"}</p>{!readOnly && !draftId && <Button variant="outline" onClick={() => setWorkshopProposal(null)}>Preparar solo la actividad</Button>}</div>}
 </section>}
-{parent.status === "active" && Boolean(parent.details.activity_route?.length) && <details className="rounded-xl border bg-[#f8fbff] p-4"><summary className="cursor-pointer font-bold text-[#07576c]">Talleres opcionales de este proyecto</summary><p className="mt-2 text-sm text-[#526b87]">Puedes decidirlos después de preparar las actividades. Cada taller queda vinculado a este proyecto.</p><div className="mt-3"><WorkshopMasterPanel projectId={parent.id}/></div></details>}
+{parent.status === "active" && !newAyniFeatureEnabled() && Boolean(parent.details.activity_route?.length) && <details className="rounded-xl border bg-[#f8fbff] p-4"><summary className="cursor-pointer font-bold text-[#07576c]">Talleres opcionales de este proyecto</summary><p className="mt-2 text-sm text-[#526b87]">Puedes decidirlos después de preparar las actividades. Cada taller queda vinculado a este proyecto.</p><div className="mt-3"><WorkshopMasterPanel projectId={parent.id}/></div></details>}
 <section>
 <h2 className="font-bold">Actividades de esta experiencia</h2>{activitiesLoadError && <Button variant="outline" onClick={() => { if (parent)
         void refreshActivities(parent).then(() => setMessage("")).catch(() => { setMessage("No se pudieron cargar las actividades."); setMessageTone("error"); }); }}>Reintentar carga de actividades</Button>}
@@ -458,6 +459,7 @@ export function ParentActivityGenerator({ onConfirmed, onGoToday, onRecordEviden
 <Button variant="outline" onClick={() => openActivity(item)}>{item.status === "draft" ? "Continuar borrador" : "Ver actividad"}</Button>{item.status === "active" && !item.workshop && parent.status === "active" && <Button className="ml-2" variant="outline" disabled={Boolean(operation)} onClick={() => void copyActivity(item)}>Preparar nueva versión</Button>}
 {item.status === "archived" && item.future_schedules?.length > 0 && <p className="mt-2 rounded-lg bg-amber-50 p-2 text-sm">Esta versión sigue programada en {item.future_schedules.length} bloque(s) futuros. Puedes mantenerla o cambiar cada bloque después de confirmar la versión nueva.</p>}
 {item.status === "active" && item.supersedes_activity_id && activities.find((source) => source.id === item.supersedes_activity_id)?.future_schedules?.map((entry) => <Button key={entry.id} className="ml-2 mt-2" variant="outline" disabled={Boolean(operation)} onClick={() => void switchFutureSchedule(item, entry.id)}>Usar V{item.version} el {entry.scheduled_on.slice(0, 10)}</Button>)}
+{newAyniFeatureEnabled() && item.status === "active" && !item.workshop && <DirectWorkshopPanel activityId={item.id} expectedRevision={item.revision}/>}
 {item.status === "active" && item.details.competency_status === "confirmed" && item.details.competency_id && <div id={`criterion-${item.id}`}>{<CriterionEvidenceGenerator activityId={item.id} activityTitle={item.title} activityDate={item.occurs_on} competencyName={nameOf(item.details.competency_id)} onGoToday={onGoToday} onRecordEvidence={onRecordEvidence}/>}</div>}</article>)}</section>
 </>}</section>;
 }

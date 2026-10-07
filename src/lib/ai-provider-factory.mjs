@@ -23,6 +23,9 @@ export function createAIProviderForPlan(executionPlan, options = {}) {
       client: options.client,
       timeoutMs: options.timeoutMs,
       model: executionPlan.model,
+      background: options.background,
+      resumeResponseId: options.resumeResponseId,
+      onResponseStarted: options.onResponseStarted,
     });
   }
   throw new AIProviderFactoryError("provider_not_implemented", { provider: executionPlan.provider });

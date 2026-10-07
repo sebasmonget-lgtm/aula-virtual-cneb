@@ -31,6 +31,7 @@ async function fixture({ oralStatus = "active", mathStatus = "active", oralInfor
     create table evaluation_periods(id uuid primary key,school_year_id uuid not null references school_years(id),starts_on date not null,ends_on date not null,label text);
     create table students(id uuid primary key,classroom_id uuid not null references classrooms(id),status text not null,first_name text,last_name text,preferred_name text);
     create table competency_descriptive_conclusions(id uuid primary key,student_id uuid,competency_v4_id text,period_start date,period_end date,version integer,details jsonb,status text,teacher_confirmed_at timestamptz,updated_at timestamptz default now());`);
+  await db.exec(`create table student_family_interviews(id uuid primary key,classroom_id uuid,student_id uuid,version integer,details jsonb,status text);`);
   await db.exec(await readFile(new URL("../../local-db/migrations/0022_family_reports.sql", import.meta.url), "utf8"));
   await db.query(`insert into school_years values($1,$2,'2026-03-01','2026-12-20')`, [schoolYearId,teacherId]);
   await db.query(`insert into age_grades values($1,5)`, [ageGradeId]);
@@ -311,4 +312,17 @@ test("Evaluar comparte período y aula con el informe familiar y Documentos iden
   assert.match(generator,/periodId:period\?\.id/);
   assert.match(generator,/Descargar Word/);
   assert.match(documents,/Informe histórico sin período formal/);
+});
+
+
+test("una entrevista nueva invalida recomendaciones pendientes, sin alterar conclusiones",async()=>{
+ const f=await fixture();
+ try{
+  const before=await f.db.query("select details from competency_descriptive_conclusions where id=$1",[oralId]);
+  const generated=await f.generate();assert.equal(generated.status,200);
+  await f.db.query("insert into student_family_interviews(id,classroom_id,student_id,version,details,status) values($1,$2,$3,1,$4::jsonb,'confirmed')",[mathId,classroomId,studentId,JSON.stringify({interests:"Plantas",resources:"Sin compras"})]);
+  const stale=await f.save(generated);assert.equal(stale.status,422);assert.match(stale.body.error,/entrevista familiar/);
+  const refreshed=await f.generate();assert.equal(refreshed.status,200);assert.equal((await f.save(refreshed)).status,200);
+  assert.deepEqual((await f.db.query("select details from competency_descriptive_conclusions where id=$1",[oralId])).rows,before.rows);
+ }finally{await f.db.close();}
 });

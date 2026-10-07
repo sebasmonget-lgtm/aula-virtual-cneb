@@ -70,7 +70,7 @@ test("versiona, confirma, detecta cambios y aísla dos docentes y aulas",async()
   const f=await fixture();
   const generated=await f.callA("POST","/api/ai/assessment-masters/generate",{periodId:periodA});
   assert.equal(generated.status,200,JSON.stringify(generated.body));
-  assert.deepEqual(f.providerOptions,[{timeoutMs:180000}],"El marco multicompetencia requiere el plazo de planificación, no el de clasificación.");
+  assert.deepEqual(f.providerOptions,[],"El contexto se calcula sin proveedor IA.");
   assert.equal((await f.callA("POST","/api/assessment-masters",{periodId:periodA,proposal:generationSafe(generated),generationId:generated.body.generation_id})).status,200);
   const draft=(await f.callA("GET",`/api/assessment-masters?periodId=${periodA}`)).body.current;
   assert.equal(draft.status,"draft");

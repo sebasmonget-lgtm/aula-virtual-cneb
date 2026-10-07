@@ -30,9 +30,9 @@ test("inicio tardío conserva quince tramos y prepara solo fechas restantes",asy
     assert.ok(plan.proposed_experiences.every(row=>row.instructional_dates.every(date=>date>=today)));
     assert.equal(plan.resolved_calendar.projects.filter(slot=>slot.occupancy==="past_unrecorded").length,15-plan.proposed_experiences.length);
     assert.equal(validateAnnualJourney(plan,curriculum,{confirmation:true}),plan);
-    assert.equal(calls.length,2);
+    assert.equal(calls.length,1);
     assert.equal(calls[0].ai_context_bundle.calendar.length,plan.proposed_experiences.length);
-    assert.ok(!JSON.stringify(calls[1]).includes('context_items'));
+    assert.ok(!JSON.stringify(calls[0]).includes('context_items'));
     const text=JSON.stringify(annualJourneyDocumentSections(plan));
     assert.match(text,/Familia/);assert.match(text,/Período no precisado/);assert.match(text,/Pasado sin registro/);
     const slot=plan.resolved_calendar.projects.find(slot=>slot.proposal_id);

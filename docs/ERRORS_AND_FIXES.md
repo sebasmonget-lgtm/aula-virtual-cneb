@@ -1589,3 +1589,36 @@ Durante integración, dashboard usó today antes de declararlo; esquema de conve
 La captura fullPage desde un scroll intermedio situaba la cabecera fija dentro de la página. Se recapturó desde el inicio y se abrió cada archivo antes de revisión. El revisor detectó propósito fuera del viewport móvil y títulos redundantes; jerarquía corregida y dos fixes puntuados ship. No confundir esos fixes con validación visual de todo el producto.
 
 El smoke del primer Preview READY devolvió 403 con su propio Origin. Causa: la lista de orígenes solo incluía el alias fijo de QA. Solución: admitir además el hostname exacto VERCEL_URL exclusivamente cuando VERCEL=1; validar dominio HTTPS vercel.app, sin wildcard ni Host/X-Forwarded-Host del cliente. Ocho pruebas de origen/Auth/HTTP PASS: origen propio público 200, privado 401 y otro dominio con headers manipulados 403. Prevención: el smoke debe enviar el Origin del URL publicado, no sustituirlo por el alias anterior. Se vuelve a publicar desde commit limpio y se exige smoke remoto antes de entrega.
+# Correcciones del paquete maestro — 2026-10-07
+
+## Procedencia de conversaciones y recuperación de citas
+
+- Síntoma: avanzar a Dependents descartaba `project_context`; el provider neutralizaba text pero podía conservar support_text original. Recargar la síntesis no mostraba sus citas guardadas.
+- Causa raíz: reconstrucción de details sin copiar la conversación, expansión indiscriminada del mensaje y proyección pública limitada al texto docente.
+- Solución validada: conservar conversación al avanzar, seleccionar campos del mensaje y neutralizar también support_text; proyectar la propuesta IA validada por separado y recuperarla en el resumen. Refresh Preview moderno usa código.
+- Evidencia: HTTP con un turno Luna simulado, replay sin nueva llamada y source_turn/support_text conservados; pruebas de privacidad del bundle y límite de tres turnos; recuperación del snapshot de síntesis sin sobrescribir texto docente; conversación Luna real adicional PASS.
+- Prevención: separar datos guardados para la docente de campos enviados al modelo y conservar la procedencia en cada transición del trabajo durable.
+
+## Preparación anual larga y recuperación del proveedor
+
+- Síntoma: el escenario válido de quince propuestas con GPT-6.1 Sol high agotó el timeout síncrono de 180 segundos sin devolver usage.
+- Causa raíz: una respuesta high extensa vivía dentro de una única petición HTTP. Un checkpoint de salida completada no permitía recuperar una respuesta todavía en curso.
+- Solución validada: Responses background con `store:false`, guardar ID antes de devolver pendiente y recuperar ese mismo ID en peticiones cortas con espera. Público recibe solo progreso; ownership, revisión, fingerprint y lease siguen vigentes. La expiración muestra aviso y exige reintento docente explícito antes de crear una respuesta nueva.
+- Evidencia: proveedor create/retrieve y expiración sin reintento automático; checkpoint con una sola tentativa; ruta PGlite con recarga, consulta temprana, identidad ajena y finalización. Muestra real: quince propuestas, una generación, 56 consultas, PASS en 319466 ms.
+- Prevención: no reducir effort ni dividir el año para ocultar la latencia; no repetir create al recargar ni contabilizar polls como generaciones. Costes de timeouts sin usage se consideran desconocidos.
+
+## Taller opcional dentro de un proyecto confirmado
+
+- Síntoma: actualizar la lista JSON del contenedor confirmado infringía su protección de inmutabilidad.
+- Causa raíz: se trató el contenedor activo como una colección mutable de propuestas, aunque representa una versión confirmada.
+- Solución validada: contenedor estructural `direct-workshops-v1` con items vacíos inmutables; cada taller solicitado y criterio se insertan por separado con enlace a la actividad principal. Lock de aula, revisión y comprobación de duplicado/historia antes de confirmar.
+- Evidencia: integración PGlite y ruta funcional ficticia generar → revisar → confirmar; duplicado, actividad ajena y cambio logístico no agregan llamadas al proveedor. Proyectos confirmados no generan talleres automáticamente.
+- Prevención: no actualizar padres confirmados ni reutilizar Workshop Master como requisito del recorrido moderno.
+
+## Recomendación familiar pendiente tras cambiar una entrevista
+
+- Síntoma: el fingerprint escolar por sí solo podía permitir reutilizar recomendaciones basadas en un contexto familiar anterior.
+- Causa raíz: el contexto familiar nuevo pertenecía a una autoridad distinta y no estaba incorporado a la clave de recomendación.
+- Solución validada: fingerprint separado de fuente/tipo/versión/detalles confirmado en generación, batch y confirmación. El cambio invalida únicamente la recomendación pendiente; conclusiones y niveles escolares permanecen iguales.
+- Evidencia: pruebas de informe y batch, incluyendo confirmación rechazada después de cambiar entrevista.
+- Prevención: conservar las fuentes familiares fuera del análisis y conclusión; no convertirlas en evidencia escolar ni acuerdos.

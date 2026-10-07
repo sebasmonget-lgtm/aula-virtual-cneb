@@ -39,7 +39,7 @@ type Plan = { id: string; status: string; revision: number; version: number; pro
 type Plans = { draft: Plan | null; active: Plan | null; archived: Plan[] };
 type Start = { today?:string; snapshot: Snapshot; curriculum: { id: string; name: string }[] };
 type Job = { id: string; draft_id: string; status: "queued" | "running" | "failed" | "interrupted" | "succeeded";
-  stage: string; completed_stages: string[]; updated_at: string; error?: string | null };
+  stage: string; completed_stages: string[]; updated_at: string; error?: string | null; poll_after_ms?: number };
 const api = async <T,>(path: string, value?: unknown): Promise<T> => {
   const response = await apiFetch(`${localDatabaseApiUrl}${path}`, value === undefined ? undefined : {
     method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(value) });
@@ -134,7 +134,7 @@ export function AnnualJourneyWorkspace({ onConfirmed, onGoDiagnostic, onDevelop,
     setBusy("generate"); setError(""); setJob({ ...value, status: "running" });
     try {
       let result = await api<Job>(`/api/annual-journey/jobs/${value.id}/run`, {});
-      while(result.status === "queued") { setJob(result);result = await api<Job>(`/api/annual-journey/jobs/${value.id}/run`, {}); }
+      while(result.status === "queued") { setJob(result);if(result.poll_after_ms)await new Promise(resolve=>setTimeout(resolve,result.poll_after_ms));result = await api<Job>(`/api/annual-journey/jobs/${value.id}/run`, {}); }
       if (result.status === "succeeded") { await reload(result.draft_id); setPreparing(false); setNotice("Mi año está listo para revisar."); }
       setJob(result);
     } catch {
@@ -257,7 +257,7 @@ export function AnnualJourneyWorkspace({ onConfirmed, onGoDiagnostic, onDevelop,
           : selected.status === "active" ? <Button disabled={disabled || !!plans?.draft} onClick={() => void mutate("copy")}>Revisar mi año con Ayni</Button> : null}
       </div>
       {editable && !!proposal.evidence_interpretations?.length && <div className="rounded-xl border border-[#d6e5ef] p-4"><p>Revisa las interpretaciones y sus actuaciones en «El año completo» antes de confirmar; pueden orientar los apoyos previstos.</p><label className="mt-3 flex min-h-11 items-center gap-3"><input type="checkbox" checked={interpretationsReviewed} onChange={(e) => setInterpretationsReviewed(e.target.checked)} />Revisé estas interpretaciones para esta versión del año.</label></div>}
-      {editable && <div className="flex flex-wrap items-center gap-3"><Button variant="outline" disabled={disabled} onClick={()=>changeScope(null)}><MessageCircle className="size-4"/>Ajustar Mi año con Ayni{globalChanges.length ? " · "+globalChanges.length+" pendientes" : ""}</Button><Button variant="ghost" disabled={disabled} onClick={()=>void mutate("refresh")}>Actualizar con nuevas observaciones</Button>{proposal.editor_version!==3 && <Button variant="outline" disabled={disabled} onClick={()=>void mutate("upgrade")}>Organizar borrador en 15 tramos</Button>}</div>}
+      {editable && proposal.editor_version!==3 && <div className="flex flex-wrap items-center gap-3"><Button variant="outline" disabled={disabled} onClick={()=>changeScope(null)}><MessageCircle className="size-4"/>Ajustar Mi año con Ayni{globalChanges.length ? " · "+globalChanges.length+" pendientes" : ""}</Button><Button variant="ghost" disabled={disabled} onClick={()=>void mutate("refresh")}>Actualizar con nuevas observaciones</Button>{proposal.editor_version!==3 && <Button variant="outline" disabled={disabled} onClick={()=>void mutate("upgrade")}>Organizar borrador en 15 tramos</Button>}</div>}
       {proposal.editor_version!==3 && <p className="rounded-lg bg-slate-100 p-3 text-sm text-[#3d5874]">Estás viendo una versión anterior de {proposal.proposed_experiences.length} propuestas, con sus fechas conservadas. Organizar un borrador compatible en 15 tramos activa Biblioteca, matriz curricular y arrastre; el contenido pedagógico se conserva. Si contiene trabajo protegido, usa un año QA separado.</p>}
       {proposal.editor_version===3 && !proposal.experience_context && proposal.proposed_experiences.length!==15 && <p role="status" className="rounded-lg bg-amber-50 p-3 text-sm text-amber-950">Hay {15-proposal.proposed_experiences.length} tramos vacíos. Coloca una propuesta en cada uno antes de confirmar.</p>}
       {proposal.editor_version===3 && annualCoverage(proposal).some((c:{total:number;everyday:boolean})=>!c.total&&!c.everyday) && <p role="alert" className="rounded-lg bg-amber-50 p-3 text-sm text-amber-950">Hay competencias sin oportunidad anual ni cotidiana. Revisa la matriz antes de confirmar. {proposal.experience_context?"Al confirmar este año parcial aceptas las oportunidades futuras indicadas; no se presume qué se trabajó antes.":""}</p>}

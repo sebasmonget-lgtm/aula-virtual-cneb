@@ -320,6 +320,7 @@ export async function loadDiagnosticAssessmentWorkspace(db, teacherId) {
   reviews: reviews.map(publicReview), student_reviews: studentReviews.map((row) => publicStudentReview(row,
     sameDiagnosticSources(row.source_snapshot, sourceSnapshots.get(row.student_id)))),
   group_reviews: groupReviews.map((row) => ({ id: row.id, version: row.version, status: row.status, details: row.details,
+    ai_suggestion: row.ai_snapshot?.output ?? null,
     teacher_confirmed_at: row.teacher_confirmed_at,
     is_current: row.source_snapshot?.some?.((source) => source.id === "group-sources:v2")
       ? sameDiagnosticSources(row.source_snapshot, optionalGroupSnapshot)
@@ -510,29 +511,40 @@ export async function diagnosticGroupProposalSources(db, teacherId, draftId) {
   const competencyOptions = await applicableDiagnosticCompetencies(classroom);
   const currentSources = new Map(await Promise.all(students.map(async (student) =>
     [student.id, await studentReviewSources(db, classroom.id, student.id)])));
-  const childAliases = new Map(students.map((student, index) => [student.id, `niño_${index + 1}`]));
+  const childAliases = new Map(students.map((student, index) => [student.id, `child_${index + 1}`]));
   const perChildBudget = Math.floor(24_000 / Math.max(1, students.length));
   const safeComments = comments.filter((row) => sameDiagnosticSources(row.source_snapshot, currentSources.get(row.student_id)?.snapshot))
-    .map((row) => ({ child: childAliases.get(row.student_id), information_status: row.details.information_status,
+    .map((row) => ({ child: childAliases.get(row.student_id), source_id: `${childAliases.get(row.student_id)}_comment`, information_status: row.details.information_status,
       comment: anonymousDecisionText(row.details.comment_text, names)?.slice(0, Math.min(3000, perChildBudget)) })).filter((row) => row.comment);
   // Group by a stable neutral alias so many records of one child do not imply a classroom pattern.
-  // No student IDs, family text, files or unvalidated competence suggestions enter this projection.
+  // Only anonymous text and explicit source types enter; files and identities are excluded.
   const allowed = new Set(competencyOptions.map((card) => card.id));
   const observed = students.map((student) => {
     const rows = currentSources.get(student.id).rows.map((row) => ({ row, text: anonymousDecisionText(row.observation_text, names) }))
       .filter((item) => item.text).slice(-6);
     const textLimit = Math.min(1200, Math.floor(perChildBudget / Math.max(1, rows.length)));
-    return { child: childAliases.get(student.id), notes: rows.map(({ row, text }) => ({
+    return { child: childAliases.get(student.id), notes: rows.map(({ row, text }, index) => ({
+      source_id: `${childAliases.get(student.id)}_observation_${index + 1}`,
       text: text.slice(0, textLimit), truncated: text.length > textLimit,
+      source_type: "direct_observation", observed_at: row.observed_at,
+      context: anonymousDecisionText(row.context_label ?? row.aspect_id ?? "", names),
       observation_status: row.observation_status,
       competency_ids: (row.competency_v4_ids?.length ? row.competency_v4_ids : [row.competency_v4_id].filter(Boolean))
         .filter((id) => allowed.has(id)),
     })).filter((row) => row.text) };
   }).filter((row) => row.notes.length);
-  if (!safeComments.length && !observed.length)
+  const neutralFamily = value => typeof value === "string" ? anonymousDecisionText(value, names)?.slice(0, 500)
+    : Array.isArray(value) ? value.map(neutralFamily) : value && typeof value === "object"
+      ? Object.fromEntries(Object.entries(value).map(([key, item]) => [key, neutralFamily(item)])) : value;
+  const family = students.flatMap(student => {
+    const interview = currentSources.get(student.id)?.interview;
+    return interview ? [{ child: childAliases.get(student.id), source_id: `${childAliases.get(student.id)}_family_v${interview.version}`, source_type: "family_reported_context",
+      version: interview.version, details: neutralFamily(safeFamilyContext(interview.details)) }] : [];
+  });
+  if (!safeComments.length && !observed.length && !family.length)
     fail("insufficient_information", "Aún no hay información suficiente para sugerir un resumen. Puedes escribirlo o dictarlo.");
   return { age: classroom.age_years, student_count: students.length, competency_options: competencyOptions,
-    comments: safeComments, observed_records: observed,
+    comments: safeComments.map(row => ({ ...row, source_type: "teacher_interpretation" })), observed_records: observed, family_reported_context: family,
     known_names: names, source_snapshot: sourceSnapshot };
 }
 

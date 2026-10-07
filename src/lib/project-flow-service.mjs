@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { recordAIQAResult } from "./ai-qa-trace.mjs";
 import { resolveAIExecutionPlan } from "./ai-execution-router-v4.mjs";
 import { createAIProviderForPlan } from "./ai-provider-factory.mjs";
 import { buildProviderRequest } from "./ai-generation-v4.mjs";
@@ -223,7 +224,7 @@ async function call({ workflow, task, context, outputSchema, resolvePlan, create
   const selectedIds = context.confirmed_decisions?.competency_ids
     ?? context.confirmed_project_master?.decisions?.competency_ids
     ?? context.annual_proposal?.primary_competency_ids ?? [];
-  const didacticKnowledge = await focusedKnowledgeForDirectWorkflow({ workflow, age: context.age,
+  const didacticKnowledge = await focusedKnowledgeForDirectWorkflow({ workflow: ["project_master", "annual_journey_repair"].includes(workflow) ? "project" : workflow, age: context.age,
     competencyIds: selectedIds, request: context.confirmed_decisions?.purpose ?? context.annual_proposal?.purpose
       ?? context.teacher_request ?? context.group_context ?? "",
     castellanoL2Applicable: context.castellano_l2_applicable === true,
@@ -267,6 +268,34 @@ export async function generateProjectDependents({ context, decisions, providerDe
 export async function generateProjectMaster({ context, decisions, providerDecisions = decisions, dependents, availableDates,
   workflow = "project", resolvePlan = resolveAIExecutionPlan, createProvider = createAIProviderForPlan,
   loadSkill = loadLearningExperienceSkill }) {
+  if (context.modern) {
+    const outputSchema = { ...PROJECT_MASTER_SCHEMA, id: "project-single-master-v3",
+      required: [...PROJECT_MASTER_SCHEMA.required, ...PROJECT_DEPENDENTS_SCHEMA.required],
+      properties: { ...PROJECT_MASTER_SCHEMA.properties, ...PROJECT_DEPENDENTS_SCHEMA.properties } };
+    const requestContext = { ...context, confirmed_decisions: providerDecisions,
+      available_instructional_dates: availableDates, instructional_dates: availableDates,
+      task: `Crea el proyecto completo en una sola respuesta: fundamento, preguntas orientadoras, recorrido flexible, un criterio general con evidencia esperada por competencia, cierre y recursos. Incluye exactamente una actividad por cada una de las ${availableDates.length} fechas recibidas. No cambies competencias, fechas ni decisiones docentes. Usa acciones concretas y palabras sencillas. No inventes observaciones ni logros.` };
+    const validate = output => {
+      const generatedDependents = validateProjectDependents(Object.fromEntries(PROJECT_DEPENDENTS_SCHEMA.required.map(key => [key, output[key]])), decisions.competency_ids);
+      return { output: validateProjectMaster(output, decisions, generatedDependents, availableDates), dependents: generatedDependents };
+    };
+    const result = await call({ workflow: "project_master", task: "generation", resolvePlan, createProvider, loadSkill,
+      outputSchema, context: requestContext });
+    try {
+      const validated = { ...result, ...validate(result.output) };
+      await recordAIQAResult("project_master", validated, { validators: ["per_competency_criteria", "one_blueprint_per_date", "confirmed_decisions"], downstream: ["activity", "assessment_context"] });
+      return validated;
+    }
+    catch (error) {
+      if (!(error instanceof ProjectFlowError)) throw error;
+      const repair = await call({ workflow: "annual_journey_repair", task: "generation", resolvePlan, createProvider, loadSkill,
+        outputSchema, context: { ...requestContext, invalid_output: result.output, validation_error: error.message,
+          task: "Corrige únicamente el error indicado. Conserva las fechas, competencias y decisiones confirmadas." } });
+      const validated = { ...repair, ...validate(repair.output), metadata: { ...repair.metadata, repair_used: true, primary: result.metadata } };
+      await recordAIQAResult("annual_journey_repair", validated, { validators: ["per_competency_criteria", "one_blueprint_per_date", "confirmed_decisions"], downstream: ["activity", "assessment_context"] });
+      return validated;
+    }
+  }
   validateProjectDependents(dependents, decisions.competency_ids);
   const result = await call({ workflow, task: "generation", resolvePlan, createProvider, loadSkill,
     outputSchema: PROJECT_MASTER_SCHEMA, context: { ...context, confirmed_decisions: providerDecisions,
@@ -280,6 +309,16 @@ export async function generateProjectMaster({ context, decisions, providerDecisi
 
 export async function generateProjectFormal({ context, workflow = "project", resolvePlan = resolveAIExecutionPlan,
   createProvider = createAIProviderForPlan, loadSkill = loadLearningExperienceSkill }) {
+  if (context.confirmed_project_master?.experience_contract === 1 || context.modern) {
+    const details = context.confirmed_project_master;
+    return { output: { situation: details.decisions?.context_summary || "Experiencia propuesta para el aula.",
+      foundation: details.project_master?.foundation || details.rationale,
+      methodology: (details.activity_route ?? []).map(row => row.pedagogical_intention).filter(Boolean).join(" ") || "Explorar, jugar y conversar con acompañamiento docente.",
+      assessment_followup: [...new Set((details.activity_route ?? []).map(row => row.evaluation_criterion).filter(Boolean))].join(" ") || "Registrar lo que los niños hacen o dicen.",
+      family_collaboration: "La participación de las familias se acuerda con la profesora.",
+      diversity_support: "Ajustar los apoyos según las observaciones de la profesora.",
+      closing: details.project_master?.closing_description || "Compartir las experiencias del proyecto." }, metadata: { execution: "code", provider_calls: 0 } };
+  }
   const result = await call({ workflow, task: "document_development", resolvePlan, createProvider, loadSkill,
     outputSchema: PROJECT_FORMAL_SCHEMA, context: { ...context,
       task: "Redacta las secciones formales según el Plan Maestro CONFIRMADO. No agregues actividades, competencias, hechos realizados ni decisiones nuevas. El Word lo llenará código desde estos textos y la ruta confirmada." } });

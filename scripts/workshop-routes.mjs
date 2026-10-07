@@ -57,6 +57,7 @@ export function createWorkshopRouteHandler({ db, teacherId, readJson, send }) {
         response.end(image); return true;
       }
       if (request.method === "POST" && url.pathname === "/api/workshops/master/generate") {
+        if (project.details?.experience_contract === 1) throw new Error("Añade un taller desde la actividad del día que elijas.");
         if (project.status !== "active") throw new Error("Confirma primero el proyecto.");
         if (!["project-master-v1", "project-master-v2"].includes(project.details.flow_version))
           throw new Error("Este proyecto requiere un mapa de actividades confirmado.");

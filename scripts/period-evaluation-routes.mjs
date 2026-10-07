@@ -18,10 +18,10 @@ import { loadDiagnosticCoverageRecords, projectPedagogicalCoverage } from "../sr
 import { assessmentState, observeTodaySuggestions } from "../src/lib/evidence-coverage.mjs";
 import { AYNI_HEURISTICS } from "../src/lib/ayni-heuristics.mjs";
 import { VersionConflictError, conflictPayload, httpStatusForError, isVersionConflict, publicErrorMessage, versionTransaction } from "../src/lib/version-integrity.mjs";
-import { assessmentMasterEntry } from "../src/lib/assessment-master-service.mjs";
-import { loadAssessmentMasterSources } from "./assessment-master-routes.mjs";
+import { assessmentMasterEntry, buildAssessmentContext } from "../src/lib/assessment-master-service.mjs";
+import { loadAssessmentMasterSources, loadComputedAssessmentContext } from "./assessment-master-routes.mjs";
 import { getCurrentClassroomContext, publicClassroomContext } from "../src/lib/classroom-context-service.mjs";
-import { familyObservationHint, loadConfirmedFamilyContext, projectFamilyAssessmentContext } from "../src/lib/family-interview-projection.mjs";
+import { familyObservationHint } from "../src/lib/family-interview-projection.mjs";
 import { buildClassroomPeriodReportInput, buildGenericAssessmentWorkbook, buildPeriodStatistics, classroomReportFingerprint,
   isTeacherAchievementLevel, SIAGIE_EXPORT_STATUS, stableCompetencyLabel, syncPeriodEvaluationMap, validateClassroomPeriodReport } from "../src/lib/period-assessment-closure-service.mjs";
 
@@ -315,7 +315,6 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
         const studentCount = data.model.students.filter((student) => data.model.scope.length && data.model.scope.every((id) => resolved.some((row) => row.student_id === student.id && row.competency_id === id))).length;
         const planned=await plannedCompetencyIds(data.classroom,data.period);
         const statistics=buildPeriodStatistics({rows,mapEntries:data.evaluationMap.entries,competencyMeta:data.labels,studentCount:data.model.students.length,plannedCompetencyIds:planned});
-        const master=(await db.query(`select id,status,source_snapshot from assessment_masters where classroom_id=$1 and evaluation_period_id=$2 and status='active'`,[data.classroom.id,data.period.id])).rows[0];
         const featureRelations=(await db.query(`select to_regclass('family_reports') is not null as family_ready,to_regclass('classroom_period_reports') is not null as report_ready`)).rows[0];
         const reports=featureRelations.family_ready?Number((await db.query(`select count(distinct fr.student_id)::int as total from family_reports fr join students s on s.id=fr.student_id where s.classroom_id=$1 and fr.evaluation_period_id=$2 and fr.status='active'`,[data.classroom.id,data.period.id])).rows[0]?.total??0):0;
         const classReport=featureRelations.report_ready?(await db.query(`select id,status,source_fingerprint from classroom_period_reports where classroom_id=$1 and evaluation_period_id=$2 and status='active'`,[data.classroom.id,data.period.id])).rows[0]:null;
@@ -323,7 +322,7 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
         const annualGaps=await annualValuationGaps(db,data.classroom,data.period,data.cards,data.model);
         const reportFingerprint=classroomReportFingerprint(statistics,data.evaluationMap.version);
         const steps=[
-          {number:1,label:"Revisar cobertura",done:true},{number:2,label:"Preparar marco de evaluación",done:Boolean(master)&&master.source_snapshot?.evaluation_map_fingerprint===data.evaluationMap.source_fingerprint},
+          {number:1,label:"Revisar cobertura",done:true},{number:2,label:"Contexto pedagógico calculado",done:true},
           {number:3,label:"Revisar valoraciones y pendientes",done:rows.length>0&&rows.every(periodRowResolved)},{number:4,label:"Conclusiones descriptivas",done:rows.length>0&&rows.every((row)=>row.state!=="confirmed"||!conclusionRequiredForLevel(row.level)||Boolean(row.conclusion))},
           {number:5,label:"Consolidado",done:rows.length>0&&rows.every(periodRowResolved)},{number:6,label:"Informes familiares",done:reports>=data.model.students.length&&data.model.students.length>0},
           {number:7,label:"Informe del aula",done:Boolean(classReport)&&classReport.source_fingerprint===reportFingerprint},{number:8,label:"Cerrar período",done:closure.closed&&closure.current}];
@@ -361,18 +360,26 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
         if (!data.row.sourceRows.length) throw new Error("Registra primero observaciones de esta competencia.");
         const student = await studentForClass(data.classroom, body.studentId);
         const names = assessmentStudentNames((await db.query('select first_name,last_name,preferred_name from students where classroom_id=$1',[data.classroom.id])).rows);
-        const master = (await db.query(`select * from assessment_masters where classroom_id=$1 and evaluation_period_id=$2 and status='active'`, [data.classroom.id, data.period.id])).rows[0];
-        if (!master) throw new Error("Confirma primero el marco de evaluación del período.");
         const contextV4 = await loadClassroomContext(data.classroom);
         const masterSources = await loadAssessmentMasterSources(db, { ...data.classroom, context_v4: contextV4 }, data.period);
-        if (master.source_snapshot?.fingerprint !== masterSources.snapshot.fingerprint) throw new Error("El marco de evaluación requiere revisión porque cambió la planificación o un criterio.");
+        const evidenceCriteria = data.row.sourceRows.map(row => ({ id: row.criterion_id, activity_id: row.activity_id,
+          competency_id: data.card.id, criterion_text: neutralizeAssessmentText(row.criterion_text, names) || "Qué hizo o dijo el niño",
+          expected_evidence: neutralizeAssessmentText(row.details?.expected_evidence, names),
+          observation_focus: (row.details?.observation_focus ?? []).map(text => neutralizeAssessmentText(text, names)) }));
+        const master = buildAssessmentContext({ age: data.classroom.age, snapshot: masterSources.snapshot,
+          competencyCards: data.cards, sources: { ...masterSources.sources,
+            criteria: [...masterSources.sources.criteria.filter(row => row.competency_id !== data.card.id), ...evidenceCriteria] } });
         const masterEntry = assessmentMasterEntry(master, data.card.id);
-        if (!masterEntry) throw new Error("La competencia no está incluida en el marco de evaluación confirmado.");
-        const interview = await loadConfirmedFamilyContext(db, data.classroom.id, student.id);
-        const familyContext = interview ? projectFamilyAssessmentContext(interview.details,
-          (text) => neutralizeAssessmentText(text, names)) : null;
+        const cached = data.row.draft;
+        const evidenceHash = hash(assessmentSourceSnapshot(data.row.sourceRows));
+        if (!body.deepReview && !body.force && cached?.generation_metadata?.analysis &&
+            hash(cached.source_evidence_snapshot ?? []) === evidenceHash &&
+            cached.assessment_master_snapshot?.fingerprint === master.source_snapshot.fingerprint) {
+          send(response, 200, { generation_id: null, draft_id: cached.id, draft_revision: Number(cached.revision),
+            evidence_fingerprint: evidenceHash, analysis: cached.details, conclusion: null, cached: true }, origin); return true;
+        }
         const input = buildAssessmentInput({ age: data.classroom.age, competencyId: data.card.id,
-          assessmentMaster: masterEntry, familyContext,
+          assessmentMaster: masterEntry,
           evidenceHistory: data.row.sourceRows.map((row) => sanitizeEvidenceForAssessment(row, names)),
           criteriaHistory: data.row.sourceRows.map((row) => ({ criterion_text: neutralizeAssessmentText(row.criterion_text, names),
             expected_evidence: neutralizeAssessmentText(row.details?.expected_evidence, names),
@@ -435,6 +442,11 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
           const lockedDraft=(await tx.query(`select * from competency_assessments where id=$1 and status='draft' for update`,[savedDraft.id])).rows[0];
           if(!lockedDraft||Number(lockedDraft.revision)!==body.expectedDraftRevision) throw new VersionConflictError("El borrador cambió en otra pestaña.",lockedDraft?.revision??null);
           assertSavedEvaluationDraft(lockedDraft,{fingerprint,teacherAnalysis,conclusionText,achievementLevel:body.achievementLevel,teacherJustification});
+          if (!lockedDraft.assessment_master_id && lockedDraft.assessment_master_snapshot?.construction === "deterministic-v1") {
+            const currentSources = await loadAssessmentMasterSources({ query: (...args) => tx.query(...args), transaction: action => action(tx) }, data.classroom, data.period);
+            if (currentSources.snapshot.fingerprint !== lockedDraft.assessment_master_snapshot.fingerprint)
+              throw new VersionConflictError("Cambió lo que se trabajó en el período. Vuelve a revisar las observaciones.");
+          }
           if (lockedDraft.assessment_master_id) { const activeMaster=(await tx.query(`select * from assessment_masters where id=$1 and status='active'`,[lockedDraft.assessment_master_id])).rows[0];
             if(!activeMaster||activeMaster.source_snapshot?.fingerprint!==lockedDraft.assessment_master_snapshot?.fingerprint) throw new VersionConflictError("El marco de evaluación cambió. Vuelve a preparar la sugerencia."); }
           await tx.query(`update competency_descriptive_conclusions set status='archived',updated_at=now() where student_id=$1 and competency_v4_id=$2 and period_start=$3::date and period_end=$4::date and status='active'`, [body.studentId, body.competencyId, data.period.starts_on, data.period.ends_on]);
@@ -458,7 +470,7 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
         if(!data.row.sourceRows.length) throw new Error("No hay evidencias para redactar una conclusión.");
         const student=await studentForClass(data.classroom,body.studentId);
         const names=assessmentStudentNames((await db.query('select first_name,last_name,preferred_name from students where classroom_id=$1',[data.classroom.id])).rows);
-        const master=assessment.assessment_master_id?(await db.query(`select * from assessment_masters where id=$1 and status in ('active','archived')`,[assessment.assessment_master_id])).rows[0]:null;
+        const master=await loadComputedAssessmentContext(db,data.classroom,data.period,data.cards,data.row.sourceRows,data.card.id,names);
         const prior=(await db.query(`select details from competency_descriptive_conclusions where student_id=$1 and competency_v4_id=$2 and status='active' and period_end<$3::date order by period_end desc limit 1`,[student.id,data.card.id,data.period.starts_on])).rows[0];
         const input=buildDescriptiveConclusionInput({age:data.classroom.age,competencyId:data.card.id,assessment,
           assessmentMaster:assessmentMasterEntry(master,data.card.id),evidenceRows:data.row.sourceRows,knownNames:names,
@@ -511,6 +523,7 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
       }
       if (request.method === "POST" && url.pathname === "/api/period-evaluations/classroom-report/generate") {
         const body=await readJson(request),data=await context(body.classroomId,body.periodId),rows=publicRows(data.model,data.cards,data.labels),planned=await plannedCompetencyIds(data.classroom,data.period);
+        if (newAyniFeatureEnabled(process.env.AYNI_EXPERIENCE)) throw new Error("Consulta el consolidado calculado y las conclusiones confirmadas del período.");
         const statistics=buildPeriodStatistics({rows,mapEntries:data.evaluationMap.entries,competencyMeta:data.labels,studentCount:data.model.students.length,plannedCompetencyIds:planned});
         const confirmed=statistics.classroom.confirmed_assessments,total=statistics.classroom.total_assessments;
         if(!total||confirmed/total<0.5) throw new Error("Confirma al menos la mitad de las valoraciones antes de preparar el informe del aula.");
