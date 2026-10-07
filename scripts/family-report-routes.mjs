@@ -1,3 +1,4 @@
+import { assertPeriodDatesOpen } from "../src/lib/period-edit-guard.mjs";
 import { randomUUID } from "node:crypto";
 import { loadKnowledgeBaseV4 } from "../src/lib/knowledge-base-v4.mjs";
 import { cardIsApplicable } from "../src/lib/ai-context-builder-v4.mjs";
@@ -96,6 +97,7 @@ export function createFamilyReportRouteHandler({ db, teacherId, annualPlanningCo
       }
       if (request.method === "POST" && url.pathname === "/api/ai/family-reports/generate") {
         const student = await studentInClass(context, body.studentId);
+        await assertPeriodDatesOpen(db,context.id,body.periodStart,body.periodEnd);
         const period=await formalPeriod(context,body.periodId,body.periodStart,body.periodEnd);
         const { ids, rows } = await validatedSources(context, student.id, body.periodStart, body.periodEnd, body.competencyIds ?? [],period?.id);
         const classmates=(await db.query('select first_name,last_name,preferred_name from students where classroom_id=$1',[context.id])).rows;
@@ -115,6 +117,7 @@ export function createFamilyReportRouteHandler({ db, teacherId, annualPlanningCo
       }
       if (request.method === "POST" && url.pathname === "/api/family-reports") {
         const student = await studentInClass(context, body.studentId);
+        await assertPeriodDatesOpen(db,context.id,body.periodStart,body.periodEnd);
         const item = await pending.get(body.generationId);
         const period=await formalPeriod(context,body.periodId,body.periodStart,body.periodEnd);
         checkPending(item, context, student.id, body.periodStart, body.periodEnd,period?.id);
@@ -134,6 +137,7 @@ export function createFamilyReportRouteHandler({ db, teacherId, annualPlanningCo
       const match = url.pathname.match(/^\/api\/family-reports\/([^/]+)(\/confirm)?$/);
       if (match && request.method === "PUT" && !match[2]) {
         const row = await draft(context, match[1]);
+        await assertPeriodDatesOpen(db,context.id,row.period_start,row.period_end);
         await formalPeriod(context,row.evaluation_period_id,dateOnly(row.period_start),dateOnly(row.period_end));
         const item = body.generationId ? await pending.get(body.generationId) : null;
         if (body.generationId) checkPending(item, context, row.student_id, dateOnly(row.period_start), dateOnly(row.period_end),row.evaluation_period_id);
@@ -151,12 +155,14 @@ export function createFamilyReportRouteHandler({ db, teacherId, annualPlanningCo
       }
       if (match && request.method === "POST" && match[2]) {
         const row = await draft(context, match[1]);
+        await assertPeriodDatesOpen(db,context.id,row.period_start,row.period_end);
         validateFamilyReport(row.details, row.selected_competency_ids, row.source_conclusion_snapshot);
         const { rows } = await validatedSources(context, row.student_id, dateOnly(row.period_start), dateOnly(row.period_end), row.selected_competency_ids,row.evaluation_period_id);
         if (!sameConclusionSourceSnapshot(row.source_conclusion_snapshot, conclusionSourceSnapshot(rows))) { fail(response, origin, new Error(staleMessage), 409); return true; }
         await db.exec("begin");
         let saved;
         try {
+          await assertPeriodDatesOpen(db,context.id,row.period_start,row.period_end,{lock:true});
           await db.query(`update family_reports set status='archived',updated_at=now() where student_id=$1 and period_start=$2::date and period_end=$3::date and status='active'`, [row.student_id, row.period_start, row.period_end]);
           saved = (await db.query(`update family_reports set status='active',teacher_confirmed_at=now(),updated_at=now() where id=$1 and status='draft' returning id,status,teacher_confirmed_at`, [row.id])).rows[0];
           if (!saved) throw new Error("Borrador no disponible.");

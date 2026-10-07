@@ -144,14 +144,12 @@ test("recorrido integrado conserva versiones y aísla aulas, años y documentos"
     const revised = { classroomId: a.classroomId, periodId: period.id, studentId: students[0], competencyId: "COM_ORAL",
       evidenceFingerprint: changed.body.evidence_fingerprint,expectedDraftRevision:changed.body.draft?.revision??null, teacherAnalysis: "En tres juegos explicó ideas.",
       conclusionText: "", provisionalLevel: "A", achievementLevel: "A", teacherJustification: "Tres registros revisados." };
+    assert.equal((await call(rawA,"POST","/api/period-evaluations/save-draft",revised)).status,409);
+    assert.equal((await call(rawA,"POST","/api/period-evaluations/reopen",{classroomId:a.classroomId,periodId:period.id,expectedCurrentVersionId:close1.body.id,reason:"Revisión de una nueva observación ficticia."})).status,200);
     const savedRevised=await call(rawA, "POST", "/api/period-evaluations/save-draft", revised);
     assert.equal(savedRevised.status, 200,JSON.stringify(savedRevised.body));
     assert.equal((await call(rawA, "POST", "/api/period-evaluations/confirm", {...revised,expectedDraftRevision:savedRevised.body.draft_revision})).status, 200);
     await confirmConclusion(students[0], period.id);
-    const beforeClose2=await call(rawA,"GET",`/api/period-evaluations/overview?${query}`);
-    const close2 = await call(rawA, "POST", "/api/period-evaluations/close", { classroomId: a.classroomId, periodId: period.id,
-      expectedCurrentVersionId:beforeClose2.body.closure.current_version_id,expectedSourceFingerprint:beforeClose2.body.closure.source_fingerprint });
-    assert.equal(close2.body.version, 2);
     assert.equal((await loadSavedDocument(db, teacherA, "period_closure", close1.body.id)).content.entries[0].source_evidence_ids.length, 2);
     assert.equal(await loadSavedDocument(db, teacherB, "period_closure", close1.body.id), null);
 
@@ -172,6 +170,10 @@ test("recorrido integrado conserva versiones y aísla aulas, años y documentos"
     const saved = await reportCall("POST", "/api/family-reports", { ...dates, proposal: generated.body.proposal, generationId: generated.body.generation_id });
     assert.equal(saved.status, 200, JSON.stringify(saved.body));
     assert.equal((await reportCall("POST", `/api/family-reports/${saved.body.id}/confirm?classroomId=${a.classroomId}`)).status, 200);
+    const beforeClose2=await call(rawA,"GET",`/api/period-evaluations/overview?${query}`);
+    const close2 = await call(rawA, "POST", "/api/period-evaluations/close", { classroomId: a.classroomId, periodId: period.id,
+      expectedCurrentVersionId:beforeClose2.body.closure.current_version_id,expectedSourceFingerprint:beforeClose2.body.closure.source_fingerprint });
+    assert.equal(close2.body.version, 2);
     assert.equal((await loadSavedDocument(db, teacherA, "family_report", saved.body.id)).evaluation_period_id, period.id);
     assert.equal(await loadSavedDocument(db, teacherB, "family_report", saved.body.id), null);
     const foreignReports = [];

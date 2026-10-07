@@ -1,5 +1,13 @@
 # Errores y soluciones
 
+## 2026-10-07 — Integración de lotes y consolidado
+
+**Síntoma/causa.** Una proyección nueva leía level donde el modelo canónico exponía achievement_level: consolidado perdía la valoración. Hash basado en serialización JSON dependía del orden de propiedades al recuperar JSONB. Un job de edición individual guardado solo mostraba su niño, ocultando los demás textos canónicos. Fixtures antiguas carecían de tablas de cierre y asumían modificaciones posteriores sin reapertura.
+
+**Solución validada.** Leer campo canónico; stableFingerprint para fuentes; GET de lote guardado reúne textos vigentes del aula sin generar los ajenos. Fixtures usan esquema efectivo y reapertura explícita. Suite final 745/745 PASS y HTTP ficticio comprueba corrección selectiva/recierre con manifiesto anterior intacto.
+
+**Prevención.** Probar checkpoint serializado y cambio individual con varios niños; no validar solo respuesta inicial. Guardas no fallan abiertas por falta de tablas. Capturas fullPage deben comenzar arriba para evitar cabecera fija a mitad de imagen. Render DOCX intentado pero LibreOffice ausente: registrar límite, no afirmar QA de paginación.
+
 ## 2026-10-05 — Reprogramación de actividad completada desalineó agenda y ejecución (pendiente de corrección)
 
 **Síntoma reproducido.** `reprogramActivity` aceptó mover una actividad ficticia completada del 7 al 8 de abril: cambiaron fecha de actividad y agenda, pero el log completed conservó ejecución el 7. La ruta de calendario llama directamente al servicio. Solo base PGlite en memoria; ningún dato docente modificado.

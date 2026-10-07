@@ -1,13 +1,19 @@
 # Diseño de Ayni
 
-## Mi año · modo Operate
+## Experiencia cotidiana · modo Operate
 
-La profesora llega con tiempo limitado y recuerdos concretos del aula. Debe reconocer lo que aportó, preparar una previsión y revisar decisiones sin administrar competencias o fechas. La simplicidad del recorrido reemplaza el trámite diagnóstico anterior.
+La profesora necesita reconocer lo que aportó, observar una actuación y revisar decisiones con poco tiempo. Se conservan tipografía sans, azul oscuro #172b52, teal #087d96, superficies #edf5fa y texto secundario #526b87. Usar los componentes existentes y acciones de al menos 44 px, etiquetas explícitas, foco visible y mensajes de estado.
 
-Se conserva la identidad visual del shell existente: tipografía sans, azul oscuro #172b52 para jerarquía, teal #087d96 para acciones y foco, superficies claras #edf5fa y texto secundario #526b87. No hay cambios de marca. Se utilizan Button, AsyncButton, Textarea, GenerationProgress y controles nativos.
+La navegación principal tiene cinco destinos: Mi año, Hoy, Calendario, Evaluar y Planificación. Mi aula es una entrada permanente independiente del avance de planificación. Mi año mantiene un timeline horizontal principal de 15 tramos temporales fijos y proyectos independientes. Pictogramas, ficha de proyecto, biblioteca, versiones y protección del pasado se conservan.
 
-Primero aparece un resumen literal y una pregunta opcional sobre ideas docentes. Preparar mi año es la acción principal. Después aparecen doce tarjetas, en una columna y dos desde lg: título, posibles acciones infantiles y razón contextual. Competencias, oportunidades, materiales, calendario y fuentes se consultan con detalles desplegables. Mantener y reordenar son operaciones directas; Cambiar con Ayni enfoca el mismo asistente con contexto automático.
+Diagnóstico muestra accesos paralelos a entrevistas, observación y revisión. Los editores conservan su estado al alternar caminos. La síntesis fundamentada es breve y editable; sus fuentes y versiones son detalles secundarios. Contexto familiar y aportes docentes se identifican y no representan automáticamente logros del grupo.
 
-Estados visibles: preparación guardada, borrador, vigente, histórica, cambios pendientes, progreso y recuperación. Confirmar se bloquea con cambios pendientes o interpretaciones materiales sin revisión explícita. La navegación respeta el guard compartido y la selección de versión se conserva en el hash. Altura mínima de acción 44px, etiquetas explícitas, nombres accesibles para mover, foco visible y mensajes de estado.
+Hoy coloca la actividad y la observación contextual primero, sin acción de foto duplicada ni presión global por completar evidencia. En semana de gestión o fin de período permite Ir a Mi año. No ofrece un reajuste inteligente del período en esta versión.
 
-Referencias: brief del usuario y UI existente. No introducir formularios adicionales, cuotas curriculares, múltiples chats ni datos técnicos en el recorrido principal. Verificación visual y funcional con datos ficticios en docs/qa/annual-journey-v2-2026-10-03.md.
+Evaluar presenta únicamente Evaluación del bimestre, Informe a familias y Consolidado como espacios principales. La revisión avanza por competencia y niño, muestra fechas, actividad, criterio y texto original, permite decisión docente AD/A/B/C y Confirmar y siguiente. No selecciona nivel por defecto. Sin evidencia se muestra como pendiente, nunca C.
+
+Los lotes muestran avance, textos listos y excepciones Conviene revisar en ámbar suave. Revisión individual, regeneración de un texto y guardado conjunto conservan las fuentes canónicas. La familia recibe las mismas conclusiones guardadas. Consolidado mantiene la matriz con scroll interno y encabezados fijos; mostrar conclusiones amplía las celdas, consultar evaluación vuelve al origen. Cierre y reapertura tienen acciones explícitas y motivo registrado.
+
+Planificación funciona como cuatro carpetas: Evaluación diagnóstica, Plan anual, Proyectos y actividades, Evaluación. Detalles técnicos quedan en herramientas avanzadas; la biblioteca documental conserva historial y descargas.
+
+QA mínimo: escritorio 1366 y móvil 390 con datos ficticios. Las capturas describen el estado comprobado y no sustituyen la revisión humana ni certifican todo Ayni. Esta ronda se detiene después de Preview READY, smoke y handoff; no cambia producción.

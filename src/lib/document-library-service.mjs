@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { loadActivityObservations } from "./activity-observations.mjs";
 import { diagnosticPlanningSummary } from "./diagnostic-assessment-v4.mjs";
 import { getCurrentClassroomContext } from "./classroom-context-service.mjs";
@@ -205,14 +206,16 @@ export async function loadSavedDocument(db, teacherId, kind, id) {
       content: { ...selectContent(row.details, ["meaningful_situation", "teacher_preparation", "child_actions", "mediation", "evidence_opportunities", "closure_or_continuity", "competency_status", "competency_id", "route_item_id", "evaluation_criterion", "expected_evidence", "document_template_version", "teacher_overrides"]), purpose: row.details?.purpose || row.purpose, materials: row.preparation?.materials ?? [] } };
   }
   const row = (await db.query(`select r.id,r.status,r.version,r.details,r.period_start,r.period_end,r.evaluation_period_id,r.teacher_confirmed_at,
-    p.label as period_label,s.first_name,s.last_name,s.preferred_name,sy.year,c.section,c.institution_name,profile.display_name as teacher_name from family_reports r
+    p.label as period_label,s.id as student_id,s.first_name,s.last_name,s.preferred_name,ag.age_years,to_jsonb(s)->>'profile_photo_path' as photo_path,to_jsonb(r)->'source_conclusion_ids' as conclusion_ids,sy.year,c.section,c.institution_name,profile.display_name as teacher_name from family_reports r
     join students s on s.id=r.student_id join classrooms c on c.id=s.classroom_id
     join school_years sy on sy.id=c.school_year_id join profiles profile on profile.user_id=c.teacher_id
+    join age_grades ag on ag.id=c.age_grade_id
     left join evaluation_periods p on p.id=r.evaluation_period_id
     where r.id=$2 and c.teacher_id=$1 and sy.owner_id=$1`, [teacherId, id])).rows[0];
-  return row ? { id: row.id, kind, title: `Informe a la familia de ${[row.preferred_name || row.first_name,row.last_name].filter(Boolean).join(" ")}`,
+  const levels=row?.conclusion_ids?.length ? (await db.query(`select dc.competency_v4_id,a.achievement_level from competency_descriptive_conclusions dc join competency_assessments a on a.id=dc.assessment_id where dc.id=any($1::uuid[]) and dc.student_id=$2`,[row.conclusion_ids,row.student_id])).rows : [];
+  return row ? { id: row.id, kind, title: `Informe a la familia de ${[row.first_name,row.last_name].filter(Boolean).join(" ")}`,
     status: row.status, version: Number(row.version), school_year: Number(row.year),
-    classroom: row.section, institution_name: row.institution_name,teacher_name:row.teacher_name,
+    classroom: row.section, institution_name: row.institution_name,teacher_name:row.teacher_name,age:Number(row.age_years),student_id:row.student_id,photo_revision:createHash("sha256").update(row.photo_path??"none").digest("hex"),achievement_levels:levels,
     evaluation_period_id:row.evaluation_period_id??null,period_label:row.period_label??null,
     period_start: dateOnly(row.period_start), period_end: dateOnly(row.period_end),
     confirmed_at: row.teacher_confirmed_at ? timestamp(row.teacher_confirmed_at) : null,

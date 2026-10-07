@@ -128,7 +128,10 @@ test("UI abre la lista completa y vuelve a ella al guardar; RLS remota exige esc
 
   assert.match(ui, /experience\.pedagogical_blocks/);
   assert.doesNotMatch(ui, /Ver ejemplos/);
-  assert.match(ui, /3\. Elige a un niño y anota lo que viste/);
+  assert.match(ui, /Elige a un niño y anota lo que viste/);
+  assert.doesNotMatch(ui, /JourneySteps/);
+  assert.match(ui, /Entrevistas/);
+  assert.match(ui, /Revisar lo que Ayni conoce/);
   assert.match(ui, /Relación curricular/);
   assert.doesNotMatch(ui, /¿Necesitó apoyo\?|No puedo determinarlo/);
   assert.match(ui, /observed_without_judgment/);

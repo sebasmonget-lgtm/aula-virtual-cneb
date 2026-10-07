@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { dateOnly, periodClosureFingerprint, periodRowResolved } from "./period-evaluation-service.mjs";
 import { VersionConflictError, versionTransaction } from "./version-integrity.mjs";
+import { periodEditState, appendPeriodEvent } from "./period-edit-guard.mjs";
 
 export function buildPeriodClosureManifest({period,students,rows,context=null,closedAt=null}) {
   if(!rows.length || rows.some((row)=>!periodRowResolved(row)))
@@ -50,9 +51,11 @@ export async function closePeriodWithManifest(db,{classroomId,period,teacherId,l
       ugel:profile.ugel??null,classroom_id:profile.classroom_id,section:profile.section,age_years:Number(profile.age_years),
       school_year_id:profile.school_year_id,school_year:Number(profile.year),period_id:period.id};
     const manifest=buildPeriodClosureManifest({period,students:current.students,rows:current.rows,context,closedAt:closedAt instanceof Date?closedAt.toISOString():String(closedAt)});
-    if(previous?.current_version_id && previous.source_fingerprint===fingerprint) {
+    const editState = await periodEditState(tx,classroomId,period.id);
+    if(editState.closed && previous?.current_version_id && previous.source_fingerprint===fingerprint) {
       return {id:previous.current_version_id,closed:true,current:true,unchanged:true};
     }
+    if(editState.closed)throw new VersionConflictError("Reabre el bimestre antes de guardar otro cierre.");
     const version=Number((await tx.query(`select coalesce(max(version),0)+1 as version from period_closure_versions
       where classroom_id=$1 and evaluation_period_id=$2`,[classroomId,period.id])).rows[0].version);
     const id=randomUUID();
@@ -62,6 +65,8 @@ export async function closePeriodWithManifest(db,{classroomId,period,teacherId,l
       values($1,$2,$3,$4,$5,$6,$7) on conflict(classroom_id,evaluation_period_id) do update set
       source_fingerprint=excluded.source_fingerprint,confirmed_by=excluded.confirmed_by,current_version_id=excluded.current_version_id,confirmed_at=excluded.confirmed_at`,
       [randomUUID(),classroomId,period.id,fingerprint,teacherId,closedAt,id]);
+    await appendPeriodEvent(tx,{classroomId,periodId:period.id,teacherId,reopenedVersionId:null,
+      event:{type:"closed",closure_version_id:id,source_fingerprint:fingerprint}});
     return {id,version,closed:true,current:true};
   });
 }

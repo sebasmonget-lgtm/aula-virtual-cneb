@@ -17,7 +17,6 @@ import { SpontaneousDiagnostic } from "./spontaneous-diagnostic-v4";
 import { displayPersonName } from "@/src/lib/person-name.mjs";
 import { DictationRecorder } from "./dictation-recorder";
 import { useWorkspaceSubview } from "@/src/lib/workspace-location";
-import { JourneySteps } from "./initial-journey-ui";
 import { StudentPhoto } from "./student-photo";
 import { ObservationCoverageMatrix } from "./observation-coverage-matrix";
 import { apiFetch } from "@/src/lib/ayni-api-fetch";
@@ -82,8 +81,8 @@ export function GuidedDiagnostic({ dashboard, onPlan, onStudents, initialStep = 
   }).catch(() => { setPendingSpontaneous(null); if (initialStep === 3) setStep(3); }); }, [initialStep, setStep]);
   function openMatrix(){setMatrixCoverage(null);setMatrixError("");setMatrixOpen(true);}
   function goToStep(next: 1 | 2 | 3) {
-    if (next === 3 && onPlan) { openMatrix(); setStep(2); return; }
-    setMatrixOpen(false); setStep(next); setStudentId(null); setInterviewStudentId(null);
+    if (next === 3) { setBriefReview(true); return; }
+    setMatrixOpen(false); setBriefReview(false); setStep(next);
   }
   useEffect(() => {
     if (interviewStudentId || step !== 1) return;
@@ -133,18 +132,17 @@ export function GuidedDiagnostic({ dashboard, onPlan, onStudents, initialStep = 
 
   if (error && !data) return <p role="alert" className="rounded-xl bg-[#fff1d6] p-4">{error}</p>;
   if (!data) return <LoadingState label="Cargando diagnóstico..." />;
-  if(briefReview)return <DiagnosticBriefReview onBack={()=>setBriefReview(false)} onContinue={()=>onPlan?.()}/>;
+
   if (!data.students.length) return <section className="diagnostic-panel space-y-3 p-5"><h1 className="text-2xl font-bold">Primero, conoce a tu grupo</h1><p className="text-sm text-[#526b87]">Agrega a las niñas y los niños del aula para comenzar.</p>{onStudents && <Button onClick={onStudents}>Agregar niños <ArrowRight className="size-4" /></Button>}</section>;
 
   return <div className="diagnostic-shell space-y-5">
-    <header className="flex flex-wrap items-center justify-between gap-4">
-      <div className="flex items-center gap-4"><span className="grid size-10 sm:size-14 shrink-0 place-items-center rounded-full bg-[#087d96] text-2xl font-bold text-white">{matrixOpen?3:step}</span><div><h1 className="text-2xl sm:text-3xl font-extrabold text-[#172b52]">{matrixOpen?"Revisar lo que conocemos":step===1?"Familias":"Observar"}</h1><p className="mt-2 text-sm text-[#526b87]">{matrixOpen?"Alumnos × competencias":step===1?"Una pregunta a la vez, con ejemplos y progreso.":"Registra lo que observas o prueba una experiencia para conocer mejor."}</p></div></div>
-      <span className="hidden sm:block rounded-full bg-[#edf5fb] px-4 py-2 text-sm font-semibold text-[#1b5175]">{data.classroom.age_years} años · {data.classroom.section}</span>
-    </header>
-    <JourneySteps active={matrixOpen?3:step} onStep={n=>goToStep(n as 1|2|3)}/>
+    <header><h1 className="text-2xl sm:text-3xl font-extrabold text-[#172b52]">Conoce a tu grupo</h1><p className="mt-2 text-sm text-[#526b87]">Puedes avanzar a tu ritmo. Las entrevistas y observaciones se complementan, pero no tienes que hacerlas en un orden específico.</p></header>
+    <nav aria-label="Caminos del diagnóstico" className="flex flex-wrap gap-2">{([[1,"Entrevistas a familias"],[2,"Observaciones"],[3,"Revisar lo que Ayni conoce"]] as const).map(([path,label])=><Button key={path} variant={(briefReview?path===3:!matrixOpen&&step===path)?"default":"outline"} aria-pressed={briefReview?path===3:!matrixOpen&&step===path} onClick={()=>goToStep(path)}>{label}</Button>)}</nav>
+    {briefReview&&<DiagnosticBriefReview onBack={()=>setBriefReview(false)} onContinue={()=>onPlan?.()}/>}
+    <div hidden={briefReview}>
     {error && !student && <p role="alert" className="rounded-xl bg-[#fff1d6] p-3 text-sm">{error}</p>}
 
-    {step === 1 && interviewStudentId && <FamilyInterviewEditor studentId={interviewStudentId} studentName={data.students.find((item) => item.id === interviewStudentId)?.name ?? "este niño"} printContext={{ institution: dashboard.profile.institution_name, classroom: data.classroom.section }} onSaved={() => setInterviewFeedback("Entrevista guardada. Puedes entrevistar a otro niño.")} onBack={() => setInterviewStudentId(null)} />}
+    {interviewStudentId && <div hidden={step!==1}><FamilyInterviewEditor studentId={interviewStudentId} studentName={data.students.find((item) => item.id === interviewStudentId)?.name ?? "este niño"} printContext={{ institution: dashboard.profile.institution_name, classroom: data.classroom.section }} onSaved={() => setInterviewFeedback("Entrevista guardada. Puedes entrevistar a otro niño.")} onBack={() => setInterviewStudentId(null)} /></div>}
     {step === 1 && !interviewStudentId && <section className="diagnostic-panel space-y-4 p-5 md:p-7">
       <h2 className="text-xl font-bold">Conoce a cada niño y su familia</h2>
       <p>{dashboard.profile.institution_name} · {data.classroom.section} · {data.students.length} niños</p>
@@ -161,20 +159,21 @@ export function GuidedDiagnostic({ dashboard, onPlan, onStudents, initialStep = 
         {classroomContext.confirmed_diagnostic_summary && <p className="mt-2">Síntesis diagnóstica confirmada: {classroomContext.confirmed_diagnostic_summary}</p>}
         <p className="mt-2 text-xs">Se muestran solo patrones suficientemente frecuentes. Las entrevistas aportan contexto; no son observaciones de la docente ni niveles de logro.</p>
       </div>}
-      <div className="flex justify-end"><Button className="min-h-12" onClick={() => setStep(2)}>Continuar a observar <ArrowRight /></Button></div>
+      <p className="text-sm text-[#526b87]">Puedes alternar con Observaciones cuando quieras.</p>
     </section>}
 
-    {step === 2 && matrixOpen && matrixCoverage && <ObservationCoverageMatrix data={data} counts={matrixCoverage.counts} unclassified={matrixCoverage.unclassified} competencies={matrixCompetencies} records={matrixCoverage.records}
+    <div hidden={step!==2}>
+    {matrixOpen && matrixCoverage && <ObservationCoverageMatrix data={data} counts={matrixCoverage.counts} unclassified={matrixCoverage.unclassified} competencies={matrixCompetencies} records={matrixCoverage.records}
       onBack={()=>setMatrixOpen(false)} onContinue={()=>setBriefReview(true)}
       onRecord={(id,competencyId)=>{setMatrixOpen(false);setExperienceId(null);setFreeStudentId(id);setFreeCompetencyId(competencyId);setObservationMode("spontaneous");}}
       onGuided={(id,experience)=>{setMatrixOpen(false);setObservationMode("guided");selectExperience(experience);selectStudent(id);}} />}
-    {step === 2 && matrixOpen && !matrixCoverage && <section className="diagnostic-panel space-y-4 p-5">{matrixError?<p role="alert">{matrixError}</p>:<LoadingState label="Consultando las observaciones de tu aula…" />}<Button variant="outline" onClick={()=>setMatrixOpen(false)}>Volver a observar</Button><Button onClick={()=>onPlan?.()}>Continuar de todas formas →</Button></section>}
-    {step === 2 && !matrixOpen && !experience && !freeCompetencyId && <div className="space-y-2">
+    {matrixOpen && !matrixCoverage && <section className="diagnostic-panel space-y-4 p-5">{matrixError?<p role="alert">{matrixError}</p>:<LoadingState label="Consultando las observaciones de tu aula…" />}<Button variant="outline" onClick={()=>setMatrixOpen(false)}>Volver a observar</Button><Button onClick={()=>onPlan?.()}>Continuar de todas formas →</Button></section>}
+    {!matrixOpen && !experience && !freeCompetencyId && <div className="space-y-2">
       <div role="group" aria-label="Forma de observar" className="grid gap-2 rounded-2xl border border-[#c9dce9] bg-white p-2 sm:grid-cols-2">{([["spontaneous","Registrar algo que observé"],["guided","Probar una experiencia para conocer mejor"]] as const).map(([mode,label])=><button key={mode} type="button" aria-pressed={observationMode===mode} onClick={()=>{setFreeCompetencyId("");setObservationMode(mode);}} className={`min-h-14 rounded-xl px-4 py-3 text-sm font-bold sm:text-base ${observationMode===mode?"bg-[#e4f3f7] text-[#075d70]":"text-[#526b87] hover:bg-[#f5f8fb]"}`}>{label}</button>)}</div>
       <p className="px-1 text-sm text-[#526b87]">{observationMode === "guided" ? "Elige un juego sugerido y anota lo que observaste." : "Anota algo que ocurrió durante el juego o la jornada."}</p>
     </div>}
-    {step === 2 && !matrixOpen && !experience && observationMode === "spontaneous" && <SpontaneousDiagnostic key={`${freeStudentId}:${freeCompetencyId}`} initialStudentId={freeStudentId} initialCompetencyId={freeCompetencyId} onBack={()=>{setFreeCompetencyId("");openMatrix();}} students={data.students} onDecisionSaved={() => void refreshPendingSpontaneous()} onSaved={() => void refreshObservationProgress()} />}
-    {step === 2 && !matrixOpen && !experience && observationMode === "guided" && <section className="diagnostic-panel space-y-4 p-5 md:p-7">
+    {!matrixOpen && !experience && observationMode === "spontaneous" && <SpontaneousDiagnostic key={`${freeStudentId}:${freeCompetencyId}`} initialStudentId={freeStudentId} initialCompetencyId={freeCompetencyId} onBack={()=>{setFreeCompetencyId("");openMatrix();}} students={data.students} onDecisionSaved={() => void refreshPendingSpontaneous()} onSaved={() => void refreshObservationProgress()} />}
+    {!matrixOpen && !experience && observationMode === "guided" && <section className="diagnostic-panel space-y-4 p-5 md:p-7">
       <div><h2 className="text-xl font-bold">¿Qué experiencia realizaste?</h2><p className="mt-1 text-sm text-[#526b87]">Son ideas para observar en el juego y la jornada; puedes volver a cualquiera otro día.</p></div>
       {data.experiences.some((item) => item.catalog_status === "development_fixture") && <p className="rounded-xl bg-[#fff5df] p-3 text-sm">Guías de desarrollo: todavía no son la batería pedagógica definitiva de Ayni.</p>}
       {spontaneousRecords && <p className="rounded-xl bg-[#edf8f4] p-3 text-sm text-[#246554]">Las experiencias marcadas ofrecen oportunidades para competencias con menos registros. La ausencia de observaciones no indica una dificultad del niño.</p>}
@@ -186,11 +185,11 @@ export function GuidedDiagnostic({ dashboard, onPlan, onStudents, initialStep = 
       })}</div>
     </section>}
 
-    {step === 2 && !matrixOpen && experience && !student && <section className="diagnostic-panel space-y-5 p-4 md:p-7">
+    {!matrixOpen && experience && !student && <section className="diagnostic-panel space-y-5 p-4 md:p-7">
       <Button variant="outline" className="diagnostic-back-button" onClick={() => { setExperienceId(null); setFilter("all"); }}><ArrowLeft /> Volver a experiencias</Button>
       <h2 className="text-2xl font-extrabold">{experience.title}</h2>
       {experience.pedagogical_blocks?.map(block => <PedagogicalBlock key={block.id} block={block} onObserve={(aspect) => { setAspectId(aspect); document.getElementById("diagnostic-students")?.scrollIntoView({ behavior: "smooth", block: "start" }); }} />)}
-      <div className="flex flex-wrap items-center justify-between gap-2"><div><h3 className="text-lg font-bold">3. Elige a un niño y anota lo que viste</h3><p className="text-sm text-[#526b87]">Toca su nombre cuando ocurra algo que quieras recordar. {coverage?.students_with_records ?? 0} de {data.students.length} con algún registro.</p>{spontaneousRecords && <p className="mt-1 text-sm text-[#176442]">Primero aparecen quienes aún no tienen registros de las competencias de esta experiencia.</p>}</div><Button variant="outline" className="min-h-12" onClick={() => goToStep(3)}>Revisar matriz y continuar <ArrowRight /></Button></div>
+      <div className="flex flex-wrap items-center justify-between gap-2"><div><h3 className="text-lg font-bold">Elige a un niño y anota lo que viste</h3><p className="text-sm text-[#526b87]">Toca su nombre cuando ocurra algo que quieras recordar. {coverage?.students_with_records ?? 0} de {data.students.length} con algún registro.</p>{spontaneousRecords && <p className="mt-1 text-sm text-[#176442]">Primero aparecen quienes aún no tienen registros de las competencias de esta experiencia.</p>}</div><Button variant="outline" className="min-h-12" onClick={() => goToStep(3)}>Revisar matriz y continuar <ArrowRight /></Button></div>
       <div className="flex flex-wrap gap-2" aria-label="Filtrar niños">{([
         ["all", "Todos"], ["without", "Sin observaciones"], ["with", "Con observaciones"], ["today", "Observados hoy"],
       ] as const).map(([value, label]) => <button key={value} type="button" aria-pressed={filter === value} onClick={() => setFilter(value)} className={`min-h-11 rounded-full border px-3 text-sm font-semibold ${filter === value ? "border-[#087d96] bg-[#dff3f7] text-[#075d70]" : "border-[#dbe6ef] bg-white text-[#435a78]"}`}>{label}</button>)}</div>
@@ -205,7 +204,7 @@ export function GuidedDiagnostic({ dashboard, onPlan, onStudents, initialStep = 
       <details className="border-t border-[#e3ebf2] pt-3 text-sm"><summary className="cursor-pointer font-semibold text-[#426079]">Relación curricular · {experience.competencies.length} {experience.competencies.length === 1 ? "competencia" : "competencias"}</summary><ul className="mt-2 list-disc space-y-1 pl-5 text-[#526b87]">{experience.competencies.map((item) => <li key={item.id}>{item.name}</li>)}</ul></details>
     </section>}
 
-    {step === 2 && !matrixOpen && experience && student && <section className="diagnostic-panel space-y-5 p-4 md:p-7">
+    {!matrixOpen && experience && student && <section className="diagnostic-panel space-y-5 p-4 md:p-7">
       <Button variant="outline" className="diagnostic-back-button" disabled={working || audioBusy} onClick={() => setStudentId(null)}><ArrowLeft /> Volver a todos los niños</Button>
       <div><p className="text-sm font-semibold text-[#087d96]">{experience.title}</p><h2 className="text-2xl font-extrabold">{displayPersonName(student.name)}</h2><p className="mt-1 text-sm text-[#526b87]">Registra solo lo que observaste. Puedes añadir más de una observación de este niño.</p></div>
       <fieldset className="space-y-2" disabled={working || audioBusy}><legend className="font-bold">¿Qué quieres observar?</legend><p className="text-sm text-[#526b87]">Esto solo te ayuda a enfocar la observación. No estás calificando al niño.</p>{experience.aspects.map((aspect) => <label key={aspect.id} className={`flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border p-3 ${aspectId === aspect.id ? "border-[#087d96] bg-[#e8f7fa]" : "border-[#dce9f2]"}`}><input type="radio" name="diagnostic-aspect" checked={aspectId === aspect.id} onChange={() => setAspectId(aspect.id)} /><span className="font-semibold">{aspect.label}</span></label>)}</fieldset>
@@ -215,8 +214,9 @@ export function GuidedDiagnostic({ dashboard, onPlan, onStudents, initialStep = 
       {error && <p role="alert" className="rounded-xl bg-[#fff1d6] p-3 text-sm">{error}</p>}
       <AsyncButton className="min-h-12 w-full sm:w-auto" busy={working} busyLabel="Guardando..." disabled={audioBusy || !aspectId || !note.trim()} onClick={() => void save()}><Save /> Guardar observación</AsyncButton>
     </section>}
-    {step === 2 && !matrixOpen && !student && <section className="rounded-xl border border-[#c9dce9] bg-[#edf5fa] p-5"><h2 className="text-xl font-bold">¿Listo para preparar tu año?</h2><p className="mt-2 text-[#526b87]">No necesitas observar todas las competencias para continuar. Podrás seguir conociendo al grupo durante todo el año.</p><div className="mt-4 flex flex-wrap gap-3"><Button onClick={()=>goToStep(3)}>Revisar matriz y continuar →</Button><Button variant="outline" onClick={openMatrix}>Ver niños × competencias</Button></div></section>}
+    {!matrixOpen && !student && <section className="rounded-xl border border-[#c9dce9] bg-[#edf5fa] p-5"><h2 className="text-xl font-bold">¿Listo para preparar tu año?</h2><p className="mt-2 text-[#526b87]">No necesitas observar todas las competencias para continuar. Podrás seguir conociendo al grupo durante todo el año.</p><div className="mt-4 flex flex-wrap gap-3"><Button onClick={()=>goToStep(3)}>Revisar lo que Ayni conoce</Button><Button variant="ghost" onClick={onPlan}>Crear Mi año con lo que ya tengo</Button><Button variant="outline" onClick={openMatrix}>Ver niños × competencias</Button></div></section>}
 
+    </div>
     {step === 3 && <section className="diagnostic-panel space-y-4 p-5"><h2 className="text-xl font-bold">Ayni organizará lo que ya conoces</h2>
       <p className="text-sm text-[#526b87]">En «Así entendí tu aula» verás una propuesta basada en entrevistas y observaciones. Puedes corregirla antes de crear Mi año. Seguirás observando durante el año.</p>
       {onPlan && <Button className="min-h-12" onClick={onPlan}>Revisar matriz y continuar <ArrowRight /></Button>}
@@ -224,5 +224,6 @@ export function GuidedDiagnostic({ dashboard, onPlan, onStudents, initialStep = 
         <summary className="cursor-pointer text-sm font-semibold">Ver revisiones diagnósticas anteriores y registros individuales</summary>
         {legacyReviewOpen && <DiagnosticReview onObserve={() => { setStep(2); setStudentId(null); }} onPlan={onPlan} onObservationSaved={() => void refreshObservationProgress()} onGroupConfirmed={() => setData((current) => current ? { ...current, step_progress: { ...current.step_progress, group_review_confirmed: true } } : current)} />}
       </details></section>}
+    </div>
   </div>;
 }

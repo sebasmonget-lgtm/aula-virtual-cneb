@@ -1,3 +1,4 @@
+import { periodGuardFixture } from "./test-fixtures/period-guard.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
@@ -40,6 +41,7 @@ async function fixture({ oralStatus = "active", mathStatus = "active", oralInfor
   for (const [id, competencyId, status, details] of [[oralId, "COM_ORAL", oralStatus, sourceDetails("COM_ORAL", oralInformation)], [mathId, "MAT_CANTIDAD", mathStatus, sourceDetails("MAT_CANTIDAD")]]) {
     await db.query(`insert into competency_descriptive_conclusions(id,student_id,competency_v4_id,period_start,period_end,version,details,status,teacher_confirmed_at) values($1,$2,$3,$4::date,$5::date,1,$6::jsonb,$7,$8::timestamptz)`, [id, studentId, competencyId, start, end, JSON.stringify(details), status, status === "active" ? "2026-09-22T12:00:00Z" : null]);
   }
+  await periodGuardFixture(db,classroomId);
   const pending = new Map(), captures = [], responses = [];
   const context = { id: classroomId, school_year_id:schoolYearId, age: 5, castellano_l2_applicable: false, religion_applicable: false, calendar: { starts_on: "2026-03-01", ends_on: "2026-12-20" } };
   const handler = createFamilyReportRouteHandler({ db, teacherId, annualPlanningContext: async () => context, readJson: async (request) => request.body, send: (_res, status, body) => responses.push({ status, body }), pending, metadataForAudit: (value) => value, createProvider: (plan) => { captures.push({ plan }); return {}; }, generate: async (input) => { captures.push({ input }); if(failGeneration) throw new InvalidAIGenerationError("family_report_schema_mismatch"); return { output: report(input.competency_ids, Object.fromEntries(input.student_context.teacher_confirmed_findings.map((finding) => [finding.competency_id, finding.information_status]))), metadata: { model: "mock", secret: "audit-only" } }; } });

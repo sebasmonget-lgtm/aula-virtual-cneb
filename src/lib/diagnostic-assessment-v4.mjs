@@ -1,4 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
+import { diagnosticBrief } from "./diagnostic-brief.mjs";
 import { loadKnowledgeBaseV4 } from "./knowledge-base-v4.mjs";
 import { buildDiagnosticExperienceCatalog } from "./diagnostic-experiences-v4.mjs";
 import { loadDiagnosticCatalog } from "./diagnostic-catalog-v4.mjs";
@@ -325,6 +326,7 @@ export async function loadDiagnosticAssessmentWorkspace(db, teacherId) {
       : currentGroupSnapshot !== null && sameDiagnosticSources(row.source_snapshot, currentGroupSnapshot) })),
   priority_reviews: priorityReviews,
   group_coverage: groupCoverage,
+  brief:diagnosticBrief({students,observations,interviews:familyRows,interests:derivedDiagnosticGroupInformation(familyRows,groupCoverage).interests}),
   derived_group_information: derivedDiagnosticGroupInformation(familyRows, groupCoverage) };
 }
 

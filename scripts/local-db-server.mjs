@@ -1378,7 +1378,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
           area_name:card.area_name,capacities:card.capacities,ages:card.ages }));
         const logo = await loadInstitutionLogoForDocuments(db, teacherId, logoStorage ?? assetsDir);
         const artifact = await prepareConfirmedDocumentArtifact(db,documentArtifactStorage,teacherId,
-          body?.kind,body?.sourceId,{cards,logo});
+          body?.kind,body?.sourceId,{cards,logo,photoStorage:ordinaryStorage});
         if (!artifact) { send(response,404,{error:"Documento no disponible."},origin); return; }
         send(response,200,{artifact},origin);
       } catch (error) { send(response,httpStatusForError(error,422),{error:publicErrorMessage(error)},origin); }
@@ -1433,7 +1433,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       const cards = knowledgeBase.competencyCards.map((card) => ({ id: card.id, name: card.official_name,
         area_name: card.area_name, capacities: card.capacities, ages: card.ages }));
       const logo = await loadInstitutionLogoForDocuments(db, teacherId, logoStorage ?? assetsDir);
-      const download = await prepareWordDownload(db, teacherId, parts[3], parts[4], cards, { logo });
+      const download = await prepareWordDownload(db, teacherId, parts[3], parts[4], cards, { logo,photoStorage:ordinaryStorage });
       if (!download) { send(response, 404, { error: "Documento no disponible." }, origin); return; }
       const headers = {
         "content-type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -1463,7 +1463,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       const cards = knowledgeBase.competencyCards.map((card) => ({ id: card.id, name: card.official_name,
         area_name: card.area_name, capacities: card.capacities, ages: card.ages }));
       const logo = await loadInstitutionLogoForDocuments(db, teacherId, logoStorage ?? assetsDir);
-      const download = await prepareWordDownload(db, teacherId, parts[3], parts[4], cards, { logo });
+      const download = await prepareWordDownload(db, teacherId, parts[3], parts[4], cards, { logo,photoStorage:ordinaryStorage });
       if (!download) { send(response, 404, { error: "Documento no disponible." }, origin); return; }
       const saved = await saveWordToLocalDownloads(download, path.join(homedir(), "Downloads"));
       send(response, 200, { filename: saved.filename, folder: "Descargas", alreadyExists: saved.alreadyExists }, origin);
@@ -2846,7 +2846,7 @@ async function runPreparationWorker() {
       const knowledge=await loadKnowledgeBaseV4();
       const logo=await loadInstitutionLogoForDocuments(db,job.teacher_id,logoStorage??assetsDir);
       return prepareConfirmedDocumentArtifact(db,documentArtifactStorage,job.teacher_id,item.kind,item.source_id,
-        {cards:knowledge.competencyCards.map(card=>({...card,name:card.official_name})),logo,expectedSourceHash:item.source_hash});
+        {cards:knowledge.competencyCards.map(card=>({...card,name:card.official_name})),logo,photoStorage:ordinaryStorage,expectedSourceHash:item.source_hash});
     }}));
 }
 

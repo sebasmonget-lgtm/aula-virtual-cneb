@@ -159,6 +159,7 @@ function contentForFamilyReport(document, names) {
   ];
   for (const report of Array.isArray(value.sections) ? value.sections : []) {
     children.push(heading(names.get(clean(report?.competency_id)) ?? "Aprendizajes observados", 2),
+      ...labelled("Valoración confirmada por la docente", document.achievement_levels?.find(row=>row.competency_v4_id===report.competency_id)?.achievement_level),
       ...section("Lo que hemos visto", report?.progress_summary, 2),
       ...section("Así lo vimos", report?.examples, 2),
       ...section("Qué ayudó", report?.support_or_conditions, 2),
@@ -171,7 +172,7 @@ function contentForFamilyReport(document, names) {
 }
 
 /** Render only the authorized, presentable projection returned by loadSavedDocument. */
-export async function renderSavedDocumentWord(document, competencyCards = [], { logo = null } = {}) {
+export async function renderSavedDocumentWord(document, competencyCards = [], { logo = null, studentPhoto = null } = {}) {
   if (!document || !["annual_plan", "diagnostic_summary", "experience", "activity", "family_report", "period_closure"].includes(document.kind)) {
     throw new Error("Documento no disponible para Word.");
   }
@@ -228,7 +229,8 @@ export async function renderSavedDocumentWord(document, competencyCards = [], { 
         ...(Number(document.version) > 1 ? labelled("Versión", String(document.version)) : []),
         ...labelled("Institución educativa", document.institution_name ?? document.document_context?.institution_name),
         ...labelled("Aula", document.classroom),
-        ...(document.kind === "family_report" ? labelled("Docente",document.teacher_name) : []),
+        ...(document.kind === "family_report" ? [...labelled("Edad",document.age ? `${document.age} años` : ""),...labelled("Docente",document.teacher_name),
+          ...(studentPhoto?[new Paragraph({children:[new ImageRun({data:studentPhoto.data,type:studentPhoto.mimeType==="image/png"?"png":"jpg",transformation:{width:72,height:72}})]})]:[])] : []),
         ...detail,
       ],
     }],
@@ -247,6 +249,10 @@ export async function prepareWordDownload(db, teacherId, kind, id, competencyCar
       buffer: document.content?.document_format === "diagnostic-unified-v1"
         ? await renderDiagnosticUnifiedWord(document, context, competencyCards, options)
         : await renderDiagnosticReportWord(document, context, competencyCards, options) };
+  }
+  if(kind==="family_report"&&options.photoStorage){
+    const student=(await db.query(`select s.profile_photo_path from students s join classrooms c on c.id=s.classroom_id where s.id=$1 and c.teacher_id=$2`,[document.student_id,teacherId])).rows[0];
+    if(student?.profile_photo_path){const photo=await options.photoStorage.read(student.profile_photo_path,{teacherId,studentId:document.student_id});options={...options,studentPhoto:photo};}
   }
   return { filename: wordFilenameFor(document), buffer: await renderSavedDocumentWord(document, competencyCards, options) };
 }

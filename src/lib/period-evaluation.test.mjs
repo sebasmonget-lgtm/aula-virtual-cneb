@@ -99,7 +99,7 @@ test("la migración futura exige lectura propia y escritura mediante servidor", 
   assert.match(sql, /El nivel definitivo requiere confirmación docente/);
 });
 
-async function fixture({ analysis = mockAnalysis(), jsonbPending = false } = {}) {
+async function fixture({ analysis = mockAnalysis(), jsonbPending = false, batchProvider = null } = {}) {
   const db = await PGlite.create();
   await db.exec(`
     create table school_years(id uuid primary key,owner_id uuid,year integer,starts_on date,ends_on date);
@@ -164,6 +164,9 @@ async function fixture({ analysis = mockAnalysis(), jsonbPending = false } = {})
   const masterSource=await loadAssessmentMasterSources(db,{id:classId,school_year_id:year,context_v4:currentContext},{id:firstPeriod,label:"Bimestre 1",starts_on:"2026-03-16",ends_on:"2026-05-15"});
   const masterDetails={period_summary:"Se trabajó la comunicación oral en situaciones de juego.",competencies:[{competency_id:"COM_ORAL",short_label:"Se comunica",area:"Comunicación",assessment_focus:"Cómo explica ideas en las situaciones propuestas.",criteria_worked:["Explica sus ideas."],relevant_evidence:["Explicaciones registradas."],patterns_to_consider:["Respuestas en distintas oportunidades."],progress_signals:["Amplía sus explicaciones."],support_signals:["Necesita preguntas abiertas."],insufficient_information_rules:["Una respuesta aislada no es suficiente."],contradiction_handling:"Conservar diferencias y consultar a la docente.",context_considerations:["Apoyos ofrecidos."],teacher_questions:["¿Ocurrió en otra situación?"],prohibited_inferences:["No calificar una observación aislada."],assessment_guidance:"Revisar el conjunto antes de valorar."}]};
   await db.query(`insert into assessment_masters(id,classroom_id,evaluation_period_id,version,status,details,source_snapshot,created_by,teacher_confirmed_at) values(gen_random_uuid(),$1,$2,1,'active',$3::jsonb,$4::jsonb,$5,now())`,[classId,firstPeriod,JSON.stringify(masterDetails),JSON.stringify(masterSource.snapshot),teacher]);
+  await db.exec(await readFile(new URL("../../local-db/migrations/0022_family_reports.sql",import.meta.url),"utf8"));
+  await db.exec(await readFile(new URL("../../local-db/migrations/0043_family_report_period.sql",import.meta.url),"utf8"));
+  await db.exec(await readFile(new URL("../../local-db/migrations/0023_ai_pending_generations.sql",import.meta.url),"utf8"));
   const pending = new Map(), calls = [];
   if (jsonbPending) pending.set = async (key, value) => {
     const copy = (await db.query('select $1::jsonb as payload', [JSON.stringify(value)])).rows[0].payload;
@@ -171,7 +174,7 @@ async function fixture({ analysis = mockAnalysis(), jsonbPending = false } = {})
   };
   // This reduced-schema fixture exercises the historical period routes; the F5–F8
   // ordinary-observation source has its own tests and tables in the full schema.
-  const handle = createPeriodEvaluationRouteHandler({ db, teacherId: teacher, includeOrdinary: false, loadClassroomContext: async () => currentContext, readJson: async (request) => request.body, send: (response, status, payload) => { response.result={status,body:payload}; }, pending, metadataForAudit: (metadata) => metadata, refreshStudentContext: async () => {}, evidenceStorage: { read: async () => ({ data: Buffer.from("image"), mimeType: "image/png" }) }, createProvider: () => ({}), generate: async (input) => { calls.push(input); return { output: input.workflow === "assessment" ? analysis : mockConclusion(), metadata: { model: "mock" } }; } });
+  const handle = createPeriodEvaluationRouteHandler({ db, teacherId: teacher, includeOrdinary: false, loadClassroomContext: async () => currentContext, readJson: async (request) => request.body, send: (response, status, payload) => { response.result={status,body:payload}; }, pending, metadataForAudit: (metadata) => metadata, refreshStudentContext: async () => {}, evidenceStorage: { read: async () => ({ data: Buffer.from("image"), mimeType: "image/png" }) }, createProvider: () => ({}), generate: async (input) => { calls.push(input); return { output: batchProvider ? await batchProvider(input,calls.length) : input.workflow === "assessment" ? analysis : input.workflow === "family_report" ? mockFamily(input) : mockConclusion(), metadata: { model: "mock" } }; } });
   async function call(method, route, body) {
     const response = { writeHead(status, headers) { this.status = status; this.headers = headers; }, end(data) { this.data = data; } };
     await handle({ request: { method, body }, url: new URL(`http://localhost${route}`), response, origin: null });
@@ -356,6 +359,8 @@ test("ficha única, nivel docente, cierre, salidas derivadas y cambio posterior 
     assert.equal((await f.call("GET", `/api/period-evaluations/detail?classroomId=${otherClass}&periodId=${period.id}&studentId=${studentA}&competencyId=COM_ORAL`)).status, 422);
     const revised=await f.call("GET",`/api/period-evaluations/detail?${query}&studentId=${studentA}&competencyId=COM_ORAL`);
     const decisionV2={...decisionA,evidenceFingerprint:revised.body.evidence_fingerprint,teacherAnalysis:"La docente revisó la nota corregida y el conjunto de observaciones."};
+    assert.equal((await f.call("POST","/api/period-evaluations/save-draft",{...decisionV2,expectedDraftRevision:null,provisionalLevel:"B"})).status,409);
+    assert.equal((await f.call("POST","/api/period-evaluations/reopen",{classroomId:classId,periodId:period.id,expectedCurrentVersionId:firstClose.body.id,reason:"Corrección de una observación registrada."})).status,200);
     const savedV2=await f.call("POST","/api/period-evaluations/save-draft",{...decisionV2,expectedDraftRevision:revised.body.draft?.revision??null,provisionalLevel:"B"});
     assert.equal(savedV2.status,200,JSON.stringify(savedV2.body));
     assert.equal((await f.call("POST","/api/period-evaluations/confirm",{...decisionV2,expectedDraftRevision:savedV2.body.draft_revision})).status,200);
@@ -668,4 +673,70 @@ test("H34: P1–P3 cierran con pendientes sin notas inventadas; P4 bloquea los n
     assert.equal((await f.db.query(`select count(*)::int as n from period_closure_versions where classroom_id=$1`,[classId])).rows[0].n,3);
     assert.equal((await f.db.query(`select count(*)::int as n from competency_assessments where status='active'`)).rows[0].n,0);
   } finally {await f.db.close();}
+});
+
+function mockFamily(input){return {introduction:"Compartimos lo observado este período.",sections:input.competency_ids.map(id=>({competency_id:id,information_status:"sufficient",progress_summary:"Paráfrasis que debe reemplazarse por la conclusión canónica.",examples:["Un ejemplo."],support_or_conditions:[],next_steps:[],family_suggestions:["Conversar sobre los juegos en casa."],insufficiency_note:null})),closing_note:"Seguiremos acompañando sus preguntas."};}
+async function confirmBatchGrades(f,{both=true}={}){
+  if(both)await f.db.query(`insert into evidences values(gen_random_uuid(),$1,$2,$3,now(),'observed','Contó una idea en el juego.',null,'2026-04-10')`,[studentB,activity,criterion]);
+  for(const studentId of both?[studentA,studentB]:[studentA]){
+    const detail=(await f.call("GET",`/api/period-evaluations/detail?classroomId=${classId}&periodId=${firstPeriod}&studentId=${studentId}&competencyId=COM_ORAL`)).body;
+    const body={classroomId:classId,periodId:firstPeriod,studentId,competencyId:"COM_ORAL",evidenceFingerprint:detail.evidence_fingerprint,expectedDraftRevision:null,provisionalLevel:"B",achievementLevel:"B",teacherAnalysis:"Explica una idea durante el juego con apoyo docente.",teacherJustification:"La docente contrastó esta observación en su contexto."};
+    const draft=await f.call("POST","/api/period-evaluations/save-draft",body);assert.equal(draft.status,200,JSON.stringify(draft.body));
+    assert.equal((await f.call("POST","/api/period-evaluations/confirm",{...body,expectedDraftRevision:draft.body.draft_revision})).status,200);
+  }
+}
+const batchScope={classroomId:classId,periodId:firstPeriod};
+async function prepareBatch(f,kind,extra={}){const r=await f.call("POST","/api/period-evaluations/batches",{...batchScope,kind,...extra});assert.equal(r.status,202,JSON.stringify(r.body));return r.body;}
+async function runBatch(f,job){for(let i=0;i<10&&job.status==="queued";i++){const r=await f.call("POST",`/api/period-evaluations/batches/${job.id}/run`,batchScope);assert.equal(r.status,200,JSON.stringify(r.body));job=r.body;}return job;}
+async function saveBatch(f,job){const r=await f.call("POST",`/api/period-evaluations/batches/${job.id}/save`,{...batchScope,expectedRevision:job.revision,items:job.items});assert.equal(r.status,200,JSON.stringify(r.body));return r.body;}
+
+test("lotes: checkpoint durable, reintento explícito y guardado idempotente",async()=>{
+  let fail=true;const f=await fixture({batchProvider:async(input,n)=>{if(n===2&&fail){fail=false;throw Error("fixture interruption");}return mockConclusion();}});
+  try{
+    await confirmBatchGrades(f);let job=await prepareBatch(f,"conclusions");
+    job=(await f.call("POST",`/api/period-evaluations/batches/${job.id}/run`,batchScope)).body;assert.equal(job.completed,1);
+    const failed=await f.call("POST",`/api/period-evaluations/batches/${job.id}/run`,batchScope);assert.equal(failed.status,503);assert.equal(failed.body.completed,1);
+    const recovered=(await f.call("GET",`/api/period-evaluations/batches/${job.id}?classroomId=${classId}&periodId=${firstPeriod}`)).body;assert.equal(recovered.status,"failed");assert.equal(recovered.completed,1);assert.equal(Object.hasOwn(recovered.items[0],"snapshot"),false);
+    const resumed=await f.call("POST",`/api/period-evaluations/batches/${job.id}/run`,{...batchScope,retryUncertain:true});assert.equal(resumed.status,200);assert.equal(resumed.body.status,"ready");assert.equal(f.calls.length,3);
+    const saved=await saveBatch(f,resumed.body);await saveBatch(f,saved);assert.equal((await f.db.query("select count(*)::int as n from competency_descriptive_conclusions where status='active'")).rows[0].n,2);
+  }finally{await f.db.close();}
+});
+test("lotes: una llamada incierta exige reintento y no repite resultados completados",async()=>{
+  const f=await fixture();try{await confirmBatchGrades(f);let job=await prepareBatch(f,"conclusions");
+    job=(await f.call("POST",`/api/period-evaluations/batches/${job.id}/run`,batchScope)).body;
+    await f.db.query(`update ai_pending_generations set payload=payload||'{"status":"running","lease_until":"2020-01-01T00:00:00Z"}'::jsonb where id=$1`,[job.id]);
+    assert.equal((await f.call("POST",`/api/period-evaluations/batches/${job.id}/run`,batchScope)).status,409);assert.equal(f.calls.length,1);
+    const resumed=await f.call("POST",`/api/period-evaluations/batches/${job.id}/run`,{...batchScope,retryUncertain:true});assert.equal(resumed.status,200);assert.equal(resumed.body.completed,2);assert.equal(f.calls.length,2);
+  }finally{await f.db.close();}
+});
+test("lotes: fuentes cambiadas y aula ajena bloquean sin perder las propuestas",async()=>{
+  const f=await fixture();try{await confirmBatchGrades(f);let job=await runBatch(f,await prepareBatch(f,"conclusions"));
+    await f.db.query("update evidences set observation_text='Corrección posterior' where id=$1",[firstEvidence]);
+    assert.equal((await f.call("POST",`/api/period-evaluations/batches/${job.id}/save`,{...batchScope,expectedRevision:job.revision,items:job.items})).status,409);
+    assert.equal((await f.call("GET",`/api/period-evaluations/batches/${job.id}?classroomId=${otherClass}&periodId=${firstPeriod}`)).status,422);
+    assert.equal((await f.db.query("select count(*)::int as n from competency_descriptive_conclusions")).rows[0].n,0);
+    assert.equal((await f.call("GET",`/api/period-evaluations/batches/${job.id}?classroomId=${classId}&periodId=${firstPeriod}`)).body.completed,2);
+  }finally{await f.db.close();}
+});
+test("lotes: informe canónico, edición selectiva, invalidación del único niño afectado",async()=>{
+  const f=await fixture();try{await confirmBatchGrades(f);
+    await saveBatch(f,await runBatch(f,await prepareBatch(f,"conclusions")));
+    await saveBatch(f,await runBatch(f,await prepareBatch(f,"family")));
+    const reports=(await f.db.query("select * from family_reports where status='active'")).rows;assert.equal(reports.length,2);
+    const original=(await f.db.query("select * from competency_descriptive_conclusions where student_id=$1 and status='active'",[studentA])).rows[0];
+    assert.equal(reports.find(row=>row.student_id===studentA).details.sections[0].progress_summary,original.details.conclusion_text);
+    const count=f.calls.length;const edit=await prepareBatch(f,"conclusions",{studentId:studentA,competencyId:"COM_ORAL",edit:true});assert.equal(edit.status,"ready");assert.equal(f.calls.length,count);
+    edit.items[0].proposal.conclusion_text="Explica sus ideas con preguntas abiertas. Seguiremos acompañando su participación.";await saveBatch(f,edit);
+    assert.equal((await f.db.query("select status from family_reports where id=$1",[reports.find(row=>row.student_id===studentA).id])).rows[0].status,"archived");
+    assert.equal((await f.db.query("select status from family_reports where id=$1",[reports.find(row=>row.student_id===studentB).id])).rows[0].status,"active");
+    assert.equal((await f.db.query("select status from competency_descriptive_conclusions where id=$1",[original.id])).rows[0].status,"archived");
+    assert.equal(f.calls.length,count);
+  }finally{await f.db.close();}
+});
+test("lotes: niño sin evidencia recibe informe cauteloso sin letra ni llamada IA",async()=>{
+  const f=await fixture();try{await confirmBatchGrades(f,{both:false});await saveBatch(f,await runBatch(f,await prepareBatch(f,"conclusions")));const before=f.calls.length;
+    const job=await runBatch(f,await prepareBatch(f,"family"));assert.equal(job.total,2);assert.equal(f.calls.length,before+1);
+    const unobserved=job.items.find(row=>row.student_id===studentB);assert.deepEqual(unobserved.proposal.sections,[]);assert.ok(unobserved.review_reason);await saveBatch(f,job);
+    assert.equal((await f.db.query("select count(*)::int as n from competency_assessments where student_id=$1 and achievement_level is not null",[studentB])).rows[0].n,0);
+  }finally{await f.db.close();}
 });

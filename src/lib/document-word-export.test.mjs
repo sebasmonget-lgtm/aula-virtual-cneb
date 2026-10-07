@@ -30,6 +30,15 @@ async function xmlForWithCards(document, competencyCards = cards) {
 }
 const xmlFor = xmlForWithCards;
 
+test("Word familiar reúne identificación, valoración y conclusión canónica con foto opcional",async()=>{
+  const photo=await sharp({create:{width:20,height:20,channels:3,background:"#087d96"}}).jpeg().toBuffer();
+  const document={...base("family_report",{introduction:"Lo que destaca este bimestre.",sections:[{competency_id:"COM_ORAL",progress_summary:"Explica su elección durante el juego.",examples:[],support_or_conditions:[],next_steps:[],family_suggestions:["Conversar sobre su juego."],insufficiency_note:null}],closing_note:"Continuaremos acompañándolo."}),title:"Informe a la familia de Luna Ficticia",teacher_name:"Docente ficticia",age:5,period_label:"Bimestre 3",achievement_levels:[{competency_v4_id:"COM_ORAL",achievement_level:"B"}]};
+  const zip=await JSZip.loadAsync(await renderSavedDocumentWord(document,cards,{studentPhoto:{data:photo,mimeType:"image/jpeg"}})),xml=await zip.file("word/document.xml").async("string");
+  for(const value of ["Luna Ficticia","5 años","Docente ficticia","Bimestre 3","Valoración confirmada por la docente","Explica su elección durante el juego."])assert.ok(xml.includes(value),value);
+  assert.ok(Object.keys(zip.files).some(name=>name.startsWith("word/media/")));
+  const without=await JSZip.loadAsync(await renderSavedDocumentWord(document,cards));assert.equal(Object.keys(without.files).some(name=>name.startsWith("word/media/")),false);
+});
+
 test("el plan anual se exporta a Word con secciones, encabezado y competencias, sin trazabilidad interna", async () => {
   const document = { ...base("annual_plan", annualProposal), title: annualProposal.title, document_context: { institution_name: "Jardín Los Girasoles",
     teacher_name: "Marisol Rojas", age: 5, classroom_section: "Sala Amarilla", starts_on: "2026-03-01", ends_on: "2026-12-20" } };

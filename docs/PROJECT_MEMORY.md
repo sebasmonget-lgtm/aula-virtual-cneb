@@ -1,5 +1,11 @@
 # Memoria del proyecto Ayni Aula
 
+## Handoff incremental del 7 de octubre de 2026
+
+Base remota verificada por fetch: codex/ayni-pdf-20261006 @ 47c8ce72dc77c1c08cc729ac060855f79fa14240, árbol limpio. Diagnóstico libre y síntesis con fuentes/insuficiencia; contexto separa procedencias; Hoy sin reajuste inteligente en la experiencia nueva; Evaluar con tres espacios, revisión por competencia, lotes durables y consolidado matricial. Reapertura explícita en servidor, invalidación selectiva y cierre histórico inmutable. Word familiar conserva conclusión canónica, nivel docente y foto privada opcional. Cuatro carpetas y documentación de quince tramos/timeline.
+
+Sin migraciones ni RLS nuevo; jobs/eventos reutilizan tablas/JSONB privados existentes. Suite 745/745 PASS, typecheck/lint y Next/Vinext PASS. QA HTTP/UI con aula ficticia y proveedor simulado, cero IA pagada; render de DOCX limitado por ausencia de LibreOffice. Informe: docs/qa/handoff-2026-10-07.md. Solo commit/push/Preview autorizados para esta ronda; producción se conserva y se verifica en recibo posterior. Detenerse después de READY/smoke/capturas para QA humano.
+
 ## Auditoría previa de experiencia, 2026-10-05
 
 Solicitud `ayni_rediseño_experiencia.md`: revisar el producto actual y explicar la transición antes de implementar cambios grandes. Fetch comprobó HEAD `2624348` idéntico a `origin/codex/qa-ayni-v2`; `origin/codex/annual-year-map` conserva `055c77e`, 18 commits atrás. Auditoría y propuesta en `docs/REDISENO_EXPERIENCIA_AUDITORIA_2026-10-05.md`. No se modificó producto, datos, cuentas, migraciones ni plantillas, ni se publicó. La propuesta no es una decisión arquitectónica adoptada.

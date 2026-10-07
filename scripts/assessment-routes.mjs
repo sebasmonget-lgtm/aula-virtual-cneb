@@ -1,3 +1,4 @@
+import { assertPeriodDatesOpen } from "../src/lib/period-edit-guard.mjs";
 import { randomUUID } from "node:crypto";
 import { loadKnowledgeBaseV4 } from "../src/lib/knowledge-base-v4.mjs";
 import { cardIsApplicable } from "../src/lib/ai-context-builder-v4.mjs";
@@ -81,6 +82,7 @@ export function createAssessmentRouteHandler({ db, annualPlanningContext, readJs
         const body = await readJson(request);
         const { student, card } = await scope(context, body.studentId, body.competencyId);
         validateAssessmentPeriod(body.periodStart, body.periodEnd, context.calendar);
+        await assertPeriodDatesOpen(db,context.id,body.periodStart,body.periodEnd);
         const rows = await loadAssessmentEvidence(db, { studentId: student.id, competencyId: card.id, periodStart: body.periodStart, periodEnd: body.periodEnd });
         if (!rows.length) throw new Error("No hay evidencias registradas para analizar esta competencia.");
         const master = await activeMaster(context, body.periodStart, body.periodEnd, card.id);
@@ -106,6 +108,7 @@ export function createAssessmentRouteHandler({ db, annualPlanningContext, readJs
         const body = await readJson(request);
         const { student } = await scope(context, body.studentId, body.competencyId);
         validateAssessmentPeriod(body.periodStart, body.periodEnd, context.calendar);
+        await assertPeriodDatesOpen(db,context.id,body.periodStart,body.periodEnd);
         const item = await pending.get(body.generationId);
         checkPending(item, context, student.id, body.competencyId, body.periodStart, body.periodEnd);
         validateAssessmentProposal(body.proposal, body.competencyId, item.source_evidence_ids.length);
@@ -125,6 +128,7 @@ export function createAssessmentRouteHandler({ db, annualPlanningContext, readJs
       const match = url.pathname.match(/^\/api\/assessments\/([^/]+)(\/confirm)?$/);
       if (match && request.method === "PUT" && !match[2]) {
         const body = await readJson(request), current = await currentDraft(context, match[1]);
+        await assertPeriodDatesOpen(db,context.id,current.period_start,current.period_end);
         const item = body.generationId ? await pending.get(body.generationId) : null;
         if (body.generationId) checkPending(item, context, current.student_id, current.competency_v4_id, dateOnly(current.period_start), dateOnly(current.period_end));
         validateAssessmentProposal(body.proposal, current.competency_v4_id, item?.source_evidence_ids.length ?? current.source_evidence_ids.length);
@@ -145,6 +149,7 @@ export function createAssessmentRouteHandler({ db, annualPlanningContext, readJs
         await db.exec("begin");
         let saved;
         try {
+          await assertPeriodDatesOpen(db,context.id,current.period_start,current.period_end,{lock:true});
           await db.query(`update competency_assessments set status='archived',updated_at=now() where student_id=$1 and competency_v4_id=$2 and period_start=$3::date and period_end=$4::date and status='active'`, [current.student_id, current.competency_v4_id, current.period_start, current.period_end]);
           saved = (await db.query(`update competency_assessments set status='active',teacher_confirmed_at=now(),updated_at=now() where id=$1 and status='draft' returning id,status,teacher_confirmed_at`, [current.id])).rows[0];
           if (!saved) throw new Error("Borrador no disponible.");

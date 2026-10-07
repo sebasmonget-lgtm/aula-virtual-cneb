@@ -1,3 +1,4 @@
+import { periodGuardFixture } from "./test-fixtures/period-guard.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { PGlite } from "@electric-sql/pglite";
@@ -123,6 +124,7 @@ async function fixture({ twoEvidence = false } = {}) {
   await db.query(`insert into activity_criteria values($1,$2,'COM_ORAL','Expresión de Ana','{"expected_evidence":"Ana cuenta algo"}'::jsonb)`, [criterionId, activityId]);
   await db.query(`insert into evidences values($1,$2,$3,$4,'2026-09-20T12:00:00Z','with_support','Ana contó algo',null)`, [evidenceId, studentId, activityId, criterionId]);
   if (twoEvidence) await db.query(`insert into evidences values($1,$2,$3,$4,'2026-09-21T12:00:00Z','insufficient_information','Anita escuchó',null)`, [evidenceId2, studentId, activityId, criterionId]);
+  await periodGuardFixture(db,classroomId);
   const pending = new Map(), captures = [], responses = [];
   const handler = createAssessmentRouteHandler({ db, annualPlanningContext: async () => ({ id: classroomId, age: 5, castellano_l2_applicable: false, religion_applicable: false, calendar: { starts_on: "2026-03-01", ends_on: "2026-12-31" } }), readJson: async (request) => request.body, send: (_res, status, body) => responses.push({ status, body }), pending, metadataForAudit: (value) => value, refreshStudentContext: async (database, id) => captures.push({ refreshed: id }), createProvider: () => ({}), generate: async (input) => { captures.push({ input }); return { output: proposal(), metadata: { model: "mock" } }; } });
   async function call(method, pathname, body) { responses.length = 0; await handler({ request: { method, body }, url: new URL(`http://localhost${pathname}`), response: {}, origin: null }); return responses[0]; }

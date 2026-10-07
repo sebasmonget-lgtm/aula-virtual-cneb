@@ -102,6 +102,7 @@ export type DiagnosticGroupDetails = { strengths: string; needs: string; plannin
 export type DiagnosticAnnualPriority = { title: string; reason: string; related_competency_ids: string[]; importance: "higher" | "normal" | "observe_more" };
 export type DiagnosticPriorityDetails = { priorities: DiagnosticAnnualPriority[] };
 export type DiagnosticReviewWorkspace = {
+  brief: {text:string;source_refs:{id:string;source_type:string}[];information_status:string};
   students: (LocalStudent & { initial_context: string | null; family_context: ({ version: number } & Record<string, string | number>) | null; unclassified_observations: number })[];
   observations: { id: string; student_id: string; competency_v4_id: string | null; experience_id: string; aspect_id: string; catalog_version: string; experience_title: string; aspect_prompt: string; observation_status: DiagnosticObservationStatus; observation_text: string | null; observed_at: string; has_media?: boolean }[];
   reviews: { id: string; student_id: string; competency_v4_id: string; version: number; status: "draft" | "confirmed"; details: DiagnosticSynthesisDetails; teacher_confirmed_at: string | null; updated_at: string }[];

@@ -1,3 +1,4 @@
+import { assertPeriodDatesOpen } from "../src/lib/period-edit-guard.mjs";
 import { randomUUID } from "node:crypto";
 import { loadKnowledgeBaseV4 } from "../src/lib/knowledge-base-v4.mjs";
 import { cardIsApplicable } from "../src/lib/ai-context-builder-v4.mjs";
@@ -97,6 +98,7 @@ export function createDescriptiveConclusionRouteHandler({ db, annualPlanningCont
         const body = await readJson(request);
         if (!body.studentId) throw new Error("Selecciona un niño.");
         const { assessment } = await activeAssessment(context, body.assessmentId, body.studentId);
+        await assertPeriodDatesOpen(db,context.id,assessment.period_start,assessment.period_end);
         await sourceEvidence(assessment);
         const item = await pending.get(body.generationId);
         checkPending(item, context, assessment);
@@ -114,6 +116,7 @@ export function createDescriptiveConclusionRouteHandler({ db, annualPlanningCont
       const match = url.pathname.match(/^\/api\/descriptive-conclusions\/([^/]+)(\/confirm)?$/);
       if (match && request.method === "PUT" && !match[2]) {
         const body = await readJson(request), { row, assessment } = await draft(context, match[1]);
+        await assertPeriodDatesOpen(db,context.id,row.period_start,row.period_end);
         const item = body.generationId ? await pending.get(body.generationId) : null;
         if (body.generationId) checkPending(item, context, assessment);
         if (!item && row.assessment_id !== assessment.id) throw new Error(staleMessage);
@@ -130,10 +133,12 @@ export function createDescriptiveConclusionRouteHandler({ db, annualPlanningCont
         const { row, assessment } = await draft(context, match[1]);
         validateDescriptiveConclusion(row.details, row.competency_v4_id, assessment.details.information_status);
         if (row.assessment_id !== assessment.id || !sameAssessmentSnapshot(row.source_assessment_snapshot, sourceAssessmentSnapshot(assessment))) { fail(response, origin, new Error(staleMessage), 409); return true; }
+        await assertPeriodDatesOpen(db,context.id,assessment.period_start,assessment.period_end);
         await sourceEvidence(assessment);
         await db.exec("begin");
         let saved;
         try {
+          await assertPeriodDatesOpen(db,context.id,row.period_start,row.period_end,{lock:true});
           await db.query(`update competency_descriptive_conclusions set status='archived',updated_at=now() where student_id=$1 and competency_v4_id=$2 and period_start=$3::date and period_end=$4::date and status='active'`, [row.student_id, row.competency_v4_id, row.period_start, row.period_end]);
           saved = (await db.query(`update competency_descriptive_conclusions set status='active',teacher_confirmed_at=now(),updated_at=now() where id=$1 and status='draft' returning id,status,teacher_confirmed_at`, [row.id])).rows[0];
           if (!saved) throw new Error("Borrador no disponible.");

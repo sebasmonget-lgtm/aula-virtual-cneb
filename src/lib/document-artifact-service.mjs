@@ -27,7 +27,7 @@ async function sourceScope(db, teacherId, kind, sourceId) {
 }
 
 export async function prepareConfirmedDocumentArtifact(db, storage, teacherId, kind, sourceId,
-  { cards = [], logo = null, render = prepareWordDownload, expectedSourceHash = null } = {}) {
+  { cards = [], logo = null, photoStorage = null, render = prepareWordDownload, expectedSourceHash = null } = {}) {
   if (!supported.has(kind) || !uuid.test(sourceId ?? "")) return null;
   const scope = await sourceScope(db,teacherId,kind,sourceId);
   if (!scope) return null;
@@ -68,7 +68,7 @@ export async function prepareConfirmedDocumentArtifact(db, storage, teacherId, k
     let bytes;
     try { bytes = await storage.read(key,teacherId); }
     catch {
-      const generated = await render(db,teacherId,kind,sourceId,cards,{ logo });
+      const generated = await render(db,teacherId,kind,sourceId,cards,{ logo,photoStorage });
       if (!generated?.buffer?.length) throw new Error("Word no disponible.");
       bytes = await storage.save(key,generated.buffer,teacherId);
     }

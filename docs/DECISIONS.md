@@ -1,5 +1,13 @@
 # Decisiones de arquitectura
 
+## ADR 119 — Evaluación por competencia, lotes y reapertura explícita (2026-10-07)
+
+La experiencia principal tiene tres espacios; valoración y conclusión son decisiones distintas. Docente confirma AD/A/B/C sobre evidencia vigente; luego prepara todos los textos con checkpoints por niño/competencia, revisión por excepción y guardado conjunto. Jobs usan ai_pending_generations con ownership/huella/CAS/lease; no se repite una escritura de resultado incierto automáticamente. Editar una conclusión/informe crea versión sin IA; regenerar solo el seleccionado utiliza los contratos pedagógicos existentes.
+
+Informe familiar reutiliza literalmente la conclusión canónica y su valoración original confirmada. Foto opcional permanece privada y solo se proyecta al Word familiar. Cambio de valoración archiva únicamente su conclusión y reportes derivados del niño. Cierre conserva manifiesto; modificaciones de evaluación posteriores exigen reapertura con motivo/actor/fecha en JSONB existente. Recierre crea otra versión aunque el contenido coincida. Sin migraciones ni cambios de RLS.
+
+Diagnóstico libre conserva estado al alternar; síntesis determinística cita fuentes y explicita insuficiencia. Patrones familiares son contexto, no nivel; una observación individual no se generaliza. Confirmación sigue usando snapshot versionado existente. Quince tramos/timeline y contratos históricos se conservan. Implementación, QA y rollback en docs/qa/handoff-2026-10-07.md.
+
 ## ADR 109 — Interpretaciones insuficientes y preparación anual recuperable
 
 **Decisión (2026-10-03).** Mantener la validación estricta de alcance y separar hipótesis opcionales incompatibles como información insuficiente; revisar también cualquier razón/apoyo dependiente. Reutilizar ai_pending_generations para jobs privados del aula, checkpoints de salidas, etapas reales y una llamada por petición. La página consulta estados y despacha pasos en cola; una lease con token cerca ejecuciones concurrentes/tardías. Las huellas y el CAS se vuelven a comprobar antes de guardar. No se añaden workers ni migraciones ni porcentajes ficticios.

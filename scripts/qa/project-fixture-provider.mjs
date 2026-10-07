@@ -78,6 +78,8 @@ const server = createServer(async (request, response) => {
       diversity_support: "Ofrecer diversas maneras de participar.",
       closing: "Recuperar las ideas expresadas durante el proyecto.",
     };
+    else if(schema==="descriptive-conclusion-v1")output={competency_id:context.curriculum.confirmed_competency_ids[0],information_status:"sufficient",conclusion_text:"Explica una idea durante el juego y la comparte con preguntas de apoyo. Continuará dialogando en pequeños grupos.",progress_examples:["Explicó cómo organizó los materiales."],support_or_conditions:["Preguntas abiertas de la docente."],next_steps:["Ofrecer nuevos juegos para explicar sus decisiones."],insufficiency_reason:null,caution:"Fixture local que requiere revisión docente."};
+    else if(schema==="family-report-v1")output={introduction:"Compartimos las situaciones observadas en este bimestre.",sections:context.curriculum.confirmed_competency_ids.map(id=>({competency_id:id,information_status:"sufficient",progress_summary:"Texto de prueba sustituido por la conclusión guardada.",examples:["Explicó una idea."],support_or_conditions:[],next_steps:["Seguir conversando durante el juego."],family_suggestions:["Preguntar qué descubrió durante el juego."],insufficiency_note:null})),closing_note:"Seguiremos acompañando sus preguntas y compartiendo lo observado."};
     else if (schema === "activity-v1") {
       const inherited = context.context?.workflow_inputs?.learning_experience_context?.inherited_route_item;
       if (!inherited) throw new Error("El fixture de actividad exige un blueprint heredado.");

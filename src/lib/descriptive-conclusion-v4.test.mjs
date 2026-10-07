@@ -1,3 +1,4 @@
+import { periodGuardFixture } from "./test-fixtures/period-guard.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
@@ -104,6 +105,7 @@ async function fixture({ status = "active", informationStatus = "sufficient" } =
   const rows = await loadAssessmentEvidence(db, { studentId, competencyId: "COM_ORAL", periodStart, periodEnd });
   const details = { ...assessmentDetails, information_status: informationStatus, insufficiency_reason: informationStatus === "insufficient" ? "Pocas situaciones observadas." : null };
   await db.query(`insert into competency_assessments(id,student_id,competency_v4_id,period_start,period_end,version,source_evidence_ids,source_evidence_snapshot,details,generation_metadata,status,teacher_confirmed_at,achievement_level) values($1,$2,'COM_ORAL',$3::date,$4::date,1,$5::jsonb,$6::jsonb,$7::jsonb,'{"secret":"metadata"}'::jsonb,$8,$9::timestamptz,'A')`, [assessmentId, studentId, periodStart, periodEnd, JSON.stringify(rows.map((row) => row.id)), JSON.stringify(assessmentSourceSnapshot(rows)), JSON.stringify(details), status, status === "active" ? "2026-09-22T12:00:00Z" : null]);
+  await periodGuardFixture(db,classroomId);
   const pending = new Map(), captures = [], responses = [];
   const handler = createDescriptiveConclusionRouteHandler({ db, annualPlanningContext: async () => ({ id: classroomId, age: 5, castellano_l2_applicable: false, religion_applicable: false }), readJson: async (request) => request.body, send: (_res, statusCode, body) => responses.push({ status: statusCode, body }), pending, metadataForAudit: (value) => value, refreshStudentContext: async (_database, id) => captures.push({ refreshed: id }), createProvider: () => ({}), generate: async (input) => { captures.push({ input }); return { output: conclusion(informationStatus), metadata: { model: "mock" } }; } });
   async function call(method, pathname, body) { responses.length = 0; await handler({ request: { method, body }, url: new URL(`http://localhost${pathname}`), response: {}, origin: null }); return responses[0]; }
