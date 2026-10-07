@@ -129,6 +129,7 @@ test("request selectors are scoped to the verified classroom tree", async () => 
       await db.query("insert into evaluation_periods values ($1,$2)", [period, year]);
     }
     const check = (pathname, body) => authorizeRequestSelectors({ db, teacherId: teacherA, url: new URL(`http://localhost${pathname}`), body });
+    await check("/api/students/inactive"); // Collection route; the service scopes every row to the teacher.
     assert.equal((await db.query("select count(*)::int as count from classrooms")).rows[0].count, 2);
     assert.equal((await db.query("select count(*)::int as count from evaluation_periods")).rows[0].count, 2);
     assert.equal((await db.query("select c.teacher_id as owner_id from classrooms c join school_years y on y.id=c.school_year_id and y.owner_id=c.teacher_id where c.id=$1", [roomA])).rows[0]?.owner_id, teacherA);

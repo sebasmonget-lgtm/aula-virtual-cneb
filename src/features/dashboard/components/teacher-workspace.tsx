@@ -93,7 +93,7 @@ export function TeacherWorkspace() {
   const [activityRunBlockId, setActivityRunBlockId] = useState<string | null>(null);
   const [evidenceContext, setEvidenceContext] = useState<{ activityId: string; criteria: ActivityCriterion[]; title: string } | null>(null);
   const [studentId, setStudentId] = useState("");
-  const [ordinaryContext, setOrdinaryContext] = useState<{ id: string; title: string; criteria: ActivityCriterion[] } | null | undefined>(undefined);
+  const [ordinaryContext, setOrdinaryContext] = useState<{ id: string; title: string; criteria: ActivityCriterion[]; initialStudentId?: string; initialCriterionId?: string; momentId?: string } | null | undefined>(undefined);
   const [ordinaryReviewOpen, setOrdinaryReviewOpen] = useState(false);
   const [criterionId, setCriterionId] = useState("");
   const [note, setNote] = useState("");
@@ -146,8 +146,7 @@ export function TeacherWorkspace() {
         try {
           const guidance = await loadStartingGuidance(localDatabaseApiUrl);
           if (!controller.signal.aborted && !navigationTouched.current) {
-            if(redesigned && guidance.startingSection!=="Hoy"){setActive("Planificar");writeWorkspaceLocation("Planificar",{tab:"annual"});}
-            else if (guidance.startingSection === "Diagnóstico") { setPlanningTarget("diagnostic"); setDiagnosticInitialStep(1); setActive("Planificar"); }
+            if (guidance.startingSection === "Diagnóstico") { setPlanningTarget("diagnostic"); setDiagnosticInitialStep(1); setActive("Planificar"); }
             else setActive(guidance.startingSection === "Niños" ? "Aula" : guidance.startingSection);
           }
           if (!controller.signal.aborted) {
@@ -224,9 +223,9 @@ export function TeacherWorkspace() {
     setDashboard(await updateLocalExecution(input));
   }
 
-  function openEvidenceFor(block: LocalDashboard["today"]["blocks"][number], suggestedStudentId?: string) {
+  function openEvidenceFor(block: LocalDashboard["today"]["blocks"][number], suggestedStudentId?: string, selectedCriterionId?: string, momentId?: string) {
     if (newAyniFeatureEnabled(process.env.NEXT_PUBLIC_AYNI_ORDINARY_OBSERVATIONS) && block.activity_id) {
-      setOrdinaryContext({ id: block.activity_id, title: block.title, criteria: block.criteria }); return;
+      setOrdinaryContext({ id: block.activity_id, title: block.title, criteria: block.criteria, initialStudentId: suggestedStudentId, initialCriterionId: selectedCriterionId, momentId }); return;
     }
     if (!block.activity_id || !block.criteria.length) return;
     setStudentId("");
@@ -297,13 +296,19 @@ export function TeacherWorkspace() {
             <div className="md:hidden"><p className="text-xl font-extrabold leading-tight text-[#1c2e50]">Ayni Aula</p><p className="text-xs text-[#60718a]">{active === "Documentos" || active === "Biblioteca" ? "Tus documentos, ideas y materiales" : active === "Calendario" ? "Tu año, proyectos y actividades" : active === "Aula" ? "Tus niños y su seguimiento" : active === "Evaluar" ? "Evidencias y decisiones" : active === "Planificar" ? "Diagnóstico, proyectos y actividades" : "Tu aliada en Inicial"}</p></div>
             <div className="hidden md:block"><p className="text-sm font-semibold md:text-base">{sentenceCase(today)}</p><p className="text-xs text-muted-foreground">{profile?.institution_name ?? "Institución por configurar"} · {profile?.section ?? "Aula"}</p></div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <details className="relative"><summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-xl border bg-white px-3 text-sm font-semibold text-[#07576c]"><Users className="size-4" /> Mi aula</summary>
+              <div className="absolute right-0 z-40 mt-2 grid w-52 gap-1 rounded-xl border bg-white p-2 shadow-lg">
+                <Button variant="ghost" onClick={() => navigate("Aula")}>Alumnos y familias</Button>
+                <Button variant="ghost" onClick={() => navigate("Perfil")}>Datos del aula</Button>
+                <Button variant="ghost" onClick={() => navigate("Perfil")}>Configuración</Button>
+              </div></details>
             {newAyniFeatureEnabled(process.env.NEXT_PUBLIC_AYNI_ORDINARY_OBSERVATIONS) && (active === "Hoy" || active === "Aula") &&
               <Button type="button" variant="outline" className="min-h-11" onClick={() => setOrdinaryContext(null)}>Registrar observación</Button>}
             {newAyniFeatureEnabled(process.env.NEXT_PUBLIC_AYNI_CURRICULAR_REVIEW) && (active === "Hoy" || active === "Aula") &&
               <Button type="button" variant="outline" className="min-h-11" onClick={() => setOrdinaryReviewOpen(true)}>Revisar observaciones</Button>}
             {!f7Enabled && <button type="button" aria-label="Calendario" title="Calendario" aria-current={active === "Calendario" ? "page" : undefined} onClick={() => navigate("Calendario")} className={`grid size-11 place-items-center rounded-xl focus-visible:outline-2 focus-visible:outline-[#087d96] md:hidden ${active === "Calendario" ? "bg-[#dff3f6] text-[#087d96]" : "text-[#60718a] hover:bg-[#edf6fa]"}`}><CalendarRange className="size-5" /></button>}
-            <div className={`hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold sm:flex ${databaseState === "connected" ? "bg-[#e5f1ee] text-[#1f625c]" : "bg-muted text-muted-foreground"}`}>
+            <div className={`hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ${databaseState === "connected" ? "bg-[#e5f1ee] text-[#1f625c]" : "bg-muted text-muted-foreground"}`}>
               <Database className="size-3.5" />
               {databaseState === "connected" ? "Base conectada" : "Conectando"}
             </div>
@@ -318,8 +323,8 @@ export function TeacherWorkspace() {
           active === "Documentos" ? <DocumentsScreen onPlan={() => navigate("Planificar")} /> :
           active === "Calendario" ? <SchoolCalendarScreen onOpenPlanning={() => navigate("Planificar")} onOpenActivity={(item) => { setCalendarActivity(item); setPlanningTarget("activities"); navigate("Planificar"); }} /> : active === "Biblioteca" ? dashboard ? <ResourceLibraryScreen onPlan={() => navigate("Planificar")} age={dashboard.profile.age_years} initialFilter={libraryFilter} onUse={(resource) => { setSelectedResource(resource); setPlanningTarget("activities"); navigate("Planificar"); }} /> : <ScreenSkeleton /> :
           active === "Evaluar" ? dashboard ? <EvaluationArea dashboard={dashboard} initialTarget={evaluationTarget} initialSection={evaluationEntry} onPlan={() => { setPlanningTarget(null); navigate("Planificar"); }} onPrepareActivity={() => { setPlanningTarget("activities"); navigate("Planificar"); }} onToday={() => navigate("Hoy")} /> : <ScreenSkeleton /> :
-          active === "Aula" ? dashboard ? <><div className="mx-auto mb-4 flex max-w-5xl flex-wrap gap-2">{f7Enabled && <><Button variant="outline" onClick={() => openDiagnostic()}>Diagnóstico</Button><Button variant="outline" onClick={() => navigate("Evaluar")}>Evaluación</Button>{newAyniFeatureEnabled(process.env.NEXT_PUBLIC_AYNI_CURRICULAR_REVIEW) && <Button variant="outline" onClick={() => setOrdinaryReviewOpen(true)}>Observaciones por revisar</Button>}</>}</div><StudentsScreen students={students} onImported={setDashboard} onDiagnostic={() => openDiagnostic()} onEvaluate={(studentId, competencyId) => { navigate("Evaluar"); setEvaluationTarget({ studentId, competencyId }); }} onPlan={() => navigate("Planificar")} /></> : <ScreenSkeleton /> : active === "Planificar" ? dashboard ? <PlanningArea dashboard={dashboard} initialTab={planningTarget} initialActivity={calendarActivity} diagnosticInitialStep={diagnosticInitialStep} selectedResource={selectedResource} onGoToday={() => navigate("Hoy")} onRecordEvidence={openPlannedEvidence} onGoStudents={() => navigate("Aula")} onGoWorkshops={() => { setLibraryFilter("workshops"); navigate("Biblioteca"); }} onGoCalendar={() => navigate("Calendario")} onGoLibrary={() => { setLibraryFilter("for-you"); navigate("Biblioteca"); }} onGoEvaluation={()=>navigate("Evaluar")} onGoDocuments={()=>navigate("Documentos")} /> : <ScreenSkeleton /> : <>
-          {activityRunBlock ? <ActivityRunView block={activityRunBlock} evidenceRevision={evidenceRevision} onBack={() => setActivityRunBlockId(null)} onEvidence={(suggestedStudentId) => openEvidenceFor(activityRunBlock,suggestedStudentId)} onStepChange={async (stepIndex) => updateExecution({ scheduleEntryId: activityRunBlock.id, action: "set_step", stepIndex })} onComplete={async () => { await updateExecution({ scheduleEntryId: activityRunBlock.id, action: "complete", closureType: "as_planned" }); setActivityRunBlockId(null); }} /> : active === "Hoy" && (dashboard ? <TodayHome onActivitiesChanged={async()=>setDashboard(await loadLocalDashboard())} dashboard={dashboard} refreshKey={evidenceRevision} openEvidence={openEvidenceFor} openAttendance={() => setAttendanceOpen(true)} updateExecution={updateExecution} openActivity={openActivity} onPlan={() => navigate("Planificar")} onPrepareActivity={() => { setPlanningTarget("activities"); navigate("Planificar"); }} onObserveWithoutActivity={() => newAyniFeatureEnabled(process.env.NEXT_PUBLIC_AYNI_ORDINARY_OBSERVATIONS) ? setOrdinaryContext(null) : (setPlanningTarget("activities"), navigate("Planificar"))} onReplan={() => { navigate("Evaluar"); setEvaluationEntry("replan"); }} onReviewObservations={() => setOrdinaryReviewOpen(true)} /> : <ScreenSkeleton />)}
+          active === "Aula" ? dashboard ? <><div className="mx-auto mb-4 flex max-w-5xl flex-wrap gap-2">{f7Enabled && <><Button variant="outline" onClick={() => openDiagnostic()}>Diagnóstico</Button><Button variant="outline" onClick={() => navigate("Evaluar")}>Evaluación</Button>{newAyniFeatureEnabled(process.env.NEXT_PUBLIC_AYNI_CURRICULAR_REVIEW) && <Button variant="outline" onClick={() => setOrdinaryReviewOpen(true)}>Observaciones por revisar</Button>}</>}</div><StudentsScreen students={students} onImported={setDashboard} onDiagnostic={() => openDiagnostic()} onEvaluate={(studentId, competencyId) => { navigate("Evaluar"); setEvaluationTarget({ studentId, competencyId }); }} onPlan={() => navigatePrimary("Mi año")} /></> : <ScreenSkeleton /> : active === "Planificar" ? dashboard ? <PlanningArea dashboard={dashboard} initialTab={planningTarget} initialActivity={calendarActivity} diagnosticInitialStep={diagnosticInitialStep} selectedResource={selectedResource} onGoToday={() => navigate("Hoy")} onRecordEvidence={openPlannedEvidence} onGoStudents={() => navigate("Aula")} onGoWorkshops={() => { setLibraryFilter("workshops"); navigate("Biblioteca"); }} onGoCalendar={() => navigate("Calendario")} onGoLibrary={() => { setLibraryFilter("for-you"); navigate("Biblioteca"); }} onGoEvaluation={()=>navigate("Evaluar")} onGoDocuments={()=>navigate("Documentos")} /> : <ScreenSkeleton /> : <>
+          {activityRunBlock ? <ActivityRunView block={activityRunBlock} evidenceRevision={evidenceRevision} onBack={() => setActivityRunBlockId(null)} onEvidence={(id, criterionId, momentId) => openEvidenceFor(activityRunBlock, id, criterionId, momentId)} onStepChange={async (stepIndex) => updateExecution({ scheduleEntryId: activityRunBlock.id, action: "set_step", stepIndex })} onComplete={async (note) => { await updateExecution({ scheduleEntryId: activityRunBlock.id, action: "complete", closureType: note ? "note" : "as_planned", closureNote: note }); setActivityRunBlockId(null); }} /> : active === "Hoy" && (dashboard ? <TodayHome onActivitiesChanged={async()=>setDashboard(await loadLocalDashboard())} dashboard={dashboard} refreshKey={evidenceRevision} openEvidence={openEvidenceFor} openAttendance={() => setAttendanceOpen(true)} updateExecution={updateExecution} openActivity={openActivity} onPlan={() => navigate("Planificar")} onPrepareActivity={() => { setPlanningTarget("activities"); navigate("Planificar"); }} onObserveWithoutActivity={() => newAyniFeatureEnabled(process.env.NEXT_PUBLIC_AYNI_ORDINARY_OBSERVATIONS) ? setOrdinaryContext(null) : (setPlanningTarget("activities"), navigate("Planificar"))} onReplan={() => { navigate("Evaluar"); setEvaluationEntry("replan"); }} onReviewObservations={() => setOrdinaryReviewOpen(true)} /> : <ScreenSkeleton />)}
           </>}
         </main>
 
@@ -329,7 +334,7 @@ export function TeacherWorkspace() {
       </SidebarInset>
       <AttendanceDialog open={attendanceOpen} onOpenChange={setAttendanceOpen} students={students} onSave={markAttendance} />
       <EvidenceDialog open={evidenceOpen} onOpenChange={closeEvidence} students={students} studentId={studentId} setStudentId={setStudentId} criterionId={criterionId} setCriterionId={setCriterionId} criteria={evidenceContext?.criteria ?? activity?.criteria ?? []} note={note} setNote={setNote} photo={photo} setPhoto={setPhoto} audio={audio} setAudio={setAudio} saved={saved} saving={savingEvidence} saveError={saveError} saveEvidence={saveEvidence} activityTitle={evidenceContext?.title ?? activity?.title ?? "Actividad"} databaseConnected={databaseState === "connected"} />
-      {ordinaryContext !== undefined && <OrdinaryObservationDialog students={students} activity={ordinaryContext} onClose={() => setOrdinaryContext(undefined)} />}
+      {ordinaryContext !== undefined && <OrdinaryObservationDialog students={students} activity={ordinaryContext} onClose={() => { setOrdinaryContext(undefined); setEvidenceRevision(value => value + 1); void loadLocalDashboard().then(setDashboard); }} />}
       {ordinaryReviewOpen && <OrdinaryReviewDialog students={students} onClose={() => { setOrdinaryReviewOpen(false); setEvidenceRevision(value => value + 1); }} />}
     </SidebarProvider>
   );

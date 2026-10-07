@@ -20,6 +20,9 @@ import { loadKnowledgeBaseV4 } from "../src/lib/knowledge-base-v4.mjs";
 import { competencyApplicability } from "../src/lib/competency-applicability.mjs";
 import { generateTeacherActivity } from "../src/lib/ai-activity-ui-service.mjs";
 import { generateTeacherAnnualPlan } from "../src/lib/ai-annual-plan-ui-service.mjs";
+import { inactiveStudents, changeStudentEnrollment } from "../src/lib/student-enrollment.mjs";
+import { pendingPastActivities, reviewPastActivity } from "../src/lib/past-activity-review.mjs";
+import { activityPedagogicalBlocks } from "../src/lib/pedagogical-blocks.mjs";
 import { ANNUAL_PREPLAN_FORMAT, AnnualPreplanError, ageFilteredAnnualCurriculum, generateAnnualPreplan, validateAnnualPreplan, validatePreplanTrace } from "../src/lib/annual-preplan-service.mjs";
 import { saveRegeneratedAnnualDraft } from "../src/lib/annual-preplan-regeneration.mjs";
 import { preparePersonalization, confirmPersonalization, currentPersonalization, savePersonalizationDraft } from "../src/lib/annual-personalization-service.mjs";
@@ -401,8 +404,12 @@ async function dashboard() {
      order by a.occurs_on desc
      limit 1
   `, [classroomId]);
+  const dateFormatter = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Lima", year: "numeric", month: "2-digit", day: "2-digit" });
+  const timeFormatter = new Intl.DateTimeFormat("en-GB", { timeZone: "America/Lima", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+  const today = qaDailyClock?.date ?? dateFormatter.format(new Date());
+  const now = qaDailyClock?.time ?? timeFormatter.format(new Date());
   const studentsResult = await db.query(`
-    select s.id, coalesce(s.preferred_name, s.first_name) as name,
+    select s.id, case when s.birth_date is not null then extract(year from age($2::date,s.birth_date))::int else null end as age_years, coalesce(s.preferred_name, s.first_name) as name,
            concat_ws(' ', coalesce(s.preferred_name, s.first_name), s.last_name) as full_name,
            coalesce(records.evidence_count, 0)::int as evidence_count,
            coalesce(records.competency_count, 0)::int as competency_count,
@@ -410,15 +417,18 @@ async function dashboard() {
       from students s
       left join lateral (
         select count(*)::int as evidence_count,
-               count(distinct ac.competency_v4_id)::int as competency_count,
+               count(distinct ev.competency_v4_id)::int as competency_count,
                max(ev.observed_at) as last_observed_at
-          from evidences ev
-          left join activity_criteria ac on ac.id = ev.criterion_id
+          from (select ev.student_id,ev.observed_at,ac.competency_v4_id from evidences ev
+            left join activity_criteria ac on ac.id=ev.criterion_id
+            union all select o.student_id,o.occurred_at,coalesce(o.context_snapshot->>'captured_competency_id',ac.competency_v4_id)
+            from ordinary_observations o left join activity_criteria ac on ac.id=o.captured_criterion_id
+            where o.status<>'voided') ev
          where ev.student_id = s.id
       ) records on true
      where s.classroom_id = $1 and s.status = 'active'
      order by coalesce(s.preferred_name, s.first_name)
-  `, [classroomId]);
+  `, [classroomId,today]);
   const metricsResult = await db.query(`
     select
       (select count(*)::int from students where classroom_id=$1 and status = 'active') as students_total,
@@ -439,10 +449,6 @@ async function dashboard() {
      where p.user_id = $1 and c.id=$2
      limit 1
   `, [teacherId, classroomId]);
-  const dateFormatter = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Lima", year: "numeric", month: "2-digit", day: "2-digit" });
-  const timeFormatter = new Intl.DateTimeFormat("en-GB", { timeZone: "America/Lima", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
-  const today = qaDailyClock?.date ?? dateFormatter.format(new Date());
-  const now = qaDailyClock?.time ?? timeFormatter.format(new Date());
   const attendanceResult = await db.query(`
     select count(*)::int as recorded_count from attendance_records
      where classroom_id = $1 and attendance_date = $2::date
@@ -455,7 +461,7 @@ async function dashboard() {
   try{effectiveCalendarDay=(await loadEffectiveCalendar(db,{teacherId,classroomId,from:today,to:today})).days[0]??null;}catch{}
   const todayBlocks = await db.query(`
     select se.id, se.start_time::text, se.end_time::text, se.block_type, coalesce(se.title, a.title) as title,
-           se.activity_id, a.purpose, a.details as activity_details, le.title as experience_title,
+           se.activity_id, a.purpose, a.details as activity_details, le.title as experience_title, le.details->'activity_route' as activity_route,
            coalesce(criteria.criteria, '[]'::jsonb) as criteria,
            coalesce(a.preparation->'materials', '[]'::jsonb) as materials, coalesce(a.preparation->'steps', '[]'::jsonb) as steps,
            coalesce(del.status, 'planned') as status, coalesce(del.current_override, false) as current_override,
@@ -479,7 +485,9 @@ async function dashboard() {
            and exact.scheduled_on=$2::date and exact.block_type='workshop'))
      order by se.start_time, se.sort_order
   `, [teacherId, today]);
-  const rawBlocks = todayBlocks.rows.map((block) => ({ ...block, materials: block.materials ?? [], steps: block.steps ?? [], criteria: normalizeCriteria(block.criteria ?? []) }));
+  const rawBlocks = todayBlocks.rows.map((block) => ({ ...block, materials: block.materials ?? [], steps: block.steps ?? [], criteria: normalizeCriteria(block.criteria ?? []),
+    day_progress: block.activity_route?.length ? { position: block.activity_route.findIndex(item=>item.id===block.activity_details?.route_item_id)+1, total: block.activity_route.length } : null,
+    pedagogical_blocks: activityPedagogicalBlocks(block.activity_details ?? {}, block.steps ?? [], normalizeCriteria(block.criteria ?? [])) }));
   const attendanceRecorded = Number(attendanceResult.rows[0]?.recorded_count ?? 0) > 0;
   const legacyException=exceptionResult.rows[0]??null;
   const calendarException=legacyException??(effectiveCalendarDay&&!effectiveCalendarDay.is_instructional?{
@@ -494,6 +502,7 @@ async function dashboard() {
     classroom_id: classroomId,
     activity: activityResult.rows[0] ? { ...activityResult.rows[0], criteria: normalizeCriteria(activityResult.rows[0].criteria ?? []) } : null,
     today: {
+      past_pending: await pendingPastActivities(db,teacherId,today),
       date: today, now, ...(qaDailyClock ? { qa_clock: qaDailyClock } : {}), blocks, attendance: { recorded: attendanceRecorded, recorded_count: Number(attendanceResult.rows[0]?.recorded_count ?? 0) },
       calendar_exception: calendarException,
       journey: { mode: journey.mode, current_block_id: journey.currentBlock?.id ?? null, next_block_id: journey.nextBlock?.id ?? null, primary_action: journey.primaryAction, pending_items: journey.pendingItems },
@@ -1167,6 +1176,11 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       const result = await loadStudentTrajectory(db, teacherId, studentId, { includeOrdinary: true });
       send(response, result ? 200 : 404, result ?? { error: "Niño no encontrado en el aula activa." }, origin);
       return;
+    }
+    if (request.method === "GET" && url.pathname === "/api/students/inactive") { send(response,200,{students:await inactiveStudents(db,teacherId)},origin);return; }
+    if (request.method === "PATCH" && /^\/api\/students\/[0-9a-f-]{36}\/enrollment$/.test(url.pathname)) {
+      try { await changeStudentEnrollment(db,teacherId,url.pathname.split("/")[3],await readJson(request));send(response,200,{dashboard:await dashboard()},origin); }
+      catch(error){send(response,httpStatusForError(error,422),{error:publicErrorMessage(error)},origin);}return;
     }
     if (request.method === "GET" && url.pathname.startsWith("/api/students/")) {
       const studentId = url.pathname.split("/").at(-1);
@@ -2760,6 +2774,10 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       }
       send(response, 200, { dashboard: await dashboard() }, origin);
       return;
+    }
+    if (request.method === "POST" && url.pathname === "/api/today/review-past") {
+      try { const body=await readJson(request);const today=qaDailyClock?.date??limaToday();await reviewPastActivity(db,teacherId,body,today);send(response,200,{dashboard:await dashboard()},origin); }
+      catch(error){send(response,httpStatusForError(error,422),{error:publicErrorMessage(error)},origin);}return;
     }
     if (request.method === "POST" && url.pathname === "/api/today/execution") {
       const body = await readJson(request);

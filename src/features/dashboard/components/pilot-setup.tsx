@@ -78,21 +78,18 @@ export function PilotSetup({ onReady }: { onReady: (dashboard: LocalDashboard) =
 
   return <main className="mx-auto max-w-5xl space-y-5 p-5 md:p-9">
     <header>
-      <p className="font-semibold text-[#087d96]">Paso 1 de 6 · Configura el aula</p>
+      <p className="font-semibold text-[#087d96]">Configura tu aula</p>
       <h1 className="text-3xl font-bold">Cuéntanos sobre tu aula</h1>
-      <p className="mt-2 text-sm text-muted-foreground">Registra los datos del colegio y del aula una sola vez. Después añadirás a los alumnos y continuarás con el diagnóstico.</p>
+      <p className="mt-2 text-sm text-muted-foreground">Registra los datos del colegio y del aula una sola vez. Después podrás añadir a los alumnos y elegir cómo empezar.</p>
     </header>
     <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
       <section className="rounded-2xl border bg-white p-5 sm:p-6" aria-label="Datos del colegio y del aula">
-        <h2 className="text-lg font-bold text-[#19345b]">Datos del colegio</h2>
+        <h2 className="text-lg font-bold text-[#19345b]">Datos básicos</h2>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <label className="block text-sm font-semibold">Institución<Input className="mt-2" value={institutionName} onChange={(event) => setInstitutionName(event.target.value)} /></label>
           <label className="block text-sm font-semibold">Docente<Input className="mt-2" value={teacherName} onChange={(event) => setTeacherName(event.target.value)} /></label>
           <label className="block text-sm font-semibold">Sección<Input className="mt-2" value={section} onChange={(event) => setSection(event.target.value)} /></label>
-          <label className="block text-sm font-semibold">Código modular <span className="font-normal text-[#526b87]">(opcional)</span><Input className="mt-2" value={institutionCode} onChange={(event) => setInstitutionCode(event.target.value)} /></label>
-          <label className="block text-sm font-semibold">Distrito <span className="font-normal text-[#526b87]">(opcional)</span><Input className="mt-2" value={district} onChange={(event) => setDistrict(event.target.value)} /></label>
-          <label className="block text-sm font-semibold">UGEL <span className="font-normal text-[#526b87]">(opcional)</span><Input className="mt-2" value={ugel} onChange={(event) => setUgel(event.target.value)} /></label>
-          <label className="block text-sm font-semibold">Dirección <span className="font-normal text-[#526b87]">(opcional)</span><Input className="mt-2" placeholder="Nombre de la directora o director" value={directorName} onChange={(event) => setDirectorName(event.target.value)} /></label>
+
         </div>
         <h2 className="mt-6 border-t pt-5 text-lg font-bold text-[#19345b]">Aula y año escolar</h2>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
@@ -107,13 +104,19 @@ export function PilotSetup({ onReady }: { onReady: (dashboard: LocalDashboard) =
           <div className="sm:col-span-2"><label className="flex items-center gap-2 text-sm font-semibold"><input type="checkbox" checked={castellanoL2Applicable} onChange={(event) => setCastellanoL2Applicable(event.target.checked)} /> Castellano como segunda lengua aplicable</label><p className="ml-6 mt-1 text-sm text-muted-foreground">Márcalo si corresponde enseñar castellano como segunda lengua a niños cuya lengua materna es originaria.</p></div>
           <div className="sm:col-span-2"><label className="flex items-center gap-2 text-sm font-semibold"><input type="checkbox" checked={religionApplicable} onChange={(event) => setReligionApplicable(event.target.checked)} /> Educación religiosa aplicable</label><p className="ml-6 mt-1 text-sm text-muted-foreground">Márcalo si el área forma parte de la planificación. Las exoneraciones de familias se respetan por estudiante.</p></div>
         </div>
+        <details className="mt-6 border-t pt-5"><summary className="min-h-11 cursor-pointer font-bold text-[#19345b]">Datos para tus documentos (opcionales)</summary><div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <label className="block text-sm font-semibold">Código modular <span className="font-normal text-[#526b87]">(opcional)</span><Input className="mt-2" value={institutionCode} onChange={(event) => setInstitutionCode(event.target.value)} /></label>
+          <label className="block text-sm font-semibold">Distrito <span className="font-normal text-[#526b87]">(opcional)</span><Input className="mt-2" value={district} onChange={(event) => setDistrict(event.target.value)} /></label>
+          <label className="block text-sm font-semibold">UGEL <span className="font-normal text-[#526b87]">(opcional)</span><Input className="mt-2" value={ugel} onChange={(event) => setUgel(event.target.value)} /></label>
+          <label className="block text-sm font-semibold">Director(a) <span className="font-normal text-[#526b87]">(opcional)</span><Input className="mt-2" placeholder="Nombre de la directora o director" value={directorName} onChange={(event) => setDirectorName(event.target.value)} /></label>
+        </div></details>
       </section>
       <aside className="h-fit rounded-2xl border border-[#dce9f2] bg-[#eef8fb] p-5">
         <div className="flex items-center gap-3"><div className="grid size-16 shrink-0 place-items-center overflow-hidden rounded-2xl bg-[#087d96] text-xl font-bold text-white">{logoPreview && !createLogo ? <Image unoptimized src={logoPreview} alt="Vista previa del logo" width={64} height={64} className="size-full object-contain bg-white" /> : createLogo ? <span style={{ backgroundColor: logoPrimary }} className="grid size-full place-items-center">{logoInitials.toUpperCase().slice(0, 3) || "AA"}</span> : "IE"}</div><div><h2 className="font-bold">Logo del colegio</h2><p className="text-xs text-muted-foreground">Aparecerá en tus documentos Word.</p></div></div>
         <label className="mt-5 block text-sm font-semibold">Subir una imagen del logo <span className="font-normal">(opcional)</span>
           <input ref={logoInputRef} className="mt-2 block w-full text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-white file:px-3 file:py-2 file:font-semibold file:text-[#075d70]" type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => { const file = event.target.files?.[0] ?? null; setLogoFile(file); setLogoPreview(file ? URL.createObjectURL(file) : ""); if (file) setCreateLogo(false); }} />
         </label>
-        <p className="mt-2 text-xs text-muted-foreground">PNG, JPG o WebP. Hasta 2 MB. Se guarda en este equipo.</p>
+        <p className="mt-2 text-xs text-muted-foreground">PNG, JPG o WebP. Hasta 2 MB. Se guarda de forma privada.</p>
         {logoFile && <p className="mt-2 text-sm text-[#075d70]">Seleccionado: {logoFile.name} <button className="underline" type="button" onClick={() => { setLogoFile(null); setLogoPreview(""); if (logoInputRef.current) logoInputRef.current.value = ""; }}>Quitar</button></p>}
         <label className="mt-5 flex items-center gap-2 text-sm font-medium"><input type="checkbox" checked={createLogo} onChange={(event) => { setCreateLogo(event.target.checked); if (event.target.checked) { setLogoFile(null); setLogoPreview(""); if (logoInputRef.current) logoInputRef.current.value = ""; } }} /> Prefiero crear uno con iniciales</label>
         {createLogo && <div className="mt-4 space-y-3"><label className="block text-sm font-semibold">Iniciales (máximo 3)<Input className="mt-2" maxLength={3} value={logoInitials} onChange={(event) => setLogoInitials(event.target.value)} /></label><div className="flex gap-4 text-sm"><label>Color base <input type="color" value={logoPrimary} onChange={(event) => setLogoPrimary(event.target.value)} className="ml-2 align-middle" /></label><label>Acento <input type="color" value={logoAccent} onChange={(event) => setLogoAccent(event.target.value)} className="ml-2 align-middle" /></label></div></div>}

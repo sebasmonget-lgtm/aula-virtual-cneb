@@ -14,7 +14,7 @@ export const AI_ROUTING_POLICY = Object.freeze({
     diagnostic_group_synthesis: Object.freeze({ tier: "judgment_generation" }),
     diagnostic_priority_assist: Object.freeze({ tier: "judgment_generation" }),
     annual_plan: Object.freeze({ tier: "global_planning", task_tiers: Object.freeze({ document_development: "focused_writing" }) }),
-    annual_journey_conversation: Object.freeze({ tier: "structured_light" }),
+    annual_journey_conversation: Object.freeze({ tier: "routine_generation" }),
     annual_journey_intent: Object.freeze({ tier: "structured_light" }),
     annual_journey_review: Object.freeze({ tier: "judgment_generation" }),
     annual_journey_repair: Object.freeze({ tier: "judgment_generation" }),

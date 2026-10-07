@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { diagnosticPedagogicalBlocks } from "./pedagogical-blocks.mjs";
 import { loadKnowledgeBaseV4 } from "./knowledge-base-v4.mjs";
 import { cardIsApplicable } from "./ai-context-builder-v4.mjs";
 import { loadDiagnosticCatalog } from "./diagnostic-catalog-v4.mjs";
@@ -31,6 +32,7 @@ export function buildDiagnosticExperienceCatalog(knowledgeBase, { age, castellan
     });
     return { id: template.id, catalog_version: document.version, catalog_status: document.status, title: template.title,
       explanation: template.explanation, teacher_instructions: template.teacher_instructions, examples: template.examples,
+      pedagogical_blocks: diagnosticPedagogicalBlocks({ teacher_instructions: template.teacher_instructions, aspects }),
       aspects, competencies: [...new Map(aspects.map((aspect) => [aspect.competency_id,
         { id: aspect.competency_id, name: aspect.competency_name }])).values()] };
   }).filter((experience) => experience.aspects.length > 0);

@@ -18,6 +18,7 @@ import { AnnualPlanningConversation } from "./annual-planning-conversation";
 import { AnnualPreparationProgress } from "./annual-preparation-progress";
 import { DictationRecorder } from "./dictation-recorder";
 import { AyniMascot, JourneySteps } from "./initial-journey-ui";
+import { ProjectPictogram } from "./project-pictogram";
 
 type Fact = { key: string; kind: string; subject: string; scope: string; support_text: string; uncertainty: string; occurred_at: string | null; explicit_tags?: string[] };
 type Snapshot = { source_fingerprint: string; student_count: number; facts: Fact[]; resources: string[];
@@ -80,7 +81,7 @@ export function AnnualJourneyWorkspace({ onConfirmed, onGoDiagnostic, onDevelop,
   const [conversationId,setConversationId]=useState<string>();
   const contextEdited=useRef(false);
   const [contextDirty,setContextDirty]=useState(false);
-  const captureConversation=useCallback((value:{id:string;messages:{role:string;text:string}[]})=>{setConversationId(value.id);if(!contextEdited.current)setExperienceInput(previous=>({...previous,contextItems:value.messages.flatMap((m,index)=>m.role==="teacher"?m.text.split(/\n+|;\s*/).filter(Boolean).map(text=>({text,source_turn:index})):[])}));},[]);
+  const captureConversation=useCallback((value:{id:string;messages:{role:string;text:string}[];contextItems?:{text:string;source_turn:number}[]})=>{setConversationId(value.id);if(!contextEdited.current&&value.contextItems)setExperienceInput(previous=>({...previous,contextItems:value.contextItems!.map(item=>({text:item.text,source_turn:item.source_turn}))}));},[]);
   const [panelOpen,setPanelOpen]=useState(false);
   const [job, setJob] = useState<Job | null>(null);
   const [busy, setBusy] = useState<string | null>(null), [audioBusy, setAudioBusy] = useState(false);
@@ -218,17 +219,16 @@ export function AnnualJourneyWorkspace({ onConfirmed, onGoDiagnostic, onDevelop,
   const snapshot = preparing ? start?.snapshot : proposal?.classroom_snapshot;
   const disabled = !!busy || audioBusy || generating;
   const proposalDetails = complete ? (<div className={listOpen ? "grid gap-5 lg:grid-cols-2" : "space-y-5"}>{proposal!.proposed_experiences.map((row, index) => listOpen || row.proposal_id === selectedProposal?.proposal_id ? <article key={row.proposal_id} className="rounded-xl border border-[#d6e5ef] bg-white p-5 sm:p-6">
-        <h2 className="text-xl font-bold leading-snug text-[#172b52]">{proposal!.editor_version===3 ? (proposal!.resolved_calendar?.projects?.findIndex((slot:{proposal_id:string|null})=>slot.proposal_id===row.proposal_id) ?? index)+1 : index+1} · {annualDisplayTitle(row.title)}</h2>
+        <div className="flex flex-col gap-5 sm:flex-row"><ProjectPictogram project={row} className="size-40 sm:size-48"/><div className="min-w-0"><h2 className="text-xl font-bold leading-snug text-[#172b52]">{proposal!.editor_version===3 ? (proposal!.resolved_calendar?.projects?.findIndex((slot:{proposal_id:string|null})=>slot.proposal_id===row.proposal_id) ?? index)+1 : index+1} · {annualDisplayTitle(row.title)}</h2><p className="mt-3 leading-relaxed text-[#3d5874]"><strong>Qué buscamos:</strong> {row.purpose}</p><ul className="mt-3 space-y-1 text-sm text-[#526b87]">{row.primary_competency_ids.map(id=><li key={id}>{names.get(id)??id}</li>)}</ul></div></div>
         {row.planned_start_date && row.planned_end_date && <p className="mt-2 text-sm font-semibold text-[#526b87]">{compactDate(row.planned_start_date)} – {compactDate(row.planned_end_date)} · {proposal?.resolved_calendar?.projects?.some(slot=>slot.proposal_id===row.proposal_id&&!!slot.historical_dates?.length)?"Tramo parcial":`${row.duration_weeks} semanas`} · {row.period} · {row.planned_instructional_days} días lectivos</p>}
         <p className="mt-4 font-semibold">Qué podrían hacer los niños</p><ul className="mt-2 list-disc space-y-1 pl-5 text-[#3d5874]">{row.children_actions.map((text, i) => <li key={i}>{text}</li>)}</ul>
-        <p className="mt-4 font-semibold">Por qué tiene sentido para esta aula</p><p className="mt-2 leading-relaxed text-[#3d5874]">{row.rationale}</p>
         <div className="mt-4 flex flex-wrap gap-2">{editable && <><Button variant="outline" disabled={disabled} onClick={() => void mutate("keep", { proposalId: row.proposal_id })}>{row.teacher_protected && <Check aria-hidden="true" />} {row.teacher_protected ? "Mantenida · permitir cambios" : "Dejar como está"}</Button>
           <Button variant="outline" disabled={disabled || row.teacher_protected} onClick={() => changeScope(row.proposal_id)}>Cambiar con Ayni</Button>
           </>}
-          {selected!.status === "active" && onDevelop && <Button variant="outline" onClick={() => onDevelop(row.proposal_id)}>Preparar esta propuesta</Button>}
+          {selected!.status === "active" && onDevelop && <Button onClick={() => onDevelop(row.proposal_id)}>Ver proyecto</Button>}
         </div>
         <details className="mt-3 text-sm leading-relaxed"><summary className="min-h-11 cursor-pointer py-2 font-semibold text-[#087d96]">Ver detalles</summary>
-          <div className="space-y-3"><p><strong>Invitación prevista:</strong> {row.invitation}</p><p><strong>Propósito:</strong> {row.purpose}</p>
+          <div className="space-y-3"><p><strong>Por qué tiene sentido para esta aula:</strong> {row.rationale}</p><p><strong>Invitación prevista:</strong> {row.invitation}</p>
             {row.opportunities.map((value, i) => <OpportunityDetails key={i} value={value} names={names} />)}
             <p><strong>Materiales:</strong> {row.materials.join(" · ")}</p><p><strong>Apoyos:</strong> {row.supports.join(" · ")}</p><p><strong>Flexibilidad:</strong> {row.flexibility}</p>
             <p><strong>Fechas previstas:</strong> {row.planned_start_date} al {row.planned_end_date}</p>

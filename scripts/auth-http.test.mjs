@@ -239,6 +239,8 @@ test("the HTTP boundary protects every route and local PGlite remains usable", {
     });
     assert.equal(imported.status, 201);
     const studentB = (await imported.json()).dashboard.students[0].id;
+    const inactiveB=await call("/api/students/inactive","token-b");assert.equal(inactiveB.status,200);assert.deepEqual((await inactiveB.json()).students,[]);
+    assert.equal((await call(`/api/students/${studentB}/enrollment`,"token-a",{method:"PATCH",headers:{"content-type":"application/json"},body:JSON.stringify({status:"inactive",expectedStatus:"active"})})).status,404);
     const spontaneousB = await call("/api/diagnostics/spontaneous-observations", "token-b", {
       method: "POST", headers: { "content-type": "application/json" },
       body: JSON.stringify({ studentId: studentB, contextLabel: "Juego", observationText: "Su mamá contó lo que juega en casa." }),

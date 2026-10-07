@@ -244,6 +244,10 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
         if(!period){send(response,200,{suggestions:[],message:"Esta actividad no pertenece a un período de evaluación."},origin);return true;}
         const data=await context(classroom.id,period.id);
         const criteria=(await db.query(`select id,competency_v4_id from activity_criteria where activity_id=$1 and status='active'`,[activity.id])).rows;
+        const requestedCompetency=url.searchParams.get("competencyId");
+        if(requestedCompetency&&!criteria.some(item=>item.competency_v4_id===requestedCompetency)) {
+          send(response,422,{error:"La competencia no pertenece a esta actividad."},origin);return true;
+        }
         const diagnostic=await loadDiagnosticCoverageRecords(db,classroom.id,period);
         const students=data.model.students.map((student)=>({id:student.id,name:[student.preferred_name||student.first_name,student.last_name].filter(Boolean).join(" ")}));
         const familyRows=(await db.query(`select distinct on (i.student_id) i.student_id,i.details
@@ -261,7 +265,7 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
           for(const entry of row.manifest?.entries??[]) carryover.delete(`${entry.student_id}:${entry.competency_id}`);
         }
         for(const row of data.model.rows) if(row.state==="confirmed") carryover.delete(`${row.student_id}:${row.competency_v4_id}`);
-        const suggestions=[...new Set(criteria.map((item)=>item.competency_v4_id))].flatMap((competencyId)=>{
+        const suggestions=[...new Set(criteria.map((item)=>item.competency_v4_id))].filter(id=>!requestedCompetency||id===requestedCompetency).flatMap((competencyId)=>{
           const criterionIds=criteria.filter((item)=>item.competency_v4_id===competencyId).map((item)=>item.id);
           const records=[...data.model.rows.filter((row)=>row.competency_v4_id===competencyId).flatMap((row)=>row.sourceRows.map((item)=>({...item,student_id:row.student_id,competency_id:competencyId,situation_id:item.activity_id,criterion_focus_key:item.criterion_id}))),
             ...diagnostic.filter((item)=>item.competency_id===competencyId)];
@@ -277,7 +281,9 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
               ...(familyHint?{family_context_source:"family_interview"}:{})};});
         }).sort((a,b)=>a.rank-b.rank||a.student_name.localeCompare(b.student_name,"es"))
           .slice(0,AYNI_HEURISTICS.observe_today_limit);
-        send(response,200,{period_id:period.id,suggestions},origin);return true;
+        const priorityStudents=requestedCompetency?students.map(student=>({student_id:student.id,
+          has_evidence:data.model.rows.some(row=>row.student_id===student.id&&row.competency_v4_id===requestedCompetency&&row.sourceRows.length>0)})):[];
+        send(response,200,{period_id:period.id,suggestions,students:priorityStudents},origin);return true;
       }
       if (request.method === "GET" && url.pathname === "/api/period-evaluations/coverage/detail") {
         const data=await context(url.searchParams.get("classroomId"),url.searchParams.get("periodId"));

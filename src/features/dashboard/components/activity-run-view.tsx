@@ -1,69 +1,44 @@
 "use client";
 
-import { ArrowLeft, ArrowRight, BookOpen, Camera, CheckCircle2, ClipboardList, Package } from "lucide-react";
-import { useEffect, useState } from "react";
+import { ArrowLeft, CheckCircle2, Package } from "lucide-react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { localDatabaseApiUrl, type LocalDashboard } from "@/src/lib/local-database";
-import { apiFetch } from "@/src/lib/ayni-api-fetch";
+import { Textarea } from "@/components/ui/textarea";
+import type { LocalDashboard } from "@/src/lib/local-database";
 import { AsyncButton, WorkflowFeedback } from "./workflow-ui";
+import { PedagogicalBlock } from "./pedagogical-block";
 
 type ActivityBlock = LocalDashboard["today"]["blocks"][number];
-type ObservationSuggestion = {student_id:string;student_name:string;competency_name:string;reason:string};
 
-export function ActivityRunView({ block, evidenceRevision, onBack, onEvidence, onStepChange, onComplete }: {
-  block: ActivityBlock;
-  evidenceRevision: number;
-  onBack: () => void;
-  onEvidence: (studentId?: string) => void;
+export function ActivityRunView({ block, onBack, onEvidence, onComplete }: {
+  block: ActivityBlock; evidenceRevision: number; onBack: () => void;
+  onEvidence: (studentId?: string, criterionId?: string, momentId?: string) => void;
   onStepChange: (stepIndex: number) => Promise<void>;
-  onComplete: () => Promise<void>;
+  onComplete: (note?: string) => Promise<void>;
 }) {
-  const [showComplete, setShowComplete] = useState(false);
-  const [operation, setOperation] = useState<"step" | "complete" | null>(null);
-  const [error, setError] = useState("");
-  const [suggestionSnapshot, setSuggestionSnapshot] = useState<{activityId:string;revision:number;items:ObservationSuggestion[]}>({activityId:"",revision:-1,items:[]});
-  useEffect(()=>{
-    if(!block.activity_id)return;
-    const controller=new AbortController();
-    apiFetch(`${localDatabaseApiUrl}/api/period-evaluations/observe-today?activityId=${encodeURIComponent(block.activity_id)}`,{signal:controller.signal,cache:"no-store"})
-      .then(async(response)=>response.ok?await response.json() as {suggestions:ObservationSuggestion[]}:null)
-      .then((result)=>{if(!controller.signal.aborted)setSuggestionSnapshot({activityId:block.activity_id!,revision:evidenceRevision,items:result?.suggestions??[]});})
-      .catch(()=>{if(!controller.signal.aborted)setSuggestionSnapshot({activityId:block.activity_id!,revision:evidenceRevision,items:[]});});
-    return()=>controller.abort();
-  },[block.activity_id,evidenceRevision]);
-  const suggestions=suggestionSnapshot.activityId===block.activity_id&&suggestionSnapshot.revision===evidenceRevision?suggestionSnapshot.items:[];
-  async function run(action: "step" | "complete", nextIndex?: number) {
-    if (operation) return;
-    setOperation(action); setError("");
-    try { if (action === "complete") await onComplete(); else if (nextIndex !== undefined) await onStepChange(nextIndex); }
-    catch { setError(action === "complete" ? "No se pudo cerrar la actividad. Vuelve a intentarlo." : "No se pudo cambiar de paso. Vuelve a intentarlo."); }
-    finally { setOperation(null); }
+  const [closing, setClosing] = useState(false), [busy, setBusy] = useState(false);
+  const [note, setNote] = useState(""), [error, setError] = useState("");
+  async function finish() {
+    if (busy) return; setBusy(true); setError("");
+    try { await onComplete(note.trim() || undefined); }
+    catch { setError("No se pudo cerrar la actividad. Vuelve a intentarlo."); }
+    finally { setBusy(false); }
   }
-  const steps = block.steps;
-  const currentStepIndex = Math.min(Math.max(block.current_step_index ?? 0, 0), Math.max(steps.length - 1, 0));
-  const hasSteps = steps.length > 0;
-  const isFirst = currentStepIndex === 0;
-  const isLast = currentStepIndex >= steps.length - 1;
-  const evidenceLabels = { drawing: "Guardar dibujo", oral: "Registrar comentario", movement: "Registrar movimiento", photo: "Tomar foto", production: "Guardar producción", observation: "Registrar observación" } as const;
-  const evidenceLabel = block.criteria[0]?.evidence_kind ? evidenceLabels[block.criteria[0].evidence_kind] : "Registrar evidencia";
-
   return <section className="mx-auto max-w-3xl space-y-5">
-    <button type="button" onClick={onBack} className="inline-flex items-center gap-2 text-sm font-bold text-[#126177]"><ArrowLeft className="size-4" /> Volver a mi jornada</button>
-    <article className="diagnostic-panel overflow-hidden border-[#c5edf0] bg-[linear-gradient(135deg,#ffffff,#e9fbfb)] p-5 md:p-7">
-      <p className="text-sm font-semibold text-[#087d96]">{block.experience_title ?? (block.block_type === "workshop" ? "Taller" : "Actividad")}</p>
-      <h1 className="mt-1 text-3xl font-extrabold tracking-tight">{block.title}</h1>
-      {block.purpose && <p className="mt-3 max-w-2xl text-base leading-relaxed text-[#526b87]">{block.purpose}</p>}
-      {block.materials.length > 0 && <div className="mt-5"><p className="mb-2 flex items-center gap-2 text-sm font-bold"><Package className="size-4 text-[#087d96]" /> Materiales</p><div className="flex flex-wrap gap-2">{block.materials.map((material) => <span key={material} className="rounded-full bg-white px-3 py-2 text-sm font-medium text-[#315a78] shadow-sm">{material}</span>)}</div></div>}
-    </article>
-    <article className="diagnostic-panel p-5 md:p-7">
-      <div className="flex items-center justify-between gap-3"><div className="flex items-center gap-2"><ClipboardList className="size-5 text-[#087d96]" /><h2 className="text-xl font-extrabold">{hasSteps ? `Paso ${currentStepIndex + 1} de ${steps.length}` : "Pasos guiados"}</h2></div>{hasSteps && <span className="rounded-full bg-[#e8f6fb] px-3 py-1 text-sm font-bold text-[#126177]">{currentStepIndex + 1}/{steps.length}</span>}</div>
-      <p className="mt-5 min-h-20 text-lg leading-relaxed text-[#294d6d]">{hasSteps ? steps[currentStepIndex] : "Esta actividad no tiene pasos breves registrados todavía."}</p>
-      {hasSteps && <div className="mt-6 grid gap-3 sm:grid-cols-2"><AsyncButton variant="outline" className="h-12" busy={operation === "step"} busyLabel="Cambiando paso..." disabled={Boolean(operation) || isFirst} onClick={() => void run("step", currentStepIndex - 1)}><ArrowLeft /> Anterior</AsyncButton><AsyncButton className="h-12" busy={operation === "step"} busyLabel="Cambiando paso..." disabled={Boolean(operation) || isLast} onClick={() => void run("step", currentStepIndex + 1)}>Siguiente <ArrowRight /></AsyncButton></div>}
-    </article>
+    <Button variant="ghost" onClick={onBack}><ArrowLeft /> Volver a mi jornada</Button>
+    <header className="rounded-2xl bg-[#e9f7f7] p-5 sm:p-7">
+      <h1 className="text-3xl font-bold text-[#172b52]">{block.title}</h1>
+      {block.day_progress && block.day_progress.position > 0 && <p className="mt-2 text-sm font-semibold text-[#07576c]">Día {block.day_progress.position} de {block.day_progress.total}</p>}
+      {block.experience_title && <p className="mt-2 font-semibold text-[#07576c]">{block.experience_title}</p>}
+      {block.purpose && <p className="mt-3 leading-relaxed text-[#294d6d]">{block.purpose}</p>}
+      {!!block.materials.length && <details className="mt-4"><summary className="min-h-11 cursor-pointer font-semibold text-[#07576c]"><Package className="mr-2 inline size-4" /> Materiales</summary><p className="mt-2 text-[#294d6d]">{block.materials.join(" · ")}</p></details>}
+    </header>
+    {block.pedagogical_blocks?.length ? block.pedagogical_blocks.map(part => <PedagogicalBlock key={part.id} block={part} onObserve={(criterionId, momentId) => onEvidence(undefined, criterionId, momentId)} />)
+      : <WorkflowFeedback tone="info">Esta actividad aún no tiene una guía registrada. Puedes consultar su documento.</WorkflowFeedback>}
     {error && <WorkflowFeedback tone="error">{error}</WorkflowFeedback>}
-    {suggestions.length>0&&<article className="diagnostic-panel p-5"><h2 className="text-lg font-extrabold">Podrías observar hoy</h2><p className="mt-1 text-sm text-[#526b87]">Sugerencias basadas en los registros del período y, cuando existe, en contexto informado por la familia. La docente decide qué observar.</p><ul className="mt-3 space-y-2">{suggestions.map((item)=><li key={`${item.student_id}:${item.competency_name}`} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-white p-3"><div><b>{item.student_name}</b><p className="text-sm text-[#526b87]">{item.competency_name} · {item.reason}</p></div><Button type="button" variant="outline" onClick={()=>onEvidence(item.student_id)}>Registrar</Button></li>)}</ul></article>}
-    <div className="grid gap-3 sm:grid-cols-2"><Button variant="outline" className="h-12 border-[#87bdcb] text-[#126177]" disabled={!block.criteria.length || Boolean(operation)} onClick={()=>onEvidence()}><Camera /> {evidenceLabel}</Button><AsyncButton className="h-12" busy={operation === "complete"} busyLabel="Terminando..." disabled={Boolean(operation)} onClick={() => void run("complete")}><CheckCircle2 /> Terminar actividad</AsyncButton></div>
-    {hasSteps && <div><Button variant="ghost" className="text-[#126177]" onClick={() => setShowComplete((visible) => !visible)}><BookOpen /> {showComplete ? "Ocultar actividad completa" : "Ver actividad completa"}</Button>{showComplete && <ol className="mt-2 space-y-2 rounded-2xl border bg-white p-4 text-sm text-[#315a78]">{steps.map((step, index) => <li key={`${index}-${step}`} className="flex gap-3"><span className="font-bold text-[#087d96]">{index + 1}</span><span>{step}</span></li>)}</ol>}</div>}
-    <p className="flex items-center gap-2 text-sm text-muted-foreground"><BookOpen className="size-4" /> La evidencia es opcional y puedes volver a la actividad completa cuando lo necesites.</p>
+    {closing ? <section className="space-y-3 rounded-2xl border bg-white p-5">
+      <label className="block font-semibold">¿Quieres recordar algo? (opcional)<Textarea className="mt-2" maxLength={800} value={note} onChange={event => setNote(event.target.value)} placeholder="Por ejemplo: mañana retomaremos la comparación de las semillas." /></label>
+      <div className="flex flex-wrap gap-3"><AsyncButton busy={busy} busyLabel="Terminando…" onClick={() => void finish()}>Terminar actividad</AsyncButton><Button variant="outline" disabled={busy} onClick={() => setClosing(false)}>Seguir con la actividad</Button></div>
+    </section> : <Button className="min-h-12" onClick={() => setClosing(true)}><CheckCircle2 /> Terminar actividad</Button>}
   </section>;
 }

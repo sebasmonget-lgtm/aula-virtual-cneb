@@ -1,6 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import { VersionConflictError, versionTransaction } from "./version-integrity.mjs";
 import { lockClassroomSchedule } from "./activity-schedule-integrity.mjs";
+import { activityPedagogicalBlocks } from "./pedagogical-blocks.mjs";
 
 const uuid = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
 const validId = value => typeof value === "string" && uuid.test(value);
@@ -11,6 +12,7 @@ export function validateOrdinaryObservation(input) {
   if (!['guided', 'spontaneous'].includes(input.sourceKind)) throw new TypeError("Elige el tipo de observación.");
   if (input.activityId != null && !validId(input.activityId)) throw new TypeError("La actividad no es válida.");
   if (input.criterionId != null && (!validId(input.criterionId) || !input.activityId)) throw new TypeError("El criterio requiere una actividad válida.");
+  if (input.momentId != null && (typeof input.momentId !== 'string' || !input.criterionId || input.momentId.length > 80)) throw new TypeError("El momento requiere un criterio de la actividad.");
   const rawText = input.rawText == null ? null : input.rawText;
   if (rawText !== null && (typeof rawText !== 'string' || !rawText.trim() || rawText.length > 4000))
     throw new TypeError("Escribe una observación de hasta 4000 caracteres.");
@@ -18,7 +20,7 @@ export function validateOrdinaryObservation(input) {
   // Raw text, including names, casing, line breaks and transcription mistakes, is never normalized.
   return { studentId: input.studentId, clientRequestId: input.clientRequestId,
     sourceKind: input.sourceKind, activityId: input.activityId ?? null,
-    criterionId: input.criterionId ?? null, rawText };
+    criterionId: input.criterionId ?? null, ...(input.momentId ? { momentId: input.momentId } : {}), rawText };
 }
 
 export async function saveOrdinaryObservation(db, teacherId, input, { mediaPath = null, mediaMimeType = null, mediaFingerprint = null, occurredAt = new Date() } = {}) {
@@ -45,6 +47,14 @@ export async function saveOrdinaryObservation(db, teacherId, input, { mediaPath 
       project_title: activity.project_title, blueprint_id: blueprintId,
       project_version: activity.details?.activity_contract?.project_version ?? null,
       project_fingerprint: activity.details?.activity_contract?.project_fingerprint ?? null };
+    if (capture.momentId) {
+      const preparation=(await db.query(`select preparation from activities where id=$1`,[capture.activityId])).rows[0]?.preparation;
+      const criteria=(await db.query(`select id,criterion_text,competency_v4_id,details from activity_criteria where activity_id=$1 and status='active'`,[capture.activityId])).rows;
+      const moment=activityPedagogicalBlocks(activity.details??{},preparation?.steps??[],criteria)
+        .find(block=>block.id===capture.momentId&&block.observations?.some(item=>item.id===capture.criterionId));
+      if(!moment)throw new TypeError("El momento para observar ya no pertenece a esta actividad. Recarga su guía.");
+      context={...context,moment_id:moment.id,moment_title:moment.title};
+    }
   }
   if (capture.criterionId) {
     const criterion = (await db.query(`select ac.id,ac.competency_id,ac.competency_v4_id,ac.criterion_text from activity_criteria ac

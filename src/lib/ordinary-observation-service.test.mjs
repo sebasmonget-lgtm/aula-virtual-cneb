@@ -15,9 +15,9 @@ async function fixture() {
     create table students(id uuid primary key,classroom_id uuid not null references classrooms(id),status text not null);
     create table learning_experiences(id uuid primary key,classroom_id uuid not null references classrooms(id),title text not null);
     create table activities(id uuid primary key,experience_id uuid not null references learning_experiences(id),
-      title text not null,occurs_on date not null,status text not null,details jsonb not null default '{}'::jsonb);
+      title text not null,occurs_on date not null,status text not null,details jsonb not null default '{}'::jsonb, preparation jsonb not null default '{}'::jsonb);
     create table activity_criteria(id uuid primary key,activity_id uuid not null references activities(id),
-      competency_id uuid,competency_v4_id text,criterion_text text,status text not null,teacher_confirmed_at timestamptz);
+      competency_id uuid,competency_v4_id text,criterion_text text,status text not null,teacher_confirmed_at timestamptz,details jsonb default '{}'::jsonb);
     create table evaluation_periods(id uuid primary key,school_year_id uuid not null,starts_on date not null,ends_on date not null);`);
   await db.exec(await readFile(new URL("../../local-db/migrations/0062_ordinary_observations.sql", import.meta.url), "utf8"));
   await db.exec(await readFile(new URL("../../local-db/migrations/0063_ordinary_observation_delete_guard.sql", import.meta.url), "utf8"));
@@ -139,6 +139,18 @@ test("un criterio elegido expresamente queda ligado al alumno y no se infiere de
       studentId: f.student, clientRequestId: randomUUID(), sourceKind: 'guided', activityId: f.activity,
       criterionId: randomUUID(), rawText: 'Prueba.' }), /no pertenecen/);
   } finally { await f.db.close(); }
+});
+
+test("el servidor conserva un momento real y rechaza momentos inventados",async()=>{
+  const f=await fixture();try{
+    const criterionId=randomUUID();
+    await f.db.query(`update activities set details=details||'{"child_actions":"Compara dos colecciones","closure_or_continuity":"Cuenta lo que encontró"}'::jsonb where id=$1`,[f.activity]);
+    await f.db.query(`insert into activity_criteria(id,activity_id,competency_v4_id,criterion_text,status,teacher_confirmed_at) values($1,$2,'MAT_CANTIDAD','Compara las colecciones','active',now())`,[criterionId,f.activity]);
+    const input={studentId:f.student,clientRequestId:randomUUID(),sourceKind:'guided',activityId:f.activity,criterionId,rawText:'Contó tres bloques.',momentId:'development'};
+    const saved=await saveOrdinaryObservation(f.db,f.teacher,input);assert.equal(saved.observation.context_snapshot.moment_id,'development');
+    await assert.rejects(saveOrdinaryObservation(f.db,f.teacher,{...input,clientRequestId:randomUUID(),momentId:'inventado'}),/momento/i);
+    assert.equal((await listOrdinaryObservations(f.db,f.teacher)).length,1);
+  }finally{await f.db.close();}
 });
 
 test("criterio histórico activo sigue siendo decisión docente sin inventar ID V4", async () => {

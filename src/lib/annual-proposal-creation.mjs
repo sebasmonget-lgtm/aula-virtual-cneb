@@ -1,7 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { versionTransaction, VersionConflictError, assertRevision, expectedRevision } from "./version-integrity.mjs";
 import { annualJourneySafeText, annualJourneyCurriculumTerms } from "./annual-journey-privacy.mjs";
-import { CONVERSATION_SCHEMA } from "./initial-journey-service.mjs";
 import { annualCreationContext, libraryRow } from "./annual-year-editor.mjs";
 import { JOURNEY_ROW_PROPERTIES, JOURNEY_REVIEW_SCHEMA, assertJourneySchema, journeyFail, validateAnnualJourney } from "./annual-journey-contract.mjs";
 import { JOURNEY_RULES } from "./annual-journey-service.mjs";
@@ -12,6 +11,10 @@ import { persistAnnualProjectSlots } from "./annual-project-slots.mjs";
 import { personalizationSources } from "./annual-personalization-service.mjs";
 import { namedProposalCompetencies, validateProposalCompetencies, proposalTeacherTexts, proposalRequestedCompetencies, missingProposalCompetencies, proposalIntentIssues } from "./annual-proposal-intent.mjs";
 import { appendConversationTurn, conversationStatus } from "./conversation-turn.mjs";
+// Creating one proposal does not extract the classroom context of the initial interview.
+const CONVERSATION_SCHEMA={id:"annual-proposal-conversation-v1",type:"object",additionalProperties:false,
+  required:["status","message","question","chips"],properties:{status:{type:"string",enum:["ready","needs_clarification","insufficient_core_information"]},
+    message:{type:"string"},question:{type:"string"},chips:{type:"array",items:{type:"string"},maxItems:5}}};
 
 const WORKFLOW="annual_proposal_creation_v3";
 const publicSession=(id,p,curriculum)=>({id,revision:p.revision,status:conversationStatus(p),approved:p.approved===true,review_feedback:p.review?.status==="needs_review"?(p.review.issues??[]).map(i=>i.reason):[],messages:p.messages,candidate:p.candidate ?? null,candidate_sources:p.candidate_sources ?? [],required_competency_ids:proposalRequestedCompetencies(p,curriculum),missing_required_competency_ids:p.candidate?missingProposalCompetencies(p.candidate,proposalRequestedCompetencies(p,curriculum)):[]});

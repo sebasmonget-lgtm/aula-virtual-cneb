@@ -18,7 +18,11 @@ const server = createServer(async (request, response) => {
     const criterion = (id) => ({ competency_id: id, criterion: "Explica una idea relacionada con el propósito de la propuesta.",
       expected_evidence: ["Explicación registrada por la docente durante la actividad."] });
     let output;
-    if (schema.startsWith("annual-journey-slots")) {output=generationFixture(context.curriculum.competency_cards);output.proposals=output.proposals.slice(0,context.calendar.length);}
+    if (schema === "annual-planning-conversation-v2") {
+      const texts=context.teacher_decisions??[];
+      output={status:texts.length?"ready":"needs_clarification",message:texts.length?"Ya tengo suficiente información para preparar tu año.":"Vamos a aprovechar los recursos de tu aula.",question:texts.length?"":"¿Qué espacios o materiales tenemos? Por ejemplo: patio, huerto o bloques.",chips:texts.length?[]:["Tenemos bloques y un patio"],context_items:texts.map((text,index)=>({text,source_turn:index,support_text:text}))};
+    }
+    else if (schema.startsWith("annual-journey-slots")) {output=generationFixture(context.curriculum.competency_cards);output.proposals=output.proposals.slice(0,context.calendar.length);}
     else if (schema === "annual-journey-review-v2") output={issues:[]};
     else if (schema === "annual-preplan-v1") output = {
       proposals: context.initial_slots.map((slot, index) => {

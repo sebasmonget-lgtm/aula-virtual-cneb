@@ -1,0 +1,31 @@
+// Explicit local QA. Fictitious classroom, no .env files and no remote provider.
+import assert from 'node:assert/strict';
+import {randomUUID} from 'node:crypto';
+import {writeFile} from 'node:fs/promises';
+import JSZip from 'jszip';
+const root='http://127.0.0.1:8798';
+async function api(path,body,method='POST'){const r=await fetch(root+path,body===undefined?undefined:{method,headers:{'content-type':'application/json'},body:JSON.stringify(body)});const value=await r.json();assert.ok(r.ok,`${path}: ${r.status} ${value.error??''}`);return value;}
+let dashboard=await api('/api/dashboard');assert.equal(dashboard.profile.teacher_name,'Docente ficticia PDF');assert.equal(dashboard.students.length,2);
+const block=dashboard.today.blocks.find(item=>item.activity_id&&item.criteria.length);assert.ok(block);
+const moment=block.pedagogical_blocks.find(item=>item.observations?.length);assert.ok(moment);
+const criterion=block.criteria[0],student=dashboard.students[0];
+const capture={studentId:student.id,clientRequestId:randomUUID(),sourceKind:'guided',activityId:block.activity_id,criterionId:criterion.id,momentId:moment.id,rawText:'Dijo: elegí tres bloques para construir la torre.'};
+const first=await api('/api/ordinary-observations',capture),again=await api('/api/ordinary-observations',capture);assert.equal(again.observation.id,first.observation.id);assert.equal(again.created,false);
+assert.equal(first.observation.context_snapshot.moment_id,moment.id);
+const url=`/api/period-evaluations/observe-today?activityId=${block.activity_id}&competencyId=${criterion.competency_v4_id}`;
+const priority=await api(url);assert.equal(priority.students.length,2);assert.equal(priority.students.find(item=>item.student_id===student.id).has_evidence,true);assert.ok(priority.suggestions.every(item=>item.competency_id===criterion.competency_v4_id));
+const original=await api(`/api/documents/activity/${block.activity_id}`);assert.equal(original.document.registered_evidence.length,1);assert.equal(original.document.registered_evidence[0].observation_text,capture.rawText);
+const firstArtifact=(await api('/api/documents/artifacts/prepare',{kind:'activity',sourceId:block.activity_id})).artifact;
+await api(`/api/ordinary-observations/${first.observation.id}/revisions`,{action:'correct',expectedRevision:1,correctedText:'Dijo: elegí cuatro bloques para construir la torre.',reason:'Corrección ficticia de transcripción'});
+const corrected=await api(`/api/documents/activity/${block.activity_id}`);assert.equal(corrected.document.registered_evidence[0].source_revision,2);assert.match(corrected.document.registered_evidence[0].observation_text,/cuatro bloques/);
+const nextArtifact=(await api('/api/documents/artifacts/prepare',{kind:'activity',sourceId:block.activity_id})).artifact;assert.notEqual(nextArtifact.id,firstArtifact.id);
+const word=await fetch(root+`/api/documents/activity/${block.activity_id}/download`);assert.equal(word.status,200);const wordBytes=Buffer.from(await word.arrayBuffer());const zip=await JSZip.loadAsync(wordBytes);assert.match(await zip.file('word/document.xml').async('string'),/cuatro bloques/);
+await writeFile('.local/pdf-activity-corrected.docx',wordBytes);
+await api('/api/today/execution',{scheduleEntryId:block.id,action:'complete',closureType:'note',closureNote:'Cierre ficticio: volveremos a construir mañana.'});
+dashboard=await api('/api/dashboard');assert.equal(dashboard.today.blocks.find(item=>item.id===block.id).status,'completed');
+await api(`/api/students/${student.id}/enrollment`,{status:'inactive',expectedStatus:'active'},'PATCH');assert.equal((await api('/api/students/inactive')).students[0].id,student.id);
+await api(`/api/students/${student.id}/enrollment`,{status:'active',expectedStatus:'inactive'},'PATCH');assert.equal((await api('/api/ordinary-observations')).observations.length,1);
+const conversation=await api('/api/annual-journey/conversation',{});
+const ready=await api('/api/annual-journey/conversation',{id:conversation.id,expectedRevision:conversation.revision,text:'Tenemos bloques y un patio'});assert.equal(ready.status,'ready');assert.ok(ready.contextItems.length);assert.equal(ready.contextItems[0].source_turn,0);
+const counts=await (await fetch('http://127.0.0.1:8797/counts')).json();assert.equal(counts.paidCalls,0);
+const result={fictitious:true,student_count:2,moment_preserved:true,idempotent:true,competency_priority:true,word_original_and_correction:true,new_document_version:true,closure_note:true,withdraw_and_restore:true,structured_context:true,...counts};await writeFile('.local/pdf-vertical-observations.json',JSON.stringify(result,null,2));console.log(JSON.stringify(result));

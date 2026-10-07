@@ -19,7 +19,7 @@ async function fixture() {
     create table students(id uuid primary key,classroom_id uuid not null references classrooms(id),status text not null);
     create table learning_experiences(id uuid primary key,classroom_id uuid not null references classrooms(id),title text not null);
     create table activities(id uuid primary key,experience_id uuid not null references learning_experiences(id),
-      title text not null,occurs_on date not null,status text not null,details jsonb not null default '{}'::jsonb);
+      title text not null,occurs_on date not null,status text not null,details jsonb not null default '{}'::jsonb, preparation jsonb not null default '{}'::jsonb);
     create table activity_criteria(id uuid primary key,activity_id uuid not null references activities(id),
       competency_id uuid,competency_v4_id text,criterion_text text,status text not null,teacher_confirmed_at timestamptz);
     create table evaluation_periods(id uuid primary key,school_year_id uuid not null,starts_on date not null,ends_on date not null);`);

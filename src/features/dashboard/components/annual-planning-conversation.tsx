@@ -8,8 +8,8 @@ import { localDatabaseApiUrl } from "@/src/lib/local-database";
 import { DictationRecorder } from "./dictation-recorder";
 import { JourneySteps } from "./initial-journey-ui";
 import { AyniChatMessage, AyniTyping } from "./ayni-chat-message";
-type Conversation={id:string;revision:number;status:string;messages:{role:string;text:string}[];chips:string[];teacherIdeas:string};
-export function AnnualPlanningConversation({observations,families,unknown,onIdeas,onDraft,onGenerate,onConversation,disabled}:{observations:number;families:number;unknown:number;onIdeas:(text:string)=>void;onDraft:(text:string)=>void;onGenerate:()=>void;onConversation?:(value:{id:string;messages:{role:string;text:string}[]})=>void;disabled:boolean}){
+type Conversation={id:string;revision:number;status:string;messages:{role:string;text:string}[];chips:string[];teacherIdeas:string;contextItems?:{text:string;source_turn:number}[]};
+export function AnnualPlanningConversation({observations,families,unknown,onIdeas,onDraft,onGenerate,onConversation,disabled}:{observations:number;families:number;unknown:number;onIdeas:(text:string)=>void;onDraft:(text:string)=>void;onGenerate:()=>void;onConversation?:(value:{id:string;messages:{role:string;text:string}[];contextItems?:{text:string;source_turn:number}[]})=>void;disabled:boolean}){
  const [conversation,setConversation]=useState<Conversation|null>(null),[text,setText]=useState(""),[busy,setBusy]=useState(false),[audio,setAudio]=useState(false),[error,setError]=useState("");
  const [pending,setPending]=useState("");
  const [pendingIndex,setPendingIndex]=useState(0);

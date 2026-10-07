@@ -1,5 +1,5 @@
 import { apiFetch } from "./ayni-api-fetch";
-export type LocalStudent = { id: string; name: string; full_name?: string; evidence_count?: number; competency_count?: number; last_observed_at?: string | null };
+export type LocalStudent = { age_years?: number; id: string; name: string; full_name?: string; evidence_count?: number; competency_count?: number; last_observed_at?: string | null };
 export type TeacherConfirmedAssessment = { id: string; period_start: string; period_end: string; information_status: "sufficient" | "insufficient"; evidence_overview: string; strengths_and_advances: string[]; support_needs: string[]; next_opportunities: string[]; teacher_confirmed_at: string };
 export type TeacherConfirmedConclusion = { id: string; period_start: string; period_end: string; information_status: "sufficient" | "insufficient"; conclusion_text: string; support_or_conditions: string[]; next_steps: string[]; teacher_confirmed_at: string };
 export type StudentPedagogicalProfile = {
@@ -47,12 +47,13 @@ export type LocalDashboard = {
   students: LocalStudent[];
   metrics: { students_total: number; evidences_week: number; students_observed: number };
   today: {
+    past_pending?: {id:string;title:string;date:string;display_status:string}[];
     qa_clock?: { date: string; time: string };
     date: string; now: string;
     attendance: { recorded: boolean; recorded_count: number };
     calendar_exception: { type: string; label: string; is_instructional: boolean } | null;
     journey: { mode: string; current_block_id: string | null; next_block_id: string | null; primary_action: string; pending_items: string[] };
-    blocks: { id: string; start_time: string; end_time: string; block_type: string; title: string; activity_id: string | null; purpose: string | null; activity_details: { opening?: string; development?: string; closure?: string; workshop_type?: string } | null; experience_title: string | null; materials: string[]; steps: string[]; criteria: ActivityCriterion[]; status: string; display_status: string; current_override: boolean; current_step_index: number; closure_type: string | null }[];
+    blocks: { day_progress?:{position:number;total:number}|null; pedagogical_blocks?: import("../features/dashboard/components/pedagogical-block").PedagogicalBlockData[]; id: string; start_time: string; end_time: string; block_type: string; title: string; activity_id: string | null; purpose: string | null; activity_details: { opening?: string; development?: string; closure?: string; workshop_type?: string } | null; experience_title: string | null; materials: string[]; steps: string[]; criteria: ActivityCriterion[]; status: string; display_status: string; current_override: boolean; current_step_index: number; closure_type: string | null }[];
   };
   profile: {
     teacher_name: string; institution_name: string; section: string; age_label: string;
@@ -79,7 +80,7 @@ export type DiagnosticWorkspace = {
   entries: { id: string; student_id: string; competency_id: string; teacher_confirmed: boolean; teacher_interpretation: string | null }[];
   observations: { id: string; student_id: string; competency_id: string; reference_id: string; status: string; note: string | null }[];
   experiences: {
-    id: string; title: string; explanation: string; teacher_instructions: string; examples: string[]; catalog_version: string; catalog_status: string;
+    id: string; title: string; explanation: string; pedagogical_blocks?: import("../features/dashboard/components/pedagogical-block").PedagogicalBlockData[]; teacher_instructions: string; examples: string[]; catalog_version: string; catalog_status: string;
     competencies: { id: string; name: string }[];
     aspects: { id: string; competency_id: string; competency_name: string; area_name: string; label: string; prompt: string; examples: string[]; age_reference: string }[];
   }[];

@@ -96,10 +96,10 @@ export function AnnualYearMap({ rows, available, calendar, effectiveCalendar, sl
     {projected.error && <p role="alert" className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">{projected.error}</p>}
     {selected && <section className="rounded-2xl border border-[#d8e8f0] bg-white p-4 shadow-sm sm:p-5" aria-label={`Detalle de ${selected.title}`}>
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,.9fr)]">
-        <div><div className="flex items-center gap-3"><span className="grid size-10 shrink-0 place-items-center rounded-full bg-[#e2f4ea] text-sm font-extrabold text-[#16805d]">{String(selectedIndex + 1).padStart(2, "0")}</span>
+        <div><ProjectPictogram project={selected} className="mb-4 size-40 sm:size-48" /><div className="flex items-center gap-3"><span className="grid size-10 shrink-0 place-items-center rounded-full bg-[#e2f4ea] text-sm font-extrabold text-[#16805d]">{String(selectedIndex + 1).padStart(2, "0")}</span>
           <div><h2 className="text-lg font-extrabold text-[#172b52]">{selected.title}</h2><p className="text-xs text-[#526b87]">{selected.experience_type === "unit" ? "Unidad" : "Proyecto"} · {selected.period}</p></div></div>
           <p className="mt-2 text-sm text-[#526b87]">{compact(selected.start)} – {compact(selected.end)} · {selected.duration_weeks} semanas</p>
-          <details className="mt-3 text-sm text-[#455d77]"><summary className="min-h-11 cursor-pointer py-3 font-semibold">Propósito y procedencia</summary><p><b>Propósito:</b> {selected.purpose}</p><p className="mt-2"><b>¿Por qué está en Mi año?</b> {selected.rationale}</p></details></div>
+          <p className="mt-3 text-sm leading-relaxed text-[#294d6d]"><b>Qué buscamos:</b> {selected.purpose}</p><details className="mt-3 text-sm text-[#455d77]"><summary className="min-h-11 cursor-pointer py-3 font-semibold">Por qué está en Mi año</summary><p className="mt-2"><b>¿Por qué está en Mi año?</b> {selected.rationale}</p></details></div>
         <div className="hidden rounded-xl bg-[#f5f8fc] p-3 lg:block"><h3 className="text-sm font-bold text-[#526b87]">Competencias principales</h3>
           <ul className="mt-2 space-y-2">{selected.primary_competency_ids.map((id) => <li key={id} className="flex gap-2 text-xs"><span className="text-[#087d96]">●</span>{names.get(id) ?? id}</li>)}</ul></div>
         <div className="hidden rounded-xl bg-[#f5f8fc] p-3 lg:block"><h3 className="text-sm font-bold text-[#526b87]">Información</h3>

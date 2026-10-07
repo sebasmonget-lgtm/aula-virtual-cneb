@@ -5,11 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { apiFetch } from "@/src/lib/ayni-api-fetch";
 import { localDatabaseApiUrl } from "@/src/lib/local-database";
-import { prepareSimpleProject, combineProjectContext } from "@/src/lib/simple-project-flow.mjs";
+import { prepareSimpleProject } from "@/src/lib/simple-project-flow.mjs";
 import { displayDate, limaToday } from "@/src/lib/display-date";
 import { AsyncButton, LoadingState, WorkflowFeedback } from "./workflow-ui";
 import { ProjectDevelopmentWorkspace, type Plan, type Proposal, type Experience } from "./project-development-workspace";
 import { PreparationProgress, type PreparationJob } from "./preparation-progress";
+import { ProjectPictogram } from "./project-pictogram";
+import { DictationRecorder } from "./dictation-recorder";
+import { ProjectCalendarReview, type ProjectCalendarDay } from "./project-calendar-review";
 import { projectEventWarning } from "@/src/lib/project-event-warning.mjs";
 
 type Props = ComponentProps<typeof ProjectDevelopmentWorkspace>;
@@ -25,7 +28,9 @@ export function SimpleProjectWorkspace(props: Props) {
   const [plan, setPlan] = useState<Plan | null>(null), [experiences, setExperiences] = useState<Experience[]>([]);
   const [chosen, setChosen] = useState<string | null>(props.initialProposalId ?? null);
   const [row, setRow] = useState<Experience | null>(null), [context, setContext] = useState("");
-  const [contextExtras, setContextExtras] = useState<Record<string,string>>({});
+  const [dictating,setDictating]=useState(false);
+  const [calendar,setCalendar]=useState<ProjectCalendarDay[]>([]),[selectedDates,setSelectedDates]=useState<string[]>([]);
+  const [calendarError,setCalendarError]=useState("");
   const [names, setNames] = useState<Record<string, string>>({});
   const [advanced, setAdvanced] = useState(false), [changing, setChanging] = useState(false);
   const [loading, setLoading] = useState(true), [busy, setBusy] = useState(false), [error, setError] = useState("");
@@ -40,6 +45,17 @@ export function SimpleProjectWorkspace(props: Props) {
   const idAt = (item: Proposal, index: number) => item.proposal_id ?? plan?.project_slots.find((slot) => slot.slot_index === index + 1)?.id ?? "";
   const index = plan?.proposal.proposed_experiences.findIndex((item, position) => idAt(item, position) === chosen) ?? -1;
   const proposal = plan?.proposal.proposed_experiences[index];
+  const selectedSlot=proposal?slotFor(proposal,index):null;
+  const calendarStartsOn=selectedSlot?.starts_on,calendarEndsOn=selectedSlot?.ends_on,calendarProjectId=row?.id;
+  useEffect(() => {
+    if(!calendarStartsOn||!calendarEndsOn)return;
+    let live=true;
+    const path=calendarProjectId?`/api/project-flow/${calendarProjectId}/calendar`:`/api/school-calendar?from=${calendarStartsOn}&to=${calendarEndsOn}`;
+    void request<{days:ProjectCalendarDay[];selected_dates?:string[]}>(path).then(value=>{
+      if(!live)return;setCalendar(value.days);setSelectedDates(value.selected_dates??value.days.filter(day=>day.is_instructional&&(!modern||day.date>=limaToday())).map(day=>day.date));setCalendarError("");
+    }).catch(()=>{if(live)setCalendarError("No pudimos recuperar los días del proyecto. Vuelve a abrirlo para comprobar el calendario.");});
+    return()=>{live=false;};
+  },[calendarStartsOn,calendarEndsOn,calendarProjectId,modern]);
   useEffect(() => { let live = true;
     Promise.all([request<{ active: Plan | null }>("/api/annual-plans/current"),
       request<{ experiences: Experience[] }>("/api/learning-experiences"),
@@ -66,13 +82,18 @@ export function SimpleProjectWorkspace(props: Props) {
     try { await job(); } catch (cause) { setError(cause instanceof Error ? cause.message : "No pudimos completar la acción."); }
     finally { setBusy(false); }
   }
-  async function prepare() { if (!plan || !proposal || !chosen) return;
-    if(modern){await act(async()=>{const job=await request<PreparationJob>("/api/preparation/projects",{annualPlanId:plan.id,proposalId:chosen,additionalContext:combineProjectContext(context,contextExtras)});setPreparation(job);setChanging(false);});return;}
-    await act(async () => { const result = await prepareSimpleProject({ request, planId: plan.id,
-      proposalId: chosen, proposal, additionalContext: combineProjectContext(context, contextExtras), experience: row,
-      feedback: { usePlanningFeedback: Boolean(props.feedbackPeriodId), planningFeedbackPeriodId: props.feedbackPeriodId },
-      onCheckpoint: (saved: Experience) => setRow(saved) });
-      setRow(result); setContext(result.details.decisions?.additional_context ?? ""); setContextExtras({}); setChanging(false); setNotice("Proyecto preparado. Revísalo antes de confirmar."); });
+  async function prepare() { if (!plan || !proposal || !chosen || !selectedDates.length || calendarError) return;
+    await act(async()=>{
+      let current=row;
+      if(!current){const result=await request<{experience:Experience}>("/api/project-flow/start",{annualPlanId:plan.id,proposalId:chosen});current=result.experience;setRow(current);setOpenedProposal(chosen);}
+      await request(`/api/project-flow/${current.id}/calendar`,{selectedDates,
+        exclusions:Object.fromEntries(calendar.filter(day=>day.is_instructional&&!selectedDates.includes(day.date)).map(day=>[day.date,"No se utilizará en este proyecto"])),confirm:true},"PUT");
+      current=(await request<{experience:Experience}>(`/api/project-flow/${current.id}`)).experience;setRow(current);
+      if(modern){const job=await request<PreparationJob>("/api/preparation/projects",{annualPlanId:plan.id,proposalId:chosen,additionalContext:context.trim()});setPreparation(job);setChanging(false);return;}
+      const result=await prepareSimpleProject({request,planId:plan.id,proposalId:chosen,proposal,additionalContext:context.trim(),experience:current,
+        feedback:{usePlanningFeedback:Boolean(props.feedbackPeriodId),planningFeedbackPeriodId:props.feedbackPeriodId},onCheckpoint:(saved:Experience)=>setRow(saved)});
+      setRow(result);setChanging(false);setNotice("Proyecto preparado. Revísalo antes de confirmar.");
+    });
   }
   async function confirm() { if (!row) return; await act(async () => {
     const confirmation=await request<{block_job?:PreparationJob}>(`/api/project-flow/${row.id}/confirm`, { expectedRevision: row.revision });
@@ -83,7 +104,7 @@ export function SimpleProjectWorkspace(props: Props) {
   async function newVersion() { if (!row) return; await act(async () => {
     const copy = await request<{ id: string }>(`/api/learning-experiences/${row.id}/new-version`, { expectedRevision: row.revision });
     const result = await request<{ experience: Experience }>(`/api/project-flow/${copy.id}`);
-    setRow(result.experience); setContext(result.experience.details.decisions?.additional_context ?? ""); setContextExtras({}); setChanging(true);
+    setRow(result.experience); setContext(result.experience.details.decisions?.additional_context ?? "");  setChanging(true);
     setNotice("Nueva versión en borrador. La anterior permanece confirmada.");
   }); }
   async function rebase(){if(!row||!plan)return;await act(async()=>{
@@ -119,7 +140,8 @@ export function SimpleProjectWorkspace(props: Props) {
       (a.slot?.starts_on ?? "9999").localeCompare(b.slot?.starts_on ?? "9999") || a.position - b.position);
   const currentId=proposals.find(({slot})=>slot&&slot.starts_on<=today&&slot.ends_on>=today)?.item.proposal_id;
   const nextId=!currentId?proposals.find(({slot})=>slot&&slot.starts_on>today)?.item.proposal_id:null;
-  return <section className="ayni-workflow space-y-5"><header><p className="text-sm font-semibold text-[#087d96]">Mi año → Proyecto</p>
+  const futureNotice=modern && (selectedSlot?.starts_on??"")>today ? <WorkflowFeedback tone="info"><p>Este proyecto está previsto para más adelante. Puedes prepararlo para sus fechas o adelantarlo al primer tramo futuro. El tramo que ya comenzó se conserva.</p><Button variant="outline" className="mt-3" disabled={busy} onClick={()=>void moveEarlier()}>Quiero trabajarlo antes</Button></WorkflowFeedback>:null;
+  return <section className="ayni-workflow space-y-5"><header>
     <h1 className="text-3xl font-extrabold">{proposal?.title ?? "Elige una propuesta de Mi año"}</h1></header>
     {error && <WorkflowFeedback tone="error">{error}</WorkflowFeedback>}{notice && <WorkflowFeedback tone="success">{notice}</WorkflowFeedback>}
     {discrepancy?.changed&&row&&<WorkflowFeedback tone="info"><p>{discrepancy.reason}</p><div className="mt-3 flex flex-wrap gap-3"><Button disabled={busy} onClick={()=>void rebase()}>Preparar una nueva versión desde Mi año</Button><Button variant="outline" onClick={props.onGoAnnual}>Revisar Mi año</Button></div></WorkflowFeedback>}
@@ -131,28 +153,31 @@ export function SimpleProjectWorkspace(props: Props) {
         {(id===currentId||id===nextId)&&<p className="mt-2 text-sm font-bold text-[#087d96]">{id===currentId?"Corresponde ahora":"Próximo proyecto"}</p>}
         <p className="my-2 text-sm text-[#526b87]">{slot ? `${displayDate(slot.starts_on)} – ${displayDate(slot.ends_on)}` : item.period} · {item.purpose}</p>
         {slot && slot.ends_on < today && <p className="mb-2 text-sm text-[#916219]">Esta planificación corresponde a un período anterior. Puedes revisarla o continuar con la actual.</p>}
-        <Button disabled={!id || busy} onClick={() => { setPreparation(null);setOpenedProposal(null); setRow(null); setContext(""); setContextExtras({}); setChanging(false); setError(""); setNotice(""); setChosen(id); }}>{existing?.status === "active" ? "Ver proyecto confirmado" : existing ? "Continuar proyecto" : "Usar esta propuesta"}</Button></article>;
+        <Button disabled={!id || busy} onClick={() => { setPreparation(null);setOpenedProposal(null); setRow(null); setContext("");  setChanging(false); setError(""); setNotice(""); setChosen(id); }}>{existing?.status === "active" ? "Ver proyecto confirmado" : existing ? "Continuar proyecto" : "Usar esta propuesta"}</Button></article>;
     })}</div>{!plan && <Button onClick={props.onGoAnnual}>Completar Mi año</Button>}</> : <>
-      <p className="text-sm text-[#526b87]">{row ? `Versión ${row.version} · ${row.status === "active" ? "confirmada" : "borrador"}` : proposal.period}</p>
-      {modern && (slotFor(proposal,index)?.starts_on??"")>today && <WorkflowFeedback tone="info"><p>Este proyecto está previsto para más adelante. Puedes consultarlo y prepararlo para sus fechas, o adelantarlo al primer tramo futuro. Si el tramo actual comenzó, se conserva.</p><Button variant="outline" className="mt-3" disabled={busy} onClick={()=>void moveEarlier()}>Quiero trabajarlo antes</Button></WorkflowFeedback>}
+      <p className="text-sm text-[#526b87]">{row?.status === "active" ? "Confirmado" : "Por preparar"} · {selectedSlot ? `${displayDate(selectedSlot.starts_on)} al ${displayDate(selectedSlot.ends_on)}` : proposal.period}</p>
       {(slotFor(proposal,index)?.ends_on ?? "9999") < today && <p className="rounded-xl bg-[#fff7e8] p-3 text-sm text-[#805819]">Esta planificación corresponde a un período anterior. Puedes revisarla o continuar con la actual.</p>}
-      {(!prepared || changing) && <section className="space-y-4 rounded-2xl border bg-white p-5"><h2 className="text-xl font-bold">Punto de partida</h2>
-        <p>{proposal.rationale}</p><p><b>Propósito previsto:</b> {proposal.purpose}</p>
+      {(!prepared || changing) && <section aria-label="Propósito y preparación del proyecto" className="space-y-4 rounded-2xl border bg-white p-5">
+        <div className="flex flex-col gap-5 sm:flex-row"><ProjectPictogram project={proposal} className="size-40 sm:size-48" /><p className="leading-relaxed"><b>Qué buscamos:</b> {proposal.purpose}</p></div>
         <p className="text-sm">{proposal.primary_competency_ids.map(name).join(" · ")}</p>
-        <label className="block font-semibold">¿Hay algo nuevo que debamos tener en cuenta? (opcional)
+        {futureNotice}
+        <label className="block font-semibold">¿Hay algo que quieras que tenga en cuenta? (opcional)
           <Textarea className="mt-2" value={context} maxLength={1000} onChange={(event) => setContext(event.target.value)}
-            placeholder="Por ejemplo: surgió una pregunta, falta un material o queremos adaptar la propuesta a nuestro grupo." /></label>
-        <details className="rounded-xl border p-4"><summary className="cursor-pointer font-semibold">Añadir contexto por temas (opcional)</summary>
-          <div className="mt-4 space-y-3">{([ ["Intereses", "¿Qué está interesando al grupo?"], ["Preguntas", "¿Qué preguntas han surgido?"],
-            ["Recursos", "¿Qué recursos o condiciones tenemos?"], ["Adaptaciones", "¿Qué acompañamiento conviene considerar?"] ] as const).map(([key,label]) =>
-              <label className="block font-semibold" key={key}>{label}<Textarea className="mt-2" maxLength={200} value={contextExtras[key] ?? ""}
-                onChange={event => setContextExtras(value => ({ ...value, [key]: event.target.value }))} placeholder="Puedes dejarlo vacío." /></label>)}</div></details>
-        <AsyncButton busy={busy} busyLabel="Preparando proyecto…" disabled={busy||!!visiblePreparation&&["queued","running"].includes(visiblePreparation.status)} onClick={() => void prepare()}>
-          {context.trim() || Object.values(contextExtras).some(value => value.trim()) ? "Preparar con este contexto" : "No hay nada nuevo; usar la propuesta de Mi año"}</AsyncButton>
+            placeholder="Por ejemplo: podemos usar el patio o invitar a las familias al cierre." /></label>
+        <p className="text-sm text-[#526b87]">Puedes añadir pequeños ajustes. Para cambiar lo que buscamos o las competencias, revisa el proyecto en Mi año.</p>
+        <div className="flex flex-wrap gap-2">{["Tenemos bloques grandes", "Podemos usar el patio", "Tenemos lupas", "Podemos visitar el huerto", "Quiero invitar a las familias al cierre"].map(idea=><Button key={idea} variant="outline" className="max-w-full whitespace-normal" disabled={busy||dictating} onClick={()=>setContext(value=>[value,idea].filter(Boolean).join("\n").slice(0,1000))}>{idea}</Button>)}</div>
+        <DictationRecorder classroomScope purpose="group_summary" rawTranscript context="Ajustes para este proyecto" currentText={context} onTranscribed={value=>setContext(value.slice(0,1000))} onBusyChange={setDictating} disabled={busy}/>
+        <section className="rounded-xl bg-[#edf7fa] p-4"><h3 className="font-bold">Días del proyecto</h3><p className="mt-2">{selectedDates.length} días de clase{selectedDates.length?` · ${displayDate(selectedDates[0])} al ${displayDate(selectedDates.at(-1)!)}`:""}</p>
+          {calendarError&&<WorkflowFeedback tone="error">{calendarError}</WorkflowFeedback>}
+          <details className="mt-3"><summary className="min-h-11 cursor-pointer font-semibold text-[#07576c]">Revisar calendario</summary><ProjectCalendarReview days={calendar} selectedDates={selectedDates} disabled={busy||dictating} onChange={dates=>setSelectedDates(dates.filter(date=>!modern||date>=today))}/></details>
+        </section>
+        <AsyncButton busy={busy} busyLabel="Preparando proyecto…" disabled={busy||dictating||!selectedDates.length||!!calendarError||!!visiblePreparation&&["queued","running"].includes(visiblePreparation.status)} onClick={() => void prepare()}>
+          Preparar proyecto</AsyncButton>
         <Button variant="outline" disabled={busy} onClick={()=>modern?props.onGoAnnual?.():setAdvanced(true)}>{modern?"Quiero trabajar otro proyecto en Mi año":"Cambiar propósito, competencias o días"}</Button>
       </section>}
-      {prepared && !changing && row && <section className="space-y-4 rounded-2xl border bg-white p-5"><h2 className="text-xl font-bold">{row.status === "active" ? "Proyecto confirmado" : "Proyecto preparado"}</h2>
+      {prepared && !changing && row && <section className="space-y-4 rounded-2xl border bg-white p-5"><div className="flex flex-col gap-5 sm:flex-row"><ProjectPictogram project={proposal} className="size-40 sm:size-48" /><div><h2 className="text-xl font-bold">{row.status === "active" ? "Proyecto confirmado" : "Proyecto preparado"}</h2><p className="mt-2">{selectedDates.length} días de clase</p></div></div>
         <p>{row.details.decisions?.purpose}</p><p className="text-sm">{row.details.decisions?.competency_ids.map(name).join(" · ")}</p>
+        {futureNotice}
         <p><b>Cierre:</b> {row.details.project_master?.closing_description}</p>
         <details className="rounded-xl border p-4"><summary className="cursor-pointer font-semibold">Ver propósito, criterios, evidencia, preguntas y progresión</summary>
           <div className="mt-4 space-y-4"><p><b>Contexto:</b> {row.details.decisions?.context_summary}</p>

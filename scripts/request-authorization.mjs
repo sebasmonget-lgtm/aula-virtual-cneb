@@ -41,7 +41,7 @@ const selectorFields = {
 function pathSelector(pathname) {
   const parts = pathname.split("/");
   if (parts[1] !== "api") return null;
-  if (parts[2] === "students" && parts[3] && parts[3] !== "import") return ["student", parts[3]];
+  if (parts[2] === "students" && parts[3] && !["import","inactive"].includes(parts[3])) return ["student", parts[3]];
   if (parts[2] === "diagnostics") {
     if (parts[3] === "students" && parts[4]) return ["student", parts[4]];
     const kind = { reviews: "diagnostic_review", "student-reviews": "student_review",

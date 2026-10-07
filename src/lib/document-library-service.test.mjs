@@ -24,6 +24,8 @@ async function fixture() {
     create table experience_formal_contents(id uuid primary key,experience_id uuid unique,content jsonb);
     create table activities(id uuid primary key,experience_id uuid,title text,purpose text,status text,details jsonb,preparation jsonb,occurs_on date,linked_main_activity_id uuid,version int default 1);
     create table activity_criteria(id uuid primary key,activity_id uuid,competency_v4_id text,criterion_text text,details jsonb,status text,teacher_confirmed_at timestamptz);
+    create table ordinary_observations(id uuid primary key,classroom_id uuid,student_id uuid,created_by uuid,activity_id uuid,captured_criterion_id uuid,raw_text text,context_snapshot jsonb default '{}'::jsonb,media_path text,occurred_at timestamptz,status text default 'active',source_revision int default 1);
+    create table ordinary_observation_revisions(observation_id uuid,revision int,corrected_text text);
     create table evidences(id uuid primary key,student_id uuid,activity_id uuid,criterion_id uuid,observation_text text,observation_status text,type text,observed_at timestamptz,media_path text,created_by uuid);
     create table class_schedule_entries(id uuid primary key,activity_id uuid,classroom_id uuid);
     create table daily_execution_logs(id uuid primary key,schedule_entry_id uuid,execution_date date,teacher_closure_note text);
@@ -109,7 +111,7 @@ test("el Word de actividad recibe solo evidencia nominal real del aula autorizad
     await db.query(`insert into daily_execution_logs values($1,$2,'2026-04-02','El grupo pidió otro turno')`, [id(23), id(22)]);
     const document = await loadSavedDocument(db, id(1), "activity", id(12));
     assert.deepEqual(document.registered_evidence.map((item) => [item.student_name, item.observation_text]),
-      [["Alessia", "Propuso esperar su turno"]]);
+      [["Alessia Pérez", "Propuso esperar su turno"]]);
     assert.equal(document.registered_evidence[0].criterion_id, id(20));
     assert.equal(document.registered_evidence[0].criterion_text, "Explica lo que observó");
     assert.equal(document.registered_evidence[0].competency_v4_id, "CYT_INDAGA");
@@ -128,6 +130,27 @@ test("el Word de actividad recibe solo evidencia nominal real del aula autorizad
     assert.doesNotMatch(JSON.stringify(document), /media_path|private_path/);
     assert.equal(await loadSavedDocument(db, id(2), "activity", id(12)), null);
   } finally { await db.close(); }
+});
+
+test("una observación moderna se registra una vez y el Word refleja corrección y anulación sin alterar el original", async()=>{
+  const db=await fixture();
+  try {
+    await db.query(`insert into ordinary_observations(id,classroom_id,student_id,created_by,activity_id,captured_criterion_id,raw_text,occurred_at)
+      values($1,$2,$3,$4,$5,$6,'Observación original',now())`,[id(31),id(6),id(13),id(1),id(12),id(20)]);
+    let document=await loadSavedDocument(db,id(1),'activity',id(12));assert.equal(document.registered_evidence.length,1);
+    assert.equal(document.registered_evidence[0].observation_text,'Observación original');
+    assert.equal((await db.query('select count(*)::int n from evidences')).rows[0].n,0);
+    assert.equal(await loadSavedDocument(db,id(2),'activity',id(12)),null);
+    await db.query(`insert into ordinary_observation_revisions values($1,2,'Cambió la base después de observar')`,[id(31)]);
+    await db.query(`update ordinary_observations set status='corrected',source_revision=2 where id=$1`,[id(31)]);
+    document=await loadSavedDocument(db,id(1),'activity',id(12));assert.equal(document.registered_evidence[0].source_revision,2);
+    const cards=(await loadKnowledgeBaseV4()).competencyCards.map(card=>({id:card.id,name:card.official_name,capacities:card.capacities,ages:card.ages}));
+    const zip=await JSZip.loadAsync(await renderActivityUnifiedWord({...document,content:{...document.content,document_template_version:'activity-unified-v1',competency_id:'CYT_INDAGA'}},cards));
+    const xml=await zip.file('word/document.xml').async('string');assert.match(xml,/Cambió la base después de observar/);assert.doesNotMatch(xml,/Observación original/);
+    assert.equal((await db.query('select raw_text from ordinary_observations where id=$1',[id(31)])).rows[0].raw_text,'Observación original');
+    await db.query(`update ordinary_observations set status='voided' where id=$1`,[id(31)]);
+    assert.equal((await loadSavedDocument(db,id(1),'activity',id(12))).registered_evidence.length,0);
+  }finally{await db.close();}
 });
 
 test("un plan histórico completo obtiene el diagnóstico grupal confirmado que antes faltaba", async () => {

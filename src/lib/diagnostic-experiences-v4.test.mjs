@@ -123,10 +123,10 @@ test("UI abre la lista completa y vuelve a ella al guardar; RLS remota exige esc
   assert.match(ui, /data\.students/);
   assert.match(ui, /Sin observaciones/);
   assert.match(ui, /Observados hoy/);
-  assert.match(ui, /1\. Prepara el juego/);
-  assert.match(ui, /2\. Mientras juegan, observa/);
-  assert.match(ui, /No tienes que observarlas todas/);
-  assert.match(ui, /aspect\.examples\.map/);
+  assert.match(ui, /PedagogicalBlock/);
+
+
+  assert.match(ui, /experience\.pedagogical_blocks/);
   assert.doesNotMatch(ui, /Ver ejemplos/);
   assert.match(ui, /3\. Elige a un niño y anota lo que viste/);
   assert.match(ui, /Relación curricular/);

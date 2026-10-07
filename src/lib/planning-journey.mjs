@@ -51,7 +51,7 @@ export async function loadPlanningJourney(apiUrl, fetcher = fetch) {
   const activity = activities.some((item) => item.status === "draft") ? "draft" :
     activities.some((item) => item.status === "active") ? "confirmed" : "pending";
   /** @type {PlanningStep} */
-  const recommended = !studentCount && !plan ? "diagnostic" : plans.draft || !plan ? "annual" : !active.length ? "experiences" : "activities";
+  const recommended = !plan && !plans.draft && diagnostic !== "reviewed" ? "diagnostic" : plans.draft || !plan ? "annual" : !active.length ? "experiences" : "activities";
   return { mode:activities.some((item)=>item.status==="active")?"ongoing_cycle":"first_setup",diagnostic, studentCount, annual, experience, activity, recommended, hasConfirmedAnnual: Boolean(plan), hasConfirmedExperience: active.length > 0, hasConfirmedActivity: activities.some((item) => item.status === "active") };
 }
 

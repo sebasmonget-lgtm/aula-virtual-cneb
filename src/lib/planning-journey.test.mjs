@@ -21,7 +21,7 @@ test("sin niños se empieza por el padrón; con niños ya se puede preparar Mi a
   const withStudents = await loadStartingGuidance(base, fetchFrom({ [planUrl]: plans, [diagnosticUrl]: { ...empty, student_count: 1 } }));
   assert.equal(withStudents.startingSection, "Diagnóstico");
   const journey = await loadPlanningJourney(base, fetchFrom({ [planUrl]: plans, [experienceUrl]: { experiences: [] }, [diagnosticUrl]: { ...empty, student_count: 1 } }));
-  assert.equal(journey.recommended, "annual");
+  assert.equal(journey.recommended, "diagnostic");
   assert.equal(journey.diagnostic, "pending");
 });
 
@@ -30,7 +30,7 @@ test("una observación guardada no obliga a cerrar el diagnóstico antes de plan
   const diagnostic = { reviewed: false, student_count: 1, observation_count: 1 };
   const journey = await loadPlanningJourney(base, fetchFrom({ [planUrl]: plans, [experienceUrl]: { experiences: [] }, [diagnosticUrl]: diagnostic }));
   assert.equal(journey.diagnostic, "in_progress");
-  assert.equal(journey.recommended, "annual");
+  assert.equal(journey.recommended, "diagnostic");
   const next = await loadPlanningJourney(base, fetchFrom({ [planUrl]: plans, [experienceUrl]: { experiences: [] }, [diagnosticUrl]: { ...diagnostic, reviewed: true } }));
   assert.equal(next.diagnostic, "reviewed");
   assert.equal(next.recommended, "annual");
@@ -118,7 +118,7 @@ test("la interfaz abre el diagnóstico y ofrece continuar al plan solo tras guar
   const diagnostic = await readFile(new URL("../features/dashboard/components/profile-and-diagnostic.tsx", import.meta.url), "utf8");
   const students = await readFile(new URL("../features/dashboard/components/students-screen.tsx", import.meta.url), "utf8");
   const setup = await readFile(new URL("../features/dashboard/components/pilot-setup.tsx", import.meta.url), "utf8");
-  assert.match(setup, /Paso 1 de 6 · Configura el aula/);
+  assert.match(setup, /Configura tu aula/);
   assert.match(students, /Añadir niños al aula/);
   assert.match(workspace, /guidance\.startingSection === "Niños" \? "Aula" : guidance\.startingSection/);
   assert.match(workspace, /id: "diagnostic" as const, label: "Diagnóstico"/);
@@ -129,5 +129,5 @@ test("la interfaz abre el diagnóstico y ofrece continuar al plan solo tras guar
   assert.match(diagnostic, /disabled=\{index \+ 1 > maxStep\}/);
   assert.match(diagnostic, /setData\(await completeDiagnosticReview\(\)\); onPlan\?\.\(\)/);
   assert.match(diagnostic, /!data\.observations\.length.*información insuficiente/);
-  assert.match(students, /Continuar: evaluación diagnóstica/);
+  assert.match(students, /Terminé de cargar mi aula/);
 });
