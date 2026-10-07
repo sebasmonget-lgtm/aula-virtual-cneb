@@ -115,11 +115,16 @@ test("the HTTP boundary protects every route and local PGlite remains usable", {
       AYNI_ADMIN_SETUP_KEY: "test-only-bootstrap-key-with-more-than-32-characters",
       AYNI_AUTH_COOKIE_SECURE: "0",
       AYNI_ALLOWED_ORIGIN: "http://localhost:5173",
+      VERCEL: "1", VERCEL_URL: "ayni-aula-staging-fixture-ayni4.vercel.app",
       AYNI_LOCAL_TEACHER_ID: "ignored-in-auth-mode",
     });
     const call = async (pathname, token, init = {}) => fetch(`${running.base}${pathname}`, {
       ...init, headers: { ...(token ? { authorization: `Bearer ${token}` } : {}), ...init.headers },
     });
+    const previewOrigin = "https://ayni-aula-staging-fixture-ayni4.vercel.app";
+    assert.equal((await call("/api/auth/config", null, { headers: { origin: previewOrigin } })).status, 200);
+    assert.equal((await call("/api/auth/session", null, { headers: { origin: previewOrigin } })).status, 401);
+    assert.equal((await call("/api/auth/config", null, { headers: { origin: "https://other.vercel.app", host: "other.vercel.app", "x-forwarded-host": "other.vercel.app" } })).status, 403);
     assert.deepEqual(await (await call("/api/admin/setup-status")).json(), { available: false, recoverable: true });
     const recoveryRequest = (setupKey) => ({ method: "POST",
       headers: { origin: "http://localhost:5173", "content-type": "application/json" },

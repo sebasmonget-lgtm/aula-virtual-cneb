@@ -8,6 +8,7 @@ import { mkdir, readFile, readdir, unlink, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import path from "node:path";
 import { createDatabase } from "./database-adapter.mjs";
+import { configuredOrigins } from "./allowed-origins.mjs";
 import { resolveDailyState } from "../src/lib/daily-state.mjs";
 import { teacherTodayActions } from "../src/lib/teacher-today-actions.mjs";
 import { readQADailyClock } from "../src/lib/qa-daily-clock.mjs";
@@ -168,10 +169,7 @@ function validSetupKey(candidate) {
   return a.length === b.length && timingSafeEqual(a, b);
 }
 const corsMethods = "GET,POST,PUT,PATCH,DELETE,OPTIONS";
-const allowedOrigins = new Set([
-  ...(authMode === "local" ? ["http://localhost:5173", "http://127.0.0.1:5173"] : []),
-  ...(process.env.AYNI_ALLOWED_ORIGIN ? [process.env.AYNI_ALLOWED_ORIGIN] : []),
-]);
+const allowedOrigins = configuredOrigins(authMode);
 const exportTables = [
   "profiles", "curriculum_source_documents", "curriculum_versions", "levels", "cycles", "age_grades", "curriculum_areas",
   "competencies", "capacities", "standards", "performances", "transversal_approaches", "school_years", "classrooms",
