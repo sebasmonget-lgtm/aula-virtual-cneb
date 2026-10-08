@@ -36,7 +36,7 @@ export function validateDiagnosticSuggestion(output, sources) {
   if (!output || typeof output !== "object" || Array.isArray(output) ||
       Object.keys(output).length !== fields.length + 1 || fields.some((field) =>
         typeof output[field] !== "string" || !output[field].trim() || output[field].length > 3000 ||
-        forbiddenJudgment.test(output[field]) || neutralizeAssessmentText(output[field], knownNames) !== output[field]))
+        forbiddenJudgment.test(output[field]) || /\bchild_\d+\b/.test(output[field]) || neutralizeAssessmentText(output[field], knownNames) !== output[field]))
     throw new DiagnosticSuggestionError("proposal_invalid");
   const references = [ ...(sources.comments ?? []), ...(sources.family_reported_context ?? []),
     ...(sources.observed_records ?? []).flatMap(child => child.notes.map(note => ({ ...note, child: child.child }))) ];
@@ -74,7 +74,7 @@ export async function suggestDiagnosticGroupReview(db, teacherId, draftId, {
     const provider = createProvider(plan, { timeoutMs: 120_000 });
     const bundle = { workflow: "diagnostic_group_synthesis", context: { age: sources.age, student_count: sources.student_count,
       confirmed_teacher_comments: sources.comments, observed_records: sources.observed_records ?? [], family_reported_context: sources.family_reported_context ?? [] }, curriculum: { competency_cards: sources.competency_options ?? [] },
-      constraints: { must: ["Distinguir explícitamente lo observado, lo reportado por la familia y la interpretación docente. Una entrevista familiar no acredita un aprendizaje observado. Si hay contradicciones, conservar quién reportó qué y expresar lo que falta observar. Cada afirmación cita el alias y tipo de fuente que la sostiene.", "Los comentarios individuales son opcionales; no suponer que su ausencia indica dificultad.", "Expresar necesidades como oportunidades pedagógicas.",
+      constraints: { must: ["Distinguir explícitamente lo observado, lo reportado por la familia y la interpretación docente. Una entrevista familiar no acredita un aprendizaje observado. Si hay contradicciones, conservar el tipo de fuente y expresar lo que falta observar. Cada afirmación cita sus fuentes únicamente en claims.source_refs. El texto docente y claims.text no contienen alias child_N ni IDs; usar expresiones prudentes como un niño o algunos niños según el alcance sustentado.", "Los comentarios individuales son opcionales; no suponer que su ausencia indica dificultad.", "Expresar necesidades como oportunidades pedagógicas.",
         "Redactar una visión breve del grupo, sin priorizar competencias todavía.", "No convertir ausencia de registro en dificultad.",
         "En needs, distinguir necesidad de acompañamiento observada de falta de información. Solo plantear una necesidad grupal con un patrón comparable en varios niños o comentarios docentes confirmados que la sustenten; si no hay ese sustento, formular qué conviene seguir observando.",
         "No generalizar a todo el grupo una conducta o necesidad presente en un solo alias.",

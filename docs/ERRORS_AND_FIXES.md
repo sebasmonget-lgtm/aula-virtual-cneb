@@ -1622,3 +1622,23 @@ El smoke del primer Preview READY devolvió 403 con su propio Origin. Causa: la 
 - Solución validada: fingerprint separado de fuente/tipo/versión/detalles confirmado en generación, batch y confirmación. El cambio invalida únicamente la recomendación pendiente; conclusiones y niveles escolares permanecen iguales.
 - Evidencia: pruebas de informe y batch, incluyendo confirmación rechazada después de cambiar entrevista.
 - Prevención: conservar las fuentes familiares fuera del análisis y conclusión; no convertirlas en evidencia escolar ni acuerdos.
+## SQ-01 — Una nota pedagógica desaparecía del diagnóstico
+
+- Síntoma: seis notas vigentes se proyectaban como cinco; la mención «mi hermana» descartaba todo un registro y una entrevista con «abuela» perdía su interés. Contextos como Exploración quedaban como persona.
+- Causa raíz: reutilización de `anonymousDecisionText`, un filtro de Jev deliberadamente más restrictivo que el contrato de diagnóstico.
+- Solución validada: proyección específica de diagnóstico, neutralización de nombres y exclusión conservadora de contactos/domicilio/DNI, sin descartar parentescos ordinarios por sí solos. Vocabulario explícito conserva momentos y comienzos habituales. Referencia de Skill actualizada al contexto familiar confirmado separado.
+- Evidencia: regresión PGlite conserva el relato y excluye la nota con domicilio/teléfono; payload real del intento 3 contiene seis notas y cuatro entrevistas, sin nombres ni borradores familiares. Diagnóstico confirmado desde UI con claims sustentados.
+- Prevención: auditar conteos y significado antes del modelo; no intercambiar filtros entre clasificación, diagnóstico y planificación por similitud de nombres.
+
+## SQ-02 — Alias técnicos dentro de la síntesis visible
+
+- Síntoma: el segundo output decía child_N dentro del texto docente.
+- Causa raíz: prompt pedía citar alias en cada afirmación, aunque el schema ya disponía de `claims.source_refs`.
+- Solución validada: citas solo en metadatos y rechazo de alias en los campos visibles. Regresión focal y tercer output real PASS, sin una cuarta invocación.
+- Prevención: separar requisitos de trazabilidad de la prosa destinada a la docente. Hallazgo similar SQ-03 permanece abierto en la prosa anual de esta ronda.
+
+## Alcance de la suite completa en Windows
+
+- Síntoma: `node --test` sin rutas descubrió utilidades históricas y experimentos, y la concurrencia automática saturó el navegador. Una ejecución acotada produjo 820/825 PASS, con cinco fallos externos al alcance del producto.
+- Causas verificadas: fixture de reloj histórico ausente, utilidad externa sin configuración, carrera de renombrado de resultados mock en Windows y baseline experimental de hashes invalidado al cambiar una dependencia. Este último es un efecto de esta corrección sobre el experimento congelado, no un benchmark de precisión ejecutado.
+- Prevención: enumerar `*.test.mjs` de src/lib, scripts y evals con rg y pasar el array a `node --test --test-concurrency=2`. No renovar hashes experimentales para ocultar un cambio ni ejecutar una prueba de proveedor externo sin opt-in. Resultado de la última suite en el informe secuencial.

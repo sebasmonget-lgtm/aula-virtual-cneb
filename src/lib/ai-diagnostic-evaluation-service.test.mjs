@@ -78,6 +78,7 @@ test("rechaza salida incompleta, niveles y fuentes que cambian durante la llamad
   });
   await assert.rejects(run({ strengths: "Algo." }), (error) => error instanceof DiagnosticSuggestionError && error.reason === "proposal_invalid");
   await assert.rejects(run({ strengths: "Nivel A", needs: "Más juego.", planning_priorities: "Observar." }), { reason: "proposal_invalid" });
+  await assert.rejects(run(cited({ strengths: "child_1 juega.", needs: "Seguir observando.", planning_priorities: "Más juego." })), { reason: "proposal_invalid" });
   await assert.rejects(run({ strengths: "Ana juega.", needs: "Conversar.", planning_priorities: "Juegos." },
     async () => ({ ...source, known_names: ["Ana"] })), { reason: "proposal_invalid" });
   let calls = 0;
@@ -100,8 +101,9 @@ test("Ayni puede proponer el resumen desde hechos anónimos sin comentarios indi
       assert.deepEqual(bundle.context.confirmed_teacher_comments, []);
       assert.equal(bundle.context.observed_records.length, 1);
       assert.equal(bundle.context.observed_records[0].child, "child_1");
-      assert.equal(bundle.context.observed_records[0].notes.length, 1);
-      assert.match(bundle.context.observed_records[0].notes[0].text, /eligió bloques/i);
+      assert.equal(bundle.context.observed_records[0].notes.length, 2);
+      assert.ok(bundle.context.observed_records[0].notes.some(note => /eligió bloques/i.test(note.text)));
+      assert.ok(bundle.context.observed_records[0].notes.some(note => /mi hermana/i.test(note.text)));
       assert.doesNotMatch(JSON.stringify(bundle), /\bAna\b|Prueba|student_id|teacher_id|domicilio|77777777/);
       return { output:cited({ strengths: "Hay un registro de elección de materiales.", needs: "Seguir recogiendo observaciones.", planning_priorities: "Ofrecer juegos con materiales variados." },[bundle.context.observed_records[0].notes[0].source_id]) };
     } });
@@ -113,6 +115,9 @@ test("Ayni puede proponer el resumen desde hechos anónimos sin comentarios indi
     await recordDiagnosticExperienceObservation(db, teacher, { studentId: workspace.students[0].id,
       experienceId: workspace.experiences[0].id, aspectId: workspace.experiences[0].aspects[1].id,
       observationStatus: "observed_without_judgment", observationText: "Su familia contó su domicilio y teléfono 77777777." });
+    await recordDiagnosticExperienceObservation(db, teacher, { studentId: workspace.students[0].id,
+      experienceId: workspace.experiences[0].id, aspectId: workspace.experiences[0].aspects[2].id,
+      observationStatus: "observed_without_judgment", observationText: "Ana mostró su dibujo y dijo: mi hermana." });
     await prepareDiagnosticGroupReview(db, teacher);
     const result = await suggestDiagnosticGroupReview(db, teacher, group.id, { createProvider });
     assert.equal(calls, 1);
