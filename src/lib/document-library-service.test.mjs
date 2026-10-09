@@ -5,8 +5,24 @@ import JSZip from "jszip";
 import { listSavedDocuments, loadSavedDocument } from "./document-library-service.mjs";
 import { loadKnowledgeBaseV4 } from "./knowledge-base-v4.mjs";
 import { renderActivityUnifiedWord } from "./activity-unified-word.mjs";
+import { renderSavedDocumentWord } from "./document-word-export.mjs";
 
 const id = (number) => `00000000-0000-4000-8000-${String(number).padStart(12, "0")}`;
+
+test("el Word conserva el acuerdo docente guardado y omite acuerdos ausentes", async () => {
+  const db = await fixture();
+  try {
+    const agreement = "Podrá contar lo que vea con palabras o un dibujo, si desea hacerlo.";
+    await db.query("update family_reports set details=details||$1::jsonb where id=$2", [JSON.stringify({family_agreements:agreement}),id(14)]);
+    const document = await loadSavedDocument(db,id(1),"family_report",id(14));
+    const zip = await JSZip.loadAsync(await renderSavedDocumentWord(document,[]));
+    assert.match(await zip.file("word/document.xml").async("string"),/Podrá contar lo que vea/);
+    assert.equal(await loadSavedDocument(db,id(2),"family_report",id(14)),null);
+    await db.query("update family_reports set details=details-'family_agreements' where id=$1",[id(14)]);
+    const blank = await JSZip.loadAsync(await renderSavedDocumentWord(await loadSavedDocument(db,id(1),"family_report",id(14)),[]));
+    assert.doesNotMatch(await blank.file("word/document.xml").async("string"),/Acuerdos con la familia/);
+  } finally { await db.close(); }
+});
 
 async function fixture() {
   const db = new PGlite();

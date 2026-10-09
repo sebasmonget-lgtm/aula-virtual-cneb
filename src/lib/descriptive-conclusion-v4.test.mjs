@@ -34,9 +34,12 @@ test("descriptive_conclusion usa Luna/medium, schema strict y una tarjeta en el 
   assert.equal(captured.ai_context_bundle.curriculum.competency_cards[0].id, "COM_ORAL");
   assert.equal(result.validation.schema, "descriptive-conclusion-v1");
   assert.equal(captured.execution_plan.model, "gpt-6-luna");
+  assert.deepEqual(captured.output_schema.properties.competency_id.enum, ["COM_ORAL"]);
   assert.equal(captured.ai_context_bundle.context.student.id, "current_student");
   assert.equal(captured.ai_context_bundle.context.workflow_inputs.confirmed_achievement_level, "A");
   assert.equal(captured.ai_context_bundle.context.workflow_inputs.analysis_status, "sufficient");
+  assert.equal(captured.ai_context_bundle.context.student.teacher_confirmed_findings, undefined);
+  assert.equal(captured.ai_context_bundle.context.workflow_inputs.previous_ai_analysis_auxiliary.information_status, "sufficient");
 });
 
 test("la propuesta conjunta usa evidencias sin atribuir un análisis de IA a la docente", async () => {
@@ -145,7 +148,8 @@ test("provider recibe assessment y evidencias seguras sin identidad, foto ni met
   await generateAIWorkflowV4(f.captures[0].input, { provider: { async generate(request) { providerBundle = request.ai_context_bundle; return conclusion(); } } });
   assert.doesNotMatch(JSON.stringify(providerBundle), /\b(?:Ana|Anita|Pérez)\b|00000000|media_path|photo\.jpg|base64|generation_metadata|source_evidence_ids|source_assessment_snapshot|fingerprint|secret/);
   assert.equal(providerBundle.curriculum.competency_cards.length, 1);
-  assert.equal(providerBundle.context.student.teacher_confirmed_findings.information_status, "sufficient");
+  assert.equal(providerBundle.context.student.teacher_confirmed_findings, undefined);
+  assert.equal(providerBundle.context.workflow_inputs.previous_ai_analysis_auxiliary.information_status, "sufficient");
   const pending = f.pending.get(generated.body.generation_id);
   assert.equal(pending.student_id, studentId);
   assert.equal(pending.assessment_id, assessmentId);

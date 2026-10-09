@@ -1642,3 +1642,23 @@ El smoke del primer Preview READY devolvió 403 con su propio Origin. Causa: la 
 - Síntoma: `node --test` sin rutas descubrió utilidades históricas y experimentos, y la concurrencia automática saturó el navegador. Una ejecución acotada produjo 820/825 PASS, con cinco fallos externos al alcance del producto.
 - Causas verificadas: fixture de reloj histórico ausente, utilidad externa sin configuración, carrera de renombrado de resultados mock en Windows y baseline experimental de hashes invalidado al cambiar una dependencia. Este último es un efecto de esta corrección sobre el experimento congelado, no un benchmark de precisión ejecutado.
 - Prevención: enumerar `*.test.mjs` de src/lib, scripts y evals con rg y pasar el array a `node --test --test-concurrency=2`. No renovar hashes experimentales para ocultar un cambio ni ejecutar una prueba de proveedor externo sin opt-in. Resultado de la última suite en el informe secuencial.
+
+## QA de continuación — SQ-03 / CQ-01 a CQ-10 — 2026-10-08
+
+La evidencia detallada y los ciclos están en docs/qa/AYNI_QA_CONTINUACION_SOLO_QA_2026-10-08.md. Todas las reproducciones usan datos ficticios; requests/raw y outputs rechazados se conservan fuera de Git.
+
+| Incidente | Síntoma / causa raíz | Solución validada | Prevención |
+|---|---|---|---|
+| SQ-03 | Alias visibles; trazabilidad interna usada directamente como prosa. | Proyección por fuente propia, UI/Word, hash raw intacto y regresión PGlite. | No resolver alias por orden de matrícula ni editar evidencia original. |
+| CQ-01 | Tarjeta ready sin intención nueva y pregunta inicial perdida al recuperar. | Intención obligatoria por código y pregunta estable; focales y tres llamadas de conversación/tarjeta. | Contrato del modelo no sustituye precondición de dominio. |
+| CQ-02 | Chat pide materiales conocidos porque payload omitía campos. | Herencia de materiales/acciones/apoyos/flexibilidad neutralizados; focales y nueva conversación real. | Auditar inputs heredados antes de cambiar prompt o downstream. |
+| CQ-03 | Fecha coincidente rechazada; DATE del adaptador se comparaba con string. Captura planificada legacy. | SELECT DATE::text y captura ordinaria bajo flag; tres guardados UI y focales. | Contrato ISO explícito en límites SQL/API. |
+| CQ-04 | Corrección no aparecía para revisión; filtro solo status pending. | source_revision>1 exige revisión manual; RED/GREEN y confirmación UI. | Nueva revisión invalida atribución previa, conserva original. |
+| CQ-05 | Análisis inaccesible en vista moderna; spinner de botón equivocado. | Botón a ruta existente, busyAction por acción, motivo de insuficiencia visible; UI y typecheck. | Distinguir análisis auxiliar de confirmación docente, sin elegir letra automáticamente. |
+| CQ-06 | Conteos y evidencia esperada incompletos; consulta legacy y reconstrucción parcial del Master. | Constructor completo existente, merge ordinarias revisadas/legacy por ID; regresión y inputs reales. | Comparar conteos, área, criterio y evidencia esperada antes del proveedor. |
+| CQ-07 | Auxiliar etiquetado hallazgo docente; modelo escribe nombre en ID de competencia. | Retirar duplicación solo del auxiliar y enum en schema clonado de request; focales y outputs revalidados. | No promover análisis IA a fuente confirmada; rechazar referencias abiertas erróneas. |
+| CQ-08 | Draft antiguo bloquea cierre tras dejar nota sin clasificación. | CTA pendiente por save-draft con CAS/fingerprint actual y nivel null; UI y 41 focales. | Ausencia de evidencia tiene resolución explícita sin letra. |
+| CQ-09 | Excel corta nombres/conclusiones por ancho default. | Formato de columnas, wrap y filas; render y comparación exacta de 42 valores; 13 focales. | QA visual de exportación, no solo ZIP/XML. |
+| CQ-10 | Acuerdo docente guardado no aparece en Word; whitelist de proyección omitía campo ya soportado. | Campo permitido en biblioteca; regresión integrada RED/GREEN, 17 focales y render final. | Comparar documento descargado con estado docente confirmado; no solo render con objeto construido a mano. |
+
+Limitaciones del harness, separadas del producto: reinicio con reloj de fixture hacia atrás ordenó batch antiguo como reciente; se corrigió exclusivamente reloj privado, sin alterar artifacts. Chrome bloqueó descarga local de origen distinto; no se desactivó protección, se inspeccionó endpoint propio HTTP 200 y se dejó descarga nativa pendiente. Lint descubrió scripts de LibreOffice extraído en .local/qa-tools; comando final excluye solo esa carpeta privada. Typecheck se ejecuta con npx tsc --noEmit, pues no existe script npm typecheck.

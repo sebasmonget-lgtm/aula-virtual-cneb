@@ -96,6 +96,26 @@ test("criterio elegido en captura es procedencia docente; adicionales solo cuent
   } finally { await f.db.close(); }
 });
 
+test("la guiada corregida vuelve a la cola hasta confirmar su atribución vigente", async () => {
+  const f = await fixture();
+  try {
+    const observation = await f.raw({ guided: true, text: "Dijo que vio dos objetos." });
+    assert.equal((await ordinaryReviewQueue(f.db, f.teacher)).length, 0);
+    await reviseOrdinaryObservation(f.db, f.teacher, observation.id, { action: "correct",
+      correctedText: "Señaló dos objetos; no escuché su respuesta.", reason: "Preciso lo observado", expectedRevision: 1 });
+    const pending = await ordinaryReviewQueue(f.db, f.teacher);
+    assert.deepEqual(pending.map(row => row.id), [observation.id]);
+    assert.equal(pending[0].source_revision, 2);
+    assert.equal((await ordinaryReviewQueue(f.db, f.other)).length, 0);
+    await confirmOrdinaryAttribution(f.db, f.teacher, observation.id, { expectedVersion: 0,
+      competencyIds: [COM], criterionIds: [f.criterion], allowedIds: [COM, MAT] });
+    assert.equal((await ordinaryReviewQueue(f.db, f.teacher)).length, 0);
+    const history = await ordinaryAttributionHistory(f.db, f.teacher, observation.id);
+    assert.equal(history.latest.raw_revision, 2);
+    assert.equal(history.observation.raw_text, observation.raw_text);
+  } finally { await f.db.close(); }
+});
+
 test("abstención, fallo y corrección raw nunca inventan una clasificación", async () => {
   const f = await fixture();
   try {

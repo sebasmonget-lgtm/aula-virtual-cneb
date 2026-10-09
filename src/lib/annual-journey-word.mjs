@@ -1,4 +1,5 @@
 import { annualDisplayTitle } from "./annual-year-editor.mjs";
+import { annualTeacherText } from "./annual-teacher-display.mjs";
 import { Document, HeadingLevel, Paragraph, Packer, TextRun } from "docx";
 
 /** A pure rendering of the confirmed object. No title regex, inference, prompt or enrichment. */
@@ -56,7 +57,7 @@ export async function renderAnnualJourneyWord(document, cards = []) {
       document.document_context?.classroom_section].filter(Boolean).join(" · ") })];
   for (const section of annualJourneyDocumentSections(document.content, names)) {
     children.push(new Paragraph({ text: section.title, heading: HeadingLevel.HEADING_1, keepNext: true }));
-    for (const line of section.lines) children.push(new Paragraph({ children: [new TextRun(line)], spacing: { after: 140 }, widowControl: true }));
+    for (const line of section.lines) children.push(new Paragraph({ children: [new TextRun(annualTeacherText(line,document.display_subjects))], spacing: { after: 140 }, widowControl: true }));
   }
   return Packer.toBuffer(new Document({ styles: { default: { document: { run: { font: "Calibri", size: 22 } } } },
     sections: [{ properties: {}, children }] }));

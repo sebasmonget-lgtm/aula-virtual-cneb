@@ -52,3 +52,15 @@ test("propósito y contexto pedagógico conservan verbos sin liberar nombres con
   const result=annualJourneySafeText("Explorar y compartir decisiones. Tenemos bloques. Aurelio visitará el huerto con Luna.",["Luna"],cards.map(card=>card.name));
   assert.match(result,/Explorar y compartir decisiones/);assert.match(result,/Tenemos bloques/);assert.ok(!result.includes("Aurelio"));assert.ok(!result.includes("Luna"));
 });
+test("annual context cannot make a new card ready without its own teacher intention", async () => {
+  const {proposalConversationAnswer}=await import("./annual-proposal-intent.mjs");
+  const ready={status:"ready",message:"Bloques y hojas del año",question:"",chips:[]};
+  const guarded=proposalConversationAnswer({messages:[{role:"assistant",text:ready.message}],safe_texts:[]},ready);
+  assert.equal(guarded.status,"needs_clarification");assert.match(guarded.question,/crear/);assert.equal(guarded.message.includes("Bloques"),false);
+  assert.equal(proposalConversationAnswer({messages:[{role:"teacher",text:"Visitar la granja para observar animales"}],safe_texts:["Visitar la granja"]},ready),ready);
+});
+test("recovered initial card prompt stays distinct from annual intentions after a reply",async()=>{
+ const {proposalConversationMessages}=await import("./annual-proposal-intent.mjs");
+ const p={messages:[{role:"assistant",text:"Annual blocks"},{role:"teacher",text:"Granja"},{role:"assistant",text:"Granja acordada"}]};
+ const shown=proposalConversationMessages(p);assert.match(shown[0].text,/crear/);assert.deepEqual(shown.slice(1),p.messages.slice(1));assert.equal(p.messages[0].text,"Annual blocks");
+});

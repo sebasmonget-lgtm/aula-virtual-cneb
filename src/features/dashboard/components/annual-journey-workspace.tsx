@@ -19,6 +19,7 @@ import { AnnualPreparationProgress } from "./annual-preparation-progress";
 import { DictationRecorder } from "./dictation-recorder";
 import { AyniMascot, JourneySteps } from "./initial-journey-ui";
 import { ProjectPictogram } from "./project-pictogram";
+import { annualTeacherText, annualTeacherProposalView } from "@/src/lib/annual-teacher-display.mjs";
 
 type Fact = { key: string; kind: string; subject: string; scope: string; support_text: string; uncertainty: string; occurred_at: string | null; explicit_tags?: string[] };
 type Snapshot = { source_fingerprint: string; student_count: number; facts: Fact[]; resources: string[];
@@ -35,7 +36,7 @@ type Proposal = { editor_version?: number; available_experiences?: Row[]; curric
   organization_criteria?: string[]; transversal_approaches?: string[]; teaching_strategies?: string[]; assessment_followup?: string[];
   family_collaboration?: string[]; inclusive_supports?: string[];
   resolved_calendar?: { projects?: {historical_dates?:string[];proposal_id:string|null;slot_id:string;starts_on:string;ends_on:string;duration_weeks:2|3;period:string;instructional_dates:string[]}[]; integrity: { eligible: number; assigned: number; gaps: number; overlaps: number }; initial_stage: { purpose: string; name: string; suggested_experiences: string[]; what_to_observe: string[]; family_actions?: string[]; diagnostic_focus?: string[]; teacher_notes?: string; starts_on: string; ends_on: string } } };
-type Plan = { id: string; status: string; revision: number; version: number; proposal: Proposal; document_context?: { calendar?: AnnualMapCalendar } };
+type Plan = { id: string; status: string; revision: number; version: number; proposal: Proposal; display_subjects?: Record<string,string>; document_context?: { calendar?: AnnualMapCalendar } };
 type Plans = { draft: Plan | null; active: Plan | null; archived: Plan[] };
 type Start = { today?:string; snapshot: Snapshot; curriculum: { id: string; name: string }[] };
 type Job = { id: string; draft_id: string; status: "queued" | "running" | "failed" | "interrupted" | "succeeded";
@@ -54,9 +55,9 @@ const sourceLabels: Record<string, string> = { family_report: "La familia report
 const annualViews = ["map", "list"] as const;
 const compactDate = (value: string) => new Intl.DateTimeFormat("es-PE", { day: "numeric", month: "short", timeZone: "UTC" }).format(new Date(`${value}T00:00:00Z`));
 
-function Facts({ snapshot }: { snapshot: Snapshot }) {
+function Facts({ snapshot, subjects }: { snapshot: Snapshot; subjects?: Record<string,string> }) {
   return <div className="space-y-4">{snapshot.facts.length ? snapshot.facts.map((fact) => <div key={fact.key}>
-    <p className="text-sm font-semibold text-[#526b87]">{sourceLabels[fact.kind] ?? fact.kind} · {fact.scope === "individual" ? "Un niño o niña" : "Alcance declarado"} · {fact.subject.replace("child_", "Niño ")}</p>
+    <p className="text-sm font-semibold text-[#526b87]">{sourceLabels[fact.kind] ?? fact.kind} · {fact.scope === "individual" ? "Un niño o niña" : "Alcance declarado"} · {annualTeacherText(fact.subject,subjects)}</p>
     <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed">{fact.support_text || "Registro conservado en su fuente privada."}</p>
     {!!fact.explicit_tags?.length && <p className="mt-1 text-sm">Selecciones explícitas: {fact.explicit_tags.join(", ")}</p>}
     {fact.occurred_at && <p className="mt-1 text-xs text-[#526b87]">{new Date(fact.occurred_at).toLocaleDateString("es-PE", { timeZone: "America/Lima" })}</p>}
@@ -94,7 +95,7 @@ export function AnnualJourneyWorkspace({ onConfirmed, onGoDiagnostic, onDevelop,
   const messageRef = useRef<HTMLTextAreaElement>(null);
   const runningJobRef = useRef(false);
   const selected = [plans?.draft, plans?.active, ...(plans?.archived ?? [])].find((p) => p?.id === selectedId) ?? null;
-  const proposal = selected?.proposal, modern = proposal?.journey_version === 2;
+  const proposal: Proposal | undefined = selected ? annualTeacherProposalView(selected.proposal,selected.display_subjects) : undefined, modern = proposal?.journey_version === 2;
   const complete = modern && !!proposal?.resolved_calendar && (proposal.editor_version===3 || proposal.proposed_experiences.length===12);
   const calendar = selected?.document_context?.calendar;
   const mapProjection: { rows: (Row & { start: string; end: string })[]; error: string } = (() => {
@@ -284,7 +285,7 @@ export function AnnualJourneyWorkspace({ onConfirmed, onGoDiagnostic, onDevelop,
           <div className="mt-6"><h3 className="font-bold">{scope?"Cambios para esta propuesta":"Cambios para Mi año"}</h3>{panelChanges.length?<ol className="mt-2 list-decimal space-y-3 pl-5">{panelChanges.map(c=><li key={c.id}><span className="whitespace-pre-wrap">{c.text}</span><Button variant="ghost" disabled={disabled} onClick={()=>void mutate("remove-intent",{changeId:c.id})}>Quitar</Button></li>)}</ol>:<p className="mt-2 text-sm text-[#526b87]">{scope?"Aún no has agregado cambios para esta propuesta.":"Aún no has agregado cambios para Mi año."}</p>}
           {panelChanges.length>0 && <AsyncButton busyLabel="Aplicando…" className="mt-3" busy={busy === "apply"} disabled={disabled || !!message.trim()} onClick={() => void mutate("apply",{proposalId:scope})}>Aplicar cambios</AsyncButton>}</div>
         </>}
-        <details className="mt-5"><summary className="min-h-11 cursor-pointer py-2 font-semibold">{scope?"Por qué Ayni propuso esta experiencia":"Qué sabemos del aula para ajustar Mi año"}</summary>{scope&&panelProposal?<div className="space-y-3 text-sm"><p>{panelProposal.rationale}</p>{panelProposal.source_fact_keys.map(key=>{const fact=snapshot?.facts.find(f=>f.key===key);return fact?<p key={key}>{fact.support_text || "Registro conservado en su fuente privada."}</p>:null;})}</div>:snapshot?<Facts snapshot={snapshot}/>:null}</details>
+        <details className="mt-5"><summary className="min-h-11 cursor-pointer py-2 font-semibold">{scope?"Por qué Ayni propuso esta experiencia":"Qué sabemos del aula para ajustar Mi año"}</summary>{scope&&panelProposal?<div className="space-y-3 text-sm"><p>{panelProposal.rationale}</p>{panelProposal.source_fact_keys.map(key=>{const fact=snapshot?.facts.find(f=>f.key===key);return fact?<p key={key}>{fact.support_text || "Registro conservado en su fuente privada."}</p>:null;})}</div>:snapshot?<Facts snapshot={snapshot} subjects={selected?.display_subjects}/>:null}</details>
       </SheetContent></Sheet>
 
       <details className="rounded-xl border bg-white p-5"><summary className="min-h-11 cursor-pointer font-semibold">El año completo: momentos cotidianos, acompañamiento y observación</summary>

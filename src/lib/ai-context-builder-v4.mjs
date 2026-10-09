@@ -292,6 +292,10 @@ function studentSubset(input, workflowRequirements) {
   const { values } = resolveRequiredUserContext(input, [...workflowRequirements.required_user_context, ...workflowRequirements.preferred_user_context]);
   const aliases = { student_id: "id", evidence_history: "evidence_history", teacher_confirmed_findings: "teacher_confirmed_findings" };
   for (const [field, target] of Object.entries(aliases)) {
+    if (input.workflow === "descriptive_conclusion" && target === "teacher_confirmed_findings" && hasValue(input.student_context?.previous_ai_analysis_auxiliary)) {
+      delete student[target];
+      continue;
+    }
     if (hasValue(values[field])) student[target] = values[field];
   }
   return Object.keys(student).length ? student : null;

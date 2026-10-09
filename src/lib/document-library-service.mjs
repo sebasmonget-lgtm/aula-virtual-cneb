@@ -6,6 +6,7 @@ import { projectPeriodClosureDocument } from "./period-closure-history.mjs";
 import { activityV3, canonicalProjectRoute, planningV3ReadEnabled, projectMasterV3 } from "./planning-contract-v3.mjs";
 import { initialDiagnosticPeriod, nationalCalendarBlocks2026 } from "./annual-plan-calendar.mjs";
 import { interviewInterestOptions } from "./family-interview-contract.mjs";
+import { annualDisplaySubjects } from "./annual-teacher-display.mjs";
 
 const dateOnly = (value) => value instanceof Date ? value.toISOString().slice(0, 10) : String(value ?? "").slice(0, 10);
 const timestamp = (value) => value instanceof Date ? value.toISOString() : String(value ?? "");
@@ -82,7 +83,7 @@ export async function loadSavedDocument(db, teacherId, kind, id) {
       version: Number(row.version), school_year: Number(row.year), classroom: row.section,
       confirmed_at: row.teacher_confirmed_at ? timestamp(row.teacher_confirmed_at) : null,
       content: row.proposal, source_plan_format: row.proposal.plan_format, formal_ready: row.status !== "draft",
-      document_context: row.document_context };
+      document_context: row.document_context, display_subjects: await annualDisplaySubjects(db, { teacherId, classroomId: row.classroom_id, proposal: row.proposal }) };
     const fallback = { institution_name: row.institution_name, teacher_name: row.teacher_name,
       classroom_section: row.section, age: Number(row.age_years), school_year: Number(row.year),
       starts_on: dateOnly(row.starts_on), ends_on: dateOnly(row.ends_on) };
@@ -219,7 +220,7 @@ export async function loadSavedDocument(db, teacherId, kind, id) {
     evaluation_period_id:row.evaluation_period_id??null,period_label:row.period_label??null,
     period_start: dateOnly(row.period_start), period_end: dateOnly(row.period_end),
     confirmed_at: row.teacher_confirmed_at ? timestamp(row.teacher_confirmed_at) : null,
-    content: selectContent(row.details, ["introduction", "sections", "closing_note"]) } : null;
+    content: selectContent(row.details, ["introduction", "sections", "closing_note", "family_agreements"]) } : null;
 }
 
 /** Aggregate only authorized diagnostic sources for the classroom Word report.

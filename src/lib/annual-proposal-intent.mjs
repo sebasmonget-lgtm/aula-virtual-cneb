@@ -33,6 +33,15 @@ export function validateProposalCompetencies(ids, curriculum) {
 }
 
 export const proposalTeacherTexts = payload => payload.messages?.some(m => m.role === "teacher") ? payload.messages.filter(m => m.role === "teacher").map(m => m.text) : payload.safe_texts;
+// Annual preferences describe the year, never the intention of a new card.
+export function proposalConversationAnswer(payload, answer) {
+  if ((proposalTeacherTexts(payload) ?? []).some(text => text?.trim())) return answer;
+  return {status:"needs_clarification",message:"Hola, profesora. Vamos a preparar una nueva propuesta para tu aula.",question:"¿Qué te gustaría crear y qué quisieras que hagan los niños?",chips:[]};
+}
+export function proposalConversationMessages(payload) {
+  const initial=proposalConversationAnswer({safe_texts:[]},null);
+  return (payload.messages ?? []).map((message,index)=>index===0&&message.role==="assistant"?{...message,text:[initial.message,initial.question].join("\n\n")}:message);
+}
 export const proposalRequestedCompetencies = (payload, curriculum) => payload.required_competency_ids ?? namedProposalCompetencies(proposalTeacherTexts(payload), curriculum);
 export function missingProposalCompetencies(row, required) {
   return required.filter(id => !(row.primary_competency_ids ?? []).includes(id) || !(row.opportunities ?? []).some(opportunity => opportunity.competency_id === id));

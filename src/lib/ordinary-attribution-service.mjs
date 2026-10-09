@@ -111,6 +111,6 @@ export async function ordinaryReviewQueue(db, teacherId, classroomId = null) {
       order by av.version desc limit 1) a on true
     where c.teacher_id=$1 and o.created_by=$1 and ($2::uuid is null or o.classroom_id=$2::uuid) and o.status<>'voided'
       and (a.id is null or a.state not in ('confirmed','unclassified') or a.raw_revision<>o.source_revision)
-      and (o.captured_criterion_id is null or a.id is not null)
+      and (o.captured_criterion_id is null or a.id is not null or o.source_revision>1)
     order by o.occurred_at desc,o.id desc`, [teacherId, classroomId])).rows;
 }

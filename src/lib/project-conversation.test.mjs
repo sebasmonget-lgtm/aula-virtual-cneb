@@ -21,3 +21,8 @@ test("tres respuestas o continuar cierran con código sin una llamada adicional"
     assert.equal(result.ready,true);assert.equal(result.metadata.execution,"code");
   }
 });
+test("confirmed card conditions reach conversation without exposing student names",async()=>{
+ let bundle;
+ await projectConversation({card:{...card,materials:["Papel","Crayones de Alba"],supports:["Familias voluntarias, sin compras"],children_actions:["Observar sin tocar ni alimentar animales"],invitation:"¿Qué observar?",flexibility:"Conservar preguntas sin respuesta"},names:["Alba"],knownContext:"Visita ya acordada",messages:[],createProvider:()=>({generate:async request=>{bundle=request.ai_context_bundle;return{output:{question:"¿Cómo compartirán sus hallazgos?",ready:false}};}})});
+ assert.ok(!JSON.stringify(bundle).includes("Alba"));assert.equal(bundle.card.materials[0],"Papel");assert.match(bundle.card.supports[0],/sin compras/);assert.match(bundle.card.children_actions[0],/sin tocar/);assert.match(bundle.known_context,/ya acordada/);
+});

@@ -1,6 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import JSZip from "jszip";
 import { versionTransaction } from "./version-integrity.mjs";
+import { loadConfirmedOrdinaryEvaluationRows } from "./ordinary-evaluation-adapter.mjs";
 
 const hash = (value) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
 const dateOnly = (value) => value == null ? null : value instanceof Date ? value.toISOString().slice(0, 10) : String(value).slice(0, 10);
@@ -40,6 +41,8 @@ export async function syncPeriodEvaluationMap(db, { classroomId, schoolYearId, p
   const relations=(await db.query(`select to_regclass('period_evaluation_map_versions') is not null as map_ready,
     to_regclass('daily_execution_logs') is not null and to_regclass('class_schedule_entries') is not null as execution_ready,
     to_regclass('evidences') is not null and to_regclass('students') is not null as evidence_ready,
+    to_regclass('ordinary_observations') is not null and to_regclass('ordinary_observation_revisions') is not null
+      and to_regclass('ordinary_observation_attributions') is not null as ordinary_ready,
     to_regclass('experience_formal_contents') is not null as formal_content_ready`)).rows[0];
   const activities = (await db.query(`select a.id as activity_id,a.revision as activity_revision,a.occurs_on,
       (to_jsonb(a)->>'planned_date')::date as planned_date,coalesce(to_jsonb(a)->>'schedule_status','planned') as schedule_status,
@@ -55,15 +58,26 @@ export async function syncPeriodEvaluationMap(db, { classroomId, schoolYearId, p
     from daily_execution_logs del join class_schedule_entries se on se.id=del.schedule_entry_id
     where se.classroom_id=$1 and se.activity_id is not null and del.execution_date between $2::date and $3::date
     order by del.execution_date desc,del.id desc`, [classroomId, period.starts_on, period.ends_on])).rows : [];
-  const evidence = relations.evidence_ready ? (await db.query(`select e.criterion_id,count(*)::int as evidence_count,count(distinct e.student_id)::int as students_with_evidence,
-      max(coalesce((to_jsonb(e)->>'observed_on')::date,e.observed_at::date)) as actual_on
+  const evidence = relations.evidence_ready ? (await db.query(`select e.id,e.criterion_id,e.student_id,
+      coalesce((to_jsonb(e)->>'observed_on')::date,e.observed_at::date) as actual_on
     from evidences e join students s on s.id=e.student_id where s.classroom_id=$1
-      and coalesce((to_jsonb(e)->>'observed_on')::date,e.observed_at::date) between $2::date and $3::date group by e.criterion_id`,
+      and coalesce((to_jsonb(e)->>'observed_on')::date,e.observed_at::date) between $2::date and $3::date`,
     [classroomId, period.starts_on, period.ends_on])).rows : [];
   const formalContents = relations.formal_content_ready && activities.length ? (await db.query(`select id,experience_id from experience_formal_contents
     where experience_id=any($1::uuid[])`, [[...new Set(activities.map((row) => row.experience_id))]])).rows : [];
   const executionByActivity = new Map(executions.map((row) => [row.activity_id, row]));
-  const evidenceByCriterion = new Map(evidence.map((row) => [row.criterion_id, row]));
+  const ordinary = relations.ordinary_ready ? await loadConfirmedOrdinaryEvaluationRows(db, { classroomId, period }) : [];
+  const evidenceByCriterion = new Map();
+  for (const row of [...evidence.map(item => ({ ...item, source: "legacy" })),
+    ...ordinary.map(item => ({ ...item, actual_on: item.observed_on, source: "ordinary" }))]) {
+    if (!row.criterion_id) continue;
+    const aggregate = evidenceByCriterion.get(row.criterion_id) ?? { ids: new Set(), students: new Set(), actual_on: null };
+    aggregate.ids.add(`${row.source}:${row.id}`); aggregate.students.add(row.student_id);
+    const day = dateOnly(row.actual_on);
+    if (day && (!aggregate.actual_on || day > aggregate.actual_on)) aggregate.actual_on = day;
+    aggregate.evidence_count = aggregate.ids.size; aggregate.students_with_evidence = aggregate.students.size;
+    evidenceByCriterion.set(row.criterion_id, aggregate);
+  }
   const formalContentByExperience = new Map(formalContents.map((row) => [row.experience_id, row.id]));
   const snapshot = activities.map((row) => {
     const actual = evidenceByCriterion.get(row.criterion_id), execution = executionByActivity.get(row.activity_id);
@@ -183,13 +197,25 @@ const columnName = (index) => { let result = "", value = index + 1; while (value
 export async function buildGenericAssessmentWorkbook(rows) {
   const states = { confirmed: "Valorada por la docente", observation_pending: "Pendiente de observación", insufficient_information: "Información insuficiente", needs_review: "Requiere revisión", conclusion_pending: "Falta conclusión descriptiva", pending: "Pendiente de revisión docente", draft: "Borrador por revisar" };
   const data = [["Alumno","Competencia","Valoración","Conclusión descriptiva","Período","Estado"], ...rows.map((row) => [row.student_name,row.competency_name,row.state === "confirmed" ? row.achievement_level ?? "" : "",row.state === "confirmed" ? row.conclusion ?? "" : "",row.period_label ?? "",states[row.state] ?? row.state ?? "Sin valoración"])];
-  const sheet = data.map((row, rowIndex) => `<row r="${rowIndex + 1}">${row.map((value, columnIndex) => `<c r="${columnName(columnIndex)}${rowIndex + 1}" t="inlineStr"><is><t xml:space="preserve">${xml(value)}</t></is></c>`).join("")}</row>`).join("");
+  const widths = [28, 48, 12, 75, 18, 28];
+  const lineCount = (text, width) => {
+    let lines = 1, length = 0;
+    for (const word of String(text ?? "").split(/\s+/)) {
+      if (length && length + word.length + 1 > width - 3) { lines++; length = 0; }
+      length += word.length + (length ? 1 : 0);
+    }
+    return lines;
+  };
+  const sheet = data.map((row, rowIndex) => `<row r="${rowIndex + 1}" ht="${rowIndex ? Math.max(...row.map((value, index) => lineCount(value, widths[index]))) * 18 + 12 : 32}" customHeight="1">${row.map((value, columnIndex) => `<c r="${columnName(columnIndex)}${rowIndex + 1}" s="${rowIndex ? 0 : 1}" t="inlineStr"><is><t xml:space="preserve">${xml(value)}</t></is></c>`).join("")}</row>`).join("");
   const zip = new JSZip();
   zip.file("[Content_Types].xml", `<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>`);
   zip.folder("_rels").file(".rels", `<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`);
   zip.folder("xl").file("workbook.xml", `<?xml version="1.0" encoding="UTF-8"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Consolidado" sheetId="1" r:id="rId1"/></sheets></workbook>`);
   zip.folder("xl").folder("_rels").file("workbook.xml.rels", `<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/></Relationships>`);
-  zip.folder("xl").folder("worksheets").file("sheet1.xml", `<?xml version="1.0" encoding="UTF-8"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>${sheet}</sheetData></worksheet>`);
+  zip.file("[Content_Types].xml", (await zip.file("[Content_Types].xml").async("string")).replace("</Types>", '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>'));
+  zip.folder("xl").folder("_rels").file("workbook.xml.rels", (await zip.file("xl/_rels/workbook.xml.rels").async("string")).replace("</Relationships>", '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'));
+  zip.folder("xl").file("styles.xml", '<?xml version="1.0" encoding="UTF-8"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="Arial"/></font><font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Arial"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF173352"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf><xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>');
+  zip.folder("xl").folder("worksheets").file("sheet1.xml", `<?xml version="1.0" encoding="UTF-8"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols>${widths.map((width,index)=>`<col min="${index+1}" max="${index+1}" width="${width}" customWidth="1"/>`).join("")}</cols><sheetData>${sheet}</sheetData><autoFilter ref="A1:F${data.length}"/></worksheet>`);
   return zip.generateAsync({ type: "nodebuffer", compression: "DEFLATE" });
 }
 

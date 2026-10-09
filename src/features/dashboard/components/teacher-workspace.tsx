@@ -238,6 +238,9 @@ export function TeacherWorkspace() {
   }
 
   function openPlannedEvidence({ activityId, title, criterion }: { activityId: string; title: string; criterion: ActivityCriterion }) {
+    if (newAyniFeatureEnabled(process.env.NEXT_PUBLIC_AYNI_ORDINARY_OBSERVATIONS)) {
+      setOrdinaryContext({ id: activityId, title, criteria: [criterion], initialCriterionId: criterion.id }); return;
+    }
     setStudentId("");
     setEvidenceContext({ activityId, title, criteria: [criterion] });
     setCriterionId(criterion.id);

@@ -18,7 +18,7 @@ import { loadDiagnosticCoverageRecords, projectPedagogicalCoverage } from "../sr
 import { assessmentState, observeTodaySuggestions } from "../src/lib/evidence-coverage.mjs";
 import { AYNI_HEURISTICS } from "../src/lib/ayni-heuristics.mjs";
 import { VersionConflictError, conflictPayload, httpStatusForError, isVersionConflict, publicErrorMessage, versionTransaction } from "../src/lib/version-integrity.mjs";
-import { assessmentMasterEntry, buildAssessmentContext } from "../src/lib/assessment-master-service.mjs";
+import { assessmentMasterEntry } from "../src/lib/assessment-master-service.mjs";
 import { loadAssessmentMasterSources, loadComputedAssessmentContext } from "./assessment-master-routes.mjs";
 import { getCurrentClassroomContext, publicClassroomContext } from "../src/lib/classroom-context-service.mjs";
 import { familyObservationHint } from "../src/lib/family-interview-projection.mjs";
@@ -361,14 +361,8 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
         const student = await studentForClass(data.classroom, body.studentId);
         const names = assessmentStudentNames((await db.query('select first_name,last_name,preferred_name from students where classroom_id=$1',[data.classroom.id])).rows);
         const contextV4 = await loadClassroomContext(data.classroom);
-        const masterSources = await loadAssessmentMasterSources(db, { ...data.classroom, context_v4: contextV4 }, data.period);
-        const evidenceCriteria = data.row.sourceRows.map(row => ({ id: row.criterion_id, activity_id: row.activity_id,
-          competency_id: data.card.id, criterion_text: neutralizeAssessmentText(row.criterion_text, names) || "Qué hizo o dijo el niño",
-          expected_evidence: neutralizeAssessmentText(row.details?.expected_evidence, names),
-          observation_focus: (row.details?.observation_focus ?? []).map(text => neutralizeAssessmentText(text, names)) }));
-        const master = buildAssessmentContext({ age: data.classroom.age, snapshot: masterSources.snapshot,
-          competencyCards: data.cards, sources: { ...masterSources.sources,
-            criteria: [...masterSources.sources.criteria.filter(row => row.competency_id !== data.card.id), ...evidenceCriteria] } });
+        const master = await loadComputedAssessmentContext(db, { ...data.classroom, context_v4: contextV4 },
+          data.period, data.cards, data.row.sourceRows, data.card.id, names);
         const masterEntry = assessmentMasterEntry(master, data.card.id);
         const cached = data.row.draft;
         const evidenceHash = hash(assessmentSourceSnapshot(data.row.sourceRows));

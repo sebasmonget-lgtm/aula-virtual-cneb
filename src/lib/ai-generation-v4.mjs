@@ -284,8 +284,18 @@ export async function generateAIWorkflowV4(input, { provider, providerFactory, k
     throw new InvalidAIGenerationError("skill_scope_invalid");
   }
   const prepared = await prepareAIRequestV4(input, knowledgeBase);
-  const outputSchema = input.workflow === "annual_plan" ? (input.annual_stage === "development" ? ANNUAL_PLAN_DEVELOPMENT_SCHEMA : ANNUAL_PLAN_OUTPUT_SCHEMA) : input.workflow === "project" ? PROJECT_OUTPUT_SCHEMA : input.workflow === "unit" ? UNIT_OUTPUT_SCHEMA : input.workflow === "criterion_realignment" ? CRITERION_EVIDENCE_OUTPUT_SCHEMA : input.workflow === "assessment_master" ? ASSESSMENT_MASTER_OUTPUT_SCHEMA : input.workflow === "assessment" ? ASSESSMENT_OUTPUT_SCHEMA : input.workflow === "descriptive_conclusion" ? DESCRIPTIVE_CONCLUSION_OUTPUT_SCHEMA : input.workflow === "family_report" ? FAMILY_REPORT_OUTPUT_SCHEMA : input.workflow === "classroom_period_report" ? CLASSROOM_PERIOD_REPORT_SCHEMA : ACTIVITY_OUTPUT_SCHEMA;
+  let outputSchema = input.workflow === "annual_plan" ? (input.annual_stage === "development" ? ANNUAL_PLAN_DEVELOPMENT_SCHEMA : ANNUAL_PLAN_OUTPUT_SCHEMA) : input.workflow === "project" ? PROJECT_OUTPUT_SCHEMA : input.workflow === "unit" ? UNIT_OUTPUT_SCHEMA : input.workflow === "criterion_realignment" ? CRITERION_EVIDENCE_OUTPUT_SCHEMA : input.workflow === "assessment_master" ? ASSESSMENT_MASTER_OUTPUT_SCHEMA : input.workflow === "assessment" ? ASSESSMENT_OUTPUT_SCHEMA : input.workflow === "descriptive_conclusion" ? DESCRIPTIVE_CONCLUSION_OUTPUT_SCHEMA : input.workflow === "family_report" ? FAMILY_REPORT_OUTPUT_SCHEMA : input.workflow === "classroom_period_report" ? CLASSROOM_PERIOD_REPORT_SCHEMA : ACTIVITY_OUTPUT_SCHEMA;
   const confirmedCompetencyId = input.competency_ids?.length === 1 ? input.competency_ids[0] : null;
+  if (input.workflow === "descriptive_conclusion" && confirmedCompetencyId) {
+    outputSchema = { ...outputSchema, properties: { ...outputSchema.properties,
+      competency_id: { type: "string", enum: [confirmedCompetencyId] } } };
+  }
+  if (input.workflow === "family_report" && input.competency_ids?.length) {
+    const sections = outputSchema.properties.sections;
+    outputSchema = { ...outputSchema, properties: { ...outputSchema.properties,
+      sections: { ...sections, items: { ...sections.items, properties: { ...sections.items.properties,
+        competency_id: { type: "string", enum: [...input.competency_ids] } } } } } };
+  }
   const primaryProvider = provider ?? providerFactory?.(plan);
   let finalPlan = plan;
   let attempt;

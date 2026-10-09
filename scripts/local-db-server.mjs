@@ -1,4 +1,5 @@
 import { criterionRealignmentEligibility } from "../src/lib/criterion-realignment-policy.mjs";
+import { annualDisplaySubjects } from "../src/lib/annual-teacher-display.mjs";
 import { handleDirectWorkshop } from "./direct-workshop-routes.mjs";
 import { projectConversation } from "../src/lib/project-conversation.mjs";
 import { newAyniFeatureEnabled } from "../src/lib/new-ayni-feature-flag.mjs";
@@ -1674,6 +1675,8 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
             starts_on: row.source_starts_on, ends_on: row.source_ends_on,
           }),
         }));
+      for (const plan of plans) if (plan.proposal?.journey_version === 2) plan.display_subjects = await annualDisplaySubjects(db, {
+        teacherId, classroomId: plan.classroom_id, proposal: plan.proposal });
       const activePlan = plans.find((plan) => plan.status === "active") ?? null;
       if (activePlan) activePlan.project_slots = (await db.query(`select id,proposal_id,slot_index,starts_on::text,ends_on::text,duration_weeks
         from project_slots where annual_plan_id=$1 order by slot_index`, [activePlan.id])).rows;
@@ -2720,7 +2723,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       let capture;
       try { capture = validateEvidenceCaptureV4(body); } catch (error) { send(response, httpStatusForError(error, 400), { error: publicErrorMessage(error) }, origin); return; }
       const allowed = await db.query(`
-        select ac.id, ac.competency_id, ac.competency_v4_id, a.details as activity_details, a.occurs_on,
+        select ac.id, ac.competency_id, ac.competency_v4_id, a.details as activity_details, a.occurs_on::text as occurs_on,
                a.teacher_confirmed_at as activity_confirmed_at, a.linked_main_activity_id,
                a.workshop_item_index, le.type as experience_type
           from students s

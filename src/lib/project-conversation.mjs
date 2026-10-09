@@ -13,7 +13,9 @@ export async function projectConversation({ card, knownContext, messages, names 
   const clean = value => neutralizeAssessmentText(String(value ?? ""), names);
   const plan = resolveAIExecutionPlan({ workflow: "project_conversation" });
   const result = await createProvider(plan).generate(buildProviderRequest("project_conversation", {
-    card: { title: clean(card.title), purpose: clean(card.purpose), competency_ids: card.primary_competency_ids },
+    card: { title: clean(card.title), purpose: clean(card.purpose), competency_ids: card.primary_competency_ids,
+      invitation:clean(card.invitation),children_actions:(card.children_actions??[]).map(clean),
+      materials:(card.materials??[]).map(clean),supports:(card.supports??[]).map(clean),flexibility:clean(card.flexibility) },
     known_context: clean(knownContext), messages: messages.map(message => ({ role: message.role, text: clean(message.text),
       ...(message.source_turn ? { source_turn: message.source_turn, support_text: clean(message.support_text ?? message.text) } : {}) })),
     task: "Haz una sola pregunta breve sobre decisiones que cambien cómo desarrollar este proyecto: espacios, materiales, participación familiar o cierre. No vuelvas a preguntar título, propósito, competencias, edad, fechas ni datos ya conocidos. Incluye un ejemplo cotidiano. Normalmente bastan una o dos respuestas, máximo tres. Si ya hay información suficiente, termina. No generes preguntas orientadoras, criterios ni actividades." }, plan, schema));

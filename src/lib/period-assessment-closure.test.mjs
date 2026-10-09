@@ -69,6 +69,40 @@ test("1 y 12: criterio confirmado aparece en el mapa con IDs, versiones y etique
   } finally { await db.close(); }
 });
 
+test("el mapa integra legacy y ordinaria vigente sin duplicar niños ni incluir atribuciones obsoletas", async () => {
+  const db = await mapFixture();
+  try {
+    await db.exec(`alter table students add column status text default 'active';
+      alter table activities add column title text default 'Juego';
+      alter table activity_criteria add column criterion_text text default 'Explica';
+      alter table activity_criteria add column performance_id uuid;
+      alter table activity_criteria add column display_order integer default 1;
+      create table ordinary_observations(id uuid,classroom_id uuid,student_id uuid,occurred_at timestamptz,
+        raw_text text,media_path text,activity_id uuid,captured_criterion_id uuid,context_snapshot jsonb,source_kind text,status text,source_revision integer);
+      create table ordinary_observation_revisions(observation_id uuid,revision integer,corrected_text text);
+      create table ordinary_observation_attributions(id uuid,observation_id uuid,version integer,state text,source text,
+        confirmed_competency_ids text[],confirmed_criterion_ids uuid[],raw_revision integer);`);
+    await db.query("insert into evidences values($1,$2,$3,'2026-04-10T16:00:00Z')", [periodId, studentId, criterionId]);
+    await db.query(`insert into ordinary_observations values($1,$2,$3,'2026-04-11T16:00:00Z','Contó su idea.',null,
+      $4,$5,'{}','guided','saved',1)`, [yearId, classroomId, studentId, activityId, criterionId]);
+    const input = { classroomId, schoolYearId: yearId, period: { id: periodId, starts_on: "2026-03-01", ends_on: "2026-05-31" } };
+    let result = await syncPeriodEvaluationMap(db, input);
+    assert.equal(result.entries[0].evidence_count, 2);
+    assert.equal(result.entries[0].students_with_evidence, 1);
+    assert.equal(result.entries[0].actual_on, "2026-04-11");
+    await db.query("update ordinary_observations set source_revision=2,status='corrected' where id=$1", [yearId]);
+    result = await syncPeriodEvaluationMap(db, input);
+    assert.equal(result.entries[0].evidence_count, 1);
+    await db.query(`insert into ordinary_observation_attributions values($1,$2,1,'confirmed','teacher',
+      array['COM_ORAL'],array[$3::uuid],2)`, [experienceId, yearId, criterionId]);
+    result = await syncPeriodEvaluationMap(db, input);
+    assert.equal(result.entries[0].evidence_count, 2);
+    assert.equal(result.entries[0].students_with_evidence, 1);
+    await db.query("update ordinary_observations set status='voided'");
+    assert.equal((await syncPeriodEvaluationMap(db, input)).entries[0].evidence_count, 1);
+  } finally { await db.close(); }
+});
+
 test("lecturas simultáneas del mismo período comparten una sola versión del mapa", async () => {
   const db = await mapFixture();
   try {

@@ -1052,3 +1052,11 @@ AI QA Trace exige opt-in del harness ficticio, además del flag, y rechaza Produ
 ## ADR-120 — Proyección propia de fuentes para la síntesis diagnóstica
 
 El filtro textual de decisiones Jev rechaza menciones familiares y no sirve como proyección de diagnóstico. La síntesis necesita conservar una observación como el relato de un dibujo y el contexto pedagógico familiar confirmado, en campos distintos. Se reutiliza el neutralizador de planificación con vocabulario pedagógico explícito, y se excluyen de forma conservadora los textos con contactos, domicilio o DNI. No se envían identidades ni medios. Jev mantiene su filtro y opt-in. Las citas pertenecen a metadatos `source_refs`; no se muestran alias en la prosa diagnóstica. Validación: regresión PGlite de relato ordinario/contacto privado y tercer resultado real con seis notas, cuatro entrevistas y claims sustentados.
+
+## ADR-121 — Fuentes y proyecciones del QA de continuación
+
+El análisis previo de IA permanece auxiliar en workflow_inputs de una conclusión; no se duplica como teacher_confirmed_findings. Evidencia cruda y decisión docente sostienen conclusión. El schema por request se clona y enumera IDs confirmados para conclusión e informe familiar. No se alteran contratos guardados, router o outputs crudos para convertir rechazos en aprobaciones.
+
+La presentación anual resuelve aliases con IDs de fuentes autorizadas de la versión; no con el orden de matrícula. UI y Word comparten proyección nominal sin modificar evidencia. El Assessment Context reutiliza constructor completo y combina fuentes ordinarias revisadas y legacy, deduplicando IDs y alumnos. Corrección sin revisión manual queda fuera.
+
+Un draft obsoleto cuya competencia ya no tiene evidencia puede guardarse como pendiente sin valoración por la ruta existente con CAS/fingerprint. El cierre mantiene pendientes y versiones. Las exportaciones conservan acuerdos docentes opcionales y valores canónicos; formato XLSX no cambia estados o letras. Alcance exclusivo Preview, sin migraciones ni cambios de permisos. Validación funcional y límites: docs/qa/AYNI_QA_CONTINUACION_SOLO_QA_2026-10-08.md.

@@ -62,6 +62,7 @@ test("router Luna/medium y schema strict family-report-v1; bundle usa solo compe
   let request;
   const generated = await generateAIWorkflowV4(input, { provider: { async generate(value) { request = value; return report(); } } });
   assert.equal(generated.validation.schema, "family-report-v1"); assert.equal(request.execution_plan.model, "gpt-6-luna");
+  assert.deepEqual(request.output_schema.properties.sections.items.properties.competency_id.enum, ["COM_ORAL"]);
   assert.deepEqual(request.ai_context_bundle.curriculum.competency_cards.map((card) => card.id), ["COM_ORAL"]);
   assert.deepEqual(request.ai_context_bundle.context.student.teacher_confirmed_findings.map((finding) => finding.competency_id), ["COM_ORAL"]);
   assert.deepEqual(request.ai_context_bundle.provenance.competency_ids, ["COM_ORAL"]);
