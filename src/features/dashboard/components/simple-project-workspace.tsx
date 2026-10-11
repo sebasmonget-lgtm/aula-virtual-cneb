@@ -10,6 +10,7 @@ import { displayDate, limaToday } from "@/src/lib/display-date";
 import { AsyncButton, LoadingState, WorkflowFeedback } from "./workflow-ui";
 import { ProjectDevelopmentWorkspace, type Plan, type Proposal, type Experience } from "./project-development-workspace";
 import { PreparationProgress, type PreparationJob } from "./preparation-progress";
+import { AyniChatMessage } from "./ayni-chat-message";
 import { ProjectPictogram } from "./project-pictogram";
 import { DictationRecorder } from "./dictation-recorder";
 import { ProjectCalendarReview, type ProjectCalendarDay } from "./project-calendar-review";
@@ -180,14 +181,15 @@ export function SimpleProjectWorkspace(props: Props) {
         <div className="flex flex-col gap-5 sm:flex-row"><ProjectPictogram project={proposal} className="size-40 sm:size-48" /><p className="leading-relaxed"><b>Qué buscamos:</b> {proposal.purpose}</p></div>
         <p className="text-sm">{proposal.primary_competency_ids.map(name).join(" · ")}</p>
         {futureNotice}
-        {modern&&<div className="space-y-3"><p className="text-sm text-[#526b87]">Ayni ya conoce la tarjeta y las fechas. Puedes conversar sobre cómo quieres desarrollar este proyecto.</p>{conversation?.messages.map((message,index)=><p key={index} className={message.role==="teacher"?"text-sm":"font-semibold"}>{message.role==="teacher"?"Tu decisión: ":"Ayni: "}{message.text}</p>)}</div>}
+        <details open={changing}><summary className="min-h-11 cursor-pointer py-2 font-semibold text-[#07576c]">Añadir ajustes o conversar con Ayni (opcional)</summary><div className="mt-3 space-y-4">
+        {modern&&<div className="space-y-3"><p className="text-sm text-[#526b87]">Ayni ya conoce la tarjeta y las fechas. Puedes conversar sobre cómo quieres desarrollar este proyecto.</p>{conversation?.messages.map((message,index)=><AyniChatMessage key={index} role={message.role} text={message.text}/>)}</div>}
         <label className="block font-semibold">¿Hay algo que quieras que tenga en cuenta? (opcional)
           <Textarea className="mt-2" value={context} maxLength={1000} onChange={(event) => setContext(event.target.value)}
             placeholder="Por ejemplo: podemos usar el patio o invitar a las familias al cierre." /></label>
         {modern&&!conversation?.ready&&<AsyncButton variant="outline" busy={busy} busyLabel="Preparando una pregunta…" onClick={()=>void converse()}>Conversar con Ayni</AsyncButton>}
         <p className="text-sm text-[#526b87]">Puedes añadir pequeños ajustes. Para cambiar lo que buscamos o las competencias, revisa el proyecto en Mi año.</p>
 
-        <DictationRecorder classroomScope purpose="group_summary" rawTranscript context="Ajustes para este proyecto" currentText={context} onTranscribed={value=>setContext(value.slice(0,1000))} onBusyChange={setDictating} disabled={busy}/>
+        <DictationRecorder classroomScope purpose="group_summary" rawTranscript context="Ajustes para este proyecto" currentText={context} onTranscribed={value=>setContext(value.slice(0,1000))} onBusyChange={setDictating} disabled={busy}/></div></details>
         <section className="rounded-xl bg-[#edf7fa] p-4"><h3 className="font-bold">Días del proyecto</h3><p className="mt-2">{selectedDates.length} días de clase{selectedDates.length?` · ${displayDate(selectedDates[0])} al ${displayDate(selectedDates.at(-1)!)}`:""}</p>
           {calendarError&&<WorkflowFeedback tone="error">{calendarError}</WorkflowFeedback>}
           <details className="mt-3"><summary className="min-h-11 cursor-pointer font-semibold text-[#07576c]">Revisar calendario</summary><ProjectCalendarReview days={calendar} selectedDates={selectedDates} disabled={busy||dictating} onChange={dates=>setSelectedDates(dates.filter(date=>!modern||date>=today))}/></details>
@@ -201,7 +203,7 @@ export function SimpleProjectWorkspace(props: Props) {
         {futureNotice}
         {row.status==="active"&&nextActivity&&props.onDevelopActivity&&<div className="space-y-2"><p className="text-sm text-[#526b87]">Siguiente actividad · {displayDate(nextActivity.date)} · {nextActivity.title}</p><Button disabled={busy} onClick={()=>props.onDevelopActivity?.(row.id,nextActivity.id)}>Preparar actividad</Button></div>}
         <p><b>Cierre:</b> {row.details.project_master?.closing_description}</p>
-        <section aria-label="Qué vamos a observar" className="space-y-3 border-t border-[#d6e5ef] pt-4"><h3 className="font-bold">Qué vamos a observar</h3>{row.details.dependents?.general_criteria.map(criterion=><div key={criterion.competency_id}><p className="text-sm font-semibold">{name(criterion.competency_id)}</p><p>{criterion.criterion}</p></div>)}</section>
+        <details aria-label="Qué vamos a observar" className="space-y-3 border-t border-[#d6e5ef] pt-4"><summary className="min-h-11 cursor-pointer font-bold">Qué vamos a observar · {row.details.dependents?.general_criteria.length??0} criterios</summary>{row.details.dependents?.general_criteria.map(criterion=><div key={criterion.competency_id}><p className="text-sm font-semibold">{name(criterion.competency_id)}</p><p>{criterion.criterion}</p></div>)}</details>
 
         <details className="rounded-xl border p-4"><summary className="cursor-pointer font-semibold">Ver mapa · {row.details.activity_route?.length ?? 0} actividades</summary>
           <ol className="mt-4 divide-y divide-[#d6e5ef]">{row.details.activity_route?.map(item=><li key={item.id} className="py-3"><p><b>{displayDate(item.date)} · {item.title}</b></p><p className="mt-1 text-sm text-[#526b87]">{item.specific_purpose}</p>{row.status==="active"&&item.date>=today&&<Button variant="ghost" className="mt-2" onClick={()=>props.onDevelopActivity?.(row.id,item.id)}>Preparar esta actividad</Button>}</li>)}</ol></details>

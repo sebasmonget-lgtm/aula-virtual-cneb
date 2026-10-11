@@ -314,11 +314,11 @@ export function TeacherWorkspace() {
           <div className="flex flex-wrap items-center justify-end gap-2">
             <details className="relative"><summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-xl border bg-white px-3 text-sm font-semibold text-[#07576c]"><Users className="size-4" /> Mi aula</summary>
               <div className="absolute right-0 z-40 mt-2 grid w-52 gap-1 rounded-xl border bg-white p-2 shadow-lg">
-                <Button variant="ghost" onClick={() => navigate("Aula")}>Alumnos y familias</Button>
-                <Button variant="ghost" onClick={() => navigate("Perfil")}>Datos del aula</Button>
+                <Button variant="ghost" onClick={() => navigate("Aula")}>Niños y familias</Button>
+                
                 <Button variant="ghost" onClick={() => navigate("Perfil")}>Configuración</Button>
               </div></details>
-            {newAyniFeatureEnabled(process.env.NEXT_PUBLIC_AYNI_ORDINARY_OBSERVATIONS) && (active === "Hoy" || active === "Aula") &&
+            {newAyniFeatureEnabled(process.env.NEXT_PUBLIC_AYNI_ORDINARY_OBSERVATIONS) && active === "Aula" &&
               <Button type="button" variant="outline" className="min-h-11" onClick={() => setOrdinaryContext(null)}>Registrar observación</Button>}
             {newAyniFeatureEnabled(process.env.NEXT_PUBLIC_AYNI_CURRICULAR_REVIEW) && (active === "Hoy" || active === "Aula") &&
               <Button type="button" variant="outline" className="min-h-11" onClick={() => setOrdinaryReviewOpen(true)}>Revisar observaciones</Button>}
@@ -327,7 +327,7 @@ export function TeacherWorkspace() {
               <Database className="size-3.5" />
               {databaseState === "connected" ? "Base conectada" : "Conectando"}
             </div>
-            <button type="button" title="Abrir perfil" aria-label="Abrir perfil" onClick={() => navigate("Perfil")} className="grid size-10 place-items-center rounded-full bg-[#d9eaf4] text-sm font-bold text-[#155a78] hover:bg-[#c4e3f0] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#087d96]">{profile?.teacher_name?.split(" ").map((part) => part[0]).slice(0, 2).join("") ?? ""}</button>
+            <button type="button" title="Abrir perfil" aria-label="Abrir perfil" onClick={() => navigate("Perfil")} className="grid size-11 place-items-center rounded-full bg-[#d9eaf4] text-sm font-bold text-[#155a78] hover:bg-[#c4e3f0] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#087d96]">{profile?.teacher_name?.split(" ").map((part) => part[0]).slice(0, 2).join("") ?? ""}</button>
           </div>
         </header>
 

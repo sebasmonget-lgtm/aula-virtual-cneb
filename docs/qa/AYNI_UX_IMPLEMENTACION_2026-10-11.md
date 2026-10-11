@@ -54,3 +54,11 @@ Entrevista conserva seis preguntas, autosave, confirmación, papel y adjuntos; l
 52 pruebas focales PASS/0 SKIP. Navegador con componentes reales y transporte ficticio: revisión CSV sin escritura, homónimo reconocido antes de una importación; captura protege cambio de niño, guarda sin competencia y sin consulta de sugerencias; campos opcionales plegados y edad vacía. Typecheck y lint focal exit 0; build final de la etapa pendiente de registrar. Las primeras comprobaciones detectaron tipos nullable y una condición del tercer tab retirado del encabezado; corregidos antes del cierre. Rollback revierte UI y extracción; formatos y datos del servidor permanecen compatibles.
 
 Cierre etapa 4: build Next webpack exit 0 después de la última corrección. No se usaron aulas remotas ni proveedores IA reales.
+
+## Etapa 5 · Mi año, proyecto, Hoy y Calendario
+
+Editor conserva sus quince tramos y drag/drop; abre alrededor de la fecha del servidor y añade flechas/Ir a hoy. Biblioteca y oportunidades por competencia son plegables; la biblioteca se abre al arrastrar. Mover/retirar/sustituir conserva CAS, confirmación, delta curricular y protecciones. Vista Lista disponible. Proyectos reutilizan mensajes del chat y agrupan ajustes/dictado opcionales; preparar y la siguiente actividad destacan, mapa/criterios siguen disponibles. Generación gradual y ejecución docente intactas.
+
+Hoy reduce duplicaciones de captura en cabecera/acciones rápidas; asistencia secundaria aparece en días lectivos y se conserva la captura cotidiana alternativa cuando la evidencia principal pertenece a una actividad. Calendario mantiene Mes/Semana/Año, excepción, reprogramación y fuente oficial; agrupa calendario oficial, mejora controles táctiles y usa Dialog existente para foco/Escape. Reprogramación/excepción pendiente y cierre de actividad se protegen; escrituras evitan doble envío mientras están activas.
+
+42 pruebas focales PASS/0 SKIP; navegador ficticio PASS para foco/Escape del taller, guarda de reprogramación/cambio de mes, guardado explícito y nota de cierre sin finalización automática. Typecheck y lint focal exit 0. Build Next webpack exit 0. Revisión vercel:react-best-practices aplicada sin nuevos frameworks o dependencias. Rollback: revertir UI; ninguna API, migración ni dato mutado por esta etapa.

@@ -2,6 +2,7 @@
 
 import { ArrowLeft, CheckCircle2, Package } from "lucide-react";
 import { useState } from "react";
+import { useUnsavedWork } from "@/src/lib/use-unsaved-work";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import type { LocalDashboard } from "@/src/lib/local-database";
@@ -18,6 +19,7 @@ export function ActivityRunView({ block, onBack, onEvidence, onComplete }: {
 }) {
   const [closing, setClosing] = useState(false), [busy, setBusy] = useState(false);
   const [note, setNote] = useState(""), [error, setError] = useState("");
+  const allowLeave=useUnsavedWork(Boolean(note.trim()),busy);
   async function finish() {
     if (busy) return; setBusy(true); setError("");
     try { await onComplete(note.trim() || undefined); }
@@ -25,7 +27,7 @@ export function ActivityRunView({ block, onBack, onEvidence, onComplete }: {
     finally { setBusy(false); }
   }
   return <section className="mx-auto max-w-3xl space-y-5">
-    <Button variant="ghost" onClick={onBack}><ArrowLeft /> Volver a mi jornada</Button>
+    <Button variant="ghost" onClick={()=>{if(allowLeave())onBack();}}><ArrowLeft /> Volver a mi jornada</Button>
     <header className="rounded-2xl bg-[#e9f7f7] p-5 sm:p-7">
       <h1 className="text-3xl font-bold text-[#172b52]">{block.title}</h1>
       {block.day_progress && block.day_progress.position > 0 && <p className="mt-2 text-sm font-semibold text-[#07576c]">Día {block.day_progress.position} de {block.day_progress.total}</p>}
@@ -38,7 +40,7 @@ export function ActivityRunView({ block, onBack, onEvidence, onComplete }: {
     {error && <WorkflowFeedback tone="error">{error}</WorkflowFeedback>}
     {closing ? <section className="space-y-3 rounded-2xl border bg-white p-5">
       <label className="block font-semibold">¿Quieres recordar algo? (opcional)<Textarea className="mt-2" maxLength={800} value={note} onChange={event => setNote(event.target.value)} placeholder="Por ejemplo: mañana retomaremos la comparación de las semillas." /></label>
-      <div className="flex flex-wrap gap-3"><AsyncButton busy={busy} busyLabel="Terminando…" onClick={() => void finish()}>Terminar actividad</AsyncButton><Button variant="outline" disabled={busy} onClick={() => setClosing(false)}>Seguir con la actividad</Button></div>
+      <div className="flex flex-wrap gap-3"><AsyncButton busy={busy} busyLabel="Terminando…" onClick={() => void finish()}>Terminar actividad</AsyncButton><Button variant="outline" disabled={busy} onClick={() => { if(allowLeave()){setClosing(false);setNote("");} }}>Seguir con la actividad</Button></div>
     </section> : <Button className="min-h-12" onClick={() => setClosing(true)}><CheckCircle2 /> Terminar actividad</Button>}
   </section>;
 }
