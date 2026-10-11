@@ -101,3 +101,11 @@ Smoke de lectura: ingreso visible en IAB; `/api/auth/config` 200 con modo Supaba
 La sesión permanecía abierta en el host anterior tras el reinicio, pero el nuevo host muestra «Bienvenida a Ayni» con DNI y contraseña vacíos. Queda visible en el Side Panel, esperando ingreso manual con la cuenta QA conservada. No se introdujeron credenciales, completaron formularios ni crearon registros. El reloj está implementado y validado localmente con inicio 16/02/2026 08:00 Lima; **su comprobación autenticada en la Preview nueva está pendiente**. Captura privada `preview-login.png`, recibos `deployment-receipt.json`, `project-receipt.json` y `preview-smoke.json`.
 
 Siguiente acción bajo control del propietario: iniciar sesión y verificar el reloj antes de configurar el aula. No avanzar al recorrido sin indicación expresa.
+
+## Comprobación autenticada de la pantalla inicial
+
+Observación posterior del Side Panel, sin introducir credenciales ni interactuar con formularios: sesión docente abierta en la nueva Preview; control autorizado visible «QA · 16 de febrero de 2026 · 08:00 · Lima». Su visibilidad confirma el permiso de servidor para la identidad QA específica. Se resuelve el pendiente de comprobación autenticada del reloj inicial.
+
+Pantalla «Configura tu aula»: Institución, Docente y Sección vacíos; edad sin elegir; año 2026; botón «Guardar aula y añadir niños» deshabilitado. La docente debe registrar sus datos básicos y elegir 5 años para este recorrido. No se rellenaron campos, cambió el reloj, guardó el aula ni comprobó ningún botón mediante clic. Sin medición de carga instrumentada. Evidencia privada `preview-qa-initial.png`.
+
+Estado: esperando opinión de la persona usuaria e indicación «Siguiente» antes de actuar. Sin propuesta de diseño implementada.

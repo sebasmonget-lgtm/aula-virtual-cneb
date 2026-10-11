@@ -2,6 +2,8 @@
 
 ## Preparación de QA interactivo — 2026-10-11
 
+Comprobación posterior de solo lectura en Side Panel: nueva Preview con sesión QA abierta y reloj visible 16/02/2026 08:00 Lima. «Configura tu aula» continúa vacía, edad sin elegir y guardado deshabilitado. Queda resuelta la comprobación autenticada inicial; esperar opinión e indicación «Siguiente» antes de completar campos o avanzar. Captura privada `preview-qa-initial.png`.
+
 Publicación posterior verificada: Preview `https://ayni-aula-staging-f9yzgr1u6-ayni4.vercel.app/`, READY, commit de código `d24b535`, despliegue `dpl_4gGromARSqVsffsYSEEK8tCKzeg9`; Production continúa en `ea206bf`. Smoke de lectura pasa con autenticación existente de Vercel (config 200, reloj sin sesión Ayni 401). Nuevo host abierto visible en Side Panel; requiere ingreso manual QA. Comprobación autenticada del reloj en ese host pendiente; no rellenar el aula ni avanzar automáticamente. Recibos privados en `.local/reset-open-account-20261011/`; estado completo en el documento QA.
 
 El propietario confirmó que todos los datos remotos son de pruebas y autorizó reutilizar Supabase actual, reiniciar exclusivamente las 352 filas identificadas de la docente QA y conservar credenciales, otras cuentas y configuración global. Reinicio ejecutado tras respaldo y ensayo con rollback: consulta independiente verifica cero filas propias, Auth y seguridad intactos, 81 huellas de tablas protegidas sin cambios; sin objetos Storage. La UI autenticada volvió a «Configura tu aula» y quedó sin completar.
