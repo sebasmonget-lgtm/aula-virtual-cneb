@@ -1,4 +1,5 @@
 "use client";
+import { limaToday } from "@/src/lib/display-date";
 import { useEffect, useRef, useState } from "react";
 import { Sparkles, Pencil, Plus, MoreVertical, X } from "lucide-react";
 import { useUnsavedWork } from "@/src/lib/use-unsaved-work";
@@ -27,7 +28,7 @@ function SavedObservation({record,items,name,onChange,busy}:{record:SpontaneousO
  {deleting&&<div role="alert" className="mt-4 rounded-xl bg-[#fff1e8] p-4"><p className="text-sm">¿Eliminar esta observación del recorrido? Su historial y evidencia privada se conservarán.</p><div className="mt-3 flex gap-2"><Button disabled={busy||audio} variant="destructive" onClick={()=>void onChange(record,text,ids,true)}>Eliminar observación</Button><Button variant="outline" disabled={busy||audio} onClick={()=>setDeleting(false)}>Cancelar</Button></div></div>}</article>;
 }
 export function SpontaneousDiagnostic({students,initialStudentId="",initialCompetencyId="",onBack,onSaved,onDecisionSaved,onContinue}:{students:LocalStudent[];initialStudentId?:string;initialCompetencyId?:string;onBack?:()=>void;onSaved?:()=>void;onDecisionSaved?:()=>void;onContinue?:()=>void}) {
- const [studentId,setStudentId]=useState(initialStudentId),[contextLabel,setContextLabel]=useState(""),[date,setDate]=useState(()=>new Date().toLocaleDateString("en-CA",{timeZone:"America/Lima"}));
+ const [studentId,setStudentId]=useState(initialStudentId),[contextLabel,setContextLabel]=useState(""),[date,setDate]=useState(()=>limaToday());
  const [note,setNote]=useState(""),[media,setMedia]=useState<PrivateMediaUpload|null>(null),[support,setSupport]=useState<"yes"|"no"|"unknown"|"">("");
  const [records,setRecords]=useState<SpontaneousObservation[]|null>(null),[items,setItems]=useState<Competency[]>([]),[ids,setIds]=useState<string[]>(initialCompetencyId?[initialCompetencyId]:[]);
  const [analyzed,setAnalyzed]=useState(false),[picker,setPicker]=useState(false),[busy,setBusy]=useState<string|null>(null),[audio,setAudio]=useState(false),[mediaBusy,setMediaBusy]=useState(false),[error,setError]=useState(""),[message,setMessage]=useState("");

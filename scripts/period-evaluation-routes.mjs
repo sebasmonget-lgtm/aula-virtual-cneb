@@ -233,7 +233,7 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
           group by ac.competency_v4_id`,[data.classroom.id,data.period.starts_on,data.period.ends_on])).rows;
         const diagnosticRecords=await loadDiagnosticCoverageRecords(db,data.classroom.id,data.period);
         const projection=projectPedagogicalCoverage({students:data.model.students,cards:data.cards,model:data.model,diagnosticRecords,
-          today: data.period.ends_on < new Date().toISOString().slice(0,10) ? data.period.ends_on : new Date().toISOString().slice(0,10),
+          today: data.period.ends_on < limaToday() ? data.period.ends_on : limaToday(),
           activityCounts:new Map(counts.map((item)=>[item.competency_v4_id,Number(item.activity_count)]))});
         send(response,200,{period:data.period,classroom_id:data.classroom.id,...projection},origin);return true;
       }

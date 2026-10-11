@@ -6,6 +6,11 @@ export function displayDate(value: string | null | undefined, options: Intl.Date
   return new Intl.DateTimeFormat("es-PE", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC", ...options }).format(date);
 }
 
+let qaClock: { date: string; time: string } | null = null;
+export function setQADisplayClock(value: { date: string; time: string } | null) { qaClock = value; }
+export function displayNow() {
+  return qaClock ? new Date(`${qaClock.date}T${qaClock.time}:00-05:00`) : new Date();
+}
 export function limaToday() {
-  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Lima", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Lima", year: "numeric", month: "2-digit", day: "2-digit" }).format(displayNow());
 }

@@ -1,9 +1,10 @@
+import { limaToday } from "./activity-schedule-integrity.mjs";
 import { randomUUID } from "node:crypto";
 import { periodClosureFingerprint, loadPeriodEvaluationRows, periodRowResolved } from "./period-evaluation-service.mjs";
 import { VersionConflictError, versionTransaction } from "./version-integrity.mjs";
 
 const dateOnly = (value) => value instanceof Date ? value.toISOString().slice(0, 10) : String(value).slice(0, 10);
-const todayInPeru = () => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Lima", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+const todayInPeru = limaToday;
 const priorityChoices = new Set(["prioritize", "maintain", "not_prioritize"]);
 const workshopChoices = new Set(["recommended", "library", "create", "ignore"]);
 const workshopFamily = (name) => /motricidad/i.test(name) ? "psicomotricidad"

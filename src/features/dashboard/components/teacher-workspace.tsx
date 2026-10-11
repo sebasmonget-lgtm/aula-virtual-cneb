@@ -333,7 +333,7 @@ export function TeacherWorkspace() {
         </header>
 
         <main id="ayni-main" tabIndex={-1} className="mx-auto w-full max-w-[1450px] px-4 pb-28 pt-4 md:px-7 md:pt-8">
-          {dashboard?.today.qa_clock && <p role="status" className="mb-4 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm">QA · reloj de prueba de la jornada: {displayDate(dashboard.today.qa_clock.date)} · {dashboard.today.qa_clock.time}. No cambia la fecha del equipo ni los cierres.</p>}
+          {dashboard?.today.qa_clock && process.env.NEXT_PUBLIC_AYNI_QA_CLOCK !== "1" && <p role="status" className="mb-4 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm">QA · reloj de prueba de la jornada: {displayDate(dashboard.today.qa_clock.date)} · {dashboard.today.qa_clock.time}. No cambia la fecha del equipo ni los cierres.</p>}
           {guidanceError && <div className="mb-4 flex flex-wrap items-center gap-3"><WorkflowFeedback tone="error">No pudimos comprobar cuál es tu siguiente paso.</WorkflowFeedback><Button variant="outline" onClick={() => { setGuidanceError(false); setRetry((value) => value + 1); }}>Reintentar</Button></div>}
           {starting ? <ScreenSkeleton /> : active === "Perfil" ? dashboard ? <InstitutionProfile dashboard={dashboard} onSaved={setDashboard} /> : <ScreenSkeleton /> :
           active === "Documentos" ? <DocumentsScreen onPlan={() => navigate("Planificar")} /> :

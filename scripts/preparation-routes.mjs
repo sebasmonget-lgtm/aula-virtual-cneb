@@ -1,6 +1,6 @@
 import { enqueuePreparation, enqueueActivityBlock, ownedPreparationJob, publicPreparationJob, retryPreparation, preparationFingerprint } from "../src/lib/preparation-jobs.mjs";
 import { versionTransaction, VersionConflictError, httpStatusForError, publicErrorMessage } from "../src/lib/version-integrity.mjs";
-import { lockClassroomSchedule } from "../src/lib/activity-schedule-integrity.mjs";
+import { lockClassroomSchedule, limaToday } from "../src/lib/activity-schedule-integrity.mjs";
 
 export async function handlePreparationRoutes({request,response,url,db,teacherId,origin,send,readJson,annualPlanningContext,projectFlowSource,projectFlowRow,domainRequest}) {
   if(!url.pathname.startsWith("/api/preparation/"))return false;
@@ -8,7 +8,7 @@ export async function handlePreparationRoutes({request,response,url,db,teacherId
     if(url.pathname==="/api/preparation/projects" && request.method==="POST"){
       const body=await readJson(request),source=await projectFlowSource(body.annualPlanId,body.proposalId);
       if(!source.plan.proposal.experience_context || source.plan.status!=="active")throw new VersionConflictError("Confirma Mi año antes de preparar el proyecto.");
-      if(source.slot.ends_on<new Intl.DateTimeFormat("en-CA",{timeZone:"America/Lima"}).format(new Date()))throw new VersionConflictError("Este proyecto pertenece al pasado. Consúltalo o elige un proyecto futuro; no se prepara retrospectivamente.");
+      if(source.slot.ends_on<limaToday())throw new VersionConflictError("Este proyecto pertenece al pasado. Consúltalo o elige un proyecto futuro; no se prepara retrospectivamente.");
       if(typeof body.additionalContext!=="string" || body.additionalContext.length>1000)throw new TypeError("Resume el contexto en un máximo de 1000 caracteres.");
       let revisedProject=null;
       if(body.projectId!==undefined || body.expectedProjectRevision!==undefined){

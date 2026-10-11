@@ -1,5 +1,6 @@
 import { createHash, createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import { VersionConflictError, versionTransaction } from "./version-integrity.mjs";
+import { currentPedagogicalClock } from "./pedagogical-clock.mjs";
 
 export const preparationFingerprint = value => createHash("sha256").update(JSON.stringify(value)).digest("hex");
 const LEASE_SECONDS=360;
@@ -23,7 +24,8 @@ export async function enqueuePreparation(db,{teacherId,classroomId,kind,sourceId
   return (await db.query(`insert into preparation_jobs(id,teacher_id,classroom_id,kind,source_id,source_revision,input_fingerprint,status,payload)
     values($1,$2,$3,$4,$5,$6,$7,'queued',$8::jsonb)
     on conflict(kind,source_id,source_revision,input_fingerprint) do update set updated_at=preparation_jobs.updated_at returning *`,
-    [randomUUID(),teacherId,classroomId,kind,sourceId,sourceRevision,preparationFingerprint(input),JSON.stringify(payload)])).rows[0];
+    [randomUUID(),teacherId,classroomId,kind,sourceId,sourceRevision,preparationFingerprint(input),JSON.stringify({ ...payload,
+      ...(currentPedagogicalClock() ? { qa_clock: currentPedagogicalClock() } : {}) })])).rows[0];
 }
 export async function enqueueActivityBlock(db,teacherId,project) {
   if(project.status!=="active" || !project.details.activity_route?.length)throw new VersionConflictError("Confirma primero el proyecto completo.");

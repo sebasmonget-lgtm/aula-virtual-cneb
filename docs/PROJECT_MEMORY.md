@@ -1,5 +1,13 @@
 # Memoria del proyecto Ayni Aula
 
+## Preparación de QA interactivo — 2026-10-11
+
+El propietario confirmó que todos los datos remotos son de pruebas y autorizó reutilizar Supabase actual, reiniciar exclusivamente las 352 filas identificadas de la docente QA y conservar credenciales, otras cuentas y configuración global. Reinicio ejecutado tras respaldo y ensayo con rollback: consulta independiente verifica cero filas propias, Auth y seguridad intactos, 81 huellas de tablas protegidas sin cambios; sin objetos Storage. La UI autenticada volvió a «Configura tu aula» y quedó sin completar.
+
+Rama aislada `codex/ayni-qa-reloj-20261011`, base documental `dcc1b36` sobre producto `5bafbd8`. Control de fecha/hora exclusivo de Preview y docente permitida por servidor; inicio 16/02/2026 08:00 Lima. Cookie firmada HTTP-only por host, sin tabla ni migración nuevas. Contexto de tiempo por petición; planificación, jornada, calendario y observaciones reciben la fecha de QA. Seguridad, sesiones, leases, facturación y auditoría técnica mantienen tiempo real; preparaciones durables guardan el reloj de origen. Producción rechaza el mecanismo incluso con el flag o cookie.
+
+El recorrido requiere una pantalla y una acción a la vez, y avanzar únicamente por indicación del propietario. No rellenar el aula ni crear registros remotos durante la preparación. Propuestas de diseño necesitan aprobación previa; el único control nuevo autorizado es el reloj QA. Estado, comprobaciones, límites y rollback en `docs/qa/AYNI_QA_INTERACTIVO_2026-10-11.md`. La consulta remota previa a esta publicación confirma que `5bafbd8` está solo en Preview; Producción permanece en `ea206bf` / `dpl_EgekhWXwVjaM9iCcRc8mpJn2Eoc4`. Consultar el recibo posterior para la nueva Preview; no afirmar un despliegue hasta verificar READY y smoke.
+
 ## Simplificación UX autorizada — 2026-10-11
 
 El propietario autoriza implementación progresiva del informe `AUDITORIA_UX_PROPUESTA_2026-10-11.md`, commits independientes y pruebas ficticias, con Preview cuando esté disponible/autorizado; excluye Producción y datos reales. Rama aislada `codex/ayni-ux-simplificacion-20261011`, base e3a107f. Se conservan cinco destinos, quince tramos, biblioteca, calendario, confirmación docente y actividades graduales. Primero confianza/recuperación; luego simplificación visual. Evidencia y pendientes por etapa en `docs/qa/AYNI_UX_IMPLEMENTACION_2026-10-11.md`; no heredar gates históricos como nuevos PASS.

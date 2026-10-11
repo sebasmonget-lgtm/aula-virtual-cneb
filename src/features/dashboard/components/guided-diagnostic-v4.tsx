@@ -1,4 +1,5 @@
 "use client";
+import { limaToday } from "@/src/lib/display-date";
 
 import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, ArrowRight, Save } from "lucide-react";
@@ -26,7 +27,7 @@ import { localDatabaseApiUrl } from "@/src/lib/local-database";
 type Filter = "all" | "without" | "with" | "today";
 const diagnosticStepValues = [1, 2, 3] as const;
 const observationModes = ["guided", "spontaneous"] as const;
-function isToday(value: string) { return new Date(value).toDateString() === new Date().toDateString(); }
+function isToday(value: string) { const date = new Date(value); return !Number.isNaN(date.valueOf()) && new Intl.DateTimeFormat("en-CA", { timeZone: "America/Lima", year: "numeric", month: "2-digit", day: "2-digit" }).format(date) === limaToday(); }
 
 export function GuidedDiagnostic({ dashboard, onPlan, onStudents, initialStep = 1 }: {
   dashboard: LocalDashboard; onPlan?: () => void; onStudents?: () => void; initialStep?: 1 | 2 | 3;

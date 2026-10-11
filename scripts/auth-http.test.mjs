@@ -53,6 +53,61 @@ async function stopAyni(child) {
   });
 }
 
+test("Preview QA clock works before onboarding, validates Origin, and reloads signed time without writing pedagogy", { timeout: 90000 }, async () => {
+  const temp = await mkdtemp(path.join(tmpdir(), "ayni-qa-clock-"));
+  let instance;
+  try {
+    const port = await freePort();
+    const origin = `http://127.0.0.1:${port}`;
+    instance = await startAyni(port, path.join(temp, "pgdata"), {
+      NODE_ENV: "test", AYNI_DB_MODE: "local", AYNI_AUTH_MODE: "local", AYNI_LOCAL_TEACHER_ID: teacherA,
+      AYNI_ALLOWED_ORIGIN: origin, VERCEL_ENV: "preview", AYNI_QA_PREVIEW_CLOCK: "1",
+      AYNI_QA_TEACHER_ID: teacherA, AYNI_SESSION_SIGNING_KEY: sessionSigningKey,
+      AYNI_ORDINARY_OBSERVATIONS: "1",
+    });
+    const initial = await fetch(`${instance.base}/api/qa/clock`);
+    assert.equal(initial.status, 200);
+    assert.equal(initial.headers.get("cache-control"), "private, no-store");
+    assert.deepEqual(await initial.json(), { date: "2026-02-16", time: "08:00" });
+    const body = JSON.stringify({ date: "2026-12-18", time: "10:30" });
+    assert.equal((await fetch(`${instance.base}/api/qa/clock`, { method: "PUT", body })).status, 403);
+    assert.equal((await fetch(`${instance.base}/api/qa/clock`, { method: "PUT", headers: { origin: "https://foreign.example" }, body })).status, 403);
+    assert.equal((await fetch(`${instance.base}/api/qa/clock`, { method: "PUT", headers: { origin }, body: JSON.stringify({ date: "2026-02-31", time: "10:30" }) })).status, 422);
+    const changed = await fetch(`${instance.base}/api/qa/clock`, { method: "PUT", headers: { origin }, body });
+    assert.equal(changed.status, 200);
+    const cookie = changed.headers.getSetCookie().find(value => value.startsWith("__Host-ayni_qa_clock="));
+    assert.ok(cookie);
+    const reloaded = await fetch(`${instance.base}/api/qa/clock`, { headers: { cookie: cookie.split(";")[0] } });
+    assert.deepEqual(await reloaded.json(), { date: "2026-12-18", time: "10:30" });
+    const setup = await fetch(`${instance.base}/api/pilot/setup`);
+    assert.equal(setup.status, 200);
+    assert.equal((await setup.json()).configured, false);
+    const qaHeaders = { origin, cookie: cookie.split(";")[0], "content-type": "application/json" };
+    const created = await fetch(`${instance.base}/api/pilot/setup`, { method: "POST", headers: qaHeaders,
+      body: JSON.stringify({ teacherName: "Docente ficticia de reloj", institutionName: "Colegio ficticio", section: "QA", age: 5,
+        year: 2026, startsOn: "2026-03-16", endsOn: "2026-12-18" }) });
+    assert.equal(created.status, 201, await created.clone().text());
+    const firstDashboard = (await created.json()).dashboard;
+    assert.equal(firstDashboard.today.date, "2026-12-18");
+    assert.equal(firstDashboard.today.now, "10:30");
+    const imported = await fetch(`${instance.base}/api/students/import`, { method: "POST", headers: qaHeaders,
+      body: JSON.stringify({ students: [{ firstName: "Niña", lastName: "Ficticia QA", birthDate: "2021-03-01" }] }) });
+    assert.equal(imported.status, 201, await imported.clone().text());
+    const student = (await imported.json()).dashboard.students[0];
+    const captured = await fetch(`${instance.base}/api/ordinary-observations`, { method: "POST", headers: qaHeaders,
+      body: JSON.stringify({ studentId: student.id, clientRequestId: "dddddddd-dddd-4ddd-8ddd-dddddddddddd",
+        sourceKind: "spontaneous", rawText: "Agrupó tres bloques en esta prueba ficticia." }) });
+    assert.equal(captured.status, 201, await captured.clone().text());
+    const saved = (await captured.json()).observation;
+    assert.equal(new Date(saved.occurred_at).toISOString(), "2026-12-18T15:30:00.000Z");
+    const persisted = await fetch(`${instance.base}/api/ordinary-observations`, { headers: qaHeaders });
+    assert.equal((await persisted.json()).observations[0].id, saved.id);
+  } finally {
+    if (instance) await stopAyni(instance.child);
+    await rm(temp, { recursive: true, force: true });
+  }
+});
+
 test("the HTTP boundary protects every route and local PGlite remains usable", { timeout: 90000 }, async () => {
   const temp = await mkdtemp(path.join(tmpdir(), "ayni-auth-"));
   const dataDir = path.join(temp, "pgdata");
@@ -134,7 +189,7 @@ test("the HTTP boundary protects every route and local PGlite remains usable", {
       headers: { "content-type": "application/json" } })).status, 403);
     assert.equal((await call("/api/admin/recover", null, recoveryRequest("test-only-bootstrap-key-with-more-than-32-characters"))).status, 200);
     const privateRoutes = [
-      "/api/pilot/setup", "/api/profile", "/api/ai-usage", "/api/admin/accounts", "/api/diagnostics",
+      "/api/qa/clock", "/api/pilot/setup", "/api/profile", "/api/ai-usage", "/api/admin/accounts", "/api/diagnostics",
       "/api/diagnostics/students/11111111-1111-4111-8111-111111111111/family-interview",
       "/api/diagnostics/students/11111111-1111-4111-8111-111111111111/family-interview/attachment",
       "/api/diagnostics/students/11111111-1111-4111-8111-111111111111/family-interview/save-and-confirm",
@@ -149,6 +204,7 @@ test("the HTTP boundary protects every route and local PGlite remains usable", {
       "/api/documents/family_report/11111111-1111-4111-8111-111111111111/download",
     ];
     for (const route of privateRoutes) assert.equal((await call(route)).status, 401, route);
+    assert.equal((await call("/api/qa/clock", "token-a")).status, 404);
     assert.equal((await call("/api/admin/accounts", "token-a")).status, 403);
     assert.equal((await call("/api/dashboard", "token-admin")).status, 403);
     const adminDirectory = await call("/api/admin/accounts", "token-admin");

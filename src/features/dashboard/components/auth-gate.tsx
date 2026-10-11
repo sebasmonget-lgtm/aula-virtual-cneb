@@ -7,6 +7,7 @@ import { apiFetch } from "@/src/lib/ayni-api-fetch";
 import { localDatabaseApiUrl } from "@/src/lib/local-database";
 import { TeacherWorkspace } from "./teacher-workspace";
 import { AdminWorkspace } from "./admin-workspace";
+import { QAClockControl } from "./qa-clock-control";
 
 type AccessState = "checking" | "ready" | "login" | "unavailable";
 const rememberedDniKey = "ayni:remembered-dni";
@@ -147,7 +148,7 @@ export function AuthGate() {
     {mode === "supabase" && <div className="flex justify-end border-b border-[#dce7ef] bg-white px-5 py-2">
       <button type="button" onClick={() => void signOut()} className="rounded-lg px-3 py-2 text-sm font-semibold text-[#0a7890] hover:bg-[#eaf6f9]">Cerrar sesión</button>
     </div>}
-    <TeacherWorkspace /></>}
+    {process.env.NEXT_PUBLIC_AYNI_QA_CLOCK === "1" ? <QAClockControl><TeacherWorkspace /></QAClockControl> : <TeacherWorkspace />}</>}
   </>;
   if (state === "checking") return <main className="grid min-h-screen place-items-center text-[#19334d]">Comprobando tu sesión…</main>;
   if (state === "unavailable") return <main className="grid min-h-screen place-items-center p-6 text-center text-[#19334d]">

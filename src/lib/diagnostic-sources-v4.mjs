@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { simulatedObservationInstant } from "./pedagogical-clock.mjs";
 import { isDeepStrictEqual } from "node:util";
 import { versionTransaction, VersionConflictError } from "./version-integrity.mjs";
 import { loadKnowledgeBaseV4 } from "./knowledge-base-v4.mjs";
@@ -271,12 +272,12 @@ export async function recordSpontaneousObservation(db, teacherId, input) {
   const id = randomUUID();
   await db.query(`insert into diagnostic_spontaneous_observations
     (id,classroom_id,student_id,context_label,observation_text,support_status,created_by,media_path,media_mime_type,
-      classification_status,classifier_version,classifier_status)
-    values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`, [id,classroom.id,input.studentId,context,note || null,
+      classification_status,classifier_version,classifier_status,observed_at)
+    values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,coalesce($13::timestamptz,now()))`, [id,classroom.id,input.studentId,context,note || null,
       input.supportStatus ?? null,teacherId,input.mediaPath ?? null,input.mediaMimeType ?? null,
       input.classifierEnabled === false ? "needs_review" : "pending",
       input.classifierEnabled ? "CURRENT_V2_4_RAW" : null,
-      input.classifierEnabled === false ? "disabled" : input.classifierEnabled ? "pending" : null]);
+      input.classifierEnabled === false ? "disabled" : input.classifierEnabled ? "pending" : null,simulatedObservationInstant()]);
   return { id, student_id: input.studentId, classification_status: input.classifierEnabled === false ? "needs_review" : "pending",
     classifier_version: input.classifierEnabled ? "CURRENT_V2_4_RAW" : null };
 }
@@ -297,7 +298,7 @@ export async function recordConfirmedSpontaneousObservation(db, teacherId, input
     const old=(await tx.query('select * from diagnostic_spontaneous_observations where id=$1',[id])).rows[0];
     if(old){if(old.created_by!==teacherId||old.student_id!==input.studentId||old.context_label!==context||old.observation_text!==(note||null)||old.support_status!==(input.supportStatus??null)||(input.observedAt&&new Date(old.observed_at).toISOString().slice(0,10)!==input.observedAt)||JSON.stringify([...(old.competency_v4_ids??[])].sort())!==JSON.stringify([...ids].sort())) fail("invalid_observation","La solicitud ya corresponde a otro registro. Recarga para revisar lo guardado.");return {id,student_id:old.student_id,classification_status:old.classification_status,competency_v4_ids:old.competency_v4_ids,replayed:true};}
     await tx.query(`insert into diagnostic_spontaneous_observations(id,classroom_id,student_id,context_label,observation_text,support_status,created_by,media_path,media_mime_type,classifier_status,observed_at)
-      values($1,$2,$3,$4,$5,$6,$7,$8,$9,'disabled',coalesce($10::timestamptz,now()))`,[id,classroom.id,input.studentId,context,note||null,input.supportStatus??null,teacherId,input.mediaPath??null,input.mediaMimeType??null,input.observedAt?input.observedAt+'T12:00:00-05:00':null]);
+      values($1,$2,$3,$4,$5,$6,$7,$8,$9,'disabled',coalesce($10::timestamptz,$11::timestamptz,now()))`,[id,classroom.id,input.studentId,context,note||null,input.supportStatus??null,teacherId,input.mediaPath??null,input.mediaMimeType??null,input.observedAt?input.observedAt+'T12:00:00-05:00':null,simulatedObservationInstant()]);
     return writeTeacherClassification(tx,teacherId,classroom,id,ids);
   });
 }
@@ -321,10 +322,10 @@ export async function recordMatrixDiagnosticObservation(db, teacherId, input) {
   const id = randomUUID();
   const saved = (await db.query(`insert into diagnostic_spontaneous_observations
     (id,classroom_id,student_id,context_label,observation_text,created_by,
-      classification_status,classification_source,competency_v4_id,competency_v4_ids,classified_at)
-    values($1,$2,$3,$4,$5,$6,'classified','teacher',$7,array[$7]::text[],now())
+      classification_status,classification_source,competency_v4_id,competency_v4_ids,classified_at,observed_at)
+    values($1,$2,$3,$4,$5,$6,'classified','teacher',$7,array[$7]::text[],now(),coalesce($8::timestamptz,now()))
     returning id,student_id,competency_v4_id,context_label,observation_text,observed_at`,
-    [id,classroom.id,input.studentId,context,note,teacherId,input.competencyId])).rows[0];
+    [id,classroom.id,input.studentId,context,note,teacherId,input.competencyId,simulatedObservationInstant()])).rows[0];
   return saved;
 }
 

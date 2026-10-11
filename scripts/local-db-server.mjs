@@ -16,7 +16,9 @@ import { configuredOrigins } from "./allowed-origins.mjs";
 import { resolveDailyState } from "../src/lib/daily-state.mjs";
 import { teacherTodayActions } from "../src/lib/teacher-today-actions.mjs";
 import { readQADailyClock } from "../src/lib/qa-daily-clock.mjs";
-const qaDailyClock = readQADailyClock();
+const localQaDailyClock = readQADailyClock();
+import { currentPedagogicalClock, pedagogicalNow, simulatedObservationInstant, withPedagogicalClock } from "../src/lib/pedagogical-clock.mjs";
+import { readPreviewQAClock, previewQAClockCookie, previewQAClockForJob, validateQAClock } from "../src/lib/preview-qa-clock.mjs";
 import { isValidStepIndex } from "../src/lib/activity-runner.mjs";
 import { buildStudentPedagogicalContext, refreshStudentContextSnapshot } from "../src/lib/student-context-service.mjs";
 import { getCurrentClassroomContext, publicClassroomContext } from "../src/lib/classroom-context-service.mjs";
@@ -386,6 +388,7 @@ async function decodePrivateMedia(value) {
 }
 
 async function handleAuthenticatedRequest({ teacherId, requestId, db, preparationItemId, jobClassroomId }, request, response) {
+const qaDailyClock = currentPedagogicalClock() ?? localQaDailyClock;
 async function dashboard() {
   const classroomResult = await db.query(`select id from classrooms where teacher_id = $1 and status = 'active' limit 1`, [teacherId]);
   const classroomId = classroomResult.rows[0]?.id;
@@ -434,9 +437,9 @@ async function dashboard() {
   const metricsResult = await db.query(`
     select
       (select count(*)::int from students where classroom_id=$1 and status = 'active') as students_total,
-      (select count(*)::int from evidences ev join students s on s.id=ev.student_id where s.classroom_id=$1 and ev.observed_at >= now() - interval '7 days') as evidences_week,
+      (select count(*)::int from evidences ev join students s on s.id=ev.student_id where s.classroom_id=$1 and ev.observed_at >= coalesce($2::timestamptz,now()) - interval '7 days') as evidences_week,
       (select count(distinct ev.student_id)::int from evidences ev join students s on s.id=ev.student_id where s.classroom_id=$1) as students_observed
-  `, [classroomId]);
+  `, [classroomId, simulatedObservationInstant()]);
   const profileResult = await db.query(`
     select p.display_name as teacher_name, ip.display_name as institution_name,
            ip.institution_code, ip.district, ip.ugel, ip.director_name,
@@ -2583,7 +2586,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       if (!session) {
         session = { id: randomUUID() };
         await db.query(`insert into diagnostic_sessions (id, classroom_id, title, created_by)
-          values ($1, $2, $3, $4)`, [session.id, allowed.rows[0].classroom_id, `Diagnóstico inicial ${new Date().getFullYear()}`, teacherId]);
+          values ($1, $2, $3, $4)`, [session.id, allowed.rows[0].classroom_id, `Diagnóstico inicial ${Number(limaToday().slice(0,4))}`, teacherId]);
       }
       const confirmed = body.teacherConfirmed === true;
       const existing = (await db.query(`select id from diagnostic_entries where session_id = $1 and student_id = $2 and competency_id = $3`, [session.id, body.studentId, body.competencyId])).rows[0];
@@ -2601,11 +2604,11 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       `, [entryId, session.id, body.studentId, body.competencyId, allowed.rows[0].guide_id,
         context || "Observación en aula", observation || null, interpretation || null, confirmed, confirmed ? "confirmed" : "draft"]);
       await db.query(`insert into student_observations
-        (id, diagnostic_entry_id, reference_id, status, note, author_id)
-        values ($1,$2,$3,$4,$5,$6)
+        (id, diagnostic_entry_id, reference_id, status, note, author_id, observed_at)
+        values ($1,$2,$3,$4,$5,$6,coalesce($7::timestamptz,now()))
         on conflict (diagnostic_entry_id, reference_id) do update set
-          status = excluded.status, note = excluded.note, observed_at = now()
-      `, [randomUUID(), entryId, body.referenceId, status, observation || null, teacherId]);
+          status = excluded.status, note = excluded.note, observed_at = excluded.observed_at
+      `, [randomUUID(), entryId, body.referenceId, status, observation || null, teacherId, simulatedObservationInstant()]);
       await refreshStudentContextSnapshot(db, body.studentId);
       await db.exec("commit");
       } catch (error) {
@@ -2678,7 +2681,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
             const result = await saveOrdinaryObservation(db, teacherId, body, {
               mediaPath, mediaMimeType: media?.mimeType ?? null,
               mediaFingerprint: media ? createHash("sha256").update(media.bytes).digest("hex") : null,
-              occurredAt: qaDailyClock ? new Date(`${qaDailyClock.date}T${qaDailyClock.time}:00-05:00`) : new Date(),
+              occurredAt: qaDailyClock ? new Date(`${qaDailyClock.date}T${qaDailyClock.time}:00-05:00`) : pedagogicalNow(),
             });
             if (!result.created && mediaPath) await ordinaryStorage.delete(mediaPath, { teacherId, studentId: body.studentId });
             send(response, result.created ? 201 : 200, result, origin);
@@ -2868,8 +2871,8 @@ async function preparationDomainRequest(job,pathname,body,method="POST",extra={}
   request.method=body===undefined?"GET":method;request.url=pathname;request.headers={};
   let status,result;
   const response={writeHead(value){status=value;},end(value){result=JSON.parse(value);},setHeader(){},hasHeader(){return false;}};
-  await requestDatabaseScope.run(activeDb,()=>withAiUsageContext({teacherId:job.teacher_id,db:activeDb},()=>handleAuthenticatedRequest({teacherId:job.teacher_id,
-    requestId:job.id,db:activeDb,jobClassroomId:job.classroom_id,preparationItemId:extra.preparationItemId},request,response)));
+  await withPedagogicalClock(previewQAClockForJob(job),()=>requestDatabaseScope.run(activeDb,()=>withAiUsageContext({teacherId:job.teacher_id,db:activeDb},()=>handleAuthenticatedRequest({teacherId:job.teacher_id,
+    requestId:job.id,db:activeDb,jobClassroomId:job.classroom_id,preparationItemId:extra.preparationItemId},request,response))));
   if(status>=400 || !status)throw Object.assign(new Error(result?.message ?? result?.error ?? "Preparation step failed"),{status});
   return result;
 }
@@ -3041,6 +3044,23 @@ export async function handleApiRequest(request, response) {
   if (context.role !== "teacher") {
     send(response, 403, { error: "Esta sección es para docentes." }, origin); return;
   }
+  const previewClock = readPreviewQAClock(request, context);
+  if (url.pathname === "/api/qa/clock") {
+    if (!previewClock) { send(response, 404, { error: "Reloj QA no disponible." }, origin); return; }
+    if (request.method === "GET") {
+      send(response, 200, previewClock, origin, { "cache-control": "private, no-store" }); return;
+    }
+    if (request.method === "PUT") {
+      if (!origin || !allowedOrigins.has(origin)) { send(response, 403, { error: "Origen requerido para cambiar el reloj QA." }, origin); return; }
+      try {
+        const clock = validateQAClock(await readJson(request));
+        send(response, 200, clock, origin, { "cache-control": "private, no-store",
+          "set-cookie": [...(context.sessionCookies ?? []), previewQAClockCookie(clock, context)] });
+      } catch { send(response, 422, { error: "Elige una fecha válida de 2026 y una hora entre 00:00 y 23:59." }, origin); }
+      return;
+    }
+    send(response, 405, { error: "Método no disponible." }, origin); return;
+  }
   if (context.authMode === "supabase") {
     try {
       const body = ["POST", "PUT", "PATCH", "DELETE"].includes(request.method) ? await readJson(request) : null;
@@ -3051,8 +3071,8 @@ export async function handleApiRequest(request, response) {
       return;
     }
   }
-  await withAiUsageContext({ teacherId: context.teacherId, db },
-    () => handleAuthenticatedRequest(context, request, response));
+  await withPedagogicalClock(previewClock,()=>withAiUsageContext({ teacherId: context.teacherId, db },
+    () => handleAuthenticatedRequest(context, request, response)));
   } finally {
     if (dbMode === "postgres") {
       try { await requestDb.close(); }

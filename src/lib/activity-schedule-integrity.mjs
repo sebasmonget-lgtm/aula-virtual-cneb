@@ -1,6 +1,7 @@
 import { VersionConflictError } from "./version-integrity.mjs";
+import { pedagogicalNow } from "./pedagogical-clock.mjs";
 
-export function limaToday(now = new Date()) {
+export function limaToday(now = pedagogicalNow()) {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Lima", year: "numeric", month: "2-digit", day: "2-digit" }).format(now);
 }
 

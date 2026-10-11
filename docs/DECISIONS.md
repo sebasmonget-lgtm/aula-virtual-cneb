@@ -1,5 +1,15 @@
 # Decisiones de arquitectura
 
+## ADR 120 — Reloj pedagógico de QA en Preview (2026-10-11)
+
+Se conserva la base Supabase actual por decisión explícita del propietario: todavía no hay usuarios ni datos reales. El reinicio administrativo se limita a IDs y contenidos congelados de la cuenta QA autorizada, con respaldo privado, ensayo que termina en rollback, locks, validación de identidad/recuento y comprobación de conservación de Auth, datos externos, catálogo y seguridad. No borrar Auth, tablas, políticas ni recursos compartidos. Una identidad con nombre igual no es el mismo propietario.
+
+El reloj de Preview requiere simultáneamente `VERCEL_ENV=preview`, `AYNI_QA_PREVIEW_CLOCK=1`, docente autenticada con rol `teacher` e ID exacto `AYNI_QA_TEACHER_ID`, y clave existente de firma de sesión. Las variables se limitan al nuevo despliegue Preview; no se cambian las configuraciones globales ni Production. La UI tiene su propio flag público, pero este no concede autorización. GET/PUT autenticados `/api/qa/clock`, validación de Origin para PUT, año 2026 y hora civil de Lima. Inicio por defecto 16/02/2026 08:00. Cookie `__Host-ayni_qa_clock`, firmada y ligada a docente, HTTP-only, Secure, SameSite=Lax, sin Domain.
+
+AsyncLocalStorage delimita el tiempo pedagógico a cada petición. No parchear Date global, reloj del equipo, SQL now(), autenticación, refresh, nonces, leases ni costos. Se adaptan fechas de jornada, calendario, límites de pasado/futuro, cobertura y captura de observaciones; timestamps técnicos y confirmaciones históricas conservan tiempo real. Una preparación durable guarda el reloj del origen en su JSONB privado y su worker solo lo usa para la docente/entorno autorizados. No se añaden tabla, migración o permiso RLS.
+
+La UI carga el reloj autorizado antes del aula, lo mantiene en memoria y ofrece cambiar fecha/hora bajo una sección plegada. Aplicar respeta la guarda de trabajo pendiente y recarga después de respuesta confirmada. La cookie conserva la selección al navegar o recargar ese host. Un host de despliegue distinto empieza en la fecha por defecto y puede necesitar nueva sesión; no copiar cookies ni credenciales a mano. Cambiar fecha no altera registros ya guardados ni genera IA. Rollback: servir la Preview anterior o retirar los flags del despliegue nuevo; las cookies no se interpretan en Production. El reloj local anterior continúa separado con sus restricciones originales.
+
 ## ADR 119 — Evaluación por competencia, lotes y reapertura explícita (2026-10-07)
 
 La experiencia principal tiene tres espacios; valoración y conclusión son decisiones distintas. Docente confirma AD/A/B/C sobre evidencia vigente; luego prepara todos los textos con checkpoints por niño/competencia, revisión por excepción y guardado conjunto. Jobs usan ai_pending_generations con ownership/huella/CAS/lease; no se repite una escritura de resultado incierto automáticamente. Editar una conclusión/informe crea versión sin IA; regenerar solo el seleccionado utiliza los contratos pedagógicos existentes.

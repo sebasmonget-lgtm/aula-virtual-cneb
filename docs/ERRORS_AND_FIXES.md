@@ -1,5 +1,13 @@
 # Errores y soluciones
 
+## Reinicio QA: comparación decimal y límite de argumentos — 2026-10-11
+
+- Síntoma: el ensayo administrativo abortó antes de eliminar filas con «QA data changed: ai_usage_events», aun con el mismo contenido. La consulta independiente posterior tuvo error 54023 al construir un objeto con 81 huellas.
+- Causa raíz: serializar números por JavaScript conserva su valor, pero puede cambiar la escala textual de numeric; un hash de esa representación no equivale a igualdad de datos. PostgreSQL limita a 100 argumentos una llamada a función.
+- Solución validada: comparar arrays JSONB completos con igualdad semántica, además del recuento/IDs, para el contenido propio; mantener hashes calculados íntegramente en SQL para datos protegidos. Construir el mapa amplio con jsonb_object_agg sobre VALUES.
+- Validación: ensayo con rollback PASS, reinicio de exactamente 352 filas PASS y consulta independiente con cero filas propias, Auth/seguridad y las 81 huellas protegidas intactas. Artefactos administrativos privados, sin credenciales, en `.local/reset-open-account-20261011/`.
+- Prevención: no debilitar la guarda al fallar; distinguir igualdad JSONB de igualdad de representación decimal y usar agregación para mapas grandes. No reutilizar inventarios ni IDs de reinicios antiguos.
+
 ## 2026-10-11 · UX-06 · Transición tras configurar el aula
 
 **Síntoma:** aula guardada correctamente, seguida de carga permanente en lugar de registrar niños. Reproducido con navegador y servidor HTTP real sobre PGlite nueva y docente ficticia.
