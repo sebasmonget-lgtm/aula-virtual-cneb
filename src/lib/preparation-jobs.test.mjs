@@ -74,3 +74,26 @@ test("lease, llamada incierta y firma privada impiden duplicación silenciosa",a
     assert.equal(await acceptPreparationDispatch(db,headers,secret,Date.now()+120000),false);
   }finally{await db.close();}
 });
+
+test("repreparar un borrador distingue su revisión y rechaza contexto, propiedad o CAS incorrectos",async()=>{
+  const {db,teacher,project}=await fixture();try{
+    const planId=randomUUID(),proposalId=randomUUID();
+    const source={plan:{id:planId,status:"active",revision:1,proposal:{experience_context:{}}},slot:{ends_on:"2099-12-31"},classroom:{id:project.classroom_id}};
+    const revised={...project,status:"draft",annual_plan_id:planId,source_proposal_id:proposalId,revision:12,
+      details:{stage:"dependents",decisions:{additional_context:"Tenemos tizas."}}};
+    const route=async(body,owned=revised)=>{let result;await handlePreparationRoutes({request:{method:"POST"},response:{},url:new URL("http://local/api/preparation/projects"),db,teacherId:teacher,
+      readJson:async()=>body,projectFlowSource:async()=>source,projectFlowRow:async()=>({row:owned}),send:(_response,status,data)=>{result={status,data};}});return result;};
+    const base={annualPlanId:planId,proposalId,additionalContext:"Tenemos tizas."};
+    const original=await route(base);assert.equal(original.status,202);
+    const changed={...base,projectId:project.id,expectedProjectRevision:12};
+    const next=await route(changed);assert.equal(next.status,202);assert.notEqual(next.data.id,original.data.id);
+    assert.equal((await route(changed)).data.id,next.data.id,"double submission recovers the same revised job");
+    assert.equal((await ownedPreparationJob(db,teacher,next.data.id)).payload.project_id,project.id);
+    assert.equal((await route({...changed,expectedProjectRevision:11})).status,409);
+    assert.equal((await route({...changed,additionalContext:"Otro contexto"})).status,409);
+    assert.equal((await route(changed,null)).status,409);
+    assert.equal((await route(changed,{...revised,status:"active"})).status,409);
+    assert.equal((await route(changed,{...revised,source_proposal_id:randomUUID()})).status,409);
+    assert.equal((await route(changed,{...revised,details:{...revised.details,project_master:{}}})).status,409);
+  }finally{await db.close();}
+});

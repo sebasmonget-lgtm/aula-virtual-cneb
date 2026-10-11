@@ -1769,11 +1769,11 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       const exclusions=stored.filter((item)=>!item.selected);
       const days=candidateProjectDates(calendar.days,source.slot.starts_on,source.slot.ends_on,exclusions);
       return { selection:{...selection,starts_on:annualCalendarDay(selection.starts_on),ends_on:annualCalendarDay(selection.ends_on)},days,
-        selected_dates:stored.filter((item)=>item.selected).map((item)=>item.date) };
+        selected_dates:stored.filter((item)=>item.selected).map((item)=>item.date),today:limaToday() };
     }
     if(request.method==="GET"&&url.pathname==="/api/school-calendar"){
       try{const classroom=await annualPlanningContext();if(!classroom){send(response,404,{error:"Aula no disponible."},origin);return;}
-        const data=await loadEffectiveCalendar(db,{teacherId,classroomId:classroom.id,from:url.searchParams.get("from"),to:url.searchParams.get("to")});send(response,200,data,origin);}
+        const data=await loadEffectiveCalendar(db,{teacherId,classroomId:classroom.id,from:url.searchParams.get("from"),to:url.searchParams.get("to")});send(response,200,{...data,today:limaToday()},origin);}
       catch(error){send(response,httpStatusForError(error,422),{error:publicErrorMessage(error)},origin);}return;
     }
     if(request.method==="PUT"&&url.pathname==="/api/school-calendar/override"){

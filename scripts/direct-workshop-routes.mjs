@@ -55,6 +55,10 @@ export async function handleDirectWorkshop({ request, url, response, origin, db,
       await tx.query(`insert into activity_criteria(id,activity_id,competency_v4_id,criterion_text,details,status,teacher_confirmed_at)
         values($1,$2,$3,$4,$5::jsonb,'active',now())`, [randomUUID(),workshopId,proposal.competency_id,proposal.criterion_or_observation_focus,
           JSON.stringify({competency_id:proposal.competency_id,criterion_text:proposal.criterion_or_observation_focus,expected_evidence:proposal.evidence_expected,observation_focus:[proposal.criterion_or_observation_focus]} )]);
+      await tx.query(`insert into class_schedule_entries(id,classroom_id,scheduled_on,start_time,end_time,
+        block_type,activity_id,title,is_instructional,sort_order)
+        values($1,$2,$3::date,'11:20','12:00','workshop',$4,$5,true,70)`,
+        [randomUUID(),context.id,date,workshopId,proposal.title]);
       return workshopId;
     });
     await pending.delete(body.generationId); send(response, 200, { id: workshopId, confirmed: true }, origin);

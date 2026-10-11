@@ -1,5 +1,13 @@
 # Medición de costo de IA por docente
 
+## Muestra nueva conciliada — 2026-10-09/10
+
+52 calls, 36 aceptadas y 16 rechazadas: USD 0,6705745; gasto de rechazos USD 0,280928825. Todas tienen usage. Ledger inicial 0,6733795 conservado; diferencia ASR conciliada por tokens, no por duración. Caché write reemplaza entrada ordinaria, no se agrega encima; salida incluye reasoning ya facturado. Versión 2026-10-10-standard-cache-writes-asr-usage. Precios Standard por millón: Sol corta 2/0.10/2.50/10 y Luna corta 0.10/0.01/0.125/0.50 (entrada/read/write/salida); ASR mini audio input 1.25, texto salida 5. Prioridad costo proveedor → tokens válidos → duración fallback 0.003/min. Fuentes oficiales consultadas el 10 de octubre: [precios](https://developers.openai.com/api/docs/pricing), [ASR](https://developers.openai.com/api/docs/models/gpt-4o-mini-transcribe).
+
+Tablas actuales: docs/qa/AYNI_COSTOS_ACTUALES.csv, AYNI_COSTOS_ESCENARIOS.csv y AYNI_COSTOS_SENSIBILIDAD.csv. n y fallos visibles, sin p95 para n<30. Quince tarjetas no implican quince Masters. Escenarios 6/20/25 niños y diez meses, proyectos preparados 5/10/15; típico veinte niños API USD 3.00760413/año y 0.300760413/mes lectivo. Intervalos son sensibilidad explícita, no inferencia estadística. Infraestructura Vercel/Supabase/storage/red, impuestos y margen no medidos: total conocido API más importe desconocido. No es precio de suscripción ni factura.
+
+La evidencia de las secciones inferiores pertenece a rondas/arquitecturas históricas y no se suma al nuevo ledger.
+
 ## Política vigente y muestra medida — 2026-10-07
 
 GPT-6.1 Sol usa USD 2/0.10/10 por millón de tokens de entrada/caché/salida corta y 4/0.20/15 para entrada larga, según `ai-usage-service.mjs`. GPT-6 Luna mantiene 0.10/0.01/0.50 corta. Cada registro conserva modelo y versión de tarifa. Consultas de Responses background no son generaciones nuevas y la usage se registra al completar la respuesta.

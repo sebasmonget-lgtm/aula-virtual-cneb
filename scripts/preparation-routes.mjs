@@ -10,8 +10,18 @@ export async function handlePreparationRoutes({request,response,url,db,teacherId
       if(!source.plan.proposal.experience_context || source.plan.status!=="active")throw new VersionConflictError("Confirma Mi año antes de preparar el proyecto.");
       if(source.slot.ends_on<new Intl.DateTimeFormat("en-CA",{timeZone:"America/Lima"}).format(new Date()))throw new VersionConflictError("Este proyecto pertenece al pasado. Consúltalo o elige un proyecto futuro; no se prepara retrospectivamente.");
       if(typeof body.additionalContext!=="string" || body.additionalContext.length>1000)throw new TypeError("Resume el contexto en un máximo de 1000 caracteres.");
+      let revisedProject=null;
+      if(body.projectId!==undefined || body.expectedProjectRevision!==undefined){
+        const {row}=await projectFlowRow(body.projectId);
+        if(!row || row.status!=="draft" || row.annual_plan_id!==source.plan.id || row.source_proposal_id!==body.proposalId ||
+          row.revision!==body.expectedProjectRevision || row.details.stage!=="dependents" || row.details.project_master ||
+          row.details.decisions?.additional_context!==body.additionalContext)
+          throw new VersionConflictError("La preparación cambió. Abre el proyecto guardado antes de volver a prepararlo.");
+        revisedProject=row;
+      }
       const job=await enqueuePreparation(db,{teacherId,classroomId:source.classroom.id,kind:"project",sourceId:source.plan.id,sourceRevision:source.plan.revision,
-        input:{proposalId:body.proposalId,additionalContext:body.additionalContext},payload:{stage:"structure",proposal_id:body.proposalId,additional_context:body.additionalContext}});
+        input:{proposalId:body.proposalId,additionalContext:body.additionalContext,...(revisedProject?{projectId:revisedProject.id,projectRevision:revisedProject.revision}:{})},
+        payload:{stage:"structure",proposal_id:body.proposalId,additional_context:body.additionalContext,...(revisedProject?{project_id:revisedProject.id}:{})}});
       send(response,202,publicPreparationJob(job),origin);return true;
     }
     if(url.pathname==="/api/preparation/activities" && request.method==="POST"){

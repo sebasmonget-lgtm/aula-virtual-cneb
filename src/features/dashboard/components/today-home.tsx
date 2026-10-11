@@ -46,12 +46,12 @@ export function TodayHome({ dashboard, refreshKey = 0, openEvidence, openAttenda
     void (async () => {
       const response = await apiFetch(`${localDatabaseApiUrl}/api/period-evaluations/workspace`, { signal: controller.signal });
       if (!response.ok) return;
-      const data = await response.json() as { years: { id: string }[]; classrooms: { id: string; school_year_id: string }[];
+      const data = await response.json() as { today: string; years: { id: string }[]; classrooms: { id: string; school_year_id: string }[];
         periods: { id: string; school_year_id: string; label: string; ends_on: string }[] };
       const classroom = data.classrooms.find((item) => item.school_year_id === data.years[0]?.id);
-      const today = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Lima", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+      const today = data.today;
       const period = [...data.periods].reverse().find((item) => item.school_year_id === classroom?.school_year_id && item.ends_on < today);
-      if (!classroom || !period) return;
+      if (!classroom || !period) { if (!controller.signal.aborted) setBimester(null); return; }
       if(modern){if(!controller.signal.aborted)setBimester({label:period.label,adjusted:false,ready:false,final:false,closed:false});return;}
       const review = await apiFetch(`${localDatabaseApiUrl}/api/period-evaluations/replan?classroomId=${classroom.id}&periodId=${period.id}`, { signal: controller.signal });
       if (!review.ok) return;
@@ -62,7 +62,7 @@ export function TodayHome({ dashboard, refreshKey = 0, openEvidence, openAttenda
         ready: result.summary.assessments_total > 0 && result.summary.assessments_confirmed === result.summary.assessments_total });
     })().catch(() => {});
     return () => controller.abort();
-  }, [modern]);
+  }, [modern, dashboard.today.date, refreshKey]);
   useEffect(() => {
     if (process.env.NEXT_PUBLIC_AYNI_F7_NAV !== "1") return;
     const controller = new AbortController();

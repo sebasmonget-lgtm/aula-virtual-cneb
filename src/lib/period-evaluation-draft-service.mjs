@@ -22,15 +22,20 @@ export async function savePeriodEvaluationDraft(db, { studentId, competencyId, p
     if(expectedDraftRevision!==undefined && (existing ? Number(existing.revision) : null)!==expectedDraftRevision)
       throw new VersionConflictError("El borrador cambió en otra pestaña. Revísalo antes de guardar.",existing?.revision??null);
     const previousCurrent=existing && evidenceFingerprint(existing.source_evidence_snapshot ?? [])===fingerprint;
+    const confirmed=!existing ? (await tx.query(`select * from competency_assessments where student_id=$1 and competency_v4_id=$2
+      and (evaluation_period_id=$3 or (evaluation_period_id is null and period_start=$4::date and period_end=$5::date)) and status='active'
+      order by version desc limit 1 for update`,[studentId,competencyId,period.id,period.starts_on,period.ends_on])).rows[0] : null;
+    const confirmedCurrent=confirmed && evidenceFingerprint(confirmed.source_evidence_snapshot ?? [])===fingerprint;
+    const currentSource=previousCurrent ? existing : confirmedCurrent ? confirmed : null;
     const manualStatus=rows.length>0 && clean(teacherAnalysis) ? "sufficient" : "insufficient";
-    const details=analysis ?? (previousCurrent && existing.generation_metadata?.analysis ? existing.details : {
+    const details=analysis ?? (currentSource ? currentSource.details : {
       competency_id:competencyId,information_status:manualStatus,evidence_overview:clean(teacherAnalysis)||"Análisis pendiente de la docente.",observable_patterns:[],strengths_and_advances:[],
       support_needs:[],next_opportunities:[],teacher_questions:[],insufficiency_reason:manualStatus==="insufficient"?"La docente revisará más oportunidades de observación.":null,caution:"Borrador docente." });
     // Campos conservados solo por compatibilidad histórica. Las nuevas generaciones nunca sugieren AD/A/B/C.
     const suggestedLevel=null;
     const suggestionReason=null;
     const fields=[JSON.stringify(rows.map((row)=>row.id)),JSON.stringify(snapshot),JSON.stringify(details),
-      JSON.stringify(metadata ?? (previousCurrent ? existing.generation_metadata : {})),suggestedLevel,suggestionReason,
+      JSON.stringify(metadata ?? currentSource?.generation_metadata ?? {}),suggestedLevel,suggestionReason,
       clean(teacherAnalysis),clean(conclusionText),provisionalLevel || null,clean(teacherJustification,1000)];
     let saved;
     if(existing) saved=(await tx.query(`update competency_assessments set evaluation_period_id=$12,source_evidence_ids=$1::jsonb,source_evidence_snapshot=$2::jsonb,
@@ -46,7 +51,7 @@ export async function savePeriodEvaluationDraft(db, { studentId, competencyId, p
         version,source_evidence_ids,source_evidence_snapshot,details,generation_metadata,status,suggested_level,suggestion_reason,
         draft_teacher_analysis,working_conclusion_text,provisional_level,draft_teacher_justification,assessment_master_id,assessment_master_snapshot)
         values($1,$2,$3,$4,$5::date,$6::date,$7,$8::jsonb,$9::jsonb,$10::jsonb,$11::jsonb,'draft',$12,$13,$14,$15,$16,$17,$18,$19::jsonb)
-        returning id,updated_at,revision`,[randomUUID(),studentId,competencyId,period.id,period.starts_on,period.ends_on,version,...fields,assessmentMasterId,assessmentMasterSnapshot?JSON.stringify(assessmentMasterSnapshot):null])).rows[0];
+        returning id,updated_at,revision`,[randomUUID(),studentId,competencyId,period.id,period.starts_on,period.ends_on,version,...fields,assessmentMasterId??currentSource?.assessment_master_id??null,(assessmentMasterSnapshot??currentSource?.assessment_master_snapshot)?JSON.stringify(assessmentMasterSnapshot??currentSource.assessment_master_snapshot):null])).rows[0];
     }
     if(!saved) throw new VersionConflictError();
     return {id:saved.id,updated_at:saved.updated_at,revision:Number(saved.revision),evidence_fingerprint:fingerprint};

@@ -123,6 +123,7 @@ export function ParentActivityGenerator({ onConfirmed, onGoToday, onRecordEviden
 }) {
     const [experiences, setExperiences] = useState<Experience[]>([]);
     const [competencies, setCompetencies] = useState<Competency[]>([]);
+    const [today, setToday] = useState(limaToday);
     const [parent, setParent] = useState<Experience | null>(null);
     const [activities, setActivities] = useState<Activity[]>([]);
     const [proposal, setProposal] = useState<Proposal | null>(null);
@@ -165,13 +166,17 @@ export function ParentActivityGenerator({ onConfirmed, onGoToday, onRecordEviden
             }>; }), apiFetch(`${localDatabaseApiUrl}/api/ai/competency-options?workflow=activity`).then((response) => { if (!response.ok)
                 throw new Error("No se pudieron cargar las competencias."); return response.json() as Promise<{
                 competencies?: Competency[];
-            }>; })]).then(([data, cards]) => {
+            }>; }), apiFetch(`${localDatabaseApiUrl}/api/teacher/today`, { cache: "no-store" }).then(async (response) => {
+                if (!response.ok) throw new Error("No se pudo cargar el calendario del aula.");
+                return await response.json() as { date: string };
+            })]).then(([data, cards, clock]) => {
             if (!live)
                 return;
             const available = (data.experiences ?? []).filter((item) => (item.status === "active" || item.status === "archived") && (item.type === "project" || item.type === "unit") &&
                 (typeof item.details?.starting_point === "string" || item.id === initialExperienceId));
             setExperiences(available);
             setCompetencies(cards.competencies ?? []);
+            setToday(clock.date);
             setInitialLoadError(false);
             setMessage("");
             const selected = available.find((item) => item.id === initialExperienceId);
@@ -378,10 +383,10 @@ export function ParentActivityGenerator({ onConfirmed, onGoToday, onRecordEviden
 {initialLoadError && <Button variant="outline" onClick={() => { setOperation("load"); setReload((value) => value + 1); }}>Reintentar carga</Button>}
 {!parent ? <section className="space-y-3">
 <h2 className="font-bold">1. Elige un proyecto o unidad</h2>{operation !== "load" && !initialLoadError && experiences.length === 0 && <EmptyState title="Primero confirma un proyecto o unidad" description="Vuelve al paso anterior, confirma una experiencia y luego prepara aquí su primera actividad."/>}
-{[...experiences].sort((a,b) => Number(a.ends_on.slice(0,10) < limaToday()) - Number(b.ends_on.slice(0,10) < limaToday()) || a.starts_on.localeCompare(b.starts_on)).map((item) => <article key={item.id} className="rounded-xl border p-4">
-<b>{item.type === "project" ? "Proyecto" : "Unidad"}: {item.title} · versión {item.version} · {item.status === "archived" ? "Versión anterior" : item.ends_on.slice(0,10) < limaToday() ? "Período anterior" : item.starts_on.slice(0,10) > limaToday() ? "Próximo" : "Vigente"}</b>
+{[...experiences].sort((a,b) => Number(a.ends_on.slice(0,10) < today) - Number(b.ends_on.slice(0,10) < today) || a.starts_on.localeCompare(b.starts_on)).map((item) => <article key={item.id} className="rounded-xl border p-4">
+<b>{item.type === "project" ? "Proyecto" : "Unidad"}: {item.title} · versión {item.version} · {item.status === "archived" ? "Versión anterior" : item.ends_on.slice(0,10) < today ? "Período anterior" : item.starts_on.slice(0,10) > today ? "Próximo" : "Vigente"}</b>
 <p className="mt-1 text-sm text-[#526b87]">{displayDate(item.starts_on)} – {displayDate(item.ends_on)}</p>
-{item.ends_on.slice(0,10) < limaToday() && <p className="mt-1 text-sm text-[#916219]">Esta planificación corresponde a un período anterior. Puedes revisarla o continuar con la actual.</p>}
+{item.ends_on.slice(0,10) < today && <p className="mt-1 text-sm text-[#916219]">Esta planificación corresponde a un período anterior. Puedes revisarla o continuar con la actual.</p>}
 <p className="mt-1 text-sm">{item.purpose}</p>
 <Button className="mt-3" onClick={() => void openParent(item)}>Entrar y preparar actividades</Button>
 </article>)}</section> : <>

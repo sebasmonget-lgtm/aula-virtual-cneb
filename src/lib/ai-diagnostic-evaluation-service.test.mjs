@@ -103,6 +103,8 @@ test("Ayni puede proponer el resumen desde hechos anónimos sin comentarios indi
       assert.equal(bundle.context.observed_records[0].child, "child_1");
       assert.equal(bundle.context.observed_records[0].notes.length, 2);
       assert.ok(bundle.context.observed_records[0].notes.some(note => /eligió bloques/i.test(note.text)));
+        for (const action of ["Mezcló agua", "Tocó la mezcla", "Esperó su turno", "Puso cinco semillas", "Dijo que se doblaba", "Exploramos hojas", "Propuso comparar", "Colocó una hoja"])
+        assert.ok(bundle.context.observed_records[0].notes.some(note => note.text.includes(action)), `La anonimización perdió la actuación: ${action}`);
       assert.ok(bundle.context.observed_records[0].notes.some(note => /mi hermana/i.test(note.text)));
       assert.doesNotMatch(JSON.stringify(bundle), /\bAna\b|Prueba|student_id|teacher_id|domicilio|77777777/);
       return { output:cited({ strengths: "Hay un registro de elección de materiales.", needs: "Seguir recogiendo observaciones.", planning_priorities: "Ofrecer juegos con materiales variados." },[bundle.context.observed_records[0].notes[0].source_id]) };
@@ -111,7 +113,7 @@ test("Ayni puede proponer el resumen desde hechos anónimos sin comentarios indi
     assert.equal(calls, 0);
     await recordDiagnosticExperienceObservation(db, teacher, { studentId: workspace.students[0].id,
       experienceId: workspace.experiences[0].id, aspectId: workspace.experiences[0].aspects[0].id,
-      observationStatus: "observed_without_judgment", observationText: "Ana eligió bloques y explicó su elección." });
+        observationStatus: "observed_without_judgment", observationText: "Ana eligió bloques y explicó su elección. Mezcló agua. Tocó la mezcla. Esperó su turno. Puso cinco semillas. Dijo que se doblaba. Exploramos hojas. Propuso comparar. Colocó una hoja." });
     await recordDiagnosticExperienceObservation(db, teacher, { studentId: workspace.students[0].id,
       experienceId: workspace.experiences[0].id, aspectId: workspace.experiences[0].aspects[1].id,
       observationStatus: "observed_without_judgment", observationText: "Su familia contó su domicilio y teléfono 77777777." });

@@ -95,6 +95,18 @@ test("schema impide competencias ajenas, información falsa, notas, rankings y r
   await assert.rejects(() => generateAIWorkflowV4(input, { provider: { async generate() { return report(["MAT_CANTIDAD"]); } } }), InvalidAIGenerationError);
 });
 
+test("ejemplos observados siguen exigidos con información insuficiente sin mutar el schema compartido", async () => {
+  const details = {...sourceDetails("COM_ORAL", "insufficient"), progress_examples:["Señaló el dibujo y contó lo que vio."]};
+  const input = buildFamilyReportInput({age:5,competencyIds:["COM_ORAL"],conclusions:[{competency_v4_id:"COM_ORAL",period_start:start,period_end:end,details}]});
+  let captured;
+  await generateAIWorkflowV4(input,{provider:{async generate(request){captured=request;return {...report(["COM_ORAL"],{COM_ORAL:"insufficient"}),sections:[{...section("COM_ORAL","insufficient"),examples:details.progress_examples}]};}}});
+  assert.equal(captured.output_schema.properties.sections.items.properties.examples.minItems,1);
+  assert.equal(FAMILY_REPORT_OUTPUT_SCHEMA.properties.sections.items.properties.examples.minItems,undefined);
+  const emptyInput = buildFamilyReportInput({age:5,competencyIds:["COM_ORAL"],conclusions:[{competency_v4_id:"COM_ORAL",period_start:start,period_end:end,details:sourceDetails("COM_ORAL","insufficient")}]});
+  await generateAIWorkflowV4(emptyInput,{provider:{async generate(request){captured=request;return report(["COM_ORAL"],{COM_ORAL:"insufficient"});}}});
+  assert.equal(captured.output_schema.properties.sections.items.properties.examples.minItems,undefined);
+});
+
 test("si falla el esquema de IA, el borrador reutiliza solo conclusiones confirmadas", async () => {
   const f=await fixture({oralInformation:"insufficient",failGeneration:true});
   try {

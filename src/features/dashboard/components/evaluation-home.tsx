@@ -10,7 +10,7 @@ import { LoadingState, WorkflowFeedback } from "./workflow-ui";
 type EvaluationView = "student" | "conclusions" | "family" | "coverage" | "consolidated";
 type Row = { student_id: string; competency_id: string; competency_name: string; evidence_count: number; state: string; valuation_confirmed:boolean };
 type Overview = { students: { id: string; first_name: string; last_name: string; preferred_name: string | null }[]; rows: Row[] };
-type Workspace = { years: { id: string; year: number }[]; classrooms: { id: string; school_year_id: string }[]; periods: { id: string; school_year_id: string; label: string; starts_on: string; ends_on: string }[] };
+type Workspace = { today:string;years: { id: string; year: number }[]; classrooms: { id: string; school_year_id: string }[]; periods: { id: string; school_year_id: string; label: string; starts_on: string; ends_on: string }[] };
 type Target = { studentId: string; competencyId: string };
 
 async function json<T>(url: string, signal: AbortSignal): Promise<T> {
@@ -34,7 +34,7 @@ export function EvaluationHome({ onPeriod }: {
     json<Workspace>("/api/period-evaluations/workspace", controller.signal).then(async (workspace) => {
       const year = workspace.years[0];
       const classroom = workspace.classrooms.find((item) => item.school_year_id === year?.id);
-      const now = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Lima", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+      const now = workspace.today;
       const periods = workspace.periods.filter((item) => item.school_year_id === year?.id);
       const requestedPeriod = readWorkspaceParams("Evaluar").get("period");
       const period = periods.find((item) => item.id === requestedPeriod) ?? periods.find((item) => item.starts_on <= now && item.ends_on >= now) ?? periods[0];
@@ -47,9 +47,10 @@ export function EvaluationHome({ onPeriod }: {
     return () => controller.abort();
   }, [retry]);
 
-  const candidates=(overview?.rows??[]).filter(row=>!row.valuation_confirmed);
+  const candidates=(overview?.rows??[]).filter(row=>row.evidence_count>0&&!row.valuation_confirmed);
+  const unobserved=(overview?.rows??[]).filter(row=>!row.evidence_count&&!row.valuation_confirmed);
   const actions = [
-    {title:"Evaluación del bimestre",subtitle:`${candidates.length} evaluaciones por confirmar · valoraciones y conclusiones`,Icon:BookOpen,act:()=>onPeriod("student")},
+    {title:"Evaluación del bimestre",subtitle:`${candidates.length} valoraciones por confirmar · ${unobserved.length} pendientes de observación`,Icon:BookOpen,act:()=>onPeriod("student")},
     {title:"Informe a familias",subtitle:"Prepara todos los informes y revisa las excepciones",Icon:Users,act:()=>onPeriod("family")},
     {title:"Consolidado",subtitle:"Matriz, conclusiones, Excel y cierre del bimestre",Icon:TableProperties,act:()=>onPeriod("consolidated")},
   ];

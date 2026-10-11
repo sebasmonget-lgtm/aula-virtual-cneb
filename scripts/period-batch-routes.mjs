@@ -48,14 +48,22 @@ export function createPeriodBatchHandler({db,teacherId,context,loadRows,readJson
   const publicJob=(id,payload)=>({id,kind:payload.kind,status:payload.status==="running"&&Date.parse(payload.lease_until)<=Date.now()?"uncertain":payload.status,
     total:payload.tasks.length,completed:payload.results.length,error:payload.error??null,items:payload.results.map(({student_id,competency_id,review_reason,proposal,saved_id})=>({student_id,competency_id,review_reason,proposal,saved_id})),revision:payload.revision});
   const presentJob=async(id,payload,data)=>{
-    const result=publicJob(id,payload);if(payload.status!=="saved")return result;
+    const result=publicJob(id,payload);
+    if(payload.status!=="saved"){
+      if(payload.status==="ready"){
+        let current=false;
+        try{const tasks=await freshTasks(data,payload.kind);const selected=payload.tasks.map(task=>tasks.find(item=>key(item)===key(task)));current=selected.every(Boolean)&&hash(selected.map(taskSource))===payload.source_fingerprint;}catch{/* Source review is required before preparing again. */}
+        if(!current){result.status="stale";result.items=[];result.completed=0;result.error="Las valoraciones o sus fuentes cambiaron. Prepara otra vez los textos afectados.";}
+      }
+      return result;
+    }
     const model=await loadRows(db,{classroomId:data.classroom.id,period:data.period,applicableIds:new Set(data.cards.map(card=>card.id))});
     if(payload.kind==="conclusions"){
       const relevant=model.rows.filter(row=>row.sourceRows.length||row.assessment);
-      result.items=relevant.filter(row=>eligible(row)&&conclusionIsCurrent(row.conclusion,row.assessment)).map(row=>({student_id:row.student_id,competency_id:row.competency_v4_id,review_reason:row.sourceRows.length<3?"Hay pocas evidencias de esta competencia.":null,proposal:row.conclusion.details,saved_id:row.conclusion.id}));result.total=relevant.length;
+      result.items=relevant.filter(row=>eligible(row)&&conclusionIsCurrent(row.conclusion,row.assessment)).map(row=>({student_id:row.student_id,competency_id:row.competency_v4_id,review_reason:row.sourceRows.length<3||row.assessment.details.information_status==="insufficient"?"Hay pocas evidencias de esta competencia.":null,proposal:row.conclusion.details,saved_id:row.conclusion.id}));result.total=relevant.length;
     }else{
       const reports=(await db.query(`select r.* from family_reports r join students s on s.id=r.student_id where s.classroom_id=$1 and s.status='active' and r.evaluation_period_id=$2 and r.status='active'`,[data.classroom.id,data.period.id])).rows;
-      result.items=reports.filter(report=>sameConclusionSourceSnapshot(report.source_conclusion_snapshot,conclusionSourceSnapshot(model.rows.filter(row=>row.student_id===report.student_id&&eligible(row)&&conclusionIsCurrent(row.conclusion,row.assessment)).map(row=>row.conclusion)))).map(report=>({student_id:report.student_id,competency_id:null,review_reason:!report.details.sections.length?"Este niño aún no tiene conclusiones confirmadas.":null,proposal:report.details,saved_id:report.id}));result.total=model.students.length;
+      result.items=reports.filter(report=>sameConclusionSourceSnapshot(report.source_conclusion_snapshot,conclusionSourceSnapshot(model.rows.filter(row=>row.student_id===report.student_id&&eligible(row)&&conclusionIsCurrent(row.conclusion,row.assessment)).map(row=>row.conclusion)))).map(report=>({student_id:report.student_id,competency_id:null,review_reason:!report.details.sections.length?"Este niño aún no tiene conclusiones confirmadas.":model.rows.some(row=>row.student_id===report.student_id&&eligible(row)&&(row.sourceRows.length<3||row.assessment.details.information_status==="insufficient"))?"Hay competencias con pocas evidencias.":null,proposal:report.details,saved_id:report.id}));result.total=model.students.length;
     }
     result.completed=result.items.length;return result;
   };
@@ -84,7 +92,8 @@ export function createPeriodBatchHandler({db,teacherId,context,loadRows,readJson
         if(prior?.payload.status==="running")throw new VersionConflictError("Hay una preparación en curso.");
         if(body.kind==="family")for(const task of tasks){
           const report=(await tx.query(`select id,details,source_conclusion_snapshot,generation_metadata from family_reports where student_id=$1 and evaluation_period_id=$2 and status='active' order by version desc limit 1`,[task.student_id,data.period.id])).rows[0];
-          if(report && report.generation_metadata?.family_context_fingerprint===task.family_context_fingerprint && sameConclusionSourceSnapshot(report.source_conclusion_snapshot,task.snapshot))task.existing=report;
+          const usesNoFamilyContext=!task.snapshot.length && report?.generation_metadata?.source==="no_confirmed_conclusions";
+          if(report && (usesNoFamilyContext || report.generation_metadata?.family_context_fingerprint===task.family_context_fingerprint) && sameConclusionSourceSnapshot(report.source_conclusion_snapshot,task.snapshot))task.existing=report;
         }
         if(body.edit && tasks.some(task=>!task.existing))throw new VersionConflictError("Prepara primero el texto desde las fuentes actuales.");
         const id=randomUUID(),payload={teacher_id:teacherId,classroom_id:data.classroom.id,period_id:data.period.id,kind:body.kind,status:body.edit?"ready":"queued",revision:1,lease_token:randomUUID(),source_fingerprint:sourceFingerprint,
@@ -149,7 +158,7 @@ export function createPeriodBatchHandler({db,teacherId,context,loadRows,readJson
     try {
       if(task) {
         if(job.kind==="family"&&!task.snapshot.length) {
-          job.results.push({...task,proposal:{introduction:"Todavía no hay valoraciones y conclusiones confirmadas para este niño en el período. Seguiremos recogiendo observaciones.",sections:[],closing_note:"La docente puede conversar con la familia sobre situaciones cotidianas que ayuden a conocer mejor al niño."},metadata:{source:"no_confirmed_conclusions"}});
+          job.results.push({...task,proposal:{introduction:"Todavía no hay valoraciones y conclusiones confirmadas para este niño en el período. Seguiremos recogiendo observaciones.",sections:[],closing_note:"La docente puede conversar con la familia sobre situaciones cotidianas que ayuden a conocer mejor al niño."},metadata:{source:"no_confirmed_conclusions",family_context_fingerprint:task.family_context_fingerprint}});
           job.status=job.results.length===job.tasks.length?"ready":"queued";job.revision++;
           await put(id,job,job.lease_token);send(response,200,publicJob(id,job),origin);return true;
         }

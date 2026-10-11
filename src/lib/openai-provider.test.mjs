@@ -48,7 +48,7 @@ function validResponse(overrides = {}) {
     output_text: JSON.stringify(activityOutput),
     usage: {
       input_tokens: 110,
-      input_tokens_details: { cached_tokens: 12 },
+      input_tokens_details: { cached_tokens: 12, cache_write_tokens: 80 },
       output_tokens: 55,
       total_tokens: 165,
     },
@@ -80,7 +80,7 @@ test("OpenAIProvider usa Responses API, el plan central y Structured Outputs str
   assert.equal(result.metadata.provider, "openai");
   assert.equal(result.metadata.model, "gpt-6-luna");
   assert.equal(result.metadata.response_id, "resp_123");
-  assert.deepEqual(result.metadata.usage, { input_tokens: 110, cached_input_tokens: 12, output_tokens: 55, total_tokens: 165 });
+  assert.deepEqual(result.metadata.usage, { input_tokens: 110, cached_input_tokens: 12, cache_write_tokens: 80, output_tokens: 55, total_tokens: 165 });
 });
 
 test("OpenAIProvider coloca la Skill en instrucciones y conserva el bundle como dato", async () => {

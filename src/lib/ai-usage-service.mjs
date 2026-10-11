@@ -1,8 +1,9 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 import { randomUUID } from "node:crypto";
 
-// Snapshot of Standard API prices on 2026-09-27. Existing events keep their calculated cost.
-export const AI_USAGE_PRICING_VERSION = "2026-10-07-standard";
+// Standard API prices verified on 2026-10-09. Existing events keep their calculated cost.
+// Cache writes replace the uncached-input rate; they are not an additive charge.
+export const AI_USAGE_PRICING_VERSION = "2026-10-10-standard-cache-writes-asr-usage";
 const OPENAI_TEXT_RATES = Object.freeze({
   "gpt-6.1-sol": { short: [2, 0.1, 10], long: [4, 0.2, 15] },
   "gpt-6-sol": { short: [2, 0.2, 10], long: [4, 0.4, 15] },
@@ -16,18 +17,23 @@ const safeTeacherId = /^[0-9a-f-]{36}$/iu;
 const tokens = (value) => Number.isInteger(value) && value >= 0 ? value : null;
 const money = (value) => Math.round(value * 1e10) / 1e10;
 
-export function estimateTextCost({ model, inputTokens, cachedInputTokens = 0, outputTokens }) {
+export function estimateTextCost({ model, inputTokens, cachedInputTokens = 0, cacheWriteTokens = 0, outputTokens }) {
   const modelFamily = Object.keys(OPENAI_TEXT_RATES).find((name) => model === name || model?.startsWith(`${name}-`));
   const rates = OPENAI_TEXT_RATES[modelFamily];
-  const input = tokens(inputTokens), cached = tokens(cachedInputTokens), output = tokens(outputTokens);
-  if (!rates || input === null || cached === null || output === null || cached > input) return null;
+  const input = tokens(inputTokens), cached = tokens(cachedInputTokens), writes = tokens(cacheWriteTokens), output = tokens(outputTokens);
+  if (!rates || input === null || cached === null || writes === null || output === null || cached + writes > input) return null;
   const [inputRate, cachedRate, outputRate] = rates[input > 272_000 ? "long" : "short"];
-  return money(((input - cached) * inputRate + cached * cachedRate + output * outputRate) / 1_000_000);
+  return money(((input - cached - writes) * inputRate + cached * cachedRate + writes * inputRate * 1.25 + output * outputRate) / 1_000_000);
 }
 
 export function estimateTranscriptionCost(durationSeconds) {
   return Number.isFinite(durationSeconds) && durationSeconds > 0
     ? money(durationSeconds * TRANSCRIPTION_PER_MINUTE / 60) : null;
+}
+
+export function estimateTranscriptionTokenCost({ inputTokens, outputTokens }) {
+  const input = tokens(inputTokens), output = tokens(outputTokens);
+  return input !== null && output !== null ? money((input * 1.25 + output * 5) / 1_000_000) : null;
 }
 
 export function estimateJevCost(inputTokens) {
@@ -43,7 +49,7 @@ export function withAiUsageContext({ teacherId, db }, work) {
 
 /** Best-effort billing telemetry: IDs, counts and prices only; never prompts or student data. */
 export async function recordAiUsage({ provider, workflow, model, inputTokens = null,
-  cachedInputTokens = null, outputTokens = null, durationSeconds = null, providerCostUsd = null }) {
+  cachedInputTokens = null, cacheWriteTokens = 0, outputTokens = null, durationSeconds = null, providerCostUsd = null }) {
   const context = usageContext.getStore();
   if (!context) return false;
   if (!["openai", "openrouter"].includes(provider) || !safeName.test(workflow) || !safeName.test(model))
@@ -52,10 +58,11 @@ export async function recordAiUsage({ provider, workflow, model, inputTokens = n
   const duration = Number.isFinite(durationSeconds) && durationSeconds > 0 ? durationSeconds : null;
   let cost = Number.isFinite(providerCostUsd) && providerCostUsd >= 0 ? money(providerCostUsd) : null;
   let costSource = cost === null ? "unpriced" : "provider";
-  if (cost === null && provider === "openai" && duration !== null && model === "gpt-4o-mini-transcribe") {
-    cost = estimateTranscriptionCost(duration); costSource = "estimate";
+  if (cost === null && provider === "openai" && model === "gpt-4o-mini-transcribe") {
+    cost = estimateTranscriptionTokenCost({ inputTokens: input, outputTokens: output }) ?? estimateTranscriptionCost(duration);
+    if (cost !== null) costSource = "estimate";
   } else if (cost === null && provider === "openai") {
-    cost = estimateTextCost({ model, inputTokens: input, cachedInputTokens: cached ?? 0, outputTokens: output });
+    cost = estimateTextCost({ model, inputTokens: input, cachedInputTokens: cached ?? 0, cacheWriteTokens, outputTokens: output });
     if (cost !== null) costSource = "estimate";
   } else if (cost === null && provider === "openrouter" && model.startsWith("typesafe/jev-")) {
     cost = estimateJevCost(input);

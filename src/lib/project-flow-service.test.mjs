@@ -150,11 +150,25 @@ test("proyecto moderno: una generación high, calendario exacto y formal por có
   assert.equal(calls.length,1);
   assert.equal(calls[0].execution_plan.model,"gpt-6.1-sol");
   assert.equal(calls[0].execution_plan.reasoning_effort,"high");
+  assert.equal(calls[0].output_schema.properties.foundation.maxLength,1500);
+  assert.match(calls[0].ai_context_bundle.task,/hasta 1200 caracteres, con frases completas/);
+  assert.equal(calls[0].output_schema.properties.activities.items.properties.mediation_notes.maxLength,500);
   assert.equal(generated.dependents.general_criteria.length,1);
   const details=projectDetails({source:{title:"Plantas",primary_competency_ids:["CYT_INDAGA"]},preview:{context_summary:"Propuesta docente"},decisions,dependents:generated.dependents,master:generated.output});
   const formal=await generateProjectFormal({context:{modern:true,confirmed_project_master:details},createProvider:()=>{throw new Error("Formal no debe facturar");}});
   assert.equal(formal.metadata.provider_calls,0);
   assert.ok(formal.output.foundation);
+});
+
+test("una fundamentación fuera del límite se repara sin relajar el contrato ni cambiar fuentes",async()=>{
+  const calls=[];
+  const createProvider=()=>({generate:async request=>{calls.push(request);return {output:calls.length===1?{...master,...dependents,foundation:"a".repeat(1501)}:{...master,...dependents}};}});
+  const result=await generateProjectMaster({context:{modern:true,age:5},decisions,availableDates:["2026-04-13","2026-04-14"],createProvider,loadSkill:async()=>"Skill"});
+  assert.equal(calls.length,2);assert.equal(result.metadata.repair_used,true);
+  assert.equal(calls[1].ai_context_bundle.invalid_output.foundation.length,1501);
+  assert.equal(calls[1].output_schema.properties.foundation.maxLength,1500);
+  assert.deepEqual(calls[1].ai_context_bundle.confirmed_decisions,decisions);
+  assert.ok(result.output.foundation.length<=1500);
 });
 
 test("proyecto moderno: repara una sola vez fechas inválidas y conserva decisiones", async()=>{

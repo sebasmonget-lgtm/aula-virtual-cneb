@@ -233,6 +233,7 @@ function fallbackReason(error) {
 function normalizedUsage(value = null) {
   if (!value) return null;
   return { input_tokens: value.input_tokens ?? null, cached_input_tokens: value.cached_input_tokens ?? null,
+    cache_write_tokens: value.cache_write_tokens ?? 0,
     output_tokens: value.output_tokens ?? null, total_tokens: value.total_tokens ?? null };
 }
 
@@ -242,6 +243,7 @@ function combinedUsage(...values) {
   const sum = (field) => present.every((item) => Number.isFinite(item?.[field]))
     ? present.reduce((total, item) => total + item[field], 0) : null;
   return { input_tokens: sum("input_tokens"), cached_input_tokens: sum("cached_input_tokens"),
+    cache_write_tokens: sum("cache_write_tokens"),
     output_tokens: sum("output_tokens"), total_tokens: sum("total_tokens") };
 }
 
@@ -292,9 +294,12 @@ export async function generateAIWorkflowV4(input, { provider, providerFactory, k
   }
   if (input.workflow === "family_report" && input.competency_ids?.length) {
     const sections = outputSchema.properties.sections;
+    const confirmedFindings = input.student_context?.teacher_confirmed_findings ?? [];
+    const everySectionHasExamples = input.competency_ids.every(id => confirmedFindings.some(finding => finding.competency_id === id && finding.progress_examples?.length > 0));
     outputSchema = { ...outputSchema, properties: { ...outputSchema.properties,
       sections: { ...sections, items: { ...sections.items, properties: { ...sections.items.properties,
-        competency_id: { type: "string", enum: [...input.competency_ids] } } } } } };
+        competency_id: { type: "string", enum: [...input.competency_ids] },
+        ...(everySectionHasExamples ? { examples: { ...sections.items.properties.examples, minItems: 1 } } : {}) } } } } };
   }
   const primaryProvider = provider ?? providerFactory?.(plan);
   let finalPlan = plan;

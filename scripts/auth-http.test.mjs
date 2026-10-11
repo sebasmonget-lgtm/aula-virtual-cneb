@@ -274,6 +274,10 @@ test("the HTTP boundary protects every route and local PGlite remains usable", {
     assert.equal(todayB.classroom_id, contextB.id);
     assert.ok(!JSON.stringify(todayA).includes(studentB));
     assert.match(todayA.date, /^\d{4}-\d{2}-\d{2}$/);
+    const calendarA = await (await call("/api/school-calendar?from=2026-03-30&to=2026-04-10", "token-a")).json();
+    assert.equal(calendarA.today, todayA.date, "calendar filtering uses the same authoritative Lima date as Hoy");
+    const evaluationWorkspaceA = await (await call("/api/period-evaluations/workspace", "token-a")).json();
+    assert.equal(evaluationWorkspaceA.today, todayA.date, "evaluation chooses its period using server time");
     assert.equal((await call(`/api/students/${studentB}`, "token-a")).status, 404);
     assert.equal((await call(`/api/students/${studentB}`, "token-b")).status, 200);
     const interviewPath = `/api/diagnostics/students/${studentB}/family-interview/save-and-confirm`;

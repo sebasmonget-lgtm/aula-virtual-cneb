@@ -42,6 +42,7 @@ const metadata = (response, routing, operation, affected) => ({ operation, affec
   reasoning_effort: routing.reasoning_effort, issues_found: response.output?.issues?.length ?? 0,
   estimated_cost_usd: estimateTextCost({model: response.provider_metadata?.model ?? routing.model,
     inputTokens: response.provider_metadata?.usage?.input_tokens, cachedInputTokens: response.provider_metadata?.usage?.cached_input_tokens ?? 0,
+    cacheWriteTokens: response.provider_metadata?.usage?.cache_write_tokens ?? 0,
     outputTokens: response.provider_metadata?.usage?.output_tokens}), pricing_version: AI_USAGE_PRICING_VERSION });
 export function appendJourneyIntent(plan, text, proposalId = null) {
   if (typeof text !== "string" || !text.trim() || text.length > 1600 || plan.pending_changes.length >= 20)

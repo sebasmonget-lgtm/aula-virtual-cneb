@@ -47,6 +47,7 @@ export async function transcribeAndPolishAudio({ bytes, mimeType, context = "", 
   });
   await recordAiUsage({ provider: "openai", workflow: "observation_rewrite", model: response.model ?? rewritePlan.model,
     inputTokens: response.usage?.input_tokens, cachedInputTokens: response.usage?.input_tokens_details?.cached_tokens ?? 0,
+    cacheWriteTokens: response.usage?.input_tokens_details?.cache_write_tokens ?? 0,
     outputTokens: response.usage?.output_tokens });
   const improved = JSON.parse(response.output_text || "{}").improved_text;
   if (typeof improved !== "string" || !improved.trim()) throw new Error("No se pudo preparar el texto del audio.");

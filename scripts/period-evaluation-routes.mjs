@@ -22,6 +22,7 @@ import { assessmentMasterEntry } from "../src/lib/assessment-master-service.mjs"
 import { loadAssessmentMasterSources, loadComputedAssessmentContext } from "./assessment-master-routes.mjs";
 import { getCurrentClassroomContext, publicClassroomContext } from "../src/lib/classroom-context-service.mjs";
 import { familyObservationHint } from "../src/lib/family-interview-projection.mjs";
+import { limaToday } from "../src/lib/activity-schedule-integrity.mjs";
 import { buildClassroomPeriodReportInput, buildGenericAssessmentWorkbook, buildPeriodStatistics, classroomReportFingerprint,
   isTeacherAchievementLevel, SIAGIE_EXPORT_STATUS, stableCompetencyLabel, syncPeriodEvaluationMap, validateClassroomPeriodReport } from "../src/lib/period-assessment-closure-service.mjs";
 
@@ -170,7 +171,7 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
         const classrooms = (await db.query(`select c.id,c.school_year_id,c.section,ag.age_years as age from classrooms c join school_years sy on sy.id=c.school_year_id join age_grades ag on ag.id=c.age_grade_id where c.teacher_id=$1 and sy.owner_id=$1 order by sy.year desc,c.section`, [teacherId])).rows;
         const periods = [];
         for (const year of years) periods.push(...await ensurePeriods(year));
-        send(response, 200, { years: years.map((year) => ({ ...year, starts_on: dateOnly(year.starts_on), ends_on: dateOnly(year.ends_on) })), classrooms, periods }, origin);
+        send(response, 200, { today:limaToday(),years: years.map((year) => ({ ...year, starts_on: dateOnly(year.starts_on), ends_on: dateOnly(year.ends_on) })), classrooms, periods }, origin);
         return true;
       }
       if (request.method === "GET" && url.pathname === "/api/period-evaluations/replan") {
@@ -423,7 +424,7 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
           throw new VersionConflictError("El borrador cambió en otra pestaña.",data.row.draft.revision);
         const savedDraft=assertSavedEvaluationDraft(data.row.draft,{fingerprint,teacherAnalysis,conclusionText,
           achievementLevel:body.achievementLevel,teacherJustification});
-        const suggestion={analysis:savedDraft.details,analysis_metadata:savedDraft.generation_metadata?.analysis??{},
+        const suggestion={analysis:savedDraft.details,analysis_metadata:savedDraft.generation_metadata?.analysis??savedDraft.generation_metadata??{},
           conclusion_metadata:savedDraft.generation_metadata?.conclusion??{}};
         if ((sourceRows.length < AYNI_HEURISTICS.assessment_low_records_for_explanation || suggestion?.analysis?.information_status === "insufficient") && !teacherJustification) throw new Error("Explica brevemente el criterio de tu decisión docente.");
         const analysis = suggestion?.analysis ? { ...suggestion.analysis, evidence_overview: teacherAnalysis } : { competency_id: data.card.id, information_status: "sufficient", evidence_overview: teacherAnalysis, observable_patterns: [], strengths_and_advances: [], support_needs: [], next_opportunities: [], teacher_questions: [], insufficiency_reason: null, caution: "Interpretación confirmada por la docente." };
@@ -577,7 +578,7 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
         }
         if (url.pathname.endsWith(".xlsx")) {
           const workbook=await buildGenericAssessmentWorkbook(rows);
-          response.writeHead(200,{"content-type":"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet","content-disposition":`attachment; filename="consolidado-ayni-${data.classroom.year}-${data.period.ordinal}.xlsx"`,"cache-control":"private, no-store",...(origin?{"access-control-allow-origin":origin}:{})});
+          response.writeHead(200,{"content-type":"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet","content-disposition":`attachment; filename="consolidado-ayni-${data.classroom.year}-${data.period.ordinal}.xlsx"`,"cache-control":"private, no-store",...(origin?{"access-control-allow-origin":origin,"access-control-allow-credentials":"true"}:{})});
           response.end(workbook);return true;
         }
         if (url.pathname.endsWith("progress-report")) {

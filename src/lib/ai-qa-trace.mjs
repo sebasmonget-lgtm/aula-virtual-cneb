@@ -42,7 +42,8 @@ export async function endAIQATrace(trace, result, error = null) {
   Object.assign(trace, { raw_structured_output: result?.output ?? null, error: error ? error.reason ?? error.name : null,
     latency_ms: Date.now() - trace.started_at, usage: usage ?? null,
     cost_usd: estimateTextCost({ model: result?.provider_metadata?.model ?? trace.model,
-      inputTokens: usage?.input_tokens, cachedInputTokens: usage?.cached_input_tokens ?? 0, outputTokens: usage?.output_tokens }),
+      inputTokens: usage?.input_tokens, cachedInputTokens: usage?.cached_input_tokens ?? 0,
+      cacheWriteTokens: usage?.cache_write_tokens ?? 0, outputTokens: usage?.output_tokens }),
     fallback: result?.provider_metadata?.fallback_used ?? false });
   await save(state, trace);
 }

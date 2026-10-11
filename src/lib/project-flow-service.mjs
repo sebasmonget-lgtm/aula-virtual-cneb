@@ -8,6 +8,8 @@ import { focusedKnowledgeForDirectWorkflow } from "./ai-focused-knowledge.mjs";
 
 const string = { type: "string", minLength: 1 };
 const strings = { type: "array", items: string };
+const text = maxLength => ({ ...string, maxLength });
+const texts = maxLength => ({ type: "array", items: text(maxLength) });
 const object = (properties) => ({ type: "object", additionalProperties: false,
   required: Object.keys(properties), properties });
 const schema = (id, properties) => ({ id, ...object(properties) });
@@ -16,23 +18,23 @@ export const PROJECT_PREVIEW_SCHEMA = schema("project-preview-v1", {
   context_summary: string, context_points: strings, additional_context_example: string,
   purpose_options: { type: "array", minItems: 2, maxItems: 3, items: string },
 });
-const criterionSchema = object({ competency_id: string, criterion: string, expected_evidence: strings });
-const journeySchema = object({ title: string, description: string });
+const criterionSchema = object({ competency_id: string, criterion: text(400), expected_evidence: { ...texts(200), minItems: 1 } });
+const journeySchema = object({ title: text(140), description: text(500) });
 export const PROJECT_DEPENDENTS_SCHEMA = schema("project-dependents-v1", {
-  guiding_questions: { type: "array", minItems: 2, maxItems: 8, items: string },
+  guiding_questions: { type: "array", minItems: 2, maxItems: 8, items: text(250) },
   journey: { type: "array", minItems: 2, maxItems: 7, items: journeySchema },
   general_criteria: { type: "array", minItems: 1, maxItems: 6, items: criterionSchema },
 });
-const activitySchema = object({ date: string, title: string, purpose: string,
+const activitySchema = object({ date: string, title: text(180), purpose: text(500),
   competency_ids: { type: "array", minItems: 1, maxItems: 2, items: string },
-  criterion_competency_id: string, pedagogical_intention: string, criterion_text: string,
-  expected_evidence: string, acceptable_evidence_variations: strings, observation_focus: strings,
-  materials: strings, mediation_notes: string, continuity_from_previous: string,
-  continuity_to_next: string, flexibility_notes: string,
-  role_in_project: string, expected_progression: string,
-  estimated_minutes: { type: "integer" } });
+  criterion_competency_id: string, pedagogical_intention: text(500), criterion_text: text(500),
+  expected_evidence: text(500), acceptable_evidence_variations: texts(240), observation_focus: { ...texts(240), minItems: 1 },
+  materials: texts(160), mediation_notes: text(500), continuity_from_previous: text(400),
+  continuity_to_next: text(400), flexibility_notes: text(500),
+  role_in_project: text(400), expected_progression: text(400),
+  estimated_minutes: { type: "integer", minimum: 10, maximum: 180 } });
 export const PROJECT_MASTER_SCHEMA = schema("project-master-v1", {
-  foundation: string, closing_description: string, closing_rationale: string, resources: strings,
+  foundation: text(1500), closing_description: text(700), closing_rationale: text(700), resources: texts(160),
   activities: { type: "array", minItems: 1, maxItems: 15, items: activitySchema },
 });
 export const PROJECT_FORMAL_SCHEMA = schema("project-formal-v1", {
@@ -274,7 +276,7 @@ export async function generateProjectMaster({ context, decisions, providerDecisi
       properties: { ...PROJECT_MASTER_SCHEMA.properties, ...PROJECT_DEPENDENTS_SCHEMA.properties } };
     const requestContext = { ...context, confirmed_decisions: providerDecisions,
       available_instructional_dates: availableDates, instructional_dates: availableDates,
-      task: `Crea el proyecto completo en una sola respuesta: fundamento, preguntas orientadoras, recorrido flexible, un criterio general con evidencia esperada por competencia, cierre y recursos. Incluye exactamente una actividad por cada una de las ${availableDates.length} fechas recibidas. No cambies competencias, fechas ni decisiones docentes. Usa acciones concretas y palabras sencillas. No inventes observaciones ni logros.` };
+      task: `Crea el proyecto completo en una sola respuesta: fundamento, preguntas orientadoras, recorrido flexible, un criterio general con evidencia esperada por competencia, cierre y recursos. Redacta una fundamentación breve, de hasta 1200 caracteres, con frases completas; sintetiza antes de alcanzar el límite, nunca cortes una frase. Incluye exactamente una actividad por cada una de las ${availableDates.length} fechas recibidas. No cambies competencias, fechas ni decisiones docentes. Usa acciones concretas y palabras sencillas. No inventes observaciones ni logros.` };
     const validate = output => {
       const generatedDependents = validateProjectDependents(Object.fromEntries(PROJECT_DEPENDENTS_SCHEMA.required.map(key => [key, output[key]])), decisions.competency_ids);
       return { output: validateProjectMaster(output, decisions, generatedDependents, availableDates), dependents: generatedDependents };

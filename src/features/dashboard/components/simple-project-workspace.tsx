@@ -32,6 +32,7 @@ export function SimpleProjectWorkspace(props: Props) {
   const [dictating,setDictating]=useState(false);
   const [calendar,setCalendar]=useState<ProjectCalendarDay[]>([]),[selectedDates,setSelectedDates]=useState<string[]>([]);
   const [calendarError,setCalendarError]=useState("");
+  const [today,setToday]=useState(limaToday);
   const [names, setNames] = useState<Record<string, string>>({});
   const [advanced, setAdvanced] = useState(false), [changing, setChanging] = useState(false);
   const [loading, setLoading] = useState(true), [busy, setBusy] = useState(false), [error, setError] = useState("");
@@ -42,7 +43,9 @@ export function SimpleProjectWorkspace(props: Props) {
   const [discrepancy,setDiscrepancy]=useState<{changed:boolean;reason:string|null}|null>(null);
   const modern=!!plan?.proposal.experience_context;
   const slotFor=(item:Proposal,position:number)=>plan?.project_slots.find(slot=>slot.proposal_id?slot.proposal_id===item.proposal_id:!modern&&slot.slot_index===position+1);
-  const visiblePreparation=preparation ?? preparations.find(job=>job.kind==="activity_block"&&job.project_id===row?.id || job.kind==="project"&&job.annual_plan_id===plan?.id&&job.proposal_id===chosen&&job.status!=="succeeded");
+  const latestProjectPreparation=preparations.find(job=>job.kind==="project"&&job.annual_plan_id===plan?.id&&job.proposal_id===chosen);
+  const visiblePreparation=preparation ?? (latestProjectPreparation?.status!=="succeeded"?latestProjectPreparation:undefined) ??
+    preparations.find(job=>job.kind==="activity_block"&&job.project_id===row?.id&&!job.approved_at);
   const idAt = (item: Proposal, index: number) => item.proposal_id ?? plan?.project_slots.find((slot) => slot.slot_index === index + 1)?.id ?? "";
   const index = plan?.proposal.proposed_experiences.findIndex((item, position) => idAt(item, position) === chosen) ?? -1;
   const proposal = plan?.proposal.proposed_experiences[index];
@@ -52,16 +55,17 @@ export function SimpleProjectWorkspace(props: Props) {
     if(!calendarStartsOn||!calendarEndsOn)return;
     let live=true;
     const path=calendarProjectId?`/api/project-flow/${calendarProjectId}/calendar`:`/api/school-calendar?from=${calendarStartsOn}&to=${calendarEndsOn}`;
-    void request<{days:ProjectCalendarDay[];selected_dates?:string[]}>(path).then(value=>{
-      if(!live)return;setCalendar(value.days);setSelectedDates(value.selected_dates??value.days.filter(day=>day.is_instructional&&(!modern||day.date>=limaToday())).map(day=>day.date));setCalendarError("");
+    void request<{days:ProjectCalendarDay[];selected_dates?:string[];today:string}>(path).then(value=>{
+      if(!live)return;setToday(value.today);setCalendar(value.days);setSelectedDates(value.selected_dates??value.days.filter(day=>day.is_instructional&&(!modern||day.date>=value.today)).map(day=>day.date));setCalendarError("");
     }).catch(()=>{if(live)setCalendarError("No pudimos recuperar los días del proyecto. Vuelve a abrirlo para comprobar el calendario.");});
     return()=>{live=false;};
   },[calendarStartsOn,calendarEndsOn,calendarProjectId,modern]);
   useEffect(() => { let live = true;
     Promise.all([request<{ active: Plan | null }>("/api/annual-plans/current"),
       request<{ experiences: Experience[] }>("/api/learning-experiences"),
-      request<{ competencies: { id: string; name: string }[] }>("/api/ai/competency-options?workflow=project")])
-      .then(([plans, list, cards]) => { if (!live) return; setPlan(plans.active); setExperiences(list.experiences);
+      request<{ competencies: { id: string; name: string }[] }>("/api/ai/competency-options?workflow=project"),
+      request<{date:string}>("/api/teacher/today")])
+      .then(([plans, list, cards, clock]) => { if (!live) return; setToday(clock.date); setPlan(plans.active); setExperiences(list.experiences);
         if(plans.active?.proposal.experience_context)void request<{jobs:PreparationJob[]}>("/api/preparation/current").then(value=>{if(live)setPreparations(value.jobs);}).catch(()=>{});
         setNames(Object.fromEntries(cards.competencies.map((card) => [card.id, card.name]))); })
       .catch((cause: Error) => { if (live) setError(cause.message); }).finally(() => { if (live) setLoading(false); });
@@ -95,7 +99,16 @@ export function SimpleProjectWorkspace(props: Props) {
       await request(`/api/project-flow/${current.id}/calendar`,{selectedDates,
         exclusions:Object.fromEntries(calendar.filter(day=>day.is_instructional&&!selectedDates.includes(day.date)).map(day=>[day.date,"No se utilizará en este proyecto"])),confirm:true},"PUT");
       current=(await request<{experience:Experience}>(`/api/project-flow/${current.id}`)).experience;setRow(current);
-      if(modern){const job=await request<PreparationJob>("/api/preparation/projects",{annualPlanId:plan.id,proposalId:chosen,additionalContext:[...(conversation?.messages.filter(message=>message.role==="teacher").map(message=>message.text)??[]),context.trim()].filter(Boolean).join("\n").slice(0,1000)});setPreparation(job);setChanging(false);return;}
+      if(modern){
+        const additionalContext=[...(conversation?.messages.filter(message=>message.role==="teacher").map(message=>message.text)??[]),context.trim()].filter(Boolean).join("\n").slice(0,1000);
+        if(changing){
+          current=(await request<{experience:Experience}>(`/api/project-flow/${current.id}/dependents`,{expectedRevision:current.revision,
+            decisions:{purpose:proposal.purpose,context_summary:proposal.rationale,competency_ids:proposal.primary_competency_ids,additional_context:additionalContext}})).experience;
+          setRow(current);
+        }
+        const job=await request<PreparationJob>("/api/preparation/projects",{annualPlanId:plan.id,proposalId:chosen,additionalContext,
+          ...(changing?{projectId:current.id,expectedProjectRevision:current.revision}:{})});setPreparation(job);setChanging(false);return;
+      }
       const result=await prepareSimpleProject({request,planId:plan.id,proposalId:chosen,proposal,additionalContext:context.trim(),experience:current,
         feedback:{usePlanningFeedback:Boolean(props.feedbackPeriodId),planningFeedbackPeriodId:props.feedbackPeriodId},onCheckpoint:(saved:Experience)=>setRow(saved)});
       setRow(result);setChanging(false);setNotice("Proyecto preparado. Revísalo antes de confirmar.");
@@ -118,7 +131,7 @@ export function SimpleProjectWorkspace(props: Props) {
     setRow(result.experience);setDiscrepancy(null);setChanging(true);setPreparation(null);setNotice("La preparación anterior se conserva. Puedes preparar y revisar la nueva versión antes de confirmarla.");
   });}
   async function moveEarlier(){if(!plan||!proposal||!chosen)return;
-    const today=limaToday(),slots=plan.project_slots.filter(slot=>slot.starts_on>=today).sort((a,b)=>a.starts_on.localeCompare(b.starts_on));
+    const slots=plan.project_slots.filter(slot=>slot.starts_on>=today).sort((a,b)=>a.starts_on.localeCompare(b.starts_on));
     const target=slots.find(slot=>slot.proposal_id!==chosen);
     if(!target){setNotice("No hay otro tramo futuro disponible. Revisa Mi año.");return;}
     const warning=projectEventWarning(proposal,target);
@@ -140,7 +153,7 @@ export function SimpleProjectWorkspace(props: Props) {
     <Button variant="outline" onClick={() => { setError(""); setReload(value => value + 1); }}>Volver a intentar</Button></WorkflowFeedback> : <LoadingState label="Abriendo el proyecto guardado…" />;
   const prepared = row?.details.stage === "map_review" || row?.status === "active";
   const name = (id: string) => names[id] ?? id;
-  const today = limaToday();
+  const nextActivity=row?.details.activity_route?.find(item=>item.date>=today);
   const proposals = (plan?.proposal.proposed_experiences ?? []).map((item, position) => ({ item, position,
     slot: slotFor(item,position) })).sort((a, b) =>
       (a.slot?.starts_on ?? "9999").localeCompare(b.slot?.starts_on ?? "9999") || a.position - b.position);
@@ -151,7 +164,7 @@ export function SimpleProjectWorkspace(props: Props) {
     <h1 className="text-3xl font-extrabold">{proposal?.title ?? "Elige una propuesta de Mi año"}</h1></header>
     {error && <WorkflowFeedback tone="error">{error}</WorkflowFeedback>}{notice && <WorkflowFeedback tone="success">{notice}</WorkflowFeedback>}
     {discrepancy?.changed&&row&&<WorkflowFeedback tone="info"><p>{discrepancy.reason}</p><div className="mt-3 flex flex-wrap gap-3"><Button disabled={busy} onClick={()=>void rebase()}>Preparar una nueva versión desde Mi año</Button><Button variant="outline" onClick={props.onGoAnnual}>Revisar Mi año</Button></div></WorkflowFeedback>}
-    {visiblePreparation&&<PreparationProgress key={visiblePreparation.id} id={visiblePreparation.id} names={names} onProjectReady={id=>{void request<{experience:Experience}>(`/api/project-flow/${id}`).then(value=>{setRow(value.experience);setOpenedProposal(chosen);setContext(value.experience.details.decisions?.additional_context??"");setPreparation(null);setPreparations(previous=>previous.filter(job=>job.id!==visiblePreparation.id));}).catch(cause=>setError(cause.message));}}/>}
+    {visiblePreparation&&<PreparationProgress key={visiblePreparation.id} id={visiblePreparation.id} names={names} onProjectReady={id=>{void request<{experience:Experience}>(`/api/project-flow/${id}`).then(value=>{setRow(value.experience);setOpenedProposal(chosen);setContext(value.experience.details.project_context?"":value.experience.details.decisions?.additional_context??"");setPreparation(null);setPreparations(previous=>previous.filter(job=>job.id!==visiblePreparation.id));}).catch(cause=>setError(cause.message));}}/>}
     {!proposal ? <><p className="text-sm text-[#526b87]">Propuestas en el orden de Mi año. La vigente o la próxima está destacada.</p><div className="grid gap-3 sm:grid-cols-2">{proposals.map(({ item, position, slot }) => {
       const id = idAt(item, position); const existing = experiences.find((entry) => entry.status !== "archived" && entry.annual_plan_id === plan?.id &&
         (entry.source_proposal_id === id || (!entry.source_proposal_id && entry.source_proposal_index === position)));
@@ -173,7 +186,7 @@ export function SimpleProjectWorkspace(props: Props) {
             placeholder="Por ejemplo: podemos usar el patio o invitar a las familias al cierre." /></label>
         {modern&&!conversation?.ready&&<AsyncButton variant="outline" busy={busy} busyLabel="Preparando una pregunta…" onClick={()=>void converse()}>Conversar con Ayni</AsyncButton>}
         <p className="text-sm text-[#526b87]">Puedes añadir pequeños ajustes. Para cambiar lo que buscamos o las competencias, revisa el proyecto en Mi año.</p>
-        <div className="flex flex-wrap gap-2">{["Tenemos bloques grandes", "Podemos usar el patio", "Tenemos lupas", "Podemos visitar el huerto", "Quiero invitar a las familias al cierre"].map(idea=><Button key={idea} variant="outline" className="max-w-full whitespace-normal" disabled={busy||dictating} onClick={()=>setContext(value=>[value,idea].filter(Boolean).join("\n").slice(0,1000))}>{idea}</Button>)}</div>
+
         <DictationRecorder classroomScope purpose="group_summary" rawTranscript context="Ajustes para este proyecto" currentText={context} onTranscribed={value=>setContext(value.slice(0,1000))} onBusyChange={setDictating} disabled={busy}/>
         <section className="rounded-xl bg-[#edf7fa] p-4"><h3 className="font-bold">Días del proyecto</h3><p className="mt-2">{selectedDates.length} días de clase{selectedDates.length?` · ${displayDate(selectedDates[0])} al ${displayDate(selectedDates.at(-1)!)}`:""}</p>
           {calendarError&&<WorkflowFeedback tone="error">{calendarError}</WorkflowFeedback>}
@@ -183,27 +196,16 @@ export function SimpleProjectWorkspace(props: Props) {
           Preparar proyecto</AsyncButton>
         <Button variant="outline" disabled={busy} onClick={()=>modern?props.onGoAnnual?.():setAdvanced(true)}>{modern?"Quiero trabajar otro proyecto en Mi año":"Cambiar propósito, competencias o días"}</Button>
       </section>}
-      {prepared && !changing && row && <section className="space-y-4 rounded-2xl border bg-white p-5"><div className="flex flex-col gap-5 sm:flex-row"><ProjectPictogram project={proposal} className="size-40 sm:size-48" /><div><h2 className="text-xl font-bold">{row.status === "active" ? "Proyecto confirmado" : "Proyecto preparado"}</h2><p className="mt-2">{selectedDates.length} días de clase</p></div></div>
-        <p>{row.details.decisions?.purpose}</p><p className="text-sm">{row.details.decisions?.competency_ids.map(name).join(" · ")}</p>
+      {prepared && !changing && row && <section className="space-y-4 rounded-2xl border bg-white p-5"><div className="flex items-center gap-4"><ProjectPictogram project={proposal} className="size-16 shrink-0 sm:size-24" /><p className="text-sm text-[#526b87]">{selectedDates.length} días de clase</p></div>
+        <p>{row.details.decisions?.purpose}</p>
         {futureNotice}
+        {row.status==="active"&&nextActivity&&props.onDevelopActivity&&<div className="space-y-2"><p className="text-sm text-[#526b87]">Siguiente actividad · {displayDate(nextActivity.date)} · {nextActivity.title}</p><Button disabled={busy} onClick={()=>props.onDevelopActivity?.(row.id,nextActivity.id)}>Preparar actividad</Button></div>}
         <p><b>Cierre:</b> {row.details.project_master?.closing_description}</p>
-        <details className="rounded-xl border p-4"><summary className="cursor-pointer font-semibold">Ver propósito, criterios, evidencia, preguntas y progresión</summary>
-          <div className="mt-4 space-y-4"><p><b>Contexto:</b> {row.details.decisions?.context_summary}</p>
-            {row.details.decisions?.additional_context && <p><b>Aporte docente:</b> {row.details.decisions.additional_context}</p>}
-            <h3 className="font-bold">Fundamentación</h3><p>{row.details.project_master?.foundation}</p>
-            <h3 className="font-bold">Preguntas</h3><ul className="list-disc pl-5">{row.details.dependents?.guiding_questions.map((value) => <li key={value}>{value}</li>)}</ul>
-            <h3 className="font-bold">Progresión</h3>{row.details.dependents?.journey.map((part) => <p key={part.title}><b>{part.title}:</b> {part.description}</p>)}
-            <h3 className="font-bold">Criterios y evidencia esperada</h3>{row.details.dependents?.general_criteria.map((criterion) => <div key={criterion.competency_id}><b>{name(criterion.competency_id)}</b><p>{criterion.criterion}</p><p className="text-sm">{criterion.expected_evidence.join(" · ")}</p></div>)}
-            <h3 className="font-bold">Recursos</h3><p>{row.details.project_master?.resources?.join(" · ")}</p>
-            <p><b>Sentido del cierre:</b> {row.details.project_master?.closing_rationale}</p>
-          </div></details>
+        <section aria-label="Qué vamos a observar" className="space-y-3 border-t border-[#d6e5ef] pt-4"><h3 className="font-bold">Qué vamos a observar</h3>{row.details.dependents?.general_criteria.map(criterion=><div key={criterion.competency_id}><p className="text-sm font-semibold">{name(criterion.competency_id)}</p><p>{criterion.criterion}</p></div>)}</section>
+
         <details className="rounded-xl border p-4"><summary className="cursor-pointer font-semibold">Ver mapa · {row.details.activity_route?.length ?? 0} actividades</summary>
-          <ol className="mt-4 space-y-3">{row.details.activity_route?.map((item) => <li key={item.id} className="rounded-lg border p-3"><b>{displayDate(item.date)} · {item.title}</b><p>{item.specific_purpose}</p>
-            <p className="text-sm">{name(item.criterion_competency_id)} · {item.evaluation_criterion}</p><p className="text-sm">Evidencia: {item.expected_evidence}</p>
-            <p className="text-sm"><b>Progresión:</b> {item.expected_progression}</p><p className="text-sm"><b>Papel en el proyecto:</b> {item.role_in_project}</p>
-            <p className="text-sm"><b>Mediación:</b> {item.mediation_notes}</p><p className="text-sm"><b>Recursos:</b> {item.materials?.join(" · ")}</p>
-            {row.status === "active" && !modern && <Button className="mt-2" onClick={() => props.onDevelopActivity?.(row.id, item.id)}>Desarrollar actividad</Button>}</li>)}</ol></details>
-        <div className="flex flex-wrap items-center justify-between gap-3"><Button variant="outline" disabled={busy} onClick={() => { setChosen(null); setRow(null); setLoading(true); setReload(value => value + 1); }}>← Volver a Mi año</Button>
+          <ol className="mt-4 divide-y divide-[#d6e5ef]">{row.details.activity_route?.map(item=><li key={item.id} className="py-3"><p><b>{displayDate(item.date)} · {item.title}</b></p><p className="mt-1 text-sm text-[#526b87]">{item.specific_purpose}</p>{row.status==="active"&&item.date>=today&&<Button variant="ghost" className="mt-2" onClick={()=>props.onDevelopActivity?.(row.id,item.id)}>Preparar esta actividad</Button>}</li>)}</ol></details>
+        <div className="flex flex-wrap items-center justify-between gap-3"><Button variant="outline" disabled={busy} onClick={() => props.onGoAnnual?.()}>← Volver a Mi año</Button>
           {row.status === "draft" ? <div className="flex gap-2"><Button variant="outline" disabled={busy} onClick={() => setChanging(true)}>Quiero cambiar algo</Button>
             <AsyncButton busy={busy} busyLabel="Confirmando…" disabled={busy} onClick={() => void confirm()}>Confirmar proyecto →</AsyncButton></div>
             : !modern&&<Button variant="outline" disabled={busy} onClick={() => void newVersion()}>Preparar una nueva versión</Button>}</div>

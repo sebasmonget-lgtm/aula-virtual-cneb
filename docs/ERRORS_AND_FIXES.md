@@ -1662,3 +1662,79 @@ La evidencia detallada y los ciclos están en docs/qa/AYNI_QA_CONTINUACION_SOLO_
 | CQ-10 | Acuerdo docente guardado no aparece en Word; whitelist de proyección omitía campo ya soportado. | Campo permitido en biblioteca; regresión integrada RED/GREEN, 17 focales y render final. | Comparar documento descargado con estado docente confirmado; no solo render con objeto construido a mano. |
 
 Limitaciones del harness, separadas del producto: reinicio con reloj de fixture hacia atrás ordenó batch antiguo como reciente; se corrigió exclusivamente reloj privado, sin alterar artifacts. Chrome bloqueó descarga local de origen distinto; no se desactivó protección, se inspeccionó endpoint propio HTTP 200 y se dejó descarga nativa pendiente. Lint descubrió scripts de LibreOffice extraído en .local/qa-tools; comando final excluye solo esa carpeta privada. Typecheck se ejecuta con npx tsc --noEmit, pues no existe script npm typecheck.
+
+## QA integral del 9 de octubre — incidencias reproducidas
+
+| ID | Síntoma y causa | Corrección y validación focal | Prevención |
+|---|---|---|---|
+| IQ-01 | Privacidad sustituía acciones y decisiones comunes por `[persona]`; retomar conservaba la copia incompleta. | Vocabulario explícito y reconstrucción desde original autorizado. Regresión con nombres/contactos excluidos y recuperación de decisiones; 17 pruebas focales finales de conversación/preparación. | Auditar input efectivo antes de aprobar un consumidor. |
+| IQ-02 | Chat anual unía fragmentos como cita literal y contaba referencias desde uno. | Citas continuas e índice explícito desde cero; validación conserva y recupera turnos rechazados. Conversación real posterior aceptada. | Las citas del modelo nunca sustituyen la fuente literal. |
+| IQ-03 | Costo omitía escrituras en caché. | Propagación del conteo y tarifa separada, sin doble conteo; 28 pruebas de costo/proveedor/generación/traza. | Guardar versión de tarifa; no recalcular silenciosamente registros históricos. |
+| IQ-04 | Reloj del dispositivo dejaba un proyecto futuro sin días o elegía otro bimestre. | Fecha de Lima de servidor para calendario, selección de proyecto y período. HTTP/Auth/calendario/proyecto: 25 pruebas; prueba funcional con relojes deliberadamente distintos. | Compartir la fecha autorizada con clientes que filtran fechas; servidor conserva la validación. |
+| IQ-05 | «Quiero cambiar algo» recuperaba job exitoso anterior o duplicaba el contexto guardado. | Reset por ruta existente con CAS, trabajo ligado a revisión del borrador; entrada libre no se rellena con turnos ya guardados. 17 focales, incluido doble envío, propiedad, estado y revisión. | Identidad de reintento distingue recuperación de una decisión de regenerar. |
+| IQ-06 | Master real produjo 1.832 caracteres; validador aceptaba máximo 1.500, schema no declaraba el límite. | Schema alineado con límites canónicos de textos, evidencia, tiempos y listas. 11 pruebas de Master, incluida reparación por longitud sin cambiar fuentes. Llamada real 18 aceptada: 994 caracteres completos, ocho días y contrato preservado. | Schema y validador deben imponer el mismo contrato; no recortar raw ni relajar validación para aprobarlo. |
+
+Evidencia y gates de la nueva historia: `docs/qa/AYNI_QA_IA_UX_COSTOS_2026-10-09.md`. Los resultados focales no sustituyen la regresión final. Límite privado del harness: el reloj se reiniciaba hacia atrás; se fijó un offset estable antes de continuar, sin modificar fechas históricas ni el reloj del sistema.
+
+### IQ-07 — Tipo de taller sin enumeración en el schema (09.10.2026)
+
+- Síntoma: la primera petición real devolvió «Gráfico-plástico», rechazada porque la categoría canónica es «gráfico-plástico». El fallback quedó bloqueado por el límite privado secuencial; no es otra llamada facturable.
+- Causa raíz: schema aceptaba cualquier string mientras el validador exige uno de siete valores exactos.
+- Solución: incorporar el mismo enum al schema, conservando el validador. La siguiente llamada Luna produjo el valor permitido y fue revisada antes de confirmar; raw anterior y costo conservados.
+- Validación: taller directo, persistencia y Word 9/9; llamada real 22 aceptada, 21 rechazada. Prevención: verificar que las categorías del schema y del contrato coincidan.
+
+### IQ-08 — Taller opcional confirmado fuera de la jornada (09.10.2026)
+
+- Síntoma: el taller solicitado del segundo día persistía como actividad confirmada, pero Hoy solo mostraba la actividad principal.
+- Causa raíz: la ruta directa nueva omitía el bloque de class_schedule_entries que sí inserta la confirmación histórica de la pareja.
+- Solución: crear el horario del taller en la misma transacción de confirmación, bajo bloqueo del aula y validación de fecha, propiedad y revisión existentes. Sin migración ni generación adicional para guardar.
+- Validación: regresión PGlite 2/2 comprueba horario, fecha, título, aula y ausencia de duplicados; flujo real posterior: taller 30 confirmado, un único horario creado y abierto desde Hoy con inicio/desarrollo/cierre.
+- Prevención: verificar producto completo persistencia → agenda → apertura, además del documento guardado.
+
+### IQ-09 — Actividad futura confundida con taller o con ejecución (09.10.2026)
+
+- Síntoma: llamada 27 anunció «el siguiente taller» al referirse a otra fila de activity_route; llamada 29 abrió el taller afirmando que los niños ya habían probado y observado una actividad todavía prevista.
+- Causa raíz: autoridad incompleta en las instrucciones: la preferencia de un taller de dibujo se confundía con el tipo de la siguiente actividad, y el plan recibido se redactaba como registro de ejecución.
+- Solución: aclarar en la referencia existente de crear-actividad que las filas son actividades y que el taller es una solicitud separada; en el taller directo distinguir planificación y ejecución y mantener las alternativas docentes por falta de recursos. Cambios secuenciales, sin modificar raw ni modelo.
+- Validación: actividad 28 aceptada tras verificación del prompt físico y continuidad a «siguiente actividad». Taller 30 aceptado: condición «si realizaron la prueba», alternativa sin sol y advertencia de no asumir ejecución conservadas. Las salidas rechazadas conservan costo y motivo privado.
+- Prevención: auditar modalidad temporal y tipo de unidad en cada continuidad; un contrato JSON válido no acredita fidelidad pedagógica.
+
+### IQ-10 — Sustento inaccesible con tres notas e información insuficiente (09.10.2026)
+
+- Síntoma: el análisis real de tres notas indicaba información insuficiente; el formulario permitía elegir una letra pero no ofrecía el sustento exigido por el servidor.
+- Causa raíz: la UI solo consultaba el conteo y la evaluación previa, omitiendo el estado del nuevo borrador de análisis.
+- Solución: una condición compartida incluye la insuficiencia del borrador para mostrar el sustento y deshabilitar la confirmación hasta completarlo. El servidor mantiene su validación.
+- Validación funcional: mismo análisis guardado, sin regenerarlo; aparece el campo, se registra sustento y B manual, se confirma y avanza al siguiente niño. Capturas privadas antes/después; regresión final 775/775 PASS.
+- Prevención: las condiciones de presentación y habilitación deben consultar la misma fuente vigente que la autorización del servidor.
+
+### IQ-11 — Conclusión cambia el estado de información (10.10.2026)
+
+- Síntoma: llamada 34 devolvió sufficient cuando la valoración docente conservaba insufficient. El contrato rechazó la salida y el lote retuvo la conclusión anterior.
+- Causa: la instrucción no hacía explícita la autoridad del estado guardado frente a la letra docente.
+- Solución validada: indicar que analysis_status se conserva literalmente y que una letra confirmada no crea suficiencia. Reintento 35 únicamente del texto pendiente: insufficient, motivo concreto y hechos vigentes. 14/14 focales de conclusión; capturas y costos privados.
+- Prevención: conservar estados canónicos también cuando la IA produce una prosa plausible; no relajar el contrato ni modificar raw.
+
+### IQ-12 — Informe omite ejemplos e incluye el fin futuro del período (10.10.2026)
+
+- Síntoma: salida 36 extendió la observación al 15 de mayo; 37 y 38 omitieron examples aunque había tres actuaciones confirmadas. El lote quedó sin confirmar.
+- Causa: prompt no distinguía el intervalo del informe de las fechas observadas; schema permitía una lista vacía que el validador rechazaba si existían ejemplos.
+- Cambios secuenciales: instrucción temporal y copia de ejemplos; después minItems=1 solo cuando todas las competencias seleccionadas tienen ejemplos, conservando el schema base y el caso sin ejemplos. No se modifica la evidencia, ni se atribuye una corrección manual a la IA.
+- Validación: llamadas 39/40 aceptadas; 48 conserva contenido canónico con introducción sin fechas observadas futuras. Regresión final 775/775 PASS; todos los rechazos permanecen en ledger.
+
+## Consolidación IQ-13 a IQ-21 — 10.10.2026
+
+Contexto: historia local nueva, base 16c1d6f, rama codex/ayni-qa-ia-ux-costos-20261009. SHA correctivo: commit que contiene este registro, documentado en recibo privado posterior. Severidad retrospectiva: IQ-01/02/06/09/11/12/16/18 P1 por alterar fuentes o contrato pedagógico; IQ-03/04/05/07/08/10/13/14/15/17/19/20/21 P2. Ninguna salida rechazada crítica se incorpora al estado final. Los P1 reproducidos se corrigieron; los criterios pendientes del informe no se convierten en PASS.
+
+| ID | Síntoma / causa raíz | Solución y validación | Prevención |
+|---|---|---|---|
+| IQ-13 | Descarga nativa fallaba por solicitud fuera de apiFetch/Origin autenticado. | Blob por cliente autorizado y Origin exacto; Auth/Origin focal, descarga IAB final Word/Excel con XML canónico igual. | Probar descarga navegador y ownership, además de HTTP. |
+| IQ-14 | Ruido de matriz anual, sugerencias y acciones repetidas. | Lectura sin matriz; frases eliminadas, fila con dos CTA y detalle a pedido; QA desktop/móvil final. Reproducción visual antes/después, no RED automatizado. | Distinguir control pedagógico de presentación técnica. |
+| IQ-15 | Observación corregida y conteos de historia mostraban texto anterior o duplicación. | Mostrar corrected_text vigente y contar revisión humana; cambiar nota desde móvil y verificar downstream. | Conservar raw y mostrar revisión actual por ID. |
+| IQ-16 | Revisión de un niño creó cuatro versiones de informes vacíos de otros niños. Causa: fallback sin conclusión dependía de fingerprint de familia irrelevante. | Reutilizar fallback activo cuando sigue sin conclusión; metadata de fuente explícita. PGlite RED/GREEN y suite final; historia incorrecta conservada. | Comparar alumnos no afectados, no borrar versiones para ocultar error. |
+| IQ-17 | Lote ready exponía borradores tras cambiar fuentes. Causa: estado durable no revalidaba fingerprint al presentar. | Proyección pública stale sin items, payload durable intacto; rutas latest/direct y prueba con dos resultados históricos inalterados. | Revalidar fuente al leer sin mutar historia; reintento explícito. |
+| IQ-18 | Cambio manual B→A sin nuevo análisis convertía insufficient en sufficient. Causa: draft sin IA perdía metadata confirmada vigente. | Heredar análisis confirmado solo con mismo fingerprint y lock. RED/GREEN; llamada 44 rechazada no guardada; nuevo análisis explícito 45 y conclusión 46 delimitan fuente final. | Letra docente no crea evidencia ni suficiencia. |
+| IQ-19 | Preparar día cinco y volver a Hoy mostraba jornada vieja. Causa: dashboard se cargaba únicamente al montar. | Actualizar al entrar a Hoy, abortar carga obsoleta; calendario→Hoy sin F5 muestra horario nuevo único. | Verificar retorno tras mutación y no solo recarga. |
+| IQ-20 | Calendario usaba fecha de dispositivo, mostraba contenedor técnico y contaba días pasados como realizados. | Propagar todayDate del servidor, conservar selección explícita; excluir padre de talleres y conteo inferido. QA final desktop/móvil y F5 con fecha Apr7. | Fecha planificada no prueba ejecución ni logro. |
+| IQ-21 | ASR con usage real seguía costándose solo por minutos. | Tarifa token input 1.25/output 5 por millón; preferir costo proveedor, después tokens válidos y finalmente duración. RED antes del fix y GREEN 5/5, suite final 775. Conciliación 52 calls sin desconocidos. | Conservar versión y ledger anterior; nunca sumar tokens y duración para la misma respuesta. |
+
+Limitaciones de herramientas: zoom no verificable por atajo; micrófono sin autorización específica; secretos cloud no extraíbles por env pull. No son permisos para desactivar seguridad. El render final produjo ocho páginas válidas, aunque el wrapper PowerShell de foreach terminó con error de redirección; se verifican archivos/render individuales, no se atribuye exit 0 al wrapper.

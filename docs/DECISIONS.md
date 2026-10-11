@@ -1060,3 +1060,21 @@ El análisis previo de IA permanece auxiliar en workflow_inputs de una conclusi�
 La presentación anual resuelve aliases con IDs de fuentes autorizadas de la versión; no con el orden de matrícula. UI y Word comparten proyección nominal sin modificar evidencia. El Assessment Context reutiliza constructor completo y combina fuentes ordinarias revisadas y legacy, deduplicando IDs y alumnos. Corrección sin revisión manual queda fuera.
 
 Un draft obsoleto cuya competencia ya no tiene evidencia puede guardarse como pendiente sin valoración por la ruta existente con CAS/fingerprint. El cierre mantiene pendientes y versiones. Las exportaciones conservan acuerdos docentes opcionales y valores canónicos; formato XLSX no cambia estados o letras. Alcance exclusivo Preview, sin migraciones ni cambios de permisos. Validación funcional y límites: docs/qa/AYNI_QA_CONTINUACION_SOLO_QA_2026-10-08.md.
+
+## ADR-122 — Contratos y recuperación del QA integral del 9 de octubre
+
+Las decisiones originales son la autoridad para reconstruir la copia privada de conversación. La cita literal debe ser continua y su índice se envía explícitamente desde cero. Los nombres y contactos permanecen excluidos. No se convierte una preferencia o participación futura en observación.
+
+Las pantallas de proyecto y evaluación usan la fecha de Lima del servidor para elegir días y períodos; el servidor sigue autorizando y validando toda mutación. Repreparar un borrador usa las rutas de decisiones existentes con CAS y un fingerprint ligado a su revisión, conservando la recuperación idempotente del mismo trabajo. No altera un proyecto confirmado ni requiere migraciones.
+
+El schema de Project Master declara los límites que ya exigía su validador. Las salidas rechazadas permanecen en la evidencia privada y en el costo físico. Se conserva `cache_write_tokens` en proveedor, agregación y metadata; la tarifa de escritura reemplaza la de entrada ordinaria para esos tokens. Cada costo conserva versión de precios. La ronda queda sujeta a sus gates propios, sin heredar validación o publicación de una QA anterior.
+
+## ADR-123 — Autoridad canónica, fechas y costos en el cierre del QA integral
+
+Confirmar una letra conserva el análisis confirmado solo si su fingerprint sigue vigente; no infiere suficiencia. Conclusión copia ese estado y familia copia la conclusión. Fallback de familia sin conclusión reutiliza el artifact anterior si sigue vacío, sin depender de contexto familiar que no interviene en su texto. Un lote listo con fuentes cambiadas se proyecta stale, conservando su resultado durable privado.
+
+Hoy recarga dashboard al entrar; Calendario recibe fecha del servidor, conserva una selección explícita y no equipara fechas pasadas a ejecución. El contenedor estructural de talleres no es un proyecto visible. Exportaciones usan apiFetch autorizado/Origin existente. Sin migraciones ni cambio de RLS.
+
+ASR utiliza costo explícito del proveedor cuando existe; después tokens reales válidos y solo como fallback duración. Caché de escritura sustituye entrada ordinaria, reasoning incluido en output no se duplica. Registro versionado; ledger anterior inalterado y conciliación separada.
+
+El PDF del 9 de octubre autoriza Production solo con G0–G5 PASS. Hardware, zoom 200% y smoke autenticado cloud pendientes mantienen G2/G3/G5 bloqueados aunque haya commit limpio, checks técnicos y Preview READY. No se reutilizan credenciales reales, ni se rebaja protección para aprobar gates.

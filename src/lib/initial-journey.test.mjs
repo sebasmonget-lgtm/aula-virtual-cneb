@@ -110,6 +110,21 @@ test("initial journey: atomic decisions, private photos/invitations and bounded 
    assert.match(lastBundle.teacher_decisions[0],/Indaga y Crea/);
    assert.ok(!lastBundle.teacher_decisions[0].includes("Camila"));assert.ok(!lastBundle.teacher_decisions[0].includes("Aurelio"));
   });
+  await t.test("retomar reconstruye las preferencias desde el original y conserva la privacidad",async()=>{
+   await db.query(`update ai_pending_generations set expires_at=now() where workflow='annual_journey_conversation'`);
+   const c=await conversation("POST");failNext=true;
+   const text="Prefiero arte. Más adelante podrán cuidar plantas. Podrán contar semillas. Podemos observar. Usaremos cajas. Contamos con tizas. Mantengamos ocho días. Mientras tanto conversaremos. Preparar proyecto. Camila y Aurelio participarán.";
+   await assert.rejects(conversation("POST",{id:c.id,expectedRevision:c.revision,text}));
+   await db.query(`update ai_pending_generations set payload=jsonb_set(payload,'{safe_texts}',$2::jsonb) where id=$1`,[c.id,JSON.stringify(["[persona] arte."])]);
+   const resumed=await conversation("POST",{id:c.id});
+   assert.match(lastBundle.teacher_decisions[0],/^Prefiero arte\. Más adelante/);
+   assert.match(lastBundle.teacher_decisions[0],/Podrán contar semillas\. Podemos observar\./);
+   assert.match(lastBundle.teacher_decisions[0],/Usaremos cajas\./);
+   assert.match(lastBundle.teacher_decisions[0],/Contamos con tizas\. Mantengamos ocho días\. Mientras tanto conversaremos\. Preparar proyecto\./);
+   assert.deepEqual(lastBundle.teacher_decision_sources,[{source_turn:0,text:lastBundle.teacher_decisions[0]}]);
+   assert.ok(!/Camila|Aurelio/u.test(lastBundle.teacher_decisions[0]));
+   assert.equal(resumed.messages.filter(m=>m.role==="teacher").length,1);
+  });
   await t.test("three useful answers, saved turn recovery without duplication, literal preferences never become observations",async()=>{
    await db.query(`update ai_pending_generations set expires_at=now() where workflow='annual_journey_conversation'`);let c=await conversation("POST");failNext=true;await assert.rejects(conversation("POST",{id:c.id,expectedRevision:c.revision,text:"Quiero comunidad"}));assert.equal((await conversation("GET")).revision,c.revision);
    const persisted=await conversation("GET");assert.equal(persisted.status,"interrupted");assert.equal(persisted.messages.at(-1).text,"Quiero comunidad");

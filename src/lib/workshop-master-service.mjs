@@ -28,6 +28,7 @@ export const WORKSHOP_DAY_SCHEMA = { id: "workshop-v1", type: "object", addition
   properties: Object.fromEntries([
     ...["title", "workshop_type", "competency_id", "purpose", "criterion_or_observation_focus", "opening", "development", "closure", "evidence_expected"]
       .map((field) => [field, { type: "string" }]),
+    ["workshop_type", { type: "string", enum: types }],
     ["materials", { type: "array", items: { type: "string" } }], ["sheet_id", { type: ["string", "null"] }],
   ]) };
 
@@ -153,7 +154,7 @@ export async function generateDirectWorkshop({ age, activity, materials = [], pr
   const bundle = { age, activity: { title: clean(activity.title), purpose: clean(activity.purpose),
     child_actions: clean(activity.details.child_actions), competency_id: activity.details.competency_id },
     materials: materials.map(clean), teacher_preference: clean(preference),
-    task: "Propón UN taller opcional para este día. Conserva la competencia recibida. Explica con palabras sencillas qué harán los niños, cómo acompañarlos, materiales, qué observar y cierre. No inventes observaciones ni logros. La ficha no es necesaria: sheet_id debe ser null. Elige un tipo de taller de gráfico-plástico, psicomotricidad, ciencia, matemática, lectura y escritura, juego dramático o música." };
+    task: "Propón UN taller opcional para este día. Conserva la competencia recibida. Explica con palabras sencillas qué harán los niños, cómo acompañarlos, materiales, qué observar y cierre. La actividad recibida es una planificación, no un registro de ejecución: no afirmes que los niños ya probaron, observaron o descubrieron algo. Para retomarla usa condiciones como «si realizaron la prueba» y conserva las alternativas de la preferencia docente cuando falte sol u otro recurso. No inventes observaciones ni logros. La ficha no es necesaria: sheet_id debe ser null. Elige un tipo de taller de gráfico-plástico, psicomotricidad, ciencia, matemática, lectura y escritura, juego dramático o música." };
   const validate = output => {
     if (!types.includes(output?.workshop_type)) throw new Error("El tipo de taller no es válido.");
     validateWorkshopDay(output, { competency_id: activity.details.competency_id, workshop_type: output.workshop_type, sheet_id: null });

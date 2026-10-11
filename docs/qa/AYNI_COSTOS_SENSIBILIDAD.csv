@@ -1,0 +1,10 @@
+change,api_usd,assumption
+1 turno chat Mi año,0.001246425,Mediana de turnos aprobados
+1 turno chat tarjeta,0.0009418625000000001,Mediana de dos turnos
+1 turno chat proyecto,0.00017894999999999999,Mediana de dos turnos
+1 regeneración anual,0.170111,Una llamada high; no incluye nuevo chat
+1 Master reintentado,0.0727988,Muestra única aceptada; raw rechazado no sustituido
+20 actividades extra,0.0354335,Mediana de cinco actividades aprobadas
+100 notas dictadas 30 s,0.066,Muestra única de 30 s; tokens medidos
+100 notas dictadas 60 s y limpieza,0.10903,Muestra única de 60 s con limpieza condicional
+"1 bimestre adicional, 20 niños × 6 competencias",0.30390174999999997,Todos con evidencia; no asigna letras automáticamente

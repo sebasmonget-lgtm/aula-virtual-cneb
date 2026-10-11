@@ -106,7 +106,7 @@ export function OrdinaryReviewDialog({ students, onClose }: { students: LocalStu
           {savedRows.length > 0 && <section className="space-y-2 border-t pt-4"><h3 className="font-semibold">Otras observaciones guardadas</h3>
             {savedRows.map(row => <button key={row.id} type="button" onClick={() => void openRow(row.id)}
               className="block min-h-11 w-full rounded-xl border bg-white p-3 text-left text-sm hover:border-[#087d96]">
-              <span className="font-semibold">{name(row.student_id)}</span> · {row.raw_text ?? "Foto sin texto"}</button>)}
+              <span className="font-semibold">{name(row.student_id)}</span> · {row.corrected_text ?? row.raw_text ?? "Foto sin texto"}</button>)}
           </section>}</> : <>
           <p className="font-semibold">{name(detail.observation.student_id)}</p>
           <p className="whitespace-pre-wrap rounded-xl border bg-[#f6f9fd] p-3 text-sm">{detail.observation.raw_text ?? "Foto sin texto"}</p>
@@ -134,7 +134,7 @@ export function OrdinaryReviewDialog({ students, onClose }: { students: LocalStu
                 checked={criterionIds.includes(item.id)} onChange={(event) => setCriterionIds(previous =>
                   event.target.checked ? [...previous, item.id] : previous.filter(id => id !== item.id))} />{item.criterion_text}</label>)}
           </fieldset>}
-          {detail.history.length > 0 && <p className="text-xs text-muted-foreground">Historial: {detail.history.length} versión(es); la última es {detail.latest?.state}.</p>}
+          {detail.history.length > 0 && <p className="text-xs text-muted-foreground">{detail.history.length} revisiones conservadas en el historial.</p>}
         </>}
         {message && <WorkflowFeedback tone={detail ? "error" : "success"}>{message}</WorkflowFeedback>}
       </div>

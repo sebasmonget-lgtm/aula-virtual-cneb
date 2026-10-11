@@ -175,9 +175,9 @@ async function fixture({ analysis = mockAnalysis(), jsonbPending = false, batchP
   // This reduced-schema fixture exercises the historical period routes; the F5–F8
   // ordinary-observation source has its own tests and tables in the full schema.
   const handle = createPeriodEvaluationRouteHandler({ db, teacherId: teacher, includeOrdinary: false, loadClassroomContext: async () => currentContext, readJson: async (request) => request.body, send: (response, status, payload) => { response.result={status,body:payload}; }, pending, metadataForAudit: (metadata) => metadata, refreshStudentContext: async () => {}, evidenceStorage: { read: async () => ({ data: Buffer.from("image"), mimeType: "image/png" }) }, createProvider: () => ({}), generate: async (input) => { calls.push(input); return { output: batchProvider ? await batchProvider(input,calls.length) : input.workflow === "assessment" ? analysis : input.workflow === "family_report" ? mockFamily(input) : mockConclusion(), metadata: { model: "mock" } }; } });
-  async function call(method, route, body) {
+  async function call(method, route, body, origin=null) {
     const response = { writeHead(status, headers) { this.status = status; this.headers = headers; }, end(data) { this.data = data; } };
-    await handle({ request: { method, body }, url: new URL(`http://localhost${route}`), response, origin: null });
+    await handle({ request: { method, body }, url: new URL(`http://localhost${route}`), response, origin });
     return response.result ?? { status: response.status, body: response.data, headers: response.headers };
   }
   return { db, call, calls, currentContext, pending };
@@ -712,10 +712,13 @@ test("lotes: una llamada incierta exige reintento y no repite resultados complet
 test("lotes: fuentes cambiadas y aula ajena bloquean sin perder las propuestas",async()=>{
   const f=await fixture();try{await confirmBatchGrades(f);let job=await runBatch(f,await prepareBatch(f,"conclusions"));
     await f.db.query("update evidences set observation_text='Corrección posterior' where id=$1",[firstEvidence]);
+    const staleJob=(await f.call("GET",`/api/period-evaluations/batches?classroomId=${classId}&periodId=${firstPeriod}&kind=conclusions`)).body.job;
+    assert.equal(staleJob.status,"stale");assert.deepEqual(staleJob.items,[]);
     assert.equal((await f.call("POST",`/api/period-evaluations/batches/${job.id}/save`,{...batchScope,expectedRevision:job.revision,items:job.items})).status,409);
     assert.equal((await f.call("GET",`/api/period-evaluations/batches/${job.id}?classroomId=${otherClass}&periodId=${firstPeriod}`)).status,422);
     assert.equal((await f.db.query("select count(*)::int as n from competency_descriptive_conclusions")).rows[0].n,0);
-    assert.equal((await f.call("GET",`/api/period-evaluations/batches/${job.id}?classroomId=${classId}&periodId=${firstPeriod}`)).body.completed,2);
+    assert.equal((await f.call("GET",`/api/period-evaluations/batches/${job.id}?classroomId=${classId}&periodId=${firstPeriod}`)).body.status,"stale");
+    assert.equal((await f.db.query("select payload from ai_pending_generations where id=$1",[job.id])).rows[0].payload.results.length,2);
   }finally{await f.db.close();}
 });
 test("lotes: informe canónico, edición selectiva, invalidación del único niño afectado",async()=>{
@@ -738,5 +741,50 @@ test("lotes: niño sin evidencia recibe informe cauteloso sin letra ni llamada I
     const job=await runBatch(f,await prepareBatch(f,"family"));assert.equal(job.total,2);assert.equal(f.calls.length,before+1);
     const unobserved=job.items.find(row=>row.student_id===studentB);assert.deepEqual(unobserved.proposal.sections,[]);assert.ok(unobserved.review_reason);await saveBatch(f,job);
     assert.equal((await f.db.query("select count(*)::int as n from competency_assessments where student_id=$1 and achievement_level is not null",[studentB])).rows[0].n,0);
+  }finally{await f.db.close();}
+});
+test("lotes guardados: recargar conserva la advertencia de evidencia limitada sin nuevas llamadas",async()=>{
+  const f=await fixture({batchProvider:input=>input.workflow==="assessment"?mockAnalysis():input.workflow==="family_report"?mockFamily(input):({...mockConclusion(),information_status:input.analysis_status,insufficiency_reason:input.analysis_status==="insufficient"?"Falta observar otras situaciones.":null})});try{
+    await f.db.query(`insert into evidences(id,student_id,activity_id,criterion_id,observed_at,observed_on,observation_text) values(gen_random_uuid(),$1,$2,$3,'2026-04-12T12:00:00Z','2026-04-12','Comentó otra idea del juego.')`,[studentA,activity,criterion]);
+    await confirmBatchGrades(f);
+    await f.db.query("update competency_assessments set details=jsonb_set(details,'{information_status}','\"insufficient\"'::jsonb) where student_id=$1",[studentA]);
+    await saveBatch(f,await runBatch(f,await prepareBatch(f,"conclusions")));
+    await saveBatch(f,await runBatch(f,await prepareBatch(f,"family")));
+    const calls=f.calls.length;
+    for(const kind of ["conclusions","family"]){const result=await f.call("GET",`/api/period-evaluations/batches?classroomId=${classId}&periodId=${firstPeriod}&kind=${kind}`);assert.equal(result.status,200);assert.match(result.body.job.items.find(row=>row.student_id===studentA).review_reason,/pocas evidencias/);}
+    assert.equal(f.calls.length,calls);
+  }finally{await f.db.close();}
+});
+test("lotes: refrescar un informe conserva el informe histórico del niño sin conclusiones",async()=>{
+  const f=await fixture();try{
+    await confirmBatchGrades(f,{both:false});await saveBatch(f,await runBatch(f,await prepareBatch(f,"conclusions")));
+    await saveBatch(f,await runBatch(f,await prepareBatch(f,"family")));
+    await f.db.query("update family_reports set generation_metadata=generation_metadata-'family_context_fingerprint' where student_id=$1",[studentB]);
+    const before=(await f.db.query("select * from family_reports where student_id=$1",[studentB])).rows;
+    const edit=await prepareBatch(f,"conclusions",{studentId:studentA,competencyId:"COM_ORAL",edit:true});
+    edit.items[0].proposal.conclusion_text="Explica una idea del juego. Seguiremos observando cómo escucha a otros.";await saveBatch(f,edit);
+    const calls=f.calls.length;await saveBatch(f,await runBatch(f,await prepareBatch(f,"family",{refresh:true})));
+    assert.equal(f.calls.length,calls+1);
+    assert.deepEqual((await f.db.query("select * from family_reports where student_id=$1",[studentB])).rows,before);
+  }finally{await f.db.close();}
+});
+test("cambiar la letra conserva el análisis insuficiente de las mismas evidencias sin regenerar IA",async()=>{
+ const f=await fixture();try{
+  await confirmBatchGrades(f,{both:false});
+  await f.db.query(`update competency_assessments set details=jsonb_set(jsonb_set(details,'{information_status}','"insufficient"'::jsonb),'{insufficiency_reason}','"Falta observar otras situaciones."'::jsonb) where student_id=$1 and status='active'`,[studentA]);
+  const detail=(await f.call("GET",`/api/period-evaluations/detail?classroomId=${classId}&periodId=${firstPeriod}&studentId=${studentA}&competencyId=COM_ORAL`)).body;
+  const input={classroomId:classId,periodId:firstPeriod,studentId:studentA,competencyId:"COM_ORAL",evidenceFingerprint:detail.evidence_fingerprint,expectedDraftRevision:null,provisionalLevel:"A",achievementLevel:"A",teacherAnalysis:"La docente revisó el alcance de las actuaciones observadas.",teacherJustification:"Confirmo mi juicio limitado a los criterios observados; falta contrastar otras situaciones.",conclusionText:""};
+  const calls=f.calls.length,saved=await f.call("POST","/api/period-evaluations/save-draft",input);assert.equal(saved.status,200);
+  const confirmed=await f.call("POST","/api/period-evaluations/confirm",{...input,expectedDraftRevision:saved.body.draft_revision});assert.equal(confirmed.status,200);
+  const active=(await f.db.query("select * from competency_assessments where student_id=$1 and status='active'",[studentA])).rows[0];
+  assert.equal(active.achievement_level,"A");assert.equal(active.details.information_status,"insufficient");assert.equal(active.details.insufficiency_reason,"Falta observar otras situaciones.");assert.equal(f.calls.length,calls);
+ }finally{await f.db.close();}
+});
+test("Excel: descarga con credenciales para el origen autorizado y mantiene el aislamiento del aula",async()=>{
+  const f=await fixture();try{
+    const origin="http://localhost:5166";
+    const result=await f.call("GET",`/api/period-evaluations/consolidated.xlsx?classroomId=${classId}&periodId=${firstPeriod}`,undefined,origin);
+    assert.equal(result.status,200);assert.equal(result.headers["access-control-allow-origin"],origin);assert.equal(result.headers["access-control-allow-credentials"],"true");assert.equal(result.body.subarray(0,2).toString(),"PK");assert.equal(f.calls.length,0);
+    assert.equal((await f.call("GET",`/api/period-evaluations/consolidated.xlsx?classroomId=${otherClass}&periodId=${firstPeriod}`,undefined,origin)).status,422);
   }finally{await f.db.close();}
 });

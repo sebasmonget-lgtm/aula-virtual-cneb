@@ -20,7 +20,8 @@ insufficient_core_information solo si faltan edad/aula/currículo (no si hay com
 Al inicio, si no hay decisiones previas, saluda brevemente y pregunta por proyectos/experiencias previstas. Chips opcionales neutrales, nunca intereses inventados.
 ready: message 'Ya tengo suficiente información para preparar tu año.', question vacío, chips vacío. Detente.
 Toda pregunta incluye ejemplos breves entre paréntesis: patio, huerto, bloques, visita o cierre con familias, solo cuando son pertinentes. No vuelvas a preguntar datos incluidos en una respuesta múltiple.
-context_items resume solo hechos, recursos, restricciones, fechas o decisiones expresas de teacher_decisions. No copies mensajes completos ni saludos. Incluye todos los aportes vigentes, conserva negaciones y elimina duplicados. source_turn es el índice de teacher_decisions; support_text es una cita literal de ese aporte. No inventes ni completes información. Sin aportes, lista vacía.
+context_items resume solo hechos, recursos, restricciones, fechas o decisiones expresas de teacher_decisions. No copies mensajes completos ni saludos. Incluye todos los aportes vigentes, conserva negaciones y elimina duplicados. source_turn es el índice de teacher_decisions; support_text debe ser un único fragmento continuo copiado exactamente de ese aporte, incluidos puntuación y espacios. Nunca concatenes fragmentos separados ni omitas palabras dentro de una cita: divide el contexto en varios elementos si necesitas respaldar ideas separadas. Conserva el tiempo y la modalidad: 'prefiero', 'quiero' o 'podrán' son preferencias o posibilidades futuras, no hechos ya realizados. No inventes ni completes información. Sin aportes, lista vacía.
+Usa teacher_decision_sources para copiar la fuente y su source_turn explícito. El primer aporte tiene source_turn 0; el segundo 1; el tercero 2. No cuentes desde uno ni uses índices de mensajes de conversación.
 Las respuestas docentes siguen siendo preferencias, nunca intereses observados del grupo.`;
 
 export function buildAnnualPlanningBrief({context,snapshot,curriculum,calendar}) {
@@ -66,24 +67,28 @@ export async function handlePlanningConversation({request,response,url,db,contex
     else await tx.query(`update ai_pending_generations set payload=$1::jsonb where id=$2`,[JSON.stringify(payload),row.id]);
   });
   if(request.method==="GET"||!payload||payload.lease_token!==lease){if(!row)journeyFail("not_found","Conversación no disponible.");send(response,200,publicConversation(row.id,row.payload),origin);return true;}
+  // Rebuild from the authoritative teacher text when resuming: an older privacy
+  // vocabulary may have removed ordinary verbs from the persisted safe copy.
+  const safeTeacherDecisions=payload.teacher_texts.map(text=>annualJourneySafeText(text,sources.names,annualJourneyCurriculumTerms(curriculum)));
   let answer,called=false;
   try{
     {
     called=true;
     const plan=resolvePlan({workflow:WORKFLOW,task:"generation"});
     const result=await createProvider(plan,{timeoutMs:55000}).generate(buildProviderRequest(WORKFLOW,{AnnualPlanningBrief:buildAnnualPlanningBrief({context,snapshot,curriculum,calendar}),
-      conversation:payload.messages.filter(m=>m.role==="assistant").map(m=>m.text),teacher_decisions:payload.safe_texts},plan,CONVERSATION_SCHEMA,PLANNING_CONVERSATION_RULES));
+      conversation:payload.messages.filter(m=>m.role==="assistant").map(m=>m.text),teacher_decisions:safeTeacherDecisions,
+      teacher_decision_sources:safeTeacherDecisions.map((text,source_turn)=>({source_turn,text}))},plan,CONVERSATION_SCHEMA,PLANNING_CONVERSATION_RULES));
     answer=result.output;
     if(!["ready","needs_clarification","insufficient_core_information"].includes(answer?.status)||typeof answer.message!=="string"||typeof answer.question!=="string"||!Array.isArray(answer.chips)||answer.chips.some(c=>typeof c!=="string")||answer.chips.length>5)journeyFail("invalid","No pude preparar una respuesta clara. Tu conversación se conserva.");
     if(answer.context_items && (!Array.isArray(answer.context_items)||answer.context_items.length>20||answer.context_items.some(item=>
       typeof item.text!=="string"||!item.text.trim()||item.text.length>500||!Number.isInteger(item.source_turn)||
-      typeof item.support_text!=="string"||!item.support_text.trim()||!payload.safe_texts[item.source_turn]?.includes(item.support_text))))
+      typeof item.support_text!=="string"||!item.support_text.trim()||!safeTeacherDecisions[item.source_turn]?.includes(item.support_text))))
       journeyFail("invalid","No pude relacionar el contexto con tus aportes. La conversación se conserva para retomarla.");
     if(answer.status==="ready")answer={...answer,question:"",chips:[]};
     if(payload.safe_texts.length>=3)answer={...answer,status:"ready",message:"Ya tengo suficiente información para preparar tu año.",question:"",chips:[]};
     }
   }catch(error){await db.query(`update ai_pending_generations set payload=jsonb_set(payload,'{lease_until}','null'::jsonb) where id=$1 and payload->>'lease_token'=$2`,[row.id,lease]);throw error;}
-  const next={...payload,answer,revision:payload.revision+1,calls:payload.calls+(called?1:0),lease_until:null,pending_turn:false,
+  const next={...payload,safe_texts:safeTeacherDecisions,answer,revision:payload.revision+1,calls:payload.calls+(called?1:0),lease_until:null,pending_turn:false,
     messages:[...payload.messages,{role:"assistant",text:[answer.message,answer.question].filter(Boolean).join("\n\n")}]};
   const updated=await db.query(`update ai_pending_generations set payload=$1::jsonb where id=$2 and classroom_id=$3 and payload->>'lease_token'=$4 returning id`,[JSON.stringify(next),row.id,context.id,lease]);
   if(!updated.rows.length)throw new VersionConflictError();

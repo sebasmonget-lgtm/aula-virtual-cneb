@@ -14,6 +14,8 @@ test("taller directo: una llamada Luna; un fallo de calidad permite un solo Sol 
   const calls=[];
   const good=await generateDirectWorkshop({age:5,activity,createProvider:()=>({generate:async request=>{calls.push(request);return{output:proposal};}})});
   assert.equal(good.metadata.model,"gpt-6-luna");assert.equal(calls.length,1);
+  assert.deepEqual(calls[0].output_schema.properties.workshop_type.enum,
+    ["gráfico-plástico", "psicomotricidad", "ciencia", "matemática", "lectura y escritura", "juego dramático", "música"]);
   calls.length=0;
   const repaired=await generateDirectWorkshop({age:5,activity,createProvider:plan=>({generate:async request=>{calls.push(request);return{output:plan.model==="gpt-6-luna"?{...proposal,competency_id:"INVENTADA"}:proposal};}})});
   assert.equal(repaired.metadata.fallback_used,true);assert.equal(calls.length,2);
@@ -40,7 +42,17 @@ test("taller a pedido persiste sin master IA; fechas, ownership, CAS, duplicados
     const confirmed=await call("confirm",body);assert.equal(confirmed.status,200,JSON.stringify(confirmed.data));
     const stored=(await db.query(`select a.occurs_on,a.linked_main_activity_id,e.details from activities a join learning_experiences e on e.id=a.experience_id where a.id=$1`,[confirmed.data.id])).rows[0];
     assert.equal(new Date(stored.occurs_on).toISOString().slice(0,10),"2026-11-02");assert.equal(stored.linked_main_activity_id,activityId);assert.equal(stored.details.schema,"direct-workshops-v1");
+    const schedule=(await db.query(`select classroom_id,scheduled_on,start_time,end_time,block_type,title
+      from class_schedule_entries where activity_id=$1`,[confirmed.data.id])).rows;
+    assert.equal(schedule.length,1);
+    assert.equal(schedule[0].classroom_id,created.classroomId);
+    assert.equal(new Date(schedule[0].scheduled_on).toISOString().slice(0,10),"2026-11-02");
+    assert.equal(schedule[0].block_type,"workshop");
+    assert.equal(schedule[0].title,proposal.title);
+    assert.equal(schedule[0].start_time,"11:20:00");
+    assert.equal(schedule[0].end_time,"12:00:00");
     assert.equal((await call("confirm",body)).status,422);
+    assert.equal((await db.query(`select id from class_schedule_entries where activity_id=$1`,[confirmed.data.id])).rows.length,1);
     assert.equal((await call("generate",{expectedRevision:1,preference:""})).status,422);assert.equal(calls,1);
     assert.equal((await call("generate",{expectedRevision:1,preference:""},created.classroomId,"2026-11-03")).status,409);assert.equal(calls,1);
   } finally {await db.close();}

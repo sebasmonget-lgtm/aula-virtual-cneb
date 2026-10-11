@@ -23,6 +23,7 @@ function normalizeUsage(usage = {}) {
   return {
     input_tokens: usage.input_tokens ?? null,
     cached_input_tokens: usage.input_tokens_details?.cached_tokens ?? usage.cached_input_tokens ?? null,
+    cache_write_tokens: usage.input_tokens_details?.cache_write_tokens ?? usage.cache_write_tokens ?? 0,
     output_tokens: usage.output_tokens ?? null,
     total_tokens: usage.total_tokens ?? null,
   };
@@ -117,6 +118,7 @@ export class OpenAIProvider extends AIProvider {
     }
     await recordAiUsage({ provider: "openai", workflow: request.workflow ?? "generation", model: response.model ?? plan.model,
       inputTokens: response.usage?.input_tokens, cachedInputTokens: response.usage?.input_tokens_details?.cached_tokens ?? 0,
+      cacheWriteTokens: response.usage?.input_tokens_details?.cache_write_tokens ?? 0,
       outputTokens: response.usage?.output_tokens });
     try {
     if (response.status === "incomplete" || response.incomplete_details) {
