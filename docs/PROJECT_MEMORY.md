@@ -2,6 +2,8 @@
 
 ## Preparación de QA interactivo — 2026-10-11
 
+Publicación posterior verificada: Preview `https://ayni-aula-staging-f9yzgr1u6-ayni4.vercel.app/`, READY, commit de código `d24b535`, despliegue `dpl_4gGromARSqVsffsYSEEK8tCKzeg9`; Production continúa en `ea206bf`. Smoke de lectura pasa con autenticación existente de Vercel (config 200, reloj sin sesión Ayni 401). Nuevo host abierto visible en Side Panel; requiere ingreso manual QA. Comprobación autenticada del reloj en ese host pendiente; no rellenar el aula ni avanzar automáticamente. Recibos privados en `.local/reset-open-account-20261011/`; estado completo en el documento QA.
+
 El propietario confirmó que todos los datos remotos son de pruebas y autorizó reutilizar Supabase actual, reiniciar exclusivamente las 352 filas identificadas de la docente QA y conservar credenciales, otras cuentas y configuración global. Reinicio ejecutado tras respaldo y ensayo con rollback: consulta independiente verifica cero filas propias, Auth y seguridad intactos, 81 huellas de tablas protegidas sin cambios; sin objetos Storage. La UI autenticada volvió a «Configura tu aula» y quedó sin completar.
 
 Rama aislada `codex/ayni-qa-reloj-20261011`, base documental `dcc1b36` sobre producto `5bafbd8`. Control de fecha/hora exclusivo de Preview y docente permitida por servidor; inicio 16/02/2026 08:00 Lima. Cookie firmada HTTP-only por host, sin tabla ni migración nuevas. Contexto de tiempo por petición; planificación, jornada, calendario y observaciones reciben la fecha de QA. Seguridad, sesiones, leases, facturación y auditoría técnica mantienen tiempo real; preparaciones durables guardan el reloj de origen. Producción rechaza el mecanismo incluso con el flag o cookie.

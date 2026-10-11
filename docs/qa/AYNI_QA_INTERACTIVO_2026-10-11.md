@@ -91,3 +91,13 @@ Consulta actual por CLI aislada de Vercel (el conector devolvió 403, sin cambia
 - Production: `dpl_EgekhWXwVjaM9iCcRc8mpJn2Eoc4`, SHA `ea206bf179841f6a85f43dbec95c391a47b12674`.
 
 **La versión mejorada sigue exclusivamente en Preview.** La nueva Preview del reloj tendrá su propio recibo posterior en `.local/reset-open-account-20261011/`, fuera del commit para que este permanezca identificable y limpio. Comprobar allí READY, SHA, smoke y conservación del destino Production antes de presentarla como publicada. No crear el aula ni avanzar a la siguiente pantalla al abrirla.
+
+## Preview publicada y punto de espera
+
+Nueva Preview: https://ayni-aula-staging-f9yzgr1u6-ayni4.vercel.app/ — `dpl_4gGromARSqVsffsYSEEK8tCKzeg9`, READY, target Preview, commit `d24b5357929daaf472bf35b64099243ea8bd747e`, rama `codex/ayni-qa-reloj-20261011`. Se desplegó desde árbol limpio, con flags exclusivos del despliegue. Recibos privados confirman proyecto/equipo esperados y Production sin cambio: `dpl_EgekhWXwVjaM9iCcRc8mpJn2Eoc4` / `ea206bf179841f6a85f43dbec95c391a47b12674`. No se promovió la versión mejorada ni el reloj a Production.
+
+Smoke de lectura: ingreso visible en IAB; `/api/auth/config` 200 con modo Supabase (0,768 s); `/api/qa/clock` sin sesión Ayni devuelve 401 (0,578 s). Las solicitudes usan autenticación existente de Vercel para atravesar su protección, sin modificar permisos. El primer fetch público siguió el redireccionamiento SSO a HTML 200; se descartó como evidencia de API. Estos tiempos aislados no miden ingreso, guardado de observaciones ni rendimiento anual.
+
+La sesión permanecía abierta en el host anterior tras el reinicio, pero el nuevo host muestra «Bienvenida a Ayni» con DNI y contraseña vacíos. Queda visible en el Side Panel, esperando ingreso manual con la cuenta QA conservada. No se introdujeron credenciales, completaron formularios ni crearon registros. El reloj está implementado y validado localmente con inicio 16/02/2026 08:00 Lima; **su comprobación autenticada en la Preview nueva está pendiente**. Captura privada `preview-login.png`, recibos `deployment-receipt.json`, `project-receipt.json` y `preview-smoke.json`.
+
+Siguiente acción bajo control del propietario: iniciar sesión y verificar el reloj antes de configurar el aula. No avanzar al recorrido sin indicación expresa.
