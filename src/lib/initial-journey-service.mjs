@@ -6,6 +6,7 @@ import { resolveAIExecutionPlan } from "./ai-execution-router-v4.mjs";
 import { createAIProviderForPlan } from "./ai-provider-factory.mjs";
 import { buildProviderRequest } from "./ai-generation-v4.mjs";
 import { appendConversationTurn, conversationStatus } from "./conversation-turn.mjs";
+import { validateAnnualContextDraft } from "./annual-context-draft.mjs";
 
 const WORKFLOW="annual_journey_conversation";
 export const CONVERSATION_SCHEMA={id:"annual-planning-conversation-v2",type:"object",additionalProperties:false,required:["status","message","question","chips","context_items"],properties:{status:{type:"string",enum:["ready","needs_clarification","insufficient_core_information"]},message:{type:"string"},question:{type:"string"},chips:{type:"array",items:{type:"string"},maxItems:5},context_items:{type:"array",maxItems:20,items:{type:"object",additionalProperties:false,required:["text","source_turn","support_text"],properties:{text:{type:"string",maxLength:500},source_turn:{type:"integer",minimum:0},support_text:{type:"string",minLength:1}}}}}};
@@ -33,27 +34,40 @@ export function buildAnnualPlanningBrief({context,snapshot,curriculum,calendar})
     source_policy:"individual evidence remains individual; preferences are teacher decisions, missing records are unknown"};
 }
 const publicConversation=(id,p)=>({id,revision:p.revision,status:conversationStatus(p),messages:p.messages,
-  question:p.answer?.question??"",chips:p.answer?.chips??[],teacherIdeas:p.teacher_texts.join("\n"),contextItems:p.answer?.context_items??[],calls:p.calls,attempts:p.attempts??p.calls});
+  question:p.answer?.question??"",chips:p.answer?.chips??[],teacherIdeas:p.teacher_texts.join("\n"),contextItems:p.answer?.context_items??[],contextDraft:p.context_draft??null,calls:p.calls,attempts:p.attempts??p.calls});
 export async function handlePlanningConversation({request,response,url,db,context,teacherId,snapshot,curriculum,calendar,sources,send,origin,readJson,
   createProvider=createAIProviderForPlan,resolvePlan=resolveAIExecutionPlan}) {
   if(url.pathname!=="/api/annual-journey/conversation")return false;
-  if(!["POST","GET"].includes(request.method))return false;
-  const body=request.method==="POST"?await readJson(request):{};
+  if(!["POST","GET","PUT"].includes(request.method))return false;
+  const body=request.method!=="GET"?await readJson(request):{};
   if(body.text!=null&&(typeof body.text!=="string"||!body.text.trim()||body.text.length>1600))journeyFail("invalid","Escribe una respuesta de hasta 1600 caracteres.");
   const safe=body.text?annualJourneySafeText(body.text,sources.names,annualJourneyCurriculumTerms(curriculum)):"";
   if(body.text&&!safe)journeyFail("private_text","Escribe la decisión sin datos personales.");
   const id=body.id??url.searchParams.get("id");
-  let row,payload;
+  if(request.method==="PUT"&&!id)journeyFail("invalid","Abre la conversación antes de guardar el contexto.");
+  let row,payload,carriedContext;
+  const contextRetainUntil=context.ends_on??`${context.year}-12-31`;
   const lease=randomUUID();
   await versionTransaction(db,`conversation:${context.id}`,async tx=>{
     row=(await tx.query(`select id,payload from ai_pending_generations where classroom_id=$1 and workflow=$2 and expires_at>now()
       and ($3::uuid is null or id=$3) order by created_at desc limit 1`,[context.id,WORKFLOW,id??null])).rows[0];
     if(id&&!row)journeyFail("not_found","Conversación no disponible.");
     if(row&&row.payload.teacher_id!==teacherId)journeyFail("not_found","Conversación no disponible.");
-    if(row&&row.payload.source_fingerprint!==snapshot.source_fingerprint){if(id||request.method==="GET")throw new VersionConflictError("Hay registros nuevos. Actualiza el contexto.");row=null;}
+    if(row&&row.payload.source_fingerprint!==snapshot.source_fingerprint){if(id||request.method==="GET")throw new VersionConflictError("Hay registros nuevos. Actualiza el contexto.");if(row.payload.context_draft)carriedContext=row.payload;row=null;}
     if(request.method==="GET")return;
     payload=row?.payload??{teacher_id:teacherId,source_fingerprint:snapshot.source_fingerprint,revision:0,messages:[],teacher_texts:[],safe_texts:[],calls:0};
+    if(carriedContext)payload={...payload,context_draft:carriedContext.context_draft,messages:carriedContext.messages,teacher_texts:carriedContext.teacher_texts,safe_texts:carriedContext.safe_texts};
     if(payload.source_fingerprint!==snapshot.source_fingerprint)throw new VersionConflictError("Hay nuevos registros. Vuelve a abrir la conversación para actualizar el contexto.");
+    if(request.method==="PUT") {
+      if(Number(body.expectedRevision)!==payload.revision)throw new VersionConflictError("El contexto cambió en otra ventana. Tus cambios siguen aquí; vuelve a abrir la conversación.");
+      if(payload.pending_turn||payload.lease_until&&Date.parse(payload.lease_until)>Date.now())throw new VersionConflictError("Ayni está respondiendo. Espera antes de guardar el contexto.");
+      const contextDraft=validateAnnualContextDraft(body.contextDraft,curriculum,payload.teacher_texts.length);
+      payload={...payload,context_draft:contextDraft,revision:payload.revision+1};
+      await tx.query(`update ai_pending_generations set payload=$1::jsonb,
+        expires_at=greatest(expires_at,now()+interval '7 days',$3::date+interval '31 days') where id=$2`,[JSON.stringify(payload),row.id,contextRetainUntil]);
+      row.payload=payload;
+      return;
+    }
     if(payload.pending_turn&&body.text){
       if(payload.messages.at(-1)?.role==="teacher"&&payload.messages.at(-1).text===body.text.trim())body.text=undefined;
       else throw new VersionConflictError("Hay una respuesta guardada pendiente. Retómala antes de enviar otra.");
@@ -63,10 +77,10 @@ export async function handlePlanningConversation({request,response,url,db,contex
     if(body.text&&Number(body.expectedRevision)!==payload.revision)throw new VersionConflictError("La respuesta ya se guardó. Abre la conversación para continuar.");
     if(payload.lease_until&&Date.parse(payload.lease_until)>Date.now())throw new VersionConflictError("Ayni está respondiendo. Espera un momento y vuelve a abrir la conversación.");
     payload={...appendConversationTurn(payload,body.text,safe),attempts:(payload.attempts??payload.calls)+1,lease_token:lease,lease_until:new Date(Date.now()+65000).toISOString()};
-    if(!row){row={id:randomUUID()};await tx.query(`insert into ai_pending_generations(id,classroom_id,workflow,payload,created_at,expires_at) values($1,$2,$3,$4::jsonb,now(),now()+interval '7 days')`,[row.id,context.id,WORKFLOW,JSON.stringify(payload)]);}
+    if(!row){row={id:randomUUID()};await tx.query(`insert into ai_pending_generations(id,classroom_id,workflow,payload,created_at,expires_at) values($1,$2,$3,$4::jsonb,now(),case when $5::boolean then greatest(now()+interval '7 days',$6::date+interval '31 days') else now()+interval '7 days' end)`,[row.id,context.id,WORKFLOW,JSON.stringify(payload),!!payload.context_draft,contextRetainUntil]);}
     else await tx.query(`update ai_pending_generations set payload=$1::jsonb where id=$2`,[JSON.stringify(payload),row.id]);
   });
-  if(request.method==="GET"||!payload||payload.lease_token!==lease){if(!row)journeyFail("not_found","Conversación no disponible.");send(response,200,publicConversation(row.id,row.payload),origin);return true;}
+  if(request.method==="GET"||request.method==="PUT"||!payload||payload.lease_token!==lease){if(!row)journeyFail("not_found","Conversación no disponible.");send(response,200,publicConversation(row.id,row.payload),origin);return true;}
   // Rebuild from the authoritative teacher text when resuming: an older privacy
   // vocabulary may have removed ordinary verbs from the persisted safe copy.
   const safeTeacherDecisions=payload.teacher_texts.map(text=>annualJourneySafeText(text,sources.names,annualJourneyCurriculumTerms(curriculum)));

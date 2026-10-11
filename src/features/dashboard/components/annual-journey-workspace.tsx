@@ -13,7 +13,8 @@ import { canLeaveWorkspace, readWorkspaceParams, useWorkspaceSubview, writeWorks
 import { savedJourneyAnnualRows } from "@/src/lib/annual-year-map.mjs";
 import { AnnualYearTimeline, type AnnualMapRow, type AnnualMapCalendar, type AnnualMapEffectiveCalendar } from "./annual-year-map";
 import { AsyncButton, GenerationProgress, LoadingState, WorkflowFeedback } from "./workflow-ui";
-import { ExperienceContextForm, type ExperienceContextInput } from "./experience-context-form";
+import { ExperienceContextForm } from "./experience-context-form";
+import { useAnnualContextDraft } from "@/src/lib/use-annual-context-draft";
 import { AnnualPlanningConversation } from "./annual-planning-conversation";
 import { AnnualPreparationProgress } from "./annual-preparation-progress";
 import { DictationRecorder } from "./dictation-recorder";
@@ -78,11 +79,8 @@ export function AnnualJourneyWorkspace({ onConfirmed, onGoDiagnostic, onDevelop,
   const [selectedId, setSelectedId] = useState(""), [preparing, setPreparing] = useState(false);
   const [ideas, setIdeas] = useState(""), [message, setMessage] = useState(""), [scope, setScope] = useState<string | null>(null);
   const [ideaDraft, setIdeaDraft] = useState("");
-  const [experienceInput,setExperienceInput]=useState<ExperienceContextInput>({contextItems:[],historicalProjects:[]});
-  const [conversationId,setConversationId]=useState<string>();
-  const contextEdited=useRef(false);
-  const [contextDirty,setContextDirty]=useState(false);
-  const captureConversation=useCallback((value:{id:string;messages:{role:string;text:string}[];contextItems?:{text:string;source_turn:number}[]})=>{setConversationId(value.id);if(!contextEdited.current&&value.contextItems)setExperienceInput(previous=>({...previous,contextItems:value.contextItems!.map(item=>({text:item.text,source_turn:item.source_turn}))}));},[]);
+  const contextDraft = useAnnualContextDraft();
+  const { value: experienceInput, conversationId, dirty: contextDirty, captureConversation, seed: seedContext } = contextDraft;
   const [panelOpen,setPanelOpen]=useState(false);
   const [job, setJob] = useState<Job | null>(null);
   const [busy, setBusy] = useState<string | null>(null), [audioBusy, setAudioBusy] = useState(false);
@@ -147,14 +145,14 @@ export function AnnualJourneyWorkspace({ onConfirmed, onGoDiagnostic, onDevelop,
   useEffect(() => { let live = true;
     Promise.resolve().then(() => Promise.all([reload(), loadStart()])).then(([next]) => { if (live) { setPreparing(!next || next.proposal.journey_version === 2 && !next.proposal.proposed_experiences.length);
       setIdeas(next?.proposal.teacher_preferences ?? "");
-      if(next?.proposal.experience_context) setExperienceInput({contextItems:next.proposal.experience_context.context_items,historicalProjects:next.proposal.experience_context.historical_projects});
+      if(next?.proposal.experience_context) seedContext({contextItems:next.proposal.experience_context.context_items,historicalProjects:next.proposal.experience_context.historical_projects});
       if (next?.proposal.generation_job_id) void api<Job>(`/api/annual-journey/jobs/${next.proposal.generation_job_id}`).then(value => {
         if (live) { setJob(value); if (value.status !== "succeeded") setPreparing(true);
         }
       }).catch(() => {});
     } }).catch((e) => { if (live) setError(e.message); });
     return () => { live = false; };
-  }, [reload, loadStart, continueSavedJob]);
+  }, [reload, loadStart, continueSavedJob, seedContext]);
   useEffect(() => { let live = true;
     void api<AnnualMapEffectiveCalendar>("/api/school-calendar").then(value => { if (live) setEffectiveCalendar(value); }).catch(() => { if (live) setCalendarUnavailable(true); });
     return () => { live = false; };
@@ -166,10 +164,10 @@ export function AnnualJourneyWorkspace({ onConfirmed, onGoDiagnostic, onDevelop,
   useEffect(() => {
     if (generating || !dirty && !busy && !audioBusy) return;
     const unload = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ""; };
-    const navigation = (e: Event) => { if (busy || audioBusy || !window.confirm("Hay texto pendiente. ¿Quieres salir sin guardarlo?")) e.preventDefault(); };
+    const navigation = (e: Event) => { if (busy || audioBusy || contextDraft.saving || !window.confirm("Hay texto pendiente. ¿Quieres salir sin guardarlo?")) e.preventDefault(); };
     window.addEventListener("beforeunload", unload); window.addEventListener("ayni-before-navigation", navigation);
     return () => { window.removeEventListener("beforeunload", unload); window.removeEventListener("ayni-before-navigation", navigation); };
-  }, [dirty, busy, audioBusy, generating]);
+  }, [dirty, busy, audioBusy, generating, contextDraft.saving]);
   const jobId=job?.id,jobStatus=job?.status;
   useEffect(() => {
     if (!jobId || !["queued", "running"].includes(jobStatus??"")) return;
@@ -205,7 +203,7 @@ export function AnnualJourneyWorkspace({ onConfirmed, onGoDiagnostic, onDevelop,
     try {
       const result = await api<Job>("/api/annual-journey/prepare", { teacherIdeas: ideas, sourceFingerprint: start.snapshot.source_fingerprint, ...(process.env.NEXT_PUBLIC_AYNI_EXPERIENCE!=="0"?{experienceContract:true,conversationId,...experienceInput}:{}),
         ...(editable && modern ? { draftId: selected.id, expectedRevision: selected.revision } : {}) });
-      contextEdited.current=false;setContextDirty(false);setJob(result); await reload(result.draft_id);
+      setJob(result); await reload(result.draft_id);
     } catch(error) {
       const saved=await reload().catch(()=>null);
       if(saved?.proposal.generation_job_id&&saved.proposal.teacher_preferences===(process.env.NEXT_PUBLIC_AYNI_EXPERIENCE!=="0"?experienceInput.contextItems.map(item=>item.text.trim()).join("\n"):ideas)){
@@ -250,7 +248,7 @@ export function AnnualJourneyWorkspace({ onConfirmed, onGoDiagnostic, onDevelop,
     {notice && <p role="status" className="text-sm font-semibold text-[#176442]">{notice}</p>}
     {busy === "apply" ? <GenerationProgress label="Ayni está aplicando tus indicaciones" description="Revisa las propuestas que necesitan cambios y conserva las demás." /> : null}
     {job && job.status !== "succeeded" && <AnnualPreparationProgress job={job} generating={generating} disabled={disabled} onContinue={()=>void continueSavedJob(job)} onRefresh={()=>void run("reload",async()=>{await reload(job.draft_id);await loadStart();setJob(null);})}/>}
-    {preparing && !generating && (!job || job.status === "succeeded") && start && <>{process.env.NEXT_PUBLIC_AYNI_EXPERIENCE !== "0" && <ExperienceContextForm sources={start.snapshot.facts.filter(f=>f.kind!=="teacher_context"&&f.kind!=="teacher_decision").map(f=>({text:f.support_text,label:`${sourceLabels[f.kind]??"Síntesis confirmada"} · ${f.scope==="individual"?"Registro individual":"Alcance de su fuente"}`}))} value={experienceInput} onChange={value=>{contextEdited.current=true;setContextDirty(true);setExperienceInput(value);}} curriculum={start.curriculum} today={start.today??new Date().toLocaleDateString("en-CA",{timeZone:"America/Lima"})} disabled={disabled}/>}<AnnualPlanningConversation observations={start.snapshot.facts.filter(f=>f.kind==="observed").length} families={start.snapshot.facts.filter(f=>f.kind==="family_report").length} unknown={start.snapshot.competency_information.filter(c=>c.recorded_performances===0).length} onIdeas={setIdeas} onDraft={setIdeaDraft} onGenerate={generate} onConversation={captureConversation} disabled={disabled}/></>}
+    {preparing && !generating && (!job || job.status === "succeeded") && start && <>{process.env.NEXT_PUBLIC_AYNI_EXPERIENCE !== "0" && <ExperienceContextForm sources={start.snapshot.facts.filter(f=>f.kind!=="teacher_context"&&f.kind!=="teacher_decision").map(f=>({text:f.support_text,label:`${sourceLabels[f.kind]??"Síntesis confirmada"} · ${f.scope==="individual"?"Registro individual":"Alcance de su fuente"}`}))} value={experienceInput} onChange={contextDraft.change} curriculum={start.curriculum} today={start.today??new Date().toLocaleDateString("en-CA",{timeZone:"America/Lima"})} disabled={disabled||contextDraft.saving}/>}<p role="status" className="text-sm text-[#526b87]">{contextDraft.saving?"Guardando contexto…":contextDirty?"Contexto pendiente de guardar.":conversationId?"Contexto guardado.":"Tu conversación y contexto se guardarán aquí."}</p>{contextDraft.error&&<WorkflowFeedback tone="error">{contextDraft.error}<div className="mt-2 flex flex-wrap gap-2"><Button variant="outline" onClick={contextDraft.retry}>Reintentar guardado</Button><Button variant="ghost" onClick={()=>void contextDraft.reloadSaved()}>Recargar contexto guardado</Button></div></WorkflowFeedback>}<AnnualPlanningConversation contextRevision={contextDraft.revision} onIdeas={setIdeas} onDraft={setIdeaDraft} onGenerate={generate} onConversation={captureConversation} disabled={disabled||contextDirty||contextDraft.saving}/></>}
     {!preparing && complete && selected && <>
       {!proposal.experience_context && <JourneySteps active={6}/>}{proposal.experience_context&&<section className="space-y-3 rounded-xl bg-[#edf7fa] p-4"><h2 className="font-bold">Tu inicio en Ayni · {proposal.experience_context.starts_on}</h2><p className="text-sm">El pasado sin registro permanece explícito. El primer proyecto se prepara para los días lectivos restantes.</p><details><summary className="min-h-11 cursor-pointer py-2 font-semibold">Contexto confirmado e historia declarada</summary><ul className="space-y-2">{proposal.experience_context.context_items.map((item,i)=><li key={i}>{item.text}</li>)}</ul><ul className="mt-4 space-y-2">{proposal.experience_context.historical_projects.map((item,i)=><li key={i}>{item.title} · {item.period?`Bimestre ${item.period}`:"Período no precisado"} · Historia declarada</li>)}</ul></details></section>}
       <div className="flex flex-wrap items-center justify-between gap-3"><p className="font-semibold text-[#526b87]">{editable ? "Borrador guardado · revisa antes de confirmar" : selected.status === "active" ? "Año confirmado · previsión flexible" : "Versión histórica"}</p>

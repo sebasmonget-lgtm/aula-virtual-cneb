@@ -1762,3 +1762,7 @@ Limitaciones de herramientas: zoom no verificable por atajo; micrófono sin auto
 - Solución: selector compartido explícito/vigente/último terminado, portada sin ceros ficticios; guardar borrador por API existente con CAS, separar confirmación y proteger navegación/regeneración. Recarga de detalle solo por contexto o actualización deliberada.
 - Validación: RED/GREEN en Chromium, recarga recupera borrador sin confirmar nivel y lote editado; 35 pruebas focales, typecheck, lint y Next PASS. Ningún dato real, migración o llamada IA pagada.
 - Prevención: probar fechas de gestión entre períodos y salidas internas de formularios, además del menú principal; progreso guardado del job no significa que todas las ediciones locales estén guardadas.
+
+## UX-04 · Edición manual bloqueaba decisiones posteriores de Mi año
+
+Síntoma: después de tocar contexto, el chat ya no incorporaba decisiones nuevas; recargar antes de preparar perdía correcciones e historia. Causa: un booleano global bloqueaba todo el contexto y este solo se persistía al preparar. Solución: importación por turno, borrador privado con CAS/autosave y recuperación por lectura. Las fuentes actualizadas conservan el borrador; la retención cubre el año escolar. Validación: 20 pruebas focales PASS y RED/GREEN de componentes reales con datos ficticios (edición, eliminación, nuevo turno, recarga y respuesta incierta). Prevención: separar importación de decisiones de las ediciones docentes, bloquear preparación durante respuesta/guardado y no prometer guardado antes de su confirmación.

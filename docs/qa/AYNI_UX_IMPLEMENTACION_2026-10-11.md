@@ -32,3 +32,13 @@ Siguientes etapas: contexto/chat anual; configuración/matrícula/diagnóstico; 
 Pendientes generales: Preview de esta rama, recorrido integrado, capturas con estilos de escritorio/móvil, zoom 200 %, hardware físico y aislamiento remoto de dos docentes. Los resultados históricos no se heredan como resultados nuevos. No se hará publicación en Producción.
 
 Rollback de etapa 1: revertir su commit de UI/hook/helper. Los registros y contratos existentes siguen siendo compatibles; no hay migración que revertir.
+
+## Etapa 3 · Contexto anual y conversación
+
+Un solo panel plegable reúne fuentes, ideas editables e historia. Se retiraron los cuatro resúmenes laterales y la repetición del texto docente completo junto al chat. La acción Crear Mi año espera la respuesta de Ayni y el guardado del contexto. Se mantienen dictado, conversación recuperable, fuentes, historia opcional y todas las decisiones antes de preparar.
+
+Se corrigieron importación después de una edición, recuperación de contexto antes de preparar y pérdida al cambiar fuentes. Extensión compatible PUT de la API de conversación, sobre el JSON privado existente; sin migraciones. Autosave 900 ms, CAS/propiedad/fingerprint, exclusión durante turno IA pendiente, lectura tras respuesta incierta y error/reintento explícitos. El draft admite filas incompletas; la preparación mantiene su validación final. Retención del contexto hasta 31 días después del año escolar (mínimo siete días); sin datos pedagógicos en almacenamiento del navegador. ADR-124 documenta límites y rollback.
+
+20 pruebas focales PASS/0 SKIP: contexto, servicio PGlite del recorrido inicial y generación por horizonte. RED/GREEN en navegador reproduce bloqueo de decisiones nuevas y pérdida de edición en recarga; la versión corregida conserva edición, eliminación e incorporación posterior, y recupera un guardado cuya respuesta se perdió. Transporte simulado: un envío explícito al chat, cero generaciones adicionales por guardar/recargar. La prueba privada adapta next/image al harness Vite; no modifica el componente de producto.
+
+Etapa 3: lint focal, build Next webpack y typecheck independiente exit 0. Un primer typecheck simultáneo al build encontró archivos temporales .next/types eliminados por el compilador; no fue un error del producto. Se corrigió el orden de validación y se ejecutó nuevamente tras terminar el build. No volver a correr ambos sobre .next en paralelo.

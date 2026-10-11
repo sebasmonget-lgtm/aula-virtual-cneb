@@ -99,7 +99,33 @@ test("initial journey: atomic decisions, private photos/invitations and bounded 
   await t.test("AnnualPlanningBrief retains negation/subject/source, unknowns and institutional context, uses Luna",()=>{assert.equal(brief.sources[0].support_text,"No le interesa el agua.");assert.equal(brief.sources[0].subject,"child_1");assert.equal(brief.sources[0].kind,"family_report");assert.deepEqual(brief.unknowns,[ids[0]]);assert.equal(brief.classroom.institutional_context.resources,"Sin piscina");assert.equal(resolveAIExecutionPlan({workflow:"annual_journey_conversation",task:"generation"}).model,"gpt-6-luna");});
   let calls=0,lastBundle,failNext=false;
   const createProvider=plan=>({generate:async request=>{assert.equal(plan.model,"gpt-6-luna");calls++;lastBundle=request.ai_context_bundle;if(failNext){failNext=false;throw new Error('provider interrupted');}const decisions=lastBundle.teacher_decisions;return {output:{status:decisions.length&&decisions[0]!=="Quiero comunidad"?"ready":"needs_clarification",message:"Ya revisé los registros disponibles.",question:"¿Hay alguna experiencia que quieras realizar?",chips:["No tengo una idea todavía"],context_items:decisions.map((text,index)=>({text,source_turn:index,support_text:text}))}};}});
-  async function conversation(method,body={}){sent=null;await handlePlanningConversation({request:{method},response,url:new URL('http://localhost/api/annual-journey/conversation'),db,context,teacherId:teacher,snapshot,curriculum,calendar,sources:{names:["Camila"]},send,readJson:async()=>body,createProvider});return sent.value;}
+  async function conversation(method,body={},owner=teacher){sent=null;await handlePlanningConversation({request:{method},response,url:new URL('http://localhost/api/annual-journey/conversation'),db,context,teacherId:owner,snapshot,curriculum,calendar,sources:{names:["Camila"]},send,readJson:async()=>body,createProvider});return sent.value;}
+  await t.test("context draft saves recover through GET, respect owner/CAS and add zero AI calls",async()=>{
+   let c=await conversation("POST");
+   c=await conversation("POST",{id:c.id,expectedRevision:c.revision,text:"Tenemos patio"});
+   const before=calls,expectedRevision=c.revision;
+   const contextDraft={value:{contextItems:[{text:"Patio pequeño, sin huerto",source_turn:0},{text:""}],historicalProjects:[{title:"Familia",competency_ids:[ids[0]],period:1}]},importedTurns:[0]};
+   await assert.rejects(conversation("PUT",{id:c.id,expectedRevision,contextDraft},other));
+   c=await conversation("PUT",{id:c.id,expectedRevision,contextDraft});
+   assert.equal(c.revision,expectedRevision+1);assert.deepEqual((await conversation("GET")).contextDraft,contextDraft);assert.equal(calls,before);
+   await assert.rejects(conversation("PUT",{id:c.id,expectedRevision,contextDraft}),/cambió/);
+   const invalid={...contextDraft,value:{...contextDraft.value,historicalProjects:[{title:"Familia",competency_ids:["AJENA"]}]}};
+   await assert.rejects(conversation("PUT",{id:c.id,expectedRevision:c.revision,contextDraft:invalid}));
+   await db.query(`update ai_pending_generations set payload=jsonb_set(payload,'{pending_turn}','true'::jsonb) where id=$1`,[c.id]);
+   await assert.rejects(conversation("PUT",{id:c.id,expectedRevision:c.revision,contextDraft}),/respondiendo/);
+   await db.query(`update ai_pending_generations set payload=jsonb_set(payload,'{pending_turn}','false'::jsonb) where id=$1`,[c.id]);
+   c=await conversation("POST",{id:c.id,expectedRevision:c.revision,text:"Cierre con familias"});
+   assert.deepEqual(c.contextDraft,contextDraft);assert.equal(calls,before+1);
+   const previous=snapshot.source_fingerprint;snapshot.source_fingerprint="changed-draft";
+   await assert.rejects(conversation("PUT",{id:c.id,expectedRevision:c.revision,contextDraft}));snapshot.source_fingerprint=previous;
+   assert.deepEqual((await conversation("GET")).contextDraft,contextDraft);
+   const oldId=c.id;snapshot.source_fingerprint="new-records";
+   c=await conversation("POST");assert.notEqual(c.id,oldId);assert.deepEqual(c.contextDraft,contextDraft);
+   assert.equal(c.teacherIdeas,"Tenemos patio\nCierre con familias");
+   const retained=(await db.query('select expires_at from ai_pending_generations where id=$1',[c.id])).rows[0];
+   assert.ok(new Date(retained.expires_at)>=new Date('2027-01-31'));
+   snapshot.source_fingerprint=previous;
+  });
   await t.test("no ideas / one / several ideas reach ready, refresh costs zero, CAS rejects repeated turn",async()=>{
    for(const text of ["No tengo una idea todavía","Proyecto con agua","Agua y una actividad con las familias"]){await db.query(`update ai_pending_generations set expires_at=now() where workflow='annual_journey_conversation'`);const before=calls,start=await conversation("POST");assert.equal(start.status,"needs_clarification");assert.equal((await conversation("GET")).id,start.id);assert.equal((await conversation("POST")).id,start.id);assert.equal(calls,before+1);const end=await conversation("POST",{id:start.id,expectedRevision:start.revision,text});assert.equal(end.status,"ready");assert.equal(end.teacherIdeas,text);assert.equal(end.chips.length,0);assert.equal(calls,before+2);await assert.rejects(conversation("POST",{id:start.id,expectedRevision:start.revision,text}));}
   });
