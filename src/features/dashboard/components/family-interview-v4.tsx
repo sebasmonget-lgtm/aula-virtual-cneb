@@ -217,7 +217,7 @@ export function FamilyInterviewEditor({ studentId, studentName: rawStudentName, 
                 ...(v.autonomy_routines ?? []).filter((row) => row.id !== item.id),
                 ...(!selected ? [{ id: item.id, level: level.id as "alone" | "sometimes" | "much_help" }] : []),
               ], structured_options_version: familyInterviewStructuredOptionsVersion }))}
-              className={`min-h-10 rounded-full border px-3 text-sm ${selected ? "border-[#087d96] bg-[#e4f7f9]" : "border-[#d7e4ed]"}`}>{level.label}</button>;
+              className={`flex min-h-11 items-center gap-2 rounded-lg border px-3 text-sm ${selected ? "border-[#087d96] bg-[#e4f7f9]" : "border-[#d7e4ed]"}`}><span className={`grid size-4 shrink-0 place-items-center rounded-full border ${selected?"border-[#087d96] bg-[#087d96] text-white":"border-[#71869d]"}`} aria-hidden="true">{selected&&<Check className="size-3"/>}</span>{level.label}</button>;
           })}</div></fieldset>)}</div>{shortField("autonomy_context", "¿Quieres comentar algo más? (opcional)")}</>}
       {questions[step].key === "communication_context" && <>{chips("communication_tags", interviewCommunicationOptions, "¿Cómo suele comunicarse?")}
         {shortField("communication_context", "Algo más que quieras contar (opcional)")}

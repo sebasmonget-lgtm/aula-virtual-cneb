@@ -27,9 +27,9 @@ RED/GREEN de período de octubre y salidas de evaluación/lote mediante componen
 
 ## Plan y límites
 
-Siguientes etapas: contexto/chat anual; configuración/matrícula/diagnóstico; año/proyectos/Hoy/Calendario; informes/documentos; integración y Preview. Se conservan cinco destinos, quince tramos, biblioteca, calendario, ejecución/confirmación docente y generación gradual de actividades.
+Etapas de producto implementadas: observación; evaluación; contexto/chat anual; configuración/matrícula/diagnóstico; año/proyectos/Hoy/Calendario; informes/documentos. Se conservan cinco destinos, quince tramos, biblioteca, calendario, ejecución/confirmación docente y generación gradual de actividades.
 
-Pendientes generales: Preview de esta rama, recorrido integrado, capturas con estilos de escritorio/móvil, zoom 200 %, hardware físico y aislamiento remoto de dos docentes. Los resultados históricos no se heredan como resultados nuevos. No se hará publicación en Producción.
+Pendientes al cierre: Preview de esta rama y smoke remoto, zoom 200 %, hardware físico y aislamiento remoto de dos docentes. Los resultados históricos no se heredan como resultados nuevos. No se hará publicación en Producción.
 
 Rollback de etapa 1: revertir su commit de UI/hook/helper. Los registros y contratos existentes siguen siendo compatibles; no hay migración que revertir.
 
@@ -71,4 +71,59 @@ La prueba vertical con navegador, servidor HTTP real y PGlite nueva detectó un 
 
 Suite completa fresca: 768 PASS, 0 FAIL/0 SKIP, incluidos servicios PGlite, rutas HTTP, autorización, IA simulada y suite evals. Primer pase: 762/765 PASS; tres expectativas de textos retirados se actualizaron preservando comprobaciones de guardado/confirmación. Reejecución focal posterior a la transición de configuración: 24/24 PASS. Typecheck, Next webpack y Vinext exit 0. Lint global: exit 0, cero errores, dos avisos preexistentes en fixtures privados ajenos. Rollback: revertir este commit de cliente/tests; sin migración ni cambio de formato.
 
-Capturas e integración ampliada de escritorio/móvil en curso. Preview pendiente de commit limpio y smoke; Producción fuera del alcance.
+Capturas e integración ampliada registradas en la etapa 7. Producción fuera del alcance.
+
+## Etapa 7 · Validación integrada y detalles táctiles
+
+Acciones de preparar/cambiar proyecto separadas, con altura mínima de 44 px y texto adaptable. Selección de rutinas en entrevista tiene marca visible y objetivo de 44 px, igual que las otras opciones. Sin cambios de datos, reglas o confirmación. 27 pruebas focales PASS/0 SKIP; typecheck, lint focal y builds Next/Vinext exit 0 después de estos ajustes.
+
+Recorrido vertical real: configurar aula nueva, añadir niño, recargar, guardar observación, dos correcciones, recargar historial y recuperar la segunda; escribir respuesta de entrevista y recuperar su autosave después de recargar. Servidor HTTP real y PGlite nueva en directorio privado aislado, docente/niña ficticias. Proceso hijo con lista explícita de variables del sistema, sin secretos de IA/Supabase. Cero solicitudes de generación/sugerencia/transcripción y cero confirmaciones de evaluación. Todas las mutaciones corresponden a acciones de la prueba o autosave existente de entrevista; no se modificaron aulas remotas.
+
+Componentes restantes con estilos reales y transporte ficticio: contexto/chat, editor 15 tramos (foco por fecha, flechas, desplazamiento interno), proyecto, actividad, revisión de competencia, lote, registro y documentos. Diez estados en 1366×900 y 390×844: sin error JS ni desbordamiento de página. Una ronda visual y otra de confirmación; se conserva la identidad visual. Las fechas del mock de calendario se ajustaron a from/to del contrato para no mostrar días ajenos al proyecto. Next Image se adapta únicamente en el harness privado; su aviso inicial sobre unoptimized no es un fallo del producto.
+
+Las capturas de workspace esperan datos específicos, no solo la presencia del contenedor: un primer intento fotografió cargas transitorias y no se considera validación visual de contenido. Los resultados aprobados y fuentes de transporte se distinguen en `.local/ux-simplificacion/`; no se mezclan mocks con pruebas de backend real.
+
+Validadores ejecutados: catálogo diagnostic-v4.4 válido, siete experiencias con estado development_fixture y revisión editorial aún necesaria. Validador curricular legado exit 0, pero informa 0/0 transcripciones oficiales verificadas; no se declara completitud curricular a partir de ese resultado. No se cambió el contenido pedagógico.
+
+## Comparación de experiencia
+
+| Antes | Implementación actual |
+|---|---|
+| Observación podía desaparecer al cerrar; segunda corrección desde RAW | Guardas de trabajo pendiente; corrección desde versión vigente y original consultable |
+| Octubre abría Bimestre 1 fuera de período | Período explícito/vigente/último terminado, selector y contexto en URL |
+| Análisis y ediciones de informes podían salir sin aviso | Guardar borrador separado de confirmar; ediciones protegidas y recuperación de lo guardado |
+| Contexto anual local bloqueaba nuevas decisiones del chat | Contexto durable con CAS, importación por turno, borrados respetados y recuperación de respuesta incierta |
+| Pasos/tarjetas/contexto repetidos delante del chat | Chat y creación principales; un panel de contexto plegable |
+| Configuración y matrícula con opcionales prominentes | Datos principales primero; opcionales plegados, lista compacta y CSV revisado antes de guardar |
+| Tres entradas diagnósticas y catálogo completo al inicio | Dos caminos; revisión opcional y experiencia priorizada con alternativas disponibles |
+| Sugerencia curricular/dictado confundidos con guardar | Guardar observación principal; sugerir competencia opcional/expreso, sin consulta automática al dictar |
+| Mapa comenzaba al inicio; biblioteca extensa | Foco en fecha del servidor, flechas/Ir a hoy, biblioteca plegable; quince tramos intactos |
+| Hoy duplicaba captura y mostraba asistencia en día no lectivo | Acción cotidiana priorizada; asistencia contextual y observación alternativa conservada |
+| Reprogramación/cierre podían descartar notas | Salidas protegidas; guardado/ejecución siempre por acción docente |
+| Preparado parecía guardado; sincronización competía con documentos | Estado «falta guardar» y funciones completas de descarga/sincronización bajo detalle |
+
+## Commits y publicación
+
+Base: `e3a107ffc9d8d83f1cbd73c4b68129a8a03d854f`. Rama: `codex/ayni-ux-simplificacion-20261011`.
+
+| Commit | Entrega |
+|---|---|
+| `0fe1e4c` | Auditoría base preservada |
+| `5968ce0` | Observación y correcciones |
+| `ca8026d` | Períodos y borradores de evaluación |
+| `9c0a40d` | Contexto anual durable sin generación extra |
+| `1f9da5d` | Aula, matrícula y diagnóstico |
+| `cfa173e` | Mi año, proyecto, Hoy y Calendario |
+| `b597913` | Documentos, estados de informe y transición de aula |
+
+La siguiente revisión visual del propietario se realiza sobre esta implementación, sin reconstruir flujos ni añadir generación anticipada. Preview se registrará con URL única, deployment ID, SHA exacto y smoke; no se confunde con la versión anterior.
+
+## Límites y rollback
+
+- Pendiente aceptación visual conjunta pantalla por pantalla, hardware de cámara/micrófono y zoom 200 %.
+- Pendiente smoke autenticado de dos docentes ficticias en Preview, incluidos medios privados y aislamiento remoto. Las pruebas PGlite/HTTP de autorización pasaron; no sustituyen esa comprobación remota.
+- El trabajo pendiente de observación sin guardar vive en memoria y tiene guardas; una salida deliberada lo descarta. Contexto anual y borradores guardados sí se recuperan del servidor. No se guardan datos pedagógicos en localStorage.
+- Contexto con cambios simultáneos/conflicto CAS exige reintento o recargar conscientemente; no mezcla ciegamente escrituras ajenas. Se importan turnos nuevos una vez; no se resuelven contradicciones semánticas automáticamente.
+- Importación admite CSV, no XLSX; homónimos requieren revisión, sin fusiones automáticas ni edición masiva de identidades.
+- Sin migraciones, prompts/modelos nuevos, reemplazo del backend o publicación en Producción. PUT de contexto usa JSON privado existente y mantiene control de propiedad/revisión.
+- Rollback por commits independientes; los datos guardados siguen compatibles. Revertir UI no borra evidencias, versiones, períodos, trabajos ni contexto. No ejecutar limpieza de datos reales como rollback.

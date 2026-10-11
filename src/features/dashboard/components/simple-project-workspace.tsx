@@ -194,9 +194,9 @@ export function SimpleProjectWorkspace(props: Props) {
           {calendarError&&<WorkflowFeedback tone="error">{calendarError}</WorkflowFeedback>}
           <details className="mt-3"><summary className="min-h-11 cursor-pointer font-semibold text-[#07576c]">Revisar calendario</summary><ProjectCalendarReview days={calendar} selectedDates={selectedDates} disabled={busy||dictating} onChange={dates=>setSelectedDates(dates.filter(date=>!modern||date>=today))}/></details>
         </section>
-        <AsyncButton busy={busy} busyLabel="Preparando proyecto…" disabled={busy||dictating||!selectedDates.length||!!calendarError||!!visiblePreparation&&["queued","running"].includes(visiblePreparation.status)} onClick={() => void prepare()}>
+        <div className="flex flex-wrap items-center gap-3"><AsyncButton className="min-h-11" busy={busy} busyLabel="Preparando proyecto…" disabled={busy||dictating||!selectedDates.length||!!calendarError||!!visiblePreparation&&["queued","running"].includes(visiblePreparation.status)} onClick={() => void prepare()}>
           Preparar proyecto</AsyncButton>
-        <Button variant="outline" disabled={busy} onClick={()=>modern?props.onGoAnnual?.():setAdvanced(true)}>{modern?"Quiero trabajar otro proyecto en Mi año":"Cambiar propósito, competencias o días"}</Button>
+        <Button className="min-h-11 whitespace-normal text-left" variant="outline" disabled={busy} onClick={()=>modern?props.onGoAnnual?.():setAdvanced(true)}>{modern?"Quiero trabajar otro proyecto en Mi año":"Cambiar propósito, competencias o días"}</Button></div>
       </section>}
       {prepared && !changing && row && <section className="space-y-4 rounded-2xl border bg-white p-5"><div className="flex items-center gap-4"><ProjectPictogram project={proposal} className="size-16 shrink-0 sm:size-24" /><p className="text-sm text-[#526b87]">{selectedDates.length} días de clase</p></div>
         <p>{row.details.decisions?.purpose}</p>
