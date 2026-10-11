@@ -1746,3 +1746,11 @@ Limitaciones de herramientas: zoom no verificable por atajo; micrófono sin auto
 - Solución: conservar la migración y los permisos intactos; excluir esa tabla de la expectativa de SELECT docente y comprobar explícitamente que anon/authenticated carezcan de SELECT/INSERT/UPDATE/DELETE. No se cambió código de producto ni datos cloud.
 - Validación: harness completo PASS con 73 migraciones, 66 tablas privadas y aislamiento de dos docentes en 16 tablas sensibles y Storage. No sustituye QA autenticado de RLS remoto.
 - Prevención: distinguir datos pedagógicos con lectura por ownership de las tablas técnicas reservadas al backend; comprobar ausencia de grants, además de presencia de RLS.
+
+## UX-01/02 · Salida de observación y correcciones sucesivas — 2026-10-11
+
+- Síntoma: cerrar el diálogo descartaba texto pendiente sin aviso; una segunda corrección abría el RAW original en lugar del texto vigente.
+- Causa raíz: cierre sin comprobación de borrador/preparación de foto y editor inicializado con `raw_text` aun cuando el listado incluía `corrected_text`.
+- Solución: guarda compartida de trabajo pendiente, controles de salida consistentes y lectura de la corrección vigente. Original consultable; APIs, CAS y revisiones intactos. No se añaden cachés con datos de menores ni llamadas IA.
+- Validación: RED/GREEN de ambos casos en Chromium con datos ficticios y componentes reales; 16 casos focales distintos PASS, incluyendo dos correcciones sucesivas en PGlite; typecheck/lint y builds Next/Vinext PASS. Detalles en el informe de implementación.
+- Prevención: probar segunda edición además de primera; proteger cada ruta de salida y mostrar versión vigente sin modificar el original. No equiparar trabajo en memoria con autosave persistido.

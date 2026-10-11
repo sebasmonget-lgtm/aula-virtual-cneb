@@ -1,5 +1,9 @@
 # Memoria del proyecto Ayni Aula
 
+## Simplificación UX autorizada — 2026-10-11
+
+El propietario autoriza implementación progresiva del informe `AUDITORIA_UX_PROPUESTA_2026-10-11.md`, commits independientes y pruebas ficticias, con Preview cuando esté disponible/autorizado; excluye Producción y datos reales. Rama aislada `codex/ayni-ux-simplificacion-20261011`, base e3a107f. Se conservan cinco destinos, quince tramos, biblioteca, calendario, confirmación docente y actividades graduales. Primero confianza/recuperación; luego simplificación visual. Evidencia y pendientes por etapa en `docs/qa/AYNI_UX_IMPLEMENTACION_2026-10-11.md`; no heredar gates históricos como nuevos PASS.
+
 ## Handoff incremental del 7 de octubre de 2026
 
 Base remota verificada por fetch: codex/ayni-pdf-20261006 @ 47c8ce72dc77c1c08cc729ac060855f79fa14240, árbol limpio. Diagnóstico libre y síntesis con fuentes/insuficiencia; contexto separa procedencias; Hoy sin reajuste inteligente en la experiencia nueva; Evaluar con tres espacios, revisión por competencia, lotes durables y consolidado matricial. Reapertura explícita en servidor, invalidación selectiva y cierre histórico inmutable. Word familiar conserva conclusión canónica, nivel docente y foto privada opcional. Cuatro carpetas y documentación de quince tramos/timeline.

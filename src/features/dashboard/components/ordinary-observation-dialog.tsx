@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { apiFetch } from "@/src/lib/ayni-api-fetch";
+import { useUnsavedWork } from "@/src/lib/use-unsaved-work";
+import { currentObservationText, pendingObservationWork } from "@/src/lib/observation-work.mjs";
 import { localDatabaseApiUrl, type ActivityCriterion, type LocalStudent, type PrivateMediaUpload } from "@/src/lib/local-database";
 import { AsyncButton, WorkflowFeedback } from "./workflow-ui";
 import { DictationRecorder } from "./dictation-recorder";
@@ -37,6 +39,7 @@ export function OrdinaryObservationDialog({ students, activity, onClose }: {
   const [recordingBusy, setRecordingBusy] = useState(false);
   const [preparingPhoto, setPreparingPhoto] = useState(false);
   const [message, setMessage] = useState("");
+  const [feedbackTone, setFeedbackTone] = useState<"success" | "error">("success");
   const [saved, setSaved] = useState<SavedObservation | null>(null);
   const [editMode, setEditMode] = useState(false);
   const [correctedText, setCorrectedText] = useState("");
@@ -44,6 +47,10 @@ export function OrdinaryObservationDialog({ students, activity, onClose }: {
   const [history, setHistory] = useState<SavedObservation[] | null>(null);
   const [historyBusy, setHistoryBusy] = useState(false);
   const student = students.find((item) => item.id === studentId);
+  const blocked = saving || recordingBusy || preparingPhoto;
+  const dirty = pendingObservationWork({ saved, rawText, photo, editMode, correctedText, reason });
+  const allowLeave = useUnsavedWork(dirty, blocked, "Esta observación tiene cambios sin guardar. ¿Quieres descartarlos?");
+  const close = () => { if (allowLeave()) onClose(); };
 
   async function save(text = rawText, fromDictation = false) {
     if (!studentId || (!text.trim() && !photo) || saving || (recordingBusy && !fromDictation) || preparingPhoto) return;
@@ -59,8 +66,8 @@ export function OrdinaryObservationDialog({ students, activity, onClose }: {
       if (!response.ok) throw new Error(data.error || "No se pudo guardar la observación.");
       setRawText(text);
       setSaved(data.observation);
-      setMessage("Observación guardada para el alumno seleccionado.");
-    } catch (error) { setMessage(error instanceof Error ? error.message : "No se pudo guardar."); }
+      setFeedbackTone("success"); setMessage("Observación guardada para el niño seleccionado.");
+    } catch (error) { setFeedbackTone("error"); setMessage(error instanceof Error ? error.message : "No se pudo guardar. Tu texto sigue aquí; vuelve a intentarlo."); }
     finally { setSaving(false); }
   }
 
@@ -76,12 +83,14 @@ export function OrdinaryObservationDialog({ students, activity, onClose }: {
       if (!response.ok) throw new Error(data.error || "No se pudo revisar la observación.");
       setSaved({ ...data.observation, corrected_text: action === "correct" ? correctedText : saved.corrected_text });
       setEditMode(false); setReason("");
+      setFeedbackTone("success");
       setMessage(action === "void" ? "Observación anulada; el original queda en el historial." : "Corrección guardada; el original permanece intacto.");
-    } catch (error) { setMessage(error instanceof Error ? error.message : "No se pudo revisar."); }
+    } catch (error) { setFeedbackTone("error"); setMessage(error instanceof Error ? error.message : "No se pudo revisar."); }
     finally { setSaving(false); }
   }
 
   function startAnother() {
+    if (!allowLeave()) return;
     setStudentId(""); setCriterionId(activity?.initialCriterionId ?? ""); setRawText(""); setPhoto(null); setSaved(null); setEditMode(false);
     setCorrectedText(""); setReason(""); setMessage(""); setHistory(null); setClientRequestId(crypto.randomUUID());
   }
@@ -93,19 +102,19 @@ export function OrdinaryObservationDialog({ students, activity, onClose }: {
       const data = await response.json() as { error?: string; observations: SavedObservation[] };
       if (!response.ok) throw new Error(data.error || "No se pudo abrir el historial.");
       setHistory(data.observations);
-    } catch (error) { setMessage(error instanceof Error ? error.message : "No se pudo abrir el historial."); }
+    } catch (error) { setFeedbackTone("error"); setMessage(error instanceof Error ? error.message : "No se pudo abrir el historial."); }
     finally { setHistoryBusy(false); }
   }
 
-  return <Dialog open onOpenChange={(open) => { if (!open && !saving && !recordingBusy) onClose(); }}>
+  return <Dialog open onOpenChange={(open) => { if (!open) close(); }}>
     <DialogContent className="flex max-h-[90dvh] flex-col overflow-hidden rounded-2xl p-0 sm:max-w-xl">
       <DialogHeader className="shrink-0 border-b px-6 py-5">
         <DialogTitle>Registrar observación</DialogTitle>
         <DialogDescription>{activity ? `Durante: ${activity.title}` : "Una observación espontánea, sin elegir competencia."}</DialogDescription>
       </DialogHeader>
       <div className="min-h-0 space-y-5 overflow-y-auto px-6 py-4">
-        <fieldset disabled={Boolean(saved) || saving || recordingBusy}>
-          <legend className="mb-2 text-base font-semibold">Alumno observado <span className="text-red-700">*</span></legend>
+        <fieldset disabled={Boolean(saved) || blocked}>
+          <legend className="mb-2 text-base font-semibold">¿A quién observaste? <span className="text-red-700">*</span></legend>
           {priorityError && <p role="status" className="mb-2 text-sm">{priorityError}</p>}
           {([false, true] as const).map(hasEvidence => <div key={String(hasEvidence)} className="mb-3">
           {competencyId && priority.length > 0 && <h3 className="mb-2 text-sm font-semibold">{hasEvidence ? "Ya tienen evidencia" : "Aún sin evidencia en esta competencia"}</h3>}
@@ -113,7 +122,7 @@ export function OrdinaryObservationDialog({ students, activity, onClose }: {
             aria-pressed={studentId === item.id} onClick={() => setStudentId(item.id)}
             className={`min-h-11 rounded-xl border px-3 py-2 text-sm ${studentId === item.id ? "border-[#087d96] bg-[#e8f6fb] font-semibold" : "bg-white hover:border-[#087d96]"}`}>
             {studentId === item.id && <Check className="mr-1 inline size-4" />}{item.full_name ?? item.name}</button>)}</div></div>)}
-          {!studentId && <p className="mt-2 text-sm text-[#7a3c12]">Selecciona al alumno antes de escribir, dictar o guardar.</p>}
+          {!studentId && <p className="mt-2 text-sm text-[#7a3c12]">Elige un niño para escribir o dictar tu observación.</p>}
         </fieldset>
         {!saved && activity?.initialCriterionId && <p className="rounded-xl bg-[#fff4df] p-3 text-sm"><b>Criterio:</b> {activity.criteria.find(item => item.id === activity.initialCriterionId)?.criterion_text}</p>}
         {!saved && !activity?.initialCriterionId && activity && activity.criteria.length > 0 && <div>
@@ -130,13 +139,13 @@ export function OrdinaryObservationDialog({ students, activity, onClose }: {
           {history.length === 0 ? <p className="mt-2 text-sm">Todavía no hay observaciones.</p> :
             <div className="mt-2 max-h-44 space-y-2 overflow-y-auto">{history.slice(0, 20).map((item) =>
               <button key={item.id} type="button" className="block w-full rounded-lg border bg-white p-2 text-left text-sm hover:border-[#087d96]"
-                onClick={() => { setSaved(item); setStudentId(item.student_id); setHistory(null); setEditMode(false); setMessage(""); }}>
+                disabled={blocked} onClick={() => { if (!allowLeave()) return; setSaved(item); setStudentId(item.student_id); setHistory(null); setEditMode(false); setMessage(""); }}>
                 <span className="font-semibold">{students.find((child) => child.id === item.student_id)?.name ?? "Alumno"} · {item.status === "corrected" ? "Corregida" : item.status === "voided" ? "Anulada" : "Guardada"}</span>
                 <span className="mt-1 block truncate">{item.corrected_text ?? item.raw_text ?? "Foto"}</span>
               </button>)}</div>}
         </section>}
         {!saved ? <>
-          <div><label htmlFor="ordinary-raw-text" className="mb-2 block font-semibold">¿Qué ocurrió?</label>
+          <div><label htmlFor="ordinary-raw-text" className="mb-2 block font-semibold">¿Qué observaste?</label>
             <Textarea id="ordinary-raw-text" value={rawText} onChange={(event) => setRawText(event.target.value)}
               disabled={!studentId || saving || recordingBusy} maxLength={4000} className="min-h-32 bg-white"
               placeholder="Describe lo que viste o escuchaste; no hace falta elegir una competencia." /></div>
@@ -149,31 +158,32 @@ export function OrdinaryObservationDialog({ students, activity, onClose }: {
               disabled={!studentId || saving || recordingBusy || preparingPhoto} className="block w-full text-sm"
               onChange={async (event) => { const file = event.currentTarget.files?.[0]; if (!file) return;
                 setPreparingPhoto(true); setMessage(""); try { setPhoto(await preparePrivateMedia(file)); }
-                catch (error) { setMessage(error instanceof Error ? error.message : "No se pudo preparar la foto."); }
+                catch (error) { setFeedbackTone("error"); setMessage(error instanceof Error ? error.message : "No se pudo preparar la foto."); }
                 finally { setPreparingPhoto(false); } }} />
             {photo && <p className="mt-2 text-sm">Foto lista: {photo.name} <button type="button" className="underline" onClick={() => setPhoto(null)}>Quitar</button></p>}
           </div>
         </> : <section className="rounded-xl border bg-[#f6f9fd] p-4">
           <p className="font-semibold">{student?.name} · {saved.status === "voided" ? "Anulada" : saved.status === "corrected" ? "Corregida" : "Guardada"}</p>
-          <p className="mt-2 whitespace-pre-wrap text-sm">{saved.raw_text ?? "Foto sin texto"}</p>
-          {saved.corrected_text && <p className="mt-2 whitespace-pre-wrap rounded-lg bg-white p-2 text-sm"><b>Revisión docente:</b> {saved.corrected_text}</p>}
+          <p className="mt-2 whitespace-pre-wrap text-sm">{currentObservationText(saved) || "Foto sin texto"}</p>
+          {saved.corrected_text != null && <details className="mt-3 text-sm"><summary className="min-h-11 cursor-pointer py-2">Ver texto original</summary><p className="whitespace-pre-wrap">{saved.raw_text ?? "Foto sin texto"}</p></details>}
           <p className="mt-2 text-xs text-muted-foreground">El texto original y el alumno asociado no se modifican por una corrección.</p>
-          {saved.status !== "voided" && !editMode && <Button type="button" variant="outline" className="mt-3" onClick={() => { setCorrectedText(saved.raw_text ?? ""); setEditMode(true); }}>Corregir o anular</Button>}
+          {saved.status !== "voided" && !editMode && <Button type="button" variant="outline" className="mt-3" onClick={() => { setCorrectedText(currentObservationText(saved)); setEditMode(true); }}>Corregir o anular</Button>}
           {editMode && <div className="mt-3 space-y-3">
             <label className="block text-sm font-semibold">Texto corregido<Textarea value={correctedText} onChange={(event) => setCorrectedText(event.target.value)} maxLength={4000} className="mt-1 bg-white" /></label>
             <label className="block text-sm font-semibold">Motivo de la revisión<input value={reason} onChange={(event) => setReason(event.target.value)} maxLength={500} className="mt-1 min-h-11 w-full rounded-lg border bg-white px-3" /></label>
             <div className="flex flex-wrap gap-2"><AsyncButton busy={saving} busyLabel="Guardando..." disabled={!correctedText.trim() || reason.trim().length < 3} onClick={() => void revise("correct")}>Guardar corrección</AsyncButton>
               <Button variant="outline" disabled={saving || reason.trim().length < 3} onClick={() => void revise("void")}>Anular observación</Button>
-              <Button variant="ghost" onClick={() => setEditMode(false)}>Cancelar</Button></div>
+              <Button variant="ghost" disabled={blocked} onClick={() => { if (allowLeave()) { setEditMode(false); setReason(""); } }}>Cancelar</Button></div>
           </div>}
         </section>}
-        {message && <WorkflowFeedback tone={saved && !editMode ? "success" : "error"}>{message}</WorkflowFeedback>}
+        {!saved && dirty && <p role="status" className="text-sm text-[#526b87]">Sin guardar · Tu observación se conserva mientras esta ventana esté abierta.</p>}
+        {message && <WorkflowFeedback tone={feedbackTone}>{message}</WorkflowFeedback>}
       </div>
       <DialogFooter className="shrink-0 border-t px-6 py-4">
-        <Button variant="ghost" onClick={onClose} disabled={saving || recordingBusy}>Cerrar</Button>
+        <Button variant="ghost" onClick={close} disabled={blocked}>Cerrar</Button>
         {!saved && <AsyncButton variant="outline" busy={historyBusy} busyLabel="Cargando..." disabled={saving || recordingBusy}
           onClick={() => void loadHistory()}>Ver observaciones</AsyncButton>}
-        {saved ? <Button variant="outline" onClick={startAnother}>Registrar otra</Button> :
+        {saved ? <Button variant="outline" disabled={blocked} onClick={startAnother}>Registrar otra</Button> :
           <AsyncButton busy={saving} busyLabel="Guardando..." disabled={!studentId || (!rawText.trim() && !photo) || recordingBusy || preparingPhoto}
             onClick={() => void save()}>Guardar observación</AsyncButton>}
       </DialogFooter>

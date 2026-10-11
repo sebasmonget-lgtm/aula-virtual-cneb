@@ -101,6 +101,23 @@ test("corrección CAS append-only conserva original, alumno y media; revisión p
   } finally { await f.db.close(); }
 });
 
+test("dos correcciones sucesivas conservan RAW e historia y listan solo la vigente", async () => {
+  const f = await fixture();
+  try {
+    const { observation } = await saveOrdinaryObservation(f.db, f.teacher, {
+      studentId: f.student, clientRequestId: randomUUID(), sourceKind: "spontaneous", rawText: "Contó tres bloques." });
+    const first = await reviseOrdinaryObservation(f.db, f.teacher, observation.id, {
+      action: "correct", correctedText: "Contó cuatro bloques con apoyo.", reason: "Aclaración ficticia", expectedRevision: 1 });
+    const second = await reviseOrdinaryObservation(f.db, f.teacher, observation.id, {
+      action: "correct", correctedText: "Contó cuatro bloques después de una pregunta.", reason: "Precisé el apoyo", expectedRevision: first.source_revision });
+    assert.equal(second.raw_text, observation.raw_text);
+    assert.equal(second.source_revision, 3);
+    assert.equal((await listOrdinaryObservations(f.db, f.teacher))[0].corrected_text, "Contó cuatro bloques después de una pregunta.");
+    const history = (await f.db.query("select corrected_text from ordinary_observation_revisions where observation_id=$1 order by revision", [observation.id])).rows;
+    assert.deepEqual(history.map(row => row.corrected_text), ["Contó cuatro bloques con apoyo.", "Contó cuatro bloques después de una pregunta."]);
+  } finally { await f.db.close(); }
+});
+
 test("foto privada sin texto queda ligada al alumno y no exige competencia", async () => {
   const f = await fixture();
   try {
