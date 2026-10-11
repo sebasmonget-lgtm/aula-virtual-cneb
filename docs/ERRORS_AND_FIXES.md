@@ -1738,3 +1738,11 @@ Contexto: historia local nueva, base 16c1d6f, rama codex/ayni-qa-ia-ux-costos-20
 | IQ-21 | ASR con usage real seguía costándose solo por minutos. | Tarifa token input 1.25/output 5 por millón; preferir costo proveedor, después tokens válidos y finalmente duración. RED antes del fix y GREEN 5/5, suite final 775. Conciliación 52 calls sin desconocidos. | Conservar versión y ledger anterior; nunca sumar tokens y duración para la misma respuesta. |
 
 Limitaciones de herramientas: zoom no verificable por atajo; micrófono sin autorización específica; secretos cloud no extraíbles por env pull. No son permisos para desactivar seguridad. El render final produjo ocho páginas válidas, aunque el wrapper PowerShell de foreach terminó con error de redirección; se verifican archivos/render individuales, no se atribuye exit 0 al wrapper.
+
+## Harness RLS exige lectura docente de nonces del backend — 2026-10-11
+
+- Síntoma: `scripts/test-supabase-rls.mjs` falla con `preparation_dispatch_receipts: exactly one policy` al aplicar las 73 migraciones.
+- Causa raíz: clasificaba una tabla exclusivamente del servidor como registro pedagógico legible por docentes. La migración 20261006015005 ya habilita RLS y revoca todos los grants de public/anon/authenticated; cero políticas de cliente es el comportamiento previsto.
+- Solución: conservar la migración y los permisos intactos; excluir esa tabla de la expectativa de SELECT docente y comprobar explícitamente que anon/authenticated carezcan de SELECT/INSERT/UPDATE/DELETE. No se cambió código de producto ni datos cloud.
+- Validación: harness completo PASS con 73 migraciones, 66 tablas privadas y aislamiento de dos docentes en 16 tablas sensibles y Storage. No sustituye QA autenticado de RLS remoto.
+- Prevención: distinguir datos pedagógicos con lectura por ownership de las tablas técnicas reservadas al backend; comprobar ausencia de grants, además de presencia de RLS.

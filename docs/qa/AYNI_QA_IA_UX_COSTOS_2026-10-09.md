@@ -1,6 +1,6 @@
 # QA integral de IA, UX y costos — 9–10 de octubre de 2026
 
-Resultado: correcciones y recorrido local consolidados; publicación limitada a Preview. **Production BLOQUEADA** hasta completar G2, G3 y G5. No se heredan PASS de rondas anteriores. La petición directa del propietario adopta el recorrido del PDF del 9 de octubre y sus condiciones de publicación.
+Resultado histórico: correcciones y recorrido local consolidados, con G2/G3/G5 pendientes. **Actualización del 11 de octubre: Production publicada para pruebas internas por autorización directa posterior del propietario**, sin declarar aprobadas las verificaciones pendientes. Release exacto `ea206bf`; alcance, smoke y rollback en [AYNI_PRODUCTION_INTERNA_2026-10-11.md](AYNI_PRODUCTION_INTERNA_2026-10-11.md). Se conserva abajo la evidencia y las restricciones históricas de cada ronda.
 
 ## Procedencia, datos y rollback
 

@@ -51,9 +51,18 @@ try {
   // Catalog assertions catch a newly added exposed table or a forgotten old policy.
   const allTables = await db.query(`select c.relname, c.relrowsecurity from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relkind='r' order by c.relname`);
   assert(allTables.rows.every((row) => row.relrowsecurity), 'Every public table needs RLS');
+  // Dispatch nonces are backend-only; unlike teacher-owned records, they have no client SELECT policy.
+  for (const role of ['anon', 'authenticated']) {
+    const access = await db.query(`select
+      has_table_privilege($1, 'public.preparation_dispatch_receipts', 'SELECT') as sel,
+      has_table_privilege($1, 'public.preparation_dispatch_receipts', 'INSERT') as ins,
+      has_table_privilege($1, 'public.preparation_dispatch_receipts', 'UPDATE') as upd,
+      has_table_privilege($1, 'public.preparation_dispatch_receipts', 'DELETE') as del`, [role]);
+    assert.deepEqual(access.rows[0], { sel: false, ins: false, upd: false, del: false }, 'Dispatch receipts: backend only');
+  }
   const privateTables = allTables.rows.map((row) => row.relname).filter((name) => !new Set([
     'curriculum_versions','levels','age_grades','curriculum_areas','competencies','capacities','standards','performances',
-    'competency_observation_guides','document_templates','observation_references','curriculum_source_documents','cycles','transversal_approaches','ai_pending_generations',
+    'competency_observation_guides','document_templates','observation_references','curriculum_source_documents','cycles','transversal_approaches','ai_pending_generations','preparation_dispatch_receipts',
   ]).has(name));
   for (const table of privateTables) {
     const policies = await db.query(`select cmd, roles from pg_policies where schemaname='public' and tablename=$1`, [table]);
