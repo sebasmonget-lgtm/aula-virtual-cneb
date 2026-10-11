@@ -62,3 +62,13 @@ Editor conserva sus quince tramos y drag/drop; abre alrededor de la fecha del se
 Hoy reduce duplicaciones de captura en cabecera/acciones rápidas; asistencia secundaria aparece en días lectivos y se conserva la captura cotidiana alternativa cuando la evidencia principal pertenece a una actividad. Calendario mantiene Mes/Semana/Año, excepción, reprogramación y fuente oficial; agrupa calendario oficial, mejora controles táctiles y usa Dialog existente para foco/Escape. Reprogramación/excepción pendiente y cierre de actividad se protegen; escrituras evitan doble envío mientras están activas.
 
 42 pruebas focales PASS/0 SKIP; navegador ficticio PASS para foco/Escape del taller, guarda de reprogramación/cambio de mes, guardado explícito y nota de cierre sin finalización automática. Typecheck y lint focal exit 0. Build Next webpack exit 0. Revisión vercel:react-best-practices aplicada sin nuevos frameworks o dependencias. Rollback: revertir UI; ninguna API, migración ni dato mutado por esta etapa.
+
+## Etapa 6 · Informes, documentos e integración
+
+Descarga completa y sincronización pasan a detalles secundarios. Se mantienen cuatro carpetas, árbol, versiones, progreso recuperable, Word/ZIP y conflictos de archivos. El consolidado se llama Registro de evaluaciones; conserva filtros, conclusiones y Excel, con región desplazable por teclado. Informes preparados indican «falta guardar» hasta persistirse; preparar no equivale a guardar o confirmar. Errores de conexión usan una indicación docente, sin pedir iniciar infraestructura.
+
+La prueba vertical con navegador, servidor HTTP real y PGlite nueva detectó un bloqueo después de configurar el aula: la guarda busy del formulario interceptaba su propia transición de éxito. Se permite esa transición únicamente después de la respuesta de guardado. Reproducción inicial fallida y comprobación posterior PASS para configuración → niño → observación → dos correcciones → recarga. Datos exclusivamente ficticios; entorno hijo sin credenciales de proveedores, cero IA. Las guardas de las otras salidas se mantienen.
+
+Suite completa fresca: 768 PASS, 0 FAIL/0 SKIP, incluidos servicios PGlite, rutas HTTP, autorización, IA simulada y suite evals. Primer pase: 762/765 PASS; tres expectativas de textos retirados se actualizaron preservando comprobaciones de guardado/confirmación. Reejecución focal posterior a la transición de configuración: 24/24 PASS. Typecheck, Next webpack y Vinext exit 0. Lint global: exit 0, cero errores, dos avisos preexistentes en fixtures privados ajenos. Rollback: revertir este commit de cliente/tests; sin migración ni cambio de formato.
+
+Capturas e integración ampliada de escritorio/móvil en curso. Preview pendiente de commit limpio y smoke; Producción fuera del alcance.

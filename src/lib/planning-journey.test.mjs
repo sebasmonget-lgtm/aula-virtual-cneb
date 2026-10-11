@@ -129,5 +129,7 @@ test("la interfaz abre el diagnóstico y ofrece continuar al plan solo tras guar
   assert.match(diagnostic, /disabled=\{index \+ 1 > maxStep\}/);
   assert.match(diagnostic, /setData\(await completeDiagnosticReview\(\)\); onPlan\?\.\(\)/);
   assert.match(diagnostic, /!data\.observations\.length.*información insuficiente/);
-  assert.match(students, /Terminé de cargar mi aula/);
+  assert.match(students, /Ya registré a mis niños/);
+  assert.match(students, /onDiagnostic/);
+  assert.match(students, /onPlan/);
 });

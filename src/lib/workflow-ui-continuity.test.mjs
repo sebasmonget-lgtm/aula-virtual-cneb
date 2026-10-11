@@ -144,9 +144,10 @@ test("alta y entrevista presentan datos completos, fecha opcional y audio por pr
   for (const field of ["institutionCode", "district", "ugel", "directorName", "createLogo"]) {
     assert.match(setup, new RegExp(field));
   }
-  assert.match(students, /Añadir alumno<\/button>/);
+  assert.match(students, /Añadir niño/);
   assert.match(students, /id="student-birth-date" type="date"/);
-  assert.match(students, /Importar lista CSV/);
+  assert.match(students, /Lista de niños en CSV/);
+  assert.match(students, /Revisar lista antes de añadir/);
   assert.match(students, /student\.birth_date &&/);
   assert.match(interview, /<InterviewAudioRecorder[^>]*studentId=/);
   assert.match(interview, /aria-live="polite"/);
@@ -198,7 +199,9 @@ test("guiadas y espontáneas conservan dictado revisable y guardado explícito",
   assert.match(guided, /disabled=\{working \|\| audioBusy\}/);
   assert.match(spontaneous, /purpose="raw_observation" rawTranscript/);
   assert.match(spontaneous, /onTranscribed=\{dictated\}/);
-  assert.match(spontaneous, /todavía no guarda/);
+  assert.match(spontaneous, /Pedir una sugerencia no guarda ni asigna un nivel/);
+  const dictated = spontaneous.slice(spontaneous.indexOf("async function dictated"), spontaneous.indexOf("return <", spontaneous.indexOf("async function dictated")));
+  assert.doesNotMatch(dictated, /await analyze|void analyze/);
   assert.match(recorder, /mergeDictationText\(currentTextRef\.current, text, maxLength\)/);
   assert.match(recorder, /const recordingLabel = "Dictar"/);
   assert.doesNotMatch(recorder, /saveSpontaneousObservation|saveDiagnosticExperienceObservation/);

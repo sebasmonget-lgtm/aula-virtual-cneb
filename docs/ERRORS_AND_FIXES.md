@@ -1,5 +1,15 @@
 # Errores y soluciones
 
+## 2026-10-11 · UX-06 · Transición tras configurar el aula
+
+**Síntoma:** aula guardada correctamente, seguida de carga permanente en lugar de registrar niños. Reproducido con navegador y servidor HTTP real sobre PGlite nueva y docente ficticia.
+
+**Causa:** la nueva guarda de salida busy de PilotSetup seguía activa cuando onReady llamaba a navigate; rechazaba su propia transición posterior al guardado y dejaba starting activo.
+
+**Solución validada:** la respuesta exitosa de configuración usa la transición explícita afterSavedSetup; las otras navegaciones conservan canLeaveWorkspace. El recorrido vuelve a mostrar matrícula, añade un niño, guarda una observación, conserva dos correcciones y las recupera después de recargar. 24 pruebas focales, typecheck y builds Next/Vinext PASS.
+
+**Prevención:** comprobar éxito de formulario dentro del workspace completo y API real; una prueba aislada del formulario con callback vacío no verifica la transición. No omitir la guarda en errores o salidas anteriores al commit de datos.
+
 ## 2026-10-07 — Integración de lotes y consolidado
 
 **Síntoma/causa.** Una proyección nueva leía level donde el modelo canónico exponía achievement_level: consolidado perdía la valoración. Hash basado en serialización JSON dependía del orden de propiedades al recuperar JSONB. Un job de edición individual guardado solo mostraba su niño, ocultando los demás textos canónicos. Fixtures antiguas carecían de tablas de cierre y asumían modificaciones posteriores sin reapertura.
