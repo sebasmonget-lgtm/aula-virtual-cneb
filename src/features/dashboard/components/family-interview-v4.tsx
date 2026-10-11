@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, Printer } from "lucide-react";
+import { ArrowLeft, ArrowRight, Printer, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { attachFamilyInterview, saveAndConfirmFamilyInterview, familyInterviewAttachmentUrl,
   loadFamilyInterview, loadFamilyInterviewStatuses, loadStudentPedagogicalProfile, saveFamilyInterview,
@@ -131,7 +131,7 @@ export function FamilyInterviewEditor({ studentId, studentName: rawStudentName, 
               ...(field === "interest_tags" && !next.includes("other") ? { other_interest_text: undefined } : {}),
               ...(field === "community_tags" && !next.includes("other") ? { other_community_text: undefined } : {}) };
           })}
-          className={`min-h-11 rounded-full border px-4 text-sm font-medium ${selected ? "border-[#087d96] bg-[#e4f7f9] text-[#075a6d]" : "border-[#d7e4ed] bg-white text-[#405a73]"}`}>{option.label}</button>;
+          className={`inline-flex min-h-11 items-center gap-2 rounded-lg border px-4 text-sm font-medium ${selected ? "border-[#087d96] bg-[#e4f7f9] text-[#075a6d]" : "border-[#d7e4ed] bg-white text-[#405a73]"}`}><span className={`grid size-5 shrink-0 place-items-center rounded border ${selected?"border-[#087d96] bg-[#087d96] text-white":"border-[#8ba5b5]"}`} aria-hidden="true">{selected&&<Check className="size-4"/>}</span>{option.label}</button>;
       })}</div></fieldset>;
   }
   async function transcribeField(field: TextField, maxLength: number, text: string, saveNow: boolean) {

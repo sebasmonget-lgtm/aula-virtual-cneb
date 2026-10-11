@@ -16,7 +16,8 @@ import { FamilyInterviewEditor, FamilyInterviewStatusBadge, useFamilyInterviewSt
 import { SpontaneousDiagnostic } from "./spontaneous-diagnostic-v4";
 import { displayPersonName } from "@/src/lib/person-name.mjs";
 import { DictationRecorder } from "./dictation-recorder";
-import { useWorkspaceSubview } from "@/src/lib/workspace-location";
+import { useUnsavedWork } from "@/src/lib/use-unsaved-work";
+import { canLeaveWorkspace, useWorkspaceSubview } from "@/src/lib/workspace-location";
 import { StudentPhoto } from "./student-photo";
 import { ObservationCoverageMatrix } from "./observation-coverage-matrix";
 import { apiFetch } from "@/src/lib/ayni-api-fetch";
@@ -31,10 +32,10 @@ export function GuidedDiagnostic({ dashboard, onPlan, onStudents, initialStep = 
   dashboard: LocalDashboard; onPlan?: () => void; onStudents?: () => void; initialStep?: 1 | 2 | 3;
 }) {
   const [data, setData] = useState<DiagnosticWorkspace | null>(null);
-  const [step, setStep] = useWorkspaceSubview("Planificar", "step", diagnosticStepValues, initialStep === 3 ? 2 : initialStep);
+  const [step, setStep] = useWorkspaceSubview("Planificar", "step", diagnosticStepValues, initialStep === 3 ? 2 : initialStep, false);
   const [experienceId, setExperienceId] = useState<string | null>(null);
   const [interviewStudentId, setInterviewStudentId] = useState<string | null>(null);
-  const [observationMode, setObservationMode] = useWorkspaceSubview("Planificar", "mode", observationModes, "spontaneous");
+  const [observationMode, setObservationMode] = useWorkspaceSubview("Planificar", "mode", observationModes, "spontaneous", false);
   const [, setPendingSpontaneous] = useState<number | null>(null);
   const [spontaneousRecords, setSpontaneousRecords] = useState<SpontaneousObservation[] | null>(null);
   const [studentId, setStudentId] = useState<string | null>(null);
@@ -59,7 +60,7 @@ export function GuidedDiagnostic({ dashboard, onPlan, onStudents, initialStep = 
   const { statuses: interviewStatuses, error: interviewStatusError } = useFamilyInterviewStatusMap(`${interviewStudentId ?? "list"}:${data?.students.map((item) => item.id).join(",") ?? ""}`, Boolean(data?.students.length));
 
   useEffect(() => { loadDiagnostics().then(setData).catch((cause) => setError(cause instanceof Error ? cause.message : "No se pudo cargar el diagnóstico.")); }, []);
-  useEffect(()=>{let live=true;
+  useEffect(()=>{if(!matrixOpen)return;let live=true;
     apiFetch(`${localDatabaseApiUrl}/api/annual-journey/coverage`).then(async response=>{
       if(!response.ok)throw new Error("No pudimos consultar los registros. Puedes volver a observar o continuar a preparar tu año.");
       const result=await response.json() as {curriculum:{id:string;name:string}[];counts:Record<string,number>;unclassified:number;observed_students:number};
@@ -79,8 +80,9 @@ export function GuidedDiagnostic({ dashboard, onPlan, onStudents, initialStep = 
     setPendingSpontaneous(count);
     if (initialStep === 3) setStep(3);
   }).catch(() => { setPendingSpontaneous(null); if (initialStep === 3) setStep(3); }); }, [initialStep, setStep]);
-  function openMatrix(){setMatrixCoverage(null);setMatrixError("");setMatrixOpen(true);}
+  function openMatrix(){if(!canLeaveWorkspace())return;setMatrixCoverage(null);setMatrixError("");setMatrixOpen(true);}
   function goToStep(next: 1 | 2 | 3) {
+    if(!canLeaveWorkspace())return;
     if (next === 3) { setBriefReview(true); return; }
     setMatrixOpen(false); setBriefReview(false); setStep(next);
   }
@@ -103,7 +105,8 @@ export function GuidedDiagnostic({ dashboard, onPlan, onStudents, initialStep = 
     !observedPairs.has(`${id}:${competencyId}`));
   const experienceGapScore = (competencyIds: string[]) => (data?.students ?? []).reduce((total, item) =>
     total + missingFor(item.id, competencyIds).length, 0);
-  const highestGapScore = Math.max(0, ...(data?.experiences ?? []).map((item) => experienceGapScore(item.competencies.map((card) => card.id))));
+  const rankedExperiences = [...(data?.experiences ?? [])].sort((a,b)=>experienceGapScore(b.competencies.map(card=>card.id))-experienceGapScore(a.competencies.map(card=>card.id)));
+  const allowLeave=useUnsavedWork(Boolean(studentId&&note.trim()),working||audioBusy);
   const visibleStudents = (data?.students ?? []).filter((item) => {
     const own = records.filter((record) => record.student_id === item.id);
     if (filter === "without") return missingFor(item.id, experience?.competencies.map((card) => card.id) ?? []).length > 0;
@@ -114,9 +117,11 @@ export function GuidedDiagnostic({ dashboard, onPlan, onStudents, initialStep = 
     missingFor(a.id, experience?.competencies.map((card) => card.id) ?? []).length);
 
   function selectExperience(id: string) {
+    if(!canLeaveWorkspace())return;
     setExperienceId(id); setStudentId(null); setFilter("all"); setFeedback(""); setError("");
   }
   function selectStudent(id: string) {
+    if(!allowLeave())return;
     setStudentId(id); setNote(""); setError(""); setFeedback("");
   }
   async function save() {
@@ -135,9 +140,16 @@ export function GuidedDiagnostic({ dashboard, onPlan, onStudents, initialStep = 
 
   if (!data.students.length) return <section className="diagnostic-panel space-y-3 p-5"><h1 className="text-2xl font-bold">Primero, conoce a tu grupo</h1><p className="text-sm text-[#526b87]">Agrega a las niñas y los niños del aula para comenzar.</p>{onStudents && <Button onClick={onStudents}>Agregar niños <ArrowRight className="size-4" /></Button>}</section>;
 
+  const classroomData=data;
+  function renderExperience(item: DiagnosticWorkspace["experiences"][number]) {
+        const progress = classroomData.experience_coverage.find((value) => value.experience_id === item.id);
+        const score = experienceGapScore(item.competencies.map((card) => card.id));
+        const recommended = item.id===rankedExperiences[0]?.id && score>0;
+        return <button key={item.id} type="button" onClick={() => selectExperience(item.id)} className={`min-h-28 w-full rounded-2xl border-2 bg-white p-4 text-left hover:bg-[#f4fbfd] focus-visible:outline-2 focus-visible:outline-[#087d96] ${recommended ? "border-[#54a98a]" : "border-[#dce9f2] hover:border-[#087d96]"}`}><span className="font-bold text-[#172b52]">{item.title}</span>{recommended && <span className="ml-2 inline-block rounded-full bg-[#e0f5e9] px-2 py-1 text-xs font-bold text-[#176442]">Recomendada para observar</span>}<span className="mt-1 block text-sm text-[#526b87]">{item.explanation}</span><span className="mt-2 block text-xs font-semibold text-[#087d96]">{progress?.students_with_records ?? 0} de {classroomData.students.length} niños con registros</span></button>;
+  }
   return <div className="diagnostic-shell space-y-5">
     <header><h1 className="text-2xl sm:text-3xl font-extrabold text-[#172b52]">Conoce a tu grupo</h1><p className="mt-2 text-sm text-[#526b87]">Puedes avanzar a tu ritmo. Las entrevistas y observaciones se complementan, pero no tienes que hacerlas en un orden específico.</p></header>
-    <nav aria-label="Caminos del diagnóstico" className="flex flex-wrap gap-2">{([[1,"Entrevistas a familias"],[2,"Observaciones"],[3,"Revisar lo que Ayni conoce"]] as const).map(([path,label])=><Button key={path} variant={(briefReview?path===3:!matrixOpen&&step===path)?"default":"outline"} aria-pressed={briefReview?path===3:!matrixOpen&&step===path} onClick={()=>goToStep(path)}>{label}</Button>)}</nav>
+    <nav aria-label="Caminos del diagnóstico" className="flex flex-wrap gap-2">{([[1,"Entrevistas a familias"],[2,"Observaciones"]] as const).map(([path,label])=><Button key={path} variant={(!briefReview&&!matrixOpen&&step===path)?"default":"outline"} aria-pressed={!briefReview&&!matrixOpen&&step===path} onClick={()=>goToStep(path)}>{label}</Button>)}</nav><Button variant="ghost" className="min-h-11" onClick={()=>goToStep(3)}>Revisar lo que Ayni conoce (opcional)</Button>
     {briefReview&&<DiagnosticBriefReview onBack={()=>setBriefReview(false)} onContinue={()=>onPlan?.()}/>}
     <div hidden={briefReview}>
     {error && !student && <p role="alert" className="rounded-xl bg-[#fff1d6] p-3 text-sm">{error}</p>}
@@ -169,21 +181,16 @@ export function GuidedDiagnostic({ dashboard, onPlan, onStudents, initialStep = 
       onGuided={(id,experience)=>{setMatrixOpen(false);setObservationMode("guided");selectExperience(experience);selectStudent(id);}} />}
     {matrixOpen && !matrixCoverage && <section className="diagnostic-panel space-y-4 p-5">{matrixError?<p role="alert">{matrixError}</p>:<LoadingState label="Consultando las observaciones de tu aula…" />}<Button variant="outline" onClick={()=>setMatrixOpen(false)}>Volver a observar</Button><Button onClick={()=>onPlan?.()}>Continuar de todas formas →</Button></section>}
     {!matrixOpen && !experience && !freeCompetencyId && <div className="space-y-2">
-      <div role="group" aria-label="Forma de observar" className="grid gap-2 rounded-2xl border border-[#c9dce9] bg-white p-2 sm:grid-cols-2">{([["spontaneous","Registrar algo que observé"],["guided","Probar una experiencia para conocer mejor"]] as const).map(([mode,label])=><button key={mode} type="button" aria-pressed={observationMode===mode} onClick={()=>{setFreeCompetencyId("");setObservationMode(mode);}} className={`min-h-14 rounded-xl px-4 py-3 text-sm font-bold sm:text-base ${observationMode===mode?"bg-[#e4f3f7] text-[#075d70]":"text-[#526b87] hover:bg-[#f5f8fb]"}`}>{label}</button>)}</div>
+      <div role="group" aria-label="Forma de observar" className="grid gap-2 rounded-2xl border border-[#c9dce9] bg-white p-2 sm:grid-cols-2">{([["spontaneous","Registrar algo que observé"],["guided","Probar una experiencia para conocer mejor"]] as const).map(([mode,label])=><button key={mode} type="button" aria-pressed={observationMode===mode} onClick={()=>{if(!canLeaveWorkspace())return;setFreeCompetencyId("");setObservationMode(mode);}} className={`min-h-14 rounded-xl px-4 py-3 text-sm font-bold sm:text-base ${observationMode===mode?"bg-[#e4f3f7] text-[#075d70]":"text-[#526b87] hover:bg-[#f5f8fb]"}`}>{label}</button>)}</div>
       <p className="px-1 text-sm text-[#526b87]">{observationMode === "guided" ? "Elige un juego sugerido y anota lo que observaste." : "Anota algo que ocurrió durante el juego o la jornada."}</p>
     </div>}
     {!matrixOpen && !experience && observationMode === "spontaneous" && <SpontaneousDiagnostic key={`${freeStudentId}:${freeCompetencyId}`} initialStudentId={freeStudentId} initialCompetencyId={freeCompetencyId} onBack={()=>{setFreeCompetencyId("");openMatrix();}} students={data.students} onDecisionSaved={() => void refreshPendingSpontaneous()} onSaved={() => void refreshObservationProgress()} />}
     {!matrixOpen && !experience && observationMode === "guided" && <section className="diagnostic-panel space-y-4 p-5 md:p-7">
-      <div><h2 className="text-xl font-bold">¿Qué experiencia realizaste?</h2><p className="mt-1 text-sm text-[#526b87]">Son ideas para observar en el juego y la jornada; puedes volver a cualquiera otro día.</p></div>
+      <div><h2 className="text-xl font-bold">Experiencias para observar</h2><p className="mt-1 text-sm text-[#526b87]">Puedes realizar un juego sugerido o volver a uno que ya realizaste.</p></div>
       {data.experiences.some((item) => item.catalog_status === "development_fixture") && <p className="rounded-xl bg-[#fff5df] p-3 text-sm">Guías de desarrollo: todavía no son la batería pedagógica definitiva de Ayni.</p>}
       {spontaneousRecords && <p className="rounded-xl bg-[#edf8f4] p-3 text-sm text-[#246554]">Las experiencias marcadas ofrecen oportunidades para competencias con menos registros. La ausencia de observaciones no indica una dificultad del niño.</p>}
-      <div className="grid gap-3 md:grid-cols-2">{data.experiences.map((item) => {
-        const progress = data.experience_coverage.find((value) => value.experience_id === item.id);
-        const score = experienceGapScore(item.competencies.map((card) => card.id));
-        const recommended = spontaneousRecords && score > 0 && score === highestGapScore;
-        return <button key={item.id} type="button" onClick={() => selectExperience(item.id)} className={`min-h-28 rounded-2xl border-2 bg-white p-4 text-left hover:bg-[#f4fbfd] focus-visible:outline-2 focus-visible:outline-[#087d96] ${recommended ? "border-[#54a98a]" : "border-[#dce9f2] hover:border-[#087d96]"}`}><span className="font-bold text-[#172b52]">{item.title}</span>{recommended && <span className="ml-2 inline-block rounded-full bg-[#e0f5e9] px-2 py-1 text-xs font-bold text-[#176442]">Recomendada para observar</span>}<span className="mt-1 block text-sm text-[#526b87]">{item.explanation}</span><span className="mt-2 block text-xs font-semibold text-[#087d96]">{progress?.students_with_records ?? 0} de {data.students.length} niños con registros</span></button>;
-      })}</div>
-    </section>}
+      <div>{rankedExperiences[0]&&renderExperience(rankedExperiences[0])}</div>
+      {rankedExperiences.length>1&&<details><summary className="min-h-11 cursor-pointer py-3 font-semibold text-[#075d70]">Ver otras {rankedExperiences.length-1} experiencias</summary><div className="grid gap-3 md:grid-cols-2">{rankedExperiences.slice(1).map(renderExperience)}</div></details>} </section>}
 
     {!matrixOpen && experience && !student && <section className="diagnostic-panel space-y-5 p-4 md:p-7">
       <Button variant="outline" className="diagnostic-back-button" onClick={() => { setExperienceId(null); setFilter("all"); }}><ArrowLeft /> Volver a experiencias</Button>

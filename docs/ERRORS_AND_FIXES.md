@@ -1766,3 +1766,7 @@ Limitaciones de herramientas: zoom no verificable por atajo; micrófono sin auto
 ## UX-04 · Edición manual bloqueaba decisiones posteriores de Mi año
 
 Síntoma: después de tocar contexto, el chat ya no incorporaba decisiones nuevas; recargar antes de preparar perdía correcciones e historia. Causa: un booleano global bloqueaba todo el contexto y este solo se persistía al preparar. Solución: importación por turno, borrador privado con CAS/autosave y recuperación por lectura. Las fuentes actualizadas conservan el borrador; la retención cubre el año escolar. Validación: 20 pruebas focales PASS y RED/GREEN de componentes reales con datos ficticios (edición, eliminación, nuevo turno, recarga y respuesta incierta). Prevención: separar importación de decisiones de las ediciones docentes, bloquear preparación durante respuesta/guardado y no prometer guardado antes de su confirmación.
+
+## UX-05 · Atribución de captura y revisión de matrícula
+
+Síntoma: una captura pendiente podía cambiar de niño; una lista CSV se enviaba sin revisión previa. Causa: acciones locales sin guarda y POST directo. Solución: guarda de captura/corrección y revisión explícita de lista con aviso de coincidencias; no hay deduplicación automática. Validado con navegador ficticio y 52 pruebas focales de servicios. Prevención: revisar antes de importar y mantener texto, niño e identidad de reintento ligados hasta guardar o descartar deliberadamente.
