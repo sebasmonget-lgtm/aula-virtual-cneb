@@ -15,9 +15,19 @@ Pruebas automatizadas: 15 casos iniciales PASS (helpers, captura y servicios PGl
 
 Typecheck y lint focal exit 0. Builds Next webpack y Vinext exit 0. Nueva regresión PGlite: 9/9 casos del servicio PASS, incluyendo dos correcciones sucesivas. En total se ejecutaron 16 casos focales distintos satisfactoriamente. Vinext conserva avisos del empaquetador sobre `eval` en PGlite y tamaño de chunks; no son fallos de compilación.
 
+## Etapa 2 · Período y borradores
+
+Selección compartida: período explícito, vigente o último terminado; antes del inicio se ofrece el primero futuro. La portada permite elegir período y persiste el mismo contexto en la URL; no muestra ceros durante carga/error. El selector del detalle respeta las guardas del trabajo pendiente.
+
+La revisión moderna permite guardar un borrador mediante la API existente, sin confirmar nivel; conserva la revisión devuelta para posteriores confirmaciones. Cambiar niño/competencia, salir o pedir otro análisis protege ediciones. Una actualización de los contadores no vuelve a cargar encima de un análisis local. Los fallos de confirmación conservan campos y revisión en memoria. En lotes, ediciones manuales se distinguen del progreso durable y se protegen antes de salir o regenerar.
+
+RED/GREEN de período de octubre y salidas de evaluación/lote mediante componentes reales y datos ficticios. GREEN incluye guardar borrador, recargar y recuperar texto sin nivel seleccionado; guardar lote y recargar conserva la edición. Transporte simulado: dos guardados explícitos, cero confirmaciones y cero generaciones IA.
+
+35 pruebas focales PASS, 0 FAIL/0 SKIP: selección de períodos, drafts, evaluación y lotes PGlite, incluyendo autorización, fuentes obsoletas, cierre, historial, recuperación de trabajos y ausencia de evidencia sin C. Typecheck, lint focal y build Next webpack exit 0. Vinext se ejecutó en etapa 1 y se repetirá en el cierre integrado. Rollback: revertir el commit de cliente/selector; APIs y datos guardados siguen siendo compatibles.
+
 ## Plan y límites
 
-Siguientes etapas: período/borradores de evaluación; contexto/chat anual; configuración/matrícula/diagnóstico; año/proyectos/Hoy/Calendario; informes/documentos; integración y Preview. Se conservan cinco destinos, quince tramos, biblioteca, calendario, ejecución/confirmación docente y generación gradual de actividades.
+Siguientes etapas: contexto/chat anual; configuración/matrícula/diagnóstico; año/proyectos/Hoy/Calendario; informes/documentos; integración y Preview. Se conservan cinco destinos, quince tramos, biblioteca, calendario, ejecución/confirmación docente y generación gradual de actividades.
 
 Pendientes generales: Preview de esta rama, recorrido integrado, capturas con estilos de escritorio/móvil, zoom 200 %, hardware físico y aislamiento remoto de dos docentes. Los resultados históricos no se heredan como resultados nuevos. No se hará publicación en Producción.
 

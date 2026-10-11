@@ -1754,3 +1754,11 @@ Limitaciones de herramientas: zoom no verificable por atajo; micrófono sin auto
 - Solución: guarda compartida de trabajo pendiente, controles de salida consistentes y lectura de la corrección vigente. Original consultable; APIs, CAS y revisiones intactos. No se añaden cachés con datos de menores ni llamadas IA.
 - Validación: RED/GREEN de ambos casos en Chromium con datos ficticios y componentes reales; 16 casos focales distintos PASS, incluyendo dos correcciones sucesivas en PGlite; typecheck/lint y builds Next/Vinext PASS. Detalles en el informe de implementación.
 - Prevención: probar segunda edición además de primera; proteger cada ruta de salida y mostrar versión vigente sin modificar el original. No equiparar trabajo en memoria con autosave persistido.
+
+## UX-03/15 · Período incorrecto y edición evaluativa pendiente — 2026-10-11
+
+- Síntoma: entre períodos aparecía el bimestre 1; cambiar niño o salir de un lote permitía descartar textos sin advertencia. La revisión moderna solo exponía confirmación, no guardado de borrador independiente.
+- Causa raíz: fallback al primer período; formularios locales sin guardas propias y recarga de detalle dependiente de cualquier cambio de `rows`.
+- Solución: selector compartido explícito/vigente/último terminado, portada sin ceros ficticios; guardar borrador por API existente con CAS, separar confirmación y proteger navegación/regeneración. Recarga de detalle solo por contexto o actualización deliberada.
+- Validación: RED/GREEN en Chromium, recarga recupera borrador sin confirmar nivel y lote editado; 35 pruebas focales, typecheck, lint y Next PASS. Ningún dato real, migración o llamada IA pagada.
+- Prevención: probar fechas de gestión entre períodos y salidas internas de formularios, además del menú principal; progreso guardado del job no significa que todas las ediciones locales estén guardadas.

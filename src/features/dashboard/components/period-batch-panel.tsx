@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { apiFetch } from "@/src/lib/ayni-api-fetch";
+import { useUnsavedWork } from "@/src/lib/use-unsaved-work";
 import { localDatabaseApiUrl } from "@/src/lib/local-database";
 import { AsyncButton, LoadingState, WorkflowFeedback } from "./workflow-ui";
 
@@ -17,11 +18,13 @@ async function api<T>(path:string,body?:unknown):Promise<T>{
 export function PeriodBatchPanel({classroomId,periodId,kind,students,competencies,disabled,onSaved,onContinue}:{classroomId:string;periodId:string;kind:"conclusions"|"family";students:Person[];competencies:{id:string;name:string}[];disabled:boolean;onSaved:()=>Promise<void>;onContinue?:()=>void}){
   const [job,setJob]=useState<Job|null>(null),[busy,setBusy]=useState(false),[loading,setLoading]=useState(true),[error,setError]=useState("");
   const [filter,setFilter]=useState("all"),[open,setOpen]=useState<string|null>(null),[items,setItems]=useState<Item[]>([]);
+  const dirty=Boolean(job&&JSON.stringify(items)!==JSON.stringify(job.items));
+  const allowLeave=useUnsavedWork(dirty,busy&&dirty,"Hay textos editados sin guardar. ¿Quieres descartarlos?");
   const scope={classroomId,periodId};
   const query=new URLSearchParams({...scope,kind}).toString();
   function adopt(next:Job|null){setJob(next);setItems(next?.items??[]);}
   useEffect(()=>{let active=true;api<{job:Job|null}>(`/api/period-evaluations/batches?${query}`).then(data=>{if(active)adopt(data.job);}).catch(cause=>{if(active)setError(cause.message);}).finally(()=>{if(active)setLoading(false);});return()=>{active=false;};},[query]);
-  async function prepare(target?:Item,editing=false){setBusy(true);setError("");try{const next=await api<Job>("/api/period-evaluations/batches",{...scope,kind,...(!target?{refresh:true}:{}),...(target?{studentId:target.student_id,competencyId:target.competency_id,...(editing?{edit:true}:{regenerate:true})}:{})});adopt(next);if(target&&editing)setOpen(`${target.student_id}:${target.competency_id??"family"}`);}catch(cause){setError((cause as Error).message);}finally{setBusy(false);}}
+  async function prepare(target?:Item,editing=false){if(!allowLeave())return;setBusy(true);setError("");try{const next=await api<Job>("/api/period-evaluations/batches",{...scope,kind,...(!target?{refresh:true}:{}),...(target?{studentId:target.student_id,competencyId:target.competency_id,...(editing?{edit:true}:{regenerate:true})}:{})});adopt(next);if(target&&editing)setOpen(`${target.student_id}:${target.competency_id??"family"}`);}catch(cause){setError((cause as Error).message);}finally{setBusy(false);}}
   // Sequential requests, no detached work or automatic POST retry after a transport error.
   useEffect(()=>{
     if(!job||job.status!=="queued"||busy||disabled)return;
@@ -60,6 +63,7 @@ export function PeriodBatchPanel({classroomId,periodId,kind,students,competencie
     <div><h2 className="text-xl font-bold">{kind==="conclusions"?"Conclusiones descriptivas":"Informe a familias"}</h2><p className="mt-1 text-sm text-[#526b87]">{kind==="conclusions"?"Ayni prepara los textos desde tus valoraciones y las evidencias. Revisa las excepciones y guarda el conjunto.":"Un informe por niño, con las mismas conclusiones guardadas y recomendaciones para su familia."}</p></div>
     {loading&&<LoadingState label="Recuperando el trabajo guardado…"/>}
     {error&&<WorkflowFeedback tone="error">{error}</WorkflowFeedback>}
+    {dirty&&<p role="status" className="text-sm text-[#526b87]">Cambios sin guardar · Guarda el conjunto para conservar tus ediciones.</p>}
     {!loading&&!job&&<AsyncButton busyLabel="Preparando…" busy={busy} disabled={disabled} onClick={()=>void prepare()}>{kind==="conclusions"?"Preparar conclusiones":`Generar ${students.length} informes`}</AsyncButton>}
     {job&&<><p role="status" className="text-sm">{job.completed} de {job.total} {kind==="conclusions"?"conclusiones":"informes"} preparados · {items.filter(item=>item.review_reason).length} conviene revisar</p>
       {["queued","running"].includes(job.status)&&<LoadingState label="Preparando el siguiente texto. Puedes salir y volver; el avance queda guardado."/>}

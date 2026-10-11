@@ -15,7 +15,8 @@ import { newAyniFeatureEnabled } from "@/src/lib/new-ayni-feature-flag.mjs";
 import { CompetencyPeriodReview } from "./competency-period-review";
 import { PeriodBatchPanel } from "./period-batch-panel";
 import { PeriodConsolidated } from "./period-consolidated";
-import { readWorkspaceParams, useWorkspaceSubview, writeWorkspaceLocation } from "@/src/lib/workspace-location";
+import { canLeaveWorkspace, readWorkspaceParams, useWorkspaceSubview, writeWorkspaceLocation } from "@/src/lib/workspace-location";
+import { selectEvaluationPeriod } from "@/src/lib/evaluation-period-selection.mjs";
 
 type Year = { id: string; year: number };
 type Classroom = { id: string; school_year_id: string; section: string; age: number };
@@ -95,7 +96,7 @@ export function PeriodEvaluation({ initialStudentId = "", initialCompetencyId = 
     const year = result.years.find((item) => item.id === params.get("year")) ?? result.years[0], classroom = result.classrooms.find((item) => item.id === params.get("classroom") && item.school_year_id === year?.id) ?? result.classrooms.find((item) => item.school_year_id === year?.id);
     const periods = result.periods.filter((item) => item.school_year_id === year?.id);
     const today = result.today;
-    setYearId(year?.id ?? ""); setClassroomId(classroom?.id ?? ""); setPeriodId(periods.find((item) => item.id === params.get("period"))?.id ?? periods.find((item) => item.starts_on <= today && item.ends_on >= today)?.id ?? periods[0]?.id ?? "");
+    setYearId(year?.id ?? ""); setClassroomId(classroom?.id ?? ""); setPeriodId(selectEvaluationPeriod(periods, today, params.get("period"))?.id ?? "");
     setStudentId(params.get("student") ?? initialStudentId); setCompetencyId(params.get("competency") ?? initialCompetencyId);
   }).catch((error) => setMessage(error.message)); }, [initialStudentId, initialCompetencyId]);
 
@@ -163,7 +164,7 @@ export function PeriodEvaluation({ initialStudentId = "", initialCompetencyId = 
 
   if (!workspace) return <p className="rounded-2xl border bg-white p-6">{message || "Cargando evaluación del período…"}</p>;
   if(process.env.NEXT_PUBLIC_AYNI_EXPERIENCE!=="0"&&["student","conclusions","family","consolidated"].includes(view))return <section className="mx-auto max-w-5xl space-y-6">
-    <header><h1 className="text-2xl font-bold">{view==="family"?"Informe a familias":view==="consolidated"?"Consolidado":"Evaluación del bimestre"}</h1><label className="mt-3 block text-sm font-semibold">Período<select className="mt-1 min-h-11 w-full rounded-xl border bg-white px-3" value={periodId} onChange={event=>{setOverview(null);setPeriodId(event.target.value);}}>{periods.map(period=><option key={period.id} value={period.id}>{period.label} · {formatDate(period.starts_on)} a {formatDate(period.ends_on)}</option>)}</select></label></header>
+    <header><h1 className="text-2xl font-bold">{view==="family"?"Informe a familias":view==="consolidated"?"Consolidado":"Evaluación del período"}</h1><label className="mt-3 block text-sm font-semibold">Período<select className="mt-1 min-h-11 w-full rounded-xl border bg-white px-3" value={periodId} onChange={event=>{if(!canLeaveWorkspace())return;setOverview(null);setPeriodId(event.target.value);}}>{periods.map(period=><option key={period.id} value={period.id}>{period.label} · {formatDate(period.starts_on)} a {formatDate(period.ends_on)}</option>)}</select></label></header>
     <nav className="flex flex-wrap gap-2" aria-label="Espacios de Evaluar">{([["student","Evaluación del bimestre"],["family","Informe a familias"],["consolidated","Consolidado"]] as const).map(([target,label])=><Button key={target} variant={view===target||view==="conclusions"&&target==="student"?"default":"outline"} onClick={()=>setView(target)}>{label}</Button>)}</nav>
     {message&&<p role="status" className="text-sm">{message}</p>}
     {overviewError&&<p role="alert">{overviewError}<Button variant="outline" onClick={()=>setOverviewRetry(value=>value+1)}>Reintentar</Button></p>}
