@@ -85,3 +85,27 @@ Para veinte niños, típico: USD 0,3008/mes lectivo; intervalo de sensibilidad a
 | G6 Production | BLOQUEADO | G2/G3/G5 incompletos: autorización condicional del PDF no satisfecha |
 
 No integrar a main ni promover Production para ocultar límites. Rollback de código mediante revert del commit correctivo; no borrar migraciones o datos legítimos. Evidencia reproducible restringida al propietario: paquete privado con manifiesto de hashes, trazas, snapshots, capturas, exportaciones, WAV, logs y recibos sanitizados. Se excluyen secretos, auth, env y bases de datos. Resumen ejecutivo privado ≤2 páginas con SHA y URLs verificadas después de publicar Preview.
+
+## Seguimiento final y autorización vigente — 11.10.2026
+
+Solicitud directa del propietario: completar QA pendiente y publicar Production solo con G0–G5 aprobados, sin defectos críticos/altos. Autoriza ahora las pruebas de micrófono/cámara y sus permisos; la nota histórica de autorización de micrófono pendiente ya no es el impedimento actual. No autoriza eludir autenticación, RLS ni barreras del navegador.
+
+Fetch de todos los remotos realizado; árbol inicial limpio, rama codex/ayni-qa-ia-ux-costos-20261009 y origin en 2ce624ac47fad1240070ae84369896bf3027af24. No hay commits posteriores en la rama solicitada; las referencias de las demás ramas se registran sin integrar cambios históricos ajenos a esta QA. Se revisaron informe, IQ-01–21 y G0–G6. Los 775 PASS y 52 llamadas de la ronda anterior siguen siendo evidencia histórica separada. Esta continuación no altera código de producto ni dispara nuevas llamadas IA.
+
+Vercel actual comprobado por API/CLI: Preview dpl_4acwL9EkxFXFGtk35jPLheEUHocu, https://ayni-aula-staging-a9p57mk0x-ayni4.vercel.app, READY y SHA 2ce624a. Production dpl_BQ8jr9TVGXgDjsyu8oNN5bhy3QuH, https://project-0w0pq.vercel.app, READY y SHA e2bcd35ed377618fc520f07e00b4bee0f3b84d0f. El acceso de CLI renovó la credencial expirada; el primer 403 operativo no es un defecto del producto y no se guarda su secreto.
+
+Comprobaciones públicas frescas: 17/17 rutas/Origin y 5/5 fronteras adicionales PASS. GET/PUT de foto, PATCH de observación y descargas Word/Excel sin sesión devuelven 401; se usaron UUIDs inexistentes y ningún dato legítimo fue modificado. La protección de Vercel permanece activa y se utiliza únicamente el acceso de automatización existente. Estas comprobaciones no prueban aislamiento entre docentes autenticados.
+
+Regresión fresca sobre el código de 2ce624a: 775/775 PASS, sin fallos ni skips; lint, typecheck, Next webpack y Vinext exit 0. Logs, hashes y recibos en .local/ayni-qa-final-20261011, sin reemplazar el paquete histórico. No se añadieron tests espejo ni cambios cosméticos; no apareció un nuevo defecto de producto verificable dentro del alcance ejecutado.
+
+| Criterio pendiente | Intento / resultado actual | Acción imprescindible |
+|---|---|---|
+| Dos docentes y aulas en Preview | No hay cuentas ficticias cloud utilizables. Se solicitó iniciar sesión con cuentas exclusivamente QA; no se usan cuentas reales ni se extraen sesiones del navegador. | Administrador crea dos docentes QA por el mecanismo normal; propietario inicia sesión o proporciona un mecanismo seguro de credenciales dedicado. |
+| Zoom real 200% | Se intentó acceder al Chrome nativo mediante Computer Use. El control se detuvo por no poder verificar con seguridad la URL actual en Windows. No se ejecutó zoom ni se repitió el atajo que antes no surtió efecto. | Seleccionar Preview en Chrome, dejar visible su URL y restablecer el control seguro del navegador; comprobar zoom nativo 200% con captura y dimensiones reales. |
+| Micrófono físico | Autorizado en esta solicitud, pero sin recorrido autenticado y con control de Windows detenido. No se grabó ni transcribió otro WAV para simular hardware. | Sesión QA autenticada y control disponible; usuario dicta una frase en español para verificar grabación, transcripción, guardado/recuperación y denegación/reintento. |
+| Cámara / foto UI | No se capturó fotografía física ni se repitió la ilustración por API como supuesto PASS de cámara. | Sesión QA autenticada, cámara disponible y objeto sin personas; comprobar captura/subida, permiso denegado y recuperación. |
+| Flujo completo remoto | Historia local y calidad IA históricas conservadas; no se reimportaron snapshots a la base compartida ni se fabricó un recorrido autenticado. | Ejecutar Mi aula→fuentes→diagnóstico→año→proyecto→actividades/taller→Hoy→evaluación→familias→Word/Excel→cierre/reapertura en las dos cuentas QA. Reusar evidencia válida sin regeneración IA innecesaria. |
+
+Estado vigente: G0 PASS, G1 PASS local histórico (aceptación cloud pendiente), G2 BLOQUEADO, G3 checks técnicos PASS y aceptación cloud/hardware BLOQUEADA, G4 PASS sin costo nuevo, G5 READY/smoke público PASS pero autenticación BLOQUEADA, G6 BLOQUEADO. **Ayni no está declarada lista para uso real. Production no se actualiza.** No quedan permisos rutinarios por pedir: la intervención es por identidad/hardware/control seguro.
+
+Commit y push de este seguimiento, nuevo Preview del SHA final y smoke público posterior se registran en recibos privados sin cambiar el commit publicado. No atribuir la READY de 2ce624a al nuevo SHA antes de comprobarla. Rollback sigue siendo dpl_BQ8jr9TVGXgDjsyu8oNN5bhy3QuH; no se modifican datos, migraciones, RLS o variables de Production.
