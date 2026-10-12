@@ -356,3 +356,12 @@ Rollback: volver a producto 7486997 / Preview hesxovasj o revertir este commit. 
 
 
 Cierre técnico: typecheck final y posterior a Next, lint de fuentes (excluye artefactos .local), Next/webpack y Vinext finales PASS. Detector acotado a PreparationHome sin hallazgos; diffcheck limpio. No se modificaron formularios/diagnóstico/IA/backend ni se ejecutaron suites completas. Validación de navegación local terminada antes de publicar.
+
+
+### UX-QA-06 — Publicación para revisión
+
+Producto 903020be2eccbb5a4768396e04e5b0af4306e48b, rama QA actual y árbol limpio al publicar. Preview https://ayni-aula-staging-fu6c3ya3f-ayni4.vercel.app/#preparacion — dpl_7Dj2SB2hjWhMhor7EH9YLems3W42 READY, SHA exacto/proyecto/equipo/target verificados. Build cloud Next/TypeScript PASS. Reloj QA y docente permitida conservados en flags exclusivos de Preview; benchmark desactivado. Sin promoción ni configuración global.
+
+Ocho smoke HTTP de lectura PASS: raíz/auth-config/health 200 y las rutas privadas 401 sin sesión Ayni. Tiempos curl 0,770–4,312 s incluyen transporte/CLI/protección/carga fría; no son tiempos de guardado ni llamadas IA. Consulta posterior 2026-10-12T14:12:04.307Z confirma Production ea206bf179841f6a85f43dbec95c391a47b12674 / dpl_EgekhWXwVjaM9iCcRc8mpJn2Eoc4 intacta.
+
+Side Panel visible abierto en #preparacion del nuevo host. Mostró acceso vacío; se solicitó login manual QA, sin pedir ni introducir credenciales. Comprobación autenticada de tres niños/reloj y revisión humana pendientes; la captura de la portada entregada corresponde al entorno ficticio local. No se completaron formularios ni se avanzó el recorrido remoto. Pestañas/servidor locales cerrados, evidencias conservadas. Trabajo técnico y publicación cerrados dentro del objetivo 30–60 minutos (inicio 13:35 UTC, Preview verificada 14:12 UTC); no hubo un bloqueo de implementación.
