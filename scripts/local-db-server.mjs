@@ -92,6 +92,7 @@ import { availableSheets } from "../src/lib/workshop-sheet-catalog.mjs";
 import { activeWorkshopForProject, insertDailyPair, linkedWorkshopDraft, updateDailyPair } from "./daily-workshop-persistence.mjs";
 import { createPendingAIGenerationsStore } from "../src/lib/pending-ai-generations-store.mjs";
 import { createPilotClassroom, importStudentsForTeacher, parseStudentCsv } from "../src/lib/pilot-onboarding-service.mjs";
+import { confirmEnrollmentCompletion } from '../src/lib/enrollment-completion.mjs';
 import { loadClassroomSettings, saveClassroomSettings } from "../src/lib/classroom-settings-service.mjs";
 import { createLocalPrivateEvidenceStorage, createSupabasePrivateEvidenceStorage } from "../src/lib/private-evidence-storage.mjs";
 import { createSupabasePrivateObservationStorage } from "../src/lib/private-observation-storage.mjs";
@@ -448,7 +449,7 @@ async function dashboard() {
   const profileResult = await db.query(`
     select p.display_name as teacher_name, ip.display_name as institution_name,
            ip.institution_code, ip.district, ip.ugel, ip.director_name,
-           ip.logo_asset_id, c.section, ag.label as age_label, ag.age_years,
+           ip.logo_asset_id, c.id as classroom_id, p.preferences->'enrollment_completed_at'->>c.id::text as enrollment_completed_at, c.section, ag.label as age_label, ag.age_years,
            ia.original_path as logo_path, sy.year as school_year
       from profiles p
       join classrooms c on c.teacher_id = p.user_id
@@ -843,8 +844,10 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
     }
     if (url.pathname === "/api/classroom/settings" && ["GET", "PUT"].includes(request.method)) {
       try {
+        const input = request.method === "PUT" ? await readJson(request) : null;
         const settings = request.method === "GET" ? await loadClassroomSettings(db, teacherId)
-          : await saveClassroomSettings(db, teacherId, await readJson(request));
+          : input?.confirmEnrollment === true ? await confirmEnrollmentCompletion(db, teacherId, input.classroomId)
+          : await saveClassroomSettings(db, teacherId, input);
         send(response, 200, settings, origin);
       } catch (error) { send(response, httpStatusForError(error, 422), { error: publicErrorMessage(error) }, origin); }
       return;

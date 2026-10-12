@@ -1818,3 +1818,8 @@ Síntoma: después de tocar contexto, el chat ya no incorporaba decisiones nueva
 ## UX-05 · Atribución de captura y revisión de matrícula
 
 Síntoma: una captura pendiente podía cambiar de niño; una lista CSV se enviaba sin revisión previa. Causa: acciones locales sin guarda y POST directo. Solución: guarda de captura/corrección y revisión explícita de lista con aviso de coincidencias; no hay deduplicación automática. Validado con navegador ficticio y 52 pruebas focales de servicios. Prevención: revisar antes de importar y mantener texto, niño e identidad de reintento ligados hasta guardar o descartar deliberadamente.
+
+
+## 2026-10-12 — El cierre de matrícula no dejaba check persistente
+
+Síntoma: tras pulsar «Terminé de registrar a mis niños», etapa 2 seguía numerada al regresar/recargar. Causa: callback solo navegaba y portada solo calculaba completado para etapa 1; faltaba escritura explícita. Solución: confirmación por aula en preferencias docentes existentes, servidor con ownership/RLS, bloqueo/transacción/idempotencia; lectura en dashboard y check por estado confirmado. Validado: pruebas focales, HTTP local error/reintento, recarga/nuevo montaje, preservación de tres niños y un borrador ficticios, typecheck/lint/Next/Vinext. No se infiere ni se rellena estado remoto por conteo. Prevención: comprobar persistencia de cada acción de finalización y no usar navegación como evidencia de guardado. QA cloud autenticado queda pendiente de ingreso manual.

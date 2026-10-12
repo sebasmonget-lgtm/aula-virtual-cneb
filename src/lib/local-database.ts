@@ -56,6 +56,7 @@ export type LocalDashboard = {
     blocks: { day_progress?:{position:number;total:number}|null; pedagogical_blocks?: import("../features/dashboard/components/pedagogical-block").PedagogicalBlockData[]; id: string; start_time: string; end_time: string; block_type: string; title: string; activity_id: string | null; purpose: string | null; activity_details: { opening?: string; development?: string; closure?: string; workshop_type?: string } | null; experience_title: string | null; materials: string[]; steps: string[]; criteria: ActivityCriterion[]; status: string; display_status: string; current_override: boolean; current_step_index: number; closure_type: string | null }[];
   };
   profile: {
+    classroom_id?: string; enrollment_completed_at?: string | null;
     teacher_name: string; institution_name: string; section: string; age_label: string;
     age_years: number; school_year: number; institution_code: string | null; district: string | null;
     ugel: string | null; director_name: string | null; logo_url: string | null;
@@ -363,4 +364,13 @@ export async function transcribeShortAudio(input: { studentId?: string; scope?: 
   const result = await response.json() as { transcript?: string; improved_text?: string; error?: string };
   if (!response.ok || !result.improved_text) throw new Error(result.error ?? "No se pudo transcribir el audio.");
   return { transcript: result.transcript ?? "", improvedText: result.improved_text };
+}
+
+export async function confirmClassroomEnrollment(classroomId: string): Promise<{classroomId:string;completedAt:string}> {
+  const response = await apiFetch(`${localDatabaseApiUrl}/api/classroom/settings`, {
+    method: "PUT", headers: {"content-type":"application/json"}, body: JSON.stringify({confirmEnrollment:true,classroomId}),
+  });
+  const result = await apiJson<{classroomId:string;completedAt:string;error?:string}>(response);
+  if (!response.ok || result.classroomId !== classroomId || !result.completedAt) throw new Error(result.error ?? "No pudimos confirmar la matrícula. Tus niños siguen guardados; vuelve a intentarlo.");
+  return result;
 }
