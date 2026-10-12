@@ -343,7 +343,7 @@ export const confirmDiagnosticPriorities = (id: string) => diagnosticRequest(`pr
 export const saveDiagnosticInitialContext = (studentId: string, initialContext: string) => diagnosticRequest(`students/${encodeURIComponent(studentId)}/initial-context`, "PUT", { initialContext });
 
 export const loadFamilyInterview = (studentId: string) => diagnosticRequest<{ draft: FamilyInterview | null; confirmed: FamilyInterview | null }>(`students/${encodeURIComponent(studentId)}/family-interview`);
-export const loadFamilyInterviewStatuses = () => diagnosticRequest<{ students: { student_id: string; status: FamilyInterviewStatus }[] }>("family-interview-status");
+export const loadFamilyInterviewStatuses = () => diagnosticRequest<{ students: { student_id: string; status: FamilyInterviewStatus; has_confirmed_answers: boolean }[] }>("family-interview-status");
 export const saveFamilyInterview = (studentId: string, details: FamilyInterviewDetails) => diagnosticRequest<FamilyInterview>(`students/${encodeURIComponent(studentId)}/family-interview`, "PUT", { details });
 export const saveAndConfirmFamilyInterview = (studentId: string, details: FamilyInterviewDetails) => diagnosticRequest<FamilyInterview>(`students/${encodeURIComponent(studentId)}/family-interview/save-and-confirm`, "POST", { details });
 export const confirmFamilyInterview = (studentId: string) => diagnosticRequest<FamilyInterview>(`students/${encodeURIComponent(studentId)}/family-interview/confirm`, "POST");

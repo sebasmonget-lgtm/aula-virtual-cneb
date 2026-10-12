@@ -9,7 +9,7 @@ import { buildClassifierOptions } from "./openai-competency-classifier.mjs";
 import { anonymousDecisionText } from "./jev-competency-suggestion.mjs";
 import { observationRecommendationState } from "./observation-recommendation.mjs";
 import { summarizeSpontaneousV24Pilot } from "./observation-v24-pilot-metrics.mjs";
-import { familyInterviewCategories, familyInterviewStructuredOptionsVersion, interviewLanguageOptions, interviewInterestOptions, interviewAutonomyOptions, interviewAutonomyLevels, interviewCommunicationOptions, interviewEmotionalSupportOptions, interviewSocialPlayOptions, interviewHomeActivityOptions, interviewCommunityOptions, interviewParticipationSupportOptions, interviewPreviousEducationOptions, interviewPreviousEducationTypeOptions } from "./family-interview-contract.mjs";
+import { hasFamilyInterviewAnswers, familyInterviewCategories, familyInterviewStructuredOptionsVersion, interviewLanguageOptions, interviewInterestOptions, interviewAutonomyOptions, interviewAutonomyLevels, interviewCommunicationOptions, interviewEmotionalSupportOptions, interviewSocialPlayOptions, interviewHomeActivityOptions, interviewCommunityOptions, interviewParticipationSupportOptions, interviewPreviousEducationOptions, interviewPreviousEducationTypeOptions } from "./family-interview-contract.mjs";
 
 export class DiagnosticSourceError extends Error {
   constructor(reason, message) { super(message); this.name = "DiagnosticSourceError"; this.reason = reason; }
@@ -167,15 +167,23 @@ export async function loadFamilyInterview(db, teacherId, studentId) {
 }
 export async function listFamilyInterviewStatuses(db, teacherId) {
   const classroom = await scope(db, teacherId);
-  const rows = (await db.query(`select s.id as student_id,
-      case when bool_or(i.status = 'draft' and i.details <> '{}'::jsonb) then 'partial'
-           when bool_or(i.status = 'confirmed' and i.details <> '{}'::jsonb) then 'confirmed'
-           else 'not_started' end as status
+  const rows = (await db.query(`select s.id as student_id,i.status,i.details,i.teacher_confirmed_at
     from students s left join student_family_interviews i
       on i.student_id = s.id and i.classroom_id = s.classroom_id
     where s.classroom_id = $1 and s.status = 'active'
-    group by s.id order by s.id`, [classroom.id])).rows;
-  return { students: rows };
+    order by s.id,i.version desc`, [classroom.id])).rows;
+  const students = new Map();
+  for (const row of rows) {
+    const entry = students.get(row.student_id) ?? { student_id: row.student_id, status: "not_started", has_confirmed_answers: false };
+    const answers = hasFamilyInterviewAnswers(row.details);
+    if (answers && row.status === "draft") entry.status = "partial";
+    if (answers && row.status === "confirmed" && row.teacher_confirmed_at) {
+      entry.has_confirmed_answers = true;
+      if (entry.status !== "partial") entry.status = "confirmed";
+    }
+    students.set(row.student_id, entry);
+  }
+  return { students: [...students.values()] };
 }
 const interviewVersionKey = (teacherId, studentId) => `family-interview:${teacherId}:${studentId}`;
 async function saveFamilyInterviewWithin(db, teacherId, studentId, details) {

@@ -131,7 +131,9 @@ test("UI abre la lista completa y vuelve a ella al guardar; RLS remota exige esc
   assert.match(ui, /Elige a un niño y anota lo que viste/);
   assert.doesNotMatch(ui, /JourneySteps/);
   assert.match(ui, /Entrevistas/);
-  assert.match(ui, /Revisar lo que Ayni conoce/);
+  assert.match(ui, /initialDiagnosticProgress/);
+  assert.match(ui, /Crear Mi año con lo que tengo/);
+  assert.doesNotMatch(ui, /Revisar lo que Ayni conoce/);
   assert.match(ui, /Relación curricular/);
   assert.doesNotMatch(ui, /¿Necesitó apoyo\?|No puedo determinarlo/);
   assert.match(ui, /observed_without_judgment/);

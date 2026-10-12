@@ -355,10 +355,17 @@ test("lista marca respuestas parciales y confirmadas; corregir conserva versione
     assert.equal(confirmed.id, draft.id);
     assert.equal((await statuses())[first], "confirmed");
     assert.equal((await statuses())[second], "not_started");
+    await db.query(`insert into student_family_interviews(id,classroom_id,student_id,version,status,details,created_by,teacher_confirmed_at)
+      values($1,$2,$3,1,'confirmed','{"structured_options_version":2,"interests":"  "}'::jsonb,$4,now())`, [randomUUID(),own.classroom.id,second,teacher]);
+    const emptyStatus=(await listFamilyInterviewStatuses(db, teacher)).students.find(item=>item.student_id===second);
+    assert.equal(emptyStatus.status,"not_started");
+    assert.equal(emptyStatus.has_confirmed_answers,false);
+
     const correction = await saveFamilyInterview(db, teacher, first, { interests: "Ahora también le gusta dibujar." });
     assert.notEqual(correction.id, confirmed.id);
     assert.equal(correction.version, confirmed.version + 1);
     assert.equal((await statuses())[first], "partial");
+    assert.equal((await listFamilyInterviewStatuses(db, teacher)).students.find(item=>item.student_id===first).has_confirmed_answers, true);
     assert.equal((await loadFamilyInterview(db, teacher, first)).confirmed.details.interests, "Le gustan los bloques.");
     await confirmFamilyInterview(db, teacher, first);
     assert.equal((await statuses())[first], "confirmed");

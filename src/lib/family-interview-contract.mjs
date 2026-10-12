@@ -82,3 +82,9 @@ export const familyInterviewQuestionGroups = (name) => [{ title: "La familia nos
   { key: "family_community_context", label: "¿Qué experiencias, actividades o costumbres de su familia o comunidad son significativas para " + name + "?" },
   { key: "participation_support_context", label: "¿Hay algo más que quieras que la profesora conozca para acompañarlo y ayudarlo a participar?" },
 ] }];
+
+/** A version marker, whitespace and empty lists are not family answers. */
+export function hasFamilyInterviewAnswers(details) {
+  return Object.entries(details ?? {}).some(([key, value]) => key !== "structured_options_version" &&
+    (typeof value === "string" ? Boolean(value.trim()) : Array.isArray(value) && value.length > 0));
+}

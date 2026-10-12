@@ -1,5 +1,12 @@
 # Decisiones de arquitectura
 
+## ADR 125 — Cobertura inicial y confirmaciones sin bloquear Mi año (2026-10-12)
+
+UX-QA-05 aprobada: portada de diagnóstico con tarjetas equivalentes de familias/observaciones y paso opcional hacia Mi año, sin gates por porcentaje. Reutilizar endpoints y registros actuales; el GET de estados familiares expone has_confirmed_answers para distinguir progreso real de un borrador de corrección. Respuestas vacías o metadata no cuentan; se conserva la confirmación anterior mientras se prepara una corrección. Observación inicial se cuenta por niño único en fuentes propias del diagnóstico, incluidas espontáneas sin competencia; no mezclar observaciones ordinarias de otros contextos. No equiparar cobertura con cierre pedagógico.
+
+Toast reutilizable solo tras éxito del servidor, cuatro segundos y aria-live, sin modal ni cambio de foco. Matrícula actualiza lista antes del archivo opcional; conserva la recuperación exclusiva de foto. Entrevista inicia con selección de niño, conserva seis preguntas/voz/historia y confirmación explícita. Guardas inmediatas por ref evitan doble clic, sin ampliar el contrato de idempotencia de matrícula. Permisos, RLS, modelos, calendario y reloj intactos; sin migración. Presentación/cursor/estados acotados a las superficies autorizadas. QA funcional solo local ficticio; Preview remoto espera revisión humana antes de nuevas entradas.
+
+
 ## ADR 123 — Matrícula inicial enfocada en añadir niños (2026-10-11)
 
 Decisión aprobada UX-QA-04: «Añade a tus niños» con nombre/apellido y campos opcionales visibles, importar lista secundario con revisión, único CTA principal «Guardar niño», lista sencilla y continuación explícita al diagnóstico. Usar StudentsScreen y los contratos existentes; sin backend, IA, RLS ni migraciones nuevos. Mantener herramientas completas para la vista habitual de Mi aula y observaciones en sus contextos. Reutilizar useWorkspaceSubview y `#aula?view=enrollment` para conservar la vista al añadir/recargar, sin almacenar datos de niños ni marcar diagnósticos como completados. La vista `list` mantiene perfiles, búsquedas, evidencias y matrícula/reincorporación; la URL solo decide presentación, nunca autoriza datos.

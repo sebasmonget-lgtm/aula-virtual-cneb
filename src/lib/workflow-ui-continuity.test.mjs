@@ -120,10 +120,11 @@ test("Aula distingue campos, acciones y estado de carga al añadir niños", asyn
     assert.match(students, new RegExp(`htmlFor="${id}"`));
     assert.match(students, new RegExp(`id="${id}"`));
   }
-  assert.match(students, /<form className="mt-5" aria-busy=/);
+  assert.match(students, /<form className="mt-5"[^>]*aria-busy=/);
   assert.match(students, /<AsyncButton type="submit"/);
-  assert.match(students, /Guardando al niño en el aula…/);
-  assert.match(students, /Importando la lista de niños…/);
+  assert.match(students, /"Guardando…"/);
+  assert.match(students, /Añadiendo lista…/);
+  assert.doesNotMatch(students, /Guardando al niño en el aula…/);
   assert.match(workflow, /role="status"><p className="text-sm font-semibold text-\[#126177\]">Cargando información del aula…/);
   assert.match(input, /border border-input bg-white/);
   assert.match(textarea, /border border-input bg-white/);
@@ -153,12 +154,14 @@ test("alta y entrevista presentan datos completos, fecha opcional y audio por pr
   assert.match(interview, /aria-live="polite"/);
   assert.match(interview, /saveDraft\(true\)/);
   assert.match(interview, /await saveAndConfirmFamilyInterview\(studentId, details\)/);
-  assert.match(interview, /onSaved\?\.\(result\); onBack\?\.\(\)/);
-  assert.match(interview, /step<questions\.length-1/);
-  assert.match(interview, />Finalizar entrevista</);
-  assert.match(interview, /disabled=\{audioBusy\}/);
+  assert.match(interview, /onSaved\?\.\(result\)/);
+  assert.match(interview, /SaveConfirmation/);
+  assert.match(interview, /step === questions\.length - 1/);
+  assert.match(interview, />Confirmar entrevista</);
+  assert.match(interview, /disabled=\{audioBusy \|\| !hasFamilyInterviewAnswers\(details\)\}/);
   assert.match(interview, /displayPersonName\(rawStudentName\)/);
-  assert.match(guided, /Entrevista de \{displayPersonName\(item.name\)\}/);
+  assert.match(guided, /setInterviewStudentId\(item.id\)/);
+  assert.match(guided, /displayPersonName\(item.name\)/);
   assert.doesNotMatch(recorder, /Máximo 1 minuto\. El audio no se guarda/);
   assert.doesNotMatch(recorder, /Transcripción añadida/);
   assert.match(recorder, /getUserMedia\(\{ audio: true \}\)/);

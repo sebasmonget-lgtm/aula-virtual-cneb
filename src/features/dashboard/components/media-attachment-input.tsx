@@ -40,9 +40,9 @@ export async function preparePrivateMedia(file: File, {maxEdge=1600,maxBytes=1_0
   return { base64, mimeType, name: file.name };
 }
 
-export function MediaAttachmentInput({ studentId, context, media, onMedia, onTranscribed, disabled = false, audioOnly = false, rawTranscript = false, onBusyChange }: {
+export function MediaAttachmentInput({ studentId, context, media, onMedia, onTranscribed, disabled = false, audioOnly = false, rawTranscript = false, buttonInputs = false, onBusyChange }: {
   studentId: string; context: string; media: PrivateMediaUpload | null;
-  onMedia: (value: PrivateMediaUpload | null) => void; onTranscribed: (text: string) => void; disabled?: boolean; audioOnly?: boolean; rawTranscript?: boolean;
+  onMedia: (value: PrivateMediaUpload | null) => void; onTranscribed: (text: string) => void; disabled?: boolean; audioOnly?: boolean; rawTranscript?: boolean; buttonInputs?: boolean;
   onBusyChange?: (busy: boolean) => void;
 }) {
   const [busy, setBusy] = useState(false);
@@ -134,10 +134,10 @@ export function MediaAttachmentInput({ studentId, context, media, onMedia, onTra
   return <div className="space-y-2">
     <p className="text-sm font-semibold">{audioOnly ? "Audio" : "Foto o audio"} <span className="font-normal text-muted-foreground">(opcional)</span></p>
     <div className="flex flex-wrap gap-2">
-      {!audioOnly && <><input ref={photoInput} type="file" accept="image/*" capture="environment" className="sr-only" tabIndex={-1} onChange={(event) => { void chooseFile(event.currentTarget.files?.[0]); event.currentTarget.value = ""; }} />
+      {!audioOnly && <><input ref={photoInput} type="file" accept="image/*" capture="environment" className={buttonInputs ? "hidden" : "sr-only"} tabIndex={-1} onChange={(event) => { void chooseFile(event.currentTarget.files?.[0]); event.currentTarget.value = ""; }} />
         <Button type="button" variant="outline" className="min-h-12 border-[#9eb7ca] bg-white" disabled={disabled || busy || recording} onClick={() => photoInput.current?.click()}><Camera className="size-4" />Tomar foto</Button></>}
       <Button type="button" variant="outline" className="min-h-12 border-[#9eb7ca] bg-white" disabled={disabled || busy} onClick={() => recording ? recorderRef.current?.stop() : void startRecording()}>{recording ? <Square className="size-4" /> : <Mic className="size-4" />}{recording ? `Detener · 0:${String(seconds).padStart(2, "0")}` : "Grabar audio"}</Button>
-      <input ref={fileInput} type="file" accept={audioOnly ? "audio/webm,audio/mpeg,audio/mp4,audio/wav,audio/ogg" : "image/jpeg,image/png,image/webp,audio/webm,audio/mpeg,audio/mp4,audio/wav,audio/ogg"} className="sr-only" tabIndex={-1} onChange={(event) => { void chooseFile(event.currentTarget.files?.[0]); event.currentTarget.value = ""; }} />
+      <input ref={fileInput} type="file" accept={audioOnly ? "audio/webm,audio/mpeg,audio/mp4,audio/wav,audio/ogg" : "image/jpeg,image/png,image/webp,audio/webm,audio/mpeg,audio/mp4,audio/wav,audio/ogg"} className={buttonInputs ? "hidden" : "sr-only"} tabIndex={-1} onChange={(event) => { void chooseFile(event.currentTarget.files?.[0]); event.currentTarget.value = ""; }} />
       <Button type="button" variant="outline" className="min-h-12 border-[#9eb7ca] bg-white" disabled={disabled || busy || recording} onClick={() => fileInput.current?.click()}><FolderOpen className="size-4" />Elegir archivo</Button>
       {media?.mimeType.startsWith("image/")&&<div className="relative"><Image src={`data:${media.mimeType};base64,${media.base64}`} alt="Vista previa de la foto adjunta" unoptimized width={88} height={64} className="h-16 w-22 rounded-xl object-cover"/><button type="button" aria-label="Quitar foto adjunta" disabled={disabled||busy||recording} className="absolute -right-2 -top-2 grid size-7 place-items-center rounded-full border bg-white text-[#087d96]" onClick={()=>onMedia(null)}><X className="size-4"/></button></div>}
     </div>

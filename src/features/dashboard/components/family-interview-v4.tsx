@@ -6,10 +6,11 @@ import { Button } from "@/components/ui/button";
 import { attachFamilyInterview, saveAndConfirmFamilyInterview, familyInterviewAttachmentUrl,
   loadFamilyInterview, loadFamilyInterviewStatuses, loadStudentPedagogicalProfile, saveFamilyInterview,
   type FamilyInterview, type FamilyInterviewDetails, type FamilyInterviewStatus } from "@/src/lib/local-database";
+import { SaveConfirmation, useSaveConfirmation } from "./save-confirmation";
 import { AsyncButton, LoadingState } from "./workflow-ui";
 import { InterviewAudioRecorder } from "./interview-audio-recorder";
 import { buildFamilyInterviewPrintHtml } from "@/src/lib/family-interview-print.mjs";
-import { familyInterviewQuestionGroups, familyInterviewStructuredOptionsVersion, interviewLanguageOptions,
+import { hasFamilyInterviewAnswers, familyInterviewQuestionGroups, familyInterviewStructuredOptionsVersion, interviewLanguageOptions,
   interviewInterestOptions, interviewAutonomyOptions, interviewAutonomyLevels, interviewCommunicationOptions,
   interviewEmotionalSupportOptions, interviewSocialPlayOptions, interviewHomeActivityOptions,
   interviewCommunityOptions, interviewParticipationSupportOptions, interviewPreviousEducationOptions,
@@ -23,15 +24,17 @@ import { summarizeFamilyInterview } from "@/src/lib/family-interview-projection.
 export function useFamilyInterviewStatusMap(refreshKey: string, enabled = true) {
   const [statuses, setStatuses] = useState<Record<string, FamilyInterviewStatus>>({});
   const [error, setError] = useState("");
+  const [confirmedIds, setConfirmedIds] = useState<string[]>([]);
+  const [loaded, setLoaded] = useState(false);
   useEffect(() => {
     if (!enabled) return;
     let active = true;
     loadFamilyInterviewStatuses().then(({ students }) => {
-      if (active) { setStatuses(Object.fromEntries(students.map((item) => [item.student_id, item.status]))); setError(""); }
+      if (active) { setStatuses(Object.fromEntries(students.map((item) => [item.student_id, item.status]))); setConfirmedIds(students.filter(item => item.has_confirmed_answers).map(item => item.student_id)); setLoaded(true); setError(""); }
     }).catch(() => { if (active) setError("No se pudo actualizar el estado de las entrevistas."); });
     return () => { active = false; };
   }, [refreshKey, enabled]);
-  return { statuses, error };
+  return { statuses, confirmedIds, loaded, error };
 }
 export function FamilyInterviewStatusBadge({ status }: { status?: FamilyInterviewStatus }) {
   if (!status) return null;
@@ -40,7 +43,7 @@ export function FamilyInterviewStatusBadge({ status }: { status?: FamilyIntervie
     partial: "border-[#ecd29a] bg-[#fff3db] text-[#88591d]",
     not_started: "border-[#d8e2ed] bg-[#f4f7fb] text-[#5a6d83]",
   };
-  const labels = { confirmed: "Entrevista confirmada", partial: "Entrevista en curso", not_started: "Sin respuestas" };
+  const labels = { confirmed: "Confirmada", partial: "En progreso", not_started: "Pendiente" };
   return <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-bold ${styles[status]}`}>{labels[status]}</span>;
 }
 function printInterview(name: string, details: FamilyInterviewDetails, context?: { institution?: string; classroom?: string }) {
@@ -56,10 +59,13 @@ type TextField = "interests" | "autonomy_context" | "communication_context" | "l
   "emotional_support_context" | "social_context" | "home_activity_example" | "family_community_context" |
   "family_community_enjoyed" | "participation_support_context" | "family_expectation" | "family_context" | "other_interest_text" | "other_language_text" | "other_community_text";
 
-export function FamilyInterviewEditor({ studentId, studentName: rawStudentName, onBack, onSaved, printContext }: {
+export function FamilyInterviewEditor({ studentId, studentName: rawStudentName, onBack, onSaved, printContext, onNext }: {
   studentId: string; studentName: string; onBack?: () => void; onSaved?: (interview: FamilyInterview) => void;
-  printContext?: { institution?: string; classroom?: string };
+  printContext?: { institution?: string; classroom?: string }; onNext?: () => void;
 }) {
+  const { confirmation, confirm } = useSaveConfirmation();
+  const actionPending = useRef(false);
+  const paperInput = useRef<HTMLInputElement>(null);
   const studentName = displayPersonName(rawStudentName);
   const [draft, setDraft] = useState<FamilyInterview | null>(null);
   const [confirmed, setConfirmed] = useState<FamilyInterview | null>(null);
@@ -157,10 +163,11 @@ export function FamilyInterviewEditor({ studentId, studentName: rawStudentName, 
         })} onTranscribed={(text, saveNow) => transcribeField(field, maxLength, text, saveNow)} />}</div></div>;
   }
   async function run(work: () => Promise<void>) {
-    if (busy || audioBusy) return;
+    if (actionPending.current || busy || audioBusy) return;
+    actionPending.current = true;
     setBusy(true); setError(""); setMessage("");
     try { await autosave.current; await work(); } catch (cause) { setError(cause instanceof Error ? cause.message : "No se pudo guardar."); }
-    finally { setBusy(false); }
+    finally { actionPending.current = false; setBusy(false); }
   }
   async function saveDraft(exitAfter = false) {
     const result = await saveFamilyInterview(studentId, detailsRef.current); savedText.current=JSON.stringify(detailsRef.current);
@@ -170,7 +177,8 @@ export function FamilyInterviewEditor({ studentId, studentName: rawStudentName, 
   async function save() {
     const result = await saveAndConfirmFamilyInterview(studentId, details);
     setConfirmed(result); setDraft(null); setCreatingVersion(false); setDetails(result.details);
-    setMessage("Entrevista guardada."); onSaved?.(result); onBack?.();
+    savedText.current = JSON.stringify(result.details);
+    setMessage(""); confirm("¡Entrevista confirmada!", `Las respuestas de ${studentName} quedaron guardadas.`); onSaved?.(result);
   }
   async function attach(file: File) {
     if (!draft && !confirmed) { setError("Guarda primero la entrevista antes de adjuntar el papel."); return; }
@@ -189,10 +197,10 @@ export function FamilyInterviewEditor({ studentId, studentName: rawStudentName, 
   }
   if (loading) return <LoadingState label="Abriendo entrevista..." />;
   return <section className="diagnostic-panel space-y-4 p-4 md:p-6">
-    {onBack && <Button variant="outline" className="diagnostic-back-button" disabled={busy || audioBusy} onClick={() => { if(readOnly) onBack(); else void run(() => saveDraft(true)); }}><ArrowLeft /> Volver a entrevistar a otro alumno</Button>}
+    {onBack && <Button variant="outline" className="diagnostic-back-button" disabled={busy || audioBusy} onClick={() => { if(readOnly) onBack(); else void run(() => saveDraft(true)); }}><ArrowLeft /> Volver a la lista de niños</Button>}
     <header className="flex items-center gap-4"><AyniMascot size="medium" pose="interview"/><div>
-      <h2 className="text-base font-semibold">Conozcamos a la familia de {studentName}</h2>
-      <p className="mt-1 hidden text-sm text-[#526b87] sm:block">Todas las respuestas son opcionales. Puedes volver después.</p>
+      <h2 className="text-base font-semibold">Entrevista de {studentName}</h2>
+      <p className="mt-1 text-sm text-[#526b87]">Todas las respuestas son opcionales. Puedes volver después.</p>
       </div></header>
     {confirmed && <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-[#e5f8ed] p-3 text-sm">
       <p>Entrevista confirmada · versión {confirmed.version}. {readOnly ? "Puedes corregirla; la versión anterior se conservará." : "Estás preparando una corrección."}</p>
@@ -247,9 +255,13 @@ export function FamilyInterviewEditor({ studentId, studentName: rawStudentName, 
         {shortField("family_expectation", "Respuesta corta (opcional)")}</>}
     <div className="flex items-center justify-between gap-3 pt-2">
       <Button variant="outline" disabled={step===0||busy||audioBusy} onClick={()=>setStep(v=>v-1)}><ArrowLeft/>Anterior</Button>
-      {step<questions.length-1?<Button className="min-h-12 bg-[#dfb447] px-6 text-[#352909] hover:bg-[#cfa139]" disabled={busy||audioBusy} onClick={()=>setStep(v=>v+1)}>Siguiente<ArrowRight/></Button>:readOnly?<Button onClick={onBack}>Volver a alumnos</Button>:<AsyncButton className="min-h-12 bg-[#dfb447] text-[#352909] hover:bg-[#cfa139]" busy={busy} disabled={audioBusy} busyLabel="Guardando…" onClick={()=>void run(save)}>Finalizar entrevista</AsyncButton>}
+      <Button variant="outline" disabled={step === questions.length - 1 || busy || audioBusy} onClick={() => setStep(v => v + 1)}>Siguiente<ArrowRight/></Button>
+
     </div>
     </article><aside className="rounded-2xl bg-[#f1f7fa] p-5"><div className="flex items-center gap-3"><StudentPhoto id={studentId} name={studentName}/><p className="font-bold">{studentName}</p></div><h3 className="mt-5 font-bold">Respuestas ya registradas <span className="text-sm font-normal">{answered}/{questions.length}</span></h3><ul className="mt-3 space-y-2">{questions.map((q,i)=><li key={q.key}><button type="button" disabled={busy||audioBusy} aria-label={`${q.label}: ${answerFor(q.key)?"Con respuesta":"Sin respuesta"}`} aria-current={step===i?"step":undefined} className={`flex min-h-12 w-full items-start gap-3 rounded-xl p-3 text-left text-sm ${step===i?"bg-white":"hover:bg-white"}`} onClick={()=>setStep(i)}><span aria-hidden="true" className={`mt-0.5 grid size-5 shrink-0 place-items-center rounded-full border ${answerFor(q.key)?"border-[#087d96] bg-[#087d96] text-white":"border-[#9fb8cc]"}`}>{answerFor(q.key)?"✓":""}</span><span><span className="block font-semibold">{["Intereses y gustos","Juego con otras personas","En casa","Lenguas y comunicación","Familia y comunidad","Acompañamiento"][i]}</span><span className="mt-1 line-clamp-1 block text-xs text-[#526b87]">{answerFor(q.key)?answerFor(q.key).length>48?answerFor(q.key).slice(0,45)+"…":answerFor(q.key):"Opcional"}</span></span></button></li>)}</ul></aside></div>
+    {!readOnly && <AsyncButton className="min-h-12 w-full sm:w-auto" busy={busy} disabled={audioBusy || !hasFamilyInterviewAnswers(details)} busyLabel="Guardando…" onClick={() => void run(save)}>Confirmar entrevista</AsyncButton>}
+    {readOnly && onNext && <Button variant="outline" onClick={onNext}>Continuar con otro niño<ArrowRight/></Button>}
+    <SaveConfirmation confirmation={confirmation}/>
     {confirmed && creatingVersion && <Button variant="ghost" disabled={busy} onClick={() => { setCreatingVersion(false); setDetails(confirmed?.details ?? {}); }}>Cancelar cambios</Button>}
     {(details.family_context || details.previous_education_status) && <details className="rounded-xl border p-4"><summary className="cursor-pointer font-semibold">Información de la entrevista anterior</summary><p className="mt-3 text-sm">{details.family_context}</p><p className="mt-2 text-sm">Experiencias previas: {interviewPreviousEducationOptions.find((option) => option.id === details.previous_education_status)?.label} {interviewPreviousEducationTypeOptions.find((option) => option.id === details.previous_education_type)?.label}</p></details>}
     {details.structured_options_version !== 2 && (["language_context", "communication_emotional_context", "adaptation_context", "daily_routine_context", "family_expectations", "previous_education"] as const).some((key) => details[key]) && <details className="rounded-xl border p-4"><summary className="cursor-pointer font-semibold">Respuestas de la entrevista anterior</summary>
@@ -258,10 +270,10 @@ export function FamilyInterviewEditor({ studentId, studentName: rawStudentName, 
     <details className="print:hidden"><summary className="cursor-pointer py-2 text-sm text-[#526b87]">Entrevista en papel (opcional)</summary>
     <div className="flex flex-wrap gap-2 print:hidden">
       <Button variant="ghost" onClick={() => { if (!printInterview(studentName, details, printContext)) setError("El navegador bloqueó la hoja para imprimir."); }}><Printer /> Imprimir para papel</Button>
-      <label className="text-sm font-semibold">Adjuntar entrevista hecha en papel (opcional)
-        <input type="file" accept=".pdf,.jpg,.jpeg,.png" className="mt-2 block w-full" onChange={(event) => {
+      <div className="space-y-2"><p className="text-sm font-semibold">Adjuntar entrevista hecha en papel (opcional)</p><Button variant="outline" disabled={busy || audioBusy} onClick={() => paperInput.current?.click()}>Seleccionar archivo</Button>
+        <input ref={paperInput} type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(event) => {
           const file = event.target.files?.[0]; if (file) void run(() => attach(file));
-        }} /></label>
+        }} /></div>
     </div>
     </details>
     {(draft?.has_attachment || confirmed?.has_attachment) && <a className="text-sm font-semibold text-[#087d96] underline" href={familyInterviewAttachmentUrl(studentId)} target="_blank" rel="noreferrer">Ver respaldo privado</a>}

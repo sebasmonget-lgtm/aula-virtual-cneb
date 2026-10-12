@@ -1,5 +1,10 @@
 # Errores y soluciones
 
+## UX-QA-05 — Confirmación de entrevista atribuida a un borrador (2026-10-12)
+
+Síntoma observado en Side Panel: «Entrevista guardada» en lista cuyos niños aparecen sin respuestas. Causa: onSaved se invocaba también al volver guardando un borrador; el contenedor convertía ese callback en confirmación general. Solución: lista presenta estado persistido; toast de confirmación únicamente tras save-and-confirm exitoso. El progreso consulta respuestas confirmadas y conserva el estado independiente del borrador. Metadata/espacios/listas vacías no cuentan. Validación: caso HTTP/UI local pendiente→borrador recuperable (0 %)→una respuesta confirmada (100 %), servidor y recarga; 62 regresiones focales PASS. Prevención: distinguir avance guardado de entrevista confirmada, y probar correcciones con historia en lugar de contar solo el estado visible más reciente.
+
+
 ## Matrícula inicial: foto recuperada y borradores de importación — 2026-10-11
 
 En el QA local, un error de foto después del alta conserva al niño y reintenta exclusivamente el archivo, pero la miniatura ya consultada como ausente no se refrescaba. La URL de foto dependía solo del ID: se agrega una revisión de imagen por niño al recuperar la foto, conservando el handler y la API privada. La recuperación de archivo/niño y su persistencia tras recarga se comprobaron con servidor local real; la aceptación visual remota se hará cuando el propietario autorice matricular.

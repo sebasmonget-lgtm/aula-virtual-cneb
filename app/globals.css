@@ -265,3 +265,17 @@ body:has([data-ayni-screen="initial-enrollment"]) button:disabled {
   opacity: .45;
   filter: saturate(.4);
 }
+
+/* Nonblocking confirmations stay above the persistent bottom navigation. */
+.ayni-save-confirmation-host { position: fixed; z-index: 80; right: 1rem; bottom: calc(6rem + env(safe-area-inset-bottom)); width: min(24rem, calc(100vw - 2rem)); pointer-events: none; }
+.ayni-save-confirmation { display: flex; gap: .75rem; border: 1px solid #a8dbc1; border-radius: 12px; padding: 1rem; background: #e5f8ed; color: #176442; }
+body:has([data-ayni-screen="initial-diagnostic"]) :is(button, summary, a[href]):not(:disabled) { cursor: pointer; }
+[data-ayni-screen="initial-diagnostic"] button { transition: background-color 120ms ease, border-color 120ms ease; }
+[data-ayni-screen="initial-diagnostic"] button:not(:disabled):hover { border-color: #087d96; }
+[data-ayni-screen="initial-diagnostic"] button:not(:disabled):active { filter: brightness(.94); }
+[data-ayni-screen="initial-diagnostic"] button:disabled { opacity: .5; cursor: not-allowed; }
+[data-ayni-screen="initial-diagnostic"] :is(button, summary, a[href]):focus-visible { outline: 2px solid #087d96; outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) { [data-ayni-screen="initial-diagnostic"] button { transition: none; } }
+
+[data-ayni-screen="initial-diagnostic"] :is(summary, a[href]):hover { background-color: #edf8fa; }
+[data-ayni-screen="initial-diagnostic"] :is(summary, a[href]):active { background-color: #e4f3f7; }
