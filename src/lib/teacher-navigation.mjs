@@ -1,4 +1,5 @@
 const routes = new Map([
+  ["#preparacion", "Preparación"],
   ["#hoy", "Hoy"], ["#planificar", "Planificar"], ["#aula", "Aula"],
   ["#documentos", "Documentos"], ["#calendario", "Calendario"],
   ["#biblioteca", "Biblioteca"], ["#diagnostico", "Diagnóstico"],

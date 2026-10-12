@@ -6,7 +6,7 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react"
 import NextImage from "next/image";
 import {
   ArrowRight, BookOpen, CalendarDays, CalendarRange, Check, ClipboardCheck, Database,
-  Home, Users,
+  Home, School, Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -44,6 +44,8 @@ import { OrdinaryReviewDialog } from "./ordinary-review-dialog";
 import { DocumentsScreen, type DocumentFolder } from "./documents-screen";
 import { PlanningDownload } from "./planning-download";
 import { destinationFromHash, hashForDestination, primaryDestination } from "@/src/lib/teacher-navigation.mjs";
+import { PreparationHome } from "./preparation-home";
+import { preparationHash, preparationStage, preparationStageHash } from "@/src/lib/preparation-navigation.mjs";
 import { canLeaveWorkspace, readWorkspaceParams, useWorkspaceSubview, writeWorkspaceLocation } from "@/src/lib/workspace-location";
 
 const ProjectDevelopmentWorkspace = newAyniFeatureEnabled(process.env.NEXT_PUBLIC_AYNI_PROJECT_SIMPLE) || process.env.NEXT_PUBLIC_AYNI_EXPERIENCE!=="0"
@@ -70,6 +72,8 @@ const f7Nav = [["Hoy", "Hoy", Home], ["Planificar", "Planificar", CalendarDays],
   ["Mi aula", "Aula", Users], ["Biblioteca", "Biblioteca", BookOpen]] as const;
 const redesigned = process.env.NEXT_PUBLIC_AYNI_EXPERIENCE !== "0";
 const experienceNav = [["Mi año","Mi año",CalendarDays],["Hoy","Hoy",Home],["Calendario","Calendario",CalendarRange],["Evaluar","Evaluar",ClipboardCheck],["Planificación","Planificar",BookOpen]] as const;
+const preparationNav = [["1. Configura tu aula","Perfil",School],["2. Añade a tus niños","Aula",Users],["3. Conoce a tu grupo","Diagnóstico",ClipboardCheck],["4. Prepara Mi año","Mi año",CalendarDays]] as const;
+const additionalNav = [...experienceNav,["Biblioteca","Biblioteca",BookOpen],["Documentos","Documentos",BookOpen]] as const;
 const f7Enabled = !redesigned && newAyniFeatureEnabled(process.env.NEXT_PUBLIC_AYNI_F7_NAV);
 const sentenceCase = (value: string) => value.charAt(0).toLocaleUpperCase("es-PE") + value.slice(1);
 const planningTabs = ["home", "diagnostic", "annual", "experiences", "activities"] as const;
@@ -82,6 +86,10 @@ export function TeacherWorkspace() {
   const [active, setActive] = useState("Hoy");
   const [annualDestination, setAnnualDestination] = useState(false);
   const navigationTouched = useRef(false);
+  const preparationReturn = useRef<string | null>(null);
+  const [annualConfirmed, setAnnualConfirmed] = useState<boolean | null>(null);
+  const [annualDraft, setAnnualDraft] = useState(false);
+  const preparing = redesigned && annualConfirmed === false;
   const [evaluationTarget, setEvaluationTarget] = useState<{ studentId: string; competencyId: string } | null>(null);
   const [planningTarget, setPlanningTarget] = useState<"activities" | "diagnostic" | null>(null);
   const [calendarActivity, setCalendarActivity] = useState<{ id: string; experience_id: string } | null>(null);
@@ -123,6 +131,8 @@ export function TeacherWorkspace() {
         window.history.pushState(null, "", acceptedHash || window.location.pathname);
         window.dispatchEvent(new Event("ayni-location-change")); return;
       }
+      const previousPreparation = preparationHash(acceptedHash);
+      if (previousPreparation && acceptedHash !== window.location.hash) preparationReturn.current = previousPreparation;
       acceptedHash = window.location.hash;
       setAnnualDestination(readWorkspaceParams("Planificar").get("tab") === "annual");
       const destination = destinationFromHash(window.location.hash);
@@ -138,7 +148,7 @@ export function TeacherWorkspace() {
   useEffect(() => {
     const controller = new AbortController();
     loadPilotSetup().then((setup) => {
-      if (!setup.configured) { setAccountYear(setup.year); setNeedsSetup(true); setDatabaseState("connected"); return null; }
+      if (!setup.configured) { setAccountYear(setup.year); setNeedsSetup(true); setAnnualConfirmed(false); setAnnualDraft(false); setDatabaseState("connected"); setStarting(false); if (!navigationTouched.current) setActive("Preparación"); return null; }
       return loadLocalDashboard(controller.signal);
     })
       .then(async (data) => {
@@ -149,8 +159,11 @@ export function TeacherWorkspace() {
         setDatabaseState("connected");
         try {
           const guidance = await loadStartingGuidance(localDatabaseApiUrl);
+          if (controller.signal.aborted) return;
+          setAnnualConfirmed(Boolean(guidance.plans.active)); setAnnualDraft(Boolean(guidance.plans.draft));
           if (!controller.signal.aborted && !navigationTouched.current) {
-            if (guidance.startingSection === "Diagnóstico") { setPlanningTarget("diagnostic"); setDiagnosticInitialStep(1); setActive("Planificar"); }
+            if (redesigned) setActive(guidance.plans.active ? "Hoy" : "Preparación");
+            else if (guidance.startingSection === "Diagnóstico") { setPlanningTarget("diagnostic"); setDiagnosticInitialStep(1); setActive("Planificar"); }
             else setActive(guidance.startingSection === "Niños" ? "Aula" : guidance.startingSection);
           }
           if (!controller.signal.aborted) {
@@ -215,9 +228,30 @@ export function TeacherWorkspace() {
   const initialEnrollment = students.length === 0 || classroomView === "enrollment";
   const selectedNavigation = redesigned && active==="Planificar" && annualDestination ? "Mi año" : f7Enabled && active !== "Biblioteca" ? primaryDestination(active) : active;
 
-  function navigate(section: string, afterSavedSetup = false) { if (!afterSavedSetup && !canLeaveWorkspace()) return false; navigationTouched.current = true; setStarting(false); if (section !== "Planificar") { setPlanningTarget(null); setSelectedResource(null); setCalendarActivity(null); } if (section === "Evaluar") { setEvaluationTarget(null); setEvaluationEntry("home"); } setActive(section); const hash = hashForDestination(section); if (hash && destinationFromHash(window.location.hash) !== section) { window.history.pushState(null, "", hash); window.dispatchEvent(new Event("ayni-location-change")); } return true; }
+  function navigate(section: string, afterSavedSetup = false) { if (!afterSavedSetup && !canLeaveWorkspace()) return false; const previousPreparation = preparationHash(window.location.hash); if (previousPreparation) preparationReturn.current = previousPreparation; navigationTouched.current = true; setStarting(false); if (section !== "Planificar") { setPlanningTarget(null); setSelectedResource(null); setCalendarActivity(null); } if (section === "Evaluar") { setEvaluationTarget(null); setEvaluationEntry("home"); } setActive(section); const hash = hashForDestination(section); if (hash && destinationFromHash(window.location.hash) !== section) { window.history.pushState(null, "", hash); window.dispatchEvent(new Event("ayni-location-change")); } return true; }
   function navigatePrimary(section:string) { if(!navigate(section==="Mi año"?"Planificar":section))return; if(section==="Mi año" || section==="Planificar") writeWorkspaceLocation("Planificar",{tab:section==="Mi año"?"annual":"home"}); }
   function openDiagnostic(initialStep: 1 | 2 | 3 = 1) { setPlanningTarget("diagnostic"); setDiagnosticInitialStep(initialStep); navigate("Planificar"); }
+
+  function openPreparationHash(hash: string) {
+    const destination = destinationFromHash(hash);
+    if (!destination || !navigate(destination)) return;
+    setCalendarActivity(null); setSelectedResource(null);
+    setPlanningTarget(hash.includes("tab=diagnostic") ? "diagnostic" : null);
+    window.history.replaceState(null, "", hash); window.dispatchEvent(new Event("ayni-location-change"));
+  }
+  function openPreparationStage(stage: number) { openPreparationHash(preparationStageHash(stage)); }
+  function returnToPreparation() {
+    if (preparationHash(window.location.hash)) {navigate("Preparación");return;}
+    const fallback = preparationStage({configured:Boolean(dashboard), studentCount:students.length, annualDraft});
+    openPreparationHash(preparationReturn.current ?? preparationStageHash(fallback));
+  }
+  function preparationMenu() {
+    return <details className="relative"><summary className="min-h-11 cursor-pointer rounded-xl border bg-white px-3 py-3 text-sm font-semibold text-[#07576c] hover:bg-[#edf6fa] focus-visible:outline-2 focus-visible:outline-[#087d96]">Más funciones</summary><div className="absolute bottom-full right-0 z-40 mb-2 grid max-h-[60vh] w-52 gap-1 overflow-y-auto rounded-xl border bg-white p-2 md:static md:mt-2 md:mb-0 md:w-full md:max-h-none">{additionalNav.map(([label,destination,Icon])=><Button key={label} variant="ghost" disabled={!dashboard} className="min-h-11 justify-start" onClick={event=>{navigatePrimary(destination);event.currentTarget.closest("details")?.removeAttribute("open");}}><Icon className="size-4"/>{label}</Button>)}</div></details>;
+  }
+  useEffect(() => {
+    if (annualConfirmed !== true || active !== "Preparación") return;
+    window.history.replaceState(null,"","#hoy"); window.dispatchEvent(new Event("ayni-location-change"));
+  }, [annualConfirmed,active]);
 
   function closeEvidence(open: boolean) {
     setEvidenceOpen(open);
@@ -274,11 +308,11 @@ export function TeacherWorkspace() {
   const activityRunBlock = dashboard?.today.blocks.find((block) => block.id === activityRunBlockId) ?? null;
 
   // Setup has already committed; its busy exit guard must not block this transition.
-  if (needsSetup) return <PilotSetup accountYear={accountYear} onReady={(ready) => { setDashboard(ready); setNeedsSetup(false); setDatabaseState("connected"); navigate("Aula", true); }} />;
+  if (needsSetup && active !== "Preparación") return <><div className="mx-auto max-w-5xl px-5 pt-5"><Button variant="outline" onClick={()=>navigate("Preparación")}>Volver a mi preparación</Button></div><PilotSetup accountYear={accountYear} onReady={(ready) => { setDashboard(ready); setNeedsSetup(false); setDatabaseState("connected"); navigate("Aula", true); writeWorkspaceLocation("Aula",{view:"enrollment"},true); }} /></>;
   if (databaseState === "offline") return <main className="mx-auto max-w-xl space-y-4 p-6"><h1 className="text-2xl font-bold">No se pudo conectar con el aula</h1><p>Comprueba tu conexión y vuelve a intentarlo. Tu trabajo guardado seguirá disponible.</p><Button onClick={() => { setDatabaseState("checking"); setRetry((value) => value + 1); }}>Reintentar</Button></main>;
 
   return (
-    <SidebarProvider style={{ "--sidebar-width": "13.5rem" } as CSSProperties}>
+    <SidebarProvider data-ayni-preparing={preparing ? "true" : undefined} style={{ "--sidebar-width": "13.5rem" } as CSSProperties}>
       <a href="#ayni-main" onClick={(event) => { event.preventDefault(); document.getElementById("ayni-main")?.focus(); }} className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-xl focus:bg-white focus:px-4 focus:py-3 focus:font-bold focus:text-[#07576c] focus:shadow-lg">Saltar al contenido</a>
       <Sidebar collapsible="offcanvas" className="border-r border-[#e4eaf3] text-[#19345b]">
         <SidebarHeader className="px-5 pb-4 pt-6">
@@ -291,14 +325,14 @@ export function TeacherWorkspace() {
           <SidebarGroup>
             <SidebarGroupContent>
               <nav aria-label="Navegación principal"><SidebarMenu className="gap-1.5">
-                {(redesigned ? experienceNav : f7Enabled ? f7Nav : nav.map(([label, Icon]) => [label, label, Icon] as const)).map(([label, destination, Icon]) => (
+                {(preparing ? [["Mi preparación","Preparación",Home] as const,...preparationNav] : redesigned ? experienceNav : f7Enabled ? f7Nav : nav.map(([label, Icon]) => [label, label, Icon] as const)).map(([label, destination, Icon]) => (
                   <SidebarMenuItem key={label}>
-                    <SidebarMenuButton asChild isActive={selectedNavigation === destination} className="h-11 rounded-xl px-3 text-[15px] transition-colors hover:bg-[#eaf6f9] focus-visible:ring-2 data-[active=true]:bg-[#087d96] data-[active=true]:font-semibold data-[active=true]:text-white">
-                      <button type="button" aria-current={selectedNavigation === destination ? "page" : undefined} onClick={() => navigatePrimary(destination)}><Icon /><span>{label}</span></button>
+                    <SidebarMenuButton asChild isActive={selectedNavigation === destination || preparing && destination === "Diagnóstico" && active === "Planificar" && readWorkspaceParams("Planificar").get("tab")==="diagnostic"} className={`${preparing ? "min-h-11 h-auto py-3" : "h-11"} rounded-xl px-3 text-[15px] transition-colors hover:bg-[#eaf6f9] focus-visible:ring-2 data-[active=true]:bg-[#087d96] data-[active=true]:font-semibold data-[active=true]:text-white`}>
+                      <button type="button" aria-current={selectedNavigation === destination ? "page" : undefined} onClick={() => {if(preparing && destination !== "Preparación")openPreparationStage(preparationNav.findIndex(item=>item[1]===destination)+1);else navigatePrimary(destination);}}><Icon /><span className={preparing ? "whitespace-normal" : undefined}>{label}</span></button>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 ))}
-              </SidebarMenu></nav>
+              </SidebarMenu></nav>{preparing && <div className="mt-6">{preparationMenu()}</div>}
             </SidebarGroupContent>
           </SidebarGroup>
         </SidebarContent>
@@ -339,19 +373,20 @@ export function TeacherWorkspace() {
 
         <main id="ayni-main" tabIndex={-1} className="mx-auto w-full max-w-[1450px] px-4 pb-28 pt-4 md:px-7 md:pt-8">
           {dashboard?.today.qa_clock && process.env.NEXT_PUBLIC_AYNI_QA_CLOCK !== "1" && <p role="status" className="mb-4 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm">QA · reloj de prueba de la jornada: {displayDate(dashboard.today.qa_clock.date)} · {dashboard.today.qa_clock.time}. No cambia la fecha del equipo ni los cierres.</p>}
+          {preparing && active !== "Preparación" && <div className="mb-4"><Button variant="outline" className="min-h-11 whitespace-normal" onClick={returnToPreparation}>Volver a mi preparación</Button></div>}
           {guidanceError && <div className="mb-4 flex flex-wrap items-center gap-3"><WorkflowFeedback tone="error">No pudimos comprobar cuál es tu siguiente paso.</WorkflowFeedback><Button variant="outline" onClick={() => { setGuidanceError(false); setRetry((value) => value + 1); }}>Reintentar</Button></div>}
-          {starting ? <ScreenSkeleton /> : active === "Perfil" ? dashboard ? <InstitutionProfile dashboard={dashboard} onSaved={setDashboard} /> : <ScreenSkeleton /> :
+          {starting ? <ScreenSkeleton /> : active === "Preparación" ? <PreparationHome dashboard={dashboard} year={accountYear} annualDraft={annualDraft} onStage={openPreparationStage}/> : active === "Perfil" ? dashboard ? <InstitutionProfile dashboard={dashboard} onSaved={setDashboard} /> : <ScreenSkeleton /> :
           active === "Documentos" ? <DocumentsScreen onPlan={() => navigate("Planificar")} /> :
           active === "Calendario" ? <SchoolCalendarScreen todayDate={dashboard?.today.date} onOpenPlanning={() => navigate("Planificar")} onOpenActivity={(item) => { setCalendarActivity(item); setPlanningTarget("activities"); navigate("Planificar"); }} /> : active === "Biblioteca" ? dashboard ? <ResourceLibraryScreen onPlan={() => navigate("Planificar")} age={dashboard.profile.age_years} initialFilter={libraryFilter} onUse={(resource) => { setSelectedResource(resource); setPlanningTarget("activities"); navigate("Planificar"); }} /> : <ScreenSkeleton /> :
           active === "Evaluar" ? dashboard ? <EvaluationArea dashboard={dashboard} initialTarget={evaluationTarget} initialSection={evaluationEntry} onPlan={() => { setPlanningTarget(null); navigate("Planificar"); }} onPrepareActivity={() => { setPlanningTarget("activities"); navigate("Planificar"); }} onToday={() => navigate("Hoy")} /> : <ScreenSkeleton /> :
-          active === "Aula" ? dashboard ? <><div className="mx-auto mb-4 flex max-w-5xl flex-wrap gap-2">{f7Enabled && !initialEnrollment && <><Button variant="outline" onClick={() => openDiagnostic()}>Diagnóstico</Button><Button variant="outline" onClick={() => navigate("Evaluar")}>Evaluación</Button>{newAyniFeatureEnabled(process.env.NEXT_PUBLIC_AYNI_CURRICULAR_REVIEW) && <Button variant="outline" onClick={() => setOrdinaryReviewOpen(true)}>Observaciones por revisar</Button>}</>}</div><StudentsScreen students={students} initialEnrollment={initialEnrollment} classroomLabel={profile ? profile.section + " · " + profile.age_label : undefined} onRegistrationComplete={() => { writeWorkspaceLocation("Aula", {view:"list"}, true); openDiagnostic(); }} onImported={(ready) => { if (initialEnrollment) writeWorkspaceLocation("Aula", {view:"enrollment"}, true); setDashboard(ready); }} onDiagnostic={() => openDiagnostic()} onEvaluate={(studentId, competencyId) => { navigate("Evaluar"); setEvaluationTarget({ studentId, competencyId }); }} onPlan={() => navigatePrimary("Mi año")} /></> : <ScreenSkeleton /> : active === "Planificar" ? dashboard ? <PlanningArea dashboard={dashboard} initialTab={planningTarget} initialActivity={calendarActivity} diagnosticInitialStep={diagnosticInitialStep} selectedResource={selectedResource} onGoToday={() => navigate("Hoy")} onRecordEvidence={openPlannedEvidence} onGoStudents={() => navigate("Aula")} onGoWorkshops={() => { setLibraryFilter("workshops"); navigate("Biblioteca"); }} onGoCalendar={() => navigate("Calendario")} onGoLibrary={() => { setLibraryFilter("for-you"); navigate("Biblioteca"); }} onGoEvaluation={()=>navigate("Evaluar")} onGoDocuments={()=>navigate("Documentos")} /> : <ScreenSkeleton /> : <>
+          active === "Aula" ? dashboard ? <><div className="mx-auto mb-4 flex max-w-5xl flex-wrap gap-2">{f7Enabled && !initialEnrollment && <><Button variant="outline" onClick={() => openDiagnostic()}>Diagnóstico</Button><Button variant="outline" onClick={() => navigate("Evaluar")}>Evaluación</Button>{newAyniFeatureEnabled(process.env.NEXT_PUBLIC_AYNI_CURRICULAR_REVIEW) && <Button variant="outline" onClick={() => setOrdinaryReviewOpen(true)}>Observaciones por revisar</Button>}</>}</div><StudentsScreen students={students} initialEnrollment={initialEnrollment} classroomLabel={profile ? profile.section + " · " + profile.age_label : undefined} onRegistrationComplete={() => { writeWorkspaceLocation("Aula", {view:"list"}, true); openDiagnostic(); }} onImported={(ready) => { if (initialEnrollment) writeWorkspaceLocation("Aula", {view:"enrollment"}, true); setDashboard(ready); }} onDiagnostic={() => openDiagnostic()} onEvaluate={(studentId, competencyId) => { navigate("Evaluar"); setEvaluationTarget({ studentId, competencyId }); }} onPlan={() => navigatePrimary("Mi año")} /></> : <ScreenSkeleton /> : active === "Planificar" ? dashboard ? <PlanningArea onAnnualConfirmed={()=>{void loadStartingGuidance(localDatabaseApiUrl).then(guidance=>{setAnnualConfirmed(Boolean(guidance.plans.active));setAnnualDraft(Boolean(guidance.plans.draft));}).catch(()=>setGuidanceError(true));}} dashboard={dashboard} initialTab={planningTarget} initialActivity={calendarActivity} diagnosticInitialStep={diagnosticInitialStep} selectedResource={selectedResource} onGoToday={() => navigate("Hoy")} onRecordEvidence={openPlannedEvidence} onGoStudents={() => navigate("Aula")} onGoWorkshops={() => { setLibraryFilter("workshops"); navigate("Biblioteca"); }} onGoCalendar={() => navigate("Calendario")} onGoLibrary={() => { setLibraryFilter("for-you"); navigate("Biblioteca"); }} onGoEvaluation={()=>navigate("Evaluar")} onGoDocuments={()=>navigate("Documentos")} /> : <ScreenSkeleton /> : <>
           {activityRunBlock ? <ActivityRunView block={activityRunBlock} evidenceRevision={evidenceRevision} onBack={() => setActivityRunBlockId(null)} onEvidence={(id, criterionId, momentId) => openEvidenceFor(activityRunBlock, id, criterionId, momentId)} onStepChange={async (stepIndex) => updateExecution({ scheduleEntryId: activityRunBlock.id, action: "set_step", stepIndex })} onComplete={async (note) => { await updateExecution({ scheduleEntryId: activityRunBlock.id, action: "complete", closureType: note ? "note" : "as_planned", closureNote: note }); setActivityRunBlockId(null); }} /> : active === "Hoy" && (dashboard ? <TodayHome onActivitiesChanged={async()=>setDashboard(await loadLocalDashboard())} dashboard={dashboard} refreshKey={evidenceRevision} openEvidence={openEvidenceFor} openAttendance={() => setAttendanceOpen(true)} updateExecution={updateExecution} openActivity={openActivity} onPlan={() => navigatePrimary("Mi año")} onPrepareActivity={() => { setPlanningTarget("activities"); navigate("Planificar"); }} onObserveWithoutActivity={() => newAyniFeatureEnabled(process.env.NEXT_PUBLIC_AYNI_ORDINARY_OBSERVATIONS) ? setOrdinaryContext(null) : (setPlanningTarget("activities"), navigate("Planificar"))} onReplan={() => { navigate("Evaluar"); setEvaluationEntry("replan"); }} onReviewObservations={() => setOrdinaryReviewOpen(true)} /> : <ScreenSkeleton />)}
           </>}
         </main>
 
-        <nav className={`fixed inset-x-0 bottom-0 z-30 grid ${f7Enabled ? "grid-cols-4" : "grid-cols-5"} border-t border-[#e1e9f2] bg-white/97 px-1 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_rgba(24,45,80,.05)] backdrop-blur md:hidden`} aria-label="Navegación rápida">
+        {preparing ? <nav aria-label="Navegación de preparación" className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-2 items-center gap-2 border-t bg-white px-4 py-2 pb-[max(.5rem,env(safe-area-inset-bottom))] md:hidden"><Button className="min-h-12 whitespace-normal" variant={active==="Preparación" ? "default" : "outline"} onClick={()=>navigate("Preparación")}><Home className="size-4"/>Mi preparación</Button>{preparationMenu()}</nav> : <nav className={`fixed inset-x-0 bottom-0 z-30 grid ${f7Enabled ? "grid-cols-4" : "grid-cols-5"} border-t border-[#e1e9f2] bg-white/97 px-1 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_rgba(24,45,80,.05)] backdrop-blur md:hidden`} aria-label="Navegación rápida">
           {(redesigned ? experienceNav : f7Enabled ? f7Nav : mobileNav).map(([label, destination, Icon]) => <button key={label} type="button" aria-current={selectedNavigation === destination ? "page" : undefined} onClick={() => { if (destination === "Biblioteca") setLibraryFilter("for-you"); navigatePrimary(destination); }} className={`group mx-0.5 flex min-h-16 flex-col items-center justify-center gap-1 rounded-xl text-[11px] font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-[-3px] active:bg-[#d8f0f4] ${selectedNavigation === destination ? "text-[#087d96]" : "text-[#60718a]"}`}><span className={`grid h-7 w-11 place-items-center rounded-lg ${selectedNavigation === destination ? "bg-[#dff3f6]" : "group-hover:bg-[#edf6fa]"}`}><Icon className="size-5" /></span><span>{label}</span></button>)}
-        </nav>
+        </nav>}
       </SidebarInset>
       <AttendanceDialog open={attendanceOpen} onOpenChange={setAttendanceOpen} students={students} onSave={markAttendance} />
       <EvidenceDialog open={evidenceOpen} onOpenChange={closeEvidence} students={students} studentId={studentId} setStudentId={setStudentId} criterionId={criterionId} setCriterionId={setCriterionId} criteria={evidenceContext?.criteria ?? activity?.criteria ?? []} note={note} setNote={setNote} photo={photo} setPhoto={setPhoto} audio={audio} setAudio={setAudio} saved={saved} saving={savingEvidence} saveError={saveError} saveEvidence={saveEvidence} activityTitle={evidenceContext?.title ?? activity?.title ?? "Actividad"} databaseConnected={databaseState === "connected"} />
@@ -414,7 +449,7 @@ function EvaluationArea({ dashboard, initialTarget, initialSection, onPlan, onPr
     </>}
   </section>;
 }
-function PlanningArea({ dashboard, initialTab, initialActivity, diagnosticInitialStep, selectedResource, onGoToday, onRecordEvidence, onGoStudents, onGoWorkshops, onGoCalendar, onGoLibrary, onGoEvaluation, onGoDocuments }: { dashboard: LocalDashboard; initialTab?:"activities"|"diagnostic"|null; initialActivity?:{id:string;experience_id:string}|null; diagnosticInitialStep:1|2|3; selectedResource: LibraryResource | null; onGoToday: () => void; onRecordEvidence: (input: { activityId: string; title: string; criterion: ActivityCriterion }) => void; onGoStudents: () => void; onGoWorkshops: () => void; onGoCalendar: () => void; onGoLibrary: () => void;onGoEvaluation:()=>void;onGoDocuments:()=>void }) {
+function PlanningArea({ onAnnualConfirmed, dashboard, initialTab, initialActivity, diagnosticInitialStep, selectedResource, onGoToday, onRecordEvidence, onGoStudents, onGoWorkshops, onGoCalendar, onGoLibrary, onGoEvaluation, onGoDocuments }: { onAnnualConfirmed?: () => void; dashboard: LocalDashboard; initialTab?:"activities"|"diagnostic"|null; initialActivity?:{id:string;experience_id:string}|null; diagnosticInitialStep:1|2|3; selectedResource: LibraryResource | null; onGoToday: () => void; onRecordEvidence: (input: { activityId: string; title: string; criterion: ActivityCriterion }) => void; onGoStudents: () => void; onGoWorkshops: () => void; onGoCalendar: () => void; onGoLibrary: () => void;onGoEvaluation:()=>void;onGoDocuments:()=>void }) {
   const [tab, setTab] = useWorkspaceSubview("Planificar", "tab", planningTabs, initialTab??"home");
   const [diagnosticStep, setDiagnosticStep] = useState<1 | 2 | 3>(diagnosticInitialStep);
   const [projectProposalId, setProjectProposalId] = useState<string | null>(null);
@@ -452,7 +487,7 @@ function PlanningArea({ dashboard, initialTab, initialActivity, diagnosticInitia
     <nav aria-label="Ubicación en planificación" className="flex flex-wrap items-center gap-2 text-sm"><Button variant="ghost" className="-ml-3 min-h-11 text-[#07576c]" onClick={() => setTab("home")}>← Planificar</Button><span aria-hidden="true">/</span><span className="font-semibold text-[#172b52]">{tab === "annual" ? "Mi año" : tab === "experiences" ? "Proyecto o unidad" : tab === "activities" ? "Actividades del proyecto" : "Diagnóstico"}</span></nav>
     {loading ? <LoadingState label="Buscando dónde continuar..." /> : progressError ? <div className="space-y-2"><WorkflowFeedback tone="error">No se pudo comprobar dónde continuar. Tus datos guardados no se han perdido.</WorkflowFeedback><Button variant="outline" onClick={() => void refreshJourney()}>Reintentar carga del avance</Button></div> : <>
       {tab === "activities" && selectedResource && <div className="rounded-2xl bg-[#edf8f4] p-4 text-sm text-[#1c554b]"><b>Recurso elegido: {selectedResource.title}</b><p className="mt-1">Elige un proyecto o unidad. Ayni incorporará el contexto y los materiales del recurso a la actividad para que puedas revisarlos.</p></div>}
-      {journey && !canOpenPlanningStep(journey, tab) && !(tab === "activities" && initialActivity) ? <NextStepCard title="Completa el paso anterior" description={tab === "annual" ? "Agrega al menos un niño para preparar tu año." : tab === "experiences" ? "Confirma primero el plan anual." : "Confirma primero un proyecto o unidad."} action={tab === "annual" ? "Agregar niños" : tab === "experiences" ? "Abrir plan anual" : "Abrir proyecto o unidad"} onAction={tab === "annual" ? onGoStudents : () => setTab(tab === "experiences" ? "annual" : "experiences")} /> : tab === "diagnostic" ? (journey?.studentCount ? <GuidedDiagnostic dashboard={dashboard} initialStep={diagnosticStep} onPlan={() => { setTab("annual"); void refreshJourney(); }} onStudents={onGoStudents} /> : <NextStepCard title="Primero, agrega a los niños" description="Necesitas la lista del aula para registrar el diagnóstico inicial." action="Agregar niños" onAction={onGoStudents} />) : tab === "annual" ? <AnnualPreplanWorkspace onConfirmed={() => void refreshJourney()} onGoDiagnostic={onGoDiagnostic}
+      {journey && !canOpenPlanningStep(journey, tab) && !(tab === "activities" && initialActivity) ? <NextStepCard title="Completa el paso anterior" description={tab === "annual" ? "Agrega al menos un niño para preparar tu año." : tab === "experiences" ? "Confirma primero el plan anual." : "Confirma primero un proyecto o unidad."} action={tab === "annual" ? "Agregar niños" : tab === "experiences" ? "Abrir plan anual" : "Abrir proyecto o unidad"} onAction={tab === "annual" ? onGoStudents : () => setTab(tab === "experiences" ? "annual" : "experiences")} /> : tab === "diagnostic" ? (journey?.studentCount ? <GuidedDiagnostic dashboard={dashboard} initialStep={diagnosticStep} onPlan={() => { setTab("annual"); void refreshJourney(); }} onStudents={onGoStudents} /> : <NextStepCard title="Primero, agrega a los niños" description="Necesitas la lista del aula para registrar el diagnóstico inicial." action="Agregar niños" onAction={onGoStudents} />) : tab === "annual" ? <AnnualPreplanWorkspace onConfirmed={() => {onAnnualConfirmed?.();void refreshJourney();}} onGoDiagnostic={onGoDiagnostic}
         onDevelop={(proposalId) => { setProjectProposalId(proposalId); setTab("experiences"); }} /> : tab === "experiences" ? <ProjectDevelopmentWorkspace initialProposalId={projectProposalId} feedbackPeriodId={feedbackPeriodId}
         onConfirmed={() => void refreshJourney()} onGoAnnual={() => { setProjectProposalId(null); setTab("annual"); void refreshJourney(); }}
         onDevelopActivity={(experienceId, routeItemId) => {

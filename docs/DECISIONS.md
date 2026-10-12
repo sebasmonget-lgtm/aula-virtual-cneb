@@ -1,5 +1,12 @@
 # Decisiones de arquitectura
 
+## ADR 126 — Preparación como entrada temporal del workspace (2026-10-12)
+
+UI aprobada UX-QA-06: entry #preparacion y cuatro etapas mientras el endpoint anual existente no ofrece plan activo confirmado. Un borrador no restaura navegación cotidiana. Reutilizar formularios, barras/cobertura, guardas y consulta de arranque; sin autoridad pedagógica nueva. El callback de confirmación comprueba servidor; Hoy es inicio del ciclo con año confirmado. Acceso secundario a todos los destinos conservado.
+
+Regresar usa solo una ruta saneada de etapa en memoria; incluye paso/forma de observar, excluye IDs de alumnos/textos. Recarga orienta desde datos existentes. No escribir navegación en base, crear APIs ni cachear borradores privados. No exigir porcentaje de entrevistas/observaciones para abrir Mi año. Rollback de UI compatible con todos los registros y enlaces previos.
+
+
 ## ADR 125 — Cobertura inicial y confirmaciones sin bloquear Mi año (2026-10-12)
 
 UX-QA-05 aprobada: portada de diagnóstico con tarjetas equivalentes de familias/observaciones y paso opcional hacia Mi año, sin gates por porcentaje. Reutilizar endpoints y registros actuales; el GET de estados familiares expone has_confirmed_answers para distinguir progreso real de un borrador de corrección. Respuestas vacías o metadata no cuentan; se conserva la confirmación anterior mientras se prepara una corrección. Observación inicial se cuenta por niño único en fuentes propias del diagnóstico, incluidas espontáneas sin competencia; no mezclar observaciones ordinarias de otros contextos. No equiparar cobertura con cierre pedagógico.

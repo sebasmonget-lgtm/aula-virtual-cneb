@@ -1,5 +1,10 @@
 # Errores y soluciones
 
+## UX-QA-06 — Salir de la preparación dejaba a la docente sin regreso claro
+
+Síntoma reportado: una docente sin año confirmado puede abrir otro módulo y no encontrar su etapa de preparación. Causa: shell con todos los destinos al mismo nivel, sin portada ni regreso; el arranque anterior trataba también el borrador anual como motivo para ir a Hoy. Solución: navegación temporal de cuatro etapas basada en plans.active del servidor, acceso secundario y ruta de regreso saneada; después de confirmación, navegación habitual/Hoy. Validación: 16 focales PASS; diagnóstico→Hoy→entrevista y Calendario→etapa pendiente con borrador guardado y tres niños conservados en HTTP local; cero escrituras/IA durante navegación. Escenario anual confirmado mediante respuesta GET ficticia explícita, sin preparar un plan remoto. Prevención: probar salida/regreso y distinguir borrador de año confirmado; no guardar contenido privado para recordar navegación.
+
+
 ## UX-QA-05 — Confirmación de entrevista atribuida a un borrador (2026-10-12)
 
 Síntoma observado en Side Panel: «Entrevista guardada» en lista cuyos niños aparecen sin respuestas. Causa: onSaved se invocaba también al volver guardando un borrador; el contenedor convertía ese callback en confirmación general. Solución: lista presenta estado persistido; toast de confirmación únicamente tras save-and-confirm exitoso. El progreso consulta respuestas confirmadas y conserva el estado independiente del borrador. Metadata/espacios/listas vacías no cuentan. Validación: caso HTTP/UI local pendiente→borrador recuperable (0 %)→una respuesta confirmada (100 %), servidor y recarga; 62 regresiones focales PASS. Prevención: distinguir avance guardado de entrevista confirmada, y probar correcciones con historia en lugar de contar solo el estado visible más reciente.
