@@ -169,7 +169,19 @@ export async function loadAiUsageSummary(): Promise<AiUsageSummary> {
   return response.json();
 }
 
-export async function loadPilotSetup(): Promise<{ configured: boolean; year?: number }> {
+export type PilotSetupDraft = {
+  teacherName: string; institutionName: string; section: string; institutionCode: string; district: string; ugel: string; directorName: string;
+  age: number | null; year: number; createLogo: boolean; logoInitials: string; logoPrimary: string; logoAccent: string;
+  logoUpload?: { mimeType: "image/png" | "image/jpeg" | "image/webp"; base64: string };
+};
+
+export async function savePilotSetupDraft(input: PilotSetupDraft): Promise<void> {
+  const response = await apiFetch(`${apiUrl}/api/pilot/setup`, { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify(input) });
+  const result = await apiJson<{error?: string}>(response);
+  if (!response.ok) throw new Error(result.error ?? "No se pudieron guardar los cambios. Inténtalo de nuevo.");
+}
+
+export async function loadPilotSetup(): Promise<{ configured: boolean; year?: number; draft?: PilotSetupDraft | null }> {
   const response = await apiFetch(`${apiUrl}/api/pilot/setup`, { cache: "no-store" });
   if (!response.ok) throw new Error("No se pudo consultar la configuración del aula.");
   return response.json();

@@ -20,7 +20,7 @@ import {
   SidebarProvider,
 } from "@/components/ui/sidebar";
 import {
-  confirmClassroomEnrollment, createLocalEvidence, loadLocalDashboard, loadPilotSetup, localDatabaseApiUrl, saveLocalAttendance, updateLocalExecution, type ActivityCriterion, type LocalDashboard, type LocalStudent, type PrivateMediaUpload,
+  confirmClassroomEnrollment, createLocalEvidence, loadLocalDashboard, loadPilotSetup, localDatabaseApiUrl, saveLocalAttendance, updateLocalExecution, type ActivityCriterion, type LocalDashboard, type LocalStudent, type PrivateMediaUpload, type PilotSetupDraft,
 } from "@/src/lib/local-database";
 import { canOpenPlanningStep, loadPlanningJourney, loadStartingGuidance } from "@/src/lib/planning-journey.mjs";
 import { InstitutionProfile } from "./profile-and-diagnostic";
@@ -80,7 +80,7 @@ const evaluationViews = ["student", "conclusions", "family", "coverage", "consol
 const classroomViews = ["enrollment", "list"] as const;
 const noClassroomViews = [] as const;
 
-export function TeacherWorkspace() {
+export function TeacherWorkspace({ onSignOut, onSetupRequired }: { onSignOut?: () => void; onSetupRequired?: (required: boolean) => void }) {
   const [active, setActive] = useState("Hoy");
   const [diagnosticChild, setDiagnosticChild] = useState(false);
   const [annualDestination, setAnnualDestination] = useState(false);
@@ -113,6 +113,7 @@ export function TeacherWorkspace() {
   const [dashboard, setDashboard] = useState<LocalDashboard | null>(null);
   const [needsSetup, setNeedsSetup] = useState(false);
   const [accountYear, setAccountYear] = useState<number | undefined>(undefined);
+  const [setupDraft, setSetupDraft] = useState<PilotSetupDraft | null>(null);
   const [databaseState, setDatabaseState] = useState<"checking" | "connected" | "offline">("checking");
   const [guidanceError, setGuidanceError] = useState(false);
   const [starting, setStarting] = useState(true);
@@ -145,7 +146,8 @@ export function TeacherWorkspace() {
   useEffect(() => {
     const controller = new AbortController();
     loadPilotSetup().then((setup) => {
-      if (!setup.configured) { setAccountYear(setup.year); setNeedsSetup(true); setAnnualConfirmed(false); setAnnualDraft(false); setDatabaseState("connected"); setStarting(false); if (!navigationTouched.current) setActive("Preparación"); return null; }
+      onSetupRequired?.(!setup.configured);
+      if (!setup.configured) { setAccountYear(setup.year); setSetupDraft(setup.draft ?? null); setNeedsSetup(true); setAnnualConfirmed(false); setAnnualDraft(false); setDatabaseState("connected"); setStarting(false); return null; }
       return loadLocalDashboard(controller.signal);
     })
       .then(async (data) => {
@@ -171,7 +173,7 @@ export function TeacherWorkspace() {
       })
       .catch(() => { setDatabaseState("offline"); setStarting(false); });
     return () => controller.abort();
-  }, [retry]);
+  }, [retry, onSetupRequired]);
 
   useEffect(() => {
     if (active !== "Hoy" || starting || needsSetup) return;
@@ -298,7 +300,7 @@ export function TeacherWorkspace() {
   const activityRunBlock = dashboard?.today.blocks.find((block) => block.id === activityRunBlockId) ?? null;
 
   // Setup has already committed; its busy exit guard must not block this transition.
-  if (needsSetup && active !== "Preparación") return <><div className="mx-auto max-w-5xl px-5 pt-5"><Button variant="outline" onClick={()=>navigate("Preparación")}><ArrowLeft aria-hidden="true" className="size-4"/>Volver a mi preparación</Button></div><PilotSetup accountYear={accountYear} onReady={(ready) => { setDashboard(ready); setNeedsSetup(false); setDatabaseState("connected"); navigate("Aula", true); writeWorkspaceLocation("Aula",{view:"enrollment"},true); }} /></>;
+  if (needsSetup) return <PilotSetup accountYear={accountYear} initialDraft={setupDraft} onSignOut={onSignOut} onReady={(ready) => { setDashboard(ready); setNeedsSetup(false); onSetupRequired?.(false); setDatabaseState("connected"); navigate("Aula", true); writeWorkspaceLocation("Aula",{view:"enrollment"},true); }} />;
   if (databaseState === "offline") return <main className="mx-auto max-w-xl space-y-4 p-6"><h1 className="text-2xl font-bold">No se pudo conectar con el aula</h1><p>Comprueba tu conexión y vuelve a intentarlo. Tu trabajo guardado seguirá disponible.</p><Button onClick={() => { setDatabaseState("checking"); setRetry((value) => value + 1); }}>Reintentar</Button></main>;
 
   return (

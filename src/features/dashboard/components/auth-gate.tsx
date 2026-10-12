@@ -25,6 +25,7 @@ function offerBrowserPasswordStorage(dni: string, password: string) {
 }
 
 export function AuthGate() {
+  const [setupRequired, setSetupRequired] = useState(false);
   const [state, setState] = useState<AccessState>("checking");
   const [mode, setMode] = useState<"local" | "supabase">("local");
   const [role, setRole] = useState<"teacher" | "admin">("teacher");
@@ -145,10 +146,10 @@ export function AuthGate() {
 
   if (state === "ready") return <>
     {role === "admin" ? <AdminWorkspace onSignOut={() => void signOut()} /> : <>
-    {mode === "supabase" && <div className="flex justify-end border-b border-[#dce7ef] bg-white px-5 py-2">
+    {mode === "supabase" && !setupRequired && <div className="flex justify-end border-b border-[#dce7ef] bg-white px-5 py-2">
       <button type="button" onClick={() => void signOut()} className="rounded-lg px-3 py-2 text-sm font-semibold text-[#0a7890] hover:bg-[#eaf6f9]">Cerrar sesión</button>
     </div>}
-    {process.env.NEXT_PUBLIC_AYNI_QA_CLOCK === "1" ? <QAClockControl><TeacherWorkspace /></QAClockControl> : <TeacherWorkspace />}</>}
+    {process.env.NEXT_PUBLIC_AYNI_QA_CLOCK === "1" ? <QAClockControl><TeacherWorkspace onSignOut={() => void signOut()} onSetupRequired={setSetupRequired}/></QAClockControl> : <TeacherWorkspace onSignOut={() => void signOut()} onSetupRequired={setSetupRequired}/>}</>}
   </>;
   if (state === "checking") return <main className="grid min-h-screen place-items-center text-[#19334d]">Comprobando tu sesión…</main>;
   if (state === "unavailable") return <main className="grid min-h-screen place-items-center p-6 text-center text-[#19334d]">

@@ -47,7 +47,7 @@ export async function createPilotClassroom(db, teacherId, input, { assetsDir, lo
       }
       throw new VersionConflictError("Ya existe un aula activa. Recarga para revisar sus datos antes de editarla.");
     }
-    await db.query(`insert into profiles(user_id,display_name) values($1,$2) on conflict(user_id) do update set display_name=excluded.display_name,updated_at=now()`, [teacherId, value.teacherName]);
+    await db.query(`insert into profiles(user_id,display_name) values($1,$2) on conflict(user_id) do update set display_name=excluded.display_name,preferences=profiles.preferences-'classroom_setup',updated_at=now()`, [teacherId, value.teacherName]);
     await db.query(`insert into levels(id,name) values('20000000-0000-4000-8000-000000000001','Educación Inicial') on conflict(id) do nothing`);
     await db.query(`insert into age_grades(id,level_id,label,age_years) values($1,'20000000-0000-4000-8000-000000000001',$2,$3) on conflict(level_id,age_years) do nothing`, [gradeId(value.age), `${value.age} años`, value.age]);
     const grade = (await db.query(`select id from age_grades where level_id='20000000-0000-4000-8000-000000000001' and age_years=$1`, [value.age])).rows[0];

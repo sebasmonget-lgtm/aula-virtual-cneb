@@ -1,5 +1,9 @@
 # Errores y soluciones
 
+## Nueva docente veía Preparación y no tenía guardado automático del alta — 2026-10-12
+
+Síntoma: sin aula, #preparacion mostraba portada previa; el formulario guardaba únicamente al continuar, por lo que recargar perdía datos incompletos. Causa: PilotSetup dependía de active distinto de Preparación y conservaba todos sus datos en memoria. Solución: renderizar alta siempre que needsSetup; recuperar y guardar automáticamente estado privado por cuenta en preferences existente, con debounce/cola, confirmación visible, reintento y bloqueo compartido con creación. POST limpia estado temporal dentro de la transacción. Validado con PGlite (datos incompletos, aislamiento, preferencias preservadas, limpieza final y rechazo de escrituras tardías) y navegador local (recarga, edad explícita, logo y matrícula). Prevención: no declarar «guardado automático» basándose solo en estado React ni hacer depender el alta de un hash previo.
+
 ## Preview QA: límite de conexiones de sesión — 2026-10-12
 
 Resultado posterior: republicación autorizada del mismo código `903020b` en `dpl_48KBjF5WGdE6ojVJZta5uMyv7pLG` READY. Recuperación pública validada con auth/config 200, sesión sin ingreso 401, health 200 e ingreso vacío visible en Side Panel. Typecheck/lint, cuatro pruebas del adaptador y build cloud PASS. Producción intacta respecto de la referencia leída antes de esta operación. No se modificó el pool ni se demuestra prevención permanente de recurrencia; queda pendiente revisar el pool de sesión/serverless. Comprobación autenticada requiere ingreso manual del propietario en el nuevo dominio.

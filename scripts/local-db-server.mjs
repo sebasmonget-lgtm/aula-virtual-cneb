@@ -1,4 +1,5 @@
 import { criterionRealignmentEligibility } from "../src/lib/criterion-realignment-policy.mjs";
+import { loadSetupDraft, saveSetupDraft } from "../src/lib/pilot-setup-draft.mjs";
 import { annualDisplaySubjects } from "../src/lib/annual-teacher-display.mjs";
 import { handleDirectWorkshop } from "./direct-workshop-routes.mjs";
 import { projectConversation } from "../src/lib/project-conversation.mjs";
@@ -818,7 +819,12 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       const classroom = (await db.query(`select id from classrooms where teacher_id=$1 and status='active'`, [teacherId])).rows[0];
       const year = Number.isInteger(schoolYear) ? schoolYear : currentSchoolYear();
       if (!classroom) await provisionAccountSchoolYear(db, teacherId, year);
-      send(response, 200, { configured: Boolean(classroom), year, calendarAvailable:Boolean(pilotSchoolYearDefaults(year)) }, origin);
+      send(response, 200, { configured: Boolean(classroom), year, calendarAvailable:Boolean(pilotSchoolYearDefaults(year)), draft: classroom ? null : await loadSetupDraft(db, teacherId) }, origin, {"cache-control":"private, no-store"});
+      return;
+    }
+    if (request.method === "PUT" && url.pathname === "/api/pilot/setup") {
+      try { send(response, 200, await saveSetupDraft(db, teacherId, await readJson(request)), origin, {"cache-control":"private, no-store"}); }
+      catch (error) { send(response, httpStatusForError(error, 422), { error: publicErrorMessage(error) }, origin); }
       return;
     }
     if (request.method === "POST" && url.pathname === "/api/pilot/setup") {

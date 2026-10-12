@@ -1,5 +1,9 @@
 # Decisiones de arquitectura
 
+## Alta de aula con guardado automático previo — 2026-10-12
+
+La docente sin aula entra directamente a «Crea tu salón», independientemente del hash previo. El mockup fija composición y campos; el propietario retira el botón de borrador y exige selección explícita de 3/4/5 años. Guardar automáticamente no equivale a crear un aula: el estado incompleto vive en profiles.preferences.classroom_setup de la cuenta autenticada, aprovechando ownership/RLS existente; el servidor no acepta un owner del cliente. GET no-cache recupera el formulario; PUT valida límites y tipo/tamaño del logo sin crear registros pedagógicos. POST conserva la validación e idempotencia de alta y elimina ese estado temporal solo al confirmar la transacción. Guardados automáticos serializados; el mismo advisory lock protege PUT y creación de escrituras tardías. No almacenamiento privado en el navegador. Rollback de código conserva datos de cuentas y aulas, pudiendo dejar el borrador temporal sin efectos en el flujo anterior.
+
 ## ADR 126 — Preparación como entrada temporal del workspace (2026-10-12)
 
 UI aprobada UX-QA-06: entry #preparacion y cuatro etapas mientras el endpoint anual existente no ofrece plan activo confirmado. Un borrador no restaura navegación cotidiana. Reutilizar formularios, barras/cobertura, guardas y consulta de arranque; sin autoridad pedagógica nueva. El callback de confirmación comprueba servidor; Hoy es inicio del ciclo con año confirmado. Acceso secundario a todos los destinos conservado.
