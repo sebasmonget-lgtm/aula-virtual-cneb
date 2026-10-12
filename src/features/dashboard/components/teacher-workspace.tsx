@@ -35,7 +35,7 @@ import { PlanningHome } from "./planning-home";
 import { EvaluationHome } from "./evaluation-home";
 import { TodayHome } from "./today-home";
 import { displayDate } from "@/src/lib/display-date";
-import { MediaAttachmentInput } from "./media-attachment-input";
+import { MediaAttachmentInput, preparePrivateMedia } from "./media-attachment-input";
 import type { LibraryResource } from "@/src/lib/library-resource";
 import { ProjectDevelopmentWorkspace as LegacyProjectDevelopmentWorkspace } from "./project-development-workspace";
 import { SimpleProjectWorkspace } from "./simple-project-workspace";
@@ -391,17 +391,11 @@ export function TeacherWorkspace() {
   );
 }
 
-async function preparePhoto(file: File) {
+async function preparePhoto(file: File): Promise<{ base64: string; mimeType: "image/jpeg" | "image/png" | "image/webp"; name: string }> {
   if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) throw new Error('La foto debe ser JPEG, PNG o WebP.');
-  const source = await new Promise<string>((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(String(reader.result)); reader.onerror = () => reject(new Error('No se pudo leer la foto.')); reader.readAsDataURL(file); });
-  const image = await new Promise<HTMLImageElement>((resolve, reject) => { const element = new Image(); element.onload = () => resolve(element); element.onerror = () => reject(new Error('No se pudo procesar la foto.')); element.src = source; });
-  const scale = Math.min(1, 1600 / Math.max(image.width, image.height));
-  const canvas = document.createElement('canvas'); canvas.width = Math.round(image.width * scale); canvas.height = Math.round(image.height * scale);
-  canvas.getContext('2d')?.drawImage(image, 0, 0, canvas.width, canvas.height);
-  const dataUrl = canvas.toDataURL('image/jpeg', 0.78);
-  const base64 = dataUrl.split(',')[1] ?? '';
-  if (base64.length > 4_000_000) throw new Error('La foto sigue siendo demasiado grande. Elige una imagen más ligera.');
-  return { base64, mimeType: 'image/jpeg' as const, name: file.name };
+  const prepared = await preparePrivateMedia(file);
+  if (prepared.mimeType !== "image/jpeg" && prepared.mimeType !== "image/png" && prepared.mimeType !== "image/webp") throw new Error("No se pudo preparar la foto.");
+  return { base64: prepared.base64, mimeType: prepared.mimeType, name: file.name };
 }
 
 function EvidenceDialog({ open, onOpenChange, students, studentId, setStudentId, criterionId, setCriterionId, criteria, note, setNote, photo, setPhoto, audio, setAudio, saved, saving, saveError, saveEvidence, activityTitle, databaseConnected }: {

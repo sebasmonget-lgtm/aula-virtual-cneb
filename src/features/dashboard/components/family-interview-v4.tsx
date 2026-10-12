@@ -19,6 +19,7 @@ import { familyContextLabels } from "@/src/lib/local-database";
 import { displayPersonName } from "@/src/lib/person-name.mjs";
 import { AyniMascot } from "./initial-journey-ui";
 import { StudentPhoto } from "./student-photo";
+import { preparePrivateMedia } from "./media-attachment-input";
 import { summarizeFamilyInterview } from "@/src/lib/family-interview-projection.mjs";
 
 export function useFamilyInterviewStatusMap(refreshKey: string, enabled = true) {
@@ -182,16 +183,17 @@ export function FamilyInterviewEditor({ studentId, studentName: rawStudentName, 
   }
   async function attach(file: File) {
     if (!draft && !confirmed) { setError("Guarda primero la entrevista antes de adjuntar el papel."); return; }
-    if (!["application/pdf", "image/jpeg", "image/png"].includes(file.type) || file.size > 3_000_000) {
-      setError("Adjunta un PDF, JPG o PNG de hasta 3 MB."); return;
+    if (!["application/pdf", "image/jpeg", "image/png"].includes(file.type) || (file.type === "application/pdf" && file.size > 3_000_000)) {
+      setError("Adjunta un PDF de hasta 3 MB o una foto JPG o PNG."); return;
     }
-    const base64 = await new Promise<string>((resolve, reject) => {
+    const prepared = file.type.startsWith("image/") ? await preparePrivateMedia(file, { preferJpeg: true }) : null;
+    const base64 = prepared?.base64 ?? await new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => resolve(String(reader.result).split(",")[1] ?? "");
       reader.onerror = () => reject(new Error("No se pudo leer el archivo."));
       reader.readAsDataURL(file);
     });
-    const updated = await attachFamilyInterview(studentId, file.type, base64);
+    const updated = await attachFamilyInterview(studentId, prepared?.mimeType ?? file.type, base64);
     if (updated.status === "confirmed") setConfirmed(updated); else setDraft(updated);
     setMessage("Respaldo privado adjuntado. No se extrajo información del archivo.");
   }

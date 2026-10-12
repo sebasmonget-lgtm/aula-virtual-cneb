@@ -9,28 +9,60 @@ import { AsyncButton } from "./workflow-ui";
 
 const supported = new Set(["image/jpeg", "image/png", "image/webp", "audio/webm", "audio/mpeg", "audio/mp4", "audio/wav", "audio/ogg"]);
 
-export async function preparePrivateMedia(file: File, {maxEdge=1600,maxBytes=1_000_000}:{maxEdge?:number;maxBytes?:number}={}): Promise<PrivateMediaUpload> {
+export async function preparePrivateMedia(file: File, { maxEdge = 1600, maxBytes = 3_000_000, preferJpeg = false }: {
+  maxEdge?: number; maxBytes?: number; preferJpeg?: boolean;
+} = {}): Promise<PrivateMediaUpload> {
   const originalType = file.type.split(";")[0];
   let mimeType = originalType === "audio/x-wav" ? "audio/wav" : originalType === "audio/x-m4a" ? "audio/mp4" : originalType;
   if (!supported.has(mimeType)) throw new Error("Usa una foto JPEG, PNG o WebP, o un audio WebM, MP3, M4A, WAV u OGG.");
   let prepared: Blob = file;
   if (mimeType.startsWith("image/")) {
     if(file.size>25_000_000)throw new Error("Elige una foto de hasta 25 MB para prepararla.");
-    const bitmap=await createImageBitmap(file);
+    // Decode EXIF orientation once, then encode pixels without the original metadata.
+    const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" }).catch(() => {
+      throw new Error("No se pudo abrir la foto. Elige una imagen JPEG, PNG o WebP válida.");
+    });
     try {
-      let edge=maxEdge;
-      for(const quality of [0.82,0.68,0.54,0.48]) {
-        const scale=Math.min(1,edge/Math.max(bitmap.width,bitmap.height));
-        const canvas=document.createElement("canvas");canvas.width=Math.max(1,Math.round(bitmap.width*scale));canvas.height=Math.max(1,Math.round(bitmap.height*scale));
-        const ctx=canvas.getContext("2d");if(!ctx)throw new Error("No se pudo preparar la foto.");ctx.fillStyle="#fff";ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(bitmap,0,0,canvas.width,canvas.height);
-        prepared=await new Promise<Blob>((resolve,reject)=>canvas.toBlob(blob=>blob?resolve(blob):reject(new Error("No se pudo preparar la foto.")),"image/jpeg",quality));
-        if(prepared.size<=maxBytes)break;edge=Math.round(edge*0.8);
+      const canvas = typeof OffscreenCanvas !== "undefined" && typeof OffscreenCanvas.prototype.convertToBlob === "function"
+        ? new OffscreenCanvas(1, 1) : document.createElement("canvas");
+      const scale = Math.min(1, Math.min(1600, maxEdge) / Math.max(bitmap.width, bitmap.height));
+      canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+      canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+      const ctx = canvas instanceof HTMLCanvasElement ? canvas.getContext("2d") : canvas.getContext("2d");
+      if (!ctx) throw new Error("No se pudo preparar la foto.");
+      ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+      let transparent = false;
+      if (mimeType !== "image/jpeg") {
+        const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+        for (let index = 3; index < pixels.length; index += 4) {
+          if (pixels[index] !== 255) { transparent = true; break; }
+        }
       }
-      mimeType="image/jpeg";
-    }finally{bitmap.close();}
+      const encode = (type: string): Promise<Blob> => canvas instanceof HTMLCanvasElement
+        ? new Promise((resolve, reject) => {
+          canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error("No se pudo preparar la foto.")), type, 0.8);
+        }) : canvas.convertToBlob({ type, quality: 0.8 });
+      // PNG preserves transparent artwork. Photographs favor WebP, with JPEG fallback.
+      prepared = await encode(transparent ? "image/png" : preferJpeg ? "image/jpeg" : "image/webp");
+      if (!transparent && !preferJpeg && (prepared.type !== "image/webp" || prepared.size > Math.min(500_000, maxBytes))) {
+        const jpeg = await encode("image/jpeg");
+        if (prepared.type !== "image/webp" || jpeg.size < prepared.size) prepared = jpeg;
+      }
+      // Keep the existing small portrait budget, without reducing encoding quality.
+      // Evidence never shrinks further merely to meet the soft 500 KB target.
+      if (!transparent && maxEdge <= 512 && maxBytes <= 100_000) {
+        for (let attempt = 0; prepared.size > maxBytes && attempt < 4; attempt++) {
+          canvas.width = Math.max(1, Math.round(canvas.width * 0.8));
+          canvas.height = Math.max(1, Math.round(canvas.height * 0.8));
+          ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+          prepared = await encode(prepared.type);
+        }
+      }
+      mimeType = prepared.type;
+    } finally { bitmap.close(); }
   }
   if (!prepared.size || prepared.size > (mimeType.startsWith("audio/") ? 8_000_000 : maxBytes))
-    throw new Error(mimeType.startsWith("audio/") ? "El audio debe pesar como máximo 8 MB." : "No se pudo reducir la foto. Elige otra imagen.");
+    throw new Error(mimeType.startsWith("audio/") ? "El audio debe pesar como máximo 8 MB." : "La foto sigue siendo demasiado grande para guardarla con claridad. Elige una imagen más ligera.");
   const base64 = await new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(String(reader.result).split(",")[1] ?? "");
@@ -154,7 +186,7 @@ export function MediaAttachmentInput({ studentId, context, media, onMedia, onTra
         finally { setBusy(false); } }}>{rawTranscript ? "Transcribir audio" : "Transcribir y mejorar texto"}</AsyncButton>
       {transcript && <details className="text-xs text-muted-foreground"><summary>Ver transcripción literal</summary><p>{transcript}</p></details>}
     </div>}
-    {media && !media.mimeType.startsWith("audio/") && <p className="text-xs text-muted-foreground">Foto preparada hasta 1 MB. Se guarda privada y no se envía a la IA.</p>}
+    {media && !media.mimeType.startsWith("audio/") && <p className="text-xs text-muted-foreground">Foto preparada conservando sus detalles. Se guarda privada y no se envía a la IA.</p>}
     {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
   </div>;
 }
