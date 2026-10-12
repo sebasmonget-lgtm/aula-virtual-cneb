@@ -156,3 +156,11 @@ Escritorio 1366×900 y móvil 390×844 inspeccionados; móvil sin desbordamiento
 Validaciones: typecheck PASS antes de compilación; lint de fuente completo PASS excluyendo archivos privados/generados; Vinext PASS con avisos conocidos PGlite/eval y chunks; Next/webpack PASS inicial y en reintento final con caché apartada. Un typecheck simultáneo al segundo build leyó archivos de tipos en regeneración y falló; se reejecuta después de finalizar Next. El segundo build falló en WasmHash de la caché Webpack, sin error de fuente; el reintento aislado pasa. Causa concreta del fallo interno no demostrada. No declarar PASS para esas ejecuciones fallidas. Recibos y logs privados en `.local/setup-screen-qa/`; el recibo final de typecheck y Preview acompaña el despliegue.
 
 Pendiente aceptación humana de esta pantalla, prueba remota de guardar por indicación del propietario y revisión de Word; las comprobaciones locales no acreditan esas etapas. Rollback: servir Preview anterior `d24b535` o revertir este cambio; no requiere rollback de datos remotos porque esta implementación no los escribe.
+
+## UX-QA-01: publicación para revisión
+
+Commit de implementación `ea70731df9889f23da3f81bce4b2c046a506953c`, árbol limpio al publicar. Nueva Preview https://ayni-aula-staging-7q5bnhrz5-ayni4.vercel.app/ — `dpl_A5K2xzq52Lh7MRQZVtCvHYWqrzmn`, READY, target Preview, SHA exacto verificado; build cloud Next PASS (~1 minuto según log). Flags del reloj exclusivos del despliegue. Typecheck final después de Next PASS. Recibos privados en `.local/setup-screen-qa/`.
+
+Smoke remoto de lectura PASS: Auth/config 200, reloj y ajustes sin sesión Ayni 401, health 200. Tiempos aislados 0,485 s / 0,468 s / 0,422 s / 2,745 s respectivamente; no equivalen a tiempo de guardar ni a carga completa de la pantalla. Consulta de proyecto posterior al despliegue confirma Production intacta: `dpl_EgekhWXwVjaM9iCcRc8mpJn2Eoc4` / `ea206bf`.
+
+La nueva Preview quedó abierta visible en Side Panel. El host nuevo muestra ingreso con campos vacíos; se solicitó ingreso manual con la cuenta QA, sin introducir credenciales ni copiar cookies. No se guardó el aula remota ni se abrió registro de niños. Pendiente comprobación visual autenticada en este host y aprobación del propietario para continuar.
