@@ -110,22 +110,27 @@ Pantalla «Configura tu aula»: Institución, Docente y Sección vacíos; edad s
 
 Estado: esperando opinión de la persona usuaria e indicación «Siguiente» antes de actuar. Sin propuesta de diseño implementada.
 
-## UX-QA-01 — Agrupar datos del colegio y del aula de forma visible
+## UX-QA-01 — Decisión final de diseño para «Configura tu aula»
 
-**Estado: propuesta de la persona usuaria registrada; pendiente de aprobación, sin implementar.** Pantalla: «Configura tu aula». Se continuará revisando el resto de esta misma pantalla antes de aprobar cambios.
+**Estado: diseño aprobado por la persona usuaria; implementación expresamente pospuesta.** Pantalla: «Configura tu aula». Continuar el recorrido de QA antes de consolidar las mejoras. Esta aprobación de criterios no autoriza implementar ni desplegar cambios ahora.
 
 Problema señalado: los datos institucionales ocultos en paneles plegables pueden quedar sin completar porque muchas profesoras no volverán a buscarlos, aunque después los necesiten para personalizar sus documentos Word. Objetivo: agrupar claramente la información que se registra una sola vez, manteniendo un formulario sencillo.
 
-Organización propuesta:
+Organización aprobada, con todos los campos visibles y claramente ordenados:
 
 1. Mostrar desde el inicio «Datos de tu colegio»: institución, UGEL, distrito, código modular, director(a) y logo.
 2. Mostrar debajo «Datos de tu aula»: nombre de la profesora, sección, edad y año escolar.
-3. Conservar el calendario MINEDU en un panel plegable, con las fechas oficiales seleccionadas por defecto. Este punto expresa el comportamiento solicitado; todavía no acredita la verificación de las fechas actuales.
-4. Ubicar las configuraciones curriculares especiales en una sección secundaria claramente identificada.
-5. Explicar que los datos institucionales se utilizarán para personalizar los documentos.
-6. Recomendar completar el logo y permitir continuar cuando todavía no esté disponible.
-7. Mantener accesible la edición posterior de cualquier dato.
+Los datos no indispensables pueden seguir siendo opcionales. Explicar que los datos institucionales se utilizarán para personalizar los documentos; recomendar el logo y permitir continuar sin él. Mantener accesible la edición posterior de cualquier dato.
+
+Simplificación aprobada:
+
+1. No mostrar el calendario MINEDU ni el apartado para modificar sus fechas durante la configuración inicial. Aplicar automáticamente el calendario correspondiente al año escolar seleccionado.
+2. No mostrar las opciones de castellano como segunda lengua ni educación religiosa en esta pantalla.
+3. Conservar internamente el calendario, su edición y las configuraciones curriculares especiales. Permitir configurarlas posteriormente desde un lugar apropiado cuando sean necesarias; ese lugar todavía no se ha definido.
+4. Mantener un único botón principal: «Guardar aula y añadir niños».
+
+Estos criterios sustituyen la propuesta anterior de calendario plegable y configuraciones curriculares secundarias dentro de la configuración inicial. Ocultar los controles iniciales no implica eliminar sus funcionalidades. El calendario automático es un requisito aprobado, no una validación de las fechas oficiales o de la cobertura de otros años.
 
 Las dos imágenes adjuntas por la persona usuaria son referencias conceptuales de la agrupación y el texto de ayuda; no prueban una interfaz funcional ni autorizan copiar su apariencia. La segunda imagen omite el año escolar, pero la propuesta escrita sí lo incluye: conservarlo en «Datos de tu aula». No se ha acordado añadir campos obligatorios; el requisito explícito es permitir continuar sin logo.
 
-Validación futura, solo tras aprobación e implementación: comprobar visibilidad y legibilidad en Side Panel, continuidad sin logo, calendario por defecto, edición posterior y personalización de Word. No se ejecutaron estas pruebas en este paso. No se modificaron código, formularios, datos ni despliegues; esta entrada no autoriza implementación.
+Validación futura, cuando se autorice implementar: comprobar las dos secciones visibles y legibles en Side Panel, opcionalidad de los datos no indispensables, continuidad sin logo, aplicación automática del calendario del año seleccionado, ausencia de calendario y opciones curriculares en la configuración inicial, acceso posterior a esas funcionalidades y a la edición de datos, personalización de Word y único botón principal con el texto aprobado. No se ejecutaron estas pruebas en este paso. Solo se actualizó documentación; código, formularios, datos y despliegues permanecen sin modificaciones.
