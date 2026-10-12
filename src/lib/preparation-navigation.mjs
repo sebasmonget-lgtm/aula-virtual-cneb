@@ -1,6 +1,6 @@
 /** Presentation only; all records and drafts remain owned by their existing modules. */
-export function preparationStage({ configured, studentCount, enrollmentCompleted = false, annualDraft, initialCoverage = false }) {
-  return !configured ? 1 : !studentCount || !enrollmentCompleted ? 2 : annualDraft || initialCoverage ? 4 : 3;
+export function preparationStage({ configured, studentCount, enrollmentCompleted = false, initialCoverage = false }) {
+  return !configured ? 1 : !studentCount || !enrollmentCompleted ? 2 : initialCoverage ? 4 : 3;
 }
 
 export function preparationStageHash(stage) {

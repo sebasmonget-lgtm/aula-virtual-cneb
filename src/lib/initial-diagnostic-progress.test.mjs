@@ -16,3 +16,8 @@ test('100 percent is coverage of initial sources, including preserved legacy dia
   assert.deepEqual(progress,{total:3,interviewed:3,observed:3,complete:true});
   assert.equal(initialDiagnosticProgress({...base,students:[]}).complete,false);
 });
+
+
+test('voided initial observations never advance coverage in any source',()=>{
+  assert.equal(initialDiagnosticProgress({...base,spontaneous:[{student_id:'a',status:'voided',has_media:true}],guided:[{student_id:'b',observation_status:'voided',observation_text:'Anulada'}],legacy:[{student_id:'c',status:'voided',note:'Anulada'}]}).observed,0);
+});
