@@ -1133,3 +1133,10 @@ La finalización de matrícula es una decisión docente, no un estado deducido p
 ## ADR-128 — Preparación sin menú y conversación iniciada explícitamente (2026-10-12)
 
 La decisión final UX-QA-08 reemplaza únicamente el menú inicial de ADR-127: antes de Mi año confirmado, las cuatro etapas de la portada son la navegación principal, sin sidebar/Más funciones; regreso único desde el grupo y sus dos flujos. Cobertura inicial es información recomendada, no evaluación final ni requisito anual. Advertencia y color del botón dependen de ambas barras completas; matrícula sigue siendo confirmación docente persistida. Después del año confirmado se conservan cinco destinos y Hoy. Reutilizar estados, APIs y guardas existentes, sin sistema nuevo de progreso. Navegar durante preparación solo recupera la conversación anual; iniciar/reanudar IA exige botón explícito. Prompts/generación/persistencia privada no cambian. Rollback de cliente compatible con datos actuales.
+
+
+## ADR-129 — Preparación horizontal y observación guiada contextual (2026-10-12)
+
+UX-QA-10 sustituye las cuatro filas de ADR-128 por timeline reutilizado y un único panel seleccionado. Sin seguimiento nuevo: aula/matrícula/cobertura guardadas determinan etapa inicial, selección manual temporal permite revisar cualquiera. Matrícula explícita y año confirmado mantienen sus contratos; cinco destinos/Hoy posteriores intactos. Criterios pedagógicos y IA no cambian.
+
+UX-QA-09 usa cada aspecto editorial como criterio fijo al abrir modal, luego elige niño. Reutiliza endpoint de guardado, transacción/lock y storage privados. UUID por intención hace replay idempotente sin impedir múltiples observaciones voluntarias. Compact response actualiza cobertura en memoria; no consulta IA ni workspace completo al guardar. Fotografía requiere únicamente tres campos opcionales con CHECK, migración nueva y GET privado con propiedad en servidor. No duplica observación en otro sistema. Cambio de esquema compartido pendiente de confirmación explícita; no desplegar código que consulte columnas aún inexistentes. Rollback conserva campos y archivos privados.

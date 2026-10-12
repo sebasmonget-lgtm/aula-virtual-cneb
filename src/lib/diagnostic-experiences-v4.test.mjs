@@ -6,6 +6,7 @@ import { loadKnowledgeBaseV4 } from "./knowledge-base-v4.mjs";
 import { createPilotClassroom, importStudentsForTeacher } from "./pilot-onboarding-service.mjs";
 import { buildStudentPedagogicalContext } from "./student-context-service.mjs";
 import { diagnosticProgressForTeacher } from "./diagnostic-review-service.mjs";
+import { loadDiagnosticAssessmentWorkspace } from "./diagnostic-assessment-v4.mjs";
 import {
   buildDiagnosticExperienceCatalog, loadDiagnosticExperienceWorkspace,
   recordDiagnosticExperienceObservation, summarizeDiagnosticExperience,
@@ -13,6 +14,28 @@ import {
 
 const teacher = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 const otherTeacher = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+
+test("guardado guiado idempotente conserva foto privada, criterio y hechos sin evaluación",async()=>{
+  const db=await database();
+  try{
+    await createPilotClassroom(db,teacher,{teacherName:"Docente",institutionName:"Escuela",section:"A",age:5,year:2026,startsOn:"2026-03-01",endsOn:"2026-12-18",castellanoL2Applicable:false,religionApplicable:false});
+    await importStudentsForTeacher(db,teacher,[{firstName:"Ana",lastName:"Prueba"}]);
+    const workspace=await loadDiagnosticExperienceWorkspace(db,teacher),experience=workspace.experiences[0],studentId=workspace.students[0].id;
+    const input={studentId,experienceId:experience.id,aspectId:experience.aspects[0].id,observationStatus:"observed_without_judgment",observationText:"Eligió bloques y dijo que haría una casa.",clientRequestId:"cccccccc-cccc-4ccc-8ccc-cccccccccccc",mediaPath:`student-evidence/${teacher}/${studentId}/dddddddd-dddd-4ddd-8ddd-dddddddddddd.jpg`,mediaMimeType:"image/jpeg",mediaSha256:"a".repeat(64)};
+    const first=await recordDiagnosticExperienceObservation(db,teacher,input),retry=await recordDiagnosticExperienceObservation(db,teacher,input);
+    assert.equal(first.id,retry.id);assert.equal(retry.replayed,true);assert.equal(first.competencyId,experience.aspects[0].competency_id);assert.equal(first.observation.observation_status,"observed_without_judgment");
+    assert.equal((await loadDiagnosticExperienceWorkspace(db,teacher)).experience_observations.length,1);assert.equal(first.observation.has_media,true);assert.equal(first.observation.media_path,undefined);
+    const history=await loadDiagnosticAssessmentWorkspace(db,teacher);
+    assert.equal(history.observations.find(row=>row.id===first.id).has_media,true);
+    assert.equal(history.observations.find(row=>row.id===first.id).media_path,undefined);
+    await assert.rejects(db.query('update diagnostic_experience_observations set media_sha256=null where id=$1',[first.id]), /diagnostic_guided_photo_check/);
+    await assert.rejects(recordDiagnosticExperienceObservation(db,teacher,{...input,mediaSha256:"b".repeat(64)}),{reason:"request_conflict"});
+    await assert.rejects(recordDiagnosticExperienceObservation(db,teacher,{...input,observationText:"Texto distinto"}),{reason:"request_conflict"});
+    await recordDiagnosticExperienceObservation(db,teacher,{...input,clientRequestId:"eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee"});
+    assert.equal((await loadDiagnosticExperienceWorkspace(db,teacher)).experience_observations.length,2);
+    assert.equal((await db.query('select count(*)::int as n from evidences')).rows[0].n,0);
+  }finally{await db.close();}
+});
 
 async function database() {
   const db = await PGlite.create();
@@ -112,31 +135,16 @@ test("el servidor rechaza niños ajenos, aspectos inventados y estados inválido
   } finally { await db.close(); }
 });
 
-test("UI abre la lista completa y vuelve a ella al guardar; RLS remota exige escritura por servidor", async () => {
+test("UI selecciona dentro del modal, sin lista inferior; RLS remota exige escritura por servidor", async () => {
   const [ui, server, sql, hardening] = await Promise.all([
     readFile(new URL("../features/dashboard/components/guided-diagnostic-v4.tsx", import.meta.url), "utf8"),
     readFile(new URL("../../scripts/local-db-server.mjs", import.meta.url), "utf8"),
     readFile(new URL("../../supabase/migrations/202609220025_diagnostic_experience_observations.sql", import.meta.url), "utf8"),
     readFile(new URL("../../supabase/migrations/202609230003_diagnostic_server_authority.sql", import.meta.url), "utf8"),
   ]);
-  assert.match(ui, /setStudentId\(null\); setFilter\("all"\)/);
-  assert.match(ui, /data\.students/);
-  assert.match(ui, /Sin observaciones/);
-  assert.match(ui, /Observados hoy/);
-  assert.match(ui, /PedagogicalBlock/);
-
-
-  assert.match(ui, /experience\.pedagogical_blocks/);
-  assert.doesNotMatch(ui, /Ver ejemplos/);
-  assert.match(ui, /Elige a un niño y anota lo que viste/);
-  assert.doesNotMatch(ui, /JourneySteps/);
-  assert.match(ui, /Entrevistas/);
-  assert.match(ui, /initialDiagnosticProgress/);
-  assert.match(ui, /Crear Mi año con lo que tengo/);
-  assert.doesNotMatch(ui, /Revisar lo que Ayni conoce/);
+  assert.match(ui, /GuidedObservationDialog/);
+  assert.doesNotMatch(ui, /scrollIntoView|Elige a un niño y anota lo que viste|Observados hoy/);
   assert.match(ui, /Relación curricular/);
-  assert.doesNotMatch(ui, /¿Necesitó apoyo\?|No puedo determinarlo/);
-  assert.match(ui, /observed_without_judgment/);
   assert.match(server, /recordDiagnosticExperienceObservation/);
   assert.match(sql, /enable row level security/);
   assert.match(sql, /for select to authenticated/);

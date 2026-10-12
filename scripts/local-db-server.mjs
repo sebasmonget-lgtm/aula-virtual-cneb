@@ -2570,13 +2570,35 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       send(response, 200, { workspace: await diagnosticWorkspace() }, origin);
       return;
     }
+    if (request.method === "GET" && /^\/api\/diagnostics\/experience-observations\/[0-9a-f-]{36}\/media$/i.test(url.pathname)) {
+      const row=(await db.query(`select o.student_id,o.media_path from diagnostic_experience_observations o join classrooms c on c.id=o.classroom_id where o.id=$1 and c.teacher_id=$2 and o.created_by=$2`,[url.pathname.split('/')[4],teacherId])).rows[0];
+      if(!row?.media_path){send(response,404,{error:"Fotografía no encontrada."},origin);return;}
+      if(!evidenceStorage){send(response,503,{error:"Storage privado no configurado."},origin);return;}
+      const media=await evidenceStorage.read(row.media_path,{teacherId,studentId:row.student_id});
+      sendAsset(response,200,media.data,media.mimeType,origin,"private, no-store");return;
+    }
     if (request.method === "POST" && url.pathname === "/api/diagnostics/experience-observations") {
+      let mediaPath=null;
+      const body=await readJson(request),started=performance.now();
       try {
-        const saved = await recordDiagnosticExperienceObservation(db, teacherId, await readJson(request));
+        const owned=(await db.query(`select s.id from students s join classrooms c on c.id=s.classroom_id where s.id=$1 and s.status='active' and c.status='active' and c.teacher_id=$2`,[body.studentId,teacherId])).rows[0];
+        if(!owned){send(response,403,{error:"El niño no pertenece al aula activa."},origin);return;}
+        if(body.media&&!evidenceStorage){send(response,503,{error:"Storage privado no configurado."},origin);return;}
+        const media=await decodePrivateMedia(body.media);
+        if(media&&!media.mimeType.startsWith('image/')){send(response,400,{error:"Adjunta una fotografía JPEG, PNG o WebP."},origin);return;}
+        const storageStart=performance.now();
+        mediaPath=media?await evidenceStorage.save({teacherId,studentId:body.studentId,mimeType:media.mimeType,bytes:media.bytes}):null;
+        const storageMs=performance.now()-storageStart,dbStart=performance.now();
+        const saved = await recordDiagnosticExperienceObservation(db, teacherId, {...body,mediaPath,mediaMimeType:media?.mimeType,mediaSha256:media?createHash('sha256').update(media.bytes).digest('hex'):null});
+        const dbMs=performance.now()-dbStart;
+        if(saved.replayed&&mediaPath)await evidenceStorage.delete(mediaPath).catch(()=>{});
+        const snapshotStart=performance.now();
         try { await refreshStudentContextSnapshot(db, saved.studentId); }
         catch { recordOperationalEvent("student_context_refresh_failed", { workflow: "diagnostic" }); }
-        send(response, 201, { workspace: await diagnosticWorkspace() }, origin);
+        response.setHeader('Server-Timing',`storage;dur=${storageMs.toFixed(1)},db;dur=${dbMs.toFixed(1)},snapshot;dur=${(performance.now()-snapshotStart).toFixed(1)},server;dur=${(performance.now()-started).toFixed(1)}`);
+        send(response, 201, body.compact===true ? {observation:saved.observation,replayed:Boolean(saved.replayed)} : { workspace: await diagnosticWorkspace() }, origin);
       } catch (error) {
+        if(mediaPath){try{const committed=body.clientRequestId?(await db.query('select media_path from diagnostic_experience_observations where id=$1',[body.clientRequestId])).rows[0]:null;if(committed?.media_path!==mediaPath)await evidenceStorage.delete(mediaPath);}catch{/* Keep an uncertain committed attachment; never delete a saved photo. */}}
         if (error instanceof DiagnosticExperienceError) {
           send(response, error.reason === "invalid_student" ? 403 : error.reason === "no_classroom" ? 404 : 400,
             { error: publicErrorMessage(error) }, origin);

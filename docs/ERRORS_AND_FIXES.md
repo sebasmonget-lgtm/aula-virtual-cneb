@@ -1827,3 +1827,16 @@ Síntoma: tras pulsar «Terminé de registrar a mis niños», etapa 2 seguía nu
 ## 2026-10-12 — Entrar a Mi año podía iniciar IA durante preparación
 
 Síntoma: continuar desde preparación con cobertura incompleta hacía POST de conversación al abrir Mi año. Causa: montaje del componente recuperaba GET y, ante 404/409 o conversación interrumpida, iniciaba/reanudaba automáticamente. Solución mínima: flag de preparación inicial propagado por los contenedores existentes; lectura sin POST y botones explícitos Comenzar conversación/Retomar respuesta. No cambian backend, prompts ni generación anual. Validado: UI local con GET 404 y conversación interrumpida, botones de advertencia, acceso con 100 %, 129 lecturas finales sin escritura/IA, persistencia de tres niños y borrador, checks técnicos PASS. Primera exploración produjo un registro interrumpido solo local, conservado; ninguna mutación cloud. Prevención: verificar solicitudes al navegar y separar recuperación de trabajo guardado de acciones que lo generan.
+
+
+## UX-QA-09 — Registro guiado lejos del criterio y reintentos sin identidad (2026-10-12)
+
+Síntoma: Registrar observación y selección de experiencia desplazaban al listado inferior; cuatro filtros/niños separados obligaban a recuperar criterio, y el guardado recargaba workspace. Causa: formulario global debajo de todas las tarjetas y ausencia de ID estable por solicitud. Solución: aspecto editorial fijo abre modal en contexto, todos los niños disponibles con prioridad por competencia, respuesta compacta; UUID y lock transaccional existentes protegen replay/conflictos. Error previo y respuesta perdida probados en PGlite sin perder texto/foto; concurrencia crea una sola fila, nueva intención permite otra. No IA por guardado. Prevención: pruebas de selección/merge y servicio idempotente; preservar guardas y no limpiar formulario hasta confirmación servidor.
+
+Foto guiada no tenía persistencia propia: tres columnas opcionales, storage privado reutilizado y ruta owner-only. CHECK exige tipo y huella no nulos junto a ruta, evitando la semántica UNKNOWN de CHECK SQL. No desplegar antes de aplicar migración aprobada; no ocultar este requisito con un UI funcional a medias. Columnas cloud siguen pendientes de autorización y no hay DDL remoto en esta fase.
+
+## UX-QA-10 — Portada como cuatro formularios y carga de progreso sin límite (2026-10-12)
+
+Síntoma: las cuatro filas desarrolladas competían visualmente; error lento podía dejar barras consultando sin fin. Causa: render simultáneo y fetch de cobertura sin plazo. Solución: reutilizar timeline con único panel y selección por estados reales; timeout/error/Reintentar en portada. Visual 1280 y 390 px, teclado/recarga y navegación habitual confirmada por GET ficticio comprobadas. Nunca interpretar error como 0 % ni completar matrícula por tener niños.
+
+Validación de build volvió a encontrar WasmHash._updateWithBuffer en cache incremental webpack de Windows ya documentado. Apartar únicamente .next/cache/webpack bajo .local tras validar rutas absolutas permitió build limpio; no cambio de configuración/framework ni borrado de datos. No confundir fallo de cache con error pedagógico. Recibo final pendiente de cierre.

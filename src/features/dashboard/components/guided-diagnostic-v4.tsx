@@ -1,36 +1,36 @@
 "use client";
-import { limaToday } from "@/src/lib/display-date";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, CalendarDays, Eye, MessageCircle, Save, Sparkles } from "lucide-react";
-import { PedagogicalBlock } from "./pedagogical-block";
+import { useEffect, useState } from "react";
+import { ArrowLeft, ArrowRight, CalendarDays, Eye, MessageCircle, Sparkles } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+
 import {
-  loadDiagnostics, loadSpontaneousObservations, saveDiagnosticExperienceObservation,
+  loadDiagnostics, loadSpontaneousObservations,
   type DiagnosticWorkspace, type LocalDashboard, type SpontaneousObservation,
 } from "@/src/lib/local-database";
-import { SaveConfirmation, useSaveConfirmation } from "./save-confirmation";
+
 import { DiagnosticProgress } from "./diagnostic-progress";
 import { initialDiagnosticProgress } from "@/src/lib/initial-diagnostic-progress.mjs";
-import { AsyncButton, LoadingState } from "./workflow-ui";
+
 import { DiagnosticReview } from "./diagnostic-review-v4";
 import { DiagnosticBriefReview } from "./diagnostic-brief-review";
 import { FamilyInterviewEditor, FamilyInterviewStatusBadge, useFamilyInterviewStatusMap } from "./family-interview-v4";
 import { SpontaneousDiagnostic } from "./spontaneous-diagnostic-v4";
 import { displayPersonName } from "@/src/lib/person-name.mjs";
-import { DictationRecorder } from "./dictation-recorder";
-import { useUnsavedWork } from "@/src/lib/use-unsaved-work";
+
 import { canLeaveWorkspace, useWorkspaceSubview } from "@/src/lib/workspace-location";
 import { StudentPhoto } from "./student-photo";
 import { ObservationCoverageMatrix } from "./observation-coverage-matrix";
 import { apiFetch } from "@/src/lib/ayni-api-fetch";
 import { localDatabaseApiUrl } from "@/src/lib/local-database";
 
-type Filter = "all" | "without" | "with" | "today";
+import { GuidedObservationDialog } from "./guided-observation-dialog";
+import { initialObservedPairs, mergeGuidedObservation } from "@/src/lib/guided-observation-flow.mjs";
+
+import { LoadingState } from "./workflow-ui";
 const diagnosticStepValues = [0, 1, 2, 3] as const;
 const observationModes = ["choose", "guided", "spontaneous"] as const;
-function isToday(value: string) { const date = new Date(value); return !Number.isNaN(date.valueOf()) && new Intl.DateTimeFormat("en-CA", { timeZone: "America/Lima", year: "numeric", month: "2-digit", day: "2-digit" }).format(date) === limaToday(); }
 
 export function GuidedDiagnostic({ initialPreparation = false, dashboard, onPlan, onStudents, initialStep = 1 }: {
   initialPreparation?: boolean; dashboard: LocalDashboard; onPlan?: () => void; onStudents?: () => void; initialStep?: 1 | 2 | 3;
@@ -43,17 +43,9 @@ export function GuidedDiagnostic({ initialPreparation = false, dashboard, onPlan
   const [, setPendingSpontaneous] = useState<number | null>(null);
   const [observationsError, setObservationsError] = useState("");
   const [spontaneousRecords, setSpontaneousRecords] = useState<SpontaneousObservation[] | null>(null);
-  const [studentId, setStudentId] = useState<string | null>(null);
-  const [aspectId, setAspectId] = useState("");
-  const [note, setNote] = useState("");
-  const [filter, setFilter] = useState<Filter>("all");
-  const [working, setWorking] = useState(false);
-  const [audioBusy, setAudioBusy] = useState(false);
   const [error, setError] = useState("");
   const [feedback, setFeedback] = useState("");
   const [interviewRevision, setInterviewRevision] = useState(0);
-  const { confirmation, confirm } = useSaveConfirmation();
-  const savingObservation = useRef(false);
   const [legacyReviewOpen, setLegacyReviewOpen] = useState(false);
   const [matrixOpen,setMatrixOpen]=useState(false);
   const [matrixCompetencies,setMatrixCompetencies]=useState<{id:string;name:string}[]>([]);
@@ -95,51 +87,16 @@ export function GuidedDiagnostic({ initialPreparation = false, dashboard, onPlan
     setMatrixOpen(false); setBriefReview(false); setStep(next);
   }
   const experience = data?.experiences.find((item) => item.id === experienceId);
-  const student = data?.students.find((item) => item.id === studentId);
-  const records = useMemo(() => data?.experience_observations.filter((item) => item.experience_id === experienceId) ?? [], [data, experienceId]);
-  const coverage = data?.experience_coverage.find((item) => item.experience_id === experienceId);
-  const observedPairs = new Set([
-    ...(data?.experience_observations ?? []).map((item) => `${item.student_id}:${item.competency_v4_id}`),
-    ...(spontaneousRecords ?? []).filter((item) => item.classification_source === "teacher")
-      .flatMap((item) => item.competency_v4_ids.map((id) => `${item.student_id}:${id}`)),
-  ]);
+  const observedPairs = initialObservedPairs(data?.experience_observations ?? [], spontaneousRecords ?? []);
   const missingFor = (id: string, competencyIds: string[]) => competencyIds.filter((competencyId) =>
     !observedPairs.has(`${id}:${competencyId}`));
   const experienceGapScore = (competencyIds: string[]) => (data?.students ?? []).reduce((total, item) =>
     total + missingFor(item.id, competencyIds).length, 0);
   const rankedExperiences = [...(data?.experiences ?? [])].sort((a,b)=>experienceGapScore(b.competencies.map(card=>card.id))-experienceGapScore(a.competencies.map(card=>card.id)));
-  const allowLeave=useUnsavedWork(Boolean(studentId&&note.trim()),working||audioBusy);
-  const visibleStudents = (data?.students ?? []).filter((item) => {
-    const own = records.filter((record) => record.student_id === item.id);
-    if (filter === "without") return missingFor(item.id, experience?.competencies.map((card) => card.id) ?? []).length > 0;
-    if (filter === "with") return own.length > 0;
-    if (filter === "today") return own.some((record) => isToday(record.observed_at));
-    return true;
-  }).sort((a, b) => missingFor(b.id, experience?.competencies.map((card) => card.id) ?? []).length -
-    missingFor(a.id, experience?.competencies.map((card) => card.id) ?? []).length);
-
   function selectExperience(id: string) {
     if(!canLeaveWorkspace())return;
-    setExperienceId(id); setStudentId(null); setFilter("all"); setFeedback(""); setError("");
+    setExperienceId(id); setFeedback(""); setError("");
   }
-  function selectStudent(id: string) {
-    if(!allowLeave())return;
-    setStudentId(id); setNote(""); setError(""); setFeedback("");
-  }
-  async function save() {
-    if (!studentId || !experienceId || !aspectId || !note.trim() || savingObservation.current || working || audioBusy) return;
-    savingObservation.current = true;
-    setWorking(true); setError("");
-    try {
-      const updated = await saveDiagnosticExperienceObservation({ studentId, experienceId, aspectId, observationStatus: "observed_without_judgment", observationText: note });
-      setData(updated); setStudentId(null); setFilter("all");
-      setNote("");
-      confirm("¡Observación guardada!", "Puedes seguir observando a tus niños.");
-      setFeedback("");
-    } catch (cause) { setError(cause instanceof Error ? cause.message : "No se pudo guardar."); }
-    finally { savingObservation.current = false; setWorking(false); }
-  }
-
   if (error && !data) return <p role="alert" className="rounded-xl bg-[#fff1d6] p-4">{error}</p>;
   if (!data) return <LoadingState label="Cargando diagnóstico..." />;
 
@@ -156,7 +113,7 @@ export function GuidedDiagnostic({ initialPreparation = false, dashboard, onPlan
   const progress = initialDiagnosticProgress({students:data.students, interviews:confirmedIds.map(student_id=>({student_id,has_confirmed_answers:true})), spontaneous:spontaneousRecords ?? [], guided:data.experience_observations, legacy:data.observations});
   const allInitial = progressReady && progress.complete;
   return <div data-ayni-screen="initial-diagnostic" className="diagnostic-shell space-y-6">
-    <SaveConfirmation confirmation={confirmation}/>
+
     <header>
       {step !== 0 && <Button variant="outline" className="mb-4 min-h-11" onClick={() => goToStep(0)}><ArrowLeft aria-hidden="true"/>Volver a Conoce a tu grupo</Button>}
       <h1 className="text-2xl font-extrabold text-[#172b52] sm:text-3xl">{step === 0 ? "Conoce a tu grupo" : step === 1 ? "Entrevistas a las familias" : step === 2 ? "Observa a tus niños" : "Información inicial del grupo"}</h1>
@@ -201,12 +158,13 @@ export function GuidedDiagnostic({ initialPreparation = false, dashboard, onPlan
     {step === 2 && !briefReview && <>
     <DiagnosticProgress label="Niños con observaciones iniciales" count={progress.observed} total={progress.total} loading={spontaneousRecords === null} error={observationsError}/>
     <p className="text-sm text-[#526b87]">Esta barra muestra a cuántos niños observaste inicialmente. Seguirás observando durante todo el año.</p>
-    {error && !student && <p role="alert" className="rounded-xl bg-[#fff1d6] p-3 text-sm">{error}</p>}
+    {error && <p role="alert" className="rounded-xl bg-[#fff1d6] p-3 text-sm">{error}</p>}
+    {feedback && <p role="status" className="rounded-xl bg-[#edf8fc] p-3 text-sm">{feedback}</p>}
 
     {matrixOpen && matrixCoverage && <ObservationCoverageMatrix data={data} counts={matrixCoverage.counts} unclassified={matrixCoverage.unclassified} competencies={matrixCompetencies} records={matrixCoverage.records}
       onBack={()=>setMatrixOpen(false)} onContinue={initialPreparation ? undefined : ()=>setBriefReview(true)}
       onRecord={(id,competencyId)=>{setMatrixOpen(false);setExperienceId(null);setFreeStudentId(id);setFreeCompetencyId(competencyId);setObservationMode("spontaneous");}}
-      onGuided={(id,experience)=>{setMatrixOpen(false);setObservationMode("guided");selectExperience(experience);selectStudent(id);}} />}
+      onGuided={(_id,experience)=>{setMatrixOpen(false);setObservationMode("guided");selectExperience(experience);}} />}
     {matrixOpen && !matrixCoverage && <section className="diagnostic-panel space-y-4 p-5">{matrixError?<p role="alert">{matrixError}</p>:<LoadingState label="Consultando las observaciones de tu aula…" />}<Button variant="outline" onClick={()=>setMatrixOpen(false)}>Volver a observar</Button>{!initialPreparation && <Button onClick={()=>onPlan?.()}>Continuar de todas formas →</Button>}</section>}
     {!matrixOpen && !experience && !freeCompetencyId && <div className="grid gap-3 sm:grid-cols-2" role="group" aria-label="Forma de observar">
       {([{mode:"spontaneous",title:"Observación espontánea",description:"Registra algo que ocurrió naturalmente durante el juego o la jornada.",icon:Eye},{mode:"guided",title:"Experiencia guiada",description:"Realiza un juego preparado y observa cómo participan los niños.",icon:Sparkles}] as const).map(({mode,title,description,icon:Icon}) => <button key={mode} type="button" aria-pressed={observationMode===mode} onClick={()=>{if(!canLeaveWorkspace())return;setFreeCompetencyId("");setObservationMode(mode);}} className={`min-h-32 rounded-xl border-2 p-5 text-left ${observationMode===mode ? "border-[#087d96] bg-[#e8f6f8]" : "border-[#d4e1ed] bg-white hover:border-[#087d96]"}`}><Icon aria-hidden="true" className="mb-3 size-5 text-[#087d96]"/><span className="block font-bold text-[#172b52]">{title}</span><span className="mt-2 block text-sm text-[#526b87]">{description}</span></button>)}
@@ -219,43 +177,21 @@ export function GuidedDiagnostic({ initialPreparation = false, dashboard, onPlan
       <div>{rankedExperiences[0]&&renderExperience(rankedExperiences[0])}</div>
       {rankedExperiences.length>1&&<details><summary className="min-h-11 cursor-pointer py-3 font-semibold text-[#075d70]">Ver otras {rankedExperiences.length-1} experiencias</summary><div className="grid gap-3 md:grid-cols-2">{rankedExperiences.slice(1).map(renderExperience)}</div></details>} </section>}
 
-    {!matrixOpen && experience && !student && <section className="diagnostic-panel space-y-5 p-4 md:p-7">
-      <Button variant="outline" className="diagnostic-back-button" onClick={() => { setExperienceId(null); setFilter("all"); }}><ArrowLeft /> Volver a experiencias</Button>
+    {!matrixOpen && experience && <section className="diagnostic-panel space-y-4 p-4 md:p-5">
+      <Button variant="outline" className="diagnostic-back-button" onClick={() => {if(canLeaveWorkspace())setExperienceId(null);}}><ArrowLeft /> Volver a experiencias</Button>
       <h2 className="text-2xl font-extrabold">{experience.title}</h2>
-      {experience.pedagogical_blocks?.map(block => <PedagogicalBlock key={block.id} block={block} onObserve={(aspect) => { setAspectId(aspect); document.getElementById("diagnostic-students")?.scrollIntoView({ behavior: "smooth", block: "start" }); }} />)}
-      <div className="flex flex-wrap items-center justify-between gap-2"><div><h3 className="text-lg font-bold">Elige a un niño y anota lo que viste</h3><p className="text-sm text-[#526b87]">Toca su nombre cuando ocurra algo que quieras recordar. {coverage?.students_with_records ?? 0} de {data.students.length} con algún registro.</p>{spontaneousRecords && <p className="mt-1 text-sm text-[#176442]">Primero aparecen quienes aún no tienen registros de las competencias de esta experiencia.</p>}</div>{!initialPreparation && <Button variant="outline" className="min-h-12" onClick={() => goToStep(3)}>Revisar matriz y continuar <ArrowRight /></Button>}</div>
-      <div className="flex flex-wrap gap-2" aria-label="Filtrar niños">{([
-        ["all", "Todos"], ["without", "Sin observaciones"], ["with", "Con observaciones"], ["today", "Observados hoy"],
-      ] as const).map(([value, label]) => <button key={value} type="button" aria-pressed={filter === value} onClick={() => setFilter(value)} className={`min-h-11 rounded-full border px-3 text-sm font-semibold ${filter === value ? "border-[#087d96] bg-[#dff3f7] text-[#075d70]" : "border-[#dbe6ef] bg-white text-[#435a78]"}`}>{label}</button>)}</div>
-      {feedback && <p role="status" className="rounded-xl bg-[#e5f8ed] p-3 text-sm text-[#1e6040]">✓ {feedback}</p>}
-      <div id="diagnostic-students" className="grid scroll-mt-24 gap-3 sm:grid-cols-2 xl:grid-cols-3">{visibleStudents.map((item) => {
-        const own = records.filter((record) => record.student_id === item.id);
-        const today = own.some((record) => isToday(record.observed_at));
-        const missing = missingFor(item.id, experience.competencies.map((card) => card.id));
-        return <button key={item.id} type="button" onClick={() => selectStudent(item.id)} className={`min-h-20 rounded-2xl border bg-white p-4 text-left hover:bg-[#f4fbfd] focus-visible:outline-2 focus-visible:outline-[#087d96] ${spontaneousRecords && missing.length ? "border-[#54a98a]" : "border-[#dce9f2] hover:border-[#087d96]"}`}><span className="block text-base font-bold">{displayPersonName(item.name)}</span><span className="mt-1 block text-sm text-[#526b87]">{own.length === 0 ? "Sin observaciones en esta experiencia" : `${own.length} ${own.length === 1 ? "observación" : "observaciones"}`}</span>{spontaneousRecords && missing.length > 0 && <span className="mt-1 block text-xs font-semibold text-[#176442]">Por observar: {experience.competencies.filter((card) => missing.includes(card.id)).map((card) => card.name).join(" · ")}</span>}{today && <span className="mt-1 block text-xs font-semibold text-[#087d96]">✓ Observación registrada hoy</span>}</button>;
-      })}</div>
-      {visibleStudents.length === 0 && <p className="rounded-xl bg-[#f3f7fb] p-4 text-sm">No hay niños en este filtro. Puedes volver a “Todos”.</p>}
-      <details className="border-t border-[#e3ebf2] pt-3 text-sm"><summary className="cursor-pointer font-semibold text-[#426079]">Relación curricular · {experience.competencies.length} {experience.competencies.length === 1 ? "competencia" : "competencias"}</summary><ul className="mt-2 list-disc space-y-1 pl-5 text-[#526b87]">{experience.competencies.map((item) => <li key={item.id}>{item.name}</li>)}</ul></details>
+      <GuidedObservationDialog key={experience.id} experience={experience} students={data.students} pairs={observedPairs} onClose={()=>setFeedback("")} onSaved={record=>setData(current=>current ? mergeGuidedObservation(current,record) : current)}/>
+      <details className="border-t border-[#e3ebf2] pt-3 text-sm"><summary className="min-h-11 cursor-pointer py-2 font-semibold text-[#426079]">Relación curricular · {experience.competencies.length} competencias</summary><ul className="mt-2 list-disc space-y-1 pl-5 text-[#526b87]">{experience.competencies.map(item=><li key={item.id}>{item.name}</li>)}</ul></details>
     </section>}
 
-    {!matrixOpen && experience && student && <section className="diagnostic-panel space-y-5 p-4 md:p-7">
-      <Button variant="outline" className="diagnostic-back-button" disabled={working || audioBusy} onClick={() => { if (allowLeave()) setStudentId(null); }}><ArrowLeft /> Volver a todos los niños</Button>
-      <div><p className="text-sm font-semibold text-[#087d96]">{experience.title}</p><h2 className="text-2xl font-extrabold">{displayPersonName(student.name)}</h2><p className="mt-1 text-sm text-[#526b87]">Registra solo lo que observaste. Puedes añadir más de una observación de este niño.</p></div>
-      <fieldset className="space-y-2" disabled={working || audioBusy}><legend className="font-bold">¿Qué quieres observar?</legend><p className="text-sm text-[#526b87]">Esto solo te ayuda a enfocar la observación. No estás calificando al niño.</p>{experience.aspects.map((aspect) => <label key={aspect.id} className={`flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border p-3 ${aspectId === aspect.id ? "border-[#087d96] bg-[#e8f7fa]" : "border-[#dce9f2]"}`}><input type="radio" name="diagnostic-aspect" checked={aspectId === aspect.id} onChange={() => setAspectId(aspect.id)} /><span className="font-semibold">{aspect.label}</span></label>)}</fieldset>
-      <label className="block text-sm font-semibold">¿Qué hizo o dijo?<span className="mt-1 block font-normal text-[#526b87]">Puedes anotar qué hizo, qué dijo, cómo lo hizo o si necesitó ayuda.</span><Textarea className="mt-2 min-h-24" disabled={working} maxLength={4000} value={note} onChange={(event) => setNote(event.target.value)} placeholder="Ej.: Probó saltar los bloques varias veces y cambió la distancia después de no lograrlo." /></label>
-      <DictationRecorder key={`${student.id}:${experience.id}`} studentId={student.id} context={`${experience.title}: ${experience.aspects.find((aspect) => aspect.id === aspectId)?.prompt ?? "observación durante el juego"}`} currentText={note} disabled={working} onBusyChange={setAudioBusy} onTranscribed={(text) => setNote(text)} />
-      <p className="text-xs text-[#526b87]">Es una nota de observación. Podrás interpretarla más adelante.</p>
-      {error && <p role="alert" className="rounded-xl bg-[#fff1d6] p-3 text-sm">{error}</p>}
-      <AsyncButton className="min-h-12 w-full sm:w-auto" busy={working} busyLabel="Guardando..." disabled={audioBusy || !aspectId || !note.trim()} onClick={() => void save()}><Save /> Guardar observación</AsyncButton>
-    </section>}
-    {!matrixOpen && !student && <div className="flex flex-wrap gap-3 border-t border-[#d4e1ed] pt-4"><Button variant="outline" onClick={openMatrix}>Ver niños × competencias</Button><Button variant="outline" onClick={() => {if(canLeaveWorkspace())setStep(3);}}>Consultar revisiones anteriores</Button></div>}
+    {!matrixOpen && <div className="flex flex-wrap gap-3 border-t border-[#d4e1ed] pt-4"><Button variant="outline" onClick={openMatrix}>Ver niños × competencias</Button><Button variant="outline" onClick={() => {if(canLeaveWorkspace())setStep(3);}}>Consultar revisiones anteriores</Button></div>}
     </>}
     {step === 3 && <section className="diagnostic-panel space-y-4 p-5"><h2 className="text-xl font-bold">Ayni organizará lo que ya conoces</h2>
       {!initialPreparation && <p className="text-sm text-[#526b87]">En «Así entendí tu aula» verás una propuesta basada en entrevistas y observaciones. Puedes corregirla antes de crear Mi año. Seguirás observando durante el año.</p>}
       {onPlan && <Button className="min-h-12" onClick={onPlan}>Revisar matriz y continuar <ArrowRight /></Button>}
       <details open={legacyReviewOpen} onToggle={(event) => setLegacyReviewOpen(event.currentTarget.open)} className="rounded-xl border p-3">
         <summary className="cursor-pointer text-sm font-semibold">Ver revisiones diagnósticas anteriores y registros individuales</summary>
-        {legacyReviewOpen && <DiagnosticReview onObserve={() => { setStep(2); setStudentId(null); }} onPlan={onPlan} onObservationSaved={() => void refreshObservationProgress()} onGroupConfirmed={() => setData((current) => current ? { ...current, step_progress: { ...current.step_progress, group_review_confirmed: true } } : current)} />}
+        {legacyReviewOpen && <DiagnosticReview onObserve={() => { setStep(2); }} onPlan={onPlan} onObservationSaved={() => void refreshObservationProgress()} onGroupConfirmed={() => setData((current) => current ? { ...current, step_progress: { ...current.step_progress, group_review_confirmed: true } } : current)} />}
       </details></section>}
   </div>;
 }

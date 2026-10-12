@@ -89,6 +89,7 @@ export type DiagnosticWorkspace = {
     id: string; student_id: string; experience_id: string; aspect_id: string;
     competency_v4_id: string; observation_status: DiagnosticObservationStatus;
     observation_text: string | null; observed_at: string;
+    has_media?: boolean;
   }[];
   experience_coverage: {
     experience_id: string; students_with_records: number; students_with_information: number;
@@ -317,6 +318,13 @@ export async function saveDiagnosticExperienceObservation(input: {
   return payload.workspace;
 }
 
+export async function saveCompactGuidedObservation(input: {studentId:string;experienceId:string;aspectId:string;observationText:string;clientRequestId:string;media?:PrivateMediaUpload}) {
+  const response=await apiFetch(`${apiUrl}/api/diagnostics/experience-observations`,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({...input,observationStatus:"observed_without_judgment",compact:true})});
+  const payload=await apiJson<{error?:string;observation?:DiagnosticWorkspace["experience_observations"][number]}>(response);
+  if(!response.ok||!payload.observation)throw new Error(payload.error??"No se pudo guardar la observación. Tu texto y foto siguen aquí.");
+  return payload.observation;
+}
+
 async function diagnosticRequest<T>(path: string, method = "GET", body?: unknown): Promise<T> {
   const response = await apiFetch(`${apiUrl}/api/diagnostics/${path}`, {
     method, cache: "no-store", ...(body === undefined ? {} : { headers: { "content-type": "application/json" }, body: JSON.stringify(body) }),
@@ -356,6 +364,7 @@ export const saveMatrixDiagnosticObservation = (input: { studentId: string; comp
 export const correctSpontaneousClassification = (id: string, competencyIds: string[]) => diagnosticRequest<{ id: string; student_id: string; classification_status: "classified" | "needs_review"; competency_v4_id: string | null; competency_v4_ids: string[] }>(`spontaneous-observations/${encodeURIComponent(id)}/classification`, "PUT", { competencyIds });
 export const suggestSpontaneousCompetenciesWithAyni = (id: string) => diagnosticRequest<{ id: string; status: string; recommendation_state: ObservationRecommendationState }>(`spontaneous-observations/${encodeURIComponent(id)}/suggest`, "POST");
 export const spontaneousObservationMediaUrl = (id: string) => `${apiUrl}/api/diagnostics/spontaneous-observations/${encodeURIComponent(id)}/media`;
+export const guidedObservationMediaUrl = (id: string) => `${apiUrl}/api/diagnostics/experience-observations/${encodeURIComponent(id)}/media`;
 export const evidenceMediaUrl = (id: string) => `${apiUrl}/api/period-evaluations/evidence/${encodeURIComponent(id)}/media`;
 export async function transcribeShortAudio(input: { studentId?: string; scope?: "classroom"; context: string; audio: PrivateMediaUpload; purpose?: "observation" | "raw_observation" | "interview" | "teacher_comment" | "group_summary" }) {
   const response = await apiFetch(`${apiUrl}/api/audio/transcribe`, {

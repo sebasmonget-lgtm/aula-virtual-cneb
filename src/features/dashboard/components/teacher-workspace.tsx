@@ -236,7 +236,7 @@ export function TeacherWorkspace() {
     setPlanningTarget(hash.includes("tab=diagnostic") ? "diagnostic" : null);
     window.history.replaceState(null, "", hash); window.dispatchEvent(new Event("ayni-location-change"));
   }
-  function openPreparationStage(stage: number) { openPreparationHash(preparationStageHash(stage)); }
+  function openPreparationStage(stage: number) { openPreparationHash(stage===2 && dashboard?.profile.enrollment_completed_at ? "#aula" : preparationStageHash(stage)); }
   function returnToPreparation() { navigate("Preparación"); }
   useEffect(() => {
     if (annualConfirmed !== true || active !== "Preparación") return;
@@ -365,7 +365,7 @@ export function TeacherWorkspace() {
           {dashboard?.today.qa_clock && process.env.NEXT_PUBLIC_AYNI_QA_CLOCK !== "1" && <p role="status" className="mb-4 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm">QA · reloj de prueba de la jornada: {displayDate(dashboard.today.qa_clock.date)} · {dashboard.today.qa_clock.time}. No cambia la fecha del equipo ni los cierres.</p>}
           {preparing && active !== "Preparación" && !diagnosticChild && <div className="mb-4"><Button variant="outline" className="min-h-11 whitespace-normal" onClick={returnToPreparation}><ArrowLeft aria-hidden="true" className="size-4"/>Volver a mi preparación</Button></div>}
           {guidanceError && <div className="mb-4 flex flex-wrap items-center gap-3"><WorkflowFeedback tone="error">No pudimos comprobar cuál es tu siguiente paso.</WorkflowFeedback><Button variant="outline" onClick={() => { setGuidanceError(false); setRetry((value) => value + 1); }}>Reintentar</Button></div>}
-          {starting ? <ScreenSkeleton /> : active === "Preparación" ? <PreparationHome dashboard={dashboard} year={accountYear} annualDraft={annualDraft} onStage={openPreparationStage}/> : active === "Perfil" ? dashboard ? <InstitutionProfile dashboard={dashboard} onSaved={setDashboard} /> : <ScreenSkeleton /> :
+          {starting || active === "Preparación" && databaseState === "checking" ? <ScreenSkeleton /> : active === "Preparación" ? <PreparationHome dashboard={dashboard} year={accountYear} annualDraft={annualDraft} onStage={openPreparationStage}/> : active === "Perfil" ? dashboard ? <InstitutionProfile dashboard={dashboard} onSaved={setDashboard} /> : <ScreenSkeleton /> :
           active === "Documentos" ? <DocumentsScreen onPlan={() => navigate("Planificar")} /> :
           active === "Calendario" ? <SchoolCalendarScreen todayDate={dashboard?.today.date} onOpenPlanning={() => navigate("Planificar")} onOpenActivity={(item) => { setCalendarActivity(item); setPlanningTarget("activities"); navigate("Planificar"); }} /> : active === "Biblioteca" ? dashboard ? <ResourceLibraryScreen onPlan={() => navigate("Planificar")} age={dashboard.profile.age_years} initialFilter={libraryFilter} onUse={(resource) => { setSelectedResource(resource); setPlanningTarget("activities"); navigate("Planificar"); }} /> : <ScreenSkeleton /> :
           active === "Evaluar" ? dashboard ? <EvaluationArea dashboard={dashboard} initialTarget={evaluationTarget} initialSection={evaluationEntry} onPlan={() => { setPlanningTarget(null); navigate("Planificar"); }} onPrepareActivity={() => { setPlanningTarget("activities"); navigate("Planificar"); }} onToday={() => navigate("Hoy")} /> : <ScreenSkeleton /> :

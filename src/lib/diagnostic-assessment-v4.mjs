@@ -278,7 +278,8 @@ export async function loadDiagnosticAssessmentWorkspace(db, teacherId) {
   const pending = new Map(unclassified.map((row) => [row.student_id, row.total]));
   const guided = (await db.query(`select o.id, o.student_id, o.competency_v4_id,
       o.experience_id, o.aspect_id, o.catalog_version, o.experience_title_snapshot,
-      o.aspect_prompt_snapshot, o.observation_status, o.observation_text, o.observed_at
+      o.aspect_prompt_snapshot, o.observation_status, o.observation_text, o.observed_at,
+      o.media_path is not null as has_media
     from diagnostic_experience_observations o join students s on s.id = o.student_id
     where o.classroom_id = $1 and s.classroom_id = $1 and s.status = 'active'
     order by o.observed_at, o.id`, [classroom.id])).rows;

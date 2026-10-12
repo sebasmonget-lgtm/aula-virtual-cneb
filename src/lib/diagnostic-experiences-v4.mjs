@@ -1,4 +1,6 @@
 import { randomUUID } from "node:crypto";
+import { versionTransaction } from "./version-integrity.mjs";
+import { simulatedObservationInstant } from "./pedagogical-clock.mjs";
 import { diagnosticPedagogicalBlocks } from "./pedagogical-blocks.mjs";
 import { loadKnowledgeBaseV4 } from "./knowledge-base-v4.mjs";
 import { cardIsApplicable } from "./ai-context-builder-v4.mjs";
@@ -73,7 +75,7 @@ export async function loadDiagnosticExperienceWorkspace(db, teacherId) {
   }, catalog);
   const experience_observations = (await db.query(`select deo.id, deo.student_id, deo.experience_id,
       deo.aspect_id, deo.competency_v4_id, deo.observation_status, deo.observation_text, deo.observed_at,
-      deo.catalog_version
+      deo.catalog_version, deo.media_path is not null as has_media
     from diagnostic_experience_observations deo
     join students s on s.id = deo.student_id and s.classroom_id = deo.classroom_id and s.status = 'active'
     where deo.classroom_id = $1 order by deo.observed_at desc, deo.id desc`, [classroom.id])).rows;
@@ -101,13 +103,21 @@ export async function recordDiagnosticExperienceObservation(db, teacherId, input
   const experience = experiences.find((item) => item.id === input?.experienceId);
   const aspect = experience?.aspects.find((item) => item.id === input?.aspectId);
   if (!aspect) throw new DiagnosticExperienceError("invalid_aspect", "El aspecto no corresponde a una experiencia aplicable.");
-  const id = randomUUID();
-  await db.query(`insert into diagnostic_experience_observations
+  const id = input.clientRequestId ?? randomUUID();
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) throw new DiagnosticExperienceError("invalid_request", "Solicitud inválida.");
+  return versionTransaction(db,`guided-observation:${id}`,async tx=>{
+  const old=(await tx.query('select * from diagnostic_experience_observations where id=$1',[id])).rows[0];
+  if(old){
+    if(old.created_by!==teacherId || old.classroom_id!==classroom.id || old.student_id!==student.id || old.experience_id!==experience.id || old.aspect_id!==aspect.id || old.observation_status!==status || old.observation_text!==(note?.trim()||null) || (old.media_sha256??null)!==(input.mediaSha256??null)) throw new DiagnosticExperienceError("request_conflict", "La solicitud ya corresponde a otro registro. Revisa lo guardado antes de cambiarla.");
+    return {id,studentId:student.id,competencyId:aspect.competency_id,replayed:true,observation:{...old,has_media:Boolean(old.media_path),media_path:undefined,media_sha256:undefined}};
+  }
+  const row=(await tx.query(`insert into diagnostic_experience_observations
     (id, classroom_id, student_id, experience_id, aspect_id, competency_v4_id,
      observation_status, observation_text, created_by, catalog_version,
-     experience_title_snapshot, aspect_prompt_snapshot)
-    values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
+     experience_title_snapshot, aspect_prompt_snapshot,media_path,media_mime_type,media_sha256,observed_at)
+    values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,coalesce($16::timestamptz,now())) returning *`,
   [id, classroom.id, student.id, experience.id, aspect.id, aspect.competency_id,
-    status, note?.trim() || null, teacherId, experience.catalog_version, experience.title, aspect.prompt]);
-  return { id, studentId: student.id, competencyId: aspect.competency_id };
+    status, note?.trim() || null, teacherId, experience.catalog_version, experience.title, aspect.prompt,input.mediaPath??null,input.mediaMimeType??null,input.mediaSha256??null,simulatedObservationInstant()])).rows[0];
+  return { id, studentId: student.id, competencyId: aspect.competency_id,observation:{...row,has_media:Boolean(row.media_path),media_path:undefined,media_sha256:undefined} };
+  });
 }

@@ -115,6 +115,18 @@ button[data-slot="button"][data-variant="outline"] { border-color: var(--input);
 .ayni-journey-link > small { overflow: hidden; max-width: 100%; font-size: .7rem; font-weight: 700; text-overflow: ellipsis; }
 .ayni-journey li.is-complete > .ayni-journey-link > span { border-color: #b8dfd4; background: #e6f6f0; color: #287163; }
 .ayni-step-actions { display: flex; justify-content: flex-start; }
+.ayni-preparation-journey { margin-block: 1.75rem; }
+.ayni-preparation-journey .ayni-journey-link { width: 100%; min-height: 5rem; padding: .35rem .15rem; }
+.ayni-preparation-journey li:not(:last-child)::after { top: 1.55rem; left: calc(50% + 1.4rem); width: calc(100% - 2.4rem); }
+.ayni-preparation-journey .ayni-journey-link > span:not(.sr-only) { width: 2.4rem; height: 2.4rem; background: #eef3fa; font-size: 1rem; }
+.ayni-preparation-journey .ayni-journey-link > small { overflow: visible; white-space: normal; text-wrap: balance; font-size: clamp(.75rem, 1.3vw, .9rem); line-height: 1.4; color: #172b52; }
+.ayni-preparation-journey li.is-complete > .ayni-journey-link > span:not(.sr-only) { border-color: #17653f; background: #17653f; color: #fff; }
+.ayni-preparation-journey li.is-complete::after { background: #17653f; }
+.ayni-preparation-journey .ayni-journey-link[aria-selected="true"] > span:not(.sr-only) { border-color: #087d96; background: #087d96; color: #fff; }
+.ayni-preparation-journey li.is-complete > .ayni-journey-link[aria-selected="true"] > span:not(.sr-only) { background: #17653f; border-color: #17653f; box-shadow: 0 0 0 3px #b7ded5; }
+.ayni-preparation-journey .ayni-journey-link[aria-selected="true"] > small { font-weight: 800; }
+.ayni-preparation-journey .ayni-journey-link:hover { background: #e8f6fb; }
+.ayni-preparation-journey .ayni-journey-link:active { transform: translateY(1px); }
 .ayni-workflow { max-width: 56rem; margin-inline: auto; }
 .ayni-workflow :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea) { width: 100%; min-height: 2.75rem; max-width: 100%; border: 1px solid var(--input); border-radius: .65rem; padding: .6rem .75rem; background: #fff; color: #182d50; }
 .ayni-workflow select { width: 100%; }
