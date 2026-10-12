@@ -2,6 +2,8 @@
 
 ## Preview QA: límite de conexiones de sesión — 2026-10-12
 
+Resultado posterior: republicación autorizada del mismo código `903020b` en `dpl_48KBjF5WGdE6ojVJZta5uMyv7pLG` READY. Recuperación pública validada con auth/config 200, sesión sin ingreso 401, health 200 e ingreso vacío visible en Side Panel. Typecheck/lint, cuatro pruebas del adaptador y build cloud PASS. Producción intacta respecto de la referencia leída antes de esta operación. No se modificó el pool ni se demuestra prevención permanente de recurrencia; queda pendiente revisar el pool de sesión/serverless. Comprobación autenticada requiere ingreso manual del propietario en el nuevo dominio.
+
 Síntoma: «No pudimos conectar con Ayni» y HTTP 500 en `/api/auth/config`, también errores previos al reinicio en diagnóstico/Mi año. Logs de Vercel prueban `EMAXCONNSESSION`, máximo 15 clientes del pool de sesión. El borrado QA terminó y se verificó independientemente; este fallo no acredita pérdida adicional de datos. Cierre administrativo de dos conexiones postgres/Supavisor en estado idle PASS, pero la Preview siguió devolviendo 500. Recuperación propuesta y expresamente autorizada: volver a publicar únicamente la misma Preview, código `903020b`, sin modificar producto. Recuperación visual/smoke pendientes; no declarar resolución antes de comprobarlos. Como prevención pendiente, revisar el uso de session pooling en serverless y la recuperación de bootstrap tras un fallo de conexión. Recibos privados en `.local/reset-qa-20261012/`; sin secretos.
 
 ## Reinicio QA: calendario compartido y recuperación del acceso — 2026-10-12
