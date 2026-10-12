@@ -57,6 +57,7 @@ import { PeriodFutureReview } from "./period-future-review";
 const BimesterReplan=process.env.NEXT_PUBLIC_AYNI_EXPERIENCE!=="0"?PeriodFutureReview:LegacyBimesterReplan;
 import { PlanningFeedbackOption } from "./planning-feedback-option";
 import { PilotSetup } from "./pilot-setup";
+import { EnrollmentWorkspace } from "./enrollment-workspace";
 import { AsyncButton, LoadingState, NextStepCard, ScreenSkeleton, WorkflowFeedback } from "./workflow-ui";
 
 const nav = [
@@ -225,6 +226,7 @@ export function TeacherWorkspace({ onSignOut, onSetupRequired }: { onSignOut?: (
   const metrics = dashboard?.metrics;
   const [classroomView] = useWorkspaceSubview("Aula", "view", dashboard ? classroomViews : noClassroomViews, students.length === 0 ? "enrollment" : "list");
   const initialEnrollment = students.length === 0 || classroomView === "enrollment";
+  useEffect(() => { onSetupRequired?.(needsSetup || active === "Aula" && initialEnrollment); }, [needsSetup,active,initialEnrollment,onSetupRequired]);
   const selectedNavigation = redesigned && active==="Planificar" && annualDestination ? "Mi año" : f7Enabled && active !== "Biblioteca" ? primaryDestination(active) : active;
 
   function navigate(section: string, afterSavedSetup = false) { if (!afterSavedSetup && !canLeaveWorkspace()) return false; navigationTouched.current = true; setStarting(false); if (section !== "Planificar") { setPlanningTarget(null); setSelectedResource(null); setCalendarActivity(null); } if (section === "Evaluar") { setEvaluationTarget(null); setEvaluationEntry("home"); } setActive(section); const hash = hashForDestination(section); if (hash && destinationFromHash(window.location.hash) !== section) { window.history.pushState(null, "", hash); window.dispatchEvent(new Event("ayni-location-change")); } return true; }
@@ -301,6 +303,12 @@ export function TeacherWorkspace({ onSignOut, onSetupRequired }: { onSignOut?: (
 
   // Setup has already committed; its busy exit guard must not block this transition.
   if (needsSetup) return <PilotSetup accountYear={accountYear} initialDraft={setupDraft} onSignOut={onSignOut} onReady={(ready) => { setDashboard(ready); setNeedsSetup(false); onSetupRequired?.(false); setDatabaseState("connected"); navigate("Aula", true); writeWorkspaceLocation("Aula",{view:"enrollment"},true); }} />;
+  if (active === "Aula" && initialEnrollment && dashboard && !starting) return <EnrollmentWorkspace dashboard={dashboard} onUpdated={ready=>{setDashboard(ready);writeWorkspaceLocation("Aula",{view:"enrollment"},true);}} onBack={()=>navigate("Perfil")} onSignOut={onSignOut} onContinue={async()=>{
+    if(!dashboard.profile.classroom_id)throw new Error("Recarga para revisar el aula actual.");
+    const confirmed=await confirmClassroomEnrollment(dashboard.profile.classroom_id);
+    setDashboard(current=>current?.profile.classroom_id===confirmed.classroomId?{...current,profile:{...current.profile,enrollment_completed_at:confirmed.completedAt}}:current);
+    writeWorkspaceLocation("Aula",{view:"list"},true);openDiagnostic(1,true);
+  }}/>;
   if (databaseState === "offline") return <main className="mx-auto max-w-xl space-y-4 p-6"><h1 className="text-2xl font-bold">No se pudo conectar con el aula</h1><p>Comprueba tu conexión y vuelve a intentarlo. Tu trabajo guardado seguirá disponible.</p><Button onClick={() => { setDatabaseState("checking"); setRetry((value) => value + 1); }}>Reintentar</Button></main>;
 
   return (
@@ -367,7 +375,7 @@ export function TeacherWorkspace({ onSignOut, onSetupRequired }: { onSignOut?: (
           {dashboard?.today.qa_clock && process.env.NEXT_PUBLIC_AYNI_QA_CLOCK !== "1" && <p role="status" className="mb-4 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm">QA · reloj de prueba de la jornada: {displayDate(dashboard.today.qa_clock.date)} · {dashboard.today.qa_clock.time}. No cambia la fecha del equipo ni los cierres.</p>}
           {preparing && active !== "Preparación" && !diagnosticChild && <div className="mb-4"><Button variant="outline" className="min-h-11 whitespace-normal" onClick={returnToPreparation}><ArrowLeft aria-hidden="true" className="size-4"/>Volver a mi preparación</Button></div>}
           {guidanceError && <div className="mb-4 flex flex-wrap items-center gap-3"><WorkflowFeedback tone="error">No pudimos comprobar cuál es tu siguiente paso.</WorkflowFeedback><Button variant="outline" onClick={() => { setGuidanceError(false); setRetry((value) => value + 1); }}>Reintentar</Button></div>}
-          {starting || active === "Preparación" && databaseState === "checking" ? <ScreenSkeleton /> : active === "Preparación" ? <PreparationHome dashboard={dashboard} year={accountYear} annualDraft={annualDraft} onStage={openPreparationStage}/> : active === "Perfil" ? dashboard ? <InstitutionProfile dashboard={dashboard} onSaved={setDashboard} /> : <ScreenSkeleton /> :
+          {starting || active === "Preparación" && databaseState === "checking" ? <ScreenSkeleton /> : active === "Preparación" ? <PreparationHome dashboard={dashboard} year={accountYear} annualDraft={annualDraft} onStage={openPreparationStage}/> : active === "Perfil" ? dashboard ? <>{preparing&&<Button variant="outline" className="mb-4" onClick={()=>{navigate("Aula");writeWorkspaceLocation("Aula",{view:"enrollment"},true);}}>Volver a añadir niños<ArrowRight size={17}/></Button>}<InstitutionProfile dashboard={dashboard} onSaved={setDashboard} /></> : <ScreenSkeleton /> :
           active === "Documentos" ? <DocumentsScreen onPlan={() => navigate("Planificar")} /> :
           active === "Calendario" ? <SchoolCalendarScreen todayDate={dashboard?.today.date} onOpenPlanning={() => navigate("Planificar")} onOpenActivity={(item) => { setCalendarActivity(item); setPlanningTarget("activities"); navigate("Planificar"); }} /> : active === "Biblioteca" ? dashboard ? <ResourceLibraryScreen onPlan={() => navigate("Planificar")} age={dashboard.profile.age_years} initialFilter={libraryFilter} onUse={(resource) => { setSelectedResource(resource); setPlanningTarget("activities"); navigate("Planificar"); }} /> : <ScreenSkeleton /> :
           active === "Evaluar" ? dashboard ? <EvaluationArea dashboard={dashboard} initialTarget={evaluationTarget} initialSection={evaluationEntry} onPlan={() => { setPlanningTarget(null); navigate("Planificar"); }} onPrepareActivity={() => { setPlanningTarget("activities"); navigate("Planificar"); }} onToday={() => navigate("Hoy")} /> : <ScreenSkeleton /> :

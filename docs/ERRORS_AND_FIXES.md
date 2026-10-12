@@ -1,5 +1,9 @@
 # Errores y soluciones
 
+## Edición de nacimiento y compatibilidad local/remota de alumnos — 2026-10-12
+
+En comprobación local, el date nativo modificado emitía input sin actualizar el estado del formulario solo con onChange: el servidor recibía nacimiento vacío. Se manejan input/change y actualizaciones funcionales, validando guardado y recarga de 2021-03-13 en navegador y en el servicio. Además PGlite rechazó updated_at en el UPDATE nuevo porque ese campo del esquema remoto no pertenece al contrato local de students; UPDATE usa solo campos comunes y CAS por valores originales, sin migración. Prueba funcional de identidad/historial/aislamiento/replay y conflicto PASS. Prevención: validar la fecha recibida tras recarga y ejecutar SQL nuevo contra contrato local antes de publicar.
+
 ## Nueva docente veía Preparación y no tenía guardado automático del alta — 2026-10-12
 
 Síntoma: sin aula, #preparacion mostraba portada previa; el formulario guardaba únicamente al continuar, por lo que recargar perdía datos incompletos. Causa: PilotSetup dependía de active distinto de Preparación y conservaba todos sus datos en memoria. Solución: renderizar alta siempre que needsSetup; recuperar y guardar automáticamente estado privado por cuenta en preferences existente, con debounce/cola, confirmación visible, reintento y bloqueo compartido con creación. POST limpia estado temporal dentro de la transacción. Validado con PGlite (datos incompletos, aislamiento, preferencias preservadas, limpieza final y rechazo de escrituras tardías) y navegador local (recarga, edad explícita, logo y matrícula). Prevención: no declarar «guardado automático» basándose solo en estado React ni hacer depender el alta de un hash previo.

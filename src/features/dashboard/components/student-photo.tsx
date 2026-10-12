@@ -6,11 +6,11 @@ import { localDatabaseApiUrl, type PrivateMediaUpload } from "@/src/lib/local-da
 import { Button } from "@/components/ui/button";
 import { preparePrivateMedia } from "./media-attachment-input";
 
-export function StudentPhoto({ id, name, revision=0 }: {id:string;name:string;revision?:number}) {
+export function StudentPhoto({ id, name, revision=0, className="" }: {id:string;name:string;revision?:number;className?:string}) {
   const [photo,setPhoto]=useState({identity:"",url:""});
   const identity=`${id}:${revision}`,url=photo.identity===identity?photo.url:"";
   useEffect(()=>{let live=true,objectUrl=""; apiFetch(`${localDatabaseApiUrl}/api/students/${id}/photo`,{cache:"no-store"}).then(async r=>{if(!r.ok)return;objectUrl=URL.createObjectURL(await r.blob());if(live)setPhoto({identity:`${id}:${revision}`,url:objectUrl});else URL.revokeObjectURL(objectUrl);}).catch(()=>{});return()=>{live=false;if(objectUrl)URL.revokeObjectURL(objectUrl);};},[id,revision]);
-  return <span aria-hidden="true" className="grid size-12 shrink-0 place-items-center overflow-hidden rounded-2xl bg-[#e3f2f5] text-base font-bold text-[#075d70]">{url?<Image src={url} alt="" width={48} height={48} unoptimized className="size-full object-cover" />:name.split(/\s+/).slice(0,2).map(n=>n[0]).join("")}</span>;
+  return <span aria-hidden="true" className={"grid size-12 shrink-0 place-items-center overflow-hidden rounded-2xl bg-[#e3f2f5] text-base font-bold text-[#075d70] "+className}>{url?<Image src={url} alt="" width={48} height={48} unoptimized className="size-full object-cover" />:name.split(/\s+/).slice(0,2).map(n=>n[0]).join("")}</span>;
 }
 export function StudentPhotoEditor({id,name}:{id:string;name:string}) {
   const [revision,setRevision]=useState(0),[busy,setBusy]=useState(false),[message,setMessage]=useState(""),[removing,setRemoving]=useState(false);

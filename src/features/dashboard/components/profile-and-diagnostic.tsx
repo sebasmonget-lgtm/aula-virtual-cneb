@@ -12,6 +12,7 @@ import {
 } from "@/src/lib/local-database";
 import { AsyncButton, LoadingState, WorkflowFeedback } from "./workflow-ui";
 import { ClassroomSettings } from "./classroom-settings";
+import { useUnsavedWork } from "@/src/lib/use-unsaved-work";
 
 const states = [
   ["observed", "Lo observé"],
@@ -50,6 +51,7 @@ export function InstitutionProfile({ dashboard, onSaved }: {
   const [message, setMessage] = useState("");
   const [aiUsage, setAiUsage] = useState<AiUsageSummary | null>(null);
   const [aiUsageError, setAiUsageError] = useState("");
+  useUnsavedWork(teacherName !== p.teacher_name || institutionName !== p.institution_name || section !== p.section || institutionCode !== (p.institution_code ?? "") || district !== (p.district ?? "") || ugel !== (p.ugel ?? "") || directorName !== (p.director_name ?? "") || createLogo || Boolean(logoFile),working);
   useEffect(() => {
     let active = true;
     loadAiUsageSummary().then((usage) => { if (active) setAiUsage(usage); })
@@ -76,6 +78,7 @@ export function InstitutionProfile({ dashboard, onSaved }: {
       const result = await saveLocalProfile({ teacherName, institutionName, section, institutionCode,
         district, ugel, directorName, createLogo, logoInitials, logoPrimary, logoAccent, logoUpload });
       onSaved(result); setCreateLogo(false); setLogoFile(null);
+      setTeacherName(result.profile.teacher_name);setInstitutionName(result.profile.institution_name);setSection(result.profile.section);setInstitutionCode(result.profile.institution_code??"");setDistrict(result.profile.district??"");setUgel(result.profile.ugel??"");setDirectorName(result.profile.director_name??"");
       if (logoInputRef.current) logoInputRef.current.value = "";
       setMessage("Datos del colegio guardados.");
     } catch (error) {

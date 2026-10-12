@@ -1,5 +1,9 @@
 # Decisiones de arquitectura
 
+## Matrícula con edición lateral y retirada recuperable — 2026-10-12
+
+Los mockups del propietario fijan lista/formulario de matrícula. Se elimina de la lista cambiando estado a inactive, con confirmación y sin cargar historial/identidades retiradas en pantalla habitual; consulta explícita de recuperación usa servicio existente. Editar conserva IDs y nombre preferido existente, valida igual que alta y compara campos originales bajo lock de aula compartido con cambios de matrícula; mismo resultado admite replay tras respuesta perdida. No se añade esquema ni autoridad al cliente. Foto usa servicio privado/preparación existente; si falla después del guardado de datos, reintento independiente sin duplicar alumno. Volver reutiliza perfil de colegio/aula y protege datos pendientes. Pantalla de matrícula autónoma evita encabezados/navegación duplicados; Mi aula y etapas posteriores mantienen componentes existentes.
+
 ## Alta de aula con guardado automático previo — 2026-10-12
 
 La docente sin aula entra directamente a «Crea tu salón», independientemente del hash previo. El mockup fija composición y campos; el propietario retira el botón de borrador y exige selección explícita de 3/4/5 años. Guardar automáticamente no equivale a crear un aula: el estado incompleto vive en profiles.preferences.classroom_setup de la cuenta autenticada, aprovechando ownership/RLS existente; el servidor no acepta un owner del cliente. GET no-cache recupera el formulario; PUT valida límites y tipo/tamaño del logo sin crear registros pedagógicos. POST conserva la validación e idempotencia de alta y elimina ese estado temporal solo al confirmar la transacción. Guardados automáticos serializados; el mismo advisory lock protege PUT y creación de escrituras tardías. No almacenamiento privado en el navegador. Rollback de código conserva datos de cuentas y aulas, pudiendo dejar el borrador temporal sin efectos en el flujo anterior.

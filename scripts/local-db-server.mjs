@@ -1,5 +1,6 @@
 import { criterionRealignmentEligibility } from "../src/lib/criterion-realignment-policy.mjs";
 import { loadSetupDraft, saveSetupDraft } from "../src/lib/pilot-setup-draft.mjs";
+import { updateStudentDetails } from "../src/lib/student-details-service.mjs";
 import { annualDisplaySubjects } from "../src/lib/annual-teacher-display.mjs";
 import { handleDirectWorkshop } from "./direct-workshop-routes.mjs";
 import { projectConversation } from "../src/lib/project-conversation.mjs";
@@ -421,7 +422,7 @@ async function dashboard() {
   const today = qaDailyClock?.date ?? dateFormatter.format(new Date());
   const now = qaDailyClock?.time ?? timeFormatter.format(new Date());
   const studentsResult = await db.query(`
-    select s.id, case when s.birth_date is not null then extract(year from age($2::date,s.birth_date))::int else null end as age_years, coalesce(s.preferred_name, s.first_name) as name,
+    select s.id,s.first_name,s.last_name,s.preferred_name,s.birth_date::text, case when s.birth_date is not null then extract(year from age($2::date,s.birth_date))::int else null end as age_years, coalesce(s.preferred_name, s.first_name) as name,
            concat_ws(' ', coalesce(s.preferred_name, s.first_name), s.last_name) as full_name,
            coalesce(records.evidence_count, 0)::int as evidence_count,
            coalesce(records.competency_count, 0)::int as competency_count,
@@ -1229,6 +1230,10 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       return;
     }
     if (request.method === "GET" && url.pathname === "/api/students/inactive") { send(response,200,{students:await inactiveStudents(db,teacherId)},origin);return; }
+    if (request.method === "PATCH" && /^\/api\/students\/[0-9a-f-]{36}\/details$/.test(url.pathname)) {
+      try { await updateStudentDetails(db,teacherId,url.pathname.split("/")[3],await readJson(request));send(response,200,{dashboard:await dashboard()},origin); }
+      catch(error){send(response,httpStatusForError(error,422),{error:publicErrorMessage(error)},origin);}return;
+    }
     if (request.method === "PATCH" && /^\/api\/students\/[0-9a-f-]{36}\/enrollment$/.test(url.pathname)) {
       try { await changeStudentEnrollment(db,teacherId,url.pathname.split("/")[3],await readJson(request));send(response,200,{dashboard:await dashboard()},origin); }
       catch(error){send(response,httpStatusForError(error,422),{error:publicErrorMessage(error)},origin);}return;
