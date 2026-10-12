@@ -325,3 +325,12 @@ Rollback: servir la Preview e73ba0e / dri00dpue o revertir este commit de produc
 
 
 Comprobación adicional de foto y cobertura parcial: segundo niño ficticio local, alta confirmada antes del fallo simulado de foto, reintento exclusivo de PUT foto exitoso en 30 ms, miniatura y toast «¡Foto guardada!» sin nueva inscripción. Recibo independiente confirma exactamente dos niños, conserva los registros del primero y barras 1/2 (50 %). Se retiró también el indicador redundante heredado en Mi aula habitual; cada fase expone una sola carga. La acción habitual de guardar sigue disponible para reintentar errores, sin descartar campos.
+
+
+### UX-QA-05 — Publicación para revisión
+
+Producto 7486997c6f6e11e1b9a67e97ee1504be2e5d4bf6, rama codex/ayni-qa-reloj-20261011 y árbol limpio al publicar. Preview https://ayni-aula-staging-hesxovasj-ayni4.vercel.app/#planificar?tab=diagnostic&step=0&mode=choose — dpl_AGWxHGffXg3dggWb5yTbxJZRFeEo READY, SHA exacto/equipo/proyecto/target verificados. Build cloud Next y TypeScript PASS. Reloj QA habilitado solo en esta Preview y la docente permitida; benchmark permanece desactivado. Sin promoción ni cambios de configuración global.
+
+Smoke cloud de siete lecturas PASS: auth/config y health 200; clock, classroom/settings, benchmark y las dos fuentes diagnósticas nuevas/actualizadas 401 sin sesión Ayni. Tiempos curl 2,824–4,924 s con CLI/protección/carga fría; no equivalen a un guardado ni a sus fases de servidor/Supabase. Consulta posterior del proyecto (2026-10-12T13:07:11.495Z) confirma Production dpl_EgekhWXwVjaM9iCcRc8mpJn2Eoc4 / ea206bf179841f6a85f43dbec95c391a47b12674 intacta.
+
+Nueva Preview visible en Side Panel; mostró formulario de ingreso vacío, captura privada preview-current.jpg. Se solicitó acceso manual QA para comprobar «Conoce a tu grupo» con los tres niños existentes y el reloj. Comprobación autenticada final y aprobación humana pendientes; no atribuir a cloud las capturas funcionales locales. No se completaron entrevistas u observaciones remotas. Servidor local y pestaña de pruebas cerrados; PGlite y recibos ficticios conservados. Rollback de producto sigue e73ba0e/dri00dpue.
