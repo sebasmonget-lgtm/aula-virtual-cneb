@@ -577,3 +577,5 @@ La regresión RLS local adicional detectó solo un supuesto desactualizado del h
 ## QA interactivo — matrícula y menú inicial (2026-10-12)
 
 UX-QA-07 / ADR-127: matrícula completada se guarda explícitamente por aula en profiles.preferences.enrollment_completed_at, sin migraciones y sin modificar setup_submission. Se lee en dashboard y se refleja con check; existen niños no equivale a confirmación. Menú previo a Mi año: solo Mi preparación y Más funciones. Entrevistas/observaciones mantienen retorno y borradores; posterior confirmación anual conserva cinco destinos/Hoy. Pruebas focales y builds PASS. Cuenta remota no se modificó ni se avanzó; clic histórico no persistido requiere nueva confirmación humana. Producción no se publica.
+
+Publicado solo Preview UX-QA-07: 57847ff / https://ayni-aula-staging-eojwqll9a-ayni4.vercel.app/#preparacion, READY y ocho smoke PASS. Production ea206bf intacta. Usuaria inició sesión manualmente; portada verifica tres niños, Celeste 5 años, QA 16/02/2026 08:00 Lima y navegación reducida. Confirmación histórica ausente: no rellenar automáticamente; pendiente nuevo clic de la docente y su revisión.
