@@ -217,4 +217,40 @@ Prueba de navegador local con backend real PGlite y proxy de fallos: el primer P
 Medición remota preparada: endpoint y panel diagnóstico exclusivos de docente QA, Preview, Origin válido y flags de prueba. Tres casos: reproducción del recorrido secuencial con logo, corregido con logo y corregido básico. Cada uno usa clones temporales de tablas en una transacción que termina obligatoriamente en rollback. El aula Celeste y su logo no se usan como datos ficticios ni se reemplazan. El propietario autorizó retirar **únicamente los dos logos ficticios** creados por esta prueba. El HTTP de este arnés incluye preparación de clones, rollback, comprobación del reintento y limpieza; la fase de guardado se informa por separado, sin confundirla con un alta ordinaria.
 
 Pendientes de esta ronda: medir antes/después en Supabase/Storage reales, registrar fases y límites, publicar Preview con commit limpio, comprobar Production intacta y mostrar el resultado en Side Panel. Rollback de aplicación: Preview 6092601; la migración es aditiva y compatible, sin borrar datos ni restaurar calendarios privados. Desactivar los flags del arnés al cerrar la medición.
-`nValidación previa al despliegue: typecheck posterior a Next, lint de fuente, Next/webpack y Vinext finales PASS. Detector de los componentes modificados sin hallazgos. La prueba funcional local confirma indicador único, formulario conservado y reintento confirmado por servidor. Sin más rediseños. Recibos finales: typecheck-release, lint-release, next-release, vinext-release, calendar-final-guards y full-final en .local/setup-performance-qa/.
+
+Validación previa al despliegue: typecheck posterior a Next, lint de fuente, Next/webpack y Vinext finales PASS. Detector de los componentes modificados sin hallazgos. La prueba funcional local confirma indicador único, formulario conservado y reintento confirmado por servidor. Sin más rediseños. Recibos finales: typecheck-release, lint-release, next-release, vinext-release, calendar-final-guards y full-final en .local/setup-performance-qa/.
+
+
+### UX-QA-03: Preview de medición
+
+Commit de producto 28bdde05cea93f659372478ebaaebcaefc2750ef, árbol limpio al publicar. Preview https://ayni-aula-staging-a5hfavnq9-ayni4.vercel.app/ — dpl_A2dX7oaWLWVU1jYqCZWLia5F6wwi READY, target Preview, SHA/equipo/proyecto verificados. Build cloud Next PASS. Smoke HTTP de lectura PASS: config 200, reloj/ajustes/diagnóstico sin sesión 401, health 200. Tiempos de la comprobación simultánea fría: 4,620 / 4,630 / 4,642 / 2,997 / 2,990 s; no son tiempos de guardar ni de la pantalla completa. Production sigue dpl_EgekhWXwVjaM9iCcRc8mpJn2Eoc4 / ea206bf179841f6a85f43dbec95c391a47b12674 según recibo independiente posterior.
+
+Side Panel muestra el ingreso de esta nueva Preview. Se pide ingreso manual QA, sin introducir credenciales ni transferir cookies. La comparación remota requiere esa sesión; no declarar aún tiempos de guardado Supabase. Flags del diagnóstico habilitados exclusivamente en esta Preview para la medición autorizada y pendientes de desactivar en la entrega final. No se avanzó al registro de niños.
+
+### UX-QA-03: medición remota y conservación
+
+Navegador autenticado QA, reloj 16/02/2026 08:00 Lima, misma Preview/Supabase/Storage. Un solo clic al diagnóstico autorizado ejecutó tres escenarios. No se introdujeron datos en el aula Celeste ni se registraron niños.
+
+| Fase medida | Anterior con logo | Corregido con logo | Corregido básico |
+|---|---:|---:|---:|
+| Guardado transaccional central | 2,146 s | 2,107 s | 1,364 s |
+| Generar calendario | 36,229 s / 305 INSERT | 0 s / 0 INSERT | 0 s / 0 INSERT |
+| Cargar dashboard completo | 1,686 s | No se requiere | No se requiere |
+| Total central servidor | 40,061 s | 2,108 s | 1,364 s |
+| Subida real a Storage, incluida en guardado | 0,466 s | 0,430 s | Sin logo |
+| Normalizar logo, incluido en guardado | 17,44 ms | 18,19 ms | <1 ms |
+| Consultas + espera de red central | 39,546 s / 334 consultas | 1,658 s / 14 consultas | 1,363 s / 12 consultas |
+| Autenticación, fuera del núcleo | 184 ms | 226 ms | 167 ms |
+| Adquirir conexión, fuera del núcleo | 707 ms | <1 ms | 682 ms |
+| HTTP del arnés completo | 44,607 s | 6,514 s | 5,248 s |
+| HTTP menos servidor del arnés | 248 ms | 240 ms | 277 ms |
+
+El calendario representa aproximadamente 90,4 % del tiempo central anterior. El arnés HTTP incluye clones temporales, prueba de reintento, rollback y limpieza de Storage; no presentar sus 5,248/6,514 s como guardado normal. Las fases se superponen: SQL/red y logo están incluidos en guardado; no sumarlas dos veces. SQL/red mide la espera del cliente PostgreSQL, no exclusivamente CPU en Supabase. El núcleo usa SAVEPOINT/RELEASE dentro de una transacción externa para garantizar rollback; el flujo real COMMIT y la respuesta perdida se verificaron en las pruebas funcionales locales y de servicio.
+
+Objetivo básico <2 s: conseguido para el núcleo remoto de guardado (1,364 s), sin acreditar aún un clic→pantalla normal <2 s. Auth, conexión fría y transporte pueden llevar una solicitud normal por encima de ese umbral; no se modifica el límite de conexiones ni su liberación rápida por una promesa no medida. Se elimina el cuello de botella real de 36 s sin alterar seguridad, región ni límites del pool. El frontend local tarda <1 ms en preparar y 168 ms clic→confirmación de reintento. Mantener la medición de esperas en el resto del QA.
+
+Los tres informes confirman idempotencia, rollback y retirada de los dos únicos logos ficticios creados. Consulta independiente posterior: una sola aula QA activa, cero niños, logo original vinculado y cinco objetos Storage, como antes. Lecturas detalladas posteriores coinciden en 83 tablas; únicamente preparation_dispatch_receipts varía por nonces efímeros de dos minutos del programador preexistente. La huella global inicial/final NO coincide y no se declara tal comparación como PASS. Código existente de dispatch y la variación aislada entre lecturas explican ese registro técnico; no hay trabajos pendientes ni aumento de ai_usage_events. No se modifica ni se detiene ese proceso fuera de alcance. Recibos privados: remote-measurements.json, benchmark-before/after, fingerprint-detail-one/two y conservation-receipt. La comparación atómica de 84 tablas durante la migración sí fue PASS.
+
+Fuente oficial, feriados y gestión, ausencia de inserciones al consultar, protección de ediciones, referencias históricas, planificación anual/proyectos y Hoy se validan con los casos funcionales de calendario. Los registros particulares siguen en sus tablas propias. Años sin fuente publicada permanecen explícitamente no disponibles. El recorrido manual completo hasta diciembre y documentos Word siguen pendientes de las pantallas posteriores; no declararlos validados por estas pruebas.
+
+Se prepara entrega final de Preview con ambos flags de benchmark desactivados y reloj QA conservado. Revisión humana pendiente. No avanzar a niños.
