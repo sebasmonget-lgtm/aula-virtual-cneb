@@ -1,3 +1,4 @@
+import { currentSchoolYear, provisionAccountSchoolYear } from "../src/lib/account-school-year.mjs";
 import { dniLoginAlias } from "./dni-login.mjs";
 import { supabaseServiceHeaders } from "../src/lib/supabase-service-headers.mjs";
 
@@ -33,13 +34,15 @@ export async function listAuthUsers(config) {
 
 export async function createTeacherAccount(config) {
   const alias = accountInput(config);
+  const schoolYear = currentSchoolYear();
   const name = String(config.name ?? "").trim();
   if (name && (name.length < 2 || name.length > 100)) throw new Error("El nombre debe tener entre 2 y 100 caracteres.");
   const created = await adminRequest(config, "/auth/v1/admin/users", {
     method: "POST",
     body: JSON.stringify({ email: alias, password: config.password, email_confirm: true,
-      app_metadata: { ayni_role: "teacher" }, ...(name ? { user_metadata: { display_name: name } } : {}) }),
+      app_metadata: { ayni_role: "teacher", school_year: schoolYear }, ...(name ? { user_metadata: { display_name: name } } : {}) }),
   });
+  if (config.db) await provisionAccountSchoolYear(config.db, created.id, schoolYear, name || "Docente");
   return { id: created.id };
 }
 

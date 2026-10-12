@@ -67,13 +67,10 @@ test("calendario 2026 aplica feriados, gestión, overrides y conserva proyectos 
     await saveClassroomOverride(db,{teacherId:teacher,classroomId:setup.classroomId,date:"2026-04-06",isInstructional:false,reason:"Actividad institucional"});
     const effective=await loadEffectiveCalendar(db,{teacherId:teacher,classroomId:setup.classroomId,from:"2026-04-06",to:"2026-04-06"});
     assert.equal(effective.days[0].is_instructional,false);assert.equal(effective.days[0].school_override,true);
-    await assert.rejects(saveClassroomOverride(db,{teacherId:teacher,classroomId:setup.classroomId,date:"2026-04-02",isInstructional:true,reason:"Recuperación"}),/flujo autorizado/);
-    await saveClassroomOverride(db,{teacherId:teacher,classroomId:setup.classroomId,date:"2026-04-02",isInstructional:true,reason:"Jornada recuperada por el aula",confirmOfficialException:true});
+    await assert.rejects(saveClassroomOverride(db,{teacherId:teacher,classroomId:setup.classroomId,date:"2026-04-02",isInstructional:true,reason:"Recuperación"}),/fechas oficiales/);
+    await assert.rejects(saveClassroomOverride(db,{teacherId:teacher,classroomId:setup.classroomId,date:"2026-04-02",isInstructional:true,reason:"Jornada",confirmOfficialException:true}),/fechas oficiales/);
     const exception=await loadEffectiveCalendar(db,{teacherId:teacher,classroomId:setup.classroomId,from:"2026-04-02",to:"2026-04-02"});
-    assert.equal(exception.days[0].is_instructional,true);
-    assert.equal(exception.days[0].school_override,true);
-    assert.equal(exception.days[0].calendar_type,"school_instructional_override");
-    assert.deepEqual(validateSelectedInstructionalDates(exception.days,["2026-04-02"],"2026-04-02","2026-04-02"),["2026-04-02"]);
+    assert.equal(exception.days[0].is_instructional,false);
     assert.equal((await db.query(`select calendar_type from school_calendar_days where id=$1`,[exception.days[0].id])).rows[0].calendar_type,"national_holiday");
     const experience=randomUUID();await db.query(`insert into learning_experiences(id,classroom_id,type,title,purpose,starts_on,ends_on,status,details)
       values($1,$2,'project','Proyecto antiguo','Explorar','2026-04-01','2026-04-30','active','{}'::jsonb)`,[experience,setup.classroomId]);

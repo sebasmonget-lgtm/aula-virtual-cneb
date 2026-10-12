@@ -1,4 +1,4 @@
-import { apiFetch } from "./ayni-api-fetch";
+import { apiFetch, apiJson } from "./ayni-api-fetch";
 export type LocalStudent = { age_years?: number; id: string; name: string; full_name?: string; evidence_count?: number; competency_count?: number; last_observed_at?: string | null };
 export type TeacherConfirmedAssessment = { id: string; period_start: string; period_end: string; information_status: "sufficient" | "insufficient"; evidence_overview: string; strengths_and_advances: string[]; support_needs: string[]; next_opportunities: string[]; teacher_confirmed_at: string };
 export type TeacherConfirmedConclusion = { id: string; period_start: string; period_end: string; information_status: "sufficient" | "insufficient"; conclusion_text: string; support_or_conditions: string[]; next_steps: string[]; teacher_confirmed_at: string };
@@ -167,15 +167,17 @@ export async function loadAiUsageSummary(): Promise<AiUsageSummary> {
   return response.json();
 }
 
-export async function loadPilotSetup(): Promise<{ configured: boolean }> {
+export async function loadPilotSetup(): Promise<{ configured: boolean; year?: number }> {
   const response = await apiFetch(`${apiUrl}/api/pilot/setup`, { cache: "no-store" });
   if (!response.ok) throw new Error("No se pudo consultar la configuración del aula.");
   return response.json();
 }
 
-export async function savePilotSetup(input: { teacherName: string; institutionName: string; section: string; institutionCode?: string; district?: string; ugel?: string; directorName?: string; age: number; year: number; startsOn: string; endsOn: string; castellanoL2Applicable: boolean; religionApplicable: boolean; createLogo?: boolean; logoInitials?: string; logoPrimary?: string; logoAccent?: string; logoUpload?: { mimeType: "image/png" | "image/jpeg" | "image/webp"; base64: string } }): Promise<LocalDashboard> {
-  const response = await apiFetch(`${apiUrl}/api/pilot/setup`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(input) });
-  const result = await response.json() as { dashboard?: LocalDashboard; error?: string };
+export async function savePilotSetup(input: { submissionId?: string; teacherName: string; institutionName: string; section: string; institutionCode?: string; district?: string; ugel?: string; directorName?: string; age: number; year: number; startsOn: string; endsOn: string; castellanoL2Applicable: boolean; religionApplicable: boolean; createLogo?: boolean; logoInitials?: string; logoPrimary?: string; logoAccent?: string; logoUpload?: { mimeType: "image/png" | "image/jpeg" | "image/webp"; base64: string } }): Promise<LocalDashboard> {
+  const started = performance.now();
+  const response = await apiFetch(`${apiUrl}/api/pilot/setup`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ ...input, initialSnapshot: true }) });
+  const result = await apiJson<{ dashboard?: LocalDashboard; error?: string }>(response);
+  if (process.env.NEXT_PUBLIC_AYNI_QA_CLOCK === "1") console.info("ayni_setup_http", JSON.stringify({ httpMs: Math.round(performance.now() - started), status: response.status, serverTiming: response.headers.get("server-timing") }));
   if (!response.ok || !result.dashboard) throw new Error(result.error ?? "No se pudo configurar el aula.");
   return result.dashboard;
 }

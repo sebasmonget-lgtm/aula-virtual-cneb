@@ -141,7 +141,7 @@ export function createRequestAuth({ mode = 'local', localTeacherId, supabaseUrl,
     const credentials = requestToken(request);
     if (credentials?.source === 'bearer') {
       const user = await verifyToken(credentials.token);
-      return { teacherId: user.id, role: user.app_metadata.ayni_role, requestId, db, authMode: mode, tokenSource: 'bearer' };
+      return { teacherId: user.id, role: user.app_metadata.ayni_role, schoolYear: user.app_metadata.school_year, requestId, db, authMode: mode, tokenSource: 'bearer' };
     }
     const retained = readSignedRefresh(request.headers.cookie, sessionSigningKey);
     if (retained) readActivity(request.headers.cookie, sessionSigningKey, now(), retained.token);
@@ -159,7 +159,7 @@ export function createRequestAuth({ mode = 'local', localTeacherId, supabaseUrl,
       user = await verifyToken(token);
       cookies = sessionCookies(renewed);
     } else cookies = [refreshCookie(retained.token), activityCookie(retained.token)];
-    return { teacherId: user.id, role: user.app_metadata.ayni_role, requestId, db, authMode: mode, tokenSource: 'cookie', sessionCookies: cookies };
+    return { teacherId: user.id, role: user.app_metadata.ayni_role, schoolYear: user.app_metadata.school_year, requestId, db, authMode: mode, tokenSource: 'cookie', sessionCookies: cookies };
   }
 
   async function signIn(dni, password) {

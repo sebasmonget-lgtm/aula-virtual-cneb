@@ -49,6 +49,8 @@ import { confirmedProjectFormalContext } from "../src/lib/direct-ai-context-cont
 import { ANNUAL_PLAN_TEMPLATE_FORMAT, validateAnnualPlanProposal } from "../src/lib/annual-plan-contract.mjs";
 import { annualCalendarDay } from "../src/lib/annual-plan-schedule.mjs";
 import { buildFlexibleAnnualSchedule, buildEditableAnnualSchedule, defaultInitialStage, nationalCalendarBlocks2026, nationalSchoolHolidays2026, validateAnnualCalendar } from "../src/lib/annual-plan-calendar.mjs";
+import { measureSetupPhase } from "../src/lib/setup-performance.mjs";
+import { initialClassroomDashboard } from "../src/lib/initial-classroom-dashboard.mjs";
 import { candidateProjectDates, ensureSchoolCalendar, loadEffectiveCalendar, reprogramActivity, saveClassroomOverride,
   validateSelectedInstructionalDates } from "../src/lib/school-calendar-service.mjs";
 import { lockClassroomSchedule } from "../src/lib/activity-schedule-integrity.mjs";
@@ -114,6 +116,8 @@ import { limaToday } from "../src/lib/activity-schedule-integrity.mjs";
 import { loadPlanningFeedback, planningFeedbackText, resolveProjectPlanningFeedback } from "../src/lib/planning-feedback.mjs";
 import { expectedRevision, assertRevision, conflictPayload, httpStatusForError, isVersionConflict, versionTransaction, VersionConflictError, publicErrorMessage } from "../src/lib/version-integrity.mjs";
 import { createRequestAuth, RequestAuthError } from "./request-auth.mjs";
+import { currentSchoolYear, provisionAccountSchoolYear } from "../src/lib/account-school-year.mjs";
+import { pilotSchoolYearDefaults } from "../src/lib/pilot-school-year-defaults.mjs";
 import { createFirstAdmin, createTeacherAccount, listAuthUsers, recoverFirstAdmin, resetPasswordByUserId } from "./teacher-account-admin-service.mjs";
 import { loadAdminDirectory } from "./admin-directory.mjs";
 import { timingSafeEqual } from "node:crypto";
@@ -388,7 +392,7 @@ async function decodePrivateMedia(value) {
   return { bytes, mimeType, audio };
 }
 
-async function handleAuthenticatedRequest({ teacherId, requestId, db, preparationItemId, jobClassroomId }, request, response) {
+async function handleAuthenticatedRequest({ teacherId, requestId, db, preparationItemId, jobClassroomId, schoolYear }, request, response) {
 const qaDailyClock = currentPedagogicalClock() ?? localQaDailyClock;
 async function dashboard() {
   const classroomResult = await db.query(`select id from classrooms where teacher_id = $1 and status = 'active' limit 1`, [teacherId]);
@@ -496,8 +500,8 @@ async function dashboard() {
     pedagogical_blocks: activityPedagogicalBlocks(block.activity_details ?? {}, block.steps ?? [], normalizeCriteria(block.criteria ?? [])) }));
   const attendanceRecorded = Number(attendanceResult.rows[0]?.recorded_count ?? 0) > 0;
   const legacyException=exceptionResult.rows[0]??null;
-  const calendarException=legacyException??(effectiveCalendarDay&&!effectiveCalendarDay.is_instructional?{
-    type:effectiveCalendarDay.calendar_type,label:effectiveCalendarDay.reason,is_instructional:false}:null);
+  const calendarException=(effectiveCalendarDay&&!effectiveCalendarDay.is_instructional?{
+    type:effectiveCalendarDay.calendar_type,label:effectiveCalendarDay.reason,is_instructional:false}:null)??legacyException;
   const journey = resolveDailyState({ now, scheduleEntries: rawBlocks, attendanceRecorded, calendarException });
   const blocks = rawBlocks.map((block) => ({
     ...block,
@@ -569,12 +573,11 @@ async function annualCalendarForClassroom(row) {
   }
   const exceptions = (await db.query(`select exception_date,type,label,is_instructional from calendar_exceptions where classroom_id=$1 order by exception_date`, [row.id])).rows;
   const datedExceptions = exceptions.map((item) => ({ ...item, exception_date: annualCalendarDay(item.exception_date) }));
-  const customDates = new Set(datedExceptions.map((item) => item.exception_date));
-  const defaultHolidays = Number(row.year) === 2026 ? nationalSchoolHolidays2026().filter((item) => !customDates.has(item.exception_date)) : [];
+  const defaultHolidays = Number(row.year) === 2026 ? nationalSchoolHolidays2026() : [];
   return { school_year: row.year, starts_on: annualCalendarDay(row.starts_on), ends_on: annualCalendarDay(row.ends_on),
-    blocks: blocks.map((block) => ({ ...block, start_date: annualCalendarDay(block.start_date), end_date: annualCalendarDay(block.end_date) })),
+    blocks: Number(row.year) === 2026 ? nationalCalendarBlocks2026().map(block => ({ ...block, id:blocks.find(item => Number(item.sort_order) === block.sort_order)?.id, editable:false })) : [],
     initial_stage: stage ?? null,
-    exceptions: [...defaultHolidays, ...datedExceptions].sort((a, b) => a.exception_date.localeCompare(b.exception_date)) };
+    exceptions: [...defaultHolidays, ...datedExceptions.filter(item => !defaultHolidays.some(holiday => holiday.exception_date === item.exception_date))].sort((a, b) => a.exception_date.localeCompare(b.exception_date)) };
 }
 
 async function replaceAnnualProjectSlots(planId, schedule, runner = db) {
@@ -796,20 +799,45 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       send(response, 200, { ok: true, engine: dbMode, ...(dbMode === "local" ? { storage: ".local/pgdata" } : {}) }, origin);
       return;
     }
+    if (request.method === "POST" && url.pathname === "/api/qa/setup-benchmark") {
+      // Auth, exact QA owner, Preview, and Origin were checked before dispatch.
+      const { benchmarkSetup } = await import("../src/lib/qa-setup-benchmark.mjs");
+      const body = await readJson(request);
+      const result = await benchmarkSetup(db, {teacherId,scenario:body.scenario,logoStorage,clock:qaDailyClock,
+        loadDashboard:async sandbox => {
+          let status,payload;
+          const capture={setHeader(){},hasHeader(){return false;},writeHead(code){status=code;},end(value){payload=JSON.parse(String(value));}};
+          await handleAuthenticatedRequest({teacherId,requestId,db:sandbox}, {method:"GET",url:"/api/dashboard",headers:request.headers},capture);
+          if(status!==200)throw new Error("No se pudo medir el panel QA.");
+          return payload;
+        }});
+      send(response,200,result,origin,{"cache-control":"private, no-store"});return;
+    }
     if (request.method === "GET" && url.pathname === "/api/pilot/setup") {
       const classroom = (await db.query(`select id from classrooms where teacher_id=$1 and status='active'`, [teacherId])).rows[0];
-      send(response, 200, { configured: Boolean(classroom) }, origin);
+      const year = Number.isInteger(schoolYear) ? schoolYear : currentSchoolYear();
+      if (!classroom) await provisionAccountSchoolYear(db, teacherId, year);
+      send(response, 200, { configured: Boolean(classroom), year, calendarAvailable:Boolean(pilotSchoolYearDefaults(year)) }, origin);
       return;
     }
     if (request.method === "POST" && url.pathname === "/api/pilot/setup") {
       try {
         const body = await readJson(request);
+        const official = pilotSchoolYearDefaults(body.year);
+        if (!official || body.startsOn !== official.startsOn || body.endsOn !== official.endsOn) throw new Error("Las fechas oficiales del calendario MINEDU no se pueden modificar.");
         if (!logoStorage && dbMode === "postgres" && (body.logoUpload || body.createLogo)) {
           send(response, 503, { error: "La carga de logos estará disponible al conectar Storage." }, origin);
           return;
         }
-        await createPilotClassroom(db, teacherId, body, { assetsDir, logoStorage });
-        send(response, 201, { dashboard: await dashboard() }, origin);
+        const saved = await measureSetupPhase("save", () => createPilotClassroom(db, teacherId, body, { assetsDir, logoStorage }));
+        const data = body.initialSnapshot === true && !saved.replayed
+          ? initialClassroomDashboard(saved, qaDailyClock ?? {
+            date: new Intl.DateTimeFormat("en-CA", { timeZone: "America/Lima", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date()),
+            time: new Intl.DateTimeFormat("en-GB", { timeZone: "America/Lima", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date()),
+          }, `http://127.0.0.1:${port}`)
+          : await measureSetupPhase("dashboard", () => dashboard());
+        if (qaDailyClock) data.today.qa_clock = qaDailyClock;
+        send(response, saved.replayed ? 200 : 201, { dashboard: data }, origin);
       } catch (error) { send(response, httpStatusForError(error, 422), { error: publicErrorMessage(error) }, origin); }
       return;
     }
@@ -1523,19 +1551,12 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         }
         if (blocks.some((block) => typeof block.label !== "string" || !block.label.trim() || block.label.length > 120)) throw new Error("Cada bloque necesita un nombre breve.");
         const valid = validateAnnualCalendar({ school_year: context.year, blocks });
-        const originalById = new Map(context.calendar.blocks.map((block) => [block.id, block]));
+        if (valid.blocks.length !== context.calendar.blocks.length) throw new Error("El calendario oficial MINEDU es de solo lectura. Registra las incidencias del aula por separado.");
         for (const original of context.calendar.blocks.filter((block) => block.editable === false)) {
           const next = valid.blocks.find((block) => block.id === original.id);
           if (!next || ["type", "label", "start_date", "end_date"].some((field) => next[field] !== original[field])) throw new Error("Hay un bloque del calendario que no se puede modificar.");
         }
         await db.exec("begin");
-        if (existing) await db.query(`update project_slots set calendar_block_id=null where annual_plan_id=$1`, [existing.id]);
-        await db.query(`delete from calendar_blocks where school_year_id=$1`, [context.school_year_id]);
-        for (const [index, block] of valid.blocks.entries()) {
-          await db.query(`insert into calendar_blocks(id,school_year_id,type,label,start_date,end_date,editable,sort_order)
-            values($1,$2,$3,$4,$5::date,$6::date,$7,$8)`, [originalById.has(block.id) ? block.id : randomUUID(),
-            context.school_year_id, block.type, block.label.trim(), block.start_date, block.end_date, block.editable !== false, index]);
-        }
         await db.query(`insert into initial_stages(id,school_year_id,name,duration_weeks,purpose,suggested_experiences,what_to_observe,family_actions,diagnostic_focus,teacher_notes)
           values($1,$2,$3,$4,$5,$6::jsonb,$7::jsonb,$8::jsonb,$9::jsonb,$10)
           on conflict(school_year_id) do update set name=excluded.name,duration_weeks=excluded.duration_weeks,purpose=excluded.purpose,
@@ -3005,7 +3026,7 @@ export async function handleApiRequest(request, response) {
   return requestDatabaseScope.run(requestDb, async () => {
   try {
   let context;
-  try { context = await requestAuth.resolve(request, requestDb); }
+  try { context = await measureSetupPhase("auth", () => requestAuth.resolve(request, requestDb)); }
   catch (error) {
     const status = error instanceof RequestAuthError ? error.status : 401;
     send(response, status, { error: status === 503 ? "No se pudo verificar la sesión." : "Inicia sesión para continuar." }, origin,
@@ -3036,7 +3057,7 @@ export async function handleApiRequest(request, response) {
         const body = await readJson(request);
         if (typeof body.name !== "string" || body.name.trim().length < 2 || body.name.trim().length > 100)
           throw new Error("Nombre inválido.");
-        const result = await createTeacherAccount({ ...authAdminConfig, dni: body.dni, password: body.password, name: body.name });
+        const result = await createTeacherAccount({ ...authAdminConfig, db:context.db, dni: body.dni, password: body.password, name: body.name });
         send(response, 201, result, origin); return;
       }
       const reset = url.pathname.match(/^\/api\/admin\/accounts\/([0-9a-f-]{36})\/password$/i);
@@ -3054,6 +3075,11 @@ export async function handleApiRequest(request, response) {
     send(response, 403, { error: "Esta sección es para docentes." }, origin); return;
   }
   const previewClock = readPreviewQAClock(request, context);
+  if (url.pathname === "/api/qa/setup-benchmark") {
+    if (!previewClock || process.env.AYNI_QA_SETUP_BENCHMARK !== "1") {send(response,404,{error:"Prueba QA no disponible."},origin);return;}
+    if (request.method !== "POST") {send(response,405,{error:"Método no disponible."},origin);return;}
+    if (!origin || !allowedOrigins.has(origin)) {send(response,403,{error:"Origen requerido."},origin);return;}
+  }
   if (url.pathname === "/api/qa/clock") {
     if (!previewClock) { send(response, 404, { error: "Reloj QA no disponible." }, origin); return; }
     if (request.method === "GET") {

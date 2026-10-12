@@ -1,5 +1,6 @@
 import { PGlite } from "@electric-sql/pglite";
 import { supabaseRootCa2021 } from "./supabase-root-ca-2021.mjs";
+import { measureSetupPhase, setupPerformanceActive } from "../src/lib/setup-performance.mjs";
 
 const transactionCommand = (sql) => String(sql).trim().replace(/;$/, "").toLowerCase();
 
@@ -11,15 +12,19 @@ export function createPostgresSession(pool) {
   const open = () => { if (closed) throw new Error("La conexión de esta petición ya terminó."); };
   const query = async (sql, params) => {
     open();
-    return (transactionClient ?? pool).query(sql, params);
+    if (!setupPerformanceActive()) return (transactionClient ?? pool).query(sql, params);
+    if (transactionClient) return measureSetupPhase("db_query", () => transactionClient.query(sql, params));
+    const client = await measureSetupPhase("db_connect", () => pool.connect());
+    try { return await measureSetupPhase("db_query", () => client.query(sql, params)); }
+    finally { client.release(); }
   };
   const exec = async (sql) => {
     open();
     const command = transactionCommand(sql);
     if (command === "begin") {
       if (transactionClient) throw new Error("Ya existe una transacción activa.");
-      const client = await pool.connect();
-      try { await client.query("BEGIN"); transactionClient = client; }
+      const client = await measureSetupPhase("db_connect", () => pool.connect());
+      try { await measureSetupPhase("db_query", () => client.query("BEGIN")); transactionClient = client; }
       catch (error) { client.release(); throw error; }
       return;
     }
@@ -27,7 +32,7 @@ export function createPostgresSession(pool) {
       if (!transactionClient) throw new Error("No hay una transacción activa.");
       const client = transactionClient;
       transactionClient = null;
-      try { await client.query(command.toUpperCase()); }
+      try { await measureSetupPhase("db_query", () => client.query(command.toUpperCase())); }
       finally { client.release(); }
       return;
     }
@@ -40,7 +45,7 @@ export function createPostgresSession(pool) {
       const client = transactionClient;
       await client.query(`SAVEPOINT ${name}`);
       try {
-        const result = await work({ query: (sql, params) => client.query(sql, params), exec: (sql) => client.query(sql) });
+        const result = await work({ query: (sql, params) => measureSetupPhase("db_query", () => client.query(sql, params)), exec: (sql) => measureSetupPhase("db_query", () => client.query(sql)) });
         await client.query(`RELEASE SAVEPOINT ${name}`);
         return result;
       } catch (error) {
@@ -48,11 +53,11 @@ export function createPostgresSession(pool) {
         throw error;
       }
     }
-    const client = await pool.connect();
+    const client = await measureSetupPhase("db_connect", () => pool.connect());
     try {
-      await client.query("BEGIN");
-      const result = await work({ query: (sql, params) => client.query(sql, params), exec: (sql) => client.query(sql) });
-      await client.query("COMMIT");
+      await measureSetupPhase("db_query", () => client.query("BEGIN"));
+      const result = await work({ query: (sql, params) => measureSetupPhase("db_query", () => client.query(sql, params)), exec: (sql) => measureSetupPhase("db_query", () => client.query(sql)) });
+      await measureSetupPhase("db_query", () => client.query("COMMIT"));
       return result;
     } catch (error) {
       await client.query("ROLLBACK").catch(() => {});

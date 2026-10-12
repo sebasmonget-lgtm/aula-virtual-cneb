@@ -1,5 +1,9 @@
 # Decisiones de arquitectura
 
+## ADR 122 — Calendario oficial compartido y guardado confirmado
+
+Reutilizar school_calendar_versions/days mediante una base oficial sin school_year_id privado, precargada una vez por año publicado. RLS de solo lectura compartida y datos por aula separados; preservar versiones/IDs históricos, sin regeneración por alta. Una migración aditiva necesaria permite la base común y agrega setup_submission para deduplicar sin introducir metadata en contexto pedagógico. Asignar año de Lima en app_metadata al crear cuentas y provisionar school_years cuando existe calendario publicado. Fuente MINEDU 2026 RM 501-2025; años sin fuente no reciben fechas inventadas. Hoy/Mi año/proyectos consumen la misma base y guardas de servidor impiden modificar feriados/gestión. Guardado responde únicamente después de COMMIT con snapshot mínimo; reintentos recuperan el aula actual. Resultado de COMMIT incierto se consulta antes de retirar un logo. Server-Timing separa fases sin PII. Arnés remoto opcional exclusivo de QA/Preview usa clones y rollback, con cleanup de dos logos expresamente autorizado. Preview requiere checks y commit limpio; Production no se despliega.
+
 ## ADR 121 — Alta simple y ajustes posteriores de aula (2026-10-11)
 
 Decisión aprobada UX-QA-01: alta con colegio y aula visibles, logo/datos complementarios opcionales, fechas automáticas del calendario versionado del año, flags curriculares false iniciales y único CTA existente. No exponer calendario ni flags en el alta. Hoy solo hay fuente 2026; bloquear explícitamente años sin calendario para evitar inventarlo.

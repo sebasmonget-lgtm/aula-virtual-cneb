@@ -1,5 +1,9 @@
 # Memoria del proyecto Ayni Aula
 
+## Corrección del guardado y calendario compartido — 2026-10-11
+
+UX-QA-03: Celeste sí se guardó una vez, cero niños y logo preservado. La carga posterior del panel hacía 305 INSERT secuenciales de calendario. Propietario aprueba año automático por cuenta, calendario oficial precargado compartido, protección de fechas oficiales y conservación de históricos. Migración aditiva 202610110001 aplicada atómicamente en la base de pruebas actual; ensayo y aplicación conservan huellas de 84 tablas, incluidas Auth y Storage. Consulta independiente confirma Celeste, logo y 305 días compartidos. Idempotencia separada del contexto pedagógico y snapshot después de COMMIT. Suite completa 778 PASS; 42 focales posteriores validan las guardas finales de calendario. Medición real y publicación Preview pendientes; no afirmar el objetivo <2 s todavía. Dos logos ficticios pueden retirarse por autorización explícita; conservar Celeste/credenciales/otros datos. No avanzar a niños. Ver UX-QA-03.
+
 ## Preparación de QA interactivo — 2026-10-11
 
 UX-QA-02 aprobado: «Seleccionar logo» como botón accesible y estados de interacción claros en «Configura tu aula», incluidos controles de cabecera mientras esa pantalla está presente. Implementación limitada mediante marcador de pantalla; criterio general registrado en documento QA para revisar las otras pantallas posteriormente. Mantener estilo, logo opcional, único CTA principal, funcionalidad existente y ausencia de cambios de backend/IA/datos remotos. No avanzar al registro de niños; esperar revisión humana de Preview.

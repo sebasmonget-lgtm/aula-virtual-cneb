@@ -104,6 +104,7 @@ export function TeacherWorkspace() {
   const [saveError, setSaveError] = useState("");
   const [dashboard, setDashboard] = useState<LocalDashboard | null>(null);
   const [needsSetup, setNeedsSetup] = useState(false);
+  const [accountYear, setAccountYear] = useState<number | undefined>(undefined);
   const [databaseState, setDatabaseState] = useState<"checking" | "connected" | "offline">("checking");
   const [guidanceError, setGuidanceError] = useState(false);
   const [starting, setStarting] = useState(true);
@@ -135,7 +136,7 @@ export function TeacherWorkspace() {
   useEffect(() => {
     const controller = new AbortController();
     loadPilotSetup().then((setup) => {
-      if (!setup.configured) { setNeedsSetup(true); setDatabaseState("connected"); return null; }
+      if (!setup.configured) { setAccountYear(setup.year); setNeedsSetup(true); setDatabaseState("connected"); return null; }
       return loadLocalDashboard(controller.signal);
     })
       .then(async (data) => {
@@ -269,7 +270,7 @@ export function TeacherWorkspace() {
   const activityRunBlock = dashboard?.today.blocks.find((block) => block.id === activityRunBlockId) ?? null;
 
   // Setup has already committed; its busy exit guard must not block this transition.
-  if (needsSetup) return <PilotSetup onReady={(ready) => { setDashboard(ready); setNeedsSetup(false); setDatabaseState("connected"); navigate("Aula", true); }} />;
+  if (needsSetup) return <PilotSetup accountYear={accountYear} onReady={(ready) => { setDashboard(ready); setNeedsSetup(false); setDatabaseState("connected"); navigate("Aula", true); }} />;
   if (databaseState === "offline") return <main className="mx-auto max-w-xl space-y-4 p-6"><h1 className="text-2xl font-bold">No se pudo conectar con el aula</h1><p>Comprueba tu conexión y vuelve a intentarlo. Tu trabajo guardado seguirá disponible.</p><Button onClick={() => { setDatabaseState("checking"); setRetry((value) => value + 1); }}>Reintentar</Button></main>;
 
   return (

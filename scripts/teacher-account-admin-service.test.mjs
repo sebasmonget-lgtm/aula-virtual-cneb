@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { currentSchoolYear } from "../src/lib/account-school-year.mjs";
 import { dniLoginAlias } from "./dni-login.mjs";
 import { createFirstAdmin, createTeacherAccount, listAuthUsers, recoverFirstAdmin, resetPasswordByUserId, resetTeacherPassword } from "./teacher-account-admin-service.mjs";
 
@@ -18,7 +19,7 @@ test("the administrator provisions and resets by DNI without sending that DNI to
   await resetTeacherPassword({ ...base, fetchImpl });
   assert.equal(calls[0].options.method, "POST");
   assert.deepEqual(JSON.parse(calls[0].options.body), { email: alias, password: base.password,
-    email_confirm: true, app_metadata: { ayni_role: "teacher" } });
+    email_confirm: true, app_metadata: { ayni_role: "teacher", school_year:currentSchoolYear() } });
   assert.equal(calls[2].options.method, "PUT");
   assert.equal(JSON.parse(calls[2].options.body).password, base.password);
   assert.equal(calls.some(({ url, options }) => url.includes(base.dni) || options.body?.includes(base.dni)), false);

@@ -5,6 +5,7 @@ import { apiFetch } from "@/src/lib/ayni-api-fetch";
 import { localDatabaseApiUrl } from "@/src/lib/local-database";
 import { displayDate, setQADisplayClock } from "@/src/lib/display-date";
 import { canLeaveWorkspace } from "@/src/lib/workspace-location";
+import { QASetupPerformance } from "./qa-setup-performance";
 
 type Clock = { date: string; time: string };
 
@@ -68,6 +69,7 @@ export function QAClockControl({ children }: { children: ReactNode }) {
         <p>Solo esta cuenta QA en esta Preview. Los registros guardados conservan sus fechas.</p>
         {error && <p role="alert" className="mt-2">{error}</p>}
       </details>
+      {process.env.NEXT_PUBLIC_AYNI_QA_SETUP_BENCHMARK === "1" && <QASetupPerformance />}
     </aside>}
     {children}
   </>;

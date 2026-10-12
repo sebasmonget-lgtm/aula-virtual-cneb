@@ -16,6 +16,10 @@ export async function saveClassroomSettings(db,teacherId,input){
     if(!input?.expected||Object.keys(value).some(key=>input.expected[key]!==value[key]))throw new VersionConflictError('La configuración cambió. Recarga antes de guardar.');
     const next=input.settings;
     if(!next||![3,4,5].includes(next.age)||!Number.isInteger(next.year)||!validDate(next.startsOn)||!validDate(next.endsOn)||next.startsOn>next.endsOn||Number(next.startsOn.slice(0,4))!==next.year||Number(next.endsOn.slice(0,4))!==next.year||typeof next.castellanoL2Applicable!=='boolean'||typeof next.religionApplicable!=='boolean')throw new Error('Revisa la edad, el año y las fechas del aula.');
+    if (next.startsOn !== value.startsOn || next.endsOn !== value.endsOn) {
+      const official = pilotSchoolYearDefaults(next.year);
+      if (!official || next.startsOn !== official.startsOn || next.endsOn !== official.endsOn) throw new Error('Las fechas oficiales MINEDU no se pueden modificar.');
+    }
     const structural=['age','year','startsOn','endsOn'].some(key=>next[key]!==value[key]);
     if(structural){
       if(!pilotSchoolYearDefaults(next.year))throw new Error('El calendario oficial de ese año todavía no está disponible.');

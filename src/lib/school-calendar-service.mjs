@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { assertActivityScheduleMutable, limaToday, lockClassroomSchedule } from "./activity-schedule-integrity.mjs";
 import { assertRevision, expectedRevision } from "./version-integrity.mjs";
+import { nationalCalendarBlocks2026 } from "./annual-plan-calendar.mjs";
 
 const iso = (value) => {
   if (value instanceof Date) return value.toISOString().slice(0,10);
@@ -13,13 +14,7 @@ const isDate = (value) => /^\d{4}-\d{2}-\d{2}$/.test(value ?? "");
 export class SchoolCalendarError extends Error {
   constructor(reason, message) { super(message); this.name = "SchoolCalendarError"; this.reason = reason; }
 }
-const BLOCKS_2026=[
-  [0,"management","Gestión inicial","2026-03-02","2026-03-13"],[1,"instructional","Periodo lectivo 1","2026-03-16","2026-05-15"],
-  [2,"management","Semana de gestión","2026-05-18","2026-05-22"],[3,"instructional","Periodo lectivo 2","2026-05-25","2026-07-24"],
-  [4,"management","Semanas de gestión","2026-07-27","2026-08-07"],[5,"instructional","Periodo lectivo 3","2026-08-10","2026-10-09"],
-  [6,"management","Semana de gestión","2026-10-12","2026-10-16"],[7,"instructional","Periodo lectivo 4","2026-10-19","2026-12-18"],
-  [8,"management","Gestión final","2026-12-21","2026-12-31"]
-];
+const BLOCKS_2026 = nationalCalendarBlocks2026();
 
 export function classifyCalendarDay({ date, block = null, holiday = null }) {
   const day = new Date(`${date}T00:00:00Z`).getUTCDay();
@@ -36,6 +31,7 @@ export function classifyCalendarDay({ date, block = null, holiday = null }) {
 }
 
 export function effectiveCalendarDay(base, override = null) {
+  if (["national_holiday","management_week","weekend"].includes(base.calendar_type)) return { ...base, date:iso(base.date) };
   if (!override || override.reverted_at) return { ...base, date: iso(base.date) };
   return { ...base, date: iso(base.date), calendar_type: override.new_calendar_type,
     is_instructional: override.new_is_instructional, source: "Calendario del aula", reason: override.reason,
@@ -74,32 +70,10 @@ export function validateBlueprintDates(blueprints, selectedDates) {
 }
 
 export async function ensureSchoolCalendar(db, schoolYearId) {
-  let version = (await db.query(`select * from school_calendar_versions where school_year_id=$1 and status='active' limit 1`, [schoolYearId])).rows[0];
-  if (version) return version;
-  const schoolYear = (await db.query(`select id,year,starts_on,ends_on from school_years where id=$1`, [schoolYearId])).rows[0];
-  if (!schoolYear) throw new SchoolCalendarError("year_missing", "No se encontró el año escolar.");
-  if (Number(schoolYear.year) !== 2026) throw new SchoolCalendarError("calendar_unavailable", `El calendario oficial ${schoolYear.year} todavía no está cargado.`);
-  const id = randomUUID();
-  version = (await db.query(`insert into school_calendar_versions(id,school_year_id,calendar_year,name,version,source_name,source_url,source_metadata)
-    values($1,$2,$3,$4,'MINEDU-2026-RM-501-2025-v1','Ministerio de Educación del Perú',
-    'https://repositorio.minedu.gob.pe/handle/20.500.12799/11753',$5::jsonb) returning *`,
-  [id,schoolYearId,schoolYear.year,`Calendario MINEDU ${schoolYear.year}`,JSON.stringify({ resolution:"RM 501-2025-MINEDU",instructional_weeks:36,management_weeks:8 })])).rows[0];
-  // The official base is independent from the legacy, editable annual-plan blocks.
-  // Classroom differences belong in classroom_calendar_overrides.
-  const blocks = BLOCKS_2026.map(([sort_order,type,label,start_date,end_date]) =>
-    ({ sort_order,type,label,start_date,end_date }));
-  const holidays = (await db.query(`select * from school_calendar_holidays where calendar_year=$1`,[schoolYear.year])).rows;
-  const start = blocks.length ? iso(blocks[0].start_date) : iso(schoolYear.starts_on);
-  const end = blocks.length ? iso(blocks.at(-1).end_date) : iso(schoolYear.ends_on);
-  for (let cursor = new Date(`${start}T00:00:00Z`); cursor <= new Date(`${end}T00:00:00Z`); cursor.setUTCDate(cursor.getUTCDate()+1)) {
-    const date = cursor.toISOString().slice(0,10);
-    const block = blocks.find((item) => iso(item.start_date)<=date && date<=iso(item.end_date));
-    const holiday = holidays.find((item) => iso(item.holiday_date)===date);
-    const day = classifyCalendarDay({ date, block, holiday });
-    await db.query(`insert into school_calendar_days(id,calendar_version_id,date,day_of_week,calendar_type,is_instructional,source,reason,editable,school_override)
-      values($1,$2,$3::date,$4,$5,$6,$7,$8,$9,false) on conflict(calendar_version_id,date) do nothing`,
-    [randomUUID(),id,date,cursor.getUTCDay(),day.calendar_type,day.is_instructional,day.source,day.reason,day.editable]);
-  }
+  const version = (await db.query(`select v.* from school_years sy join school_calendar_versions v
+    on (v.school_year_id=sy.id or (v.school_year_id is null and v.calendar_year=sy.year))
+    where sy.id=$1 and v.calendar_year=sy.year and v.status='active' order by (v.school_year_id is not null) desc limit 1`, [schoolYearId])).rows[0];
+  if (!version) throw new SchoolCalendarError("calendar_unavailable", "El calendario oficial de ese año todavía no está cargado.");
   return version;
 }
 
@@ -118,8 +92,7 @@ export async function loadEffectiveCalendar(db, { teacherId, classroomId = null,
   const days = rows.map((row) => effectiveCalendarDay({ id:row.id,date:row.date,day_of_week:Number(row.day_of_week),calendar_type:row.calendar_type,
     is_instructional:row.is_instructional,source:row.source,reason:row.reason,editable:row.editable,school_override:row.school_override },
   row.override_id ? { id:row.override_id,new_calendar_type:row.new_calendar_type,new_is_instructional:row.new_is_instructional,reason:row.override_reason,reverted_at:row.reverted_at } : null));
-  const blocks = Number(classroom.year) === 2026 ? BLOCKS_2026.map(([sort_order,type,label,start_date,end_date]) =>
-    ({ sort_order,type,label,start_date,end_date })) : [];
+  const blocks = Number(classroom.year) === 2026 ? BLOCKS_2026.map(block => ({ ...block, editable:false })) : [];
   const experiences = (await db.query(`select id,title,type,starts_on::text,ends_on::text,status,details from learning_experiences
     where classroom_id=$1 and status in ('active','draft') and starts_on<=$3::date and ends_on>=$2::date order by starts_on`,[classroom.id,start,end])).rows;
   const activities = (await db.query(`select a.id,a.title,a.purpose,a.occurs_on::text,a.planned_date::text,a.schedule_status,a.status,
@@ -133,13 +106,13 @@ export async function loadEffectiveCalendar(db, { teacherId, classroomId = null,
     days,blocks,experiences,activities };
 }
 
-export async function saveClassroomOverride(db, { teacherId, classroomId, date, isInstructional, reason, confirmOfficialException = false }) {
+export async function saveClassroomOverride(db, { teacherId, classroomId, date, isInstructional, reason }) {
   if (!isDate(date) || !String(reason ?? "").trim()) throw new SchoolCalendarError("invalid_override", "Indica la fecha y el motivo del cambio.");
   const calendar = await loadEffectiveCalendar(db,{teacherId,classroomId,from:date,to:date});
   const day = calendar.days[0];
   if (!day) throw new SchoolCalendarError("date_outside_year", "La fecha está fuera del calendario escolar.");
-  if (isInstructional && ["national_holiday","management_week","weekend"].includes(day.calendar_type) && confirmOfficialException !== true)
-    throw new SchoolCalendarError("authorization_required", "Este día está bloqueado por el calendario oficial y requiere un flujo autorizado.");
+  if (["national_holiday","management_week","weekend"].includes(day.calendar_type))
+    throw new SchoolCalendarError("authorization_required", "Este día está bloqueado por el calendario oficial y no permite modificar fechas oficiales.");
   await db.query(`update classroom_calendar_overrides set reverted_at=now(),reverted_by=$1 where classroom_id=$2 and override_date=$3::date and reverted_at is null`,[teacherId,classroomId,date]);
   const inserted = (await db.query(`insert into classroom_calendar_overrides(id,classroom_id,override_date,previous_calendar_type,new_calendar_type,
     previous_is_instructional,new_is_instructional,reason,changed_by) values($1,$2,$3::date,$4,$5,$6,$7,$8,$9) returning *`,

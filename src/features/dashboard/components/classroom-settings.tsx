@@ -21,12 +21,12 @@ export function ClassroomSettings({onSaved}:{onSaved:(dashboard:LocalDashboard)=
   const patch=(value:Partial<Settings>)=>setDraft(current=>current?{...current,...value}:current);
   return <details className="rounded-xl border bg-white p-5" onToggle={event=>{if(event.currentTarget.open&&!saved&&!busy)void load();}}>
     <summary className="min-h-11 cursor-pointer font-bold">Configuración del aula</summary>
-    <p className="mt-2 text-sm text-muted-foreground">Revisa la edad, el año y las opciones curriculares. Para ajustar días de clase, abre Calendario. La edad, el año y las fechas se protegen cuando el aula ya tiene niños o planificación.</p>
+    <p className="mt-2 text-sm text-muted-foreground">Revisa la edad, el año y las opciones curriculares. Para ajustar días de clase, abre Calendario. Las fechas oficiales MINEDU son de solo lectura. La edad y el año se protegen cuando el aula ya tiene niños o planificación.</p>
     {draft&&<div className="mt-4 space-y-4"><div className="grid gap-4 sm:grid-cols-2">
       <label className="text-sm font-semibold">Edad del aula<select disabled={busy} className="mt-2 block min-h-11 w-full rounded-lg border px-3" value={draft.age} onChange={e=>patch({age:Number(e.target.value)})}>{[3,4,5].map(age=><option key={age} value={age}>{age} años</option>)}</select></label>
       <label className="text-sm font-semibold">Año escolar<Input disabled={busy} className="mt-2" type="number" min={2020} max={2100} value={draft.year} onChange={e=>patch({year:Number(e.target.value)})}/></label>
-      <label className="text-sm font-semibold">Inicio del año escolar (incluye gestión)<Input disabled={busy} className="mt-2" type="date" value={draft.startsOn} onChange={e=>patch({startsOn:e.target.value})}/></label>
-      <label className="text-sm font-semibold">Fin del año escolar (incluye gestión)<Input disabled={busy} className="mt-2" type="date" value={draft.endsOn} onChange={e=>patch({endsOn:e.target.value})}/></label>
+      <label className="text-sm font-semibold">Inicio del año escolar (incluye gestión)<Input disabled={busy} className="mt-2" type="date" readOnly value={draft.startsOn}/></label>
+      <label className="text-sm font-semibold">Fin del año escolar (incluye gestión)<Input disabled={busy} className="mt-2" type="date" readOnly value={draft.endsOn}/></label>
     </div><label className="flex min-h-11 items-center gap-2 text-sm"><input disabled={busy} type="checkbox" checked={draft.castellanoL2Applicable} onChange={e=>patch({castellanoL2Applicable:e.target.checked})}/>Castellano como segunda lengua aplicable</label>
       <label className="flex min-h-11 items-center gap-2 text-sm"><input disabled={busy} type="checkbox" checked={draft.religionApplicable} onChange={e=>patch({religionApplicable:e.target.checked})}/>Educación religiosa aplicable</label>
       <AsyncButton busy={busy} disabled={JSON.stringify(saved)===JSON.stringify(draft)} busyLabel="Guardando…" onClick={()=>void save()}>Guardar configuración del aula</AsyncButton>

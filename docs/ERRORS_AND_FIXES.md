@@ -1,5 +1,9 @@
 # Errores y soluciones
 
+## Guardado del aula tarda aproximadamente 40 s — 2026-10-11
+
+Síntoma: espera excesiva y dos indicadores. Confirmado que el aula original sí se creó una vez. Causa comprobada en código: después del COMMIT, dashboard materializaba 305 días con INSERT secuenciales sobre Supabase, más consultas del panel. SQL agregado muy rápido (0,22 ms medio); no atribuir todo el tiempo a CPU SQL ni inventar el desglose de la petición histórica sin trazas. Solución validada localmente: base oficial precargada compartida, snapshot confirmado, único progreso y reintentos idempotentes; no retirar logo si COMMIT tiene resultado incierto. Migración aplicada preserva 84 tablas; suite completa 778 PASS y 42 focales finales PASS. Prueba local recupera respuesta perdida sin vaciar el formulario; falta medición remota y publicación antes de dar cierre. Prevención: medir HTTP y fases en entorno remoto; PGlite local no acredita latencia Supabase.
+
 ## QA de configuración: tipos en regeneración y caché Webpack — 2026-10-11
 
 - Síntoma: typecheck concurrente con Next encontró archivos `.next/types` desaparecidos; el segundo build tuvo TypeError interno en WasmHash._updateWithBuffer, aunque el build inicial pasó.

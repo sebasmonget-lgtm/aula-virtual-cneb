@@ -17,8 +17,9 @@ test('classroom settings preserve ownership, stale writes, calendars and existin
     assert.deepEqual(await loadClassroomSettings(db,other),untouched);
     await assert.rejects(saveClassroomSettings(db,teacher,{expected:original,settings:original}),/Recarga/);
     for(const changes of [{startsOn:'2026-02-31'},{year:2027,startsOn:'2027-03-02',endsOn:'2027-12-31'},{religionApplicable:'true'}])await assert.rejects(saveClassroomSettings(db,teacher,{expected:saved,settings:{...saved,...changes}}));
-    saved=await saveClassroomSettings(db,teacher,{expected:saved,settings:{...saved,age:4,startsOn:'2026-02-16'}});
-    assert.equal(saved.age,4);assert.equal(saved.startsOn,'2026-02-16');
+    await assert.rejects(saveClassroomSettings(db,teacher,{expected:saved,settings:{...saved,startsOn:'2026-02-16'}}),/oficiales/);
+    saved=await saveClassroomSettings(db,teacher,{expected:saved,settings:{...saved,age:4}});
+    assert.equal(saved.age,4);assert.equal(saved.startsOn,'2026-03-02');
     await importStudentsForTeacher(db,teacher,[{firstName:'Niña',lastName:'Ficticia'}]);
     await assert.rejects(saveClassroomSettings(db,teacher,{expected:saved,settings:{...saved,age:5}}),/niños o planificación/);
     assert.deepEqual(await loadClassroomSettings(db,teacher),saved);

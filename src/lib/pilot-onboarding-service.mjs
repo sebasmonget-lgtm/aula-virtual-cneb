@@ -1,8 +1,10 @@
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { writeFile, unlink } from "node:fs/promises";
 import path from "node:path";
 import { buildInstitutionInitialsLogo, normalizeInstitutionLogoUpload } from "./institution-logo.mjs";
 import { validateStudentsForImport } from "./student-import.mjs";
+import { measureSetupPhase } from "./setup-performance.mjs";
+import { VersionConflictError } from "./version-integrity.mjs";
 export { parseStudentCsv, validateStudentsForImport } from "./student-import.mjs";
 
 const yearPattern = /^\d{4}-\d{2}-\d{2}$/;
@@ -19,35 +21,48 @@ export function validatePilotSetup(value) {
 
 export async function createPilotClassroom(db, teacherId, input, { assetsDir, logoStorage } = {}) {
   const value = validatePilotSetup(input);
+  const submissionId = input?.submissionId ?? null;
+  if (submissionId !== null && !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(submissionId)) throw new TypeError("Identificador de guardado inválido.");
   if (input?.createLogo && input?.logoUpload) throw new TypeError("Elige subir un logo o crearlo con iniciales.");
-  const logoBytes = input?.logoUpload ? await normalizeInstitutionLogoUpload(input.logoUpload)
-    : input?.createLogo ? buildInstitutionInitialsLogo({ initials: input.logoInitials, primary: input.logoPrimary, accent: input.logoAccent }) : null;
+  const logoBytes = await measureSetupPhase("logo_decode", () => input?.logoUpload ? normalizeInstitutionLogoUpload(input.logoUpload)
+    : input?.createLogo ? buildInstitutionInitialsLogo({ initials: input.logoInitials, primary: input.logoPrimary, accent: input.logoAccent }) : null);
+  const fingerprint = createHash("sha256").update(JSON.stringify(value)).update(logoBytes ?? "").digest("hex");
   const logoExtension = input?.createLogo ? "svg" : "png";
   const logoMimeType = input?.createLogo ? "image/svg+xml" : "image/png";
   const logoSize = input?.createLogo ? 512 : 384;
   if (logoBytes && !assetsDir && !logoStorage) throw new Error("No se puede guardar el logo en esta instalación.");
   const logoAssetId = logoBytes ? randomUUID() : null;
   let createdLogoPath = null;
+  let commitAttempted = false;
+  const classroomId = randomUUID();
   await db.exec("begin");
   try {
-    const active = (await db.query(`select id from classrooms where teacher_id=$1 and status='active'`, [teacherId])).rows[0];
-    if (active) throw new Error("Ya existe un aula activa. Edita su perfil antes de crear otra.");
+    await db.query("select pg_advisory_xact_lock(hashtext($1))", [`pilot-setup:${teacherId}`]);
+    const active = (await db.query(`select id,school_year_id,to_jsonb(c)->'setup_submission' as setup_submission from classrooms c where teacher_id=$1 and status='active'`, [teacherId])).rows[0];
+    if (active) {
+      if (submissionId && active.setup_submission?.id === submissionId) {
+        if (active.setup_submission.fingerprint !== fingerprint) throw new VersionConflictError("Esta solicitud ya guardó otros datos. Recarga para revisar el aula guardada.");
+        await db.exec("commit");
+        return { classroomId: active.id, schoolYearId: active.school_year_id, replayed: true };
+      }
+      throw new VersionConflictError("Ya existe un aula activa. Recarga para revisar sus datos antes de editarla.");
+    }
     await db.query(`insert into profiles(user_id,display_name) values($1,$2) on conflict(user_id) do update set display_name=excluded.display_name,updated_at=now()`, [teacherId, value.teacherName]);
     await db.query(`insert into levels(id,name) values('20000000-0000-4000-8000-000000000001','Educación Inicial') on conflict(id) do nothing`);
     await db.query(`insert into age_grades(id,level_id,label,age_years) values($1,'20000000-0000-4000-8000-000000000001',$2,$3) on conflict(level_id,age_years) do nothing`, [gradeId(value.age), `${value.age} años`, value.age]);
     const grade = (await db.query(`select id from age_grades where level_id='20000000-0000-4000-8000-000000000001' and age_years=$1`, [value.age])).rows[0];
-    const schoolYearId = randomUUID(), classroomId = randomUUID();
+    const schoolYearId = randomUUID();
     await db.query(`insert into school_years(id,owner_id,year,starts_on,ends_on) values($1,$2,$3,$4::date,$5::date) on conflict(owner_id,year) do nothing`, [schoolYearId, teacherId, value.year, value.startsOn, value.endsOn]);
     const actualYear = (await db.query(`select id,starts_on,ends_on from school_years where owner_id=$1 and year=$2`, [teacherId, value.year])).rows[0];
     if (isoDay(actualYear.starts_on) !== value.startsOn || isoDay(actualYear.ends_on) !== value.endsOn) throw new Error("El año escolar ya existe con otras fechas; revísalo antes de continuar.");
-    await db.query(`insert into institution_profiles(id,owner_user_id,display_name,institution_code,district,ugel,director_name)
+    const institution = (await db.query(`insert into institution_profiles(id,owner_user_id,display_name,institution_code,district,ugel,director_name)
       values($1,$2,$3,$4,$5,$6,$7) on conflict(owner_user_id) do update set display_name=excluded.display_name,
-      institution_code=excluded.institution_code,district=excluded.district,ugel=excluded.ugel,director_name=excluded.director_name,updated_at=now()`,
-    [randomUUID(), teacherId, value.institutionName, value.institutionCode, value.district, value.ugel, value.directorName]);
+      institution_code=excluded.institution_code,district=excluded.district,ugel=excluded.ugel,director_name=excluded.director_name,updated_at=now() returning logo_asset_id`,
+    [randomUUID(), teacherId, value.institutionName, value.institutionCode, value.district, value.ugel, value.directorName])).rows[0];
     if (logoBytes) {
       let relativePath;
       if (logoStorage) {
-        relativePath = await logoStorage.save({ teacherId, assetId: logoAssetId, mimeType: logoMimeType, bytes: logoBytes });
+        relativePath = await measureSetupPhase("logo_upload", () => logoStorage.save({ teacherId, assetId: logoAssetId, mimeType: logoMimeType, bytes: logoBytes }));
         createdLogoPath = relativePath;
       } else {
         relativePath = `.local/assets/${logoAssetId}.${logoExtension}`;
@@ -60,11 +75,25 @@ export async function createPilotClassroom(db, teacherId, input, { assetsDir, lo
         values ($1, $2, 'logo', $3, $3, $4, $5, $5)`, [logoAssetId, teacherId, relativePath, logoMimeType, logoSize]);
       await db.query(`update institution_profiles set logo_asset_id=$1 where owner_user_id=$2`, [logoAssetId, teacherId]);
     }
-    await db.query(`insert into classrooms(id,school_year_id,teacher_id,age_grade_id,institution_name,section,castellano_l2_applicable,religion_applicable) values($1,$2,$3,$4,$5,$6,$7,$8)`, [classroomId, actualYear.id, teacherId, grade.id, value.institutionName, value.section, value.castellanoL2Applicable, value.religionApplicable]);
+    await db.query(`insert into classrooms(id,school_year_id,teacher_id,age_grade_id,institution_name,section,castellano_l2_applicable,religion_applicable${submissionId ? ",setup_submission" : ""}) values($1,$2,$3,$4,$5,$6,$7,$8${submissionId ? ",$9::jsonb" : ""})`, [classroomId, actualYear.id, teacherId, grade.id, value.institutionName, value.section, value.castellanoL2Applicable, value.religionApplicable, ...(submissionId ? [JSON.stringify({ id: submissionId, fingerprint })] : [])]);
+    commitAttempted = true;
     await db.exec("commit");
-    return { classroomId, schoolYearId: actualYear.id };
+    return { classroomId, schoolYearId: actualYear.id, initialProfile: {
+      teacher_name: value.teacherName, institution_name: value.institutionName, section: value.section,
+      institution_code: value.institutionCode, district: value.district, ugel: value.ugel,
+      director_name: value.directorName, age_years: value.age, age_label: `${value.age} años`,
+      school_year: value.year, logo_asset_id: logoAssetId ?? institution.logo_asset_id,
+    } };
   } catch (error) {
     await db.exec("rollback").catch(() => {});
+    if (commitAttempted) {
+      // A lost COMMIT response does not mean the write failed. Preserve its logo
+      // unless the database positively confirms this new classroom is absent.
+      let confirmed;
+      try { confirmed = (await db.query("select id,school_year_id from classrooms where id=$1 and teacher_id=$2",[classroomId,teacherId])).rows[0]; }
+      catch { throw error; }
+      if (confirmed) return {classroomId:confirmed.id,schoolYearId:confirmed.school_year_id,replayed:true};
+    }
     if (createdLogoPath) {
       if (logoStorage) await logoStorage.remove(createdLogoPath, teacherId).catch(() => {});
       else await unlink(createdLogoPath).catch(() => {});

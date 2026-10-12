@@ -39,17 +39,17 @@ export function nationalCalendarBlocks2026() {
     ["management", "2026-10-12", "2026-10-16", "Semana de gestión"],
     ["instructional", "2026-10-19", "2026-12-18", "Periodo lectivo 4"],
     ["management", "2026-12-21", "2026-12-31", "Gestión final"],
-  ].map(([type, start_date, end_date, label], sort_order) => ({ type, start_date, end_date, label, editable: true, sort_order }));
+  ].map(([type, start_date, end_date, label], sort_order) => ({ type, start_date, end_date, label, editable: false, sort_order }));
 }
 
-/** Feriados nacionales de 2026 que caen dentro de los bloques lectivos. Los días institucionales se agregan aparte. */
+/** Base nacional 2026; incidencias del aula se mantienen aparte. */
 export function nationalSchoolHolidays2026() {
   return [
     ["2026-04-02", "Jueves Santo"], ["2026-04-03", "Viernes Santo"],
-    ["2026-05-01", "Día del Trabajo"], ["2026-06-29", "San Pedro y San Pablo"],
-    ["2026-07-23", "Día de la Fuerza Aérea del Perú"], ["2026-08-06", "Batalla de Junín"],
-    ["2026-10-08", "Combate de Angamos"], ["2026-12-08", "Inmaculada Concepción"],
-    ["2026-12-09", "Batalla de Ayacucho"],
+    ["2026-05-01", "Día del Trabajo"], ["2026-06-07", "Batalla de Arica y Día de la Bandera"], ["2026-06-29", "San Pedro y San Pablo"],
+    ["2026-07-23", "Día de la Fuerza Aérea del Perú"], ["2026-07-28", "Fiestas Patrias"], ["2026-07-29", "Fiestas Patrias"], ["2026-08-06", "Batalla de Junín"], ["2026-08-30", "Santa Rosa de Lima"],
+    ["2026-10-08", "Combate de Angamos"], ["2026-11-01", "Día de Todos los Santos"], ["2026-12-08", "Inmaculada Concepción"],
+    ["2026-12-09", "Batalla de Ayacucho"], ["2026-12-25", "Navidad"],
   ].map(([exception_date, label]) => ({ exception_date, type: "holiday", label, is_instructional: false }));
 }
 

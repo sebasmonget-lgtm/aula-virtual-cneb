@@ -85,7 +85,7 @@ test("Preview QA clock works before onboarding, validates Origin, and reloads si
     const qaHeaders = { origin, cookie: cookie.split(";")[0], "content-type": "application/json" };
     const created = await fetch(`${instance.base}/api/pilot/setup`, { method: "POST", headers: qaHeaders,
       body: JSON.stringify({ teacherName: "Docente ficticia de reloj", institutionName: "Colegio ficticio", section: "QA", age: 5,
-        year: 2026, startsOn: "2026-03-16", endsOn: "2026-12-18" }) });
+        year: 2026, startsOn: "2026-03-02", endsOn: "2026-12-31" }) });
     assert.equal(created.status, 201, await created.clone().text());
     const firstDashboard = (await created.json()).dashboard;
     assert.equal(firstDashboard.today.date, "2026-12-18");
@@ -254,7 +254,7 @@ test("the HTTP boundary protects every route and local PGlite remains usable", {
       const setup = await call("/api/pilot/setup", token, {
         method: "POST", headers: { "content-type": "application/json" },
         body: JSON.stringify({ teacherName: `Docente ${label}`, institutionName: `Jardín ${label}`,
-          section: label, age: 5, year: 2026, startsOn: "2026-03-01", endsOn: "2026-12-31",
+          section: label, age: 5, year: 2026, startsOn: "2026-03-02", endsOn: "2026-12-31",
           castellanoL2Applicable: false, religionApplicable: false }),
       });
       assert.equal(setup.status, 201, `setup ${label}: ${await setup.text()}`);
