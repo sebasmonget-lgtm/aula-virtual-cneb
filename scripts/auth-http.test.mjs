@@ -189,7 +189,7 @@ test("the HTTP boundary protects every route and local PGlite remains usable", {
       headers: { "content-type": "application/json" } })).status, 403);
     assert.equal((await call("/api/admin/recover", null, recoveryRequest("test-only-bootstrap-key-with-more-than-32-characters"))).status, 200);
     const privateRoutes = [
-      "/api/qa/clock", "/api/pilot/setup", "/api/profile", "/api/ai-usage", "/api/admin/accounts", "/api/diagnostics",
+      "/api/qa/clock", "/api/classroom/settings", "/api/pilot/setup", "/api/profile", "/api/ai-usage", "/api/admin/accounts", "/api/diagnostics",
       "/api/diagnostics/students/11111111-1111-4111-8111-111111111111/family-interview",
       "/api/diagnostics/students/11111111-1111-4111-8111-111111111111/family-interview/attachment",
       "/api/diagnostics/students/11111111-1111-4111-8111-111111111111/family-interview/save-and-confirm",

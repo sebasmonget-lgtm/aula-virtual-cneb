@@ -112,7 +112,7 @@ Estado: esperando opinión de la persona usuaria e indicación «Siguiente» ant
 
 ## UX-QA-01 — Decisión final de diseño para «Configura tu aula»
 
-**Estado: diseño aprobado por la persona usuaria; implementación expresamente pospuesta.** Pantalla: «Configura tu aula». Continuar el recorrido de QA antes de consolidar las mejoras. Esta aprobación de criterios no autoriza implementar ni desplegar cambios ahora.
+**Estado: diseño aprobado; implementación autorizada posteriormente y realizada en la rama QA actual.** Pantalla: «Configura tu aula». La instrucción posterior sustituye la postergación inicial y autoriza publicar únicamente Preview. Esperar revisión humana antes de avanzar al registro de niños.
 
 Problema señalado: los datos institucionales ocultos en paneles plegables pueden quedar sin completar porque muchas profesoras no volverán a buscarlos, aunque después los necesiten para personalizar sus documentos Word. Objetivo: agrupar claramente la información que se registra una sola vez, manteniendo un formulario sencillo.
 
@@ -133,4 +133,26 @@ Estos criterios sustituyen la propuesta anterior de calendario plegable y config
 
 Las dos imágenes adjuntas por la persona usuaria son referencias conceptuales de la agrupación y el texto de ayuda; no prueban una interfaz funcional ni autorizan copiar su apariencia. La segunda imagen omite el año escolar, pero la propuesta escrita sí lo incluye: conservarlo en «Datos de tu aula». No se ha acordado añadir campos obligatorios; el requisito explícito es permitir continuar sin logo.
 
-Validación futura, cuando se autorice implementar: comprobar las dos secciones visibles y legibles en Side Panel, opcionalidad de los datos no indispensables, continuidad sin logo, aplicación automática del calendario del año seleccionado, ausencia de calendario y opciones curriculares en la configuración inicial, acceso posterior a esas funcionalidades y a la edición de datos, personalización de Word y único botón principal con el texto aprobado. No se ejecutaron estas pruebas en este paso. Solo se actualizó documentación; código, formularios, datos y despliegues permanecen sin modificaciones.
+Criterios de comprobación: dos secciones visibles y legibles en Side Panel, opcionalidad de los datos no indispensables, continuidad sin logo, aplicación automática del calendario del año seleccionado, ausencia de calendario y opciones curriculares en la configuración inicial, acceso posterior a esas funcionalidades y a la edición de datos, personalización de Word y único botón principal con el texto aprobado. El registro inicial fue solo documental; las comprobaciones posteriores se detallan abajo.
+
+## Metodología vigente: implementar y revisar una pantalla cada vez
+
+Por instrucción posterior del propietario: mostrar pantalla, revisar UX/UI y funcionamiento juntos, registrar decisiones, implementar solo lo aprobado para esa pantalla, validar, actualizar exclusivamente Preview, abrir el resultado en Side Panel y esperar aprobación antes de pasar a la siguiente. Medir esperas perceptibles y corregir las innecesarias. No rediseñar pantallas adicionales, modificar IA o backend sin necesidad ni crear registros remotos durante esta implementación.
+
+Primera implementación autorizada: UX-QA-01 en `codex/ayni-qa-reloj-20261011`. El propietario autorizó adicionalmente un panel plegable mínimo «Configuración del aula» en la página de configuración existente, con edad, año, fechas y opciones curriculares, sin rediseñar el resto.
+
+## UX-QA-01: implementación y comprobaciones locales
+
+Se reutilizan campos, carga privada/generador de logo, botón y contrato de guardado existentes. Colegio y aula son secciones visibles; los datos complementarios y el logo siguen opcionales. Calendario y opciones curriculares no aparecen en el alta inicial. Las fechas oficiales se derivan del año seleccionado; los flags iniciales conservan el valor false existente. El año inicial respeta el reloj QA. Sin nuevas esperas artificiales ni generación IA.
+
+Límite existente hecho explícito: el único calendario oficial versionado disponible es 2026. Otro año muestra aviso y bloquea el alta; no se inventan fechas ni se reutilizan las de 2026 bajo otro año. La creación envía 02/03/2026–31/12/2026, incluidas semanas de gestión.
+
+Panel posterior autorizado: carga solo al abrirlo, permite recuperar y guardar opciones/edad/año/fechas mediante servidor autenticado, filtro de docente y propietario, transacción y comparación del estado previo para rechazar conflictos. No modifica RLS, migraciones, credenciales, datos históricos ni IA. Cambios estructurales se rechazan cuando existen niños, planificación, agenda, jobs o un año compartido con otra aula. Las fechas deben contener los bloques existentes; los ajustes de días siguen en Calendario. Las opciones curriculares permanecen editables. El perfil institucional y logo conservan su edición existente.
+
+Prueba de navegador sobre HTTP real/PGlite local independiente: alta ficticia de 5 años sin logo ni datos opcionales, consulta posterior conserva institución/docente/sección y fechas automáticas; cero niños creados. Clic→confirmación local: **397 ms**. Panel posterior: cambiar Educación religiosa, guardar (**288 ms**) y recargar conserva selección. Estos tiempos incluyen el control de navegador y son locales, no SLA ni mediciones remotas. No se ejecuta el registro de niños en Preview.
+
+Escritorio 1366×900 y móvil 390×844 inspeccionados; móvil sin desbordamiento (390/390). Datos, logo y botón accesibles sin desplegar paneles. Detector Impeccable sin hallazgos; revisión de componentes React conserva estado derivado, carga diferida, errores, guarda de salida y permisos de servidor. Capturas y pruebas privadas en `.local/setup-screen-qa/`. Regresiones focales: 12 PASS/0 SKIP (Auth, calendario, logo, fechas); servicio nuevo: 1 PASS/0 SKIP (ownership, conflicto, fechas inválidas, año no disponible, protección con niño y flags recuperables).
+
+Validaciones: typecheck PASS antes de compilación; lint de fuente completo PASS excluyendo archivos privados/generados; Vinext PASS con avisos conocidos PGlite/eval y chunks; Next/webpack PASS inicial y en reintento final con caché apartada. Un typecheck simultáneo al segundo build leyó archivos de tipos en regeneración y falló; se reejecuta después de finalizar Next. El segundo build falló en WasmHash de la caché Webpack, sin error de fuente; el reintento aislado pasa. Causa concreta del fallo interno no demostrada. No declarar PASS para esas ejecuciones fallidas. Recibos y logs privados en `.local/setup-screen-qa/`; el recibo final de typecheck y Preview acompaña el despliegue.
+
+Pendiente aceptación humana de esta pantalla, prueba remota de guardar por indicación del propietario y revisión de Word; las comprobaciones locales no acreditan esas etapas. Rollback: servir Preview anterior `d24b535` o revertir este cambio; no requiere rollback de datos remotos porque esta implementación no los escribe.

@@ -90,6 +90,7 @@ import { availableSheets } from "../src/lib/workshop-sheet-catalog.mjs";
 import { activeWorkshopForProject, insertDailyPair, linkedWorkshopDraft, updateDailyPair } from "./daily-workshop-persistence.mjs";
 import { createPendingAIGenerationsStore } from "../src/lib/pending-ai-generations-store.mjs";
 import { createPilotClassroom, importStudentsForTeacher, parseStudentCsv } from "../src/lib/pilot-onboarding-service.mjs";
+import { loadClassroomSettings, saveClassroomSettings } from "../src/lib/classroom-settings-service.mjs";
 import { createLocalPrivateEvidenceStorage, createSupabasePrivateEvidenceStorage } from "../src/lib/private-evidence-storage.mjs";
 import { createSupabasePrivateObservationStorage } from "../src/lib/private-observation-storage.mjs";
 import { validateShortAudio, transcribeAndPolishAudio, AUDIO_MIME_TYPES } from "../src/lib/audio-note-service.mjs";
@@ -809,6 +810,14 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         }
         await createPilotClassroom(db, teacherId, body, { assetsDir, logoStorage });
         send(response, 201, { dashboard: await dashboard() }, origin);
+      } catch (error) { send(response, httpStatusForError(error, 422), { error: publicErrorMessage(error) }, origin); }
+      return;
+    }
+    if (url.pathname === "/api/classroom/settings" && ["GET", "PUT"].includes(request.method)) {
+      try {
+        const settings = request.method === "GET" ? await loadClassroomSettings(db, teacherId)
+          : await saveClassroomSettings(db, teacherId, await readJson(request));
+        send(response, 200, settings, origin);
       } catch (error) { send(response, httpStatusForError(error, 422), { error: publicErrorMessage(error) }, origin); }
       return;
     }

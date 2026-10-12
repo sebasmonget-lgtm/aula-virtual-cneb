@@ -11,6 +11,7 @@ import {
   type AiUsageSummary, type DiagnosticWorkspace, type LocalDashboard,
 } from "@/src/lib/local-database";
 import { AsyncButton, LoadingState, WorkflowFeedback } from "./workflow-ui";
+import { ClassroomSettings } from "./classroom-settings";
 
 const states = [
   ["observed", "Lo observé"],
@@ -111,6 +112,7 @@ export function InstitutionProfile({ dashboard, onSaved }: {
         </div>}
       </aside>
     </div>
+    <ClassroomSettings onSaved={onSaved} />
     <section className="diagnostic-panel p-5 md:p-7" aria-labelledby="ai-cost-title">
       <h2 id="ai-cost-title" className="text-xl font-bold">Uso de IA de esta docente</h2>
       <p className="mt-1 text-sm text-[#526b87]">Costo aproximado de OpenAI y Jev en USD. Se registra desde esta versión; no incluye alojamiento ni almacenamiento.</p>

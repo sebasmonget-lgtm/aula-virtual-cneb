@@ -1,5 +1,12 @@
 # Errores y soluciones
 
+## QA de configuración: tipos en regeneración y caché Webpack — 2026-10-11
+
+- Síntoma: typecheck concurrente con Next encontró archivos `.next/types` desaparecidos; el segundo build tuvo TypeError interno en WasmHash._updateWithBuffer, aunque el build inicial pasó.
+- Causa: dependencia compartida comprobada entre tsc y regeneración de tipos de Next. La causa concreta del TypeError de Webpack no quedó demostrada; no atribuirlo al componente ni afirmar que la concurrencia lo explica.
+- Corrección: completar Next antes del typecheck final; apartar la caché Webpack dentro del workspace y repetir Next de forma aislada. Reintento Next PASS, Vinext PASS. Recibo posterior de typecheck en `.local/setup-screen-qa/typecheck-final.log`.
+- Prevención: no ejecutar simultáneamente comprobaciones que regeneran y leen `.next/types`; conservar logs privados y revalidar sin modificar lógica de producto para un fallo de caché.
+
 ## Reinicio QA: comparación decimal y límite de argumentos — 2026-10-11
 
 - Síntoma: el ensayo administrativo abortó antes de eliminar filas con «QA data changed: ai_usage_events», aun con el mismo contenido. La consulta independiente posterior tuvo error 54023 al construir un objeto con 81 huellas.

@@ -6,6 +6,7 @@ import { useUnsavedWork } from "@/src/lib/use-unsaved-work";
 import { Input } from "@/components/ui/input";
 import { savePilotSetup, type LocalDashboard } from "@/src/lib/local-database";
 import { pilotSchoolYearDefaults } from "@/src/lib/pilot-school-year-defaults.mjs";
+import { displayNow } from "@/src/lib/display-date";
 import { AsyncButton, LoadingState } from "./workflow-ui";
 
 type LogoMimeType = "image/png" | "image/jpeg" | "image/webp";
@@ -25,8 +26,7 @@ async function encodeLogo(file: File) {
 }
 
 export function PilotSetup({ onReady }: { onReady: (dashboard: LocalDashboard) => void }) {
-  const currentYear = new Date().getFullYear();
-  const initialDates = pilotSchoolYearDefaults(currentYear);
+  const currentYear = displayNow().getFullYear();
   const [teacherName, setTeacherName] = useState("");
   const [institutionName, setInstitutionName] = useState("");
   const [section, setSection] = useState("");
@@ -36,10 +36,6 @@ export function PilotSetup({ onReady }: { onReady: (dashboard: LocalDashboard) =
   const [directorName, setDirectorName] = useState("");
   const [age, setAge] = useState<number | null>(null);
   const [year, setYear] = useState(currentYear);
-  const [startsOn, setStartsOn] = useState(initialDates?.startsOn ?? "");
-  const [endsOn, setEndsOn] = useState(initialDates?.endsOn ?? "");
-  const [castellanoL2Applicable, setCastellanoL2Applicable] = useState(false);
-  const [religionApplicable, setReligionApplicable] = useState(false);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState("");
   const [createLogo, setCreateLogo] = useState(false);
@@ -49,21 +45,19 @@ export function PilotSetup({ onReady }: { onReady: (dashboard: LocalDashboard) =
   const logoInputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  useUnsavedWork(Boolean(teacherName || institutionName || section || logoFile || createLogo || institutionCode || district || ugel || directorName || age !== null || year !== currentYear || startsOn !== (initialDates?.startsOn??"") || endsOn !== (initialDates?.endsOn??"") || castellanoL2Applicable || religionApplicable), busy);
+  useUnsavedWork(Boolean(teacherName || institutionName || section || logoFile || createLogo || institutionCode || district || ugel || directorName || age !== null || year !== currentYear), busy);
   const officialDates = pilotSchoolYearDefaults(year);
 
   useEffect(() => () => { if (logoPreview) URL.revokeObjectURL(logoPreview); }, [logoPreview]);
 
-  function changeYear(nextYear: number) {
-    setYear(nextYear);
-    const dates = pilotSchoolYearDefaults(nextYear);
-    setStartsOn(dates?.startsOn ?? "");
-    setEndsOn(dates?.endsOn ?? "");
-  }
-
   async function save() {
+    if (busy) return;
     if (age === null) {
       setError("Elige la edad del aula para continuar.");
+      return;
+    }
+    if (!officialDates) {
+      setError("Aún no está disponible el calendario oficial de ese año. Elige un año con calendario disponible.");
       return;
     }
     setBusy(true);
@@ -71,7 +65,8 @@ export function PilotSetup({ onReady }: { onReady: (dashboard: LocalDashboard) =
     try {
       const logoUpload = logoFile ? await encodeLogo(logoFile) : undefined;
       onReady(await savePilotSetup({ teacherName, institutionName, section, institutionCode, district, ugel,
-        directorName, age, year, startsOn, endsOn, castellanoL2Applicable, religionApplicable,
+        directorName, age, year, startsOn: officialDates.startsOn, endsOn: officialDates.endsOn,
+        castellanoL2Applicable: false, religionApplicable: false,
         createLogo, logoInitials, logoPrimary, logoAccent, logoUpload }));
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "No se pudo configurar el aula.");
@@ -83,38 +78,18 @@ export function PilotSetup({ onReady }: { onReady: (dashboard: LocalDashboard) =
       <h1 className="text-3xl font-bold">Configura tu aula</h1>
       <p className="mt-2 text-sm text-muted-foreground">Registra los datos del colegio y del aula una sola vez. Después podrás añadir a tus niños y elegir cómo empezar.</p>
     </header>
-    <div className="space-y-5">
-      <section className="rounded-2xl border bg-white p-5 sm:p-6" aria-label="Datos del colegio y del aula">
-        <h2 className="text-lg font-bold text-[#19345b]">Datos básicos</h2>
-        <div className="mt-4 grid gap-4 sm:grid-cols-2">
-          <label className="block text-sm font-semibold">Institución<Input className="mt-2" value={institutionName} onChange={(event) => setInstitutionName(event.target.value)} /></label>
-          <label className="block text-sm font-semibold">Docente<Input className="mt-2" value={teacherName} onChange={(event) => setTeacherName(event.target.value)} /></label>
-          <label className="block text-sm font-semibold">Sección<Input className="mt-2" value={section} onChange={(event) => setSection(event.target.value)} /></label>
-
-        </div>
-        <h2 className="mt-6 border-t pt-5 text-lg font-bold text-[#19345b]">Aula y año escolar</h2>
-        <div className="mt-4 grid gap-4 sm:grid-cols-2">
-          <label className="block text-sm font-semibold">Edad del aula<select required aria-describedby="classroom-age-help" className="mt-2 block min-h-11 w-full rounded-lg border border-input bg-white px-3" value={age ?? ""} onChange={(event) => setAge(event.target.value ? Number(event.target.value) : null)}><option value="">Elige la edad</option><option value={3}>3 años</option><option value={4}>4 años</option><option value={5}>5 años</option></select><span id="classroom-age-help" className="mt-1 block font-normal text-muted-foreground">Debes elegir la edad para continuar.</span></label>
-          <label className="block text-sm font-semibold">Año escolar<Input className="mt-2" type="number" min={2020} max={2100} value={year} onChange={(event) => changeYear(Number(event.target.value))} /></label>
-          <details className="sm:col-span-2" open={!officialDates}><summary className="min-h-11 cursor-pointer py-2 font-semibold text-[#19345b]">{officialDates?"Calendario Minedu 2026 · revisar o cambiar fechas":"Ingresa las fechas de tu año escolar"}</summary><div className="mt-2 grid gap-4 sm:grid-cols-2">          <div className="rounded-xl bg-[#eef8fb] p-3 text-sm text-[#23475d] sm:col-span-2">
-            {officialDates ? <p><strong>Calendario Minedu 2026:</strong> 36 semanas de clases y 8 de gestión. El año escolar va del 2 de marzo al 31 de diciembre; las clases, del 16 de marzo al 18 de diciembre. En las semanas de gestión el personal planifica y evalúa, sin clases regulares. Si tu DRE, UGEL o colegio aprobó otras fechas, puedes cambiarlas abajo.</p>
-              : <p>No hay fechas oficiales precargadas para {year || "ese año"}. Consulta la calendarización de tu DRE, UGEL o colegio e ingresa el inicio y el fin del año escolar, incluidas las semanas de gestión.</p>}
-          </div>
-          <label className="block text-sm font-semibold">Inicio del año escolar (incluye gestión)<Input className="mt-2" type="date" value={startsOn} onChange={(event) => setStartsOn(event.target.value)} /></label>
-          <label className="block text-sm font-semibold">Fin del año escolar (incluye gestión)<Input className="mt-2" type="date" value={endsOn} onChange={(event) => setEndsOn(event.target.value)} /></label>
-</div></details>
-          <div className="sm:col-span-2"><label className="flex items-center gap-2 text-sm font-semibold"><input type="checkbox" checked={castellanoL2Applicable} onChange={(event) => setCastellanoL2Applicable(event.target.checked)} /> Castellano como segunda lengua aplicable</label><p className="ml-6 mt-1 text-sm text-muted-foreground">Márcalo si corresponde enseñar castellano como segunda lengua a niños cuya lengua materna es originaria.</p></div>
-          <div className="sm:col-span-2"><label className="flex items-center gap-2 text-sm font-semibold"><input type="checkbox" checked={religionApplicable} onChange={(event) => setReligionApplicable(event.target.checked)} /> Educación religiosa aplicable</label><p className="ml-6 mt-1 text-sm text-muted-foreground">Márcalo si el área forma parte de la planificación. Las exoneraciones de familias se respetan por estudiante.</p></div>
-        </div>
-        <details className="mt-6 border-t pt-5"><summary className="min-h-11 cursor-pointer font-bold text-[#19345b]">Datos para tus documentos (opcionales)</summary><div className="mt-4 grid gap-4 sm:grid-cols-2">
-          <label className="block text-sm font-semibold">Código modular <span className="font-normal text-[#526b87]">(opcional)</span><Input className="mt-2" value={institutionCode} onChange={(event) => setInstitutionCode(event.target.value)} /></label>
-          <label className="block text-sm font-semibold">Distrito <span className="font-normal text-[#526b87]">(opcional)</span><Input className="mt-2" value={district} onChange={(event) => setDistrict(event.target.value)} /></label>
-          <label className="block text-sm font-semibold">UGEL <span className="font-normal text-[#526b87]">(opcional)</span><Input className="mt-2" value={ugel} onChange={(event) => setUgel(event.target.value)} /></label>
-          <label className="block text-sm font-semibold">Director(a) <span className="font-normal text-[#526b87]">(opcional)</span><Input className="mt-2" placeholder="Nombre de la directora o director" value={directorName} onChange={(event) => setDirectorName(event.target.value)} /></label>
-        </div></details>
-      </section>
-      <details className="rounded-xl border border-[#dce9f2] bg-[#eef8fb] p-5"><summary className="min-h-11 cursor-pointer font-semibold">Logo para tus documentos (opcional)</summary><div className="mt-3">
-        <div className="flex items-center gap-3"><div className="grid size-16 shrink-0 place-items-center overflow-hidden rounded-2xl bg-[#087d96] text-xl font-bold text-white">{logoPreview && !createLogo ? <Image unoptimized src={logoPreview} alt="Vista previa del logo" width={64} height={64} className="size-full object-contain bg-white" /> : createLogo ? <span style={{ backgroundColor: logoPrimary }} className="grid size-full place-items-center">{logoInitials.toUpperCase().slice(0, 3) || "AA"}</span> : "IE"}</div><div><h2 className="font-bold">Logo del colegio</h2><p className="text-xs text-muted-foreground">Aparecerá en tus documentos Word.</p></div></div>
+    <section className="rounded-2xl border bg-white p-5 sm:p-6" aria-labelledby="school-data-title">
+      <h2 id="school-data-title" className="text-lg font-bold text-[#19345b]">Datos de tu colegio</h2>
+      <p className="mt-2 text-sm text-muted-foreground">Estos datos se usarán para personalizar tus documentos. Los campos opcionales se pueden completar después.</p>
+      <div className="mt-5 grid gap-4 sm:grid-cols-2">
+        <label className="block text-sm font-semibold sm:col-span-2">Institución<Input className="mt-2" value={institutionName} onChange={(event) => setInstitutionName(event.target.value)} /></label>
+        <label className="block text-sm font-semibold">UGEL <span className="font-normal text-muted-foreground">(opcional)</span><Input className="mt-2" value={ugel} onChange={(event) => setUgel(event.target.value)} /></label>
+        <label className="block text-sm font-semibold">Distrito <span className="font-normal text-muted-foreground">(opcional)</span><Input className="mt-2" value={district} onChange={(event) => setDistrict(event.target.value)} /></label>
+        <label className="block text-sm font-semibold">Código modular <span className="font-normal text-muted-foreground">(opcional)</span><Input className="mt-2" value={institutionCode} onChange={(event) => setInstitutionCode(event.target.value)} /></label>
+        <label className="block text-sm font-semibold">Director(a) <span className="font-normal text-muted-foreground">(opcional)</span><Input className="mt-2" value={directorName} onChange={(event) => setDirectorName(event.target.value)} /></label>
+      </div>
+      <div className="mt-6 border-t pt-5">
+        <div className="flex items-center gap-3"><div className="grid size-16 shrink-0 place-items-center overflow-hidden rounded-2xl bg-[#087d96] text-xl font-bold text-white">{logoPreview && !createLogo ? <Image unoptimized src={logoPreview} alt="Vista previa del logo" width={64} height={64} className="size-full object-contain bg-white" /> : createLogo ? <span style={{ backgroundColor: logoPrimary }} className="grid size-full place-items-center">{logoInitials.toUpperCase().slice(0, 3) || "AA"}</span> : "IE"}</div><div><h2 className="font-bold">Logo del colegio</h2><p className="text-sm text-muted-foreground">Recomendado para personalizar tus documentos. Puedes continuar sin logo.</p></div></div>
         <label className="mt-5 block text-sm font-semibold">Subir una imagen del logo <span className="font-normal">(opcional)</span>
           <input ref={logoInputRef} className="mt-2 block w-full text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-white file:px-3 file:py-2 file:font-semibold file:text-[#075d70]" type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => { const file = event.target.files?.[0] ?? null; setLogoFile(file); setLogoPreview(file ? URL.createObjectURL(file) : ""); if (file) setCreateLogo(false); }} />
         </label>
@@ -122,10 +97,20 @@ export function PilotSetup({ onReady }: { onReady: (dashboard: LocalDashboard) =
         {logoFile && <p className="mt-2 text-sm text-[#075d70]">Seleccionado: {logoFile.name} <button className="underline" type="button" onClick={() => { setLogoFile(null); setLogoPreview(""); if (logoInputRef.current) logoInputRef.current.value = ""; }}>Quitar</button></p>}
         <label className="mt-5 flex items-center gap-2 text-sm font-medium"><input type="checkbox" checked={createLogo} onChange={(event) => { setCreateLogo(event.target.checked); if (event.target.checked) { setLogoFile(null); setLogoPreview(""); if (logoInputRef.current) logoInputRef.current.value = ""; } }} /> Prefiero crear uno con iniciales</label>
         {createLogo && <div className="mt-4 space-y-3"><label className="block text-sm font-semibold">Iniciales (máximo 3)<Input className="mt-2" maxLength={3} value={logoInitials} onChange={(event) => setLogoInitials(event.target.value)} /></label><div className="flex gap-4 text-sm"><label>Color base <input type="color" value={logoPrimary} onChange={(event) => setLogoPrimary(event.target.value)} className="ml-2 align-middle" /></label><label>Acento <input type="color" value={logoAccent} onChange={(event) => setLogoAccent(event.target.value)} className="ml-2 align-middle" /></label></div></div>}
-      </div></details>
-    </div>
+      </div>
+    </section>
+    <section className="rounded-2xl border bg-white p-5 sm:p-6" aria-labelledby="classroom-data-title">
+      <h2 id="classroom-data-title" className="text-lg font-bold text-[#19345b]">Datos de tu aula</h2>
+      <div className="mt-5 grid gap-4 sm:grid-cols-2">
+        <label className="block text-sm font-semibold sm:col-span-2">Nombre de la profesora<Input className="mt-2" value={teacherName} onChange={(event) => setTeacherName(event.target.value)} /></label>
+        <label className="block text-sm font-semibold sm:col-span-2">Sección<Input className="mt-2" value={section} onChange={(event) => setSection(event.target.value)} /></label>
+        <label className="block text-sm font-semibold">Edad del aula<select required aria-describedby="classroom-age-help" className="mt-2 block min-h-11 w-full rounded-lg border border-input bg-white px-3" value={age ?? ""} onChange={(event) => setAge(event.target.value ? Number(event.target.value) : null)}><option value="">Elige la edad</option><option value={3}>3 años</option><option value={4}>4 años</option><option value={5}>5 años</option></select><span id="classroom-age-help" className="mt-1 block font-normal text-muted-foreground">Debes elegir la edad para continuar.</span></label>
+        <label className="block text-sm font-semibold">Año escolar<Input className="mt-2" type="number" min={2020} max={2100} value={year || ""} aria-describedby={!officialDates ? "school-year-help" : undefined} onChange={(event) => setYear(Number(event.target.value))} /></label>
+      </div>
+      {!officialDates && <p id="school-year-help" role="alert" className="mt-3 text-sm text-destructive">Aún no está disponible el calendario oficial de {year || "ese año"}. Elige un año con calendario disponible (2026).</p>}
+    </section>
     {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
     {busy && <LoadingState label="Guardando datos del colegio y del aula…" />}
-    <AsyncButton disabled={age === null} busy={busy} busyLabel="Guardando…" onClick={() => void save()}>Guardar aula y añadir niños</AsyncButton>
+    <AsyncButton className="min-h-11" disabled={age === null || !officialDates} busy={busy} busyLabel="Guardando…" onClick={() => void save()}>Guardar aula y añadir niños</AsyncButton>
   </main>;
 }

@@ -1,5 +1,11 @@
 # Decisiones de arquitectura
 
+## ADR 121 — Alta simple y ajustes posteriores de aula (2026-10-11)
+
+Decisión aprobada UX-QA-01: alta con colegio y aula visibles, logo/datos complementarios opcionales, fechas automáticas del calendario versionado del año, flags curriculares false iniciales y único CTA existente. No exponer calendario ni flags en el alta. Hoy solo hay fuente 2026; bloquear explícitamente años sin calendario para evitar inventarlo.
+
+Panel posterior mínimo autorizado en configuración existente: GET/PUT de ajustes autenticados, docente/propietario filtrados, transacción con lock y estado previo obligatorio. No recibir IDs de propietario desde cliente. Rechazar conflicto sin sobrescribir; impedir cambios de edad/año/límites temporales con niños, planificación, agenda, jobs o año compartido, y no truncar bloques existentes. Las opciones curriculares continúan editables. Mantener calendario y perfil/logo existentes, sin migración, RLS nuevo, IA ni eliminación de datos. Publicar solo Preview y detener el recorrido hasta aceptación humana.
+
 ## ADR 120 — Reloj pedagógico de QA en Preview (2026-10-11)
 
 Se conserva la base Supabase actual por decisión explícita del propietario: todavía no hay usuarios ni datos reales. El reinicio administrativo se limita a IDs y contenidos congelados de la cuenta QA autorizada, con respaldo privado, ensayo que termina en rollback, locks, validación de identidad/recuento y comprobación de conservación de Auth, datos externos, catálogo y seguridad. No borrar Auth, tablas, políticas ni recursos compartidos. Una identidad con nombre igual no es el mismo propietario.
