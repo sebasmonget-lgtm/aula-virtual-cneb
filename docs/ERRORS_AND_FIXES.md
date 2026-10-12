@@ -1,5 +1,9 @@
 # Errores y soluciones
 
+## Hora civil y reintento de entrevista en pantalla nueva — 2026-10-12
+
+En prueba local, Observaciones lanzó Invalid time value porque today.now es hora civil HH:mm, no un timestamp para new Date. Se usa hora del reloj QA si existe o today.now directamente; navegación y guardados libre/guiado validados. Revisión del editor detectó que una carga fallida podía presentar datos vacíos: ahora bloquea edición/autosave, muestra Reintentar y permite salir sin guardar. Desconexión simulada/reconexión y recuperación del formulario PASS; reintento reinicia estado desde el evento y limpia fallo tras respuesta válida, sin setState síncrono en efecto. Prevención: comprobar contrato semántico de hora y validar recuperación de errores, además de tipos.
+
 ## Edición de nacimiento y compatibilidad local/remota de alumnos — 2026-10-12
 
 En comprobación local, el date nativo modificado emitía input sin actualizar el estado del formulario solo con onChange: el servidor recibía nacimiento vacío. Se manejan input/change y actualizaciones funcionales, validando guardado y recarga de 2021-03-13 en navegador y en el servicio. Además PGlite rechazó updated_at en el UPDATE nuevo porque ese campo del esquema remoto no pertenece al contrato local de students; UPDATE usa solo campos comunes y CAS por valores originales, sin migración. Prueba funcional de identidad/historial/aislamiento/replay y conflicto PASS. Prevención: validar la fecha recibida tras recarga y ejecutar SQL nuevo contra contrato local antes de publicar.

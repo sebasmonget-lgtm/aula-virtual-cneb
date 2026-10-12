@@ -1,5 +1,9 @@
 # Decisiones de arquitectura
 
+## Tercera etapa con entrevistas apiladas y observación por niño — 2026-10-12
+
+Mockups fijan composición. InterviewsWorkspace sustituye entrada diagnóstica de preparación, preservando ruta de revisión step=3. No añadir datos privados a URLs: solo tab/step/mode. Reusar FamilyInterviewEditor en layout stacked, y SpontaneousDiagnostic embedded; mantener usos previos. Navegación del editor espera autosave antes de desmontarlo. Avance agregado cuenta grupos respondidos en versión más reciente; historial confirmado sigue separado. Fallo de carga no habilita formulario vacío. Cambiar al modo guiado utiliza catálogo/IDs actuales, preparación real y todos sus momentos; modal guarda vía contrato compacto/idempotente existente, con evidencia privada y competencia vinculada por criterio. Cantidades por experiencia; guardar otro exige seleccionar niño. Las revisiones anteriores y Mi año siguen accesibles sin umbral de completitud. Sin migración/IA nueva; rollback de UI no borra datos.
+
 ## Matrícula con edición lateral y retirada recuperable — 2026-10-12
 
 Los mockups del propietario fijan lista/formulario de matrícula. Se elimina de la lista cambiando estado a inactive, con confirmación y sin cargar historial/identidades retiradas en pantalla habitual; consulta explícita de recuperación usa servicio existente. Editar conserva IDs y nombre preferido existente, valida igual que alta y compara campos originales bajo lock de aula compartido con cambios de matrícula; mismo resultado admite replay tras respuesta perdida. No se añade esquema ni autoridad al cliente. Foto usa servicio privado/preparación existente; si falla después del guardado de datos, reintento independiente sin duplicar alumno. Volver reutiliza perfil de colegio/aula y protege datos pendientes. Pantalla de matrícula autónoma evita encabezados/navegación duplicados; Mi aula y etapas posteriores mantienen componentes existentes.

@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { countFamilyInterviewAnswers } from "./family-interview-progress.mjs";
 import { simulatedObservationInstant } from "./pedagogical-clock.mjs";
 import { isDeepStrictEqual } from "node:util";
 import { versionTransaction, VersionConflictError } from "./version-integrity.mjs";
@@ -174,7 +175,7 @@ export async function listFamilyInterviewStatuses(db, teacherId) {
     order by s.id,i.version desc`, [classroom.id])).rows;
   const students = new Map();
   for (const row of rows) {
-    const entry = students.get(row.student_id) ?? { student_id: row.student_id, status: "not_started", has_confirmed_answers: false };
+    const entry = students.get(row.student_id) ?? { student_id: row.student_id, status: "not_started", has_confirmed_answers: false, answered_questions: countFamilyInterviewAnswers(row.details), total_questions: 6 };
     const answers = hasFamilyInterviewAnswers(row.details);
     if (answers && row.status === "draft") entry.status = "partial";
     if (answers && row.status === "confirmed" && row.teacher_confirmed_at) {

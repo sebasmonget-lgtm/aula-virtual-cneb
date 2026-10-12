@@ -76,11 +76,11 @@ export const interviewPreviousEducationTypeOptions = Object.freeze([
 ]);
 export const familyInterviewQuestionGroups = (name) => [{ title: "La familia nos cuenta", questions: [
   { key: "interests", label: "¿Qué disfruta hacer " + name + "?", hint: "Cuéntanos un ejemplo. También puedes decir qué no le interesa." },
-  { key: "social_context", label: "¿Cómo juega, solo/a o con otras personas?" },
-  { key: "home_activity_example", label: "¿Qué suele contar, preguntar, construir o explorar?", hint: "Una experiencia concreta nos ayuda a conocerlo mejor." },
-  { key: "communication_context", label: "¿Qué lenguas escucha o usa y cómo se comunica?" },
+  { key: "social_context", label: "¿Cómo juega " + name + ", solo/a o con otras personas?" },
+  { key: "home_activity_example", label: "¿Qué suele contar, preguntar, construir o explorar " + name + "?", hint: "Una experiencia concreta nos ayuda a conocerlo mejor." },
+  { key: "communication_context", label: "¿Qué lenguas escucha o usa " + name + " y cómo se comunica?" },
   { key: "family_community_context", label: "¿Qué experiencias, actividades o costumbres de su familia o comunidad son significativas para " + name + "?" },
-  { key: "participation_support_context", label: "¿Hay algo más que quieras que la profesora conozca para acompañarlo y ayudarlo a participar?" },
+  { key: "participation_support_context", label: "¿Hay algo más que quieras que la profesora conozca para acompañar a " + name + " y ayudarle a participar?" },
 ] }];
 
 /** A version marker, whitespace and empty lists are not family answers. */

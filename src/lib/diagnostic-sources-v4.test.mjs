@@ -281,6 +281,7 @@ test("entrevista parcial, reload, confirmación, impresión y adjunto privado si
 
 test("seis preguntas breves; la familia aporta contexto sin cobertura ni evidencia", async () => {
   const groups = familyInterviewQuestionGroups("Camila");
+  assert.ok(groups.flatMap(group=>group.questions).every(question=>question.label.includes("Camila")));
   assert.equal(groups.length, 1);
   const questions = groups.flatMap((group) => group.questions);
   assert.equal(questions.length, 6);
@@ -360,8 +361,12 @@ test("lista marca respuestas parciales y confirmadas; corregir conserva versione
     const emptyStatus=(await listFamilyInterviewStatuses(db, teacher)).students.find(item=>item.student_id===second);
     assert.equal(emptyStatus.status,"not_started");
     assert.equal(emptyStatus.has_confirmed_answers,false);
+    assert.equal(emptyStatus.answered_questions,0);
+    assert.equal(emptyStatus.total_questions,6);
 
-    const correction = await saveFamilyInterview(db, teacher, first, { interests: "Ahora también le gusta dibujar." });
+    const correction = await saveFamilyInterview(db, teacher, first, { interests: "Ahora también le gusta dibujar.", social_play_tags:["seeks_others"] });
+    const correctionProgress=(await listFamilyInterviewStatuses(db,teacher)).students.find(item=>item.student_id===first);
+    assert.equal(correctionProgress.answered_questions,2);
     assert.notEqual(correction.id, confirmed.id);
     assert.equal(correction.version, confirmed.version + 1);
     assert.equal((await statuses())[first], "partial");

@@ -58,6 +58,7 @@ const BimesterReplan=process.env.NEXT_PUBLIC_AYNI_EXPERIENCE!=="0"?PeriodFutureR
 import { PlanningFeedbackOption } from "./planning-feedback-option";
 import { PilotSetup } from "./pilot-setup";
 import { EnrollmentWorkspace } from "./enrollment-workspace";
+import { InterviewsWorkspace } from "./interviews-workspace";
 import { AsyncButton, LoadingState, NextStepCard, ScreenSkeleton, WorkflowFeedback } from "./workflow-ui";
 
 const nav = [
@@ -84,6 +85,7 @@ const noClassroomViews = [] as const;
 export function TeacherWorkspace({ onSignOut, onSetupRequired }: { onSignOut?: () => void; onSetupRequired?: (required: boolean) => void }) {
   const [active, setActive] = useState("Hoy");
   const [diagnosticChild, setDiagnosticChild] = useState(false);
+  const [diagnosticScreenStep, setDiagnosticScreenStep] = useState(0);
   const [annualDestination, setAnnualDestination] = useState(false);
   const navigationTouched = useRef(false);
   const [annualConfirmed, setAnnualConfirmed] = useState<boolean | null>(null);
@@ -134,6 +136,7 @@ export function TeacherWorkspace({ onSignOut, onSetupRequired }: { onSignOut?: (
       acceptedHash = window.location.hash;
       setAnnualDestination(readWorkspaceParams("Planificar").get("tab") === "annual");
       setDiagnosticChild(readWorkspaceParams("Planificar").get("tab") === "diagnostic" && ["1","2","3"].includes(readWorkspaceParams("Planificar").get("step") ?? ""));
+      setDiagnosticScreenStep(Number(readWorkspaceParams("Planificar").get("step") ?? 0));
       const destination = destinationFromHash(window.location.hash);
       if (destination) { navigationTouched.current = true; if (destination === "Diagnóstico") { setPlanningTarget("diagnostic"); setActive("Planificar"); } else setActive(destination); setStarting(false); }
     };
@@ -226,7 +229,8 @@ export function TeacherWorkspace({ onSignOut, onSetupRequired }: { onSignOut?: (
   const metrics = dashboard?.metrics;
   const [classroomView] = useWorkspaceSubview("Aula", "view", dashboard ? classroomViews : noClassroomViews, students.length === 0 ? "enrollment" : "list");
   const initialEnrollment = students.length === 0 || classroomView === "enrollment";
-  useEffect(() => { onSetupRequired?.(needsSetup || active === "Aula" && initialEnrollment); }, [needsSetup,active,initialEnrollment,onSetupRequired]);
+  const interviewsActive = active === "Planificar" && (planningTarget === "diagnostic" || readWorkspaceParams("Planificar").get("tab") === "diagnostic") && diagnosticScreenStep !== 3;
+  useEffect(() => { onSetupRequired?.(needsSetup || active === "Aula" && initialEnrollment || interviewsActive); }, [needsSetup,active,initialEnrollment,interviewsActive,onSetupRequired]);
   const selectedNavigation = redesigned && active==="Planificar" && annualDestination ? "Mi año" : f7Enabled && active !== "Biblioteca" ? primaryDestination(active) : active;
 
   function navigate(section: string, afterSavedSetup = false) { if (!afterSavedSetup && !canLeaveWorkspace()) return false; navigationTouched.current = true; setStarting(false); if (section !== "Planificar") { setPlanningTarget(null); setSelectedResource(null); setCalendarActivity(null); } if (section === "Evaluar") { setEvaluationTarget(null); setEvaluationEntry("home"); } setActive(section); const hash = hashForDestination(section); if (hash && destinationFromHash(window.location.hash) !== section) { window.history.pushState(null, "", hash); window.dispatchEvent(new Event("ayni-location-change")); } return true; }
@@ -309,6 +313,7 @@ export function TeacherWorkspace({ onSignOut, onSetupRequired }: { onSignOut?: (
     setDashboard(current=>current?.profile.classroom_id===confirmed.classroomId?{...current,profile:{...current.profile,enrollment_completed_at:confirmed.completedAt}}:current);
     writeWorkspaceLocation("Aula",{view:"list"},true);openDiagnostic(1,true);
   }}/>;
+  if (interviewsActive && dashboard && !starting) return <InterviewsWorkspace dashboard={dashboard} onSignOut={onSignOut} onBack={()=>{if(navigate("Aula",true))writeWorkspaceLocation("Aula",{view:"enrollment"},true);}} onProfile={()=>navigate("Perfil",true)} onPlan={()=>{setPlanningTarget(null);navigate("Planificar",true);writeWorkspaceLocation("Planificar",{tab:"annual",step:"",mode:""});}} onReview={()=>writeWorkspaceLocation("Planificar",{tab:"diagnostic",step:"3"})}/>;
   if (databaseState === "offline") return <main className="mx-auto max-w-xl space-y-4 p-6"><h1 className="text-2xl font-bold">No se pudo conectar con el aula</h1><p>Comprueba tu conexión y vuelve a intentarlo. Tu trabajo guardado seguirá disponible.</p><Button onClick={() => { setDatabaseState("checking"); setRetry((value) => value + 1); }}>Reintentar</Button></main>;
 
   return (
