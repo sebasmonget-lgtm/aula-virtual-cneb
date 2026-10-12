@@ -1,5 +1,9 @@
 # Memoria del proyecto Ayni Aula
 
+## Producción para QA de las pantallas nuevas — 2026-10-12
+
+Solicitud expresa posterior «sube a main o production para hacer QA»: se publica en Production Vercel sin merge de main. SHA d595ffebd05d50a1971c8389f4c3d758f22a39a7, mismo producto validado en Preview 77a6bae (diff sólo documentación), árbol limpio al publicar. Build Production con --skip-domain, proveniencia READY/target/project/SHA y siete smoke PASS antes de promover; promoción del mismo build y siete smoke finales PASS. Deployment dpl_2KDEnPFk7UqyvPa7At3t1RW7sLqy, URL única https://ayni-aula-staging-gb8ttxsuq-ayni4.vercel.app; dominio habitual https://project-0w0pq.vercel.app vinculado a ese ID y SHA, verificados por API. Rollback anterior afeb45e57e11dfc820aad90d328fe3322f832f76 / dpl_ActGMDfihKLi5iPU6igWqnHAxxtw disponible. Sin cambios de infraestructura/env/RLS/migraciones ni escrituras pedagógicas por el agente. Sesión existente del navegador integrado abre Crea tu salón con datos vacíos/edad sin elegir en Production; acceso autenticado inicial comprobado, aceptación docente y recorrido QA pendientes. Panel abierto en dominio estable. Recibos y captura .local/interviews-production-20261012/.
+
 ## Entrevistas y observaciones desde mockups — 2026-10-12
 
 Tercera pantalla de preparación reemplazada por InterviewsWorkspace: cabecera/ilustración, etapas, pestañas Entrevistas/Observaciones sin «Elige qué quieres completar», niños/buscador/avance a la izquierda. Se conservan las seis preguntas actuales y sus opciones/IDs; cada pregunta menciona al niño. Editor apilado reutiliza guardado automático, confirmación, correcciones versionadas y adjunto privado. Cambiar de niño/pestaña o salir espera el guardado pendiente; error de carga muestra reintento y bloquea edición/guardado de datos vacíos. El endpoint agregado existente añade answered_questions/total_questions de la versión más reciente, sin consultar una entrevista por cada alumno.
