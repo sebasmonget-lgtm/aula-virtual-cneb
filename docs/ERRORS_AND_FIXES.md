@@ -1,5 +1,15 @@
 # Errores y soluciones
 
+## Preview QA: límite de conexiones de sesión — 2026-10-12
+
+Síntoma: «No pudimos conectar con Ayni» y HTTP 500 en `/api/auth/config`, también errores previos al reinicio en diagnóstico/Mi año. Logs de Vercel prueban `EMAXCONNSESSION`, máximo 15 clientes del pool de sesión. El borrado QA terminó y se verificó independientemente; este fallo no acredita pérdida adicional de datos. Cierre administrativo de dos conexiones postgres/Supavisor en estado idle PASS, pero la Preview siguió devolviendo 500. Recuperación propuesta y expresamente autorizada: volver a publicar únicamente la misma Preview, código `903020b`, sin modificar producto. Recuperación visual/smoke pendientes; no declarar resolución antes de comprobarlos. Como prevención pendiente, revisar el uso de session pooling en serverless y la recuperación de bootstrap tras un fallo de conexión. Recibos privados en `.local/reset-qa-20261012/`; sin secretos.
+
+## Reinicio QA: calendario compartido y recuperación del acceso — 2026-10-12
+
+Síntoma: ensayo abortó con «Protected data changed or QA rows remain: school_calendar_versions». Causa: la huella de filas protegidas usaba `NOT (predicado de propietario)`; las versiones compartidas con `school_year_id IS NULL` quedaban excluidas de la huella inicial, pero incluidas al verificar toda la tabla tras el borrado. Solución: calcular el respaldo con `(predicado) IS NOT TRUE`, incluyendo los recursos compartidos sin propietario. Validación: ensayo con rollback, reinicio de 331 filas y verificación independiente de 81 huellas protegidas PASS; calendario compartido intacto. Prevención: contemplar NULL al calcular el complemento de ámbitos privados.
+
+El acceso administrativo se recuperó con la CLI ya autenticada: `supabase projects list` identifica el proyecto nuevo y `supabase db query --linked --project-ref ... --file ...` ejecuta sin extraer secretos. El conector muestra otra cuenta y las URLs locales están ocultas; esos dos fallos no demuestran ausencia de acceso. Comprobar primero la sesión CLI existente antes de pedir otro ingreso. No registrar tokens ni secretos.
+
 ## UX-QA-06 — Salir de la preparación dejaba a la docente sin regreso claro
 
 Síntoma reportado: una docente sin año confirmado puede abrir otro módulo y no encontrar su etapa de preparación. Causa: shell con todos los destinos al mismo nivel, sin portada ni regreso; el arranque anterior trataba también el borrador anual como motivo para ir a Hoy. Solución: navegación temporal de cuatro etapas basada en plans.active del servidor, acceso secundario y ruta de regreso saneada; después de confirmación, navegación habitual/Hoy. Validación: 16 focales PASS; diagnóstico→Hoy→entrevista y Calendario→etapa pendiente con borrador guardado y tres niños conservados en HTTP local; cero escrituras/IA durante navegación. Escenario anual confirmado mediante respuesta GET ficticia explícita, sin preparar un plan remoto. Prevención: probar salida/regreso y distinguir borrador de año confirmado; no guardar contenido privado para recordar navegación.
