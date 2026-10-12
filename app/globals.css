@@ -246,3 +246,22 @@ body:has([data-ayni-screen="classroom-setup"]) :is(button, input, select):disabl
 @media (prefers-reduced-motion: reduce) {
   body:has([data-ayni-screen="classroom-setup"]) :is(button, summary, a[href], select, input) { transition: none; }
 }
+
+/* Approved interaction states only while the initial enrollment is visible. */
+body:has([data-ayni-screen="initial-enrollment"]) button {
+  min-height: 44px;
+  border: 1px solid #bdd0dd;
+}
+body:has([data-ayni-screen="initial-enrollment"]) :is(button, summary, a[href]):not(:disabled):hover {
+  border-color: #087d96;
+  filter: brightness(.96);
+}
+body:has([data-ayni-screen="initial-enrollment"]) :is(button, summary, a[href]):not(:disabled):active {
+  filter: brightness(.90);
+}
+body:has([data-ayni-screen="initial-enrollment"]) button:disabled {
+  cursor: not-allowed;
+  pointer-events: auto;
+  opacity: .45;
+  filter: saturate(.4);
+}

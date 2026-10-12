@@ -3,8 +3,8 @@ import { newAyniFeatureEnabled } from "@/src/lib/new-ayni-feature-flag.mjs";
 
 import { StudentPhoto, StudentPhotoEditor, EnrollmentPhoto, uploadStudentPhoto } from "./student-photo";
 
-import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Plus, Search } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { ArrowLeft, ArrowRight, ListPlus, Plus, Search, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -28,7 +28,7 @@ const statusLabels = {
   observed_without_judgment: "Descripción docente",
 } as const;
 
-export function StudentsScreen({ students, onImported, onEvaluate, onPlan, onDiagnostic }: { students: LocalStudent[]; onImported: (dashboard: LocalDashboard) => void; onEvaluate?: (studentId: string, competencyId: string) => void; onPlan?: () => void; onDiagnostic?: () => void }) {
+export function StudentsScreen({ students, onImported, onEvaluate, onPlan, onDiagnostic, initialEnrollment = students.length === 0, classroomLabel, onRegistrationComplete }: { students: LocalStudent[]; onImported: (dashboard: LocalDashboard) => void; onEvaluate?: (studentId: string, competencyId: string) => void; onPlan?: () => void; onDiagnostic?: () => void; initialEnrollment?: boolean; classroomLabel?: string; onRegistrationComplete?: () => void }) {
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [profile, setProfile] = useState<StudentPedagogicalProfile | null>(null);
@@ -41,17 +41,22 @@ export function StudentsScreen({ students, onImported, onEvaluate, onPlan, onDia
   const [photo,setPhoto]=useState<PrivateMediaUpload|null>(null);
   const [photoBusy,setPhotoBusy]=useState(false);
   const [photoRetry,setPhotoRetry]=useState<{id:string;media:PrivateMediaUpload}|null>(null);
+  const [photoRevisions,setPhotoRevisions]=useState<Record<string,number>>({});
   const [csv, setCsv] = useState("");
   const [csvReview, setCsvReview] = useState<{firstName:string;lastName:string;preferredName:string|null;birthDate:string|null}[] | null>(null);
   const [namesReviewed, setNamesReviewed] = useState(false);
   const [importBusy, setImportBusy] = useState(false);
-  const [importAction, setImportAction] = useState<"single" | "csv">("single");
+  const [importAction, setImportAction] = useState<"single" | "csv" | "photo">("single");
   const [importMessage, setImportMessage] = useState("");
   const [importTone, setImportTone] = useState<"success" | "error">("success");
   const [addOpen, setAddOpen] = useState(students.length === 0);
-  const allowLeave = useUnsavedWork(Boolean(firstName.trim() || lastName.trim() || preferredName.trim() || birthDate || photo || csv.trim()), importBusy || photoBusy);
+  const [importOpen, setImportOpen] = useState(false);
+  const csvFileInput = useRef<HTMLInputElement>(null);
+  const singleDirty = Boolean(firstName.trim() || lastName.trim() || preferredName.trim() || birthDate || photo);
+  const dirty = singleDirty || Boolean(csv.trim());
+  const allowLeave = useUnsavedWork(dirty || Boolean(photoRetry), importBusy || photoBusy);
   const [filter, setFilter] = useState<"all" | "unobserved" | "evidence">("all");
-  const { statuses: interviewStatuses } = useFamilyInterviewStatusMap(`${selectedId ?? "list"}:${students.map((item) => item.id).join(",")}`, students.length > 0);
+  const { statuses: interviewStatuses } = useFamilyInterviewStatusMap(`${selectedId ?? "list"}:${students.map((item) => item.id).join(",")}`, students.length > 0 && !initialEnrollment);
   const visibleStudents = useMemo(() => students.filter((student) =>
     (student.full_name ?? student.name).toLocaleLowerCase("es-PE").includes(query.toLocaleLowerCase("es-PE")) &&
     (filter === "all" || (filter === "unobserved" ? !student.evidence_count : Boolean(student.evidence_count))),
@@ -71,18 +76,21 @@ export function StudentsScreen({ students, onImported, onEvaluate, onPlan, onDia
     return `${records} ${records === 1 ? "evidencia" : "evidencias"} · ${competencies ? `${competencies} ${competencies === 1 ? "competencia" : "competencias"}` : "sin competencia vinculada"}`;
   };
 
+  const savingStudent = useRef(false);
   async function addStudents(useCsv: boolean) {
-    if (importBusy || photoBusy) return;
-    if (useCsv && (!csvReview?.length || duplicateNames.length > 0 && !namesReviewed)) return;
+    if (savingStudent.current || importBusy || photoBusy || photoRetry) return;
+    if (useCsv && (!csvReview?.length || duplicateNames.length > 0 && !namesReviewed || initialEnrollment && singleDirty)) return;
+    savingStudent.current = true;
     setImportAction(useCsv ? "csv" : "single"); setImportBusy(true); setImportMessage("");
     try {
       const dashboard = await importPilotStudents(useCsv ? { students: csvReview!.map(row=>({...row,preferredName:row.preferredName??undefined,birthDate:row.birthDate??undefined})) } : { students: [{ firstName, lastName, preferredName, birthDate }] });
-      setFirstName(""); setLastName(""); setPreferredName(""); setBirthDate(""); setCsv("");
+      if (useCsv) { setCsv(""); setCsvReview(null); }
+      else { setFirstName(""); setLastName(""); setPreferredName(""); setBirthDate(""); }
       setImportMessage(useCsv ? "Lista de niños importada al aula." : "Niño añadido al aula."); setImportTone("success");
       if(!useCsv && photo){const added=dashboard.students.find(s=>!students.some(old=>old.id===s.id));if(added){setPhoto(null);try{await uploadStudentPhoto(added.id,photo);setPhotoRetry(null);}catch{setPhotoRetry({id:added.id,media:photo});setImportMessage("Niño añadido. La foto aún no se guardó; puedes reintentar sin inscribirlo de nuevo.");setImportTone("error");}}}
-      setCsvReview(null); onImported(dashboard);
+      setNamesReviewed(false); onImported(dashboard);
     } catch (error) { setImportMessage(error instanceof Error ? error.message : "No se pudieron añadir los niños."); setImportTone("error"); }
-    finally { setImportBusy(false); }
+    finally { savingStudent.current = false; setImportBusy(false); }
   }
 
   useEffect(() => {
@@ -99,45 +107,54 @@ export function StudentsScreen({ students, onImported, onEvaluate, onPlan, onDia
   }, [selectedId]);
 
   if (selectedId) return <><StudentEnrollment studentId={selectedId} onSaved={async()=>{onImported(await loadLocalDashboard());setSelectedId(null);setProfile(null);}}/><EvidenceStudentCorrection profile={profile} students={students} onCorrected={async () => { setProfile(await loadStudentPedagogicalProfile(selectedId)); }} /><StudentProfile profile={profile} loading={loading} error={profileError} onBack={() => { setSelectedId(null); setProfile(null); setProfileError(""); }} onEvaluate={onEvaluate} onPlan={onPlan} /></>;
-  return <section className="mx-auto max-w-5xl space-y-5">
-    <header className="flex items-start justify-between gap-3"><div><h1 className="text-3xl font-extrabold tracking-tight text-[#1c2e50]">Mi aula</h1><p className="mt-1 text-[#566883]">Tus niños y sus registros</p></div><button type="button" onClick={() => setAddOpen((open) => !open)} aria-expanded={addOpen} className="flex min-h-11 shrink-0 items-center gap-2 rounded-xl border border-[#0b7891] bg-white px-4 font-bold text-[#07576c]"><Plus className="size-4" /> Añadir niño</button></header>
-    <p className="text-sm text-[#526b87]">{students.length} niños · {observedCount} con evidencias de actividad · {students.length-observedCount} por observar</p>
-    <label className="flex min-h-14 items-center gap-3 rounded-2xl border border-input bg-white px-4 text-[#60718a] focus-within:ring-[3px] focus-within:ring-ring/50"><Search className="size-5" aria-hidden="true" /><span className="sr-only">Buscar niño</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar niño" className="min-w-0 flex-1 border-0 bg-transparent text-[#1c2e50] outline-none" /></label>
-    <div className="flex flex-wrap gap-2" aria-label="Filtrar niños">{([["all", "Todos"], ["unobserved", "Por observar"], ["evidence", "Con evidencias"]] as const).map(([id, label]) => <button type="button" key={id} aria-pressed={filter === id} onClick={() => setFilter(id)} className={`min-h-11 rounded-full px-4 text-sm font-semibold ${filter === id ? "bg-[#0b7891] text-white" : "border border-input bg-white text-[#315575]"}`}>{label}</button>)}</div>
-    {addOpen && <section className="rounded-[1.3rem] border border-[#d4e1ed] bg-white p-5 sm:p-6" aria-labelledby="add-students-title">
-      <h2 id="add-students-title" className="text-lg font-extrabold text-[#1c2e50]">Añadir niños al aula</h2>
-      <p className="mt-1 text-sm text-[#526b87]">Escribe el nombre y apellido. El nombre preferido y la fecha de nacimiento son opcionales.</p>
-      <form className="mt-5" aria-busy={importBusy && importAction === "single"} onSubmit={(event) => { event.preventDefault(); void addStudents(false); }}>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <label htmlFor="student-first-name" className="block text-sm font-semibold text-[#244260]">Nombre <span className="text-[#9a4050]" aria-hidden="true">*</span><Input id="student-first-name" className="mt-2" value={firstName} onChange={(event) => setFirstName(event.target.value)} autoComplete="off" required /></label>
-          <label htmlFor="student-last-name" className="block text-sm font-semibold text-[#244260]">Apellido <span className="text-[#9a4050]" aria-hidden="true">*</span><Input id="student-last-name" className="mt-2" value={lastName} onChange={(event) => setLastName(event.target.value)} autoComplete="off" required /></label>
-        </div>
-        <details className="mt-4"><summary className="min-h-11 cursor-pointer py-2 text-sm font-semibold text-[#244260]">Nombre preferido, nacimiento y foto (opcionales)</summary><div className="mt-3 grid gap-4 sm:grid-cols-2">          <label htmlFor="student-preferred-name" className="block text-sm font-semibold text-[#244260]">Nombre preferido <span className="font-normal text-[#526b87]">(opcional)</span><Input id="student-preferred-name" className="mt-2" value={preferredName} onChange={(event) => setPreferredName(event.target.value)} autoComplete="off" /></label>
-          <label htmlFor="student-birth-date" className="block text-sm font-semibold text-[#244260]">Fecha de nacimiento <span className="font-normal text-[#526b87]">(opcional)</span><Input id="student-birth-date" type="date" className="mt-2" max={new Date().toISOString().slice(0, 10)} value={birthDate} onChange={(event) => setBirthDate(event.target.value)} /></label>
-
-          <EnrollmentPhoto media={photo} onChange={setPhoto} onBusy={setPhotoBusy} disabled={importBusy||photoBusy}/>
-        </div></details>
-        <AsyncButton type="submit" className="mt-4 min-h-11" busy={importBusy && importAction === "single"} busyLabel="Añadiendo niño…" disabled={importBusy || photoBusy || !firstName.trim() || !lastName.trim()}>{importMessage && importTone === "success" ? "Añadir otro niño" : "Guardar niño"}</AsyncButton>
-      </form>
-      <details className="mt-4">
-        <summary className="min-h-11 cursor-pointer py-3 text-sm font-semibold text-[#244260]">Añadir varios niños desde una lista</summary>
-        <div className="mt-3 rounded-xl border border-[#a9bdce] bg-[#f7faff] p-4">
+  const optionalFields = <div className="grid gap-4 sm:grid-cols-2">
+      <label htmlFor="student-preferred-name" className="block text-sm font-semibold text-[#244260]">Nombre preferido <span className="font-normal text-[#526b87]">(opcional)</span><Input id="student-preferred-name" className="mt-2" disabled={importBusy || photoBusy} value={preferredName} onChange={(event) => setPreferredName(event.target.value)} autoComplete="off" /></label>
+      <label htmlFor="student-birth-date" className="block text-sm font-semibold text-[#244260]">Fecha de nacimiento <span className="font-normal text-[#526b87]">(opcional)</span><Input id="student-birth-date" type="date" className="mt-2" disabled={importBusy || photoBusy} max={new Date().toISOString().slice(0, 10)} value={birthDate} onChange={(event) => setBirthDate(event.target.value)} /></label>
+    </div>;
+  const importPanel = <div className="mt-3 rounded-xl border border-[#a9bdce] bg-[#f7faff] p-4">
           <label htmlFor="students-csv" className="block text-sm font-semibold text-[#244260]">Lista de niños en CSV</label>
           <p id="students-csv-help" className="mt-1 text-sm text-[#526b87]">Encabezado: first_name,last_name,preferred_name. Puedes añadir birth_date como cuarta columna (AAAA-MM-DD). Máximo 40 niños.</p>
-          <Textarea id="students-csv" className="mt-2 min-h-32" aria-describedby="students-csv-help" value={csv} onChange={(event) => { setCsv(event.target.value); setCsvReview(null); setNamesReviewed(false); }} placeholder={'first_name,last_name,preferred_name\nMaría,López,María'} />
-          <label className="mt-3 block text-sm">O abre un archivo CSV<input type="file" accept=".csv,text/csv" disabled={importBusy} className="mt-2 block max-w-full text-sm" onChange={event=>{const file=event.target.files?.[0];if(!file)return;if(file.size>20000){setImportTone("error");setImportMessage("El CSV admite hasta 20 KB.");return;}void file.text().then(value=>{setCsv(value);setCsvReview(null);setNamesReviewed(false);}).catch(()=>{setImportTone("error");setImportMessage("No pude leer el archivo. Puedes pegar la lista.");});}}/></label>
+          <Textarea disabled={importBusy || photoBusy} id="students-csv" className="mt-2 min-h-32" aria-describedby="students-csv-help" value={csv} onChange={(event) => { setCsv(event.target.value); setCsvReview(null); setNamesReviewed(false); }} placeholder={'first_name,last_name,preferred_name\nMaría,López,María'} />
+          <div className="mt-3 text-sm"><p>O abre un archivo CSV</p>{initialEnrollment && <Button type="button" variant="outline" className="mt-2" disabled={importBusy || photoBusy} onClick={() => csvFileInput.current?.click()}>Seleccionar archivo CSV</Button>}<input ref={csvFileInput} hidden={initialEnrollment} aria-label="Archivo CSV de niños" type="file" accept=".csv,text/csv" disabled={importBusy || photoBusy} className="mt-2 block max-w-full text-sm" onChange={event=>{const file=event.target.files?.[0];if(!file)return;if(file.size>20000){setImportTone("error");setImportMessage("El CSV admite hasta 20 KB.");return;}void file.text().then(value=>{setCsv(value);setCsvReview(null);setNamesReviewed(false);}).catch(()=>{setImportTone("error");setImportMessage("No pude leer el archivo. Puedes pegar la lista.");});}}/></div>
           <Button type="button" className="mt-3 min-h-11" variant="outline" disabled={importBusy || !csv.trim()} onClick={reviewCsv}>Revisar lista antes de añadir</Button>
-          {csvReview&&<section className="mt-4 space-y-3" aria-label="Revisión de niños por añadir"><h3 className="font-semibold">Revisa {csvReview.length} niños antes de guardar</h3><ul className="divide-y">{csvReview.map((row,index)=><li key={index} className="flex min-h-12 items-center justify-between gap-3 py-2 text-sm"><span>{row.firstName} {row.lastName}{row.birthDate&&<small className="block">Nacimiento: {row.birthDate}</small>}</span><Button variant="ghost" disabled={importBusy} aria-label={"Quitar de la lista a "+row.firstName+" "+row.lastName} onClick={()=>{setCsvReview(csvReview.filter((_,i)=>i!==index));setNamesReviewed(false);}}>Quitar</Button></li>)}</ul>{duplicateNames.length>0&&<label className="flex items-start gap-3 rounded-lg bg-[#fff4df] p-3 text-sm"><input type="checkbox" checked={namesReviewed} onChange={event=>setNamesReviewed(event.target.checked)}/><span>Hay nombres repetidos en la lista o que ya aparecen en el aula. Revisé que se trata de niños distintos y quiero añadirlos. Ayni no combinará sus registros.</span></label>}<AsyncButton busy={importBusy&&importAction==="csv"} busyLabel="Añadiendo lista…" disabled={importBusy||!csvReview.length||duplicateNames.length>0&&!namesReviewed} onClick={()=>void addStudents(true)}>Añadir {csvReview.length} niños al aula</AsyncButton></section>}
+          {csvReview&&<section className="mt-4 space-y-3" aria-label="Revisión de niños por añadir"><h3 className="font-semibold">Revisa {csvReview.length} {csvReview.length === 1 ? "niño" : "niños"} antes de guardar</h3><ul className="divide-y">{csvReview.map((row,index)=><li key={index} className="flex min-h-12 items-center justify-between gap-3 py-2 text-sm"><span>{row.firstName} {row.lastName}{row.birthDate&&<small className="block">Nacimiento: {row.birthDate}</small>}</span><Button variant="ghost" disabled={importBusy || photoBusy} aria-label={"Quitar de la lista a "+row.firstName+" "+row.lastName} onClick={()=>{setCsvReview(csvReview.filter((_,i)=>i!==index));setNamesReviewed(false);}}>Quitar</Button></li>)}</ul>{duplicateNames.length>0&&<label className="flex items-start gap-3 rounded-lg bg-[#fff4df] p-3 text-sm"><input type="checkbox" disabled={importBusy || photoBusy} checked={namesReviewed} onChange={event=>setNamesReviewed(event.target.checked)}/><span>Hay nombres repetidos en la lista o que ya aparecen en el aula. Revisé que se trata de niños distintos y quiero añadirlos. Ayni no combinará sus registros.</span></label>}<AsyncButton variant={initialEnrollment ? "outline" : "default"} busy={importBusy&&importAction==="csv"} busyLabel="Añadiendo lista…" disabled={importBusy||photoBusy||Boolean(photoRetry)||initialEnrollment&&singleDirty||!csvReview.length||duplicateNames.length>0&&!namesReviewed} onClick={()=>void addStudents(true)}>Añadir {csvReview.length} {csvReview.length === 1 ? "niño" : "niños"} al aula</AsyncButton></section>}
+        </div>;
+  return <section data-ayni-screen={initialEnrollment ? "initial-enrollment" : undefined} className="mx-auto max-w-5xl space-y-5">
+    {initialEnrollment ? <header>
+      <div className="flex flex-wrap items-baseline justify-between gap-2"><h1 className="text-3xl font-extrabold tracking-tight text-[#1c2e50]">Añade a tus niños</h1>{classroomLabel && <p className="text-sm text-[#526b87]">{classroomLabel}</p>}</div>
+      <p className="mt-2 text-[#566883]">Estás preparando tu aula. Registra a tus niños uno por uno o importa una lista.</p>
+    </header> : <header className="flex items-start justify-between gap-3"><div><h1 className="text-3xl font-extrabold tracking-tight text-[#1c2e50]">Mi aula</h1><p className="mt-1 text-[#566883]">Tus niños y sus registros</p></div><button type="button" onClick={() => setAddOpen((open) => !open)} aria-expanded={addOpen} className="flex min-h-11 shrink-0 items-center gap-2 rounded-xl border border-[#0b7891] bg-white px-4 font-bold text-[#07576c]"><Plus className="size-4" /> Añadir niño</button></header>}
+    {!initialEnrollment && <>
+      <p className="text-sm text-[#526b87]">{students.length} niños · {observedCount} con evidencias de actividad · {students.length-observedCount} por observar</p>
+      <label className="flex min-h-14 items-center gap-3 rounded-2xl border border-input bg-white px-4 text-[#60718a] focus-within:ring-[3px] focus-within:ring-ring/50"><Search className="size-5" aria-hidden="true" /><span className="sr-only">Buscar niño</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar niño" className="min-w-0 flex-1 border-0 bg-transparent text-[#1c2e50] outline-none" /></label>
+      <div className="flex flex-wrap gap-2" aria-label="Filtrar niños">{([["all", "Todos"], ["unobserved", "Por observar"], ["evidence", "Con evidencias"]] as const).map(([id, label]) => <button type="button" key={id} aria-pressed={filter === id} onClick={() => setFilter(id)} className={"min-h-11 rounded-full px-4 text-sm font-semibold " + (filter === id ? "bg-[#0b7891] text-white" : "border border-input bg-white text-[#315575]")}>{label}</button>)}</div>
+    </>}
+    {(initialEnrollment || addOpen) && <section className="rounded-[1.3rem] border border-[#d4e1ed] bg-white p-5 sm:p-6" aria-labelledby="add-students-title">
+      <div className="flex flex-wrap items-center justify-between gap-3"><h2 id="add-students-title" className="text-lg font-extrabold text-[#1c2e50]">{initialEnrollment ? "Datos del niño" : "Añadir niños al aula"}</h2>{initialEnrollment && <Button type="button" variant="outline" className="min-h-11" disabled={importBusy || photoBusy} aria-expanded={importOpen} aria-controls="initial-students-import" onClick={() => setImportOpen(open => !open)}><ListPlus className="size-4" aria-hidden="true" />Importar lista</Button>}</div>
+      {!initialEnrollment && <p className="mt-1 text-sm text-[#526b87]">Escribe el nombre y apellido. El nombre preferido y la fecha de nacimiento son opcionales.</p>}
+      <form className="mt-5" aria-busy={importBusy && importAction === "single"} onSubmit={(event) => { event.preventDefault(); void addStudents(false); }}>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label htmlFor="student-first-name" className="block text-sm font-semibold text-[#244260]">Nombre <span className="text-[#9a4050]" aria-hidden="true">*</span><Input id="student-first-name" className="mt-2" disabled={importBusy || photoBusy} value={firstName} onChange={(event) => setFirstName(event.target.value)} autoComplete="off" required /></label>
+          <label htmlFor="student-last-name" className="block text-sm font-semibold text-[#244260]">Apellido <span className="text-[#9a4050]" aria-hidden="true">*</span><Input id="student-last-name" className="mt-2" disabled={importBusy || photoBusy} value={lastName} onChange={(event) => setLastName(event.target.value)} autoComplete="off" required /></label>
         </div>
-      </details>
-      {importBusy && <div className="mt-4"><LoadingState label={importAction === "csv" ? "Importando la lista de niños…" : "Guardando al niño en el aula…"} /></div>}
+        {initialEnrollment ? <div className="mt-4">{optionalFields}</div> : <details className="mt-4"><summary className="min-h-11 cursor-pointer py-2 text-sm font-semibold text-[#244260]">Nombre preferido, nacimiento y foto (opcionales)</summary><div className="mt-3">{optionalFields}<EnrollmentPhoto media={photo} onChange={setPhoto} onBusy={setPhotoBusy} disabled={importBusy||photoBusy}/></div></details>}
+        {initialEnrollment && <EnrollmentPhoto media={photo} onChange={setPhoto} onBusy={setPhotoBusy} disabled={importBusy||photoBusy} initialEnrollment/>}
+        <AsyncButton type="submit" className={"mt-4 min-h-11 " + (initialEnrollment ? "w-full" : "")} aria-live="polite" busy={importBusy && importAction === "single"} busyLabel="Guardando niño…" disabled={importBusy || photoBusy || Boolean(photoRetry) || !firstName.trim() || !lastName.trim()}>{initialEnrollment ? "Guardar niño" : importMessage && importTone === "success" ? "Añadir otro niño" : "Guardar niño"}</AsyncButton>
+      </form>
+      {initialEnrollment ? <div id="initial-students-import" hidden={!importOpen}>{importPanel}{singleDirty && <p className="mt-2 text-sm text-[#526b87]">Guarda el niño que estás preparando antes de importar la lista.</p>}</div> : <details className="mt-4"><summary className="min-h-11 cursor-pointer py-3 text-sm font-semibold text-[#244260]">Añadir varios niños desde una lista</summary>{importPanel}</details>}
+      {importBusy && !initialEnrollment && <div className="mt-4"><LoadingState label={importAction === "csv" ? "Importando la lista de niños…" : "Guardando al niño en el aula…"} /></div>}
       {importMessage && <div className="mt-4"><WorkflowFeedback tone={importTone}>{importMessage}</WorkflowFeedback></div>}
-      {photoRetry&&<Button disabled={importBusy} className="mt-3" variant="outline" onClick={()=>{setImportBusy(true);void uploadStudentPhoto(photoRetry.id,photoRetry.media).then(()=>{setPhotoRetry(null);setImportTone("success");setImportMessage("Foto privada guardada.");}).catch(()=>setImportMessage("La foto sigue pendiente. El alumno ya está inscrito.")).finally(()=>setImportBusy(false));}}>Reintentar guardar foto</Button>}
-
+      {photoRetry && <AsyncButton type="button" disabled={importBusy || photoBusy} busy={importBusy && importAction === "photo"} busyLabel="Guardando foto…" className="mt-3" variant="outline" onClick={() => { setImportAction("photo"); setImportBusy(true); void uploadStudentPhoto(photoRetry.id, photoRetry.media).then(() => { setPhotoRevisions(current => ({...current, [photoRetry.id]: (current[photoRetry.id] ?? 0) + 1})); setPhotoRetry(null); setImportTone("success"); setImportMessage("Foto privada guardada."); }).catch(() => setImportMessage("La foto sigue pendiente. El alumno ya está inscrito.")).finally(() => setImportBusy(false)); }}>Reintentar guardar foto</AsyncButton>}
     </section>}
-    {students.length > 0 && (onDiagnostic||onPlan) && <details className="rounded-xl bg-[#eaf8f2] p-4"><summary className="min-h-11 cursor-pointer font-semibold text-[#246554]">Ya registré a mis niños · ¿Cómo sigo?</summary><p className="mt-2 text-sm text-[#246554]">Puedes conocer a tu grupo con entrevistas y observaciones, o crear Mi año y seguir observando después.</p><div className="mt-3 flex flex-wrap gap-3">{onDiagnostic&&<Button onClick={()=>{if(allowLeave())onDiagnostic();}}>Comenzar diagnóstico</Button>}{onPlan&&<Button variant="outline" onClick={()=>{if(allowLeave())onPlan();}}>Crear Mi año</Button>}</div></details>}
+    {initialEnrollment && <section aria-labelledby="registered-children-title" className="space-y-4">
+      <h2 id="registered-children-title" className="flex items-center gap-2 text-lg font-extrabold text-[#1c2e50]"><Users className="size-5" aria-hidden="true" />Niños registrados: {students.length}</h2>
+      {students.length ? <ul className="divide-y divide-[#d4e1ed] rounded-xl border border-[#d4e1ed] bg-white px-4">{students.map(student => <li key={student.id} className="flex items-center gap-3 py-3"><StudentPhoto id={student.id} name={student.full_name ?? student.name} revision={photoRevisions[student.id] ?? 0}/><p className="min-w-0 break-words font-semibold text-[#244260]">{student.full_name ?? student.name}</p></li>)}</ul> : <p className="text-sm text-[#526b87]">Aquí aparecerán los niños que vayas agregando.</p>}
+      <Button type="button" variant="outline" className="min-h-12 w-full whitespace-normal" disabled={!students.length || importBusy || photoBusy || dirty || Boolean(photoRetry) || !(onRegistrationComplete || onDiagnostic)} aria-describedby="registration-finish-help" onClick={() => { if (allowLeave()) (onRegistrationComplete ?? onDiagnostic)?.(); }}>Terminé de registrar a mis niños<ArrowRight className="size-4 shrink-0" aria-hidden="true" /></Button>
+      <p id="registration-finish-help" className="text-sm text-[#526b87]">{!students.length ? "Se habilitará cuando registres al menos un niño." : dirty || photoRetry ? "Guarda los datos o la foto pendiente antes de continuar." : "Continuarás al diagnóstico para conocer a tu grupo."}</p>
+    </section>}
+    {!initialEnrollment && students.length > 0 && (onDiagnostic||onPlan) && <details className="rounded-xl bg-[#eaf8f2] p-4"><summary className="min-h-11 cursor-pointer font-semibold text-[#246554]">Ya registré a mis niños · ¿Cómo sigo?</summary><p className="mt-2 text-sm text-[#246554]">Puedes conocer a tu grupo con entrevistas y observaciones, o crear Mi año y seguir observando después.</p><div className="mt-3 flex flex-wrap gap-3">{onDiagnostic&&<Button onClick={()=>{if(allowLeave())onDiagnostic();}}>Comenzar diagnóstico</Button>}{onPlan&&<Button variant="outline" onClick={()=>{if(allowLeave())onPlan();}}>Crear Mi año</Button>}</div></details>}
     <StudentEnrollment onSaved={async()=>onImported(await loadLocalDashboard())}/>
-    <div className="grid gap-3 lg:grid-cols-2">{visibleStudents.length ? visibleStudents.map((student) => <button key={student.id} type="button" onClick={() => { if(!allowLeave())return; setProfile(null); setLoading(true); setSelectedId(student.id); }} className="flex min-h-24 w-full items-center gap-3 rounded-[1.3rem] border border-[#d4e1ed] bg-white p-4 text-left hover:border-[#8acbd8] hover:shadow-sm"><StudentPhoto id={student.id} name={student.full_name ?? student.name}/><span className="min-w-0 flex-1"><strong className="block break-words text-[#1c2e50]">{student.full_name ?? student.name}</strong>{student.age_years != null && <small className="mt-1 block text-[#566883]">{student.age_years} años</small>}{Boolean(student.evidence_count) && <small className="mt-1 block text-[#566883]">{recordSummary(student)}</small>}<FamilyInterviewStatusBadge status={interviewStatuses[student.id]} /></span><span className="shrink-0 text-center"><span className={`block rounded-full px-2 py-1 text-xs font-bold ${student.evidence_count ? "bg-[#eaf8f2] text-[#287561]" : "bg-[#fff4df] text-[#9a641a]"}`}>{student.evidence_count ? "Con evidencias" : "Sin evidencias de actividad"}</span><span className="mt-2 block text-xs font-bold text-[#07576c]">Ver perfil →</span></span></button>) : <EmptyState title={students.length ? "No encontramos niños" : "Aún no hay niños en el aula"} description={students.length ? "Prueba con otro nombre o filtro." : "Añade un niño para empezar a acompañar su progreso."} />}</div>
+    {!initialEnrollment && <div className="grid gap-3 lg:grid-cols-2">{visibleStudents.length ? visibleStudents.map((student) => <button key={student.id} type="button" onClick={() => { if(!allowLeave())return; setProfile(null); setLoading(true); setSelectedId(student.id); }} className="flex min-h-24 w-full items-center gap-3 rounded-[1.3rem] border border-[#d4e1ed] bg-white p-4 text-left hover:border-[#8acbd8] hover:shadow-sm"><StudentPhoto id={student.id} name={student.full_name ?? student.name}/><span className="min-w-0 flex-1"><strong className="block break-words text-[#1c2e50]">{student.full_name ?? student.name}</strong>{student.age_years != null && <small className="mt-1 block text-[#566883]">{student.age_years} años</small>}{Boolean(student.evidence_count) && <small className="mt-1 block text-[#566883]">{recordSummary(student)}</small>}<FamilyInterviewStatusBadge status={interviewStatuses[student.id]} /></span><span className="shrink-0 text-center"><span className={`block rounded-full px-2 py-1 text-xs font-bold ${student.evidence_count ? "bg-[#eaf8f2] text-[#287561]" : "bg-[#fff4df] text-[#9a641a]"}`}>{student.evidence_count ? "Con evidencias" : "Sin evidencias de actividad"}</span><span className="mt-2 block text-xs font-bold text-[#07576c]">Ver perfil →</span></span></button>) : <EmptyState title={students.length ? "No encontramos niños" : "Aún no hay niños en el aula"} description={students.length ? "Prueba con otro nombre o filtro." : "Añade un niño para empezar a acompañar su progreso."} />}</div>}
   </section>;
 }
 
