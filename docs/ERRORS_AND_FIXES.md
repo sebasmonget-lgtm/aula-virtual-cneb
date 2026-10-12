@@ -6,6 +6,7 @@
 - Causa: dependencia compartida comprobada entre tsc y regeneración de tipos de Next. La causa concreta del TypeError de Webpack no quedó demostrada; no atribuirlo al componente ni afirmar que la concurrencia lo explica.
 - Corrección: completar Next antes del typecheck final; apartar la caché Webpack dentro del workspace y repetir Next de forma aislada. Reintento Next PASS, Vinext PASS. Recibo posterior de typecheck en `.local/setup-screen-qa/typecheck-final.log`.
 - Prevención: no ejecutar simultáneamente comprobaciones que regeneran y leen `.next/types`; conservar logs privados y revalidar sin modificar lógica de producto para un fallo de caché.
+- Recurrencia durante UX-QA-02: Next/webpack falló otra vez en WasmHash incluso ejecutándose sin otra compilación concurrente. Apartar únicamente `.next/cache/webpack` a `.local/setup-interactions-qa/` y repetir dio PASS; typecheck posterior y Vinext PASS. Esto confirma la recuperación validada, sin demostrar aún la causa interna del fallo. No se modificó configuración ni lógica de producto para sortearlo.
 
 ## Reinicio QA: comparación decimal y límite de argumentos — 2026-10-11
 

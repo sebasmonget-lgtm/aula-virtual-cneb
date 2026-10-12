@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useUnsavedWork } from "@/src/lib/use-unsaved-work";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { savePilotSetup, type LocalDashboard } from "@/src/lib/local-database";
 import { pilotSchoolYearDefaults } from "@/src/lib/pilot-school-year-defaults.mjs";
 import { displayNow } from "@/src/lib/display-date";
@@ -73,7 +74,7 @@ export function PilotSetup({ onReady }: { onReady: (dashboard: LocalDashboard) =
     } finally { setBusy(false); }
   }
 
-  return <main className="mx-auto max-w-5xl space-y-5 p-5 md:p-9">
+  return <main data-ayni-screen="classroom-setup" className="mx-auto max-w-5xl space-y-5 p-5 md:p-9">
     <header>
       <h1 className="text-3xl font-bold">Configura tu aula</h1>
       <p className="mt-2 text-sm text-muted-foreground">Registra los datos del colegio y del aula una sola vez. Después podrás añadir a tus niños y elegir cómo empezar.</p>
@@ -90,12 +91,14 @@ export function PilotSetup({ onReady }: { onReady: (dashboard: LocalDashboard) =
       </div>
       <div className="mt-6 border-t pt-5">
         <div className="flex items-center gap-3"><div className="grid size-16 shrink-0 place-items-center overflow-hidden rounded-2xl bg-[#087d96] text-xl font-bold text-white">{logoPreview && !createLogo ? <Image unoptimized src={logoPreview} alt="Vista previa del logo" width={64} height={64} className="size-full object-contain bg-white" /> : createLogo ? <span style={{ backgroundColor: logoPrimary }} className="grid size-full place-items-center">{logoInitials.toUpperCase().slice(0, 3) || "AA"}</span> : "IE"}</div><div><h2 className="font-bold">Logo del colegio</h2><p className="text-sm text-muted-foreground">Recomendado para personalizar tus documentos. Puedes continuar sin logo.</p></div></div>
-        <label className="mt-5 block text-sm font-semibold">Subir una imagen del logo <span className="font-normal">(opcional)</span>
-          <input ref={logoInputRef} className="mt-2 block w-full text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-white file:px-3 file:py-2 file:font-semibold file:text-[#075d70]" type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => { const file = event.target.files?.[0] ?? null; setLogoFile(file); setLogoPreview(file ? URL.createObjectURL(file) : ""); if (file) setCreateLogo(false); }} />
-        </label>
-        <p className="mt-2 text-xs text-muted-foreground">PNG, JPG o WebP. Hasta 2 MB. Se guarda de forma privada.</p>
-        {logoFile && <p className="mt-2 text-sm text-[#075d70]">Seleccionado: {logoFile.name} <button className="underline" type="button" onClick={() => { setLogoFile(null); setLogoPreview(""); if (logoInputRef.current) logoInputRef.current.value = ""; }}>Quitar</button></p>}
-        <label className="mt-5 flex items-center gap-2 text-sm font-medium"><input type="checkbox" checked={createLogo} onChange={(event) => { setCreateLogo(event.target.checked); if (event.target.checked) { setLogoFile(null); setLogoPreview(""); if (logoInputRef.current) logoInputRef.current.value = ""; } }} /> Prefiero crear uno con iniciales</label>
+        <div className="mt-5 flex flex-wrap items-center gap-3">
+          <Button variant="outline" type="button" disabled={busy} className="min-h-11 border-[#bdd0dd] bg-white font-semibold text-[#075d70]" aria-describedby="setup-logo-help" onClick={() => logoInputRef.current?.click()}>Seleccionar logo</Button>
+          <input ref={logoInputRef} hidden type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => { const file = event.target.files?.[0]; if (!file) return; setLogoFile(file); setLogoPreview(URL.createObjectURL(file)); setCreateLogo(false); }} />
+          <p role="status" className="min-w-0 break-all text-sm text-[#075d70]">{logoFile ? `Seleccionado: ${logoFile.name}` : "Ningún logo seleccionado"}</p>
+          {logoFile && <Button variant="outline" className="min-h-11 border-[#bdd0dd] bg-white text-[#075d70]" type="button" disabled={busy} onClick={() => { setLogoFile(null); setLogoPreview(""); if (logoInputRef.current) logoInputRef.current.value = ""; }}>Quitar logo</Button>}
+        </div>
+        <p id="setup-logo-help" className="mt-2 text-xs text-muted-foreground">Opcional. PNG, JPG o WebP. Hasta 2 MB. Se guarda de forma privada.</p>
+        <label className="setup-logo-choice mt-5 flex min-h-11 items-center gap-2 rounded-lg border border-transparent px-2 text-sm font-medium"><input type="checkbox" disabled={busy} checked={createLogo} onChange={(event) => { setCreateLogo(event.target.checked); if (event.target.checked) { setLogoFile(null); setLogoPreview(""); if (logoInputRef.current) logoInputRef.current.value = ""; } }} /> Prefiero crear uno con iniciales</label>
         {createLogo && <div className="mt-4 space-y-3"><label className="block text-sm font-semibold">Iniciales (máximo 3)<Input className="mt-2" maxLength={3} value={logoInitials} onChange={(event) => setLogoInitials(event.target.value)} /></label><div className="flex gap-4 text-sm"><label>Color base <input type="color" value={logoPrimary} onChange={(event) => setLogoPrimary(event.target.value)} className="ml-2 align-middle" /></label><label>Acento <input type="color" value={logoAccent} onChange={(event) => setLogoAccent(event.target.value)} className="ml-2 align-middle" /></label></div></div>}
       </div>
     </section>

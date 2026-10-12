@@ -202,3 +202,47 @@ button[data-slot="button"][data-variant="outline"] { border-color: var(--input);
 .journey-matrix-scroll::-webkit-scrollbar { height: 14px; }
 .journey-matrix-scroll::-webkit-scrollbar-track { background: #edf5fa; border-radius: 8px; }
 .journey-matrix-scroll::-webkit-scrollbar-thumb { background: #9bbac9; border: 3px solid #edf5fa; border-radius: 8px; }
+
+/* Approved QA interaction states, limited to the initial classroom setup. */
+body:has([data-ayni-screen="classroom-setup"]) :is(button, summary, a[href], select, input[type="checkbox"], input[type="color"], .setup-logo-choice) {
+  cursor: pointer;
+  transition: background-color 120ms ease, border-color 120ms ease, filter 120ms ease;
+}
+body:has([data-ayni-screen="classroom-setup"]) button {
+  min-height: 44px;
+  border: 1px solid #bdd0dd;
+}
+body:has([data-ayni-screen="classroom-setup"]) :is(button, summary, a[href]):not(:disabled):hover {
+  filter: brightness(.96);
+  border-color: #087d96;
+}
+body:has([data-ayni-screen="classroom-setup"]) :is(summary, a[href], .setup-logo-choice):hover {
+  background-color: #eaf6f9;
+}
+body:has([data-ayni-screen="classroom-setup"]) :is(button, summary, a[href], .setup-logo-choice):not(:disabled):active {
+  filter: brightness(.90);
+}
+body:has([data-ayni-screen="classroom-setup"]) :is(button, summary, a[href], input, select):focus-visible {
+  outline: 3px solid #087d96;
+  outline-offset: 3px;
+}
+body:has([data-ayni-screen="classroom-setup"]) :is(select, input[type="color"]):not(:disabled):hover {
+  border-color: #087d96;
+  background-color: #f1f8fa;
+}
+body:has([data-ayni-screen="classroom-setup"]) input[type="checkbox"] { accent-color: #087d96; }
+body:has([data-ayni-screen="classroom-setup"]) input[type="color"] {
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid #bdd0dd;
+  border-radius: 8px;
+}
+body:has([data-ayni-screen="classroom-setup"]) :is(button, input, select):disabled {
+  cursor: not-allowed;
+  pointer-events: auto;
+  opacity: .45;
+  filter: saturate(.4);
+}
+@media (prefers-reduced-motion: reduce) {
+  body:has([data-ayni-screen="classroom-setup"]) :is(button, summary, a[href], select, input) { transition: none; }
+}

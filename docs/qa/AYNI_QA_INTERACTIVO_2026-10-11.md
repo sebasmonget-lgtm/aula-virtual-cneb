@@ -164,3 +164,25 @@ Commit de implementación `ea70731df9889f23da3f81bce4b2c046a506953c`, árbol lim
 Smoke remoto de lectura PASS: Auth/config 200, reloj y ajustes sin sesión Ayni 401, health 200. Tiempos aislados 0,485 s / 0,468 s / 0,422 s / 2,745 s respectivamente; no equivalen a tiempo de guardar ni a carga completa de la pantalla. Consulta de proyecto posterior al despliegue confirma Production intacta: `dpl_EgekhWXwVjaM9iCcRc8mpJn2Eoc4` / `ea206bf`.
 
 La nueva Preview quedó abierta visible en Side Panel. El host nuevo muestra ingreso con campos vacíos; se solicitó ingreso manual con la cuenta QA, sin introducir credenciales ni copiar cookies. No se guardó el aula remota ni se abrió registro de niños. Pendiente comprobación visual autenticada en este host y aprobación del propietario para continuar.
+
+## UX-QA-02 — Logo e interacción de controles
+
+El propietario aprueba implementar en «Configura tu aula» un botón reconocible «Seleccionar logo», reemplazando el selector nativo visible en inglés. Mantener estilo, carga privada, vista previa, límites existentes y posibilidad de continuar sin logo. Antes de este ajuste, observación de solo lectura de la Preview `7q5bnhrz5` confirmó sesión QA abierta, reloj 16/02/2026 08:00 Lima y formulario sin guardar.
+
+Criterio general aprobado para revisar pantalla por pantalla durante el QA:
+
+- Botones con borde, fondo y estados visuales claros.
+- Cursor de mano en controles clicables disponibles; los campos de texto conservan el cursor de edición.
+- Respuesta sutil al pasar el mouse y al presionar.
+- Foco visible al navegar por teclado.
+- Controles deshabilitados claramente diferenciados y sin aparentar disponibilidad.
+- Aplicar también a controles plegables, enlaces de acción y otros elementos interactivos.
+- Conservar el estilo actual y evitar efectos exagerados.
+
+Alcance de esta implementación: configuración inicial y controles que la acompañan. Las reglas CSS solo se activan si existe el marcador de esta pantalla; no cambian otras pantallas. El criterio general queda pendiente de revisión e implementación autorizada para cada pantalla posterior. No modificar backend, IA, credenciales, migraciones ni datos remotos.
+
+Implementación: botón secundario «Seleccionar logo» accesible por teclado, input nativo oculto, nombre del archivo anunciado como estado y botón «Quitar logo». Conserva generador de iniciales, formatos PNG/JPG/WebP y máximo 2 MB. El único botón principal continúa siendo «Guardar aula y añadir niños». Foco turquesa, cursor, borde, hover y respuesta de pulsación discretos; controles no disponibles atenuados con cursor de prohibición. Transiciones desactivadas cuando se solicita movimiento reducido.
+
+Prueba funcional local con HTTP/PGlite independiente: Enter sobre «Seleccionar logo» abre el selector, selección muestra archivo y vista previa; quitar y volver a seleccionar el mismo archivo funciona; generación de iniciales y colores se conservan. Guardado con logo: **506 ms** clic→confirmación local, recuperación mediante GET confirma el logo privado y cero niños. Sin escrituras remotas ni llamadas IA. Foco por Tab/Shift+Tab, cursor pointer disponible, not-allowed y opacidad .45 deshabilitado comprobados mediante navegador. Hover y active definidos e inspeccionados en CSS; su percepción con mouse queda para revisión humana en Preview.
+
+Escritorio 1366×900 y móvil 390×844 inspeccionados, sin desbordamiento horizontal. Capturas y recibos privados en `.local/setup-interactions-qa/`. Typecheck inicial y posterior a Next, lint de fuente, Vinext y Next/webpack final PASS; 15 pruebas focales PASS/0 SKIP (logo, fechas y preparación del piloto). Next falló inicialmente en WasmHash y pasó tras apartar su caché: no atribuir el fallo al componente ni declarar PASS para la ejecución fallida. Detector Impeccable: cero anti-patrones; aviso sobre un fondo de cuadrícula preexistente fuera de alcance. Publicación y smoke se registran al completarse. Rollback: revertir este ajuste o utilizar Preview anterior `ea70731`; sin cambios de datos que revertir. No avanzar al registro de niños.
