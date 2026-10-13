@@ -1,7 +1,7 @@
 "use client";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import { apiFetch } from "@/src/lib/ayni-api-fetch";
+import { apiFetch, apiJson } from "@/src/lib/ayni-api-fetch";
 import { localDatabaseApiUrl, type PrivateMediaUpload } from "@/src/lib/local-database";
 import { Button } from "@/components/ui/button";
 import { preparePrivateMedia } from "./media-attachment-input";
@@ -19,7 +19,11 @@ export function StudentPhotoEditor({id,name}:{id:string;name:string}) {
 }
 export async function uploadStudentPhoto(id:string,media:PrivateMediaUpload) {
   const response=await apiFetch(`${localDatabaseApiUrl}/api/students/${id}/photo`,{method:"PUT",headers:{"content-type":"application/json"},body:JSON.stringify({media})});
-  if(!response.ok)throw new Error((await response.json() as {error?:string}).error??"No se pudo guardar la foto.");
+  if(!response.ok){
+    if(response.status>=500)throw new Error("El servicio de fotos no está disponible en este momento. Puedes reintentar en unos segundos.");
+    const result=await apiJson<{error?:string}>(response);
+    throw new Error(result.error??"No se pudo guardar la foto.");
+  }
 }
 export function EnrollmentPhoto({media,onChange,onBusy,disabled,initialEnrollment=false}:{media:PrivateMediaUpload|null;onChange:(photo:PrivateMediaUpload|null)=>void;onBusy:(busy:boolean)=>void;disabled:boolean;initialEnrollment?:boolean}) {
   const [error,setError]=useState("");

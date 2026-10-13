@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {compareObservationDates, experienceCoverageGaps, observationMoment, toggleInterviewOption} from './diagnostic-ui-flow.mjs';
+import {compareObservationDates, experienceCoverageGaps, experienceCoverageOpportunities, rankGuidedExperiences, guidedObservationLookFor, guidedExperienceIllustrations, observationMoment, toggleInterviewOption} from './diagnostic-ui-flow.mjs';
 import {projectFamilyAssessmentContext} from './family-interview-projection.mjs';
 import {familyInterviewQuestionGroups, interviewInterestOptions} from './family-interview-contract.mjs';
 import {diagnosticPedagogicalBlocks} from './pedagogical-blocks.mjs';
@@ -39,5 +39,37 @@ test('every catalog moment has a distinct teacher action and preserves its crite
     const blocks=diagnosticPedagogicalBlocks(experience).slice(1);
     assert.equal(new Set(blocks.map(block=>block.instruction)).size,experience.aspects.length);
     blocks.forEach((block,i)=>{assert.notEqual(block.instruction,experience.teacher_instructions);assert.notEqual(block.instruction,experience.aspects[i].prompt);assert.equal(block.observations[0].criterion,experience.aspects[i].prompt);assert.equal(block.observations[0].id,experience.aspects[i].id);assert.deepEqual(block.examples,experience.aspects[i].examples);});
+  }
+});
+
+test('guided recommendations prioritise missing coverage, then a single record, without favouring larger experiences',()=>{
+  const students=[{id:'a'},{id:'b'}];
+  const experiences=[{id:'large',competencies:[{id:'oral'},{id:'count'},{id:'art'}]}, {id:'small',competencies:[{id:'movement'}]}];
+  const free=['oral','count','art'].flatMap(id=>students.map(student=>({student_id:student.id,competency_v4_ids:[id]})));
+  let ranked=rankGuidedExperiences(experiences,students,[],free);
+  assert.equal(ranked[0].experience.id,'small');
+  assert.equal(ranked[0].missingRate,1);
+  assert.ok(ranked[1].opportunities.every(item=>item.missing===0&&item.few===2));
+  const twice=[...free,...free];
+  assert.deepEqual(experienceCoverageOpportunities(experiences[0],students,[],twice),[]);
+  ranked=rankGuidedExperiences(experiences,students,[],[...twice,...students.map(student=>({student_id:student.id,competency_v4_ids:['movement']}))]);
+  assert.equal(ranked[0].experience.id,'small');
+  assert.equal(ranked[0].fewRate,1);
+});
+
+test('coverage ignores removed, insufficient, unconfirmed suggestions and children outside the active roster',()=>{
+  const experience={id:'play',competencies:[{id:'oral',name:'Comunica'}]};
+  const guided=[{student_id:'a',competency_v4_id:'oral',observation_status:'insufficient_information',observation_text:'Sin oportunidad.'},{student_id:'foreign',competency_v4_id:'oral',observation_status:'observed_without_judgment',observation_text:'Habló.'}];
+  const free=[{student_id:'a',competency_v4_ids:['oral'],observation_status:'withdrawn'},{student_id:'b',competency_v4_ids:[],suggested_competency_v4_ids:['oral']}];
+  assert.deepEqual(experienceCoverageOpportunities(experience,[{id:'a'},{id:'b'}],guided,free),[{id:'oral',name:'Comunica',missing:2,few:0}]);
+  assert.deepEqual(rankGuidedExperiences([experience],[],guided,free)[0].opportunities,[]);
+});
+
+test('every predefined experience has a lightweight illustration and concrete teacher cues preserve the criterion',async()=>{
+  const catalog=JSON.parse(await readFile(new URL('../../knowledge/diagnostic-experiences/catalog.json',import.meta.url),'utf8'));
+  for(const experience of catalog.experiences){
+    const asset=await readFile(new URL(`../../public/project-illustrations/${guidedExperienceIllustrations[experience.id]}.webp`,import.meta.url));
+    assert.ok(asset.byteLength<35_000);
+    for(const criterion of experience.aspects){const original=JSON.stringify(criterion);const cue=guidedObservationLookFor(criterion);assert.ok(cue.startsWith('Fíjate si'));assert.ok(cue.includes(criterion.examples[0].replace(/[.]$/,'').replace(/^./,letter=>letter.toLowerCase())));assert.equal(JSON.stringify(criterion),original);}
   }
 });

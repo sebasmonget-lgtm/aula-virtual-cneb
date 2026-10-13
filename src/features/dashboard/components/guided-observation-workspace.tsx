@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import Image from "next/image";
 import { ArrowLeft, ArrowRight, Check, Eye, Heart, Info, Lightbulb, List, Plus, Save, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -12,6 +13,7 @@ import { MediaAttachmentInput } from "./media-attachment-input";
 import { StudentPhoto } from "./student-photo";
 import { AsyncButton, WorkflowFeedback } from "./workflow-ui";
 import { SaveConfirmation, useSaveConfirmation } from "./save-confirmation";
+import { guidedExperienceIllustrations, guidedObservationLookFor } from "@/src/lib/diagnostic-ui-flow.mjs";
 import styles from "./interviews-workspace.module.css";
 
 type Experience=DiagnosticWorkspace["experiences"][number];
@@ -33,6 +35,7 @@ export function GuidedObservationWorkspace({experience,students,observations,onS
   const allowLeave=useUnsavedWork(Boolean(note.trim()||media),disabled);
   const current=available[position];
   const criterion=current?.criterion;
+  const illustration=guidedExperienceIllustrations[experience.id as keyof typeof guidedExperienceIllustrations];
   const counts=(id:string)=>observations.filter(record=>record.student_id===id&&record.experience_id===experience.id&&record.aspect_id===criterion?.id&&!['draft','withdrawn','voided','cancelled','insufficient_information'].includes(record.observation_status)&&Boolean(record.observation_text?.trim()||record.has_media)).length;
   function close(){if(!allowLeave())return;setOpen(false);setNote("");setMedia(null);setError("");request.current="";}
   async function save(another=false){
@@ -44,9 +47,9 @@ export function GuidedObservationWorkspace({experience,students,observations,onS
   }
   if(!current)return <p>No hay momentos disponibles para esta experiencia.</p>;
   return <section className={styles.guided}>
-    <header className={styles.guidedHeader}><span className={styles.roundIcon}><List size={29}/></span><div><small>Observación guiada</small><h2>{experience.title}</h2><span className={styles.momentBadge}>Momento {position+1} de {available.length}</span></div></header>
+    <header className={styles.guidedHeader}><span className={styles.roundIcon}><List size={29}/></span><div><h2>{experience.title}</h2><span className={styles.momentBadge}>Momento {position+1} de {available.length}</span></div>{illustration&&<Image src={`/project-illustrations/${illustration}.webp`} alt="" width={160} height={160} unoptimized className={styles.experienceIllustration}/>}</header>
     <div className={styles.guidance}><section><Lightbulb size={26}/><div><h3>Qué hacer</h3><p>{current.block.instruction}</p></div></section><section><Eye size={27}/><div><h3>Qué observar</h3><p>{current.block.expected_actions||criterion?.prompt}</p></div></section><section><List size={26}/><div><h3>Por ejemplo</h3><ul>{(current.block.examples?.length?current.block.examples:criterion?.examples??experience.examples).map(example=><li key={example}>{example}</li>)}</ul></div></section></div>
-    <div className={styles.criterion}><Target size={28}/><div><h3>Criterio de observación</h3><strong>{criterion?.prompt}</strong><p><Heart size={17}/>Competencia relacionada: {criterion?.competency_name}</p><Button className={styles.primary} onClick={()=>{if(!allowLeave())return;setStudentId("");setNote("");setMedia(null);setError("");request.current="";setOpen(true);}}><Plus/>Registrar observación</Button></div></div>
+    <div className={styles.criterion}><Target size={28}/><div><h3>Criterio de observación</h3><strong>{criterion?.prompt}</strong><div className={styles.lookFor}><Eye size={24} aria-hidden="true"/><div><h4>Qué debes mirar en este momento</h4><p>{guidedObservationLookFor(criterion)}</p></div></div><p><Heart size={17}/>Competencia relacionada: {criterion?.competency_name}</p><Button className={styles.primary} onClick={()=>{if(!allowLeave())return;setStudentId("");setNote("");setMedia(null);setError("");request.current="";setOpen(true);}}><Plus/>Registrar observación</Button></div></div>
     <p className={styles.coverageHelp}>Cada momento es una oportunidad para observar. Registra solo lo que realmente ocurra.</p><div className={styles.guidedActions}><Button variant="outline" disabled={position===0} onClick={()=>{if(allowLeave())setPosition(value=>value-1);}}><ArrowLeft/>Momento anterior</Button><Button variant="outline" disabled={position===available.length-1} onClick={()=>{if(allowLeave())setPosition(value=>Math.min(value+1,available.length-1));}}>Siguiente momento<ArrowRight/></Button></div>
     <SaveConfirmation confirmation={confirmation}/>
     <Dialog open={open} onOpenChange={value=>{if(!value)close();}}><DialogContent className={styles.guidedDialog} onInteractOutside={event=>{if(note.trim()||media||disabled)event.preventDefault();}}>

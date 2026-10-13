@@ -1,15 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useImperativeHandle, useRef, useState, type Ref } from "react";
-import { ArrowLeft, ArrowRight, Printer, Check } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { attachFamilyInterview, saveAndConfirmFamilyInterview, familyInterviewAttachmentUrl,
+import { saveAndConfirmFamilyInterview, familyInterviewAttachmentUrl,
   loadFamilyInterview, loadFamilyInterviewStatuses, loadStudentPedagogicalProfile, saveFamilyInterview,
   type FamilyInterview, type FamilyInterviewDetails, type FamilyInterviewStatus } from "@/src/lib/local-database";
 import { SaveConfirmation, useSaveConfirmation } from "./save-confirmation";
 import { AsyncButton, LoadingState } from "./workflow-ui";
 import { InterviewAudioRecorder } from "./interview-audio-recorder";
-import { buildFamilyInterviewPrintHtml } from "@/src/lib/family-interview-print.mjs";
 import { hasFamilyInterviewAnswers, familyInterviewQuestionGroups, familyInterviewStructuredOptionsVersion, interviewLanguageOptions,
   interviewInterestOptions, interviewAutonomyOptions, interviewAutonomyLevels, interviewCommunicationOptions,
   interviewEmotionalSupportOptions, interviewSocialPlayOptions, interviewHomeActivityOptions,
@@ -19,7 +18,6 @@ import { familyContextLabels } from "@/src/lib/local-database";
 import { displayPersonName } from "@/src/lib/person-name.mjs";
 import { AyniMascot } from "./initial-journey-ui";
 import { StudentPhoto } from "./student-photo";
-import { preparePrivateMedia } from "./media-attachment-input";
 import { countFamilyInterviewAnswers, familyInterviewAnswerFields } from "@/src/lib/family-interview-progress.mjs";
 import { interviewOptionIds, toggleInterviewOption } from "@/src/lib/diagnostic-ui-flow.mjs";
 import styles from "./interviews-workspace.module.css";
@@ -55,13 +53,6 @@ export function FamilyInterviewStatusBadge({ status }: { status?: FamilyIntervie
   const labels = { confirmed: "Confirmada", partial: "En progreso", not_started: "Pendiente" };
   return <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-bold ${styles[status]}`}>{labels[status]}</span>;
 }
-function printInterview(name: string, details: FamilyInterviewDetails, context?: { institution?: string; classroom?: string }) {
-  const sheet = window.open("", "_blank");
-  if (!sheet) return false;
-  sheet.document.write(buildFamilyInterviewPrintHtml(name, details, familyInterviewQuestionGroups(name), context));
-  sheet.document.close();
-  return true;
-}
 type TagField = "interest_tags" | "language_tags" | "communication_tags" | "emotional_support_tags" |
   "social_play_tags" | "home_activity_tags" | "community_tags" | "participation_support_tags";
 type TextField = "interests" | "autonomy_context" | "communication_context" | "language_context" |
@@ -69,13 +60,12 @@ type TextField = "interests" | "autonomy_context" | "communication_context" | "l
   "family_community_enjoyed" | "participation_support_context" | "family_expectation" | "family_context" | "other_interest_text" | "other_language_text" | "other_community_text";
 
 export type FamilyInterviewEditorHandle = { flush: () => Promise<boolean> };
-export function FamilyInterviewEditor({ studentId, studentName: rawStudentName, onBack, onSaved, printContext, onNext, layout="wizard", ref }: {
+export function FamilyInterviewEditor({ studentId, studentName: rawStudentName, onBack, onSaved, onNext, layout="wizard", ref }: {
   studentId: string; studentName: string; onBack?: () => void; onSaved?: (interview: FamilyInterview) => void;
   printContext?: { institution?: string; classroom?: string }; onNext?: () => void; layout?: "wizard" | "stacked"; ref?: Ref<FamilyInterviewEditorHandle>;
 }) {
   const { confirmation, confirm } = useSaveConfirmation();
   const actionPending = useRef(false);
-  const paperInput = useRef<HTMLInputElement>(null);
   const studentName = displayPersonName(rawStudentName);
   const [draft, setDraft] = useState<FamilyInterview | null>(null);
   const [confirmed, setConfirmed] = useState<FamilyInterview | null>(null);
@@ -194,22 +184,6 @@ export function FamilyInterviewEditor({ studentId, studentName: rawStudentName, 
     savedText.current=JSON.stringify(result.details);setSavedSnapshot(JSON.stringify(result.details));
     setMessage(""); confirm("¡Entrevista confirmada!", `Las respuestas de ${studentName} quedaron guardadas.`); onSaved?.(result);
   }
-  async function attach(file: File) {
-    if (!draft && !confirmed) { setError("Guarda primero la entrevista antes de adjuntar el papel."); return; }
-    if (!["application/pdf", "image/jpeg", "image/png"].includes(file.type) || (file.type === "application/pdf" && file.size > 3_000_000)) {
-      setError("Adjunta un PDF de hasta 3 MB o una foto JPG o PNG."); return;
-    }
-    const prepared = file.type.startsWith("image/") ? await preparePrivateMedia(file, { preferJpeg: true }) : null;
-    const base64 = prepared?.base64 ?? await new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(String(reader.result).split(",")[1] ?? "");
-      reader.onerror = () => reject(new Error("No se pudo leer el archivo."));
-      reader.readAsDataURL(file);
-    });
-    const updated = await attachFamilyInterview(studentId, prepared?.mimeType ?? file.type, base64);
-    if (updated.status === "confirmed") setConfirmed(updated); else setDraft(updated);
-    setMessage("Respaldo privado adjuntado. No se extrajo información del archivo.");
-  }
   useImperativeHandle(ref,()=>({flush:async()=>{
     if(loading||busy||audioBusy||actionPending.current)return false;
     if(readOnly||loadFailed)return true;
@@ -295,15 +269,6 @@ export function FamilyInterviewEditor({ studentId, studentName: rawStudentName, 
     {details.structured_options_version !== 2 && (["language_context", "communication_emotional_context", "adaptation_context", "daily_routine_context", "family_expectations", "previous_education"] as const).some((key) => details[key]) && <details className="rounded-xl border p-4"><summary className="cursor-pointer font-semibold">Respuestas de la entrevista anterior</summary>
       <div className="mt-3 space-y-2">{(["language_context", "communication_emotional_context", "adaptation_context", "daily_routine_context", "family_expectations", "previous_education"] as const)
         .filter((key) => details[key]).map((key) => <p key={key} className="text-sm"><strong>{familyContextLabels[key] ?? key}:</strong> {details[key]}</p>)}</div></details>}
-    <details className="print:hidden"><summary className="cursor-pointer py-2 text-sm text-[#526b87]">Entrevista en papel (opcional)</summary>
-    <div className="flex flex-wrap gap-2 print:hidden">
-      <Button variant="ghost" onClick={() => { if (!printInterview(studentName, details, printContext)) setError("El navegador bloqueó la hoja para imprimir."); }}><Printer /> Imprimir para papel</Button>
-      <div className="space-y-2"><p className="text-sm font-semibold">Adjuntar entrevista hecha en papel (opcional)</p><Button variant="outline" disabled={busy || audioBusy} onClick={() => paperInput.current?.click()}>Seleccionar archivo</Button>
-        <input ref={paperInput} type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(event) => {
-          const file = event.target.files?.[0]; if (file) void run(() => attach(file));
-        }} /></div>
-    </div>
-    </details>
     {(draft?.has_attachment || confirmed?.has_attachment) && <a className="text-sm font-semibold text-[#087d96] underline" href={familyInterviewAttachmentUrl(studentId)} target="_blank" rel="noreferrer">Ver respaldo privado</a>}
     {message && <p role="status" className="text-sm text-[#1e6040]">{message}</p>}
     {error && <div><p role="alert" className="text-sm text-red-700">{error}</p>{!readOnly&&JSON.stringify(details)!==savedSnapshot&&<Button variant="outline" disabled={busy||audioBusy||autoSaving} onClick={()=>void run(()=>saveDraft())}>Reintentar guardado</Button>}</div>}

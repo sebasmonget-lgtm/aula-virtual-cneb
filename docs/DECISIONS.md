@@ -1,5 +1,11 @@
 # Decisiones de arquitectura
 
+## Captura continua y orientación de experiencias de Inicial — 2026-10-13
+
+Después de guardar observación libre, conservar formulario/niño/fecha y competencia preseleccionada desde matriz; limpiar contenido y selección opcional, con confirmación breve del servidor y foco en texto. Los controles de dictado/foto y buscador se reinician por revisión de captura para no heredar contenido. Fallo conserva borrador e intención UUID. Orientación guiada calcula cobertura de observaciones propias ya guardadas: prioriza proporción sin registro y luego con un registro por niño activo×competencia, normalizada por tamaño de experiencia, desempate por orden del catálogo. Sugerencias sin confirmar y actuaciones insuficientes no cuentan. La recomendación no impone actividad ni valoración; no cambia elección docente al guardar.
+
+El texto versionado de criterios permanece fuente canónica; explicación docente se deriva de ejemplos y se etiqueta «Qué debes mirar en este momento». Imágenes de la biblioteca existente por ID de experiencia, sin IA ni peso adicional relevante. Retirar controles de papel no borra respaldos históricos. Matrícula espera intento de foto antes de publicar lista para evitar nuevas lecturas de avatar durante esa escritura; reintento separado protegido por ref, sin repetir alta. No se modifica infraestructura a partir de captura sin recibo del error original. Validación/rollback en docs/qa/AYNI_OBSERVACIONES_INICIAL_2026-10-13.md.
+
 ## Optimización focal de guardado — 2026-10-12
 
 Se conserva el recálculo de contexto en la petición: lectura agrupada y lock por alumno evitan background sin garantías de ejecución/frescura. Idempotencia de alta se identifica por intención UUID, no por nombres; recibo transaccional en JSON existente evita migración. Respuesta compacta opt-in preserva API anterior. No se cambia pool ni se cachea autorización. Validación remota: snapshot guiado ~0,72 s, fuentes concurrentes presentes. Alta/edición promedian menos de dos segundos; no se debilita integridad para forzar el umbral en otros flujos. Datos y límites del instrumento en docs/SAVE_PERFORMANCE_20261012.md.

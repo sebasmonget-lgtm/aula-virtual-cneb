@@ -77,13 +77,14 @@ export function EnrollmentWorkspace({dashboard,onUpdated,onBack,onContinue,onSig
       const next=editing&&!useCsv ? await mutate(`/api/students/${editing.id}/details`,{...form,preferredName:editing.preferred_name??null,expected:{...studentForm(editing),birthDate:editing.birth_date??null,preferredName:editing.preferred_name??null}},dashboard)
         : await importPilotStudents(input,importIntent.current.id,dashboard);
       const savedId=editing?.id ?? next.students.find(student=>!students.some(old=>old.id===student.id))?.id;
-      onUpdated(next);
       if(useCsv){setCsv("");setReview(null);setImportOpen(false);setNamesReviewed(false);}else reset();
       let photoSaved=true;
       if(photo&&savedId&&!useCsv){
         try{await uploadStudentPhoto(savedId,photo);setRevisions(value=>({...value,[savedId]:(value[savedId]??0)+1}));}
-        catch{photoSaved=false;setPhotoRetry({id:savedId,media:photo});setError("Los datos del niño se guardaron. La foto está pendiente; reintenta guardarla sin añadirlo de nuevo.");}
+        catch(cause){photoSaved=false;setPhotoRetry({id:savedId,media:photo});setError(`Los datos del niño se guardaron. ${cause instanceof Error?cause.message:"La foto está pendiente."} Reintenta guardarla sin añadirlo de nuevo.`);}
       }
+      // Publish the roster after the upload to avoid avatar reads competing with the first photo write.
+      onUpdated(next);
       importIntent.current=null;
       if(photoSaved)confirm(editing?"¡Datos del niño actualizados!":useCsv?"¡Lista registrada!":"¡Niño añadido!","Registro guardado.");
     }catch(cause){setError(cause instanceof Error?cause.message:"No se pudo guardar al niño.");}
@@ -93,6 +94,13 @@ export function EnrollmentWorkspace({dashboard,onUpdated,onBack,onContinue,onSig
     if(!deleting||lock.current)return;lock.current=true;setBusy(true);setAction("remove");setError("");
     try{onUpdated(await mutate(`/api/students/${deleting.id}/enrollment`,{status:"inactive",expectedStatus:"active"}));if(editing?.id===deleting.id)reset();setDeleting(null);confirm("Niño eliminado de la lista.","Su historial se conserva para recuperarlo.");}
     catch(cause){setError(cause instanceof Error?cause.message:"No se pudo eliminar. Inténtalo de nuevo.");}
+    finally{lock.current=false;setBusy(false);}
+  }
+  async function retryPhoto(){
+    if(lock.current||unavailable||!photoRetry)return;
+    const pending=photoRetry;lock.current=true;setBusy(true);setAction("photo");
+    try{await uploadStudentPhoto(pending.id,pending.media);setRevisions(value=>({...value,[pending.id]:(value[pending.id]??0)+1}));setPhotoRetry(null);setError("");confirm("¡Foto guardada!");}
+    catch(cause){setError(`Los datos del niño se conservan. ${cause instanceof Error?cause.message:"La foto sigue pendiente. Inténtalo de nuevo."}`);}
     finally{lock.current=false;setBusy(false);}
   }
   async function continueRegistration(){if(lock.current||photoRetry||!allowLeave())return;lock.current=true;setBusy(true);setAction("continue");setError("");try{await onContinue();}catch(cause){setError(cause instanceof Error?cause.message:"No se pudo continuar. Inténtalo de nuevo.");}finally{lock.current=false;setBusy(false);}}
@@ -127,7 +135,7 @@ export function EnrollmentWorkspace({dashboard,onUpdated,onBack,onContinue,onSig
             {editing&&<button type="button" className={styles.cancelEdit} disabled={unavailable} onClick={reset}>Cancelar edición</button>}
           </form>
           {error&&!deleting&&<WorkflowFeedback tone="error">{error}</WorkflowFeedback>}
-          {photoRetry&&<div className={styles.retry}><AsyncButton busy={busy&&action==="photo"} busyLabel="Guardando foto…" disabled={unavailable} variant="outline" onClick={()=>{setBusy(true);setAction("photo");void uploadStudentPhoto(photoRetry.id,photoRetry.media).then(()=>{setRevisions(value=>({...value,[photoRetry.id]:(value[photoRetry.id]??0)+1}));setPhotoRetry(null);setError("");confirm("¡Foto guardada!");}).catch(()=>setError("La foto sigue pendiente. Inténtalo de nuevo.")).finally(()=>setBusy(false));}}>Reintentar guardar foto</AsyncButton><Button variant="ghost" disabled={unavailable} onClick={()=>{setPhotoRetry(null);setError("");}}>Continuar sin esta foto</Button></div>}
+          {photoRetry&&<div className={styles.retry}><AsyncButton busy={busy&&action==="photo"} busyLabel="Guardando foto…" disabled={unavailable} variant="outline" onClick={()=>void retryPhoto()}>Reintentar guardar foto</AsyncButton><Button variant="ghost" disabled={unavailable} onClick={()=>{setPhotoRetry(null);setError("");}}>Continuar sin esta foto</Button></div>}
         </section>
       </div>
       <footer className={`${shell.card} ${styles.footer}`}><Button type="button" variant="outline" disabled={unavailable} onClick={()=>{if(allowLeave())onBack();}}><ArrowLeft/>Volver</Button><AsyncButton busy={busy&&action==="continue"} busyLabel="Continuando…" className={shell.primary} disabled={unavailable||!students.length||dirty||Boolean(photoRetry)} onClick={()=>void continueRegistration()}>Continuar a entrevistas y observaciones<ArrowRight/></AsyncButton></footer>

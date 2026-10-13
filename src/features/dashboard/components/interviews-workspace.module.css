@@ -74,8 +74,12 @@
 .footer { display: flex; justify-content: flex-end; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 22px; }
 .page button[data-slot=button].primary, .primary { background: #0075d8; color: white; }
 .page button[data-slot=button].primary:hover:not(:disabled), .primary:hover:not(:disabled) { background: #0066bc; }
-.experienceSelect { display: block; margin: 0 0 12px; font-size: 13px; color: #5878a9; }
-.experienceSelect select { display: block; width: 100%; min-height: 44px; padding: 8px 12px; margin-top: 5px; border: 1px solid #c9dff8; border-radius: 9px; background: #fff; color: #123779; font-size: 15px; }
+.experiencePicker { padding: 18px; margin-bottom: 16px; border: 1px solid #a9ccec; border-radius: 14px; background: #e9f5ff; }
+.experiencePicker > p { color: #315c89; font-size: 13px; line-height: 1.5; margin-top: 10px; max-width: 75ch; }
+.experienceSelect { display: block; font-size: 17px; font-weight: 700; color: #123779; }
+.experienceSelect > span { font-size: 14px; font-weight: 400; }
+.experienceSelect select { display: block; width: 100%; min-height: 56px; padding: 10px 14px; margin-top: 10px; border: 1px solid #5c83b0; border-radius: 9px; background: #fff; color: #123779; font-size: 15px; font-weight: 500; }
+.experienceSelect select:focus-visible { outline: 2px solid #0075d8; outline-offset: 3px; }
 .freeCard, .guided { border: 1px solid #e1edf9; border-radius: 16px; background: #fff; padding: 20px; }
 .freeCard > * + * { margin-top: 16px; }
 .freeHeader { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
@@ -94,30 +98,35 @@
 .noteRow { display: flex; align-items: flex-start; gap: 10px; margin-top: 8px; }
 .noteRow textarea { flex: 1; min-width: 0; min-height: 126px; border: 1px solid #bcd5f5; border-radius: 9px; font-size: 15px; padding: 12px; color: #244674; }
 .counter { display: block; text-align: right; color: #2474ba; font-size: 12px; margin-top: 4px; }
-.freeEvidenceGrid { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.45fr); gap: 18px; }
+.freeEvidenceGrid { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.7fr); gap: 12px; }
 .freeEvidenceGrid h3 { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
-.freeEvidenceGrid h3 span { font-weight: 400; color: #597cad; }
+.freeEvidenceGrid h3 span { font-weight: 400; color: #456489; }
 .freeEvidenceGrid > section > fieldset { margin-top: 0; }
-.freeEvidenceGrid legend { font-size: 12px; font-weight: 400; color: #597cad; }
+.freeEvidenceGrid legend { font-size: 12px; font-weight: 400; color: #456489; }
 .freeEvidenceGrid fieldset label { font-size: 12px; min-height: 44px; padding: 7px 9px; }
 .page input[type=checkbox] { width: 18px; height: 18px; min-height: 18px; padding: 0; margin: 0; accent-color: #0075d8; }
 .freeEvidenceGrid details { margin-top: 10px; font-size: 13px; }
 .freeEvidenceGrid summary { min-height: 36px; cursor: pointer; color: #3f6b9e; }
 .observationActions { display: flex; justify-content: flex-end; gap: 12px; flex-wrap: wrap; }
-.guidedHeader { display: flex; gap: 16px; align-items: center; }
+.guidedHeader { display: flex; gap: 16px; align-items: center; min-height: 120px; }
+.guidedHeader > div { flex: 1; min-width: 0; }
+.experienceIllustration { width: 140px; height: 140px; object-fit: contain; flex-shrink: 0; }
 .roundIcon { display: grid; place-items: center; width: 58px; height: 58px; flex-shrink: 0; background: #0075d8; color: white; border-radius: 50%; }
 .guidedHeader small { font-size: 14px; color: #4479b5; }
 .guidedHeader h2 { font-size: 23px; font-weight: 800; line-height: 1.3; }
 .momentBadge { display: inline-block; background: #e3f3ff; border-radius: 8px; color: #0068ba; padding: 4px 10px; margin-top: 8px; font-size: 13px; }
-.guidance { margin-top: 20px; padding: 8px 18px; border: 1px solid #c9ddf7; border-radius: 14px; background: #f6fbff; }
-.guidance > section { display: flex; gap: 15px; padding: 15px 0; }
-.guidance > section + section { border-top: 1px solid #d8e5f7; }
-.guidance > section > svg { flex-shrink: 0; color: #0075d8; margin-top: 2px; }
-.guidance h3, .criterion h3 { font-size: 15px; font-weight: 700; margin-bottom: 5px; }
-.guidance p, .guidance li { color: #456b9b; font-size: 14px; line-height: 1.55; white-space: pre-line; }
+.guidance { margin-top: 16px; display: grid; gap: 12px; }
+.guidance > section { display: flex; gap: 16px; padding: 18px; border: 1px solid #b6d9f7; border-radius: 14px; background: #eff8ff; }
+.guidance > section:nth-child(2) { background: #eefbf5; border-color: #b0e2cd; }
+.guidance > section:nth-child(3) { background: #fff9e9; border-color: #efd58a; }
+.guidance > section > svg { flex-shrink: 0; color: #005fae; background: #d8eeff; width: 52px; height: 52px; border-radius: 50%; padding: 12px; }
+.guidance > section:nth-child(2) > svg { color: #086e53; background: #d2f4e2; }
+.guidance > section:nth-child(3) > svg { color: #946006; background: #fff0bf; }
+.guidance h3, .criterion h3 { font-size: 19px; font-weight: 800; margin-bottom: 6px; }
+.guidance p, .guidance li { color: #315783; font-size: 15px; line-height: 1.55; white-space: pre-line; max-width: 75ch; }
 .guidance ul { padding-left: 18px; list-style: disc; }
-.criterion { display: flex; gap: 15px; border: 1px solid #c9ddf7; border-radius: 12px; padding: 17px; margin-top: 12px; background: #f4faff; }
-.criterion > svg { color: #0075d8; flex-shrink: 0; }
+.criterion { display: flex; gap: 16px; border: 1px solid #d0b7f0; border-radius: 14px; padding: 18px; margin-top: 12px; background: #f5efff; }
+.criterion > svg { color: #7033b5; background: #e9dbff; width: 52px; height: 52px; padding: 12px; border-radius: 50%; flex-shrink: 0; }
 .criterion strong { display: block; font-size: 15px; line-height: 1.4; }
 .criterion > div { min-width: 0; flex: 1; }
 .criterion button { margin-top: 12px; min-height: 48px; }
@@ -125,6 +134,10 @@
 .dialogStudents button[data-coverage=few] { background: #eef7fc; border-color: #9bbbd0; }
 .dialogStudents button[aria-pressed=true] { background: #e5f4ff; border-color: #0075d8; }
 .criterion p { display: flex; align-items: center; gap: 8px; background: #e0f0ff; border-radius: 7px; padding: 8px; font-size: 12px; margin-top: 9px; color: #2563a5; }
+.lookFor { display: flex; gap: 12px; padding: 14px 0; margin-top: 6px; color: #533388; }
+.lookFor > svg { flex-shrink: 0; margin-top: 2px; }
+.lookFor h4 { font-size: 15px; font-weight: 700; }
+.lookFor p { display: block; padding: 0; margin-top: 4px; background: transparent; color: #533388; font-size: 15px; line-height: 1.5; max-width: 75ch; }
 .guidedActions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 14px; }
 .guidedDialog { left: auto; right: 24px; translate: none; transform: translateY(-50%); width: min(600px,calc(100vw - 32px)); max-width: 600px; max-height: 92dvh; overflow-y: auto; border-radius: 17px; padding: 22px; display: flex; flex-direction: column; gap: 14px; color: #143573; }
 .guidedDialog h2 { font-size: 21px; font-weight: 800; }
@@ -181,4 +194,41 @@
 .selectedCompetencies { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
 .selectedCompetencies > span { display: inline-flex; gap: 8px; align-items: center; border: 1px solid #b7d9ef; border-radius: 8px; padding: 6px 10px; font-size: 13px; background: #e9f6ff; }
 .selectedCompetencies button { min-width: 36px; min-height: 36px; display: grid; place-items: center; }
+.freeCard .moments { border-radius: 14px; background: #eef8ff; padding: 14px 16px; min-width: 0; }
+.freeCard .moments legend { float: left; width: 100%; color: #123779; }
+.freeCard .moments > div { clear: both; padding-top: 10px; margin-top: 0; gap: 8px; }
+.observedPanel { padding: 14px 16px; border-radius: 14px; background: #edf9f7; }
+.observedPanel > label, .photoPanel h3, .competencyPanel h3, .freeCard .supportOptions legend { display: flex; align-items: center; gap: 10px; }
+.observedPanel > label > svg { color: #087970; }
+.photoPanel { padding: 16px; border-radius: 14px; background: #eff5ff; min-width: 0; }
+.photoPanel h3 > svg { color: #0070ce; flex-shrink: 0; }
+.competencyPanel { padding: 16px; border-radius: 14px; background: #f5f0ff; min-width: 0; }
+.competencyPanel > * + * { margin-top: 10px; }
+.competencyPanel h3 > svg { color: #7635af; flex-shrink: 0; }
+.competencyPanel > p { color: #5c477c; font-size: 13px; line-height: 1.5; }
+.competencyPanel fieldset { min-width: 0; }
+.competencyPanel fieldset > div { max-height: 280px; }
+.freeCard .supportOptions { background: #fff0f6; border-radius: 14px; padding: 14px 16px; min-width: 0; }
+.freeCard .supportOptions legend { float: left; width: 100%; font-size: 14px; color: #703c56; }
+.freeCard .supportOptions legend > svg { flex-shrink: 0; color: #ad3b70; }
+.freeCard .supportOptions > div { clear: both; padding-top: 8px; }
+.captureConfirmation { display: flex; align-items: center; gap: 10px; padding: 12px 16px; margin-bottom: 12px; border: 1px solid #9cdbcb; border-radius: 12px; background: #e4f8f1; color: #14644e; font-size: 14px; line-height: 1.5; }
+.captureConfirmation > svg { flex-shrink: 0; }
+.emptyStatus { height: 0; }
+.page .freeCard button:focus-visible, .page .experiencePicker button:focus-visible { outline: 2px solid #0075d8; outline-offset: 3px; }
+.freeCard textarea::placeholder { color: #526b87; }
+.freeCard input, .freeCard textarea { caret-color: #0075d8; }
+.freeCard fieldset > div { scrollbar-width: thin; scrollbar-color: #9db6d5 #f5f0ff; }
+@media (max-width: 767px) {
+  .experiencePicker { padding: 14px; }
+  .experienceSelect select { font-size: 14px; }
+  .guidedHeader { min-height: auto; align-items: center; flex-wrap: wrap; }
+  .experienceIllustration { width: 88px; height: 88px; margin-left: auto; }
+  .guidance > section, .criterion { gap: 10px; padding: 14px 12px; }
+  .guidance > section > svg, .criterion > svg { width: 38px; height: 38px; padding: 8px; }
+  .guidance h3, .criterion h3 { font-size: 17px; }
+  .guidance p, .guidance li, .lookFor p { font-size: 14px; }
+  .observedPanel, .photoPanel, .competencyPanel, .freeCard .moments, .freeCard .supportOptions { padding: 12px; }
+  .freeEvidenceGrid .competencyPanel fieldset > div { grid-template-columns: 1fr; }
+}
 @media (max-width: 767px) { .questionCard fieldset button { min-height: 44px; } .dialogStudents > div { display: flex; overflow-x: auto; max-height: none; } .dialogStudents button { min-width: 140px; width: 140px; flex-shrink: 0; } }
