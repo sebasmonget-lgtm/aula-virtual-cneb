@@ -23,6 +23,8 @@ type OpenDocument = DocumentEntry & {
   source_plan_format?: string; formal_ready?: boolean;
   starts_on?: string; ends_on?: string; occurs_on?: string; experience_title?: string;
   period_start?: string; period_end?: string; competencies?: { id: string; name: string }[];
+  active_criterion?: { criterion_text: string; competency_v4_id: string } | null;
+  workshop?: { id: string; content: Record<string, unknown> } | null;
 };
 type Artifact = { id: string; source_kind: string; source_id: string; filename: string;
   sha256: string; byte_length: number; version: number;source_version:number;
@@ -119,6 +121,12 @@ function DocumentContent({ document }: { document: OpenDocument }) {
         <Section title="Qué harán los niños" value={content.child_actions} /><Section title="Cómo acompañaré" value={content.mediation} />
         <Section title="Qué podré observar" value={content.evidence_opportunities} /><Section title="Cierre o continuidad" value={content.closure_or_continuity} />
         {text(content.competency_id) && <Section title="Competencia confirmada" value={names.get(text(content.competency_id)) ?? text(content.competency_id)} />}
+        <Section title="Criterio para observar" value={document.active_criterion?.criterion_text || content.evaluation_criterion} />
+        <Section title="Evidencia esperada" value={content.expected_evidence} />
+        {document.workshop && <section aria-label="Taller del día" className="space-y-5 rounded-xl border bg-[#f3f8fb] p-4">
+          <h3 className="text-lg font-bold">Taller del día · {text(document.workshop.content.title)}</h3>
+          {([["Propósito", "purpose"], ["Materiales", "materials"], ["Inicio", "opening"], ["Desarrollo", "development"], ["Cierre", "closure"], ["Qué observar", "criterion_or_observation_focus"], ["Evidencia esperada", "evidence_expected"]] as const).map(([label, key]) => <Section key={key} title={label} value={document.workshop?.content[key]} />)}
+        </section>}
       </>}
       {document.kind === "family_report" && <>
         <p className="rounded-xl bg-[#eaf7fb] p-3 text-sm">{document.period_label || "Informe histórico sin período formal"}</p>

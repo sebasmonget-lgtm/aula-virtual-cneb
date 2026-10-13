@@ -18,7 +18,7 @@ export async function loadActivityObservations(db, { teacherId, classroomId, act
     union all
     select ev.id,ev.student_id,concat_ws(' ',coalesce(s.preferred_name,s.first_name),s.last_name),
       ev.criterion_id,ac.criterion_text,ac.competency_v4_id,ev.observation_text,ev.observation_status,
-      ev.type,ev.observed_at,ev.media_path is not null,'legacy_evidence',1
+      ev.type::text,ev.observed_at,ev.media_path is not null,'legacy_evidence',1
     from evidences ev join students s on s.id=ev.student_id and s.classroom_id=$3
     join classrooms c on c.id=s.classroom_id and c.teacher_id=$2
     join activities a on a.id=ev.activity_id join learning_experiences e on e.id=a.experience_id and e.classroom_id=c.id

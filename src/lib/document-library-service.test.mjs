@@ -42,7 +42,8 @@ async function fixture() {
     create table activity_criteria(id uuid primary key,activity_id uuid,competency_v4_id text,criterion_text text,details jsonb,status text,teacher_confirmed_at timestamptz);
     create table ordinary_observations(id uuid primary key,classroom_id uuid,student_id uuid,created_by uuid,activity_id uuid,captured_criterion_id uuid,raw_text text,context_snapshot jsonb default '{}'::jsonb,media_path text,occurred_at timestamptz,status text default 'active',source_revision int default 1);
     create table ordinary_observation_revisions(observation_id uuid,revision int,corrected_text text);
-    create table evidences(id uuid primary key,student_id uuid,activity_id uuid,criterion_id uuid,observation_text text,observation_status text,type text,observed_at timestamptz,media_path text,created_by uuid);
+    create type evidence_type as enum ('observation','photo','audio','video','document');
+    create table evidences(id uuid primary key,student_id uuid,activity_id uuid,criterion_id uuid,observation_text text,observation_status text,type evidence_type,observed_at timestamptz,media_path text,created_by uuid);
     create table class_schedule_entries(id uuid primary key,activity_id uuid,classroom_id uuid);
     create table daily_execution_logs(id uuid primary key,schedule_entry_id uuid,execution_date date,teacher_closure_note text);
     create table students(id uuid primary key,classroom_id uuid,first_name text,last_name text,preferred_name text,status text default 'active');
