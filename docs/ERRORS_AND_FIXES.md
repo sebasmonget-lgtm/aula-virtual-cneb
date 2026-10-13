@@ -1889,3 +1889,6 @@ Síntoma: continuar podía no navegar y confirmar matrícula requería recargar.
 
 ## EX-03 — Listado guiado desactualizado y borrador tras fallo IA
 Síntomas: registro guiado recién guardado no aparecía en lista compartida; preparar nueva versión para IA podía dejar borrador sin correcciones docentes si fallaba el proveedor. Solución: refrescar lista por registros confirmados y persistir correcciones en versión nueva antes de solicitar IA. Autosave no limpia texto ante error. Servicios focales y build PASS; error local no se declara como éxito de IA remota.
+
+## EX-04 — Retiro incompatible con el enum cloud
+QA por interfaz detectó error al retirar a un niño ficticio: el servicio escribía inactive, válido en esquema local text pero inexistente en classroom_status cloud (draft/active/archived). No hubo borrado. Solución: mantener API inactive y mapear persistencia a archived; lectura/recuperación admiten también filas locales históricas inactive mediante cast text. Sin migración ni cambio de permisos. Seis pruebas focales PASS, incluyendo enum cloud real, CAS, aislamiento y conservación de historia. Prevención: probar servicio con tipos oficiales además del esquema local flexible.
