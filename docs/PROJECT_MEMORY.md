@@ -1,5 +1,11 @@
 # Memoria del proyecto Ayni Aula
 
+## Lista compacta de observaciones y colores por competencia — 2026-10-13
+
+Base 493ae01 limpia, fetch remoto sin cambios omitidos. Renderer de lista libre/guiada/anterior adopta filas del mockup con identidad/fecha, tipo/momento, texto, competencias y acciones. Selector reciente/antiguo con fechas inválidas al final; texto largo expandible. 14 SVG nuevos derivados del conjunto vectorial existente, paleta por IDs estables (sin niveles), 5.201 bytes en conjunto/máximo 546; contraste >=4,5:1, sugerencias explícitas y dos competencias preservadas. No IA raster: extensión de iconos SVG editables. No nuevas dependencias/backend/migraciones/RLS.
+
+Typecheck, lint global de fuente/focal, build Next webpack, 27 pruebas y detector PASS. UI real local aislada: orden ambas direcciones, imágenes cargadas, edición versionada/texto largo/dos competencias, expansión/contracción y cancelación de retirada sin DELETE PASS; cuatro registros ficticios conservados. Desktop 1366/móvil 390 sin desbordamiento. No escrituras cloud ni despliegue de este cambio; producción anterior conserva fb96be1. Recibos .local/observation-list-20261013/. Informe/rollback: docs/qa/AYNI_LISTA_OBSERVACIONES_2026-10-13.md.
+
 ## Observaciones de Inicial y recuperación de fotografía — 2026-10-13
 
 Producción posterior expresamente autorizada «subelo a produccion»: mismo SHA validado en Preview `fb96be10753feebc082d8818c9b7c0c35d57aa43`, checkout temporal detached limpio; build Production staged `--skip-domain` y ocho smoke PASS antes de promover. Deployment `dpl_826w5Q1K2p66eNLvj7phjgGxnHxq`, URL https://ayni-aula-staging-9btr6bia7-ayni4.vercel.app, READY. Promovido mismo build sin reconstrucción, dominio https://project-0w0pq.vercel.app confirmado por API/alias/SHA y ocho smoke finales PASS. Scan de errores desde el despliegue: cero entradas; no drains configurados. Rollback `a16d162` / `dpl_4hi44yVEoU7xkHfHSZM4GCVkyZFx` conservado. Sin migraciones/env/escrituras pedagógicas; Preview y cuenta intactas. Tool de apertura del panel devuelve queued; login/QA docente posterior no se declara comprobado. Recibos .local/observations-production-20261013/. Rama local restituida.

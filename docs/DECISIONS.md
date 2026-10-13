@@ -1,5 +1,9 @@
 # Decisiones de arquitectura
 
+## Competencias en lista compacta — 2026-10-13
+
+Usar IDs oficiales para asignar paleta/icono, nunca nombres cortos como identidad ni colores para logros. Paleta central de presentación exportada para reuso; SVG compactos son variantes aditivas del conjunto vectorial existente. La lista comparte renderer para fuentes libres/guiadas/anteriores, conserva sugerencias explícitas y enlaces privados, admite dos competencias y despliega textos largos. Orden visual seleccionable en memoria; sin alterar fecha/registro ni persistir información pedagógica en navegador. Aplicación global de colores en otros módulos se deja fuera de esta solicitud de lista. No cambios servidor/esquema/permisos.
+
 ## Captura continua y orientación de experiencias de Inicial — 2026-10-13
 
 Después de guardar observación libre, conservar formulario/niño/fecha y competencia preseleccionada desde matriz; limpiar contenido y selección opcional, con confirmación breve del servidor y foco en texto. Los controles de dictado/foto y buscador se reinician por revisión de captura para no heredar contenido. Fallo conserva borrador e intención UUID. Orientación guiada calcula cobertura de observaciones propias ya guardadas: prioriza proporción sin registro y luego con un registro por niño activo×competencia, normalizada por tamaño de experiencia, desempate por orden del catálogo. Sugerencias sin confirmar y actuaciones insuficientes no cuentan. La recomendación no impone actividad ni valoración; no cambia elección docente al guardar.

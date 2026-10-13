@@ -215,6 +215,12 @@
 .captureConfirmation { display: flex; align-items: center; gap: 10px; padding: 12px 16px; margin-bottom: 12px; border: 1px solid #9cdbcb; border-radius: 12px; background: #e4f8f1; color: #14644e; font-size: 14px; line-height: 1.5; }
 .captureConfirmation > svg { flex-shrink: 0; }
 .emptyStatus { height: 0; }
+.recordList { display: grid; gap: 8px; margin-top: 20px; }
+.recordListHeader { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 2px; }
+.recordListHeader h2 { display: flex; align-items: center; gap: 10px; font-size: 19px; font-weight: 800; line-height: 1.4; }
+.recordListHeader h2 > svg { color: #008568; flex-shrink: 0; }
+.recordListHeader select { min-height: 44px; padding: 8px 12px; border: 1px solid #c9dff8; border-radius: 9px; background: #fff; color: #123779; font-size: 13px; }
+.recordListHeader select:focus-visible { outline: 2px solid #0075d8; outline-offset: 3px; }
 .page .freeCard button:focus-visible, .page .experiencePicker button:focus-visible { outline: 2px solid #0075d8; outline-offset: 3px; }
 .freeCard textarea::placeholder { color: #526b87; }
 .freeCard input, .freeCard textarea { caret-color: #0075d8; }

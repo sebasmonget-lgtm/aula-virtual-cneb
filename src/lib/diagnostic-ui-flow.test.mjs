@@ -25,6 +25,7 @@ test('missing moment is explicit and chronological ordering handles missing or m
   assert.equal(observationMoment(' Juego libre '),'Juego libre');
   const rows=[{id:'missing',date:null},{id:'old',observed_at:'2026-01-02T17:00:00Z'},{id:'b',date:'2026-01-03'},{id:'a',date:'2026-01-03'},{id:'invalid',date:'invalid'}];
   assert.deepEqual(rows.sort(compareObservationDates).map(row=>row.id),['b','a','old','missing','invalid']);
+  assert.deepEqual(rows.sort((a,b)=>compareObservationDates(a,b,'oldest')).map(row=>row.id),['old','b','a','missing','invalid']);
 });
 test('experience hints measure available records without treating absence as a difficulty',()=>{
   const students=[{id:'a'},{id:'b'}], experience={competencies:[{id:'identity'},{id:'oral'}]};

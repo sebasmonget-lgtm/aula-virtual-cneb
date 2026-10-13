@@ -10,9 +10,13 @@ export function toggleInterviewOption(values, field, id) {
 export const observationMoment = value => value?.trim() || 'Sin momento indicado';
 const instant = value => { const result = value ? Date.parse(value) : NaN; return Number.isFinite(result) ? result : -Infinity; };
 /** Undated records follow dated ones; IDs provide a deterministic tie break. */
-export function compareObservationDates(a, b) {
+export function compareObservationDates(a, b, order='newest') {
   const left = instant(a.observed_at ?? a.date), right = instant(b.observed_at ?? b.date);
-  if (left !== right) return right > left ? 1 : -1;
+  if (left !== right) {
+    if(left===-Infinity)return 1;
+    if(right===-Infinity)return -1;
+    return (right > left ? 1 : -1)*(order==='oldest'?-1:1);
+  }
   return String(b.id).localeCompare(String(a.id));
 }
 export function isRecordedObservation(record) {
