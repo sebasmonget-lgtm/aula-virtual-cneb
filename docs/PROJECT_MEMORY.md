@@ -1,5 +1,9 @@
 # Memoria del proyecto Ayni Aula
 
+## Publicación de guías simples y chat directo — 2026-10-13
+
+Production actualizado a fuente `dc02a73714f25fe4c222cdcf038b32a56c5b6d46`, deployment `dpl_ErioWNTaEcdGfjZoZgjW3axcEpAs` / https://ayni-aula-staging-pubnx8j34-ayni4.vercel.app. Stage sin dominio → 10 smoke PASS → promover mismo build → alias/SHA verificados y 10 smoke PASS. UI autenticada confirmó cobertura real y entrada al chat con respuesta de Ayni, sin generar año ni escribir observaciones cloud. 49 pruebas PASS, typecheck/lint/Next build PASS. GitHub rama actualizada; main sin cambios. Rollback `dpl_AtjxWnr35ydnfKyANmLhpyxwSngA` / `c98d739`. QA siempre en ruta `https://project-0w0pq.vercel.app/#planificar?tab=diagnostic&step=2&mode=guided`, no raíz (overview anterior). Recibo: `docs/qa/AYNI_SIMPLE_GUIDES_CHAT_2026-10-13.md`. Commit documental posterior no modifica fuente publicada.
+
 ## QA: guías simples, cobertura coherente y chat directo — 2026-10-13
 
 Base `add155a` y fuente `c98d739`, sin reemplazar por versiones anteriores. Dos acciones por momento; selector de experiencias con prioridades; diálogo cuenta competencia completa, búsqueda y grilla para aulas grandes. Último momento ofrece otra experiencia. Tabla «Resumen de observaciones» conduce al chat; captura desde celda conserva niño/competencia y reutiliza formulario compacto. Chat abre/retoma sin pantalla de fuentes, con contexto/historia opcionales dentro. No confirma síntesis ni genera año automáticamente. Fuentes excluyen información insuficiente. Sin migraciones/RLS/credenciales. Validaciones y publicación: `docs/qa/AYNI_SIMPLE_GUIDES_CHAT_2026-10-13.md`.
