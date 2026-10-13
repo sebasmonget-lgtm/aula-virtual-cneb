@@ -101,7 +101,7 @@ export function postgresPoolConfig(connectionString, options = {}) {
   };
 }
 
-export async function createDatabase({ mode, dataDir, connectionString, poolFactory } = {}) {
+export async function createDatabase({ mode, dataDir, connectionString, poolFactory, attachPool } = {}) {
   if (mode === "local") {
     const db = await PGlite.create(dataDir);
     return { mode, db, requestDb: () => db, close: () => db.close() };
@@ -114,6 +114,12 @@ export async function createDatabase({ mode, dataDir, connectionString, poolFact
   const pg = poolFactory ? null : (await import("pg")).default;
   const pool = poolFactory ? poolFactory(config) : new pg.Pool(config);
   pool.on?.("error", () => { /* A future checkout will report a safe failure; never log credentials. */ });
+  // Idle timers cannot run while a Vercel function is suspended. Keep the
+  // existing pool alive only until its idle connections have been released.
+  if (process.env.AYNI_SERVERLESS === "1" && process.env.VERCEL === "1") {
+    const attach = attachPool ?? (await import("@vercel/functions")).attachDatabasePool;
+    attach(pool);
+  }
   const db = createPostgresSession(pool);
   return { mode, db, requestDb: () => createPostgresSession(pool), close: () => pool.end() };
 }

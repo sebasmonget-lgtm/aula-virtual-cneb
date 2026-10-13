@@ -25,6 +25,27 @@ function fakePool() {
   return pool;
 }
 
+test("Vercel attaches the shared pool once without changing transactional ownership or local mode", async () => {
+  const previous = { serverless: process.env.AYNI_SERVERLESS, vercel: process.env.VERCEL };
+  const pool = fakePool(); let attached = 0, config;
+  try {
+    process.env.AYNI_SERVERLESS = "1"; process.env.VERCEL = "1";
+    const database = await createDatabase({ mode: "postgres", connectionString: "postgresql://user:pass@db.example.com/postgres",
+      poolFactory: value => { config = value; return pool; }, attachPool: value => { assert.equal(value, pool); attached++; } });
+    assert.equal(config.max, 1); assert.equal(config.idleTimeoutMillis, 1000); assert.equal(config.ssl.rejectUnauthorized, true);
+    const request = database.requestDb();
+    await request.transaction(tx => tx.query("select 1")); await request.close();
+    assert.equal(attached, 1); assert.equal(pool.releases, 1); await database.close();
+    process.env.VERCEL = "0";
+    const standalone = await createDatabase({ mode: "postgres", connectionString: "postgresql://user:pass@db.example.com/postgres",
+      poolFactory: () => pool, attachPool: () => { throw Error("Standalone must not attach to Vercel"); } });
+    await standalone.close();
+  } finally {
+    if (previous.serverless === undefined) delete process.env.AYNI_SERVERLESS; else process.env.AYNI_SERVERLESS = previous.serverless;
+    if (previous.vercel === undefined) delete process.env.VERCEL; else process.env.VERCEL = previous.vercel;
+  }
+});
+
 test("PostgreSQL adapter uses one pooled client per transaction and releases it", async () => {
   const pool = fakePool();
   const db = createPostgresSession(pool);
