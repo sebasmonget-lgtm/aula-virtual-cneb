@@ -1,0 +1,18 @@
+:where(.steps) { display: flex; align-items: center; gap: 10px; width: 100%; margin-top: 22px; padding: 0; list-style: none; }
+.steps li { display: flex; align-items: center; min-width: 0; gap: 10px; }
+.steps li:not(:last-child)::after { content: ""; flex-shrink: 0; width: 24px; height: 1px; background: #bfd5ef; }
+.step { display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 4px; border-radius: 8px; text-align: left; color: #486796; font-size: 14px; line-height: 1.35; cursor: pointer; }
+.marker { display: grid; place-items: center; flex-shrink: 0; width: 34px; height: 34px; border: 1px solid #d2e3fa; border-radius: 50%; background: #edf6ff; color: #143573; font-size: 16px; font-weight: 700; }
+.step[data-completed] { color: #00758c; font-weight: 600; }
+.step[data-completed] .marker { background: #06bf99; border-color: #06bf99; color: white; }
+.step[aria-current] { color: #102e6b; font-weight: 700; }
+.step[aria-current] .marker { background: #0075d8; border-color: #0075d8; color: white; }
+.step:hover:not(:disabled) { background: #e3f3ff; }
+.step:focus-visible { outline: 2px solid #0075d8; outline-offset: 3px; }
+.step:disabled { cursor: wait; opacity: .65; }
+@media (max-width: 800px) {
+  .steps { display: grid; grid-template-columns: 1fr 1fr; width: 100%; gap: 8px; }
+  .steps li:not(:last-child)::after { display: none; }
+  .step { width: 100%; gap: 8px; font-size: 13px; }
+  .marker { width: 29px; height: 29px; font-size: 14px; }
+}

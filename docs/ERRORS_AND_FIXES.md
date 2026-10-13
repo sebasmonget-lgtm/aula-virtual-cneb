@@ -1,5 +1,9 @@
 # Errores y soluciones
 
+## Codificación en edición y ancho del indicador — 2026-10-13
+
+Síntoma local durante implementación: acentos corruptos en alta/configuración y último paso sobre ilustración. Causa: lectura Python con codificación Windows implícita y ancho del componente compartido sobrescribiendo el ancho reservado del contenedor. Solución: reconstruir desde HEAD UTF-8 con lectura/escritura explícita; selector base :where de baja especificidad respeta el layout existente. Validación: textos restaurados, typecheck/lint/build, navegación y escritorio/móvil sin superposición ni overflow. Prevención: especificar UTF-8 en herramientas de archivo e inspeccionar la composición real, incluidos los anchos del contenedor. No afecta a registros guardados.
+
 ## Observación libre interrumpida y recuperación de foto poco informativa — 2026-10-13
 
 Síntoma confirmado en código/UI: tras guardar libre se ocultaba el formulario y exigía «Registrar otra»; al reiniciarlo podían heredarse apoyo/competencias y estado interno de foto/dictado. Causa: `captureOpen=false` y limpieza parcial. Solución: formulario continuo, limpieza completa tras confirmación, controles reiniciados por revisión y foco en texto. Validación local: 503 simulado conserva borrador/UUID; reintento y tres registros consecutivos (uno con foto privada) PASS; captura vacía, cero competencias opcionales, apoyo sin indicar y evidencia privada recuperable. Prevención: verificar registro consecutivo real por UI, no solo guardado del servicio.

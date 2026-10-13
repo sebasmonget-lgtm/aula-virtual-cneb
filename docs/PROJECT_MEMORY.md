@@ -1,5 +1,9 @@
 # Memoria del proyecto Ayni Aula
 
+## Navegación por los cuatro pasos — 2026-10-13
+
+Base cc9db0d: indicador compartido clickeable en configuración, matrícula, entrevistas/resumen y Mi año; incluye checks, teclado/foco y botones de 44px. Preserva flush de entrevista/resumen y confirmación de salida; matrícula confirma por API antes de 3/4, sin niños vuelve a alta. Resumen se marca como paso 3. Typecheck, lint excluyendo cachés .local, build vinext/Next webpack y tres pruebas de navegación PASS; UI real/PGlite aislado con ida/vuelta, salto 2→4, autosave y requisitos PASS. Tres regex obsoletas de suite adicional ya fallan en baseline; no atribuidas al cambio. Sin escrituras remotas ni publicación. Detalle, limitaciones y rollback: docs/qa/AYNI_PASOS_PREPARACION_2026-10-13.md.
+
 ## Bloques guiados con imágenes genéricas — 2026-10-13
 
 Base 2f2b9e4 conserva lista compacta. Nuevos fondos genéricos compartidos nube/plantas/cono en Qué hacer/Qué observar/Por ejemplo, generados con imagegen integrado y optimizados WebP con alfa, 21.578 bytes total. Criterio violeta con recuadro claro interno, lupa/título resaltado/ejemplos docentes y niño genérico de biblioteca existente. Espacio reservado para imágenes, sin superponer instrucciones ni tocar criterios/ejemplos/IDs/guardado. Typecheck, lint global/focal, build Next webpack, diez pruebas focales y detector PASS; UI local 1366/390 sin desbordamiento, siguiente momento/modal/cambio experiencia conservados y fondos reutilizados. Sin escrituras pedagógicas/migraciones/RLS/publicación. Capturas .local/guided-panels-20261013/; prompts, rutas y rollback en docs/qa/AYNI_BLOQUES_GUIADOS_2026-10-13.md.

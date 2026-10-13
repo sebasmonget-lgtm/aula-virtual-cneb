@@ -1,5 +1,9 @@
 # Decisiones de arquitectura
 
+## Pasos como navegación de preparación — 2026-10-13
+
+Un único componente de botones nativos para los cuatro destinos; números/checks/texto comparten el control. El estado actual indica ubicación, no confirma datos pedagógicos. Destinos centrales reutilizan preparationStageHash; matrícula usa su confirmación servidor y entrevistas/resumen su flush antes de salir. No exigir cobertura diagnóstica para abrir Mi año; sí conservar aula/niños/matrícula. No persistir nuevos datos ni cambiar permisos. Los pasos visibles durante la preparación se mantienen también en el editor de perfil para permitir el retorno.
+
 ## Competencias en lista compacta — 2026-10-13
 
 Usar IDs oficiales para asignar paleta/icono, nunca nombres cortos como identidad ni colores para logros. Paleta central de presentación exportada para reuso; SVG compactos son variantes aditivas del conjunto vectorial existente. La lista comparte renderer para fuentes libres/guiadas/anteriores, conserva sugerencias explícitas y enlaces privados, admite dos competencias y despliega textos largos. Orden visual seleccionable en memoria; sin alterar fecha/registro ni persistir información pedagógica en navegador. Aplicación global de colores en otros módulos se deja fuera de esta solicitud de lista. No cambios servidor/esquema/permisos.

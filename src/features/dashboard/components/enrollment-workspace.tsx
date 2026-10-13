@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import Image from "next/image";
-import { ArrowLeft, ArrowRight, Camera, Check, ChevronDown, ImageIcon, Info, ListPlus, LogOut, Pencil, Plus, Save, Search, Trash2, Users } from "lucide-react";
+import { ArrowLeft, ArrowRight, Camera, ChevronDown, ImageIcon, Info, ListPlus, LogOut, Pencil, Plus, Save, Search, Trash2, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,6 +16,7 @@ import { StudentEnrollment } from "./student-enrollment";
 import { preparePrivateMedia } from "./media-attachment-input";
 import { AsyncButton, WorkflowFeedback } from "./workflow-ui";
 import { SaveConfirmation, useSaveConfirmation } from "./save-confirmation";
+import { PreparationSteps } from "./preparation-steps";
 import shell from "./pilot-setup.module.css";
 import styles from "./enrollment-workspace.module.css";
 
@@ -32,7 +33,7 @@ async function mutate(path:string,body:Record<string,unknown>,dashboard?:LocalDa
 }
 
 export function EnrollmentWorkspace({dashboard,onUpdated,onBack,onContinue,onSignOut}: {
-  dashboard:LocalDashboard;onUpdated:(data:LocalDashboard)=>void;onBack:()=>void;onContinue:()=>Promise<void>;onSignOut?:()=>void;
+  dashboard:LocalDashboard;onUpdated:(data:LocalDashboard)=>void;onBack:()=>void;onContinue:(step?:3|4)=>Promise<void>;onSignOut?:()=>void;
 }) {
   const [query,setQuery]=useState("");
   const [editing,setEditing]=useState<LocalStudent|null>(null);
@@ -103,7 +104,7 @@ export function EnrollmentWorkspace({dashboard,onUpdated,onBack,onContinue,onSig
     catch(cause){setError(`Los datos del niño se conservan. ${cause instanceof Error?cause.message:"La foto sigue pendiente. Inténtalo de nuevo."}`);}
     finally{lock.current=false;setBusy(false);}
   }
-  async function continueRegistration(){if(lock.current||photoRetry||!allowLeave())return;lock.current=true;setBusy(true);setAction("continue");setError("");try{await onContinue();}catch(cause){setError(cause instanceof Error?cause.message:"No se pudo continuar. Inténtalo de nuevo.");}finally{lock.current=false;setBusy(false);}}
+  async function continueRegistration(step:3|4=3){if(lock.current||photoRetry||!allowLeave())return;if(!students.length){setError("Añade al menos un niño o niña para continuar.");return;}lock.current=true;setBusy(true);setAction("continue");setError("");try{await onContinue(step);}catch(cause){setError(cause instanceof Error?cause.message:"No se pudo continuar. Inténtalo de nuevo.");}finally{lock.current=false;setBusy(false);}}
   const teacherName=dashboard.profile.teacher_name;
   return <div className={`${shell.page} ${styles.page}`} data-ayni-screen="enrollment">
     <header className={shell.topbar}><div className={styles.topbarInner}>
@@ -115,7 +116,7 @@ export function EnrollmentWorkspace({dashboard,onUpdated,onBack,onContinue,onSig
         <button type="button" className={styles.backLink} disabled={unavailable} onClick={()=>{if(allowLeave())onBack();}}><ArrowLeft size={18}/>Volver</button>
         <h1>Añade a tus niños</h1><p>Registra a los niños de tu aula. Puedes <strong>añadirlos</strong> uno por uno o varios a la vez.</p>
         <Image className={`${shell.illustration} ${styles.illustration}`} src="/ayni-classroom-welcome.png" alt="" width={1536} height={1024} sizes="440px" preload/>
-        <ol className={`${shell.steps} ${styles.steps}`} aria-label="Preparación de tu aula">{["Configura tu aula","Añade a tus niños","Entrevistas y observaciones","Prepara Mi año con Ayni"].map((label,index)=><li key={label} aria-current={index===1?"step":undefined} className={index===0?styles.completed:undefined}><span>{index===0?<Check size={22} aria-label="Completado"/>:index+1}</span><span>{label}</span></li>)}</ol>
+        <PreparationSteps current={2} className={styles.steps} disabled={unavailable} onSelect={step=>{if(step===1){if(allowLeave())onBack();}else if(step===3||step===4)void continueRegistration(step);}}/>
       </div>
       <div className={styles.columns}>
         <section className={`${shell.card} ${styles.listCard}`} aria-labelledby="registered-children-title">

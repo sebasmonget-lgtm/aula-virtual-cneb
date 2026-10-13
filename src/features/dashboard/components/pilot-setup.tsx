@@ -10,6 +10,7 @@ import { savePilotSetup, savePilotSetupDraft, type PilotSetupDraft, type LocalDa
 import { pilotSchoolYearDefaults } from "@/src/lib/pilot-school-year-defaults.mjs";
 import { displayNow } from "@/src/lib/display-date";
 import { AsyncButton } from "./workflow-ui";
+import { PreparationSteps } from "./preparation-steps";
 import styles from "./pilot-setup.module.css";
 
 async function encodeLogo(file: File): Promise<NonNullable<PilotSetupDraft["logoUpload"]>> {
@@ -37,6 +38,7 @@ export function PilotSetup({ onReady, accountYear, initialDraft, onSignOut }: {
   const [autosave, setAutosave] = useState<"saved" | "pending" | "saving" | "error">("saved");
   const [autosaveError, setAutosaveError] = useState("");
   const [retry, setRetry] = useState(0);
+  const formRef = useRef<HTMLFormElement>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
   const submissionId = useRef<string | null>(null);
   const saving = useRef(false);
@@ -111,11 +113,9 @@ export function PilotSetup({ onReady, accountYear, initialDraft, onSignOut }: {
         <h1>Crea tu salón</h1>
         <p>Completa estos datos una sola vez para empezar a usar Ayni con tu grupo.</p>
         <Image className={styles.illustration} src="/ayni-classroom-welcome.png" alt="" width={1536} height={1024} sizes="380px" preload />
-        <ol className={styles.steps} aria-label="Preparación de tu aula">
-          {["Configura tu aula", "Añade a tus niños", "Entrevistas y observaciones", "Prepara Mi año con Ayni"].map((label, index) => <li key={label} aria-current={index === 0 ? "step" : undefined}><span>{index + 1}</span><span>{label}</span></li>)}
-        </ol>
+        <PreparationSteps current={1} className={styles.steps} disabled={busy||readingLogo} onSelect={step=>{if(step===2)formRef.current?.requestSubmit();else if(step>2)setError("Primero configura tu aula y añade a tus niños para continuar.");}}/>
       </div>
-      <form onSubmit={event => { event.preventDefault(); void save(); }} className={styles.form}>
+      <form ref={formRef} onSubmit={event => { event.preventDefault(); void save(); }} className={styles.form}>
         <section className={styles.card} aria-labelledby="school-data-title">
           <div className={styles.sectionHeading}><span className={styles.schoolIcon}><School size={32} aria-hidden="true"/></span><div><h2 id="school-data-title">Datos del colegio</h2><p>Estos datos se usarán para personalizar tus documentos. Los campos opcionales se pueden completar después.</p></div></div>
           <div className={styles.schoolLayout}>
