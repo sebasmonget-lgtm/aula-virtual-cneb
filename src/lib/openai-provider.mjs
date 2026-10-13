@@ -76,6 +76,7 @@ export class OpenAIProvider extends AIProvider {
     }
     const client = this.getClient();
     let response;
+    let providerDurationMs = 0;
     let trace;
     try {
       const payload = {
@@ -94,9 +95,11 @@ export class OpenAIProvider extends AIProvider {
         },
       };
       trace = await beginAIQATrace(request, payload, this.resumeResponseId);
+      const providerStarted = performance.now();
       response = this.resumeResponseId
         ? await client.responses.retrieve(this.resumeResponseId, {}, { timeout: this.timeoutMs, maxRetries: 0 })
         : await client.responses.create(payload, { timeout: this.timeoutMs, maxRetries: 0 });
+      providerDurationMs = performance.now() - providerStarted;
       if (this.background && !this.resumeResponseId) {
         if (!response.id) throw new OpenAIProviderError("response_incomplete");
         if (trace) trace.openai_response_id = response.id;
@@ -143,6 +146,7 @@ export class OpenAIProvider extends AIProvider {
         provider: "openai",
         model: actualModel,
         response_id: response._request_id ?? response.id ?? null,
+        duration_ms: providerDurationMs,
         usage: normalizeUsage(response.usage),
       },
     };

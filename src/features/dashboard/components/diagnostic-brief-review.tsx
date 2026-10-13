@@ -14,13 +14,16 @@ export const DiagnosticBriefReview=forwardRef<SummaryHandle,{onBack:()=>void;onC
   const [sources,setSources]=useState<DiagnosticReviewWorkspace|null>(null),[details,setDetails]=useState<DiagnosticGroupDetails|null>(null);
   const [operation,setOperation]=useState<'suggest'|'continue'|null>(null),[status,setStatus]=useState<'saved'|'pending'|'saving'|'error'>('saved'),[error,setError]=useState(''),[revision,setRevision]=useState(0);
   const [claims,setClaims]=useState<NonNullable<DiagnosticGroupDetails['claims']>>([]);
+  const [waiting,setWaiting]=useState(false),[prepared,setPrepared]=useState<DiagnosticGroupDetails|null>(null);
   const latest=useRef<DiagnosticGroupDetails|null>(null),saved=useRef(''),draftId=useRef(''),queue=useRef<Promise<boolean>|null>(null),lock=useRef(false),alive=useRef(true);
   const dirty=!!details&&JSON.stringify(details)!==saved.current;
-  useUnsavedWork(dirty,operation!==null||status==='saving');
+  useUnsavedWork(dirty,operation==='continue'||status==='saving');
   useEffect(()=>{alive.current=true;let active=true;loadDiagnosticReview().then(value=>{if(!active)return;
     const draft=value.group_reviews.find(row=>row.status==='draft'),review=draft??value.group_reviews.find(row=>row.status==='confirmed');
     const initial=editable(review?.details??{strengths:value.brief.text,needs:'',planning_priorities:'',competency_priorities:[]});
     if(draft)draftId.current=draft.id;
+    setWaiting(draft?.ai_state==='processing'&&Date.parse(draft.ai_expires_at??'')>Date.now());
+    setPrepared(draft?.is_current&&draft.ai_suggestion&&JSON.stringify(editable(draft.ai_suggestion))!==JSON.stringify(initial)?draft.ai_suggestion:null);
     latest.current=initial;saved.current=review?JSON.stringify(initial):'';setDetails(initial);setStatus(review?'saved':'pending');setSources(value);setClaims(review?.ai_suggestion?.claims??[]);setError('');
   }).catch(()=>{if(active)setError('No pudimos recuperar tu resumen. Reintenta; tus correcciones guardadas se conservan.');});return()=>{active=false;alive.current=false;};},[revision]);
   async function flush():Promise<boolean>{
@@ -42,7 +45,10 @@ export const DiagnosticBriefReview=forwardRef<SummaryHandle,{onBack:()=>void;onC
     if(!await flush())return;const draft=await prepareDiagnosticGroup();draftId.current=draft.id;
     // A new version must preserve the teacher's current corrections even if AI fails.
     if(latest.current&&JSON.stringify(editable(draft.details))!==JSON.stringify(latest.current))await saveDiagnosticGroup(draft.id,latest.current);
-    const result=await suggestDiagnosticGroup(draft.id);change(editable(result.details));setClaims(result.details.claims??[]);await flush();
+    const result=await suggestDiagnosticGroup(draft.id);
+    // The server stores the result independently; an unmounted editor must not overwrite newer corrections.
+    if(!alive.current)return;
+    change(editable(result.details));setClaims(result.details.claims??[]);setPrepared(null);await flush();
   }catch(cause){setError(cause instanceof Error?cause.message:'Ayni no pudo terminar el resumen. Puedes continuar con tus palabras.');}finally{lock.current=false;setOperation(null);}}
   async function advance(){if(lock.current||!latest.current)return;lock.current=true;setOperation('continue');setError('');try{
     if(!await flush())return;
@@ -57,11 +63,13 @@ export const DiagnosticBriefReview=forwardRef<SummaryHandle,{onBack:()=>void;onC
     <p className="max-w-prose text-sm text-[#526b87]">Revisa lo que conocemos y añade lo que te ayude a planificar. Tus correcciones se guardan automáticamente.</p>
     {incomplete&&<p className="rounded-xl bg-[#eef6fa] p-3 text-sm">Puedes continuar ahora. Con más entrevistas y observaciones, la personalización de Mi año será más completa.</p>}
     <div><h3 className="font-bold">Intereses contados por las familias</h3>{sources.derived_group_information.interests.length?<ul className="mt-2 flex flex-wrap gap-2">{sources.derived_group_information.interests.map(item=><li key={item.key} className="rounded-lg bg-[#e5f4ee] px-3 py-2 text-sm">{item.label} · {item.count} {item.count===1?'familia':'familias'}</li>)}</ul>:<p className="mt-2 text-sm text-[#526b87]">Los intereses aparecerán aquí al confirmar las entrevistas familiares.</p>}</div>
-    <AsyncButton variant="outline" busy={operation==='suggest'} busyLabel="Ayni está preparando tu resumen…" disabled={!!operation||status==='saving'} onClick={()=>void suggest()}><Sparkles size={18}/>Preparar resumen con Ayni</AsyncButton>
+    <AsyncButton variant="outline" busy={operation==='suggest'} busyLabel="Ayni está preparando tu resumen…" disabled={!!operation||waiting||status==='saving'} onClick={()=>void suggest()}><Sparkles size={18}/>Preparar resumen con Ayni</AsyncButton>
+    {waiting&&<div role="status" className="space-y-3 rounded-xl bg-[#eef6fa] p-3"><p>Ayni sigue preparando tu resumen. Puedes salir y volver; tu texto está guardado y no iniciaremos otra generación.</p><Button variant="outline" disabled={status==='saving'||!!operation} onClick={()=>void flush().then(ok=>{if(ok)setRevision(value=>value+1);})}>Consultar estado del resumen</Button></div>}
+    {prepared&&<div className="space-y-3 rounded-xl bg-[#e5f4ee] p-3"><p>Ayni terminó una propuesta que quedó guardada. Puedes usarla y editarla; tus palabras actuales se conservan hasta que la elijas.</p><Button variant="outline" disabled={!!operation||status==='saving'} onClick={()=>{change(editable(prepared));setClaims(prepared.claims??[]);setPrepared(null);void flush();}}>Usar el resumen preparado</Button></div>}
     {operation==='suggest'&&<p role="status" className="text-sm text-[#526b87]">Estamos leyendo la información disponible. La propuesta aparecerá cuando termine correctamente; tus datos actuales siguen guardados.</p>}
     {fields.map(([field,label])=><label key={field} className="block font-semibold">{label}<Textarea className="mt-2 min-h-24 font-normal leading-relaxed" maxLength={3000} value={details[field]} disabled={!!operation} onChange={event=>change({...details,[field]:event.target.value})}/></label>)}
     <details className="text-sm"><summary className="min-h-11 cursor-pointer py-3">Fuentes e historial del resumen</summary><p>{sources.derived_group_information.confirmed_interviews} entrevistas confirmadas y {sources.observations.length} registros de observación. Las entrevistas aportan contexto familiar; no acreditan logros.</p>{claims.length>0&&<ul className="mt-3 space-y-3">{claims.map((claim,index)=><li key={index}>{claim.text}<span className="mt-1 block text-[#526b87]">{claim.sources.map(source=>`${source.child.replace('child_','Niño ')} · ${source.source_type==='family_reported_context'?'según la familia':source.source_type==='teacher_interpretation'?'comentario docente':'observación directa'}`).join('; ')}</span></li>)}</ul>}{sources.group_reviews.filter(row=>row.status==='confirmed').map(row=><div key={row.id} className="mt-3 border-t pt-3"><strong>Versión {row.version}</strong><p className="whitespace-pre-wrap">{[row.details.strengths,row.details.needs,row.details.planning_priorities].filter(Boolean).join('\n')}</p></div>)}</details>
     {error&&<div role="alert" className="space-y-2 rounded-xl bg-[#fff1df] p-3"><p>{error}</p>{status==='error'&&<Button variant="outline" onClick={()=>void flush()}>Reintentar guardado</Button>}</div>}
-    <div className="flex flex-wrap justify-between gap-3 border-t border-[#d6e5ef] pt-4"><Button variant="outline" disabled={!!operation||status==='saving'} onClick={()=>void flush().then(ok=>{if(ok)onBack();})}>Volver a entrevistas y observaciones</Button><AsyncButton busy={operation==='continue'} busyLabel="Preparando el paso a Mi año…" disabled={!!operation||!details.strengths.trim()} onClick={()=>void advance()}>Continuar a Mi año<ArrowRight/></AsyncButton></div>
+    <div className="flex flex-wrap justify-between gap-3 border-t border-[#d6e5ef] pt-4"><Button variant="outline" disabled={operation==='continue'||status==='saving'} onClick={()=>void flush().then(ok=>{if(ok)onBack();})}>Volver a entrevistas y observaciones</Button><AsyncButton busy={operation==='continue'} busyLabel="Preparando el paso a Mi año…" disabled={!!operation||waiting||!details.strengths.trim()} onClick={()=>void advance()}>Continuar a Mi año<ArrowRight/></AsyncButton></div>
   </section>;
 });

@@ -5,7 +5,7 @@ import { measureSetupPhase, withSetupPerformance } from "../src/lib/setup-perfor
 export async function handleServerlessRequest(webRequest) {
   const pathname = new URL(webRequest.url).pathname;
   const saveOperation = ["POST", "PUT", "PATCH"].includes(webRequest.method) && (
-    ["/api/pilot/setup", "/api/qa/setup-benchmark", "/api/students/import", "/api/diagnostics/spontaneous-observations", "/api/diagnostics/experience-observations"].includes(pathname)
+    ["/api/pilot/setup", "/api/qa/setup-benchmark", "/api/students/import", "/api/diagnostics/spontaneous-observations", "/api/diagnostics/experience-observations", "/api/diagnostics/group-review/suggest"].includes(pathname)
     || /^\/api\/students\/[0-9a-f-]{36}\/(details|photo)$/.test(pathname)
     || /^\/api\/diagnostics\/students\/[0-9a-f-]{36}\/family-interview(?:\/(save-and-confirm|confirm))?$/.test(pathname));
   if (saveOperation) {

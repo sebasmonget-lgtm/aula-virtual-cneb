@@ -1892,3 +1892,6 @@ Síntomas: registro guiado recién guardado no aparecía en lista compartida; pr
 
 ## EX-04 — Retiro incompatible con el enum cloud
 QA por interfaz detectó error al retirar a un niño ficticio: el servicio escribía inactive, válido en esquema local text pero inexistente en classroom_status cloud (draft/active/archived). No hubo borrado. Solución: mantener API inactive y mapear persistencia a archived; lectura/recuperación admiten también filas locales históricas inactive mediante cast text. Sin migración ni cambio de permisos. Seis pruebas focales PASS, incluyendo enum cloud real, CAS, aislamiento y conservación de historia. Prevención: probar servicio con tipos oficiales además del esquema local flexible.
+
+## AN-01 — Estado del resumen perdido al recargar durante IA
+Causa: ai_snapshot conservaba procesamiento/salida, pero su estado no llegaba al editor y una petición de un editor desmontado podía intentar guardar después. Solución focal: publicar estado/expiración, consultar sin regenerar y aplicar propuesta guardada solo expresamente; retorno tardío desmontado no persiste correcciones. Cache/lease y validación de fuentes se conservan. Focales servidor, typecheck/lint/build PASS; recuperación UI real se verificará con una generación. Prevención: distinguir propuesta durable y texto docente y medir proveedor/DB separadamente.

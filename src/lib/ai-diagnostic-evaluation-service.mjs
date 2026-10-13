@@ -6,6 +6,7 @@ import { loadDiagnosticEvaluationSkill } from "./diagnostic-evaluation-skill.mjs
 import { neutralizeAssessmentText } from "./assessment-v4-service.mjs";
 import { recordAIQAResult } from "./ai-qa-trace.mjs";
 import { randomUUID } from "node:crypto";
+import { currentSetupPerformance } from "./setup-performance.mjs";
 
 const fields = ["strengths", "needs", "planning_priorities"];
 const OUTPUT_SCHEMA = { id: "diagnostic-group-suggestion-v3", type: "object", additionalProperties: false,
@@ -69,7 +70,9 @@ export async function suggestDiagnosticGroupReview(db, teacherId, draftId, {
   resolvePlan = resolveAIExecutionPlan, createProvider = createAIProviderForPlan,
   loadSkill = loadDiagnosticEvaluationSkill, loadSources = diagnosticGroupProposalSources,
 } = {}) {
+  const started = performance.now(), timing = {};
   const sources = await loadSources(db, teacherId, draftId);
+  timing.sources_before_ms = performance.now() - started;
   const old=(await db.query(`select ai_snapshot from diagnostic_group_reviews
     where id=$1 and created_by=$2 and status='draft'`,[draftId,teacherId])).rows[0]?.ai_snapshot;
   if(old?.output&&sameDiagnosticSources(old.source_snapshot,sources.source_snapshot))return {details:old.output,cached:true};
@@ -95,16 +98,26 @@ export async function suggestDiagnosticGroupReview(db, teacherId, draftId, {
           "Concluir que todos los niños necesitan el mismo apoyo por una prioridad grupal."] },
       provenance: { source_type: "diagnostic_facts_and_optional_confirmed_comments", source_count: sources.comments.length + (sources.observed_records?.length ?? 0) } };
     const request = buildProviderRequest("diagnostic_group_synthesis", bundle, plan, OUTPUT_SCHEMA, await loadSkill());
+    const providerStarted = performance.now();
     const response = await provider.generate(request);
+    timing.provider_step_ms = performance.now() - providerStarted;
+    timing.provider_http_ms = response.provider_metadata?.duration_ms ?? null;
     const details = validateDiagnosticSuggestion(response.output, sources);
+    const validationStarted = performance.now();
     const current = await loadSources(db, teacherId, draftId);
+    timing.sources_after_ms = performance.now() - validationStarted;
     if (!sameDiagnosticSources(sources.source_snapshot, current.source_snapshot)) throw new DiagnosticSuggestionError("stale_sources");
+    timing.server_before_store_ms = performance.now() - started;
+    const measured = currentSetupPerformance();
+    timing.db_query_before_store_ms = measured?.db_query ?? null;
+    timing.db_connect_before_store_ms = measured?.db_connect ?? null;
+    timing.query_count_before_store = measured?.queries ?? null;
     const stored=await db.query(`update diagnostic_group_reviews set ai_snapshot=$1::jsonb,updated_at=now()
       where id=$2 and status='draft' and ai_snapshot->>'lease_token'=$3 returning id`, [JSON.stringify({ status:'ready',output: details,
       provider: response.provider_metadata?.provider ?? plan.provider, model: plan.model,
       reasoning_effort: plan.reasoning_effort, routing_policy_version: plan.routing_policy_version,
       response_id: response.provider_metadata?.response_id ?? null,
-      usage: response.provider_metadata?.usage ?? null, source_snapshot: sources.source_snapshot }), draftId,lease]);
+      usage: response.provider_metadata?.usage ?? null, timing, source_snapshot: sources.source_snapshot }), draftId,lease]);
     if(!stored.rows.length)throw new DiagnosticSuggestionError('stale_sources');
     await recordAIQAResult("diagnostic_group_synthesis", details, { validators: ["source_refs", "distinct_children_scope", "privacy", "source_fingerprint"], downstream: ["annual_plan"] });
     return { details };

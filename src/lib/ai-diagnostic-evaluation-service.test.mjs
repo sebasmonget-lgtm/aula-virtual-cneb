@@ -62,6 +62,10 @@ test("Skill diagnóstica sugiere un borrador editable sin enviar nombres, entrev
     assert.equal((await db.query("select details from diagnostic_group_reviews where id=$1", [group.id])).rows[0].details.strengths, "");
     const recovered=(await loadDiagnosticAssessmentWorkspace(db,teacher)).group_reviews.find(row=>row.id===group.id);
     assert.deepEqual(recovered.ai_suggestion,suggestion.details);
+    assert.equal(recovered.ai_state,'ready');
+    assert.equal(recovered.ai_expires_at,null);
+    const savedTiming=(await db.query('select ai_snapshot from diagnostic_group_reviews where id=$1',[group.id])).rows[0].ai_snapshot.timing;
+    assert.ok(savedTiming.sources_before_ms>=0&&savedTiming.sources_after_ms>=0&&savedTiming.provider_step_ms>=0);
     assert.equal(recovered.details.strengths,"");
     assert.equal(requests.length,1);
     let reads=0;
@@ -69,6 +73,9 @@ test("Skill diagnóstica sugiere un borrador editable sin enviar nombres, entrev
     assert.deepEqual((await diagnosticGroupProposalSources(measured, teacher, group.id)).comments.length, 2);
     assert.ok(reads<=12,`Grouped sources should not read separately per pupil: ${reads}`);
     await db.query(`update diagnostic_group_reviews set ai_snapshot=$1::jsonb where id=$2`,[JSON.stringify({status:'processing',expires_at:new Date(Date.now()+180000).toISOString(),lease_token:'test'}),group.id]);
+    const processing=(await loadDiagnosticAssessmentWorkspace(db,teacher)).group_reviews.find(row=>row.id===group.id);
+    assert.equal(processing.ai_state,'processing');assert.ok(Date.parse(processing.ai_expires_at)>Date.now());
+    assert.equal('lease_token' in processing,false);
     await assert.rejects(suggestDiagnosticGroupReview(db,teacher,group.id,{createProvider:()=>{throw Error('duplicate');}}),{reason:'in_progress'});
     await assert.rejects(diagnosticGroupProposalSources(db, otherTeacher, group.id), { reason: "no_classroom" });
   } finally { await db.close(); }
