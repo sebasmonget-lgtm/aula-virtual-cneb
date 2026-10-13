@@ -1,5 +1,9 @@
 # Decisiones de arquitectura
 
+## Preparación: estados y captura ligera — 2026-10-12
+
+Mantener seis claves familiares, respuestas múltiples/texto/dictado y confirmación versionada. Alias visual plants/nature sin invalidar ni reescribir IDs históricos; borrador recuperable separado de confirmada. Libre admite momento no indicado mediante literal explícito compatible con servidor; competencias opcionales, IA solo a pedido. Historial completo ordenado por fecha observada, faltantes al final. Guiada distingue instrucciones docentes por momento conservando criterio/competencia/ejemplos; alumno seleccionado una sola vez en modal, cantidades por criterio. Cobertura incompleta invita a observar, nunca acredita dificultad. Finaliza en entrevistas/observaciones/preparación; Mi año no incorpora requisitos diagnósticos adicionales. Publicación únicamente Preview según adjunto más reciente.
+
 ## Tercera etapa con entrevistas apiladas y observación por niño — 2026-10-12
 
 Mockups fijan composición. InterviewsWorkspace sustituye entrada diagnóstica de preparación, preservando ruta de revisión step=3. No añadir datos privados a URLs: solo tab/step/mode. Reusar FamilyInterviewEditor en layout stacked, y SpontaneousDiagnostic embedded; mantener usos previos. Navegación del editor espera autosave antes de desmontarlo. Avance agregado cuenta grupos respondidos en versión más reciente; historial confirmado sigue separado. Fallo de carga no habilita formulario vacío. Cambiar al modo guiado utiliza catálogo/IDs actuales, preparación real y todos sus momentos; modal guarda vía contrato compacto/idempotente existente, con evidencia privada y competencia vinculada por criterio. Cantidades por experiencia; guardar otro exige seleccionar niño. Las revisiones anteriores y Mi año siguen accesibles sin umbral de completitud. Sin migración/IA nueva; rollback de UI no borra datos.

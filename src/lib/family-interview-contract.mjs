@@ -18,7 +18,7 @@ export const interviewInterestOptions = Object.freeze([
   { id: "stories", label: "Cuentos y libros" }, { id: "drawing", label: "Dibujo" },
   { id: "music", label: "Música y canto" }, { id: "dance", label: "Baile" },
   { id: "cooking", label: "Cocinar" }, { id: "water", label: "Agua" },
-  { id: "sports", label: "Deportes" }, { id: "movement", label: "Juegos de movimiento" },
+  { id: "sports", label: "Juegos deportivos" }, { id: "movement", label: "Correr, saltar o trepar" },
   { id: "nature", label: "Naturaleza" }, { id: "pretend_play", label: "Juego de imaginar" },
   { id: "other", label: "Otro" },
 ]);
@@ -34,7 +34,7 @@ export const interviewAutonomyLevels = Object.freeze([
 export const interviewCommunicationOptions = Object.freeze([
   { id: "converses", label: "Conversa con facilidad" }, { id: "quiet_initially", label: "Habla poco al inicio" },
   { id: "short_phrases", label: "Usa frases cortas" }, { id: "gestures", label: "Usa gestos además de palabras" },
-  { id: "needs_time", label: "Necesita tiempo para expresarse" }, { id: "other", label: "Otra" },
+  { id: "needs_time", label: "Necesita tiempo para expresarse" }, { id: "other", label: "Otra forma de comunicarse" },
 ]);
 export const interviewEmotionalSupportOptions = Object.freeze([
   { id: "talk", label: "Conversar con calma" }, { id: "company", label: "Estar cerca de alguien" },
@@ -43,16 +43,16 @@ export const interviewEmotionalSupportOptions = Object.freeze([
 ]);
 export const interviewSocialPlayOptions = Object.freeze([
   { id: "seeks_others", label: "Busca jugar con otros" }, { id: "alone_sometimes", label: "A veces juega solo/a" },
-  { id: "proposes", label: "Propone juegos" }, { id: "follows", label: "Sigue juegos de otros" },
+  { id: "proposes", label: "Propone juegos" }, { id: "follows", label: "Se suma a juegos de otros" },
   { id: "takes_time", label: "Necesita tiempo para integrarse" },
-  { id: "sharing_waiting", label: "A veces le cuesta esperar o compartir" }, { id: "other", label: "Otra" },
+  { id: "sharing_waiting", label: "Está aprendiendo a esperar y compartir" }, { id: "other", label: "Otra forma de jugar" },
 ]);
 export const interviewHomeActivityOptions = Object.freeze([
   { id: "asks_why", label: "Pregunta cómo o por qué" }, { id: "counts_compares", label: "Cuenta, reparte o compara" },
   { id: "builds", label: "Construye o arma" }, { id: "books", label: "Mira libros o escucha cuentos" },
   { id: "draws_writes", label: "Dibuja o intenta escribir" }, { id: "invents", label: "Inventa historias o juegos" },
   { id: "music_dance", label: "Canta, baila o hace música" }, { id: "explores", label: "Explora la naturaleza u objetos" },
-  { id: "notices_details", label: "Observa detalles y los comenta" }, { id: "other", label: "Otra" },
+  { id: "notices_details", label: "Observa detalles y los comenta" }, { id: "other", label: "Otra experiencia en casa" },
 ]);
 export const interviewCommunityOptions = Object.freeze([
   { id: "agriculture", label: "Chacra o agricultura" }, { id: "animals", label: "Animales" },
@@ -60,12 +60,12 @@ export const interviewCommunityOptions = Object.freeze([
   { id: "cooking", label: "Cocina" }, { id: "park", label: "Parque" },
   { id: "music", label: "Música" }, { id: "celebrations", label: "Fiestas y costumbres" },
   { id: "crafts", label: "Tejidos o artesanías" }, { id: "sports", label: "Deportes" },
-  { id: "nature", label: "Naturaleza" }, { id: "travel", label: "Viajes" }, { id: "other", label: "Otra" },
+  { id: "nature", label: "Naturaleza" }, { id: "travel", label: "Viajes" }, { id: "other", label: "Otra experiencia familiar" },
 ]);
 export const interviewParticipationSupportOptions = Object.freeze([
   { id: "watch_first", label: "Observar antes de participar" }, { id: "more_time", label: "Tener más tiempo" },
   { id: "quiet", label: "Evitar ciertos ruidos" }, { id: "anticipation", label: "Saber qué pasará" },
-  { id: "movement", label: "Poder moverse" }, { id: "other", label: "Otra" },
+  { id: "movement", label: "Poder moverse" }, { id: "other", label: "Otro apoyo" },
 ]);
 export const interviewPreviousEducationOptions = Object.freeze([
   { id: "yes", label: "Sí" }, { id: "no", label: "No" }, { id: "unknown", label: "Prefiero no responder" },
@@ -77,10 +77,10 @@ export const interviewPreviousEducationTypeOptions = Object.freeze([
 export const familyInterviewQuestionGroups = (name) => [{ title: "La familia nos cuenta", questions: [
   { key: "interests", label: "¿Qué disfruta hacer " + name + "?", hint: "Cuéntanos un ejemplo. También puedes decir qué no le interesa." },
   { key: "social_context", label: "¿Cómo juega " + name + ", solo/a o con otras personas?" },
-  { key: "home_activity_example", label: "¿Qué suele contar, preguntar, construir o explorar " + name + "?", hint: "Una experiencia concreta nos ayuda a conocerlo mejor." },
+  { key: "home_activity_example", label: "¿Qué hace o explora " + name + " cuando juega en casa?", hint: "Cuenta una experiencia concreta, además de sus gustos." },
   { key: "communication_context", label: "¿Qué lenguas escucha o usa " + name + " y cómo se comunica?" },
-  { key: "family_community_context", label: "¿Qué experiencias, actividades o costumbres de su familia o comunidad son significativas para " + name + "?" },
-  { key: "participation_support_context", label: "¿Hay algo más que quieras que la profesora conozca para acompañar a " + name + " y ayudarle a participar?" },
+  { key: "family_community_context", label: "¿Qué experiencias familiares o de su comunidad son importantes para " + name + "?" },
+  { key: "participation_support_context", label: "¿Qué debe saber la profesora para acompañar a " + name + " y ayudarle a participar?" },
 ] }];
 
 /** A version marker, whitespace and empty lists are not family answers. */

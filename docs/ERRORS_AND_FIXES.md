@@ -1,5 +1,11 @@
 # Errores y soluciones
 
+## Modal guiado móvil y restauración de entrevista — 2026-10-12
+
+Síntoma: a 390px el modal tenía scroll horizontal general (476px de contenido en 350px útiles). Causa: fieldset conserva mínimo intrínseco aunque la fila de niños tiene scroll propio. Solución: min-width:0 y width:100% en fieldset; fila interna mantiene su scroll deliberado. DOM/captura posterior prueban 350/350px sin desbordamiento general. Prevención: medir scrollWidth del modal, no solo del documento.
+
+«Cancelar cambios» restauraba valores en memoria y cerraba edición; el borrador autoguardado reaparecía al recargar. «Restaurar datos confirmados» conserva edición y aplica autosave existente; historial confirmado cambia únicamente al confirmar. No prometer eliminación de borrador cuando el servicio conserva versiones. Typecheck/lint/build PASS; historial/confirmación e idempotencia cubiertos en pruebas de servicio.
+
 ## Hora civil y reintento de entrevista en pantalla nueva — 2026-10-12
 
 En prueba local, Observaciones lanzó Invalid time value porque today.now es hora civil HH:mm, no un timestamp para new Date. Se usa hora del reloj QA si existe o today.now directamente; navegación y guardados libre/guiado validados. Revisión del editor detectó que una carga fallida podía presentar datos vacíos: ahora bloquea edición/autosave, muestra Reintentar y permite salir sin guardar. Desconexión simulada/reconexión y recuperación del formulario PASS; reintento reinicia estado desde el evento y limpia fallo tras respuesta válida, sin setState síncrono en efecto. Prevención: comprobar contrato semántico de hora y validar recuperación de errores, además de tipos.

@@ -93,3 +93,10 @@
   .editorHeading { gap: 12px; } .photoRow { gap: 12px; } .photoControl > button { width: 120px; height: 120px; } .page .previewPhoto { width: 105px; height: 105px; } .photoMenu { right: -20px; }
   .page .editor .save { min-height: 52px; font-size: 16px; } .footer { flex-direction: column-reverse; padding: 16px; } .page .footer > button:last-child { padding: 12px 16px; }
 }
+
+.page .editor[data-editing=true] { border: 2px solid #0075d8; background: #f1f9ff; }
+.editingMode, .editingBadge { display: inline-block; border-radius: 999px; background: #dceeff; color: #10549a; font-size: 12px; font-weight: 700; padding: 4px 10px; }
+.editingMode { margin-bottom: 12px; }
+.editingBadge { display: block; width: fit-content; margin-top: 7px; }
+.page .listTools button { min-height: 40px; font-size: 13px; background: transparent; }
+.editorHeading h2 { overflow-wrap: anywhere; }

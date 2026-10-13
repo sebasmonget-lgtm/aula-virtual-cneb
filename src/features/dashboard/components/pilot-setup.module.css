@@ -103,3 +103,5 @@
   .footer { margin-top: 24px; gap: 12px; }
   .footer > button { width: 100%; }
 }
+
+@media (min-width: 1360px) { .page[data-ayni-screen=classroom-setup] .steps { width: calc(100% - 300px); } .page[data-ayni-screen=classroom-setup] .steps li { white-space: nowrap; font-size: 13px; gap: 10px; } .page[data-ayni-screen=classroom-setup] .steps li:not(:last-child)::after { width: 16px; margin-left: 2px; } }

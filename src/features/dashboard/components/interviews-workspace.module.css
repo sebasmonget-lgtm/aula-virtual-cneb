@@ -129,6 +129,7 @@
 .dialogContext svg { flex-shrink: 0; color: #0075d8; width: 24px; height: 24px; }
 .dialogContext small { display: block; font-size: 11px; color: #597cad; }
 .dialogContext strong { display: block; margin-top: 2px; }
+.dialogStudents { min-width: 0; width: 100%; }
 .dialogStudents legend, .dialogLabel { font-size: 14px; font-weight: 700; }
 .dialogStudents > div { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px; max-height: 235px; overflow-y: auto; margin-top: 8px; }
 .dialogStudents button { position: relative; min-height: 150px; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; padding: 12px; border: 1px solid #d5e3fa; border-radius: 9px; font-size: 12px; text-align: left; }
@@ -156,3 +157,23 @@
   .guidedHeader { align-items: flex-start; gap: 10px; } .guidedHeader h2 { font-size: 20px; } .roundIcon { width: 44px; height: 44px; } .guidance { padding: 6px 12px; } .guidedActions button { width: 100%; }
   .guidedDialog { left: 12px; right: 12px; top: 4dvh; width: auto; max-width: none; max-height: 92dvh; transform: none; padding: 18px; } .dialogStudents > div { grid-template-columns: repeat(2,minmax(0,1fr)); } .dialogActions { flex-direction: column; } .footer { justify-content: stretch; } .footer button { width: 100%; white-space: normal; }
 }
+
+.guidedColumns { grid-template-columns: minmax(0,1fr); max-width: 1000px; margin: auto; }
+.interviewStatus { font-size: 13px; padding: 8px 12px; background: #fff7e4; color: #74520d; border-radius: 8px; margin-bottom: 12px; }
+.interviewStatus[data-confirmed=true] { background: #e1f8ef; color: #166247; }
+.questionCard { padding-top: 12px; padding-bottom: 12px; }
+.questionCard fieldset button { min-height: 40px; }
+.questionCard > div, .questionCard > fieldset { margin-top: 8px; }
+.questionCard textarea { min-height: 40px; }
+.observationTools { display: flex; justify-content: flex-end; margin-bottom: 8px; }
+.coverageHelp { font-size: 13px; color: #426792; margin: 8px 0 14px; line-height: 1.5; }
+.supportOptions legend { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+.savedCapture, .completedInterviews { padding: 20px; background: #edfaf4; color: #165d43; border: 1px solid #b8e3d1; border-radius: 14px; }
+.savedCapture h2, .completedInterviews h2 { font-size: 19px; font-weight: 700; }
+.savedCapture p, .completedInterviews p { margin: 8px 0 14px; font-size: 14px; }
+.completedInterviews { margin-top: 16px; }
+.suggestionStatus { font-size: 13px; line-height: 1.5; color: #21547c; padding: 10px 0; }
+.selectedCompetencies { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.selectedCompetencies > span { display: inline-flex; gap: 8px; align-items: center; border: 1px solid #b7d9ef; border-radius: 8px; padding: 6px 10px; font-size: 13px; background: #e9f6ff; }
+.selectedCompetencies button { min-width: 36px; min-height: 36px; display: grid; place-items: center; }
+@media (max-width: 767px) { .questionCard fieldset button { min-height: 44px; } .dialogStudents > div { display: flex; overflow-x: auto; max-height: none; } .dialogStudents button { min-width: 140px; width: 140px; flex-shrink: 0; } }

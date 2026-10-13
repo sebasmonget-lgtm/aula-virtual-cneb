@@ -3,7 +3,7 @@ import { interviewAutonomyOptions, interviewCommunicationOptions,
   interviewInterestOptions, interviewLanguageOptions, interviewParticipationSupportOptions,
   interviewSocialPlayOptions } from "./family-interview-contract.mjs";
 
-const labels = (ids = [], options) => ids.filter((id) => id !== "other")
+const labels = (ids = [], options) => [...new Set(ids.map(id=>options===interviewInterestOptions&&id==="nature"?"plants":id))].filter((id) => id !== "other")
   .map((id) => options.find((item) => item.id === id)?.label).filter(Boolean);
 const short = (value, limit = 180) => typeof value === "string" ? value.trim().slice(0, limit) : "";
 

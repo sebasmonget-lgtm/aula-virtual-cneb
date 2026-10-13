@@ -313,7 +313,7 @@ export function TeacherWorkspace({ onSignOut, onSetupRequired }: { onSignOut?: (
     setDashboard(current=>current?.profile.classroom_id===confirmed.classroomId?{...current,profile:{...current.profile,enrollment_completed_at:confirmed.completedAt}}:current);
     writeWorkspaceLocation("Aula",{view:"list"},true);openDiagnostic(1,true);
   }}/>;
-  if (interviewsActive && dashboard && !starting) return <InterviewsWorkspace dashboard={dashboard} onSignOut={onSignOut} onBack={()=>{if(navigate("Aula",true))writeWorkspaceLocation("Aula",{view:"enrollment"},true);}} onProfile={()=>navigate("Perfil",true)} onPlan={()=>{setPlanningTarget(null);navigate("Planificar",true);writeWorkspaceLocation("Planificar",{tab:"annual",step:"",mode:""});}} onReview={()=>writeWorkspaceLocation("Planificar",{tab:"diagnostic",step:"3"})}/>;
+  if (interviewsActive && dashboard && !starting) return <InterviewsWorkspace dashboard={dashboard} onSignOut={onSignOut} onBack={()=>{if(navigate("Aula",true))writeWorkspaceLocation("Aula",{view:"enrollment"},true);}} onProfile={()=>navigate("Perfil",true)} onPreparation={()=>navigate("Preparación",true)} onReview={()=>writeWorkspaceLocation("Planificar",{tab:"diagnostic",step:"3"})}/>;
   if (databaseState === "offline") return <main className="mx-auto max-w-xl space-y-4 p-6"><h1 className="text-2xl font-bold">No se pudo conectar con el aula</h1><p>Comprueba tu conexión y vuelve a intentarlo. Tu trabajo guardado seguirá disponible.</p><Button onClick={() => { setDatabaseState("checking"); setRetry((value) => value + 1); }}>Reintentar</Button></main>;
 
   return (
