@@ -45,3 +45,51 @@ Corrección de título validada por UI en d1ae579 / Preview 4vyrj22v6: Construim
 Ver proyecto desde la primera tarjeta abre su propósito, ambas competencias y ocho días de clase (30 marzo–10 abril), excluyendo por UI 2/3 abril y fines de semana. Una sola preparación con doble clic, un solo proyecto y un solo trabajo durable. Se recargó durante Plan Maestro, se recuperó Continuar proyecto y el resultado apareció con dos criterios y ocho previsiones del mapa, ninguna actividad desarrollada ni evaluación generada. Plan Maestro: elecciones de refugio/camino/rincón, ayuda voluntaria, acuerdos según lo que ocurre, cierre sin producto/presentación obligatoria; no infiere niveles de familiares. Trabajo 197 s desde creado a succeeded, de 12:56:35.701Z a 12:59:52.662Z; observación visual espaciada aproximadamente 253 s. Costos US$0,073441 (gpt-6.1-sol / 5269 entrada, 6027 salida) y US$0,000035154 de selección de ilustración abstracta ya existente (project_image / Jev). No se subieron fotos ni se enviaron evidencias privadas a IA. No se confirmó el proyecto: queda listo para revisión humana.
 
 Incidencia focal de UI: pese a map_review, cabecera decía Por preparar, y recarga perdía la propuesta elegida aunque datos/trabajo se conservaran. Corrección mínima en SimpleProjectWorkspace: Preparado para revisar solo con map_review/resultado durable, conserva Confirmado para proyecto activo; persiste UUID de propuesta en ubicación mediante helper existente, recuperándolo al recargar/salir/volver. Sin nuevas peticiones, IA ni cambios de datos. Prueba cloud posterior pendiente. Rollback de esta corrección: revertir el commit de UI, datos siguen disponibles desde Continuar proyecto.
+
+## Evaluación pedagógica y revisión humana
+
+Las propuestas se ajustan a Inicial de cinco años: elecciones y juego real con cajas/bloques, prueba de puentes, mercado, cuentos, macetas, recorridos corporales, sonidos, escritura con destinatario, relatos bilingües y revisión de estrategias. Las cinco actuaciones concretas sustentan propuestas iniciales y cuatro interpretaciones individuales; cuando no existe antecedente, la justificación declara responsabilidad curricular. Las entrevistas aportan intereses familiares, nunca niveles ni desempeños acreditados. Materiales existentes/reutilizados, aportes y participación voluntarios, alternativas sin salidas ni compras, atención a castellano/quechua y sin suponer dominio docente de ambas lenguas. Se mantienen IDs y capacidades oficiales de la versión CNEB de Inicial cargada; la comprobación determinística no sustituye la revisión pedagógica humana.
+
+| Competencia | Propuestas | B1/B2/B3/B4 | Oportunidad cotidiana |
+| --- | ---: | --- | --- |
+| Construye su identidad | 3 | 1/0/0/2 | Sí |
+| Convive y participa | 4 | 2/0/1/1 | Sí |
+| Motricidad | 2 | 0/1/1/0 | Sí |
+| Comunicación oral | 5 | 1/2/0/2 | Sí |
+| Lectura | 2 | 0/1/0/1 | Sí |
+| Escritura | 2 | 0/1/1/0 | Sí |
+| Arte | 3 | 0/1/1/1 | Sí |
+| Cantidad | 2 | 1/0/1/0 | Sí |
+| Forma/movimiento/localización | 4 | 1/1/1/1 | Sí |
+| Indagación | 3 | 0/1/2/0 | Sí |
+| TIC | 0 | 0/0/0/0 | Condicional, sin acceso confirmado |
+| Aprendizaje autónomo | 3 | 1/0/1/1 | Sí |
+
+Hay variedad y cobertura, pero la distribución no es uniforme por bimestre: cantidad, lectura y motricidad tienen dos propuestas, sostenidas además en rutinas concretas. TIC aparece como oportunidad eventual condicionada a dispositivo/permisos, no como cobertura material garantizada ni actuación atribuida sin equipo. La docente debe revisar su viabilidad y decidir cómo concretarla, y revisar progresión/distribución según lo que observe durante el año. No se suman rutinas al conteo de propuestas para inflar la matriz.
+
+Limitación del fixture con reloj QA: observaciones tienen fecha pedagógica 16/02, pero confirmaciones de entrevistas/resumen y decisiones conservan sellos técnicos reales de octubre. La IA incluyó una cautela sobre antecedentes posteriores al 16/02. Conviene revisar esa frase en este plan simulado y distinguir fecha de registro/confirmación de fecha pedagógica en una futura decisión de dominio; no se altera el reloj, los sellos existentes ni se genera otro plan para ocultarlo. Los recursos y posibilidades comunitarias de este caso son ficticios; antes de usar un aula real, confirmar seguridad, autorizaciones, apoyos lingüísticos, útiles para escritura y acceso digital. El primer proyecto queda preparado y pendiente de confirmación docente; no se generaron actividades individuales, evaluaciones ni evidencias retrospectivas.
+
+## Tiempos y costos del recorrido controlado
+
+| Operación | Tiempo durable de servidor/trabajo | Costo aproximado USD |
+| --- | --- | ---: |
+| Resumen del aula | 77,527 s antes de persistir; HTTP proveedor 74,065 s | 0,032414 |
+| Conversación anual, apertura + una respuesta | Sin cronometraje HTTP desglosado | 0,002199 |
+| Único plan anual, 15 propuestas | 298,214 s de generación; ~305 s hasta revisión terminada | 0,155769 |
+| Ajuste focal rechazado antes del arreglo | Duración proveedor no conservada; no se atribuye tiempo del agente a Ayni | 0,052124 |
+| Ajuste focal corregido | 17,956 s de paso proveedor | 0,026159 |
+| Corrección focal de título | 14,902 s de paso proveedor | 0,025746 |
+| Preparar primer proyecto, Plan Maestro + selección de ilustración | 197 s desde trabajo creado a succeeded | 0,073476 |
+| Total del recorrido y reproducción/corrección de errores | Una generación anual; sin actividades desarrolladas | **0,367885** |
+
+Costos OpenAI son estimaciones del ledger con versión de precios 2026-10-10, no factura. Selección de ilustración usa costo reportado por proveedor. Las consultas UI espaciadas, recargas y tiempos del intermediario de pruebas impiden comparar los tiempos observados como latencia precisa de una profesora. No se repite una generación costosa para obtener medias ni se afirma un antes/después de velocidad sin métricas comparables. Optimización del cambio focal comprobable: salida de 2949 a 812 tokens, costo -49,8%, éxito preservando exactamente alcance; modelo/esfuerzo del flujo no se rebajan.
+
+## Cierre y entrega
+
+Preview final de producto: https://ayni-aula-staging-8hac4md3s-ayni4.vercel.app, commit **19113a1030330abb7bc090cb0d814733bc9df8d9**, despliegue READY dpl_DMSp1iFunwFqmiSkUmBia5YX1pth. Se publicó con árbol limpio, build local/cloud, typecheck, lint y pruebas focales; seis smoke PASS. Correcciones de resumen/proveedor/calendario: 49 pruebas focales; cambio de alcance: 23; vocabulario: 28; proyecto/recuperación: 10. Estas suites se solapan, no se presentan como suma de casos distintos. No se realizó auditoría general. Producción sigue en dpl_2KDEnPFk7UqyvPa7At3t1RW7sLqy / d595ffebd05d50a1971c8389f4c3d758f22a39a7, verificada nuevamente al cierre. Ninguna migración, cambio de permisos ni despliegue de Producción.
+
+La última Preview recupera V1 Vigente y el primer proyecto preparado. Recargar conserva la propuesta abierta por URL; cerrar sesión muestra acceso, reingresar con cuenta QA devuelve al mismo proyecto con Preparado para revisar, dos criterios y mapa de ocho días. No se llama a IA al recuperar. El año se deja confirmado y el proyecto pendiente de confirmación humana. Los cinco niños activos del fixture se conservan, cuatro entrevistas, cinco observaciones activas y seis históricas (una retirada recuperable), un plan anual, un trabajo anual, un proyecto, un trabajo de proyecto y cero actividades desarrolladas. Nueve eventos de uso, total US$0,367885254. Se deja la Preview abierta para seguir QA; la URL previa 5704x75jz corresponde a código anterior y no incorpora estas correcciones.
+
+Límite visual: espera anual/lista de quince propuestas/calendario inicial del proyecto se verificaron a 390 px antes de reconectar el sidepanel. Tras la reconexión, el control de viewport no aplicó el tamaño solicitado a las pestañas recuperadas (DOM continuó 1366/1280); no se declara como validación móvil nueva del último estado preparado. Se conservan las capturas anteriores de móvil y la evidencia real de escritorio final, sin modificar código para el intermediario. Conviene una última mirada humana al Plan Maestro en el teléfono.
+
+Los cuatro cambios son reversibles por sus commits: 8b65bd7 (recuperación resumen/instrumentación), 1e95ebd (alcance y error del panel), d1ae579 (vocabulario), 19113a1 (estado y selección de proyecto). Las comprobaciones React de estos cambios no añaden efectos de generación, peticiones nuevas, listeners de navegación ni dependencia a paquetes; se reutilizan helpers existentes y los estados se derivan de confirmaciones durables. No se aplicó cambio SQL en Supabase. Este cierre se guarda en un commit solo documental posterior; no exige otro despliegue ni generación.
