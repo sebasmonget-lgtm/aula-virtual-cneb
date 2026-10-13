@@ -14,6 +14,8 @@ import { CriterionEvidenceGenerator } from "./criterion-evidence-generator";
 import { WorkshopMasterPanel } from "./workshop-master-panel";
 import { AdditionalActivityCriteria, type AdditionalActivityCriterion } from "./additional-activity-criteria";
 import { AsyncButton, EmptyState, LoadingState, NextStepCard, ReadOnlyField, WorkflowFeedback } from "./workflow-ui";
+import { readWorkspaceParams, writeWorkspaceLocation } from "@/src/lib/workspace-location";
+import { useUnsavedWork } from "@/src/lib/use-unsaved-work";
 type Proposal = {
     teacher_context?: string;
     additional_criteria?: AdditionalActivityCriterion[];
@@ -79,6 +81,7 @@ type RouteItem = {
     competency_id: string;
     evaluation_criterion: string;
     expected_evidence: string;
+    materials?: string[];
 };
 type Experience = {
     id: string;
@@ -110,7 +113,7 @@ const fields: [
     string
 ][] = [["title", "Título"], ["purpose", "Propósito"], ["meaningful_situation", "Situación significativa"], ["teacher_preparation", "Preparación docente"], ["child_actions", "Acciones de los niños"], ["mediation", "Mediación"], ["evidence_opportunities", "Oportunidades de evidencia"], ["closure_or_continuity", "Cierre o continuidad"]];
 const snapshot = (proposal: Proposal, date: string, materials: string) => JSON.stringify({ proposal, date, materials: materials.split(",").map((item) => item.trim()).filter(Boolean) });
-export function ParentActivityGenerator({ onConfirmed, onGoToday, onRecordEvidence, feedbackPeriodId, initialResource, initialExperienceId, initialRouteItemId, initialActivityId }: {
+export function ParentActivityGenerator({ onConfirmed, onGoToday, onRecordEvidence, feedbackPeriodId, initialResource, initialExperienceId: suppliedExperienceId, initialRouteItemId: suppliedRouteItemId, initialActivityId: suppliedActivityId }: {
     onConfirmed?: () => void;
     onGoToday?: () => void;
     onRecordEvidence?: (input: { activityId: string; title: string; criterion: ActivityCriterion }) => void;
@@ -121,6 +124,10 @@ export function ParentActivityGenerator({ onConfirmed, onGoToday, onRecordEviden
     initialRouteItemId?: string | null;
     initialActivityId?: string | null;
 }) {
+    const [restored] = useState(()=>readWorkspaceParams("Planificar"));
+    const initialExperienceId=suppliedExperienceId??restored.get("dayProject");
+    const initialRouteItemId=suppliedRouteItemId??restored.get("dayRoute");
+    const initialActivityId=suppliedActivityId??restored.get("dayActivity");
     const [experiences, setExperiences] = useState<Experience[]>([]);
     const [competencies, setCompetencies] = useState<Competency[]>([]);
     const [today, setToday] = useState(limaToday);
@@ -156,6 +163,8 @@ export function ParentActivityGenerator({ onConfirmed, onGoToday, onRecordEviden
             setDate(selected.planned_date ?? selected.date ?? "");
     };
     const hasUnsavedChanges = Boolean(draftId && proposal && (generationId || snapshot(proposal, date, materials) !== savedSnapshot || jsonValuesDiffer(workshopProposal, activities.find((item) => item.id === draftId)?.workshop?.details ?? null)));
+    const canLeave=useUnsavedWork(!readOnly&&Boolean(proposal?(!draftId||hasUnsavedChanges):context.trim()||materials.trim()),Boolean(operation)&&operation!=="load");
+    useEffect(()=>{if(parent)writeWorkspaceLocation("Planificar",{dayProject:parent.id,dayRoute:routeItemId,dayActivity:draftId??""},true);},[parent,routeItemId,draftId]);
     const nameOf = (id: string) => competencies.find((item) => item.id === id)?.name ?? id;
     const reset = () => { setProposal(null); setWorkshopProposal(null); setDraftId(null); setGenerationId(null); setSavedSnapshot(null); setReadOnly(false); setDate(""); setPurpose(""); setCompetencyId(""); setRouteItemId(""); setMaterials(""); setContext(""); };
     useEffect(() => {
@@ -224,7 +233,7 @@ export function ParentActivityGenerator({ onConfirmed, onGoToday, onRecordEviden
         activities?: Activity[];
     }; setActivities(data.activities ?? []); setActivitiesLoadError(false); return data.activities ?? []; }
     async function openParent(experience: Experience) { if (operation)
-        return; setParent(experience); setActivities([]); setActivitiesLoadError(false); reset(); if (initialResource) {
+        return; if(!canLeave())return; setParent(experience); setActivities([]); setActivitiesLoadError(false); reset(); if (initialResource) {
         setMaterials(initialResource.materials.join(", "));
         setContext(`Recurso de biblioteca: ${initialResource.title}. ${initialResource.purpose}`);
     } setOperation("load"); setMessage(""); try {
@@ -371,8 +380,8 @@ export function ParentActivityGenerator({ onConfirmed, onGoToday, onRecordEviden
     finally {
         setOperation(null);
     } }
-    function openActivity(activity: Activity) { const materialsText = (activity.preparation.materials ?? []).join(", "); const activityDate = activity.occurs_on.slice(0, 10); setProposal({ ...activity.details, title: activity.details.title || activity.title, purpose: activity.details.purpose || activity.purpose }); setWorkshopProposal(activity.workshop?.details ?? null); setDraftId(activity.id); setGenerationId(null); setSavedSnapshot(snapshot(activity.details, activityDate, materialsText)); setDate(activityDate); setPurpose(activity.details.purpose || activity.purpose); setCompetencyId(activity.details.competency_id ?? ""); setRouteItemId(activity.details.route_item_id ?? ""); setMaterials(materialsText); setContext(""); setReadOnly(activity.status !== "draft"); }
-    function startNew() { reset(); setCompetencyId(""); setParent(null); setActivities([]); setActivitiesLoadError(false); }
+    function openActivity(activity: Activity) { if(operation||!canLeave())return; const materialsText = (activity.preparation.materials ?? []).join(", "); const activityDate = activity.occurs_on.slice(0, 10); setProposal({ ...activity.details, title: activity.details.title || activity.title, purpose: activity.details.purpose || activity.purpose }); setWorkshopProposal(activity.workshop?.details ?? null); setDraftId(activity.id); setGenerationId(null); setSavedSnapshot(snapshot(activity.details, activityDate, materialsText)); setDate(activityDate); setPurpose(activity.details.purpose || activity.purpose); setCompetencyId(activity.details.competency_id ?? ""); setRouteItemId(activity.details.route_item_id ?? ""); setMaterials(materialsText); setContext(""); setReadOnly(activity.status !== "draft"); }
+    function startNew() { if(operation||!canLeave())return; reset(); setCompetencyId(""); setParent(null); setActivities([]); setActivitiesLoadError(false); writeWorkspaceLocation("Planificar",{dayProject:"",dayRoute:"",dayActivity:""},true); }
     return <section className="ayni-workflow space-y-5 [&_button]:min-h-11 [&_button]:h-auto [&_button]:whitespace-normal [&_button]:py-3">
 <header>
 
@@ -394,11 +403,11 @@ export function ParentActivityGenerator({ onConfirmed, onGoToday, onRecordEviden
 <b>{parent.type === "project" ? "Proyecto" : "Unidad"}: {parent.title} · versión {parent.version}
 {parent.status === "archived" ? " · histórica" : ""}</b>
 <details className="mt-1 text-sm"><summary className="min-h-11 cursor-pointer py-2 font-semibold text-[#07576c]">Propósito del proyecto</summary><p>{parent.purpose}</p></details>
-<Button className="mt-1 min-h-11" variant="ghost" onClick={startNew}>Cambiar de proyecto</Button>
+<Button className="mt-1 min-h-11" variant="ghost" disabled={Boolean(operation)} onClick={startNew}>Cambiar de proyecto</Button>
 </section>
 {parent.status === "archived" && !proposal && <p className="rounded-xl bg-[#f2f8fc] p-3 text-sm">Esta versión es histórica. Puedes consultar y terminar sus actividades existentes; las actividades nuevas se preparan desde la versión vigente.</p>}
 {!proposal && parent.status === "active" && <section className="ayni-panel space-y-3 p-4 sm:p-5">
-<h2 className="ayni-section-title">Elige la actividad que prepararás</h2>{Boolean(parent.details.activity_route?.length) && <label>Actividad<select value={routeItemId} onChange={(event) => { const item = parent.details.activity_route?.find((row) => row.id === event.target.value); setRouteItemId(event.target.value); setPurpose(item?.specific_purpose ?? ""); setCompetencyId(item?.competency_id ?? ""); }}>
+<h2 className="ayni-section-title">Elige la actividad que prepararás</h2>{Boolean(parent.details.activity_route?.length) && <label>Actividad<select disabled={Boolean(operation)} value={routeItemId} onChange={(event) => { const item = parent.details.activity_route?.find((row) => row.id === event.target.value); setRouteItemId(event.target.value); setPurpose(item?.specific_purpose ?? ""); setCompetencyId(item?.competency_id ?? ""); }}>
 <option value="">Elige una actividad</option>{parent.details.activity_route?.map((item) => <option key={item.id} value={item.id}>{item.number}. {item.title}</option>)}</select>
 </label>}
 {routeItem && <p className="text-sm font-semibold">Fecha: {displayDate(date)}</p>}
@@ -415,20 +424,23 @@ export function ParentActivityGenerator({ onConfirmed, onGoToday, onRecordEviden
 <details className="rounded-xl border bg-[#f8fbff] p-4">
 <summary className="font-bold">Agregar detalles opcionales</summary>
 <div className="mt-4 space-y-3">
-<label>Materiales adicionales<Textarea value={materials} onChange={(event) => setMaterials(event.target.value)}/>
+<label>Materiales adicionales<Textarea disabled={Boolean(operation)} value={materials} onChange={(event) => setMaterials(event.target.value)}/>
 </label>
-<label>¿Quieres agregar algo para este día? (opcional)<Textarea maxLength={1000} value={context} onChange={(event) => setContext(event.target.value)} placeholder="Por ejemplo: hoy tenemos hojas nuevas para explorar en parejas."/>
+<label>¿Quieres agregar algo para este día? (opcional)<Textarea disabled={Boolean(operation)} maxLength={1000} value={context} onChange={(event) => setContext(event.target.value)} placeholder="Por ejemplo: hoy tenemos hojas nuevas para explorar en parejas."/>
 </label>
 </div>
 </details>
 
 </section>}
+{operation==="generate"&&<p role="status" className="text-sm text-[#526b87]">Ayni está preparando este día. Espera aquí para revisar y guardar la propuesta; no vuelvas a iniciar la generación.</p>}
 {readOnly && draftId && activities.some((item) => item.id === draftId && item.status === "active") && proposal?.competency_status === "confirmed" && proposal.competency_id && <NextStepCard title="Actividad confirmada" description="Revisa qué observarás durante esta actividad y prepara el criterio si aún falta." action="Ver qué observar" onAction={() => document.getElementById(`criterion-${draftId}`)?.scrollIntoView({ behavior: "smooth", block: "start" })}/>}{proposal && <section className="ayni-panel space-y-3 p-4 sm:p-5">
+<p className="font-semibold">{date?displayDate(date):"Fecha por seleccionar"} · {proposal.title}</p>
+<ReadOnlyField label="Materiales previstos para este día" value={[...new Set([...(routeItem?.materials??[]),...(parent.details.spaces_and_materials??[]),...materials.split(",").map(item=>item.trim()).filter(Boolean)])].join(" · ")}/>
 <WorkflowFeedback tone={readOnly ? "success" : "info"}>{readOnly ? "Actividad confirmada · solo lectura" : "Revisa el borrador. Puedes cambiar cualquier texto antes de confirmar."}</WorkflowFeedback>{!readOnly && <>{hasUnsavedChanges && <p className="text-sm text-[#526b87]">Guarda los cambios antes de confirmar.</p>}<div className="flex flex-wrap gap-2">
 <AsyncButton variant={draftId && !hasUnsavedChanges ? "outline" : "default"} busy={operation === "save"} busyLabel="Guardando..." disabled={Boolean(operation)} onClick={() => void save()}>{draftId ? "Guardar cambios" : "Guardar borrador"}</AsyncButton>{draftId && <AsyncButton busy={operation === "confirm"} busyLabel="Confirmando..." disabled={Boolean(operation) || hasUnsavedChanges} onClick={() => void confirm()}>Confirmar actividad</AsyncButton>}<details className="w-full rounded-xl border bg-[#f8fbff] p-3">
 <summary className="text-sm font-bold">Otras acciones</summary>
 <div className="mt-3 flex flex-wrap gap-2">
-<Button variant="outline" onClick={startNew}>Descartar</Button>{parent.status === "active" && <AsyncButton variant="outline" busy={operation === "generate"} busyLabel="Preparando otra propuesta..." disabled={Boolean(operation)} onClick={() => void generate()}>Preparar otra propuesta</AsyncButton>}</div>
+<Button variant="outline" disabled={Boolean(operation)} onClick={startNew}>Descartar</Button>{parent.status === "active" && <AsyncButton variant="outline" busy={operation === "generate"} busyLabel="Preparando otra propuesta..." disabled={Boolean(operation)} onClick={() => void generate()}>Preparar otra propuesta</AsyncButton>}</div>
 </details>
 </div>
 </>}{fields.map(([key, label]) => readOnly ? <ReadOnlyField key={key} label={label} value={proposal[key]}/> : <label key={key}>{label}<Textarea disabled={Boolean(operation)} value={proposal[key]} onChange={(event) => setProposal({ ...proposal, [key]: event.target.value })}/>
@@ -436,12 +448,12 @@ export function ParentActivityGenerator({ onConfirmed, onGoToday, onRecordEviden
 {proposal.evaluation_criterion && (readOnly ? <div className="rounded-lg bg-[#e7f5f7] p-3 text-sm">
 <b>Criterio:</b> {proposal.evaluation_criterion}<br />
 <b>Evidencia esperada:</b> {proposal.expected_evidence}</div> : <div className="grid gap-3 sm:grid-cols-2">
-<label>Criterio para observar<Textarea value={proposal.evaluation_criterion} onChange={(event) => setProposal({ ...proposal, evaluation_criterion: event.target.value })}/>
+<label>Criterio para observar<Textarea disabled={Boolean(operation)} value={proposal.evaluation_criterion} onChange={(event) => setProposal({ ...proposal, evaluation_criterion: event.target.value })}/>
 </label>
-<label>Evidencia esperada<Textarea value={proposal.expected_evidence ?? ""} onChange={(event) => setProposal({ ...proposal, expected_evidence: event.target.value })}/>
+<label>Evidencia esperada<Textarea disabled={Boolean(operation)} value={proposal.expected_evidence ?? ""} onChange={(event) => setProposal({ ...proposal, expected_evidence: event.target.value })}/>
 </label>
 </div>)}
-{readOnly ? <ReadOnlyField label="Competencia principal" value={proposal.competency_id ? nameOf(proposal.competency_id) : "Sin confirmar"}/> : <label>Competencia principal<select value={proposal.competency_id ?? ""} onChange={(event) => setProposal({ ...proposal, competency_status: event.target.value ? "confirmed" : "unconfirmed", competency_id: event.target.value || null })}>
+{readOnly ? <ReadOnlyField label="Competencia principal" value={proposal.competency_id ? nameOf(proposal.competency_id) : "Sin confirmar"}/> : <label>Competencia principal<select disabled={Boolean(operation)} value={proposal.competency_id ?? ""} onChange={(event) => setProposal({ ...proposal, competency_status: event.target.value ? "confirmed" : "unconfirmed", competency_id: event.target.value || null })}>
 <option value="">Aún no la confirmo</option>{ids.map((id) => <option key={id} value={id}>{nameOf(id)}</option>)}</select>
 </label>}
 {inheritedView && <>{readOnly ? proposal.teacher_context ? <ReadOnlyField label="Aporte docente" value={proposal.teacher_context} /> : null :

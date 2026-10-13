@@ -200,10 +200,15 @@ export function SimpleProjectWorkspace(props: Props) {
         </section>
         <div className="flex flex-wrap items-center gap-3"><AsyncButton className="min-h-11" busy={busy} busyLabel="Preparando proyecto…" disabled={busy||dictating||!selectedDates.length||!!calendarError||!!visiblePreparation&&["queued","running"].includes(visiblePreparation.status)} onClick={() => void prepare()}>
           Preparar proyecto</AsyncButton>
+        {changing && <Button variant="outline" disabled={busy||dictating} onClick={()=>{setContext(row?.details.decisions?.additional_context??"");setChanging(false);}}>Cancelar ajustes</Button>}
         <Button className="min-h-11 whitespace-normal text-left" variant="outline" disabled={busy} onClick={()=>modern?props.onGoAnnual?.():setAdvanced(true)}>{modern?"Quiero trabajar otro proyecto en Mi año":"Cambiar propósito, competencias o días"}</Button></div>
       </section>}
       {prepared && !changing && row && <section className="space-y-4 rounded-2xl border bg-white p-5"><div className="flex items-center gap-4"><ProjectPictogram project={proposal} className="size-16 shrink-0 sm:size-24" /><p className="text-sm text-[#526b87]">{selectedDates.length} días de clase</p></div>
         <p>{row.details.decisions?.purpose}</p>
+        <details className="rounded-xl border p-4"><summary className="min-h-11 cursor-pointer font-semibold">Fundamento y materiales del proyecto</summary>
+          <p className="mt-3">{row.details.project_master?.foundation}</p><h3 className="mt-4 font-semibold">Materiales previstos</h3>
+          <ul className="mt-2 list-disc pl-5">{(row.details.project_master?.resources??row.details.spaces_and_materials??[]).map((material,index)=><li key={index}>{material}</li>)}</ul>
+        </details>
         {futureNotice}
         {row.status==="active"&&nextActivity&&props.onDevelopActivity&&<div className="space-y-2"><p className="text-sm text-[#526b87]">Siguiente actividad · {displayDate(nextActivity.date)} · {nextActivity.title}</p><Button disabled={busy} onClick={()=>props.onDevelopActivity?.(row.id,nextActivity.id)}>Preparar actividad</Button></div>}
         <p><b>Cierre:</b> {row.details.project_master?.closing_description}</p>
