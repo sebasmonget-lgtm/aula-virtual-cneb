@@ -31,7 +31,7 @@ export async function personalizationSources(db, teacherId, context) {
     select o.id,o.student_id,o.competency_v4_id,o.observation_text,o.observed_at,0 as source_revision,
       'guided_diagnostic_observation' as source_type, null::text as classification_source, array[o.competency_v4_id]::text[] as competency_ids from diagnostic_experience_observations o
       join students s on s.id=o.student_id and s.status='active'
-      where o.classroom_id=$1
+      where o.classroom_id=$1 and o.observation_status<>'insufficient_information'
     union all
     select so.id,de.student_id,null::text as competency_v4_id,coalesce(so.note,de.observation_text) as observation_text,
       so.observed_at,0 as source_revision,'legacy_diagnostic_observation' as source_type, null::text as classification_source,array[]::text[] as competency_ids

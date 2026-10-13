@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { projectPlanningSignals, proposePersonalization, validatePersonalization } from "./annual-personalization-service.mjs";
+import { projectPlanningSignals, proposePersonalization, validatePersonalization, personalizationSources } from "./annual-personalization-service.mjs";
 import { generateAnnualPreplan, validatePreplanTrace } from "./annual-preplan-service.mjs";
 import { defaultInitialStage, nationalCalendarBlocks2026 } from "./annual-plan-calendar.mjs";
 import { readFile, readdir } from "node:fs/promises";
@@ -112,6 +112,10 @@ test("recorrido persistente con poca evidencia confirma V1 y conserva historia a
     const same = await preparePersonalization(db, teacher, context);
     assert.equal(same.id, draft.id);
     const studentId = (await db.query("select id from students where classroom_id=$1", [classroomId])).rows[0].id;
+    await db.query(`insert into diagnostic_experience_observations
+      (id,classroom_id,student_id,experience_id,aspect_id,competency_v4_id,observation_status,observation_text,created_by)
+      values($1,$2,$3,'getting_to_know_us','choice','PS_IDENTIDAD','insufficient_information','No hubo ocasión de observar.', $4)`,[id(49),classroomId,studentId,teacher]);
+    assert.deepEqual((await personalizationSources(db,teacher,context)).observations,[], 'An insufficient opportunity is not a saved observation of the competency');
     await db.query(`insert into diagnostic_spontaneous_observations
       (id,classroom_id,student_id,context_label,observation_text,created_by)
       values($1,$2,$3,'Juego','Construyó una casa con bloques.', $4)`, [id(50), classroomId, studentId, teacher]);

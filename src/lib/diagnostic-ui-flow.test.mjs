@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {compareObservationDates, experienceCoverageGaps, experienceCoverageOpportunities, rankGuidedExperiences, guidedObservationLookFor, guidedExperienceIllustrations, observationMoment, toggleInterviewOption} from './diagnostic-ui-flow.mjs';
+import {compareObservationDates, experienceCoverageGaps, experienceCoverageOpportunities, rankGuidedExperiences, guidedObservationLookFor, guidedExperienceIllustrations, observationMoment, toggleInterviewOption, guidedStudentsByCoverage, guidedTeacherSteps, experiencePriorityLabel} from './diagnostic-ui-flow.mjs';
 import {projectFamilyAssessmentContext} from './family-interview-projection.mjs';
 import {familyInterviewQuestionGroups, interviewInterestOptions} from './family-interview-contract.mjs';
 import {diagnosticPedagogicalBlocks} from './pedagogical-blocks.mjs';
@@ -72,5 +72,26 @@ test('every predefined experience has a lightweight illustration and concrete te
     const asset=await readFile(new URL(`../../public/project-illustrations/${guidedExperienceIllustrations[experience.id]}.webp`,import.meta.url));
     assert.ok(asset.byteLength<35_000);
     for(const criterion of experience.aspects){const original=JSON.stringify(criterion);const cue=guidedObservationLookFor(criterion);assert.ok(cue.startsWith('Fíjate si'));assert.ok(cue.includes(criterion.examples[0].replace(/[.]$/,'').replace(/^./,letter=>letter.toLowerCase())));assert.equal(JSON.stringify(criterion),original);}
+  }
+});
+
+test('the same authoritative competency counts drive child labels and recommendation order',()=>{
+  const students=[{id:'a',name:'Ana'},{id:'b',name:'Belén'},{id:'c',name:'Carlos'}];
+  const experiences=[{id:'recorded',competencies:[{id:'identity'}]},{id:'empty',competencies:[{id:'oral'}]}];
+  // Counts include free, other guided criteria and ordinary observations confirmed by the teacher.
+  const coverage={'a:identity':3,'b:identity':1,'c:identity':2,'foreign:oral':8};
+  const ranked=rankGuidedExperiences(experiences,students,[],[],coverage);
+  assert.deepEqual(ranked.map(row=>row.experience.id),['empty','recorded']);
+  assert.equal(experiencePriorityLabel(ranked[0]),'Sin observaciones en estas competencias');
+  assert.deepEqual(guidedStudentsByCoverage(students,'identity',coverage).map(row=>[row.student.id,row.count]),[['b',1],['c',2],['a',3]]);
+  assert.deepEqual(guidedStudentsByCoverage(students,'oral',coverage,'ANA').map(row=>[row.student.id,row.count]),[['a',0]]);
+  assert.deepEqual(guidedStudentsByCoverage(students,'oral',coverage,'missing'),[]);
+});
+
+test('every catalog criterion has a short action guide without changing official content',async()=>{
+  const catalog=JSON.parse(await readFile(new URL('../../knowledge/diagnostic-experiences/catalog.json',import.meta.url),'utf8'));
+  for(const experience of catalog.experiences)for(const aspect of experience.aspects){
+    assert.equal(guidedTeacherSteps[aspect.id]?.length,2,aspect.id);
+    assert.ok(guidedTeacherSteps[aspect.id].every(step=>step.length<130));
   }
 });

@@ -1,5 +1,13 @@
 # Errores y soluciones
 
+## «Sin registro» pese a tener observaciones de la competencia — 2026-10-13
+
+- Síntoma: había observaciones libres o en otro criterio, pero selector guiado indicaba «Sin registro».
+- Causa: diálogo contaba solo experiencia/aspecto y ranking tenía otra agregación incompleta.
+- Solución: diálogo y ranking usan cobertura autorizada por niño/competencia de la tabla; información insuficiente no cuenta. Sugerencias sin confirmación siguen excluidas.
+- Validación: pruebas de cobertura/fuentes y QA local de celda → guiada («1 registro»), 35 niños con nombres largos, búsqueda y grilla desplazable en 1366/390 px sin desbordamiento del diálogo.
+- Prevención: reutilizar cobertura común y mantener pruebas que cruzan fuentes, sin filtrar solo por criterio.
+
 ## Verificación de fecha y textos largos en compactación — 2026-10-13
 
 Síntomas locales durante implementación: fecha elegida por UI no llegaba al segundo estado React y textos largos se superponían en tarjetas móviles. Causas: retirar onInput del control date existente al reubicarlo y filas auto comprimidas por max-height del grid. Solución: conservar los dos eventos originales onInput/onChange y grid-auto-rows minmax(min-content,auto), con scroll interno. Validación: segundo registro ficticio fechado 12/10/2026 tras cambio, guardado continuo, tarjetas de ~95px para textos de 81px y sin overflow horizontal, typecheck/lint/build PASS. Prevención: preservar handlers al mover controles y revisar textos oficiales largos, no solo etiquetas breves. Ninguno de estos estados se publicó.

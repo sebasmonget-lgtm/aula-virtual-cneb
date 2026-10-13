@@ -4,16 +4,15 @@ import { Button } from "@/components/ui/button";
 export type ExperienceContextInput = { contextItems: { text: string; source_turn?: number }[];
   historicalProjects: { title: string; competency_ids: string[]; period?: number | null }[] };
 
-export function ExperienceContextForm({ value, onChange, curriculum, today, disabled, sources=[] }: {
+export function ExperienceContextForm({ value, onChange, curriculum, today, disabled }: {
   value: ExperienceContextInput; onChange: (next: ExperienceContextInput) => void;
   curriculum: { id: string; name: string }[]; today: string; disabled: boolean; sources?:{text:string;label:string}[];
 }) {
   const updateHistory = (index: number, changes: Partial<ExperienceContextInput["historicalProjects"][number]>) =>
     onChange({ ...value, historicalProjects: value.historicalProjects.map((item,i)=>i===index?{...item,...changes}:item) });
   return <details className="space-y-4 rounded-xl bg-white p-5" aria-label="Contexto e historia del año">
-    <summary className="min-h-11 cursor-pointer text-lg font-bold text-[#172b52]">Lo que Ayni tendrá en cuenta <span className="font-normal text-sm text-[#526b87]">· {value.contextItems.length} ideas · {value.historicalProjects.length} proyectos anteriores</span></summary>
+    <summary className="min-h-11 cursor-pointer text-lg font-bold text-[#172b52]">Revisar mis ideas y proyectos (opcional) <span className="font-normal text-sm text-[#526b87]">· {value.contextItems.length} ideas · {value.historicalProjects.length} proyectos anteriores</span></summary>
     <div>
-      <div className="mt-3 rounded-xl bg-[#edf7fa] p-3"><h3 className="text-sm font-semibold">Fuentes de tu aula</h3>{sources.length?<details><summary className="min-h-11 cursor-pointer py-2 text-sm">Ver lo registrado en entrevistas, observaciones y síntesis</summary><div className="space-y-3">{sources.map((source,index)=><div key={index}><p className="text-xs font-semibold text-[#526b87]">{source.label}</p><p className="mt-1 whitespace-pre-wrap text-sm">{source.text}</p></div>)}</div></details>:<p className="mt-1 text-sm text-[#526b87]">Todavía falta recoger información. Puedes crear Mi año y seguir observando.</p>}</div>
       <h3 className="mt-4 font-semibold">Añadido por ti</h3>
       <p className="mt-2 text-sm text-[#526b87]">Son tus decisiones sobre espacios, recursos, eventos o ideas. Puedes corregirlas o quitarlas antes de crear Mi año.</p>
       <div className="mt-3 space-y-3">{value.contextItems.map((item,index)=><div key={index} className="flex items-start gap-2">

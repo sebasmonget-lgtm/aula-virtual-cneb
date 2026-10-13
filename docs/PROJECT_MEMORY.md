@@ -1,5 +1,9 @@
 # Memoria del proyecto Ayni Aula
 
+## QA: guías simples, cobertura coherente y chat directo — 2026-10-13
+
+Base `add155a` y fuente `c98d739`, sin reemplazar por versiones anteriores. Dos acciones por momento; selector de experiencias con prioridades; diálogo cuenta competencia completa, búsqueda y grilla para aulas grandes. Último momento ofrece otra experiencia. Tabla «Resumen de observaciones» conduce al chat; captura desde celda conserva niño/competencia y reutiliza formulario compacto. Chat abre/retoma sin pantalla de fuentes, con contexto/historia opcionales dentro. No confirma síntesis ni genera año automáticamente. Fuentes excluyen información insuficiente. Sin migraciones/RLS/credenciales. Validaciones y publicación: `docs/qa/AYNI_SIMPLE_GUIDES_CHAT_2026-10-13.md`.
+
 ## Publicación de observaciones compactas — 2026-10-13
 
 Solicitud expresa «publicalo en vercel production». SHA `c98d739fa540f1d9a2d261da1683b277ded7b4e3` en proyecto `prj_3GOhE5KykLKbhuULD5rAeXpfbEko` / ayni4; árbol limpio y origin 0/0. Build Production --skip-domain usado como staging, READY `dpl_AtjxWnr35ydnfKyANmLhpyxwSngA` / https://ayni-aula-staging-qyimcq0fa-ayni4.vercel.app; diez smoke previos PASS. Promovido el mismo build a https://project-0w0pq.vercel.app, alias/proyecto/SHA verificados y diez smoke finales PASS. UI autenticada en pestaña nueva comprobó compactFree/photoSupportRow/cinco columnas y compactGuided/tres columnas, con textos retirados ausentes; captura privada ignorada .local/compact-production-20261013/panels-live.png. Sin escritura pedagógica, cambio de env/RLS/migración o modificación de las pestañas previas del usuario; pestaña de prueba cerrada. Rollback `dpl_9vLYaDxmqZrfrCntrTQEFgGg3Cmw` / `3be0385ac947eea8813b17b3e496d7b59cac4d98` conservado. Enlace QA: /#planificar?tab=diagnostic&step=2&mode=spontaneous. Recibos ignorados .local/compact-production-20261013/; documentación confirmada después del SHA publicado.

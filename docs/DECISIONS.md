@@ -1,5 +1,11 @@
 # Decisiones de arquitectura
 
+## Guías simples y entrada directa al chat — 2026-10-13
+
+Dos acciones breves por momento complementan criterios oficiales sin modificar IDs ni catálogo. Ranking y selector de niños reutilizan `/api/annual-journey/coverage`: libres con competencia confirmada, otras experiencias guiadas y registros ordinarios atribuibles. Prioridad por proporción de pares niño/competencia sin registros, luego con uno; empate mantiene catálogo. Ausencia no implica dificultad. Información insuficiente no cuenta como observación.
+
+En preparación: captura → tabla «Resumen de observaciones» → chat Ayni. Enlaces antiguos de síntesis en paso 3 abren la tabla. No generar/confirmar síntesis pedagógica para avanzar; el backend ya reúne fuentes autorizadas y conserva las anteriormente confirmadas. Chat abre/retoma directamente, sin generar Mi año hasta acción docente. Ideas/historia editables en desplegable opcional dentro del chat conservan guardado y control de revisión; se elimina listado crudo de fuentes/JSON. Captura de celda reutiliza formulario compacto con niño/competencia bloqueados. Selector de niños incorpora búsqueda, orden por cantidad y grilla con scroll vertical también en móvil.
+
 ## Densidad de captura y orientación guiada — 2026-10-13
 
 La recomendación conserva su cálculo por niño/competencia, pero expone solo marca en el selector y resumen breve; no listado por niño ni explicación extendida. Compactar con columnas de escritorio que se apilan en móvil, conservando criterio oficial/explicación concreta y nombres completos. Variante compacta explícita solo en observaciones integradas; editor de registros y otros formularios mantienen su presentación. No cambios del contrato de captura, clasificación, privacidad o permisos.

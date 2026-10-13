@@ -244,7 +244,20 @@
   .observedPanel, .photoPanel, .competencyPanel, .freeCard .moments, .freeCard .supportOptions { padding: 12px; }
   .freeEvidenceGrid .competencyPanel fieldset > div { grid-template-columns: 1fr; }
 }
-@media (max-width: 767px) { .questionCard fieldset button { min-height: 44px; } .dialogStudents > div { display: flex; overflow-x: auto; max-height: none; } .dialogStudents button { min-width: 140px; width: 140px; flex-shrink: 0; } }
+@media (max-width: 767px) { .questionCard fieldset button { min-height: 44px; } .dialogStudents > div { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+
+.teacherSteps { list-style: decimal; padding-left: 16px; }
+.teacherSteps li + li { margin-top: 4px; }
+.dialogStudents button { min-width: 0; overflow-wrap: anywhere; min-height: 120px; }
+.dialogStudents > div { max-height: 250px; overflow-y: auto; overscroll-behavior: contain; scrollbar-color: #588ac0 #edf7fa; }
+.studentSearch { display: block; margin: 8px 0; font-size: 13px; font-weight: 600; }
+.studentSearch input { display: block; width: 100%; min-height: 44px; margin-top: 4px; border: 1px solid #99bce3; border-radius: 8px; background: white; padding: 8px 12px; font-weight: 400; }
+.studentSearch input:focus-visible { outline: 2px solid #0075d8; outline-offset: 2px; }
+.observationTools button { min-height: 44px; background: white; border-color: #7192bd; }
+.cellCaptureContext { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; padding: 12px; border-radius: 10px; background: #e4f3f7; }
+.cellCaptureContext h2 { font-size: 16px; font-weight: 700; }
+.cellCaptureContext p { margin-top: 3px; font-size: 13px; color: #255a86; }
+.cellCaptureContext > div { min-width: 0; overflow-wrap: anywhere; }
 
 /* Compact observation layouts; other classroom/interview views keep their spacing. */
 .compactObservations:not(.guidedColumns) { grid-template-columns: 240px minmax(0,1fr); }
