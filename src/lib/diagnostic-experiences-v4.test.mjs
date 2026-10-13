@@ -9,7 +9,7 @@ import { diagnosticProgressForTeacher } from "./diagnostic-review-service.mjs";
 import { loadDiagnosticAssessmentWorkspace } from "./diagnostic-assessment-v4.mjs";
 import {
   buildDiagnosticExperienceCatalog, loadDiagnosticExperienceWorkspace,
-  recordDiagnosticExperienceObservation, summarizeDiagnosticExperience,
+  recordDiagnosticExperienceObservation, summarizeDiagnosticExperience, reviseGuidedObservation,
 } from "./diagnostic-experiences-v4.mjs";
 
 const teacher = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
@@ -28,6 +28,15 @@ test("guardado guiado idempotente conserva foto privada, criterio y hechos sin e
     const history=await loadDiagnosticAssessmentWorkspace(db,teacher);
     assert.equal(history.observations.find(row=>row.id===first.id).has_media,true);
     assert.equal(history.observations.find(row=>row.id===first.id).media_path,undefined);
+    const revised=await reviseGuidedObservation(db,teacher,first.id,{expectedText:input.observationText,observationText:'Eligió bloques y explicó cómo haría una casa con dos puertas.'});
+    assert.equal(revised.id,first.id);
+    const corrected=(await db.query('select observation_text,media_path,competency_v4_id from diagnostic_experience_observations where id=$1',[first.id])).rows[0];
+    assert.equal(corrected.media_path,input.mediaPath);assert.equal(corrected.competency_v4_id,first.competencyId);
+    const audit=(await db.query("select preferences->'guided_observation_revisions' as audit from profiles where user_id=$1",[teacher])).rows[0].audit;
+    assert.equal(audit[first.id][0].previous_text,input.observationText);
+    assert.equal((await reviseGuidedObservation(db,teacher,first.id,{expectedText:input.observationText,observationText:corrected.observation_text})).replayed,true);
+    await assert.rejects(reviseGuidedObservation(db,otherTeacher,first.id,{expectedText:corrected.observation_text,observationText:'Otro texto.'}));
+    await assert.rejects(reviseGuidedObservation(db,teacher,first.id,{expectedText:input.observationText,observationText:'Texto diferente.'}),{reason:'conflict'});
     await assert.rejects(db.query('update diagnostic_experience_observations set media_sha256=null where id=$1',[first.id]), /diagnostic_guided_photo_check/);
     await assert.rejects(recordDiagnosticExperienceObservation(db,teacher,{...input,mediaSha256:"b".repeat(64)}),{reason:"request_conflict"});
     await assert.rejects(recordDiagnosticExperienceObservation(db,teacher,{...input,observationText:"Texto distinto"}),{reason:"request_conflict"});

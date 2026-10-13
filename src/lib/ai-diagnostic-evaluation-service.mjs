@@ -5,6 +5,7 @@ import { diagnosticGroupProposalSources, sameDiagnosticSources } from "./diagnos
 import { loadDiagnosticEvaluationSkill } from "./diagnostic-evaluation-skill.mjs";
 import { neutralizeAssessmentText } from "./assessment-v4-service.mjs";
 import { recordAIQAResult } from "./ai-qa-trace.mjs";
+import { randomUUID } from "node:crypto";
 
 const fields = ["strengths", "needs", "planning_priorities"];
 const OUTPUT_SCHEMA = { id: "diagnostic-group-suggestion-v3", type: "object", additionalProperties: false,
@@ -21,7 +22,7 @@ const forbiddenJudgment = /\b(?:nivel\s*(?:AD|A|B|C)|calificaci[oó]n\s*(?:AD|A|
 
 export class DiagnosticSuggestionError extends Error {
   constructor(reason) {
-    super(reason === "stale_sources" ? "La información del aula cambió. Actualiza el borrador antes de pedir una propuesta." :
+    super(reason === "in_progress" ? "Ayni ya está preparando este resumen. Espera un momento y vuelve a consultar; no iniciaremos otra generación." : reason === "stale_sources" ? "La información del aula cambió. Actualiza el borrador antes de pedir una propuesta." :
       reason === "proposal_invalid" ? "La propuesta llegó incompleta. Puedes escribir el resumen con tus palabras." :
       reason === "api_key_missing" || reason === "authentication_failed" ? "No se pudo acceder al servicio de IA. Puedes escribir el resumen con tus palabras." :
       reason === "timeout" ? "La propuesta tardó demasiado. Puedes escribir el resumen con tus palabras." :
@@ -69,6 +70,15 @@ export async function suggestDiagnosticGroupReview(db, teacherId, draftId, {
   loadSkill = loadDiagnosticEvaluationSkill, loadSources = diagnosticGroupProposalSources,
 } = {}) {
   const sources = await loadSources(db, teacherId, draftId);
+  const old=(await db.query(`select ai_snapshot from diagnostic_group_reviews
+    where id=$1 and created_by=$2 and status='draft'`,[draftId,teacherId])).rows[0]?.ai_snapshot;
+  if(old?.output&&sameDiagnosticSources(old.source_snapshot,sources.source_snapshot))return {details:old.output,cached:true};
+  const lease=randomUUID();
+  const claimed=await db.query(`update diagnostic_group_reviews set ai_snapshot=$3::jsonb
+    where id=$1 and created_by=$2 and status='draft' and
+    (ai_snapshot->>'status' is distinct from 'processing' or (ai_snapshot->>'expires_at')::timestamptz<now()) returning id`,
+    [draftId,teacherId,JSON.stringify({status:'processing',lease_token:lease,expires_at:new Date(Date.now()+180_000).toISOString(),source_snapshot:sources.source_snapshot})]);
+  if(!claimed.rows.length)throw new DiagnosticSuggestionError('in_progress');
   try {
     const plan = resolvePlan({ workflow: "diagnostic_group_synthesis", task: "generation" });
     const provider = createProvider(plan, { timeoutMs: 120_000 });
@@ -89,13 +99,18 @@ export async function suggestDiagnosticGroupReview(db, teacherId, draftId, {
     const details = validateDiagnosticSuggestion(response.output, sources);
     const current = await loadSources(db, teacherId, draftId);
     if (!sameDiagnosticSources(sources.source_snapshot, current.source_snapshot)) throw new DiagnosticSuggestionError("stale_sources");
-    await db.query(`update diagnostic_group_reviews set ai_snapshot=$1::jsonb,updated_at=now()
-      where id=$2 and status='draft'`, [JSON.stringify({ output: details,
+    const stored=await db.query(`update diagnostic_group_reviews set ai_snapshot=$1::jsonb,updated_at=now()
+      where id=$2 and status='draft' and ai_snapshot->>'lease_token'=$3 returning id`, [JSON.stringify({ status:'ready',output: details,
       provider: response.provider_metadata?.provider ?? plan.provider, model: plan.model,
       reasoning_effort: plan.reasoning_effort, routing_policy_version: plan.routing_policy_version,
       response_id: response.provider_metadata?.response_id ?? null,
-      usage: response.provider_metadata?.usage ?? null, source_snapshot: sources.source_snapshot }), draftId]);
+      usage: response.provider_metadata?.usage ?? null, source_snapshot: sources.source_snapshot }), draftId,lease]);
+    if(!stored.rows.length)throw new DiagnosticSuggestionError('stale_sources');
     await recordAIQAResult("diagnostic_group_synthesis", details, { validators: ["source_refs", "distinct_children_scope", "privacy", "source_fingerprint"], downstream: ["annual_plan"] });
     return { details };
-  } catch (error) { throw safeFailure(error); }
+  } catch (error) {
+    await db.query(`update diagnostic_group_reviews set ai_snapshot=jsonb_set(ai_snapshot,'{status}','"failed"'::jsonb)
+      where id=$1 and created_by=$2 and ai_snapshot->>'lease_token'=$3`,[draftId,teacherId,lease]);
+    throw safeFailure(error);
+  }
 }

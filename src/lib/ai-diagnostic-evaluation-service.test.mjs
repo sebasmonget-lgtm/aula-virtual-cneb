@@ -52,6 +52,8 @@ test("Skill diagnóstica sugiere un borrador editable sin enviar nombres, entrev
     assert.deepEqual(Object.fromEntries(Object.keys(output).map(key=>[key,suggestion.details[key]])),output);
     assert.equal(suggestion.details.claims[0].sources[0].source_type,"teacher_interpretation");
     assert.equal(requests.length, 1);
+    const cached=await suggestDiagnosticGroupReview(db,teacher,group.id,{createProvider:()=>({generate:async()=>{throw Error('duplicate provider request');}})});
+    assert.equal(cached.cached,true);assert.deepEqual(cached.details,suggestion.details);
     assert.equal(requests[0].request.output_schema.id, "diagnostic-group-suggestion-v3");
     assert.match(requests[0].request.skill_instructions, /Skill crear-evaluacion-diagnostica/);
     const bundle = requests[0].request.ai_context_bundle;
@@ -62,7 +64,12 @@ test("Skill diagnóstica sugiere un borrador editable sin enviar nombres, entrev
     assert.deepEqual(recovered.ai_suggestion,suggestion.details);
     assert.equal(recovered.details.strengths,"");
     assert.equal(requests.length,1);
-    assert.deepEqual((await diagnosticGroupProposalSources(db, teacher, group.id)).comments.length, 2);
+    let reads=0;
+    const measured={query:(...args)=>{reads++;return db.query(...args);}};
+    assert.deepEqual((await diagnosticGroupProposalSources(measured, teacher, group.id)).comments.length, 2);
+    assert.ok(reads<=12,`Grouped sources should not read separately per pupil: ${reads}`);
+    await db.query(`update diagnostic_group_reviews set ai_snapshot=$1::jsonb where id=$2`,[JSON.stringify({status:'processing',expires_at:new Date(Date.now()+180000).toISOString(),lease_token:'test'}),group.id]);
+    await assert.rejects(suggestDiagnosticGroupReview(db,teacher,group.id,{createProvider:()=>{throw Error('duplicate');}}),{reason:'in_progress'});
     await assert.rejects(diagnosticGroupProposalSources(db, otherTeacher, group.id), { reason: "no_classroom" });
   } finally { await db.close(); }
 });
@@ -73,7 +80,7 @@ test("rechaza salida incompleta, niveles y fuentes que cambian durante la llamad
   const source = { age: 5, student_count: 1, comments: [{ information_status: "information_available", comment: "Jugó y conversó." }],
     competency_options: [{ id: "COM_ORAL", name: "Se comunica oralmente" }],
     source_snapshot: [{ id: "a", fingerprint: "uno" }] };
-  const run = (output, loadSources = async () => source) => suggestDiagnosticGroupReview({ query: async () => ({ rows: [] }) }, teacher, "draft", {
+  const run = (output, loadSources = async () => source) => suggestDiagnosticGroupReview({ query: async sql => ({ rows: sql.startsWith('update') ? [{id:'draft'}] : [] }) }, teacher, "draft", {
     loadSources, createProvider: () => ({ generate: async () => ({ output }) }),
   });
   await assert.rejects(run({ strengths: "Algo." }), (error) => error instanceof DiagnosticSuggestionError && error.reason === "proposal_invalid");

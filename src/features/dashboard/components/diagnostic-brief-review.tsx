@@ -1,39 +1,67 @@
 "use client";
-import { useEffect, useState } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
+import { ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { loadDiagnosticReview, prepareDiagnosticGroup, suggestDiagnosticGroup, saveDiagnosticGroup, confirmDiagnosticGroup, type DiagnosticReviewWorkspace, type DiagnosticGroupDetails } from "@/src/lib/local-database";
+import { useUnsavedWork } from "@/src/lib/use-unsaved-work";
 import { AsyncButton, LoadingState } from "./workflow-ui";
 
-export function DiagnosticBriefReview({onBack,onContinue}:{onBack:()=>void;onContinue:()=>void}) {
-  const [sources,setSources]=useState<DiagnosticReviewWorkspace|null>(null),[note,setNote]=useState("");
-  const [operation,setOperation]=useState<"suggest"|"confirm"|null>(null),[error,setError]=useState("");
-  const busy=operation!==null;
-  const [claims,setClaims]=useState<NonNullable<DiagnosticGroupDetails["claims"]>>([]);
-  useEffect(()=>{let live=true;loadDiagnosticReview().then(value=>{if(live){
-    const review=value.group_reviews.find(row=>row.status==="draft"&&row.is_current)??value.group_reviews.find(row=>row.status==="confirmed"&&row.is_current);
-    setSources(value);setNote(review?.details.strengths||[review?.ai_suggestion?.strengths,review?.ai_suggestion?.needs,review?.ai_suggestion?.planning_priorities].filter(Boolean).join("\n\n")||value.brief.text);
-    setClaims(review?.ai_suggestion?.claims??[]);
-  }}).catch(()=>{if(live)setError("No pudimos recuperar el resumen. Puedes volver a observar o continuar sin confirmarlo.");});return()=>{live=false;};},[]);
-  const observed=sources?new Set(sources.observations.map(row=>row.student_id)).size:0;
-  const summary=sources?`Niños en el aula: ${sources.students.length}. Entrevistas familiares confirmadas: ${sources.derived_group_information.confirmed_interviews}. Niños con observaciones relacionadas con una competencia: ${observed}. Las entrevistas aportan contexto y los registros de observación conservan lo que ocurrió; no asignan niveles.`:"";
-  async function suggest(){if(!sources||busy)return;setOperation("suggest");setError("");try{
-    const draft=await prepareDiagnosticGroup();
-    const result=await suggestDiagnosticGroup(draft.id);
-    setNote([result.details.strengths,result.details.needs,result.details.planning_priorities].filter(Boolean).join("\n\n"));
-    setClaims(result.details.claims??[]);
-  }catch(cause){setError(cause instanceof Error?cause.message:"No pudimos preparar la síntesis. Puedes corregir el resumen con tus palabras.");}finally{setOperation(null);}}
-  async function confirm(){if(!sources||busy)return;setOperation("confirm");setError("");try{
-    const draft=await prepareDiagnosticGroup();
-    await saveDiagnosticGroup(draft.id,{strengths:note.trim(),needs:"",planning_priorities:"Seguiremos recogiendo observaciones durante el año.",competency_priorities:[]});
-    await confirmDiagnosticGroup(draft.id);onContinue();
-  }catch(cause){setError(cause instanceof Error?cause.message:"No pudimos confirmar el resumen.");}finally{setOperation(null);}}
-  return <section className="space-y-5 rounded-2xl border border-[#d6e5ef] bg-white p-5 sm:p-7"><h2 className="text-2xl font-bold">Lo que Ayni conoce de tu grupo</h2>
-    {!sources&&!error&&<LoadingState label="Reuniendo entrevistas y observaciones…"/>}
-    {sources&&<><AsyncButton variant="outline" disabled={busy} busy={operation==="suggest"} busyLabel="Leyendo entrevistas y observaciones…" onClick={()=>void suggest()}>Preparar síntesis con Ayni</AsyncButton><label className="block font-semibold">Así estoy entendiendo a tu grupo<Textarea className="mt-2 min-h-64 font-normal leading-relaxed" maxLength={3000} value={note} disabled={busy} onChange={event=>setNote(event.target.value)} placeholder="Anota solo lo que observaste o una decisión para acompañar al grupo."/></label>
-      <p className="text-sm text-[#526b87]">Puedes corregir o añadir algo importante. Al confirmar se guarda la información usada en este resumen; los registros posteriores no la reescriben.</p>
-      <details className="text-sm"><summary className="min-h-11 cursor-pointer py-3">Fuentes utilizadas</summary><p>{summary}</p>{claims.length>0&&<p className="mt-2">Estas fuentes corresponden a la síntesis propuesta por Ayni. Tus correcciones se conservan aparte.</p>}{claims.length>0?<ul className="mt-3 space-y-4">{claims.map((claim,index)=><li key={index}><p>{claim.text}</p><p className="mt-1 text-[#526b87]">{claim.scope==="planning_decision"?"Propuesta para planificar. ":claim.scope==="information_gap"?"Información por completar o interpretar. ":""}{claim.sources.map(source=>`${source.child.replace("child_","Niño ")} · ${source.source_type==="family_reported_context"?"según la familia":source.source_type==="teacher_interpretation"?"comentario docente":"observación directa"}`).join("; ")}</p></li>)}</ul>:<p className="mt-2">El resumen inicial se elaboró con {sources.brief.source_refs.length} registros. Prepara la síntesis con Ayni para revisar las fuentes de cada afirmación.</p>}</details>
-      <AsyncButton busy={operation==="confirm"} busyLabel="Confirmando resumen…" disabled={busy||!note.trim()} onClick={()=>void confirm()}>Confirmar resumen y continuar con Mi año</AsyncButton></>}
-    {error&&<p role="alert">{error}</p>}<div className="flex flex-wrap gap-3"><Button variant="outline" disabled={busy} onClick={onBack}>Volver al diagnóstico</Button><Button variant="ghost" disabled={busy} onClick={onContinue}>Crear Mi año con lo que ya tengo</Button></div>
+export type SummaryHandle={flush:()=>Promise<boolean>};
+const fields=[['strengths','Lo que conocemos de tu grupo'],['needs','Lo que conviene seguir observando'],['planning_priorities','Qué tendremos en cuenta al planificar']] as const;
+const editable=(d:DiagnosticGroupDetails):DiagnosticGroupDetails=>({strengths:d.strengths??'',needs:d.needs??'',planning_priorities:d.planning_priorities??'',competency_priorities:d.competency_priorities??[]});
+export const DiagnosticBriefReview=forwardRef<SummaryHandle,{onBack:()=>void;onContinue:()=>void}>(function DiagnosticBriefReview({onBack,onContinue},ref){
+  const [sources,setSources]=useState<DiagnosticReviewWorkspace|null>(null),[details,setDetails]=useState<DiagnosticGroupDetails|null>(null);
+  const [operation,setOperation]=useState<'suggest'|'continue'|null>(null),[status,setStatus]=useState<'saved'|'pending'|'saving'|'error'>('saved'),[error,setError]=useState(''),[revision,setRevision]=useState(0);
+  const [claims,setClaims]=useState<NonNullable<DiagnosticGroupDetails['claims']>>([]);
+  const latest=useRef<DiagnosticGroupDetails|null>(null),saved=useRef(''),draftId=useRef(''),queue=useRef<Promise<boolean>|null>(null),lock=useRef(false),alive=useRef(true);
+  const dirty=!!details&&JSON.stringify(details)!==saved.current;
+  useUnsavedWork(dirty,operation!==null||status==='saving');
+  useEffect(()=>{alive.current=true;let active=true;loadDiagnosticReview().then(value=>{if(!active)return;
+    const draft=value.group_reviews.find(row=>row.status==='draft'),review=draft??value.group_reviews.find(row=>row.status==='confirmed');
+    const initial=editable(review?.details??{strengths:value.brief.text,needs:'',planning_priorities:'',competency_priorities:[]});
+    if(draft)draftId.current=draft.id;
+    latest.current=initial;saved.current=review?JSON.stringify(initial):'';setDetails(initial);setStatus(review?'saved':'pending');setSources(value);setClaims(review?.ai_suggestion?.claims??[]);setError('');
+  }).catch(()=>{if(active)setError('No pudimos recuperar tu resumen. Reintenta; tus correcciones guardadas se conservan.');});return()=>{active=false;alive.current=false;};},[revision]);
+  async function flush():Promise<boolean>{
+    if(queue.current)return queue.current;
+    queue.current=Promise.resolve().then(async()=>{try{
+      while(latest.current&&JSON.stringify(latest.current)!==saved.current){
+        setStatus('saving');setError('');const value=latest.current;
+        if(!draftId.current)draftId.current=(await prepareDiagnosticGroup()).id;
+        await saveDiagnosticGroup(draftId.current,value);saved.current=JSON.stringify(value);
+      }
+      if(alive.current)setStatus('saved');return true;
+    }catch(cause){if(alive.current){setStatus('error');setError(cause instanceof Error?cause.message:'No se pudo guardar. Tu texto sigue aquí.');}return false;}finally{queue.current=null;}});
+    return queue.current;
+  }
+  useImperativeHandle(ref,()=>({flush}));
+  useEffect(()=>{if(!dirty||operation||status==='error')return;const timer=setTimeout(()=>void flush(),700);return()=>clearTimeout(timer);});
+  function change(value:DiagnosticGroupDetails){latest.current=value;setDetails(value);setStatus('pending');setError('');}
+  async function suggest(){if(lock.current||!sources)return;lock.current=true;setOperation('suggest');setError('');try{
+    if(!await flush())return;const draft=await prepareDiagnosticGroup();draftId.current=draft.id;
+    // A new version must preserve the teacher's current corrections even if AI fails.
+    if(latest.current&&JSON.stringify(editable(draft.details))!==JSON.stringify(latest.current))await saveDiagnosticGroup(draft.id,latest.current);
+    const result=await suggestDiagnosticGroup(draft.id);change(editable(result.details));setClaims(result.details.claims??[]);await flush();
+  }catch(cause){setError(cause instanceof Error?cause.message:'Ayni no pudo terminar el resumen. Puedes continuar con tus palabras.');}finally{lock.current=false;setOperation(null);}}
+  async function advance(){if(lock.current||!latest.current)return;lock.current=true;setOperation('continue');setError('');try{
+    if(!await flush())return;
+    const existing=sources?.group_reviews.find(row=>row.status==='confirmed'&&row.is_current&&JSON.stringify(editable(row.details))===JSON.stringify(latest.current));
+    if(!draftId.current&&!existing){draftId.current=(await prepareDiagnosticGroup()).id;await saveDiagnosticGroup(draftId.current,latest.current);}
+    if(draftId.current){await confirmDiagnosticGroup(draftId.current);draftId.current='';}onContinue();
+  }catch(cause){setError(cause instanceof Error?cause.message:'No pudimos continuar a Mi año. Tu resumen guardado se conserva.');}finally{lock.current=false;setOperation(null);}}
+  if(!sources||!details)return <section className="space-y-4">{error?<><p role="alert">{error}</p><Button onClick={()=>setRevision(value=>value+1)}>Reintentar</Button></>:<LoadingState label="Recuperando tu resumen del aula…"/>}</section>;
+  const incomplete=sources.derived_group_information.confirmed_interviews<sources.students.length||new Set(sources.observations.map(row=>row.student_id)).size<sources.students.length;
+  return <section className="min-w-0 space-y-5 rounded-2xl border border-[#d6e5ef] bg-white p-5 sm:p-7" aria-label="Tu resumen del aula">
+    <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-2xl font-bold">Tu resumen del aula</h2><span role="status" className="text-sm text-[#526b87]">{status==='saving'?'Guardando…':status==='pending'?'Cambios pendientes':status==='error'?'No se pudo guardar':'Cambios guardados'}</span></div>
+    <p className="max-w-prose text-sm text-[#526b87]">Revisa lo que conocemos y añade lo que te ayude a planificar. Tus correcciones se guardan automáticamente.</p>
+    {incomplete&&<p className="rounded-xl bg-[#eef6fa] p-3 text-sm">Puedes continuar ahora. Con más entrevistas y observaciones, la personalización de Mi año será más completa.</p>}
+    <div><h3 className="font-bold">Intereses contados por las familias</h3>{sources.derived_group_information.interests.length?<ul className="mt-2 flex flex-wrap gap-2">{sources.derived_group_information.interests.map(item=><li key={item.key} className="rounded-lg bg-[#e5f4ee] px-3 py-2 text-sm">{item.label} · {item.count} {item.count===1?'familia':'familias'}</li>)}</ul>:<p className="mt-2 text-sm text-[#526b87]">Los intereses aparecerán aquí al confirmar las entrevistas familiares.</p>}</div>
+    <AsyncButton variant="outline" busy={operation==='suggest'} busyLabel="Ayni está preparando tu resumen…" disabled={!!operation||status==='saving'} onClick={()=>void suggest()}><Sparkles size={18}/>Preparar resumen con Ayni</AsyncButton>
+    {operation==='suggest'&&<p role="status" className="text-sm text-[#526b87]">Estamos leyendo la información disponible. La propuesta aparecerá cuando termine correctamente; tus datos actuales siguen guardados.</p>}
+    {fields.map(([field,label])=><label key={field} className="block font-semibold">{label}<Textarea className="mt-2 min-h-24 font-normal leading-relaxed" maxLength={3000} value={details[field]} disabled={!!operation} onChange={event=>change({...details,[field]:event.target.value})}/></label>)}
+    <details className="text-sm"><summary className="min-h-11 cursor-pointer py-3">Fuentes e historial del resumen</summary><p>{sources.derived_group_information.confirmed_interviews} entrevistas confirmadas y {sources.observations.length} registros de observación. Las entrevistas aportan contexto familiar; no acreditan logros.</p>{claims.length>0&&<ul className="mt-3 space-y-3">{claims.map((claim,index)=><li key={index}>{claim.text}<span className="mt-1 block text-[#526b87]">{claim.sources.map(source=>`${source.child.replace('child_','Niño ')} · ${source.source_type==='family_reported_context'?'según la familia':source.source_type==='teacher_interpretation'?'comentario docente':'observación directa'}`).join('; ')}</span></li>)}</ul>}{sources.group_reviews.filter(row=>row.status==='confirmed').map(row=><div key={row.id} className="mt-3 border-t pt-3"><strong>Versión {row.version}</strong><p className="whitespace-pre-wrap">{[row.details.strengths,row.details.needs,row.details.planning_priorities].filter(Boolean).join('\n')}</p></div>)}</details>
+    {error&&<div role="alert" className="space-y-2 rounded-xl bg-[#fff1df] p-3"><p>{error}</p>{status==='error'&&<Button variant="outline" onClick={()=>void flush()}>Reintentar guardado</Button>}</div>}
+    <div className="flex flex-wrap justify-between gap-3 border-t border-[#d6e5ef] pt-4"><Button variant="outline" disabled={!!operation||status==='saving'} onClick={()=>void flush().then(ok=>{if(ok)onBack();})}>Volver a entrevistas y observaciones</Button><AsyncButton busy={operation==='continue'} busyLabel="Preparando el paso a Mi año…" disabled={!!operation||!details.strengths.trim()} onClick={()=>void advance()}>Continuar a Mi año<ArrowRight/></AsyncButton></div>
   </section>;
-}
+});

@@ -1,3 +1,5 @@
+import { countInterviewInterests } from "./interview-interest-counts.mjs";
+import { versionTransaction } from "./version-integrity.mjs";
 import { createHash, randomUUID } from "node:crypto";
 import { diagnosticBrief } from "./diagnostic-brief.mjs";
 import { loadKnowledgeBaseV4 } from "./knowledge-base-v4.mjs";
@@ -40,9 +42,7 @@ export const sameDiagnosticSources = (a, b) => {
 };
 
 export function derivedDiagnosticGroupInformation(familyRows, coverage) {
-  const interests = interviewInterestOptions.map(({ id, label }) => ({ key: id, label,
-    count: familyRows.filter((row) => normalizeFamilyInterviewDetails(row.details).interest_tags?.includes(id)).length }))
-    .filter((item) => item.count >= 2 && item.count * 2 >= familyRows.length)
+  const interests = countInterviewInterests(familyRows.map(row=>({...row,details:normalizeFamilyInterviewDetails(row.details)})), interviewInterestOptions)
     .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label, "es"));
   const observation_gaps = coverage.filter((item) => item.children_without_observations > 0)
     .map(({ competency_id, competency_name, children_with_observations, children_without_observations }) => ({
@@ -145,6 +145,28 @@ async function studentReviewSources(db, classroomId, studentId) {
       where classroom_id=$1 and student_id=$2 and status='confirmed' order by version desc limit 1`, [classroomId, studentId])).rows[0];
   const rows = [...guided, ...spontaneous, ...await legacyDiagnosticObservations(db, classroomId, studentId)];
   return { rows, interview, snapshot: studentReviewSnapshot(rows, interview) };
+}
+
+/** Batch sources once per classroom, rather than four queries per child. */
+async function groupReviewSources(db, classroomId, students) {
+  const ids = students.map(student => student.id);
+  const guided = (await db.query(`select id,student_id,competency_v4_id,experience_id,aspect_id,catalog_version,
+    observation_status,observation_text,observed_at from diagnostic_experience_observations
+    where classroom_id=$1 and student_id=any($2::uuid[])`, [classroomId,ids])).rows;
+  const free = (await db.query(`select id,student_id,competency_v4_id,competency_v4_ids,context_label,observation_text,
+    support_status,observed_at,classification_source,classification_status from effective_diagnostic_spontaneous_observations
+    where classroom_id=$1 and student_id=any($2::uuid[])`, [classroomId,ids])).rows.map(row => ({...row,
+      experience_id:'spontaneous',aspect_id:row.context_label,catalog_version:'spontaneous-v1',
+      observation_status:row.support_status==='yes'?'with_support':'observed_without_judgment'}));
+  const interviews = (await db.query(`select distinct on (student_id) id,student_id,version,details,teacher_confirmed_at
+    from student_family_interviews where classroom_id=$1 and student_id=any($2::uuid[]) and status='confirmed'
+    order by student_id,version desc`, [classroomId,ids])).rows;
+  const legacy = await legacyDiagnosticObservations(db,classroomId);
+  return new Map(students.map(student => {
+    const rows=[...guided,...free,...legacy].filter(row=>row.student_id===student.id);
+    const interview=interviews.find(row=>row.student_id===student.id);
+    return [student.id,{rows,interview,snapshot:studentReviewSnapshot(rows,interview)}];
+  }));
 }
 
 /** One-child model projection; interviews remain context and never observed performance. */
@@ -468,8 +490,8 @@ async function confirmedSnapshot(db, classroomId, currentSnapshots = null) {
 
 /** Facts are sources even when no child has an optional teacher comment. */
 async function optionalGroupSourceSnapshot(db, classroom, students, currentSnapshots = null) {
-  const snapshots = currentSnapshots ?? new Map(await Promise.all(students.map(async (student) =>
-    [student.id, (await studentReviewSources(db, classroom.id, student.id)).snapshot])));
+  const snapshots = currentSnapshots ?? new Map([...(await groupReviewSources(db,classroom.id,students))]
+    .map(([id,value])=>[id,value.snapshot]));
   const comments = (await db.query(`select distinct on (r.student_id) r.id,r.student_id,r.version,r.details,
       r.source_snapshot,r.teacher_confirmed_at from diagnostic_student_reviews r join students s on s.id=r.student_id
     where r.classroom_id=$1 and s.classroom_id=$1 and s.status='active' and r.status='confirmed'
@@ -483,6 +505,9 @@ async function optionalGroupSourceSnapshot(db, classroom, students, currentSnaps
 }
 
 export async function prepareDiagnosticGroupReview(db, teacherId) {
+  return versionTransaction(db,`group-prepare:${teacherId}`,tx=>prepareGroup(tx,teacherId));
+}
+async function prepareGroup(db, teacherId) {
   const { classroom, students } = await scope(db, teacherId);
   const snapshot = await optionalGroupSourceSnapshot(db, classroom, students);
   const existing = (await db.query(`select id,details from diagnostic_group_reviews where classroom_id = $1 and status = 'draft'`, [classroom.id])).rows[0];
@@ -505,7 +530,9 @@ export async function diagnosticGroupProposalSources(db, teacherId, draftId) {
   const draft = (await db.query(`select source_snapshot from diagnostic_group_reviews
     where id=$1 and classroom_id=$2 and created_by=$3 and status='draft'`, [draftId, classroom.id, teacherId])).rows[0];
   if (!draft) fail("not_editable", "Prepara primero el borrador del aula.");
-  const sourceSnapshot = await optionalGroupSourceSnapshot(db, classroom, students);
+  const currentSources = await groupReviewSources(db,classroom.id,students);
+  const sourceSnapshot = await optionalGroupSourceSnapshot(db, classroom, students,
+    new Map([...currentSources].map(([id,value])=>[id,value.snapshot])));
   if (!sameDiagnosticSources(draft.source_snapshot, sourceSnapshot))
     fail("stale_sources", "Las observaciones o comentarios cambiaron. Actualiza el resumen del aula.");
   const comments = (await db.query(`select distinct on (r.student_id) r.student_id,r.source_snapshot,r.details
@@ -517,8 +544,6 @@ export async function diagnosticGroupProposalSources(db, teacherId, draftId) {
     .flatMap((row) => [row.first_name, row.last_name, row.preferred_name,
       [row.first_name, row.last_name].filter(Boolean).join(" ")]).filter(Boolean);
   const competencyOptions = await applicableDiagnosticCompetencies(classroom);
-  const currentSources = new Map(await Promise.all(students.map(async (student) =>
-    [student.id, await studentReviewSources(db, classroom.id, student.id)])));
   const childAliases = new Map(students.map((student, index) => [student.id, `child_${index + 1}`]));
   const perChildBudget = Math.floor(24_000 / Math.max(1, students.length));
   const safeComments = comments.filter((row) => sameDiagnosticSources(row.source_snapshot, currentSources.get(row.student_id)?.snapshot))
@@ -568,6 +593,13 @@ export async function saveDiagnosticGroupReview(db, teacherId, id, details) {
 }
 
 export async function confirmDiagnosticGroupReview(db, teacherId, id) {
+  return versionTransaction(db,`group-confirm:${id}`,async tx=>{
+    const replay=(await tx.query(`select id,version,status,details,teacher_confirmed_at from diagnostic_group_reviews
+      where id=$1 and created_by=$2 and status='confirmed'`,[id,teacherId])).rows[0];
+    return replay ?? confirmGroup(tx,teacherId,id);
+  });
+}
+async function confirmGroup(db, teacherId, id) {
   const { classroom, students } = await scope(db, teacherId);
   const row = (await db.query(`select * from diagnostic_group_reviews where id = $1 and classroom_id = $2
     and created_by = $3 and status = 'draft'`, [id,classroom.id,teacherId])).rows[0];

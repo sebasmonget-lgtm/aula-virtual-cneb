@@ -121,3 +121,24 @@ export async function recordDiagnosticExperienceObservation(db, teacherId, input
   return { id, studentId: student.id, competencyId: aspect.competency_id,observation:{...row,has_media:Boolean(row.media_path),media_path:undefined,media_sha256:undefined} };
   });
 }
+
+/** Corrections retain the original in an owned, persistent JSON history; no schema change. */
+export async function reviseGuidedObservation(db,teacherId,id,input){
+  if(typeof input?.observationText!=='string'||!input.observationText.trim()||input.observationText.length>4000)
+    throw new DiagnosticExperienceError('invalid_note','Escribe lo que hizo o dijo el niño.');
+  return versionTransaction(db,`guided-observation:${id}`,async tx=>{
+    const row=(await tx.query(`select o.* from diagnostic_experience_observations o join classrooms c on c.id=o.classroom_id
+      where o.id=$1 and c.teacher_id=$2 and c.status='active' and o.created_by=$2 for update of o`,[id,teacherId])).rows[0];
+    if(!row)throw new DiagnosticExperienceError('invalid_student','Registro no disponible.');
+    const text=input.observationText.trim();
+    if(row.observation_text===text)return {id,studentId:row.student_id,replayed:true};
+    if(row.observation_text!==input.expectedText)throw new DiagnosticExperienceError('conflict','La observación cambió en otra pestaña. Actualiza la lista.');
+    const profile=(await tx.query('select preferences from profiles where user_id=$1 for update',[teacherId])).rows[0];
+    const history=profile?.preferences?.guided_observation_revisions?.[id]??[];
+    const revision={student_id:row.student_id,previous_text:row.observation_text,corrected_text:text,corrected_at:new Date().toISOString()};
+    await tx.query(`update profiles set preferences=coalesce(preferences,'{}'::jsonb)||jsonb_build_object('guided_observation_revisions',
+      coalesce(preferences->'guided_observation_revisions','{}'::jsonb)||$2::jsonb) where user_id=$1`,[teacherId,JSON.stringify({[id]:[...history,revision]})]);
+    await tx.query('update diagnostic_experience_observations set observation_text=$2 where id=$1',[id,text]);
+    return {id,studentId:row.student_id};
+  });
+}

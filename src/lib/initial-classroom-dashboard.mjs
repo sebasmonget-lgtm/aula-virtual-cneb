@@ -16,7 +16,7 @@ export function initialClassroomDashboard(saved, clock, logoOrigin) {
   return {
     classroom_id: saved.classroomId, activity: null, students: [],
     metrics: { students_total: 0, evidences_week: 0, students_observed: 0 },
-    profile: { ...saved.initialProfile, logo_url: saved.initialProfile.logo_asset_id
+    profile: { ...saved.initialProfile, classroom_id:saved.classroomId, logo_url: saved.initialProfile.logo_asset_id
       ? `${logoOrigin}/api/assets/${saved.initialProfile.logo_asset_id}` : null },
     today: { date, now: time, past_pending: [], blocks: [],
       attendance: { recorded: false, recorded_count: 0 }, calendar_exception: calendarException,

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { ArrowLeft, Check, ChevronDown, Eye, List, LogOut, MessageCircle, Pencil, Search, Users } from "lucide-react";
+import { ArrowLeft, ChevronDown, Eye, List, LogOut, MessageCircle, Pencil, Search, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { loadDiagnostics, loadSpontaneousObservations, type DiagnosticWorkspace, type LocalDashboard, type SpontaneousObservation, type FamilyInterview } from "@/src/lib/local-database";
@@ -12,14 +12,30 @@ import { SpontaneousDiagnostic } from "./spontaneous-diagnostic-v4";
 import { GuidedObservationWorkspace } from "./guided-observation-workspace";
 import { StudentPhoto } from "./student-photo";
 import { LoadingState, WorkflowFeedback } from "./workflow-ui";
+import { DiagnosticBriefReview, type SummaryHandle } from "./diagnostic-brief-review";
+import { DiagnosticReview } from "./diagnostic-review-v4";
+import { ObservationCoverageMatrix } from "./observation-coverage-matrix";
+import { PreparationSteps } from "./preparation-steps";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { apiFetch } from "@/src/lib/ayni-api-fetch";
+import { localDatabaseApiUrl } from "@/src/lib/local-database";
 import { mergeGuidedObservation } from "@/src/lib/guided-observation-flow.mjs";
-import { experienceCoverageGaps, isRecordedObservation } from "@/src/lib/diagnostic-ui-flow.mjs";
+import { experienceCoverageOpportunities, isRecordedObservation } from "@/src/lib/diagnostic-ui-flow.mjs";
 import shell from "./pilot-setup.module.css";
 import styles from "./interviews-workspace.module.css";
 
-export function InterviewsWorkspace({dashboard,onBack,onProfile,onPreparation,onSignOut,onReview}: {
-  dashboard:LocalDashboard;onBack:()=>void;onProfile:()=>void;onPreparation:()=>void;onReview:()=>void;onSignOut?:()=>void;
+export function InterviewsWorkspace({dashboard,onBack,onProfile,onPreparation,onSignOut,onPlan}: {
+  dashboard:LocalDashboard;onBack:()=>void;onProfile:()=>void;onPreparation:()=>void;onPlan:()=>void;onSignOut?:()=>void;
 }) {
+  const summaryRef=useRef<SummaryHandle>(null);
+  const [error,setError]=useState("");
+  const viewFromLocation=()=>{const params=readWorkspaceParams("Planificar");return params.get("step")!=="3"?"capture":params.get("mode")==="matrix"?"matrix":params.get("mode")==="history"?"history":"summary";};
+  const [view,setView]=useState(viewFromLocation);
+  const [matrix,setMatrix]=useState<{curriculum:{id:string;name:string}[];counts:Record<string,number>;unclassified:number;records:{student_id:string;text:string;date:string;competency_ids:string[]}[]}|null>(null);
+  const [observationRevision,setObservationRevision]=useState(0);
+  const [cell,setCell]=useState<{studentId:string;competencyId:string}|null>(null);
+  function openView(next:string){setView(next);writeWorkspaceLocation("Planificar",{tab:"diagnostic",step:next==="capture"?tab==="interviews"?"1":"2":"3",mode:next==="capture"?mode==="guided"?"guided":"spontaneous":next},true);}
+  useEffect(()=>{if(view!=="matrix")return;let live=true;apiFetch(localDatabaseApiUrl+"/api/annual-journey/coverage").then(async response=>{if(!response.ok)throw Error("No pudimos abrir el mapa. Reintenta consultar los registros.");return response.json() as Promise<NonNullable<typeof matrix>>;}).then(value=>{if(live){setMatrix(value);setError("");}}).catch(cause=>{if(live)setError(cause.message);});return()=>{live=false;};},[view,observationRevision]);
   const [data,setData]=useState<DiagnosticWorkspace|null>(null);
   const [records,setRecords]=useState<SpontaneousObservation[]>([]);
   const [tab,setTab]=useState<"interviews"|"observations">(()=>readWorkspaceParams("Planificar").get("step")==="2"?"observations":"interviews");
@@ -27,9 +43,8 @@ export function InterviewsWorkspace({dashboard,onBack,onProfile,onPreparation,on
   const [studentId,setStudentId]=useState(dashboard.students[0]?.id??"");
   const [experienceId,setExperienceId]=useState("");
   const [query,setQuery]=useState("");
-  const [error,setError]=useState("");
   const [revision,setRevision]=useState(0);
-  const [observationRevision,setObservationRevision]=useState(0);
+
   const [navigationBusy,setNavigationBusy]=useState(false);
   const [profileMenu,setProfileMenu]=useState(false);
   const interviewRef=useRef<FamilyInterviewEditorHandle>(null);
@@ -38,16 +53,16 @@ export function InterviewsWorkspace({dashboard,onBack,onProfile,onPreparation,on
   const updateObservationProgress=useCallback(()=>setObservationRevision(value=>value+1),[]);
   useEffect(()=>{let live=true;Promise.all([loadDiagnostics(),loadSpontaneousObservations()]).then(([workspace,free])=>{if(live){setData(workspace);setRecords(free.observations);setError("");}}).catch(cause=>{if(live)setError(cause instanceof Error?cause.message:"No se pudo abrir el registro inicial.");});return()=>{live=false;};},[observationRevision]);
   useEffect(()=>{
-    const sync=()=>{const params=readWorkspaceParams("Planificar");setTab(params.get("step")==="2"?"observations":"interviews");setMode(params.get("mode")==="guided"?"guided":"free");};
-    window.addEventListener("popstate",sync);window.addEventListener("hashchange",sync);return()=>{window.removeEventListener("popstate",sync);window.removeEventListener("hashchange",sync);};
+    const sync=()=>{setView(viewFromLocation());const params=readWorkspaceParams("Planificar");if(params.get("step")==="3")return;setTab(params.get("step")==="2"?"observations":"interviews");setMode(params.get("mode")==="guided"?"guided":"free");};
+    window.addEventListener("ayni-location-change",sync);window.addEventListener("popstate",sync);window.addEventListener("hashchange",sync);return()=>{window.removeEventListener("ayni-location-change",sync);window.removeEventListener("popstate",sync);window.removeEventListener("hashchange",sync);};
   },[]);
   async function change(work:()=>void){
     if(navigationBusy)return;
     setNavigationBusy(true);
-    try{if(tab==="interviews"&&interviewRef.current){if(!await interviewRef.current.flush())return;}else if(!canLeaveWorkspace())return;work();}
+    try{if(view==="summary"&&summaryRef.current){if(!await summaryRef.current.flush())return;}else if(tab==="interviews"&&interviewRef.current){if(!await interviewRef.current.flush())return;}else if(!canLeaveWorkspace())return;work();}
     finally{setNavigationBusy(false);}
   }
-  function destination(nextTab:"interviews"|"observations",nextMode:"free"|"guided"=mode){setTab(nextTab);setMode(nextMode);writeWorkspaceLocation("Planificar",{tab:"diagnostic",step:nextTab==="interviews"?"1":"2",mode:nextMode==="guided"?"guided":"spontaneous"},true);}
+  function destination(nextTab:"interviews"|"observations",nextMode:"free"|"guided"=mode){setView("capture");setTab(nextTab);setMode(nextMode);writeWorkspaceLocation("Planificar",{tab:"diagnostic",step:nextTab==="interviews"?"1":"2",mode:nextMode==="guided"?"guided":"spontaneous"},true);}
   const selected=dashboard.students.find(student=>student.id===studentId)??dashboard.students[0];
   const selectedName=selected?.first_name??selected?.name??"el niño";
   const experience=data?.experiences.find(item=>item.id===experienceId)??data?.experiences[0];
@@ -63,10 +78,10 @@ export function InterviewsWorkspace({dashboard,onBack,onProfile,onPreparation,on
       <div className={styles.account}><button type="button" disabled={navigationBusy} aria-expanded={profileMenu} onClick={()=>setProfileMenu(value=>!value)}><span className={styles.avatar}>{teacherName.split(/\s+/).slice(0,2).map(part=>part[0]).join("")}</span><span>{teacherName}</span><ChevronDown size={18}/></button>{profileMenu&&<div className={styles.accountMenu}><button type="button" onClick={()=>void change(onProfile)}>Datos del colegio y aula</button>{onSignOut&&<button type="button" onClick={()=>void change(onSignOut)}><LogOut size={17}/>Cerrar sesión</button>}</div>}</div>
     </div></header>
     <main className={styles.content}>
-      <div className={`${shell.intro} ${styles.intro}`}><button type="button" className={styles.backLink} disabled={navigationBusy} onClick={()=>void change(onBack)}><ArrowLeft size={18}/>Volver</button><h1>Entrevistas y observaciones</h1><p>Conoce a tus niños y niñas a través de sus familias y de lo que observas en el aula.<br/>Puedes hacer primero las entrevistas, las observaciones, o alternarlas.</p><Image className={`${shell.illustration} ${styles.illustration}`} src="/ayni-classroom-welcome.png" alt="" width={1536} height={1024} sizes="420px" preload/>
-        <ol className={`${shell.steps} ${styles.steps}`} aria-label="Preparación de tu aula">{["Configura tu aula","Añade a tus niños","Entrevistas y observaciones","Prepara Mi año con Ayni"].map((label,index)=><li key={label} className={index<2?styles.completed:undefined} aria-current={index===2?"step":undefined}><span>{index<2?<Check size={22} aria-label="Completado"/>:index+1}</span><span>{label}</span></li>)}</ol>
+      <div className={`${shell.intro} ${styles.intro}`}><button type="button" className={styles.backLink} disabled={navigationBusy} onClick={()=>void change(onBack)}><ArrowLeft size={18}/>Volver</button><h1>{view==="summary"?"Tu resumen del aula":view==="matrix"?"Mapa de observaciones":view==="history"?"Historial del aula":"Entrevistas y observaciones"}</h1><p>Conoce a tus niños y niñas a través de sus familias y de lo que observas en el aula.<br/>Puedes hacer primero las entrevistas, las observaciones, o alternarlas.</p><Image className={`${shell.illustration} ${styles.illustration}`} src="/ayni-classroom-welcome.png" alt="" width={1536} height={1024} sizes="420px" preload/>
+        <PreparationSteps current={view==="summary"?4:3}/>
       </div>
-      <div className={styles.mainTabs} role="tablist" aria-label="Entrevistas y observaciones">{([["interviews","Entrevistas","Responde solo con lo que la familia te comentó",MessageCircle],["observations","Observaciones","Registra lo que observas en el aula",Eye]] as const).map(([id,title,hint,Icon])=><button key={id} type="button" role="tab" aria-selected={tab===id} aria-controls="initial-information-panel" disabled={navigationBusy} onClick={()=>void change(()=>destination(id))}><Icon size={38} aria-hidden="true"/><span><strong>{title}</strong><small>{hint}</small></span></button>)}</div>
+      {view==="capture"&&<><div className={styles.mainTabs} role="tablist" aria-label="Entrevistas y observaciones">{([["interviews","Entrevistas","Responde solo con lo que la familia te comentó",MessageCircle],["observations","Observaciones","Registra lo que observas en el aula",Eye]] as const).map(([id,title,hint,Icon])=><button key={id} type="button" role="tab" aria-selected={tab===id} aria-controls="initial-information-panel" disabled={navigationBusy} onClick={()=>void change(()=>destination(id))}><Icon size={38} aria-hidden="true"/><span><strong>{title}</strong><small>{hint}</small></span></button>)}</div>
       <div className={`${styles.columns} ${guidedMode?styles.guidedColumns:""}`}>
         {!guidedMode&&<aside className={styles.studentList} aria-labelledby="initial-children-title"><h2 id="initial-children-title"><Users size={27}/>Mis niños ({dashboard.students.length})</h2><label className={styles.search}><Search size={21}/><span className="sr-only">Buscar niño o niña</span><Input placeholder="Buscar niño o niña…" value={query} onChange={event=>setQuery(event.target.value)}/></label><div className={styles.studentRows}>{students.map(student=>{
           const count=tab==="interviews"?answerCounts[student.id]??0:mode==="free"?records.filter(record=>record.student_id===student.id).length:(data?.experience_observations??[]).filter(record=>record.student_id===student.id&&record.experience_id===experience?.id&&meaningful(record)).length;
@@ -78,13 +93,18 @@ export function InterviewsWorkspace({dashboard,onBack,onProfile,onPreparation,on
         <div id="initial-information-panel" role="tabpanel" className={styles.workspace}>
           {error&&<WorkflowFeedback tone="error">{error}<Button variant="outline" onClick={()=>{setRevision(value=>value+1);updateObservationProgress();}}>Reintentar</Button></WorkflowFeedback>}
           {!data&&!error?<LoadingState label="Cargando entrevistas y observaciones…"/>:!selected?<p>Añade a tus niños para comenzar.</p>:tab==="interviews"?<FamilyInterviewEditor key={selected.id} ref={interviewRef} layout="stacked" studentId={selected.id} studentName={selectedName} printContext={{institution:dashboard.profile.institution_name,classroom:dashboard.profile.section}} onSaved={updateInterviewProgress} onNext={nextChild?()=>void change(()=>setStudentId(nextChild.id)):undefined}/>:<>
-            <div className={styles.observationTools}><Button variant="ghost" disabled={navigationBusy} onClick={()=>void change(onReview)}>Registros y revisiones del grupo</Button></div><div className={styles.modeTabs} role="tablist" aria-label="Forma de observar">{([["free","Libre","Registra lo que observas",Pencil],["guided","Guiada","Con apoyo de indicadores",List]] as const).map(([id,title,hint,Icon])=><button key={id} type="button" role="tab" aria-selected={mode===id} disabled={navigationBusy} onClick={()=>void change(()=>destination("observations",id))}><Icon size={31}/><span><strong>{title}</strong><small>{hint}</small></span></button>)}</div>
-            {mode==="free"?<SpontaneousDiagnostic key={selected.id} embedded students={dashboard.students} initialStudentId={selected.id} initialDate={dashboard.today.date} initialTime={dashboard.today.qa_clock?.time??dashboard.today.now} onRecordsUpdated={setRecords}/>:experience&&data?<><label className={styles.experienceSelect}>Experiencia para observar<select value={experience.id} disabled={navigationBusy} onChange={event=>{const id=event.target.value;void change(()=>setExperienceId(id));}}>{data.experiences.map(item=><option key={item.id} value={item.id}>{item.title}{experienceCoverageGaps(item,dashboard.students,data.experience_observations,records)?" · Oportunidades para registrar más":""}</option>)}</select></label><p className={styles.coverageHelp}>La sugerencia se basa en los registros disponibles, no en dificultades de los niños.</p><GuidedObservationWorkspace key={experience.id} experience={experience} students={dashboard.students} observations={data.experience_observations} onSaved={record=>{setData(current=>current?mergeGuidedObservation(current,record):current);}}/></>:<p>No hay experiencias disponibles para esta aula.</p>}
+            <div className={styles.observationTools}><Button variant="ghost" disabled={navigationBusy} onClick={()=>void change(()=>openView("matrix"))}>Ver mapa de observaciones</Button></div><div className={styles.modeTabs} role="tablist" aria-label="Forma de observar">{([["free","Libre","Registra lo que observas",Pencil],["guided","Guiada","Con apoyo de indicadores",List]] as const).map(([id,title,hint,Icon])=><button key={id} type="button" role="tab" aria-selected={mode===id} disabled={navigationBusy} onClick={()=>void change(()=>destination("observations",id))}><Icon size={31}/><span><strong>{title}</strong><small>{hint}</small></span></button>)}</div>
+            {mode==="free"?<SpontaneousDiagnostic key={selected.id} embedded students={dashboard.students} initialStudentId={selected.id} initialDate={dashboard.today.date} initialTime={dashboard.today.qa_clock?.time??dashboard.today.now} guidedRecords={data?.experience_observations} onRecordsUpdated={setRecords}/>:experience&&data?<><label className={styles.experienceSelect}>Experiencia para observar<select value={experience.id} disabled={navigationBusy} onChange={event=>{const id=event.target.value;void change(()=>setExperienceId(id));}}>{data.experiences.map(item=><option key={item.id} value={item.id}>{item.title} · {experienceCoverageOpportunities(item,dashboard.students,data.experience_observations,records).length} competencias con oportunidades</option>)}</select></label><div className={styles.coverageHelp}><strong>Oportunidades en esta experiencia</strong>{experienceCoverageOpportunities(experience,dashboard.students,data.experience_observations,records).slice(0,3).map((item:{id:string;name:string;missing:number})=><p key={item.id}>{item.name}: {item.missing} {item.missing===1?"niño sin registro":"niños sin registros"}.</p>)}<p>Esto orienta qué observar; no indica dificultades de aprendizaje.</p></div><GuidedObservationWorkspace key={experience.id} experience={experience} students={dashboard.students} observations={data.experience_observations} onSaved={record=>{setData(current=>current?mergeGuidedObservation(current,record):current);setObservationRevision(value=>value+1);}}/><SpontaneousDiagnostic key={data.experience_observations.length} listOnly students={dashboard.students} guidedRecords={data.experience_observations}/></>:<p>No hay experiencias disponibles para esta aula.</p>}
           </>}
         </div>
       </div>
       {tab==="interviews"&&allConfirmed&&<section className={styles.completedInterviews} role="status"><h2>¡Buen trabajo! Todas las entrevistas están confirmadas.</h2><p>Puedes seguir conociendo a tus niños con las observaciones.</p><Button className={styles.primary} disabled={navigationBusy} onClick={()=>void change(()=>destination("observations","free"))}>Continuar con observaciones</Button></section>}
-      <footer className={styles.footer}><Button variant="outline" disabled={navigationBusy} onClick={()=>void change(onPreparation)}><ArrowLeft/>Volver a mi preparación</Button></footer>
+      </>}
+      {view==="summary"&&<DiagnosticBriefReview ref={summaryRef} onBack={()=>openView("capture")} onContinue={onPlan}/>}
+      {view==="matrix"&&data&&(matrix?<ObservationCoverageMatrix data={data} counts={matrix.counts} unclassified={matrix.unclassified} competencies={matrix.curriculum} records={matrix.records} onRecord={(studentId,competencyId)=>setCell({studentId,competencyId})} onGuided={(_id,experienceId)=>{setExperienceId(experienceId);destination("observations","guided");}} onBack={()=>openView("capture")} onContinue={()=>openView("summary")}/>:error?<WorkflowFeedback tone="error">{error}<Button onClick={updateObservationProgress}>Reintentar</Button></WorkflowFeedback>:<LoadingState label="Abriendo el mapa de observaciones…"/>)}
+      {view==="history"&&<DiagnosticReview onPlan={()=>openView("summary")} onObserve={()=>destination("observations","free")}/>}
+      <Dialog open={!!cell} onOpenChange={value=>{if(!value&&canLeaveWorkspace())setCell(null);}}><DialogContent className="max-h-[92dvh] overflow-y-auto sm:max-w-3xl"><DialogHeader><DialogTitle>Anotar una observación</DialogTitle><DialogDescription>Registra lo ocurrido para el niño y la competencia elegidos en el mapa.</DialogDescription></DialogHeader>{cell&&<SpontaneousDiagnostic formOnly students={dashboard.students} initialStudentId={cell.studentId} initialCompetencyId={cell.competencyId} initialDate={dashboard.today.date} onBack={()=>setCell(null)} onSaved={()=>{setCell(null);updateObservationProgress();}}/>}</DialogContent></Dialog>
+      <footer className={styles.footer}>{view==="capture"&&<><Button variant="ghost" disabled={navigationBusy} onClick={()=>void change(()=>openView("history"))}>Ver historial</Button><Button className={styles.primary} disabled={navigationBusy} onClick={()=>void change(()=>openView("summary"))}>Continuar a tu resumen del aula</Button></>}<Button variant="outline" disabled={navigationBusy} onClick={()=>void change(onPreparation)}><ArrowLeft/>Volver a mi preparación</Button></footer>
     </main>
   </div>;
 }

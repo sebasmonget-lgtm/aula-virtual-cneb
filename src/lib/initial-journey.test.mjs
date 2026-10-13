@@ -5,7 +5,7 @@ import { readdir,readFile } from "node:fs/promises";
 import { randomUUID, randomBytes } from "node:crypto";
 import { createPilotClassroom,importStudentsForTeacher } from "./pilot-onboarding-service.mjs";
 import { recordConfirmedSpontaneousObservation,reviseSpontaneousObservation,correctSpontaneousClassification,loadSpontaneousObservations,applicableDiagnosticCompetencies } from "./diagnostic-sources-v4.mjs";
-import { previewSpontaneous,handleFamilyShare,handleStudentPhoto } from "../../scripts/initial-journey-routes.mjs";
+import { previewSpontaneous,suggestSavedCapture,handleFamilyShare,handleStudentPhoto } from "../../scripts/initial-journey-routes.mjs";
 import { buildAnnualPlanningBrief,handlePlanningConversation } from "./initial-journey-service.mjs";
 import { resolveAIExecutionPlan } from "./ai-execution-router-v4.mjs";
 import { personalizationSources } from "./annual-personalization-service.mjs";
@@ -50,6 +50,24 @@ test("initial journey: atomic decisions, private photos/invitations and bounded 
   });
   const response={};let sent;
   const send=(_,status,value)=>{sent={status,value};};
+  await t.test("automatic suggestion keeps acknowledged observation separate from teacher classification",async()=>{
+   const automatic={...input,clientRequestId:randomUUID(),competencyIds:[],automaticSuggestion:true,observationText:'Contó las piezas y explicó que necesitaba dos más.'};
+   const saved=await recordConfirmedSpontaneousObservation(db,teacher,automatic);
+   assert.equal(saved.classification_status,'pending');let calls=0;
+   const classifier={classify:async()=>{calls++;return {candidate_ids:[ids[0]]};}};
+   await suggestSavedCapture({db,teacherId:teacher,id:saved.id,classifier});
+   await suggestSavedCapture({db,teacherId:teacher,id:saved.id,classifier});
+   const row=(await loadSpontaneousObservations(db,teacher)).observations.find(row=>row.id===saved.id);
+   assert.equal(calls,1);assert.equal(row.recommendation_state,'suggested');assert.deepEqual(row.competency_v4_ids,[]);
+   assert.deepEqual(row.suggested_competency_v4_ids,[ids[0]]);assert.equal(row.observation_text,automatic.observationText);
+   await correctSpontaneousClassification(db,teacher,saved.id,[ids[0]]);
+   assert.equal((await loadSpontaneousObservations(db,teacher)).observations.find(row=>row.id===saved.id).classification_source,'teacher');
+   const failed=await recordConfirmedSpontaneousObservation(db,teacher,{...automatic,clientRequestId:randomUUID(),observationText:'Jugó con piezas distintas y explicó su elección.'});
+   await suggestSavedCapture({db,teacherId:teacher,id:failed.id,classifier:{classify:async()=>{throw Error('network');}}});
+   const kept=(await loadSpontaneousObservations(db,teacher)).observations.find(row=>row.id===failed.id);
+   assert.equal(kept.recommendation_state,'unavailable');assert.ok(kept.observation_text);
+   await assert.rejects(suggestSavedCapture({db,teacherId:other,id:saved.id,classifier}));
+  });
   await t.test("invitation exposes only own answers; replacement/expiry invalidate token and teacher review stays separate",async()=>{
    const teacherUrl=new URL(`http://localhost/api/diagnostics/students/${student.id}/family-share`),base={response,db,teacherId:teacher,send,readJson:async()=>({})};
    await handleFamilyShare({...base,url:teacherUrl,request:{method:"POST"}});const token=sent.value.token;

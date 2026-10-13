@@ -77,7 +77,7 @@ export function buildAnnualClassroomSnapshot(sources, context, curriculum = []) 
 export function explicitPlanningSignals(sources) {
   const collect = (field, options) => {
     const map = new Map();
-    for (const row of sources.interviews) for (const tag of row.details?.[field] ?? []) {
+    for (const row of sources.interviews) for (const tag of new Set((row.details?.[field] ?? []).map(id=>field==='interest_tags'&&id==='nature'?'plants':id))) {
       if (tag === "other") continue;
       const label = options.find((x) => x.id === tag)?.label;
       if (!label) continue;

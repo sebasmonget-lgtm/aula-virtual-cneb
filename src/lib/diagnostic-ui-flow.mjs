@@ -28,3 +28,14 @@ export function experienceCoverageGaps(experience, students, guided, free) {
     return students.some(student => !children.has(student.id));
   }).length;
 }
+
+/** Counts coverage opportunities, never attainment or difficulties. */
+export function experienceCoverageOpportunities(experience, students, guided, free) {
+  return experience.competencies.map(competency => {
+    const children = new Set([
+      ...guided.filter(record => record.competency_v4_id === competency.id && isRecordedObservation(record)),
+      ...free.filter(record => record.competency_v4_ids?.includes(competency.id)),
+    ].map(record => record.student_id));
+    return {id:competency.id,name:competency.name,missing:students.filter(student=>!children.has(student.id)).length};
+  }).filter(item=>item.missing>0).sort((a,b)=>b.missing-a.missing);
+}

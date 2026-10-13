@@ -1,3 +1,4 @@
+import { countInterviewInterests } from "./interview-interest-counts.mjs";
 import { createHash } from "node:crypto";
 import { interviewLanguageOptions, interviewInterestOptions, interviewCommunityOptions } from "./family-interview-contract.mjs";
 import { normalizeFamilyInterviewDetails } from "./diagnostic-sources-v4.mjs";
@@ -51,7 +52,7 @@ export async function getCurrentClassroomContext(db, teacherId, classroomId = nu
     students_total: students.length, confirmed_interviews: interviews.length,
     languages: countTags(interviews, "language_tags", interviewLanguageOptions),
     primary_languages: countChoice(interviews, "primary_language_tag", interviewLanguageOptions),
-    common_interests: countTags(interviews, "interest_tags", interviewInterestOptions),
+    common_interests: countInterviewInterests(interviews, interviewInterestOptions),
     community_opportunities: countTags(interviews, "community_tags", interviewCommunityOptions),
     previous_education: previous,
     confirmed_diagnostic_summary: group ? diagnosticPlanningSummary(group.details, names) : null,

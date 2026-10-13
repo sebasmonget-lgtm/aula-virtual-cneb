@@ -261,8 +261,7 @@ test("the HTTP boundary protects every route and local PGlite remains usable", {
     }
     for (const token of ["token-a", "token-b"]) {
       const usage = await call("/api/ai-usage", token);
-      assert.equal(usage.status, 200);
-      assert.deepEqual((await usage.json()).total, { calls: 0, unpricedCalls: 0, estimatedCalls: 0, costUsd: 0 });
+      assert.equal(usage.status, 403);
     }
     const contextA = await (await call("/api/ai/annual-plan/context", "token-a")).json();
     const contextB = await (await call("/api/ai/annual-plan/context", "token-b")).json();

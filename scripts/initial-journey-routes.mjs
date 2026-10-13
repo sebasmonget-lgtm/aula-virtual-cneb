@@ -48,6 +48,24 @@ export async function previewSpontaneous({db,teacherId,input,v24=null,classifier
     await db.query(`update ai_pending_generations set payload=jsonb_set(jsonb_set(payload,'{lease_until}','null'::jsonb),'{failed_provider_calls}',$3::jsonb) where id=$1 and payload->>'lease_token'=$2`,[pending.id,lease,JSON.stringify(providerCalls)]);throw error;
   }
 }
+
+/** Saved first; recommendation can fail without rolling back text or private media. */
+export async function suggestSavedCapture({db,teacherId,id,v24=null,classifier}) {
+  const row=(await db.query(`select o.* from effective_diagnostic_spontaneous_observations o
+    join classrooms c on c.id=o.classroom_id where o.id=$1 and c.teacher_id=$2 and o.created_by=$2`,[id,teacherId])).rows[0];
+  if(!row)throw new Error('Observación no disponible.');
+  if(row.classification_source==='teacher'||row.classification_status!=='pending')return {id,state:'preserved'};
+  let ids=[],reason=null;
+  try {ids=(await previewSpontaneous({db,teacherId,input:{studentId:row.student_id,contextLabel:row.context_label,observationText:row.observation_text??''},v24,...(classifier?{classifier}:{})})).competency_ids;}
+  catch(error){if(error.message?.includes('ya está leyendo'))return {id,state:'pending'};reason='unavailable';}
+  const updated=await db.query(`update diagnostic_spontaneous_observations o set classification_status='needs_review',
+    classification_source=$3,suggested_competency_v4_ids=$4::text[],classification_reason=$5,classified_at=now(),
+    classifier_status=$6 where o.id=$1 and o.created_by=$2 and o.classification_source is distinct from 'teacher'
+    and exists(select 1 from effective_diagnostic_spontaneous_observations e where e.id=o.id
+      and e.source_revision=$7 and e.observation_text is not distinct from $8) returning id`,
+    [id,teacherId,reason?null:'openai',ids,reason,reason?'failed':ids.length?'suggested':'abstained',row.source_revision,row.observation_text]);
+  return {id,state:updated.rows.length?reason?'unavailable':ids.length?'suggested':'insufficient_information':'preserved'};
+}
 export async function handleStudentPhoto({request,response,url,db,teacherId,origin,send,sendAsset,readJson,storage}) {
   const match=/^\/api\/students\/([0-9a-f-]{36})\/photo$/i.exec(url.pathname);if(!match)return false;
   const student=await ownedStudent(db,teacherId,match[1]);

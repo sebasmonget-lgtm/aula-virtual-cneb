@@ -45,6 +45,7 @@ import { DocumentsScreen, type DocumentFolder } from "./documents-screen";
 import { PlanningDownload } from "./planning-download";
 import { destinationFromHash, hashForDestination, primaryDestination } from "@/src/lib/teacher-navigation.mjs";
 import { PreparationHome } from "./preparation-home";
+import { PreparationSteps } from "./preparation-steps";
 import { preparationStageHash } from "@/src/lib/preparation-navigation.mjs";
 import { canLeaveWorkspace, readWorkspaceParams, useWorkspaceSubview, writeWorkspaceLocation } from "@/src/lib/workspace-location";
 
@@ -85,7 +86,7 @@ const noClassroomViews = [] as const;
 export function TeacherWorkspace({ onSignOut, onSetupRequired }: { onSignOut?: () => void; onSetupRequired?: (required: boolean) => void }) {
   const [active, setActive] = useState("Hoy");
   const [diagnosticChild, setDiagnosticChild] = useState(false);
-  const [diagnosticScreenStep, setDiagnosticScreenStep] = useState(0);
+  const [, setDiagnosticScreenStep] = useState(0);
   const [annualDestination, setAnnualDestination] = useState(false);
   const navigationTouched = useRef(false);
   const [annualConfirmed, setAnnualConfirmed] = useState<boolean | null>(null);
@@ -229,7 +230,7 @@ export function TeacherWorkspace({ onSignOut, onSetupRequired }: { onSignOut?: (
   const metrics = dashboard?.metrics;
   const [classroomView] = useWorkspaceSubview("Aula", "view", dashboard ? classroomViews : noClassroomViews, students.length === 0 ? "enrollment" : "list");
   const initialEnrollment = students.length === 0 || classroomView === "enrollment";
-  const interviewsActive = active === "Planificar" && (planningTarget === "diagnostic" || readWorkspaceParams("Planificar").get("tab") === "diagnostic") && diagnosticScreenStep !== 3;
+  const interviewsActive = active === "Planificar" && (planningTarget === "diagnostic" || readWorkspaceParams("Planificar").get("tab") === "diagnostic");
   useEffect(() => { onSetupRequired?.(needsSetup || active === "Aula" && initialEnrollment || interviewsActive); }, [needsSetup,active,initialEnrollment,interviewsActive,onSetupRequired]);
   const selectedNavigation = redesigned && active==="Planificar" && annualDestination ? "Mi año" : f7Enabled && active !== "Biblioteca" ? primaryDestination(active) : active;
 
@@ -313,7 +314,7 @@ export function TeacherWorkspace({ onSignOut, onSetupRequired }: { onSignOut?: (
     setDashboard(current=>current?.profile.classroom_id===confirmed.classroomId?{...current,profile:{...current.profile,enrollment_completed_at:confirmed.completedAt}}:current);
     writeWorkspaceLocation("Aula",{view:"list"},true);openDiagnostic(1,true);
   }}/>;
-  if (interviewsActive && dashboard && !starting) return <InterviewsWorkspace dashboard={dashboard} onSignOut={onSignOut} onBack={()=>{if(navigate("Aula",true))writeWorkspaceLocation("Aula",{view:"enrollment"},true);}} onProfile={()=>navigate("Perfil",true)} onPreparation={()=>navigate("Preparación",true)} onReview={()=>writeWorkspaceLocation("Planificar",{tab:"diagnostic",step:"3"})}/>;
+  if (interviewsActive && dashboard && !starting) return <InterviewsWorkspace dashboard={dashboard} onSignOut={onSignOut} onBack={()=>{if(navigate("Aula",true))writeWorkspaceLocation("Aula",{view:"enrollment"},true);}} onProfile={()=>navigate("Perfil",true)} onPreparation={()=>navigate("Preparación",true)} onPlan={()=>{setPlanningTarget(null);navigate("Planificar",true);writeWorkspaceLocation("Planificar",{tab:"annual",step:"",mode:""});}}/>;
   if (databaseState === "offline") return <main className="mx-auto max-w-xl space-y-4 p-6"><h1 className="text-2xl font-bold">No se pudo conectar con el aula</h1><p>Comprueba tu conexión y vuelve a intentarlo. Tu trabajo guardado seguirá disponible.</p><Button onClick={() => { setDatabaseState("checking"); setRetry((value) => value + 1); }}>Reintentar</Button></main>;
 
   return (
@@ -488,10 +489,11 @@ function PlanningArea({ initialPreparation = false, onAnnualConfirmed, dashboard
   if (tab === "home") return <section className="mx-auto max-w-5xl space-y-4">{f7Enabled && <div className="flex flex-wrap gap-2" aria-label="Herramientas de planificación"><Button variant="outline" onClick={onGoCalendar}>Calendario</Button><Button variant="outline" onClick={onGoLibrary}>Biblioteca</Button></div>}{loading ? <LoadingState label="Buscando dónde continuar..." /> : progressError || !journey ? <div className="space-y-3"><WorkflowFeedback tone="error">No se pudo cargar tu planificación.</WorkflowFeedback><Button variant="outline" onClick={() => void refreshJourney()}>Reintentar</Button></div> : <PlanningHome journey={journey} dashboard={dashboard} onOpen={(step) => { if (!canOpenPlanningStep(journey, step)) return; if (step === "diagnostic") onGoDiagnostic(); else setTab(step); }} onWorkshops={onGoWorkshops} onEvaluation={onGoEvaluation} />}</section>;
 
   return <section className={`mx-auto space-y-5 ${tab === "annual" ? "max-w-7xl" : "max-w-5xl"}`}>
+    {initialPreparation&&tab==="annual"&&<PreparationSteps current={4}/>}
     {!initialPreparation && <nav aria-label="Ubicación en planificación" className="flex flex-wrap items-center gap-2 text-sm"><Button variant="ghost" className="-ml-3 min-h-11 text-[#07576c]" onClick={() => setTab("home")}>← Planificar</Button><span aria-hidden="true">/</span><span className="font-semibold text-[#172b52]">{tab === "annual" ? "Mi año" : tab === "experiences" ? "Proyecto o unidad" : tab === "activities" ? "Actividades del proyecto" : "Diagnóstico"}</span></nav>}
     {loading ? <LoadingState label="Buscando dónde continuar..." /> : progressError ? <div className="space-y-2"><WorkflowFeedback tone="error">No se pudo comprobar dónde continuar. Tus datos guardados no se han perdido.</WorkflowFeedback><Button variant="outline" onClick={() => void refreshJourney()}>Reintentar carga del avance</Button></div> : <>
       {tab === "activities" && selectedResource && <div className="rounded-2xl bg-[#edf8f4] p-4 text-sm text-[#1c554b]"><b>Recurso elegido: {selectedResource.title}</b><p className="mt-1">Elige un proyecto o unidad. Ayni incorporará el contexto y los materiales del recurso a la actividad para que puedas revisarlos.</p></div>}
-      {journey && !canOpenPlanningStep(journey, tab) && !(tab === "activities" && initialActivity) ? <NextStepCard title="Completa el paso anterior" description={tab === "annual" ? "Agrega al menos un niño para preparar tu año." : tab === "experiences" ? "Confirma primero el plan anual." : "Confirma primero un proyecto o unidad."} action={tab === "annual" ? "Agregar niños" : tab === "experiences" ? "Abrir plan anual" : "Abrir proyecto o unidad"} onAction={tab === "annual" ? onGoStudents : () => setTab(tab === "experiences" ? "annual" : "experiences")} /> : tab === "diagnostic" ? (journey?.studentCount ? <GuidedDiagnostic initialPreparation={initialPreparation} dashboard={dashboard} initialStep={diagnosticStep} onPlan={initialPreparation ? undefined : () => { setTab("annual"); void refreshJourney(); }} onStudents={onGoStudents} /> : <NextStepCard title="Primero, agrega a los niños" description="Necesitas la lista del aula para registrar el diagnóstico inicial." action="Agregar niños" onAction={onGoStudents} />) : tab === "annual" ? <AnnualPreplanWorkspace explicitConversationStart={initialPreparation} onConfirmed={() => {onAnnualConfirmed?.();void refreshJourney();}} onGoDiagnostic={onGoDiagnostic}
+      {journey && !canOpenPlanningStep(journey, tab) && !(tab === "activities" && initialActivity) ? <NextStepCard title="Completa el paso anterior" description={tab === "annual" ? "Agrega al menos un niño para preparar tu año." : tab === "experiences" ? "Confirma primero el plan anual." : "Confirma primero un proyecto o unidad."} action={tab === "annual" ? "Agregar niños" : tab === "experiences" ? "Abrir plan anual" : "Abrir proyecto o unidad"} onAction={tab === "annual" ? onGoStudents : () => setTab(tab === "experiences" ? "annual" : "experiences")} /> : tab === "diagnostic" ? (journey?.studentCount ? <GuidedDiagnostic initialPreparation={initialPreparation} dashboard={dashboard} initialStep={diagnosticStep} onPlan={() => { setTab("annual"); void refreshJourney(); }} onStudents={onGoStudents} /> : <NextStepCard title="Primero, agrega a los niños" description="Necesitas la lista del aula para registrar el diagnóstico inicial." action="Agregar niños" onAction={onGoStudents} />) : tab === "annual" ? <AnnualPreplanWorkspace explicitConversationStart={initialPreparation} onConfirmed={() => {onAnnualConfirmed?.();void refreshJourney();}} onGoDiagnostic={onGoDiagnostic}
         onDevelop={(proposalId) => { setProjectProposalId(proposalId); setTab("experiences"); }} /> : tab === "experiences" ? <ProjectDevelopmentWorkspace initialProposalId={projectProposalId} feedbackPeriodId={feedbackPeriodId}
         onConfirmed={() => void refreshJourney()} onGoAnnual={() => { setProjectProposalId(null); setTab("annual"); void refreshJourney(); }}
         onDevelopActivity={(experienceId, routeItemId) => {

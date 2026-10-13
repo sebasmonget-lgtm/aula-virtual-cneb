@@ -5,7 +5,7 @@ import { annualDisplaySubjects } from "../src/lib/annual-teacher-display.mjs";
 import { handleDirectWorkshop } from "./direct-workshop-routes.mjs";
 import { projectConversation } from "../src/lib/project-conversation.mjs";
 import { newAyniFeatureEnabled } from "../src/lib/new-ayni-feature-flag.mjs";
-import { previewSpontaneous, handleStudentPhoto, handleFamilyShare } from "./initial-journey-routes.mjs";
+import { suggestSavedCapture, previewSpontaneous, handleStudentPhoto, handleFamilyShare } from "./initial-journey-routes.mjs";
 import { handleAnnualJourneyRoutes } from "./annual-journey-routes.mjs";
 import { createServer } from "node:http";
 import { AsyncLocalStorage } from "node:async_hooks";
@@ -109,7 +109,7 @@ import { recordOperationalEvent } from "../src/lib/operational-events.mjs";
 import { loadStudentTrajectory } from "../src/lib/student-trajectory-service.mjs";
 import { withAiUsageContext, loadTeacherAiUsage } from "../src/lib/ai-usage-service.mjs";
 import { completeDiagnosticReviewForTeacher, diagnosticProgressForTeacher, diagnosticStepProgressForTeacher, DiagnosticReviewError } from "../src/lib/diagnostic-review-service.mjs";
-import { DiagnosticExperienceError, loadDiagnosticExperienceWorkspace, recordDiagnosticExperienceObservation } from "../src/lib/diagnostic-experiences-v4.mjs";
+import { DiagnosticExperienceError, loadDiagnosticExperienceWorkspace, recordDiagnosticExperienceObservation, reviseGuidedObservation } from "../src/lib/diagnostic-experiences-v4.mjs";
 import { DiagnosticAssessmentError, loadDiagnosticAssessmentWorkspace, prepareDiagnosticSynthesis, saveDiagnosticSynthesis, confirmDiagnosticSynthesis, prepareDiagnosticStudentReview, saveDiagnosticStudentReview, confirmDiagnosticStudentReview, prepareDiagnosticGroupReview, saveDiagnosticGroupReview, confirmDiagnosticGroupReview, saveStudentInitialContext, diagnosticPlanningSummary } from "../src/lib/diagnostic-assessment-v4.mjs";
 import { DiagnosticSourceError, loadFamilyInterview, listFamilyInterviewStatuses, saveFamilyInterview, confirmFamilyInterview, saveAndConfirmFamilyInterview, attachFamilyInterview, familyInterviewAttachmentPath, recordSpontaneousObservation, recordConfirmedSpontaneousObservation, reviseSpontaneousObservation, recordMatrixDiagnosticObservation, loadSpontaneousObservations, correctSpontaneousClassification, markSpontaneousNeedsReview, suggestSpontaneousV24, loadSpontaneousV24Metrics } from "../src/lib/diagnostic-sources-v4.mjs";
 import { createObservationV24Classifier, observationV24Enabled } from "../src/lib/observation-v24-classifier.mjs";
@@ -1121,6 +1121,9 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
           const result=await reviseSpontaneousObservation(db,teacherId,url.pathname.split("/")[4],await readJson(request),request.method==="DELETE");
           await refreshStudentContextSnapshot(db,result.student_id);send(response,200,result,origin);
         }
+        else if (request.method === "POST" && /^\/api\/diagnostics\/spontaneous-observations\/[0-9a-f-]{36}\/suggest-capture$/i.test(url.pathname)) {
+          await readJson(request);send(response,200,await suggestSavedCapture({db,teacherId,id:url.pathname.split("/")[4],v24:observationV24Classifier??await createObservationV24Classifier()}),origin);
+        }
         else if (request.method === "POST" && url.pathname === "/api/diagnostics/spontaneous-observations/preview") {
           send(response,200,await previewSpontaneous({db,teacherId,input:await readJson(request),v24:observationV24Classifier??await createObservationV24Classifier()}),origin);
         }
@@ -1971,7 +1974,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       return;
     }
     if (request.method === "GET" && url.pathname === "/api/ai-usage") {
-      send(response, 200, await loadTeacherAiUsage(db, teacherId), origin);
+      send(response, 403, {error:"Acceso reservado a administración."}, origin);
       return;
     }
     if (request.method === "GET" && /^\/api\/project-flow\/images\/[a-z0-9_]+$/i.test(url.pathname)) {
@@ -2595,6 +2598,11 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       const media=await evidenceStorage.read(row.media_path,{teacherId,studentId:row.student_id});
       sendAsset(response,200,media.data,media.mimeType,origin,"private, no-store");return;
     }
+    if (request.method === "PATCH" && /^\/api\/diagnostics\/experience-observations\/[0-9a-f-]{36}$/i.test(url.pathname)) {
+      try{const saved=await reviseGuidedObservation(db,teacherId,url.pathname.split('/')[4],await readJson(request));
+        await refreshStudentContextSnapshot(db,saved.studentId);send(response,200,saved,origin);
+      }catch(error){send(response,error.reason==='conflict'?409:422,{error:publicErrorMessage(error)},origin);}return;
+    }
     if (request.method === "POST" && url.pathname === "/api/diagnostics/experience-observations") {
       let mediaPath=null;
       const body=await readJson(request),started=performance.now();
@@ -3113,6 +3121,12 @@ export async function handleApiRequest(request, response) {
     } catch {
       send(response, 422, { error: "No se pudo completar la operación. Revisa los datos y vuelve a intentar." }, origin); return;
     }
+  }
+  if (url.pathname === "/api/ai-usage") {
+    if(context.role!=="admin"){send(response,403,{error:"Acceso reservado a administración."},origin);return;}
+    const teacherId=url.searchParams.get("teacherId");
+    if(!/^[0-9a-f-]{36}$/i.test(teacherId??"")){send(response,400,{error:"Selecciona una docente."},origin);return;}
+    send(response,200,await loadTeacherAiUsage(requestDb,teacherId),origin);return;
   }
   if (context.role !== "teacher") {
     send(response, 403, { error: "Esta sección es para docentes." }, origin); return;

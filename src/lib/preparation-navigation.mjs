@@ -16,6 +16,6 @@ export function preparationHash(hash) {
   if (route === '#mi-ano' || route === '#planificar' && params.get('tab') === 'annual') return preparationStageHash(4);
   if (route !== '#diagnostico' && !(route === '#planificar' && params.get('tab') === 'diagnostic')) return null;
   const step = ['0','1','2','3'].includes(params.get('step')) ? params.get('step') : '0';
-  const mode = ['choose','spontaneous','guided'].includes(params.get('mode')) ? params.get('mode') : 'choose';
+  const mode = ['choose','spontaneous','guided','matrix','history','summary'].includes(params.get('mode')) ? params.get('mode') : 'choose';
   return `#planificar?tab=diagnostic&step=${step}&mode=${mode}`;
 }

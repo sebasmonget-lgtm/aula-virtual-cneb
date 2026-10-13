@@ -112,7 +112,7 @@ export function PilotSetup({ onReady, accountYear, initialDraft, onSignOut }: {
         <p>Completa estos datos una sola vez para empezar a usar Ayni con tu grupo.</p>
         <Image className={styles.illustration} src="/ayni-classroom-welcome.png" alt="" width={1536} height={1024} sizes="380px" preload />
         <ol className={styles.steps} aria-label="Preparación de tu aula">
-          {["Configura tu aula", "Añade a tus niños", "Entrevistas / observaciones", "Prepara Mi año con Ayni"].map((label, index) => <li key={label} aria-current={index === 0 ? "step" : undefined}><span>{index + 1}</span><span>{label}</span></li>)}
+          {["Configura tu aula", "Añade a tus niños", "Entrevistas y observaciones", "Prepara Mi año con Ayni"].map((label, index) => <li key={label} aria-current={index === 0 ? "step" : undefined}><span>{index + 1}</span><span>{label}</span></li>)}
         </ol>
       </div>
       <form onSubmit={event => { event.preventDefault(); void save(); }} className={styles.form}>
