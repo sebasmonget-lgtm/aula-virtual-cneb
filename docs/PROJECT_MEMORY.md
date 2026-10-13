@@ -1,5 +1,9 @@
 # Memoria del proyecto Ayni Aula
 
+## Publicación de los últimos cambios de interfaz — 2026-10-13
+
+Solicitud expresa «sube estos ultimos cambios a vercel produciony haz commit en github». Rama codex/observaciones-inicial-qa subida; SHA de código `3be0385ac947eea8813b17b3e496d7b59cac4d98`. Incluye lista compacta/iconos/colores, bloques ilustrados/recuadro de criterio y pasos clickeables. Preview `dpl_6AZFy7KRkssw8oeFfwCVpsaWiay8` READY / https://ayni-aula-staging-e8bd52l8n-ayni4.vercel.app y 10 smoke PASS. Production staged --skip-domain `dpl_9vLYaDxmqZrfrCntrTQEFgGg3Cmw` READY / https://ayni-aula-staging-ooxk5sozm-ayni4.vercel.app, 10 smoke PASS antes de promover. Mismo build promovido a https://project-0w0pq.vercel.app; alias/proyecto/SHA verificados y 10 smoke finales PASS. Árbol limpio al desplegar y builds cloud Next PASS. Rollback `dpl_826w5Q1K2p66eNLvj7phjgGxnHxq` / `fb96be10753feebc082d8818c9b7c0c35d57aa43` conservado. Sin escrituras pedagógicas/migraciones/env/RLS ni cambios de main; QA docente autenticado no ejecutado. Recibo y límites: docs/qa/AYNI_RELEASE_UI_2026-10-13.md; artefactos ignorados .local/latest-ui-release-20261013/. Documentación confirmada después del SHA publicado.
+
 ## Navegación por los cuatro pasos — 2026-10-13
 
 Base cc9db0d: indicador compartido clickeable en configuración, matrícula, entrevistas/resumen y Mi año; incluye checks, teclado/foco y botones de 44px. Preserva flush de entrevista/resumen y confirmación de salida; matrícula confirma por API antes de 3/4, sin niños vuelve a alta. Resumen se marca como paso 3. Typecheck, lint excluyendo cachés .local, build vinext/Next webpack y tres pruebas de navegación PASS; UI real/PGlite aislado con ida/vuelta, salto 2→4, autosave y requisitos PASS. Tres regex obsoletas de suite adicional ya fallan en baseline; no atribuidas al cambio. Sin escrituras remotas ni publicación. Detalle, limitaciones y rollback: docs/qa/AYNI_PASOS_PREPARACION_2026-10-13.md.

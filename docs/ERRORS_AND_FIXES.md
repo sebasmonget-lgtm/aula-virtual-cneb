@@ -1,5 +1,9 @@
 # Errores y soluciones
 
+## Herramientas de publicación: acceso CLI y helper Git — 2026-10-13
+
+Síntoma: conector Vercel devuelve 403 para ayni4; push Git invoca una ruta temporal de gh.exe inexistente; curl rechaza --global-config. Causas: conector sin acceso al scope autorizado, helper específico de GitHub obsoleto y CLI 63.1.2 reenviando esa opción a curl nativo. Solución validada: CLI con su configuración local existente y scope explícito; helper Git Credential Manager limitado al comando de push; smoke con credencial local heredada solo por el proceso y proyecto/equipo ya verificados. Validación: push/commit remoto coinciden, Preview y Production READY en proyecto correcto, tres fases de diez smoke PASS. No se imprimen secretos ni se cambia protección, identidad o configuración global de Git. Prevención: comprobar enlace/proyecto/commit, no repetir conector 403 sin cambio, evitar opciones globales reenviadas en curl y verificar SHA/alias antes y después de promoción.
+
 ## Codificación en edición y ancho del indicador — 2026-10-13
 
 Síntoma local durante implementación: acentos corruptos en alta/configuración y último paso sobre ilustración. Causa: lectura Python con codificación Windows implícita y ancho del componente compartido sobrescribiendo el ancho reservado del contenedor. Solución: reconstruir desde HEAD UTF-8 con lectura/escritura explícita; selector base :where de baja especificidad respeta el layout existente. Validación: textos restaurados, typecheck/lint/build, navegación y escritorio/móvil sin superposición ni overflow. Prevención: especificar UTF-8 en herramientas de archivo e inspeccionar la composición real, incluidos los anchos del contenedor. No afecta a registros guardados.
