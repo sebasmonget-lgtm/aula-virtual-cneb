@@ -17,6 +17,17 @@ import { loadSavedDocument } from "./document-library-service.mjs";
 import { renderSavedDocumentWord } from "./document-word-export.mjs";
 import { annualJourneyDocumentSections } from "./annual-journey-word.mjs";
 import { scopedAnnualChanges, annualCalendarCriteria } from "./annual-change-scope.mjs";
+import { annualJourneySafeText } from "./annual-journey-privacy.mjs";
+
+test("indicaciones pedagógicas y títulos preservan verbos sin revelar nombres privados", () => {
+  const value=annualJourneySafeText('Conserva las fechas. Cambia el título a «Construimos lugares para jugar». Permite elegir. Mantén acuerdos. Sofía aportó cajas. Federico traerá semillas. DNI: 12345678',['Sofía']);
+  assert.match(value,/Conserva las fechas/);
+  assert.match(value,/«Construimos lugares para jugar»/);
+  assert.match(value,/Permite elegir/);
+  assert.match(value,/Mantén acuerdos/);
+  assert.ok(!value.includes('Sofía')&&!value.includes('Federico')&&!value.includes('12345678'));
+  assert.equal(annualJourneySafeText('Construimos una casa',['Construimos']),'[estudiante] una casa');
+});
 
 const curriculum = [{ id: "MAT_CANTIDAD", name: "Cantidad", capacities: ["Comunica su comprensión"] },
   { id: "COM_ORAL", name: "Comunicación oral", capacities: ["Interactúa estratégicamente"] }];

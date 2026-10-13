@@ -674,3 +674,4 @@ Base b70cb3b/cce2027; cuenta QA vacía después de limpieza autorizada, nueva au
 # QA Mi año — 13/10/2026: ajuste focal
 
 En el recorrido real desde b70cb3b se reprodujo invalid_scope al cambiar solo una propuesta: se pedía a la IA copiar literalmente las oportunidades cotidianas e interpretaciones globales. El esquema focal ahora solo devuelve replacements y el servidor conserva las decisiones globales; el contrato global no cambia. Error visible dentro del panel. Sin migraciones ni Producción. Medición/QA en docs/qa/AYNI_MI_ANO_AUTONOMO_2026-10-13.md; una sola generación anual y datos ficticios aislados.
+- QA Mi año: vocabulario cerrado de privacidad incorpora diez verbos pedagógicos para evitar títulos [persona]. Mantiene neutralización previa de nombres conocidos y anonimización de contactos/nombres desconocidos. Corrección focal AN-03, sin migración ni cambio de acceso.
