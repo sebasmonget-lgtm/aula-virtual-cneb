@@ -2,6 +2,8 @@
 
 ## Correcciones de preparación y simplificación del diagnóstico — 2026-10-12
 
+Publicada únicamente Preview: https://ayni-aula-staging-lzgq4uu40-ayni4.vercel.app/#planificar?tab=diagnostic&step=1 — dpl_3piAoxMmujC5UdUjjWE2yYMj2WwP READY, SHA e91a2550f2baf2ae108f6ac2730b06d0b8a0b9df verificado, working tree limpio al publicar, build cloud PASS. Seis smoke PASS: health/config 200; session/setup/status entrevistas GET y observación libre POST sin sesión 401. Producción conserva dpl_2KDEnPFk7UqyvPa7At3t1RW7sLqy / d595ffebd05d50a1971c8389f4c3d758f22a39a7 según API antes/después. Panel lateral abierto con formulario de ingreso vacío; revisión autenticada remota requiere ingreso manual QA. Recibos privados .local/ux-refinement-20261012/. Esta publicación completa el estado pendiente indicado debajo; aprobación de Producción no solicitada para este cambio.
+
 Solicitud del propietario y adjunto: cuarta etapa «Prepara Mi año con Ayni», sin salto de texto en alta desde 1360px; matrícula distingue edición con nombre completo, mensaje, Modo edición, borde/fondo y fila Editando; importación/recuperación secundarias. Se mantienen alta/edición/cancelación y retirada recuperable.
 
 Se auditan las seis preguntas sin cambiar claves ni validación histórica: plants/nature se presentan una sola vez; IDs previos siguen legibles, resumen deduplicado, opciones y ejemplos más precisos. Guardando/pendiente/borrador/confirmada separados; respuesta exitosa actualiza contadores sin reconsultar la lista. Siguiente niño pendiente y felicitación al confirmar todas, seguida de observaciones. Restaurar respuestas confirmadas devuelve esos datos al borrador sin simular borrar una corrección persistida; confirmación sigue explícita.
