@@ -1,3 +1,4 @@
+import { guidedObservationActive } from "./guided-observation-state.mjs";
 import { assessmentState, coverageForRecords } from "./evidence-coverage.mjs";
 
 /** Diagnostic records are factual context; criterion-linked evidence remains distinct. */
@@ -7,7 +8,7 @@ export async function loadDiagnosticCoverageRecords(db, classroomId, period) {
       coalesce(o.experience_title_snapshot,'Observación diagnóstica') as situation_title,
       o.aspect_prompt_snapshot as criterion_text
     from diagnostic_experience_observations o join students s on s.id=o.student_id
-    where o.classroom_id=$1 and s.classroom_id=$1 and s.status='active'
+    where ${guidedObservationActive('o')} and o.classroom_id=$1 and s.classroom_id=$1 and s.status='active'
       and o.observed_at::date between $2::date and $3::date`,
     [classroomId, period.starts_on, period.ends_on])).rows.map((row) => ({ ...row, source_type: "diagnostic_guided" }));
   const spontaneous = (await db.query(`select o.id,o.student_id,o.competency_v4_ids,o.observed_at,

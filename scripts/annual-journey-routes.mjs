@@ -19,6 +19,7 @@ import { handleAnnualProposalCreation } from "../src/lib/annual-proposal-creatio
 import { scopedAnnualChanges, annualCalendarCriteria } from "../src/lib/annual-change-scope.mjs";
 import { annualFutureGaps } from "../src/lib/annual-experience-context.mjs";
 import { limaToday } from "../src/lib/activity-schedule-integrity.mjs";
+import { annualChatSummary } from "../src/lib/annual-chat-summary.mjs";
 import { loadPeriodFutureReview } from "../src/lib/period-future-review.mjs";
 
 export async function handleAnnualJourneyRoutes({ request, response, url, db, teacherId, origin, send, readJson,
@@ -64,7 +65,7 @@ export async function handleAnnualJourneyRoutes({ request, response, url, db, te
       return { ...next, revision: Number(next.revision) };
     };
     if (url.pathname === "/api/annual-journey/start" && request.method === "GET") {
-      send(response, 200, { snapshot, curriculum, today:limaToday(),calendar_integrity: solveAnnualJourneyCalendar(calendar).integrity }, origin); return true;
+      send(response, 200, { snapshot, curriculum, chat_summary:annualChatSummary(sources,snapshot,curriculum), today:limaToday(),calendar_integrity: solveAnnualJourneyCalendar(calendar).integrity }, origin); return true;
     }
     if (url.pathname === "/api/annual-journey/coverage" && request.method === "GET") {
       const records = sources.observations.map(row => ({...row,

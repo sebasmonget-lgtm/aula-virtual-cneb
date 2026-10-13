@@ -1,3 +1,4 @@
+import { guidedObservationActive } from "./guided-observation-state.mjs";
 import { randomUUID } from "node:crypto";
 
 export class DiagnosticReviewError extends Error {
@@ -19,7 +20,7 @@ export async function diagnosticProgressForTeacher(db, teacherId) {
         join diagnostic_entries de on de.id = so.diagnostic_entry_id
         join diagnostic_sessions ds on ds.id = de.session_id where ds.classroom_id = $1)
       +
-      (select count(*) from diagnostic_experience_observations where classroom_id = $1)
+      (select count(*) from diagnostic_experience_observations where ${guidedObservationActive('diagnostic_experience_observations')} and classroom_id = $1)
       +
       (select count(*) from effective_diagnostic_spontaneous_observations where classroom_id = $1)
     )::int as total`, [classroom.id]),
@@ -35,7 +36,7 @@ export async function diagnosticStepProgressForTeacher(db, teacherId) {
   const [observed, group] = await Promise.all([
     db.query(`select count(*)::int as total from students s
       where s.classroom_id = $1 and s.status = 'active' and (
-        exists(select 1 from diagnostic_experience_observations o where o.classroom_id = $1 and o.student_id = s.id)
+        exists(select 1 from diagnostic_experience_observations o where ${guidedObservationActive('o')} and o.classroom_id = $1 and o.student_id = s.id)
         or exists(select 1 from effective_diagnostic_spontaneous_observations o where o.classroom_id = $1 and o.student_id = s.id)
         or exists(select 1 from student_observations o
           join diagnostic_entries de on de.id = o.diagnostic_entry_id

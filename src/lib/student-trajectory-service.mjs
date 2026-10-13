@@ -1,3 +1,4 @@
+import { guidedObservationActive } from "./guided-observation-state.mjs";
 import { loadKnowledgeBaseV4 } from "./knowledge-base-v4.mjs";
 import { competencyApplicability } from "./competency-applicability.mjs";
 import { dateOnly, loadPeriodEvaluationRows } from "./period-evaluation-service.mjs";
@@ -19,7 +20,7 @@ export async function loadStudentTrajectory(db, teacherId, studentId, { includeO
   const names = new Map(cards.map(card => [card.id, card.official_name]));
   const diagnosticGuided = (await db.query(`select id,competency_v4_id,observed_at,observation_text,
       coalesce(experience_title_snapshot,'Experiencia diagnóstica') as situation
-    from diagnostic_experience_observations where classroom_id=$1 and student_id=$2
+    from diagnostic_experience_observations where ${guidedObservationActive('diagnostic_experience_observations')} and classroom_id=$1 and student_id=$2
     order by observed_at,id`, [owner.classroom_id,studentId])).rows.map(row => ({
       id: row.id, competency_ids: row.competency_v4_id ? [row.competency_v4_id] : [],
       date: dateOnly(row.observed_at), observation: row.observation_text, situation: row.situation,

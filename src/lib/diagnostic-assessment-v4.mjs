@@ -1,3 +1,4 @@
+import { guidedObservationActive } from "./guided-observation-state.mjs";
 import { countInterviewInterests } from "./interview-interest-counts.mjs";
 import { versionTransaction } from "./version-integrity.mjs";
 import { createHash, randomUUID } from "node:crypto";
@@ -135,7 +136,7 @@ async function legacyDiagnosticObservations(db, classroomId, studentId = null) {
 async function studentReviewSources(db, classroomId, studentId) {
   const guided = (await db.query(`select id,student_id,competency_v4_id,experience_id,aspect_id,catalog_version,
       observation_status,observation_text,observed_at from diagnostic_experience_observations
-      where classroom_id=$1 and student_id=$2`, [classroomId, studentId])).rows;
+      where ${guidedObservationActive('diagnostic_experience_observations')} and classroom_id=$1 and student_id=$2`, [classroomId, studentId])).rows;
   const spontaneous = (await db.query(`select id,student_id,competency_v4_id,competency_v4_ids,context_label,observation_text,
       support_status,observed_at,classification_source,classification_status
       from effective_diagnostic_spontaneous_observations where classroom_id=$1 and student_id=$2`, [classroomId, studentId])).rows
@@ -152,7 +153,7 @@ async function groupReviewSources(db, classroomId, students) {
   const ids = students.map(student => student.id);
   const guided = (await db.query(`select id,student_id,competency_v4_id,experience_id,aspect_id,catalog_version,
     observation_status,observation_text,observed_at from diagnostic_experience_observations
-    where classroom_id=$1 and student_id=any($2::uuid[])`, [classroomId,ids])).rows;
+    where ${guidedObservationActive('diagnostic_experience_observations')} and classroom_id=$1 and student_id=any($2::uuid[])`, [classroomId,ids])).rows;
   const free = (await db.query(`select id,student_id,competency_v4_id,competency_v4_ids,context_label,observation_text,
     support_status,observed_at,classification_source,classification_status from effective_diagnostic_spontaneous_observations
     where classroom_id=$1 and student_id=any($2::uuid[])`, [classroomId,ids])).rows.map(row => ({...row,
@@ -236,7 +237,7 @@ async function sourceRows(db, classroomId, studentId, competencyId) {
       o.aspect_id, o.catalog_version, o.experience_title_snapshot, o.aspect_prompt_snapshot,
       o.observation_status, o.observation_text, o.observed_at
     from diagnostic_experience_observations o join students s on s.id = o.student_id
-    where o.classroom_id = $1 and o.student_id = $2 and o.competency_v4_id = $3
+    where ${guidedObservationActive('o')} and o.classroom_id = $1 and o.student_id = $2 and o.competency_v4_id = $3
       and s.classroom_id = $1 and s.status = 'active'
     order by o.observed_at, o.id`, [classroomId, studentId, competencyId])).rows;
   const spontaneous = (await db.query(`select o.id,o.student_id,o.competency_v4_id,o.context_label,
@@ -303,7 +304,7 @@ export async function loadDiagnosticAssessmentWorkspace(db, teacherId) {
       o.aspect_prompt_snapshot, o.observation_status, o.observation_text, o.observed_at,
       o.media_path is not null as has_media
     from diagnostic_experience_observations o join students s on s.id = o.student_id
-    where o.classroom_id = $1 and s.classroom_id = $1 and s.status = 'active'
+    where ${guidedObservationActive('o')} and o.classroom_id = $1 and s.classroom_id = $1 and s.status = 'active'
     order by o.observed_at, o.id`, [classroom.id])).rows;
   const spontaneousAll = (await db.query(`select o.id,o.student_id,o.competency_v4_id,o.competency_v4_ids,o.context_label,o.observation_text,
       o.support_status,o.observed_at,o.classification_source,o.classification_status,o.media_path is not null as has_media

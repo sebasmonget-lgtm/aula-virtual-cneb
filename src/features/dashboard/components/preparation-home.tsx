@@ -1,4 +1,5 @@
 "use client";
+import { PreparationSteps, type PreparationStep } from "./preparation-steps";
 
 import { useEffect, useState } from "react";
 import { ArrowRight, Check } from "lucide-react";
@@ -42,15 +43,8 @@ export function PreparationHome({ dashboard, year, annualDraft, onStage }: { das
   ];
   return <section data-ayni-screen="preparation-home" className="mx-auto max-w-4xl space-y-6">
     <header><h1 className="text-2xl font-extrabold text-[#172b52] sm:text-3xl">Preparemos tu año escolar</h1><p className="mt-2 text-[#526b87]">{dashboard?.profile.school_year ?? year ?? ""} · Avanza a tu ritmo. Puedes volver a cualquiera de estas etapas.</p></header>
-    <ol className="ayni-journey ayni-preparation-journey" role="tablist" aria-label="Etapas de mi preparación">
-      {stages.map(stage => <li key={stage.id} role="presentation" data-stage={stage.id} data-state={stage.completed ? "completed" : selected===stage.id ? "active" : "pending"} className={stage.completed ? "is-complete" : ""}>
-        <button type="button" role="tab" id={`preparation-tab-${stage.id}`} aria-label={`${stage.id}. ${stage.title}${stage.completed ? ", completado" : ""}`} aria-controls="preparation-stage-content" aria-selected={selected===stage.id} tabIndex={selected===stage.id ? 0 : -1} className="ayni-journey-link" onClick={()=>setSelectedStage(stage.id)} onKeyDown={event=>{
-          const target = event.key === "ArrowRight" ? stage.id % 4 + 1 : event.key === "ArrowLeft" ? (stage.id + 2) % 4 + 1 : event.key === "Home" ? 1 : event.key === "End" ? 4 : null;
-          if(target){event.preventDefault();setSelectedStage(target);document.getElementById(`preparation-tab-${target}`)?.focus();}
-        }}><span aria-hidden="true">{stage.completed ? <Check/> : stage.id}</span><small>{stage.id}. {stage.title}</small></button>
-      </li>)}
-    </ol>
-    <div id="preparation-stage-content" role="tabpanel" aria-labelledby={`preparation-tab-${selected}`} className="ayni-panel space-y-5 p-5 sm:p-7" tabIndex={0}>
+    <PreparationSteps current={selected as PreparationStep} completedSteps={stages.filter(stage=>stage.completed).map(stage=>stage.id)} disabledSteps={stages.filter(stage=>!stage.enabled).map(stage=>stage.id)} onSelect={setSelectedStage}/>
+    <div id="preparation-stage-content" aria-label={stages[selected-1].title} className="ayni-panel space-y-5 p-5 sm:p-7" tabIndex={0}>
       {selected===1 && <>
         <div className="flex items-start gap-3">{configured && <span className="grid size-12 shrink-0 place-items-center rounded-full bg-[#17653f] text-white"><Check aria-hidden="true"/></span>}<div><h2 className="text-xl font-extrabold text-[#172b52]">{configured ? "¡Tu aula está configurada!" : "Configura tu aula"}</h2><p className="mt-2 text-sm text-[#526b87]">{stages[0].description}</p></div></div>
         <div className="flex flex-wrap gap-3"><Button variant={configured ? "outline" : "default"} onClick={()=>onStage(1)}>{stages[0].action}</Button><Button variant="outline" onClick={()=>setSelectedStage(2)}>Continuar<ArrowRight aria-hidden="true"/></Button></div>

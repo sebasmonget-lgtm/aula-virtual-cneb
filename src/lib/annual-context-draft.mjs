@@ -1,4 +1,8 @@
 /** Import each teacher turn once; later AI wording must not replace teacher edits. */
+export function currentAnnualConversation(previous,next) {
+  return previous?.id===next.id && (previous.revision>next.revision || previous.revision===next.revision&&previous.status===next.status) ? previous : next;
+}
+
 export function mergeAnnualContextDraft(draft, items = []) {
   const importedTurns = new Set(draft.importedTurns);
   const additions = items.filter(item => !importedTurns.has(item.source_turn));

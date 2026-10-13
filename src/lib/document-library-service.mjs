@@ -1,3 +1,4 @@
+import { guidedObservationActive } from "./guided-observation-state.mjs";
 import { createHash } from "node:crypto";
 import { loadActivityObservations } from "./activity-observations.mjs";
 import { diagnosticPlanningSummary } from "./diagnostic-assessment-v4.mjs";
@@ -251,7 +252,7 @@ export async function loadDiagnosticWordContext(db, teacherId, reviewId) {
   const [guided, spontaneous, legacy, interviews, childReviews, familyInterests, priorityReview] = await Promise.all([
     db.query(`select o.student_id,o.competency_v4_id,o.observed_at from diagnostic_experience_observations o
       join students s on s.id=o.student_id and s.classroom_id=o.classroom_id
-      where o.classroom_id=$1 and s.status='active'`, [scope.classroom_id]),
+      where ${guidedObservationActive('o')} and o.classroom_id=$1 and s.status='active'`, [scope.classroom_id]),
     db.query(`select o.student_id,o.competency_v4_id,o.competency_v4_ids,o.classification_status,o.observed_at
       from effective_diagnostic_spontaneous_observations o join students s on s.id=o.student_id and s.classroom_id=o.classroom_id
       where o.classroom_id=$1 and s.status='active'`, [scope.classroom_id]),

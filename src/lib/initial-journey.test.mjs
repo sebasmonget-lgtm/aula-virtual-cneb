@@ -134,6 +134,8 @@ test("initial journey: atomic decisions, private photos/invitations and bounded 
    await db.query(`update ai_pending_generations set payload=jsonb_set(payload,'{pending_turn}','false'::jsonb) where id=$1`,[c.id]);
    c=await conversation("POST",{id:c.id,expectedRevision:c.revision,text:"Cierre con familias"});
    assert.deepEqual(c.contextDraft,contextDraft);assert.equal(calls,before+1);
+   assert.equal(lastBundle.effective_context.contextItems[0].text,"Patio pequeño, sin huerto");
+   assert.equal(lastBundle.effective_context.historicalProjects[0].title,"Familia");
    const previous=snapshot.source_fingerprint;snapshot.source_fingerprint="changed-draft";
    await assert.rejects(conversation("PUT",{id:c.id,expectedRevision:c.revision,contextDraft}));snapshot.source_fingerprint=previous;
    assert.deepEqual((await conversation("GET")).contextDraft,contextDraft);

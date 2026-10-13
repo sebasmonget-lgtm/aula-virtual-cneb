@@ -10,10 +10,9 @@ export function ExperienceContextForm({ value, onChange, curriculum, today, disa
 }) {
   const updateHistory = (index: number, changes: Partial<ExperienceContextInput["historicalProjects"][number]>) =>
     onChange({ ...value, historicalProjects: value.historicalProjects.map((item,i)=>i===index?{...item,...changes}:item) });
-  return <details className="space-y-4 rounded-xl bg-white p-5" aria-label="Contexto e historia del año">
-    <summary className="min-h-11 cursor-pointer text-lg font-bold text-[#172b52]">Revisar mis ideas y proyectos (opcional) <span className="font-normal text-sm text-[#526b87]">· {value.contextItems.length} ideas · {value.historicalProjects.length} proyectos anteriores</span></summary>
+  return <div className="mt-4 space-y-4" aria-label="Contexto e historia del año">
+    <h3 className="font-semibold">Decisiones, ideas y recursos</h3>
     <div>
-      <h3 className="mt-4 font-semibold">Añadido por ti</h3>
       <p className="mt-2 text-sm text-[#526b87]">Son tus decisiones sobre espacios, recursos, eventos o ideas. Puedes corregirlas o quitarlas antes de crear Mi año.</p>
       <div className="mt-3 space-y-3">{value.contextItems.map((item,index)=><div key={index} className="flex items-start gap-2">
         <label className="flex-1 text-sm"><span className="block pb-1 text-xs text-[#526b87]">{item.source_turn!==undefined?"Añadido por ti en la conversación":"Añadido por ti"}</span><span className="sr-only">Elemento de contexto {index+1}</span>
@@ -21,7 +20,7 @@ export function ExperienceContextForm({ value, onChange, curriculum, today, disa
             onChange={e=>onChange({...value,contextItems:value.contextItems.map((current,i)=>i===index?{...current,text:e.target.value}:current)})}/></label>
         <Button variant="ghost" disabled={disabled} aria-label={`Quitar elemento de contexto ${index+1}`} onClick={()=>onChange({...value,contextItems:value.contextItems.filter((_,i)=>i!==index)})}>Quitar</Button>
       </div>)}</div>
-      <Button className="mt-3" variant="outline" disabled={disabled||value.contextItems.length>=20} onClick={()=>onChange({...value,contextItems:[...value.contextItems,{text:""}]})}>Agregar una idea o recurso</Button>
+      <Button className="mt-3" variant="outline" disabled={disabled||value.contextItems.length>=20} onClick={()=>onChange({...value,contextItems:[...value.contextItems,{text:""}]})}>Agregar una decisión</Button><Button className="ml-2 mt-3" variant="outline" disabled={disabled||value.contextItems.length>=20} onClick={()=>onChange({...value,contextItems:[...value.contextItems,{text:"Recursos y espacios: "}]})}>Agregar recursos o espacios</Button>
     </div>
     {today.slice(5)>"03-16" && <div><h2 className="text-xl font-bold text-[#172b52]">Lo que ya trabajaste este año</h2>
       <p className="mt-2 text-sm text-[#526b87]">Puedes mencionar animales, familia, plantas o Fiestas Patrias. Basta el nombre; las competencias y el período son opcionales. También puedes continuar sin registrar proyectos anteriores.</p>
@@ -37,5 +36,5 @@ export function ExperienceContextForm({ value, onChange, curriculum, today, disa
       <Button variant="outline" className="mt-3" disabled={disabled||value.historicalProjects.length>=20} onClick={()=>onChange({...value,historicalProjects:[...value.historicalProjects,{title:"",competency_ids:[]}]})}>Agregar proyecto anterior</Button>
       <p className="mt-3 text-sm text-[#526b87]">Se conservará como historia declarada. Ayni preparará únicamente los días disponibles desde {today}, sin crear actividades ni evidencias del pasado.</p>
     </div>}
-  </details>;
+  </div>;
 }

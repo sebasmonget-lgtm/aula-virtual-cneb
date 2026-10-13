@@ -1,3 +1,4 @@
+import { guidedObservationActive } from "./guided-observation-state.mjs";
 import { randomUUID } from "node:crypto";
 import { loadKnowledgeBaseV4 } from "./knowledge-base-v4.mjs";
 import { safeFamilyContext } from "./diagnostic-sources-v4.mjs";
@@ -57,7 +58,7 @@ coalesce((select jsonb_agg(to_jsonb(q)) from (
 coalesce((select jsonb_agg(to_jsonb(q)) from (
     select id, experience_id, aspect_id, competency_v4_id, observation_status,
            observation_text, observed_at
-      from diagnostic_experience_observations where student_id = $1
+      from diagnostic_experience_observations where ${guidedObservationActive('diagnostic_experience_observations')} and student_id = $1
      order by observed_at desc, id desc limit 30
   ) q),'[]'::jsonb) as "diagnosticObservations",
 coalesce((select jsonb_agg(to_jsonb(q)) from (select id, context_label, observation_text,

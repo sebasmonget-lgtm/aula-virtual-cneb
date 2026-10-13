@@ -121,7 +121,7 @@ async function fixture({ analysis = mockAnalysis(), jsonbPending = false, batchP
   await db.exec(migration);
   await db.exec(await readFile(new URL("../../local-db/migrations/0041_period_assessment_drafts.sql", import.meta.url), "utf8"));
   await db.exec(await readFile(new URL("../../local-db/migrations/0042_period_closure_history.sql", import.meta.url), "utf8"));
-  await db.exec(`create table profiles(user_id uuid primary key,display_name text);
+  await db.exec(`create table profiles(user_id uuid primary key,display_name text,preferences jsonb default '{}'::jsonb);
     create table institution_profiles(owner_user_id uuid primary key,display_name text,ugel text);
     create table experience_formal_contents(id uuid primary key,experience_id uuid);
     alter table classrooms add column institution_name text not null default 'Jardín de prueba';
@@ -132,7 +132,7 @@ async function fixture({ analysis = mockAnalysis(), jsonbPending = false, batchP
   await db.exec(await readFile(new URL("../../local-db/migrations/0057_period_assessment_closure.sql", import.meta.url), "utf8"));
   await db.exec(`create table diagnostic_experience_observations(id uuid primary key,classroom_id uuid,student_id uuid,
     competency_v4_id text,observed_at timestamptz,observation_text text,observation_status text,experience_id text,
-    experience_title_snapshot text,aspect_prompt_snapshot text);
+    experience_title_snapshot text,aspect_prompt_snapshot text,created_by uuid);
     create table diagnostic_spontaneous_observations(id uuid primary key,classroom_id uuid,student_id uuid,
     competency_v4_ids text[],observed_at timestamptz,observation_text text,context_label text,support_status text,
     classification_status text);

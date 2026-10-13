@@ -2,8 +2,8 @@
 import { AyniMascot } from "./initial-journey-ui";
 export function AyniChatMessage({role,text}:{role:string;text:string}) {
   return <div className={`flex min-w-0 items-start gap-2 ${role==="teacher"?"justify-end":""}`}>
-    {role==="assistant"&&<span className="w-12 shrink-0 sm:w-20"><AyniMascot/></span>}
-    <p className={`min-w-0 max-w-xl whitespace-pre-wrap break-words rounded-2xl p-4 leading-relaxed ${role==="teacher"?"border border-[#d6e5ef] bg-white":"bg-[#deeff4]"}`}>{text}</p>
+    {role==="assistant"&&<span className="w-10 shrink-0 sm:w-12"><AyniMascot/></span>}
+    <p className={`min-w-0 max-w-xl text-sm whitespace-pre-wrap break-words rounded-2xl p-4 leading-relaxed ${role==="teacher"?"bg-[#f3ebff] text-[#563581]":"bg-[#edf7ff] text-[#245791]"}`}>{text}</p>
   </div>;
 }
 export function AyniTyping({label="Ayni está escribiendo…"}:{label?:string}) {

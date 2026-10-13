@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { guidedObservationActive } from "./guided-observation-state.mjs";
 import { versionTransaction } from "./version-integrity.mjs";
 import { simulatedObservationInstant } from "./pedagogical-clock.mjs";
 import { diagnosticPedagogicalBlocks } from "./pedagogical-blocks.mjs";
@@ -78,7 +79,7 @@ export async function loadDiagnosticExperienceWorkspace(db, teacherId) {
       deo.catalog_version, deo.media_path is not null as has_media
     from diagnostic_experience_observations deo
     join students s on s.id = deo.student_id and s.classroom_id = deo.classroom_id and s.status = 'active'
-    where deo.classroom_id = $1 order by deo.observed_at desc, deo.id desc`, [classroom.id])).rows;
+    where deo.classroom_id = $1 and ${guidedObservationActive('deo')} order by deo.observed_at desc, deo.id desc`, [classroom.id])).rows;
   return { classroom, students, experiences, experience_observations,
     experience_coverage: experiences.map((experience) => summarizeDiagnosticExperience(students, experience_observations, experience)) };
 }
@@ -109,6 +110,8 @@ export async function recordDiagnosticExperienceObservation(db, teacherId, input
   const old=(await tx.query('select * from diagnostic_experience_observations where id=$1',[id])).rows[0];
   if(old){
     if(old.created_by!==teacherId || old.classroom_id!==classroom.id || old.student_id!==student.id || old.experience_id!==experience.id || old.aspect_id!==aspect.id || old.observation_status!==status || old.observation_text!==(note?.trim()||null) || (old.media_sha256??null)!==(input.mediaSha256??null)) throw new DiagnosticExperienceError("request_conflict", "La solicitud ya corresponde a otro registro. Revisa lo guardado antes de cambiarla.");
+    if(!(await tx.query(`select 1 from diagnostic_experience_observations o where o.id=$1 and ${guidedObservationActive('o')}`,[id])).rows.length)
+      throw new DiagnosticExperienceError('request_conflict','Esta observación fue eliminada del recorrido.');
     return {id,studentId:student.id,competencyId:aspect.competency_id,replayed:true,observation:{...old,has_media:Boolean(old.media_path),media_path:undefined,media_sha256:undefined}};
   }
   const row=(await tx.query(`insert into diagnostic_experience_observations
@@ -131,14 +134,32 @@ export async function reviseGuidedObservation(db,teacherId,id,input){
       where o.id=$1 and c.teacher_id=$2 and c.status='active' and o.created_by=$2 for update of o`,[id,teacherId])).rows[0];
     if(!row)throw new DiagnosticExperienceError('invalid_student','Registro no disponible.');
     const text=input.observationText.trim();
-    if(row.observation_text===text)return {id,studentId:row.student_id,replayed:true};
-    if(row.observation_text!==input.expectedText)throw new DiagnosticExperienceError('conflict','La observación cambió en otra pestaña. Actualiza la lista.');
     const profile=(await tx.query('select preferences from profiles where user_id=$1 for update',[teacherId])).rows[0];
     const history=profile?.preferences?.guided_observation_revisions?.[id]??[];
+    if(history.at(-1)?.action==='withdraw')throw new DiagnosticExperienceError('conflict','Esta observación ya fue eliminada del recorrido.');
+    if(row.observation_text===text)return {id,studentId:row.student_id,replayed:true};
+    if(row.observation_text!==input.expectedText)throw new DiagnosticExperienceError('conflict','La observación cambió en otra pestaña. Actualiza la lista.');
     const revision={student_id:row.student_id,previous_text:row.observation_text,corrected_text:text,corrected_at:new Date().toISOString()};
     await tx.query(`update profiles set preferences=coalesce(preferences,'{}'::jsonb)||jsonb_build_object('guided_observation_revisions',
       coalesce(preferences->'guided_observation_revisions','{}'::jsonb)||$2::jsonb) where user_id=$1`,[teacherId,JSON.stringify({[id]:[...history,revision]})]);
     await tx.query('update diagnostic_experience_observations set observation_text=$2 where id=$1',[id,text]);
+    return {id,studentId:row.student_id};
+  });
+}
+
+export async function withdrawGuidedObservation(db,teacherId,id,input){
+  return versionTransaction(db,`guided-observation:${id}`,async tx=>{
+    const row=(await tx.query(`select o.* from diagnostic_experience_observations o join classrooms c on c.id=o.classroom_id
+      where o.id=$1 and c.teacher_id=$2 and c.status='active' and o.created_by=$2 for update of o`,[id,teacherId])).rows[0];
+    if(!row)throw new DiagnosticExperienceError('invalid_student','Registro no disponible.');
+    const profile=(await tx.query('select preferences from profiles where user_id=$1 for update',[teacherId])).rows[0];
+    if(!profile)throw new DiagnosticExperienceError('invalid_student','Cuenta no disponible.');
+    const history=profile.preferences?.guided_observation_revisions?.[id]??[];
+    if(history.at(-1)?.action==='withdraw')return {id,studentId:row.student_id,replayed:true};
+    if(row.observation_text!==input?.expectedText)throw new DiagnosticExperienceError('conflict','La observación cambió en otra pestaña. Actualiza la lista.');
+    const event={action:'withdraw',student_id:row.student_id,previous_text:row.observation_text,corrected_at:new Date().toISOString()};
+    await tx.query(`update profiles set preferences=coalesce(preferences,'{}'::jsonb)||jsonb_build_object('guided_observation_revisions',
+      coalesce(preferences->'guided_observation_revisions','{}'::jsonb)||$2::jsonb) where user_id=$1`,[teacherId,JSON.stringify({[id]:[...history,event]})]);
     return {id,studentId:row.student_id};
   });
 }

@@ -1,6 +1,14 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mergeAnnualContextDraft, validateAnnualContextDraft } from "./annual-context-draft.mjs";
+import { mergeAnnualContextDraft, validateAnnualContextDraft, currentAnnualConversation } from "./annual-context-draft.mjs";
+
+test('a delayed chat read cannot roll back the revision saved by context editing',()=>{
+ const saved={id:'current',revision:9,status:'ready'};
+ assert.equal(currentAnnualConversation(saved,{id:'current',revision:7,status:'ready'}),saved);
+ assert.equal(currentAnnualConversation(saved,{...saved}),saved);
+ assert.equal(currentAnnualConversation(saved,{id:'current',revision:10,status:'responding'}).revision,10);
+ assert.equal(currentAnnualConversation(saved,{id:'new',revision:1,status:'ready'}).id,'new');
+});
 
 test("new chat decisions survive manual edits and removed decisions stay removed", () => {
   const first = mergeAnnualContextDraft({ value: { contextItems: [], historicalProjects: [] }, importedTurns: [] },

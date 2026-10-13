@@ -30,8 +30,8 @@ function Field({ label, value, onChange, placeholder = "" }: {
   </label>;
 }
 
-export function InstitutionProfile({ dashboard, onSaved }: {
-  dashboard: LocalDashboard; onSaved: (data: LocalDashboard) => void;
+export function InstitutionProfile({ dashboard, onSaved, onContinue }: {
+  dashboard: LocalDashboard; onSaved: (data: LocalDashboard) => void; onContinue?:()=>void;
 }) {
   const p = dashboard.profile;
   const [teacherName, setTeacherName] = useState(p.teacher_name);
@@ -108,7 +108,7 @@ export function InstitutionProfile({ dashboard, onSaved }: {
         </div>}
       </aside>
     </div>
-    <ClassroomSettings onSaved={onSaved} />
+    <ClassroomSettings onSaved={onSaved} />{onContinue&&<footer className="flex justify-end"><Button className="min-h-12 bg-[#0075d8]" disabled={working} onClick={onContinue}>Continuar<ArrowRight/></Button></footer>}
 
   </div>;
 }

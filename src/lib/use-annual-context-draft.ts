@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { apiFetch, apiJson } from "./ayni-api-fetch";
 import { localDatabaseApiUrl } from "./local-database";
-import { mergeAnnualContextDraft } from "./annual-context-draft.mjs";
+import { mergeAnnualContextDraft, currentAnnualConversation } from "./annual-context-draft.mjs";
 import type { ExperienceContextInput } from "../features/dashboard/components/experience-context-form";
 
 type Draft = { value: ExperienceContextInput; importedTurns: number[] };
@@ -28,7 +28,7 @@ export function useAnnualContextDraft() {
       if (value.contextDraft) saved.current = fingerprint(base);
     }
     replace(mergeAnnualContextDraft(base, value.contextItems ?? []));
-    setConversation(previous => previous?.id === value.id && previous.revision === value.revision && previous.status === value.status ? previous : value);
+    setConversation(previous => currentAnnualConversation(previous,value));
   }, [replace]);
   const change = useCallback((value: ExperienceContextInput) => {
     setError(""); replace({ ...draftRef.current, value });
@@ -65,6 +65,8 @@ export function useAnnualContextDraft() {
         // Read after an uncertain response, without repeating a write or calling AI.
         try {
           const recovered = await read(conversation.id);
+          // Retain local edits, but retry against the authoritative revision rather than the stale write.
+          setConversation(recovered);
           const normalized = (value: Draft) => JSON.stringify({ ...value, value: { ...value.value,
             historicalProjects: value.value.historicalProjects.map(item => ({ ...item, period: item.period ?? null })) } });
           if (recovered.contextDraft && normalized(recovered.contextDraft) === normalized(pending)) {

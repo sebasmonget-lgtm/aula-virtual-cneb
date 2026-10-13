@@ -17,7 +17,7 @@
 .intro > p { max-width: 960px; font-size: 17px; line-height: 1.4; }
 .intro .illustration { width: 410px; height: 204px; right: -6px; }
 .backLink { display: flex; gap: 7px; align-items: center; min-height: 34px; color: #006bc5; font-size: 14px; }
-.steps { width: calc(100% - 400px); margin-top: 21px; }
+.steps { width: 100%; margin-top: 21px; }
 .steps li { font-size: 13px; gap: 10px; }
 .steps li.completed { color: #00789c; font-weight: 600; }
 .steps li.completed > span:first-child { background: #06bf99; color: white; border-color: #06bf99; }
@@ -71,7 +71,7 @@
 .questionCard textarea { font-size: 14px; color: #163b74; min-height: 44px; }
 .questionCard textarea::placeholder { color: #607ca8; }
 .questionCard textarea:focus-visible { outline: 2px solid #0075d8; outline-offset: 2px; }
-.footer { display: flex; justify-content: flex-end; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 22px; }
+.footer { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 22px; }
 .page button[data-slot=button].primary, .primary { background: #0075d8; color: white; }
 .page button[data-slot=button].primary:hover:not(:disabled), .primary:hover:not(:disabled) { background: #0066bc; }
 .experiencePicker { padding: 18px; margin-bottom: 16px; border: 1px solid #a9ccec; border-radius: 14px; background: #e9f5ff; }

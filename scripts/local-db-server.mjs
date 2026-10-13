@@ -109,7 +109,7 @@ import { recordOperationalEvent } from "../src/lib/operational-events.mjs";
 import { loadStudentTrajectory } from "../src/lib/student-trajectory-service.mjs";
 import { withAiUsageContext, loadTeacherAiUsage } from "../src/lib/ai-usage-service.mjs";
 import { completeDiagnosticReviewForTeacher, diagnosticProgressForTeacher, diagnosticStepProgressForTeacher, DiagnosticReviewError } from "../src/lib/diagnostic-review-service.mjs";
-import { DiagnosticExperienceError, loadDiagnosticExperienceWorkspace, recordDiagnosticExperienceObservation, reviseGuidedObservation } from "../src/lib/diagnostic-experiences-v4.mjs";
+import { DiagnosticExperienceError, loadDiagnosticExperienceWorkspace, recordDiagnosticExperienceObservation, reviseGuidedObservation, withdrawGuidedObservation } from "../src/lib/diagnostic-experiences-v4.mjs";
 import { DiagnosticAssessmentError, loadDiagnosticAssessmentWorkspace, prepareDiagnosticSynthesis, saveDiagnosticSynthesis, confirmDiagnosticSynthesis, prepareDiagnosticStudentReview, saveDiagnosticStudentReview, confirmDiagnosticStudentReview, prepareDiagnosticGroupReview, saveDiagnosticGroupReview, confirmDiagnosticGroupReview, saveStudentInitialContext, diagnosticPlanningSummary } from "../src/lib/diagnostic-assessment-v4.mjs";
 import { DiagnosticSourceError, loadFamilyInterview, listFamilyInterviewStatuses, saveFamilyInterview, confirmFamilyInterview, saveAndConfirmFamilyInterview, attachFamilyInterview, familyInterviewAttachmentPath, recordSpontaneousObservation, recordConfirmedSpontaneousObservation, reviseSpontaneousObservation, recordMatrixDiagnosticObservation, loadSpontaneousObservations, correctSpontaneousClassification, markSpontaneousNeedsReview, suggestSpontaneousV24, loadSpontaneousV24Metrics } from "../src/lib/diagnostic-sources-v4.mjs";
 import { createObservationV24Classifier, observationV24Enabled } from "../src/lib/observation-v24-classifier.mjs";
@@ -2598,8 +2598,8 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       const media=await evidenceStorage.read(row.media_path,{teacherId,studentId:row.student_id});
       sendAsset(response,200,media.data,media.mimeType,origin,"private, no-store");return;
     }
-    if (request.method === "PATCH" && /^\/api\/diagnostics\/experience-observations\/[0-9a-f-]{36}$/i.test(url.pathname)) {
-      try{const saved=await reviseGuidedObservation(db,teacherId,url.pathname.split('/')[4],await readJson(request));
+    if (["PATCH","DELETE"].includes(request.method) && /^\/api\/diagnostics\/experience-observations\/[0-9a-f-]{36}$/i.test(url.pathname)) {
+      try{const saved=await (request.method==="DELETE"?withdrawGuidedObservation:reviseGuidedObservation)(db,teacherId,url.pathname.split('/')[4],await readJson(request));
         await refreshStudentContextSnapshot(db,saved.studentId);send(response,200,saved,origin);
       }catch(error){send(response,error.reason==='conflict'?409:422,{error:publicErrorMessage(error)},origin);}return;
     }
