@@ -95,3 +95,13 @@ test('every catalog criterion has a short action guide without changing official
     assert.ok(guidedTeacherSteps[aspect.id].every(step=>step.length<130));
   }
 });
+
+test('coverage ties favour fewer observations per child and competency, including fully recorded experiences',()=>{
+  const students=[{id:'a'},{id:'b'}];
+  const experiences=[{id:'more',competencies:[{id:'oral'}]},{id:'less',competencies:[{id:'identity'},{id:'movement'}]}];
+  const coverage={'a:oral':5,'b:oral':5,'a:identity':2,'b:identity':2,'a:movement':2,'b:movement':2};
+  const ranked=rankGuidedExperiences(experiences,students,[],[],coverage);
+  assert.deepEqual(ranked.map(item=>item.experience.id),['less','more']);
+  assert.equal(ranked[0].recordRate,2);
+  assert.deepEqual(ranked[0].opportunities,[]);
+});

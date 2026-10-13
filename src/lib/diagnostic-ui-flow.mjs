@@ -52,8 +52,13 @@ export function rankGuidedExperiences(experiences, students, guided, free, cover
   return experiences.map((experience,index)=>{
     const opportunities=experienceCoverageOpportunities(experience,students,guided,free,coverage);
     const denominator=Math.max(1,experience.competencies.length*students.length);
-    return {experience,opportunities,index,missingRate:opportunities.reduce((sum,item)=>sum+item.missing,0)/denominator,fewRate:opportunities.reduce((sum,item)=>sum+item.few,0)/denominator};
-  }).sort((a,b)=>b.missingRate-a.missingRate||b.fewRate-a.fewRate||a.index-b.index);
+    const studentIds=new Set(students.map(student=>student.id));
+    const total=experience.competencies.reduce((sum,competency)=>sum+(coverage
+      ? students.reduce((count,student)=>count+(coverage[`${student.id}:${competency.id}`]??0),0)
+      : guided.filter(record=>studentIds.has(record.student_id)&&record.competency_v4_id===competency.id&&isRecordedObservation(record)).length
+        +free.filter(record=>studentIds.has(record.student_id)&&record.competency_v4_ids?.includes(competency.id)&&!['withdrawn','cancelled','voided','draft'].includes(record.observation_status)).length),0);
+    return {experience,opportunities,index,recordRate:total/denominator,missingRate:opportunities.reduce((sum,item)=>sum+item.missing,0)/denominator,fewRate:opportunities.reduce((sum,item)=>sum+item.few,0)/denominator};
+  }).sort((a,b)=>b.missingRate-a.missingRate||b.fewRate-a.fewRate||a.recordRate-b.recordRate||a.index-b.index);
 }
 
 export function experiencePriorityLabel(item) {
