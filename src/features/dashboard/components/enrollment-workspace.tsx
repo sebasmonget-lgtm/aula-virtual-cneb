@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { AlertDialog, AlertDialogContent, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel } from "@/components/ui/alert-dialog";
 import { apiFetch } from "@/src/lib/ayni-api-fetch";
-import { importPilotStudents, loadLocalDashboard, localDatabaseApiUrl, type LocalDashboard, type LocalStudent, type PrivateMediaUpload } from "@/src/lib/local-database";
+import { importPilotStudents, mergeDashboardRoster, loadLocalDashboard, localDatabaseApiUrl, type LocalDashboard, type LocalStudent, type PrivateMediaUpload } from "@/src/lib/local-database";
 import { parseStudentCsv, validateStudentsForImport } from "@/src/lib/student-import.mjs";
 import { useUnsavedWork } from "@/src/lib/use-unsaved-work";
 import { StudentPhoto, uploadStudentPhoto } from "./student-photo";
@@ -23,9 +23,10 @@ type Form = {firstName:string;lastName:string;birthDate:string};
 const empty: Form = {firstName:"",lastName:"",birthDate:""};
 const studentForm = (student: LocalStudent): Form => ({firstName:student.first_name ?? "",lastName:student.last_name ?? "",birthDate:student.birth_date ?? ""});
 const fullName = (student: LocalStudent) => student.first_name ? `${student.first_name} ${student.last_name ?? ""}`.trim() : student.full_name ?? student.name;
-async function mutate(path:string,body:unknown):Promise<LocalDashboard> {
-  const response=await apiFetch(`${localDatabaseApiUrl}${path}`,{method:"PATCH",headers:{"content-type":"application/json"},body:JSON.stringify(body)});
-  const result=await response.json() as {dashboard?:LocalDashboard;error?:string};
+async function mutate(path:string,body:Record<string,unknown>,dashboard?:LocalDashboard):Promise<LocalDashboard> {
+  const response=await apiFetch(`${localDatabaseApiUrl}${path}`,{method:"PATCH",headers:{"content-type":"application/json"},body:JSON.stringify({...body,compact:Boolean(dashboard)})});
+  const result=await response.json() as {dashboard?:LocalDashboard;students?:LocalStudent[];error?:string};
+  if(response.ok&&dashboard&&result.students)return mergeDashboardRoster(dashboard,result.students);
   if(!response.ok || !result.dashboard)throw new Error(result.error ?? "No se pudo guardar. Recarga la lista y vuelve a intentarlo.");
   return result.dashboard;
 }
@@ -52,6 +53,7 @@ export function EnrollmentWorkspace({dashboard,onUpdated,onBack,onContinue,onSig
   const [namesReviewed,setNamesReviewed]=useState(false);
   const fileInput=useRef<HTMLInputElement>(null),cameraInput=useRef<HTMLInputElement>(null),nameInput=useRef<HTMLInputElement>(null),csvInput=useRef<HTMLInputElement>(null);
   const lock=useRef(false);
+  const importIntent=useRef<{payload:string;id:string}|null>(null);
   const {confirmation,confirm}=useSaveConfirmation();
   const dirty=JSON.stringify(form)!==JSON.stringify(editing?studentForm(editing):empty)||Boolean(photo)||Boolean(csv.trim());
   const allowLeave=useUnsavedWork(dirty||Boolean(photoRetry),busy||photoBusy);
@@ -61,7 +63,7 @@ export function EnrollmentWorkspace({dashboard,onUpdated,onBack,onContinue,onSig
   const normalized=(name:string)=>name.normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim().toLocaleLowerCase("es-PE");
   const duplicateNames=(review??[]).map(row=>normalized(`${row.firstName} ${row.lastName}`)).filter((name,index,all)=>all.indexOf(name)!==index || students.some(student=>normalized(fullName(student))===name));
 
-  function reset(){setEditing(null);setForm(empty);setPhoto(null);setPhotoMenu(false);setError("");}
+  function reset(){importIntent.current=null;setEditing(null);setForm(empty);setPhoto(null);setPhotoMenu(false);setError("");}
   function edit(student:LocalStudent){if(unavailable||photoRetry||!allowLeave())return;setEditing(student);setForm(studentForm(student));setPhoto(null);setPhotoMenu(false);setError("");nameInput.current?.focus();}
   async function choose(file?:File){if(!file)return;setPhotoBusy(true);setError("");try{setPhoto(await preparePrivateMedia(file,{maxEdge:512,maxBytes:100_000}));setPhotoMenu(false);}catch(cause){setError(cause instanceof Error?cause.message:"No se pudo preparar la foto.");}finally{setPhotoBusy(false);}}
   async function save(useCsv=false){
@@ -69,16 +71,21 @@ export function EnrollmentWorkspace({dashboard,onUpdated,onBack,onContinue,onSig
     if(useCsv&&(!review?.length||dirty&&Boolean(form.firstName||form.lastName||photo)||duplicateNames.length>0&&!namesReviewed))return;
     lock.current=true;setBusy(true);setAction(useCsv?"import":"save");setError("");
     try {
-      const next=editing&&!useCsv ? await mutate(`/api/students/${editing.id}/details`,{...form,preferredName:editing.preferred_name??null,expected:{...studentForm(editing),birthDate:editing.birth_date??null,preferredName:editing.preferred_name??null}})
-        : await importPilotStudents({students:useCsv?review!.map(row=>({...row,preferredName:row.preferredName??undefined,birthDate:row.birthDate??undefined})):[form]});
+      const input={students:useCsv?review!.map(row=>({...row,preferredName:row.preferredName??undefined,birthDate:row.birthDate??undefined})):[form]};
+      const payload=JSON.stringify(input);
+      if(importIntent.current?.payload!==payload)importIntent.current={payload,id:crypto.randomUUID()};
+      const next=editing&&!useCsv ? await mutate(`/api/students/${editing.id}/details`,{...form,preferredName:editing.preferred_name??null,expected:{...studentForm(editing),birthDate:editing.birth_date??null,preferredName:editing.preferred_name??null}},dashboard)
+        : await importPilotStudents(input,importIntent.current.id,dashboard);
       const savedId=editing?.id ?? next.students.find(student=>!students.some(old=>old.id===student.id))?.id;
       onUpdated(next);
       if(useCsv){setCsv("");setReview(null);setImportOpen(false);setNamesReviewed(false);}else reset();
-      confirm(editing?"¡Datos del niño actualizados!":useCsv?"¡Lista registrada!":"¡Niño añadido!","Registro guardado.");
+      let photoSaved=true;
       if(photo&&savedId&&!useCsv){
         try{await uploadStudentPhoto(savedId,photo);setRevisions(value=>({...value,[savedId]:(value[savedId]??0)+1}));}
-        catch{setPhotoRetry({id:savedId,media:photo});setError("Los datos del niño se guardaron. La foto está pendiente; reintenta guardarla sin añadirlo de nuevo.");}
+        catch{photoSaved=false;setPhotoRetry({id:savedId,media:photo});setError("Los datos del niño se guardaron. La foto está pendiente; reintenta guardarla sin añadirlo de nuevo.");}
       }
+      importIntent.current=null;
+      if(photoSaved)confirm(editing?"¡Datos del niño actualizados!":useCsv?"¡Lista registrada!":"¡Niño añadido!","Registro guardado.");
     }catch(cause){setError(cause instanceof Error?cause.message:"No se pudo guardar al niño.");}
     finally{lock.current=false;setBusy(false);nameInput.current?.focus();}
   }

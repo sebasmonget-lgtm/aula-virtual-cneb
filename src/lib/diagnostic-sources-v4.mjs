@@ -187,11 +187,11 @@ export async function listFamilyInterviewStatuses(db, teacherId) {
   return { students: [...students.values()] };
 }
 const interviewVersionKey = (teacherId, studentId) => `family-interview:${teacherId}:${studentId}`;
-async function saveFamilyInterviewWithin(db, teacherId, studentId, details) {
-  const classroom = await scope(db, teacherId);
-  await studentInScope(db, classroom.id, studentId);
+async function saveFamilyInterviewWithin(db, teacherId, studentId, details, prepared) {
+  const classroom = prepared?.classroom ?? await scope(db, teacherId);
+  if (!prepared) await studentInScope(db, classroom.id, studentId);
   const validated = validateFamilyInterviewDetails(details);
-  const draft = await interviewRow(db, classroom.id, studentId, "draft");
+  const draft = prepared ? prepared.draft : await interviewRow(db, classroom.id, studentId, "draft");
   if (draft) {
     const updated = await db.query(`update student_family_interviews set details=$1::jsonb,updated_at=now()
       where id=$2 and classroom_id=$3 and created_by=$4 and status='draft' returning *`,
@@ -203,10 +203,10 @@ async function saveFamilyInterviewWithin(db, teacherId, studentId, details) {
     values($1,$2,$3,$4,'draft',$5::jsonb,$6) returning *`, [randomUUID(), classroom.id, studentId, version, JSON.stringify(validated), teacherId]);
   return publicInterview(saved.rows[0]);
 }
-async function confirmFamilyInterviewWithin(db, teacherId, studentId) {
-  const classroom = await scope(db, teacherId);
-  await studentInScope(db, classroom.id, studentId);
-  const draft = await interviewRow(db, classroom.id, studentId, "draft");
+async function confirmFamilyInterviewWithin(db, teacherId, studentId, prepared) {
+  const classroom = prepared?.classroom ?? await scope(db, teacherId);
+  if (!prepared) await studentInScope(db, classroom.id, studentId);
+  const draft = prepared?.draft ?? await interviewRow(db, classroom.id, studentId, "draft");
   if (!draft) fail("missing_draft", "Guarda la entrevista antes de confirmarla.");
   validateFamilyInterviewDetails(draft.details);
   const confirmed = await db.query(`update student_family_interviews set status='confirmed',teacher_confirmed_at=now(),updated_at=now()
@@ -233,8 +233,8 @@ export async function saveAndConfirmFamilyInterview(db, teacherId, studentId, de
     const confirmed = await interviewRow(tx, classroom.id, studentId, "confirmed");
     if (!draft && confirmed && isDeepStrictEqual(validateFamilyInterviewDetails(confirmed.details), validated))
       return publicInterview(confirmed);
-    await saveFamilyInterviewWithin(tx, teacherId, studentId, validated);
-    return confirmFamilyInterviewWithin(tx, teacherId, studentId);
+    const saved = await saveFamilyInterviewWithin(tx, teacherId, studentId, validated, { classroom, draft });
+    return confirmFamilyInterviewWithin(tx, teacherId, studentId, { classroom, draft: saved });
   });
 }
 export async function attachFamilyInterview(db, teacherId, studentId, storagePath, mimeType) {

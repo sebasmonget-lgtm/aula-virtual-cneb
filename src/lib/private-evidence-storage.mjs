@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { mkdir, writeFile, unlink, readFile } from "node:fs/promises";
 import path from "node:path";
 import { supabaseServiceHeaders } from "./supabase-service-headers.mjs";
+import { measureSetupPhase } from "./setup-performance.mjs";
 
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const extensions = new Map([["image/jpeg", "jpg"], ["image/png", "png"], ["image/webp", "webp"],
@@ -58,8 +59,8 @@ export function createSupabasePrivateEvidenceStorage({ url, serviceRoleKey, fetc
       if (!uuid.test(teacherId) || !uuid.test(studentId) || !extensions.has(mimeType) ||
         !Buffer.isBuffer(bytes) || bytes.length < 1 || bytes.length > limit) throw new TypeError("Archivo de evidencia inválido.");
       const key = `${teacherId}/${studentId}/${randomUUID()}.${extensions.get(mimeType)}`;
-      const response = await fetchImpl(endpoint(key), { method: "POST", headers: { ...headers(),
-        "content-type": mimeType, "x-upsert": "false", "cache-control": "private, no-store" }, body: bytes });
+      const response = await measureSetupPhase("storage", () => fetchImpl(endpoint(key), { method: "POST", headers: { ...headers(),
+        "content-type": mimeType, "x-upsert": "false", "cache-control": "private, no-store" }, body: bytes }));
       if (!response.ok) throw new Error("No se pudo guardar la evidencia privada.");
       return `student-evidence/${key}`;
     },

@@ -256,7 +256,7 @@ function queueDiagnosticClassification(id, studentId, teacherId) {
   diagnosticClassificationQueue = diagnosticClassificationQueue.then(() => withAiUsageContext({ teacherId, db }, async () => {
     try {
       await suggestSpontaneousV24(db, teacherId, id, observationV24Classifier);
-      await refreshStudentContextSnapshot(db, studentId);
+      await measureSetupPhase("snapshot", () => refreshStudentContextSnapshot(db, studentId));
     } catch {
       await markSpontaneousNeedsReview(db, teacherId, id).catch(() => {});
       recordOperationalEvent("diagnostic_classification_failed", { workflow: "diagnostic" });
@@ -397,6 +397,30 @@ async function decodePrivateMedia(value) {
 
 async function handleAuthenticatedRequest({ teacherId, requestId, db, preparationItemId, jobClassroomId, schoolYear }, request, response) {
 const qaDailyClock = currentPedagogicalClock() ?? localQaDailyClock;
+async function studentRoster(classroomId, today = qaDailyClock?.date ?? new Intl.DateTimeFormat("en-CA", { timeZone: "America/Lima", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date())) {
+  return db.query(`
+    select s.id,s.first_name,s.last_name,s.preferred_name,s.birth_date::text, case when s.birth_date is not null then extract(year from age($2::date,s.birth_date))::int else null end as age_years, coalesce(s.preferred_name, s.first_name) as name,
+           concat_ws(' ', coalesce(s.preferred_name, s.first_name), s.last_name) as full_name,
+           coalesce(records.evidence_count, 0)::int as evidence_count,
+           coalesce(records.competency_count, 0)::int as competency_count,
+           records.last_observed_at
+      from students s
+      left join lateral (
+        select count(*)::int as evidence_count,
+               count(distinct ev.competency_v4_id)::int as competency_count,
+               max(ev.observed_at) as last_observed_at
+          from (select ev.student_id,ev.observed_at,ac.competency_v4_id from evidences ev
+            left join activity_criteria ac on ac.id=ev.criterion_id
+            union all select o.student_id,o.occurred_at,coalesce(o.context_snapshot->>'captured_competency_id',ac.competency_v4_id)
+            from ordinary_observations o left join activity_criteria ac on ac.id=o.captured_criterion_id
+            where o.status<>'voided') ev
+         where ev.student_id = s.id
+      ) records on true
+     where s.classroom_id = $1 and s.status = 'active'
+     order by coalesce(s.preferred_name, s.first_name)
+  `, [classroomId,today]);
+}
+
 async function dashboard() {
   const classroomResult = await db.query(`select id from classrooms where teacher_id = $1 and status = 'active' limit 1`, [teacherId]);
   const classroomId = classroomResult.rows[0]?.id;
@@ -421,27 +445,7 @@ async function dashboard() {
   const timeFormatter = new Intl.DateTimeFormat("en-GB", { timeZone: "America/Lima", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
   const today = qaDailyClock?.date ?? dateFormatter.format(new Date());
   const now = qaDailyClock?.time ?? timeFormatter.format(new Date());
-  const studentsResult = await db.query(`
-    select s.id,s.first_name,s.last_name,s.preferred_name,s.birth_date::text, case when s.birth_date is not null then extract(year from age($2::date,s.birth_date))::int else null end as age_years, coalesce(s.preferred_name, s.first_name) as name,
-           concat_ws(' ', coalesce(s.preferred_name, s.first_name), s.last_name) as full_name,
-           coalesce(records.evidence_count, 0)::int as evidence_count,
-           coalesce(records.competency_count, 0)::int as competency_count,
-           records.last_observed_at
-      from students s
-      left join lateral (
-        select count(*)::int as evidence_count,
-               count(distinct ev.competency_v4_id)::int as competency_count,
-               max(ev.observed_at) as last_observed_at
-          from (select ev.student_id,ev.observed_at,ac.competency_v4_id from evidences ev
-            left join activity_criteria ac on ac.id=ev.criterion_id
-            union all select o.student_id,o.occurred_at,coalesce(o.context_snapshot->>'captured_competency_id',ac.competency_v4_id)
-            from ordinary_observations o left join activity_criteria ac on ac.id=o.captured_criterion_id
-            where o.status<>'voided') ev
-         where ev.student_id = s.id
-      ) records on true
-     where s.classroom_id = $1 and s.status = 'active'
-     order by coalesce(s.preferred_name, s.first_name)
-  `, [classroomId,today]);
+  const studentsResult = await studentRoster(classroomId, today);
   const metricsResult = await db.query(`
     select
       (select count(*)::int from students where classroom_id=$1 and status = 'active') as students_total,
@@ -863,8 +867,9 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       try {
         const body = await readJson(request);
         const rows = body.csv === undefined ? body.students : parseStudentCsv(body.csv);
-        const count = await importStudentsForTeacher(db, teacherId, rows);
-        send(response, 201, { count, dashboard: await dashboard() }, origin);
+        const receipt = await measureSetupPhase("save", () => importStudentsForTeacher(db, teacherId, rows, { clientRequestId: body.clientRequestId, returnReceipt: true }));
+        const result = body.compact === true ? { students: (await studentRoster(receipt.classroomId)).rows } : { dashboard: await dashboard() };
+        send(response, 201, { ...receipt, ...result }, origin);
       } catch (error) { send(response, httpStatusForError(error, 422), { error: publicErrorMessage(error) }, origin); }
       return;
     }
@@ -1046,15 +1051,15 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         if (request.method === "GET" && parts.length === 6) send(response, 200, await loadFamilyInterview(db, teacherId, studentId), origin);
         else if (request.method === "PUT" && parts.length === 6) {
           const saved = await saveFamilyInterview(db, teacherId, studentId, (await readJson(request)).details);
-          await refreshStudentContextSnapshot(db, studentId);
+          // Drafts are excluded from confirmed pedagogical context.
           send(response, 200, saved, origin);
         } else if (request.method === "POST" && parts.length === 7 && parts[6] === "save-and-confirm") {
           const saved = await saveAndConfirmFamilyInterview(db, teacherId, studentId, (await readJson(request)).details);
-          await refreshStudentContextSnapshot(db, studentId);
+          await measureSetupPhase("snapshot", () => refreshStudentContextSnapshot(db, studentId));
           send(response, 200, saved, origin);
         } else if (request.method === "POST" && parts[6] === "confirm") {
           const saved = await confirmFamilyInterview(db, teacherId, studentId);
-          await refreshStudentContextSnapshot(db, studentId);
+          await measureSetupPhase("snapshot", () => refreshStudentContextSnapshot(db, studentId));
           send(response, 200, saved, origin);
         } else if (request.method === "POST" && parts[6] === "attachment") {
           if (!interviewStorage) { send(response, 503, { error: "Storage privado no configurado." }, origin); return; }
@@ -1121,7 +1126,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         }
         else if (request.method === "POST" && url.pathname === "/api/diagnostics/spontaneous-observations/matrix") {
           const saved = await recordMatrixDiagnosticObservation(db, teacherId, await readJson(request));
-          await refreshStudentContextSnapshot(db, saved.student_id);
+          await measureSetupPhase("snapshot", () => refreshStudentContextSnapshot(db, saved.student_id));
           send(response, 201, saved, origin);
         }
         else if (request.method === "POST" && url.pathname === "/api/diagnostics/spontaneous-observations") {
@@ -1130,7 +1135,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
           const owned = (await db.query(`select s.id from students s join classrooms c on c.id=s.classroom_id
             where s.id=$1 and s.status='active' and c.teacher_id=$2 and c.status='active'`, [body.studentId,teacherId])).rows[0];
           if (!owned) { send(response, 404, { error: "Niño no encontrado." }, origin); return; }
-          const media = await decodePrivateMedia(body.media);
+          const media = await measureSetupPhase("media_decode", () => decodePrivateMedia(body.media));
           const mediaPath = media ? await evidenceStorage.save({ teacherId, studentId: body.studentId,
             mimeType: media.mimeType, bytes: media.bytes }) : null;
           let saved;
@@ -1138,7 +1143,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
             mediaPath, mediaMimeType: media?.mimeType }); }
           catch (error) { if (mediaPath) await evidenceStorage.delete(mediaPath).catch(() => {}); throw error; }
           if(saved.replayed && mediaPath)await evidenceStorage.delete(mediaPath).catch(()=>{});
-          await refreshStudentContextSnapshot(db, saved.student_id);
+          await measureSetupPhase("snapshot", () => refreshStudentContextSnapshot(db, saved.student_id));
           send(response, 201, saved, origin);
           if (observationV24Active && !Array.isArray(body.competencyIds)) {
             if (process.env.AYNI_SERVERLESS === "1") await queueDiagnosticClassification(saved.id, saved.student_id, teacherId);
@@ -1167,7 +1172,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
           const id = url.pathname.split("/")[4];
           const body = await readJson(request);
           const saved = await correctSpontaneousClassification(db, teacherId, id, body.competencyIds ?? body.competencyId ?? null);
-          await refreshStudentContextSnapshot(db, saved.student_id);
+          await measureSetupPhase("snapshot", () => refreshStudentContextSnapshot(db, saved.student_id));
           send(response, 200, saved, origin);
         } else send(response, 404, { error: "Ruta de observación no encontrada." }, origin);
       } catch (error) {
@@ -1231,7 +1236,9 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
     }
     if (request.method === "GET" && url.pathname === "/api/students/inactive") { send(response,200,{students:await inactiveStudents(db,teacherId)},origin);return; }
     if (request.method === "PATCH" && /^\/api\/students\/[0-9a-f-]{36}\/details$/.test(url.pathname)) {
-      try { await updateStudentDetails(db,teacherId,url.pathname.split("/")[3],await readJson(request));send(response,200,{dashboard:await dashboard()},origin); }
+      try { const body = await readJson(request); const updated = await measureSetupPhase("save", () => updateStudentDetails(db,teacherId,url.pathname.split("/")[3],body));
+        const result = body.compact === true ? { students: (await studentRoster(updated.classroomId)).rows } : { dashboard: await dashboard() };
+        send(response,200,result,origin); }
       catch(error){send(response,httpStatusForError(error,422),{error:publicErrorMessage(error)},origin);}return;
     }
     if (request.method === "PATCH" && /^\/api\/students\/[0-9a-f-]{36}\/enrollment$/.test(url.pathname)) {
@@ -2595,7 +2602,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         const owned=(await db.query(`select s.id from students s join classrooms c on c.id=s.classroom_id where s.id=$1 and s.status='active' and c.status='active' and c.teacher_id=$2`,[body.studentId,teacherId])).rows[0];
         if(!owned){send(response,403,{error:"El niño no pertenece al aula activa."},origin);return;}
         if(body.media&&!evidenceStorage){send(response,503,{error:"Storage privado no configurado."},origin);return;}
-        const media=await decodePrivateMedia(body.media);
+        const media=await measureSetupPhase("media_decode", () => decodePrivateMedia(body.media));
         if(media&&!media.mimeType.startsWith('image/')){send(response,400,{error:"Adjunta una fotografía JPEG, PNG o WebP."},origin);return;}
         const storageStart=performance.now();
         mediaPath=media?await evidenceStorage.save({teacherId,studentId:body.studentId,mimeType:media.mimeType,bytes:media.bytes}):null;
@@ -2604,7 +2611,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         const dbMs=performance.now()-dbStart;
         if(saved.replayed&&mediaPath)await evidenceStorage.delete(mediaPath).catch(()=>{});
         const snapshotStart=performance.now();
-        try { await refreshStudentContextSnapshot(db, saved.studentId); }
+        try { await measureSetupPhase("snapshot", () => refreshStudentContextSnapshot(db, saved.studentId)); }
         catch { recordOperationalEvent("student_context_refresh_failed", { workflow: "diagnostic" }); }
         response.setHeader('Server-Timing',`storage;dur=${storageMs.toFixed(1)},db;dur=${dbMs.toFixed(1)},snapshot;dur=${(performance.now()-snapshotStart).toFixed(1)},server;dur=${(performance.now()-started).toFixed(1)}`);
         send(response, 201, body.compact===true ? {observation:saved.observation,replayed:Boolean(saved.replayed)} : { workspace: await diagnosticWorkspace() }, origin);

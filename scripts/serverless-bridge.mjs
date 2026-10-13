@@ -3,7 +3,12 @@ import { measureSetupPhase, withSetupPerformance } from "../src/lib/setup-perfor
 
 /** Adapt the existing Node HTTP API to a Next.js route without a listening port. */
 export async function handleServerlessRequest(webRequest) {
-  if (webRequest.method === "POST" && ["/api/pilot/setup","/api/qa/setup-benchmark"].includes(new URL(webRequest.url).pathname)) {
+  const pathname = new URL(webRequest.url).pathname;
+  const saveOperation = ["POST", "PUT", "PATCH"].includes(webRequest.method) && (
+    ["/api/pilot/setup", "/api/qa/setup-benchmark", "/api/students/import", "/api/diagnostics/spontaneous-observations", "/api/diagnostics/experience-observations"].includes(pathname)
+    || /^\/api\/students\/[0-9a-f-]{36}\/(details|photo)$/.test(pathname)
+    || /^\/api\/diagnostics\/students\/[0-9a-f-]{36}\/family-interview(?:\/(save-and-confirm|confirm))?$/.test(pathname));
+  if (saveOperation) {
     const measured = await withSetupPerformance(() => adaptRequest(webRequest));
     measured.result.headers.set("server-timing", measured.timing);
     return measured.result;
@@ -14,7 +19,7 @@ export async function handleServerlessRequest(webRequest) {
 async function adaptRequest(webRequest) {
   process.env.AYNI_SERVERLESS = "1";
   const { handleApiRequest } = await measureSetupPhase("bootstrap", () => import("./local-db-server.mjs"));
-  const body = ["GET", "HEAD"].includes(webRequest.method) ? null : Buffer.from(await webRequest.arrayBuffer());
+  const body = ["GET", "HEAD"].includes(webRequest.method) ? null : await measureSetupPhase("body_read", async () => Buffer.from(await webRequest.arrayBuffer()));
   if (body && body.length > 11_000_000) return Response.json({ error: "Solicitud demasiado grande." }, { status: 413 });
   const request = Readable.from(body ? [body] : []);
   request.method = webRequest.method;

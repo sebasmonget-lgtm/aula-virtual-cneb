@@ -45,6 +45,7 @@ export function StudentsScreen({ students, onImported, onEvaluate, onPlan, onDia
   const [profile, setProfile] = useState<StudentPedagogicalProfile | null>(null);
   const [loading, setLoading] = useState(false);
   const [profileError, setProfileError] = useState("");
+  const importIntent = useRef<{payload:string;id:string}|null>(null);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [preferredName, setPreferredName] = useState("");
@@ -99,14 +100,19 @@ export function StudentsScreen({ students, onImported, onEvaluate, onPlan, onDia
     const started = performance.now();
     const savedName = firstName.trim();
     try {
-      const dashboard = await importPilotStudents(useCsv ? { students: csvReview!.map(row=>({...row,preferredName:row.preferredName??undefined,birthDate:row.birthDate??undefined})) } : { students: [{ firstName, lastName, preferredName, birthDate }] });
+      const input = useCsv ? { students: csvReview!.map(row=>({...row,preferredName:row.preferredName??undefined,birthDate:row.birthDate??undefined})) } : { students: [{ firstName, lastName, preferredName, birthDate }] };
+      const payload = JSON.stringify(input);
+      if(importIntent.current?.payload!==payload)importIntent.current={payload,id:crypto.randomUUID()};
+      const dashboard = await importPilotStudents(input, importIntent.current.id);
+      importIntent.current=null;
       setLastSaveMs(Math.round(performance.now() - started));
       onImported(dashboard);
-      confirm(useCsv ? "¡Lista registrada!" : `¡${savedName} ya está en tu aula!`, "Registro guardado.");
+      let photoSaved=true;
       if (useCsv) { setCsv(""); setCsvReview(null); }
       else { setFirstName(""); setLastName(""); setPreferredName(""); setBirthDate(""); }
       setImportMessage(useCsv ? "Lista de niños importada al aula." : "Niño añadido al aula."); setImportTone("success");
-      if(!useCsv && photo){const added=dashboard.students.find(s=>!students.some(old=>old.id===s.id));if(added){setPhoto(null);setImportAction("photo");try{await uploadStudentPhoto(added.id,photo);setPhotoRevisions(current => ({...current, [added.id]: (current[added.id] ?? 0) + 1}));setPhotoRetry(null);}catch{setPhotoRetry({id:added.id,media:photo});setImportMessage("Niño añadido. La foto aún no se guardó; puedes reintentar sin inscribirlo de nuevo.");setImportTone("error");}}}
+      if(!useCsv && photo){const added=dashboard.students.find(s=>!students.some(old=>old.id===s.id));if(added){setPhoto(null);setImportAction("photo");try{await uploadStudentPhoto(added.id,photo);setPhotoRevisions(current => ({...current, [added.id]: (current[added.id] ?? 0) + 1}));setPhotoRetry(null);}catch{photoSaved=false;setPhotoRetry({id:added.id,media:photo});setImportMessage("Niño añadido. La foto aún no se guardó; puedes reintentar sin inscribirlo de nuevo.");setImportTone("error");}}}
+      if(photoSaved)confirm(useCsv ? "¡Lista registrada!" : `¡${savedName} ya está en tu aula!`, "Registro guardado.");
       setNamesReviewed(false);
     } catch (error) { setImportMessage(error instanceof Error ? error.message : "No se pudieron añadir los niños."); setImportTone("error"); }
     finally { savingStudent.current = false; setImportBusy(false); window.setTimeout(() => firstNameInput.current?.focus(), 0); }

@@ -1,5 +1,14 @@
 # Memoria del proyecto Ayni Aula
 
+## Optimización focal de guardado — 2026-10-12
+
+Alta/importación usa clientRequestId estable durante un intento y sus reintentos; recibo SHA-256/IDs en profiles.preferences.student_import_requests, junto con INSERT de alumnos en la misma transacción. Lock de aula/perfil serializa concurrencia y capacidad; nunca se deduplican nombres. Otra clave permite homónimos; misma clave con otro payload devuelve conflicto. Clientes anteriores sin clave siguen compatibles, pero no pueden distinguir reintento de otra alta legítima. Formularios actuales siempre envían clave. Altas/ediciones de matrícula piden roster compacto y fusionan students_total; el tablero completo queda disponible para clientes anteriores.
+
+Contexto pedagógico: once lecturas se agrupan en una sentencia consistente; timestamps conservan el contrato Date del adapter. Snapshot sigue síncrono y serializado por alumno con lock transaccional, sin cola o background volátil. Borradores familiares no refrescan fuentes confirmadas; confirmar reutiliza autorización/draft ya leídos bajo el mismo lock de versión. Server-Timing acotado a endpoints de guardado separa bootstrap/body_read/auth/db_connect/db_query/storage/snapshot/server, sin IDs/SQL/contenido. Fotos conservan compresión y Storage privado; formularios esperan su confirmación antes del éxito completo y retienen reintento separado si falla la foto. Sin migración, cambios de permisos, reloj o IA.
+
+TypeScript, lint focal, build Next webpack y pruebas focales de servicios/adapter/contexto PASS. Pruebas incluyen rollback del comprobante, reintento después de editar/retirar, homónimos, claves distintas y aislamiento. Publicación autorizada únicamente Preview; comparación remota y recibo pendientes. Rollback: revertir este cambio, dejando recibos y registros compatibles; no revertir schema ni datos. Artefactos de medición aislados .local/save-optimization-20261012/.
+
+
 ## Correcciones de preparación y simplificación del diagnóstico — 2026-10-12
 
 Publicada únicamente Preview: https://ayni-aula-staging-lzgq4uu40-ayni4.vercel.app/#planificar?tab=diagnostic&step=1 — dpl_3piAoxMmujC5UdUjjWE2yYMj2WwP READY, SHA e91a2550f2baf2ae108f6ac2730b06d0b8a0b9df verificado, working tree limpio al publicar, build cloud PASS. Seis smoke PASS: health/config 200; session/setup/status entrevistas GET y observación libre POST sin sesión 401. Producción conserva dpl_2KDEnPFk7UqyvPa7At3t1RW7sLqy / d595ffebd05d50a1971c8389f4c3d758f22a39a7 según API antes/después. Panel lateral abierto con formulario de ingreso vacío; revisión autenticada remota requiere ingreso manual QA. Recibos privados .local/ux-refinement-20261012/. Esta publicación completa el estado pendiente indicado debajo; aprobación de Producción no solicitada para este cambio.

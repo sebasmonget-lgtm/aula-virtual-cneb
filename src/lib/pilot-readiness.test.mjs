@@ -35,6 +35,41 @@ async function database(directory) {
   return db;
 }
 
+test("student import receipts survive retries, edits and removal without merging equal names", async () => {
+  const db = await database();
+  try {
+    await createPilotClassroom(db, teacherA, setup("Docente A"));
+    await createPilotClassroom(db, teacherB, setup("Docente B"));
+    const students = [{ firstName: "Ana", lastName: "Prueba" }, { firstName: "Ana", lastName: "Prueba" }];
+    const options = { clientRequestId: "cccccccc-cccc-4ccc-8ccc-cccccccccccc", returnReceipt: true };
+    const saved = await importStudentsForTeacher(db, teacherA, students, options);
+    const replay = await importStudentsForTeacher(db, teacherA, students, options);
+    assert.deepEqual(replay.studentIds, saved.studentIds);
+    assert.equal(replay.replayed, true);
+    assert.equal(saved.studentIds.length, 2);
+    assert.equal(new Set(saved.studentIds).size, 2);
+    await assert.rejects(importStudentsForTeacher(db, teacherA, [{ firstName: "Otro", lastName: "Prueba" }], options), /otros datos/);
+    await db.query("update students set first_name='Editado',status='inactive' where id=$1", [saved.studentIds[0]]);
+    assert.deepEqual((await importStudentsForTeacher(db, teacherA, students, options)).studentIds, saved.studentIds);
+    assert.equal((await db.query("select count(*)::int n from students where classroom_id=$1", [saved.classroomId])).rows[0].n, 2);
+    const next = await importStudentsForTeacher(db, teacherA, students, { ...options, clientRequestId: "dddddddd-dddd-4ddd-8ddd-dddddddddddd" });
+    assert.equal(next.replayed, false);
+    assert.equal((await db.query("select count(*)::int n from students where classroom_id=$1", [saved.classroomId])).rows[0].n, 4);
+    const other = await importStudentsForTeacher(db, teacherB, students, options);
+    assert.notEqual(other.classroomId, saved.classroomId);
+    assert.equal(other.replayed, false);
+    // Receipt insert fails after pupils insert: the entire operation must roll back.
+    const failing = { exec: (...args) => db.exec(...args), query: (sql, params) => {
+      if (sql.startsWith("update profiles set preferences=jsonb_set")) throw new Error("Receipt write failure");
+      return db.query(sql, params);
+    } };
+    const retryOptions = { ...options, clientRequestId: "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee" };
+    await assert.rejects(importStudentsForTeacher(failing, teacherA, students, retryOptions), /Receipt write failure/);
+    assert.equal((await db.query("select count(*)::int n from students where classroom_id=$1", [saved.classroomId])).rows[0].n, 4);
+    assert.equal((await importStudentsForTeacher(db, teacherA, students, retryOptions)).replayed, false);
+  } finally { await db.close(); }
+});
+
 test("pending generations survives store recreation and expires without exposing payload", async () => {
   const dir = await mkdtemp(path.join(tmpdir(), "ayni-pending-"));
   let db = await database(dir);

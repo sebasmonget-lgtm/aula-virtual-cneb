@@ -1,5 +1,10 @@
 # Errores y soluciones
 
+## Optimización focal de guardado — 2026-10-12
+
+Síntoma: repetir HTTP de alta generaba otro alumno; guiada dedicaba ~1,49 s a once lecturas de contexto; guardar borrador recalculaba contexto que excluye borradores. Causa: sin recibo de operación, consultas secuenciales y trabajo no necesario. Solución: recibo atómico bajo lock, lectura agrupada, reutilización de scope en confirmación, omisión del snapshot en borrador, roster compacto. Pruebas locales PASS; comparación remota y fiabilidad en Preview pendientes. Prevención: prueba de recibos/homónimos/rollback y contrato de una lectura de fuentes, métricas HTTP sin datos pedagógicos. Éxito de foto de alumno se anuncia tras confirmación de subida, con reintento separado si solo se guardaron datos.
+
+
 ## Modal guiado móvil y restauración de entrevista — 2026-10-12
 
 Síntoma: a 390px el modal tenía scroll horizontal general (476px de contenido en 350px útiles). Causa: fieldset conserva mínimo intrínseco aunque la fila de niños tiene scroll propio. Solución: min-width:0 y width:100% en fieldset; fila interna mantiene su scroll deliberado. DOM/captura posterior prueban 350/350px sin desbordamiento general. Prevención: medir scrollWidth del modal, no solo del documento.

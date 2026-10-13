@@ -102,16 +102,38 @@ export async function createPilotClassroom(db, teacherId, input, { assetsDir, lo
   }
 }
 
-export async function importStudentsForTeacher(db, teacherId, input) {
+export async function importStudentsForTeacher(db, teacherId, input, { clientRequestId, returnReceipt = false } = {}) {
   const students = validateStudentsForImport(input);
+  if (clientRequestId != null && !/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(clientRequestId))
+    throw new TypeError("Identificador de registro inválido.");
+  const fingerprint = createHash("sha256").update(JSON.stringify(students)).digest("hex");
   await db.exec("begin");
   try {
-    const classroom = (await db.query(`select id from classrooms where teacher_id=$1 and status='active'`, [teacherId])).rows[0];
+    const classroom = (await db.query(`select id from classrooms where teacher_id=$1 and status='active' for update`, [teacherId])).rows[0];
     if (!classroom) throw new Error("Configura primero un aula activa.");
+    // Receipt and pupils commit together. Names are never used as a uniqueness key.
+    const receiptKey = clientRequestId?.toLowerCase();
+    const profile = receiptKey ? (await db.query(`select preferences from profiles where user_id=$1 for update`, [teacherId])).rows[0] : null;
+    if (receiptKey && !profile) throw new Error("Perfil docente no disponible.");
+    const previous = profile?.preferences?.student_import_requests?.[receiptKey];
+    if (previous) {
+      if (previous.fingerprint !== fingerprint || previous.classroomId !== classroom.id)
+        throw new VersionConflictError("Este registro ya se utilizó con otros datos. Recarga la lista.");
+      await db.exec("commit");
+      return returnReceipt ? { count: previous.studentIds.length, studentIds: previous.studentIds, replayed: true, classroomId: classroom.id } : previous.studentIds.length;
+    }
     const current = Number((await db.query(`select count(*)::int as count from students where classroom_id=$1 and status='active'`, [classroom.id])).rows[0].count);
     if (current + students.length > 45) throw new Error("El aula admite hasta 45 niños activos en este piloto.");
-    for (const student of students) await db.query(`insert into students(id,classroom_id,first_name,last_name,preferred_name,birth_date) values($1,$2,$3,$4,$5,$6::date)`, [randomUUID(), classroom.id, student.firstName, student.lastName, student.preferredName, student.birthDate]);
+    const studentIds = students.map(() => randomUUID());
+    await db.query(`insert into students(id,classroom_id,first_name,last_name,preferred_name,birth_date)
+      select id,$1,first_name,last_name,preferred_name,birth_date from jsonb_to_recordset($2::jsonb)
+      as x(id uuid,first_name text,last_name text,preferred_name text,birth_date date)`,
+      [classroom.id, JSON.stringify(students.map((student, index) => ({ id: studentIds[index], first_name: student.firstName,
+        last_name: student.lastName, preferred_name: student.preferredName, birth_date: student.birthDate })))]);
+    if (receiptKey) await db.query(`update profiles set preferences=jsonb_set(coalesce(preferences,'{}'::jsonb),
+      '{student_import_requests}',coalesce(preferences->'student_import_requests','{}'::jsonb)||$2::jsonb),updated_at=now() where user_id=$1`,
+      [teacherId, JSON.stringify({ [receiptKey]: { fingerprint, classroomId: classroom.id, studentIds } })]);
     await db.exec("commit");
-    return students.length;
+    return returnReceipt ? { count: students.length, studentIds, replayed: false, classroomId: classroom.id } : students.length;
   } catch (error) { await db.exec("rollback"); throw error; }
 }

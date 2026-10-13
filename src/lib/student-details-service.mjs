@@ -15,9 +15,9 @@ export async function updateStudentDetails(db,teacherId,studentId,input) {
     if(!row)throw new VersionConflictError('La lista cambió. Recarga antes de editar.');
     const current=fields(row);
     // A retry after a lost response is successful if this exact edit already committed.
-    if(Object.keys(current).every(key=>current[key]===value[key]))return {id:studentId};
+    if(Object.keys(current).every(key=>current[key]===value[key]))return {id:studentId,classroomId:owned.classroom_id};
     if(Object.keys(current).some(key=>current[key]!==input.expected[key]))throw new VersionConflictError('Los datos del niño cambiaron. Recarga la lista antes de guardar.');
     await tx.query(`update students set first_name=$1,last_name=$2,preferred_name=$3,birth_date=$4::date where id=$5 and classroom_id=$6`,[value.firstName,value.lastName,value.preferredName,value.birthDate,studentId,owned.classroom_id]);
-    return {id:studentId};
+    return {id:studentId,classroomId:owned.classroom_id};
   });
 }

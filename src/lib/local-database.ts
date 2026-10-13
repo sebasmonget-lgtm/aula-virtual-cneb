@@ -196,10 +196,15 @@ export async function savePilotSetup(input: { submissionId?: string; teacherName
   return result.dashboard;
 }
 
-export async function importPilotStudents(input: { csv: string } | { students: { firstName: string; lastName: string; preferredName?: string; birthDate?: string }[] }): Promise<LocalDashboard> {
-  const response = await apiFetch(`${apiUrl}/api/students/import`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(input) });
-  const result = await response.json() as { dashboard?: LocalDashboard; error?: string };
-  if (!response.ok || !result.dashboard) throw new Error(result.error ?? "No se pudieron cargar los niños.");
+export function mergeDashboardRoster(dashboard: LocalDashboard, students: LocalStudent[]): LocalDashboard {
+  return { ...dashboard, students, metrics: { ...dashboard.metrics, students_total: students.length } };
+}
+export async function importPilotStudents(input: { csv: string } | { students: { firstName: string; lastName: string; preferredName?: string; birthDate?: string }[] }, clientRequestId: string, dashboard?: LocalDashboard): Promise<LocalDashboard> {
+  const response = await apiFetch(`${apiUrl}/api/students/import`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ ...input, clientRequestId, compact: Boolean(dashboard) }) });
+  const result = await response.json() as { dashboard?: LocalDashboard; students?: LocalStudent[]; error?: string };
+  if (!response.ok) throw new Error(result.error ?? "No se pudieron cargar los niños.");
+  if (dashboard && result.students) return mergeDashboardRoster(dashboard, result.students);
+  if (!result.dashboard) throw new Error("No se pudo confirmar el registro. Reintenta guardar.");
   return result.dashboard;
 }
 

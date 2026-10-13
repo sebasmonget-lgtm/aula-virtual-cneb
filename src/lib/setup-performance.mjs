@@ -1,7 +1,7 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 
 const scope = new AsyncLocalStorage();
-const names = new Set(["bootstrap", "auth", "save", "dashboard", "calendar", "logo_decode", "logo_upload", "db_connect", "db_query"]);
+const names = new Set(["bootstrap", "auth", "save", "dashboard", "calendar", "logo_decode", "logo_upload", "db_connect", "db_query", "body_read", "media_decode", "storage", "snapshot"]);
 export const setupPerformanceActive = () => Boolean(scope.getStore());
 export async function measureSetupPhase(name, work) {
   const state = scope.getStore();

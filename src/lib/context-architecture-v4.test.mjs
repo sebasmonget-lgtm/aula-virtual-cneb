@@ -70,7 +70,12 @@ test("current ClassroomContext agrega solo etiquetas confirmadas del aula autori
     assert.equal(JSON.stringify(publicView).includes(a.students[0].id), false);
     assert.equal(JSON.stringify(publicView).includes(b.id), false);
     assert.equal(current.provenance.source_refs.length, 6);
-    const student = await buildStudentPedagogicalContext(db, a.students[0].id);
+    let sourceQueries = 0;
+    const student = await buildStudentPedagogicalContext({ query: (...args) => {
+      sourceQueries++;
+      return db.query(...args);
+    } }, a.students[0].id);
+    assert.equal(sourceQueries, 1, "all context sources share one statement and snapshot");
     assert.equal(student.family_interview_context.interests, "Le gustan los animales.");
     assert.equal(student.family_interview_context.interest_tags[0], "animals");
     assert.equal(student.family_interview_context.primary_language_tag, "es");

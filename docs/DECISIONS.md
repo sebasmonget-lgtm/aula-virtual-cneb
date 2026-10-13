@@ -1,5 +1,10 @@
 # Decisiones de arquitectura
 
+## Optimización focal de guardado — 2026-10-12
+
+Se conserva el recálculo de contexto en la petición: lectura agrupada y lock por alumno evitan background sin garantías de ejecución/frescura. Idempotencia de alta se identifica por intención UUID, no por nombres; recibo transaccional en JSON existente evita migración. Respuesta compacta opt-in preserva API anterior. No se cambia pool ni se cachea autorización.
+
+
 ## Preparación: estados y captura ligera — 2026-10-12
 
 Mantener seis claves familiares, respuestas múltiples/texto/dictado y confirmación versionada. Alias visual plants/nature sin invalidar ni reescribir IDs históricos; borrador recuperable separado de confirmada. Libre admite momento no indicado mediante literal explícito compatible con servidor; competencias opcionales, IA solo a pedido. Historial completo ordenado por fecha observada, faltantes al final. Guiada distingue instrucciones docentes por momento conservando criterio/competencia/ejemplos; alumno seleccionado una sola vez en modal, cantidades por criterio. Cobertura incompleta invita a observar, nunca acredita dificultad. Finaliza en entrevistas/observaciones/preparación; Mi año no incorpora requisitos diagnósticos adicionales. Publicación únicamente Preview según adjunto más reciente.

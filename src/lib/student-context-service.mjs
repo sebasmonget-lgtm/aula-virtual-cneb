@@ -5,24 +5,23 @@ import { neutralizeAssessmentText } from "./assessment-v4-service.mjs";
 import { buildDiagnosticContext } from "./context-policy-v4.mjs";
 import { isDiagnosticScaffoldSummary } from "./diagnostic-review-copy.mjs";
 import { isCurrentDiagnosticStudentReview } from "./diagnostic-assessment-v4.mjs";
+import { versionTransaction } from "./version-integrity.mjs";
 
 export function resolveSourceUpdatedAt(...timestamps) {
   const valid = timestamps.flat().filter(Boolean).map((value) => new Date(value)).filter((value) => !Number.isNaN(value.valueOf()));
   return valid.length ? new Date(Math.max(...valid.map((value) => value.valueOf()))).toISOString() : new Date(0).toISOString();
 }
 
-export async function buildStudentPedagogicalContext(db, studentId) {
-  const student = (await db.query(`
+// One statement shares a consistent snapshot and avoids eleven database round trips.
+async function loadContextSources(db, studentId) {
+  const row = (await db.query(`select (select to_jsonb(q) from (
     select s.id, coalesce(s.preferred_name, s.first_name) as name, s.first_name, s.last_name,
            c.section, ag.age_years, sy.year as school_year
       from students s join classrooms c on c.id = s.classroom_id
       join age_grades ag on ag.id = c.age_grade_id join school_years sy on sy.id = c.school_year_id
      where s.id = $1
-  `, [studentId])).rows[0];
-  if (!student) return null;
-
-  const v4Names = new Map((await loadKnowledgeBaseV4()).competencyCards.map((card) => [card.id, card.official_name]));
-  const competencies = (await db.query(`
+  ) q) as "student",
+coalesce((select jsonb_agg(to_jsonb(q)) from (
     select coalesce(ac.competency_v4_id, ac.competency_id::text) as raw_competency_id,
       case when ac.competency_v4_id is null then concat('legacy:', ac.competency_id::text) else concat('v4:', ac.competency_v4_id) end as competency_key,
       ac.competency_id, ac.competency_v4_id, co.official_text as competency_text,
@@ -38,8 +37,8 @@ export async function buildStudentPedagogicalContext(db, studentId) {
     group by ac.competency_id, ac.competency_v4_id, co.official_text
     having count(e.id) > 0
     order by max(e.observed_at) desc nulls last
-  `, [studentId])).rows;
-  const recentEvidence = (await db.query(`
+  ) q),'[]'::jsonb) as "competencies",
+coalesce((select jsonb_agg(to_jsonb(q)) from (
     select e.id, e.observed_at, e.observation_status, e.observation_text,
            jsonb_array_length(coalesce(to_jsonb(e)->'student_reassignment_history','[]'::jsonb)) as assignment_revision,
            a.title as activity_title, ac.criterion_text, ac.competency_id, ac.competency_v4_id,
@@ -48,34 +47,58 @@ export async function buildStudentPedagogicalContext(db, studentId) {
       from evidences e join activities a on a.id = e.activity_id
       join activity_criteria ac on ac.id = e.criterion_id
      where e.student_id = $1 order by e.observed_at desc limit 12
-  `, [studentId])).rows;
-  const assessments = (await db.query(`select id,competency_v4_id,period_start,period_end,details,teacher_confirmed_at from competency_assessments where student_id=$1 and status='active' and teacher_confirmed_at is not null order by teacher_confirmed_at desc`, [studentId])).rows;
-  const conclusions = (await db.query(`select id,competency_v4_id,period_start,period_end,details,teacher_confirmed_at from competency_descriptive_conclusions where student_id=$1 and status='active' and teacher_confirmed_at is not null order by teacher_confirmed_at desc`, [studentId])).rows;
-  const safeConclusion = (row) => ({ id: row.id, period_start: row.period_start, period_end: row.period_end, information_status: row.details?.information_status, conclusion_text: row.details?.conclusion_text, support_or_conditions: row.details?.support_or_conditions ?? [], next_steps: row.details?.next_steps ?? [], teacher_confirmed_at: row.teacher_confirmed_at });
-  const diagnosis = (await db.query(`
+  ) q),'[]'::jsonb) as "recentEvidence",
+coalesce((select jsonb_agg(to_jsonb(q)) from (select id,competency_v4_id,period_start,period_end,details,teacher_confirmed_at from competency_assessments where student_id=$1 and status='active' and teacher_confirmed_at is not null order by teacher_confirmed_at desc) q),'[]'::jsonb) as "assessments",
+coalesce((select jsonb_agg(to_jsonb(q)) from (select id,competency_v4_id,period_start,period_end,details,teacher_confirmed_at from competency_descriptive_conclusions where student_id=$1 and status='active' and teacher_confirmed_at is not null order by teacher_confirmed_at desc) q),'[]'::jsonb) as "conclusions",
+coalesce((select jsonb_agg(to_jsonb(q)) from (
     select de.competency_id, de.teacher_interpretation, de.teacher_confirmed, de.updated_at
       from diagnostic_entries de where de.student_id = $1 order by de.updated_at desc
-  `, [studentId])).rows;
-  const diagnosticObservations = (await db.query(`
+  ) q),'[]'::jsonb) as "diagnosis",
+coalesce((select jsonb_agg(to_jsonb(q)) from (
     select id, experience_id, aspect_id, competency_v4_id, observation_status,
            observation_text, observed_at
       from diagnostic_experience_observations where student_id = $1
      order by observed_at desc, id desc limit 30
-  `, [studentId])).rows;
-  const spontaneousObservations = (await db.query(`select id, context_label, observation_text,
+  ) q),'[]'::jsonb) as "diagnosticObservations",
+coalesce((select jsonb_agg(to_jsonb(q)) from (select id, context_label, observation_text,
       support_status, observed_at, classification_status, classification_source, competency_v4_id, competency_v4_ids
     from effective_diagnostic_spontaneous_observations where student_id=$1
-    order by observed_at desc,id desc limit 30`, [studentId])).rows;
-  const interview = (await db.query(`select id,version,details,teacher_confirmed_at from student_family_interviews
-    where student_id=$1 and status='confirmed' order by version desc limit 1`, [studentId])).rows[0];
-  const confirmedDiagnosticReviews = (await db.query(`select distinct on (competency_v4_id)
+    order by observed_at desc,id desc limit 30) q),'[]'::jsonb) as "spontaneousObservations",
+(select to_jsonb(q) from (select id,version,details,teacher_confirmed_at from student_family_interviews
+    where student_id=$1 and status='confirmed' order by version desc limit 1) q) as "interview",
+coalesce((select jsonb_agg(to_jsonb(q)) from (select distinct on (competency_v4_id)
       id, competency_v4_id, version, details, teacher_confirmed_at
     from diagnostic_competency_reviews where student_id = $1 and status = 'confirmed'
-    order by competency_v4_id, version desc`, [studentId])).rows
-    .filter((row) => !isDiagnosticScaffoldSummary(row.details?.summary_text));
-  const confirmedStudentReview = (await db.query(`select id,classroom_id,version,details,source_snapshot,teacher_confirmed_at
+    order by competency_v4_id, version desc) q),'[]'::jsonb) as "confirmedDiagnosticReviews",
+(select to_jsonb(q) from (select id,classroom_id,version,details,source_snapshot,teacher_confirmed_at
     from diagnostic_student_reviews where student_id=$1 and status='confirmed'
-    order by version desc limit 1`, [studentId])).rows[0];
+    order by version desc limit 1) q) as "confirmedStudentReview"`, [studentId])).rows[0];
+  // pg returns timestamp columns as Date; preserve that contract inside JSON aggregates.
+  for (const value of Object.values(row)) for (const item of Array.isArray(value) ? value : value ? [value] : []) {
+    for (const key of ["observed_at", "last_observed_at", "teacher_confirmed_at", "updated_at"])
+      if (item[key]) item[key] = new Date(item[key]);
+  }
+  return row;
+}
+
+export async function buildStudentPedagogicalContext(db, studentId) {
+  const sources = await loadContextSources(db, studentId);
+  const student = sources.student ?? undefined;
+  if (!student) return null;
+
+  const v4Names = new Map((await loadKnowledgeBaseV4()).competencyCards.map((card) => [card.id, card.official_name]));
+  const competencies = sources.competencies;
+  const recentEvidence = sources.recentEvidence;
+  const assessments = sources.assessments;
+  const conclusions = sources.conclusions;
+  const safeConclusion = (row) => ({ id: row.id, period_start: row.period_start, period_end: row.period_end, information_status: row.details?.information_status, conclusion_text: row.details?.conclusion_text, support_or_conditions: row.details?.support_or_conditions ?? [], next_steps: row.details?.next_steps ?? [], teacher_confirmed_at: row.teacher_confirmed_at });
+  const diagnosis = sources.diagnosis;
+  const diagnosticObservations = sources.diagnosticObservations;
+  const spontaneousObservations = sources.spontaneousObservations;
+  const interview = sources.interview ?? undefined;
+  const confirmedDiagnosticReviews = sources.confirmedDiagnosticReviews
+    .filter((row) => !isDiagnosticScaffoldSummary(row.details?.summary_text));
+  const confirmedStudentReview = sources.confirmedStudentReview ?? undefined;
   const studentReviewCurrent = confirmedStudentReview ? await isCurrentDiagnosticStudentReview(db,
     confirmedStudentReview.classroom_id, studentId, confirmedStudentReview.source_snapshot) : false;
   return {
@@ -136,6 +159,11 @@ export async function buildStudentPedagogicalContext(db, studentId) {
 }
 
 export async function refreshStudentContextSnapshot(db, studentId) {
+  // Serialize readers/writers of the derived snapshot: an older refresh cannot finish last.
+  return versionTransaction(db, `student-context:${studentId}`, (tx) => refreshSnapshotWithin(tx, studentId));
+}
+
+async function refreshSnapshotWithin(db, studentId) {
   const context = await buildStudentPedagogicalContext(db, studentId);
   if (!context) return null;
   const sourceUpdatedAt = resolveSourceUpdatedAt(
