@@ -1895,3 +1895,9 @@ QA por interfaz detectó error al retirar a un niño ficticio: el servicio escri
 
 ## AN-01 — Estado del resumen perdido al recargar durante IA
 Causa: ai_snapshot conservaba procesamiento/salida, pero su estado no llegaba al editor y una petición de un editor desmontado podía intentar guardar después. Solución focal: publicar estado/expiración, consultar sin regenerar y aplicar propuesta guardada solo expresamente; retorno tardío desmontado no persiste correcciones. Cache/lease y validación de fuentes se conservan. Focales servidor, typecheck/lint/build PASS; recuperación UI real se verificará con una generación. Prevención: distinguir propuesta durable y texto docente y medir proveedor/DB separadamente.
+# AN-02 — Cambio local rechazado por eco de decisiones globales (13/10/2026)
+
+- Síntoma: Aplicar cambios desde Cambiar propuesta con Ayni conserva la indicación, pero devuelve invalid_scope; el error quedaba oculto fuera del panel.
+- Causa: el esquema del parche local exigía regenerar/copiar oportunidades cotidianas e interpretaciones del año y comprobaba igualdad literal. Esta escritura no pertenecía al alcance autorizado de la propuesta.
+- Solución: request/esquema focal incluye solo replacements; servidor conserva campos globales. Igual autorización de IDs, propuestas protegidas y validadores; respuesta con campos globales extra se rechaza. Error renderizado dentro del Sheet.
+- Prevención/validación: pruebas de alcance, propuestas ajenas y pendientes, conservación de decisiones globales y rechazo de campos extra. Medición y validación UI cloud en el informe de Mi año; no se regeneran los 15 tramos para probar el arreglo.

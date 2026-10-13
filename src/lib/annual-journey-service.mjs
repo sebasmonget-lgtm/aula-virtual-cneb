@@ -214,11 +214,25 @@ export async function applyAnnualJourneyChanges(plan, { context, curriculum, pro
   // A global instruction is interpreted by Luna once, then the stronger model receives only its affected subtree.
   const global = changes.some((x) => !x.proposal_id), events = [];
   const call = async (workflow, bundle, schema, affected) => {
+    const scopedPatch = Boolean(proposalId) && schema === JOURNEY_PATCH_SCHEMA;
+    const requestSchema = scopedPatch ? { ...schema, id: "annual-journey-scoped-patch-v3", required: ["replacements"],
+      properties: { replacements: { ...schema.properties.replacements, minItems: affected, maxItems: affected } } } : schema;
+    // A local edit has no authority to rewrite global decisions, or to echo them through the model.
+    const requestBundle = { ...bundle };
+    if (scopedPatch) {
+      delete requestBundle.everyday_opportunities; delete requestBundle.evidence_interpretations;
+      if (requestBundle.plan) {
+        requestBundle.plan = { ...requestBundle.plan };
+        delete requestBundle.plan.everyday_opportunities; delete requestBundle.plan.evidence_interpretations;
+      }
+    }
     const routing = resolvePlan({ workflow, task: "generation" }), begin = Date.now();
     const response = await createProvider(routing, { timeoutMs: 180000 }).generate(buildProviderRequest(workflow,
-      { ...bundle, classroom: providerSnapshot(plan.classroom_snapshot), curriculum: { age: context.age, competency_cards: curriculum } }, routing, schema, JOURNEY_RULES));
+      { ...requestBundle, classroom: providerSnapshot(plan.classroom_snapshot), curriculum: { age: context.age, competency_cards: curriculum } }, routing, requestSchema, JOURNEY_RULES));
     events.push({ ...metadata(response, routing, workflow, affected), duration_ms: Date.now() - begin });
-    return assertJourneySchema(response.output, schema);
+    const output = assertJourneySchema(response.output, requestSchema);
+    return scopedPatch ? { ...output, everyday_opportunities: plan.everyday_opportunities,
+      evidence_interpretations: plan.evidence_interpretations } : output;
   };
   if (global) {
     const schema = { id: "annual-journey-intent-v2", type: "object", additionalProperties: false, required: ["proposal_ids"], properties: {
@@ -229,7 +243,7 @@ export async function applyAnnualJourneyChanges(plan, { context, curriculum, pro
   }
   if ([...explicit].some((id) => protectedIds.includes(id) || !plan.proposed_experiences.some((r) => r.proposal_id === id)))
     journeyFail("protected_proposal", "Una propuesta iniciada, vinculada a trabajo o mantenida por ti está protegida. Elige una propuesta futura.");
-  const patch = await call("annual_journey_repair", { task: "Aplica juntas las indicaciones docentes solo a las propuestas autorizadas. Sustituye oportunidades completas; no agregues competencias nominales." + (proposalId ? " Conserva literalmente everyday_opportunities y evidence_interpretations: esta indicación modifica solo la propuesta seleccionada." : ""),
+  const patch = await call("annual_journey_repair", { task: "Aplica juntas las indicaciones docentes solo a las propuestas autorizadas. Sustituye oportunidades completas; no agregues competencias nominales." + (proposalId ? " Devuelve solo replacements. El servidor conserva las oportunidades cotidianas e interpretaciones; esta indicación modifica solo la propuesta seleccionada." : ""),
     changes, affected_proposal_ids: [...explicit],
     proposals: plan.proposed_experiences.filter((r) => explicit.has(r.proposal_id)), everyday_opportunities: plan.everyday_opportunities, evidence_interpretations: plan.evidence_interpretations,
     other_proposals: plan.proposed_experiences.filter((r) => !explicit.has(r.proposal_id)).map(({ title, primary_competency_ids }) => ({ title, primary_competency_ids })) }, JOURNEY_PATCH_SCHEMA, explicit.size);

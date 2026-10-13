@@ -671,3 +671,6 @@ Cierre preparación: b70cb3b / https://ayni-aula-staging-5704x75jz-ayni4.vercel.
 
 ## QA Mi año autónomo — 2026-10-13
 Base b70cb3b/cce2027; cuenta QA vacía después de limpieza autorizada, nueva aula/5 niños ficticios creados desde UI. Una generación anual autorizada, sin migraciones ni Producción. Corrección focal de recuperación de resumen: estado/expiración públicos sin lease, propuesta durable aplicable expresamente, editor desmontado no sobrescribe datos posteriores. Duración HTTP del proveedor y fases DB/fuentes en metadata existente; no cambio de modelo/effort. Se restaura reloj exclusivamente por flags de la nueva Preview/UUID QA, valor existente 16Feb08Lima. 49 focales, typecheck/lint/build PASS; recorrido/generación real pendientes del despliegue. Registro: docs/qa/AYNI_MI_ANO_AUTONOMO_2026-10-13.md.
+# QA Mi año — 13/10/2026: ajuste focal
+
+En el recorrido real desde b70cb3b se reprodujo invalid_scope al cambiar solo una propuesta: se pedía a la IA copiar literalmente las oportunidades cotidianas e interpretaciones globales. El esquema focal ahora solo devuelve replacements y el servidor conserva las decisiones globales; el contrato global no cambia. Error visible dentro del panel. Sin migraciones ni Producción. Medición/QA en docs/qa/AYNI_MI_ANO_AUTONOMO_2026-10-13.md; una sola generación anual y datos ficticios aislados.
