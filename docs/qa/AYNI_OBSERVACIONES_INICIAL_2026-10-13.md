@@ -33,3 +33,11 @@ Artefactos ignorados: `.local/qa-interface-20261013/`: capturas, `http.json`, `f
 ## Rollback
 
 Revertir el commit de esta entrega restaura la interfaz anterior. Los registros, fotos privadas, entrevistas, competencias y fechas siguen siendo compatibles: no hay cambios de esquema ni de permisos.
+
+## Publicación autorizada para continuar QA
+
+Solicitud posterior del propietario, 13/10/2026: «haz commit de estos nuevos cambios y sube a Vercel para continuar el QA». Se reutiliza el commit de producto `fb96be10753feebc082d8818c9b7c0c35d57aa43`, rama `codex/observaciones-inicial-qa`; árbol limpio y validación local completa al despachar. Sin modificación posterior de producto.
+
+Preview: https://ayni-aula-staging-4r1fqnohk-ayni4.vercel.app/#planificar?tab=diagnostic&step=2&mode=spontaneous . Deployment `dpl_7WX4wYgnKuinjkcMW81jj26TcKbj`, proyecto `ayni-aula-staging`, READY; API verifica proyecto y SHA esperados y target distinto de Production. Build cloud PASS. Ocho smoke secuenciales PASS: `/`, ilustración `movement.webp`, `/health` y `/api/auth/config` GET 200; sesión, alta de aula y estado familiar GET 401, observación libre POST sin sesión 401. La petición POST rechazada no escribe datos pedagógicos.
+
+Producción conserva `dpl_4hi44yVEoU7xkHfHSZM4GCVkyZFx` / `a16d162e8fe62469699bb84adabecefd7e8ab624`, comprobados por API antes/después. Sin cambios de env, cuenta, reloj, RLS o migraciones. Acceso CLI autorizado usa las credenciales existentes sin copiarlas al repo/logs. Panel de Codex solicitado por herramienta: respuesta `queued`; no se declara navegación/login autenticado remoto validado. La docente continúa QA con el enlace de Preview y su cuenta existente. Recibos privados `.local/observations-preview-20261013/` (`deployment-verified.json`, `smoke.json`, logs de build). Este apartado actualiza el estado «No publicación» de la validación local anterior.
