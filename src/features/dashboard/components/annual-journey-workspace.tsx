@@ -245,7 +245,7 @@ export function AnnualJourneyWorkspace({ onConfirmed, onGoDiagnostic, onDevelop,
         {[plans?.draft, plans?.active, ...(plans?.archived ?? [])].filter((p): p is Plan => !!p).map((p) => <option key={p.id} value={p.id}>V{p.version} · {p.status === "draft" ? "Borrador" : p.status === "active" ? "Vigente" : "Histórica"}</option>)}
       </select></label>}
     </header>}
-    {error && <WorkflowFeedback tone="error">{error}<Button className="mt-3" variant="outline" disabled={disabled} onClick={() => void run("reload", async () => { await reload(); await loadStart(); })}>Abrir lo guardado y actualizar resumen</Button></WorkflowFeedback>}
+    {error && <WorkflowFeedback tone="error">{error}<Button className="mt-3" variant="outline" disabled={disabled} onClick={() => void run("reload", async () => { const next=await reload(); await loadStart(); setPreparing(!next || next.proposal.journey_version===2&&!next.proposal.proposed_experiences.length); })}>Abrir lo guardado y actualizar resumen</Button></WorkflowFeedback>}
     {notice && <p role="status" className="text-sm font-semibold text-[#176442]">{notice}</p>}
     {busy === "apply" ? <GenerationProgress label="Ayni está aplicando tus indicaciones" description="Revisa las propuestas que necesitan cambios y conserva las demás." /> : null}
     {job && job.status !== "succeeded" && <AnnualPreparationProgress job={job} generating={generating} disabled={disabled} onContinue={()=>void continueSavedJob(job)} onRefresh={()=>void run("reload",async()=>{await reload(job.draft_id);await loadStart();setJob(null);})}/>}

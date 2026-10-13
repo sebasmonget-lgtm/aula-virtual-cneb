@@ -36,4 +36,6 @@ Escritorio y 390 px: panel de dos columnas y contexto plegado en móvil; convers
 
 ## Publicación y rollback
 
-Pendiente registrar SHA fuente, deployment READY, smoke previo, promoción del mismo build y smoke final. Sin migraciones, secretos en repositorio, cambios de variables cloud, permisos o main. Rollback identificado: deployment anterior citado arriba; conserva eventos privados, pero su servidor anterior no filtraba retiros guiados (ADR-132), por lo que una reversión requiere revisar estos eventos.
+Primera publicación `f39c47a05d34bcf3cbddcbf1349c7804a92143e3`, deployment `dpl_8aYjnn2WyyvBLF7JrGp3Go4vQYxM`, READY; 12 smoke previos PASS y promoción del mismo build. La comprobación final reprodujo EMAXCONNSESSION en /health y carga anual: límite de 15 conexiones en modo sesión. El reintento de lectura recuperó los datos y expuso una entrada vacía de UI; CHAT-02 corrige ese estado. Verificado localmente con 503 sostenido y botón de recuperación hasta chat visible, sin recargar. Build/typecheck/lint del ajuste PASS. No presentar la recuperación como solución permanente del pool.
+
+Pendiente recibo de la publicación final con CHAT-02. Sin migraciones, secretos en repositorio, cambios de variables cloud, permisos o main. Rollback identificado: deployment anterior citado arriba; conserva eventos privados, pero su servidor anterior no filtraba retiros guiados (ADR-132), por lo que una reversión requiere revisar estos eventos.
