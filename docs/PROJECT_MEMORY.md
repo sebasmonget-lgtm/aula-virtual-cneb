@@ -1,5 +1,9 @@
 # Memoria del proyecto Ayni Aula
 
+## Bloques guiados con imágenes genéricas — 2026-10-13
+
+Base 2f2b9e4 conserva lista compacta. Nuevos fondos genéricos compartidos nube/plantas/cono en Qué hacer/Qué observar/Por ejemplo, generados con imagegen integrado y optimizados WebP con alfa, 21.578 bytes total. Criterio violeta con recuadro claro interno, lupa/título resaltado/ejemplos docentes y niño genérico de biblioteca existente. Espacio reservado para imágenes, sin superponer instrucciones ni tocar criterios/ejemplos/IDs/guardado. Typecheck, lint global/focal, build Next webpack, diez pruebas focales y detector PASS; UI local 1366/390 sin desbordamiento, siguiente momento/modal/cambio experiencia conservados y fondos reutilizados. Sin escrituras pedagógicas/migraciones/RLS/publicación. Capturas .local/guided-panels-20261013/; prompts, rutas y rollback en docs/qa/AYNI_BLOQUES_GUIADOS_2026-10-13.md.
+
 ## Lista compacta de observaciones y colores por competencia — 2026-10-13
 
 Base 493ae01 limpia, fetch remoto sin cambios omitidos. Renderer de lista libre/guiada/anterior adopta filas del mockup con identidad/fecha, tipo/momento, texto, competencias y acciones. Selector reciente/antiguo con fechas inválidas al final; texto largo expandible. 14 SVG nuevos derivados del conjunto vectorial existente, paleta por IDs estables (sin niveles), 5.201 bytes en conjunto/máximo 546; contraste >=4,5:1, sugerencias explícitas y dos competencias preservadas. No IA raster: extensión de iconos SVG editables. No nuevas dependencias/backend/migraciones/RLS.

@@ -116,9 +116,9 @@
 .guidedHeader h2 { font-size: 23px; font-weight: 800; line-height: 1.3; }
 .momentBadge { display: inline-block; background: #e3f3ff; border-radius: 8px; color: #0068ba; padding: 4px 10px; margin-top: 8px; font-size: 13px; }
 .guidance { margin-top: 16px; display: grid; gap: 12px; }
-.guidance > section { display: flex; gap: 16px; padding: 18px; border: 1px solid #b6d9f7; border-radius: 14px; background: #eff8ff; }
-.guidance > section:nth-child(2) { background: #eefbf5; border-color: #b0e2cd; }
-.guidance > section:nth-child(3) { background: #fff9e9; border-color: #efd58a; }
+.guidance > section { display: flex; gap: 16px; padding: 18px 152px 18px 18px; border: 1px solid #b6d9f7; border-radius: 14px; background-color: #eff8ff; background-image: url('/guided-panels/cloud.webp'); background-repeat: no-repeat; background-position: right 12px bottom 4px; background-size: 128px auto; }
+.guidance > section:nth-child(2) { background-color: #eefbf5; background-image: url('/guided-panels/plants.webp'); border-color: #b0e2cd; }
+.guidance > section:nth-child(3) { background-color: #fff9e9; background-image: url('/guided-panels/cone.webp'); border-color: #efd58a; }
 .guidance > section > svg { flex-shrink: 0; color: #005fae; background: #d8eeff; width: 52px; height: 52px; border-radius: 50%; padding: 12px; }
 .guidance > section:nth-child(2) > svg { color: #086e53; background: #d2f4e2; }
 .guidance > section:nth-child(3) > svg { color: #946006; background: #fff0bf; }
@@ -134,10 +134,12 @@
 .dialogStudents button[data-coverage=few] { background: #eef7fc; border-color: #9bbbd0; }
 .dialogStudents button[aria-pressed=true] { background: #e5f4ff; border-color: #0075d8; }
 .criterion p { display: flex; align-items: center; gap: 8px; background: #e0f0ff; border-radius: 7px; padding: 8px; font-size: 12px; margin-top: 9px; color: #2563a5; }
-.lookFor { display: flex; gap: 12px; padding: 14px 0; margin-top: 6px; color: #533388; }
-.lookFor > svg { flex-shrink: 0; margin-top: 2px; }
-.lookFor h4 { font-size: 15px; font-weight: 700; }
+.lookFor { display: flex; align-items: center; gap: 12px; padding: 12px 14px; margin-top: 10px; color: #533388; background: #fcfaff; border-radius: 12px; }
+.lookFor > svg { flex-shrink: 0; color: #6333b0; background: #ede4ff; width: 46px; height: 46px; border-radius: 50%; padding: 10px; }
+.lookFor > div { min-width: 0; flex: 1; }
+.lookFor h4 { display: inline; padding: 3px 7px; border-radius: 6px; background: #ede4ff; font-size: 14px; font-weight: 700; line-height: 1.6; box-decoration-break: clone; }
 .lookFor p { display: block; padding: 0; margin-top: 4px; background: transparent; color: #533388; font-size: 15px; line-height: 1.5; max-width: 75ch; }
+.lookForIllustration { width: 80px; height: 80px; object-fit: contain; flex-shrink: 0; align-self: flex-end; }
 .guidedActions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 14px; }
 .guidedDialog { left: auto; right: 24px; translate: none; transform: translateY(-50%); width: min(600px,calc(100vw - 32px)); max-width: 600px; max-height: 92dvh; overflow-y: auto; border-radius: 17px; padding: 22px; display: flex; flex-direction: column; gap: 14px; color: #143573; }
 .guidedDialog h2 { font-size: 21px; font-weight: 800; }
@@ -230,10 +232,15 @@
   .experienceSelect select { font-size: 14px; }
   .guidedHeader { min-height: auto; align-items: center; flex-wrap: wrap; }
   .experienceIllustration { width: 88px; height: 88px; margin-left: auto; }
-  .guidance > section, .criterion { gap: 10px; padding: 14px 12px; }
+  .guidance > section { gap: 10px; padding: 14px 12px 62px; background-size: 86px auto; background-position: right 10px bottom 4px; }
+  .criterion { gap: 10px; padding: 14px 12px; }
   .guidance > section > svg, .criterion > svg { width: 38px; height: 38px; padding: 8px; }
   .guidance h3, .criterion h3 { font-size: 17px; }
   .guidance p, .guidance li, .lookFor p { font-size: 14px; }
+  .lookFor { flex-wrap: wrap; padding: 12px; gap: 8px; }
+  .lookFor > svg { width: 36px; height: 36px; padding: 8px; align-self: flex-start; }
+  .lookFor > div { flex-basis: calc(100% - 44px); }
+  .lookForIllustration { width: 56px; height: 56px; margin-left: auto; }
   .observedPanel, .photoPanel, .competencyPanel, .freeCard .moments, .freeCard .supportOptions { padding: 12px; }
   .freeEvidenceGrid .competencyPanel fieldset > div { grid-template-columns: 1fr; }
 }
