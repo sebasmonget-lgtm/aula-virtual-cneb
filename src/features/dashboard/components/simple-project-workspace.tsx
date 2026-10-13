@@ -15,6 +15,7 @@ import { ProjectPictogram } from "./project-pictogram";
 import { DictationRecorder } from "./dictation-recorder";
 import { ProjectCalendarReview, type ProjectCalendarDay } from "./project-calendar-review";
 import { projectEventWarning } from "@/src/lib/project-event-warning.mjs";
+import { readWorkspaceParams, writeWorkspaceLocation } from "@/src/lib/workspace-location";
 
 type Props = ComponentProps<typeof ProjectDevelopmentWorkspace>;
 async function request<T>(path: string, body?: unknown, method?: string): Promise<T> {
@@ -27,7 +28,7 @@ async function request<T>(path: string, body?: unknown, method?: string): Promis
 }
 export function SimpleProjectWorkspace(props: Props) {
   const [plan, setPlan] = useState<Plan | null>(null), [experiences, setExperiences] = useState<Experience[]>([]);
-  const [chosen, setChosen] = useState<string | null>(props.initialProposalId ?? null);
+  const [chosen, setChosen] = useState<string | null>(() => props.initialProposalId ?? readWorkspaceParams("Planificar").get("projectProposal"));
   const [row, setRow] = useState<Experience | null>(null), [context, setContext] = useState("");
   const [conversation,setConversation]=useState<{messages:{role:string;text:string}[];ready:boolean}|null>(null);
   const [dictating,setDictating]=useState(false);
@@ -50,6 +51,9 @@ export function SimpleProjectWorkspace(props: Props) {
   const idAt = (item: Proposal, index: number) => item.proposal_id ?? plan?.project_slots.find((slot) => slot.slot_index === index + 1)?.id ?? "";
   const index = plan?.proposal.proposed_experiences.findIndex((item, position) => idAt(item, position) === chosen) ?? -1;
   const proposal = plan?.proposal.proposed_experiences[index];
+  useEffect(() => {
+    if (chosen) writeWorkspaceLocation("Planificar", { projectProposal: chosen }, true);
+  }, [chosen]);
   const selectedSlot=proposal?slotFor(proposal,index):null;
   const calendarStartsOn=selectedSlot?.starts_on,calendarEndsOn=selectedSlot?.ends_on,calendarProjectId=row?.id;
   useEffect(() => {
@@ -175,7 +179,7 @@ export function SimpleProjectWorkspace(props: Props) {
         {slot && slot.ends_on < today && <p className="mb-2 text-sm text-[#916219]">Esta planificación corresponde a un período anterior. Puedes revisarla o continuar con la actual.</p>}
         <Button disabled={!id || busy} onClick={() => { setPreparation(null);setOpenedProposal(null); setRow(null); setContext(""); setConversation(null);  setChanging(false); setError(""); setNotice(""); setChosen(id); }}>{existing?.status === "active" ? "Ver proyecto confirmado" : existing ? "Continuar proyecto" : "Usar esta propuesta"}</Button></article>;
     })}</div>{!plan && <Button onClick={props.onGoAnnual}>Completar Mi año</Button>}</> : <>
-      <p className="text-sm text-[#526b87]">{row?.status === "active" ? "Confirmado" : "Por preparar"} · {selectedSlot ? `${displayDate(selectedSlot.starts_on)} al ${displayDate(selectedSlot.ends_on)}` : proposal.period}</p>
+      <p className="text-sm text-[#526b87]">{row?.status === "active" ? "Confirmado" : prepared ? "Preparado para revisar" : "Por preparar"} · {selectedSlot ? `${displayDate(selectedSlot.starts_on)} al ${displayDate(selectedSlot.ends_on)}` : proposal.period}</p>
       {(slotFor(proposal,index)?.ends_on ?? "9999") < today && <p className="rounded-xl bg-[#fff7e8] p-3 text-sm text-[#805819]">Esta planificación corresponde a un período anterior. Puedes revisarla o continuar con la actual.</p>}
       {(!prepared || changing) && <section aria-label="Propósito y preparación del proyecto" className="space-y-4 rounded-2xl border bg-white p-5">
         <div className="flex flex-col gap-5 sm:flex-row"><ProjectPictogram project={proposal} className="size-40 sm:size-48" /><p className="leading-relaxed"><b>Qué buscamos:</b> {proposal.purpose}</p></div>
