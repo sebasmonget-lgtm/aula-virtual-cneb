@@ -20,3 +20,11 @@ Libre conserva identificación accesible del niño, fecha editable, momento, dic
 ## Rollback
 
 Revertir el commit de presentación; los registros y sus IDs/fechas/competencias siguen usando el mismo contrato. No revertir datos ni migraciones.
+
+## Publicación posterior autorizada
+
+Solicitud «publicalo en vercel production»: código `c98d739fa540f1d9a2d261da1683b277ded7b4e3`. Build cloud Next webpack Production --skip-domain READY `dpl_AtjxWnr35ydnfKyANmLhpyxwSngA` en https://ayni-aula-staging-qyimcq0fa-ayni4.vercel.app; diez smoke previos PASS. Promovido el mismo build, sin reconstrucción, a https://project-0w0pq.vercel.app; alias/proyecto/SHA verificados y diez smoke finales PASS. Cada fase prueba página, SVG compacto, nube WebP, ilustración WebP, health/config (200), sesión/setup/status entrevistas/POST observación sin sesión (401). Veinte controles remotos en total. Árbol limpio al desplegar.
+
+Comprobación visual autenticada de ambas vistas publicada: formulario continuo compacto, foto/apoyo y cinco columnas; guiada con tres bloques, criterio interno y textos de oportunidades retirados. Solo navegación/lecturas, sin registros ni alteración de alumnos. Captura local privada `.local/compact-production-20261013/panels-live.png`; pestaña creada para la prueba cerrada. QA docente de guardado/cámara/IA en Producción no ejecutado; pruebas funcionales locales conservadas arriba.
+
+Rollback: `dpl_9vLYaDxmqZrfrCntrTQEFgGg3Cmw` / `3be0385ac947eea8813b17b3e496d7b59cac4d98`, https://ayni-aula-staging-ooxk5sozm-ayni4.vercel.app. No cambios de datos/env/migraciones/RLS. Recibos ignorados `.local/compact-production-20261013/`. Enlace concreto para continuar QA: https://project-0w0pq.vercel.app/#planificar?tab=diagnostic&step=2&mode=spontaneous .
