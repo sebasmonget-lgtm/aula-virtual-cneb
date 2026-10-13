@@ -1,5 +1,9 @@
 # Decisiones de arquitectura
 
+## Densidad de captura y orientación guiada — 2026-10-13
+
+La recomendación conserva su cálculo por niño/competencia, pero expone solo marca en el selector y resumen breve; no listado por niño ni explicación extendida. Compactar con columnas de escritorio que se apilan en móvil, conservando criterio oficial/explicación concreta y nombres completos. Variante compacta explícita solo en observaciones integradas; editor de registros y otros formularios mantienen su presentación. No cambios del contrato de captura, clasificación, privacidad o permisos.
+
 ## Pasos como navegación de preparación — 2026-10-13
 
 Un único componente de botones nativos para los cuatro destinos; números/checks/texto comparten el control. El estado actual indica ubicación, no confirma datos pedagógicos. Destinos centrales reutilizan preparationStageHash; matrícula usa su confirmación servidor y entrevistas/resumen su flush antes de salir. No exigir cobertura diagnóstica para abrir Mi año; sí conservar aula/niños/matrícula. No persistir nuevos datos ni cambiar permisos. Los pasos visibles durante la preparación se mantienen también en el editor de perfil para permitir el retorno.

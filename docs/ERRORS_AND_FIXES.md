@@ -1,5 +1,9 @@
 # Errores y soluciones
 
+## Verificación de fecha y textos largos en compactación — 2026-10-13
+
+Síntomas locales durante implementación: fecha elegida por UI no llegaba al segundo estado React y textos largos se superponían en tarjetas móviles. Causas: retirar onInput del control date existente al reubicarlo y filas auto comprimidas por max-height del grid. Solución: conservar los dos eventos originales onInput/onChange y grid-auto-rows minmax(min-content,auto), con scroll interno. Validación: segundo registro ficticio fechado 12/10/2026 tras cambio, guardado continuo, tarjetas de ~95px para textos de 81px y sin overflow horizontal, typecheck/lint/build PASS. Prevención: preservar handlers al mover controles y revisar textos oficiales largos, no solo etiquetas breves. Ninguno de estos estados se publicó.
+
 ## Enlace de QA abre el resumen de preparación — 2026-10-13
 
 Síntoma reportado tras publicación: al abrir el enlace raíz aparece «Conoce a tu grupo» con indicador verde del resumen, percibido como una versión antigua. Causa confirmada: el enlace final apuntaba a `/`, que TeacherWorkspace resuelve a PreparationHome si no hay año confirmado; ese componente conserva su diseño anterior y no es el espacio InterviewsWorkspace modificado. La API de Vercel comprobó nuevamente Production 3be0385/dpl_9vLYaDxmqZrfrCntrTQEFgGg3Cmw; incluye los commits anteriores a16d162/dbda48f. Corrección validada: abrir desde el resumen el espacio real y Observaciones; navegador autenticado muestra cuatro botones/checks y los SVG compactos nuevos. Destino de QA: /#planificar?tab=diagnostic&step=2&mode=spontaneous. No hubo rollback, cambios de código, datos o nueva publicación. Prevención: entregar la ruta concreta validada y comprobar la pantalla autenticada, no inferirla de health/HTTP/commit. Captura privada ignorada: .local/latest-ui-release-20261013/current-observations.png.
