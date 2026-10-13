@@ -2,7 +2,7 @@
 
 ## Optimización focal de guardado — 2026-10-12
 
-Se conserva el recálculo de contexto en la petición: lectura agrupada y lock por alumno evitan background sin garantías de ejecución/frescura. Idempotencia de alta se identifica por intención UUID, no por nombres; recibo transaccional en JSON existente evita migración. Respuesta compacta opt-in preserva API anterior. No se cambia pool ni se cachea autorización.
+Se conserva el recálculo de contexto en la petición: lectura agrupada y lock por alumno evitan background sin garantías de ejecución/frescura. Idempotencia de alta se identifica por intención UUID, no por nombres; recibo transaccional en JSON existente evita migración. Respuesta compacta opt-in preserva API anterior. No se cambia pool ni se cachea autorización. Validación remota: snapshot guiado ~0,72 s, fuentes concurrentes presentes. Alta/edición promedian menos de dos segundos; no se debilita integridad para forzar el umbral en otros flujos. Datos y límites del instrumento en docs/SAVE_PERFORMANCE_20261012.md.
 
 
 ## Preparación: estados y captura ligera — 2026-10-12
