@@ -31,3 +31,7 @@ Recibos privados ignorados: `.local/latest-ui-release-20261013/`. Contienen solo
 ## Rollback
 
 Versión anterior conservada: `dpl_826w5Q1K2p66eNLvj7phjgGxnHxq` / `fb96be10753feebc082d8818c9b7c0c35d57aa43`, URL https://ayni-aula-staging-9btr6bia7-ayni4.vercel.app. Rollback de deployment sin revertir datos o esquema. La documentación de este recibo se confirma en un commit posterior al SHA de código publicado.
+
+## Revisión del destino de QA
+
+Reporte posterior de pantalla antigua: la raíz abre PreparationHome con diseño anterior conservado. Producción sigue en el SHA publicado; incluye la base anterior consolidada. Se abrió y comprobó el espacio actualizado autenticado en `/#planificar?tab=diagnostic&step=2&mode=spontaneous`: cuatro botones del indicador, formulario continuo e iconos compactos publicados presentes. Sin modificación de código/datos ni despliegue adicional. Captura privada `.local/latest-ui-release-20261013/current-observations.png`. Usar el enlace concreto para continuar el mismo QA.
