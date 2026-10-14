@@ -6,14 +6,14 @@ import { localDatabaseApiUrl } from "@/src/lib/local-database";
 import { displayDate } from "@/src/lib/display-date";
 import { WorkflowFeedback } from "./workflow-ui";
 
-export type PreparationJob={id:string;kind:"project"|"activity_block";status:string;project_id:string|null;proposal_id?:string|null;annual_plan_id?:string|null;stage:string;completed:number;total:number;approved_at:string|null;error:string|null};
+export type PreparationJob={id:string;kind:"project"|"activity_block";status:string;project_id:string|null;proposal_id?:string|null;annual_plan_id?:string|null;complete_project?:boolean;stage:string;completed:number;total:number;approved_at:string|null;error:string|null};
 type ReviewActivity={id:string;revision:number;occurs_on:string;details:Record<string,unknown>;preparation?:{materials?:string[]};workshop?:{details:Record<string,unknown>}};
 async function request<T>(path:string,body?:unknown):Promise<T>{
   const response=await apiFetch(`${localDatabaseApiUrl}${path}`,body===undefined?undefined:{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)});
   const result=await apiJson<T & {error?:string}>(response);if(!response.ok)throw new Error(result.error||"No pudimos recuperar el avance.");return result;
 }
 const fields=[["purpose","Propósito"],["meaningful_situation","Situación significativa"],["teacher_preparation","Preparación docente"],["child_actions","Acciones de los niños"],["mediation","Mediación"],["evaluation_criterion","Criterio"],["expected_evidence","Evidencia esperada"],["evidence_opportunities","Oportunidades para observar"],["closure_or_continuity","Cierre o continuidad"]] as const;
-export function PreparationProgress({id,onProjectReady,names={}}:{id:string;onProjectReady?:(projectId:string)=>void;names?:Record<string,string>}){
+export function PreparationProgress({id,onProjectReady,onGoToday,names={}}:{id:string;onProjectReady?:(projectId:string)=>void;onGoToday?:()=>void;names?:Record<string,string>}){
   const [job,setJob]=useState<PreparationJob|null>(null),[activities,setActivities]=useState<ReviewActivity[]>([]),[reviewed,setReviewed]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState("");
   const delivered=useRef(false),readyCallback=useRef(onProjectReady);
   const [pollRevision,setPollRevision]=useState(0);
@@ -36,6 +36,7 @@ export function PreparationProgress({id,onProjectReady,names={}}:{id:string;onPr
     }catch(cause){setError(cause instanceof Error?cause.message:"No pudimos reintentar.");}finally{setBusy(false);}}
   async function approve(){setBusy(true);setError("");try{setJob(await request<PreparationJob>(`/api/preparation/${id}/approve`,{reviewed,activities:activities.map(item=>({id:item.id,expectedRevision:item.revision}))}));}
     catch(cause){setReviewed(false);setError(cause instanceof Error?cause.message:"No pudimos confirmar el bloque.");}finally{setBusy(false);}}
+  if(job?.complete_project)return <section className="space-y-4 rounded-2xl border bg-white p-5" aria-label="Preparación completa del proyecto"><h2 className="text-xl font-bold text-[#172b52]">{job.status==='succeeded'&&job.approved_at?`${job.total} actividades listas`:"Ayni está preparando tus actividades"}</h2><ol className="space-y-3 text-sm text-[#47658b]"><li>Preparando Plan Maestro{['activities','publishing','ready'].includes(job.stage)?' · Listo':''}</li><li role="status" aria-live="polite">Generando actividades: {job.completed} de {job.total}</li><li>Verificando y guardando actividades{job.approved_at?' · Listo':''}</li></ol>{['queued','running'].includes(job.status)&&<p className="text-sm text-[#47658b]">Puedes salir y volver. Recuperaremos el avance guardado.</p>}{(job.error||error)&&<WorkflowFeedback tone="error">{error||job.error}</WorkflowFeedback>}{['failed','uncertain'].includes(job.status)&&<Button disabled={busy} onClick={()=>void retry()}>Reintentar lo pendiente</Button>}{job.status==='succeeded'&&job.approved_at&&onGoToday&&<Button onClick={onGoToday}>Ir a Hoy</Button>}</section>;
   return <section className="space-y-4 rounded-xl border bg-white p-5" aria-label="Preparación del proyecto">
     <h2 className="text-xl font-bold">{job?.approved_at?"Tus actividades están confirmadas":job?.status==="succeeded"?"Preparación lista para revisar":"Estamos preparando tu proyecto"}</h2>
     <p role="status" aria-live="polite">{job?.kind==="activity_block"?`${job.completed} de ${job.total} actividades listas`:({structure:"Preparando la estructura",criteria:"Preparando los criterios",calendar:"Organizando los días",master:"Preparando el Plan Maestro",ready:"Plan Maestro listo"}[job?.stage??"structure"])}</p>

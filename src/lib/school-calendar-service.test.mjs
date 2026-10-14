@@ -77,6 +77,10 @@ test("calendario 2026 aplica feriados, gestión, overrides y conserva proyectos 
     const oldActivity=randomUUID();await db.query(`insert into activities(id,experience_id,occurs_on,title,purpose,status,details) values($1,$2,'2026-04-07','Actividad antigua','Explorar','active','{}'::jsonb)`,[oldActivity,experience]);
     const loaded=await loadEffectiveCalendar(db,{teacherId:teacher,classroomId:setup.classroomId,from:"2026-04-07",to:"2026-04-07"});
     assert.equal(loaded.activities[0].title,"Actividad antigua");assert.equal(loaded.activities[0].planned_date,null);
+    await db.query("update activities set status='archived' where id=$1",[oldActivity]);
+    assert.equal((await loadEffectiveCalendar(db,{teacherId:teacher,classroomId:setup.classroomId,from:"2026-04-07",to:"2026-04-07"})).activities.length,0);
+    await db.query(`insert into class_schedule_entries(id,classroom_id,scheduled_on,start_time,end_time,block_type,activity_id,title) values($1,$2,'2026-04-07','09:00','09:45','activity',$3,'Actividad histórica')`,[randomUUID(),setup.classroomId,oldActivity]);
+    assert.equal((await loadEffectiveCalendar(db,{teacherId:teacher,classroomId:setup.classroomId,from:"2026-04-07",to:"2026-04-07"})).activities[0].id,oldActivity);
   }finally{await db.close();}
 });
 
@@ -91,6 +95,10 @@ test("reprogramar valida calendario, evita conflictos y sincroniza Hoy",{timeout
     const pair=(await db.query(`select a.occurs_on::text,se.scheduled_on::text from activities a join class_schedule_entries se on se.activity_id=a.id where a.id=$1`,[activity])).rows[0];
     assert.equal(pair.occurs_on,pair.scheduled_on);assert.equal(pair.occurs_on,"2026-04-08");
     assert.equal(Number((await db.query(`select count(*) as n from activity_schedule_changes where activity_id=$1`,[activity])).rows[0].n),1);
+    const acceptedActivity=randomUUID();
+    await db.query(`insert into activities(id,experience_id,occurs_on,title,purpose,status,details,generation_metadata) values($1,$2,'2026-04-09','Proyecto completo','Explorar','active','{}','{"publication_authorization":{"policy":"accepted-project-complete-v1"}}')`,[acceptedActivity,experience]);
+    await assert.rejects(reprogramActivity(db,{teacherId:teacher,activityId:acceptedActivity,newDate:"2026-04-10",reason:"Cambio"},{today:"2026-04-06"}),{reason:'project_sequence_protected'});
+    assert.equal((await loadEffectiveCalendar(db,{teacherId:teacher,classroomId:setup.classroomId,from:"2026-04-09",to:"2026-04-09"})).activities[0].sequence_locked,true);
   }finally{await db.close();}
 });
 

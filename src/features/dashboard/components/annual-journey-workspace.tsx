@@ -10,7 +10,7 @@ import { scopedAnnualChanges, annualCalendarCriteria } from "@/src/lib/annual-ch
 import { Textarea } from "@/components/ui/textarea";
 import { apiFetch, apiJson } from "@/src/lib/ayni-api-fetch";
 import { localDatabaseApiUrl } from "@/src/lib/local-database";
-import { canLeaveWorkspace, readWorkspaceParams, useWorkspaceSubview, writeWorkspaceLocation } from "@/src/lib/workspace-location";
+import { canLeaveWorkspace, readWorkspaceParams, useWorkspaceSubview, useWorkspaceParam, writeWorkspaceLocation } from "@/src/lib/workspace-location";
 import { savedJourneyAnnualRows } from "@/src/lib/annual-year-map.mjs";
 import { AnnualYearTimeline, type AnnualMapRow, type AnnualMapCalendar, type AnnualMapEffectiveCalendar } from "./annual-year-map";
 import { AsyncButton, GenerationProgress, LoadingState, WorkflowFeedback } from "./workflow-ui";
@@ -25,7 +25,8 @@ import { AnnualProjectPreview } from "./annual-project-preview";
 import yearStyles from "./annual-plan.module.css";
 import { annualTeacherText, annualTeacherProposalView } from "@/src/lib/annual-teacher-display.mjs";
 import { hasSavedAnnualYear, selectSavedAnnualPlan, currentAnnualPeriod, annualPeriodNumber } from "@/src/lib/annual-plan-display.mjs";
-import {AnnualProposalChangeDialog, type ProposalPreviewState} from "./annual-proposal-change-dialog";
+import {CompleteProjectWorkspace} from "./complete-project-workspace";
+import {ActivityConsultation} from "./activity-consultation";
 
 type Fact = { key: string; kind: string; subject: string; scope: string; support_text: string; uncertainty: string; occurred_at: string | null; explicit_tags?: string[] };
 type Snapshot = { source_fingerprint: string; student_count: number; facts: Fact[]; resources: string[];
@@ -59,6 +60,7 @@ const generalLabels = { organization_criteria: "Cómo organizaremos el año", tr
   family_collaboration: "Familias y comunidad", inclusive_supports: "Apoyos para participar" } as const;
 const sourceLabels: Record<string, string> = { family_report: "La familia reporta", observed: "La profesora registró", teacher_context: "Contexto docente", teacher_decision: "Decisión docente" };
 const annualViews = ["map", "list"] as const;
+const activityParam=(value:string)=>/^[0-9a-f-]{36}$/i.test(value)?value:undefined;
 const compactDate = (value: string) => new Intl.DateTimeFormat("es-PE", { day: "numeric", month: "short", timeZone: "UTC" }).format(new Date(`${value}T00:00:00Z`));
 
 function Facts({ snapshot, subjects }: { snapshot: Snapshot; subjects?: Record<string,string> }) {
@@ -77,8 +79,8 @@ function OpportunityDetails({ value, names }: { value: Opportunity; names: Map<s
   </div>;
 }
 
-export function AnnualJourneyWorkspace({ onConfirmed, onGoDiagnostic, onDevelop, onLegacy }: {
-  explicitConversationStart?: boolean; onConfirmed?: () => void; onGoDiagnostic?: () => void; onDevelop?: (id: string) => void; onLegacy: () => void;
+export function AnnualJourneyWorkspace({ onConfirmed, onGoDiagnostic, onLegacy,onGoToday }: {
+  explicitConversationStart?: boolean; onConfirmed?: () => void; onGoDiagnostic?: () => void; onDevelop?: (id: string) => void; onLegacy: () => void;onGoToday?:()=>void;
 }) {
   const [plans, setPlans] = useState<Plans | null>(null), [start, setStart] = useState<Start | null>(null);
   const [selectedId, setSelectedId] = useState(""), [preparing, setPreparing] = useState(false);
@@ -87,13 +89,13 @@ export function AnnualJourneyWorkspace({ onConfirmed, onGoDiagnostic, onDevelop,
   const contextDraft = useAnnualContextDraft();
   const { value: experienceInput, conversationId, dirty: contextDirty, captureConversation, seed: seedContext } = contextDraft;
   const [panelOpen,setPanelOpen]=useState(false);
-  const [changeProposalId,setChangeProposalId]=useState<string|null>(null);
   const [job, setJob] = useState<Job | null>(null);
   const [busy, setBusy] = useState<string | null>(null), [audioBusy, setAudioBusy] = useState(false);
   const [error, setError] = useState(""), [notice, setNotice] = useState("");
   const [interpretationsReviewed, setInterpretationsReviewed] = useState(false);
   const [annualView, setAnnualView] = useWorkspaceSubview("Planificar", "annualView", annualViews, "map", false);
   const [selectedProposalId, setSelectedProposalId] = useState<string | null>(()=>readWorkspaceParams("Planificar").get("annualProposal"));
+  const [consultId,setConsultId]=useWorkspaceParam("Planificar","activityConsult","",activityParam);
   const [annualTools]=useWorkspaceSubview("Planificar","annualTools",["year","tools"] as const,"year",false);
   const toolsOnly=annualTools==='tools';
   const [periodValue,setPeriodValue]=useWorkspaceSubview("Planificar","annualPeriod",["current","all","1","2","3","4"] as const,"current",false);
@@ -206,7 +208,7 @@ export function AnnualJourneyWorkspace({ onConfirmed, onGoDiagnostic, onDevelop,
       if (cause.draftId) await reload(cause.draftId).catch(() => {});
     } finally { setBusy(null); }
   };
-  useEffect(()=>{let live=true;if(!busy&&developAfterSave)void Promise.resolve().then(()=>{if(live){onDevelop?.(developAfterSave);setDevelopAfterSave(null);}});return()=>{live=false;};},[busy,developAfterSave,onDevelop]);
+  useEffect(()=>{let live=true;if(!busy&&developAfterSave)void Promise.resolve().then(()=>{if(live){setSelectedProposalId(developAfterSave);writeWorkspaceLocation('Planificar',{annualProposal:developAfterSave,prepareProject:developAfterSave},true);setDevelopAfterSave(null);}});return()=>{live=false;};},[busy,developAfterSave]);
   const mutate = (operation: string, extra: unknown = {}) => selected && run(operation, async () => {
     const result = await api<Plan>(`/api/annual-journey/${selected.id}/${operation}`, { expectedRevision: selected.revision, interpretationsReviewed, futureCoverageAcknowledged:!!proposal?.experience_context, ...(extra as object) });
     if (operation === "intent") { setMessage(""); setNotice("Indicación guardada. Puedes agregar otra o aplicar los cambios juntos."); }
@@ -214,24 +216,6 @@ export function AnnualJourneyWorkspace({ onConfirmed, onGoDiagnostic, onDevelop,
     setInterpretationsReviewed(false); await reload(result.id);
     if(operation==='confirm'&&prepareAfterConfirm){setDevelopAfterSave(prepareAfterConfirm);setPrepareAfterConfirm(null);}
   });
-  const changeProject=(id:string)=>setChangeProposalId(id);
-  const displayPreview=(value:ProposalPreviewState):ProposalPreviewState=>value.preview?{...value,preview:{...value.preview,
-    proposal:annualTeacherProposalView(value.preview.proposal,selected?.display_subjects)}}:value;
-  const generateProjectChange=async(text:string)=>{
-    if(!selected||!changeProposalId)throw new Error("Vuelve a elegir el proyecto.");
-    const draft=selected.status==='active'?(plans?.draft??await api<Plan>(`/api/annual-journey/${selected.id}/copy`,{expectedRevision:selected.revision})):selected;
-    if(draft.status!=='draft')throw new Error("Abre una revisión del año para cambiar este proyecto.");
-    await reload(draft.id);
-    let result:ProposalPreviewState;
-    try{result=await api<ProposalPreviewState>(`/api/annual-journey/${draft.id}/proposal-preview`,{expectedRevision:draft.revision,proposalId:changeProposalId,text});}
-    catch(cause){
-      // A lost response may already have saved a candidate; read it before repeating a model request.
-      const recovered=await api<ProposalPreviewState>(`/api/annual-journey/${draft.id}/proposal-preview?proposalId=${changeProposalId}`).catch(()=>null);
-      if(!recovered?.preview||recovered.preview.request!==text)throw cause;
-      result=recovered;
-    }
-    await reload(result.planId);return displayPreview(result);
-  };
   const generate = () => run("prepare", async () => {
     const existing=selectSavedAnnualPlan(plans,selectedId);
     if(hasSavedAnnualYear(existing)){await reload(existing.id);setPreparing(false);return;}
@@ -253,7 +237,9 @@ export function AnnualJourneyWorkspace({ onConfirmed, onGoDiagnostic, onDevelop,
   const names = new Map((proposal?.curriculum_reference ?? start?.curriculum ?? []).map((c) => [c.id, c.name]));
   const snapshot = preparing ? start?.snapshot : proposal?.classroom_snapshot;
   const disabled = !!busy || audioBusy || generating;
-  const proposalDetails=complete&&!toolsOnly?<div className={listOpen?'space-y-4':'space-y-5'}>{(listOpen?visibleProposals:selectedProposal?[selectedProposal]:[]).map(row=><AnnualProjectPreview key={row.proposal_id} row={row} index={(proposal!.resolved_calendar?.projects?.findIndex(slot=>slot.proposal_id===row.proposal_id)??proposal!.proposed_experiences.indexOf(row))+1} names={names} onPrepare={selected?.status==='archived'||!onDevelop?undefined:()=>{if(selected?.status==='active')onDevelop(row.proposal_id);else{setPrepareAfterConfirm(row.proposal_id);setReviewOpen(true);}}} onChange={()=>changeProject(row.proposal_id)} canChange={!!editable||selected?.status==='active'} disabled={disabled}/>)}{!visibleProposals.length&&<p className="rounded-xl bg-white p-5 text-[#47658b]">No hay proyectos registrados en este bimestre. Puedes consultar otro bimestre o Todo el año.</p>}</div>:null;
+  if(consultId)return <ActivityConsultation key={consultId} id={consultId} onBack={()=>setConsultId('')}/>;
+  const proposalDetails=complete&&!toolsOnly?<div className={listOpen?'space-y-4':'space-y-5'}>{(listOpen?visibleProposals:selectedProposal?[selectedProposal]:[]).map(row=>selected?.status==='archived'?<AnnualProjectPreview key={row.proposal_id} row={row} index={(proposal!.resolved_calendar?.projects?.findIndex(slot=>slot.proposal_id===row.proposal_id)??0)+1} names={names} disabled canChange={false} onChange={()=>{}}/>:<CompleteProjectWorkspace key={`${selected?.id}:${row.proposal_id}`} embedded planId={selected?.id} proposalId={row.proposal_id} onGoToday={onGoToday}
+    onRequireConfirmation={()=>{setPrepareAfterConfirm(row.proposal_id);setReviewOpen(true);}} onConfirmed={()=>{void reload().then(()=>onConfirmed?.()).catch(cause=>setError(cause.message));}} onPlanChanged={async id=>{await reload(id);}}/>)}{!visibleProposals.length&&<p className="rounded-xl bg-white p-5 text-[#47658b]">No hay proyectos registrados en este bimestre. Puedes consultar otro bimestre o Todo el año.</p>}</div>:null;
   return <section ref={overviewRef} className={"ayni-workflow space-y-6 !max-w-none "+yearStyles.page}>
     {(!preparing||generating)&&<header className="flex flex-wrap items-start justify-between gap-4"><div><h1 className="text-3xl font-extrabold text-[#172b52]">{preparing?job&&job.status!=="succeeded"?"Preparando Mi año":"Conversar con Ayni":toolsOnly?"Organizar propuestas":"Mi año"}</h1>
       <p className="mt-2 text-[#526b87]">{preparing?"Ayni te acompaña a preparar una propuesta para tu aula.":"Conocemos al grupo y preparamos oportunidades para seguir aprendiendo."}</p></div>
@@ -271,7 +257,10 @@ export function AnnualJourneyWorkspace({ onConfirmed, onGoDiagnostic, onDevelop,
     {!preparing && complete && selected && proposal && <>
       {editable&&!toolsOnly&&<section className={yearStyles.summary}><div><h2>{editable?'Resumen listo para revisar':'Mi año guardado'}</h2><p>{editable?'Revisa lo principal antes de confirmar tu año.':'Puedes preparar un proyecto y volver a tu año cuando lo necesites.'}</p></div>{proposal.experience_context&&<div><small>Inicio en Ayni</small><strong>{compactDate(proposal.experience_context.starts_on)}</strong></div>}<div><small>Contexto registrado</small><strong>{proposal.experience_context?.context_items[0]?.text??String(proposal.classroom_snapshot?.student_count??0)+' niños en tu aula'}</strong></div><Button disabled={disabled} onClick={()=>{setPrepareAfterConfirm(null);setReviewOpen(true);}}>{editable?'Revisar y confirmar':'Ver resumen del año'}</Button></section>}
       {toolsOnly&&<div className="flex flex-wrap gap-3">{editable?<Button disabled={disabled} onClick={()=>{setPrepareAfterConfirm(null);setReviewOpen(true);}}>Revisar y confirmar</Button>:selected.status==='active'&&!plans?.draft?<Button disabled={disabled} onClick={()=>void mutate('copy')}>Abrir revisión para organizar</Button>:null}</div>}
+      {!toolsOnly&&<Dialog open={reviewOpen} onOpenChange={value=>{if(!disabled)setReviewOpen(value);}}><DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-xl"><DialogHeader><DialogTitle>¿Confirmamos Mi año?</DialogTitle><DialogDescription>Las propuestas consideran la información disponible de tu aula.</DialogDescription></DialogHeader><p><strong>{proposal.resolved_calendar?.projects?.length??15} tramos</strong> organizados en 4 bimestres. Conservamos las fechas lectivas, feriados y semanas de gestión del calendario.</p><p className="text-sm text-[#47658b]">Los períodos pasados sin registro se mantienen como tales. Confirmas la planificación de los días disponibles.</p>{!!proposal.future_coverage_gaps?.length&&<p className="text-sm text-[#47658b]">En lo que queda del año hay {proposal.future_coverage_gaps.length} competencias sin una oportunidad prevista en proyectos. Puedes seguir observándolas en los momentos cotidianos.</p>}{!!proposal.evidence_interpretations?.length&&<p className="text-sm text-[#47658b]">Las interpretaciones de Ayni quedan pendientes de revisión; esta confirmación no acredita logros ni niveles de los niños. Las fuentes siguen disponibles en Entrevistas y observaciones.</p>}{error&&<WorkflowFeedback tone="error">{error}</WorkflowFeedback>}{editable&&<AsyncButton busy={busy==='confirm'} busyLabel="Confirmando…" disabled={disabled||!!message.trim()||!!proposal.pending_changes?.length} onClick={()=>void mutate('confirm',{confirmationScope:'planning',interpretationsReviewed:false})}>Confirmar Mi año</AsyncButton>}</DialogContent></Dialog>}
+      {toolsOnly&&<>
       <Dialog open={reviewOpen} onOpenChange={value=>{if(!disabled)setReviewOpen(value);}}><DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-2xl"><DialogHeader><DialogTitle>{editable?'Revisa y confirma Mi año':'Resumen de Mi año'}</DialogTitle><DialogDescription>{prepareAfterConfirm?'Confirma tu año para continuar con el proyecto elegido.':'La confirmación conserva esta versión. Después puedes cambiar proyectos con Ayni.'}</DialogDescription></DialogHeader>{proposal.experience_context&&<><h3 className="font-bold">Tus decisiones</h3><ul className="list-disc space-y-2 pl-5">{proposal.experience_context.context_items.map((item,i)=><li key={i}>{item.text}</li>)}</ul>{!!proposal.experience_context.historical_projects.length&&<><h3 className="font-bold">Historia que declaraste</h3><ul>{proposal.experience_context.historical_projects.map((item,i)=><li key={i}>{item.title}</li>)}</ul></> }</>}{proposal.evidence_interpretations?.map((item,i)=><section key={i} className="space-y-2 rounded-xl bg-[#edf7fa] p-3"><p>{item.interpretation}</p><p className="text-sm">{item.scope==='individual'?'Registro individual':'Subgrupo'} · Interpretación para revisar</p>{item.fact_keys.map(key=><p key={key} className="text-sm">{snapshot?.facts.find(fact=>fact.key===key)?.support_text}</p>)}</section>)}{editable&&!!proposal.evidence_interpretations?.length&&<label className="flex min-h-11 items-center gap-3"><input type="checkbox" checked={interpretationsReviewed} onChange={event=>setInterpretationsReviewed(event.target.checked)}/>Revisé estas interpretaciones para esta versión del año.</label>}{proposal.experience_context&&<p className="text-sm text-[#47658b]">Las fechas pasadas sin registro se conservan así. Confirmas las oportunidades previstas para los días disponibles.</p>}{editable&&<AsyncButton busy={busy==='confirm'} busyLabel="Confirmando…" disabled={disabled||!!message.trim()||!!proposal.pending_changes?.length||proposal.editor_version===3&&!proposal.experience_context&&(proposal.proposed_experiences.length!==15||annualCoverage(proposal).some((item:{total:number;everyday:boolean})=>!item.total&&!item.everyday))||!!proposal.evidence_interpretations?.length&&!interpretationsReviewed} onClick={()=>void mutate('confirm')}>{prepareAfterConfirm?'Confirmar y continuar al proyecto':'Confirmar Mi año'}</AsyncButton>}{error&&<WorkflowFeedback tone="error">{error}</WorkflowFeedback>}</DialogContent></Dialog>
+      </>}
       {toolsOnly && editable && proposal.editor_version!==3 && <div className="flex flex-wrap items-center gap-3"><Button variant="outline" disabled={disabled} onClick={()=>changeScope(null)}><MessageCircle className="size-4"/>Ajustar Mi año con Ayni{globalChanges.length ? " · "+globalChanges.length+" pendientes" : ""}</Button><Button variant="ghost" disabled={disabled} onClick={()=>void mutate("refresh")}>Actualizar con nuevas observaciones</Button>{proposal.editor_version!==3 && <Button variant="outline" disabled={disabled} onClick={()=>void mutate("upgrade")}>Organizar borrador en 15 tramos</Button>}</div>}
       {toolsOnly && proposal.editor_version!==3 && <p className="rounded-lg bg-slate-100 p-3 text-sm text-[#3d5874]">Estás viendo una versión anterior de {proposal.proposed_experiences.length} propuestas, con sus fechas conservadas. Organizar un borrador compatible en 15 tramos activa Biblioteca, matriz curricular y arrastre; el contenido pedagógico se conserva. Si contiene trabajo protegido, usa un año QA separado.</p>}
       {toolsOnly && proposal.editor_version===3 && !proposal.experience_context && proposal.proposed_experiences.length!==15 && <p role="status" className="rounded-lg bg-amber-50 p-3 text-sm text-amber-950">Hay {15-proposal.proposed_experiences.length} tramos vacíos. Coloca una propuesta en cada uno antes de confirmar.</p>}
@@ -289,11 +278,7 @@ export function AnnualJourneyWorkspace({ onConfirmed, onGoDiagnostic, onDevelop,
       {!listOpen && calendar && proposal.editor_version!==3 && <AnnualYearTimeline rows={mapProjection.rows} calendar={calendar} effectiveCalendar={effectiveCalendar}
         selectedId={selectedProposal?.proposal_id ?? null} onSelect={setSelectedProposalId} initialStage={proposal.resolved_calendar?.initial_stage} />}
       {proposal.editor_version===3 && calendar ? <AnnualSlotEditor plan={proposal as unknown as EditorPlan} planId={selected.id} revision={selected.revision} calendar={calendar} effectiveCalendar={effectiveCalendar} compact={!toolsOnly} showTools={toolsOnly} calendarTimeline={toolsOnly||period==='all'&&!listOpen} onProtection={id=>void mutate("keep",{proposalId:id})} listView={listOpen} viewAction={<Button variant="outline" onClick={()=>setAnnualView(listOpen?'map':'list')}>{listOpen?<MapIcon size={16}/>:<List size={16}/>} {listOpen?'Ver mapa':'Ver lista'}</Button>} period={period} onPeriod={value=>{setPeriodValue(value as typeof periodValue);setSelectedProposalId(null);}} selectedId={selectedProposal?.proposal_id ?? null} onSelect={chooseProposal} editable={!!editable} disabled={disabled} onAction={action=>void mutate("structure",{action})} onReload={reload}>{proposalDetails}</AnnualSlotEditor> : proposalDetails}
-      {changeProposalId&&proposal.proposed_experiences.find(row=>row.proposal_id===changeProposalId)&&<AnnualProposalChangeDialog key={changeProposalId} hasConfirmedYear={!!plans?.active}
-        row={proposal.proposed_experiences.find(row=>row.proposal_id===changeProposalId)!} index={(proposal.resolved_calendar?.projects?.findIndex(slot=>slot.proposal_id===changeProposalId)??proposal.proposed_experiences.findIndex(row=>row.proposal_id===changeProposalId))+1} names={names}
-        onClose={()=>setChangeProposalId(null)} onRead={async()=>selected.status==='draft'?displayPreview(await api<ProposalPreviewState>(`/api/annual-journey/${selected.id}/proposal-preview?proposalId=${changeProposalId}`)):null}
-        onGenerate={generateProjectChange} onApply={async state=>{await api(`/api/annual-journey/${state.planId}/proposal-preview/accept`,{expectedRevision:state.revision,previewId:state.preview!.id});await reload(state.planId);setNotice("Cambio guardado en el borrador. Revisa y confirma Mi año cuando esté listo.");onConfirmed?.();}}
-        onDiscard={async state=>{const current=await api<ProposalPreviewState>(`/api/annual-journey/${state.planId}/proposal-preview?proposalId=${changeProposalId}`);if(current.preview?.id===state.preview?.id)await api(`/api/annual-journey/${state.planId}/proposal-preview/discard`,{expectedRevision:current.revision,previewId:current.preview!.id});await reload(state.planId);}}/>}
+
       <Sheet open={panelOpen} onOpenChange={value=>{if(!value&&disabled)return;if(!value&&message.trim()&&!window.confirm("Hay texto sin guardar. ¿Quieres cerrar el panel?"))return;setPanelOpen(value);}}><SheetContent className="w-full overflow-y-auto p-5 sm:max-w-xl"><SheetHeader><SheetTitle>{scope?"Cambiar propuesta con Ayni":"Ajustar Mi año con Ayni"}</SheetTitle><SheetDescription>{scope?"Cuéntame qué quisieras cambiar. Puedes pedir otro enfoque, tema, materiales, competencias u otra experiencia.":"Reúne cambios para todo tu año: temas, propuestas futuras u oportunidades curriculares. Las propuestas protegidas se conservan."}</SheetDescription></SheetHeader>
         <div className="mt-4 flex items-center gap-3 rounded-xl bg-[#edf7fa] p-3"><span className="w-16 shrink-0"><AyniMascot/></span><p className="text-sm leading-relaxed">{scope?"¿Qué enfoque quieres cambiar y qué deseas que hagan los niños? Agrega tus indicaciones; las revisaremos juntas antes de aplicar el cambio.":"Cuéntame qué quieres priorizar y qué condiciones debo considerar para ajustar tu año."}</p></div>
         {error && <WorkflowFeedback tone="error">{error}</WorkflowFeedback>}

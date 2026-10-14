@@ -18,8 +18,9 @@ import { projectEventWarning } from "@/src/lib/project-event-warning.mjs";
 import { readWorkspaceParams, writeWorkspaceLocation } from "@/src/lib/workspace-location";
 import {useUnsavedWork} from "@/src/lib/use-unsaved-work";
 import {ProjectActivitySequence} from "./project-activity-sequence";
+import {CompleteProjectWorkspace} from "./complete-project-workspace";
 
-type Props = ComponentProps<typeof ProjectDevelopmentWorkspace>;
+type Props = ComponentProps<typeof ProjectDevelopmentWorkspace>&{onGoToday?:()=>void};
 async function request<T>(path: string, body?: unknown, method?: string): Promise<T> {
   const response = await apiFetch(`${localDatabaseApiUrl}${path}`, body === undefined ? undefined : {
     method: method ?? "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body),
@@ -166,6 +167,7 @@ export function SimpleProjectWorkspace(props: Props) {
   if (advanced) return <div className="space-y-4"><Button variant="outline" onClick={() => { setAdvanced(false); setOpenedProposal(null); setRow(null); setLoading(true); setReload((value) => value + 1); }}>Volver a la vista sencilla</Button>
     <ProjectDevelopmentWorkspace {...props} initialProposalId={chosen} /></div>;
   if (loading) return <LoadingState label="Abriendo Mi año…" />;
+  if(modern&&chosen&&!advanced)return <CompleteProjectWorkspace proposalId={chosen} onGoAnnual={props.onGoAnnual} onGoToday={props.onGoToday} onConfirmed={props.onConfirmed}/>;
   const existingForChosen = chosen && experiences.some((entry) => entry.status !== "archived" && (entry.annual_plan_id === plan?.id || modern&&entry.source_proposal_id===chosen) &&
     (entry.source_proposal_id === chosen || (!entry.source_proposal_id && entry.source_proposal_index === index)));
   if (existingForChosen && openedProposal !== chosen) return error ? <WorkflowFeedback tone="error">{error}

@@ -17,13 +17,17 @@ test("chat de cambio: revisión privada antes de aplicar, CAS, propiedad y prote
     const teacherId=randomUUID(),created=await createPilotClassroom(db,teacherId,{teacherName:"QA chat",institutionName:"QA",section:"QA",age:5,year:2026,startsOn:"2026-03-02",endsOn:"2026-12-31"});
     const context={id:created.classroomId,school_year_id:created.schoolYearId,curriculum_version_id:(await db.query("select id from curriculum_versions limit 1")).rows[0].id,
       year:2026,age:5,available_resources:[],calendar:{initial_stage:defaultInitialStage()}};
-    let calls=0,invalidPatch=false;
+    let calls=0,invalidPatch=false,invalidChat=false,chatRequests=[];
     const route=async(path,body,user=teacherId)=>{
       let result;
       await handleAnnualJourneyRoutes({request:{method:body===undefined?"GET":"POST"},response:{},url:new URL(`http://localhost/api/annual-journey/${path}`),db,teacherId:user,
         readJson:async()=>body,send:(_r,status,data)=>{result={status,data};},annualPlanningContext:async()=>context,annualDocumentContext:()=>({teacher_name:"QA"}),
         createProvider:()=>({generate:async request=>{
           calls++;
+          if(request.output_schema.id==='project-change-conversation-v1'){
+            chatRequests.push(request.ai_context_bundle);
+            return{output:{message:invalidChat?'Respuesta inválida':'Podemos usar botellas recicladas para explorar.',question:request.ai_context_bundle.conversation.filter(m=>m.role==='teacher').length===1?'¿Lo hacemos en el patio?':'',ready:request.ai_context_bundle.conversation.filter(m=>m.role==='teacher').length>1,chips:[],competency_ids:[invalidChat?'NON_CNEB':request.ai_context_bundle.curriculum.competency_cards[0].id]}};
+          }
           if(request.workflow==="annual_journey_review")return{output:{issues:[]}};
           if(request.workflow==="annual_journey_repair"){
             assert.ok(request.ai_context_bundle.changes.every(change=>!change.text.includes("12345678")));
@@ -38,9 +42,33 @@ test("chat de cambio: revisión privada antes de aplicar, CAS, propiedad y prote
     const initial=await route("generate",{teacherIdeas:"",sourceFingerprint:start.data.snapshot.source_fingerprint});assert.equal(initial.status,201,JSON.stringify(initial.data));
     let plan=initial.data;
     const proposalId=plan.proposal.proposed_experiences.find(row=>row.planned_start_date>="2026-10-19").proposal_id;
-    const baseline=structuredClone(plan.proposal),countBefore=calls;
+    const baseline=structuredClone(plan.proposal);let countBefore=calls;
     const read=async()=> (await db.query("select * from annual_plans where id=$1",[plan.id])).rows[0];
     let preview;
+    await t.test('diálogo multitur no muta el año; recuperación, idempotencia, CAS y competencia oficial',async()=>{
+      const original=structuredClone(plan.proposal),firstId=randomUUID(),before=calls;
+      const first=await route(`${plan.id}/proposal-chat`,{proposalId,text:'Quiero materiales reciclados.',turnId:firstId,expectedConversationRevision:0});assert.equal(first.status,200,JSON.stringify(first.data));
+      const again=await route(`${plan.id}/proposal-chat`,{proposalId,text:'Quiero materiales reciclados.',turnId:firstId,expectedConversationRevision:0});assert.equal(again.data.id,first.data.id);assert.equal(calls,before+1);
+      const second=await route(`${plan.id}/proposal-chat`,{proposalId,text:'Sí, en el patio y con canales.',turnId:randomUUID(),conversationId:first.data.id,expectedConversationRevision:1});assert.equal(second.status,200);
+      assert.equal(second.data.messages.filter(m=>m.role==='teacher').length,2);assert.equal(second.data.ready,true);
+      assert.deepEqual((await route(`${plan.id}/proposal-chat?proposalId=${proposalId}`)).data,second.data);assert.equal(calls,before+2);
+      assert.equal(chatRequests.at(-1).conversation.filter(m=>m.role==='teacher').length,2);
+      assert.equal((await route(`${plan.id}/proposal-chat?proposalId=${proposalId}`,undefined,randomUUID())).status,404);
+      assert.equal((await route(`${plan.id}/proposal-chat`,{proposalId,text:'Otro pedido',turnId:randomUUID(),conversationId:first.data.id,expectedConversationRevision:1})).status,409);
+      assert.deepEqual((await read()).proposal,original);
+      invalidChat=true;const failedId=randomUUID();
+      const failed=await route(`${plan.id}/proposal-chat`,{proposalId,text:'Más exploración',turnId:failedId,conversationId:first.data.id,expectedConversationRevision:2});assert.equal(failed.status,422);
+      const recovered=(await route(`${plan.id}/proposal-chat?proposalId=${proposalId}`)).data;assert.equal(recovered.pendingTurn,failedId);assert.equal(recovered.messages.filter(m=>m.role==='teacher').length,3);
+      invalidChat=false;const retried=await route(`${plan.id}/proposal-chat`,{proposalId,text:'Más exploración',turnId:failedId,conversationId:first.data.id,expectedConversationRevision:2,retry:true});assert.equal(retried.status,200);assert.equal(retried.data.messages.filter(m=>m.role==='teacher').length,3);
+      assert.deepEqual((await read()).proposal,original);
+      const generated=await route(`${plan.id}/proposal-preview`,{proposalId,expectedRevision:plan.revision,conversationId:first.data.id,conversationRevision:3});assert.equal(generated.status,200,JSON.stringify(generated.data));plan=await read();
+      const count=calls,same=await route(`${plan.id}/proposal-preview`,{proposalId,expectedRevision:plan.revision,conversationId:first.data.id,conversationRevision:3});assert.equal(same.data.preview.id,generated.data.preview.id);assert.equal(calls,count);
+      const newer=await route(`${plan.id}/proposal-chat`,{proposalId,text:'Añadir papel',turnId:randomUUID(),conversationId:first.data.id,expectedConversationRevision:3});assert.equal(newer.status,200);
+      assert.equal((await route(`${plan.id}/proposal-preview/accept`,{expectedRevision:plan.revision,previewId:generated.data.preview.id})).status,409,'new conversation decisions invalidate the stored candidate');
+      assert.equal((await route(`${plan.id}/proposal-preview?proposalId=${proposalId}`)).data.preview,null);
+      // A later explicit generation replaces the stale private candidate.
+    });
+    countBefore=calls;
     await t.test("generar y reabrir conserva la propuesta hasta aceptar",async()=>{
       const result=await route(`${plan.id}/proposal-preview`,{expectedRevision:plan.revision,proposalId,text:"Más naturaleza. DNI: 12345678"});
       assert.equal(result.status,200);preview=result.data;plan=await read();

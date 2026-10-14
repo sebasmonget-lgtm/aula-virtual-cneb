@@ -55,7 +55,7 @@ export function ProjectDevelopmentWorkspace({ initialProposalId, onConfirmed, on
   initialProposalId?: string | null; onConfirmed?: () => void;
   feedbackPeriodId?: string | null;
   onDevelopActivity?: (experienceId: string, routeItemId: string) => void;
-  onGoAnnual?: () => void }) {
+  onGoAnnual?: () => void; onGoToday?:()=>void }) {
   const [plan, setPlan] = useState<Plan | null>(null), [experiences, setExperiences] = useState<Experience[]>([]);
   const [competencies, setCompetencies] = useState<Competency[]>([]), [selected, setSelected] = useState<Experience | null>(null);
   const [dates, setDates] = useState<string[]>([]), [decisions, setDecisions] = useState<Decision | null>(null);

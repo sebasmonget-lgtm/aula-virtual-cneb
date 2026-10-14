@@ -3,7 +3,7 @@ import { assertRevision, versionTransaction, VersionConflictError } from "./vers
 
 /** Confirm the activity and its inherited criterion as one database change. */
 export async function confirmActivityWithCriterion(db, activityId, criterion, criterionId = randomUUID(), expectedDraftRevision = null,
-  workshop = null) {
+  workshop = null, publication = {}) {
   const identity = (await db.query(`select lineage_id from activities where id=$1`, [activityId])).rows[0];
   if (!identity) throw new VersionConflictError("La actividad ya no está disponible.");
   return versionTransaction(db, `activity:${identity.lineage_id}`, async (transaction) => {
@@ -42,7 +42,7 @@ export async function confirmActivityWithCriterion(db, activityId, criterion, cr
       const id = Array.isArray(criterionId) ? criterionId[index] : index === 0 ? criterionId : randomUUID();
       await transaction.query(`insert into activity_criteria(id,activity_id,competency_id,competency_v4_id,performance_id,criterion_text,details,status,teacher_confirmed_at) values($1,$2,null,$3,null,$4,$5::jsonb,'active',now())`, [id, activityId, item.competency_id, item.criterion_text, JSON.stringify(item)]);
     }
-    if (!draft.supersedes_activity_id) {
+    if (!draft.supersedes_activity_id && !publication.acceptedBlock) {
       const schedule = (await transaction.query(`select id from class_schedule_entries where activity_id=$1 and classroom_id=$2
         and scheduled_on is not null order by scheduled_on limit 1`,[activityId,draft.classroom_id])).rows[0];
       if (schedule) await transaction.query(`update class_schedule_entries set scheduled_on=$1,title=$2 where id=$3`,[draft.occurs_on,draft.title,schedule.id]);

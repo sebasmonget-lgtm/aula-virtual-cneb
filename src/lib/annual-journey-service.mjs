@@ -206,7 +206,7 @@ export function applyJourneyPatch(plan, patch, affected) {
 }
 
 export async function applyAnnualJourneyChanges(plan, { context, curriculum, protectedIds = [], proposalId,
-  createProvider = createAIProviderForPlan, resolvePlan = resolveAIExecutionPlan } = {}) {
+  conversation = null, createProvider = createAIProviderForPlan, resolvePlan = resolveAIExecutionPlan } = {}) {
   const changes = scopedAnnualChanges(plan, proposalId);
   if (!changes.length) return plan;
   const processed = new Set(changes.map(change => change.id));
@@ -218,7 +218,7 @@ export async function applyAnnualJourneyChanges(plan, { context, curriculum, pro
     const requestSchema = scopedPatch ? { ...schema, id: "annual-journey-scoped-patch-v3", required: ["replacements"],
       properties: { replacements: { ...schema.properties.replacements, minItems: affected, maxItems: affected } } } : schema;
     // A local edit has no authority to rewrite global decisions, or to echo them through the model.
-    const requestBundle = { ...bundle };
+    const requestBundle = { ...bundle, ...(conversation ? {project_conversation:conversation} : {}) };
     if (scopedPatch) {
       delete requestBundle.everyday_opportunities; delete requestBundle.evidence_interpretations;
       if (requestBundle.plan) {

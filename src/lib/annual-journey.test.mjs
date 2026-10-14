@@ -329,7 +329,8 @@ test("vertical en PostgreSQL: preparar → cambios → confirmar → Word idént
     assert.deepEqual((await db.query("select proposal from annual_plans where id=$1",[current.id])).rows[0].proposal,current.proposal,"Changing a library conversation does not rewrite the year");
     const confirm = await route(`${current.id}/confirm`, { expectedRevision: current.revision }); assert.equal(confirm.status, 200, JSON.stringify(confirm.data));
     const beforeCalls = calls.length, doc = await loadSavedDocument(db, teacherId, "annual_plan", current.id);
-    assert.deepEqual(doc.content, current.proposal);
+    const {interpretation_review,...confirmedProjection}=doc.content;
+    assert.equal(interpretation_review.status,'reviewed');assert.deepEqual(confirmedProjection, current.proposal);
     const a = await renderSavedDocumentWord(doc), b = await renderSavedDocumentWord(doc);
     const xml = async (bytes) => (await JSZip.loadAsync(bytes)).file("word/document.xml").async("string");
     assert.equal(await xml(a), await xml(b)); assert.equal(calls.length, beforeCalls);

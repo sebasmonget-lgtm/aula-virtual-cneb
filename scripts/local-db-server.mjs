@@ -395,7 +395,7 @@ async function decodePrivateMedia(value) {
   return { bytes, mimeType, audio };
 }
 
-async function handleAuthenticatedRequest({ teacherId, requestId, db, preparationItemId, jobClassroomId, schoolYear }, request, response) {
+async function handleAuthenticatedRequest({ teacherId, requestId, db, preparationItemId, jobClassroomId, schoolYear, acceptedBlock }, request, response) {
 const qaDailyClock = currentPedagogicalClock() ?? localQaDailyClock;
 async function studentRoster(classroomId, today = qaDailyClock?.date ?? new Intl.DateTimeFormat("en-CA", { timeZone: "America/Lima", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date())) {
   return db.query(`
@@ -1796,14 +1796,15 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       const source = (await db.query(`select details from learning_experiences where id=$1 and classroom_id=$2
         and type in ('project','unit')`, [row.supersedes_experience_id, row.classroom_id])).rows[0];
       if (!source) throw new VersionConflictError("La versión anterior del proyecto ya no está disponible.");
-      const today = (await db.query(`select to_char((now() at time zone 'America/Lima')::date,'YYYY-MM-DD') as today`)).rows[0].today;
+      const today = limaToday();
       const records = (await db.query(`select distinct a.details->>'route_item_id' as route_item_id from activities a
-        where a.experience_id=$1 and a.details->>'route_item_id' is not null
+        join learning_experiences e on e.id=a.experience_id where e.lineage_id=$1 and a.details->>'route_item_id' is not null
         and (exists(select 1 from evidences e where e.activity_id=a.id)
+          or exists(select 1 from ordinary_observations o where o.activity_id=a.id)
           or exists(select 1 from class_schedule_entries se join daily_execution_logs d
-            on d.schedule_entry_id=se.id where se.activity_id=a.id and d.status<>'planned'))`,
-      [row.supersedes_experience_id])).rows;
-      return { sourceRoute: canonicalProjectRoute(source.details), today,
+            on d.schedule_entry_id=se.id where se.activity_id=a.id and (d.status<>'planned' or d.actual_started_at is not null or d.actual_ended_at is not null)))`,
+      [row.lineage_id])).rows;
+      return { sourceRoute: canonicalProjectRoute(source.details), sourceCriteria: source.details?.dependents?.general_criteria ?? [], today,
         recordedRouteIds: records.map((item) => item.route_item_id) };
     }
     async function ensureProjectCalendarSelection(row, source) {
@@ -2168,7 +2169,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         }
         let route = preserveTeacherMapEdits(base.activity_route, row.details.previous_map ?? row.details.activity_route,
           row.details.teacher_overrides, row.details.decisions);
-        const protectedVersion = simpleProjectEnabled() ? await protectedProjectVersion(row) : null;
+        const protectedVersion = simpleProjectEnabled() || source.plan.proposal.experience_context ? await protectedProjectVersion(row) : null;
         if (protectedVersion) {
           route = retainProtectedProjectRows(protectedVersion.sourceRoute, route, protectedVersion);
           assertFutureProjectMapEdits(protectedVersion.sourceRoute, route, protectedVersion);
@@ -2395,6 +2396,8 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
     if (request.method === "POST" && /^\/api\/activities\/[^/]+\/copy$/.test(url.pathname)) {
       const id=url.pathname.split("/")[3],context=await annualPlanningContext();
       if (!context) { send(response,404,{error:"Aula no disponible."},origin); return; }
+      const owned=(await db.query("select a.* from activities a join learning_experiences e on e.id=a.experience_id where a.id=$1 and e.classroom_id=$2",[id,context.id])).rows[0];
+      if(owned&&await acceptedProjectActivity(owned,context.id)){send(response,409,{error:"Ajusta los días futuros desde el proyecto con Ayni; conservamos su secuencia."},origin);return;}
       if (await db.query(`select 1 from activities wa join learning_experiences wm on wm.id=wa.experience_id
         where wa.linked_main_activity_id=$1 and wm.classroom_id=$2 and wm.type='workshop'
         and wa.status in ('draft','active') limit 1`, [id, context.id]).then((result) => result.rows.length)) {
@@ -2421,6 +2424,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       const context = await annualPlanningContext(); const body = await readJson(request); const experience = context && await activeLearningExperience(body.experienceId, context.id);
       if (context && !(await db.query(`select 1 from annual_plans where classroom_id=$1 and school_year_id=$2 and status='active' limit 1`, [context.id, context.school_year_id])).rows.length) { send(response, 422, { error: "Confirma primero el plan anual antes de preparar una actividad." }, origin); return; }
       if (!experience) { send(response, 422, { error: "Selecciona un Project o Unit confirmado." }, origin); return; }
+      if(!jobClassroomId&&await acceptedProjectActivity({experience_id:experience.id},context.id)){send(response,409,{error:"Este proyecto prepara sus actividades completas. Ajusta sus días futuros con Ayni."},origin);return;}
       const routeItem = routeItemFor(experience, body.routeItemId);
       if ((experience.details?.activity_route?.length && !routeItem) || (body.routeItemId && !routeItem)) { send(response, 422, { error: "Elige una actividad de la ruta confirmada." }, origin); return; }
       const allowed = await activityAllowedCompetencies(experience, context);
@@ -2431,7 +2435,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         const master = routeIndex ? (await db.query(`select * from learning_experiences where parent_project_id=$1 and type='workshop' and status='active'`, [experience.id])).rows[0] : null;
         let workshop = null;
         let workshopError = null;
-        if (!experience.details?.experience_contract && master && workshopItemIsSelected(master.details.items?.[routeIndex - 1])) {
+        if (body.includeWorkshop!==false && !experience.details?.experience_contract && master && workshopItemIsSelected(master.details.items?.[routeIndex - 1])) {
           const item = master.details.items?.[routeIndex - 1];
           try {
             const sheet = item?.sheet_id ? (await availableSheets({ age: context.age, competencyId: item.competency_id }))
@@ -2455,6 +2459,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       const context = await annualPlanningContext(); const body = await readJson(request); const experience = context && await activeLearningExperience(body.experienceId, context.id); const pending = await pendingAIGenerations.get(body.generationId);
       if (context && !(await db.query(`select 1 from annual_plans where classroom_id=$1 and school_year_id=$2 and status='active' limit 1`, [context.id, context.school_year_id])).rows.length) { send(response, 422, { error: "Confirma primero el plan anual antes de guardar una actividad." }, origin); return; }
       if (!experience || !pending || pending.workflow !== "activity" || pending.classroom_id !== context.id || pending.learning_experience_id !== experience.id) { send(response, 422, { error: "La generación de actividad no corresponde a esta experiencia." }, origin); return; }
+      if(!jobClassroomId&&await acceptedProjectActivity({experience_id:experience.id},context.id)){send(response,409,{error:"Las actividades se guardan junto con el proyecto completo."},origin);return;}
       try {
         const routeItem = routeItemFor(experience, pending.route_item_id);
         if (experience.details?.activity_route?.length && !routeItem) throw new Error("La actividad de origen ya no está en la ruta confirmada.");
@@ -2480,6 +2485,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
     if (request.method === "PUT" && url.pathname.startsWith("/api/activities/")) {
       const id=url.pathname.split("/")[3]; const context=await annualPlanningContext(); const body=await readJson(request); const current=context&&(await db.query(`select a.*,e.classroom_id,e.version as experience_version,e.status as experience_status,e.details as experience_details,e.starts_on as experience_starts_on,e.ends_on as experience_ends_on from activities a join learning_experiences e on e.id=a.experience_id where a.id=$1 and e.classroom_id=$2 and a.status='draft'`,[id,context.id])).rows[0];
       if(!current||!["active","archived"].includes(current.experience_status)){send(response,404,{error:"Borrador no disponible."},origin);return;} const pending=typeof body.generationId==="string"?await pendingAIGenerations.get(body.generationId):null; if(body.generationId&&(!pending||pending.workflow!=="activity"||pending.classroom_id!==context.id||pending.learning_experience_id!==current.experience_id)){send(response,422,{error:"La regeneración no corresponde a esta actividad."},origin);return;} try {
+        if(await acceptedProjectActivity(current,context.id))throw new VersionConflictError("Ajusta el proyecto completo con Ayni; no se editan sus actividades por separado.");
         const revision = expectedRevision(body.expectedRevision);
         const parent = { id: current.experience_id, version: current.experience_version, status: current.experience_status, details: current.experience_details };
         const routeItem = routeItemFor(parent, current.details?.route_item_id);
@@ -2516,6 +2522,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       }
       if (current.status !== "draft") { send(response, 409, conflictPayload(new VersionConflictError("La actividad ya fue confirmada o reemplazada.", current.revision)), origin); return; }
       try {
+        if(!acceptedBlock&&await acceptedProjectActivity(current,context.id))throw new VersionConflictError("La aceptación del proyecto prepara y publica el bloque completo después de validarlo.");
         validateActivityDate(annualCalendarDay(current.occurs_on), { starts_on: current.experience_starts_on, ends_on: current.experience_ends_on }, context);
         validateActivityV4(current.details, await activityAllowedCompetencies({ details: current.experience_details }, context));
         const routeItem = routeItemFor({ details: current.experience_details }, current.details?.route_item_id);
@@ -2533,7 +2540,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         const workshop = workshopDraft ? { id: workshopDraft.id,
           competencyId: workshopDraft.details.competency_id,
           expectedRevision: expectedRevision(body.workshopRevision) } : null;
-        const confirmed = await confirmActivityWithCriterion(db, id, criterion, randomUUID(), expectedRevision(body.expectedRevision), workshop);
+        const confirmed = await confirmActivityWithCriterion(db, id, criterion, randomUUID(), expectedRevision(body.expectedRevision), workshop,{acceptedBlock:acceptedBlock===true});
         send(response, 200, confirmed, origin);
       } catch (error) {
         send(response, httpStatusForError(error, 422), isVersionConflict(error)?conflictPayload(error):{ error: publicErrorMessage(error) }, origin);
@@ -2943,9 +2950,19 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
 }
 }
 
+async function acceptedProjectActivity(activity,classroomId){
+  if(activity.generation_metadata?.publication_authorization?.policy==='accepted-project-complete-v1')return true;
+  if(!activity.preparation_item_id&&!activity.experience_id)return false;
+  return (await db.query(`select 1 from preparation_jobs where classroom_id=$1 and teacher_id=(select teacher_id from classrooms where id=$1)
+    and payload->'acceptance'->>'policy'='accepted-project-complete-v1'
+    and (payload->'items' @> jsonb_build_array(jsonb_build_object('id',$2::text)) or payload->>'project_id'=$3)`,[classroomId,activity.preparation_item_id??null,activity.experience_id??null])).rows.length>0;
+}
+
 async function preparationDomainRequest(job,pathname,body,method="POST",extra={}) {
-  if(!(/^\/api\/project-flow\/[0-9a-f-]{36}(?:\/(dependents|calendar|master))?$/.test(pathname) ||
+  if(!(/^\/api\/project-flow\/[0-9a-f-]{36}(?:\/(dependents|calendar|master|confirm))?$/.test(pathname) ||
+    /^\/api\/annual-journey\/[0-9a-f-]{36}\/confirm$/.test(pathname) ||
     pathname==="/api/project-flow/start" || pathname==="/api/ai/activities/generate" || pathname==="/api/activities" ||
+    /^\/api\/learning-experiences\/[0-9a-f-]{36}\/new-version$/.test(pathname) ||
     /^\/api\/activities\/[0-9a-f-]{36}\/confirm$/.test(pathname)))throw new Error("Unsupported preparation step");
   const activeDb=job.db ?? requestDatabaseScope.getStore() ?? database.db;
   const request=Readable.from(body===undefined?[]:[JSON.stringify(body)]);
@@ -2953,19 +2970,20 @@ async function preparationDomainRequest(job,pathname,body,method="POST",extra={}
   let status,result;
   const response={writeHead(value){status=value;},end(value){result=JSON.parse(value);},setHeader(){},hasHeader(){return false;}};
   await withPedagogicalClock(previewQAClockForJob(job),()=>requestDatabaseScope.run(activeDb,()=>withAiUsageContext({teacherId:job.teacher_id,db:activeDb},()=>handleAuthenticatedRequest({teacherId:job.teacher_id,
-    requestId:job.id,db:activeDb,jobClassroomId:job.classroom_id,preparationItemId:extra.preparationItemId},request,response))));
+    requestId:job.id,db:activeDb,jobClassroomId:job.classroom_id,preparationItemId:extra.preparationItemId,acceptedBlock:extra.acceptedBlock===true&&job.payload?.acceptance?.policy==="accepted-project-complete-v1"},request,response))));
   if(status>=400 || !status)throw Object.assign(new Error(result?.message ?? result?.error ?? "Preparation step failed"),{status});
   return result;
 }
 async function runPreparationWorker() {
-  return runPreparationStep(db,preparationExecutor({db,request:preparationDomainRequest,pending:pendingAIGenerations,
+  const execute=preparationExecutor({db,request:preparationDomainRequest,pending:pendingAIGenerations,
     partitionDocuments:partitionDocumentArtifacts,
     prepareDocument:async(job,item)=>{
       const knowledge=await loadKnowledgeBaseV4();
       const logo=await loadInstitutionLogoForDocuments(db,job.teacher_id,logoStorage??assetsDir);
       return prepareConfirmedDocumentArtifact(db,documentArtifactStorage,job.teacher_id,item.kind,item.source_id,
         {cards:knowledge.competencyCards.map(card=>({...card,name:card.official_name})),logo,photoStorage:ordinaryStorage,expectedSourceHash:item.source_hash});
-    }}));
+    }});
+  return runPreparationStep(db,(job,checkpoint)=>withPedagogicalClock(previewQAClockForJob(job),()=>execute(job,checkpoint)));
 }
 
 export async function handleApiRequest(request, response) {

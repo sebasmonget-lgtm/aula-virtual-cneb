@@ -59,9 +59,9 @@ export function useWorkspaceParam(destination: string, key: string, fallback: st
     return () => { for (const event of [changedEvent, "hashchange", "popstate"]) window.removeEventListener(event, sync); };
   }, [destination, key, fallback, validate]);
   const select = useCallback((next: string) => {
-    if (!validate(next)) return;
+    if (next !== fallback && !validate(next)) return;
     setValue(next);
     writeWorkspaceLocation(destination, { [key]: next }, true);
-  }, [destination, key, validate]);
+  }, [destination, key, fallback, validate]);
   return [value, select] as const;
 }

@@ -97,10 +97,12 @@ export async function loadEffectiveCalendar(db, { teacherId, classroomId = null,
     where classroom_id=$1 and status in ('active','draft') and starts_on<=$3::date and ends_on>=$2::date order by starts_on`,[classroom.id,start,end])).rows;
   const activities = (await db.query(`select a.id,a.title,a.purpose,a.occurs_on::text,a.planned_date::text,a.schedule_status,a.status,
     a.experience_id,e.title as experience_title,e.type as experience_type,a.details,
+    coalesce(a.generation_metadata->'publication_authorization'->>'policy','')='accepted-project-complete-v1' as sequence_locked,
     coalesce(se.start_time::text,'') as start_time
     from activities a join learning_experiences e on e.id=a.experience_id
-    left join lateral(select start_time from class_schedule_entries where activity_id=a.id and scheduled_on=a.occurs_on order by start_time limit 1)se on true
-    where e.classroom_id=$1 and a.occurs_on between $2::date and $3::date and a.status in ('draft','active','archived') order by a.occurs_on,se.start_time`,[classroom.id,start,end])).rows;
+    left join lateral(select id,start_time from class_schedule_entries where activity_id=a.id and scheduled_on=a.occurs_on order by start_time limit 1)se on true
+    where e.classroom_id=$1 and a.occurs_on between $2::date and $3::date and a.status in ('draft','active','archived')
+      and (a.status<>'archived' or se.id is not null) order by a.occurs_on,se.start_time`,[classroom.id,start,end])).rows;
   return { classroom:{ id:classroom.id,section:classroom.section,year:Number(classroom.year),starts_on:iso(classroom.starts_on),ends_on:iso(classroom.ends_on) },
     version:{ id:version.id,name:version.name,version:version.version,source_name:version.source_name,source_url:version.source_url,source_metadata:version.source_metadata },
     days,blocks,experiences,activities };
@@ -140,11 +142,13 @@ export async function reprogramActivity(db,{teacherId,activityId,newDate,reason,
   if(!owner)throw new SchoolCalendarError("activity_missing","No se encontró la actividad.");
   return db.transaction(async tx => {
   await lockClassroomSchedule(tx, owner.classroom_id);
-  const row=(await tx.query(`select a.id,a.title,a.status,a.lineage_id,a.revision,a.occurs_on::text,a.experience_id,e.classroom_id,e.starts_on::text,e.ends_on::text
+  const row=(await tx.query(`select a.id,a.title,a.status,a.lineage_id,a.revision,a.generation_metadata,a.occurs_on::text,a.experience_id,e.classroom_id,e.starts_on::text,e.ends_on::text
     from activities a join learning_experiences e on e.id=a.experience_id join classrooms c on c.id=e.classroom_id
     where a.id=$1 and c.teacher_id=$2 for update of a`,[activityId,teacherId])).rows[0];
   if(!row)throw new SchoolCalendarError("activity_missing","No se encontró la actividad.");
   if (revision != null) assertRevision(row, expectedRevision(revision));
+  if(changeType==='rescheduled'&&row.generation_metadata?.publication_authorization?.policy==='accepted-project-complete-v1')
+    throw new SchoolCalendarError('project_sequence_protected','Ajusta los días futuros desde el proyecto con Ayni; conservamos su secuencia.');
   await assertActivityScheduleMutable(tx, row, today);
   if(changeType!=="rescheduled"){
     await tx.query(`update activities set schedule_status=$1,updated_at=now() where id=$2`,[changeType,activityId]);

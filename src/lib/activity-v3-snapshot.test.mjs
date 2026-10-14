@@ -25,6 +25,19 @@ function fixture() {
   const activity = { id: id(6), experience_id: project.id, version: 1, status: "draft", occurs_on: date };
   return { project, blueprint, proposal, activity };
 }
+
+test("una versión futura conserva identidad y significado del criterio registrado aunque se hayan vaciado dependientes", () => {
+  const { project } = fixture(), original = structuredClone(project.details);
+  const draft = { ...project, status: "draft", details: { ...project.details, dependents: { general_criteria: [] } } };
+  const next = structuredClone(original);
+  next.dependents.general_criteria = next.dependents.general_criteria.map(item => { const replacement = { ...item, criterion: "Nuevo texto" }; delete replacement.criterion_id; return replacement; });
+  const stamped = stampProjectV3(draft, next, { plan: { id: id(1), version: 1 }, proposalId: id(2), slot: { id: id(3) }, source: { title: "Semillas" } }, "kb-test", [date],
+    { today: date, sourceRoute: original.activity_route, sourceCriteria: original.dependents.general_criteria, recordedRouteIds: [] });
+  assert.deepEqual(stamped.activity_route[0], original.activity_route[0]);
+  assert.deepEqual(stamped.dependents.general_criteria[0], original.dependents.general_criteria[0]);
+  assert.equal(stamped.dependents.general_criteria[1].criterion_id, original.dependents.general_criteria[1].criterion_id);
+  assert.deepEqual(project.details, original);
+});
 test("actividad sin aporte extra hereda propósito, fecha, criterio, materiales y versión exacta", () => {
   const { project, proposal, activity, blueprint } = fixture(), before = JSON.stringify(project);
   const input = buildTeacherActivityGenerationInput({ request: { routeItemId: blueprint.id }, classroom: { id: id(7), age: 4 }, learningExperience: project });

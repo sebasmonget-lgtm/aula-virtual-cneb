@@ -34,7 +34,7 @@ export function annualJourneyDocumentSections(plan, names = new Map()) {
   }
   for (const opportunity of plan.everyday_opportunities) sections.push({ ...opportunitySection(opportunity, names),
     title: `${opportunity.moment} · ${names.get(opportunity.competency_id) ?? opportunity.competency_id}` });
-  sections.push({ title: "Interpretaciones revisadas por la docente", lines: plan.evidence_interpretations.map((x) =>
+  sections.push({ title: plan.interpretation_review?.status==="pending"?"Interpretaciones propuestas por Ayni · pendientes de revisión docente":"Interpretaciones revisadas por la docente", lines: plan.evidence_interpretations.map((x) =>
     `${x.scope} · ${x.meaning}: ${x.interpretation}`) });
   if (plan.insufficient_interpretations?.length) sections.push({title:"Información que todavía necesitamos conocer",lines:[
     `En ${plan.insufficient_interpretations.length} posibles interpretaciones todavía faltaba sustento. Conservamos los registros sin concluir que exista un avance o una dificultad.`]});

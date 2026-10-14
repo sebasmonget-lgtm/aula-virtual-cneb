@@ -23,6 +23,7 @@ import { annualChatSummary } from "../src/lib/annual-chat-summary.mjs";
 import { hasSavedAnnualYear } from "../src/lib/annual-plan-display.mjs";
 import { loadPeriodFutureReview } from "../src/lib/period-future-review.mjs";
 import {handleAnnualProposalPreview} from "../src/lib/annual-proposal-preview.mjs";
+import {handleAnnualProjectChat} from "../src/lib/annual-project-chat.mjs";
 
 export async function handleAnnualJourneyRoutes({ request, response, url, db, teacherId, origin, send, readJson,
   annualPlanningContext, annualDocumentContext, createProvider, resolvePlan }) {
@@ -131,6 +132,7 @@ export async function handleAnnualJourneyRoutes({ request, response, url, db, te
     if(editorMatch && request.method==="GET") { const row=await load(editorMatch[1],db,false);send(response,200,{protected_ids:await protectedIds(row),today:limaToday()},origin);return true; }
     if(await handleAnnualProposalCreation({request,response,url,db,context,teacherId,sources,curriculum,send,origin,readJson,load,write,createProvider,resolvePlan,
       loadReviewContext:periodId=>loadPeriodFutureReview(db,{teacherId,classroomId:context.id,periodId,curriculum})}))return true;
+    if(await handleAnnualProjectChat({request,response,url,db,context,sources,curriculum,origin,send,readJson,load,protectedIds,createProvider}))return true;
     if(await handleAnnualProposalPreview({request,response,url,db,context,teacherId,sources,curriculum,calendar,origin,send,readJson,
       load,write,protectedIds,createProvider,resolvePlan,loadFreshSources:tx=>personalizationSources(tx,teacherId,context),
       loadFreshCalendar:async tx=>({...await loadEffectiveCalendar(tx,{teacherId,classroomId:context.id}),initial_stage:context.calendar.initial_stage})}))return true;
@@ -155,7 +157,9 @@ export async function handleAnnualJourneyRoutes({ request, response, url, db, te
         validateAnnualJourney(row.proposal, curriculum, { confirmation: true });
         if(row.proposal.experience_context && annualFutureGaps(row.proposal,curriculum).length && body.futureCoverageAcknowledged!==true)
           journeyFail("teacher_review_required","Revisa las competencias sin oportunidad futura antes de confirmar este año parcial.");
-        if (row.proposal.evidence_interpretations.length && body.interpretationsReviewed !== true) journeyFail("teacher_review_required", "Revisa las interpretaciones de actuaciones antes de confirmar este año.");
+        const planningOnly=body.confirmationScope==="planning";
+        if(planningOnly&&body.interpretationsReviewed===true)journeyFail("invalid_review","Confirmar la planificación no confirma interpretaciones individuales.");
+        if (row.proposal.evidence_interpretations.length && !planningOnly && body.interpretationsReviewed !== true) journeyFail("teacher_review_required", "Revisa las interpretaciones de actuaciones antes de confirmar este año.");
         if (row.proposal.classroom_snapshot.source_fingerprint !== (await personalizationSources(tx, teacherId, context)).fingerprint)
           throw new VersionConflictError("Hay información nueva del aula. Vuelve a preparar el borrador antes de confirmar.");
         const freshCalendar = await loadEffectiveCalendar(tx, { teacherId, classroomId: context.id });
@@ -164,9 +168,10 @@ export async function handleAnnualJourneyRoutes({ request, response, url, db, te
         const content = { ...row.proposal, metrics: { ...row.proposal.metrics, confirmed_at: new Date().toISOString(),
           time_to_confirm_ms: Date.now() - Date.parse(row.proposal.metrics.started_at) } };
         // One immutable projection: no model, exporter prompt or semantic enrichment after this point.
+        const confirmedContent={...row.proposal,interpretation_review:{status:planningOnly?"pending":"reviewed",scope:planningOnly?"planning_only":"explicit_interpretation_review",teacher_id:teacherId,at:new Date().toISOString()}};
         await tx.query(`insert into annual_plan_formal_content(annual_plan_id,content,ai_metadata,source_revision)
-          values($1,$2::jsonb,$3::jsonb,$4)`, [id,JSON.stringify(row.proposal),JSON.stringify({ render_only: true,
-          content_hash: createHash("sha256").update(JSON.stringify(row.proposal)).digest("hex") }),row.revision]);
+          values($1,$2::jsonb,$3::jsonb,$4)`, [id,JSON.stringify(confirmedContent),JSON.stringify({ render_only: true,confirmation_scope:planningOnly?"planning":"planning_and_interpretations",
+          content_hash: createHash("sha256").update(JSON.stringify(confirmedContent)).digest("hex") }),row.revision]);
         // Metrics are stored beside the immutable content without bumping the draft CAS revision.
         await tx.query(`update annual_plan_formal_content set ai_metadata=ai_metadata || $1::jsonb where annual_plan_id=$2`,
           [JSON.stringify({ confirmed_at: content.metrics.confirmed_at, time_to_confirm_ms: content.metrics.time_to_confirm_ms }),id]);

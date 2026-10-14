@@ -15,11 +15,17 @@ export function stampProjectV3(experience, details, source, kbVersion, dates, pr
   if (experience.status !== "draft") throw new Error("Una versión confirmada no se puede convertir ni reescribir.");
   const canonical = canonicalProjectDetails(details);
   const previous = experience.details?.dependents?.general_criteria ?? [];
-  const criteria = canonical.dependents.general_criteria.map((item) => ({ ...item,
-    criterion_id: item.criterion_id ?? previous.find((before) => before.competency_id === item.competency_id)?.criterion_id ?? randomUUID() }));
-  const refs = new Map(criteria.map((item) => [item.competency_id, item.criterion_id]));
   const protectedIds = new Set((protectedVersion?.sourceRoute ?? []).filter(row =>
     String(row.date).slice(0, 10) <= protectedVersion.today || protectedVersion.recordedRouteIds.includes(row.id)).map(row => row.id));
+  const protectedCriterionIds = new Set((protectedVersion?.sourceRoute ?? []).filter(row => protectedIds.has(row.id))
+    .flatMap(row => row.criterion_refs ?? []));
+  const sourceCriteria = protectedVersion?.sourceCriteria ?? [];
+  const criteria = canonical.dependents.general_criteria.map((item) => ({ ...item,
+    // A worked blueprint keeps both the identity and meaning of its original criterion.
+    ...(sourceCriteria.find(before => before.competency_id === item.competency_id && protectedCriterionIds.has(before.criterion_id)) ?? {}),
+    criterion_id: sourceCriteria.find(before => before.competency_id === item.competency_id)?.criterion_id ??
+      item.criterion_id ?? previous.find((before) => before.competency_id === item.competency_id)?.criterion_id ?? randomUUID() }));
+  const refs = new Map(criteria.map((item) => [item.competency_id, item.criterion_id]));
   const stamped = { ...canonical, contract_version: "project-master-v3",
     ...(source.plan.proposal?.experience_context?{experience_contract:1}:{}),
     dependents: { ...canonical.dependents, general_criteria: criteria },

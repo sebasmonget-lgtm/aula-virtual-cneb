@@ -1,5 +1,6 @@
 import { preparationFingerprint } from "./preparation-jobs.mjs";
 import { VersionConflictError } from "./version-integrity.mjs";
+import {prepareAcceptedProjectActivities,COMPLETE_PROJECT_POLICY} from "./complete-project-preparation.mjs";
 
 /** Reuses the domain handlers; request is an internal, allowlisted adapter, never a client URL. */
 export function preparationExecutor({db,request,pending,prepareDocument,partitionDocuments}) {
@@ -11,7 +12,7 @@ export function preparationExecutor({db,request,pending,prepareDocument,partitio
       p.parts=partitionDocuments(p.items.map(item=>({id:item.artifact_id,byte_length:item.byte_length})));
       p.stage="ready";await checkpoint(p);return true;
     }
-    const call=async(path,body,method,extra)=>request(job,path,body,method,extra);
+    const call=async(path,body,method,extra)=>request(extra?.db?{...job,db:extra.db}:job,path,body,method,extra);
     const generatedCall=async(path,body)=>{
       if(p.attempt_pending)throw Object.assign(new Error("Uncertain provider result"),{uncertain:true});
       p.attempt_pending=true;await checkpoint(p);
@@ -19,7 +20,7 @@ export function preparationExecutor({db,request,pending,prepareDocument,partitio
       catch(error){error.uncertain=error.status==null || error.status>=500;throw error;}
     };
     if(job.kind==="project"){
-      const plan=(await db.query(`select * from annual_plans where id=$1 and classroom_id=$2 and status='active'`,[job.source_id,job.classroom_id])).rows[0];
+      const plan=(await db.query(`select * from annual_plans where id=$1 and classroom_id=$2 and (status='active' or $3::boolean and status='archived')`,[job.source_id,job.classroom_id,p.future_version===true])).rows[0];
       if(!plan || Number(plan.revision)!==Number(job.source_revision))throw new VersionConflictError("Mi año cambió. Revisa la planificación antes de preparar el proyecto.");
       const proposal=plan.proposal.proposed_experiences.find(row=>row.proposal_id===p.proposal_id);
       if(!proposal)throw new VersionConflictError("La propuesta ya no pertenece a Mi año.");
@@ -27,7 +28,10 @@ export function preparationExecutor({db,request,pending,prepareDocument,partitio
       const {experience:row}=await call(`/api/project-flow/${p.project_id}`);
       if(row.details.dependents && (row.details.decisions?.additional_context??"") !== (p.additional_context??""))
         throw new VersionConflictError("Este proyecto fue preparado con otro contexto. Conserva la preparación o solicita una nueva versión desde Mi año.");
-      if(row.status==="active" || row.details.stage==="map_review"){p.stage="ready";p.attempt_pending=false;await checkpoint(p);return true;}
+      if(row.status==="active" || row.details.stage==="map_review"){
+        if(p.acceptance?.policy===COMPLETE_PROJECT_POLICY)return prepareAcceptedProjectActivities({db,job,p,call,checkpoint,pending,generatedCall});
+        p.stage="ready";p.attempt_pending=false;await checkpoint(p);return true;
+      }
       const decisions={context_summary:proposal.rationale,purpose:proposal.purpose,competency_ids:proposal.primary_competency_ids,additional_context:p.additional_context};
       if(!row.details.dependents){await generatedCall(`/api/project-flow/${row.id}/dependents`,{decisions,expectedRevision:row.revision});p.stage="calendar";await checkpoint(p);return false;}
       // An interrupted write is recovered by inspecting the persisted row before considering another model call.
@@ -40,7 +44,7 @@ export function preparationExecutor({db,request,pending,prepareDocument,partitio
         p.stage="master";await checkpoint(p);return false;
       }
       await generatedCall(`/api/project-flow/${row.id}/master`,{dependents:row.details.dependents,expectedRevision:row.revision});
-      p.stage="ready";await checkpoint(p);return true;
+      p.stage=p.acceptance?"activities":"ready";await checkpoint(p);return !p.acceptance;
     }
     const project=(await db.query(`select * from learning_experiences where id=$1 and classroom_id=$2 and status='active'`,[job.source_id,job.classroom_id])).rows[0];
     if(!project || Number(project.revision)!==Number(job.source_revision) || preparationFingerprint(project.details)!==job.input_fingerprint)

@@ -83,7 +83,7 @@ export async function loadSavedDocument(db, teacherId, kind, id) {
     if (row.proposal?.journey_version === 2) return { id: row.id, kind, title: row.proposal.title, status: row.status,
       version: Number(row.version), school_year: Number(row.year), classroom: row.section,
       confirmed_at: row.teacher_confirmed_at ? timestamp(row.teacher_confirmed_at) : null,
-      content: row.proposal, source_plan_format: row.proposal.plan_format, formal_ready: row.status !== "draft",
+      content: row.status==='draft'?row.proposal:row.formal_content??row.proposal, source_plan_format: row.proposal.plan_format, formal_ready: row.status !== "draft",
       document_context: row.document_context, display_subjects: await annualDisplaySubjects(db, { teacherId, classroomId: row.classroom_id, proposal: row.proposal }) };
     const fallback = { institution_name: row.institution_name, teacher_name: row.teacher_name,
       classroom_section: row.section, age: Number(row.age_years), school_year: Number(row.year),

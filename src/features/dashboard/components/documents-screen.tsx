@@ -3,7 +3,8 @@ import { newAyniFeatureEnabled } from "@/src/lib/new-ayni-feature-flag.mjs";
 
 import { apiFetch } from "@/src/lib/ayni-api-fetch";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import {useWorkspaceParam,writeWorkspaceLocation} from "@/src/lib/workspace-location";
 import { ArrowLeft, BookOpen, Download, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { localDatabaseApiUrl } from "@/src/lib/local-database";
@@ -18,7 +19,7 @@ type DocumentEntry = {
   status: string; version?: number; school_year: number; classroom: string; classroom_id?:string;
   parent_experience_id?:string; date: string; period_label?: string | null;
 };
-type OpenDocument = DocumentEntry & {
+export type OpenDocument = DocumentEntry & {
   institution_name?: string; document_context?: DocumentContext; content: Record<string, unknown>;
   source_plan_format?: string; formal_ready?: boolean;
   starts_on?: string; ends_on?: string; occurs_on?: string; experience_title?: string;
@@ -77,7 +78,7 @@ function Pathways({ title, value }: { title: string; value: unknown }) {
   </section>;
 }
 
-function DocumentContent({ document }: { document: OpenDocument }) {
+export function DocumentContent({ document }: { document: OpenDocument }) {
   if (document.kind === "annual_plan" && document.source_plan_format === "annual_preplan_v1" && !document.formal_ready) {
     const rows = Array.isArray(document.content.proposed_experiences) ? document.content.proposed_experiences as Record<string, unknown>[] : [];
     return <article className="rounded-2xl border bg-white p-5"><h2 className="text-xl font-bold">Mi año · versión {document.version}</h2>
@@ -148,10 +149,13 @@ function DocumentContent({ document }: { document: OpenDocument }) {
 
 export type DocumentFolder = "diagnostic"|"annual"|"experiences"|"evaluation";
 const folderKinds:Record<DocumentFolder,DocumentKind[]>={diagnostic:["diagnostic_summary"],annual:["annual_plan"],experiences:["experience","activity"],evaluation:["family_report","period_closure"]};
+const documentParam=(value:string)=>/^(annual_plan|diagnostic_summary|experience|activity|family_report|period_closure):[0-9a-f-]{36}$/i.test(value)?value:undefined;
 export function DocumentsScreen({ onPlan, folder }: { onPlan?: () => void;folder?:DocumentFolder } = {}) {
   const [authMode, setAuthMode] = useState<"local" | "supabase">("local");
   const [documents, setDocuments] = useState<DocumentEntry[]>([]);
-  const [selected, setSelected] = useState<{ kind: DocumentKind; id: string } | null>(null);
+  const [documentKey,setDocumentKey]=useWorkspaceParam("Documentos","document","",documentParam);
+  const selected=useMemo(()=>documentKey?{kind:documentKey.split(':')[0] as DocumentKind,id:documentKey.split(':')[1]}:null,[documentKey]);
+  const setSelected=(value:{kind:DocumentKind;id:string}|null)=>setDocumentKey(value?`${value.kind}:${value.id}`:'');
   const [opened, setOpened] = useState<OpenDocument | null>(null);
   const [loading, setLoading] = useState(true);
   const [opening, setOpening] = useState(false);
@@ -210,7 +214,7 @@ export function DocumentsScreen({ onPlan, folder }: { onPlan?: () => void;folder
     apiFetch(`${localDatabaseApiUrl}/api/documents/${selected.kind}/${selected.id}`, { signal: controller.signal }).then(async (response) => {
       if (!response.ok) throw new Error("No pudimos abrir este documento.");
       return response.json() as Promise<{ document: OpenDocument }>;
-    }).then((result) => { setOpened(result.document); setError(""); })
+    }).then((result) => { if(!controller.signal.aborted){setOpened(result.document); setError("");} })
       .catch(() => { if (!controller.signal.aborted) setError("No pudimos abrir este documento. Inténtalo otra vez."); })
       .finally(() => { if (!controller.signal.aborted) setOpening(false); });
     return () => controller.abort();
@@ -268,7 +272,7 @@ export function DocumentsScreen({ onPlan, folder }: { onPlan?: () => void;folder
     if (!opened || savingWord) return;
     setSavingWord(true); setWordMessage(""); setWordError("");
     try {
-      if (authMode === "supabase") {
+      if (authMode === "supabase" || process.env.NEXT_PUBLIC_AYNI_EXPERIENCE !== "0") {
         const response = await apiFetch(`${localDatabaseApiUrl}/api/documents/${opened.kind}/${opened.id}/download`);
         if (!response.ok) throw new Error("No se pudo descargar el Word.");
         const blob = await response.blob();
@@ -295,22 +299,22 @@ export function DocumentsScreen({ onPlan, folder }: { onPlan?: () => void;folder
   return <section className="mx-auto max-w-5xl space-y-5">
     <PageIntro title={folder?{diagnostic:"Evaluación diagnóstica",annual:"Plan anual",experiences:"Proyectos y actividades",evaluation:"Evaluación"}[folder]:"Documentos"} description={folder?"Consulta y descarga los documentos de esta carpeta, con su fuente y versión.":"Encuentra aquí tus diagnósticos, planes, experiencias, actividades, cierres e informes."} icon={BookOpen} />
     {selected && <div className="flex flex-wrap items-center justify-between gap-3"><Button variant="outline" className="min-h-11" onClick={() => { setSelected(null); setOpened(null); setError(""); setWordMessage(""); setWordError(""); }}><ArrowLeft className="mr-2 size-4" />Volver a mis documentos</Button>
-      <div className="flex flex-wrap gap-2">{needsProjectWord && opened.status === "active" && <Button className="min-h-11" disabled={savingWord} onClick={() => void prepareProjectWord()}>{savingWord ? "Preparando Word..." : "Preparar Word del proyecto"}</Button>}{artifactFeature && opened && ["annual_plan","experience"].includes(opened.kind) && ["active","archived"].includes(opened.status) && downloadable &&
+      <div className="flex flex-wrap gap-2">{opened?.kind==='annual_plan'&&opened.content.journey_version===2&&onPlan&&<Button variant="outline" disabled={savingWord} onClick={()=>{onPlan();writeWorkspaceLocation('Planificar',{tab:'annual',annualTools:'tools',annualPlan:opened.id});}}>Revisar plan anual</Button>}{needsProjectWord && opened.status === "active" && <Button className="min-h-11" disabled={savingWord} onClick={() => void prepareProjectWord()}>{savingWord ? "Preparando Word..." : "Preparar Word del proyecto"}</Button>}{artifactFeature && opened && ["annual_plan","experience"].includes(opened.kind) && ["active","archived"].includes(opened.status) && downloadable &&
         (stableArtifact ? <Button className="min-h-11" disabled={savingWord} onClick={() => void downloadStableArtifact(stableArtifact)}><Download className="mr-2 size-4" />Descargar versión estable</Button>
           : <Button className="min-h-11" disabled={savingWord} onClick={() => void prepareArtifact()}>{savingWord ? "Preparando..." : "Preparar versión estable"}</Button>)}
-      {downloadable && !stableArtifact && <Button variant={artifactFeature && ["annual_plan","experience"].includes(opened.kind) ? "outline" : "default"} className="min-h-11" disabled={savingWord} onClick={() => void saveWordLocally()}><Download className="mr-2 size-4" />{savingWord ? "Preparando Word..." : authMode === "supabase" ? "Descargar Word" : "Guardar Word en Descargas"}</Button>}</div></div>}
+      {downloadable && !stableArtifact && <Button variant={artifactFeature && ["annual_plan","experience"].includes(opened.kind) ? "outline" : "default"} className="min-h-11" disabled={savingWord} onClick={() => void saveWordLocally()}><Download className="mr-2 size-4" />{savingWord ? "Preparando Word..." : authMode === "supabase" || process.env.NEXT_PUBLIC_AYNI_EXPERIENCE !== "0" ? "Descargar Word" : "Guardar Word en Descargas"}</Button>}</div></div>}
     {wordMessage && <WorkflowFeedback tone="success">{wordMessage}</WorkflowFeedback>}
     {wordError && <WorkflowFeedback tone="error">{wordError}</WorkflowFeedback>}
     {needsProjectWord && <p className="rounded-xl bg-[#eaf7fb] p-4 text-sm">El proyecto está confirmado. Prepara su Word antes de guardarlo en Descargas.</p>}
     {opened?.kind === "annual_plan" && opened.content.journey_version !== 2 && opened.source_plan_format !== "annual_preplan_v1" && opened.content.plan_format !== "twelve_projects_flexible_weeks" &&
       <WorkflowFeedback tone="error">Este plan se creó antes del formato actual. Su Word conserva la plantilla anterior. Abre Plan para preparar una versión actualizada; el plan vigente seguirá guardado mientras la revisas.</WorkflowFeedback>}
-    {opened && downloadUrl && authMode === "local" && !stableArtifact && <details className="text-sm text-[#526b87]"><summary className="min-h-11 cursor-pointer py-2 font-semibold">Opciones de descarga</summary><p>«Guardar Word en Descargas» lo guarda en el equipo que ejecuta Ayni. Si estás usando otro dispositivo, <a className="underline" href={downloadUrl} download>descarga el Word en este dispositivo</a>.</p></details>}
+    {opened && downloadUrl && authMode === "local" && process.env.NEXT_PUBLIC_AYNI_EXPERIENCE === "0" && !stableArtifact && <details className="text-sm text-[#526b87]"><summary className="min-h-11 cursor-pointer py-2 font-semibold">Opciones de descarga</summary><p>«Guardar Word en Descargas» lo guarda en el equipo que ejecuta Ayni. Si estás usando otro dispositivo, <a className="underline" href={downloadUrl} download>descarga el Word en este dispositivo</a>.</p></details>}
     {!selected && syncFeature && <details><summary className="min-h-11 cursor-pointer font-semibold text-[#07576c]">Versiones y sincronización de documentos</summary><DocumentSyncPanel artifacts={artifacts} /></details>}
     {error && <div className="flex flex-wrap items-center gap-3"><WorkflowFeedback tone="error">{error}</WorkflowFeedback><Button variant="outline" onClick={() => { setLoading(!selected); setOpening(Boolean(selected)); setRevision((value) => value + 1); }}>Reintentar</Button></div>}
-    {selected ? opening ? <LoadingState label="Abriendo documento..." /> : opened ? <DocumentContent document={opened} /> : null :
+    {selected ? opening || !opened && !error ? <LoadingState label="Abriendo documento..." /> : opened ? <DocumentContent document={opened} /> : null :
       loading ? <LoadingState label="Buscando tus documentos..." /> : error ? null : documents.length === 0 ?
-        <div className="rounded-2xl border border-[#d6e5ef] bg-white p-6"><FileText className="size-8 text-[#087d96]" /><h2 className="mt-3 text-lg font-bold">Aún no hay documentos guardados</h2><p className="mt-1 text-[#526b87]">Cuando guardes tu diagnóstico, plan anual o una actividad, aparecerán aquí.</p>{onPlan && <Button className="mt-3" onClick={onPlan}>Ir a Planificar</Button>}</div> :
-        syncFeature ? <DocumentTree documents={documents} artifactStates={artifactStates}
+        <div className="rounded-2xl border border-[#d6e5ef] bg-white p-6"><FileText className="size-8 text-[#087d96]" /><h2 className="mt-3 text-lg font-bold">Aún no hay documentos guardados</h2><p className="mt-1 text-[#526b87]">Cuando guardes tu diagnóstico, plan anual o una actividad, aparecerán aquí.</p>{onPlan && <Button className="mt-3" onClick={onPlan}>Ir a Mi año</Button>}</div> :
+        artifactFeature ? <DocumentTree documents={documents} artifactStates={artifactStates}
           onOpen={item=>{setOpened(null);setError("");setWordMessage("");setWordError("");setOpening(true);setSelected({kind:item.kind as DocumentKind,id:item.id});}} /> :
         years.map((year) => <section key={year} aria-label={`Documentos ${year}`} className="space-y-3"><h2 className="text-lg font-extrabold text-[#172b52]">Año escolar {year}</h2>
           <ul className="space-y-2">{documents.filter((item) => item.school_year === year).map((item) => <li key={`${item.kind}-${item.id}`} className="rounded-2xl border border-[#d6e5ef] bg-white p-4 shadow-sm sm:flex sm:items-center sm:justify-between sm:gap-5">
