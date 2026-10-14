@@ -16,6 +16,7 @@ import { DictationRecorder } from "./dictation-recorder";
 import { ProjectCalendarReview, type ProjectCalendarDay } from "./project-calendar-review";
 import { projectEventWarning } from "@/src/lib/project-event-warning.mjs";
 import { readWorkspaceParams, writeWorkspaceLocation } from "@/src/lib/workspace-location";
+import {ProjectActivitySequence} from "./project-activity-sequence";
 
 type Props = ComponentProps<typeof ProjectDevelopmentWorkspace>;
 async function request<T>(path: string, body?: unknown, method?: string): Promise<T> {
@@ -41,6 +42,7 @@ export function SimpleProjectWorkspace(props: Props) {
   const [notice, setNotice] = useState("");
   const [reload, setReload] = useState(0);
   const [openedProposal, setOpenedProposal] = useState<string | null>(null);
+  const [protectedRouteIds,setProtectedRouteIds]=useState<string[]>([]),[editingSequence,setEditingSequence]=useState(false);
   const [preparations,setPreparations]=useState<PreparationJob[]>([]),[preparation,setPreparation]=useState<PreparationJob|null>(null);
   const [discrepancy,setDiscrepancy]=useState<{changed:boolean;reason:string|null}|null>(null);
   const modern=!!plan?.proposal.experience_context;
@@ -83,8 +85,8 @@ export function SimpleProjectWorkspace(props: Props) {
     const found = experiences.filter((item) => (item.annual_plan_id === plan.id || plan.proposal.experience_context&&item.source_proposal_id===chosen) && item.status !== "archived" &&
       (item.source_proposal_id === chosen || (!item.source_proposal_id && item.source_proposal_index === selectedIndex)))
       .sort((a, b) => b.version - a.version)[0];
-    if (found) void request<{ experience: Experience;discrepancy:{changed:boolean;reason:string|null} }>(`/api/project-flow/${found.id}`).then((result) => {
-      if (live) { setDiscrepancy(result.discrepancy);setRow(result.experience);setConversation(result.experience.details.project_context??null); setContext(result.experience.details.project_context?"":result.experience.details.decisions?.additional_context ?? ""); setOpenedProposal(chosen); }
+    if (found) void request<{ experience: Experience;protected_route_ids:string[];discrepancy:{changed:boolean;reason:string|null} }>(`/api/project-flow/${found.id}`).then((result) => {
+      if (live) { setProtectedRouteIds(result.protected_route_ids??[]);setDiscrepancy(result.discrepancy);setRow(result.experience);setConversation(result.experience.details.project_context??null); setContext(result.experience.details.project_context?"":result.experience.details.decisions?.additional_context ?? ""); setOpenedProposal(chosen); }
     }).catch((cause: Error) => { if (live) setError(cause.message); });
     return () => { live = false; };
   }, [plan, chosen, experiences]);
@@ -125,10 +127,10 @@ export function SimpleProjectWorkspace(props: Props) {
     const result = await request<{ experience: Experience }>(`/api/project-flow/${row.id}`);
     setRow(result.experience); setNotice("Proyecto confirmado."); props.onConfirmed?.();
   }); }
-  async function newVersion() { if (!row) return; await act(async () => {
+  async function newVersion(sequenceOnly=false) { if (!row) return; await act(async () => {
     const copy = await request<{ id: string }>(`/api/learning-experiences/${row.id}/new-version`, { expectedRevision: row.revision });
-    const result = await request<{ experience: Experience }>(`/api/project-flow/${copy.id}`);
-    setRow(result.experience); setContext(result.experience.details.decisions?.additional_context ?? "");  setChanging(true);
+    const result = await request<{ experience: Experience;protected_route_ids:string[] }>(`/api/project-flow/${copy.id}`);
+    setProtectedRouteIds(result.protected_route_ids??[]);setRow(result.experience); setContext(result.experience.details.decisions?.additional_context ?? "");  setChanging(!sequenceOnly);
     setNotice("Nueva versión en borrador. La anterior permanece confirmada.");
   }); }
   async function rebase(){if(!row||!plan)return;await act(async()=>{
@@ -164,7 +166,7 @@ export function SimpleProjectWorkspace(props: Props) {
       (a.slot?.starts_on ?? "9999").localeCompare(b.slot?.starts_on ?? "9999") || a.position - b.position);
   const currentId=proposals.find(({slot})=>slot&&slot.starts_on<=today&&slot.ends_on>=today)?.item.proposal_id;
   const nextId=!currentId?proposals.find(({slot})=>slot&&slot.starts_on>today)?.item.proposal_id:null;
-  const futureNotice=modern && (selectedSlot?.starts_on??"")>today ? <WorkflowFeedback tone="info"><p>Este proyecto está previsto para más adelante. Puedes prepararlo para sus fechas o adelantarlo al primer tramo futuro. El tramo que ya comenzó se conserva.</p><Button variant="outline" className="mt-3" disabled={busy} onClick={()=>void moveEarlier()}>Quiero trabajarlo antes</Button></WorkflowFeedback>:null;
+  const futureNotice=modern && (selectedSlot?.starts_on??"")>today ? <WorkflowFeedback tone="info"><p>Este proyecto está previsto para más adelante. Puedes prepararlo para sus fechas o adelantarlo al primer tramo futuro. El tramo que ya comenzó se conserva.</p><Button variant="outline" className="mt-3" disabled={busy||editingSequence} onClick={()=>void moveEarlier()}>Quiero trabajarlo antes</Button></WorkflowFeedback>:null;
   return <section className="ayni-workflow space-y-5"><header>
     <h1 className="text-3xl font-extrabold">{proposal?.title ?? "Elige una propuesta de Mi año"}</h1></header>
     {error && <WorkflowFeedback tone="error">{error}</WorkflowFeedback>}{notice && <WorkflowFeedback tone="success">{notice}</WorkflowFeedback>}
@@ -214,12 +216,11 @@ export function SimpleProjectWorkspace(props: Props) {
         <p><b>Cierre:</b> {row.details.project_master?.closing_description}</p>
         <details aria-label="Qué vamos a observar" className="space-y-3 border-t border-[#d6e5ef] pt-4"><summary className="min-h-11 cursor-pointer font-bold">Qué vamos a observar · {row.details.dependents?.general_criteria.length??0} criterios</summary>{row.details.dependents?.general_criteria.map(criterion=><div key={criterion.competency_id}><p className="text-sm font-semibold">{name(criterion.competency_id)}</p><p>{criterion.criterion}</p></div>)}</details>
 
-        <details className="rounded-xl border p-4"><summary className="cursor-pointer font-semibold">Ver mapa · {row.details.activity_route?.length ?? 0} actividades</summary>
-          <ol className="mt-4 divide-y divide-[#d6e5ef]">{row.details.activity_route?.map(item=><li key={item.id} className="py-3"><p><b>{displayDate(item.date)} · {item.title}</b></p><p className="mt-1 text-sm text-[#526b87]">{item.specific_purpose}</p>{row.status==="active"&&item.date>=today&&<Button variant="ghost" className="mt-2" onClick={()=>props.onDevelopActivity?.(row.id,item.id)}>Preparar esta actividad</Button>}</li>)}</ol></details>
+        <ProjectActivitySequence disabled={busy} key={row.id} route={row.details.activity_route??[]} editable={row.status==='draft'} protectedIds={protectedRouteIds} today={today} onEditing={setEditingSequence} onSave={async route=>{const result=await request<{experience:Experience}>(`/api/project-flow/${row.id}/map`,{activity_route:route,expectedRevision:row.revision},'PUT');setRow(result.experience);}} onPrepare={row.status==='active'?id=>props.onDevelopActivity?.(row.id,id):undefined}/>
         <div className="flex flex-wrap items-center justify-between gap-3"><Button variant="outline" disabled={busy} onClick={() => props.onGoAnnual?.()}>← Volver a Mi año</Button>
-          {row.status === "draft" ? <div className="flex gap-2"><Button variant="outline" disabled={busy} onClick={() => setChanging(true)}>Quiero cambiar algo</Button>
-            <AsyncButton busy={busy} busyLabel="Confirmando…" disabled={busy} onClick={() => void confirm()}>Confirmar proyecto →</AsyncButton></div>
-            : !modern&&<Button variant="outline" disabled={busy} onClick={() => void newVersion()}>Preparar una nueva versión</Button>}</div>
+          {row.status === "draft" ? <div className="flex gap-2"><Button variant="outline" disabled={busy||editingSequence} onClick={() => setChanging(true)}>Quiero cambiar algo</Button>
+            <AsyncButton busy={busy} busyLabel="Confirmando…" disabled={busy||editingSequence} onClick={() => void confirm()}>Confirmar proyecto →</AsyncButton></div>
+            : <Button variant="outline" disabled={busy} onClick={() => void newVersion(true)}>Revisar y modificar secuencia</Button>}</div>
         {!modern&&<Button variant="outline" disabled={busy} onClick={() => setAdvanced(true)}>Abrir detalle editable e imágenes</Button>}
       </section>}
     </>}

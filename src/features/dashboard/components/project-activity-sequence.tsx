@@ -1,0 +1,18 @@
+"use client";
+import {useState} from "react";
+import {Button} from "@/components/ui/button";
+import {Input} from "@/components/ui/input";
+import {Textarea} from "@/components/ui/textarea";
+import {displayDate} from "@/src/lib/display-date";
+import {useUnsavedWork} from "@/src/lib/use-unsaved-work";
+import type {Experience} from "./project-development-workspace";
+
+type Route=NonNullable<Experience['details']['activity_route']>;
+export function ProjectActivitySequence({route,editable,protectedIds,today,onSave,onEditing,onPrepare,disabled}:{route:Route;editable:boolean;protectedIds:string[];today:string;onSave:(route:Route)=>Promise<void>;onEditing:(editing:boolean)=>void;onPrepare?:(id:string)=>void;disabled:boolean}){
+ const [edit,setEdit]=useState<{id:string;title:string;purpose:string}|null>(null);
+ const [busy,setBusy]=useState(false),[error,setError]=useState('');
+ const original=route.find(item=>item.id===edit?.id);
+ useUnsavedWork(!!edit&&(edit.title!==original?.title||edit.purpose!==original?.specific_purpose),busy||disabled);
+ async function save(){if(!edit)return;setBusy(true);setError('');try{await onSave(route.map(item=>item.id===edit.id?{...item,title:edit.title.trim(),specific_purpose:edit.purpose.trim()}:item));setEdit(null);onEditing(false);}catch(cause){setError(cause instanceof Error?cause.message:'No pudimos guardar. Tus cambios siguen aquí.');}finally{setBusy(false);}}
+ return <section aria-label="Secuencia de actividades" className="border-t border-[#d6e5ef] pt-4"><h2 className="text-xl font-bold text-[#172b52]">Secuencia de actividades</h2><p className="mt-1 text-sm text-[#526b87]">{route.length} actividades · {editable?'Revisa el recorrido antes de confirmar el proyecto.':'Elige una actividad para prepararla.'}</p>{error&&<p role="alert" className="mt-3 text-red-700">{error}</p>}<ol className="mt-3 divide-y divide-[#d6e5ef]">{route.map((item,index)=>{const locked=protectedIds.includes(item.id)||item.date<today;return <li key={item.id} className="py-4"><div className="flex flex-wrap items-start justify-between gap-3"><div className="min-w-0 flex-1"><p className="text-sm text-[#526b87]">{index+1} · {displayDate(item.date)}</p><h3 className="mt-1 font-semibold">{item.title}</h3></div>{editable?<Button variant="outline" disabled={busy||disabled||!!edit||locked} onClick={()=>{setEdit({id:item.id,title:item.title,purpose:item.specific_purpose});setError('');onEditing(true);}}>Modificar actividad</Button>:onPrepare&&!locked?<Button variant="outline" disabled={busy||disabled} onClick={()=>onPrepare(item.id)}>Preparar actividad</Button>:null}</div>{edit?.id===item.id?<div className="mt-3 space-y-3"><label className="block text-sm font-semibold">Título de la actividad<Input className="mt-1" maxLength={180} value={edit.title} disabled={busy||disabled} onChange={event=>setEdit({...edit,title:event.target.value})}/></label><label className="block text-sm font-semibold">Propósito de la actividad<Textarea className="mt-1" maxLength={500} value={edit.purpose} disabled={busy} onChange={event=>setEdit({...edit,purpose:event.target.value})}/></label><div className="flex justify-end gap-2"><Button variant="outline" disabled={busy} onClick={()=>{setEdit(null);setError('');onEditing(false);}}>Cancelar</Button><Button disabled={busy||disabled||!edit.title.trim()||!edit.purpose.trim()} onClick={()=>void save()}>{busy?'Guardando…':'Guardar cambios'}</Button></div></div>:<p className="mt-2 max-w-[75ch] text-sm leading-relaxed text-[#526b87]">{item.specific_purpose}</p>}{locked&&editable&&<p className="mt-2 text-sm text-[#805819]">Actividad protegida: conserva el trabajo ya registrado.</p>}</li>;})}</ol></section>;
+}
