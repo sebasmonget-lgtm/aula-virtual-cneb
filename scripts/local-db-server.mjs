@@ -2988,7 +2988,7 @@ async function runPreparationWorker() {
   return runPreparationStep(db,(job,checkpoint)=>withPedagogicalClock(previewQAClockForJob(job),()=>execute(job,checkpoint)));
 }
 
-export async function drainPreparationQueue(origin){
+export async function drainPreparationQueue(origin,oidcToken=null){
   const workerDb=database.requestDb();
   try{await requestDatabaseScope.run(workerDb,()=>drainPreparation({step:runPreparationWorker,
     hasPending:async()=>!!(await db.query("select 1 from preparation_jobs where status='queued' limit 1")).rows.length,
@@ -2996,7 +2996,8 @@ export async function drainPreparationQueue(origin){
       const secret=preparationDispatchSecret();
       const deploymentOrigin=process.env.VERCEL_URL?`https://${process.env.VERCEL_URL}`:origin;
       if(!secret||!deploymentOrigin||!allowedOrigins.has(deploymentOrigin))return;
-      const response=await fetch(deploymentOrigin+'/api/internal/preparation/run',{method:'POST',headers:preparationDispatchHeaders(secret),signal:AbortSignal.timeout(12000)});
+      const response=await fetch(deploymentOrigin+'/api/internal/preparation/run',{method:'POST',headers:{...preparationDispatchHeaders(secret),
+        ...(process.env.VERCEL==='1'&&oidcToken?{'x-vercel-trusted-oidc-idp-token':oidcToken}:{})},redirect:'error',signal:AbortSignal.timeout(12000)});
       if(!response.ok)recordOperationalEvent('preparation_continuation_failed',{status:response.status});
     }}));}catch{recordOperationalEvent('preparation_background_interrupted',{status:503});}
   finally{if(dbMode==='postgres')await workerDb.close();}

@@ -32,7 +32,8 @@ async function adaptRequest(webRequest, options) {
   const response = {
     schedulePreparation: options.after ? () => options.after(async () => {
       const { drainPreparationQueue } = await import("./local-db-server.mjs");
-      await drainPreparationQueue(new URL(webRequest.url).origin);
+      await drainPreparationQueue(new URL(webRequest.url).origin,
+        process.env.VERCEL === "1" ? webRequest.headers.get("x-vercel-oidc-token") : null);
     }) : undefined,
     setHeader(name, value) {
       headers.delete(name);

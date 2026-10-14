@@ -38,3 +38,5 @@ Rollback de código: 7d52aae, conservando versiones, propuestas, actividades y j
 
 ## Publicación
 Pendiente registrar commit, READY, SHA, smoke y Production intacta después del despliegue Preview.
+
+Continuación protegida: usa el token OIDC de la invocación Vercel únicamente para una petición firmada al origen fijo del mismo deployment, mediante x-vercel-trusted-oidc-idp-token. Redirecciones rechazadas; no se expone el token ni se desactiva protección. Acceso de navegador integrado mostró Vercel Authentication; CLI autenticada conserva smoke y el QA humano debe usar su cuenta autorizada. Fuente oficial: https://vercel.com/changelog/trusted-sources-for-deployment-protection y https://vercel.com/docs/oidc.

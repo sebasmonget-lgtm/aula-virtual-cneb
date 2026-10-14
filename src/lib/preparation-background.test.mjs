@@ -6,6 +6,9 @@ import {drainPreparation,preparationDispatchSecret,preparationDispatchHeaders} f
 test('worker serverless continúa después de responder con autorización del servidor y limpieza de conexión',async()=>{
   const route=await readFile(new URL('../../app/api/[...path]/route.js',import.meta.url),'utf8'),bridge=await readFile(new URL('../../scripts/serverless-bridge.mjs',import.meta.url),'utf8');
   assert.match(route,/handleServerlessRequest\(request, \{ after \}\)/);assert.match(bridge,/options\.after\(async/);
+  assert.match(bridge,/process\.env\.VERCEL === "1" \? webRequest\.headers\.get\("x-vercel-oidc-token"\)/);
+  const server=await readFile(new URL('../../scripts/local-db-server.mjs',import.meta.url),'utf8');
+  assert.match(server,/'x-vercel-trusted-oidc-idp-token':oidcToken/);assert.match(server,/redirect:'error'/);
   let time=0,calls=0,continuations=0;
   await drainPreparation({step:async()=>{time+=60;calls++;return{};},hasPending:async()=>true,continueWork:async()=>continuations++,now:()=>time,budgetMs:100});
   assert.equal(calls,2);assert.equal(continuations,1);
