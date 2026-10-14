@@ -22,6 +22,7 @@ import { limaToday } from "../src/lib/activity-schedule-integrity.mjs";
 import { annualChatSummary } from "../src/lib/annual-chat-summary.mjs";
 import { hasSavedAnnualYear } from "../src/lib/annual-plan-display.mjs";
 import { loadPeriodFutureReview } from "../src/lib/period-future-review.mjs";
+import {handleAnnualProposalPreview} from "../src/lib/annual-proposal-preview.mjs";
 
 export async function handleAnnualJourneyRoutes({ request, response, url, db, teacherId, origin, send, readJson,
   annualPlanningContext, annualDocumentContext, createProvider, resolvePlan }) {
@@ -130,6 +131,9 @@ export async function handleAnnualJourneyRoutes({ request, response, url, db, te
     if(editorMatch && request.method==="GET") { const row=await load(editorMatch[1],db,false);send(response,200,{protected_ids:await protectedIds(row),today:limaToday()},origin);return true; }
     if(await handleAnnualProposalCreation({request,response,url,db,context,teacherId,sources,curriculum,send,origin,readJson,load,write,createProvider,resolvePlan,
       loadReviewContext:periodId=>loadPeriodFutureReview(db,{teacherId,classroomId:context.id,periodId,curriculum})}))return true;
+    if(await handleAnnualProposalPreview({request,response,url,db,context,teacherId,sources,curriculum,calendar,origin,send,readJson,
+      load,write,protectedIds,createProvider,resolvePlan,loadFreshSources:tx=>personalizationSources(tx,teacherId,context),
+      loadFreshCalendar:async tx=>({...await loadEffectiveCalendar(tx,{teacherId,classroomId:context.id}),initial_stage:context.calendar.initial_stage})}))return true;
     const match = /^\/api\/annual-journey\/([0-9a-f-]{36})\/(intent|remove-intent|apply|keep|move|structure|upgrade|confirm|copy|refresh)$/i.exec(url.pathname);
     if (!match || request.method !== "POST") { send(response, 404, { error: "Acción no disponible." }, origin); return true; }
     const [, id, operation] = match, body = await readJson(request), revision = expectedRevision(body.expectedRevision);

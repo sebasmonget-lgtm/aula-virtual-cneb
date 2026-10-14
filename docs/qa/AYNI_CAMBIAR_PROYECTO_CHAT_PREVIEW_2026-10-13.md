@@ -1,0 +1,20 @@
+# Cambiar proyecto con Ayni — Preview
+
+Base 68b6795, rama codex/mi-ano-simple-preview, working tree inicial limpio y origen sincronizado. Se mantiene instrucción de Preview sin Production ni datos existentes. Mockups guían chat/pedido/revisión; etiquetas «Pantalla» de las imágenes no son contenido del producto. No se vuelve a añadir pantalla de detalles ni otras herramientas descartadas por instrucciones previas.
+
+## Flujo y persistencia
+Cambiar con Ayni abre directamente diálogo con proyecto/fechas, pregunta de Ayni, cinco sugerencias y escribir/dictar. Una acción Generar propuesta lleva a revisión breve de título, propósito, acciones, materiales cambiados y competencias. Editar pedido conserva texto; Cancelar/Cerrar retira candidato sin cambiar proyecto. Acciones permanecen visibles durante scroll, foco/diálogo Radix existente y formulario bloqueado mientras opera.
+
+Motor scoped existente genera y valida candidato; nuevos endpoints proposal-preview GET/POST y accept/discard reutilizan autorización load/write y transacción/CAS anual. Candidato guarda contenido en generation_metadata ya existente del draft; no toca proposal antes de aceptar. Al aceptar, servidor usa candidato guardado por ID/revisión/hash, jamás contenido reenviado por navegador; vuelve a comprobar fuentes, calendario, protección sobrevenida, fechas, otros proyectos y decisiones globales. Confirmado abre copia al generar, no al abrir chat. Guardado de aplicación continúa en borrador, con confirmación anual existente. Se conserva historial, original, esquemas, permisos/RLS, modelos, motor y actividades. Sin migraciones ni consultas/escrituras pedagógicas cloud.
+
+## Evidencia funcional
+42 pruebas PASS: annual-proposal-preview, annual-journey, annual-journey-recovery, annual-year-editor. Incluyen generación separada/reapertura sin otra IA; usuario ajeno 404; candidato inventado/CAS/replay 409; cancelación conserva original; copia activa intacta; editar pedido sustituye candidato; fechas/otros proyectos intactos; respuesta de modelo fuera de alcance rechazada; trabajo vinculado después de generar bloquea aceptación y nueva IA; alcance global/calendario inmutables. Fixture de test corrige sourceFingerprint requerido y contador esperado del motor scoped (una llamada de repair; revisión determinista no pide otra), sin alterar motor para pasar pruebas.
+
+Harness privado .local/proposal-chat-20261013: PGlite nuevo, 35 niños ficticios y proveedor local, ninguna API externa/modelo pagado. UI real abre chat, elige sugerencia, genera, revisa, edita, cancela; GET verifica proposal igual. Segundo pedido: recarga/reabre candidato durable, aplica, GET confirma solo proyecto elegido cambiado/calendario idéntico. UI confirma año ficticio; abrir chat en active no crea draft; generar crea copia, cancelar deja draft y active con proyectos/calendario idénticos. Cuatro respuestas fixture: una anual y tres pedidos; cero pagadas. No actividades completas generadas.
+
+Capturas escritorio/chat/revisión y móvil 390×844 en harness ignorado; diálogo móvil ancho 358, client/scroll 342, página 390 sin overflow horizontal. Scroll vertical contiene contenido y footer permanece visible. Override viewport de IAB no cambió tamaño efectivo; se restableció y móvil se verificó con iframe de 390, no se atribuye captura de escritorio a móvil. Stub Next Image del harness emite advertencia unoptimized, ajena al producto. Visual passes acotadas, identidad/logo/tipo/turquesa/pictogramas existentes.
+
+npx tsc --noEmit, npm run lint -- --ignore-pattern .local/** y Next build --webpack PASS. Sin cambios de dependencias. Guía oficial Supabase RLS consultada como referencia; se mantienen tabla privada y autorización existentes: https://supabase.com/docs/guides/database/postgres/row-level-security. Changelog descargado/inspeccionado, sin API Supabase nueva usada.
+
+## Publicación
+Recibo Preview pendiente de verificación final. Rollback Preview: volver a 68b6795/retirar solo el deployment. Los nuevos campos metadata no cambian schemas; original y proposal actual no se reemplazan al generar.
