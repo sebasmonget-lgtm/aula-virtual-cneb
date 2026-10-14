@@ -20,6 +20,7 @@ import { scopedAnnualChanges, annualCalendarCriteria } from "../src/lib/annual-c
 import { annualFutureGaps } from "../src/lib/annual-experience-context.mjs";
 import { limaToday } from "../src/lib/activity-schedule-integrity.mjs";
 import { annualChatSummary } from "../src/lib/annual-chat-summary.mjs";
+import { hasSavedAnnualYear } from "../src/lib/annual-plan-display.mjs";
 import { loadPeriodFutureReview } from "../src/lib/period-future-review.mjs";
 
 export async function handleAnnualJourneyRoutes({ request, response, url, db, teacherId, origin, send, readJson,
@@ -87,6 +88,10 @@ export async function handleAnnualJourneyRoutes({ request, response, url, db, te
         plan_format: "annual_preplan_v1", title: "Mi año", school_year: String(context.year), proposed_experiences: [],
         pending_changes: [], change_history: [], preparation_status: "saved", metrics: { started_at: new Date().toISOString(), regenerations: 0, operations: [] } };
       const row = await versionTransaction(db, `annual:${context.school_year_id}`, async (tx) => {
+        if(body.draftId){const requested=await load(body.draftId,tx,false);if(requested.school_year_id!==context.school_year_id)journeyFail('not_found','Este año no está disponible en el aula actual.');}
+        const saved=(await tx.query(`select * from annual_plans where school_year_id=$1 and classroom_id=$2
+          and status in ('draft','active','archived') order by version desc`,[context.school_year_id,context.id])).rows.find(hasSavedAnnualYear);
+        if(saved)return saved;
         if (body.draftId) { const existing = await load(body.draftId, tx); assertRevision(existing, expectedRevision(body.expectedRevision)); return existing; }
         const existing = (await tx.query(`select id from annual_plans where school_year_id=$1 and status='draft'`, [context.school_year_id])).rows[0];
         if (existing) { draftId = existing.id; throw new VersionConflictError("Ya tienes un borrador. Ábrelo para continuar."); }
@@ -100,6 +105,7 @@ export async function handleAnnualJourneyRoutes({ request, response, url, db, te
           JSON.stringify(annualDocumentContext(context)),JSON.stringify({ workflow: "annual_journey_v2" }),active?.id ?? null,snapshot.source_fingerprint])).rows[0];
       });
       draftId = row.id;
+      if(hasSavedAnnualYear(row)){send(response,200,row,origin);return true;}
       if ((await protectedIds(row)).length) journeyFail("protected_proposal", "Este borrador conserva decisiones o trabajo iniciado. Usa Cambiar con Ayni para modificar solo propuestas futuras.");
       const safeIdeas = annualJourneySafeText(body.teacherIdeas, sources.names, annualJourneyCurriculumTerms(curriculum));
       if (body.teacherIdeas.trim() && !safeIdeas) journeyFail("private_text", "La indicación incluye información privada. Conservamos tu preparación; escribe la idea sin nombres ni datos personales.");

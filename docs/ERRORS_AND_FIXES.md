@@ -1955,3 +1955,11 @@ Después del reintento siguió apareciendo EMAXCONNSESSION también al recuperar
 ### LIST-01 — Guiadas sin acciones equivalentes a libres
 
 Síntoma: una observación guiada no tenía los tres puntos ni retiro; el menú libre exigía otro clic en su disparador. Causa: dos implementaciones de acciones y ausencia de retiro guiado en servidor. Solución: componente compartido accesible con cierre exterior y ruta DELETE autorizada que registra evento privado, sin borrar original/foto. Lectores actuales filtran esos eventos; versiones históricas quedan preservadas. Validación: UI local de apertura/clic fuera/retiro, CAS, propiedad ajena, replay, exclusión en cobertura/contexto/trayectoria/progreso/fuentes anuales y conservación de original/media. Prevención: probar operación vertical, no ocultar solo la tarjeta. La regresión de evaluación usa ahora los campos reales created_by/preferences; un fixture sin ellos producía fallos de esquema, no una incompatibilidad de Production.
+
+### AN-05 — Mi año reabría preparación o permitía regeneración completa
+
+Síntoma: retroceder/avanzar podía reabrir preparación; además existía Volver a preparar el borrador. Causa: entrada basada en cantidad de propuestas futuras y estado/TTL de job, aunque ya había calendario durable; prepare/generate no reutilizaban ese año. Solución: detectar el plan guardado (incluido año sin futuro disponible), cargarlo sin consultar el job terminado y devolverlo desde ambas rutas bajo el lock existente. Se elimina la regeneración completa desde la UI; cambios focales usan revisión existente. Validación: 46 pruebas focales PASS, replay antes/después de confirmar y con job expirado sin generación extra, selección histórica y UI de vuelta/recarga con IDs conservados.
+
+### AN-06 — Confirmar para preparar quedaba en Mi año
+
+En QA local la confirmación persistía, pero navegar al proyecto en el mismo callback encontraba la guarda global todavía ocupada. Se difiere la navegación hasta busy liberado, usando efecto y microtarea cancelable. Confirmación/reload terminan primero. Validación: interfaz real local confirma copia de revisión y abre el proyecto elegido; la generación inicial sigue siendo una sola solicitud al proveedor ficticio. No se cambia la guarda ni se omite confirmación docente.

@@ -1,0 +1,16 @@
+"use client";
+import {useRef,type ReactNode} from 'react';
+import {ChevronLeft,ChevronRight,Plus} from 'lucide-react';
+import {Button} from '@/components/ui/button';
+import {annualPeriodNumber} from '@/src/lib/annual-plan-display.mjs';
+import {competencyVisual} from '@/src/lib/competency-presentation';
+import {annualDisplayTitle} from '@/src/lib/annual-year-editor.mjs';
+import {ProjectPictogram} from './project-pictogram';
+import type {AnnualMapRow} from './annual-year-map';
+import styles from './annual-plan.module.css';
+type Slot={slot_id:string;index:number;period:string;proposal_id:string|null;duration_weeks:number;starts_on:string;ends_on:string;occupancy?:string};
+export function AnnualCompactTimeline({slots,rows,period,onPeriod,selectedId,onSelect,onEmpty,today,disabled,viewAction,listView=false,highlightedIds}:{slots:Slot[];rows:AnnualMapRow[];period:string;onPeriod:(value:string)=>void;selectedId:string|null;onSelect:(id:string)=>void;onEmpty:(id:string)=>void;today:string;disabled:boolean;viewAction?:ReactNode;listView?:boolean;highlightedIds?:string[]}){
+ const scroll=useRef<HTMLDivElement>(null);
+ const visible=slots.filter(slot=>period==='all'||String(annualPeriodNumber(slot.period))===period);
+ return <section className={styles.timeline}><header><div><h2>Tu año en el tiempo</h2><p>{slots.length} tramos · Organizados en 4 bimestres</p></div><div role="group" aria-label="Bimestres de Mi año" className={styles.periods}>{['1','2','3','4','all'].map(value=><Button key={value} aria-label={value==='all'?'Todo el año':`Bimestre ${value}`} aria-pressed={period===value} variant={period===value?'default':'outline'} disabled={disabled} onClick={()=>onPeriod(value)}>{value==='all'?'Todo el año':`B${value}`}</Button>)}{viewAction}</div></header>{!listView&&<div className={styles.timelineRow}><Button variant="outline" size="icon" aria-label="Ver proyectos anteriores" onClick={()=>scroll.current?.scrollBy({left:-500,behavior:'smooth'})}><ChevronLeft/></Button><div className={styles.slots} ref={scroll} tabIndex={0} role="region" aria-label="Proyectos del bimestre">{visible.map(slot=>{const row=rows.find(item=>item.proposal_id===slot.proposal_id),visual=row?competencyVisual(row.primary_competency_ids[0]):null;const current=slot.starts_on<=today&&slot.ends_on>=today;return <button key={slot.slot_id} className={styles.slot} aria-pressed={!!row&&selectedId===row.proposal_id} disabled={disabled||!row&&(slot.occupancy==='past_unrecorded'||slot.starts_on<today)} style={{...(visual?{background:visual.background,color:visual.foreground}:{}),opacity:highlightedIds&&row&&!highlightedIds.includes(row.proposal_id)?.35:1}} onClick={()=>row?onSelect(row.proposal_id):onEmpty(slot.slot_id)}><span className={styles.slotNumber}>{slot.index}</span>{current&&<span className={styles.today}>Hoy</span>}{row?<ProjectPictogram project={row} className="size-14"/>:<Plus size={24}/>}<strong>{row?annualDisplayTitle(row.title):slot.occupancy==='past_unrecorded'?'Pasado sin registro':'Sin propuesta'}</strong><span>{slot.duration_weeks} sem</span></button>;})}</div><Button variant="outline" size="icon" aria-label="Ver proyectos siguientes" onClick={()=>scroll.current?.scrollBy({left:500,behavior:'smooth'})}><ChevronRight/></Button></div>}</section>;
+}

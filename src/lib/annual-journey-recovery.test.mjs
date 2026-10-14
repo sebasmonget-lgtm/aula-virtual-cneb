@@ -153,14 +153,20 @@ test("job moderno: recuperación, exclusión concurrente y permisos sin revisió
     assert.equal(generations,2);assert.equal(redundantCalls,0);
     const saved=(await db.query("select proposal,revision from annual_plans where id=$1",[prepared.data.draft_id])).rows[0];
     assert.equal(saved.proposal.teacher_idea_messages.length,2);assert.equal(saved.proposal.resolved_calendar.integrity.assigned,172);
+    const repeatedDraft=await route('prepare',{draftId:prepared.data.draft_id,expectedRevision:0,teacherIdeas:'',sourceFingerprint:start.data.snapshot.source_fingerprint});
+    assert.equal(repeatedDraft.data.status,'succeeded');assert.equal(generations,2);
     const confirmed=await route(`${prepared.data.draft_id}/confirm`,{expectedRevision:Number(saved.revision)});assert.equal(confirmed.status,200,JSON.stringify(confirmed.data));
     assert.equal((await route(`jobs/${id}/run`,{})).status,200);assert.equal(generations,2);
     await route("start");await route(`jobs/${id}`);assert.equal(redundantCalls,0);
     const newPreparation=await route("prepare",{teacherIdeas:"Nueva revisión",sourceFingerprint:start.data.snapshot.source_fingerprint});
     assert.equal(newPreparation.status,202);
-    await db.query("update annual_plans set proposal=proposal || '{\"teacher_preferences\":\"Otra edición\"}'::jsonb where id=$1",[newPreparation.data.draft_id]);
-    assert.equal((await route(`jobs/${newPreparation.data.id}/run`,{})).status,409);
-    assert.equal((await route(`jobs/${newPreparation.data.id}`)).data.status,"failed");assert.equal(generations,2);
+    assert.equal(newPreparation.data.status,'succeeded');assert.equal(newPreparation.data.draft_id,prepared.data.draft_id);
+    const legacyReplay=await route('generate',{teacherIdeas:'',sourceFingerprint:start.data.snapshot.source_fingerprint});
+    assert.equal(legacyReplay.status,200);assert.equal(legacyReplay.data.id,prepared.data.draft_id);assert.equal(generations,2);
+    assert.equal((await db.query('select count(*)::int as count from annual_plans')).rows[0].count,1);
+    await db.query("update ai_pending_generations set created_at=now()-interval '2 days',expires_at=now()-interval '1 day' where id=$1",[id]);
+    const expiredReplay=await route("prepare",{teacherIdeas:"",sourceFingerprint:start.data.snapshot.source_fingerprint});
+    assert.equal(expiredReplay.data.status,'succeeded');assert.equal(expiredReplay.data.draft_id,prepared.data.draft_id);assert.equal(generations,2);
     assert.equal(publicJourneyJob(id,{status:"running",lease_until:"2026-01-01",completed_stages:[],stage:"review",checkpoint:{}},Date.now()).status,"interrupted");
   } finally {await db.close();}
 });

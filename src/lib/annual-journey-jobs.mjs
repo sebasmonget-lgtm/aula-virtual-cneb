@@ -9,6 +9,7 @@ import { loadEffectiveCalendar } from "./school-calendar-service.mjs";
 import { persistAnnualProjectSlots } from "./annual-project-slots.mjs";
 import { validateExperienceContext } from "./annual-experience-context.mjs";
 import { limaToday } from "./activity-schedule-integrity.mjs";
+import { hasSavedAnnualYear } from "./annual-plan-display.mjs";
 
 const WORKFLOW = "annual_journey_v2_job", LEASE_MS = 210000;
 export const JOURNEY_STAGES = ["sources", "calendar", "generation", "validation", "review"];
@@ -52,9 +53,17 @@ export async function handleJourneyJobs({ request, response, url, db, context, t
     const safeIdeas = annualJourneySafeText(body.teacherIdeas, sources.names, annualJourneyCurriculumTerms(curriculum));
     if (body.teacherIdeas.trim() && !safeIdeas) journeyFail("private_text", "Escribe tus ideas sin datos personales. Tus registros se conservan.");
     const result = await versionTransaction(db, lock, async tx => {
-      let row;
+      let row=body.draftId?await load(body.draftId,tx,false):null;
+      if(row&&row.school_year_id!==context.school_year_id)journeyFail('not_found','Este año no está disponible en el aula actual.');
+      const savedYear=(await tx.query(`select * from annual_plans where school_year_id=$1 and classroom_id=$2
+        and status in ('draft','active','archived') order by case when status='draft' then 0 else 1 end,version desc`,[context.school_year_id,context.id])).rows.find(hasSavedAnnualYear);
+      if(savedYear){
+        return {id:savedYear.proposal.generation_job_id??savedYear.id,draft_id:savedYear.id,status:'succeeded',stage:'review',
+          completed_stages:JOURNEY_STAGES,updated_at:savedYear.updated_at,error:null,poll_after_ms:0,replayed:true};
+      }
       if (body.draftId) {
-        row = await load(body.draftId, tx); assertRevision(row, expectedRevision(body.expectedRevision));
+        if(row.status!=='draft')journeyFail('not_found','Abre el año guardado para continuar.');
+        assertRevision(row, expectedRevision(body.expectedRevision));
         if ((await protectedIds(row, tx)).length) journeyFail("protected_proposal", "Este año contiene trabajo protegido. Usa Cambiar con Ayni para ajustar propuestas futuras.");
         if (row.proposal.generation_job_id) {
           const previous = await get(row.proposal.generation_job_id, tx).catch(e => { if (e.reason !== "not_found") throw e; });
