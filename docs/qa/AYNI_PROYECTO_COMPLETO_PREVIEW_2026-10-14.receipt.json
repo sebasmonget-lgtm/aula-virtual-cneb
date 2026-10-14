@@ -1,0 +1,193 @@
+{
+  "environment": "preview",
+  "productCommit": "7d52aae352d7b9b39d4a0f5a0ed7fab49a836d34",
+  "deployment": {
+    "projectId": "prj_3GOhE5KykLKbhuULD5rAeXpfbEko",
+    "deploymentId": "dpl_67JuCAjcKyUruhEYiCxQ3PS7y8UW",
+    "url": "https://ayni-aula-staging-nk2pti1nx-ayni4.vercel.app",
+    "state": "READY",
+    "target": null,
+    "sha": "7d52aae352d7b9b39d4a0f5a0ed7fab49a836d34"
+  },
+  "smoke": {
+    "phase": "preview",
+    "url": "https://ayni-aula-staging-nk2pti1nx-ayni4.vercel.app",
+    "pass": true,
+    "checks": [
+      {
+        "path": "/",
+        "method": "GET",
+        "status": 200,
+        "expected": 200,
+        "pass": true
+      },
+      {
+        "path": "/competencies/compact/psico_motricidad.svg",
+        "method": "GET",
+        "status": 200,
+        "expected": 200,
+        "pass": true
+      },
+      {
+        "path": "/guided-panels/cloud.webp",
+        "method": "GET",
+        "status": 200,
+        "expected": 200,
+        "pass": true
+      },
+      {
+        "path": "/project-illustrations/movement.webp",
+        "method": "GET",
+        "status": 200,
+        "expected": 200,
+        "pass": true
+      },
+      {
+        "path": "/health",
+        "method": "GET",
+        "status": 200,
+        "expected": 200,
+        "pass": true
+      },
+      {
+        "path": "/api/auth/config",
+        "method": "GET",
+        "status": 200,
+        "expected": 200,
+        "pass": true
+      },
+      {
+        "path": "/api/auth/session",
+        "method": "GET",
+        "status": 401,
+        "expected": 401,
+        "pass": true
+      },
+      {
+        "path": "/api/pilot/setup",
+        "method": "GET",
+        "status": 401,
+        "expected": 401,
+        "pass": true
+      },
+      {
+        "path": "/api/diagnostics/family-interview-status",
+        "method": "GET",
+        "status": 401,
+        "expected": 401,
+        "pass": true
+      },
+      {
+        "path": "/api/diagnostics/spontaneous-observations",
+        "method": "POST",
+        "status": 401,
+        "expected": 401,
+        "pass": true
+      },
+      {
+        "path": "/api/diagnostics/experience-observations/12345678-1234-4234-8234-123456789012",
+        "method": "DELETE",
+        "status": 401,
+        "expected": 401,
+        "pass": true
+      },
+      {
+        "path": "/api/preparation/current",
+        "method": "GET",
+        "status": 401,
+        "expected": 401,
+        "pass": true
+      },
+      {
+        "path": "/api/preparation/projects/complete",
+        "method": "POST",
+        "status": 401,
+        "expected": 401,
+        "pass": true
+      },
+      {
+        "path": "/api/preparation/projects/future-preview",
+        "method": "POST",
+        "status": 401,
+        "expected": 401,
+        "pass": true
+      },
+      {
+        "path": "/api/preparation/projects/future-complete",
+        "method": "POST",
+        "status": 401,
+        "expected": 401,
+        "pass": true
+      },
+      {
+        "path": "/api/annual-journey/12345678-1234-4234-8234-123456789012/proposal-chat",
+        "method": "GET",
+        "status": 401,
+        "expected": 401,
+        "pass": true
+      },
+      {
+        "path": "/api/documents",
+        "method": "GET",
+        "status": 401,
+        "expected": 401,
+        "pass": true
+      },
+      {
+        "path": "/api/documents/activity/12345678-1234-4234-8234-123456789012/download",
+        "method": "GET",
+        "status": 401,
+        "expected": 401,
+        "pass": true
+      },
+      {
+        "path": "/api/annual-journey/start",
+        "method": "GET",
+        "status": 401,
+        "expected": 401,
+        "pass": true
+      },
+      {
+        "path": "/api/annual-journey/12345678-1234-4234-8234-123456789012/proposal-preview",
+        "method": "GET",
+        "status": 401,
+        "expected": 401,
+        "pass": true
+      },
+      {
+        "path": "/api/annual-journey/12345678-1234-4234-8234-123456789012/proposal-preview",
+        "method": "POST",
+        "status": 401,
+        "expected": 401,
+        "pass": true
+      },
+      {
+        "path": "/api/annual-journey/12345678-1234-4234-8234-123456789012/proposal-preview/accept",
+        "method": "POST",
+        "status": 401,
+        "expected": 401,
+        "pass": true
+      },
+      {
+        "path": "/api/annual-journey/12345678-1234-4234-8234-123456789012/proposal-preview/discard",
+        "method": "POST",
+        "status": 401,
+        "expected": 401,
+        "pass": true
+      }
+    ]
+  },
+  "productionUnchanged": {
+    "projectId": "prj_3GOhE5KykLKbhuULD5rAeXpfbEko",
+    "deploymentId": "dpl_H19YWzRdGjkgh8y72QAd1qBty7Mf",
+    "url": "https://ayni-aula-staging-8a8wfvf8y-ayni4.vercel.app",
+    "state": "READY",
+    "target": "production",
+    "sha": "9a0920230350cd6b9050f35683a1f35d459e78c7",
+    "projectName": "ayni-aula-staging",
+    "ownerId": "team_NBNhb7GhppqLvEnxRxrVk9kl",
+    "canonicalUrl": "https://project-0w0pq.vercel.app"
+  },
+  "authenticatedCloudQA": "pending manual login",
+  "paidFixtureCalls": 0
+}
