@@ -9,6 +9,19 @@ import { renderSavedDocumentWord } from "./document-word-export.mjs";
 
 const id = (number) => `00000000-0000-4000-8000-${String(number).padStart(12, "0")}`;
 
+test('actividad consultada incluye solo la secuencia guardada autorizada y omite borradores',async()=>{
+  const db=await fixture();try{
+    await db.query(`insert into activities(id,experience_id,title,purpose,status,details,preparation,occurs_on)
+      values($1,$2,'Siguiente','Explorar','active','{"meaningful_situation":"QA"}','{}','2026-04-03'),
+      ($3,$2,'Borrador','Explorar','draft','{"meaningful_situation":"QA"}','{}','2026-04-04'),
+      ($4,$5,'Otro proyecto','Explorar','active','{"meaningful_situation":"QA"}','{}','2026-04-03')`,[id(21),id(10),id(22),id(23),id(11)]);
+    const document=await loadSavedDocument(db,id(1),'activity',id(12));
+    assert.deepEqual(document.project_activities.map(row=>row.id),[id(12),id(21)]);
+    assert.equal(document.project_activities[1].date,'2026-04-03');
+    assert.equal(await loadSavedDocument(db,id(2),'activity',id(12)),null);
+  }finally{await db.close();}
+});
+
 test("el Word conserva el acuerdo docente guardado y omite acuerdos ausentes", async () => {
   const db = await fixture();
   try {

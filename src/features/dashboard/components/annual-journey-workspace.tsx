@@ -238,7 +238,7 @@ export function AnnualJourneyWorkspace({ onConfirmed, onGoDiagnostic, onLegacy,o
   const names = new Map((proposal?.curriculum_reference ?? start?.curriculum ?? []).map((c) => [c.id, c.name]));
   const snapshot = preparing ? start?.snapshot : proposal?.classroom_snapshot;
   const disabled = !!busy || audioBusy || generating;
-  if(consultId)return <ActivityConsultation key={consultId} id={consultId} onBack={()=>setConsultId('')}/>;
+  if(consultId)return <ActivityConsultation key={consultId} id={consultId} onActivity={setConsultId} onBack={()=>setConsultId('')}/>;
   const proposalDetails=complete&&!toolsOnly?<div className={listOpen?'space-y-4':'space-y-5'}>{(listOpen?visibleProposals:selectedProposal?[selectedProposal]:[]).map(row=>selected?.status==='archived'?<AnnualProjectPreview key={row.proposal_id} row={row} index={(proposal!.resolved_calendar?.projects?.findIndex(slot=>slot.proposal_id===row.proposal_id)??0)+1} names={names} disabled canChange={false} onChange={()=>{}}/>:<CompleteProjectWorkspace key={`${selected?.id}:${row.proposal_id}`} embedded planId={selected?.id} proposalId={row.proposal_id} onGoToday={onGoToday}
     onRequireConfirmation={()=>{setPrepareAfterConfirm(row.proposal_id);setReviewOpen(true);}} onConfirmed={()=>{void reload().then(()=>onConfirmed?.()).catch(cause=>setError(cause.message));}} onPlanChanged={async id=>{await reload(id);}}/>)}{!visibleProposals.length&&<p className="rounded-xl bg-white p-5 text-[#47658b]">No hay proyectos registrados en este bimestre. Puedes consultar otro bimestre o Todo el año.</p>}</div>:null;
   return <section ref={overviewRef} className={"ayni-workflow space-y-6 !max-w-none "+yearStyles.page}>

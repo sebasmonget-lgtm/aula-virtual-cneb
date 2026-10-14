@@ -25,6 +25,7 @@ export type OpenDocument = DocumentEntry & {
   starts_on?: string; ends_on?: string; occurs_on?: string; experience_title?: string;
   period_start?: string; period_end?: string; competencies?: { id: string; name: string }[];
   active_criterion?: { criterion_text: string; competency_v4_id: string } | null;
+  project_activities?: {id:string;title:string;date:string}[];
   workshop?: { id: string; content: Record<string, unknown> } | null;
 };
 type Artifact = { id: string; source_kind: string; source_id: string; filename: string;

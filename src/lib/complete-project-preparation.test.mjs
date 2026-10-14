@@ -85,6 +85,17 @@ test('aceptación completa: diez días, recuperación sin repetir IA y publicaci
     await assert.rejects(()=>ownedPreparationJob(db,randomUUID(),job.id));
     assert.equal(await runPreparationStep(db,execute),null);
     assert.equal(preparationFingerprint((await db.query('select details from learning_experiences where id=$1',[experience])).rows[0].details),stored.payload.project_fingerprint);
+    let calendarReceipt;
+    const calendarOptions={request:{method:'POST'},response:{},url:new URL('http://localhost/api/preparation/projects/complete'),db,teacherId:teacher,
+      annualPlanningContext:async()=>({id:classroom.classroomId}),send:(_response,status,value)=>{calendarReceipt={status,value};},
+      domainRequest:async()=>{throw Error('No mutation before calendar confirmation');},
+      readJson:async()=>({annualPlanId:annual,expectedRevision:plan.revision,proposalId:proposal,accepted:true})};
+    await handlePreparationRoutes(calendarOptions);
+    assert.equal(calendarReceipt.status,202);assert.equal(calendarReceipt.value.id,job.id,'published legacy replay keeps accepted dates');
+    for(const selectedDates of [undefined,[],[dates[0],dates[0]],['2099-11-99bad']]){
+      await handlePreparationRoutes({...calendarOptions,readJson:async()=>({annualPlanId:annual,expectedRevision:plan.revision,proposalId:randomUUID(),accepted:true,selectedDates})});
+      assert.equal(calendarReceipt.status,409);assert.match(calendarReceipt.value.message??calendarReceipt.value.error,/calendario/);
+    }
     const futureJob=await enqueuePreparation(db,{teacherId:teacher,classroomId:classroom.classroomId,kind:'project',sourceId:annual,sourceRevision:plan.revision,input:{future:true},payload:{...payload,future_version:true,accepted_preview_revision:11}});
     let receipt;
     const routeOptions={request:{method:'POST'},response:{},url:new URL('http://localhost/api/preparation/projects/future-complete'),db,teacherId:teacher,origin:'http://localhost',send:(_response,status,value)=>{receipt={status,value};},readJson:async()=>({projectId:experience,expectedRevision:11,accepted:true}),projectFlowRow:async()=>({row:(await db.query('select * from learning_experiences where id=$1',[experience])).rows[0]})};

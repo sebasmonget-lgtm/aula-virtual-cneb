@@ -94,6 +94,13 @@ export async function handlePreparationRoutes({request,response,url,db,teacherId
       if(body.accepted!==true||!context)throw new VersionConflictError("Acepta el proyecto antes de preparar sus actividades.");
       let plan=(await db.query(`select ap.* from annual_plans ap join school_years y on y.id=ap.school_year_id where ap.id=$1 and ap.classroom_id=$2 and y.owner_id=$3`,[body.annualPlanId,context.id,teacherId])).rows[0];
       if(!plan||Number(plan.revision)!==body.expectedRevision||!['active','draft'].includes(plan.status))throw new VersionConflictError("Mi año cambió. Abre la versión actual antes de preparar.");
+      // Replay preserves the calendar already accepted, including jobs created by older clients.
+      const previous=(await db.query(`select * from preparation_jobs where teacher_id=$1 and classroom_id=$2 and source_id=$3 and source_revision=$4
+        and payload->>'proposal_id'=$5 and payload->'acceptance'->>'policy'=$6 order by created_at desc limit 1`,[teacherId,context.id,plan.id,plan.revision,body.proposalId,COMPLETE_PROJECT_POLICY])).rows[0];
+      if(previous){send(response,202,publicPreparationJob(await recoverAcceptedProjectContinuation(db,teacherId,previous.id)),origin);return true;}
+      const dates=body.selectedDates;
+      if(!Array.isArray(dates)||!dates.length||new Set(dates).size!==dates.length||dates.some(date=>typeof date!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(date)||date<limaToday()))
+        throw new VersionConflictError('Confirma en el calendario los días que trabajarás antes de preparar el proyecto.');
       if(plan.status==='draft'){
         const current=(await db.query("select * from annual_plans where classroom_id=$1 and status='active'",[context.id])).rows[0];
         if(!current||plan.supersedes_plan_id!==current.id||plan.proposal.pending_changes?.length)throw new VersionConflictError("Confirma primero Mi año. Conservamos el borrador.");
@@ -113,11 +120,7 @@ export async function handlePreparationRoutes({request,response,url,db,teacherId
         plan=(await db.query("select * from annual_plans where id=$1",[plan.id])).rows[0];
       }
       const source=await projectFlowSource(plan.id,body.proposalId);
-      const dates=body.selectedDates??source.dates?.filter(date=>date>=limaToday());
       if(!source.plan.proposal.experience_context||source.slot.ends_on<limaToday()||!Array.isArray(dates)||!dates.length||new Set(dates).size!==dates.length||dates.some(date=>typeof date!=='string'||date<limaToday()||!source.dates?.includes(date)))throw new VersionConflictError("Selecciona días de clase disponibles dentro de este proyecto.");
-      const previous=(await db.query(`select * from preparation_jobs where teacher_id=$1 and classroom_id=$2 and source_id=$3 and source_revision=$4
-        and payload->>'proposal_id'=$5 and payload->'acceptance'->>'policy'=$6 order by created_at desc limit 1`,[teacherId,context.id,plan.id,plan.revision,body.proposalId,COMPLETE_PROJECT_POLICY])).rows[0];
-      if(previous){send(response,202,publicPreparationJob(await recoverAcceptedProjectContinuation(db,teacherId,previous.id)),origin);return true;}
       const started=await domainRequest({id:plan.id,teacher_id:teacherId,classroom_id:context.id,payload:{}},"/api/project-flow/start",{annualPlanId:plan.id,proposalId:body.proposalId});
       if(started.experience.status==='draft'&&!started.experience.details.project_master)await domainRequest({id:plan.id,teacher_id:teacherId,classroom_id:context.id,payload:{}},`/api/project-flow/${started.experience.id}/calendar`,{
         selectedDates:[...dates].sort(),exclusions:Object.fromEntries(source.dates.filter(date=>!dates.includes(date)).map(date=>[date,'Día excluido por la docente del proyecto'])),confirm:true},'PUT');

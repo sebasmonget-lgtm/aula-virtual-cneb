@@ -197,6 +197,9 @@ export async function loadSavedDocument(db, teacherId, kind, id) {
       age: Number(row.age_years), teacher_name: row.teacher_name, ugel: row.ugel, district: row.district,
       occurs_on: dateOnly(row.occurs_on), experience_title: row.experience_title,
       experience_id: row.experience_id, experience_details: { activity_route: canonicalProjectRoute(row.experience_details) },
+      project_activities: (await db.query(`select a.id,a.title,a.occurs_on from activities a join learning_experiences e on e.id=a.experience_id
+        where e.classroom_id=$3 and a.status=$2 and (e.id=$1 or $2='active' and e.source_proposal_id=(select source_proposal_id from learning_experiences where id=$1))
+        order by a.occurs_on,a.id`,[row.experience_id,row.status,row.classroom_id])).rows.map(item=>({id:item.id,title:item.title,date:dateOnly(item.occurs_on)})),
       active_criterion: activeCriterion ? { criterion_text: activeCriterion.criterion_text,
         competency_v4_id: activeCriterion.competency_v4_id, observation_focus: activeCriterion.details?.observation_focus ?? [] } : null,
       registered_evidence: registeredEvidence.map((item) => ({ id: item.id, student_id: item.student_id,
