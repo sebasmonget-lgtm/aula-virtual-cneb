@@ -16,4 +16,6 @@ Typecheck, lint de fuentes y Next build PASS.
 La nueva lectura autenticada retomará las actividades pendientes del proyecto ya aceptado. Esto no crea otro año/proyecto ni altera observaciones, evaluaciones o secuencia. No se modifican jobs por Management API ni se fuerza una aprobación pedagógica. Resultado cloud pendiente de registrar después de publicación y entrada autenticada.
 
 ## Publicación y rollback
-Commit, Preview READY y smoke pendientes. Production excluida; rollback 32f9415 conserva los datos y Master. Evidencia privada en .local/preparation-stuck-20261014, sin secretos en el repositorio.
+Producto c452e01019121e4f5a3a8833e33a17316209faca, subido a GitHub. Preview https://ayni-aula-staging-h7rqj0fz5-ayni4.vercel.app / dpl_5VPuUDA1BNBQSHmvDinnpqAVcN7A, READY, target null, SHA verificado. Build cloud y 24 smoke por CLI autenticada PASS. Production dpl_H19YWzRdGjkgh8y72QAd1qBty7Mf / 9a0920230350cd6b9050f35683a1f35d459e78c7 permanece intacta. Production excluida; rollback 32f9415 conserva los datos y Master. Evidencia privada en .local/preparation-stuck-20261014, sin secretos en el repositorio.
+
+La consulta de lectura confirma recovery_source_matches=1 para el trabajo real. Se abrió una pestaña separada en Chrome; Vercel permite acceso, pero Ayni pide DNI/contraseña en el nuevo dominio. Inicio de sesión docente solicitado al usuario para comprobar recuperación real; sin SQL de escritura, sin otra generación anual/Master y sin llamadas pagadas sintéticas.
