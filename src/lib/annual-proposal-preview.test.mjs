@@ -43,6 +43,8 @@ test("chat de cambio: revisión privada antes de aplicar, CAS, propiedad y prote
     let plan=initial.data;
     const proposalId=plan.proposal.proposed_experiences.find(row=>row.planned_start_date>="2026-10-19").proposal_id;
     const baseline=structuredClone(plan.proposal);let countBefore=calls;
+    const reordered=Object.fromEntries(Object.entries(baseline).reverse().map(([key,value])=>[key,value&&typeof value==='object'&&!Array.isArray(value)?Object.fromEntries(Object.entries(value).reverse()):value]));
+    assert.doesNotThrow(()=>assertProposalPreviewScope(baseline,reordered,proposalId),'JSONB key order is not a change of dates or scope');
     const read=async()=> (await db.query("select * from annual_plans where id=$1",[plan.id])).rows[0];
     let preview;
     await t.test('diálogo multitur no muta el año; recuperación, idempotencia, CAS y competencia oficial',async()=>{

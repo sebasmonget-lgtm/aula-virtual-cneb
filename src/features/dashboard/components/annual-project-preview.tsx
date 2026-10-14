@@ -20,7 +20,7 @@ export function AnnualProjectPreview({row,index,names,onPrepare,onChange,canChan
    <div className={styles.metadata}>{row.planned_start_date&&<span><CalendarDays size={17}/>{date(row.planned_start_date)} – {date(row.planned_end_date)}</span>}<span><Clock size={17}/>{row.duration_weeks} semanas{row.planned_instructional_days!=null?` · ${row.planned_instructional_days} días lectivos`:""}</span><span>{row.period}</span></div>
    <p className={styles.purpose}><strong>De qué trata:</strong> {row.purpose}</p>
    {!!row.children_actions?.length&&<div className="mt-3 text-sm"><strong>Qué harán los niños</strong><ul className="mt-1 list-disc space-y-1 pl-5">{row.children_actions.slice(0,3).map((action,index)=><li key={index}>{action}</li>)}</ul></div>}
-   {!!row.materials?.length&&<p className="mt-3 text-sm"><strong>Materiales sugeridos:</strong> {row.materials.slice(0,5).join(" · ")}. Comprueba cuáles tienes disponibles.</p>}
+   {!!row.materials?.length&&<p className="mt-3 text-sm"><strong>Materiales previstos:</strong> {row.materials.slice(0,5).map(material=>material.trim().replace(/[.;]+$/,'')).join(" · ")}</p>}
    {row.expected_product&&<p className="mt-2 text-sm"><strong>Resultado esperado:</strong> {row.expected_product}</p>}
    <AnnualCompetencies ids={row.primary_competency_ids} names={names}/>
   </div>

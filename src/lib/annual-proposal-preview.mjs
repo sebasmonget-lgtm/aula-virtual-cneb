@@ -1,4 +1,5 @@
 import {createHash, randomUUID} from "node:crypto";
+import {isDeepStrictEqual} from "node:util";
 import {appendJourneyIntent, applyAnnualJourneyChanges} from "./annual-journey-service.mjs";
 import {journeyFail, validateAnnualJourney} from "./annual-journey-contract.mjs";
 import {annualJourneySafeText, annualJourneyCurriculumTerms} from "./annual-journey-privacy.mjs";
@@ -6,9 +7,10 @@ import {effectiveCalendarFingerprint} from "./annual-journey-calendar.mjs";
 import {assertRevision, expectedRevision, versionTransaction, VersionConflictError} from "./version-integrity.mjs";
 import {loadProjectChat} from "./annual-project-chat.mjs";
 import {missingProposalCompetencies} from "./annual-proposal-intent.mjs";
+import {libraryRow} from './annual-year-editor.mjs';
 
 const hash = proposal => createHash("sha256").update(JSON.stringify(proposal)).digest("hex");
-const same = (a,b) => JSON.stringify(a) === JSON.stringify(b);
+const same = (a,b) => isDeepStrictEqual(a,b);
 
 /** A model cannot move a slot, alter another proposal, or replace annual decisions. */
 export function assertProposalPreviewScope(before, after, proposalId, protectedIds = []) {
@@ -24,6 +26,25 @@ export function assertProposalPreviewScope(before, after, proposalId, protectedI
     ["planned_start_date","planned_end_date","planned_instructional_days","duration_weeks","period","teacher_protected"].some(key=>!same(original[key],changed[key])) ||
     ["everyday_opportunities","evidence_interpretations","experience_context","available_experiences","classroom_snapshot"].some(key=>!same(before[key],after[key])))
     journeyFail("invalid_scope", "El cambio debe conservar las fechas y los demás proyectos.");
+}
+
+/** Project acceptance can confirm one library replacement, but cannot authorize unrelated year edits. */
+export function assertSingleProjectPreparationRevision(before,after,proposalId){
+  if(before.proposed_experiences.some(row=>row.proposal_id===proposalId))return assertProposalPreviewScope(before,after,proposalId);
+  const slot=after.resolved_calendar.projects.find(slot=>slot.proposal_id===proposalId),oldSlot=before.resolved_calendar.projects.find(item=>item.slot_id===slot?.slot_id);
+  const old=before.proposed_experiences.find(row=>row.proposal_id===oldSlot?.proposal_id);
+  if(!old||!slot)journeyFail('invalid_scope','Revisa los cambios de Mi año antes de preparar este proyecto.');
+  const outgoing=after.available_experiences?.find(row=>row.proposal_id===old.proposal_id);
+  if(!same(outgoing,libraryRow(old)))journeyFail('invalid_scope','Conserva el proyecto anterior en Biblioteca.');
+  const otherLibrary=(after.available_experiences??[]).filter(row=>row.proposal_id!==old.proposal_id);
+  if(!same(otherLibrary,(before.available_experiences??[]).filter(row=>row.proposal_id!==proposalId)))journeyFail('invalid_scope','Revisa las otras propuestas de Biblioteca antes de preparar.');
+  const facts=after.classroom_snapshot.facts,originalFacts=before.classroom_snapshot.facts;
+  if(!originalFacts.every(fact=>facts.some(next=>same(fact,next)))||facts.filter(fact=>!originalFacts.some(old=>old.key===fact.key)).some(fact=>fact.kind!=='teacher_decision'||!fact.key.startsWith('proposal_intent_')))
+    journeyFail('invalid_scope','Revisa las fuentes del aula antes de preparar.');
+  const normalized={...after,available_experiences:before.available_experiences,classroom_snapshot:{...after.classroom_snapshot,facts:originalFacts},
+    resolved_calendar:{...after.resolved_calendar,projects:after.resolved_calendar.projects.map(item=>item.slot_id===slot.slot_id?{...item,proposal_id:old.proposal_id}:item),assignments:after.resolved_calendar.assignments.map(item=>item.owner===proposalId?{...item,owner:old.proposal_id}:item)},
+    proposed_experiences:after.proposed_experiences.map(row=>row.proposal_id===proposalId?{...row,proposal_id:old.proposal_id}:row)};
+  assertProposalPreviewScope(before,normalized,old.proposal_id);
 }
 
 export function publicProposalPreview(preview) {
@@ -81,7 +102,7 @@ export async function handleAnnualProposalPreview({request,response,url,db,conte
       {context,curriculum,proposalId,protectedIds:await protectedIds(base),createProvider,resolvePlan,
         conversation:conversation?{messages:conversation.payload.messages.map(m=>({role:m.role,text:annualJourneySafeText(m.text,sources.names,annualJourneyCurriculumTerms(curriculum))})),
           proposed_competency_ids:conversation.payload.answer.competency_ids,
-          instruction:"Integra las decisiones de todo el diálogo y las competencias pertinentes que Ayni acaba de explicar. Conserva su sustento CNEB con acciones y capacidades reales; no alteres fechas ni otros proyectos."}:null});
+          instruction:"Integra las decisiones de todo el diálogo y las competencias pertinentes que Ayni acaba de explicar. Conserva su sustento CNEB con acciones y capacidades reales; Los materiales finales serán nombres concretos y breves, acordados en la conversación; no incluyas avisos de verificar disponibilidad en la lista. No inventes un inventario. No alteres fechas ni otros proyectos."}:null});
     if(conversation&&missingProposalCompetencies(candidate.proposed_experiences.find(row=>row.proposal_id===proposalId),conversation.payload.answer.competency_ids).length)
       journeyFail("invalid_competency","La propuesta no conserva las competencias explicadas en el diálogo. Sigue conversando para ajustar el pedido.");
     candidate.change_history.at(-1).changes=changes;

@@ -2,21 +2,21 @@ import { Readable } from "node:stream";
 import { measureSetupPhase, withSetupPerformance } from "../src/lib/setup-performance.mjs";
 
 /** Adapt the existing Node HTTP API to a Next.js route without a listening port. */
-export async function handleServerlessRequest(webRequest) {
+export async function handleServerlessRequest(webRequest, options = {}) {
   const pathname = new URL(webRequest.url).pathname;
   const saveOperation = ["POST", "PUT", "PATCH"].includes(webRequest.method) && (
     ["/api/pilot/setup", "/api/qa/setup-benchmark", "/api/students/import", "/api/diagnostics/spontaneous-observations", "/api/diagnostics/experience-observations", "/api/diagnostics/group-review/suggest"].includes(pathname)
     || /^\/api\/students\/[0-9a-f-]{36}\/(details|photo)$/.test(pathname)
     || /^\/api\/diagnostics\/students\/[0-9a-f-]{36}\/family-interview(?:\/(save-and-confirm|confirm))?$/.test(pathname));
   if (saveOperation) {
-    const measured = await withSetupPerformance(() => adaptRequest(webRequest));
+    const measured = await withSetupPerformance(() => adaptRequest(webRequest, options));
     measured.result.headers.set("server-timing", measured.timing);
     return measured.result;
   }
-  return adaptRequest(webRequest);
+  return adaptRequest(webRequest, options);
 }
 
-async function adaptRequest(webRequest) {
+async function adaptRequest(webRequest, options) {
   process.env.AYNI_SERVERLESS = "1";
   const { handleApiRequest } = await measureSetupPhase("bootstrap", () => import("./local-db-server.mjs"));
   const body = ["GET", "HEAD"].includes(webRequest.method) ? null : await measureSetupPhase("body_read", async () => Buffer.from(await webRequest.arrayBuffer()));
@@ -30,6 +30,10 @@ async function adaptRequest(webRequest) {
   let payload = Buffer.alloc(0);
   let ended = false;
   const response = {
+    schedulePreparation: options.after ? () => options.after(async () => {
+      const { drainPreparationQueue } = await import("./local-db-server.mjs");
+      await drainPreparationQueue(new URL(webRequest.url).origin);
+    }) : undefined,
     setHeader(name, value) {
       headers.delete(name);
       for (const item of Array.isArray(value) ? value : [value]) headers.append(name, String(item));

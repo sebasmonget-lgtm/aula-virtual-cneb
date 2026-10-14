@@ -2,7 +2,7 @@
 
 Ayni ayuda a docentes de Inicial (3, 4 y 5 años) a conocer su aula, planificar actividades y acompañar aprendizajes con el CNEB oficial versionado. La actividad es la unidad cotidiana.
 
-La navegación principal ofrece Mi año, Hoy, Calendario, Evaluar y Planificación. Mi aula permanece accesible para matrícula, fotos privadas opcionales, entrevistas y seguimiento.
+La navegación principal ofrece Mi año, Hoy, Calendario, Evaluar y Documentos. Mi aula permanece accesible para matrícula, fotos privadas opcionales, entrevistas y seguimiento.
 
 Diagnóstico permite alternar entrevistas familiares, observación espontánea o guiada y revisión sin orden obligatorio. La síntesis breve cita registros concretos, diferencia contexto familiar de evidencia y se confirma en una versión con sus fuentes. Puede crearse el año con diagnóstico incompleto.
 
@@ -14,7 +14,7 @@ Evaluar tiene tres espacios: Evaluación del bimestre (revisión por competencia
 
 Los informes familiares conservan literalmente las conclusiones guardadas. El Word usa la plantilla existente con identificación del niño, docente, aula, período, edad y foto privada cuando existe. Consolidado es una matriz de consulta con conclusiones opcionales y Excel de Ayni; no promete un importador oficial de SIAGIE.
 
-Planificación presenta cuatro carpetas: Evaluación diagnóstica, Plan anual, Proyectos y actividades, Evaluación. Documentos mantiene sus versiones y descargas existentes.
+Documentos organiza consultas y Word en carpetas por año/aula, tipo y proyecto, conservando versiones. Mi año reúne preparación y actividades; el diagnóstico permanece en Mi aula y las valoraciones en Evaluar. Accesos anteriores y motores internos continúan disponibles.
 
 El objeto pedagógico estructurado es la fuente de verdad. Servidor y RLS controlan acceso; las evidencias privadas de menores no se envían a IA por defecto. La IA no inventa hechos ni confirma niveles. El paquete corregido del 7 de octubre autoriza Preview y después Production con el mismo SHA, únicamente tras superar los gates funcionales, visuales y de IA. Una validación fallida impide promover.
 
@@ -27,7 +27,7 @@ Diagnóstico reúne actuaciones observadas, reportes familiares confirmados y co
 
 Mi año conversa con Luna y prepara una vez con GPT-6.1 Sol high. Los quince tramos, fechas, movimientos, cobertura y validación son código. Una reparación se permite solo al fallar la validación. Las tarjetas son breves; el detalle se desarrolla en el proyecto. La generación larga guarda su response ID en el job privado y lo consulta, sin repetir generación al recargar. Biblioteca conversa con Luna y genera una tarjeta con GPT-6.1 Sol medium.
 
-El proyecto conversa con Luna y registra los aportes docentes con su turno y texto de apoyo. Una sola generación GPT-6.1 Sol high prepara preguntas, criterios por competencia, recorrido y un blueprint por fecha confirmada. Confirmarlo no genera automáticamente todas las actividades. La actividad se desarrolla a pedido con Luna medium; su criterio se hereda. Solo un cambio docente confirmado del propósito o de las acciones infantiles permite realinearlo. Tiempo, materiales, lugar y redacción no disparan esa IA.
+El proyecto conversa con Luna y registra los aportes docentes con su turno y texto de apoyo. Una sola generación GPT-6.1 Sol high prepara preguntas, criterios por competencia, recorrido y un blueprint por fecha confirmada. En Mi año, Preparar proyecto abre el calendario; aceptar sus días prepara automáticamente todas las actividades con Luna medium y conserva sus criterios heredados. Las actividades completas se consultan debajo del proyecto; su secuencia confirmada no se edita individualmente. Solo un cambio docente confirmado del propósito o de las acciones infantiles permite realinearlo. Tiempo, materiales, lugar y redacción no disparan esa IA.
 
 El taller es opcional dentro del día: una generación Luna medium y fallback GPT-6.1 Sol low únicamente por validación. No se prepara un Workshop Master moderno. El contenedor persistente es estructural; cada taller y su criterio se guardan por separado, sin modificar padres confirmados.
 

@@ -14,7 +14,7 @@ Evaluar presenta únicamente Evaluación del bimestre, Informe a familias y Cons
 
 Los lotes muestran avance, textos listos y excepciones Conviene revisar en ámbar suave. Revisión individual, regeneración de un texto y guardado conjunto conservan las fuentes canónicas. La familia recibe las mismas conclusiones guardadas. Consolidado mantiene la matriz con scroll interno y encabezados fijos; mostrar conclusiones amplía las celdas, consultar evaluación vuelve al origen. Cierre y reapertura tienen acciones explícitas y motivo registrado.
 
-Planificación funciona como cuatro carpetas: Evaluación diagnóstica, Plan anual, Proyectos y actividades, Evaluación. Detalles técnicos quedan en herramientas avanzadas; la biblioteca documental conserva historial y descargas.
+Documentos usa carpetas familiares por año/aula, tipo y proyecto/versión. Conserva historial, Word y ubicación al volver. Mi año reúne la tarjeta esencial y las actividades cronológicas, con selección visible.
 
 QA mínimo: escritorio 1366 y móvil 390 con datos ficticios. Las capturas describen el estado comprobado y no sustituyen la revisión humana ni certifican todo Ayni. Preview y Production deben compartir exactamente el mismo SHA y pasar sus verificaciones. La promoción queda bloqueada si falla un gate.
 
@@ -23,7 +23,7 @@ QA mínimo: escritorio 1366 y móvil 390 con datos ficticios. Las capturas descr
 
 La síntesis diagnóstica ofrece Preparar síntesis con Ayni, texto editable y fuentes por afirmación en un detalle secundario. Se distingue observación directa, según la familia y comentario docente. No se añade revisión individual ni confirmación de prioridades al recorrido principal.
 
-Mi año conserva sus quince tramos y movimientos por código. El editor nuevo no ofrece intención global libre como acción principal. Biblioteca conversa antes de preparar una tarjeta. El proyecto ofrece conversación breve, calendario revisable y una preparación completa; sus actividades se desarrollan cuando se necesitan. Loading conserva avance y permite salir y volver.
+Mi año conserva sus quince tramos y movimientos por código. El editor nuevo no ofrece intención global libre como acción principal. Biblioteca conversa antes de preparar una tarjeta. El proyecto ofrece conversación breve, calendario revisable y una preparación completa; aceptar los días prepara todas sus actividades con progreso debajo de la tarjeta. Loading conserva avance y permite salir y volver.
 
 Dentro de una actividad se ofrece + Añadir taller. No hay pantalla obligatoria de talleres del proyecto. Actualizar qué observar requiere elegir un cambio del propósito o de lo que harán los niños y explicar el cambio; los ajustes de tiempo, lugar o materiales se editan normalmente.
 

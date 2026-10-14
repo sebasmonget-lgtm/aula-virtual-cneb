@@ -308,6 +308,7 @@ export function TeacherWorkspace({ onSignOut, onSetupRequired }: { onSignOut?: (
     setActivityRunBlockId(block.id);
   }
 
+  useEffect(()=>{if(active!=='Hoy')return;const activityId=readWorkspaceParams('Hoy').get('activity');if(!activityId)return;let live=true;void loadLocalDashboard().then(value=>{if(live){setDashboard(value);setActivityRunBlockId(value.today.blocks.find(block=>block.activity_id===activityId)?.id??null);}}).catch(()=>{});return()=>{live=false;};},[active]);
   const activityRunBlock = dashboard?.today.blocks.find((block) => block.id === activityRunBlockId) ?? null;
 
   // Setup has already committed; its busy exit guard must not block this transition.

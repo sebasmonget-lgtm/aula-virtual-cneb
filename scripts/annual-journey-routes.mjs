@@ -185,12 +185,16 @@ export async function handleAnnualJourneyRoutes({ request, response, url, db, te
         if ((await tx.query(`select id from annual_plans where school_year_id=$1 and status='draft'`, [context.school_year_id])).rows.length) throw new VersionConflictError("Ya hay un borrador para revisar.");
         const version = Number((await tx.query(`select max(version)+1 as next from annual_plans where school_year_id=$1`,[context.school_year_id])).rows[0].next);
         const newId = randomUUID();
-        const copied = refreshJourneySnapshot({ ...source.proposal, pending_changes: [], metrics: { ...source.proposal.metrics, started_at: new Date().toISOString() } }, snapshot);
+        let copied = refreshJourneySnapshot({ ...source.proposal, pending_changes: [], metrics: { ...source.proposal.metrics, started_at: new Date().toISOString() } }, snapshot);
+        const scoped=body.proposalId&&source.proposal.proposed_experiences.some(row=>row.proposal_id===body.proposalId);
+        if(body.proposalId&&!scoped)journeyFail('invalid_scope','El proyecto no pertenece al año vigente.');
+        // Only the selected proposal will change; keep the validation of unchanged content as inherited.
+        if(scoped)copied={...copied,pending_changes:[],pedagogical_review:{...source.proposal.pedagogical_review,scope:'inherited_unchanged_content',source_plan_id:source.id}};
         const next = (await tx.query(`insert into annual_plans(id,classroom_id,school_year_id,curriculum_version_id,version,status,proposal,
           document_context,generation_metadata,supersedes_plan_id,source_context_fingerprint)
           values($1,$2,$3,$4,$5,'draft',$6::jsonb,$7::jsonb,$8::jsonb,$9,$10) returning id,revision,status,version,proposal`,
         [newId,context.id,context.school_year_id,source.curriculum_version_id,version,JSON.stringify(copied),JSON.stringify(source.document_context),
-          JSON.stringify({ workflow: "annual_journey_copy" }),id,snapshot.source_fingerprint])).rows[0];
+          JSON.stringify({ workflow: "annual_journey_copy",...(scoped?{scoped_proposal_id:body.proposalId,scoped_source_revision:Number(source.revision),scoped_base_proposal:copied}:{}) }),id,snapshot.source_fingerprint])).rows[0];
         await persistAnnualProjectSlots(tx, newId, copied.resolved_calendar); return next;
       });
       send(response, 201, result, origin); return true;

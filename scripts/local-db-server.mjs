@@ -126,6 +126,7 @@ import { loadAdminDirectory } from "./admin-directory.mjs";
 import { timingSafeEqual } from "node:crypto";
 import { Readable } from "node:stream";
 import { runPreparationStep, acceptPreparationDispatch } from "../src/lib/preparation-jobs.mjs";
+import {drainPreparation,preparationDispatchSecret,preparationDispatchHeaders} from '../src/lib/preparation-background.mjs';
 import { preparationExecutor } from "../src/lib/preparation-executor.mjs";
 import { assertProjectAnnualAuthority } from "../src/lib/project-annual-authority.mjs";
 import { handlePreparationRoutes } from "./preparation-routes.mjs";
@@ -2910,12 +2911,13 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         send(response, 400, { error: "La acción de jornada no es válida." }, origin);
         return;
       }
-      const entry = (await db.query(`select se.id,se.classroom_id, coalesce(jsonb_array_length(a.preparation->'steps'), 0)::int as total_steps from class_schedule_entries se join classrooms c on c.id = se.classroom_id left join activities a on a.id = se.activity_id where se.id = $1 and c.teacher_id = $2`, [body.scheduleEntryId, teacherId])).rows[0];
+      const entry = (await db.query(`select se.id,se.classroom_id,se.scheduled_on::text, coalesce(jsonb_array_length(a.preparation->'steps'), 0)::int as total_steps from class_schedule_entries se join classrooms c on c.id = se.classroom_id left join activities a on a.id = se.activity_id where se.id = $1 and c.teacher_id = $2`, [body.scheduleEntryId, teacherId])).rows[0];
       if (!entry) {
         send(response, 403, { error: "El bloque no pertenece al aula activa." }, origin);
         return;
       }
       const today = qaDailyClock?.date ?? new Intl.DateTimeFormat("en-CA", { timeZone: "America/Lima", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+      if(entry.scheduled_on!==today){send(response,422,{error:"Puedes iniciar esta actividad en su fecha programada. Hoy conserva la jornada actual."},origin);return;}
       if (action === "set_step" && !isValidStepIndex(body.stepIndex, entry.total_steps)) {
         send(response, 400, { error: "El paso no pertenece a esta actividad." }, origin);
         return;
@@ -2986,6 +2988,20 @@ async function runPreparationWorker() {
   return runPreparationStep(db,(job,checkpoint)=>withPedagogicalClock(previewQAClockForJob(job),()=>execute(job,checkpoint)));
 }
 
+export async function drainPreparationQueue(origin){
+  const workerDb=database.requestDb();
+  try{await requestDatabaseScope.run(workerDb,()=>drainPreparation({step:runPreparationWorker,
+    hasPending:async()=>!!(await db.query("select 1 from preparation_jobs where status='queued' limit 1")).rows.length,
+    continueWork:async()=>{
+      const secret=preparationDispatchSecret();
+      const deploymentOrigin=process.env.VERCEL_URL?`https://${process.env.VERCEL_URL}`:origin;
+      if(!secret||!deploymentOrigin||!allowedOrigins.has(deploymentOrigin))return;
+      const response=await fetch(deploymentOrigin+'/api/internal/preparation/run',{method:'POST',headers:preparationDispatchHeaders(secret),signal:AbortSignal.timeout(12000)});
+      if(!response.ok)recordOperationalEvent('preparation_continuation_failed',{status:response.status});
+    }}));}catch{recordOperationalEvent('preparation_background_interrupted',{status:503});}
+  finally{if(dbMode==='postgres')await workerDb.close();}
+}
+
 export async function handleApiRequest(request, response) {
   const origin = request.headers.origin;
   const url = new URL(request.url ?? "/", `http://127.0.0.1:${port}`);
@@ -3013,10 +3029,11 @@ export async function handleApiRequest(request, response) {
   if(url.pathname==="/api/internal/preparation/run") {
     const workerDb=database.requestDb();
     try { await requestDatabaseScope.run(workerDb,async()=>{
-      if(request.method!=="POST" || !await acceptPreparationDispatch(workerDb,request.headers,process.env.AYNI_PREPARATION_DISPATCH_SECRET)){
+      if(request.method!=="POST" || !await acceptPreparationDispatch(workerDb,request.headers,preparationDispatchSecret())){
         send(response,401,{error:"Acceso no autorizado."});return;
       }
-      const job=await runPreparationWorker();send(response,200,{processed:!!job});
+      if(response.schedulePreparation){response.schedulePreparation();send(response,202,{scheduled:true});}
+      else{const job=await runPreparationWorker();send(response,200,{processed:!!job});}
     }); }catch{send(response,503,{error:"No se pudo procesar la cola."});}
     finally{if(dbMode==="postgres")await workerDb.close();}
     return;
@@ -3183,6 +3200,7 @@ export async function handleApiRequest(request, response) {
   }
   await withPedagogicalClock(previewClock,()=>withAiUsageContext({ teacherId: context.teacherId, db },
     () => handleAuthenticatedRequest(context, request, response)));
+  if(url.pathname.startsWith('/api/preparation/')&&response.schedulePreparation)response.schedulePreparation();
   } finally {
     if (dbMode === "postgres") {
       try { await requestDb.close(); }

@@ -7,7 +7,7 @@ const LEASE_SECONDS=360;
 export function publicPreparationJob(row) {
   const items=row.payload.items ?? [];
   return {id:row.id,kind:row.kind,status:row.status,parts:row.kind==="document_export"?row.payload.parts??[]:undefined,project_id:row.payload.project_id ?? (row.kind==="activity_block"?row.source_id:null),
-    stage:row.payload.stage,proposal_id:row.payload.proposal_id??null,annual_plan_id:row.kind==="project"?row.source_id:null,complete_project:!!row.payload.acceptance,completed:items.filter(item=>item.activity_id||item.artifact_id).length,total:items.length||row.payload.expected_dates?.length||0,
+    stage:row.payload.stage,updated_at:row.updated_at,created_at:row.created_at,responding:row.payload.attempt_pending===true,proposal_id:row.payload.proposal_id??null,annual_plan_id:row.kind==="project"?row.source_id:null,complete_project:!!row.payload.acceptance,completed:items.filter(item=>item.activity_id||item.artifact_id).length,total:items.length||row.payload.expected_dates?.length||0,
     approved_at:row.approved_at,error:row.payload.error ?? null,
     activities:items.filter(item=>item.activity_id).map(item=>({id:item.activity_id,route_item_id:item.route_item_id}))};
 }

@@ -138,6 +138,7 @@ export function AnnualJourneyWorkspace({ onConfirmed, onGoDiagnostic, onLegacy,o
     const data = await api<Plans>("/api/annual-plans/current"); setPlans(data);
     const next:Plan|null = selectSavedAnnualPlan(data,id ?? readWorkspaceParams("Planificar").get("annualPlan"));
     setSelectedId(next?.id ?? "");
+    const requested=readWorkspaceParams("Planificar").get("annualProposal");if(requested&&next?.proposal.proposed_experiences.some(row=>row.proposal_id===requested))setSelectedProposalId(requested);
     setScope(current => current && !next?.proposal.proposed_experiences.some(row => row.proposal_id === current) ? null : current);
     if (next) writeWorkspaceLocation("Planificar", { annualPlan: next.id }, true);
     return next;

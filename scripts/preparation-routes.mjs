@@ -2,7 +2,7 @@ import { enqueuePreparation, enqueueActivityBlock, ownedPreparationJob, publicPr
 import { versionTransaction, VersionConflictError, httpStatusForError, publicErrorMessage } from "../src/lib/version-integrity.mjs";
 import { lockClassroomSchedule, limaToday } from "../src/lib/activity-schedule-integrity.mjs";
 import {COMPLETE_PROJECT_POLICY} from "../src/lib/complete-project-preparation.mjs";
-import {assertProposalPreviewScope} from "../src/lib/annual-proposal-preview.mjs";
+import {assertSingleProjectPreparationRevision} from "../src/lib/annual-proposal-preview.mjs";
 import {loadProjectChat} from "../src/lib/annual-project-chat.mjs";
 
 async function futureDates(db,project){
@@ -98,20 +98,33 @@ export async function handlePreparationRoutes({request,response,url,db,teacherId
         const current=(await db.query("select * from annual_plans where classroom_id=$1 and status='active'",[context.id])).rows[0];
         if(!current||plan.supersedes_plan_id!==current.id||plan.proposal.pending_changes?.length)throw new VersionConflictError("Confirma primero Mi año. Conservamos el borrador.");
         // Project acceptance may confirm a scoped revision, never unrelated changes to the year.
-        assertProposalPreviewScope(current.proposal,plan.proposal,body.proposalId);
+        const copied=plan.generation_metadata?.scoped_base_proposal;
+        if(copied&&Number(plan.generation_metadata.scoped_source_revision)!==Number(current.revision))throw new VersionConflictError('Mi año cambió. Revisa la propuesta actual antes de preparar.');
+        assertSingleProjectPreparationRevision(copied??current.proposal,plan.proposal,body.proposalId);
+        // Recover scoped copies created before inherited validation was retained.
+        // A new card must have its own persisted successful review; all other content passed the scope check above.
+        if(copied&&plan.proposal.pedagogical_review?.status==='pending'&&current.proposal.pedagogical_review?.status==='passed'&&
+          plan.proposal.change_history?.some(change=>change.kind==='library_creation'&&change.proposal_id===body.proposalId&&change.review?.status==='passed')){
+          plan=(await db.query("update annual_plans set proposal=$1::jsonb where id=$2 and status='draft' and revision=$3 returning *",
+            [JSON.stringify({...plan.proposal,pedagogical_review:{...current.proposal.pedagogical_review,scope:'inherited_and_scoped_card_review',source_plan_id:current.id}}),plan.id,plan.revision])).rows[0];
+          if(!plan)throw new VersionConflictError();
+        }
         await domainRequest({id:plan.id,teacher_id:teacherId,classroom_id:context.id,payload:{}},`/api/annual-journey/${plan.id}/confirm`,{expectedRevision:Number(plan.revision),confirmationScope:'planning',interpretationsReviewed:false,futureCoverageAcknowledged:true});
         plan=(await db.query("select * from annual_plans where id=$1",[plan.id])).rows[0];
       }
       const source=await projectFlowSource(plan.id,body.proposalId);
-      if(!source.plan.proposal.experience_context||source.slot.ends_on<limaToday()||!source.dates?.length||source.dates.some(date=>date<limaToday()))throw new VersionConflictError("Elige un proyecto con días lectivos disponibles; no preparamos trabajo retrospectivo.");
+      const dates=body.selectedDates??source.dates?.filter(date=>date>=limaToday());
+      if(!source.plan.proposal.experience_context||source.slot.ends_on<limaToday()||!Array.isArray(dates)||!dates.length||new Set(dates).size!==dates.length||dates.some(date=>typeof date!=='string'||date<limaToday()||!source.dates?.includes(date)))throw new VersionConflictError("Selecciona días de clase disponibles dentro de este proyecto.");
       const previous=(await db.query(`select * from preparation_jobs where teacher_id=$1 and classroom_id=$2 and source_id=$3 and source_revision=$4
         and payload->>'proposal_id'=$5 and payload->'acceptance'->>'policy'=$6 order by created_at desc limit 1`,[teacherId,context.id,plan.id,plan.revision,body.proposalId,COMPLETE_PROJECT_POLICY])).rows[0];
       if(previous){send(response,202,publicPreparationJob(previous),origin);return true;}
       const started=await domainRequest({id:plan.id,teacher_id:teacherId,classroom_id:context.id,payload:{}},"/api/project-flow/start",{annualPlanId:plan.id,proposalId:body.proposalId});
+      if(started.experience.status==='draft'&&!started.experience.details.project_master)await domainRequest({id:plan.id,teacher_id:teacherId,classroom_id:context.id,payload:{}},`/api/project-flow/${started.experience.id}/calendar`,{
+        selectedDates:[...dates].sort(),exclusions:Object.fromEntries(source.dates.filter(date=>!dates.includes(date)).map(date=>[date,'Día excluido por la docente del proyecto'])),confirm:true},'PUT');
       const contextText=started.experience.details.decisions?.additional_context??"";
       const job=await enqueuePreparation(db,{teacherId,classroomId:context.id,kind:'project',sourceId:plan.id,sourceRevision:plan.revision,
-        input:{policy:COMPLETE_PROJECT_POLICY,proposalId:body.proposalId,dates:source.dates},payload:{stage:'structure',proposal_id:body.proposalId,project_id:started.experience.id,
-          additional_context:contextText,expected_dates:source.dates,acceptance:{policy:COMPLETE_PROJECT_POLICY,teacher_id:teacherId,accepted_at:new Date().toISOString(),scope:'project_and_daily_activities',reviewed_individually:false}}});
+        input:{policy:COMPLETE_PROJECT_POLICY,proposalId:body.proposalId,dates},payload:{stage:'structure',proposal_id:body.proposalId,project_id:started.experience.id,
+          additional_context:contextText,expected_dates:[...dates].sort(),acceptance:{policy:COMPLETE_PROJECT_POLICY,teacher_id:teacherId,accepted_at:new Date().toISOString(),scope:'project_and_daily_activities',reviewed_individually:false}}});
       send(response,202,publicPreparationJob(job),origin);return true;
     }
     if(url.pathname==="/api/preparation/projects" && request.method==="POST"){

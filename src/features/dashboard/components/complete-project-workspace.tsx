@@ -4,7 +4,8 @@ import {Button} from "@/components/ui/button";
 import {apiFetch,apiJson} from "@/src/lib/ayni-api-fetch";
 import {localDatabaseApiUrl} from "@/src/lib/local-database";
 import {displayDate} from "@/src/lib/display-date";
-import {readWorkspaceParams,writeWorkspaceLocation,useWorkspaceParam} from "@/src/lib/workspace-location";
+import {useWorkspaceParam} from "@/src/lib/workspace-location";
+import {ProjectCalendarReview,type ProjectCalendarDay} from "./project-calendar-review";
 import {AnnualProjectPreview} from "./annual-project-preview";
 import {ProjectChangeChat} from "./project-change-chat";
 import {PreparationProgress,type PreparationJob} from "./preparation-progress";
@@ -36,7 +37,7 @@ export function CompleteProjectWorkspace({proposalId,onGoAnnual,onGoToday,onConf
   const [busy,setBusy]=useState(false),[loading,setLoading]=useState(true),[error,setError]=useState("");
   const [hasConfirmed,setHasConfirmed]=useState(false),ready=useRef(false);
   const [activities,setActivities]=useState<SavedActivity[]>([]);
-  const [accepting,setAccepting]=useState(()=>!embedded||readWorkspaceParams("Planificar").get("prepareProject")===proposalId);
+  const [calendarOpen,setCalendarOpen]=useState(false),[calendar,setCalendar]=useState<ProjectCalendarDay[]>([]),[selectedDates,setSelectedDates]=useState<string[]>([]);
   const [consultId,setConsultId]=useWorkspaceParam("Planificar","activityConsult","",activityParam);
   useUnsavedWork(false,busy);
   const load=useCallback(async(id?:string)=>{const data=await readPreparation(proposalId,id??planId);setPlan(data.plan);setHasConfirmed(data.hasConfirmed);setJob(data.job);setActivities(data.activities);},[proposalId,planId]);
@@ -45,8 +46,12 @@ export function CompleteProjectWorkspace({proposalId,onGoAnnual,onGoToday,onConf
   }).catch(cause=>{if(live)setError(cause.message);}).finally(()=>{if(live)setLoading(false);});return()=>{live=false;};},[proposalId,planId]);
   const proposal=plan?.proposal.proposed_experiences.find(row=>row.proposal_id===proposalId);
   const names=new Map(plan?.proposal.curriculum_reference?.map(card=>[card.id,card.name])??[]);
+  async function prepare(){if(busy||!plan||!proposal)return;if(plan.status==='draft'&&!hasConfirmed){onRequireConfirmation?.();return;}setBusy(true);setError('');try{
+    const data=await api<{days:ProjectCalendarDay[];today:string}>(`/api/school-calendar?from=${proposal.planned_start_date}&to=${proposal.planned_end_date}`);
+    const days=data.days.map(day=>({...day,is_instructional:day.is_instructional&&day.date>=data.today}));setCalendar(days);setSelectedDates(days.filter(day=>day.is_instructional).map(day=>day.date));setCalendarOpen(true);
+  }catch(cause){setError(cause instanceof Error?cause.message:'No pudimos abrir el calendario.');}finally{setBusy(false);}}
   async function accept(){if(busy||!plan)return;setBusy(true);setError("");try{
-    setJob(await api<PreparationJob>('/api/preparation/projects/complete',{annualPlanId:plan.id,expectedRevision:Number(plan.revision),proposalId,accepted:true}));
+    setJob(await api<PreparationJob>('/api/preparation/projects/complete',{annualPlanId:plan.id,expectedRevision:Number(plan.revision),proposalId,accepted:true,selectedDates}));setCalendarOpen(false);
   }catch(cause){setError(cause instanceof Error?cause.message:"No pudimos iniciar la preparación. Tu proyecto sigue guardado.");}finally{setBusy(false);}}
   if(loading)return <LoadingState label="Abriendo tu proyecto…"/>;
   if(consultId)return <ActivityConsultation key={consultId} id={consultId} onBack={()=>setConsultId('')}/>;
@@ -54,9 +59,8 @@ export function CompleteProjectWorkspace({proposalId,onGoAnnual,onGoToday,onConf
     {!embedded&&<header><h1 className="text-3xl font-extrabold text-[#172b52]">Preparar proyecto</h1><p className="mt-2 text-[#526b87]">Revisa la propuesta. Si ya está como quieres, Ayni preparará todas sus actividades.</p></header>}
     {error&&<WorkflowFeedback tone="error">{error}<Button className="mt-2" variant="outline" onClick={()=>{setError('');void load().catch(cause=>setError(cause.message));}}>Recuperar lo guardado</Button></WorkflowFeedback>}
     {proposal&&plan&&<><AnnualProjectPreview row={proposal} index={(plan.proposal.resolved_calendar?.projects.findIndex(slot=>slot.proposal_id===proposalId)??plan.proposal.proposed_experiences.indexOf(proposal))+1} names={names} disabled={busy}
-      onPrepare={job?undefined:()=>{if(plan.status==='draft'&&!hasConfirmed){onRequireConfirmation?.();return;}if(accepting)void accept();else{setAccepting(true);writeWorkspaceLocation("Planificar",{prepareProject:proposalId});}}}
-      prepareLabel={accepting?"Aceptar proyecto y preparar actividades":"Preparar proyecto"} canChange={!job||!!job.approved_at} onChange={()=>setChat(true)}/>
-      {!job&&accepting&&<p className="text-sm text-[#47658b]">Se preparará una actividad completa para cada día lectivo. Los materiales de la propuesta son sugeridos; comprueba su disponibilidad.</p>}</>}
+      onPrepare={job?undefined:()=>void prepare()} canChange={!job||!!job.approved_at} onChange={()=>setChat(true)}/></>}
+    {!job&&calendarOpen&&<section className="rounded-2xl border border-[#bce3ec] bg-white p-5" aria-label="Días del proyecto"><h2 className="text-xl font-bold text-[#172b52]">¿Qué días trabajarán este proyecto?</h2><p className="mt-2 text-sm text-[#526b87]">El proyecto ya está elegido. Ajusta los días dentro de su tramo y Ayni preparará todas las actividades.</p><ProjectCalendarReview days={calendar} selectedDates={selectedDates} onChange={setSelectedDates} disabled={busy}/><div className="mt-4 flex flex-wrap justify-end gap-2"><Button variant="outline" disabled={busy} onClick={()=>setCalendarOpen(false)}>Volver</Button><Button disabled={busy||!selectedDates.length} onClick={()=>void accept()}>{busy?'Iniciando preparación…':`Preparar ${selectedDates.length} actividades`}</Button></div></section>}
     {job&&!job.approved_at&&<PreparationProgress key={job.id} id={job.id} onGoToday={onGoToday} onProjectReady={()=>{
       if(!ready.current){ready.current=true;void load().then(()=>onConfirmed?.()).catch(cause=>setError(cause.message));}
     }}/>}

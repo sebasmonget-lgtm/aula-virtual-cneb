@@ -1,6 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import {Folder,FileText,ChevronRight,ArrowLeft} from "lucide-react";
+import {useWorkspaceParam} from "@/src/lib/workspace-location";
+import {Button} from "@/components/ui/button";
 
 export type TreeDocument = { id:string;kind:string;title:string;status:string;version?:number;
   school_year:number;classroom:string;classroom_id?:string;parent_experience_id?:string;
@@ -13,44 +16,25 @@ const sectionName = (kind:string) => ({ diagnostic_summary:"Diagnóstico",annual
   period_closure:"Cierres del período" }[kind] ?? "Otros documentos");
 const order = ["diagnostic_summary","annual_plan","experience","activity","family_report","period_closure"];
 
-export function DocumentTree({documents,artifactStates,onOpen}:{documents:TreeDocument[];artifactStates:ArtifactState[];
-  onOpen:(document:TreeDocument)=>void}) {
-  const [showDrafts,setShowDrafts]=useState(false);
-  const visible=documents.filter(item=>showDrafts || item.status!=="draft");
-  const groups=new Map<string,TreeDocument[]>();
-  for(const item of visible) {
-    const key=`${item.school_year}:${item.classroom_id??item.classroom}`;
-    groups.set(key,[...(groups.get(key)??[]),item]);
-  }
-  const documentState=(item:TreeDocument)=>{
-    if(!["annual_plan","experience"].includes(item.kind))return "";
-    const states=artifactStates.filter(state=>state.source_kind===item.kind && state.source_id===item.id);
-    const exact=states.find(state=>state.source_version===item.version);
-    if(exact?.status==="confirmed")return " · Word listo";
-    if(exact?.status==="pending")return " · Preparando Word";
-    if(exact?.status==="failed")return " · Error al preparar Word";
-    if(states.some(state=>state.status==="confirmed"))return " · Nueva versión sin Word estable";
-    return " · Word aún no preparado";
-  };
-  const dateLabel=(value?:string)=>value?new Intl.DateTimeFormat('es-PE',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'}).format(new Date(value.slice(0,10)+'T00:00:00Z')):'';
-  const row=(item:TreeDocument)=><li key={`${item.kind}-${item.id}`} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border bg-white p-3">
-    <div><p className="font-semibold">{item.title}</p><p className="text-xs text-[#526b87]">{item.version?`Versión ${item.version} · `:""}{item.status==="draft"?"Borrador":item.status==="archived"?"Versión anterior":"Confirmado"}{item.period_label?` · ${item.period_label}`:""}{item.date?` · ${dateLabel(item.date)}`:""}{documentState(item)}</p></div>
-    <button type="button" className="min-h-11 rounded-xl border px-4 font-semibold text-[#07576c]" onClick={()=>onOpen(item)}>Abrir</button></li>;
-  return <div className="space-y-4"><label className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold"><input type="checkbox" checked={showDrafts} onChange={event=>setShowDrafts(event.target.checked)} />Mostrar borradores</label>
-    {[...groups.entries()].sort((a,b)=>b[0].localeCompare(a[0])).map(([key,items])=><details key={key} open className="rounded-2xl border bg-[#f5f9fc] p-4">
-      <summary className="cursor-pointer text-lg font-extrabold">Año escolar {items[0].school_year} · Aula {items[0].classroom}</summary>
-      <div className="mt-3 space-y-3">{order.map(kind=>{const matching=items.filter(item=>item.kind===kind);
-        if(!matching.length)return null;
-        if(kind==="experience") return <details key={kind} open className="rounded-xl border bg-white/70 p-3"><summary className="cursor-pointer font-bold">{sectionName(kind)} · {matching.length}</summary>
-          <div className="mt-2 space-y-3">{matching.map(parent=>{const children=items.filter(item=>item.kind==="activity" && item.parent_experience_id===parent.id).sort((a,b)=>(a.date??" ").localeCompare(b.date??" "));
-            return <section key={parent.id} className="space-y-2"><ul>{row(parent)}</ul>{children.length>0&&<div className="ml-3 border-l-2 border-[#d6e5ef] pl-3"><p className="mb-2 text-sm font-semibold">Actividades · {children.length}</p><ul className="space-y-2">{children.map(row)}</ul></div>}</section>;})}</div></details>;
-        if(kind==="activity") {
-          const ungrouped=matching.filter(item=>!items.some(parent=>parent.kind==="experience" && parent.id===item.parent_experience_id));
-          return ungrouped.length?<details key={kind} open className="rounded-xl border bg-white/70 p-3"><summary className="cursor-pointer font-bold">{sectionName(kind)} · {ungrouped.length}</summary>
-            <ul className="mt-2 space-y-2">{ungrouped.map(row)}</ul></details>:null;
-        }
-        return <details key={kind} open className="rounded-xl border bg-white/70 p-3"><summary className="cursor-pointer font-bold">{sectionName(kind)} · {matching.length}</summary>
-          <ul className="mt-2 space-y-2">{matching.map(row)}</ul></details>;
-      })}</div></details>)}
-  </div>;
+const folderPath=(value:string)=>/^\d{4}:[^~]{1,100}(~[a-z_]+)?(~[0-9a-f-]{36})?$/i.test(value)?value:undefined;
+
+export function DocumentTree({documents,artifactStates,onOpen}:{documents:TreeDocument[];artifactStates:ArtifactState[];onOpen:(document:TreeDocument)=>void}){
+ const [showDrafts,setShowDrafts]=useState(false);
+ const [path,setPath]=useWorkspaceParam('Documentos','folder','',folderPath);const [group='',kind='',project='']=path.split('~');
+ const setGroup=(value:string)=>setPath(value),setKind=(value:string)=>setPath(group+(value?'~'+value:'')),setProject=(value:string)=>setPath(group+'~'+kind+(value?'~'+value:''));
+ const visible=documents.filter(item=>showDrafts||item.status!=='draft');
+ const groupKey=(item:TreeDocument)=>`${item.school_year}:${item.classroom_id??item.classroom}`;
+ const groups=[...new Set(visible.map(groupKey))].sort().reverse();
+ const items=visible.filter(item=>groupKey(item)===group),parent=items.find(item=>item.id===project&&item.kind==='experience');
+ const date=(value?:string)=>value?new Intl.DateTimeFormat('es-PE',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'}).format(new Date(value.slice(0,10)+'T00:00:00Z')):'';
+ const folders=!group?groups.map(key=>({id:key,title:`${visible.find(item=>groupKey(item)===key)?.school_year} · Aula ${visible.find(item=>groupKey(item)===key)?.classroom}`,count:visible.filter(item=>groupKey(item)===key).length})):
+ !kind?order.filter(type=>items.some(item=>item.kind===type)).filter(type=>type!=='activity'||items.some(item=>item.kind==='activity'&&!items.some(parent=>parent.id===item.parent_experience_id))).map(type=>({id:type,title:sectionName(type),count:items.filter(item=>item.kind===type).length})):
+ kind==='experience'&&!project?items.filter(item=>item.kind==='experience').map(item=>({id:item.id,title:item.title+` · V${item.version??1}${item.status==='archived'?' · Anterior':''}`,count:items.filter(child=>child.parent_experience_id===item.id).length+1})):[];
+ const files=project?items.filter(item=>item.id===project||item.parent_experience_id===project):kind&&kind!=='experience'?items.filter(item=>item.kind===kind&&(kind!=='activity'||!items.some(parent=>parent.id===item.parent_experience_id))):[];
+ function back(){if(project)setProject('');else if(kind)setKind('');else setGroup('');}
+ return <section className="overflow-hidden rounded-2xl border border-[#d6e5ef] bg-white" aria-label="Carpetas de documentos"><div className="flex flex-wrap items-center gap-2 border-b bg-[#f3f8fc] px-4 py-3"><Button size="icon" variant="ghost" aria-label="Volver a la carpeta anterior" disabled={!group} onClick={back}><ArrowLeft className="size-5"/></Button><nav aria-label="Ubicación de documentos" className="flex min-w-0 flex-1 flex-wrap items-center gap-1 text-sm text-[#07576c]"><button type="button" className="min-h-11 font-semibold" onClick={()=>setPath('')}>Documentos</button>{group&&<><ChevronRight className="size-4"/><button type="button" className="min-h-11" onClick={()=>setKind('')}>{items[0]?.school_year} · {items[0]?.classroom}</button></>}{kind&&<><ChevronRight className="size-4"/><button type="button" className="min-h-11" onClick={()=>setProject('')}>{sectionName(kind)}</button></>}{parent&&<><ChevronRight className="size-4"/><span className="break-words">{parent.title}</span></>}</nav><label className="inline-flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" checked={showDrafts} onChange={event=>setShowDrafts(event.target.checked)}/>Mostrar borradores</label></div>
+ {!!folders.length&&<div className="grid grid-cols-2 gap-3 p-4 sm:grid-cols-3 lg:grid-cols-4">{folders.map(folder=><button type="button" key={folder.id} className="flex min-h-36 min-w-0 flex-col items-center gap-2 rounded-xl border border-transparent p-3 text-center hover:border-[#86b9d0] hover:bg-[#edf7fa] focus-visible:outline-2 focus-visible:outline-[#087d96]" onClick={()=>{if(!group)setGroup(folder.id);else if(!kind)setKind(folder.id);else setProject(folder.id);}}><Folder className="size-14 fill-[#ffda70] text-[#af7a08]" strokeWidth={1.3}/><strong className="break-words text-sm text-[#172b52]">{folder.title}</strong><span className="text-xs text-[#526b87]">{folder.count} documentos</span></button>)}</div>}
+ {!!files.length&&<ul className="divide-y">{files.sort((a,b)=>(a.date??'').localeCompare(b.date??'')).map(item=>{const artifact=artifactStates.find(state=>state.source_kind===item.kind&&state.source_id===item.id&&state.source_version===item.version);return <li key={`${item.kind}-${item.id}`}><button type="button" className="flex min-h-20 w-full items-center gap-3 px-4 py-3 text-left hover:bg-[#edf7fa] focus-visible:outline-2 focus-visible:outline-[#087d96]" onClick={()=>onOpen(item)}><FileText className="size-9 shrink-0 text-[#087d96]"/><span className="min-w-0 flex-1"><strong className="block break-words text-sm text-[#172b52]">{item.title}</strong><span className="text-xs text-[#526b87]">{date(item.date)} · {item.status==='draft'?'Borrador':item.status==='archived'?'Versión anterior':'Confirmado'}{item.version?` · V${item.version}`:''}{artifact?.status==='confirmed'?' · Word listo':''}</span></span><span className="text-sm font-semibold text-[#07576c]">Abrir</span></button></li>;})}</ul>}
+ {!folders.length&&!files.length&&<p className="p-5 text-sm text-[#526b87]">Esta carpeta aún no tiene documentos.</p>}
+ </section>;
 }

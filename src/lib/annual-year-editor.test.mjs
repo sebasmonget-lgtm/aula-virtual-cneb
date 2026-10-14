@@ -7,6 +7,8 @@ import { materializeJourneyRows } from "./annual-journey-service.mjs";
 import { validateAnnualJourney } from "./annual-journey-contract.mjs";
 import { annualDisplayTitle, annualCoverage, editAnnualStructure, coverageDelta, libraryRow, annualCreationContext } from "./annual-year-editor.mjs";
 import { candidateProjectDates, validateSelectedInstructionalDates, validateBlueprintDates } from "./school-calendar-service.mjs";
+import {assertSingleProjectPreparationRevision} from './annual-proposal-preview.mjs';
+import {assignAnnualSlots} from './annual-year-editor.mjs';
 
 const cards=[{id:"MAT_CANTIDAD",name:"Cantidad",capacities:["Comunica su comprensión"]},{id:"CYT_INDAGA",name:"Indaga",capacities:["Problematiza situaciones"]}];
 function fixture() {
@@ -14,6 +16,20 @@ function fixture() {
   const {proposals,...general}=output;
   return {journey_version:2,editor_version:3,...general,curriculum_reference:cards,classroom_snapshot:{version:2,facts:[],source_fingerprint:"fixture"},pending_changes:[],change_history:[],pedagogical_review:{status:"passed"},resolved_calendar:calendar,proposed_experiences:materializeJourneyRows(proposals.map((r,i)=>({...r,proposal_id:calendar.projects[i].proposal_id})),calendar),available_experiences:[]};
 }
+
+test('preparar una sustitución de Biblioteca conserva un solo tramo y rechaza otras decisiones',()=>{
+  let base=fixture();base=assignAnnualSlots(base,base.resolved_calendar.projects,base.proposed_experiences);
+  const old=base.proposed_experiences[11],incoming={...libraryRow(old),proposal_id:randomUUID(),title:'Otro proyecto de juego'};
+  const draft={...base,available_experiences:[incoming]};
+  const replaced=editAnnualStructure(draft,{kind:'place',proposalId:incoming.proposal_id,targetSlotId:old.slot_id});
+  assert.doesNotThrow(()=>assertSingleProjectPreparationRevision(base,replaced,incoming.proposal_id));
+  assert.deepEqual(replaced.available_experiences[0],libraryRow(old));
+  assert.throws(()=>assertSingleProjectPreparationRevision(base,{...replaced,teaching_strategies:['Otro cambio global']},incoming.proposal_id));
+  const moved=structuredClone(replaced);moved.resolved_calendar.projects[11].ends_on='2026-12-31';
+  assert.throws(()=>assertSingleProjectPreparationRevision(base,moved,incoming.proposal_id));
+  const unrelated=structuredClone(replaced);unrelated.proposed_experiences[0].title='Cambio ajeno';
+  assert.throws(()=>assertSingleProjectPreparationRevision(base,unrelated,incoming.proposal_id));
+});
 test("15 tramos: 11 de dos semanas, cuatro de tres, 34 semanas después de acogida; bimestres fijos",()=>{
   const c=solveAnnualJourneyCalendar(fixtureCalendar());
   assert.equal(c.projects.length,15);assert.equal(c.projects.filter(s=>s.duration_weeks===2).length,11);assert.equal(c.projects.filter(s=>s.duration_weeks===3).length,4);assert.equal(c.projects.reduce((n,s)=>n+s.duration_weeks,0),34);
