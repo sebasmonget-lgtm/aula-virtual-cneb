@@ -1,6 +1,12 @@
 /** UI orchestration only: existing server routes remain the authorization and CAS boundary. */
 import { jsonValuesDiffer } from "./project-draft-changes.mjs";
 
+/** Editing protection must not hide the entry to an existing future activity. Server authorizes both operations. */
+export function projectSequenceAccess(item, {editable, protectedIds, today}) {
+  const future=item.date>=today;
+  return {canEdit:editable&&future&&!protectedIds.includes(item.id),canOpen:!editable&&future};
+}
+
 export function combineProjectContext(note, extras = {}) {
   const result = [note.trim(), ...Object.entries(extras).filter(([,value]) => value.trim()).map(([label,value]) => `${label}: ${value.trim()}`)]
     .filter(Boolean).join("\n");

@@ -1,4 +1,5 @@
 type ProjectRow = { id: string; revision: number; status: string; details: object };
+export function projectSequenceAccess(item: {id:string;date:string}, options: {editable:boolean;protectedIds:string[];today:string}): {canEdit:boolean;canOpen:boolean};
 export function combineProjectContext(note: string, extras?: Record<string, string>): string;
 export function prepareSimpleProject<T extends ProjectRow>(input: {
   request: <R>(path: string, body?: unknown, method?: string) => Promise<R>;

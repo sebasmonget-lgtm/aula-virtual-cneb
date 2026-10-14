@@ -1,0 +1,22 @@
+# Revisión de Mi año y proyecto — solo Preview
+
+Base 3cb8ef7; codex/mi-ano-simple-preview, origen sincronizado. Petición de revisión sobre la implementación más reciente. No se amplía a Production ni a datos existentes.
+
+## Claridad y cambios
+Mi año mantiene la ficha breve (título, imagen, fechas, duración, propósito y competencias), Preparar proyecto/Cambiar con Ayni y confirmación destacada cuando corresponde. B1–B4 recorren los 15 tramos reales; pasado sin registros permanece pasado, sin proyectos ficticios. Todo el año conserva calendario original, meses, feriados, semanas de gestión y fechas. Lista conserva las mismas fichas. Sin detalles repetidos ni Biblioteca en el principal; capacidades secundarias mantienen su módulo.
+
+Proyecto muestra secuencia y acciones por actividad; se retira el bloque duplicado de próxima actividad. Materiales/orientación y criterios de observación permanecen plegados porque son necesarios para desarrollar el proyecto. Texto «Listo para revisar», «Añadir una idea» y «Adelantar proyecto» explica acciones sin jerga interna. El acceso al trabajo confirmado previo se conserva cuando existe una revisión pendiente.
+
+Correcciones funcionales: guarda de texto/fechas pendientes, baseline y lecturas de calendario con secuencia/ref para conservar elecciones, desplegable de ideas estable al escribir, cancelar ajustes restaura baseline, interacción bloqueada durante operación, navegación de intercambio diferida hasta liberar busy. Actividad protegida sigue sin editar, pero se puede abrir desde confirmado si su fecha es hoy/futura. Wrap de botones finales elimina overflow móvil de cinco píxeles. No se cambia generación, modelos, migraciones, permisos, RLS ni contrato de persistencia.
+
+## Prueba funcional aislada
+Harness privado .local/year-usability-20261013; PGlite nuevo, 35 alumnos ficticios, proveedor local controlado, sin credenciales cloud. Año inicial generado una vez; Plan Maestro preparado una vez con nueve fechas, excluida la primera fecha lectiva. Dos respuestas fixture, cero pagadas. Preparación ejercitada contra endpoints reales; UI recupera sus nueve actividades, modifica título/propósito de la primera, guarda, recarga, confirma, abre copia de revisión y vuelve a Mi año. GET posterior verifica original active/copia draft con secuencia idéntica y mismo año durable; contador sigue dos. No se generan actividades completas.
+
+UI: B1/B2/B3/B4, Todo el año y Lista; reentrada/reload; apertura de idea, escritura sin cierre; navegación cancelada conserva texto; selección de fecha y navegación cancelada conserva nueve días. El diálogo nativo bloqueó la automatización: usuario canceló el aviso real; las pruebas siguientes usan confirm=false en fixture privado, nunca aceptan ni alteran la guarda del producto. Fechas y texto se restauran antes de salir.
+
+34 pruebas focales PASS: project-sequence-access, project-map-version-guard, simple-project-flow, project-flow-service, annual-plan-display, annual-journey-recovery, preparation-jobs. Incluyen protección abrir/editar, pasado/hoy, versiones, CAS, replay, calendario y jobs. Capturas actuales escritorio 1366 px/móvil 390 px en harness ignorado: mi-ano-desktop.png, mi-ano-mobile.png, proyecto-desktop.png, proyecto-mobile.png y proyecto-mobile-acciones.png. Ancho útil móvil 375/scrollWidth 375 en ambas pantallas; desplazamiento de tarjetas/timeline contenido. Pruebas/capturas son locales con datos ficticios; no representan un login docente autenticado cloud.
+
+## Publicación y límites
+npx tsc --noEmit, npm run lint -- --ignore-pattern .local/**, npm run build (vinext) y Next build --webpack (mismo compilador que Vercel) PASS. La primera orden npm run typecheck no existe en este repositorio; se usa tsc directamente. Lint sin exclusión escaneó un runtime jsdom temporal instalado en .local y falló por código ajeno al producto; lint de fuentes excluye únicamente el harness privado y PASS. Runtime/harness están excluidos también por .gitignore/.vercelignore y no son parte del build ni del deployment. No se declara que aquel primer lint global pasó.
+
+Recibo Preview se agrega después de verificar publicación. Rollback solo Preview: volver a 3cb8ef7 o retirar el deployment de esta revisión. Datos, calendario, historial y protecciones del servidor no cambian.
