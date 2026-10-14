@@ -4,9 +4,11 @@ import { currentPedagogicalClock } from "./pedagogical-clock.mjs";
 
 export const preparationFingerprint = value => createHash("sha256").update(JSON.stringify(value)).digest("hex");
 const LEASE_SECONDS=360;
+export const needsAcceptedProjectContinuation=row=>row.kind==='project'&&row.status==='succeeded'&&!row.approved_at&&
+  row.payload.acceptance?.policy==='accepted-project-complete-v1'&&row.payload.acceptance.teacher_id===row.teacher_id;
 export function publicPreparationJob(row) {
   const items=row.payload.items ?? [];
-  return {id:row.id,kind:row.kind,status:row.status,parts:row.kind==="document_export"?row.payload.parts??[]:undefined,project_id:row.payload.project_id ?? (row.kind==="activity_block"?row.source_id:null),
+  return {id:row.id,kind:row.kind,status:needsAcceptedProjectContinuation(row)?'incomplete':row.status,parts:row.kind==="document_export"?row.payload.parts??[]:undefined,project_id:row.payload.project_id ?? (row.kind==="activity_block"?row.source_id:null),
     stage:row.payload.stage,updated_at:row.updated_at,created_at:row.created_at,responding:row.payload.attempt_pending===true,proposal_id:row.payload.proposal_id??null,annual_plan_id:row.kind==="project"?row.source_id:null,complete_project:!!row.payload.acceptance,completed:items.filter(item=>item.activity_id||item.artifact_id).length,total:items.length||row.payload.expected_dates?.length||0,
     approved_at:row.approved_at,error:row.payload.error ?? null,
     activities:items.filter(item=>item.activity_id).map(item=>({id:item.activity_id,route_item_id:item.route_item_id}))};
@@ -16,6 +18,25 @@ export async function ownedPreparationJob(db,teacherId,id) {
     join school_years y on y.id=c.school_year_id where j.id=$1 and j.teacher_id=$2 and c.teacher_id=$2 and y.owner_id=$2`,[id,teacherId])).rows[0];
   if(!row)throw new VersionConflictError("Esta preparación no está disponible.");
   return row;
+}
+/** Older executors stopped at the master. Continue only the already accepted, unchanged source. */
+export async function recoverAcceptedProjectContinuation(db,teacherId,id){
+  return versionTransaction(db,`preparation:${id}`,async tx=>{
+    const row=await ownedPreparationJob(tx,teacherId,id);
+    if(!needsAcceptedProjectContinuation(row))return row;
+    const p=row.payload;
+    const source=(await tx.query(`select 1 from annual_plans ap join learning_experiences e on e.annual_plan_id=ap.id
+      where ap.id=$1 and ap.classroom_id=$2 and ap.revision=$3 and (ap.status='active' or $6::boolean and ap.status='archived')
+      and e.id=$4 and e.classroom_id=$2 and e.source_proposal_id=$5 and e.status in ('draft','active')
+      and e.details->'project_master' is not null and (e.status='active' or e.details->>'stage'='map_review')`,
+    [row.source_id,row.classroom_id,row.source_revision,p.project_id,p.proposal_id,p.future_version===true])).rows[0];
+    if(!source)return row;
+    const uncertain=p.attempt_pending===true;
+    const payload={...p,stage:'activities',error:uncertain?'No pudimos comprobar si la última llamada terminó. El trabajo guardado se conserva.':null,
+      recovery:{kind:'accepted_master_without_publication',recovered_at:new Date().toISOString()}};
+    return (await tx.query(`update preparation_jobs set status=$1,payload=$2::jsonb,lease_until=null,updated_at=now()
+      where id=$3 and status='succeeded' and approved_at is null returning *`,[uncertain?'uncertain':'queued',JSON.stringify(payload),id])).rows[0]??row;
+  });
 }
 export async function enqueuePreparation(db,{teacherId,classroomId,kind,sourceId,sourceRevision,input,payload}) {
   if(!(await db.query(`select 1 from classrooms c join school_years y on y.id=c.school_year_id
@@ -36,8 +57,8 @@ export async function retryPreparation(db,teacherId,id,acceptPotentialRepeat=fal
   return versionTransaction(db,`preparation:${id}`,async tx=>{
     const row=await ownedPreparationJob(tx,teacherId,id);
     if(row.status==="running" && new Date(row.lease_until).getTime()>Date.now())throw new VersionConflictError("La preparación sigue en curso.");
-    if(row.status==="succeeded")return row;
-    if(row.status==="uncertain" && acceptPotentialRepeat!==true)throw new VersionConflictError("No se pudo comprobar si la última llamada terminó. Confirma el reintento; podría repetir esa llamada.");
+    if(row.status==="succeeded"&&!needsAcceptedProjectContinuation(row))return row;
+    if((row.status==="uncertain"||needsAcceptedProjectContinuation(row)&&row.payload.attempt_pending===true) && acceptPotentialRepeat!==true)throw new VersionConflictError("No se pudo comprobar si la última llamada terminó. Confirma el reintento; podría repetir esa llamada.");
     const payload={...row.payload,error:null,attempt_pending:false};
     return (await tx.query(`update preparation_jobs set status='queued',lease_token=null,lease_until=null,
       payload=$2::jsonb,updated_at=now() where id=$1 returning *`,[id,JSON.stringify(payload)])).rows[0];
@@ -65,6 +86,8 @@ export async function runPreparationStep(db,execute) {
   try {
     await ownedPreparationJob(db,job.teacher_id,job.id);
     const complete=await execute(job,checkpoint);
+    if(complete&&needsAcceptedProjectContinuation({...job,status:'succeeded',approved_at:(await ownedPreparationJob(db,job.teacher_id,job.id)).approved_at}))
+      throw new VersionConflictError('Falta publicar las actividades del proyecto aceptado. Conservamos el avance.');
     await db.query(`update preparation_jobs set status=$1,lease_until=null,updated_at=now()
       where id=$2 and lease_token=$3 and status='running'`,[complete?"succeeded":"queued",job.id,job.lease_token]);
   }catch(error){

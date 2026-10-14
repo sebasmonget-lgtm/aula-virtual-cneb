@@ -1,4 +1,4 @@
-import { enqueuePreparation, enqueueActivityBlock, ownedPreparationJob, publicPreparationJob, retryPreparation, preparationFingerprint } from "../src/lib/preparation-jobs.mjs";
+import { enqueuePreparation, enqueueActivityBlock, ownedPreparationJob, publicPreparationJob, retryPreparation, preparationFingerprint,needsAcceptedProjectContinuation,recoverAcceptedProjectContinuation } from "../src/lib/preparation-jobs.mjs";
 import { versionTransaction, VersionConflictError, httpStatusForError, publicErrorMessage } from "../src/lib/version-integrity.mjs";
 import { lockClassroomSchedule, limaToday } from "../src/lib/activity-schedule-integrity.mjs";
 import {COMPLETE_PROJECT_POLICY} from "../src/lib/complete-project-preparation.mjs";
@@ -117,7 +117,7 @@ export async function handlePreparationRoutes({request,response,url,db,teacherId
       if(!source.plan.proposal.experience_context||source.slot.ends_on<limaToday()||!Array.isArray(dates)||!dates.length||new Set(dates).size!==dates.length||dates.some(date=>typeof date!=='string'||date<limaToday()||!source.dates?.includes(date)))throw new VersionConflictError("Selecciona días de clase disponibles dentro de este proyecto.");
       const previous=(await db.query(`select * from preparation_jobs where teacher_id=$1 and classroom_id=$2 and source_id=$3 and source_revision=$4
         and payload->>'proposal_id'=$5 and payload->'acceptance'->>'policy'=$6 order by created_at desc limit 1`,[teacherId,context.id,plan.id,plan.revision,body.proposalId,COMPLETE_PROJECT_POLICY])).rows[0];
-      if(previous){send(response,202,publicPreparationJob(previous),origin);return true;}
+      if(previous){send(response,202,publicPreparationJob(await recoverAcceptedProjectContinuation(db,teacherId,previous.id)),origin);return true;}
       const started=await domainRequest({id:plan.id,teacher_id:teacherId,classroom_id:context.id,payload:{}},"/api/project-flow/start",{annualPlanId:plan.id,proposalId:body.proposalId});
       if(started.experience.status==='draft'&&!started.experience.details.project_master)await domainRequest({id:plan.id,teacher_id:teacherId,classroom_id:context.id,payload:{}},`/api/project-flow/${started.experience.id}/calendar`,{
         selectedDates:[...dates].sort(),exclusions:Object.fromEntries(source.dates.filter(date=>!dates.includes(date)).map(date=>[date,'Día excluido por la docente del proyecto'])),confirm:true},'PUT');
@@ -157,12 +157,13 @@ export async function handlePreparationRoutes({request,response,url,db,teacherId
     if(url.pathname==="/api/preparation/current" && request.method==="GET"){
       const context=await annualPlanningContext();
       const rows=context?(await db.query(`select * from preparation_jobs where classroom_id=$1 and teacher_id=$2 order by created_at desc`,[context.id,teacherId])).rows:[];
+      for(let index=0;index<rows.length;index++)if(needsAcceptedProjectContinuation(rows[index]))rows[index]=await recoverAcceptedProjectContinuation(db,teacherId,rows[index].id);
       send(response,200,{jobs:rows.map(publicPreparationJob)},origin);return true;
     }
     const match=/^\/api\/preparation\/([0-9a-f-]{36})(?:\/(retry|review|approve))?$/i.exec(url.pathname);
     if(!match)return false;
     const [,id,action]=match,row=await ownedPreparationJob(db,teacherId,id);
-    if(!action && request.method==="GET"){send(response,200,publicPreparationJob(row),origin);return true;}
+    if(!action && request.method==="GET"){send(response,200,publicPreparationJob(needsAcceptedProjectContinuation(row)?await recoverAcceptedProjectContinuation(db,teacherId,id):row),origin);return true;}
     if(action==="retry" && request.method==="POST"){
       send(response,202,publicPreparationJob(await retryPreparation(db,teacherId,id,(await readJson(request)).acceptPotentialRepeat)),origin);return true;
     }

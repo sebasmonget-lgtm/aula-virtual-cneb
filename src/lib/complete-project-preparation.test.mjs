@@ -4,7 +4,7 @@ import {randomUUID} from 'node:crypto';
 import {readFile,readdir} from 'node:fs/promises';
 import {PGlite} from '@electric-sql/pglite';
 import {createPilotClassroom} from './pilot-onboarding-service.mjs';
-import {enqueuePreparation,ownedPreparationJob,runPreparationStep,retryPreparation,preparationFingerprint} from './preparation-jobs.mjs';
+import {enqueuePreparation,ownedPreparationJob,runPreparationStep,retryPreparation,preparationFingerprint,publicPreparationJob,recoverAcceptedProjectContinuation} from './preparation-jobs.mjs';
 import {createPendingAIGenerationsStore} from './pending-ai-generations-store.mjs';
 import {preparationExecutor} from './preparation-executor.mjs';
 import {COMPLETE_PROJECT_POLICY,publishAcceptedProjectBlock} from './complete-project-preparation.mjs';
@@ -19,12 +19,32 @@ test('aceptación completa: diez días, recuperación sin repetir IA y publicaci
     const annual=randomUUID(),proposal=randomUUID(),experience=randomUUID(),curriculum=(await db.query('select id from curriculum_versions limit 1')).rows[0].id;
     const dates=Array.from({length:10},(_,i)=>`2099-11-${String(i+10).padStart(2,'0')}`),route=dates.map(date=>({id:randomUUID(),date}));
     await db.query(`insert into annual_plans(id,classroom_id,school_year_id,curriculum_version_id,status,proposal) values($1,$2,$3,$4,'active',$5::jsonb)`,[annual,classroom.classroomId,classroom.schoolYearId,curriculum,JSON.stringify({proposed_experiences:[{proposal_id:proposal}]})]);
-    await db.query(`insert into learning_experiences(id,classroom_id,type,title,purpose,starts_on,ends_on,status,details,annual_plan_id,source_proposal_id) values($1,$2,'project','QA','QA',$3,$4,'draft',$5::jsonb,$6,$7)`,[experience,classroom.classroomId,dates[0],dates.at(-1),JSON.stringify({activity_route:route,stage:'map_review',decisions:{additional_context:''}}),annual,proposal]);
+    await db.query(`insert into learning_experiences(id,classroom_id,type,title,purpose,starts_on,ends_on,status,details,annual_plan_id,source_proposal_id) values($1,$2,'project','QA','QA',$3,$4,'draft',$5::jsonb,$6,$7)`,[experience,classroom.classroomId,dates[0],dates.at(-1),JSON.stringify({activity_route:route,project_master:{foundation:'QA guardada'},stage:'map_review',decisions:{additional_context:''}}),annual,proposal]);
     await db.query("update learning_experiences set status='active',teacher_confirmed_at=now() where id=$1",[experience]);
     const plan=(await db.query('select * from annual_plans where id=$1',[annual])).rows[0];
     const input={policy:COMPLETE_PROJECT_POLICY,proposalId:proposal,dates},payload={project_id:experience,proposal_id:proposal,expected_dates:dates,additional_context:'',acceptance:{policy:COMPLETE_PROJECT_POLICY,teacher_id:teacher,accepted_at:new Date().toISOString(),reviewed_individually:false}};
     const job=await enqueuePreparation(db,{teacherId:teacher,classroomId:classroom.classroomId,kind:'project',sourceId:annual,sourceRevision:plan.revision,input,payload});
     assert.equal((await enqueuePreparation(db,{teacherId:teacher,classroomId:classroom.classroomId,kind:'project',sourceId:annual,sourceRevision:plan.revision,input,payload})).id,job.id);
+    // Real cloud incident: legacy executor saved the master and marked the accepted job done, with zero activities.
+    const legacyPayload={...payload,stage:'ready',attempt_pending:false};
+    await db.query("update preparation_jobs set status='succeeded',payload=$1::jsonb where id=$2",[JSON.stringify(legacyPayload),job.id]);
+    assert.equal(publicPreparationJob(await ownedPreparationJob(db,teacher,job.id)).status,'incomplete');
+    await assert.rejects(()=>recoverAcceptedProjectContinuation(db,randomUUID(),job.id));
+    await db.query('update preparation_jobs set source_revision=source_revision+1 where id=$1',[job.id]);
+    assert.equal((await recoverAcceptedProjectContinuation(db,teacher,job.id)).status,'succeeded','changed source is not silently resumed');
+    await db.query('update preparation_jobs set source_revision=source_revision-1 where id=$1',[job.id]);
+    await db.query('update preparation_jobs set payload=$1::jsonb where id=$2',[JSON.stringify({...legacyPayload,attempt_pending:true}),job.id]);
+    assert.equal((await recoverAcceptedProjectContinuation(db,teacher,job.id)).status,'uncertain');
+    await assert.rejects(()=>retryPreparation(db,teacher,job.id),/podría repetir/);
+    await db.query("update preparation_jobs set status='succeeded',payload=$1::jsonb where id=$2",[JSON.stringify(legacyPayload),job.id]);
+    let recoveredRead;
+    await handlePreparationRoutes({request:{method:'GET'},response:{},url:new URL('http://localhost/api/preparation/current'),db,teacherId:teacher,
+      annualPlanningContext:async()=>({id:classroom.classroomId}),send:(_r,status,value)=>{recoveredRead={status,value};}});
+    assert.equal(recoveredRead.status,200);assert.equal(recoveredRead.value.jobs[0].status,'queued');
+    assert.equal(recoveredRead.value.jobs[0].id,job.id);assert.equal(recoveredRead.value.jobs[0].total,10);
+    assert.equal((await recoverAcceptedProjectContinuation(db,teacher,job.id)).status,'queued','recovery is idempotent');
+    assert.equal((await runPreparationStep(db,async()=>true)).status,'failed','success cannot precede publication');
+    await retryPreparation(db,teacher,job.id);
     const pending=createPendingAIGenerationsStore(db);let calls=0,saves=0,confirmations=0,failSave=true,failPublish=true;
     const domain=async(j,path,body,method,extra)=>{
       const tx=j.db??db;
@@ -61,6 +81,7 @@ test('aceptación completa: diez días, recuperación sin repetir IA y publicaci
     assert.equal((await db.query('select count(distinct scheduled_on)::int as n from class_schedule_entries where activity_id in (select id from activities where experience_id=$1)',[experience])).rows[0].n,10);
     assert.equal((await db.query("select count(*)::int as n from activities where experience_id=$1 and generation_metadata->'publication_authorization'->>'reviewed_individually'='false'",[experience])).rows[0].n,10);
     stored=await ownedPreparationJob(db,teacher,job.id);await publishAcceptedProjectBlock(db,stored,domain);assert.equal(calls,10);assert.equal(saves,10);
+    assert.deepEqual((await recoverAcceptedProjectContinuation(db,teacher,job.id)).approved_at,stored.approved_at,'published block is never restarted');
     await assert.rejects(()=>ownedPreparationJob(db,randomUUID(),job.id));
     assert.equal(await runPreparationStep(db,execute),null);
     assert.equal(preparationFingerprint((await db.query('select details from learning_experiences where id=$1',[experience])).rows[0].details),stored.payload.project_fingerprint);
