@@ -1,3 +1,4 @@
+import {proposalIntentIssues} from "./annual-proposal-intent.mjs";
 import { journeyFail } from "./annual-journey-contract.mjs";
 import { horizonAssignments } from "./annual-experience-context.mjs";
 
@@ -42,6 +43,22 @@ export function assignAnnualSlots(plan, slots, rows, library=plan.available_expe
  * @param {{protectedIds?:string[],today?:string}} [options]
  */
 export function editAnnualStructure(plan, action, { protectedIds=[], today="",restoreLibrary=false }={}) {
+  if(action?.kind==='reuse'){
+    const original=plan.proposed_experiences.find(row=>row.proposal_id===action.proposalId);
+    const target=plan.resolved_calendar.projects.find(slot=>slot.slot_id===action.targetSlotId);
+    if(!original||!today||original.planned_end_date>=today||!target||target.starts_on<today)
+      journeyFail('invalid_scope','Elige una propuesta pasada y un tramo futuro disponible.');
+    if(proposalIntentIssues(original,[],plan.curriculum_reference??[]).length)
+      journeyFail('invalid_competency','Revisa esta propuesta con Ayni antes de usarla de nuevo.');
+    const titles=new Set([...plan.proposed_experiences,...(plan.available_experiences??[])].map(row=>row.title));
+    const baseTitle=original.title.slice(0,140);
+    let title=baseTitle+' · Nueva oportunidad',suffix=2;
+    while(titles.has(title))title=baseTitle+' · Nueva oportunidad '+suffix++;
+    const incoming={...libraryRow(original),proposal_id:globalThis.crypto.randomUUID(),title,reused_from_proposal_id:original.proposal_id};
+    delete incoming.teacher_protected;
+    return editAnnualStructure({...plan,available_experiences:[...(plan.available_experiences??[]),incoming]},
+      {kind:'place',proposalId:incoming.proposal_id,targetSlotId:target.slot_id},{protectedIds,today});
+  }
   if(!action || !["place","remove"].includes(action.kind))journeyFail("invalid_action","Elige colocar o retirar una propuesta.");
   if(plan.editor_version!==3 || plan.resolved_calendar.projects.length!==15) journeyFail("editor_upgrade_required","Organiza primero este borrador en los 15 tramos.");
   const slots=plan.resolved_calendar.projects.map(slot=>({...slot})), rows=[...plan.proposed_experiences], library=[...(plan.available_experiences ?? [])];

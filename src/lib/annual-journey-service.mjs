@@ -109,7 +109,7 @@ export async function generateAnnualJourney({ context, snapshot, curriculum, cal
   const futureSlots=schedule.projects.filter(slot=>slot.proposal_id);
   const count=futureSlots.length;
   const generationSchema={...JOURNEY_GENERATION_SCHEMA,id:legacy?"annual-journey-v2":"annual-journey-slots-v3",properties:{...JOURNEY_GENERATION_SCHEMA.properties,proposals:{...JOURNEY_GENERATION_SCHEMA.properties.proposals,minItems:count,maxItems:count}}};
-  const generationBundle = { task: `Devuelve ${count} propuestas futuras en el orden de los tramos recibidos. No generes trabajo retrospectivo. Adapta el desarrollo a los días realmente disponibles, incluso si el primer tramo es parcial. Los títulos no incluyen números ni fechas.`,
+  const generationBundle = { task: `Devuelve ${count} propuestas para TODO el año en el orden de los tramos recibidos, incluidos los pasados. Son previsiones del plan anual, nunca experiencias realizadas. No inventes ejecución, evidencias ni actividades diarias del pasado. Conserva las fechas completas de cada tramo; la preparación posterior se limitará a los días disponibles. Los títulos no incluyen números ni fechas.`,
     teacher_preferences: teacherIdeas, ...(experienceContext ? {preparation_date:experienceContext.starts_on,historical_projects:experienceContext.historical_projects.map(({title,competency_ids,period})=>({title,competency_ids,period})),source_policy:"Historia declarada, no evidencia ni ejecución."}:{}),
     calendar: futureSlots.map(({ index, starts_on, ends_on, period, duration_weeks, instructional_dates }) => ({ index, starts_on, ends_on, period, duration_weeks, instructional_days:instructional_dates.length })) };
   let output, schemaRepair = false;

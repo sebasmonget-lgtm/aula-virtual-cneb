@@ -58,7 +58,7 @@ export async function handlePreparationRoutes({request,response,url,db,teacherId
       const can_restore=!!row&&!row.teacher_protected&&(row.instructional_dates??[]).some(date=>date>=limaToday()&&!blocked_dates.includes(date));
       const baseline=plan?.generation_metadata?.scoped_base_proposal??(plan?.supersedes_plan_id?(await db.query('select proposal from annual_plans where id=$1 and classroom_id=$2',[plan.supersedes_plan_id,context.id])).rows[0]?.proposal:null);
       const prepared_current=!!project&&(project.annual_plan_id===plan?.id||isDeepStrictEqual(row,baseline?.proposed_experiences?.find(item=>item.proposal_id===proposalActivities[1])));
-      send(response,200,{project,prepared_current,can_replace:!protectedProject,can_restore,blocked_dates,activities:activities.map(row=>({...row,state:row.execution_status==='completed'?'Realizada':['active','in_progress'].includes(row.execution_status)?'En curso':row.date<limaToday()?'Sin realizar':'Lista'}))},origin);return true;
+      send(response,200,{today:limaToday(),project,prepared_current,can_replace:!protectedProject,can_restore,blocked_dates,activities:activities.map(row=>({...row,state:row.execution_status==='completed'?'Realizada':['active','in_progress'].includes(row.execution_status)?'En curso':row.date<limaToday()?'Sin realizar':'Lista'}))},origin);return true;
     }
     if(url.pathname==='/api/preparation/projects/future-preview'&&['GET','POST'].includes(request.method)){
       const body=request.method==='POST'?await readJson(request):Object.fromEntries(url.searchParams),{row:project}=await projectFlowRow(body.projectId);
@@ -70,6 +70,7 @@ export async function handlePreparationRoutes({request,response,url,db,teacherId
       const dates=await futureDates(db,project);
       const valid=cached&&chat&&!chat.payload.pending_turn&&cached.chat_id===chat.id&&cached.chat_revision===chat.payload.revision&&cached.source_revision===Number(project.revision)&&JSON.stringify(cached.expected_dates)===JSON.stringify(dates);
       if(request.method==='GET'){send(response,200,valid?futurePreview(draft,source.source,chat):null,origin);return true;}
+      if(new Set(project.details.decisions?.competency_ids??[]).size<2)throw new VersionConflictError('Revisa la propuesta con Ayni para incluir dos competencias antes de preparar otra versión.');
       if(!chat||chat.payload.pending_turn||chat.payload.revision!==body.conversationRevision||!chat.payload.messages.some(m=>m.role==='teacher'))throw new VersionConflictError('Revisa las decisiones actuales de la conversación.');
       if(valid){send(response,200,futurePreview(draft,source.source,chat),origin);return true;}
       if(!dates.length)throw new VersionConflictError('Este proyecto ya no tiene días futuros sin registros. Conservamos su historia.');
@@ -97,6 +98,7 @@ export async function handlePreparationRoutes({request,response,url,db,teacherId
         if(previous){send(response,202,publicPreparationJob(previous),origin);return true;}
       }
       if(!project||project.status!=='draft'||Number(project.revision)!==body.expectedRevision||body.accepted!==true)throw new VersionConflictError('Revisa y acepta la nueva versión del proyecto.');
+      if(new Set(project.details.decisions?.competency_ids??[]).size<2)throw new VersionConflictError('La nueva versión necesita dos competencias con oportunidades completas.');
       const preview=project.generation_metadata.future_change_preview,chat=preview&&await loadProjectChat(db,project.classroom_id,project.source_proposal_id,preview.chat_id);
       const original=(await db.query("select * from learning_experiences where id=$1 and classroom_id=$2 and status='active'",[project.supersedes_experience_id,project.classroom_id])).rows[0];
       if(!chat||chat.payload.pending_turn||chat.payload.revision!==preview.chat_revision||!original||Number(original.revision)!==preview.source_revision)throw new VersionConflictError('Hay decisiones nuevas. Revisa otra vez la propuesta de los días futuros.');
@@ -123,6 +125,7 @@ export async function handlePreparationRoutes({request,response,url,db,teacherId
       const candidate=plan.proposal.proposed_experiences.find(row=>row.proposal_id===body.proposalId);
       if(!candidate||proposalIntentIssues(candidate,[],plan.proposal.curriculum_reference??[]).length)
         throw new VersionConflictError('Antes de preparar, completa con Ayni las dos competencias y los materiales concretos de este proyecto. Conservamos lo que ya está guardado.');
+      if(candidate.planned_end_date<limaToday())throw new VersionConflictError('Este proyecto es solo para consulta: sus fechas ya terminaron. Usa su propuesta en un tramo futuro para prepararlo.');
       const blockedDates=await protectedSlotDates(db,context.id,candidate.planned_start_date,candidate.planned_end_date);
       if(dates.some(date=>blockedDates.includes(date)))throw new VersionConflictError('Estos días ya tienen trabajo registrado. Confirma solo los días disponibles; conservamos las actividades y observaciones anteriores.');
       if(plan.status==='draft'){

@@ -1,12 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { BookOpen, TableProperties, Users } from "lucide-react";
+import Image from "next/image";
+import { ArrowRight,CalendarDays,CheckCircle2,Clock3,Info,BookOpen,TableProperties,Users } from "lucide-react";
 import { apiFetch } from "@/src/lib/ayni-api-fetch";
 import { readWorkspaceParams, writeWorkspaceLocation } from "@/src/lib/workspace-location";
 import { selectEvaluationPeriod } from "@/src/lib/evaluation-period-selection.mjs";
 import { localDatabaseApiUrl, type LocalDashboard } from "@/src/lib/local-database";
-import { LoadingState, PageIntro, WorkflowFeedback } from "./workflow-ui";
+import { LoadingState, WorkflowFeedback } from "./workflow-ui";
+
+import styles from "./evaluation-home.module.css";
 
 type EvaluationView = "student" | "conclusions" | "family" | "coverage" | "consolidated";
 type Row = { student_id: string; competency_id: string; competency_name: string; evidence_count: number; state: string; valuation_confirmed:boolean };
@@ -32,6 +35,7 @@ export function EvaluationHome({ onPeriod }: {
   const [activePeriod, setActivePeriod] = useState<Workspace["periods"][number] | null>(null);
   const [availablePeriods, setAvailablePeriods] = useState<Workspace["periods"]>([]);
   const [requestedPeriodId, setRequestedPeriodId] = useState("");
+  const [noticeDismissed,setNoticeDismissed]=useState("");
   const [today, setToday] = useState("");
   useEffect(() => {
     const controller = new AbortController();
@@ -62,13 +66,13 @@ export function EvaluationHome({ onPeriod }: {
     {title:"Informe a familias",subtitle:"Prepara todos los informes y revisa las excepciones",Icon:Users,act:()=>onPeriod("family")},
     {title:"Consolidado",subtitle:"Valoraciones, conclusiones, Excel y cierre",Icon:TableProperties,act:()=>onPeriod("consolidated")},
   ];
-  return <div className="space-y-6">
-    <PageIntro title="Evaluar" description="Ayni organiza la evidencia; tú confirmas la evaluación." icon={BookOpen} illustration="/project-illustrations/friendship.webp"/>
-    {activePeriod && <p className="text-sm font-semibold">{activePeriod.label} · {new Date(`${activePeriod.starts_on}T12:00:00`).toLocaleDateString("es-PE")} a {new Date(`${activePeriod.ends_on}T12:00:00`).toLocaleDateString("es-PE")}</p>}
-    {activePeriod && availablePeriods.length > 1 && <label className="block text-sm font-semibold">Período que quieres revisar<select disabled={loading} className="mt-2 min-h-11 w-full max-w-sm rounded-lg border bg-white px-3" value={activePeriod.id} onChange={event=>{setLoading(true);setOverview(null);setRequestedPeriodId(event.target.value);}}>{availablePeriods.map(period=><option key={period.id} value={period.id}>{period.label}</option>)}</select></label>}
-    {activePeriod && !loading && activePeriod.ends_on < today && <p className="text-sm text-[#526b87]">Estás revisando un período terminado. Puedes elegir otro cuando lo necesites.</p>}
+  return <div className={styles.page}>
+    <header className={styles.hero}><span className={styles.heroIcon}><BookOpen aria-hidden="true"/></span><div className={styles.heroCopy}><h1>Evaluar</h1><p>Ayni organiza la evidencia; tú confirmas la evaluación.</p><span className={styles.encouragement}>Acompañamos sus primeros aprendizajes</span></div><Image src="/project-illustrations/friendship.webp" width={220} height={220} unoptimized alt="" aria-hidden="true" className={styles.heroImage}/></header>
+    {activePeriod&&<section className={styles.period} aria-label="Período de evaluación"><div className={styles.periodRow}><p><CalendarDays aria-hidden="true"/><strong>{activePeriod.label} · {new Date(`${activePeriod.starts_on}T12:00:00`).toLocaleDateString("es-PE")} a {new Date(`${activePeriod.ends_on}T12:00:00`).toLocaleDateString("es-PE")}</strong></p>{availablePeriods.length>1&&<label>Período que quieres revisar<select disabled={loading} value={activePeriod.id} onChange={event=>{setLoading(true);setOverview(null);setRequestedPeriodId(event.target.value);}}>{availablePeriods.map(period=><option key={period.id} value={period.id}>{period.label}</option>)}</select></label>}</div>
+      {!loading&&activePeriod.ends_on<today&&noticeDismissed!==activePeriod.id&&<div className={styles.notice}><Info aria-hidden="true" size={20}/><p>Estás revisando un período terminado. Puedes elegir otro cuando lo necesites.</p><button type="button" aria-label="Cerrar aviso del período" onClick={()=>setNoticeDismissed(activePeriod.id)}>×</button></div>}
+    </section>}
     {!loading&&!error&&!activePeriod&&<WorkflowFeedback tone="info">Todavía no hay un período disponible para evaluar en esta aula.</WorkflowFeedback>}
     {loading ? <LoadingState label="Revisando el avance..." /> : error ? <div className="space-y-2"><WorkflowFeedback tone="error">{error}</WorkflowFeedback><button type="button" className="font-bold text-[#0b7891] underline" onClick={() => { setLoading(true); setRetry((value) => value + 1); }}>Reintentar</button></div> : null}
-    <section className="grid gap-4">{actions.map(({title,subtitle,Icon,act},index)=><button key={title} type="button" disabled={loading||Boolean(error)||!overview} onClick={act} className={`flex min-h-28 w-full items-center gap-4 rounded-2xl border p-5 text-left transition-colors hover:border-[#087d96] disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-[#087d96] ${['border-[#c9e4d5] bg-[#eef9f2]','border-[#dfd3f4] bg-[#f5efff]','border-[#f0dfb4] bg-[#fff8e8]'][index]}`}><span className="grid size-14 shrink-0 place-items-center rounded-2xl bg-white"><Icon aria-hidden="true" className={`size-7 ${['text-[#26704c]','text-[#7047ac]','text-[#926113]'][index]}`}/></span><span className="min-w-0 flex-1"><strong className="block text-lg text-[#172b52]">{title}</strong><span className="mt-1 block text-sm text-[#526b87]">{subtitle}</span></span><span aria-hidden="true" className="text-[#087d96]">→</span></button>)}</section>
+    <section className={styles.actions} aria-label="Opciones de evaluación">{actions.map(({title,subtitle,Icon,act},index)=><button key={title} type="button" disabled={loading||Boolean(error)||!overview} onClick={act} className={`${styles.action} ${[styles.mint,styles.lilac,styles.sand][index]}`}><span className={styles.actionIcon}><Icon aria-hidden="true"/></span><span className={styles.actionCopy}><strong>{title}</strong><span>{index===0&&overview&&!loading&&!error?'Revisa lo observado y confirma tus valoraciones':subtitle}</span>{index===0&&overview&&!loading&&!error&&<span className={styles.counts}><span><CheckCircle2 aria-hidden="true"/>{candidates.length} por confirmar</span><span><Clock3 aria-hidden="true"/>{unobserved.length} pendientes de observación</span></span>}</span><Image src={['/ayni-interview-v2.webp','/project-illustrations/parents.webp','/ayni-thinking-v2.webp'][index]} width={220} height={150} unoptimized alt="" aria-hidden="true" className={styles.actionImage}/><span className={styles.arrow}><ArrowRight aria-hidden="true"/></span></button>)}</section>
   </div>;
 }

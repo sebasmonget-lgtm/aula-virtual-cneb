@@ -22,6 +22,8 @@ test('develop today preserves the project date, checks ownership, records actual
   await db.query(`insert into class_schedule_entries(id,classroom_id,scheduled_on,start_time,end_time,block_type,activity_id,is_instructional) values($1,$2,$3,'09:00','09:45','activity',$4,true)`,[schedule,room.classroomId,planned,activity]);
   await db.query(`insert into students(id,classroom_id,first_name,last_name) values($1,$2,'Niña','QA')`,[student,room.classroomId]);
   await db.query(`insert into activity_criteria(id,activity_id,competency_v4_id,criterion_text,status) values($1,$2,'CYT_INDAGA','Explica lo que observa','active')`,[criterion,activity]);
+  await assert.rejects(()=>startActivityToday(db,teacher,activity,'2026-12-01'),/proyecto terminó/);
+  assert.equal((await db.query('select count(*)::int as n from daily_execution_logs')).rows[0].n,0);
   await assert.rejects(()=>startActivityToday(db,randomUUID(),activity,actual));
   await assert.rejects(()=>startActivityToday(db,teacher,randomUUID(),actual));
   assert.equal(await startActivityToday(db,teacher,activity,actual),schedule);

@@ -25,18 +25,11 @@ export function validateExperienceContext(input, curriculum, today) {
   return { version: 1, starts_on: today, context_items: contextItems, historical_projects: historicalProjects };
 }
 
-/** Keep the full calendar accounting; only the remaining dates belong to new proposals. */
+/** All fifteen proposals belong to the annual document; execution remains future-only. */
 export function applyPlanningHorizon(schedule, context) {
-  const startsOn = context.starts_on;
-  const projects = schedule.projects.map(slot => {
-    const dates = slot.instructional_dates.filter(date=>date>=startsOn);
-    if (!dates.length) return { ...slot, proposal_id: null, occupancy: "past_unrecorded" };
-    return { ...slot, occupancy: "planned", ...(slot.starts_on < startsOn ? {
-      calendar_starts_on: slot.starts_on, starts_on: dates[0],
-      historical_dates: slot.instructional_dates.filter(date=>date<startsOn), instructional_dates: dates,
-    } : {}) };
-  });
-  return { ...schedule, projects, assignments: horizonAssignments(schedule.initial_stage, projects) };
+  const projects=schedule.projects.map(slot=>({...slot,occupancy:slot.ends_on<context.starts_on?'annual_only':'planned'}));
+  return {...schedule,planning_scope:'full_year',preparation_starts_on:context.starts_on,projects,
+    assignments:horizonAssignments(schedule.initial_stage,projects)};
 }
 
 export function horizonAssignments(initial, slots) {
@@ -47,6 +40,6 @@ export function horizonAssignments(initial, slots) {
 
 export function annualFutureGaps(plan, curriculum = plan.curriculum_reference ?? []) {
   const covered = new Set([...(plan.everyday_opportunities ?? []),
-    ...(plan.proposed_experiences ?? []).flatMap(row=>row.opportunities ?? [])].map(o=>o.competency_id));
+    ...(plan.proposed_experiences ?? []).filter(row=>!plan.experience_context||row.planned_end_date>=plan.experience_context.starts_on).flatMap(row=>row.opportunities ?? [])].map(o=>o.competency_id));
   return curriculum.filter(card=>!covered.has(card.id)).map(card=>card.id);
 }

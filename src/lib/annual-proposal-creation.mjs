@@ -117,6 +117,8 @@ export async function handleAnnualProposalCreation({request,response,url,db,cont
       }
       payload.candidate=libraryRow(row);payload.candidate_sources=snapshot.facts.filter(f=>row.source_fact_keys.includes(f.key)).map(f=>({key:f.key,text:f.support_text}));payload.review={status:"passed",reviewed_at:new Date().toISOString(),required_competency_ids:required};
     } else if(operation==="approve") {
+      if(!payload.candidate||proposalIntentIssues(payload.candidate,payload.required_competency_ids??[],curriculum).length)
+        journeyFail('invalid_competency','Actualiza esta propuesta antes de incorporarla: necesita dos competencias con oportunidades completas.');
       const result=await versionTransaction(db,`annual:${context.school_year_id}`,async tx=>{
         const current=await load(planId,tx);assertRevision(current,Number(base.revision));
         if((await personalizationSources(tx,teacherId,context)).fingerprint!==current.proposal.classroom_snapshot.source_fingerprint)throw new VersionConflictError("Aparecieron registros nuevos. Actualiza Mi año antes de incorporar esta propuesta.");

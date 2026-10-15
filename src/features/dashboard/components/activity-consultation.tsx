@@ -23,6 +23,7 @@ export function ActivityConsultation({id,onBack,activities=[],onActivity,inToday
   const [actionError,setActionError]=useState('');
   const [confirmStart,setConfirmStart]=useState(false);
   const [observationContext,setObservationContext]=useState<{criterionId?:string;momentId?:string;free?:boolean}|null>(null);
+  const pastProject=!!document?.experience_ends_on&&!!dashboard&&document.experience_ends_on<dashboard.today.date;
   const siblings=activities.length?activities:document?.project_activities??[];
   const block=dashboard?.today.blocks.find(block=>block.activity_id===id)??null,position=siblings.findIndex(item=>item.id===id);
   useEffect(()=>{let live=true;void loadLocalDashboard().then(value=>{if(live)setDashboard(value);}).catch(()=>{});return()=>{live=false;};},[id]);
@@ -45,10 +46,10 @@ export function ActivityConsultation({id,onBack,activities=[],onActivity,inToday
     const previewBlock:LocalDashboard['today']['blocks'][number]={id:'consultation',activity_id:id,title:document.title,purpose:String(document.content.purpose??''),experience_title:document.experience_title??null,activity_details:null,
       materials_source:String(document.content.materials_source??'activity'),materials:Array.isArray(document.content.materials)?document.content.materials as string[]:[],steps:[],criteria:guide.criteria.map(item=>({...item,competency_text:document.competencies?.find(card=>card.id===item.competency_v4_id)?.name??item.competency_v4_id??''})),pedagogical_blocks:guide.pedagogical_blocks,
       start_time:'',end_time:'',block_type:'activity',status:'planned',display_status:'planned',current_override:false,current_step_index:0,closure_type:null};
-    const canStart=document.status==='active'&&(!document.actual_execution_date||document.actual_execution_date===dashboard.today.date)&&!['completed','skipped'].includes(block?.status??'');
+    const canStart=!pastProject&&document.status==='active'&&(!document.actual_execution_date||document.actual_execution_date===dashboard.today.date)&&!['completed','skipped'].includes(block?.status??'');
     return <><ActivityRunView key={id} block={previewBlock} evidenceRevision={0} onBack={onBack} preview onEvidence={(_studentId,criterionId,momentId)=>setObservationContext({criterionId,momentId})} onFreeObservation={()=>setObservationContext({free:true})} onStepChange={async()=>{}} onComplete={async()=>{}} starting={starting}
       onStart={canStart?()=>{if(document.occurs_on!==dashboard.today.date)setConfirmStart(true);else void developToday();}:undefined}
-      actions={<><Button variant="outline" disabled={downloading} onClick={()=>void download()}><Download size={18}/>Descargar Word</Button>{!canStart&&<p className="text-sm">Esta actividad ya tiene trabajo registrado. Puedes consultar su guía.</p>}</>}/>
+      actions={<><Button variant="outline" disabled={downloading} onClick={()=>void download()}><Download size={18}/>Descargar Word</Button>{!canStart&&<p className="text-sm">{pastProject?'Proyecto pasado · Puedes consultar su guía.':'Esta actividad ya tiene trabajo registrado. Puedes consultar su guía.'}</p>}</>}/>
       {(actionError||downloadError)&&<WorkflowFeedback tone="error">{actionError||downloadError}</WorkflowFeedback>}
       {observationContext&&<OrdinaryObservationDialog students={dashboard.students} activity={{id,title:document.title,criteria:previewBlock.criteria,initialCriterionId:observationContext.criterionId,momentId:observationContext.momentId,free:observationContext.free}} onClose={()=>setObservationContext(null)}/>}
       <Dialog open={confirmStart} onOpenChange={value=>{if(!starting)setConfirmStart(value);}}><DialogContent><DialogHeader><DialogTitle>¿Desarrollar esta actividad hoy?</DialogTitle><DialogDescription>Esta actividad está programada para otra fecha. Registraremos que la desarrollas hoy y conservaremos su fecha prevista.</DialogDescription></DialogHeader><DialogFooter><Button variant="outline" disabled={starting} onClick={()=>setConfirmStart(false)}>Cancelar</Button><Button disabled={starting} onClick={()=>void developToday()}>{starting?'Abriendo…':'Sí, desarrollar hoy'}</Button></DialogFooter></DialogContent></Dialog></>;
@@ -56,9 +57,9 @@ export function ActivityConsultation({id,onBack,activities=[],onActivity,inToday
   return <section className="mx-auto max-w-6xl space-y-4"><Button variant="outline" disabled={starting||downloading} onClick={onBack}><ArrowLeft size={18}/>{inToday?"Volver a Hoy":"Volver a Mi año"}</Button><p className="text-sm text-[#526b87]">{inToday&&!block?"Consulta · Conservamos su fecha programada. Si decides trabajarla hoy, pulsa «Desarrollar hoy».":"Actividad completa · Consulta"}</p>
     {error?<WorkflowFeedback tone="error">{error}<Button variant="outline" onClick={()=>setRetry(value=>value+1)}>Reintentar</Button></WorkflowFeedback>:document?<>
       <ActivityReadingView document={document} position={position>=0?position+1:undefined} total={siblings.length} actions={<>
-        {block&&['planned','active'].includes(block.status)&&<Button disabled={starting} onClick={()=>void start()}>{starting?'Abriendo…':block.status==='active'?'Continuar esta actividad':'Iniciar esta actividad ahora'}<ArrowRight size={18}/></Button>}
+        {!pastProject&&block&&['planned','active'].includes(block.status)&&<Button disabled={starting} onClick={()=>void start()}>{starting?'Abriendo…':block.status==='active'?'Continuar esta actividad':'Iniciar esta actividad ahora'}<ArrowRight size={18}/></Button>}
         {!block&&!inToday&&!document.actual_execution_date&&document.status==='active'&&<Button onClick={()=>writeWorkspaceLocation('Hoy',{activity:id})}>Desarrollar en Hoy<ArrowRight size={18}/></Button>}
-        {!block&&inToday&&!document.actual_execution_date&&document.status==='active'&&<Button disabled={starting} onClick={()=>void developToday()}>{starting?'Abriendo actividad…':'Desarrollar hoy'}<ArrowRight size={18}/></Button>}
+        {!pastProject&&!block&&inToday&&!document.actual_execution_date&&document.status==='active'&&<Button disabled={starting} onClick={()=>void developToday()}>{starting?'Abriendo actividad…':'Desarrollar hoy'}<ArrowRight size={18}/></Button>}
         {!!block?.criteria.length&&<Button variant="outline" disabled={starting} onClick={()=>setObserving(true)}><PencilLine size={18}/>Registrar observación</Button>}
         <Button variant="outline" disabled={downloading} onClick={()=>void download()}><Download size={18}/>{downloading?'Descargando…':'Descargar Word'}</Button>
       </>}/>

@@ -174,7 +174,7 @@ export async function loadSavedDocument(db, teacherId, kind, id) {
   }
   if (kind === "activity") {
     const row = (await db.query(`select a.id,a.version,a.title,a.purpose,a.status,a.details,a.preparation,a.occurs_on,e.title as experience_title,
-      e.id as experience_id,e.version as experience_version,e.details as experience_details,c.id as classroom_id,sy.year,c.section,c.institution_name,ag.age_years,p.display_name as teacher_name,ip.ugel,ip.district from activities a join learning_experiences e on e.id=a.experience_id
+      e.ends_on as experience_ends_on,e.id as experience_id,e.version as experience_version,e.details as experience_details,c.id as classroom_id,sy.year,c.section,c.institution_name,ag.age_years,p.display_name as teacher_name,ip.ugel,ip.district from activities a join learning_experiences e on e.id=a.experience_id
       join classrooms c on c.id=e.classroom_id join school_years sy on sy.id=c.school_year_id
       join age_grades ag on ag.id=c.age_grade_id join profiles p on p.user_id=c.teacher_id
       left join institution_profiles ip on ip.owner_user_id=c.teacher_id
@@ -198,7 +198,7 @@ export async function loadSavedDocument(db, teacherId, kind, id) {
         { id: row.experience_id, version: row.experience_version, details: row.experience_details }) } : {}),
       school_year: Number(row.year), classroom: row.section, institution_name: row.institution_name,
       age: Number(row.age_years), teacher_name: row.teacher_name, ugel: row.ugel, district: row.district,
-      occurs_on: dateOnly(row.occurs_on), experience_title: row.experience_title,
+      occurs_on: dateOnly(row.occurs_on), experience_ends_on:dateOnly(row.experience_ends_on), experience_title: row.experience_title,
       guide: { criteria: activityCriteria, pedagogical_blocks: activityPedagogicalBlocks(row.details,row.preparation?.steps??[],activityCriteria) },
       experience_id: row.experience_id, experience_details: { activity_route: canonicalProjectRoute(row.experience_details) },
       project_activities: (await db.query(`select a.id,a.title,a.occurs_on from activities a join learning_experiences e on e.id=a.experience_id

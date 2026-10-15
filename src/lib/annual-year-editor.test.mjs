@@ -106,3 +106,17 @@ test('recuperar desde Biblioteca conserva el tramo con historia y respeta la pro
  old.teacher_protected=true;
  assert.throws(()=>editAnnualStructure(plan,action,{...options,restoreLibrary:true}),e=>e.reason==='protected_proposal');
 });
+
+
+test('reutilizar una previsión pasada crea otra identidad futura sin mover la historia',()=>{
+ const plan=fixture(),old=plan.proposed_experiences[0],target=plan.resolved_calendar.projects[12];
+ old.opportunities=[...old.opportunities,{...plan.everyday_opportunities[1]}];delete old.opportunities[1].moment;old.primary_competency_ids=cards.map(card=>card.id);
+ const next=editAnnualStructure(plan,{kind:'reuse',proposalId:old.proposal_id,targetSlotId:target.slot_id},{today:'2026-10-15',protectedIds:[old.proposal_id]});
+ const reused=next.proposed_experiences.find(row=>row.reused_from_proposal_id===old.proposal_id);
+ assert.deepEqual(next.proposed_experiences.find(row=>row.proposal_id===old.proposal_id),old);
+ assert.notEqual(reused.proposal_id,old.proposal_id);assert.equal(reused.planned_start_date,target.starts_on);assert.equal(next.proposed_experiences.length,15);
+ assert.deepEqual(next.available_experiences[0],libraryRow(plan.proposed_experiences[12]));validateAnnualJourney(next,cards,{confirmation:true});
+ assert.doesNotThrow(()=>assertSingleProjectPreparationRevision(plan,next,reused.proposal_id));
+ assert.throws(()=>editAnnualStructure(plan,{kind:'reuse',proposalId:old.proposal_id,targetSlotId:plan.resolved_calendar.projects[1].slot_id},{today:'2026-10-15'}));
+ assert.throws(()=>editAnnualStructure(plan,{kind:'reuse',proposalId:old.proposal_id,targetSlotId:target.slot_id},{today:'2026-10-15',protectedIds:[target.proposal_id]}));
+});

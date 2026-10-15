@@ -10,13 +10,14 @@ export async function startActivityToday(db,teacherId,activityId,today){
   if(!owner)throw new VersionConflictError('Esta actividad no está disponible en tu aula.');
   return db.transaction(async tx=>{
     await lockClassroomSchedule(tx,owner.classroom_id);
-    const rows=(await tx.query(`select se.id from class_schedule_entries se join activities a on a.id=se.activity_id
+    const rows=(await tx.query(`select se.id,e.ends_on::text as project_ends_on from class_schedule_entries se join activities a on a.id=se.activity_id
       join learning_experiences e on e.id=a.experience_id join classrooms c on c.id=e.classroom_id join school_years y on y.id=c.school_year_id
       where a.id=$1 and se.classroom_id=$2 and e.classroom_id=$2 and c.teacher_id=$3 and y.owner_id=$3 and c.status='active'
       and a.status='active' and e.status='active' and a.schedule_status not in ('cancelled','not_worked')
       and se.block_type='activity' and se.scheduled_on=a.occurs_on for update of se,a`,[activityId,owner.classroom_id,teacherId])).rows;
     if(rows.length!==1)throw new VersionConflictError('Abre una actividad confirmada y programada de tu proyecto.');
     const entry=rows[0];
+    if(entry.project_ends_on<today)throw new VersionConflictError("Este proyecto terminó. Puedes consultarlo o usar su propuesta en un tramo futuro.");
     const logs=(await tx.query(`select d.*,d.execution_date::text as execution_date from daily_execution_logs d join class_schedule_entries se on se.id=d.schedule_entry_id
       join activities a on a.id=se.activity_id where a.lineage_id=(select lineage_id from activities where id=$1)
       and (d.status<>'planned' or d.actual_started_at is not null or d.actual_ended_at is not null)`,[activityId])).rows;
