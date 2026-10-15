@@ -32,5 +32,9 @@ Ruta absoluta de artefactos: C:/Users/ASUS/Documents/ChatGPT/Asistente CNEB/.loc
 
 ## Publicación y rollback
 
-Pendiente recibo del nuevo Preview y SHA del producto. Smoke cloud limitado a recursos públicos y rechazo 401 sin sesión; sin escrituras pedagógicas cloud. QA autenticado con proveedor real pendiente.
+Producto desplegado: 185af9dbec65dc77ea2c6e0559f1df03586dd2ea. Preview: https://ayni-aula-staging-jwx30qdak-ayni4.vercel.app. Despliegue dpl_9HY1VLy3c1psE6emDapfLKYSSe45, READY y target null verificados. Build cloud y 32 smoke PASS; navegador muestra login Ayni. Smoke cloud limitado a recursos públicos y rechazo 401 sin sesión; sin escrituras pedagógicas cloud. QA autenticado con proveedor real pendiente.
 Rollback de código: 0982f27. Los registros y versiones no requieren rollback ni migraciones. Producción debe conservar dpl_H19YWzRdGjkgh8y72QAd1qBty7Mf / 9a0920230350cd6b9050f35683a1f35d459e78c7.
+
+
+
+Cierre: producto 185af9dbec65dc77ea2c6e0559f1df03586dd2ea / dpl_9HY1VLy3c1psE6emDapfLKYSSe45 / https://ayni-aula-staging-jwx30qdak-ayni4.vercel.app, READY/target null/SHA exacto. Next cloud y 32 smoke PASS, incluidas asistencia, structure y consulta de propuestas sin sesión; recursos ilustrados 200 y datos privados 401. Navegador muestra login docente. Producción dpl_H19YWzRdGjkgh8y72QAd1qBty7Mf/9a0920230350cd6b9050f35683a1f35d459e78c7 reconsultada intacta. Sin mutaciones pedagógicas cloud, migraciones ni promoción; QA local apagado. Recibo documental en commit posterior sin cambio de producto.
