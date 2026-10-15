@@ -27,3 +27,7 @@ Capturas privadas ficticias:
 
 ## Límites y rollback
 IA real, cámara y dictado cloud no probados. No se rellenan ni regeneran automáticamente versiones anuales anteriores; solo los años nuevos usan el contrato completo. No se alteran observaciones para conseguir dos competencias. Rollback: revertir el commit de producto en otro Preview; las versiones full_year mantienen su JSON completo y legible, sin esquema SQL nuevo. No se modifica Producción. Recibo de publicación a continuación tras verificar READY/SHA/smoke.
+
+
+## Recibo de publicación
+Producto 72c8f267fcf0b26b8c11985c38d24aac096212be / https://ayni-aula-staging-inidjd37e-ayni4.vercel.app / dpl_76dHj3ugwPnCfGDWU93f6Kxs1rEH, READY, target null y SHA exacto comprobados. Next cloud y 34 smoke PASS. Producción conserva dpl_H19YWzRdGjkgh8y72QAd1qBty7Mf / 9a0920230350cd6b9050f35683a1f35d459e78c7. Rama publicada en GitHub, sin promoción ni mutaciones pedagógicas cloud. QA local apagado y viewport restaurado. Las correcciones adicionales de Hoy se desarrollarán sobre este commit en otro Preview.
