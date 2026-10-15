@@ -9,9 +9,10 @@ import {competencyVisual} from '@/src/lib/competency-presentation';
 import {AnnualCompetencies} from './annual-project-preview';
 import {WorkflowFeedback} from './workflow-ui';
 import {WorkshopResources} from './workshop-resources';
+import {workshopAges,workshopForAge,workshopAgeLabel} from '@/src/lib/workshop-ages.mjs';
 import styles from './workshop-library.module.css';
 
-type Workshop={id:string;title:string;age:number;type:string;competency_id:string;duration_minutes:number;purpose:string;criterion:string;evidence:string;materials:string[];preparation:string;opening:{teacher:string;children:string};development:{teacher:string;children:string};closure:{teacher:string;children:string};resources:{id:string;title:string;url:string}[]};
+type Workshop={id:string;title:string;age:number;ages?:number[];adaptations?:Record<number,Partial<Workshop>>;type:string;competency_id:string;duration_minutes:number;purpose:string;criterion:string;evidence:string;materials:string[];preparation:string;opening:{teacher:string;children:string};development:{teacher:string;children:string};closure:{teacher:string;children:string};resources:{id:string;title:string;url:string}[]};
 type Library={age:number;today:string;available_dates:string[];scheduled:{id:string;date:string;title:string}[];coverage:Record<string,{developed:number;observed_students:number}>;competencies:{id:string;name:string}[];workshops:Workshop[]};
 export function WorkshopLibrary({classroomId,onBack,onAdded,onOpen}:{classroomId:string;onBack:()=>void;onAdded:(id:string)=>Promise<void>;onOpen:(id:string)=>void}){
   const [data,setData]=useState<Library|null>(null),[error,setError]=useState(''),[retry,setRetry]=useState(0);
@@ -31,7 +32,9 @@ export function WorkshopLibrary({classroomId,onBack,onAdded,onOpen}:{classroomId
     }catch(cause){setError(cause instanceof Error?cause.message:'No pudimos guardar el taller.');}finally{setBusy(false);}
   }
   const names=new Map(data?.competencies.map(c=>[c.id,c.name])??[]),existing=data?.scheduled.find(w=>w.date===date);
-  const filtered=data?.workshops.filter(w=>(!age||w.age===Number(age))&&(!type||w.type===type)&&(!competency||w.competency_id===competency)&&`${w.title} ${w.purpose}`.toLocaleLowerCase('es').includes(query.toLocaleLowerCase('es')))??[];
+  const candidates=data?.workshops.filter(w=>!age||workshopAges(w).includes(Number(age)))
+    .map(w=>workshopForAge(w,Number(age)||data.age)??workshopForAge(w,w.age)) as Workshop[]|undefined;
+  const filtered=candidates?.filter(w=>(!type||w.type===type)&&(!competency||w.competency_id===competency)&&`${w.title} ${w.purpose}`.toLocaleLowerCase('es').includes(query.toLocaleLowerCase('es')));
   return <section className={styles.library} aria-label="Biblioteca de talleres">
     <Button variant="ghost" onClick={onBack}><ArrowLeft size={18}/>Volver a Hoy</Button>
     <header className={styles.header}><BookOpen size={34} aria-hidden="true"/><div><h1>Elige un taller</h1><p>Para jugar, explorar y observar otros aprendizajes.</p></div></header>
@@ -45,14 +48,15 @@ export function WorkshopLibrary({classroomId,onBack,onAdded,onOpen}:{classroomId
         <label><span className={styles.searchLabel}><Search size={16}/>Buscar taller</span><input type="search" value={query} onChange={e=>{setQuery(e.target.value);setSelected(null);}} placeholder="Nombre o idea…"/></label>
       </div>
       <p className={styles.hint}>Primero verás competencias sin actividades desarrolladas y con menos niños observados. Tú eliges.</p>
-      <div className={styles.grid}>{filtered.map(w=>{const visual=competencyVisual(w.competency_id);return <button type="button" key={w.id} aria-pressed={selected?.id===w.id} onClick={()=>{setSelected(w);setError('');}} className={styles.card} style={{background:visual?.background??'#edf7fa'}}>
-        <div className={styles.cardTop}>{visual&&<Image src={visual.image} alt="" width={48} height={48} unoptimized/>}<span>{w.age} años · {w.duration_minutes} min</span></div>
+      <div className={styles.grid}>{filtered?.map(w=>{const visual=competencyVisual(w.competency_id);return <button type="button" key={w.id} aria-pressed={selected?.id===w.id} onClick={()=>{setSelected(w);setError('');}} className={styles.card} style={{background:visual?.background??'#edf7fa'}}>
+        <div className={styles.cardTop}>{visual&&<Image src={visual.image} alt="" width={48} height={48} unoptimized/>}<span>{workshopAgeLabel(w)} · {w.duration_minutes} min</span></div>
         <h2>{w.title}</h2><p>{w.type}</p><span className={styles.competency} style={{color:visual?.foreground}}>{names.get(w.competency_id)}</span>
         {data.coverage[w.competency_id]?.developed===0&&<span className={styles.priority}>Por explorar en el aula</span>}
       </button>;})}</div>
-      {!filtered.length&&<p>No hay talleres con esos filtros. Prueba otra competencia o tipo.</p>}
+      {!filtered?.length&&<p>No hay talleres con esos filtros. Prueba otra competencia o tipo.</p>}
       {selected&&<article ref={detail} tabIndex={-1} className={styles.detail} aria-label={`Taller: ${selected.title}`}>
         <header><h2>{selected.title}</h2><p>{selected.age} años · {selected.type} · {selected.duration_minutes} minutos</p><AnnualCompetencies ids={[selected.competency_id]} names={names}/></header>
+        {selected.ages&&<p className={styles.hint}>Para {workshopAgeLabel(selected)}. Estás viendo la guía de {selected.age} años.</p>}
         <p className={styles.purpose}><Target size={22}/>{selected.purpose}</p>
         <section className={styles.materials}><h3><Package size={21}/>Materiales</h3><ul>{selected.materials.map(m=><li key={m}>{m}</li>)}</ul><WorkshopResources resources={selected.resources}/></section>
         <section className={styles.preparation}><h3>Antes de empezar</h3><p>{selected.preparation}</p></section>

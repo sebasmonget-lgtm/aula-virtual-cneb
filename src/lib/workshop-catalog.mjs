@@ -1,12 +1,15 @@
 import { pilotWorkshops } from './workshop-pilot-content.mjs';
+import { multiageWorkshops } from './workshop-multiage-content.mjs';
 
-export const WORKSHOP_CATALOG_VERSION = '1.0.0';
+export const WORKSHOP_CATALOG_VERSION = '1.1.0';
 const sources = ['CNEB', 'PCI_INICIAL_CANONICAL', 'PLANIFICACION_INICIAL_2019', 'INTERACCIONES_2019'];
 const resources = {
   cuento: { id: 'cuento-la-semilla', title: 'La semilla de Lila · cuento Ayni', url: '/workshops/cuento-la-semilla.png' },
   cantidades: { id: 'tarjetas-cantidades', title: 'Tarjetas de cantidades', url: '/workshops/tarjetas-cantidades.png' },
   formas: { id: 'tarjetas-formas', title: 'Tarjetas de formas', url: '/workshops/tarjetas-formas.png' },
   registro: { id: 'registro-exploracion', title: 'Registro de lo que probamos', url: '/workshops/registro-exploracion.png' },
+  mensajes: { id: 'tiras-de-mensajes', title: 'Tiras para nuestros mensajes', url: '/workshops/tiras-de-mensajes.png' },
+  libros: { id: 'cuidamos-los-libros', title: 'Cuidamos los libros · guía Ayni', url: '/workshops/cuidamos-los-libros.png' },
 };
 // Each row is an authored age-specific challenge: purpose, observable criterion, child action and mediation.
 const families = [
@@ -90,7 +93,8 @@ export const workshopCatalog = Object.freeze([...pilots,...families.flatMap(f =>
     development:{teacher,children},closure:{teacher:f.closure,children:'Comparten una decisión o un descubrimiento con palabras, gestos, una demostración o un dibujo.'},
     resources:f.resource?[resources[f.resource]]:[],version:WORKSHOP_CATALOG_VERSION,source_refs:sources,
     authorship:'Ayni · propuesta pedagógica basada en CNEB'};
-}))]);
+})),...multiageWorkshops.map(w=>({...w,resources:w.resource_key?[resources[w.resource_key]]:[],
+  version:WORKSHOP_CATALOG_VERSION,source_refs:sources,authorship:'Ayni · propuesta pedagógica basada en CNEB'}))]);
 
 export function workshopActivityDetails(w) {
   const stages = field => ['opening','development','closure'].map((key,i)=>`${['Inicio','Desarrollo','Cierre'][i]}: ${w[key][field]}`).join('\n\n');
@@ -99,7 +103,7 @@ export function workshopActivityDetails(w) {
     closure_or_continuity:w.closure.teacher,opening:w.opening.children,development:w.development.children,closure:w.closure.children,
     evaluation_criterion:w.criterion,criterion_or_observation_focus:w.criterion,expected_evidence:w.evidence,evidence_expected:w.evidence,
     evidence_opportunities:w.evidence,materials:w.materials,resources:w.resources,document_template_version:'activity-unified-v1',
-    workshop_catalog:{id:w.id,version:w.version,source_refs:w.source_refs,authorship:w.authorship}};
+    workshop_catalog:{id:w.id,version:w.version,age:w.age,source_refs:w.source_refs,authorship:w.authorship}};
 }
 
 export function rankWorkshopCatalog(catalog, coverage) {

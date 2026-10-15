@@ -46,6 +46,28 @@ for(let i=0;i<3;i++){
 }
 story+=text(['Para la docente: lee sin adelantar el final. Vuelvan a las pistas del cuento.', 'Los niños pueden señalar, conversar o dibujar; no es una prueba de lectura.'],80,1600,24);
 documents.push(['cuento-la-semilla',story+end]);
+let messages=start('Mensajes para alguien especial');
+messages+=text(['Escribe a tu manera. Puedes usar tus propias marcas y letras.', 'Cuenta para quién es tu mensaje y qué quieres comunicar.'],80,220,28);
+for(let i=0;i<3;i++){
+  const y=330+i*420;
+  messages+=`<rect x="80" y="${y}" width="1080" height="370" rx="18" fill="${['#edf7fa','#eef8f2','#f5effc'][i]}" stroke="#93aab9" stroke-dasharray="8 8"/>`;
+  messages+=text(['Para: ___________________________'],115,y+65,28);
+}
+messages+=text(['Para la docente: acepta la escritura propia; no pidas copiar un modelo.', 'Anota su explicación aparte, con permiso, sin escribir encima de su texto.'],80,1600,24);
+documents.push(['tiras-de-mensajes',messages+end]);
+let books=start('Cuidamos los libros');
+books+=text(['Una guía para consultar en nuestra biblioteca.'],80,220,28);
+const bookTips=[['Manos limpias y secas.','Antes de elegir un libro, miramos nuestras manos.'],['Abrimos el libro con cuidado.','Lo apoyamos sobre una mesa o en nuestro regazo.'],['Pasamos una página a la vez.','Tomamos la esquina suavemente, sin tirar.'],['Lo devolvemos a su lugar.','Así otra persona podrá encontrarlo.']];
+for(const [i,lines]of bookTips.entries()){
+ const y=285+i*320;
+ books+=`<rect x="80" y="${y}" width="1080" height="285" rx="18" fill="${['#edf7fa','#eef8f2','#fff8e7','#f5effc'][i]}"/><circle cx="150" cy="${y+65}" r="30" fill="#087d96"/><text x="140" y="${y+76}" style="fill:white;font-size:30px;font-weight:bold">${i+1}</text>`;
+ books+=text(lines,210,y+75,29);
+ // Crisp book diagram: written captions remain visible and are read with adult support.
+ books+=`<path d="M500 ${y+155}q65-20 130 0q65-20 130 0v90q-65-20-130 0q-65-20-130 0Z M630 ${y+155}v90" fill="white" stroke="#087d96" stroke-width="5"/>`;
+ books+=`<path d="M520 ${y+182}h80m-80 24h80m50-24h80m-80 24h80" fill="none" stroke="#a6bcd1" stroke-width="4"/>`;
+}
+books+=text(['Para la docente: lean juntos y busquen pistas en palabras, dibujos y números.'],80,1625,24);
+documents.push(['cuidamos-los-libros',books+end]);
 for(const [name,svg]of documents){await writeFile(`${svgFolder}/${name}.svg`,svg);await sharp(Buffer.from(svg)).png().toFile(`${folder}/${name}.png`);}
-await writeFile(`${svgFolder}/PROVENANCE.json`,JSON.stringify({author:'Ayni',version:'1.0.0',generator:'scripts/build-workshop-resources.mjs',method:'Original text and deterministic SVG geometry rendered with sharp',sources:[],files:documents.map(([name])=>name)},null,2)+'\n');
+await writeFile(`${svgFolder}/PROVENANCE.json`,JSON.stringify({author:'Ayni',version:'1.1.0',generator:'scripts/build-workshop-resources.mjs',method:'Original text and deterministic SVG geometry rendered with sharp',sources:[],files:documents.map(([name])=>name)},null,2)+'\n');
 console.log(`Created ${documents.length} original printable resources.`);

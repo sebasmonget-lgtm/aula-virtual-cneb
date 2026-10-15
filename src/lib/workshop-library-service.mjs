@@ -1,5 +1,6 @@
 import {randomUUID} from 'node:crypto';
 import {workshopCatalog,workshopActivityDetails,rankWorkshopCatalog} from './workshop-catalog.mjs';
+import {workshopForAge} from './workshop-ages.mjs';
 import {versionTransaction,VersionConflictError} from './version-integrity.mjs';
 import {lockClassroomSchedule,limaToday} from './activity-schedule-integrity.mjs';
 import {loadEffectiveCalendar} from './school-calendar-service.mjs';
@@ -39,13 +40,14 @@ export async function loadWorkshopLibrary(db,{teacherId,classroomId,today=limaTo
     .map(a=>({id:a.id,date:a.occurs_on,title:a.title}));
   return {age:Number(own.age),today,available_dates:availableDates,scheduled,coverage,
     competencies:kb.competencyCards.map(c=>({id:c.id,name:c.official_name})),
-    workshops:rankWorkshopCatalog(workshopCatalog,coverage)};
+    workshops:rankWorkshopCatalog(workshopCatalog.map(w=>workshopForAge(w,Number(own.age))??w),coverage)};
 }
 
 /** Selection snapshots authored content into existing activities/criteria/calendar. No AI, no parallel observation store. */
 export async function scheduleLibraryWorkshop(db,{teacherId,classroomId,workshopId,occursOn,clientRequestId,today=limaToday()}){
-  const own=await classroom(db,teacherId,classroomId),w=workshopCatalog.find(w=>w.id===workshopId);
-  if(!w||w.age!==Number(own.age))throw new TypeError('Elige un taller de la edad de tu aula.');
+  const own=await classroom(db,teacherId,classroomId),entry=workshopCatalog.find(w=>w.id===workshopId);
+  const w=entry&&workshopForAge(entry,Number(own.age));
+  if(!w)throw new TypeError('Elige un taller de la edad de tu aula.');
   if(!uuid(clientRequestId)||typeof occursOn!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(occursOn))throw new TypeError('Revisa la fecha del taller.');
   return versionTransaction(db,`workshop-library:${classroomId}`,async tx=>{
     await lockClassroomSchedule(tx,classroomId);

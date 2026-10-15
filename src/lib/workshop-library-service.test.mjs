@@ -15,13 +15,18 @@ import JSZip from 'jszip';
 import {handleWorkshopLibrary} from '../../scripts/workshop-library-routes.mjs';
 import {startActivityToday} from './activity-today-execution.mjs';
 import {loadLibraryResources} from '../../scripts/library-resources.mjs';
+import {workshopAges,workshopForAge,workshopAgeLabel} from './workshop-ages.mjs';
 
-test('24 talleres: edades curriculares, guía docente, criterio observable y recursos concretos',async()=>{
-  const kb=await loadKnowledgeBaseV4();assert.equal(workshopCatalog.length,24);
+test('36 talleres, 58 adaptaciones: edades curriculares, guía docente, criterio y recursos concretos',async()=>{
+  const kb=await loadKnowledgeBaseV4();assert.equal(workshopCatalog.length,36);
   const files=await loadLibraryResources();
-  assert.equal(new Set(workshopCatalog.map(w=>w.id)).size,24);
-  for(const w of workshopCatalog){
-    assert.ok(kb.competencyCards.find(c=>c.id===w.competency_id)?.ages[String(w.age)]);
+  assert.equal(new Set(workshopCatalog.map(w=>w.id)).size,36);
+  const variants=workshopCatalog.flatMap(w=>workshopAges(w).map(age=>workshopForAge(w,age)));
+  assert.equal(variants.length,58);
+  for(const w of variants){
+    const card=kb.competencyCards.find(c=>c.id===w.competency_id);
+    assert.ok(card?.ages[String(w.age)]);
+    assert.equal(card.runtime_selectable_by_age[String(w.age)],true,`${w.id}:${w.age}`);
     for(const field of ['purpose','criterion','evidence','preparation'])assert.ok(w[field]?.length>25,`${w.id}:${field}`);
     assert.ok(w.materials.length>1);assert.doesNotMatch(w.materials.join(' '),/por definir|supports|por seleccionar/i);
     for(const key of ['opening','development','closure'])for(const field of ['teacher','children'])assert.ok(w[key][field]?.length>20,`${w.id}:${key}:${field}`);
@@ -36,14 +41,17 @@ test('24 talleres: edades curriculares, guía docente, criterio observable y rec
   }
 });
 
-test('los 24 talleres se publican con sus momentos y criterio propios en las tres edades',async()=>{
+test('las 58 variantes se publican con adaptación y criterio propios en las tres edades',async()=>{
   const db=new PGlite();try{
     for(const file of (await readdir(new URL('../../local-db/migrations/',import.meta.url))).filter(f=>f.endsWith('.sql')).sort())
       await db.exec(await readFile(new URL('../../local-db/migrations/'+file,import.meta.url),'utf8'));
-    const dates=['2026-10-19','2026-10-20','2026-10-21','2026-10-22','2026-10-23','2026-10-26','2026-10-27','2026-10-28'];
     for(const age of [3,4,5]){
       const teacherId=randomUUID(),c=await createPilotClassroom(db,teacherId,{teacherName:'QA',institutionName:'QA',section:'QA '+age,age,year:2026,startsOn:'2026-03-02',endsOn:'2026-12-31'});
-      for(const [index,w]of workshopCatalog.filter(w=>w.age===age).entries()){
+      const library=await loadWorkshopLibrary(db,{teacherId,classroomId:c.classroomId,today:'2026-10-15'});
+      const dates=library.available_dates;
+      const variants=workshopCatalog.map(w=>workshopForAge(w,age)).filter(Boolean);
+      assert.equal(variants.length,age===3?18:20);
+      for(const [index,w]of variants.entries()){
         const saved=await scheduleLibraryWorkshop(db,{teacherId,classroomId:c.classroomId,workshopId:w.id,occursOn:dates[index],clientRequestId:randomUUID(),today:'2026-10-15'});
         const doc=await loadSavedDocument(db,teacherId,'activity',saved.id);
         assert.equal(doc.guide.pedagogical_blocks.length,3,w.id);
@@ -51,10 +59,31 @@ test('los 24 talleres se publican con sus momentos y criterio propios en las tre
         assert.equal(doc.content.evaluation_criterion,w.criterion,w.id);
         assert.equal(doc.guide.pedagogical_blocks[1].expected_actions,w.development.children,w.id);
         assert.equal(doc.content.teacher_preparation,w.preparation,w.id);
+        const snapshot=(await db.query('select details from activities where id=$1',[saved.id])).rows[0].details;
+        assert.equal(snapshot.workshop_catalog.age,age);
+        assert.equal(snapshot.workshop_catalog.id,w.id);
+        assert.equal(snapshot.workshop_catalog.version,'1.1.0');
+        assert.equal((await scheduleLibraryWorkshop(db,{teacherId,classroomId:c.classroomId,workshopId:w.id,occursOn:dates[index],clientRequestId:
+          (await db.query('select generation_metadata from activities where id=$1',[saved.id])).rows[0].generation_metadata.client_request_id,today:'2026-10-15'})).id,saved.id);
       }
+      if(age===3)await assert.rejects(scheduleLibraryWorkshop(db,{teacherId,classroomId:c.classroomId,
+        workshopId:'taller-compartido-mensajes-que-llegan',occursOn:dates[20],clientRequestId:randomUUID(),today:'2026-10-15'}),/edad/);
     }
-    assert.equal((await db.query("select count(*)::int as n from activities where details ? 'workshop_catalog'")).rows[0].n,24);
+    assert.equal((await db.query("select count(*)::int as n from activities where details ? 'workshop_catalog'")).rows[0].n,58);
   }finally{await db.close();}
+});
+
+test('taller compartido adapta el reto y el criterio sin duplicar tarjeta ni inventar edades',()=>{
+  const w=workshopCatalog.find(w=>w.id==='taller-compartido-rampas-y-ruedas');
+  const variants=[3,4,5].map(age=>workshopForAge(w,age));
+  assert.equal(new Set(variants.map(v=>v.id)).size,1);
+  assert.equal(new Set(variants.map(v=>v.criterion)).size,3);
+  assert.equal(new Set(variants.map(v=>v.development.teacher)).size,3);
+  assert.deepEqual(variants.map(v=>v.duration_minutes),[25,30,35]);
+  assert.equal(workshopAgeLabel(w),'3, 4 y 5 años');
+  assert.equal(workshopForAge(w,2),null);
+  assert.equal(workshopForAge({...w,adaptations:{}},4),null);
+  assert.equal(workshopForAge(workshopCatalog.find(w=>w.competency_id==='COM_ESCRITURA'),3),null);
 });
 
 test('recomendación separa actividad desarrollada de observaciones y no interpreta niveles',()=>{
