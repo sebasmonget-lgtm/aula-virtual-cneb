@@ -1,0 +1,37 @@
+.todayHeader{display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap}
+.greeting{display:flex;align-items:center;gap:14px;min-width:0}
+.greeting h1{font-size:clamp(1.65rem,2.4vw,2.25rem);font-weight:800;color:#172b52;line-height:1.2;overflow-wrap:anywhere}
+.greetingIcon{color:#c88b17;flex-shrink:0;width:46px;height:46px}
+.attendance{display:flex;align-items:center;gap:14px;padding:18px;border:1px solid #c8e8da;border-radius:20px;background:#effaf4}
+.attendance>svg{color:#087d96;background:#d5f3e6;padding:12px;border-radius:50%;width:56px;height:56px}
+.attendance strong{display:block;font-size:1.1rem;color:#172b52}
+.attendance p{font-size:.82rem;margin-top:3px;color:#315e4b}
+.attendance button{margin-left:6px;min-height:48px}
+.emptyHero{position:relative;display:flex;align-items:center;min-height:300px;overflow:hidden;border:1px solid #f3dfb5;border-radius:24px;background:#fff9ec}
+.emptyCopy{position:relative;z-index:1;flex:1;padding:28px;max-width:68%}
+.calendarMark{display:grid;place-items:center;width:64px;height:64px;border-radius:50%;background:#ffedb5;color:#087d96;margin-bottom:14px}
+.emptyCopy h2{font-size:clamp(1.5rem,2.5vw,2rem);line-height:1.2;font-weight:800;color:#172b52;text-wrap:balance}
+.emptyCopy p{margin-top:10px;max-width:54ch;color:#5f5947;line-height:1.6}
+.emptyCopy .reason{font-weight:600;margin-bottom:-6px}
+.heroActions{display:flex;flex-wrap:wrap;gap:12px;margin-top:24px}
+.heroActions button{height:auto;min-height:48px;white-space:normal;text-align:left}
+.emptyIllustration{align-self:flex-end;width:34%;height:auto;object-fit:contain;max-height:280px;margin-right:16px}
+.emptyLower{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.5fr);gap:16px}
+.also,.upcoming{min-width:0;padding:20px;border:1px solid #e2d9f7;border-radius:22px;background:#f5f0ff}
+.upcoming{border-color:#d5eaf5;background:#edf8ff}
+.also h2,.upcoming h2{display:flex;align-items:center;gap:10px;color:#172b52;font-size:1.1rem;font-weight:800;margin-bottom:16px}
+.also h2 svg{color:#946b0b}.upcoming h2 svg{color:#087d96}
+.upcoming>p{font-size:.9rem;color:#375a77;line-height:1.6}
+.quickActions{display:flex;flex-direction:column;gap:10px}
+.quickActions button{justify-content:flex-start;white-space:normal;text-align:left;height:auto;min-height:54px;background:white;font-size:.85rem}
+.quickActions button>svg:last-child{margin-left:auto;flex-shrink:0}
+.upcomingItems{display:grid;gap:10px}
+.upcomingItems button,.period{display:flex;align-items:center;gap:12px;padding:12px;background:white;border:1px solid #d5e6f1;border-radius:14px;text-align:left;min-height:76px;color:#172b52}
+.upcomingItems button:hover{border-color:#087d96;background:#f9fdff}
+.upcomingItems span{min-width:0;flex:1}
+.upcomingItems strong{display:block;font-size:.9rem;overflow-wrap:anywhere;line-height:1.45}
+.upcomingItems small{display:block;font-size:.75rem;line-height:1.6;color:#526b87}
+.period>svg{color:#7047ac;flex-shrink:0}
+@media(min-width:1450px){.upcomingItems{grid-template-columns:repeat(3,minmax(0,1fr))}.upcomingItems button,.period{flex-wrap:wrap;align-content:flex-start}.upcomingItems span{flex-basis:65%}}
+@media(max-width:900px){.emptyLower{grid-template-columns:1fr}.emptyCopy{max-width:74%}.emptyIllustration{width:28%;margin-right:8px}.attendance{width:100%;justify-content:space-between}.attendance>div{flex:1}}
+@media(max-width:540px){.todayHeader{gap:18px}.greetingIcon{width:34px;height:34px}.attendance{padding:12px;gap:9px}.attendance>svg{width:42px;height:42px;padding:8px}.attendance button{font-size:.8rem;padding:10px;min-height:44px}.attendance strong{font-size:1rem}.attendance p{font-size:.72rem}.emptyHero{display:block}.emptyCopy{max-width:none;padding:20px 20px 12px}.emptyCopy h2{font-size:1.6rem}.calendarMark{width:48px;height:48px}.emptyIllustration{display:block;width:62%;max-height:150px;margin:0 12px 0 auto}.heroActions{gap:10px;margin-top:20px}.heroActions button{width:100%;justify-content:space-between}.also,.upcoming{padding:16px}}

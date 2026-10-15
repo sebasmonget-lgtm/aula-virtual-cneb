@@ -797,3 +797,7 @@ Guía de Hoy recupera Registrar observación junto al criterio incluso antes de 
 
 
 Cierre: producto 185af9dbec65dc77ea2c6e0559f1df03586dd2ea / dpl_9HY1VLy3c1psE6emDapfLKYSSe45 / https://ayni-aula-staging-jwx30qdak-ayni4.vercel.app, READY/target null/SHA exacto. Next cloud y 32 smoke PASS, incluidas asistencia, structure y consulta de propuestas sin sesión; recursos ilustrados 200 y datos privados 401. Navegador muestra login docente. Producción dpl_H19YWzRdGjkgh8y72QAd1qBty7Mf/9a0920230350cd6b9050f35683a1f35d459e78c7 reconsultada intacta. Sin mutaciones pedagógicas cloud, migraciones ni promoción; QA local apagado. Recibo documental en commit posterior sin cambio de producto.
+
+
+## Hoy cálido y Calendario escolar — solo Preview (2026-10-14)
+Base ca7a4bd/185af9d. Hoy sin actividad incorpora ilustración Ayni, bienvenida según hora Perú actualizable, asistencia opcional, consulta de próxima actividad y observación libre. Calendario con días pastel, lateral de proyecto/próxima actividad y detalle seleccionado; Mes/Semana/Año y herramientas existentes conservadas. Datos próximos autorizados excluyen versiones archivadas, cancelaciones y ejecuciones terminadas; historia preservada. 32 pruebas distintas PASS, 15 focales repetidas finales, typecheck/lint/Next build y QA UI aislado con 35 niños ficticios en escritorio/móvil sin overflow. Sin migraciones, IA pagada ni writes pedagógicos cloud. Informe docs/qa/AYNI_HOY_CALENDARIO_VISUAL_2026-10-14.md. Recibo Preview pendiente; Producción excluida.

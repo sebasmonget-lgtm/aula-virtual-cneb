@@ -93,12 +93,13 @@ export async function loadEffectiveCalendar(db, { teacherId, classroomId = null,
     is_instructional:row.is_instructional,source:row.source,reason:row.reason,editable:row.editable,school_override:row.school_override },
   row.override_id ? { id:row.override_id,new_calendar_type:row.new_calendar_type,new_is_instructional:row.new_is_instructional,reason:row.override_reason,reverted_at:row.reverted_at } : null));
   const blocks = Number(classroom.year) === 2026 ? BLOCKS_2026.map(block => ({ ...block, editable:false })) : [];
-  const experiences = (await db.query(`select id,title,type,starts_on::text,ends_on::text,status,details from learning_experiences
-    where classroom_id=$1 and status in ('active','draft') and starts_on<=$3::date and ends_on>=$2::date order by starts_on`,[classroom.id,start,end])).rows;
+  const experiences = (await db.query(`select e.id,e.title,e.type,e.starts_on::text,e.ends_on::text,e.status,e.details,e.source_proposal_id,p.status as annual_status from learning_experiences e left join annual_plans p on p.id=e.annual_plan_id
+    where e.classroom_id=$1 and e.status in ('active','draft') and e.starts_on<=$3::date and e.ends_on>=$2::date order by e.starts_on`,[classroom.id,start,end])).rows;
   const activities = (await db.query(`select a.id,a.title,a.purpose,a.occurs_on::text,a.planned_date::text,a.schedule_status,a.status,
     a.experience_id,e.title as experience_title,e.type as experience_type,a.details,
     coalesce(a.generation_metadata->'publication_authorization'->>'policy','')='accepted-project-complete-v1' as sequence_locked,
-    coalesce(se.start_time::text,'') as start_time
+    coalesce(se.start_time::text,'') as start_time,
+    coalesce((select d.status from daily_execution_logs d where d.schedule_entry_id=se.id order by d.execution_date desc limit 1),'planned') as execution_status
     from activities a join learning_experiences e on e.id=a.experience_id
     left join lateral(select id,start_time from class_schedule_entries where activity_id=a.id and scheduled_on=a.occurs_on order by start_time limit 1)se on true
     where e.classroom_id=$1 and a.occurs_on between $2::date and $3::date and a.status in ('draft','active','archived')
