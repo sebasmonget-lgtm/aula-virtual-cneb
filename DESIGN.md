@@ -33,4 +33,6 @@ Hoy ofrece Elegir taller, sin un sexto destino principal. La biblioteca hereda c
 
 Los talleres compartidos muestran «3, 4 y 5 años» o «4 y 5 años» en una sola tarjeta. La revisión aclara qué guía por edad se está mostrando; cambiar el filtro de edad cambia consignas y criterio. No hay un formulario adicional ni una selección pedagógica obligatoria extra: al guardar, el servidor usa la edad del aula.
 
+Con cien talleres, los mismos filtros y búsqueda muestran una cantidad de resultados breve y accesible. La cantidad se calcula sobre identidades visibles, no suma adaptaciones. No se añaden submenús, otro navegador de biblioteca ni un paso de generación al elegir.
+
 Evaluar abre sin generar IA y muestra observaciones originales junto a la revisión docente. El contexto calculado no requiere confirmar un Assessment Master de IA. Informe a familias conserva las conclusiones guardadas y permite escribir acuerdos opcionales. Consolidado muestra información calculada; la generación de informe narrativo del aula queda fuera del recorrido moderno. Los históricos conservan consulta y Word.

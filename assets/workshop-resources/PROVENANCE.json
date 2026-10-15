@@ -1,6 +1,6 @@
 {
   "author": "Ayni",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "generator": "scripts/build-workshop-resources.mjs",
   "method": "Original text and deterministic SVG geometry rendered with sharp",
   "sources": [],
@@ -10,6 +10,10 @@
     "registro-exploracion",
     "cuento-la-semilla",
     "tiras-de-mensajes",
-    "cuidamos-los-libros"
+    "cuidamos-los-libros",
+    "la-torre-de-nina",
+    "charquito-de-cielo",
+    "adivinanzas-con-pistas",
+    "pintamos-con-agua"
   ]
 }

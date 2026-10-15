@@ -1,7 +1,8 @@
 import { pilotWorkshops } from './workshop-pilot-content.mjs';
 import { multiageWorkshops } from './workshop-multiage-content.mjs';
+import { expandedWorkshops } from './workshop-expanded-content.mjs';
 
-export const WORKSHOP_CATALOG_VERSION = '1.1.0';
+export const WORKSHOP_CATALOG_VERSION = '1.2.0';
 const sources = ['CNEB', 'PCI_INICIAL_CANONICAL', 'PLANIFICACION_INICIAL_2019', 'INTERACCIONES_2019'];
 const resources = {
   cuento: { id: 'cuento-la-semilla', title: 'La semilla de Lila · cuento Ayni', url: '/workshops/cuento-la-semilla.png' },
@@ -10,6 +11,10 @@ const resources = {
   registro: { id: 'registro-exploracion', title: 'Registro de lo que probamos', url: '/workshops/registro-exploracion.png' },
   mensajes: { id: 'tiras-de-mensajes', title: 'Tiras para nuestros mensajes', url: '/workshops/tiras-de-mensajes.png' },
   libros: { id: 'cuidamos-los-libros', title: 'Cuidamos los libros · guía Ayni', url: '/workshops/cuidamos-los-libros.png' },
+  torre: { id: 'la-torre-de-nina', title: 'La torre de Nina · cuento Ayni', url: '/workshops/la-torre-de-nina.png' },
+  poema: { id: 'charquito-de-cielo', title: 'Charquito de cielo · poema Ayni', url: '/workshops/charquito-de-cielo.png' },
+  adivinanzas: { id: 'adivinanzas-con-pistas', title: 'Adivinanzas con pistas · Ayni', url: '/workshops/adivinanzas-con-pistas.png' },
+  instructivo: { id: 'pintamos-con-agua', title: 'Pintamos con agua · instructivo Ayni', url: '/workshops/pintamos-con-agua.png' },
 };
 // Each row is an authored age-specific challenge: purpose, observable criterion, child action and mediation.
 const families = [
@@ -93,7 +98,7 @@ export const workshopCatalog = Object.freeze([...pilots,...families.flatMap(f =>
     development:{teacher,children},closure:{teacher:f.closure,children:'Comparten una decisión o un descubrimiento con palabras, gestos, una demostración o un dibujo.'},
     resources:f.resource?[resources[f.resource]]:[],version:WORKSHOP_CATALOG_VERSION,source_refs:sources,
     authorship:'Ayni · propuesta pedagógica basada en CNEB'};
-})),...multiageWorkshops.map(w=>({...w,resources:w.resource_key?[resources[w.resource_key]]:[],
+})),...[...multiageWorkshops,...expandedWorkshops].map(w=>({...w,resources:w.resource_key?[resources[w.resource_key]]:[],
   version:WORKSHOP_CATALOG_VERSION,source_refs:sources,authorship:'Ayni · propuesta pedagógica basada en CNEB'}))]);
 
 export function workshopActivityDetails(w) {

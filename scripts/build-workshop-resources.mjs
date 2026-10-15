@@ -68,6 +68,56 @@ for(const [i,lines]of bookTips.entries()){
 }
 books+=text(['Para la docente: lean juntos y busquen pistas en palabras, dibujos y números.'],80,1625,24);
 documents.push(['cuidamos-los-libros',books+end]);
+let tower=start('La torre de Nina');
+tower+=text(['Un cuento original Ayni para mirar y leer en compañía.'],80,215,27);
+const towerPages=[
+ ['Nina quería una torre para su muñeco.','Puso bloques uno sobre otro.','—¿Podrá sostener uno más? —preguntó.'],
+ ['Al poner otra pieza, la torre cayó.','Nina miró la base estrecha.','—Probaré de otra manera —decidió.'],
+ ['Puso piezas anchas abajo y otras encima.','La nueva torre se mantuvo en su lugar.','Nina volvió a mirar y sonrió.','¿Qué cambió en su construcción?'],
+];
+for(const [i,lines]of towerPages.entries()){
+ const y=280+i*425;
+ tower+=`<rect x="80" y="${y}" width="1080" height="385" rx="18" fill="${['#edf7fa','#fff8e7','#eef8f2'][i]}"/><text x="115" y="${y+60}" font-size="28" font-weight="700">${i+1}</text>`;
+ tower+=text(lines,115,y+125,30);
+ const block=(x,dy,w,h,fill)=>`<rect x="${x}" y="${y+dy}" width="${w}" height="${h}" rx="3" fill="${fill}"/>`;
+ if(i===0)tower+=block(1000,260,60,60,'#087d96')+block(1000,200,60,60,'#e3a22e')+block(1000,140,60,60,'#8263b7');
+ if(i===1)tower+=block(945,260,65,60,'#087d96')+block(1020,265,65,55,'#e3a22e')+block(1060,190,55,60,'#8263b7');
+ if(i===2)tower+=block(950,260,160,60,'#087d96')+block(975,200,110,60,'#e3a22e')+block(1000,140,60,60,'#8263b7');
+}
+tower+=text(['Para la docente: no adelantes el desenlace; vuelvan al texto y a las imágenes.', 'Se puede anticipar, señalar, comentar y cambiar de interpretación.'],80,1595,24);
+documents.push(['la-torre-de-nina',tower+end]);
+let poem=start('Charquito de cielo');
+poem+=text(['Un poema original Ayni para leer en compañía.'],80,220,28);
+poem+=`<rect x="80" y="290" width="1080" height="1050" rx="20" fill="#edf7fa"/>`;
+poem+=text(['En un charquito del patio','cabe un pedazo de cielo.','Pasa una nube despacio,','se mira y sigue su vuelo.','','Llega una gota pequeña,','se dibujan redondeles.','El cielo se mueve un poco','y vuelve a quedarse quieto.'],135,400,43);
+poem+=`<ellipse cx="620" cy="1220" rx="370" ry="65" fill="#b9e7ef"/><ellipse cx="620" cy="1220" rx="160" ry="28" fill="none" stroke="#087d96" stroke-width="5"/><ellipse cx="620" cy="1220" rx="260" ry="46" fill="none" stroke="#087d96" stroke-width="4"/>`;
+poem+=text(['¿Qué parte quieres volver a escuchar?', 'Mira el texto y la imagen. Puedes señalar, comentar o dibujar tu idea.'],80,1440,30);
+poem+=text(['Para la docente: no pedir memorización ni respuestas únicas.', 'Una interpretación se conversa volviendo a una pista del poema.'],80,1585,24);
+documents.push(['charquito-de-cielo',poem+end]);
+let riddles=start('Adivinanzas con pistas');
+riddles+=text(['Escucha, mira y cuenta qué pista te ayuda a pensar.'],80,220,28);
+const riddleLines=[['Ruedo por el suelo.','Con tus manos me puedes enviar.','¿Quién soy?'],['Al abrirme hay páginas.','Cuentos y pistas puedo guardar.','¿Quién soy?'],['Salgo de día en el cielo.','Doy luz; no me debes mirar.','¿Quién soy?'],['De noche puedo asomarme.','A veces parezco una sonrisa.','¿Quién soy?']];
+for(const [i,lines]of riddleLines.entries()){
+ const y=285+i*300;
+ riddles+=`<rect x="80" y="${y}" width="1080" height="275" rx="18" fill="${['#fff8e7','#f5effc','#eef8f2','#edf7fa'][i]}"/>`+text(lines,115,y+65,31);
+ if(i===0)riddles+=`<circle cx="1020" cy="${y+120}" r="68" fill="#e7bd4d" stroke="#172b52" stroke-width="5"/><path d="M952 ${y+120}h136m-68-68v136" stroke="#172b52" stroke-width="4"/>`;
+ if(i===1)riddles+=`<path d="M920 ${y+65}q50-20 100 0q50-20 100 0v125q-50-20-100 0q-50-20-100 0Z M1020 ${y+65}v125" fill="white" stroke="#087d96" stroke-width="5"/>`;
+ if(i===2){riddles+=`<circle cx="1020" cy="${y+125}" r="48" fill="#e7bd4d"/>`;for(let ray=0;ray<8;ray++){const a=ray*Math.PI/4;riddles+=`<path d="M${1020+Math.cos(a)*62} ${y+125+Math.sin(a)*62}l${Math.cos(a)*20} ${Math.sin(a)*20}" stroke="#b07911" stroke-width="6"/>`;}}
+ if(i===3)riddles+=`<circle cx="1020" cy="${y+125}" r="70" fill="#e7bd4d"/><circle cx="1053" cy="${y+96}" r="64" fill="#edf7fa"/>`;
+}
+riddles+=text(['Para la docente: las respuestas se pueden cubrir con papel si el grupo lo desea.', 'Relean y comparen pistas sin competir por adivinar más rápido.'],80,1585,24);
+documents.push(['adivinanzas-con-pistas',riddles+end]);
+let water=start('Pintamos con agua');
+water+=text(['Un instructivo original Ayni para consultar antes y durante el juego.'],80,220,27);
+const waterSteps=[['Reunimos lo necesario.','Poca agua limpia, una brocha, cartón oscuro y una toalla.'],['Mojamos un poco la brocha.','La sacamos sin derramar. No bebemos el agua.'],['Dibujamos sobre el cartón.','Elegimos qué marcas queremos hacer.'],['Miramos y volvemos a probar.','¿Qué pasó con las marcas después de un rato?']];
+for(const [i,lines]of waterSteps.entries()){
+ const y=285+i*305;
+ water+=`<rect x="80" y="${y}" width="1080" height="280" rx="18" fill="${['#edf7fa','#eef8f2','#fff8e7','#f5effc'][i]}"/><circle cx="140" cy="${y+60}" r="30" fill="#087d96"/><text x="130" y="${y+70}" style="fill:white;font-size:28px">${i+1}</text>`+text(lines,195,y+65,28);
+ if(i<2)water+=`<path d="M850 ${y+140}h110l-10 90h-90Z" fill="white" stroke="#087d96" stroke-width="4"/><path d="M858 ${y+180}h94l-6 45h-82Z" fill="#b9e7ef"/><path d="M1020 ${y+130}v70" stroke="#a06e42" stroke-width="14"/><rect x="1000" y="${y+195}" width="40" height="45" rx="4" fill="#087d96"/>`;
+ else water+=`<rect x="815" y="${y+135}" width="280" height="110" rx="6" fill="#405c70"/><path d="M840 ${y+205}q45-70 90-10t110-10" fill="none" stroke="${i===2?'#b9e7ef':'#6d8da0'}" stroke-width="10"/>`;
+}
+water+=text(['Para la docente: consulta el texto con los niños; no es una prueba de lectura.', 'Protege el suelo y acompaña el uso de agua.'],80,1585,24);
+documents.push(['pintamos-con-agua',water+end]);
 for(const [name,svg]of documents){await writeFile(`${svgFolder}/${name}.svg`,svg);await sharp(Buffer.from(svg)).png().toFile(`${folder}/${name}.png`);}
-await writeFile(`${svgFolder}/PROVENANCE.json`,JSON.stringify({author:'Ayni',version:'1.1.0',generator:'scripts/build-workshop-resources.mjs',method:'Original text and deterministic SVG geometry rendered with sharp',sources:[],files:documents.map(([name])=>name)},null,2)+'\n');
+await writeFile(`${svgFolder}/PROVENANCE.json`,JSON.stringify({author:'Ayni',version:'1.2.0',generator:'scripts/build-workshop-resources.mjs',method:'Original text and deterministic SVG geometry rendered with sharp',sources:[],files:documents.map(([name])=>name)},null,2)+'\n');
 console.log(`Created ${documents.length} original printable resources.`);

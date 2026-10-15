@@ -17,12 +17,13 @@ import {startActivityToday} from './activity-today-execution.mjs';
 import {loadLibraryResources} from '../../scripts/library-resources.mjs';
 import {workshopAges,workshopForAge,workshopAgeLabel} from './workshop-ages.mjs';
 
-test('36 talleres, 58 adaptaciones: edades curriculares, guía docente, criterio y recursos concretos',async()=>{
-  const kb=await loadKnowledgeBaseV4();assert.equal(workshopCatalog.length,36);
+test('100 talleres, 246 adaptaciones: edades curriculares, guía docente, criterio y recursos concretos',async()=>{
+  const kb=await loadKnowledgeBaseV4();assert.equal(workshopCatalog.length,100);
   const files=await loadLibraryResources();
-  assert.equal(new Set(workshopCatalog.map(w=>w.id)).size,36);
+  assert.equal(new Set(workshopCatalog.map(w=>w.id)).size,100);
+  assert.equal(new Set(workshopCatalog.map(w=>w.title)).size,100,'100 propuestas distintas, no variantes contadas como talleres');
   const variants=workshopCatalog.flatMap(w=>workshopAges(w).map(age=>workshopForAge(w,age)));
-  assert.equal(variants.length,58);
+  assert.equal(variants.length,246);
   for(const w of variants){
     const card=kb.competencyCards.find(c=>c.id===w.competency_id);
     assert.ok(card?.ages[String(w.age)]);
@@ -41,36 +42,62 @@ test('36 talleres, 58 adaptaciones: edades curriculares, guía docente, criterio
   }
 });
 
-test('las 58 variantes se publican con adaptación y criterio propios en las tres edades',async()=>{
-  const db=new PGlite();try{
+test('las 246 variantes se publican con adaptación y criterio propios en las tres edades',async()=>{
+  const db=new PGlite(),exported=new Set(),kb=await loadKnowledgeBaseV4();try{
     for(const file of (await readdir(new URL('../../local-db/migrations/',import.meta.url))).filter(f=>f.endsWith('.sql')).sort())
       await db.exec(await readFile(new URL('../../local-db/migrations/'+file,import.meta.url),'utf8'));
     for(const age of [3,4,5]){
       const teacherId=randomUUID(),c=await createPilotClassroom(db,teacherId,{teacherName:'QA',institutionName:'QA',section:'QA '+age,age,year:2026,startsOn:'2026-03-02',endsOn:'2026-12-31'});
-      const library=await loadWorkshopLibrary(db,{teacherId,classroomId:c.classroomId,today:'2026-10-15'});
+      const library=await loadWorkshopLibrary(db,{teacherId,classroomId:c.classroomId,today:'2026-03-16'});
       const dates=library.available_dates;
       const variants=workshopCatalog.map(w=>workshopForAge(w,age)).filter(Boolean);
-      assert.equal(variants.length,age===3?18:20);
+      assert.equal(variants.length,age===3?78:84);
+      assert.ok(dates.length>=variants.length,'Cada selección se prueba en un día lectivo diferente.');
       for(const [index,w]of variants.entries()){
-        const saved=await scheduleLibraryWorkshop(db,{teacherId,classroomId:c.classroomId,workshopId:w.id,occursOn:dates[index],clientRequestId:randomUUID(),today:'2026-10-15'});
+        const saved=await scheduleLibraryWorkshop(db,{teacherId,classroomId:c.classroomId,workshopId:w.id,occursOn:dates[index],clientRequestId:randomUUID(),today:'2026-03-16'});
         const doc=await loadSavedDocument(db,teacherId,'activity',saved.id);
         assert.equal(doc.guide.pedagogical_blocks.length,3,w.id);
         assert.equal(doc.guide.criteria[0].competency_v4_id,w.competency_id,w.id);
         assert.equal(doc.content.evaluation_criterion,w.criterion,w.id);
         assert.equal(doc.guide.pedagogical_blocks[1].expected_actions,w.development.children,w.id);
         assert.equal(doc.content.teacher_preparation,w.preparation,w.id);
+        if(age===5&&w.id.startsWith('taller-biblioteca-')&&!exported.has(w.competency_id)){
+          const word=await renderSavedDocumentWord(doc,kb.competencyCards.map(c=>({...c,name:c.official_name})));
+          const xml=await(await JSZip.loadAsync(word)).file('word/document.xml').async('string');
+          const text=xml.replace(/<[^>]+>/g,'').replace(/•/g,'').replace(/\s+/g,' ');
+          for(const value of [w.title,w.criterion,w.development.teacher])assert.ok(text.includes(value),`${w.id}: Word ${value}`);
+          exported.add(w.competency_id);
+        }
         const snapshot=(await db.query('select details from activities where id=$1',[saved.id])).rows[0].details;
         assert.equal(snapshot.workshop_catalog.age,age);
         assert.equal(snapshot.workshop_catalog.id,w.id);
-        assert.equal(snapshot.workshop_catalog.version,'1.1.0');
+        assert.equal(snapshot.workshop_catalog.version,'1.2.0');
         assert.equal((await scheduleLibraryWorkshop(db,{teacherId,classroomId:c.classroomId,workshopId:w.id,occursOn:dates[index],clientRequestId:
-          (await db.query('select generation_metadata from activities where id=$1',[saved.id])).rows[0].generation_metadata.client_request_id,today:'2026-10-15'})).id,saved.id);
+          (await db.query('select generation_metadata from activities where id=$1',[saved.id])).rows[0].generation_metadata.client_request_id,today:'2026-03-16'})).id,saved.id);
       }
       if(age===3)await assert.rejects(scheduleLibraryWorkshop(db,{teacherId,classroomId:c.classroomId,
-        workshopId:'taller-compartido-mensajes-que-llegan',occursOn:dates[20],clientRequestId:randomUUID(),today:'2026-10-15'}),/edad/);
+        workshopId:'taller-compartido-mensajes-que-llegan',occursOn:dates[20],clientRequestId:randomUUID(),today:'2026-03-16'}),/edad/);
     }
-    assert.equal((await db.query("select count(*)::int as n from activities where details ? 'workshop_catalog'")).rows[0].n,58);
+    assert.equal((await db.query("select count(*)::int as n from activities where details ? 'workshop_catalog'")).rows[0].n,246);
+    assert.equal(exported.size,10,'Un Word completo de las nuevas propuestas por cada competencia cubierta.');
   }finally{await db.close();}
+});
+
+test('el repertorio cubre áreas variadas y no duplica una guía para completar cien',async()=>{
+  const kb=await loadKnowledgeBaseV4(),areas=new Set(),counts={};
+  for(const w of workshopCatalog){
+    const card=kb.competencyCards.find(c=>c.id===w.competency_id);
+    areas.add(card.area_id);counts[w.competency_id]=(counts[w.competency_id]??0)+1;
+  }
+  assert.equal(areas.size,5);assert.equal(Object.keys(counts).length,10);
+  assert.ok(counts.PSICO_MOTRICIDAD>=12);assert.ok(counts.COM_ARTE>=16);assert.ok(counts.COM_LECTURA>=10);
+  const authored=workshopCatalog.filter(w=>w.id.startsWith('taller-biblioteca-'));
+  assert.equal(authored.length,64);
+  for(const age of [3,4,5]){
+    const variants=authored.map(w=>workshopForAge(w,age)).filter(Boolean);
+    const actions=variants.map(w=>`${w.development.teacher}|${w.development.children}`.toLowerCase().replace(/\s+/g,' '));
+    assert.equal(new Set(actions).size,variants.length,'Cada taller tiene acciones/mediación propias.');
+  }
 });
 
 test('taller compartido adapta el reto y el criterio sin duplicar tarjeta ni inventar edades',()=>{

@@ -47,6 +47,7 @@ export function WorkshopLibrary({classroomId,onBack,onAdded,onOpen}:{classroomId
         <label>Competencia<select value={competency} onChange={e=>{setCompetency(e.target.value);setSelected(null);}}><option value="">Todas las competencias</option>{data.competencies.filter(c=>data.workshops.some(w=>w.competency_id===c.id)).map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
         <label><span className={styles.searchLabel}><Search size={16}/>Buscar taller</span><input type="search" value={query} onChange={e=>{setQuery(e.target.value);setSelected(null);}} placeholder="Nombre o idea…"/></label>
       </div>
+      <p className={styles.hint} role="status">{filtered?.length??0} {(filtered?.length??0)===1?'taller disponible':'talleres disponibles'}{age?` para ${age} años`:''}.</p>
       <p className={styles.hint}>Primero verás competencias sin actividades desarrolladas y con menos niños observados. Tú eliges.</p>
       <div className={styles.grid}>{filtered?.map(w=>{const visual=competencyVisual(w.competency_id);return <button type="button" key={w.id} aria-pressed={selected?.id===w.id} onClick={()=>{setSelected(w);setError('');}} className={styles.card} style={{background:visual?.background??'#edf7fa'}}>
         <div className={styles.cardTop}>{visual&&<Image src={visual.image} alt="" width={48} height={48} unoptimized/>}<span>{workshopAgeLabel(w)} · {w.duration_minutes} min</span></div>
