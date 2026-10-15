@@ -23,3 +23,7 @@ Capturas locales (datos ficticios):
 
 ## Límites y rollback
 No se verificaron IA real, cámara ni dictado en cloud. La validación autenticada se hizo únicamente en la fixture; el smoke cloud no escribe datos pedagógicos. No se modificó Producción. Rollback: volver al commit previo de producto y publicar otro Preview; no hay datos que migrar ni restaurar. El recibo del despliegue se añade después de comprobar READY, SHA y smoke.
+
+
+## Recibo de publicación
+Producto e9924eb847cea6237399241606dc0842ca86f00a, Preview https://ayni-aula-staging-pjv7s2tf2-ayni4.vercel.app / dpl_Cgnmv3T5V4kd9VAwie8beHuPCzUB; READY, target null y SHA exacto verificados. Next cloud PASS y 34 smoke PASS, incluida ilustración original y calendario protegido sin sesión. Entrada del Preview comprobada en navegador: login Ayni; requiere iniciar sesión en el nuevo dominio. Producción conserva dpl_H19YWzRdGjkgh8y72QAd1qBty7Mf / 9a0920230350cd6b9050f35683a1f35d459e78c7. Rama publicada en GitHub; no se promovió el Preview ni se hicieron escrituras pedagógicas cloud. QA local apagado y viewport restaurado.
