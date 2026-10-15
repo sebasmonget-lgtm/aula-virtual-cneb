@@ -92,3 +92,17 @@ test("Project Master recibe nueve días en dos semanas con feriado; exclusiones 
   assert.throws(()=>validateBlueprintDates([...dates.map(date=>({date})),{date:"2026-06-29"}],dates));
   const fewer=candidateProjectDates(calendar.days,slot.starts_on,slot.ends_on,[{date:dates[0],exclusion_reason:"Decisión docente"}]);assert.equal(fewer.filter(d=>d.selected).length,8);
 });
+
+test('recuperar desde Biblioteca conserva el tramo con historia y respeta la protección docente',()=>{
+ const plan=fixture(),old=plan.proposed_experiences.at(-1),incoming=libraryRow({...old,proposal_id:randomUUID(),title:'Otra propuesta guardada'});
+ plan.available_experiences=[incoming];const action={kind:'place',proposalId:incoming.proposal_id,targetSlotId:old.slot_id};
+ const options={protectedIds:[old.proposal_id],today:'2026-10-14'};
+ assert.throws(()=>editAnnualStructure(plan,action,options),e=>e.reason==='protected_proposal');
+ const restored=editAnnualStructure(plan,action,{...options,restoreLibrary:true});
+ assert.deepEqual(restored.available_experiences,[libraryRow(old)]);
+ assert.equal(restored.proposed_experiences.at(-1).planned_start_date,old.planned_start_date);
+ assert.equal(restored.proposed_experiences.at(-1).planned_end_date,old.planned_end_date);
+ assert.throws(()=>editAnnualStructure(plan,action,{...options,restoreLibrary:true,today:'2100-01-01'}),e=>e.reason==='protected_proposal');
+ old.teacher_protected=true;
+ assert.throws(()=>editAnnualStructure(plan,action,{...options,restoreLibrary:true}),e=>e.reason==='protected_proposal');
+});

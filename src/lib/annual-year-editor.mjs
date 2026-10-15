@@ -41,7 +41,7 @@ export function assignAnnualSlots(plan, slots, rows, library=plan.available_expe
  * @param {{kind:string,proposalId:string,targetSlotId?:string}} action
  * @param {{protectedIds?:string[],today?:string}} [options]
  */
-export function editAnnualStructure(plan, action, { protectedIds=[], today="" }={}) {
+export function editAnnualStructure(plan, action, { protectedIds=[], today="",restoreLibrary=false }={}) {
   if(!action || !["place","remove"].includes(action.kind))journeyFail("invalid_action","Elige colocar o retirar una propuesta.");
   if(plan.editor_version!==3 || plan.resolved_calendar.projects.length!==15) journeyFail("editor_upgrade_required","Organiza primero este borrador en los 15 tramos.");
   const slots=plan.resolved_calendar.projects.map(slot=>({...slot})), rows=[...plan.proposed_experiences], library=[...(plan.available_experiences ?? [])];
@@ -52,7 +52,9 @@ export function editAnnualStructure(plan, action, { protectedIds=[], today="" }=
   const affectedIds=[...new Set([incoming.proposal_id,displacedId].filter(Boolean))];
   if(action.kind!=="remove" && !target) journeyFail("invalid_slot","Suelta la propuesta en uno de los tramos del año.");
   const blocked=row=>row&&(row.teacher_protected || protectedIds.includes(row.proposal_id) || today && row.planned_start_date<today);
-  if(blocked(incoming) || blocked(rows.find(row=>row.proposal_id===target?.proposal_id)) || target && today && target.starts_on<today)
+  const outgoing=rows.find(row=>row.proposal_id===target?.proposal_id);
+  const restoring=restoreLibrary&&action.kind==='place'&&!source&&!!outgoing&&!incoming.teacher_protected&&!outgoing.teacher_protected&&target.ends_on>=today;
+  if(!restoring&&(blocked(incoming) || blocked(outgoing) || target && today && target.starts_on<today))
     journeyFail("protected_proposal","Este cambio afectaría una propuesta pasada, protegida o vinculada a trabajo. Elige un tramo futuro disponible.");
   if(action.kind==="remove") {
     if(!source) journeyFail("invalid_scope","Esta propuesta ya está en Biblioteca.");

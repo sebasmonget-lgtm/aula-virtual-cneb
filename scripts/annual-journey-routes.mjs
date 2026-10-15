@@ -22,8 +22,9 @@ import { limaToday } from "../src/lib/activity-schedule-integrity.mjs";
 import { annualChatSummary } from "../src/lib/annual-chat-summary.mjs";
 import { hasSavedAnnualYear } from "../src/lib/annual-plan-display.mjs";
 import { loadPeriodFutureReview } from "../src/lib/period-future-review.mjs";
-import {handleAnnualProposalPreview} from "../src/lib/annual-proposal-preview.mjs";
+import {handleAnnualProposalPreview,assertSingleProjectPreparationRevision} from "../src/lib/annual-proposal-preview.mjs";
 import {handleAnnualProjectChat} from "../src/lib/annual-project-chat.mjs";
+import {savedLibraryRestoration} from '../src/lib/project-slot-replacement.mjs';
 
 export async function handleAnnualJourneyRoutes({ request, response, url, db, teacherId, origin, send, readJson,
   annualPlanningContext, annualDocumentContext, createProvider, resolvePlan }) {
@@ -60,10 +61,10 @@ export async function handleAnnualJourneyRoutes({ request, response, url, db, te
               where s.activity_id=a.id and (execution.status<>'planned' or execution.actual_started_at is not null or execution.actual_ended_at is not null)))))`,[row.classroom_id,row.school_year_id,today])).rows;
       return row.proposal.proposed_experiences.filter(r=>r.teacher_protected || r.planned_start_date<today || linked.some(x=>x.proposal_id===r.proposal_id)).map(r=>r.proposal_id);
     };
-    const write = async (row, proposal, tx) => {
-      const next = (await tx.query(`update annual_plans set proposal=$1::jsonb,source_context_fingerprint=$4,updated_at=now()
+    const write = async (row, proposal, tx,metadata=row.generation_metadata) => {
+      const next = (await tx.query(`update annual_plans set proposal=$1::jsonb,source_context_fingerprint=$4,generation_metadata=$5::jsonb,updated_at=now()
         where id=$2 and status='draft' and revision=$3 returning id,revision,status,version,proposal`,
-      [JSON.stringify(proposal), row.id, row.revision, proposal.classroom_snapshot.source_fingerprint])).rows[0];
+      [JSON.stringify(proposal), row.id, row.revision, proposal.classroom_snapshot.source_fingerprint,JSON.stringify(metadata??{})])).rows[0];
       if (!next) throw new VersionConflictError();
       return { ...next, revision: Number(next.revision) };
     };
@@ -150,7 +151,7 @@ export async function handleAnnualJourneyRoutes({ request, response, url, db, te
           for(const proposalId of frozen){
             const before=comparable(parent.proposal.proposed_experiences.find(item=>item.proposal_id===proposalId));
             const after=comparable(row.proposal.proposed_experiences.find(item=>item.proposal_id===proposalId));
-            if(JSON.stringify(before)!==JSON.stringify(after))throw new VersionConflictError("Apareció trabajo protegido después de abrir el borrador. Conserva ese proyecto y revisa los cambios futuros.");
+            if(JSON.stringify(before)!==JSON.stringify(after)&&!savedLibraryRestoration(row.proposal,parent.proposal,proposalId,limaToday()))throw new VersionConflictError("Apareció trabajo protegido después de abrir el borrador. Conserva ese proyecto y revisa los cambios futuros.");
           }
         }
         if (row.proposal?.journey_version !== 2) journeyFail("invalid", "Usa el recorrido de esta versión.");
@@ -239,18 +240,30 @@ export async function handleAnnualJourneyRoutes({ request, response, url, db, te
           const schedule=solveAnnualJourneyCalendar(freshCalendar,Array.from({length:15},(_,i)=>({proposal_id:proposal.proposed_experiences[i]?.proposal_id ?? null})));
           proposal=assignAnnualSlots({...proposal,resolved_calendar:schedule},schedule.projects,proposal.proposed_experiences);
           proposal={...proposal,organization_criteria:annualCalendarCriteria(proposal),change_history:[...(proposal.change_history ?? []),{kind:"calendar_upgrade",previous_organization_criteria:row.proposal.organization_criteria,applied_at:new Date().toISOString(),ai_calls:0}]};
-        } else proposal=editAnnualStructure(proposal,operation==="move"?{kind:"place",proposalId:body.proposalId,targetSlotId:proposal.resolved_calendar.projects[Number(body.to)]?.slot_id}:body.action,{protectedIds:protectedRows,today:limaToday()});
+        } else proposal=editAnnualStructure(proposal,operation==="move"?{kind:"place",proposalId:body.proposalId,targetSlotId:proposal.resolved_calendar.projects[Number(body.to)]?.slot_id}:body.action,{protectedIds:protectedRows,today:limaToday(),restoreLibrary:operation==='structure'&&body.restoreLibrary===true});
       }
       if (["apply","move","structure","upgrade"].includes(operation)) {
         for (const protectedId of protectedRows) {
           const before = row.proposal.proposed_experiences.find((r) => r.proposal_id === protectedId), after = proposal.proposed_experiences.find((r) => r.proposal_id === protectedId);
-          if (JSON.stringify(before) !== JSON.stringify(after)) journeyFail("protected_proposal", "Este cambio afectaría trabajo iniciado o una decisión mantenida. El borrador se conserva.");
+          if (JSON.stringify(before) !== JSON.stringify(after)&&!(operation==='structure'&&body.restoreLibrary===true&&savedLibraryRestoration(proposal,row.proposal,protectedId,limaToday()))) journeyFail("protected_proposal", "Este cambio afectaría trabajo iniciado o una decisión mantenida. El borrador se conserva.");
         }
         if (operation === "apply" && (snapshot.source_fingerprint !== proposal.classroom_snapshot.source_fingerprint
           || effectiveCalendarFingerprint(calendar) !== proposal.resolved_calendar.calendar_fingerprint)) throw new VersionConflictError("Las fuentes o el calendario cambiaron. Actualiza la preparación antes de aplicar.");
       }
       validateAnnualJourney(proposal, curriculum, { requireCoverage:operation==="apply" });
-      const next = await write(row, proposal, tx);
+      let metadata=row.generation_metadata;
+      if(operation==='structure'&&body.restoreLibrary===true&&metadata?.scoped_base_proposal&&snapshot.source_fingerprint!==proposal.classroom_snapshot.source_fingerprint){
+        const displaced=row.proposal.resolved_calendar.projects.find(slot=>slot.slot_id===body.action?.targetSlotId)?.proposal_id;
+        if(savedLibraryRestoration(proposal,row.proposal,displaced,limaToday())){
+          // A literal restoration uses no AI interpretation of the new records. Refresh its source snapshot only,
+          // after proving this draft contains no unrelated year changes; keep the scoped content baseline in sync.
+          assertSingleProjectPreparationRevision(metadata.scoped_base_proposal,proposal,body.action.proposalId);
+          const freshSnapshot=refreshJourneySnapshot(proposal,snapshot).classroom_snapshot;
+          proposal={...proposal,classroom_snapshot:freshSnapshot};
+          metadata={...metadata,scoped_base_proposal:{...metadata.scoped_base_proposal,classroom_snapshot:freshSnapshot}};
+        }
+      }
+      const next = await write(row, proposal, tx,metadata);
       if (["move","structure","upgrade"].includes(operation)) await persistAnnualProjectSlots(tx, id, proposal.resolved_calendar);
       return next;
     });

@@ -6,7 +6,7 @@ import { apiFetch } from "@/src/lib/ayni-api-fetch";
 import { readWorkspaceParams, writeWorkspaceLocation } from "@/src/lib/workspace-location";
 import { selectEvaluationPeriod } from "@/src/lib/evaluation-period-selection.mjs";
 import { localDatabaseApiUrl, type LocalDashboard } from "@/src/lib/local-database";
-import { LoadingState, WorkflowFeedback } from "./workflow-ui";
+import { LoadingState, PageIntro, WorkflowFeedback } from "./workflow-ui";
 
 type EvaluationView = "student" | "conclusions" | "family" | "coverage" | "consolidated";
 type Row = { student_id: string; competency_id: string; competency_name: string; evidence_count: number; state: string; valuation_confirmed:boolean };
@@ -63,12 +63,12 @@ export function EvaluationHome({ onPeriod }: {
     {title:"Consolidado",subtitle:"Valoraciones, conclusiones, Excel y cierre",Icon:TableProperties,act:()=>onPeriod("consolidated")},
   ];
   return <div className="space-y-6">
-    <header><h1 className="text-3xl font-extrabold tracking-tight text-[#1c2e50]">Evaluar</h1><p className="mt-1 text-[#566883]">Ayni organiza la evidencia; tú confirmas la evaluación.</p></header>
+    <PageIntro title="Evaluar" description="Ayni organiza la evidencia; tú confirmas la evaluación." icon={BookOpen} illustration="/project-illustrations/friendship.webp"/>
     {activePeriod && <p className="text-sm font-semibold">{activePeriod.label} · {new Date(`${activePeriod.starts_on}T12:00:00`).toLocaleDateString("es-PE")} a {new Date(`${activePeriod.ends_on}T12:00:00`).toLocaleDateString("es-PE")}</p>}
     {activePeriod && availablePeriods.length > 1 && <label className="block text-sm font-semibold">Período que quieres revisar<select disabled={loading} className="mt-2 min-h-11 w-full max-w-sm rounded-lg border bg-white px-3" value={activePeriod.id} onChange={event=>{setLoading(true);setOverview(null);setRequestedPeriodId(event.target.value);}}>{availablePeriods.map(period=><option key={period.id} value={period.id}>{period.label}</option>)}</select></label>}
     {activePeriod && !loading && activePeriod.ends_on < today && <p className="text-sm text-[#526b87]">Estás revisando un período terminado. Puedes elegir otro cuando lo necesites.</p>}
     {!loading&&!error&&!activePeriod&&<WorkflowFeedback tone="info">Todavía no hay un período disponible para evaluar en esta aula.</WorkflowFeedback>}
     {loading ? <LoadingState label="Revisando el avance..." /> : error ? <div className="space-y-2"><WorkflowFeedback tone="error">{error}</WorkflowFeedback><button type="button" className="font-bold text-[#0b7891] underline" onClick={() => { setLoading(true); setRetry((value) => value + 1); }}>Reintentar</button></div> : null}
-    <section className="divide-y divide-[#d6e5ef]">{actions.map(({title,subtitle,Icon,act})=><button key={title} type="button" disabled={loading||Boolean(error)||!overview} onClick={act} className="flex min-h-24 w-full items-center gap-4 py-5 text-left hover:bg-[#f5f9fc] disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-[#087d96]"><Icon aria-hidden="true" className="size-7 shrink-0 text-[#087d96]"/><span className="min-w-0 flex-1"><strong className="block text-lg">{title}</strong><span className="mt-1 block text-sm text-[#526b87]">{subtitle}</span></span><span aria-hidden="true" className="text-[#087d96]">→</span></button>)}</section>
+    <section className="grid gap-4">{actions.map(({title,subtitle,Icon,act},index)=><button key={title} type="button" disabled={loading||Boolean(error)||!overview} onClick={act} className={`flex min-h-28 w-full items-center gap-4 rounded-2xl border p-5 text-left transition-colors hover:border-[#087d96] disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-[#087d96] ${['border-[#c9e4d5] bg-[#eef9f2]','border-[#dfd3f4] bg-[#f5efff]','border-[#f0dfb4] bg-[#fff8e8]'][index]}`}><span className="grid size-14 shrink-0 place-items-center rounded-2xl bg-white"><Icon aria-hidden="true" className={`size-7 ${['text-[#26704c]','text-[#7047ac]','text-[#926113]'][index]}`}/></span><span className="min-w-0 flex-1"><strong className="block text-lg text-[#172b52]">{title}</strong><span className="mt-1 block text-sm text-[#526b87]">{subtitle}</span></span><span aria-hidden="true" className="text-[#087d96]">→</span></button>)}</section>
   </div>;
 }

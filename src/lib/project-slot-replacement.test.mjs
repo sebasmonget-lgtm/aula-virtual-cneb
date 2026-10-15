@@ -5,7 +5,7 @@ import {readFile,readdir} from 'node:fs/promises';
 import {PGlite} from '@electric-sql/pglite';
 import {createPilotClassroom} from './pilot-onboarding-service.mjs';
 import {libraryRow} from './annual-year-editor.mjs';
-import {assertSavedSlotReplacement} from './project-slot-replacement.mjs';
+import {assertSavedSlotReplacement,savedLibraryRestoration,protectedSlotDates} from './project-slot-replacement.mjs';
 import {enqueuePreparation,ownedPreparationJob,preparationFingerprint} from './preparation-jobs.mjs';
 import {COMPLETE_PROJECT_POLICY,publishAcceptedProjectBlock} from './complete-project-preparation.mjs';
 
@@ -27,7 +27,7 @@ test('prepared replacement publishes atomically, preserves old documents, audits
   const oldYear=randomUUID(),year=randomUUID(),oldId=randomUUID(),nextId=randomUUID(),oldProject=randomUUID(),project=randomUUID(),oldActivity=randomUUID(),omitted=randomUUID(),activity=randomUUID(),schedule=randomUUID(),routeId=randomUUID();
   const day='2099-11-10',last='2099-11-11',slot={slot_id:'slot12',starts_on:day,ends_on:last};
   const old={proposal_id:oldId,title:'Agua',purpose:'Explorar',planned_start_date:day,planned_end_date:last};
-  const previous={proposed_experiences:[old],resolved_calendar:{projects:[{...slot,proposal_id:oldId}]}};
+  const previous={proposed_experiences:[old],available_experiences:[{proposal_id:nextId,title:'Animales'}],resolved_calendar:{projects:[{...slot,proposal_id:oldId}]}};
   const next={proposed_experiences:[{proposal_id:nextId,title:'Animales'}],available_experiences:[libraryRow(old)],resolved_calendar:{projects:[{...slot,proposal_id:nextId}]}};
   for(const [id,status,proposal]of [[oldYear,'archived',previous],[year,'active',next]])await db.query(`insert into annual_plans(id,classroom_id,school_year_id,curriculum_version_id,status,proposal,version) values($1,$2,$3,$4,$5,$6::jsonb,case when $5='active' then 2 else 1 end)`,[id,room.classroomId,room.schoolYearId,curriculum,status,JSON.stringify(proposal)]);
   const details={activity_route:[{id:routeId,date:day}],project_master:{foundation:'Guardada'}};
@@ -38,7 +38,7 @@ test('prepared replacement publishes atomically, preserves old documents, audits
   const accepted=await enqueuePreparation(db,{teacherId:teacher,classroomId:room.classroomId,kind:'project',sourceId:year,sourceRevision:plan.revision,input:{test:'replacement'},payload:{project_id:project,project_revision:Number(p.revision),project_fingerprint:preparationFingerprint(p.details),expected_dates:[day],items:[{activity_id:activity,route_item_id:routeId,date:day}],acceptance:{policy:COMPLETE_PROJECT_POLICY,teacher_id:teacher}}});
   const log=randomUUID();await db.query(`insert into daily_execution_logs(id,schedule_entry_id,execution_date,status,actual_started_at) values($1,$2,$3,'active',now())`,[log,schedule,day]);
   const confirm=async(j,path)=>j.db.query("update activities set status='active' where id=$1",[path.split('/')[3]]);
-  await assert.rejects(()=>publishAcceptedProjectBlock(db,accepted,confirm),/ejecución o evidencias/);
+  await assert.rejects(()=>publishAcceptedProjectBlock(db,accepted,confirm),/ejecución o evidencias|otro proyecto/);
   assert.equal((await db.query('select status from activities where id=$1',[oldActivity])).rows[0].status,'active');
   assert.equal((await ownedPreparationJob(db,teacher,accepted.id)).approved_at,null);
   await db.query('delete from daily_execution_logs where id=$1',[log]); // disposable fixture only
@@ -50,5 +50,35 @@ test('prepared replacement publishes atomically, preserves old documents, audits
   assert.equal((await db.query('select count(*)::int as n from activity_schedule_changes where activity_id=any($1::uuid[])',[[oldActivity,omitted]])).rows[0].n,2);
   await publishAcceptedProjectBlock(db,accepted,confirm);
   assert.equal((await db.query('select count(*)::int as n from activity_schedule_changes where activity_id=any($1::uuid[])',[[oldActivity,omitted]])).rows[0].n,2,'replay does not cancel or publish twice');
+  // A later restoration may retain a day already worked early, even when its planned date is future.
+  const historical=randomUUID(),historicalSchedule=randomUUID();
+  await db.query(`insert into activities(id,experience_id,title,purpose,occurs_on,status,details) values($1,$2,'Historia','QA',$3,'active','{}')`,[historical,oldProject,last]);
+  await db.query(`insert into class_schedule_entries(id,classroom_id,scheduled_on,start_time,end_time,block_type,activity_id,title,is_instructional) values($1,$2,$3,'09:00','09:45','activity',$4,'Historia',true)`,[historicalSchedule,room.classroomId,last,historical]);
+  const linked=randomUUID(),linkedSchedule=randomUUID(),workshop=randomUUID();
+  await db.query(`insert into learning_experiences(id,classroom_id,type,title,purpose,starts_on,ends_on,status,details,parent_project_id) values($1,$2,'workshop','Taller','QA',$3,$3,'active','{}',$4)`,[workshop,room.classroomId,last,oldProject]);
+  await db.query(`insert into activities(id,experience_id,title,purpose,occurs_on,status,details,linked_main_activity_id,workshop_item_index) values($1,$2,'Taller vinculado','QA',$3,'active','{}',$4,1)`,[linked,workshop,last,historical]);
+  await db.query(`insert into class_schedule_entries(id,classroom_id,scheduled_on,start_time,end_time,block_type,activity_id,title,is_instructional) values($1,$2,$3,'10:00','10:45','workshop',$4,'Taller',true)`,[linkedSchedule,room.classroomId,last,linked]);
+  await db.query(`insert into daily_execution_logs(id,schedule_entry_id,execution_date,status,actual_started_at) values($1,$2,$3,'active',now())`,[randomUUID(),linkedSchedule,last]);
+  assert.deepEqual(await protectedSlotDates(db,room.classroomId,day,last),[last]);
+  const restored=await enqueuePreparation(db,{teacherId:teacher,classroomId:room.classroomId,kind:'project',sourceId:year,sourceRevision:plan.revision,input:{test:'restoration'},payload:accepted.payload});
+  await publishAcceptedProjectBlock(db,restored,confirm);
+  assert.ok((await ownedPreparationJob(db,teacher,restored.id)).approved_at);
+  assert.equal((await db.query('select status from activities where id=$1',[historical])).rows[0].status,'active');
+  assert.equal((await db.query('select activity_id from class_schedule_entries where id=$1',[historicalSchedule])).rows[0].activity_id,historical);
+  assert.equal((await db.query('select status from daily_execution_logs where schedule_entry_id=$1',[linkedSchedule])).rows[0].status,'active');
  }finally{await db.close();}
 });
+
+ test('restoration requires the original library card, exact dates and an unprotected live slot',()=>{
+ const old={proposal_id:'old',title:'Animales'},incoming={proposal_id:'water',title:'Agua'};
+ const slot={slot_id:'slot',starts_on:'2026-10-01',ends_on:'2026-10-30'};
+ const before={proposed_experiences:[old],available_experiences:[incoming],resolved_calendar:{projects:[{...slot,proposal_id:'old'}]}};
+ const after={proposed_experiences:[incoming],available_experiences:[old],resolved_calendar:{projects:[{...slot,proposal_id:'water'}]}};
+ assert.equal(savedLibraryRestoration(after,before,'old','2026-10-14'),true);
+ for(const change of [p=>p.proposed_experiences[0].title='Alterado',p=>p.available_experiences=[],p=>p.resolved_calendar.projects[0].starts_on='2026-10-02']){
+ const altered=structuredClone(after);change(altered);assert.equal(savedLibraryRestoration(altered,before,'old','2026-10-14'),false);
+ }
+ assert.equal(savedLibraryRestoration(after,before,'old','2026-11-01'),false);
+ before.proposed_experiences[0].teacher_protected=true;
+ assert.equal(savedLibraryRestoration(after,before,'old','2026-10-14'),false);
+ });

@@ -1,8 +1,8 @@
-import {assertSavedSlotReplacement} from "./project-slot-replacement.mjs";
+import {assertSavedSlotReplacement,savedLibraryRestoration} from "./project-slot-replacement.mjs";
 import {randomUUID} from "node:crypto";
 import {preparationFingerprint,ownedPreparationJob} from "./preparation-jobs.mjs";
 import {versionTransaction,VersionConflictError} from "./version-integrity.mjs";
-import {lockClassroomSchedule,assertActivityScheduleMutable,limaToday} from "./activity-schedule-integrity.mjs";
+import {lockClassroomSchedule,assertActivityScheduleMutable,activityHasRecordedWork,limaToday} from "./activity-schedule-integrity.mjs";
 
 export const COMPLETE_PROJECT_POLICY="accepted-project-complete-v1";
 export async function publishAcceptedProjectBlock(db,job,request){
@@ -29,6 +29,7 @@ export async function publishAcceptedProjectBlock(db,job,request){
         const previous=(await tx.query('select * from annual_plans where id=$1 and classroom_id=$2 and school_year_id=$3',[prior.annual_plan_id,job.classroom_id,year.school_year_id])).rows[0];
         if(!previous)throw new VersionConflictError('La programación pertenece a otro año.');
         assertSavedSlotReplacement(year.proposal,previous.proposal,project.source_proposal_id,prior.source_proposal_id);
+        if((prior.occurs_on<limaToday()||await activityHasRecordedWork(tx,prior))&&savedLibraryRestoration(year.proposal,previous.proposal,prior.source_proposal_id,limaToday()))continue;
         await assertActivityScheduleMutable(tx,prior);retired.push(prior);
       }
     }

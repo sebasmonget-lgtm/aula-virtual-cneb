@@ -3,11 +3,13 @@
 import { useEffect, useRef, useState, type ComponentProps, type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
 import { AlertCircle, ArrowRight, CheckCircle2, Inbox, LoaderCircle, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import Image from 'next/image';
 
-export function PageIntro({ eyebrow, title, description, icon: Icon }: { eyebrow?: string; title: string; description?: string; icon?: LucideIcon }) {
-  return <header className="ayni-page-intro">
+export function PageIntro({ eyebrow, title, description, icon: Icon,illustration }: { eyebrow?: string; title: string; description?: string; icon?: LucideIcon;illustration?:string }) {
+  return <header className={`ayni-page-intro ${illustration?'rounded-2xl border border-[#c5e7e7] bg-[#e9f7f7] p-4 sm:p-6':''}`}>
     {Icon && <span className="ayni-page-icon"><Icon aria-hidden="true" className="size-5" /></span>}
     <div className="min-w-0">{eyebrow && <p className="ayni-eyebrow">{eyebrow}</p>}<h1>{title}</h1>{description && <p className="ayni-page-description">{description}</p>}</div>
+    {illustration&&<Image src={illustration} width={96} height={96} alt="" aria-hidden="true" unoptimized className="ml-auto hidden size-24 shrink-0 object-contain sm:block"/>}
   </header>;
 }
 

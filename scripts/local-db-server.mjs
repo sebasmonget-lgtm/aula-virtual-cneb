@@ -469,7 +469,7 @@ async function dashboard() {
      limit 1
   `, [teacherId, classroomId]);
   const attendanceResult = await db.query(`
-    select count(*)::int as recorded_count from attendance_records
+    select count(*)::int as recorded_count,coalesce(jsonb_agg(jsonb_build_object('studentId',student_id,'status',status)),'[]'::jsonb) as records from attendance_records
      where classroom_id = $1 and attendance_date = $2::date
   `, [classroomId, today]);
   const exceptionResult = await db.query(`
@@ -523,7 +523,7 @@ async function dashboard() {
     activity: activityResult.rows[0] ? { ...activityResult.rows[0], criteria: normalizeCriteria(activityResult.rows[0].criteria ?? []) } : null,
     today: {
       past_pending: await pendingPastActivities(db,teacherId,today),
-      date: today, now, ...(qaDailyClock ? { qa_clock: qaDailyClock } : {}), blocks, attendance: { recorded: attendanceRecorded, recorded_count: Number(attendanceResult.rows[0]?.recorded_count ?? 0) },
+      date: today, now, ...(qaDailyClock ? { qa_clock: qaDailyClock } : {}), blocks, attendance: { records:attendanceResult.rows[0]?.records??[],recorded: attendanceRecorded, recorded_count: Number(attendanceResult.rows[0]?.recorded_count ?? 0) },
       calendar_exception: calendarException,
       journey: { mode: journey.mode, current_block_id: journey.currentBlock?.id ?? null, next_block_id: journey.nextBlock?.id ?? null, primary_action: journey.primaryAction, pending_items: journey.pendingItems },
     },
@@ -2879,6 +2879,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       return;
     }
     if (request.method === "POST" && url.pathname === "/api/attendance") {
+      const today=qaDailyClock?.date??limaToday();
       const body = await readJson(request);
       const records = Array.isArray(body.records) ? body.records : [];
       const allowedStatuses = new Set(["present", "absent", "late", "excused"]);

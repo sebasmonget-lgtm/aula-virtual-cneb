@@ -5,6 +5,8 @@ import {COMPLETE_PROJECT_POLICY} from "../src/lib/complete-project-preparation.m
 import {assertSingleProjectPreparationRevision} from "../src/lib/annual-proposal-preview.mjs";
 import {loadProjectChat} from "../src/lib/annual-project-chat.mjs";
 import {proposalIntentIssues} from '../src/lib/annual-proposal-intent.mjs';
+import {protectedSlotDates} from '../src/lib/project-slot-replacement.mjs';
+import {isDeepStrictEqual} from 'node:util';
 
 async function futureDates(db,project){
   const recorded=(await db.query(`select distinct a.occurs_on::text as date from activities a join learning_experiences e on e.id=a.experience_id
@@ -37,17 +39,26 @@ export async function handlePreparationRoutes({request,response,url,db,teacherId
         coalesce(d.status,'planned') as execution_status from class_schedule_entries se join activities a on a.id=se.activity_id
         join learning_experiences e on e.id=a.experience_id join annual_plans p on p.id=e.annual_plan_id
         left join daily_execution_logs d on d.schedule_entry_id=se.id
-        where se.classroom_id=$1 and p.school_year_id=$2 and e.source_proposal_id=$3 and se.block_type='activity' and a.status='active'
+        where se.classroom_id=$1 and p.school_year_id=$2 and e.source_proposal_id=$3 and se.block_type='activity' and a.status='active' and a.schedule_status not in ('cancelled','not_worked')
         order by se.scheduled_on,a.id`,[context.id,context.school_year_id,proposalActivities[1]])).rows;
-      const project=(await db.query(`select e.id,e.title,e.purpose,e.details->'decisions'->'competency_ids' as competency_ids from learning_experiences e join annual_plans p on p.id=e.annual_plan_id
-        where e.classroom_id=$1 and p.school_year_id=$2 and e.source_proposal_id=$3 and e.status='active' order by e.version desc,e.teacher_confirmed_at desc limit 1`,[context.id,context.school_year_id,proposalActivities[1]])).rows[0]??null;
+      const project=(await db.query(`select e.id,e.annual_plan_id,e.title,e.purpose,e.details->'decisions'->'competency_ids' as competency_ids from learning_experiences e join annual_plans p on p.id=e.annual_plan_id
+        where e.classroom_id=$1 and p.school_year_id=$2 and e.source_proposal_id=$3 and e.status='active'
+        and exists(select 1 from activities a where a.experience_id=e.id and a.status='active' and a.schedule_status not in ('cancelled','not_worked'))
+        order by p.version desc,e.version desc,e.teacher_confirmed_at desc limit 1`,[context.id,context.school_year_id,proposalActivities[1]])).rows[0]??null;
       const protectedProject=(await db.query(`select exists(select 1 from learning_experiences e
         join annual_plans p on p.id=e.annual_plan_id where e.classroom_id=$1 and p.school_year_id=$2 and e.source_proposal_id=$3
         and (e.starts_on<$4::date or exists(select 1 from activities a where a.experience_id=e.id and (
           exists(select 1 from evidences ev where ev.activity_id=a.id) or exists(select 1 from ordinary_observations o where o.activity_id=a.id)
           or exists(select 1 from class_schedule_entries se join daily_execution_logs d on d.schedule_entry_id=se.id where se.activity_id=a.id
             and (d.status<>'planned' or d.actual_started_at is not null or d.actual_ended_at is not null)))))) as protected`,[context.id,context.school_year_id,proposalActivities[1],limaToday()])).rows[0]?.protected;
-      send(response,200,{project,can_replace:!protectedProject,activities:activities.map(row=>({...row,state:row.execution_status==='completed'?'Realizada':['active','in_progress'].includes(row.execution_status)?'En curso':row.date<limaToday()?'Sin realizar':'Lista'}))},origin);return true;
+      const plan=(await db.query(`select id,proposal,generation_metadata,supersedes_plan_id from annual_plans where classroom_id=$1 and school_year_id=$2 and status in ('draft','active')
+        and exists(select 1 from jsonb_array_elements(proposal->'proposed_experiences') r where r->>'proposal_id'=$3) order by version desc limit 1`,[context.id,context.school_year_id,proposalActivities[1]])).rows[0];
+      const row=plan?.proposal.proposed_experiences.find(row=>row.proposal_id===proposalActivities[1]);
+      const blocked_dates=row?await protectedSlotDates(db,context.id,row.planned_start_date,row.planned_end_date):[];
+      const can_restore=!!row&&!row.teacher_protected&&(row.instructional_dates??[]).some(date=>date>=limaToday()&&!blocked_dates.includes(date));
+      const baseline=plan?.generation_metadata?.scoped_base_proposal??(plan?.supersedes_plan_id?(await db.query('select proposal from annual_plans where id=$1 and classroom_id=$2',[plan.supersedes_plan_id,context.id])).rows[0]?.proposal:null);
+      const prepared_current=!!project&&(project.annual_plan_id===plan?.id||isDeepStrictEqual(row,baseline?.proposed_experiences?.find(item=>item.proposal_id===proposalActivities[1])));
+      send(response,200,{project,prepared_current,can_replace:!protectedProject,can_restore,blocked_dates,activities:activities.map(row=>({...row,state:row.execution_status==='completed'?'Realizada':['active','in_progress'].includes(row.execution_status)?'En curso':row.date<limaToday()?'Sin realizar':'Lista'}))},origin);return true;
     }
     if(url.pathname==='/api/preparation/projects/future-preview'&&['GET','POST'].includes(request.method)){
       const body=request.method==='POST'?await readJson(request):Object.fromEntries(url.searchParams),{row:project}=await projectFlowRow(body.projectId);
@@ -112,6 +123,8 @@ export async function handlePreparationRoutes({request,response,url,db,teacherId
       const candidate=plan.proposal.proposed_experiences.find(row=>row.proposal_id===body.proposalId);
       if(!candidate||proposalIntentIssues(candidate,[],plan.proposal.curriculum_reference??[]).length)
         throw new VersionConflictError('Antes de preparar, completa con Ayni las dos competencias y los materiales concretos de este proyecto. Conservamos lo que ya está guardado.');
+      const blockedDates=await protectedSlotDates(db,context.id,candidate.planned_start_date,candidate.planned_end_date);
+      if(dates.some(date=>blockedDates.includes(date)))throw new VersionConflictError('Estos días ya tienen trabajo registrado. Confirma solo los días disponibles; conservamos las actividades y observaciones anteriores.');
       if(plan.status==='draft'){
         const current=(await db.query("select * from annual_plans where classroom_id=$1 and status='active'",[context.id])).rows[0];
         if(!current||plan.supersedes_plan_id!==current.id||plan.proposal.pending_changes?.length)throw new VersionConflictError("Confirma primero Mi año. Conservamos el borrador.");
