@@ -16,3 +16,15 @@ test("diagnostic blocks preserve the exact observed aspect and examples",()=>{
   const blocks=diagnosticPedagogicalBlocks({teacher_instructions:"Ofrece materiales",aspects:[{id:"compare",label:"Comparan",prompt:"Qué compara",examples:["Pone dos piedras juntas"]}]});
   assert.equal(blocks[0].observations,undefined);assert.deepEqual(blocks[1].examples,["Pone dos piedras juntas"]);assert.equal(blocks[1].observations[0].id,"compare");
 });
+
+
+test("explicit stages provide one moment each, retaining introductions, original fields and criterion provenance",()=>{
+  const details={meaningful_situation:"Situación formal",child_actions:"Pueden participar a su manera. Inicio: Eligen una semilla. Desarrollo: Comparan las semillas. Cierre: Comparten un hallazgo.",mediation:"Respeta sus tiempos. Inicio: Ofrece semillas. Desarrollo: Pregunta qué cambia. Cierre: Recupera sus ideas.",closure_or_continuity:"Continuidad formal",expected_evidence:"Una comparación registrada"};
+  const original=structuredClone(details);
+  const blocks=activityPedagogicalBlocks(details,[],[{id:"criterion-real",competency_v4_id:"CYT_INDAGA",criterion_text:"Compara las semillas"}]);
+  assert.deepEqual(blocks.map(block=>block.instruction),["Respeta sus tiempos.\n\nOfrece semillas.","Pregunta qué cambia.","Recupera sus ideas."]);
+  assert.deepEqual(blocks.map(block=>block.expected_actions),["Pueden participar a su manera.\n\nEligen una semilla.","Comparan las semillas.","Comparten un hallazgo."]);
+  assert.deepEqual(blocks.filter(block=>block.observations).map(block=>block.id),["development"]);
+  assert.equal(blocks[1].observations[0].id,"criterion-real");assert.equal(blocks[1].observations[0].competency_id,"CYT_INDAGA");
+  assert.deepEqual(details,original);
+});

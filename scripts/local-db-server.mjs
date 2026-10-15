@@ -2781,7 +2781,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
             });
             if (!result.created && mediaPath) await ordinaryStorage.delete(mediaPath, { teacherId, studentId: body.studentId });
             send(response, result.created ? 201 : 200, result, origin);
-            if (result.created && curricularReviewEnabled) await queueOrdinarySuggestion(teacherId, result.observation.id);
+            if (result.created && curricularReviewEnabled && body.automaticSuggestion!==false) await queueOrdinarySuggestion(teacherId, result.observation.id);
           } catch (error) {
             if (mediaPath) await ordinaryStorage.delete(mediaPath, { teacherId, studentId: body.studentId }).catch(() => {});
             throw error;

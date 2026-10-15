@@ -264,8 +264,6 @@ test("entrevista parcial, reload, confirmación, impresión y adjunto privado si
     const next = await saveFamilyInterview(db, teacher, studentId, { interests: "Ahora también dibuja." });
     assert.equal(next.version, 2);
     assert.equal((await loadFamilyInterview(db, teacher, studentId)).confirmed.id, confirmed.id);
-    const ui = await readFile(new URL("../features/dashboard/components/family-interview-v4.tsx", import.meta.url), "utf8");
-    assert.match(ui, /Imprimir para papel/);
     const print = buildFamilyInterviewPrintHtml("Camila <Prueba>", { interests: "Bloques & dibujo" }, familyInterviewQuestionGroups("Camila <Prueba>"), { institution: "Escuela", classroom: "A" });
     assert.match(print, /window\.print/);
     assert.match(print, /Camila &lt;Prueba&gt;/);

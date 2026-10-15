@@ -19,6 +19,7 @@ import { compareObservationDates, observationMoment } from "@/src/lib/diagnostic
 import { competencyLabel } from "@/src/lib/competency-presentation";
 import styles from "./interviews-workspace.module.css";
 const moments=["Juego libre","Recreo","Lonchera","Asamblea","Rutina","Conversación","Exploración","Otro"];
+import {ObservationCompetencyPicker as CompetencyPicker} from "./observation-competency-picker";
 type Competency={id:string;name:string};
 type PriorRecord={id:string;source_type:string;student_id:string;text:string;date:string;competency_ids:string[]};
 function GuidedRecord({record,name,items,hasMedia,onSaved}:{record:PriorRecord;name:string;items:Competency[];hasMedia:boolean;onSaved:()=>Promise<void>}){
@@ -30,10 +31,7 @@ function GuidedRecord({record,name,items,hasMedia,onSaved}:{record:PriorRecord;n
  {deleting&&<div role="alert" className="mt-4 rounded-xl bg-[#fff1e8] p-4"><p>¿Eliminar esta observación del recorrido? Su historial y evidencia privada se conservarán.</p>{error&&<p role="alert">{error}</p>}<div className="mt-3 flex gap-2"><Button variant="destructive" disabled={busy||audio} onClick={()=>void save(true)}>Eliminar observación</Button><Button variant="outline" disabled={busy||audio} onClick={()=>setDeleting(false)}>Cancelar</Button></div></div>}
  </ObservationRecordCard>;
 }
-function CompetencyPicker({items,selected,onChange,disabled,compact=false}:{items:Competency[];selected:string[];onChange:(ids:string[])=>void;disabled:boolean;compact?:boolean}) {
-  const [query,setQuery]=useState("");
-  return <fieldset disabled={disabled} className="space-y-3" aria-label="Elige hasta dos competencias (opcional)"><legend className={compact?"sr-only":"font-semibold"}>Elige hasta dos competencias (opcional)</legend><label className="block text-sm"><span className={compact?"sr-only":undefined}>Buscar competencia</span><input placeholder={compact?"Buscar competencia…":undefined} type="search" value={query} onChange={e=>setQuery(e.target.value)} className="mt-1 min-h-11 w-full rounded-xl border bg-white px-3" /></label><div className="grid max-h-64 gap-2 overflow-y-auto sm:grid-cols-2">{items.filter(c=>c.name.toLocaleLowerCase("es").includes(query.toLocaleLowerCase("es"))).map(c=><label key={c.id} className="flex min-h-12 items-center gap-3 rounded-xl border bg-white p-3 text-sm"><input type="checkbox" checked={selected.includes(c.id)} disabled={!selected.includes(c.id)&&selected.length>=2} onChange={e=>onChange(e.target.checked?[...selected,c.id]:selected.filter(id=>id!==c.id))}/><span>{c.name}</span></label>)}</div></fieldset>;
-}
+
 function SavedObservation({record,items,name,onChange,busy}:{record:SpontaneousObservation;items:Competency[];name:string;onChange:(record:SpontaneousObservation,text:string,ids:string[],withdraw?:boolean)=>Promise<boolean>;busy:boolean}) {
  const [editing,setEditing]=useState(false),[text,setText]=useState(record.observation_text??""),[ids,setIds]=useState(record.competency_v4_ids??[]),[deleting,setDeleting]=useState(false),[audio,setAudio]=useState(false);
  const allowLeave=useUnsavedWork(editing&&(text!==(record.observation_text??"")||JSON.stringify(ids)!==JSON.stringify(record.competency_v4_ids)),editing&&busy||audio);

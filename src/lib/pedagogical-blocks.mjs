@@ -1,17 +1,22 @@
+import {activityReadingStages} from "./activity-reading-content.mjs";
 import { diagnosticMomentInstruction } from "./diagnostic-moment-instructions.mjs";
-/** Server projection of explicit pedagogical fields. Never infer sections by parsing prose. */
+/** Server projection of explicit pedagogical fields. Split only explicit saved stage labels; never invent or summarize instructions. */
 export function activityPedagogicalBlocks(details = {}, steps = [], criteria = []) {
   const opportunities = criteria.map(criterion => ({
     id: criterion.id, competency_id: criterion.competency_v4_id ?? criterion.competency_id,
     competency_name: criterion.competency_text ?? null, criterion: criterion.criterion_text,
     expected_evidence: criterion.details?.expected_evidence ?? details.expected_evidence ?? null,
   }));
+  const childParts=activityReadingStages(details.child_actions),teacherParts=activityReadingStages(details.mediation);
+  const stage=(parts,label)=>parts.stages.find(item=>item.label===label)?.text;
+  const child=(label)=>stage(childParts,label),teacher=(label)=>stage(teacherParts,label);
+  const opening=(parts,content)=>[parts.introduction,content].filter(Boolean).join("\n\n");
   if (details.child_actions || details.meaningful_situation) return [
-    { id: "opening", title: "Comiencen", instruction: details.meaningful_situation },
-    { id: "development", title: "Exploren y prueben", instruction: details.mediation || details.child_actions,
-      ...(details.mediation && details.child_actions ? { expected_actions: details.child_actions } : {}),
+    { id: "opening", title: "Comiencen", instruction: opening(teacherParts,teacher("Inicio")||details.meaningful_situation), ...(child("Inicio")?{expected_actions:opening(childParts,child("Inicio"))}:{}) },
+    { id: "development", title: "Exploren y prueben", instruction: teacher("Desarrollo")||details.mediation || details.child_actions,
+      ...(details.mediation && details.child_actions ? { expected_actions: child("Desarrollo")||details.child_actions } : {}),
       ...(opportunities.length ? { observations: opportunities } : {}) },
-    { id: "closure", title: "Compartan lo que ocurrió", instruction: details.closure_or_continuity },
+    { id: "closure", title: "Compartan lo que ocurrió", instruction: teacher("Cierre")||details.closure_or_continuity,...(child("Cierre")?{expected_actions:child("Cierre")}:{}) },
   ].filter(block => typeof block.instruction === "string" && block.instruction.trim());
   // Historical activities keep their literal instructions; no invented examples or evidence.
   return steps.map((instruction, index) => ({ id: `instruction-${index + 1}`, title: `Actividad · ${index + 1}`, instruction,
