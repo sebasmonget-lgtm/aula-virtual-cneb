@@ -48,4 +48,10 @@ Rollback: revertir catálogo/importación y contador, conservar los PNG nuevos p
 
 ## Publicación
 
-Pendiente commit de producto, Preview, smoke y comprobación de Producción intacta.
+Producto c3d0e973b966f5bb499fae9270b515c9d9322371, publicado en GitHub en codex/mi-ano-simple-preview.
+
+Preview https://ayni-aula-staging-p70wwsrkl-ayni4.vercel.app · deployment dpl_7sMNRcPfQCAvu6fMT8rmNaxondsN · READY target null y SHA exacto verificados. Build Next cloud PASS y 22 smoke PASS: diez imprimibles/pictograma/inicio/health/config 200, rutas privadas sin sesión 401. Comprobaciones independientes en lotes de cuatro mediante CLI oficial, con resultados individuales conservados. Nuevo dominio abre login Ayni; no se autenticó ni se escribió en la cuenta cloud reiniciada.
+
+Producción reconsultada conserva dpl_H19YWzRdGjkgh8y72QAd1qBty7Mf y 9a0920230350cd6b9050f35683a1f35d459e78c7, iguales al baseline. Sin promoción, DDL/RLS ni cambios de datos cloud. Recibos preview.json, preview-smoke.json y production-final.json en el directorio privado del QA. Working tree limpio al publicar; recibo documental posterior sin cambios de producto.
+
+QA local apagado controladamente, pestaña temporal cerrada y viewport restablecido. Preview nuevo conservado como entregable; captura library-desktop.jpg muestra cien talleres en el fixture ficticio.
