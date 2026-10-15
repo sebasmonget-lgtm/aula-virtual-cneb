@@ -34,3 +34,7 @@ Pedagógicamente, menos registros significa menos evidencia disponible, no menor
 
 ## Límites y rollback
 Voz y cámara reutilizan los componentes de Diagnóstico; permisos y captura física no probados. IA real y recorrido autenticado de generación cloud no probados; sugerencias QA respondidas por transporte local falso, sin red externa. No se reescriben registros históricos ni se fuerza una competencia en observaciones libres. Revertir el commit de producto en otro Preview restaura presentación/prompt; datos ordinarios y atribuciones siguen siendo compatibles. Nunca promover a Producción. Recibo de publicación se añadirá después de READY/SHA y smoke.
+
+
+## Recibo de publicación
+Producto 48e7cc3940793b2bfec54d7a0718000319c2dd26 / https://ayni-aula-staging-kjkmaxrp8-ayni4.vercel.app / dpl_EohEQSots2FAcSg4QgFUBRs97thh, READY, target null y SHA exacto comprobados. Next cloud y 38 smoke PASS. Acceso docente visible en navegador; no se inició sesión ni se hicieron mutaciones pedagógicas cloud. Producción conserva dpl_H19YWzRdGjkgh8y72QAd1qBty7Mf / 9a0920230350cd6b9050f35683a1f35d459e78c7. Rama publicada en GitHub, sin promoción. Fixture local apagado, pestaña temporal cerrada y viewport restaurado; Preview abierto como entrega. IA real y permisos físicos de micrófono/cámara pendientes de QA humano.
