@@ -31,4 +31,10 @@ Misma persistencia canónica, sin migraciones/RLS ni otro motor/almacén de obse
 
 ## Publicación
 
-Pendiente commit de producto, Preview, smoke y comprobación de Producción intacta. No promoción a Producción.
+Producto fbc1264d14a6f51c4fd028ae29231a332b5c10e6, publicado en GitHub en codex/mi-ano-simple-preview.
+
+Preview https://ayni-aula-staging-75swmll20-ayni4.vercel.app · deployment dpl_9AyY2cSLFiX9ZEvpJdXni1mch6sA · READY, target null y SHA exacto verificados. Build Next cloud PASS; 18 smoke PASS (seis PNG/pictograma/inicio/health/config disponibles, APIs privadas 401 sin sesión). Login Ayni visible en navegador, sin autenticar ni poblar la cuenta cloud reiniciada. Recibos privados preview.json y preview-smoke.json en .local/workshop-expansion-20261015.
+
+Producción reconsultada conserva dpl_H19YWzRdGjkgh8y72QAd1qBty7Mf / 9a0920230350cd6b9050f35683a1f35d459e78c7, igual al baseline. Sin promoción, migraciones, cambios de permisos ni escrituras pedagógicas cloud. QA local apagado de forma controlada y pestaña temporal cerrada; viewport restablecido. Captura de entrega library-desktop-final.jpg corresponde a QA local ficticio, no a una sesión autenticada cloud.
+
+Este recibo se añade después del commit de producto, sin cambios de código que requieran otro despliegue.
