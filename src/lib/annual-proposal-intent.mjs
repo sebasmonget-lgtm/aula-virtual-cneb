@@ -55,5 +55,5 @@ export function proposalIntentIssues(row, required, curriculum) {
     reason: `Falta la competencia elegida por la docente: ${curriculum.find(card => card.id === id)?.name ?? id}. Incluye una oportunidad real con acciones, capacidades, condiciones, mediación, observación y apoyos; no basta agregar el ID.`}))];
 }
 
-export const isMaterialPlaceholder=value=>typeof value==='string'&&/^(?:supports?|materials?|resources?|children_actions|opportunities|teacher_preparation|undefined|null)$/iu.test(value.trim());
+export const isMaterialPlaceholder=value=>typeof value==='string'&&(/^(?:supports?|materials?|resources?|children_actions|opportunities|teacher_preparation|undefined|null)$/iu.test(value.trim())||/\b(?:por definir|por determinar|por seleccionar|a definir|pendiente de definir|to be defined|tbd)\b/iu.test(value));
 export const presentMaterials=materials=>(materials??[]).filter(value=>typeof value==='string'&&value.trim()&&!isMaterialPlaceholder(value));

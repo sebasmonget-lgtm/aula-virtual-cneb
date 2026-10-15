@@ -8,6 +8,7 @@ import {createPilotClassroom} from './pilot-onboarding-service.mjs';
 import {saveOrdinaryObservation} from './ordinary-observation-service.mjs';
 import {loadStudentTrajectory} from './student-trajectory-service.mjs';
 import {loadSavedDocument} from './document-library-service.mjs';
+import {classroomObservationCoverage} from './classroom-observation-coverage.mjs';
 
 test('develop today preserves the project date, checks ownership, records actual day and keeps nominal observation context',async()=>{
  const db=new PGlite();try{
@@ -37,6 +38,8 @@ test('develop today preserves the project date, checks ownership, records actual
   const trajectory=await loadStudentTrajectory(db,teacher,student,{includeOrdinary:true});
   assert.match(JSON.stringify(trajectory),/agua cae/);assert.equal(await loadStudentTrajectory(db,randomUUID(),student,{includeOrdinary:true}),null);
   assert.ok(trajectory.timeline.every(period=>period.competencies.every(item=>item.level===null)),'observation does not invent a final level');
+  const counts=await classroomObservationCoverage(db,{classroomId:room.classroomId,year:{starts_on:new Date('2026-03-02'),ends_on:new Date('2026-12-31')},competencyId:'CYT_INDAGA'});
+  assert.equal(counts.get(student),1,'actual-day capture must count even when planned in a later bimester');
   await assert.rejects(()=>startActivityToday(db,teacher,activity,'2026-10-15'),/jornada registrada/);
   await db.query("update daily_execution_logs set status='completed',actual_ended_at=now() where schedule_entry_id=$1",[schedule]);
   await assert.rejects(()=>startActivityToday(db,teacher,activity,actual),/jornada registrada/);

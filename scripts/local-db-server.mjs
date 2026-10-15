@@ -22,7 +22,8 @@ import { readQADailyClock } from "../src/lib/qa-daily-clock.mjs";
 const localQaDailyClock = readQADailyClock();
 import { currentPedagogicalClock, pedagogicalNow, simulatedObservationInstant, withPedagogicalClock } from "../src/lib/pedagogical-clock.mjs";
 import { readPreviewQAClock, previewQAClockCookie, previewQAClockForJob, validateQAClock } from "../src/lib/preview-qa-clock.mjs";
-import { isValidStepIndex } from "../src/lib/activity-runner.mjs";
+import {activityMaterials} from "../src/lib/activity-materials.mjs";
+import { activityMomentCount,assertActivityMomentAction,normalizeStepIndex } from "../src/lib/activity-runner.mjs";
 import { buildStudentPedagogicalContext, refreshStudentContextSnapshot } from "../src/lib/student-context-service.mjs";
 import { getCurrentClassroomContext, publicClassroomContext } from "../src/lib/classroom-context-service.mjs";
 import { buildClassroomStatistics } from "../src/lib/statistics-service.mjs";
@@ -272,7 +273,7 @@ const pendingDiagnosticRows = observationV24Active && authMode === "local" ? (aw
   order by o.observed_at,o.id`, [localTeacherId])).rows : [];
 for (const row of pendingDiagnosticRows) queueDiagnosticClassification(row.id, row.student_id, localTeacherId);
 
-const ordinarySuggestionInFlight = new Set();
+const ordinarySuggestionInFlight = new Map();
 async function suggestOrdinaryObservation(teacherId, observationId) {
   const { observation, latest } = await ordinaryAttributionHistory(db, teacherId, observationId);
   if (["confirmed", "unclassified"].includes(latest?.state) && latest.raw_revision === observation.source_revision) return latest;
@@ -298,15 +299,14 @@ async function suggestOrdinaryObservation(teacherId, observationId) {
     provenance: { source: "jev", kb_version: kb.version, decision_metadata: decision.decision_metadata ?? null } });
 }
 function queueOrdinarySuggestion(teacherId, observationId) {
-  if (ordinarySuggestionInFlight.has(observationId)) return Promise.resolve();
-  ordinarySuggestionInFlight.add(observationId);
+  if (ordinarySuggestionInFlight.has(observationId)) return process.env.AYNI_SERVERLESS==='1'?ordinarySuggestionInFlight.get(observationId):undefined;
   const work = async () => {
     try { await suggestOrdinaryObservation(teacherId, observationId); }
     catch { recordOperationalEvent("ordinary_suggestion_failed", { workflow: "ordinary_observation" }); }
     finally { ordinarySuggestionInFlight.delete(observationId); }
   };
-  if (process.env.AYNI_SERVERLESS === "1") return work();
-  setImmediate(work);
+  const running=process.env.AYNI_SERVERLESS === "1"?work():new Promise(resolve=>setImmediate(()=>work().then(resolve)));
+  ordinarySuggestionInFlight.set(observationId,running);return process.env.AYNI_SERVERLESS==='1'?running:undefined;
 }
 
 async function migrate() {
@@ -480,11 +480,11 @@ async function dashboard() {
   try{effectiveCalendarDay=(await loadEffectiveCalendar(db,{teacherId,classroomId,from:today,to:today})).days[0]??null;}catch{}
   const todayBlocks = await db.query(`
     select se.id, se.start_time::text, se.end_time::text, se.block_type, coalesce(se.title, a.title) as title,
-           se.activity_id, a.purpose, a.details as activity_details, le.title as experience_title, le.details->'activity_route' as activity_route,
+           se.activity_id, a.purpose, a.details as activity_details, le.title as experience_title, le.details->'activity_route' as activity_route, le.details as project_details,
            coalesce(criteria.criteria, '[]'::jsonb) as criteria,
            coalesce(a.preparation->'materials', '[]'::jsonb) as materials, coalesce(a.preparation->'steps', '[]'::jsonb) as steps,
            coalesce(del.status, 'planned') as status, coalesce(del.current_override, false) as current_override,
-           least(coalesce(del.current_step_index, 0), greatest(coalesce(jsonb_array_length(a.preparation->'steps'), 0) - 1, 0))::int as current_step_index,
+           coalesce(del.current_step_index, 0)::int as current_step_index,
            del.closure_type, del.teacher_closure_note
       from class_schedule_entries se
       join classrooms cl on cl.id = se.classroom_id
@@ -505,7 +505,7 @@ async function dashboard() {
            and exact.scheduled_on=$2::date and exact.block_type='workshop'))
      order by se.start_time, se.sort_order
   `, [teacherId, today]);
-  const rawBlocks = todayBlocks.rows.map((block) => ({ ...block, materials: block.materials ?? [], steps: block.steps ?? [], criteria: normalizeCriteria(block.criteria ?? []),
+  const rawBlocks = todayBlocks.rows.map((block) => ({ ...block, current_step_index:normalizeStepIndex(block.current_step_index,activityMomentCount(block.activity_details??{},block.steps??[])), materials: activityMaterials(block.materials,block.activity_details??{},block.project_details??{}).materials,materials_source:activityMaterials(block.materials,block.activity_details??{},block.project_details??{}).source, steps: block.steps ?? [], criteria: normalizeCriteria(block.criteria ?? []),
     day_progress: block.activity_route?.length ? { position: block.activity_route.findIndex(item=>item.id===block.activity_details?.route_item_id)+1, total: block.activity_route.length } : null,
     pedagogical_blocks: activityPedagogicalBlocks(block.activity_details ?? {}, block.steps ?? [], normalizeCriteria(block.criteria ?? [])) }));
   const attendanceRecorded = Number(attendanceResult.rows[0]?.recorded_count ?? 0) > 0;
@@ -2736,7 +2736,12 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
           send(response, 200, { ...history, competencies, criteria }, origin);
         } else if (request.method === "POST" && /^\/api\/ordinary-observations\/[0-9a-f-]+\/suggest$/i.test(url.pathname) && curricularReviewEnabled) {
           await readJson(request);
-          const result = await suggestOrdinaryObservation(teacherId, url.pathname.split("/")[3]);
+          const observationId=url.pathname.split('/')[3];
+          // Own the record before waiting on a background task; keys are never authority.
+          await ordinaryAttributionHistory(db,teacherId,observationId);
+          const running=ordinarySuggestionInFlight.get(observationId);if(running)await running;
+          const history=await ordinaryAttributionHistory(db,teacherId,observationId);
+          const result = running&&history.latest?.raw_revision===history.observation.source_revision?history.latest:await suggestOrdinaryObservation(teacherId,observationId);
           send(response, 200, { attribution: result }, origin);
         } else if (request.method === "POST" && /^\/api\/ordinary-observations\/[0-9a-f-]+\/attributions$/i.test(url.pathname) && curricularReviewEnabled) {
           const observationId = url.pathname.split("/")[3], body = await readJson(request);
@@ -2918,22 +2923,21 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         send(response, 400, { error: "La acción de jornada no es válida." }, origin);
         return;
       }
-      const entry = (await db.query(`select se.id,se.classroom_id,se.scheduled_on::text, coalesce(jsonb_array_length(a.preparation->'steps'), 0)::int as total_steps from class_schedule_entries se join classrooms c on c.id = se.classroom_id left join activities a on a.id = se.activity_id where se.id = $1 and c.teacher_id = $2`, [body.scheduleEntryId, teacherId])).rows[0];
+      const entry = (await db.query(`select se.id,se.classroom_id,se.scheduled_on::text,a.details,a.preparation from class_schedule_entries se join classrooms c on c.id = se.classroom_id left join activities a on a.id = se.activity_id where se.id = $1 and c.teacher_id = $2`, [body.scheduleEntryId, teacherId])).rows[0];
       if (!entry) {
         send(response, 403, { error: "El bloque no pertenece al aula activa." }, origin);
         return;
       }
       const actualToday=async tx=>!!(await tx.query("select 1 from daily_execution_logs where schedule_entry_id=$1 and execution_date=$2::date and status='active' and actual_started_at is not null",[entry.id,today])).rows.length;
       if(entry.scheduled_on!==today&&!await actualToday(db)){send(response,422,{error:"Puedes iniciar esta actividad en su fecha programada. Hoy conserva la jornada actual."},origin);return;}
-      if (action === "set_step" && !isValidStepIndex(body.stepIndex, entry.total_steps)) {
-        send(response, 400, { error: "El paso no pertenece a esta actividad." }, origin);
-        return;
-      }
       const status = action === "complete" ? "completed" : action === "skip" ? "skipped" : action === "set_step" ? "active" : "active";
       const closureType = action === "complete" ? (body.closureType === "note" ? "note" : "as_planned") : action === "skip" ? "cancelled" : null;
       const closureNote = cleanText(body.closureNote, 800) || null;
       await db.transaction(async tx => {
       await lockClassroomSchedule(tx,entry.classroom_id);
+      const progress=(await tx.query('select current_step_index,status from daily_execution_logs where schedule_entry_id=$1 and execution_date=$2::date for update',[entry.id,today])).rows[0];
+      try{assertActivityMomentAction({action,stepIndex:body.stepIndex,currentStep:progress?.current_step_index??0,totalSteps:activityMomentCount(entry.details??{},entry.preparation?.steps??[]),status:progress?.status});}
+      catch(error){throw new VersionConflictError(error.message);}
       const current=(await tx.query(`select scheduled_on::text,weekday from class_schedule_entries where id=$1`,[entry.id])).rows[0];
       if((current.scheduled_on ? current.scheduled_on!==today : Number(current.weekday)!==new Date(`${today}T00:00:00Z`).getUTCDay())&&!await actualToday(tx))
         throw new VersionConflictError("El bloque cambió de fecha. Recarga Hoy antes de comenzar.");

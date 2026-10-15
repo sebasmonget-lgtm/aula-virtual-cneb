@@ -10,6 +10,8 @@ import {writeWorkspaceLocation} from "@/src/lib/workspace-location";
 import type {OpenDocument} from "./documents-screen";
 import {ActivityReadingView} from './activity-reading-view';
 import {OrdinaryObservationDialog} from './ordinary-observation-dialog';
+import {ActivityRunView} from './activity-run-view';
+import {Dialog,DialogContent,DialogHeader,DialogTitle,DialogDescription,DialogFooter} from '@/components/ui/dialog';
 import styles from './activity-reading.module.css';
 import {LoadingState,WorkflowFeedback} from "./workflow-ui";
 
@@ -19,12 +21,13 @@ export function ActivityConsultation({id,onBack,activities=[],onActivity,inToday
   const [dashboard,setDashboard]=useState<LocalDashboard|null>(null),[starting,setStarting]=useState(false),[observing,setObserving]=useState(false);
   const [downloading,setDownloading]=useState(false),[downloadError,setDownloadError]=useState('');
   const [actionError,setActionError]=useState('');
+  const [confirmStart,setConfirmStart]=useState(false);
   const siblings=activities.length?activities:document?.project_activities??[];
   const block=dashboard?.today.blocks.find(block=>block.activity_id===id)??null,position=siblings.findIndex(item=>item.id===id);
   useEffect(()=>{let live=true;void loadLocalDashboard().then(value=>{if(live)setDashboard(value);}).catch(()=>{});return()=>{live=false;};},[id]);
   async function start(){if(!block||starting)return;setStarting(true);try{if(block.status==='planned')await updateLocalExecution({scheduleEntryId:block.id,action:'start'});writeWorkspaceLocation('Hoy',{activity:id});}catch(cause){setActionError(cause instanceof Error?cause.message:'No pudimos iniciar la actividad.');}finally{setStarting(false);}}
   async function developToday(){if(starting)return;setStarting(true);setActionError('');try{
-    const next=await updateLocalExecution({activityId:id,action:'start_today'});setDashboard(next);onStarted?.(next);
+    const next=await updateLocalExecution({activityId:id,action:'start_today'});setConfirmStart(false);setDashboard(next);onStarted?.(next);
   }catch(cause){setActionError(cause instanceof Error?cause.message:'No pudimos iniciar la actividad en Hoy.');}finally{setStarting(false);}}
   useEffect(()=>{const controller=new AbortController();void apiFetch(`${localDatabaseApiUrl}/api/documents/activity/${id}`,{signal:controller.signal}).then(async response=>{
     const value=await apiJson<{document?:OpenDocument;error?:string}>(response);if(!response.ok||!value.document)throw new Error(value.error??'No pudimos abrir la actividad guardada.');return value.document;
@@ -36,6 +39,18 @@ export function ActivityConsultation({id,onBack,activities=[],onActivity,inToday
     link.href=url;link.download=response.headers.get('content-disposition')?.match(/filename="([^"\\/]+)"/)?.[1]??`actividad-${id}.docx`;
     window.document.body.appendChild(link);link.click();link.remove();window.setTimeout(()=>URL.revokeObjectURL(url),60000);
   }catch(cause){setDownloadError(cause instanceof Error?cause.message:'No pudimos descargar el Word.');}finally{setDownloading(false);}}
+  if(inToday&&document?.guide&&dashboard){
+    const guide=document.guide;
+    const previewBlock:LocalDashboard['today']['blocks'][number]={id:'consultation',activity_id:id,title:document.title,purpose:String(document.content.purpose??''),experience_title:document.experience_title??null,activity_details:null,
+      materials_source:String(document.content.materials_source??'activity'),materials:Array.isArray(document.content.materials)?document.content.materials as string[]:[],steps:[],criteria:guide.criteria.map(item=>({...item,competency_text:document.competencies?.find(card=>card.id===item.competency_v4_id)?.name??item.competency_v4_id??''})),pedagogical_blocks:guide.pedagogical_blocks,
+      start_time:'',end_time:'',block_type:'activity',status:'planned',display_status:'planned',current_override:false,current_step_index:0,closure_type:null};
+    const canStart=document.status==='active'&&(!document.actual_execution_date||document.actual_execution_date===dashboard.today.date)&&!['completed','skipped'].includes(block?.status??'');
+    return <><ActivityRunView key={id} block={previewBlock} evidenceRevision={0} onBack={onBack} preview onEvidence={()=>{}} onStepChange={async()=>{}} onComplete={async()=>{}} starting={starting}
+      onStart={canStart?()=>{if(document.occurs_on!==dashboard.today.date)setConfirmStart(true);else void developToday();}:undefined}
+      actions={<><Button variant="outline" disabled={downloading} onClick={()=>void download()}><Download size={18}/>Descargar Word</Button>{!canStart&&<p className="text-sm">Esta actividad ya tiene trabajo registrado. Puedes consultar su guía.</p>}</>}/>
+      {(actionError||downloadError)&&<WorkflowFeedback tone="error">{actionError||downloadError}</WorkflowFeedback>}
+      <Dialog open={confirmStart} onOpenChange={value=>{if(!starting)setConfirmStart(value);}}><DialogContent><DialogHeader><DialogTitle>¿Desarrollar esta actividad hoy?</DialogTitle><DialogDescription>Esta actividad está programada para otra fecha. Registraremos que la desarrollas hoy y conservaremos su fecha prevista.</DialogDescription></DialogHeader><DialogFooter><Button variant="outline" disabled={starting} onClick={()=>setConfirmStart(false)}>Cancelar</Button><Button disabled={starting} onClick={()=>void developToday()}>{starting?'Abriendo…':'Sí, desarrollar hoy'}</Button></DialogFooter></DialogContent></Dialog></>;
+  }
   return <section className="mx-auto max-w-6xl space-y-4"><Button variant="outline" disabled={starting||downloading} onClick={onBack}><ArrowLeft size={18}/>{inToday?"Volver a Hoy":"Volver a Mi año"}</Button><p className="text-sm text-[#526b87]">{inToday&&!block?"Consulta · Conservamos su fecha programada. Si decides trabajarla hoy, pulsa «Desarrollar hoy».":"Actividad completa · Consulta"}</p>
     {error?<WorkflowFeedback tone="error">{error}<Button variant="outline" onClick={()=>setRetry(value=>value+1)}>Reintentar</Button></WorkflowFeedback>:document?<>
       <ActivityReadingView document={document} position={position>=0?position+1:undefined} total={siblings.length} actions={<>

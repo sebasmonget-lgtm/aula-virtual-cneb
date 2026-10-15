@@ -5,6 +5,7 @@ import { createAIProviderForPlan } from "./ai-provider-factory.mjs";
 import { buildProviderRequest } from "./ai-generation-v4.mjs";
 import { loadLearningExperienceSkill } from "./learning-experience-skill.mjs";
 import { focusedKnowledgeForDirectWorkflow } from "./ai-focused-knowledge.mjs";
+import {isMaterialPlaceholder} from './annual-proposal-intent.mjs';
 
 const string = { type: "string", minLength: 1 };
 const strings = { type: "array", items: string };
@@ -92,9 +93,11 @@ export function validateProjectDependents(output, competencyIds) {
 }
 
 export function validateProjectMaster(output, decisions, dependents, availableDates) {
+  if(Array.isArray(output?.resources)&&output.resources.some(isMaterialPlaceholder))
+    fail('incomplete_materials','Define materiales concretos en español; no dejes recursos «por definir» o «por seleccionar». Conserva las decisiones docentes y no inventes disponibilidad.');
   if (!hasText(output?.foundation, 1500) || !hasText(output.closing_description, 700) ||
       !hasText(output.closing_rationale, 700) || !Array.isArray(output.resources) ||
-      output.resources.some((value) => !hasText(value, 160)) || !Array.isArray(output.activities) ||
+      output.resources.some((value) => !hasText(value, 160)||isMaterialPlaceholder(value)) || !Array.isArray(output.activities) ||
       output.activities.length !== availableDates.length)
     fail("invalid_master", "El proyecto generado necesita revisión. Inténtalo nuevamente.");
   const dates = new Set(availableDates), seenDates = new Set(), selected = new Set(decisions.competency_ids);
@@ -108,13 +111,13 @@ export function validateProjectMaster(output, decisions, dependents, availableDa
         !hasText(row.criterion_text, 500) || !hasText(row.expected_evidence, 500) ||
         !Array.isArray(row.acceptable_evidence_variations) || row.acceptable_evidence_variations.some((value) => !hasText(value, 240)) ||
         !Array.isArray(row.observation_focus) || !row.observation_focus.length || row.observation_focus.some((value) => !hasText(value, 240)) ||
-        !Array.isArray(row.materials) || row.materials.some((value) => !hasText(value, 160)) ||
+        !Array.isArray(row.materials) || row.materials.some((value) => !hasText(value, 160)||isMaterialPlaceholder(value)) ||
         !hasText(row.mediation_notes, 500) || !hasText(row.continuity_from_previous, 400) ||
         !hasText(row.continuity_to_next, 400) || !hasText(row.flexibility_notes, 500) ||
         !hasText(row.role_in_project, 400) ||
         !hasText(row.expected_progression, 400) || !Number.isInteger(row.estimated_minutes) ||
         row.estimated_minutes < 10 || row.estimated_minutes > 180)
-      fail("invalid_activity_map", "Una actividad propuesta no coincide con el calendario o las competencias.");
+      fail("invalid_activity_map", "Una actividad necesita revisar su calendario, competencias o materiales. Los materiales deben ser concretos, sin «por definir».");
     seenDates.add(row.date); titles.add(normalized);
   }
   const ordered = [...output.activities].sort((a, b) => a.date.localeCompare(b.date));
@@ -276,7 +279,7 @@ export async function generateProjectMaster({ context, decisions, providerDecisi
       properties: { ...PROJECT_MASTER_SCHEMA.properties, ...PROJECT_DEPENDENTS_SCHEMA.properties } };
     const requestContext = { ...context, confirmed_decisions: providerDecisions,
       available_instructional_dates: availableDates, instructional_dates: availableDates,
-      task: `Crea el proyecto completo en una sola respuesta: fundamento, preguntas orientadoras, recorrido flexible, un criterio general con evidencia esperada por competencia, cierre y recursos. Redacta una fundamentación breve, de hasta 1200 caracteres, con frases completas; sintetiza antes de alcanzar el límite, nunca cortes una frase. Incluye exactamente una actividad por cada una de las ${availableDates.length} fechas recibidas. No cambies competencias, fechas ni decisiones docentes. Usa acciones concretas y palabras sencillas. No inventes observaciones ni logros.` };
+      task: `Crea el proyecto completo en una sola respuesta: fundamento, preguntas orientadoras, recorrido flexible, un criterio general con evidencia esperada por competencia, cierre y recursos. Redacta una fundamentación breve, de hasta 1200 caracteres, con frases completas; sintetiza antes de alcanzar el límite, nunca cortes una frase. Incluye exactamente una actividad por cada una de las ${availableDates.length} fechas recibidas. No cambies competencias, fechas ni decisiones docentes. Usa acciones concretas y palabras sencillas. Define materiales concretos en español para cada día a partir de las decisiones y recursos del proyecto. Nunca escribas «por definir», «por seleccionar» ni nombres de campos técnicos. No inventes disponibilidad. No inventes observaciones ni logros.` };
     const validate = output => {
       const generatedDependents = validateProjectDependents(Object.fromEntries(PROJECT_DEPENDENTS_SCHEMA.required.map(key => [key, output[key]])), decisions.competency_ids);
       return { output: validateProjectMaster(output, decisions, generatedDependents, availableDates), dependents: generatedDependents };

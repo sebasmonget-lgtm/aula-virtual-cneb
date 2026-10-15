@@ -782,3 +782,7 @@ Base 678ebbb/50ea956. Apertura nominal local inmediata y copia al primer envío;
 
 
 Cierre chat/Hoy/Documentos: producto ec6383f, Preview https://ayni-aula-staging-31l6t4dkj-ayni4.vercel.app/ · dpl_BosgNJL6hYUqKsJs9i59hTZMfUzr · READY/target null/SHA exacto. Build cloud y 26 smoke PASS; GitHub sincronizado. Preview abierto con sesión ya existente, solo inicio leído. Producción conserva dpl_H19YWzRdGjkgh8y72QAd1qBty7Mf/9a09202; datos pedagógicos cloud sin mutaciones de QA. Servidor fixture apagado; documentación del recibo en commit posterior sin cambio de producto.
+
+
+## Biblioteca lateral y guía de Hoy — solo Preview (2026-10-14)
+Base ec6383f/a04b63f, rama codex/mi-ano-simple-preview. Biblioteca/ficha lateral con competencias, filtros B1–B4/Todo el año y detalle ilustrado reutilizado en Documentos. Hoy abre guía antes de iniciar, confirma ejecución fuera de fecha, muestra materiales y persiste momentos con cierre validado en servidor. Captura cotidiana adopta componentes de diagnóstico para foto/búsqueda sin cambiar tablas; libre explícita conserva contexto y revisión curricular existente. Conteo Sin registro anual distinto de evaluación bimestral. Dos competencias y recursos concretos exigidos en nueva generación/preparación; fuentes históricas se conservan. 83 focales + 32 evaluación PASS, UI/HTTP con 35 niños ficticios y Word; cero llamadas pagadas. Sin migraciones ni QA en datos reales. Informe: docs/qa/AYNI_BIBLIOTECA_GUIA_HOY_2026-10-14.md. Publicación Preview pendiente de recibo; Producción excluida.

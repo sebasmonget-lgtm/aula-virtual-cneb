@@ -12,6 +12,7 @@ export function validateOrdinaryObservation(input) {
   if (!['guided', 'spontaneous'].includes(input.sourceKind)) throw new TypeError("Elige el tipo de observación.");
   if (input.activityId != null && !validId(input.activityId)) throw new TypeError("La actividad no es válida.");
   if (input.criterionId != null && (!validId(input.criterionId) || !input.activityId)) throw new TypeError("El criterio requiere una actividad válida.");
+  if(input.sourceKind==='spontaneous'&&(input.criterionId!=null||input.momentId!=null))throw new TypeError('La observación libre se guarda sin un criterio asociado. Puedes revisarla después.');
   if (input.momentId != null && (typeof input.momentId !== 'string' || !input.criterionId || input.momentId.length > 80)) throw new TypeError("El momento requiere un criterio de la actividad.");
   const rawText = input.rawText == null ? null : input.rawText;
   if (rawText !== null && (typeof rawText !== 'string' || !rawText.trim() || rawText.length > 4000))

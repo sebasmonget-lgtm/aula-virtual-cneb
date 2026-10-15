@@ -4,6 +4,7 @@ import { lockClassroomSchedule, limaToday } from "../src/lib/activity-schedule-i
 import {COMPLETE_PROJECT_POLICY} from "../src/lib/complete-project-preparation.mjs";
 import {assertSingleProjectPreparationRevision} from "../src/lib/annual-proposal-preview.mjs";
 import {loadProjectChat} from "../src/lib/annual-project-chat.mjs";
+import {proposalIntentIssues} from '../src/lib/annual-proposal-intent.mjs';
 
 async function futureDates(db,project){
   const recorded=(await db.query(`select distinct a.occurs_on::text as date from activities a join learning_experiences e on e.id=a.experience_id
@@ -32,6 +33,7 @@ export async function handlePreparationRoutes({request,response,url,db,teacherId
         where p.classroom_id=$1 and p.school_year_id=$2 and y.owner_id=$3 and exists(select 1 from jsonb_array_elements(p.proposal->'proposed_experiences') r where r->>'proposal_id'=$4)`,[context.id,context.school_year_id,teacherId,proposalActivities[1]])).rows;
       if(!source.length)throw new VersionConflictError('El proyecto no pertenece a tu año.');
       const activities=(await db.query(`select a.id,a.title,a.experience_id,se.scheduled_on::text as date,
+        coalesce((select jsonb_agg(distinct ac.competency_v4_id) filter(where ac.competency_v4_id is not null) from activity_criteria ac where ac.activity_id=a.id and ac.status='active'),'[]'::jsonb) as competency_ids,
         coalesce(d.status,'planned') as execution_status from class_schedule_entries se join activities a on a.id=se.activity_id
         join learning_experiences e on e.id=a.experience_id join annual_plans p on p.id=e.annual_plan_id
         left join daily_execution_logs d on d.schedule_entry_id=se.id
@@ -107,6 +109,9 @@ export async function handlePreparationRoutes({request,response,url,db,teacherId
       const dates=body.selectedDates;
       if(!Array.isArray(dates)||!dates.length||new Set(dates).size!==dates.length||dates.some(date=>typeof date!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(date)||date<limaToday()))
         throw new VersionConflictError('Confirma en el calendario los días que trabajarás antes de preparar el proyecto.');
+      const candidate=plan.proposal.proposed_experiences.find(row=>row.proposal_id===body.proposalId);
+      if(!candidate||proposalIntentIssues(candidate,[],plan.proposal.curriculum_reference??[]).length)
+        throw new VersionConflictError('Antes de preparar, completa con Ayni las dos competencias y los materiales concretos de este proyecto. Conservamos lo que ya está guardado.');
       if(plan.status==='draft'){
         const current=(await db.query("select * from annual_plans where classroom_id=$1 and status='active'",[context.id])).rows[0];
         if(!current||plan.supersedes_plan_id!==current.id||plan.proposal.pending_changes?.length)throw new VersionConflictError("Confirma primero Mi año. Conservamos el borrador.");

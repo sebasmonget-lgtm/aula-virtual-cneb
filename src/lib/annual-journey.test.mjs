@@ -7,7 +7,7 @@ import JSZip from "jszip";
 import { solveAnnualJourneyCalendar } from "./annual-journey-calendar.mjs";
 import { nationalSchoolHolidays2026, defaultInitialStage } from "./annual-plan-calendar.mjs";
 import { fixtureCalendar, generationFixture as makeFixture } from "./test-fixtures/annual-journey.mjs";
-const generationFixture = (cards = curriculum) => makeFixture(cards);
+const generationFixture = (cards = curriculum) => {const out=makeFixture(cards);out.proposals=out.proposals.map(row=>({...row,opportunities:out.everyday_opportunities.slice(0,2).map(({moment,...item})=>{void moment;return item;})}));return out;};
 import { buildAnnualClassroomSnapshot } from "./annual-classroom-snapshot.mjs";
 import { generateAnnualJourney, appendJourneyIntent, applyAnnualJourneyChanges, refreshJourneySnapshot } from "./annual-journey-service.mjs";
 import { validateAnnualJourney } from "./annual-journey-contract.mjs";
@@ -126,9 +126,9 @@ test("generación moderna usa una llamada y cobertura concreta incluyendo moment
     calendar: fixtureCalendar(), createProvider: provider(calls) });
   validateAnnualJourney(plan, curriculum, { confirmation: true });
   assert.equal(calls.length, 1); assert.equal(plan.proposed_experiences.length, 15);
-  const broken = structuredClone(plan); broken.everyday_opportunities = [];
+  const broken = structuredClone(plan); broken.everyday_opportunities = [];broken.proposed_experiences.forEach(row=>{row.opportunities=row.opportunities.slice(0,1);row.primary_competency_ids=row.primary_competency_ids.slice(0,1);});
   assert.throws(() => validateAnnualJourney(broken, curriculum), (e) => e.reason === "coverage_missing");
-  const nominal = structuredClone(plan); nominal.proposed_experiences[0].primary_competency_ids.push("COM_ORAL");
+  const nominal = structuredClone(plan); nominal.proposed_experiences[0].opportunities=nominal.proposed_experiences[0].opportunities.slice(0,1);
   assert.throws(() => validateAnnualJourney(nominal, curriculum), (e) => e.reason === "nominal_competency");
   assert.ok(!JSON.stringify(calls[0].request).includes("source_refs"));
 });
@@ -371,4 +371,17 @@ test("generación anual pendiente conserva response ID y no cuenta los sondeos c
  await assert.rejects(()=>generateAnnualJourney(args),error=>error.reason==="response_pending");
  const result=await generateAnnualJourney({...args,checkpoint});assert.equal(result.resolved_calendar.projects.length,15);
  assert.equal(created,1);assert.equal(retrieved,1);assert.equal(checkpoint.attempts.length,1);
+});
+
+test('generación inicial repara una sola propuesta con una competencia sin agregar IDs nominales',async()=>{
+ const calls=[];
+ const createProvider=()=>({generate:async request=>{
+   calls.push(request);const bundle=request.ai_context_bundle;
+   if(request.workflow==='annual_plan'){const output=generationFixture();output.proposals[0].opportunities=output.proposals[0].opportunities.slice(0,1);return {output};}
+   assert.equal(request.workflow,'annual_journey_repair');assert.equal(bundle.affected_proposal_ids.length,1);
+   return {output:{replacements:[{proposal_id:bundle.affected_proposal_ids[0],change_reason:'Completar oportunidades reales',...generationFixture().proposals[0]}],everyday_opportunities:bundle.plan.everyday_opportunities,evidence_interpretations:bundle.plan.evidence_interpretations}};
+ }});
+ const plan=await generateAnnualJourney({context:{year:2026,age:5},snapshot:snapshot(),curriculum,calendar:fixtureCalendar(),createProvider});
+ assert.equal(calls.length,2);assert.equal(plan.proposed_experiences[0].primary_competency_ids.length,2);assert.equal(plan.proposed_experiences[0].opportunities.length,2);
+ assert.deepEqual(plan.proposed_experiences.slice(1).map(row=>row.title),generationFixture().proposals.slice(1).map(row=>row.title));
 });

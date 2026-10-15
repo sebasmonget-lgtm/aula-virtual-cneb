@@ -15,6 +15,7 @@ import {initialProjectChat,presentProjectChat} from "@/src/lib/project-chat-gree
 import {annualDisplayTitle} from "@/src/lib/annual-year-editor.mjs";
 
 export type ChangeProposal={proposal_id:string;title:string;purpose:string;primary_competency_ids:string[];
+  opportunities?:{competency_id:string;child_action:string;conditions:string;mediation:string;observation:string;supports:string}[];
   period:string;duration_weeks:number;planned_start_date?:string;planned_end_date?:string;children_actions:string[];materials:string[]};
 export type ProposalChangePreview={id:string;proposalId:string;request:string;proposal:ChangeProposal;changes:string[];conversationId?:string|null;conversationRevision?:number|null};
 export type ProposalPreviewState={planId:string;revision:number;preview:ProposalChangePreview|null;pendingRequest?:string};

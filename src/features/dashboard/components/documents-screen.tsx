@@ -1,4 +1,5 @@
 "use client";
+import {ProjectReadingView} from "./project-reading-view";
 import { newAyniFeatureEnabled } from "@/src/lib/new-ayni-feature-flag.mjs";
 
 import {displayDocumentDate} from "@/src/lib/display-date";
@@ -13,8 +14,7 @@ import { AnnualPlanDocument, type DocumentContext, type Proposal } from "./annua
 import { LoadingState, PageIntro, WorkflowFeedback } from "./workflow-ui";
 import { DocumentTree, type ArtifactState } from "./document-tree";
 import {ActivityReadingView} from "./activity-reading-view";
-import {ProjectPictogram} from "./project-pictogram";
-import {AnnualCompetencies,AnnualProjectPreview} from "./annual-project-preview";
+import {AnnualProjectPreview} from "./annual-project-preview";
 import type {ChangeProposal} from "./annual-proposal-change-dialog";
 import { DocumentSyncPanel } from "./document-sync-panel";
 
@@ -28,6 +28,7 @@ export type OpenDocument = DocumentEntry & {
   institution_name?: string; document_context?: DocumentContext; content: Record<string, unknown>;
   source_plan_format?: string; formal_ready?: boolean;
   actual_execution_date?:string|null;
+  guide?: {criteria: import('@/src/lib/local-database').ActivityCriterion[];pedagogical_blocks: import('./pedagogical-block').PedagogicalBlockData[]};
   starts_on?: string; ends_on?: string; occurs_on?: string; experience_title?: string;
   period_start?: string; period_end?: string; competencies?: { id: string; name: string }[];
   active_criterion?: { criterion_text: string; competency_v4_id: string } | null;
@@ -98,11 +99,7 @@ export function DocumentContent({ document }: { document: OpenDocument }) {
         <p className="mt-1 text-sm">{text(row.period)} · {String(row.duration_weeks ?? "")} semanas</p><p className="mt-1">{text(row.rationale)}</p></li>)}</ol></article>;
   }
   if (document.kind === "annual_plan") return <AnnualPlanDocument proposal={document.content as Proposal} context={document.document_context ?? {}} competencies={document.competencies ?? []} status={document.status as "draft" | "active" | "archived"} />;
-  if(document.kind==='experience'&&document.content.project_master){
-    const content=document.content,master=content.project_master as Record<string,unknown>,decisions=(content.decisions??{}) as Record<string,unknown>;
-    const names=new Map((document.competencies??[]).map(card=>[card.id,card.name])),ids=items(decisions.competency_ids??content.primary_competency_ids),route=Array.isArray(content.activity_route)?content.activity_route as Record<string,unknown>[]:[];
-    return <article className="space-y-4" aria-label="Proyecto guardado"><header className="flex items-start gap-4 rounded-2xl border bg-white p-5"><ProjectPictogram project={{title:document.title,purpose:text(content.purpose),primary_competency_ids:ids}} className="size-20 shrink-0 sm:size-28"/><div className="min-w-0"><h2 className="text-2xl font-bold text-[#172b52]">{document.title}</h2><p className="mt-2 text-sm text-[#526b87]">{statusFor(document.status)} · Versión {document.version} · {dateFor(document.starts_on??'')} – {dateFor(document.ends_on??'')}</p><p className="mt-3 leading-relaxed">{text(content.purpose)}</p><AnnualCompetencies ids={ids} names={names}/></div></header><div className="grid gap-4 md:grid-cols-2"><section className="space-y-3 rounded-2xl border bg-[#edf9f4] p-5"><h3 className="font-bold text-[#07576c]">Qué buscamos</h3><p className="leading-relaxed">{text(master.foundation)||text(content.purpose)}</p></section><section className="space-y-3 rounded-2xl border bg-[#fff8e7] p-5"><h3 className="font-bold text-[#79500c]">Materiales</h3><ul className="list-disc space-y-1 pl-5">{items(master.resources??content.spaces_and_materials).map((material,index)=><li key={index}>{material}</li>)}</ul></section></div><section className="rounded-2xl border bg-white p-5"><h3 className="text-lg font-bold text-[#172b52]">Actividades del proyecto</h3><ol className="mt-4 space-y-3">{route.map((item,index)=><li key={text(item.id)||index} className="rounded-xl bg-[#edf7fa] p-4"><p className="text-sm text-[#526b87]">{dateFor(text(item.date||item.planned_date))}</p><h4 className="mt-1 font-bold">{index+1}. {text(item.title)}</h4><p className="mt-2 leading-relaxed">{text(item.specific_purpose||item.purpose)}</p>{text(item.mediation_notes)&&<p className="mt-2 text-sm"><b>Cómo acompañar:</b> {text(item.mediation_notes)}</p>}{text(item.evaluation_criterion)&&<p className="mt-2 text-sm"><b>Qué observar:</b> {text(item.evaluation_criterion)}</p>}</li>)}</ol></section>{text(master.closing_description)&&<section className="rounded-2xl border bg-[#f4efff] p-5"><h3 className="font-bold text-[#513283]">Para cerrar el proyecto</h3><p className="mt-2 leading-relaxed">{text(master.closing_description)}</p></section>}</article>;
-  }
+  if(document.kind==='experience'&&document.content.project_master)return <ProjectReadingView document={document}/>;
   if (document.kind === "period_closure") {
     const entries=Array.isArray(document.content.entries)?document.content.entries as Record<string,unknown>[]:[];
     const names=new Map((document.competencies??[]).map((card)=>[card.id,card.name]));

@@ -11,27 +11,33 @@ import { currentObservationText, pendingObservationWork } from "@/src/lib/observ
 import { localDatabaseApiUrl, type ActivityCriterion, type LocalStudent, type PrivateMediaUpload } from "@/src/lib/local-database";
 import { AsyncButton, WorkflowFeedback } from "./workflow-ui";
 import { DictationRecorder } from "./dictation-recorder";
-import { preparePrivateMedia } from "./media-attachment-input";
+import { MediaAttachmentInput } from "./media-attachment-input";
+import {StudentPhoto} from './student-photo';
+import {AnnualCompetencies} from './annual-project-preview';
+import {OrdinaryReviewDialog} from './ordinary-review-dialog';
 
 type SavedObservation = { id: string; student_id: string; raw_text: string | null; corrected_text?: string | null; source_revision: number; status: string };
 
 export function OrdinaryObservationDialog({ students, activity, onClose }: {
-  students: LocalStudent[]; activity: { id: string; title: string; criteria: ActivityCriterion[]; initialStudentId?: string; initialCriterionId?: string; momentId?: string } | null; onClose: () => void;
+  students: LocalStudent[]; activity: { id: string; title: string; criteria: ActivityCriterion[]; initialStudentId?: string; initialCriterionId?: string; momentId?: string;free?:boolean } | null; onClose: () => void;
 }) {
   const [studentId, setStudentId] = useState(activity?.initialStudentId ?? "");
-  const [criterionId, setCriterionId] = useState(activity?.initialCriterionId ?? "");
-  const [priority, setPriority] = useState<{student_id: string; has_evidence: boolean}[]>([]);
+  const [criterionId, setCriterionId] = useState(activity?.free?'':activity?.initialCriterionId ?? "");
+  const [search,setSearch]=useState(''),[review,setReview]=useState(false);
+  const guided=!!activity&&!activity.free;
+  const [priority, setPriority] = useState<{student_id: string; has_evidence: boolean;record_count?:number}[]>([]);
+  const [coverageRevision,setCoverageRevision]=useState(0);
   const [priorityError, setPriorityError] = useState("");
   const competencyId = activity?.criteria.find(item => item.id === criterionId)?.competency_v4_id;
   useEffect(() => {
     if (!activity || !competencyId) return;
     const controller = new AbortController();
     void apiFetch(`${localDatabaseApiUrl}/api/period-evaluations/observe-today?activityId=${encodeURIComponent(activity.id)}&competencyId=${encodeURIComponent(competencyId)}`, { signal: controller.signal })
-      .then(async response => { if (!response.ok) throw new Error(); return response.json() as Promise<{students?:{student_id:string;has_evidence:boolean}[]}>; })
+      .then(async response => { if (!response.ok) throw new Error(); return response.json() as Promise<{students?:{student_id:string;has_evidence:boolean;record_count?:number}[]}>; })
       .then(value => { if (!controller.signal.aborted) { setPriority(value.students ?? []); setPriorityError(""); } })
       .catch(() => { if (!controller.signal.aborted) setPriorityError("No pudimos comprobar los registros de esta competencia. Puedes elegir a cualquier niño."); });
     return () => controller.abort();
-  }, [activity, competencyId]);
+  }, [activity, competencyId,coverageRevision]);
   const [rawText, setRawText] = useState("");
   const [photo, setPhoto] = useState<PrivateMediaUpload | null>(null);
   const [clientRequestId, setClientRequestId] = useState(() => crypto.randomUUID());
@@ -58,14 +64,15 @@ export function OrdinaryObservationDialog({ students, activity, onClose }: {
     try {
       const response = await apiFetch(`${localDatabaseApiUrl}/api/ordinary-observations`, {
         method: "POST", headers: { "content-type": "application/json" },
-        body: JSON.stringify({ studentId, clientRequestId, sourceKind: activity ? "guided" : "spontaneous",
-          activityId: activity?.id ?? null, criterionId: criterionId || null, momentId: activity?.momentId ?? null, rawText: text || null,
+        body: JSON.stringify({ studentId, clientRequestId, sourceKind: guided ? "guided" : "spontaneous",
+          activityId: activity?.id ?? null, criterionId: guided?criterionId || null:null, momentId: guided?activity?.momentId ?? null:null, rawText: text || null,
           photo: photo ? { base64: photo.base64, mimeType: photo.mimeType } : null }),
       });
       const data = await response.json() as { error?: string; observation: SavedObservation };
       if (!response.ok) throw new Error(data.error || "No se pudo guardar la observación.");
       setRawText(text);
       setSaved(data.observation);
+      setCoverageRevision(value=>value+1);
       setFeedbackTone("success"); setMessage("Observación guardada para el niño seleccionado.");
     } catch (error) { setFeedbackTone("error"); setMessage(error instanceof Error ? error.message : "No se pudo guardar. Tu texto sigue aquí; vuelve a intentarlo."); }
     finally { setSaving(false); }
@@ -91,7 +98,7 @@ export function OrdinaryObservationDialog({ students, activity, onClose }: {
 
   function startAnother() {
     if (!allowLeave()) return;
-    setStudentId(""); setCriterionId(activity?.initialCriterionId ?? ""); setRawText(""); setPhoto(null); setSaved(null); setEditMode(false);
+    setStudentId(""); setCriterionId(guided?activity?.initialCriterionId ?? "":''); setRawText(""); setPhoto(null); setSaved(null); setEditMode(false);setSearch('');
     setCorrectedText(""); setReason(""); setMessage(""); setHistory(null); setClientRequestId(crypto.randomUUID());
   }
 
@@ -106,26 +113,31 @@ export function OrdinaryObservationDialog({ students, activity, onClose }: {
     finally { setHistoryBusy(false); }
   }
 
+  if(review&&saved)return <OrdinaryReviewDialog students={students} initialObservationId={saved.id} onClose={()=>setReview(false)}/>;
   return <Dialog open onOpenChange={(open) => { if (!open) close(); }}>
-    <DialogContent className="flex max-h-[90dvh] flex-col overflow-hidden rounded-2xl p-0 sm:max-w-xl">
+    <DialogContent className="flex max-h-[90dvh] flex-col overflow-hidden rounded-2xl p-0 sm:max-w-3xl">
       <DialogHeader className="shrink-0 border-b px-6 py-5">
-        <DialogTitle>Registrar observación</DialogTitle>
-        <DialogDescription>{activity ? `Durante: ${activity.title}` : "Una observación espontánea, sin elegir competencia."}</DialogDescription>
+        <DialogTitle>{guided?'Registrar observación guiada':'Registrar observación libre'}</DialogTitle>
+        <DialogDescription>{activity ? `Durante: ${activity.title}` : "Escribe o dicta lo que viste o escuchaste."}</DialogDescription>
       </DialogHeader>
       <div className="min-h-0 space-y-5 overflow-y-auto px-6 py-4">
         <fieldset disabled={Boolean(saved) || blocked}>
           <legend className="mb-2 text-base font-semibold">¿A quién observaste? <span className="text-red-700">*</span></legend>
+          <input aria-label="Buscar niño o niña" placeholder="Buscar niño o niña…" value={search} onChange={event=>setSearch(event.target.value)} className="mb-3 min-h-11 w-full rounded-xl border bg-white px-3 text-sm"/>
+          <div className="max-h-64 overflow-y-auto pr-1">
           {priorityError && <p role="status" className="mb-2 text-sm">{priorityError}</p>}
           {([false, true] as const).map(hasEvidence => <div key={String(hasEvidence)} className="mb-3">
-          {competencyId && priority.length > 0 && <h3 className="mb-2 text-sm font-semibold">{hasEvidence ? "Ya tienen evidencia" : "Aún sin evidencia en esta competencia"}</h3>}
-          <div className="flex flex-wrap gap-2">{students.filter(item => priority.length && competencyId ? (priority.find(row => row.student_id === item.id)?.has_evidence ?? false) === hasEvidence : !hasEvidence).map((item) => <button key={item.id} type="button"
+          {competencyId && priority.length > 0 && students.some(item=>(item.full_name??item.name).toLocaleLowerCase('es').includes(search.toLocaleLowerCase('es'))&&(priority.find(row=>row.student_id===item.id)?.has_evidence??false)===hasEvidence)&&<h3 className="mb-2 text-sm font-semibold">{hasEvidence ? "Con registros en esta competencia" : "Sin registros en esta competencia"}</h3>}
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">{students.filter(item=>(item.full_name??item.name).toLocaleLowerCase('es').includes(search.toLocaleLowerCase('es'))).filter(item => priority.length && competencyId ? (priority.find(row => row.student_id === item.id)?.has_evidence ?? false) === hasEvidence : !hasEvidence).map((item) => <button key={item.id} type="button"
             aria-pressed={studentId === item.id} onClick={() => setStudentId(item.id)}
-            className={`min-h-11 rounded-xl border px-3 py-2 text-sm ${studentId === item.id ? "border-[#087d96] bg-[#e8f6fb] font-semibold" : "bg-white hover:border-[#087d96]"}`}>
-            {studentId === item.id && <Check className="mr-1 inline size-4" />}{item.full_name ?? item.name}</button>)}</div></div>)}
+            className={`flex min-h-20 items-center gap-3 rounded-xl border px-3 py-2 text-left text-sm ${studentId === item.id ? "border-[#087d96] bg-[#e8f6fb] font-semibold" : "bg-white hover:border-[#087d96]"}`}>
+            <StudentPhoto id={item.id} name={item.name}/><span className="min-w-0 break-words">{studentId === item.id && <Check className="mr-1 inline size-4" />}{item.full_name ?? item.name}{competencyId&&priority.some(row=>row.student_id===item.id)&&<small className="mt-1 block font-normal text-[#526b87]">{priority.find(row=>row.student_id===item.id)?.has_evidence?'Con registro':'Sin registro'}</small>}</span></button>)}</div></div>)}
+          </div>
           {!studentId && <p className="mt-2 text-sm text-[#7a3c12]">Elige un niño para escribir o dictar tu observación.</p>}
         </fieldset>
-        {!saved && activity?.initialCriterionId && <p className="rounded-xl bg-[#fff4df] p-3 text-sm"><b>Criterio:</b> {activity.criteria.find(item => item.id === activity.initialCriterionId)?.criterion_text}</p>}
-        {!saved && !activity?.initialCriterionId && activity && activity.criteria.length > 0 && <div>
+        {!saved&&guided&&criterionId&&<section className="rounded-xl bg-[#f4efff] p-3 text-sm"><b>Criterio de observación:</b><p className="mt-1">{activity?.criteria.find(item=>item.id===criterionId)?.criterion_text}</p>{competencyId&&<AnnualCompetencies ids={[competencyId]} names={new Map(activity?.criteria.map(item=>[item.competency_v4_id??'',item.competency_text])??[])}/>}</section>}
+        {!saved&&!guided&&<p className="rounded-xl bg-[#edf9f4] p-3 text-sm">Observación libre · No tiene una competencia asociada. Después de guardar, puedes pedir una sugerencia a Ayni y revisarla.</p>}
+        {!saved && guided && !activity?.initialCriterionId && activity && activity.criteria.length > 0 && <div>
           <label htmlFor="ordinary-criterion" className="mb-2 block text-sm font-semibold">Criterio observado <span className="font-normal">(opcional)</span></label>
           <select id="ordinary-criterion" value={criterionId} onChange={(event) => setCriterionId(event.target.value)}
             disabled={!studentId || saving || recordingBusy} className="min-h-11 w-full rounded-xl border bg-white px-3">
@@ -148,23 +160,16 @@ export function OrdinaryObservationDialog({ students, activity, onClose }: {
           <div><label htmlFor="ordinary-raw-text" className="mb-2 block font-semibold">¿Qué observaste?</label>
             <Textarea id="ordinary-raw-text" value={rawText} onChange={(event) => setRawText(event.target.value)}
               disabled={!studentId || saving || recordingBusy} maxLength={4000} className="min-h-32 bg-white"
-              placeholder="Describe lo que viste o escuchaste; no hace falta elegir una competencia." /></div>
+              placeholder="Cuenta qué hizo o dijo, con un ejemplo concreto." /></div>
           {studentId && <DictationRecorder key={studentId} studentId={studentId} purpose="raw_observation"
             rawTranscript context={activity?.title ?? "Observación espontánea"} currentText={rawText}
             disabled={saving} onBusyChange={setRecordingBusy}
             onTranscribed={async (text, saveNow) => { setRawText(text); if (saveNow) await save(text, true); }} />}
-          <div><label htmlFor="ordinary-photo" className="mb-2 block text-sm font-semibold">Foto privada <span className="font-normal">(opcional)</span></label>
-            <input id="ordinary-photo" type="file" accept="image/jpeg,image/png,image/webp" capture="environment"
-              disabled={!studentId || saving || recordingBusy || preparingPhoto} className="block w-full text-sm"
-              onChange={async (event) => { const file = event.currentTarget.files?.[0]; if (!file) return;
-                setPreparingPhoto(true); setMessage(""); try { setPhoto(await preparePrivateMedia(file)); }
-                catch (error) { setFeedbackTone("error"); setMessage(error instanceof Error ? error.message : "No se pudo preparar la foto."); }
-                finally { setPreparingPhoto(false); } }} />
-            {photo && <p className="mt-2 text-sm">Foto lista: {photo.name} <button type="button" className="underline" onClick={() => setPhoto(null)}>Quitar</button></p>}
-          </div>
+          <div className="rounded-xl bg-[#edf7ff] p-4"><MediaAttachmentInput key={studentId} studentId={studentId} context={activity?.title??'Observación libre'} media={photo} onMedia={setPhoto} onTranscribed={()=>{}} onBusyChange={setPreparingPhoto} disabled={!studentId||saving||recordingBusy} photoOnly buttonInputs/></div>
         </> : <section className="rounded-xl border bg-[#f6f9fd] p-4">
           <p className="font-semibold">{student?.name} · {saved.status === "voided" ? "Anulada" : saved.status === "corrected" ? "Corregida" : "Guardada"}</p>
           <p className="mt-2 whitespace-pre-wrap text-sm">{currentObservationText(saved) || "Foto sin texto"}</p>
+          {!guided&&saved.status!=='voided'&&<Button variant="outline" className="mt-3 whitespace-normal" onClick={()=>setReview(true)}>Sugerir competencias con Ayni</Button>}
           {saved.corrected_text != null && <details className="mt-3 text-sm"><summary className="min-h-11 cursor-pointer py-2">Ver texto original</summary><p className="whitespace-pre-wrap">{saved.raw_text ?? "Foto sin texto"}</p></details>}
           <p className="mt-2 text-xs text-muted-foreground">El texto original y el alumno asociado no se modifican por una corrección.</p>
           {saved.status !== "voided" && !editMode && <Button type="button" variant="outline" className="mt-3" onClick={() => { setCorrectedText(currentObservationText(saved)); setEditMode(true); }}>Corregir o anular</Button>}

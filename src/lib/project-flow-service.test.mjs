@@ -38,6 +38,11 @@ const provider = (output, check) => () => ({ generate: async (request) => {
   check?.(request); return { output, provider_metadata: { usage: { input_tokens: 10 } } };
 } });
 
+test('el proyecto preparado rechaza recursos y materiales diarios indefinidos',()=>{
+ assert.throws(()=>validateProjectMaster({...master,resources:['Soporte por definir']},decisions,dependents,['2026-04-13','2026-04-14']));
+ assert.throws(()=>validateProjectMaster({...master,activities:master.activities.map(row=>({...row,materials:['Cuento por seleccionar']}))},decisions,dependents,['2026-04-13','2026-04-14']),/materiales/);
+});
+
 test("la docente puede conservar una sola pregunta y esa selección pasa al Master", async () => {
   const oneQuestion = { ...dependents, guiding_questions: ["¿Qué vemos?"] };
   assert.equal(validateProjectDependents(oneQuestion, decisions.competency_ids), oneQuestion);

@@ -1,8 +1,10 @@
 "use client";
 
 import Image from "next/image";
-import styles from "./interviews-workspace.module.css";
-import { Eye, Lightbulb, Play,Target,Search,Heart,Plus } from "lucide-react";
+import guide from "./activity-guide.module.css";
+import {readingSentences,activityReadingStages} from "@/src/lib/activity-reading-content.mjs";
+import {AnnualCompetencies} from "./annual-project-preview";
+import { Eye, Lightbulb, Play,Target,Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export type PedagogicalBlockData = { id: string; title: string; instruction: string;
@@ -22,9 +24,14 @@ export function PedagogicalBlock({ block, onObserve, compact = false, position }
       {onObserve && <Button className="mt-2 min-h-11" onClick={()=>onObserve(moment.id,block.id)}>Registrar observación</Button>}
     </section>)}
   </article>;
-  return <article className="rounded-2xl border border-[#d8e8f0] bg-white p-4 sm:p-5">
-    <h2 className="mb-3 text-xl font-bold text-[#172b52]">{block.title}</h2>
-    <div className={styles.guidance}><section><Lightbulb size={26}/><div><h3>Qué hacer</h3><p className="whitespace-pre-line">{block.instruction}</p></div></section>{block.expected_actions&&<section><Play size={26}/><div><h3>Qué harán los niños</h3><p className="whitespace-pre-line">{block.expected_actions}</p></div></section>}{!!block.examples?.length&&<section><Eye size={26}/><div><h3>Por ejemplo</h3><ul>{block.examples.map(example=><li key={example}>{example}</li>)}</ul></div></section>}</div>
-    {block.observations?.map(moment=><div key={moment.id} className={`${styles.criterion} mt-3`}><Target size={28}/><div className={styles.criterionBody}><div className={styles.criterionTitle}><h3>Criterio de observación</h3><strong>{moment.criterion}</strong></div><div className={styles.lookFor}><Search size={24} aria-hidden="true"/><div><h4>Qué debes mirar en este momento:</h4><p>{moment.expected_evidence||moment.criterion}</p></div><Image src="/project-illustrations/boy.webp" alt="" width={96} height={96} unoptimized className={styles.lookForIllustration}/></div>{moment.competency_name&&<div className={styles.relatedCompetency}><span><Heart size={17} aria-hidden="true"/>Competencia relacionada</span><p>{moment.competency_name}</p></div>}{onObserve&&<Button className={styles.primary} onClick={()=>onObserve(moment.id,block.id)}><Plus/>Registrar observación</Button>}</div></div>)}
+  const children=activityReadingStages(block.expected_actions) as {introduction:string;stages:{label:string;text:string}[]};
+  return <article className={guide.moment}>
+    <h2>{position?`${position}. `:''}{block.title}</h2>
+    <div className={guide.columns}>
+      <section className={guide.teacher}><h3><Lightbulb/>Qué hacer</h3><ol>{(readingSentences(block.instruction) as string[]).map((text,index)=><li key={index}><span>{index+1}</span><p>{text}</p></li>)}</ol></section>
+      {block.expected_actions&&<section className={guide.children}><h3><Play/>Qué harán los niños</h3>{children.introduction&&<p>{children.introduction}</p>}{children.stages.map((stage,index)=><div key={stage.label} className={guide.childStage}><div><h4>{stage.label}</h4><p>{stage.text}</p></div><Image src={`/project-illustrations/${['planning_play','ideas','sharing'][index%3]}.webp`} alt="" width={88} height={88} unoptimized/></div>)}</section>}
+      {!!block.observations?.length&&<section className={guide.observe}><h3><Eye/>Qué observar</h3>{block.observations.map(item=><div key={item.id} className={guide.criterion}><h4><Target size={20}/>Criterio de observación</h4><p>{item.criterion}</p>{item.competency_id&&<AnnualCompetencies ids={[item.competency_id]} names={new Map([[item.competency_id,item.competency_name??item.competency_id]])}/>}<h4 className="mt-4">Qué evidencia puedes registrar</h4><p>{item.expected_evidence||item.criterion}</p>{onObserve&&<Button className="mt-4 h-auto min-h-11 w-full whitespace-normal" onClick={()=>onObserve(item.id,block.id)}><Plus size={18}/>Registrar observación guiada</Button>}</div>)}</section>}
+      {!!block.examples?.length&&<section className={guide.examples}><h3>Por ejemplo</h3><ul className="list-disc space-y-2 pl-5">{block.examples.map(example=><li key={example}>{example}</li>)}</ul></section>}
+    </div>
   </article>;
 }

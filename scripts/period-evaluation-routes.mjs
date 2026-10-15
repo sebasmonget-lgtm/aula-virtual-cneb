@@ -23,6 +23,7 @@ import { loadAssessmentMasterSources, loadComputedAssessmentContext } from "./as
 import { getCurrentClassroomContext, publicClassroomContext } from "../src/lib/classroom-context-service.mjs";
 import { familyObservationHint } from "../src/lib/family-interview-projection.mjs";
 import { limaToday } from "../src/lib/activity-schedule-integrity.mjs";
+import {classroomObservationCoverage} from '../src/lib/classroom-observation-coverage.mjs';
 import { buildClassroomPeriodReportInput, buildGenericAssessmentWorkbook, buildPeriodStatistics, classroomReportFingerprint,
   isTeacherAchievementLevel, SIAGIE_EXPORT_STATUS, stableCompetencyLabel, syncPeriodEvaluationMap, validateClassroomPeriodReport } from "../src/lib/period-assessment-closure-service.mjs";
 
@@ -290,8 +291,9 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
               ...(familyHint?{family_context_source:"family_interview"}:{})};});
         }).sort((a,b)=>a.rank-b.rank||a.student_name.localeCompare(b.student_name,"es"))
           .slice(0,AYNI_HEURISTICS.observe_today_limit);
-        const priorityStudents=requestedCompetency?students.map(student=>({student_id:student.id,
-          has_evidence:data.model.rows.some(row=>row.student_id===student.id&&row.competency_v4_id===requestedCompetency&&row.sourceRows.length>0)})):[];
+        const captureCounts=requestedCompetency?await classroomObservationCoverage(db,{classroomId:classroom.id,year,competencyId:requestedCompetency,includeOrdinary}):new Map();
+        const priorityStudents=requestedCompetency?students.map(student=>({student_id:student.id,record_count:captureCounts.get(student.id)??0,
+          has_evidence:(captureCounts.get(student.id)??0)>0})):[];
         send(response,200,{period_id:period.id,suggestions,students:priorityStudents},origin);return true;
       }
       if (request.method === "GET" && url.pathname === "/api/period-evaluations/coverage/detail") {

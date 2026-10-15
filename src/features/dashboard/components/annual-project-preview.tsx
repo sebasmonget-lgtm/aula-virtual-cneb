@@ -14,7 +14,7 @@ const date=(value?:string)=>value?new Intl.DateTimeFormat("es-PE",{day:"numeric"
 export function AnnualCompetencies({ids,names}:{ids:string[];names:Map<string,string>}){
  return <ul className={styles.competencies}>{[...new Set(ids)].map(id=>{const visual=competencyVisual(id);return <li key={id} style={visual?{color:visual.foreground,background:visual.background}:undefined}>{visual&&<Image src={visual.image} alt="" width={24} height={24} unoptimized/>}<span title={names.get(id)??id}>{competencyLabel(id,names.get(id)??id)}</span></li>;})}</ul>;
 }
-export function AnnualProjectPreview({row,index,names,onPrepare,onChange,canChange,disabled,prepareLabel="Preparar proyecto"}:{row:Row;index:number;names:Map<string,string>;onPrepare?:()=>void;onChange:()=>void;canChange:boolean;disabled:boolean;prepareLabel?:string}){
+export function AnnualProjectPreview({row,index,names,onPrepare,onChange,onDetails,canChange,disabled,prepareLabel="Preparar proyecto"}:{row:Row;index:number;names:Map<string,string>;onPrepare?:()=>void;onChange:()=>void;onDetails?:()=>void;canChange:boolean;disabled:boolean;prepareLabel?:string}){
  return <article className={styles.preview} aria-label={`Proyecto ${index}: ${annualDisplayTitle(row.title)}`}>
   <ProjectPictogram project={row} className={styles.projectImage}/>
   <div className={styles.previewContent}><h2>{index} · {annualDisplayTitle(row.title)}</h2>
@@ -25,6 +25,6 @@ export function AnnualProjectPreview({row,index,names,onPrepare,onChange,canChan
    {row.expected_product&&<p className="mt-2 text-sm"><strong>Resultado esperado:</strong> {row.expected_product}</p>}
    <AnnualCompetencies ids={row.primary_competency_ids} names={names}/>
   </div>
-  <div className={styles.actions}>{onPrepare&&<Button className="max-w-full whitespace-normal text-left" disabled={disabled} onClick={onPrepare}>{prepareLabel}<ArrowRight className="shrink-0" size={18}/></Button>}{canChange&&<Button variant="outline" disabled={disabled||row.teacher_protected} onClick={onChange}><Sparkles size={17}/>Cambiar con Ayni</Button>}</div>
+  <div className={styles.actions}>{onDetails&&<Button variant="outline" disabled={disabled} onClick={onDetails}>Ver detalle del proyecto</Button>}{onPrepare&&<Button className="max-w-full whitespace-normal text-left" disabled={disabled} onClick={onPrepare}>{prepareLabel}<ArrowRight className="shrink-0" size={18}/></Button>}{canChange&&<Button variant="outline" disabled={disabled||row.teacher_protected} onClick={onChange}><Sparkles size={17}/>Cambiar con Ayni</Button>}</div>
  </article>;
 }

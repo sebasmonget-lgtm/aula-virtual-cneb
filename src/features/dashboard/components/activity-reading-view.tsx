@@ -2,7 +2,7 @@
 import Image from 'next/image';
 import {CalendarDays,CheckCircle2,ListChecks,Target,Heart,Search,ClipboardList,BookOpen,FileText} from 'lucide-react';
 import {activityReadingStages,readingSentences,savedText} from '@/src/lib/activity-reading-content.mjs';
-import {displayDate} from '@/src/lib/display-date';
+import {displayDate,displayDocumentDate} from '@/src/lib/display-date';
 import {competencyVisual} from '@/src/lib/competency-presentation';
 import {ProjectPictogram} from './project-pictogram';
 import type {OpenDocument} from './documents-screen';
@@ -35,7 +35,7 @@ export function ActivityReadingView({document,position,total,actions}:{document:
     </header>
     {savedText(content.purpose)&&<section className={`${styles.purpose} ${styles.mint}`}><Illustration name="ideas" className={styles.purposeArt}/><div><h2><Target/>Propósito</h2><p>{savedText(content.purpose)}</p></div></section>}
     <div className={styles.pair}>
-      <section className={`${styles.panel} ${styles.sand}`}><Illustration name="pencil"/><div><h2>Materiales</h2><SavedLines value={content.materials}/>{!readingSentences(content.materials).length&&<p>Sin materiales adicionales registrados.</p>}</div></section>
+      <section className={`${styles.panel} ${styles.sand}`}><Illustration name="pencil"/><div><h2>{content.materials_source==='project'?'Materiales del proyecto':'Materiales'}</h2><SavedLines value={content.materials}/>{content.materials_source==='project'&&<p className="mt-2 text-sm">Recursos registrados en el proyecto preparado.</p>}{content.materials_source==='incomplete'?<p>El proyecto guardado aún no precisa estos materiales. Revísalos con Ayni antes de prepararlo de nuevo.</p>:!readingSentences(content.materials).length&&<p>Sin materiales adicionales registrados.</p>}</div></section>
       <section className={`${styles.panel} ${styles.rose}`}><ClipboardList className={styles.largeIcon}/><div><h2>Antes de empezar</h2><SavedLines value={content.teacher_preparation}/></div></section>
     </div>
     {!sequence.groupedContext&&savedText(content.meaningful_situation)&&<section className={styles.situation}><h2><BookOpen/>Situación para los niños</h2><p>{savedText(content.meaningful_situation)}</p></section>}
@@ -52,7 +52,7 @@ export function ActivityReadingView({document,position,total,actions}:{document:
       <section className={styles.lilac}><h2><Target/>Criterio</h2><p>{savedText(document.active_criterion?.criterion_text||content.evaluation_criterion)}</p></section>
       <section className={styles.sky}><h2><FileText/>Evidencia esperada</h2><p>{savedText(content.expected_evidence)}</p></section>
     </div>
-    {!!document.registered_evidence?.length&&<section className={styles.sequence}><h2><ClipboardList/>Observaciones registradas</h2><ul className="mt-3 space-y-3">{document.registered_evidence.map(item=><li key={item.id} className="rounded-xl bg-[#edf7fa] p-3"><strong>{item.student_name}</strong><span className="ml-2 text-sm">{displayDate(item.observed_at.slice(0,10))}</span><p className="mt-1">{item.observation_text||'Evidencia privada adjunta'}</p></li>)}</ul></section>}
+    {!!document.registered_evidence?.length&&<section className={styles.sequence}><h2><ClipboardList/>Observaciones registradas</h2><ul className="mt-3 space-y-3">{document.registered_evidence.map(item=><li key={item.id} className="rounded-xl bg-[#edf7fa] p-3"><strong>{item.student_name}</strong><span className="ml-2 text-sm">{displayDocumentDate(item.observed_at)}</span><p className="mt-1">{item.observation_text||'Evidencia privada adjunta'}</p></li>)}</ul></section>}
     {document.workshop&&<section className={styles.workshop}><h2>Taller del día · {savedText(document.workshop.content.title)}</h2>{[['Propósito','purpose'],['Materiales','materials'],['Inicio','opening'],['Desarrollo','development'],['Cierre','closure'],['Qué observar','criterion_or_observation_focus'],['Evidencia esperada','evidence_expected']].map(([label,key])=><div key={key}><h3>{label}</h3><SavedLines value={document.workshop?.content[key]}/></div>)}</section>}
   </article>;
 }

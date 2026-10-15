@@ -5,6 +5,12 @@ import { randomUUID } from "node:crypto";
 import { PGlite } from "@electric-sql/pglite";
 import { listOrdinaryObservations, reviseOrdinaryObservation, saveOrdinaryObservation, validateOrdinaryObservation } from "./ordinary-observation-service.mjs";
 
+test('libre conserva contexto de actividad pero nunca captura un criterio de manera implícita',()=>{
+ const input={studentId:randomUUID(),clientRequestId:randomUUID(),activityId:randomUUID(),sourceKind:'spontaneous',rawText:'Comparte las telas.'};
+ assert.equal(validateOrdinaryObservation(input).criterionId,null);
+ assert.throws(()=>validateOrdinaryObservation({...input,criterionId:randomUUID()}),/sin un criterio/);
+});
+
 async function fixture() {
   const db = await PGlite.create();
   await db.exec(`create table profiles(user_id uuid primary key);

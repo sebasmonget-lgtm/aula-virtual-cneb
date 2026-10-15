@@ -8,6 +8,8 @@ import { activityV3, canonicalProjectRoute, planningV3ReadEnabled, projectMaster
 import { initialDiagnosticPeriod, nationalCalendarBlocks2026 } from "./annual-plan-calendar.mjs";
 import { interviewInterestOptions } from "./family-interview-contract.mjs";
 import { annualDisplaySubjects } from "./annual-teacher-display.mjs";
+import { activityPedagogicalBlocks } from "./pedagogical-blocks.mjs";
+import {activityMaterials} from './activity-materials.mjs';
 
 const dateOnly = (value) => value instanceof Date ? value.toISOString().slice(0, 10) : String(value ?? "").slice(0, 10);
 const timestamp = (value) => value instanceof Date ? value.toISOString() : String(value ?? "");
@@ -179,9 +181,10 @@ export async function loadSavedDocument(db, teacherId, kind, id) {
       where a.id=$2 and c.teacher_id=$1 and sy.owner_id=$1 and a.details ? 'meaningful_situation'`, [teacherId, id])).rows[0];
     if (!row) return null;
     const registeredEvidence = await loadActivityObservations(db, { activityId: row.id, teacherId, classroomId: row.classroom_id });
-    const activeCriterion = (await db.query(`select criterion_text,competency_v4_id,details from activity_criteria
+    const activityCriteria = (await db.query(`select id,criterion_text,competency_id,competency_v4_id,details from activity_criteria
       where activity_id=$1 and (($2='archived' and version=1) or ($2<>'archived' and status='active'))
-      order by teacher_confirmed_at desc nulls last limit 1`, [row.id,row.status])).rows[0];
+      order by display_order,teacher_confirmed_at desc nulls last`, [row.id,row.status])).rows;
+    const activeCriterion=activityCriteria[0];
     const closure = (await db.query(`select del.teacher_closure_note,case when del.actual_started_at is not null then del.execution_date::text end as actual_execution_date from daily_execution_logs del
       join class_schedule_entries se on se.id=del.schedule_entry_id
       where se.activity_id=$1 and se.classroom_id=$2 and (del.teacher_closure_note is not null or del.actual_started_at is not null)
@@ -196,6 +199,7 @@ export async function loadSavedDocument(db, teacherId, kind, id) {
       school_year: Number(row.year), classroom: row.section, institution_name: row.institution_name,
       age: Number(row.age_years), teacher_name: row.teacher_name, ugel: row.ugel, district: row.district,
       occurs_on: dateOnly(row.occurs_on), experience_title: row.experience_title,
+      guide: { criteria: activityCriteria, pedagogical_blocks: activityPedagogicalBlocks(row.details,row.preparation?.steps??[],activityCriteria) },
       experience_id: row.experience_id, experience_details: { activity_route: canonicalProjectRoute(row.experience_details) },
       project_activities: (await db.query(`select a.id,a.title,a.occurs_on from activities a join learning_experiences e on e.id=a.experience_id
         where e.classroom_id=$3 and a.status=$2 and (e.id=$1 or $2='active' and e.source_proposal_id=(select source_proposal_id from learning_experiences where id=$1))
@@ -209,7 +213,7 @@ export async function loadSavedDocument(db, teacherId, kind, id) {
       actual_execution_date: closure?.actual_execution_date??null,
       teacher_closure_note: closure?.teacher_closure_note ?? null,
       workshop: workshop ? { id: workshop.id, content: workshop.details } : null,
-      content: { ...selectContent(row.details, ["meaningful_situation", "teacher_preparation", "child_actions", "mediation", "evidence_opportunities", "closure_or_continuity", "competency_status", "competency_id", "route_item_id", "evaluation_criterion", "expected_evidence", "document_template_version", "teacher_overrides"]), purpose: row.details?.purpose || row.purpose, materials: row.preparation?.materials ?? [] } };
+      content: { ...selectContent(row.details, ["meaningful_situation", "teacher_preparation", "child_actions", "mediation", "evidence_opportunities", "closure_or_continuity", "competency_status", "competency_id", "route_item_id", "evaluation_criterion", "expected_evidence", "document_template_version", "teacher_overrides"]), purpose: row.details?.purpose || row.purpose, ...(()=>{const resolved=activityMaterials(row.preparation?.materials,row.details,row.experience_details);return {materials:resolved.materials,materials_source:resolved.source};})() } };
   }
   const row = (await db.query(`select r.id,r.status,r.version,r.details,r.period_start,r.period_end,r.evaluation_period_id,r.teacher_confirmed_at,
     p.label as period_label,s.id as student_id,s.first_name,s.last_name,s.preferred_name,ag.age_years,to_jsonb(s)->>'profile_photo_path' as photo_path,to_jsonb(r)->'source_conclusion_ids' as conclusion_ids,sy.year,c.section,c.institution_name,profile.display_name as teacher_name from family_reports r

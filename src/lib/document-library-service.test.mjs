@@ -82,7 +82,7 @@ async function fixture() {
     [id(12), id(10), JSON.stringify({ meaningful_situation: "El patio cambia", child_actions: ["Mueven la luz"], response_id: "hidden" }), JSON.stringify({ materials: ["linternas"], private_path: "hidden" })]);
   await db.query(`insert into activity_criteria values($1,$2,'CYT_INDAGA','Explica lo que observó',$3::jsonb,'active',now())`,
     [id(20), id(12), JSON.stringify({ observation_focus: ["Pregunta por el cambio de luz"] })]);
-  await db.exec(`alter table activity_criteria add column version integer not null default 1`);
+  await db.exec(`alter table activity_criteria add column version integer not null default 1;alter table activity_criteria add column competency_id uuid;alter table activity_criteria add column display_order integer not null default 0`);
   await db.query(`insert into students(id,classroom_id,first_name,last_name,preferred_name) values($1,$2,'Alessia','Pérez',null)`, [id(13), id(6)]);
   await db.query(`insert into family_reports(id,student_id,status,version,details,updated_at,period_start,period_end,teacher_confirmed_at,generation_metadata) values($1,$2,'active',1,$3::jsonb,now(),'2026-03-01','2026-06-01',now(),$4::jsonb)`,
     [id(14), id(13), JSON.stringify({ introduction: "Compartimos avances", sections: [], closing_note: "Seguimos juntos", source_snapshot: "hidden" }), JSON.stringify({ tokens: 300 })]);

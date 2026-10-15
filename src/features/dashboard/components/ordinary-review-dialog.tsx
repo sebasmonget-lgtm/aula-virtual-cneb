@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef,useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { apiFetch } from "@/src/lib/ayni-api-fetch";
@@ -17,7 +17,7 @@ type Detail = { observation: { id: string; student_id: string; raw_text: string 
   latest: Attribution | null; competencies: { id: string; name: string }[];
   criteria: { id: string; competency_v4_id: string; criterion_text: string }[] };
 
-export function OrdinaryReviewDialog({ students, onClose }: { students: LocalStudent[]; onClose: () => void }) {
+export function OrdinaryReviewDialog({ students, onClose,initialObservationId }: { students: LocalStudent[]; onClose: () => void;initialObservationId?:string }) {
   const [rows, setRows] = useState<ReviewRow[]>([]);
   const [savedRows, setSavedRows] = useState<ReviewRow[]>([]);
   const [detail, setDetail] = useState<Detail | null>(null);
@@ -26,6 +26,7 @@ export function OrdinaryReviewDialog({ students, onClose }: { students: LocalStu
   const [editing, setEditing] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
+  const openedInitial=useRef(false);
 
   const loadQueue = useCallback(async () => {
     const [queueResponse, allResponse] = await Promise.all([
@@ -41,12 +42,17 @@ export function OrdinaryReviewDialog({ students, onClose }: { students: LocalStu
     setSavedRows((all.observations ?? []).filter(item => !pendingIds.has(item.id)).slice(0, 20));
   }, []);
 
-  async function openRow(id: string) {
+  const openRow=useCallback(async (id: string,suggest=false)=> {
     setBusy(true); setMessage("");
     try {
-      const response = await apiFetch(`${localDatabaseApiUrl}/api/ordinary-observations/${id}/attributions`, { cache: "no-store" });
-      const data = await response.json() as Detail & { error?: string };
+      let response = await apiFetch(`${localDatabaseApiUrl}/api/ordinary-observations/${id}/attributions`, { cache: "no-store" });
+      let data = await response.json() as Detail & { error?: string };
       if (!response.ok) throw new Error(data.error ?? "No se pudo abrir la observación.");
+      if(suggest&&(!['suggested','confirmed','unclassified'].includes(data.latest?.state??'')||data.latest?.raw_revision!==data.observation.source_revision)){
+        const suggestion=await apiFetch(`${localDatabaseApiUrl}/api/ordinary-observations/${id}/suggest`,{method:'POST',headers:{'content-type':'application/json'},body:'{}'});
+        if(!suggestion.ok)throw new Error('No pudimos obtener una sugerencia. Tu observación sigue guardada.');
+        response=await apiFetch(`${localDatabaseApiUrl}/api/ordinary-observations/${id}/attributions`,{cache:'no-store'});data=await response.json() as Detail & {error?:string};if(!response.ok)throw new Error(data.error??'No pudimos abrir la sugerencia guardada.');
+      }
       setDetail(data);
       const initial = data.latest?.state === "confirmed" ? data.latest.confirmed_competency_ids
         : data.observation.context_snapshot?.captured_competency_id ? [data.observation.context_snapshot.captured_competency_id]
@@ -57,12 +63,12 @@ export function OrdinaryReviewDialog({ students, onClose }: { students: LocalStu
       setEditing(false);
     } catch (error) { setMessage(error instanceof Error ? error.message : "No se pudo abrir."); }
     finally { setBusy(false); }
-  }
+  },[]);
 
   useEffect(() => {
-    void Promise.resolve().then(loadQueue).catch((error) =>
+    void Promise.resolve().then(loadQueue).then(()=>{if(initialObservationId&&!openedInitial.current){openedInitial.current=true;return openRow(initialObservationId,true);}}).catch((error) =>
       setMessage(error instanceof Error ? error.message : "No se pudo cargar."));
-  }, [loadQueue]);
+  }, [loadQueue,initialObservationId,openRow]);
 
   async function act(kind: "suggest" | "confirm" | "unclassified") {
     if (!detail || busy) return;
