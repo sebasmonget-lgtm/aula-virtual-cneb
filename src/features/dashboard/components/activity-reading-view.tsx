@@ -6,6 +6,7 @@ import {displayDate,displayDocumentDate} from '@/src/lib/display-date';
 import {competencyVisual} from '@/src/lib/competency-presentation';
 import {ProjectPictogram} from './project-pictogram';
 import type {OpenDocument} from './documents-screen';
+import {WorkshopResources} from './workshop-resources';
 import styles from './activity-reading.module.css';
 
 function SavedLines({value}:{value:unknown}){
@@ -38,6 +39,7 @@ export function ActivityReadingView({document,position,total,actions}:{document:
       <section className={`${styles.panel} ${styles.sand}`}><Illustration name="pencil"/><div><h2>{content.materials_source==='project'?'Materiales del proyecto':'Materiales'}</h2><SavedLines value={content.materials}/>{content.materials_source==='project'&&<p className="mt-2 text-sm">Recursos registrados en el proyecto preparado.</p>}{content.materials_source==='incomplete'?<p>El proyecto guardado aún no precisa estos materiales. Revísalos con Ayni antes de prepararlo de nuevo.</p>:!readingSentences(content.materials).length&&<p>Sin materiales adicionales registrados.</p>}</div></section>
       <section className={`${styles.panel} ${styles.rose}`}><ClipboardList className={styles.largeIcon}/><div><h2>Antes de empezar</h2><SavedLines value={content.teacher_preparation}/></div></section>
     </div>
+    <WorkshopResources resources={content.resources}/>
     {!sequence.groupedContext&&savedText(content.meaningful_situation)&&<section className={styles.situation}><h2><BookOpen/>Situación para los niños</h2><p>{savedText(content.meaningful_situation)}</p></section>}
     {!!sequence.stages.length&&<section className={styles.sequence}><h2><ListChecks/>Qué harán los niños</h2>{sequence.introduction&&<p>{sequence.introduction}</p>}<ol className={styles.steps}>
       {sequence.stages.map((step,index)=><li key={step.label} className={`${styles.step} ${[styles.sky,styles.sand,styles.lilac][index]}`}><h3>{sequence.stages.length===3&&<span className={styles.stepNumber}>{index+1}</span>}{step.label}</h3><div className={styles.stepBody}><Illustration name={['planning_play','ideas','sharing'][index]}/><SavedLines value={step.text}/></div></li>)}

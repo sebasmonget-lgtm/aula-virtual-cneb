@@ -4,6 +4,7 @@ import { loadSetupDraft, saveSetupDraft } from "../src/lib/pilot-setup-draft.mjs
 import { updateStudentDetails } from "../src/lib/student-details-service.mjs";
 import { annualDisplaySubjects } from "../src/lib/annual-teacher-display.mjs";
 import { handleDirectWorkshop } from "./direct-workshop-routes.mjs";
+import { handleWorkshopLibrary } from "./workshop-library-routes.mjs";
 import { projectConversation } from "../src/lib/project-conversation.mjs";
 import { newAyniFeatureEnabled } from "../src/lib/new-ayni-feature-flag.mjs";
 import { suggestSavedCapture, previewSpontaneous, handleStudentPhoto, handleFamilyShare } from "./initial-journey-routes.mjs";
@@ -901,6 +902,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       send(response, 200, { resources: (await loadLibraryResources()).map(publicLibraryResource) }, origin);
       return;
     }
+    if(await handleWorkshopLibrary({request,url,response,origin,db,teacherId,readJson,send}))return;
     if (request.method === "GET" && /^\/api\/library\/resources\/[a-z0-9-]+\/download$/.test(url.pathname)) {
       const id = url.pathname.split("/")[4];
       const resource = (await loadLibraryResources()).find((item) => item.id === id);

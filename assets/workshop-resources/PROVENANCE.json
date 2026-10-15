@@ -1,0 +1,13 @@
+{
+  "author": "Ayni",
+  "version": "1.0.0",
+  "generator": "scripts/build-workshop-resources.mjs",
+  "method": "Original text and deterministic SVG geometry rendered with sharp",
+  "sources": [],
+  "files": [
+    "tarjetas-cantidades",
+    "tarjetas-formas",
+    "registro-exploracion",
+    "cuento-la-semilla"
+  ]
+}

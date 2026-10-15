@@ -3,7 +3,7 @@ import { newAyniFeatureEnabled } from "@/src/lib/new-ayni-feature-flag.mjs";
 
 
 import { useEffect, useState } from "react";
-import { Check, Clock3, Users, MoonStar, Sun, Sunrise } from "lucide-react";
+import { Check, Clock3, Users, MoonStar, Sun, Sunrise, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,6 +17,7 @@ import { ProjectActivitiesBrowser } from "./project-activities-browser";
 import {TodayEmptyState} from "./today-empty-state";
 import {teacherGreeting} from "@/src/lib/daily-dashboard-display.mjs";
 import overview from "./daily-overview.module.css";
+import {WorkshopLibrary} from './workshop-library';
 
 type Block = LocalDashboard["today"]["blocks"][number];
 type Execution = { scheduleEntryId: string; action: "start" | "complete" | "skip" | "keep_current" | "set_step"; stepIndex?: number; closureType?: "as_planned" | "note"; closureNote?: string };
@@ -38,6 +39,7 @@ export function TodayHome({ dashboard, refreshKey = 0, onCalendar, onConsultActi
   onActivitiesChanged?:()=>Promise<void>;
 }) {
   const [clock,setClock]=useState(()=>new Date());
+  const [choosingWorkshop,setChoosingWorkshop]=useState(false);
   const [upcomingPeriod,setUpcomingPeriod]=useState<{label:string;starts_on:string;ends_on:string}|null>(null);
   useEffect(()=>{const update=()=>setClock(new Date());const timer=window.setInterval(update,60000);document.addEventListener("visibilitychange",update);return()=>{window.clearInterval(timer);document.removeEventListener("visibilitychange",update);};},[]);
   const modern=process.env.NEXT_PUBLIC_AYNI_EXPERIENCE!=="0";
@@ -109,14 +111,16 @@ export function TodayHome({ dashboard, refreshKey = 0, onCalendar, onConsultActi
     setError("");
     try {
       if (journey.primary_action === "close_block") setClosing(true);
-      else if (featured.block_type === "workshop") setSelected(featured);
+      else if(featured.block_type==='workshop'&&!featured.pedagogical_blocks?.length)setSelected(featured);
       else if (featured.activity_id) await openActivity(featured, journey.primary_action === "start_block");
       else setSelected(featured);
     } catch { setError("No se pudo abrir la actividad. Inténtalo de nuevo."); }
   }
 
+  if(choosingWorkshop&&profile.classroom_id)return <WorkshopLibrary classroomId={profile.classroom_id} onBack={()=>setChoosingWorkshop(false)} onOpen={id=>{setChoosingWorkshop(false);onConsultActivity(id);}} onAdded={async id=>{await onActivitiesChanged?.();setChoosingWorkshop(false);onConsultActivity(id);}}/>;
   return <div className="mx-auto max-w-5xl space-y-6">
     <header className={overview.todayHeader}><div><div className={overview.greeting}><h1>{greeting.text}, {teacher}</h1><GreetingIcon aria-hidden="true" className={overview.greetingIcon}/></div><p className="mt-2 text-[#526b87]">{profile.age_label} · {profile.section} · {metrics.students_total} estudiantes</p></div><section className={overview.attendance} aria-label="Asistencia opcional"><Users aria-hidden="true"/><div><strong>Asistencia</strong><p>Opcional · {today.attendance.recorded_count} de {metrics.students_total} registrados</p></div><Button onClick={openAttendance}>Tomar asistencia</Button></section></header>
+    {profile.classroom_id&&<section className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#c9e4df] bg-[#eef8f2] p-5"><div><h2 className="text-lg font-extrabold text-[#172b52]">Talleres para tu aula</h2><p className="mt-1 text-sm text-[#365b73]">Elige por edad, tipo o competencia y añádelo a una jornada.</p></div><Button onClick={()=>setChoosingWorkshop(true)}><BookOpen size={19}/>Elegir taller</Button></section>}
     {modern&&!emptyToday&&bimester&&<div className="flex flex-wrap items-center justify-between gap-2 text-sm text-[#526b87]"><span>{bimester.label} terminó. Puedes consultar lo que viene.</span><Button variant="ghost" onClick={()=>onPlan()}>Ir a Mi año</Button></div>}
     {!modern&&bimester && <section className="rounded-[1.5rem] bg-[#e9f8f2] p-5"><h2 className="text-lg font-extrabold text-[#1c2e50]">{bimester.adjusted ? "✓ Plan reajustado" : bimester.final && bimester.closed ? "✓ Período final cerrado" : `Cierre de ${bimester.label}`}</h2>
       <p className="mt-1 text-sm text-[#526681]">{bimester.adjusted ? "Tu planificación actualizada está lista para continuar." : bimester.final && bimester.closed ? "El cierre del año quedó guardado." : bimester.ready ? bimester.final ? "Tus evaluaciones están listas para cerrar el año." : "Tus evaluaciones están listas. Revisemos qué conviene ajustar para el siguiente período." : "Revisa las valoraciones pendientes para cerrar el período."}</p>
@@ -137,7 +141,7 @@ export function TodayHome({ dashboard, refreshKey = 0, onCalendar, onConsultActi
         : <p className="mt-2 text-sm text-[#566883]">No hay tareas adicionales por revisar ahora.</p>}
     </section>}
     <div className="flex flex-wrap gap-3">{!emptyToday&&canObserve&&canObserveWithoutActivity&&<Button variant="ghost" className="min-h-11" onClick={onObserveWithoutActivity}>Registrar otra observación cotidiana</Button>}</div>
-    {today.blocks.length > 0 && <section><h2 className="mb-3 text-xl font-extrabold text-[#1c2e50]">Tu jornada</h2><div className="space-y-2">{today.blocks.map((block) => <button key={block.id} type="button" onClick={() => block.block_type === "workshop" ? setSelected(block) : block.activity_id ? void openActivity(block).catch(() => setError("No se pudo abrir la actividad.")) : setSelected(block)} className="flex min-h-16 w-full items-center gap-3 rounded-2xl border border-[#d4e1ed] bg-white p-4 text-left hover:border-[#8acbd8]"><span className="w-12 shrink-0 text-sm font-bold text-[#566883]">{block.start_time.slice(0, 5)}</span><span className="grid size-6 shrink-0 place-items-center text-[#0b7891]">{block.status === "completed" ? <Check className="size-4" /> : <Clock3 className="size-4" />}</span><span className="min-w-0 flex-1 truncate font-bold text-[#1c2e50]">{block.block_type === "workshop" ? "Taller · " : ""}{block.title}</span><span className="shrink-0 text-xs font-bold text-[#07576c]">{status(block)}</span></button>)}</div></section>}
+    {today.blocks.length > 0 && <section><h2 className="mb-3 text-xl font-extrabold text-[#1c2e50]">Tu jornada</h2><div className="space-y-2">{today.blocks.map((block) => <button key={block.id} type="button" onClick={() => block.block_type==='workshop'&&!block.pedagogical_blocks?.length?setSelected(block):block.activity_id ? void openActivity(block).catch(() => setError("No se pudo abrir la actividad.")) : setSelected(block)} className="flex min-h-16 w-full items-center gap-3 rounded-2xl border border-[#d4e1ed] bg-white p-4 text-left hover:border-[#8acbd8]"><span className="w-12 shrink-0 text-sm font-bold text-[#566883]">{block.start_time.slice(0, 5)}</span><span className="grid size-6 shrink-0 place-items-center text-[#0b7891]">{block.status === "completed" ? <Check className="size-4" /> : <Clock3 className="size-4" />}</span><span className="min-w-0 flex-1 truncate font-bold text-[#1c2e50]">{block.block_type === "workshop" ? "Taller · " : ""}{block.title}</span><span className="shrink-0 text-xs font-bold text-[#07576c]">{status(block)}</span></button>)}</div></section>}
     <Dialog open={closing} onOpenChange={setClosing}><DialogContent><DialogHeader><DialogTitle>¿Cómo salió?</DialogTitle><DialogDescription>El cierre queda guardado solo cuando tú lo confirmas.</DialogDescription></DialogHeader><Textarea value={closureNote} onChange={(event) => setClosureNote(event.target.value)} placeholder="Una nota breve, si la necesitas" />{error && <WorkflowFeedback tone="error">{error}</WorkflowFeedback>}<DialogFooter><Button variant="outline" onClick={() => setClosing(false)}>Cancelar</Button><AsyncButton busy={busy} busyLabel="Guardando..." onClick={() => void complete()}>Guardar cierre</AsyncButton></DialogFooter></DialogContent></Dialog>
     <Dialog open={Boolean(selected)} onOpenChange={(open) => { if (!open) setSelected(null); }}><DialogContent><DialogHeader><DialogTitle>{selected?.title}</DialogTitle><DialogDescription>{selected ? `${selected.start_time.slice(0, 5)} – ${selected.end_time.slice(0, 5)}` : ""}</DialogDescription></DialogHeader>{selected?.purpose && <p className="text-sm text-[#566883]">{selected.purpose}</p>}{selected?.block_type === "workshop" && <div className="space-y-2 text-sm">{([ ["opening","Inicio"], ["development","Desarrollo"], ["closure","Cierre"] ] as const).map(([field,label]) => selected.activity_details?.[field] ? <p key={field}><b>{label}:</b> {selected.activity_details[field]}</p> : null)}</div>}{selected?.materials?.length ? <p className="text-sm"><b>Materiales:</b> {selected.materials.join(", ")}</p> : null}<DialogFooter><Button onClick={() => setSelected(null)}>Cerrar</Button></DialogFooter></DialogContent></Dialog>
   </div>;

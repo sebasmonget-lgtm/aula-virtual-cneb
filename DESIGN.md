@@ -27,4 +27,8 @@ Mi año conserva sus quince tramos y movimientos por código. El editor nuevo no
 
 Dentro de una actividad se ofrece + Añadir taller. No hay pantalla obligatoria de talleres del proyecto. Actualizar qué observar requiere elegir un cambio del propósito o de lo que harán los niños y explicar el cambio; los ajustes de tiempo, lugar o materiales se editan normalmente.
 
+### Biblioteca de talleres en Hoy · 2026-10-15
+
+Hoy ofrece Elegir taller, sin un sexto destino principal. La biblioteca hereda colores y pictogramas de competencias, tipografía y tarjetas de Ayni. Edad del aula seleccionada de entrada, filtros por tipo/competencia y búsqueda. Primero aparecen competencias sin ejecución registrada y después menor cobertura de niños; esas señales nunca son niveles. La docente revisa propósito, materiales, preparación, guía de tres momentos y criterio antes de añadir a un día lectivo. La ficha mantiene ancho legible y pasa de tres columnas a una en móvil. La ejecución abre la misma guía de Hoy: preparación visible, acciones docentes, acciones infantiles, observación junto al criterio, captura libre independiente y Word existente. La selección no llama a IA ni inicia la actividad.
+
 Evaluar abre sin generar IA y muestra observaciones originales junto a la revisión docente. El contexto calculado no requiere confirmar un Assessment Master de IA. Informe a familias conserva las conclusiones guardadas y permite escribir acuerdos opcionales. Consolidado muestra información calculada; la generación de informe narrativo del aula queda fuera del recorrido moderno. Los históricos conservan consulta y Word.
