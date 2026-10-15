@@ -41,4 +41,12 @@ Servidor: aula/año propios, edad del aula, calendario efectivo y fechas vigente
 
 ## Publicación
 
-Pendiente de registrar commit de producto, SHA exacto del Preview READY, smoke autenticado por CLI y comprobación de Producción intacta. No promover a Producción.
+Producto: d976f07fec6d0e8a9e06f17bb9e0eb690782cde9, publicado en GitHub en codex/mi-ano-simple-preview.
+
+Preview: https://ayni-aula-staging-dqfhsyfp4-ayni4.vercel.app · deployment dpl_9cVzVNVPeeqvmvRiqc7ATWJrAfh4 · READY · target null · SHA exacto comprobado. Next cloud PASS y 16 smoke por CLI autorizada PASS: cuatro imprimibles y pictograma 200; rutas privadas sin sesión docente 401; inicio, health y auth/config 200. Nuevo dominio abre el login Ayni. No se inició sesión ni se añadieron datos pedagógicos cloud para este QA; el recorrido funcional autenticado se probó con PGlite/35 niños ficticios.
+
+Producción reconsultada conserva dpl_H19YWzRdGjkgh8y72QAd1qBty7Mf y SHA 9a0920230350cd6b9050f35683a1f35d459e78c7. Sin promoción, migraciones ni cambios de RLS. Proveedores/servidores locales de QA apagados después de la captura; navegación temporal limpiada y viewport restablecido. La página interna de error del navegador impidió cerrar una pestaña temporal; no afectó al QA, completado en una pestaña HTTP nueva permitida.
+
+Descarga UI comprobada adicionalmente: Word de lectura conserva título, criterio y observación nominal del niño; PNG descargado idéntico al original. Recibo privado ui-downloads.json. Captura de entrega de la guía: guide-desktop-viewport.jpg.
+
+Este recibo se añade en un commit documental posterior; no cambia el código del Preview.
