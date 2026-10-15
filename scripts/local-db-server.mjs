@@ -1,3 +1,4 @@
+import {startActivityToday} from "../src/lib/activity-today-execution.mjs";
 import { criterionRealignmentEligibility } from "../src/lib/criterion-realignment-policy.mjs";
 import { loadSetupDraft, saveSetupDraft } from "../src/lib/pilot-setup-draft.mjs";
 import { updateStudentDetails } from "../src/lib/student-details-service.mjs";
@@ -497,7 +498,8 @@ async function dashboard() {
         where ac.activity_id = a.id and ac.status = 'active'
       ) criteria on true
       left join daily_execution_logs del on del.schedule_entry_id = se.id and del.execution_date = $2::date
-     where cl.teacher_id = $1 and (se.scheduled_on = $2::date or (se.scheduled_on is null and se.weekday = extract(dow from $2::date)))
+     where cl.teacher_id = $1 and coalesce(a.schedule_status,'planned') not in ('cancelled','not_worked') and (se.scheduled_on = $2::date or (se.scheduled_on is null and se.weekday = extract(dow from $2::date)) or del.actual_started_at is not null)
+       and not exists(select 1 from daily_execution_logs previous where previous.schedule_entry_id=se.id and previous.execution_date<>$2::date and (previous.status<>'planned' or previous.actual_started_at is not null))
        and not (se.scheduled_on is null and se.block_type='workshop' and exists (
          select 1 from class_schedule_entries exact where exact.classroom_id=se.classroom_id
            and exact.scheduled_on=$2::date and exact.block_type='workshop'))
@@ -2883,7 +2885,6 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         send(response, 400, { error: "La asistencia contiene estudiantes o estados no válidos." }, origin);
         return;
       }
-      const today = qaDailyClock?.date ?? new Intl.DateTimeFormat("en-CA", { timeZone: "America/Lima", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
       await db.exec("begin");
       try {
         for (const record of records) await db.query(`insert into attendance_records
@@ -2906,6 +2907,12 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
     if (request.method === "POST" && url.pathname === "/api/today/execution") {
       const body = await readJson(request);
       const action = body.action;
+      const today = qaDailyClock?.date ?? new Intl.DateTimeFormat("en-CA", {timeZone:"America/Lima",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
+      if(action==='start_today'){
+        if(typeof body.activityId!=='string'||! /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(body.activityId)){send(response,400,{error:'Elige una actividad guardada.'},origin);return;}
+        await startActivityToday(db,teacherId,body.activityId,today);
+        send(response,200,{dashboard:await dashboard()},origin);return;
+      }
       const allowedActions = new Set(["start", "complete", "skip", "keep_current", "set_step"]);
       if (!body.scheduleEntryId || !allowedActions.has(action)) {
         send(response, 400, { error: "La acción de jornada no es válida." }, origin);
@@ -2916,8 +2923,8 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         send(response, 403, { error: "El bloque no pertenece al aula activa." }, origin);
         return;
       }
-      const today = qaDailyClock?.date ?? new Intl.DateTimeFormat("en-CA", { timeZone: "America/Lima", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
-      if(entry.scheduled_on!==today){send(response,422,{error:"Puedes iniciar esta actividad en su fecha programada. Hoy conserva la jornada actual."},origin);return;}
+      const actualToday=async tx=>!!(await tx.query("select 1 from daily_execution_logs where schedule_entry_id=$1 and execution_date=$2::date and status='active' and actual_started_at is not null",[entry.id,today])).rows.length;
+      if(entry.scheduled_on!==today&&!await actualToday(db)){send(response,422,{error:"Puedes iniciar esta actividad en su fecha programada. Hoy conserva la jornada actual."},origin);return;}
       if (action === "set_step" && !isValidStepIndex(body.stepIndex, entry.total_steps)) {
         send(response, 400, { error: "El paso no pertenece a esta actividad." }, origin);
         return;
@@ -2928,7 +2935,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       await db.transaction(async tx => {
       await lockClassroomSchedule(tx,entry.classroom_id);
       const current=(await tx.query(`select scheduled_on::text,weekday from class_schedule_entries where id=$1`,[entry.id])).rows[0];
-      if(current.scheduled_on ? current.scheduled_on!==today : Number(current.weekday)!==new Date(`${today}T00:00:00Z`).getUTCDay())
+      if((current.scheduled_on ? current.scheduled_on!==today : Number(current.weekday)!==new Date(`${today}T00:00:00Z`).getUTCDay())&&!await actualToday(tx))
         throw new VersionConflictError("El bloque cambió de fecha. Recarga Hoy antes de comenzar.");
       await tx.query(`insert into daily_execution_logs
         (id, schedule_entry_id, execution_date, status, actual_started_at, actual_ended_at, teacher_closure_note, closure_type, current_override, current_step_index)

@@ -83,7 +83,8 @@ export function AnnualJourneyWorkspace({ onConfirmed, onGoDiagnostic, onLegacy,o
   explicitConversationStart?: boolean; onConfirmed?: () => void; onGoDiagnostic?: () => void; onDevelop?: (id: string) => void; onLegacy: () => void;onGoToday?:()=>void;
 }) {
   const [plans, setPlans] = useState<Plans | null>(null), [start, setStart] = useState<Start | null>(null);
-  const [selectedId, setSelectedId] = useState(""), [preparing, setPreparing] = useState(false);
+  const [selectedId,setSelectedId]=useWorkspaceParam("Planificar","annualPlan","",activityParam);
+  const [preparing, setPreparing] = useState(false);
   const [ideas, setIdeas] = useState(""), [message, setMessage] = useState(""), [scope, setScope] = useState<string | null>(null);
   const [ideaDraft, setIdeaDraft] = useState("");
   const contextDraft = useAnnualContextDraft();
@@ -106,7 +107,7 @@ export function AnnualJourneyWorkspace({ onConfirmed, onGoDiagnostic, onLegacy,o
   const messageRef = useRef<HTMLTextAreaElement>(null),overviewRef=useRef<HTMLElement>(null);
 
   const runningJobRef = useRef(false);
-  const selected = [plans?.draft, plans?.active, ...(plans?.archived ?? [])].find((p) => p?.id === selectedId) ?? null;
+  const selected:Plan|null = plans?selectSavedAnnualPlan(plans,selectedId||undefined):null;
   const proposal: Proposal | undefined = selected ? annualTeacherProposalView(selected.proposal,selected.display_subjects) : undefined, modern = proposal?.journey_version === 2;
   const complete = hasSavedAnnualYear(selected);
   const calendar = selected?.document_context?.calendar;
@@ -142,7 +143,7 @@ export function AnnualJourneyWorkspace({ onConfirmed, onGoDiagnostic, onLegacy,o
     setScope(current => current && !next?.proposal.proposed_experiences.some(row => row.proposal_id === current) ? null : current);
     if (next) writeWorkspaceLocation("Planificar", { annualPlan: next.id }, true);
     return next;
-  }, []);
+  }, [setSelectedId]);
   const loadStart = useCallback(async () => { const value = await api<Start>("/api/annual-journey/start"); setStart(value); return value; }, []);
   const continueSavedJob = useCallback(async (value: Job) => {
     if (runningJobRef.current) return;
@@ -309,7 +310,7 @@ export function AnnualJourneyWorkspace({ onConfirmed, onGoDiagnostic, onLegacy,o
     </>}
     {!preparing && selected && !modern && <div className="space-y-3"><p>Esta versión utiliza el recorrido anterior. Sus datos y documentos se conservan.</p><Button onClick={onLegacy}>Abrir versión anterior</Button>
       {!plans?.draft && <Button variant="outline" disabled={disabled} onClick={() => { setPreparing(true); setIdeas(""); }}>Preparar una nueva versión con Ayni</Button>}</div>}
-    <footer className="flex flex-wrap gap-3 text-sm">{!preparing&&<Button variant="outline" disabled={disabled} onClick={toolsOnly?()=>writeWorkspaceLocation("Planificar",{tab:"home",annualTools:""}):onGoDiagnostic}>{toolsOnly?"Volver a Planificación":"Volver"}</Button>}
+    <footer className="flex flex-wrap gap-3 text-sm">{!preparing&&toolsOnly&&<Button variant="outline" disabled={disabled} onClick={toolsOnly?()=>writeWorkspaceLocation("Planificar",{tab:"home",annualTools:""}):onGoDiagnostic}>{toolsOnly?"Volver a Planificación":"Volver"}</Button>}
       {preparing && complete && <Button variant="ghost" disabled={disabled} onClick={() => setPreparing(false)}>Volver a las propuestas guardadas</Button>}
     </footer>
   </section>;

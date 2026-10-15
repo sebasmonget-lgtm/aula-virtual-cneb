@@ -26,6 +26,7 @@ export function ActivityReadingView({document,position,total,actions}:{document:
     <header className={styles.header}>
       <div className={styles.heading}><h1>{document.title}</h1><div className={styles.metadata}>
         <span><CalendarDays size={19}/>{displayDate(document.occurs_on??document.date)}</span>
+        {document.actual_execution_date&&document.actual_execution_date!==document.occurs_on&&<span><CheckCircle2 size={19}/>Trabajada el {displayDate(document.actual_execution_date)}</span>}
         {!!position&&!!total&&<span><ListChecks size={19}/>Actividad {position} de {total}</span>}
         <span className={styles.status}><CheckCircle2 size={18}/>{confirmed?'Confirmada':document.status==='archived'?'Versión anterior':'Borrador'}</span>
       </div>{document.experience_title&&<p className={styles.experience}><BookOpen size={19}/><span><strong>Experiencia:</strong> {document.experience_title}</span></p>}</div>
@@ -51,6 +52,7 @@ export function ActivityReadingView({document,position,total,actions}:{document:
       <section className={styles.lilac}><h2><Target/>Criterio</h2><p>{savedText(document.active_criterion?.criterion_text||content.evaluation_criterion)}</p></section>
       <section className={styles.sky}><h2><FileText/>Evidencia esperada</h2><p>{savedText(content.expected_evidence)}</p></section>
     </div>
+    {!!document.registered_evidence?.length&&<section className={styles.sequence}><h2><ClipboardList/>Observaciones registradas</h2><ul className="mt-3 space-y-3">{document.registered_evidence.map(item=><li key={item.id} className="rounded-xl bg-[#edf7fa] p-3"><strong>{item.student_name}</strong><span className="ml-2 text-sm">{displayDate(item.observed_at.slice(0,10))}</span><p className="mt-1">{item.observation_text||'Evidencia privada adjunta'}</p></li>)}</ul></section>}
     {document.workshop&&<section className={styles.workshop}><h2>Taller del día · {savedText(document.workshop.content.title)}</h2>{[['Propósito','purpose'],['Materiales','materials'],['Inicio','opening'],['Desarrollo','development'],['Cierre','closure'],['Qué observar','criterion_or_observation_focus'],['Evidencia esperada','evidence_expected']].map(([label,key])=><div key={key}><h3>{label}</h3><SavedLines value={document.workshop?.content[key]}/></div>)}</section>}
   </article>;
 }

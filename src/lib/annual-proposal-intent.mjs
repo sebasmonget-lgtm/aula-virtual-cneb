@@ -36,7 +36,7 @@ export const proposalTeacherTexts = payload => payload.messages?.some(m => m.rol
 // Annual preferences describe the year, never the intention of a new card.
 export function proposalConversationAnswer(payload, answer) {
   if ((proposalTeacherTexts(payload) ?? []).some(text => text?.trim())) return answer;
-  return {status:"needs_clarification",message:"Hola, profesora. Vamos a preparar una nueva propuesta para tu aula.",question:"¿Qué te gustaría crear y qué quisieras que hagan los niños?",chips:[]};
+  return {status:"needs_clarification",message:"Hola. Vamos a preparar una nueva propuesta para tu aula.",question:"¿Qué te gustaría crear y qué quisieras que hagan los niños?",chips:[]};
 }
 export function proposalConversationMessages(payload) {
   const initial=proposalConversationAnswer({safe_texts:[]},null);
@@ -47,6 +47,13 @@ export function missingProposalCompetencies(row, required) {
   return required.filter(id => !(row.primary_competency_ids ?? []).includes(id) || !(row.opportunities ?? []).some(opportunity => opportunity.competency_id === id));
 }
 export function proposalIntentIssues(row, required, curriculum) {
-  return missingProposalCompetencies(row, required).map(id => ({proposal_id: row.proposal_id,
-    reason: `Falta la competencia elegida por la docente: ${curriculum.find(card => card.id === id)?.name ?? id}. Incluye una oportunidad real con acciones, capacidades, condiciones, mediación, observación y apoyos; no basta agregar el ID.`}));
+  const ids=[...new Set(row.primary_competency_ids??[])];
+  const issues=[];
+  if(ids.length<2||ids.some(id=>!(row.opportunities??[]).some(item=>item.competency_id===id)))issues.push({proposal_id:row.proposal_id,reason:'Incluye al menos dos competencias distintas, cada una con una oportunidad CNEB completa y pertinente a las acciones infantiles; no agregues solo IDs.'});
+  if((row.materials??[]).some(isMaterialPlaceholder))issues.push({proposal_id:row.proposal_id,reason:'materials contiene un campo técnico en inglés en vez de materiales. Usa solo nombres concretos en español acordados en la conversación. No inventes disponibilidad.'});
+  return [...issues,...missingProposalCompetencies(row, required).map(id => ({proposal_id: row.proposal_id,
+    reason: `Falta la competencia elegida por la docente: ${curriculum.find(card => card.id === id)?.name ?? id}. Incluye una oportunidad real con acciones, capacidades, condiciones, mediación, observación y apoyos; no basta agregar el ID.`}))];
 }
+
+export const isMaterialPlaceholder=value=>typeof value==='string'&&/^(?:supports?|materials?|resources?|children_actions|opportunities|teacher_preparation|undefined|null)$/iu.test(value.trim());
+export const presentMaterials=materials=>(materials??[]).filter(value=>typeof value==='string'&&value.trim()&&!isMaterialPlaceholder(value));

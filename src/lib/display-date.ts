@@ -14,3 +14,11 @@ export function displayNow() {
 export function limaToday() {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Lima", year: "numeric", month: "2-digit", day: "2-digit" }).format(displayNow());
 }
+
+/** Catalog timestamps use the classroom's civil day; planned dates remain literal. */
+export function displayDocumentDate(value:string|null|undefined){
+  if(!value)return '';
+  if(!value.includes('T'))return displayDate(value,{month:'short'});
+  const date=new Date(value);if(Number.isNaN(date.valueOf()))return '';
+  return new Intl.DateTimeFormat('es-PE',{day:'numeric',month:'short',year:'numeric',timeZone:'America/Lima'}).format(date);
+}

@@ -4,7 +4,7 @@ import {Button} from "@/components/ui/button";
 import {apiFetch,apiJson} from "@/src/lib/ayni-api-fetch";
 import {localDatabaseApiUrl} from "@/src/lib/local-database";
 import {displayDate} from "@/src/lib/display-date";
-import {useWorkspaceParam} from "@/src/lib/workspace-location";
+import {useWorkspaceParam,writeWorkspaceLocation} from "@/src/lib/workspace-location";
 import {ProjectCalendarReview,type ProjectCalendarDay} from "./project-calendar-review";
 import {AnnualProjectPreview} from "./annual-project-preview";
 import {ProjectChangeChat} from "./project-change-chat";
@@ -13,7 +13,7 @@ import {ActivityConsultation} from "./activity-consultation";
 import {LoadingState,WorkflowFeedback} from "./workflow-ui";
 import {useUnsavedWork} from "@/src/lib/use-unsaved-work";
 import type {ChangeProposal} from "./annual-proposal-change-dialog";
-type Plan={id:string;status:string;revision:number;proposal:{proposed_experiences:ChangeProposal[];curriculum_reference?:{id:string;name:string}[];resolved_calendar?:{projects:{proposal_id:string|null}[]}}};
+type Plan={id:string;status:string;revision:number;document_context?:{teacher_name?:string};proposal:{proposed_experiences:ChangeProposal[];available_experiences?:ChangeProposal[];curriculum_reference?:{id:string;name:string}[];resolved_calendar?:{projects:{proposal_id:string|null}[]}}};
 type SavedActivity={id:string;title:string;date:string;state:string};
 const activityParam=(value:string)=>/^[0-9a-f-]{36}$/i.test(value)?value:undefined;
 async function api<T>(path:string,body?:unknown):Promise<T>{
@@ -24,11 +24,12 @@ async function api<T>(path:string,body?:unknown):Promise<T>{
 async function readPreparation(proposalId:string,id?:string){
   const [plans,jobs,saved]=await Promise.all([
     api<{draft:Plan|null;active:Plan|null}>('/api/annual-plans/current'),api<{jobs:PreparationJob[]}>('/api/preparation/current'),
-    api<{project:{id:string}|null;activities:SavedActivity[]}>(`/api/preparation/proposals/${proposalId}/activities`),
+    api<{project:{id:string}|null;can_replace:boolean;activities:SavedActivity[]}>(`/api/preparation/proposals/${proposalId}/activities`),
   ]);
   const plan=[plans.draft,plans.active].find(plan=>plan?.id===id)??(plans.draft?.proposal.proposed_experiences.some(row=>row.proposal_id===proposalId)?plans.draft:plans.active);
-  const job=jobs.jobs.find(item=>item.complete_project&&item.proposal_id===proposalId&&(item.annual_plan_id===plan?.id||item.project_id===saved.project?.id&&plan?.status==='active'))??null;
-  return {plan:plan??null,hasConfirmed:!!plans.active,job,activities:saved.activities};
+  const samePrepared=plan?.status==='draft'&&JSON.stringify(plan.proposal.proposed_experiences.find(row=>row.proposal_id===proposalId))===JSON.stringify(plans.active?.proposal.proposed_experiences.find(row=>row.proposal_id===proposalId));
+  const job=jobs.jobs.find(item=>item.complete_project&&item.proposal_id===proposalId&&(item.annual_plan_id===plan?.id||item.project_id===saved.project?.id&&(plan?.status==='active'||samePrepared)))??null;
+  return {plan:plan??null,hasConfirmed:!!plans.active,job,projectId:saved.project?.id??null,canReplace:saved.can_replace,activities:saved.activities};
 }
 export function CompleteProjectWorkspace({proposalId,onGoAnnual,onGoToday,onConfirmed,embedded=false,planId,onRequireConfirmation,onPlanChanged}:{
   proposalId:string;onGoAnnual?:()=>void;onGoToday?:()=>void;onConfirmed?:()=>void;embedded?:boolean;planId?:string;onRequireConfirmation?:()=>void;onPlanChanged?:(id:string)=>Promise<void>;
@@ -36,15 +37,18 @@ export function CompleteProjectWorkspace({proposalId,onGoAnnual,onGoToday,onConf
   const [plan,setPlan]=useState<Plan|null>(null),[job,setJob]=useState<PreparationJob|null>(null),[chat,setChat]=useState(false);
   const [busy,setBusy]=useState(false),[loading,setLoading]=useState(true),[error,setError]=useState("");
   const [hasConfirmed,setHasConfirmed]=useState(false),ready=useRef(false);
+  const [restore,setRestore]=useState<ChangeProposal|null>(null);
+  const [savedProjectId,setSavedProjectId]=useState<string|null>(null);
+  const [canReplace,setCanReplace]=useState(false);
   const [activities,setActivities]=useState<SavedActivity[]>([]);
   const [calendarOpen,setCalendarOpen]=useState(false),[calendar,setCalendar]=useState<ProjectCalendarDay[]>([]),[selectedDates,setSelectedDates]=useState<string[]>([]);
   const calendarPanel=useRef<HTMLElement>(null),[calendarBaseline,setCalendarBaseline]=useState<string[]>([]);
   const [consultId,setConsultId]=useWorkspaceParam("Planificar","activityConsult","",activityParam);
   useUnsavedWork(calendarOpen&&JSON.stringify(selectedDates)!==JSON.stringify(calendarBaseline),busy);
   useEffect(()=>{if(calendarOpen){calendarPanel.current?.scrollIntoView({block:'start',behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});calendarPanel.current?.focus({preventScroll:true});}},[calendarOpen]);
-  const load=useCallback(async(id?:string)=>{const data=await readPreparation(proposalId,id??planId);setPlan(data.plan);setHasConfirmed(data.hasConfirmed);setJob(data.job);setActivities(data.activities);},[proposalId,planId]);
+  const load=useCallback(async(id?:string)=>{const data=await readPreparation(proposalId,id??planId);setPlan(data.plan);setHasConfirmed(data.hasConfirmed);setJob(data.job);setActivities(data.activities);setCanReplace(data.canReplace);setSavedProjectId(data.projectId);},[proposalId,planId]);
   useEffect(()=>{let live=true;void readPreparation(proposalId,planId).then(data=>{
-    if(live){setPlan(data.plan);setHasConfirmed(data.hasConfirmed);setJob(data.job);setActivities(data.activities);}
+    if(live){setPlan(data.plan);setHasConfirmed(data.hasConfirmed);setJob(data.job);setActivities(data.activities);setCanReplace(data.canReplace);setSavedProjectId(data.projectId);}
   }).catch(cause=>{if(live)setError(cause.message);}).finally(()=>{if(live)setLoading(false);});return()=>{live=false;};},[proposalId,planId]);
   const proposal=plan?.proposal.proposed_experiences.find(row=>row.proposal_id===proposalId);
   const names=new Map(plan?.proposal.curriculum_reference?.map(card=>[card.id,card.name])??[]);
@@ -55,6 +59,13 @@ export function CompleteProjectWorkspace({proposalId,onGoAnnual,onGoToday,onConf
   async function accept(){if(busy||!plan)return;setBusy(true);setError("");try{
     setJob(await api<PreparationJob>('/api/preparation/projects/complete',{annualPlanId:plan.id,expectedRevision:Number(plan.revision),proposalId,accepted:true,selectedDates}));setCalendarOpen(false);
   }catch(cause){setError(cause instanceof Error?cause.message:"No pudimos iniciar la preparación. Tu proyecto sigue guardado.");}finally{setBusy(false);}}
+  async function restoreProposal(item:ChangeProposal){if(!plan||busy)return;setBusy(true);setError('');try{
+    const target=plan.status==='draft'?plan:await api<Plan>(`/api/annual-journey/${plan.id}/copy`,{expectedRevision:plan.revision,proposalId});
+    const slot=target.proposal.resolved_calendar?.projects.find(item=>item.proposal_id===proposalId) as {slot_id?:string}|undefined;
+    if(!slot?.slot_id)throw Error('El tramo cambió. Actualiza Mi año.');
+    await api(`/api/annual-journey/${target.id}/structure`,{expectedRevision:target.revision,action:{kind:'place',proposalId:item.proposal_id,targetSlotId:slot.slot_id}});
+    writeWorkspaceLocation('Planificar',{annualProposal:item.proposal_id});await onPlanChanged?.(target.id);setRestore(null);
+  }catch(cause){setError(cause instanceof Error?cause.message:'No pudimos usar esta propuesta.');}finally{setBusy(false);}}
   if(loading)return <LoadingState label="Abriendo tu proyecto…"/>;
   if(consultId)return <ActivityConsultation key={consultId} id={consultId} activities={activities} onActivity={setConsultId} onBack={()=>setConsultId('')}/>;
   return <section className="ayni-workflow space-y-5">
@@ -62,6 +73,7 @@ export function CompleteProjectWorkspace({proposalId,onGoAnnual,onGoToday,onConf
     {error&&<WorkflowFeedback tone="error">{error}<Button className="mt-2" variant="outline" onClick={()=>{setError('');void load().catch(cause=>setError(cause.message));}}>Recuperar lo guardado</Button></WorkflowFeedback>}
     {proposal&&plan&&<><AnnualProjectPreview row={proposal} index={(plan.proposal.resolved_calendar?.projects.findIndex(slot=>slot.proposal_id===proposalId)??plan.proposal.proposed_experiences.indexOf(proposal))+1} names={names} disabled={busy}
       onPrepare={job||calendarOpen?undefined:()=>void prepare()} canChange={!calendarOpen&&(!job||!!job.approved_at)} onChange={()=>setChat(true)}/></>}
+    {!!plan?.proposal.available_experiences?.length&&!calendarOpen&&<aside className="rounded-2xl border bg-white p-4" aria-label="Biblioteca de proyectos"><h2 className="font-bold text-[#172b52]">Otras propuestas guardadas</h2><p className="mt-1 text-sm text-[#526b87]">Puedes recuperar una propuesta para este tramo. Conservaremos la actual.</p>{savedProjectId&&!canReplace&&<p className="mt-2 text-sm">Este proyecto ya tiene días pasados o trabajo registrado. Conservamos su historia; puedes ajustar sus próximos días con Ayni.</p>}<div className="mt-3 flex gap-3 overflow-x-auto pb-2">{plan.proposal.available_experiences.map(item=><Button key={item.proposal_id} variant="outline" disabled={busy||!!savedProjectId&&!canReplace} className="h-auto min-h-12 max-w-64 shrink-0 whitespace-normal text-left" onClick={()=>setRestore(item)}>{item.title}</Button>)}</div>{restore&&<div className="mt-3 rounded-xl bg-[#edf7fa] p-3"><p>¿Usar «{restore.title}» en lugar de «{proposal?.title}»? Las fechas se conservan. Después confirmarás los días para preparar sus actividades.</p><div className="mt-3 flex flex-wrap justify-end gap-2"><Button variant="outline" disabled={busy} onClick={()=>setRestore(null)}>Cancelar</Button><Button disabled={busy} onClick={()=>void restoreProposal(restore)}>Usar esta propuesta</Button></div></div>}</aside>}
     {!job&&calendarOpen&&<section ref={calendarPanel} tabIndex={-1} className="scroll-mt-6 rounded-2xl border border-[#bce3ec] bg-white p-4 outline-none sm:p-5" aria-label="Días del proyecto"><h2 className="text-xl font-bold text-[#172b52]">Confirma los días de tu proyecto</h2><p className="mt-2 text-sm text-[#526b87]">Marca solo los días en que trabajarán. Ayni preparará una actividad por cada día elegido.</p><ProjectCalendarReview days={calendar} selectedDates={selectedDates} onChange={setSelectedDates} disabled={busy}/><div className="mt-4 flex flex-wrap justify-between gap-3"><Button variant="outline" disabled={busy} onClick={()=>setCalendarOpen(false)}>Volver al proyecto</Button><Button className="h-auto min-h-11 whitespace-normal" disabled={busy||!selectedDates.length} onClick={()=>void accept()}>{busy?'Iniciando preparación…':`Confirmar días y preparar ${selectedDates.length} actividades`}</Button></div></section>}
     {job&&!job.approved_at&&<PreparationProgress key={job.id} id={job.id} onGoToday={onGoToday} onProjectReady={()=>{
       if(!ready.current){ready.current=true;void load().then(()=>onConfirmed?.()).catch(cause=>setError(cause.message));}
@@ -74,7 +86,7 @@ export function CompleteProjectWorkspace({proposalId,onGoAnnual,onGoToday,onConf
     </section>}
     {!proposal&&!error&&<p>Este proyecto no está en la versión actual. Vuelve a Mi año para elegirlo.</p>}
     {chat&&proposal&&plan&&<ProjectChangeChat planId={plan.id} row={proposal} index={(plan.proposal.resolved_calendar?.projects.findIndex(slot=>slot.proposal_id===proposalId)??0)+1} names={names} hasConfirmedYear={hasConfirmed}
-      futureProjectId={job?.approved_at?job.project_id??undefined:undefined} onPrepared={next=>{ready.current=false;setJob(next);}} onClose={()=>setChat(false)} onApplied={async id=>{await load(id);await onPlanChanged?.(id);}}/>}
+      teacherName={plan.document_context?.teacher_name} futureProjectId={savedProjectId&&!canReplace?savedProjectId:undefined} onPrepared={next=>{ready.current=false;setJob(next);}} onClose={()=>setChat(false)} onApplied={async id=>{await load(id);await onPlanChanged?.(id);}}/>}
     {!embedded&&<footer><Button variant="outline" disabled={busy} onClick={onGoAnnual}>← Volver a Mi año</Button></footer>}
   </section>;
 }

@@ -193,6 +193,7 @@ export async function renderSavedDocumentWord(document, competencyCards = [], { 
     return renderLearningExperienceUnifiedWord(document, competencyCards, { logo });
   if (document.kind === "activity" && ["activity-unified-v1", "activity-with-workshop-v1"].includes(document.content?.document_template_version))
     return renderActivityUnifiedWord(document, competencyCards, { logo });
+  if(document.kind==='activity'&&document.activity_v3)return renderActivityUnifiedWord({...document,content:{...document.content,document_template_version:document.workshop?'activity-with-workshop-v1':'activity-unified-v1'}},competencyCards,{logo});
   const names = new Map(competencyCards.map((card) => [card.id, card.name]));
   const detail = document.kind === "annual_plan" ? contentForAnnual(document, names) :
     document.kind === "diagnostic_summary" ? contentForDiagnostic(document) :

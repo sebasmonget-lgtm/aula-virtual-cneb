@@ -30,7 +30,7 @@ test("valida pertenencia curricular y límite real de cinco oportunidades",()=>{
 test("no basta agregar un ID: exige oportunidad y competencia principal de la fila",()=>{
   const row={proposal_id:"row",primary_competency_ids:["CYT_INDAGA","COM_ARTE"],opportunities:[{competency_id:"CYT_INDAGA"}]};
   assert.deepEqual(missingProposalCompetencies(row,["CYT_INDAGA","COM_ARTE"]),["COM_ARTE"]);
-  assert.match(proposalIntentIssues(row,["COM_ARTE"],cards)[0].reason,/Crea proyectos.*oportunidad real/);
+  assert.match(proposalIntentIssues(row,["COM_ARTE"],cards).at(-1).reason,/Crea proyectos.*oportunidad real/);
   row.opportunities.push({competency_id:"COM_ARTE"});
   assert.deepEqual(proposalIntentIssues(row,["CYT_INDAGA","COM_ARTE"],cards),[]);
 });
@@ -63,4 +63,12 @@ test("recovered initial card prompt stays distinct from annual intentions after 
  const {proposalConversationMessages}=await import("./annual-proposal-intent.mjs");
  const p={messages:[{role:"assistant",text:"Annual blocks"},{role:"teacher",text:"Granja"},{role:"assistant",text:"Granja acordada"}]};
  const shown=proposalConversationMessages(p);assert.match(shown[0].text,/crear/);assert.deepEqual(shown.slice(1),p.messages.slice(1));assert.equal(p.messages[0].text,"Annual blocks");
+});
+
+
+test('changed and new proposals require two actual opportunities and reject schema placeholders as materials',()=>{
+ const row={proposal_id:'row',primary_competency_ids:['CYT_INDAGA'],opportunities:[{competency_id:'CYT_INDAGA'}],materials:['supports']};
+ const errors=proposalIntentIssues(row,[],cards);assert.equal(errors.length,2);
+ row.primary_competency_ids.push('COM_ARTE');row.opportunities.push({competency_id:'COM_ARTE'});row.materials=['Papel','Telas'];
+ assert.deepEqual(proposalIntentIssues(row,[],cards),[]);
 });

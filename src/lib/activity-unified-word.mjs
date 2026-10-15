@@ -130,7 +130,7 @@ export async function renderActivityUnifiedWord(document, cards = [], { logo = n
     "AÑO_ESCOLAR": String(document.school_year), TITULO_ACTIVIDAD: document.title,
     TITULO_PROYECTO: clean(document.experience_title), INSTITUCION_EDUCATIVA: clean(document.institution_name) || "Institución educativa",
     EDAD_AULA: `${document.age || ""} años · ${clean(document.classroom)}`, DOCENTE: clean(document.teacher_name) || "Docente del aula",
-    FECHA: /^\d{4}-\d{2}-\d{2}$/.test(date) ? `${date.slice(8)}/${date.slice(5, 7)}/${date.slice(0, 4)}` : date,
+    FECHA: document.actual_execution_date&&document.actual_execution_date!==date ? `${document.actual_execution_date.slice(8)}/${document.actual_execution_date.slice(5,7)}/${document.actual_execution_date.slice(0,4)} (prevista: ${date.slice(8)}/${date.slice(5,7)}/${date.slice(0,4)})` : /^\d{4}-\d{2}-\d{2}$/.test(date) ? `${date.slice(8)}/${date.slice(5, 7)}/${date.slice(0, 4)}` : date,
     UGEL: clean(document.ugel) || "Sin dato registrado", NUMERO_ACTIVIDAD: String(route?.number ?? "Del proyecto"),
     DURACION_REFERENCIAL: "Flexible según el grupo", SEDE_COLEGIO: clean(document.district) || "Sede principal",
     PROPOSITO_QUE: clean(content.purpose), PROPOSITO_COMO: clean(content.child_actions), PROPOSITO_PARA_QUE: clean(content.closure_or_continuity),

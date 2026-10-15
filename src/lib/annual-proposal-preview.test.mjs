@@ -33,7 +33,7 @@ test("chat de cambio: revisión privada antes de aplicar, CAS, propiedad y prote
             assert.ok(request.ai_context_bundle.changes.every(change=>!change.text.includes("12345678")));
             const rows=request.ai_context_bundle.proposals,cards=request.ai_context_bundle.curriculum.competency_cards;
             return{output:{replacements:rows.map((row,index)=>({proposal_id:invalidPatch?randomUUID():row.proposal_id,change_reason:"Pedido docente",...generationFixture(cards).proposals[index],
-              title:"Exploramos la naturaleza",purpose:"Explorar hojas y compartir lo que descubrimos.",children_actions:["Mirar hojas del patio.","Contar lo que ven."],materials:["Hojas del patio","Papel"]}))}};
+              opportunities:generationFixture(cards).everyday_opportunities.slice(0,2).map(({moment,...item})=>{void moment;return item;}),title:"Exploramos la naturaleza",purpose:"Explorar hojas y compartir lo que descubrimos.",children_actions:["Mirar hojas del patio.","Contar lo que ven."],materials:["Hojas del patio","Papel"]}))}};
           }
           return{output:generationFixture(request.ai_context_bundle.curriculum.competency_cards)};
         }})});return result;

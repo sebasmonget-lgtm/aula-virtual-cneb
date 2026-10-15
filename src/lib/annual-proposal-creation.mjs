@@ -29,9 +29,11 @@ export async function handleAnnualProposalCreation({request,response,url,db,cont
   if(!match)return false;
   if(!["GET","POST"].includes(request.method)){send(response,405,{error:"Método no disponible"},origin);return true;}
   const [,planId,operation]=match, body=request.method==="POST"?await readJson(request):{}, sessionId=body.id ?? url.searchParams.get("id");
+  const forProposalId=body.forProposalId??url.searchParams.get("forProposalId");
   const reviewPeriodId=body.reviewPeriodId??url.searchParams.get("reviewPeriodId");
   const reviewContext=reviewPeriodId&&request.method==="POST"?await loadReviewContext(reviewPeriodId):null;
   const base=await load(planId);if(base.proposal.editor_version!==3)journeyFail("editor_upgrade_required","Organiza este borrador en 15 tramos antes de crear propuestas.");
+  if(forProposalId&&!base.proposal.proposed_experiences.some(row=>row.proposal_id===forProposalId))journeyFail("not_found","Este proyecto no está en la versión elegida.");
   if(request.method==="POST")assertRevision(base,expectedRevision(body.expectedRevision));
   if(body.requiredCompetencyIds!==undefined && operation!=="generate")journeyFail("invalid_intent","Las competencias se eligen al preparar la propuesta, antes de revisarla.");
   const selected=body.requiredCompetencyIds===undefined?undefined:validateProposalCompetencies(body.requiredCompetencyIds,curriculum);
@@ -40,13 +42,13 @@ export async function handleAnnualProposalCreation({request,response,url,db,cont
   if(body.text&&!safe)journeyFail("private_text","Cuenta la idea sin datos personales.");
   const lease=randomUUID();let stored,payload;
   await versionTransaction(db,`new-proposal:${planId}`,async tx=>{
-    stored=(await tx.query(`select id,payload from ai_pending_generations where classroom_id=$1 and workflow=$2 and expires_at>now() and ($3::uuid is null or id=$3) and payload->>'plan_id'=$4 order by created_at desc limit 1`,[context.id,WORKFLOW,sessionId ?? null,planId])).rows[0];
+    stored=(await tx.query(`select id,payload from ai_pending_generations where classroom_id=$1 and workflow=$2 and expires_at>now() and ($3::uuid is null or id=$3) and payload->>'plan_id'=$4 and coalesce(payload->>'for_proposal_id','')=$5 order by created_at desc limit 1`,[context.id,WORKFLOW,sessionId ?? null,planId,forProposalId??''])).rows[0];
     if(sessionId&&!stored)journeyFail("not_found","Esta conversación no está disponible.");
     if(stored&&reviewPeriodId&&stored.payload.period_review?.period.id!==reviewPeriodId){if(sessionId)journeyFail("not_found","Esta conversación corresponde a otra revisión.");stored=null;}
     if(stored?.payload.teacher_id && stored.payload.teacher_id!==teacherId)journeyFail("not_found","Conversación no disponible.");
     if(request.method==="GET")return;
     if((stored?.payload.approved || body.restart===true) && !sessionId)stored=null;
-    payload=stored?.payload ?? {teacher_id:teacherId,plan_id:planId,plan_revision:Number(base.revision),revision:0,messages:[],safe_texts:[],calls:0};
+    payload=stored?.payload ?? {teacher_id:teacherId,plan_id:planId,...(forProposalId?{for_proposal_id:forProposalId}:{}),plan_revision:Number(base.revision),revision:0,messages:[],safe_texts:[],calls:0};
     if(!stored&&reviewContext)payload.period_review=reviewContext;
     if(payload.approved)journeyFail("already_approved","Esta propuesta ya está en Biblioteca. Abre una nueva conversación.");
     if(payload.plan_revision!==Number(base.revision))throw new VersionConflictError("Mi año cambió. Abre una nueva conversación con el contexto actualizado.");
@@ -101,7 +103,7 @@ export async function handleAnnualProposalCreation({request,response,url,db,cont
       payload.created_fact={...payload.created_fact,support_text:payload.messages.filter(m=>m.role==="teacher").map(m=>m.text).join("\n")+choice,ai_support_text:payload.safe_texts.join("\n")+choice};
       const snapshot={...base.proposal.classroom_snapshot,facts:[...base.proposal.classroom_snapshot.facts,payload.created_fact]};
       const classroom={...snapshot,facts:snapshot.facts.map(({source_refs,ai_support_text,support_text,...fact})=>{void source_refs;return {...fact,support_text:ai_support_text===undefined?support_text:ai_support_text ?? "Información privada omitida"};})};
-      let row=payload.draft ?? {...await call("new_project_card_generation",{task:"Crea UNA propuesta completa, flexible, diferente de las existentes, para Biblioteca. El tema y enfoque más reciente de teacher_intentions prevalecen. Si ya hay otra propuesta del mismo tema en MiAno, crea una variante de acciones sin cambiar ese tema. Conserva TODAS las required_competency_ids elegidas por la docente con oportunidades reales; no las sustituyas por otras. No pongas números ni fechas en el título. No generes otras propuestas ni cambies el año. En materials incluye nombres breves y concretos de materiales acordados en la conversación; no agregues advertencias de verificar disponibilidad ni afirmes inventario no informado.",required_competency_ids:required,teacher_intentions:payload.safe_texts,MiAno:annualCreationContext(base.proposal),period_review:payload.period_review??null,classroom},rowSchema),proposal_id:id,experience_type:body.experienceType==="unit"?"unit":"project"};
+      let row=payload.draft ?? {...await call("new_project_card_generation",{task:"Crea UNA propuesta completa con al menos DOS competencias distintas y oportunidades pertinentes completas para cada una, flexible, diferente de las existentes, para Biblioteca. El tema y enfoque más reciente de teacher_intentions prevalecen. Si ya hay otra propuesta del mismo tema en MiAno, crea una variante de acciones sin cambiar ese tema. Conserva TODAS las required_competency_ids elegidas por la docente con oportunidades reales; no las sustituyas por otras. No pongas números ni fechas en el título. No generes otras propuestas ni cambies el año. En materials incluye nombres breves y concretos de materiales acordados en la conversación; no agregues advertencias de verificar disponibilidad ni afirmes inventario no informado.",required_competency_ids:required,teacher_intentions:payload.safe_texts,MiAno:annualCreationContext(base.proposal),period_review:payload.period_review??null,classroom},rowSchema),proposal_id:id,experience_type:body.experienceType==="unit"?"unit":"project"};
       row.primary_competency_ids=[...new Set(row.opportunities.map(o=>o.competency_id))];
       const check=()=>validateAnnualJourney({...base.proposal,classroom_snapshot:snapshot,available_experiences:[...(base.proposal.available_experiences ?? []),libraryRow(row)]},curriculum,{requireCoverage:false});
       let validationIssue=null;try{check();}catch(error){validationIssue={proposal_id:id,reason:error.message};}payload.draft=row;await checkpoint();

@@ -6,7 +6,7 @@ import {annualJourneySafeText, annualJourneyCurriculumTerms} from "./annual-jour
 import {effectiveCalendarFingerprint} from "./annual-journey-calendar.mjs";
 import {assertRevision, expectedRevision, versionTransaction, VersionConflictError} from "./version-integrity.mjs";
 import {loadProjectChat} from "./annual-project-chat.mjs";
-import {missingProposalCompetencies} from "./annual-proposal-intent.mjs";
+import {missingProposalCompetencies,proposalIntentIssues} from "./annual-proposal-intent.mjs";
 import {libraryRow} from './annual-year-editor.mjs';
 
 const hash = proposal => createHash("sha256").update(JSON.stringify(proposal)).digest("hex");
@@ -65,7 +65,7 @@ export async function handleAnnualProposalPreview({request,response,url,db,conte
     const row=await load(id),saved=row.generation_metadata?.proposal_change_preview;
     const proposalId=url.searchParams.get("proposalId");
     const chat=saved?.chat_id&&saved.proposal_id===proposalId?await loadProjectChat(db,context.id,proposalId,saved.chat_id):null;
-    const valid=saved&&saved.proposal_id===proposalId&&saved.base_hash===hash(row.proposal)&&(!chat||!chat.payload.pending_turn&&chat.payload.revision===saved.chat_revision);
+    const valid=saved&&saved.proposal_id===proposalId&&!proposalIntentIssues(saved.proposal.proposed_experiences.find(item=>item.proposal_id===proposalId),[],curriculum).length&&saved.base_hash===hash(row.proposal)&&(!chat||!chat.payload.pending_turn&&chat.payload.revision===saved.chat_revision);
     send(response,200,{planId:id,revision:Number(row.revision),preview:valid?publicProposalPreview(saved):null,
       pendingRequest:(row.proposal.pending_changes??[]).filter(change=>change.proposal_id===proposalId).map(change=>change.text).join("\n")},origin);
     return true;
@@ -89,7 +89,7 @@ export async function handleAnnualProposalPreview({request,response,url,db,conte
     const conversation=body.conversationId?await loadProjectChat(db,context.id,proposalId,body.conversationId):null;
     if(conversation&&(conversation.payload.revision!==body.conversationRevision||conversation.payload.pending_turn))throw new VersionConflictError("Espera la respuesta de Ayni y revisa las decisiones actuales.");
     const previous=base.generation_metadata?.proposal_change_preview;
-    if(conversation&&previous?.chat_id===conversation.id&&previous.chat_revision===conversation.payload.revision&&previous.base_hash===hash(base.proposal)){
+    if(conversation&&previous?.chat_id===conversation.id&&previous.chat_revision===conversation.payload.revision&&previous.base_hash===hash(base.proposal)&&!proposalIntentIssues(previous.proposal.proposed_experiences.find(item=>item.proposal_id===proposalId),[],curriculum).length){
       send(response,200,{planId:id,revision:Number(base.revision),preview:publicProposalPreview(previous)},origin);return true;
     }
     const texts=conversation?conversation.payload.messages.filter(m=>m.role==="teacher").map(m=>m.text):[body.text];
@@ -122,6 +122,7 @@ export async function handleAnnualProposalPreview({request,response,url,db,conte
         if(preview.chat_id){const chat=await loadProjectChat(tx,context.id,preview.proposal_id,preview.chat_id);if(chat.payload.pending_turn||chat.payload.revision!==preview.chat_revision)throw new VersionConflictError("La conversación tiene decisiones nuevas. Revisa la propuesta actualizada antes de aplicar.");}
         await ensureFresh(tx,row);
         assertProposalPreviewScope(row.proposal,preview.proposal,preview.proposal_id,await protectedIds(row,tx));
+        if(proposalIntentIssues(preview.proposal.proposed_experiences.find(row=>row.proposal_id===preview.proposal_id),[],curriculum).length)journeyFail('invalid_competency','Actualiza la propuesta con dos competencias y materiales claros antes de aplicarla.');
         validateAnnualJourney(preview.proposal,curriculum,{requireCoverage:true});
         // Existing write/CAS path preserves immutable active versions and pedagogical protections.
         const next=await write(row,preview.proposal,tx);

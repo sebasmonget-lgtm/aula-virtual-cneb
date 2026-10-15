@@ -1,3 +1,4 @@
+import {proposalIntentIssues} from "./annual-proposal-intent.mjs";
 import { randomUUID } from "node:crypto";
 import { recordAIQAResult } from "./ai-qa-trace.mjs";
 import { estimateTextCost, AI_USAGE_PRICING_VERSION } from "./ai-usage-service.mjs";
@@ -243,7 +244,7 @@ export async function applyAnnualJourneyChanges(plan, { context, curriculum, pro
   }
   if ([...explicit].some((id) => protectedIds.includes(id) || !plan.proposed_experiences.some((r) => r.proposal_id === id)))
     journeyFail("protected_proposal", "Una propuesta iniciada, vinculada a trabajo o mantenida por ti está protegida. Elige una propuesta futura.");
-  const patch = await call("annual_journey_repair", { task: "Aplica juntas las indicaciones docentes solo a las propuestas autorizadas. Sustituye oportunidades completas; no agregues competencias nominales." + (proposalId ? " Devuelve solo replacements. El servidor conserva las oportunidades cotidianas e interpretaciones; esta indicación modifica solo la propuesta seleccionada." : ""),
+  const patch = await call("annual_journey_repair", { task: "Aplica juntas las indicaciones docentes solo a las propuestas autorizadas. Sustituye oportunidades completas; cada proyecto cambiado requiere al menos dos competencias distintas con acciones y capacidades pertinentes, nunca competencias nominales. Materiales en español, acordados con la docente; nunca nombres de campos técnicos como supports." + (proposalId ? " Devuelve solo replacements. El servidor conserva las oportunidades cotidianas e interpretaciones; esta indicación modifica solo la propuesta seleccionada." : ""),
     changes, affected_proposal_ids: [...explicit],
     proposals: plan.proposed_experiences.filter((r) => explicit.has(r.proposal_id)), everyday_opportunities: plan.everyday_opportunities, evidence_interpretations: plan.evidence_interpretations,
     other_proposals: plan.proposed_experiences.filter((r) => !explicit.has(r.proposal_id)).map(({ title, primary_competency_ids }) => ({ title, primary_competency_ids })) }, JOURNEY_PATCH_SCHEMA, explicit.size);
@@ -253,11 +254,20 @@ export async function applyAnnualJourneyChanges(plan, { context, curriculum, pro
         JSON.stringify(patch.evidence_interpretations) !== JSON.stringify(plan.evidence_interpretations))
       journeyFail("invalid_scope", "Este cambio incluye decisiones del año completo. Ajusta solo la propuesta seleccionada.");
   }
+  if(proposalId){
+    const issues=proposalIntentIssues(next.proposed_experiences.find(row=>row.proposal_id===proposalId),conversation?.proposed_competency_ids??[],curriculum);
+    if(issues.length){
+      const repaired=await call("annual_journey_repair",{task:"Repara SOLO este proyecto con dos o más competencias pertinentes y oportunidades completas. Corrige únicamente estas incidencias, conserva fechas, tema, decisiones docentes y materiales acordados.",issues,affected_proposal_ids:[proposalId],proposals:next.proposed_experiences.filter(row=>row.proposal_id===proposalId)},JOURNEY_PATCH_SCHEMA,1);
+      next=applyJourneyPatch(next,repaired,new Set([proposalId]));
+      if(proposalIntentIssues(next.proposed_experiences.find(row=>row.proposal_id===proposalId),conversation?.proposed_competency_ids??[],curriculum).length)journeyFail("invalid_competency","La propuesta aún necesita dos competencias con oportunidades completas y materiales claros. Tu pedido sigue guardado.");
+    }
+  }
   const reviewLocks = proposalId ? [...new Set([...protectedIds, ...plan.proposed_experiences.filter(row => row.proposal_id !== proposalId).map(row => row.proposal_id)])] : protectedIds;
   next = await reviewAndRepair(next, curriculum, call, reviewLocks, undefined, proposalId ? [proposalId] : null);
   if (proposalId && (JSON.stringify(next.everyday_opportunities) !== JSON.stringify(plan.everyday_opportunities) ||
     JSON.stringify(next.evidence_interpretations) !== JSON.stringify(plan.evidence_interpretations)))
     journeyFail("invalid_scope", "La revisión afectaría decisiones del año completo. Conservamos el borrador.");
+  if(proposalId&&proposalIntentIssues(next.proposed_experiences.find(row=>row.proposal_id===proposalId),conversation?.proposed_competency_ids??[],curriculum).length)journeyFail('invalid_competency','La revisión aún necesita dos competencias con oportunidades completas y materiales claros. Conservamos tu pedido.');
   if (next.editor_version === 3) next.organization_criteria = annualCalendarCriteria(next);
   return { ...next, pending_changes: plan.pending_changes.filter(change => !processed.has(change.id)), change_history: [...plan.change_history, { changes,
     affected_proposal_ids: [...explicit], change_reasons: patch.replacements.map((r) => ({ proposal_id: r.proposal_id, reason: r.change_reason })), applied_at: new Date().toISOString() }], metrics: { ...plan.metrics,

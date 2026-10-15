@@ -19,7 +19,7 @@ const selectContent = (source, fields) => Object.fromEntries(fields.map((field) 
 export async function listSavedDocuments(db, teacherId) {
   const annual = (await db.query(`select ap.id,ap.status,ap.version,ap.proposal,ap.updated_at,sy.year,c.id as classroom_id,c.section
     from annual_plans ap join classrooms c on c.id=ap.classroom_id join school_years sy on sy.id=ap.school_year_id
-    where c.teacher_id=$1 and sy.owner_id=$1 and (ap.proposal ? 'title' or ap.proposal->>'plan_format'='annual_preplan_v1')`, [teacherId])).rows.map((row) => ({
+    where c.teacher_id=$1 and sy.owner_id=$1 and (ap.proposal ? 'title' or ap.proposal->>'plan_format'='annual_preplan_v1' or ap.proposal->>'journey_version'='2')`, [teacherId])).rows.map((row) => ({
       id: row.id, kind: "annual_plan", title: row.proposal?.title || "Plan anual", status: row.status,
       version: Number(row.version), school_year: Number(row.year), classroom_id: row.classroom_id, classroom: row.section, date: timestamp(row.updated_at),
     }));
@@ -78,13 +78,13 @@ export async function loadSavedDocument(db, teacherId, kind, id) {
       join age_grades ag on ag.id=c.age_grade_id join profiles p on p.user_id=c.teacher_id
       left join institution_profiles ip on ip.owner_user_id=c.teacher_id
       left join annual_plan_formal_content af on af.annual_plan_id=ap.id
-      where ap.id=$2 and c.teacher_id=$1 and sy.owner_id=$1 and (ap.proposal ? 'title' or ap.proposal->>'plan_format'='annual_preplan_v1')`, [teacherId, id])).rows[0];
+      where ap.id=$2 and c.teacher_id=$1 and sy.owner_id=$1 and (ap.proposal ? 'title' or ap.proposal->>'plan_format'='annual_preplan_v1' or ap.proposal->>'journey_version'='2')`, [teacherId, id])).rows[0];
     if (!row) return null;
-    if (row.proposal?.journey_version === 2) return { id: row.id, kind, title: row.proposal.title, status: row.status,
+    if (row.proposal?.journey_version === 2) return { id: row.id, kind, title: row.proposal.title??"Mi año", status: row.status,
       version: Number(row.version), school_year: Number(row.year), classroom: row.section,
       confirmed_at: row.teacher_confirmed_at ? timestamp(row.teacher_confirmed_at) : null,
-      content: row.status==='draft'?row.proposal:row.formal_content??row.proposal, source_plan_format: row.proposal.plan_format, formal_ready: row.status !== "draft",
-      document_context: row.document_context, display_subjects: await annualDisplaySubjects(db, { teacherId, classroomId: row.classroom_id, proposal: row.proposal }) };
+      content: row.status==='draft'?row.proposal:row.formal_content?.journey_version===2?row.formal_content:row.proposal, source_plan_format: row.proposal.plan_format, formal_ready: row.status !== "draft",
+      document_context: {...row.document_context,teacher_name:row.document_context?.teacher_name??row.teacher_name}, display_subjects: await annualDisplaySubjects(db, { teacherId, classroomId: row.classroom_id, proposal: row.proposal }) };
     const fallback = { institution_name: row.institution_name, teacher_name: row.teacher_name,
       classroom_section: row.section, age: Number(row.age_years), school_year: Number(row.year),
       starts_on: dateOnly(row.starts_on), ends_on: dateOnly(row.ends_on) };
@@ -182,9 +182,9 @@ export async function loadSavedDocument(db, teacherId, kind, id) {
     const activeCriterion = (await db.query(`select criterion_text,competency_v4_id,details from activity_criteria
       where activity_id=$1 and (($2='archived' and version=1) or ($2<>'archived' and status='active'))
       order by teacher_confirmed_at desc nulls last limit 1`, [row.id,row.status])).rows[0];
-    const closure = (await db.query(`select del.teacher_closure_note from daily_execution_logs del
+    const closure = (await db.query(`select del.teacher_closure_note,case when del.actual_started_at is not null then del.execution_date::text end as actual_execution_date from daily_execution_logs del
       join class_schedule_entries se on se.id=del.schedule_entry_id
-      where se.activity_id=$1 and se.classroom_id=$2 and del.teacher_closure_note is not null
+      where se.activity_id=$1 and se.classroom_id=$2 and (del.teacher_closure_note is not null or del.actual_started_at is not null)
       order by del.execution_date desc limit 1`, [row.id, row.classroom_id])).rows[0];
     const workshop = (await db.query(`select wa.id,wa.status,wa.details from activities wa
       join learning_experiences wm on wm.id=wa.experience_id and wm.type='workshop'
@@ -206,6 +206,7 @@ export async function loadSavedDocument(db, teacherId, kind, id) {
         criterion_id: item.criterion_id, criterion_text: item.criterion_text, competency_v4_id: item.competency_v4_id,
         student_name: item.student_name, observation_text: item.observation_text, observation_status: item.observation_status,
         type: item.type, observed_at: timestamp(item.observed_at), has_attachment: item.has_attachment, source: item.source, source_revision: item.source_revision })),
+      actual_execution_date: closure?.actual_execution_date??null,
       teacher_closure_note: closure?.teacher_closure_note ?? null,
       workshop: workshop ? { id: workshop.id, content: workshop.details } : null,
       content: { ...selectContent(row.details, ["meaningful_situation", "teacher_preparation", "child_actions", "mediation", "evidence_opportunities", "closure_or_continuity", "competency_status", "competency_id", "route_item_id", "evaluation_criterion", "expected_evidence", "document_template_version", "teacher_overrides"]), purpose: row.details?.purpose || row.purpose, materials: row.preparation?.materials ?? [] } };

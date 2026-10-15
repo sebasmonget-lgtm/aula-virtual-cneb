@@ -1,6 +1,7 @@
 "use client";
 import { newAyniFeatureEnabled } from "@/src/lib/new-ayni-feature-flag.mjs";
 
+import {displayDocumentDate} from "@/src/lib/display-date";
 import { apiFetch } from "@/src/lib/ayni-api-fetch";
 
 import { useEffect, useMemo, useState } from "react";
@@ -11,6 +12,10 @@ import { localDatabaseApiUrl } from "@/src/lib/local-database";
 import { AnnualPlanDocument, type DocumentContext, type Proposal } from "./annual-plan-generator";
 import { LoadingState, PageIntro, WorkflowFeedback } from "./workflow-ui";
 import { DocumentTree, type ArtifactState } from "./document-tree";
+import {ActivityReadingView} from "./activity-reading-view";
+import {ProjectPictogram} from "./project-pictogram";
+import {AnnualCompetencies,AnnualProjectPreview} from "./annual-project-preview";
+import type {ChangeProposal} from "./annual-proposal-change-dialog";
 import { DocumentSyncPanel } from "./document-sync-panel";
 
 type DocumentKind = "annual_plan" | "diagnostic_summary" | "experience" | "activity" | "family_report" | "period_closure";
@@ -22,10 +27,12 @@ type DocumentEntry = {
 export type OpenDocument = DocumentEntry & {
   institution_name?: string; document_context?: DocumentContext; content: Record<string, unknown>;
   source_plan_format?: string; formal_ready?: boolean;
+  actual_execution_date?:string|null;
   starts_on?: string; ends_on?: string; occurs_on?: string; experience_title?: string;
   period_start?: string; period_end?: string; competencies?: { id: string; name: string }[];
   active_criterion?: { criterion_text: string; competency_v4_id: string } | null;
   project_activities?: {id:string;title:string;date:string}[];
+  registered_evidence?:{id:string;student_name:string;observation_text?:string;observed_at:string}[];
   workshop?: { id: string; content: Record<string, unknown> } | null;
 };
 type Artifact = { id: string; source_kind: string; source_id: string; filename: string;
@@ -46,10 +53,7 @@ const labelFor = (entry: DocumentEntry) => entry.kind === "annual_plan" ? "Plan 
     entry.kind === "period_closure" ? "Cierre del período" : "Informe a la familia";
 const statusFor = (status: string) => status === "active" || status === "confirmed" ? "Confirmado" :
   status === "archived" ? "Versión anterior" : "Borrador";
-const dateFor = (value: string) => {
-  const date = new Date(value.slice(0, 10) + "T12:00:00");
-  return Number.isNaN(date.valueOf()) ? "" : new Intl.DateTimeFormat("es-PE", { day: "numeric", month: "short", year: "numeric" }).format(date);
-};
+const dateFor=displayDocumentDate;
 
 function Section({ title, value }: { title: string; value: unknown }) {
   const list = items(value);
@@ -80,6 +84,12 @@ function Pathways({ title, value }: { title: string; value: unknown }) {
 }
 
 export function DocumentContent({ document }: { document: OpenDocument }) {
+  if(document.kind==='activity')return <ActivityReadingView document={document} actions={null}/>;
+  if(document.kind==='annual_plan'&&document.content.journey_version===2){
+    const slots=((document.content.resolved_calendar as {projects?:{proposal_id?:string}[]}|undefined)?.projects??[]);
+    const rows=(document.content.proposed_experiences??[]) as ChangeProposal[],curriculum=(document.content.curriculum_reference??[]) as {id:string;name:string}[];
+    return <article className="space-y-4" aria-label="Plan anual guardado"><h2 className="text-2xl font-bold text-[#172b52]">Mi año · versión {document.version}</h2><p className="text-sm text-[#526b87]">{statusFor(document.status)} · {rows.length} proyectos · {document.school_year}</p>{rows.map((row,index)=><AnnualProjectPreview key={row.proposal_id} row={row} index={slots.findIndex(slot=>slot.proposal_id===row.proposal_id)>=0?slots.findIndex(slot=>slot.proposal_id===row.proposal_id)+1:index+1} names={new Map(curriculum.map(card=>[card.id,card.name]))} canChange={false} disabled onChange={()=>{}}/>)}</article>;
+  }
   if (document.kind === "annual_plan" && document.source_plan_format === "annual_preplan_v1" && !document.formal_ready) {
     const rows = Array.isArray(document.content.proposed_experiences) ? document.content.proposed_experiences as Record<string, unknown>[] : [];
     return <article className="rounded-2xl border bg-white p-5"><h2 className="text-xl font-bold">Mi año · versión {document.version}</h2>
@@ -88,6 +98,11 @@ export function DocumentContent({ document }: { document: OpenDocument }) {
         <p className="mt-1 text-sm">{text(row.period)} · {String(row.duration_weeks ?? "")} semanas</p><p className="mt-1">{text(row.rationale)}</p></li>)}</ol></article>;
   }
   if (document.kind === "annual_plan") return <AnnualPlanDocument proposal={document.content as Proposal} context={document.document_context ?? {}} competencies={document.competencies ?? []} status={document.status as "draft" | "active" | "archived"} />;
+  if(document.kind==='experience'&&document.content.project_master){
+    const content=document.content,master=content.project_master as Record<string,unknown>,decisions=(content.decisions??{}) as Record<string,unknown>;
+    const names=new Map((document.competencies??[]).map(card=>[card.id,card.name])),ids=items(decisions.competency_ids??content.primary_competency_ids),route=Array.isArray(content.activity_route)?content.activity_route as Record<string,unknown>[]:[];
+    return <article className="space-y-4" aria-label="Proyecto guardado"><header className="flex items-start gap-4 rounded-2xl border bg-white p-5"><ProjectPictogram project={{title:document.title,purpose:text(content.purpose),primary_competency_ids:ids}} className="size-20 shrink-0 sm:size-28"/><div className="min-w-0"><h2 className="text-2xl font-bold text-[#172b52]">{document.title}</h2><p className="mt-2 text-sm text-[#526b87]">{statusFor(document.status)} · Versión {document.version} · {dateFor(document.starts_on??'')} – {dateFor(document.ends_on??'')}</p><p className="mt-3 leading-relaxed">{text(content.purpose)}</p><AnnualCompetencies ids={ids} names={names}/></div></header><div className="grid gap-4 md:grid-cols-2"><section className="space-y-3 rounded-2xl border bg-[#edf9f4] p-5"><h3 className="font-bold text-[#07576c]">Qué buscamos</h3><p className="leading-relaxed">{text(master.foundation)||text(content.purpose)}</p></section><section className="space-y-3 rounded-2xl border bg-[#fff8e7] p-5"><h3 className="font-bold text-[#79500c]">Materiales</h3><ul className="list-disc space-y-1 pl-5">{items(master.resources??content.spaces_and_materials).map((material,index)=><li key={index}>{material}</li>)}</ul></section></div><section className="rounded-2xl border bg-white p-5"><h3 className="text-lg font-bold text-[#172b52]">Actividades del proyecto</h3><ol className="mt-4 space-y-3">{route.map((item,index)=><li key={text(item.id)||index} className="rounded-xl bg-[#edf7fa] p-4"><p className="text-sm text-[#526b87]">{dateFor(text(item.date||item.planned_date))}</p><h4 className="mt-1 font-bold">{index+1}. {text(item.title)}</h4><p className="mt-2 leading-relaxed">{text(item.specific_purpose||item.purpose)}</p>{text(item.mediation_notes)&&<p className="mt-2 text-sm"><b>Cómo acompañar:</b> {text(item.mediation_notes)}</p>}{text(item.evaluation_criterion)&&<p className="mt-2 text-sm"><b>Qué observar:</b> {text(item.evaluation_criterion)}</p>}</li>)}</ol></section>{text(master.closing_description)&&<section className="rounded-2xl border bg-[#f4efff] p-5"><h3 className="font-bold text-[#513283]">Para cerrar el proyecto</h3><p className="mt-2 leading-relaxed">{text(master.closing_description)}</p></section>}</article>;
+  }
   if (document.kind === "period_closure") {
     const entries=Array.isArray(document.content.entries)?document.content.entries as Record<string,unknown>[]:[];
     const names=new Map((document.competencies??[]).map((card)=>[card.id,card.name]));
@@ -115,20 +130,6 @@ export function DocumentContent({ document }: { document: OpenDocument }) {
         <Pathways title={document.subtype === "project" ? "Posibles caminos" : "Situaciones propuestas"} value={document.subtype === "project" ? content.possible_pathways : content.proposed_situations} />
         <Section title="Espacios y materiales" value={content.spaces_and_materials} /><Section title="Qué podríamos observar" value={content.evidence_opportunities} />
         <Section title="Familias y comunidad" value={content.family_or_community_links} /><Section title="Cuándo ajustar" value={content.adjustment_points} /><Section title="Cómo adaptarla" value={content.flexibility_notes} />
-      </>}
-      {document.kind === "activity" && <>
-        {document.experience_title && <p className="rounded-xl bg-[#f2f8fb] p-3 text-sm"><b>Experiencia:</b> {document.experience_title}</p>}
-        <Section title="Propósito" value={content.purpose} /><Section title="Situación para los niños" value={content.meaningful_situation} />
-        <Section title="Antes de empezar" value={content.teacher_preparation} /><Section title="Materiales" value={content.materials} />
-        <Section title="Qué harán los niños" value={content.child_actions} /><Section title="Cómo acompañaré" value={content.mediation} />
-        <Section title="Qué podré observar" value={content.evidence_opportunities} /><Section title="Cierre o continuidad" value={content.closure_or_continuity} />
-        {text(content.competency_id) && <Section title="Competencia confirmada" value={names.get(text(content.competency_id)) ?? text(content.competency_id)} />}
-        <Section title="Criterio para observar" value={document.active_criterion?.criterion_text || content.evaluation_criterion} />
-        <Section title="Evidencia esperada" value={content.expected_evidence} />
-        {document.workshop && <section aria-label="Taller del día" className="space-y-5 rounded-xl border bg-[#f3f8fb] p-4">
-          <h3 className="text-lg font-bold">Taller del día · {text(document.workshop.content.title)}</h3>
-          {([["Propósito", "purpose"], ["Materiales", "materials"], ["Inicio", "opening"], ["Desarrollo", "development"], ["Cierre", "closure"], ["Qué observar", "criterion_or_observation_focus"], ["Evidencia esperada", "evidence_expected"]] as const).map(([label, key]) => <Section key={key} title={label} value={document.workshop?.content[key]} />)}
-        </section>}
       </>}
       {document.kind === "family_report" && <>
         <p className="rounded-xl bg-[#eaf7fb] p-3 text-sm">{document.period_label || "Informe histórico sin período formal"}</p>

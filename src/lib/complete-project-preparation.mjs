@@ -1,3 +1,4 @@
+import {assertSavedSlotReplacement} from "./project-slot-replacement.mjs";
 import {randomUUID} from "node:crypto";
 import {preparationFingerprint,ownedPreparationJob} from "./preparation-jobs.mjs";
 import {versionTransaction,VersionConflictError} from "./version-integrity.mjs";
@@ -16,19 +17,40 @@ export async function publishAcceptedProjectBlock(db,job,request){
     if(route.length!==p.expected_dates.length||p.items.length!==route.length||p.items.some(item=>!item.activity_id))throw new VersionConflictError("Primero deben estar listas todas las actividades del proyecto.");
     const rows=(await tx.query("select *,occurs_on::text as occurs_on from activities where experience_id=$1 and id=any($2::uuid[]) for update",[project.id,p.items.map(item=>item.activity_id)])).rows;
     if(rows.length!==route.length)throw new VersionConflictError("Falta una actividad del bloque.");
+    const year=(await tx.query('select * from annual_plans where id=$1 and classroom_id=$2',[project.annual_plan_id,job.classroom_id])).rows[0];
+    const slot=year?.proposal.resolved_calendar?.projects.find(item=>item.proposal_id===project.source_proposal_id);
+    const retired=[];
+    if(slot){
+      const candidates=(await tx.query(`select a.*,a.occurs_on::text as occurs_on,e.source_proposal_id,e.annual_plan_id,se.id as schedule_id from class_schedule_entries se
+        join activities a on a.id=se.activity_id join learning_experiences e on e.id=a.experience_id
+        where se.classroom_id=$1 and se.scheduled_on between $2::date and $3::date and se.block_type='activity'
+          and a.status='active' and a.schedule_status not in ('cancelled','not_worked') and e.source_proposal_id<>$4`,[job.classroom_id,slot.starts_on,slot.ends_on,project.source_proposal_id])).rows;
+      for(const prior of candidates){
+        const previous=(await tx.query('select * from annual_plans where id=$1 and classroom_id=$2 and school_year_id=$3',[prior.annual_plan_id,job.classroom_id,year.school_year_id])).rows[0];
+        if(!previous)throw new VersionConflictError('La programación pertenece a otro año.');
+        assertSavedSlotReplacement(year.proposal,previous.proposal,project.source_proposal_id,prior.source_proposal_id);
+        await assertActivityScheduleMutable(tx,prior);retired.push(prior);
+      }
+    }
     const schedules=[];
     for(const item of p.items){
       const row=rows.find(row=>row.id===item.activity_id),blueprint=route.find(row=>row.id===item.route_item_id);
       if(!row||!blueprint||row.details.route_item_id!==blueprint.id||String(row.occurs_on).slice(0,10)!==item.date||item.date<limaToday())throw new VersionConflictError("Revisa las fechas y la secuencia; no publicamos actividades del pasado.");
       const existing=(await tx.query(`select a.*,se.id as schedule_id,se.activity_id,e.source_proposal_id from class_schedule_entries se join activities a on a.id=se.activity_id
-        join learning_experiences e on e.id=a.experience_id where se.classroom_id=$1 and se.scheduled_on=$2::date and se.block_type='activity'`,[job.classroom_id,item.date])).rows;
+        join learning_experiences e on e.id=a.experience_id where se.classroom_id=$1 and se.scheduled_on=$2::date and se.block_type='activity' and a.schedule_status not in ('cancelled','not_worked')`,[job.classroom_id,item.date])).rows;
       if(existing.length>1)throw new VersionConflictError("Hay dos actividades previstas para el mismo día. Revisa el calendario.");
       const prior=existing[0];
       if(prior&&prior.activity_id!==row.id){
-        if(prior.source_proposal_id!==project.source_proposal_id)throw new VersionConflictError("Este día pertenece a otro proyecto. Conservamos su programación.");
+        if(prior.source_proposal_id!==project.source_proposal_id&&!retired.some(item=>item.id===prior.id))throw new VersionConflictError("Este día pertenece a otro proyecto. Conservamos su programación.");
         await assertActivityScheduleMutable(tx,{...prior,id:prior.activity_id,occurs_on:item.date});
       }
       schedules.push({item,row,prior});
+    }
+    for(const prior of retired){
+      await tx.query("update activities set schedule_status='cancelled',updated_at=now() where id=$1 and status='active'",[prior.id]);
+      await tx.query(`insert into activity_schedule_changes(id,activity_id,previous_date,new_date,change_type,reason,changed_by)
+        values($1,$2,$3::date,null,'cancelled',$4,$5)`,[randomUUID(),prior.id,prior.occurs_on,`Proyecto reemplazado por decisión docente · preparación ${job.id}`,job.teacher_id]);
+      await tx.query("update activities set status='archived',superseded_at=now(),updated_at=now() where id=$1 and status='active'",[prior.id]);
     }
     const transactionalDb={...tx,transaction:work=>work(tx)};
     for(const {row,item,prior}of schedules){

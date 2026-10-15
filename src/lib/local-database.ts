@@ -279,7 +279,7 @@ export function updateLocalExecution(input: {
   scheduleEntryId: string; action: "start" | "complete" | "skip" | "keep_current" | "set_step";
   stepIndex?: number;
   closureType?: "as_planned" | "note"; closureNote?: string;
-}) {
+}|{activityId:string;action:"start_today"}) {
   return postDashboard("/api/today/execution", input);
 }
 

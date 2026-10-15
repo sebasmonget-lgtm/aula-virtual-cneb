@@ -58,7 +58,7 @@ async function fixture() {
     create type evidence_type as enum ('observation','photo','audio','video','document');
     create table evidences(id uuid primary key,student_id uuid,activity_id uuid,criterion_id uuid,observation_text text,observation_status text,type evidence_type,observed_at timestamptz,media_path text,created_by uuid);
     create table class_schedule_entries(id uuid primary key,activity_id uuid,classroom_id uuid);
-    create table daily_execution_logs(id uuid primary key,schedule_entry_id uuid,execution_date date,teacher_closure_note text);
+    create table daily_execution_logs(id uuid primary key,schedule_entry_id uuid,execution_date date,actual_started_at timestamptz,teacher_closure_note text);
     create table students(id uuid primary key,classroom_id uuid,first_name text,last_name text,preferred_name text,status text default 'active');
     create table family_reports(id uuid primary key,student_id uuid,status text,version int,details jsonb,updated_at timestamptz,period_start date,period_end date,teacher_confirmed_at timestamptz,generation_metadata jsonb,evaluation_period_id uuid);
     create table evaluation_periods(id uuid primary key,school_year_id uuid,label text,starts_on date,ends_on date);
@@ -138,7 +138,7 @@ test("el Word de actividad recibe solo evidencia nominal real del aula autorizad
     await db.query(`insert into evidences values($1,$2,$3,$4,'Propuso esperar su turno',null,'observation',now(),null,$5)`,
       [id(21), id(13), id(12), id(20), id(1)]);
     await db.query(`insert into class_schedule_entries values($1,$2,$3)`, [id(22), id(12), id(6)]);
-    await db.query(`insert into daily_execution_logs values($1,$2,'2026-04-02','El grupo pidió otro turno')`, [id(23), id(22)]);
+    await db.query(`insert into daily_execution_logs(id,schedule_entry_id,execution_date,teacher_closure_note) values($1,$2,'2026-04-02','El grupo pidió otro turno')`, [id(23), id(22)]);
     const document = await loadSavedDocument(db, id(1), "activity", id(12));
     assert.deepEqual(document.registered_evidence.map((item) => [item.student_name, item.observation_text]),
       [["Alessia Pérez", "Propuso esperar su turno"]]);
@@ -205,4 +205,17 @@ test("un borrador usa la UGEL y el nombre institucional guardados si su snapshot
     assert.equal(plan.document_context.ugel, "UGEL 01");
     assert.equal(plan.document_context.teacher_name, "Docente B");
   } finally { await db.close(); }
+});
+
+
+test('modern year version without legacy title opens and exports with classroom ownership',async()=>{
+ const db=await fixture();try{
+  const row=(await db.query('select * from annual_plans where classroom_id=$1',[id(6)])).rows[0];
+  const proposal={journey_version:2,proposed_experiences:[],classroom_snapshot:{facts:[]}};
+  await db.query('update annual_plans set proposal=$1::jsonb where id=$2',[JSON.stringify(proposal),row.id]);
+  assert.ok((await listSavedDocuments(db,id(1))).some(item=>item.id===row.id));
+  const saved=await loadSavedDocument(db,id(1),'annual_plan',row.id);
+  assert.equal(saved.content.journey_version,2);assert.equal(saved.title,'Mi año');
+  assert.equal(await loadSavedDocument(db,id(2),'annual_plan',row.id),null);
+ }finally{await db.close();}
 });

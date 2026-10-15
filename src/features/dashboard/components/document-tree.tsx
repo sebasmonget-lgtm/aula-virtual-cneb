@@ -1,5 +1,6 @@
 "use client";
 
+import {displayDocumentDate} from "@/src/lib/display-date";
 import { useState } from "react";
 import {Folder,FileText,ChevronRight,ArrowLeft} from "lucide-react";
 import {useWorkspaceParam} from "@/src/lib/workspace-location";
@@ -26,7 +27,7 @@ export function DocumentTree({documents,artifactStates,onOpen}:{documents:TreeDo
  const groupKey=(item:TreeDocument)=>`${item.school_year}:${item.classroom_id??item.classroom}`;
  const groups=[...new Set(visible.map(groupKey))].sort().reverse();
  const items=visible.filter(item=>groupKey(item)===group),parent=items.find(item=>item.id===project&&item.kind==='experience');
- const date=(value?:string)=>value?new Intl.DateTimeFormat('es-PE',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'}).format(new Date(value.slice(0,10)+'T00:00:00Z')):'';
+ const date=displayDocumentDate;
  const folders=!group?groups.map(key=>({id:key,title:`${visible.find(item=>groupKey(item)===key)?.school_year} · Aula ${visible.find(item=>groupKey(item)===key)?.classroom}`,count:visible.filter(item=>groupKey(item)===key).length})):
  !kind?order.filter(type=>items.some(item=>item.kind===type)).filter(type=>type!=='activity'||items.some(item=>item.kind==='activity'&&!items.some(parent=>parent.id===item.parent_experience_id))).map(type=>({id:type,title:sectionName(type),count:items.filter(item=>item.kind===type).length})):
  kind==='experience'&&!project?items.filter(item=>item.kind==='experience').map(item=>({id:item.id,title:item.title+` · V${item.version??1}${item.status==='archived'?' · Anterior':''}`,count:items.filter(child=>child.parent_experience_id===item.id).length+1})):[];

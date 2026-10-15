@@ -40,7 +40,7 @@ const provider = (calls, cards = curriculum, reviewIssues = []) => (routing) => 
   if (request.ai_context_bundle.global_prose_repair) { const {proposals,...general}=generationFixture(cards);void proposals;
     return {output:{...general,replacements:[]}}; }
   if (request.workflow === "annual_journey_repair") return { output: { replacements: request.ai_context_bundle.proposals.map((row, i) => ({
-    proposal_id: row.proposal_id, change_reason: "Cambio docente", ...generationFixture(cards).proposals[i], title: `Plantas y juego ${i + 1}` })),
+    proposal_id: row.proposal_id, change_reason: "Cambio docente", ...generationFixture(cards).proposals[i], opportunities:generationFixture(cards).everyday_opportunities.slice(0,2).map(({moment,...item})=>{void moment;return item;}),title: `Plantas y juego ${i + 1}` })),
     ...(request.output_schema.properties.everyday_opportunities ? {everyday_opportunities: request.ai_context_bundle.everyday_opportunities, evidence_interpretations: request.ai_context_bundle.evidence_interpretations ?? []} : {}) } };
   return { output: generationFixture(cards) };
 } });
@@ -233,7 +233,7 @@ test("vertical en PostgreSQL: preparar → cambios → confirmar → Word idént
           if (failing) throw Object.assign(new Error("Simulated provider failure"), { name: "OpenAIProviderError" });
           if(request.output_schema.id==="annual-proposal-row-v3") {calls.push({routing,request});const fixture=generationFixture(request.ai_context_bundle.curriculum.competency_cards),row=fixture.proposals[0],required=request.ai_context_bundle.required_competency_ids??[];
             const ids=failRequired||request.ai_context_bundle.task.startsWith("Crea")?required.filter(id=>id!=="COM_ARTE"):required;
-            const opportunities=ids.length?ids.map(id=>{const {moment,...opportunity}=fixture.everyday_opportunities.find(o=>o.competency_id===id);void moment;return opportunity;}):row.opportunities;
+            const opportunities=ids.length?ids.map(id=>{const {moment,...opportunity}=fixture.everyday_opportunities.find(o=>o.competency_id===id);void moment;return opportunity;}):fixture.everyday_opportunities.slice(0,2).map(({moment,...item})=>{void moment;return item;});
             return {output:{...row,opportunities,title:request.ai_context_bundle.teacher_intentions.at(-1)?.includes("Navidad")?"Navidad con las familias":request.ai_context_bundle.teacher_intentions.at(-1)?.includes("otra alternativa")?"Otra idea para explorar el mercado":required.length?"Exploramos semillas con arte":"Exploramos nuestro mercado",source_fact_keys:[request.ai_context_bundle.classroom.facts.findLast(f=>f.key.startsWith("proposal_intent_")).key]}};}
           if(request.workflow==="new_project_card_conversation") {calls.push({routing,request});const ready=request.ai_context_bundle.teacher_intentions.length>0;return {output:{status:ready?"ready":"needs_clarification",message:ready?"Prepararemos una propuesta sobre el mercado.":"¿Qué propuesta quieres crear?",question:"",chips:[]}};}
           return provider(calls, request.ai_context_bundle.curriculum.competency_cards)(routing).generate(request);
@@ -327,6 +327,12 @@ test("vertical en PostgreSQL: preparar → cambios → confirmar → Word idént
     const christmas=await route(`${current.id}/new-proposal/generate`,{expectedRevision:current.revision,id:oldIdea.data.id,revision:resumed.data.revision});assert.equal(christmas.status,200,JSON.stringify(christmas.data));assert.match(christmas.data.candidate.title,/Navidad/);assert.notEqual(christmas.data.candidate.proposal_id,oldCandidate.data.candidate.proposal_id);
     assert.equal(calls.length-beforeGenerate,1);assert.equal(christmas.data.review_feedback.length,0);
     assert.deepEqual((await db.query("select proposal from annual_plans where id=$1",[current.id])).rows[0].proposal,current.proposal,"Changing a library conversation does not rewrite the year");
+    const firstScope=current.proposal.proposed_experiences[0].proposal_id,secondScope=current.proposal.proposed_experiences[1].proposal_id;
+    const scopeA=await route(`${current.id}/new-proposal/conversation`,{expectedRevision:current.revision,forProposalId:firstScope});
+    const scopeB=await route(`${current.id}/new-proposal/conversation`,{expectedRevision:current.revision,forProposalId:secondScope});
+    assert.equal(scopeA.status,200);assert.equal(scopeB.status,200);assert.notEqual(scopeA.data.id,scopeB.data.id);
+    assert.equal((await route(`${current.id}/new-proposal/conversation?id=${scopeA.data.id}&forProposalId=${secondScope}`,{},teacherId,'GET')).status,404,'another slot cannot recover these decisions');
+    assert.equal((await route(`${current.id}/new-proposal/conversation?id=${scopeA.data.id}&forProposalId=${firstScope}`,{},teacherId,'GET')).status,200);
     const confirm = await route(`${current.id}/confirm`, { expectedRevision: current.revision }); assert.equal(confirm.status, 200, JSON.stringify(confirm.data));
     const beforeCalls = calls.length, doc = await loadSavedDocument(db, teacherId, "annual_plan", current.id);
     const {interpretation_review,...confirmedProjection}=doc.content;
