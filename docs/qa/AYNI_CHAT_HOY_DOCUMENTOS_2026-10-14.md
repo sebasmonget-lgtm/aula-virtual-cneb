@@ -23,4 +23,9 @@ El proveedor es ficticio: estas pruebas validan flujos/contratos y preservación
 
 ## Publicación y rollback
 
-Pendiente registrar commit/URL/deployment/READY y smoke de Preview. Sin migraciones. Rollback de código al Preview anterior 50ea956; ninguna reversión de contenido histórico o de base de datos. No promover ni usar --prod. El cambio crea registros solo por una acción docente autorizada en la aplicación.
+Código publicado: ec6383f8ae79732650c4bf9ccd02bdbbddce60aa, subido a GitHub en codex/mi-ano-simple-preview.
+Preview: https://ayni-aula-staging-31l6t4dkj-ayni4.vercel.app/ · dpl_BosgNJL6hYUqKsJs9i59hTZMfUzr · READY · target=null · SHA exacto.
+Compilación cloud PASS (Next/webpack, 44 s). 26 comprobaciones smoke PASS: raíz/assets/health y rechazo 401 sin sesión Ayni en rutas privadas, incluida ejecución de Hoy y creación de propuestas.
+Producción verificada después: dpl_H19YWzRdGjkgh8y72QAd1qBty7Mf / 9a0920230350cd6b9050f35683a1f35d459e78c7, sin promoción ni cambio de alias.
+Preview abierto en el navegador integrado; cargó la sesión existente y el inicio. No se abrieron generadores ni se enviaron observaciones del aula real. QA funcional con datos ficticios y servidor local ya apagado.
+El recibo se registra en un commit documental posterior: no requiere otro despliegue y no cambia el código publicado. Sin migraciones. Rollback de código al Preview anterior 50ea956; ninguna reversión de contenido histórico o de base de datos. No promover ni usar --prod. El cambio crea registros solo por una acción docente autorizada en la aplicación.
