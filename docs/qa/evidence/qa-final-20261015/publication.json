@@ -1,0 +1,21 @@
+{
+  "preview": {
+    "projectId": "prj_3GOhE5KykLKbhuULD5rAeXpfbEko",
+    "deploymentId": "dpl_36D6DLzgj4gagrpRdkjyNcixTXb4",
+    "url": "https://ayni-aula-staging-m54csiriv-ayni4.vercel.app",
+    "state": "READY",
+    "target": null,
+    "sha": "a24d870c7f72c2d359751f5f4bbca68776256925"
+  },
+  "productionUnchanged": {
+    "projectId": "prj_3GOhE5KykLKbhuULD5rAeXpfbEko",
+    "deploymentId": "dpl_H19YWzRdGjkgh8y72QAd1qBty7Mf",
+    "url": "https://ayni-aula-staging-8a8wfvf8y-ayni4.vercel.app",
+    "state": "READY",
+    "target": "production",
+    "sha": "9a0920230350cd6b9050f35683a1f35d459e78c7"
+  },
+  "smokeChecks": 18,
+  "pass": true,
+  "pedagogicalCloudWrites": false
+}

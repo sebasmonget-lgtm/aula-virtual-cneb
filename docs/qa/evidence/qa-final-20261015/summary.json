@@ -42,6 +42,12 @@
   "tests": {
     "files": 197,
     "passed": 910,
-    "failed": 0
+    "failed": 0,
+    "finalFocused": {
+      "passed": 57,
+      "failed": 0
+    },
+    "nextBuild": "PASS",
+    "lint": "PASS"
   }
 }
