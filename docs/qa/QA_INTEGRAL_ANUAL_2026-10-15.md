@@ -182,6 +182,10 @@ Cadena demostrada parcialmente: Diagnóstico → Mi año → Proyecto → Plan M
 
 ## Publicación exclusivamente Preview
 
+### Contraste posterior de consumo aportado por el usuario
+
+La captura posterior muestra acumulado de octubre US$7,28 frente a US$6,80 en la referencia anterior: incremento observado de cuenta US$0,48. Es distinto de la estimación conservadora de varios proveedores de esta ronda (US$0,789982332); no se atribuye automáticamente toda la diferencia mensual al QA. El total US$2,12, 157 solicitudes y 1.058.551 tokens pertenecen a una ventana móvil de siete días y no se restan de la ventana anterior como si fuera idéntica. La captura muestra US$0,56 para el15oct UTC. No es un recibo individual de las45 llamadas ni sustituye el ledger. El límite US$5 se conserva y no se habilitaron nuevas llamadas pagadas para contrastar estos datos.
+
 Producto: `c9ca5fea3301085cf595043d8d80d74cffb2d96b`, subido a GitHub en `codex/qa-integral-anual-20261015`. [Preview verificado](https://ayni-aula-staging-9860ndjvv-ayni4.vercel.app/), deployment `dpl_9sKEp6khmYnaHFCQRhUEwmzV89nx`, READY, target null y SHA exacto. Build cloud PASS. Dieciocho controles smoke PASS: recursos200 y APIs privadas401 sin sesión, sin escrituras pedagógicas. Navegador muestra Bienvenida a Ayni y campos de acceso. [Recibo](evidence/qa-integral-20261015/preview.json), [smoke](evidence/qa-integral-20261015/preview-smoke.json), [captura cloud](evidence/qa-integral-20261015/preview-login.png).
 
 Producción reconsultada tras publicar: mismo deployment `dpl_H19YWzRdGjkgh8y72QAd1qBty7Mf` y SHA `9a0920230350cd6b9050f35683a1f35d459e78c7`. No promoción, reasignación de alias ni migración. Tres servidores locales apagados con cierre de PGlite; bases y registros ficticios conservados. La pestaña cloud se deja abierta como resultado. El recibo documental se confirma después del producto y no cambia el SHA desplegado.
