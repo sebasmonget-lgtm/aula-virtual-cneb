@@ -12,13 +12,13 @@ export function fixtureCalendar() {
 export const opportunityFixture = (card) => ({ competency_id: card.id, capacity_names: [card.capacities[0]],
   child_action: "Los niños comparan sus colecciones y explican sus decisiones al jugar.", conditions: "Colecciones disponibles y tiempo para probar diferentes formas de organizar.",
   mediation: "Escuchar y ofrecer preguntas abiertas sin resolver por ellos.", observation: "Cómo explica sus decisiones y cambia de estrategia.", supports: "Permitir gestos y acompañamiento individual." });
-export function generationFixture(cards) {
+export function generationFixture(cards,{competencyCount=2}={}) {
   return { organization_criteria: ["Previsión flexible"], transversal_approaches: ["Respeto a las diferencias"],
     teaching_strategies: ["Escuchar y acompañar el juego"], assessment_followup: ["Registrar actuaciones contextualizadas"],
     family_collaboration: ["Escuchar reportes familiares sin convertirlos en evidencia"], inclusive_supports: ["Ofrecer diferentes formas de participar"],
     evidence_interpretations: [], everyday_opportunities: cards.map((c) => ({ moment: "Juego y conversación", ...opportunityFixture(c) })),
     proposals: Array.from({ length: 15 }, (_, i) => ({ title: `Invitación ${i + 1}`, rationale: "Oportunidad curricular para seguir conociendo al grupo; no supone un interés observado.",
       purpose: "Explorar y compartir decisiones durante el juego.", invitation: "Invitar a organizar y comparar materiales del aula.",
-      children_actions: ["Explorar, comparar y explicar decisiones"], materials: ["Materiales disponibles del aula"],
-      supports: ["Tiempo y gestos"], flexibility: "Los niños pueden proponer otros caminos.", source_fact_keys: [], opportunities: [opportunityFixture(cards[0])] })) };
+      children_actions: ["Explorar, comparar y explicar decisiones"], materials: ["Cajas de cartón y papel"],
+      supports: ["Tiempo y gestos"], flexibility: "Los niños pueden proponer otros caminos.", source_fact_keys: [], opportunities: cards.slice(0,competencyCount).map(opportunityFixture) })) };
 }

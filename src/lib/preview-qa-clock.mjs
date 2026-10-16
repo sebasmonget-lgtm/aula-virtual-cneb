@@ -46,7 +46,8 @@ export function previewQAClockCookie(clock, context, env = process.env) {
   return `${cookieName}=${payload}.${sign(payload, env.AYNI_SESSION_SIGNING_KEY).toString("base64url")}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=31536000`;
 }
 
-export function previewQAClockForJob(job, env = process.env) {
-  if (!previewQAClockAllowed(job.teacher_id, "teacher", env) || !job.payload?.qa_clock) return null;
-  return validateQAClock(job.payload.qa_clock);
+export function previewQAClockForJob(job, env = process.env, inheritedClock = null) {
+  if (!previewQAClockAllowed(job.teacher_id, "teacher", env)) return null;
+  const clock = job.payload?.qa_clock ?? inheritedClock;
+  return clock ? validateQAClock(clock) : null;
 }

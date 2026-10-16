@@ -48,7 +48,7 @@ test("el Word diagnóstico sin logo conserva un documento válido y declara la a
 test("la descarga toma recuentos autorizados sin incluir respuestas ni nombres de niños", async () => {
   const db = new PGlite();
   try {
-    await db.exec(`create table profiles(user_id uuid,display_name text);
+    await db.exec(`create table profiles(user_id uuid,display_name text,preferences jsonb default '{}');
       create table institution_profiles(owner_user_id uuid,display_name text,ugel text);
       create table school_years(id uuid,owner_id uuid,year int);
       create table calendar_blocks(school_year_id uuid,type text,start_date date,end_date date);
@@ -57,7 +57,7 @@ test("la descarga toma recuentos autorizados sin incluir respuestas ni nombres d
       create table classrooms(id uuid,teacher_id uuid,school_year_id uuid,age_grade_id uuid,section text,institution_name text);
       create table diagnostic_group_reviews(id uuid,classroom_id uuid,status text,version int,details jsonb,teacher_confirmed_at timestamptz);
       create table students(id uuid,classroom_id uuid,first_name text,last_name text,preferred_name text,status text);
-      create table diagnostic_experience_observations(student_id uuid,classroom_id uuid,competency_v4_id text,observed_at timestamptz,observation_text text);
+      create table diagnostic_experience_observations(id uuid default gen_random_uuid(),created_by uuid,student_id uuid,classroom_id uuid,competency_v4_id text,observed_at timestamptz,observation_text text);
       create table diagnostic_spontaneous_observations(student_id uuid,classroom_id uuid,competency_v4_id text,competency_v4_ids text[] default '{}',classification_status text,observed_at timestamptz,observation_text text);
       create view effective_diagnostic_spontaneous_observations as select * from diagnostic_spontaneous_observations;
       create table diagnostic_sessions(id uuid,classroom_id uuid);
@@ -66,7 +66,7 @@ test("la descarga toma recuentos autorizados sin incluir respuestas ni nombres d
       create table student_family_interviews(student_id uuid,classroom_id uuid,status text,version int,details jsonb);
       create table diagnostic_priority_reviews(classroom_id uuid,group_review_id uuid,status text,version int,details jsonb);
       create table diagnostic_student_reviews(student_id uuid,classroom_id uuid,status text,details jsonb);`);
-    await db.query("insert into profiles values($1,'Marisol')", [id(1)]);
+    await db.query("insert into profiles(user_id,display_name) values($1,'Marisol')", [id(1)]);
     await db.query("insert into school_years values($1,$2,2026)", [id(2), id(1)]);
     await db.query("insert into initial_stages values($1,2)", [id(2)]);
     await db.query("insert into age_grades values($1,5)", [id(3)]);
@@ -75,7 +75,7 @@ test("la descarga toma recuentos autorizados sin incluir respuestas ni nombres d
     await db.query("insert into students values($1,$2,'Ana','Pérez',null,'active')", [id(5), id(4)]);
     await db.query("insert into diagnostic_group_reviews values($1,$2,'confirmed',1,$3::jsonb,now())",
       [id(8), id(4), JSON.stringify(document.content)]);
-    await db.query("insert into diagnostic_experience_observations values($1,$2,'COM_ORAL',now(),'Dato privado del niño')", [id(5), id(4)]);
+    await db.query("insert into diagnostic_experience_observations(student_id,classroom_id,created_by,competency_v4_id,observed_at,observation_text) values($1,$2,$3,'COM_ORAL',now(),'Dato privado del niño')", [id(5), id(4), id(1)]);
     await db.query("insert into diagnostic_spontaneous_observations(student_id,classroom_id,competency_v4_id,classification_status,observed_at,observation_text) values($1,$2,null,'pending',now(),'Otra nota privada')", [id(5), id(4)]);
     await db.query("insert into student_family_interviews values($1,$2,'confirmed',1,$3::jsonb)",
       [id(5), id(4), JSON.stringify({ answer: "Secreto familiar", interest_tags: ["animals", "music"] })]);

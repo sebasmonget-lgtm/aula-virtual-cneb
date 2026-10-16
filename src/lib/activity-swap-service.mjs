@@ -13,6 +13,8 @@ export async function swapActivityDates(db,teacherId,input,{today=limaToday()}={
       join learning_experiences e on e.id=a.experience_id where a.id=any($1::uuid[]) and e.classroom_id=$2
       and a.status='active' and a.linked_main_activity_id is null and e.type in ('project','unit') for update of a`,[[input.activityId,input.otherActivityId],owner.classroom_id])).rows;
     if(rows.length!==2 || rows[0].experience_id!==rows[1].experience_id)throw new VersionConflictError("Intercambia actividades confirmadas del mismo proyecto.");
+    if(rows.some(row=>row.status==='active'||row.teacher_confirmed_at))
+      throw new VersionConflictError("Conservamos la secuencia confirmada. Los cambios se revisan para el proyecto completo con Ayni.");
     const first=rows.find(row=>row.id===input.activityId),second=rows.find(row=>row.id===input.otherActivityId);
     assertRevision(first,expectedRevision(input.expectedRevision));assertRevision(second,expectedRevision(input.otherExpectedRevision));
     const pairs=[];

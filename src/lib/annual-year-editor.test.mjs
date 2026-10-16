@@ -12,7 +12,9 @@ import {assignAnnualSlots} from './annual-year-editor.mjs';
 
 const cards=[{id:"MAT_CANTIDAD",name:"Cantidad",capacities:["Comunica su comprensión"]},{id:"CYT_INDAGA",name:"Indaga",capacities:["Problematiza situaciones"]}];
 function fixture() {
-  const output=generationFixture(cards),calendar=solveAnnualJourneyCalendar(fixtureCalendar(),output.proposals.map(()=>({proposal_id:randomUUID()})));
+  // Historical rows may have one competency. Keep coverage delta tests explicit;
+  // the default generation fixture follows the current two-competency policy.
+  const output=generationFixture(cards,{competencyCount:1}),calendar=solveAnnualJourneyCalendar(fixtureCalendar(),output.proposals.map(()=>({proposal_id:randomUUID()})));
   const {proposals,...general}=output;
   return {journey_version:2,editor_version:3,...general,curriculum_reference:cards,classroom_snapshot:{version:2,facts:[],source_fingerprint:"fixture"},pending_changes:[],change_history:[],pedagogical_review:{status:"passed"},resolved_calendar:calendar,proposed_experiences:materializeJourneyRows(proposals.map((r,i)=>({...r,proposal_id:calendar.projects[i].proposal_id})),calendar),available_experiences:[]};
 }

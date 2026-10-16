@@ -113,23 +113,20 @@ test("un proyecto de un plan histórico sigue en el recorrido y falla claramente
   await assert.rejects(loadPlanningJourney(base, fetchFrom({ [planUrl]: null, [experienceUrl]: { experiences: [] } })), /avance/);
 });
 
-test("la interfaz abre el diagnóstico y ofrece continuar al plan solo tras guardar la revisión", async () => {
+test("la interfaz conserva diagnóstico desde Mi aula y acceso a Mi año sin exigir porcentajes", async () => {
   const workspace = await readFile(new URL("../features/dashboard/components/teacher-workspace.tsx", import.meta.url), "utf8");
-  const diagnostic = await readFile(new URL("../features/dashboard/components/profile-and-diagnostic.tsx", import.meta.url), "utf8");
+  const guided = await readFile(new URL("../features/dashboard/components/guided-diagnostic-v4.tsx", import.meta.url), "utf8");
   const students = await readFile(new URL("../features/dashboard/components/students-screen.tsx", import.meta.url), "utf8");
   const setup = await readFile(new URL("../features/dashboard/components/pilot-setup.tsx", import.meta.url), "utf8");
-  assert.match(setup, /Configura tu aula/);
+  assert.match(setup, /Guardar aula y continuar/);
   assert.match(students, /Añadir niños al aula/);
-  assert.match(workspace, /guidance\.startingSection === "Niños" \? "Aula" : guidance\.startingSection/);
-  assert.match(workspace, /id: "diagnostic" as const, label: "Diagnóstico"/);
-  assert.match(workspace, /className="ayni-journey-link" onClick=\{onGoDiagnostic\}/);
-  assert.match(workspace, /guidance\.startingSection === "Diagnóstico".*setPlanningTarget\("diagnostic"\).*setActive\("Planificar"\)/);
-  assert.match(workspace, /tab === "diagnostic" \? \(journey\?\.studentCount \? <GuidedDiagnostic/);
+  assert.match(workspace, /function openDiagnostic[\s\S]*?setPlanningTarget\("diagnostic"\)/);
+  assert.match(workspace, /onDiagnostic=\{\(\) => openDiagnostic\(\)\}/);
+  assert.match(workspace, /<GuidedDiagnostic/);
   assert.match(workspace, /<EvaluationHome dashboard=\{dashboard\}/);
-  assert.match(diagnostic, /disabled=\{index \+ 1 > maxStep\}/);
-  assert.match(diagnostic, /setData\(await completeDiagnosticReview\(\)\); onPlan\?\.\(\)/);
-  assert.match(diagnostic, /!data\.observations\.length.*información insuficiente/);
+  assert.match(workspace, /onPlan=\{\(\) => navigatePrimary\("Mi año"\)\}/);
+  assert.match(guided, /<SpontaneousDiagnostic/);
+  assert.match(guided, /<GuidedObservationDialog/);
+  assert.doesNotMatch(guided, /evidence_count\s*>=\s*\d+.*onPlan/);
   assert.match(students, /Ya registré a mis niños/);
-  assert.match(students, /onDiagnostic/);
-  assert.match(students, /onPlan/);
 });

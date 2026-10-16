@@ -5,6 +5,14 @@ export class ActivityVersionError extends Error {
   constructor(reason, message) { super(message); this.name = "ActivityVersionError"; this.reason = reason; }
 }
 
+/** Legacy confirmations have no preparation job but protect the same sequence. */
+export async function hasConfirmedProjectSequence(db,classroomId,experienceId) {
+  if(!experienceId)return false;
+  return (await db.query(`select 1 from activities a
+    join learning_experiences e on e.id=a.experience_id and e.classroom_id=$1
+    where e.id=$2 and a.status in ('active','archived') limit 1`,[classroomId,experienceId])).rows.length>0;
+}
+
 export async function copyConfirmedActivity(db, teacherId, classroomId, sourceId, expectedSourceRevision = null) {
   const dateOnly=(value)=>value instanceof Date?value.toISOString().slice(0,10):/^\d{4}-\d{2}-\d{2}/.test(String(value))?String(value).slice(0,10):new Date(value).toISOString().slice(0,10);
   const identity = (await db.query(`select lineage_id from activities where id=$1`, [sourceId])).rows[0];

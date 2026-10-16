@@ -3,7 +3,15 @@ export const savedText=value=>typeof value==='string'?value.trim():'';
 export function readingSentences(value){
   if(Array.isArray(value))return value.filter(item=>typeof item==='string'&&item.trim()).map(item=>item.trim());
   const text=savedText(value);if(!text)return [];
-  return [...new Intl.Segmenter('es-PE',{granularity:'sentence'}).segment(text)].map(item=>item.segment.trim()).filter(Boolean);
+  const sentences=[];
+  for(const item of new Intl.Segmenter('es-PE',{granularity:'sentence'}).segment(text)){
+    const part=item.segment.trim();if(!part)continue;
+    // A quoted question inside an instruction is not the end of that action:
+    // «¿Qué pasará?» y escuchar… must remain one practical instruction.
+    if(sentences.length&&/^\p{Ll}/u.test(part))sentences[sentences.length-1]+=' '+part;
+    else sentences.push(part);
+  }
+  return sentences;
 }
 export function activityReadingStages(value,{opening,closure}={}){
   const text=savedText(value),matches=[...text.matchAll(/(?:^|\s)(Inicio|Desarrollo|Cierre)\s*:\s*/giu)];

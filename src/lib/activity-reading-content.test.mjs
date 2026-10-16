@@ -1,6 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {activityReadingStages,readingSentences} from './activity-reading-content.mjs';
+test('a quoted question retains its lowercase continuation in the same instruction',()=>{
+  const action='Acompañar la prueba; preguntar «¿Qué piensas que podría pasar?» y escuchar sin confirmar una respuesta.';
+  assert.deepEqual(readingSentences(action),[action]);
+  assert.deepEqual(readingSentences(action+' Luego recoger sus ideas.'),[action,'Luego recoger sus ideas.']);
+});
 test('formatting retains full saved content and respects explicit activity stages',()=>{
   const value='Invita a elegir. Inicio: Miran imágenes. Pueden esperar. Desarrollo: Pregunta: «¿Qué podría pasar?». Escuchan la lectura. Cierre: Comparten una pista.';
   const result=activityReadingStages(value);

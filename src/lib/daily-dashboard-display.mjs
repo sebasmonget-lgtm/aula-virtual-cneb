@@ -1,7 +1,29 @@
-/** Presentation only. Peru's clock is independent of the device's time zone. */
-export function teacherGreeting(at=new Date()){
+/** Presentation only. Peru's clock is independent of the device's time zone.
+ * @param {Date} at
+ * @param {{date:string,time:string}|null} qaClock
+ */
+export function teacherGreeting(at=new Date(),qaClock=null){
+  if(/^\d{4}-\d{2}-\d{2}$/.test(qaClock?.date??'')&&/^\d{2}:\d{2}$/.test(qaClock?.time??'')){
+    const simulated=new Date(`${qaClock.date}T${qaClock.time}:00-05:00`);
+    if(Number.isFinite(simulated.getTime()))at=simulated;
+  }
   const hour=Number(new Intl.DateTimeFormat('en-GB',{timeZone:'America/Lima',hour:'2-digit',hourCycle:'h23'}).format(at));
   return hour<12?{text:'Buenos días',period:'morning'}:hour<19?{text:'Buenas tardes',period:'afternoon'}:{text:'Buenas noches',period:'night'};
+}
+
+/** A completed block remains available to consult, never as an upcoming task. */
+export function todayBlockLabel(block, isCurrent=false){
+  if(block?.status==='completed')return 'TERMINADA';
+  if(block?.status==='skipped')return 'NO REALIZADA';
+  return isCurrent?'AHORA':'PRÓXIMO';
+}
+
+export function calendarActivityState(activity,today){
+  const execution=activity.execution_status??'planned';
+  return {
+    label:execution==='completed'?'Terminada':execution==='skipped'||activity.schedule_status==='not_worked'?'No realizada':execution==='active'?'En curso':activity.schedule_status==='rescheduled'?'Reprogramada':activity.status==='active'?'Confirmada':'Pendiente',
+    canMarkNotWorked:activity.status==='active'&&execution==='planned'&&activity.occurs_on>=today&&!['cancelled','not_worked'].includes(activity.schedule_status),
+  };
 }
 
 /** Keep historical documents available; only confirmed, usable activities count as upcoming. */

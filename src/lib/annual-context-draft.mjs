@@ -1,26 +1,42 @@
-/** Import each teacher turn once; later AI wording must not replace teacher edits. */
+/** Reconcile generated summaries; teacher edits and removals always take precedence. */
 export function currentAnnualConversation(previous,next) {
   return previous?.id===next.id && (previous.revision>next.revision || previous.revision===next.revision&&previous.status===next.status) ? previous : next;
 }
 
 export function mergeAnnualContextDraft(draft, items = []) {
   const importedTurns = new Set(draft.importedTurns);
-  const additions = items.filter(item => !importedTurns.has(item.source_turn));
-  for (const item of additions) importedTurns.add(item.source_turn);
-  const texts = new Set(draft.value.contextItems.map(item => item.text.trim()));
-  const contextItems = [...draft.value.contextItems];
-  for (const item of additions) {
-    if (!texts.has(item.text.trim())) {
-      contextItems.push({ text: item.text, source_turn: item.source_turn });
-      texts.add(item.text.trim());
-    }
+  // A read/retry of the same answer cannot revise the teacher's current draft.
+  if (!items.some(item => !importedTurns.has(item.source_turn))) return draft;
+  const importedItems = [...(draft.importedItems ?? [])];
+  let contextItems = [...draft.value.contextItems];
+  const signature = rows => JSON.stringify(rows.map(item => item.text.trim()).sort());
+  const turns = new Set(items.map(item => item.source_turn));
+  for (const turn of turns) {
+    const previous = importedItems.filter(item => item.source_turn === turn);
+    const current = contextItems.filter(item => item.source_turn === turn);
+    // Legacy drafts have no baseline. Never infer that their text was unedited.
+    if (importedTurns.has(turn) && (!previous.length || signature(previous) !== signature(current))) continue;
+    const next = items.filter(item => item.source_turn === turn);
+    contextItems = contextItems.filter(item => item.source_turn !== turn);
+    for (let i = importedItems.length - 1; i >= 0; i--) if (importedItems[i].source_turn === turn) importedItems.splice(i, 1);
+    importedItems.push(...next.map(({text,source_turn}) => ({text,source_turn})));
+    contextItems.push(...next.map(({text,source_turn}) => ({text,source_turn})));
+    importedTurns.add(turn);
   }
-  return { value: { ...draft.value, contextItems }, importedTurns: [...importedTurns] };
+  const texts = new Set();
+  contextItems = contextItems.filter(item => {
+    if (!texts.has(item.text.trim())) {
+      texts.add(item.text.trim());
+      return true;
+    }
+    return false;
+  });
+  return { value: { ...draft.value, contextItems }, importedTurns: [...importedTurns], importedItems };
 }
 
 /** A draft may contain unfinished rows. Final preparation still validates completeness. */
 export function validateAnnualContextDraft(draft, curriculum, turnCount) {
-  const { value, importedTurns } = draft ?? {};
+  const { value, importedTurns, importedItems } = draft ?? {};
   if (!value || !Array.isArray(value.contextItems) || value.contextItems.length > 20 ||
       !Array.isArray(value.historicalProjects) || value.historicalProjects.length > 20 ||
       !Array.isArray(importedTurns) || importedTurns.some(turn => !Number.isInteger(turn) || turn < 0 || turn >= turnCount))
@@ -41,5 +57,9 @@ export function validateAnnualContextDraft(draft, curriculum, turnCount) {
       throw new TypeError("Revisa el nombre, período y competencias de los proyectos anteriores.");
     return { title: item.title, competency_ids: [...new Set(item.competency_ids)], period: item.period ?? null };
   });
-  return { value: { contextItems, historicalProjects }, importedTurns: [...new Set(importedTurns)] };
+  if (importedItems != null && (!Array.isArray(importedItems) || importedItems.length > 20 || importedItems.some(item =>
+    typeof item?.text !== 'string' || item.text.length > 500 || !Number.isInteger(item.source_turn) || !importedTurns.includes(item.source_turn))))
+    throw new TypeError('No pude conservar la procedencia del contexto. Vuelve a abrir la conversación.');
+  return { value: { contextItems, historicalProjects }, importedTurns: [...new Set(importedTurns)],
+    ...(importedItems ? {importedItems: importedItems.map(({text,source_turn}) => ({text,source_turn}))} : {}) };
 }

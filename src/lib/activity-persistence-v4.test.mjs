@@ -64,7 +64,7 @@ test("I: activity conserva límites de parent y persistencia", async () => {
   const activitySection = server.slice(server.indexOf('pathname === "/api/activities"'), server.indexOf('pathname === "/api/activity-criteria"'));
   assert.doesNotMatch(activitySection, /insert into evidences/);
   assert.match(activitySection, /inheritedActivityCriterion\(current\.details,\s*routeItem\)/);
-  assert.match(activitySection, /confirmActivityWithCriterion\(db,\s*id,\s*criterion,\s*randomUUID\(\),\s*expectedRevision\(body\.expectedRevision\),\s*workshop\)/);
+  assert.match(activitySection, /confirmActivityWithCriterion\(db,\s*id,\s*criterion,\s*randomUUID\(\),\s*expectedRevision\(body\.expectedRevision\),\s*workshop,\s*\{acceptedBlock:acceptedBlock===true\}\)/);
 });
 
 test("A-C: OPTIONS permite PUT y el parent público no filtra metadata técnica", async () => {

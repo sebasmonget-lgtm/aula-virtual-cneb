@@ -125,6 +125,10 @@ export async function handlePreparationRoutes({request,response,url,db,teacherId
       const candidate=plan.proposal.proposed_experiences.find(row=>row.proposal_id===body.proposalId);
       if(!candidate||proposalIntentIssues(candidate,[],plan.proposal.curriculum_reference??[]).length)
         throw new VersionConflictError('Antes de preparar, completa con Ayni las dos competencias y los materiales concretos de este proyecto. Conservamos lo que ya está guardado.');
+      // Reject an invalid calendar before confirming a scoped annual revision.
+      // The authoritative saved proposal already excludes holidays and weekends.
+      if(!Array.isArray(candidate.instructional_dates)||dates.some(date=>!candidate.instructional_dates.includes(date)))
+        throw new VersionConflictError('Selecciona días de clase disponibles dentro de este proyecto.');
       if(candidate.planned_end_date<limaToday())throw new VersionConflictError('Este proyecto es solo para consulta: sus fechas ya terminaron. Usa su propuesta en un tramo futuro para prepararlo.');
       const blockedDates=await protectedSlotDates(db,context.id,candidate.planned_start_date,candidate.planned_end_date);
       if(dates.some(date=>blockedDates.includes(date)))throw new VersionConflictError('Estos días ya tienen trabajo registrado. Confirma solo los días disponibles; conservamos las actividades y observaciones anteriores.');

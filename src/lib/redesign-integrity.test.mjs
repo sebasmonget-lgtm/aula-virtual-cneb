@@ -24,27 +24,20 @@ async function fixture(){const db=new PGlite();const dir=new URL("../../local-db
     values($1,$2,$3::date,$3::date,'QA','Explorar','active',now(),'{"meaningful_situation":"QA"}',$4,case when $4::uuid is null then null else 1 end)`,[id,experienceId,date,linked]);await syncActivitySchedule(db,{activityId:id,classroomId:classroom.classroomId,title:"QA",occursOn:date});return (await db.query("select * from activities where id=$1",[id])).rows[0];};
   return {db,teacher,classroom,project,make};
 }
-test("intercambio de Hoy es atómico, conserva fecha pedagógica y protege talleres/ejecución/pasado",async()=>{
-  const {db,teacher,classroom,project,make}=await fixture();try{
+test("intercambio individual de confirmadas se rechaza y no altera fechas, agenda ni historia",async()=>{
+  const {db,teacher,make}=await fixture();try{
     const a=await make("2026-10-19"),b=await make("2026-10-20");
     const input={activityId:a.id,otherActivityId:b.id,expectedRevision:a.revision,otherExpectedRevision:b.revision};
-    const failing={transaction:work=>db.transaction(tx=>work({query:async(sql,params)=>{if(sql.includes("activity_schedule_changes"))throw Error("audit failed");return tx.query(sql,params);}}))};
-    await assert.rejects(swapActivityDates(failing,teacher,input,{today:"2026-10-19"}),/audit failed/);
-    assert.equal((await db.query("select occurs_on::text as date from activities where id=$1",[a.id])).rows[0].date,"2026-10-19");
+    const activities=await db.query("select id,occurs_on,planned_date,revision,status from activities order by id");
+    const schedule=await db.query("select * from class_schedule_entries order by id");
+    await assert.rejects(swapActivityDates(db,teacher,input,{today:"2026-10-19"}),/secuencia/);
+    assert.deepEqual((await db.query("select id,occurs_on,planned_date,revision,status from activities order by id")).rows,activities.rows);
+    assert.deepEqual((await db.query("select * from class_schedule_entries order by id")).rows,schedule.rows);
+    assert.equal((await db.query("select count(*)::int n from activity_schedule_changes")).rows[0].n,0);
     await assert.rejects(swapActivityDates(db,randomUUID(),input,{today:"2026-10-19"}));
-    await assert.rejects(swapActivityDates(db,teacher,{...input,expectedRevision:999},{today:"2026-10-19"}));
-    const result=await swapActivityDates(db,teacher,input,{today:"2026-10-19"});assert.equal(result.occurs_on,"2026-10-20");
-    const saved=(await db.query("select occurs_on::text,planned_date::text,revision from activities where id=$1",[a.id])).rows[0];
-    assert.equal(saved.planned_date,"2026-10-19");assert.equal(saved.occurs_on,"2026-10-20");assert.ok(saved.revision>a.revision);
-    const workshop=randomUUID();await db.query(`insert into learning_experiences(id,classroom_id,type,title,purpose,starts_on,ends_on,status,parent_project_id) values($1,$2,'workshop','Taller','QA','2026-10-19','2026-11-06','active',$3)`,[workshop,classroom.classroomId,project.id]);
-    const w=await make("2026-10-20",workshop,a.id),s=(await db.query("select id from class_schedule_entries where activity_id=$1",[w.id])).rows[0];
-    await db.query(`insert into daily_execution_logs(id,schedule_entry_id,execution_date,status) values($1,$2,'2026-10-20','active')`,[randomUUID(),s.id]);
-    const newB=(await db.query("select revision from activities where id=$1",[b.id])).rows[0];
-    await assert.rejects(swapActivityDates(db,teacher,{...input,expectedRevision:saved.revision,otherExpectedRevision:newB.revision},{today:"2026-10-19"}),/ejecución/);
-    await assert.rejects(assertProjectUnstarted(db,project,"2026-10-05"),/trabajo registrado/);
-    await assert.rejects(swapActivityDates(db,teacher,{...input,expectedRevision:saved.revision,otherExpectedRevision:newB.revision},{today:"2026-10-21"}),/pasado/);
   }finally{await db.close();}
 });
+
 test("rebase explícito conserva padre, identidad y actividades; exige descendencia y vuelve a verificar al confirmar",async()=>{
   const {db,teacher,classroom,project,make}=await fixture();try{
     const curriculum=(await db.query("select id from curriculum_versions where active=true limit 1")).rows[0].id;

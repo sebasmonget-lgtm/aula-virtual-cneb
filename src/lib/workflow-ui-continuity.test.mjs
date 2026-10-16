@@ -181,8 +181,8 @@ test("alta y entrevista presentan datos completos, fecha opcional y audio por pr
 test("los accesos docentes llegan al diagnóstico dentro de Planificar", async () => {
   const workspace = await component("teacher-workspace");
   const evaluation = await component("evaluation-home");
-  assert.match(workspace, /function openDiagnostic.*setPlanningTarget\("diagnostic"\).*navigate\("Planificar"\)/);
-  assert.match(workspace, /<PlanningArea dashboard=\{dashboard\} initialTab=\{planningTarget\}/);
+  assert.match(workspace, /function openDiagnostic.*setPlanningTarget\("diagnostic"\).*navigate\("Planificar", afterConfirmedEnrollment\)/);
+  assert.match(workspace, /<PlanningArea[\s\S]*?dashboard=\{dashboard\} initialTab=\{planningTarget\}/);
   assert.match(workspace, /onDiagnostic=\{\(\) => openDiagnostic\(\)\}/);
   assert.match(workspace, /aria-label="Calendario" title="Calendario"/);
   assert.doesNotMatch(evaluation, /title: "Diagnóstico"|onDiagnostic/);
@@ -190,7 +190,9 @@ test("los accesos docentes llegan al diagnóstico dentro de Planificar", async (
 });
 
 test("guiadas y espontáneas conservan dictado revisable y guardado explícito", async () => {
-  const guided = await component("guided-diagnostic-v4");
+  const guidedParent = await component("guided-diagnostic-v4");
+  assert.match(guidedParent, /<GuidedObservationDialog/);
+  const guided = await component("guided-observation-dialog");
   const spontaneous = await component("spontaneous-diagnostic-v4");
   const recorder = await component("dictation-recorder");
   for (const source of [guided, spontaneous]) {
@@ -198,11 +200,11 @@ test("guiadas y espontáneas conservan dictado revisable y guardado explícito",
     assert.match(source, /currentText=\{note\}/);
     assert.match(source, /Guardar observación/);
   }
-  assert.match(guided, /onTranscribed=\{\(text\) => setNote\(text\)\}/);
-  assert.match(guided, /disabled=\{working \|\| audioBusy\}/);
+  assert.match(guided, /onTranscribed=\{setNote\}/);
+  assert.match(guided, /disabled=\{busy\|\|audio\}/);
   assert.match(spontaneous, /purpose="raw_observation" rawTranscript/);
   assert.match(spontaneous, /onTranscribed=\{dictated\}/);
-  assert.match(spontaneous, /Pedir una sugerencia no guarda ni asigna un nivel/);
+  assert.match(spontaneous, /Esto no asigna niveles/);
   const dictated = spontaneous.slice(spontaneous.indexOf("async function dictated"), spontaneous.indexOf("return <", spontaneous.indexOf("async function dictated")));
   assert.doesNotMatch(dictated, /await analyze|void analyze/);
   assert.match(recorder, /mergeDictationText\(currentTextRef\.current, text, maxLength\)/);
@@ -212,11 +214,13 @@ test("guiadas y espontáneas conservan dictado revisable y guardado explícito",
 
 test("consultar la competencia no guarda; la docente revisa antes de registrar", async () => {
   const source = await component("spontaneous-diagnostic-v4");
-  const analyze = source.slice(source.indexOf("async function analyze"), source.indexOf("async function save"));
+  const analyzeStart = source.indexOf("async function analyze");
+  assert.ok(analyzeStart >= 0);
+  const analyze = source.slice(analyzeStart, source.indexOf("async function dictated", analyzeStart));
   assert.match(analyze, /spontaneous-observations\/preview/);
   assert.doesNotMatch(analyze, /saveSpontaneousObservation/);
-  assert.match(source, /Ayni sugiere:/);
-  assert.match(source, /picker&&<CompetencyPicker/);
+  assert.match(source, /Sugerir competencia con Ayni/);
+  assert.match(source, /<CompetencyPicker/);
   assert.match(source, /Guardar sin competencia/);
   assert.match(source, /competencyIds:ids/);
   assert.match(source, /Mis observaciones registradas/);

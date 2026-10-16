@@ -1,0 +1,13 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {mkdtempSync} from 'node:fs';
+import {tmpdir} from 'node:os';
+import path from 'node:path';
+import {createQaSpendBudget} from './qa-spend-budget.mjs';
+const file=()=>path.join(mkdtempSync(path.join(tmpdir(),'ayni-qa-budget-')),'budget.json');
+const request={model:'gpt-6.1-sol',input:'Synthetic classroom only'};
+test('reservations persist across restart and block before dispatch',()=>{const f=file(),b=createQaSpendBudget({file:f,limitUsd:1});b.reserve(request);assert.throws(()=>b.reserve(request),/BUDGET_EXCEEDED/);const again=createQaSpendBudget({file:f,limitUsd:1});assert.equal(again.snapshot().entries.length,1);assert.throws(()=>again.reserve(request),/BUDGET_EXCEEDED/);});
+test('pending and missing usage retain full reservation; measured usage releases remainder',()=>{const b=createQaSpendBudget({file:file()});const r=b.reserve(request),reserved=b.snapshot().committedUsd;b.settle(r.id,{id:'resp_synthetic',status:'queued'});assert.equal(b.reservationForResponse('resp_synthetic'),r.id);b.settle(r.id,{status:'failed'});assert.equal(b.snapshot().committedUsd,reserved);b.settle(r.id,{usage:{input_tokens:1000,output_tokens:100}});assert.equal(b.snapshot().committedUsd,.0065);});
+test('rejects unpriced endpoints/models, tools, external context and media',()=>{const b=createQaSpendBudget({file:file()});for(const extra of [{model:'unknown'},{tools:[{type:'web_search'}]},{service_tier:'ultrafast'},{previous_response_id:'other'},{input:'input_image'}])assert.throws(()=>b.reserve({...request,...extra}));assert.equal(b.snapshot().entries.length,0);assert.throws(()=>createQaSpendBudget({file:file(),limitUsd:5.01}));});
+test('each concurrent reservation is accounted synchronously and output is bounded',async()=>{const b=createQaSpendBudget({file:file(),limitUsd:1});const r=await Promise.allSettled([Promise.resolve().then(()=>b.reserve(request)),Promise.resolve().then(()=>b.reserve(request))]);assert.equal(r.filter(x=>x.status==='fulfilled').length,1);assert.equal(r.find(x=>x.status==='fulfilled').value.payload.max_output_tokens,32000);});
+test('pinned Jev shares the same ledger and does not add unsupported generation fields',()=>{const b=createQaSpendBudget({file:file()});const r=b.reserve({model:'typesafe/jev-1.13',state:'Synthetic text',questions:{one:{type:'choice'}}});assert.equal(r.payload.max_output_tokens,undefined);b.settle(r.id,{usage:{input_tokens:1000,output_tokens:2}});assert.equal(b.snapshot().committedUsd,.000042);});

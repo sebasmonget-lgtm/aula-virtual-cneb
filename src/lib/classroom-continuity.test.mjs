@@ -39,5 +39,17 @@ test("matrícula reversible y revisión por fecha conservan historia y permisos"
       await assert.rejects(reviewPastActivity(db,teacher,{scheduleEntryId:entry,action:'complete',closureNote:''},'2026-10-06'));
       assert.equal((await db.query('select count(*)::int n from evidences where student_id=$1',[student.id])).rows[0].n,0);
     });
+    await t.test('propuestas retiradas y actividades adelantadas no reaparecen como pendientes ni admiten otro cierre',async()=>{
+      const entries=[];
+      for(const [status,scheduleStatus] of [['archived','cancelled'],['active','cancelled'],['active','not_worked'],['active','planned']]){
+        const id=randomUUID(),scheduled=randomUUID();entries.push(scheduled);
+        await db.query(`insert into activities(id,experience_id,title,purpose,occurs_on,status,schedule_status) values($1,$2,'Histórico QA','Explorar','2026-10-05',$3,$4)`,[id,project,status,scheduleStatus]);
+        await db.query(`insert into class_schedule_entries(id,classroom_id,scheduled_on,start_time,end_time,block_type,title,activity_id) values($1,$2,'2026-10-05','10:00','10:45','activity','Histórico QA',$3)`,[scheduled,student.classroom_id,id]);
+      }
+      await db.query(`insert into daily_execution_logs(id,schedule_entry_id,execution_date,status,actual_started_at) values($1,$2,'2026-10-02','completed',now())`,[randomUUID(),entries.at(-1)]);
+      assert.deepEqual(await pendingPastActivities(db,teacher,'2026-10-06'),[]);
+      for(const scheduleEntryId of entries)await assert.rejects(()=>reviewPastActivity(db,teacher,{scheduleEntryId,action:'complete',closureNote:'Intento QA bloqueado'},'2026-10-06'));
+      assert.equal((await db.query('select count(*)::int n from daily_execution_logs where schedule_entry_id=any($1::uuid[])',[entries])).rows[0].n,1);
+    });
   }finally{await db.close();}
 });

@@ -1302,3 +1302,14 @@ La biblioteca pasa de 36 a 100 identidades, sin contar adaptaciones como tallere
 Se conserva el ranking de ejecución real/cobertura válida y los filtros actuales, con cantidad de resultados visible. No nueva IA al elegir, motor ni ruta de observaciones. Catálogo 1.2.0; servidor resuelve la edad propia y guarda el snapshot canónico existente, sin reescribir instancias anteriores. Cuatro imprimibles originales nuevos dan soporte escrito a lectura; no son 100 fichas nuevas ni un taller automáticamente vinculado a cada uno de los 389 recursos externos. Ficha y experiencia no se confunden: movimiento, convivencia y creación requieren actuación real.
 
 Guía común de Hoy, calendario y Word existentes; seis a diez imprimibles originales públicos, además de tarjetas motoras previas. Sin migraciones, RLS ni datos cloud. Rollback: revertir importación del repertorio y contador de resultados, conservando PNG nuevos y campos canónicos para las actividades ya elegidas. No borrar filas ni regenerar actividades. Solo Preview; informe docs/qa/AYNI_CIEN_TALLERES_2026-10-15.md.
+
+
+## ADR-152 — Aplicar la secuencia confirmada también a rutas antiguas (2026-10-15)
+
+El encargo QA ratifica que las actividades confirmadas y sus criterios no se copian, editan, regeneran ni intercambian individualmente. La protección alcanza proyectos históricos sin metadatos de preparación y el servicio de intercambio antiguo; la consulta y los motores de preparación completa conservan sus contratos. Los cambios futuros se aprueban como secuencias nuevas con historia protegida. No es una nueva decisión curricular ni una migración.
+
+La corrección de contexto conversacional conserva opcionalmente una línea base de elementos importados. Solo actualiza grupos generados intactos tras un aporte docente nuevo; no sobrescribe cambios manuales ni datos antiguos sin esa línea base. El reloj Preview se hereda explícitamente en llamadas internas autenticadas, nunca desde el cliente ni para Producción. Los días se validan antes de confirmar el año.
+
+Evaluar abre fotos mediante las rutas privadas canónicas y apiFetch autenticado; no hay almacenamiento nuevo ni medios en IA. Documentos agrupa los mismos lectores en cuatro carpetas y acepta enlaces anteriores. QA usa bases ficticias nuevas y reserva persistente de costo antes de cada llamada: techo conservador4,50USD para cumplir el máximo5USD. Sin migraciones, cambios de modelos, RLS o Producción. Validación y límites: docs/qa/QA_INTEGRAL_ANUAL_2026-10-15.md.
+
+La auditoría ratifica ADR085: B1–B3 permiten pendientes legítimos sin convertirlos en C; B4 exige valoraciones anuales aplicables. La falta de decisión bloquea cierre y se explica, nunca se rellena automáticamente. Corregir texto observado invalida atribución y requiere reconfirmarla; interfaz no debe anunciarla confirmada mientras está pendiente. No se modificaron estas reglas para completar QA.

@@ -122,9 +122,10 @@ export function OrdinaryObservationDialog({ students, activity, onClose }: {
       const data = await response.json() as { error?: string; observation: SavedObservation };
       if (!response.ok) throw new Error(data.error || "No se pudo revisar la observación.");
       setSaved({ ...data.observation, corrected_text: action === "correct" ? correctedText : saved.corrected_text });
+      setFreeDecision(false);setFreePending(false);
       setEditMode(false); setReason("");setCoverageRevision(value=>value+1);
       setFeedbackTone("success");
-      setMessage(action === "void" ? "Observación anulada; el original queda en el historial." : "Corrección guardada; el original permanece intacto.");
+      setMessage(action === "void" ? "Observación anulada; el original queda en el historial." : "Corrección guardada; el original permanece intacto. Revisa y confirma sus competencias para usar esta versión en Evaluar.");
     } catch (error) { setFeedbackTone("error"); setMessage(error instanceof Error ? error.message : "No se pudo revisar."); }
     finally { setSaving(false); }
   }
@@ -197,7 +198,7 @@ export function OrdinaryObservationDialog({ students, activity, onClose }: {
         </> : <section className="rounded-xl border bg-[#f6f9fd] p-4">
           <p className="font-semibold">{student?.name} · {saved.status === "voided" ? "Anulada" : saved.status === "corrected" ? "Corregida" : "Guardada"}</p>
           <p className="mt-2 whitespace-pre-wrap text-sm">{currentObservationText(saved) || "Foto sin texto"}</p>
-          {!guided&&freePending&&<Button className="mt-3" disabled={blocked} onClick={()=>void retryFree()}>Confirmar competencias elegidas</Button>}{!guided&&freeDecision&&!freePending&&<div className="mt-3"><AnnualCompetencies ids={freeIds} names={new Map(freeItems.map(item=>[item.id,item.name]))}/><p className="text-xs text-[#526b87]">{freeIds.length?'Competencias confirmadas por ti.':'Guardada sin competencia.'}</p></div>}{!guided&&saved.status!=='voided'&&<Button variant="outline" className="mt-3 whitespace-normal" onClick={()=>setReview(true)}>Revisar o cambiar competencias</Button>}
+          {!guided&&freePending&&<Button className="mt-3" disabled={blocked} onClick={()=>void retryFree()}>Confirmar competencias elegidas</Button>}{!guided&&freeDecision&&!freePending&&<div className="mt-3"><AnnualCompetencies ids={freeIds} names={new Map(freeItems.map(item=>[item.id,item.name]))}/><p className="text-xs text-[#526b87]">{freeIds.length?'Competencias confirmadas por ti.':'Guardada sin competencia.'}</p></div>}{(!guided||saved.status==='corrected')&&saved.status!=='voided'&&<Button variant="outline" className="mt-3 whitespace-normal" onClick={()=>setReview(true)}>Revisar o cambiar competencias</Button>}
           {saved.corrected_text != null && <details className="mt-3 text-sm"><summary className="min-h-11 cursor-pointer py-2">Ver texto original</summary><p className="whitespace-pre-wrap">{saved.raw_text ?? "Foto sin texto"}</p></details>}
           <p className="mt-2 text-xs text-muted-foreground">El texto original y el alumno asociado no se modifican por una corrección.</p>
           {saved.status !== "voided" && !editMode && <Button type="button" variant="outline" className="mt-3" onClick={() => { setCorrectedText(currentObservationText(saved)); setEditMode(true); }}>Corregir o anular</Button>}

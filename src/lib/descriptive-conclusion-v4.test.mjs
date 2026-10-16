@@ -251,6 +251,12 @@ test("confirmación archiva solo mismo periodo y rollback conserva ambos estados
 
 test("StudentContext conserva únicamente la conclusión confirmada segura", async () => {
   const db = { async query(sql) {
+    if (sql.includes('as "student"')&&sql.includes('as "conclusions"')) return {rows:[{
+      student:{id:studentId,name:'Ana',first_name:'Ana',last_name:'Pérez',section:'A',age_years:5,school_year:2026},
+      competencies:[{competency_key:'v4:COM_ORAL',competency_id:null,competency_v4_id:'COM_ORAL',evidence_count:2,demonstrated:1,with_support:1}],
+      conclusions:[{id:'conclusion-1',competency_v4_id:'COM_ORAL',period_start:periodStart,period_end:periodEnd,details:{...conclusion(),extra_secret:'not-public'},generation_metadata:{api_key:'not-public'},teacher_confirmed_at:'2026-09-22T12:00:00Z'}],
+      recentEvidence:[],assessments:[],diagnosis:[],diagnosticObservations:[],spontaneousObservations:[],interview:null,confirmedDiagnosticReviews:[],confirmedStudentReview:null,
+    }]};
     if (sql.includes("from students s join classrooms")) return { rows: [{ id: studentId, name: "Ana", first_name: "Ana", last_name: "Pérez", section: "A", age_years: 5, school_year: 2026 }] };
     if (sql.includes("from activity_criteria ac")) return { rows: [{ competency_key: "v4:COM_ORAL", competency_id: null, competency_v4_id: "COM_ORAL", competency_text: null, evidence_count: 2, demonstrated: 1, with_support: 1, not_yet_demonstrated: 0, insufficient_information: 0, last_observed_at: "2026-09-21" }] };
     if (sql.includes("from evidences e join activities")) return { rows: [] };

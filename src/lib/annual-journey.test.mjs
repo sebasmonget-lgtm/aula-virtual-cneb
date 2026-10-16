@@ -27,6 +27,8 @@ test("indicaciones pedagógicas y títulos preservan verbos sin revelar nombres 
   assert.match(value,/Mantén acuerdos/);
   assert.ok(!value.includes('Sofía')&&!value.includes('Federico')&&!value.includes('12345678'));
   assert.equal(annualJourneySafeText('Construimos una casa',['Construimos']),'[estudiante] una casa');
+  assert.equal(annualJourneySafeText('Tenemos bloques y patio. Queremos comenzar en octubre.'),'Tenemos bloques y patio. Queremos comenzar en octubre.');
+  assert.equal(annualJourneySafeText('Queremos jugar',['Queremos']),'[estudiante] jugar');
 });
 
 const curriculum = [{ id: "MAT_CANTIDAD", name: "Cantidad", capacities: ["Comunica su comprensión"] },

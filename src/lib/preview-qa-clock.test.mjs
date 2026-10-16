@@ -10,6 +10,17 @@ const env = { VERCEL_ENV: "preview", AYNI_QA_PREVIEW_CLOCK: "1", AYNI_QA_TEACHER
   AYNI_SESSION_SIGNING_KEY: "isolated-test-key-with-at-least-32-characters" };
 const request = cookie => ({ headers: { cookie } });
 
+test('nested project operations retain only an authorized QA teaching clock',()=>{
+ const clock={date:'2026-03-16',time:'08:00'},job={teacher_id:teacherId,payload:{}};
+ withPedagogicalClock(clock,()=>{
+  assert.deepEqual(previewQAClockForJob(job,env,currentPedagogicalClock()),clock);
+  assert.equal(previewQAClockForJob(job,env),null);
+  assert.equal(previewQAClockForJob({...job,teacher_id:'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'},env,currentPedagogicalClock()),null);
+  assert.equal(previewQAClockForJob(job,{...env,VERCEL_ENV:'production'},currentPedagogicalClock()),null);
+  assert.deepEqual(previewQAClockForJob({...job,payload:{qa_clock:{date:'2026-04-01',time:'09:00'}}},env,currentPedagogicalClock()),{date:'2026-04-01',time:'09:00'});
+ });
+});
+
 test("clock requires Preview, opt-in, a single authenticated teacher and a signing key", () => {
   assert.equal(previewQAClockAllowed(teacherId, "teacher", env), true);
   for (const patch of [{ VERCEL_ENV: "production" }, { VERCEL_ENV: "development" }, { AYNI_QA_PREVIEW_CLOCK: "0" },

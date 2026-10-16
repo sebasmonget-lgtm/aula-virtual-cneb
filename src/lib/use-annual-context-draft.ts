@@ -5,7 +5,7 @@ import { localDatabaseApiUrl } from "./local-database";
 import { mergeAnnualContextDraft, currentAnnualConversation } from "./annual-context-draft.mjs";
 import type { ExperienceContextInput } from "../features/dashboard/components/experience-context-form";
 
-type Draft = { value: ExperienceContextInput; importedTurns: number[] };
+type Draft = { value: ExperienceContextInput; importedTurns: number[]; importedItems?: {text:string;source_turn:number}[] };
 export type AnnualContextConversation = { id: string; revision: number; status: string;
   contextItems?: { text: string; source_turn: number }[]; contextDraft?: Draft | null };
 const empty = (): Draft => ({ value: { contextItems: [], historicalProjects: [] }, importedTurns: [] });

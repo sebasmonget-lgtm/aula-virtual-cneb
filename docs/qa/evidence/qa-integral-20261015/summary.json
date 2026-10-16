@@ -1,0 +1,40 @@
+{
+  "result": "PARTIAL_NOT_PRODUCTION_READY",
+  "baseSha": "e7afaa5ab0ba0f612de3f79e582944dc7e837dfa",
+  "tests": {
+    "files": 188,
+    "pass": 883,
+    "fail": 0,
+    "typecheck": "PASS",
+    "lint": "PASS",
+    "build": "PASS"
+  },
+  "environment": "Fresh isolated local PGlite; no cloud pedagogical writes",
+  "realAiCalls": 45,
+  "conservativeApiUsd": 0.789982332,
+  "paidCallsEnabled": false,
+  "closedPeriods": [
+    1,
+    2,
+    3
+  ],
+  "annualClose": "Expected rejection:237 unvalued pairs; positive closure NOT TESTED",
+  "studentHistoryRegression": {
+    "activeStudents": 20,
+    "observations": 10,
+    "unchanged": true
+  },
+  "openFindings": [
+    "QA06",
+    "QA20",
+    "QA21",
+    "QA22"
+  ],
+  "limits": [
+    "Cloud Auth/RLS/Storage",
+    "Positive B4 closure",
+    "Word visual render",
+    "ZIP comprehensive",
+    "Physical voice/camera/offline"
+  ]
+}

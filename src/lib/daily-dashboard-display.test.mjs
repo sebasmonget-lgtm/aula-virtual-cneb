@@ -1,6 +1,29 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {teacherGreeting,calendarAgenda,calendarProjectsOnDay} from './daily-dashboard-display.mjs';
+import {teacherGreeting,todayBlockLabel,calendarActivityState,calendarAgenda,calendarProjectsOnDay} from './daily-dashboard-display.mjs';
+test('calendario distingue ejecución y no ofrece retirar trabajo registrado ni fechas pasadas',()=>{
+  const activity={status:'active',schedule_status:'planned',occurs_on:'2026-07-06'};
+  assert.deepEqual(calendarActivityState({...activity,execution_status:'completed'},'2026-07-06'),{label:'Terminada',canMarkNotWorked:false});
+  assert.equal(calendarActivityState({...activity,execution_status:'active'},'2026-07-06').canMarkNotWorked,false);
+  assert.equal(calendarActivityState(activity,'2026-07-07').canMarkNotWorked,false);
+  assert.equal(calendarActivityState(activity,'2026-07-06').canMarkNotWorked,true);
+  assert.equal(calendarActivityState({...activity,status:'archived'},'2026-07-06').canMarkNotWorked,false);
+});
+test('saludo respeta el reloj QA recibido sin cambiar el reloj real',()=>{
+  const real=new Date('2026-10-15T23:00:00Z');
+  assert.deepEqual(teacherGreeting(real,{date:'2026-08-17',time:'08:00'}),{text:'Buenos días',period:'morning'});
+  assert.deepEqual(teacherGreeting(real,{date:'2026-08-17',time:'20:00'}),{text:'Buenas noches',period:'night'});
+  assert.deepEqual(teacherGreeting(real,{date:'incorrecta',time:'08:00'}),teacherGreeting(real));
+  assert.equal(real.toISOString(),'2026-10-15T23:00:00.000Z');
+});
+
+test('Hoy conserva la consulta de terminadas sin anunciarlas como próximas',()=>{
+  assert.equal(todayBlockLabel({status:'completed'}),'TERMINADA');
+  assert.equal(todayBlockLabel({status:'completed'},true),'TERMINADA');
+  assert.equal(todayBlockLabel({status:'skipped'}),'NO REALIZADA');
+  assert.equal(todayBlockLabel({status:'planned'}),'PRÓXIMO');
+  assert.equal(todayBlockLabel({status:'active'},true),'AHORA');
+});
 
 for(const [instant,text,period] of [
   ['2026-10-14T05:00:00Z','Buenos días','morning'],
