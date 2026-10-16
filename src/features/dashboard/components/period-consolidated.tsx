@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { FileDown } from "lucide-react";
+import { FileDown, CheckCircle2, Clock3 } from "lucide-react";
 import { apiFetch } from "@/src/lib/ayni-api-fetch";
 import { localDatabaseApiUrl } from "@/src/lib/local-database";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ type Row = {
   achievement_level: string | null;
   conclusion: string;
   state: string;
+  valuation_confirmed: boolean;
 };
 
 const statusLabel: Record<string, string> = {
@@ -40,6 +41,7 @@ export function PeriodConsolidated({ classroomId, periodId, periodLabel, onRevie
   const [retry, setRetry] = useState(0);
   const [studentFilter, setStudentFilter] = useState("");
   const [competencyFilter, setCompetencyFilter] = useState("");
+  const [statusFilter,setStatusFilter]=useState("all");
   const [showConclusions,setShowConclusions]=useState(false);
   const [downloading,setDownloading]=useState(false);
 
@@ -58,10 +60,12 @@ export function PeriodConsolidated({ classroomId, periodId, periodLabel, onRevie
 
   const students = [...new Map((rows ?? []).map((row) => [row.student_id, row.student_name])).entries()];
   const competencies = [...new Map((rows ?? []).map((row) => [row.competency_id, row.competency_name])).entries()];
-  const visible = (rows ?? []).filter((row) =>
-    (!studentFilter || row.student_id === studentFilter) && (!competencyFilter || row.competency_id === competencyFilter));
-  const confirmed = visible.filter((row) => row.state === "confirmed").length;
-  const exportQuery = `classroomId=${encodeURIComponent(classroomId)}&periodId=${encodeURIComponent(periodId)}${studentFilter ? `&studentId=${encodeURIComponent(studentFilter)}` : ""}${competencyFilter ? `&competencyId=${encodeURIComponent(competencyFilter)}` : ""}`;
+  const filtered = (rows ?? []).filter((row) => (!studentFilter || row.student_id === studentFilter) && (!competencyFilter || row.competency_id === competencyFilter));
+  const visible = filtered.filter(row=>statusFilter==="all"||(statusFilter==="complete"?row.state==="confirmed":row.state!=="confirmed"));
+  const confirmed = visible.filter((row) => row.valuation_confirmed).length;
+  const visibleStudents=students.filter(([id])=>visible.some(row=>row.student_id===id));
+  const visibleCompetencies=competencies.filter(([id])=>(!competencyFilter||id===competencyFilter)&&visible.some(row=>row.competency_id===id));
+  const exportQuery = `classroomId=${encodeURIComponent(classroomId)}&periodId=${encodeURIComponent(periodId)}${studentFilter ? `&studentId=${encodeURIComponent(studentFilter)}` : ""}${competencyFilter ? `&competencyId=${encodeURIComponent(competencyFilter)}` : ""}${statusFilter!=="all"?`&status=${statusFilter}`:""}`;
   async function downloadExcel(){setDownloading(true);setError("");try{
     const response=await apiFetch(`${localDatabaseApiUrl}/api/period-evaluations/consolidated.xlsx?${exportQuery}`,{cache:"no-store"});
     if(!response.ok)throw new Error("No pudimos descargar el Excel. Vuelve a intentarlo.");
@@ -70,21 +74,33 @@ export function PeriodConsolidated({ classroomId, periodId, periodLabel, onRevie
     document.body.appendChild(link);link.click();link.remove();window.setTimeout(()=>URL.revokeObjectURL(url),60000);
   }catch(cause){setError((cause as Error).message);}finally{setDownloading(false);}}
 
-  return <section className="space-y-4 rounded-2xl border bg-white p-5" aria-labelledby="consolidated-title">
-    <div>
-      <h3 id="consolidated-title" className="text-xl font-bold">Registro de evaluaciones · {periodLabel}</h3>
-      <p className="mt-1 text-sm text-[#526b87]">Cada fila representa un niño y cada columna una competencia. Consulta la evaluación para revisar el sustento; los niveles se corrigen en su origen.</p>
+  return <section className="min-w-0 space-y-4 rounded-2xl border bg-white p-4 sm:p-5" aria-labelledby="consolidated-title">
+    <div className="flex flex-wrap items-start justify-between gap-4">
+      <div><h3 id="consolidated-title" className="text-xl font-bold">Registro de evaluaciones · {periodLabel}</h3><p className="mt-1 text-sm text-[#526b87]">Cada fila es un niño o niña; cada columna, una competencia.</p></div>
+      <Button variant="outline" disabled={!rows||downloading} onClick={()=>void downloadExcel()}><FileDown aria-hidden="true" className="mr-2 size-4"/>{downloading?"Descargando…":"Exportar Excel de Ayni"}</Button>
     </div>
-    {error ? <div role="alert" className="rounded-xl bg-[#fff2d9] p-4 text-sm">{error} <Button type="button" variant="outline" className="ml-2" onClick={() => { setError(""); setRows(null); setRetry((value) => value + 1); }}>Reintentar</Button></div> : null}
-    {!rows && !error ? <p role="status" className="text-sm text-[#526b87]">Cargando consolidado…</p> : null}
-    {rows && <><div className="grid gap-3 sm:grid-cols-2">
-      <label className="text-sm font-semibold">Niño<select className="mt-1 block min-h-11 w-full rounded-xl border bg-white px-3" value={studentFilter} onChange={(event) => setStudentFilter(event.target.value)}><option value="">Todos los niños</option>{students.map(([id, name]) => <option key={id} value={id}>{name}</option>)}</select></label>
-      <label className="text-sm font-semibold">Competencia<select className="mt-1 block min-h-11 w-full rounded-xl border bg-white px-3" value={competencyFilter} onChange={(event) => setCompetencyFilter(event.target.value)}><option value="">Todas las competencias</option>{competencies.map(([id, name]) => <option key={id} value={id}>{name}</option>)}</select></label>
-    </div>
-      <div className="flex flex-wrap items-center justify-between gap-3 text-sm"><p>{confirmed} de {visible.length} valoraciones confirmadas en esta vista.</p><Button variant="outline" disabled={downloading} onClick={()=>void downloadExcel()}><FileDown className="mr-2 size-4" />{downloading?"Descargando…":"Exportar Excel de Ayni"}</Button></div>
-      <label className="flex min-h-11 items-center gap-3 text-sm font-semibold"><input type="checkbox" checked={showConclusions} onChange={event=>setShowConclusions(event.target.checked)}/>Mostrar conclusiones descriptivas</label>
-      <p className="text-xs text-[#526b87]">Puedes filtrar por niño o competencia. Desliza la tabla para consultar las otras columnas.</p><div tabIndex={0} role="region" aria-label="Tabla de evaluaciones, desplaza para ver las competencias" className="max-h-[65vh] overflow-auto rounded-xl border focus-visible:outline-2 focus-visible:outline-[#087d96]"><table className="w-full min-w-max border-separate border-spacing-0 text-left text-sm"><thead className="sticky top-0 z-20 bg-[#eaf7fb]"><tr><th scope="col" className="sticky left-0 z-30 min-w-40 bg-[#eaf7fb] p-3">Niño</th>{competencies.filter(([id])=>!competencyFilter||id===competencyFilter).map(([id,name])=><th key={id} scope="col" className="max-w-56 p-3 text-center">{name}</th>)}</tr></thead><tbody>{students.filter(([id])=>!studentFilter||id===studentFilter).map(([id,name])=><tr key={id}><th scope="row" className="sticky left-0 z-10 border-t bg-white p-3">{name}</th>{competencies.filter(([cid])=>!competencyFilter||cid===competencyFilter).map(([cid])=>{const row=visible.find(item=>item.student_id===id&&item.competency_id===cid);return <td key={cid} className="max-w-72 border-t p-3 text-center align-top"><b>{row?.achievement_level??"—"}</b>{showConclusions&&<p className="mt-2 whitespace-normal text-left text-sm">{row?.conclusion||"Conclusión pendiente"}</p>}<span className="mt-1 block text-xs text-[#526b87]">{row?statusLabel[row.state]??row.state:"Sin registro"}</span><button type="button" className="mt-1 min-h-11 px-2 font-semibold text-[#07576c] underline" onClick={()=>onReview(id,cid)} aria-label={`Ver evaluación de ${name} en ${row?.competency_name??cid}`}>Ver evaluación</button></td>;})}</tr>)}</tbody></table>{!visible.length&&<p className="p-4 text-sm text-[#526b87]">Todavía no hay competencias trabajadas para esta vista.</p>}</div>
-      <p className="text-xs text-[#526b87]">Esta vista organiza datos de Ayni de forma similar al registro por competencia de SIAGIE. El Excel no es un archivo de carga a SIAGIE.</p>
+    {error&&<div role="alert" className="rounded-xl bg-[#fff2d9] p-4 text-sm">{error} <Button type="button" variant="outline" className="ml-2" onClick={()=>{setError("");setRows(null);setRetry(value=>value+1);}}>Reintentar</Button></div>}
+    {!rows&&!error&&<p role="status" className="text-sm text-[#526b87]">Cargando consolidado…</p>}
+    {rows&&<>
+      <div className="grid items-end gap-4 rounded-xl bg-[#f5f9fc] p-3 md:grid-cols-2 xl:grid-cols-[1fr_1.2fr_auto]">
+        <label className="min-w-0 text-sm font-semibold">Niño o niña<select className="mt-1 block min-h-11 w-full rounded-xl border bg-white px-3" value={studentFilter} onChange={event=>setStudentFilter(event.target.value)}><option value="">Todos los niños</option>{students.map(([id,name])=><option key={id} value={id}>{name}</option>)}</select></label>
+        <label className="min-w-0 text-sm font-semibold">Competencia<select className="mt-1 block min-h-11 w-full rounded-xl border bg-white px-3" value={competencyFilter} onChange={event=>setCompetencyFilter(event.target.value)}><option value="">Todas las competencias</option>{competencies.map(([id,name])=><option key={id} value={id}>{name}</option>)}</select></label>
+        <fieldset className="min-w-0"><legend className="mb-1 text-sm font-semibold">Registro</legend><div className="flex flex-wrap gap-1">{[["all","Todos"],["pending","Pendientes"],["complete","Completos"]].map(([value,label])=><button key={value} type="button" aria-pressed={statusFilter===value} onClick={()=>setStatusFilter(value)} className={`min-h-11 rounded-xl px-3 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#087d96] ${statusFilter===value?"bg-[#087d96] text-white":"bg-white text-[#345372] hover:bg-[#e3eef5]"}`}>{label}</button>)}</div></fieldset>
+      </div>
+      <div className="flex flex-wrap items-center justify-between gap-3 text-sm"><p role="status" className="tabular-nums">{confirmed} de {visible.length} valoraciones confirmadas en esta vista.</p><label className="flex min-h-11 cursor-pointer items-center gap-3 font-semibold"><input className="size-4 accent-[#087d96]" type="checkbox" checked={showConclusions} onChange={event=>setShowConclusions(event.target.checked)}/>Mostrar conclusiones descriptivas</label></div>
+      <p className="text-xs text-[#526b87]">Un registro completo tiene valoración y conclusión confirmadas. Desliza la tabla para ver más competencias.</p>
+      <div tabIndex={0} role="region" aria-label="Tabla de evaluaciones, desplaza para ver las competencias" className="max-h-[65vh] overflow-auto overscroll-contain rounded-xl border focus-visible:outline-2 focus-visible:outline-[#087d96]">
+        <table className="w-full table-fixed border-separate border-spacing-0 text-left text-sm" style={{minWidth:200+visibleCompetencies.length*220}}>
+          <thead className="sticky top-0 z-20 bg-[#eaf7fb]"><tr><th scope="col" className="sticky left-0 z-30 w-[200px] bg-[#eaf7fb] p-4">Niño / Niña</th>{visibleCompetencies.map(([id,name])=><th key={id} scope="col" className="w-[220px] p-4 text-center align-top font-semibold leading-snug">{name}</th>)}</tr></thead>
+          <tbody>{visibleStudents.map(([id,name])=><tr key={id} className="group"><th scope="row" className="sticky left-0 z-10 border-t bg-white p-4 font-semibold group-hover:bg-[#f3f9fc]">{name}</th>{visibleCompetencies.map(([cid])=>{const row=visible.find(item=>item.student_id===id&&item.competency_id===cid);return <td key={cid} className="border-t p-3 text-center align-top group-hover:bg-[#f8fbfd]">{row?<>
+            <span className={`inline-flex min-w-12 justify-center rounded-full px-3 py-1 font-bold ${row.valuation_confirmed?"bg-[#e0f4e8] text-[#155d49]":"bg-[#f1f5f9] text-[#526b87]"}`}>{row.achievement_level??"—"}</span>
+            <span className={`mt-2 flex items-center justify-center gap-1 text-xs ${row.valuation_confirmed?"text-[#12634e]":"text-[#526b87]"}`}>{row.valuation_confirmed?<CheckCircle2 aria-hidden="true" className="size-3.5 shrink-0"/>:<Clock3 aria-hidden="true" className="size-3.5 shrink-0"/>}{statusLabel[row.state]??row.state}</span>
+            {showConclusions&&<p className="mt-2 whitespace-pre-wrap text-left text-sm leading-relaxed">{row.conclusion||"Conclusión pendiente"}</p>}
+            <button type="button" className="mt-1 min-h-11 rounded-lg px-2 font-semibold text-[#07576c] underline underline-offset-4 hover:bg-[#eaf7fb] focus-visible:outline-2 focus-visible:outline-[#087d96]" onClick={()=>onReview(id,cid)} aria-label={`Ver evaluación de ${name} en ${row.competency_name}`}>Ver detalle</button>
+          </>:<span className="text-xs text-[#526b87]">Fuera del filtro</span>}</td>;})}</tr>)}</tbody>
+        </table>{!visible.length&&<p className="p-5 text-sm text-[#526b87]">No hay registros que coincidan con estos filtros.</p>}
+      </div>
+      <p className="text-xs leading-relaxed text-[#526b87]">Los niveles se corrigen desde su evaluación. El Excel incluye los filtros elegidos; es un registro de Ayni, no un archivo de carga a SIAGIE.</p>
     </>}
   </section>;
 }

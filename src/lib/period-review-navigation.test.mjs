@@ -18,6 +18,16 @@ for(const mayLeave of [false,true])test(`cambio de bimestre: ${mayLeave?'limpia 
 });
 
 const reviewSource=await readFile(new URL('../features/dashboard/components/competency-period-review.tsx',import.meta.url),'utf8');
+const selectStudent=reviewSource.match(/function selectStudent\(id:string\)\{[^\n]+\}/)?.[0].replace('(id:string)','(id)');
+assert.ok(selectStudent,'La lista de estudiantes debe proteger la valoración abierta.');
+for(const mayLeave of [false,true])test(`lista de estudiantes: ${mayLeave?'cambia y limpia el detalle':'cancelar conserva el borrador abierto'}`,()=>{
+  const state={studentId:'camila',detail:{analysis:'Borrador docente'},error:'',notice:'',rosterOpen:true};
+  const before=structuredClone(state),context={studentId:state.studentId,allowLeave:()=>mayLeave};
+  for(const key of Object.keys(state))context['set'+key[0].toUpperCase()+key.slice(1)]=value=>{state[key]=value;};
+  runInNewContext(`(${selectStudent})('diego')`,context);
+  if(!mayLeave)assert.deepEqual(state,before);
+  else{assert.equal(state.studentId,'diego');assert.equal(state.detail,null);assert.equal(state.rosterOpen,false);}
+});
 const analyze=reviewSource.slice(reviewSource.indexOf('async function analyze('),reviewSource.indexOf('async function saveObservationPending(')).replaceAll('(cause as Error)','cause');
 for(const draft of [null,{revision:4}])test(`reanálisis explícito ${draft?'reutiliza revisión vigente':'materializa borrador de valoración confirmada'} antes de IA`,async()=>{
   const calls=[],context={detail:{timeline:[{id:'evidence'}],draft},busy:false,closed:false,dirty:false,level:'B',reason:'Sustento docente',analysis:'Análisis anterior',classroomId:'class',periodId:'period',studentId:'child',competencyId:'COM_ORAL',assessmentReanalysisWarning,
