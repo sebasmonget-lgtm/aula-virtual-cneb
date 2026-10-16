@@ -2060,3 +2060,21 @@ Síntomas: foto ordinaria guardada no podía abrirse desde la revisión por comp
 Síntomas reproducidos: calendario ofrecía no realizada tras ejecutar; saludo ignoraba reloj QA; corrección libre seguía anunciando competencia confirmada; cierre anual deshabilitado sin causa; trayectoria visible devolvía flag deshabilitado; lector anual abría editor anterior. Causas: proyecciones de estado/revisión y defaults distintos. Correcciones focales reutilizan estado canónico, fecha QA validada, invalidación explícita de atribución, explicación de237 pendientes, default compartido y ruta anual compacta. HTTP409 de actividad ejecutada sin mutación, corrección/reconfirmación UI, trayectoria200/UI y documentos V1/V3 PASS. También selección repetida de alumno conserva detalle y Queremos deja de ser falso nombre manteniendo protección de nombres conocidos.
 
 Pendientes reproducidos: QA06 TIC depende de dispositivo no confirmado; QA20 resumen Mi aula omite atribuciones libres aunque Evaluar está correcto; QA21 reanálisis borra decisión provisional sin aviso claro; QA22 placeholder [estudiante] visible. No solucionarlos fabricando recursos/evidencias o preservando decisiones obsoletas. Matriz, evidencia, límites y regresiones en informe QA integral.
+
+### QA-FINAL-01 — QA06/20–22 corregidos (2026-10-15)
+
+Recursos: proveedor/cobertura no filtraban TIC sin dispositivo confirmado. Política común para entradas, contratos nuevos y cambio focal;15 proyectos/mínimo2 conservados y otras competencias sin restricciones nuevas. Roster: la proyección omitía atribuciones posteriores de observaciones libres; ahora usa el lector efectivo canónico con revisión/retiro/multicompetencia. Camila2 registros/3 competencias coincide con Evaluar/Trayectoria.
+
+Reanálisis: el borrador perdía letra/motivo. Diálogo explícito y guardia de revisión antes de IA; historial JSONB del texto anterior y decisión provisional conservada, nunca confirmación automática. 409 sin reconocimiento no consume IA. IA real/UI conserva B y motivo, recierre B4 y lectura histórica PASS. Anonimización: marcador propio distinto de referencias a compañeros; presentación sustituye solo sujeto inequívoco. Regresión adicional: criterio nulo en observación libre no debe ejecutar replaceAll ni impedir analizar.
+
+Prevención: comprobar proyección canónica, efectos de errores y costo antes de despacho; separar suficiencia del resumen de suficiencia de evaluación; conservar huellas y confirmación docente. Pruebas/pasos/archivos y limitaciones en ronda final del informe QA.
+
+### QA-FINAL-02 — Contexto del bimestre y paginación Word (2026-10-15)
+
+Síntomas: aviso/competencia anterior reaparecían al cambiar bimestre; un lector legacy oculto sobrescribía el enlace compacto. Se limpia estado al aceptar cambio, se conserva si se cancela y se recupera el par del enlace sin proyección legacy. Handler real y UI B4→B3/enlace Indagación PASS.
+
+Word: observación del taller dividida sin nombre/criterio en continuación. Filas indivisibles cuando caben, cabecera repetida y unida a primera fila; render Word local autorizado comprueba sección+alumno+criterio+texto juntos. Nuevos artefactos layout2 sin sobrescribir históricos. ZIP44 archivos real desde UI, CRC y OOXML PASS. Presentación técnica del anual histórico sigue P2, sin ocultar el hallazgo ni rediseño global.
+
+### QA-FINAL-03 — Preview y Producción comparten base (bloqueo de QA cloud)
+
+Lectura de configuraciones muestra misma conexión DB y proyecto Supabase. Se detuvieron escrituras cloud antes de crear datos ficticios. Usuario autorizó misma cuenta/base separada; organización gratuita y formulario de proyecto preparados, credencial nueva requiere entrada/envío manual. Auth/RLS/Storage cruzados no se declaran validados. No hay fallo de RLS demostrado ni migración aplicada. No incluir valores secretos en recibos o repositorio.

@@ -45,6 +45,13 @@ test("la actividad distingue qué observar de las observaciones registradas", as
   assert.match(completedXml, /Propuso esperar su turno/);
   assert.match(completedXml, /14\/04\/2026/);
   assert.match(completedXml, /Guardada en Ayni/);
+  const observationTable = [...completedXml.matchAll(/<w:tbl(?:\s[^>]*)?>[\s\S]*?<\/w:tbl>/g)]
+    .find(match => match[0].includes("Nombre del estudiante"))?.[0];
+  assert.ok(observationTable);
+  const observationRows = [...observationTable.matchAll(/<w:tr(?:\s[^>]*)?>[\s\S]*?<\/w:tr>/g)];
+  assert.match(observationRows[0][0], /<w:tblHeader\/>/);
+  for (const row of observationRows) assert.match(row[0], /<w:cantSplit\/>/);
+  assert.match(observationRows[1][0], /Ana[\s\S]*Explica cómo acuerda un turno[\s\S]*Propuso esperar su turno/);
   assert.match(completedXml, /El grupo propuso nuevos turnos/);
   assert.doesNotMatch(completedXml, /VIII\. TALLER|\{\{/);
   const withWorkshop = { ...document, content: { ...document.content, document_template_version: "activity-with-workshop-v1" },

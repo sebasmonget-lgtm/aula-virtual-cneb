@@ -1,3 +1,4 @@
+import { resourceEligibleCompetencies } from "./annual-resource-policy.mjs";
 export const ANNUAL_JOURNEY_VERSION = 2;
 const string = { type: "string", minLength: 1, maxLength: 1000 };
 const list = (max = 12) => ({ type: "array", minItems: 1, maxItems: max, items: string });
@@ -57,6 +58,7 @@ export function validateAnnualJourney(plan, curriculum, { confirmation = false, 
   assertJourneySchema(Object.fromEntries(journeyGeneralFields.map((key) => [key, plan[key]])), object(JOURNEY_GENERAL_PROPERTIES));
   if (!plan.classroom_snapshot || plan.classroom_snapshot.version !== 2 || !Array.isArray(plan.classroom_snapshot.facts))
     journeyFail("invalid_snapshot", "Vuelve a revisar lo que sabemos del aula.");
+  const eligible = resourceEligibleCompetencies(curriculum, plan.classroom_snapshot.resources);
   const allowed = new Map(curriculum.map((card) => [card.id, card]));
   const keys = new Set(plan.classroom_snapshot.facts.map((fact) => fact.key));
   const covered = new Set();
@@ -65,6 +67,8 @@ export function validateAnnualJourney(plan, curriculum, { confirmation = false, 
     const card = allowed.get(item.competency_id);
     if (!card || (card.capacities && item.capacity_names.some((name) => !card.capacities.includes(name))))
       journeyFail("invalid_curriculum", "Una oportunidad no corresponde al currículo del aula.", { proposal_id: proposalId });
+    if (plan.resource_policy_version === 1 && !eligible.some(card => card.id === item.competency_id))
+      journeyFail('resource_unavailable', 'Confirma un medio digital disponible antes de proponer esta competencia.', { proposal_id: proposalId });
     covered.add(item.competency_id);
   };
   const titles = new Set();
@@ -95,7 +99,7 @@ export function validateAnnualJourney(plan, curriculum, { confirmation = false, 
         { interpretation_index: index, fact_keys: interpretation.fact_keys, subjects: [...children], requested_scope: interpretation.scope });
     if (interpretation.scope === "subgroup" && children.size < 2) journeyFail("invalid_scope", "Varias observaciones del mismo niño siguen siendo individuales.");
   }
-  const missing = curriculum.filter((card) => !covered.has(card.id)).map((card) => card.id);
+  const missing = eligible.filter((card) => !covered.has(card.id)).map((card) => card.id);
   const lateStart=plan.resolved_calendar?.planning_scope!=="full_year" && plan.experience_context?.version===1 && plan.experience_context.starts_on > plan.resolved_calendar?.initial_stage.starts_on;
   if (missing.length && !lateStart && (plan.editor_version !== 3 || confirmation || requireCoverage)) journeyFail("coverage_missing", "Faltan oportunidades reales en las propuestas o momentos cotidianos.", { missing_competency_ids: missing });
   if (!Array.isArray(plan.pending_changes) || plan.pending_changes.length > 20 || !Array.isArray(plan.change_history))

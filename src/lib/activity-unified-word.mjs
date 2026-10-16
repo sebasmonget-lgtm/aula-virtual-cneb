@@ -92,6 +92,19 @@ function transformActivity(xml, evidence, closure, withWorkshop, guide) {
   output = removePageBreakAfterTable(output, "{{COMPETENCIA_PRINCIPAL}}");
   output = removePageBreakAfterTable(output, "JUEGO LIBRE");
   output = removePageBreakAfterTable(output, "{{INICIO}}");
+  // Keep a child's name, criterion and observation together when the row fits a page.
+  // Word still permits oversized rows to flow; repeated column labels retain context.
+  output = output.replace(/<w:tbl(?:\s[^>]*)?>[\s\S]*?<\/w:tbl>/g, (table) => {
+    if (!xmlText(table).includes("Nombre del estudiante")) return table;
+    let first = true;
+    return table.replace(/<w:tr(?:\s[^>]*)?>[\s\S]*?<\/w:tr>/g, (row) => {
+      const properties = `<w:cantSplit/>${first ? "<w:tblHeader/>" : ""}`;
+      if (first) row = row.replace(/<w:pPr>/g, "<w:pPr><w:keepNext/>");
+      first = false;
+      return row.includes("<w:trPr>") ? row.replace("<w:trPr>", `<w:trPr>${properties}`)
+        : row.replace(/(<w:tr(?:\s[^>]*)?>)/, `$1<w:trPr>${properties}</w:trPr>`);
+    });
+  });
   return output;
 }
 

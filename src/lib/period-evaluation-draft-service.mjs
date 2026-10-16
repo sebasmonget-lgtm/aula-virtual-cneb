@@ -8,7 +8,7 @@ const grade = new Set(["AD","A","B","C"]);
 
 export async function savePeriodEvaluationDraft(db, { studentId, competencyId, period, sourceRows, analysis = null, metadata = null,
   teacherAnalysis = "", conclusionText = "", provisionalLevel = null, teacherJustification = "",
-  assessmentMasterId = null, assessmentMasterSnapshot = null,
+  assessmentMasterId = null, assessmentMasterSnapshot = null, reanalysisPrevious = null,
   expectedDraftRevision = undefined, expectedEvidenceFingerprint = null, loadCurrent = null }) {
   if (provisionalLevel && !grade.has(provisionalLevel)) throw new Error("El nivel provisional no es válido.");
   return versionTransaction(db,`period:${period.id}`,async(tx)=>{
@@ -34,8 +34,12 @@ export async function savePeriodEvaluationDraft(db, { studentId, competencyId, p
     // Campos conservados solo por compatibilidad histórica. Las nuevas generaciones nunca sugieren AD/A/B/C.
     const suggestedLevel=null;
     const suggestionReason=null;
+    const generationMetadata = metadata ?? currentSource?.generation_metadata ?? {};
+    if (reanalysisPrevious) generationMetadata.reanalysis_history = [
+      ...(existing?.generation_metadata?.reanalysis_history ?? confirmed?.generation_metadata?.reanalysis_history ?? []),
+      {...reanalysisPrevious, replaced_at: new Date().toISOString()}];
     const fields=[JSON.stringify(rows.map((row)=>row.id)),JSON.stringify(snapshot),JSON.stringify(details),
-      JSON.stringify(metadata ?? currentSource?.generation_metadata ?? {}),suggestedLevel,suggestionReason,
+      JSON.stringify(generationMetadata),suggestedLevel,suggestionReason,
       clean(teacherAnalysis),clean(conclusionText),provisionalLevel || null,clean(teacherJustification,1000)];
     let saved;
     if(existing) saved=(await tx.query(`update competency_assessments set evaluation_period_id=$12,source_evidence_ids=$1::jsonb,source_evidence_snapshot=$2::jsonb,

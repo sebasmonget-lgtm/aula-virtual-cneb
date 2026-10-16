@@ -1,0 +1,223 @@
+{
+  "synthetic": true,
+  "scope": "Una alumna ficticia de 5 años, 12 competencias aplicables, 24 notas escritas como entrada de prueba; no son actuaciones de una niña real. No genera notas ni niveles con IA.",
+  "resources": "Para la muestra TIC se declara una tableta del aula, aplicación de dibujo sin red y acompañamiento docente.",
+  "items": [
+    {
+      "competency_id": "PS_IDENTIDAD",
+      "period": 1,
+      "level": "B",
+      "observations": [
+        {
+          "date": "2026-04-13",
+          "text": "Eligió construir y dijo que le gusta hacer puentes. Al caerse uno dijo estoy molesta y pidió sentarse conmigo."
+        },
+        {
+          "date": "2026-04-20",
+          "text": "En otro juego nombró su tristeza al perder una pieza; pidió ayuda, respiró conmigo y decidió volver."
+        }
+      ],
+      "teacher_analysis": "Reconoce preferencias y nombra emociones; todavía necesita acompañamiento para regularse.",
+      "teacher_justification": "Decisión docente ficticia para QA, sustentada exclusivamente en estas dos actuaciones contextualizadas; no representa un diagnóstico grupal ni una valoración real de una menor.",
+      "conclusion": "Reconoce preferencias y nombra emociones; todavía necesita acompañamiento para regularse. Continuar ofreciendo oportunidades similares y registrar cómo actúa con menor apoyo."
+    },
+    {
+      "competency_id": "PS_CONVIVE",
+      "period": 1,
+      "level": "A",
+      "observations": [
+        {
+          "date": "2026-04-13",
+          "text": "Propuso alternar los recipientes y esperó el turno que acordó con un compañero."
+        },
+        {
+          "date": "2026-04-20",
+          "text": "Ante una disputa por bloques escuchó al compañero y propuso repartirlos para construir juntos."
+        }
+      ],
+      "teacher_analysis": "Propone acuerdos y los usa para resolver diferencias con sus compañeros.",
+      "teacher_justification": "Decisión docente ficticia para QA, sustentada exclusivamente en estas dos actuaciones contextualizadas; no representa un diagnóstico grupal ni una valoración real de una menor.",
+      "conclusion": "Propone acuerdos y los usa para resolver diferencias con sus compañeros. Continuar ofreciendo oportunidades similares y registrar cómo actúa con menor apoyo."
+    },
+    {
+      "competency_id": "PSICO_MOTRICIDAD",
+      "period": 1,
+      "level": "A",
+      "observations": [
+        {
+          "date": "2026-04-13",
+          "text": "Cruzó la línea elevada baja con brazos abiertos y modificó sus pasos para no caer."
+        },
+        {
+          "date": "2026-04-20",
+          "text": "Eligió un recorrido entre conos, frenó antes del obstáculo y ajustó la distancia al saltar."
+        }
+      ],
+      "teacher_analysis": "Ajusta equilibrio y desplazamientos a las condiciones del espacio de juego.",
+      "teacher_justification": "Decisión docente ficticia para QA, sustentada exclusivamente en estas dos actuaciones contextualizadas; no representa un diagnóstico grupal ni una valoración real de una menor.",
+      "conclusion": "Ajusta equilibrio y desplazamientos a las condiciones del espacio de juego. Continuar ofreciendo oportunidades similares y registrar cómo actúa con menor apoyo."
+    },
+    {
+      "competency_id": "COM_ORAL",
+      "period": 2,
+      "level": "A",
+      "observations": [
+        {
+          "date": "2026-06-08",
+          "text": "Contó primero lavé los vasos, después llenamos y al final guardamos; respondió cómo evitó derramar."
+        },
+        {
+          "date": "2026-06-15",
+          "text": "Escuchó la explicación de un compañero y preguntó por qué cambió el recorrido antes de contar su propuesta."
+        }
+      ],
+      "teacher_analysis": "Comunica sucesos en secuencia, escucha y pregunta para comprender al interlocutor.",
+      "teacher_justification": "Decisión docente ficticia para QA, sustentada exclusivamente en estas dos actuaciones contextualizadas; no representa un diagnóstico grupal ni una valoración real de una menor.",
+      "conclusion": "Comunica sucesos en secuencia, escucha y pregunta para comprender al interlocutor. Continuar ofreciendo oportunidades similares y registrar cómo actúa con menor apoyo."
+    },
+    {
+      "competency_id": "COM_LECTURA",
+      "period": 2,
+      "level": "A",
+      "observations": [
+        {
+          "date": "2026-06-08",
+          "text": "Miró portada y anticipó que el conejo se escondería; señaló la madriguera para explicar su idea."
+        },
+        {
+          "date": "2026-06-15",
+          "text": "Tras escuchar el cuento contrastó su anticipación con una ilustración y encontró al personaje en otra página."
+        }
+      ],
+      "teacher_analysis": "Anticipa contenido con indicios e interpreta ilustraciones contrastando sus ideas durante la lectura compartida.",
+      "teacher_justification": "Decisión docente ficticia para QA, sustentada exclusivamente en estas dos actuaciones contextualizadas; no representa un diagnóstico grupal ni una valoración real de una menor.",
+      "conclusion": "Anticipa contenido con indicios e interpreta ilustraciones contrastando sus ideas durante la lectura compartida. Continuar ofreciendo oportunidades similares y registrar cómo actúa con menor apoyo."
+    },
+    {
+      "competency_id": "COM_ESCRITURA",
+      "period": 2,
+      "level": "B",
+      "observations": [
+        {
+          "date": "2026-06-08",
+          "text": "Quiso invitar al otro salón; hizo marcas junto a un dibujo y explicó que allí decía vengan a jugar."
+        },
+        {
+          "date": "2026-06-15",
+          "text": "Dictó a la profesora el lugar de encuentro y revisó si su invitación explicaba a quién estaba dirigida."
+        }
+      ],
+      "teacher_analysis": "Produce mensajes desde sus hipótesis y revisa el destinatario con preguntas de la docente; no se exige escritura convencional.",
+      "teacher_justification": "Decisión docente ficticia para QA, sustentada exclusivamente en estas dos actuaciones contextualizadas; no representa un diagnóstico grupal ni una valoración real de una menor.",
+      "conclusion": "Produce mensajes desde sus hipótesis y revisa el destinatario con preguntas de la docente; no se exige escritura convencional. Continuar ofreciendo oportunidades similares y registrar cómo actúa con menor apoyo."
+    },
+    {
+      "competency_id": "COM_ARTE",
+      "period": 3,
+      "level": "A",
+      "observations": [
+        {
+          "date": "2026-09-07",
+          "text": "Eligió azul y trazos curvos para representar viento; probó dos herramientas y explicó por qué prefirió la esponja."
+        },
+        {
+          "date": "2026-09-14",
+          "text": "Combinó sonidos suaves y fuertes para representar lluvia y explicó a sus compañeros cómo decidió el final."
+        }
+      ],
+      "teacher_analysis": "Explora recursos expresivos y comunica decisiones de sus creaciones visuales y sonoras.",
+      "teacher_justification": "Decisión docente ficticia para QA, sustentada exclusivamente en estas dos actuaciones contextualizadas; no representa un diagnóstico grupal ni una valoración real de una menor.",
+      "conclusion": "Explora recursos expresivos y comunica decisiones de sus creaciones visuales y sonoras. Continuar ofreciendo oportunidades similares y registrar cómo actúa con menor apoyo."
+    },
+    {
+      "competency_id": "MAT_CANTIDAD",
+      "period": 3,
+      "level": "A",
+      "observations": [
+        {
+          "date": "2026-09-07",
+          "text": "Puso un plato para cada uno de seis muñecos y contó seis señalando cada plato una sola vez."
+        },
+        {
+          "date": "2026-09-14",
+          "text": "Llegó otro muñeco: añadió un plato, volvió a contar y dijo ahora son siete porque llegó uno más."
+        }
+      ],
+      "teacher_analysis": "Resuelve un reparto mediante correspondencia y conteo y explica el cambio al añadir un elemento.",
+      "teacher_justification": "Decisión docente ficticia para QA, sustentada exclusivamente en estas dos actuaciones contextualizadas; no representa un diagnóstico grupal ni una valoración real de una menor.",
+      "conclusion": "Resuelve un reparto mediante correspondencia y conteo y explica el cambio al añadir un elemento. Continuar ofreciendo oportunidades similares y registrar cómo actúa con menor apoyo."
+    },
+    {
+      "competency_id": "MAT_FORMA",
+      "period": 3,
+      "level": "A",
+      "observations": [
+        {
+          "date": "2026-09-07",
+          "text": "Explicó al compañero pasa detrás de la caja y entre los conos mientras señalaba el recorrido."
+        },
+        {
+          "date": "2026-09-14",
+          "text": "Para una construcción eligió piezas rectangulares como pared, las giró y comparó cuáles cubrían el hueco."
+        }
+      ],
+      "teacher_analysis": "Usa relaciones espaciales y transforma la posición de piezas para resolver recorridos y construcciones.",
+      "teacher_justification": "Decisión docente ficticia para QA, sustentada exclusivamente en estas dos actuaciones contextualizadas; no representa un diagnóstico grupal ni una valoración real de una menor.",
+      "conclusion": "Usa relaciones espaciales y transforma la posición de piezas para resolver recorridos y construcciones. Continuar ofreciendo oportunidades similares y registrar cómo actúa con menor apoyo."
+    },
+    {
+      "competency_id": "CYT_INDAGA",
+      "period": 4,
+      "level": "B",
+      "observations": [
+        {
+          "date": "2026-11-09",
+          "text": "Preguntó si una planta crecería sin luz y propuso dejar dos macetas con igual agua en lugares distintos."
+        },
+        {
+          "date": "2026-11-16",
+          "text": "Comparó sus dibujos de las macetas, señaló hojas diferentes y con preguntas recordó comprobar también el agua."
+        }
+      ],
+      "teacher_analysis": "Plantea una pregunta y propone comparar condiciones; necesita mediación para controlar otras variables y contrastar registros.",
+      "teacher_justification": "Decisión docente ficticia para QA, sustentada exclusivamente en estas dos actuaciones contextualizadas; no representa un diagnóstico grupal ni una valoración real de una menor.",
+      "conclusion": "Plantea una pregunta y propone comparar condiciones; necesita mediación para controlar otras variables y contrastar registros. Continuar ofreciendo oportunidades similares y registrar cómo actúa con menor apoyo."
+    },
+    {
+      "competency_id": "TRANS_TIC",
+      "period": 4,
+      "level": "B",
+      "observations": [
+        {
+          "date": "2026-11-09",
+          "text": "En la tableta disponible del aula, con acompañamiento, abrió la aplicación de dibujo y eligió una herramienta para representar su recorrido."
+        },
+        {
+          "date": "2026-11-16",
+          "text": "Con apoyo guardó su dibujo, lo volvió a abrir y explicó que debía pedir permiso antes de compartirlo; no se usaron fotos personales."
+        }
+      ],
+      "teacher_analysis": "Utiliza funciones digitales para representar y recuperar una producción con acompañamiento; sigue necesitando apoyo para guardar.",
+      "teacher_justification": "Decisión docente ficticia para QA, sustentada exclusivamente en estas dos actuaciones contextualizadas; no representa un diagnóstico grupal ni una valoración real de una menor.",
+      "conclusion": "Utiliza funciones digitales para representar y recuperar una producción con acompañamiento; sigue necesitando apoyo para guardar. Continuar ofreciendo oportunidades similares y registrar cómo actúa con menor apoyo."
+    },
+    {
+      "competency_id": "TRANS_AUTONOMO",
+      "period": 4,
+      "level": "B",
+      "observations": [
+        {
+          "date": "2026-11-09",
+          "text": "Decidió construir un puente y anticipó primero ordenar piezas y después probar si pasa el muñeco."
+        },
+        {
+          "date": "2026-11-16",
+          "text": "Al probar vio que el muñeco no cabía, revisó su meta y cambió el ancho; pidió ayuda para organizar el tiempo restante."
+        }
+      ],
+      "teacher_analysis": "Propone pasos, revisa el resultado y ajusta una estrategia; requiere apoyo para organizar el tiempo.",
+      "teacher_justification": "Decisión docente ficticia para QA, sustentada exclusivamente en estas dos actuaciones contextualizadas; no representa un diagnóstico grupal ni una valoración real de una menor.",
+      "conclusion": "Propone pasos, revisa el resultado y ajusta una estrategia; requiere apoyo para organizar el tiempo. Continuar ofreciendo oportunidades similares y registrar cómo actúa con menor apoyo."
+    }
+  ]
+}

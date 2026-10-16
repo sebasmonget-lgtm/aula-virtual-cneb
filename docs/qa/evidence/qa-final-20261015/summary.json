@@ -1,0 +1,47 @@
+{
+  "baseSha": "275c545eaef851c61689b130bbbee6a12bba66c9",
+  "branch": "codex/qa-final-pendientes-20261015",
+  "data": "fictional local only",
+  "closure": {
+    "closedPeriods": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "annualUnvalued": 0,
+    "observations": 24,
+    "b1b3Unchanged": true,
+    "confirmedPairs": 12,
+    "b4Versions": 2
+  },
+  "zip": {
+    "documents": 44,
+    "bytes": 7100912,
+    "CRC": true,
+    "downloadedFromUI": true
+  },
+  "word": {
+    "samples": 4,
+    "pagesVisuallyReviewed": 34,
+    "observationPaginationFixed": true,
+    "originalsModified": false
+  },
+  "newApi": {
+    "calls": 1,
+    "estimatedUsd": 0.0020575,
+    "preDispatchLimitUsd": 4.5,
+    "targetNameAbsentInProviderInput": true
+  },
+  "cloud": {
+    "sameDatabase": true,
+    "pedagogicalWrites": false,
+    "isolatedProjectCreated": false,
+    "authRlsReal": "NOT TESTED"
+  },
+  "tests": {
+    "files": 197,
+    "passed": 910,
+    "failed": 0
+  }
+}

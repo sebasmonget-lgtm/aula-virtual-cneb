@@ -11,6 +11,7 @@ export type SyncArtifact = { id:string;source_kind:string;source_id:string;filen
   sha256:string;byte_length:number;version:number;school_year:number;classroom:string;classroom_id:string };
 type SyncResult = {written:string[];skipped:string[];conflicts:{id:string;path:string}[];
   copies:{id:string;path:string}[]};
+const artifactLabels:Record<string,string>={annual_plan:"Plan anual",experience:"Proyecto o unidad",activity:"Actividad diaria",diagnostic_summary:"Evaluación diagnóstica",family_report:"Informe a familias",period_closure:"Cierre de bimestre"};
 
 async function savedHandle():Promise<FileSystemDirectoryHandle|null> {
   if(!("indexedDB" in window))return null;
@@ -89,7 +90,7 @@ export function DocumentSyncPanel({artifacts}:{artifacts:SyncArtifact[]}) {
     <p className="text-sm text-[#526b87]">Elige los documentos confirmados. No se borrarán ni sobrescribirán archivos editados en tu equipo.</p>
     <div className="space-y-2">{artifacts.map(item=><label key={item.id} className="flex min-h-11 items-center gap-3 rounded-xl bg-white p-2 text-sm">
       <input type="checkbox" checked={selected.includes(item.id)} onChange={event=>setSelected(current=>event.target.checked?[...current,item.id]:current.filter(id=>id!==item.id))} />
-      <span>{item.source_kind==="annual_plan"?"Plan anual":"Proyecto o unidad"} · {item.school_year} · {item.classroom} · V{item.version}</span></label>)}</div>
+      <span>{artifactLabels[item.source_kind]??"Documento confirmado"} · {item.school_year} · {item.classroom} · V{item.version}</span></label>)}</div>
     <div className="flex flex-wrap gap-2">{pickerAvailable&&<Button disabled={busy||!chosen.length} onClick={()=>void sync()}>{busy?"Sincronizando…":handle?"Sincronizar carpeta anterior":"Elegir carpeta y sincronizar"}</Button>}
       <Button variant="outline" disabled={busy||!chosen.length} onClick={()=>void downloadZip()}>Descargar ZIP</Button>
       {handle&&<button type="button" className="min-h-11 px-2 text-sm font-semibold text-[#07576c]" onClick={()=>setHandle(null)}>Elegir otra carpeta</button>}</div>

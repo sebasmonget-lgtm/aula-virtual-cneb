@@ -387,3 +387,19 @@ test('generación inicial repara una sola propuesta con una competencia sin agre
  assert.equal(calls.length,2);assert.equal(plan.proposed_experiences[0].primary_competency_ids.length,2);assert.equal(plan.proposed_experiences[0].opportunities.length,2);
  assert.deepEqual(plan.proposed_experiences.slice(1).map(row=>row.title),generationFixture().proposals.slice(1).map(row=>row.title));
 });
+
+
+test('QA06: nuevo año excluye TIC no disponible y conserva las otras competencias; medio confirmado la permite',async()=>{
+ const digital={id:'TRANS_TIC',name:'TIC',capacities:['Interactúa en entornos virtuales']},cards=[...curriculum,digital];
+ for(const resources of [[],['No tenemos tableta'],['tableta por confirmar'],['tableta del aula']]){
+  const calls=[],snap={...snapshot(),resources};
+  const createProvider=()=>({generate:async request=>{calls.push(request);return {output:generationFixture(request.ai_context_bundle.curriculum.competency_cards)};}});
+  const plan=await generateAnnualJourney({context:{year:2026,age:5},snapshot:snap,curriculum:cards,calendar:fixtureCalendar(),createProvider});
+  const hasDevice=resources.includes('tableta del aula');
+  assert.equal(calls[0].ai_context_bundle.curriculum.competency_cards.some(card=>card.id==='TRANS_TIC'),hasDevice);
+  assert.equal(plan.resource_policy_version,1);assert.equal(plan.proposed_experiences.length,15);
+  assert.ok(plan.proposed_experiences.every(row=>row.primary_competency_ids.length>=2));
+  validateAnnualJourney(plan,cards,{confirmation:true});
+  if(!hasDevice){const bad=structuredClone(plan);bad.proposed_experiences[0].opportunities.push({competency_id:'TRANS_TIC',capacity_names:digital.capacities,child_action:'Dibuja',conditions:'Con dispositivo hipotético',mediation:'Acompañar',observation:'Elige',supports:'Apoyo'});bad.proposed_experiences[0].primary_competency_ids.push('TRANS_TIC');assert.throws(()=>validateAnnualJourney(bad,cards),e=>e.reason==='resource_unavailable');}
+ }
+});

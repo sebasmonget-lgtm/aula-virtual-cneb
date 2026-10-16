@@ -1,3 +1,4 @@
+import { loadConfirmedOrdinaryEvaluationRows } from "../src/lib/ordinary-evaluation-adapter.mjs";
 import {startActivityToday} from "../src/lib/activity-today-execution.mjs";
 import { criterionRealignmentEligibility } from "../src/lib/criterion-realignment-policy.mjs";
 import { loadSetupDraft, saveSetupDraft } from "../src/lib/pilot-setup-draft.mjs";
@@ -401,20 +402,20 @@ async function decodePrivateMedia(value) {
 async function handleAuthenticatedRequest({ teacherId, requestId, db, preparationItemId, jobClassroomId, schoolYear, acceptedBlock }, request, response) {
 const qaDailyClock = currentPedagogicalClock() ?? localQaDailyClock;
 async function studentRoster(classroomId, today = qaDailyClock?.date ?? new Intl.DateTimeFormat("en-CA", { timeZone: "America/Lima", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date())) {
-  return db.query(`
+  const result = await db.query(`
     select s.id,s.first_name,s.last_name,s.preferred_name,s.birth_date::text, case when s.birth_date is not null then extract(year from age($2::date,s.birth_date))::int else null end as age_years, coalesce(s.preferred_name, s.first_name) as name,
            concat_ws(' ', coalesce(s.preferred_name, s.first_name), s.last_name) as full_name,
            coalesce(records.evidence_count, 0)::int as evidence_count,
-           coalesce(records.competency_count, 0)::int as competency_count,
+           records.competency_ids,
            records.last_observed_at
       from students s
       left join lateral (
         select count(*)::int as evidence_count,
-               count(distinct ev.competency_v4_id)::int as competency_count,
+               array_agg(distinct ev.competency_v4_id) filter (where ev.competency_v4_id is not null) as competency_ids,
                max(ev.observed_at) as last_observed_at
           from (select ev.student_id,ev.observed_at,ac.competency_v4_id from evidences ev
             left join activity_criteria ac on ac.id=ev.criterion_id
-            union all select o.student_id,o.occurred_at,coalesce(o.context_snapshot->>'captured_competency_id',ac.competency_v4_id)
+            union all select o.student_id,o.occurred_at,null::text
             from ordinary_observations o left join activity_criteria ac on ac.id=o.captured_criterion_id
             where o.status<>'voided') ev
          where ev.student_id = s.id
@@ -422,6 +423,10 @@ async function studentRoster(classroomId, today = qaDailyClock?.date ?? new Intl
      where s.classroom_id = $1 and s.status = 'active'
      order by coalesce(s.preferred_name, s.first_name)
   `, [classroomId,today]);
+  const ordinary = await loadConfirmedOrdinaryEvaluationRows(db, { classroomId,
+    period: { starts_on: '0001-01-01', ends_on: '9999-12-31' } });
+  return { ...result, rows: result.rows.map(({competency_ids, ...student}) => ({...student,
+    competency_count: new Set([...(competency_ids ?? []), ...ordinary.filter(row => row.student_id === student.id).map(row => row.competency_v4_id)]).size })) };
 }
 
 async function dashboard() {

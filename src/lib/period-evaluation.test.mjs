@@ -788,3 +788,21 @@ test("Excel: descarga con credenciales para el origen autorizado y mantiene el a
     assert.equal((await f.call("GET",`/api/period-evaluations/consolidated.xlsx?classroomId=${otherClass}&periodId=${firstPeriod}`,undefined,origin)).status,422);
   }finally{await f.db.close();}
 });
+
+
+test('QA21: reanálisis exige revisión explícita y conserva decisión y texto anterior en historial',async()=>{
+ const f=await fixture();try{
+ const selection={classroomId:classId,periodId:firstPeriod,studentId:studentA,competencyId:'COM_ORAL'};
+ const detail=(await f.call('GET','/api/period-evaluations/detail?'+new URLSearchParams(selection))).body;
+ const saved=await f.call('POST','/api/period-evaluations/save-draft',{...selection,evidenceFingerprint:detail.evidence_fingerprint,expectedDraftRevision:null,provisionalLevel:'B',teacherAnalysis:'Análisis docente que debe conservarse.',teacherJustification:'Sustento propio de la profesora.',conclusionText:''});
+ assert.equal(saved.status,200,JSON.stringify(saved.body));
+ const before=f.calls.length;
+ const rejected=await f.call('POST','/api/period-evaluations/suggest',{...selection,force:true});
+ assert.equal(rejected.status,409,JSON.stringify(rejected.body));assert.equal(f.calls.length,before);
+ const result=await f.call('POST','/api/period-evaluations/suggest',{...selection,force:true,acknowledgedRevision:saved.body.draft_revision});assert.equal(result.status,200,JSON.stringify(result.body));
+ const row=(await f.db.query('select * from competency_assessments where id=$1',[result.body.draft_id])).rows[0];
+ assert.equal(row.provisional_level,'B');assert.equal(row.draft_teacher_justification,'Sustento propio de la profesora.');assert.equal(row.achievement_level,null);
+ assert.equal(row.generation_metadata.reanalysis_history.at(-1).teacher_analysis,'Análisis docente que debe conservarse.');
+ assert.equal(row.generation_metadata.reanalysis_history.at(-1).provisional_level,'B');
+ }finally{await f.db.close();}
+});

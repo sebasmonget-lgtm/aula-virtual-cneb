@@ -1,7 +1,10 @@
 "use client";
+import { assessmentDisplayText, assessmentReanalysisWarning } from "@/src/lib/assessment-display.mjs";
 import { useEffect, useState } from "react";
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { writeWorkspaceLocation } from "@/src/lib/workspace-location";
 import { apiFetch } from "@/src/lib/ayni-api-fetch";
 import { useUnsavedWork } from "@/src/lib/use-unsaved-work";
 import { localDatabaseApiUrl } from "@/src/lib/local-database";
@@ -22,19 +25,29 @@ export function CompetencyPeriodReview({classroomId,periodId,students,scope,rows
   const [batchRevision,setBatchRevision]=useState(0);
   const [savedSnapshot,setSavedSnapshot]=useState("");
   const [reloadRevision,setReloadRevision]=useState(0);
+  const [confirmAnalysis,setConfirmAnalysis]=useState(false);
+  useEffect(()=>{writeWorkspaceLocation("Evaluar",{student:studentId,competency:competencyId},true);},[studentId,competencyId]);
   const dirty = Boolean(detail && snapshot(analysis,level,reason)!==savedSnapshot);
   const allowLeave = useUnsavedWork(dirty,busy,"Hay cambios en esta valoración sin guardar. ¿Quieres descartarlos?");
+  const selectedPerson=students.find(row=>row.id===studentId);
+  const selectedStudentName=selectedPerson?.preferred_name||selectedPerson?.first_name||"el niño observado";
   useEffect(()=>{
     if(!studentId||!competencyId)return;let active=true;
-    api<Detail>(`/api/period-evaluations/detail?${new URLSearchParams({classroomId,periodId,studentId,competencyId})}`).then(value=>{if(!active)return;const text=value.draft?.teacher_analysis??value.assessment?.details.evidence_overview??"",grade=value.draft?.provisional_level??value.assessment?.achievement_level??"",justification=value.draft?.teacher_justification??value.assessment?.teacher_justification??"";setDetail(value);setAnalysis(text);setLevel(grade);setReason(justification);setSavedSnapshot(snapshot(text,grade,justification));setEditing(false);setError("");}).catch(cause=>{if(active)setError(cause.message);});return()=>{active=false;};
-  },[classroomId,periodId,studentId,competencyId,reloadRevision]);
+    api<Detail>(`/api/period-evaluations/detail?${new URLSearchParams({classroomId,periodId,studentId,competencyId})}`).then(value=>{if(!active)return;const text=assessmentDisplayText(value.draft?.teacher_analysis??value.assessment?.details.evidence_overview??"",selectedStudentName),grade=value.draft?.provisional_level??value.assessment?.achievement_level??"",justification=value.draft?.teacher_justification??value.assessment?.teacher_justification??"";setDetail(value);setAnalysis(text);setLevel(grade);setReason(justification);setSavedSnapshot(snapshot(text,grade,justification));setEditing(false);setError("");}).catch(cause=>{if(active)setError(cause.message);});return()=>{active=false;};
+  },[classroomId,periodId,studentId,competencyId,reloadRevision,selectedStudentName]);
   const name=(id:string)=>{const student=students.find(row=>row.id===id);return student?`${student.preferred_name||student.first_name} ${student.last_name}`:"Niño del aula";};
   const pairs=rows.filter(row=>row.competency_id===competencyId),pending=rows.filter(row=>row.evidence_count>0&&!row.valuation_confirmed),current=pairs.find(row=>row.student_id===studentId);
   const relevant=rows.filter(row=>row.evidence_count>0||row.level);
   const needsReason=Boolean(detail&&(detail.timeline.length<3||detail.draft?.details?.information_status==="insufficient"||detail.assessment?.details.information_status==="insufficient"));
   function choose(id:string){if(!allowLeave())return;setCompetencyId(id);const next=rows.find(row=>row.competency_id===id&&!row.valuation_confirmed&&row.evidence_count>0)??rows.find(row=>row.competency_id===id);setStudentId(next?.student_id??"");setDetail(null);setError("");setNotice("");}
-  async function analyze(){if(!detail||!detail.timeline.length||busy||closed||!allowLeave())return;setBusy(true);setBusyAction("analysis");setError("");setNotice("");try{
-    await api("/api/period-evaluations/suggest",{classroomId,periodId,studentId,competencyId});
+  async function analyze(acknowledged=false){if(!detail||!detail.timeline.length||busy||closed)return;
+    const warning=assessmentReanalysisWarning({level,reason,analysis});
+    if(warning&&!acknowledged){setConfirmAnalysis(true);return;}
+    setConfirmAnalysis(false);
+    setBusy(true);setBusyAction("analysis");setError("");setNotice("");try{
+    let acknowledgedRevision=detail.draft?.revision;
+    if(dirty||!detail.draft)acknowledgedRevision=(await writeDraft()).draft_revision;
+    await api("/api/period-evaluations/suggest",{classroomId,periodId,studentId,competencyId,acknowledgedRevision,force:acknowledged});
     await onChanged();setReloadRevision(value=>value+1);setNotice("Análisis listo. Revisa las evidencias y elige tú la valoración.");
   }catch(cause){setError((cause as Error).message);}finally{setBusy(false);setBusyAction(null);}}
   async function saveObservationPending(){if(!detail?.draft||detail.timeline.length||busy||closed)return;setBusy(true);setBusyAction("confirmation");setError("");setNotice("");try{
@@ -57,6 +70,10 @@ export function CompetencyPeriodReview({classroomId,periodId,students,scope,rows
     await onChanged();setBatchRevision(value=>value+1);setNotice("Valoración confirmada por ti.");setDetail(null);setStudentId(next?.student_id??"");if(!next)setCompetencyId("");
   }catch(cause){setError((cause as Error).message);}finally{setBusy(false);setBusyAction(null);}}
   return <div className="space-y-6">
+    <AlertDialog open={confirmAnalysis} onOpenChange={setConfirmAnalysis}><AlertDialogContent>
+      <AlertDialogHeader><AlertDialogTitle>Antes de volver a analizar</AlertDialogTitle><AlertDialogDescription>{assessmentReanalysisWarning({level,reason,analysis})}</AlertDialogDescription></AlertDialogHeader>
+      <AlertDialogFooter><AlertDialogCancel>Conservar mi borrador</AlertDialogCancel><AlertDialogAction onClick={()=>void analyze(true)}>Continuar con el análisis</AlertDialogAction></AlertDialogFooter>
+    </AlertDialogContent></AlertDialog>
     {notice&&<WorkflowFeedback tone="success">{notice}</WorkflowFeedback>}
     {error&&<WorkflowFeedback tone="error">{error}</WorkflowFeedback>}
     {!competencyId?<section><p className="text-[#526b87]">{pending.length} valoraciones por confirmar · {rows.filter(row=>!row.evidence_count&&!row.level).length} pendientes de observación.</p><div className="mt-4 divide-y divide-[#d6e5ef]">{scope.map(card=>{const own=rows.filter(row=>row.competency_id===card.id),count=own.filter(row=>row.evidence_count>0&&!row.valuation_confirmed).length;return <div key={card.id} className="flex items-center justify-between gap-3 py-4"><div><h3 className="font-semibold">{card.name}</h3><p className="text-sm text-[#526b87]">{count} por confirmar · {own.filter(row=>!row.evidence_count&&!row.level).length} pendientes de observación</p></div><Button variant="outline" onClick={()=>choose(card.id)}>Revisar</Button></div>;})}</div>{!scope.length&&<p className="mt-4">Todavía no hay competencias trabajadas en este período.</p>}</section>:<section className="space-y-4">
@@ -70,7 +87,7 @@ export function CompetencyPeriodReview({classroomId,periodId,students,scope,rows
           {current?.valuation_confirmed&&!editing?<><p className="font-semibold">Valoración confirmada: {detail.assessment?.achievement_level}</p><Button variant="outline" disabled={closed} onClick={()=>setEditing(true)}>Corregir valoración</Button></>:<>
             {editing&&<WorkflowFeedback tone="info">Al cambiar esta valoración, su conclusión y el informe de este niño tendrán que prepararse de nuevo. Las versiones anteriores se conservan.</WorkflowFeedback>}
             <AsyncButton variant="outline" busy={busy&&busyAction==="analysis"} busyLabel="Analizando…" disabled={closed||busy} onClick={()=>void analyze()}>Analizar evidencias</AsyncButton>
-            {detail.draft?.details?.information_status==="insufficient"&&<WorkflowFeedback tone="info">Información insuficiente: {detail.draft.details.insufficiency_reason}</WorkflowFeedback>}
+            {detail.draft?.details?.information_status==="insufficient"&&<WorkflowFeedback tone="info">Información insuficiente: {assessmentDisplayText(detail.draft.details.insufficiency_reason,name(studentId))}</WorkflowFeedback>}
             <label className="block text-sm font-semibold">¿Qué muestran estas evidencias?<Textarea className="mt-1" disabled={closed||busy} value={analysis} onChange={event=>setAnalysis(event.target.value)}/></label>
             <fieldset disabled={closed||busy}><legend className="mb-2 text-sm font-semibold">Valoración que confirmas</legend><div className="grid grid-cols-2 gap-2 sm:grid-cols-4">{[["AD","Logro destacado"],["A","Logro esperado"],["B","En proceso"],["C","En inicio"]].map(([value,label])=><label key={value} className={`flex min-h-14 cursor-pointer items-center gap-2 rounded-xl border px-3 ${level===value?"border-[#087d96] bg-[#eaf7fb]":"bg-white"}`}><input type="radio" name="achievement" checked={level===value} onChange={()=>setLevel(value)}/><span><b>{value}</b><small className="block">{label}</small></span></label>)}</div></fieldset>
             {needsReason&&<label className="block text-sm font-semibold">Sustento de tu decisión con evidencia limitada<Textarea className="mt-1" disabled={closed||busy} value={reason} onChange={event=>setReason(event.target.value)}/></label>}

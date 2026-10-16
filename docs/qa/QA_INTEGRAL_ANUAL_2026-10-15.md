@@ -1,6 +1,6 @@
 # Auditoría anual de Ayni — 15 de octubre de 2026
 
-**Resultado: PARTIAL. No constituye aprobación para Producción.** Se ejecutó una historia ficticia desde aula hasta B4, con cierres reales de B1–B3 y rechazo correcto del cierre anual por 237 pares alumno/competencia sin valoración. No se inventaron calificaciones para completar el año. El cierre anual positivo queda NOT TESTED.
+**Resultado vigente de la ronda final: NO APTA para Producción; correcciones listas para validar en Preview.** El cierre positivo B4/anual ya fue demostrado en un escenario reducido ficticio; los cuatro P2 originales fueron corregidos. Preview y Producción comparten actualmente base cloud: Auth/RLS con dos cuentas y medios privados siguen sin validación real aislada. El apartado «Ronda final» al final actualiza los resultados históricos siguientes, que se conservan para trazabilidad.
 
 ## A. Procedencia, aislamiento y cobertura
 
@@ -189,3 +189,89 @@ La captura posterior muestra acumulado de octubre US$7,28 frente a US$6,80 en la
 Producto: `c9ca5fea3301085cf595043d8d80d74cffb2d96b`, subido a GitHub en `codex/qa-integral-anual-20261015`. [Preview verificado](https://ayni-aula-staging-9860ndjvv-ayni4.vercel.app/), deployment `dpl_9sKEp6khmYnaHFCQRhUEwmzV89nx`, READY, target null y SHA exacto. Build cloud PASS. Dieciocho controles smoke PASS: recursos200 y APIs privadas401 sin sesión, sin escrituras pedagógicas. Navegador muestra Bienvenida a Ayni y campos de acceso. [Recibo](evidence/qa-integral-20261015/preview.json), [smoke](evidence/qa-integral-20261015/preview-smoke.json), [captura cloud](evidence/qa-integral-20261015/preview-login.png).
 
 Producción reconsultada tras publicar: mismo deployment `dpl_H19YWzRdGjkgh8y72QAd1qBty7Mf` y SHA `9a0920230350cd6b9050f35683a1f35d459e78c7`. No promoción, reasignación de alias ni migración. Tres servidores locales apagados con cierre de PGlite; bases y registros ficticios conservados. La pestaña cloud se deja abierta como resultado. El recibo documental se confirma después del producto y no cambia el SHA desplegado.
+
+## Ronda final focalizada — 15 de octubre de 2026 (Lima)
+
+### Procedencia y límites
+
+Base remota `275c545eaef851c61689b130bbbee6a12bba66c9`, descendiente de `c9ca5fe`, contrastada de nuevo con `git fetch origin`. Rama aislada `codex/qa-final-pendientes-20261015`. Se continuó la auditoría conservando sus tres aulas; no se repitió desde cero. Se añadió una cuarta base PGlite exclusiva para el cierre positivo. No se modificaron migraciones, modelos predeterminados, cantidad de proyectos, competencias históricas ni secuencias confirmadas.
+
+### Matriz de actualización
+
+Esta tabla sustituye únicamente los estados de los pendientes de la ronda anterior; los demás mantienen su cobertura y sus límites originales.
+
+| Punto | Regresión de código | Ejecución real | Resultado / límite |
+|---|---|---|---|
+| QA06 recursos/TIC | PASS | Contrato y entrada del proveedor con fixtures | PASS técnico; no se regeneró otro anual con IA pagada |
+| QA20 Mi aula / Evaluar / Trayectoria | PASS en adaptadores; HTTP canónico | PASS, aula original de 20 | Dos observaciones de Camila, tres competencias confirmadas; un registro puede cubrir dos competencias |
+| QA21 reanálisis y borrador | PASS | PASS UI + IA real + lectura histórica | Advertencia explícita; B y sustento conservados; nueva confirmación docente necesaria |
+| QA22 nombre / anonimización | PASS | PASS UI + IA real | Marcador inequívoco del alumno actual se presenta con su nombre; referencias ambiguas antiguas permanecen neutrales |
+| B4 y cierre anual positivos | PASS contratos existentes | PASS, aula reducida de una niña ficticia | Doce competencias aplicables valoradas durante el año; no prueba cierre masivo de 20 niños |
+| Reapertura y recierre B4 | PASS | PASS UI + HTTP + lectura de historia | Dos versiones; motivo y análisis anterior conservados; B1–B3 intactos |
+| Consolidado y conclusiones del caso reducido | PASS | PASS, cuatro consolidados y doce conclusiones manuales | Sin documento anual unificado nuevo; se consultan los cuatro períodos y su trayectoria |
+| Word de cierre | PASS | PASS, cinco archivos descargados | Cuatro cierres más la versión anterior de B4, nombres y contenido sin campos pendientes |
+| Word visual | PASS paginación de observaciones | PASS, 34 páginas de cuatro muestras y revisión de corrección | Word local autorizado, originales intactos; mejoras de presentación pendientes del anual histórico |
+| ZIP completo | PASS | PASS HTTP y UI | 44 Word / 7.100.912 bytes, CRC y estructura interna de cada DOCX correctos |
+| Enlace directo / cambio de bimestre | PASS | PASS UI local | Se abre Indagación del alumno correcto; cambiar B4→B3 limpia selección y mensajes anteriores |
+| Móvil emulado | PASS focal | PASS, revisión B4 sin desborde horizontal | No sustituye celular físico |
+| Aislamiento cloud | FAIL en configuración actual | Lectura real de conexiones | Preview y Producción usan la misma conexión DB y el mismo proyecto Supabase |
+| Auth/RLS, cuentas cruzadas y medios cloud | PARTIAL en tests locales | NOT TESTED en cloud aislado | Bloqueado hasta crear/configurar base independiente |
+| Cámara, dictado, celular físico y desconexión física | PARTIAL previo | NOT TESTED en esta ronda | No hay evidencia de hardware real ni pérdida de red física |
+
+### Cuatro P2 originales
+
+**QA06 — Corregido.** Causa: el generador y la cobertura anual ofrecían TRANS_TIC aunque el contexto solo planteaba conseguir o confirmar un dispositivo. La misma política de recursos filtra esa competencia en la entrada al proveedor, en la cobertura requerida y en el reemplazo focal. Los contratos nuevos (`resource_policy_version: 1`) rechazan una oportunidad TIC sin dispositivo disponible; un equipo sin internet sí puede utilizarse. No se bloquean otras competencias ni se reescriben años antiguos. Pruebas con recursos vacíos, no disponibles, condicionales y confirmados: quince tramos y mínimo dos competencias se conservan; una salida con TIC sin recurso se rechaza. Archivos: `annual-resource-policy`, `annual-plan-contract`, `annual-journey-contract/service` y tests. Límites: política sobre la declaración de recursos, no inventario físico verificado; no nueva muestra anual pagada.
+
+**QA20 — Corregido.** Causa: el resumen de matrícula contaba IDs capturados en la observación y omitía la decisión curricular posterior. Ahora utiliza `loadConfirmedOrdinaryEvaluationRows`, el mismo lector canónico que alimenta la evaluación, considerando última atribución, revisión del texto y retiro. Mantiene un registro por observación y una unión por competencia. Reproducción/regresión HTTP y UI: Camila tiene dos observaciones y tres competencias (Convivencia, Oral y Cantidad); el segundo registro multicompetencia aparece en las dos columnas de Evaluar y en Trayectoria con el mismo ID. Bruno sin clasificación no recibe competencia ficticia; un registro retirado no suma. Archivo: `scripts/local-db-server.mjs`. Recibo privado: `roster-trajectory.json` y dashboard del recorrido.
+
+**QA21 — Corregido.** Causa: reanalizar sustituía el borrador y perdía letra/motivo sin información suficiente. Se usa el diálogo existente de Ayni, con dos decisiones claras: conservar borrador o continuar con el análisis. El servidor exige reconocer la revisión vigente antes de una llamada que afecta una decisión; el borrador conserva letra y sustento, y archiva el análisis anterior en `generation_metadata.reanalysis_history`. Evidencias y huellas vigentes siguen siendo obligatorias para confirmar. Regresiones: 409 sin reconocimiento y cero llamadas; continuar actualiza análisis y conserva B/sustento; lectura posterior de base aislada confirma historia; UI exige nueva confirmación, nunca asigna una letra por IA. Archivos: `competency-period-review`, `period-evaluation-routes`, `period-evaluation-draft-service` y tests.
+
+**QA22 — Corregido con límite de atribución.** Causa: un marcador anónimo genérico llegaba literal a la interfaz. La solicitud distingue el sujeto actual (`[estudiante_actual]`) de otros nombres; nombres compartidos por compañeros no se usan para desambiguar. Solo el marcador explícito se presenta como el nombre del alumno seleccionado. Un `[estudiante]` histórico ambiguo se presenta como «un estudiante»: convertirlo automáticamente al nombre del alumno podría atribuirle una actuación de otro. Las solicitudes y la salida canónica de IA permanecen anonimizadas; se transforma únicamente la presentación. IA real produjo «Hay dos observaciones de [estudiante_actual]…» y la UI mostró «…de Ada…». Pruebas de dos niños y criterio nulo. Archivos: `assessment-v4-service`, `assessment-display`, rutas y componente de revisión.
+
+### Cierre positivo B4/anual y conservación
+
+El cierre vigente exige que todas las filas del período estén resueltas; en B4 añade una valoración docente anual vigente por cada niño y competencia aplicable. No permite completar el requisito con letras inventadas ni elimina competencias para cerrar. El bloqueo de los 237 pares del aula original sigue siendo correcto y no se manipuló esa aula.
+
+Caso adicional: María Prueba / Cierre QA, una niña de cinco años («Ada Ficticia Qa»), sin religión ni castellano L2 aplicables; doce competencias del catálogo aplicables. Hay tableta con aplicación sin conexión y acompañamiento adulto declarados para la prueba de TIC. El calendario inicial de esta aula divide B1–B4 de marzo a diciembre; no es una nueva validación del calendario oficial del aula original. Cada competencia tiene dos actuaciones ficticias explícitamente guionizadas y confirmadas como datos de prueba, no como observaciones de una menor real ni contenido inventado por la IA.
+
+`scripts/qa/b4-positive-scenario.json` conserva el guion: 24 textos fechados, doce decisiones A/B contextualizadas, sustento de la evidencia limitada y doce conclusiones docentes. Se registró todo mediante rutas reales. Aula, alumna y cuatro confirmaciones se hicieron desde la UI; ocho decisiones y doce conclusiones manuales usaron los endpoints de guardado/confirmación. **Ninguna calificación se escribió por SQL.** Las consultas SQL posteriores fueron solo de lectura, con el servidor PGlite cerrado, para comprobar la historia. No se dio por realizada ninguna actividad por su fecha.
+
+B1 y B2 cerraron por UI; B3 por endpoint; B4 por UI. Los cuatro consolidados contienen doce pares confirmados en total, con sus conclusiones y evidencias. B4 informó `annual_unvalued: 0`. Se comprobó recarga y cierre vigente en los cuatro períodos. Las 24 observaciones permanecieron y los overviews B1–B3 son idénticos antes y después del cierre B4.
+
+Negativos: escribir borrador en período cerrado devuelve409; reapertura sin motivo422; cierre con versión obsoleta409; estado sin mutación. Después se reabrió B4 por UI con motivo explícito, se ejecutó un reanálisis real, se conservó/reconfirmó B y su sustento, se confirmó nuevamente la conclusión manual y se recerró B4 por UI. Existen dos manifiestos B4, historial del motivo y del análisis anterior, y cinco Word de cierres legibles internamente. La consulta anual de la trayectoria conserva los cuatro períodos. Esto demuestra el **camino positivo reducido**, no un año completo ejecutado con 20 niños, todas las actividades ni informes familiares B4 generados en lote. Los informes familiares reales de la primera auditoría siguen siendo la evidencia de ese módulo.
+
+### Seguridad cloud y bloqueo pendiente
+
+Se descargó la configuración de Vercel para comparación local privada, sin publicar valores. Auth es Supabase y DB es PostgreSQL en ambos entornos. Las huellas de `SUPABASE_DB_URL` y `AYNI_SUPABASE_URL` coinciden exactamente entre Preview y Producción. **No hubo escrituras pedagógicas cloud ni se modificaron conexiones o permisos existentes.**
+
+Tras autorización y aclaración del usuario («Misma cuenta, base QA separada»), se creó únicamente la organización gratuita «Ayni QA aislado», dentro de la cuenta actual. Se dejó preparado el formulario «Ayni QA final» en el panel lateral, pendiente de que el usuario introduzca y envíe la nueva contraseña. La política de control del navegador exige que esa credencial nueva la introduzca el usuario. No se creó la base, no se tocaron proyectos ajenos y no se aceptaron términos en nombre del usuario. Las conexiones compartidas siguen intactas.
+
+Por tanto **NO se declaran probados** registro cloud, RLS con dos docentes reales, acceso cruzado, medios privados, recuperación de sesión o persistencia cloud aislada. Los tests de autorización locales y los 401 del smoke no sustituyen esas pruebas. Este es un bloqueo para aprobar Producción, no un fallo de RLS demostrado.
+
+### Word, ZIP y UX
+
+El usuario autorizó explícitamente exportar copias ficticias con Microsoft Word local. Se abrieron de solo lectura, con macros deshabilitadas, se exportaron a PDF y se cerraron sin guardar. Se inspeccionaron visualmente todas las páginas: actividad5, taller5, informe familiar2 y anual22. Los originales se conservan; la copia inicial del taller coincide en SHA256 con el original descargado. La inspección cubre márgenes, texto, datos, tablas, saltos y legibilidad, no solo XML.
+
+**QA24 P2 — Corregido, paginación de observación.** En el taller, una observación continuaba en otra página sin nombre ni criterio visibles. Se impide dividir filas que caben en una página, se repite la cabecera y se conserva junto a la primera fila. El nuevo Word se renderizó otra vez en Word: sección, nombre, criterio y registro quedan juntos en página5, sin recortes. Filas excepcionalmente mayores a una página pueden continuar por limitación normal de Word. `activity-unified-word` y regresión XML; los nuevos artefactos de actividad usan revisión de presentación `layout2`, conservando los bytes de los anteriores. No cambia el contenido pedagógico ni las evidencias.
+
+El ZIP completo se preparó con el job real de exportación (44/44), se descargó también desde Documentos y se comprobó el archivo que llegó a Descargas. Tiene44 DOCX, 7.100.912 bytes, carpetas por aula/tipo, manifest y CRC válidos; todos los DOCX abren como OOXML con `word/document.xml`. No se afirma render visual de esos44 completos. Los archivos históricos dentro del ZIP conservan su presentación anterior; no se sobrescribieron para aplicar `layout2`.
+
+**QA23 P2 — Corregido, cambio de período/enlace.** Al pasar de bimestre persistían aviso y selección anterior, y una proyección legacy oculta podía sobrescribir la competencia del enlace. La vista compacta conserva una sola selección de revisión, recupera la del enlace inicial, evita el lector legacy oculto y limpia mensaje/motivo/par al cambiar período. Prueba ejecutando el handler real: cancelar conserva todo; aceptar limpia el contexto. UI: enlace directo a Indagación/Ada correcto y B4→B3 muestra sus propias competencias sin el error anterior. El modo avanzado conserva su contrato.
+
+Pendiente nuevo **P2 de presentación, sin rediseño general**: el anual histórico de22 páginas usa el formato textual de compatibilidad e incluye etiquetas técnicas en su trazabilidad. Debe ajustarse esa presentación antes de un piloto amplio; no se reescribieron documentos históricos para ocultarlo. No hay evidencia de pérdida de contenido en las muestras. Además se corrigió la etiqueta genérica «Proyecto o unidad» del panel opcional de sincronización: ahora distingue actividad, diagnóstico, informe y cierre por su tipo canónico, sin cambiar archivos ni carpetas.
+
+Revisión móvil focal emulada de B4 sin desborde horizontal; no dispositivo físico. La automatización de Chrome perdió su conexión durante la exportación; el flujo se terminó en navegador integrado. La espera automática del evento de descarga venció, pero se verificaron el mensaje de éxito, HTTP200 y el ZIP real de Descargas. No se clasificó esa espera de la herramienta como fallo del producto. Cámara, micrófono físico y desconexión física siguen NOT TESTED.
+
+### Calidad pedagógica y costo de esta ronda
+
+Una sola nueva llamada real de análisis, con el enrutamiento predeterminado `gpt-6-luna`: entrada6.175 y salida685 tokens (6.860 total), aproximadamente9,4s. Estimación del ledger **US$0,0020575**, no factura del proveedor; reserva previa US$0,024544 y techo persistente US$4,50 para cumplir el máximo del usuario US$5. No se enviaron fotos ni audio a IA. Después se deshabilitaron las llamadas pagadas. La ronda anterior y sus45 llamadas no se vuelven a contabilizar como consumo nuevo.
+
+Salida real: el análisis cita las dos fechas y distingue plantear una pregunta, proponer comparar, mirar dibujos y recordar el agua con mediación. No inventa resultados de crecimiento ni formula una calificación. Advierte que dos actuaciones no permiten cerrar toda la competencia; `information_status: sufficient` se refiere a poder resumir esas actuaciones, no a suficiencia curricular ni a una letra. La UI mantiene el aviso de pocas evidencias y solicita sustento docente. La conclusión B se confirmó explícitamente con el alcance limitado del guion. No se generaliza esta muestra a todas las generaciones.
+
+### Validación, rollback y decisión
+
+Typecheck, lint (excluyendo `.local`, que contiene cachés/recibos privados), build local y regresiones focales PASS. Suite completa: **197 archivos /910 tests,0 fallos**,374,2s;18 regresiones focales de navegación/Word/continuidad PASS. La revisión final añadió dos casos de reanálisis desde valoración ya confirmada o borrador: antes de IA materializa el borrador si falta, reconoce la revisión exacta y solo fuerza una generación nueva después de aceptar el diálogo;57 pruebas focales de evaluación/anual/navegación PASS. No se repitió una llamada real para ello. `npx next build --webpack` y su typecheck final PASS, además del build local. La corrección de etiquetas documentales se comprobó en UI:14 actividades,20 informes y4 cierres identificados correctamente. Los contratos UI, autoridad docente, fuentes canónicas, cierres y artefactos existentes permanecen protegidos. `git diff --check` sin incidencias. No migración ni cambio de modelos por defecto. [Recibo resumido sin secretos](evidence/qa-final-20261015/summary.json), [B4 recerrado](evidence/qa-final-20261015/b4-reclosed.png), [móvil emulado](evidence/qa-final-20261015/b4-mobile.png), [Word corregido](evidence/qa-final-20261015/word-observation-layout2.png). Publicación y SHA en recibo posterior.
+
+Rollback: revertir el commit focal desde275c545 y publicar otro Preview, sin promover a Producción. Conservar bases, observaciones, cierres y artefactos: no borrar/revertir datos. Los documentos `layout2` ya guardados siguen siendo archivos históricos; los metadatos adicionales de reanálisis y política son compatibles con lectores anteriores. La base QA cloud aún no existe, por lo que no hay migraciones cloud que revertir.
+
+**Veredicto: NO APTA PARA PRODUCCIÓN.** Los cuatro P2 originales y el cierre positivo reducido quedan resueltos con evidencia; Word y ZIP ya tienen prueba real. Falta terminar el entorno cloud independiente y ejecutar Auth/RLS/medios con dos cuentas, probar hardware/red y resolver las fricciones documentales señaladas. El aula original20 sigue legítimamente sin cierre anual por falta de valoraciones; no se la declara cerrada. La publicación autorizada es exclusivamente Preview y su smoke sin sesión no equivale a aprobación pedagógica ni de seguridad cloud.

@@ -1,3 +1,4 @@
+import { resourceEligibleCompetencies } from "./annual-resource-policy.mjs";
 import { DEFAULT_ANNUAL_PROJECT_WEEKS } from "./annual-plan-calendar.mjs";
 
 const ANNUAL_PLAN_FIELDS = ["title", "school_year", "general_context_summary", "planning_priorities", "competency_overview", "proposed_experiences", "review_checkpoints", "flexibility_notes"];
@@ -136,9 +137,7 @@ export function validateAnnualPlanMasterCoverage(master, applicableCompetencyIds
 
 /** Do not require a digital experience when the classroom has not confirmed a device. */
 export function requiredAnnualCoverageIds(cards, availableResources = []) {
-  const hasDigitalDevice = Array.isArray(availableResources) && availableResources.some((resource) =>
-    /\b(celular|tel[eé]fono|tablet|tableta|computadora|ordenador|laptop|proyector|pantalla|dispositivo digital|c[aá]mara)\b/i.test(String(resource)));
-  return cards.filter((card) => card.id !== "TRANS_TIC" || hasDigitalDevice).map((card) => card.id);
+  return resourceEligibleCompetencies(cards, availableResources).map(card => card.id);
 }
 
 export function validateAnnualPlanDevelopment(output) {

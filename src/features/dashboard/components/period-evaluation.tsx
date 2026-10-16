@@ -98,18 +98,20 @@ export function PeriodEvaluation({ initialStudentId = "", initialCompetencyId = 
     const today = result.today;
     setYearId(year?.id ?? ""); setClassroomId(classroom?.id ?? ""); setPeriodId(selectEvaluationPeriod(periods, today, params.get("period"))?.id ?? "");
     setStudentId(params.get("student") ?? initialStudentId); setCompetencyId(params.get("competency") ?? initialCompetencyId);
+    setReviewPair({studentId:params.get("student") ?? initialStudentId,competencyId:params.get("competency") ?? initialCompetencyId});
   }).catch((error) => setMessage(error.message)); }, [initialStudentId, initialCompetencyId]);
 
   const applyOverview = useCallback((result: Overview) => {
     setOverviewError("");
     setOverview(result);
     setReport(null);
+    if(process.env.NEXT_PUBLIC_AYNI_EXPERIENCE!=="0"&&["student","conclusions","family","consolidated"].includes(view))return;
     setStudentId((current) => result.students.some((student) => student.id === current) ? current : result.students[0]?.id ?? "");
     setCompetencyId((current) => result.scope.some((item) => item.id === current) ? current : result.scope[0]?.id ?? "");
-  }, []);
+  }, [view]);
   useEffect(() => {
-    if (yearId && classroomId && periodId) writeWorkspaceLocation("Evaluar", { year: yearId, classroom: classroomId, period: periodId, student: studentId, competency: competencyId }, true);
-  }, [yearId, classroomId, periodId, studentId, competencyId]);
+    if (yearId && classroomId && periodId) writeWorkspaceLocation("Evaluar", { year: yearId, classroom: classroomId, period: periodId, ...(process.env.NEXT_PUBLIC_AYNI_EXPERIENCE==="0"||!["student","conclusions","family","consolidated"].includes(view)?{student:studentId,competency:competencyId}:{}) }, true);
+  }, [yearId, classroomId, periodId, studentId, competencyId, view]);
   async function reloadOverview() {
     if (!classroomId || !periodId) return;
     applyOverview(await api<Overview>(`/api/period-evaluations/overview?classroomId=${classroomId}&periodId=${periodId}`));
@@ -139,11 +141,11 @@ export function PeriodEvaluation({ initialStudentId = "", initialCompetencyId = 
     applyDetail(await api<Detail>(`/api/period-evaluations/detail?classroomId=${classroomId}&periodId=${periodId}&studentId=${studentId}&competencyId=${competencyId}`));
   }
   useEffect(() => {
-    if (!classroomId || !periodId || !studentId || !competencyId) return;
+    if (process.env.NEXT_PUBLIC_AYNI_EXPERIENCE!=="0"&&["student","conclusions","family","consolidated"].includes(view) || !classroomId || !periodId || !studentId || !competencyId) return;
     let active = true;
     void api<Detail>(`/api/period-evaluations/detail?classroomId=${classroomId}&periodId=${periodId}&studentId=${studentId}&competencyId=${competencyId}`).then((result) => { if (active) applyDetail(result); }).catch((error) => { if (active) { setDetail(null); setMessage(error.message); } });
     return () => { active = false; };
-  }, [classroomId, periodId, studentId, competencyId, overview]);
+  }, [classroomId, periodId, studentId, competencyId, overview, view]);
 
   async function act(work: () => Promise<void>) { setBusy(true); setMessage(""); try { await work(); } catch (error) { setMessage(error instanceof Error ? error.message : "Ocurrió un problema."); } finally { setBusy(false); } }
   const classrooms = workspace?.classrooms.filter((item) => item.school_year_id === yearId) ?? [];
@@ -164,7 +166,7 @@ export function PeriodEvaluation({ initialStudentId = "", initialCompetencyId = 
 
   if (!workspace) return <p className="rounded-2xl border bg-white p-6">{message || "Cargando evaluación del período…"}</p>;
   if(process.env.NEXT_PUBLIC_AYNI_EXPERIENCE!=="0"&&["student","conclusions","family","consolidated"].includes(view))return <section className="mx-auto max-w-5xl space-y-6">
-    <header><h1 className="text-2xl font-bold">{view==="family"?"Informe a familias":view==="consolidated"?"Consolidado":"Evaluación del período"}</h1><label className="mt-3 block text-sm font-semibold">Período<select className="mt-1 min-h-11 w-full rounded-xl border bg-white px-3" value={periodId} onChange={event=>{if(!canLeaveWorkspace())return;setOverview(null);setPeriodId(event.target.value);}}>{periods.map(period=><option key={period.id} value={period.id}>{period.label} · {formatDate(period.starts_on)} a {formatDate(period.ends_on)}</option>)}</select></label></header>
+    <header><h1 className="text-2xl font-bold">{view==="family"?"Informe a familias":view==="consolidated"?"Consolidado":"Evaluación del período"}</h1><label className="mt-3 block text-sm font-semibold">Período<select className="mt-1 min-h-11 w-full rounded-xl border bg-white px-3" value={periodId} onChange={event=>{if(!canLeaveWorkspace())return;setMessage("");setReopenReason("");setReviewPair({studentId:"",competencyId:""});setStudentId("");setCompetencyId("");setDetail(null);setOverview(null);setPeriodId(event.target.value);}}>{periods.map(period=><option key={period.id} value={period.id}>{period.label} · {formatDate(period.starts_on)} a {formatDate(period.ends_on)}</option>)}</select></label></header>
     <nav className="flex flex-wrap gap-2" aria-label="Espacios de Evaluar">{([["student","Evaluación del bimestre"],["family","Informe a familias"],["consolidated","Consolidado"]] as const).map(([target,label])=><Button key={target} variant={view===target||view==="conclusions"&&target==="student"?"default":"outline"} onClick={()=>setView(target)}>{label}</Button>)}</nav>
     {message&&<p role="status" className="text-sm">{message}</p>}
     {overviewError&&<p role="alert">{overviewError}<Button variant="outline" onClick={()=>setOverviewRetry(value=>value+1)}>Reintentar</Button></p>}

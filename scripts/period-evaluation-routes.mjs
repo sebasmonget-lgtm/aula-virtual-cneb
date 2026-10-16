@@ -363,7 +363,10 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
         await assertPeriodOpen(db,data.classroom.id,data.period.id);
         if (!data.row.sourceRows.length) throw new Error("Registra primero observaciones de esta competencia.");
         const student = await studentForClass(data.classroom, body.studentId);
-        const names = assessmentStudentNames((await db.query('select first_name,last_name,preferred_name from students where classroom_id=$1',[data.classroom.id])).rows);
+        const classmates = (await db.query('select id,first_name,last_name,preferred_name from students where classroom_id=$1',[data.classroom.id])).rows;
+        const names = assessmentStudentNames(classmates);
+        const currentNames = [student.first_name,student.preferred_name,[student.first_name,student.last_name].filter(Boolean).join(' ')]
+          .filter(name => name?.trim().length > 1 && !classmates.some(peer => peer.id !== student.id && [peer.first_name,peer.preferred_name,[peer.first_name,peer.last_name].filter(Boolean).join(' ')].includes(name)));
         const contextV4 = await loadClassroomContext(data.classroom);
         const master = await loadComputedAssessmentContext(db, { ...data.classroom, context_v4: contextV4 },
           data.period, data.cards, data.row.sourceRows, data.card.id, names);
@@ -376,9 +379,14 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
           send(response, 200, { generation_id: null, draft_id: cached.id, draft_revision: Number(cached.revision),
             evidence_fingerprint: evidenceHash, analysis: cached.details, conclusion: null, cached: true }, origin); return true;
         }
+        const previous = data.row.draft ?? data.row.assessment;
+        if ((previous?.provisional_level || previous?.draft_teacher_justification?.trim() || previous?.achievement_level) &&
+            body.acknowledgedRevision !== Number(previous.revision)) {
+          fail(response,origin,new Error('Antes de analizar, confirma que revisarás tu valoración y su sustento. El borrador anterior se conserva.'),409);return true;
+        }
         const input = buildAssessmentInput({ age: data.classroom.age, competencyId: data.card.id,
           assessmentMaster: masterEntry,
-          evidenceHistory: data.row.sourceRows.map((row) => sanitizeEvidenceForAssessment(row, names)),
+          evidenceHistory: data.row.sourceRows.map((row) => sanitizeEvidenceForAssessment(row, names, currentNames)),
           criteriaHistory: data.row.sourceRows.map((row) => ({ criterion_text: neutralizeAssessmentText(row.criterion_text, names),
             expected_evidence: neutralizeAssessmentText(row.details?.expected_evidence, names),
             observation_focus: row.details?.observation_focus ?? [], evidence_scope: row.details?.evidence_scope ?? null })) });
@@ -394,6 +402,9 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
           sourceRows: latest.row.sourceRows, analysis: analysis.output,
           metadata: { analysis: metadataForAudit(analysis.metadata), conclusion: conclusionMetadata }, assessmentMasterId: master.id, assessmentMasterSnapshot: master.source_snapshot,
           teacherAnalysis: analysis.output.evidence_overview, conclusionText: "",
+          provisionalLevel: previous?.provisional_level ?? previous?.achievement_level ?? null,
+          teacherJustification: previous?.draft_teacher_justification ?? previous?.teacher_justification ?? "",
+          reanalysisPrevious: previous ? {revision:Number(previous.revision),teacher_analysis:previous.draft_teacher_analysis ?? previous.details?.evidence_overview ?? '',provisional_level:previous.provisional_level ?? previous.achievement_level ?? null,teacher_justification:previous.draft_teacher_justification ?? previous.teacher_justification ?? '',source_evidence_snapshot:previous.source_evidence_snapshot} : null,
           expectedDraftRevision:data.row.draft?.revision??null,expectedEvidenceFingerprint:evidenceFingerprint,
           loadCurrent:async(tx)=>{await assertPeriodOpen(tx,data.classroom.id,data.period.id);const model=await loadRows(tx,{classroomId:data.classroom.id,period:data.period,applicableIds:new Set(data.cards.map((card)=>card.id))});return model.rows.find((row)=>row.student_id===student.id&&row.competency_v4_id===data.card.id)?.sourceRows??[];} });
         await pending.set(generationId, { workflow: "period_evaluation", classroom_id: data.classroom.id, period_id: data.period.id, student_id: student.id, competency_v4_id: data.card.id, evidence_fingerprint: evidenceFingerprint, analysis: analysis.output, conclusion, analysis_metadata: metadataForAudit(analysis.metadata), conclusion_metadata: conclusionMetadata, createdAt: Date.now() });

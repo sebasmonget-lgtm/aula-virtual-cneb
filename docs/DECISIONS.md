@@ -1313,3 +1313,13 @@ La corrección de contexto conversacional conserva opcionalmente una línea base
 Evaluar abre fotos mediante las rutas privadas canónicas y apiFetch autenticado; no hay almacenamiento nuevo ni medios en IA. Documentos agrupa los mismos lectores en cuatro carpetas y acepta enlaces anteriores. QA usa bases ficticias nuevas y reserva persistente de costo antes de cada llamada: techo conservador4,50USD para cumplir el máximo5USD. Sin migraciones, cambios de modelos, RLS o Producción. Validación y límites: docs/qa/QA_INTEGRAL_ANUAL_2026-10-15.md.
 
 La auditoría ratifica ADR085: B1–B3 permiten pendientes legítimos sin convertirlos en C; B4 exige valoraciones anuales aplicables. La falta de decisión bloquea cierre y se explica, nunca se rellena automáticamente. Corregir texto observado invalida atribución y requiere reconfirmarla; interfaz no debe anunciarla confirmada mientras está pendiente. No se modificaron estas reglas para completar QA.
+
+## ADR-153 — Reanálisis explícito, recursos confirmados y cierre QA aislado (2026-10-15)
+
+Los nuevos planes identifican resource_policy_version1: no se selecciona TIC como oportunidad curricular principal sin dispositivo confirmado; el acceso sin internet sigue permitido. La cobertura anual y cambios focales comparten la política. No se reescriben competencias/criterios de años históricos ni se tocan otras competencias para cubrir una condición de recursos.
+
+Reanalizar no elimina decisiones silenciosamente: advertencia, reconocimiento de revisión vigente y texto anterior guardado en metadatos; letra y motivo permanecen provisionales y necesitan confirmación docente con huellas actuales. El nombre se recupera solo para el marcador inequívoco del sujeto, manteniendo anonimización del proveedor y referencias ambiguas neutrales. Mi aula deriva competencias de la misma lectura efectiva de atribuciones que Evaluar/Trayectoria. Sin tablas/migraciones nuevas.
+
+El caso reducido de cierre anual complementa, no sustituye, el aula20:12 decisiones sustentadas en datos ficticios por flujos reales, B1–B4 y reapertura/recierre versionados. No SQL de notas. Documentos nuevos pueden corregir paginación con revisión layout2; los bytes ya confirmados se conservan. No convertir falta de evidencia en C ni permitir edición diaria individual.
+
+El usuario aclaró explícitamente usar la misma cuenta y una base QA separada. Configuración actual compartida no autoriza escrituras de prueba cloud. Preparar proyecto separado antes de validar Auth/RLS con cuentas ficticias. No cambiar Producción ni sus variables; solo Preview. Detalles, límites y rollback en informe QA integral actualizado.

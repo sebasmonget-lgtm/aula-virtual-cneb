@@ -41,13 +41,14 @@ export function assessmentStudentNames(students) {
     .flatMap(name=>[name,name.normalize('NFD').replace(/\p{M}/gu,'')]))];
 }
 
-export function sanitizeEvidenceForAssessment(evidence, knownNames = []) {
-  return { observed_on: evidenceDay(evidence), activity_title: neutralizeAssessmentText(evidence.activity_title, knownNames), criterion_text: neutralizeAssessmentText(evidence.criterion_text, knownNames), observation_status: evidence.observation_status, observation_note: neutralizeAssessmentText(evidence.observation_text, knownNames) ?? null, media_available: Boolean(evidence.media_available) };
+export function sanitizeEvidenceForAssessment(evidence, knownNames = [], currentNames = []) {
+  const safe = value => typeof value !== 'string' ? value : neutralizeAssessmentText(neutralizeAssessmentText(value, currentNames).replaceAll('[estudiante]', '[estudiante_actual]'), knownNames);
+  return { observed_on: evidenceDay(evidence), activity_title: safe(evidence.activity_title), criterion_text: safe(evidence.criterion_text), observation_status: evidence.observation_status, observation_note: safe(evidence.observation_text) ?? null, media_available: Boolean(evidence.media_available) };
 }
 
 export function buildAssessmentInput({ age, competencyId, evidenceHistory, criteriaHistory = [], assessmentMaster, priorTeacherConclusions, contextChanges }) {
   return { workflow: "assessment", age, student_id: "current_student", competency_ids: [competencyId],
-    teacher_request: "Organiza únicamente lo que muestran estas observaciones reales. Resume avances, patrones, contradicciones y qué falta observar. Lo previsto en una actividad no es un hecho ocurrido. No asignes, sugieras, predigas ni menciones AD/A/B/C. La valoración pertenece a la profesora. Usa frases cortas y palabras sencillas. Si la información no alcanza, dilo claramente.",
+    teacher_request: "Organiza únicamente lo que muestran estas observaciones reales. Resume avances, patrones, contradicciones y qué falta observar. Lo previsto en una actividad no es un hecho ocurrido. No asignes, sugieras, predigas ni menciones AD/A/B/C. La valoración pertenece a la profesora. Usa frases cortas y palabras sencillas. Al referirte al niño evaluado usa [estudiante_actual]; [estudiante] en una fuente puede ser otro niño, no atribuyas esa actuación al evaluado. Si la información no alcanza, dilo claramente.",
     evidence_history: evidenceHistory, criteria_history: criteriaHistory, assessment_master: assessmentMaster,
     ...(priorTeacherConclusions ? { prior_teacher_conclusions: priorTeacherConclusions } : {}),
     ...(contextChanges ? { context_changes: contextChanges } : {}) };
