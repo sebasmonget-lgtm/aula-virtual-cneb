@@ -179,3 +179,9 @@ Rollback: revertir el commit de producto de esta rama y volver al Preview anteri
 14. ¿Qué falta para Producción? Resolver QA06/20–22; verificar aislamiento y Auth/RLS/medios con cuenta ficticia cloud; ejecutar B4 positivo con decisiones docentes trazables; Word render/ZIP; regresión de red, hardware y carga, y ampliar muestra pedagógica/contextos.
 
 Cadena demostrada parcialmente: Diagnóstico → Mi año → Proyecto → Plan Maestro → diarias → observaciones → evaluación → conclusiones → informes → cierreB1/reapertura → continuidadB2/B3 → rechazo legítimoB4. **No se afirma cadena anual completa aprobada.**
+
+## Publicación exclusivamente Preview
+
+Producto: `c9ca5fea3301085cf595043d8d80d74cffb2d96b`, subido a GitHub en `codex/qa-integral-anual-20261015`. [Preview verificado](https://ayni-aula-staging-9860ndjvv-ayni4.vercel.app/), deployment `dpl_9sKEp6khmYnaHFCQRhUEwmzV89nx`, READY, target null y SHA exacto. Build cloud PASS. Dieciocho controles smoke PASS: recursos200 y APIs privadas401 sin sesión, sin escrituras pedagógicas. Navegador muestra Bienvenida a Ayni y campos de acceso. [Recibo](evidence/qa-integral-20261015/preview.json), [smoke](evidence/qa-integral-20261015/preview-smoke.json), [captura cloud](evidence/qa-integral-20261015/preview-login.png).
+
+Producción reconsultada tras publicar: mismo deployment `dpl_H19YWzRdGjkgh8y72QAd1qBty7Mf` y SHA `9a0920230350cd6b9050f35683a1f35d459e78c7`. No promoción, reasignación de alias ni migración. Tres servidores locales apagados con cierre de PGlite; bases y registros ficticios conservados. La pestaña cloud se deja abierta como resultado. El recibo documental se confirma después del producto y no cambia el SHA desplegado.

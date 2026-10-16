@@ -1,0 +1,133 @@
+{
+  "phase": "preview",
+  "url": "https://ayni-aula-staging-9860ndjvv-ayni4.vercel.app",
+  "pass": true,
+  "checks": [
+    {
+      "path": "/workshops/tiras-de-mensajes.png",
+      "method": "GET",
+      "status": 200,
+      "expected": 200,
+      "pass": true
+    },
+    {
+      "path": "/workshops/cuidamos-los-libros.png",
+      "method": "GET",
+      "status": 200,
+      "expected": 200,
+      "pass": true
+    },
+    {
+      "path": "/api/workshop-library",
+      "method": "GET",
+      "status": 401,
+      "expected": 401,
+      "pass": true
+    },
+    {
+      "path": "/api/workshop-library",
+      "method": "POST",
+      "status": 401,
+      "expected": 401,
+      "pass": true
+    },
+    {
+      "path": "/workshops/cuento-la-semilla.png",
+      "method": "GET",
+      "status": 200,
+      "expected": 200,
+      "pass": true
+    },
+    {
+      "path": "/workshops/tarjetas-cantidades.png",
+      "method": "GET",
+      "status": 200,
+      "expected": 200,
+      "pass": true
+    },
+    {
+      "path": "/workshops/tarjetas-formas.png",
+      "method": "GET",
+      "status": 200,
+      "expected": 200,
+      "pass": true
+    },
+    {
+      "path": "/workshops/registro-exploracion.png",
+      "method": "GET",
+      "status": 200,
+      "expected": 200,
+      "pass": true
+    },
+    {
+      "path": "/api/library/resources",
+      "method": "GET",
+      "status": 401,
+      "expected": 401,
+      "pass": true
+    },
+    {
+      "path": "/api/documents",
+      "method": "GET",
+      "status": 401,
+      "expected": 401,
+      "pass": true
+    },
+    {
+      "path": "/api/today/execution",
+      "method": "POST",
+      "status": 401,
+      "expected": 401,
+      "pass": true
+    },
+    {
+      "path": "/api/ordinary-observations",
+      "method": "POST",
+      "status": 401,
+      "expected": 401,
+      "pass": true
+    },
+    {
+      "path": "/api/school-calendar",
+      "method": "GET",
+      "status": 401,
+      "expected": 401,
+      "pass": true
+    },
+    {
+      "path": "/competencies/compact/com_lectura.svg",
+      "method": "GET",
+      "status": 200,
+      "expected": 200,
+      "pass": true
+    },
+    {
+      "path": "/",
+      "method": "GET",
+      "status": 200,
+      "expected": 200,
+      "pass": true
+    },
+    {
+      "path": "/health",
+      "method": "GET",
+      "status": 200,
+      "expected": 200,
+      "pass": true
+    },
+    {
+      "path": "/api/auth/config",
+      "method": "GET",
+      "status": 200,
+      "expected": 200,
+      "pass": true
+    },
+    {
+      "path": "/api/auth/session",
+      "method": "GET",
+      "status": 401,
+      "expected": 401,
+      "pass": true
+    }
+  ]
+}
