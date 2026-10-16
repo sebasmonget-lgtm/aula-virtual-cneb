@@ -18,6 +18,21 @@ for(const mayLeave of [false,true])test(`cambio de bimestre: ${mayLeave?'limpia 
 });
 
 const reviewSource=await readFile(new URL('../features/dashboard/components/competency-period-review.tsx',import.meta.url),'utf8');
+const familySource=await readFile(new URL('../features/dashboard/components/period-batch-panel.tsx',import.meta.url),'utf8');
+test('cambiar de informe conserva las ediciones locales de todos los niños sin guardar ni generar',()=>{
+  const select=familySource.match(/function selectFamilyStudent\(id:string\)\{[^\n]+\}/)?.[0].replace('(id:string)','(id)');
+  assert.ok(select);
+  const items=[{student_id:'ana',proposal:{introduction:'Edición docente sin guardar'}},{student_id:'diego',proposal:{introduction:'Texto anterior'}}];
+  const before=structuredClone(items),state={student:'ana',roster:true};
+  runInNewContext(`(${select})('diego')`,{items,setFamilyStudent:id=>{state.student=id;},setFamilyRoster:value=>{state.roster=value;}});
+  assert.equal(state.student,'diego');assert.equal(state.roster,false);assert.deepEqual(items,before);
+});
+test('el selector de informes conserva los textos guardados de niños fuera de la matrícula activa',()=>{
+  const expression=familySource.match(/const familyStudents=([^;]+);/)?.[1];
+  assert.ok(expression);
+  const result=runInNewContext(expression,{students:[{id:'activo'}],items:[{student_id:'activo'},{student_id:'retirado'}]});
+  assert.deepEqual(Array.from(result,item=>item.id),['activo','retirado']);
+});
 const selectStudent=reviewSource.match(/function selectStudent\(id:string\)\{[^\n]+\}/)?.[0].replace('(id:string)','(id)');
 assert.ok(selectStudent,'La lista de estudiantes debe proteger la valoración abierta.');
 for(const mayLeave of [false,true])test(`lista de estudiantes: ${mayLeave?'cambia y limpia el detalle':'cancelar conserva el borrador abierto'}`,()=>{
