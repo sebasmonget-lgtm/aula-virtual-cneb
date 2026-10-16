@@ -10,9 +10,11 @@ import {
   completeDiagnosticReview, loadDiagnostics, saveDiagnosticObservation, saveLocalProfile,
    type DiagnosticWorkspace, type LocalDashboard,
 } from "@/src/lib/local-database";
-import { AsyncButton, LoadingState, WorkflowFeedback } from "./workflow-ui";
+import { AsyncButton, LoadingState, PageIntro, WorkflowFeedback } from "./workflow-ui";
 import { ClassroomSettings } from "./classroom-settings";
 import { useUnsavedWork } from "@/src/lib/use-unsaved-work";
+
+import styles from "./classroom-surfaces.module.css";
 
 const states = [
   ["observed", "Lo observé"],
@@ -79,10 +81,11 @@ export function InstitutionProfile({ dashboard, onSaved, onContinue }: {
     } finally { setWorking(false); }
   }
 
-  return <div className="space-y-6">
-    <div><h1 className="mt-1 text-3xl font-bold tracking-tight">Datos del colegio y aula</h1><p className="mt-2 text-muted-foreground">Escribe estos datos una vez. Aparecerán en tus documentos.</p></div>
+  return <div className={`${styles.surface} space-y-6`}>
+    <div className={styles.intro}><PageIntro title="Datos del colegio y aula" description="Escribe estos datos una vez. Aparecerán en tus documentos." icon={School} illustration="/ayni-profesora.webp" /></div>
     <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
-      <section className="diagnostic-panel p-5 md:p-7">
+      <section className={`${styles.formPanel} diagnostic-panel p-5 md:p-7`}>
+        <div className={styles.sectionHeading}><School aria-hidden="true"/><h2>Conocemos tu aula</h2></div>
         <div className="grid gap-5 sm:grid-cols-2">
           <Field label="Institución" value={institutionName} onChange={setInstitutionName} />
           <Field label="Docente" value={teacherName} onChange={setTeacherName} />
@@ -94,7 +97,7 @@ export function InstitutionProfile({ dashboard, onSaved, onContinue }: {
         </div>
         <div className="mt-6 flex flex-wrap items-center gap-3"><AsyncButton busy={working} busyLabel="Guardando datos..." onClick={save}><Save /> Guardar datos</AsyncButton>{message && <WorkflowFeedback tone={message.startsWith("Datos del colegio guardados") ? "success" : "error"}>{message}</WorkflowFeedback>}</div>
       </section>
-      <aside className="rounded-2xl border border-[#dce9f2] bg-[#eef8fb] p-5">
+      <aside className={`${styles.logoPanel} rounded-2xl border p-5`}>
         <div className="flex items-center gap-3"><div className="grid size-16 place-items-center overflow-hidden rounded-2xl bg-[#087d96] text-white">{p.logo_url ? <Image unoptimized src={p.logo_url} alt="Logo del colegio" width={64} height={64} className="size-full object-contain bg-white" /> : <School className="size-8" />}</div><div><p className="font-bold">Logo del colegio</p><p className="text-xs text-muted-foreground">Aparecerá en tus documentos Word.</p></div></div>
         <label className="mt-5 block text-sm font-semibold">Subir una imagen del logo
           <input ref={logoInputRef} className="mt-2 block w-full text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-white file:px-3 file:py-2 file:font-semibold file:text-[#075d70]" type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => { setLogoFile(event.target.files?.[0] ?? null); if (event.target.files?.[0]) setCreateLogo(false); }} />

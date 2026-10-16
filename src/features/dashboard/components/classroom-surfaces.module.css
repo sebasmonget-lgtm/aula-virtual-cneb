@@ -1,0 +1,94 @@
+.surface {
+  min-width: 0;
+  color: #172b52;
+}
+
+.intro {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 24px;
+  border: 1px solid #cce6e5;
+  border-radius: 24px;
+  background: #eaf7f5;
+}
+
+.intro > :first-child { flex: 1; min-width: 0; }
+.intro :global(.ayni-page-intro) { align-items: center; gap: 16px; border: 0; padding: 0; background: transparent; }
+.intro :global(.ayni-page-icon) { background: #d4eee6; color: #176b59; }
+.intro :global(.ayni-page-description) { color: #466b74; }
+
+.summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  padding: 16px 20px;
+  border-radius: 16px;
+  background: #f0f5fc;
+  color: #435d7d;
+  font-size: 14px;
+}
+.summary span { display: flex; align-items: center; gap: 8px; }
+.summary strong { color: #172b52; font-size: 18px; font-variant-numeric: tabular-nums; }
+.summary svg { width: 20px; height: 20px; color: #087d96; }
+.summary span:last-child svg { color: #7855ab; }
+
+.studentCard { transition: border-color 160ms ease, background-color 160ms ease; }
+.studentCard:hover { background-color: #f2faf8; }
+.studentStatus { max-width: 150px; }
+.profileHeader {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px 24px;
+  padding: 24px;
+  border: 1px solid #cce6e5;
+  border-radius: 24px;
+  background: #eaf7f5;
+}
+.profileHeader h1 { overflow-wrap: anywhere; text-wrap: balance; }
+.profileMeta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.profileMeta span { padding: 6px 12px; border-radius: 12px; background: #fff; color: #466b74; font-size: 14px; }
+.profileHeader > p:last-child { grid-column: 1 / -1; }
+.surface :global([role="tablist"]) { border-radius: 16px; background: #edf4fa; padding: 6px; }
+.surface :global([role="tabpanel"]) > article { border-color: #d6e5ef; }
+
+.sectionHeading { display: flex; align-items: center; gap: 12px; }
+.sectionHeading > svg { width: 40px; height: 40px; flex-shrink: 0; padding: 10px; border-radius: 14px; background: #d8eee7; color: #176b59; }
+.sectionHeading h2, .sectionHeading h3 { font-weight: 800; }
+.trajectory section { overflow: hidden; border-color: #d6e5ef; }
+.trajectory section > .sectionHeading { margin: -20px -20px 16px; padding: 16px 20px; background: #eaf7f2; }
+.trajectory section:nth-child(even) > .sectionHeading { background: #f2edfc; }
+.trajectory section:nth-child(even) > .sectionHeading > svg { background: #e7def7; color: #6e4598; }
+.trajectory section:nth-child(3n) > .sectionHeading { background: #fff6e5; }
+.trajectory article { border-width: 0 0 1px; border-radius: 0; padding: 8px 0 16px; }
+.trajectory article:last-child { border: 0; padding-bottom: 0; }
+.trajectory details summary { min-height: 44px; padding: 12px 0; }
+.logoPanel { align-self: start; border-color: #e1d9ef; background: #f4f0fc; }
+.formPanel { border-color: #d6e5ef; }
+.formPanel > .sectionHeading { margin-bottom: 24px; }
+
+.surface ::selection { background: #c8eceb; color: #172b52; }
+.surface button:focus-visible, .surface summary:focus-visible { outline: 3px solid #087d96; outline-offset: 3px; }
+
+@media (max-width: 600px) {
+  .intro, .profileHeader { padding: 20px; border-radius: 20px; }
+  .intro > button { width: 100%; justify-content: center; }
+  .profileHeader { grid-template-columns: minmax(0, 1fr); }
+  .studentCard { flex-wrap: wrap; }
+  .studentStatus { max-width: none; width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 8px; text-align: left; }
+  .studentStatus > :last-child { margin-top: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .studentCard { transition: none; }
+}
+
+.matrixIntro { padding: 18px 20px; border-radius: 16px; background: #eaf7f5; }
+.matrixIntro p { max-width: 70ch; color: #466b74; }
+.matrixLegend { display: flex; flex-wrap: wrap; gap: 12px 24px; padding: 14px 18px; border-radius: 14px; background: #fff8e9; font-size: 14px; }
+.matrix :global(.journey-matrix-scroll) { scrollbar-color: #719ebf #edf5fb; }
+.matrix th[scope="row"] { background: #f6fafc; }
+.matrix th[scope="col"] { background: #edf6fa; }
+.matrix td button[aria-pressed="true"] { background: #e2f3f4; outline: 2px solid #087d96; outline-offset: -2px; }
