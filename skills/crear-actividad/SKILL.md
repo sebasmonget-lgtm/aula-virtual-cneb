@@ -5,7 +5,7 @@ description: Preparar una actividad de Educación Inicial desde una fila confirm
 
 # Crear actividad
 
-Recibe el Plan Maestro confirmado, una fila de su mapa, las filas anterior y siguiente, la posición de la actividad, el contexto pertinente actualizado del aula y las tarjetas CNEB de la edad. Devuelve solo el JSON exigido por `output_schema`. Conserva el propósito específico, la competencia, el criterio y la evidencia esperada de la fila; la docente puede modificarlos después de forma explícita. No reprogrames todo el proyecto ni desarrolles las otras actividades.
+Recibe el Plan Maestro confirmado, una fila de su mapa, las filas anterior y siguiente, la posición de la actividad, el contexto pertinente actualizado del aula y las tarjetas CNEB de la edad. Devuelve solo el JSON exigido por `output_schema`. Conserva el propósito específico, la competencia, el criterio y la evidencia esperada de la fila. Una actividad confirmada no se modifica individualmente; los cambios de un proyecto futuro se preparan como una nueva secuencia completa con aprobación docente e historia protegida. No reprogrames todo el proyecto ni desarrolles las otras actividades.
 
 `curriculum.target_age` es la edad del aula. Si `curriculum.confirmed_competency_ids` contiene un ID, conserva exactamente ese ID y devuelve `competency_status: "confirmed"`; no lo reemplaces ni lo conviertas en pendiente.
 
@@ -21,3 +21,11 @@ En cada campo usa frases cortas, acciones concretas y una idea por oración. Sep
 ## Guía para desarrollar la actividad en Hoy
 En child_actions usa exactamente tres apartados rotulados «Inicio:», «Desarrollo:» y «Cierre:», con una o dos frases breves de acciones infantiles en cada uno. En mediation usa los mismos tres rótulos, con una o dos indicaciones prácticas para la profesora por momento: qué ofrecer, preguntar o hacer ahora. Una pregunta concreta es suficiente; evita listas de preguntas equivalentes, teoría y recordatorios repetidos.
 Cada apartado corresponde a ese momento, no repitas Inicio/Desarrollo/Cierre dentro de otro apartado. Conserva la coherencia entre momentos y el propósito, criterio y evidencia heredados. meaningful_situation presenta la invitación inicial; closure_or_continuity conserva el cierre y la continuidad; teacher_preparation indica lo necesario antes de comenzar. evidence_opportunities explica brevemente qué podría observar, sin inventar registros ni logros. La aplicación presenta estas indicaciones en Hoy; Word conserva íntegros los campos formales de la actividad.
+
+## Revisión de claridad antes de responder
+
+- Cada indicación debe permitir actuar ahora: qué material ofrecer, qué intervención hacer o qué pregunta usar en esa situación concreta. Evita fórmulas vacías como «desarrollar la competencia» o «fomentar el aprendizaje significativo» como instrucciones.
+- No encadenes dos paráfrasis de una misma acción: «dice qué hará el personaje; comenta qué podría hacer» expresa una sola idea. Escríbela una vez. Las acciones de la docente y las de los niños deben complementarse, no copiarse.
+- En evidence_opportunities concreta qué actuación o expresión podría registrar la profesora y en qué situación. No copies el criterio ni lo reformules dos veces. Los ejemplos, si son necesarios, son posibilidades y no hechos ocurridos ni frases que el niño deba repetir.
+- Comprueba que cada momento continúe el anterior, que los materiales y apoyos estén disponibles según el contexto confirmado y que las frases sean completas y naturales. No añadas recursos, competencias ni actuaciones para rellenar apartados.
+- La revisión de redacción no autoriza alterar propósito, criterio ni evidencia heredados para hacerlos encajar con un texto nuevo.

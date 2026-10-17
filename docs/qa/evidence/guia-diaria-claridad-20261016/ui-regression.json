@@ -1,0 +1,50 @@
+[
+  {
+    "compact": false,
+    "variant": "ausente",
+    "criterionCount": 1,
+    "evidenceCount": 0,
+    "overflow": false,
+    "linkedCallback": true
+  },
+  {
+    "compact": false,
+    "variant": "igual",
+    "criterionCount": 1,
+    "evidenceCount": 0,
+    "overflow": false,
+    "linkedCallback": true
+  },
+  {
+    "compact": false,
+    "variant": "propia",
+    "criterionCount": 1,
+    "evidenceCount": 1,
+    "overflow": false,
+    "linkedCallback": true
+  },
+  {
+    "compact": true,
+    "variant": "ausente",
+    "criterionCount": 1,
+    "evidenceCount": 0,
+    "overflow": false,
+    "linkedCallback": true
+  },
+  {
+    "compact": true,
+    "variant": "igual",
+    "criterionCount": 1,
+    "evidenceCount": 0,
+    "overflow": false,
+    "linkedCallback": true
+  },
+  {
+    "compact": true,
+    "variant": "propia",
+    "criterionCount": 1,
+    "evidenceCount": 1,
+    "overflow": false,
+    "linkedCallback": true
+  }
+]
