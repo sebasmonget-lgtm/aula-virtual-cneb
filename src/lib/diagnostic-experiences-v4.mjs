@@ -8,9 +8,9 @@ import { cardIsApplicable } from "./ai-context-builder-v4.mjs";
 import { loadDiagnosticCatalog } from "./diagnostic-catalog-v4.mjs";
 import developmentCatalog from "../../knowledge/diagnostic-experiences/catalog.json" with { type: "json" };
 
-export const DIAGNOSTIC_CATALOG_VERSION = "diagnostic-v4.4";
+export const DIAGNOSTIC_CATALOG_VERSION = developmentCatalog.version;
 
-// The versioned JSON is the single editorial source; fixtures are explicitly marked development-only.
+// Keep the legacy export name for compatibility; the JSON carries its current editorial status.
 export const DIAGNOSTIC_DEVELOPMENT_TEMPLATES = Object.freeze(developmentCatalog.experiences);
 
 export class DiagnosticExperienceError extends Error {
@@ -21,21 +21,23 @@ export function buildDiagnosticExperienceCatalog(knowledgeBase, { age, castellan
   if (![3, 4, 5].includes(Number(age))) throw new DiagnosticExperienceError("invalid_age", "El aula debe ser de 3, 4 o 5 años.");
   const cards = new Map(knowledgeBase.competencyCards.map((card) => [card.id, card]));
   const applicability = { castellanoL2Applicable, religionApplicable };
-  const document = catalogDocument ?? { version: DIAGNOSTIC_CATALOG_VERSION, status: "development_fixture", experiences: DIAGNOSTIC_DEVELOPMENT_TEMPLATES };
+  const document = catalogDocument ?? developmentCatalog;
   return document.experiences.filter((template) => template.active && (!template.ages || template.ages.includes(Number(age))))
     .sort((a,b) => a.sort_order - b.sort_order || a.id.localeCompare(b.id)).map((template) => {
     const aspects = template.aspects.flatMap((aspect) => {
       const card = cards.get(aspect.competencyId);
       if (!card || !card.runtime_selectable_by_age?.[String(age)] || !cardIsApplicable(card, applicability)) return [];
-      const ageReference = card.ages?.[String(age)]?.observable_patterns?.[aspect.patternIndex];
+      const ageReference = card.ages?.[String(age)]?.observable_patterns?.[aspect.patternIndexByAge?.[String(age)] ?? aspect.patternIndex];
       if (!ageReference) throw new DiagnosticExperienceError("missing_age_reference", "Falta un referente para esta edad.");
       return [{ id: aspect.id, competency_id: card.id, competency_name: card.official_name,
         area_name: card.area_name, label: aspect.label, prompt: aspect.prompt,
-        examples: aspect.examples, age_reference: ageReference }];
+        examples: aspect.examples, age_reference: ageReference,
+        ...(aspect.teacher_steps ? { teacher_steps: aspect.teacher_steps, look_for: aspect.look_for, moment_title: aspect.moment_title } : {}) }];
     });
     return { id: template.id, catalog_version: document.version, catalog_status: document.status, title: template.title,
-      explanation: template.explanation, teacher_instructions: template.teacher_instructions, examples: template.examples,
-      pedagogical_blocks: diagnosticPedagogicalBlocks({ id: template.id, teacher_instructions: template.teacher_instructions, aspects }),
+      explanation: template.explanation, teacher_instructions: template.teacher_instructions_by_age?.[String(age)] ?? template.teacher_instructions,
+      age_support: template.age_support?.[String(age)] ?? null, examples: template.examples,
+      pedagogical_blocks: diagnosticPedagogicalBlocks({ id: template.id, teacher_instructions: template.teacher_instructions_by_age?.[String(age)] ?? template.teacher_instructions, aspects }),
       aspects, competencies: [...new Map(aspects.map((aspect) => [aspect.competency_id,
         { id: aspect.competency_id, name: aspect.competency_name }])).values()] };
   }).filter((experience) => experience.aspects.length > 0);

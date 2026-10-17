@@ -1,0 +1,354 @@
+[
+  {
+    "experience": "getting_to_know_us",
+    "criterion": "Elige dónde jugar y muestra qué le interesa.",
+    "cue": "Observa cómo expresa su preferencia y qué hace después de elegir. Puede comunicarla con palabras, gestos o acercándose.",
+    "cueOccurrences": 1,
+    "examples": [
+      "Señala los bloques, se acerca y empieza a construir.",
+      "Dice «quiero cocinar» y busca los utensilios del juego de roles."
+    ],
+    "moment": "Momento 1 de 4",
+    "steps": [
+      "Presenta dos o tres espacios preparados: bloques, dibujo o juego de roles.",
+      "Invita a elegir uno. Observa antes de ofrecer ayuda o sugerir una opción."
+    ],
+    "title": "Elegimos dónde jugar"
+  },
+  {
+    "experience": "getting_to_know_us",
+    "criterion": "Cuenta lo que quiere hacer y atiende a la respuesta de otro niño.",
+    "cue": "Escucha si logra comunicar su idea a otra persona y responder a lo que esta dice. No exijas una explicación larga.",
+    "cueOccurrences": 1,
+    "examples": [
+      "Dice «hagamos una casa» y responde «aquí» cuando le preguntan dónde.",
+      "Escucha «necesitamos una puerta» y propone usar una caja."
+    ],
+    "moment": "Momento 2 de 4",
+    "steps": [
+      "Acércate a dos niños que estén jugando y pregunta qué quieren hacer.",
+      "Deja que se respondan. Si hace falta, pregunta: «¿Qué te propone tu compañero?»."
+    ],
+    "title": "Compartimos nuestras ideas de juego"
+  },
+  {
+    "experience": "getting_to_know_us",
+    "criterion": "Propone o acepta una manera de compartir el juego.",
+    "cue": "Mira qué propone o acepta para que ambos puedan jugar y cómo pone en práctica ese acuerdo. Anota también el apoyo que necesitó.",
+    "cueOccurrences": 1,
+    "examples": [
+      "Propone «tú llevas los bloques y después yo» y espera a que vuelva el camión.",
+      "Acepta usar juntos una caja y acerca materiales para construir con su compañero."
+    ],
+    "moment": "Momento 3 de 4",
+    "steps": [
+      "Si surge una necesidad de compartir, descríbela sin decidir por ellos: «Los dos quieren ese camión».",
+      "Pregunta qué podrían hacer y acompaña el acuerdo que elijan. No provoques un conflicto para observar."
+    ],
+    "title": "Buscamos una forma de compartir"
+  },
+  {
+    "experience": "getting_to_know_us",
+    "criterion": "Se acerca a otros niños y participa en el juego a su manera.",
+    "cue": "Observa cómo busca participar o invita a otra persona, y qué respuesta encuentra. El tiempo que tarda en acercarse no define su aprendizaje.",
+    "cueOccurrences": 1,
+    "examples": [
+      "Se acerca al restaurante y pregunta «¿puedo ser quien cocina?».",
+      "Hace un lugar junto a su construcción y le ofrece bloques a otro niño."
+    ],
+    "moment": "Momento 4 de 4",
+    "steps": [
+      "Observa si alguien quiere acercarse a un juego que ya comenzó. Dale tiempo para mirar.",
+      "Si necesita apoyo, ayúdalo a expresar que quiere participar. Respeta que prefiera seguir observando."
+    ],
+    "title": "Nos sumamos al juego de otros"
+  },
+  {
+    "experience": "movement_and_art",
+    "criterion": "Prueba distintas maneras de moverse durante el juego.",
+    "cue": "Observa cómo coordina su cuerpo al desplazarse, detenerse o cambiar de dirección. Describe el movimiento concreto, sin comparar rapidez entre niños.",
+    "cueOccurrences": 1,
+    "examples": [
+      "Corre por el espacio libre y reduce la velocidad al acercarse a otro niño.",
+      "Camina, se agacha para recoger una tela y vuelve a ponerse de pie."
+    ],
+    "moment": "Momento 1 de 4",
+    "steps": [
+      "Delimita un espacio despejado. Invita a desplazarse sin chocar y a elegir sus movimientos.",
+      "Dales tiempo para probar; acompaña a quien necesite otro ritmo o una alternativa de movimiento."
+    ],
+    "title": "Exploramos cómo movernos"
+  },
+  {
+    "experience": "movement_and_art",
+    "criterion": "Cambia cómo se mueve cuando el juego lo requiere.",
+    "cue": "Mira cómo adapta su postura, equilibrio o recorrido ante una dificultad. Registra si lo hizo solo o qué ayuda pidió.",
+    "cueOccurrences": 1,
+    "examples": [
+      "Se agacha para pasar bajo una tela sostenida por la docente.",
+      "Al perder el equilibrio sobre una línea, separa los brazos y vuelve a probar."
+    ],
+    "moment": "Momento 2 de 4",
+    "steps": [
+      "Propón un recorrido con una línea en el piso y cojines bajos y firmes; ofrece también un paso libre.",
+      "Invita a elegir por dónde pasar y a volver a intentar si lo desean. Acompaña sin mover su cuerpo por ellos."
+    ],
+    "title": "Elegimos por dónde pasar"
+  },
+  {
+    "experience": "movement_and_art",
+    "criterion": "Combina materiales para crear algo propio.",
+    "cue": "Observa qué posibilidades descubre al probar y combinar materiales. La producción no necesita parecerse a un objeto reconocible.",
+    "cueOccurrences": 1,
+    "examples": [
+      "Arruga papel para darle volumen y lo une a una tela con cinta.",
+      "Prueba líneas anchas y delgadas con el crayón antes de elegir cómo continuar."
+    ],
+    "moment": "Momento 3 de 4",
+    "steps": [
+      "Después del movimiento, ofrece papel, telas, crayones y cinta de papel al alcance.",
+      "Invita a probar combinaciones y crear algo propio. No presentes un modelo para copiar."
+    ],
+    "title": "Exploramos materiales para crear"
+  },
+  {
+    "experience": "movement_and_art",
+    "criterion": "Usa movimientos o materiales para mostrar lo que imagina.",
+    "cue": "Escucha qué significado le da a su creación o a su movimiento. No atribuyas una intención que el niño no haya mostrado o explicado.",
+    "cueOccurrences": 1,
+    "examples": [
+      "Mueve una tela en el aire y dice «es el viento que empuja mi barco».",
+      "Señala las marcas de su papel y explica «aquí iba saltando»."
+    ],
+    "moment": "Momento 4 de 4",
+    "steps": [
+      "Invita a mostrar una creación o un movimiento que quieran compartir.",
+      "Pregunta qué quisieron expresar y acepta que lo cuenten, lo señalen o lo representen de nuevo."
+    ],
+    "title": "Compartimos lo que imaginamos"
+  },
+  {
+    "experience": "count_and_locate",
+    "criterion": "Cuenta o reúne objetos para resolver una situación de juego.",
+    "cue": "Mira qué estrategia usa para repartir: entregar uno a uno, reunir objetos o contar. Registra lo que hace, aunque el conteo aún no sea estable.",
+    "cueOccurrences": 1,
+    "examples": [
+      "Entrega un vehículo a cada compañero y vuelve a buscar otro para quien aún no tiene.",
+      "Cuenta los muñecos, mira a los participantes y dice «me falta uno»."
+    ],
+    "moment": "Momento 1 de 4",
+    "steps": [
+      "Prepara un muñeco o vehículo por participante y una cesta con piezas grandes para construir caminos.",
+      "Invita a repartir un muñeco o vehículo a cada uno. Pregunta cómo pueden saber si todos tienen."
+    ],
+    "title": "Repartimos los materiales del juego"
+  },
+  {
+    "experience": "count_and_locate",
+    "criterion": "Nota si un grupo de objetos tiene más, menos o la misma cantidad.",
+    "cue": "Observa cómo relaciona las colecciones para decidir si sobra, falta o alcanza. Escucha sus palabras y mira si empareja o cuenta objetos.",
+    "cueOccurrences": 1,
+    "examples": [
+      "Coloca un muñeco junto a cada vehículo y señala el que quedó sin vehículo.",
+      "Acerca dos grupos de piezas, los cuenta y comenta que uno tiene más."
+    ],
+    "moment": "Momento 2 de 4",
+    "steps": [
+      "Revisa con el grupo los vehículos y las piezas que reunieron para jugar.",
+      "Si aparece una diferencia, pregunta: «¿Cómo podemos saber si alcanzan?». Deja que comparen a su manera."
+    ],
+    "title": "Comprobamos si los materiales alcanzan"
+  },
+  {
+    "experience": "count_and_locate",
+    "criterion": "Coloca objetos o explica por dónde pasar en el recorrido.",
+    "cue": "Mira cómo usa las posiciones y las relaciones entre los objetos para orientar el recorrido. Anota sus palabras, señalamientos o desplazamientos.",
+    "cueOccurrences": 1,
+    "examples": [
+      "Coloca la parada detrás de una caja y lleva el muñeco hasta ella.",
+      "Señala un espacio entre dos bloques y dice «por aquí pasa el carro»."
+    ],
+    "moment": "Momento 3 de 4",
+    "steps": [
+      "Invita a colocar cajas o bloques grandes para hacer un recorrido con inicio y llegada.",
+      "Pide que muestren por dónde irá el muñeco y dónde colocarán una parada. Acepta explicaciones con gestos."
+    ],
+    "title": "Construimos un camino para el muñeco"
+  },
+  {
+    "experience": "count_and_locate",
+    "criterion": "Prueba otro camino cuando algo impide pasar.",
+    "cue": "Observa qué cambia en el recorrido para llegar al destino y cómo comprueba su idea. No confundas una ruta diferente con un error.",
+    "cueOccurrences": 1,
+    "examples": [
+      "Mueve dos bloques y hace pasar el vehículo por el nuevo espacio.",
+      "Prueba un camino más largo alrededor de la caja y logra llegar a la parada."
+    ],
+    "moment": "Momento 4 de 4",
+    "steps": [
+      "Cuando el recorrido esté listo, avisa que una parte estará cerrada y coloca una caja sin riesgo de caída.",
+      "Pregunta cómo podría llegar el muñeco por otro lado. Deja que prueben antes de sugerir una solución."
+    ],
+    "title": "Buscamos otro camino"
+  },
+  {
+    "experience": "explore_our_world",
+    "criterion": "Pregunta por algo que ve o le llama la atención.",
+    "cue": "Escucha las preguntas que surgen de lo que ve o prueba. Una pregunta puede expresarse con pocas palabras, un gesto o una comparación.",
+    "cueOccurrences": 1,
+    "examples": [
+      "Mira una piedra en el fondo y pregunta «¿por qué se fue abajo?».",
+      "Sostiene una tapa sobre el agua y pregunta «¿esta también se hunde?»."
+    ],
+    "moment": "Momento 1 de 4",
+    "steps": [
+      "Muestra una bandeja con poca agua y objetos grandes seguros, como tapas grandes, piedras lisas y bloques.",
+      "Deja que los miren y exploren. Pregunta qué les da curiosidad, sin adelantar cuáles flotarán."
+    ],
+    "title": "Nos preguntamos qué pasará en el agua"
+  },
+  {
+    "experience": "explore_our_world",
+    "criterion": "Mira o toca dos materiales y nota alguna diferencia.",
+    "cue": "Observa qué diferencia reconoce al explorar los objetos y cómo la comunica. Registra sus hallazgos sin convertirlos en una explicación científica que aún no dio.",
+    "cueOccurrences": 1,
+    "examples": [
+      "Señala la piedra y la tapa: «esta queda abajo y esta arriba».",
+      "Toca un bloque mojado, busca el que no metió al agua y comenta «este está seco»."
+    ],
+    "moment": "Momento 2 de 4",
+    "steps": [
+      "Invita a elegir dos objetos y a probarlos, uno por vez, en la misma bandeja.",
+      "Pregunta qué notaron en cada caso. Da tiempo para mirar antes de pedir una respuesta."
+    ],
+    "title": "Comparamos lo que ocurre con dos objetos"
+  },
+  {
+    "experience": "explore_our_world",
+    "criterion": "Cambia algo de su exploración para ver qué ocurre.",
+    "cue": "Mira qué cambia al volver a probar y si presta atención a lo que sucede. Anota la acción y el resultado que el niño identificó, sin atribuirle una conclusión.",
+    "cueOccurrences": 1,
+    "examples": [
+      "Voltea la tapa, la pone otra vez en el agua y se acerca para mirar si entra agua.",
+      "Vuelve a colocar la piedra suavemente para comprobar si ocurre lo mismo."
+    ],
+    "moment": "Momento 3 de 4",
+    "steps": [
+      "Retoma una pregunta del grupo. Por ejemplo, invita a probar una tapa boca arriba y luego boca abajo.",
+      "Deja que decidan qué volver a probar y observen el resultado. No anuncies que algo tiene que ocurrir."
+    ],
+    "title": "Probamos una idea nueva"
+  },
+  {
+    "experience": "explore_our_world",
+    "criterion": "Describe a otro niño o a la docente lo que observó.",
+    "cue": "Escucha si comunica a otra persona algo de la exploración y cómo usa el objeto, los gestos o las palabras para hacerse entender.",
+    "cueOccurrences": 1,
+    "examples": [
+      "Levanta la tapa y cuenta «la puse así y se llenó de agua».",
+      "Muestra dos objetos y explica a un compañero cuál quedó en el fondo."
+    ],
+    "moment": "Momento 4 de 4",
+    "steps": [
+      "Invita a cada niño que quiera participar a mostrar un objeto que exploró.",
+      "Pregunta qué hizo y qué pasó. Deja que un compañero escuche y haga una pregunta."
+    ],
+    "title": "Compartimos un descubrimiento"
+  },
+  {
+    "experience": "stories_and_marks",
+    "criterion": "Dice qué cree que pasará al mirar el cuento.",
+    "cue": "Escucha qué imagina a partir de las ilustraciones y qué detalle señala. Antes de leer, no busques que acierte el argumento.",
+    "cueOccurrences": 1,
+    "examples": [
+      "Señala unas botas en la portada y comenta «creo que va a salir a buscar algo».",
+      "Mira un personaje detrás de un árbol y dice «creo que va a sorprender a su amigo»."
+    ],
+    "moment": "Momento 1 de 4",
+    "steps": [
+      "Muestra la portada del cuento y da tiempo para mirar sus ilustraciones.",
+      "Pregunta: «¿De qué creen que tratará?». Escucha distintas ideas y después comienza la lectura."
+    ],
+    "title": "Miramos la portada antes de leer"
+  },
+  {
+    "experience": "stories_and_marks",
+    "criterion": "Relata con sus palabras algo que ocurrió en el cuento.",
+    "cue": "Escucha qué parte comunica y cómo se hace entender. Puedes preguntar quién o qué ocurrió; evita completar la historia por él.",
+    "cueOccurrences": 1,
+    "examples": [
+      "Muestra una página y cuenta «se cayó al agua y su amigo lo ayudó».",
+      "Dice «primero estaba solo; después llegaron los otros» mientras pasa dos páginas."
+    ],
+    "moment": "Momento 2 de 4",
+    "steps": [
+      "Al terminar de leer, invita a elegir una escena que recuerden o les haya llamado la atención.",
+      "Deja que la cuenten con sus palabras y se apoyen en las ilustraciones, sin repetir el texto de memoria."
+    ],
+    "title": "Recordamos una parte del cuento"
+  },
+  {
+    "experience": "stories_and_marks",
+    "criterion": "Escribe a su manera un mensaje sobre el cuento para alguien.",
+    "cue": "Observa la intención de escribir: qué quiere comunicar y para quién. Un dibujo puede acompañar el mensaje, pero por sí solo no acredita escritura.",
+    "cueOccurrences": 1,
+    "examples": [
+      "Dice «les voy a contar que el cuento da risa» y hace marcas para escribir su mensaje.",
+      "Escribe con letras o grafismos una invitación y explica a qué grupo quiere entregarla."
+    ],
+    "moment": "Momento 3 de 4",
+    "steps": [
+      "Ofrece papel y crayones: «¿Quieren dejar un mensaje sobre este cuento para otro grupo?».",
+      "Invita a escribir a su manera lo que quieran comunicar. No dictes letras ni pidas copiar un modelo."
+    ],
+    "title": "Dejamos un mensaje sobre el cuento"
+  },
+  {
+    "experience": "stories_and_marks",
+    "criterion": "Relee a su manera el mensaje y comenta si dice lo que quería comunicar.",
+    "cue": "Escucha qué significado da a lo que escribió. Si decide añadir o cambiar algo, registra su explicación; no corrijas su escritura para hacerla convencional.",
+    "cueOccurrences": 1,
+    "examples": [
+      "Señala sus marcas y dice «aquí escribí que vengan a escuchar el cuento».",
+      "Al volver a leer su mensaje, añade una marca y comenta «faltaba decir a quién invitamos»."
+    ],
+    "moment": "Momento 4 de 4",
+    "steps": [
+      "Invita a señalar en su propio mensaje dónde dice lo que quiso comunicar.",
+      "Escucha su lectura. Si quiere cambiar algo antes de entregarlo, dale tiempo y materiales para hacerlo."
+    ],
+    "title": "Leemos nuestro mensaje antes de compartirlo"
+  },
+  {
+    "experience": "spanish_second_language",
+    "criterion": "Responde o se expresa en castellano durante un juego cercano.",
+    "cue": "Distingue lo que comprende de lo que expresa en castellano. Describe las palabras y el apoyo gestual que usó; una respuesta en su lengua familiar no es un error.",
+    "cueOccurrences": 1,
+    "examples": [
+      "Al oír «dame el aro», elige el aro y lo entrega, sin decir palabras en castellano.",
+      "Señala el objeto y pide «pelota, por favor» después de escuchar a un compañero."
+    ],
+    "moment": "Momento 1 de 1",
+    "steps": [
+      "Usa un juego conocido con objetos visibles. Di en castellano: «Dame la pelota, por favor», y acompaña con un gesto.",
+      "Espera su respuesta y ofrece turnos para pedir o entregar otro objeto. Acepta también su lengua familiar."
+    ],
+    "title": "Jugamos a pedir y entregar materiales"
+  },
+  {
+    "experience": "beliefs_and_care",
+    "criterion": "Expresa gratitud o cuidado en relación con una práctica o enseñanza religiosa que conoce.",
+    "cue": "Registra lo que expresa y su relación con la tradición compartida. No atribuyas una creencia a partir de una acción de cuidado aislada ni pidas información privada.",
+    "cueOccurrences": 1,
+    "examples": [
+      "En un momento de agradecimiento que ya conoce, dice «gracias, Dios, por mi familia».",
+      "Relaciona el relato escuchado con ayudar a un compañero y propone una forma concreta de hacerlo."
+    ],
+    "moment": "Momento 1 de 1",
+    "steps": [
+      "Solo si corresponde al aula, retoma un relato o práctica religiosa que los niños ya conozcan.",
+      "Invita a compartir un gesto de agradecimiento o cuidado relacionado con esa práctica. Participar es voluntario."
+    ],
+    "title": "Compartimos un gesto de agradecimiento"
+  }
+]

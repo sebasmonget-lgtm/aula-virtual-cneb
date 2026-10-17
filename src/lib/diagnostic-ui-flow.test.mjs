@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {compareObservationDates, experienceCoverageGaps, experienceCoverageOpportunities, rankGuidedExperiences, guidedObservationLookFor, guidedExperienceIllustrations, observationMoment, toggleInterviewOption, guidedStudentsByCoverage, guidedTeacherSteps, experiencePriorityLabel} from './diagnostic-ui-flow.mjs';
+import {compareObservationDates, experienceCoverageGaps, experienceCoverageOpportunities, rankGuidedExperiences, guidedObservationLookFor, guidedExperienceIllustrations, observationMoment, toggleInterviewOption, guidedStudentsByCoverage, experiencePriorityLabel} from './diagnostic-ui-flow.mjs';
 import {projectFamilyAssessmentContext} from './family-interview-projection.mjs';
 import {familyInterviewQuestionGroups, interviewInterestOptions} from './family-interview-contract.mjs';
 import {diagnosticPedagogicalBlocks} from './pedagogical-blocks.mjs';
@@ -71,7 +71,7 @@ test('every predefined experience has a lightweight illustration and concrete te
   for(const experience of catalog.experiences){
     const asset=await readFile(new URL(`../../public/project-illustrations/${guidedExperienceIllustrations[experience.id]}.webp`,import.meta.url));
     assert.ok(asset.byteLength<35_000);
-    for(const criterion of experience.aspects){const original=JSON.stringify(criterion);const cue=guidedObservationLookFor(criterion);assert.ok(cue.startsWith('Fíjate si'));assert.ok(cue.includes(criterion.examples[0].replace(/[.]$/,'').replace(/^./,letter=>letter.toLowerCase())));assert.equal(JSON.stringify(criterion),original);}
+    for(const criterion of experience.aspects){const original=JSON.stringify(criterion);const cue=guidedObservationLookFor(criterion);assert.equal(cue,criterion.look_for);assert.ok(criterion.examples.every(example=>!cue.includes(example)));assert.notEqual(cue,criterion.prompt);assert.equal(JSON.stringify(criterion),original);}
   }
 });
 
@@ -91,8 +91,8 @@ test('the same authoritative competency counts drive child labels and recommenda
 test('every catalog criterion has a short action guide without changing official content',async()=>{
   const catalog=JSON.parse(await readFile(new URL('../../knowledge/diagnostic-experiences/catalog.json',import.meta.url),'utf8'));
   for(const experience of catalog.experiences)for(const aspect of experience.aspects){
-    assert.equal(guidedTeacherSteps[aspect.id]?.length,2,aspect.id);
-    assert.ok(guidedTeacherSteps[aspect.id].every(step=>step.length<130));
+    assert.ok(aspect.teacher_steps.length>=2&&aspect.teacher_steps.length<=3,aspect.id);
+    assert.ok(aspect.teacher_steps.every(step=>step.length<=200));assert.ok(aspect.moment_title&&aspect.look_for);
   }
 });
 

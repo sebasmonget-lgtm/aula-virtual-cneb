@@ -40,7 +40,7 @@ async function setup(db, user, section) {
 test("catálogo JSON versionado valida IDs, edad y mapping v4 sin IA", async () => {
   const kb = await loadKnowledgeBaseV4();
   const catalog = await loadDiagnosticCatalog(kb.competencyCards);
-  assert.equal(catalog.status, "development_fixture");
+  assert.equal(catalog.status, "reviewed");
   assert.ok(catalog.experiences.every((item) => item.ages.includes(5)));
   assert.throws(() => validateDiagnosticCatalog({ ...catalog, experiences: [...catalog.experiences, catalog.experiences[0]] }, kb.competencyCards), /inválida/);
   assert.throws(() => validateDiagnosticCatalog({ ...catalog, experiences: [{ ...catalog.experiences[0], aspects: [{ ...catalog.experiences[0].aspects[0], competencyId: "FAKE" }] }] }, kb.competencyCards), /inválido/);

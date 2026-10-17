@@ -60,7 +60,7 @@ test("guías por edad usan tarjetas v4 y solo muestran competencias especiales a
   for (const age of [3, 4, 5]) {
     const experiences = buildDiagnosticExperienceCatalog(kb, { age });
     assert.equal(experiences.length, 5);
-    assert.equal(experiences[0].catalog_version, "diagnostic-v4.4");
+    assert.equal(experiences[0].catalog_version, "diagnostic-v4.5");
     assert.match(experiences[0].teacher_instructions, /Prepara dos o tres opciones sencillas/);
     assert.ok(experiences.every((item) => item.aspects.length >= 2 && item.aspects.length <= 4));
     if (age === 3) assert.equal(experiences.find((item) => item.id === "stories_and_marks").aspects.length, 2);
@@ -159,4 +159,27 @@ test("UI selecciona dentro del modal, sin lista inferior; RLS remota exige escri
   assert.match(sql, /for select to authenticated/);
   assert.match(sql, /for insert to authenticated/);
   assert.match(hardening, /drop policy if exists diagnostic_experience_insert_own/);
+});
+
+test('publishing the editorial catalogue preserves a historical writing snapshot and its later text correction', async () => {
+  const db = await database();
+  try {
+    await createPilotClassroom(db, teacher, { teacherName:'Docente QA', institutionName:'Colegio QA', section:'A', age:5, year:2026, startsOn:'2026-03-01', endsOn:'2026-12-18' });
+    await importStudentsForTeacher(db, teacher, [{ firstName:'Ana', lastName:'Prueba' }]);
+    const initial = await loadDiagnosticExperienceWorkspace(db, teacher);
+    const id = '12345678-1234-4234-8234-123456789012';
+    const oldPrompt = 'Dibuja, hace trazos o intenta escribir para contar algo de la historia.';
+    const note = 'Hizo marcas y dijo «aquí dice para Ana».';
+    // Historical database fixture, never a migration or rewrite of a teacher's records.
+    await db.query(`insert into diagnostic_experience_observations
+      (id,classroom_id,student_id,experience_id,aspect_id,competency_v4_id,observation_status,observation_text,created_by,catalog_version,experience_title_snapshot,aspect_prompt_snapshot)
+      values($1,$2,$3,'stories_and_marks','writing','COM_ESCRITURA','observed_without_judgment',$4,$5,'diagnostic-v4.4','Escuchamos y contamos historias',$6)`,
+      [id, initial.classroom.id, initial.students[0].id, note, teacher, oldPrompt]);
+    const current = await loadDiagnosticExperienceWorkspace(db, teacher);
+    assert.ok(current.experiences.find(row=>row.id==='stories_and_marks').aspects.some(row=>row.id==='write_message'));
+    assert.equal(current.experience_observations.find(row=>row.id===id).catalog_version, 'diagnostic-v4.4');
+    await reviseGuidedObservation(db, teacher, id, { expectedText:note, observationText:note+' Después le entregó el papel.' });
+    const saved = (await db.query('select catalog_version,aspect_id,aspect_prompt_snapshot,competency_v4_id from diagnostic_experience_observations where id=$1',[id])).rows[0];
+    assert.deepEqual(saved,{catalog_version:'diagnostic-v4.4',aspect_id:'writing',aspect_prompt_snapshot:oldPrompt,competency_v4_id:'COM_ESCRITURA'});
+  } finally { await db.close(); }
 });

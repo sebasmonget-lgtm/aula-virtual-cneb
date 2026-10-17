@@ -25,7 +25,7 @@ export function activityPedagogicalBlocks(details = {}, steps = [], criteria = [
 
 export function diagnosticPedagogicalBlocks(experience) {
   return [{ id: "prepare", title: "Prepara el juego", instruction: experience.teacher_instructions },
-    ...experience.aspects.map(aspect => ({ id: aspect.id, title: aspect.label, instruction: diagnosticMomentInstruction(experience.id, aspect.id, aspect.prompt),
+    ...experience.aspects.map(aspect => ({ id: aspect.id, title: aspect.moment_title ?? aspect.label, instruction: aspect.teacher_steps?.join('\n') || diagnosticMomentInstruction(experience.id, aspect.id, aspect.prompt),
       ...(aspect.examples?.length ? { examples: aspect.examples } : {}),
       observations: [{ id: aspect.id, competency_id: aspect.competency_id, competency_name: aspect.competency_name, criterion: aspect.prompt }] }))];
 }

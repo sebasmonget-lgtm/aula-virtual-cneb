@@ -1,6 +1,6 @@
 {
-  "version": "diagnostic-v4.4",
-  "status": "development_fixture",
+  "version": "diagnostic-v4.5",
+  "status": "reviewed",
   "experiences": [
     {
       "id": "getting_to_know_us",
@@ -13,10 +13,16 @@
           "label": "Elige dónde jugar o qué material usar.",
           "prompt": "Elige dónde jugar y muestra qué le interesa.",
           "examples": [
-            "Se acerca por iniciativa propia a un espacio de juego.",
-            "Señala o dice qué material quiere usar."
+            "Señala los bloques, se acerca y empieza a construir.",
+            "Dice «quiero cocinar» y busca los utensilios del juego de roles."
           ],
-          "patternIndex": 0
+          "patternIndex": 0,
+          "moment_title": "Elegimos dónde jugar",
+          "teacher_steps": [
+            "Presenta dos o tres espacios preparados: bloques, dibujo o juego de roles.",
+            "Invita a elegir uno. Observa antes de ofrecer ayuda o sugerir una opción."
+          ],
+          "look_for": "Observa cómo expresa su preferencia y qué hace después de elegir. Puede comunicarla con palabras, gestos o acercándose."
         },
         {
           "id": "conversation",
@@ -24,10 +30,21 @@
           "label": "Cuenta cómo quiere jugar y responde a otro niño.",
           "prompt": "Cuenta lo que quiere hacer y atiende a la respuesta de otro niño.",
           "examples": [
-            "Explica cómo quiere jugar.",
-            "Responde a una propuesta de otro niño."
+            "Dice «hagamos una casa» y responde «aquí» cuando le preguntan dónde.",
+            "Escucha «necesitamos una puerta» y propone usar una caja."
           ],
-          "patternIndex": 1
+          "patternIndex": 1,
+          "moment_title": "Compartimos nuestras ideas de juego",
+          "teacher_steps": [
+            "Acércate a dos niños que estén jugando y pregunta qué quieren hacer.",
+            "Deja que se respondan. Si hace falta, pregunta: «¿Qué te propone tu compañero?»."
+          ],
+          "look_for": "Escucha si logra comunicar su idea a otra persona y responder a lo que esta dice. No exijas una explicación larga.",
+          "patternIndexByAge": {
+            "3": 1,
+            "4": 0,
+            "5": 1
+          }
         },
         {
           "id": "agreements",
@@ -35,10 +52,21 @@
           "label": "Propone cómo compartir materiales o turnarse.",
           "prompt": "Propone o acepta una manera de compartir el juego.",
           "examples": [
-            "Espera su turno después de conversarlo.",
-            "Propone repartir materiales."
+            "Propone «tú llevas los bloques y después yo» y espera a que vuelva el camión.",
+            "Acepta usar juntos una caja y acerca materiales para construir con su compañero."
           ],
-          "patternIndex": 1
+          "patternIndex": 1,
+          "moment_title": "Buscamos una forma de compartir",
+          "teacher_steps": [
+            "Si surge una necesidad de compartir, descríbela sin decidir por ellos: «Los dos quieren ese camión».",
+            "Pregunta qué podrían hacer y acompaña el acuerdo que elijan. No provoques un conflicto para observar."
+          ],
+          "look_for": "Mira qué propone o acepta para que ambos puedan jugar y cómo pone en práctica ese acuerdo. Anota también el apoyo que necesitó.",
+          "patternIndexByAge": {
+            "3": 1,
+            "4": 2,
+            "5": 1
+          }
         },
         {
           "id": "joins_game",
@@ -46,10 +74,21 @@
           "label": "Se acerca a otros niños y se suma al juego.",
           "prompt": "Se acerca a otros niños y participa en el juego a su manera.",
           "examples": [
-            "Observa y luego se suma al juego.",
-            "Invita a otro niño a participar."
+            "Se acerca al restaurante y pregunta «¿puedo ser quien cocina?».",
+            "Hace un lugar junto a su construcción y le ofrece bloques a otro niño."
           ],
-          "patternIndex": 1
+          "patternIndex": 1,
+          "moment_title": "Nos sumamos al juego de otros",
+          "teacher_steps": [
+            "Observa si alguien quiere acercarse a un juego que ya comenzó. Dale tiempo para mirar.",
+            "Si necesita apoyo, ayúdalo a expresar que quiere participar. Respeta que prefiera seguir observando."
+          ],
+          "look_for": "Observa cómo busca participar o invita a otra persona, y qué respuesta encuentra. El tiempo que tarda en acercarse no define su aprendizaje.",
+          "patternIndexByAge": {
+            "3": 0,
+            "4": 0,
+            "5": 0
+          }
         }
       ],
       "ages": [
@@ -57,10 +96,15 @@
         4,
         5
       ],
-      "teacher_instructions": "Prepara dos o tres opciones sencillas, como bloques, dibujo o juego de roles. Invita a los niños a elegir dónde jugar y acompaña sin dirigir todas sus decisiones.",
+      "teacher_instructions": "Prepara dos o tres opciones sencillas, como bloques, dibujo o juego de roles, con materiales al alcance. Deja tiempo para elegir y jugar; las conversaciones y los acuerdos surgen de ese juego.",
       "examples": [],
       "sort_order": 1,
-      "active": true
+      "active": true,
+      "age_support": {
+        "3": "Con 3 años, acepta elecciones señaladas y conversaciones de pocas palabras; acompaña la entrada al juego.",
+        "4": "Con 4 años, da tiempo para intercambiar propuestas y ensayar acuerdos sencillos.",
+        "5": "Con 5 años, invita a explicar sus propuestas y revisar un acuerdo si no funciona, sin exigir que todos actúen igual."
+      }
     },
     {
       "id": "movement_and_art",
@@ -73,21 +117,16 @@
           "label": "Prueba correr, girar, saltar o agacharse.",
           "prompt": "Prueba distintas maneras de moverse durante el juego.",
           "examples": [
-            "Corre, gira o se agacha al explorar.",
-            "Cambia de dirección al encontrar un obstáculo."
+            "Corre por el espacio libre y reduce la velocidad al acercarse a otro niño.",
+            "Camina, se agacha para recoger una tela y vuelve a ponerse de pie."
           ],
-          "patternIndex": 0
-        },
-        {
-          "id": "creation",
-          "competencyId": "COM_ARTE",
-          "label": "Combina papel, pintura u otros materiales para crear.",
-          "prompt": "Combina materiales para crear algo propio.",
-          "examples": [
-            "Prueba varias formas de usar papel o pintura.",
-            "Une materiales para representar una idea."
+          "patternIndex": 0,
+          "moment_title": "Exploramos cómo movernos",
+          "teacher_steps": [
+            "Delimita un espacio despejado. Invita a desplazarse sin chocar y a elegir sus movimientos.",
+            "Dales tiempo para probar; acompaña a quien necesite otro ritmo o una alternativa de movimiento."
           ],
-          "patternIndex": 0
+          "look_for": "Observa cómo coordina su cuerpo al desplazarse, detenerse o cambiar de dirección. Describe el movimiento concreto, sin comparar rapidez entre niños."
         },
         {
           "id": "adjust_movement",
@@ -95,10 +134,38 @@
           "label": "Cambia cómo se mueve para pasar un obstáculo.",
           "prompt": "Cambia cómo se mueve cuando el juego lo requiere.",
           "examples": [
-            "Pasa por debajo o alrededor de un objeto.",
-            "Vuelve a intentarlo de otra manera."
+            "Se agacha para pasar bajo una tela sostenida por la docente.",
+            "Al perder el equilibrio sobre una línea, separa los brazos y vuelve a probar."
           ],
-          "patternIndex": 0
+          "patternIndex": 0,
+          "moment_title": "Elegimos por dónde pasar",
+          "teacher_steps": [
+            "Propón un recorrido con una línea en el piso y cojines bajos y firmes; ofrece también un paso libre.",
+            "Invita a elegir por dónde pasar y a volver a intentar si lo desean. Acompaña sin mover su cuerpo por ellos."
+          ],
+          "look_for": "Mira cómo adapta su postura, equilibrio o recorrido ante una dificultad. Registra si lo hizo solo o qué ayuda pidió.",
+          "patternIndexByAge": {
+            "3": 0,
+            "4": 1,
+            "5": 0
+          }
+        },
+        {
+          "id": "creation",
+          "competencyId": "COM_ARTE",
+          "label": "Combina papel, pintura u otros materiales para crear.",
+          "prompt": "Combina materiales para crear algo propio.",
+          "examples": [
+            "Arruga papel para darle volumen y lo une a una tela con cinta.",
+            "Prueba líneas anchas y delgadas con el crayón antes de elegir cómo continuar."
+          ],
+          "patternIndex": 0,
+          "moment_title": "Exploramos materiales para crear",
+          "teacher_steps": [
+            "Después del movimiento, ofrece papel, telas, crayones y cinta de papel al alcance.",
+            "Invita a probar combinaciones y crear algo propio. No presentes un modelo para copiar."
+          ],
+          "look_for": "Observa qué posibilidades descubre al probar y combinar materiales. La producción no necesita parecerse a un objeto reconocible."
         },
         {
           "id": "express_idea",
@@ -106,10 +173,21 @@
           "label": "Representa algo con su cuerpo o con materiales.",
           "prompt": "Usa movimientos o materiales para mostrar lo que imagina.",
           "examples": [
-            "Representa un animal con el cuerpo.",
-            "Cuenta qué quiso crear con sus materiales."
+            "Mueve una tela en el aire y dice «es el viento que empuja mi barco».",
+            "Señala las marcas de su papel y explica «aquí iba saltando»."
           ],
-          "patternIndex": 0
+          "patternIndex": 0,
+          "moment_title": "Compartimos lo que imaginamos",
+          "teacher_steps": [
+            "Invita a mostrar una creación o un movimiento que quieran compartir.",
+            "Pregunta qué quisieron expresar y acepta que lo cuenten, lo señalen o lo representen de nuevo."
+          ],
+          "look_for": "Escucha qué significado le da a su creación o a su movimiento. No atribuyas una intención que el niño no haya mostrado o explicado.",
+          "patternIndexByAge": {
+            "3": 2,
+            "4": 2,
+            "5": 2
+          }
         }
       ],
       "ages": [
@@ -117,10 +195,15 @@
         4,
         5
       ],
-      "teacher_instructions": "Deja espacio para moverse y ofrece telas, papel u otros materiales para crear. Invita a explorar libremente, sin mostrar una única forma correcta.",
+      "teacher_instructions": "Prepara un espacio despejado, cojines bajos y firmes, una tela, papel, crayones y cinta de papel. Revisa que no haya riesgo de caída o de enredarse. Comiencen con movimiento y después ofrezcan materiales para crear.",
       "examples": [],
       "sort_order": 2,
-      "active": true
+      "active": true,
+      "age_support": {
+        "3": "Con 3 años, ofrece pasos amplios y apoyos estables; acepta distintas maneras de participar.",
+        "4": "Con 4 años, permite combinar movimientos y elegir cómo resolver un paso del recorrido.",
+        "5": "Con 5 años, deja que propongan variantes y expresen sus ideas con movimientos o materiales; ajusta el reto a sus posibilidades."
+      }
     },
     {
       "id": "count_and_locate",
@@ -133,21 +216,21 @@
           "label": "Cuenta o reúne objetos que necesita para jugar.",
           "prompt": "Cuenta o reúne objetos para resolver una situación de juego.",
           "examples": [
-            "Busca las piezas que faltan.",
-            "Cuenta objetos para repartirlos."
+            "Entrega un vehículo a cada compañero y vuelve a buscar otro para quien aún no tiene.",
+            "Cuenta los muñecos, mira a los participantes y dice «me falta uno»."
           ],
-          "patternIndex": 0
-        },
-        {
-          "id": "space",
-          "competencyId": "MAT_FORMA",
-          "label": "Coloca objetos o explica por dónde pasar.",
-          "prompt": "Coloca objetos o explica por dónde pasar en el recorrido.",
-          "examples": [
-            "Pone un objeto dentro o detrás de otro.",
-            "Señala un camino para llegar a un lugar."
+          "patternIndex": 0,
+          "moment_title": "Repartimos los materiales del juego",
+          "teacher_steps": [
+            "Prepara un muñeco o vehículo por participante y una cesta con piezas grandes para construir caminos.",
+            "Invita a repartir un muñeco o vehículo a cada uno. Pregunta cómo pueden saber si todos tienen."
           ],
-          "patternIndex": 0
+          "look_for": "Mira qué estrategia usa para repartir: entregar uno a uno, reunir objetos o contar. Registra lo que hace, aunque el conteo aún no sea estable.",
+          "patternIndexByAge": {
+            "3": 3,
+            "4": 2,
+            "5": 0
+          }
         },
         {
           "id": "compare_groups",
@@ -155,10 +238,43 @@
           "label": "Compara si hay más, menos o igual cantidad de objetos.",
           "prompt": "Nota si un grupo de objetos tiene más, menos o la misma cantidad.",
           "examples": [
-            "Acerca dos grupos de fichas para compararlos.",
-            "Dice que faltan piezas para completar el juego."
+            "Coloca un muñeco junto a cada vehículo y señala el que quedó sin vehículo.",
+            "Acerca dos grupos de piezas, los cuenta y comenta que uno tiene más."
           ],
-          "patternIndex": 0
+          "patternIndex": 0,
+          "moment_title": "Comprobamos si los materiales alcanzan",
+          "teacher_steps": [
+            "Revisa con el grupo los vehículos y las piezas que reunieron para jugar.",
+            "Si aparece una diferencia, pregunta: «¿Cómo podemos saber si alcanzan?». Deja que comparen a su manera."
+          ],
+          "look_for": "Observa cómo relaciona las colecciones para decidir si sobra, falta o alcanza. Escucha sus palabras y mira si empareja o cuenta objetos.",
+          "patternIndexByAge": {
+            "3": 2,
+            "4": 0,
+            "5": 1
+          }
+        },
+        {
+          "id": "space",
+          "competencyId": "MAT_FORMA",
+          "label": "Coloca objetos o explica por dónde pasar.",
+          "prompt": "Coloca objetos o explica por dónde pasar en el recorrido.",
+          "examples": [
+            "Coloca la parada detrás de una caja y lleva el muñeco hasta ella.",
+            "Señala un espacio entre dos bloques y dice «por aquí pasa el carro»."
+          ],
+          "patternIndex": 0,
+          "moment_title": "Construimos un camino para el muñeco",
+          "teacher_steps": [
+            "Invita a colocar cajas o bloques grandes para hacer un recorrido con inicio y llegada.",
+            "Pide que muestren por dónde irá el muñeco y dónde colocarán una parada. Acepta explicaciones con gestos."
+          ],
+          "look_for": "Mira cómo usa las posiciones y las relaciones entre los objetos para orientar el recorrido. Anota sus palabras, señalamientos o desplazamientos.",
+          "patternIndexByAge": {
+            "3": 1,
+            "4": 1,
+            "5": 1
+          }
         },
         {
           "id": "change_route",
@@ -166,10 +282,21 @@
           "label": "Busca otro camino cuando no puede pasar.",
           "prompt": "Prueba otro camino cuando algo impide pasar.",
           "examples": [
-            "Rodea un obstáculo.",
-            "Mueve una pieza para abrir paso."
+            "Mueve dos bloques y hace pasar el vehículo por el nuevo espacio.",
+            "Prueba un camino más largo alrededor de la caja y logra llegar a la parada."
           ],
-          "patternIndex": 0
+          "patternIndex": 0,
+          "moment_title": "Buscamos otro camino",
+          "teacher_steps": [
+            "Cuando el recorrido esté listo, avisa que una parte estará cerrada y coloca una caja sin riesgo de caída.",
+            "Pregunta cómo podría llegar el muñeco por otro lado. Deja que prueben antes de sugerir una solución."
+          ],
+          "look_for": "Observa qué cambia en el recorrido para llegar al destino y cómo comprueba su idea. No confundas una ruta diferente con un error.",
+          "patternIndexByAge": {
+            "3": 3,
+            "4": 3,
+            "5": 3
+          }
         }
       ],
       "ages": [
@@ -177,10 +304,15 @@
         4,
         5
       ],
-      "teacher_instructions": "Pon objetos que puedan agrupar o repartir y prepara un recorrido sencillo. Plantea una pequeña necesidad de juego y deja que prueben cómo resolverla.",
+      "teacher_instructions": "Reúne muñecos o vehículos, bloques y cajas grandes para construir caminos. La situación de juego es repartir los materiales y preparar un recorrido para llegar a una parada.",
       "examples": [],
       "sort_order": 3,
-      "active": true
+      "active": true,
+      "age_support": {
+        "3": "Con 3 años, ofrece pocos objetos grandes; acepta reparto, comparación y conteo espontáneo sin exigir una secuencia correcta.",
+        "4": "Con 4 años, favorece repartir uno a uno y comprobar si los materiales alcanzan.",
+        "5": "Con 5 años, invita a anticipar cuántos necesitan y verificarlo con objetos; la cantidad se ajusta al grupo, no es una prueba."
+      }
     },
     {
       "id": "explore_our_world",
@@ -193,21 +325,16 @@
           "label": "Pregunta por algo que ve y le llama la atención.",
           "prompt": "Pregunta por algo que ve o le llama la atención.",
           "examples": [
-            "Pregunta por qué flota un objeto.",
-            "Se pregunta qué hay debajo de una hoja."
+            "Mira una piedra en el fondo y pregunta «¿por qué se fue abajo?».",
+            "Sostiene una tapa sobre el agua y pregunta «¿esta también se hunde?»."
           ],
-          "patternIndex": 0
-        },
-        {
-          "id": "tell_discovery",
-          "competencyId": "COM_ORAL",
-          "label": "Cuenta a otro niño o a la profesora lo que encontró.",
-          "prompt": "Describe a otro niño o a la docente lo que observó.",
-          "examples": [
-            "Explica qué pasó al mezclar materiales.",
-            "Muestra algo que encontró y lo describe."
+          "patternIndex": 0,
+          "moment_title": "Nos preguntamos qué pasará en el agua",
+          "teacher_steps": [
+            "Muestra una bandeja con poca agua y objetos grandes seguros, como tapas grandes, piedras lisas y bloques.",
+            "Deja que los miren y exploren. Pregunta qué les da curiosidad, sin adelantar cuáles flotarán."
           ],
-          "patternIndex": 0
+          "look_for": "Escucha las preguntas que surgen de lo que ve o prueba. Una pregunta puede expresarse con pocas palabras, un gesto o una comparación."
         },
         {
           "id": "compare_materials",
@@ -215,10 +342,21 @@
           "label": "Mira o toca dos materiales y dice en qué se diferencian.",
           "prompt": "Mira o toca dos materiales y nota alguna diferencia.",
           "examples": [
-            "Distingue cuál está seco o mojado.",
-            "Compara el tamaño de dos hojas."
+            "Señala la piedra y la tapa: «esta queda abajo y esta arriba».",
+            "Toca un bloque mojado, busca el que no metió al agua y comenta «este está seco»."
           ],
-          "patternIndex": 0
+          "patternIndex": 0,
+          "moment_title": "Comparamos lo que ocurre con dos objetos",
+          "teacher_steps": [
+            "Invita a elegir dos objetos y a probarlos, uno por vez, en la misma bandeja.",
+            "Pregunta qué notaron en cada caso. Da tiempo para mirar antes de pedir una respuesta."
+          ],
+          "look_for": "Observa qué diferencia reconoce al explorar los objetos y cómo la comunica. Registra sus hallazgos sin convertirlos en una explicación científica que aún no dio.",
+          "patternIndexByAge": {
+            "3": 2,
+            "4": 2,
+            "5": 2
+          }
         },
         {
           "id": "tries_again",
@@ -226,10 +364,38 @@
           "label": "Cambia algo de lo que está probando y mira qué ocurre.",
           "prompt": "Cambia algo de su exploración para ver qué ocurre.",
           "examples": [
-            "Usa otra cantidad de agua.",
-            "Prueba un material diferente."
+            "Voltea la tapa, la pone otra vez en el agua y se acerca para mirar si entra agua.",
+            "Vuelve a colocar la piedra suavemente para comprobar si ocurre lo mismo."
           ],
-          "patternIndex": 0
+          "patternIndex": 0,
+          "moment_title": "Probamos una idea nueva",
+          "teacher_steps": [
+            "Retoma una pregunta del grupo. Por ejemplo, invita a probar una tapa boca arriba y luego boca abajo.",
+            "Deja que decidan qué volver a probar y observen el resultado. No anuncies que algo tiene que ocurrir."
+          ],
+          "look_for": "Mira qué cambia al volver a probar y si presta atención a lo que sucede. Anota la acción y el resultado que el niño identificó, sin atribuirle una conclusión.",
+          "patternIndexByAge": {
+            "3": 1,
+            "4": 1,
+            "5": 1
+          }
+        },
+        {
+          "id": "tell_discovery",
+          "competencyId": "COM_ORAL",
+          "label": "Cuenta a otro niño o a la profesora lo que encontró.",
+          "prompt": "Describe a otro niño o a la docente lo que observó.",
+          "examples": [
+            "Levanta la tapa y cuenta «la puse así y se llenó de agua».",
+            "Muestra dos objetos y explica a un compañero cuál quedó en el fondo."
+          ],
+          "patternIndex": 0,
+          "moment_title": "Compartimos un descubrimiento",
+          "teacher_steps": [
+            "Invita a cada niño que quiera participar a mostrar un objeto que exploró.",
+            "Pregunta qué hizo y qué pasó. Deja que un compañero escuche y haga una pregunta."
+          ],
+          "look_for": "Escucha si comunica a otra persona algo de la exploración y cómo usa el objeto, los gestos o las palabras para hacerse entender."
         }
       ],
       "ages": [
@@ -237,10 +403,15 @@
         4,
         5
       ],
-      "teacher_instructions": "Acerca hojas, agua u otros materiales seguros del entorno. Deja que los niños los exploren y escucha sus preguntas antes de ofrecer respuestas.",
+      "teacher_instructions": "Prepara una bandeja plástica con poca agua, tapas grandes, bloques, piedras grandes lisas y un paño. Revisa que los objetos no se puedan tragar. Acompaña de cerca la exploración y seca los derrames.",
       "examples": [],
       "sort_order": 4,
-      "active": true
+      "active": true,
+      "age_support": {
+        "3": "Con 3 años, explora en un grupo pequeño y acepta que comuniquen sus preguntas y hallazgos con gestos.",
+        "4": "Con 4 años, acompaña la comparación de dos objetos y la descripción de lo que ocurre.",
+        "5": "Con 5 años, retoma sus ideas iniciales y pregunta qué quieren volver a comprobar, sin pedir una explicación científica formal."
+      }
     },
     {
       "id": "stories_and_marks",
@@ -253,21 +424,16 @@
           "label": "Dice qué cree que ocurrirá en la historia.",
           "prompt": "Dice qué cree que pasará al mirar el cuento.",
           "examples": [
-            "Señala una imagen y dice qué cree que hará un personaje.",
-            "Comenta qué podría hacer un personaje."
+            "Señala unas botas en la portada y comenta «creo que va a salir a buscar algo».",
+            "Mira un personaje detrás de un árbol y dice «creo que va a sorprender a su amigo»."
           ],
-          "patternIndex": 0
-        },
-        {
-          "id": "writing",
-          "competencyId": "COM_ESCRITURA",
-          "label": "Hace dibujos, trazos o escrituras para representar una idea.",
-          "prompt": "Dibuja, hace trazos o intenta escribir para contar algo de la historia.",
-          "examples": [
-            "Dibuja un personaje.",
-            "Hace trazos o intenta escribir y cuenta qué significan."
+          "patternIndex": 1,
+          "moment_title": "Miramos la portada antes de leer",
+          "teacher_steps": [
+            "Muestra la portada del cuento y da tiempo para mirar sus ilustraciones.",
+            "Pregunta: «¿De qué creen que tratará?». Escucha distintas ideas y después comienza la lectura."
           ],
-          "patternIndex": 0
+          "look_for": "Escucha qué imagina a partir de las ilustraciones y qué detalle señala. Antes de leer, no busques que acierte el argumento."
         },
         {
           "id": "retelling",
@@ -275,21 +441,59 @@
           "label": "Cuenta con sus palabras una parte de la historia.",
           "prompt": "Relata con sus palabras algo que ocurrió en el cuento.",
           "examples": [
-            "Cuenta qué hizo un personaje.",
-            "Relaciona dos momentos de la historia."
+            "Muestra una página y cuenta «se cayó al agua y su amigo lo ayudó».",
+            "Dice «primero estaba solo; después llegaron los otros» mientras pasa dos páginas."
           ],
-          "patternIndex": 2
+          "patternIndex": 2,
+          "moment_title": "Recordamos una parte del cuento",
+          "teacher_steps": [
+            "Al terminar de leer, invita a elegir una escena que recuerden o les haya llamado la atención.",
+            "Deja que la cuenten con sus palabras y se apoyen en las ilustraciones, sin repetir el texto de memoria."
+          ],
+          "look_for": "Escucha qué parte comunica y cómo se hace entender. Puedes preguntar quién o qué ocurrió; evita completar la historia por él.",
+          "patternIndexByAge": {
+            "3": 3,
+            "4": 2,
+            "5": 2
+          }
         },
         {
-          "id": "shares_marks",
+          "id": "write_message",
           "competencyId": "COM_ESCRITURA",
-          "label": "Explica qué significan sus dibujos, trazos o escrituras.",
-          "prompt": "Muestra sus dibujos, trazos o escrituras y cuenta lo que quiso comunicar.",
+          "label": "Escribe a su manera un mensaje sobre el cuento.",
+          "prompt": "Escribe a su manera un mensaje sobre el cuento para alguien.",
           "examples": [
-            "Señala un dibujo y cuenta qué representa.",
-            "Explica a otro niño lo que representan sus dibujos, trazos o escrituras."
+            "Dice «les voy a contar que el cuento da risa» y hace marcas para escribir su mensaje.",
+            "Escribe con letras o grafismos una invitación y explica a qué grupo quiere entregarla."
           ],
-          "patternIndex": 0
+          "patternIndex": 0,
+          "moment_title": "Dejamos un mensaje sobre el cuento",
+          "teacher_steps": [
+            "Ofrece papel y crayones: «¿Quieren dejar un mensaje sobre este cuento para otro grupo?».",
+            "Invita a escribir a su manera lo que quieran comunicar. No dictes letras ni pidas copiar un modelo."
+          ],
+          "look_for": "Observa la intención de escribir: qué quiere comunicar y para quién. Un dibujo puede acompañar el mensaje, pero por sí solo no acredita escritura."
+        },
+        {
+          "id": "read_own_message",
+          "competencyId": "COM_ESCRITURA",
+          "label": "Explica lo que quiso escribir antes de compartirlo.",
+          "prompt": "Relee a su manera el mensaje y comenta si dice lo que quería comunicar.",
+          "examples": [
+            "Señala sus marcas y dice «aquí escribí que vengan a escuchar el cuento».",
+            "Al volver a leer su mensaje, añade una marca y comenta «faltaba decir a quién invitamos»."
+          ],
+          "patternIndex": 0,
+          "moment_title": "Leemos nuestro mensaje antes de compartirlo",
+          "teacher_steps": [
+            "Invita a señalar en su propio mensaje dónde dice lo que quiso comunicar.",
+            "Escucha su lectura. Si quiere cambiar algo antes de entregarlo, dale tiempo y materiales para hacerlo."
+          ],
+          "look_for": "Escucha qué significado da a lo que escribió. Si decide añadir o cambiar algo, registra su explicación; no corrijas su escritura para hacerla convencional.",
+          "patternIndexByAge": {
+            "4": 0,
+            "5": 3
+          }
         }
       ],
       "ages": [
@@ -297,10 +501,18 @@
         4,
         5
       ],
-      "teacher_instructions": "Lee un cuento breve y deja tiempo para mirar y comentar las imágenes. Después ofrece papel y colores para dibujar o contar algo de la historia.",
+      "teacher_instructions": "Elige un cuento breve con ilustraciones visibles y revísalo antes de leer. Prepara papel y crayones para quienes quieran dejar un mensaje después. No hace falta que todos produzcan lo mismo.",
       "examples": [],
       "sort_order": 5,
-      "active": true
+      "active": true,
+      "age_support": {
+        "3": "Con 3 años, los momentos se centran en mirar, escuchar y contar. Un dibujo puede ser expresión libre; no se asigna a escritura.",
+        "4": "Con 4 años, ofrece la escritura del mensaje como una elección y escucha qué quieren comunicar con sus marcas.",
+        "5": "Con 5 años, invita a pensar para quién escriben y a revisar con ayuda si el mensaje dice lo que querían."
+      },
+      "teacher_instructions_by_age": {
+        "3": "Elige un cuento breve con ilustraciones visibles y revísalo antes de leer. Deja tiempo para mirar, escuchar y comentar. Si después quieren dibujar, será una expresión libre, sin atribuirla a escritura."
+      }
     },
     {
       "id": "spanish_second_language",
@@ -313,19 +525,28 @@
           "label": "Responde o dice algo en castellano mientras juega.",
           "prompt": "Responde o se expresa en castellano durante un juego cercano.",
           "examples": [
-            "Responde a una invitación breve.",
-            "Nombra un material que quiere usar."
+            "Al oír «dame el aro», elige el aro y lo entrega, sin decir palabras en castellano.",
+            "Señala el objeto y pide «pelota, por favor» después de escuchar a un compañero."
           ],
-          "patternIndex": 0
+          "patternIndex": 0,
+          "moment_title": "Jugamos a pedir y entregar materiales",
+          "teacher_steps": [
+            "Usa un juego conocido con objetos visibles. Di en castellano: «Dame la pelota, por favor», y acompaña con un gesto.",
+            "Espera su respuesta y ofrece turnos para pedir o entregar otro objeto. Acepta también su lengua familiar."
+          ],
+          "look_for": "Distingue lo que comprende de lo que expresa en castellano. Describe las palabras y el apoyo gestual que usó; una respuesta en su lengua familiar no es un error."
         }
       ],
       "ages": [
         5
       ],
-      "teacher_instructions": "Propón un juego conocido con objetos cercanos. Habla en castellano con frases breves y permite que respondan también con gestos o en su lengua familiar.",
+      "teacher_instructions": "Elige un juego de pedir y entregar objetos conocidos, como una pelota y un aro. Esta guía se usa solo en aulas donde el castellano es segunda lengua; considera la experiencia previa de cada niño con esa lengua.",
       "examples": [],
       "sort_order": 6,
-      "active": true
+      "active": true,
+      "age_support": {
+        "5": "Conserva la lengua familiar como apoyo. Observa comprensión y expresión por separado; no traduzcas sus gestos como palabras que no dijo."
+      }
     },
     {
       "id": "beliefs_and_care",
@@ -333,15 +554,26 @@
       "explanation": "Cuando corresponde al contexto del aula, conversa con respeto sobre el cuidado y las creencias familiares.",
       "aspects": [
         {
-          "id": "religion",
+          "id": "gratitude_and_tradition",
           "competencyId": "PS_RELIGION",
-          "label": "Cuenta cómo cuidan o celebran algo en su familia, si desea hacerlo.",
-          "prompt": "Cuenta una experiencia familiar de cuidado o creencias, si desea hacerlo.",
+          "label": "Comparte un gesto de gratitud o cuidado ligado a una tradición conocida.",
+          "prompt": "Expresa gratitud o cuidado en relación con una práctica o enseñanza religiosa que conoce.",
           "examples": [
-            "Relata una acción de cuidado que conoce.",
-            "Escucha con respeto lo que comparte otro niño."
+            "En un momento de agradecimiento que ya conoce, dice «gracias, Dios, por mi familia».",
+            "Relaciona el relato escuchado con ayudar a un compañero y propone una forma concreta de hacerlo."
           ],
-          "patternIndex": 0
+          "patternIndex": 0,
+          "moment_title": "Compartimos un gesto de agradecimiento",
+          "teacher_steps": [
+            "Solo si corresponde al aula, retoma un relato o práctica religiosa que los niños ya conozcan.",
+            "Invita a compartir un gesto de agradecimiento o cuidado relacionado con esa práctica. Participar es voluntario."
+          ],
+          "look_for": "Registra lo que expresa y su relación con la tradición compartida. No atribuyas una creencia a partir de una acción de cuidado aislada ni pidas información privada.",
+          "patternIndexByAge": {
+            "3": 1,
+            "4": 1,
+            "5": 0
+          }
         }
       ],
       "ages": [
@@ -349,10 +581,15 @@
         4,
         5
       ],
-      "teacher_instructions": "Invita a compartir, solo si lo desean, acciones de cuidado o tradiciones familiares. Escucha con respeto y evita pedir detalles personales.",
+      "teacher_instructions": "Usa únicamente un relato o práctica religiosa conocidos y pertinentes para el contexto del aula. Nadie debe revelar creencias privadas ni participar por obligación. No se utiliza cuando esta competencia no es aplicable.",
       "examples": [],
       "sort_order": 7,
-      "active": true
+      "active": true,
+      "age_support": {
+        "3": "Con 3 años, acepta un gesto o una expresión breve de agradecimiento vinculados al contexto conocido.",
+        "4": "Con 4 años, escucha qué valora de la práctica o relato que conoce, sin pedir que recite fórmulas.",
+        "5": "Con 5 años, invita a relacionar una enseñanza conocida con una acción de cuidado; respeta también a quien no quiera compartir."
+      }
     }
   ]
 }

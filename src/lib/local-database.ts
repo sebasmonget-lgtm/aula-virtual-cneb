@@ -81,9 +81,9 @@ export type DiagnosticWorkspace = {
   entries: { id: string; student_id: string; competency_id: string; teacher_confirmed: boolean; teacher_interpretation: string | null }[];
   observations: { id: string; student_id: string; competency_id: string; reference_id: string; status: string; note: string | null }[];
   experiences: {
-    id: string; title: string; explanation: string; pedagogical_blocks?: import("../features/dashboard/components/pedagogical-block").PedagogicalBlockData[]; teacher_instructions: string; examples: string[]; catalog_version: string; catalog_status: string;
+    id: string; title: string; explanation: string; pedagogical_blocks?: import("../features/dashboard/components/pedagogical-block").PedagogicalBlockData[]; teacher_instructions: string; age_support?: string | null; examples: string[]; catalog_version: string; catalog_status: string;
     competencies: { id: string; name: string }[];
-    aspects: { id: string; competency_id: string; competency_name: string; area_name: string; label: string; prompt: string; examples: string[]; age_reference: string }[];
+    aspects: { id: string; competency_id: string; competency_name: string; area_name: string; label: string; prompt: string; examples: string[]; age_reference: string; moment_title?: string; teacher_steps?: string[]; look_for?: string }[];
   }[];
   experience_observations: {
     id: string; student_id: string; experience_id: string; aspect_id: string;
