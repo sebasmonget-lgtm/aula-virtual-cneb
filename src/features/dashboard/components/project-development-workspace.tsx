@@ -302,19 +302,19 @@ export function ProjectDevelopmentWorkspace({ initialProposalId, onConfirmed, on
       {(showAllProposals ? orderedProposals : orderedProposals.filter(({ index }) => index === suggestedIndex)).map(({ item, index, slot }) => { const proposalId = proposalIdAt(index);
         const found = experiences.find((row) =>
           (row.source_proposal_id === proposalId || (row.annual_plan_id === plan?.id && !row.source_proposal_id && row.source_proposal_index === index)) && row.status !== "archived");
-        return <article key={proposalId || index} className={`rounded-2xl border bg-white p-4 ${suggestedIndex === index ? "border-[#087d96]" : "border-[#d6e5ef]"}`}>
+        return <article key={proposalId || index} className={`rounded-2xl border bg-white p-4 ${suggestedIndex === index ? "border-[#087d96]" : "border-[var(--ayni-panel-border)]"}`}>
           <div className="flex flex-wrap items-start justify-between gap-2"><h3 className="font-bold">{item.experience_type === "unit" ? "U" : "P"}{String(index + 1).padStart(2, "0")} · {item.title}</h3>{suggestedIndex === index && slot && slot.ends_on >= today && <span className="rounded-full bg-[#e8f6fa] px-3 py-1 text-xs font-bold text-[#087d96]">{slot.starts_on <= today ? "Planificación vigente" : "Próxima planificación"}</span>}</div>
           <p className="mt-1 text-sm text-[#526b87]">{slot ? `${dateLabel(slot.starts_on.slice(0, 10))} – ${dateLabel(slot.ends_on.slice(0, 10))}` : item.period} · {item.experience_type === "unit" ? "Unidad" : "Proyecto"} · {proposalStatus(found)}</p>
           {slot && slot.ends_on < today && <p className="mt-1 text-sm text-[#916219]">Esta planificación corresponde a un período anterior. Puedes revisarla o continuar con la actual.</p>}
           <p className="mt-1 text-sm text-[#526b87]">{item.rationale}</p>
           <Button className="mt-3" disabled={Boolean(busy) || !proposalId} onClick={() => void openProposal(proposalId)}>{found ? found.status === "active" ? "Entrar al proyecto" : "Continuar proyecto" : "Empezar este proyecto"}</Button>
         </article>; })}{Boolean(plan) && <Button variant="outline" onClick={() => setShowAllProposals(!showAllProposals)}>{showAllProposals ? "Mostrar solo la siguiente" : "Elegir otro"}</Button>}{!plan && <p>Confirma primero «Mi año» para continuar.</p>}</section>
-      {plan?.proposal.plan_format !== "annual_preplan_v1" && <section className="rounded-2xl border border-[#d6e5ef] bg-[#f8fbff] p-4">
+      {plan?.proposal.plan_format !== "annual_preplan_v1" && <section className="rounded-2xl border border-[var(--ayni-panel-border)] bg-[#f8fbff] p-4">
         <h3 className="font-bold">¿Surgió un interés nuevo en el grupo?</h3>
         <p className="mt-1 text-sm text-[#526b87]">Actualiza «Mi año» a la tabla editable para incorporar, postergar o reemplazar una propuesta.</p>
         <Button className="mt-3" variant="outline" onClick={onGoAnnual}>Ir a Mi año</Button>
       </section>}
-      {plan?.proposal.plan_format === "annual_preplan_v1" && <section className="space-y-3 rounded-2xl border border-[#d6e5ef] bg-white p-4"><Button variant="outline" onClick={() => setShowEmergent(!showEmergent)}>
+      {plan?.proposal.plan_format === "annual_preplan_v1" && <section className="space-y-3 rounded-2xl border border-[var(--ayni-panel-border)] bg-white p-4"><Button variant="outline" onClick={() => setShowEmergent(!showEmergent)}>
         + Crear un proyecto nuevo desde cero</Button>
         <p className="text-sm text-[#526b87]">Úsalo si surgió un interés de los niños que no aparece en «Mi año». Ayni propondrá cómo incorporarlo; tú revisarás el cambio antes de confirmarlo.</p>
         {showEmergent && <div className="space-y-3"><p className="text-sm text-[#526b87]">Cuéntanos qué ha surgido. Ayni propondrá una fila para «Mi año» y tú decidirás si se incorpora.</p>

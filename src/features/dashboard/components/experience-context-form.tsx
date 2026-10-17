@@ -24,7 +24,7 @@ export function ExperienceContextForm({ value, onChange, curriculum, today, disa
     </div>
     {today.slice(5)>"03-16" && <div><h2 className="text-xl font-bold text-[#172b52]">Lo que ya trabajaste este año</h2>
       <p className="mt-2 text-sm text-[#526b87]">Puedes mencionar animales, familia, plantas o Fiestas Patrias. Basta el nombre; las competencias y el período son opcionales. También puedes continuar sin registrar proyectos anteriores.</p>
-      <div className="mt-4 space-y-5">{value.historicalProjects.map((item,index)=><fieldset key={index} disabled={disabled} className="space-y-3 border-b border-[#d6e5ef] pb-4">
+      <div className="mt-4 space-y-5">{value.historicalProjects.map((item,index)=><fieldset key={index} disabled={disabled} className="space-y-3 border-b border-[var(--ayni-panel-border)] pb-4">
         <legend className="sr-only">Proyecto anterior {index+1}</legend>
         <label className="block text-sm font-semibold">Nombre del proyecto o unidad<input className="mt-1 min-h-11 w-full rounded-lg border border-[#b9ccd5] px-3 font-normal" maxLength={180} value={item.title} onChange={e=>updateHistory(index,{title:e.target.value})}/></label>
         <details><summary className="min-h-11 cursor-pointer py-2 text-sm font-semibold text-[#07576c]">Agregar período o competencias, si las conoces</summary>

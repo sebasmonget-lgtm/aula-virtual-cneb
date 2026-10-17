@@ -351,15 +351,15 @@ export function TeacherWorkspace({ onSignOut, onSetupRequired }: { onSignOut?: (
           </SidebarGroup>
         </SidebarContent>
         <SidebarFooter className="p-4">
-          <div className="rounded-xl border border-[#dce6f4] bg-white p-3">
+          <div className="rounded-xl border border-[var(--ayni-panel-border)] bg-white p-3">
             <p className="text-sm font-semibold">{profile?.section ?? "Aula"} · {profile?.age_label ?? "Edad por configurar"}</p>
             <p className="mt-1 text-xs text-[#63748d]">{profile?.school_year ?? "Año sin configurar"} · {metrics?.students_total ?? 0} estudiantes</p>
           </div>
         </SidebarFooter>
       </Sidebar>}
 
-      <SidebarInset className="min-w-0 bg-[#f7faff]">
-        <header className="sticky top-0 z-30 flex min-h-20 items-center justify-between bg-[#f7faff] px-4 md:border-b md:border-[#e7edf7] md:bg-white md:px-8">
+      <SidebarInset className="min-w-0 bg-background">
+        <header className="sticky top-0 z-30 flex min-h-20 items-center justify-between bg-background px-4 md:border-b md:border-[#e7edf7] md:bg-white md:px-8">
           <div className="flex items-center gap-3">
             <NextImage src="/favicon.svg" alt="" width={44} height={44} className={"size-11 rounded-2xl " + (preparing ? "" : "md:hidden")} />
             <div className={preparing ? "" : "md:hidden"}><p className="text-xl font-extrabold leading-tight text-[#1c2e50]">Ayni Aula</p><p className="text-xs text-[#60718a]">{preparing ? "Tu aliada en Inicial" : active === "Documentos" || active === "Biblioteca" ? "Tus documentos, ideas y materiales" : active === "Calendario" ? "Tu año, proyectos y actividades" : active === "Aula" ? "Tus niños y su seguimiento" : active === "Evaluar" ? "Evidencias y decisiones" : active === "Planificar" ? "Diagnóstico, proyectos y actividades" : "Tu aliada en Inicial"}</p></div>

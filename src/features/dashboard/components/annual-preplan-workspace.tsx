@@ -84,7 +84,7 @@ function PreplanTable({ rows, options, calendar, editable, onChange, onDevelop, 
     if (target < 0 || target >= rows.length) return;
     onChange(moveAnnualRow(rows, index, target));
   };
-  return <><section hidden={editorOnly} className="space-y-4 rounded-2xl border border-[#d6e5ef] bg-white p-4 sm:p-5">
+  return <><section hidden={editorOnly} className="space-y-4 rounded-2xl border border-[var(--ayni-panel-border)] bg-white p-4 sm:p-5">
     <div><h2 className="text-xl font-extrabold text-[#172b52]">Lista de proyectos y unidades</h2>
       <p className="mt-1 text-sm text-[#526b87]">Propuestas de la versión seleccionada, en el mismo orden del mapa.</p></div>
     <div className="space-y-3 md:hidden">{rows.map((row, index) => <article key={row.proposal_id} className="rounded-xl border p-4">

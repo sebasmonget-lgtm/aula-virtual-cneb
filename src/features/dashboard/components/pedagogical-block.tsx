@@ -12,7 +12,7 @@ export type PedagogicalBlockData = { id: string; title: string; instruction: str
   observations?: { id: string; competency_id?: string; competency_name?: string | null; criterion: string; expected_evidence?: string | null }[] };
 
 export function PedagogicalBlock({ block, onObserve, compact = false, position }: { block: PedagogicalBlockData; onObserve?: (criterionId: string, momentId: string) => void; compact?: boolean; position?: number }) {
-  if (compact) return <article className="space-y-3 rounded-xl border border-[#d8e8f0] bg-white p-4">
+  if (compact) return <article className="space-y-3 rounded-xl border border-[var(--ayni-panel-border)] bg-white p-4">
     <h3 className="text-lg font-bold text-[#172b52]">{position ? `${position}. ` : ""}{block.title}</h3>
     <section className="rounded-lg bg-[#e8f5fa] p-3 text-sm text-[#294d6d]"><h4 className="mb-1 flex items-center gap-2 font-bold text-[#07576c]"><Play aria-hidden="true" className="size-4"/>Qué hacer</h4><p className="whitespace-pre-line leading-relaxed">{block.instruction}</p>{block.expected_actions && <p className="mt-2 whitespace-pre-line">{block.expected_actions}</p>}</section>
     {!!block.examples?.length && <section className="rounded-lg bg-[#f0eafb] p-3 text-sm text-[#594477]"><h4 className="mb-1 flex items-center gap-2 font-bold"><Lightbulb aria-hidden="true" className="size-4"/>Por ejemplo…</h4><ul className="list-disc space-y-1 pl-5">{block.examples.map(example=><li key={example}>{example}</li>)}</ul></section>}

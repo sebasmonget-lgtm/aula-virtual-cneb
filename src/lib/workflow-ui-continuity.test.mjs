@@ -128,7 +128,19 @@ test("Aula distingue campos, acciones y estado de carga al añadir niños", asyn
   assert.match(workflow, /role="status"><p className="text-sm font-semibold text-\[#126177\]">Cargando información del aula…/);
   assert.match(input, /border border-input bg-white/);
   assert.match(textarea, /border border-input bg-white/);
-  assert.match(css, /--input: #71869d/);
+  // Fields must remain distinguishable on their actual background as tokens evolve.
+  const token = name => css.match(new RegExp(`--${name}: (#[0-9a-f]{6})`))[1];
+  const luminance = hex => {
+    const rgb = hex.slice(1).match(/../g).map(part => parseInt(part, 16) / 255)
+      .map(value => value <= .04045 ? value / 12.92 : ((value + .055) / 1.055) ** 2.4);
+    return rgb[0] * .2126 + rgb[1] * .7152 + rgb[2] * .0722;
+  };
+  const contrast = (first, second) => {
+    const values = [luminance(first), luminance(second)].sort((a, b) => b - a);
+    return (values[0] + .05) / (values[1] + .05);
+  };
+  assert.ok(contrast(token("input"), token("ayni-field-bg")) >= 3, "field border contrast");
+  assert.ok(contrast(token("ayni-field-placeholder"), token("ayni-field-bg")) >= 4.5, "placeholder contrast");
   assert.match(css, /button\[data-slot="button"\]\[data-variant="outline"\] \{ border-color: var\(--input\)/);
   assert.match(css, /select:not\(\[class\]\), textarea:not\(\[class\]\)\)/);
   assert.doesNotMatch(input, /dark:bg-input/);

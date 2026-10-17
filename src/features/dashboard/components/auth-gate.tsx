@@ -158,7 +158,7 @@ export function AuthGate() {
   return <main className="min-h-screen bg-[#f5f8fc] px-5 py-8 text-[#19334d] sm:px-8 sm:py-12">
     <div className="mx-auto w-full max-w-3xl">
       <div className="flex items-center gap-3">
-        <Image src="/favicon.svg" alt="" width={48} height={48} className="h-12 w-12 rounded-2xl shadow-sm" />
+        <Image src="/favicon.svg" alt="" width={48} height={48} className="h-12 w-12 rounded-2xl shadow-[var(--ayni-panel-shadow)]" />
         <div><p className="text-lg font-extrabold leading-tight">Ayni Aula</p><p className="text-sm font-semibold text-[#58718b]">Tu espacio docente</p></div>
       </div>
       <div className="mt-10 flex items-end gap-3 sm:mt-12">
@@ -169,14 +169,14 @@ export function AuthGate() {
         </div>
         <Image src="/ayni-profesora.webp" alt="Ayni, profesora tecnológica con una tableta" width={200} height={133} className="hidden w-40 shrink-0 object-contain sm:block" priority />
       </div>
-      <form onSubmit={(event) => void (settingUp ? setup(event) : recovering ? recoverAdmin(event) : signIn(event))} className="mt-6 rounded-3xl border border-[#d7e4ee] bg-white p-5 shadow-[0_12px_32px_rgba(24,50,76,0.05)] sm:p-7">
+      <form onSubmit={(event) => void (settingUp ? setup(event) : recovering ? recoverAdmin(event) : signIn(event))} className="mt-6 rounded-3xl border border-[var(--ayni-panel-border)] bg-white p-5 shadow-[0_12px_32px_rgba(24,50,76,0.05)] sm:p-7">
         {(settingUp || recovering) && <><label htmlFor="ayni-setup-key" className="block text-sm font-bold">Clave de configuración</label><input id="ayni-setup-key" type="password" autoComplete="off" required minLength={32} value={setupKey} onChange={(event) => setSetupKey(event.target.value)} className="mt-2 mb-5 w-full rounded-2xl border border-[#bdd0dd] px-4 py-4" />{settingUp && <><label htmlFor="ayni-setup-name" className="block text-sm font-bold">Nombre del administrador</label><input id="ayni-setup-name" required minLength={2} maxLength={100} value={setupName} onChange={(event) => setSetupName(event.target.value)} className="mt-2 mb-5 w-full rounded-2xl border border-[#bdd0dd] px-4 py-4" /></>}</>}
         <label htmlFor="ayni-login-dni" className="block text-sm font-bold text-[#19334d]">{recovering ? "DNI con el que entrarás" : "DNI"}</label>
         <input id="ayni-login-dni" name="username" type="text" inputMode="numeric" pattern="[0-9]{8}" maxLength={8} autoComplete="username" required value={dni} onChange={(event) => setDni(event.target.value.replace(/\D/g, ""))} className="mt-2 w-full rounded-2xl border border-[#bdd0dd] bg-white px-4 py-4 text-base outline-none transition focus:border-[#087d96] focus:ring-2 focus:ring-[#087d96]/15" />
         <label htmlFor="ayni-login-password" className="mt-5 block text-sm font-bold text-[#19334d]">{recovering ? "Nueva contraseña" : "Contraseña"}</label>
         <div className="mt-2 flex overflow-hidden rounded-2xl border border-[#bdd0dd] bg-white transition focus-within:border-[#087d96] focus-within:ring-2 focus-within:ring-[#087d96]/15">
           <input id="ayni-login-password" name="password" type={showPassword ? "text" : "password"} autoComplete={settingUp || recovering ? "new-password" : "current-password"} minLength={settingUp || recovering ? 12 : undefined} required value={password} onChange={(event) => setPassword(event.target.value)} className="min-w-0 flex-1 px-4 py-4 text-base outline-none" />
-          <button type="button" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"} aria-pressed={showPassword} className="grid w-14 place-items-center border-l border-[#d7e4ee] text-[#526b87] hover:bg-[#f5f8fc] focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-[#087d96]">
+          <button type="button" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"} aria-pressed={showPassword} className="grid w-14 place-items-center border-l border-[var(--ayni-panel-border)] text-[#526b87] hover:bg-[#f5f8fc] focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-[#087d96]">
             {showPassword ? <EyeOff size={21} aria-hidden="true" /> : <Eye size={21} aria-hidden="true" />}
           </button>
         </div>
@@ -188,7 +188,7 @@ export function AuthGate() {
         </div>}
         {notice && <p role="status" className="mt-4 rounded-xl bg-[#eaf6f9] px-4 py-3 text-sm text-[#176076]">{notice}</p>}
         {error && <p role="alert" className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
-        <button type="submit" disabled={busy} className="mt-7 w-full rounded-2xl bg-[#087d96] px-5 py-4 text-base font-bold text-white shadow-sm transition hover:bg-[#086d83] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#087d96] disabled:opacity-60">{busy ? "Procesando…" : settingUp ? "Crear administrador" : recovering ? "Restablecer acceso" : "Ingresar"}</button>
+        <button type="submit" disabled={busy} className="mt-7 w-full rounded-2xl bg-[#087d96] px-5 py-4 text-base font-bold text-white shadow-[var(--ayni-panel-shadow)] transition hover:bg-[#086d83] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#087d96] disabled:opacity-60">{busy ? "Procesando…" : settingUp ? "Crear administrador" : recovering ? "Restablecer acceso" : "Ingresar"}</button>
       </form>
       {setupAvailable && <button type="button" onClick={() => { setSettingUp((value) => !value); setError(""); setPassword(""); }} className="mt-5 text-sm font-semibold text-[#087d96] underline">{settingUp ? "Volver al inicio de sesión" : "Configurar primer administrador"}</button>}
       {recoveryAvailable && <button type="button" onClick={() => { setRecovering((value) => !value); setError(""); setNotice(""); setPassword(""); setPasswordConfirmation(""); }} className="mt-5 text-sm font-semibold text-[#087d96] underline">{recovering ? "Volver al inicio de sesión" : "Recuperar acceso del administrador"}</button>}

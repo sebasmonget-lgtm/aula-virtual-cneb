@@ -3,7 +3,7 @@
 @import "../vendor/shadcn-tailwind-4.13.0.css";
 
 :root {
-  --background: #f9fbff;
+  --background: #eaf2f8;
   --foreground: #182d50;
   --card: #ffffff;
   --card-foreground: #182d50;
@@ -18,8 +18,12 @@
   --accent: #e9f5fc;
   --accent-foreground: #182d50;
   --destructive: #b83b45;
-  --border: #dde6f1;
-  --input: #71869d;
+  --border: #b8ccde;
+  --input: #748da4;
+  --ayni-panel-border: #b8ccde;
+  --ayni-panel-shadow: 0 5px 16px rgba(23, 43, 82, .065);
+  --ayni-field-bg: #f0f5fa;
+  --ayni-field-placeholder: #526b87;
   --ring: #087d96;
   --radius: 0.9rem;
   --sidebar: #f5f8ff;
@@ -68,14 +72,26 @@
 
 * { border-color: var(--border); }
 body { margin: 0; background: var(--background); color: var(--foreground); }
+/* Quiet, shared field surfaces; typography and semantic state colors stay local. */
+:where(input:not([type="checkbox"], [type="radio"], [type="file"], [type="hidden"], [type="range"], [type="color"], [type="button"], [type="submit"], [type="reset"]):not(:disabled):not([readonly]), textarea:not(:disabled):not([readonly]), select:not(:disabled)) {
+  background-color: var(--ayni-field-bg);
+}
+:where(input:not([type="checkbox"], [type="radio"], [type="file"], [type="hidden"], [type="range"], [type="color"], [type="button"], [type="submit"], [type="reset"]):not(:disabled):not([readonly]), textarea:not(:disabled):not([readonly]), select:not(:disabled)):not([aria-invalid="true"]) {
+  border-color: var(--input);
+}
+:where(input, textarea)::placeholder { color: var(--ayni-field-placeholder); }
+[data-slot="select-trigger"][data-placeholder] { color: var(--ayni-field-placeholder); }
+.ayni-field-shell { background: var(--ayni-field-bg); border-color: var(--input); }
+.ayni-field-shell > :is(input, textarea) { background: transparent; border: 0; box-shadow: none; }
+.ayni-field-shell:focus-within { outline: 2px solid var(--ring); outline-offset: 2px; }
 button, a { -webkit-tap-highlight-color: transparent; }
 button:not(:disabled), a[href], summary { cursor: pointer; }
 button, a[href], input, select, textarea { transition: background-color .16s ease, border-color .16s ease, box-shadow .16s ease, color .16s ease, transform .16s ease; }
-:is(button, a[href], input, select, textarea, summary):focus-visible { outline: 3px solid #38a6b7; outline-offset: 2px; }
-:is(input[data-slot="input"], textarea[data-slot="textarea"]) { border-color: var(--input); background-color: #fff; }
+:is(button, a[href], input, select, textarea, summary):focus-visible { outline: 3px solid var(--ring); outline-offset: 2px; }
+:is(input[data-slot="input"]:not([type="file"], [type="checkbox"], [type="radio"], [type="range"], [type="color"]), textarea[data-slot="textarea"], [data-slot="select-trigger"]) { border-color: var(--input); background-color: var(--ayni-field-bg); }
 :is(input[data-slot="input"], textarea[data-slot="textarea"])[aria-invalid="true"] { border-color: var(--destructive); }
 button[data-slot="button"][data-variant="outline"] { border-color: var(--input); }
-:where(input:not([class]):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]):not([type="range"]):not([type="color"]):not([type="button"]):not([type="submit"]):not([type="reset"]), select:not([class]), textarea:not([class])) { display: block; width: 100%; min-height: 2.75rem; border: 1px solid var(--input); border-radius: .65rem; padding: .6rem .75rem; background: #fff; color: var(--foreground); }
+:where(input:not([class]):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]):not([type="range"]):not([type="color"]):not([type="button"]):not([type="submit"]):not([type="reset"]), select:not([class]), textarea:not([class])) { display: block; width: 100%; min-height: 2.75rem; border: 1px solid var(--input); border-radius: .65rem; padding: .6rem .75rem; background: var(--ayni-field-bg); color: var(--foreground); }
 :is(button, input, select, textarea):disabled { cursor: not-allowed; opacity: .55; }
 ::selection { background: #f6c85f80; }
 
@@ -84,7 +100,7 @@ button[data-slot="button"][data-variant="outline"] { border-color: var(--input);
 .ayni-page-icon { display: grid; flex: none; place-items: center; width: 2.8rem; height: 2.8rem; border-radius: 1rem; background: #e7ddff; color: #7149b7; }
 .ayni-eyebrow { margin-bottom: .25rem; font-size: .78rem; font-weight: 750; letter-spacing: .03em; color: #087d96; }
 .ayni-page-description { margin-top: .35rem; color: #526b87; font-size: .92rem; line-height: 1.5; }
-.ayni-panel { border: 1px solid #dce6f4; border-radius: 1.15rem; background: #fff; box-shadow: 0 10px 28px rgba(36,69,112,.045); }
+.ayni-panel { border: 1px solid var(--ayni-panel-border); border-radius: 1.15rem; background: #fff; box-shadow: var(--ayni-panel-shadow); }
 .ayni-tabs-scroll { min-width: 0; overflow-x: auto; scrollbar-width: thin; scrollbar-color: #c4d6e9 transparent; padding: .1rem .1rem .4rem; }
 .ayni-tabs { display: flex; gap: .55rem; width: max-content; min-width: 100%; }
 .ayni-tab { display: inline-flex; min-height: 2.85rem; min-width: 9.4rem; flex: 1 0 auto; align-items: center; justify-content: center; gap: .55rem; border: 1px solid #d5e1f2; border-radius: .85rem; padding: .55rem .85rem; background: #f7faff; color: #315575; font-size: .87rem; font-weight: 700; white-space: nowrap; scroll-snap-align: start; }
@@ -128,7 +144,7 @@ button[data-slot="button"][data-variant="outline"] { border-color: var(--input);
 .ayni-preparation-journey .ayni-journey-link:hover { background: #e8f6fb; }
 .ayni-preparation-journey .ayni-journey-link:active { transform: translateY(1px); }
 .ayni-workflow { max-width: 56rem; margin-inline: auto; }
-.ayni-workflow :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea) { width: 100%; min-height: 2.75rem; max-width: 100%; border: 1px solid var(--input); border-radius: .65rem; padding: .6rem .75rem; background: #fff; color: #182d50; }
+.ayni-workflow :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea) { width: 100%; min-height: 2.75rem; max-width: 100%; border: 1px solid var(--input); border-radius: .65rem; padding: .6rem .75rem; background: var(--ayni-field-bg); color: #182d50; }
 .ayni-workflow select { width: 100%; }
 .ayni-workflow textarea { width: 100%; min-height: 5.25rem; line-height: 1.5; }
 .ayni-workflow label { font-size: .88rem; font-weight: 650; color: #244260; }
@@ -197,10 +213,10 @@ button[data-slot="button"][data-variant="outline"] { border-color: var(--input);
 .diagnostic-shell .diagnostic-back-button svg { width: 20px; height: 20px; }
 
 .diagnostic-panel {
-  border: 1px solid #dce6f4;
+  border: 1px solid var(--ayni-panel-border);
   border-radius: 18px;
   background: #fff;
-  box-shadow: 0 12px 34px rgba(36, 69, 112, .035);
+  box-shadow: var(--ayni-panel-shadow);
 }
 
 .diagnostic-field {

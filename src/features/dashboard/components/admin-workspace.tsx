@@ -85,14 +85,14 @@ export function AdminWorkspace({ onSignOut }: { onSignOut: () => void }) {
       {error && <p role="alert" className="mt-5 rounded-xl bg-red-50 p-4 text-red-700">{error}</p>}
       {notice && <p role="status" className="mt-5 rounded-xl bg-[#e5f5ee] p-4 text-[#17634b]">{notice}</p>}
       <section aria-label="Resumen de consumo" className="mt-7 grid gap-4 sm:grid-cols-3">
-        <div className="rounded-2xl border border-[#d7e4ee] bg-white p-5"><p className="text-sm text-[#526b87]">Cuentas docentes</p><p className="mt-2 text-3xl font-bold">{directory?.accounts.filter((item) => item.role === "teacher").length ?? "—"}</p></div>
-        <div className="rounded-2xl border border-[#d7e4ee] bg-white p-5"><p className="text-sm text-[#526b87]">IA este mes · {directory?.month ?? ""}</p><p className="mt-2 text-3xl font-bold">{directory ? money(directory.monthCostUsd) : "—"}</p></div>
-        <div className="rounded-2xl border border-[#d7e4ee] bg-white p-5"><p className="text-sm text-[#526b87]">IA acumulada registrada</p><p className="mt-2 text-3xl font-bold">{directory ? money(directory.totalCostUsd) : "—"}</p></div>
+        <div className="rounded-2xl border border-[var(--ayni-panel-border)] bg-white p-5"><p className="text-sm text-[#526b87]">Cuentas docentes</p><p className="mt-2 text-3xl font-bold">{directory?.accounts.filter((item) => item.role === "teacher").length ?? "—"}</p></div>
+        <div className="rounded-2xl border border-[var(--ayni-panel-border)] bg-white p-5"><p className="text-sm text-[#526b87]">IA este mes · {directory?.month ?? ""}</p><p className="mt-2 text-3xl font-bold">{directory ? money(directory.monthCostUsd) : "—"}</p></div>
+        <div className="rounded-2xl border border-[var(--ayni-panel-border)] bg-white p-5"><p className="text-sm text-[#526b87]">IA acumulada registrada</p><p className="mt-2 text-3xl font-bold">{directory ? money(directory.totalCostUsd) : "—"}</p></div>
       </section>
       <p className="mt-3 text-sm text-[#526b87]">Importes en USD: incluyen costos informados por el proveedor y estimaciones. No incluyen uso anterior al registro ni infraestructura. Una llamada sin precio puede dejar el total incompleto.</p>
       <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-        <section className="overflow-hidden rounded-2xl border border-[#d7e4ee] bg-white">
-          <div className="border-b border-[#d7e4ee] p-5"><h2 className="text-xl font-bold">Usuarios</h2><p className="mt-1 text-sm text-[#526b87]">Las contraseñas actuales no se pueden consultar. Puedes restablecer las de las docentes.</p></div>
+        <section className="overflow-hidden rounded-2xl border border-[var(--ayni-panel-border)] bg-white">
+          <div className="border-b border-[var(--ayni-panel-border)] p-5"><h2 className="text-xl font-bold">Usuarios</h2><p className="mt-1 text-sm text-[#526b87]">Las contraseñas actuales no se pueden consultar. Puedes restablecer las de las docentes.</p></div>
           {!directory ? <p className="p-5">Cargando cuentas…</p> : directory.accounts.length === 0 ? <p className="p-5">Aún no hay cuentas.</p> :
             <div className="divide-y divide-[#e6edf3]">{directory.accounts.map((account) => <article key={account.id} className="p-5">
               <div className="flex flex-wrap justify-between gap-3"><div><h3 className="font-bold">{account.name}</h3><p className="text-sm text-[#526b87]">{account.role === "admin" ? "Administrador" : "Docente"} · Cuenta {account.id.slice(0, 8)} · Alta {date(account.createdAt)} · Último ingreso {date(account.lastSignInAt)}</p></div>
@@ -100,7 +100,7 @@ export function AdminWorkspace({ onSignOut }: { onSignOut: () => void }) {
               {account.role === "teacher" && <p className="mt-3 text-sm">IA: <strong>{money(account.ai.monthCostUsd)}</strong> este mes · <strong>{money(account.ai.costUsd)}</strong> acumulado · {account.ai.calls} llamadas{account.ai.unpricedCalls ? ` · ${account.ai.unpricedCalls} sin precio` : ""}{account.ai.estimatedCalls ? ` · ${account.ai.estimatedCalls} estimadas` : ""}</p>}
             </article>)}</div>}
         </section>
-        <aside className="self-start rounded-2xl border border-[#d7e4ee] bg-white p-5"><h2 className="text-xl font-bold">Nueva docente</h2><p className="mt-1 text-sm text-[#526b87]">La profesora ingresará con su DNI y la contraseña que le entregues.</p>
+        <aside className="self-start rounded-2xl border border-[var(--ayni-panel-border)] bg-white p-5"><h2 className="text-xl font-bold">Nueva docente</h2><p className="mt-1 text-sm text-[#526b87]">La profesora ingresará con su DNI y la contraseña que le entregues.</p>
           <form onSubmit={(event) => void create(event)} className="mt-5 space-y-4">
             <label className="block text-sm font-semibold">Nombre<input className={inputClass} value={name} onChange={(event) => setName(event.target.value)} minLength={2} maxLength={100} required autoComplete="off" /></label>
             <label className="block text-sm font-semibold">DNI<input className={inputClass} value={dni} onChange={(event) => setDni(event.target.value.replace(/\D/g, ""))} inputMode="numeric" pattern="[0-9]{8}" maxLength={8} required autoComplete="off" /></label>

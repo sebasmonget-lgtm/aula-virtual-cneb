@@ -52,12 +52,12 @@
 .profileMeta span { padding: 6px 12px; border-radius: 12px; background: #fff; color: #466b74; font-size: 14px; }
 .profileHeader > p:last-child { grid-column: 1 / -1; }
 .surface :global([role="tablist"]) { border-radius: 16px; background: #edf4fa; padding: 6px; }
-.surface :global([role="tabpanel"]) > article { border-color: #d6e5ef; }
+.surface :global([role="tabpanel"]) > article { border-color: var(--ayni-panel-border); }
 
 .sectionHeading { display: flex; align-items: center; gap: 12px; }
 .sectionHeading > svg { width: 40px; height: 40px; flex-shrink: 0; padding: 10px; border-radius: 14px; background: #d8eee7; color: #176b59; }
 .sectionHeading h2, .sectionHeading h3 { font-weight: 800; }
-.trajectory section { overflow: hidden; border-color: #d6e5ef; }
+.trajectory section { overflow: hidden; border-color: var(--ayni-panel-border); }
 .trajectory section > .sectionHeading { margin: -20px -20px 16px; padding: 16px 20px; background: #eaf7f2; }
 .trajectory section:nth-child(even) > .sectionHeading { background: #f2edfc; }
 .trajectory section:nth-child(even) > .sectionHeading > svg { background: #e7def7; color: #6e4598; }
@@ -66,7 +66,7 @@
 .trajectory article:last-child { border: 0; padding-bottom: 0; }
 .trajectory details summary { min-height: 44px; padding: 12px 0; }
 .logoPanel { align-self: start; border-color: #e1d9ef; background: #f4f0fc; }
-.formPanel { border-color: #d6e5ef; }
+.formPanel { border-color: var(--ayni-panel-border); }
 .formPanel > .sectionHeading { margin-bottom: 24px; }
 
 .surface ::selection { background: #c8eceb; color: #172b52; }

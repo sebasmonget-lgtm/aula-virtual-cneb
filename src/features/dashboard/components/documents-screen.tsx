@@ -108,7 +108,7 @@ export function DocumentContent({ document }: { document: OpenDocument }) {
   }
   const content = document.content;
   const names = new Map((document.competencies ?? []).map((card) => [card.id, card.name]));
-  return <article aria-label={labelFor(document)} className="overflow-hidden rounded-[1.5rem] border border-[#d6e5ef] bg-white shadow-sm">
+  return <article aria-label={labelFor(document)} className="overflow-hidden rounded-[1.5rem] border border-[var(--ayni-panel-border)] bg-white shadow-[var(--ayni-panel-shadow)]">
     <header className="bg-gradient-to-r from-[#e8f6fa] to-[#f5f9fd] p-5 sm:p-8">
       <div className="flex flex-wrap justify-between gap-2"><p className="text-xs font-extrabold uppercase tracking-wider text-[#087d96]">{labelFor(document)}{document.kind === "experience" && document.version ? ` · Versión ${document.version}` : ""}</p><span className="rounded-full bg-white px-3 py-1 text-xs font-semibold">{statusFor(document.status)}</span></div>
       <h2 className="mt-3 text-2xl font-extrabold leading-tight text-[#172b52]">{document.title}</h2>
@@ -313,11 +313,11 @@ export function DocumentsScreen({ onPlan, folder }: { onPlan?: () => void;folder
     {error && <div className="flex flex-wrap items-center gap-3"><WorkflowFeedback tone="error">{error}</WorkflowFeedback><Button variant="outline" onClick={() => { setLoading(!selected); setOpening(Boolean(selected)); setRevision((value) => value + 1); }}>Reintentar</Button></div>}
     {selected ? opening || !opened && !error ? <LoadingState label="Abriendo documento..." /> : opened ? <DocumentContent document={opened} /> : null :
       loading ? <LoadingState label="Buscando tus documentos..." /> : error ? null : documents.length === 0 ?
-        <div className="rounded-2xl border border-[#d6e5ef] bg-white p-6"><FileText className="size-8 text-[#087d96]" /><h2 className="mt-3 text-lg font-bold">Aún no hay documentos guardados</h2><p className="mt-1 text-[#526b87]">Cuando guardes tu diagnóstico, plan anual o una actividad, aparecerán aquí.</p>{onPlan && <Button className="mt-3" onClick={onPlan}>Ir a Mi año</Button>}</div> :
+        <div className="rounded-2xl border border-[var(--ayni-panel-border)] bg-white p-6"><FileText className="size-8 text-[#087d96]" /><h2 className="mt-3 text-lg font-bold">Aún no hay documentos guardados</h2><p className="mt-1 text-[#526b87]">Cuando guardes tu diagnóstico, plan anual o una actividad, aparecerán aquí.</p>{onPlan && <Button className="mt-3" onClick={onPlan}>Ir a Mi año</Button>}</div> :
         artifactFeature ? <DocumentTree documents={documents} artifactStates={artifactStates}
           onOpen={item=>{setOpened(null);setError("");setWordMessage("");setWordError("");setOpening(true);setSelected({kind:item.kind as DocumentKind,id:item.id});}} /> :
         years.map((year) => <section key={year} aria-label={`Documentos ${year}`} className="space-y-3"><h2 className="text-lg font-extrabold text-[#172b52]">Año escolar {year}</h2>
-          <ul className="space-y-2">{documents.filter((item) => item.school_year === year).map((item) => <li key={`${item.kind}-${item.id}`} className="rounded-2xl border border-[#d6e5ef] bg-white p-4 shadow-sm sm:flex sm:items-center sm:justify-between sm:gap-5">
+          <ul className="space-y-2">{documents.filter((item) => item.school_year === year).map((item) => <li key={`${item.kind}-${item.id}`} className="rounded-2xl border border-[var(--ayni-panel-border)] bg-white p-4 shadow-[var(--ayni-panel-shadow)] sm:flex sm:items-center sm:justify-between sm:gap-5">
             <div className="min-w-0"><p className="text-xs font-bold uppercase tracking-wide text-[#087d96]">{labelFor(item)} · {statusFor(item.status)}</p><h3 className="mt-1 break-words text-lg font-bold text-[#172b52]">{item.title}</h3><p className="mt-1 text-sm text-[#526b87]">{item.classroom}{item.period_label ? ` · ${item.period_label}` : item.kind === "family_report" ? " · Informe histórico sin período formal" : ""}{item.date ? ` · ${dateFor(item.date)}` : ""}{item.version && item.version > 1 ? ` · Versión ${item.version}` : ""}</p></div>
             <Button variant="outline" className="mt-3 min-h-11 shrink-0 sm:mt-0" onClick={() => { setOpened(null); setError(""); setWordMessage(""); setWordError(""); setOpening(true); setSelected({ kind: item.kind, id: item.id }); }}>Abrir documento</Button>
           </li>)}</ul>

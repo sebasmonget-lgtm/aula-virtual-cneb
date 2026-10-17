@@ -36,3 +36,9 @@ Los talleres compartidos muestran «3, 4 y 5 años» o «4 y 5 años» en una so
 Con cien talleres, los mismos filtros y búsqueda muestran una cantidad de resultados breve y accesible. La cantidad se calcula sobre identidades visibles, no suma adaptaciones. No se añaden submenús, otro navegador de biblioteca ni un paso de generación al elegir.
 
 Evaluar abre sin generar IA y muestra observaciones originales junto a la revisión docente. El contexto calculado no requiere confirmar un Assessment Master de IA. Informe a familias conserva las conclusiones guardadas y permite escribir acuerdos opcionales. Consolidado muestra información calculada; la generación de informe narrativo del aula queda fuera del recorrido moderno. Los históricos conservan consulta y Word.
+
+### Contraste de superficies y sombras · 2026-10-17
+
+Refinamiento aprobado a partir del mockup de matrícula: fondo azul grisáceo `#eaf2f8`, tarjetas blancas, borde neutral `#b8ccde` y sombra compartida `0 5px 16px rgba(23,43,82,.065)`. Las tarjetas principales reutilizan `--ayni-panel-border` y `--ayni-panel-shadow`; los estados y las superficies de competencias conservan sus colores. No aplicar sombras nuevas a cada tarjeta interna, fila ni control.
+
+Campos editables con fondo suave `#f0f5fa`, borde `#748da4` y placeholder `#526b87`: contraste borde/fondo 3.14:1 y placeholder/fondo 5.02:1. Las búsquedas con iconos y los compositores envueltos pintan el contenedor, manteniendo transparente su campo interior. Archivo, checkbox, radio y color conservan su presentación específica. Foco, error y deshabilitado siguen diferenciados. Matrícula separa sus dos paneles por 24 px en escritorio y conserva el apilado móvil. No cambia texto, tipografía, tamaño, contenido pedagógico ni reglas funcionales.

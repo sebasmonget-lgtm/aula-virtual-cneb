@@ -1323,3 +1323,7 @@ Reanalizar no elimina decisiones silenciosamente: advertencia, reconocimiento de
 El caso reducido de cierre anual complementa, no sustituye, el aula20:12 decisiones sustentadas en datos ficticios por flujos reales, B1–B4 y reapertura/recierre versionados. No SQL de notas. Documentos nuevos pueden corregir paginación con revisión layout2; los bytes ya confirmados se conservan. No convertir falta de evidencia en C ni permitir edición diaria individual.
 
 El usuario aclaró explícitamente usar la misma cuenta y una base QA separada. Configuración actual compartida no autoriza escrituras de prueba cloud. Preparar proyecto separado antes de validar Auth/RLS con cuentas ficticias. No cambiar Producción ni sus variables; solo Preview. Detalles, límites y rollback en informe QA integral actualizado.
+
+
+## 2026-10-17 - Contraste visual compartido aprobado
+Extender el mockup de matricula: fondo azul grisaceo, tarjetas blancas distinguibles, campos suavemente tenidos y sombras discretas. Mantener textos, tipografia, colores de competencias/estados y reglas existentes. Usar tokens compartidos; no aplicar sombra a cada fila ni sustituir la identidad de Ayni. Solo Preview. Detalle: docs/qa/QA_CONTRASTE_SUPERFICIES_2026-10-17.md.

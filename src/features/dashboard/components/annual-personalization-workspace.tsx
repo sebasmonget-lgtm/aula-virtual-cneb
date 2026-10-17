@@ -96,7 +96,7 @@ export function AnnualPersonalizationWorkspace({ onCreated, competencies, calend
   const set = (change: Partial<Details>) => { setDetails({ ...details, ...change }); setConfirmed([]); setNotice(""); };
   const mark = (key: string) => { setConfirmed((value) => value.includes(key) ? value : [...value, key]); setEditing(null); };
   const card = (key: string, title: string, summary: React.ReactNode, editor: React.ReactNode) =>
-    <section key={key} className="rounded-2xl border border-[#d6e5ef] bg-white p-4 sm:p-5">
+    <section key={key} className="rounded-2xl border border-[var(--ayni-panel-border)] bg-white p-4 sm:p-5">
       <div className="flex flex-wrap items-center justify-between gap-2"><h2 className="text-lg font-extrabold text-[#172b52]">{title}</h2>
         {(review.status === "confirmed" || confirmed.includes(key)) && <span className={`rounded-full px-3 py-1 text-xs font-bold ${review.status === "confirmed" ? "bg-[#e6f7ed] text-[#176442]" : "bg-[#edf4fa] text-[#3d5874]"}`}>{review.status === "confirmed" ? "Confirmado" : "Revisado"}</span>}</div>
       {editing === key ? <div className="mt-3 space-y-3">{editor}<div className="flex gap-2"><Button onClick={() => mark(key)}>Listo</Button>

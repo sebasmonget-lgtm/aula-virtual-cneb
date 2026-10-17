@@ -95,7 +95,7 @@ export function CompleteProjectWorkspace({proposalId,onGoAnnual,onGoToday,onConf
     {job&&!job.approved_at&&<PreparationProgress key={job.id} id={job.id} onGoToday={onGoToday} onProjectReady={()=>{
       if(!ready.current){ready.current=true;void load().then(()=>onConfirmed?.()).catch(cause=>setError(cause.message));}
     }}/>}
-    {past&&<section className="rounded-2xl border border-[#d4e7f1] bg-[#edf7fa] p-4"><p className="text-sm text-[#365773]">Proyecto pasado · Solo consulta.</p>{!!futureSlots.length&&<Button variant="outline" className="mt-3" onClick={()=>setReuseOpen(!reuseOpen)}>Usar en un tramo futuro</Button>}
+    {past&&<section className="rounded-2xl border border-[var(--ayni-panel-border)] bg-[#edf7fa] p-4"><p className="text-sm text-[#365773]">Proyecto pasado · Solo consulta.</p>{!!futureSlots.length&&<Button variant="outline" className="mt-3" onClick={()=>setReuseOpen(!reuseOpen)}>Usar en un tramo futuro</Button>}
       {reuseOpen&&<div className="mt-3 space-y-3"><label className="block text-sm font-semibold">¿En qué tramo?<select className="mt-2 min-h-11 w-full rounded-xl border bg-white px-3" value={reuseSlot} onChange={event=>setReuseSlot(event.target.value)}><option value="">Elige un tramo futuro</option>{futureSlots.map(slot=><option key={slot.slot_id} value={slot.slot_id}>Tramo {slot.index} · {displayDate(slot.starts_on)} – {displayDate(slot.ends_on)}</option>)}</select></label><p className="text-sm">Crearemos una copia. La propuesta de ese tramo quedará en Biblioteca.</p><Button disabled={busy||!reuseSlot} onClick={()=>void reuseProposal()}>Usar en este tramo</Button></div>}
     </section>}
 

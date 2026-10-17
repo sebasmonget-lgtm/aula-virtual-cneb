@@ -23,7 +23,7 @@ export function PlanningHome({ journey, dashboard, onOpen, onWorkshops, onEvalua
   const status = (step: Step) => step === "diagnostic" ? journey.diagnostic : step === "annual" ? journey.annual : step === "experiences" ? journey.experience : journey.activity;
   return <div className="space-y-6">
     <header><h1 className="text-3xl font-extrabold tracking-tight text-[#1c2e50]">Planificar</h1><p className="mt-1 text-[#566883]">Tu trabajo organizado en cuatro carpetas.</p></header>
-    <section className="rounded-[1.5rem] border border-[#d4e1ed] bg-white p-5 shadow-sm" aria-label="Continuar planificación">
+    <section className="rounded-[1.5rem] border border-[var(--ayni-panel-border)] bg-white p-5 shadow-[var(--ayni-panel-shadow)]" aria-label="Continuar planificación">
       <div className="flex items-center justify-between gap-3"><h2 className="text-lg font-extrabold text-[#1c2e50]">Continúa donde lo dejaste</h2><span className="rounded-full bg-[#fff2d8] px-3 py-1 text-xs font-bold text-[#9a641a]">{label(status(recommended.id))}</span></div>
       <p className="mt-4 text-xl font-bold text-[#1c2e50]">{recommended.id === "diagnostic" ? "Conoce a tu grupo" : recommended.id === "annual" ? "Prepara tu plan anual" : recommended.id === "experiences" ? "Elige el próximo proyecto de tu plan" : "Entra a un proyecto y prepara su próxima actividad"}</p>
       <p className="mt-1 text-sm text-[#566883]">{journey.studentCount} niños en el aula · {dashboard.profile.age_label}</p>

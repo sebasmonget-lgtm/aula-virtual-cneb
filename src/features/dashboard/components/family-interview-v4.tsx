@@ -141,7 +141,7 @@ export function FamilyInterviewEditor({ studentId, studentName: rawStudentName, 
               ...(field === "interest_tags" && !next.includes("other") ? { other_interest_text: undefined } : {}),
               ...(field === "community_tags" && !next.includes("other") ? { other_community_text: undefined } : {}) };
           })}
-          className={`inline-flex min-h-11 items-center gap-2 rounded-lg border px-4 text-sm font-medium ${selected ? "border-[#087d96] bg-[#e4f7f9] text-[#075a6d]" : "border-[#d7e4ed] bg-white text-[#405a73]"}`}><span className={`grid size-5 shrink-0 place-items-center rounded border ${selected?"border-[#087d96] bg-[#087d96] text-white":"border-[#8ba5b5]"}`} aria-hidden="true">{selected&&<Check className="size-4"/>}</span>{option.label}</button>;
+          className={`inline-flex min-h-11 items-center gap-2 rounded-lg border px-4 text-sm font-medium ${selected ? "border-[#087d96] bg-[#e4f7f9] text-[#075a6d]" : "border-[var(--ayni-panel-border)] bg-white text-[#405a73]"}`}><span className={`grid size-5 shrink-0 place-items-center rounded border ${selected?"border-[#087d96] bg-[#087d96] text-white":"border-[#8ba5b5]"}`} aria-hidden="true">{selected&&<Check className="size-4"/>}</span>{option.label}</button>;
       })}</div></fieldset>;
   }
   async function transcribeField(field: TextField, maxLength: number, text: string, saveNow: boolean) {
@@ -156,7 +156,7 @@ export function FamilyInterviewEditor({ studentId, studentName: rawStudentName, 
     }
   }
   function shortField(field: TextField, label: string, maxLength = 300) {
-    return <div><label htmlFor={`family-${field}`} className="block text-sm font-semibold text-[#405a73]">{label}</label><div className="mt-2 flex items-start gap-2 rounded-xl border border-[#d7e4ed] bg-white p-2">
+    return <div><label htmlFor={`family-${field}`} className="block text-sm font-semibold text-[#405a73]">{label}</label><div className="ayni-field-shell mt-2 flex items-start gap-2 rounded-xl border bg-white p-2">
       <textarea id={`family-${field}`} rows={layout === "stacked" ? 2 : 4} className={(layout === "stacked" ? "min-h-12 " : "min-h-24 ")+"min-w-0 flex-1 resize-y bg-transparent p-2 text-base font-normal outline-none focus-visible:ring-2 focus-visible:ring-[#087d96]"}
         disabled={readOnly || busy} maxLength={maxLength} value={details[field] ?? ""}
         onChange={(event) => changeText(field, event.target.value)} />
@@ -205,7 +205,7 @@ export function FamilyInterviewEditor({ studentId, studentName: rawStudentName, 
                 ...(v.autonomy_routines ?? []).filter((row) => row.id !== item.id),
                 ...(!selected ? [{ id: item.id, level: level.id as "alone" | "sometimes" | "much_help" }] : []),
               ], structured_options_version: familyInterviewStructuredOptionsVersion }))}
-              className={`flex min-h-11 items-center gap-2 rounded-lg border px-3 text-sm ${selected ? "border-[#087d96] bg-[#e4f7f9]" : "border-[#d7e4ed]"}`}><span className={`grid size-4 shrink-0 place-items-center rounded-full border ${selected?"border-[#087d96] bg-[#087d96] text-white":"border-[#71869d]"}`} aria-hidden="true">{selected&&<Check className="size-3"/>}</span>{level.label}</button>;
+              className={`flex min-h-11 items-center gap-2 rounded-lg border px-3 text-sm ${selected ? "border-[#087d96] bg-[#e4f7f9]" : "border-[var(--ayni-panel-border)]"}`}><span className={`grid size-4 shrink-0 place-items-center rounded-full border ${selected?"border-[#087d96] bg-[#087d96] text-white":"border-[#71869d]"}`} aria-hidden="true">{selected&&<Check className="size-3"/>}</span>{level.label}</button>;
           })}</div></fieldset>)}</div>{shortField("autonomy_context", "¿Quieres comentar algo más? (opcional)")}</>}
       {question.key === "communication_context" && <>{chips("communication_tags", interviewCommunicationOptions, "¿Cómo suele comunicarse?")}
         {shortField("communication_context", "Algo más que quieras contar (opcional)")}

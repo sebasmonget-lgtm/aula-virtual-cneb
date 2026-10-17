@@ -46,7 +46,7 @@ export function StudentTrajectory({ studentId, diagnosticCount }: { studentId: s
       </li>)}</ul>}</section>
     {data.timeline.map(({ period, competencies }) => <section key={period.id} className="rounded-2xl border bg-white p-5">
       <div className={styles.sectionHeading}><CalendarDays aria-hidden="true"/><div><h2 className="text-lg font-extrabold">{period.label}</h2><p className="mt-1 text-xs text-[#526b87]">{displayDate(period.starts_on)} – {displayDate(period.ends_on)}</p></div></div>
-      {competencies.length ? <div className="mt-3 space-y-3">{competencies.map(item => <article key={item.id} className="rounded-xl border border-[#d4e1ed] p-3">
+      {competencies.length ? <div className="mt-3 space-y-3">{competencies.map(item => <article key={item.id} className="rounded-xl border border-[var(--ayni-panel-border)] p-3">
         <h3 className="font-semibold">{item.name}</h3><p className="mt-1 text-sm text-[#526b87]">{stateLabel(item.state)} · {item.sources.length} {item.sources.length === 1 ? "registro" : "registros"}</p>
         {item.level && <p className="mt-1 text-sm font-semibold">Valoración docente: {item.level}</p>}
         {item.conclusion && <p className="mt-1 text-sm">{item.conclusion}</p>}

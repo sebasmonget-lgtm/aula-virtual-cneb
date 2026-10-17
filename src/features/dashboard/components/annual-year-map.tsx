@@ -33,7 +33,7 @@ export function AnnualYearTimeline({ rows, calendar, effectiveCalendar, selected
   const monthStart = (index: number) => `${calendar.school_year}-${String(index + 3).padStart(2, "0")}-01`;
   const monthEnd = (index: number) => new Date(Date.UTC(calendar.school_year, index + 3, 0)).toISOString().slice(0, 10);
   return <div className="space-y-3">
-    <section aria-label="Mapa del año escolar" tabIndex={0} className="journey-matrix-scroll overflow-x-auto rounded-2xl border border-[#d8e8f0] bg-white shadow-sm">
+    <section aria-label="Mapa del año escolar" tabIndex={0} className="journey-matrix-scroll overflow-x-auto rounded-2xl border border-[var(--ayni-panel-border)] bg-white shadow-[var(--ayni-panel-shadow)]">
       <div className="relative min-w-[3060px] px-4 pb-4 pt-4">
         <div className="relative h-9 border-b border-[#dbe8f0]">{months.map((month, index) => <span key={month}
           className="absolute top-0 border-l border-[#e0eaf1] pl-2 text-xs font-bold text-[#304a70]"
@@ -94,7 +94,7 @@ export function AnnualYearMap({ rows, available, calendar, effectiveCalendar, sl
   return <div className="space-y-3">
     <AnnualYearTimeline rows={projected.rows} calendar={calendar} effectiveCalendar={effectiveCalendar} selectedId={selected?.proposal_id ?? null} onSelect={onSelect} />
     {projected.error && <p role="alert" className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">{projected.error}</p>}
-    {selected && <section className="rounded-2xl border border-[#d8e8f0] bg-white p-4 shadow-sm sm:p-5" aria-label={`Detalle de ${selected.title}`}>
+    {selected && <section className="rounded-2xl border border-[var(--ayni-panel-border)] bg-white p-4 shadow-[var(--ayni-panel-shadow)] sm:p-5" aria-label={`Detalle de ${selected.title}`}>
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,.9fr)]">
         <div><ProjectPictogram project={selected} className="mb-4 size-40 sm:size-48" /><div className="flex items-center gap-3"><span className="grid size-10 shrink-0 place-items-center rounded-full bg-[#e2f4ea] text-sm font-extrabold text-[#16805d]">{String(selectedIndex + 1).padStart(2, "0")}</span>
           <div><h2 className="text-lg font-extrabold text-[#172b52]">{selected.title}</h2><p className="text-xs text-[#526b87]">{selected.experience_type === "unit" ? "Unidad" : "Proyecto"} · {selected.period}</p></div></div>
@@ -118,7 +118,7 @@ export function AnnualYearMap({ rows, available, calendar, effectiveCalendar, sl
       {editing && replacementOpen && <div className="mt-3 flex flex-wrap gap-2 rounded-xl bg-[#f3f8fb] p-3 text-sm"><b className="w-full">Sustituir por una propuesta disponible</b>
         {available.map((row) => <Button key={row.proposal_id} type="button" variant="outline" onClick={() => { onReplace(row.proposal_id); setReplacementOpen(false); }}>{annualDisplayTitle(row.title)}</Button>)}</div>}
     </section>}
-    <section className="rounded-2xl border border-[#d8e8f0] bg-white p-4 shadow-sm" aria-label="Propuestas disponibles">
+    <section className="rounded-2xl border border-[var(--ayni-panel-border)] bg-white p-4 shadow-[var(--ayni-panel-shadow)]" aria-label="Propuestas disponibles">
       <div className="flex flex-wrap items-center justify-between gap-2"><div><h2 className="font-extrabold text-[#172b52]">Propuestas disponibles</h2><p className="text-xs text-[#526b87]">Ideas retiradas o pendientes para incorporar al año.</p></div>
         {editing && <Button type="button" variant="outline" onClick={onAddManual}><Plus className="size-4" /> Nueva propuesta</Button>}</div>
       {available.length ? <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">{available.map(row => <article key={row.proposal_id} className={`rounded-xl border p-3 ${rowStyle(row)}`}>
