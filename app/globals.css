@@ -22,7 +22,8 @@
   --input: #748da4;
   --ayni-panel-border: #b8ccde;
   --ayni-panel-shadow: 0 5px 16px rgba(23, 43, 82, .065);
-  --ayni-field-bg: #f0f5fa;
+  --ayni-field-bg: #ffffff;
+  --ayni-field-disabled-bg: #e7edf3;
   --ayni-field-placeholder: #526b87;
   --ring: #087d96;
   --radius: 0.9rem;
@@ -84,6 +85,10 @@ body { margin: 0; background: var(--background); color: var(--foreground); }
 .ayni-field-shell { background: var(--ayni-field-bg); border-color: var(--input); }
 .ayni-field-shell > :is(input, textarea) { background: transparent; border: 0; box-shadow: none; }
 .ayni-field-shell:focus-within { outline: 2px solid var(--ring); outline-offset: 2px; }
+:is(input:not([type="checkbox"], [type="radio"], [type="file"], [type="hidden"], [type="range"], [type="color"], [type="button"], [type="submit"], [type="reset"]), textarea, select):is(:disabled, [readonly]), [data-slot="select-trigger"]:is(:disabled, [data-disabled]), .ayni-field-shell:has(:is(input, textarea):disabled) {
+  --ayni-field-bg: var(--ayni-field-disabled-bg);
+  background-color: var(--ayni-field-bg);
+}
 button, a { -webkit-tap-highlight-color: transparent; }
 button:not(:disabled), a[href], summary { cursor: pointer; }
 button, a[href], input, select, textarea { transition: background-color .16s ease, border-color .16s ease, box-shadow .16s ease, color .16s ease, transform .16s ease; }

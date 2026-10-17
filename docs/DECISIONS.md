@@ -1327,3 +1327,6 @@ El usuario aclaró explícitamente usar la misma cuenta y una base QA separada. 
 
 ## 2026-10-17 - Contraste visual compartido aprobado
 Extender el mockup de matricula: fondo azul grisaceo, tarjetas blancas distinguibles, campos suavemente tenidos y sombras discretas. Mantener textos, tipografia, colores de competencias/estados y reglas existentes. Usar tokens compartidos; no aplicar sombra a cada fila ni sustituir la identidad de Ayni. Solo Preview. Detalle: docs/qa/QA_CONTRASTE_SUPERFICIES_2026-10-17.md.
+
+## 2026-10-17 — Diferenciar controles disponibles y bloqueados
+Feedback posterior: el fondo editable pasa a blanco; gris reservado a disabled/readonly. Entrevista distingue opción disponible celeste, seleccionada turquesa con check y bloqueada gris. Mantiene sombras aprobadas y colores semánticos. Prevalece sobre el anterior fondo gris azulado del campo. Detalle: docs/qa/QA_CONTROLES_ACTIVOS_2026-10-17.md.

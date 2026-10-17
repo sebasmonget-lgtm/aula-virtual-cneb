@@ -141,7 +141,7 @@ export function FamilyInterviewEditor({ studentId, studentName: rawStudentName, 
               ...(field === "interest_tags" && !next.includes("other") ? { other_interest_text: undefined } : {}),
               ...(field === "community_tags" && !next.includes("other") ? { other_community_text: undefined } : {}) };
           })}
-          className={`inline-flex min-h-11 items-center gap-2 rounded-lg border px-4 text-sm font-medium ${selected ? "border-[#087d96] bg-[#e4f7f9] text-[#075a6d]" : "border-[var(--ayni-panel-border)] bg-white text-[#405a73]"}`}><span className={`grid size-5 shrink-0 place-items-center rounded border ${selected?"border-[#087d96] bg-[#087d96] text-white":"border-[#8ba5b5]"}`} aria-hidden="true">{selected&&<Check className="size-4"/>}</span>{option.label}</button>;
+          className={`${styles.interviewChoice} inline-flex min-h-11 items-center gap-2 rounded-lg border px-4 text-sm font-medium ${selected ? "border-[#087d96] bg-[#e4f7f9] text-[#075a6d]" : "border-[var(--ayni-panel-border)] bg-white text-[#405a73]"}`}><span className={`grid size-5 shrink-0 place-items-center rounded border ${selected?"border-[#087d96] bg-[#087d96] text-white":"border-[#8ba5b5]"}`} aria-hidden="true">{selected&&<Check className="size-4"/>}</span>{option.label}</button>;
       })}</div></fieldset>;
   }
   async function transcribeField(field: TextField, maxLength: number, text: string, saveNow: boolean) {
@@ -205,7 +205,7 @@ export function FamilyInterviewEditor({ studentId, studentName: rawStudentName, 
                 ...(v.autonomy_routines ?? []).filter((row) => row.id !== item.id),
                 ...(!selected ? [{ id: item.id, level: level.id as "alone" | "sometimes" | "much_help" }] : []),
               ], structured_options_version: familyInterviewStructuredOptionsVersion }))}
-              className={`flex min-h-11 items-center gap-2 rounded-lg border px-3 text-sm ${selected ? "border-[#087d96] bg-[#e4f7f9]" : "border-[var(--ayni-panel-border)]"}`}><span className={`grid size-4 shrink-0 place-items-center rounded-full border ${selected?"border-[#087d96] bg-[#087d96] text-white":"border-[#71869d]"}`} aria-hidden="true">{selected&&<Check className="size-3"/>}</span>{level.label}</button>;
+              className={`${styles.interviewChoice} flex min-h-11 items-center gap-2 rounded-lg border px-3 text-sm ${selected ? "border-[#087d96] bg-[#e4f7f9]" : "border-[var(--ayni-panel-border)]"}`}><span className={`grid size-4 shrink-0 place-items-center rounded-full border ${selected?"border-[#087d96] bg-[#087d96] text-white":"border-[#71869d]"}`} aria-hidden="true">{selected&&<Check className="size-3"/>}</span>{level.label}</button>;
           })}</div></fieldset>)}</div>{shortField("autonomy_context", "¿Quieres comentar algo más? (opcional)")}</>}
       {question.key === "communication_context" && <>{chips("communication_tags", interviewCommunicationOptions, "¿Cómo suele comunicarse?")}
         {shortField("communication_context", "Algo más que quieras contar (opcional)")}

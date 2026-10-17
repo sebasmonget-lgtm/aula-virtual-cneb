@@ -67,6 +67,12 @@
 .questionCard fieldset button { min-height: 44px; padding: 7px 10px; border-radius: 7px; font-size: 12px; line-height: 1.3; font-weight: 400; text-align: left; }
 .questionCard fieldset button[aria-pressed=true] { background: #e3f4ff; border-color: #b8ddff; color: #0062bc; }
 .questionCard fieldset button[aria-pressed=true] > span { background: #0075d8; border-color: #0075d8; }
+.questionCard .interviewChoice, .interviewChoice { background: #f3fcff; border-color: #62869c; color: #234b63; font-weight: 500; }
+.questionCard .interviewChoice > span, .interviewChoice > span { background: #fff; border-color: #4d7f97; }
+.questionCard .interviewChoice:hover:not(:disabled), .interviewChoice:hover:not(:disabled) { background: #e5f6fb; border-color: #087d96; }
+.questionCard .interviewChoice[aria-pressed=true], .interviewChoice[aria-pressed=true] { background: #dcf4ef; border-color: #087d96; color: #075a6d; }
+.questionCard .interviewChoice[aria-pressed=true] > span, .interviewChoice[aria-pressed=true] > span { background: #087d96; border-color: #087d96; color: #fff; }
+.questionCard .interviewChoice:disabled, .interviewChoice:disabled { background: var(--ayni-field-disabled-bg); border-color: #9aaab9; color: #526b87; }
 .questionCard label { font-size: 13px; color: #597cad; font-weight: 400; }
 .questionCard textarea { font-size: 14px; color: #163b74; min-height: 44px; }
 .questionCard textarea::placeholder { color: var(--ayni-field-placeholder); }
