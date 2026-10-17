@@ -14,8 +14,9 @@ import {
   type DiagnosticGroupDetails, type DiagnosticPriorityDetails, type DiagnosticReviewWorkspace, type DiagnosticStudentReviewDetails,
   type DiagnosticObservationStatus, type FamilyInterview, type FamilyInterviewAnswerKey,
 } from "@/src/lib/local-database";
-import { familyInterviewQuestionGroups, interviewInterestOptions, interviewLanguageOptions,
+import { familyInterviewVersionFor, familyInterviewQuestionGroups, interviewInterestOptions, interviewLanguageOptions,
   interviewPreviousEducationTypeOptions } from "@/src/lib/family-interview-contract.mjs";
+import {familyInterviewAnswerText} from '@/src/lib/family-interview-print.mjs';
 import { AsyncButton, LoadingState } from "./workflow-ui";
 import { diagnosticReviewProgress } from "@/src/lib/diagnostic-review-progress.mjs";
 import { DictationRecorder } from "./dictation-recorder";
@@ -45,7 +46,9 @@ const statusText: Record<DiagnosticObservationStatus, string> = {
 };
 
 const interviewSummaryLabels: Record<FamilyInterviewAnswerKey, string> = {
-  family_context: "Quiénes le acompañan",
+  family_context: "Contexto familiar y expectativas",
+  identity_autonomy_context: "Identidad y autonomía", literacy_context: "Lectura y escritura",
+  mathematics_context: "Matemática", exploration_context: "Curiosidad y exploración",
   language_context: "Lenguas en casa",
   interests: "Intereses",
   autonomy_context: "Autonomía",
@@ -66,6 +69,8 @@ const groupSummaryPrompts = [
 ] as const;
 
 function interviewAnswer(interview: FamilyInterview, key: FamilyInterviewAnswerKey) {
+  const answer=familyInterviewAnswerText(interview.details,key);
+  if(answer)return answer;
   const details = interview.details;
   const written = details[key]?.trim();
   if (written) return written;
@@ -251,11 +256,12 @@ export function DiagnosticReview({ onObserve, onPlan, onGroupConfirmed, onObserv
       <section className="space-y-3 rounded-2xl border border-[var(--ayni-panel-border)] bg-white p-4"><h4 className="text-lg font-bold">1 · Lo que contó la familia</h4><p className="text-xs text-[#526b87]">Es contexto familiar; no es una observación de la docente.</p>
         {interviewError && <p role="alert" className="text-sm text-[#a33c37]">{interviewError}</p>}
         {!interview && !interviewError && <p className="text-sm text-[#526b87]">Sin entrevista confirmada o cargando entrevista.</p>}
-        {interview && familyInterviewQuestionGroups(student.name).map((group) => {
-          const answers = group.questions.map(({ key }) => ({ key: key as FamilyInterviewAnswerKey,
-            answer: interviewAnswer(interview, key as FamilyInterviewAnswerKey) })).filter((item) => item.answer);
+        {interview && familyInterviewQuestionGroups(student.name,familyInterviewVersionFor(interview.details)).map((group) => {
+          const answers = group.questions.map(question => ({ key: question.key as FamilyInterviewAnswerKey,
+            label:'title' in question ? question.title : interviewSummaryLabels[question.key as FamilyInterviewAnswerKey]??question.label,
+            answer: interviewAnswer(interview, question.key as FamilyInterviewAnswerKey) })).filter((item) => item.answer);
           return answers.length ? <div key={group.title} className="pt-1"><h5 className="font-semibold text-[#075d70]">{group.title}</h5>
-            <ul className="mt-2 list-disc space-y-2 pl-6 marker:text-[#087d96]">{answers.map(({ key, answer }) => <li key={key} className="pl-1 leading-relaxed"><span className="font-semibold">{interviewSummaryLabels[key]}:</span> {answer}</li>)}</ul>
+            <ul className="mt-2 list-disc space-y-2 pl-6 marker:text-[#087d96]">{answers.map(({ key, label, answer }) => <li key={key} className="pl-1 leading-relaxed"><span className="font-semibold">{label}:</span> {answer}</li>)}</ul>
           </div> : null;
         })}
       </section>

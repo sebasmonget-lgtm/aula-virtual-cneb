@@ -1330,3 +1330,6 @@ Extender el mockup de matricula: fondo azul grisaceo, tarjetas blancas distingui
 
 ## 2026-10-17 — Diferenciar controles disponibles y bloqueados
 Feedback posterior: el fondo editable pasa a blanco; gris reservado a disabled/readonly. Entrevista distingue opción disponible celeste, seleccionada turquesa con check y bloqueada gris. Mantiene sombras aprobadas y colores semánticos. Prevalece sobre el anterior fondo gris azulado del campo. Detalle: docs/qa/QA_CONTROLES_ACTIVOS_2026-10-17.md.
+
+## 2026-10-17 — Entrevista de ocho preguntas
+Por instrucción explícita de la usuaria, las entrevistas nuevas cubren ocho temas con las preguntas proporcionadas: juegos; identidad/autonomía; convivencia; comunicación oral; lectura/escritura; matemática; exploración; contexto familiar/expectativas. Sustituye la decisión previa de seis preguntas para nuevas entrevistas y correcciones. Las confirmadas anteriores siguen consultables con su contrato previo. Metadato JSON de cuestionario separado de la versión de opciones; sin migración ni respuestas inferidas. Todas opcionales y solo contexto familiar. Informe QA_ENTREVISTA_OCHO_PREGUNTAS_2026-10-17.md.

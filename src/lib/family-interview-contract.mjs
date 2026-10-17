@@ -5,6 +5,7 @@ export const familyInterviewCategories = Object.freeze([
   "social_context", "adaptation_context", "previous_education", "daily_routine_context",
   "family_expectations", "family_expectation", "home_activity_example",
   "family_community_context", "family_community_enjoyed", "participation_support_context",
+  "identity_autonomy_context", "literacy_context", "mathematics_context", "exploration_context",
 ]);
 export const familyInterviewStructuredOptionsVersion = 2;
 export const interviewLanguageOptions = Object.freeze([
@@ -79,14 +80,29 @@ export const interviewPreviousEducationTypeOptions = Object.freeze([
   { id: "nursery", label: "Cuna" }, { id: "kindergarten", label: "Jardín" },
   { id: "daycare", label: "Guardería" }, { id: "other", label: "Otro espacio" },
 ]);
-export const familyInterviewQuestionGroups = (name) => [{ title: "La familia nos cuenta", questions: [
+export const familyInterviewQuestionnaireVersion = 3;
+export const familyInterviewQuestionGroups = (name, version = familyInterviewQuestionnaireVersion) => [{ title: version === 2 ? "La familia nos cuenta" : "Preguntas para la familia", questions: version === 2 ? [
   { key: "interests", label: "¿Qué le gusta hacer a " + name + " y qué temas le interesan?", hint: "Marca solo lo que cuente la familia. Puedes añadir un ejemplo o comentar lo que no le gusta." },
   { key: "social_context", label: "¿Cómo suele jugar " + name + ", a solas y con otras personas?", hint: "Puedes señalar distintas formas de jugar; no hace falta elegir una sola." },
   { key: "home_activity_example", label: "¿Qué has visto hacer a " + name + " mientras juega o explora en casa?", hint: "Aquí interesa una situación concreta: qué hizo, dijo o intentó." },
   { key: "communication_context", label: "¿Qué lenguas escucha o usa " + name + " en casa y cómo se hace entender?", hint: "Puedes marcar una lengua aunque todavía no la hable, si la escucha en casa." },
   { key: "family_community_context", label: "¿Qué actividades, lugares o costumbres comparte " + name + " con su familia o comunidad?", hint: "Las opciones son temas o lugares. Puedes contar qué hace allí o con quién comparte esa experiencia." },
   { key: "participation_support_context", label: "¿Qué ayuda a " + name + " a sentirse a gusto y participar?", hint: "Comparte lo que ayude a acompañarle. No necesitas incluir información privada." },
+] : [
+  { key: "interests", title: "Juegos e intereses", label: "¿Qué juegos o actividades disfruta más su hijo o hija? ¿Qué suele hacer cuando juega libremente?", hint: "Marca solo lo que cuente la familia. Puedes añadir un ejemplo o comentar lo que no le gusta." },
+  { key: "identity_autonomy_context", title: "Identidad y autonomía", label: "¿Cómo expresa sus emociones cuando está alegre, triste o molesto? ¿Qué cosas suele hacer por sí mismo?", hint: "Puedes contar una situación cotidiana y qué hace sin ayuda o con acompañamiento." },
+  { key: "social_context", title: "Convivencia", label: "¿Cómo se relaciona con otros niños o familiares? ¿Qué hace cuando tiene que compartir o surge algún desacuerdo?", hint: "Cuenta lo que suele ocurrir; no hay respuestas correctas o incorrectas." },
+  { key: "communication_context", title: "Comunicación oral", label: "¿Qué cosas suele contar o preguntar en casa? ¿Cómo expresa sus ideas o necesidades y en qué lengua o lenguas se comunica?", hint: "Puedes marcar las lenguas y añadir qué cuenta, pregunta o cómo se hace entender." },
+  { key: "literacy_context", title: "Lectura y escritura", label: "¿Cómo se interesa por los cuentos, libros o imágenes? ¿Intenta dibujar, hacer marcas o escribir algo a su manera para comunicar lo que desea?", hint: "Cuenta lo que has visto. Dibujar, hacer marcas y escribir son formas diferentes de expresión; no necesita leer ni escribir convencionalmente." },
+  { key: "mathematics_context", title: "Matemática", label: "Cuando juega o ayuda en casa, ¿suele contar, agrupar, repartir, comparar o construir con objetos? ¿Puede contar algún ejemplo?", hint: "Describe un juego o una tarea cotidiana, sin proponerle una prueba." },
+  { key: "exploration_context", title: "Curiosidad y exploración", label: "¿Qué cosas despiertan su curiosidad? Cuando quiere saber cómo funciona algo, ¿qué suele hacer para descubrirlo?", hint: "Puedes contar qué le llamó la atención y qué hizo para averiguarlo." },
+  { key: "family_context", title: "Contexto familiar y expectativas", label: "¿Qué considera importante que la profesora conozca sobre su hijo o hija? ¿Qué le gustaría que aprenda o desarrolle durante este año?", hint: "Comparte solo información útil para acompañarle. Todas las respuestas son opcionales." },
 ] }];
+
+/** Existing answers remain in their original questionnaire until explicitly corrected. */
+export function familyInterviewVersionFor(details = {}) {
+  return details?.questionnaire_version === 3 || !hasFamilyInterviewAnswers(details) ? 3 : 2;
+}
 
 /** A version marker, whitespace and empty lists are not family answers. */
 export function hasFamilyInterviewAnswers(details) {

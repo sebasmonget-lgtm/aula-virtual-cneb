@@ -10,7 +10,7 @@ import { buildClassifierOptions } from "./openai-competency-classifier.mjs";
 import { anonymousDecisionText } from "./jev-competency-suggestion.mjs";
 import { observationRecommendationState } from "./observation-recommendation.mjs";
 import { summarizeSpontaneousV24Pilot } from "./observation-v24-pilot-metrics.mjs";
-import { hasFamilyInterviewAnswers, familyInterviewCategories, familyInterviewStructuredOptionsVersion, interviewLanguageOptions, interviewInterestOptions, interviewAutonomyOptions, interviewAutonomyLevels, interviewCommunicationOptions, interviewEmotionalSupportOptions, interviewSocialPlayOptions, interviewHomeActivityOptions, interviewCommunityOptions, interviewParticipationSupportOptions, interviewPreviousEducationOptions, interviewPreviousEducationTypeOptions } from "./family-interview-contract.mjs";
+import { hasFamilyInterviewAnswers, familyInterviewQuestionGroups, familyInterviewVersionFor, familyInterviewCategories, familyInterviewStructuredOptionsVersion, interviewLanguageOptions, interviewInterestOptions, interviewAutonomyOptions, interviewAutonomyLevels, interviewCommunicationOptions, interviewEmotionalSupportOptions, interviewSocialPlayOptions, interviewHomeActivityOptions, interviewCommunityOptions, interviewParticipationSupportOptions, interviewPreviousEducationOptions, interviewPreviousEducationTypeOptions } from "./family-interview-contract.mjs";
 
 export class DiagnosticSourceError extends Error {
   constructor(reason, message) { super(message); this.name = "DiagnosticSourceError"; this.reason = reason; }
@@ -52,10 +52,14 @@ export function validateFamilyInterviewDetails(value) {
   if (Object.keys(value).some((key) => ![...familyInterviewCategories, ...legacyInterviewFields,
     ...tagFields.map(([field]) => field), "primary_language_tag", "other_language_text", "other_interest_text",
     "other_community_text", "home_language_uses", "autonomy_routines",
-    "previous_education_status", "previous_education_type", "structured_options_version"].includes(key))) fail("invalid_interview", "La entrevista contiene un campo no permitido.");
+    "previous_education_status", "previous_education_type", "structured_options_version", "questionnaire_version"].includes(key))) fail("invalid_interview", "La entrevista contiene un campo no permitido.");
   if (value.structured_options_version != null && ![1, familyInterviewStructuredOptionsVersion].includes(value.structured_options_version))
     fail("invalid_interview", "La versión de opciones de la entrevista no es compatible.");
   const result = {};
+  if (value.questionnaire_version != null) {
+    if (![2,3].includes(value.questionnaire_version)) fail("invalid_interview", "La versión de preguntas de la entrevista no es compatible.");
+    result.questionnaire_version = value.questionnaire_version;
+  }
   for (const field of [...familyInterviewCategories, ...legacyInterviewFields]) {
     const answer = value[field];
     if (answer == null || answer === "") continue;
@@ -112,7 +116,12 @@ export function validateFamilyInterviewDetails(value) {
       fail("invalid_interview", "El tipo de experiencia previa requiere la respuesta «Sí».");
     result.previous_education_type = value.previous_education_type;
   }
-  const newFields = ["communication_context", "emotional_support_context", "home_activity_example",
+  const eightQuestionFields = ["identity_autonomy_context", "literacy_context", "mathematics_context", "exploration_context"];
+  if (eightQuestionFields.some(field => result[field])) {
+    if (value.questionnaire_version === 2) fail("invalid_interview", "Las respuestas nuevas requieren las ocho preguntas de la entrevista.");
+    result.questionnaire_version = 3;
+  }
+  const newFields = [...eightQuestionFields, "communication_context", "emotional_support_context", "home_activity_example",
     "family_community_context", "family_community_enjoyed", "participation_support_context", "family_expectation",
     "communication_tags", "emotional_support_tags", "social_play_tags", "home_activity_tags", "community_tags",
     "participation_support_tags", "other_community_text", "home_language_uses", "autonomy_routines"];
@@ -130,6 +139,7 @@ export function safeFamilyContext(details) {
   const normalized = normalizeFamilyInterviewDetails(details ?? {});
   return Object.fromEntries([...permittedContextFields, "communication_context", "emotional_support_context",
     "home_activity_example", "family_community_context", "family_community_enjoyed",
+    "identity_autonomy_context", "literacy_context", "mathematics_context", "exploration_context",
     "participation_support_context", "family_expectation", "language_tags", "primary_language_tag",
     "other_language_text", "home_language_uses", "interest_tags", "other_interest_text",
     "autonomy_routines", "communication_tags", "emotional_support_tags", "social_play_tags",
@@ -175,7 +185,7 @@ export async function listFamilyInterviewStatuses(db, teacherId) {
     order by s.id,i.version desc`, [classroom.id])).rows;
   const students = new Map();
   for (const row of rows) {
-    const entry = students.get(row.student_id) ?? { student_id: row.student_id, status: "not_started", has_confirmed_answers: false, answered_questions: countFamilyInterviewAnswers(row.details), total_questions: 6 };
+    const entry = students.get(row.student_id) ?? { student_id: row.student_id, status: "not_started", has_confirmed_answers: false, answered_questions: countFamilyInterviewAnswers(row.details), total_questions: familyInterviewQuestionGroups("",familyInterviewVersionFor(row.details))[0].questions.length };
     const answers = hasFamilyInterviewAnswers(row.details);
     if (answers && row.status === "draft") entry.status = "partial";
     if (answers && row.status === "confirmed" && row.teacher_confirmed_at) {
@@ -225,7 +235,7 @@ export async function confirmFamilyInterview(db, teacherId, studentId) {
 /** The teacher's Save action is the confirmation; no model evaluates family answers. */
 export async function saveAndConfirmFamilyInterview(db, teacherId, studentId, details) {
   const validated = validateFamilyInterviewDetails(details);
-  if (!Object.keys(validated).length) fail("empty_interview", "Añade al menos una respuesta antes de guardar la entrevista.");
+  if (!hasFamilyInterviewAnswers(validated)) fail("empty_interview", "Añade al menos una respuesta antes de guardar la entrevista.");
   return versionTransaction(db, interviewVersionKey(teacherId, studentId), async (tx) => {
     const classroom = await scope(tx, teacherId);
     await studentInScope(tx, classroom.id, studentId);

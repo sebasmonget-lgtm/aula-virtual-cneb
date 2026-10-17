@@ -128,6 +128,6 @@ test("opciones de la entrevista se capturan al responder, sin clasificar despué
   assert.match(ui, /Pregunta \{step \+ 1\} de \{questions\.length\}/);
   assert.match(ui, /saveDraft\(true\)/);
   assert.match(ui, /Avance guardado\. Puedes continuar después\./);
-  assert.match(ui, /¿Con quién usa/);
+  assert.match(ui, /¿Con quién escucha o usa/);
   assert.match(ui, /¿Qué otro interés/);
 });

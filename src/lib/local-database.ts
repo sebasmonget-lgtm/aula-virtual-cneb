@@ -116,13 +116,15 @@ export type DiagnosticReviewWorkspace = {
   derived_group_information: { confirmed_interviews: number; interests: { key: string; label: string; count: number }[]; observation_gaps: { competency_id: string; competency_name: string; children_with_observations: number; children_without_observations: number }[] };
 };
 
-export type FamilyInterviewAnswerKey = "family_context" | "language_context" | "interests" | "autonomy_context" | "communication_emotional_context" | "social_context" | "adaptation_context" | "previous_education" | "daily_routine_context" | "family_expectations";
+export type FamilyInterviewAnswerKey = "family_context" | "language_context" | "interests" | "autonomy_context" | "communication_emotional_context" | "social_context" | "adaptation_context" | "previous_education" | "daily_routine_context" | "family_expectations" | "identity_autonomy_context" | "literacy_context" | "mathematics_context" | "exploration_context";
 export type FamilyInterviewDetails = Partial<Record<FamilyInterviewAnswerKey, string>> & {
   language_tags?: string[]; primary_language_tag?: string; other_language_text?: string;
   interest_tags?: string[]; other_interest_text?: string;
   communication_context?: string; emotional_support_context?: string;
   home_activity_example?: string; family_community_context?: string; family_community_enjoyed?: string;
   participation_support_context?: string; family_expectation?: string;
+  identity_autonomy_context?: string; literacy_context?: string; mathematics_context?: string; exploration_context?: string;
+  questionnaire_version?: number;
   autonomy_routines?: { id: string; level: "alone" | "sometimes" | "much_help" }[];
   home_language_uses?: { language_tag: string; with_whom: string }[];
   communication_tags?: string[]; emotional_support_tags?: string[]; social_play_tags?: string[];
@@ -133,6 +135,9 @@ export type FamilyInterviewDetails = Partial<Record<FamilyInterviewAnswerKey, st
   structured_options_version?: number;
 };
 export const familyContextLabels: Record<string, string> = {
+  family_context: "Contexto familiar y expectativas", identity_autonomy_context: "Identidad y autonomía",
+  literacy_context: "Lectura y escritura", mathematics_context: "Matemática", exploration_context: "Curiosidad y exploración",
+  family_expectations: "Expectativas familiares anteriores", daily_routine_context: "Rutinas cotidianas",
   language_context: "Lenguas en casa", interests: "Intereses", autonomy_context: "Autonomía",
   communication_emotional_context: "Comunicación y emociones", social_context: "Relación con otros",
   adaptation_context: "Rutinas que dan seguridad", previous_education: "Experiencias educativas anteriores",

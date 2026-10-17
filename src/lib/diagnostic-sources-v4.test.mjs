@@ -24,6 +24,26 @@ import { attachFamilyInterview, classifySpontaneousObservation, confirmFamilyInt
 
 const teacher = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 const other = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+
+test('ocho respuestas familiares persisten por el servicio y conservan la versión confirmada anterior',async()=>{
+  const db=await database();
+  try {
+    const own=await setup(db,teacher,'A');const studentId=own.students[0].id;
+    await assert.rejects(saveAndConfirmFamilyInterview(db,teacher,studentId,{questionnaire_version:3}),{reason:'empty_interview'});
+    const original=await saveAndConfirmFamilyInterview(db,teacher,studentId,{structured_options_version:2,home_activity_example:'Jugaba con cajas.',home_activity_tags:['builds']});
+    const before=structuredClone(original.details);
+    const next={...before,questionnaire_version:3,interests:'Juega a cocinar.',identity_autonomy_context:'Expresa alegría y se pone los zapatos.',social_context:'Propone turnarse.',communication_context:'Cuenta lo que hizo.',literacy_context:'Mira cuentos y hace marcas.',mathematics_context:'Reparte cucharas.',exploration_context:'Prueba cómo ruedan objetos.',family_context:'Queremos que haga amigos.'};
+    const draft=await saveFamilyInterview(db,teacher,studentId,next);
+    assert.equal((await loadFamilyInterview(db,teacher,studentId)).draft.details.literacy_context,next.literacy_context);
+    assert.equal(draft.details.home_activity_example,before.home_activity_example);
+    const confirmed=await saveAndConfirmFamilyInterview(db,teacher,studentId,next);
+    assert.ok(confirmed.version>original.version);
+    const historical=(await db.query('select details from student_family_interviews where id=$1',[original.id])).rows[0];
+    assert.deepEqual(historical.details,before);
+    const progress=(await listFamilyInterviewStatuses(db,teacher)).students.find(row=>row.student_id===studentId);
+    assert.equal(progress.total_questions,8);assert.equal(progress.answered_questions,8);
+  } finally {await db.close();}
+});
 async function database() {
   const db = await PGlite.create();
   const migrations = new URL("../../local-db/migrations/", import.meta.url);
@@ -278,7 +298,7 @@ test("entrevista parcial, reload, confirmación, impresión y adjunto privado si
 });
 
 test("seis preguntas breves; la familia aporta contexto sin cobertura ni evidencia", async () => {
-  const groups = familyInterviewQuestionGroups("Camila");
+  const groups = familyInterviewQuestionGroups("Camila",2);
   assert.ok(groups.flatMap(group=>group.questions).every(question=>question.label.includes("Camila")));
   assert.equal(groups.length, 1);
   const questions = groups.flatMap((group) => group.questions);
@@ -360,7 +380,7 @@ test("lista marca respuestas parciales y confirmadas; corregir conserva versione
     assert.equal(emptyStatus.status,"not_started");
     assert.equal(emptyStatus.has_confirmed_answers,false);
     assert.equal(emptyStatus.answered_questions,0);
-    assert.equal(emptyStatus.total_questions,6);
+    assert.equal(emptyStatus.total_questions,8);
 
     const correction = await saveFamilyInterview(db, teacher, first, { interests: "Ahora también le gusta dibujar.", social_play_tags:["seeks_others"] });
     const correctionProgress=(await listFamilyInterviewStatuses(db,teacher)).students.find(item=>item.student_id===first);

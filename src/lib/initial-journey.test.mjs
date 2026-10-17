@@ -76,6 +76,10 @@ test("initial journey: atomic decisions, private photos/invitations and bounded 
    await handleFamilyShare({response,db,send,url,request:{...request,method:"PUT"},readJson:async()=>({details:{interests:"No le interesa el agua.",structured_options_version:2}})});assert.equal(sent.status,200);
    assert.equal(Number((await db.query('select count(*) n from student_family_interviews')).rows[0].n),0);
    await handleFamilyShare({...base,url:teacherUrl,request:{method:"GET"}});assert.equal(sent.value.details.interests,"No le interesa el agua.");
+   const currentDetails={questionnaire_version:3,identity_autonomy_context:"Pide compañía cuando se molesta.",literacy_context:"Mira cuentos.",mathematics_context:"Reparte cucharas.",exploration_context:"Prueba cómo ruedan objetos."};
+   await handleFamilyShare({response,db,send,url,request:{...request,method:"PUT"},readJson:async()=>({details:currentDetails})});assert.equal(sent.status,200);
+   await handleFamilyShare({...base,url:teacherUrl,request:{method:"GET"}});
+   for(const [key,value]of Object.entries(currentDetails))assert.equal(sent.value.details[key],value);
    await assert.rejects(handleFamilyShare({...base,teacherId:other,url:teacherUrl,request:{method:"POST"}}));
    await handleFamilyShare({...base,url:teacherUrl,request:{method:"POST"}});await handleFamilyShare({response,db,send,url,request});assert.equal(sent.status,404);
   });

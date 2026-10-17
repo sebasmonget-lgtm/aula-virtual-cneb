@@ -16,7 +16,7 @@ test('legacy nature IDs remain valid while overlapping interests are presented o
   assert.deepEqual(toggleInterviewOption(['nature'],'community_tags','nature'),[]);
 });
 test('six distinct family contexts keep their keys and personalise all questions',()=>{
-  const questions=familyInterviewQuestionGroups('Mariana Belén')[0].questions;
+  const questions=familyInterviewQuestionGroups('Mariana Belén',2)[0].questions;
   assert.deepEqual(questions.map(q=>q.key),['interests','social_context','home_activity_example','communication_context','family_community_context','participation_support_context']);
   assert.ok(questions.every(q=>q.label.includes('Mariana Belén')));
 });

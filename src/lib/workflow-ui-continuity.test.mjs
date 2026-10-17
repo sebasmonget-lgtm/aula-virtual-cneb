@@ -165,7 +165,8 @@ test("alta y entrevista presentan datos completos, fecha opcional y audio por pr
   assert.match(interview, /<InterviewAudioRecorder[^>]*studentId=/);
   assert.match(interview, /aria-live="polite"/);
   assert.match(interview, /saveDraft\(true\)/);
-  assert.match(interview, /await saveAndConfirmFamilyInterview\(studentId, details\)/);
+  assert.match(interview, /await saveAndConfirmFamilyInterview\(studentId,/);
+  assert.match(interview, /questionnaire_version:questionnaireVersion/);
   assert.match(interview, /onSaved\?\.\(result\)/);
   assert.match(interview, /SaveConfirmation/);
   assert.match(interview, /step === questions\.length - 1/);

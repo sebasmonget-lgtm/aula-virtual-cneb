@@ -201,6 +201,7 @@ export async function buildSafeDiagnosticStudentContext(db, teacherId, studentId
       "interests", "interest_tags", "other_interest_text", "previous_education_status", "previous_education_type", "autonomy_context",
       "autonomy_routines", "communication_emotional_context", "communication_context", "communication_tags",
       "emotional_support_tags", "social_context", "social_play_tags", "home_activity_tags",
+      "identity_autonomy_context", "literacy_context", "mathematics_context", "exploration_context",
       "community_tags", "participation_support_tags", "adaptation_context", "previous_education"]
       .filter((key) => profile.family_interview_context?.[key])
       .map((key) => [key, clean(profile.family_interview_context[key])])),

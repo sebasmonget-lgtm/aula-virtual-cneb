@@ -13,6 +13,11 @@ export function summarizeFamilyInterview(details = {}) {
   const interests = labels(details.interest_tags, interviewInterestOptions);
   if (interests.length) parts.push("intereses mencionados: " + interests.slice(0, 4).join(", "));
   if (short(details.interests)) parts.push("comentario sobre sus gustos: " + short(details.interests));
+  for (const [key,label] of [['identity_autonomy_context','emociones y autonomía'],['social_context','convivencia'],
+    ['communication_context','comunicación'],['literacy_context','interés por cuentos y formas de comunicar'],
+    ['mathematics_context','juegos con objetos y cantidades'],['exploration_context','curiosidad y exploración']]) {
+    if (short(details[key])) parts.push(label + ': ' + short(details[key]));
+  }
   const languages = (details.language_tags ?? []).map(tag => {
     const language = interviewLanguageLabel(tag, details.other_language_text).toLowerCase();
     const uses = (details.home_language_uses ?? []).filter(row => row.language_tag === tag && row.with_whom)
@@ -54,6 +59,10 @@ export function projectFamilyAssessmentContext(details = {}, clean = (value) => 
     community: labels(details.community_tags, interviewCommunityOptions).slice(0, 5),
     family_example: project(details.home_activity_example),
     family_support_note: project(details.participation_support_context),
+    reported_identity_autonomy: project(details.identity_autonomy_context),
+    reported_literacy: project(details.literacy_context),
+    reported_mathematics: project(details.mathematics_context),
+    reported_exploration: project(details.exploration_context),
     ...(details.structured_options_version !== 2 ? { legacy_family_context: project(
       [details.interests, details.language_context, details.communication_emotional_context,
         details.autonomy_context, details.social_context].filter(Boolean).join(" ")) } : {}),
