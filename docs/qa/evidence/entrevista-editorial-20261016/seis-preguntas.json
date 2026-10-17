@@ -1,0 +1,159 @@
+[
+  {
+    "groups": [
+      {
+        "label": "Intereses que reconoce la familia",
+        "options": [
+          "Animales",
+          "Plantas y naturaleza",
+          "Construcción",
+          "Vehículos",
+          "Cuentos y libros",
+          "Dibujo",
+          "Música y canto",
+          "Baile",
+          "Cocinar",
+          "Agua",
+          "Juegos deportivos",
+          "Correr, saltar o trepar",
+          "Juego de imaginar",
+          "Otro"
+        ],
+        "selected": 0
+      }
+    ],
+    "hints": [
+      "Marca solo lo que cuente la familia. Puedes añadir un ejemplo o comentar lo que no le gusta."
+    ],
+    "overflow": false,
+    "question": "¿Qué le gusta hacer a Ana Ejemplo Qa y qué temas le interesan?"
+  },
+  {
+    "groups": [
+      {
+        "label": "Elige las formas de jugar que reconoces",
+        "options": [
+          "Busca jugar con otros",
+          "A veces juega solo/a",
+          "Propone juegos",
+          "Se suma a juegos de otros",
+          "Necesita tiempo para integrarse",
+          "Está aprendiendo a esperar y compartir",
+          "Otra forma de jugar"
+        ],
+        "selected": 0
+      }
+    ],
+    "hints": [
+      "Puedes señalar distintas formas de jugar; no hace falta elegir una sola."
+    ],
+    "overflow": false,
+    "question": "¿Cómo suele jugar Ana Ejemplo Qa, a solas y con otras personas?"
+  },
+  {
+    "groups": [
+      {
+        "label": "Acciones que la familia ha visto en casa",
+        "options": [
+          "Pregunta cómo o por qué",
+          "Cuenta, reparte o compara",
+          "Construye o arma",
+          "Mira libros o escucha cuentos",
+          "Dibuja o intenta escribir",
+          "Inventa historias o juegos",
+          "Canta, baila o hace música",
+          "Explora la naturaleza u objetos",
+          "Observa detalles y los comenta",
+          "Otra experiencia en casa"
+        ],
+        "selected": 0
+      }
+    ],
+    "hints": [
+      "Aquí interesa una situación concreta: qué hizo, dijo o intentó."
+    ],
+    "overflow": false,
+    "question": "¿Qué has visto hacer a Ana Ejemplo Qa mientras juega o explora en casa?"
+  },
+  {
+    "groups": [
+      {
+        "label": "¿Cómo suele comunicarse?",
+        "options": [
+          "Conversa con facilidad",
+          "Habla poco al inicio",
+          "Usa frases cortas",
+          "Usa gestos además de palabras",
+          "Necesita tiempo para expresarse",
+          "Otra forma de comunicarse"
+        ],
+        "selected": 0
+      },
+      {
+        "label": "¿Qué lenguas escucha o usa en casa?",
+        "options": [
+          "Castellano",
+          "Quechua",
+          "Aimara",
+          "Inglés",
+          "Otra lengua"
+        ],
+        "selected": 0
+      }
+    ],
+    "hints": [
+      "Puedes marcar una lengua aunque todavía no la hable, si la escucha en casa."
+    ],
+    "overflow": false,
+    "question": "¿Qué lenguas escucha o usa Ana Ejemplo Qa en casa y cómo se hace entender?"
+  },
+  {
+    "groups": [
+      {
+        "label": "Temas, lugares o actividades de esas experiencias",
+        "options": [
+          "Chacra o agricultura",
+          "Animales",
+          "Mercado o comercio",
+          "Taller u oficio",
+          "Cocina",
+          "Parque",
+          "Música",
+          "Fiestas y costumbres",
+          "Tejidos o artesanías",
+          "Deportes",
+          "Naturaleza",
+          "Viajes",
+          "Otra experiencia familiar"
+        ],
+        "selected": 0
+      }
+    ],
+    "hints": [
+      "Las opciones son temas o lugares. Puedes contar qué hace allí o con quién comparte esa experiencia."
+    ],
+    "overflow": false,
+    "question": "¿Qué actividades, lugares o costumbres comparte Ana Ejemplo Qa con su familia o comunidad?"
+  },
+  {
+    "groups": [
+      {
+        "label": "Apoyos que le ayudan, según la familia",
+        "options": [
+          "Observar antes de participar",
+          "Tener más tiempo",
+          "Evitar ciertos ruidos",
+          "Saber qué pasará",
+          "Poder moverse",
+          "Otro apoyo"
+        ],
+        "selected": 0
+      }
+    ],
+    "hints": [
+      "Comparte lo que ayude a acompañarle. No necesitas incluir información privada."
+    ],
+    "overflow": false,
+    "question": "¿Qué ayuda a Ana Ejemplo Qa a sentirse a gusto y participar?"
+  }
+]

@@ -285,7 +285,7 @@ test("seis preguntas breves; la familia aporta contexto sin cobertura ni evidenc
   assert.equal(questions.length, 6);
   assert.ok(questions.every((question) => familyInterviewCategories.includes(question.key)));
   assert.match(questions[0].label, /Camila/);
-  assert.match(questions[5].label, /profesora/);
+  assert.match(questions[5].label, /sentirse a gusto y participar/);
   assert.deepEqual(validateFamilyInterviewDetails({}), {});
   assert.deepEqual(validateFamilyInterviewDetails({ home_languages: "Quechua" }), { language_context: "Quechua" });
   const db = await database();

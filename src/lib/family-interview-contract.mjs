@@ -12,6 +12,11 @@ export const interviewLanguageOptions = Object.freeze([
   { id: "ay", label: "Aimara" }, { id: "en", label: "Inglés" },
   { id: "other", label: "Otra lengua" },
 ]);
+/** Keep the family's own language name when «Otra lengua» was selected. */
+export function interviewLanguageLabel(id, otherLanguageText = "") {
+  return id === "other" && typeof otherLanguageText === "string" && otherLanguageText.trim()
+    ? otherLanguageText.trim() : interviewLanguageOptions.find(option => option.id === id)?.label ?? "";
+}
 export const interviewInterestOptions = Object.freeze([
   { id: "animals", label: "Animales" }, { id: "plants", label: "Plantas y naturaleza" },
   { id: "construction", label: "Construcción" }, { id: "vehicles", label: "Vehículos" },
@@ -75,12 +80,12 @@ export const interviewPreviousEducationTypeOptions = Object.freeze([
   { id: "daycare", label: "Guardería" }, { id: "other", label: "Otro espacio" },
 ]);
 export const familyInterviewQuestionGroups = (name) => [{ title: "La familia nos cuenta", questions: [
-  { key: "interests", label: "¿Qué disfruta hacer " + name + "?", hint: "Cuéntanos un ejemplo. También puedes decir qué no le interesa." },
-  { key: "social_context", label: "¿Cómo juega " + name + ", solo/a o con otras personas?" },
-  { key: "home_activity_example", label: "¿Qué hace o explora " + name + " cuando juega en casa?", hint: "Cuenta una experiencia concreta, además de sus gustos." },
-  { key: "communication_context", label: "¿Qué lenguas escucha o usa " + name + " y cómo se comunica?" },
-  { key: "family_community_context", label: "¿Qué experiencias familiares o de su comunidad son importantes para " + name + "?" },
-  { key: "participation_support_context", label: "¿Qué debe saber la profesora para acompañar a " + name + " y ayudarle a participar?" },
+  { key: "interests", label: "¿Qué le gusta hacer a " + name + " y qué temas le interesan?", hint: "Marca solo lo que cuente la familia. Puedes añadir un ejemplo o comentar lo que no le gusta." },
+  { key: "social_context", label: "¿Cómo suele jugar " + name + ", a solas y con otras personas?", hint: "Puedes señalar distintas formas de jugar; no hace falta elegir una sola." },
+  { key: "home_activity_example", label: "¿Qué has visto hacer a " + name + " mientras juega o explora en casa?", hint: "Aquí interesa una situación concreta: qué hizo, dijo o intentó." },
+  { key: "communication_context", label: "¿Qué lenguas escucha o usa " + name + " en casa y cómo se hace entender?", hint: "Puedes marcar una lengua aunque todavía no la hable, si la escucha en casa." },
+  { key: "family_community_context", label: "¿Qué actividades, lugares o costumbres comparte " + name + " con su familia o comunidad?", hint: "Las opciones son temas o lugares. Puedes contar qué hace allí o con quién comparte esa experiencia." },
+  { key: "participation_support_context", label: "¿Qué ayuda a " + name + " a sentirse a gusto y participar?", hint: "Comparte lo que ayude a acompañarle. No necesitas incluir información privada." },
 ] }];
 
 /** A version marker, whitespace and empty lists are not family answers. */

@@ -7,7 +7,10 @@ import { publicClassroomContext } from "./classroom-context-service.mjs";
 import { buildProjectContext } from "./context-policy-v4.mjs";
 import { buildAssessmentInput } from "./assessment-v4-service.mjs";
 import { buildFamilyInterviewPrintHtml } from "./family-interview-print.mjs";
-import { familyInterviewQuestionGroups } from "./family-interview-contract.mjs";
+import { familyInterviewQuestionGroups, interviewLanguageLabel, interviewInterestOptions, interviewSocialPlayOptions,
+  interviewHomeActivityOptions, interviewCommunicationOptions, interviewLanguageOptions, interviewCommunityOptions,
+  interviewParticipationSupportOptions } from "./family-interview-contract.mjs";
+import { countFamilyInterviewAnswers } from "./family-interview-progress.mjs";
 
 const uuid = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
 const context = { id: uuid(99), age: 5, available_resources: [], group_context: "", annual_planning_context: {} };
@@ -102,4 +105,55 @@ test("la hoja para papel conserva selecciones y ejemplos sin convertirlos en eva
   assert.match(html, /Quechua con abuelos/);
   assert.match(html, /Entrevista familiar/);
   assert.doesNotMatch(html, /diagnóstica|nivel de logro|competencia/i);
+});
+
+test("cada opción activa corresponde a una de las seis respuestas y no completa las demás", () => {
+  for (const [field, options] of [["interest_tags", interviewInterestOptions], ["social_play_tags", interviewSocialPlayOptions],
+    ["home_activity_tags", interviewHomeActivityOptions], ["communication_tags", interviewCommunicationOptions],
+    ["language_tags", interviewLanguageOptions], ["community_tags", interviewCommunityOptions],
+    ["participation_support_tags", interviewParticipationSupportOptions]]) {
+    for (const option of options) {
+      const selected = validateFamilyInterviewDetails({ structured_options_version: 2, [field]: [option.id] });
+      assert.deepEqual(selected[field], [option.id]);
+      assert.equal(countFamilyInterviewAnswers(selected), 1);
+    }
+  }
+  assert.equal(countFamilyInterviewAnswers({}), 0);
+});
+
+test("el resumen conserva negaciones y comentarios aunque también haya intereses seleccionados", () => {
+  const details = { structured_options_version: 2, interest_tags: ["animals"], interests: "No le gustan los perros grandes; prefiere observarlos de lejos." };
+  const before = structuredClone(details);
+  const summary = summarizeFamilyInterview(details);
+  assert.ok(summary.includes(details.interests));
+  assert.match(summary, /intereses mencionados: Animales/);
+  assert.doesNotMatch(summary, /le gusta No|familia, le gustan los perros grandes/);
+  assert.deepEqual(details, before);
+});
+
+test("lenguas sin interlocutor no desaparecen y otra lengua conserva el nombre familiar", () => {
+  const details = validateFamilyInterviewDetails({ structured_options_version: 2,
+    language_tags: ["es", "qu", "other"], other_language_text: "Asháninka",
+    home_language_uses: [{ language_tag: "qu", with_whom: "abuelos" }] });
+  const before = structuredClone(details);
+  const summary = summarizeFamilyInterview(details);
+  assert.match(summary, /castellano/); assert.match(summary, /quechua con abuelos/); assert.match(summary, /asháninka/);
+  assert.equal(interviewLanguageLabel("other", details.other_language_text), "Asháninka");
+  assert.equal(interviewLanguageLabel("other", " "), "Otra lengua");
+  const html = buildFamilyInterviewPrintHtml("Niña QA", details, familyInterviewQuestionGroups("Niña QA"));
+  assert.match(html, /Castellano, Asháninka, Quechua/);
+  assert.match(html, /Lenguas que escucha o usa en casa/);
+  assert.deepEqual(details, before);
+});
+
+test("una forma de comunicación no se transforma en gusto, habilidad ni evidencia", () => {
+  for (const id of ["quiet_initially", "short_phrases", "gestures", "needs_time"]) {
+    const details = { structured_options_version: 2, communication_tags: [id] };
+    const hint = familyObservationHint(details, "COM_ORAL");
+    assert.match(hint, /Según la familia/);
+    assert.doesNotMatch(hint, /disfruta conversar|conversa con facilidad|logró|dificultad/);
+    assert.equal(projectFamilyAssessmentContext(details).role, "context_only");
+    assert.deepEqual(buildAssessmentInput({ age: 5, competencyId: "COM_ORAL", evidenceHistory: [],
+      familyContext: projectFamilyAssessmentContext(details) }).evidence_history, []);
+  }
 });

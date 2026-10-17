@@ -1,6 +1,6 @@
 import { interviewAutonomyOptions, interviewAutonomyLevels, interviewCommunicationOptions, interviewCommunityOptions,
   interviewEmotionalSupportOptions, interviewHomeActivityOptions, interviewInterestOptions,
-  interviewLanguageOptions, interviewParticipationSupportOptions, interviewSocialPlayOptions } from "./family-interview-contract.mjs";
+  interviewParticipationSupportOptions, interviewSocialPlayOptions, interviewLanguageLabel } from "./family-interview-contract.mjs";
 
 const escape = (value) => String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;")
   .replaceAll(">", "&gt;").replaceAll('"', "&quot;");
@@ -23,12 +23,12 @@ function answerFor(details, key) {
     const level = interviewAutonomyLevels.find((item) => item.id === row.level)?.label;
     return task && level ? `${task}: ${level}` : "";
   }).filter(Boolean).join("; ") : "";
-  const languages = key === "communication_context" ? labelList(details.language_tags, interviewLanguageOptions) : "";
+  const languages = key === "communication_context" ? (details.language_tags ?? []).map(tag => interviewLanguageLabel(tag, details.other_language_text)).filter(Boolean).join(", ") : "";
   const familyUse = key === "communication_context" ? (details.home_language_uses ?? []).map((row) =>
-    `${interviewLanguageOptions.find((item) => item.id === row.language_tag)?.label ?? ""} con ${row.with_whom}`).join("; ") : "";
+    `${interviewLanguageLabel(row.language_tag, details.other_language_text)} con ${row.with_whom}`).join("; ") : "";
   const other = key === "interests" ? details.other_interest_text : key === "communication_context"
     ? details.other_language_text : key === "family_community_context" ? details.other_community_text : "";
-  return [selected, autonomy, languages && `Idiomas en casa: ${languages}`, familyUse,
+  return [selected, autonomy, languages && `Lenguas que escucha o usa en casa: ${languages}`, familyUse,
     other && `Otro: ${other}`, details[key], key === "family_community_context" && details.family_community_enjoyed,
     key === "family_expectation" && details.family_expectations].filter(Boolean).join("\n");
 }

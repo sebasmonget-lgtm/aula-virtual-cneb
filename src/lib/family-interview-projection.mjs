@@ -1,7 +1,7 @@
 import { interviewAutonomyOptions, interviewCommunicationOptions,
   interviewCommunityOptions, interviewHomeActivityOptions,
   interviewInterestOptions, interviewLanguageOptions, interviewParticipationSupportOptions,
-  interviewSocialPlayOptions } from "./family-interview-contract.mjs";
+  interviewSocialPlayOptions, interviewLanguageLabel } from "./family-interview-contract.mjs";
 
 const labels = (ids = [], options) => [...new Set(ids.map(id=>options===interviewInterestOptions&&id==="nature"?"plants":id))].filter((id) => id !== "other")
   .map((id) => options.find((item) => item.id === id)?.label).filter(Boolean);
@@ -11,16 +11,16 @@ const short = (value, limit = 180) => typeof value === "string" ? value.trim().s
 export function summarizeFamilyInterview(details = {}) {
   const parts = [];
   const interests = labels(details.interest_tags, interviewInterestOptions);
-  if (interests.length) parts.push("le interesan " + interests.slice(0, 4).join(", "));
-  else if (short(details.interests)) parts.push("le gusta " + short(details.interests));
-  const languages = labels(details.language_tags, interviewLanguageOptions);
+  if (interests.length) parts.push("intereses mencionados: " + interests.slice(0, 4).join(", "));
+  if (short(details.interests)) parts.push("comentario sobre sus gustos: " + short(details.interests));
+  const languages = (details.language_tags ?? []).map(tag => {
+    const language = interviewLanguageLabel(tag, details.other_language_text).toLowerCase();
+    const uses = (details.home_language_uses ?? []).filter(row => row.language_tag === tag && row.with_whom)
+      .map(row => short(row.with_whom, 60));
+    return language ? language + (uses.length ? " con " + uses.join(" y ") : "") : "";
+  }).filter(Boolean);
   if (languages.length) {
-    const uses = (details.home_language_uses ?? []).filter((row) => row.with_whom)
-      .map((row) => {
-        const language = interviewLanguageOptions.find((item) => item.id === row.language_tag)?.label.toLowerCase();
-        return language ? `${language} con ${short(row.with_whom, 60)}` : "";
-      }).filter(Boolean);
-    parts.push("en casa escucha o usa " + (uses.length ? uses.join(" y ") : languages.join(" y ")));
+    parts.push("en casa escucha o usa " + new Intl.ListFormat("es-PE", { style: "long", type: "conjunction" }).format(languages));
   }
   const communication = labels(details.communication_tags, interviewCommunicationOptions);
   if (communication.length) parts.push("para comunicarse " + communication.slice(0, 2).join(" y ").toLowerCase());
@@ -32,11 +32,12 @@ export function summarizeFamilyInterview(details = {}) {
   const home = labels(details.home_activity_tags, interviewHomeActivityOptions);
   if (home.length) parts.push("en casa " + home.slice(0, 2).join(" y ").toLowerCase());
   const community = labels(details.community_tags, interviewCommunityOptions);
-  if (community.length) parts.push("participa en experiencias de " + community.slice(0, 3).join(", ").toLowerCase());
+  if (community.length) parts.push("experiencias familiares o de la comunidad: " + community.slice(0, 3).join(", ").toLowerCase());
   const supports = labels(details.participation_support_tags, interviewParticipationSupportOptions);
   if (supports.length) parts.push("le ayuda " + supports.slice(0, 2).join(" y ").toLowerCase());
   if (!parts.length) return "";
-  return "Según la familia, " + parts.join("; ") + ".";
+  const summary = "Según la familia, " + parts.map(part => part.replace(/[.;]$/u, "")).join("; ");
+  return /[.!?…]$/u.test(summary) ? summary : summary + ".";
 }
 
 /** Bounded family context for Assessment. It never enters evidence_history. */
@@ -76,12 +77,12 @@ export function familyObservationHint(details = {}, competencyId) {
   if (competencyId === "MAT_CANTIDAD" && home.includes("counts_compares"))
     return "Según la familia, suele contar, repartir o comparar en casa. Durante el juego con materiales, observa cómo usa cantidades al organizar objetos.";
   if (competencyId === "MAT_FORMA" && (home.includes("builds") || interests.includes("construction") || interests.includes("vehicles")))
-    return "Según la familia, le interesan las construcciones o vehículos. Al armar o mover materiales, observa cómo explora formas, tamaños y posiciones.";
+    return "Según la familia, hay juegos o intereses relacionados con construcciones o vehículos. Al armar o mover materiales, observa cómo explora formas, tamaños y posiciones.";
   if (competencyId === "COM_ORAL" && (communication.length || home.includes("invents") || interests.includes("stories")))
-    return "Según la familia, disfruta conversar o contar ideas. En una conversación o juego, observa cómo expresa lo que quiere comunicar.";
+    return "Según la familia, hay información sobre su comunicación o sus juegos con historias. En una conversación o juego, observa cómo expresa lo que quiere comunicar, con el tiempo y los apoyos que necesite.";
   if (competencyId === "PS_CONVIVE" && social.length)
-    return "Según la familia, tiene formas propias de acercarse al juego compartido. Observa cómo participa y acuerda con otros en una situación de juego.";
+    return "Según la familia, hay información sobre sus formas de jugar. Observa cómo participa y acuerda con otros en una situación de juego.";
   if (competencyId === "CYT_INDAGA" && (home.includes("asks_why") || home.includes("explores") || interests.includes("animals") || interests.includes("plants")))
-    return "Según la familia, muestra curiosidad por explorar. En una actividad con objetos o naturaleza, observa qué preguntas hace y qué prueba.";
+    return "Según la familia, hay intereses o experiencias que pueden orientar una exploración. En una actividad con objetos o naturaleza, observa qué preguntas hace y qué prueba.";
   return null;
 }

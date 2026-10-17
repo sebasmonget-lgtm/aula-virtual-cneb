@@ -13,7 +13,7 @@ import { hasFamilyInterviewAnswers, familyInterviewQuestionGroups, familyIntervi
   interviewInterestOptions, interviewAutonomyOptions, interviewAutonomyLevels, interviewCommunicationOptions,
   interviewEmotionalSupportOptions, interviewSocialPlayOptions, interviewHomeActivityOptions,
   interviewCommunityOptions, interviewParticipationSupportOptions, interviewPreviousEducationOptions,
-  interviewPreviousEducationTypeOptions } from "@/src/lib/family-interview-contract.mjs";
+  interviewPreviousEducationTypeOptions, interviewLanguageLabel } from "@/src/lib/family-interview-contract.mjs";
 import { familyContextLabels } from "@/src/lib/local-database";
 import { displayPersonName } from "@/src/lib/person-name.mjs";
 import { AyniMascot } from "./initial-journey-ui";
@@ -193,7 +193,7 @@ export function FamilyInterviewEditor({ studentId, studentName: rawStudentName, 
   }}));
   function renderQuestion(question: typeof questions[number], index: number) { return <article key={question.key} className={layout === "stacked" ? styles.questionCard : "min-w-0 min-h-72 space-y-5 rounded-2xl border bg-white p-5"}>      <h3 className={styles.questionTitle}>{layout === "stacked" && <span>{index+1}</span>}{question.label}</h3>
       {question.hint && <p className="text-sm text-[#526b87]">{question.hint}</p>}
-      {question.key === "interests" && <>{chips("interest_tags", interviewInterestOptions.filter(option=>option.id!=="nature"), "Elige lo que más le guste")}
+      {question.key === "interests" && <>{chips("interest_tags", interviewInterestOptions.filter(option=>option.id!=="nature"), "Intereses que reconoce la familia")}
         {details.interest_tags?.includes("other") && shortField("other_interest_text", "¿Qué otro interés?",200)}
         {shortField("interests", "Un ejemplo corto, si quieres")}</>}
       {question.key === "autonomy_context" && <><p className="text-sm text-[#526b87]">Marca solo las rutinas que quieras contar. Esto no es una prueba.</p>
@@ -209,9 +209,9 @@ export function FamilyInterviewEditor({ studentId, studentName: rawStudentName, 
           })}</div></fieldset>)}</div>{shortField("autonomy_context", "¿Quieres comentar algo más? (opcional)")}</>}
       {question.key === "communication_context" && <>{chips("communication_tags", interviewCommunicationOptions, "¿Cómo suele comunicarse?")}
         {shortField("communication_context", "Algo más que quieras contar (opcional)")}
-        {chips("language_tags", interviewLanguageOptions, "¿Qué idiomas escucha o usa en casa?")}
-        {details.language_tags?.includes("other") && shortField("other_language_text", "¿Cuál otro idioma?", 200)}
-        {(details.language_tags ?? []).map((tag) => <label key={tag} className="block text-sm">¿Con quién usa {interviewLanguageOptions.find((item) => item.id === tag)?.label.toLowerCase()}? (opcional)
+        {chips("language_tags", interviewLanguageOptions, "¿Qué lenguas escucha o usa en casa?")}
+        {details.language_tags?.includes("other") && shortField("other_language_text", "¿Qué otra lengua?", 200)}
+        {(details.language_tags ?? []).map((tag) => <label key={tag} className="block text-sm">¿Con quién escucha o usa {interviewLanguageLabel(tag, details.other_language_text).toLowerCase()}? (opcional)
           <input className="mt-2 min-h-11 w-full rounded-xl border px-3" disabled={readOnly} maxLength={100}
             value={details.home_language_uses?.find((row) => row.language_tag === tag)?.with_whom ?? ""}
             onChange={(e) => setDetails((v) => ({ ...v, structured_options_version: familyInterviewStructuredOptionsVersion, home_language_uses: [
@@ -222,14 +222,13 @@ export function FamilyInterviewEditor({ studentId, studentName: rawStudentName, 
         {shortField("emotional_support_context", "¿Cómo suele reaccionar? Un ejemplo breve (opcional)")}</>}
       {question.key === "social_context" && <>{chips("social_play_tags", interviewSocialPlayOptions, "Elige las formas de jugar que reconoces")}
         {shortField("social_context", "Un ejemplo, si quieres")}</>}
-      {question.key === "home_activity_example" && <>{chips("home_activity_tags", interviewHomeActivityOptions, "¿Qué has notado en sus juegos?")}
+      {question.key === "home_activity_example" && <>{chips("home_activity_tags", interviewHomeActivityOptions, "Acciones que la familia ha visto en casa")}
         {shortField("home_activity_example", "Si quieres, cuéntanos un ejemplo")}</>}
-      {question.key === "family_community_context" && <>{chips("community_tags", interviewCommunityOptions, "Personas, lugares y actividades cercanas")}
+      {question.key === "family_community_context" && <>{chips("community_tags", interviewCommunityOptions, "Temas, lugares o actividades de esas experiencias")}
         {details.community_tags?.includes("other") && shortField("other_community_text", "¿Qué otra actividad o lugar?", 200)}
         {shortField("family_community_context", "Algo más sobre su vida familiar o comunidad (opcional)")}
         {shortField("family_community_enjoyed", "¿Hay alguna experiencia que disfrute especialmente? (opcional)")}</>}
-      {question.key === "participation_support_context" && <><p className="text-sm text-[#526b87]">Pregunta opcional. No necesitas compartir información privada.</p>
-        {chips("participation_support_tags", interviewParticipationSupportOptions, "¿Qué le ayuda a participar?")}
+      {question.key === "participation_support_context" && <>{chips("participation_support_tags", interviewParticipationSupportOptions, "Apoyos que le ayudan, según la familia")}
         {shortField("participation_support_context", "Algo más que deberíamos saber (opcional)")}</>}
       {question.key === "family_expectation" && <><p className="text-sm text-[#526b87]">Tu deseo para este año es una expectativa familiar; no es una evaluación del niño.</p>
         {shortField("family_expectation", "Respuesta corta (opcional)")}</>}
