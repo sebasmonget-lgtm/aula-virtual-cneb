@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { savePilotSetup, savePilotSetupDraft, type PilotSetupDraft, type LocalDashboard } from "@/src/lib/local-database";
 import { pilotSchoolYearDefaults } from "@/src/lib/pilot-school-year-defaults.mjs";
+import { readPilotSetupForm } from "@/src/lib/pilot-setup-form.mjs";
 import { displayNow } from "@/src/lib/display-date";
 import { AsyncButton } from "./workflow-ui";
 import { PreparationSteps } from "./preparation-steps";
@@ -48,7 +49,6 @@ export function PilotSetup({ onReady, accountYear, initialDraft, onSignOut }: {
   const allowLeave = useUnsavedWork(autosave !== "saved" || readingLogo, busy);
   const officialDates = pilotSchoolYearDefaults(draft.year);
   const logoPreview = draft.logoUpload ? `data:${draft.logoUpload.mimeType};base64,${draft.logoUpload.base64}` : "";
-  const complete = draft.teacherName.trim().length >= 2 && draft.institutionName.trim().length >= 2 && Boolean(draft.section.trim()) && draft.age !== null && Boolean(officialDates);
 
   function change(patch: Partial<PilotSetupDraft>) {
     const next: PilotSetupDraft = { ...JSON.parse(latest.current), ...patch };
@@ -86,16 +86,28 @@ export function PilotSetup({ onReady, accountYear, initialDraft, onSignOut }: {
   }
 
   async function save() {
-    if (saving.current || readingLogo) return;
-    if (draft.age === null) { setError("Selecciona la edad del aula para continuar."); return; }
-    if (!complete || !officialDates) { setError("Completa institución, nombre de la profesora, sección y año escolar para continuar."); return; }
+    if (saving.current || readingLogo || !formRef.current) return;
+    const submitted: PilotSetupDraft = readPilotSetupForm(new FormData(formRef.current), JSON.parse(latest.current));
+    change(submitted);
+    for (const [field, message, minimum] of [
+      ["institutionName", "Escribe el nombre de la institución para continuar.", 2],
+      ["teacherName", "Escribe el nombre de la profesora para continuar.", 2],
+      ["section", "Escribe la sección del aula para continuar.", 1],
+    ] as const) {
+      if (submitted[field].trim().length < minimum) {
+        setError(message); formRef.current.querySelector<HTMLInputElement>(`[name="${field}"]`)?.focus(); return;
+      }
+    }
+    if (submitted.age === null) { setError("Selecciona la edad del aula para continuar."); return; }
+    const dates = pilotSchoolYearDefaults(submitted.year);
+    if (!dates) { setError(`Aún no está disponible el calendario oficial de ${submitted.year}. Selecciona 2026 para continuar.`); return; }
     saving.current = true; submissionId.current ??= crypto.randomUUID();
     const started = performance.now();
     setBusy(true); setError("");
     try {
       await queue.current.catch(() => {});
-      onReady(await savePilotSetup({ ...draft, age: draft.age, submissionId: submissionId.current,
-        startsOn: officialDates.startsOn, endsOn: officialDates.endsOn, castellanoL2Applicable: false, religionApplicable: false }));
+      onReady(await savePilotSetup({ ...submitted, age: submitted.age, submissionId: submissionId.current,
+        startsOn: dates.startsOn, endsOn: dates.endsOn, castellanoL2Applicable: false, religionApplicable: false }));
       if (process.env.NEXT_PUBLIC_AYNI_QA_CLOCK === "1") requestAnimationFrame(() => console.info("ayni_setup_frontend", JSON.stringify({ clickToFrameMs: Math.round(performance.now() - started), withLogo: Boolean(draft.logoUpload || draft.createLogo) })));
     } catch (cause) { setError(cause instanceof Error ? cause.message : "No se pudo configurar el aula."); }
     finally { saving.current = false; setBusy(false); }
@@ -115,16 +127,19 @@ export function PilotSetup({ onReady, accountYear, initialDraft, onSignOut }: {
         <Image className={styles.illustration} src="/ayni-classroom-welcome.png" alt="" width={1536} height={1024} sizes="380px" preload />
         <PreparationSteps current={1} className={styles.steps} disabled={busy||readingLogo} onSelect={step=>{if(step===2)formRef.current?.requestSubmit();else if(step>2)setError("Primero configura tu aula y añade a tus niños para continuar.");}}/>
       </div>
-      <form ref={formRef} onSubmit={event => { event.preventDefault(); void save(); }} className={styles.form}>
+      <form ref={formRef} onSubmit={event => { event.preventDefault(); void save(); }} onInvalidCapture={() => {
+        if (formRef.current) change(readPilotSetupForm(new FormData(formRef.current), JSON.parse(latest.current)));
+        setError("Revisa los campos marcados con * para continuar.");
+      }} className={styles.form}>
         <section className={styles.card} aria-labelledby="school-data-title">
           <div className={styles.sectionHeading}><span className={styles.schoolIcon}><School size={32} aria-hidden="true"/></span><div><h2 id="school-data-title">Datos del colegio</h2><p>Estos datos se usarán para personalizar tus documentos. Los campos opcionales se pueden completar después.</p></div></div>
           <div className={styles.schoolLayout}>
             <div className={styles.fields}>
-              <label className={styles.full}>Institución {required}<Input required minLength={2} maxLength={200} disabled={busy} placeholder="Nombre de la institución educativa" value={draft.institutionName} onChange={event => change({institutionName:event.target.value})}/></label>
-              <label>UGEL {optional}<Input maxLength={100} disabled={busy} placeholder="Ej. UGEL 07 San Borja" value={draft.ugel} onChange={event => change({ugel:event.target.value})}/></label>
-              <label>Distrito {optional}<Input maxLength={100} disabled={busy} placeholder="Ej. San Borja" value={draft.district} onChange={event => change({district:event.target.value})}/></label>
-              <label>Código modular {optional}<Input maxLength={40} disabled={busy} placeholder="Ej. 1234567" value={draft.institutionCode} onChange={event => change({institutionCode:event.target.value})}/></label>
-              <label>Director(a) {optional}<Input maxLength={120} disabled={busy} placeholder="Nombre del director o directora" value={draft.directorName} onChange={event => change({directorName:event.target.value})}/></label>
+              <label className={styles.full}>Institución {required}<Input required minLength={2} maxLength={200} disabled={busy} placeholder="Nombre de la institución educativa" name="institutionName" value={draft.institutionName} onChange={event => change({institutionName:event.target.value})}/></label>
+              <label>UGEL {optional}<Input maxLength={100} disabled={busy} placeholder="Ej. UGEL 07 San Borja" name="ugel" value={draft.ugel} onChange={event => change({ugel:event.target.value})}/></label>
+              <label>Distrito {optional}<Input maxLength={100} disabled={busy} placeholder="Ej. San Borja" name="district" value={draft.district} onChange={event => change({district:event.target.value})}/></label>
+              <label>Código modular {optional}<Input maxLength={40} disabled={busy} placeholder="Ej. 1234567" name="institutionCode" value={draft.institutionCode} onChange={event => change({institutionCode:event.target.value})}/></label>
+              <label>Director(a) {optional}<Input maxLength={120} disabled={busy} placeholder="Nombre del director o directora" name="directorName" value={draft.directorName} onChange={event => change({directorName:event.target.value})}/></label>
             </div>
             <div className={styles.logoArea}>
               <div className={styles.logoHeading}><span className={styles.schoolIcon}><ImageIcon size={25} aria-hidden="true"/></span><div><h3>Logo del colegio {optional}</h3><p>Recomendado para personalizar tus documentos.</p></div></div>
@@ -144,15 +159,15 @@ export function PilotSetup({ onReady, accountYear, initialDraft, onSignOut }: {
         <section className={styles.card} aria-labelledby="classroom-data-title">
           <div className={styles.sectionHeading}><span className={styles.classroomIcon}><Users size={32} aria-hidden="true"/></span><div><h2 id="classroom-data-title">Datos de tu aula</h2><p>Cuéntanos sobre tu grupo de niños y tu rol.</p></div></div>
           <div className={styles.fields}>
-            <label>Nombre de la profesora {required}<Input required minLength={2} maxLength={100} autoComplete="name" disabled={busy} placeholder="Tu nombre completo" value={draft.teacherName} onChange={event => change({teacherName:event.target.value})}/></label>
-            <label>Sección {required}<Input required maxLength={80} disabled={busy} placeholder="Ej. A, B, Única" value={draft.section} onChange={event => change({section:event.target.value})}/></label>
-            <label>Edad del aula {required}<select required disabled={busy} value={draft.age ?? ""} onChange={event => change({age:event.target.value ? Number(event.target.value) : null})}><option value="">Selecciona edad</option><option value={3}>3 años</option><option value={4}>4 años</option><option value={5}>5 años</option></select></label>
-            <label>Año escolar {required}<select required disabled={busy} value={draft.year} aria-describedby={!officialDates ? "school-year-help" : undefined} onChange={event => change({year:Number(event.target.value)})}>{[...new Set([currentYear,2026,draft.year])].sort().map(value => <option key={value} value={value}>{value}</option>)}</select></label>
+            <label>Nombre de la profesora {required}<Input required minLength={2} maxLength={100} autoComplete="name" disabled={busy} placeholder="Tu nombre completo" name="teacherName" value={draft.teacherName} onChange={event => change({teacherName:event.target.value})}/></label>
+            <label>Sección {required}<Input required maxLength={80} disabled={busy} placeholder="Ej. A, B, Única" name="section" value={draft.section} onChange={event => change({section:event.target.value})}/></label>
+            <label>Edad del aula {required}<select required disabled={busy} name="age" value={draft.age ?? ""} onChange={event => change({age:event.target.value ? Number(event.target.value) : null})}><option value="">Selecciona edad</option><option value={3}>3 años</option><option value={4}>4 años</option><option value={5}>5 años</option></select></label>
+            <label>Año escolar {required}<select required disabled={busy} name="year" value={draft.year} aria-describedby={!officialDates ? "school-year-help" : undefined} onChange={event => change({year:Number(event.target.value)})}>{[...new Set([currentYear,2026,draft.year])].sort().map(value => <option key={value} value={value}>{value}</option>)}</select></label>
           </div>
           {!officialDates && <p id="school-year-help" role="alert" className={styles.error}>Aún no está disponible el calendario oficial de {draft.year}. Selecciona 2026 para continuar.</p>}
           {error && <p role="alert" className={styles.error}>{error}</p>}
           <div className={styles.footer}>
-            <AsyncButton type="submit" className={styles.primary} disabled={!complete || readingLogo} busy={busy} busyLabel="Guardando aula…"><ArrowRight aria-hidden="true"/>Guardar aula y continuar</AsyncButton>
+            <AsyncButton type="submit" className={styles.primary} disabled={readingLogo} busy={busy} busyLabel="Guardando aula…"><ArrowRight aria-hidden="true"/>Guardar aula y continuar</AsyncButton>
             <p role="status" aria-live="polite" className={styles.saveStatus}>{autosave === "saved" ? "Tus cambios se guardan automáticamente." : autosave === "pending" || autosave === "saving" ? "Guardando cambios…" : <>{autosaveError} <button type="button" onClick={() => { setAutosave("pending"); setRetry(value => value + 1); }}>Reintentar</button></>}</p>
           </div>
         </section>

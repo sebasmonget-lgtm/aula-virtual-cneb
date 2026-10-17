@@ -869,3 +869,6 @@ Refinamiento delimitado a estas interfaces, usando la identidad de Mi año sin e
 
 ## Continuidad visual de Mi aula — 2026-10-16
 Tras aprobación del estilo anterior, se aplica a Mi aula, perfil y trayectoria del niño, datos del colegio y matriz diagnóstica actual. Reutiliza PageIntro, ilustraciones e iconos existentes con CSS limitado; no cambia otros módulos, motores ni datos. Conteos canónicos, filtros, fuentes y formularios conservados. 35 regresiones, TypeScript, lint y builds Vinext/Next PASS; revisión local real con 20 niños ficticios en escritorio y celular, sin IA pagada ni escrituras cloud. Informe y capturas: docs/qa/QA_AULA_IDENTIDAD_VISUAL_2026-10-16.md. Solo Preview autorizado; no modifica Producción.
+
+## Guardado inicial del aula — 2026-10-16
+Tras aviso de botón deshabilitado hasta recargar, se reproduce localmente el caso de valores restaurados sin eventos y borrador React obsoleto. Guardar valida los campos visibles mediante FormData, muestra errores accionables y conserva datos restaurados también al validar un formulario incompleto. Mantiene servidor, calendario, logo, autoguardado e idempotencia. 29 regresiones y QA local de guardado/continuación/recuperación, sin tocar la cuenta de la usuaria. Informe: docs/qa/QA_SETUP_GUARDAR_CONTINUAR_2026-10-16.md. Solo Preview; cero IA.
