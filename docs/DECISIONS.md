@@ -1353,3 +1353,9 @@ Feedback posterior: el fondo editable pasa a blanco; gris reservado a disabled/r
 
 ## 2026-10-17 — Entrevista de ocho preguntas
 Por instrucción explícita de la usuaria, las entrevistas nuevas cubren ocho temas con las preguntas proporcionadas: juegos; identidad/autonomía; convivencia; comunicación oral; lectura/escritura; matemática; exploración; contexto familiar/expectativas. Sustituye la decisión previa de seis preguntas para nuevas entrevistas y correcciones. Las confirmadas anteriores siguen consultables con su contrato previo. Metadato JSON de cuestionario separado de la versión de opciones; sin migración ni respuestas inferidas. Todas opcionales y solo contexto familiar. Informe QA_ENTREVISTA_OCHO_PREGUNTAS_2026-10-17.md.
+
+## 2026-10-18 — Recuperación del proyecto moderno y evidencia de generalización
+
+Preparar el Master mediante el trabajo existente puede usar respuestas identificadas en segundo plano. Persistir ID, contexto y resultados terminados antes de continuar o reparar; no repetir automáticamente una creación sin resultado identificable. Mantener lease, permisos y revisión de fuente. Reutilizar el JSON del trabajo, sin migración ni otra cola. Es una corrección operativa; la latencia de la generación sigue siendo un indicador pendiente.
+
+Una lectura breve se ofrece preferentemente completa en el primer encuentro; entregas justificadas siguen permitidas. Distinguir primera lectura, relectura e imaginación de alternativas. Cambios de prompts se contrastan conservando entradas/modelos/esquemas y salidas anteriores. Casos usados para ajustar ya no cuentan como evidencia reservada; congelar casos y rúbrica antes de futuras generaciones. Contratos prueban invariantes, no certificación semántica. Informe QA_PEDAGOGICA_RONDA_2_2026-10-18.md. Sin publicación ni datos cloud.

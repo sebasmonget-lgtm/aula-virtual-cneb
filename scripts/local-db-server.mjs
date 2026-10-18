@@ -399,7 +399,7 @@ async function decodePrivateMedia(value) {
   return { bytes, mimeType, audio };
 }
 
-async function handleAuthenticatedRequest({ teacherId, requestId, db, preparationItemId, jobClassroomId, schoolYear, acceptedBlock }, request, response) {
+async function handleAuthenticatedRequest({ teacherId, requestId, db, preparationItemId, jobClassroomId, schoolYear, acceptedBlock, masterExecution }, request, response) {
 const qaDailyClock = currentPedagogicalClock() ?? localQaDailyClock;
 async function studentRoster(classroomId, today = qaDailyClock?.date ?? new Intl.DateTimeFormat("en-CA", { timeZone: "America/Lima", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date())) {
   const result = await db.query(`
@@ -2161,7 +2161,8 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
           curriculum: source.aiContext.curriculum.filter((card) => row.details.decisions.competency_ids.includes(card.id)) },
           decisions: row.details.decisions,
           providerDecisions: source.plan.proposal.experience_context ? source.safeDecisions(row.details.decisions) : row.details.decisions,
-          dependents, availableDates: calendarReview.selected_dates, workflow: row.type });
+          dependents, availableDates: calendarReview.selected_dates, workflow: row.type,
+          backgroundExecution: !!masterExecution, checkpoint: masterExecution?.checkpoint, onCheckpoint: masterExecution?.save });
         if (generated.dependents) dependents = generated.dependents;
         const base = projectDetails({ source: source.source, preview: row.details.preview,
           decisions: row.details.decisions, dependents, master: generated.output, previous: row.details });
@@ -2197,7 +2198,10 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
           id,expectedRevision(body.expectedRevision)])).rows[0];
         if (!saved) throw new VersionConflictError("El borrador cambió. Vuelve a abrirlo.");
         send(response, 200, { experience: saved }, origin);
-      } catch (error) { send(response, httpStatusForError(error, 422), isVersionConflict(error) ? conflictPayload(error) : { error: publicErrorMessage(error) }, origin); }
+      } catch (error) {
+        if(masterExecution&&error.reason==='response_pending'){send(response,202,{generation_pending:true},origin);return;}
+        send(response, httpStatusForError(error, 422), isVersionConflict(error) ? conflictPayload(error) : { error: publicErrorMessage(error) }, origin);
+      }
       return;
     }
     if (request.method === "PUT" && /^\/api\/project-flow\/[0-9a-f-]+\/map$/i.test(url.pathname)) {
@@ -2996,7 +3000,7 @@ async function preparationDomainRequest(job,pathname,body,method="POST",extra={}
   let status,result;
   const response={writeHead(value){status=value;},end(value){result=JSON.parse(value);},setHeader(){},hasHeader(){return false;}};
   await withPedagogicalClock(previewQAClockForJob(job,process.env,currentPedagogicalClock()),()=>requestDatabaseScope.run(activeDb,()=>withAiUsageContext({teacherId:job.teacher_id,db:activeDb},()=>handleAuthenticatedRequest({teacherId:job.teacher_id,
-    requestId:job.id,db:activeDb,jobClassroomId:job.classroom_id,preparationItemId:extra.preparationItemId,acceptedBlock:extra.acceptedBlock===true&&job.payload?.acceptance?.policy==="accepted-project-complete-v1"},request,response))));
+    requestId:job.id,db:activeDb,jobClassroomId:job.classroom_id,preparationItemId:extra.preparationItemId,masterExecution:extra.masterExecution,acceptedBlock:extra.acceptedBlock===true&&job.payload?.acceptance?.policy==="accepted-project-complete-v1"},request,response))));
   if(status>=400 || !status)throw Object.assign(new Error(result?.message ?? result?.error ?? "Preparation step failed"),{status});
   return result;
 }

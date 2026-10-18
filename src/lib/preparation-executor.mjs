@@ -14,10 +14,18 @@ export function preparationExecutor({db,request,pending,prepareDocument,partitio
     }
     const call=async(path,body,method,extra)=>request(extra?.db?{...job,db:extra.db}:job,path,body,method,extra);
     const generatedCall=async(path,body)=>{
-      if(p.attempt_pending)throw Object.assign(new Error("Uncertain provider result"),{uncertain:true});
+      const master=job.kind==='project'&&path===`/api/project-flow/${p.project_id}/master`;
+      if(p.attempt_pending&&!(master&&p.project_provider_checkpoint?.provider_responses))throw Object.assign(new Error("Uncertain provider result"),{uncertain:true});
+      const wait=Date.parse(p.provider_poll_after)-Date.now();
+      if(master&&wait>0)await new Promise(resolve=>setTimeout(resolve,Math.min(wait,5000)));
+      delete p.provider_poll_after;
       p.attempt_pending=true;await checkpoint(p);
-      try { const result=await call(path,body);p.attempt_pending=false;return result; }
-      catch(error){error.uncertain=error.status==null || error.status>=500;throw error;}
+      const extra=master?{masterExecution:{checkpoint:p.project_provider_checkpoint??{},save:async value=>{p.project_provider_checkpoint=value;await checkpoint(p);}}}:undefined;
+      try { const result=await call(path,body,undefined,extra);p.attempt_pending=false;
+        if(result?.generation_pending){p.provider_poll_after=new Date(Date.now()+5000).toISOString();await checkpoint(p);}
+        return result;
+      }
+      catch(error){error.uncertain=error.status==null || error.status>=500 || master&&!!p.project_provider_checkpoint?.provider_responses&&error.status!==409;throw error;}
     };
     if(job.kind==="project"){
       const plan=(await db.query(`select * from annual_plans where id=$1 and classroom_id=$2 and (status='active' or $3::boolean and status='archived')`,[job.source_id,job.classroom_id,p.future_version===true])).rows[0];
@@ -43,7 +51,8 @@ export function preparationExecutor({db,request,pending,prepareDocument,partitio
           exclusions:Object.fromEntries(calendar.days.filter(day=>day.is_instructional&&!day.selected).map(day=>[day.date,day.exclusion_reason||"No se utilizará en este proyecto"])),confirm:true},"PUT");
         p.stage="master";await checkpoint(p);return false;
       }
-      await generatedCall(`/api/project-flow/${row.id}/master`,{dependents:row.details.dependents,expectedRevision:row.revision});
+      const generated=await generatedCall(`/api/project-flow/${row.id}/master`,{dependents:row.details.dependents,expectedRevision:row.revision});
+      if(generated?.generation_pending)return false;
       p.stage=p.acceptance?"activities":"ready";await checkpoint(p);return !p.acceptance;
     }
     const project=(await db.query(`select * from learning_experiences where id=$1 and classroom_id=$2 and status='active'`,[job.source_id,job.classroom_id])).rows[0];

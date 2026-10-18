@@ -1,4 +1,5 @@
-import { randomUUID } from "node:crypto";
+import { randomUUID, createHash } from "node:crypto";
+import { VersionConflictError } from "./version-integrity.mjs";
 import { recordAIQAResult } from "./ai-qa-trace.mjs";
 import { resolveAIExecutionPlan } from "./ai-execution-router-v4.mjs";
 import { createAIProviderForPlan } from "./ai-provider-factory.mjs";
@@ -229,7 +230,7 @@ export function preserveTeacherMapEdits(generatedRoute, previousMap, overrides, 
   return retained.sort((a, b) => a.date.localeCompare(b.date)).map((item, index) => ({ ...item, number: index + 1 }));
 }
 
-async function call({ workflow, task, context, outputSchema, resolvePlan, createProvider, loadSkill }) {
+async function call({ workflow, task, context, outputSchema, resolvePlan, createProvider, loadSkill, providerOptions = {} }) {
   const plan = resolvePlan({ workflow, task });
   const selectedIds = context.confirmed_decisions?.competency_ids
     ?? context.confirmed_project_master?.decisions?.competency_ids
@@ -242,7 +243,7 @@ async function call({ workflow, task, context, outputSchema, resolvePlan, create
   const feedbackInstruction = context.planning_feedback
     ? " Usa las valoraciones docentes confirmadas de planning_feedback para actualizar las oportunidades, mediación y progresión pertinentes a esta propuesta. Distingue esos resultados del diagnóstico inicial: no repitas automáticamente necesidades antiguas como si fueran actuales. Un nivel B o C no significa que todos necesiten el mismo apoyo; sin registro o sin valoración no es nivel C. Conserva fortalezas y no inventes hechos, niveles ni necesidades individuales."
     : "";
-  const response = await createProvider(plan, { timeoutMs: 180_000 })
+  const response = await createProvider(plan, { timeoutMs: 180_000, ...providerOptions })
     .generate(buildProviderRequest(workflow, { ...context, task: `${context.task}${feedbackInstruction}`,
       didactic_knowledge: didacticKnowledge },
       plan, outputSchema, await loadSkill()));
@@ -279,7 +280,18 @@ const meaningfulSituationInstruction = "Redacta meaningful_situation en un párr
 
 export async function generateProjectMaster({ context, decisions, providerDecisions = decisions, dependents, availableDates,
   workflow = "project", resolvePlan = resolveAIExecutionPlan, createProvider = createAIProviderForPlan,
-  loadSkill = loadLearningExperienceSkill }) {
+  loadSkill = loadLearningExperienceSkill, backgroundExecution = false, checkpoint = {}, onCheckpoint = async () => {} }) {
+  const execution = key => backgroundExecution ? { background: true, timeoutMs: 30_000,
+    resumeResponseId: checkpoint.provider_responses?.[key], onResponseStarted: async id => {
+      checkpoint.provider_responses ??= {}; checkpoint.provider_responses[key] = id;
+      await onCheckpoint(structuredClone(checkpoint));
+    } } : {};
+  const masterCall=async(key,args)=>{
+    if(backgroundExecution&&checkpoint.completed_calls?.[key])return structuredClone(checkpoint.completed_calls[key]);
+    const result=await call({...args,providerOptions:execution(key)});
+    if(backgroundExecution){checkpoint.completed_calls??={};checkpoint.completed_calls[key]=result;await onCheckpoint(structuredClone(checkpoint));}
+    return result;
+  };
   if (context.modern) {
     const outputSchema = { ...PROJECT_MASTER_SCHEMA, id: "project-single-master-v3",
       required: [...PROJECT_MASTER_SCHEMA.required, ...PROJECT_DEPENDENTS_SCHEMA.required],
@@ -291,7 +303,13 @@ export async function generateProjectMaster({ context, decisions, providerDecisi
       const generatedDependents = validateProjectDependents(Object.fromEntries(PROJECT_DEPENDENTS_SCHEMA.required.map(key => [key, output[key]])), decisions.competency_ids);
       return { output: validateProjectMaster(output, decisions, generatedDependents, availableDates), dependents: generatedDependents };
     };
-    const result = await call({ workflow: "project_master", task: "generation", resolvePlan, createProvider, loadSkill,
+    if(backgroundExecution){
+      const fingerprint=createHash('sha256').update(JSON.stringify({requestContext,decisions,availableDates})).digest('hex');
+      if(checkpoint.input_fingerprint&&checkpoint.input_fingerprint!==fingerprint)
+        throw new VersionConflictError('El contexto del proyecto cambió. Conservamos el resultado anterior; revisa la preparación antes de crear otra secuencia.');
+      checkpoint.input_fingerprint=fingerprint;await onCheckpoint(structuredClone(checkpoint));
+    }
+    const result = await masterCall("master", { workflow: "project_master", task: "generation", resolvePlan, createProvider, loadSkill,
       outputSchema, context: requestContext });
     try {
       const validated = { ...result, ...validate(result.output) };
@@ -300,7 +318,7 @@ export async function generateProjectMaster({ context, decisions, providerDecisi
     }
     catch (error) {
       if (!(error instanceof ProjectFlowError)) throw error;
-      const repair = await call({ workflow: "annual_journey_repair", task: "generation", resolvePlan, createProvider, loadSkill,
+      const repair = await masterCall("repair", { workflow: "annual_journey_repair", task: "generation", resolvePlan, createProvider, loadSkill,
         outputSchema, context: { ...requestContext, invalid_output: result.output, validation_error: error.message,
           task: `Corrige únicamente el error indicado. Conserva las fechas, competencias y decisiones confirmadas. ${meaningfulSituationInstruction}` } });
       const validated = { ...repair, ...validate(repair.output), metadata: { ...repair.metadata, repair_used: true, primary: result.metadata } };

@@ -1,0 +1,282 @@
+{
+  "date": "2026-10-18",
+  "base_commit": "c552629",
+  "synthetic": true,
+  "cloud_writes": false,
+  "provider_creates": 25,
+  "completed": 24,
+  "uncertain": 1,
+  "known_usage_standard_estimate_usd": 0.5900361099999999,
+  "uncertain_reserved_usd": 0.7896,
+  "round_conservative_usd": 1.7610422499999996,
+  "prior_qa_conservative_usd": 1.4242853319999997,
+  "cumulative_conservative_usd": 3.1853275819999993,
+  "authorized_cap_usd": 5,
+  "allocated_cumulative_max_usd": 4.924285332,
+  "daily_seconds": {
+    "min": 6.311,
+    "max": 11.644,
+    "mean": 8.718235294117648
+  },
+  "frozen_at": "2026-10-18T14:00:49.629Z",
+  "frozen_hashes": {
+    "evals/project-master/heldout-pedagogy-20261018.json": "20dfb9e2c03724de4564425ffbd21a5c28e9e384f81dcef0ac29211ef740a80f",
+    "skills/crear-proyecto-unidad/SKILL.md": "eb4f16b094ee95cd2f134a55d0b51fd416abc818e40729d2887573dd12a0c06c",
+    "skills/crear-actividad/SKILL.md": "2eba5e8d7d70cf5836c716f7a92ef61900688a27d941b1e2ace7b1ba1ad8497e",
+    "src/lib/project-flow-service.mjs": "ce7eda43178e28e3789e27ad44f2bf489897fb35f4a01694448962ab4c70c994",
+    "src/lib/ai-activity-ui-service.mjs": "d189dd130b9ce08f29d2c1c902fabd44da2e38a054098a6095c8d0772b035db6"
+  },
+  "verified_unchanged_at": "2026-10-18T14:05:46.515Z",
+  "rows": [
+    {
+      "request": 1,
+      "label": "Mi año: quince propuestas",
+      "status": "measured",
+      "seconds": 392.191,
+      "input_tokens": 5795,
+      "output_tokens": 15864,
+      "known_standard_estimate_usd": 0.173126,
+      "conservative_usd": 0.266935
+    },
+    {
+      "request": 2,
+      "label": "Cantidad: proyecto cinco fechas",
+      "status": "measured",
+      "seconds": 293.332,
+      "input_tokens": 5862,
+      "output_tokens": 4862,
+      "known_standard_estimate_usd": 0.0632735,
+      "conservative_usd": 0.10224
+    },
+    {
+      "request": 3,
+      "label": "Lectura: intento síncrono sin resultado identificable",
+      "status": "uncertain",
+      "seconds": null,
+      "input_tokens": null,
+      "output_tokens": null,
+      "known_standard_estimate_usd": null,
+      "conservative_usd": 0.7896
+    },
+    {
+      "request": 4,
+      "label": "Lectura A: proyecto cinco fechas",
+      "status": "measured",
+      "seconds": 137.812,
+      "input_tokens": 5903,
+      "output_tokens": 5555,
+      "known_standard_estimate_usd": 0.070306,
+      "conservative_usd": 0.11284
+    },
+    {
+      "request": 5,
+      "label": "Movimiento: proyecto cinco fechas",
+      "status": "measured",
+      "seconds": 148.581,
+      "input_tokens": 5567,
+      "output_tokens": 5471,
+      "known_standard_estimate_usd": 0.0642724,
+      "conservative_usd": 0.1099
+    },
+    {
+      "request": 6,
+      "label": "Lectura B: proyecto cinco fechas",
+      "status": "measured",
+      "seconds": 107.58,
+      "input_tokens": 6007,
+      "output_tokens": 4560,
+      "known_standard_estimate_usd": 0.060616,
+      "conservative_usd": 0.098435
+    },
+    {
+      "request": 7,
+      "label": "Cantidad: actividad 1",
+      "status": "measured",
+      "seconds": 7.468,
+      "input_tokens": 10758,
+      "output_tokens": 611,
+      "known_standard_estimate_usd": 0.001650175,
+      "conservative_usd": 0.00314775
+    },
+    {
+      "request": 8,
+      "label": "Cantidad: actividad 2",
+      "status": "measured",
+      "seconds": 9.066,
+      "input_tokens": 11059,
+      "output_tokens": 771,
+      "known_standard_estimate_usd": 0.00157391,
+      "conservative_usd": 0.003343
+    },
+    {
+      "request": 9,
+      "label": "Cantidad: actividad 3",
+      "status": "measured",
+      "seconds": 10.025,
+      "input_tokens": 11313,
+      "output_tokens": 835,
+      "known_standard_estimate_usd": 0.00163766,
+      "conservative_usd": 0.0034545
+    },
+    {
+      "request": 10,
+      "label": "Cantidad: actividad 4",
+      "status": "measured",
+      "seconds": 8.659,
+      "input_tokens": 11277,
+      "output_tokens": 735,
+      "known_standard_estimate_usd": 0.00158316,
+      "conservative_usd": 0.0033705
+    },
+    {
+      "request": 11,
+      "label": "Cantidad: actividad 5",
+      "status": "measured",
+      "seconds": 6.311,
+      "input_tokens": 10608,
+      "output_tokens": 565,
+      "known_standard_estimate_usd": 0.001414535,
+      "conservative_usd": 0.00307575
+    },
+    {
+      "request": 12,
+      "label": "Lectura B: actividad 1",
+      "status": "measured",
+      "seconds": 7.166,
+      "input_tokens": 10755,
+      "output_tokens": 608,
+      "known_standard_estimate_usd": 0.00145441,
+      "conservative_usd": 0.00314475
+    },
+    {
+      "request": 13,
+      "label": "Lectura B: actividad 2",
+      "status": "measured",
+      "seconds": 7.014,
+      "input_tokens": 11246,
+      "output_tokens": 596,
+      "known_standard_estimate_usd": 0.001509785,
+      "conservative_usd": 0.0032585
+    },
+    {
+      "request": 14,
+      "label": "Lectura B: actividad 3",
+      "status": "measured",
+      "seconds": 9.467,
+      "input_tokens": 11201,
+      "output_tokens": 852,
+      "known_standard_estimate_usd": 0.00163216,
+      "conservative_usd": 0.00343925
+    },
+    {
+      "request": 15,
+      "label": "Lectura B: actividad 4",
+      "status": "measured",
+      "seconds": 10.376,
+      "input_tokens": 11244,
+      "output_tokens": 861,
+      "known_standard_estimate_usd": 0.001642035,
+      "conservative_usd": 0.00345675
+    },
+    {
+      "request": 16,
+      "label": "Lectura B: actividad 5",
+      "status": "measured",
+      "seconds": 6.946,
+      "input_tokens": 10730,
+      "output_tokens": 526,
+      "known_standard_estimate_usd": 0.001410285,
+      "conservative_usd": 0.003077
+    },
+    {
+      "request": 17,
+      "label": "Movimiento: actividad 1",
+      "status": "measured",
+      "seconds": 7.305,
+      "input_tokens": 11278,
+      "output_tokens": 642,
+      "known_standard_estimate_usd": 0.001536785,
+      "conservative_usd": 0.003301
+    },
+    {
+      "request": 18,
+      "label": "Movimiento: actividad 2",
+      "status": "measured",
+      "seconds": 8.215,
+      "input_tokens": 11897,
+      "output_tokens": 643,
+      "known_standard_estimate_usd": 0.00161466,
+      "conservative_usd": 0.0034565
+    },
+    {
+      "request": 19,
+      "label": "Movimiento: actividad 3",
+      "status": "measured",
+      "seconds": 11.644,
+      "input_tokens": 11924,
+      "output_tokens": 954,
+      "known_standard_estimate_usd": 0.001773535,
+      "conservative_usd": 0.0036965
+    },
+    {
+      "request": 20,
+      "label": "Movimiento: actividad 4",
+      "status": "measured",
+      "seconds": 10.358,
+      "input_tokens": 11214,
+      "output_tokens": 937,
+      "known_standard_estimate_usd": 0.001676285,
+      "conservative_usd": 0.00350625
+    },
+    {
+      "request": 21,
+      "label": "Movimiento: actividad 5",
+      "status": "measured",
+      "seconds": 9.482,
+      "input_tokens": 10550,
+      "output_tokens": 831,
+      "known_standard_estimate_usd": 0.001540285,
+      "conservative_usd": 0.00326075
+    },
+    {
+      "request": 22,
+      "label": "Espacio/movimiento tres años: proyecto tres fechas",
+      "status": "measured",
+      "seconds": 117.581,
+      "input_tokens": 5094,
+      "output_tokens": 4673,
+      "known_standard_estimate_usd": 0.0548603,
+      "conservative_usd": 0.095565
+    },
+    {
+      "request": 23,
+      "label": "Espacio/movimiento tres años: primera actividad",
+      "status": "measured",
+      "seconds": 9.829,
+      "input_tokens": 10907,
+      "output_tokens": 721,
+      "known_standard_estimate_usd": 0.00152991,
+      "conservative_usd": 0.0032675
+    },
+    {
+      "request": 24,
+      "label": "Lectura por entregas cinco años: proyecto cinco fechas",
+      "status": "measured",
+      "seconds": 160.299,
+      "input_tokens": 5429,
+      "output_tokens": 6791,
+      "known_standard_estimate_usd": 0.0768778,
+      "conservative_usd": 0.12901
+    },
+    {
+      "request": 25,
+      "label": "Lectura por entregas cinco años: primera actividad",
+      "status": "measured",
+      "seconds": 8.879,
+      "input_tokens": 10932,
+      "output_tokens": 704,
+      "known_standard_estimate_usd": 0.001524535,
+      "conservative_usd": 0.003261
+    }
+  ]
+}

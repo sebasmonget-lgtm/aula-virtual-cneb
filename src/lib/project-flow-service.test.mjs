@@ -38,6 +38,42 @@ const provider = (output, check) => () => ({ generate: async (request) => {
   check?.(request); return { output, provider_metadata: { usage: { input_tokens: 10 } } };
 } });
 
+test('el Master en segundo plano recupera un ID conocido sin repetir la creación ni aceptar contexto cambiado',async()=>{
+ const checkpoint={},saved=[];let creates=0,retrieves=0;
+ const createProvider=(_plan,options)=>({generate:async()=>{
+  assert.equal(options.background,true);
+  if(!options.resumeResponseId){creates++;await options.onResponseStarted('resp_master_known');throw Object.assign(new Error('Pending'),{reason:'response_pending'});}
+  assert.equal(options.resumeResponseId,'resp_master_known');retrieves++;
+  if(retrieves===1)throw Object.assign(new Error('Pending'),{reason:'response_pending'});
+  return {output:{...master,...dependents}};
+ }});
+ const args={context:{modern:true,age:5},decisions,availableDates:['2026-04-13','2026-04-14'],backgroundExecution:true,checkpoint,
+  onCheckpoint:async value=>saved.push(value),createProvider,loadSkill:async()=> 'Skill'};
+ await assert.rejects(()=>generateProjectMaster(args),e=>e.reason==='response_pending');
+ assert.equal(saved.at(-1).provider_responses.master,'resp_master_known');
+ await assert.rejects(()=>generateProjectMaster({...args,availableDates:['2026-04-15','2026-04-16']}),e=>e.name==='VersionConflictError');
+ await assert.rejects(()=>generateProjectMaster(args),e=>e.reason==='response_pending');
+ const result=await generateProjectMaster(args);
+ assert.equal(creates,1);assert.equal(retrieves,2);assert.equal(result.output.activity_route.length,2);
+});
+
+test('la reparación del Master conserva sus dos respuestas conocidas y no vuelve a facturar la principal',async()=>{
+ const checkpoint={};let creates=0,primaryReads=0;
+ const createProvider=(_plan,options)=>({generate:async()=>{
+  if(!options.resumeResponseId){creates++;const id=creates===1?'resp_primary':'resp_repair';await options.onResponseStarted(id);throw Object.assign(new Error('Pending'),{reason:'response_pending'});}
+  if(options.resumeResponseId==='resp_primary')primaryReads++;
+  return {output:{...master,...dependents,...(options.resumeResponseId==='resp_primary'?{foundation:'x'.repeat(1501)}:{})}};
+ }});
+ const args={context:{modern:true,age:5},decisions,availableDates:['2026-04-13','2026-04-14'],backgroundExecution:true,checkpoint,
+  onCheckpoint:async()=>{},createProvider,loadSkill:async()=> 'Skill'};
+ await assert.rejects(()=>generateProjectMaster(args),e=>e.reason==='response_pending');
+ await assert.rejects(()=>generateProjectMaster(args),e=>e.reason==='response_pending');
+ const result=await generateProjectMaster(args);
+ assert.equal(creates,2);assert.equal(result.metadata.repair_used,true);
+  assert.equal(primaryReads,1,'El resultado primario completo no se recupera ni se vuelve a contabilizar durante la reparación');
+ assert.deepEqual(checkpoint.provider_responses,{master:'resp_primary',repair:'resp_repair'});
+});
+
 test('el proyecto preparado rechaza recursos y materiales diarios indefinidos',()=>{
  assert.throws(()=>validateProjectMaster({...master,resources:['Soporte por definir']},decisions,dependents,['2026-04-13','2026-04-14']));
  assert.throws(()=>validateProjectMaster({...master,activities:master.activities.map(row=>({...row,materials:['Cuento por seleccionar']}))},decisions,dependents,['2026-04-13','2026-04-14']),/materiales/);

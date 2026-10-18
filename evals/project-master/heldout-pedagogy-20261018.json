@@ -1,0 +1,43 @@
+{
+  "protocol": "Inputs and rubric frozen before generation; do not adjust the prompt after inspecting these outputs. Structural validation is separate from semantic review. No exact wording is required.",
+  "cases": [
+    {
+      "key": "space3",
+      "age": 3,
+      "title": "¿Por dónde pasa nuestra pelota?",
+      "competency_ids": ["MAT_FORMA", "PSICO_MOTRICIDAD"],
+      "purpose": "Explorar recorridos con el cuerpo y con una pelota, probando posiciones y espacios para hacerla pasar.",
+      "context": "Invitación docente para un aula ficticia de tres años. No se dispone de observaciones diagnósticas ni de intereses del grupo confirmados.",
+      "resources": ["Pelotas blandas grandes", "Cajas grandes de cartón vacías", "Patio pequeño, plano y despejado"],
+      "teacher_decision": "Preparar un recorrido de tres días que los niños puedan explorar con estos materiales.",
+      "dates": ["2026-10-26", "2026-10-27", "2026-10-28"],
+      "review_rubric_not_provider_input": [
+        "Situación significativa presentada como invitación docente, sin fabricar intereses ni dificultades del grupo.",
+        "Oportunidades concretas para ambas competencias, con participación corporal y relaciones espaciales apropiadas para tres años.",
+        "Sin exigir explicaciones abstractas, nomenclatura geométrica o desempeño de mayor edad como condición de éxito.",
+        "Secuencia con cambios de reto y continuidad; cierre vinculado a lo explorado.",
+        "Materiales disponibles, seguridad y apoyos viables; sin introducir un cuento o salida no disponibles.",
+        "Primera actividad mantiene propósito y criterio del mapa; instrucciones realizables y evidencia observable sin anticipar resultados."
+      ]
+    },
+    {
+      "key": "serial5",
+      "age": 5,
+      "title": "Una historia para compartir por entregas",
+      "competency_ids": ["COM_LECTURA", "COM_ORAL"],
+      "purpose": "Interpretar un cuento ilustrado y conversar sobre las pistas y relaciones que ayudan a comprenderlo.",
+      "context": "Invitación docente para un aula ficticia de cinco años. No se dispone de observaciones diagnósticas ni de intereses del grupo confirmados.",
+      "resources": ["Cuento ilustrado físico ficticio «La visita que cambió nuestro barrio», de 24 páginas", "Espacio de lectura con imágenes visibles"],
+      "teacher_decision": "Por su extensión, leeremos el cuento en dos encuentros. La profesora elegirá previamente un corte con sentido y leerá la segunda parte en el siguiente encuentro. Ayni no dispone del argumento, de una transcripción ni de las imágenes del cuento.",
+      "dates": ["2026-11-02", "2026-11-03", "2026-11-04", "2026-11-05", "2026-11-06"],
+      "review_rubric_not_provider_input": [
+        "Respeta la decisión explícita de lectura en dos encuentros; no impone relato completo el primer día.",
+        "No inventa personajes, acontecimientos, citas ni contenidos de páginas que no recibió.",
+        "La docente elige el corte según el libro real; las indicaciones funcionan sin conocer el argumento.",
+        "Las relecturas posteriores tienen nuevos propósitos interpretativos; el desenlace conocido no se presenta como una sorpresa.",
+        "Oportunidades reales para lectura y comunicación oral, sin transformar la conversación en prueba de memoria o decodificación.",
+        "Primera actividad conserva decisiones y criterio, tiene mediación breve y observación sustentada en actuaciones posibles."
+      ]
+    }
+  ]
+}

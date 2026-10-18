@@ -88,6 +88,7 @@ export async function retryPreparation(db,teacherId,id,acceptPotentialRepeat=fal
     if(row.status==="succeeded"&&!needsAcceptedProjectContinuation(row))return row;
     if((row.status==="uncertain"||needsAcceptedProjectContinuation(row)&&row.payload.attempt_pending===true) && acceptPotentialRepeat!==true)throw new VersionConflictError("No se pudo comprobar si la última llamada terminó. Confirma el reintento; podría repetir esa llamada.");
     const payload={...row.payload,error:null,attempt_pending:false};
+    if(acceptPotentialRepeat===true){delete payload.project_provider_checkpoint;delete payload.provider_poll_after;}
     return (await tx.query(`update preparation_jobs set status='queued',lease_token=null,lease_until=null,
       payload=$2::jsonb,updated_at=now() where id=$1 returning *`,[id,JSON.stringify(payload)])).rows[0];
   });
