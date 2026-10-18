@@ -1,10 +1,41 @@
 import { annualDisplayTitle } from "./annual-year-editor.mjs";
 import { annualTeacherText } from "./annual-teacher-display.mjs";
 import { Document, HeadingLevel, Paragraph, Packer, TextRun } from "docx";
+import { familyInterviewQuestionGroups } from "./family-interview-contract.mjs";
+
+const sourceKinds = { observed: "Observación de aula", family_report: "Relato de la familia",
+  teacher_context: "Contexto del aula", teacher_decision: "Decisión docente" };
+const scopes = { individual: "Registro individual", subgroup: "Subgrupo", group: "Grupo", classroom: "Aula", teacher_defined: "Alcance definido por la docente" };
+const familyLabels = { ...Object.fromEntries(familyInterviewQuestionGroups("").flatMap(group => group.questions).map(q => [q.key,q.title])),
+  language_context: "Lenguas en casa", family_expectation: "Expectativa familiar", family_expectations: "Expectativas familiares",
+  family_community_context: "Familia y comunidad", family_community_enjoyed: "Experiencias compartidas",
+  other_interest_text: "Otros intereses", other_language_text: "Otra lengua", other_community_text: "Otras experiencias",
+  home_activity_example: "Actividades en casa", participation_support_context: "Apoyos para participar",
+  emotional_support_context: "Acompañamiento emocional", autonomy_context: "Autonomía",
+  communication_emotional_context: "Comunicación de emociones", adaptation_context: "Adaptación",
+  daily_routine_context: "Rutinas en casa", previous_education: "Experiencia educativa anterior" };
+// Only translate field labels added by the family snapshot. Preserve every answer,
+// including unrecognized legacy data, and never apply this to observed evidence.
+const sourceText = fact => fact.kind !== "family_report" ? fact.support_text : fact.support_text.split("\n").map(line => {
+  const match=/^([a-z_]+): (.*)$/.exec(line);
+  return match && familyLabels[match[1]] ? `${familyLabels[match[1]]}: ${match[2]}` : line;
+}).join("\n");
+const sourceQualifications = { literal_record_only: "Describe lo registrado; no acredita por sí solo un logro.",
+  reported_not_observed: "Información referida por la familia; no es evidencia curricular observada.",
+  teacher_reported: "Información proporcionada por la docente.",
+  confirmed_teacher_interpretation: "Síntesis revisada por la docente; consultar sus registros de origen.",
+  confirmed_teacher_decision_not_new_evidence: "Decisión docente; no añade evidencia de aprendizaje.",
+  historical_source_preserved_for_trace: "Antecedente conservado; no describe por sí solo la situación actual." };
+const interpretationLabels = { advance: "Posible avance", support_needed: "Posible necesidad de apoyo",
+  ambiguous: "Información insuficiente para interpretar" };
+const readableDate = value => /^\d{4}-\d{2}-\d{2}/.test(value ?? "")
+  ? value.slice(0,10).split("-").reverse().join("/") : "Fecha no registrada";
 
 /** A pure rendering of the confirmed object. No title regex, inference, prompt or enrichment. */
-export function annualJourneyDocumentSections(plan, names = new Map()) {
+export function annualJourneyDocumentSections(plan, names = new Map(), subjects = {}) {
   if (plan.curriculum_reference) names = new Map(plan.curriculum_reference.map((card) => [card.id, card.name]));
+  const facts = plan.classroom_snapshot.facts;
+  const sources = new Map(facts.map((fact,index) => [fact.key,{ fact, number: index + 1 }]));
   const sections = [{ title: "Ideas y decisiones docentes", lines: [plan.teacher_preferences].filter(Boolean) }];
   if(plan.experience_context){
     sections.push({title:"Contexto aprobado por la profesora",lines:plan.experience_context.context_items.map(item=>item.text)});
@@ -22,26 +53,27 @@ export function annualJourneyDocumentSections(plan, names = new Map()) {
     ...(stage.teacher_notes ? [stage.teacher_notes] : [])] });
   for (const [index, row] of plan.proposed_experiences.entries()) {
     const slot=plan.resolved_calendar.projects.find(slot=>slot.proposal_id===row.proposal_id);
-    const duration=slot?.historical_dates?.length?`${row.planned_instructional_days} días restantes del tramo`: `${row.duration_weeks} semanas · ${row.planned_instructional_days} días lectivos`;
+    const duration=slot?.historical_dates?.length?`${row.planned_instructional_days} días restantes del tramo`: `${row.duration_weeks} ${row.duration_weeks === 1 ? "semana" : "semanas"} · ${row.planned_instructional_days} días lectivos`;
     sections.push({ title: `${slot?.index ?? index + 1}. ${annualDisplayTitle(row.title)}`, lines: [row.rationale, row.purpose, row.invitation,
       ...row.children_actions, `${row.planned_start_date} al ${row.planned_end_date} · ${duration}`] });
     for (const opportunity of row.opportunities) sections.push(opportunitySection(opportunity, names));
     sections.push({ title: "Materiales, apoyos y flexibilidad", lines: [...row.materials, ...row.supports, row.flexibility] });
-    sections.push({ title: "Fuentes pertinentes", lines: row.source_fact_keys.map((key) => {
-      const fact = plan.classroom_snapshot.facts.find((f) => f.key === key);
-      return `${fact.kind} · ${fact.subject} · ${fact.scope}: ${fact.support_text}`;
+    sections.push({ title: "Registros de referencia", lines: row.source_fact_keys.map((key) => {
+      const source = sources.get(key);
+      return source ? `Fuente ${source.number}: ${sourceKinds[source.fact.kind] ?? "Registro del aula"}. Ver su texto en la procedencia del plan.`
+        : "Referencia no disponible en esta versión del plan.";
     }) });
   }
   for (const opportunity of plan.everyday_opportunities) sections.push({ ...opportunitySection(opportunity, names),
     title: `${opportunity.moment} · ${names.get(opportunity.competency_id) ?? opportunity.competency_id}` });
-  sections.push({ title: plan.interpretation_review?.status==="pending"?"Interpretaciones propuestas por Ayni · pendientes de revisión docente":"Interpretaciones revisadas por la docente", lines: plan.evidence_interpretations.map((x) =>
-    `${x.scope} · ${x.meaning}: ${x.interpretation}`) });
+  sections.push({ title: plan.interpretation_review?.status==="reviewed"?"Interpretaciones revisadas por la docente":"Interpretaciones propuestas por Ayni · pendientes de revisión docente", lines: plan.evidence_interpretations.map((x) =>
+    `${scopes[x.scope] ?? "Alcance no precisado"} · ${interpretationLabels[x.meaning] ?? "Interpretación para revisar"}: ${x.interpretation}`) });
   if (plan.insufficient_interpretations?.length) sections.push({title:"Información que todavía necesitamos conocer",lines:[
     `En ${plan.insufficient_interpretations.length} posibles interpretaciones todavía faltaba sustento. Conservamos los registros sin concluir que exista un avance o una dificultad.`]});
-  sections.push({ title: "Lo que sabemos del aula y su procedencia", lines: plan.classroom_snapshot.facts.map((f) =>
-    `${f.kind} · ${f.subject} · ${f.scope} · ${f.occurred_at ?? "fecha desconocida"} · ${f.uncertainty}: ${f.support_text}${f.explicit_tags?.length ? `; selecciones: ${f.explicit_tags.join(", ")}` : ""}`) });
+  sections.push({ title: "Lo que sabemos del aula y su procedencia", lines: facts.map((f,index) =>
+    `Fuente ${index + 1}. ${sourceKinds[f.kind] ?? "Registro del aula"} · ${scopes[f.scope] ?? "Alcance no precisado"}${/^child_\d+$/i.test(f.subject ?? "") ? ` · ${annualTeacherText(f.subject,subjects)}` : ""} · ${readableDate(f.occurred_at)}. ${sourceText(f)}${f.explicit_tags?.length ? `; selecciones: ${f.explicit_tags.join(", ")}` : ""} ${sourceQualifications[f.uncertainty] ?? "Consultar el registro original para conocer su alcance."}`) });
   sections.push({ title: "Calendario efectivo", lines: [`Versión: ${plan.resolved_calendar.calendar_version.version}`,
-    `Huella: ${plan.resolved_calendar.calendar_fingerprint}`, `${plan.resolved_calendar.integrity.assigned}/${plan.resolved_calendar.integrity.eligible} fechas; 0 huecos; 0 solapamientos.`] });
+    `${plan.resolved_calendar.integrity.assigned} de ${plan.resolved_calendar.integrity.eligible} fechas previstas; ${plan.resolved_calendar.integrity.gaps} sin asignar; ${plan.resolved_calendar.integrity.overlaps} solapamientos.`] });
   return sections;
 }
 function opportunitySection(o, names) {
@@ -55,7 +87,7 @@ export async function renderAnnualJourneyWord(document, cards = []) {
   const children = [new Paragraph({ text: `Mi año ${document.school_year} · versión ${document.version}`, heading: HeadingLevel.TITLE }),
     new Paragraph({ text: [document.document_context?.institution_name, document.document_context?.teacher_name,
       document.document_context?.classroom_section].filter(Boolean).join(" · ") })];
-  for (const section of annualJourneyDocumentSections(document.content, names)) {
+  for (const section of annualJourneyDocumentSections(document.content, names, document.display_subjects)) {
     children.push(new Paragraph({ text: section.title, heading: HeadingLevel.HEADING_1, keepNext: true }));
     for (const line of section.lines) children.push(new Paragraph({ children: [new TextRun(annualTeacherText(line,document.display_subjects))], spacing: { after: 140 }, widowControl: true }));
   }

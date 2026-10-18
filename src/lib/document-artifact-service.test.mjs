@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { mkdtemp, readFile, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -12,9 +12,30 @@ import { createLocalPrivateDocumentArtifactStorage,
 import { listConfirmedDocumentArtifacts,listDocumentArtifactStates,prepareConfirmedDocumentArtifact,
   readConfirmedDocumentArtifact } from "./document-artifact-service.mjs";
 import { buildAuthorizedDocumentZip } from "./document-sync-package.mjs";
+import { loadSavedDocument } from "./document-library-service.mjs";
 
 const teacher = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 const foreign = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+
+test('una revisión de maquetación crea otro artefacto sin sustituir los bytes históricos',async()=>{
+ const f=await fixture();
+ try{
+  const oldId=randomUUID(),oldBytes=Buffer.from('PK:documento histórico de prueba'),key=`${teacher}/${oldId}.docx`;
+  const source=await loadSavedDocument(f.db,teacher,'experience',f.project);
+  await f.storage.save(key,oldBytes,teacher);
+  await f.db.query(`insert into document_artifacts(id,teacher_id,classroom_id,source_kind,source_id,source_version,
+    template_version,source_sha256,status,filename,storage_key,sha256,byte_length,confirmed_at)
+    select $1,$2,classroom_id,'experience',id,version,'experience-legacy-v1',$4,'confirmed','anterior.docx',$5,$6,$7,now()
+    from learning_experiences where id=$3`,[oldId,teacher,f.project,createHash('sha256').update(JSON.stringify(source)).digest('hex'),key,createHash('sha256').update(oldBytes).digest('hex'),oldBytes.length]);
+  let renders=0;
+  const options={render:async()=>{renders++;return{buffer:Buffer.from('PK:maquetación nueva')};}};
+  const current=await prepareConfirmedDocumentArtifact(f.db,f.storage,teacher,'experience',f.project,options);
+  assert.notEqual(current.id,oldId);
+  assert.equal((await prepareConfirmedDocumentArtifact(f.db,f.storage,teacher,'experience',f.project,options)).id,current.id);
+  assert.equal(renders,1);assert.deepEqual((await readConfirmedDocumentArtifact(f.db,f.storage,teacher,oldId)).bytes,oldBytes);
+  assert.equal((await listConfirmedDocumentArtifacts(f.db,teacher)).length,2);
+ }finally{await f.db.close();await rm(f.root,{recursive:true,force:true});}
+});
 async function fixture() {
   const db = new PGlite(), directory = new URL("../../local-db/migrations/",import.meta.url);
   for (const name of (await readdir(directory)).filter(name=>name.endsWith(".sql")).sort())

@@ -211,7 +211,7 @@ export async function renderActivityUnifiedWord(document, cards = [], { logo = n
   const overview = [
     ["Qué haremos hoy", clean(content.purpose)],
   ].filter(([, value]) => value);
-  return renderUnifiedWord({ templateUrl: withWorkshop ? workshopTemplateUrl : oldTemplateUrl, values, logo, appendixImages,
+  return renderUnifiedWord({ templateUrl: withWorkshop ? workshopTemplateUrl : oldTemplateUrl, values, logo, appendixImages, compactTrailingSpace: true,
     transform: (xml) => insertCoverQuickView(transformActivity(xml, evidenceRows, closure, withWorkshop, guide), "Hoy en el aula", overview),
     transformPart: (part, xml) => part.includes("header") ? replaceWordText(xml, "PLANIFICACIÓN ANUAL", "ACTIVIDAD DE APRENDIZAJE") : xml });
 }

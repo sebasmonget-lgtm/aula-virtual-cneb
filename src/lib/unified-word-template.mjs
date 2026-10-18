@@ -118,6 +118,25 @@ export function removePageBreakBeforeTable(xml, tableText) {
     (full, paragraph, table) => /<w:br[^>]*w:type="page"/.test(paragraph) && textOf(table).includes(tableText) ? table : full);
 }
 
+/** Template headings left empty after optional sections must not consume a final page. */
+export function compactWordDocumentEnd(xml) {
+  const sectionAt = xml.lastIndexOf("<w:sectPr");
+  if (sectionAt < 0) return xml;
+  let body = xml.slice(0, sectionAt);
+  while (true) {
+    const last = [...body.matchAll(paragraphPattern)].at(-1);
+    if (!last || body.slice(last.index + last[0].length).trim()) break;
+    const paragraph = last[0];
+    const text = [...paragraph.matchAll(textPattern)].map(match => match[2]).join("").trim();
+    if (text || /<w:(?:drawing|pict|object|fldChar|fldSimple|instrText|sym|hyperlink|sdt|delText|ins|del|footnoteReference|endnoteReference|commentReference|commentRangeStart|commentRangeEnd|bookmarkStart|bookmarkEnd|sectPr)\b/.test(paragraph)) break;
+    body = body.slice(0, last.index);
+  }
+  // Word requires a paragraph after a terminal table. Give its mark one point,
+  // without the removed heading's keepNext, line height or spacing.
+  if (body.trimEnd().endsWith("</w:tbl>")) body += '<w:p><w:pPr><w:spacing w:before="0" w:after="0" w:line="20" w:lineRule="exact"/><w:rPr><w:sz w:val="2"/></w:rPr></w:pPr></w:p>';
+  return body + xml.slice(sectionAt);
+}
+
 /** A small, source-backed guide uses the unused space on a document cover. */
 export function insertCoverQuickView(xml, title, rows) {
   const breakParagraph = (xml.match(paragraphPattern) ?? []).find((part) => /<w:br\b[^>]*w:type="page"/.test(part));
@@ -227,7 +246,7 @@ async function insertInlineImages(archive, xml, images) {
 }
 
 /** The DOCX is a view of validated application data; this function makes no AI call. */
-export async function renderUnifiedWord({ templateUrl, values, logo = null, appendixImages = [], inlineImages = [], transform = (xml) => xml, transformPart = (_part, xml) => xml }) {
+export async function renderUnifiedWord({ templateUrl, values, logo = null, appendixImages = [], inlineImages = [], compactTrailingSpace = false, transform = (xml) => xml, transformPart = (_part, xml) => xml }) {
   const archive = await JSZip.loadAsync(await readFile(templateUrl));
   let xml = await archive.file("word/document.xml")?.async("string");
   if (!xml) throw new Error("La plantilla no tiene contenido Word.");
@@ -236,6 +255,7 @@ export async function renderUnifiedWord({ templateUrl, values, logo = null, appe
   xml = await insertInlineImages(archive, xml, inlineImages);
   xml = fillWordXml(xml, { ...values, LOGO_COLEGIO: "" });
   xml = await appendPrintableImages(archive, xml, appendixImages);
+  if (compactTrailingSpace) xml = compactWordDocumentEnd(xml);
   archive.file("word/document.xml", xml);
   for (const part of Object.keys(archive.files).filter((name) => /^word\/(header|footer)\d+\.xml$/.test(name))) {
     archive.file(part, fillWordXml(transformPart(part, await archive.file(part).async("string")), { ...values, LOGO_COLEGIO: "" }));

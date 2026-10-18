@@ -1,5 +1,5 @@
 import { annualJourneySafeText } from "./annual-journey-privacy.mjs";
-import { interviewInterestOptions, interviewLanguageOptions, interviewCommunityOptions } from "./family-interview-contract.mjs";
+import { familyInterviewCategories, interviewInterestOptions, interviewLanguageOptions, interviewCommunityOptions } from "./family-interview-contract.mjs";
 import { createHash } from "node:crypto";
 
 /** Literal evidence, anonymous subjects and explicit provenance. No keyword inference. */
@@ -25,10 +25,10 @@ export function buildAnnualClassroomSnapshot(sources, context, curriculum = []) 
       ...(details.community_tags ?? []).map((id) => interviewCommunityOptions.find((x) => x.id === id)?.label),
       ...(details.language_tags ?? []).map((id) => interviewLanguageOptions.find((x) => x.id === id)?.label),
     ].filter(Boolean);
-    const text = ["language_context", "interests", "family_community_context", "family_community_enjoyed",
+    const text = [...new Set(["language_context", "interests", "family_community_context", "family_community_enjoyed",
       "other_interest_text", "other_language_text", "other_community_text", "social_context", "home_activity_example",
       "communication_context", "participation_support_context", "emotional_support_context", "family_expectation",
-      "autonomy_context", "communication_emotional_context", "adaptation_context", "daily_routine_context", "family_expectations", "previous_education"]
+      "autonomy_context", "communication_emotional_context", "adaptation_context", "daily_routine_context", "family_expectations", "previous_education", ...familyInterviewCategories])]
       .map((field) => details[field] ? `${field}: ${details[field]}` : "").filter(Boolean).join("\n");
     const structured = Object.fromEntries(["communication_tags", "emotional_support_tags", "social_play_tags",
       "home_activity_tags", "participation_support_tags", "home_language_uses", "primary_language_tag"]

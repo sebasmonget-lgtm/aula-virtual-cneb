@@ -344,7 +344,7 @@ test("vertical en PostgreSQL: preparar → cambios → confirmar → Word idént
     const xml = async (bytes) => (await JSZip.loadAsync(bytes)).file("word/document.xml").async("string");
     assert.equal(await xml(a), await xml(b)); assert.equal(calls.length, beforeCalls);
     assert.match(await xml(a), /Plantas y juego/);
-    assert.deepEqual(annualJourneyDocumentSections(doc.content), annualJourneyDocumentSections(current.proposal));
+    assert.deepEqual(annualJourneyDocumentSections(doc.content), annualJourneyDocumentSections({...current.proposal,interpretation_review}));
     const active = (await db.query("select id,revision from annual_plans where status='active'")).rows[0];
     const copy = await route(`${active.id}/copy`, { expectedRevision: Number(active.revision) }); assert.equal(copy.status, 201, JSON.stringify(copy.data));
     assert.equal((await db.query("select count(*)::int as n from annual_plans where status='active'")).rows[0].n, 1);

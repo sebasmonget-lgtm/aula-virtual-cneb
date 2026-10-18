@@ -2,7 +2,22 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import JSZip from "jszip";
 import sharp from "sharp";
-import { fillWordXml, removeParagraphsContaining, renderUnifiedWord, wordTemplateFields } from "./unified-word-template.mjs";
+import { compactWordDocumentEnd, fillWordXml, removeParagraphsContaining, renderUnifiedWord, wordTemplateFields } from "./unified-word-template.mjs";
+
+test("el final Word elimina títulos vacíos sin quitar contenido, campos ni secciones", () => {
+  const end='<w:sectPr><w:pgSz w:w="12240"/></w:sectPr></w:body></w:document>';
+  const start='<w:document><w:body>',text='<w:p><w:r><w:t>Registro conservado.</w:t></w:r></w:p>';
+  const blank='<w:p><w:pPr><w:keepNext/><w:spacing w:after="180"/></w:pPr></w:p>';
+  assert.equal(compactWordDocumentEnd(start+text+blank+blank+end),start+text+end);
+  const table='<w:tbl><w:tr><w:tc>'+text+'</w:tc></w:tr></w:tbl>';
+  const compact=compactWordDocumentEnd(start+table+blank+end);
+  assert.ok(compact.includes(table));assert.match(compact,/w:lineRule="exact"/);
+  assert.doesNotMatch(compact,/<w:keepNext/);assert.equal(compactWordDocumentEnd(compact),compact);
+  for(const content of ['<w:drawing/>','<w:fldSimple w:instr="PAGE"/>','<w:bookmarkStart w:id="1"/>','<w:sectPr/>','<w:sym w:char="F0FC"/>']) {
+    const xml=start+text+'<w:p>'+content+'</w:p>'+end;
+    assert.equal(compactWordDocumentEnd(xml),xml);
+  }
+});
 
 test("rellena un marcador dividido entre runs sin alterar el texto que lo rodea", () => {
   const xml = '<w:p><w:r><w:t>Antes {{CAM</w:t></w:r><w:r><w:t>PO}} después</w:t></w:r></w:p>';

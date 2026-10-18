@@ -1,0 +1,203 @@
+{
+  "base_commit": "6c2e285",
+  "date": "2026-10-18",
+  "synthetic": true,
+  "cloud_writes": false,
+  "annual_contract": "PASS",
+  "current_eight_question_source": "PASS",
+  "current_eight_annual_contract": "PASS",
+  "calendar": {
+    "eligible": 172,
+    "assigned": 172,
+    "gaps": 0,
+    "overlaps": 0
+  },
+  "maps": [
+    {
+      "key": "science5",
+      "age": 5,
+      "title": "Puentes de papel en prueba",
+      "dates": [
+        "2026-04-13",
+        "2026-04-14",
+        "2026-04-15",
+        "2026-04-16"
+      ],
+      "guided_criteria": {
+        "CYT_INDAGA": 3,
+        "MAT_FORMA": 1
+      }
+    },
+    {
+      "key": "art3",
+      "age": 3,
+      "title": "Manchas y trazos que queremos compartir",
+      "dates": [
+        "2026-11-02",
+        "2026-11-03",
+        "2026-11-04"
+      ],
+      "guided_criteria": {
+        "COM_ARTE": 2,
+        "COM_ORAL": 1
+      }
+    }
+  ],
+  "days": [
+    {
+      "file": "daily-art3-1.json",
+      "title": "Probamos trazos y manchas",
+      "inherited": "PASS"
+    },
+    {
+      "file": "daily-art3-2.json",
+      "title": "Volvemos a nuestras creaciones",
+      "inherited": "PASS"
+    },
+    {
+      "file": "daily-art3-3.json",
+      "title": "Elegimos qué compartir",
+      "inherited": "PASS"
+    },
+    {
+      "file": "daily-science5-1.json",
+      "title": "¿Qué pasa con nuestro primer puente?",
+      "inherited": "PASS"
+    },
+    {
+      "file": "daily-science5-2.json",
+      "title": "Una hoja puede cambiar de forma",
+      "inherited": "PASS"
+    },
+    {
+      "file": "daily-science5-3.json",
+      "title": "Apoyos más cerca o más lejos",
+      "inherited": "PASS"
+    },
+    {
+      "file": "daily-science5-4.json",
+      "title": "Volvemos a probar para explicar",
+      "inherited": "PASS"
+    }
+  ],
+  "creates": 11,
+  "completed": 11,
+  "known_usage_standard_estimate_usd": 0.41969002499999997,
+  "round_conservative_usd": 0.66160075,
+  "previous_qa_conservative_usd": 3.1853275819999993,
+  "cumulative_conservative_usd": 3.846928331999999,
+  "allocated_max_usd": 4.935327581999999,
+  "frozen": {
+    "at": "2026-10-18T14:34:34.809Z",
+    "base_commit": "6c2e285",
+    "scope": "before project and daily calls; annual already completed without prompt changes",
+    "hashes": {
+      "evals/project-master/final-pedagogy-20261018.json": "e4b520091e1aa6778c3108d84b9d8313a867c382e07a40216e5d67eebf51323d",
+      "skills/crear-proyecto-unidad/SKILL.md": "eb4f16b094ee95cd2f134a55d0b51fd416abc818e40729d2887573dd12a0c06c",
+      "skills/crear-actividad/SKILL.md": "2eba5e8d7d70cf5836c716f7a92ef61900688a27d941b1e2ace7b1ba1ad8497e",
+      "src/lib/project-flow-service.mjs": "ce7eda43178e28e3789e27ad44f2bf489897fb35f4a01694448962ab4c70c994",
+      "src/lib/ai-activity-ui-service.mjs": "d189dd130b9ce08f29d2c1c902fabd44da2e38a054098a6095c8d0772b035db6"
+    }
+  },
+  "rows": [
+    {
+      "request": 1,
+      "label": "Mi año: 15 propuestas de cinco años",
+      "seconds": 291.593,
+      "input_tokens": 4683,
+      "output_tokens": 13532,
+      "standard_estimate_usd": 0.147026,
+      "conservative_usd": 0.226395
+    },
+    {
+      "request": 2,
+      "label": "Proyecto ciencias: cuatro fechas",
+      "seconds": 96.639,
+      "input_tokens": 5891,
+      "output_tokens": 4260,
+      "standard_estimate_usd": 0.057326,
+      "conservative_usd": 0.093355
+    },
+    {
+      "request": 3,
+      "label": "Ciencias: diaria 1",
+      "seconds": 15.809,
+      "input_tokens": 11108,
+      "output_tokens": 1230,
+      "standard_estimate_usd": 0.002003425,
+      "conservative_usd": 0.0036995
+    },
+    {
+      "request": 4,
+      "label": "Ciencias: diaria 2",
+      "seconds": 7.026,
+      "input_tokens": 11237,
+      "output_tokens": 628,
+      "standard_estimate_usd": 0.00152466,
+      "conservative_usd": 0.00328025
+    },
+    {
+      "request": 5,
+      "label": "Ciencias: diaria 3",
+      "seconds": 10.328,
+      "input_tokens": 11709,
+      "output_tokens": 865,
+      "standard_estimate_usd": 0.00170216,
+      "conservative_usd": 0.003576
+    },
+    {
+      "request": 6,
+      "label": "Ciencias: diaria 4",
+      "seconds": 9.839,
+      "input_tokens": 11147,
+      "output_tokens": 844,
+      "standard_estimate_usd": 0.00162141,
+      "conservative_usd": 0.00341975
+    },
+    {
+      "request": 7,
+      "label": "Proyecto arte: tres fechas",
+      "seconds": 85.624,
+      "input_tokens": 5292,
+      "output_tokens": 3520,
+      "standard_estimate_usd": 0.0484285,
+      "conservative_usd": 0.07926
+    },
+    {
+      "request": 8,
+      "label": "Arte: diaria 1",
+      "seconds": 6.881,
+      "input_tokens": 10518,
+      "output_tokens": 579,
+      "standard_estimate_usd": 0.001604175,
+      "conservative_usd": 0.00306375
+    },
+    {
+      "request": 9,
+      "label": "Arte: diaria 2",
+      "seconds": 7.244,
+      "input_tokens": 11064,
+      "output_tokens": 589,
+      "standard_estimate_usd": 0.001483535,
+      "conservative_usd": 0.00320775
+    },
+    {
+      "request": 10,
+      "label": "Arte: diaria 3",
+      "seconds": 6.469,
+      "input_tokens": 10405,
+      "output_tokens": 550,
+      "standard_estimate_usd": 0.00138166,
+      "conservative_usd": 0.00301375
+    },
+    {
+      "request": 11,
+      "label": "Anual adicional: ocho preguntas familiares vigentes",
+      "seconds": 330.618,
+      "input_tokens": 4756,
+      "output_tokens": 14370,
+      "standard_estimate_usd": 0.1555885,
+      "conservative_usd": 0.23933
+    }
+  ]
+}

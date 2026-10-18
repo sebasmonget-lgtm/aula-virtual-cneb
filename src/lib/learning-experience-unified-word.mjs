@@ -144,7 +144,7 @@ export async function renderLearningExperienceUnifiedWord(document, cards = [], 
   const overview = [
     ["Así podría empezar", (content.activity_route ?? []).slice(0, 3).map((item) => item.title).filter(Boolean).join(" · ")],
   ].filter(([, value]) => value);
-  return renderUnifiedWord({ templateUrl, values, logo, transform(xml) {
+  return renderUnifiedWord({ templateUrl, values, logo, compactTrailingSpace: true, transform(xml) {
     let output = removeBetween(xml, "XI. SEGUIMIENTO DEL PROYECTO / UNIDAD");
     output = removeBetween(output, "IV. PLANIFICACIÓN CON LOS NIÑOS", "V. PROPÓSITO GENERAL");
     output = replaceSectionBody(output, "II. ORIGEN Y SITUACIÓN SIGNIFICATIVA", "III. PREPLANIFICACIÓN DOCENTE", origin);

@@ -1,0 +1,39 @@
+{
+  "review_protocol": "Freeze before generation. Review semantic quality independently of JSON validity. Do not include this rubric in provider input or tune prompts using the final outputs without recording a new iteration.",
+  "cases": [
+    {
+      "key": "science5",
+      "age": 5,
+      "source": "First science proposal in a newly generated annual plan for a fictitious classroom with paper, large blocks and toy cars; four confirmed dates.",
+      "rubric": [
+        "The significant situation distinguishes one child's observation from a group interest or a demonstrated need.",
+        "Children ask or test possibilities and compare what happened; the adult does not supply a predetermined scientific conclusion.",
+        "Trials and the closing contribute to the same inquiry; changes are manageable with available resources and time.",
+        "Both selected competencies receive genuine opportunities and observable criteria.",
+        "Guidance says what the teacher can do, what children may do and what to observe without inventing evidence.",
+        "Language and supports respect the family's linguistic context without stereotyping or inferring a language deficit.",
+        "The formal Word is readable and useful to prepare the activity; it retains criteria and source decisions without technical field dumps."
+      ]
+    },
+    {
+      "key": "art3",
+      "age": 3,
+      "title": "Manchas y trazos que queremos compartir",
+      "competency_ids": ["COM_ARTE", "COM_ORAL"],
+      "purpose": "Explorar trazos, manchas y colores y compartir lo que cada niño quiere mostrar de su creación.",
+      "context": "Invitación docente para un aula ficticia de tres años. No se dispone de observaciones previas de este grupo.",
+      "teacher_decision": "Quiero tres encuentros para explorar estos materiales y volver a las creaciones. Cada niño podrá decidir qué hacer y cómo compartirlo.",
+      "resources": ["Papel grande", "Crayones gruesos", "Témperas lavables", "Pinceles gruesos", "Mesas protegidas", "Paños y agua para limpieza"],
+      "dates": ["2026-11-02", "2026-11-03", "2026-11-04"],
+      "rubric": [
+        "Exploration and expression remain open; no model to copy or uniform end product.",
+        "Does not require representative drawing, written labels or elaborate verbal explanations at age three.",
+        "Communication has a real audience and children may use brief words, gestures or showing their work.",
+        "Sequence adds a meaningful opportunity each day instead of repeating instructions to fill dates.",
+        "Materials are concrete, available and safe; no forced body exposure or photo upload.",
+        "Criteria describe actions that can actually be observed; expected evidence remains distinct from a record.",
+        "All three daily activities inherit the confirmed map and remain practical for the teacher."
+      ]
+    }
+  ]
+}
