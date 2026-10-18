@@ -19,16 +19,17 @@ import { annualJourneyDocumentSections } from "./annual-journey-word.mjs";
 import { scopedAnnualChanges, annualCalendarCriteria } from "./annual-change-scope.mjs";
 import { annualJourneySafeText } from "./annual-journey-privacy.mjs";
 
-test("indicaciones pedagógicas y títulos preservan verbos sin revelar nombres privados", () => {
+test("indicaciones pedagógicas preservan el texto completo sin filtro de vocabulario o nombres", () => {
   const value=annualJourneySafeText('Conserva las fechas. Cambia el título a «Construimos lugares para jugar». Permite elegir. Mantén acuerdos. Sofía aportó cajas. Federico traerá semillas. DNI: 12345678',['Sofía']);
   assert.match(value,/Conserva las fechas/);
   assert.match(value,/«Construimos lugares para jugar»/);
   assert.match(value,/Permite elegir/);
   assert.match(value,/Mantén acuerdos/);
-  assert.ok(!value.includes('Sofía')&&!value.includes('Federico')&&!value.includes('12345678'));
-  assert.equal(annualJourneySafeText('Construimos una casa',['Construimos']),'[estudiante] una casa');
+  assert.ok(value.includes('Sofía')&&value.includes('Federico')&&value.includes('12345678'));
+  assert.equal(annualJourneySafeText('Construimos una casa',['Construimos']),'Construimos una casa');
   assert.equal(annualJourneySafeText('Tenemos bloques y patio. Queremos comenzar en octubre.'),'Tenemos bloques y patio. Queremos comenzar en octubre.');
-  assert.equal(annualJourneySafeText('Queremos jugar',['Queremos']),'[estudiante] jugar');
+  assert.equal(annualJourneySafeText('Queremos jugar',['Queremos']),'Queremos jugar');
+  for(const phrase of ['Plantear preguntas sobre cómo crecen las plantas.','Responde a la intención docente.','Favorecer elecciones personales.'])assert.equal(annualJourneySafeText(phrase),phrase);
 });
 
 const curriculum = [{ id: "MAT_CANTIDAD", name: "Cantidad", capacities: ["Comunica su comprensión"] },

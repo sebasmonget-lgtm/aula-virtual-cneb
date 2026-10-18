@@ -1,4 +1,4 @@
-/** Presentation only. Never put pupil names back into provider input or canonical AI output. */
+/** Presentation compatibility for historical markers. New prose keeps its supplied names. */
 export function assessmentDisplayText(value, studentName) {
   return String(value ?? '').replace(/\[estudiante_actual\]|\bcurrent_student\b/g, () => studentName || 'el niño observado')
     .replace(/\[estudiante\]/g, 'un estudiante');

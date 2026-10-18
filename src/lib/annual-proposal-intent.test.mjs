@@ -34,23 +34,23 @@ test("no basta agregar un ID: exige oportunidad y competencia principal de la fi
   row.opportunities.push({competency_id:"COM_ARTE"});
   assert.deepEqual(proposalIntentIssues(row,["CYT_INDAGA","COM_ARTE"],cards),[]);
 });
-test("vocabulario curricular no se oculta como persona, sin exponer nombres ni contactos",()=>{
+test("vocabulario curricular no se oculta como persona, sin filtrar palabras ni nombres",()=>{
   const result=annualJourneySafeText("Quiero priorizar Indaga y Crea. Aurelio quiere visitar a Mariana. Correo: docente@example.com",["Mariana"],cards.map(c=>c.name));
-  assert.match(result,/Indaga y Crea/);assert.ok(!result.includes("Aurelio"));assert.ok(!result.includes("Mariana"));assert.ok(!result.includes("docente@example.com"));
+  assert.match(result,/Indaga y Crea/);assert.ok(result.includes("Aurelio"));assert.ok(result.includes("Mariana"));assert.ok(result.includes("docente@example.com"));
   assert.deepEqual(proposalRequestedCompetencies({safe_texts:["Quiero priorizar [persona] y [persona]"],messages:[{role:"teacher",text:"Quiero priorizar Indaga y Crea"}]},cards),["CYT_INDAGA","COM_ARTE"]);
 });
-test("Navidad y Perú conservan el tema de la propuesta sin liberar nombres de alumnos",()=>{
+test("Navidad y Perú conservan el tema de la propuesta con nombres conservados",()=>{
  const text=annualJourneySafeText("Quiero un proyecto de Navidad con las familias en Perú. Camila y Aurelio dibujarán.",["Camila"],cards.map(c=>c.name));
- assert.match(text,/Navidad/);assert.match(text,/Perú/);assert.ok(!text.includes("Camila"));assert.ok(!text.includes("Aurelio"));
+ assert.match(text,/Navidad/);assert.match(text,/Perú/);assert.ok(text.includes("Camila"));assert.ok(text.includes("Aurelio"));
  assert.deepEqual(namedProposalCompetencies(["Quiero priorizar Lenguajes artísticos."],cards),["COM_ARTE"]);
- // A word in the allowed vocabulary that is an actual child's name is still neutralized first.
- assert.ok(!annualJourneySafeText("Luna dibujó estrellas",["Luna"]).includes("Luna"));
+ // Names and teaching vocabulary now remain verbatim by explicit product decision.
+ assert.ok(annualJourneySafeText("Luna dibujó estrellas",["Luna"]).includes("Luna"));
 });
 
 
-test("propósito y contexto pedagógico conservan verbos sin liberar nombres conocidos",()=>{
+test("propósito y contexto pedagógico conservan verbos con nombres conservados",()=>{
   const result=annualJourneySafeText("Explorar y compartir decisiones. Tenemos bloques. Aurelio visitará el huerto con Luna.",["Luna"],cards.map(card=>card.name));
-  assert.match(result,/Explorar y compartir decisiones/);assert.match(result,/Tenemos bloques/);assert.ok(!result.includes("Aurelio"));assert.ok(!result.includes("Luna"));
+  assert.match(result,/Explorar y compartir decisiones/);assert.match(result,/Tenemos bloques/);assert.ok(result.includes("Aurelio"));assert.ok(result.includes("Luna"));
 });
 test("annual context cannot make a new card ready without its own teacher intention", async () => {
   const {proposalConversationAnswer}=await import("./annual-proposal-intent.mjs");

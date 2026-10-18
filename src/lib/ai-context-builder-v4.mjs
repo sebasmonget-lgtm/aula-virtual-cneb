@@ -24,7 +24,7 @@ const GENERATION_RULE_BY_WORKFLOW = {
 };
 
 const STUDENT_FIELDS = new Set([
-  "id", "age", "language_context", "family_context", "prior_reports", "observations",
+  "id", "name", "age", "language_context", "family_context", "prior_reports", "observations",
   "portfolio_summary", "criteria_history", "evidence_history", "supports_used", "teacher_notes",
   "teacher_confirmed_findings", "context_changes",
 ]);

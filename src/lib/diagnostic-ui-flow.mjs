@@ -77,6 +77,7 @@ export function guidedStudentsByCoverage(students, competencyId, coverage, query
 export const guidedExperienceIllustrations = {
   getting_to_know_us: 'planning_play', movement_and_art: 'movement', count_and_locate: 'numbers',
   explore_our_world: 'inquiry', stories_and_marks: 'storytelling', spanish_second_language: 'sharing', beliefs_and_care: 'heart',
+  plan_try_review: 'planning_play', create_a_digital_message: 'storytelling',
 };
 
 /** Authored observation cues stay separate from examples and historical criteria. */

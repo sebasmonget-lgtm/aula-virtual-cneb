@@ -24,6 +24,8 @@ test("el proyecto unificado clona la ruta, usa currículo de la edad y no antici
   const xml = await archive.file("word/document.xml").async("string");
   assert.match(xml, /Elegimos juegos/);
   assert.match(xml, /Nos organizamos/);
+  assert.match(xml, /ajustar el acompañamiento docente, conservando la secuencia confirmada/);
+  assert.doesNotMatch(xml, /ajustar las siguientes actividades/);
   for (const label of ["Qué podríamos observar durante el proceso", "Primeros pasos", "Cómo acompañará la docente", "Qué observar", "Evidencia esperada"])
     assert.match(xml, new RegExp(label));
   assert.doesNotMatch(xml, /¿QUÉ HAREMOS\?|¿CÓMO LO HAREMOS\?|¿QUÉ NECESITAREMOS\?/);
@@ -68,6 +70,16 @@ test("el Word V2 usa el mapa confirmado y las fechas reales sin inventar registr
   assert.match(xml, /13\/04\/2026/);
   assert.match(xml, /2 semanas lectivas previstas/);
   assert.match(xml, /Partimos de preguntas del grupo/);
+  const meaningful='La docente propone explorar las hojas del patio: ¿qué diferencias podemos descubrir?';
+  const updated={...document,content:{...document.content,project_master:{...document.content.project_master,meaningful_situation:meaningful}}};
+  const updatedArchive=await JSZip.loadAsync(await renderLearningExperienceUnifiedWord(updated,cards));
+  const updatedXml=await updatedArchive.file('word/document.xml').async('string');
+  assert.ok(updatedXml.includes(meaningful));
+  assert.doesNotMatch(updatedXml,/De dónde parte/,'La situación canónica ya contiene el origen del proyecto');
+  assert.equal(updatedXml.split(meaningful).length-1,1,'La situación aparece una sola vez');
+  const shortArchive=await JSZip.loadAsync(await renderLearningExperienceUnifiedWord({...updated,ends_on:'2026-04-16'},cards));
+  assert.match(await shortArchive.file('word/document.xml').async('string'),/1 semana lectiva prevista/);
+  assert.doesNotMatch(updatedXml,/Exploramos el patio\.|Partimos de preguntas del grupo\./,'No mezcla la situación nueva con el fundamento o texto formal anterior');
   assert.match(xml, /Compartir lo investigado/);
   for (const heading of ["III. PREPLANIFICACIÓN DOCENTE", "IV. PROPÓSITO GENERAL", "V. PROPÓSITOS DE APRENDIZAJE Y EVALUACIÓN", "VI. ENFOQUES", "VII. ESTRATEGIA GENERAL DE EVALUACIÓN", "VIII. RUTA DE ACTIVIDADES", "IX. RECURSOS"])
     assert.ok(xml.includes(heading), `Falta ${heading}`);

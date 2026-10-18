@@ -30,7 +30,7 @@ type Route = { id: string; number: number; date: string; title: string; specific
 type Details = { spaces_and_materials?: string[]; project_context?: {messages:{role:string;text:string}[];ready:boolean;pending?:string|null}; flow_version?: string; stage?: string; preview?: { context_summary: string; context_points: string[];
   purpose_options: string[]; additional_context_example: string }; decisions?: Decision;
   planning_feedback?: { period_id: string; period_label: string; confirmed_assessments: number } | null;
-  dependents?: Dependents; project_master?: { foundation: string; closing_description: string; closing_rationale: string; resources?: string[] };
+  dependents?: Dependents; project_master?: { meaningful_situation?: string; foundation: string; closing_description: string; closing_rationale: string; resources?: string[] };
   activity_route?: Route[]; previous_map?: Route[] | null; image_id?: string | null; image_suggested_id?: string | null };
 export type Experience = { id: string; annual_plan_id: string; source_proposal_id: string | null;
   source_proposal_index: number; title: string; type: "project" | "unit"; status: "draft" | "active" | "archived";

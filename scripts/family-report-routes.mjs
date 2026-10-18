@@ -108,7 +108,7 @@ export function createFamilyReportRouteHandler({ db, teacherId, annualPlanningCo
         const interview = await loadConfirmedFamilyContext(db, context.id, student.id);
         const familyRecommendationContext = interview ? { source_type: "family_reported_context", version: interview.version,
           summary: neutralizeAssessmentText(summarizeFamilyInterview(interview.details), assessmentStudentNames(classmates)) } : null;
-        const input = buildFamilyReportInput({ age: context.age, competencyIds: ids, conclusions: rows, knownNames: assessmentStudentNames(classmates), familyRecommendationContext, castellanoL2Applicable: context.castellano_l2_applicable === true, religionApplicable: context.religion_applicable === true });
+        const input = buildFamilyReportInput({ age: context.age, studentName: [student.first_name, student.last_name].filter(Boolean).join(" "), competencyIds: ids, conclusions: rows, knownNames: assessmentStudentNames(classmates), familyRecommendationContext, castellanoL2Applicable: context.castellano_l2_applicable === true, religionApplicable: context.religion_applicable === true });
         const plan = resolveAIExecutionPlan({ workflow: "family_report", task: "generation" });
         let result,source="ai";
         try { result=await generate(input, { provider: createProvider(plan), executionPlan: plan }); }

@@ -2,31 +2,11 @@ import { loadKnowledgeBaseV4 } from "./knowledge-base-v4.mjs";
 import { neutralizeAssessmentText } from "./assessment-v4-service.mjs";
 import { createJevOpenRouterDecision } from "./jev-openrouter-decision.mjs";
 
-const FAMILY = /(?<!\p{L})(?:mam[aá]|pap[aá]|madre|padre|abuela?|abuelo|t[ií]a|t[ií]o|hermana?|hermano|familia|domicilio|direcci[oó]n|tel[eé]fono|vivienda)(?!\p{L})/iu;
-const IDENTIFIER = /(?:https?:\/\/|www\.|[\w.+-]+@[\w.-]+\.[a-z]{2,}|\b\d{7,}\b)/iu;
-// Keep a deliberately closed list: unknown capitalized words remain redacted as possible names.
-const SAFE_OBSERVATION_WORDS = new Set([
-  "Agrupó", "Comparó", "Contó", "Construyó", "Dibujó", "Dijo", "Eligió", "Explicó",
-  "Exploró", "Hizo", "Jugó", "Miró", "Mostró", "Observó", "Ordenó", "Participó",
-  "Preguntó", "Repartió", "Respondió", "Señaló", "Separó", "Terminó", "Trabajó", "Usó",
-  "Construye", "Dibuja", "Escucha", "Escribe", "Lleva", "Mueve", "Ordena", "Propone",
-  "Reparte", "Puso", "Toma", "Dice", "Creo", "Será", "Estuvo",
-  "Acá", "Ahí", "Ahora", "Antes", "Aquí", "Así", "Cómo", "Después", "Durante",
-  "Esta", "Este", "Hoy", "Luego", "Mientras", "Primero",
-]);
-
-/** Conservatively remove identifiable material before any external decision call. */
-export function anonymousDecisionText(value, knownNames = []) {
-  if (typeof value !== "string" || value.length > 4_000) return null;
-  // Remove only our visible test annotation, never identifiers within the observation itself.
-  value = value.replace(/^\[PRUEBA FICTICIA(?: · OBS-\d{8})?\]\s*/u, "");
-  if (!value.trim() || FAMILY.test(value) || IDENTIFIER.test(value)) return null;
-  let text = neutralizeAssessmentText(value, knownNames);
-  text = text.replace(/\b(?:se llama|llamad[oa]|nombre de)\s+\p{L}+/giu, "[persona]");
-  text = text.replace(/(?<!\p{L})\p{Lu}\p{Ll}{2,}(?!\p{L})/gu,
-    (word) => SAFE_OBSERVATION_WORDS.has(word) ? word : "[persona]");
-  if (FAMILY.test(text) || IDENTIFIER.test(text) || !/[\p{L}]{3}/u.test(text)) return null;
-  return text.trim();
+/** Compatibility name: preserve the observation, including names and family context. */
+export function anonymousDecisionText(value) {
+  if (typeof value !== "string" || value.length > 4000) return null;
+  const text = neutralizeAssessmentText(value).trim();
+  return text || null;
 }
 
 function competencyQuestions(options, planning = false) {
@@ -72,7 +52,7 @@ function observationChoiceQuestion(cards, age) {
   return { type: "choice", instructions: "Selecciona una sola competencia CNEB cuya actuación específica esté " +
     "más directamente observada. Hablar, usar materiales o estar con otros puede ser solo un medio de otra " +
     "actuación; no lo conviertas automáticamente en otra competencia. No evalúes logro ni inventes hechos " +
-    "o propósito docente. Elige NO_CLASIFICABLE si falta una actuación concreta y suficiente.", criteria };
+    "o propósito docente. Un reporte de la familia no equivale a una actuación observada en el aula. No clasifiques por un nombre, dato de contacto o parentesco; estos datos por sí solos no describen una competencia. Elige NO_CLASIFICABLE si falta una actuación concreta y suficiente.", criteria };
 }
 
 /** Teacher-facing observation: Choice ranks the primary, independent noul suggests optional additions. */

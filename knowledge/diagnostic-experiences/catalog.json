@@ -1,5 +1,5 @@
 {
-  "version": "diagnostic-v4.5",
+  "version": "diagnostic-v4.6",
   "status": "reviewed",
   "experiences": [
     {
@@ -590,6 +590,88 @@
         "4": "Con 4 años, escucha qué valora de la práctica o relato que conoce, sin pedir que recite fórmulas.",
         "5": "Con 5 años, invita a relacionar una enseñanza conocida con una acción de cuidado; respeta también a quien no quiera compartir."
       }
+    },
+    {
+      "id": "plan_try_review",
+      "title": "Probamos nuestro plan",
+      "explanation": "Acompaña un pequeño reto elegido por los niños y escucha cómo lo planean, prueban y revisan.",
+      "ages": [5],
+      "teacher_instructions": "Ofrece bloques grandes, cajas o papel que ya tengas. Invita a cada niño o pequeño grupo a elegir un reto realizable, como construir un camino para un muñeco. Deja tiempo para probar y revisar; no des una solución para copiar.",
+      "age_support": {"5": "Ayuda a pensar con preguntas breves. Puede explicar su plan con palabras, gestos o un dibujo; registra también el apoyo que necesitó."},
+      "examples": [],
+      "sort_order": 8,
+      "active": true,
+      "aspects": [
+        {
+          "id": "choose_goal_and_materials",
+          "competencyId": "TRANS_AUTONOMO",
+          "label": "Piensa qué quiere lograr y qué necesita.",
+          "prompt": "Explica con ayuda qué quiere hacer y qué necesita para empezar.",
+          "patternIndex": 0,
+          "moment_title": "Pensamos un reto pequeño",
+          "teacher_steps": ["Invita a elegir algo que quiera construir o resolver con los materiales disponibles.", "Pregunta «¿Qué quieres lograr? ¿Qué necesitas para empezar?». Escucha sin completar su idea."],
+          "look_for": "Distingue la meta que expresa de los materiales que elige. Anota cómo relaciona lo que necesita con su reto y qué pregunta o apoyo le ayudó a pensarlo.",
+          "examples": ["Dice «quiero un camino para el muñeco» y busca cajas para unirlas.", "Después de que preguntas qué necesita, señala papel y dice que hará un puente."]
+        },
+        {
+          "id": "try_a_strategy",
+          "competencyId": "TRANS_AUTONOMO",
+          "label": "Propone una forma de hacer su reto y la prueba.",
+          "prompt": "Plantea con ayuda una acción o estrategia para alcanzar el reto que eligió.",
+          "patternIndex": 1,
+          "moment_title": "Probamos nuestro plan",
+          "teacher_steps": ["Pregunta «¿Cómo podrías hacerlo?» y deja que pruebe su idea.", "Si encuentra una dificultad, pregunta qué otra forma podría intentar; evita resolverla por él."],
+          "look_for": "Observa si vincula una acción con lo que quiere lograr. Describe el intento, el cambio que propone y la ayuda recibida, sin confundir obedecer una instrucción con planear una estrategia.",
+          "examples": ["Propone poner primero las cajas grandes para que el camino no se caiga.", "Al ver que el papel se dobla, dice «voy a poner dos» y prueba nuevamente."]
+        },
+        {
+          "id": "review_the_attempt",
+          "competencyId": "TRANS_AUTONOMO",
+          "label": "Cuenta qué le ayudó y qué podría cambiar.",
+          "prompt": "Revisa con ayuda lo que hizo y comunica qué le sirvió o qué cambiaría.",
+          "patternIndex": 2,
+          "moment_title": "Miramos cómo nos fue",
+          "teacher_steps": ["Retoma su meta inicial y pregunta «¿Te sirvió tu idea? ¿Qué cambiaste?».", "Invita a mostrar un intento o explicar qué probaría la próxima vez. Acepta que aún necesite ayuda."],
+          "look_for": "Registra la relación que establece entre su intento y el resultado. Un trabajo terminado o decir «me salió» no basta por sí solo para describir cómo revisó su estrategia.",
+          "examples": ["Señala una caja y explica que la cambió porque el muñeco no pasaba.", "Dice «con dos papeles aguantó» y propone volver a doblarlos para otro puente."]
+        }
+      ]
+    },
+    {
+      "id": "create_a_digital_message",
+      "title": "Creamos un mensaje digital",
+      "explanation": "Solo con un dispositivo disponible y acompañado, exploran una función y crean un registro sencillo para comunicar una idea.",
+      "ages": [5],
+      "required_resource": "digital_creation",
+      "teacher_instructions": "Solo si dispones de un celular, tableta, computadora o cámara adecuados, prepara una función sencilla de foto, audio o dibujo sin conexión. En un grupo pequeño, invita a registrar una construcción o un mensaje. La docente acompaña siempre; no se usan cuentas, internet ni imágenes de personas.",
+      "age_support": {"5": "Elige una función que permita actuar al niño con acompañamiento. Mantén el uso breve y con una finalidad comunicativa. Mirar una pantalla sin intervenir no es la actuación que propone esta guía."},
+      "examples": [],
+      "sort_order": 9,
+      "active": true,
+      "aspects": [
+        {
+          "id": "explore_a_digital_function",
+          "competencyId": "TRANS_TIC",
+          "label": "Explora una función sencilla con acompañamiento.",
+          "prompt": "Explora con acompañamiento una función del dispositivo y participa en su uso y cuidado.",
+          "patternIndex": 0,
+          "moment_title": "Conocemos la herramienta",
+          "teacher_steps": ["Presenta una función que ya verificaste y acuerda cómo cuidar el dispositivo y tomar turnos.", "Invita a probarla con ayuda y pregunta para qué cree que puede servir. No exijas que conozca el aparato."],
+          "look_for": "Describe qué acción realiza en el dispositivo, para qué la usa y qué acompañamiento necesita. Diferencia una exploración propia de una acción hecha completamente por la docente.",
+          "examples": ["Con ayuda encuentra el botón de grabar y lo prueba para escuchar su voz.", "Dirige la cámara hacia su construcción y pide ayuda para ver si aparece completa."]
+        },
+        {
+          "id": "make_and_review_a_digital_record",
+          "competencyId": "TRANS_TIC",
+          "label": "Crea un registro para comunicar una idea.",
+          "prompt": "Produce con acompañamiento una imagen o un audio para registrar o comunicar algo que eligió.",
+          "patternIndex": 1,
+          "moment_title": "Creamos y revisamos un mensaje",
+          "teacher_steps": ["Pregunta qué quiere comunicar y acompaña la creación de una foto de un objeto, un audio o un dibujo digital.", "Miren o escuchen el resultado y conversen sobre si comunica su idea. No publiques ni envíes el archivo."],
+          "look_for": "Anota qué quiso comunicar y cómo participó en la creación y revisión del registro. Una foto tomada solo por la docente no demuestra esta actuación del niño.",
+          "examples": ["Graba «este es mi puente» y al escucharlo decide añadir para qué sirve.", "Con ayuda toma una foto de su construcción y señala qué parte quiere mostrar."]
+        }
+      ]
     }
   ]
 }

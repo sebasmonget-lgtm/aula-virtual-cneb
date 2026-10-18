@@ -28,7 +28,7 @@ test("descriptive_conclusion usa Luna/medium, schema strict y una tarjeta en el 
   assert.equal(DESCRIPTIVE_CONCLUSION_OUTPUT_SCHEMA.id, "descriptive-conclusion-v1");
   assert.equal(DESCRIPTIVE_CONCLUSION_OUTPUT_SCHEMA.additionalProperties, false);
   let captured;
-  const input = buildDescriptiveConclusionInput({ age: 5, competencyId: "COM_ORAL", assessment: { achievement_level: "A", details: assessmentDetails }, evidenceRows: [{ observed_at: "2026-09-20T12:00:00Z", activity_title: "Relato", criterion_text: "Expresa ideas", observation_status: "with_support", observation_text: "Contó algo" }] });
+  const input = buildDescriptiveConclusionInput({ age: 5, studentName: "Ana", competencyId: "COM_ORAL", assessment: { achievement_level: "A", details: assessmentDetails }, evidenceRows: [{ observed_at: "2026-09-20T12:00:00Z", activity_title: "Relato", criterion_text: "Expresa ideas", observation_status: "with_support", observation_text: "Contó algo" }] });
   const result = await generateAIWorkflowV4(input, { provider: { id: "mock", async generate(request) { captured = request; return conclusion(); } } });
   assert.equal(captured.workflow, "descriptive_conclusion"); assert.equal(captured.ai_context_bundle.curriculum.competency_cards.length, 1);
   assert.equal(captured.ai_context_bundle.curriculum.competency_cards[0].id, "COM_ORAL");
@@ -36,6 +36,7 @@ test("descriptive_conclusion usa Luna/medium, schema strict y una tarjeta en el 
   assert.equal(captured.execution_plan.model, "gpt-6-luna");
   assert.deepEqual(captured.output_schema.properties.competency_id.enum, ["COM_ORAL"]);
   assert.equal(captured.ai_context_bundle.context.student.id, "current_student");
+  assert.equal(captured.ai_context_bundle.context.student.name, "Ana");
   assert.equal(captured.ai_context_bundle.context.workflow_inputs.confirmed_achievement_level, "A");
   assert.equal(captured.ai_context_bundle.context.workflow_inputs.analysis_status, "sufficient");
   assert.equal(captured.ai_context_bundle.context.student.teacher_confirmed_findings, undefined);
@@ -140,13 +141,13 @@ test("provider recibe assessment y evidencias seguras sin identidad, foto ni met
   const payload = JSON.stringify(f.captures[0].input);
   assert.match(payload, /current_student/);
   assert.match(payload, /previous_ai_analysis_auxiliary/);
-  assert.doesNotMatch(payload, /\b(?:Ana|Anita|Pérez)\b|00000000|media_path|photo\.jpg|base64|generation_metadata|source_evidence_ids|source_assessment_snapshot|fingerprint|secret/);
+  assert.doesNotMatch(payload, /00000000|media_path|photo\.jpg|base64|generation_metadata|source_evidence_ids|source_assessment_snapshot|fingerprint|secret/);
   assert.equal(f.captures[0].input.multiple_evidence_records.length, 2);
-  assert.equal(f.captures[0].input.prior_conclusion, "[estudiante] participó antes.");
+  assert.equal(f.captures[0].input.prior_conclusion, "Ana participó antes.");
   assert.equal(f.captures[0].input.multiple_evidence_records[1].observation_status, "insufficient_information");
   let providerBundle;
   await generateAIWorkflowV4(f.captures[0].input, { provider: { async generate(request) { providerBundle = request.ai_context_bundle; return conclusion(); } } });
-  assert.doesNotMatch(JSON.stringify(providerBundle), /\b(?:Ana|Anita|Pérez)\b|00000000|media_path|photo\.jpg|base64|generation_metadata|source_evidence_ids|source_assessment_snapshot|fingerprint|secret/);
+  assert.doesNotMatch(JSON.stringify(providerBundle), /00000000|media_path|photo\.jpg|base64|generation_metadata|source_evidence_ids|source_assessment_snapshot|fingerprint|secret/);
   assert.equal(providerBundle.curriculum.competency_cards.length, 1);
   assert.equal(providerBundle.context.student.teacher_confirmed_findings, undefined);
   assert.equal(providerBundle.context.workflow_inputs.previous_ai_analysis_auxiliary.information_status, "sufficient");

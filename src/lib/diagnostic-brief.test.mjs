@@ -5,9 +5,9 @@ const students=[{id:"a",first_name:"Luna",last_name:"Ficticia",preferred_name:nu
 test("síntesis insuficiente conserva el desconocimiento y no inventa niveles",()=>{
   const result=diagnosticBrief({students,observations:[]});assert.equal(result.information_status,"insufficient_information");assert.match(result.text,/falta conocer mejor/);assert.deepEqual(result.source_refs,[]);assert.doesNotMatch(result.text,/lograron|nivel [ABC]/);
 });
-test("un registro concreto se cita sin generalizar y sin nombres privados",()=>{
+test("un registro concreto se cita sin generalizar y con el texto original",()=>{
   const result=diagnosticBrief({students,observations:[{id:"o",student_id:"a",experience_id:"spontaneous",observed_at:"2026-10-07T14:00:00Z",observation_text:"Luna contó a Nico que eligió construir una casa."}]});
-  assert.equal(result.information_status,"insufficient_information");assert.match(result.text,/eligió construir una casa/);assert.match(result.text,/no permiten generalizar/);assert.doesNotMatch(result.text,/Luna|Nico/);assert.deepEqual(result.source_refs,[{id:"o",source_type:"spontaneous_observation"}]);
+  assert.equal(result.information_status,"insufficient_information");assert.match(result.text,/eligió construir una casa/);assert.match(result.text,/no permiten generalizar/);assert.match(result.text,/Luna contó a Nico/);assert.deepEqual(result.source_refs,[{id:"o",source_type:"spontaneous_observation"}]);
 });
 test("patrón familiar conserva su procedencia y nunca prueba aprendizaje",()=>{
   const group=Array.from({length:5},(_,i)=>({id:String(i),first_name:`Persona${i}`}));

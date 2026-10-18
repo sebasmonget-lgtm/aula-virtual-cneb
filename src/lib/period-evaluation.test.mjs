@@ -196,7 +196,7 @@ test("conclusión confirma snapshot recargado de JSONB pero rechaza valores camb
     const assessment = await f.call("POST", "/api/period-evaluations/confirm", { ...decision, expectedDraftRevision: saved.body.draft_revision });
     assert.equal(assessment.status, 200, JSON.stringify(assessment.body));
     await confirmGeneratedConclusion(f, firstPeriod, studentA);
-    assert.doesNotMatch(JSON.stringify(f.calls.find(item=>item.workflow==='descriptive_conclusion')), /\b(?:Ana|Luis|Pérez|Rojas)\b/);
+    assert.match(JSON.stringify(f.calls.find(item=>item.workflow==='descriptive_conclusion')), /\bAna\b/);
     const another = await f.call("POST", "/api/period-evaluations/conclusion/suggest", base);
     const item = f.pending.get(another.body.generation_id);
     item.source_assessment_snapshot.achievement_level = "A";
@@ -214,7 +214,7 @@ test("el análisis se cachea por evidencia y contexto pedagógico sin depender d
     const current = await f.call("POST", "/api/period-evaluations/suggest", selection);
     assert.equal(current.status, 200, JSON.stringify(current.body));
     assert.equal(f.calls.length, 1);
-    assert.doesNotMatch(JSON.stringify(f.calls[0]), /\b(?:Ana|Luis|Pérez|Rojas)\b/);
+    assert.match(JSON.stringify(f.calls[0]), /\bAna\b/);
     f.currentContext.source_fingerprint = "confirmed-classroom-context-2";
     const stale = await f.call("POST", "/api/period-evaluations/suggest", selection);
     assert.equal(stale.status, 200);

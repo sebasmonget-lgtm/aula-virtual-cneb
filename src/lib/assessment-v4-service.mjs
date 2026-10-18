@@ -20,13 +20,10 @@ export function validateAssessmentProposal(value, competencyId, evidenceCount) {
   return value;
 }
 
-export function neutralizeAssessmentText(value, names) {
+/** Preserve pedagogical prose. Machine identifiers, binary blobs and local paths are not prose. */
+export function neutralizeAssessmentText(value) {
   if (typeof value !== "string") return value;
-  const withoutNames = names.filter((name) => typeof name === "string" && name.trim().length > 1).sort((a, b) => b.length - a.length).reduce((text, name) => {
-    const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    return text.replace(new RegExp(`(^|[^\\p{L}\\p{N}])${escaped}(?=$|[^\\p{L}\\p{N}])`, "giu"), "$1[estudiante]");
-  }, value);
-  return withoutNames
+  return value
     .replace(/\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/gi, "[identificador]")
     .replace(/data:(?:image|audio|video)\/[^\s;]+;base64,[A-Za-z0-9+/=]+/gi, "[archivo privado]")
     .replace(/(?:[A-Za-z]:\\|\/private\/|\/Users\/)[^\s]+/g, "[ruta privada]")
@@ -41,14 +38,15 @@ export function assessmentStudentNames(students) {
     .flatMap(name=>[name,name.normalize('NFD').replace(/\p{M}/gu,'')]))];
 }
 
-export function sanitizeEvidenceForAssessment(evidence, knownNames = [], currentNames = []) {
-  const safe = value => typeof value !== 'string' ? value : neutralizeAssessmentText(neutralizeAssessmentText(value, currentNames).replaceAll('[estudiante]', '[estudiante_actual]'), knownNames);
+export function sanitizeEvidenceForAssessment(evidence) {
+  const safe = value => neutralizeAssessmentText(value);
   return { observed_on: evidenceDay(evidence), activity_title: safe(evidence.activity_title), criterion_text: safe(evidence.criterion_text), observation_status: evidence.observation_status, observation_note: safe(evidence.observation_text) ?? null, media_available: Boolean(evidence.media_available) };
 }
 
-export function buildAssessmentInput({ age, competencyId, evidenceHistory, criteriaHistory = [], assessmentMaster, priorTeacherConclusions, contextChanges }) {
+export function buildAssessmentInput({ age, competencyId, studentName, evidenceHistory, criteriaHistory = [], assessmentMaster, priorTeacherConclusions, contextChanges }) {
   return { workflow: "assessment", age, student_id: "current_student", competency_ids: [competencyId],
-    teacher_request: "Organiza únicamente lo que muestran estas observaciones reales. Resume avances, patrones, contradicciones y qué falta observar. Lo previsto en una actividad no es un hecho ocurrido. No asignes, sugieras, predigas ni menciones AD/A/B/C. La valoración pertenece a la profesora. Usa frases cortas y palabras sencillas. Al referirte al niño evaluado usa [estudiante_actual]; [estudiante] en una fuente puede ser otro niño, no atribuyas esa actuación al evaluado. Si la información no alcanza, dilo claramente.",
+    ...(studentName ? { student_context: { name: studentName } } : {}),
+    teacher_request: "Organiza únicamente lo que muestran estas observaciones reales. Resume avances, patrones, contradicciones y qué falta observar. Lo previsto en una actividad no es un hecho ocurrido. No asignes, sugieras, predigas ni menciones AD/A/B/C. La valoración pertenece a la profesora. Usa frases cortas y palabras sencillas. El alumno evaluado está identificado en student_context.name cuando ese dato existe. Las notas pueden mencionar a otros niños o familiares: conserva quién hizo cada acción y no atribuyas actuaciones ajenas al evaluado. Los marcadores de versiones anteriores no permiten adivinar una identidad. Si la información no alcanza, dilo claramente.",
     evidence_history: evidenceHistory, criteria_history: criteriaHistory, assessment_master: assessmentMaster,
     ...(priorTeacherConclusions ? { prior_teacher_conclusions: priorTeacherConclusions } : {}),
     ...(contextChanges ? { context_changes: contextChanges } : {}) };

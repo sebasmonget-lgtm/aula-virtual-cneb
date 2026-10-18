@@ -14,10 +14,8 @@ import { interviewInterestOptions } from "./family-interview-contract.mjs";
 import { normalizeFamilyInterviewDetails } from "./diagnostic-sources-v4.mjs";
 import { annualJourneySafeText } from "./annual-journey-privacy.mjs";
 
-// The Jev decision filter rejects all family mentions. A diagnostic summary needs
-// ordinary reported interests and observed speech, while excluding private contact data.
+// Preserve the teacher's text and its source type; do not infer privacy from words or surnames.
 const anonymousDiagnosticText = (value, names) => {
-  if (typeof value !== "string" || /(?:domicilio|direcci[oó]n|dni|tel[eé]fono|https?:\/\/|www\.|[\w.+-]+@[\w.-]+\.[a-z]{2,}|\b\d{7,}\b)/iu.test(value)) return null;
   return annualJourneySafeText(value, names) || null;
 };
 
@@ -553,7 +551,7 @@ export async function diagnosticGroupProposalSources(db, teacherId, draftId) {
     .map((row) => ({ child: childAliases.get(row.student_id), source_id: `${childAliases.get(row.student_id)}_comment`, information_status: row.details.information_status,
       comment: anonymousDiagnosticText(row.details.comment_text, names)?.slice(0, Math.min(3000, perChildBudget)) })).filter((row) => row.comment);
   // Group by a stable neutral alias so many records of one child do not imply a classroom pattern.
-  // Only anonymous text and explicit source types enter; files and identities are excluded.
+  // Explicit source types and stable subjects preserve attribution; files remain excluded.
   const allowed = new Set(competencyOptions.map((card) => card.id));
   const observed = students.map((student) => {
     const rows = currentSources.get(student.id).rows.map((row) => ({ row, text: anonymousDiagnosticText(row.observation_text, names) }))

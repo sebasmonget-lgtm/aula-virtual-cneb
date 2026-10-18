@@ -384,7 +384,7 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
             body.acknowledgedRevision !== Number(previous.revision)) {
           fail(response,origin,new Error('Antes de analizar, confirma que revisarás tu valoración y su sustento. El borrador anterior se conserva.'),409);return true;
         }
-        const input = buildAssessmentInput({ age: data.classroom.age, competencyId: data.card.id,
+        const input = buildAssessmentInput({ age: data.classroom.age, competencyId: data.card.id, studentName: [student.first_name,student.last_name].filter(Boolean).join(' '),
           assessmentMaster: masterEntry,
           evidenceHistory: data.row.sourceRows.map((row) => sanitizeEvidenceForAssessment(row, names, currentNames)),
           criteriaHistory: data.row.sourceRows.map((row) => ({ criterion_text: neutralizeAssessmentText(row.criterion_text, names),
@@ -481,7 +481,7 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
         const names=assessmentStudentNames((await db.query('select first_name,last_name,preferred_name from students where classroom_id=$1',[data.classroom.id])).rows);
         const master=await loadComputedAssessmentContext(db,data.classroom,data.period,data.cards,data.row.sourceRows,data.card.id,names);
         const prior=(await db.query(`select details from competency_descriptive_conclusions where student_id=$1 and competency_v4_id=$2 and status='active' and period_end<$3::date order by period_end desc limit 1`,[student.id,data.card.id,data.period.starts_on])).rows[0];
-        const input=buildDescriptiveConclusionInput({age:data.classroom.age,competencyId:data.card.id,assessment,
+        const input=buildDescriptiveConclusionInput({age:data.classroom.age,studentName:[student.first_name,student.last_name].filter(Boolean).join(" "),competencyId:data.card.id,assessment,
           assessmentMaster:assessmentMasterEntry(master,data.card.id),evidenceRows:data.row.sourceRows,knownNames:names,
           priorConclusion:prior?.details?.conclusion_text,teacherNotes:body.teacherNotes});
         const plan=resolveAIExecutionPlan({workflow:"descriptive_conclusion",task:"generation"});

@@ -35,7 +35,7 @@ const activitySchema = object({ date: string, title: text(180), purpose: text(50
   role_in_project: text(400), expected_progression: text(400),
   estimated_minutes: { type: "integer", minimum: 10, maximum: 180 } });
 export const PROJECT_MASTER_SCHEMA = schema("project-master-v1", {
-  foundation: text(1500), closing_description: text(700), closing_rationale: text(700), resources: texts(160),
+  meaningful_situation: text(1200), foundation: text(1500), closing_description: text(700), closing_rationale: text(700), resources: texts(160),
   activities: { type: "array", minItems: 1, maxItems: 15, items: activitySchema },
 });
 export const PROJECT_FORMAL_SCHEMA = schema("project-formal-v1", {
@@ -93,6 +93,8 @@ export function validateProjectDependents(output, competencyIds) {
 }
 
 export function validateProjectMaster(output, decisions, dependents, availableDates) {
+  if (!hasText(output?.meaningful_situation, 1200))
+    fail("missing_meaningful_situation", "Explica de dónde surge este proyecto, por qué tiene sentido para el aula y qué pregunta o reto podrán explorar los niños, usando solo el contexto confirmado.");
   if(Array.isArray(output?.resources)&&output.resources.some(isMaterialPlaceholder))
     fail('incomplete_materials','Define materiales concretos en español; no dejes recursos «por definir» o «por seleccionar». Conserva las decisiones docentes y no inventes disponibilidad.');
   if (!hasText(output?.foundation, 1500) || !hasText(output.closing_description, 700) ||
@@ -120,6 +122,9 @@ export function validateProjectMaster(output, decisions, dependents, availableDa
       fail("invalid_activity_map", "Una actividad necesita revisar su calendario, competencias o materiales. Los materiales deben ser concretos, sin «por definir».");
     seenDates.add(row.date); titles.add(normalized);
   }
+  const covered = new Set(output.activities.flatMap(row => row.competency_ids));
+  if (decisions.competency_ids.some(id => !covered.has(id)))
+    fail("missing_competency_opportunity", "El recorrido debe incluir oportunidades de actividad para cada competencia elegida. Conserva el propósito y prepara la secuencia completa, sin añadir etiquetas nominales.");
   const ordered = [...output.activities].sort((a, b) => a.date.localeCompare(b.date));
   return { ...output, activity_route: ordered.map((item, index) => ({
     id: randomUUID(), number: index + 1, position: index + 1, date: item.date, planned_date: item.date, title: item.title,
@@ -163,7 +168,7 @@ export function projectDetails({ source, preview, decisions, dependents, master,
     flexibility_notes: "El recorrido puede ajustarse según lo observado durante el proyecto.",
     preview, decisions, dependents, planning_feedback: previous?.planning_feedback ?? null,
     ...(previous?.rebased_from?{rebased_from:previous.rebased_from}:{}),
-    project_master: { foundation: master.foundation, closing_description: master.closing_description,
+    project_master: { meaningful_situation: master.meaningful_situation, foundation: master.foundation, closing_description: master.closing_description,
       closing_rationale: master.closing_rationale, resources: master.resources },
     activity_route: route, teacher_overrides: previous?.teacher_overrides ?? [],
   };
@@ -270,6 +275,8 @@ export async function generateProjectDependents({ context, decisions, providerDe
   return result;
 }
 
+const meaningfulSituationInstruction = "Redacta meaningful_situation en un párrafo breve: contexto o motivo de origen sustentado, por qué ofrece una oportunidad de aprendizaje y una pregunta o reto abierto comprensible para esta edad. Vincula el reto con el propósito, las competencias y el recorrido; no lo reduzcas a nombrar el tema o enumerar competencias. Usa solo las fuentes recibidas y confirmed_decisions, incluido additional_context. Distingue lo observado por la docente de lo referido por las familias; conserva el alcance individual o de subgrupo. No inventes curiosidades, frases infantiles, necesidades, huertos, visitas ni recursos. Si no hay un interés observado, presenta honestamente una invitación docente basada en una oportunidad curricular; no afirmes que el grupo ya mostró ese interés. La situación se propone: no anticipes aprendizajes logrados. No repitas este párrafo en foundation, que explica brevemente el fundamento pedagógico.";
+
 export async function generateProjectMaster({ context, decisions, providerDecisions = decisions, dependents, availableDates,
   workflow = "project", resolvePlan = resolveAIExecutionPlan, createProvider = createAIProviderForPlan,
   loadSkill = loadLearningExperienceSkill }) {
@@ -279,7 +286,7 @@ export async function generateProjectMaster({ context, decisions, providerDecisi
       properties: { ...PROJECT_MASTER_SCHEMA.properties, ...PROJECT_DEPENDENTS_SCHEMA.properties } };
     const requestContext = { ...context, confirmed_decisions: providerDecisions,
       available_instructional_dates: availableDates, instructional_dates: availableDates,
-      task: `Crea el proyecto completo en una sola respuesta: fundamento, preguntas orientadoras, recorrido flexible, un criterio general con evidencia esperada por competencia, cierre y recursos. Redacta una fundamentación breve, de hasta 1200 caracteres, con frases completas; sintetiza antes de alcanzar el límite, nunca cortes una frase. Incluye exactamente una actividad por cada una de las ${availableDates.length} fechas recibidas. No cambies competencias, fechas ni decisiones docentes. Usa acciones concretas y palabras sencillas. Define materiales concretos en español para cada día a partir de las decisiones y recursos del proyecto. Nunca escribas «por definir», «por seleccionar» ni nombres de campos técnicos. No inventes disponibilidad. No inventes observaciones ni logros.` };
+      task: `${meaningfulSituationInstruction} Crea el proyecto completo en una sola respuesta: fundamento, preguntas orientadoras, recorrido flexible, un criterio general con evidencia esperada por competencia, cierre y recursos. Redacta una fundamentación breve, de hasta 1200 caracteres, con frases completas; sintetiza antes de alcanzar el límite, nunca cortes una frase. Incluye exactamente una actividad por cada una de las ${availableDates.length} fechas recibidas. No cambies competencias, fechas ni decisiones docentes. Usa acciones concretas y palabras sencillas. Define materiales concretos en español para cada día a partir de las decisiones y recursos del proyecto. Nunca escribas «por definir», «por seleccionar» ni nombres de campos técnicos. No inventes disponibilidad. No inventes observaciones ni logros.` };
     const validate = output => {
       const generatedDependents = validateProjectDependents(Object.fromEntries(PROJECT_DEPENDENTS_SCHEMA.required.map(key => [key, output[key]])), decisions.competency_ids);
       return { output: validateProjectMaster(output, decisions, generatedDependents, availableDates), dependents: generatedDependents };
@@ -295,7 +302,7 @@ export async function generateProjectMaster({ context, decisions, providerDecisi
       if (!(error instanceof ProjectFlowError)) throw error;
       const repair = await call({ workflow: "annual_journey_repair", task: "generation", resolvePlan, createProvider, loadSkill,
         outputSchema, context: { ...requestContext, invalid_output: result.output, validation_error: error.message,
-          task: "Corrige únicamente el error indicado. Conserva las fechas, competencias y decisiones confirmadas." } });
+          task: `Corrige únicamente el error indicado. Conserva las fechas, competencias y decisiones confirmadas. ${meaningfulSituationInstruction}` } });
       const validated = { ...repair, ...validate(repair.output), metadata: { ...repair.metadata, repair_used: true, primary: result.metadata } };
       await recordAIQAResult("annual_journey_repair", validated, { validators: ["per_competency_criteria", "one_blueprint_per_date", "confirmed_decisions"], downstream: ["activity", "assessment_context"] });
       return validated;
@@ -308,7 +315,7 @@ export async function generateProjectMaster({ context, decisions, providerDecisi
       confirmed_general_criteria: dependents.general_criteria, available_instructional_dates: availableDates,
       project_start_date: availableDates[0], project_end_date: availableDates.at(-1),
       instructional_dates: availableDates, total_activities: availableDates.length,
-      task: `Diseña exactamente ${availableDates.length} actividades: una por cada fecha confirmada en instructional_dates, sin agregar, omitir ni cambiar fechas. El campo date de cada fila es su planned_date confirmado. Cada actividad debe ser un blueprint reutilizable con propósito, competencia principal, posibles competencias secundarias, intención pedagógica, criterio observable, evidencia esperada y variaciones aceptables, foco de observación, materiales, mediación, continuidad y flexibilidad. Usa solo las competencias confirmadas. No inventes observaciones ni niveles. La última actividad conduce al cierre. Mantén las decisiones docentes intactas y devuelve solo los campos del esquema.` } });
+      task: `${meaningfulSituationInstruction} Diseña exactamente ${availableDates.length} actividades: una por cada fecha confirmada en instructional_dates, sin agregar, omitir ni cambiar fechas. El campo date de cada fila es su planned_date confirmado. Cada actividad debe ser un blueprint reutilizable con propósito, competencia principal, posibles competencias secundarias, intención pedagógica, criterio observable, evidencia esperada y variaciones aceptables, foco de observación, materiales, mediación, continuidad y flexibilidad. Usa solo las competencias confirmadas. No inventes observaciones ni niveles. La última actividad conduce al cierre. Mantén las decisiones docentes intactas y devuelve solo los campos del esquema.` } });
   return { ...result, output: validateProjectMaster(result.output, decisions, dependents, availableDates) };
 }
 
@@ -316,7 +323,7 @@ export async function generateProjectFormal({ context, workflow = "project", res
   createProvider = createAIProviderForPlan, loadSkill = loadLearningExperienceSkill }) {
   if (context.confirmed_project_master?.experience_contract === 1 || context.modern) {
     const details = context.confirmed_project_master;
-    return { output: { situation: details.decisions?.context_summary || "Experiencia propuesta para el aula.",
+    return { output: { situation: details.project_master?.meaningful_situation || details.decisions?.context_summary || "Experiencia propuesta para el aula.",
       foundation: details.project_master?.foundation || details.rationale,
       methodology: (details.activity_route ?? []).map(row => row.pedagogical_intention).filter(Boolean).join(" ") || "Explorar, jugar y conversar con acompañamiento docente.",
       assessment_followup: [...new Set((details.activity_route ?? []).map(row => row.evaluation_criterion).filter(Boolean))].join(" ") || "Registrar lo que los niños hacen o dicen.",

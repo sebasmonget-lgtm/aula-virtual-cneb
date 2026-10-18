@@ -4,7 +4,7 @@ import {randomUUID} from 'node:crypto';
 import {readFile,readdir} from 'node:fs/promises';
 import {PGlite} from '@electric-sql/pglite';
 import {createPilotClassroom} from './pilot-onboarding-service.mjs';
-import {enqueuePreparation,ownedPreparationJob,runPreparationStep,retryPreparation,preparationFingerprint,publicPreparationJob,recoverAcceptedProjectContinuation} from './preparation-jobs.mjs';
+import {enqueuePreparation,ownedPreparationJob,runPreparationStep,retryPreparation,preparationFingerprint,publicPreparationJob,recoverAcceptedProjectContinuation,recoverSavedPreparationResult} from './preparation-jobs.mjs';
 import {createPendingAIGenerationsStore} from './pending-ai-generations-store.mjs';
 import {preparationExecutor} from './preparation-executor.mjs';
 import {COMPLETE_PROJECT_POLICY,publishAcceptedProjectBlock} from './complete-project-preparation.mjs';
@@ -18,13 +18,17 @@ test('aceptación completa: diez días, recuperación sin repetir IA y publicaci
     const teacher=randomUUID(),classroom=await createPilotClassroom(db,teacher,{teacherName:'QA',institutionName:'QA',section:'QA',age:5,year:2026,startsOn:'2026-03-02',endsOn:'2026-12-31'});
     const annual=randomUUID(),proposal=randomUUID(),experience=randomUUID(),curriculum=(await db.query('select id from curriculum_versions limit 1')).rows[0].id;
     const dates=Array.from({length:10},(_,i)=>`2099-11-${String(i+10).padStart(2,'0')}`),route=dates.map(date=>({id:randomUUID(),date}));
-    await db.query(`insert into annual_plans(id,classroom_id,school_year_id,curriculum_version_id,status,proposal) values($1,$2,$3,$4,'active',$5::jsonb)`,[annual,classroom.classroomId,classroom.schoolYearId,curriculum,JSON.stringify({proposed_experiences:[{proposal_id:proposal}]})]);
-    await db.query(`insert into learning_experiences(id,classroom_id,type,title,purpose,starts_on,ends_on,status,details,annual_plan_id,source_proposal_id) values($1,$2,'project','QA','QA',$3,$4,'draft',$5::jsonb,$6,$7)`,[experience,classroom.classroomId,dates[0],dates.at(-1),JSON.stringify({activity_route:route,project_master:{foundation:'QA guardada'},stage:'map_review',decisions:{additional_context:''}}),annual,proposal]);
+    await db.query(`insert into annual_plans(id,classroom_id,school_year_id,curriculum_version_id,status,proposal) values($1,$2,$3,$4,'active',$5::jsonb)`,[annual,classroom.classroomId,classroom.schoolYearId,curriculum,JSON.stringify({proposed_experiences:[{proposal_id:proposal,purpose:'QA',rationale:'QA',primary_competency_ids:['CYT_INDAGA','COM_ORAL']}]})]);
+    await db.query(`insert into learning_experiences(id,classroom_id,type,title,purpose,starts_on,ends_on,status,details,annual_plan_id,source_proposal_id) values($1,$2,'project','QA','QA',$3,$4,'draft',$5::jsonb,$6,$7)`,[experience,classroom.classroomId,dates[0],dates.at(-1),JSON.stringify({activity_route:route,project_master:{foundation:'QA guardada'},stage:'map_review',decisions:{additional_context:'',context_summary:'QA',purpose:'QA',competency_ids:['CYT_INDAGA','COM_ORAL']}}),annual,proposal]);
     await db.query("update learning_experiences set status='active',teacher_confirmed_at=now() where id=$1",[experience]);
     const plan=(await db.query('select * from annual_plans where id=$1',[annual])).rows[0];
     const input={policy:COMPLETE_PROJECT_POLICY,proposalId:proposal,dates},payload={project_id:experience,proposal_id:proposal,expected_dates:dates,additional_context:'',acceptance:{policy:COMPLETE_PROJECT_POLICY,teacher_id:teacher,accepted_at:new Date().toISOString(),reviewed_individually:false}};
     const job=await enqueuePreparation(db,{teacherId:teacher,classroomId:classroom.classroomId,kind:'project',sourceId:annual,sourceRevision:plan.revision,input,payload});
     assert.equal((await enqueuePreparation(db,{teacherId:teacher,classroomId:classroom.classroomId,kind:'project',sourceId:annual,sourceRevision:plan.revision,input,payload})).id,job.id);
+    await db.query("update preparation_jobs set status='uncertain',payload=$1::jsonb where id=$2",[JSON.stringify({...payload,stage:'master',attempt_pending:true}),job.id]);
+    assert.equal((await recoverSavedPreparationResult(db,teacher,job.id)).status,'queued','master canónico guardado se recupera sin IA');
+    await db.query("update preparation_jobs set status='uncertain',payload=$1::jsonb where id=$2",[JSON.stringify({...payload,additional_context:'Otra decisión',stage:'master',attempt_pending:true}),job.id]);
+    assert.equal((await recoverSavedPreparationResult(db,teacher,job.id)).status,'uncertain','no reutiliza otro contexto');
     // Real cloud incident: legacy executor saved the master and marked the accepted job done, with zero activities.
     const legacyPayload={...payload,stage:'ready',attempt_pending:false};
     await db.query("update preparation_jobs set status='succeeded',payload=$1::jsonb where id=$2",[JSON.stringify(legacyPayload),job.id]);
@@ -68,7 +72,15 @@ test('aceptación completa: diez días, recuperación sin repetir IA y publicaci
     await retryPreparation(db,teacher,job.id);await runPreparationStep(db,execute);assert.equal(calls,1,'durable response restores expired transport token');
     // Recover the row after losing its checkpoint: the item ID proves it was already saved.
     let stored=await ownedPreparationJob(db,teacher,job.id);delete stored.payload.items[0].activity_id;
-    await db.query('update preparation_jobs set payload=$1::jsonb where id=$2',[JSON.stringify(stored.payload),job.id]);
+    stored.payload.attempt_pending=true;
+    await db.query("update preparation_jobs set status='uncertain',payload=$1::jsonb where id=$2",[JSON.stringify(stored.payload),job.id]);
+    const lostReplyRead=async(owner=teacher)=>{let result;await handlePreparationRoutes({request:{method:'GET'},response:{},url:new URL(`http://localhost/api/preparation/${job.id}`),db,teacherId:owner,send:(_r,status,value)=>{result={status,value};}});return result;};
+    assert.equal((await lostReplyRead(randomUUID())).status,409);
+    await db.query('update preparation_jobs set source_revision=source_revision+1 where id=$1',[job.id]);
+    assert.equal((await lostReplyRead()).value.status,'uncertain','no continúa una fuente distinta');
+    await db.query('update preparation_jobs set source_revision=source_revision-1 where id=$1',[job.id]);
+    assert.equal((await lostReplyRead()).value.status,'queued','recupera resultado persistido sin preguntar ni repetir IA');
+    assert.equal((await lostReplyRead()).value.status,'queued','lectura idempotente');
     await runPreparationStep(db,execute);assert.equal(calls,1);assert.equal(saves,1);
     for(let i=0;i<24;i++){const step=await runPreparationStep(db,execute);if(step?.status==='failed')break;}
     stored=await ownedPreparationJob(db,teacher,job.id);assert.equal(stored.status,'failed');assert.equal(calls,10);assert.equal(saves,10);

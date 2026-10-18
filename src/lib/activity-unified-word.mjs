@@ -1,6 +1,7 @@
 import path from "node:path";
 import { expandTableRow, insertCoverQuickView, removePageBreakAfterTable, removeParagraphsContaining, renderUnifiedWord, replaceWordText, xmlEscape } from "./unified-word-template.mjs";
 import { availableSheets, renderSheetPages } from "./workshop-sheet-catalog.mjs";
+import { activityReadingStages } from "./activity-reading-content.mjs";
 
 const oldTemplateUrl = path.join(process.cwd(), "assets/templates/actividad-aprendizaje-inicial-ayni-v2.docx");
 const workshopTemplateUrl = path.join(process.cwd(), "assets/templates/actividad-aprendizaje-inicial-con-taller-v1.docx");
@@ -38,6 +39,25 @@ function replaceSectionBody(xml, startText, endText, body) {
 function activityGuide(content, whatToObserve) {
   const questions = [...clean(content.mediation).matchAll(/¿[^?]+\?/g)].map((match) => match[0]);
   const materials = Array.isArray(content.materials) ? content.materials : [];
+  const actions = activityReadingStages(content.child_actions);
+  const mediation = activityReadingStages(content.mediation);
+  const phased = actions.stages.length === 3 && mediation.stages.length === 3;
+  if (phased) return {
+    purpose: readableBlock("Propósito", content.purpose),
+    sequence: [
+      readableBlock("Docente · antes de empezar", content.teacher_preparation),
+      readableBlock("Materiales", materials),
+      readableBlock("Contexto de las acciones", actions.introduction),
+      readableBlock("Orientaciones generales", mediation.introduction),
+      ...actions.stages.map((stage, index) => [
+        readableParagraph(stage.label.toLocaleUpperCase("es-PE"), { bold: true }),
+        index === 0 ? readableBlock("Situación para empezar", content.meaningful_situation) : "",
+        readableBlock("Niños · qué harán", stage.text),
+        readableBlock("Docente · cómo acompaña", mediation.stages[index].text),
+      ].join("")),
+      readableBlock("Continuidad", content.closure_or_continuity),
+    ].join(""),
+  };
   return {
     purpose: readableBlock("Propósito", content.purpose),
     sequence: [
@@ -124,6 +144,11 @@ export async function renderActivityUnifiedWord(document, cards = [], { logo = n
   const ageFocus = clean(card?.ages?.[String(document.age)]?.ai_focus);
   const route = document.experience_details?.activity_route?.find((item) => item.id === content.route_item_id);
   const criterion = document.active_criterion;
+  const primaryId = criterion?.competency_v4_id || content.competency_id;
+  const observedIds = (document.guide?.criteria ?? []).map(item => item.competency_v4_id ?? item.competency_id);
+  const integratedIds = [...new Set([...(route?.competency_ids ?? []), ...(route?.possible_secondary_competency_ids ?? []), ...observedIds])]
+    .filter(id => id && id !== primaryId);
+  const integrated = integratedIds.map(id => cards.find(item => item.id === id)?.name).filter(Boolean);
   const actualEvidence = Array.isArray(document.registered_evidence) ? document.registered_evidence : [];
   const closure = clean(document.teacher_closure_note);
   const workshop = document.workshop?.content ?? null;
@@ -136,7 +161,9 @@ export async function renderActivityUnifiedWord(document, cards = [], { logo = n
     EVIDENCIA_REGISTRO_CAMPO: [observedDate(item.observed_at), clean(item.observation_text) || "Foto registrada en Ayni"].filter(Boolean).join(" · "),
     EVIDENCIA_SIGUIENTE_PASO: "Revisar junto con nuevos registros",
   }));
-  const whatToObserve = list(criterion?.observation_focus) || clean(content.evidence_opportunities) || clean(content.expected_evidence || route?.expected_evidence);
+  const criterionText = clean(criterion?.criterion_text || content.evaluation_criterion || route?.evaluation_criterion);
+  const distinctFocus = (criterion?.observation_focus ?? []).filter(value => clean(value) !== criterionText);
+  const whatToObserve = list(distinctFocus) || clean(content.evidence_opportunities) || clean(content.expected_evidence || route?.expected_evidence);
   const guide = activityGuide(content, whatToObserve);
   const date = String(document.occurs_on ?? "").slice(0, 10);
   const values = {
@@ -153,7 +180,7 @@ export async function renderActivityUnifiedWord(document, cards = [], { logo = n
     CRITERIO_EVALUACION: clean(criterion?.criterion_text) || clean(content.evaluation_criterion || route?.evaluation_criterion) || "La docente precisará el criterio antes de observar.",
     QUE_OBSERVAR: whatToObserve || "La docente precisará qué actuación observar.",
     EVIDENCIA_ESPERADA: clean(content.expected_evidence || route?.expected_evidence) || clean(content.evidence_opportunities),
-    COMPETENCIA_INTEGRADA: "No se prioriza otra competencia en esta actividad.",
+    COMPETENCIA_INTEGRADA: integrated.length ? `${integrated.join("; ")}. Integración prevista en el mapa; no acredita una actuación ni una valoración.` : "No se ha previsto otra competencia en el mapa de esta actividad.",
     ENFOQUE_TRANSVERSAL: "Según la situación del aula", ACTITUD_OBSERVABLE: "Escuchar y participar respetando las distintas formas de expresión.",
     APOYOS_DIVERSIDAD: "Ajustar materiales y tiempos según el grupo.",
     MATERIALES_PRINCIPALES: list(content.materials),

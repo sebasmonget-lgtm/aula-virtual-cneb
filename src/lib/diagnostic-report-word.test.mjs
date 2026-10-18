@@ -24,12 +24,12 @@ test("el Word diagnóstico rellena la plantilla con datos verificados y no inven
   const xml = await zip.file("word/document.xml").async("string");
   const header = await zip.file("word/header1.xml").async("string");
   for (const value of ["Jardín Sol &amp; Luna", "Marisol Rojas", "UGEL 03", "2 de 2",
-    "Se comunica oralmente en su lengua materna", "Ofrecer juegos de conversación.", "[estudiante]"]) {
+    "Se comunica oralmente en su lengua materna", "Ofrecer juegos de conversación.", "Ana conversa"]) {
     assert.match(xml, new RegExp(value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   }
   assert.match(header, /2026/);
   assert.match(xml, /16\/03\/2026 – 27\/03\/2026/);
-  assert.doesNotMatch(xml, /\{\{|LECTURA_|DECISION_|SEGUIMIENTO_|Ana conversa|nivel de logro asignado/);
+  assert.doesNotMatch(xml, /\{\{|LECTURA_|DECISION_|SEGUIMIENTO_|nivel de logro asignado/);
   assert.ok(zip.file("word/media/image10.png"));
   assert.notDeepEqual(await zip.file("word/media/image10.png").async("nodebuffer"), logo);
 });
@@ -45,7 +45,7 @@ test("el Word diagnóstico sin logo conserva un documento válido y declara la a
   assert.doesNotMatch(xml, /r:embed="rId20"|\{\{/);
 });
 
-test("la descarga toma recuentos autorizados sin incluir respuestas ni nombres de niños", async () => {
+test("la descarga toma recuentos autorizados sin incluir respuestas familiares ni metadatos internos", async () => {
   const db = new PGlite();
   try {
     await db.exec(`create table profiles(user_id uuid,display_name text,preferences jsonb default '{}');
@@ -88,6 +88,6 @@ test("la descarga toma recuentos autorizados sin incluir respuestas ni nombres d
     for (const value of ["Jardín oficial", "UGEL 03", "1 de 1", "Se comunica oralmente", "2 registros de 1 niño"])
       assert.match(xml, new RegExp(value));
     assert.match(xml, /16\/03\/2026 – 27\/03\/2026/);
-    assert.doesNotMatch(xml, /Secreto familiar|Dato privado del niño|Otra nota privada|Comentario privado|Ana conversa|source_snapshot|generation_metadata/);
+    assert.doesNotMatch(xml, /Secreto familiar|Dato privado del niño|Otra nota privada|Comentario privado|source_snapshot|generation_metadata/);
   } finally { await db.close(); }
 });

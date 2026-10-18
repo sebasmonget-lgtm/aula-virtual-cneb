@@ -27,14 +27,14 @@ test("Jev puede elegir SIN_FICHA y jamás acepta un ID inventado", async () => {
     loadKb: async () => ({ version: "4.1.0" }) }), /ineligible/);
 });
 
-test("el texto del taller quita nombres conocidos antes de la decisión", async () => {
+test("el texto del taller conserva nombres y contexto antes de la decisión", async () => {
   let sent;
   await suggestWorkshopSheet({ age: 5, competencyId: "MAT_CANTIDAD",
     intention: "Camila agrupó colecciones y explicó cómo comparó", topic: "colecciones",
     knownNames: ["Camila"], candidates: [sheet],
     client: { decide: async (input) => { sent = input.state; return { answers: { sheet: { choice: "SIN_FICHA" } } }; } },
     loadKb: async () => ({ version: "4.1.0" }) });
-  assert.equal(sent.includes("Camila"), false);
+  assert.equal(sent.includes("Camila"), true);
 });
 
 test("si Jev falla se conserva la sugerencia previa del catálogo", async () => {

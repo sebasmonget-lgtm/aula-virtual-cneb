@@ -16,7 +16,7 @@ const dependents = { guiding_questions: ["¿Qué vemos?", "¿Qué cambió?"], jo
   { title: "Observamos", description: "Miramos y comparamos." }],
   general_criteria: [{ competency_id: "CYT_INDAGA", criterion: "Observa y compara cambios.",
     expected_evidence: ["Explicaciones", "Dibujos"] }] };
-const master = { foundation: "El grupo pregunta por cambios visibles.", closing_description: "Compartir lo observado.",
+const master = { meaningful_situation: "La docente recoge preguntas de algunos niños sobre las plantas cercanas. Propone observar sus cambios y compartir lo descubierto: ¿cómo podemos averiguar qué necesitan para crecer?", foundation: "El grupo pregunta por cambios visibles.", closing_description: "Compartir lo observado.",
   closing_rationale: "Permite conversar sobre las preguntas iniciales.", resources: ["Plantas del patio"],
   activities: [{ date: "2026-04-13", title: "Miramos las plantas", purpose: "Observar cambios.",
     competency_ids: ["CYT_INDAGA"], criterion_competency_id: "CYT_INDAGA",
@@ -136,6 +136,10 @@ test("el criterio, no el orden de dos competencias, determina la principal del m
   assert.deepEqual(edited[0].possible_secondary_competency_ids, ["CYT_INDAGA"]);
 });
 
+test('un proyecto no puede dejar una competencia elegida fuera de todo su recorrido',()=>{
+  assert.throws(()=>validateProjectMaster(master,{...decisions,competency_ids:['CYT_INDAGA','COM_ORAL']},dependents,['2026-04-13','2026-04-14']),error=>error.reason==='missing_competency_opportunity');
+});
+
 test("un borrador nuevo persiste solo un mapa canónico y conserva preguntas y criterios", () => {
   const validated = validateProjectMaster(master, decisions, dependents, ["2026-04-13", "2026-04-14"]);
   const details = projectDetails({ source: { title: "El huerto", primary_competency_ids: ["CYT_INDAGA"] },
@@ -163,6 +167,24 @@ test("proyecto moderno: una generación high, calendario exacto y formal por có
   const formal=await generateProjectFormal({context:{modern:true,confirmed_project_master:details},createProvider:()=>{throw new Error("Formal no debe facturar");}});
   assert.equal(formal.metadata.provider_calls,0);
   assert.ok(formal.output.foundation);
+  assert.equal(details.project_master.meaningful_situation,master.meaningful_situation);
+  assert.equal(formal.output.situation,master.meaningful_situation);
+  assert.ok(calls[0].output_schema.required.includes('meaningful_situation'));
+  assert.match(calls[0].ai_context_bundle.task,/incluido additional_context/);
+  assert.match(calls[0].ai_context_bundle.task,/invitación docente basada en una oportunidad curricular/);
+  assert.match(calls[0].ai_context_bundle.task,/conserva el alcance individual o de subgrupo/);
+});
+
+test('una situación ausente se repara con las mismas fuentes y sin inventar contexto',async()=>{
+  for(const value of [undefined,'','a'.repeat(1201)])assert.throws(()=>validateProjectMaster({...master,meaningful_situation:value},decisions,dependents,['2026-04-13','2026-04-14']),error=>error.reason==='missing_meaningful_situation');
+  const calls=[],confirmed={...decisions,additional_context:'La docente confirma acceso acompañado al huerto cercano.'};
+  const result=await generateProjectMaster({context:{modern:true,age:5},decisions:confirmed,availableDates:['2026-04-13','2026-04-14'],loadSkill:async()=> 'Skill',createProvider:()=>({generate:async request=>{
+    calls.push(request);return {output:{...master,...dependents,...(calls.length===1?{meaningful_situation:''}:{})}};
+  }})});
+  assert.equal(calls.length,2);assert.equal(result.metadata.repair_used,true);
+  assert.deepEqual(calls[1].ai_context_bundle.confirmed_decisions,confirmed);
+  assert.match(calls[1].ai_context_bundle.task,/No inventes curiosidades/);
+  assert.equal(result.output.meaningful_situation,master.meaningful_situation);
 });
 
 test("una fundamentación fuera del límite se repara sin relajar el contrato ni cambiar fuentes",async()=>{

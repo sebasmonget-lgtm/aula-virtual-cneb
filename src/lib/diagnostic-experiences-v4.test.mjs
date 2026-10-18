@@ -55,12 +55,30 @@ async function database() {
   return db;
 }
 
+test('las nuevas oportunidades transversales guardan el hecho, criterio y versión en el mismo diagnóstico',async()=>{
+  const db=await database();try{
+    await createPilotClassroom(db,teacher,{teacherName:'Docente ficticia',institutionName:'IE QA',section:'A',age:5,year:2026,startsOn:'2026-03-16',endsOn:'2026-12-18'});
+    await importStudentsForTeacher(db,teacher,[{firstName:'Ana',lastName:'Ejemplo QA'}]);
+    const initial=await loadDiagnosticExperienceWorkspace(db,teacher),studentId=initial.students[0].id;
+    for(const [experienceId,competencyId,text]of[
+      ['plan_try_review','TRANS_AUTONOMO','Dijo que haría un puente y eligió dos cajas para empezar.'],
+      ['create_a_digital_message','TRANS_TIC','Con acompañamiento encuadró su construcción y pulsó el botón para fotografiarla.']]){
+      const experience=initial.experiences.find(row=>row.id===experienceId);
+      const result=await recordDiagnosticExperienceObservation(db,teacher,{studentId,experienceId,aspectId:experience.aspects[0].id,observationStatus:'observed_without_judgment',observationText:text});
+      assert.equal(result.competencyId,competencyId);assert.equal(result.observation.catalog_version,'diagnostic-v4.6');
+      assert.equal(result.observation.aspect_prompt_snapshot,experience.aspects[0].prompt);assert.equal(result.observation.observation_text,text);
+    }
+    const reopened=await loadDiagnosticExperienceWorkspace(db,teacher);assert.equal(reopened.experience_observations.length,2);
+    assert.equal((await db.query('select count(*)::int as n from evidences')).rows[0].n,0);
+  }finally{await db.close();}
+});
+
 test("guías por edad usan tarjetas v4 y solo muestran competencias especiales aplicables", async () => {
   const kb = await loadKnowledgeBaseV4();
   for (const age of [3, 4, 5]) {
     const experiences = buildDiagnosticExperienceCatalog(kb, { age });
-    assert.equal(experiences.length, 5);
-    assert.equal(experiences[0].catalog_version, "diagnostic-v4.5");
+    assert.equal(experiences.length, age===5?7:5);
+    assert.equal(experiences[0].catalog_version, "diagnostic-v4.6");
     assert.match(experiences[0].teacher_instructions, /Prepara dos o tres opciones sencillas/);
     assert.ok(experiences.every((item) => item.aspects.length >= 2 && item.aspects.length <= 4));
     if (age === 3) assert.equal(experiences.find((item) => item.id === "stories_and_marks").aspects.length, 2);

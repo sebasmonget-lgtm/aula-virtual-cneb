@@ -1,5 +1,9 @@
 # Decisiones de arquitectura
 
+## 2026-10-18 — Situación significativa explícita por proyecto
+
+Cada proyecto nuevo o sustituido debe explicar su origen sustentado, la oportunidad de aprendizaje y un reto abierto pertinente a la edad. El contexto puede provenir de observaciones, reportes familiares, decisiones docentes o una invitación curricular explícita; no se inventan curiosidades, necesidades ni disponibilidad de recursos. La razón anual breve (`rationale`) y la invitación orientan el proyecto. La misma generación del mapa produce `project_master.meaningful_situation` (máximo 1200 caracteres), conservada en el JSON canónico y reutilizada en detalle, formalización Word y contexto diario. Sin nueva llamada adicional de IA ni migración. Los proyectos históricos se leen con su contexto guardado y no se regeneran ni reescriben. Ver `docs/qa/QA_SITUACION_SIGNIFICATIVA_2026-10-18.md`.
+
 ## Guías simples y entrada directa al chat — 2026-10-13
 
 Dos acciones breves por momento complementan criterios oficiales sin modificar IDs ni catálogo. Ranking y selector de niños reutilizan `/api/annual-journey/coverage`: libres con competencia confirmada, otras experiencias guiadas y registros ordinarios atribuibles. Prioridad por proporción de pares niño/competencia sin registros, luego con uno; desempate por menos registros medios por niño/competencia, finalmente orden del catálogo. También recomendar la menos registrada cuando todas tienen cobertura. Ausencia no implica dificultad. Información insuficiente no cuenta como observación.
@@ -1313,6 +1317,22 @@ La corrección de contexto conversacional conserva opcionalmente una línea base
 Evaluar abre fotos mediante las rutas privadas canónicas y apiFetch autenticado; no hay almacenamiento nuevo ni medios en IA. Documentos agrupa los mismos lectores en cuatro carpetas y acepta enlaces anteriores. QA usa bases ficticias nuevas y reserva persistente de costo antes de cada llamada: techo conservador4,50USD para cumplir el máximo5USD. Sin migraciones, cambios de modelos, RLS o Producción. Validación y límites: docs/qa/QA_INTEGRAL_ANUAL_2026-10-15.md.
 
 La auditoría ratifica ADR085: B1–B3 permiten pendientes legítimos sin convertirlos en C; B4 exige valoraciones anuales aplicables. La falta de decisión bloquea cierre y se explica, nunca se rellena automáticamente. Corregir texto observado invalida atribución y requiere reconfirmarla; interfaz no debe anunciarla confirmada mientras está pendiente. No se modificaron estas reglas para completar QA.
+
+## ADR-156 — Texto pedagógico íntegro y calidad de nuevas secuencias (2026-10-18)
+
+La instrucción explícita de la usuaria elimina el filtro automático de privacidad textual: no sustituir nombres, acciones ni contexto familiar, no bloquear por vocabulario. Prevalece sobre la anonimización textual descrita en decisiones anteriores, incluida ADR-153. Se mantienen autorización/RLS, campos permitidos, exclusión de medios/rutas privadas e identificadores técnicos. El análisis identifica al alumno evaluado sin atribuirle acciones de otros; entrevista familiar no se convierte en evidencia de aula. Marcadores históricos ambiguos se conservan, sin adivinar identidades.
+
+Los proyectos nuevos requieren situación significativa canónica y oportunidades en el mapa para todas las competencias elegidas. La cobertura estructural no sustituye pertinencia pedagógica. Refuerzo de progresión, comparación, recursos, seguridad y mediación situada; sin cambiar modelos ni editar actividades confirmadas. Word refleja competencias integradas y distribuye fases guardadas con el separador existente, sin regenerar contenido ni reescribir bytes históricos. Validación real y límites en `docs/qa/QA_PEDAGOGICA_PROYECTOS_ACTIVIDADES_2026-10-18.md`; solo local, sin publicación.
+
+## ADR-154 — Continuar trabajos conocidos sin repetir decisiones (2026-10-18)
+
+Mi año retoma automáticamente una respuesta del proveedor identificada o una etapa interrumpida sin llamada pendiente, con tres recuperaciones como máximo por trabajo y espera creciente. El servidor vuelve a validar propietario, revisión, fuentes, calendario y lease. Un conflicto invalida la recuperación automática anterior. Las respuestas desconocidas/expiradas, contenido inválido y cambios de contexto requieren una acción explícita; no repetir silenciosamente una creación de IA incierta. El chat inicial no se monta mientras se consulta una preparación existente.
+
+Para proyectos ya aceptados, una lectura puede reconciliar un estado incierto con un resultado canónico persistido del mismo paso y versión. Usa la cola, snapshots y publicación completa existentes. No cambia una actividad confirmada ni mezcla secuencias. Tras `ready`, las decisiones adicionales siguen admitidas antes de generar, con acción visible y respuesta conservada. Sin migración ni cambios de modelo. Informe: `docs/qa/QA_CONTINUIDAD_PLANIFICACION_2026-10-18.md`. Solo cambios locales, sin publicación en esta ronda.
+
+## ADR-155 — Cobertura conjunta durante las semanas diagnósticas (2026-10-18)
+
+La aclaración docente se refiere al diagnóstico inicial, conservando calendario y quince proyectos. El conjunto de guías ofrece oportunidades para todas las competencias aplicables por edad y flags L2/Religión, sin exigirlas en cada actividad ni completar todos los pares niño×competencia antes de avanzar. Catálogo v4.6 añade aprendizaje autónomo y TIC para 5 años, con cinco momentos originales. TIC es condicional a dispositivo adecuado y acompañamiento; no se presume disponibilidad ni se convierte su ausencia en dificultad. No se extienden desempeños de 5 años a 3/4 ni se reescriben snapshots históricos. Validador de cobertura, almacenamiento y permisos existentes; cero IA al elegir o desarrollar. 114 regresiones y QA UI ficticio, sin publicación.
 
 ## ADR-153 — Reanálisis explícito, recursos confirmados y cierre QA aislado (2026-10-15)
 

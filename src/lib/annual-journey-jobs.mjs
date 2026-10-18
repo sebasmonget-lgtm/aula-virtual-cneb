@@ -13,11 +13,24 @@ import { hasSavedAnnualYear } from "./annual-plan-display.mjs";
 
 const WORKFLOW = "annual_journey_v2_job", LEASE_MS = 210000;
 export const JOURNEY_STAGES = ["sources", "calendar", "generation", "validation", "review"];
+// Resume only known work. A lost create response without an ID may have cost
+// money already; source conflicts and invalid pedagogy need teacher review.
+export function journeyAutomaticResume(payload, now = Date.now()) {
+  const interrupted = payload.status === "running" && Date.parse(payload.lease_until) <= now;
+  const checkpoint = payload.checkpoint ?? {}, index = checkpoint.outputs?.length ?? 0;
+  const knownResponse = Boolean(checkpoint.provider_responses?.[index]);
+  const noPendingCall = (checkpoint.attempts?.length ?? 0) <= index;
+  const transient = payload.status === "failed" && ["timeout", "rate_limited", "provider_error"].includes(payload.provider_error_reason);
+  const allowed = (payload.automatic_resumes ?? 0) < 3 &&
+    (interrupted && (knownResponse || noPendingCall) || transient && knownResponse);
+  return { can_auto_resume: allowed, resume_after_ms: allowed ? 2000 * 2 ** (payload.automatic_resumes ?? 0) : 0 };
+}
 export function publicJourneyJob(id, payload, now = Date.now()) {
   const stalled = payload.status === "running" && Date.parse(payload.lease_until) <= now;
   return { id, draft_id: payload.draft_id, status: stalled ? "interrupted" : payload.status,
     stage: payload.stage, completed_stages: payload.completed_stages, updated_at: payload.updated_at,
-    error: stalled ? "La preparación se interrumpió. Puedes continuar desde el trabajo guardado." : payload.error ?? null,
+    error: stalled ? "La conexión se interrumpió. El avance de tu año sigue guardado." : payload.error ?? null,
+    ...journeyAutomaticResume(payload, now),
     poll_after_ms: Math.max(0, Date.parse(payload.next_poll_at ?? "1970-01-01") - now),
     calls_completed: payload.checkpoint?.events?.length ?? 0, calls_attempted:payload.checkpoint?.attempts?.length??0 };
 }
@@ -112,6 +125,7 @@ export async function handleJourneyJobs({ request, response, url, db, context, t
   const [,id,run] = match;
   if (!run && request.method === "GET") { send(response,200,publicJourneyJob(id,await get(id)),origin); return true; }
   if (!run || request.method !== "POST") return false;
+  const runBody = await readJson(request) ?? {};
   const payload = await versionTransaction(db,lock,async tx => {
     const job = await get(id,tx);
     if (job.status === "succeeded") return job;
@@ -123,8 +137,12 @@ export async function handleJourneyJobs({ request, response, url, db, context, t
       if (snapshot.source_fingerprint !== job.sourceFingerprint || effectiveCalendarFingerprint(calendar) !== job.calendarFingerprint)
         throw new VersionConflictError("Los registros o el calendario cambiaron. Tus ideas se conservan; actualiza la preparación.");
     } catch(error) {
-      job.status="failed";job.error=error.name==="VersionConflictError"?error.message:"Este borrador cambió. Abre el año guardado para continuar.";
+      job.status="failed";job.provider_error_reason="source_changed";job.error=error.name==="VersionConflictError"?error.message:"Este borrador cambió. Abre el año guardado para continuar.";
       await update(id,job,job.lease_token,tx);return job;
+    }
+    if (runBody.automaticResume === true && job.status !== "queued") {
+      if (!journeyAutomaticResume(job).can_auto_resume) throw new VersionConflictError("El avance está guardado. Revisa la preparación antes de reintentar.");
+      job.automatic_resumes = (job.automatic_resumes ?? 0) + 1;
     }
     const token = randomUUID(), priorToken = job.lease_token;
     // This branch is reached only by an explicit retry of a failed job, never automatic polling.

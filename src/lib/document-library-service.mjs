@@ -163,7 +163,7 @@ export async function loadSavedDocument(db, teacherId, kind, id) {
           proposalId: row.canonical_proposal_id }) } : {}),
       content: { ...selectContent(row.details, ["starting_point", "trigger_or_interest", "learning_need_or_context", "primary_competency_ids", "possible_secondary_competency_ids", "possible_pathways", "proposed_situations", "spaces_and_materials", "evidence_opportunities", "family_or_community_links", "adjustment_points", "flexibility_notes", "document_template_version", "teacher_overrides", "project_master", "dependents", "decisions"]), activity_route: canonicalProjectRoute(row.details), purpose: row.details?.purpose || row.purpose, planning_reason: row.planning_reason,
         formal_content: row.formal_content ?? (row.details?.experience_contract === 1 ? {
-          situation: row.details.decisions?.context_summary,
+          situation: row.details.project_master?.meaningful_situation || row.details.decisions?.context_summary,
           foundation: row.details.project_master?.foundation,
           methodology: (row.details.dependents?.journey ?? []).map(part => `${part.title}: ${part.description}`).join("\n"),
           diversity_support: (row.details.source_proposal_snapshot?.supports ?? []).join("\n"),

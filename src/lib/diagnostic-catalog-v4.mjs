@@ -18,7 +18,8 @@ export function validateDiagnosticCatalog(document, competencyCards) {
       || !Array.isArray(experience.examples) || experience.examples.some((item) => typeof item !== "string" || !item.trim())
       || !Array.isArray(experience.ages) || !experience.ages.length
       || experience.ages.some((age) => ![3,4,5].includes(age)) || new Set(experience.ages).size !== experience.ages.length
-      || !Array.isArray(experience.aspects) || !experience.aspects.length || experience.aspects.length > 5)
+      || !Array.isArray(experience.aspects) || !experience.aspects.length || experience.aspects.length > 5
+      || experience.required_resource !== undefined && experience.required_resource !== 'digital_creation')
       throw new Error(`Experiencia diagnóstica inválida: ${experience.id ?? "sin ID"}.`);
     ids.add(experience.id);
     sortOrders.add(experience.sort_order);

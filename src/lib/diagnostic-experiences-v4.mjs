@@ -36,6 +36,7 @@ export function buildDiagnosticExperienceCatalog(knowledgeBase, { age, castellan
     });
     return { id: template.id, catalog_version: document.version, catalog_status: document.status, title: template.title,
       explanation: template.explanation, teacher_instructions: template.teacher_instructions_by_age?.[String(age)] ?? template.teacher_instructions,
+      ...(template.required_resource?{required_resource:template.required_resource}:{}),
       age_support: template.age_support?.[String(age)] ?? null, examples: template.examples,
       pedagogical_blocks: diagnosticPedagogicalBlocks({ id: template.id, teacher_instructions: template.teacher_instructions_by_age?.[String(age)] ?? template.teacher_instructions, aspects }),
       aspects, competencies: [...new Map(aspects.map((aspect) => [aspect.competency_id,

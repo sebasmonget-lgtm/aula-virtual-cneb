@@ -11,6 +11,7 @@ export function confirmedProjectFoundation(project) {
     decisions: details.decisions ?? null,
     guiding_questions: details.dependents?.guiding_questions ?? [],
     project_master: {
+      ...(master.meaningful_situation ? { meaningful_situation: master.meaningful_situation } : {}),
       foundation: master.foundation ?? null,
       closing_description: master.closing_description ?? null,
       closing_rationale: master.closing_rationale ?? null,

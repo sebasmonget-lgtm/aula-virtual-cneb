@@ -1,7 +1,7 @@
 # Catálogo editorial de experiencias diagnósticas
 
 `catalog.json` es la única fuente editable de las experiencias guiadas. Su estado actual es
-`reviewed`, versión `diagnostic-v4.5`: revisión editorial interna de los 22 momentos de siete
+`reviewed`, versión `diagnostic-v4.6`: revisión editorial interna de los 27 momentos de nueve
 experiencias. No implica certificación del MINEDU ni validación de eficacia en aula.
 No se generan experiencias con IA.
 
@@ -28,6 +28,15 @@ escritura intencional, y excluye criterios de escritura a los tres años según 
 Los nuevos IDs `write_message`, `read_own_message` y `gratitude_and_tradition` distinguen
 cambios de significado de los aspectos históricos. Estos últimos conservan sus snapshots.
 El mapa legacy de instrucciones es solo un fallback de compatibilidad, no otra fuente editorial.
+
+La versión 4.6 añade dos experiencias para 5 años: planear/probar/revisar un reto (aprendizaje
+autónomo) y explorar/crear un registro digital con acompañamiento (TIC). Esta última declara
+`required_resource: digital_creation`: es una propuesta condicional, no una afirmación de
+disponibilidad. Solo realizarla si la docente cuenta con un dispositivo adecuado; sin cuentas,
+internet, publicación ni imágenes de personas. Sin dispositivo no se fabrica una observación
+ni se interpreta dificultad. No se añaden desempeños transversales de 5 años a 3 o 4 años.
+El validador comprueba que el conjunto ofrezca oportunidades para cada competencia aplicable
+por edad/L2/Religión. No impone completar todas ni observar a todos en una misma actividad.
 
 Referencia curricular: KB v4 versionada y Programa Curricular de Educación Inicial del MINEDU.
 Revisión y límites: `docs/qa/QA_GUIADAS_EDITORIAL_2026-10-16.md`. Ejecutar también las pruebas

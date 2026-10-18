@@ -110,7 +110,7 @@ test("Jev propone varias competencias sin confirmar y las notas familiares queda
       return { source: "jev", candidate_ids: allowed.slice(0, 2).map((item) => item.id) };
     } });
     const row = (await loadSpontaneousObservations(db, teacher)).observations.find((item) => item.id === saved.id);
-    assert.equal(sent.includes("Camila"), false);
+    assert.equal(sent.includes("Camila"), true);
     assert.equal(row.classification_source, "jev");
     assert.deepEqual(row.competency_v4_ids, []);
     assert.equal(row.suggested_competency_v4_ids.length, 2);
@@ -124,12 +124,12 @@ test("Jev propone varias competencias sin confirmar y las notas familiares queda
     } }, { allowReview: true })).status, "teacher_preserved");
     const privateNote = await recordSpontaneousObservation(db, teacher, { studentId,
       contextLabel: "Conversación", observationText: "Su mamá Rosa dijo que jugó en casa." });
-    await suggestSpontaneousCompetencies(db, teacher, privateNote.id, { classify: async () => {
-      throw new Error("No se debe transmitir esta nota.");
+    await suggestSpontaneousCompetencies(db, teacher, privateNote.id, { classify: async ({observation}) => {
+      assert.match(observation,/Su mamá Rosa/);return {source:"jev",candidate_ids:[]};
     } });
     const privateRow = (await loadSpontaneousObservations(db, teacher)).observations.find((item) => item.id === privateNote.id);
     assert.equal(privateRow.classification_status, "needs_review");
-    assert.equal(privateRow.classification_source, null);
+    assert.equal(privateRow.classification_source, "jev");
   } finally { await db.close(); }
 });
 
@@ -147,9 +147,9 @@ test("etiqueta ficticia no bloquea Ayni; reconsulta distingue abstención, priva
       return { source: "jev", candidate_ids: ["MAT_CANTIDAD"] }; } };
     const result = await suggestSpontaneousCompetencies(db, teacher, saved.id, classifier, { allowReview: true });
     assert.equal(result.recommendation_state, "suggested");
-    assert.equal(sent.includes("PRUEBA FICTICIA"), false);
-    assert.equal(sent.includes("20260927"), false);
-    assert.equal(sent.includes("Camila"), false);
+    assert.equal(sent.includes("PRUEBA FICTICIA"), true);
+    assert.equal(sent.includes("20260927"), true);
+    assert.equal(sent.includes("Camila"), true);
     const row = (await loadSpontaneousObservations(db, teacher)).observations.find((item) => item.id === saved.id);
     assert.equal(row.observation_text, "[PRUEBA FICTICIA · OBS-20260927] Camila contó tres vasos.");
     assert.equal(row.recommendation_state, "suggested");
@@ -160,9 +160,10 @@ test("etiqueta ficticia no bloquea Ayni; reconsulta distingue abstención, priva
     assert.equal(abstained.recommendation_state, "insufficient_information");
     const privateNote = await recordSpontaneousObservation(db, teacher, { studentId,
       contextLabel: "Juego", observationText: "[PRUEBA FICTICIA · OBS-20260927] Su DNI es 12345678." });
+    const noEvidence = { classify: async () => ({source:"jev",candidate_ids:[]}) };
     const neverSend = { classify: async () => { throw new Error("No se debe llamar al proveedor."); } };
-    assert.equal((await suggestSpontaneousCompetencies(db, teacher, privateNote.id, neverSend)).recommendation_state, "privacy_blocked");
-    assert.equal((await suggestSpontaneousCompetencies(db, teacher, privateNote.id, neverSend, { allowReview: true })).recommendation_state, "privacy_blocked");
+    assert.equal((await suggestSpontaneousCompetencies(db, teacher, privateNote.id, noEvidence)).recommendation_state, "insufficient_information");
+    assert.equal((await suggestSpontaneousCompetencies(db, teacher, privateNote.id, noEvidence, { allowReview: true })).recommendation_state, "insufficient_information");
     const mediaOnly = await recordSpontaneousObservation(db, teacher, { studentId, contextLabel: "Juego", mediaPath: "private-test-path", mediaMimeType: "image/png" });
     assert.equal((await suggestSpontaneousCompetencies(db, teacher, mediaOnly.id, neverSend)).recommendation_state, "missing_text");
     await correctSpontaneousClassification(db, teacher, saved.id, []);

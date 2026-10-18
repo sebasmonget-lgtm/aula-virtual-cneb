@@ -8,7 +8,7 @@ import {buildAnnualClassroomSnapshot} from "./annual-classroom-snapshot.mjs";
 import {generateAnnualJourney} from "./annual-journey-service.mjs";
 import {validateAnnualJourney} from "./annual-journey-contract.mjs";
 import {observationCoverage,coverageLabel} from "./observation-coverage.mjs";
-import {publicJourneyJob} from "./annual-journey-jobs.mjs";
+import {publicJourneyJob,journeyAutomaticResume} from "./annual-journey-jobs.mjs";
 import {createPilotClassroom} from "./pilot-onboarding-service.mjs";
 import {defaultInitialStage} from "./annual-plan-calendar.mjs";
 import {handleAnnualJourneyRoutes} from "../../scripts/annual-journey-routes.mjs";
@@ -16,6 +16,17 @@ const curriculum=[{id:"MAT_CANTIDAD",name:"Cantidad",capacities:["Comunica su co
 const snapshot=()=>buildAnnualClassroomSnapshot({students:[{id:"one"},{id:"two"}],interviews:[],names:[],fingerprint:"scope",
   observations:[{id:"one_blocks",student_id:"one",observation_text:"Cambió las piezas después de que cayó la torre."},
     {id:"two_seeds",student_id:"two",observation_text:"Señaló otro recipiente al cambiar la disposición."}]},{available_resources:[]},curriculum);
+
+test("recuperación automática acotada: solo respuesta conocida o etapa sin llamada pendiente",()=>{
+  const base={status:'running',lease_until:'2020-01-01',checkpoint:{attempts:[{}],outputs:[],provider_responses:{0:'private'}}};
+  assert.equal(journeyAutomaticResume(base).can_auto_resume,true);
+  assert.equal(journeyAutomaticResume({...base,checkpoint:{attempts:[{}],outputs:[]}}).can_auto_resume,false);
+  assert.equal(journeyAutomaticResume({...base,checkpoint:{attempts:[{}],outputs:[{}]}}).can_auto_resume,true);
+  assert.equal(journeyAutomaticResume({...base,lease_until:'2099-01-01'}).can_auto_resume,false);
+  assert.equal(journeyAutomaticResume({...base,automatic_resumes:3}).can_auto_resume,false);
+  for(const reason of ['timeout','rate_limited','provider_error'])assert.equal(journeyAutomaticResume({...base,status:'failed',provider_error_reason:reason}).can_auto_resume,true);
+  for(const reason of ['response_expired','response_failed','semantic_review','invalid','authentication_failed','source_changed',null])assert.equal(journeyAutomaticResume({...base,status:'failed',provider_error_reason:reason}).can_auto_resume,false);
+});
 
 test("job background: recargar y consultar temprano no crea otra generación ni expone el ID del proveedor",async()=>{
   const db=new PGlite();
@@ -25,7 +36,7 @@ test("job background: recargar y consultar temprano no crea otra generación ni 
     const teacherId=randomUUID(),created=await createPilotClassroom(db,teacherId,{teacherName:"QA background",institutionName:"QA",section:"QA",age:5,year:2026,startsOn:"2026-03-02",endsOn:"2026-12-31"});
     const context={id:created.classroomId,school_year_id:created.schoolYearId,curriculum_version_id:(await db.query("select id from curriculum_versions limit 1")).rows[0].id,
       year:2026,age:5,available_resources:[],calendar:{initial_stage:defaultInitialStage()}};
-    let creates=0,retrieves=0;
+    let creates=0,retrieves=0,failRetrieve=true;
     const route=async(path,body,user=teacherId)=>{
       let result;
       await handleAnnualJourneyRoutes({request:{method:body===undefined?"GET":"POST"},response:{},url:new URL(`http://localhost/api/annual-journey/${path}`),
@@ -34,6 +45,7 @@ test("job background: recargar y consultar temprano no crea otra generación ni 
           assert.equal(options.background,true);
           if(!options.resumeResponseId){creates++;await options.onResponseStarted("resp_private_fixture");throw Object.assign(new Error("pending"),{reason:"response_pending"});}
           retrieves++;assert.equal(options.resumeResponseId,"resp_private_fixture");
+          if(failRetrieve){failRetrieve=false;throw Object.assign(new Error('temporary'),{reason:'timeout'});}
           return{output:generationFixture(request.ai_context_bundle.curriculum.competency_cards)};
         }})});return result;
     };
@@ -45,9 +57,20 @@ test("job background: recargar y consultar temprano no crea otra generación ni 
     await route(`jobs/${id}`);await route(`jobs/${id}/run`,{});assert.equal(creates,1);assert.equal(retrieves,0);
     assert.equal((await route(`jobs/${id}`,undefined,randomUUID())).status,404);
     await db.query("update ai_pending_generations set payload=jsonb_set(payload,'{next_poll_at}','\"1970-01-01\"'::jsonb) where id=$1",[id]);
-    assert.equal((await route(`jobs/${id}/run`,{})).status,202);
+    const interrupted=await route(`jobs/${id}/run`,{});
+    assert.equal(interrupted.status,503);assert.equal(interrupted.data.can_auto_resume,true);
+    const beforeConflict=(await db.query('select payload from ai_pending_generations where id=$1',[id])).rows[0].payload;
+    await db.query('update ai_pending_generations set payload=$1::jsonb where id=$2',[JSON.stringify({...beforeConflict,automatic_resumes:3}),id]);
+    assert.equal((await route(`jobs/${id}/run`,{automaticResume:true})).status,409);
+    assert.equal((await route(`jobs/${id}`)).data.can_auto_resume,false);assert.equal(retrieves,1,'el servidor aplica el límite sin consultar al proveedor');
+    await db.query('update ai_pending_generations set payload=$1::jsonb where id=$2',[JSON.stringify({...beforeConflict,revision:beforeConflict.revision+1}),id]);
+    const changed=await route(`jobs/${id}/run`,{automaticResume:true});
+    assert.equal(changed.status,409);assert.equal(changed.data.can_auto_resume,false,'un conflicto no conserva la recuperación de un timeout anterior');assert.equal(retrieves,1);
+    await db.query('update ai_pending_generations set payload=$1::jsonb where id=$2',[JSON.stringify(beforeConflict),id]);
+    assert.equal((await route(`jobs/${id}/run`,{automaticResume:true})).status,202);
     assert.equal((await route(`jobs/${id}/run`,{})).status,201);
-    assert.equal(creates,1);assert.equal(retrieves,1);
+    assert.equal(creates,1);assert.equal(retrieves,2);
+    assert.equal((await db.query('select payload from ai_pending_generations where id=$1',[id])).rows[0].payload.automatic_resumes,1);
     assert.equal((await route(`jobs/${id}`)).data.calls_attempted,1);
   } finally {await db.close();}
 });
@@ -147,6 +170,8 @@ test("job moderno: recuperación, exclusión concurrente y permisos sin revisió
     assert.equal((await route(`jobs/${id}`,undefined,randomUUID())).status,404);
     release();assert.equal((await running).status,503);
     const failed=await route(`jobs/${id}`);assert.equal(failed.data.status,"failed");
+    assert.equal(failed.data.can_auto_resume,false);
+    assert.equal((await route(`jobs/${id}/run`,{automaticResume:true})).status,409);assert.equal(generations,1);
     assert.equal(failed.data.calls_attempted,1);assert.equal(failed.data.calls_completed,0);
     assert.equal((await route(`jobs/${id}/run`,{})).status,202);
     assert.equal((await route(`jobs/${id}/run`,{})).status,201);

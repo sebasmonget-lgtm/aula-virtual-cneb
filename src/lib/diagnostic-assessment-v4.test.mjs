@@ -139,7 +139,7 @@ test("vista grupal admite observaciones sin comentarios; prioridades docentes ll
     const server = await readFile(new URL("../../scripts/local-db-server.mjs", import.meta.url), "utf8");
     assert.match(server, /diagnostic_group_reviews where classroom_id=\$1 and status='confirmed'/);
     assert.match(server, /diagnostic_summary: groupSummary/);
-    assert.equal(diagnosticPlanningSummary({ strengths: "Ana conversó.", needs: "", planning_priorities: "Jugar juntos." }, ["Ana"]), "[estudiante] conversó. Jugar juntos.");
+    assert.equal(diagnosticPlanningSummary({ strengths: "Ana conversó.", needs: "", planning_priorities: "Jugar juntos." }, ["Ana"]), "Ana conversó. Jugar juntos.");
     assert.equal(diagnosticPlanningSummary(null), undefined);
   } finally { await db.close(); }
 });

@@ -58,7 +58,7 @@ test("router Luna/medium y schema strict family-report-v1; bundle usa solo compe
   assert.equal(FAMILY_REPORT_OUTPUT_SCHEMA.id, "family-report-v1"); assert.equal(FAMILY_REPORT_OUTPUT_SCHEMA.additionalProperties, false);
   assert.equal(FAMILY_REPORT_OUTPUT_SCHEMA.properties.sections.items.additionalProperties, false);
   const conclusions = [{ competency_v4_id: "COM_ORAL", period_start: start, period_end: end, details: sourceDetails("COM_ORAL") }, { competency_v4_id: "MAT_CANTIDAD", period_start: start, period_end: end, details: sourceDetails("MAT_CANTIDAD") }];
-  const input = buildFamilyReportInput({ age: 5, competencyIds: ["COM_ORAL"], conclusions, knownNames: ["Ana"] });
+  const input = buildFamilyReportInput({ age: 5, studentName: "Ana", competencyIds: ["COM_ORAL"], conclusions, knownNames: ["Ana"] });
   let request;
   const generated = await generateAIWorkflowV4(input, { provider: { async generate(value) { request = value; return report(); } } });
   assert.equal(generated.validation.schema, "family-report-v1"); assert.equal(request.execution_plan.model, "gpt-6-luna");
@@ -66,6 +66,7 @@ test("router Luna/medium y schema strict family-report-v1; bundle usa solo compe
   assert.deepEqual(request.ai_context_bundle.curriculum.competency_cards.map((card) => card.id), ["COM_ORAL"]);
   assert.deepEqual(request.ai_context_bundle.context.student.teacher_confirmed_findings.map((finding) => finding.competency_id), ["COM_ORAL"]);
   assert.deepEqual(request.ai_context_bundle.provenance.competency_ids, ["COM_ORAL"]);
+  assert.equal(request.ai_context_bundle.context.student.name, "Ana");
   assert.ok(request.ai_context_bundle.knowledge.semantic_units.length <= 7);
   assert.ok(request.ai_context_bundle.knowledge.source_claims.length <= 3);
   assert.deepEqual(await generateAIWorkflowV4(input, { provider: { async generate() { return report(); } } }).then((value) => value.output), generated.output);
@@ -174,7 +175,7 @@ test("proveedor recibe hallazgos confirmados anonimizados, nunca fuentes interna
   const input = f.captures.find((item) => item.input).input;
   const payload = JSON.stringify(input);
   assert.match(payload, /current_student/);
-  assert.doesNotMatch(payload, /\b(?:Ana|Anita|Pérez|Inés|Ines|Ventura)\b|00000000|photo\.jpg|base64|generation_metadata|source_conclusion_ids|fingerprint|audit-only/);
+  assert.doesNotMatch(payload, /00000000|photo\.jpg|base64|generation_metadata|source_conclusion_ids|fingerprint|audit-only/);
   assert.deepEqual(input.competency_ids, ["COM_ORAL"]);
   const pending = f.pending.get(generated.body.generation_id);
   assert.deepEqual(pending.source_conclusion_ids, [oralId]); assert.equal(pending.source_conclusion_snapshot[0].details_hash.length, 64);

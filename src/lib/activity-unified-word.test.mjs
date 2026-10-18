@@ -33,6 +33,24 @@ test("la actividad distingue qué observar de las observaciones registradas", as
   assert.match(xml, /VI\. REGISTRO DE OBSERVACIONES Y EVIDENCIAS/);
   assert.match(xml, /Aún no hay observaciones registradas/);
   assert.doesNotMatch(xml, /Nombre del estudiante/);
+  const integratedDocument={...document,experience_details:{activity_route:[{...route,competency_ids:['PS_CONVIVE','COM_ORAL']}]},active_criterion:{...document.active_criterion,observation_focus:['Acordar turnos']}};
+  const integratedZip=await JSZip.loadAsync(await renderActivityUnifiedWord(integratedDocument,cards));
+  const integratedXml=await integratedZip.file('word/document.xml').async('string');
+  assert.match(integratedXml,/Se comunica oralmente en su lengua materna/);
+  assert.match(integratedXml,/Integración prevista en el mapa/);
+  assert.doesNotMatch(integratedXml,/No se prioriza otra competencia|No se ha previsto otra competencia/);
+  assert.match(integratedXml,/Escuchar acuerdos/,'El foco genérico no vuelve a copiar el criterio');
+  assert.deepEqual(document.active_criterion.observation_focus,['Escuchar cómo propone los turnos']);
+  const phasedDocument = { ...document, content: { ...document.content,
+    child_actions: "Inicio: Eligen una caja.\nDesarrollo: Prueban cómo apoyarla.\nCierre: Señalan lo que cambió.",
+    mediation: "Inicio: Ofrece dos cajas.\nDesarrollo: Pregunta: ¿Qué ayuda a sostenerla?\nCierre: Recupera la prueba que hicieron." } };
+  const phasedZip = await JSZip.loadAsync(await renderActivityUnifiedWord(phasedDocument,cards));
+  const phasedXml = await phasedZip.file('word/document.xml').async('string');
+  const sequence = phasedXml.slice(phasedXml.indexOf('V. SECUENCIA DE LA ACTIVIDAD'),phasedXml.indexOf('VI. REGISTRO DE OBSERVACIONES'));
+  assert.match(sequence,/INICIO[\s\S]*Eligen una caja[\s\S]*Ofrece dos cajas[\s\S]*DESARROLLO[\s\S]*Prueban cómo apoyarla[\s\S]*CIERRE[\s\S]*Señalan lo que cambió/);
+  assert.doesNotMatch(sequence,/Inicio:|Desarrollo:|Cierre:|Preguntas para conversar/);
+  assert.equal((sequence.match(/¿Qué ayuda a sostenerla\?/g)??[]).length,1);
+  assert.equal(phasedDocument.content.child_actions,"Inicio: Eligen una caja.\nDesarrollo: Prueban cómo apoyarla.\nCierre: Señalan lo que cambió.");
   const completed = { ...document, registered_evidence: [{ student_name: "Ana", criterion_id: "criterion-1", criterion_text: "Explica cómo acuerda un turno", competency_v4_id: "PS_CONVIVE", observed_at: "2026-04-14T15:00:00Z", observation_text: "Propuso esperar su turno.", observation_status: null, has_attachment: true }], teacher_closure_note: "El grupo propuso nuevos turnos." };
   const completedWord = await renderActivityUnifiedWord(completed, cards);
   if (process.env.AYNI_QA_DOCX_DIR) await writeFile(path.join(process.env.AYNI_QA_DOCX_DIR, "activity-with-observation-qa.docx"), completedWord);

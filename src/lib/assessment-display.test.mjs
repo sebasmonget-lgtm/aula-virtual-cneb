@@ -8,10 +8,10 @@ test('presentation names only explicit evaluated-child tokens and keeps anonymou
  assert.equal(raw,'[estudiante_actual] explicó a [estudiante].');
  assert.match(assessmentReanalysisWarning({level:'B',reason:'Sustento docente',analysis:'Anterior'}),/versión anterior.*historial/);
 });
-test('provider receives no target or peer name and does not conflate subjects',()=>{
+test('provider preserves target and peer names without rewriting who did each action',()=>{
  const value=sanitizeEvidenceForAssessment({observed_on:'2026-10-26',observation_text:'Lucía explicó a Diego. Diego respondió.',activity_title:'Juego',criterion_text:'Comunica'},['Lucía','Diego'],['Lucía']);
- assert.equal(value.observation_note,'[estudiante_actual] explicó a [estudiante]. [estudiante] respondió.');
- assert.ok(!JSON.stringify(value).includes('Lucía')&&!JSON.stringify(value).includes('Diego'));
+ assert.equal(value.observation_note,'Lucía explicó a Diego. Diego respondió.');
+ assert.ok(JSON.stringify(value).includes('Lucía')&&JSON.stringify(value).includes('Diego'));
 });
 
-test('libre sin criterio conserva null al anonimizar y no bloquea el análisis',()=>{const value=sanitizeEvidenceForAssessment({observed_on:'2026-11-09',criterion_text:null,activity_title:null,observation_text:'Ada comparó dos dibujos.'},['Ada'],['Ada']);assert.equal(value.criterion_text,null);assert.equal(value.activity_title,null);assert.equal(value.observation_note,'[estudiante_actual] comparó dos dibujos.');});
+test('libre sin criterio conserva null y texto original y no bloquea el análisis',()=>{const value=sanitizeEvidenceForAssessment({observed_on:'2026-11-09',criterion_text:null,activity_title:null,observation_text:'Ada comparó dos dibujos.'},['Ada'],['Ada']);assert.equal(value.criterion_text,null);assert.equal(value.activity_title,null);assert.equal(value.observation_note,'Ada comparó dos dibujos.');});

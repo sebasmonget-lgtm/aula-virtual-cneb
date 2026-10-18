@@ -1,4 +1,4 @@
-import { enqueuePreparation, enqueueActivityBlock, ownedPreparationJob, publicPreparationJob, retryPreparation, preparationFingerprint,needsAcceptedProjectContinuation,recoverAcceptedProjectContinuation } from "../src/lib/preparation-jobs.mjs";
+import { enqueuePreparation, enqueueActivityBlock, ownedPreparationJob, publicPreparationJob, retryPreparation, preparationFingerprint,needsAcceptedProjectContinuation,recoverAcceptedProjectContinuation,recoverSavedPreparationResult } from "../src/lib/preparation-jobs.mjs";
 import { versionTransaction, VersionConflictError, httpStatusForError, publicErrorMessage } from "../src/lib/version-integrity.mjs";
 import { lockClassroomSchedule, limaToday } from "../src/lib/activity-schedule-integrity.mjs";
 import {COMPLETE_PROJECT_POLICY} from "../src/lib/complete-project-preparation.mjs";
@@ -191,13 +191,19 @@ export async function handlePreparationRoutes({request,response,url,db,teacherId
     if(url.pathname==="/api/preparation/current" && request.method==="GET"){
       const context=await annualPlanningContext();
       const rows=context?(await db.query(`select * from preparation_jobs where classroom_id=$1 and teacher_id=$2 order by created_at desc`,[context.id,teacherId])).rows:[];
-      for(let index=0;index<rows.length;index++)if(needsAcceptedProjectContinuation(rows[index]))rows[index]=await recoverAcceptedProjectContinuation(db,teacherId,rows[index].id);
+      for(let index=0;index<rows.length;index++){
+        if(rows[index].status==='uncertain')rows[index]=await recoverSavedPreparationResult(db,teacherId,rows[index].id);
+        if(needsAcceptedProjectContinuation(rows[index]))rows[index]=await recoverAcceptedProjectContinuation(db,teacherId,rows[index].id);
+      }
       send(response,200,{jobs:rows.map(publicPreparationJob)},origin);return true;
     }
     const match=/^\/api\/preparation\/([0-9a-f-]{36})(?:\/(retry|review|approve))?$/i.exec(url.pathname);
     if(!match)return false;
     const [,id,action]=match,row=await ownedPreparationJob(db,teacherId,id);
-    if(!action && request.method==="GET"){send(response,200,publicPreparationJob(needsAcceptedProjectContinuation(row)?await recoverAcceptedProjectContinuation(db,teacherId,id):row),origin);return true;}
+    if(!action && request.method==="GET"){
+      const recovered=row.status==='uncertain'?await recoverSavedPreparationResult(db,teacherId,id):row;
+      send(response,200,publicPreparationJob(needsAcceptedProjectContinuation(recovered)?await recoverAcceptedProjectContinuation(db,teacherId,id):recovered),origin);return true;
+    }
     if(action==="retry" && request.method==="POST"){
       send(response,202,publicPreparationJob(await retryPreparation(db,teacherId,id,(await readJson(request)).acceptPotentialRepeat)),origin);return true;
     }

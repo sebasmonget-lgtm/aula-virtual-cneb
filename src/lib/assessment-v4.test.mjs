@@ -45,6 +45,17 @@ test("Assessment excluye contexto familiar y mantiene las observaciones intactas
   assert.equal(JSON.stringify(input.evidence_history).includes("Animales"), false);
 });
 
+test("el contexto identifica al alumno evaluado y conserva quién realizó cada acción", async () => {
+  let captured;
+  const note = "Ana ofreció el recipiente a Bruno; Bruno lo sostuvo y Ana vertió agua.";
+  const input = buildAssessmentInput({ age: 5, competencyId: "COM_ORAL", studentName: "Ana Pérez",
+    evidenceHistory: [{ observation_note: note, observation_status: "observed_without_judgment" }] });
+  await generateAIWorkflowV4(input, { provider: { async generate(request) { captured = request; return proposal(); } } });
+  assert.equal(captured.ai_context_bundle.context.student.name, "Ana Pérez");
+  assert.equal(captured.ai_context_bundle.context.student.evidence_history[0].observation_note, note);
+  assert.match(input.teacher_request, /no atribuyas actuaciones ajenas/);
+});
+
 test("assessment-v3 valida estructura y nunca acepta una sugerencia de nivel", () => {
   assert.deepEqual(validateAssessmentProposal(proposal(), "COM_ORAL", 1), proposal());
   assert.deepEqual(validateAssessmentProposal(proposal("sufficient"), "COM_ORAL", 2), proposal("sufficient"));
@@ -66,12 +77,12 @@ test("provider no puede devolver salida inválida", async () => {
   await assert.rejects(() => generateAIWorkflowV4(input, { provider: { async generate() { return { ...proposal("sufficient"), competency_id: "OTHER" }; } } }), InvalidAIGenerationError);
 });
 
-test("sanitización solo afecta copia provider y elimina identidad y rutas", () => {
+test("contexto conserva el texto y excluye medios adjuntos sin alterar el original", () => {
   const original = { id: evidenceId, observed_at: "2026-09-20T12:00:00Z", observation_status: "with_support", observation_text: "ANA Pérez habló con Ana.", activity_title: "Relato de Ana", criterion_text: "Escuchar a Pérez", media_path: "/private/foto.jpg", photo: "base64", media_available: true };
   const copy = sanitizeEvidenceForAssessment(original, ["Ana", "Pérez"]);
   assert.equal(original.observation_text, "ANA Pérez habló con Ana.");
-  assert.equal(copy.observation_note, "[estudiante] [estudiante] habló con [estudiante].");
-  assert.doesNotMatch(JSON.stringify(copy), /Ana|Pérez|private|base64|00000000/);
+  assert.equal(copy.observation_note, "ANA Pérez habló con Ana.");
+  assert.doesNotMatch(JSON.stringify(copy), /private|base64|00000000/);
   assert.equal(copy.media_available, true);
 });
 
@@ -143,7 +154,8 @@ test("API filtra estudiante/competencia/periodo y no llama IA sin evidencia", as
   assert.equal((await f.call("POST", "/api/ai/assessments/generate", { studentId, competencyId: "COM_ORAL", periodStart, periodEnd })).status, 200);
   assert.equal(f.captures.length, 1);
   const payload = JSON.stringify(f.captures[0].input);
-  assert.doesNotMatch(payload, /\b(?:Ana|Anita|Pérez)\b|00000000|media_path|fingerprint|source_evidence|generation_metadata/);
+  assert.doesNotMatch(payload, /00000000|media_path|fingerprint|source_evidence|generation_metadata/);
+  assert.match(payload,/Ana/);
   assert.match(payload, /current_student/);
 });
 

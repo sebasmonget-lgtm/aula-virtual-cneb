@@ -101,7 +101,7 @@ export async function handlePlanningConversation({request,response,url,db,contex
       typeof item.support_text!=="string"||!item.support_text.trim()||!safeTeacherDecisions[item.source_turn]?.includes(item.support_text))))
       journeyFail("invalid","No pude relacionar el contexto con tus aportes. La conversación se conserva para retomarla.");
     if(answer.status==="ready")answer={...answer,question:"",chips:[]};
-    if(payload.safe_texts.length>=3)answer={...answer,status:"ready",message:"Ya tengo suficiente información para preparar tu año.",question:"",chips:[]};
+    if(payload.safe_texts.length>=3)answer={...answer,status:"ready",question:"",chips:[]};
     }
   }catch(error){await db.query(`update ai_pending_generations set payload=jsonb_set(payload,'{lease_until}','null'::jsonb) where id=$1 and payload->>'lease_token'=$2`,[row.id,lease]);throw error;}
   const next={...payload,safe_texts:safeTeacherDecisions,answer,revision:payload.revision+1,calls:payload.calls+(called?1:0),lease_until:null,pending_turn:false,

@@ -91,7 +91,7 @@ export function createAssessmentRouteHandler({ db, annualPlanningContext, readJs
         const interview = await loadConfirmedFamilyContext(db, context.id, student.id);
         const familyContext = interview ? projectFamilyAssessmentContext(interview.details,
           (text) => neutralizeAssessmentText(text, names)) : null;
-        const input = buildAssessmentInput({ age: context.age, competencyId: card.id, assessmentMaster: master?.entry,
+        const input = buildAssessmentInput({ age: context.age, competencyId: card.id, studentName: [student.first_name,student.last_name].filter(Boolean).join(' '), assessmentMaster: master?.entry,
           familyContext, evidenceHistory: rows.map((row) => sanitizeEvidenceForAssessment(row, names)),
           criteriaHistory: rows.map((row) => ({ criterion_text: neutralizeAssessmentText(row.criterion_text, names),
             expected_evidence: neutralizeAssessmentText(row.details?.expected_evidence, names),

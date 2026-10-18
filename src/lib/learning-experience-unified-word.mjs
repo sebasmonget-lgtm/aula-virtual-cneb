@@ -8,7 +8,8 @@ const dateLabel = (value) => /^\d{4}-\d{2}-\d{2}$/.test(value ?? "") ? `${value.
 const durationWeeks = (startsOn, endsOn) => {
   const start = new Date(`${startsOn}T00:00:00Z`), end = new Date(`${endsOn}T00:00:00Z`);
   if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end < start) return "Duración referencial";
-  return `${Math.max(1, Math.floor((end.getTime() - start.getTime()) / 604800000) + 1)} semanas lectivas previstas`;
+  const weeks = Math.max(1, Math.floor((end.getTime() - start.getTime()) / 604800000) + 1);
+  return weeks === 1 ? "1 semana lectiva prevista" : `${weeks} semanas lectivas previstas`;
 };
 const xmlText = (xml) => [...xml.matchAll(/<w:t(?:\s[^>]*)?>([\s\S]*?)<\/w:t>/g)].map((match) => match[1]).join("");
 
@@ -77,7 +78,7 @@ function valuesFor(document, cards) {
     DOCENTE: clean(document.teacher_name) || "Docente del aula", UGEL: clean(document.ugel) || "Sin dato registrado",
     PRIORIDAD_ANUAL_O_PROYECTO_ORIGEN: document.origin === "planned" ? "Propuesta del plan anual" : clean(content.planning_reason),
     FECHA_SIGNIFICATIVA: "Según el calendario del aula", ORIGEN_NECESIDAD_INTERES_PROBLEMA: clean(content.trigger_or_interest || content.learning_need_or_context || content.starting_point),
-    SITUACION_SIGNIFICATIVA: modern ? [clean(content.formal_content?.situation), clean(content.formal_content?.foundation)].filter(Boolean).join(" ")
+    SITUACION_SIGNIFICATIVA: modern ? clean(content.project_master?.meaningful_situation) || [clean(content.formal_content?.situation), clean(content.formal_content?.foundation)].filter(Boolean).join(" ")
       : clean(content.starting_point), RETO_PREGUNTA: clean(content.dependents?.guiding_questions?.[0] || content.possible_pathways?.[0]?.title || content.proposed_situations?.[0]?.title || content.title),
     PRODUCTO_FINAL: modern ? clean(content.project_master?.closing_description) : "El resultado colectivo se acordará con los niños al iniciar la experiencia.",
     EVIDENCIAS_CLAVE: list(content.evidence_opportunities), PREPLAN_QUE: list(content.activity_route.map((item) => item.title)),
@@ -91,7 +92,7 @@ function valuesFor(document, cards) {
     PARTICIPACION_FAMILIA_COMUNIDAD: clean(content.formal_content?.family_collaboration) || list(content.family_or_community_links) || "Cuando resulte pertinente para el grupo.",
     ESTRATEGIA_RECOJO_EVIDENCIAS: clean(content.formal_content?.assessment_followup) || "Observar y registrar actuaciones durante el juego y las actividades.",
     INSTRUMENTOS_PROYECTO: "Notas de observación y evidencias registradas por la docente.",
-    USO_EVIDENCIAS_PARA_AJUSTAR: "Revisar los registros y ajustar las siguientes actividades.",
+    USO_EVIDENCIAS_PARA_AJUSTAR: "Revisar los registros para ajustar el acompañamiento docente, conservando la secuencia confirmada.",
     NRO_ACTIVIDAD: "", FECHA_ACTIVIDAD: "", TITULO_ACTIVIDAD: "", PROPOSITO_ESPECIFICO: "", COMPETENCIA_PRINCIPAL_ACTIVIDAD: "", CRITERIO_ACTIVIDAD: "", EVIDENCIA_ACTIVIDAD: "",
     MATERIALES_RECURSOS_PROYECTO: list(content.spaces_and_materials), ORGANIZACION_ESPACIOS: clean(content.spaces_and_materials?.[0]) || "Según la actividad.",
     HITOS_CALENDARIO: `${dateLabel(document.starts_on)} al ${dateLabel(document.ends_on)}`,
@@ -108,7 +109,7 @@ export async function renderLearningExperienceUnifiedWord(document, cards = [], 
   const { values, competencyRows, routeRows } = valuesFor(document, cards);
   const content = document.content ?? {};
   const origin = [
-    block("De dónde parte", values.ORIGEN_NECESIDAD_INTERES_PROBLEMA),
+    clean(content.project_master?.meaningful_situation) ? "" : block("De dónde parte", values.ORIGEN_NECESIDAD_INTERES_PROBLEMA),
     block("Situación para empezar", values.SITUACION_SIGNIFICATIVA),
     block("Pregunta que guía", values.RETO_PREGUNTA),
     block("Resultado que se espera", values.PRODUCTO_FINAL),
@@ -131,7 +132,7 @@ export async function renderLearningExperienceUnifiedWord(document, cards = [], 
   const assessment = [
     block("Qué observar y registrar", values.ESTRATEGIA_RECOJO_EVIDENCIAS),
     block("Dónde quedará registrado", values.INSTRUMENTOS_PROYECTO),
-    block("Cómo ajustar las próximas actividades", values.USO_EVIDENCIAS_PARA_AJUSTAR),
+    block("Cómo acompañar los próximos encuentros", values.USO_EVIDENCIAS_PARA_AJUSTAR),
   ].join("");
   const route = routeRows.map((row) => [
     paragraph(`${row.NRO_ACTIVIDAD}. ${row.TITULO_ACTIVIDAD}${row.FECHA_ACTIVIDAD ? ` · ${row.FECHA_ACTIVIDAD}` : ""}`, true),

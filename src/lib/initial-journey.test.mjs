@@ -33,7 +33,7 @@ test("initial journey: atomic decisions, private photos/invitations and bounded 
    assert.equal(Number((await db.query('select count(*) n from diagnostic_spontaneous_observations')).rows[0].n),2);
   });
   await t.test("pre-save analysis is cached; capture/edit adds zero AI calls and never sends media",async()=>{
-   let calls=0;const classifier={classify:async request=>{calls++;assert.equal(request.observation.includes("Camila"),false);assert.equal(request.media,undefined);await db.query('select 1');return {candidate_ids:[ids[0]]};}};
+   let calls=0;const classifier={classify:async request=>{calls++;assert.equal(request.observation.includes("Camila"),true);assert.equal(request.media,undefined);await db.query('select 1');return {candidate_ids:[ids[0]]};}};
    const data={...input,observationText:"Camila contó los vasos y dijo que faltaba uno."};const a=await previewSpontaneous({db,teacherId:teacher,input:data,classifier});const b=await previewSpontaneous({db,teacherId:teacher,input:data,classifier});assert.deepEqual(a.competency_ids,[ids[0]]);assert.equal(b.cached,true);assert.equal(calls,1);
    await recordConfirmedSpontaneousObservation(db,teacher,{...data,clientRequestId:randomUUID(),competencyIds:a.competency_ids});assert.equal(calls,1);
    await assert.rejects(previewSpontaneous({db,teacherId:other,input:data,classifier}));
@@ -153,14 +153,14 @@ test("initial journey: atomic decisions, private photos/invitations and bounded 
   await t.test("no ideas / one / several ideas reach ready, refresh costs zero, CAS rejects repeated turn",async()=>{
    for(const text of ["No tengo una idea todavía","Proyecto con agua","Agua y una actividad con las familias"]){await db.query(`update ai_pending_generations set expires_at=now() where workflow='annual_journey_conversation'`);const before=calls,start=await conversation("POST");assert.equal(start.status,"needs_clarification");assert.equal((await conversation("GET")).id,start.id);assert.equal((await conversation("POST")).id,start.id);assert.equal(calls,before+1);const end=await conversation("POST",{id:start.id,expectedRevision:start.revision,text});assert.equal(end.status,"ready");assert.equal(end.teacherIdeas,text);assert.equal(end.chips.length,0);assert.equal(calls,before+2);await assert.rejects(conversation("POST",{id:start.id,expectedRevision:start.revision,text}));}
   });
-  await t.test("la conversación conserva Indaga y Crea y oculta nombres privados",async()=>{
+  await t.test("la conversación conserva Indaga y Crea sin alterar nombres ni verbos",async()=>{
    await db.query(`update ai_pending_generations set expires_at=now() where workflow='annual_journey_conversation'`);
    const c=await conversation("POST");
    await conversation("POST",{id:c.id,expectedRevision:c.revision,text:"Quiero priorizar Indaga y Crea. Camila y Aurelio participarán."});
    assert.match(lastBundle.teacher_decisions[0],/Indaga y Crea/);
-   assert.ok(!lastBundle.teacher_decisions[0].includes("Camila"));assert.ok(!lastBundle.teacher_decisions[0].includes("Aurelio"));
+   assert.ok(lastBundle.teacher_decisions[0].includes("Camila"));assert.ok(lastBundle.teacher_decisions[0].includes("Aurelio"));
   });
-  await t.test("retomar reconstruye las preferencias desde el original y conserva la privacidad",async()=>{
+  await t.test("retomar reconstruye las preferencias desde el original sin volver a filtrar el texto",async()=>{
    await db.query(`update ai_pending_generations set expires_at=now() where workflow='annual_journey_conversation'`);
    const c=await conversation("POST");failNext=true;
    const text="Prefiero arte. Más adelante podrán cuidar plantas. Podrán contar semillas. Podemos observar. Usaremos cajas. Contamos con tizas. Mantengamos ocho días. Mientras tanto conversaremos. Preparar proyecto. Camila y Aurelio participarán.";
@@ -172,7 +172,7 @@ test("initial journey: atomic decisions, private photos/invitations and bounded 
    assert.match(lastBundle.teacher_decisions[0],/Usaremos cajas\./);
    assert.match(lastBundle.teacher_decisions[0],/Contamos con tizas\. Mantengamos ocho días\. Mientras tanto conversaremos\. Preparar proyecto\./);
    assert.deepEqual(lastBundle.teacher_decision_sources,[{source_turn:0,text:lastBundle.teacher_decisions[0]}]);
-   assert.ok(!/Camila|Aurelio/u.test(lastBundle.teacher_decisions[0]));
+   assert.match(lastBundle.teacher_decisions[0],/Camila y Aurelio/);
    assert.equal(resumed.messages.filter(m=>m.role==="teacher").length,1);
   });
   await t.test("three useful answers, saved turn recovery without duplication, literal preferences never become observations",async()=>{
@@ -182,6 +182,8 @@ test("initial journey: atomic decisions, private photos/invitations and bounded 
    c=await conversation("POST",{id:c.id,expectedRevision:c.revision,text:"Invitar a las familias a construir juguetes"});assert.equal(c.status,"needs_clarification");
    c=await conversation("POST",{id:c.id,expectedRevision:c.revision,text:"Solo con materiales reciclados"});assert.equal(c.status,"ready");const before=calls;
    c=await conversation("POST",{id:c.id,expectedRevision:c.revision,text:"Sin pedir compras"});assert.equal(calls,before+1);assert.equal(c.status,"ready");assert.equal(snapshot.facts.length,1);assert.equal(lastBundle.AnnualPlanningBrief.sources[0].kind,"family_report");
+   assert.equal(c.messages.at(-1).text,"Ya revisé los registros disponibles.","no sustituye la respuesta al cuarto aporte por el cierre genérico");
+   assert.match(c.teacherIdeas,/Sin pedir compras/);assert.ok(c.contextItems.some(item=>item.source_turn===3&&item.text.includes('compras')));
    const oldId=c.id;snapshot.source_fingerprint="changed";await assert.rejects(conversation("GET"));c=await conversation("POST");assert.notEqual(c.id,oldId);
   });
  }finally{await db.close();}

@@ -80,10 +80,10 @@ test("citas inventadas y explicaciones ausentes no llegan a persistencia",async(
   await assert.rejects(generate(base,{mutate:(output)=>({...output,proposals:output.proposals.map((row,i)=>i?row:{...row,source_teacher_idea_keys:["h99"]})})}),/inexistente/);
 });
 
-test("nombres de niños en ideas no se envían al proveedor y el título docente se conserva",async()=>{
+test("ideas y título docente conservan nombres y texto original",async()=>{
   const namedIdea={...ideas[0],title:"Historias de Lucía Flores",explanation:"Lucía Flores contó una historia."};
   const {result,request}=await generate({...base,student_names:["Lucía","Flores","Lucía Flores"]},{ideas:[namedIdea]});
-  assert.doesNotMatch(JSON.stringify(request.ai_context_bundle.planning_preferences),/Lucía|Flores/);
+  assert.match(JSON.stringify(request.ai_context_bundle.planning_preferences),/Lucía Flores/);
   assert.equal(result.proposal.planning_preferences.teacher_ideas[0].title,namedIdea.title);
 });
 

@@ -171,7 +171,7 @@ export function GuidedDiagnostic({ initialPreparation = false, dashboard, onPlan
     </div>}
     {!matrixOpen && !experience && observationMode === "spontaneous" && <SpontaneousDiagnostic key={`${freeStudentId}:${freeCompetencyId}`} initialStudentId={freeStudentId} initialCompetencyId={freeCompetencyId} onBack={()=>{setFreeCompetencyId("");openMatrix();}} students={data.students} onDecisionSaved={() => void refreshPendingSpontaneous()} onSaved={() => void refreshObservationProgress()} />}
     {!matrixOpen && !experience && observationMode === "guided" && <section className="diagnostic-panel space-y-4 p-5 md:p-7">
-      <div><h2 className="text-xl font-bold">Experiencias para observar</h2><p className="mt-1 text-sm text-[#526b87]">Puedes realizar un juego sugerido o volver a uno que ya realizaste.</p></div>
+      <div><h2 className="text-xl font-bold">Experiencias para observar</h2><p className="mt-1 text-sm text-[#526b87]">Durante las semanas de diagnóstico, combina estas experiencias para observar las competencias de tu aula. Cada juego ofrece oportunidades distintas; puedes repetirlo o continuar otro día.</p></div>
       {data.experiences.some((item) => item.catalog_status === "development_fixture") && <p className="rounded-xl bg-[#fff5df] p-3 text-sm">Guías de desarrollo: todavía no son la batería pedagógica definitiva de Ayni.</p>}
       {spontaneousRecords && <p className="rounded-xl bg-[#edf8f4] p-3 text-sm text-[#246554]">Las experiencias marcadas ofrecen oportunidades para competencias con menos registros. La ausencia de observaciones no indica una dificultad del niño.</p>}
       <div>{rankedExperiences[0]&&renderExperience(rankedExperiences[0])}</div>

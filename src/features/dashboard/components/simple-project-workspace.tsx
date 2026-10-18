@@ -221,6 +221,7 @@ export function SimpleProjectWorkspace(props: Props) {
       </section>}
       {prepared && !changing && row && <section className="space-y-4 rounded-2xl border bg-white p-5"><div className="flex items-center gap-4"><ProjectPictogram project={proposal} className="size-16 shrink-0 sm:size-24" /><p className="text-sm text-[#526b87]">{selectedDates.length} días de clase</p></div>
         <p>{row.details.decisions?.purpose}</p>
+        {row.details.project_master?.meaningful_situation&&<section className="rounded-xl bg-[#fff8e8] p-4"><h3 className="font-semibold">Situación significativa</h3><p className="mt-2">{row.details.project_master.meaningful_situation}</p></section>}
         <details className="rounded-xl border p-4"><summary className="min-h-11 cursor-pointer font-semibold">Materiales y orientación para la docente</summary>
           <p className="mt-3">{row.details.project_master?.foundation}</p><h3 className="mt-4 font-semibold">Materiales previstos</h3>
           <ul className="mt-2 list-disc pl-5">{(row.details.project_master?.resources??row.details.spaces_and_materials??[]).map((material,index)=><li key={index}>{material}</li>)}</ul>

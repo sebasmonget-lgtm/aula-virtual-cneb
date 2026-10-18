@@ -20,31 +20,12 @@ function parallelResult(quantity, oral, sufficient = 0.95) {
     evidence_sufficient: { noul: sufficient } }, metadata: {} };
 }
 
-test("anonimiza nombres y omite información familiar o identificadores", () => {
-  assert.equal(anonymousDecisionText("Contó tres vasos y explicó a Camila.", ["Camila"]),
-    "Contó tres vasos y explicó a [estudiante].");
-  assert.equal(anonymousDecisionText("Conversó con su mamá Rosa.", ["Rosa"]), null);
-  assert.equal(anonymousDecisionText("Su DNI es 12345678."), null);
-});
-
-test("conserva verbos y conectores observables sin exponer nombres desconocidos", () => {
-  assert.equal(anonymousDecisionText("Dibujó círculos. Después señaló el más grande."),
-    "Dibujó círculos. Después señaló el más grande.");
-  assert.equal(anonymousDecisionText("Reparte cuatro plumones. Dice: 'Ahora falta uno'."),
-    "Reparte cuatro plumones. Dice: 'Ahora falta uno'.");
-  assert.equal(anonymousDecisionText("Camila dibujó círculos."), "[persona] dibujó círculos.");
-  assert.equal(anonymousDecisionText("Dibuja círculos.", ["Dibuja"]), "[estudiante] círculos.");
-});
-
-test("omite solo el prefijo ficticio; no permite que oculte identificadores o información familiar", () => {
-  assert.equal(anonymousDecisionText("[PRUEBA FICTICIA · OBS-20260927] Camila contó tres vasos.", ["Camila"]),
-    "[estudiante] contó tres vasos.");
-  assert.equal(anonymousDecisionText("[PRUEBA FICTICIA] Contó tres vasos."), "Contó tres vasos.");
-  assert.equal(anonymousDecisionText("[PRUEBA FICTICIA · OBS-20260927] Su DNI es 12345678."), null);
-  assert.equal(anonymousDecisionText("[PRUEBA FICTICIA · OBS-20260927] Conversó con su mamá Rosa."), null);
-  assert.equal(anonymousDecisionText("[PRUEBA FICTICIA · OBS-20260927] "), null);
-  assert.equal(anonymousDecisionText("[ETIQUETA · OBS-20260927] Contó vasos."), null);
-  assert.equal(anonymousDecisionText("Contó vasos. [PRUEBA FICTICIA · OBS-20260927]"), null);
+test("preserva texto observable, nombres y contexto familiar sin filtro de privacidad", () => {
+  for(const value of ["Contó tres vasos y explicó a Camila.","Conversó con su mamá Rosa.","Su DNI es 12345678.","Camila dibujó círculos.","Plantear preguntas. Después comparar.","[PRUEBA FICTICIA] Contó tres vasos."])
+    assert.equal(anonymousDecisionText(value,["Camila","Rosa"]),value);
+  assert.equal(anonymousDecisionText("Dibuja círculos.",["Dibuja"]),"Dibuja círculos.");
+  assert.equal(anonymousDecisionText("  "),null);
+  assert.equal(anonymousDecisionText("a".repeat(4001)),null);
 });
 
 test("Choice prioriza la principal y noul sugiere adicionales sin duplicarla", async () => {

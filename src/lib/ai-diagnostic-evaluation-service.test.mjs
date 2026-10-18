@@ -22,7 +22,7 @@ async function database() {
   return db;
 }
 
-test("Skill diagnóstica sugiere un borrador editable sin enviar nombres, entrevista ni observaciones crudas", async () => {
+test("Skill diagnóstica sugiere un borrador editable con texto docente íntegro, sin entrevistas ni metadatos internos", async () => {
   const db = await database();
   try {
     await createPilotClassroom(db, teacher, { teacherName: "Docente", institutionName: "Escuela", section: "A",
@@ -58,7 +58,8 @@ test("Skill diagnóstica sugiere un borrador editable sin enviar nombres, entrev
     assert.match(requests[0].request.skill_instructions, /Skill crear-evaluacion-diagnostica/);
     const bundle = requests[0].request.ai_context_bundle;
     assert.equal(bundle.context.confirmed_teacher_comments.length, 2);
-    assert.doesNotMatch(JSON.stringify(bundle), /Ana|Bruno|Prueba|student_id|interview|observation_text|OBSERVACION_PRIVADA_DE_PRUEBA/);
+    assert.doesNotMatch(JSON.stringify(bundle), /student_id|interview|observation_text/);
+    assert.equal(bundle.context.observed_records[0].notes[0].text,"OBSERVACION_PRIVADA_DE_PRUEBA");
     assert.equal((await db.query("select details from diagnostic_group_reviews where id=$1", [group.id])).rows[0].details.strengths, "");
     const recovered=(await loadDiagnosticAssessmentWorkspace(db,teacher)).group_reviews.find(row=>row.id===group.id);
     assert.deepEqual(recovered.ai_suggestion,suggestion.details);
@@ -83,7 +84,7 @@ test("Skill diagnóstica sugiere un borrador editable sin enviar nombres, entrev
 
 test("rechaza salida incompleta, niveles y fuentes que cambian durante la llamada", async () => {
   assert.equal(neutralizeAssessmentText("Ana llegó en la mañana y Anabel miró.", ["Ana"]),
-    "[estudiante] llegó en la mañana y Anabel miró.");
+    "Ana llegó en la mañana y Anabel miró.");
   const source = { age: 5, student_count: 1, comments: [{ information_status: "information_available", comment: "Jugó y conversó." }],
     competency_options: [{ id: "COM_ORAL", name: "Se comunica oralmente" }],
     source_snapshot: [{ id: "a", fingerprint: "uno" }] };
@@ -100,7 +101,7 @@ test("rechaza salida incompleta, niveles y fuentes que cambian durante la llamad
     async () => ++calls === 1 ? source : { ...source, source_snapshot: [{ id: "a", fingerprint: "dos" }] }), { reason: "stale_sources" });
 });
 
-test("Ayni puede proponer el resumen desde hechos anónimos sin comentarios individuales", async () => {
+test("Ayni puede proponer el resumen desde registros con su texto original sin comentarios individuales", async () => {
   const db = await database();
   try {
     await createPilotClassroom(db, teacher, { teacherName: "Docente", institutionName: "Escuela", section: "A",
@@ -115,12 +116,12 @@ test("Ayni puede proponer el resumen desde hechos anónimos sin comentarios indi
       assert.deepEqual(bundle.context.confirmed_teacher_comments, []);
       assert.equal(bundle.context.observed_records.length, 1);
       assert.equal(bundle.context.observed_records[0].child, "child_1");
-      assert.equal(bundle.context.observed_records[0].notes.length, 2);
+      assert.equal(bundle.context.observed_records[0].notes.length, 3);
       assert.ok(bundle.context.observed_records[0].notes.some(note => /eligió bloques/i.test(note.text)));
         for (const action of ["Mezcló agua", "Tocó la mezcla", "Esperó su turno", "Puso cinco semillas", "Dijo que se doblaba", "Exploramos hojas", "Propuso comparar", "Colocó una hoja"])
         assert.ok(bundle.context.observed_records[0].notes.some(note => note.text.includes(action)), `La anonimización perdió la actuación: ${action}`);
       assert.ok(bundle.context.observed_records[0].notes.some(note => /mi hermana/i.test(note.text)));
-      assert.doesNotMatch(JSON.stringify(bundle), /\bAna\b|Prueba|student_id|teacher_id|domicilio|77777777/);
+      assert.doesNotMatch(JSON.stringify(bundle), /student_id|teacher_id/);
       return { output:cited({ strengths: "Hay un registro de elección de materiales.", needs: "Seguir recogiendo observaciones.", planning_priorities: "Ofrecer juegos con materiales variados." },[bundle.context.observed_records[0].notes[0].source_id]) };
     } });
     await assert.rejects(suggestDiagnosticGroupReview(db, teacher, group.id, { createProvider }), { reason: "insufficient_information" });

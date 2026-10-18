@@ -26,7 +26,7 @@ test("transcribe y propone redacción con Luna sin guardar ni alterar el audio",
     calls.push(request.model); return { text: "Camila conto tres vasos y dijo falta uno" };
   } } }, responses: { create: async (request) => {
     calls.push(request.model);
-    assert.doesNotMatch(request.input, /Camila/);
+    assert.match(request.input, /Camila/);
     return { output_text: JSON.stringify({ improved_text: "Contó tres vasos y dijo que faltaba uno." }) };
   } } };
   const result = await transcribeAndPolishAudio({ bytes: wav(1), mimeType: "audio/wav", context: "Lonchera", names: ["Camila"], client });

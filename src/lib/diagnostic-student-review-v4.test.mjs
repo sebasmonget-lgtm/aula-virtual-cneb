@@ -53,7 +53,7 @@ test("un comentario por niño requiere palabras docentes, conserva fuentes y per
     assert.equal(context.confirmed_student_diagnostic_review.comment_text, confirmed.details.comment_text);
     assert.equal(context.confirmed_student_diagnostic_review.is_current, true);
     assert.equal((await buildSafeDiagnosticStudentContext(db, teacher, studentId)).teacher_confirmed_student_comment.comment_text,
-      "Todavía necesito observar a [estudiante] en el aula antes de interpretar su participación.");
+      "Todavía necesito observar a Ana en el aula antes de interpretar su participación.");
     assert.ok(context.source_provenance.some((row) => row.source_type === "diagnostic_student_review" && row.source_id === prepared.id));
   } finally { await db.close(); }
 });
@@ -139,13 +139,14 @@ test("panorama grupal deriva intereses y vacíos; el plan usa solo fuentes vigen
     const current = publicClassroomContext(await getCurrentClassroomContext(db, teacher, initial.classroom.id));
     assert.equal(current.diagnostic_review_current, true);
     assert.match(current.confirmed_diagnostic_summary, /Proponer juegos/);
-    assert.doesNotMatch(current.confirmed_diagnostic_summary, /\bAna\b/);
+    assert.match(current.confirmed_diagnostic_summary, /\bAna\b/);
     const input = buildAnnualPlanGenerationInput({ classroom: { id: initial.classroom.id, age: 5,
       group_context: "Aula de 5 años", diagnostic_summary: current.confirmed_diagnostic_summary,
       context_v4: current, calendar: { school_year: 2026, starts_on: "2026-03-01", ends_on: "2026-12-18" } } });
     const serialized = JSON.stringify(input);
     assert.equal(input.calendar_context.project_slots.length, 12);
-    assert.doesNotMatch(serialized, /\bAna\b|\bBruno\b|Le gusta construir|Eligió bloques|student_id|student_context|adjunto|foto/i);
+    assert.doesNotMatch(serialized, /Le gusta construir|Eligió bloques|student_id|student_context|adjunto|foto/i);
+    assert.match(serialized,/Ana/);
     assert.equal(input.context_snapshot.observation_gaps.some((item) => item.competency_id === aspect.competency_id), false); // celda pequeña suprimida
     await recordDiagnosticExperienceObservation(db, teacher, { studentId: bruno.id,
       experienceId: initial.experiences[0].id, aspectId: aspect.id,

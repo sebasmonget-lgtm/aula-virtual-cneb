@@ -19,6 +19,34 @@ export async function ownedPreparationJob(db,teacherId,id) {
   if(!row)throw new VersionConflictError("Esta preparación no está disponible.");
   return row;
 }
+/** Resolve a lost reply only from a canonical result already saved by that step.
+ * Never reset an unknown model call or change a confirmed activity. */
+export async function recoverSavedPreparationResult(db,teacherId,id){
+  return versionTransaction(db,`preparation:${id}`,async tx=>{
+    const row=await ownedPreparationJob(tx,teacherId,id),p=row.payload;
+    if(row.status!=='uncertain'||row.approved_at||row.kind!=='project'||
+      p.acceptance?.policy!=='accepted-project-complete-v1'||p.acceptance.teacher_id!==teacherId)return row;
+    const project=(await tx.query(`select e.*,ap.proposal as annual_proposal from learning_experiences e join annual_plans ap on ap.id=e.annual_plan_id
+      where e.id=$1 and e.classroom_id=$2 and e.source_proposal_id=$3 and ap.id=$4 and ap.revision=$5
+      and (ap.status='active' or $6::boolean and ap.status='archived') and e.status in ('draft','active')`,
+    [p.project_id,row.classroom_id,p.proposal_id,row.source_id,row.source_revision,p.future_version===true])).rows[0];
+    if(!project||(project.details.decisions?.additional_context??'')!==(p.additional_context??''))return row;
+    const source=project.annual_proposal?.proposed_experiences?.find(item=>item.proposal_id===p.proposal_id),decisions=project.details.decisions;
+    const sameDecisions=source&&decisions&&source.purpose===decisions.purpose&&source.rationale===decisions.context_summary&&
+      JSON.stringify([...(source.primary_competency_ids??[])].sort())===JSON.stringify([...(decisions.competency_ids??[])].sort());
+    let saved=!!sameDecisions&&(p.stage==='criteria'&&!!project.details.dependents ||
+      p.stage==='master'&&!!project.details.project_master&&!!project.details.activity_route?.length);
+    if(p.stage==='activities'&&Number(project.revision)===p.project_revision&&preparationFingerprint(project.details)===p.project_fingerprint){
+      const item=p.items?.find(item=>!item.activity_id);
+      if(item)saved=!!(await tx.query(`select 1 from activities where experience_id=$1 and status in ('draft','active')
+        and (preparation_item_id=$2 or details->>'route_item_id'=$3)`,[project.id,item.id,item.route_item_id])).rows.length;
+    }
+    if(!saved)return row;
+    const payload={...p,error:null,attempt_pending:false,recovery:{kind:'persisted_result_after_lost_reply',recovered_at:new Date().toISOString()}};
+    return (await tx.query(`update preparation_jobs set status='queued',payload=$1::jsonb,lease_token=null,lease_until=null,updated_at=now()
+      where id=$2 and status='uncertain' returning *`,[JSON.stringify(payload),id])).rows[0]??row;
+  });
+}
 /** Older executors stopped at the master. Continue only the already accepted, unchanged source. */
 export async function recoverAcceptedProjectContinuation(db,teacherId,id){
   return versionTransaction(db,`preparation:${id}`,async tx=>{

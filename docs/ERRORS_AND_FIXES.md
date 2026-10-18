@@ -1,5 +1,15 @@
 # Errores y soluciones
 
+## 2026-10-18 — El motivo del proyecto no se desarrollaba ni se mostraba como situación significativa
+
+**Síntoma.** El año guardaba `rationale`, pero el mapa no exigía una situación significativa distinta del fundamento. El detalle no mostraba ese motivo; la formalización moderna copiaba el contexto breve y Word lo concatenaba con el fundamento.
+
+**Causa.** Contrato del mapa sin un campo de origen/oportunidad/reto; lectores y contexto diario no tenían esa sección explícita.
+
+**Solución validada.** `meaningful_situation` requerido en nuevas respuestas, máximo 1200 caracteres; una reparación acotada conserva las mismas fuentes/decisiones si falta. Guardado en `project_master`, reutilizado por lectores, formalización por código, Word y contexto diario. Razón anual y skill de proyecto exigen sustento, reto abierto y atribución honesta. Históricos conservan sus textos y exportación previa. 76 pruebas de contrato/regresión PASS, chequeos de código y QA visual local ficticio PASS. No se afirma calidad de una generación nueva con IA real: no se ejecutó.
+
+**Prevención.** Regresiones para campo vacío/excesivo, reparación sin cambiar fuentes, texto canónico exportado una sola vez, transmisión al contexto diario y lectura histórica sin mutación. Sin migración ni llamadas adicionales normales. Informe `docs/qa/QA_SITUACION_SIGNIFICATIVA_2026-10-18.md`.
+
 ## «Sin registro» pese a tener observaciones de la competencia — 2026-10-13
 
 - Síntoma: había observaciones libres o en otro criterio, pero selector guiado indicaba «Sin registro».
@@ -2098,6 +2108,20 @@ Sintoma: tarjetas de matricula casi se fundian entre si y con el fondo; campos e
 
 ## 2026-10-17 — Campos disponibles con apariencia bloqueada
 Síntoma: campo gris parece disabled y sugerencias de entrevista demasiado tenues. Causa: token común de campo teñido sin distinguir disponibilidad, bordes/casillas suaves y overrides del layout apilado. Solución: blanco editable, gris disabled/readonly y clase específica de opción con borde/casilla contrastados, selección turquesa con check y hover. Sombras intactas. Validación: QA local de confirmación/reload/reapertura, escritorio/móvil, 52 regresiones y checks de compilación. Prevención: revisar estados disponibles, elegidos y bloqueados juntos; contraste numérico no sustituye su interpretación por la profesora. Informe QA_CONTROLES_ACTIVOS_2026-10-17.md.
+
+## 2026-10-18 — Texto pedagógico mutilado y contradicciones en documentos
+
+Síntomas reproducidos: «Plantear», «Responde» o «Favorecer» tratados como personas; contexto familiar bloqueado; Word niega una competencia secundaria que el mapa incluye; criterio duplicado como foco; fases completas anidadas en Desarrollo y preguntas repetidas. Causas: heurísticas de mayúsculas/lista cerrada y filtros textuales compartidos, texto fijo del exportador y lectura sin separar fases. Solución: retirar anonimización/veto textual según instrucción explícita, conservar atribución y medios privados, derivar competencias del mapa, usar foco distinto y separador de fases existente. Uso de registros ajusta acompañamiento, no una actividad pedagógica confirmada.
+
+Se añade comprobación de cobertura conjunta de competencias en nuevos mapas y refuerzo de prompts sobre variedad, progresión, comparación y apoyos concretos. No reconstruye generaciones históricas ni cambia evidencias. Prevención: regresiones con verbos/nombres reales, actores distintos, competencias integradas y fases de Word; revisión cualitativa de salidas pagadas. Muestra: quince propuestas, tres proyectos/doce blueprints y ocho actividades, once Word. 932 regresiones amplias y suites posteriores de 14/13 PASS. USD 0,38710 estimado, control conservador 0,63225. Límites y evidencia en `docs/qa/QA_PEDAGOGICA_PROYECTOS_ACTIVIDADES_2026-10-18.md`.
+
+## 2026-10-18 — Continuación manual repetida en planificación
+
+Síntoma reportado: Mi año/proyecto pide reintentar; preguntas vuelven durante la recuperación. Causas identificadas en código: el cliente solo continúa `queued`; no excluye montar el chat mientras recupera el trabajo; estados inciertos no reconcilian automáticamente un resultado ya persistido. Solución focal: continuación acotada para resultados conocidos, espera de lectura antes del chat, lectura final del plan terminado y reconciliación de proyecto/actividad canónicos con propiedad, versión y decisiones intactas. Conflicto tras timeout retira elegibilidad para evitar un bucle. Decisión adicional después de ready ya existía, pero ahora tiene etiqueta/acción explícitas; se retira la sustitución de respuesta por cierre genérico desde el tercer aporte. Recuperación y chat comprobados visualmente con API simulada; no atribuir este resultado a la cuenta original. Sin IA pagada ni datos cloud. Informe `docs/qa/QA_CONTINUIDAD_PLANIFICACION_2026-10-18.md`.
+
+## 2026-10-18 — Brecha de competencias transversales en diagnóstico de 5 años
+
+La auditoría por edad de la KB encontró sin oportunidad guiada a TRANS_AUTONOMO y TRANS_TIC. Catálogo v4.6 añade dos experiencias/cinco momentos propios con acciones, orientación, ejemplos y criterios; TIC solo con recurso adecuado y acompañamiento, sin suponer disponibilidad. Validador y pruebas recorren edad y aplicabilidad L2/Religión para evitar brechas futuras. Versiones/IDs históricos y almacenamiento se conservan; registrar y recargar una observación nueva usa el flujo actual y no crea una evaluación. Total 114 regresiones PASS, UI actual/lector y móvil comprobados; no certificación curricular externa ni intervención real con niños.
 
 ## 2026-10-17 — Dependencias del cuestionario fijadas a seis preguntas
 Al incorporar ocho preguntas se identificaron denominadores `/6`, opciones del enlace familiar elegidas por índice y guardado que no admitía las respuestas nuevas. Solución: versión explícita de cuestionario, campos permitidos, progreso por versión y configuración de opciones por clave; conservar contrato anterior y datos no reasignados. Confirmar comprueba respuestas reales, no solo la presencia de un marcador de versión. 77 regresiones y QA local de 8/8, parcial y corrección histórica; builds PASS. Prevención: validar desde pregunta hasta persistencia, lectura, impresión y contexto familiar sin inventar evidencia. Informe QA_ENTREVISTA_OCHO_PREGUNTAS_2026-10-17.md.
