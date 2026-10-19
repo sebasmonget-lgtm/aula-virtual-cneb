@@ -1,7 +1,8 @@
 import { annualDisplayTitle } from "./annual-year-editor.mjs";
 import { annualTeacherText } from "./annual-teacher-display.mjs";
-import { Document, HeadingLevel, Paragraph, Packer, TextRun } from "docx";
+import { Document, HeadingLevel, Paragraph, Packer, TextRun, Footer, PageNumber, Table, TableRow, TableCell, WidthType } from "docx";
 import { familyInterviewQuestionGroups } from "./family-interview-contract.mjs";
+import * as interview from "./family-interview-contract.mjs";
 
 const sourceKinds = { observed: "Observación de aula", family_report: "Relato de la familia",
   teacher_context: "Contexto del aula", teacher_decision: "Decisión docente" };
@@ -16,7 +17,15 @@ const familyLabels = { ...Object.fromEntries(familyInterviewQuestionGroups("").f
   daily_routine_context: "Rutinas en casa", previous_education: "Experiencia educativa anterior" };
 // Only translate field labels added by the family snapshot. Preserve every answer,
 // including unrecognized legacy data, and never apply this to observed evidence.
+const optionFields={communication_tags:['Comunicación',interview.interviewCommunicationOptions],emotional_support_tags:['Acompañamiento emocional',interview.interviewEmotionalSupportOptions],social_play_tags:['Formas de jugar',interview.interviewSocialPlayOptions],home_activity_tags:['Experiencias en casa',interview.interviewHomeActivityOptions],participation_support_tags:['Apoyos para participar',interview.interviewParticipationSupportOptions],primary_language_tag:['Lengua principal',interview.interviewLanguageOptions]};
+const readableFamilyField=(key,value)=>{
+  const [label,options]=optionFields[key]??[familyLabels[key]??key.replaceAll('_',' '),[]];
+  if(key==='home_language_uses')return 'Lenguas y personas con quienes se comunica: '+value.map(row=>[interview.interviewLanguageLabel(row.language_tag),row.with_whom].filter(Boolean).join(' con ')).join('; ');
+  const text=(Array.isArray(value)?value:[value]).map(id=>options.find(option=>option.id===id)?.label??String(id)).join(', ');
+  return `${label}: ${text}`;
+};
 const sourceText = fact => fact.kind !== "family_report" ? fact.support_text : fact.support_text.split("\n").map(line => {
+  if(line.trim().startsWith('{')){try{return Object.entries(JSON.parse(line)).map(([key,value])=>readableFamilyField(key,value)).join('\n');}catch{/* Historical free text remains literal. */}}
   const match=/^([a-z_]+): (.*)$/.exec(line);
   return match && familyLabels[match[1]] ? `${familyLabels[match[1]]}: ${match[2]}` : line;
 }).join("\n");
@@ -28,15 +37,15 @@ const sourceQualifications = { literal_record_only: "Describe lo registrado; no 
   historical_source_preserved_for_trace: "Antecedente conservado; no describe por sí solo la situación actual." };
 const interpretationLabels = { advance: "Posible avance", support_needed: "Posible necesidad de apoyo",
   ambiguous: "Información insuficiente para interpretar" };
-const readableDate = value => /^\d{4}-\d{2}-\d{2}/.test(value ?? "")
-  ? value.slice(0,10).split("-").reverse().join("/") : "Fecha no registrada";
+const readableDate = value => /^\d{4}-\d{2}-\d{2}$/.test(value ?? "") ? value.split('-').reverse().join('/')
+  : value && Number.isFinite(Date.parse(value)) ? new Intl.DateTimeFormat('es-PE',{timeZone:'America/Lima',day:'2-digit',month:'2-digit',year:'numeric'}).format(new Date(value)) : "Fecha no registrada";
 
 /** A pure rendering of the confirmed object. No title regex, inference, prompt or enrichment. */
 export function annualJourneyDocumentSections(plan, names = new Map(), subjects = {}) {
   if (plan.curriculum_reference) names = new Map(plan.curriculum_reference.map((card) => [card.id, card.name]));
   const facts = plan.classroom_snapshot.facts;
   const sources = new Map(facts.map((fact,index) => [fact.key,{ fact, number: index + 1 }]));
-  const sections = [{ title: "Ideas y decisiones docentes", lines: [plan.teacher_preferences].filter(Boolean) }];
+  const sections = plan.experience_context ? [] : [{ title: "Ideas y decisiones docentes", lines: [plan.teacher_preferences].filter(Boolean) }];
   if(plan.experience_context){
     sections.push({title:"Contexto aprobado por la profesora",lines:plan.experience_context.context_items.map(item=>item.text)});
     sections.push({title:"Proyectos anteriores declarados",lines:plan.experience_context.historical_projects.length ? plan.experience_context.historical_projects.map(item=>`${item.title} · ${item.period?`Bimestre ${item.period}`:"Período no precisado"} · ${item.competency_ids.length?item.competency_ids.map(id=>names.get(id)??id).join("; "):"Competencias no declaradas"}. Declaración docente; no representa evidencias ni evaluaciones.`) : ["No se declararon proyectos anteriores."]});
@@ -54,8 +63,8 @@ export function annualJourneyDocumentSections(plan, names = new Map(), subjects 
   for (const [index, row] of plan.proposed_experiences.entries()) {
     const slot=plan.resolved_calendar.projects.find(slot=>slot.proposal_id===row.proposal_id);
     const duration=slot?.historical_dates?.length?`${row.planned_instructional_days} días restantes del tramo`: `${row.duration_weeks} ${row.duration_weeks === 1 ? "semana" : "semanas"} · ${row.planned_instructional_days} días lectivos`;
-    sections.push({ title: `${slot?.index ?? index + 1}. ${annualDisplayTitle(row.title)}`, lines: [row.rationale, row.purpose, row.invitation,
-      ...row.children_actions, `${row.planned_start_date} al ${row.planned_end_date} · ${duration}`] });
+    sections.push({ title: `${slot?.index ?? index + 1}. ${annualDisplayTitle(row.title)}`, lines: [`Situación que da origen: ${row.rationale}`, `Propósito: ${row.purpose}`, `Reto para los niños: ${row.invitation}`,
+      ...row.children_actions.map(text=>`Qué harán: ${text}`), `${readableDate(row.planned_start_date)} al ${readableDate(row.planned_end_date)} · ${duration}`] });
     for (const opportunity of row.opportunities) sections.push(opportunitySection(opportunity, names));
     sections.push({ title: "Materiales, apoyos y flexibilidad", lines: [...row.materials, ...row.supports, row.flexibility] });
     sections.push({ title: "Registros de referencia", lines: row.source_fact_keys.map((key) => {
@@ -74,23 +83,27 @@ export function annualJourneyDocumentSections(plan, names = new Map(), subjects 
     `Fuente ${index + 1}. ${sourceKinds[f.kind] ?? "Registro del aula"} · ${scopes[f.scope] ?? "Alcance no precisado"}${/^child_\d+$/i.test(f.subject ?? "") ? ` · ${annualTeacherText(f.subject,subjects)}` : ""} · ${readableDate(f.occurred_at)}. ${sourceText(f)}${f.explicit_tags?.length ? `; selecciones: ${f.explicit_tags.join(", ")}` : ""} ${sourceQualifications[f.uncertainty] ?? "Consultar el registro original para conocer su alcance."}`) });
   sections.push({ title: "Calendario efectivo", lines: [`Versión: ${plan.resolved_calendar.calendar_version.version}`,
     `${plan.resolved_calendar.integrity.assigned} de ${plan.resolved_calendar.integrity.eligible} fechas previstas; ${plan.resolved_calendar.integrity.gaps} sin asignar; ${plan.resolved_calendar.integrity.overlaps} solapamientos.`] });
-  return sections;
+  return sections.filter(section=>section.lines?.some(line=>typeof line==='string'&&line.trim()));
 }
 function opportunitySection(o, names) {
-  return { title: names.get(o.competency_id) ?? o.competency_id, lines: [o.capacity_names.join(" · "),
-    o.child_action, o.conditions, o.mediation, o.observation, o.supports] };
+  return { title: names.get(o.competency_id) ?? o.competency_id, lines: [`Capacidades: ${o.capacity_names.join(" · ")}`,
+    `Qué harán: ${o.child_action}`, `Condiciones: ${o.conditions}`, `Cómo acompañar: ${o.mediation}`, `Qué observar: ${o.observation}`, `Apoyos: ${o.supports}`] };
 }
 export async function renderAnnualJourneyWord(document, cards = []) {
   if (!["active", "archived", "confirmed"].includes(document.status) || document.content?.journey_version !== 2)
     throw new Error("Confirma tu año antes de descargar el documento.");
+  const age=document.age??document.document_context?.age;
   const names = new Map(cards.map((card) => [card.id, card.official_name ?? card.name]));
   const children = [new Paragraph({ text: `Mi año ${document.school_year} · versión ${document.version}`, heading: HeadingLevel.TITLE }),
     new Paragraph({ text: [document.document_context?.institution_name, document.document_context?.teacher_name,
-      document.document_context?.classroom_section].filter(Boolean).join(" · ") })];
+      document.document_context?.classroom_section??document.document_context?.section,age?`${age} años`:null,Number.isInteger(document.content.classroom_snapshot.student_count)?`${document.content.classroom_snapshot.student_count} niños`:null].filter(Boolean).join(" · ") })];
+  const cell=(text,width,header=false)=>new TableCell({width:{size:width,type:WidthType.DXA},shading:{fill:header?'DDEEF3':'FFFFFF'},margins:{top:100,bottom:100,left:100,right:100},children:[new Paragraph({children:[new TextRun({text,bold:header,size:20})]})]});
+  const widths=[550,1900,3300,3550];
+  children.push(new Paragraph({text:'Vista general de los quince proyectos',heading:HeadingLevel.HEADING_1,keepNext:true}),new Table({width:{size:9300,type:WidthType.DXA},columnWidths:widths,rows:[new TableRow({tableHeader:true,children:['N.º','Fechas','Proyecto','Competencias'].map((text,i)=>cell(text,widths[i],true))}),...document.content.proposed_experiences.map((row,index)=>new TableRow({cantSplit:true,children:[String(document.content.resolved_calendar.projects.find(slot=>slot.proposal_id===row.proposal_id)?.index??index+1),`${readableDate(row.planned_start_date)}\n${readableDate(row.planned_end_date)}`,annualDisplayTitle(row.title),row.opportunities.map(item=>names.get(item.competency_id)??item.competency_id).join('; ')].map((text,i)=>cell(text,widths[i]))}))]}));
   for (const section of annualJourneyDocumentSections(document.content, names, document.display_subjects)) {
     children.push(new Paragraph({ text: section.title, heading: HeadingLevel.HEADING_1, keepNext: true }));
     for (const line of section.lines) children.push(new Paragraph({ children: [new TextRun(annualTeacherText(line,document.display_subjects))], spacing: { after: 140 }, widowControl: true }));
   }
   return Packer.toBuffer(new Document({ styles: { default: { document: { run: { font: "Calibri", size: 22 } } } },
-    sections: [{ properties: {}, children }] }));
+    sections: [{ properties: {},footers:{default:new Footer({children:[new Paragraph({children:[new TextRun('Ayni · Mi año · Página '),new TextRun({children:[PageNumber.CURRENT]})]})]})}, children }] }));
 }

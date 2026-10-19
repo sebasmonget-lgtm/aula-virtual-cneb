@@ -7,6 +7,17 @@ const request = { activityPurpose: "Explorar cambios de sombra.", context: "El g
 const proposal = { title: "Sombras", purpose: "Explorar", meaningful_situation: "Situación", teacher_preparation: "Preparar", child_actions: "Explorar", mediation: "Preguntar", evidence_opportunities: "Observar", closure_or_continuity: "Cerrar", competency_status: "unconfirmed", competency_id: null };
 const plan = { execution: "generation", provider: "openai", model: "gpt-6-luna", reasoning_effort: "medium" };
 
+test("la generación real del contrato reúne las tarjetas de varias competencias y conserva la principal y sus criterios",async()=>{
+ const route={id:'route-multi',specific_purpose:'Comparar, contar y explicar',competency_id:'CYT_INDAGA',competency_ids:['CYT_INDAGA','COM_ORAL','MAT_CANTIDAD'],evaluation_criterion:'Compara semillas',expected_evidence:'Señala diferencias',observation_moments:['development'],
+  additional_criteria:[{competency_id:'COM_ORAL',criterion_text:'Explica lo que hizo',expected_evidence:'Explicación',observation_moments:['closure']},{competency_id:'MAT_CANTIDAD',criterion_text:'Cuenta al comparar',expected_evidence:'Conteo',observation_moments:['development','closure']}]};
+ let calls=0;
+ const result=await generateTeacherActivity({request:{routeItemId:route.id},classroom,learningExperience:{id:'project',title:'Semillas',details:{activity_route:[route]}},resolvePlan:()=>plan,
+  createProvider:()=>({generate:async request=>{calls++;assert.deepEqual(new Set(request.ai_context_bundle.curriculum.competency_cards.map(item=>item.id)),new Set(route.competency_ids));
+   assert.deepEqual(request.ai_context_bundle.context.workflow_inputs.learning_experience_context.inherited_route_item.additional_criteria,route.additional_criteria);
+   return{output:{...proposal,competency_status:'confirmed',competency_id:'CYT_INDAGA'},provider_metadata:{provider:'mock',model:'mock',usage:{input_tokens:1,output_tokens:1}}};}})});
+ assert.equal(calls,1);assert.equal(result.proposal.competency_id,'CYT_INDAGA');assert.deepEqual(result.proposal.additional_criteria,route.additional_criteria);
+});
+
 test("A y H: prepara activity sin competencia con aula y materiales precargados", () => {
   const input = buildTeacherActivityGenerationInput({ request, classroom });
   assert.equal(input.age, 5);

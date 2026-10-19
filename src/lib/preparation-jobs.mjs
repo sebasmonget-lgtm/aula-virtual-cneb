@@ -8,13 +8,16 @@ export const needsAcceptedProjectContinuation=row=>row.kind==='project'&&row.sta
   row.payload.acceptance?.policy==='accepted-project-complete-v1'&&row.payload.acceptance.teacher_id===row.teacher_id;
 export function publicPreparationJob(row) {
   const items=row.payload.items ?? [];
-  return {id:row.id,kind:row.kind,status:needsAcceptedProjectContinuation(row)?'incomplete':row.status,parts:row.kind==="document_export"?row.payload.parts??[]:undefined,project_id:row.payload.project_id ?? (row.kind==="activity_block"?row.source_id:null),
-    stage:row.payload.stage,updated_at:row.updated_at,created_at:row.created_at,responding:row.payload.attempt_pending===true,proposal_id:row.payload.proposal_id??null,annual_plan_id:row.kind==="project"?row.source_id:null,complete_project:!!row.payload.acceptance,completed:items.filter(item=>item.activity_id||item.artifact_id).length,total:items.length||row.payload.expected_dates?.length||0,
-    approved_at:row.approved_at,error:row.payload.error ?? null,
+  const legacyPending=row.legacy===true&&!(row.status==='succeeded'&&row.approved_at);
+  return {id:row.id,kind:row.kind,status:legacyPending?'legacy_pending':needsAcceptedProjectContinuation(row)?'incomplete':row.status,parts:row.kind==="document_export"?row.payload.parts??[]:undefined,project_id:row.payload.project_id ?? (row.kind==="activity_block"?row.source_id:null),
+    stage:row.payload.stage,updated_at:row.updated_at,created_at:row.created_at,responding:row.payload.attempt_pending===true||items.some(item=>item.attempt_pending),proposal_id:row.payload.proposal_id??null,annual_plan_id:row.kind==="project"?row.source_id:null,legacy:row.legacy===true,complete_project:!!row.payload.acceptance,completed:items.filter(item=>item.activity_id||item.artifact_id).length,total:items.length||row.payload.expected_dates?.length||0,
+    approved_at:row.approved_at,error:legacyPending?'Esta preparación pertenece al ejecutor anterior. Conservamos su avance; requiere revisar el aislamiento antes de retomarla.':row.payload.error ?? null,
     activities:items.filter(item=>item.activity_id).map(item=>({id:item.activity_id,route_item_id:item.route_item_id}))};
 }
 export async function ownedPreparationJob(db,teacherId,id) {
-  const row=(await db.query(`select j.* from preparation_jobs j join classrooms c on c.id=j.classroom_id
+  let row=(await db.query(`select j.* from preparation_jobs_v2 j join classrooms c on c.id=j.classroom_id
+    join school_years y on y.id=c.school_year_id where j.id=$1 and j.teacher_id=$2 and c.teacher_id=$2 and y.owner_id=$2`,[id,teacherId])).rows[0];
+  if(!row)row=(await db.query(`select j.*,true as legacy from preparation_jobs j join classrooms c on c.id=j.classroom_id
     join school_years y on y.id=c.school_year_id where j.id=$1 and j.teacher_id=$2 and c.teacher_id=$2 and y.owner_id=$2`,[id,teacherId])).rows[0];
   if(!row)throw new VersionConflictError("Esta preparación no está disponible.");
   return row;
@@ -24,6 +27,7 @@ export async function ownedPreparationJob(db,teacherId,id) {
 export async function recoverSavedPreparationResult(db,teacherId,id){
   return versionTransaction(db,`preparation:${id}`,async tx=>{
     const row=await ownedPreparationJob(tx,teacherId,id),p=row.payload;
+    if(row.legacy)return row;
     if(row.status!=='uncertain'||row.approved_at||row.kind!=='project'||
       p.acceptance?.policy!=='accepted-project-complete-v1'||p.acceptance.teacher_id!==teacherId)return row;
     const project=(await tx.query(`select e.*,ap.proposal as annual_proposal from learning_experiences e join annual_plans ap on ap.id=e.annual_plan_id
@@ -43,7 +47,7 @@ export async function recoverSavedPreparationResult(db,teacherId,id){
     }
     if(!saved)return row;
     const payload={...p,error:null,attempt_pending:false,recovery:{kind:'persisted_result_after_lost_reply',recovered_at:new Date().toISOString()}};
-    return (await tx.query(`update preparation_jobs set status='queued',payload=$1::jsonb,lease_token=null,lease_until=null,updated_at=now()
+    return (await tx.query(`update preparation_jobs_v2 set status='queued',payload=$1::jsonb,lease_token=null,lease_until=null,updated_at=now()
       where id=$2 and status='uncertain' returning *`,[JSON.stringify(payload),id])).rows[0]??row;
   });
 }
@@ -51,6 +55,7 @@ export async function recoverSavedPreparationResult(db,teacherId,id){
 export async function recoverAcceptedProjectContinuation(db,teacherId,id){
   return versionTransaction(db,`preparation:${id}`,async tx=>{
     const row=await ownedPreparationJob(tx,teacherId,id);
+    if(row.legacy)return row;
     if(!needsAcceptedProjectContinuation(row))return row;
     const p=row.payload;
     const source=(await tx.query(`select 1 from annual_plans ap join learning_experiences e on e.annual_plan_id=ap.id
@@ -62,7 +67,7 @@ export async function recoverAcceptedProjectContinuation(db,teacherId,id){
     const uncertain=p.attempt_pending===true;
     const payload={...p,stage:'activities',error:uncertain?'No pudimos comprobar si la última llamada terminó. El trabajo guardado se conserva.':null,
       recovery:{kind:'accepted_master_without_publication',recovered_at:new Date().toISOString()}};
-    return (await tx.query(`update preparation_jobs set status=$1,payload=$2::jsonb,lease_until=null,updated_at=now()
+    return (await tx.query(`update preparation_jobs_v2 set status=$1,payload=$2::jsonb,lease_until=null,updated_at=now()
       where id=$3 and status='succeeded' and approved_at is null returning *`,[uncertain?'uncertain':'queued',JSON.stringify(payload),id])).rows[0]??row;
   });
 }
@@ -70,10 +75,13 @@ export async function enqueuePreparation(db,{teacherId,classroomId,kind,sourceId
   if(!(await db.query(`select 1 from classrooms c join school_years y on y.id=c.school_year_id
     where c.id=$1 and c.teacher_id=$2 and y.owner_id=$2 and c.status='active'`,[classroomId,teacherId])).rows.length)
     throw new VersionConflictError("El aula no está disponible.");
-  return (await db.query(`insert into preparation_jobs(id,teacher_id,classroom_id,kind,source_id,source_revision,input_fingerprint,status,payload)
+  if((await db.query(`select 1 from preparation_jobs where classroom_id=$1 and teacher_id=$2 and source_id=$3
+    and status in ('queued','running','uncertain') limit 1`,[classroomId,teacherId,sourceId])).rows.length)
+    throw new VersionConflictError("Hay una preparación anterior pendiente. Debe revisarse antes de iniciar otra versión para conservar su trabajo.");
+  return (await db.query(`insert into preparation_jobs_v2(id,teacher_id,classroom_id,kind,source_id,source_revision,input_fingerprint,status,payload)
     values($1,$2,$3,$4,$5,$6,$7,'queued',$8::jsonb)
-    on conflict(kind,source_id,source_revision,input_fingerprint) do update set updated_at=preparation_jobs.updated_at returning *`,
-    [randomUUID(),teacherId,classroomId,kind,sourceId,sourceRevision,preparationFingerprint(input),JSON.stringify({ ...payload,
+    on conflict(kind,source_id,source_revision,input_fingerprint) do update set updated_at=preparation_jobs_v2.updated_at returning *`,
+    [randomUUID(),teacherId,classroomId,kind,sourceId,sourceRevision,preparationFingerprint(input),JSON.stringify({ ...payload, executor_version:2,
       ...(currentPedagogicalClock() ? { qa_clock: currentPedagogicalClock() } : {}) })])).rows[0];
 }
 export async function enqueueActivityBlock(db,teacherId,project) {
@@ -84,12 +92,19 @@ export async function enqueueActivityBlock(db,teacherId,project) {
 export async function retryPreparation(db,teacherId,id,acceptPotentialRepeat=false) {
   return versionTransaction(db,`preparation:${id}`,async tx=>{
     const row=await ownedPreparationJob(tx,teacherId,id);
+    if(row.legacy)throw new VersionConflictError("Esta preparación pertenece al ejecutor anterior. Conservamos su historial; requiere revisar el aislamiento antes de retomarla.");
     if(row.status==="running" && new Date(row.lease_until).getTime()>Date.now())throw new VersionConflictError("La preparación sigue en curso.");
     if(row.status==="succeeded"&&!needsAcceptedProjectContinuation(row))return row;
     if((row.status==="uncertain"||needsAcceptedProjectContinuation(row)&&row.payload.attempt_pending===true) && acceptPotentialRepeat!==true)throw new VersionConflictError("No se pudo comprobar si la última llamada terminó. Confirma el reintento; podría repetir esa llamada.");
-    const payload={...row.payload,error:null,attempt_pending:false};
+    const payload={...row.payload,error:null,failure_reason:null,attempt_pending:false};
+    if(row.payload.failure_reason==='insufficient_quota'){
+      const provider=payload.project_provider_checkpoint;
+      if(provider)provider.provider_responses=Object.fromEntries(Object.entries(provider.provider_responses??{}).filter(([key])=>provider.completed_calls?.[key]));
+      delete payload.provider_poll_after;
+    }
+    if(acceptPotentialRepeat===true)for(const item of payload.items??[])if(!item.generated&&!item.activity_id)item.attempt_pending=false;
     if(acceptPotentialRepeat===true){delete payload.project_provider_checkpoint;delete payload.provider_poll_after;}
-    return (await tx.query(`update preparation_jobs set status='queued',lease_token=null,lease_until=null,
+    return (await tx.query(`update preparation_jobs_v2 set status='queued',lease_token=null,lease_until=null,
       payload=$2::jsonb,updated_at=now() where id=$1 returning *`,[id,JSON.stringify(payload)])).rows[0];
   });
 }
@@ -97,32 +112,37 @@ export async function retryPreparation(db,teacherId,id,acceptPotentialRepeat=fal
 /** One bounded domain step per invocation. No provider IO occurs in the claim transaction. */
 export async function runPreparationStep(db,execute) {
   const job=await versionTransaction(db,"preparation:dispatch",async tx=>{
-    if(Number((await tx.query(`select count(*) as n from preparation_jobs where status='running' and lease_until>now()`)).rows[0].n)>=2)return null;
-    const candidate=(await tx.query(`select * from preparation_jobs where status='queued' or status='running' and lease_until<=now()
+    if(Number((await tx.query(`select count(*) as n from preparation_jobs_v2 where status='running' and lease_until>now()`)).rows[0].n)>=2)return null;
+    const candidate=(await tx.query(`select * from preparation_jobs_v2 where status='queued' or status='running' and lease_until<=now()
       order by created_at limit 1 for update skip locked`)).rows[0];
     if(!candidate)return null;
     const token=randomUUID();
-    return (await tx.query(`update preparation_jobs set status='running',lease_token=$2,lease_until=now()+$3*interval '1 second',updated_at=now()
+    return (await tx.query(`update preparation_jobs_v2 set status='running',lease_token=$2,lease_until=now()+$3*interval '1 second',updated_at=now()
       where id=$1 returning *`,[candidate.id,token,LEASE_SECONDS])).rows[0];
   });
   if(!job)return null;
   const checkpoint=async payload=>{
-    const saved=(await db.query(`update preparation_jobs set payload=$1::jsonb,lease_until=now()+$4*interval '1 second',updated_at=now()
+    const saved=(await db.query(`update preparation_jobs_v2 set payload=$1::jsonb,lease_until=now()+$4*interval '1 second',updated_at=now()
       where id=$2 and lease_token=$3 and status='running' returning id`,[JSON.stringify(payload),job.id,job.lease_token,LEASE_SECONDS])).rows;
     if(!saved.length)throw new VersionConflictError("Otra operación retomó esta preparación.");
     job.payload=payload;
   };
   try {
     await ownedPreparationJob(db,job.teacher_id,job.id);
+    const started=Date.now();
+    await checkpoint({...job.payload,worker:{version:2,revision:process.env.VERCEL_GIT_COMMIT_SHA??'local',deployment:process.env.VERCEL_URL??'local',started_at:new Date(started).toISOString()}});
     const complete=await execute(job,checkpoint);
+    await checkpoint({...job.payload,last_step_ms:Date.now()-started});
     if(complete&&needsAcceptedProjectContinuation({...job,status:'succeeded',approved_at:(await ownedPreparationJob(db,job.teacher_id,job.id)).approved_at}))
       throw new VersionConflictError('Falta publicar las actividades del proyecto aceptado. Conservamos el avance.');
-    await db.query(`update preparation_jobs set status=$1,lease_until=null,updated_at=now()
+    await db.query(`update preparation_jobs_v2 set status=$1,lease_until=null,updated_at=now()
       where id=$2 and lease_token=$3 and status='running'`,[complete?"succeeded":"queued",job.id,job.lease_token]);
   }catch(error){
-    const uncertain=error.uncertain===true;
-    job.payload.error=uncertain?"No pudimos comprobar si la última llamada terminó. El trabajo guardado se conserva.":"No pudimos completar lo pendiente. El trabajo guardado se conserva; puedes reintentar.";
-    await db.query(`update preparation_jobs set status=$1,payload=$2::jsonb,lease_until=null,updated_at=now()
+    const quota=error.reason==='insufficient_quota'||error.provider_reason==='insufficient_quota';
+    const uncertain=!quota&&error.uncertain===true;
+    job.payload.failure_reason=quota?'insufficient_quota':null;
+    job.payload.error=quota?"El servicio de IA no tiene saldo disponible. El avance está guardado. Después de recargar el saldo puedes retomar lo pendiente.":uncertain?"No pudimos comprobar si la última llamada terminó. El trabajo guardado se conserva.":"No pudimos completar lo pendiente. El trabajo guardado se conserva; puedes reintentar.";
+    await db.query(`update preparation_jobs_v2 set status=$1,payload=$2::jsonb,lease_until=null,updated_at=now()
       where id=$3 and lease_token=$4 and status='running'`,[uncertain?"uncertain":"failed",JSON.stringify(job.payload),job.id,job.lease_token]);
   }
   return publicPreparationJob(await ownedPreparationJob(db,job.teacher_id,job.id));

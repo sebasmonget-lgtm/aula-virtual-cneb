@@ -26,12 +26,19 @@ test("el proyecto unificado clona la ruta, usa currículo de la edad y no antici
   assert.match(xml, /Nos organizamos/);
   assert.match(xml, /ajustar el acompañamiento docente, conservando la secuencia confirmada/);
   assert.doesNotMatch(xml, /ajustar las siguientes actividades/);
-  for (const label of ["Qué podríamos observar durante el proceso", "Primeros pasos", "Cómo acompañará la docente", "Qué observar", "Evidencia esperada"])
+  for (const label of ["Primeros pasos", "Cómo acompañará la docente", "Qué observar", "Evidencia esperada"])
     assert.match(xml, new RegExp(label));
   assert.doesNotMatch(xml, /¿QUÉ HAREMOS\?|¿CÓMO LO HAREMOS\?|¿QUÉ NECESITAREMOS\?/);
   assert.doesNotMatch(xml, /\{\{/);
   assert.doesNotMatch(xml, /XI\. SEGUIMIENTO/);
   assert.doesNotMatch(xml, /Fila repetible/);
+  assert.match(xml,/VI\. ESTRATEGIA GENERAL DE EVALUACIÓN/);
+  assert.match(xml,/VII\. RUTA DE ACTIVIDADES/);
+  const officialDocument = { ...document, content: { ...document.content, dependents: { general_criteria: [
+    { competency_id: "PS_CONVIVE", criterion: "Propone acuerdos", expected_evidence: ["Explica su acuerdo"], official_performance_refs: ["PCI2016.PS_CONVIVE.5.03"] },
+  ] } } };
+  const officialZip = await JSZip.loadAsync(await renderLearningExperienceUnifiedWord(officialDocument, cards));
+  assert.match(await officialZip.file("word/document.xml").async("string"), /Desempeño de 5 años · MINEDU, p\. 87/);
   const logo = await sharp({ create: { width: 80, height: 80, channels: 4, background: "#087d96" } }).png().toBuffer();
   const withLogoBuffer = await renderLearningExperienceUnifiedWord(document, cards, { logo });
   if (process.env.AYNI_QA_DOCX_DIR) await writeFile(path.join(process.env.AYNI_QA_DOCX_DIR, "project-unified-logo-qa.docx"), withLogoBuffer);
@@ -81,7 +88,7 @@ test("el Word V2 usa el mapa confirmado y las fechas reales sin inventar registr
   assert.match(await shortArchive.file('word/document.xml').async('string'),/1 semana lectiva prevista/);
   assert.doesNotMatch(updatedXml,/Exploramos el patio\.|Partimos de preguntas del grupo\./,'No mezcla la situación nueva con el fundamento o texto formal anterior');
   assert.match(xml, /Compartir lo investigado/);
-  for (const heading of ["III. PREPLANIFICACIÓN DOCENTE", "IV. PROPÓSITO GENERAL", "V. PROPÓSITOS DE APRENDIZAJE Y EVALUACIÓN", "VI. ENFOQUES", "VII. ESTRATEGIA GENERAL DE EVALUACIÓN", "VIII. RUTA DE ACTIVIDADES", "IX. RECURSOS"])
+  for (const heading of ["III. PREPLANIFICACIÓN DOCENTE", "IV. PROPÓSITO GENERAL", "V. PROPÓSITOS DE APRENDIZAJE Y EVALUACIÓN", "VI. ENFOQUES", "VII. ESTRATEGIA GENERAL DE EVALUACIÓN", "VIII. RUTA DE ACTIVIDADES", "Materiales y recursos previstos"])
     assert.ok(xml.includes(heading), `Falta ${heading}`);
   assert.ok(!xml.includes("<w:t>V. PROPÓSITO GENERAL</w:t>"), "No debe saltar el IV");
   assert.doesNotMatch(xml, /\{\{/);

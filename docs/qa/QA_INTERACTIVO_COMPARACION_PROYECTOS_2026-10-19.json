@@ -1,0 +1,205 @@
+{
+  "id": "QA-PASO-11",
+  "screen": "Segundo proyecto para comparar tiempos",
+  "date": "2026-10-19",
+  "status": "PASS preparación funcional de esta muestra; FAIL aislamiento de versiones; benchmark no limpio",
+  "project": {
+    "title": "Canciones y ritmos para compartir",
+    "experienceId": "c9efc649-77be-4851-b33d-b298a42a46c4",
+    "proposalId": "12680f8b-cf58-46f2-b65a-04f139a1a5fb",
+    "age": 5,
+    "competencies": {
+      "PS_CONVIVE": 4,
+      "COM_ARTE": 6
+    }
+  },
+  "execution": {
+    "method": "Inicio y consulta por interfaz; comprobaciones posteriores exclusivamente de lectura. Sin reintentos manuales en esta segunda generación.",
+    "clickedAt": "2026-10-19T13:23:08.539Z",
+    "jobCreatedAt": "2026-10-19T13:23:31.578106+00:00",
+    "publishedAt": "2026-10-19T13:39:38.131067+00:00",
+    "readyObservedAt": "2026-10-19T13:40:54.229Z",
+    "clickToPublishedSeconds": 989.592067,
+    "clickToObservedSeconds": 1065.69,
+    "timingQualification": "El clic antecede a la confirmación y creación del trabajo. La observación de UI es un límite superior. Entorno con workers compartidos de distintas versiones; no representa una medición aislada de Preview.",
+    "backgroundResponseSeconds": 196,
+    "backgroundQualification": "Respuesta completada del checkpoint, distinta del master canónico: no atribuir estos segundos al contenido finalmente utilizado.",
+    "savedActivities": 10,
+    "scheduledActivities": 10,
+    "failedStructuralChecks": [],
+    "checks": [
+      {
+        "title": "Escuchamos y elegimos cómo participar",
+        "dateMatches": true,
+        "purposeMatches": true,
+        "criterionMatches": true,
+        "competencyMatches": true,
+        "refsMatch": true,
+        "fingerprintMatches": true
+      },
+      {
+        "title": "Sonidos con nuestro cuerpo",
+        "dateMatches": true,
+        "purposeMatches": true,
+        "criterionMatches": true,
+        "competencyMatches": true,
+        "refsMatch": true,
+        "fingerprintMatches": true
+      },
+      {
+        "title": "Lo que suena en los objetos",
+        "dateMatches": true,
+        "purposeMatches": true,
+        "criterionMatches": true,
+        "competencyMatches": true,
+        "refsMatch": true,
+        "fingerprintMatches": true
+      },
+      {
+        "title": "Acuerdos para escucharnos",
+        "dateMatches": true,
+        "purposeMatches": true,
+        "criterionMatches": true,
+        "competencyMatches": true,
+        "refsMatch": true,
+        "fingerprintMatches": true
+      },
+      {
+        "title": "Un ritmo que puedo cambiar",
+        "dateMatches": true,
+        "purposeMatches": true,
+        "criterionMatches": true,
+        "competencyMatches": true,
+        "refsMatch": true,
+        "fingerprintMatches": true
+      },
+      {
+        "title": "Elegimos cómo crear juntos",
+        "dateMatches": true,
+        "purposeMatches": true,
+        "criterionMatches": true,
+        "competencyMatches": true,
+        "refsMatch": true,
+        "fingerprintMatches": true
+      },
+      {
+        "title": "Un lugar imaginado suena",
+        "dateMatches": true,
+        "purposeMatches": true,
+        "criterionMatches": true,
+        "competencyMatches": true,
+        "refsMatch": true,
+        "fingerprintMatches": true
+      },
+      {
+        "title": "Probamos otra combinación",
+        "dateMatches": true,
+        "purposeMatches": true,
+        "criterionMatches": true,
+        "competencyMatches": true,
+        "refsMatch": true,
+        "fingerprintMatches": true
+      },
+      {
+        "title": "Decidimos cómo compartir",
+        "dateMatches": true,
+        "purposeMatches": true,
+        "criterionMatches": true,
+        "competencyMatches": true,
+        "refsMatch": true,
+        "fingerprintMatches": true
+      },
+      {
+        "title": "Compartimos a nuestra manera",
+        "dateMatches": true,
+        "purposeMatches": true,
+        "criterionMatches": true,
+        "competencyMatches": true,
+        "refsMatch": true,
+        "fingerprintMatches": true
+      }
+    ]
+  },
+  "cost": {
+    "recordedEstimateUSD": 0.094569547,
+    "additionalBackgroundProvisionUSD": 0.0932435,
+    "cumulativeRecordedEstimateUSD": 4.2894407,
+    "cumulativeWithProvisionUSD": 4.3826842,
+    "limitUSD": 5,
+    "qualification": "Estimaciones, no factura. Se añade provisión para la respuesta background completada que no coincide con el uso del master guardado. No hay conciliación completa de todos los intentos previos."
+  },
+  "requested_changes": [
+    {
+      "id": "QA-PROYECTO-04",
+      "severity": "P1",
+      "status": "Reproducido; documentado sin corregir durante QA conjunto",
+      "symptom": "Preview y Producción comparten la cola global. El programador existente llama al worker de Producción antiguo cada diez segundos. La nueva respuesta background seguida no coincide con el master canónico guardado.",
+      "verifiedFacts": [
+        "Cron ayni-preparation-dispatch activo con schedule 10 seconds, consulta SELECT de cron.job.",
+        "54 solicitudes pg_net/0.20.4 a /api/internal/preparation/run en deployment Production dpl_H19YWzRdGjkgh8y72QAd1qBty7Mf entre 13:23 y 13:32 UTC.",
+        "runPreparationStep reclama cualquier trabajo queued o running con lease vencida, sin filtro de entorno ni versión, tanto en SHA actual como en Production.",
+        "Master canónico sin meaningful_situation, metadata 5441 input y 6525 output; uso registrado a las 13:27:43.410 UTC.",
+        "Respuesta guardada en checkpoint completada a las 13:27:49 UTC, 6030 input y 7817 output, contiene meaningful_situation y un fundamento distinto.",
+        "Production SHA 9a0920230350cd6b9050f35683a1f35d459e78c7 tiene contrato master sin meaningful_situation. Preview SHA d0260f43fd46e63951bc0edeb67706f48cf7ec8b sí lo exige."
+      ],
+      "inference": "El worker antiguo probablemente procesó parte del mismo trabajo. No hay identidad de deployment persistida por paso que permita atribuir cada escritura con certeza. La coexistencia y la discrepancia sí están comprobadas.",
+      "impact": "QA de la versión nueva no aislado; riesgo de aplicar contratos antiguos y producir llamadas no reflejadas completamente en los costos de la aplicación. No se demuestra pérdida de observaciones ni doble actividad.",
+      "files": [
+        "src/lib/preparation-jobs.mjs",
+        "src/lib/preparation-executor.mjs",
+        "src/lib/project-flow-service.mjs",
+        "scripts/configure-preparation-cron.sql",
+        "scripts/local-db-server.mjs"
+      ],
+      "recommendedPending": "Aislar la cola y sus despachadores por entorno y versión compatible, o usar una base QA independiente. Registrar worker/deployment por paso y conciliar responses con uso. Requiere revisar la configuración existente antes de actuar; no cambiar silenciosamente Production ni su cron.",
+      "plannedRegressionOnly": [
+        "Worker antiguo no reclama trabajos nuevos de Preview",
+        "Reanudación sin mezclar contratos de versiones distintas",
+        "Respuesta y uso guardados coinciden con el contenido canónico",
+        "Una actividad por fecha sin duplicados",
+        "Recuperación y publicación completa conservan historial"
+      ],
+      "actionTaken": "Solo consultas SELECT y lectura de logs/código. No se modificó cron, Vault, base, permisos, despliegues, prompts ni modelos."
+    }
+  ],
+  "pedagogicalQualification": "La ruta de diez días vincula arte y convivencia con criterios observables. No aprobar la última versión: falta la situación significativa en el master canónico y hay mezcla probable de workers. No se descargaron Word ni se desarrollaron estas actividades.",
+  "evidence": [
+    "outputs/qa-interactivo-20261018/proyecto-13-diez-actividades-listas.png"
+  ],
+  "implementation": "Pendiente al finalizar QA; ninguna corrección de producto aplicada.",
+  "historyIntegrity": {
+    "annualProposalsUnchanged": true,
+    "guidedCount": 35,
+    "freeCount": 30,
+    "scheduleCount": 10
+  },
+  "parallelizationReview": {
+    "date": "2026-10-19",
+    "status": "Revisión de código; propuesta pendiente de implementación y medición",
+    "verified": [
+      "prepareAcceptedProjectActivities selecciona p.items.find(item=>!item.activity_id); una llamada genera y otra invocación guarda antes de pasar a la siguiente actividad.",
+      "Cada generateTeacherActivity usa Plan Maestro confirmado, fila propia y vecinos previous_map_item/next_map_item de la ruta ya guardada; no requiere la respuesta generada de la actividad anterior para esta preparación completa nueva.",
+      "activityParentContext consulta solo actividades active. Las diez actividades del bloque permanecen draft hasta publishAcceptedProjectBlock, por lo que los borradores anteriores de ese bloque no son contexto incremental de las siguientes llamadas.",
+      "publishAcceptedProjectBlock exige todo el bloque y publica bajo transacción, conservando calendario, permisos y coherencia con revisión/huella del proyecto.",
+      "El límite global de dos jobs running no implica dos actividades del mismo job en paralelo. El payload usa attempt_pending compartido y checkpoints del job completo."
+    ],
+    "recommendation": [
+      "Primero aislar worker, cola y contrato por entorno/versión, según QA-PROYECTO-04.",
+      "Una vez validado el Plan Maestro, generar con concurrencia acotada configurable, inicialmente dos o tres actividades, no diez llamadas sin límite.",
+      "Cada llamada debe leer la misma revisión/huella y el contexto estable correspondiente a su posición en la secuencia.",
+      "Mantener estado, respuesta y resultado durable por ítem; evitar que checkpoints concurrentes sobrescriban resultados y que una reanudación repita llamadas completadas.",
+      "Conservar guardado validado y publicación atómica final en el orden del calendario. El orden de respuesta del proveedor no decide el orden pedagógico.",
+      "Instrumentar cola, IA, persistencia y publicación por separado; probar timeout de un ítem, respuesta incierta, recarga, límite de proveedor y doble despachador sin duplicación."
+    ],
+    "expectedEffect": "Acortar la etapa de actividades sin cambiar modelo, prompts, cantidad de actividades o decisiones pedagógicas. No hay benchmark paralelo ejecutado ni compromiso de duración. Cantidad de llamadas/tokens similar; costo y límites reales deben medirse.",
+    "files": [
+      "src/lib/complete-project-preparation.mjs:73",
+      "src/lib/preparation-executor.mjs:16",
+      "src/lib/ai-activity-ui-service.mjs:47",
+      "src/lib/direct-ai-context-contracts.mjs:24",
+      "scripts/local-db-server.mjs:678",
+      "src/lib/preparation-jobs.mjs:98"
+    ],
+    "noChanges": "Sin modificaciones de producto, nuevas llamadas pagadas, tests de concurrencia o despliegues en esta revisión."
+  }
+}

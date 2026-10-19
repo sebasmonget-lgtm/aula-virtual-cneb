@@ -1,0 +1,317 @@
+{
+  "project": "Lo que cambia en las macetas",
+  "date": "2026-10-19",
+  "verdict": "PARTIAL: base pedagógica coherente y trazabilidad correcta; viabilidad, concreción docente y Word todavía requieren mejoras",
+  "scope": "Plan Maestro real recién generado, proyecto completo, diez actividades y once Word descargados por el endpoint canónico del backend local. Una muestra de cinco años, no una aprobación de toda Ayni.",
+  "environment": "QA local aislado, base PGlite independiente, cambios locales sobre d0260f43fd46e63951bc0edeb67706f48cf7ec8b en codex/qa-corrections-20261019. Preview y Producción intactas.",
+  "projectId": "6f140dcb-419c-45fb-a666-a0d0f73047ad",
+  "masterModel": "gpt-6.1-sol high",
+  "activityModel": "gpt-6-luna medium",
+  "generationMs": 292997,
+  "generationEstimatedUsd": 0.118395255,
+  "reviewAdditionalAiCalls": 0,
+  "reviewAdditionalAiUsd": 0,
+  "cumulativeEstimatedUsd": 4.501079455,
+  "competencyDistribution": {
+    "CYT_INDAGA": 6,
+    "COM_ORAL": 4
+  },
+  "checks": {
+    "canonicalAssertionsPassed": 100,
+    "canonicalAssertionsTotal": 100,
+    "wordDocuments": 11,
+    "renderedPages": 40,
+    "visuallyInspectedPages": 40,
+    "projectWordPages": 10,
+    "activityWordPagesEach": 3,
+    "projectExportAssertionsPassed": 13,
+    "projectExportAssertionsTotal": 13,
+    "typecheck": "PASS",
+    "lint": "PASS",
+    "build": "PASS",
+    "pedagogicalDataUnchanged": true
+  },
+  "strengths": [
+    "Situación significativa explica preguntas referidas por la docente y un registro individual, sin generalizarlo como logro grupal.",
+    "Dos competencias pertinentes desarrolladas en actividades reales: indagación y comunicación oral.",
+    "Ruta progresiva: preguntar, observar, registrar, explicar, comparar, buscar información y compartir el proceso.",
+    "Producto entendido como comunicar el proceso y hallazgos, sin obligar a fabricar un objeto o exponer públicamente.",
+    "Acepta que no haya cambios visibles; no atribuye causas ni resultados anticipados.",
+    "Admite dibujos, señalamientos, dictado y conversación en pareja como apoyos, sin confundirlos con escritura autónoma.",
+    "Diez actividades preservan propósito, fecha, criterio, competencia y fingerprint del Plan Maestro; no se mezclan secuencias."
+  ],
+  "activities": [
+    {
+      "n": 1,
+      "title": "¿Qué queremos averiguar?",
+      "competency": "Indaga",
+      "status": "PARTIAL",
+      "works": "Pregunta y propuesta de cómo buscar información son observables y pertinentes; las ideas iniciales no se presentan como resultados.",
+      "improve": "La mediación añade papel fuera del inventario. Usar la superficie limpia de las cajas ya prevista o confirmar el soporte antes. Añadir un apoyo opcional concreto sin imponer una respuesta.",
+      "findingIds": [
+        "PM-03",
+        "PM-02"
+      ]
+    },
+    {
+      "n": 2,
+      "title": "Una primera mirada",
+      "competency": "Indaga",
+      "status": "PARTIAL",
+      "works": "Relaciona una pregunta con un detalle observado y un dibujo o descripción propios.",
+      "improve": "Depende de acceso no confirmado. Una idea dibujada sin objeto no demuestra observación. Identificar la maceta, fecha y detalle en el registro para hacer comparable el seguimiento.",
+      "findingIds": [
+        "PM-01",
+        "PM-04"
+      ]
+    },
+    {
+      "n": 3,
+      "title": "Mi dibujo te cuenta",
+      "competency": "Se comunica oralmente",
+      "status": "PASS con observaciones de estilo y Word",
+      "works": "Hay destinatario real; explicar y aclarar un dibujo da un propósito a la comunicación oral. La docente puede releer el dictado para que el niño confirme su mensaje.",
+      "improve": "Conservar esta estructura breve; evitar repetir el mismo cierre y las mismas advertencias en todos los campos. La aprobación pedagógica de esta actividad no elimina las condiciones generales de acceso del proyecto.",
+      "findingIds": [
+        "PM-02",
+        "W-02"
+      ]
+    },
+    {
+      "n": 4,
+      "title": "¿Sigue igual ese detalle?",
+      "competency": "Indaga",
+      "status": "PASS condicionado a observaciones disponibles",
+      "works": "Comparar el mismo detalle con el registro anterior tiene sentido; se admite igualdad y se pregunta en qué se fijó.",
+      "improve": "Preparar registros comparables e identificados. No convertir el plan alternativo de formular otra pregunta en evidencia de comparación ya realizada.",
+      "findingIds": [
+        "PM-01",
+        "PM-04",
+        "W-02"
+      ]
+    },
+    {
+      "n": 5,
+      "title": "Preguntas para pensar los cuidados",
+      "competency": "Se comunica oralmente",
+      "status": "PARTIAL",
+      "works": "Preguntar, escuchar y retomar una respuesta permite observar comunicación oral. La visita de la vecina se prevé solo con coordinación previa y como opción.",
+      "improve": "Precisar qué fuente o persona disponible ayudará a responder y qué preparar antes. Si no hay respuesta, solo se puede registrar la pregunta; no se observa la recuperación de información prevista por el criterio.",
+      "findingIds": [
+        "PM-01",
+        "PM-04"
+      ]
+    },
+    {
+      "n": 6,
+      "title": "Miramos después de la pausa",
+      "competency": "Indaga",
+      "status": "PARTIAL",
+      "works": "La separación temporal tras el fin de semana da sentido a volver a observar; se preservan los límites de lo conocido.",
+      "improve": "La pregunta sobre los días en que no miramos y el criterio de reconocer información faltante son abstractos. Priorizar comparar hoy con un dibujo anterior fechado; la incertidumbre puede quedar como nota breve para la docente.",
+      "findingIds": [
+        "PM-02",
+        "PM-04"
+      ]
+    },
+    {
+      "n": 7,
+      "title": "¿Lo vimos o nos lo contaron?",
+      "competency": "Se comunica oralmente",
+      "status": "PARTIAL",
+      "works": "Puede enriquecer la conversación al recuperar algo dicho por otra persona y hacer una pregunta pertinente.",
+      "improve": "El criterio se concentra en clasificar el origen de ideas y resulta estrecho para la comunicación oral. Anclar la conversación en dos aportes reales, observar cómo explica, escucha y pregunta, sin exigir categorías abstractas ni inventar ejemplos como hechos del grupo.",
+      "findingIds": [
+        "PM-02",
+        "PM-04"
+      ]
+    },
+    {
+      "n": 8,
+      "title": "Buscamos un dato que falta",
+      "competency": "Indaga",
+      "status": "PARTIAL",
+      "works": "Volver a buscar información para revisar una idea aporta una intención diferente a la primera observación; se permite mantenerla si se sostiene.",
+      "improve": "Concretar qué se quiere volver a mirar y qué dibujo comparar. «Dato», «mantener o revisar una idea» y «qué te permite pensar» necesitan apoyos ligados al objeto. El cierre explícito como oportunidad de observación no se proyecta en ese momento.",
+      "findingIds": [
+        "PM-02",
+        "PM-05"
+      ]
+    },
+    {
+      "n": 9,
+      "title": "Cuidados que podemos proponer",
+      "competency": "Se comunica oralmente",
+      "status": "PARTIAL",
+      "works": "Proponer un cuidado y explicar una razón da sentido a hablar y escuchar otras propuestas.",
+      "improve": "«Sin decidir acciones de cuidado» es una restricción más amplia de lo necesario. Distinguir falta de información o autorización de situaciones donde una propuesta segura ya está sustentada. No prohibir toda decisión por defecto.",
+      "findingIds": [
+        "PM-02"
+      ]
+    },
+    {
+      "n": 10,
+      "title": "Lo que sabemos y lo pendiente",
+      "competency": "Indaga",
+      "status": "PARTIAL",
+      "works": "Recupera pregunta, acciones, información y dudas del recorrido. El cierre en pareja o con la docente respeta formas de participación.",
+      "improve": "La continuidad dice que no se exige una conclusión sobre las macetas. Admitir incertidumbre no debe desplazar compartir lo realmente aprendido cuando hay datos. Ayudar a contrastar la idea inicial con un hallazgo o una permanencia; conservar la duda si los datos no alcanzan.",
+      "findingIds": [
+        "PM-02",
+        "PM-05"
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "id": "PM-01",
+      "severity": "P1",
+      "status": "OPEN",
+      "title": "La viabilidad del recurso central no se resuelve antes de generar la secuencia",
+      "evidence": "El maestro y las actividades 2, 4, 6 y 8 requieren macetas con acceso por confirmar. Las alternativas conservan preguntas o dibujos imaginados, pero no ofrecen la observación y comparación que exigen varios criterios.",
+      "cause": "Hecho observado: se preserva la incertidumbre del contexto y no se pide aclaración antes de preparar diez fechas. La validación vigente comprueba estructura, fechas y competencias, no que la secuencia permita desarrollar sus criterios con recursos confirmados.",
+      "recommendation": "Resolver el recurso esencial antes de preparar la secuencia o presentar la aclaración pendiente. La alternativa debe ofrecer una experiencia real equivalente y autorizada; no basta repetir que no se atribuirán hallazgos. Nunca acreditar un criterio no observado.",
+      "files": [
+        "src/lib/project-flow-service.mjs",
+        "skills/crear-proyecto-unidad/SKILL.md",
+        "src/lib/ai-activity-ui-service.mjs"
+      ],
+      "acceptance": "Caso con recurso esencial desconocido no termina como diez días listos para observar un objeto inexistente. Caso confirmado mantiene sus competencias y ruta."
+    },
+    {
+      "id": "PM-02",
+      "severity": "P2",
+      "status": "OPEN",
+      "title": "Exceso de cautelas y lenguaje abstracto desplaza las acciones docentes",
+      "evidence": "«¿Qué dato encontraste y qué te permite pensar?» en actividad 8; «qué información falta sobre los días intermedios» en 6; repetición de no atribuir hallazgos en numerosos campos; cierres 9 y 10 restringen decisiones o conclusiones incluso sin diferenciar un resultado sustentado.",
+      "cause": "Probable desbalance entre restricciones de no invención y ejemplos operativos. No se atribuye causalidad al modelo sin una prueba comparativa. La revisión estructural no detecta densidad de cautelas ni abstracción para la edad.",
+      "recommendation": "Una acción clara y una pregunta concreta por intervención. Agrupar cada condición de disponibilidad donde cambia lo que se hará. Mantener seguridad, incertidumbre y atribución real; permitir conclusiones sencillas sustentadas y propuestas seguras cuando corresponda.",
+      "files": [
+        "src/lib/project-flow-service.mjs",
+        "skills/crear-actividad/SKILL.md"
+      ],
+      "acceptance": "Muestras nuevas de distintas áreas muestran exploración y mediación concretas, sin restricciones absolutas ni largas repeticiones de contingencias."
+    },
+    {
+      "id": "PM-03",
+      "severity": "P2",
+      "status": "OPEN",
+      "title": "Un recurso aparece en la mediación sin estar previsto",
+      "evidence": "Actividad 1: «Ofrece papel y crayones». Su inventario y el maestro solo prevén cajas o superficies limpias y crayones.",
+      "cause": "La validación de materiales normaliza el inventario, pero no comprueba recursos mencionados dentro de la mediación. No es una pérdida del Word: el recurso ya está en el contenido generado.",
+      "recommendation": "Comprobar coherencia del inventario con las acciones y recoger el soporte conocido; no exigir coincidencia literal de sinónimos ni una lista rígida de palabras.",
+      "files": [
+        "src/lib/ai-activity-ui-service.mjs",
+        "skills/crear-actividad/SKILL.md"
+      ],
+      "acceptance": "Casos con materiales limitados no añaden compras o soportes no confirmados en el texto de la guía."
+    },
+    {
+      "id": "PM-04",
+      "severity": "P2",
+      "status": "OPEN",
+      "title": "Faltan apoyos prácticos y correspondencia suficiente entre acción y criterio en algunas contingencias",
+      "evidence": "La comparación no indica conservar maceta, detalle y fecha identificados. En 5 puede faltar la respuesta oral que permitiría observar recuperar información. En 7 se prioriza clasificar el origen de una idea sobre la explicación y la interacción.",
+      "cause": "Los criterios se heredan correctamente, pero preservar la cadena de IDs no demuestra que todas las alternativas permitan observar la misma actuación.",
+      "recommendation": "Revisar alineación semántica entre actuación, criterio, evidencia y alternativa; incluir preparativos breves para registros comparables y fuentes accesibles. Mantener competencias y criterios confirmados; cambiar el diseño solo en nuevas secuencias revisadas.",
+      "files": [
+        "src/lib/project-flow-service.mjs",
+        "skills/crear-actividad/SKILL.md"
+      ],
+      "acceptance": "Revisión humana de cada alternativa identifica qué parte del criterio permite observar y qué parte sigue pendiente."
+    },
+    {
+      "id": "PM-05",
+      "severity": "P2",
+      "status": "OPEN",
+      "title": "La proyección conserva solo el primer momento explícito de observación",
+      "evidence": "Actividades 8 y 10 tienen Desarrollo y Cierre en evidence_opportunities. La respuesta canónica guide.pedagogical_blocks vincula el criterio solo a development; closure no lleva observations.",
+      "cause": "activityPedagogicalBlocks usa una expresión regular anclada al comienzo y obtiene un único observeAt.",
+      "recommendation": "Definir y respetar oportunidades explícitas por momento, reutilizando el mismo criterio y almacenamiento. Evitar duplicar registros o alterar el criterio. Este hallazgo es de la proyección API; no se ejecutó una captura nueva desde Hoy en esta revisión.",
+      "files": [
+        "src/lib/pedagogical-blocks.mjs"
+      ],
+      "acceptance": "Una guía con dos momentos explícitos muestra el criterio donde corresponde y conserva una sola observación por cada guardado docente."
+    },
+    {
+      "id": "W-01",
+      "severity": "P2",
+      "status": "OPEN",
+      "title": "Se conserva una sección de enfoques vacía",
+      "evidence": "Word del proyecto, página 5: encabezados Enfoque(s) transversal(es) pertinente(s) y Actitudes observables sin contenido.",
+      "cause": "El renderer conserva la tabla de la plantilla aunque no recibe transversal_approaches ni observable_attitudes para completarla.",
+      "recommendation": "Omitir el bloque vacío o completar solo con decisiones pedagógicas respaldadas. No inventar un enfoque para llenar la tabla.",
+      "files": [
+        "src/lib/learning-experience-unified-word.mjs",
+        "src/lib/document-library-service.mjs"
+      ],
+      "acceptance": "Documento sin esos datos no muestra una tabla vacía; documento con datos explícitos conserva su contenido."
+    },
+    {
+      "id": "W-02",
+      "severity": "P2",
+      "status": "OPEN",
+      "title": "La guía práctica y sus criterios quedan separados por paginación",
+      "evidence": "Cada actividad ocupa 3 páginas. En 1 y 3 un criterio empieza al final de la página 2 y termina en la 3. En 6 se parte el referente; en 7 las capacidades. Qué observar se encuentra después de la secuencia, no junto a la actuación pertinente.",
+      "cause": "La nueva plantilla adelanta la secuencia, pero mantiene una tabla curricular extensa y no protege todas sus filas o agrupaciones. El material de observación continúa en otro bloque.",
+      "recommendation": "Acercar criterio y foco al momento observable y mantener cada fila legible en una página. Reducir repeticiones y datos administrativos antes de reducir el tamaño de letra. Tres páginas no son por sí mismas un error; sí lo son los cortes y el recorrido innecesario.",
+      "files": [
+        "src/lib/activity-unified-word.mjs",
+        "src/lib/unified-word-template.mjs"
+      ],
+      "acceptance": "Render de textos cortos y largos sin filas cortadas; una profesora localiza qué hacer y qué observar en el mismo tramo de lectura."
+    },
+    {
+      "id": "W-03",
+      "severity": "P2",
+      "status": "OPEN",
+      "title": "El Word del proyecto repite contenidos y alarga la ruta",
+      "evidence": "10 páginas. Evidencias se repiten en páginas 2, 4-5 y evaluación general. Materiales reaparecen en página 10 casi vacía. Las cinco preguntas orientadoras están en una sola viñeta extensa, página 2.",
+      "cause": "La plantilla presenta varias proyecciones del mismo dato canónico y una ruta con el nombre completo de competencia y cuatro subtítulos por actividad.",
+      "recommendation": "Una lista de preguntas, tabla compacta de ruta y referencias sin duplicación. Conservar el texto pedagógico relevante, los datos canónicos y la estética Ayni.",
+      "files": [
+        "src/lib/learning-experience-unified-word.mjs"
+      ],
+      "acceptance": "Mismo contenido esencial y diez actividades, con menos repetición y sin última página residual; no fijar un número de páginas a costa de legibilidad."
+    },
+    {
+      "id": "W-04",
+      "severity": "P2",
+      "status": "OPEN",
+      "title": "Algunos apoyos y datos se sustituyen por textos genéricos",
+      "evidence": "Los diez Word dicen «Ajustar materiales y tiempos según el grupo» y «Según la situación del aula». El proyecto sí dispone de apoyos concretos de participación. La duración del blueprint es 25 o 30 minutos, pero la portada diaria dice «Flexible según el grupo». Sede muestra «Sin dato registrado».",
+      "cause": "Fallbacks literales de la plantilla no proyectan todos los apoyos ni la duración que ya existe en la ruta. No es un fallo de la IA que el Word no aproveche esos datos.",
+      "recommendation": "Usar apoyos concretos guardados y duración referencial disponible; omitir sede ausente y no inventar adaptaciones, enfoques ni necesidades del aula.",
+      "files": [
+        "src/lib/activity-unified-word.mjs",
+        "src/lib/document-library-service.mjs"
+      ],
+      "acceptance": "Apoyos y duración existentes llegan al Word sin reescribir el contenido, y no se crean datos para completar campos."
+    },
+    {
+      "id": "W-05",
+      "severity": "P2",
+      "status": "OPEN",
+      "title": "El referente curricular es demasiado general para la revisión formal",
+      "evidence": "Los Word indican «Síntesis orientativa para 5 años: Indagación más organizada y comparación de evidencias» o «Mayor organización de ideas, inferencia y participación pertinente». No son el desempeño oficial específico seleccionado para la actividad.",
+      "cause": "Se imprime ai_focus del catálogo como referente. El rótulo Síntesis orientativa evita atribuir una cita oficial falsa, pero aporta poco sustento concreto.",
+      "recommendation": "Distinguir explícitamente orientación interna, desempeño oficial por edad y criterio contextualizado. Usar referencias oficiales versionadas pertinentes; no copiar todos los desempeños ni afirmar que un listado completo fue trabajado.",
+      "files": [
+        "src/lib/activity-unified-word.mjs",
+        "src/lib/learning-experience-unified-word.mjs"
+      ],
+      "acceptance": "Una profesora distingue el criterio observable del referente oficial, con fuente y edad verificables."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Programa curricular de Educación Inicial MINEDU",
+      "url": "https://www.minedu.gob.pe/curriculo/pdf/programa-curricular-educacion-inicial.pdf",
+      "pages": "Comunicación oral: página impresa 119, página 121 del PDF. Indagación: páginas impresas 190-192, páginas 192-194 del PDF.",
+      "verification": "PDF oficial descargado y texto completo de los apartados pertinentes revisado; no se superó la verificación de seguridad del repositorio alternativo."
+    }
+  ],
+  "changePolicy": "Auditoría y exportaciones únicamente. No se modificaron prompts, modelos, datos pedagógicos confirmados ni producción durante esta revisión. Hallazgos abiertos, no corregidos ni declarados resueltos.",
+  "evidence": ".local/qa-timing-20261019/integrity-audit.json, documents-canonical.json, snapshot-latest.json, pages-manifest.json y 40 PNG; exports en outputs/qa-pedagogico-20261019",
+  "reviewReport": "outputs/qa-pedagogico-20261019/Revision-pedagogica-y-Word.docx"
+}

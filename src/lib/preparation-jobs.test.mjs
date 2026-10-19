@@ -65,7 +65,7 @@ test("lease, llamada incierta y firma privada impiden duplicación silenciosa",a
     release();assert.equal((await running).status,"uncertain");
     await assert.rejects(()=>retryPreparation(db,teacher,job.id),/última llamada/);
     assert.equal((await retryPreparation(db,teacher,job.id,true)).status,"queued");
-    await db.query(`update preparation_jobs set status='running',lease_until=now()-interval '1 minute',payload=jsonb_set(payload,'{attempt_pending}','true'::jsonb) where id=$1`,[job.id]);
+    await db.query(`update preparation_jobs_v2 set status='running',lease_until=now()-interval '1 minute',payload=jsonb_set(payload,'{attempt_pending}','true'::jsonb) where id=$1`,[job.id]);
     assert.equal((await runPreparationStep(db,execute)).status,"uncertain");assert.equal(calls,1);
     const secret="fixture-secret-32-characters-minimum",timestamp=String(Math.floor(Date.now()/1000)),nonce=randomUUID();
     const headers={"x-ayni-dispatch-time":timestamp,"x-ayni-dispatch-nonce":nonce,"x-ayni-dispatch-signature":createHmac("sha256",secret).update(`${timestamp}.${nonce}`).digest("hex")};
@@ -97,3 +97,16 @@ test("repreparar un borrador distingue su revisión y rechaza contexto, propieda
     assert.equal((await route(changed,{...revised,details:{...revised.details,project_master:{}}})).status,409);
   }finally{await db.close();}
 });
+
+ test("new queue is invisible to the legacy claimant; legacy history is read only",async()=>{
+  const {db,teacher,project}=await fixture();try{
+    const job=await enqueueActivityBlock(db,teacher,project);
+    assert.equal((await db.query("select id from preparation_jobs where status='queued'")).rows.length,0);
+    await db.query(`insert into preparation_jobs select * from preparation_jobs_v2 where id=$1`,[job.id]);
+    await db.query('delete from preparation_jobs_v2 where id=$1',[job.id]);
+    const historical=await ownedPreparationJob(db,teacher,job.id);assert.equal(historical.legacy,true);
+    await assert.rejects(()=>retryPreparation(db,teacher,job.id),/ejecutor anterior/);
+    assert.equal(await runPreparationStep(db,async()=>{throw Error('must not run');}),null);
+    assert.equal((await db.query('select status from preparation_jobs where id=$1',[job.id])).rows[0].status,'queued');
+  }finally{await db.close();}
+ });

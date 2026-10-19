@@ -6,6 +6,8 @@ import { buildActivityContext } from "./context-policy-v4.mjs";
 import { loadActivitySkill } from "./activity-skill.mjs";
 import { canonicalProjectRoute } from "./planning-contract-v3.mjs";
 
+import { routeObservationCriteria } from "./activity-observation-plan.mjs";
+
 const MAX_PURPOSE_LENGTH = 500;
 const MAX_CONTEXT_LENGTH = 1_000;
 const MAX_MATERIALS = 20;
@@ -31,6 +33,7 @@ function materials(value) {
 
 export function teacherMessageForActivityGenerationError(error) {
   switch (error?.reason) {
+    case "insufficient_quota": return "El servicio de IA no tiene saldo disponible. Conservamos el avance; puedes retomarlo después de recargar.";
     case "authentication_failed":
     case "api_key_missing": return "No se pudo acceder al servicio de IA.";
     case "rate_limited": return "El servicio está ocupado. Inténtalo nuevamente en unos momentos.";
@@ -88,12 +91,15 @@ export function buildTeacherActivityGenerationInput({ request = {}, classroom, l
         possible_secondary_competency_ids: (routeItem.competency_ids ?? []).filter((id) => id !== (routeItem.criterion_competency_id || routeItem.competency_id)),
         pedagogical_intention: routeItem.pedagogical_intention ?? routeItem.role_in_project,
         evaluation_criterion: routeItem.evaluation_criterion, expected_evidence: routeItem.expected_evidence,
+        additional_criteria: routeItem.additional_criteria ?? [],
+        ...(routeItem.official_performance_refs ? { official_performance_refs: routeItem.official_performance_refs } : {}),
+        ...(routeItem.observation_moments ? { observation_moments: routeItem.observation_moments } : {}),
         acceptable_evidence_variations: routeItem.acceptable_evidence_variations ?? [], observation_focus: routeItem.observation_focus ?? [],
         materials: routeItem.materials ?? [], mediation_notes: routeItem.mediation_notes ?? "",
         continuity_from_previous: routeItem.continuity_from_previous ?? "", continuity_to_next: routeItem.continuity_to_next ?? "",
         flexibility_notes: routeItem.flexibility_notes ?? "" } : null,
       prior_activities: learningExperience.prior_activities ?? [] } } : {}),
-    ...(competencyId ? { competency_ids: [competencyId] } : {}),
+    ...(competencyId ? { competency_ids: routeItem ? routeObservationCriteria(routeItem).map(item => item.competency_id) : [competencyId] } : {}),
   };
 }
 
@@ -108,7 +114,10 @@ export async function generateTeacherActivity({ request, classroom, learningExpe
     const inherited = input.learning_experience_context?.inherited_route_item;
     return {
       proposal: inherited ? { ...generated.output, purpose: inherited.specific_purpose, competency_status: "confirmed", competency_id: inherited.competency_id,
-        route_item_id: inherited.id, evaluation_criterion: inherited.evaluation_criterion, expected_evidence: inherited.expected_evidence } : generated.output,
+        route_item_id: inherited.id, evaluation_criterion: inherited.evaluation_criterion, expected_evidence: inherited.expected_evidence,
+        observation_focus: inherited.observation_focus, additional_criteria: inherited.additional_criteria,
+        ...(inherited.official_performance_refs ? { official_performance_refs: inherited.official_performance_refs } : {}),
+        ...(inherited.observation_moments ? { observation_moments: inherited.observation_moments } : {}) } : generated.output,
       internalMetadata: {
         workflow: generated.metadata.workflow,
         model: generated.metadata.model,

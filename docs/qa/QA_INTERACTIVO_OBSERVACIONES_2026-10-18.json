@@ -1,0 +1,1081 @@
+{
+  "preview": "https://ayni-aula-staging-5t9tbxosy-ayni4.vercel.app/",
+  "commit": "d0260f43fd46e63951bc0edeb67706f48cf7ec8b",
+  "data_origin": "Observaciones redactadas para QA, sin niveles ni hechos de alumnos reales.",
+  "method": "Texto, momento, sugerencia de Ayni, revisión, selección y guardado exclusivamente desde la interfaz. Consulta SQL de solo lectura únicamente para gasto agregado. Casos y criterios esperados congelados antes de las treinta consultas.",
+  "status": "Functional PASS; pedagogical PARTIAL in this selected sample",
+  "scope": {
+    "students": 10,
+    "observationsPerStudent": 3,
+    "total": 30,
+    "distinctCompetencies": 11
+  },
+  "verdicts": {
+    "PASS": 27,
+    "FAIL_PRIMARY": 1,
+    "FAIL_ABSTENTION": 1,
+    "PARTIAL_COVERAGE": 1
+  },
+  "results": [
+    {
+      "student": "Camila Huamán Castro",
+      "note": 1,
+      "text": "Mezcló pintura azul y amarilla, dijo «Quiero un verde más claro» y añadió amarillo. Después pintó con una esponja para hacer las hojas de su árbol.",
+      "expected": [
+        "COM_ARTE"
+      ],
+      "suggested": [
+        {
+          "id": "COM_ARTE",
+          "name": "Crea proyectos desde los lenguajes artísticos"
+        }
+      ],
+      "verdict": "PASS",
+      "review": "Propone Arte por exploración de color y creación; no añade Indagación u Oral por el tema o por una cita.",
+      "saved": true
+    },
+    {
+      "student": "Camila Huamán Castro",
+      "note": 2,
+      "text": "Contó cinco vasos para seis niños, miró quién no tenía y dijo «Falta uno». Buscó otro vaso y lo puso en el lugar que faltaba.",
+      "moment": "Lonchera",
+      "expected": [
+        "MAT_CANTIDAD"
+      ],
+      "acceptableAdditional": [],
+      "suggested": [
+        {
+          "id": "MAT_CANTIDAD",
+          "name": "Resuelve problemas de cantidad"
+        }
+      ],
+      "selected": [
+        "MAT_CANTIDAD"
+      ],
+      "verdict": "PASS",
+      "review": "Cantidad: conteo y correspondencia para identificar un vaso faltante; la expresión oral es un medio de la resolución.",
+      "uiObservedSeconds": 3.058,
+      "saved": true
+    },
+    {
+      "student": "Camila Huamán Castro",
+      "note": 3,
+      "text": "Quería el muñeco que usaba una compañera. Le preguntó si podían turnarse, le ofreció otro mientras esperaba y respetó el turno acordado.",
+      "moment": "Juego libre",
+      "expected": [
+        "PS_CONVIVE"
+      ],
+      "acceptableAdditional": [],
+      "suggested": [
+        {
+          "id": "PS_CONVIVE",
+          "name": "Convive y participa democráticamente en la búsqueda del bien común"
+        }
+      ],
+      "selected": [
+        "PS_CONVIVE"
+      ],
+      "verdict": "PASS",
+      "review": "Convivencia: propone y respeta un acuerdo para compartir el muñeco, con acciones concretas de interacción.",
+      "uiObservedSeconds": 2.771,
+      "saved": true
+    },
+    {
+      "student": "Diego Ramos Vega",
+      "note": 1,
+      "text": "Su carro no cabía por el túnel de bloques. Separó dos bloques, probó pasar el carro y dijo «Ahora entra».",
+      "moment": "Juego libre",
+      "expected": [
+        "MAT_FORMA"
+      ],
+      "acceptableAdditional": [],
+      "suggested": [
+        {
+          "id": "CYT_INDAGA",
+          "name": "Indaga mediante métodos científicos para construir sus conocimientos"
+        }
+      ],
+      "selected": [
+        "MAT_FORMA"
+      ],
+      "verdict": "FAIL_PRIMARY",
+      "review": "Sugirió Indagación, pero el texto muestra un ajuste del ancho del túnel al tamaño del carro: la relación espacial es directa. No hay pregunta sobre un fenómeno ni comparación para investigar una causa. Se conserva la salida original y se corrige la selección docente a Forma, movimiento y localización.",
+      "uiObservedSeconds": 12.242,
+      "saved": true
+    },
+    {
+      "student": "Diego Ramos Vega",
+      "note": 2,
+      "text": "Contó cómo llegó al colegio: «Primero subí al bus con mi mamá y después caminamos». Respondió a un compañero que le preguntó dónde bajó del bus.",
+      "moment": "Asamblea",
+      "expected": [
+        "COM_ORAL"
+      ],
+      "acceptableAdditional": [],
+      "suggested": [
+        {
+          "id": "COM_ORAL",
+          "name": "Se comunica oralmente en su lengua materna"
+        }
+      ],
+      "selected": [
+        "COM_ORAL"
+      ],
+      "verdict": "PASS",
+      "review": "Oral: relata una secuencia y responde una pregunta de un interlocutor sobre lo narrado.",
+      "uiObservedSeconds": 2.692,
+      "saved": true
+    },
+    {
+      "student": "Diego Ramos Vega",
+      "note": 3,
+      "text": "Al caerse su torre dijo «Estoy molesto». Se apartó un momento, pidió compañía a la profesora y después volvió a construir.",
+      "moment": "Juego libre",
+      "expected": [
+        "PS_IDENTIDAD"
+      ],
+      "acceptableAdditional": [],
+      "suggested": [
+        {
+          "id": "PS_IDENTIDAD",
+          "name": "Construye su identidad"
+        }
+      ],
+      "selected": [
+        "PS_IDENTIDAD"
+      ],
+      "verdict": "PASS",
+      "review": "Identidad: nombra la emoción y recurre a una estrategia y al apoyo de una adulta para regularse; no supone un nivel de logro.",
+      "uiObservedSeconds": 2.731,
+      "saved": true
+    },
+    {
+      "student": "Emilia Cárdenas Ruiz",
+      "note": 1,
+      "text": "Al mirar la portada de un cuento señaló el paraguas del personaje y dijo «Creo que va a llover porque tiene paraguas».",
+      "moment": "Conversación",
+      "expected": [
+        "COM_LECTURA"
+      ],
+      "acceptableAdditional": [],
+      "suggested": [
+        {
+          "id": "COM_LECTURA",
+          "name": "Lee diversos tipos de textos escritos en su lengua materna"
+        }
+      ],
+      "selected": [
+        "COM_LECTURA"
+      ],
+      "verdict": "PASS",
+      "review": "Lectura: anticipa un contenido basándose en una ilustración de la portada. La expresión oral comunica esa anticipación y no exige sumar otra competencia.",
+      "uiObservedSeconds": 2.493,
+      "saved": true
+    },
+    {
+      "student": "Emilia Cárdenas Ruiz",
+      "note": 2,
+      "text": "Preguntó por qué una hoja estaba seca. Propuso compararla con otra de la misma planta, miró y tocó ambas, y comentó en qué se sentían distintas.",
+      "moment": "Exploración",
+      "expected": [
+        "CYT_INDAGA"
+      ],
+      "acceptableAdditional": [],
+      "suggested": [
+        {
+          "id": "CYT_INDAGA",
+          "name": "Indaga mediante métodos científicos para construir sus conocimientos"
+        }
+      ],
+      "selected": [
+        "CYT_INDAGA"
+      ],
+      "verdict": "PASS",
+      "review": "Indagación: plantea una pregunta y propone obtener información comparando las hojas mediante observación y tacto, sin dar por probada la causa.",
+      "uiObservedSeconds": 2.345,
+      "saved": true
+    },
+    {
+      "student": "Emilia Cárdenas Ruiz",
+      "note": 3,
+      "text": "Eligió dos instrumentos y creó sonidos suaves y fuertes para acompañar su historia de lluvia. Probó otra combinación y mostró al grupo cómo la había hecho.",
+      "moment": "Juego libre",
+      "expected": [
+        "COM_ARTE"
+      ],
+      "acceptableAdditional": [],
+      "suggested": [
+        {
+          "id": "COM_ARTE",
+          "name": "Crea proyectos desde los lenguajes artísticos"
+        }
+      ],
+      "selected": [
+        "COM_ARTE"
+      ],
+      "verdict": "PASS",
+      "review": "Arte: explora sonidos, toma decisiones para una composición propia y comparte el proceso; no es una indagación sobre un fenómeno físico.",
+      "uiObservedSeconds": 2.777,
+      "saved": true
+    },
+    {
+      "student": "Gabriel Paredes Soto",
+      "note": 1,
+      "text": "Eligió saltar entre tres aros. Flexionó las rodillas al caer y abrió los brazos para mantener el equilibrio antes del siguiente salto.",
+      "moment": "Recreo",
+      "expected": [
+        "PSICO_MOTRICIDAD"
+      ],
+      "acceptableAdditional": [],
+      "suggested": [
+        {
+          "id": "PSICO_MOTRICIDAD",
+          "name": "Se desenvuelve de manera autónoma a través de su motricidad"
+        }
+      ],
+      "selected": [
+        "PSICO_MOTRICIDAD"
+      ],
+      "verdict": "PASS",
+      "review": "Motricidad: coordinación de saltos, caída y equilibrio corporal; no se atribuye Cantidad por mencionar tres aros.",
+      "uiObservedSeconds": 2.896,
+      "saved": true
+    },
+    {
+      "student": "Gabriel Paredes Soto",
+      "note": 2,
+      "text": "Al ver que dos compañeros querían empezar el juego, propuso turnarse y preguntó si estaban de acuerdo. Esperó su turno según lo acordado.",
+      "moment": "Juego libre",
+      "expected": [
+        "PS_CONVIVE"
+      ],
+      "acceptableAdditional": [],
+      "suggested": [
+        {
+          "id": "PS_CONVIVE",
+          "name": "Convive y participa democráticamente en la búsqueda del bien común"
+        }
+      ],
+      "selected": [
+        "PS_CONVIVE"
+      ],
+      "verdict": "PASS",
+      "review": "Convivencia: construye un acuerdo de turnos con sus compañeros y lo cumple.",
+      "uiObservedSeconds": 2.85,
+      "saved": true
+    },
+    {
+      "student": "Gabriel Paredes Soto",
+      "note": 3,
+      "text": "Al repartir pelotas dio una a cada compañero. Cuando notó que uno tenía dos y otro ninguna, movió una pelota para que todos tuvieran una.",
+      "moment": "Juego libre",
+      "expected": [
+        "MAT_CANTIDAD"
+      ],
+      "acceptableAdditional": [],
+      "suggested": [
+        {
+          "id": "MAT_CANTIDAD",
+          "name": "Resuelve problemas de cantidad"
+        }
+      ],
+      "selected": [
+        "MAT_CANTIDAD"
+      ],
+      "verdict": "PASS",
+      "review": "Cantidad: revisa y corrige un reparto con correspondencia uno a uno; no se añade Convivencia solo por repartir a compañeros.",
+      "uiObservedSeconds": 2.617,
+      "saved": true
+    },
+    {
+      "student": "Luciana Torres Medina",
+      "note": 1,
+      "text": "En la tienda de juego hizo marcas y letras en un papel. Dijo «Esta es la lista para que mi compañero sepa qué comprar» y señaló dónde había escrito cada producto.",
+      "moment": "Juego libre",
+      "expected": [
+        "COM_ESCRITURA"
+      ],
+      "acceptableAdditional": [],
+      "suggested": [
+        {
+          "id": "COM_ESCRITURA",
+          "name": "Escribe diversos tipos de textos en su lengua materna"
+        }
+      ],
+      "selected": [
+        "COM_ESCRITURA"
+      ],
+      "verdict": "PASS",
+      "review": "Escritura: produce marcas y letras para un mensaje con propósito y destinatario, y explica lo que escribió; no se exige escritura convencional.",
+      "uiObservedSeconds": 2.725,
+      "saved": true
+    },
+    {
+      "student": "Luciana Torres Medina",
+      "note": 2,
+      "text": "Al mirar las ilustraciones de un cuento señaló al zorro detrás del árbol y dijo «Se escondió para que el conejo no lo vea». Mostró la imagen en la que se había fijado.",
+      "moment": "Conversación",
+      "expected": [
+        "COM_LECTURA"
+      ],
+      "acceptableAdditional": [],
+      "suggested": [
+        {
+          "id": "COM_LECTURA",
+          "name": "Lee diversos tipos de textos escritos en su lengua materna"
+        }
+      ],
+      "selected": [
+        "COM_LECTURA"
+      ],
+      "verdict": "PASS",
+      "review": "Lectura: interpreta una escena del cuento a partir de información de la ilustración y señala la pista utilizada.",
+      "uiObservedSeconds": 2.456,
+      "saved": true
+    },
+    {
+      "student": "Luciana Torres Medina",
+      "note": 3,
+      "text": "Escuchó las propuestas para cuidar los libros, eligió una y explicó por qué prefería guardar cada libro después de usarlo. Aceptó el acuerdo que eligió el grupo.",
+      "moment": "Asamblea",
+      "expected": [
+        "PS_CONVIVE"
+      ],
+      "acceptableAdditional": [],
+      "suggested": [
+        {
+          "id": "PS_CONVIVE",
+          "name": "Convive y participa democráticamente en la búsqueda del bien común"
+        }
+      ],
+      "selected": [
+        "PS_CONVIVE"
+      ],
+      "verdict": "PASS",
+      "review": "Convivencia: participa en la decisión sobre el cuidado de libros y acepta un acuerdo del grupo; no se atribuye Lectura por el objeto libro.",
+      "uiObservedSeconds": 2.732,
+      "saved": true
+    },
+    {
+      "student": "Mateo Quispe Flores",
+      "note": 1,
+      "text": "Buscó una caja para guardar su construcción. Comparó dos cajas, giró la construcción y eligió aquella en la que cabía sin desarmarla.",
+      "moment": "Juego libre",
+      "expected": [
+        "MAT_FORMA"
+      ],
+      "acceptableAdditional": [],
+      "suggested": [
+        {
+          "id": "MAT_FORMA",
+          "name": "Resuelve problemas de forma, movimiento y localización"
+        }
+      ],
+      "selected": [
+        "MAT_FORMA"
+      ],
+      "verdict": "PASS",
+      "review": "Forma: compara tamaños y ajusta la orientación de una construcción para elegir un recipiente en el que quepa.",
+      "uiObservedSeconds": 2.629,
+      "saved": true
+    },
+    {
+      "student": "Mateo Quispe Flores",
+      "note": 2,
+      "text": "Dijo que una hoja flotaría y una piedra se hundiría. Las puso en el agua, miró qué ocurrió y dibujó dónde quedó cada una para comparar con su idea inicial.",
+      "moment": "Exploración",
+      "expected": [
+        "CYT_INDAGA"
+      ],
+      "acceptableAdditional": [],
+      "suggested": [
+        {
+          "id": "CYT_INDAGA",
+          "name": "Indaga mediante métodos científicos para construir sus conocimientos"
+        }
+      ],
+      "selected": [
+        "CYT_INDAGA"
+      ],
+      "verdict": "PASS",
+      "review": "Indagación: propone una posible respuesta, obtiene información, la registra y compara con su idea; el dibujo funciona como registro y no obliga a sumar Arte.",
+      "uiObservedSeconds": 2.457,
+      "saved": true
+    },
+    {
+      "student": "Mateo Quispe Flores",
+      "note": 3,
+      "text": "Dijo «Quiero aprender esta canción». Pidió escucharla por partes; al olvidar el final, pidió repetir solo esa parte y volvió a intentarlo.",
+      "moment": "Conversación",
+      "expected": [
+        "TRANS_AUTONOMO"
+      ],
+      "acceptableAdditional": [],
+      "suggested": [],
+      "selected": [
+        "TRANS_AUTONOMO"
+      ],
+      "verdict": "FAIL_ABSTENTION",
+      "review": "No propone ninguna competencia pese a una meta explícita, una estrategia para alcanzarla y un ajuste ante la dificultad. Es pertinente TRANS_AUTONOMO a los cinco años; no se usa COM_ARTE solo por tratarse de una canción. Se selecciona manualmente, sin cambiar el texto ni volver a consultar a Ayni.",
+      "uiObservedSeconds": 46.74,
+      "saved": true
+    },
+    {
+      "student": "Nicolás Mendoza León",
+      "note": 1,
+      "text": "Preguntó qué material absorbería más agua. Puso una servilleta y una lámina de plástico junto a dos gotas, miró qué ocurrió y señaló la diferencia.",
+      "moment": "Exploración",
+      "expected": [
+        "CYT_INDAGA"
+      ],
+      "acceptableAdditional": [],
+      "suggested": [
+        {
+          "id": "CYT_INDAGA",
+          "name": "Indaga mediante métodos científicos para construir sus conocimientos"
+        }
+      ],
+      "selected": [
+        "CYT_INDAGA"
+      ],
+      "verdict": "PASS",
+      "review": "Indagación: formula una pregunta y compara lo que ocurre con dos materiales al contacto con el agua, describiendo una diferencia observable.",
+      "uiObservedSeconds": 2.502,
+      "saved": true
+    },
+    {
+      "student": "Nicolás Mendoza León",
+      "note": 2,
+      "text": "Contó a dos compañeros dónde había visto una mariposa y cómo se movía. Cuando no entendieron, agregó «Estaba junto a la puerta» y respondió qué colores tenía.",
+      "moment": "Conversación",
+      "expected": [
+        "COM_ORAL"
+      ],
+      "acceptableAdditional": [],
+      "suggested": [
+        {
+          "id": "COM_ORAL",
+          "name": "Se comunica oralmente en su lengua materna"
+        }
+      ],
+      "selected": [
+        "COM_ORAL"
+      ],
+      "verdict": "PASS",
+      "review": "Oral: relata y amplía su explicación según la comprensión de sus interlocutores; mencionar una mariposa no atribuye Indagación.",
+      "uiObservedSeconds": 2.576,
+      "saved": true
+    },
+    {
+      "student": "Nicolás Mendoza León",
+      "note": 3,
+      "text": "Separó ocho animales de juguete en dos grupos y contó cuántos tenía cada grupo. Pasó uno de un grupo al otro y volvió a contar para compararlos.",
+      "moment": "Juego libre",
+      "expected": [
+        "MAT_CANTIDAD"
+      ],
+      "acceptableAdditional": [],
+      "suggested": [
+        {
+          "id": "MAT_CANTIDAD",
+          "name": "Resuelve problemas de cantidad"
+        }
+      ],
+      "selected": [
+        "MAT_CANTIDAD"
+      ],
+      "verdict": "PASS",
+      "review": "Cantidad: agrupa, cuenta y vuelve a contar después de modificar las colecciones para comparar cantidades.",
+      "uiObservedSeconds": 2.907,
+      "saved": true
+    },
+    {
+      "student": "Sofía Vargas Cabrera",
+      "note": 1,
+      "text": "Inventó una danza para representar el viento. Eligió una tela, probó movimientos lentos y rápidos y decidió cuáles usar antes de mostrarlos a sus compañeros.",
+      "moment": "Juego libre",
+      "expected": [
+        "COM_ARTE"
+      ],
+      "acceptableAdditional": [],
+      "suggested": [
+        {
+          "id": "COM_ARTE",
+          "name": "Crea proyectos desde los lenguajes artísticos"
+        }
+      ],
+      "selected": [
+        "COM_ARTE"
+      ],
+      "verdict": "PASS",
+      "review": "Arte: decide movimientos y materiales para una danza que representa el viento; se distingue creación expresiva de una observación de destreza motriz.",
+      "uiObservedSeconds": 2.698,
+      "saved": true
+    },
+    {
+      "student": "Sofía Vargas Cabrera",
+      "note": 2,
+      "text": "Hizo una invitación con marcas y letras y dijo «Es para que Emilia venga a mi teatro». Releyó a su manera lo que había escrito antes de entregársela.",
+      "moment": "Juego libre",
+      "expected": [
+        "COM_ESCRITURA"
+      ],
+      "acceptableAdditional": [],
+      "suggested": [
+        {
+          "id": "COM_ESCRITURA",
+          "name": "Escribe diversos tipos de textos en su lengua materna"
+        }
+      ],
+      "selected": [
+        "COM_ESCRITURA"
+      ],
+      "verdict": "PASS",
+      "review": "Escritura: produce y relee una invitación a su manera para una destinataria y propósito definidos; no confunde marcas con ausencia de escritura.",
+      "uiObservedSeconds": 2.928,
+      "saved": true
+    },
+    {
+      "student": "Sofía Vargas Cabrera",
+      "note": 3,
+      "text": "Dijo «Me dio miedo el ruido de la puerta». Contó al grupo lo que pasó y respondió qué le había ayudado a calmarse: «Pedir que se quede mi profesora».",
+      "moment": "Conversación",
+      "expected": [
+        "PS_IDENTIDAD"
+      ],
+      "acceptableAdditional": [
+        "COM_ORAL"
+      ],
+      "suggested": [
+        {
+          "id": "COM_ORAL",
+          "name": "Se comunica oralmente en su lengua materna"
+        }
+      ],
+      "selected": [
+        "PS_IDENTIDAD",
+        "COM_ORAL"
+      ],
+      "verdict": "PARTIAL_COVERAGE",
+      "review": "Comunicación oral es defendible: relata e interactúa con el grupo. Sin embargo, la nota también nombra una emoción y el apoyo que le ayudó a regularla; faltó Identidad. Se conservan ambas relaciones sustentadas, sin considerar incorrecta la sugerencia oral.",
+      "uiObservedSeconds": 2.512,
+      "saved": true
+    },
+    {
+      "student": "Thiago Gutiérrez Silva",
+      "note": 1,
+      "text": "Puso un plato para cada uno de sus cinco compañeros. Contó seis platos, retiró el que sobraba y revisó que todos tuvieran uno.",
+      "moment": "Lonchera",
+      "expected": [
+        "MAT_CANTIDAD"
+      ],
+      "acceptableAdditional": [],
+      "suggested": [
+        {
+          "id": "MAT_CANTIDAD",
+          "name": "Resuelve problemas de cantidad"
+        }
+      ],
+      "selected": [
+        "MAT_CANTIDAD"
+      ],
+      "verdict": "PASS",
+      "review": "Cantidad: establece correspondencia, cuenta y retira un elemento sobrante, revisando el reparto.",
+      "uiObservedSeconds": 2.572,
+      "saved": true
+    },
+    {
+      "student": "Thiago Gutiérrez Silva",
+      "note": 2,
+      "text": "Al terminar el juego preguntó dónde guardar los materiales que usaron todos. Recogió con sus compañeros y cuidó que no quedaran piezas en el paso.",
+      "moment": "Rutina",
+      "expected": [
+        "PS_CONVIVE"
+      ],
+      "acceptableAdditional": [],
+      "suggested": [
+        {
+          "id": "PS_CONVIVE",
+          "name": "Convive y participa democráticamente en la búsqueda del bien común"
+        }
+      ],
+      "selected": [
+        "PS_CONVIVE"
+      ],
+      "verdict": "PASS",
+      "review": "Convivencia: participa con otros en el cuidado de recursos y de la seguridad de un espacio común; no atribuye autonomía del aprendizaje por ordenar.",
+      "uiObservedSeconds": 2.7,
+      "saved": true
+    },
+    {
+      "student": "Thiago Gutiérrez Silva",
+      "note": 3,
+      "text": "Usó pinzas grandes para trasladar pompones a un recipiente. Ajustó la fuerza de sus dedos cuando uno se cayó y continuó coordinando ambas manos.",
+      "moment": "Juego libre",
+      "expected": [
+        "PSICO_MOTRICIDAD"
+      ],
+      "acceptableAdditional": [],
+      "suggested": [
+        {
+          "id": "PSICO_MOTRICIDAD",
+          "name": "Se desenvuelve de manera autónoma a través de su motricidad"
+        }
+      ],
+      "selected": [
+        "PSICO_MOTRICIDAD"
+      ],
+      "verdict": "PASS",
+      "review": "Motricidad: coordinación fina de manos y ajuste de fuerza; el objeto manipulado no convierte la actuación en indagación.",
+      "uiObservedSeconds": 2.747,
+      "saved": true
+    },
+    {
+      "student": "Valentina Rojas Salazar",
+      "note": 1,
+      "text": "Al mirar un cuento reconoció al personaje en dos páginas y explicó qué había cambiado entre las ilustraciones. Volvió a la primera imagen para mostrar su comparación.",
+      "moment": "Conversación",
+      "expected": [
+        "COM_LECTURA"
+      ],
+      "acceptableAdditional": [],
+      "suggested": [
+        {
+          "id": "COM_LECTURA",
+          "name": "Lee diversos tipos de textos escritos en su lengua materna"
+        }
+      ],
+      "selected": [
+        "COM_LECTURA"
+      ],
+      "verdict": "PASS",
+      "review": "Lectura: relaciona y contrasta información entre ilustraciones del cuento, volviendo al texto para señalar su evidencia.",
+      "uiObservedSeconds": 2.673,
+      "saved": true
+    },
+    {
+      "student": "Valentina Rojas Salazar",
+      "note": 2,
+      "text": "Al observar dos macetas preguntó por qué una tenía un brote. Propuso mirar ambas cada mañana y dibujó lo que veía para recordar cómo estaban ese día.",
+      "moment": "Exploración",
+      "expected": [
+        "CYT_INDAGA"
+      ],
+      "acceptableAdditional": [],
+      "suggested": [
+        {
+          "id": "CYT_INDAGA",
+          "name": "Indaga mediante métodos científicos para construir sus conocimientos"
+        }
+      ],
+      "selected": [
+        "CYT_INDAGA"
+      ],
+      "verdict": "PASS",
+      "review": "Indagación: formula una pregunta, propone observaciones posteriores y registra el estado inicial; no se inventa que ya se verificó la causa.",
+      "uiObservedSeconds": 2.455,
+      "saved": true
+    },
+    {
+      "student": "Valentina Rojas Salazar",
+      "note": 3,
+      "text": "Contó en un grupo pequeño qué hizo durante un paseo, escuchó una pregunta y agregó un detalle para aclarar su relato. Esperó a que su compañera terminara antes de responder.",
+      "moment": "Conversación",
+      "expected": [
+        "COM_ORAL"
+      ],
+      "acceptableAdditional": [],
+      "suggested": [
+        {
+          "id": "COM_ORAL",
+          "name": "Se comunica oralmente en su lengua materna"
+        }
+      ],
+      "selected": [
+        "COM_ORAL"
+      ],
+      "verdict": "PASS",
+      "review": "Oral: narra, escucha y amplía un mensaje, respetando turnos propios de la interacción comunicativa; no necesita sumar Convivencia solo por esperar para responder.",
+      "uiObservedSeconds": 2.646,
+      "saved": true
+    }
+  ],
+  "persistence": [
+    {
+      "student": "Camila Huamán Castro",
+      "count": 3,
+      "checks": [
+        {
+          "note": 1,
+          "exactText": true,
+          "selectedIds": [
+            "COM_ARTE"
+          ],
+          "competenciesMatch": true
+        },
+        {
+          "note": 2,
+          "exactText": true,
+          "selectedIds": [
+            "MAT_CANTIDAD"
+          ],
+          "competenciesMatch": true
+        },
+        {
+          "note": 3,
+          "exactText": true,
+          "selectedIds": [
+            "PS_CONVIVE"
+          ],
+          "competenciesMatch": true
+        }
+      ],
+      "pass": true
+    },
+    {
+      "student": "Diego Ramos Vega",
+      "count": 3,
+      "checks": [
+        {
+          "note": 1,
+          "exactText": true,
+          "selectedIds": [
+            "MAT_FORMA"
+          ],
+          "competenciesMatch": true
+        },
+        {
+          "note": 2,
+          "exactText": true,
+          "selectedIds": [
+            "COM_ORAL"
+          ],
+          "competenciesMatch": true
+        },
+        {
+          "note": 3,
+          "exactText": true,
+          "selectedIds": [
+            "PS_IDENTIDAD"
+          ],
+          "competenciesMatch": true
+        }
+      ],
+      "pass": true
+    },
+    {
+      "student": "Emilia Cárdenas Ruiz",
+      "count": 3,
+      "checks": [
+        {
+          "note": 1,
+          "exactText": true,
+          "selectedIds": [
+            "COM_LECTURA"
+          ],
+          "competenciesMatch": true
+        },
+        {
+          "note": 2,
+          "exactText": true,
+          "selectedIds": [
+            "CYT_INDAGA"
+          ],
+          "competenciesMatch": true
+        },
+        {
+          "note": 3,
+          "exactText": true,
+          "selectedIds": [
+            "COM_ARTE"
+          ],
+          "competenciesMatch": true
+        }
+      ],
+      "pass": true
+    },
+    {
+      "student": "Gabriel Paredes Soto",
+      "count": 3,
+      "checks": [
+        {
+          "note": 1,
+          "exactText": true,
+          "selectedIds": [
+            "PSICO_MOTRICIDAD"
+          ],
+          "competenciesMatch": true
+        },
+        {
+          "note": 2,
+          "exactText": true,
+          "selectedIds": [
+            "PS_CONVIVE"
+          ],
+          "competenciesMatch": true
+        },
+        {
+          "note": 3,
+          "exactText": true,
+          "selectedIds": [
+            "MAT_CANTIDAD"
+          ],
+          "competenciesMatch": true
+        }
+      ],
+      "pass": true
+    },
+    {
+      "student": "Luciana Torres Medina",
+      "count": 3,
+      "checks": [
+        {
+          "note": 1,
+          "exactText": true,
+          "selectedIds": [
+            "COM_ESCRITURA"
+          ],
+          "competenciesMatch": true
+        },
+        {
+          "note": 2,
+          "exactText": true,
+          "selectedIds": [
+            "COM_LECTURA"
+          ],
+          "competenciesMatch": true
+        },
+        {
+          "note": 3,
+          "exactText": true,
+          "selectedIds": [
+            "PS_CONVIVE"
+          ],
+          "competenciesMatch": true
+        }
+      ],
+      "pass": true
+    },
+    {
+      "student": "Mateo Quispe Flores",
+      "count": 3,
+      "checks": [
+        {
+          "note": 1,
+          "exactText": true,
+          "selectedIds": [
+            "MAT_FORMA"
+          ],
+          "competenciesMatch": true
+        },
+        {
+          "note": 2,
+          "exactText": true,
+          "selectedIds": [
+            "CYT_INDAGA"
+          ],
+          "competenciesMatch": true
+        },
+        {
+          "note": 3,
+          "exactText": true,
+          "selectedIds": [
+            "TRANS_AUTONOMO"
+          ],
+          "competenciesMatch": true
+        }
+      ],
+      "pass": true
+    },
+    {
+      "student": "Nicolás Mendoza León",
+      "count": 3,
+      "checks": [
+        {
+          "note": 1,
+          "exactText": true,
+          "selectedIds": [
+            "CYT_INDAGA"
+          ],
+          "competenciesMatch": true
+        },
+        {
+          "note": 2,
+          "exactText": true,
+          "selectedIds": [
+            "COM_ORAL"
+          ],
+          "competenciesMatch": true
+        },
+        {
+          "note": 3,
+          "exactText": true,
+          "selectedIds": [
+            "MAT_CANTIDAD"
+          ],
+          "competenciesMatch": true
+        }
+      ],
+      "pass": true
+    },
+    {
+      "student": "Sofía Vargas Cabrera",
+      "count": 3,
+      "checks": [
+        {
+          "note": 1,
+          "exactText": true,
+          "selectedIds": [
+            "COM_ARTE"
+          ],
+          "competenciesMatch": true
+        },
+        {
+          "note": 2,
+          "exactText": true,
+          "selectedIds": [
+            "COM_ESCRITURA"
+          ],
+          "competenciesMatch": true
+        },
+        {
+          "note": 3,
+          "exactText": true,
+          "selectedIds": [
+            "PS_IDENTIDAD",
+            "COM_ORAL"
+          ],
+          "competenciesMatch": true
+        }
+      ],
+      "pass": true
+    },
+    {
+      "student": "Thiago Gutiérrez Silva",
+      "count": 3,
+      "checks": [
+        {
+          "note": 1,
+          "exactText": true,
+          "selectedIds": [
+            "MAT_CANTIDAD"
+          ],
+          "competenciesMatch": true
+        },
+        {
+          "note": 2,
+          "exactText": true,
+          "selectedIds": [
+            "PS_CONVIVE"
+          ],
+          "competenciesMatch": true
+        },
+        {
+          "note": 3,
+          "exactText": true,
+          "selectedIds": [
+            "PSICO_MOTRICIDAD"
+          ],
+          "competenciesMatch": true
+        }
+      ],
+      "pass": true
+    },
+    {
+      "student": "Valentina Rojas Salazar",
+      "count": 3,
+      "checks": [
+        {
+          "note": 1,
+          "exactText": true,
+          "selectedIds": [
+            "COM_LECTURA"
+          ],
+          "competenciesMatch": true
+        },
+        {
+          "note": 2,
+          "exactText": true,
+          "selectedIds": [
+            "CYT_INDAGA"
+          ],
+          "competenciesMatch": true
+        },
+        {
+          "note": 3,
+          "exactText": true,
+          "selectedIds": [
+            "COM_ORAL"
+          ],
+          "competenciesMatch": true
+        }
+      ],
+      "pass": true
+    }
+  ],
+  "cost": {
+    "providerCalls": 60,
+    "suggestionsRequested": 30,
+    "recordedCostUsd": 0.0155862,
+    "unpricedCalls": 0,
+    "priorConservativeUsd": 3.846928332,
+    "accumulatedControlUsd": 3.862514532,
+    "limitUsd": 5,
+    "source": "ai_usage_events aggregates, read only. Recorded provider usage is not an independently verified invoice. Prior conservative reservations, including uncertain historic call, remain included.",
+    "breakdown": [
+      {
+        "calls": 30,
+        "cost_usd": "0.0078606780",
+        "input_tokens": 187159,
+        "model": "typesafe/jev-1.13-20260917",
+        "output_tokens": 7650,
+        "provider": "openrouter",
+        "unpriced_calls": 0,
+        "workflow": "current_v2_additional"
+      },
+      {
+        "calls": 30,
+        "cost_usd": "0.0077255220",
+        "input_tokens": 183941,
+        "model": "typesafe/jev-1.13-20260917",
+        "output_tokens": 6508,
+        "provider": "openrouter",
+        "unpriced_calls": 0,
+        "workflow": "current_v2_primary"
+      }
+    ],
+    "costSources": [
+      {
+        "calls": 30,
+        "cost_source": "provider",
+        "cost_usd": "0.0078606780",
+        "model": "typesafe/jev-1.13-20260917",
+        "pricing_version": "2026-10-10-standard-cache-writes-asr-usage",
+        "provider": "openrouter",
+        "workflow": "current_v2_additional"
+      },
+      {
+        "calls": 30,
+        "cost_source": "provider",
+        "cost_usd": "0.0077255220",
+        "model": "typesafe/jev-1.13-20260917",
+        "pricing_version": "2026-10-10-standard-cache-writes-asr-usage",
+        "provider": "openrouter",
+        "workflow": "current_v2_primary"
+      }
+    ]
+  },
+  "limitations": [
+    "Muestra intencional de observaciones concretas de cinco años; 27/30 no constituye una tasa general de exactitud.",
+    "No se probaron aquí notas insuficientes, todas las edades, fotos, dictado ni aislamiento entre docentes.",
+    "uiObservedSeconds incluye esperas y comprobaciones del agente; no equivale a latencia del proveedor.",
+    "No se modificó código, modelo, prompts, contratos ni se publicó otra versión. Se corrigió la selección docente de tres registros antes de guardar."
+  ],
+  "evidence": [
+    "outputs/qa-interactivo-20261018/paso-04-observaciones-guardadas.png",
+    "outputs/qa-interactivo-20261018/paso-04-verificacion.json",
+    "outputs/qa-interactivo-20261018/observacion-diego-01-sugerencia-original.png",
+    "outputs/qa-interactivo-20261018/observacion-mateo-03-abstencion-original.png",
+    "outputs/qa-interactivo-20261018/observacion-sofia-03-sugerencia-parcial.png"
+  ]
+}

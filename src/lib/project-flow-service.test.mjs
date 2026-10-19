@@ -15,11 +15,13 @@ const dependents = { guiding_questions: ["¿Qué vemos?", "¿Qué cambió?"], jo
   { title: "Preguntamos", description: "Formulamos preguntas." },
   { title: "Observamos", description: "Miramos y comparamos." }],
   general_criteria: [{ competency_id: "CYT_INDAGA", criterion: "Observa y compara cambios.",
+    official_performance_refs: ["PCI2016.CYT_INDAGA.5.03"],
     expected_evidence: ["Explicaciones", "Dibujos"] }] };
 const master = { meaningful_situation: "La docente recoge preguntas de algunos niños sobre las plantas cercanas. Propone observar sus cambios y compartir lo descubierto: ¿cómo podemos averiguar qué necesitan para crecer?", foundation: "El grupo pregunta por cambios visibles.", closing_description: "Compartir lo observado.",
   closing_rationale: "Permite conversar sobre las preguntas iniciales.", resources: ["Plantas del patio"],
   activities: [{ date: "2026-04-13", title: "Miramos las plantas", purpose: "Observar cambios.",
     competency_ids: ["CYT_INDAGA"], criterion_competency_id: "CYT_INDAGA",
+    official_performance_refs: ["PCI2016.CYT_INDAGA.5.03"],
     pedagogical_intention: "Abrir una indagación desde lo visible.", criterion_text: "Observa y compara cambios.",
     expected_evidence: "Explicaciones y dibujos sobre cambios.", acceptable_evidence_variations: ["Explicación oral", "Dibujo comentado"],
     observation_focus: ["Cómo compara lo observado"], materials: ["Plantas del patio"],
@@ -28,6 +30,7 @@ const master = { meaningful_situation: "La docente recoge preguntas de algunos n
     role_in_project: "Abrir la investigación.", expected_progression: "Recoger primeras preguntas.", estimated_minutes: 45 },
     { date: "2026-04-14", title: "Compartimos lo que vimos", purpose: "Comunicar hallazgos.",
       competency_ids: ["CYT_INDAGA"], criterion_competency_id: "CYT_INDAGA",
+      official_performance_refs: ["PCI2016.CYT_INDAGA.5.05"],
       pedagogical_intention: "Comunicar y contrastar hallazgos.", criterion_text: "Explica cambios que observó.",
       expected_evidence: "Explicación apoyada en un registro.", acceptable_evidence_variations: ["Relato oral", "Dibujo comentado"],
       observation_focus: ["Cómo relaciona su registro con lo que explica"], materials: ["Registros del grupo"],
@@ -37,6 +40,35 @@ const master = { meaningful_situation: "La docente recoge preguntas de algunos n
 const provider = (output, check) => () => ({ generate: async (request) => {
   check?.(request); return { output, provider_metadata: { usage: { input_tokens: 10 } } };
 } });
+
+test("una selección curricular de otra edad se repara sin cambiar el criterio ni las decisiones", async () => {
+  const calls = [];
+  const result = await generateProjectMaster({ context: { modern: true, age: 5 }, decisions,
+    availableDates: ["2026-04-13", "2026-04-14"], loadSkill: async () => "Skill",
+    createProvider: () => ({ generate: async request => {
+      calls.push(request);
+      const refs = request.ai_context_bundle.didactic_knowledge.official_performance_catalog;
+      assert.equal(refs.competencies.length, 1);
+      assert.ok(refs.competencies[0].performances.every(row => row.age === 5));
+      const activities = master.activities.map((row, index) => ({ ...row,
+        ...(calls.length === 1 && index === 0 ? { official_performance_refs: ["PCI2016.CYT_INDAGA.4.03"] } : {}) }));
+      return { output: { ...master, ...dependents, activities } };
+    } }) });
+  assert.equal(calls.length, 2);
+  assert.equal(result.metadata.repair_used, true);
+  assert.deepEqual(calls[1].ai_context_bundle.confirmed_decisions, decisions);
+  assert.equal(result.output.activity_route[0].evaluation_criterion, master.activities[0].criterion_text);
+  assert.deepEqual(result.output.activity_route[0].official_performance_refs, master.activities[0].official_performance_refs);
+});
+
+test("las nuevas instrucciones docentes incompletas se rechazan sin reescribir históricos", () => {
+  const dates = ["2026-04-13", "2026-04-14"];
+  const partial = { ...master, activities: master.activities.map(row => ({ ...row, mediation_notes: "La docente acompaña, pero no在" })) };
+  assert.throws(() => validateProjectMaster(partial, decisions, dependents, dates, { age: 5, required: true, strictInstructions: true }),
+    error => error.reason === "incomplete_teacher_instruction");
+  assert.equal(validateProjectMaster(partial, decisions, dependents, dates).activities[0].mediation_notes, partial.activities[0].mediation_notes,
+    "La lectura del histórico no aplica nuevas restricciones ni modifica su contenido");
+});
 
 test('el Master en segundo plano recupera un ID conocido sin repetir la creación ni aceptar contexto cambiado',async()=>{
  const checkpoint={},saved=[];let creates=0,retrieves=0;
@@ -164,7 +196,7 @@ test("una regeneración localizada conserva el título editado por la docente en
 test("el criterio, no el orden de dos competencias, determina la principal del mapa", () => {
   const both = { ...decisions, competency_ids: ["CYT_INDAGA", "TRANS_AUTONOMO"] };
   const output = { ...master, activities: master.activities.map((item) => ({ ...item,
-    competency_ids: both.competency_ids, criterion_competency_id: "TRANS_AUTONOMO" })) };
+    competency_ids: both.competency_ids, criterion_competency_id: "TRANS_AUTONOMO", official_performance_refs: ["PCI2016.TRANS_AUTONOMO.5.03"], additional_criteria: [{ competency_id: "CYT_INDAGA", criterion_text: "Compara sus registros", expected_evidence: "Señala un cambio", observation_moments: ["development"], official_performance_refs: ["PCI2016.CYT_INDAGA.5.03"] }] })) };
   const validated = validateProjectMaster(output, both, dependents, ["2026-04-13", "2026-04-14"]);
   assert.equal(validated.activity_route[0].competency_id, "TRANS_AUTONOMO");
   const edited = validateEditedActivityMap(validated.activity_route, both, dependents, ["2026-04-13", "2026-04-14"]);
@@ -197,7 +229,7 @@ test("proyecto moderno: una generación high, calendario exacto y formal por có
   assert.equal(calls[0].execution_plan.reasoning_effort,"high");
   assert.equal(calls[0].output_schema.properties.foundation.maxLength,1500);
   assert.match(calls[0].ai_context_bundle.task,/hasta 1200 caracteres, con frases completas/);
-  assert.equal(calls[0].output_schema.properties.activities.items.properties.mediation_notes.maxLength,500);
+  assert.equal(calls[0].output_schema.properties.activities.items.properties.mediation_notes.maxLength,800);
   assert.equal(generated.dependents.general_criteria.length,1);
   const details=projectDetails({source:{title:"Plantas",primary_competency_ids:["CYT_INDAGA"]},preview:{context_summary:"Propuesta docente"},decisions,dependents:generated.dependents,master:generated.output});
   const formal=await generateProjectFormal({context:{modern:true,confirmed_project_master:details},createProvider:()=>{throw new Error("Formal no debe facturar");}});

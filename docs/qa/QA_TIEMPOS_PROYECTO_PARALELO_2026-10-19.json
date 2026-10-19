@@ -1,0 +1,47 @@
+{
+  "testedAt": "2026-10-19T18:00:25.341Z",
+  "project": "Lo que cambia en las macetas",
+  "environment": "Local isolated PGlite; real OpenAI generation; imported approved annual context; action performed through actual CompleteProjectWorkspace UI",
+  "branch": "codex/qa-corrections-20261019",
+  "baseSHA": "d0260f43fd46e63951bc0edeb67706f48cf7ec8b",
+  "uncommittedChanges": true,
+  "cloudWrites": 0,
+  "deployed": false,
+  "jobId": "1af83b0b-94bf-4cc2-9be4-931c13a2cb76",
+  "projectId": "6f140dcb-419c-45fb-a666-a0d0f73047ad",
+  "startedAt": "2026-10-19T17:54:32.922Z",
+  "publishedAt": "2026-10-19T17:59:25.919Z",
+  "elapsedMs": 292997,
+  "elapsedHuman": "4 min 52.997 s",
+  "firstObservedActivitiesAt": "2026-10-19T17:58:28.146Z",
+  "estimatedCostUsd": 0.11839525499999998,
+  "previousCumulativeEstimatedUsd": 4.3826842,
+  "cumulativeEstimatedUsd": 4.501079455,
+  "budgetLimitUsd": 5,
+  "remainingEstimatedUsd": 0.4989205450000001,
+  "apiCalls": 11,
+  "models": [
+    "gpt-6.1-sol",
+    "gpt-6-luna"
+  ],
+  "activities": 10,
+  "uniqueDates": 10,
+  "scheduleEntries": 10,
+  "competencies": [
+    "CYT_INDAGA",
+    "COM_ORAL"
+  ],
+  "integrityChecks": "PASS",
+  "manualRetriesForSuccessfulRun": 0,
+  "limitations": [
+    "One sample; different project and local persistence compared with previous Preview timings. Not a measured Preview deployment time.",
+    "Preparation timing and integrity verified; full pedagogical review not repeated.",
+    "Initial isolated setup used a placeholder environment key, failed before generation; corrected locally and restarted fresh measurement. No cloud data affected."
+  ],
+  "comparison": {
+    "previousProject13Ms": 989592,
+    "previousProject14Ms": 1020763,
+    "reductionVsProject13Percent": 70.39214140777209
+  },
+  "screenshot": ".local/qa-timing-20261019/resultado.png"
+}

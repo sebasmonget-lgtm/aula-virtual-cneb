@@ -8,6 +8,9 @@ import { loadLearningExperienceSkill } from "./learning-experience-skill.mjs";
 import { focusedKnowledgeForDirectWorkflow } from "./ai-focused-knowledge.mjs";
 import {isMaterialPlaceholder} from './annual-proposal-intent.mjs';
 
+import { routeObservationCriteria, validCriterionMoments } from "./activity-observation-plan.mjs";
+import { validateOfficialPerformanceRefs, OFFICIAL_PERFORMANCE_VERSION } from "./official-performance-references.mjs";
+
 const string = { type: "string", minLength: 1 };
 const strings = { type: "array", items: string };
 const text = maxLength => ({ ...string, maxLength });
@@ -20,18 +23,23 @@ export const PROJECT_PREVIEW_SCHEMA = schema("project-preview-v1", {
   context_summary: string, context_points: strings, additional_context_example: string,
   purpose_options: { type: "array", minItems: 2, maxItems: 3, items: string },
 });
-const criterionSchema = object({ competency_id: string, criterion: text(400), expected_evidence: { ...texts(200), minItems: 1 } });
+const performanceRefsSchema = { type: "array", maxItems: 3, items: string };
+const criterionSchema = object({ competency_id: string, criterion: text(400), expected_evidence: { ...texts(200), minItems: 1 }, official_performance_refs: performanceRefsSchema });
 const journeySchema = object({ title: text(140), description: text(500) });
 export const PROJECT_DEPENDENTS_SCHEMA = schema("project-dependents-v1", {
   guiding_questions: { type: "array", minItems: 2, maxItems: 8, items: text(250) },
   journey: { type: "array", minItems: 2, maxItems: 7, items: journeySchema },
   general_criteria: { type: "array", minItems: 1, maxItems: 6, items: criterionSchema },
 });
+const momentSchema = { type: "array", minItems: 1, maxItems: 3, items: { type: "string", enum: ["opening", "development", "closure"] } };
+const dailyCriterionSchema = object({ competency_id: string, criterion_text: text(500), expected_evidence: text(500), observation_focus: { ...texts(240), minItems: 1 }, observation_moments: momentSchema, official_performance_refs: performanceRefsSchema });
 const activitySchema = object({ date: string, title: text(180), purpose: text(500),
-  competency_ids: { type: "array", minItems: 1, maxItems: 2, items: string },
+  competency_ids: { type: "array", minItems: 1, maxItems: 6, items: string },
+  official_performance_refs: performanceRefsSchema,
+  observation_moments: momentSchema, additional_criteria: { type: "array", maxItems: 5, items: dailyCriterionSchema },
   criterion_competency_id: string, pedagogical_intention: text(500), criterion_text: text(500),
   expected_evidence: text(500), acceptable_evidence_variations: texts(240), observation_focus: { ...texts(240), minItems: 1 },
-  materials: texts(160), mediation_notes: text(500), continuity_from_previous: text(400),
+  materials: texts(160), mediation_notes: text(800), continuity_from_previous: text(400),
   continuity_to_next: text(400), flexibility_notes: text(500),
   role_in_project: text(400), expected_progression: text(400),
   estimated_minutes: { type: "integer", minimum: 10, maximum: 180 } });
@@ -80,7 +88,7 @@ export function validateProjectDecisions(input, allowedIds) {
     competency_ids: [...selected], additional_context: String(input.additional_context ?? "").trim().slice(0, 1000) };
 }
 
-export function validateProjectDependents(output, competencyIds) {
+export function validateProjectDependents(output, competencyIds, referenceOptions = {}) {
   if (!Array.isArray(output?.guiding_questions) || output.guiding_questions.length < 1 || output.guiding_questions.length > 8 ||
       output.guiding_questions.some((value) => !hasText(value, 250)) ||
       !Array.isArray(output.journey) || output.journey.length < 2 || output.journey.length > 7 ||
@@ -90,10 +98,11 @@ export function validateProjectDependents(output, competencyIds) {
         !Array.isArray(row.expected_evidence) || !row.expected_evidence.length || row.expected_evidence.some((value) => !hasText(value, 200))) ||
       new Set(output.general_criteria.map((row) => row.competency_id)).size !== competencyIds.length)
     fail("invalid_dependents", "No pudimos preparar preguntas y evaluación coherentes. Inténtalo nuevamente.");
+  for (const row of output.general_criteria) validateOfficialPerformanceRefs(row.official_performance_refs, row.competency_id, referenceOptions.age, referenceOptions);
   return output;
 }
 
-export function validateProjectMaster(output, decisions, dependents, availableDates) {
+export function validateProjectMaster(output, decisions, dependents, availableDates, referenceOptions = {}) {
   if (!hasText(output?.meaningful_situation, 1200))
     fail("missing_meaningful_situation", "Explica de dónde surge este proyecto, por qué tiene sentido para el aula y qué pregunta o reto podrán explorar los niños, usando solo el contexto confirmado.");
   if(Array.isArray(output?.resources)&&output.resources.some(isMaterialPlaceholder))
@@ -109,21 +118,36 @@ export function validateProjectMaster(output, decisions, dependents, availableDa
     const normalized = String(row.title ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
     if (!dates.has(row.date) || seenDates.has(row.date) || !hasText(row.title, 180) || titles.has(normalized) ||
         !hasText(row.purpose, 500) || !Array.isArray(row.competency_ids) || !row.competency_ids.length ||
-        row.competency_ids.length > 2 || row.competency_ids.some((id) => !selected.has(id)) ||
+        row.competency_ids.length > 6 || new Set(row.competency_ids).size !== row.competency_ids.length || row.competency_ids.some((id) => !selected.has(id)) ||
         !row.competency_ids.includes(row.criterion_competency_id) || !hasText(row.pedagogical_intention, 500) ||
         !hasText(row.criterion_text, 500) || !hasText(row.expected_evidence, 500) ||
         !Array.isArray(row.acceptable_evidence_variations) || row.acceptable_evidence_variations.some((value) => !hasText(value, 240)) ||
         !Array.isArray(row.observation_focus) || !row.observation_focus.length || row.observation_focus.some((value) => !hasText(value, 240)) ||
         !Array.isArray(row.materials) || row.materials.some((value) => !hasText(value, 160)||isMaterialPlaceholder(value)) ||
-        !hasText(row.mediation_notes, 500) || !hasText(row.continuity_from_previous, 400) ||
+        !hasText(row.mediation_notes, 800) || !hasText(row.continuity_from_previous, 400) ||
         !hasText(row.continuity_to_next, 400) || !hasText(row.flexibility_notes, 500) ||
         !hasText(row.role_in_project, 400) ||
         !hasText(row.expected_progression, 400) || !Number.isInteger(row.estimated_minutes) ||
         row.estimated_minutes < 10 || row.estimated_minutes > 180)
       fail("invalid_activity_map", "Una actividad necesita revisar su calendario, competencias o materiales. Los materiales deben ser concretos, sin «por definir».");
+    if (referenceOptions.strictInstructions && !/[.!?…][»”"')]*$/u.test(row.mediation_notes.trim()))
+      fail("incomplete_teacher_instruction", "La mediación docente debe terminar en una frase completa. Sintetiza la indicación sin cortarla al alcanzar el límite.");
+    const criteria = routeObservationCriteria(row);
+    for (const criterion of criteria) {
+      try { validateOfficialPerformanceRefs(criterion.official_performance_refs, criterion.competency_id, referenceOptions.age, referenceOptions); }
+      catch (error) { fail("invalid_official_reference", error.message); }
+    }
+    if (!validCriterionMoments(row.observation_moments) ||
+        (row.additional_criteria !== undefined && (!Array.isArray(row.additional_criteria) || row.additional_criteria.length > 5)) ||
+        criteria.some(item => !row.competency_ids.includes(item.competency_id) || !hasText(item.criterion_text, 500) ||
+          !hasText(item.expected_evidence, 500) || !validCriterionMoments(item.observation_moments) ||
+          (item.observation_focus !== undefined && (!Array.isArray(item.observation_focus) || !item.observation_focus.length || item.observation_focus.some(text => !hasText(text, 240))))) ||
+        new Set(criteria.map(item => item.competency_id)).size !== criteria.length ||
+        (row.additional_criteria !== undefined && row.competency_ids.some(id => !criteria.some(item => item.competency_id === id))))
+      fail("invalid_activity_criteria", "Cada competencia de la actividad necesita su propio criterio, evidencia y momento de observación.");
     seenDates.add(row.date); titles.add(normalized);
   }
-  const covered = new Set(output.activities.flatMap(row => row.competency_ids));
+  const covered = new Set(output.activities.flatMap(row => routeObservationCriteria(row).map(item => item.competency_id)));
   if (decisions.competency_ids.some(id => !covered.has(id)))
     fail("missing_competency_opportunity", "El recorrido debe incluir oportunidades de actividad para cada competencia elegida. Conserva el propósito y prepara la secuencia completa, sin añadir etiquetas nominales.");
   const ordered = [...output.activities].sort((a, b) => a.date.localeCompare(b.date));
@@ -136,7 +160,10 @@ export function validateProjectMaster(output, decisions, dependents, availableDa
     pedagogical_intention: item.pedagogical_intention,
     evaluation_criterion: item.criterion_text, criterion_text: item.criterion_text,
     expected_evidence: item.expected_evidence,
+    ...(item.official_performance_refs ? { official_performance_refs: item.official_performance_refs } : {}),
     acceptable_evidence_variations: item.acceptable_evidence_variations,
+    ...(item.observation_moments ? { observation_moments: item.observation_moments } : {}),
+    ...(item.additional_criteria ? { additional_criteria: item.additional_criteria } : {}),
     observation_focus: item.observation_focus, materials: item.materials,
     mediation_notes: item.mediation_notes, continuity_from_previous: item.continuity_from_previous,
     continuity_to_next: item.continuity_to_next, flexibility_notes: item.flexibility_notes,
@@ -155,6 +182,7 @@ export function projectDetails({ source, preview, decisions, dependents, master,
       item.competency_ids.filter((id) => id !== item.criterion_competency_id) }));
   return {
     flow_version: "project-master-v2",
+    ...(master.activity_route.some(row => row.official_performance_refs !== undefined) ? { official_performance_version: OFFICIAL_PERFORMANCE_VERSION } : {}),
     blueprint_version: "activity-blueprint-v1", document_template_version: "experience-unified-v2",
     title: source.title, purpose: decisions.purpose, starting_point: decisions.context_summary,
     ...(source.experience_type === "unit" ? { learning_need_or_context: decisions.context_summary,
@@ -166,7 +194,8 @@ export function projectDetails({ source, preview, decisions, dependents, master,
     spaces_and_materials: master.resources,
     evidence_opportunities: dependents.general_criteria.flatMap((item) => item.expected_evidence),
     family_or_community_links: [], adjustment_points: [],
-    flexibility_notes: "El recorrido puede ajustarse según lo observado durante el proyecto.",
+    flexibility_notes: "Ajustar el acompañamiento y los apoyos según lo observado, conservando la secuencia confirmada.",
+    ...(previous?.resource_readiness ? {resource_readiness:previous.resource_readiness} : {}),
     preview, decisions, dependents, planning_feedback: previous?.planning_feedback ?? null,
     ...(previous?.rebased_from?{rebased_from:previous.rebased_from}:{}),
     project_master: { meaningful_situation: master.meaningful_situation, foundation: master.foundation, closing_description: master.closing_description,
@@ -175,7 +204,7 @@ export function projectDetails({ source, preview, decisions, dependents, master,
   };
 }
 
-export function validateEditedActivityMap(route, decisions, dependents, dates) {
+export function validateEditedActivityMap(route, decisions, dependents, dates, age = null) {
   if (!Array.isArray(route) || route.length !== dates.length)
     fail("invalid_activity_map", "Debe existir una actividad por cada día confirmado.");
   const allowedDates = new Set(dates), usedDates = new Set(), usedIds = new Set(), usedTitles = new Set();
@@ -185,14 +214,23 @@ export function validateEditedActivityMap(route, decisions, dependents, dates) {
     if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(row.id ?? "") ||
         usedIds.has(row.id) || !allowedDates.has(row.date) || usedDates.has(row.date) || usedTitles.has(normalizedTitle) ||
         !hasText(row.title, 180) || !hasText(row.specific_purpose, 500) ||
-        !Array.isArray(row.competency_ids) || !row.competency_ids.length || row.competency_ids.length > 2 ||
-        row.competency_ids.some((id) => !allowedCompetencies.has(id)) ||
+        !Array.isArray(row.competency_ids) || !row.competency_ids.length || row.competency_ids.length > 6 ||
+        new Set(row.competency_ids).size !== row.competency_ids.length || row.competency_ids.some((id) => !allowedCompetencies.has(id)) ||
         !row.competency_ids.includes(row.criterion_competency_id) || !hasText(row.evaluation_criterion, 500) ||
         !hasText(row.expected_evidence, 500) || !Array.isArray(row.observation_focus) || !row.observation_focus.length ||
-        !hasText(row.pedagogical_intention, 500) || !hasText(row.mediation_notes, 500) ||
+        !hasText(row.pedagogical_intention, 500) || !hasText(row.mediation_notes, 800) ||
         !hasText(row.continuity_from_previous, 400) || !hasText(row.continuity_to_next, 400) ||
         !hasText(row.flexibility_notes, 500) || !hasText(row.role_in_project, 400) || !hasText(row.expected_progression, 400))
       fail("invalid_activity_map", `Revisa la actividad ${index + 1} del mapa.`);
+    if(row.additional_criteria!==undefined){
+      const criteria=routeObservationCriteria(row);
+      if(!Array.isArray(row.additional_criteria)||row.additional_criteria.length>5||!validCriterionMoments(row.observation_moments)||
+        criteria.some(item=>!row.competency_ids.includes(item.competency_id)||!hasText(item.criterion_text,500)||!hasText(item.expected_evidence,500)||!validCriterionMoments(item.observation_moments))||
+        new Set(criteria.map(item=>item.competency_id)).size!==row.competency_ids.length)
+        fail("invalid_activity_criteria","Cada competencia del mapa necesita su propio criterio y evidencia.");
+    }
+    for (const criterion of routeObservationCriteria(row))
+      validateOfficialPerformanceRefs(criterion.official_performance_refs, criterion.competency_id, age);
     usedIds.add(row.id); usedDates.add(row.date); usedTitles.add(normalizedTitle);
     return { ...row, date: row.date, planned_date: row.date, number: index + 1, position: index + 1, competency_id: row.criterion_competency_id,
       primary_competency_id: row.criterion_competency_id,
@@ -244,7 +282,7 @@ async function call({ workflow, task, context, outputSchema, resolvePlan, create
     ? " Usa las valoraciones docentes confirmadas de planning_feedback para actualizar las oportunidades, mediación y progresión pertinentes a esta propuesta. Distingue esos resultados del diagnóstico inicial: no repitas automáticamente necesidades antiguas como si fueran actuales. Un nivel B o C no significa que todos necesiten el mismo apoyo; sin registro o sin valoración no es nivel C. Conserva fortalezas y no inventes hechos, niveles ni necesidades individuales."
     : "";
   const response = await createProvider(plan, { timeoutMs: 180_000, ...providerOptions })
-    .generate(buildProviderRequest(workflow, { ...context, task: `${context.task}${feedbackInstruction}`,
+    .generate(buildProviderRequest(workflow, { ...context, task: `${context.task}${feedbackInstruction} Cuando el esquema incluya official_performance_refs, selecciona entre 1 y 3 IDs pertinentes de didactic_knowledge.official_performance_catalog para CADA criterio general y diario, también los adicionales. Lee el desempeño completo y vincúlalo con la actuación realmente propuesta, la competencia y la edad; no selecciones por palabras sueltas ni obligues a demostrar todo el desempeño en un día. Si no hay desempeño publicado para esa competencia y edad, devuelve [] y usa el referente de ciclo. No inventes IDs ni copies otra edad. En mediation_notes da dos o tres indicaciones concretas, idealmente de hasta 500 caracteres; el esquema deja holgura hasta 800. Termina cada indicación con puntuación. Sintetiza antes de alcanzar el límite de cualquier campo, sin cortar palabras ni frases.`,
       didactic_knowledge: didacticKnowledge },
       plan, outputSchema, await loadSkill()));
   return { output: response.output, metadata: { provider: response.provider_metadata?.provider ?? plan.provider,
@@ -272,7 +310,7 @@ export async function generateProjectDependents({ context, decisions, providerDe
   const result = await call({ workflow, task: "dependents", resolvePlan, createProvider, loadSkill,
     outputSchema: PROJECT_DEPENDENTS_SCHEMA, context: { ...context, confirmed_decisions: providerDecisions,
       task: "Propón preguntas guía, recorrido flexible y un criterio general con evidencias esperadas para CADA competencia elegida. Derívalos del propósito y contexto que la docente acaba de elegir. No cambies las competencias ni inventes observaciones. No son todavía actividades diarias." } });
-  validateProjectDependents(result.output, decisions.competency_ids);
+  validateProjectDependents(result.output, decisions.competency_ids, { age: context.age, required: true });
   return result;
 }
 
@@ -296,12 +334,14 @@ export async function generateProjectMaster({ context, decisions, providerDecisi
     const outputSchema = { ...PROJECT_MASTER_SCHEMA, id: "project-single-master-v3",
       required: [...PROJECT_MASTER_SCHEMA.required, ...PROJECT_DEPENDENTS_SCHEMA.required],
       properties: { ...PROJECT_MASTER_SCHEMA.properties, ...PROJECT_DEPENDENTS_SCHEMA.properties } };
-    const requestContext = { ...context, confirmed_decisions: providerDecisions,
+    const requestContext = { ...context, official_performance_version: OFFICIAL_PERFORMANCE_VERSION, confirmed_decisions: providerDecisions,
       available_instructional_dates: availableDates, instructional_dates: availableDates,
-      task: `${meaningfulSituationInstruction} Crea el proyecto completo en una sola respuesta: fundamento, preguntas orientadoras, recorrido flexible, un criterio general con evidencia esperada por competencia, cierre y recursos. Redacta una fundamentación breve, de hasta 1200 caracteres, con frases completas; sintetiza antes de alcanzar el límite, nunca cortes una frase. Incluye exactamente una actividad por cada una de las ${availableDates.length} fechas recibidas. No cambies competencias, fechas ni decisiones docentes. Usa acciones concretas y palabras sencillas. Define materiales concretos en español para cada día a partir de las decisiones y recursos del proyecto. Nunca escribas «por definir», «por seleccionar» ni nombres de campos técnicos. No inventes disponibilidad. No inventes observaciones ni logros.` };
+      task: `${meaningfulSituationInstruction} Una actividad puede trabajar varias competencias pertinentes, sin obligar a integrar todas cada día. La primera tiene criterion_competency_id y su criterio; cada otra competencia declarada necesita su propio additional_criteria con criterio, evidencia, foco y observation_moments. Indica opening, development o closure según dónde se podrá observar; un criterio puede reaparecer en más de un momento con la misma identidad. No añadas etiquetas sin una actuación observable. Cada actividad debe aportar una nueva pregunta, decisión o revisión respecto de la anterior, con un primer paso concreto y ayudas opcionales. Un producto puede ser una actuación, representación o solución; no exijas fabricar un objeto. No confundas interpretar emociones de personajes con regular emociones propias, elegir cómo participar con construir acuerdos, ni un dibujo con escritura propia. En artes conserva la intención expresiva y permite explorar, recordar, variar y compartir; en comunicación concreta el texto accesible, el destinatario y la autoría infantil, aceptando dictado como apoyo. No inventes conflictos ni recursos y no impongas presentaciones públicas. Crea el proyecto completo en una sola respuesta: fundamento, preguntas orientadoras, recorrido flexible, un criterio general con evidencia esperada por competencia, cierre y recursos. Redacta una fundamentación breve, de hasta 1200 caracteres, con frases completas; sintetiza antes de alcanzar el límite, nunca cortes una frase. Incluye exactamente una actividad por cada una de las ${availableDates.length} fechas recibidas. No cambies competencias, fechas ni decisiones docentes. Usa acciones concretas y palabras sencillas. Formula preguntas que un niño de esta edad pueda contestar al mirar, probar o contar algo concreto. No repitas advertencias en cada apartado: coloca cada precaución solo donde cambia una decisión. Permite compartir hallazgos sustentados y decidir cuidados seguros cuando estén autorizados. Si se comparan registros, prevé identificar de qué objeto o planta y de qué fecha es cada uno; la docente puede anotar esos datos. No exijas recordar o contar una respuesta que no fue escuchada. El criterio debe valorar la competencia elegida y la actuación realmente propuesta, no clasificar fuentes si el propósito es comunicarse oralmente. Define materiales concretos en español para cada día a partir de las decisiones y recursos del proyecto. Nunca escribas «por definir», «por seleccionar» ni nombres de campos técnicos. Usa solo recursos confirmados por la docente (incluido resource_readiness), materiales disponibles y producciones previas de la secuencia. Si propones dibujar, recortar o escribir, comprueba que el soporte y los útiles aparecen en esos recursos; no agregues papel por costumbre. Una alternativa debe permitir la misma actuación observable: imaginar una planta no sustituye observar sus cambios reales. No inventes disponibilidad, observaciones ni logros.` };
     const validate = output => {
-      const generatedDependents = validateProjectDependents(Object.fromEntries(PROJECT_DEPENDENTS_SCHEMA.required.map(key => [key, output[key]])), decisions.competency_ids);
-      return { output: validateProjectMaster(output, decisions, generatedDependents, availableDates), dependents: generatedDependents };
+      let generatedDependents;
+      try { generatedDependents = validateProjectDependents(Object.fromEntries(PROJECT_DEPENDENTS_SCHEMA.required.map(key => [key, output[key]])), decisions.competency_ids, { age: context.age, required: true }); }
+      catch (error) { if (error instanceof ProjectFlowError) throw error; fail("invalid_official_reference", error.message); }
+      return { output: validateProjectMaster(output, decisions, generatedDependents, availableDates, { age: context.age, required: true, strictInstructions: true }), dependents: generatedDependents };
     };
     if(backgroundExecution){
       const fingerprint=createHash('sha256').update(JSON.stringify({requestContext,decisions,availableDates})).digest('hex');
@@ -334,7 +374,7 @@ export async function generateProjectMaster({ context, decisions, providerDecisi
       project_start_date: availableDates[0], project_end_date: availableDates.at(-1),
       instructional_dates: availableDates, total_activities: availableDates.length,
       task: `${meaningfulSituationInstruction} Diseña exactamente ${availableDates.length} actividades: una por cada fecha confirmada en instructional_dates, sin agregar, omitir ni cambiar fechas. El campo date de cada fila es su planned_date confirmado. Cada actividad debe ser un blueprint reutilizable con propósito, competencia principal, posibles competencias secundarias, intención pedagógica, criterio observable, evidencia esperada y variaciones aceptables, foco de observación, materiales, mediación, continuidad y flexibilidad. Usa solo las competencias confirmadas. No inventes observaciones ni niveles. La última actividad conduce al cierre. Mantén las decisiones docentes intactas y devuelve solo los campos del esquema.` } });
-  return { ...result, output: validateProjectMaster(result.output, decisions, dependents, availableDates) };
+  return { ...result, output: validateProjectMaster(result.output, decisions, dependents, availableDates, { age: context.age, required: true, strictInstructions: true }) };
 }
 
 export async function generateProjectFormal({ context, workflow = "project", resolvePlan = resolveAIExecutionPlan,

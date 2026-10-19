@@ -13,19 +13,22 @@ export function preparationExecutor({db,request,pending,prepareDocument,partitio
       p.stage="ready";await checkpoint(p);return true;
     }
     const call=async(path,body,method,extra)=>request(extra?.db?{...job,db:extra.db}:job,path,body,method,extra);
-    const generatedCall=async(path,body)=>{
+    let saving=Promise.resolve();
+    const durableCheckpoint=()=>{const snapshot=structuredClone(p);saving=saving.then(()=>checkpoint(snapshot));return saving;};
+    const generatedCall=async(path,body,item)=>{
       const master=job.kind==='project'&&path===`/api/project-flow/${p.project_id}/master`;
-      if(p.attempt_pending&&!(master&&p.project_provider_checkpoint?.provider_responses))throw Object.assign(new Error("Uncertain provider result"),{uncertain:true});
+      const state=item??p;
+      if(state.attempt_pending&&!(master&&p.project_provider_checkpoint?.provider_responses))throw Object.assign(new Error("Uncertain provider result"),{uncertain:true});
       const wait=Date.parse(p.provider_poll_after)-Date.now();
       if(master&&wait>0)await new Promise(resolve=>setTimeout(resolve,Math.min(wait,5000)));
       delete p.provider_poll_after;
-      p.attempt_pending=true;await checkpoint(p);
+      state.attempt_pending=true;await durableCheckpoint();
       const extra=master?{masterExecution:{checkpoint:p.project_provider_checkpoint??{},save:async value=>{p.project_provider_checkpoint=value;await checkpoint(p);}}}:undefined;
-      try { const result=await call(path,body,undefined,extra);p.attempt_pending=false;
+      try { const result=await call(path,body,undefined,extra);state.attempt_pending=false;
         if(result?.generation_pending){p.provider_poll_after=new Date(Date.now()+5000).toISOString();await checkpoint(p);}
         return result;
       }
-      catch(error){error.uncertain=error.status==null || error.status>=500 || master&&!!p.project_provider_checkpoint?.provider_responses&&error.status!==409;throw error;}
+      catch(error){const quota=error.reason==='insufficient_quota'||error.provider_reason==='insufficient_quota';error.uncertain=!quota&&(error.status==null || error.status>=500 || master&&!!p.project_provider_checkpoint?.provider_responses&&error.status!==409);if(!error.uncertain)state.attempt_pending=false;await durableCheckpoint();throw error;}
     };
     if(job.kind==="project"){
       const plan=(await db.query(`select * from annual_plans where id=$1 and classroom_id=$2 and (status='active' or $3::boolean and status='archived')`,[job.source_id,job.classroom_id,p.future_version===true])).rows[0];
@@ -37,7 +40,7 @@ export function preparationExecutor({db,request,pending,prepareDocument,partitio
       if(row.details.dependents && (row.details.decisions?.additional_context??"") !== (p.additional_context??""))
         throw new VersionConflictError("Este proyecto fue preparado con otro contexto. Conserva la preparación o solicita una nueva versión desde Mi año.");
       if(row.status==="active" || row.details.stage==="map_review"){
-        if(p.acceptance?.policy===COMPLETE_PROJECT_POLICY)return prepareAcceptedProjectActivities({db,job,p,call,checkpoint,pending,generatedCall});
+        if(p.acceptance?.policy===COMPLETE_PROJECT_POLICY)return prepareAcceptedProjectActivities({db,job,p,call,checkpoint:durableCheckpoint,pending,generatedCall});
         p.stage="ready";p.attempt_pending=false;await checkpoint(p);return true;
       }
       const decisions={context_summary:proposal.rationale,purpose:proposal.purpose,competency_ids:proposal.primary_competency_ids,additional_context:p.additional_context};

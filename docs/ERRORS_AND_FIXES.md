@@ -1,5 +1,24 @@
 # Errores y soluciones
 
+## 2026-10-19 — Referentes genéricos y mediación cortada en el límite de un campo
+
+**Síntoma y causa.** W-05 seguía abierto: el KB tenía paráfrasis por edad y mapeos oficiales vacíos; Word no podía ofrecer una selección verificable. En la muestra real posterior una mediación llegó cortada en el límite de 500 caracteres; el validador solo revisaba longitud/no vacío.
+
+**Corrección y prevención.** Catálogo aditivo de 134 desempeños con fuente/hash/página; selección explícita por criterio y validación de IDs/edad/competencia, herencia y Word. Históricos intactos. Mediación breve con holgura de 800 caracteres y terminación de frase comprobada solo en nueva generación, sin filtros de privacidad/caracteres ni garantías semánticas absolutas. Una segunda muestra real llega completa. Comparación de fuente 134/134, 155 regresiones, typecheck/lint/build PASS y doce páginas Word revisadas. Informe `docs/qa/QA_DESEMPENOS_OFICIALES_2026-10-19.md`. Local, sin despliegue.
+
+## 2026-10-19 — Hallazgos abiertos de pedagogía y Word en generación real
+
+**Síntomas reproducidos.** Macetas no confirmadas son recurso central de una ruta ya preparada; alternativas sin objeto no permiten observar varios criterios. Una mediación añade papel no previsto. La proyección usa solo el primer rótulo de observación y omite el Cierre explícito en actividades 8 y 10. El Word mantiene una tabla vacía de enfoques y divide criterios/referentes entre páginas.
+
+**Causa comprobada y límites.** `activityPedagogicalBlocks` resuelve un único `observeAt`; el renderer de proyecto conserva la tabla sin datos y el diario imprime fallbacks genéricos. La validación de fechas, contratos e IDs no evalúa la viabilidad semántica de alternativas. El desbalance de cautelas y concreción se registra como causa probable, sin atribuirlo al modelo mediante una comparación no ejecutada.
+
+**Estado.** P1/P2 abiertos, sin corrección aplicada en esta revisión. Se conserva la muestra para regresión: cien comprobaciones canónicas diarias PASS, once Word y cuarenta páginas revisadas. Registro detallado con recomendaciones y criterios de aceptación: `docs/qa/QA_PEDAGOGIA_MACETAS_2026-10-19.json`. No son pérdidas de datos ni se declara aprobada toda Ayni.
+
+## 2026-10-19 — Cola compartida y extracción incompleta de decisiones
+
+Síntoma: preparación larga y resultados incompatibles con la versión de Preview; decisiones quinta y sexta ausentes del contexto estructurado. Causas: reclamo global de preparation_jobs por ejecutores antiguos y omisiones de extracción no detectadas. Solución local: cola v2 invisible al trabajador antiguo, lectura histórica sin reintento, checkpoints por actividad y conservación literal de turnos omitidos respetando ediciones docentes. Regresiones: aislamiento, fallo parcial, diez actividades/publicación atómica, seis turnos y retiro manual. Prevención: no activar hasta migrar y verificar entorno QA; no afirmar reparación cloud todavía.
+
+
 ## 2026-10-18 — El motivo del proyecto no se desarrollaba ni se mostraba como situación significativa
 
 **Síntoma.** El año guardaba `rationale`, pero el mapa no exigía una situación significativa distinta del fundamento. El detalle no mostraba ese motivo; la formalización moderna copiaba el contexto breve y Word lo concatenaba con el fundamento.
@@ -2145,3 +2164,16 @@ Síntoma reproducido: proyecto9 páginas/última vacía y diaria5/última vacía
 Otro hallazgo del render: sin interpretation_review se anunciaba revisado por defecto. Solo status reviewed explícito permite ese rótulo; ausencia/desconocido queda pendiente. La confirmación y las interpretaciones canónicas no cambian. Regresión de confirmación solo de planificación frente a revisión explícita, fuente y artefactos históricos intactos. Informe QA_PEDAGOGICA_FINAL_2026-10-18.md. Sin IA adicional para corregir formato, migraciones ni escrituras pedagógicas cloud.
 
 Ampliación de la misma ronda: inspección del contrato vigente detecta cinco campos familiares ausentes del snapshot anual (identidad/autonomía, lectura/escritura, matemática, exploración y contexto/expectativas). La primera muestra usaba el formato anterior y no demostraba esta integración. Se conserva la lista anterior y se deriva cobertura adicional del contrato familiar; prueba recorre las ocho preguntas y mantiene las respuestas como family_report, nunca evidencia observada. Se traducen etiquetas de campos textuales en Word sin cambiar respuestas o texto observado. Se ejecuta un anual adicional real con entrevista vigente, dentro del mismo techo; métricas finales en informe/JSON. Sin backfill de planes previos.
+
+## 2026-10-19 — Criterios múltiples y correcciones de la revisión de macetas
+
+Una actividad puede desarrollar varias competencias pertinentes, cada una con criterio, evidencia y uno o varios momentos de observación. Se heredan y persisten las referencias completas; se reutiliza el almacenamiento existente. La muestra real detectó y permitió corregir otra restricción de AIContextBundle a una competencia por llamada diaria. No se obliga a integrar dos competencias en todos los días ni se reescriben actividades confirmadas.
+
+Se agregó confirmación docente previa para recursos explícitamente pendientes, se reforzaron las reglas de viabilidad y lenguaje práctico y se ajustaron los Word. Las observaciones libres sin criterio tampoco reciben un criterio por defecto en el documento. Detalle, evidencia, límites y rollback: docs/qa/QA_CORRECCIONES_PEDAGOGICAS_2026-10-19.md. En esta etapa inicial el mapeo de desempeños oficiales estaba pendiente. La ampliación posterior lo implementa y valida: ver docs/qa/QA_DESEMPENOS_OFICIALES_2026-10-19.md; las paráfrasis históricas siguen diferenciadas de las citas oficiales.
+
+QA: 96 regresiones PASS; typecheck, lint y build PASS. Muestra nueva de IA real: un Master y seis actividades de cinco años; ocho llamadas pagadas contando una revisión del último borrador. Costo adicional estimado USD 0,1066935; acumulado USD 4,607772955 de 5. Sin escrituras cloud, commit ni despliegue de esta ronda.
+
+
+## 2026-10-19 — Prerrequisito de publicación: cola nueva y base compartida
+
+Síntoma: preparation_jobs_v2 ausente en la conexión cloud prevista para Preview. Causa: la corrección local introduce una cola aislada, mientras Preview y Producción aún comparten el esquema anterior. Solución de activación: proyecto Supabase QA independiente autorizado, 77 migraciones y copia acotada de la cuenta QA con validación íntegra de filas/archivos. Auth/RLS reales aprobados; prueba de cola revertida. El proyecto Vercel no tiene repositorio conectado y rechaza variables por rama: usar overrides exclusivos del despliegue Preview y verificar su auth/config antes de compartirlo. Prevención: no publicar basándose solo en build; comprobar conexión efectiva, tabla, permisos y que el target de Producción conserve ID/SHA. Evidencia privada en .local/release-20261019/.

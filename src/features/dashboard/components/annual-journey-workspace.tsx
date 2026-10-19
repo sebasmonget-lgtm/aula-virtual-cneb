@@ -46,7 +46,7 @@ type Proposal = { editor_version?: number; available_experiences?: Row[]; curric
 type Plan = { id: string; status: string; revision: number; version: number; proposal: Proposal; display_subjects?: Record<string,string>; document_context?: { calendar?: AnnualMapCalendar } };
 type Plans = { draft: Plan | null; active: Plan | null; archived: Plan[] };
 type Start = { chat_summary:AnnualChatSummary; today?:string; snapshot: Snapshot; curriculum: { id: string; name: string }[] };
-type Job = { id: string; draft_id: string; status: "queued" | "running" | "failed" | "interrupted" | "succeeded";
+type Job = { started_at?:string;id: string; draft_id: string; status: "queued" | "running" | "failed" | "interrupted" | "succeeded";
   stage: string; completed_stages: string[]; updated_at: string; error?: string | null; poll_after_ms?: number; can_auto_resume?: boolean; resume_after_ms?: number };
 const api = async <T,>(path: string, value?: unknown): Promise<T> => {
   const response = await apiFetch(`${localDatabaseApiUrl}${path}`, value === undefined ? undefined : {

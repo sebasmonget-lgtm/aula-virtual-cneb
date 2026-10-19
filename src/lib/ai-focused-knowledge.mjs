@@ -1,5 +1,6 @@
 import { loadKnowledgeBaseV4 } from "./knowledge-base-v4.mjs";
 import { retrieveKnowledgeV4 } from "./knowledge-retrieval-v4.mjs";
+import { officialPerformanceContext } from "./official-performance-references.mjs";
 
 const DIRECT_WORKFLOWS = new Set(["annual_plan", "project", "unit", "workshop"]);
 
@@ -35,9 +36,11 @@ export async function focusedKnowledgeForDirectWorkflow({ workflow, age, compete
     source_refs: unit.source_refs });
   return {
     knowledge_base_version: kb.version,
+    official_performance_catalog: officialPerformanceContext(ids, age),
     semantic_units: semantic.map(compact),
     source_claims: claims.map(compact),
-    provenance: { knowledge_unit_ids: [...semantic, ...claims].map((unit) => unit.id),
+    provenance: { official_performance_version: kb.officialPerformanceVersion,
+      knowledge_unit_ids: [...semantic, ...claims].map((unit) => unit.id),
       source_refs: [...new Set([...semantic, ...claims].flatMap((unit) => unit.source_refs))].sort(),
       competency_ids: ids },
   };

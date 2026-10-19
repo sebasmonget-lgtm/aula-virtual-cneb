@@ -76,7 +76,7 @@ export async function handleAnnualJourneyRoutes({ request, response, url, db, te
         classification_source:"teacher",competency_v4_ids:row.competency_ids ??
           (row.source_type === "guided_diagnostic_observation" || row.classification_source === "teacher" ? [row.competency_v4_id].filter(Boolean) : [])}));
       send(response,200,{curriculum,counts:observationCoverage([],records),
-        records:records.map(r=>({id:r.id,source_type:r.source_type,student_id:r.student_id,text:r.observation_text,date:r.observed_at??r.occurred_at,competency_ids:r.competency_v4_ids})),
+        records:records.map(r=>({id:r.id,source_type:r.source_type,experience_title:r.experience_title,criterion_text:r.criterion_text,experience_id:r.experience_id,aspect_id:r.aspect_id,student_id:r.student_id,text:r.observation_text,date:r.observed_at??r.occurred_at,competency_ids:r.competency_v4_ids})),
         observed_students:new Set(records.filter(r=>r.observation_text?.trim()).map(r=>r.student_id)).size,
         unclassified:records.filter(r=>!r.competency_v4_ids.length).length},origin);return true;
     }

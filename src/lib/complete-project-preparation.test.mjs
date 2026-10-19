@@ -7,7 +7,7 @@ import {createPilotClassroom} from './pilot-onboarding-service.mjs';
 import {enqueuePreparation,ownedPreparationJob,runPreparationStep,retryPreparation,preparationFingerprint,publicPreparationJob,recoverAcceptedProjectContinuation,recoverSavedPreparationResult} from './preparation-jobs.mjs';
 import {createPendingAIGenerationsStore} from './pending-ai-generations-store.mjs';
 import {preparationExecutor} from './preparation-executor.mjs';
-import {COMPLETE_PROJECT_POLICY,publishAcceptedProjectBlock} from './complete-project-preparation.mjs';
+import {COMPLETE_PROJECT_POLICY,publishAcceptedProjectBlock,prepareAcceptedProjectActivities} from './complete-project-preparation.mjs';
 import {confirmActivityWithCriterion} from './activity-confirmation.mjs';
 import {validateActivityV4} from './activity-v4-validation.mjs';
 import {handlePreparationRoutes} from '../../scripts/preparation-routes.mjs';
@@ -25,22 +25,22 @@ test('aceptación completa: diez días, recuperación sin repetir IA y publicaci
     const input={policy:COMPLETE_PROJECT_POLICY,proposalId:proposal,dates},payload={project_id:experience,proposal_id:proposal,expected_dates:dates,additional_context:'',acceptance:{policy:COMPLETE_PROJECT_POLICY,teacher_id:teacher,accepted_at:new Date().toISOString(),reviewed_individually:false}};
     const job=await enqueuePreparation(db,{teacherId:teacher,classroomId:classroom.classroomId,kind:'project',sourceId:annual,sourceRevision:plan.revision,input,payload});
     assert.equal((await enqueuePreparation(db,{teacherId:teacher,classroomId:classroom.classroomId,kind:'project',sourceId:annual,sourceRevision:plan.revision,input,payload})).id,job.id);
-    await db.query("update preparation_jobs set status='uncertain',payload=$1::jsonb where id=$2",[JSON.stringify({...payload,stage:'master',attempt_pending:true}),job.id]);
+    await db.query("update preparation_jobs_v2 set status='uncertain',payload=$1::jsonb where id=$2",[JSON.stringify({...payload,stage:'master',attempt_pending:true}),job.id]);
     assert.equal((await recoverSavedPreparationResult(db,teacher,job.id)).status,'queued','master canónico guardado se recupera sin IA');
-    await db.query("update preparation_jobs set status='uncertain',payload=$1::jsonb where id=$2",[JSON.stringify({...payload,additional_context:'Otra decisión',stage:'master',attempt_pending:true}),job.id]);
+    await db.query("update preparation_jobs_v2 set status='uncertain',payload=$1::jsonb where id=$2",[JSON.stringify({...payload,additional_context:'Otra decisión',stage:'master',attempt_pending:true}),job.id]);
     assert.equal((await recoverSavedPreparationResult(db,teacher,job.id)).status,'uncertain','no reutiliza otro contexto');
     // Real cloud incident: legacy executor saved the master and marked the accepted job done, with zero activities.
     const legacyPayload={...payload,stage:'ready',attempt_pending:false};
-    await db.query("update preparation_jobs set status='succeeded',payload=$1::jsonb where id=$2",[JSON.stringify(legacyPayload),job.id]);
+    await db.query("update preparation_jobs_v2 set status='succeeded',payload=$1::jsonb where id=$2",[JSON.stringify(legacyPayload),job.id]);
     assert.equal(publicPreparationJob(await ownedPreparationJob(db,teacher,job.id)).status,'incomplete');
     await assert.rejects(()=>recoverAcceptedProjectContinuation(db,randomUUID(),job.id));
-    await db.query('update preparation_jobs set source_revision=source_revision+1 where id=$1',[job.id]);
+    await db.query('update preparation_jobs_v2 set source_revision=source_revision+1 where id=$1',[job.id]);
     assert.equal((await recoverAcceptedProjectContinuation(db,teacher,job.id)).status,'succeeded','changed source is not silently resumed');
-    await db.query('update preparation_jobs set source_revision=source_revision-1 where id=$1',[job.id]);
-    await db.query('update preparation_jobs set payload=$1::jsonb where id=$2',[JSON.stringify({...legacyPayload,attempt_pending:true}),job.id]);
+    await db.query('update preparation_jobs_v2 set source_revision=source_revision-1 where id=$1',[job.id]);
+    await db.query('update preparation_jobs_v2 set payload=$1::jsonb where id=$2',[JSON.stringify({...legacyPayload,attempt_pending:true}),job.id]);
     assert.equal((await recoverAcceptedProjectContinuation(db,teacher,job.id)).status,'uncertain');
     await assert.rejects(()=>retryPreparation(db,teacher,job.id),/podría repetir/);
-    await db.query("update preparation_jobs set status='succeeded',payload=$1::jsonb where id=$2",[JSON.stringify(legacyPayload),job.id]);
+    await db.query("update preparation_jobs_v2 set status='succeeded',payload=$1::jsonb where id=$2",[JSON.stringify(legacyPayload),job.id]);
     let recoveredRead;
     await handlePreparationRoutes({request:{method:'GET'},response:{},url:new URL('http://localhost/api/preparation/current'),db,teacherId:teacher,
       annualPlanningContext:async()=>({id:classroom.classroomId}),send:(_r,status,value)=>{recoveredRead={status,value};}});
@@ -66,22 +66,22 @@ test('aceptación completa: diez días, recuperación sin repetir IA y publicaci
       return confirmActivityWithCriterion(tx,path.split('/')[3],{competency_id:'CYT_INDAGA',criterion_text:'Explica una idea'},randomUUID(),body.expectedRevision,null,{acceptedBlock:true});
     };
     const execute=preparationExecutor({db,pending,request:domain});
-    await runPreparationStep(db,execute);await runPreparationStep(db,execute);assert.equal(calls,1);
+    await runPreparationStep(db,execute);await runPreparationStep(db,execute);assert.equal(calls,3);
     await db.query("delete from ai_pending_generations where workflow='activity'");
-    assert.equal((await runPreparationStep(db,execute)).status,'failed');assert.equal(calls,1);
-    await retryPreparation(db,teacher,job.id);await runPreparationStep(db,execute);assert.equal(calls,1,'durable response restores expired transport token');
+    assert.equal((await runPreparationStep(db,execute)).status,'failed');assert.equal(calls,3);
+    await retryPreparation(db,teacher,job.id);await runPreparationStep(db,execute);assert.equal(calls,3,'durable response restores expired transport token');
     // Recover the row after losing its checkpoint: the item ID proves it was already saved.
     let stored=await ownedPreparationJob(db,teacher,job.id);delete stored.payload.items[0].activity_id;
     stored.payload.attempt_pending=true;
-    await db.query("update preparation_jobs set status='uncertain',payload=$1::jsonb where id=$2",[JSON.stringify(stored.payload),job.id]);
+    await db.query("update preparation_jobs_v2 set status='uncertain',payload=$1::jsonb where id=$2",[JSON.stringify(stored.payload),job.id]);
     const lostReplyRead=async(owner=teacher)=>{let result;await handlePreparationRoutes({request:{method:'GET'},response:{},url:new URL(`http://localhost/api/preparation/${job.id}`),db,teacherId:owner,send:(_r,status,value)=>{result={status,value};}});return result;};
     assert.equal((await lostReplyRead(randomUUID())).status,409);
-    await db.query('update preparation_jobs set source_revision=source_revision+1 where id=$1',[job.id]);
+    await db.query('update preparation_jobs_v2 set source_revision=source_revision+1 where id=$1',[job.id]);
     assert.equal((await lostReplyRead()).value.status,'uncertain','no continúa una fuente distinta');
-    await db.query('update preparation_jobs set source_revision=source_revision-1 where id=$1',[job.id]);
+    await db.query('update preparation_jobs_v2 set source_revision=source_revision-1 where id=$1',[job.id]);
     assert.equal((await lostReplyRead()).value.status,'queued','recupera resultado persistido sin preguntar ni repetir IA');
     assert.equal((await lostReplyRead()).value.status,'queued','lectura idempotente');
-    await runPreparationStep(db,execute);assert.equal(calls,1);assert.equal(saves,1);
+    await runPreparationStep(db,execute);assert.equal(calls,5);assert.equal(saves,3);
     for(let i=0;i<24;i++){const step=await runPreparationStep(db,execute);if(step?.status==='failed')break;}
     stored=await ownedPreparationJob(db,teacher,job.id);assert.equal(stored.status,'failed');assert.equal(calls,10);assert.equal(saves,10);
     assert.equal((await db.query("select count(*)::int as n from activities where status='active' and experience_id=$1",[experience])).rows[0].n,0,'a failure rolls back the whole block');
@@ -116,4 +116,18 @@ test('aceptación completa: diez días, recuperación sin repetir IA y publicaci
     await handlePreparationRoutes({...routeOptions,projectFlowRow:async()=>({row:null})});assert.equal(receipt.status,409);
     await handlePreparationRoutes({...routeOptions,url:new URL('http://localhost/api/preparation/activities'),readJson:async()=>({experienceId:experience})});assert.equal(receipt.status,202);assert.equal(receipt.value.id,futureJob.id);assert.equal(calls,10);
   }finally{await db.close();}
+});
+
+test('three independent calls overlap; one failure preserves both completed siblings',async()=>{
+ const route=[1,2,3].map(number=>({id:String(number),date:`2099-11-1${number}`}));
+ const project={id:'project',status:'active',revision:1,details:{activity_route:route}};
+ const p={project_revision:1,project_fingerprint:preparationFingerprint(project.details),expected_dates:route.map(row=>row.date),items:route.map(row=>({id:row.id,route_item_id:row.id,date:row.date}))};
+ let entered=0,release;const barrier=new Promise(resolve=>{release=resolve;});const checkpoints=[];
+ await assert.rejects(()=>prepareAcceptedProjectActivities({db:{query:async()=>({rows:[]})},job:{},p,call:async()=>({experience:project}),checkpoint:async()=>{checkpoints.push(structuredClone(p));},pending:{get:async()=>({saved:true})},generatedCall:async(_path,body)=>{
+   entered++;if(entered===3)release();await barrier;
+   if(body.routeItemId==='2')throw Object.assign(Error('Transport lost'),{uncertain:true});
+   return{generation_id:body.routeItemId,proposal:{route_item_id:body.routeItemId}};
+ }}),/Transport lost/);
+ assert.equal(entered,3);assert.equal(checkpoints.at(-1).items.filter(row=>row.generated).length,2);
+ assert.equal(p.items.filter(row=>row.activity_id).length,0,'nothing published on partial generation');
 });

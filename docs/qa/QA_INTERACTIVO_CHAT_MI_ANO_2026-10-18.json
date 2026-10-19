@@ -1,0 +1,1117 @@
+{
+  "id": "QA-INTERACTIVO-CHAT-MI-ANO-2026-10-18",
+  "preview": "https://ayni-aula-staging-5t9tbxosy-ayni4.vercel.app/",
+  "commit": "d0260f43fd46e63951bc0edeb67706f48cf7ec8b",
+  "planId": "43bea5cf-d603-43cb-ae09-5f68b15b16a3",
+  "planStatus": "draft",
+  "startedAt": "2026-10-19T03:16:59.788Z",
+  "finishedAt": "2026-10-19T03:36:28.172Z",
+  "method": {
+    "userInterface": "Seis mensajes enviados desde el chat, tres después de ready. Crear Mi año pulsado una sola vez. Quince tramos visibles; detalles 9,12,13,14 abiertos y leídos por interfaz. Recarga recupera el mismo año sin volver a generarlo.",
+    "readOnlyVerification": "Consulta de conversación guardada, salida canónica de los quince proyectos y consumo. Sin inserciones directas para sustituir acciones fallidas.",
+    "dataOrigin": "QA conjunto: conversación anual y trazabilidad a situaciones significativas; datos simulados autorizados",
+    "implementation": "Solo documentación, sin modificaciones de producto, prompts, modelos, migraciones o despliegues. No se confirmó el año; queda como borrador."
+  },
+  "inputs": [
+    {
+      "text": "Tenemos bloques, cajas, botellas limpias, tapas grandes, telas, crayones y cuentos. Hay un patio pequeño y agua solo en un caño compartido. No hay impresora ni tabletas para los niños; prefiero usar lo que ya tenemos, sin pedir compras a las familias.",
+      "sentAt": "2026-10-19T03:17:00.136Z"
+    },
+    {
+      "text": "Varios niños preguntan cómo crecen las plantas porque vieron brotes en unas macetas. Tenemos un huerto cerca del colegio y una vecina podría mostrarnos cómo lo cuida, si coordinamos antes. Me gustaría aprovechar esa curiosidad, no hacer solo una ficha de las partes de la planta.",
+      "sentAt": "2026-10-19T03:17:46.234Z"
+    },
+    {
+      "text": "Por ahora solo es posible invitar a la vecina al aula; la visita al huerto no está autorizada. También quisiera considerar la Fiesta de la Canción Criolla del 31 de octubre. Podrían escuchar canciones que conocen sus familias y crear ritmos con materiales del aula. No quiero ensayos obligatorios, disfraces comprados ni que todos tengan que presentarse frente al público.",
+      "sentAt": "2026-10-19T03:18:40.928Z"
+    },
+    {
+      "text": "Me preocupa que los papás casi no se involucren en la enseñanza. Varios trabajan hasta tarde. Quisiera acercarlos con propuestas cortitas y flexibles, sin culparlos ni mandar tareas largas, y que los niños puedan compartir algo con cualquier persona que los cuide.",
+      "sentAt": "2026-10-19T03:19:25.248Z",
+      "afterReady": true
+    },
+    {
+      "text": "Hay un parque pequeño a una cuadra que podemos observar, siempre coordinando autorización y acompañamiento. No hay río ni granja cerca. A los niños les interesa por qué hay mariposas en algunas plantas y en otras no. Podría servir para otro proyecto o relacionarse con el huerto.",
+      "sentAt": "2026-10-19T03:20:20.595Z",
+      "afterReady": true
+    },
+    {
+      "text": "Antes de crear Mi año, quiero agregar una decisión: hagamos una biblioteca viajera con los cuentos que ya tenemos. Las familias pueden compartir un cuento oral o mirar imágenes cuando puedan, sin comprar libros ni exigir que manden fotos. Que los niños elijan qué llevar y nos cuenten al volver. Inclúyelo como una propuesta diferenciada si tiene sentido.",
+      "sentAt": "2026-10-19T03:21:17.010Z",
+      "afterReady": true,
+      "designatedLateTest": true
+    }
+  ],
+  "transcript": "¡Hola! Sé que es el aula CELESTE de 5 años, con 10 niños. Las familias comparten intereses diversos; en los registros de aula hay observaciones de exploración, relatos, juego y construcción, sin que esto indique niveles del grupo.\n\n¿Qué espacios, materiales o condiciones del aula podemos tener en cuenta para el plan (patio, bloques, acceso a agua o alguna restricción)?\n\nTenemos bloques, cajas, botellas limpias, tapas grandes, telas, crayones y cuentos. Hay un patio pequeño y agua solo en un caño compartido. No hay impresora ni tabletas para los niños; prefiero usar lo que ya tenemos, sin pedir compras a las familias.\n\nGracias. Tendremos en cuenta los materiales disponibles, el patio pequeño, el caño compartido y que no se harán compras para el aula.\n\n¿Qué temas o proyectos te gustaría priorizar y qué quisieras que los niños exploren o logren con ellos (por ejemplo, plantas, agua, cuentos o construcciones)?\n\nVarios niños preguntan cómo crecen las plantas porque vieron brotes en unas macetas. Tenemos un huerto cerca del colegio y una vecina podría mostrarnos cómo lo cuida, si coordinamos antes. Me gustaría aprovechar esa curiosidad, no hacer solo una ficha de las partes de la planta.\n\nGracias. Tomaré como punto de partida lo que comentas sobre las preguntas por los brotes y tu intención de explorar las plantas más allá de una ficha.\n\nPara aprovechar el huerto, ¿qué opción te resulta posible: visitarlo o pedir a la vecina que venga al aula (visita o charla en el aula)?\n\nPor ahora solo es posible invitar a la vecina al aula; la visita al huerto no está autorizada. También quisiera considerar la Fiesta de la Canción Criolla del 31 de octubre. Podrían escuchar canciones que conocen sus familias y crear ritmos con materiales del aula. No quiero ensayos obligatorios, disfraces comprados ni que todos tengan que presentarse frente al público.\n\n¡Gracias! Puedo preparar el año considerando la exploración de las plantas a partir de las preguntas por los brotes, con la vecina en el aula y sin visita al huerto. También tendré en cuenta la Fiesta de la Canción Criolla: escuchar canciones familiares y crear ritmos con materiales del aula, sin ensayos obligatorios, disfraces comprados ni presentaciones obligatorias frente al público.\n\nMe preocupa que los papás casi no se involucren en la enseñanza. Varios trabajan hasta tarde. Quisiera acercarlos con propuestas cortitas y flexibles, sin culparlos ni mandar tareas largas, y que los niños puedan compartir algo con cualquier persona que los cuide.\n\n¡Gracias! Puedo preparar el año considerando la exploración de las plantas con la vecina en el aula, las actividades flexibles para compartir con las familias y la Fiesta de la Canción Criolla sin presentaciones obligatorias. También respetaré los recursos disponibles y las restricciones que indicaste.\n\nHay un parque pequeño a una cuadra que podemos observar, siempre coordinando autorización y acompañamiento. No hay río ni granja cerca. A los niños les interesa por qué hay mariposas en algunas plantas y en otras no. Podría servir para otro proyecto o relacionarse con el huerto.\n\n¡Gracias! Puedo preparar el año considerando la exploración de las plantas con la vecina en el aula, las actividades flexibles para compartir con las familias y la Fiesta de la Canción Criolla sin presentaciones obligatorias. Tendré en cuenta los materiales disponibles y las restricciones que indicaste.\n\nAntes de crear Mi año, quiero agregar una decisión: hagamos una biblioteca viajera con los cuentos que ya tenemos. Las familias pueden compartir un cuento oral o mirar imágenes cuando puedan, sin comprar libros ni exigir que manden fotos. Que los niños elijan qué llevar y nos cuenten al volver. Inclúyelo como una propuesta diferenciada si tiene sentido.\n\n¡Hola! Puedo preparar el año para el aula CELESTE de 5 años. Tendré en cuenta la exploración de las plantas con la vecina en el aula, la Fiesta de la Canción Criolla con actividades sin participación obligatoria y propuestas cortas y flexibles para compartir con las familias. También respetaré los materiales y las restricciones que indicaste.",
+  "criteriaFrozenBeforeGeneration": [
+    "Materiales reales y restricciones deben conservarse sin inventar recursos.",
+    "Curiosidad por brotes y huerto cercano puede originar situación significativa, con pregunta y reto infantil.",
+    "Fiesta de la Canción Criolla: oportunidad cultural, sin ensayos obligatorios ni costos familiares.",
+    "Poca participación familiar: no culpar a familias ni tratar su asistencia como logro infantil; opciones breves y flexibles.",
+    "Parque cercano: recurso posible con autorización y seguridad; río y granja no disponibles, no inventar salidas.",
+    "Una sugerencia posterior a información suficiente debe poder enviarse e influir en el plan."
+  ],
+  "results": {
+    "generation": "PASS: quince propuestas persistidas como borrador.",
+    "afterReady": "FAIL de extremo a extremo: enviar funciona y los seis mensajes se guardan, pero dos aportes tardíos no llegan al contexto ni a la propuesta.",
+    "competencies": "PASS en esta muestra: quince proyectos con dos competencias distintas y oportunidades concretas, treinta oportunidades en total.",
+    "pedagogy": "PARTIAL global por omisiones de contexto y temporalidad; los fundamentos y retos generados son generalmente coherentes y utilizables. No se considera aprobación integral del producto.",
+    "persistence": "PASS por interfaz: mismo plan tras recargar, quince tramos y sin nueva pantalla de generación."
+  },
+  "inputTrace": [
+    {
+      "input": "Materiales, patio pequeño, caño compartido y restricciones de compra/impresión/tabletas",
+      "status": "PASS",
+      "evidence": "Materiales y apoyos de las quince propuestas respetan lo disponible; agua mínima y recorridos cortos. No se programan actividades digitales."
+    },
+    {
+      "input": "Curiosidad por brotes y vecina del huerto",
+      "status": "PASS",
+      "project": 12,
+      "evidence": "Fundamento basado en preguntas declaradas y una actuación individual. Visita al huerto no prevista; vecina solo al aula si se coordina. Acceso a macetas no se da por confirmado."
+    },
+    {
+      "input": "Canción Criolla y participación voluntaria",
+      "status": "PASS",
+      "project": 13,
+      "evidence": "Exploración cultural y rítmica sin compras, disfraces, ensayos ni presentaciones obligatorias. Tramo de noviembre explícitamente después de la fecha; oportunidad cotidiana opcional antes del 31 de octubre."
+    },
+    {
+      "input": "Preocupación por participación familiar y horarios de trabajo",
+      "status": "PARTIAL",
+      "project": 9,
+      "evidence": "No culpabiliza ni exige tareas largas; incorpora cualquier cuidador y orientaciones generales flexibles. El proyecto específico queda en un tramo pasado."
+    },
+    {
+      "input": "Parque y mariposas; ausencia de río/granja",
+      "status": "FAIL",
+      "evidence": "Mensaje completo guardado, pero omitido en context_items y no incorporado en propuestas. El plan tampoco inventa una granja o río cercano; eso no demuestra procesamiento de la negación tardía."
+    },
+    {
+      "input": "Biblioteca viajera añadida después de ready",
+      "status": "FAIL",
+      "evidence": "Texto completo guardado pero no resumido como decisión ni integrado. Un proyecto de otro desenlace no satisface la intención de circulación y conversación de cuentos entre aula y hogar."
+    }
+  ],
+  "projectReviews": [
+    {
+      "number": 1,
+      "title": "Un lugar para elegir y jugar",
+      "rationale": "Invitación docente curricular para elegir, participar y cuidar espacios comunes. Permitirá conocer preferencias del aula sin anticiparlas ni suponer dificultades de convivencia.",
+      "invitation": "¿Cómo podríamos organizar lugares donde cada uno pueda elegir y jugar con otros?",
+      "purpose": "Elegir espacios de juego y acordar formas de compartirlos y cuidarlos.",
+      "dates": [
+        "2026-03-30",
+        "2026-04-10"
+      ],
+      "competencies": [
+        "PS_IDENTIDAD",
+        "PS_CONVIVE"
+      ],
+      "opportunities": [
+        {
+          "capacity_names": [
+            "Se valora a sí mismo"
+          ],
+          "child_action": "Elegir un espacio y explicar qué quiere hacer allí.",
+          "competency_id": "PS_IDENTIDAD",
+          "conditions": "Durante la elección entre espacios con materiales disponibles.",
+          "mediation": "Preguntar qué le gusta y qué necesita para comenzar.",
+          "observation": "Qué elige y cómo explica su preferencia.",
+          "supports": "Aceptar palabras, señalamientos o una conversación individual."
+        },
+        {
+          "capacity_names": [
+            "Construye normas, y asume acuerdos y leyes",
+            "Participa en acciones que promueven el bienestar común"
+          ],
+          "child_action": "Proponer lugares de guardado y probar acuerdos de uso.",
+          "competency_id": "PS_CONVIVE",
+          "conditions": "Al organizar y guardar los materiales de juego.",
+          "mediation": "Ayudar a comparar propuestas y revisar si permiten participar.",
+          "observation": "Qué acuerdos propone y cómo participa en el cuidado.",
+          "supports": "Probar pocos acuerdos mediante demostraciones concretas."
+        }
+      ],
+      "materials": [
+        "Bloques",
+        "Cajas",
+        "Telas",
+        "Cuentos"
+      ],
+      "supports": [
+        "Ofrecer elecciones entre pocas opciones visibles.",
+        "Permitir observar antes de incorporarse al juego."
+      ],
+      "review": "Fundamento honesto como invitación docente, sin inventar dificultades; elección y acuerdos tienen acciones observables.",
+      "status": "PASS_CONTENT_WITH_SCOPE_LIMITS"
+    },
+    {
+      "number": 2,
+      "title": "Pistas entre las páginas",
+      "rationale": "Invitación docente curricular que aprovecha los cuentos disponibles para explorar cómo las imágenes ayudan a anticipar historias, sin exigir lectura convencional.",
+      "invitation": "¿Qué nos permiten imaginar las pistas de estos cuentos?",
+      "purpose": "Anticipar historias usando pistas y conversar sobre distintas interpretaciones.",
+      "dates": [
+        "2026-04-13",
+        "2026-04-24"
+      ],
+      "competencies": [
+        "COM_LECTURA",
+        "COM_ORAL"
+      ],
+      "opportunities": [
+        {
+          "capacity_names": [
+            "Obtiene información del texto escrito",
+            "Infiere e interpreta información del texto escrito"
+          ],
+          "child_action": "Examinar portadas e imágenes y contrastar sus anticipaciones.",
+          "competency_id": "COM_LECTURA",
+          "conditions": "En lectura compartida y exploración libre de cuentos.",
+          "mediation": "Preguntar dónde encontró la pista y volver a la página.",
+          "observation": "Qué anticipa y qué detalle usa para sostenerlo.",
+          "supports": "Acercar el cuento y permitir señalar sin leer convencionalmente."
+        },
+        {
+          "capacity_names": [
+            "Adecúa, organiza y desarrolla el texto de forma coherente y cohesionada",
+            "Interactúa estratégicamente con distintos interlocutores"
+          ],
+          "child_action": "Contar qué cree que ocurrirá y escuchar otras posibilidades.",
+          "competency_id": "COM_ORAL",
+          "conditions": "En conversaciones de parejas o pequeños grupos.",
+          "mediation": "Dar tiempo para explicar y solicitar aclaraciones sencillas.",
+          "observation": "Cómo explica su idea y responde a otra interpretación.",
+          "supports": "Permitir gestos y apoyo en las ilustraciones."
+        }
+      ],
+      "materials": [
+        "Cuentos disponibles"
+      ],
+      "supports": [
+        "Leer en grupos pequeños con las imágenes al alcance.",
+        "Aceptar interpretaciones distintas cuando se expliquen sus pistas."
+      ],
+      "review": "Recurso disponible y reto de interpretación; respeta lectura no convencional y conversación con pistas.",
+      "status": "PASS_CONTENT_WITH_SCOPE_LIMITS"
+    },
+    {
+      "number": 3,
+      "title": "Caminos para nuestro cuerpo",
+      "rationale": "El patio pequeño invita a prever recorridos cortos y seguros. El reto permitirá explorar movimientos y orientación sin necesitar equipamiento adicional.",
+      "invitation": "¿De cuántas maneras podemos recorrer este espacio sin chocarnos?",
+      "purpose": "Crear recorridos breves y ajustar movimientos y direcciones para desplazarse con seguridad.",
+      "dates": [
+        "2026-04-27",
+        "2026-05-15"
+      ],
+      "competencies": [
+        "PSICO_MOTRICIDAD",
+        "MAT_FORMA"
+      ],
+      "opportunities": [
+        {
+          "capacity_names": [
+            "Comprende su cuerpo"
+          ],
+          "child_action": "Caminar, detenerse y cambiar de dirección entre referencias.",
+          "competency_id": "PSICO_MOTRICIDAD",
+          "conditions": "En recorridos breves, con el suelo despejado.",
+          "mediation": "Invitar a reconocer distancias y sensaciones corporales.",
+          "observation": "Cómo ajusta pasos, equilibrio y velocidad al espacio.",
+          "supports": "Ofrecer caminos más anchos y alternativas sin saltos."
+        },
+        {
+          "capacity_names": [
+            "Comunica su comprensión sobre las formas y relaciones geométricas",
+            "Usa estrategias y procedimientos para orientarse en el espacio"
+          ],
+          "child_action": "Indicar por dónde pasar y probar otra ruta.",
+          "competency_id": "MAT_FORMA",
+          "conditions": "Al diseñar recorridos con cajas como referencias.",
+          "mediation": "Preguntar cómo llegar por delante, detrás o alrededor.",
+          "observation": "Qué posiciones comunica y cómo modifica su recorrido.",
+          "supports": "Recorrer primero junto a un compañero o adulto."
+        }
+      ],
+      "materials": [
+        "Cajas firmes",
+        "Botellas limpias como referencias"
+      ],
+      "supports": [
+        "Organizar grupos pequeños y evitar cruces simultáneos.",
+        "No usar las cajas para trepar ni competir por velocidad."
+      ],
+      "review": "El patio pequeño condiciona un reto viable, con movimientos seguros y orientación; no exige equipamiento adicional.",
+      "status": "PASS_CONTENT_WITH_SCOPE_LIMITS"
+    },
+    {
+      "number": 4,
+      "title": "Pedidos en nuestra tienda",
+      "rationale": "Según lo que cuenta una familia, una niña disfruta jugar a la tienda. Esa referencia individual permite ofrecer una invitación abierta, sin atribuirla al grupo.",
+      "invitation": "¿Cómo podemos preparar pedidos y hacer que otra persona entienda qué necesita llevar?",
+      "purpose": "Resolver pedidos con cantidades pequeñas y escribir listas que ayuden a jugar.",
+      "dates": [
+        "2026-05-25",
+        "2026-06-05"
+      ],
+      "competencies": [
+        "MAT_CANTIDAD",
+        "COM_ESCRITURA"
+      ],
+      "opportunities": [
+        {
+          "capacity_names": [
+            "Comunica su comprensión sobre los números y las operaciones",
+            "Usa estrategias y procedimientos de estimación y cálculo"
+          ],
+          "child_action": "Reunir objetos y agregar o quitar según el pedido.",
+          "competency_id": "MAT_CANTIDAD",
+          "conditions": "En una tienda de juego con pequeñas colecciones.",
+          "mediation": "Preguntar cómo puede comprobar lo que falta o sobra.",
+          "observation": "Cómo cuenta y comprueba si el pedido está completo.",
+          "supports": "Reducir la colección y permitir mover cada objeto."
+        },
+        {
+          "capacity_names": [
+            "Adecúa el texto a la situación comunicativa",
+            "Reflexiona y evalúa la forma, el contenido y contexto del texto escrito"
+          ],
+          "child_action": "Escribir a su manera una lista y releerla al destinatario.",
+          "competency_id": "COM_ESCRITURA",
+          "conditions": "Al preparar una lista para otro participante.",
+          "mediation": "Preguntar si la lista permite recordar el pedido.",
+          "observation": "Para quién escribe y cómo revisa su mensaje.",
+          "supports": "Ofrecer cartón de las cajas sin modelos para copiar."
+        }
+      ],
+      "materials": [
+        "Botellas limpias",
+        "Tapas grandes",
+        "Cajas",
+        "Crayones"
+      ],
+      "supports": [
+        "Aceptar escritura propia, dibujos y lectura a su manera.",
+        "Alternar papeles sin imponer una única organización."
+      ],
+      "review": "Usa el interés informado por una familia sin generalizarlo al grupo; cantidad y escritura tienen un uso real en el juego.",
+      "status": "PASS_CONTENT_WITH_SCOPE_LIMITS"
+    },
+    {
+      "number": 5,
+      "title": "Objetos que cuentan con sonidos",
+      "rationale": "Invitación docente para investigar sonidos y crear con botellas, tapas y cajas disponibles. No presupone un interés musical compartido ni requiere instrumentos comprados.",
+      "invitation": "¿Qué sonidos podemos descubrir y combinar para contar algo sin palabras?",
+      "purpose": "Comparar sonidos de objetos y combinarlos para expresar una historia imaginada.",
+      "dates": [
+        "2026-06-08",
+        "2026-06-19"
+      ],
+      "competencies": [
+        "CYT_INDAGA",
+        "COM_ARTE"
+      ],
+      "opportunities": [
+        {
+          "capacity_names": [
+            "Problematiza situaciones para hacer indagación",
+            "Genera y registra datos o información",
+            "Analiza datos e información"
+          ],
+          "child_action": "Proponer una prueba, repetirla y comparar lo escuchado.",
+          "competency_id": "CYT_INDAGA",
+          "conditions": "Al golpear suavemente o frotar objetos seguros.",
+          "mediation": "Ayudar a cambiar una acción por vez.",
+          "observation": "Qué anticipa y cómo compara los sonidos obtenidos.",
+          "supports": "Explorar pocos objetos y permitir escuchar a distancia."
+        },
+        {
+          "capacity_names": [
+            "Explora y experimenta los lenguajes del arte",
+            "Aplica procesos creativos"
+          ],
+          "child_action": "Crear una secuencia sonora para una escena imaginada.",
+          "competency_id": "COM_ARTE",
+          "conditions": "En pequeños grupos con objetos sonoros disponibles.",
+          "mediation": "Preguntar qué quiere expresar y ofrecer tiempo para probar.",
+          "observation": "Cómo selecciona y combina sonidos para una intención.",
+          "supports": "Permitir crear individualmente y compartir solo si desea."
+        }
+      ],
+      "materials": [
+        "Botellas limpias",
+        "Tapas grandes",
+        "Cajas"
+      ],
+      "supports": [
+        "Acordar volumen suave y pausas de escucha.",
+        "No introducir objetos en la boca ni golpear cerca de otros."
+      ],
+      "review": "Exploración sonora y expresión artística diferenciadas; propone comparación y creación con objetos disponibles.",
+      "status": "PASS_CONTENT_WITH_SCOPE_LIMITS"
+    },
+    {
+      "number": 6,
+      "title": "Un refugio para animales imaginarios",
+      "rationale": "Según lo que cuenta una familia, una niña juega a la veterinaria. Se ofrece ese contexto como posibilidad de juego, no como preferencia de todos.",
+      "invitation": "¿Cómo podemos organizar un lugar para cuidar animales imaginarios y escuchar las ideas de quienes juegan?",
+      "purpose": "Organizar un juego de cuidado de animales imaginarios mediante acuerdos y conversaciones.",
+      "dates": [
+        "2026-06-22",
+        "2026-07-03"
+      ],
+      "competencies": [
+        "PS_CONVIVE",
+        "COM_ORAL"
+      ],
+      "opportunities": [
+        {
+          "capacity_names": [
+            "Interactúa con todas las personas",
+            "Construye normas, y asume acuerdos y leyes"
+          ],
+          "child_action": "Proponer personajes y negociar cómo participar.",
+          "competency_id": "PS_CONVIVE",
+          "conditions": "En un sector de juego simbólico con cajas y telas.",
+          "mediation": "Escuchar las versiones y ayudar a buscar alternativas.",
+          "observation": "Cómo acuerda papeles y comparte materiales.",
+          "supports": "Ofrecer papeles diversos y entrada gradual al juego."
+        },
+        {
+          "capacity_names": [
+            "Adecúa, organiza y desarrolla el texto de forma coherente y cohesionada",
+            "Interactúa estratégicamente con distintos interlocutores"
+          ],
+          "child_action": "Contar qué necesita un animal imaginario y acordar cuidados.",
+          "competency_id": "COM_ORAL",
+          "conditions": "Durante conversaciones entre personajes del juego.",
+          "mediation": "Pedir detalles sin dirigir toda la historia.",
+          "observation": "Cómo explica una necesidad y responde a su interlocutor.",
+          "supports": "Aceptar gestos, objetos representados y frases breves."
+        }
+      ],
+      "materials": [
+        "Cajas",
+        "Telas",
+        "Crayones",
+        "Bloques"
+      ],
+      "supports": [
+        "No requerir animales reales ni juguetes adicionales.",
+        "Ayudar a negociar sin repartir papeles por género."
+      ],
+      "review": "Juego simbólico de cuidado con negociación y oralidad; no inventa granja cercana ni exige animales reales.",
+      "status": "PASS_CONTENT_WITH_SCOPE_LIMITS"
+    },
+    {
+      "number": 7,
+      "title": "Personajes que sienten",
+      "rationale": "Invitación docente curricular para explorar emociones mediante personajes. Permitirá conocer formas de expresión y acompañamiento sin suponer problemas emocionales ni pedir exposición personal.",
+      "invitation": "¿Cómo podemos mostrar lo que siente un personaje y qué podría ayudarlo?",
+      "purpose": "Reconocer emociones y explorar maneras de expresarlas y buscar compañía.",
+      "dates": [
+        "2026-07-06",
+        "2026-07-24"
+      ],
+      "competencies": [
+        "PS_IDENTIDAD",
+        "COM_ARTE"
+      ],
+      "opportunities": [
+        {
+          "capacity_names": [
+            "Autorregula sus emociones"
+          ],
+          "child_action": "Nombrar emociones de un personaje y elegir formas de acompañarlo.",
+          "competency_id": "PS_IDENTIDAD",
+          "conditions": "En escenas ficticias, sin exigir relatos personales.",
+          "mediation": "Validar distintas emociones y conversar sobre sus posibles causas.",
+          "observation": "Qué emoción reconoce y qué ayuda propone.",
+          "supports": "Permitir hablar del personaje sin hablar de sí mismo."
+        },
+        {
+          "capacity_names": [
+            "Explora y experimenta los lenguajes del arte",
+            "Aplica procesos creativos"
+          ],
+          "child_action": "Representar una emoción mediante un lenguaje elegido.",
+          "competency_id": "COM_ARTE",
+          "conditions": "En juego dramático con movimientos, telas y dibujos.",
+          "mediation": "Invitar a probar distintas formas sin ofrecer un modelo único.",
+          "observation": "Qué gestos, movimientos o trazos elige para expresarse.",
+          "supports": "Aceptar representación sentada, individual o acompañada."
+        }
+      ],
+      "materials": [
+        "Telas",
+        "Cajas",
+        "Crayones",
+        "Cuentos"
+      ],
+      "supports": [
+        "Disponer de una pausa tranquila y compañía adulta.",
+        "No obligar a actuar ni a contar experiencias personales."
+      ],
+      "review": "Escenas ficticias y expresión artística pertinentes; conviene distinguir reconocer emociones de personajes de observar autorregulación propia.",
+      "status": "PASS_CONTENT_WITH_SCOPE_LIMITS"
+    },
+    {
+      "number": 8,
+      "title": "Construcciones que dejan pasar",
+      "rationale": "Dos familias cuentan juegos de construcción. A diferencia del recorrido corporal anterior, aquí se probarán estructuras para objetos y se revisará un plan.",
+      "invitation": "¿Cómo construiremos un paso para que un bloque llegue al otro lado?",
+      "purpose": "Planificar construcciones, comprobar si permiten pasar un objeto y modificar una estrategia.",
+      "dates": [
+        "2026-08-10",
+        "2026-08-21"
+      ],
+      "competencies": [
+        "MAT_FORMA",
+        "TRANS_AUTONOMO"
+      ],
+      "opportunities": [
+        {
+          "capacity_names": [
+            "Modela objetos con formas geométricas y sus transformaciones",
+            "Usa estrategias y procedimientos para orientarse en el espacio"
+          ],
+          "child_action": "Construir un paso entre cajas y comprobarlo con un bloque.",
+          "competency_id": "MAT_FORMA",
+          "conditions": "En construcciones pequeñas sobre el suelo.",
+          "mediation": "Preguntar qué parte necesita cambiar y volver a probar.",
+          "observation": "Cómo ajusta posiciones, altura o separación para permitir el paso.",
+          "supports": "Ofrecer piezas grandes y sostener una caja si lo solicita."
+        },
+        {
+          "capacity_names": [
+            "Define metas de aprendizaje",
+            "Organiza acciones estratégicas para alcanzar sus metas de aprendizaje",
+            "Monitorea y ajusta su desempeño durante el proceso de aprendizaje"
+          ],
+          "child_action": "Explicar su plan y cambiar una acción tras comprobarlo.",
+          "competency_id": "TRANS_AUTONOMO",
+          "conditions": "Antes, durante y después de cada intento de construcción.",
+          "mediation": "Ayudar a relacionar el resultado con su propósito.",
+          "observation": "Qué se propone, cómo empieza y qué decide modificar.",
+          "supports": "Conversar usando la propia construcción como referencia."
+        }
+      ],
+      "materials": [
+        "Bloques",
+        "Cajas"
+      ],
+      "supports": [
+        "Construir a baja altura, sin trepar.",
+        "Ofrecer tiempo individual antes de proponer colaboración."
+      ],
+      "review": "Reto de paso para objetos diferenciado del recorrido corporal; conecta posiciones, prueba y revisión del plan.",
+      "status": "PASS_CONTENT_WITH_SCOPE_LIMITS"
+    },
+    {
+      "number": 9,
+      "title": "Algo que quiero contarte",
+      "rationale": "La docente desea acercar a las familias mediante propuestas breves y permitir compartir con cualquier persona cuidadora. El mensaje tendrá destinatario elegido, sin tarea familiar obligatoria.",
+      "invitation": "¿Qué te gustaría contar a una persona que te cuida y cómo podrías dejarle un mensaje?",
+      "purpose": "Elegir algo significativo para compartir y escribir un mensaje dirigido a una persona cuidadora.",
+      "dates": [
+        "2026-08-24",
+        "2026-09-04"
+      ],
+      "competencies": [
+        "COM_ESCRITURA",
+        "PS_IDENTIDAD"
+      ],
+      "opportunities": [
+        {
+          "capacity_names": [
+            "Adecúa el texto a la situación comunicativa",
+            "Organiza y desarrolla las ideas de forma coherente y cohesionada",
+            "Reflexiona y evalúa la forma, el contenido y contexto del texto escrito"
+          ],
+          "child_action": "Escribir a su manera y releer para decidir si desea cambiar algo.",
+          "competency_id": "COM_ESCRITURA",
+          "conditions": "Al escribir en una superficie limpia de cartón.",
+          "mediation": "Preguntar para quién escribe y qué desea que comprenda.",
+          "observation": "Qué destinatario considera y cómo revisa lo que quiere comunicar.",
+          "supports": "Aceptar trazos, letras y dibujos sin exigir copia."
+        },
+        {
+          "capacity_names": [
+            "Se valora a sí mismo"
+          ],
+          "child_action": "Elegir una persona cuidadora y algo propio que quiera contarle.",
+          "competency_id": "PS_IDENTIDAD",
+          "conditions": "En una conversación individual o con alguien elegido.",
+          "mediation": "Respetar su elección y el contenido que desea mantener privado.",
+          "observation": "Qué elige compartir sobre sí y sus vínculos.",
+          "supports": "No exigir nombrar familiares ni explicar ausencias."
+        }
+      ],
+      "materials": [
+        "Cajas con superficies limpias",
+        "Crayones"
+      ],
+      "supports": [
+        "Compartir el mensaje será voluntario y podrá hacerse en privado.",
+        "La docente podrá escribir aparte lo dictado, sin reemplazar la escritura infantil."
+      ],
+      "review": "Reformula participación familiar sin culpabilizar; mensaje con destinatario y elección personal. Queda en agosto/septiembre, antes del ingreso actual: integración futura parcial.",
+      "status": "PARTIAL_TEMPORAL"
+    },
+    {
+      "number": 10,
+      "title": "Poca agua para descubrir",
+      "rationale": "Una familia cuenta preguntas sobre el paso del agua por materiales. El caño compartido orienta una comparación con cantidades mínimas, sin solicitar recursos adicionales.",
+      "invitation": "¿Qué pasa cuando ponemos un poco de agua sobre una tela y una tapa?",
+      "purpose": "Comparar qué ocurre con poca agua sobre distintos materiales y acordar su uso cuidadoso.",
+      "dates": [
+        "2026-09-07",
+        "2026-09-18"
+      ],
+      "competencies": [
+        "CYT_INDAGA",
+        "PS_CONVIVE"
+      ],
+      "opportunities": [
+        {
+          "capacity_names": [
+            "Problematiza situaciones para hacer indagación",
+            "Diseña estrategias para hacer indagación",
+            "Genera y registra datos o información",
+            "Analiza datos e información"
+          ],
+          "child_action": "Proponer una comparación y observar qué ocurre en cada material.",
+          "competency_id": "CYT_INDAGA",
+          "conditions": "Con cantidades mínimas de agua y superficies seguras.",
+          "mediation": "Ofrecer cantidades semejantes y distinguir lo pensado de lo observado.",
+          "observation": "Qué anticipa, cómo prueba y qué diferencias reconoce.",
+          "supports": "Repetir lentamente y permitir observar sin tocar."
+        },
+        {
+          "capacity_names": [
+            "Construye normas, y asume acuerdos y leyes",
+            "Participa en acciones que promueven el bienestar común"
+          ],
+          "child_action": "Acordar cantidades pequeñas y colaborar en recoger posibles derrames.",
+          "competency_id": "PS_CONVIVE",
+          "conditions": "Al preparar y recoger la exploración con agua.",
+          "mediation": "Relacionar los acuerdos con el caño compartido.",
+          "observation": "Qué propone para ahorrar agua y dejar el espacio seguro.",
+          "supports": "El adulto recogerá el agua sin bloquear el caño."
+        }
+      ],
+      "materials": [
+        "Agua del caño compartido",
+        "Botellas limpias",
+        "Tapas grandes",
+        "Telas",
+        "Cajas",
+        "Crayones"
+      ],
+      "supports": [
+        "Usar un lugar estable y secar cualquier derrame de inmediato.",
+        "Separar esta exploración del agua destinada a beber."
+      ],
+      "review": "Problema concreto con agua limitada; diferencia comparación de materiales y cuidado del recurso compartido.",
+      "status": "PASS_CONTENT_WITH_SCOPE_LIMITS"
+    },
+    {
+      "number": 11,
+      "title": "Materiales para seguir jugando",
+      "rationale": "Invitación docente curricular para combinar repartos y decisiones compartidas. A diferencia de la tienda, el reto será distribuir recursos comunes y justificar ajustes.",
+      "invitation": "¿Cómo podemos repartir los materiales para que todos podamos seguir jugando?",
+      "purpose": "Resolver repartos y acordar formas de compartir materiales para que todos puedan jugar.",
+      "dates": [
+        "2026-09-21",
+        "2026-10-09"
+      ],
+      "competencies": [
+        "MAT_CANTIDAD",
+        "PS_CONVIVE"
+      ],
+      "opportunities": [
+        {
+          "capacity_names": [
+            "Traduce cantidades a expresiones numéricas",
+            "Comunica su comprensión sobre los números y las operaciones",
+            "Usa estrategias y procedimientos de estimación y cálculo"
+          ],
+          "child_action": "Dar objetos a cada participante y ajustar el reparto.",
+          "competency_id": "MAT_CANTIDAD",
+          "conditions": "En juegos con pequeñas colecciones de bloques o tapas.",
+          "mediation": "Preguntar cómo saber si falta, sobra o alcanza.",
+          "observation": "Cómo reparte, identifica faltantes y comprueba una solución.",
+          "supports": "Permitir emparejar objetos y participantes antes de contar."
+        },
+        {
+          "capacity_names": [
+            "Construye normas, y asume acuerdos y leyes",
+            "Participa en acciones que promueven el bienestar común"
+          ],
+          "child_action": "Explicar qué necesita y acordar préstamos, turnos o repartos.",
+          "competency_id": "PS_CONVIVE",
+          "conditions": "Cuando distintas propuestas requieren los mismos materiales.",
+          "mediation": "Comparar soluciones sin imponer que todos necesiten lo mismo.",
+          "observation": "Cómo escucha necesidades y participa en una solución compartida.",
+          "supports": "Hacer visibles los materiales y ofrecer turnos breves."
+        }
+      ],
+      "materials": [
+        "Bloques",
+        "Tapas grandes",
+        "Cajas"
+      ],
+      "supports": [
+        "Trabajar con colecciones que cada niño pueda manipular.",
+        "Distinguir repartir lo mismo de acordar lo que cada juego necesita."
+      ],
+      "review": "Diferencia el reparto de recursos comunes de pedidos en la tienda; la convivencia tiene una oportunidad concreta.",
+      "status": "PASS_CONTENT_WITH_SCOPE_LIMITS"
+    },
+    {
+      "number": 12,
+      "title": "Lo que cambia en las macetas",
+      "rationale": "La docente cuenta preguntas de varios niños sobre los brotes; un registro individual muestra una propuesta de seguimiento. Conviene observar cambios, no completar fichas.",
+      "invitation": "¿Cómo podríamos descubrir qué cambia en estas macetas y cómo cuidarlas?",
+      "purpose": "Explorar cambios en las macetas, contrastar ideas y conversar sobre cuidados posibles.",
+      "dates": [
+        "2026-10-19",
+        "2026-10-30"
+      ],
+      "competencies": [
+        "CYT_INDAGA",
+        "COM_ORAL"
+      ],
+      "opportunities": [
+        {
+          "capacity_names": [
+            "Problematiza situaciones para hacer indagación",
+            "Diseña estrategias para hacer indagación",
+            "Genera y registra datos o información",
+            "Analiza datos e información",
+            "Evalúa y comunica el proceso y resultado de su indagación"
+          ],
+          "child_action": "Elegir qué observar, dibujarlo y comparar cambios o permanencias.",
+          "competency_id": "CYT_INDAGA",
+          "conditions": "Con acceso confirmado a las macetas mencionadas, sin dañarlas.",
+          "mediation": "Volver a la pregunta sin atribuir diferencias a una sola causa.",
+          "observation": "Qué pregunta, cómo registra y qué compara entre observaciones.",
+          "supports": "Observar a simple vista y conservar dibujos en cartón."
+        },
+        {
+          "capacity_names": [
+            "Obtiene información del texto oral",
+            "Adecúa, organiza y desarrolla el texto de forma coherente y cohesionada",
+            "Interactúa estratégicamente con distintos interlocutores"
+          ],
+          "child_action": "Contar lo observado y preguntar por formas de cuidado.",
+          "competency_id": "COM_ORAL",
+          "conditions": "En pequeños grupos y, si se coordina, con la vecina en el aula.",
+          "mediation": "Distinguir lo observado de lo que otra persona cuenta.",
+          "observation": "Qué pregunta, qué información recupera y cómo aclara sus ideas.",
+          "supports": "Permitir mostrar dibujos o conversar primero con un compañero."
+        }
+      ],
+      "materials": [
+        "Macetas mencionadas, con acceso por confirmar",
+        "Cajas con superficies limpias",
+        "Crayones"
+      ],
+      "supports": [
+        "La invitación a la vecina dependerá de coordinación previa y será solo al aula.",
+        "No pedir semillas ni compras; ajustar la observación si no se confirma acceso a las macetas."
+      ],
+      "review": "Buen origen contextual: preguntas sobre brotes y una observación individual de seguimiento. La invitación propone investigar cambios; vecina al aula condicionada a coordinación, sin visita al huerto.",
+      "status": "PASS_CONTENT_WITH_SCOPE_LIMITS"
+    },
+    {
+      "number": 13,
+      "title": "Canciones y ritmos para compartir",
+      "rationale": "La docente propone acercarse a la Fiesta de la Canción Criolla. Después de la fecha, podrán escuchar aportes voluntarios y crear ritmos, sin espectáculo obligatorio.",
+      "invitation": "¿Qué podemos descubrir al escuchar una canción compartida y probar nuestros propios ritmos?",
+      "purpose": "Escuchar aportes musicales, explorar ritmos y participar respetando distintas elecciones.",
+      "dates": [
+        "2026-11-02",
+        "2026-11-13"
+      ],
+      "competencies": [
+        "COM_ARTE",
+        "PS_CONVIVE"
+      ],
+      "opportunities": [
+        {
+          "capacity_names": [
+            "Explora y experimenta los lenguajes del arte",
+            "Aplica procesos creativos",
+            "Socializa sus procesos y proyectos"
+          ],
+          "child_action": "Combinar palmas, movimientos y sonidos para crear un ritmo.",
+          "competency_id": "COM_ARTE",
+          "conditions": "Con canto voluntario de una persona adulta o exploración rítmica.",
+          "mediation": "Ofrecer pausas para escuchar, probar y cambiar sin modelo obligatorio.",
+          "observation": "Cómo prueba combinaciones y explica alguna elección.",
+          "supports": "Permitir escuchar, moverse o crear sin cantar."
+        },
+        {
+          "capacity_names": [
+            "Interactúa con todas las personas",
+            "Construye normas, y asume acuerdos y leyes"
+          ],
+          "child_action": "Preguntar por una canción y acordar cómo compartir sonidos.",
+          "competency_id": "PS_CONVIVE",
+          "conditions": "En intercambios sobre canciones y formas de participación.",
+          "mediation": "Acoger costumbres diversas sin clasificarlas por valor.",
+          "observation": "Cómo escucha aportes distintos y respeta decisiones de participación.",
+          "supports": "No exigir conocer canciones ni presentarse ante público."
+        }
+      ],
+      "materials": [
+        "Voces y palmas",
+        "Botellas limpias",
+        "Tapas grandes",
+        "Cajas",
+        "Telas"
+      ],
+      "supports": [
+        "Sin repertorio criollo compartido, explorar ritmos sin atribuirles ese origen.",
+        "La participación será voluntaria, sin ensayos obligatorios, disfraces comprados ni presentación pública exigida."
+      ],
+      "review": "Tratamiento cultural y creativo sin espectáculo obligatorio. Explica que el tramo de noviembre es posterior al 31 de octubre; incluye además un acercamiento opcional antes de la fecha en oportunidades cotidianas.",
+      "status": "PASS_CONTENT_WITH_SCOPE_LIMITS"
+    },
+    {
+      "number": 14,
+      "title": "Otros caminos para un cuento",
+      "rationale": "En registros individuales aparecen comparaciones e inferencias al mirar cuentos. Retoma la lectura de pistas; ahora se imaginará otro desenlace y cómo comunicarlo por escrito.",
+      "invitation": "¿Qué otro camino podría seguir un personaje y cómo podríamos contárselo a alguien?",
+      "purpose": "Interpretar pistas de un cuento e imaginar otro desenlace mediante escritura propia.",
+      "dates": [
+        "2026-11-16",
+        "2026-11-27"
+      ],
+      "competencies": [
+        "COM_LECTURA",
+        "COM_ESCRITURA"
+      ],
+      "opportunities": [
+        {
+          "capacity_names": [
+            "Infiere e interpreta información del texto escrito",
+            "Reflexiona y evalúa la forma, el contenido y contexto del texto escrito"
+          ],
+          "child_action": "Comparar escenas y proponer otra decisión para un personaje.",
+          "competency_id": "COM_LECTURA",
+          "conditions": "Al releer un cuento elegido entre los disponibles.",
+          "mediation": "Volver a las imágenes para conversar sobre las posibilidades.",
+          "observation": "Qué interpreta y qué pistas relaciona con su propuesta.",
+          "supports": "Releer fragmentos y mantener visibles las páginas elegidas."
+        },
+        {
+          "capacity_names": [
+            "Adecúa el texto a la situación comunicativa",
+            "Organiza y desarrolla las ideas de forma coherente y cohesionada",
+            "Reflexiona y evalúa la forma, el contenido y contexto del texto escrito"
+          ],
+          "child_action": "Escribir a su manera otro desenlace y releerlo.",
+          "competency_id": "COM_ESCRITURA",
+          "conditions": "Al comunicar un desenlace a un destinatario elegido.",
+          "mediation": "Preguntar si cuenta el cambio que había imaginado.",
+          "observation": "Qué quiere comunicar y cómo revisa el sentido de su texto.",
+          "supports": "Aceptar trazos y letras acompañados de dibujos o dictado."
+        }
+      ],
+      "materials": [
+        "Cuentos",
+        "Cajas con superficies limpias",
+        "Crayones"
+      ],
+      "supports": [
+        "No exigir terminar un libro ni producir un texto común.",
+        "Permitir compartir con una sola persona o mantener el intento en proceso."
+      ],
+      "review": "Propone interpretar pistas e imaginar otro desenlace con escritura propia; es pedagógicamente distinto de la biblioteca viajera solicitada, que no se incorporó.",
+      "status": "PASS_CONTENT_WITH_SCOPE_LIMITS"
+    },
+    {
+      "number": 15,
+      "title": "Elegimos un reto y revisamos intentos",
+      "rationale": "Invitación docente para ampliar la planificación: cada niño podrá elegir un reto, no solo construir. No presupone proyectos realizados ni exige una muestra final.",
+      "invitation": "¿Qué te gustaría intentar y cómo podrías descubrir qué te ayuda a lograrlo?",
+      "purpose": "Elegir un reto, revisar intentos y comunicar qué cambió en la propia manera de hacerlo.",
+      "dates": [
+        "2026-11-30",
+        "2026-12-18"
+      ],
+      "competencies": [
+        "TRANS_AUTONOMO",
+        "COM_ORAL"
+      ],
+      "opportunities": [
+        {
+          "capacity_names": [
+            "Define metas de aprendizaje",
+            "Organiza acciones estratégicas para alcanzar sus metas de aprendizaje",
+            "Monitorea y ajusta su desempeño durante el proceso de aprendizaje"
+          ],
+          "child_action": "Elegir un reto, preparar un plan breve y revisar sus intentos.",
+          "competency_id": "TRANS_AUTONOMO",
+          "conditions": "En un reto elegido con materiales disponibles.",
+          "mediation": "Ayudar a comparar el intento con su propósito.",
+          "observation": "Qué quiere lograr, qué prueba y cómo ajusta una acción.",
+          "supports": "Ofrecer dos opciones si necesita ayuda para elegir."
+        },
+        {
+          "capacity_names": [
+            "Adecúa, organiza y desarrolla el texto de forma coherente y cohesionada",
+            "Utiliza recursos no verbales y paraverbales de forma estratégica",
+            "Interactúa estratégicamente con distintos interlocutores"
+          ],
+          "child_action": "Contar qué hizo, mostrar un cambio y explicar qué le ayudó.",
+          "competency_id": "COM_ORAL",
+          "conditions": "Al conversar con una persona o pequeño grupo elegido.",
+          "mediation": "Preguntar por una decisión concreta sin evaluar públicamente.",
+          "observation": "Cómo explica lo que intentó y responde a preguntas.",
+          "supports": "Usar objetos, gestos o dibujos para acompañar el relato."
+        }
+      ],
+      "materials": [
+        "Bloques",
+        "Cajas",
+        "Telas",
+        "Tapas grandes",
+        "Crayones",
+        "Cuentos"
+      ],
+      "supports": [
+        "Reconocer decisiones y cambios sin comparar niños.",
+        "No exigir exposición, producto terminado ni participación familiar."
+      ],
+      "review": "Meta elegida, estrategia y revisión con comunicación del proceso; no exige producto terminado ni exposición.",
+      "status": "PASS_CONTENT_WITH_SCOPE_LIMITS"
+    }
+  ],
+  "canonicalChecks": {
+    "teacherMessages": 6,
+    "unchangedSafeCopies": true,
+    "extractedSourceTurns": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "contextItems": 13,
+    "totalInputCharacters": 1805,
+    "exceeds2000CharacterLimit": false,
+    "officialContentCoverage": [
+      "PS_IDENTIDAD",
+      "PS_CONVIVE",
+      "COM_LECTURA",
+      "COM_ORAL",
+      "PSICO_MOTRICIDAD",
+      "MAT_FORMA",
+      "MAT_CANTIDAD",
+      "COM_ESCRITURA",
+      "CYT_INDAGA",
+      "COM_ARTE",
+      "TRANS_AUTONOMO"
+    ],
+    "resourceCondition": "TIC excluida de nuevas propuestas por falta de dispositivo confirmado; las observaciones previas se conservan como antecedentes, sin inferir disponibilidad actual.",
+    "futureCoverageGaps": [
+      "MAT_FORMA"
+    ],
+    "reviewInProduct": {
+      "issues_found": 0,
+      "policy": "deterministic-v3",
+      "reviewed_at": "2026-10-19T03:29:50.567Z",
+      "status": "passed"
+    },
+    "reviewCaution": "passed en la revisión determinística no detectó la omisión de aportes, porque esos aportes no llegaron al contexto de generación. Hubo una sola llamada anual y ninguna revisión semántica de IA facturada en esta ejecución."
+  },
+  "findings": [
+    {
+      "id": "QA-CHAT-01",
+      "severity": "P1",
+      "symptom": "El aporte sobre parque/mariposas y la decisión de biblioteca viajera se ven en el chat, pero sus respuestas no los reconocen y el contexto editable sigue con trece elementos que no los incluyen.",
+      "status": "Reproducido y confirmado en el plan generado; pendiente al terminar el QA",
+      "reproduction": "Después de tres respuestas y ready, enviar preocupación familiar (incorporada), luego parque y biblioteca viajera; revisar Editar de contexto.",
+      "expected": "Toda decisión adicional debe procesarse y conservarse o explicar por qué no cambia el plan. No basta permitir enviar el mensaje.",
+      "actual": "Seis aportes completos guardados; solo source_turn 0–3 en el contexto. Parque/mariposas y biblioteca viajera no incorporados a las propuestas ni orientaciones generadas.",
+      "identifiedCause": "La salida context_items del modelo omite los turnos 4 y 5. No es borrado del texto ni filtrado de privacidad: safe_texts conserva ambos completos. El servidor valida citas de lo extraído, pero no comprueba cobertura del aporte más reciente. La generación usa context_items como teacherIdeas. El motivo por el que el modelo omitió esos turnos no se aisló experimentalmente.",
+      "files": [
+        "src/lib/initial-journey-service.mjs",
+        "src/lib/annual-context-draft.mjs",
+        "src/lib/use-annual-context-draft.ts",
+        "src/lib/annual-journey-jobs.mjs"
+      ],
+      "prevention": "Probar continuidad con más de cuatro aportes, correcciones, negaciones y decisiones posteriores a ready; verificar el recorrido mensaje → contexto → generación. Detectar aportes no procesados sin depender de palabras de este caso y conservar ediciones docentes. Hacer explícitos los límites de tamaño/cantidad; evitar descartes silenciosos."
+    },
+    {
+      "id": "QA-CHAT-02",
+      "severity": "P2",
+      "symptom": "El detalle de todos los proyectos consultados se titula Proyecto 1 aunque el mapa muestra su número real (9, 12, 13 o 14).",
+      "cause": "project-detail-view.tsx pasa index={1} a AnnualProjectPreview.",
+      "expected": "Mantener el número del tramo al consultar su detalle.",
+      "files": [
+        "src/features/dashboard/components/project-detail-view.tsx"
+      ],
+      "status": "Documentado, sin corrección todavía."
+    },
+    {
+      "id": "QA-CHAT-03",
+      "severity": "P2",
+      "symptom": "La intención actual de acercar a las familias se usa para un proyecto específico ya pasado (24 de agosto a 4 de septiembre), al crear el año el 18 de octubre.",
+      "qualification": "También hay orientaciones generales y apoyos futuros de colaboración flexible. No se perdió por completo la preferencia ni se inventó ejecución del pasado; es una integración temporal parcial.",
+      "expected": "No considerar satisfecha una intención actual solo por ubicarla en un tramo no desarrollable. Revisar su incorporación a los días disponibles, sin reescribir historia ni forzar proyectos nominales.",
+      "status": "Mejora documentada para revisar al terminar QA."
+    }
+  ],
+  "editorialFollowups": [
+    "Cambiar fórmulas como Invitación docente curricular y pequeños grupos de colecciones por expresiones más cotidianas sin borrar el sustento de origen. La explicación no debe quedar dominada por advertencias de no generalización.",
+    "En escenas de personajes, distinguir oportunidades de reconocimiento emocional de evidencia real de autorregulación del niño.",
+    "La fuente canónica avisa una brecha futura de MAT_FORMA: revisar oportunidades pertinentes en los días disponibles; no interpretarla como dificultad de alumnos ni añadir competencias solo nominalmente."
+  ],
+  "timing": {
+    "generationBackendSeconds": 345.496,
+    "generationObservedUpperBoundSeconds": 395.041,
+    "providerCallDurationCaution": "duration_ms de la operación anual representa la recuperación final de una respuesta en segundo plano (377 ms), no toda la generación; usar generation_ms para tiempo real del trabajo."
+  },
+  "cost": {
+    "newCalls": 8,
+    "chatEstimateUSD": 0.022213225,
+    "annualEstimateUSD": 0.197141,
+    "roundEstimateUSD": 0.219354225,
+    "cumulativeConservativeControlUSD": 4.0818687570000005,
+    "limitUSD": 5,
+    "rows": [
+      {
+        "calls": 7,
+        "cost_source": "estimate",
+        "cost_usd": "0.0222132250",
+        "model": "gpt-6-luna",
+        "pricing_version": "2026-10-10-standard-cache-writes-asr-usage",
+        "provider": "openai",
+        "unpriced_calls": 0,
+        "workflow": "annual_journey_conversation"
+      },
+      {
+        "calls": 1,
+        "cost_source": "estimate",
+        "cost_usd": "0.1971410000",
+        "model": "gpt-6.1-sol",
+        "pricing_version": "2026-10-10-standard-cache-writes-asr-usage",
+        "provider": "openai",
+        "unpriced_calls": 0,
+        "workflow": "annual_plan"
+      }
+    ],
+    "source": "Estas ocho llamadas OpenAI usan cost_source=estimate y la tabla de precios versionada de la aplicación; no equivalen a una factura conciliada. Se conserva la reserva histórica del control acumulado.",
+    "unpricedCalls": 0
+  },
+  "screenshots": [
+    "outputs/qa-interactivo-20261018/paso-06-situacion-macetas.png",
+    "outputs/qa-interactivo-20261018/paso-06-proyecto-canciones.png"
+  ],
+  "limitations": [
+    "Una conversación real de QA con seis aportes, aula de cinco años y fecha actual 18 de octubre. No prueba que todas las conversaciones fallen o funcionen igual.",
+    "Se revisó la previsión anual y su detalle; no se generaron Planes Maestros completos, actividades diarias, Word ni nuevas evaluaciones en este paso.",
+    "No se confirmó este borrador ni se intentó corregir manualmente las decisiones omitidas para aparentar éxito.",
+    "No se implementaron todavía las correcciones, conforme al QA conjunto dirigido por la persona usuaria."
+  ],
+  "pedagogicalReassessment20261019": {
+    "scope": "Relectura de las quince previsiones y sus treinta oportunidades, sin nuevas generaciones ni cambios de producto. Se distingue coherencia de una propuesta anual de validación de una secuencia completa aún no generada.",
+    "overall": "Base mayormente pertinente para cinco años; no aprobación pedagógica completa de todos los proyectos. Dos competencias nominales no bastan: deben aparecer en actuaciones, mediación y observación; las situaciones deben sostener un reto significativo y viable.",
+    "projectNotes": [
+      {
+        "number": 1,
+        "verdict": "Base pertinente; precisar alcance",
+        "note": "Elección y acuerdos son pertinentes. En el desarrollo debe existir un reto sostenido de organizar/probar espacios; no bastan actividades rutinarias de elegir y guardar."
+      },
+      {
+        "number": 2,
+        "verdict": "Base coherente",
+        "note": "La anticipación usa pistas y se contrasta con lectura compartida; oralidad tiene intercambios explícitos."
+      },
+      {
+        "number": 3,
+        "verdict": "Base coherente",
+        "note": "Espacio real limitado, reto de recorridos y oportunidades distintas de coordinación corporal y orientación."
+      },
+      {
+        "number": 4,
+        "verdict": "Base especialmente sólida",
+        "note": "Pedidos reales dentro del juego dan sentido tanto a cantidades como a listas con destinatario."
+      },
+      {
+        "number": 5,
+        "verdict": "Base coherente",
+        "note": "Diferencia comparar sonidos de usarlos con intención expresiva. La secuencia debe conservar ambos procesos, no atribuir indagación por solo producir sonidos."
+      },
+      {
+        "number": 6,
+        "verdict": "Base coherente",
+        "note": "Juego simbólico sustentado en un reporte familiar con oportunidades de negociación y conversación, sin generalización al grupo."
+      },
+      {
+        "number": 7,
+        "verdict": "Afinar observación",
+        "note": "Reconocer emociones de personajes y representarlas es pertinente; no demuestra por sí solo autorregulación propia. No inferir regulación lograda sin actuación del niño y apoyos observados."
+      },
+      {
+        "number": 8,
+        "verdict": "Base especialmente sólida",
+        "note": "Problema concreto, pruebas espaciales y revisión de estrategias dan sentido a ambas competencias."
+      },
+      {
+        "number": 9,
+        "verdict": "Contenido pertinente; integración temporal parcial",
+        "note": "Mensaje a un cuidador tiene propósito y respeta privacidad. El proyecto quedó en un tramo pasado, aunque colaboración familiar flexible sí aparece en orientaciones generales."
+      },
+      {
+        "number": 10,
+        "verdict": "Base coherente",
+        "note": "Exploración comparativa viable con poca agua y acuerdos explícitos de cuidado del recurso; no convertir un resultado en explicación causal sin sustento."
+      },
+      {
+        "number": 11,
+        "verdict": "Base pertinente; cuidar progresión",
+        "note": "El reto de reparto común se diferencia de la tienda. Necesita situaciones que avancen en comparación, ajustes y negociación, no repetir reparto y guardado durante todo el tramo."
+      },
+      {
+        "number": 12,
+        "verdict": "Base especialmente sólida",
+        "note": "Origen contextual claro, pregunta investigable y seguimiento de cambios/permanencias. Acceso a macetas y vecina conservan condiciones; no se inventa visita autorizada."
+      },
+      {
+        "number": 13,
+        "verdict": "Base coherente",
+        "note": "Escucha cultural y creación rítmica con elección, sin espectáculo impuesto. La extensión posterior al 31 de octubre se reconoce, y hay acercamiento cotidiano opcional anterior."
+      },
+      {
+        "number": 14,
+        "verdict": "Base coherente",
+        "note": "Interpretación y otro desenlace dan sentido a lectura y escritura emergente. No satisface por ello la biblioteca viajera omitida."
+      },
+      {
+        "number": 15,
+        "verdict": "Afinar concreción",
+        "note": "Metas, estrategias y revisión son pertinentes; la formulación elegir cualquier reto queda demasiado abierta para orientar por sí sola tres semanas. Añadir opciones iniciales concretas y recorrido posible sin quitar elección infantil."
+      }
+    ],
+    "significantSituations": "Las más claras conectan origen, condición y desafío. Algunas razones siguen siendo genéricas o defensivas; mejorar redacción docente sin inventar intereses colectivos ni exigir que todas las propuestas nazcan de un interés previamente observado.",
+    "references": [
+      {
+        "title": "Programa curricular de Educación Inicial — MINEDU",
+        "url": "https://www.minedu.gob.pe/curriculo/pdf/programa-curricular-educacion-inicial.pdf",
+        "access": "Contenido recuperado por búsqueda oficial; apertura directa no disponible por tamaño del PDF."
+      },
+      {
+        "title": "Cómo realizamos la planificación curricular y evaluación formativa en la Educación Inicial Intercultural Bilingüe — MINEDU",
+        "url": "https://repositorio.minedu.gob.pe/handle/20.500.12799/7306",
+        "use": "Propiedades de una situación significativa: contexto cercano, viabilidad, reto y movilización articulada de competencias. No se traslada automáticamente una condición lingüística EIB al aula del QA."
+      }
+    ],
+    "limitations": "No se validaron nuevos Planes Maestros ni actividades diarias. La valoración es revisión editorial pedagógica interna de las salidas guardadas, no certificación externa ni comprobación de aprendizaje de niños reales."
+  }
+}

@@ -1,0 +1,43 @@
+# Correcciones pedagógicas y de observación del 19 de octubre
+
+Se corrigió la pérdida de criterios secundarios entre Plan Maestro y actividad diaria. Una actividad puede desarrollar varias competencias pertinentes; cada una conserva su criterio, evidencia y momentos. No se obliga a integrar dos competencias en todos los días. La cobertura del proyecto se comprueba desde sus criterios, no solo desde las etiquetas.
+
+Rama: `codex/qa-corrections-20261019`. Base: `d0260f43fd46e63951bc0edeb67706f48cf7ec8b`. Cambios locales aún sin commit ni despliegue. Se conservan los cambios de la ronda anterior. Ninguna escritura en Supabase, Preview o Producción; ninguna modificación del contenido pedagógico confirmado.
+
+## Causas y correcciones
+
+| Hallazgo | Corrección y validación | Alcance |
+| --- | --- | --- |
+| Competencias secundarias nominales | El Master admite hasta las competencias seleccionadas del proyecto y exige un criterio y evidencia por cada competencia declarada en los nuevos blueprints. Se heredan todos los criterios y referencias; la confirmación los guarda en las tablas existentes. | Prueba integrada con tres competencias y persistencia PGlite real. Sin migración nueva para este cambio. |
+| Contexto IA limitado a una competencia | La muestra real encontró que AIContextBundle rechazaba la sexta actividad antes de llamar al proveedor. Ahora permite varias competencias en actividades heredadas, comprueba su correspondencia con el mapa y conserva el enum de la principal. | Regresión que usa el constructor y el generador reales con proveedor simulado; actividad de dos competencias generada después con IA real. Los workflows de evaluación individual conservan su restricción anterior. |
+| PM-01 Recursos pendientes | Se pide confirmación docente para materiales explícitamente pendientes antes de preparar el bloque. El servidor guarda la decisión con docente, fecha y lista; el Master comprueba esa lista, incluyendo rutas alternativas. | Prueba del endpoint: sin confirmación no confirma el año, no inicia el proyecto y no llama a IA. La detección cubre incertidumbre explícita en materiales; no sustituye una revisión semántica de todos los contextos posibles. |
+| PM-02 Redacción práctica | Reglas generales para preguntas concretas, acciones breves, precauciones donde afectan la acción y cierre con hallazgos sustentados. | Revisión manual del Master y las seis actividades de una muestra nueva. No constituye garantía sobre todas las generaciones futuras. |
+| PM-03 Materiales consistentes | Master y guía diaria reciben inventario y producciones previas; las instrucciones exigen comprobar soporte y útiles también en la mediación. | En la muestra nueva se usa cartón, crayones, bandejas y semillas disponibles; no se introduce papel ni recursos externos. La revisión semántica general sigue siendo necesaria. |
+| PM-04 Criterio y actuación | Reglas de alineación entre competencia, actuación, criterio, alternativa y evidencia; registros identificados por objeto y fecha. Si falta una idea previa no se atribuye otra idea al niño para aparentar que cumple el criterio. | La revisión de la sexta actividad detectó un Inicio que aún no permitía observar el criterio. Se mejoró la regla general y se generó otra versión de ese borrador local; la nueva guía sí permite observarlo en Inicio y Cierre. Se conservó la primera salida para comparación. |
+| PM-05 Momento por criterio | Cada criterio admite Inicio, Desarrollo y/o Cierre. Se conserva el mismo ID si aparece en dos momentos. La lectura histórica reconoce también rótulos explícitos como «Desarrollo o Cierre». | Se verificaron tres criterios, dos competencias en un momento, un criterio compartido entre momentos, rechazo de momento ajeno y ausencia de mutación de la fuente. |
+| W-01 Bloques vacíos | El documento proyecta enfoques, actitudes y apoyos guardados; omite bloques sin datos y renumera los apartados restantes. | Pruebas XML y revisión visual; no inventa enfoques ni necesidades. |
+| W-02 Criterios y paginación | Criterios y evidencias junto al momento correspondiente; tabla curricular con una fila por competencia, filas no divisibles cuando caben y encabezados repetidos junto a su primera fila. | Render Word local a PDF y revisión de imágenes de diez actividades y ejemplo con tres competencias. |
+| W-03 Repeticiones del proyecto | Preguntas separadas, ruta en tabla, recursos cerca de la preparación y una sola estrategia de registro, sin volver a copiar todos los criterios. | Proyecto guardado de diez días: pasa de diez a ocho páginas en esta muestra, manteniendo textos canónicos. No se fija un número universal de páginas. |
+| W-04 Campos sin fuente | Duración desde estimated_minutes; apoyos desde la propuesta; campos institucionales opcionales sin datos se omiten. Se retiran las frases genéricas de enfoques y diversidad. | Pruebas y render; originales guardados intactos. |
+| W-05 Referentes curriculares | Catálogo aditivo de 134 desempeños oficiales por edad, IDs estables, fuente/hash/página. Selección explícita por criterio, validación servidor, herencia y Word; históricos sin selección conservan la paráfrasis rotulada. | COMPLETADO en código local en la revisión posterior. Comparación independiente 134/134, muestra real y doce páginas Word revisadas. Evidencia y límites en `QA_DESEMPENOS_OFICIALES_2026-10-19.md`; no desplegado. |
+| Observación libre en Word | Una observación sin criterio conserva «Sin criterio asociado»; no recibe por defecto el criterio principal de la actividad. | Regresión de tabla de registros. |
+
+## Evidencias y límites
+
+La prueba integrada guarda una observación desde el criterio secundario de Comunicación y su momento de Cierre, verifica la conservación del texto original, rechaza un momento incorrecto, evita duplicación por reintento y comprueba que llega a Evaluar con la competencia y criterio correctos. No asigna valoraciones ni inventa observaciones fuera de los datos ficticios de prueba.
+
+QA visual local del componente real PedagogicalBlock con datos de ejemplo: los botones emiten los IDs correctos de criterio y momento. Esta fixture comprueba presentación y selección; el guardado se verifica por separado en PGlite. No se declara un flujo nuevo completo por interfaz en Preview.
+
+La muestra de IA real es «Semillas que podemos comparar», de cinco años, seis días y tres competencias. Secuencia: elegir qué comparar; buscar pistas; agrupar y comparar cantidades; construir cantidades equivalentes; explicar a un interlocutor; revisar ideas con semillas y registros. El último día desarrolla Indagación y Comunicación con criterios distintos. Las seis guías conservan propósito, criterios y evidencias del Master. Son salidas locales de auditoría, no proyectos confirmados ni escritos en la cuenta QA.
+
+Se hicieron ocho llamadas pagadas: un Master y siete guías diarias, porque se revisó nuevamente solo el último borrador tras detectar la desalineación de momentos. Las primeras cinco guías se reutilizaron. El bloqueo del constructor se produjo antes de la llamada y no generó consumo. Tiempo acumulado dentro del proveedor: 273,537 segundos; no es tiempo end-to-end medido en Preview ni rendimiento del paralelismo de producción.
+
+Costo adicional estimado con tokens de entrada, caché, escritura de caché y salida: **USD 0,1066935**. Acumulado conservador de la ronda: **USD 4,607772955 de 5**. No se realizaron llamadas para regenerar los Word. Comprobantes privados en `.local/qa-correcciones-criterios-20261019/`; documentos de revisión en `outputs/qa-correcciones-criterios-20261019/`.
+
+## Comprobaciones y rollback
+
+96 regresiones PASS en servicios de proyecto, contexto y generación IA, herencia, confirmación, observaciones ordinarias, proyección a Evaluar, preparación completa, recuperación, calendario y Word. Typecheck, lint y build Vinext PASS. Las tres pruebas de Word se repitieron después del último ajuste de plantilla. Comprobantes: `.local/criteria-final-*` y `.local/criteria-last-word-tests.txt`.
+
+El código reutiliza el almacenamiento de criterios y observaciones existente. No modifica el número de proyectos, no habilita edición individual de actividades confirmadas, no cambia modelos ni registra hechos de aula mediante IA. La cola v2 de la ronda anterior continúa sin migrarse a cloud. La activación en Preview requiere su migración ya documentada y un despliegue explícito posterior.
+
+Rollback: revertir el futuro commit de esta corrección y los cambios de plantillas/caché asociados, sin borrar criterios, observaciones, contratos ni artefactos anteriores. No volver a ejecutar migraciones previas ni restablecer datos históricos. No usar reset del árbol completo: contiene también las correcciones autorizadas de la ronda anterior.

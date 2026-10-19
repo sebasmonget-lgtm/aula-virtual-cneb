@@ -1,0 +1,1687 @@
+{
+  "preview": "https://ayni-aula-staging-5t9tbxosy-ayni4.vercel.app/",
+  "commit": "d0260f43fd46e63951bc0edeb67706f48cf7ec8b",
+  "mode": "QA conjunto dirigido por la persona usuaria; registrar observaciones y esperar al final para implementar correcciones",
+  "steps": [
+    {
+      "id": "QA-PASO-01",
+      "screen": "Crea tu salón",
+      "user_feedback": "La primera pantalla parece correcta; completar con los datos anteriores desde la interfaz como una usuaria.",
+      "execution": "Controles visibles del navegador y botón Guardar aula y continuar; sin escrituras directas de base de datos ni llamadas de API para crear el aula.",
+      "input": {
+        "institution": "IE 428",
+        "teacher": "Docente del aula",
+        "section": "CELESTE",
+        "age": 5,
+        "year": 2026,
+        "optional_fields": "Sin completar: no hay valores anteriores confirmados para UGEL, distrito, código modular, director(a) o logo."
+      },
+      "result": "Guardar aula y continuar mostró Guardando aula y abrió Añade a tus niños, con cero niños y paso de configuración completado.",
+      "status": "PASS: alta y avance por interfaz",
+      "requested_changes": [
+        {
+          "id": "QA-UI-01",
+          "status": "Pendiente de implementar al finalizar el QA",
+          "problem": "La persona usuaria reporta ejemplos o sugerencias con sus apellidos apellidos personales en configuración y matrícula.",
+          "expected": "Usar otros apellidos genéricos en ejemplos, placeholders y sugerencias, tanto de profesora como de alumnos. Conservar los nombres reales ingresados por la usuaria: este cambio solo afecta texto de ejemplo.",
+          "evidence": "Observación reportada por la persona usuaria durante el QA conjunto."
+        }
+      ],
+      "persistence_check": "Tras recargar, la matrícula permaneció accesible. Reabrir Configura tu aula mostró IE 428, Docente del aula y CELESTE guardados; volvió a matrícula sin editar datos.",
+      "evidence": "outputs/qa-interactivo-20261018/paso-01-guardado.png"
+    },
+    {
+      "id": "QA-PASO-02",
+      "screen": "Añade a tus niños",
+      "user_feedback": "Registrar diez alumnos con nombres habituales, sin etiquetas prueba, ficticio o similares, desde la interfaz.",
+      "status": "PASS: diez altas por interfaz y persistencia tras recargar",
+      "requested_changes": [
+        {
+          "id": "QA-UI-02",
+          "status": "Pendiente de investigar al finalizar el QA; una incidencia observada",
+          "problem": "Tras guardar la foto de Gabriel y aparecer Añadir un niño, se pulsó Editar a Luciana. Al buscar Cambiar foto, la edición ya no estaba abierta; la pantalla seguía en Añadir un niño. Reabrir Editar a Luciana permitió continuar.",
+          "expected": "La edición elegida debe permanecer abierta; el fin de una operación anterior no debe cerrar una edición nueva. Comprobar si hay carrera entre fin de guardado, refresco de lista y cambio de selección.",
+          "cause": "No confirmada: la coincidencia temporal no demuestra la causa. No se reprodujo una segunda vez ni se inspeccionó código para corregir durante este QA.",
+          "impact": "Fue necesario abrir de nuevo la edición. No se constató pérdida de nombres o fotos guardadas.",
+          "verification": "Los cuatro avatares previos se comprobaron cargados. Continuación de las siguientes altas con comprobación de miniatura por alumno."
+        }
+      ],
+      "execution": "Diez altas consecutivas desde los campos Nombres/Apellidos y el botón Agregar niño de la interfaz. Se esperó la confirmación de cada alta antes de enviar la siguiente; sin SQL, importación ni API directa.",
+      "students": [
+        "Valentina Rojas Salazar",
+        "Mateo Quispe Flores",
+        "Camila Huamán Castro",
+        "Diego Ramos Vega",
+        "Luciana Torres Medina",
+        "Gabriel Paredes Soto",
+        "Emilia Cárdenas Ruiz",
+        "Nicolás Mendoza León",
+        "Sofía Vargas Cabrera",
+        "Thiago Gutiérrez Silva"
+      ],
+      "optional_fields": "Sin fotos ni fechas de nacimiento: no fueron proporcionadas.",
+      "result": "El contador llegó a 10 y las diez acciones Editar muestran nombres distintos. Sin mensajes de error durante el registro. No se avanzó a entrevistas.",
+      "persistence_check": "Después de recargar, Niños registrados (10) y las diez acciones Editar conservan los nombres ingresados, incluidos los acentos. Sin duplicados visibles.",
+      "evidence": "outputs/qa-interactivo-20261018/paso-02-diez-alumnos.png",
+      "photo_execution": {
+        "status": "PASS: diez imágenes guardadas por interfaz y cargadas después de recargar",
+        "method": "Editar a cada alumno, Cambiar foto, Subir imagen mediante selector de archivos, Guardar cambios. Avatares ilustrados existentes de Ayni; sin fotografías de personas reales, IA adicional o escrituras directas en base.",
+        "result": "Las diez filas tienen exactamente una imagen con carga completada y ancho natural mayor que cero tras recargar. Se mantuvieron diez alumnos y sus nombres. No se avanzó a entrevistas.",
+        "evidence": "outputs/qa-interactivo-20261018/paso-02-avatares.png",
+        "assignments": [
+          {
+            "name": "Camila Huamán Castro",
+            "asset": "public/project-illustrations/girl.webp"
+          },
+          {
+            "name": "Diego Ramos Vega",
+            "asset": "public/project-illustrations/boy.webp"
+          },
+          {
+            "name": "Emilia Cárdenas Ruiz",
+            "asset": "public/project-illustrations/identity.webp"
+          },
+          {
+            "name": "Gabriel Paredes Soto",
+            "asset": "public/project-illustrations/movement.webp"
+          },
+          {
+            "name": "Luciana Torres Medina",
+            "asset": "public/project-illustrations/writing.webp"
+          },
+          {
+            "name": "Mateo Quispe Flores",
+            "asset": "public/project-illustrations/boy.webp"
+          },
+          {
+            "name": "Nicolás Mendoza León",
+            "asset": "public/project-illustrations/boy.webp"
+          },
+          {
+            "name": "Sofía Vargas Cabrera",
+            "asset": "public/project-illustrations/artistic_expression.webp"
+          },
+          {
+            "name": "Thiago Gutiérrez Silva",
+            "asset": "public/project-illustrations/movement.webp"
+          },
+          {
+            "name": "Valentina Rojas Salazar",
+            "asset": "public/project-illustrations/dance.webp"
+          }
+        ],
+        "visual_note": "La captura muestra fondo negro detrás de las ilustraciones con transparencia. Registrar para revisión visual al finalizar: causa no investigada; no se modificó el código de compresión durante el QA."
+      }
+    },
+    {
+      "id": "QA-PASO-03",
+      "screen": "Entrevistas y observaciones — Entrevistas",
+      "user_feedback": "Completar las entrevistas de los diez alumnos desde la interfaz.",
+      "status": "PASS: diez entrevistas confirmadas; 80 respuestas y todas las opciones comprobadas tras recargar",
+      "execution": "Ocho respuestas por alumno, selecciones coherentes con el texto, guardado automático y Confirmar entrevista. Uso de Entrevistar al siguiente niño; sin SQL ni APIs directas para guardar.",
+      "data_origin": "Respuestas elaboradas para el QA con los alumnos creados en esta ronda; no se contactó a familias reales ni se registraron observaciones curriculares.",
+      "criteria": [
+        "Cada pregunta recibe una respuesta pertinente, con ejemplos cotidianos distintos por niño.",
+        "Intereses, emociones, autonomía, convivencia, comunicación y lenguas, lectura/escritura emergente, matemática cotidiana, curiosidad y expectativas familiares.",
+        "No se asignan niveles AD/A/B/C ni se presentan reportes familiares como evidencia de logros.",
+        "No avanzar al resumen, observaciones o Mi año sin indicación de la persona usuaria."
+      ],
+      "requested_changes": [],
+      "result": "Diez entrevistas con 8/8 preguntas y confirmación versión 1. Se recargó la página y se reabrió cada alumno: las 80 respuestas coinciden exactamente con las ingresadas y las selecciones se conservaron. Sin error de guardado visible. No se avanzó a observaciones, resumen o Mi año.",
+      "students": [
+        "Camila Huamán Castro",
+        "Diego Ramos Vega",
+        "Emilia Cárdenas Ruiz",
+        "Gabriel Paredes Soto",
+        "Luciana Torres Medina",
+        "Mateo Quispe Flores",
+        "Nicolás Mendoza León",
+        "Sofía Vargas Cabrera",
+        "Thiago Gutiérrez Silva",
+        "Valentina Rojas Salazar"
+      ],
+      "ai_calls": "No se solicitaron generaciones ni sugerencias de IA desde Ayni en este paso.",
+      "persistence_check": [
+        {
+          "name": "Camila Huamán Castro",
+          "answers": 8,
+          "exactMatch": true,
+          "selectionsMatch": true
+        },
+        {
+          "name": "Diego Ramos Vega",
+          "answers": 8,
+          "exactMatch": true,
+          "selectionsMatch": true
+        },
+        {
+          "name": "Emilia Cárdenas Ruiz",
+          "answers": 8,
+          "exactMatch": true,
+          "selectionsMatch": true
+        },
+        {
+          "name": "Gabriel Paredes Soto",
+          "answers": 8,
+          "exactMatch": true,
+          "selectionsMatch": true
+        },
+        {
+          "name": "Luciana Torres Medina",
+          "answers": 8,
+          "exactMatch": true,
+          "selectionsMatch": true
+        },
+        {
+          "name": "Mateo Quispe Flores",
+          "answers": 8,
+          "exactMatch": true,
+          "selectionsMatch": true
+        },
+        {
+          "name": "Nicolás Mendoza León",
+          "answers": 8,
+          "exactMatch": true,
+          "selectionsMatch": true
+        },
+        {
+          "name": "Sofía Vargas Cabrera",
+          "answers": 8,
+          "exactMatch": true,
+          "selectionsMatch": true
+        },
+        {
+          "name": "Thiago Gutiérrez Silva",
+          "answers": 8,
+          "exactMatch": true,
+          "selectionsMatch": true
+        },
+        {
+          "name": "Valentina Rojas Salazar",
+          "answers": 8,
+          "exactMatch": true,
+          "selectionsMatch": true
+        }
+      ],
+      "evidence": [
+        "outputs/qa-interactivo-20261018/paso-03-entrevistas-confirmadas.png",
+        "outputs/qa-interactivo-20261018/paso-03-verificacion.json"
+      ],
+      "current_screen": "Entrevistas, Camila seleccionada, modo de consulta confirmada. A la espera de la siguiente indicación del QA conjunto."
+    },
+    {
+      "id": "QA-PASO-04",
+      "screen": "Observación libre diagnóstica",
+      "user_feedback": "Tres observaciones simples por alumno, sugerir con Ayni y revisar la pertinencia de las competencias.",
+      "status": "Captura y persistencia PASS; sugerencias pedagógicas PARTIAL en esta muestra",
+      "execution": "Notas y criterios esperados registrados antes de pedir sugerencias. Toda captura, sugerencia, corrección de selección y guardado desde la interfaz; SQL solo de lectura para comprobar gasto agregado.",
+      "data_origin": "Hechos redactados para este QA, sin presentar niveles ni observaciones reales de menores.",
+      "budget": {
+        "priorConservativeUsd": 3.846928332,
+        "reservedThisStepUsd": 0.9,
+        "maximumAccumulatedUsd": 5,
+        "recordedThisStepUsd": 0.0155862,
+        "recordedCostSources": [
+          "provider"
+        ],
+        "providerCalls": 60,
+        "unpricedCalls": 0,
+        "accumulatedControlUsd": 3.862514532
+      },
+      "requested_changes": [
+        {
+          "id": "QA-AI-01",
+          "status": "Pendiente de investigar e implementar después del QA",
+          "problem": "Para Diego, ante un carro que no cabe por un túnel y el ajuste de su ancho, Ayni sugirió únicamente CYT_INDAGA.",
+          "expected": "Priorizar MAT_FORMA: se describe una relación espacial y un ajuste de tamaño. No inferir indagación por el verbo probar sin una actuación de investigación suficientemente descrita.",
+          "originalSuggestion": [
+            "CYT_INDAGA"
+          ],
+          "manualSelection": [
+            "MAT_FORMA"
+          ],
+          "cause": "No investigada en este paso; no se modificó el modelo, prompts, payloads o código.",
+          "evidence": "outputs/qa-interactivo-20261018/observacion-diego-01-sugerencia-original.png"
+        },
+        {
+          "id": "QA-AI-02",
+          "status": "Pendiente de investigar después del QA",
+          "problem": "Para Mateo, Ayni se abstuvo ante una meta explícita, estrategia y ajuste para aprender una canción.",
+          "expected": "Reconocer TRANS_AUTONOMO cuando el registro describe meta, estrategia y revisión; no confundirlo con creación artística por el tema musical.",
+          "originalSuggestion": [],
+          "manualSelection": [
+            "TRANS_AUTONOMO"
+          ],
+          "cause": "No investigada; no se repitió la sugerencia ni se cambió el texto para obtener una respuesta deseada.",
+          "evidence": "outputs/qa-interactivo-20261018/observacion-mateo-03-abstencion-original.png"
+        },
+        {
+          "id": "QA-AI-03",
+          "status": "Pendiente de investigar después del QA",
+          "problem": "Para Sofía, la sugerencia oral es pertinente pero omite la relación sustentada con Identidad al reconocer miedo y apoyo para regularse.",
+          "expected": "Permitir reconocer ambas relaciones cuando el texto sustenta relato/interacción y reconocimiento/regulación emocional; no sumar Oral por cualquier cita.",
+          "originalSuggestion": [
+            "COM_ORAL"
+          ],
+          "manualSelection": [
+            "PS_IDENTIDAD",
+            "COM_ORAL"
+          ],
+          "cause": "No investigada; sugerencia incompleta, no clasificación oral errónea.",
+          "evidence": "outputs/qa-interactivo-20261018/observacion-sofia-03-sugerencia-parcial.png"
+        }
+      ],
+      "result": {
+        "saved": 30,
+        "students": 10,
+        "perStudent": 3,
+        "verdicts": {
+          "PASS": 27,
+          "FAIL_PRIMARY": 1,
+          "FAIL_ABSTENTION": 1,
+          "PARTIAL_COVERAGE": 1
+        },
+        "manualSelections": 3,
+        "persistence": "Después de recargar se reabrieron los diez alumnos: tres tarjetas por alumno, texto exacto y competencias finales coincidentes con la revisión.",
+        "unchanged": "No se alteraron las entrevistas, nombres, fotografías de perfil ni código. No se avanzó al resumen de observaciones o Mi año."
+      },
+      "report": "docs/qa/QA_INTERACTIVO_OBSERVACIONES_2026-10-18.json"
+    },
+    {
+      "id": "QA-PASO-05",
+      "screen": "Experiencias guiadas diagnósticas",
+      "user_feedback": "Verificar prioridades, cobertura curricular, lenguaje claro, ayuda para la docente y registro desde criterios. Cinco observaciones en alumnos distintos por experiencia.",
+      "status": "Completado con cuatro mejoras P2 pendientes",
+      "scope": {
+        "age": 5,
+        "students": 10,
+        "availableExperiences": 7,
+        "moments": 25,
+        "plannedRecords": 35
+      },
+      "execution": "Navegación de experiencias y momentos, apertura del registro junto al criterio, selección de alumnos y guardado desde la interfaz. Modelo de referencia de conteos elaborado con las treinta libres ya verificadas y actualizado solo después de comprobar cada nuevo guardado.",
+      "data_origin": "Solo datos simulados del QA autorizado. Para TIC, escenario con dispositivo adecuado y acompañamiento; función sin conexión, sin cuentas, sin publicaciones o imágenes de personas. No se afirma disponer de este recurso en un aula real.",
+      "progress": {
+        "saved": 35,
+        "momentsReviewed": 25,
+        "rankingsChecked": 9
+      },
+      "requested_changes": [
+        {
+          "id": "QA-GUIADA-01",
+          "severity": "P2",
+          "symptom": "Al abrir otro registro inmediatamente después de guardar a Emilia, el selector aún mostró Sin registro y la mantuvo entre quienes tenían cero en TIC.",
+          "evidence": {
+            "experienceId": "create_a_digital_message",
+            "aspectId": "make_and_review_a_digital_record",
+            "choices": [
+              {
+                "countText": "Sin registro",
+                "coverage": "none",
+                "name": "Emilia Cárdenas Ruiz"
+              },
+              {
+                "countText": "Sin registro",
+                "coverage": "none",
+                "name": "Gabriel Paredes Soto"
+              },
+              {
+                "countText": "Sin registro",
+                "coverage": "none",
+                "name": "Luciana Torres Medina"
+              },
+              {
+                "countText": "Sin registro",
+                "coverage": "none",
+                "name": "Mateo Quispe Flores"
+              },
+              {
+                "countText": "Sin registro",
+                "coverage": "none",
+                "name": "Nicolás Mendoza León"
+              },
+              {
+                "countText": "Sin registro",
+                "coverage": "none",
+                "name": "Sofía Vargas Cabrera"
+              },
+              {
+                "countText": "Sin registro",
+                "coverage": "none",
+                "name": "Thiago Gutiérrez Silva"
+              },
+              {
+                "countText": "Sin registro",
+                "coverage": "none",
+                "name": "Valentina Rojas Salazar"
+              },
+              {
+                "countText": "1 registro",
+                "coverage": "few",
+                "name": "Camila Huamán Castro"
+              },
+              {
+                "countText": "1 registro",
+                "coverage": "few",
+                "name": "Diego Ramos Vega"
+              }
+            ],
+            "expected": [
+              {
+                "name": "Gabriel Paredes Soto",
+                "count": 0
+              },
+              {
+                "name": "Luciana Torres Medina",
+                "count": 0
+              },
+              {
+                "name": "Mateo Quispe Flores",
+                "count": 0
+              },
+              {
+                "name": "Nicolás Mendoza León",
+                "count": 0
+              },
+              {
+                "name": "Sofía Vargas Cabrera",
+                "count": 0
+              },
+              {
+                "name": "Thiago Gutiérrez Silva",
+                "count": 0
+              },
+              {
+                "name": "Valentina Rojas Salazar",
+                "count": 0
+              },
+              {
+                "name": "Camila Huamán Castro",
+                "count": 1
+              },
+              {
+                "name": "Diego Ramos Vega",
+                "count": 1
+              },
+              {
+                "name": "Emilia Cárdenas Ruiz",
+                "count": 1
+              }
+            ],
+            "pass": false
+          },
+          "recovery": "Sin reenviar ni recargar la página, el mismo diálogo se actualizó y mostró a Emilia con 1 registro al final del grupo correspondiente.",
+          "expected": "No mostrar como definitivos conteos anteriores mientras se refresca la cobertura; actualizar la prioridad o informar que se está cargando.",
+          "cause": "No investigada; se comprobó una ventana de desactualización visible, no pérdida del registro.",
+          "status": "Documentar e implementar al finalizar QA"
+        },
+        {
+          "id": "QA-GUIADA-02",
+          "severity": "P2",
+          "symptom": "Las tarjetas guardadas muestran alumno, texto, tipo guiada y competencia, pero no muestran el nombre de la experiencia ni el criterio. Al abrir Editar tampoco se presenta ese contexto; solo se informa que se conserva.",
+          "expected": "Facilitar consultar la experiencia y el criterio de origen, con texto breve o un detalle secundario, sin recargar la tarjeta ni permitir modificar la asociación histórica.",
+          "status": "Mejora de claridad pendiente al terminar QA; no se modificó el registro.",
+          "evidence": "Revisión por interfaz de la primera observación TIC de Camila, abrir Editar y Cancelar sin cambios."
+        },
+        {
+          "id": "QA-GUIADA-03",
+          "severity": "P2",
+          "symptom": "El contenido es mayoritariamente claro, pero quedan términos formales puntuales: colecciones, grafismos y no acredita escritura.",
+          "expected": "Preferir grupos de objetos, marcas o letras y una explicación directa de que un dibujo solo no permite observar intención de escribir.",
+          "locations": [
+            {
+              "experience": "count_and_locate",
+              "aspect": "compare_groups",
+              "field": "look_for"
+            },
+            {
+              "experience": "stories_and_marks",
+              "aspect": "write_message",
+              "fields": [
+                "look_for",
+                "examples"
+              ]
+            }
+          ],
+          "status": "Pulido editorial pendiente al terminar QA; sin cambiar criterios oficiales ni IDs."
+        },
+        {
+          "id": "QA-GUIADA-04",
+          "severity": "P2",
+          "symptom": "La paleta visible para cantidad de registros no coincide con la solicitada anteriormente: Sin registro usa amarillo suave y 1 registro azul claro.",
+          "observed": [
+            {
+              "background": "rgb(255, 248, 233)",
+              "count": "Sin registro",
+              "coverage": "none",
+              "name": "Camila Huamán Castro"
+            },
+            {
+              "background": "rgb(255, 248, 233)",
+              "count": "Sin registro",
+              "coverage": "none",
+              "name": "Diego Ramos Vega"
+            },
+            {
+              "background": "rgb(255, 248, 233)",
+              "count": "Sin registro",
+              "coverage": "none",
+              "name": "Emilia Cárdenas Ruiz"
+            },
+            {
+              "background": "rgb(255, 248, 233)",
+              "count": "Sin registro",
+              "coverage": "none",
+              "name": "Luciana Torres Medina"
+            },
+            {
+              "background": "rgb(255, 248, 233)",
+              "count": "Sin registro",
+              "coverage": "none",
+              "name": "Sofía Vargas Cabrera"
+            },
+            {
+              "background": "rgb(238, 247, 252)",
+              "count": "1 registro",
+              "coverage": "few",
+              "name": "Gabriel Paredes Soto"
+            },
+            {
+              "background": "rgb(238, 247, 252)",
+              "count": "1 registro",
+              "coverage": "few",
+              "name": "Mateo Quispe Flores"
+            },
+            {
+              "background": "rgb(238, 247, 252)",
+              "count": "1 registro",
+              "coverage": "few",
+              "name": "Nicolás Mendoza León"
+            },
+            {
+              "background": "rgb(238, 247, 252)",
+              "count": "1 registro",
+              "coverage": "few",
+              "name": "Thiago Gutiérrez Silva"
+            },
+            {
+              "background": "rgb(238, 247, 252)",
+              "count": "1 registro",
+              "coverage": "few",
+              "name": "Valentina Rojas Salazar"
+            }
+          ],
+          "expected": "Revisar la codificación acordada: 0 gris, 1 amarillo, 2 o más verde/turquesa; conservar texto y explicar que cantidad no equivale a nivel de aprendizaje.",
+          "limitation": "En este paso se comprobaron estados 0 y 1; no se creó un segundo registro del mismo niño en la misma competencia para probar 2 o más.",
+          "status": "Consistencia visual pendiente de resolver al finalizar QA; los conteos numéricos fueron correctos."
+        }
+      ],
+      "result": {
+        "saved": 35,
+        "experiences": 7,
+        "distinctStudentsPerExperience": 5,
+        "competencies": 12,
+        "persistence": "65 tarjetas tras recargar: 30 libres conservadas y 35 guiadas verificadas.",
+        "canonical": "35 vínculos completos correctos; cero valoraciones creadas.",
+        "studentPrioritization": {
+          "checks": 36,
+          "passed": 35,
+          "transientFailures": 1,
+          "note": "Las 35 selecciones se hicieron con conteos correctos una vez actualizados; cualquiera de los alumnos seguía siendo seleccionable. Todos los elegidos tenían cero registros previos en esa competencia."
+        },
+        "implementation": "Sin cambios de código; hallazgos pendientes al terminar QA."
+      },
+      "cost": {
+        "newCalls": 0,
+        "newCostUSD": 0,
+        "conservativeAccumulatedControlUSD": 3.862514532,
+        "maximumUSD": 5,
+        "verification": "Mismos 60 registros de consumo y costos antes y después de guiadas. Costos informados por proveedor; no conciliación independiente con factura. Se conserva la reserva histórica del control acumulado."
+      },
+      "report": "docs/qa/QA_INTERACTIVO_GUIADAS_2026-10-18.json",
+      "evidence": [
+        "outputs/qa-interactivo-20261018/paso-05-guia-criterio.png",
+        "outputs/qa-interactivo-20261018/paso-05-prioridad-alumnos.png"
+      ]
+    },
+    {
+      "id": "QA-PASO-06",
+      "screen": "Conversación y generación de Mi año",
+      "status": "Completado: continuidad FAIL; generación y persistencia PASS; revisión pedagógica PARTIAL",
+      "user_feedback": "Probar materiales, situación significativa, festividad, participación familiar, entorno cercano y un aporte adicional después de información suficiente; contrastar con proyectos generados.",
+      "execution": "Seis mensajes por interfaz en la misma conversación; tres aportes después de ready. Generación iniciada por Crear Mi año una sola vez.",
+      "findings": [
+        {
+          "id": "QA-CHAT-01",
+          "severity": "P1",
+          "symptom": "El aporte sobre parque/mariposas y la decisión de biblioteca viajera se ven en el chat, pero sus respuestas no los reconocen y el contexto editable sigue con trece elementos que no los incluyen.",
+          "status": "Reproducido y confirmado en el plan generado; pendiente al terminar el QA",
+          "reproduction": "Después de tres respuestas y ready, enviar preocupación familiar (incorporada), luego parque y biblioteca viajera; revisar Editar de contexto.",
+          "expected": "Toda decisión adicional debe procesarse y conservarse o explicar por qué no cambia el plan. No basta permitir enviar el mensaje.",
+          "actual": "Seis aportes completos guardados; solo source_turn 0–3 en el contexto. Parque/mariposas y biblioteca viajera no incorporados a las propuestas ni orientaciones generadas.",
+          "identifiedCause": "La salida context_items del modelo omite los turnos 4 y 5. No es borrado del texto ni filtrado de privacidad: safe_texts conserva ambos completos. El servidor valida citas de lo extraído, pero no comprueba cobertura del aporte más reciente. La generación usa context_items como teacherIdeas. El motivo por el que el modelo omitió esos turnos no se aisló experimentalmente.",
+          "files": [
+            "src/lib/initial-journey-service.mjs",
+            "src/lib/annual-context-draft.mjs",
+            "src/lib/use-annual-context-draft.ts",
+            "src/lib/annual-journey-jobs.mjs"
+          ],
+          "prevention": "Probar continuidad con más de cuatro aportes, correcciones, negaciones y decisiones posteriores a ready; verificar el recorrido mensaje → contexto → generación. Detectar aportes no procesados sin depender de palabras de este caso y conservar ediciones docentes. Hacer explícitos los límites de tamaño/cantidad; evitar descartes silenciosos."
+        },
+        {
+          "id": "QA-CHAT-02",
+          "severity": "P2",
+          "symptom": "El detalle de todos los proyectos consultados se titula Proyecto 1 aunque el mapa muestra su número real (9, 12, 13 o 14).",
+          "cause": "project-detail-view.tsx pasa index={1} a AnnualProjectPreview.",
+          "expected": "Mantener el número del tramo al consultar su detalle.",
+          "files": [
+            "src/features/dashboard/components/project-detail-view.tsx"
+          ],
+          "status": "Documentado, sin corrección todavía."
+        },
+        {
+          "id": "QA-CHAT-03",
+          "severity": "P2",
+          "symptom": "La intención actual de acercar a las familias se usa para un proyecto específico ya pasado (24 de agosto a 4 de septiembre), al crear el año el 18 de octubre.",
+          "qualification": "También hay orientaciones generales y apoyos futuros de colaboración flexible. No se perdió por completo la preferencia ni se inventó ejecución del pasado; es una integración temporal parcial.",
+          "expected": "No considerar satisfecha una intención actual solo por ubicarla en un tramo no desarrollable. Revisar su incorporación a los días disponibles, sin reescribir historia ni forzar proyectos nominales.",
+          "status": "Mejora documentada para revisar al terminar QA."
+        }
+      ],
+      "data_origin": "Contexto y preferencias simulados para QA, sin datos reales de familias o alumnos.",
+      "result": {
+        "generation": "PASS: quince propuestas persistidas como borrador.",
+        "afterReady": "FAIL de extremo a extremo: enviar funciona y los seis mensajes se guardan, pero dos aportes tardíos no llegan al contexto ni a la propuesta.",
+        "competencies": "PASS en esta muestra: quince proyectos con dos competencias distintas y oportunidades concretas, treinta oportunidades en total.",
+        "pedagogy": "PARTIAL global por omisiones de contexto y temporalidad; los fundamentos y retos generados son generalmente coherentes y utilizables. No se considera aprobación integral del producto.",
+        "persistence": "PASS por interfaz: mismo plan tras recargar, quince tramos y sin nueva pantalla de generación."
+      },
+      "report": "docs/qa/QA_INTERACTIVO_CHAT_MI_ANO_2026-10-18.json",
+      "cost": {
+        "newCalls": 8,
+        "chatEstimateUSD": 0.022213225,
+        "annualEstimateUSD": 0.197141,
+        "roundEstimateUSD": 0.219354225,
+        "cumulativeConservativeControlUSD": 4.0818687570000005,
+        "limitUSD": 5,
+        "rows": [
+          {
+            "calls": 7,
+            "cost_source": "estimate",
+            "cost_usd": "0.0222132250",
+            "model": "gpt-6-luna",
+            "pricing_version": "2026-10-10-standard-cache-writes-asr-usage",
+            "provider": "openai",
+            "unpriced_calls": 0,
+            "workflow": "annual_journey_conversation"
+          },
+          {
+            "calls": 1,
+            "cost_source": "estimate",
+            "cost_usd": "0.1971410000",
+            "model": "gpt-6.1-sol",
+            "pricing_version": "2026-10-10-standard-cache-writes-asr-usage",
+            "provider": "openai",
+            "unpriced_calls": 0,
+            "workflow": "annual_plan"
+          }
+        ],
+        "source": "Estas ocho llamadas OpenAI usan cost_source=estimate y la tabla de precios versionada de la aplicación; no equivalen a una factura conciliada. Se conserva la reserva histórica del control acumulado.",
+        "unpricedCalls": 0
+      },
+      "timing": {
+        "generationBackendSeconds": 345.496,
+        "generationObservedUpperBoundSeconds": 395.041,
+        "providerCallDurationCaution": "duration_ms de la operación anual representa la recuperación final de una respuesta en segundo plano (377 ms), no toda la generación; usar generation_ms para tiempo real del trabajo."
+      },
+      "evidence": [
+        "outputs/qa-interactivo-20261018/paso-06-situacion-macetas.png",
+        "outputs/qa-interactivo-20261018/paso-06-proyecto-canciones.png"
+      ]
+    },
+    {
+      "id": "QA-PASO-07",
+      "date": "2026-10-19",
+      "screen": "Documentos y Word del plan anual",
+      "status": "Revisión completada, correcciones pendientes al terminar QA",
+      "user_feedback": "Anotar mejoras pedagógicas y revisar Word; actualizar posteriormente la plantilla conservando la estética que le gusta.",
+      "visualPreference": "Mantener que se vea bien estéticamente como ahora; actualizar la plantilla que fue creada al inicio y quedó detrás de los cambios del producto.",
+      "report": "docs/qa/QA_INTERACTIVO_WORD_PLAN_ANUAL_2026-10-19.json",
+      "result": {
+        "pages": 30,
+        "contentIntegrity": "PASS: los quince proyectos conservan todos los campos comprobados; no se perdieron situaciones, propósitos, preguntas, acciones, materiales ni oportunidades al exportar.",
+        "pedagogy": "Se mantienen las valoraciones y mejoras por proyecto de la relectura anterior. La exportación no resuelve las decisiones omitidas del chat ni la ubicación de una intención actual en un tramo pasado.",
+        "dateConsistency": "FAIL: 35 diferencias de un día entre interfaz/Lima y Word.",
+        "readerLanguage": "FAIL: JSON crudo y valores ingleses visibles en los diez relatos familiares.",
+        "documentUsability": "PARTIAL: texto legible y sin solapamiento evidente en la revisión realizada; estructura plana, redundancia y paginación mejorables.",
+        "layout": "A4, cuerpo Calibri 11 y encabezados azules. La revisión no requiere sustituir la identidad visual aprobada.",
+        "overall": "No aprobar la salida Word como terminada hasta resolver fechas, proyección legible y estructura."
+      },
+      "requested_changes": [
+        {
+          "id": "QA-WORD-01",
+          "severity": "P1",
+          "symptom": "35 observaciones guiadas del 18/10/2026 en la interfaz figuran como 19/10/2026 en Word.",
+          "expected": "Mostrar la fecha real de observación en America/Lima y conservar intactos los registros. Distinguir timestamp de una fecha de calendario sin hora.",
+          "evidence": {
+            "example": {
+              "student": "Camila Huamán Castro",
+              "timestamp": "2026-10-19T02:51:17.941Z",
+              "ui_and_lima_date": "18/10/2026",
+              "word_date": "19/10/2026",
+              "pages": [
+                23
+              ]
+            },
+            "otherPages": [
+              24,
+              25,
+              26
+            ],
+            "verifiedParagraphs": 35
+          },
+          "cause": "annual-journey-word.mjs readableDate toma el segmento YYYY-MM-DD del timestamp UTC, sin conversión a Lima. Ejemplo: 2026-10-19T02:51:17.941Z corresponde a 18/10 en Lima.",
+          "files": [
+            "src/lib/annual-journey-word.mjs"
+          ],
+          "prevention": "Probar timestamps a ambos lados de la medianoche UTC/Lima, cambios de mes/año y fechas sin hora que no deben desplazarse.",
+          "status": "Reproducido, pendiente al terminar QA."
+        },
+        {
+          "id": "QA-WORD-02",
+          "severity": "P2",
+          "symptom": "Los diez relatos familiares incluyen JSON y etiquetas inglesas como communication_tags, social_play_tags, quiet_initially y follows.",
+          "pages": [
+            26,
+            27,
+            28,
+            29,
+            30
+          ],
+          "expected": "Proyectar solo texto legible para la profesora. Traducir los valores pertinentes con el contrato de entrevista vigente o mantenerlos como metadatos internos. Conservar los originales y la trazabilidad.",
+          "cause": "annual-classroom-snapshot.mjs incorpora JSON.stringify(structured) a support_text; sourceText en annual-journey-word.mjs traduce algunas etiquetas por línea pero conserva el JSON crudo.",
+          "files": [
+            "src/lib/annual-classroom-snapshot.mjs",
+            "src/lib/annual-journey-word.mjs"
+          ],
+          "status": "Reproducido. Corrección de presentación, no cambio del texto original ni nuevo filtro de privacidad."
+        },
+        {
+          "id": "QA-WORD-03",
+          "severity": "P2",
+          "symptom": "Los proyectos conservan fundamento, propósito, pregunta, acciones, condiciones, mediación y observación, pero se imprimen como párrafos sucesivos sin etiquetas. Las capacidades y competencias sí tienen encabezado.",
+          "pages": [
+            4,
+            7,
+            15,
+            17,
+            18
+          ],
+          "example": "Página 15: después de la competencia aparecen Elegir qué observar..., Con acceso confirmado..., Volver a la pregunta..., Qué pregunta... y Observar a simple vista... sin indicar qué campo es cada uno.",
+          "expected": "Distinguir situación significativa/origen y reto, propósito, qué harán los niños, cómo acompañar, qué observar, materiales y apoyos. No inventar campos pedagógicos nuevos ni enriquecer con IA durante la exportación.",
+          "cause": "opportunitySection convierte seis campos en una lista de textos sin rótulos. El encabezado del proyecto hace lo mismo con rationale, purpose e invitation.",
+          "files": [
+            "src/lib/annual-journey-word.mjs"
+          ],
+          "status": "Pendiente de nueva estructura de plantilla, preservando estética."
+        },
+        {
+          "id": "QA-WORD-04",
+          "severity": "P2",
+          "symptom": "La primera página repite las trece decisiones en un bloque y luego en una lista. Se vuelven a copiar como Fuente 77. La frase Describe lo registrado; no acredita por sí solo un logro se repite 65 veces.",
+          "pages": [
+            1,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            30
+          ],
+          "expected": "Un resumen inicial sin duplicaciones; procedencia organizada como anexo diferenciado o consulta secundaria, conservando cada fuente y las advertencias necesarias. Una explicación común puede evitar repetir la misma frase tras cada registro.",
+          "cause": "Se exportan teacher_preferences, experience_context y todas las fuentes de forma acumulativa.",
+          "files": [
+            "src/lib/annual-journey-word.mjs"
+          ],
+          "status": "Mejora editorial y de estructura pendiente; no eliminar registros canónicos."
+        },
+        {
+          "id": "QA-WORD-05",
+          "severity": "P2",
+          "symptom": "No hay índice, numeración de páginas ni panorama anual compacto. La cabecera no identifica edad ni cantidad de estudiantes, aunque esos datos están guardados. Hay 98 encabezados con jerarquía poco diferenciada.",
+          "expected": "Identificación breve con datos existentes; panorama de los quince tramos con fechas y competencias; índice/navegación y páginas numeradas; jerarquía entre proyecto, competencia y sección. Mantener colores, tipografía y apariencia aprobados.",
+          "cause": "La rama journey_version=2 retorna renderAnnualJourneyWord antes de la rama annual-unified-v1, aunque document_context.template_version dice annual-unified-v1. El renderizador activo genera párrafos simples con un único nivel de encabezados.",
+          "files": [
+            "src/lib/document-word-export.mjs",
+            "src/lib/annual-journey-word.mjs"
+          ],
+          "status": "Actualizar el exportador realmente usado; cambiar únicamente una plantilla antigua que esta rama no utiliza no corregiría esta salida."
+        },
+        {
+          "id": "QA-WORD-06",
+          "severity": "P2",
+          "symptom": "Hay encabezados vacíos de Registros de referencia y comienzos de página con materiales o continuaciones del proyecto anterior, sin contexto del proyecto. Varios proyectos empiezan cerca del final de una página y continúan en la siguiente.",
+          "pages": [
+            5,
+            6,
+            7,
+            8,
+            11,
+            12,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19
+          ],
+          "expected": "Omitir secciones vacías; mantener juntas unidades de lectura y señalar continuaciones cuando un proyecto ocupe más de una página. Evitar forzar una página por proyecto si compromete legibilidad.",
+          "cause": "El exportador crea siempre Registros de referencia, aun con source_fact_keys vacío. Mantiene encabezados con un párrafo siguiente, pero no organiza límites entre fichas de proyecto.",
+          "files": [
+            "src/lib/annual-journey-word.mjs"
+          ],
+          "status": "Mejora de paginación pendiente."
+        }
+      ],
+      "pedagogical_changes": [
+        {
+          "project": 1,
+          "change": "Concretar el reto de organizar/probar espacios, más allá de rutinas."
+        },
+        {
+          "project": 7,
+          "change": "Distinguir reconocimiento emocional de evidencia de autorregulación propia."
+        },
+        {
+          "project": 11,
+          "change": "Asegurar progresión en repartos y negociación, evitando repetición."
+        },
+        {
+          "project": 15,
+          "change": "Ofrecer retos iniciales concretos y un recorrido viable para tres semanas."
+        },
+        {
+          "project": 9,
+          "change": "Revisar integración de la intención familiar actual en los días disponibles."
+        }
+      ],
+      "templateBrief": {
+        "preserve": [
+          "Estética aprobada por la persona usuaria, paleta, tipografía y sensación cuidada.",
+          "Datos canónicos, quince tramos, competencias y decisiones confirmadas; fuentes e historia accesibles.",
+          "Espacio y tamaño de letra legibles; evitar comprimir todo en tablas densas."
+        ],
+        "proposedStructure": [
+          "Identificación breve del aula con los datos guardados.",
+          "Síntesis del contexto y decisiones sin repetirlas.",
+          "Panorama anual de quince tramos, fechas y competencias.",
+          "Ficha de cada proyecto: situación significativa y reto, propósito, acciones infantiles, competencias y qué observar, acompañamiento, materiales y apoyos.",
+          "Oportunidades cotidianas, seguimiento y colaboración familiar.",
+          "Procedencia e interpretaciones en un apartado/anexo claramente identificado; no mezclar metadatos técnicos con el texto docente."
+        ],
+        "implementationFocus": "Adaptar el renderizador activo de annual journey v2 y sus proyecciones, no solo retocar una plantilla histórica. Separar correcciones de formato/fechas del fallo anterior de extracción del chat. La exportación debe seguir siendo determinística, sin nuevas llamadas de IA."
+      },
+      "applicationMutation": "Se confirmó el borrador QA por interfaz para habilitar la exportación. Cambió draft → active; los quince proyectos permanecen idénticos. Confirmación de prueba de exportación, no aprobación de calidad ni de logros infantiles. Sin escrituras directas de datos. La descarga dejó visible Versión estable preparada en Documentos; se conserva el archivo exportado de esta versión.",
+      "cost": {
+        "newAIGenerationsRequested": 0,
+        "lastVerifiedAccumulatedControlUSD": 4.081868757,
+        "limitUSD": 5,
+        "note": "Exportación determinística desde contenido confirmado. La consulta final de consumo quedó sin respuesta y se canceló; no se presenta una conciliación nueva de facturación."
+      }
+    },
+    {
+      "id": "QA-PASO-08",
+      "screen": "Carga de generación de Mi año y plan anual",
+      "date": "2026-10-19",
+      "status": "Requisito registrado; implementación y regresiones pendientes al finalizar el QA conjunto",
+      "user_feedback": "Mostrar una barra circular con porcentaje gradual de 0 a 100 %, alcanzando 100 % a los 6 minutos y 30 segundos. Agregar al Word de mejoras pendientes.",
+      "requested_changes": [
+        {
+          "id": "QA-UX-CARGA-01",
+          "status": "Pendiente de implementar",
+          "expected": "Indicador circular de progreso estimado de 0 a 100 % en 390 segundos; conservar la identidad visual de Ayni y las fases reales de generación.",
+          "requestedTimingSeconds": 390,
+          "proposedCalibration": [
+            {
+              "seconds": 0,
+              "percent": 0
+            },
+            {
+              "seconds": 195,
+              "percent": 50
+            },
+            {
+              "seconds": 390,
+              "percent": 100
+            }
+          ],
+          "implementationRecommendations": [
+            "Rotular el avance como estimado; el temporizador no acredita que el plan se haya generado.",
+            "Si el trabajo real termina antes, mostrar el resultado de inmediato, sin esperar 390 segundos.",
+            "Si sigue pendiente al alcanzar 100 %, indicar que Ayni sigue preparando el año. No declarar listo, habilitar acciones ni reiniciar la generación por el temporizador.",
+            "Recuperar el tiempo transcurrido desde el inicio persistido del trabajo después de recargar o volver a la pantalla.",
+            "No agregar llamadas de IA ni cambiar modelos o prompts; mantener gestión de errores y recuperación existentes."
+          ],
+          "plannedRegressionOnly": [
+            "0, 195 y 390 segundos con reloj controlado",
+            "Finalización anticipada y tardía",
+            "Recarga y regreso a la pantalla",
+            "Fallo real y recuperación sin duplicar generación",
+            "Porcentaje legible y movimiento reducido"
+          ],
+          "evidence": "Observación de la persona usuaria: varias rondas cercanas a seis minutos. Última generación medida: 345.496 segundos; no es una garantía de duración futura."
+        }
+      ],
+      "metrics": {
+        "lastGenerationSeconds": 345.496,
+        "roundEstimatedUSD": 0.219354225,
+        "accumulatedEstimatedUSD": 4.081868757,
+        "limitUSD": 5,
+        "additionalAICallsForThisNote": 0,
+        "note": "Estimaciones previas del QA; no constituyen nueva conciliación de facturación."
+      },
+      "wordRegister": "outputs/qa-interactivo-20261018/Mejoras-pendientes-QA-Ayni.docx",
+      "applicationMutation": "Ninguna. Solo documentación local; sin cambios de código ni despliegue."
+    },
+    {
+      "id": "QA-PASO-09",
+      "screen": "Documentos del plan anual",
+      "date": "2026-10-19",
+      "status": "Decisión confirmada por la persona usuaria; implementación pendiente al finalizar el QA",
+      "user_feedback": "No se entiende la diferencia entre Revisar plan anual, Preparar versión estable y Descargar Word.",
+      "verifiedBehavior": {
+        "Revisar plan anual": "Navega a Mi año y abre el plan seleccionado. No genera otro plan ni lo confirma.",
+        "Preparar versión estable": "Prepara y guarda en almacenamiento privado un archivo Word de la fuente confirmada, con versión e integridad verificables; reutiliza el archivo existente cuando corresponde. No descarga el archivo al equipo ni es una nueva generación pedagógica con IA.",
+        "Descargar Word": "Solicita al exportador el Word desde el documento guardado y lo descarga al dispositivo. No requiere pulsar antes Preparar versión estable.",
+        "afterPreparation": "Cuando la interfaz reconoce un archivo estable, reemplaza los dos botones de preparación y descarga por Descargar versión estable."
+      },
+      "requested_changes": [
+        {
+          "id": "QA-UX-DOCS-01",
+          "severity": "P2",
+          "status": "Pendiente de implementar al finalizar el QA",
+          "symptom": "Dos operaciones técnicas de exportación aparecen como decisiones diferentes para la profesora. Versión estable no explica qué se guarda ni si es requisito para descargar.",
+          "recommendation": "Dejar únicamente Ver Mi año y Descargar Word como acciones de esta cabecera. Ocultar Preparar versión estable y resolver internamente la preparación y reutilización del archivo al descargar, conservando versiones, historial y permisos. No añadir un nuevo paso para la profesora.",
+          "decisionStatus": "Aprobado por la persona usuaria el 19 de octubre de 2026; pendiente de implementar al finalizar el QA.",
+          "files": [
+            "src/features/dashboard/components/documents-screen.tsx",
+            "src/lib/document-artifact-service.mjs",
+            "scripts/local-db-server.mjs"
+          ],
+          "validation": "Lectura del manejador de cada botón y de los servicios de exportación. Sin pulsar botones, nuevas escrituras cloud ni llamadas de IA en este paso.",
+          "approvedVisibleActions": [
+            "Ver Mi año",
+            "Descargar Word"
+          ]
+        }
+      ],
+      "applicationMutation": "Ninguna. Solo registro local del hallazgo.",
+      "user_confirmation": "Sí, solo Ver Mi año y Descargar Word. Anotarlo en el Word de mejoras."
+    },
+    {
+      "id": "QA-PASO-10",
+      "screen": "Preparar proyecto y actividades desde Mi año",
+      "date": "2026-10-19",
+      "status": "PASS funcional tras recarga del proveedor; mejoras de UX, ubicación de observación y rendimiento pendientes",
+      "project": {
+        "title": "Otros caminos para un cuento",
+        "annualPlanId": "43bea5cf-d603-43cb-ae09-5f68b15b16a3",
+        "proposalId": "4aec6a28-c096-4fb7-a23a-458a62a284d2",
+        "experienceId": "442cde52-0fe8-49a5-8790-99c7a904b21b",
+        "age": 5,
+        "competencies": [
+          "Lee",
+          "Escribe"
+        ],
+        "selectedDates": [
+          "2026-11-16",
+          "2026-11-17",
+          "2026-11-18",
+          "2026-11-19",
+          "2026-11-20",
+          "2026-11-23",
+          "2026-11-24",
+          "2026-11-25",
+          "2026-11-26",
+          "2026-11-27"
+        ]
+      },
+      "execution": {
+        "method": "Calendario y generación iniciados por interfaz; un solo reintento desde Retomar lo pendiente. Consultas posteriores de solo lectura para diagnóstico. Sin escrituras directas de base ni sustitución del flujo fallido.",
+        "startedAt": "2026-10-19T12:41:25.552Z",
+        "firstFailureObservedAt": "2026-10-19T12:43:29.369Z",
+        "firstFailureObservationElapsedSeconds": 123.817,
+        "resumedAt": "2026-10-19T12:43:43.189Z",
+        "uncertainObservedAt": "2026-10-19T12:45:02.544Z",
+        "providerCheckedAt": "2026-10-19T12:47:28.384Z",
+        "calendar": "PASS: diez días lectivos; fines de semana bloqueados.",
+        "result": "Un proyecto borrador y un trabajo persistidos; etapa master detenida; cero actividades guardadas. No se pudo evaluar el contenido pedagógico del proyecto completo ni sus actividades.",
+        "providerResult": {
+          "retrievalHttpStatus": 200,
+          "status": "failed",
+          "model": "gpt-6.1-sol",
+          "errorType": "insufficient_quota",
+          "errorCode": "credit_balance_exhausted",
+          "hasOutput": false,
+          "usage": null
+        },
+        "qualification": "El fallo por cuota está verificado para la respuesta persistida tras la reanudación. No se conserva aquí el error original de la primera interrupción, por lo que no se atribuye con certeza la misma causa al primer intento."
+      },
+      "requested_changes": [
+        {
+          "id": "QA-PROYECTO-01",
+          "severity": "P1",
+          "status": "Pendiente al finalizar QA",
+          "symptom": "La UI conserva Ayni está preparando tu proyecto aunque el trabajo está uncertain. Muestra error genérico y pide Retomar lo pendiente, sin explicar que la respuesta del proveedor terminó sin créditos.",
+          "verifiedCause": "La respuesta consultada de OpenAI tiene status failed con error credit_balance_exhausted / insufficient_quota y sin contenido. El proveedor interno reduce failed a response_failed, sin propagar response.error. La preparación puede clasificar el error como incierto si existe un checkpoint de respuesta y no hay status 409. La interfaz usa el título de preparación para todos los estados no completados.",
+          "expected": "Distinguir espera, fallo definitivo y resultado realmente incierto. Si se conoce saldo/cuota insuficiente, mostrar causa y estado detenido, conservar el identificador y avance, e informar al responsable técnico. No pedir reintentos repetidos a la profesora ni generar nuevas llamadas antes de resolver el bloqueo. Retomar desde el punto seguro cuando corresponda; no ocultar errores reales con una barra de progreso.",
+          "files": [
+            "src/lib/openai-provider.mjs",
+            "src/lib/preparation-executor.mjs",
+            "src/lib/preparation-jobs.mjs",
+            "src/features/dashboard/components/preparation-progress.tsx"
+          ],
+          "plannedRegressionOnly": [
+            "Respuesta fallida por cuota sin sugerir reintentos inútiles",
+            "Respuesta pendiente con checkpoint recuperable",
+            "Error transitorio sin duplicar generación",
+            "Encabezados y acciones coherentes con queued running failed uncertain succeeded",
+            "Conservación del proyecto y calendario al resolver el bloqueo"
+          ]
+        },
+        {
+          "id": "QA-PROYECTO-02",
+          "severity": "P2",
+          "status": "Pendiente de investigar y optimizar después del QA",
+          "symptom": "La preparación completa de un proyecto de diez días tomó unos 17 minutos hasta la publicación y 18 minutos hasta observarlo listo, pese a que la respuesta del proyecto principal tomó 200 segundos.",
+          "expected": "Medir por separado tiempos de proveedor, validaciones, generación de cada actividad, persistencia y continuación del worker. Reducir esperas comprobadas conservando la secuencia completa, los checkpoints y la protección de las actividades confirmadas. No aplicar el temporizador del plan anual como garantía del tiempo de un proyecto completo.",
+          "cause": "No aislada. Las actividades se prepararon y guardaron secuencialmente; esta muestra no demuestra cuánto de la demora corresponde a IA, red, base o coordinación del worker."
+        },
+        {
+          "id": "QA-PROYECTO-03",
+          "severity": "P2",
+          "status": "Reproducido por interfaz y confirmado en código; pendiente de implementar",
+          "symptom": "En Un cuento para disfrutar, la evidencia canónica indica observar el comentario posterior a la lectura. Hoy pone el criterio y Registrar observación solo en Desarrollo; en Cierre, donde la guía invita al comentario y a relacionar pistas, no aparecen.",
+          "cause": "activityPedagogicalBlocks asigna todas las observaciones al bloque development y ninguna a opening o closure, sin usar el momento que corresponde al contenido.",
+          "files": [
+            "src/lib/pedagogical-blocks.mjs",
+            "src/lib/pedagogical-blocks.test.mjs",
+            "src/features/dashboard/components/activity-run-view.tsx"
+          ],
+          "expected": "Ubicar criterio, evidencia y Registrar observación en el momento pertinente; conservar las referencias reales de actividad, criterio, competencia y momento. Evitar repetición automática en todos los momentos. No reescribir contenido pedagógico confirmado para corregir su presentación.",
+          "plannedRegressionOnly": [
+            "Criterio pertinente al inicio",
+            "Criterio durante exploración",
+            "Criterio del comentario de cierre",
+            "Varios criterios de una actividad",
+            "Consulta sin iniciar ni cambiar la fecha"
+          ]
+        }
+      ],
+      "cost": {
+        "lastVerifiedAccumulatedEstimateUSD": 4.081868757,
+        "budgetUSD": 5,
+        "newPersistedUsageEvents": 0,
+        "providerUsageReturned": false,
+        "newRoundCostUSD": null,
+        "note": "Sin usage devuelto ni evento de consumo nuevo; no equivale a costo cero verificado. No se afirma que el límite QA de USD 5 haya causado la falta de créditos de la cuenta del proveedor. Sin nuevas generaciones después del diagnóstico."
+      },
+      "evidence": [
+        "outputs/qa-interactivo-20261018/proyecto-14-generando.png",
+        "outputs/qa-interactivo-20261018/proyecto-14-interrumpido.png",
+        "outputs/qa-interactivo-20261018/proyecto-14-llamada-incierta.png"
+      ],
+      "applicationMutation": "Solo las acciones QA autorizadas desde la interfaz. Sin correcciones de producto, recargas de saldo, cambios de cuenta ni despliegue.",
+      "resumeAfterTopUp": {
+        "authorization": "La persona usuaria informó la recarga y pidió intentar nuevamente.",
+        "method": "Retomar lo pendiente desde la interfaz. Se presentó una confirmación JavaScript sobre posible repetición de llamada; el diálogo desapareció y la preparación pasó a running. Al consultar el diálogo ya no estaba activo. No se atribuye una aceptación automática que no se observó. Verificaciones posteriores exclusivamente de lectura.",
+        "resumeClickAt": "2026-10-19T12:51:41.189Z",
+        "readyObservedAt": "2026-10-19T13:09:44.006Z",
+        "publishedAt": "2026-10-19T13:08:41.952115+00:00",
+        "elapsedToPublishedSeconds": 1020.763115,
+        "elapsedToReadyObservationSeconds": 1082.817,
+        "timingQualification": "Tiempo desde el clic en Retomar, incluida la interacción de confirmación y la observación posterior; no es un cronómetro exacto de la cola. El intervalo del proveedor se midió por created_at y completed_at de la respuesta.",
+        "masterProviderSeconds": 200,
+        "providerStatus": "completed",
+        "results": {
+          "functional": "PASS en esta muestra: mismo proyecto y mismo trabajo; diez actividades activas, diez entradas de calendario en las fechas elegidas y finalización succeeded con approved_at.",
+          "contentIntegrity": "PASS: propósito, criterios, fechas, competencias, referencias de criterio y huella del proyecto coinciden en las diez actividades con su secuencia.",
+          "pedagogy": "PASS con mejoras puntuales en esta muestra: situación basada en registros individuales, reto lector y escritor, destinatario, escritura propia, relectura y cierre flexible. No equivale a aprobación de todas las generaciones o del recorrido anual.",
+          "competencyDistribution": {
+            "COM_LECTURA": 5,
+            "COM_ESCRITURA": 5
+          },
+          "history": "Quince propuestas anuales idénticas a la salida anterior; se mantienen los conteos de 35 observaciones guiadas y 30 libres. No se hizo comparación íntegra de todos sus textos en este paso.",
+          "ui": "Diez actividades visibles en Mi año con competencia, Ver en Hoy y Ver detalles. Consulta de la primera actividad, tres momentos de Hoy y materiales; no se pulsó Desarrollar ahora ni se registraron observaciones.",
+          "limitation": "No se descargó ni inspeccionó el Word del proyecto o de las actividades en este paso. Persistencia demostrada en consultas de lectura y navegación; no se ejecutó una recarga completa adicional del navegador."
+        },
+        "cost": {
+          "roundEstimatedUSD": 0.113002396,
+          "cumulativeConservativeEstimateUSD": 4.194871152999999,
+          "limitUSD": 5,
+          "calls": 12,
+          "workflowCounts": {
+            "project_master": 1,
+            "project_image": 1,
+            "activity": 10
+          },
+          "note": "Estimaciones registradas, no conciliación de facturación. Los intentos previos fallidos no devolvieron usage; no se presume costo cero de esos intentos."
+        },
+        "evidence": [
+          "outputs/qa-interactivo-20261018/proyecto-14-diez-actividades-listas.png",
+          "outputs/qa-interactivo-20261018/proyecto-14-guia-hoy-lectura.png",
+          "outputs/qa-interactivo-20261018/proyecto-14-guia-hoy-cierre-sin-criterio.png"
+        ],
+        "noProductChanges": "Sin modificaciones de código, modelos, prompts, migraciones o despliegues. El saldo se recargó por la persona usuaria."
+      }
+    },
+    {
+      "id": "QA-PASO-11",
+      "screen": "Segundo proyecto para comparar tiempos",
+      "date": "2026-10-19",
+      "status": "PASS preparación funcional de esta muestra; FAIL aislamiento de versiones; benchmark no limpio",
+      "project": {
+        "title": "Canciones y ritmos para compartir",
+        "experienceId": "c9efc649-77be-4851-b33d-b298a42a46c4",
+        "proposalId": "12680f8b-cf58-46f2-b65a-04f139a1a5fb",
+        "age": 5,
+        "competencies": {
+          "PS_CONVIVE": 4,
+          "COM_ARTE": 6
+        }
+      },
+      "execution": {
+        "method": "Inicio y consulta por interfaz; comprobaciones posteriores exclusivamente de lectura. Sin reintentos manuales en esta segunda generación.",
+        "clickedAt": "2026-10-19T13:23:08.539Z",
+        "jobCreatedAt": "2026-10-19T13:23:31.578106+00:00",
+        "publishedAt": "2026-10-19T13:39:38.131067+00:00",
+        "readyObservedAt": "2026-10-19T13:40:54.229Z",
+        "clickToPublishedSeconds": 989.592067,
+        "clickToObservedSeconds": 1065.69,
+        "timingQualification": "El clic antecede a la confirmación y creación del trabajo. La observación de UI es un límite superior. Entorno con workers compartidos de distintas versiones; no representa una medición aislada de Preview.",
+        "backgroundResponseSeconds": 196,
+        "backgroundQualification": "Respuesta completada del checkpoint, distinta del master canónico: no atribuir estos segundos al contenido finalmente utilizado.",
+        "savedActivities": 10,
+        "scheduledActivities": 10,
+        "failedStructuralChecks": [],
+        "checks": [
+          {
+            "title": "Escuchamos y elegimos cómo participar",
+            "dateMatches": true,
+            "purposeMatches": true,
+            "criterionMatches": true,
+            "competencyMatches": true,
+            "refsMatch": true,
+            "fingerprintMatches": true
+          },
+          {
+            "title": "Sonidos con nuestro cuerpo",
+            "dateMatches": true,
+            "purposeMatches": true,
+            "criterionMatches": true,
+            "competencyMatches": true,
+            "refsMatch": true,
+            "fingerprintMatches": true
+          },
+          {
+            "title": "Lo que suena en los objetos",
+            "dateMatches": true,
+            "purposeMatches": true,
+            "criterionMatches": true,
+            "competencyMatches": true,
+            "refsMatch": true,
+            "fingerprintMatches": true
+          },
+          {
+            "title": "Acuerdos para escucharnos",
+            "dateMatches": true,
+            "purposeMatches": true,
+            "criterionMatches": true,
+            "competencyMatches": true,
+            "refsMatch": true,
+            "fingerprintMatches": true
+          },
+          {
+            "title": "Un ritmo que puedo cambiar",
+            "dateMatches": true,
+            "purposeMatches": true,
+            "criterionMatches": true,
+            "competencyMatches": true,
+            "refsMatch": true,
+            "fingerprintMatches": true
+          },
+          {
+            "title": "Elegimos cómo crear juntos",
+            "dateMatches": true,
+            "purposeMatches": true,
+            "criterionMatches": true,
+            "competencyMatches": true,
+            "refsMatch": true,
+            "fingerprintMatches": true
+          },
+          {
+            "title": "Un lugar imaginado suena",
+            "dateMatches": true,
+            "purposeMatches": true,
+            "criterionMatches": true,
+            "competencyMatches": true,
+            "refsMatch": true,
+            "fingerprintMatches": true
+          },
+          {
+            "title": "Probamos otra combinación",
+            "dateMatches": true,
+            "purposeMatches": true,
+            "criterionMatches": true,
+            "competencyMatches": true,
+            "refsMatch": true,
+            "fingerprintMatches": true
+          },
+          {
+            "title": "Decidimos cómo compartir",
+            "dateMatches": true,
+            "purposeMatches": true,
+            "criterionMatches": true,
+            "competencyMatches": true,
+            "refsMatch": true,
+            "fingerprintMatches": true
+          },
+          {
+            "title": "Compartimos a nuestra manera",
+            "dateMatches": true,
+            "purposeMatches": true,
+            "criterionMatches": true,
+            "competencyMatches": true,
+            "refsMatch": true,
+            "fingerprintMatches": true
+          }
+        ]
+      },
+      "cost": {
+        "recordedEstimateUSD": 0.094569547,
+        "additionalBackgroundProvisionUSD": 0.0932435,
+        "cumulativeRecordedEstimateUSD": 4.2894407,
+        "cumulativeWithProvisionUSD": 4.3826842,
+        "limitUSD": 5,
+        "qualification": "Estimaciones, no factura. Se añade provisión para la respuesta background completada que no coincide con el uso del master guardado. No hay conciliación completa de todos los intentos previos."
+      },
+      "requested_changes": [
+        {
+          "id": "QA-PROYECTO-04",
+          "severity": "P1",
+          "status": "Reproducido; documentado sin corregir durante QA conjunto",
+          "symptom": "Preview y Producción comparten la cola global. El programador existente llama al worker de Producción antiguo cada diez segundos. La nueva respuesta background seguida no coincide con el master canónico guardado.",
+          "verifiedFacts": [
+            "Cron ayni-preparation-dispatch activo con schedule 10 seconds, consulta SELECT de cron.job.",
+            "54 solicitudes pg_net/0.20.4 a /api/internal/preparation/run en deployment Production dpl_H19YWzRdGjkgh8y72QAd1qBty7Mf entre 13:23 y 13:32 UTC.",
+            "runPreparationStep reclama cualquier trabajo queued o running con lease vencida, sin filtro de entorno ni versión, tanto en SHA actual como en Production.",
+            "Master canónico sin meaningful_situation, metadata 5441 input y 6525 output; uso registrado a las 13:27:43.410 UTC.",
+            "Respuesta guardada en checkpoint completada a las 13:27:49 UTC, 6030 input y 7817 output, contiene meaningful_situation y un fundamento distinto.",
+            "Production SHA 9a0920230350cd6b9050f35683a1f35d459e78c7 tiene contrato master sin meaningful_situation. Preview SHA d0260f43fd46e63951bc0edeb67706f48cf7ec8b sí lo exige."
+          ],
+          "inference": "El worker antiguo probablemente procesó parte del mismo trabajo. No hay identidad de deployment persistida por paso que permita atribuir cada escritura con certeza. La coexistencia y la discrepancia sí están comprobadas.",
+          "impact": "QA de la versión nueva no aislado; riesgo de aplicar contratos antiguos y producir llamadas no reflejadas completamente en los costos de la aplicación. No se demuestra pérdida de observaciones ni doble actividad.",
+          "files": [
+            "src/lib/preparation-jobs.mjs",
+            "src/lib/preparation-executor.mjs",
+            "src/lib/project-flow-service.mjs",
+            "scripts/configure-preparation-cron.sql",
+            "scripts/local-db-server.mjs"
+          ],
+          "recommendedPending": "Aislar la cola y sus despachadores por entorno y versión compatible, o usar una base QA independiente. Registrar worker/deployment por paso y conciliar responses con uso. Requiere revisar la configuración existente antes de actuar; no cambiar silenciosamente Production ni su cron.",
+          "plannedRegressionOnly": [
+            "Worker antiguo no reclama trabajos nuevos de Preview",
+            "Reanudación sin mezclar contratos de versiones distintas",
+            "Respuesta y uso guardados coinciden con el contenido canónico",
+            "Una actividad por fecha sin duplicados",
+            "Recuperación y publicación completa conservan historial"
+          ],
+          "actionTaken": "Solo consultas SELECT y lectura de logs/código. No se modificó cron, Vault, base, permisos, despliegues, prompts ni modelos."
+        }
+      ],
+      "pedagogicalQualification": "La ruta de diez días vincula arte y convivencia con criterios observables. No aprobar la última versión: falta la situación significativa en el master canónico y hay mezcla probable de workers. No se descargaron Word ni se desarrollaron estas actividades.",
+      "evidence": [
+        "outputs/qa-interactivo-20261018/proyecto-13-diez-actividades-listas.png"
+      ],
+      "implementation": "Pendiente al finalizar QA; ninguna corrección de producto aplicada.",
+      "historyIntegrity": {
+        "annualProposalsUnchanged": true,
+        "guidedCount": 35,
+        "freeCount": 30,
+        "scheduleCount": 10
+      },
+      "parallelizationReview": {
+        "date": "2026-10-19",
+        "status": "Revisión de código; propuesta pendiente de implementación y medición",
+        "verified": [
+          "prepareAcceptedProjectActivities selecciona p.items.find(item=>!item.activity_id); una llamada genera y otra invocación guarda antes de pasar a la siguiente actividad.",
+          "Cada generateTeacherActivity usa Plan Maestro confirmado, fila propia y vecinos previous_map_item/next_map_item de la ruta ya guardada; no requiere la respuesta generada de la actividad anterior para esta preparación completa nueva.",
+          "activityParentContext consulta solo actividades active. Las diez actividades del bloque permanecen draft hasta publishAcceptedProjectBlock, por lo que los borradores anteriores de ese bloque no son contexto incremental de las siguientes llamadas.",
+          "publishAcceptedProjectBlock exige todo el bloque y publica bajo transacción, conservando calendario, permisos y coherencia con revisión/huella del proyecto.",
+          "El límite global de dos jobs running no implica dos actividades del mismo job en paralelo. El payload usa attempt_pending compartido y checkpoints del job completo."
+        ],
+        "recommendation": [
+          "Primero aislar worker, cola y contrato por entorno/versión, según QA-PROYECTO-04.",
+          "Una vez validado el Plan Maestro, generar con concurrencia acotada configurable, inicialmente dos o tres actividades, no diez llamadas sin límite.",
+          "Cada llamada debe leer la misma revisión/huella y el contexto estable correspondiente a su posición en la secuencia.",
+          "Mantener estado, respuesta y resultado durable por ítem; evitar que checkpoints concurrentes sobrescriban resultados y que una reanudación repita llamadas completadas.",
+          "Conservar guardado validado y publicación atómica final en el orden del calendario. El orden de respuesta del proveedor no decide el orden pedagógico.",
+          "Instrumentar cola, IA, persistencia y publicación por separado; probar timeout de un ítem, respuesta incierta, recarga, límite de proveedor y doble despachador sin duplicación."
+        ],
+        "expectedEffect": "Acortar la etapa de actividades sin cambiar modelo, prompts, cantidad de actividades o decisiones pedagógicas. No hay benchmark paralelo ejecutado ni compromiso de duración. Cantidad de llamadas/tokens similar; costo y límites reales deben medirse.",
+        "files": [
+          "src/lib/complete-project-preparation.mjs:73",
+          "src/lib/preparation-executor.mjs:16",
+          "src/lib/ai-activity-ui-service.mjs:47",
+          "src/lib/direct-ai-context-contracts.mjs:24",
+          "scripts/local-db-server.mjs:678",
+          "src/lib/preparation-jobs.mjs:98"
+        ],
+        "noChanges": "Sin modificaciones de producto, nuevas llamadas pagadas, tests de concurrencia o despliegues en esta revisión."
+      }
+    },
+    {
+      "id": "QA-PASO-12",
+      "date": "2026-10-19",
+      "scope": "Revisión pedagógica de dos proyectos y veinte actividades, veintidós Word descargados por interfaz y renderizados localmente",
+      "status": "Aprovechable con ajustes pedagógicos y de guía; presentación Word PARTIAL; no aprobación general de la versión actual",
+      "method": "Lectura completa del contenido canónico guardado de los 20 días y los dos proyectos; descarga UI de los 22 Word; comparación canónica de título/propósito/criterio/evidencia; extracción de texto de las 116 páginas y revisión visual de todas mediante montajes, con ampliación de tres páginas de defectos y guía. Render con Word local en copias, autorizado previamente. No se ejecutaron estas actividades con niños ni se observaron resultados reales de aula.",
+      "environmentQualification": "Se mantiene QA-PROYECTO-04: trabajadores de versiones distintas comparten la cola. En música falta meaningful_situation en el master, aunque hay un contexto breve de origen que la interfaz y Word reutilizan. La valoración corresponde al contenido efectivamente guardado, no a una aprobación de todas las mejoras de la última Preview.",
+      "curricularReferences": [
+        {
+          "title": "Programa Curricular de Educación Inicial MINEDU",
+          "url": "https://www.minedu.gob.pe/curriculo/pdf/programa-curricular-educacion-inicial.pdf",
+          "localRead": "PDF oficial descargado; desempeños de 5 años, páginas impresas 87, 125, 131 y 137; páginas PDF 89, 127, 133 y 139."
+        },
+        {
+          "title": "La planificación en la Educación Inicial guía de orientaciones MINEDU 2019",
+          "url": "https://repositorio.minedu.gob.pe/handle/20.500.12799/6518",
+          "localRead": "Referencia oficial localizada; página de repositorio con verificación de seguridad al abrir. No se declara lectura completa de esa guía en esta ronda."
+        }
+      ],
+      "curricularInterpretation": "Se contrastaron oportunidades de interpretación de textos, escritura con intención comunicativa, exploración y expresión artística y acuerdos para el bienestar común. No se trata de una certificación del MINEDU ni de una evaluación de logros de niños.",
+      "projects": [
+        {
+          "number": 14,
+          "id": "442cde52-0fe8-49a5-8790-99c7a904b21b",
+          "title": "Otros caminos para un cuento",
+          "competencyDistribution": {
+            "COM_LECTURA": 5,
+            "COM_ESCRITURA": 5
+          },
+          "meaningfulSituationStored": true,
+          "activities": [
+            {
+              "number": 1,
+              "id": "eac04682-cb34-444f-93de-2de7760bc0c3",
+              "title": "Un cuento para disfrutar",
+              "date": "2026-11-16",
+              "competency": "COM_LECTURA",
+              "status": "Aprovechable con ajustes de guía; revisión documental, no ejecución de aula",
+              "strength": "Lectura completa y comentario basado en una pista; no convierte la lectura en un interrogatorio.",
+              "recommendedImprovement": "Precisar cómo elegir un cuento con imágenes accesibles y un conflicto comprensible. Situar Registrar observación también en el comentario de cierre, según QA-PROYECTO-03.",
+              "briefWordNote": "Elegir un cuento breve con un problema claro; mostrar sus escenas. El criterio corresponde al comentario posterior, no solo al desarrollo.",
+              "wordPages": 5,
+              "criterion": "Comenta una acción del personaje y la relaciona con una pista de las imágenes o del texto leído por la docente.",
+              "evidence": "Comentario individual que vincula una acción del personaje con alguna pista del cuento."
+            },
+            {
+              "number": 2,
+              "id": "326c172a-c334-48d0-9e73-e68523ef214b",
+              "title": "Pistas que se relacionan",
+              "date": "2026-11-17",
+              "competency": "COM_LECTURA",
+              "status": "Aprovechable con ajustes de guía; revisión documental, no ejecución de aula",
+              "strength": "La relectura tiene un propósito distinto de la primera lectura: relacionar escenas.",
+              "recommendedImprovement": "Ofrecer dos escenas visibles y una pregunta sencilla. No exigir explicaciones abstractas de causa y consecuencia a todos ni repetir exactamente el intercambio anterior.",
+              "briefWordNote": "Acercar dos escenas y preguntar qué pasó antes y después. Admitir señalar, dramatizar o explicar; ampliar la exigencia según cada niño.",
+              "wordPages": 5,
+              "criterion": "Relaciona pistas de distintas escenas para explicar una posible razón o consecuencia de una decisión del personaje.",
+              "evidence": "Explicación individual de una posible razón o consecuencia de una decisión, apoyada en escenas del cuento."
+            },
+            {
+              "number": 3,
+              "id": "3d2c1317-641e-4b39-a48f-7e0bcd67b1d7",
+              "title": "Dónde podría cambiar el camino",
+              "date": "2026-11-18",
+              "competency": "COM_LECTURA",
+              "status": "Aprovechable con ajustes de guía; revisión documental, no ejecución de aula",
+              "strength": "La decisión imaginada se apoya en una escena real del cuento.",
+              "recommendedImprovement": "Usar una representación breve para apoyar la elección. Distinguir la interpretación del cuento de la creación de una alternativa; no evaluar solo la originalidad.",
+              "briefWordNote": "Apoyar con un gesto o dramatización de la escena. Distinguir lo que ocurre en el cuento de la nueva decisión imaginada.",
+              "wordPages": 5,
+              "criterion": "Elige un momento del cuento y explica qué decisión podría cambiar, apoyándose en lo que sucede en esa escena.",
+              "evidence": "Elección de una escena acompañada de una explicación sobre la decisión que podría cambiar."
+            },
+            {
+              "number": 4,
+              "id": "b7ed959f-aa94-4b78-84d9-1daf664e0fdc",
+              "title": "Una decisión, otros caminos",
+              "date": "2026-11-19",
+              "competency": "COM_LECTURA",
+              "status": "Aprovechable con ajustes de guía; revisión documental, no ejecución de aula",
+              "strength": "La comparación da continuidad a la elección del día anterior.",
+              "recommendedImprovement": "Diferenciar con claridad el nuevo desafío: anticipar una consecuencia. Ofrecer intercambio en parejas o una breve representación en lugar de otra conversación grupal similar.",
+              "briefWordNote": "Centrar este día en qué pasaría después del cambio, con parejas o representación breve, para diferenciarlo de elegir una escena.",
+              "wordPages": 4,
+              "criterion": "Compara una posibilidad imaginada con otra decisión y explica qué podría suceder, relacionándola con pistas del cuento.",
+              "evidence": "Comparación individual entre posibilidades, con una explicación de lo que podría ocurrir después."
+            },
+            {
+              "number": 5,
+              "id": "01bc15e7-3ec4-468d-ab54-147bd5d86c2e",
+              "title": "Mi final tiene destinatario",
+              "date": "2026-11-20",
+              "competency": "COM_ESCRITURA",
+              "status": "Aprovechable con ajustes de guía; revisión documental, no ejecución de aula",
+              "strength": "La escritura tiene propósito y destinatario; acepta hipótesis de escritura, sin copia.",
+              "recommendedImprovement": "Explicar cómo preparar superficies planas de cartón si esas son las disponibles. Ofrecer dictado al adulto como mediación legítima y distinguir qué escribió cada autor; no inferir escritura propia por un dibujo aislado.",
+              "briefWordNote": "Precisar el soporte plano disponible y a quién se escribe. Distinguir escritura infantil y dictado al adulto, sin prohibir esta mediación.",
+              "wordPages": 5,
+              "criterion": "Inicia una escritura a su manera para contar otro desenlace y explica quién será su destinatario.",
+              "evidence": "Primer intento propio de escritura, acompañado de la explicación de qué quiere contar y a quién."
+            },
+            {
+              "number": 6,
+              "id": "460533e3-4738-4954-bb97-7e36066b8589",
+              "title": "Contamos lo que pasa después",
+              "date": "2026-11-23",
+              "competency": "COM_ESCRITURA",
+              "status": "Aprovechable con ajustes de guía; revisión documental, no ejecución de aula",
+              "strength": "Se retoma una producción propia y se escribe para comunicar una idea.",
+              "recommendedImprovement": "La continuidad debe centrarse en añadir o aclarar una idea, no en alargar el texto. Evitar que cinco encuentros de escritura se conviertan en ejercicios equivalentes.",
+              "briefWordNote": "Proponer añadir o aclarar una idea para el destinatario, sin exigir más extensión ni un desenlace completo en este encuentro.",
+              "wordPages": 5,
+              "criterion": "Desarrolla su escritura con ideas relacionadas con la decisión imaginada y explica qué sucede después.",
+              "evidence": "Escritura propia acompañada de una lectura que relaciona la nueva decisión con lo que sucede después."
+            },
+            {
+              "number": 7,
+              "id": "73197a8f-d875-4709-89e2-2197c547e01b",
+              "title": "Qué conservamos y qué cambiamos",
+              "date": "2026-11-24",
+              "competency": "COM_LECTURA",
+              "status": "Aprovechable con ajustes de guía; revisión documental, no ejecución de aula",
+              "strength": "Volver al cuento ayuda a separar texto leído y propuesta propia.",
+              "recommendedImprovement": "Sostener una comparación concreta con dos apoyos visibles: escena y producción. No tratar la calidad gráfica del intento como evidencia de comprensión lectora.",
+              "briefWordNote": "Comparar una escena y el intento propio. Observar la relación con el cuento, no la calidad del dibujo o de las letras.",
+              "wordPages": 5,
+              "criterion": "Compara el desenlace conocido con su propuesta y explica qué mantiene o cambia, apoyándose en pistas del cuento.",
+              "evidence": "Explicación individual de una relación o diferencia entre el cuento y el desenlace imaginado, apoyada en escenas."
+            },
+            {
+              "number": 8,
+              "id": "c9f8b5f7-1470-4844-899a-475a43a030e6",
+              "title": "¿Dice lo que quería contar?",
+              "date": "2026-11-25",
+              "competency": "COM_ESCRITURA",
+              "status": "Aprovechable con ajustes de guía; revisión documental, no ejecución de aula",
+              "strength": "La revisión tiene sentido comunicativo y permite conservar la producción sin cambios.",
+              "recommendedImprovement": "Modelar una pregunta breve como ¿Aquí dice lo que querías contar? y acompañar la relectura. Registrar una decisión concreta; no valorar la cantidad de correcciones.",
+              "briefWordNote": "Mantener la posibilidad de no cambiar el texto. Registrar por qué conserva o modifica una parte, con apoyo si lo necesita.",
+              "wordPages": 5,
+              "criterion": "Relee su escritura con apoyo y decide si necesita mantener, añadir o cambiar algo para contar el desenlace imaginado.",
+              "evidence": "Relectura individual y decisión de mantener o ajustar una parte para comunicar el cambio imaginado."
+            },
+            {
+              "number": 9,
+              "id": "c30086cd-a8a0-4cfa-8c0e-96a24dbb788d",
+              "title": "Una persona lee con nosotros",
+              "date": "2026-11-26",
+              "competency": "COM_ESCRITURA",
+              "status": "Aprovechable con ajustes de guía; revisión documental, no ejecución de aula",
+              "strength": "Un destinatario real permite probar si el mensaje comunica.",
+              "recommendedImprovement": "Dar una consigna breve al destinatario y al autor; separar sus aportes en el registro. Si hay dictado al adulto, conservar esa autoría y la revisión del niño.",
+              "briefWordNote": "Pedir al destinatario qué entendió y al autor qué desea aclarar. Conservar quién dijo o escribió cada parte del mensaje.",
+              "wordPages": 5,
+              "criterion": "Considera lo que comprende su destinatario y decide si mantiene o ajusta su escritura para comunicar el desenlace.",
+              "evidence": "Intercambio con un destinatario y decisión individual sobre cómo hacer más claro el desenlace, si fuera necesario."
+            },
+            {
+              "number": 10,
+              "id": "c1f27ad7-c1fb-4b80-b7b1-befb7d671d6d",
+              "title": "Compartimos un camino posible",
+              "date": "2026-11-27",
+              "competency": "COM_ESCRITURA",
+              "status": "Aprovechable con ajustes de guía; revisión documental, no ejecución de aula",
+              "strength": "El cierre retorna al propósito, con destinatario y sin exigir un producto uniforme.",
+              "recommendedImprovement": "Ofrecer momentos breves en parejas o con la docente. Considerar lo observado durante todo el recorrido cuando alguien no comparte en el cierre; no convertirlo en ausencia de aprendizaje.",
+              "briefWordNote": "Ofrecer compartir en pareja o con la docente. Considerar evidencias previas; no compartir al final no equivale a dificultad ni valoración C.",
+              "wordPages": 5,
+              "criterion": "Comunica mediante su escritura propia el desenlace que imaginó y comenta una decisión tomada para expresar su mensaje.",
+              "evidence": "Lectura a su manera del desenlace y comentario individual sobre una decisión de escritura o revisión, si decide compartir."
+            }
+          ]
+        },
+        {
+          "number": 13,
+          "id": "c9efc649-77be-4851-b33d-b298a42a46c4",
+          "title": "Canciones y ritmos para compartir",
+          "competencyDistribution": {
+            "PS_CONVIVE": 4,
+            "COM_ARTE": 6
+          },
+          "meaningfulSituationStored": false,
+          "activities": [
+            {
+              "number": 1,
+              "id": "8967dfce-7a8a-4626-a36f-0c6fb78e861f",
+              "title": "Escuchamos y elegimos cómo participar",
+              "date": "2026-11-02",
+              "competency": "PS_CONVIVE",
+              "status": "Aprovechable con ajustes de guía; revisión documental, no ejecución de aula",
+              "strength": "La convivencia se vincula a una necesidad real de la escucha compartida.",
+              "recommendedImprovement": "Precisar una invitación inicial concreta con los recursos confirmados. Escuchar o elegir una forma de participar no basta para acreditar el criterio: observar cómo considera al otro y participa en acuerdos.",
+              "briefWordNote": "Concretar qué se invita a escuchar o explorar. Observar la consideración del otro y los acuerdos, no únicamente elegir cómo participar.",
+              "wordPages": 5,
+              "criterion": "Expresa cómo desea participar y toma acuerdos para escuchar los aportes sin imponer una misma elección a los demás.",
+              "evidence": "Una propuesta o respuesta individual sobre cómo organizar la escucha y respetar las elecciones de participación."
+            },
+            {
+              "number": 2,
+              "id": "4048868a-bf2b-4843-9443-16910cd5e39d",
+              "title": "Sonidos con nuestro cuerpo",
+              "date": "2026-11-03",
+              "competency": "COM_ARTE",
+              "status": "Aprovechable con ajustes de guía; revisión documental, no ejecución de aula",
+              "strength": "La exploración corporal deja decisiones creativas a los niños.",
+              "recommendedImprovement": "Ofrecer un apoyo breve a quien no sabe comenzar. Evitar convertir sin modelo en una prohibición de toda demostración o referente; distinguir mediación de copia obligatoria.",
+              "briefWordNote": "Ofrecer una posibilidad para comenzar a quien lo necesita, sin pedir imitación uniforme. Observar qué sonidos decide combinar.",
+              "wordPages": 5,
+              "criterion": "Prueba sonidos de voz, palmas o movimientos y elige cómo combinarlos.",
+              "evidence": "Una exploración individual en la que prueba posibilidades corporales y reúne algunas en una combinación propia."
+            },
+            {
+              "number": 3,
+              "id": "48055052-5599-4341-b425-d4713011dbec",
+              "title": "Lo que suena en los objetos",
+              "date": "2026-11-04",
+              "competency": "COM_ARTE",
+              "status": "Aprovechable con ajustes de guía; revisión documental, no ejecución de aula",
+              "strength": "Varía acciones y materiales con una finalidad sonora.",
+              "recommendedImprovement": "Añadir ejemplos opcionales concretos, como percutir una caja o frotar una botella, y explicar el uso seguro. La elección sonora debe vincularse a una intención expresiva, no solo manipulación.",
+              "briefWordNote": "Dar ejemplos abiertos de acciones para explorar y un uso seguro de los objetos. Preguntar qué sonido quiere elegir para su creación.",
+              "wordPages": 4,
+              "criterion": "Explora maneras de hacer sonar objetos y selecciona sonidos para una combinación propia.",
+              "evidence": "Una secuencia de pruebas con objetos y una elección sonora que el niño muestra o comunica."
+            },
+            {
+              "number": 4,
+              "id": "0d2ad03d-16e9-452c-b1c4-139add2e3488",
+              "title": "Acuerdos para escucharnos",
+              "date": "2026-11-05",
+              "competency": "PS_CONVIVE",
+              "status": "Aprovechable con ajustes de guía; revisión documental, no ejecución de aula",
+              "strength": "Los acuerdos se prueban durante una exploración y no solo se enuncian.",
+              "recommendedImprovement": "No fabricar un conflicto para obtener evidencia. Observar una propuesta y su puesta en práctica ante necesidades reales de materiales o escucha; evitar otra asamblea descontextualizada.",
+              "briefWordNote": "Usar los acuerdos dentro de la exploración real. Registrar cómo se aplican; no inventar desacuerdos ni reducir el encuentro a conversar.",
+              "wordPages": 5,
+              "criterion": "Propone o ajusta acuerdos para compartir materiales y permitir que se escuchen distintas propuestas.",
+              "evidence": "Una intervención individual al decidir cómo usar los objetos o alternar sonidos, y su puesta en práctica durante la exploración."
+            },
+            {
+              "number": 5,
+              "id": "8e2cc835-56ba-4b4a-9e82-d2e3bf984c96",
+              "title": "Un ritmo que puedo cambiar",
+              "date": "2026-11-06",
+              "competency": "COM_ARTE",
+              "status": "Aprovechable con ajustes de guía; revisión documental, no ejecución de aula",
+              "strength": "Probar un cambio da progresión a la combinación inicial.",
+              "recommendedImprovement": "Hacer visible qué creación se retoma y qué cambia: sonido, movimiento o pausa. Facilitar recordar la elección mediante una demostración o un apoyo disponible, sin exigir una grabación.",
+              "briefWordNote": "Retomar una combinación identificable y variar un elemento. Conservar una referencia sencilla para recordar la elección sin exigir grabaciones.",
+              "wordPages": 4,
+              "criterion": "Combina sonidos o movimientos y prueba un cambio según lo que desea crear.",
+              "evidence": "Una combinación propia y una variación que el niño realiza para explorar otra posibilidad."
+            },
+            {
+              "number": 6,
+              "id": "60ac60aa-30bd-4852-ac85-74dbf7e82ee7",
+              "title": "Elegimos cómo crear juntos",
+              "date": "2026-11-09",
+              "competency": "PS_CONVIVE",
+              "status": "Aprovechable con ajustes de guía; revisión documental, no ejecución de aula",
+              "strength": "Considera preferencias distintas y la organización con otros.",
+              "recommendedImprovement": "Diferenciarlo del día de compartir objetos: aquí se acuerda una creación o participación conjunta concreta. Permitir explorar individualmente sin atribuir por eso una evidencia de colaboración.",
+              "briefWordNote": "Concretar una decisión para crear con otros. Distinguir explorar individualmente de evidenciar colaboración; valorar la respuesta a propuestas diferentes.",
+              "wordPages": 5,
+              "criterion": "Considera propuestas distintas al acordar cómo crear juntos y respeta las formas de participación elegidas.",
+              "evidence": "Una actuación individual al proponer, aceptar o ajustar una forma de usar materiales y participar con otros."
+            },
+            {
+              "number": 7,
+              "id": "06f242e5-4b2c-4fff-b6f6-88527fb3941f",
+              "title": "Un lugar imaginado suena",
+              "date": "2026-11-10",
+              "competency": "COM_ARTE",
+              "status": "Aprovechable con ajustes de guía; revisión documental, no ejecución de aula",
+              "strength": "La representación de una idea da sentido expresivo a los sonidos.",
+              "recommendedImprovement": "Partir de un lugar recordado o imaginado por el niño y ofrecer una pregunta de apoyo. Relacionar sonido, movimiento e intención sin imponer un mismo paisaje a todos.",
+              "briefWordNote": "Preguntar por un lugar que recuerde o imagine. Ayudar a relacionar el sonido con su idea sin imponer una escena común.",
+              "wordPages": 4,
+              "criterion": "Elige y combina sonidos o movimientos para representar un lugar imaginado y comunica alguna de sus elecciones.",
+              "evidence": "Una creación sonora o corporal y una indicación del niño sobre lo que quiso representar."
+            },
+            {
+              "number": 8,
+              "id": "480c18db-fcfc-4a07-b7ff-0a14e6288244",
+              "title": "Probamos otra combinación",
+              "date": "2026-11-11",
+              "competency": "COM_ARTE",
+              "status": "Aprovechable con ajustes de guía; revisión documental, no ejecución de aula",
+              "strength": "Revisar y transformar introduce una decisión creativa pertinente.",
+              "recommendedImprovement": "Recuperar una creación concreta antes de comparar alternativas. Diferenciar del día 5: ahora decide conservar o transformar según lo que quiere expresar, no solo variar por variar.",
+              "briefWordNote": "Recuperar una creación anterior y decidir qué conservar o transformar según lo que quiere expresar, para diferenciarlo de probar cambios al azar.",
+              "wordPages": 4,
+              "criterion": "Prueba una alternativa en su creación y comunica qué desea conservar o cambiar.",
+              "evidence": "Una nueva prueba sonora o corporal y una decisión personal sobre cómo continuar."
+            },
+            {
+              "number": 9,
+              "id": "0acc27fe-e16c-460c-881e-dc59dda8b574",
+              "title": "Decidimos cómo compartir",
+              "date": "2026-11-12",
+              "competency": "PS_CONVIVE",
+              "status": "Aprovechable con ajustes de guía; revisión documental, no ejecución de aula",
+              "strength": "Prepara un cierre con acuerdos de participación y escucha.",
+              "recommendedImprovement": "Evitar repetir los acuerdos de los días 4 y 6. Concretar las decisiones nuevas sobre cómo, dónde o con quién compartir, en un intercambio breve ligado a la creación.",
+              "briefWordNote": "Acordar decisiones nuevas del encuentro final: cómo, dónde y con quién compartir. Evitar repetir una conversación general sobre respeto.",
+              "wordPages": 5,
+              "criterion": "Propone o toma acuerdos para compartir las creaciones sin obligar a otros a cantar, tocar o mostrarlas.",
+              "evidence": "Una propuesta o ajuste individual para organizar la escucha, el uso de materiales o la participación voluntaria."
+            },
+            {
+              "number": 10,
+              "id": "f5833e32-06b1-4106-ab4e-70b28d8e0b98",
+              "title": "Compartimos a nuestra manera",
+              "date": "2026-11-13",
+              "competency": "COM_ARTE",
+              "status": "Aprovechable con ajustes de guía; revisión documental, no ejecución de aula",
+              "strength": "El cierre admite diversas formas de compartir y no acredita automáticamente al grupo.",
+              "recommendedImprovement": "Recoger también la apreciación de una creación de otro cuando sea pertinente. Para quien no comparte, revisar actuaciones anteriores y ofrecer otra oportunidad, sin forzar exposición.",
+              "briefWordNote": "Acoger la creación propia y la apreciación de otras. Revisar evidencias anteriores y ofrecer otra oportunidad a quien no desea compartir.",
+              "wordPages": 5,
+              "criterion": "Comparte una creación sonora o corporal y comunica alguna elección realizada durante su elaboración.",
+              "evidence": "La creación que un niño decide compartir y lo que muestra o comunica sobre una elección personal."
+            }
+          ]
+        }
+      ],
+      "wordFindings": [
+        {
+          "id": "QA-WORD-PROY-01",
+          "severity": "P2",
+          "finding": "Los proyectos ocupan 10 y 11 páginas; las actividades 4–5, con 116 páginas para 22 documentos. La guía práctica aparece en las páginas 3–4 de las 20 actividades.",
+          "improvement": "Abrir la actividad con propósito, materiales, preparación y guía por momentos; integrar datos una sola vez. Conservar los referentes curriculares en una sección breve o anexo y la estética Ayni. Probar una guía diaria de unas dos páginas, sin reducir tipografía ni eliminar información necesaria; es una meta de diseño, no exigencia MINEDU."
+        },
+        {
+          "id": "QA-WORD-PROY-02",
+          "severity": "P2",
+          "finding": "Ocho páginas finales tienen menos de 320 caracteres extraídos. Ejemplo: Sonidos con nuestro cuerpo, página 5, contiene solo el encabezado de evidencias y el estado sin observaciones.",
+          "improvement": "Evitar una página independiente cuando no hay registros. Mantener un estado breve al final; cuando existan evidencias, incluirlas con sus fechas y autoría. Unir encabezados con su contenido y revisar cortes de tablas y de cada actividad de la ruta."
+        },
+        {
+          "id": "QA-WORD-PROY-03",
+          "severity": "P2",
+          "finding": "Espacios / organización muestra Voces y palmas en música y Cuentos disponibles en el aula en lectura. El exportador toma spaces_and_materials[0].",
+          "improvement": "Exportar organización real del espacio y agrupamiento si está guardada; si no, dejarla por precisar sin convertir materiales en espacios ni inventar ambientes. Revisar la fuente canónica y el mapeo, no reemplazar solo estos dos textos."
+        },
+        {
+          "id": "QA-WORD-PROY-04",
+          "severity": "P2",
+          "finding": "Las 20 actividades incorporan Sede principal aunque no se registró sede. También hay bloques genéricos de apoyos, familia y enfoques sin relación concreta con la actividad.",
+          "improvement": "No inventar datos del colegio. Omitir campos opcionales vacíos o identificarlos como no registrados. Reutilizar apoyos y colaboración confirmados; no usar fórmulas de relleno."
+        },
+        {
+          "id": "QA-WORD-PROY-05",
+          "severity": "P2",
+          "finding": "En música se repite el origen bajo De dónde parte y Situación para empezar, que además incorpora el fundamento por faltar meaningful_situation. Pregunta que guía elige automáticamente la primera pregunta parcial.",
+          "improvement": "Corregir primero QA-PROYECTO-04. Exportar origen, oportunidad y reto una sola vez; diferenciar fundamento y pregunta global de preguntas para cada momento. No regenerar ni reescribir silenciosamente históricos."
+        },
+        {
+          "id": "QA-WORD-PROY-06",
+          "severity": "P2",
+          "finding": "Referentes de edad correctamente rotulados como síntesis, pero genéricos; listado completo de capacidades bajo capacidades pertinentes. Se repiten criterios y evidencias en varias secciones.",
+          "improvement": "Seleccionar y explicar los referentes pertinentes al propósito con IDs oficiales; distinguir síntesis orientativa de texto oficial. Unificar criterio, evidencia esperada y momento de observación sin confundirlos ni duplicar bloques."
+        }
+      ],
+      "preparationProgress": {
+        "id": "QA-PROYECTO-05",
+        "status": "Solicitado y documentado; pendiente al finalizar QA",
+        "parallelization": "Después de congelar la revisión del Plan Maestro, generar inicialmente 2–3 actividades simultáneas, con estado durable por ítem, límite configurable, recuperación sin duplicación, validación y publicación atómica del bloque. Aislar antes workers y colas de Preview/Producción.",
+        "ring": "Indicador circular con porcentaje asociado a etapas y actividades guardadas. Mostrar etapa actual, n de N actividades, tiempo transcurrido y animación mientras la IA responde. Identificar como estimado cualquier porcentaje basado en ponderación temporal; no presentarlo como medición de tokens ni de tiempo restante exacto.",
+        "completion": "100 % solo cuando el servidor confirme que proyecto, todas las actividades y calendario quedaron publicados. No usar 6 min 30 s como duración garantizada del proyecto. No acelerar ni bloquear la finalización para hacer coincidir un cronómetro.",
+        "waitAndFailure": "Durante una llamada larga, animación de espera y estado comprensible; un porcentaje estable no debe confundirse con error. Ante error comprobado, informar la causa, conservar avance y detener el avance fingido. Una animación no prueba que el worker siga vivo: usar estados y señales del servidor.",
+        "measurement": "Repetir una muestra después de aislar workers y aplicar concurrencia, midiendo proveedor, cola, guardado y publicación. Las muestras actuales tardaron unos 17 min y 16 min 30 s hasta publicar; no permiten prometer la duración futura.",
+        "regressionsPending": [
+          "Recarga conserva porcentaje y resultados sin retroceder arbitrariamente",
+          "Respuestas completadas fuera de orden mantienen calendario y secuencia",
+          "Una actividad falla sin repetir las completadas",
+          "100 % no aparece antes de la publicación real",
+          "429 o cuota agotada no disparan reintentos duplicados",
+          "Profesoras comprenden qué está ocurriendo durante espera y error"
+        ]
+      },
+      "crossCuttingRecommendations": [
+        "En nuevas generaciones, cada momento debe indicar acciones docentes ejecutables, participación infantil y una actuación observable; usar una o dos preguntas concretas, con apoyos opcionales.",
+        "Distinguir reiteración pedagógica con un nuevo desafío de repetir la misma conversación: dar propósito claro a cada relectura, revisión o acuerdo.",
+        "No convertir el respeto por distintas formas de participación en una guía sin propuesta activa. Enunciar esa condición una vez y mantener invitaciones concretas y apoyos.",
+        "Ofrecer acompañamiento o demostraciones breves sin imponer un modelo único; no confundir mediación con copia obligatoria.",
+        "No confundir escucha, asistencia, dibujo aislado ni producto grupal con evidencia individual de una competencia. El dictado al adulto es una mediación legítima; identificar la autoría de cada aporte.",
+        "Guardar criterios y oportunidades de observación en su momento pertinente. Mantener inmutabilidad de la actividad confirmada y documentar los ajustes reales del acompañamiento sin reescribir el plan histórico."
+      ],
+      "cost": "Sin nuevas generaciones de IA pagadas durante esta revisión. El acumulado de control previo sigue en torno a USD 4,38 de USD 5, con provisión por respuesta adicional y sin conciliación de factura.",
+      "changes": "Solo documentación local de QA. Sin cambios de producto, prompts, modelos, migraciones, scheduler o despliegues. Los Word fuente se inspeccionaron en copias; no se editó su contenido guardado.",
+      "evidence": {
+        "downloadedDocuments": 22,
+        "renderedPages": 116,
+        "canonicalComparisons": 22,
+        "canonicalMismatches": 0,
+        "sparseTrailingPages": 8,
+        "privateIndex": ".local/qa-interactivo-20261018/pedagogical-review/rendered-content.json",
+        "updatedNotesPages": 12,
+        "updatedNotesVisualQA": "Cinco páginas nuevas renderizadas e inspeccionadas; siete páginas previas idénticas mediante SHA256 de PNG con numeración normalizada. Anchos de las tablas nuevas corregidos dentro de márgenes y re-renderizados; sin filas cortadas ni texto desbordado."
+      }
+    }
+  ]
+}

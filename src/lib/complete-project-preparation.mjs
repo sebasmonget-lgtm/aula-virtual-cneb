@@ -8,6 +8,7 @@ export const COMPLETE_PROJECT_POLICY="accepted-project-complete-v1";
 export async function publishAcceptedProjectBlock(db,job,request){
   return versionTransaction(db,`accepted-project:${job.id}`,async tx=>{
     const stored=await ownedPreparationJob(tx,job.teacher_id,job.id),p=stored.payload;
+    if(stored.legacy)throw new VersionConflictError("Esta preparación anterior se conserva para consulta.");
     if(stored.approved_at)return;
     if(p.acceptance?.policy!==COMPLETE_PROJECT_POLICY||p.acceptance.teacher_id!==job.teacher_id)throw new VersionConflictError("Falta la aceptación del proyecto.");
     await lockClassroomSchedule(tx,job.classroom_id);
@@ -66,7 +67,7 @@ export async function publishAcceptedProjectBlock(db,job,request){
       }else await tx.query(`insert into class_schedule_entries(id,classroom_id,scheduled_on,start_time,end_time,block_type,activity_id,title,is_instructional,sort_order)
         values($1,$2,$3::date,'09:00','09:45','activity',$4,$5,true,50)`,[randomUUID(),job.classroom_id,item.date,row.id,row.title]);
     }
-    await tx.query("update preparation_jobs set approved_at=now(),updated_at=now() where id=$1",[job.id]);
+    await tx.query("update preparation_jobs_v2 set approved_at=now(),updated_at=now() where id=$1",[job.id]);
   });
 }
 
@@ -83,17 +84,29 @@ export async function prepareAcceptedProjectActivities({db,job,p,call,checkpoint
     p.items=route.map(item=>({id:randomUUID(),route_item_id:item.id,date:item.date??item.planned_date,stage:"generate"}));p.stage="activities";p.attempt_pending=false;await checkpoint(p);return false;
   }
   if(Number(project.revision)!==p.project_revision||preparationFingerprint(project.details)!==p.project_fingerprint)throw new VersionConflictError("El proyecto cambió. Conservamos el trabajo preparado.");
-  const item=p.items.find(item=>!item.activity_id);
-  if(!item){p.stage="publishing";await checkpoint(p);await publishAcceptedProjectBlock(db,job,(j,path,body,method,extra)=>call(path,body,method,{...extra,db:j.db}));p.stage="ready";await checkpoint(p);return true;}
-  const existing=(await db.query(`select id from activities where experience_id=$1 and (preparation_item_id=$2 or details->>'route_item_id'=$3)
-    and status in ('draft','active') order by version desc limit 1`,[project.id,item.id,item.route_item_id])).rows[0];
-  if(existing){item.activity_id=existing.id;item.stage="ready";p.attempt_pending=false;await checkpoint(p);return false;}
-  if(!item.generated){
-    const generated=await generatedCall("/api/ai/activities/generate",{experienceId:project.id,routeItemId:item.route_item_id,includeWorkshop:false});
-    item.generated=generated;item.pending=await pending.get(generated.generation_id);item.stage="save";
-    if(!item.pending)throw Object.assign(new Error("Missing result checkpoint"),{uncertain:true});await checkpoint(p);return false;
-  }
-  await pending.set(item.generated.generation_id,{...item.pending,createdAt:Date.now()});
-  const saved=await call("/api/activities",{experienceId:project.id,generationId:item.generated.generation_id,proposal:item.generated.proposal,occursOn:item.date},"POST",{preparationItemId:item.id});
-  item.activity_id=saved.id;item.stage="ready";delete item.generated;delete item.pending;await checkpoint(p);return false;
+  const remaining=p.items.filter(item=>!item.activity_id);
+  if(!remaining.length){p.stage="publishing";await checkpoint(p);await publishAcceptedProjectBlock(db,job,(j,path,body,method,extra)=>call(path,body,method,{...extra,db:j.db}));p.stage="ready";await checkpoint(p);return true;}
+  // Each item owns its provider checkpoint. All successful siblings are durable before an error escapes.
+  // Saving is deliberately a later step; the complete sequence is still published in one transaction.
+  const toSave=remaining.filter(item=>item.generated);
+  const batch=(toSave.length?toSave:remaining).slice(0,3);
+  const results=await Promise.allSettled(batch.map(async item=>{
+    const existing=(await db.query(`select id from activities where experience_id=$1 and (preparation_item_id=$2 or details->>'route_item_id'=$3)
+      and status in ('draft','active') order by version desc limit 1`,[project.id,item.id,item.route_item_id])).rows[0];
+    if(existing){item.activity_id=existing.id;item.stage="ready";item.attempt_pending=false;await checkpoint(p);return;}
+    if(p.attempt_pending)throw Object.assign(new Error("Uncertain legacy call"),{uncertain:true});
+    if(!item.generated){
+      const started=Date.now();
+      const generated=await generatedCall("/api/ai/activities/generate",{experienceId:project.id,routeItemId:item.route_item_id,includeWorkshop:false},item);
+      item.generated=generated;item.pending=await pending.get(generated.generation_id);item.stage="save";item.generation_ms=Date.now()-started;
+      if(!item.pending)throw Object.assign(new Error("Missing result checkpoint"),{uncertain:true});await checkpoint(p);return;
+    }
+    await pending.set(item.generated.generation_id,{...item.pending,createdAt:Date.now()});
+    const started=Date.now();
+    const saved=await call("/api/activities",{experienceId:project.id,generationId:item.generated.generation_id,proposal:item.generated.proposal,occursOn:item.date},"POST",{preparationItemId:item.id});
+    item.activity_id=saved.id;item.stage="ready";item.save_ms=Date.now()-started;delete item.generated;delete item.pending;await checkpoint(p);
+  }));
+  const failure=results.find(result=>result.status==='rejected');
+  if(failure)throw failure.reason;
+  return false;
 }

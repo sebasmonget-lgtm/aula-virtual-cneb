@@ -7,7 +7,7 @@ const uuid = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
 const hash = value => createHash("sha256").update(value).digest("hex");
 const supported = new Set(["annual_plan", "experience", "diagnostic_summary", "activity", "family_report", "period_closure"]);
 const publicArtifact = row => ({ id: row.id, source_kind: row.source_kind, source_id: row.source_id,
-  source_version: Number(row.source_version), version: Number(row.artifact_version),
+  source_version: Number(row.source_version), version: Number(row.artifact_version),template_version:row.template_version,
   status: row.status, filename: row.filename, sha256: row.sha256,
   byte_length: row.byte_length == null ? null : Number(row.byte_length),
   mime_type: row.mime_type, school_year: row.school_year == null ? null : Number(row.school_year),
@@ -41,9 +41,9 @@ export async function prepareConfirmedDocumentArtifact(db, storage, teacherId, k
     throw new Error("Prepara primero el Word del proyecto confirmado.");
   const sourceHash = hash(JSON.stringify(document));
   if(expectedSourceHash && sourceHash!==expectedSourceHash)throw new VersionConflictError("El documento cambió durante la descarga. Prepara una descarga nueva; los archivos anteriores se conservan.");
-  const templateVersion = kind === "annual_plan" ? document.content?.journey_version === 2 ? "annual-journey-readable-v2" : document.content?.experience_context ? "annual-experience-v1" : document.document_context?.template_version ?? "annual-legacy-v1"
-    : kind === "experience" ? `${document.content?.document_template_version ?? "experience-legacy-v1"}-layout2`
-    : `${document.content?.document_template_version ?? document.content?.document_format ?? kind}${kind === "activity" ? "-layout4" : ""}-snapshot-${sourceHash.slice(0,16)}`;
+  const templateVersion = kind === "annual_plan" ? document.content?.journey_version === 2 ? "annual-journey-readable-v3" : document.content?.experience_context ? "annual-experience-v1" : document.document_context?.template_version ?? "annual-legacy-v1"
+    : kind === "experience" ? `${document.content?.document_template_version ?? "experience-legacy-v1"}-layout5`
+    : `${document.content?.document_template_version ?? document.content?.document_format ?? kind}${kind === "activity" ? "-layout7" : ""}-snapshot-${sourceHash.slice(0,16)}`;
   const row = await versionTransaction(db,`artifact:${kind}:${sourceId}`,async tx => {
     const current = (await tx.query(`select * from document_artifacts where source_kind=$1 and source_id=$2
       and source_version=$3 and artifact_version=1 and template_version=$4`,

@@ -1,3 +1,4 @@
+import { routeObservationCriteria } from "./activity-observation-plan.mjs";
 import { createHash, randomUUID } from "node:crypto";
 import { canonicalProjectDetails, projectMasterV3, validateProjectMasterV3 } from "./planning-contract-v3.mjs";
 import { newAyniFeatureEnabled } from "./new-ayni-feature-flag.mjs";
@@ -37,7 +38,7 @@ export function stampProjectV3(experience, details, source, kbVersion, dates, pr
     kb_version: kbVersion, calendar_fingerprint: hash(dates),
     // Historical rows in a successor stay byte-for-byte intact. DTO readers derive missing legacy refs.
     activity_route: canonical.activity_route.map((row) => protectedIds.has(row.id) ? row : ({ ...row,
-      criterion_refs: [refs.get(row.criterion_competency_id ?? row.competency_id)] })) };
+      criterion_refs: routeObservationCriteria(row).map(item => refs.get(item.competency_id)) })) };
   stamped.source_fingerprint = hash({ source: source.source, source_refs: stamped.source_refs,
     kb_version: kbVersion, decisions: stamped.decisions, dependents: stamped.dependents,
     route: stamped.activity_route, dates });

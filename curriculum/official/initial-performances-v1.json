@@ -1,0 +1,1359 @@
+{
+  "version": "pci-inicial-2016-performances-v1",
+  "source": {
+    "id": "PCI_INICIAL_CANONICAL",
+    "title": "Programa Curricular de Educación Inicial",
+    "publisher": "Ministerio de Educación del Perú",
+    "year": 2016,
+    "url": "https://www.minedu.gob.pe/curriculo/pdf/programa-curricular-educacion-inicial.pdf",
+    "sha256": "1f5e7330099c894181b82265dccab9478e094b15cc766ef680608468a82c0821"
+  },
+  "transcription": {
+    "checked_on": "2026-10-19",
+    "method": "Pinned source columns and bullet counts; independent pypdf paragraph comparison",
+    "scope": "Performance paragraphs only; examples and footnote callouts excluded. Line-end hyphens and whitespace normalized. Original curricular wording retained.",
+    "not_applicable": "No age-specific performance is invented where the source has none. Religion and Castellano L2 retain classroom applicability rules."
+  },
+  "performances": [
+    {
+      "id": "PCI2016.PS_IDENTIDAD.3.01",
+      "competency_id": "PS_IDENTIDAD",
+      "age": 3,
+      "official_order": 1,
+      "text": "Reconoce sus necesidades, sensaciones, intereses y preferencias; las diferencia de las de los otros a través de palabras, acciones, gestos o movimientos.",
+      "printed_page": 78,
+      "pdf_page": 80,
+      "content_sha256": "726abe6211773a8027e1c549a86bf786cf62254d518b201cf759e28bc14e6e3d"
+    },
+    {
+      "id": "PCI2016.PS_IDENTIDAD.3.02",
+      "competency_id": "PS_IDENTIDAD",
+      "age": 3,
+      "official_order": 2,
+      "text": "Se reconoce como miembro de su familia y grupo de aula. Identifica a los integrantes de ambos grupos.",
+      "printed_page": 78,
+      "pdf_page": 80,
+      "content_sha256": "6bdabc9f66c1d768f93b7f811ac4f8c6769b7cf39e367fac2596d44e8ad0de3e"
+    },
+    {
+      "id": "PCI2016.PS_IDENTIDAD.3.03",
+      "competency_id": "PS_IDENTIDAD",
+      "age": 3,
+      "official_order": 3,
+      "text": "Toma la iniciativa para realizar actividades cotidianas y juegos desde sus intereses. Realiza acciones de cuidado personal, hábitos de alimentación e higiene.",
+      "printed_page": 78,
+      "pdf_page": 80,
+      "content_sha256": "3a607bdc008ca840dadcc8cf6c65d677d20997a22ac8b1415311e65e498728cb"
+    },
+    {
+      "id": "PCI2016.PS_IDENTIDAD.3.04",
+      "competency_id": "PS_IDENTIDAD",
+      "age": 3,
+      "official_order": 4,
+      "text": "Expresa sus emociones; utiliza para ello gestos, movimientos corporales y palabras. Identifica sus emociones y las que observa en los demás cuando el adulto las nombra.",
+      "printed_page": 78,
+      "pdf_page": 80,
+      "content_sha256": "bd26a3c3aeac1abf2f6b5f8d00f2cccaafe8f5cd3360a4af9f727b1f5119fe23"
+    },
+    {
+      "id": "PCI2016.PS_IDENTIDAD.3.05",
+      "competency_id": "PS_IDENTIDAD",
+      "age": 3,
+      "official_order": 5,
+      "text": "Busca la compañía y consuelo del adulto en situaciones en las que lo necesita para sentirse seguro. Tolera algunos tiempos de espera anticipados por el adulto.",
+      "printed_page": 78,
+      "pdf_page": 80,
+      "content_sha256": "15a489a7b9572000882dc0d6a270f33df129e378f84f5319b9bbee93ab276c5f"
+    },
+    {
+      "id": "PCI2016.PS_IDENTIDAD.4.01",
+      "competency_id": "PS_IDENTIDAD",
+      "age": 4,
+      "official_order": 1,
+      "text": "Reconoce sus intereses, preferencias y características; las diferencia de las de los otros a través de palabras o acciones, dentro de su familia o grupo de aula.",
+      "printed_page": 79,
+      "pdf_page": 81,
+      "content_sha256": "749b4c37f28db174f47c459e76a1815ea75b27350deeb7eff32e72d52f6f67fa"
+    },
+    {
+      "id": "PCI2016.PS_IDENTIDAD.4.02",
+      "competency_id": "PS_IDENTIDAD",
+      "age": 4,
+      "official_order": 2,
+      "text": "Se reconoce como miembro de su familia y grupo de aula. Comparte hechos importantes de su historia familiar.",
+      "printed_page": 79,
+      "pdf_page": 81,
+      "content_sha256": "55d61462217b5502384fac2bafec63b049a80a5f404836e188dae4bb630ce3a4"
+    },
+    {
+      "id": "PCI2016.PS_IDENTIDAD.4.03",
+      "competency_id": "PS_IDENTIDAD",
+      "age": 4,
+      "official_order": 3,
+      "text": "Toma la iniciativa para realizar acciones de cuidado personal, de alimentación e higiene de manera autónoma. Explica la importancia de estos hábitos para su salud. Busca realizar con otros algunas actividades cotidianas y juegos según sus intereses.",
+      "printed_page": 79,
+      "pdf_page": 81,
+      "content_sha256": "7db9b6dcdaf366fd94e6815ba90808a4837355f171e1a06e142f86befd7a09e1"
+    },
+    {
+      "id": "PCI2016.PS_IDENTIDAD.4.04",
+      "competency_id": "PS_IDENTIDAD",
+      "age": 4,
+      "official_order": 4,
+      "text": "Expresa sus emociones; utiliza palabras, gestos y movimientos corporales. Reconoce las emociones en los demás, y muestra su simpatía o trata de ayudar.",
+      "printed_page": 79,
+      "pdf_page": 81,
+      "content_sha256": "d04148696d54075c35db2400bdcc862fe6db9471de694189496c02c831353252"
+    },
+    {
+      "id": "PCI2016.PS_IDENTIDAD.4.05",
+      "competency_id": "PS_IDENTIDAD",
+      "age": 4,
+      "official_order": 5,
+      "text": "Busca la compañía y consuelo del adulto en situaciones en las que lo necesita para sentirse seguro o contenido. Da razón de lo que le sucedió.",
+      "printed_page": 79,
+      "pdf_page": 81,
+      "content_sha256": "fe433324047c1168920fad87e5f43d171832ed63a328c800effbb3e7c7a31ba4"
+    },
+    {
+      "id": "PCI2016.PS_IDENTIDAD.5.01",
+      "competency_id": "PS_IDENTIDAD",
+      "age": 5,
+      "official_order": 1,
+      "text": "Reconoce sus intereses, preferencias, características físicas y cualidades, las diferencia de las de los otros a través de palabras o acciones.",
+      "printed_page": 79,
+      "pdf_page": 81,
+      "content_sha256": "d9a176f39c6d9fb06a13b9eb44b754db844c20edcfe825b00df9dccef15a4508"
+    },
+    {
+      "id": "PCI2016.PS_IDENTIDAD.5.02",
+      "competency_id": "PS_IDENTIDAD",
+      "age": 5,
+      "official_order": 2,
+      "text": "Participa de diferentes acciones de juego o de la vida cotidiana asumiendo distintos roles, sin hacer distinciones de género.",
+      "printed_page": 79,
+      "pdf_page": 81,
+      "content_sha256": "73e6abf642aee057c70e3cd74614aed231180eb0e0298aa3f731aaa1e008088f"
+    },
+    {
+      "id": "PCI2016.PS_IDENTIDAD.5.03",
+      "competency_id": "PS_IDENTIDAD",
+      "age": 5,
+      "official_order": 3,
+      "text": "Se reconoce como parte de su familia, grupo de aula e IE. Comparte hechos y momentos importantes de su historia familiar.",
+      "printed_page": 79,
+      "pdf_page": 81,
+      "content_sha256": "1ebed60590841df4f9b259a1de9ca1220f5a3c88f3de5e7c622686c00d5ea693"
+    },
+    {
+      "id": "PCI2016.PS_IDENTIDAD.5.04",
+      "competency_id": "PS_IDENTIDAD",
+      "age": 5,
+      "official_order": 4,
+      "text": "Toma la iniciativa para realizar acciones de cuidado personal, de manera autónoma, y da razón sobre las decisiones que toma. Se organiza con sus compañeros y realiza algunas actividades cotidianas y juegos según sus intereses.",
+      "printed_page": 79,
+      "pdf_page": 81,
+      "content_sha256": "431ad7c96065adc4b0e2188f20957e5f648afdc7f4ab7f15b09e2c2423d54719"
+    },
+    {
+      "id": "PCI2016.PS_IDENTIDAD.5.05",
+      "competency_id": "PS_IDENTIDAD",
+      "age": 5,
+      "official_order": 5,
+      "text": "Expresa sus emociones; utiliza palabras, gestos y movimientos corporales e identifica las causas que las originan. Reconoce las emociones de los demás, y muestra su simpatía, desacuerdo o preocupación.",
+      "printed_page": 79,
+      "pdf_page": 81,
+      "content_sha256": "1d5f78049ad5459db2e6e63defaa8e32f2875ba764c5d30aa137330d8a417a72"
+    },
+    {
+      "id": "PCI2016.PS_IDENTIDAD.5.06",
+      "competency_id": "PS_IDENTIDAD",
+      "age": 5,
+      "official_order": 6,
+      "text": "Busca la compañía y consuelo del adulto en situaciones en que lo requiere. Utiliza la palabra para expresar y explicar lo que le sucede. Reconoce los límites establecidos para su seguridad y contención.",
+      "printed_page": 79,
+      "pdf_page": 81,
+      "content_sha256": "ca481268734560eb1fa9eecfa975aadd17b6d65525c7a8859d8194df7768806e"
+    },
+    {
+      "id": "PCI2016.PS_CONVIVE.3.01",
+      "competency_id": "PS_CONVIVE",
+      "age": 3,
+      "official_order": 1,
+      "text": "Se relaciona con adultos y niños de su entorno en diferentes actividades del aula y juega en pequeños grupos.",
+      "printed_page": 86,
+      "pdf_page": 88,
+      "content_sha256": "0ff3e88552423679d1ac1034bc8129b5d6ad9b8c6bfcc66e32082c6d14e73ddd"
+    },
+    {
+      "id": "PCI2016.PS_CONVIVE.3.02",
+      "competency_id": "PS_CONVIVE",
+      "age": 3,
+      "official_order": 2,
+      "text": "Participa en actividades grupales poniendo en práctica las normas de convivencia y los límites que conoce.",
+      "printed_page": 86,
+      "pdf_page": 88,
+      "content_sha256": "d8653a0eb2db4c6e98b9ceb7b870c21db6200c6cef484dbe74e2523550b4f094"
+    },
+    {
+      "id": "PCI2016.PS_CONVIVE.3.03",
+      "competency_id": "PS_CONVIVE",
+      "age": 3,
+      "official_order": 3,
+      "text": "Colabora en el cuidado del uso de recursos, materiales y espacios compartidos.",
+      "printed_page": 86,
+      "pdf_page": 88,
+      "content_sha256": "d31e3ace18234888885fb97c579c210a3ee79678da055e7a87ec3a7055c494d9"
+    },
+    {
+      "id": "PCI2016.PS_CONVIVE.4.01",
+      "competency_id": "PS_CONVIVE",
+      "age": 4,
+      "official_order": 1,
+      "text": "Se relaciona con adultos de su entorno, juega con otros niños y se integra en actividades grupales del aula. Propone ideas de juego y las normas del mismo, sigue las reglas de los demás de acuerdo con sus intereses.",
+      "printed_page": 87,
+      "pdf_page": 89,
+      "content_sha256": "31e6d511955cdce9d095b2cdd37755b00212af26f0b2e1664df70fe4582aa9b6"
+    },
+    {
+      "id": "PCI2016.PS_CONVIVE.4.02",
+      "competency_id": "PS_CONVIVE",
+      "age": 4,
+      "official_order": 2,
+      "text": "Realiza actividades cotidianas con sus compañeros y se interesa por conocer sus costumbres, así como los lugares de los que proceden. Realiza preguntas acerca de lo que le llamó la atención.",
+      "printed_page": 87,
+      "pdf_page": 89,
+      "content_sha256": "efeed0bcbc2e27853a292af4711623d34a474e58c78c6d0286b43e776a003f92"
+    },
+    {
+      "id": "PCI2016.PS_CONVIVE.4.03",
+      "competency_id": "PS_CONVIVE",
+      "age": 4,
+      "official_order": 3,
+      "text": "Participa en la construcción colectiva de acuerdos y normas, basados en el respeto y el bienestar de todos, en situaciones que lo afectan o incomodan a él o a alguno de sus compañeros. Muestra, en las actividades que realiza, comportamientos de acuerdo con las normas de convivencia asumidos.",
+      "printed_page": 87,
+      "pdf_page": 89,
+      "content_sha256": "d7e8be308b3ca6d277f432073716949141761eb03e66304da3ed315fc2b59be3"
+    },
+    {
+      "id": "PCI2016.PS_CONVIVE.4.04",
+      "competency_id": "PS_CONVIVE",
+      "age": 4,
+      "official_order": 4,
+      "text": "Colabora en actividades colectivas orientadas al cuidado de los recursos, materiales y espacios compartidos.",
+      "printed_page": 87,
+      "pdf_page": 89,
+      "content_sha256": "e11383c5e7a511fed5b1c330787995c5d19e11bfbd196fe5c3e19700c367a83c"
+    },
+    {
+      "id": "PCI2016.PS_CONVIVE.5.01",
+      "competency_id": "PS_CONVIVE",
+      "age": 5,
+      "official_order": 1,
+      "text": "Se relaciona con adultos de su entorno, juega con otros niños y se integra en actividades grupales del aula. Propone ideas de juego y sus normas. Se pone de acuerdo con el grupo para elegir un juego y las reglas del mismo.",
+      "printed_page": 87,
+      "pdf_page": 89,
+      "content_sha256": "f755988db056dd2be69aeba899dc8153089a6b0426bf9e84eb6947d61f83c7cc"
+    },
+    {
+      "id": "PCI2016.PS_CONVIVE.5.02",
+      "competency_id": "PS_CONVIVE",
+      "age": 5,
+      "official_order": 2,
+      "text": "Realiza actividades cotidianas con sus compañeros, y se interesa por compartir las costumbres de su familia y conocer los lugares de donde proceden. Muestra interés por conocer las costumbres de las familias de sus compañeros. Realiza preguntas para obtener más información.",
+      "printed_page": 87,
+      "pdf_page": 89,
+      "content_sha256": "5547929dd81997d6298402fcdad333f9725d548fe61fc39104e1a0e437019df4"
+    },
+    {
+      "id": "PCI2016.PS_CONVIVE.5.03",
+      "competency_id": "PS_CONVIVE",
+      "age": 5,
+      "official_order": 3,
+      "text": "Participa en la construcción colectiva de acuerdos y normas basadas en el respeto y el bienestar de todos considerando las situaciones que afectan o incomodan a todo el grupo. Muestra en las actividades que realiza comportamientos de acuerdo con las normas de convivencia asumidos.",
+      "printed_page": 87,
+      "pdf_page": 89,
+      "content_sha256": "a6b1072c978f8959c7de8ee4ba4ef0e795de4b0051d87b051b6cead9944c96c6"
+    },
+    {
+      "id": "PCI2016.PS_CONVIVE.5.04",
+      "competency_id": "PS_CONVIVE",
+      "age": 5,
+      "official_order": 4,
+      "text": "Asume responsabilidades en su aula para colaborar con el orden, limpieza y bienestar de todos.",
+      "printed_page": 87,
+      "pdf_page": 89,
+      "content_sha256": "c0594d8ff015d23f7ca053901bd0a30953b10ae888caf1f6b5c978767d23a77b"
+    },
+    {
+      "id": "PCI2016.PS_CONVIVE.5.05",
+      "competency_id": "PS_CONVIVE",
+      "age": 5,
+      "official_order": 5,
+      "text": "Propone y colabora en actividades colectivas –en el nivel de aula e IE– orientadas al cuidado de recursos, materiales y espacios compartidos.",
+      "printed_page": 87,
+      "pdf_page": 89,
+      "content_sha256": "567c77ec8c4333ea1a6f35551bec795c82ab0cc70c387a2d1f7614fc5aad42b5"
+    },
+    {
+      "id": "PCI2016.PS_RELIGION.3.01",
+      "competency_id": "PS_RELIGION",
+      "age": 3,
+      "official_order": 1,
+      "text": "Reconoce de manera espontánea, a través de sus acciones diarias, el amor y cuidado que le brinda su familia, como un indicio del amor de Dios, y da inicio a acciones como colaborar, saludar, despedirse y agradecer por propia iniciativa.",
+      "printed_page": 92,
+      "pdf_page": 94,
+      "content_sha256": "bad61fda4776d0fe6a912be27baf65b56702618386c3197de0d3d1c41c70dfac"
+    },
+    {
+      "id": "PCI2016.PS_RELIGION.3.02",
+      "competency_id": "PS_RELIGION",
+      "age": 3,
+      "official_order": 2,
+      "text": "Participa en las prácticas de la confesión religiosa de sus padres y lo comenta a sus compañeros de aula.",
+      "printed_page": 92,
+      "pdf_page": 94,
+      "content_sha256": "82a1d204ab6e66e3a69adae556e0e062e3064319505e39095c50039a9b858913"
+    },
+    {
+      "id": "PCI2016.PS_RELIGION.3.03",
+      "competency_id": "PS_RELIGION",
+      "age": 3,
+      "official_order": 3,
+      "text": "Disfruta por iniciativa propia de la naturaleza creada por Dios con amor.",
+      "printed_page": 92,
+      "pdf_page": 94,
+      "content_sha256": "df077124be964ba961ff54c1092ab5dd144db3d1e3da5d88ab1aa63c72d3fc9a"
+    },
+    {
+      "id": "PCI2016.PS_RELIGION.3.04",
+      "competency_id": "PS_RELIGION",
+      "age": 3,
+      "official_order": 4,
+      "text": "Demuestra su amor al prójimo acogiendo y compartiendo con todos como amigos de Jesús.",
+      "printed_page": 92,
+      "pdf_page": 94,
+      "content_sha256": "b1be05a43d9eb79a751fac5d7f211d08dcf4b684109d3de06dd6dfc39c9e145d"
+    },
+    {
+      "id": "PCI2016.PS_RELIGION.4.01",
+      "competency_id": "PS_RELIGION",
+      "age": 4,
+      "official_order": 1,
+      "text": "Expresa, por propia iniciativa, el amor y cuidado que recibe de su entorno (padres, docentes y compañeros) como un indicio del amor de Dios. Lo hace a través de la interacción con los otros, y da inicio a acciones como compartir, ayudar y colaborar.",
+      "printed_page": 93,
+      "pdf_page": 95,
+      "content_sha256": "155d90f7ad3e1b7015ee976c4e5eb5fdf5083007720f7c20c2472534854022a8"
+    },
+    {
+      "id": "PCI2016.PS_RELIGION.4.02",
+      "competency_id": "PS_RELIGION",
+      "age": 4,
+      "official_order": 2,
+      "text": "Participa en las prácticas de la confesión religiosa de sus padres y lo comenta a sus compañeros de aula y comunidad educativa.",
+      "printed_page": 93,
+      "pdf_page": 95,
+      "content_sha256": "23e833deae8cc57b23462982ad68ee6d40ef6da3c2d04f8c0ee9accf62bd420d"
+    },
+    {
+      "id": "PCI2016.PS_RELIGION.4.03",
+      "competency_id": "PS_RELIGION",
+      "age": 4,
+      "official_order": 3,
+      "text": "Participa por iniciativa propia del cuidado de la Creación en el lugar en donde se encuentra.",
+      "printed_page": 93,
+      "pdf_page": 95,
+      "content_sha256": "e5e238d73d440badabfdc8771a4edd89b9f7d3d0702a97c074fe3e7fa5dab120"
+    },
+    {
+      "id": "PCI2016.PS_RELIGION.4.04",
+      "competency_id": "PS_RELIGION",
+      "age": 4,
+      "official_order": 4,
+      "text": "Demuestra su amor al prójimo acogiendo y siendo solidario con los que necesitan ayuda en su entorno más cercano.",
+      "printed_page": 93,
+      "pdf_page": 95,
+      "content_sha256": "0ac5b9b7881661b2367f5d6ee4b8b026ef0667e9ea05c76b598ee95a4d6fe2a7"
+    },
+    {
+      "id": "PCI2016.PS_RELIGION.5.01",
+      "competency_id": "PS_RELIGION",
+      "age": 5,
+      "official_order": 1,
+      "text": "Expresa por propia iniciativa el amor y cuidado que recibe de su entorno, como un indicio del amor de Dios. Lo hace a través de la interacción con los otros, al realizar acciones como compartir, ayudar y colaborar.",
+      "printed_page": 93,
+      "pdf_page": 95,
+      "content_sha256": "9e84516811d63145c049c1b496f838ff35b78abaaa7051bb1c320aac3415d7b3"
+    },
+    {
+      "id": "PCI2016.PS_RELIGION.5.02",
+      "competency_id": "PS_RELIGION",
+      "age": 5,
+      "official_order": 2,
+      "text": "Participa en las prácticas de la confesión religiosa de sus padres o comunidad –como rituales y fiestas–, y lo comparte con sus compañeros.",
+      "printed_page": 93,
+      "pdf_page": 95,
+      "content_sha256": "b9f4775efdbc77f6c6347385898c1df48e225fece211cbc913afdae4ba970671"
+    },
+    {
+      "id": "PCI2016.PS_RELIGION.5.03",
+      "competency_id": "PS_RELIGION",
+      "age": 5,
+      "official_order": 3,
+      "text": "Participa del uso responsable de los recursos creados por Dios en su entorno.",
+      "printed_page": 93,
+      "pdf_page": 95,
+      "content_sha256": "a85cf395d7ec14a5cb8b96e95aa33ca13565eead99230e3ec7fe97ee18feb575"
+    },
+    {
+      "id": "PCI2016.PS_RELIGION.5.04",
+      "competency_id": "PS_RELIGION",
+      "age": 5,
+      "official_order": 4,
+      "text": "Demuestra su amor al prójimo respetando y siendo solidario con los que necesitan de su ayuda material y espiritual.",
+      "printed_page": 93,
+      "pdf_page": 95,
+      "content_sha256": "0f757479762b8dfa2762310c9ea9efa9e3a7d8b7447e423625a1ab1f0e570463"
+    },
+    {
+      "id": "PCI2016.PSICO_MOTRICIDAD.3.01",
+      "competency_id": "PSICO_MOTRICIDAD",
+      "age": 3,
+      "official_order": 1,
+      "text": "Realiza acciones y movimientos como correr, saltar desde pequeñas alturas, trepar, rodar, deslizarse –en los que expresa sus emociones– explorando las posibilidades de su cuerpo con relación al espacio, la superficie y los objetos.",
+      "printed_page": 104,
+      "pdf_page": 106,
+      "content_sha256": "edc2c9ae813d4500119455376308ddee9a698858c571d5f20ff1aa6d84efc9dc"
+    },
+    {
+      "id": "PCI2016.PSICO_MOTRICIDAD.3.02",
+      "competency_id": "PSICO_MOTRICIDAD",
+      "age": 3,
+      "official_order": 2,
+      "text": "Realiza acciones y movimientos de coordinación óculo-manual y óculo-podal en diferentes situaciones cotidianas y de juego según sus intereses.",
+      "printed_page": 104,
+      "pdf_page": 106,
+      "content_sha256": "0a15322eba4a8f221af8bc9a45ef2bdcf29812ab5549ba20ec8875fcf4683e34"
+    },
+    {
+      "id": "PCI2016.PSICO_MOTRICIDAD.3.03",
+      "competency_id": "PSICO_MOTRICIDAD",
+      "age": 3,
+      "official_order": 3,
+      "text": "Reconoce sus sensaciones corporales, e identifica algunas de las necesidades y cambios en el estado de su cuerpo, como la respiración después de una actividad física. Reconoce las partes de su cuerpo al relacionarlas con sus acciones y nombrarlas espontáneamente en diferentes situaciones cotidianas. Representa su cuerpo (o los de otros) a su manera y utilizando diferentes materiales.",
+      "printed_page": 104,
+      "pdf_page": 106,
+      "content_sha256": "7cb7784c7cae120fd58d430532ae4d0048eb3125c846fbae49c4ac1658c654d1"
+    },
+    {
+      "id": "PCI2016.PSICO_MOTRICIDAD.4.01",
+      "competency_id": "PSICO_MOTRICIDAD",
+      "age": 4,
+      "official_order": 1,
+      "text": "Realiza acciones y juegos de manera autónoma, como correr, saltar, trepar, rodar, deslizarse, hacer giros, patear y lanzar pelotas, etc. –en los que expresa sus emociones–explorando las posibilidades de sus cuerpo con relación al espacio, la superficie y los objetos, regulando su fuerza, velocidad y con cierto control de su equilibrio.",
+      "printed_page": 105,
+      "pdf_page": 107,
+      "content_sha256": "41ae86ca80e0c4bfafb3f64638f0818500f19d8e3576ea098434d440c3018e7d"
+    },
+    {
+      "id": "PCI2016.PSICO_MOTRICIDAD.4.02",
+      "competency_id": "PSICO_MOTRICIDAD",
+      "age": 4,
+      "official_order": 2,
+      "text": "Realiza acciones y movimientos de coordinación óculo-manual y óculo-podal, acorde con sus necesidades e intereses, y según las características de los objetos o materiales que emplea en diferentes situaciones cotidianas de exploración y juego.",
+      "printed_page": 105,
+      "pdf_page": 107,
+      "content_sha256": "091b79e462ce909681b5f299584e34e70e98901fe87819c0f5f2e5afe99cad27"
+    },
+    {
+      "id": "PCI2016.PSICO_MOTRICIDAD.4.03",
+      "competency_id": "PSICO_MOTRICIDAD",
+      "age": 4,
+      "official_order": 3,
+      "text": "Reconoce sus sensaciones corporales, e identifica las necesidades y cambios en el estado de su cuerpo, como la respiración y sudoración después de una actividad física. Reconoce las partes de su cuerpo al relacionarlas con sus acciones y nombrarlas espontáneamente en diferentes situaciones cotidianas. Representa su cuerpo (o los de otros) a su manera, utilizando diferentes materiales y haciendo evidentes algunas partes, como la cabeza, los brazos, las piernas y algunos elementos del rostro.",
+      "printed_page": 105,
+      "pdf_page": 107,
+      "content_sha256": "7f2f4ebb3a751dfd0d67900ce02c656971c33bea46294633bfa9e093f593e3b9"
+    },
+    {
+      "id": "PCI2016.PSICO_MOTRICIDAD.5.01",
+      "competency_id": "PSICO_MOTRICIDAD",
+      "age": 5,
+      "official_order": 1,
+      "text": "Realiza acciones y juegos de manera autónoma combinando habilidades motrices básicas como correr, saltar, trepar, rodar, deslizarse, hacer giros y volteretas –en los que expresa sus emociones– explorando las posibilidades de su cuerpo con relación al espacio, el tiempo, la superficie y los objetos; en estas acciones, muestra predominio y mayor control de un lado de su cuerpo.",
+      "printed_page": 105,
+      "pdf_page": 107,
+      "content_sha256": "d98d313127a84ced7afebd038f3123188c58445cc87fb851ac9ea8e116af7882"
+    },
+    {
+      "id": "PCI2016.PSICO_MOTRICIDAD.5.02",
+      "competency_id": "PSICO_MOTRICIDAD",
+      "age": 5,
+      "official_order": 2,
+      "text": "Realiza acciones y movimientos de coordinación óculo-manual y óculo-podal que requieren mayor precisión. Lo hace en diferentes situaciones cotidianas, de juego o de representación gráfico-plástica, ajustándose a los límites espaciales y a las características de los objetos, materiales y/o herramientas que utilizan, según sus necesidades, intereses y posibilidades.",
+      "printed_page": 105,
+      "pdf_page": 107,
+      "content_sha256": "243d2c7f163e2c0bdfbee9bf17ed87b95cba63c4d173f66826aa39bf9010f501"
+    },
+    {
+      "id": "PCI2016.PSICO_MOTRICIDAD.5.03",
+      "competency_id": "PSICO_MOTRICIDAD",
+      "age": 5,
+      "official_order": 3,
+      "text": "Reconoce sus sensaciones corporales, e identifica las necesidades y cambios en el estado de su cuerpo, como la respiración y sudoración. Reconoce las partes de su cuerpo al relacionarlas con sus acciones y nombrarlas espontáneamente en diferentes situaciones cotidianas. Representa su cuerpo (o el de otro) a su manera, incorporando más detalles de la figura humana, e incluyendo algunas características propias (cabello corto, largo, lacio, rizado, etc.).",
+      "printed_page": 105,
+      "pdf_page": 107,
+      "content_sha256": "274462faa05f4b7e23c917bb18387a842c87a6a5b693a4ef4612ac44058b1b25"
+    },
+    {
+      "id": "PCI2016.COM_ORAL.3.01",
+      "competency_id": "COM_ORAL",
+      "age": 3,
+      "official_order": 1,
+      "text": "Expresa sus necesidades, emociones, intereses y da cuenta de algunas experiencias al interactuar con personas de su entorno familiar, escolar o local. Utiliza palabras de uso frecuente, sonrisas, miradas, señas, gestos, movimientos corporales y diversos volúmenes de voz con la intención de lograr su propósito: informar, pedir, convencer o agradecer.",
+      "printed_page": 118,
+      "pdf_page": 120,
+      "content_sha256": "653c3a499ae2d9ad09196477f256463988b73f20a690b0d89abacd019bf20d86"
+    },
+    {
+      "id": "PCI2016.COM_ORAL.3.02",
+      "competency_id": "COM_ORAL",
+      "age": 3,
+      "official_order": 2,
+      "text": "Participa en conversaciones o escucha cuentos, leyendas y otros relatos de la tradición oral. Formula preguntas sobre lo que le interesa saber o responde a lo que le preguntan.",
+      "printed_page": 118,
+      "pdf_page": 120,
+      "content_sha256": "469d4d748a9809c8e1224c3a1d37623bf3990746151cbc4deb6172887f10b079"
+    },
+    {
+      "id": "PCI2016.COM_ORAL.3.03",
+      "competency_id": "COM_ORAL",
+      "age": 3,
+      "official_order": 3,
+      "text": "Recupera información explícita de un texto oral. Menciona el nombre de personas y personajes, sigue indicaciones orales o vuelve a contar con sus propias palabras los sucesos que más le gustaron.",
+      "printed_page": 118,
+      "pdf_page": 120,
+      "content_sha256": "1e0817b5c532e7a179ad7ae07da83d65a8d1ecb303912f824c80e5ac2c856ec7"
+    },
+    {
+      "id": "PCI2016.COM_ORAL.3.04",
+      "competency_id": "COM_ORAL",
+      "age": 3,
+      "official_order": 4,
+      "text": "Deduce características de personas, personajes, animales y objetos en anécdotas, cuentos y rimas orales.",
+      "printed_page": 118,
+      "pdf_page": 120,
+      "content_sha256": "63feec0f821beef9c1e0b711c43c755366887c6a87da44421247ca41d4a38507"
+    },
+    {
+      "id": "PCI2016.COM_ORAL.3.05",
+      "competency_id": "COM_ORAL",
+      "age": 3,
+      "official_order": 5,
+      "text": "Comenta lo que le gusta o le disgusta de personas, personajes, hechos o situaciones de la vida cotidiana a partir de sus experiencias y del contexto en que se desenvuelve.",
+      "printed_page": 118,
+      "pdf_page": 120,
+      "content_sha256": "57708f8e6dab0f25619b6caff77b904c35be381e69ab8683a782498795164edb"
+    },
+    {
+      "id": "PCI2016.COM_ORAL.4.01",
+      "competency_id": "COM_ORAL",
+      "age": 4,
+      "official_order": 1,
+      "text": "Expresa sus necesidades, emociones, intereses y da cuenta de sus experiencias al interactuar con personas de su entorno familiar, escolar o local. Utiliza palabras de uso frecuente, sonrisas, miradas, señas, gestos, movimientos corporales y diversos volúmenes de voz según su interlocutor y propósito: informar, pedir, convencer o agradecer.",
+      "printed_page": 119,
+      "pdf_page": 121,
+      "content_sha256": "e96d9d8b406adebe5f778a3e99b0caea0a51a2c882556f68725a14d4c775b7f5"
+    },
+    {
+      "id": "PCI2016.COM_ORAL.4.02",
+      "competency_id": "COM_ORAL",
+      "age": 4,
+      "official_order": 2,
+      "text": "Participa en conversaciones o escucha cuentos, leyendas, adivinanzas y otros relatos de la tradición oral. Formula preguntas sobre lo que le interesa saber o lo que no ha comprendido o responde a lo que le preguntan.",
+      "printed_page": 119,
+      "pdf_page": 121,
+      "content_sha256": "d4b156d785f060ca50d550610bd690e27fa46ceb9d4dc658eca20e47f2cc1070"
+    },
+    {
+      "id": "PCI2016.COM_ORAL.4.03",
+      "competency_id": "COM_ORAL",
+      "age": 4,
+      "official_order": 3,
+      "text": "Recupera información explícita de un texto oral. Menciona algunos hechos, el nombre de personas y personajes. Sigue indicaciones orales o vuelve a contar con sus propias palabras los sucesos que más le gustaron.",
+      "printed_page": 119,
+      "pdf_page": 121,
+      "content_sha256": "24082d0d4f5ffd5ae43953642f9a8799580943be794556af33fa0df0098a4a9d"
+    },
+    {
+      "id": "PCI2016.COM_ORAL.4.04",
+      "competency_id": "COM_ORAL",
+      "age": 4,
+      "official_order": 4,
+      "text": "Deduce relaciones de causa-efecto, así como características de personas, personajes, animales y objetos en anécdotas, cuentos, leyendas y rimas orales.",
+      "printed_page": 119,
+      "pdf_page": 121,
+      "content_sha256": "94cb5b789ef4240ae83df5cabbea64bcb867a1b05f0c42b2f24a7b5d346ac83d"
+    },
+    {
+      "id": "PCI2016.COM_ORAL.4.05",
+      "competency_id": "COM_ORAL",
+      "age": 4,
+      "official_order": 5,
+      "text": "Comenta lo que le gusta o le disgusta de personas, personajes, hechos o situaciones de la vida cotidiana a partir de sus experiencias y del contexto en que se desenvuelve.",
+      "printed_page": 119,
+      "pdf_page": 121,
+      "content_sha256": "57708f8e6dab0f25619b6caff77b904c35be381e69ab8683a782498795164edb"
+    },
+    {
+      "id": "PCI2016.COM_ORAL.5.01",
+      "competency_id": "COM_ORAL",
+      "age": 5,
+      "official_order": 1,
+      "text": "Expresa sus necesidades, emociones, intereses y da cuenta de sus experiencias al interactuar con personas de su entorno familiar, escolar o local. Utiliza palabras de uso frecuente y, estratégicamente, sonrisas, miradas, señas, gestos, movimientos corporales y diversos volúmenes de voz, según su interlocutor y propósito: informar, pedir, convencer, agradecer. Desarrolla sus ideas en torno a un tema, aunque en ocasiones puede salirse de este.",
+      "printed_page": 119,
+      "pdf_page": 121,
+      "content_sha256": "30549f1d9e6b08c3e597bc9e53de36fd4426df8883f01ef0ad37046573fc7b4d"
+    },
+    {
+      "id": "PCI2016.COM_ORAL.5.02",
+      "competency_id": "COM_ORAL",
+      "age": 5,
+      "official_order": 2,
+      "text": "Participa en conversaciones, diálogos o escucha cuentos, leyendas, rimas, adivinanzas y otros relatos de la tradición oral. Espera su turno para hablar, escucha mientras su interlocutor habla, pregunta y responde sobre lo que le interesa saber o lo que no ha comprendido con la intención de obtener información.",
+      "printed_page": 119,
+      "pdf_page": 121,
+      "content_sha256": "6f9102cc668e75299a98b7d0c801941058bba79878d46b28575cec9aada32160"
+    },
+    {
+      "id": "PCI2016.COM_ORAL.5.03",
+      "competency_id": "COM_ORAL",
+      "age": 5,
+      "official_order": 3,
+      "text": "Recupera información explícita de un texto oral. Menciona algunos hechos y lugares, el nombre de personas y personajes. Sigue indicaciones orales o vuelve a contar con sus propias palabras los sucesos que más le gustaron.",
+      "printed_page": 119,
+      "pdf_page": 121,
+      "content_sha256": "1780e010bf3544f38c765b1cbc9b453999a22a476c5201bfba2172d5260f76a4"
+    },
+    {
+      "id": "PCI2016.COM_ORAL.5.04",
+      "competency_id": "COM_ORAL",
+      "age": 5,
+      "official_order": 4,
+      "text": "Deduce relaciones de causa-efecto, así como características de personas, personajes, animales y objetos en anécdotas, cuentos, leyendas y rimas orales.",
+      "printed_page": 119,
+      "pdf_page": 121,
+      "content_sha256": "94cb5b789ef4240ae83df5cabbea64bcb867a1b05f0c42b2f24a7b5d346ac83d"
+    },
+    {
+      "id": "PCI2016.COM_ORAL.5.05",
+      "competency_id": "COM_ORAL",
+      "age": 5,
+      "official_order": 5,
+      "text": "Comenta sobre lo que le gusta o disgusta de personas, personajes, hechos o situaciones de la vida cotidiana dando razones sencillas a partir de sus experiencias y del contexto en que se desenvuelve.",
+      "printed_page": 119,
+      "pdf_page": 121,
+      "content_sha256": "808a528743d04c69a15c02243c4cee1a6d128d4f812909e760e46904e98bf2cc"
+    },
+    {
+      "id": "PCI2016.COM_LECTURA.3.01",
+      "competency_id": "COM_LECTURA",
+      "age": 3,
+      "official_order": 1,
+      "text": "Identifica características de personas, personajes, animales u objetos a partir de lo que observa en las ilustraciones cuando explora cuentos, etiquetas, carteles, que se presenta en variados soportes.",
+      "printed_page": 124,
+      "pdf_page": 126,
+      "content_sha256": "a8276f2c1cf6f47a14d1719b7ca8dcb0bf555c1554c4ccf95ec61e5d12cb4448"
+    },
+    {
+      "id": "PCI2016.COM_LECTURA.3.02",
+      "competency_id": "COM_LECTURA",
+      "age": 3,
+      "official_order": 2,
+      "text": "Dice de qué tratará, cómo continuará o cómo terminará el texto a partir de las ilustraciones o imágenes que observa antes y durante la lectura que realiza (por sí mismo o a través de un adulto).",
+      "printed_page": 124,
+      "pdf_page": 126,
+      "content_sha256": "a15cca1ea2d689a6d17c1c487825aa6aa580ada55d0e1b2815de0cc5d0cea1c0"
+    },
+    {
+      "id": "PCI2016.COM_LECTURA.3.03",
+      "competency_id": "COM_LECTURA",
+      "age": 3,
+      "official_order": 3,
+      "text": "Comenta las emociones que le generó el texto leído (por sí mismo o a través de un adulto), a partir de sus intereses y experiencias.",
+      "printed_page": 124,
+      "pdf_page": 126,
+      "content_sha256": "3cdc682427415412e08559cda0c09b93b6c95ab3087bd976a85a1d6f0b6399b2"
+    },
+    {
+      "id": "PCI2016.COM_LECTURA.4.01",
+      "competency_id": "COM_LECTURA",
+      "age": 4,
+      "official_order": 1,
+      "text": "Identifica características de personas, personajes, animales, objetos o acciones a partir de lo que observa en ilustraciones cuando explora cuentos, etiquetas, carteles, que se presentan en variados soportes.",
+      "printed_page": 125,
+      "pdf_page": 127,
+      "content_sha256": "6433855ea4ffde5683e041bd3a53061613861d7ccb57c797a0c25d0e8c4ab53a"
+    },
+    {
+      "id": "PCI2016.COM_LECTURA.4.02",
+      "competency_id": "COM_LECTURA",
+      "age": 4,
+      "official_order": 2,
+      "text": "Dice de qué tratará, cómo continuará o cómo terminará el texto a partir de las ilustraciones o imágenes que observa antes y durante la lectura que realiza (por sí mismo o a través de un adulto).",
+      "printed_page": 125,
+      "pdf_page": 127,
+      "content_sha256": "a15cca1ea2d689a6d17c1c487825aa6aa580ada55d0e1b2815de0cc5d0cea1c0"
+    },
+    {
+      "id": "PCI2016.COM_LECTURA.4.03",
+      "competency_id": "COM_LECTURA",
+      "age": 4,
+      "official_order": 3,
+      "text": "Comenta las emociones que le generó el texto leído (por sí mismo o a través de un adulto), a partir de sus intereses y experiencias.",
+      "printed_page": 125,
+      "pdf_page": 127,
+      "content_sha256": "3cdc682427415412e08559cda0c09b93b6c95ab3087bd976a85a1d6f0b6399b2"
+    },
+    {
+      "id": "PCI2016.COM_LECTURA.5.01",
+      "competency_id": "COM_LECTURA",
+      "age": 5,
+      "official_order": 1,
+      "text": "Identifica características de personas, personajes, animales, objetos o acciones a partir de lo que observa en las ilustraciones, así como de algunas palabras conocidas por él: su nombre o el de otros, palabras que aparecen frecuentemente en los cuentos, canciones, rondas, rimas, anuncios publicitarios o carteles del aula (calendario, cumpleaños, acuerdos de convivencia) que se presentan en variados soportes.",
+      "printed_page": 125,
+      "pdf_page": 127,
+      "content_sha256": "438af8f3ad3dc079ebff27537f547386fe2ce4e2a88ed5d37079bd24052c0ae2"
+    },
+    {
+      "id": "PCI2016.COM_LECTURA.5.02",
+      "competency_id": "COM_LECTURA",
+      "age": 5,
+      "official_order": 2,
+      "text": "Dice de qué tratará, cómo continuará o cómo terminará el texto a partir de algunos indicios, como el título, las ilustraciones, palabras, expresiones o sucesos significativos, que observa o escucha antes y durante la lectura que realiza (por sí mismo o a través de un adulto).",
+      "printed_page": 125,
+      "pdf_page": 127,
+      "content_sha256": "35eec23fa7fe799d6124a6e2b04731d557e573b22f61abc9406b7e9c046255c4"
+    },
+    {
+      "id": "PCI2016.COM_LECTURA.5.03",
+      "competency_id": "COM_LECTURA",
+      "age": 5,
+      "official_order": 3,
+      "text": "Opina dando razones sobre algún aspecto del texto leído (por sí mismo o a través de un adulto), a partir de sus intereses y experiencia.",
+      "printed_page": 125,
+      "pdf_page": 127,
+      "content_sha256": "4e2ca7baf641021ac819b366fb1432b761456b477ee4a22b5c429202120be72a"
+    },
+    {
+      "id": "PCI2016.COM_ARTE.3.01",
+      "competency_id": "COM_ARTE",
+      "age": 3,
+      "official_order": 1,
+      "text": "Explora por iniciativa propia diversos materiales de acuerdo con sus necesidades e intereses. Descubre las posibilidades expresivas de sus movimientos y de los materiales con los que trabaja.",
+      "printed_page": 136,
+      "pdf_page": 138,
+      "content_sha256": "910d75521020212e94f7be44fe86f652972cd3ce345302d94d56a65b9d6b0dcf"
+    },
+    {
+      "id": "PCI2016.COM_ARTE.3.02",
+      "competency_id": "COM_ARTE",
+      "age": 3,
+      "official_order": 2,
+      "text": "Representa sus ideas acerca de sus vivencias personales usando diferentes lenguajes artísticos (el dibujo, la pintura, la danza o el movimiento, el teatro, la música, los títeres, etc.).",
+      "printed_page": 136,
+      "pdf_page": 138,
+      "content_sha256": "b18aae255372ca2dfaac902c8134872553d21835caacf19dcd6fa2464da8d8f7"
+    },
+    {
+      "id": "PCI2016.COM_ARTE.3.03",
+      "competency_id": "COM_ARTE",
+      "age": 3,
+      "official_order": 3,
+      "text": "Muestra y comenta de forma espontánea, a compañeros y adultos de su entorno, lo que ha realizado al jugar y crear proyectos a través de los lenguajes artísticos.",
+      "printed_page": 136,
+      "pdf_page": 138,
+      "content_sha256": "e80f5b7e8b4cd4c13b697936295bc9bfc9f78831e562362db4c6c2516fbc5ca7"
+    },
+    {
+      "id": "PCI2016.COM_ARTE.4.01",
+      "competency_id": "COM_ARTE",
+      "age": 4,
+      "official_order": 1,
+      "text": "Explora por iniciativa propia diversos materiales de acuerdo con sus necesidades e intereses. Descubre los efectos que se producen al combinar un material con otro.",
+      "printed_page": 137,
+      "pdf_page": 139,
+      "content_sha256": "9f799c6cca85ff1547120920282fe00315e3dac4342b4e582157d720551c5fef"
+    },
+    {
+      "id": "PCI2016.COM_ARTE.4.02",
+      "competency_id": "COM_ARTE",
+      "age": 4,
+      "official_order": 2,
+      "text": "Representa ideas acerca de sus vivencias personales usando diferentes lenguajes artísticos (el dibujo, la pintura, la danza o el movimiento, el teatro, la música, los títeres, etc.).",
+      "printed_page": 137,
+      "pdf_page": 139,
+      "content_sha256": "56ad9951e3d18408cef89dfa065a55fd1c6161cf1daacd50dbda73179fe5dcad"
+    },
+    {
+      "id": "PCI2016.COM_ARTE.4.03",
+      "competency_id": "COM_ARTE",
+      "age": 4,
+      "official_order": 3,
+      "text": "Muestra y comenta de forma espontánea a compañeros y adultos de su entorno, lo que ha realizado, al jugar y crear proyectos a través de los lenguajes artísticos.",
+      "printed_page": 137,
+      "pdf_page": 139,
+      "content_sha256": "63f73cf989aef291ba51bce6d55615c6368944d5a7275fcf245c2e96149547af"
+    },
+    {
+      "id": "PCI2016.COM_ARTE.5.01",
+      "competency_id": "COM_ARTE",
+      "age": 5,
+      "official_order": 1,
+      "text": "Explora de manera individual y/o grupal diversos materiales de acuerdo con sus necesidades e intereses. Descubre los efectos que se producen al combinar un material con otro.",
+      "printed_page": 137,
+      "pdf_page": 139,
+      "content_sha256": "0836c29cf6e6b8d56319591d04e55b95eeb878f84cf2a4a9df9b083726912509"
+    },
+    {
+      "id": "PCI2016.COM_ARTE.5.02",
+      "competency_id": "COM_ARTE",
+      "age": 5,
+      "official_order": 2,
+      "text": "Representa ideas acerca de sus vivencias personales y del contexto en el que se desenvuelve usando diferentes lenguajes artísticos (el dibujo, la pintura, la danza o el movimiento, el teatro, la música, los títeres, etc.).",
+      "printed_page": 137,
+      "pdf_page": 139,
+      "content_sha256": "f9a3d6f4d5ae0d747b042e3386d6e4e4bdd57e0c171989cc8324c01f7ed16b00"
+    },
+    {
+      "id": "PCI2016.COM_ARTE.5.03",
+      "competency_id": "COM_ARTE",
+      "age": 5,
+      "official_order": 3,
+      "text": "Muestra sus creaciones y observa las creaciones de otros. Describe lo que ha creado. A solicitud de la docente, manifiesta lo que le gusta de la experiencia, o de su proyecto y del proyecto de otros.",
+      "printed_page": 137,
+      "pdf_page": 139,
+      "content_sha256": "df160aca2f39160f69362cfc6ba57cb716c2f102735a2685a85091bbf65cc9c4"
+    },
+    {
+      "id": "PCI2016.MAT_CANTIDAD.3.01",
+      "competency_id": "MAT_CANTIDAD",
+      "age": 3,
+      "official_order": 1,
+      "text": "Establece relaciones entre los objetos de su entorno según sus características perceptuales al comparar y agrupar aquellos objetos similares que le sirven para algún fin, y dejar algunos elementos sueltos.",
+      "printed_page": 174,
+      "pdf_page": 176,
+      "content_sha256": "c7d28c387d878db552c4098f35052568fc9d551ab9b914e3900b42c449c724c1"
+    },
+    {
+      "id": "PCI2016.MAT_CANTIDAD.3.02",
+      "competency_id": "MAT_CANTIDAD",
+      "age": 3,
+      "official_order": 2,
+      "text": "Usa algunas expresiones que muestran su comprensión acerca de la cantidad, peso y el tiempo –“muchos”, “pocos”, “pesa mucho”, “pesa poco”, “un ratito”– en situaciones cotidianas.",
+      "printed_page": 174,
+      "pdf_page": 176,
+      "content_sha256": "5a2c024fe62ec295a77ce21d9236b626c7d7f852338ddf763e6ceb67ea69f432"
+    },
+    {
+      "id": "PCI2016.MAT_CANTIDAD.3.03",
+      "competency_id": "MAT_CANTIDAD",
+      "age": 3,
+      "official_order": 3,
+      "text": "Utiliza el conteo espontáneo en situaciones cotidianas siguiendo un orden no convencional respecto de la serie numérica.",
+      "printed_page": 174,
+      "pdf_page": 176,
+      "content_sha256": "c9717090832634d62c886fa5389a1caa38f7f442200cfe1fbd9382f057a9c272"
+    },
+    {
+      "id": "PCI2016.MAT_CANTIDAD.4.01",
+      "competency_id": "MAT_CANTIDAD",
+      "age": 4,
+      "official_order": 1,
+      "text": "Establece relaciones entre los objetos de su entorno según sus características perceptuales al comparar y agrupar aquellos objetos similares que le sirven para algún fin, y dejar algunos elementos sueltos.",
+      "printed_page": 175,
+      "pdf_page": 177,
+      "content_sha256": "c7d28c387d878db552c4098f35052568fc9d551ab9b914e3900b42c449c724c1"
+    },
+    {
+      "id": "PCI2016.MAT_CANTIDAD.4.02",
+      "competency_id": "MAT_CANTIDAD",
+      "age": 4,
+      "official_order": 2,
+      "text": "Realiza seriaciones por tamaño de hasta tres objetos.",
+      "printed_page": 175,
+      "pdf_page": 177,
+      "content_sha256": "9cb6ed3737a2309b23c79cc4ea7da187ecfb095690a3f064dcc13bd17377baaf"
+    },
+    {
+      "id": "PCI2016.MAT_CANTIDAD.4.03",
+      "competency_id": "MAT_CANTIDAD",
+      "age": 4,
+      "official_order": 3,
+      "text": "Establece correspondencia uno a uno en situaciones cotidianas.",
+      "printed_page": 175,
+      "pdf_page": 177,
+      "content_sha256": "6a8af280c88d6decd788f3b91c5f8bde46dd0ca79211761b47394040605df5e3"
+    },
+    {
+      "id": "PCI2016.MAT_CANTIDAD.4.04",
+      "competency_id": "MAT_CANTIDAD",
+      "age": 4,
+      "official_order": 4,
+      "text": "Usa algunas expresiones que muestran su comprensión acerca de la cantidad, el tiempo y el peso –“muchos”, “pocos”, “pesa mucho”, “pesa poco”, “antes” o “después”– en situaciones cotidianas.",
+      "printed_page": 175,
+      "pdf_page": 177,
+      "content_sha256": "c17395e818de6c8a66f1e7b0a77c76328d54f2bb3f00a4019145178db30107a6"
+    },
+    {
+      "id": "PCI2016.MAT_CANTIDAD.4.05",
+      "competency_id": "MAT_CANTIDAD",
+      "age": 4,
+      "official_order": 5,
+      "text": "Utiliza el conteo hasta 5, en situaciones cotidianas en las que requiere contar, empleando material concreto o su propio cuerpo.",
+      "printed_page": 175,
+      "pdf_page": 177,
+      "content_sha256": "1bf6306b3e33e293f5cb734e7b7620f520ae2a455d2e7873dce407f39e50874f"
+    },
+    {
+      "id": "PCI2016.MAT_CANTIDAD.4.06",
+      "competency_id": "MAT_CANTIDAD",
+      "age": 4,
+      "official_order": 6,
+      "text": "Utiliza los números ordinales “primero”, “segundo” y “tercero” para establecer la posición de un objeto o persona en situaciones cotidianas, empleando, en algunos casos, materiales concreto.",
+      "printed_page": 175,
+      "pdf_page": 177,
+      "content_sha256": "7300ee128092d49250dea45ce7f658640848bb6570a908fbecb66d2f6ede0f5e"
+    },
+    {
+      "id": "PCI2016.MAT_CANTIDAD.5.01",
+      "competency_id": "MAT_CANTIDAD",
+      "age": 5,
+      "official_order": 1,
+      "text": "Establece relaciones entre los objetos de su entorno según sus características perceptuales al comparar y agrupar, y dejar algunos elementos sueltos. El niño dice el criterio que usó para agrupar.",
+      "printed_page": 175,
+      "pdf_page": 177,
+      "content_sha256": "df2bfd0794e4ddd7fe590ccdb77df3dd3460062954efc4f492ae7386113e6a74"
+    },
+    {
+      "id": "PCI2016.MAT_CANTIDAD.5.02",
+      "competency_id": "MAT_CANTIDAD",
+      "age": 5,
+      "official_order": 2,
+      "text": "Realiza seriaciones por tamaño, longitud y grosor hasta con cinco objetos.",
+      "printed_page": 175,
+      "pdf_page": 177,
+      "content_sha256": "4d603f0754c09bf09157e8fd12cc4c09ba12ddf82f99b5c650aeb00b1b6ca36b"
+    },
+    {
+      "id": "PCI2016.MAT_CANTIDAD.5.03",
+      "competency_id": "MAT_CANTIDAD",
+      "age": 5,
+      "official_order": 3,
+      "text": "Establece correspondencia uno a uno en situaciones cotidianas.",
+      "printed_page": 175,
+      "pdf_page": 177,
+      "content_sha256": "6a8af280c88d6decd788f3b91c5f8bde46dd0ca79211761b47394040605df5e3"
+    },
+    {
+      "id": "PCI2016.MAT_CANTIDAD.5.04",
+      "competency_id": "MAT_CANTIDAD",
+      "age": 5,
+      "official_order": 4,
+      "text": "Usa diversas expresiones que muestran su comprensión sobre la cantidad, el peso y el tiempo –“muchos”, “pocos”, “ninguno”, “más que”, “menos que”, “pesa más”, “pesa menos”, “ayer”, “hoy” y “mañana”–, en situaciones cotidianas.",
+      "printed_page": 175,
+      "pdf_page": 177,
+      "content_sha256": "ce496547e9c94b5283c5b5abc031d459841dd3ad85efa4c79d1df984ef37bcb5"
+    },
+    {
+      "id": "PCI2016.MAT_CANTIDAD.5.05",
+      "competency_id": "MAT_CANTIDAD",
+      "age": 5,
+      "official_order": 5,
+      "text": "Utiliza el conteo hasta 10, en situaciones cotidianas en las que requiere contar, empleando material concreto o su propio cuerpo.",
+      "printed_page": 175,
+      "pdf_page": 177,
+      "content_sha256": "7a86bccdde6c0ebc6939ad8f3d41868221dd542288581b450c20ef30abc39a67"
+    },
+    {
+      "id": "PCI2016.MAT_CANTIDAD.5.06",
+      "competency_id": "MAT_CANTIDAD",
+      "age": 5,
+      "official_order": 6,
+      "text": "Utiliza los números ordinales “primero”, “segundo”, “tercero”, “cuarto” y “quinto” para establecer el lugar o posición de un objeto o persona, empleando material concreto o su propio cuerpo.",
+      "printed_page": 175,
+      "pdf_page": 177,
+      "content_sha256": "0829a9e0ba37ce39c950dfd97824b1bb62ce05edc3958e8de488b7d3fe9bc83e"
+    },
+    {
+      "id": "PCI2016.MAT_CANTIDAD.5.07",
+      "competency_id": "MAT_CANTIDAD",
+      "age": 5,
+      "official_order": 7,
+      "text": "Utiliza el conteo en situaciones cotidianas en las que requiere juntar, agregar o quitar hasta cinco objetos.",
+      "printed_page": 175,
+      "pdf_page": 177,
+      "content_sha256": "0980766866b389c9a962c1c8da05a5c21ee5a3d2ba2a65ba1eaf6bae5bc0cc2f"
+    },
+    {
+      "id": "PCI2016.MAT_FORMA.3.01",
+      "competency_id": "MAT_FORMA",
+      "age": 3,
+      "official_order": 1,
+      "text": "Establece relaciones de medida en situaciones cotidianas. Expresa con su cuerpo o mediante algunas acciones cuando algo es grande o pequeño.",
+      "printed_page": 180,
+      "pdf_page": 182,
+      "content_sha256": "833e3451674543df4ce536b0a60a883e85b71be3630fbd7d0fbcea854c1aa2e4"
+    },
+    {
+      "id": "PCI2016.MAT_FORMA.3.02",
+      "competency_id": "MAT_FORMA",
+      "age": 3,
+      "official_order": 2,
+      "text": "Se ubica a sí mismo y ubica objetos en el espacio en el que se encuentra; a partir de ello, organiza sus movimientos y acciones para desplazarse. Utiliza expresiones como “arriba”, “abajo”, “dentro” y “fuera”, que muestran las relaciones que establece entre su cuerpo, el espacio y los objetos que hay en el entorno.",
+      "printed_page": 180,
+      "pdf_page": 182,
+      "content_sha256": "c531944b3a775a2c3ce58add77e34a0671cdde52b68f93f40daad0e698343409"
+    },
+    {
+      "id": "PCI2016.MAT_FORMA.3.03",
+      "competency_id": "MAT_FORMA",
+      "age": 3,
+      "official_order": 3,
+      "text": "Prueba diferentes formas de resolver una determinada situación relacionada con la ubicación, desplazamiento en el espacio y la construcción de objetos con material concreto.",
+      "printed_page": 180,
+      "pdf_page": 182,
+      "content_sha256": "b0fbf4b90384e297dcd8ad7e1f7e32a44d289c00b7af3ec8b9b24f8ab20f9172"
+    },
+    {
+      "id": "PCI2016.MAT_FORMA.4.01",
+      "competency_id": "MAT_FORMA",
+      "age": 4,
+      "official_order": 1,
+      "text": "Establece relaciones entre las formas de los objetos que están en su entorno.",
+      "printed_page": 181,
+      "pdf_page": 183,
+      "content_sha256": "693d6755b2ce0288a99c8efd6bbea593509b9903d770f740792d3f23bd53e44b"
+    },
+    {
+      "id": "PCI2016.MAT_FORMA.4.02",
+      "competency_id": "MAT_FORMA",
+      "age": 4,
+      "official_order": 2,
+      "text": "Establece relaciones de medida en situaciones cotidianas. Expresa con su cuerpo o mediante algunas palabras cuando algo es grande o pequeño.",
+      "printed_page": 181,
+      "pdf_page": 183,
+      "content_sha256": "ac52b7d26c6ae86ea78e8294155d6ce24bd5523497d23d0766b4159efce7d9f0"
+    },
+    {
+      "id": "PCI2016.MAT_FORMA.4.03",
+      "competency_id": "MAT_FORMA",
+      "age": 4,
+      "official_order": 3,
+      "text": "Se ubica a sí mismo y ubica objetos en el espacio en el que se encuentra; a partir de ello, organiza sus movimientos y acciones para desplazarse. Utiliza expresiones como “arriba”, “abajo”, “dentro”, “fuera”, “delante de”, “detrás de”, “encima”, “debajo”, “hacia adelante” y “hacia atrás”, que muestran las relaciones que establece entre su cuerpo, el espacio y los objetos que hay en el entorno.",
+      "printed_page": 181,
+      "pdf_page": 183,
+      "content_sha256": "b2621ee18c805fffe5b81aae213ef2271a8179723cf2e0fd19688b79b1602ff9"
+    },
+    {
+      "id": "PCI2016.MAT_FORMA.4.04",
+      "competency_id": "MAT_FORMA",
+      "age": 4,
+      "official_order": 4,
+      "text": "Expresa con material concreto y dibujos sus vivencias, en los que muestra relaciones espaciales entre personas y objetos.",
+      "printed_page": 181,
+      "pdf_page": 183,
+      "content_sha256": "17715d9874cf7081cb2feda87cacd2d0afd541f9a3abeaafc04d4e64f9b9c779"
+    },
+    {
+      "id": "PCI2016.MAT_FORMA.4.05",
+      "competency_id": "MAT_FORMA",
+      "age": 4,
+      "official_order": 5,
+      "text": "Prueba diferentes formas de resolver una determinada situación relacionada con la ubicación, desplazamiento en el espacio y la construcción de objetos con material concreto, y elige una para lograr su propósito.",
+      "printed_page": 181,
+      "pdf_page": 183,
+      "content_sha256": "ed84174c092a47d6f400510c77b1e9acccef4ac80570a421754416959ef61a1e"
+    },
+    {
+      "id": "PCI2016.MAT_FORMA.5.01",
+      "competency_id": "MAT_FORMA",
+      "age": 5,
+      "official_order": 1,
+      "text": "Establece relaciones, entre las formas de los objetos que están en su entorno y las formas geométricas que conoce, utilizando material concreto.",
+      "printed_page": 181,
+      "pdf_page": 183,
+      "content_sha256": "12abd7c76c3e88f8058b781a519cd974d01b27ec60f789d6049ffd9acd259447"
+    },
+    {
+      "id": "PCI2016.MAT_FORMA.5.02",
+      "competency_id": "MAT_FORMA",
+      "age": 5,
+      "official_order": 2,
+      "text": "Establece relaciones de medida en situaciones cotidianas y usa expresiones como “es más largo”, “es más corto”.",
+      "printed_page": 181,
+      "pdf_page": 183,
+      "content_sha256": "29802b7269db33baf39071f4511009d8bc2d80034f259fa79f61d7b9fa96b348"
+    },
+    {
+      "id": "PCI2016.MAT_FORMA.5.03",
+      "competency_id": "MAT_FORMA",
+      "age": 5,
+      "official_order": 3,
+      "text": "Se ubica a sí mismo y ubica objetos en el espacio en el que se encuentra; a partir de ello, organiza sus movimientos y acciones para desplazarse. Establece relaciones espaciales al orientar sus movimientos y acciones al desplazarse, ubicarse y ubicar objetos en situaciones cotidianas. Las expresa con su cuerpo o algunas palabras –como “cerca de” “lejos de”, “al lado de”; “hacia adelante” “hacia atrás”, “hacia un lado”, “hacia el otro lado”– que muestran las relaciones que establece entre su cuerpo, el espacio y los objetos que hay en el entorno.",
+      "printed_page": 181,
+      "pdf_page": 183,
+      "content_sha256": "f5073b4411d60a5dd14aa36250fa04ce85b838f654cae265f6750dfea5554bab"
+    },
+    {
+      "id": "PCI2016.MAT_FORMA.5.04",
+      "competency_id": "MAT_FORMA",
+      "age": 5,
+      "official_order": 4,
+      "text": "Expresa con material concreto y dibujos sus vivencias, en los que muestra relaciones espaciales y de medida entre personas y objetos.",
+      "printed_page": 181,
+      "pdf_page": 183,
+      "content_sha256": "ef4d2667e7c47ff669ca2992818146a065ee7d2afc791003a96ec2b42a88c1ce"
+    },
+    {
+      "id": "PCI2016.MAT_FORMA.5.05",
+      "competency_id": "MAT_FORMA",
+      "age": 5,
+      "official_order": 5,
+      "text": "Prueba diferentes formas de resolver una determinada situación relacionada con la ubicación, desplazamiento en el espacio y la construcción de objetos con material concreto. Elige una manera para lograr su propósito y dice por qué la usó.",
+      "printed_page": 181,
+      "pdf_page": 183,
+      "content_sha256": "039862442c4a0b39b7e43de9037e8b8505c09ebb7f738d9b1721f384afc1fab8"
+    },
+    {
+      "id": "PCI2016.CYT_INDAGA.3.01",
+      "competency_id": "CYT_INDAGA",
+      "age": 3,
+      "official_order": 1,
+      "text": "Hace preguntas que expresan su curiosidad sobre los objetos, seres vivos, hechos o fenómenos que acontecen en su ambiente.",
+      "printed_page": 190,
+      "pdf_page": 192,
+      "content_sha256": "5861d1a23f2a0842af3454245182f2f58a66058f85a4d88aa890b56919787380"
+    },
+    {
+      "id": "PCI2016.CYT_INDAGA.3.02",
+      "competency_id": "CYT_INDAGA",
+      "age": 3,
+      "official_order": 2,
+      "text": "Obtiene información sobre las características de los objetos y materiales que explora a través de sus sentidos. Usa algunos objetos y herramientas en su exploración.",
+      "printed_page": 190,
+      "pdf_page": 192,
+      "content_sha256": "f8c0eb4f250bb287f4743728388aa43eaa37a361c0047ed3db04e2f1d788f7f6"
+    },
+    {
+      "id": "PCI2016.CYT_INDAGA.3.03",
+      "competency_id": "CYT_INDAGA",
+      "age": 3,
+      "official_order": 3,
+      "text": "Comunica los descubrimientos que hace cuando explora. Utiliza gestos o señas, movimientos corporales o lo hace oralmente.",
+      "printed_page": 190,
+      "pdf_page": 192,
+      "content_sha256": "a4388660f3f387e7441524a9f0ef90d1dd57f584a0b1e830c53392a366d106fc"
+    },
+    {
+      "id": "PCI2016.CYT_INDAGA.4.01",
+      "competency_id": "CYT_INDAGA",
+      "age": 4,
+      "official_order": 1,
+      "text": "Hace preguntas que expresan su curiosidad sobre los objetos, seres vivos, hechos o fenómenos que acontecen en su ambiente; y, al responder, da a conocer lo que sabe acerca de ellos.",
+      "printed_page": 191,
+      "pdf_page": 193,
+      "content_sha256": "70a7203e1be5158c3abfe6ee2d98726714f59051f82d2e4d73d8ed6f0f049e33"
+    },
+    {
+      "id": "PCI2016.CYT_INDAGA.4.02",
+      "competency_id": "CYT_INDAGA",
+      "age": 4,
+      "official_order": 2,
+      "text": "Propone acciones, y el uso de materiales e instrumentos para buscar información del objeto, ser vivo o hecho de interés que le genera interrogantes.",
+      "printed_page": 191,
+      "pdf_page": 193,
+      "content_sha256": "bdbe920d7946418aefed3613e52bf026ad061c1bfb79aeda2bb9a06b3726e48b"
+    },
+    {
+      "id": "PCI2016.CYT_INDAGA.4.03",
+      "competency_id": "CYT_INDAGA",
+      "age": 4,
+      "official_order": 3,
+      "text": "Obtiene información sobre las características de los objetos, seres vivos o fenómenos naturales que observa y/o explora, y establece relaciones entre ellos. Registra la información de diferentes formas (dibujos, fotos, modelados).",
+      "printed_page": 191,
+      "pdf_page": 193,
+      "content_sha256": "a45b78fcbf99e04984400331756d7a4dfe8fc18a63366319aef457e7941b1ce3"
+    },
+    {
+      "id": "PCI2016.CYT_INDAGA.4.04",
+      "competency_id": "CYT_INDAGA",
+      "age": 4,
+      "official_order": 4,
+      "text": "Compara su respuesta inicial con respecto al objeto, ser vivo o hecho de interés, con la información obtenida posteriormente.",
+      "printed_page": 191,
+      "pdf_page": 193,
+      "content_sha256": "640266c6ebce0aa8c4f2d8626cc038732e24b7bc88a9a58d9fcf579efa73d96a"
+    },
+    {
+      "id": "PCI2016.CYT_INDAGA.4.05",
+      "competency_id": "CYT_INDAGA",
+      "age": 4,
+      "official_order": 5,
+      "text": "Comunica las acciones que realizó para obtener información y comparte sus resultados. Utiliza sus registros (dibujos, fotos u otras formas de representación, como el modelado) o lo hace verbalmente.",
+      "printed_page": 191,
+      "pdf_page": 193,
+      "content_sha256": "a6e8320b78fcdca31da75f44f1a8cd667c32891e23a7ad246bf301c407e9da5f"
+    },
+    {
+      "id": "PCI2016.CYT_INDAGA.5.01",
+      "competency_id": "CYT_INDAGA",
+      "age": 5,
+      "official_order": 1,
+      "text": "Hace preguntas que expresan su curiosidad sobre los objetos, seres vivos, hechos o fenómenos que acontecen en su ambiente; da a conocer lo que sabe y las ideas que tiene acerca de ellos. Plantea posibles explicaciones y/o alternativas de solución frente a una pregunta o situación problemática.",
+      "printed_page": 191,
+      "pdf_page": 193,
+      "content_sha256": "95f29d711b58d70ae571efb1e36a6ae32a4059faef6464cdea8288bf0306f902"
+    },
+    {
+      "id": "PCI2016.CYT_INDAGA.5.02",
+      "competency_id": "CYT_INDAGA",
+      "age": 5,
+      "official_order": 2,
+      "text": "Propone acciones, y el uso de materiales e instrumentos para buscar información del objeto, ser vivo o hecho de interés que genera interrogantes, o para resolver un problema planteado.",
+      "printed_page": 191,
+      "pdf_page": 193,
+      "content_sha256": "44e106b68166dc31b68ea310e3c774d7e67b832243ecfb4edf2ad4096cee5d19"
+    },
+    {
+      "id": "PCI2016.CYT_INDAGA.5.03",
+      "competency_id": "CYT_INDAGA",
+      "age": 5,
+      "official_order": 3,
+      "text": "Obtiene información sobre las características de los objetos, seres vivos, hechos y fenómenos de la naturaleza, y establece relaciones entre ellos a través de la observación, experimentación y otras fuentes proporcionadas (libros, noticias, videos, imágenes, entrevistas). Describe sus características, necesidades, funciones, relaciones o cambios en su apariencia física. Registra la información de diferentes formas (con fotos, dibujos, modelado o de acuerdo con su nivel de escritura).",
+      "printed_page": 191,
+      "pdf_page": 193,
+      "content_sha256": "fe0f4c614273500a5396aa3bdd1701bab014ff03947d1c1f8d376f6429b79aa6"
+    },
+    {
+      "id": "PCI2016.CYT_INDAGA.5.04",
+      "competency_id": "CYT_INDAGA",
+      "age": 5,
+      "official_order": 4,
+      "text": "Compara sus explicaciones y predicciones con los datos e información que ha obtenido, y participa en la construcción de las conclusiones.",
+      "printed_page": 191,
+      "pdf_page": 193,
+      "content_sha256": "4853c504607eb4132cab5431aa9d78b9ef0315ad57bce0ebb638999cfd9077a7"
+    },
+    {
+      "id": "PCI2016.CYT_INDAGA.5.05",
+      "competency_id": "CYT_INDAGA",
+      "age": 5,
+      "official_order": 5,
+      "text": "Comunica –de manera verbal, a través de dibujos, fotos, modelado o según su nivel de escritura– las acciones que realizó para obtener información. Comparte sus resultados y lo que aprendió.",
+      "printed_page": 191,
+      "pdf_page": 193,
+      "content_sha256": "b7fa1f4e88862c99e90b7ac065b1f3f7289d7c6e8f46a9e1192ea59b9a7489a4"
+    },
+    {
+      "id": "PCI2016.COM_ESCRITURA.4.01",
+      "competency_id": "COM_ESCRITURA",
+      "age": 4,
+      "official_order": 1,
+      "text": "Escribe por propia iniciativa y a su manera sobre lo que le interesa. Utiliza trazos, grafismos u otras formas para expresar sus ideas y emociones a través de una nota, para relatar una vivencia o un cuento.",
+      "printed_page": 131,
+      "pdf_page": 133,
+      "content_sha256": "a1d3af6729d321682c01f27cf202e748f45b377270912158da4bb11739b4d08e"
+    },
+    {
+      "id": "PCI2016.COM_ESCRITURA.5.01",
+      "competency_id": "COM_ESCRITURA",
+      "age": 5,
+      "official_order": 1,
+      "text": "Escribe por propia iniciativa y a su manera sobre lo que le interesa: considera a quién le escribirán y para qué lo escribirá; utiliza trazos, grafismos, letras ordenadas de izquierda a derecha y sobre una línea imaginaria para expresar sus ideas o emociones en torno a un tema a través de una nota o carta, para relatar una vivencia o un cuento.",
+      "printed_page": 131,
+      "pdf_page": 133,
+      "content_sha256": "615e0fbe709ecc075c5c15beb248af7639fb0e7bbb29bcfb885eed02058b77c3"
+    },
+    {
+      "id": "PCI2016.COM_ESCRITURA.5.02",
+      "competency_id": "COM_ESCRITURA",
+      "age": 5,
+      "official_order": 2,
+      "text": "Revisa el escrito que ha dictado, en función de lo que quiere comunicar.",
+      "printed_page": 131,
+      "pdf_page": 133,
+      "content_sha256": "064c7a89942260595545f42107e8d03486afb831f6ca1ac3db026f623209fe8f"
+    },
+    {
+      "id": "PCI2016.CAST_L2_ORAL.5.01",
+      "competency_id": "CAST_L2_ORAL",
+      "age": 5,
+      "official_order": 1,
+      "text": "Recupera información explícita (algunos hechos y lugares, el nombre de personas y personajes) de un texto oral donde predominan palabras de uso frecuente (IE, familia y comunidad) y son expresados con apoyo de gestos, expresiones corporales y tono de voz del interlocutor.",
+      "printed_page": 146,
+      "pdf_page": 148,
+      "content_sha256": "cfff0a81c7fecbbc3d657c84026fc4d6ac2ebed34f704eaa8c3fea86dd44bea2"
+    },
+    {
+      "id": "PCI2016.CAST_L2_ORAL.5.02",
+      "competency_id": "CAST_L2_ORAL",
+      "age": 5,
+      "official_order": 2,
+      "text": "Responde a un interlocutor (compañero de clases o docente) utilizando palabras y frases de su lengua materna.",
+      "printed_page": 146,
+      "pdf_page": 148,
+      "content_sha256": "90011a801ac838dcadc1bfe0051b03dac190e66ec6c9dd6b22b13e7d5c70003a"
+    },
+    {
+      "id": "PCI2016.TRANS_TIC.5.01",
+      "competency_id": "TRANS_TIC",
+      "age": 5,
+      "official_order": 1,
+      "text": "Explora, con el acompañamiento del docente, entornos virtuales y dispositivos tecnológicos, como grabador de sonido o de video, cámara fotográfica, radio, computadora o tablet, y reconoce algunas funciones básicas para su uso y cuidado.",
+      "printed_page": 204,
+      "pdf_page": 206,
+      "content_sha256": "d7d86e3b3d365913f9fb00664833c279de5a21f6265afb5050a9eccc089d7454"
+    },
+    {
+      "id": "PCI2016.TRANS_TIC.5.02",
+      "competency_id": "TRANS_TIC",
+      "age": 5,
+      "official_order": 2,
+      "text": "Produce imágenes, audio o videos para comunicar ideas, hallazgos, afectos o registrar un acontecimiento utilizando dispositivos y herramientas tecnológicas.",
+      "printed_page": 204,
+      "pdf_page": 206,
+      "content_sha256": "85ae8a95979ff8d40c1edf40404fd4b62b647865319a2221b233e99016c59941"
+    },
+    {
+      "id": "PCI2016.TRANS_AUTONOMO.5.01",
+      "competency_id": "TRANS_AUTONOMO",
+      "age": 5,
+      "official_order": 1,
+      "text": "Reflexiona, con ayuda del docente, sobre aquello que necesita hacer para realizar una “tarea” de interés –a nivel individual o grupal– tomando en cuenta sus experiencias y saberes previos al respecto.",
+      "printed_page": 210,
+      "pdf_page": 212,
+      "content_sha256": "f20d6284300fd311a2d1b102f3ee9a2997d849dff9e33caff8018908739bc7fd"
+    },
+    {
+      "id": "PCI2016.TRANS_AUTONOMO.5.02",
+      "competency_id": "TRANS_AUTONOMO",
+      "age": 5,
+      "official_order": 2,
+      "text": "Plantea, con ayuda del docente, una estrategia o acciones a realizar para poder alcanzar la “tarea” propuesta.",
+      "printed_page": 210,
+      "pdf_page": 212,
+      "content_sha256": "7c87414b6a64baef8c77c2f05a04d7593dfd3dee312b2bcbca5b6cbdf2fde7de"
+    },
+    {
+      "id": "PCI2016.TRANS_AUTONOMO.5.03",
+      "competency_id": "TRANS_AUTONOMO",
+      "age": 5,
+      "official_order": 3,
+      "text": "Revisa su actuar con relación a las estrategias que aplica para realizar la “tarea” y explica, con ayuda del adulto, las acciones que realizó para lograrla y las dificultades que tuvo (si las hubo), o los cambios en su estrategia. Comunica lo que aprendió y muestra interés por aplicar lo aprendido.",
+      "printed_page": 210,
+      "pdf_page": 212,
+      "content_sha256": "6886d1194c2c380b165303e39a5e64fac4b51f47bfc8851704d308acaf30f580"
+    }
+  ]
+}

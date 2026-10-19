@@ -1,5 +1,7 @@
+import { routeObservationCriteria } from "./activity-observation-plan.mjs";
+import { ageReference, compactPlanningTable } from "./pedagogical-word-presentation.mjs";
 import path from "node:path";
-import { insertCoverQuickView, removePageBreakAfterTable, removeParagraphsContaining, renderUnifiedWord, replaceWordText, xmlEscape } from "./unified-word-template.mjs";
+import { compactTeacherCover, insertCoverQuickView, removePageBreakAfterTable, removeParagraphsContaining, renderUnifiedWord, replaceWordText, xmlEscape } from "./unified-word-template.mjs";
 
 const templateUrl = path.join(process.cwd(), "assets/templates/proyecto-unidad-inicial-unificada-v1.docx");
 const clean = (value) => typeof value === "string" ? value.trim() : "";
@@ -50,7 +52,7 @@ function valuesFor(document, cards) {
   const selected = [...new Set([...primary, ...secondary])];
   const title = document.subtype === "project" ? "PROYECTO" : "UNIDAD";
   const capacity = (card) => list(card?.capacities?.map((item) => item.official_name));
-  const focus = (card) => clean(card?.ages?.[String(document.age)]?.ai_focus);
+  const focus = (card, context) => ageReference(card,document.age,context);
   const competencyRows = selected.map((id) => {
     const card = byId.get(id);
     if (!card) throw new Error(`Competencia no disponible en la plantilla: ${id}.`);
@@ -58,7 +60,7 @@ function valuesFor(document, cards) {
     const generalCriterion = content.dependents?.general_criteria?.find((item) => item.competency_id === id);
     return { AREA: clean(card.area_name), COMPETENCIA: clean(card.name), CAPACIDADES: capacity(card),
       DESEMPENO_REFERENTE: modern && card?.ages?.[String(document.age)]?.status !== "specified"
-        ? "Sin desempeño específico para esta edad; se considera el estándar del ciclo." : focus(card) || "Referente por revisar con la docente",
+        ? "Sin desempeño específico para esta edad; se considera el estándar del ciclo." : focus(card,generalCriterion?.official_performance_refs) || "Referente por revisar con la docente",
       CRITERIOS: clean(generalCriterion?.criterion) || list(activities.map((item) => item.evaluation_criterion)) || "Se definirá al desarrollar las actividades.",
       EVIDENCIAS: list(generalCriterion?.expected_evidence) || list(activities.map((item) => item.expected_evidence)) || "Se precisará en las actividades." };
   });
@@ -75,26 +77,26 @@ function valuesFor(document, cards) {
     FECHA_INICIO: dateLabel(document.starts_on), FECHA_FIN: dateLabel(document.ends_on),
     DURACION_REFERENCIAL: modern ? durationWeeks(document.starts_on, document.ends_on) : "Ajustable según el grupo", INSTITUCION_EDUCATIVA: clean(document.institution_name) || "Institución educativa",
     EDAD_AULA: `${document.age || ""} años · ${clean(document.classroom)}`,
-    DOCENTE: clean(document.teacher_name) || "Docente del aula", UGEL: clean(document.ugel) || "Sin dato registrado",
+    DOCENTE: clean(document.teacher_name) || "Docente del aula", UGEL: clean(document.ugel),
     PRIORIDAD_ANUAL_O_PROYECTO_ORIGEN: document.origin === "planned" ? "Propuesta del plan anual" : clean(content.planning_reason),
-    FECHA_SIGNIFICATIVA: "Según el calendario del aula", ORIGEN_NECESIDAD_INTERES_PROBLEMA: clean(content.trigger_or_interest || content.learning_need_or_context || content.starting_point),
-    SITUACION_SIGNIFICATIVA: modern ? clean(content.project_master?.meaningful_situation) || [clean(content.formal_content?.situation), clean(content.formal_content?.foundation)].filter(Boolean).join(" ")
-      : clean(content.starting_point), RETO_PREGUNTA: clean(content.dependents?.guiding_questions?.[0] || content.possible_pathways?.[0]?.title || content.proposed_situations?.[0]?.title || content.title),
+    FECHA_SIGNIFICATIVA: clean(content.significant_date), ORIGEN_NECESIDAD_INTERES_PROBLEMA: clean(content.trigger_or_interest || content.learning_need_or_context || content.starting_point),
+    SITUACION_SIGNIFICATIVA: modern ? clean(content.project_master?.meaningful_situation) || [clean(content.formal_content?.situation)].filter(Boolean).join(" ")
+      : clean(content.starting_point), RETO_PREGUNTA: clean(content.project_master?.global_challenge || content.dependents?.guiding_questions?.join(" · ") || content.possible_pathways?.[0]?.title || content.proposed_situations?.[0]?.title || content.title),
     PRODUCTO_FINAL: modern ? clean(content.project_master?.closing_description) : "El resultado colectivo se acordará con los niños al iniciar la experiencia.",
     EVIDENCIAS_CLAVE: list(content.evidence_opportunities), PREPLAN_QUE: list(content.activity_route.map((item) => item.title)),
     PREPLAN_COMO: modern ? clean(content.formal_content?.methodology) || list(content.dependents?.journey?.map((item) => item.description)) : list((content.possible_pathways || content.proposed_situations)?.map((item) => item.possible_child_actions)),
     PREPLAN_RECURSOS: list(content.spaces_and_materials),
     NINOS_QUE: "", NINOS_COMO: "", NINOS_NECESITAN: "", PROPOSITO_GENERAL_EXPERIENCIA: content.purpose,
     AREA: "", COMPETENCIA: "", CAPACIDADES: "", DESEMPENO_REFERENTE: "", CRITERIOS: "", EVIDENCIAS: "",
-    ENFOQUES_TRANSVERSALES: "Se concretarán en las actividades según la situación vivida.",
-    ACTITUDES_OBSERVABLES: "Escuchar, participar y respetar formas diversas de expresión.",
-    APOYOS_DIVERSIDAD: clean(content.formal_content?.diversity_support) || list(content.adjustment_points) || "Ajustar materiales, tiempos y formas de participación según las necesidades observadas.",
-    PARTICIPACION_FAMILIA_COMUNIDAD: clean(content.formal_content?.family_collaboration) || list(content.family_or_community_links) || "Cuando resulte pertinente para el grupo.",
+    ENFOQUES_TRANSVERSALES: list(content.transversal_approaches),
+    ACTITUDES_OBSERVABLES: list(content.observable_attitudes),
+    APOYOS_DIVERSIDAD: clean(content.formal_content?.diversity_support) || list(content.adjustment_points),
+    PARTICIPACION_FAMILIA_COMUNIDAD: clean(content.formal_content?.family_collaboration) || list(content.family_or_community_links),
     ESTRATEGIA_RECOJO_EVIDENCIAS: clean(content.formal_content?.assessment_followup) || "Observar y registrar actuaciones durante el juego y las actividades.",
     INSTRUMENTOS_PROYECTO: "Notas de observación y evidencias registradas por la docente.",
     USO_EVIDENCIAS_PARA_AJUSTAR: "Revisar los registros para ajustar el acompañamiento docente, conservando la secuencia confirmada.",
     NRO_ACTIVIDAD: "", FECHA_ACTIVIDAD: "", TITULO_ACTIVIDAD: "", PROPOSITO_ESPECIFICO: "", COMPETENCIA_PRINCIPAL_ACTIVIDAD: "", CRITERIO_ACTIVIDAD: "", EVIDENCIA_ACTIVIDAD: "",
-    MATERIALES_RECURSOS_PROYECTO: list(content.spaces_and_materials), ORGANIZACION_ESPACIOS: clean(content.spaces_and_materials?.[0]) || "Según la actividad.",
+    MATERIALES_RECURSOS_PROYECTO: list(content.spaces_and_materials), ORGANIZACION_ESPACIOS: clean(content.organization_of_spaces) || "",
     HITOS_CALENDARIO: `${dateLabel(document.starts_on)} al ${dateLabel(document.ends_on)}`,
     AJUSTES_FLEXIBILIDAD: list(content.adjustment_points) || clean(content.flexibility_notes),
     CIERRE_SOCIALIZACION: clean(content.formal_content?.closing) || "Compartir lo realizado y conversar sobre lo aprendido, según decida el grupo.",
@@ -106,41 +108,43 @@ function valuesFor(document, cards) {
 
 /** Render the planning state only; actual evidence and reflections enter after implementation. */
 export async function renderLearningExperienceUnifiedWord(document, cards = [], { logo = null } = {}) {
-  const { values, competencyRows, routeRows } = valuesFor(document, cards);
+  const { values, competencyRows } = valuesFor(document, cards);
   const content = document.content ?? {};
   const origin = [
-    clean(content.project_master?.meaningful_situation) ? "" : block("De dónde parte", values.ORIGEN_NECESIDAD_INTERES_PROBLEMA),
-    block("Situación para empezar", values.SITUACION_SIGNIFICATIVA),
-    block("Pregunta que guía", values.RETO_PREGUNTA),
+    clean(content.project_master?.meaningful_situation) || values.ORIGEN_NECESIDAD_INTERES_PROBLEMA===values.SITUACION_SIGNIFICATIVA ? "" : block("De dónde parte", values.ORIGEN_NECESIDAD_INTERES_PROBLEMA),
+    paragraph("Situación para empezar",true)+paragraph(values.SITUACION_SIGNIFICATIVA),
+    paragraph("Fundamentación pedagógica",true)+paragraph(clean(content.project_master?.meaningful_situation)?clean(content.project_master?.foundation):clean(content.formal_content?.foundation)),
+    block("Preguntas que orientan el recorrido", content.dependents?.guiding_questions?.length ? content.dependents.guiding_questions : values.RETO_PREGUNTA),
     block("Resultado que se espera", values.PRODUCTO_FINAL),
-    block("Qué podríamos observar durante el proceso", content.evidence_opportunities),
+
   ].join("");
   const preplan = [
     block("Primeros pasos", (content.activity_route ?? []).slice(0, 3).map((item) => item.title)),
     (content.activity_route?.length ?? 0) > 3 ? paragraph(`La ruta completa tiene ${content.activity_route.length} actividades; se muestra más adelante.`) : "",
     block("Cómo acompañará la docente", values.PREPLAN_COMO),
-    block("Espacios y materiales", content.spaces_and_materials),
+    block("Materiales y recursos previstos", content.spaces_and_materials),
+    block("Acompañamiento y flexibilidad", values.AJUSTES_FLEXIBILIDAD),
+
   ].join("");
   const competencies = competencyRows.map((row) => [
     paragraph(row.COMPETENCIA, true),
     paragraph(row.AREA),
-    block("Capacidades", row.CAPACIDADES),
-    block("Referente para observar", row.DESEMPENO_REFERENTE),
+    block("Capacidades de la competencia como referencia", row.CAPACIDADES),
+    block("Referente para observar", row.DESEMPENO_REFERENTE.split("\n")),
     block("Criterio", row.CRITERIOS.split(/;\s*/).filter(Boolean)),
     block("Evidencia esperada", row.EVIDENCIAS.split(/;\s*/).filter(Boolean)),
   ].join("")).join("");
   const assessment = [
-    block("Qué observar y registrar", values.ESTRATEGIA_RECOJO_EVIDENCIAS),
+    block("Qué observar y registrar", "Usar los criterios y evidencias de la ruta. Registrar lo que cada niño hace o dice, con su fecha y el criterio correspondiente."),
     block("Dónde quedará registrado", values.INSTRUMENTOS_PROYECTO),
     block("Cómo acompañar los próximos encuentros", values.USO_EVIDENCIAS_PARA_AJUSTAR),
   ].join("");
-  const route = routeRows.map((row) => [
-    paragraph(`${row.NRO_ACTIVIDAD}. ${row.TITULO_ACTIVIDAD}${row.FECHA_ACTIVIDAD ? ` · ${row.FECHA_ACTIVIDAD}` : ""}`, true),
-    block("Qué se hará", row.PROPOSITO_ESPECIFICO),
-    block("Competencia", row.COMPETENCIA_PRINCIPAL_ACTIVIDAD),
-    block("Qué observar", row.CRITERIO_ACTIVIDAD),
-    block("Evidencia esperada", row.EVIDENCIA_ACTIVIDAD),
-  ].join("")).join("");
+  const byId = new Map(cards.map(card=>[card.id,card.name??card.official_name]));
+  const route = compactPlanningTable(["Actividad y fecha", "Propósito", "Criterios y evidencias"], content.activity_route.map(item=>[
+    `${item.number}. ${item.title}\n${dateLabel(item.date)}`,
+    item.specific_purpose,
+    routeObservationCriteria(item).map(criterion=>`${byId.get(criterion.competency_id)??criterion.competency_id}\n${criterion.criterion_text}\nEvidencia: ${criterion.expected_evidence}`).join("\n\n")
+  ]),[2600,2900,4500]);
   const overview = [
     ["Así podría empezar", (content.activity_route ?? []).slice(0, 3).map((item) => item.title).filter(Boolean).join(" · ")],
   ].filter(([, value]) => value);
@@ -150,14 +154,18 @@ export async function renderLearningExperienceUnifiedWord(document, cards = [], 
     output = replaceSectionBody(output, "II. ORIGEN Y SITUACIÓN SIGNIFICATIVA", "III. PREPLANIFICACIÓN DOCENTE", origin);
     output = replaceSectionBody(output, "III. PREPLANIFICACIÓN DOCENTE", "V. PROPÓSITO GENERAL", preplan);
     output = replaceSectionBody(output, "VI. PROPÓSITOS DE APRENDIZAJE Y EVALUACIÓN", "VII. ENFOQUES", competencies);
+    const transversal = block("Enfoques previstos", content.transversal_approaches) + block("Actitudes a acompañar",content.observable_attitudes) + block("Apoyos previstos",values.APOYOS_DIVERSIDAD) + block("Participación familiar acordada",values.PARTICIPACION_FAMILIA_COMUNIDAD);
+    output = transversal ? replaceSectionBody(output,"VII. ENFOQUES","VIII. ESTRATEGIA",transversal) : removeBetween(output,"VII. ENFOQUES","VIII. ESTRATEGIA");
     output = replaceSectionBody(output, "VIII. ESTRATEGIA GENERAL DE EVALUACIÓN", "IX. RUTA DE ACTIVIDADES", assessment);
     output = replaceSectionBody(output, "IX. RUTA DE ACTIVIDADES", "X. RECURSOS", route);
+    output = removeBetween(output,"X. RECURSOS");
     output = output.replace(/<w:tbl(?:\s[^>]*)?>[\s\S]*?<\/w:tbl>/g, (table) => xmlText(table).includes("Regla para Ayni:") ? "" : table);
     output = removeParagraphsContaining(output, ["Los campos {{...}}", "Una fila por competencia", "Fila repetible:", "Esta sección es el puente directo", "Anexos opcionales"]);
     output = output.replace(/<w:tr(?:\s[^>]*)?>[\s\S]*?<\/w:tr>/g, (row) =>
       ["Hitos o fechas del calendario", "Producto final / socialización"].some((label) => xmlText(row).includes(label)) ? "" : row);
+    output=output.replace(/<w:tr(?:\s[^>]*)?>[\s\S]*?<\/w:tr>/g,row=>["UGEL","FECHA_SIGNIFICATIVA","ORGANIZACION_ESPACIOS","PARTICIPACION_FAMILIA_COMUNIDAD","APOYOS_DIVERSIDAD"].some(key=>!values[key]&&xmlText(row).includes("{{"+key+"}}"))?"":row);
     output = removePageBreakAfterTable(output, "Materiales y recursos base");
-    let coverBreak = true;
+    let coverBreak = false;
     output = output.replace(/<w:p(?:\s[^>]*)?>[\s\S]*?<\/w:p>/g, (paragraph) => {
       if (!/<w:br\b[^>]*w:type="page"/.test(paragraph)) return paragraph;
       if (coverBreak) { coverBreak = false; return paragraph; }
@@ -170,6 +178,13 @@ export async function renderLearningExperienceUnifiedWord(document, cards = [], 
         VIII: "ESTRATEGIA GENERAL DE EVALUACIÓN", IX: "RUTA DE ACTIVIDADES", X: "RECURSOS" }[from];
       output = replaceWordText(output, `${from}. ${heading}`, `${to}. ${heading}`);
     }
-    return insertCoverQuickView(output, "El proyecto en una mirada", overview);
+    let section=0;
+    const numerals=["I","II","III","IV","V","VI","VII","VIII","IX","X"];
+    output=output.replace(/<w:p(?:\s[^>]*)?>[\s\S]*?<\/w:p>/g,part=>{
+      const title=xmlText(part);
+      if(!/^[IVX]+\. (?:DATOS GENERALES|ORIGEN|PREPLANIFICACIÓN|PROPÓSITO|ENFOQUES|ESTRATEGIA|RUTA)/.test(title))return part;
+      return replaceWordText(part,title,title.replace(/^[IVX]+/,numerals[section++]));
+    });
+    return compactTeacherCover(insertCoverQuickView(output, "El proyecto en una mirada", overview),document.title);
   } });
 }

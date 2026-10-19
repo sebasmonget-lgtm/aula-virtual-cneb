@@ -1,5 +1,18 @@
 # Memoria del proyecto Ayni Aula
 
+## 2026-10-19 — Cierre local del mapeo de desempeños por edad
+
+W-05 completado: catálogo aditivo versionado de 134 desempeños del PCI canónico (35/44/55 para 3/4/5 años), con páginas y hashes; comparación geométrica y pypdf independiente 134/134. KB/contextos reciben referencias; nuevos criterios generales y diarios seleccionan IDs validados por competencia/edad, la guía hereda por código y la confirmación conserva JSONB. Word cita los seleccionados y no reclasifica históricos. Una muestra real detectó mediación cortada: holgura de longitud e integridad de terminación en generación nueva, sin filtros generales. 155 regresiones, typecheck/lint/build PASS y doce páginas Word revisadas. Acumulado estimado USD 4,75075397 de 5. Sin commit, despliegue ni cloud. Detalle: `docs/qa/QA_DESEMPENOS_OFICIALES_2026-10-19.md`.
+
+## 2026-10-19 — Revisión pedagógica de la muestra paralela de macetas
+
+Muestra real local aislada: Plan Maestro y diez actividades en 4 min 53 s, USD 0,118395 estimados. Auditoría posterior sin IA adicional: once Word canónicos, cuarenta páginas renderizadas con Word local y revisadas; cien comprobaciones de fidelidad diaria PASS. Veredicto pedagógico PARTIAL: viabilidad del recurso esencial aún pendiente, lenguaje abstracto/cautelas excesivas, papel añadido en mediación y oportunidades de cierre no proyectadas. Word conserva criterios pero hay tabla de enfoques vacía, filas partidas, repetición y fallbacks genéricos. Hallazgos abiertos, sin cambios a fuentes pedagógicas confirmadas ni cloud. Registro `docs/qa/QA_PEDAGOGIA_MACETAS_2026-10-19.json`; informe Word en `outputs/qa-pedagogico-20261019/`.
+
+## 2026-10-19 — Correcciones del QA interactivo en rama aislada
+
+Preparación v2 aislada del ejecutor antiguo, tres actividades concurrentes con checkpoints por ítem y publicación atómica, causa de saldo explícita, conservación de aportes tardíos, ubicación explícita de observación, cobertura inmediata y Word docente compacto. Sin cloud ni IA pagada. Activación requiere migración nueva y QA aislado; trabajos históricos no se retoman automáticamente. Detalle y pendientes: `docs/qa/IMPLEMENTACION_CORRECCIONES_QA_2026-10-19.md`.
+
+
 ## 2026-10-18 — Origen y reto de cada proyecto
 
 La usuaria confirma que cada proyecto debe tener situación significativa: por qué se propone y qué podrán explorar los niños desde su contexto. Implementación local: campo requerido en nuevas generaciones del mapa, persistencia canónica, lectura en proyecto/Documentos, Word sin mezclarlo con el fundamento y contexto heredado por actividades. Se refuerza el sustento de la razón anual, incluida la creación/cambio de propuestas que reutiliza esas reglas. No se inventan intereses ni recursos. Compatibilidad histórica de lectura sin reescritura; 76 pruebas PASS, typecheck/lint/Next/Vinext PASS y QA visual ficticio escritorio/móvil. Sin IA pagada, commit, push ni despliegue de esta ronda. Informe `docs/qa/QA_SITUACION_SIGNIFICATIVA_2026-10-18.md`.
@@ -924,3 +937,18 @@ Diez llamadas completas; estimación estándar0,264101525USD, control conservado
 La misma ronda encuentra omisión de cinco campos de la entrevista vigente en el contexto anual. Se enlaza la proyección al contrato familiar conservando campos anteriores; una regresión recorre las ocho preguntas. Las respuestas siguen siendo contexto referido individual, no evidencias. Se añade un anual real de comprobación y sus documentos, con gasto actualizado en las métricas finales; las siete diarias previas permanecen intactas. No se rellenan históricos.
 
 Cierre de la ampliación: once llamadas/once completas, dos muestras separadas de anual15, dos proyectos y siete diarias. El anual adicional confirma ocho respuestas en el payload real y sus interpretaciones citan solo observaciones.942 regresiones PASS, typecheck/lint/builds finales PASS. Estimación estándar total de esta ronda0,419690025USD; conservador0,66160075; QA acumulado3,846928332. Transporte pagado cerrado. El recibo de Preview se verifica tras el commit; no se anuncia publicación sin ese control.
+
+## 2026-10-19 — Criterios múltiples y correcciones de la revisión de macetas
+
+Una actividad puede desarrollar varias competencias pertinentes, cada una con criterio, evidencia y uno o varios momentos de observación. Se heredan y persisten las referencias completas; se reutiliza el almacenamiento existente. La muestra real detectó y permitió corregir otra restricción de AIContextBundle a una competencia por llamada diaria. No se obliga a integrar dos competencias en todos los días ni se reescriben actividades confirmadas.
+
+Se agregó confirmación docente previa para recursos explícitamente pendientes, se reforzaron las reglas de viabilidad y lenguaje práctico y se ajustaron los Word. Las observaciones libres sin criterio tampoco reciben un criterio por defecto en el documento. Detalle, evidencia, límites y rollback: docs/qa/QA_CORRECCIONES_PEDAGOGICAS_2026-10-19.md. En esta etapa inicial el mapeo de desempeños oficiales estaba pendiente. La ampliación posterior lo implementa y valida: ver docs/qa/QA_DESEMPENOS_OFICIALES_2026-10-19.md; las paráfrasis históricas siguen diferenciadas de las citas oficiales.
+
+QA: 96 regresiones PASS; typecheck, lint y build PASS. Muestra nueva de IA real: un Master y seis actividades de cinco años; ocho llamadas pagadas contando una revisión del último borrador. Costo adicional estimado USD 0,1066935; acumulado USD 4,607772955 de 5. Sin escrituras cloud, commit ni despliegue de esta ronda.
+
+
+## 2026-10-19 — Preparación de publicación en QA aislado
+
+Se verificó que la Preview anterior y Producción compartían Supabase y carecían de preparation_jobs_v2. Con la autorización de la persona usuaria (misma cuenta, base QA separada), se creó Ayni QA 20261019 en la organización gratuita Ayni QA aislado. Las 77 migraciones del repositorio se aplicaron en la base nueva; no se modificó el esquema anterior. Se conservó únicamente la cuenta QA actual: mismo UUID y credencial, diez alumnos, 704 filas de 81 tablas y once archivos privados, comprobados por igualdad de filas y hashes de archivos. No se copian otras cuentas ni sesiones.
+
+Auth real y RLS comprobados: propia matrícula 10, ajena 0; cola propia 1/ajena 0 en transacción de prueba revertida y escritura de navegador denegada. No se enviaron correos ni se cambió la contraseña. Publicación solo Preview con configuración del despliegue aislada; Vercel no tiene repositorio conectado, por lo que no admite overrides por rama. Se conservan las variables generales y las conexiones de las versiones anteriores. Typecheck, lint, build Next webpack y 95 regresiones adicionales PASS, además de las 155 de la ampliación curricular. Sin llamadas IA pagadas en la publicación; acumulado estimado USD 4,75075397 de 5. Detalle y límites: docs/qa/PREPUBLICACION_QA_2026-10-19.md.

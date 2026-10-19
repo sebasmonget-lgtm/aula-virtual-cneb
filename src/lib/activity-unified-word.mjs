@@ -1,5 +1,8 @@
+import { activityPedagogicalBlocks } from "./pedagogical-blocks.mjs";
+import { activityObservationCriteria } from "./activity-observation-plan.mjs";
+import { ageReference, compactPlanningTable } from "./pedagogical-word-presentation.mjs";
 import path from "node:path";
-import { expandTableRow, insertCoverQuickView, removePageBreakAfterTable, removeParagraphsContaining, renderUnifiedWord, replaceWordText, xmlEscape } from "./unified-word-template.mjs";
+import { compactTeacherCover, expandTableRow, insertCoverQuickView, removePageBreakAfterTable, removeParagraphsContaining, renderUnifiedWord, replaceWordText, xmlEscape } from "./unified-word-template.mjs";
 import { availableSheets, renderSheetPages } from "./workshop-sheet-catalog.mjs";
 import { activityReadingStages } from "./activity-reading-content.mjs";
 
@@ -36,11 +39,13 @@ function replaceSectionBody(xml, startText, endText, body) {
   return xml.slice(0, start.index) + start[0] + body + xml.slice(end.index);
 }
 
-function activityGuide(content, whatToObserve) {
+function activityGuide(content, whatToObserve, observationBlocks = [], names = new Map()) {
   const questions = [...clean(content.mediation).matchAll(/¿[^?]+\?/g)].map((match) => match[0]);
   const materials = Array.isArray(content.materials) ? content.materials : [];
   const actions = activityReadingStages(content.child_actions);
   const mediation = activityReadingStages(content.mediation);
+  const observations = moment => (observationBlocks.find(block => block.id === moment)?.observations ?? []).map(item =>
+    readableBlock(`Qué observar · ${names.get(item.competency_id) ?? item.competency_name ?? item.competency_id}`, [item.criterion, ...(item.observation_focus ?? []).filter(text=>text!==item.criterion), `Evidencia esperada: ${item.expected_evidence ?? ""}`])).join("");
   const phased = actions.stages.length === 3 && mediation.stages.length === 3;
   if (phased) return {
     purpose: readableBlock("Propósito", content.purpose),
@@ -54,6 +59,7 @@ function activityGuide(content, whatToObserve) {
         index === 0 ? readableBlock("Situación para empezar", content.meaningful_situation) : "",
         readableBlock("Niños · qué harán", stage.text),
         readableBlock("Docente · cómo acompaña", mediation.stages[index].text),
+        observations(["opening","development","closure"][index]),
       ].join("")),
       readableBlock("Continuidad", content.closure_or_continuity),
     ].join(""),
@@ -64,14 +70,17 @@ function activityGuide(content, whatToObserve) {
       readableParagraph("INICIO", { bold: true }),
       readableBlock("Situación para empezar", content.meaningful_situation),
       readableBlock("Docente · antes de empezar", content.teacher_preparation),
+      observations("opening"),
       readableParagraph("DESARROLLO", { bold: true }),
       readableBlock("Niños · qué harán", content.child_actions),
       readableBlock("Docente · cómo acompaña", content.mediation),
       readableBlock("Preguntas para conversar", questions),
       readableBlock("Materiales", materials),
+      observations("development"),
       readableParagraph("CIERRE", { bold: true }),
       readableBlock("Para cerrar y continuar", content.closure_or_continuity),
-      readableBlock("Qué observar", whatToObserve),
+      observations("closure"),
+      observationBlocks.some(block => block.observations?.length) ? "" : readableBlock("Qué observar", whatToObserve),
     ].join(""),
   };
 }
@@ -84,8 +93,10 @@ function removeSection(xml, startText, endText = null) {
   return xml.slice(0, start.index) + xml.slice(end?.index ?? xml.lastIndexOf("<w:sectPr"));
 }
 
-function transformActivity(xml, evidence, closure, withWorkshop, guide) {
+function transformActivity(xml, evidence, closure, withWorkshop, guide, curriculum, values) {
   let output = xml;
+  output = replaceSectionBody(output, "III. REFERENTES CURRICULARES", "IV. MOMENTOS FIJOS", curriculum);
+  output = output.replace(/<w:tr(?:\s[^>]*)?>[\s\S]*?<\/w:tr>/g, row => ["SEDE_COLEGIO","UGEL"].some(key => !values[key] && xmlText(row).includes("{{"+key+"}}")) ? "" : row);
   output = replaceSectionBody(output, "II. PROPÓSITO DE APRENDIZAJE", "III. REFERENTES CURRICULARES", guide.purpose);
   output = replaceSectionBody(output, "V. SECUENCIA DE LA ACTIVIDAD", withWorkshop ? "VI. CUADERNO DE CAMPO" : "VI. REGISTRO DE OBSERVACIONES", guide.sequence);
   if (!evidence.length) {
@@ -125,6 +136,23 @@ function transformActivity(xml, evidence, closure, withWorkshop, guide) {
         : row.replace(/(<w:tr(?:\s[^>]*)?>)/, `$1<w:trPr>${properties}</w:trPr>`);
     });
   });
+  const sectionStart=label=>[...output.matchAll(paragraphPattern)].find(match=>xmlText(match[0]).includes(label))?.index;
+  const curriculumStart=sectionStart("III. REFERENTES CURRICULARES"),sequenceStart=sectionStart("V. SECUENCIA DE LA ACTIVIDAD"),evidenceStart=sectionStart(withWorkshop?"VI. CUADERNO DE CAMPO":"VI. REGISTRO DE OBSERVACIONES");
+  if(curriculumStart!=null&&sequenceStart!=null&&evidenceStart!=null){
+    const reference=removeSection(output.slice(curriculumStart,sequenceStart)+'<w:sectPr/>',"IV. MOMENTOS FIJOS DE LA JORNADA").replace('<w:sectPr/>',''),sequence=output.slice(sequenceStart,evidenceStart);
+    output=output.slice(0,curriculumStart)+sequence+reference+output.slice(evidenceStart);
+  }
+  output=output.replace(/<w:br\b[^>]*w:type="page"\s*\/>/g,"");
+  // Empty observation forms should not create a trailing page; records remain in Hoy.
+  if(!evidence.length){
+    const start=[...output.matchAll(paragraphPattern)].find(match=>xmlText(match[0]).includes(withWorkshop?"VI. CUADERNO DE CAMPO":"VI. REGISTRO DE OBSERVACIONES"));
+    if(start)output=output.slice(0,start.index)+output.slice(start.index).replace(/<w:pageBreakBefore\s*\/>/g,"");
+  }
+  output=replaceWordText(output,"Capacidad(es) pertinente(s)","Capacidades de referencia");
+  output=replaceWordText(output,"V. SECUENCIA DE LA ACTIVIDAD","III. SECUENCIA DE LA ACTIVIDAD");
+  output=replaceWordText(output,"III. REFERENTES CURRICULARES","IV. REFERENTES CURRICULARES");
+  output=replaceWordText(output,"VI. REGISTRO DE OBSERVACIONES","V. REGISTRO DE OBSERVACIONES");
+  output=replaceWordText(output,"VI. CUADERNO DE CAMPO","V. CUADERNO DE CAMPO");
   return output;
 }
 
@@ -141,7 +169,7 @@ export async function renderActivityUnifiedWord(document, cards = [], { logo = n
   if (!withWorkshop && content.document_template_version !== "activity-unified-v1") throw new Error("La actividad no usa la plantilla unificada.");
   if (withWorkshop && !document.workshop?.content) throw new Error("El taller confirmado de este día no está disponible.");
   const card = cards.find((item) => item.id === content.competency_id);
-  const ageFocus = clean(card?.ages?.[String(document.age)]?.ai_focus);
+  const ageFocus = ageReference(card, document.age, content.evaluation_criterion ?? content.purpose);
   const route = document.experience_details?.activity_route?.find((item) => item.id === content.route_item_id);
   const criterion = document.active_criterion;
   const primaryId = criterion?.competency_v4_id || content.competency_id;
@@ -155,7 +183,7 @@ export async function renderActivityUnifiedWord(document, cards = [], { logo = n
   const workshopCard = cards.find((item) => item.id === workshop?.competency_id);
   const evidenceRows = actualEvidence.map((item) => ({
     EVIDENCIA_ESTUDIANTE: clean(item.student_name) || "Niño del aula",
-    EVIDENCIA_CRITERIO: clean(item.criterion_text) || clean(criterion?.criterion_text) || clean(content.evaluation_criterion || route?.evaluation_criterion),
+    EVIDENCIA_CRITERIO: clean(item.criterion_text) || "Sin criterio asociado",
     EVIDENCIA_TIPO: item.has_attachment ? "Foto" : "Sin adjunto",
     EVIDENCIA_ADJUNTO: item.has_attachment ? "Guardada en Ayni" : "",
     EVIDENCIA_REGISTRO_CAMPO: [observedDate(item.observed_at), clean(item.observation_text) || "Foto registrada en Ayni"].filter(Boolean).join(" · "),
@@ -164,25 +192,44 @@ export async function renderActivityUnifiedWord(document, cards = [], { logo = n
   const criterionText = clean(criterion?.criterion_text || content.evaluation_criterion || route?.evaluation_criterion);
   const distinctFocus = (criterion?.observation_focus ?? []).filter(value => clean(value) !== criterionText);
   const whatToObserve = list(distinctFocus) || clean(content.evidence_opportunities) || clean(content.expected_evidence || route?.expected_evidence);
-  const guide = activityGuide(content, whatToObserve);
+  const criteria = document.guide?.criteria?.length ? document.guide.criteria : activityObservationCriteria({...route,...content}).map(item => ({...item, details:{...item, ...(item.competency_id===primaryId&&criterion?.observation_focus?{observation_focus: distinctFocus.length ? distinctFocus : [whatToObserve]}:{})}, competency_v4_id:item.competency_id}));
+  const blocks = activityPedagogicalBlocks(content,[],criteria);
+  const names = new Map(cards.map(card=>[card.id,card.name??card.official_name]));
+  const guide = activityGuide(content, whatToObserve, blocks, names);
+  const hasSelectedReferences = criteria.some(item => (item.details?.official_performance_refs ?? item.official_performance_refs)?.length);
+  const curriculum = (hasSelectedReferences ? criteria.map(item => {
+    const id=item.competency_v4_id??item.competency_id, reference=cards.find(card=>card.id===id);
+    return readableParagraph(names.get(id)??id,{bold:true}) +
+      readableBlock("Referentes curriculares", ageReference(reference,document.age,item.details?.official_performance_refs??item.official_performance_refs).split("\n")) +
+      compactPlanningTable(["Criterio de esta actividad","Evidencia esperada"],[[item.criterion_text,item.details?.expected_evidence??item.expected_evidence??content.expected_evidence]],[5000,5000]);
+  }).join("") : compactPlanningTable(["Competencia y referente", "Criterio de esta actividad", "Evidencia esperada"], criteria.map(item=>{
+    const id=item.competency_v4_id??item.competency_id, reference=cards.find(card=>card.id===id);
+    return [`${names.get(id)??id}\n${ageReference(reference,document.age,item.details?.official_performance_refs??item.official_performance_refs)}`,item.criterion_text,item.details?.expected_evidence??item.expected_evidence??content.expected_evidence];
+  }),[3800,3100,3100])) + (integratedIds.some(id=>!observedIds.includes(id)&&!criteria.some(item=>(item.competency_v4_id??item.competency_id)===id)) ? readableBlock("Integración prevista en el mapa",integrated) : "");
+  const supports = document.experience_details?.source_proposal_snapshot?.supports ?? [];
+  const supportBlocks = readableBlock("Apoyos previstos", supports);
+  guide.sequence += supportBlocks;
+  const approaches = document.experience_details?.transversal_approaches ?? [];
+  const attitudes = document.experience_details?.observable_attitudes ?? [];
+  guide.sequence += readableBlock("Enfoques transversales previstos", approaches) + readableBlock("Actitudes a acompañar", attitudes);
   const date = String(document.occurs_on ?? "").slice(0, 10);
   const values = {
     "AÑO_ESCOLAR": String(document.school_year), TITULO_ACTIVIDAD: document.title,
     TITULO_PROYECTO: clean(document.experience_title), INSTITUCION_EDUCATIVA: clean(document.institution_name) || "Institución educativa",
     EDAD_AULA: `${document.age || ""} años · ${clean(document.classroom)}`, DOCENTE: clean(document.teacher_name) || "Docente del aula",
     FECHA: document.actual_execution_date&&document.actual_execution_date!==date ? `${document.actual_execution_date.slice(8)}/${document.actual_execution_date.slice(5,7)}/${document.actual_execution_date.slice(0,4)} (prevista: ${date.slice(8)}/${date.slice(5,7)}/${date.slice(0,4)})` : /^\d{4}-\d{2}-\d{2}$/.test(date) ? `${date.slice(8)}/${date.slice(5, 7)}/${date.slice(0, 4)}` : date,
-    UGEL: clean(document.ugel) || "Sin dato registrado", NUMERO_ACTIVIDAD: String(route?.number ?? "Del proyecto"),
-    DURACION_REFERENCIAL: "Flexible según el grupo", SEDE_COLEGIO: clean(document.district) || "Sede principal",
+    UGEL: clean(document.ugel), NUMERO_ACTIVIDAD: String(route?.number ?? "Del proyecto"),
+    DURACION_REFERENCIAL: Number.isInteger(route?.estimated_minutes) ? `${route.estimated_minutes} minutos estimados` : "Tiempo ajustable al grupo", SEDE_COLEGIO: clean(document.district),
     PROPOSITO_QUE: clean(content.purpose), PROPOSITO_COMO: clean(content.child_actions), PROPOSITO_PARA_QUE: clean(content.closure_or_continuity),
     COMPETENCIA_PRINCIPAL: card?.name || "Por confirmar con la docente",
     CAPACIDADES_PERTINENTES: list(card?.capacities?.map((item) => item.official_name)),
-    DESEMPENO_PERTINENTE: ageFocus ? `Síntesis orientativa para ${document.age} años: ${ageFocus}` : "Síntesis orientativa de la edad aún no disponible.",
+    DESEMPENO_PERTINENTE: ageFocus,
     CRITERIO_EVALUACION: clean(criterion?.criterion_text) || clean(content.evaluation_criterion || route?.evaluation_criterion) || "La docente precisará el criterio antes de observar.",
     QUE_OBSERVAR: whatToObserve || "La docente precisará qué actuación observar.",
     EVIDENCIA_ESPERADA: clean(content.expected_evidence || route?.expected_evidence) || clean(content.evidence_opportunities),
     COMPETENCIA_INTEGRADA: integrated.length ? `${integrated.join("; ")}. Integración prevista en el mapa; no acredita una actuación ni una valoración.` : "No se ha previsto otra competencia en el mapa de esta actividad.",
-    ENFOQUE_TRANSVERSAL: "Según la situación del aula", ACTITUD_OBSERVABLE: "Escuchar y participar respetando las distintas formas de expresión.",
-    APOYOS_DIVERSIDAD: "Ajustar materiales y tiempos según el grupo.",
+    ENFOQUE_TRANSVERSAL: list(approaches), ACTITUD_OBSERVABLE: list(attitudes),
+    APOYOS_DIVERSIDAD: list(supports),
     MATERIALES_PRINCIPALES: list(content.materials),
     INICIO: clean(content.meaningful_situation), INICIO_MEDIACION: "", INICIO_RECURSOS: list(content.materials),
     DESARROLLO: clean(content.child_actions), DESARROLLO_MEDIACION: clean(content.mediation), DESARROLLO_NINOS: "", DESARROLLO_RECURSOS: list(content.materials),
@@ -212,6 +259,6 @@ export async function renderActivityUnifiedWord(document, cards = [], { logo = n
     ["Qué haremos hoy", clean(content.purpose)],
   ].filter(([, value]) => value);
   return renderUnifiedWord({ templateUrl: withWorkshop ? workshopTemplateUrl : oldTemplateUrl, values, logo, appendixImages, compactTrailingSpace: true,
-    transform: (xml) => insertCoverQuickView(transformActivity(xml, evidenceRows, closure, withWorkshop, guide), "Hoy en el aula", overview),
+    transform: (xml) => compactTeacherCover(insertCoverQuickView(transformActivity(xml, evidenceRows, closure, withWorkshop, guide, curriculum, values), "Hoy en el aula", overview), document.title),
     transformPart: (part, xml) => part.includes("header") ? replaceWordText(xml, "PLANIFICACIÓN ANUAL", "ACTIVIDAD DE APRENDIZAJE") : xml });
 }

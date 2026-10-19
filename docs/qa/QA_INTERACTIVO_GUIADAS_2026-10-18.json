@@ -1,0 +1,3248 @@
+{
+  "id": "QA-INTERACTIVO-GUIADAS-2026-10-18",
+  "preview": "https://ayni-aula-staging-5t9tbxosy-ayni4.vercel.app/",
+  "commit": "d0260f43fd46e63951bc0edeb67706f48cf7ec8b",
+  "startedAt": "2026-10-19T02:49:01.236Z",
+  "finishedAt": "2026-10-19T03:11:04.565Z",
+  "catalogVersion": "diagnostic-v4.6",
+  "scope": {
+    "age": 5,
+    "students": 10,
+    "experiences": 7,
+    "moments": 25,
+    "applicableCompetencies": 12
+  },
+  "method": {
+    "writes": "Todas las observaciones mediante formularios y botones reales de Preview. Sin inserciones directas ni simulación de éxitos por base de datos.",
+    "verification": "Lectura de interfaz antes y después de recargar; comparación independiente del orden con conteos conocidos; consulta canónica de solo lectura para comprobar vínculos y consumo.",
+    "dataOrigin": "Solo datos simulados del QA autorizado. Para TIC, escenario con dispositivo adecuado y acompañamiento; función sin conexión, sin cuentas, sin publicaciones o imágenes de personas. No se afirma disponer de este recurso en un aula real.",
+    "implementation": "Solo documentación: las correcciones se implementarán al terminar el QA conjunto según instrucción vigente. Sin cambios de código, despliegue o migración."
+  },
+  "verdict": {
+    "functional": "PASS para guardado, persistencia y asociación de los 35 registros.",
+    "recommendations": "PASS en nueve comprobaciones estables. PARTIAL para actualización inmediata del selector de alumnos: hubo un desfase transitorio que se corrigió solo.",
+    "pedagogy": "Contenido útil, pertinente y mayoritariamente claro en esta muestra; pulido editorial localizado pendiente. La cobertura representa oportunidades, no suficiencia de evidencia para cada alumno.",
+    "overall": "PARTIAL por cuatro hallazgos P2 pendientes; no es aprobación integral del producto."
+  },
+  "coverage": [
+    {
+      "experienceId": "getting_to_know_us",
+      "title": "Nos conocemos y organizamos el juego",
+      "moments": 4,
+      "competencies": [
+        {
+          "id": "PS_IDENTIDAD",
+          "name": "Construye su identidad"
+        },
+        {
+          "id": "COM_ORAL",
+          "name": "Se comunica oralmente en su lengua materna"
+        },
+        {
+          "id": "PS_CONVIVE",
+          "name": "Convive y participa democráticamente en la búsqueda del bien común"
+        }
+      ],
+      "students": [
+        "Valentina Rojas Salazar",
+        "Nicolás Mendoza León",
+        "Luciana Torres Medina",
+        "Diego Ramos Vega",
+        "Mateo Quispe Flores"
+      ],
+      "saved": 5
+    },
+    {
+      "experienceId": "movement_and_art",
+      "title": "Nos movemos y creamos",
+      "moments": 4,
+      "competencies": [
+        {
+          "id": "PSICO_MOTRICIDAD",
+          "name": "Se desenvuelve de manera autónoma a través de su motricidad"
+        },
+        {
+          "id": "COM_ARTE",
+          "name": "Crea proyectos desde los lenguajes artísticos"
+        }
+      ],
+      "students": [
+        "Mateo Quispe Flores",
+        "Nicolás Mendoza León",
+        "Valentina Rojas Salazar",
+        "Diego Ramos Vega",
+        "Thiago Gutiérrez Silva"
+      ],
+      "saved": 5
+    },
+    {
+      "experienceId": "count_and_locate",
+      "title": "Contamos y encontramos lugares",
+      "moments": 4,
+      "competencies": [
+        {
+          "id": "MAT_CANTIDAD",
+          "name": "Resuelve problemas de cantidad"
+        },
+        {
+          "id": "MAT_FORMA",
+          "name": "Resuelve problemas de forma, movimiento y localización"
+        }
+      ],
+      "students": [
+        "Emilia Cárdenas Ruiz",
+        "Luciana Torres Medina",
+        "Camila Huamán Castro",
+        "Gabriel Paredes Soto",
+        "Sofía Vargas Cabrera"
+      ],
+      "saved": 5
+    },
+    {
+      "experienceId": "explore_our_world",
+      "title": "Exploramos nuestro entorno",
+      "moments": 4,
+      "competencies": [
+        {
+          "id": "CYT_INDAGA",
+          "name": "Indaga mediante métodos científicos para construir sus conocimientos"
+        },
+        {
+          "id": "COM_ORAL",
+          "name": "Se comunica oralmente en su lengua materna"
+        }
+      ],
+      "students": [
+        "Camila Huamán Castro",
+        "Diego Ramos Vega",
+        "Gabriel Paredes Soto",
+        "Sofía Vargas Cabrera",
+        "Thiago Gutiérrez Silva"
+      ],
+      "saved": 5
+    },
+    {
+      "experienceId": "stories_and_marks",
+      "title": "Escuchamos y contamos historias",
+      "moments": 4,
+      "competencies": [
+        {
+          "id": "COM_LECTURA",
+          "name": "Lee diversos tipos de textos escritos en su lengua materna"
+        },
+        {
+          "id": "COM_ORAL",
+          "name": "Se comunica oralmente en su lengua materna"
+        },
+        {
+          "id": "COM_ESCRITURA",
+          "name": "Escribe diversos tipos de textos en su lengua materna"
+        }
+      ],
+      "students": [
+        "Gabriel Paredes Soto",
+        "Emilia Cárdenas Ruiz",
+        "Mateo Quispe Flores",
+        "Nicolás Mendoza León",
+        "Thiago Gutiérrez Silva"
+      ],
+      "saved": 5
+    },
+    {
+      "experienceId": "plan_try_review",
+      "title": "Probamos nuestro plan",
+      "moments": 3,
+      "competencies": [
+        {
+          "id": "TRANS_AUTONOMO",
+          "name": "Gestiona su aprendizaje de manera autónoma"
+        }
+      ],
+      "students": [
+        "Nicolás Mendoza León",
+        "Sofía Vargas Cabrera",
+        "Thiago Gutiérrez Silva",
+        "Valentina Rojas Salazar",
+        "Camila Huamán Castro"
+      ],
+      "saved": 5
+    },
+    {
+      "experienceId": "create_a_digital_message",
+      "title": "Creamos un mensaje digital",
+      "moments": 2,
+      "competencies": [
+        {
+          "id": "TRANS_TIC",
+          "name": "Se desenvuelve en los entornos virtuales generados por las TIC"
+        }
+      ],
+      "students": [
+        "Camila Huamán Castro",
+        "Diego Ramos Vega",
+        "Emilia Cárdenas Ruiz",
+        "Gabriel Paredes Soto",
+        "Luciana Torres Medina"
+      ],
+      "saved": 5
+    }
+  ],
+  "pedagogicalReview": {
+    "getting_to_know_us": "Juego con elecciones e intercambios auténticos; acuerdos ante necesidades reales, sin provocar conflictos. Respeta el tiempo para incorporarse.",
+    "movement_and_art": "Propuestas de movimiento y creación con ajustes propios y expresión de ideas; sin exigir copiar un modelo.",
+    "count_and_locate": "Conteo, comparación y orientación en situaciones de juego. Conviene sustituir colecciones por grupos de objetos.",
+    "explore_our_world": "Preguntas, comparación, nuevos intentos y comunicación de hallazgos. No exige conclusiones predeterminadas.",
+    "stories_and_marks": "Anticipación a partir de ilustraciones, escucha y relato, mensaje para un destinatario y lectura de lo escrito a su manera. Simplificar grafismos y no acredita escritura.",
+    "plan_try_review": "Meta, elección de recursos, estrategia y revisión del intento; distingue aprender a aprender de simplemente obedecer o realizar cuidados personales.",
+    "create_a_digital_message": "Uso intencional de una función sencilla, cuidado y revisión del mensaje. Condicionado a recurso adecuado, acompañamiento y actividad breve sin conexión ni publicación."
+  },
+  "momentChecks": [
+    {
+      "experienceId": "create_a_digital_message",
+      "title": "Creamos un mensaje digital",
+      "moment": 1,
+      "momentTitle": "Conocemos la herramienta",
+      "aspectId": "explore_a_digital_function",
+      "competencyId": "TRANS_TIC",
+      "criterion": "Explora con acompañamiento una función del dispositivo y participa en su uso y cuidado.",
+      "steps": [
+        "Presenta una función que ya verificaste y acuerda cómo cuidar el dispositivo y tomar turnos.",
+        "Invita a probarla con ayuda y pregunta para qué cree que puede servir. No exijas que conozca el aparato."
+      ],
+      "lookFor": "Describe qué acción realiza en el dispositivo, para qué la usa y qué acompañamiento necesita. Diferencia una exploración propia de una acción hecha completamente por la docente.",
+      "examples": [
+        "Con ayuda encuentra el botón de grabar y lo prueba para escuchar su voz.",
+        "Dirige la cámara hacia su construcción y pide ayuda para ver si aparece completa."
+      ],
+      "checks": {
+        "title": true,
+        "criterion": true,
+        "cue": true,
+        "steps": [
+          true,
+          true
+        ],
+        "examples": [
+          true,
+          true
+        ],
+        "registerEnabled": true,
+        "registerInsideCriterion": true
+      },
+      "pass": true
+    },
+    {
+      "experienceId": "create_a_digital_message",
+      "title": "Creamos un mensaje digital",
+      "moment": 2,
+      "momentTitle": "Creamos y revisamos un mensaje",
+      "aspectId": "make_and_review_a_digital_record",
+      "competencyId": "TRANS_TIC",
+      "criterion": "Produce con acompañamiento una imagen o un audio para registrar o comunicar algo que eligió.",
+      "steps": [
+        "Pregunta qué quiere comunicar y acompaña la creación de una foto de un objeto, un audio o un dibujo digital.",
+        "Miren o escuchen el resultado y conversen sobre si comunica su idea. No publiques ni envíes el archivo."
+      ],
+      "lookFor": "Anota qué quiso comunicar y cómo participó en la creación y revisión del registro. Una foto tomada solo por la docente no demuestra esta actuación del niño.",
+      "examples": [
+        "Graba «este es mi puente» y al escucharlo decide añadir para qué sirve.",
+        "Con ayuda toma una foto de su construcción y señala qué parte quiere mostrar."
+      ],
+      "checks": {
+        "title": true,
+        "criterion": true,
+        "cue": true,
+        "steps": [
+          true,
+          true
+        ],
+        "examples": [
+          true,
+          true
+        ],
+        "registerEnabled": true,
+        "registerInsideCriterion": true
+      },
+      "pass": true
+    },
+    {
+      "experienceId": "plan_try_review",
+      "title": "Probamos nuestro plan",
+      "moment": 1,
+      "momentTitle": "Pensamos un reto pequeño",
+      "aspectId": "choose_goal_and_materials",
+      "competencyId": "TRANS_AUTONOMO",
+      "criterion": "Explica con ayuda qué quiere hacer y qué necesita para empezar.",
+      "steps": [
+        "Invita a elegir algo que quiera construir o resolver con los materiales disponibles.",
+        "Pregunta «¿Qué quieres lograr? ¿Qué necesitas para empezar?». Escucha sin completar su idea."
+      ],
+      "lookFor": "Distingue la meta que expresa de los materiales que elige. Anota cómo relaciona lo que necesita con su reto y qué pregunta o apoyo le ayudó a pensarlo.",
+      "examples": [
+        "Dice «quiero un camino para el muñeco» y busca cajas para unirlas.",
+        "Después de que preguntas qué necesita, señala papel y dice que hará un puente."
+      ],
+      "checks": {
+        "title": true,
+        "criterion": true,
+        "cue": true,
+        "steps": [
+          true,
+          true
+        ],
+        "examples": [
+          true,
+          true
+        ],
+        "registerEnabled": true,
+        "registerInsideCriterion": true
+      },
+      "pass": true
+    },
+    {
+      "experienceId": "plan_try_review",
+      "title": "Probamos nuestro plan",
+      "moment": 2,
+      "momentTitle": "Probamos nuestro plan",
+      "aspectId": "try_a_strategy",
+      "competencyId": "TRANS_AUTONOMO",
+      "criterion": "Plantea con ayuda una acción o estrategia para alcanzar el reto que eligió.",
+      "steps": [
+        "Pregunta «¿Cómo podrías hacerlo?» y deja que pruebe su idea.",
+        "Si encuentra una dificultad, pregunta qué otra forma podría intentar; evita resolverla por él."
+      ],
+      "lookFor": "Observa si vincula una acción con lo que quiere lograr. Describe el intento, el cambio que propone y la ayuda recibida, sin confundir obedecer una instrucción con planear una estrategia.",
+      "examples": [
+        "Propone poner primero las cajas grandes para que el camino no se caiga.",
+        "Al ver que el papel se dobla, dice «voy a poner dos» y prueba nuevamente."
+      ],
+      "checks": {
+        "title": true,
+        "criterion": true,
+        "cue": true,
+        "steps": [
+          true,
+          true
+        ],
+        "examples": [
+          true,
+          true
+        ],
+        "registerEnabled": true,
+        "registerInsideCriterion": true
+      },
+      "pass": true
+    },
+    {
+      "experienceId": "plan_try_review",
+      "title": "Probamos nuestro plan",
+      "moment": 3,
+      "momentTitle": "Miramos cómo nos fue",
+      "aspectId": "review_the_attempt",
+      "competencyId": "TRANS_AUTONOMO",
+      "criterion": "Revisa con ayuda lo que hizo y comunica qué le sirvió o qué cambiaría.",
+      "steps": [
+        "Retoma su meta inicial y pregunta «¿Te sirvió tu idea? ¿Qué cambiaste?».",
+        "Invita a mostrar un intento o explicar qué probaría la próxima vez. Acepta que aún necesite ayuda."
+      ],
+      "lookFor": "Registra la relación que establece entre su intento y el resultado. Un trabajo terminado o decir «me salió» no basta por sí solo para describir cómo revisó su estrategia.",
+      "examples": [
+        "Señala una caja y explica que la cambió porque el muñeco no pasaba.",
+        "Dice «con dos papeles aguantó» y propone volver a doblarlos para otro puente."
+      ],
+      "checks": {
+        "title": true,
+        "criterion": true,
+        "cue": true,
+        "steps": [
+          true,
+          true
+        ],
+        "examples": [
+          true,
+          true
+        ],
+        "registerEnabled": true,
+        "registerInsideCriterion": true
+      },
+      "pass": true
+    },
+    {
+      "experienceId": "movement_and_art",
+      "title": "Nos movemos y creamos",
+      "moment": 1,
+      "momentTitle": "Exploramos cómo movernos",
+      "aspectId": "movement",
+      "competencyId": "PSICO_MOTRICIDAD",
+      "criterion": "Prueba distintas maneras de moverse durante el juego.",
+      "steps": [
+        "Delimita un espacio despejado. Invita a desplazarse sin chocar y a elegir sus movimientos.",
+        "Dales tiempo para probar; acompaña a quien necesite otro ritmo o una alternativa de movimiento."
+      ],
+      "lookFor": "Observa cómo coordina su cuerpo al desplazarse, detenerse o cambiar de dirección. Describe el movimiento concreto, sin comparar rapidez entre niños.",
+      "examples": [
+        "Corre por el espacio libre y reduce la velocidad al acercarse a otro niño.",
+        "Camina, se agacha para recoger una tela y vuelve a ponerse de pie."
+      ],
+      "checks": {
+        "title": true,
+        "criterion": true,
+        "cue": true,
+        "steps": [
+          true,
+          true
+        ],
+        "examples": [
+          true,
+          true
+        ],
+        "registerEnabled": true,
+        "registerInsideCriterion": true
+      },
+      "pass": true
+    },
+    {
+      "experienceId": "movement_and_art",
+      "title": "Nos movemos y creamos",
+      "moment": 2,
+      "momentTitle": "Elegimos por dónde pasar",
+      "aspectId": "adjust_movement",
+      "competencyId": "PSICO_MOTRICIDAD",
+      "criterion": "Cambia cómo se mueve cuando el juego lo requiere.",
+      "steps": [
+        "Propón un recorrido con una línea en el piso y cojines bajos y firmes; ofrece también un paso libre.",
+        "Invita a elegir por dónde pasar y a volver a intentar si lo desean. Acompaña sin mover su cuerpo por ellos."
+      ],
+      "lookFor": "Mira cómo adapta su postura, equilibrio o recorrido ante una dificultad. Registra si lo hizo solo o qué ayuda pidió.",
+      "examples": [
+        "Se agacha para pasar bajo una tela sostenida por la docente.",
+        "Al perder el equilibrio sobre una línea, separa los brazos y vuelve a probar."
+      ],
+      "checks": {
+        "title": true,
+        "criterion": true,
+        "cue": true,
+        "steps": [
+          true,
+          true
+        ],
+        "examples": [
+          true,
+          true
+        ],
+        "registerEnabled": true,
+        "registerInsideCriterion": true
+      },
+      "pass": true
+    },
+    {
+      "experienceId": "movement_and_art",
+      "title": "Nos movemos y creamos",
+      "moment": 3,
+      "momentTitle": "Exploramos materiales para crear",
+      "aspectId": "creation",
+      "competencyId": "COM_ARTE",
+      "criterion": "Combina materiales para crear algo propio.",
+      "steps": [
+        "Después del movimiento, ofrece papel, telas, crayones y cinta de papel al alcance.",
+        "Invita a probar combinaciones y crear algo propio. No presentes un modelo para copiar."
+      ],
+      "lookFor": "Observa qué posibilidades descubre al probar y combinar materiales. La producción no necesita parecerse a un objeto reconocible.",
+      "examples": [
+        "Arruga papel para darle volumen y lo une a una tela con cinta.",
+        "Prueba líneas anchas y delgadas con el crayón antes de elegir cómo continuar."
+      ],
+      "checks": {
+        "title": true,
+        "criterion": true,
+        "cue": true,
+        "steps": [
+          true,
+          true
+        ],
+        "examples": [
+          true,
+          true
+        ],
+        "registerEnabled": true,
+        "registerInsideCriterion": true
+      },
+      "pass": true
+    },
+    {
+      "experienceId": "movement_and_art",
+      "title": "Nos movemos y creamos",
+      "moment": 4,
+      "momentTitle": "Compartimos lo que imaginamos",
+      "aspectId": "express_idea",
+      "competencyId": "COM_ARTE",
+      "criterion": "Usa movimientos o materiales para mostrar lo que imagina.",
+      "steps": [
+        "Invita a mostrar una creación o un movimiento que quieran compartir.",
+        "Pregunta qué quisieron expresar y acepta que lo cuenten, lo señalen o lo representen de nuevo."
+      ],
+      "lookFor": "Escucha qué significado le da a su creación o a su movimiento. No atribuyas una intención que el niño no haya mostrado o explicado.",
+      "examples": [
+        "Mueve una tela en el aire y dice «es el viento que empuja mi barco».",
+        "Señala las marcas de su papel y explica «aquí iba saltando»."
+      ],
+      "checks": {
+        "title": true,
+        "criterion": true,
+        "cue": true,
+        "steps": [
+          true,
+          true
+        ],
+        "examples": [
+          true,
+          true
+        ],
+        "registerEnabled": true,
+        "registerInsideCriterion": true
+      },
+      "pass": true
+    },
+    {
+      "experienceId": "count_and_locate",
+      "title": "Contamos y encontramos lugares",
+      "moment": 1,
+      "momentTitle": "Repartimos los materiales del juego",
+      "aspectId": "quantity",
+      "competencyId": "MAT_CANTIDAD",
+      "criterion": "Cuenta o reúne objetos para resolver una situación de juego.",
+      "steps": [
+        "Prepara un muñeco o vehículo por participante y una cesta con piezas grandes para construir caminos.",
+        "Invita a repartir un muñeco o vehículo a cada uno. Pregunta cómo pueden saber si todos tienen."
+      ],
+      "lookFor": "Mira qué estrategia usa para repartir: entregar uno a uno, reunir objetos o contar. Registra lo que hace, aunque el conteo aún no sea estable.",
+      "examples": [
+        "Entrega un vehículo a cada compañero y vuelve a buscar otro para quien aún no tiene.",
+        "Cuenta los muñecos, mira a los participantes y dice «me falta uno»."
+      ],
+      "checks": {
+        "title": true,
+        "criterion": true,
+        "cue": true,
+        "steps": [
+          true,
+          true
+        ],
+        "examples": [
+          true,
+          true
+        ],
+        "registerEnabled": true,
+        "registerInsideCriterion": true
+      },
+      "pass": true
+    },
+    {
+      "experienceId": "count_and_locate",
+      "title": "Contamos y encontramos lugares",
+      "moment": 2,
+      "momentTitle": "Comprobamos si los materiales alcanzan",
+      "aspectId": "compare_groups",
+      "competencyId": "MAT_CANTIDAD",
+      "criterion": "Nota si un grupo de objetos tiene más, menos o la misma cantidad.",
+      "steps": [
+        "Revisa con el grupo los vehículos y las piezas que reunieron para jugar.",
+        "Si aparece una diferencia, pregunta: «¿Cómo podemos saber si alcanzan?». Deja que comparen a su manera."
+      ],
+      "lookFor": "Observa cómo relaciona las colecciones para decidir si sobra, falta o alcanza. Escucha sus palabras y mira si empareja o cuenta objetos.",
+      "examples": [
+        "Coloca un muñeco junto a cada vehículo y señala el que quedó sin vehículo.",
+        "Acerca dos grupos de piezas, los cuenta y comenta que uno tiene más."
+      ],
+      "checks": {
+        "title": true,
+        "criterion": true,
+        "cue": true,
+        "steps": [
+          true,
+          true
+        ],
+        "examples": [
+          true,
+          true
+        ],
+        "registerEnabled": true,
+        "registerInsideCriterion": true
+      },
+      "pass": true
+    },
+    {
+      "experienceId": "count_and_locate",
+      "title": "Contamos y encontramos lugares",
+      "moment": 3,
+      "momentTitle": "Construimos un camino para el muñeco",
+      "aspectId": "space",
+      "competencyId": "MAT_FORMA",
+      "criterion": "Coloca objetos o explica por dónde pasar en el recorrido.",
+      "steps": [
+        "Invita a colocar cajas o bloques grandes para hacer un recorrido con inicio y llegada.",
+        "Pide que muestren por dónde irá el muñeco y dónde colocarán una parada. Acepta explicaciones con gestos."
+      ],
+      "lookFor": "Mira cómo usa las posiciones y las relaciones entre los objetos para orientar el recorrido. Anota sus palabras, señalamientos o desplazamientos.",
+      "examples": [
+        "Coloca la parada detrás de una caja y lleva el muñeco hasta ella.",
+        "Señala un espacio entre dos bloques y dice «por aquí pasa el carro»."
+      ],
+      "checks": {
+        "title": true,
+        "criterion": true,
+        "cue": true,
+        "steps": [
+          true,
+          true
+        ],
+        "examples": [
+          true,
+          true
+        ],
+        "registerEnabled": true,
+        "registerInsideCriterion": true
+      },
+      "pass": true
+    },
+    {
+      "experienceId": "count_and_locate",
+      "title": "Contamos y encontramos lugares",
+      "moment": 4,
+      "momentTitle": "Buscamos otro camino",
+      "aspectId": "change_route",
+      "competencyId": "MAT_FORMA",
+      "criterion": "Prueba otro camino cuando algo impide pasar.",
+      "steps": [
+        "Cuando el recorrido esté listo, avisa que una parte estará cerrada y coloca una caja sin riesgo de caída.",
+        "Pregunta cómo podría llegar el muñeco por otro lado. Deja que prueben antes de sugerir una solución."
+      ],
+      "lookFor": "Observa qué cambia en el recorrido para llegar al destino y cómo comprueba su idea. No confundas una ruta diferente con un error.",
+      "examples": [
+        "Mueve dos bloques y hace pasar el vehículo por el nuevo espacio.",
+        "Prueba un camino más largo alrededor de la caja y logra llegar a la parada."
+      ],
+      "checks": {
+        "title": true,
+        "criterion": true,
+        "cue": true,
+        "steps": [
+          true,
+          true
+        ],
+        "examples": [
+          true,
+          true
+        ],
+        "registerEnabled": true,
+        "registerInsideCriterion": true
+      },
+      "pass": true
+    },
+    {
+      "experienceId": "stories_and_marks",
+      "title": "Escuchamos y contamos historias",
+      "moment": 1,
+      "momentTitle": "Miramos la portada antes de leer",
+      "aspectId": "reading",
+      "competencyId": "COM_LECTURA",
+      "criterion": "Dice qué cree que pasará al mirar el cuento.",
+      "steps": [
+        "Muestra la portada del cuento y da tiempo para mirar sus ilustraciones.",
+        "Pregunta: «¿De qué creen que tratará?». Escucha distintas ideas y después comienza la lectura."
+      ],
+      "lookFor": "Escucha qué imagina a partir de las ilustraciones y qué detalle señala. Antes de leer, no busques que acierte el argumento.",
+      "examples": [
+        "Señala unas botas en la portada y comenta «creo que va a salir a buscar algo».",
+        "Mira un personaje detrás de un árbol y dice «creo que va a sorprender a su amigo»."
+      ],
+      "checks": {
+        "title": true,
+        "criterion": true,
+        "cue": true,
+        "steps": [
+          true,
+          true
+        ],
+        "examples": [
+          true,
+          true
+        ],
+        "registerEnabled": true,
+        "registerInsideCriterion": true
+      },
+      "pass": true
+    },
+    {
+      "experienceId": "stories_and_marks",
+      "title": "Escuchamos y contamos historias",
+      "moment": 2,
+      "momentTitle": "Recordamos una parte del cuento",
+      "aspectId": "retelling",
+      "competencyId": "COM_ORAL",
+      "criterion": "Relata con sus palabras algo que ocurrió en el cuento.",
+      "steps": [
+        "Al terminar de leer, invita a elegir una escena que recuerden o les haya llamado la atención.",
+        "Deja que la cuenten con sus palabras y se apoyen en las ilustraciones, sin repetir el texto de memoria."
+      ],
+      "lookFor": "Escucha qué parte comunica y cómo se hace entender. Puedes preguntar quién o qué ocurrió; evita completar la historia por él.",
+      "examples": [
+        "Muestra una página y cuenta «se cayó al agua y su amigo lo ayudó».",
+        "Dice «primero estaba solo; después llegaron los otros» mientras pasa dos páginas."
+      ],
+      "checks": {
+        "title": true,
+        "criterion": true,
+        "cue": true,
+        "steps": [
+          true,
+          true
+        ],
+        "examples": [
+          true,
+          true
+        ],
+        "registerEnabled": true,
+        "registerInsideCriterion": true
+      },
+      "pass": true
+    },
+    {
+      "experienceId": "stories_and_marks",
+      "title": "Escuchamos y contamos historias",
+      "moment": 3,
+      "momentTitle": "Dejamos un mensaje sobre el cuento",
+      "aspectId": "write_message",
+      "competencyId": "COM_ESCRITURA",
+      "criterion": "Escribe a su manera un mensaje sobre el cuento para alguien.",
+      "steps": [
+        "Ofrece papel y crayones: «¿Quieren dejar un mensaje sobre este cuento para otro grupo?».",
+        "Invita a escribir a su manera lo que quieran comunicar. No dictes letras ni pidas copiar un modelo."
+      ],
+      "lookFor": "Observa la intención de escribir: qué quiere comunicar y para quién. Un dibujo puede acompañar el mensaje, pero por sí solo no acredita escritura.",
+      "examples": [
+        "Dice «les voy a contar que el cuento da risa» y hace marcas para escribir su mensaje.",
+        "Escribe con letras o grafismos una invitación y explica a qué grupo quiere entregarla."
+      ],
+      "checks": {
+        "title": true,
+        "criterion": true,
+        "cue": true,
+        "steps": [
+          true,
+          true
+        ],
+        "examples": [
+          true,
+          true
+        ],
+        "registerEnabled": true,
+        "registerInsideCriterion": true
+      },
+      "pass": true
+    },
+    {
+      "experienceId": "stories_and_marks",
+      "title": "Escuchamos y contamos historias",
+      "moment": 4,
+      "momentTitle": "Leemos nuestro mensaje antes de compartirlo",
+      "aspectId": "read_own_message",
+      "competencyId": "COM_ESCRITURA",
+      "criterion": "Relee a su manera el mensaje y comenta si dice lo que quería comunicar.",
+      "steps": [
+        "Invita a señalar en su propio mensaje dónde dice lo que quiso comunicar.",
+        "Escucha su lectura. Si quiere cambiar algo antes de entregarlo, dale tiempo y materiales para hacerlo."
+      ],
+      "lookFor": "Escucha qué significado da a lo que escribió. Si decide añadir o cambiar algo, registra su explicación; no corrijas su escritura para hacerla convencional.",
+      "examples": [
+        "Señala sus marcas y dice «aquí escribí que vengan a escuchar el cuento».",
+        "Al volver a leer su mensaje, añade una marca y comenta «faltaba decir a quién invitamos»."
+      ],
+      "checks": {
+        "title": true,
+        "criterion": true,
+        "cue": true,
+        "steps": [
+          true,
+          true
+        ],
+        "examples": [
+          true,
+          true
+        ],
+        "registerEnabled": true,
+        "registerInsideCriterion": true
+      },
+      "pass": true
+    },
+    {
+      "experienceId": "getting_to_know_us",
+      "title": "Nos conocemos y organizamos el juego",
+      "moment": 1,
+      "momentTitle": "Elegimos dónde jugar",
+      "aspectId": "choice",
+      "competencyId": "PS_IDENTIDAD",
+      "criterion": "Elige dónde jugar y muestra qué le interesa.",
+      "steps": [
+        "Presenta dos o tres espacios preparados: bloques, dibujo o juego de roles.",
+        "Invita a elegir uno. Observa antes de ofrecer ayuda o sugerir una opción."
+      ],
+      "lookFor": "Observa cómo expresa su preferencia y qué hace después de elegir. Puede comunicarla con palabras, gestos o acercándose.",
+      "examples": [
+        "Señala los bloques, se acerca y empieza a construir.",
+        "Dice «quiero cocinar» y busca los utensilios del juego de roles."
+      ],
+      "checks": {
+        "title": true,
+        "criterion": true,
+        "cue": true,
+        "steps": [
+          true,
+          true
+        ],
+        "examples": [
+          true,
+          true
+        ],
+        "registerEnabled": true,
+        "registerInsideCriterion": true
+      },
+      "pass": true
+    },
+    {
+      "experienceId": "getting_to_know_us",
+      "title": "Nos conocemos y organizamos el juego",
+      "moment": 2,
+      "momentTitle": "Compartimos nuestras ideas de juego",
+      "aspectId": "conversation",
+      "competencyId": "COM_ORAL",
+      "criterion": "Cuenta lo que quiere hacer y atiende a la respuesta de otro niño.",
+      "steps": [
+        "Acércate a dos niños que estén jugando y pregunta qué quieren hacer.",
+        "Deja que se respondan. Si hace falta, pregunta: «¿Qué te propone tu compañero?»."
+      ],
+      "lookFor": "Escucha si logra comunicar su idea a otra persona y responder a lo que esta dice. No exijas una explicación larga.",
+      "examples": [
+        "Dice «hagamos una casa» y responde «aquí» cuando le preguntan dónde.",
+        "Escucha «necesitamos una puerta» y propone usar una caja."
+      ],
+      "checks": {
+        "title": true,
+        "criterion": true,
+        "cue": true,
+        "steps": [
+          true,
+          true
+        ],
+        "examples": [
+          true,
+          true
+        ],
+        "registerEnabled": true,
+        "registerInsideCriterion": true
+      },
+      "pass": true
+    },
+    {
+      "experienceId": "getting_to_know_us",
+      "title": "Nos conocemos y organizamos el juego",
+      "moment": 3,
+      "momentTitle": "Buscamos una forma de compartir",
+      "aspectId": "agreements",
+      "competencyId": "PS_CONVIVE",
+      "criterion": "Propone o acepta una manera de compartir el juego.",
+      "steps": [
+        "Si surge una necesidad de compartir, descríbela sin decidir por ellos: «Los dos quieren ese camión».",
+        "Pregunta qué podrían hacer y acompaña el acuerdo que elijan. No provoques un conflicto para observar."
+      ],
+      "lookFor": "Mira qué propone o acepta para que ambos puedan jugar y cómo pone en práctica ese acuerdo. Anota también el apoyo que necesitó.",
+      "examples": [
+        "Propone «tú llevas los bloques y después yo» y espera a que vuelva el camión.",
+        "Acepta usar juntos una caja y acerca materiales para construir con su compañero."
+      ],
+      "checks": {
+        "title": true,
+        "criterion": true,
+        "cue": true,
+        "steps": [
+          true,
+          true
+        ],
+        "examples": [
+          true,
+          true
+        ],
+        "registerEnabled": true,
+        "registerInsideCriterion": true
+      },
+      "pass": true
+    },
+    {
+      "experienceId": "getting_to_know_us",
+      "title": "Nos conocemos y organizamos el juego",
+      "moment": 4,
+      "momentTitle": "Nos sumamos al juego de otros",
+      "aspectId": "joins_game",
+      "competencyId": "PS_CONVIVE",
+      "criterion": "Se acerca a otros niños y participa en el juego a su manera.",
+      "steps": [
+        "Observa si alguien quiere acercarse a un juego que ya comenzó. Dale tiempo para mirar.",
+        "Si necesita apoyo, ayúdalo a expresar que quiere participar. Respeta que prefiera seguir observando."
+      ],
+      "lookFor": "Observa cómo busca participar o invita a otra persona, y qué respuesta encuentra. El tiempo que tarda en acercarse no define su aprendizaje.",
+      "examples": [
+        "Se acerca al restaurante y pregunta «¿puedo ser quien cocina?».",
+        "Hace un lugar junto a su construcción y le ofrece bloques a otro niño."
+      ],
+      "checks": {
+        "title": true,
+        "criterion": true,
+        "cue": true,
+        "steps": [
+          true,
+          true
+        ],
+        "examples": [
+          true,
+          true
+        ],
+        "registerEnabled": true,
+        "registerInsideCriterion": true
+      },
+      "pass": true
+    },
+    {
+      "experienceId": "explore_our_world",
+      "title": "Exploramos nuestro entorno",
+      "moment": 1,
+      "momentTitle": "Nos preguntamos qué pasará en el agua",
+      "aspectId": "question",
+      "competencyId": "CYT_INDAGA",
+      "criterion": "Pregunta por algo que ve o le llama la atención.",
+      "steps": [
+        "Muestra una bandeja con poca agua y objetos grandes seguros, como tapas grandes, piedras lisas y bloques.",
+        "Deja que los miren y exploren. Pregunta qué les da curiosidad, sin adelantar cuáles flotarán."
+      ],
+      "lookFor": "Escucha las preguntas que surgen de lo que ve o prueba. Una pregunta puede expresarse con pocas palabras, un gesto o una comparación.",
+      "examples": [
+        "Mira una piedra en el fondo y pregunta «¿por qué se fue abajo?».",
+        "Sostiene una tapa sobre el agua y pregunta «¿esta también se hunde?»."
+      ],
+      "checks": {
+        "title": true,
+        "criterion": true,
+        "cue": true,
+        "steps": [
+          true,
+          true
+        ],
+        "examples": [
+          true,
+          true
+        ],
+        "registerEnabled": true,
+        "registerInsideCriterion": true
+      },
+      "pass": true
+    },
+    {
+      "experienceId": "explore_our_world",
+      "title": "Exploramos nuestro entorno",
+      "moment": 2,
+      "momentTitle": "Comparamos lo que ocurre con dos objetos",
+      "aspectId": "compare_materials",
+      "competencyId": "CYT_INDAGA",
+      "criterion": "Mira o toca dos materiales y nota alguna diferencia.",
+      "steps": [
+        "Invita a elegir dos objetos y a probarlos, uno por vez, en la misma bandeja.",
+        "Pregunta qué notaron en cada caso. Da tiempo para mirar antes de pedir una respuesta."
+      ],
+      "lookFor": "Observa qué diferencia reconoce al explorar los objetos y cómo la comunica. Registra sus hallazgos sin convertirlos en una explicación científica que aún no dio.",
+      "examples": [
+        "Señala la piedra y la tapa: «esta queda abajo y esta arriba».",
+        "Toca un bloque mojado, busca el que no metió al agua y comenta «este está seco»."
+      ],
+      "checks": {
+        "title": true,
+        "criterion": true,
+        "cue": true,
+        "steps": [
+          true,
+          true
+        ],
+        "examples": [
+          true,
+          true
+        ],
+        "registerEnabled": true,
+        "registerInsideCriterion": true
+      },
+      "pass": true
+    },
+    {
+      "experienceId": "explore_our_world",
+      "title": "Exploramos nuestro entorno",
+      "moment": 3,
+      "momentTitle": "Probamos una idea nueva",
+      "aspectId": "tries_again",
+      "competencyId": "CYT_INDAGA",
+      "criterion": "Cambia algo de su exploración para ver qué ocurre.",
+      "steps": [
+        "Retoma una pregunta del grupo. Por ejemplo, invita a probar una tapa boca arriba y luego boca abajo.",
+        "Deja que decidan qué volver a probar y observen el resultado. No anuncies que algo tiene que ocurrir."
+      ],
+      "lookFor": "Mira qué cambia al volver a probar y si presta atención a lo que sucede. Anota la acción y el resultado que el niño identificó, sin atribuirle una conclusión.",
+      "examples": [
+        "Voltea la tapa, la pone otra vez en el agua y se acerca para mirar si entra agua.",
+        "Vuelve a colocar la piedra suavemente para comprobar si ocurre lo mismo."
+      ],
+      "checks": {
+        "title": true,
+        "criterion": true,
+        "cue": true,
+        "steps": [
+          true,
+          true
+        ],
+        "examples": [
+          true,
+          true
+        ],
+        "registerEnabled": true,
+        "registerInsideCriterion": true
+      },
+      "pass": true
+    },
+    {
+      "experienceId": "explore_our_world",
+      "title": "Exploramos nuestro entorno",
+      "moment": 4,
+      "momentTitle": "Compartimos un descubrimiento",
+      "aspectId": "tell_discovery",
+      "competencyId": "COM_ORAL",
+      "criterion": "Describe a otro niño o a la docente lo que observó.",
+      "steps": [
+        "Invita a cada niño que quiera participar a mostrar un objeto que exploró.",
+        "Pregunta qué hizo y qué pasó. Deja que un compañero escuche y haga una pregunta."
+      ],
+      "lookFor": "Escucha si comunica a otra persona algo de la exploración y cómo usa el objeto, los gestos o las palabras para hacerse entender.",
+      "examples": [
+        "Levanta la tapa y cuenta «la puse así y se llenó de agua».",
+        "Muestra dos objetos y explica a un compañero cuál quedó en el fondo."
+      ],
+      "checks": {
+        "title": true,
+        "criterion": true,
+        "cue": true,
+        "steps": [
+          true,
+          true
+        ],
+        "examples": [
+          true,
+          true
+        ],
+        "registerEnabled": true,
+        "registerInsideCriterion": true
+      },
+      "pass": true
+    }
+  ],
+  "recommendationChecks": [
+    {
+      "stage": "Antes de registrar guiadas",
+      "actual": [
+        {
+          "id": "create_a_digital_message",
+          "label": "★ Recomendada · Creamos un mensaje digital · Sin observaciones en estas competencias"
+        },
+        {
+          "id": "plan_try_review",
+          "label": "Prioridad 2 · Probamos nuestro plan · Con algunas observaciones"
+        },
+        {
+          "id": "movement_and_art",
+          "label": "Prioridad 3 · Nos movemos y creamos · Con algunas observaciones"
+        },
+        {
+          "id": "count_and_locate",
+          "label": "Prioridad 4 · Contamos y encontramos lugares · Con algunas observaciones"
+        },
+        {
+          "id": "stories_and_marks",
+          "label": "Prioridad 5 · Escuchamos y contamos historias · Con algunas observaciones"
+        },
+        {
+          "id": "getting_to_know_us",
+          "label": "Prioridad 6 · Nos conocemos y organizamos el juego · Con algunas observaciones"
+        },
+        {
+          "id": "explore_our_world",
+          "label": "Prioridad 7 · Exploramos nuestro entorno · Con algunas observaciones"
+        }
+      ],
+      "expected": [
+        {
+          "id": "create_a_digital_message",
+          "title": "Creamos un mensaje digital",
+          "zero": 10,
+          "one": 0,
+          "totalRecords": 0,
+          "denominator": 10,
+          "index": 6
+        },
+        {
+          "id": "plan_try_review",
+          "title": "Probamos nuestro plan",
+          "zero": 9,
+          "one": 1,
+          "totalRecords": 1,
+          "denominator": 10,
+          "index": 5
+        },
+        {
+          "id": "movement_and_art",
+          "title": "Nos movemos y creamos",
+          "zero": 15,
+          "one": 5,
+          "totalRecords": 5,
+          "denominator": 20,
+          "index": 1
+        },
+        {
+          "id": "count_and_locate",
+          "title": "Contamos y encontramos lugares",
+          "zero": 14,
+          "one": 6,
+          "totalRecords": 6,
+          "denominator": 20,
+          "index": 2
+        },
+        {
+          "id": "stories_and_marks",
+          "title": "Escuchamos y contamos historias",
+          "zero": 21,
+          "one": 9,
+          "totalRecords": 9,
+          "denominator": 30,
+          "index": 4
+        },
+        {
+          "id": "getting_to_know_us",
+          "title": "Nos conocemos y organizamos el juego",
+          "zero": 20,
+          "one": 10,
+          "totalRecords": 10,
+          "denominator": 30,
+          "index": 0
+        },
+        {
+          "id": "explore_our_world",
+          "title": "Exploramos nuestro entorno",
+          "zero": 12,
+          "one": 8,
+          "totalRecords": 8,
+          "denominator": 20,
+          "index": 3
+        }
+      ],
+      "pass": true
+    },
+    {
+      "stage": "Después de 5 registros TIC",
+      "actual": [
+        {
+          "id": "plan_try_review",
+          "label": "★ Recomendada · Probamos nuestro plan · Con algunas observaciones"
+        },
+        {
+          "id": "movement_and_art",
+          "label": "Prioridad 2 · Nos movemos y creamos · Con algunas observaciones"
+        },
+        {
+          "id": "count_and_locate",
+          "label": "Prioridad 3 · Contamos y encontramos lugares · Con algunas observaciones"
+        },
+        {
+          "id": "stories_and_marks",
+          "label": "Prioridad 4 · Escuchamos y contamos historias · Con algunas observaciones"
+        },
+        {
+          "id": "getting_to_know_us",
+          "label": "Prioridad 5 · Nos conocemos y organizamos el juego · Con algunas observaciones"
+        },
+        {
+          "id": "explore_our_world",
+          "label": "Prioridad 6 · Exploramos nuestro entorno · Con algunas observaciones"
+        },
+        {
+          "id": "create_a_digital_message",
+          "label": "Prioridad 7 · Creamos un mensaje digital · Con algunas observaciones"
+        }
+      ],
+      "expected": [
+        {
+          "id": "plan_try_review",
+          "title": "Probamos nuestro plan",
+          "zero": 9,
+          "one": 1,
+          "totalRecords": 1,
+          "denominator": 10,
+          "index": 5
+        },
+        {
+          "id": "movement_and_art",
+          "title": "Nos movemos y creamos",
+          "zero": 15,
+          "one": 5,
+          "totalRecords": 5,
+          "denominator": 20,
+          "index": 1
+        },
+        {
+          "id": "count_and_locate",
+          "title": "Contamos y encontramos lugares",
+          "zero": 14,
+          "one": 6,
+          "totalRecords": 6,
+          "denominator": 20,
+          "index": 2
+        },
+        {
+          "id": "stories_and_marks",
+          "title": "Escuchamos y contamos historias",
+          "zero": 21,
+          "one": 9,
+          "totalRecords": 9,
+          "denominator": 30,
+          "index": 4
+        },
+        {
+          "id": "getting_to_know_us",
+          "title": "Nos conocemos y organizamos el juego",
+          "zero": 20,
+          "one": 10,
+          "totalRecords": 10,
+          "denominator": 30,
+          "index": 0
+        },
+        {
+          "id": "explore_our_world",
+          "title": "Exploramos nuestro entorno",
+          "zero": 12,
+          "one": 8,
+          "totalRecords": 8,
+          "denominator": 20,
+          "index": 3
+        },
+        {
+          "id": "create_a_digital_message",
+          "title": "Creamos un mensaje digital",
+          "zero": 5,
+          "one": 5,
+          "totalRecords": 5,
+          "denominator": 10,
+          "index": 6
+        }
+      ],
+      "pass": true
+    },
+    {
+      "stage": "Después de 5 registros de Aprendizaje autónomo",
+      "actual": [
+        {
+          "id": "movement_and_art",
+          "label": "★ Recomendada · Nos movemos y creamos · Con algunas observaciones"
+        },
+        {
+          "id": "count_and_locate",
+          "label": "Prioridad 2 · Contamos y encontramos lugares · Con algunas observaciones"
+        },
+        {
+          "id": "stories_and_marks",
+          "label": "Prioridad 3 · Escuchamos y contamos historias · Con algunas observaciones"
+        },
+        {
+          "id": "getting_to_know_us",
+          "label": "Prioridad 4 · Nos conocemos y organizamos el juego · Con algunas observaciones"
+        },
+        {
+          "id": "explore_our_world",
+          "label": "Prioridad 5 · Exploramos nuestro entorno · Con algunas observaciones"
+        },
+        {
+          "id": "create_a_digital_message",
+          "label": "Prioridad 6 · Creamos un mensaje digital · Con algunas observaciones"
+        },
+        {
+          "id": "plan_try_review",
+          "label": "Prioridad 7 · Probamos nuestro plan · Con algunas observaciones"
+        }
+      ],
+      "expected": [
+        {
+          "id": "movement_and_art",
+          "title": "Nos movemos y creamos",
+          "zero": 15,
+          "one": 5,
+          "totalRecords": 5,
+          "denominator": 20,
+          "index": 1
+        },
+        {
+          "id": "count_and_locate",
+          "title": "Contamos y encontramos lugares",
+          "zero": 14,
+          "one": 6,
+          "totalRecords": 6,
+          "denominator": 20,
+          "index": 2
+        },
+        {
+          "id": "stories_and_marks",
+          "title": "Escuchamos y contamos historias",
+          "zero": 21,
+          "one": 9,
+          "totalRecords": 9,
+          "denominator": 30,
+          "index": 4
+        },
+        {
+          "id": "getting_to_know_us",
+          "title": "Nos conocemos y organizamos el juego",
+          "zero": 20,
+          "one": 10,
+          "totalRecords": 10,
+          "denominator": 30,
+          "index": 0
+        },
+        {
+          "id": "explore_our_world",
+          "title": "Exploramos nuestro entorno",
+          "zero": 12,
+          "one": 8,
+          "totalRecords": 8,
+          "denominator": 20,
+          "index": 3
+        },
+        {
+          "id": "create_a_digital_message",
+          "title": "Creamos un mensaje digital",
+          "zero": 5,
+          "one": 5,
+          "totalRecords": 5,
+          "denominator": 10,
+          "index": 6
+        },
+        {
+          "id": "plan_try_review",
+          "title": "Probamos nuestro plan",
+          "zero": 4,
+          "one": 6,
+          "totalRecords": 6,
+          "denominator": 10,
+          "index": 5
+        }
+      ],
+      "pass": true
+    },
+    {
+      "stage": "Después de 5 registros de Movimiento y arte",
+      "actual": [
+        {
+          "id": "count_and_locate",
+          "label": "★ Recomendada · Contamos y encontramos lugares · Con algunas observaciones"
+        },
+        {
+          "id": "stories_and_marks",
+          "label": "Prioridad 2 · Escuchamos y contamos historias · Con algunas observaciones"
+        },
+        {
+          "id": "getting_to_know_us",
+          "label": "Prioridad 3 · Nos conocemos y organizamos el juego · Con algunas observaciones"
+        },
+        {
+          "id": "explore_our_world",
+          "label": "Prioridad 4 · Exploramos nuestro entorno · Con algunas observaciones"
+        },
+        {
+          "id": "movement_and_art",
+          "label": "Prioridad 5 · Nos movemos y creamos · Con algunas observaciones"
+        },
+        {
+          "id": "create_a_digital_message",
+          "label": "Prioridad 6 · Creamos un mensaje digital · Con algunas observaciones"
+        },
+        {
+          "id": "plan_try_review",
+          "label": "Prioridad 7 · Probamos nuestro plan · Con algunas observaciones"
+        }
+      ],
+      "expected": [
+        {
+          "id": "count_and_locate",
+          "title": "Contamos y encontramos lugares",
+          "zero": 14,
+          "one": 6,
+          "totalRecords": 6,
+          "denominator": 20,
+          "index": 2
+        },
+        {
+          "id": "stories_and_marks",
+          "title": "Escuchamos y contamos historias",
+          "zero": 21,
+          "one": 9,
+          "totalRecords": 9,
+          "denominator": 30,
+          "index": 4
+        },
+        {
+          "id": "getting_to_know_us",
+          "title": "Nos conocemos y organizamos el juego",
+          "zero": 20,
+          "one": 10,
+          "totalRecords": 10,
+          "denominator": 30,
+          "index": 0
+        },
+        {
+          "id": "explore_our_world",
+          "title": "Exploramos nuestro entorno",
+          "zero": 12,
+          "one": 8,
+          "totalRecords": 8,
+          "denominator": 20,
+          "index": 3
+        },
+        {
+          "id": "movement_and_art",
+          "title": "Nos movemos y creamos",
+          "zero": 10,
+          "one": 10,
+          "totalRecords": 10,
+          "denominator": 20,
+          "index": 1
+        },
+        {
+          "id": "create_a_digital_message",
+          "title": "Creamos un mensaje digital",
+          "zero": 5,
+          "one": 5,
+          "totalRecords": 5,
+          "denominator": 10,
+          "index": 6
+        },
+        {
+          "id": "plan_try_review",
+          "title": "Probamos nuestro plan",
+          "zero": 4,
+          "one": 6,
+          "totalRecords": 6,
+          "denominator": 10,
+          "index": 5
+        }
+      ],
+      "pass": true
+    },
+    {
+      "stage": "Después de 5 registros de Cantidad y espacio",
+      "actual": [
+        {
+          "id": "stories_and_marks",
+          "label": "★ Recomendada · Escuchamos y contamos historias · Con algunas observaciones"
+        },
+        {
+          "id": "getting_to_know_us",
+          "label": "Prioridad 2 · Nos conocemos y organizamos el juego · Con algunas observaciones"
+        },
+        {
+          "id": "explore_our_world",
+          "label": "Prioridad 3 · Exploramos nuestro entorno · Con algunas observaciones"
+        },
+        {
+          "id": "movement_and_art",
+          "label": "Prioridad 4 · Nos movemos y creamos · Con algunas observaciones"
+        },
+        {
+          "id": "create_a_digital_message",
+          "label": "Prioridad 5 · Creamos un mensaje digital · Con algunas observaciones"
+        },
+        {
+          "id": "count_and_locate",
+          "label": "Prioridad 6 · Contamos y encontramos lugares · Con algunas observaciones"
+        },
+        {
+          "id": "plan_try_review",
+          "label": "Prioridad 7 · Probamos nuestro plan · Con algunas observaciones"
+        }
+      ],
+      "expected": [
+        {
+          "id": "stories_and_marks",
+          "title": "Escuchamos y contamos historias",
+          "zero": 21,
+          "one": 9,
+          "totalRecords": 9,
+          "denominator": 30,
+          "index": 4
+        },
+        {
+          "id": "getting_to_know_us",
+          "title": "Nos conocemos y organizamos el juego",
+          "zero": 20,
+          "one": 10,
+          "totalRecords": 10,
+          "denominator": 30,
+          "index": 0
+        },
+        {
+          "id": "explore_our_world",
+          "title": "Exploramos nuestro entorno",
+          "zero": 12,
+          "one": 8,
+          "totalRecords": 8,
+          "denominator": 20,
+          "index": 3
+        },
+        {
+          "id": "movement_and_art",
+          "title": "Nos movemos y creamos",
+          "zero": 10,
+          "one": 10,
+          "totalRecords": 10,
+          "denominator": 20,
+          "index": 1
+        },
+        {
+          "id": "create_a_digital_message",
+          "title": "Creamos un mensaje digital",
+          "zero": 5,
+          "one": 5,
+          "totalRecords": 5,
+          "denominator": 10,
+          "index": 6
+        },
+        {
+          "id": "count_and_locate",
+          "title": "Contamos y encontramos lugares",
+          "zero": 9,
+          "one": 11,
+          "totalRecords": 11,
+          "denominator": 20,
+          "index": 2
+        },
+        {
+          "id": "plan_try_review",
+          "title": "Probamos nuestro plan",
+          "zero": 4,
+          "one": 6,
+          "totalRecords": 6,
+          "denominator": 10,
+          "index": 5
+        }
+      ],
+      "pass": true
+    },
+    {
+      "stage": "Después de 5 registros de Cuentos y mensajes",
+      "actual": [
+        {
+          "id": "getting_to_know_us",
+          "label": "★ Recomendada · Nos conocemos y organizamos el juego · Con algunas observaciones"
+        },
+        {
+          "id": "explore_our_world",
+          "label": "Prioridad 2 · Exploramos nuestro entorno · Con algunas observaciones"
+        },
+        {
+          "id": "stories_and_marks",
+          "label": "Prioridad 3 · Escuchamos y contamos historias · Con algunas observaciones"
+        },
+        {
+          "id": "movement_and_art",
+          "label": "Prioridad 4 · Nos movemos y creamos · Con algunas observaciones"
+        },
+        {
+          "id": "create_a_digital_message",
+          "label": "Prioridad 5 · Creamos un mensaje digital · Con algunas observaciones"
+        },
+        {
+          "id": "count_and_locate",
+          "label": "Prioridad 6 · Contamos y encontramos lugares · Con algunas observaciones"
+        },
+        {
+          "id": "plan_try_review",
+          "label": "Prioridad 7 · Probamos nuestro plan · Con algunas observaciones"
+        }
+      ],
+      "expected": [
+        {
+          "id": "getting_to_know_us",
+          "title": "Nos conocemos y organizamos el juego",
+          "zero": 19,
+          "one": 11,
+          "totalRecords": 11,
+          "denominator": 30,
+          "index": 0
+        },
+        {
+          "id": "explore_our_world",
+          "title": "Exploramos nuestro entorno",
+          "zero": 11,
+          "one": 9,
+          "totalRecords": 9,
+          "denominator": 20,
+          "index": 3
+        },
+        {
+          "id": "stories_and_marks",
+          "title": "Escuchamos y contamos historias",
+          "zero": 16,
+          "one": 14,
+          "totalRecords": 14,
+          "denominator": 30,
+          "index": 4
+        },
+        {
+          "id": "movement_and_art",
+          "title": "Nos movemos y creamos",
+          "zero": 10,
+          "one": 10,
+          "totalRecords": 10,
+          "denominator": 20,
+          "index": 1
+        },
+        {
+          "id": "create_a_digital_message",
+          "title": "Creamos un mensaje digital",
+          "zero": 5,
+          "one": 5,
+          "totalRecords": 5,
+          "denominator": 10,
+          "index": 6
+        },
+        {
+          "id": "count_and_locate",
+          "title": "Contamos y encontramos lugares",
+          "zero": 9,
+          "one": 11,
+          "totalRecords": 11,
+          "denominator": 20,
+          "index": 2
+        },
+        {
+          "id": "plan_try_review",
+          "title": "Probamos nuestro plan",
+          "zero": 4,
+          "one": 6,
+          "totalRecords": 6,
+          "denominator": 10,
+          "index": 5
+        }
+      ],
+      "pass": true
+    },
+    {
+      "stage": "Después de 5 registros de Identidad, oralidad y convivencia",
+      "actual": [
+        {
+          "id": "movement_and_art",
+          "label": "★ Recomendada · Nos movemos y creamos · Con algunas observaciones"
+        },
+        {
+          "id": "explore_our_world",
+          "label": "Prioridad 2 · Exploramos nuestro entorno · Con algunas observaciones"
+        },
+        {
+          "id": "stories_and_marks",
+          "label": "Prioridad 3 · Escuchamos y contamos historias · Con algunas observaciones"
+        },
+        {
+          "id": "create_a_digital_message",
+          "label": "Prioridad 4 · Creamos un mensaje digital · Con algunas observaciones"
+        },
+        {
+          "id": "getting_to_know_us",
+          "label": "Prioridad 5 · Nos conocemos y organizamos el juego · Con algunas observaciones"
+        },
+        {
+          "id": "count_and_locate",
+          "label": "Prioridad 6 · Contamos y encontramos lugares · Con algunas observaciones"
+        },
+        {
+          "id": "plan_try_review",
+          "label": "Prioridad 7 · Probamos nuestro plan · Con algunas observaciones"
+        }
+      ],
+      "expected": [
+        {
+          "id": "movement_and_art",
+          "title": "Nos movemos y creamos",
+          "zero": 10,
+          "one": 10,
+          "totalRecords": 10,
+          "denominator": 20,
+          "index": 1
+        },
+        {
+          "id": "explore_our_world",
+          "title": "Exploramos nuestro entorno",
+          "zero": 10,
+          "one": 10,
+          "totalRecords": 10,
+          "denominator": 20,
+          "index": 3
+        },
+        {
+          "id": "stories_and_marks",
+          "title": "Escuchamos y contamos historias",
+          "zero": 15,
+          "one": 15,
+          "totalRecords": 15,
+          "denominator": 30,
+          "index": 4
+        },
+        {
+          "id": "create_a_digital_message",
+          "title": "Creamos un mensaje digital",
+          "zero": 5,
+          "one": 5,
+          "totalRecords": 5,
+          "denominator": 10,
+          "index": 6
+        },
+        {
+          "id": "getting_to_know_us",
+          "title": "Nos conocemos y organizamos el juego",
+          "zero": 14,
+          "one": 16,
+          "totalRecords": 16,
+          "denominator": 30,
+          "index": 0
+        },
+        {
+          "id": "count_and_locate",
+          "title": "Contamos y encontramos lugares",
+          "zero": 9,
+          "one": 11,
+          "totalRecords": 11,
+          "denominator": 20,
+          "index": 2
+        },
+        {
+          "id": "plan_try_review",
+          "title": "Probamos nuestro plan",
+          "zero": 4,
+          "one": 6,
+          "totalRecords": 6,
+          "denominator": 10,
+          "index": 5
+        }
+      ],
+      "pass": true
+    },
+    {
+      "stage": "Después de las 35 guiadas",
+      "actual": [
+        {
+          "id": "movement_and_art",
+          "label": "★ Recomendada · Nos movemos y creamos · Con algunas observaciones"
+        },
+        {
+          "id": "create_a_digital_message",
+          "label": "Prioridad 2 · Creamos un mensaje digital · Con algunas observaciones"
+        },
+        {
+          "id": "stories_and_marks",
+          "label": "Prioridad 3 · Escuchamos y contamos historias · Con algunas observaciones"
+        },
+        {
+          "id": "count_and_locate",
+          "label": "Prioridad 4 · Contamos y encontramos lugares · Con algunas observaciones"
+        },
+        {
+          "id": "getting_to_know_us",
+          "label": "Prioridad 5 · Nos conocemos y organizamos el juego · Con algunas observaciones"
+        },
+        {
+          "id": "plan_try_review",
+          "label": "Prioridad 6 · Probamos nuestro plan · Con algunas observaciones"
+        },
+        {
+          "id": "explore_our_world",
+          "label": "Prioridad 7 · Exploramos nuestro entorno · Con algunas observaciones"
+        }
+      ],
+      "expected": [
+        {
+          "id": "movement_and_art",
+          "title": "Nos movemos y creamos",
+          "zero": 10,
+          "one": 10,
+          "totalRecords": 10,
+          "denominator": 20,
+          "index": 1
+        },
+        {
+          "id": "create_a_digital_message",
+          "title": "Creamos un mensaje digital",
+          "zero": 5,
+          "one": 5,
+          "totalRecords": 5,
+          "denominator": 10,
+          "index": 6
+        },
+        {
+          "id": "stories_and_marks",
+          "title": "Escuchamos y contamos historias",
+          "zero": 14,
+          "one": 16,
+          "totalRecords": 16,
+          "denominator": 30,
+          "index": 4
+        },
+        {
+          "id": "count_and_locate",
+          "title": "Contamos y encontramos lugares",
+          "zero": 9,
+          "one": 11,
+          "totalRecords": 11,
+          "denominator": 20,
+          "index": 2
+        },
+        {
+          "id": "getting_to_know_us",
+          "title": "Nos conocemos y organizamos el juego",
+          "zero": 13,
+          "one": 17,
+          "totalRecords": 17,
+          "denominator": 30,
+          "index": 0
+        },
+        {
+          "id": "plan_try_review",
+          "title": "Probamos nuestro plan",
+          "zero": 4,
+          "one": 6,
+          "totalRecords": 6,
+          "denominator": 10,
+          "index": 5
+        },
+        {
+          "id": "explore_our_world",
+          "title": "Exploramos nuestro entorno",
+          "zero": 5,
+          "one": 15,
+          "totalRecords": 15,
+          "denominator": 20,
+          "index": 3
+        }
+      ],
+      "pass": true
+    },
+    {
+      "stage": "Después de recargar las 35 guiadas",
+      "actual": [
+        {
+          "id": "movement_and_art",
+          "label": "★ Recomendada · Nos movemos y creamos · Con algunas observaciones"
+        },
+        {
+          "id": "create_a_digital_message",
+          "label": "Prioridad 2 · Creamos un mensaje digital · Con algunas observaciones"
+        },
+        {
+          "id": "stories_and_marks",
+          "label": "Prioridad 3 · Escuchamos y contamos historias · Con algunas observaciones"
+        },
+        {
+          "id": "count_and_locate",
+          "label": "Prioridad 4 · Contamos y encontramos lugares · Con algunas observaciones"
+        },
+        {
+          "id": "getting_to_know_us",
+          "label": "Prioridad 5 · Nos conocemos y organizamos el juego · Con algunas observaciones"
+        },
+        {
+          "id": "plan_try_review",
+          "label": "Prioridad 6 · Probamos nuestro plan · Con algunas observaciones"
+        },
+        {
+          "id": "explore_our_world",
+          "label": "Prioridad 7 · Exploramos nuestro entorno · Con algunas observaciones"
+        }
+      ],
+      "expected": [
+        {
+          "id": "movement_and_art",
+          "title": "Nos movemos y creamos",
+          "zero": 10,
+          "one": 10,
+          "totalRecords": 10,
+          "denominator": 20,
+          "index": 1
+        },
+        {
+          "id": "create_a_digital_message",
+          "title": "Creamos un mensaje digital",
+          "zero": 5,
+          "one": 5,
+          "totalRecords": 5,
+          "denominator": 10,
+          "index": 6
+        },
+        {
+          "id": "stories_and_marks",
+          "title": "Escuchamos y contamos historias",
+          "zero": 14,
+          "one": 16,
+          "totalRecords": 16,
+          "denominator": 30,
+          "index": 4
+        },
+        {
+          "id": "count_and_locate",
+          "title": "Contamos y encontramos lugares",
+          "zero": 9,
+          "one": 11,
+          "totalRecords": 11,
+          "denominator": 20,
+          "index": 2
+        },
+        {
+          "id": "getting_to_know_us",
+          "title": "Nos conocemos y organizamos el juego",
+          "zero": 13,
+          "one": 17,
+          "totalRecords": 17,
+          "denominator": 30,
+          "index": 0
+        },
+        {
+          "id": "plan_try_review",
+          "title": "Probamos nuestro plan",
+          "zero": 4,
+          "one": 6,
+          "totalRecords": 6,
+          "denominator": 10,
+          "index": 5
+        },
+        {
+          "id": "explore_our_world",
+          "title": "Exploramos nuestro entorno",
+          "zero": 5,
+          "one": 15,
+          "totalRecords": 15,
+          "denominator": 20,
+          "index": 3
+        }
+      ],
+      "pass": true
+    }
+  ],
+  "studentPriority": {
+    "checks": 36,
+    "passed": 35,
+    "transientFailures": 1,
+    "note": "Las 35 selecciones se hicieron con conteos correctos una vez actualizados; cualquiera de los alumnos seguía siendo seleccionable. Todos los elegidos tenían cero registros previos en esa competencia."
+  },
+  "records": [
+    {
+      "experienceId": "create_a_digital_message",
+      "experienceTitle": "Creamos un mensaje digital",
+      "aspectId": "explore_a_digital_function",
+      "criterion": "Explora con acompañamiento una función del dispositivo y participa en su uso y cuidado.",
+      "competencyId": "TRANS_TIC",
+      "moment": 1,
+      "student": "Camila Huamán Castro",
+      "text": "Con la profesora a su lado, encontró el botón de grabar, lo pulsó y pidió escuchar su voz antes de elegir el mensaje que quería registrar.",
+      "studentCountBefore": 0,
+      "dialogContextMatched": true,
+      "studentOrderPassed": true,
+      "prioritization": "Elegido entre alumnos sin registros en esta competencia; selección libre entre empates.",
+      "saved": true,
+      "totalAfterSave": 31
+    },
+    {
+      "experienceId": "create_a_digital_message",
+      "experienceTitle": "Creamos un mensaje digital",
+      "aspectId": "explore_a_digital_function",
+      "criterion": "Explora con acompañamiento una función del dispositivo y participa en su uso y cuidado.",
+      "competencyId": "TRANS_TIC",
+      "moment": 1,
+      "student": "Diego Ramos Vega",
+      "text": "Sostuvo la tableta con ambas manos y apuntó la cámara a su puente. Pidió ayuda para ver si aparecía completo y tocó el botón para comprobar la imagen.",
+      "studentCountBefore": 0,
+      "dialogContextMatched": true,
+      "studentOrderPassed": true,
+      "prioritization": "Elegido entre alumnos sin registros en esta competencia; selección libre entre empates.",
+      "saved": true,
+      "totalAfterSave": 32
+    },
+    {
+      "experienceId": "create_a_digital_message",
+      "experienceTitle": "Creamos un mensaje digital",
+      "aspectId": "make_and_review_a_digital_record",
+      "criterion": "Produce con acompañamiento una imagen o un audio para registrar o comunicar algo que eligió.",
+      "competencyId": "TRANS_TIC",
+      "moment": 2,
+      "student": "Emilia Cárdenas Ruiz",
+      "text": "Eligió grabar un saludo para su grupo. Pulsó grabar con ayuda, escuchó el resultado y pidió hacerlo otra vez porque no se oía el nombre que quería decir.",
+      "studentCountBefore": 0,
+      "dialogContextMatched": true,
+      "studentOrderPassed": true,
+      "saved": true,
+      "totalAfterSave": 33
+    },
+    {
+      "experienceId": "create_a_digital_message",
+      "experienceTitle": "Creamos un mensaje digital",
+      "aspectId": "make_and_review_a_digital_record",
+      "criterion": "Produce con acompañamiento una imagen o un audio para registrar o comunicar algo que eligió.",
+      "competencyId": "TRANS_TIC",
+      "moment": 2,
+      "student": "Gabriel Paredes Soto",
+      "text": "Quiso mostrar su construcción. Con acompañamiento tomó una foto del objeto, la miró y señaló que faltaba una parte; movió el dispositivo y eligió una nueva imagen.",
+      "studentCountBefore": 0,
+      "dialogContextMatched": true,
+      "studentOrderPassed": true,
+      "saved": true,
+      "totalAfterSave": 34
+    },
+    {
+      "experienceId": "create_a_digital_message",
+      "experienceTitle": "Creamos un mensaje digital",
+      "aspectId": "make_and_review_a_digital_record",
+      "criterion": "Produce con acompañamiento una imagen o un audio para registrar o comunicar algo que eligió.",
+      "competencyId": "TRANS_TIC",
+      "moment": 2,
+      "student": "Luciana Torres Medina",
+      "text": "Creó un dibujo digital para explicar un camino. Con ayuda usó el botón de deshacer y volvió a trazar una parte antes de mostrar el resultado en el dispositivo.",
+      "studentCountBefore": 0,
+      "dialogContextMatched": true,
+      "studentOrderPassed": true,
+      "saved": true,
+      "totalAfterSave": 35
+    },
+    {
+      "experienceId": "plan_try_review",
+      "experienceTitle": "Probamos nuestro plan",
+      "aspectId": "choose_goal_and_materials",
+      "criterion": "Explica con ayuda qué quiere hacer y qué necesita para empezar.",
+      "competencyId": "TRANS_AUTONOMO",
+      "moment": 1,
+      "student": "Nicolás Mendoza León",
+      "text": "Dijo que quería hacer un camino para el muñeco. Ante la pregunta de qué necesitaba, señaló dos cajas y explicó que las pondría juntas para comenzar.",
+      "studentCountBefore": 0,
+      "dialogContextMatched": true,
+      "studentOrderPassed": true,
+      "saved": true,
+      "totalAfterSave": 36
+    },
+    {
+      "experienceId": "plan_try_review",
+      "experienceTitle": "Probamos nuestro plan",
+      "aspectId": "choose_goal_and_materials",
+      "criterion": "Explica con ayuda qué quiere hacer y qué necesita para empezar.",
+      "competencyId": "TRANS_AUTONOMO",
+      "moment": 1,
+      "student": "Sofía Vargas Cabrera",
+      "text": "Eligió construir un puente de papel. Con una pregunta de la profesora explicó que necesitaba papel y dos bloques para sostenerlo, y fue a buscarlos.",
+      "studentCountBefore": 0,
+      "dialogContextMatched": true,
+      "studentOrderPassed": true,
+      "saved": true,
+      "totalAfterSave": 37
+    },
+    {
+      "experienceId": "plan_try_review",
+      "experienceTitle": "Probamos nuestro plan",
+      "aspectId": "try_a_strategy",
+      "criterion": "Plantea con ayuda una acción o estrategia para alcanzar el reto que eligió.",
+      "competencyId": "TRANS_AUTONOMO",
+      "moment": 2,
+      "student": "Thiago Gutiérrez Silva",
+      "text": "Para que su torre no se cayera, propuso colocar primero las cajas más grandes. Probó su idea y, al notar que una se movía, decidió cambiarla de posición.",
+      "studentCountBefore": 0,
+      "dialogContextMatched": true,
+      "studentOrderPassed": true,
+      "saved": true,
+      "totalAfterSave": 38
+    },
+    {
+      "experienceId": "plan_try_review",
+      "experienceTitle": "Probamos nuestro plan",
+      "aspectId": "try_a_strategy",
+      "criterion": "Plantea con ayuda una acción o estrategia para alcanzar el reto que eligió.",
+      "competencyId": "TRANS_AUTONOMO",
+      "moment": 2,
+      "student": "Valentina Rojas Salazar",
+      "text": "Quería unir dos cajas con un camino. Propuso pegar primero un extremo del papel y después el otro; pidió que la profesora sostuviera una caja mientras lo intentaba.",
+      "studentCountBefore": 0,
+      "dialogContextMatched": true,
+      "studentOrderPassed": true,
+      "saved": true,
+      "totalAfterSave": 39
+    },
+    {
+      "experienceId": "plan_try_review",
+      "experienceTitle": "Probamos nuestro plan",
+      "aspectId": "review_the_attempt",
+      "criterion": "Revisa con ayuda lo que hizo y comunica qué le sirvió o qué cambiaría.",
+      "competencyId": "TRANS_AUTONOMO",
+      "moment": 3,
+      "student": "Camila Huamán Castro",
+      "text": "Al volver a mirar su puente dijo que una hoja se doblaba. Explicó que al poner dos pudo pasar el muñeco y propuso conservar esa idea para el siguiente intento.",
+      "studentCountBefore": 0,
+      "dialogContextMatched": true,
+      "studentOrderPassed": true,
+      "saved": true,
+      "totalAfterSave": 40
+    },
+    {
+      "experienceId": "movement_and_art",
+      "experienceTitle": "Nos movemos y creamos",
+      "aspectId": "movement",
+      "criterion": "Prueba distintas maneras de moverse durante el juego.",
+      "competencyId": "PSICO_MOTRICIDAD",
+      "moment": 1,
+      "student": "Mateo Quispe Flores",
+      "text": "Eligió caminar con pasos largos y luego agacharse para recoger una tela. Se detuvo al acercarse a un compañero y continuó por el espacio libre.",
+      "studentCountBefore": 0,
+      "dialogContextMatched": true,
+      "studentOrderPassed": true,
+      "saved": true,
+      "totalAfterSave": 41
+    },
+    {
+      "experienceId": "movement_and_art",
+      "experienceTitle": "Nos movemos y creamos",
+      "aspectId": "movement",
+      "criterion": "Prueba distintas maneras de moverse durante el juego.",
+      "competencyId": "PSICO_MOTRICIDAD",
+      "moment": 1,
+      "student": "Nicolás Mendoza León",
+      "text": "Probó caminar de puntas y luego dar pasos amplios. Al cambiar de dirección separó los brazos y redujo la velocidad para mantener el equilibrio.",
+      "studentCountBefore": 0,
+      "dialogContextMatched": true,
+      "studentOrderPassed": true,
+      "saved": true,
+      "totalAfterSave": 42
+    },
+    {
+      "experienceId": "movement_and_art",
+      "experienceTitle": "Nos movemos y creamos",
+      "aspectId": "adjust_movement",
+      "criterion": "Cambia cómo se mueve cuando el juego lo requiere.",
+      "competencyId": "PSICO_MOTRICIDAD",
+      "moment": 2,
+      "student": "Valentina Rojas Salazar",
+      "text": "Al perder el equilibrio en la línea, abrió los brazos y volvió a intentarlo con pasos más cortos. Eligió después pasar por el espacio libre junto al cojín.",
+      "studentCountBefore": 0,
+      "dialogContextMatched": true,
+      "studentOrderPassed": true,
+      "saved": true,
+      "totalAfterSave": 43
+    },
+    {
+      "experienceId": "movement_and_art",
+      "experienceTitle": "Nos movemos y creamos",
+      "aspectId": "creation",
+      "criterion": "Combina materiales para crear algo propio.",
+      "competencyId": "COM_ARTE",
+      "moment": 3,
+      "student": "Diego Ramos Vega",
+      "text": "Arrugó papel para darle volumen, lo unió a una tela con cinta y agregó trazos con crayón. Probó dos maneras de sujetarlo antes de elegir la que quería.",
+      "studentCountBefore": 0,
+      "dialogContextMatched": true,
+      "studentOrderPassed": true,
+      "saved": true,
+      "totalAfterSave": 44
+    },
+    {
+      "experienceId": "movement_and_art",
+      "experienceTitle": "Nos movemos y creamos",
+      "aspectId": "express_idea",
+      "criterion": "Usa movimientos o materiales para mostrar lo que imagina.",
+      "competencyId": "COM_ARTE",
+      "moment": 4,
+      "student": "Thiago Gutiérrez Silva",
+      "text": "Movió su tela arriba y abajo y dijo que era un barco en las olas. Repitió el movimiento para mostrar a sus compañeros lo que había imaginado.",
+      "studentCountBefore": 0,
+      "dialogContextMatched": true,
+      "studentOrderPassed": true,
+      "saved": true,
+      "totalAfterSave": 45
+    },
+    {
+      "experienceId": "count_and_locate",
+      "experienceTitle": "Contamos y encontramos lugares",
+      "aspectId": "quantity",
+      "criterion": "Cuenta o reúne objetos para resolver una situación de juego.",
+      "competencyId": "MAT_CANTIDAD",
+      "moment": 1,
+      "student": "Emilia Cárdenas Ruiz",
+      "text": "Entregó un vehículo a cada compañero. Miró a quienes aún no tenían, contó los vehículos que quedaban y fue a buscar uno más para completar el reparto.",
+      "studentCountBefore": 0,
+      "dialogContextMatched": true,
+      "studentOrderPassed": true,
+      "saved": true,
+      "totalAfterSave": 46
+    },
+    {
+      "experienceId": "count_and_locate",
+      "experienceTitle": "Contamos y encontramos lugares",
+      "aspectId": "compare_groups",
+      "criterion": "Nota si un grupo de objetos tiene más, menos o la misma cantidad.",
+      "competencyId": "MAT_CANTIDAD",
+      "moment": 2,
+      "student": "Luciana Torres Medina",
+      "text": "Colocó un muñeco junto a cada vehículo y señaló que uno había quedado sin pareja. Dijo que faltaba un vehículo y lo comprobó al colocar uno más.",
+      "studentCountBefore": 0,
+      "dialogContextMatched": true,
+      "studentOrderPassed": true,
+      "saved": true,
+      "totalAfterSave": 47
+    },
+    {
+      "experienceId": "count_and_locate",
+      "experienceTitle": "Contamos y encontramos lugares",
+      "aspectId": "space",
+      "criterion": "Coloca objetos o explica por dónde pasar en el recorrido.",
+      "competencyId": "MAT_FORMA",
+      "moment": 3,
+      "student": "Camila Huamán Castro",
+      "text": "Colocó una caja detrás de otra y señaló por dónde pasaría su muñeco para llegar a la parada. Lo desplazó entre los bloques para mostrar su recorrido.",
+      "studentCountBefore": 0,
+      "dialogContextMatched": true,
+      "studentOrderPassed": true,
+      "saved": true,
+      "totalAfterSave": 48
+    },
+    {
+      "experienceId": "count_and_locate",
+      "experienceTitle": "Contamos y encontramos lugares",
+      "aspectId": "space",
+      "criterion": "Coloca objetos o explica por dónde pasar en el recorrido.",
+      "competencyId": "MAT_FORMA",
+      "moment": 3,
+      "student": "Gabriel Paredes Soto",
+      "text": "Puso la parada al lado de una caja y separó dos bloques para que pasara el vehículo. Mostró con el dedo dónde empezaba y dónde terminaba el camino.",
+      "studentCountBefore": 0,
+      "dialogContextMatched": true,
+      "studentOrderPassed": true,
+      "saved": true,
+      "totalAfterSave": 49
+    },
+    {
+      "experienceId": "count_and_locate",
+      "experienceTitle": "Contamos y encontramos lugares",
+      "aspectId": "change_route",
+      "criterion": "Prueba otro camino cuando algo impide pasar.",
+      "competencyId": "MAT_FORMA",
+      "moment": 4,
+      "student": "Sofía Vargas Cabrera",
+      "text": "Cuando una caja cerró parte del camino, movió dos bloques y probó rodearla con el vehículo. Mostró que por ese lado podía llegar a la misma parada.",
+      "studentCountBefore": 0,
+      "dialogContextMatched": true,
+      "studentOrderPassed": true,
+      "saved": true,
+      "totalAfterSave": 50
+    },
+    {
+      "experienceId": "stories_and_marks",
+      "experienceTitle": "Escuchamos y contamos historias",
+      "aspectId": "reading",
+      "criterion": "Dice qué cree que pasará al mirar el cuento.",
+      "competencyId": "COM_LECTURA",
+      "moment": 1,
+      "student": "Gabriel Paredes Soto",
+      "text": "Señaló las botas de un personaje en la portada y dijo que quizá saldría a buscar a alguien. Mostró ese detalle cuando la profesora le preguntó en qué se había fijado.",
+      "studentCountBefore": 0,
+      "dialogContextMatched": true,
+      "studentOrderPassed": true,
+      "saved": true,
+      "totalAfterSave": 51
+    },
+    {
+      "experienceId": "stories_and_marks",
+      "experienceTitle": "Escuchamos y contamos historias",
+      "aspectId": "retelling",
+      "criterion": "Relata con sus palabras algo que ocurrió en el cuento.",
+      "competencyId": "COM_ORAL",
+      "moment": 2,
+      "student": "Emilia Cárdenas Ruiz",
+      "text": "Eligió una escena del cuento y contó con sus palabras: «Primero estaba solo y después llegó su amigo». Señaló dos ilustraciones para acompañar lo que relataba.",
+      "studentCountBefore": 0,
+      "dialogContextMatched": true,
+      "studentOrderPassed": true,
+      "saved": true,
+      "totalAfterSave": 52
+    },
+    {
+      "experienceId": "stories_and_marks",
+      "experienceTitle": "Escuchamos y contamos historias",
+      "aspectId": "write_message",
+      "criterion": "Escribe a su manera un mensaje sobre el cuento para alguien.",
+      "competencyId": "COM_ESCRITURA",
+      "moment": 3,
+      "student": "Mateo Quispe Flores",
+      "text": "Dijo que quería invitar a otro grupo a escuchar el cuento. Hizo marcas y algunas letras en un papel y explicó para quién era el mensaje que estaba escribiendo.",
+      "studentCountBefore": 0,
+      "dialogContextMatched": true,
+      "studentOrderPassed": true,
+      "saved": true,
+      "totalAfterSave": 53
+    },
+    {
+      "experienceId": "stories_and_marks",
+      "experienceTitle": "Escuchamos y contamos historias",
+      "aspectId": "read_own_message",
+      "criterion": "Relee a su manera el mensaje y comenta si dice lo que quería comunicar.",
+      "competencyId": "COM_ESCRITURA",
+      "moment": 4,
+      "student": "Nicolás Mendoza León",
+      "text": "Señaló las marcas de su mensaje y las leyó a su manera: «Vengan a escuchar el cuento». Dijo a qué grupo quería entregarlo y añadió una marca que consideró necesaria.",
+      "studentCountBefore": 0,
+      "dialogContextMatched": true,
+      "studentOrderPassed": true,
+      "saved": true,
+      "totalAfterSave": 54
+    },
+    {
+      "experienceId": "stories_and_marks",
+      "experienceTitle": "Escuchamos y contamos historias",
+      "aspectId": "read_own_message",
+      "criterion": "Relee a su manera el mensaje y comenta si dice lo que quería comunicar.",
+      "competencyId": "COM_ESCRITURA",
+      "moment": 4,
+      "student": "Thiago Gutiérrez Silva",
+      "text": "Volvió a señalar lo que había escrito y explicó que invitaba a sus compañeros. Después de escucharse añadió unas marcas y dijo que faltaba contar dónde escucharían el cuento.",
+      "studentCountBefore": 0,
+      "dialogContextMatched": true,
+      "studentOrderPassed": true,
+      "saved": true,
+      "totalAfterSave": 55
+    },
+    {
+      "experienceId": "getting_to_know_us",
+      "experienceTitle": "Nos conocemos y organizamos el juego",
+      "aspectId": "choice",
+      "criterion": "Elige dónde jugar y muestra qué le interesa.",
+      "competencyId": "PS_IDENTIDAD",
+      "moment": 1,
+      "student": "Valentina Rojas Salazar",
+      "text": "Miró las opciones de juego, señaló el espacio de dibujo y se acercó a elegir crayones. Dijo que quería dibujar flores antes de empezar.",
+      "studentCountBefore": 0,
+      "dialogContextMatched": true,
+      "studentOrderPassed": true,
+      "saved": true,
+      "totalAfterSave": 56
+    },
+    {
+      "experienceId": "getting_to_know_us",
+      "experienceTitle": "Nos conocemos y organizamos el juego",
+      "aspectId": "choice",
+      "criterion": "Elige dónde jugar y muestra qué le interesa.",
+      "competencyId": "PS_IDENTIDAD",
+      "moment": 1,
+      "student": "Nicolás Mendoza León",
+      "text": "Eligió los bloques y explicó que quería hacer un lugar para sus animales. Buscó piezas grandes y empezó a acomodarlas en el espacio elegido.",
+      "studentCountBefore": 0,
+      "dialogContextMatched": true,
+      "studentOrderPassed": true,
+      "saved": true,
+      "totalAfterSave": 57
+    },
+    {
+      "experienceId": "getting_to_know_us",
+      "experienceTitle": "Nos conocemos y organizamos el juego",
+      "aspectId": "conversation",
+      "criterion": "Cuenta lo que quiere hacer y atiende a la respuesta de otro niño.",
+      "competencyId": "COM_ORAL",
+      "moment": 2,
+      "student": "Luciana Torres Medina",
+      "text": "Propuso hacer un restaurante. Cuando su compañera preguntó dónde estaría la cocina, señaló una caja y explicó cómo podían organizar ese lugar para jugar juntas.",
+      "studentCountBefore": 0,
+      "dialogContextMatched": true,
+      "studentOrderPassed": true,
+      "saved": true,
+      "totalAfterSave": 58
+    },
+    {
+      "experienceId": "getting_to_know_us",
+      "experienceTitle": "Nos conocemos y organizamos el juego",
+      "aspectId": "agreements",
+      "criterion": "Propone o acepta una manera de compartir el juego.",
+      "competencyId": "PS_CONVIVE",
+      "moment": 3,
+      "student": "Diego Ramos Vega",
+      "text": "Al querer el mismo camión que otro niño, propuso llevar primero los bloques y después prestárselo. Esperó a que su compañero terminara el recorrido acordado.",
+      "studentCountBefore": 0,
+      "dialogContextMatched": true,
+      "studentOrderPassed": true,
+      "saved": true,
+      "totalAfterSave": 59
+    },
+    {
+      "experienceId": "getting_to_know_us",
+      "experienceTitle": "Nos conocemos y organizamos el juego",
+      "aspectId": "joins_game",
+      "criterion": "Se acerca a otros niños y participa en el juego a su manera.",
+      "competencyId": "PS_CONVIVE",
+      "moment": 4,
+      "student": "Mateo Quispe Flores",
+      "text": "Miró el juego del restaurante y preguntó si podía ayudar a cocinar. Cuando lo invitaron, acercó los utensilios y siguió la propuesta de sus compañeros.",
+      "studentCountBefore": 0,
+      "dialogContextMatched": true,
+      "studentOrderPassed": true,
+      "saved": true,
+      "totalAfterSave": 60
+    },
+    {
+      "experienceId": "explore_our_world",
+      "experienceTitle": "Exploramos nuestro entorno",
+      "aspectId": "question",
+      "criterion": "Pregunta por algo que ve o le llama la atención.",
+      "competencyId": "CYT_INDAGA",
+      "moment": 1,
+      "student": "Camila Huamán Castro",
+      "text": "Sostuvo una tapa grande sobre la bandeja y preguntó si también se iría al fondo como la piedra. La acercó al agua para mirar qué ocurría.",
+      "studentCountBefore": 0,
+      "dialogContextMatched": true,
+      "studentOrderPassed": true,
+      "saved": true,
+      "totalAfterSave": 61
+    },
+    {
+      "experienceId": "explore_our_world",
+      "experienceTitle": "Exploramos nuestro entorno",
+      "aspectId": "question",
+      "criterion": "Pregunta por algo que ve o le llama la atención.",
+      "competencyId": "CYT_INDAGA",
+      "moment": 1,
+      "student": "Diego Ramos Vega",
+      "text": "Miró la piedra en el fondo de la bandeja y preguntó por qué no quedaba arriba como la tapa. Se acercó para observar ambos objetos.",
+      "studentCountBefore": 0,
+      "dialogContextMatched": true,
+      "studentOrderPassed": true,
+      "saved": true,
+      "totalAfterSave": 62
+    },
+    {
+      "experienceId": "explore_our_world",
+      "experienceTitle": "Exploramos nuestro entorno",
+      "aspectId": "compare_materials",
+      "criterion": "Mira o toca dos materiales y nota alguna diferencia.",
+      "competencyId": "CYT_INDAGA",
+      "moment": 2,
+      "student": "Gabriel Paredes Soto",
+      "text": "Probó una piedra y una tapa, una por vez, en la bandeja. Señaló que la piedra quedó abajo y la tapa arriba, y mostró a la profesora esa diferencia.",
+      "studentCountBefore": 0,
+      "dialogContextMatched": true,
+      "studentOrderPassed": true,
+      "saved": true,
+      "totalAfterSave": 63
+    },
+    {
+      "experienceId": "explore_our_world",
+      "experienceTitle": "Exploramos nuestro entorno",
+      "aspectId": "tries_again",
+      "criterion": "Cambia algo de su exploración para ver qué ocurre.",
+      "competencyId": "CYT_INDAGA",
+      "moment": 3,
+      "student": "Sofía Vargas Cabrera",
+      "text": "Propuso voltear la tapa y volver a ponerla en el agua. Miró si entraba agua y comentó que quería probar otra vez colocándola con más cuidado.",
+      "studentCountBefore": 0,
+      "dialogContextMatched": true,
+      "studentOrderPassed": true,
+      "saved": true,
+      "totalAfterSave": 64
+    },
+    {
+      "experienceId": "explore_our_world",
+      "experienceTitle": "Exploramos nuestro entorno",
+      "aspectId": "tell_discovery",
+      "criterion": "Describe a otro niño o a la docente lo que observó.",
+      "competencyId": "COM_ORAL",
+      "moment": 4,
+      "student": "Thiago Gutiérrez Silva",
+      "text": "Mostró a un compañero la tapa que había usado y contó cómo la puso en el agua. Cuando le preguntaron qué pasó, la giró para explicar por dónde había entrado el agua.",
+      "studentCountBefore": 0,
+      "dialogContextMatched": true,
+      "studentOrderPassed": true,
+      "saved": true,
+      "totalAfterSave": 65
+    }
+  ],
+  "persistence": {
+    "cards": 65,
+    "guided": [
+      {
+        "student": "Camila Huamán Castro",
+        "experienceId": "create_a_digital_message",
+        "aspectId": "explore_a_digital_function",
+        "oneCard": true,
+        "studentMatches": true,
+        "competencyMatches": true
+      },
+      {
+        "student": "Diego Ramos Vega",
+        "experienceId": "create_a_digital_message",
+        "aspectId": "explore_a_digital_function",
+        "oneCard": true,
+        "studentMatches": true,
+        "competencyMatches": true
+      },
+      {
+        "student": "Emilia Cárdenas Ruiz",
+        "experienceId": "create_a_digital_message",
+        "aspectId": "make_and_review_a_digital_record",
+        "oneCard": true,
+        "studentMatches": true,
+        "competencyMatches": true
+      },
+      {
+        "student": "Gabriel Paredes Soto",
+        "experienceId": "create_a_digital_message",
+        "aspectId": "make_and_review_a_digital_record",
+        "oneCard": true,
+        "studentMatches": true,
+        "competencyMatches": true
+      },
+      {
+        "student": "Luciana Torres Medina",
+        "experienceId": "create_a_digital_message",
+        "aspectId": "make_and_review_a_digital_record",
+        "oneCard": true,
+        "studentMatches": true,
+        "competencyMatches": true
+      },
+      {
+        "student": "Nicolás Mendoza León",
+        "experienceId": "plan_try_review",
+        "aspectId": "choose_goal_and_materials",
+        "oneCard": true,
+        "studentMatches": true,
+        "competencyMatches": true
+      },
+      {
+        "student": "Sofía Vargas Cabrera",
+        "experienceId": "plan_try_review",
+        "aspectId": "choose_goal_and_materials",
+        "oneCard": true,
+        "studentMatches": true,
+        "competencyMatches": true
+      },
+      {
+        "student": "Thiago Gutiérrez Silva",
+        "experienceId": "plan_try_review",
+        "aspectId": "try_a_strategy",
+        "oneCard": true,
+        "studentMatches": true,
+        "competencyMatches": true
+      },
+      {
+        "student": "Valentina Rojas Salazar",
+        "experienceId": "plan_try_review",
+        "aspectId": "try_a_strategy",
+        "oneCard": true,
+        "studentMatches": true,
+        "competencyMatches": true
+      },
+      {
+        "student": "Camila Huamán Castro",
+        "experienceId": "plan_try_review",
+        "aspectId": "review_the_attempt",
+        "oneCard": true,
+        "studentMatches": true,
+        "competencyMatches": true
+      },
+      {
+        "student": "Mateo Quispe Flores",
+        "experienceId": "movement_and_art",
+        "aspectId": "movement",
+        "oneCard": true,
+        "studentMatches": true,
+        "competencyMatches": true
+      },
+      {
+        "student": "Nicolás Mendoza León",
+        "experienceId": "movement_and_art",
+        "aspectId": "movement",
+        "oneCard": true,
+        "studentMatches": true,
+        "competencyMatches": true
+      },
+      {
+        "student": "Valentina Rojas Salazar",
+        "experienceId": "movement_and_art",
+        "aspectId": "adjust_movement",
+        "oneCard": true,
+        "studentMatches": true,
+        "competencyMatches": true
+      },
+      {
+        "student": "Diego Ramos Vega",
+        "experienceId": "movement_and_art",
+        "aspectId": "creation",
+        "oneCard": true,
+        "studentMatches": true,
+        "competencyMatches": true
+      },
+      {
+        "student": "Thiago Gutiérrez Silva",
+        "experienceId": "movement_and_art",
+        "aspectId": "express_idea",
+        "oneCard": true,
+        "studentMatches": true,
+        "competencyMatches": true
+      },
+      {
+        "student": "Emilia Cárdenas Ruiz",
+        "experienceId": "count_and_locate",
+        "aspectId": "quantity",
+        "oneCard": true,
+        "studentMatches": true,
+        "competencyMatches": true
+      },
+      {
+        "student": "Luciana Torres Medina",
+        "experienceId": "count_and_locate",
+        "aspectId": "compare_groups",
+        "oneCard": true,
+        "studentMatches": true,
+        "competencyMatches": true
+      },
+      {
+        "student": "Camila Huamán Castro",
+        "experienceId": "count_and_locate",
+        "aspectId": "space",
+        "oneCard": true,
+        "studentMatches": true,
+        "competencyMatches": true
+      },
+      {
+        "student": "Gabriel Paredes Soto",
+        "experienceId": "count_and_locate",
+        "aspectId": "space",
+        "oneCard": true,
+        "studentMatches": true,
+        "competencyMatches": true
+      },
+      {
+        "student": "Sofía Vargas Cabrera",
+        "experienceId": "count_and_locate",
+        "aspectId": "change_route",
+        "oneCard": true,
+        "studentMatches": true,
+        "competencyMatches": true
+      },
+      {
+        "student": "Gabriel Paredes Soto",
+        "experienceId": "stories_and_marks",
+        "aspectId": "reading",
+        "oneCard": true,
+        "studentMatches": true,
+        "competencyMatches": true
+      },
+      {
+        "student": "Emilia Cárdenas Ruiz",
+        "experienceId": "stories_and_marks",
+        "aspectId": "retelling",
+        "oneCard": true,
+        "studentMatches": true,
+        "competencyMatches": true
+      },
+      {
+        "student": "Mateo Quispe Flores",
+        "experienceId": "stories_and_marks",
+        "aspectId": "write_message",
+        "oneCard": true,
+        "studentMatches": true,
+        "competencyMatches": true
+      },
+      {
+        "student": "Nicolás Mendoza León",
+        "experienceId": "stories_and_marks",
+        "aspectId": "read_own_message",
+        "oneCard": true,
+        "studentMatches": true,
+        "competencyMatches": true
+      },
+      {
+        "student": "Thiago Gutiérrez Silva",
+        "experienceId": "stories_and_marks",
+        "aspectId": "read_own_message",
+        "oneCard": true,
+        "studentMatches": true,
+        "competencyMatches": true
+      },
+      {
+        "student": "Valentina Rojas Salazar",
+        "experienceId": "getting_to_know_us",
+        "aspectId": "choice",
+        "oneCard": true,
+        "studentMatches": true,
+        "competencyMatches": true
+      },
+      {
+        "student": "Nicolás Mendoza León",
+        "experienceId": "getting_to_know_us",
+        "aspectId": "choice",
+        "oneCard": true,
+        "studentMatches": true,
+        "competencyMatches": true
+      },
+      {
+        "student": "Luciana Torres Medina",
+        "experienceId": "getting_to_know_us",
+        "aspectId": "conversation",
+        "oneCard": true,
+        "studentMatches": true,
+        "competencyMatches": true
+      },
+      {
+        "student": "Diego Ramos Vega",
+        "experienceId": "getting_to_know_us",
+        "aspectId": "agreements",
+        "oneCard": true,
+        "studentMatches": true,
+        "competencyMatches": true
+      },
+      {
+        "student": "Mateo Quispe Flores",
+        "experienceId": "getting_to_know_us",
+        "aspectId": "joins_game",
+        "oneCard": true,
+        "studentMatches": true,
+        "competencyMatches": true
+      },
+      {
+        "student": "Camila Huamán Castro",
+        "experienceId": "explore_our_world",
+        "aspectId": "question",
+        "oneCard": true,
+        "studentMatches": true,
+        "competencyMatches": true
+      },
+      {
+        "student": "Diego Ramos Vega",
+        "experienceId": "explore_our_world",
+        "aspectId": "question",
+        "oneCard": true,
+        "studentMatches": true,
+        "competencyMatches": true
+      },
+      {
+        "student": "Gabriel Paredes Soto",
+        "experienceId": "explore_our_world",
+        "aspectId": "compare_materials",
+        "oneCard": true,
+        "studentMatches": true,
+        "competencyMatches": true
+      },
+      {
+        "student": "Sofía Vargas Cabrera",
+        "experienceId": "explore_our_world",
+        "aspectId": "tries_again",
+        "oneCard": true,
+        "studentMatches": true,
+        "competencyMatches": true
+      },
+      {
+        "student": "Thiago Gutiérrez Silva",
+        "experienceId": "explore_our_world",
+        "aspectId": "tell_discovery",
+        "oneCard": true,
+        "studentMatches": true,
+        "competencyMatches": true
+      }
+    ],
+    "allGuidedPassed": true,
+    "freeThirtyPreserved": true
+  },
+  "canonicalVerification": {
+    "guidedRows": 35,
+    "freeRows": 30,
+    "assessmentRows": 0,
+    "rows": [
+      {
+        "student": "Camila Huamán Castro",
+        "experienceId": "create_a_digital_message",
+        "aspectId": "explore_a_digital_function",
+        "unique": true,
+        "canonicalMatch": true
+      },
+      {
+        "student": "Diego Ramos Vega",
+        "experienceId": "create_a_digital_message",
+        "aspectId": "explore_a_digital_function",
+        "unique": true,
+        "canonicalMatch": true
+      },
+      {
+        "student": "Emilia Cárdenas Ruiz",
+        "experienceId": "create_a_digital_message",
+        "aspectId": "make_and_review_a_digital_record",
+        "unique": true,
+        "canonicalMatch": true
+      },
+      {
+        "student": "Gabriel Paredes Soto",
+        "experienceId": "create_a_digital_message",
+        "aspectId": "make_and_review_a_digital_record",
+        "unique": true,
+        "canonicalMatch": true
+      },
+      {
+        "student": "Luciana Torres Medina",
+        "experienceId": "create_a_digital_message",
+        "aspectId": "make_and_review_a_digital_record",
+        "unique": true,
+        "canonicalMatch": true
+      },
+      {
+        "student": "Nicolás Mendoza León",
+        "experienceId": "plan_try_review",
+        "aspectId": "choose_goal_and_materials",
+        "unique": true,
+        "canonicalMatch": true
+      },
+      {
+        "student": "Sofía Vargas Cabrera",
+        "experienceId": "plan_try_review",
+        "aspectId": "choose_goal_and_materials",
+        "unique": true,
+        "canonicalMatch": true
+      },
+      {
+        "student": "Thiago Gutiérrez Silva",
+        "experienceId": "plan_try_review",
+        "aspectId": "try_a_strategy",
+        "unique": true,
+        "canonicalMatch": true
+      },
+      {
+        "student": "Valentina Rojas Salazar",
+        "experienceId": "plan_try_review",
+        "aspectId": "try_a_strategy",
+        "unique": true,
+        "canonicalMatch": true
+      },
+      {
+        "student": "Camila Huamán Castro",
+        "experienceId": "plan_try_review",
+        "aspectId": "review_the_attempt",
+        "unique": true,
+        "canonicalMatch": true
+      },
+      {
+        "student": "Mateo Quispe Flores",
+        "experienceId": "movement_and_art",
+        "aspectId": "movement",
+        "unique": true,
+        "canonicalMatch": true
+      },
+      {
+        "student": "Nicolás Mendoza León",
+        "experienceId": "movement_and_art",
+        "aspectId": "movement",
+        "unique": true,
+        "canonicalMatch": true
+      },
+      {
+        "student": "Valentina Rojas Salazar",
+        "experienceId": "movement_and_art",
+        "aspectId": "adjust_movement",
+        "unique": true,
+        "canonicalMatch": true
+      },
+      {
+        "student": "Diego Ramos Vega",
+        "experienceId": "movement_and_art",
+        "aspectId": "creation",
+        "unique": true,
+        "canonicalMatch": true
+      },
+      {
+        "student": "Thiago Gutiérrez Silva",
+        "experienceId": "movement_and_art",
+        "aspectId": "express_idea",
+        "unique": true,
+        "canonicalMatch": true
+      },
+      {
+        "student": "Emilia Cárdenas Ruiz",
+        "experienceId": "count_and_locate",
+        "aspectId": "quantity",
+        "unique": true,
+        "canonicalMatch": true
+      },
+      {
+        "student": "Luciana Torres Medina",
+        "experienceId": "count_and_locate",
+        "aspectId": "compare_groups",
+        "unique": true,
+        "canonicalMatch": true
+      },
+      {
+        "student": "Camila Huamán Castro",
+        "experienceId": "count_and_locate",
+        "aspectId": "space",
+        "unique": true,
+        "canonicalMatch": true
+      },
+      {
+        "student": "Gabriel Paredes Soto",
+        "experienceId": "count_and_locate",
+        "aspectId": "space",
+        "unique": true,
+        "canonicalMatch": true
+      },
+      {
+        "student": "Sofía Vargas Cabrera",
+        "experienceId": "count_and_locate",
+        "aspectId": "change_route",
+        "unique": true,
+        "canonicalMatch": true
+      },
+      {
+        "student": "Gabriel Paredes Soto",
+        "experienceId": "stories_and_marks",
+        "aspectId": "reading",
+        "unique": true,
+        "canonicalMatch": true
+      },
+      {
+        "student": "Emilia Cárdenas Ruiz",
+        "experienceId": "stories_and_marks",
+        "aspectId": "retelling",
+        "unique": true,
+        "canonicalMatch": true
+      },
+      {
+        "student": "Mateo Quispe Flores",
+        "experienceId": "stories_and_marks",
+        "aspectId": "write_message",
+        "unique": true,
+        "canonicalMatch": true
+      },
+      {
+        "student": "Nicolás Mendoza León",
+        "experienceId": "stories_and_marks",
+        "aspectId": "read_own_message",
+        "unique": true,
+        "canonicalMatch": true
+      },
+      {
+        "student": "Thiago Gutiérrez Silva",
+        "experienceId": "stories_and_marks",
+        "aspectId": "read_own_message",
+        "unique": true,
+        "canonicalMatch": true
+      },
+      {
+        "student": "Valentina Rojas Salazar",
+        "experienceId": "getting_to_know_us",
+        "aspectId": "choice",
+        "unique": true,
+        "canonicalMatch": true
+      },
+      {
+        "student": "Nicolás Mendoza León",
+        "experienceId": "getting_to_know_us",
+        "aspectId": "choice",
+        "unique": true,
+        "canonicalMatch": true
+      },
+      {
+        "student": "Luciana Torres Medina",
+        "experienceId": "getting_to_know_us",
+        "aspectId": "conversation",
+        "unique": true,
+        "canonicalMatch": true
+      },
+      {
+        "student": "Diego Ramos Vega",
+        "experienceId": "getting_to_know_us",
+        "aspectId": "agreements",
+        "unique": true,
+        "canonicalMatch": true
+      },
+      {
+        "student": "Mateo Quispe Flores",
+        "experienceId": "getting_to_know_us",
+        "aspectId": "joins_game",
+        "unique": true,
+        "canonicalMatch": true
+      },
+      {
+        "student": "Camila Huamán Castro",
+        "experienceId": "explore_our_world",
+        "aspectId": "question",
+        "unique": true,
+        "canonicalMatch": true
+      },
+      {
+        "student": "Diego Ramos Vega",
+        "experienceId": "explore_our_world",
+        "aspectId": "question",
+        "unique": true,
+        "canonicalMatch": true
+      },
+      {
+        "student": "Gabriel Paredes Soto",
+        "experienceId": "explore_our_world",
+        "aspectId": "compare_materials",
+        "unique": true,
+        "canonicalMatch": true
+      },
+      {
+        "student": "Sofía Vargas Cabrera",
+        "experienceId": "explore_our_world",
+        "aspectId": "tries_again",
+        "unique": true,
+        "canonicalMatch": true
+      },
+      {
+        "student": "Thiago Gutiérrez Silva",
+        "experienceId": "explore_our_world",
+        "aspectId": "tell_discovery",
+        "unique": true,
+        "canonicalMatch": true
+      }
+    ],
+    "pass": true
+  },
+  "findings": [
+    {
+      "id": "QA-GUIADA-01",
+      "severity": "P2",
+      "symptom": "Al abrir otro registro inmediatamente después de guardar a Emilia, el selector aún mostró Sin registro y la mantuvo entre quienes tenían cero en TIC.",
+      "evidence": {
+        "experienceId": "create_a_digital_message",
+        "aspectId": "make_and_review_a_digital_record",
+        "choices": [
+          {
+            "countText": "Sin registro",
+            "coverage": "none",
+            "name": "Emilia Cárdenas Ruiz"
+          },
+          {
+            "countText": "Sin registro",
+            "coverage": "none",
+            "name": "Gabriel Paredes Soto"
+          },
+          {
+            "countText": "Sin registro",
+            "coverage": "none",
+            "name": "Luciana Torres Medina"
+          },
+          {
+            "countText": "Sin registro",
+            "coverage": "none",
+            "name": "Mateo Quispe Flores"
+          },
+          {
+            "countText": "Sin registro",
+            "coverage": "none",
+            "name": "Nicolás Mendoza León"
+          },
+          {
+            "countText": "Sin registro",
+            "coverage": "none",
+            "name": "Sofía Vargas Cabrera"
+          },
+          {
+            "countText": "Sin registro",
+            "coverage": "none",
+            "name": "Thiago Gutiérrez Silva"
+          },
+          {
+            "countText": "Sin registro",
+            "coverage": "none",
+            "name": "Valentina Rojas Salazar"
+          },
+          {
+            "countText": "1 registro",
+            "coverage": "few",
+            "name": "Camila Huamán Castro"
+          },
+          {
+            "countText": "1 registro",
+            "coverage": "few",
+            "name": "Diego Ramos Vega"
+          }
+        ],
+        "expected": [
+          {
+            "name": "Gabriel Paredes Soto",
+            "count": 0
+          },
+          {
+            "name": "Luciana Torres Medina",
+            "count": 0
+          },
+          {
+            "name": "Mateo Quispe Flores",
+            "count": 0
+          },
+          {
+            "name": "Nicolás Mendoza León",
+            "count": 0
+          },
+          {
+            "name": "Sofía Vargas Cabrera",
+            "count": 0
+          },
+          {
+            "name": "Thiago Gutiérrez Silva",
+            "count": 0
+          },
+          {
+            "name": "Valentina Rojas Salazar",
+            "count": 0
+          },
+          {
+            "name": "Camila Huamán Castro",
+            "count": 1
+          },
+          {
+            "name": "Diego Ramos Vega",
+            "count": 1
+          },
+          {
+            "name": "Emilia Cárdenas Ruiz",
+            "count": 1
+          }
+        ],
+        "pass": false
+      },
+      "recovery": "Sin reenviar ni recargar la página, el mismo diálogo se actualizó y mostró a Emilia con 1 registro al final del grupo correspondiente.",
+      "expected": "No mostrar como definitivos conteos anteriores mientras se refresca la cobertura; actualizar la prioridad o informar que se está cargando.",
+      "cause": "No investigada; se comprobó una ventana de desactualización visible, no pérdida del registro.",
+      "status": "Documentar e implementar al finalizar QA"
+    },
+    {
+      "id": "QA-GUIADA-02",
+      "severity": "P2",
+      "symptom": "Las tarjetas guardadas muestran alumno, texto, tipo guiada y competencia, pero no muestran el nombre de la experiencia ni el criterio. Al abrir Editar tampoco se presenta ese contexto; solo se informa que se conserva.",
+      "expected": "Facilitar consultar la experiencia y el criterio de origen, con texto breve o un detalle secundario, sin recargar la tarjeta ni permitir modificar la asociación histórica.",
+      "status": "Mejora de claridad pendiente al terminar QA; no se modificó el registro.",
+      "evidence": "Revisión por interfaz de la primera observación TIC de Camila, abrir Editar y Cancelar sin cambios."
+    },
+    {
+      "id": "QA-GUIADA-03",
+      "severity": "P2",
+      "symptom": "El contenido es mayoritariamente claro, pero quedan términos formales puntuales: colecciones, grafismos y no acredita escritura.",
+      "expected": "Preferir grupos de objetos, marcas o letras y una explicación directa de que un dibujo solo no permite observar intención de escribir.",
+      "locations": [
+        {
+          "experience": "count_and_locate",
+          "aspect": "compare_groups",
+          "field": "look_for"
+        },
+        {
+          "experience": "stories_and_marks",
+          "aspect": "write_message",
+          "fields": [
+            "look_for",
+            "examples"
+          ]
+        }
+      ],
+      "status": "Pulido editorial pendiente al terminar QA; sin cambiar criterios oficiales ni IDs."
+    },
+    {
+      "id": "QA-GUIADA-04",
+      "severity": "P2",
+      "symptom": "La paleta visible para cantidad de registros no coincide con la solicitada anteriormente: Sin registro usa amarillo suave y 1 registro azul claro.",
+      "observed": [
+        {
+          "background": "rgb(255, 248, 233)",
+          "count": "Sin registro",
+          "coverage": "none",
+          "name": "Camila Huamán Castro"
+        },
+        {
+          "background": "rgb(255, 248, 233)",
+          "count": "Sin registro",
+          "coverage": "none",
+          "name": "Diego Ramos Vega"
+        },
+        {
+          "background": "rgb(255, 248, 233)",
+          "count": "Sin registro",
+          "coverage": "none",
+          "name": "Emilia Cárdenas Ruiz"
+        },
+        {
+          "background": "rgb(255, 248, 233)",
+          "count": "Sin registro",
+          "coverage": "none",
+          "name": "Luciana Torres Medina"
+        },
+        {
+          "background": "rgb(255, 248, 233)",
+          "count": "Sin registro",
+          "coverage": "none",
+          "name": "Sofía Vargas Cabrera"
+        },
+        {
+          "background": "rgb(238, 247, 252)",
+          "count": "1 registro",
+          "coverage": "few",
+          "name": "Gabriel Paredes Soto"
+        },
+        {
+          "background": "rgb(238, 247, 252)",
+          "count": "1 registro",
+          "coverage": "few",
+          "name": "Mateo Quispe Flores"
+        },
+        {
+          "background": "rgb(238, 247, 252)",
+          "count": "1 registro",
+          "coverage": "few",
+          "name": "Nicolás Mendoza León"
+        },
+        {
+          "background": "rgb(238, 247, 252)",
+          "count": "1 registro",
+          "coverage": "few",
+          "name": "Thiago Gutiérrez Silva"
+        },
+        {
+          "background": "rgb(238, 247, 252)",
+          "count": "1 registro",
+          "coverage": "few",
+          "name": "Valentina Rojas Salazar"
+        }
+      ],
+      "expected": "Revisar la codificación acordada: 0 gris, 1 amarillo, 2 o más verde/turquesa; conservar texto y explicar que cantidad no equivale a nivel de aprendizaje.",
+      "limitation": "En este paso se comprobaron estados 0 y 1; no se creó un segundo registro del mismo niño en la misma competencia para probar 2 o más.",
+      "status": "Consistencia visual pendiente de resolver al finalizar QA; los conteos numéricos fueron correctos."
+    }
+  ],
+  "cost": {
+    "newCalls": 0,
+    "newCostUSD": 0,
+    "conservativeAccumulatedControlUSD": 3.862514532,
+    "maximumUSD": 5,
+    "verification": "Mismos 60 registros de consumo y costos antes y después de guiadas. Costos informados por proveedor; no conciliación independiente con factura. Se conserva la reserva histórica del control acumulado."
+  },
+  "evidence": [
+    "outputs/qa-interactivo-20261018/paso-05-guia-criterio.png",
+    "outputs/qa-interactivo-20261018/paso-05-prioridad-alumnos.png"
+  ],
+  "limitations": [
+    "Solo aula de cinco años y diez estudiantes; no extrapolar a todas las edades.",
+    "Religión y castellano como segunda lengua no aplicaban en esta configuración y no se probaron.",
+    "Se comprobaron estados de cero y un registro por alumno y competencia; dos o más no se probaron en este paso.",
+    "Los textos son escenarios sintéticos autorizados, no actuaciones reales de niños. TIC no demuestra disponibilidad física de dispositivos en un aula real.",
+    "No se probaron dictado, carga de evidencia multimedia, permisos entre cuentas ni funcionamiento móvil en este paso.",
+    "No se generaron evaluaciones ni se avanzó a síntesis diagnóstica o Mi año."
+  ]
+}

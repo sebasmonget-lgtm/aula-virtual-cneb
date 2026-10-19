@@ -1,0 +1,158 @@
+{
+  "id": "QA-PASO-10",
+  "screen": "Preparar proyecto y actividades desde Mi año",
+  "date": "2026-10-19",
+  "status": "PASS funcional tras recarga del proveedor; mejoras de UX, ubicación de observación y rendimiento pendientes",
+  "project": {
+    "title": "Otros caminos para un cuento",
+    "annualPlanId": "43bea5cf-d603-43cb-ae09-5f68b15b16a3",
+    "proposalId": "4aec6a28-c096-4fb7-a23a-458a62a284d2",
+    "experienceId": "442cde52-0fe8-49a5-8790-99c7a904b21b",
+    "age": 5,
+    "competencies": [
+      "Lee",
+      "Escribe"
+    ],
+    "selectedDates": [
+      "2026-11-16",
+      "2026-11-17",
+      "2026-11-18",
+      "2026-11-19",
+      "2026-11-20",
+      "2026-11-23",
+      "2026-11-24",
+      "2026-11-25",
+      "2026-11-26",
+      "2026-11-27"
+    ]
+  },
+  "execution": {
+    "method": "Calendario y generación iniciados por interfaz; un solo reintento desde Retomar lo pendiente. Consultas posteriores de solo lectura para diagnóstico. Sin escrituras directas de base ni sustitución del flujo fallido.",
+    "startedAt": "2026-10-19T12:41:25.552Z",
+    "firstFailureObservedAt": "2026-10-19T12:43:29.369Z",
+    "firstFailureObservationElapsedSeconds": 123.817,
+    "resumedAt": "2026-10-19T12:43:43.189Z",
+    "uncertainObservedAt": "2026-10-19T12:45:02.544Z",
+    "providerCheckedAt": "2026-10-19T12:47:28.384Z",
+    "calendar": "PASS: diez días lectivos; fines de semana bloqueados.",
+    "result": "Un proyecto borrador y un trabajo persistidos; etapa master detenida; cero actividades guardadas. No se pudo evaluar el contenido pedagógico del proyecto completo ni sus actividades.",
+    "providerResult": {
+      "retrievalHttpStatus": 200,
+      "status": "failed",
+      "model": "gpt-6.1-sol",
+      "errorType": "insufficient_quota",
+      "errorCode": "credit_balance_exhausted",
+      "hasOutput": false,
+      "usage": null
+    },
+    "qualification": "El fallo por cuota está verificado para la respuesta persistida tras la reanudación. No se conserva aquí el error original de la primera interrupción, por lo que no se atribuye con certeza la misma causa al primer intento."
+  },
+  "requested_changes": [
+    {
+      "id": "QA-PROYECTO-01",
+      "severity": "P1",
+      "status": "Pendiente al finalizar QA",
+      "symptom": "La UI conserva Ayni está preparando tu proyecto aunque el trabajo está uncertain. Muestra error genérico y pide Retomar lo pendiente, sin explicar que la respuesta del proveedor terminó sin créditos.",
+      "verifiedCause": "La respuesta consultada de OpenAI tiene status failed con error credit_balance_exhausted / insufficient_quota y sin contenido. El proveedor interno reduce failed a response_failed, sin propagar response.error. La preparación puede clasificar el error como incierto si existe un checkpoint de respuesta y no hay status 409. La interfaz usa el título de preparación para todos los estados no completados.",
+      "expected": "Distinguir espera, fallo definitivo y resultado realmente incierto. Si se conoce saldo/cuota insuficiente, mostrar causa y estado detenido, conservar el identificador y avance, e informar al responsable técnico. No pedir reintentos repetidos a la profesora ni generar nuevas llamadas antes de resolver el bloqueo. Retomar desde el punto seguro cuando corresponda; no ocultar errores reales con una barra de progreso.",
+      "files": [
+        "src/lib/openai-provider.mjs",
+        "src/lib/preparation-executor.mjs",
+        "src/lib/preparation-jobs.mjs",
+        "src/features/dashboard/components/preparation-progress.tsx"
+      ],
+      "plannedRegressionOnly": [
+        "Respuesta fallida por cuota sin sugerir reintentos inútiles",
+        "Respuesta pendiente con checkpoint recuperable",
+        "Error transitorio sin duplicar generación",
+        "Encabezados y acciones coherentes con queued running failed uncertain succeeded",
+        "Conservación del proyecto y calendario al resolver el bloqueo"
+      ]
+    },
+    {
+      "id": "QA-PROYECTO-02",
+      "severity": "P2",
+      "status": "Pendiente de investigar y optimizar después del QA",
+      "symptom": "La preparación completa de un proyecto de diez días tomó unos 17 minutos hasta la publicación y 18 minutos hasta observarlo listo, pese a que la respuesta del proyecto principal tomó 200 segundos.",
+      "expected": "Medir por separado tiempos de proveedor, validaciones, generación de cada actividad, persistencia y continuación del worker. Reducir esperas comprobadas conservando la secuencia completa, los checkpoints y la protección de las actividades confirmadas. No aplicar el temporizador del plan anual como garantía del tiempo de un proyecto completo.",
+      "cause": "No aislada. Las actividades se prepararon y guardaron secuencialmente; esta muestra no demuestra cuánto de la demora corresponde a IA, red, base o coordinación del worker."
+    },
+    {
+      "id": "QA-PROYECTO-03",
+      "severity": "P2",
+      "status": "Reproducido por interfaz y confirmado en código; pendiente de implementar",
+      "symptom": "En Un cuento para disfrutar, la evidencia canónica indica observar el comentario posterior a la lectura. Hoy pone el criterio y Registrar observación solo en Desarrollo; en Cierre, donde la guía invita al comentario y a relacionar pistas, no aparecen.",
+      "cause": "activityPedagogicalBlocks asigna todas las observaciones al bloque development y ninguna a opening o closure, sin usar el momento que corresponde al contenido.",
+      "files": [
+        "src/lib/pedagogical-blocks.mjs",
+        "src/lib/pedagogical-blocks.test.mjs",
+        "src/features/dashboard/components/activity-run-view.tsx"
+      ],
+      "expected": "Ubicar criterio, evidencia y Registrar observación en el momento pertinente; conservar las referencias reales de actividad, criterio, competencia y momento. Evitar repetición automática en todos los momentos. No reescribir contenido pedagógico confirmado para corregir su presentación.",
+      "plannedRegressionOnly": [
+        "Criterio pertinente al inicio",
+        "Criterio durante exploración",
+        "Criterio del comentario de cierre",
+        "Varios criterios de una actividad",
+        "Consulta sin iniciar ni cambiar la fecha"
+      ]
+    }
+  ],
+  "cost": {
+    "lastVerifiedAccumulatedEstimateUSD": 4.081868757,
+    "budgetUSD": 5,
+    "newPersistedUsageEvents": 0,
+    "providerUsageReturned": false,
+    "newRoundCostUSD": null,
+    "note": "Sin usage devuelto ni evento de consumo nuevo; no equivale a costo cero verificado. No se afirma que el límite QA de USD 5 haya causado la falta de créditos de la cuenta del proveedor. Sin nuevas generaciones después del diagnóstico."
+  },
+  "evidence": [
+    "outputs/qa-interactivo-20261018/proyecto-14-generando.png",
+    "outputs/qa-interactivo-20261018/proyecto-14-interrumpido.png",
+    "outputs/qa-interactivo-20261018/proyecto-14-llamada-incierta.png"
+  ],
+  "applicationMutation": "Solo las acciones QA autorizadas desde la interfaz. Sin correcciones de producto, recargas de saldo, cambios de cuenta ni despliegue.",
+  "resumeAfterTopUp": {
+    "authorization": "La persona usuaria informó la recarga y pidió intentar nuevamente.",
+    "method": "Retomar lo pendiente desde la interfaz. Se presentó una confirmación JavaScript sobre posible repetición de llamada; el diálogo desapareció y la preparación pasó a running. Al consultar el diálogo ya no estaba activo. No se atribuye una aceptación automática que no se observó. Verificaciones posteriores exclusivamente de lectura.",
+    "resumeClickAt": "2026-10-19T12:51:41.189Z",
+    "readyObservedAt": "2026-10-19T13:09:44.006Z",
+    "publishedAt": "2026-10-19T13:08:41.952115+00:00",
+    "elapsedToPublishedSeconds": 1020.763115,
+    "elapsedToReadyObservationSeconds": 1082.817,
+    "timingQualification": "Tiempo desde el clic en Retomar, incluida la interacción de confirmación y la observación posterior; no es un cronómetro exacto de la cola. El intervalo del proveedor se midió por created_at y completed_at de la respuesta.",
+    "masterProviderSeconds": 200,
+    "providerStatus": "completed",
+    "results": {
+      "functional": "PASS en esta muestra: mismo proyecto y mismo trabajo; diez actividades activas, diez entradas de calendario en las fechas elegidas y finalización succeeded con approved_at.",
+      "contentIntegrity": "PASS: propósito, criterios, fechas, competencias, referencias de criterio y huella del proyecto coinciden en las diez actividades con su secuencia.",
+      "pedagogy": "PASS con mejoras puntuales en esta muestra: situación basada en registros individuales, reto lector y escritor, destinatario, escritura propia, relectura y cierre flexible. No equivale a aprobación de todas las generaciones o del recorrido anual.",
+      "competencyDistribution": {
+        "COM_LECTURA": 5,
+        "COM_ESCRITURA": 5
+      },
+      "history": "Quince propuestas anuales idénticas a la salida anterior; se mantienen los conteos de 35 observaciones guiadas y 30 libres. No se hizo comparación íntegra de todos sus textos en este paso.",
+      "ui": "Diez actividades visibles en Mi año con competencia, Ver en Hoy y Ver detalles. Consulta de la primera actividad, tres momentos de Hoy y materiales; no se pulsó Desarrollar ahora ni se registraron observaciones.",
+      "limitation": "No se descargó ni inspeccionó el Word del proyecto o de las actividades en este paso. Persistencia demostrada en consultas de lectura y navegación; no se ejecutó una recarga completa adicional del navegador."
+    },
+    "cost": {
+      "roundEstimatedUSD": 0.113002396,
+      "cumulativeConservativeEstimateUSD": 4.194871152999999,
+      "limitUSD": 5,
+      "calls": 12,
+      "workflowCounts": {
+        "project_master": 1,
+        "project_image": 1,
+        "activity": 10
+      },
+      "note": "Estimaciones registradas, no conciliación de facturación. Los intentos previos fallidos no devolvieron usage; no se presume costo cero de esos intentos."
+    },
+    "evidence": [
+      "outputs/qa-interactivo-20261018/proyecto-14-diez-actividades-listas.png",
+      "outputs/qa-interactivo-20261018/proyecto-14-guia-hoy-lectura.png",
+      "outputs/qa-interactivo-20261018/proyecto-14-guia-hoy-cierre-sin-criterio.png"
+    ],
+    "noProductChanges": "Sin modificaciones de código, modelos, prompts, migraciones o despliegues. El saldo se recargó por la persona usuaria."
+  },
+  "laterEnvironmentQualification": "La muestra posterior encontró workers de Preview y Producción sobre una cola global compartida. La primera muestra sí completó su flujo y sus comprobaciones descritas, pero no permite aprobar el aislamiento o atribuir todos sus pasos exclusivamente al SHA de Preview. Véase QA-PROYECTO-04 en la comparación del 19 de octubre."
+}

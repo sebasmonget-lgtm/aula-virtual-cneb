@@ -247,7 +247,7 @@
             "Revisa con el grupo los vehículos y las piezas que reunieron para jugar.",
             "Si aparece una diferencia, pregunta: «¿Cómo podemos saber si alcanzan?». Deja que comparen a su manera."
           ],
-          "look_for": "Observa cómo relaciona las colecciones para decidir si sobra, falta o alcanza. Escucha sus palabras y mira si empareja o cuenta objetos.",
+          "look_for": "Observa cómo compara los grupos de objetos para decidir si sobra, falta o alcanza. Escucha sus palabras y mira si empareja o cuenta objetos.",
           "patternIndexByAge": {
             "3": 2,
             "4": 0,
@@ -464,7 +464,7 @@
           "prompt": "Escribe a su manera un mensaje sobre el cuento para alguien.",
           "examples": [
             "Dice «les voy a contar que el cuento da risa» y hace marcas para escribir su mensaje.",
-            "Escribe con letras o grafismos una invitación y explica a qué grupo quiere entregarla."
+            "Escribe con letras o marcas propias una invitación y explica a qué grupo quiere entregarla."
           ],
           "patternIndex": 0,
           "moment_title": "Dejamos un mensaje sobre el cuento",
@@ -472,7 +472,7 @@
             "Ofrece papel y crayones: «¿Quieren dejar un mensaje sobre este cuento para otro grupo?».",
             "Invita a escribir a su manera lo que quieran comunicar. No dictes letras ni pidas copiar un modelo."
           ],
-          "look_for": "Observa la intención de escribir: qué quiere comunicar y para quién. Un dibujo puede acompañar el mensaje, pero por sí solo no acredita escritura."
+          "look_for": "Observa la intención de escribir: qué quiere comunicar y para quién. Si dibuja, escucha qué quiere comunicar y distingue el dibujo de sus intentos de escribir."
         },
         {
           "id": "read_own_message",

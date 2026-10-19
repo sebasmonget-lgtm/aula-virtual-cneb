@@ -53,6 +53,7 @@ export function inheritedActivityCriterion(activity, routeItem) {
   // The activity's visible, teacher-confirmed decision is authoritative, including legacy maps.
   return { competency_id: activity.competency_id, criterion_text: activity.evaluation_criterion || routeItem.evaluation_criterion,
     expected_evidence: activity.expected_evidence || routeItem.expected_evidence, acceptable_evidence_variations: routeItem.acceptable_evidence_variations ?? [],
+    ...((activity.official_performance_refs ?? routeItem.official_performance_refs) ? { official_performance_refs: activity.official_performance_refs ?? routeItem.official_performance_refs } : {}),
     observation_focus: routeItem.observation_focus?.length ? routeItem.observation_focus : activity.evidence_opportunities ? [activity.evidence_opportunities] : [],
     evidence_scope: "individual", teacher_caution: "Registrar lo observado después de la actividad; no inferir desde un producto colectivo." };
 }

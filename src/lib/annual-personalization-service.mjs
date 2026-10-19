@@ -41,6 +41,10 @@ export async function personalizationSources(db, teacherId, context) {
       join students s on s.id=de.student_id and s.status='active'
       where ds.classroom_id=$1 and so.status in ('observed','with_support')
     order by observed_at,id`, [context.id])).rows;
+  const guidedSources=(await db.query(`select o.id,o.experience_id,o.aspect_id,o.experience_title_snapshot as experience_title,o.aspect_prompt_snapshot as criterion_text
+    from diagnostic_experience_observations o join students s on s.id=o.student_id and s.classroom_id=o.classroom_id
+    where o.classroom_id=$1 and s.status='active'`,[context.id])).rows;
+  for(const record of observations){const guided=guidedSources.find(row=>row.id===record.id);if(guided)Object.assign(record,guided);}
   const ordinary = (await db.query(`select o.id,o.student_id,coalesce(r.corrected_text,o.raw_text) as observation_text,
     o.occurred_at as observed_at,o.source_revision,o.source_kind,'ordinary_observation' as source_type,
     case when a.state='confirmed' and a.source='teacher' and a.raw_revision=o.source_revision then a.confirmed_competency_ids

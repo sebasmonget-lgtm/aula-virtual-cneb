@@ -1,3 +1,4 @@
+import { activityObservationCriteria } from "./activity-observation-plan.mjs";
 import { ACTIVITY_CONTRACT_V3, activityV3, projectMasterV3, validateActivityV3 } from "./planning-contract-v3.mjs";
 import { annualCalendarDay } from "./annual-plan-schedule.mjs";
 import { newAyniFeatureEnabled } from "./new-ayni-feature-flag.mjs";
@@ -17,11 +18,14 @@ export function stampActivityV3(activity, details, project) {
     throw new Error("La actividad V3 requiere la versión exacta de un proyecto V3 confirmado.");
   const blueprint = master.activity_map.find(row => row.blueprint_id === details.route_item_id);
   if (!blueprint) throw new Error("El blueprint no pertenece a esta versión de proyecto.");
-  const primary = { competency_id: details.competency_id, criterion_text: details.evaluation_criterion,
-    expected_evidence: details.expected_evidence };
-  const choices = [primary, ...(details.additional_criteria ?? [])];
+  const choices = activityObservationCriteria(details);
+  const planned = activityObservationCriteria(project.details?.activity_route?.find(row => row.id === details.route_item_id) ?? {});
   const seen = new Set(), refs = [], overrides = [...(details.teacher_overrides ?? [])];
   for (const choice of choices) {
+    const sourceChoice = planned.find(row => row.competency_id === choice.competency_id);
+    if (sourceChoice?.official_performance_refs !== undefined &&
+        JSON.stringify(choice.official_performance_refs) !== JSON.stringify(sourceChoice.official_performance_refs))
+      throw new Error("La actividad conserva los desempeños del criterio confirmado en el Plan Maestro.");
     if (!master.competency_ids.includes(choice.competency_id) || seen.has(choice.competency_id) ||
       !String(choice.criterion_text ?? "").trim() || !String(choice.expected_evidence ?? "").trim())
       throw new Error("Cada competencia elegida necesita su propio criterio y evidencia esperada.");
@@ -44,9 +48,8 @@ export function stampActivityV3(activity, details, project) {
 
 export function activityCriteriaV3(details) {
   if (details.activity_contract?.contract_version !== ACTIVITY_CONTRACT_V3) return null;
-  return [{ competency_id: details.competency_id, criterion_text: details.evaluation_criterion,
-    expected_evidence: details.expected_evidence }, ...(details.additional_criteria ?? [])].map((choice, index) => ({
+  return activityObservationCriteria(details).map((choice, index) => ({
     ...choice, source_criterion_id: details.activity_contract.criterion_refs[index],
-    observation_focus: [choice.criterion_text], evidence_scope: "individual",
+    observation_focus: choice.observation_focus ?? [choice.criterion_text], evidence_scope: "individual",
     teacher_caution: "Registrar actuaciones observadas, sin inferir un nivel." }));
 }

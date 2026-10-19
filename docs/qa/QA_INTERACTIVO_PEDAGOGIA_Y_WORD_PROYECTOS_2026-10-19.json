@@ -1,0 +1,402 @@
+{
+  "id": "QA-PASO-12",
+  "date": "2026-10-19",
+  "scope": "Revisión pedagógica de dos proyectos y veinte actividades, veintidós Word descargados por interfaz y renderizados localmente",
+  "status": "Aprovechable con ajustes pedagógicos y de guía; presentación Word PARTIAL; no aprobación general de la versión actual",
+  "method": "Lectura completa del contenido canónico guardado de los 20 días y los dos proyectos; descarga UI de los 22 Word; comparación canónica de título/propósito/criterio/evidencia; extracción de texto de las 116 páginas y revisión visual de todas mediante montajes, con ampliación de tres páginas de defectos y guía. Render con Word local en copias, autorizado previamente. No se ejecutaron estas actividades con niños ni se observaron resultados reales de aula.",
+  "environmentQualification": "Se mantiene QA-PROYECTO-04: trabajadores de versiones distintas comparten la cola. En música falta meaningful_situation en el master, aunque hay un contexto breve de origen que la interfaz y Word reutilizan. La valoración corresponde al contenido efectivamente guardado, no a una aprobación de todas las mejoras de la última Preview.",
+  "curricularReferences": [
+    {
+      "title": "Programa Curricular de Educación Inicial MINEDU",
+      "url": "https://www.minedu.gob.pe/curriculo/pdf/programa-curricular-educacion-inicial.pdf",
+      "localRead": "PDF oficial descargado; desempeños de 5 años, páginas impresas 87, 125, 131 y 137; páginas PDF 89, 127, 133 y 139."
+    },
+    {
+      "title": "La planificación en la Educación Inicial guía de orientaciones MINEDU 2019",
+      "url": "https://repositorio.minedu.gob.pe/handle/20.500.12799/6518",
+      "localRead": "Referencia oficial localizada; página de repositorio con verificación de seguridad al abrir. No se declara lectura completa de esa guía en esta ronda."
+    }
+  ],
+  "curricularInterpretation": "Se contrastaron oportunidades de interpretación de textos, escritura con intención comunicativa, exploración y expresión artística y acuerdos para el bienestar común. No se trata de una certificación del MINEDU ni de una evaluación de logros de niños.",
+  "projects": [
+    {
+      "number": 14,
+      "id": "442cde52-0fe8-49a5-8790-99c7a904b21b",
+      "title": "Otros caminos para un cuento",
+      "competencyDistribution": {
+        "COM_LECTURA": 5,
+        "COM_ESCRITURA": 5
+      },
+      "meaningfulSituationStored": true,
+      "activities": [
+        {
+          "number": 1,
+          "id": "eac04682-cb34-444f-93de-2de7760bc0c3",
+          "title": "Un cuento para disfrutar",
+          "date": "2026-11-16",
+          "competency": "COM_LECTURA",
+          "status": "Aprovechable con ajustes de guía; revisión documental, no ejecución de aula",
+          "strength": "Lectura completa y comentario basado en una pista; no convierte la lectura en un interrogatorio.",
+          "recommendedImprovement": "Precisar cómo elegir un cuento con imágenes accesibles y un conflicto comprensible. Situar Registrar observación también en el comentario de cierre, según QA-PROYECTO-03.",
+          "briefWordNote": "Elegir un cuento breve con un problema claro; mostrar sus escenas. El criterio corresponde al comentario posterior, no solo al desarrollo.",
+          "wordPages": 5,
+          "criterion": "Comenta una acción del personaje y la relaciona con una pista de las imágenes o del texto leído por la docente.",
+          "evidence": "Comentario individual que vincula una acción del personaje con alguna pista del cuento."
+        },
+        {
+          "number": 2,
+          "id": "326c172a-c334-48d0-9e73-e68523ef214b",
+          "title": "Pistas que se relacionan",
+          "date": "2026-11-17",
+          "competency": "COM_LECTURA",
+          "status": "Aprovechable con ajustes de guía; revisión documental, no ejecución de aula",
+          "strength": "La relectura tiene un propósito distinto de la primera lectura: relacionar escenas.",
+          "recommendedImprovement": "Ofrecer dos escenas visibles y una pregunta sencilla. No exigir explicaciones abstractas de causa y consecuencia a todos ni repetir exactamente el intercambio anterior.",
+          "briefWordNote": "Acercar dos escenas y preguntar qué pasó antes y después. Admitir señalar, dramatizar o explicar; ampliar la exigencia según cada niño.",
+          "wordPages": 5,
+          "criterion": "Relaciona pistas de distintas escenas para explicar una posible razón o consecuencia de una decisión del personaje.",
+          "evidence": "Explicación individual de una posible razón o consecuencia de una decisión, apoyada en escenas del cuento."
+        },
+        {
+          "number": 3,
+          "id": "3d2c1317-641e-4b39-a48f-7e0bcd67b1d7",
+          "title": "Dónde podría cambiar el camino",
+          "date": "2026-11-18",
+          "competency": "COM_LECTURA",
+          "status": "Aprovechable con ajustes de guía; revisión documental, no ejecución de aula",
+          "strength": "La decisión imaginada se apoya en una escena real del cuento.",
+          "recommendedImprovement": "Usar una representación breve para apoyar la elección. Distinguir la interpretación del cuento de la creación de una alternativa; no evaluar solo la originalidad.",
+          "briefWordNote": "Apoyar con un gesto o dramatización de la escena. Distinguir lo que ocurre en el cuento de la nueva decisión imaginada.",
+          "wordPages": 5,
+          "criterion": "Elige un momento del cuento y explica qué decisión podría cambiar, apoyándose en lo que sucede en esa escena.",
+          "evidence": "Elección de una escena acompañada de una explicación sobre la decisión que podría cambiar."
+        },
+        {
+          "number": 4,
+          "id": "b7ed959f-aa94-4b78-84d9-1daf664e0fdc",
+          "title": "Una decisión, otros caminos",
+          "date": "2026-11-19",
+          "competency": "COM_LECTURA",
+          "status": "Aprovechable con ajustes de guía; revisión documental, no ejecución de aula",
+          "strength": "La comparación da continuidad a la elección del día anterior.",
+          "recommendedImprovement": "Diferenciar con claridad el nuevo desafío: anticipar una consecuencia. Ofrecer intercambio en parejas o una breve representación en lugar de otra conversación grupal similar.",
+          "briefWordNote": "Centrar este día en qué pasaría después del cambio, con parejas o representación breve, para diferenciarlo de elegir una escena.",
+          "wordPages": 4,
+          "criterion": "Compara una posibilidad imaginada con otra decisión y explica qué podría suceder, relacionándola con pistas del cuento.",
+          "evidence": "Comparación individual entre posibilidades, con una explicación de lo que podría ocurrir después."
+        },
+        {
+          "number": 5,
+          "id": "01bc15e7-3ec4-468d-ab54-147bd5d86c2e",
+          "title": "Mi final tiene destinatario",
+          "date": "2026-11-20",
+          "competency": "COM_ESCRITURA",
+          "status": "Aprovechable con ajustes de guía; revisión documental, no ejecución de aula",
+          "strength": "La escritura tiene propósito y destinatario; acepta hipótesis de escritura, sin copia.",
+          "recommendedImprovement": "Explicar cómo preparar superficies planas de cartón si esas son las disponibles. Ofrecer dictado al adulto como mediación legítima y distinguir qué escribió cada autor; no inferir escritura propia por un dibujo aislado.",
+          "briefWordNote": "Precisar el soporte plano disponible y a quién se escribe. Distinguir escritura infantil y dictado al adulto, sin prohibir esta mediación.",
+          "wordPages": 5,
+          "criterion": "Inicia una escritura a su manera para contar otro desenlace y explica quién será su destinatario.",
+          "evidence": "Primer intento propio de escritura, acompañado de la explicación de qué quiere contar y a quién."
+        },
+        {
+          "number": 6,
+          "id": "460533e3-4738-4954-bb97-7e36066b8589",
+          "title": "Contamos lo que pasa después",
+          "date": "2026-11-23",
+          "competency": "COM_ESCRITURA",
+          "status": "Aprovechable con ajustes de guía; revisión documental, no ejecución de aula",
+          "strength": "Se retoma una producción propia y se escribe para comunicar una idea.",
+          "recommendedImprovement": "La continuidad debe centrarse en añadir o aclarar una idea, no en alargar el texto. Evitar que cinco encuentros de escritura se conviertan en ejercicios equivalentes.",
+          "briefWordNote": "Proponer añadir o aclarar una idea para el destinatario, sin exigir más extensión ni un desenlace completo en este encuentro.",
+          "wordPages": 5,
+          "criterion": "Desarrolla su escritura con ideas relacionadas con la decisión imaginada y explica qué sucede después.",
+          "evidence": "Escritura propia acompañada de una lectura que relaciona la nueva decisión con lo que sucede después."
+        },
+        {
+          "number": 7,
+          "id": "73197a8f-d875-4709-89e2-2197c547e01b",
+          "title": "Qué conservamos y qué cambiamos",
+          "date": "2026-11-24",
+          "competency": "COM_LECTURA",
+          "status": "Aprovechable con ajustes de guía; revisión documental, no ejecución de aula",
+          "strength": "Volver al cuento ayuda a separar texto leído y propuesta propia.",
+          "recommendedImprovement": "Sostener una comparación concreta con dos apoyos visibles: escena y producción. No tratar la calidad gráfica del intento como evidencia de comprensión lectora.",
+          "briefWordNote": "Comparar una escena y el intento propio. Observar la relación con el cuento, no la calidad del dibujo o de las letras.",
+          "wordPages": 5,
+          "criterion": "Compara el desenlace conocido con su propuesta y explica qué mantiene o cambia, apoyándose en pistas del cuento.",
+          "evidence": "Explicación individual de una relación o diferencia entre el cuento y el desenlace imaginado, apoyada en escenas."
+        },
+        {
+          "number": 8,
+          "id": "c9f8b5f7-1470-4844-899a-475a43a030e6",
+          "title": "¿Dice lo que quería contar?",
+          "date": "2026-11-25",
+          "competency": "COM_ESCRITURA",
+          "status": "Aprovechable con ajustes de guía; revisión documental, no ejecución de aula",
+          "strength": "La revisión tiene sentido comunicativo y permite conservar la producción sin cambios.",
+          "recommendedImprovement": "Modelar una pregunta breve como ¿Aquí dice lo que querías contar? y acompañar la relectura. Registrar una decisión concreta; no valorar la cantidad de correcciones.",
+          "briefWordNote": "Mantener la posibilidad de no cambiar el texto. Registrar por qué conserva o modifica una parte, con apoyo si lo necesita.",
+          "wordPages": 5,
+          "criterion": "Relee su escritura con apoyo y decide si necesita mantener, añadir o cambiar algo para contar el desenlace imaginado.",
+          "evidence": "Relectura individual y decisión de mantener o ajustar una parte para comunicar el cambio imaginado."
+        },
+        {
+          "number": 9,
+          "id": "c30086cd-a8a0-4cfa-8c0e-96a24dbb788d",
+          "title": "Una persona lee con nosotros",
+          "date": "2026-11-26",
+          "competency": "COM_ESCRITURA",
+          "status": "Aprovechable con ajustes de guía; revisión documental, no ejecución de aula",
+          "strength": "Un destinatario real permite probar si el mensaje comunica.",
+          "recommendedImprovement": "Dar una consigna breve al destinatario y al autor; separar sus aportes en el registro. Si hay dictado al adulto, conservar esa autoría y la revisión del niño.",
+          "briefWordNote": "Pedir al destinatario qué entendió y al autor qué desea aclarar. Conservar quién dijo o escribió cada parte del mensaje.",
+          "wordPages": 5,
+          "criterion": "Considera lo que comprende su destinatario y decide si mantiene o ajusta su escritura para comunicar el desenlace.",
+          "evidence": "Intercambio con un destinatario y decisión individual sobre cómo hacer más claro el desenlace, si fuera necesario."
+        },
+        {
+          "number": 10,
+          "id": "c1f27ad7-c1fb-4b80-b7b1-befb7d671d6d",
+          "title": "Compartimos un camino posible",
+          "date": "2026-11-27",
+          "competency": "COM_ESCRITURA",
+          "status": "Aprovechable con ajustes de guía; revisión documental, no ejecución de aula",
+          "strength": "El cierre retorna al propósito, con destinatario y sin exigir un producto uniforme.",
+          "recommendedImprovement": "Ofrecer momentos breves en parejas o con la docente. Considerar lo observado durante todo el recorrido cuando alguien no comparte en el cierre; no convertirlo en ausencia de aprendizaje.",
+          "briefWordNote": "Ofrecer compartir en pareja o con la docente. Considerar evidencias previas; no compartir al final no equivale a dificultad ni valoración C.",
+          "wordPages": 5,
+          "criterion": "Comunica mediante su escritura propia el desenlace que imaginó y comenta una decisión tomada para expresar su mensaje.",
+          "evidence": "Lectura a su manera del desenlace y comentario individual sobre una decisión de escritura o revisión, si decide compartir."
+        }
+      ]
+    },
+    {
+      "number": 13,
+      "id": "c9efc649-77be-4851-b33d-b298a42a46c4",
+      "title": "Canciones y ritmos para compartir",
+      "competencyDistribution": {
+        "PS_CONVIVE": 4,
+        "COM_ARTE": 6
+      },
+      "meaningfulSituationStored": false,
+      "activities": [
+        {
+          "number": 1,
+          "id": "8967dfce-7a8a-4626-a36f-0c6fb78e861f",
+          "title": "Escuchamos y elegimos cómo participar",
+          "date": "2026-11-02",
+          "competency": "PS_CONVIVE",
+          "status": "Aprovechable con ajustes de guía; revisión documental, no ejecución de aula",
+          "strength": "La convivencia se vincula a una necesidad real de la escucha compartida.",
+          "recommendedImprovement": "Precisar una invitación inicial concreta con los recursos confirmados. Escuchar o elegir una forma de participar no basta para acreditar el criterio: observar cómo considera al otro y participa en acuerdos.",
+          "briefWordNote": "Concretar qué se invita a escuchar o explorar. Observar la consideración del otro y los acuerdos, no únicamente elegir cómo participar.",
+          "wordPages": 5,
+          "criterion": "Expresa cómo desea participar y toma acuerdos para escuchar los aportes sin imponer una misma elección a los demás.",
+          "evidence": "Una propuesta o respuesta individual sobre cómo organizar la escucha y respetar las elecciones de participación."
+        },
+        {
+          "number": 2,
+          "id": "4048868a-bf2b-4843-9443-16910cd5e39d",
+          "title": "Sonidos con nuestro cuerpo",
+          "date": "2026-11-03",
+          "competency": "COM_ARTE",
+          "status": "Aprovechable con ajustes de guía; revisión documental, no ejecución de aula",
+          "strength": "La exploración corporal deja decisiones creativas a los niños.",
+          "recommendedImprovement": "Ofrecer un apoyo breve a quien no sabe comenzar. Evitar convertir sin modelo en una prohibición de toda demostración o referente; distinguir mediación de copia obligatoria.",
+          "briefWordNote": "Ofrecer una posibilidad para comenzar a quien lo necesita, sin pedir imitación uniforme. Observar qué sonidos decide combinar.",
+          "wordPages": 5,
+          "criterion": "Prueba sonidos de voz, palmas o movimientos y elige cómo combinarlos.",
+          "evidence": "Una exploración individual en la que prueba posibilidades corporales y reúne algunas en una combinación propia."
+        },
+        {
+          "number": 3,
+          "id": "48055052-5599-4341-b425-d4713011dbec",
+          "title": "Lo que suena en los objetos",
+          "date": "2026-11-04",
+          "competency": "COM_ARTE",
+          "status": "Aprovechable con ajustes de guía; revisión documental, no ejecución de aula",
+          "strength": "Varía acciones y materiales con una finalidad sonora.",
+          "recommendedImprovement": "Añadir ejemplos opcionales concretos, como percutir una caja o frotar una botella, y explicar el uso seguro. La elección sonora debe vincularse a una intención expresiva, no solo manipulación.",
+          "briefWordNote": "Dar ejemplos abiertos de acciones para explorar y un uso seguro de los objetos. Preguntar qué sonido quiere elegir para su creación.",
+          "wordPages": 4,
+          "criterion": "Explora maneras de hacer sonar objetos y selecciona sonidos para una combinación propia.",
+          "evidence": "Una secuencia de pruebas con objetos y una elección sonora que el niño muestra o comunica."
+        },
+        {
+          "number": 4,
+          "id": "0d2ad03d-16e9-452c-b1c4-139add2e3488",
+          "title": "Acuerdos para escucharnos",
+          "date": "2026-11-05",
+          "competency": "PS_CONVIVE",
+          "status": "Aprovechable con ajustes de guía; revisión documental, no ejecución de aula",
+          "strength": "Los acuerdos se prueban durante una exploración y no solo se enuncian.",
+          "recommendedImprovement": "No fabricar un conflicto para obtener evidencia. Observar una propuesta y su puesta en práctica ante necesidades reales de materiales o escucha; evitar otra asamblea descontextualizada.",
+          "briefWordNote": "Usar los acuerdos dentro de la exploración real. Registrar cómo se aplican; no inventar desacuerdos ni reducir el encuentro a conversar.",
+          "wordPages": 5,
+          "criterion": "Propone o ajusta acuerdos para compartir materiales y permitir que se escuchen distintas propuestas.",
+          "evidence": "Una intervención individual al decidir cómo usar los objetos o alternar sonidos, y su puesta en práctica durante la exploración."
+        },
+        {
+          "number": 5,
+          "id": "8e2cc835-56ba-4b4a-9e82-d2e3bf984c96",
+          "title": "Un ritmo que puedo cambiar",
+          "date": "2026-11-06",
+          "competency": "COM_ARTE",
+          "status": "Aprovechable con ajustes de guía; revisión documental, no ejecución de aula",
+          "strength": "Probar un cambio da progresión a la combinación inicial.",
+          "recommendedImprovement": "Hacer visible qué creación se retoma y qué cambia: sonido, movimiento o pausa. Facilitar recordar la elección mediante una demostración o un apoyo disponible, sin exigir una grabación.",
+          "briefWordNote": "Retomar una combinación identificable y variar un elemento. Conservar una referencia sencilla para recordar la elección sin exigir grabaciones.",
+          "wordPages": 4,
+          "criterion": "Combina sonidos o movimientos y prueba un cambio según lo que desea crear.",
+          "evidence": "Una combinación propia y una variación que el niño realiza para explorar otra posibilidad."
+        },
+        {
+          "number": 6,
+          "id": "60ac60aa-30bd-4852-ac85-74dbf7e82ee7",
+          "title": "Elegimos cómo crear juntos",
+          "date": "2026-11-09",
+          "competency": "PS_CONVIVE",
+          "status": "Aprovechable con ajustes de guía; revisión documental, no ejecución de aula",
+          "strength": "Considera preferencias distintas y la organización con otros.",
+          "recommendedImprovement": "Diferenciarlo del día de compartir objetos: aquí se acuerda una creación o participación conjunta concreta. Permitir explorar individualmente sin atribuir por eso una evidencia de colaboración.",
+          "briefWordNote": "Concretar una decisión para crear con otros. Distinguir explorar individualmente de evidenciar colaboración; valorar la respuesta a propuestas diferentes.",
+          "wordPages": 5,
+          "criterion": "Considera propuestas distintas al acordar cómo crear juntos y respeta las formas de participación elegidas.",
+          "evidence": "Una actuación individual al proponer, aceptar o ajustar una forma de usar materiales y participar con otros."
+        },
+        {
+          "number": 7,
+          "id": "06f242e5-4b2c-4fff-b6f6-88527fb3941f",
+          "title": "Un lugar imaginado suena",
+          "date": "2026-11-10",
+          "competency": "COM_ARTE",
+          "status": "Aprovechable con ajustes de guía; revisión documental, no ejecución de aula",
+          "strength": "La representación de una idea da sentido expresivo a los sonidos.",
+          "recommendedImprovement": "Partir de un lugar recordado o imaginado por el niño y ofrecer una pregunta de apoyo. Relacionar sonido, movimiento e intención sin imponer un mismo paisaje a todos.",
+          "briefWordNote": "Preguntar por un lugar que recuerde o imagine. Ayudar a relacionar el sonido con su idea sin imponer una escena común.",
+          "wordPages": 4,
+          "criterion": "Elige y combina sonidos o movimientos para representar un lugar imaginado y comunica alguna de sus elecciones.",
+          "evidence": "Una creación sonora o corporal y una indicación del niño sobre lo que quiso representar."
+        },
+        {
+          "number": 8,
+          "id": "480c18db-fcfc-4a07-b7ff-0a14e6288244",
+          "title": "Probamos otra combinación",
+          "date": "2026-11-11",
+          "competency": "COM_ARTE",
+          "status": "Aprovechable con ajustes de guía; revisión documental, no ejecución de aula",
+          "strength": "Revisar y transformar introduce una decisión creativa pertinente.",
+          "recommendedImprovement": "Recuperar una creación concreta antes de comparar alternativas. Diferenciar del día 5: ahora decide conservar o transformar según lo que quiere expresar, no solo variar por variar.",
+          "briefWordNote": "Recuperar una creación anterior y decidir qué conservar o transformar según lo que quiere expresar, para diferenciarlo de probar cambios al azar.",
+          "wordPages": 4,
+          "criterion": "Prueba una alternativa en su creación y comunica qué desea conservar o cambiar.",
+          "evidence": "Una nueva prueba sonora o corporal y una decisión personal sobre cómo continuar."
+        },
+        {
+          "number": 9,
+          "id": "0acc27fe-e16c-460c-881e-dc59dda8b574",
+          "title": "Decidimos cómo compartir",
+          "date": "2026-11-12",
+          "competency": "PS_CONVIVE",
+          "status": "Aprovechable con ajustes de guía; revisión documental, no ejecución de aula",
+          "strength": "Prepara un cierre con acuerdos de participación y escucha.",
+          "recommendedImprovement": "Evitar repetir los acuerdos de los días 4 y 6. Concretar las decisiones nuevas sobre cómo, dónde o con quién compartir, en un intercambio breve ligado a la creación.",
+          "briefWordNote": "Acordar decisiones nuevas del encuentro final: cómo, dónde y con quién compartir. Evitar repetir una conversación general sobre respeto.",
+          "wordPages": 5,
+          "criterion": "Propone o toma acuerdos para compartir las creaciones sin obligar a otros a cantar, tocar o mostrarlas.",
+          "evidence": "Una propuesta o ajuste individual para organizar la escucha, el uso de materiales o la participación voluntaria."
+        },
+        {
+          "number": 10,
+          "id": "f5833e32-06b1-4106-ab4e-70b28d8e0b98",
+          "title": "Compartimos a nuestra manera",
+          "date": "2026-11-13",
+          "competency": "COM_ARTE",
+          "status": "Aprovechable con ajustes de guía; revisión documental, no ejecución de aula",
+          "strength": "El cierre admite diversas formas de compartir y no acredita automáticamente al grupo.",
+          "recommendedImprovement": "Recoger también la apreciación de una creación de otro cuando sea pertinente. Para quien no comparte, revisar actuaciones anteriores y ofrecer otra oportunidad, sin forzar exposición.",
+          "briefWordNote": "Acoger la creación propia y la apreciación de otras. Revisar evidencias anteriores y ofrecer otra oportunidad a quien no desea compartir.",
+          "wordPages": 5,
+          "criterion": "Comparte una creación sonora o corporal y comunica alguna elección realizada durante su elaboración.",
+          "evidence": "La creación que un niño decide compartir y lo que muestra o comunica sobre una elección personal."
+        }
+      ]
+    }
+  ],
+  "wordFindings": [
+    {
+      "id": "QA-WORD-PROY-01",
+      "severity": "P2",
+      "finding": "Los proyectos ocupan 10 y 11 páginas; las actividades 4–5, con 116 páginas para 22 documentos. La guía práctica aparece en las páginas 3–4 de las 20 actividades.",
+      "improvement": "Abrir la actividad con propósito, materiales, preparación y guía por momentos; integrar datos una sola vez. Conservar los referentes curriculares en una sección breve o anexo y la estética Ayni. Probar una guía diaria de unas dos páginas, sin reducir tipografía ni eliminar información necesaria; es una meta de diseño, no exigencia MINEDU."
+    },
+    {
+      "id": "QA-WORD-PROY-02",
+      "severity": "P2",
+      "finding": "Ocho páginas finales tienen menos de 320 caracteres extraídos. Ejemplo: Sonidos con nuestro cuerpo, página 5, contiene solo el encabezado de evidencias y el estado sin observaciones.",
+      "improvement": "Evitar una página independiente cuando no hay registros. Mantener un estado breve al final; cuando existan evidencias, incluirlas con sus fechas y autoría. Unir encabezados con su contenido y revisar cortes de tablas y de cada actividad de la ruta."
+    },
+    {
+      "id": "QA-WORD-PROY-03",
+      "severity": "P2",
+      "finding": "Espacios / organización muestra Voces y palmas en música y Cuentos disponibles en el aula en lectura. El exportador toma spaces_and_materials[0].",
+      "improvement": "Exportar organización real del espacio y agrupamiento si está guardada; si no, dejarla por precisar sin convertir materiales en espacios ni inventar ambientes. Revisar la fuente canónica y el mapeo, no reemplazar solo estos dos textos."
+    },
+    {
+      "id": "QA-WORD-PROY-04",
+      "severity": "P2",
+      "finding": "Las 20 actividades incorporan Sede principal aunque no se registró sede. También hay bloques genéricos de apoyos, familia y enfoques sin relación concreta con la actividad.",
+      "improvement": "No inventar datos del colegio. Omitir campos opcionales vacíos o identificarlos como no registrados. Reutilizar apoyos y colaboración confirmados; no usar fórmulas de relleno."
+    },
+    {
+      "id": "QA-WORD-PROY-05",
+      "severity": "P2",
+      "finding": "En música se repite el origen bajo De dónde parte y Situación para empezar, que además incorpora el fundamento por faltar meaningful_situation. Pregunta que guía elige automáticamente la primera pregunta parcial.",
+      "improvement": "Corregir primero QA-PROYECTO-04. Exportar origen, oportunidad y reto una sola vez; diferenciar fundamento y pregunta global de preguntas para cada momento. No regenerar ni reescribir silenciosamente históricos."
+    },
+    {
+      "id": "QA-WORD-PROY-06",
+      "severity": "P2",
+      "finding": "Referentes de edad correctamente rotulados como síntesis, pero genéricos; listado completo de capacidades bajo capacidades pertinentes. Se repiten criterios y evidencias en varias secciones.",
+      "improvement": "Seleccionar y explicar los referentes pertinentes al propósito con IDs oficiales; distinguir síntesis orientativa de texto oficial. Unificar criterio, evidencia esperada y momento de observación sin confundirlos ni duplicar bloques."
+    }
+  ],
+  "preparationProgress": {
+    "id": "QA-PROYECTO-05",
+    "status": "Solicitado y documentado; pendiente al finalizar QA",
+    "parallelization": "Después de congelar la revisión del Plan Maestro, generar inicialmente 2–3 actividades simultáneas, con estado durable por ítem, límite configurable, recuperación sin duplicación, validación y publicación atómica del bloque. Aislar antes workers y colas de Preview/Producción.",
+    "ring": "Indicador circular con porcentaje asociado a etapas y actividades guardadas. Mostrar etapa actual, n de N actividades, tiempo transcurrido y animación mientras la IA responde. Identificar como estimado cualquier porcentaje basado en ponderación temporal; no presentarlo como medición de tokens ni de tiempo restante exacto.",
+    "completion": "100 % solo cuando el servidor confirme que proyecto, todas las actividades y calendario quedaron publicados. No usar 6 min 30 s como duración garantizada del proyecto. No acelerar ni bloquear la finalización para hacer coincidir un cronómetro.",
+    "waitAndFailure": "Durante una llamada larga, animación de espera y estado comprensible; un porcentaje estable no debe confundirse con error. Ante error comprobado, informar la causa, conservar avance y detener el avance fingido. Una animación no prueba que el worker siga vivo: usar estados y señales del servidor.",
+    "measurement": "Repetir una muestra después de aislar workers y aplicar concurrencia, midiendo proveedor, cola, guardado y publicación. Las muestras actuales tardaron unos 17 min y 16 min 30 s hasta publicar; no permiten prometer la duración futura.",
+    "regressionsPending": [
+      "Recarga conserva porcentaje y resultados sin retroceder arbitrariamente",
+      "Respuestas completadas fuera de orden mantienen calendario y secuencia",
+      "Una actividad falla sin repetir las completadas",
+      "100 % no aparece antes de la publicación real",
+      "429 o cuota agotada no disparan reintentos duplicados",
+      "Profesoras comprenden qué está ocurriendo durante espera y error"
+    ]
+  },
+  "crossCuttingRecommendations": [
+    "En nuevas generaciones, cada momento debe indicar acciones docentes ejecutables, participación infantil y una actuación observable; usar una o dos preguntas concretas, con apoyos opcionales.",
+    "Distinguir reiteración pedagógica con un nuevo desafío de repetir la misma conversación: dar propósito claro a cada relectura, revisión o acuerdo.",
+    "No convertir el respeto por distintas formas de participación en una guía sin propuesta activa. Enunciar esa condición una vez y mantener invitaciones concretas y apoyos.",
+    "Ofrecer acompañamiento o demostraciones breves sin imponer un modelo único; no confundir mediación con copia obligatoria.",
+    "No confundir escucha, asistencia, dibujo aislado ni producto grupal con evidencia individual de una competencia. El dictado al adulto es una mediación legítima; identificar la autoría de cada aporte.",
+    "Guardar criterios y oportunidades de observación en su momento pertinente. Mantener inmutabilidad de la actividad confirmada y documentar los ajustes reales del acompañamiento sin reescribir el plan histórico."
+  ],
+  "cost": "Sin nuevas generaciones de IA pagadas durante esta revisión. El acumulado de control previo sigue en torno a USD 4,38 de USD 5, con provisión por respuesta adicional y sin conciliación de factura.",
+  "changes": "Solo documentación local de QA. Sin cambios de producto, prompts, modelos, migraciones, scheduler o despliegues. Los Word fuente se inspeccionaron en copias; no se editó su contenido guardado.",
+  "evidence": {
+    "downloadedDocuments": 22,
+    "renderedPages": 116,
+    "canonicalComparisons": 22,
+    "canonicalMismatches": 0,
+    "sparseTrailingPages": 8,
+    "privateIndex": ".local/qa-interactivo-20261018/pedagogical-review/rendered-content.json",
+    "updatedNotesPages": 12,
+    "updatedNotesVisualQA": "Cinco páginas nuevas renderizadas e inspeccionadas; siete páginas previas idénticas mediante SHA256 de PNG con numeración normalizada. Anchos de las tablas nuevas corregidos dentro de márgenes y re-renderizados; sin filas cortadas ni texto desbordado."
+  }
+}

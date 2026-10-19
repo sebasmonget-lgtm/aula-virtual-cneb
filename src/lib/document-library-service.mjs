@@ -161,7 +161,7 @@ export async function loadSavedDocument(db, teacherId, kind, id) {
       ...(planningV3ReadEnabled() ? { project_master_v3: projectMasterV3(row,
         { planVersion: row.source_plan_version, slotId: row.source_slot_id,
           proposalId: row.canonical_proposal_id }) } : {}),
-      content: { ...selectContent(row.details, ["starting_point", "trigger_or_interest", "learning_need_or_context", "primary_competency_ids", "possible_secondary_competency_ids", "possible_pathways", "proposed_situations", "spaces_and_materials", "evidence_opportunities", "family_or_community_links", "adjustment_points", "flexibility_notes", "document_template_version", "teacher_overrides", "project_master", "dependents", "decisions"]), activity_route: canonicalProjectRoute(row.details), purpose: row.details?.purpose || row.purpose, planning_reason: row.planning_reason,
+      content: { ...selectContent(row.details, ["starting_point", "trigger_or_interest", "learning_need_or_context", "primary_competency_ids", "possible_secondary_competency_ids", "possible_pathways", "proposed_situations", "spaces_and_materials", "evidence_opportunities", "family_or_community_links", "adjustment_points", "flexibility_notes", "document_template_version", "teacher_overrides", "project_master", "dependents", "decisions", "transversal_approaches", "observable_attitudes", "source_proposal_snapshot"]), activity_route: canonicalProjectRoute(row.details), purpose: row.details?.purpose || row.purpose, planning_reason: row.planning_reason,
         formal_content: row.formal_content ?? (row.details?.experience_contract === 1 ? {
           situation: row.details.project_master?.meaningful_situation || row.details.decisions?.context_summary,
           foundation: row.details.project_master?.foundation,
@@ -200,7 +200,7 @@ export async function loadSavedDocument(db, teacherId, kind, id) {
       age: Number(row.age_years), teacher_name: row.teacher_name, ugel: row.ugel, district: row.district,
       occurs_on: dateOnly(row.occurs_on), experience_ends_on:dateOnly(row.experience_ends_on), experience_title: row.experience_title,
       guide: { criteria: activityCriteria, pedagogical_blocks: activityPedagogicalBlocks(row.details,row.preparation?.steps??[],activityCriteria) },
-      experience_id: row.experience_id, experience_details: { activity_route: canonicalProjectRoute(row.experience_details) },
+      experience_id: row.experience_id, experience_details: { activity_route: canonicalProjectRoute(row.experience_details), source_proposal_snapshot: row.experience_details?.source_proposal_snapshot, transversal_approaches: row.experience_details?.transversal_approaches, observable_attitudes: row.experience_details?.observable_attitudes },
       project_activities: (await db.query(`select a.id,a.title,a.occurs_on from activities a join learning_experiences e on e.id=a.experience_id
         where e.classroom_id=$3 and a.status=$2 and (e.id=$1 or $2='active' and e.source_proposal_id=(select source_proposal_id from learning_experiences where id=$1))
         order by a.occurs_on,a.id`,[row.experience_id,row.status,row.classroom_id])).rows.map(item=>({id:item.id,title:item.title,date:dateOnly(item.occurs_on)})),
@@ -213,7 +213,7 @@ export async function loadSavedDocument(db, teacherId, kind, id) {
       actual_execution_date: closure?.actual_execution_date??null,
       teacher_closure_note: closure?.teacher_closure_note ?? null,
       workshop: workshop ? { id: workshop.id, content: workshop.details } : null,
-      content: { ...selectContent(row.details, ["meaningful_situation", "teacher_preparation", "child_actions", "mediation", "evidence_opportunities", "closure_or_continuity", "competency_status", "competency_id", "route_item_id", "evaluation_criterion", "expected_evidence", "resources", "workshop_type", "document_template_version", "teacher_overrides"]), purpose: row.details?.purpose || row.purpose, ...(()=>{const resolved=activityMaterials(row.preparation?.materials,row.details,row.experience_details);return {materials:resolved.materials,materials_source:resolved.source};})() } };
+      content: { ...selectContent(row.details, ["meaningful_situation", "teacher_preparation", "child_actions", "mediation", "evidence_opportunities", "closure_or_continuity", "competency_status", "competency_id", "route_item_id", "evaluation_criterion", "expected_evidence", "resources", "workshop_type", "document_template_version", "teacher_overrides", "additional_criteria", "observation_moments", "observation_focus", "official_performance_refs"]), purpose: row.details?.purpose || row.purpose, ...(()=>{const resolved=activityMaterials(row.preparation?.materials,row.details,row.experience_details);return {materials:resolved.materials,materials_source:resolved.source};})() } };
   }
   const row = (await db.query(`select r.id,r.status,r.version,r.details,r.period_start,r.period_end,r.evaluation_period_id,r.teacher_confirmed_at,
     p.label as period_label,s.id as student_id,s.first_name,s.last_name,s.preferred_name,ag.age_years,to_jsonb(s)->>'profile_photo_path' as photo_path,to_jsonb(r)->'source_conclusion_ids' as conclusion_ids,sy.year,c.section,c.institution_name,profile.display_name as teacher_name from family_reports r

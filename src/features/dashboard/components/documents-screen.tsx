@@ -37,7 +37,7 @@ export type OpenDocument = DocumentEntry & {
   registered_evidence?:{id:string;student_name:string;observation_text?:string;observed_at:string}[];
   workshop?: { id: string; content: Record<string, unknown> } | null;
 };
-type Artifact = { id: string; source_kind: string; source_id: string; filename: string;
+type Artifact = { template_version?:string;id: string; source_kind: string; source_id: string; filename: string;
   sha256: string; byte_length: number; version: number;source_version:number;
   school_year:number;classroom:string;classroom_id:string };
 
@@ -227,7 +227,7 @@ export function DocumentsScreen({ onPlan, folder }: { onPlan?: () => void;folder
     ? `${localDatabaseApiUrl}/api/documents/${opened.kind}/${opened.id}/download`
     : null;
   const stableArtifact = opened && ["annual_plan","experience"].includes(opened.kind) && artifacts.find(item => item.source_kind === opened.kind &&
-    item.source_id === opened.id && item.source_version === opened.version);
+    item.source_id === opened.id && item.source_version === opened.version && (opened.kind!=="experience"||item.template_version===`${opened.content.document_template_version??"experience-legacy-v1"}-layout3`));
   async function prepareProjectWord() {
     if (!opened || savingWord) return;
     setSavingWord(true); setWordError(""); setWordMessage("");
@@ -242,7 +242,7 @@ export function DocumentsScreen({ onPlan, folder }: { onPlan?: () => void;folder
     } catch (cause) { setWordError(cause instanceof Error ? cause.message : "No se pudo preparar el Word."); }
     finally { setSavingWord(false); }
   }
-  async function prepareArtifact() {
+  async function prepareArtifact(download=false) {
     if (!opened || savingWord) return;
     setSavingWord(true); setWordError(""); setWordMessage("");
     try {
@@ -252,7 +252,7 @@ export function DocumentsScreen({ onPlan, folder }: { onPlan?: () => void;folder
       const body = await response.json() as {artifact?:Artifact;error?:string};
       if (!response.ok || !body.artifact) throw new Error(body.error ?? "No se pudo preparar la versión estable.");
       setArtifacts(current => [...current.filter(item => item.id !== body.artifact!.id),body.artifact!]);
-      setWordMessage("Versión estable preparada. Puedes descargar el mismo archivo cuando lo necesites.");
+      if(download)await downloadStableArtifact(body.artifact);else setWordMessage("Versión estable preparada. Puedes descargar el mismo archivo cuando lo necesites.");
     } catch (cause) { setWordError(cause instanceof Error ? cause.message : "No se pudo preparar la versión estable."); }
     finally { setSavingWord(false); }
   }
@@ -299,10 +299,11 @@ export function DocumentsScreen({ onPlan, folder }: { onPlan?: () => void;folder
   return <section className="mx-auto max-w-5xl space-y-5">
     <PageIntro title={folder?{diagnostic:"Evaluación diagnóstica",annual:"Plan anual",experiences:"Proyectos y actividades",evaluation:"Evaluación"}[folder]:"Documentos"} description={folder?"Consulta y descarga los documentos de esta carpeta, con su fuente y versión.":"Encuentra aquí tus diagnósticos, planes, experiencias, actividades, cierres e informes."} icon={BookOpen} illustration="/project-illustrations/book.webp" />
     {selected && <div className="flex flex-wrap items-center justify-between gap-3"><Button variant="outline" className="min-h-11" onClick={() => { setSelected(null); setOpened(null); setError(""); setWordMessage(""); setWordError(""); }}><ArrowLeft className="mr-2 size-4" />Volver a mis documentos</Button>
-      <div className="flex flex-wrap gap-2">{opened?.kind==='annual_plan'&&opened.content.journey_version===2&&onPlan&&<Button variant="outline" disabled={savingWord} onClick={()=>{onPlan();writeWorkspaceLocation('Planificar',{tab:'annual',annualTools:'year',annualPlan:opened.id});}}>Revisar plan anual</Button>}{needsProjectWord && opened.status === "active" && <Button className="min-h-11" disabled={savingWord} onClick={() => void prepareProjectWord()}>{savingWord ? "Preparando Word..." : "Preparar Word del proyecto"}</Button>}{artifactFeature && opened && ["annual_plan","experience"].includes(opened.kind) && ["active","archived"].includes(opened.status) && downloadable &&
+      <div className="flex flex-wrap gap-2">{opened?.kind==='annual_plan'&&opened.content.journey_version===2&&onPlan&&<Button variant="outline" disabled={savingWord} onClick={()=>{onPlan();writeWorkspaceLocation('Planificar',{tab:'annual',annualTools:'year',annualPlan:opened.id});}}>Ver Mi año</Button>}{needsProjectWord && opened.status === "active" && <Button className="min-h-11" disabled={savingWord} onClick={() => void prepareProjectWord()}>{savingWord ? "Preparando Word..." : "Preparar Word del proyecto"}</Button>}{artifactFeature && opened && opened.kind!=="annual_plan" && ["experience"].includes(opened.kind) && ["active","archived"].includes(opened.status) && downloadable &&
         (stableArtifact ? <Button className="min-h-11" disabled={savingWord} onClick={() => void downloadStableArtifact(stableArtifact)}><Download className="mr-2 size-4" />Descargar versión estable</Button>
           : <Button className="min-h-11" disabled={savingWord} onClick={() => void prepareArtifact()}>{savingWord ? "Preparando..." : "Preparar versión estable"}</Button>)}
-      {downloadable && !stableArtifact && <Button variant={artifactFeature && ["annual_plan","experience"].includes(opened.kind) ? "outline" : "default"} className="min-h-11" disabled={savingWord} onClick={() => void saveWordLocally()}><Download className="mr-2 size-4" />{savingWord ? "Preparando Word..." : authMode === "supabase" || process.env.NEXT_PUBLIC_AYNI_EXPERIENCE !== "0" ? "Descargar Word" : "Guardar Word en Descargas"}</Button>}</div></div>}
+      {downloadable && opened.kind==="annual_plan" && <Button className="min-h-11" disabled={savingWord} onClick={()=>void (artifactFeature?prepareArtifact(true):saveWordLocally())}><Download className="mr-2 size-4"/>{savingWord?"Preparando Word...":"Descargar Word"}</Button>}
+      {downloadable && opened.kind!=="annual_plan" && !stableArtifact && <Button variant={artifactFeature && ["annual_plan","experience"].includes(opened.kind) ? "outline" : "default"} className="min-h-11" disabled={savingWord} onClick={() => void saveWordLocally()}><Download className="mr-2 size-4" />{savingWord ? "Preparando Word..." : authMode === "supabase" || process.env.NEXT_PUBLIC_AYNI_EXPERIENCE !== "0" ? "Descargar Word" : "Guardar Word en Descargas"}</Button>}</div></div>}
     {wordMessage && <WorkflowFeedback tone="success">{wordMessage}</WorkflowFeedback>}
     {wordError && <WorkflowFeedback tone="error">{wordError}</WorkflowFeedback>}
     {needsProjectWord && <p className="rounded-xl bg-[#eaf7fb] p-4 text-sm">El proyecto está confirmado. Prepara su Word antes de guardarlo en Descargas.</p>}

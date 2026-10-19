@@ -1,5 +1,14 @@
 # Decisiones de arquitectura
 
+## 2026-10-19 — Referentes oficiales explícitos sin reclasificar históricos
+
+El KB v4.1 recibe un suplemento de desempeños del PCI 2016 fijado por hash; su corpus semántico anterior permanece intacto. Referencias por ID estable, competencia, edad y página. En generaciones nuevas cada criterio selecciona referentes por sentido pedagógico; servidor valida edad/competencia y la guía hereda sin selección adicional. Ausencias oficiales usan lista vacía y referente de ciclo, respetando aplicabilidad. Se conserva en JSONB y criterios existentes, sin migraciones ni nueva lógica de evidencia. Word distingue selección oficial de paráfrasis histórica; no se deducen referencias de palabras coincidentes. Revisión y rollback: `docs/qa/QA_DESEMPENOS_OFICIALES_2026-10-19.md`.
+
+## 2026-10-19 — Aislar ejecuciones de preparación y conservar resultados parciales
+
+Una etiqueta en payload no protege contra un trabajador antiguo que reclama toda la tabla. La nueva cola preparation_jobs_v2 separa físicamente trabajos nuevos, manteniendo historial anterior solo de lectura en el nuevo ejecutor. Máximo tres generaciones independientes tras el maestro estable, resultados durables por actividad, publicación atómica de toda la secuencia. El progreso es estimado y no confirma ejecución o publicación. Migración remota aún no aplicada.
+
+
 ## 2026-10-18 — Situación significativa explícita por proyecto
 
 Cada proyecto nuevo o sustituido debe explicar su origen sustentado, la oportunidad de aprendizaje y un reto abierto pertinente a la edad. El contexto puede provenir de observaciones, reportes familiares, decisiones docentes o una invitación curricular explícita; no se inventan curiosidades, necesidades ni disponibilidad de recursos. La razón anual breve (`rationale`) y la invitación orientan el proyecto. La misma generación del mapa produce `project_master.meaningful_situation` (máximo 1200 caracteres), conservada en el JSON canónico y reutilizada en detalle, formalización Word y contexto diario. Sin nueva llamada adicional de IA ni migración. Los proyectos históricos se leen con su contexto guardado y no se regeneran ni reescriben. Ver `docs/qa/QA_SITUACION_SIGNIFICATIVA_2026-10-18.md`.
@@ -1363,3 +1372,16 @@ Una lectura breve se ofrece preferentemente completa en el primer encuentro; ent
 ## 2026-10-18 — Presentación documental sin modificar la fuente
 
 Los Word de proyectos/actividades nuevos pueden retirar párrafos vacíos terminales de secciones opcionales, manteniendo el párrafo mínimo después de una tabla y conservando todo contenido/campo/imagen. El anual referencia cada registro por número e imprime su texto una vez con procedencia/alcance legibles; no altera el snapshot ni las interpretaciones. Solo una revisión explícita permite rotular las interpretaciones como revisadas. Nuevas revisiones de plantilla distinguen la descarga corregida sin sobrescribir artefactos históricos. No migraciones ni regeneración de una actividad confirmada. Validación y límites: QA_PEDAGOGICA_FINAL_2026-10-18.md. Publicación autorizada únicamente Preview.
+
+## 2026-10-19 — Criterios múltiples y correcciones de la revisión de macetas
+
+Una actividad puede desarrollar varias competencias pertinentes, cada una con criterio, evidencia y uno o varios momentos de observación. Se heredan y persisten las referencias completas; se reutiliza el almacenamiento existente. La muestra real detectó y permitió corregir otra restricción de AIContextBundle a una competencia por llamada diaria. No se obliga a integrar dos competencias en todos los días ni se reescriben actividades confirmadas.
+
+Se agregó confirmación docente previa para recursos explícitamente pendientes, se reforzaron las reglas de viabilidad y lenguaje práctico y se ajustaron los Word. Las observaciones libres sin criterio tampoco reciben un criterio por defecto en el documento. Detalle, evidencia, límites y rollback: docs/qa/QA_CORRECCIONES_PEDAGOGICAS_2026-10-19.md. En esta etapa inicial el mapeo de desempeños oficiales estaba pendiente. La ampliación posterior lo implementa y valida: ver docs/qa/QA_DESEMPENOS_OFICIALES_2026-10-19.md; las paráfrasis históricas siguen diferenciadas de las citas oficiales.
+
+QA: 96 regresiones PASS; typecheck, lint y build PASS. Muestra nueva de IA real: un Master y seis actividades de cinco años; ocho llamadas pagadas contando una revisión del último borrador. Costo adicional estimado USD 0,1066935; acumulado USD 4,607772955 de 5. Sin escrituras cloud, commit ni despliegue de esta ronda.
+
+
+## 2026-10-19 — Activación Preview con base independiente
+
+Usar la misma cuenta Supabase con un proyecto QA separado, según confirmación explícita de la persona usuaria. Mantener la identidad, credencial, registros y archivos de la cuenta QA durante la separación. Solo el nuevo despliegue Preview recibe la conexión, firma y secreto de ejecución nuevos; no cambiar la configuración general que siguen usando Producción y la Preview anterior. No copiar sesiones ni otras cuentas. La tabla v2 se activa mediante la migración aditiva en QA; nunca apuntar el ejecutor nuevo a la base compartida sin esa tabla.

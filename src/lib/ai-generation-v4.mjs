@@ -287,7 +287,8 @@ export async function generateAIWorkflowV4(input, { provider, providerFactory, k
   }
   const prepared = await prepareAIRequestV4(input, knowledgeBase);
   let outputSchema = input.workflow === "annual_plan" ? (input.annual_stage === "development" ? ANNUAL_PLAN_DEVELOPMENT_SCHEMA : ANNUAL_PLAN_OUTPUT_SCHEMA) : input.workflow === "project" ? PROJECT_OUTPUT_SCHEMA : input.workflow === "unit" ? UNIT_OUTPUT_SCHEMA : input.workflow === "criterion_realignment" ? CRITERION_EVIDENCE_OUTPUT_SCHEMA : input.workflow === "assessment_master" ? ASSESSMENT_MASTER_OUTPUT_SCHEMA : input.workflow === "assessment" ? ASSESSMENT_OUTPUT_SCHEMA : input.workflow === "descriptive_conclusion" ? DESCRIPTIVE_CONCLUSION_OUTPUT_SCHEMA : input.workflow === "family_report" ? FAMILY_REPORT_OUTPUT_SCHEMA : input.workflow === "classroom_period_report" ? CLASSROOM_PERIOD_REPORT_SCHEMA : ACTIVITY_OUTPUT_SCHEMA;
-  const confirmedCompetencyId = input.competency_ids?.length === 1 ? input.competency_ids[0] : null;
+  const inheritedPrimary = input.workflow === "activity" ? input.learning_experience_context?.inherited_route_item?.competency_id : null;
+  const confirmedCompetencyId = inheritedPrimary ?? (input.competency_ids?.length === 1 ? input.competency_ids[0] : null);
   if (input.workflow === "descriptive_conclusion" && confirmedCompetencyId) {
     outputSchema = { ...outputSchema, properties: { ...outputSchema.properties,
       competency_id: { type: "string", enum: [confirmedCompetencyId] } } };

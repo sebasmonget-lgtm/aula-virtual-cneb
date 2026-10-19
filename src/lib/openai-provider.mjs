@@ -42,6 +42,7 @@ function outputText(response) {
 }
 
 function classifyError(error) {
+  if (["insufficient_quota", "credit_balance_exhausted"].includes(error?.code ?? error?.error?.code)) return "insufficient_quota";
   if (error?.status === 401) return "authentication_failed";
   if (error?.status === 429) return "rate_limited";
   if (/timeout|timedout|abort/i.test(`${error?.name ?? ""} ${error?.cause?.name ?? ""}`) || error?.code === "ETIMEDOUT") return "timeout";
@@ -106,7 +107,9 @@ export class OpenAIProvider extends AIProvider {
         await this.onResponseStarted(response.id);
       }
       if (["queued", "in_progress"].includes(response.status)) throw new OpenAIProviderError("response_pending");
-      if (["failed", "cancelled"].includes(response.status)) throw new OpenAIProviderError("response_failed");
+      if (["failed", "cancelled"].includes(response.status)) throw new OpenAIProviderError(
+        ["insufficient_quota", "credit_balance_exhausted"].includes(response.error?.code) ? "insufficient_quota" : "response_failed",
+        { provider_code: response.error?.code ?? null });
     } catch (error) {
       await endAIQATrace(trace, null, { reason: error instanceof OpenAIProviderError ? error.reason : classifyError(error) });
       if (error instanceof OpenAIProviderError) throw error;

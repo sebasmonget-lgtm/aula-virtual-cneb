@@ -28,7 +28,7 @@ export function journeyAutomaticResume(payload, now = Date.now()) {
 export function publicJourneyJob(id, payload, now = Date.now()) {
   const stalled = payload.status === "running" && Date.parse(payload.lease_until) <= now;
   return { id, draft_id: payload.draft_id, status: stalled ? "interrupted" : payload.status,
-    stage: payload.stage, completed_stages: payload.completed_stages, updated_at: payload.updated_at,
+    started_at:payload.started_at,stage: payload.stage, completed_stages: payload.completed_stages, updated_at: payload.updated_at,
     error: stalled ? "La conexión se interrumpió. El avance de tu año sigue guardado." : payload.error ?? null,
     ...journeyAutomaticResume(payload, now),
     poll_after_ms: Math.max(0, Date.parse(payload.next_poll_at ?? "1970-01-01") - now),
@@ -45,10 +45,10 @@ export async function handleJourneyJobs({ request, response, url, db, context, t
   if (url.pathname !== "/api/annual-journey/prepare" && !match) return false;
   const lock = `annual:${context.school_year_id}`;
   const get = async (id, tx = db) => {
-    const row = (await tx.query(`select payload from ai_pending_generations where id=$1 and classroom_id=$2
+    const row = (await tx.query(`select payload,created_at from ai_pending_generations where id=$1 and classroom_id=$2
       and workflow=$3 and expires_at>now()`, [id, context.id, WORKFLOW])).rows[0];
     if (!row || row.payload.teacher_id !== teacherId) journeyFail("not_found", "Esta preparación no está disponible.");
-    return row.payload;
+    return {...row.payload,started_at:row.payload.started_at??row.created_at};
   };
   const update = async (id, payload, token, tx = db) => {
     payload.updated_at = new Date().toISOString();
@@ -112,7 +112,7 @@ export async function handleJourneyJobs({ request, response, url, db, context, t
         scope:"classroom_preference",uncertainty:"preference_not_observed_interest",support_text:body.teacherIdeas,ai_support_text:safeIdeas,
         occurred_at:new Date().toISOString(),competency_id:null,source_refs:[]}] : [])] };
       const payload = {teacher_id:teacherId,draft_id:row.id,revision:saved.revision,status:"queued",stage:"sources",completed_stages:["sources"],
-        updated_at:new Date().toISOString(),lease_token:token,teacherIdeas:body.teacherIdeas,safeIdeas,messages,snapshot:generatedSnapshot,
+        started_at:new Date().toISOString(),updated_at:new Date().toISOString(),lease_token:token,teacherIdeas:body.teacherIdeas,safeIdeas,messages,snapshot:generatedSnapshot,
         experienceContext,preparationConversation,
         sourceFingerprint:snapshot.source_fingerprint,calendarFingerprint:effectiveCalendarFingerprint(calendar),checkpoint:{}};
       await tx.query(`insert into ai_pending_generations(id,classroom_id,workflow,payload,created_at,expires_at)

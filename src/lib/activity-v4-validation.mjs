@@ -1,4 +1,6 @@
-const fields=["title","purpose","meaningful_situation","teacher_preparation","child_actions","mediation","evidence_opportunities","closure_or_continuity","competency_status","competency_id","route_item_id","evaluation_criterion","expected_evidence","document_template_version","teacher_overrides","activity_contract","teacher_context","additional_criteria"];
+import { validCriterionMoments } from "./activity-observation-plan.mjs";
+import { validateOfficialPerformanceRefs } from "./official-performance-references.mjs";
+const fields=["title","purpose","meaningful_situation","teacher_preparation","child_actions","mediation","evidence_opportunities","closure_or_continuity","competency_status","competency_id","route_item_id","evaluation_criterion","expected_evidence","document_template_version","teacher_overrides","activity_contract","teacher_context","additional_criteria","observation_moments","observation_focus","official_performance_refs"];
 const required=fields.slice(0,10);
 export function normalizeActivityMaterials(value) {
  if(!Array.isArray(value)) return [];
@@ -12,19 +14,23 @@ export function publicActivityParent(experience, priorActivities = []) {
   prior_activities: priorActivities.map((item) => ({ occurs_on: item.occurs_on, title: item.title, purpose: item.purpose, closure_or_continuity: item.closure_or_continuity })),
  };
 }
-export function validateActivityV4(proposal, allowedCompetencyIds) {
+export function validateActivityV4(proposal, allowedCompetencyIds, age = null) {
  if(!proposal||typeof proposal!=="object"||Array.isArray(proposal)||Object.keys(proposal).some(key=>!fields.includes(key))||required.some(key=>!(key in proposal))) throw new Error("La propuesta no cumple activity-v1.");
  for(const key of fields.slice(0,8)) if(typeof proposal[key]!=="string"||!proposal[key].trim()) throw new Error(`Campo obligatorio inválido: ${key}.`);
  if(proposal.document_template_version!==undefined&&!['activity-unified-v1','activity-with-workshop-v1'].includes(proposal.document_template_version))throw new Error("Versión de documento inválida.");
  if(proposal.route_item_id!==undefined&&proposal.route_item_id!==null&&typeof proposal.route_item_id!=="string")throw new Error("Actividad de origen inválida.");
  for(const key of ["evaluation_criterion","expected_evidence"])if(proposal[key]!==undefined&&(typeof proposal[key]!=="string"||!proposal[key].trim()))throw new Error(`Campo inválido: ${key}.`);
  if(proposal.teacher_overrides!==undefined&&!Array.isArray(proposal.teacher_overrides))throw new Error("Modificaciones docentes inválidas.");
+ validateOfficialPerformanceRefs(proposal.official_performance_refs, proposal.competency_id, age);
  if(proposal.teacher_context!==undefined&&(typeof proposal.teacher_context!=="string"||proposal.teacher_context.length>1000))throw new Error("Contexto docente inválido.");
+ if(!validCriterionMoments(proposal.observation_moments) || (proposal.observation_focus !== undefined && (!Array.isArray(proposal.observation_focus) || proposal.observation_focus.some(text => typeof text !== "string" || !text.trim()))))throw new Error("Momento o foco de observación inválido.");
  if(proposal.additional_criteria!==undefined) {
-  if(!Array.isArray(proposal.additional_criteria)||proposal.additional_criteria.length>3)throw new Error("Criterios adicionales inválidos.");
+  if(!Array.isArray(proposal.additional_criteria)||proposal.additional_criteria.length>5)throw new Error("Criterios adicionales inválidos.");
   const seen=new Set([proposal.competency_id]);
   for(const item of proposal.additional_criteria) {
-   if(!item||Object.keys(item).some(key=>!["competency_id","criterion_text","expected_evidence"].includes(key))||!allowedCompetencyIds.has(item.competency_id)||seen.has(item.competency_id)||["criterion_text","expected_evidence"].some(key=>typeof item[key]!=="string"||!item[key].trim()||item[key].length>2000))throw new Error("Cada competencia adicional necesita un criterio y evidencia válidos.");
+   if(!item||Object.keys(item).some(key=>!["competency_id","criterion_text","expected_evidence","observation_focus","observation_moments","official_performance_refs"].includes(key))||!allowedCompetencyIds.has(item.competency_id)||seen.has(item.competency_id)||["criterion_text","expected_evidence"].some(key=>typeof item[key]!=="string"||!item[key].trim()||item[key].length>2000))throw new Error("Cada competencia adicional necesita un criterio y evidencia válidos.");
+   validateOfficialPerformanceRefs(item.official_performance_refs, item.competency_id, age);
+   if(!validCriterionMoments(item.observation_moments) || (item.observation_focus !== undefined && (!Array.isArray(item.observation_focus) || item.observation_focus.some(text => typeof text !== "string" || !text.trim()))))throw new Error("Momento o foco de observación inválido.");
    seen.add(item.competency_id);
   }
  }

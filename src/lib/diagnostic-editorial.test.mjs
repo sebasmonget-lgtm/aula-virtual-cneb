@@ -56,7 +56,7 @@ test('stories place reading and oral sharing before optional writing, with no wr
   for (const age of [4, 5]) {
     const writing = story(age).aspects.find(row => row.id === 'write_message');
     assert.match(writing.prompt, /mensaje.*para alguien/);
-    assert.match(writing.look_for, /por sí solo no acredita escritura/);
+    assert.match(writing.look_for, /distingue el dibujo de sus intentos de escribir/);
     assert.doesNotMatch(writing.examples.join(' '), /Dibuja un personaje/);
   }
 });

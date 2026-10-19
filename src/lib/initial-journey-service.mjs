@@ -6,6 +6,7 @@ import { resolveAIExecutionPlan } from "./ai-execution-router-v4.mjs";
 import { createAIProviderForPlan } from "./ai-provider-factory.mjs";
 import { buildProviderRequest } from "./ai-generation-v4.mjs";
 import { appendConversationTurn, conversationStatus } from "./conversation-turn.mjs";
+import {completeContextSources} from "./annual-context-sources.mjs";
 import { validateAnnualContextDraft } from "./annual-context-draft.mjs";
 
 const WORKFLOW="annual_journey_conversation";
@@ -100,6 +101,7 @@ export async function handlePlanningConversation({request,response,url,db,contex
       typeof item.text!=="string"||!item.text.trim()||item.text.length>500||!Number.isInteger(item.source_turn)||
       typeof item.support_text!=="string"||!item.support_text.trim()||!safeTeacherDecisions[item.source_turn]?.includes(item.support_text))))
       journeyFail("invalid","No pude relacionar el contexto con tus aportes. La conversación se conserva para retomarla.");
+    answer={...answer,context_items:completeContextSources(answer.context_items??[],safeTeacherDecisions,payload.context_draft?.importedTurns??[])};
     if(answer.status==="ready")answer={...answer,question:"",chips:[]};
     if(payload.safe_texts.length>=3)answer={...answer,status:"ready",question:"",chips:[]};
     }

@@ -136,8 +136,8 @@
 .criterion strong { display: block; font-size: 15px; line-height: 1.4; }
 .criterion > div { min-width: 0; flex: 1; }
 .criterion button { margin-top: 12px; min-height: 48px; }
-.dialogStudents button[data-coverage=none] { background: #fff8e9; border-color: #cfb87d; }
-.dialogStudents button[data-coverage=few] { background: #eef7fc; border-color: #9bbbd0; }
+.dialogStudents button[data-coverage=none] { background: #f3f5f7; border-color: #c5d0da; }
+.dialogStudents button[data-coverage=few] { background: #fff6d9; border-color: #d7bc72; }
 .dialogStudents button[aria-pressed=true] { background: #e5f4ff; border-color: #0075d8; }
 .criterion p { display: flex; align-items: center; gap: 8px; background: #e0f0ff; border-radius: 7px; padding: 8px; font-size: 12px; margin-top: 9px; color: #2563a5; }
 .guidedActions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 14px; }
@@ -359,3 +359,5 @@
 .guidedPreparation strong { color: #143573; }
 .guidedPreparation p { max-width: 100ch; margin-top: 4px; }
 .guidedPreparation p:last-child { color: #445d79; }
+
+.dialogStudents button[data-coverage=recorded] { background: #e5f5ee; border-color: #9ecfbd; }

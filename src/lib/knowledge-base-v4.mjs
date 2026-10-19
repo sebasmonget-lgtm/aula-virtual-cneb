@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
+import { withOfficialPerformanceMapping, OFFICIAL_PERFORMANCE_VERSION } from "./official-performance-references.mjs";
 
 export const KNOWLEDGE_BASE_V4_0_ROOT = path.join(process.cwd(), "knowledge/cneb-initial-3-5/v4.0.0");
 export const KNOWLEDGE_BASE_V4_ROOT = path.join(process.cwd(), "knowledge/cneb-initial-3-5/v4.1.0");
@@ -184,7 +185,8 @@ export async function loadKnowledgeBaseV4(rootDir = KNOWLEDGE_BASE_V4_ROOT) {
     pedagogyModules,
     generationRules,
     knowledgeUnits,
-    competencyCards,
+    competencyCards: version === "4.1.0" ? competencyCards.map(withOfficialPerformanceMapping) : competencyCards,
+    officialPerformanceVersion: version === "4.1.0" ? OFFICIAL_PERFORMANCE_VERSION : null,
     workflows: workflowRequirements.workflows,
     validateAge: validateKnowledgeBaseAge,
     getWorkflow(workflow) {

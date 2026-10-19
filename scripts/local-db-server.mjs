@@ -72,6 +72,7 @@ import { saveWordToLocalDownloads } from "../src/lib/local-word-save.mjs";
 import { buildInstitutionInitialsLogo, loadInstitutionLogoForDocuments, normalizeInstitutionLogoUpload } from "../src/lib/institution-logo.mjs";
 import { displayPersonName } from "../src/lib/person-name.mjs";
 import { validateLearningExperienceProposal } from "../src/lib/learning-experience-validation.mjs";
+import { assertResourceReadiness } from "../src/lib/project-resource-readiness.mjs";
 import { inheritedActivityCriterion, routeItemFor, saveActivityDetails, saveExperienceDetails } from "../src/lib/experience-lineage.mjs";
 import { activityCriteriaV3, activityPreparationV3, inheritedActivityEnabled, stampActivityV3 } from "../src/lib/activity-v3-snapshot.mjs";
 import { activityV3, validateActivityV3, canonicalProjectDetails, canonicalProjectRoute, planningV3ReadEnabled, projectMasterV3, resolveAnnualProposal, validateProjectMasterV3 } from "../src/lib/planning-contract-v3.mjs";
@@ -2141,7 +2142,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
           expectedRevision(body.expectedRevision)])).rows[0];
         if (!saved) throw new VersionConflictError("El borrador cambió. Vuelve a abrirlo.");
         send(response, 200, { experience: saved }, origin);
-      } catch (error) { send(response, httpStatusForError(error, 422), isVersionConflict(error) ? conflictPayload(error) : { error: publicErrorMessage(error) }, origin); }
+      } catch (error) { send(response, httpStatusForError(error, 422), isVersionConflict(error) ? conflictPayload(error) : { error: publicErrorMessage(error),...(error.reason==='insufficient_quota'?{provider_reason:'insufficient_quota'}:{}) }, origin); }
       return;
     }
     if (request.method === "POST" && /^\/api\/project-flow\/[0-9a-f-]+\/master$/i.test(url.pathname)) {
@@ -2154,8 +2155,9 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         const calendarReview=await ensureProjectCalendarSelection(row,source);
         assertProjectAnnualAuthority(source,row.details.decisions);
         if(calendarReview.selection.status!=="confirmed")throw new Error("Confirma primero los días del proyecto.");
+        assertResourceReadiness(source.source,row.details.resource_readiness);
         let dependents = source.plan.proposal.experience_context ? row.details.dependents : validateProjectDependents(body.dependents ?? row.details.dependents, row.details.decisions.competency_ids);
-        const generated = await generateProjectMaster({ context: { ...source.aiContext, modern: Boolean(source.plan.proposal.experience_context),
+        const generated = await generateProjectMaster({ context: { ...source.aiContext, resource_readiness: row.details.resource_readiness ?? null, modern: Boolean(source.plan.proposal.experience_context),
           teacher_context_sources: (row.details.project_context?.messages ?? []).filter(message=>message.role==="teacher").map(message=>({source_turn:message.source_turn,support_text:source.safeDecisions({additional_context:message.support_text}).additional_context,source_type:"teacher_decision"})),
           planning_feedback: row.details.planning_feedback ?? null,
           curriculum: source.aiContext.curriculum.filter((card) => row.details.decisions.competency_ids.includes(card.id)) },
@@ -2185,7 +2187,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
           route = retainProtectedProjectRows(protectedVersion.sourceRoute, route, protectedVersion);
           assertFutureProjectMapEdits(protectedVersion.sourceRoute, route, protectedVersion);
         }
-        validateEditedActivityMap(route, row.details.decisions, dependents, calendarReview.selected_dates);
+        validateEditedActivityMap(route, row.details.decisions, dependents, calendarReview.selected_dates, context.age);
         let details = { ...base, activity_route: route, previous_map: row.details.previous_map ?? null,
           image_id: Object.hasOwn(row.details, "image_id") ? row.details.image_id : imageSuggestion?.suggested_id ?? null,
           image_suggested_id: imageSuggestion?.suggested_id ?? row.details.image_suggested_id ?? null,
@@ -2200,7 +2202,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         send(response, 200, { experience: saved }, origin);
       } catch (error) {
         if(masterExecution&&error.reason==='response_pending'){send(response,202,{generation_pending:true},origin);return;}
-        send(response, httpStatusForError(error, 422), isVersionConflict(error) ? conflictPayload(error) : { error: publicErrorMessage(error) }, origin);
+        send(response, httpStatusForError(error, 422), isVersionConflict(error) ? conflictPayload(error) : { error: publicErrorMessage(error), ...(error.reason==='insufficient_quota'?{provider_reason:'insufficient_quota'}:{}) }, origin);
       }
       return;
     }
@@ -2212,7 +2214,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         const source = await projectFlowSource(row.annual_plan_id, row.source_proposal_id, true, row.source_proposal_index);
         const calendarReview=await ensureProjectCalendarSelection(row,source);
         if(calendarReview.selection.status!=="confirmed")throw new Error("Confirma primero los días del proyecto.");
-        const route = validateEditedActivityMap(body.activity_route, row.details.decisions, row.details.dependents, calendarReview.selected_dates);
+        const route = validateEditedActivityMap(body.activity_route, row.details.decisions, row.details.dependents, calendarReview.selected_dates, context.age);
         const protectedVersion = await protectedProjectVersion(row);
         if (protectedVersion) assertFutureProjectMapEdits(protectedVersion.sourceRoute, route, protectedVersion);
         const overrides = [...(row.details.teacher_overrides ?? [])];
@@ -2261,7 +2263,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         const source = await projectFlowSource(row.annual_plan_id, row.source_proposal_id, true, row.source_proposal_index);
         const calendarReview=await ensureProjectCalendarSelection(row,source);
         if(calendarReview.selection.status!=="confirmed")throw new Error("Confirma primero los días del proyecto.");
-        const route = validateEditedActivityMap(row.details.activity_route, row.details.decisions, row.details.dependents, calendarReview.selected_dates);
+        const route = validateEditedActivityMap(row.details.activity_route, row.details.decisions, row.details.dependents, calendarReview.selected_dates, context.age);
         assertProjectAnnualAuthority(source,row.details.decisions);
         if (row.details.contract_version === "project-master-v3") validateProjectMasterV3(projectMasterV3(row), {
           instructionalDates: calendarReview.selected_dates,
@@ -2463,7 +2465,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
           metadata: safeAnnualGenerationMetadata(generated.internalMetadata), createdAt: Date.now() });
         send(response, 200, { proposal: inheritedActivityEnabled() ? { ...generated.proposal, teacher_context: cleanText(body.context, 1000) } : generated.proposal, workshop_proposal: workshop?.proposal ?? null,
           workshop_error: workshopError,
-          generation_id: generationId }, origin); } catch (error) { send(response, httpStatusForError(error, 422), { error: publicErrorMessage(error) || "No se pudo generar la actividad." }, origin); } return;
+          generation_id: generationId }, origin); } catch (error) { send(response, httpStatusForError(error, 422), { error: publicErrorMessage(error) || "No se pudo generar la actividad.",...(error.reason==='insufficient_quota'?{provider_reason:'insufficient_quota'}:{}) }, origin); } return;
     }
     if (request.method === "POST" && url.pathname === "/api/activities") {
       const context = await annualPlanningContext(); const body = await readJson(request); const experience = context && await activeLearningExperience(body.experienceId, context.id); const pending = await pendingAIGenerations.get(body.generationId);
@@ -2477,7 +2479,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         validateActivityDate(occursOn, experience, context);
         const calendar = await loadEffectiveCalendar(db, { teacherId, classroomId: context.id, from: occursOn, to: occursOn });
         validateSelectedInstructionalDates(calendar.days, [occursOn], annualCalendarDay(experience.starts_on), annualCalendarDay(experience.ends_on));
-        validateActivityV4(body.proposal, await activityAllowedCompetencies(experience, context));
+        validateActivityV4(body.proposal, await activityAllowedCompetencies(experience, context), context.age);
         const master = body.workshopProposal ? await activeWorkshopForProject(db, experience.id) : null;
         if (body.workshopProposal && pending.workshop_master_id !== (master?.id ?? null))
           throw new VersionConflictError("El maestro de talleres cambió. Puedes guardar solo la actividad o preparar de nuevo el día.");
@@ -2504,7 +2506,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         validateActivityDate(occursOn, { starts_on: current.experience_starts_on, ends_on: current.experience_ends_on }, context);
         const calendar = await loadEffectiveCalendar(db, { teacherId, classroomId: context.id, from: occursOn, to: occursOn });
         validateSelectedInstructionalDates(calendar.days, [occursOn], annualCalendarDay(current.experience_starts_on), annualCalendarDay(current.experience_ends_on));
-        validateActivityV4(body.proposal, await activityAllowedCompetencies(parent, context));
+        validateActivityV4(body.proposal, await activityAllowedCompetencies(parent, context), context.age);
         const workshopDraft = await linkedWorkshopDraft(db, id, context.id);
         if (workshopDraft && pending && pending.workshop_master_id !== workshopDraft.experience_id)
           throw new VersionConflictError("El taller generado corresponde a otra versión del maestro.");
@@ -2534,7 +2536,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       try {
         if(!acceptedBlock&&await acceptedProjectActivity(current,context.id))throw new VersionConflictError("La aceptación del proyecto prepara y publica el bloque completo después de validarlo.");
         validateActivityDate(annualCalendarDay(current.occurs_on), { starts_on: current.experience_starts_on, ends_on: current.experience_ends_on }, context);
-        validateActivityV4(current.details, await activityAllowedCompetencies({ details: current.experience_details }, context));
+        validateActivityV4(current.details, await activityAllowedCompetencies({ details: current.experience_details }, context), context.age);
         const routeItem = routeItemFor({ details: current.experience_details }, current.details?.route_item_id);
         if (current.experience_details?.activity_route?.length && !routeItem) throw new Error("La actividad ya no pertenece a la ruta confirmada.");
         let criterion = inheritedActivityCriterion(current.details, routeItem);
@@ -2983,7 +2985,7 @@ async function acceptedProjectActivity(activity,classroomId){
   // their entire sequence against individual copies, edits and regenerations.
   if(await hasConfirmedProjectSequence(db,classroomId,activity.experience_id))return true;
   if(!activity.preparation_item_id&&!activity.experience_id)return false;
-  return (await db.query(`select 1 from preparation_jobs where classroom_id=$1 and teacher_id=(select teacher_id from classrooms where id=$1)
+  return (await db.query(`select 1 from (select * from preparation_jobs_v2 union all select * from preparation_jobs) jobs where classroom_id=$1 and teacher_id=(select teacher_id from classrooms where id=$1)
     and payload->'acceptance'->>'policy'='accepted-project-complete-v1'
     and (payload->'items' @> jsonb_build_array(jsonb_build_object('id',$2::text)) or payload->>'project_id'=$3)`,[classroomId,activity.preparation_item_id??null,activity.experience_id??null])).rows.length>0;
 }
@@ -3001,7 +3003,7 @@ async function preparationDomainRequest(job,pathname,body,method="POST",extra={}
   const response={writeHead(value){status=value;},end(value){result=JSON.parse(value);},setHeader(){},hasHeader(){return false;}};
   await withPedagogicalClock(previewQAClockForJob(job,process.env,currentPedagogicalClock()),()=>requestDatabaseScope.run(activeDb,()=>withAiUsageContext({teacherId:job.teacher_id,db:activeDb},()=>handleAuthenticatedRequest({teacherId:job.teacher_id,
     requestId:job.id,db:activeDb,jobClassroomId:job.classroom_id,preparationItemId:extra.preparationItemId,masterExecution:extra.masterExecution,acceptedBlock:extra.acceptedBlock===true&&job.payload?.acceptance?.policy==="accepted-project-complete-v1"},request,response))));
-  if(status>=400 || !status)throw Object.assign(new Error(result?.message ?? result?.error ?? "Preparation step failed"),{status});
+  if(status>=400 || !status)throw Object.assign(new Error(result?.message ?? result?.error ?? "Preparation step failed"),{status,provider_reason:result?.provider_reason});
   return result;
 }
 async function runPreparationWorker() {
@@ -3019,7 +3021,7 @@ async function runPreparationWorker() {
 export async function drainPreparationQueue(origin,oidcToken=null){
   const workerDb=database.requestDb();
   try{await requestDatabaseScope.run(workerDb,()=>drainPreparation({step:runPreparationWorker,
-    hasPending:async()=>!!(await db.query("select 1 from preparation_jobs where status='queued' limit 1")).rows.length,
+    hasPending:async()=>!!(await db.query("select 1 from preparation_jobs_v2 where status='queued' limit 1")).rows.length,
     continueWork:async()=>{
       const secret=preparationDispatchSecret();
       const deploymentOrigin=process.env.VERCEL_URL?`https://${process.env.VERCEL_URL}`:origin;

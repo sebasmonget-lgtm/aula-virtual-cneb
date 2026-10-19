@@ -182,3 +182,12 @@ test("una respuesta background expirada no genera automáticamente",async()=>{
  const provider=new OpenAIProvider({apiKey:"test-key",background:true,resumeResponseId:"resp_fictional_expired",client:{responses:{create:async()=>{created++;},retrieve:async()=>{throw Object.assign(new Error("Missing"),{status:404});}}}});
  await assert.rejects(async()=>generateAIWorkflowV4(activityInput,{provider,knowledgeBase:await loadKnowledgeBaseV4()}),error=>error.reason==="response_expired");assert.equal(created,0);
 });
+
+test("known exhausted balance is a terminal cause, including background responses",async()=>{
+ const kb=await loadKnowledgeBaseV4();
+ for(const background of [false,true]){
+   const responses=background?{retrieve:async()=>({id:'resp_known_quota',status:'failed',error:{code:'credit_balance_exhausted'}})}:{create:async()=>{throw Object.assign(new Error('Quota'),{status:429,code:'insufficient_quota'});}};
+   const provider=new OpenAIProvider({apiKey:'test-key',background,resumeResponseId:background?'resp_known_quota':null,client:{responses}});
+   await assert.rejects(()=>generateAIWorkflowV4(activityInput,{provider,knowledgeBase:kb}),error=>error.reason==='insufficient_quota');
+ }
+});

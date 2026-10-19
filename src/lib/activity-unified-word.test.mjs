@@ -26,11 +26,18 @@ test("la actividad distingue qué observar de las observaciones registradas", as
   assert.match(xml, /Explica un acuerdo/);
   assert.match(xml, /Escuchar cómo propone los turnos/);
   assert.match(xml, /Síntesis orientativa para 5 años/);
+  const officialDocument = { ...document, content: { ...document.content, official_performance_refs: ["PCI2016.PS_CONVIVE.5.03"] } };
+  const officialZip = await JSZip.loadAsync(await renderActivityUnifiedWord(officialDocument, cards));
+  const officialXml = await officialZip.file("word/document.xml").async("string");
+  assert.match(officialXml, /Desempeño de 5 años · MINEDU, p\. 87/);
+  assert.match(officialXml, /Participa en la construcción colectiva/);
+  assert.doesNotMatch(officialXml, /Síntesis orientativa/);
+  assert.equal(document.content.official_performance_refs, undefined, "No modifica la actividad histórica");
   for (const label of ["Niños · qué harán", "Docente · cómo acompaña", "Preguntas para conversar", "Materiales", "Qué observar"])
     assert.match(xml, new RegExp(label));
   assert.doesNotMatch(xml, /¿QUÉ\?|¿CÓMO\?|¿PARA QUÉ\?/);
   assert.doesNotMatch(xml, /\{\{/);
-  assert.match(xml, /VI\. REGISTRO DE OBSERVACIONES Y EVIDENCIAS/);
+  assert.match(xml, /V\. REGISTRO DE OBSERVACIONES Y EVIDENCIAS/);
   assert.match(xml, /Aún no hay observaciones registradas/);
   assert.doesNotMatch(xml, /Nombre del estudiante/);
   const integratedDocument={...document,experience_details:{activity_route:[{...route,competency_ids:['PS_CONVIVE','COM_ORAL']}]},active_criterion:{...document.active_criterion,observation_focus:['Acordar turnos']}};
@@ -46,7 +53,7 @@ test("la actividad distingue qué observar de las observaciones registradas", as
     mediation: "Inicio: Ofrece dos cajas.\nDesarrollo: Pregunta: ¿Qué ayuda a sostenerla?\nCierre: Recupera la prueba que hicieron." } };
   const phasedZip = await JSZip.loadAsync(await renderActivityUnifiedWord(phasedDocument,cards));
   const phasedXml = await phasedZip.file('word/document.xml').async('string');
-  const sequence = phasedXml.slice(phasedXml.indexOf('V. SECUENCIA DE LA ACTIVIDAD'),phasedXml.indexOf('VI. REGISTRO DE OBSERVACIONES'));
+  const sequence = phasedXml.slice(phasedXml.indexOf('III. SECUENCIA DE LA ACTIVIDAD'),phasedXml.indexOf('V. REGISTRO DE OBSERVACIONES'));
   assert.match(sequence,/INICIO[\s\S]*Eligen una caja[\s\S]*Ofrece dos cajas[\s\S]*DESARROLLO[\s\S]*Prueban cómo apoyarla[\s\S]*CIERRE[\s\S]*Señalan lo que cambió/);
   assert.doesNotMatch(sequence,/Inicio:|Desarrollo:|Cierre:|Preguntas para conversar/);
   assert.equal((sequence.match(/¿Qué ayuda a sostenerla\?/g)??[]).length,1);
@@ -57,7 +64,7 @@ test("la actividad distingue qué observar de las observaciones registradas", as
   const completedArchive = await JSZip.loadAsync(completedWord);
   const completedXml = await completedArchive.file("word/document.xml").async("string");
   assert.match(completedXml, /Ana/);
-  assert.match(completedXml, /VI\. REGISTRO DE OBSERVACIONES Y EVIDENCIAS/);
+  assert.match(completedXml, /V\. REGISTRO DE OBSERVACIONES Y EVIDENCIAS/);
   assert.doesNotMatch(completedXml, /Aún no hay observaciones registradas/);
   assert.match(completedXml, /Explica cómo acuerda un turno/);
   assert.match(completedXml, /Propuso esperar su turno/);
@@ -70,13 +77,16 @@ test("la actividad distingue qué observar de las observaciones registradas", as
   assert.match(observationRows[0][0], /<w:tblHeader\/>/);
   for (const row of observationRows) assert.match(row[0], /<w:cantSplit\/>/);
   assert.match(observationRows[1][0], /Ana[\s\S]*Explica cómo acuerda un turno[\s\S]*Propuso esperar su turno/);
+  const freeZip=await JSZip.loadAsync(await renderActivityUnifiedWord({...document,registered_evidence:[{student_name:"Ana",criterion_id:null,criterion_text:null,observation_text:"Dijo que le gustan las semillas rojas.",observed_at:"2026-04-14T15:00:00Z",source:"ordinary_observation"}]},cards));
+  const freeXml=await freeZip.file("word/document.xml").async("string"),freeTable=[...freeXml.matchAll(/<w:tbl(?:\s[^>]*)?>[\s\S]*?<\/w:tbl>/g)].find(match=>match[0].includes("Nombre del estudiante"))?.[0];
+  assert.match(freeTable,/Sin criterio asociado/);assert.doesNotMatch(freeTable,/Acordar turnos/);
   assert.match(completedXml, /El grupo propuso nuevos turnos/);
   assert.doesNotMatch(completedXml, /VIII\. TALLER|\{\{/);
   const withWorkshop = { ...document, content: { ...document.content, document_template_version: "activity-with-workshop-v1" },
     workshop: { content: { workshop_type: "Arte", purpose: "Explorar formas", opening: "Mirar", development: "Crear", closure: "Compartir", materials: ["papel"] } } };
   const workshopWord = await JSZip.loadAsync(await renderActivityUnifiedWord(withWorkshop, cards));
   const workshopXml = await workshopWord.file("word/document.xml").async("string");
-  assert.match(workshopXml, /VI\. CUADERNO DE CAMPO/);
+  assert.match(workshopXml, /V\. CUADERNO DE CAMPO/);
   assert.match(workshopXml, /Aún no hay observaciones registradas/);
   assert.doesNotMatch(workshopXml, /\{\{/);
 });

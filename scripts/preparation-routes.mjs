@@ -1,3 +1,4 @@
+import { resourceReadiness } from "../src/lib/project-resource-readiness.mjs";
 import { enqueuePreparation, enqueueActivityBlock, ownedPreparationJob, publicPreparationJob, retryPreparation, preparationFingerprint,needsAcceptedProjectContinuation,recoverAcceptedProjectContinuation,recoverSavedPreparationResult } from "../src/lib/preparation-jobs.mjs";
 import { versionTransaction, VersionConflictError, httpStatusForError, publicErrorMessage } from "../src/lib/version-integrity.mjs";
 import { lockClassroomSchedule, limaToday } from "../src/lib/activity-schedule-integrity.mjs";
@@ -91,7 +92,7 @@ export async function handlePreparationRoutes({request,response,url,db,teacherId
     if(url.pathname==='/api/preparation/projects/future-complete'&&request.method==='POST'){
       const body=await readJson(request),{row:project}=await projectFlowRow(body.projectId);
       if(project&&body.accepted===true){
-        const previous=(await db.query(`select * from preparation_jobs where teacher_id=$1 and classroom_id=$2
+        const previous=(await db.query(`select * from preparation_jobs_v2 where teacher_id=$1 and classroom_id=$2
           and payload->>'project_id'=$3 and payload->>'future_version'='true' and payload->'acceptance'->>'policy'=$4
           and payload->>'accepted_preview_revision'=$5 order by created_at desc limit 1`,
         [teacherId,project.classroom_id,project.id,COMPLETE_PROJECT_POLICY,String(body.expectedRevision)])).rows[0];
@@ -116,7 +117,7 @@ export async function handlePreparationRoutes({request,response,url,db,teacherId
       let plan=(await db.query(`select ap.* from annual_plans ap join school_years y on y.id=ap.school_year_id where ap.id=$1 and ap.classroom_id=$2 and y.owner_id=$3`,[body.annualPlanId,context.id,teacherId])).rows[0];
       if(!plan||Number(plan.revision)!==body.expectedRevision||!['active','draft'].includes(plan.status))throw new VersionConflictError("Mi año cambió. Abre la versión actual antes de preparar.");
       // Replay preserves the calendar already accepted, including jobs created by older clients.
-      const previous=(await db.query(`select * from preparation_jobs where teacher_id=$1 and classroom_id=$2 and source_id=$3 and source_revision=$4
+      const previous=(await db.query(`select * from preparation_jobs_v2 where teacher_id=$1 and classroom_id=$2 and source_id=$3 and source_revision=$4
         and payload->>'proposal_id'=$5 and payload->'acceptance'->>'policy'=$6 order by created_at desc limit 1`,[teacherId,context.id,plan.id,plan.revision,body.proposalId,COMPLETE_PROJECT_POLICY])).rows[0];
       if(previous){send(response,202,publicPreparationJob(await recoverAcceptedProjectContinuation(db,teacherId,previous.id)),origin);return true;}
       const dates=body.selectedDates;
@@ -125,6 +126,7 @@ export async function handlePreparationRoutes({request,response,url,db,teacherId
       const candidate=plan.proposal.proposed_experiences.find(row=>row.proposal_id===body.proposalId);
       if(!candidate||proposalIntentIssues(candidate,[],plan.proposal.curriculum_reference??[]).length)
         throw new VersionConflictError('Antes de preparar, completa con Ayni las dos competencias y los materiales concretos de este proyecto. Conservamos lo que ya está guardado.');
+      const readiness=resourceReadiness(candidate,body.resourcesConfirmed,teacherId);
       // Reject an invalid calendar before confirming a scoped annual revision.
       // The authoritative saved proposal already excludes holidays and weekends.
       if(!Array.isArray(candidate.instructional_dates)||dates.some(date=>!candidate.instructional_dates.includes(date)))
@@ -155,6 +157,8 @@ export async function handlePreparationRoutes({request,response,url,db,teacherId
       const started=await domainRequest({id:plan.id,teacher_id:teacherId,classroom_id:context.id,payload:{}},"/api/project-flow/start",{annualPlanId:plan.id,proposalId:body.proposalId});
       if(started.experience.status==='draft'&&!started.experience.details.project_master)await domainRequest({id:plan.id,teacher_id:teacherId,classroom_id:context.id,payload:{}},`/api/project-flow/${started.experience.id}/calendar`,{
         selectedDates:[...dates].sort(),exclusions:Object.fromEntries(source.dates.filter(date=>!dates.includes(date)).map(date=>[date,'Día excluido por la docente del proyecto'])),confirm:true},'PUT');
+      if(readiness && started.experience.status === 'draft' && !started.experience.details.project_master)
+        await db.query("update learning_experiences set details=jsonb_set(details,'{resource_readiness}',$1::jsonb),updated_at=now() where id=$2 and status='draft'",[JSON.stringify(readiness),started.experience.id]);
       const contextText=started.experience.details.decisions?.additional_context??"";
       const job=await enqueuePreparation(db,{teacherId,classroomId:context.id,kind:'project',sourceId:plan.id,sourceRevision:plan.revision,
         input:{policy:COMPLETE_PROJECT_POLICY,proposalId:body.proposalId,dates},payload:{stage:'structure',proposal_id:body.proposalId,project_id:started.experience.id,
@@ -183,14 +187,14 @@ export async function handlePreparationRoutes({request,response,url,db,teacherId
     if(url.pathname==="/api/preparation/activities" && request.method==="POST"){
       const {row}=await projectFlowRow((await readJson(request)).experienceId);
       if(!row)throw new VersionConflictError("Proyecto no disponible.");
-      const complete=(await db.query(`select * from preparation_jobs where teacher_id=$1 and classroom_id=$2
+      const complete=(await db.query(`select * from preparation_jobs_v2 where teacher_id=$1 and classroom_id=$2
         and payload->>'project_id'=$3 and payload->'acceptance'->>'policy'=$4 order by created_at desc limit 1`,[teacherId,row.classroom_id,row.id,COMPLETE_PROJECT_POLICY])).rows[0];
       if(complete){send(response,202,publicPreparationJob(complete),origin);return true;}
       send(response,202,publicPreparationJob(await enqueueActivityBlock(db,teacherId,row)),origin);return true;
     }
     if(url.pathname==="/api/preparation/current" && request.method==="GET"){
       const context=await annualPlanningContext();
-      const rows=context?(await db.query(`select * from preparation_jobs where classroom_id=$1 and teacher_id=$2 order by created_at desc`,[context.id,teacherId])).rows:[];
+      const rows=context?(await db.query(`select * from (select *,false as legacy from preparation_jobs_v2 union all select *,true as legacy from preparation_jobs) history where classroom_id=$1 and teacher_id=$2 order by created_at desc`,[context.id,teacherId])).rows:[];
       for(let index=0;index<rows.length;index++){
         if(rows[index].status==='uncertain')rows[index]=await recoverSavedPreparationResult(db,teacherId,rows[index].id);
         if(needsAcceptedProjectContinuation(rows[index]))rows[index]=await recoverAcceptedProjectContinuation(db,teacherId,rows[index].id);
@@ -218,6 +222,7 @@ export async function handlePreparationRoutes({request,response,url,db,teacherId
       const result=await versionTransaction(db,`preparation:${id}`,async tx=>{
         const job=await ownedPreparationJob(tx,teacherId,id);
         await lockClassroomSchedule(tx,job.classroom_id);
+        if(job.legacy)throw new VersionConflictError("Esta versión anterior se conserva para consulta.");
         if(job.approved_at)return publicPreparationJob(job);
         if(job.status!=="succeeded")throw new VersionConflictError("Termina de preparar todas las actividades antes de confirmar el bloque.");
         const project=(await tx.query(`select * from learning_experiences where id=$1 and classroom_id=$2 and status='active' for update`,[job.source_id,job.classroom_id])).rows[0];
@@ -233,7 +238,7 @@ export async function handlePreparationRoutes({request,response,url,db,teacherId
           const workshop=(await tx.query(`select id,revision from activities where linked_main_activity_id=$1 and status='draft'`,[activity.id])).rows[0];
           await domainRequest({...job,db:transactionalDb},`/api/activities/${activity.id}/confirm`,{expectedRevision:activity.revision,workshopRevision:workshop?.revision},"POST");
         }else if(activity.status!=="active")throw new VersionConflictError("Una actividad fue reemplazada. Revisa el bloque.");}
-        const approved=(await tx.query(`update preparation_jobs set approved_at=now(),updated_at=now() where id=$1 returning *`,[id])).rows[0];
+        const approved=(await tx.query(`update preparation_jobs_v2 set approved_at=now(),updated_at=now() where id=$1 returning *`,[id])).rows[0];
         return publicPreparationJob(approved);
       });
       send(response,200,result,origin);return true;

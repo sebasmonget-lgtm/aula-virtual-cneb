@@ -28,3 +28,11 @@ test("explicit stages provide one moment each, retaining introductions, original
   assert.equal(blocks[1].observations[0].id,"criterion-real");assert.equal(blocks[1].observations[0].competency_id,"CYT_INDAGA");
   assert.deepEqual(details,original);
 });
+
+test('an explicitly planned closing observation retains its criterion only in closure',()=>{
+ const criteria=[{id:'criterion',competency_v4_id:'COM_LECTURA',criterion_text:'Comenta lo que le gustó.'}];
+ const details={child_actions:'Inicio: Miran. Desarrollo: Escuchan. Cierre: Comentan.',mediation:'Inicio: Invita. Desarrollo: Lee. Cierre: Escucha.',evidence_opportunities:'Cierre: Un comentario sobre el cuento.'};
+ const blocks=activityPedagogicalBlocks(details,[],criteria);
+ assert.deepEqual(blocks.filter(block=>block.observations?.length).map(block=>block.id),['closure']);
+ assert.equal(blocks.at(-1).observations[0].id,'criterion');
+});

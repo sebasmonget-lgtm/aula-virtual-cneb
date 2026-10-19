@@ -147,6 +147,15 @@ export function insertCoverQuickView(xml, title, rows) {
   return xml.replace(breakParagraph, `${heading}${table}${breakParagraph}`);
 }
 
+/** Keep the template's stationery, logo support and colours without a separate cover page. */
+export function compactTeacherCover(xml,title) {
+  const first=[...xml.matchAll(paragraphPattern)].find(match=>[...match[0].matchAll(textPattern)].map(part=>part[2]).join('').includes('I. DATOS GENERALES'));
+  const body=xml.indexOf('<w:body>')+'<w:body>'.length;
+  if(!first||body<10)return xml;
+  const heading=`<w:p><w:pPr><w:keepNext/><w:spacing w:before="80" w:after="140"/></w:pPr><w:r><w:rPr><w:b/><w:color w:val="173352"/><w:sz w:val="30"/></w:rPr><w:t>${xmlEscape(title)}</w:t></w:r></w:p>`;
+  return xml.slice(0,body)+`<w:p><w:r><w:t>{{LOGO_COLEGIO}}</w:t></w:r></w:p>`+heading+xml.slice(first.index);
+}
+
 function logoDrawing(relId, imageId) {
   const size = 914400;
   return `<w:drawing><wp:inline xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${size}" cy="${size}"/><wp:docPr id="${imageId}" name="Logo institucional"/><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="${imageId}" name="logo-ayni.png"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="${relId}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${size}" cy="${size}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing>`;

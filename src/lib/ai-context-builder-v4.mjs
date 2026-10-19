@@ -1,6 +1,7 @@
 import { loadKnowledgeBaseV4, validateKnowledgeBaseAge, validateKnowledgeBaseWorkflow } from "./knowledge-base-v4.mjs";
 import { retrieveKnowledgeV4 } from "./knowledge-retrieval-v4.mjs";
 import { competencyApplicability } from "./competency-applicability.mjs";
+import { officialPerformanceContext } from "./official-performance-references.mjs";
 
 const SHORTLIST_SIZE = 3;
 
@@ -322,7 +323,13 @@ function validateInput(input, knowledgeBase) {
     throw new TypeError("competency_ids debe ser una lista de IDs de competencia.");
   }
   const uniqueIds = uniqueStrings(competencyIds);
-  if (uniqueIds.length > 1 && !["family_report", "classroom_period_report", "project", "unit", "assessment_master"].includes(input.workflow)) {
+  const inherited = input.workflow === "activity" && input.learning_experience_context?.inherited_route_item;
+  if (uniqueIds.length > 1 && inherited) {
+    const planned=[inherited.competency_id,...(inherited.additional_criteria??[]).map(item=>item.competency_id)];
+    if(uniqueIds.length>6 || new Set(planned).size!==planned.length || uniqueIds.length!==planned.length || uniqueIds.some(id=>!planned.includes(id)))
+      throw new RangeError("Las competencias deben corresponder a los criterios del mapa confirmado.");
+  }
+  if (uniqueIds.length > 1 && !inherited && !["family_report", "classroom_period_report", "project", "unit", "assessment_master"].includes(input.workflow)) {
     throw new RangeError("AIContextBundle acepta una sola competencia confirmada por llamada.");
   }
   const workflowRequirements = knowledgeBase.workflows[input.workflow];
@@ -342,7 +349,8 @@ export async function buildAIContext(input, knowledgeBase) {
   const retrievalInput = (id) => ({ workflow: input.workflow, age: input.age, teacherRequest: input.teacher_request,
     confirmedCompetencyId: id, ...applicability, temporalContext: input.temporal_context,
     applicabilityContext: retrievalApplicabilityContext(input) });
-  const multiCompetencyWorkflow = ["family_report", "classroom_period_report", "project", "unit", "assessment_master"].includes(input.workflow);
+  const multiCompetencyWorkflow = ["family_report", "classroom_period_report", "project", "unit", "assessment_master"].includes(input.workflow)
+    || input.workflow === "activity" && Boolean(input.learning_experience_context?.inherited_route_item);
   const retrieval = multiCompetencyWorkflow && confirmedIds.length > 1
     ? mergeFamilyRetrievals(await Promise.all(confirmedIds.map((id) => retrieveKnowledgeV4(retrievalInput(id), knowledgeBase))), workflowRequirements)
     : await retrieveKnowledgeV4(retrievalInput(confirmedCompetencyId), knowledgeBase);
@@ -379,6 +387,7 @@ export async function buildAIContext(input, knowledgeBase) {
       confirmed_competency_ids: confirmedIds,
       competency_cards: competencyCards,
       age_reference: selectedAgeReferences(knowledgeBase.curriculumReference, competencyIds, input.age),
+      official_performance_catalog: officialPerformanceContext(competencyIds, input.age),
       special_applicability: applicabilityRules,
     },
     knowledge: {
@@ -390,6 +399,7 @@ export async function buildAIContext(input, knowledgeBase) {
     constraints: buildConstraints(knowledgeBase, workflowRequirements, applicabilityRules),
     provenance: {
       knowledge_base_version: knowledgeBase.version,
+      official_performance_version: knowledgeBase.officialPerformanceVersion,
       knowledge_unit_ids: [...new Set(retrieval.provenance.knowledge_unit_ids)],
       source_claim_ids: [...new Set(retrieval.provenance.source_claim_ids)],
       source_refs: sourceRefs,

@@ -1,0 +1,663 @@
+{
+  "id": "QA-INTERACTIVO-WORD-PLAN-ANUAL-2026-10-19",
+  "dateLocal": "2026-10-19",
+  "preview": "https://ayni-aula-staging-5t9tbxosy-ayni4.vercel.app/",
+  "commit": "d0260f43fd46e63951bc0edeb67706f48cf7ec8b",
+  "planId": "43bea5cf-d603-43cb-ae09-5f68b15b16a3",
+  "planVersion": 1,
+  "download": {
+    "original": "C:/Users/ASUS/Downloads/plan-anual-2026-b15b16a3.docx",
+    "reviewCopy": "outputs/qa-interactivo-20261018/word-plan-anual/plan-anual-2026-b15b16a3.docx",
+    "sha256": "5ff5ffe6e80870871dbab4edcd020e1b878dd4d8f9915dd05dd4215f3e29355d",
+    "originalUnchanged": true,
+    "method": "Descargado desde la interfaz: Documentos > 2026 Aula CELESTE > Plan anual > Mi año V1 > Descargar Word."
+  },
+  "scope": {
+    "userRequest": "Anotar mejoras pedagógicas y revisar Word; actualizar posteriormente la plantilla conservando la estética que le gusta.",
+    "standingInstruction": "Documentar ahora e implementar cuando termine el QA conjunto.",
+    "explicitVisualPreference": "Mantener que se vea bien estéticamente como ahora; actualizar la plantilla que fue creada al inicio y quedó detrás de los cambios del producto.",
+    "applicationMutation": "Se confirmó el borrador QA por interfaz para habilitar la exportación. Cambió draft → active; los quince proyectos permanecen idénticos. Confirmación de prueba de exportación, no aprobación de calidad ni de logros infantiles. Sin escrituras directas de datos. La descarga dejó visible Versión estable preparada en Documentos; se conserva el archivo exportado de esta versión.",
+    "dataOrigin": "Cuenta de QA con relatos y actuaciones sintéticos autorizados. No se han añadido nuevas observaciones ni valoraciones."
+  },
+  "method": {
+    "content": "Extracción OOXML/PDF de las treinta páginas y comparación de todos los campos de los quince proyectos con el objeto canónico confirmado.",
+    "visual": "Revisión de las treinta páginas en cinco hojas de contacto; inspección ampliada de páginas 1,15,17,24 y27. No se afirma inspección de cada página individual al 100%.",
+    "renderer": "render_docx.py intentado: falló por falta de soffice. Se utilizó Microsoft Word local, según autorización previa, sobre una copia de solo lectura con macros y vínculos externos deshabilitados; exportación PDF y Poppler del runtime para PNG.",
+    "productCode": "Sin cambios de producto, modelos, prompts, migraciones o despliegues. No se ejecutaron builds ni pruebas de código porque se trata de lectura y documentación."
+  },
+  "results": {
+    "pages": 30,
+    "contentIntegrity": "PASS: los quince proyectos conservan todos los campos comprobados; no se perdieron situaciones, propósitos, preguntas, acciones, materiales ni oportunidades al exportar.",
+    "pedagogy": "Se mantienen las valoraciones y mejoras por proyecto de la relectura anterior. La exportación no resuelve las decisiones omitidas del chat ni la ubicación de una intención actual en un tramo pasado.",
+    "dateConsistency": "FAIL: 35 diferencias de un día entre interfaz/Lima y Word.",
+    "readerLanguage": "FAIL: JSON crudo y valores ingleses visibles en los diez relatos familiares.",
+    "documentUsability": "PARTIAL: texto legible y sin solapamiento evidente en la revisión realizada; estructura plana, redundancia y paginación mejorables.",
+    "layout": "A4, cuerpo Calibri 11 y encabezados azules. La revisión no requiere sustituir la identidad visual aprobada.",
+    "overall": "No aprobar la salida Word como terminada hasta resolver fechas, proyección legible y estructura."
+  },
+  "verification": {
+    "pages": 30,
+    "projects": [
+      {
+        "project": 1,
+        "title": "Un lugar para elegir y jugar",
+        "checked_fields": 28,
+        "missing": [],
+        "pass": true
+      },
+      {
+        "project": 2,
+        "title": "Pistas entre las páginas",
+        "checked_fields": 26,
+        "missing": [],
+        "pass": true
+      },
+      {
+        "project": 3,
+        "title": "Caminos para nuestro cuerpo",
+        "checked_fields": 26,
+        "missing": [],
+        "pass": true
+      },
+      {
+        "project": 4,
+        "title": "Pedidos en nuestra tienda",
+        "checked_fields": 29,
+        "missing": [],
+        "pass": true
+      },
+      {
+        "project": 5,
+        "title": "Objetos que cuentan con sonidos",
+        "checked_fields": 29,
+        "missing": [],
+        "pass": true
+      },
+      {
+        "project": 6,
+        "title": "Un refugio para animales imaginarios",
+        "checked_fields": 29,
+        "missing": [],
+        "pass": true
+      },
+      {
+        "project": 7,
+        "title": "Personajes que sienten",
+        "checked_fields": 28,
+        "missing": [],
+        "pass": true
+      },
+      {
+        "project": 8,
+        "title": "Construcciones que dejan pasar",
+        "checked_fields": 28,
+        "missing": [],
+        "pass": true
+      },
+      {
+        "project": 9,
+        "title": "Algo que quiero contarte",
+        "checked_fields": 27,
+        "missing": [],
+        "pass": true
+      },
+      {
+        "project": 10,
+        "title": "Poca agua para descubrir",
+        "checked_fields": 33,
+        "missing": [],
+        "pass": true
+      },
+      {
+        "project": 11,
+        "title": "Materiales para seguir jugando",
+        "checked_fields": 29,
+        "missing": [],
+        "pass": true
+      },
+      {
+        "project": 12,
+        "title": "Lo que cambia en las macetas",
+        "checked_fields": 33,
+        "missing": [],
+        "pass": true
+      },
+      {
+        "project": 13,
+        "title": "Canciones y ritmos para compartir",
+        "checked_fields": 31,
+        "missing": [],
+        "pass": true
+      },
+      {
+        "project": 14,
+        "title": "Otros caminos para un cuento",
+        "checked_fields": 29,
+        "missing": [],
+        "pass": true
+      },
+      {
+        "project": 15,
+        "title": "Elegimos un reto y revisamos intentos",
+        "checked_fields": 34,
+        "missing": [],
+        "pass": true
+      }
+    ],
+    "all_project_fields_present": true,
+    "date_mismatches": [
+      {
+        "student": "Camila Huamán Castro",
+        "timestamp": "2026-10-19T02:51:17.941Z",
+        "ui_and_lima_date": "18/10/2026",
+        "word_date": "19/10/2026",
+        "pages": [
+          23
+        ]
+      },
+      {
+        "student": "Diego Ramos Vega",
+        "timestamp": "2026-10-19T02:52:01.030Z",
+        "ui_and_lima_date": "18/10/2026",
+        "word_date": "19/10/2026",
+        "pages": [
+          24
+        ]
+      },
+      {
+        "student": "Emilia Cárdenas Ruiz",
+        "timestamp": "2026-10-19T02:53:51.532Z",
+        "ui_and_lima_date": "18/10/2026",
+        "word_date": "19/10/2026",
+        "pages": [
+          24
+        ]
+      },
+      {
+        "student": "Gabriel Paredes Soto",
+        "timestamp": "2026-10-19T02:54:35.621Z",
+        "ui_and_lima_date": "18/10/2026",
+        "word_date": "19/10/2026",
+        "pages": [
+          24
+        ]
+      },
+      {
+        "student": "Luciana Torres Medina",
+        "timestamp": "2026-10-19T02:55:04.700Z",
+        "ui_and_lima_date": "18/10/2026",
+        "word_date": "19/10/2026",
+        "pages": [
+          24
+        ]
+      },
+      {
+        "student": "Nicolás Mendoza León",
+        "timestamp": "2026-10-19T02:55:27.238Z",
+        "ui_and_lima_date": "18/10/2026",
+        "word_date": "19/10/2026",
+        "pages": [
+          24
+        ]
+      },
+      {
+        "student": "Sofía Vargas Cabrera",
+        "timestamp": "2026-10-19T02:55:49.521Z",
+        "ui_and_lima_date": "18/10/2026",
+        "word_date": "19/10/2026",
+        "pages": [
+          24
+        ]
+      },
+      {
+        "student": "Thiago Gutiérrez Silva",
+        "timestamp": "2026-10-19T02:56:11.216Z",
+        "ui_and_lima_date": "18/10/2026",
+        "word_date": "19/10/2026",
+        "pages": [
+          24
+        ]
+      },
+      {
+        "student": "Valentina Rojas Salazar",
+        "timestamp": "2026-10-19T02:56:37.143Z",
+        "ui_and_lima_date": "18/10/2026",
+        "word_date": "19/10/2026",
+        "pages": [
+          24
+        ]
+      },
+      {
+        "student": "Camila Huamán Castro",
+        "timestamp": "2026-10-19T02:57:02.045Z",
+        "ui_and_lima_date": "18/10/2026",
+        "word_date": "19/10/2026",
+        "pages": [
+          24
+        ]
+      },
+      {
+        "student": "Mateo Quispe Flores",
+        "timestamp": "2026-10-19T02:57:23.963Z",
+        "ui_and_lima_date": "18/10/2026",
+        "word_date": "19/10/2026",
+        "pages": [
+          24
+        ]
+      },
+      {
+        "student": "Nicolás Mendoza León",
+        "timestamp": "2026-10-19T02:57:44.431Z",
+        "ui_and_lima_date": "18/10/2026",
+        "word_date": "19/10/2026",
+        "pages": [
+          24
+        ]
+      },
+      {
+        "student": "Valentina Rojas Salazar",
+        "timestamp": "2026-10-19T02:58:06.927Z",
+        "ui_and_lima_date": "18/10/2026",
+        "word_date": "19/10/2026",
+        "pages": [
+          24
+        ]
+      },
+      {
+        "student": "Diego Ramos Vega",
+        "timestamp": "2026-10-19T02:58:28.887Z",
+        "ui_and_lima_date": "18/10/2026",
+        "word_date": "19/10/2026",
+        "pages": [
+          24
+        ]
+      },
+      {
+        "student": "Thiago Gutiérrez Silva",
+        "timestamp": "2026-10-19T02:58:50.838Z",
+        "ui_and_lima_date": "18/10/2026",
+        "word_date": "19/10/2026",
+        "pages": [
+          24
+        ]
+      },
+      {
+        "student": "Emilia Cárdenas Ruiz",
+        "timestamp": "2026-10-19T02:59:15.009Z",
+        "ui_and_lima_date": "18/10/2026",
+        "word_date": "19/10/2026",
+        "pages": [
+          25
+        ]
+      },
+      {
+        "student": "Luciana Torres Medina",
+        "timestamp": "2026-10-19T02:59:36.320Z",
+        "ui_and_lima_date": "18/10/2026",
+        "word_date": "19/10/2026",
+        "pages": [
+          25
+        ]
+      },
+      {
+        "student": "Camila Huamán Castro",
+        "timestamp": "2026-10-19T02:59:56.306Z",
+        "ui_and_lima_date": "18/10/2026",
+        "word_date": "19/10/2026",
+        "pages": [
+          25
+        ]
+      },
+      {
+        "student": "Gabriel Paredes Soto",
+        "timestamp": "2026-10-19T03:00:16.720Z",
+        "ui_and_lima_date": "18/10/2026",
+        "word_date": "19/10/2026",
+        "pages": [
+          25
+        ]
+      },
+      {
+        "student": "Sofía Vargas Cabrera",
+        "timestamp": "2026-10-19T03:00:56.204Z",
+        "ui_and_lima_date": "18/10/2026",
+        "word_date": "19/10/2026",
+        "pages": [
+          25
+        ]
+      },
+      {
+        "student": "Gabriel Paredes Soto",
+        "timestamp": "2026-10-19T03:01:44.890Z",
+        "ui_and_lima_date": "18/10/2026",
+        "word_date": "19/10/2026",
+        "pages": [
+          25
+        ]
+      },
+      {
+        "student": "Emilia Cárdenas Ruiz",
+        "timestamp": "2026-10-19T03:02:06.586Z",
+        "ui_and_lima_date": "18/10/2026",
+        "word_date": "19/10/2026",
+        "pages": [
+          25
+        ]
+      },
+      {
+        "student": "Mateo Quispe Flores",
+        "timestamp": "2026-10-19T03:02:27.791Z",
+        "ui_and_lima_date": "18/10/2026",
+        "word_date": "19/10/2026",
+        "pages": [
+          25
+        ]
+      },
+      {
+        "student": "Nicolás Mendoza León",
+        "timestamp": "2026-10-19T03:02:48.647Z",
+        "ui_and_lima_date": "18/10/2026",
+        "word_date": "19/10/2026",
+        "pages": [
+          25
+        ]
+      },
+      {
+        "student": "Thiago Gutiérrez Silva",
+        "timestamp": "2026-10-19T03:03:09.452Z",
+        "ui_and_lima_date": "18/10/2026",
+        "word_date": "19/10/2026",
+        "pages": [
+          25
+        ]
+      },
+      {
+        "student": "Valentina Rojas Salazar",
+        "timestamp": "2026-10-19T03:03:34.118Z",
+        "ui_and_lima_date": "18/10/2026",
+        "word_date": "19/10/2026",
+        "pages": [
+          25
+        ]
+      },
+      {
+        "student": "Nicolás Mendoza León",
+        "timestamp": "2026-10-19T03:03:57.219Z",
+        "ui_and_lima_date": "18/10/2026",
+        "word_date": "19/10/2026",
+        "pages": [
+          25
+        ]
+      },
+      {
+        "student": "Luciana Torres Medina",
+        "timestamp": "2026-10-19T03:04:19.206Z",
+        "ui_and_lima_date": "18/10/2026",
+        "word_date": "19/10/2026",
+        "pages": [
+          25
+        ]
+      },
+      {
+        "student": "Diego Ramos Vega",
+        "timestamp": "2026-10-19T03:04:39.676Z",
+        "ui_and_lima_date": "18/10/2026",
+        "word_date": "19/10/2026",
+        "pages": [
+          25
+        ]
+      },
+      {
+        "student": "Mateo Quispe Flores",
+        "timestamp": "2026-10-19T03:05:03.020Z",
+        "ui_and_lima_date": "18/10/2026",
+        "word_date": "19/10/2026",
+        "pages": [
+          26
+        ]
+      },
+      {
+        "student": "Camila Huamán Castro",
+        "timestamp": "2026-10-19T03:05:26.432Z",
+        "ui_and_lima_date": "18/10/2026",
+        "word_date": "19/10/2026",
+        "pages": [
+          26
+        ]
+      },
+      {
+        "student": "Diego Ramos Vega",
+        "timestamp": "2026-10-19T03:05:50.184Z",
+        "ui_and_lima_date": "18/10/2026",
+        "word_date": "19/10/2026",
+        "pages": [
+          26
+        ]
+      },
+      {
+        "student": "Gabriel Paredes Soto",
+        "timestamp": "2026-10-19T03:06:10.095Z",
+        "ui_and_lima_date": "18/10/2026",
+        "word_date": "19/10/2026",
+        "pages": [
+          26
+        ]
+      },
+      {
+        "student": "Sofía Vargas Cabrera",
+        "timestamp": "2026-10-19T03:06:33.709Z",
+        "ui_and_lima_date": "18/10/2026",
+        "word_date": "19/10/2026",
+        "pages": [
+          26
+        ]
+      },
+      {
+        "student": "Thiago Gutiérrez Silva",
+        "timestamp": "2026-10-19T03:06:54.191Z",
+        "ui_and_lima_date": "18/10/2026",
+        "word_date": "19/10/2026",
+        "pages": [
+          26
+        ]
+      }
+    ],
+    "raw_json_pages": [
+      26,
+      27,
+      28,
+      29,
+      30
+    ],
+    "repeated_source_disclaimer": 65,
+    "duplicate_teacher_context": true,
+    "tables": 0,
+    "headers": [],
+    "footers": [],
+    "page_dimensions_points": {
+      "width": 595.3,
+      "height": 841.9
+    },
+    "headings": 98,
+    "canonicalProjectsUnchanged": true
+  },
+  "findings": [
+    {
+      "id": "QA-WORD-01",
+      "severity": "P1",
+      "symptom": "35 observaciones guiadas del 18/10/2026 en la interfaz figuran como 19/10/2026 en Word.",
+      "expected": "Mostrar la fecha real de observación en America/Lima y conservar intactos los registros. Distinguir timestamp de una fecha de calendario sin hora.",
+      "evidence": {
+        "example": {
+          "student": "Camila Huamán Castro",
+          "timestamp": "2026-10-19T02:51:17.941Z",
+          "ui_and_lima_date": "18/10/2026",
+          "word_date": "19/10/2026",
+          "pages": [
+            23
+          ]
+        },
+        "otherPages": [
+          24,
+          25,
+          26
+        ],
+        "verifiedParagraphs": 35
+      },
+      "cause": "annual-journey-word.mjs readableDate toma el segmento YYYY-MM-DD del timestamp UTC, sin conversión a Lima. Ejemplo: 2026-10-19T02:51:17.941Z corresponde a 18/10 en Lima.",
+      "files": [
+        "src/lib/annual-journey-word.mjs"
+      ],
+      "prevention": "Probar timestamps a ambos lados de la medianoche UTC/Lima, cambios de mes/año y fechas sin hora que no deben desplazarse.",
+      "status": "Reproducido, pendiente al terminar QA."
+    },
+    {
+      "id": "QA-WORD-02",
+      "severity": "P2",
+      "symptom": "Los diez relatos familiares incluyen JSON y etiquetas inglesas como communication_tags, social_play_tags, quiet_initially y follows.",
+      "pages": [
+        26,
+        27,
+        28,
+        29,
+        30
+      ],
+      "expected": "Proyectar solo texto legible para la profesora. Traducir los valores pertinentes con el contrato de entrevista vigente o mantenerlos como metadatos internos. Conservar los originales y la trazabilidad.",
+      "cause": "annual-classroom-snapshot.mjs incorpora JSON.stringify(structured) a support_text; sourceText en annual-journey-word.mjs traduce algunas etiquetas por línea pero conserva el JSON crudo.",
+      "files": [
+        "src/lib/annual-classroom-snapshot.mjs",
+        "src/lib/annual-journey-word.mjs"
+      ],
+      "status": "Reproducido. Corrección de presentación, no cambio del texto original ni nuevo filtro de privacidad."
+    },
+    {
+      "id": "QA-WORD-03",
+      "severity": "P2",
+      "symptom": "Los proyectos conservan fundamento, propósito, pregunta, acciones, condiciones, mediación y observación, pero se imprimen como párrafos sucesivos sin etiquetas. Las capacidades y competencias sí tienen encabezado.",
+      "pages": [
+        4,
+        7,
+        15,
+        17,
+        18
+      ],
+      "example": "Página 15: después de la competencia aparecen Elegir qué observar..., Con acceso confirmado..., Volver a la pregunta..., Qué pregunta... y Observar a simple vista... sin indicar qué campo es cada uno.",
+      "expected": "Distinguir situación significativa/origen y reto, propósito, qué harán los niños, cómo acompañar, qué observar, materiales y apoyos. No inventar campos pedagógicos nuevos ni enriquecer con IA durante la exportación.",
+      "cause": "opportunitySection convierte seis campos en una lista de textos sin rótulos. El encabezado del proyecto hace lo mismo con rationale, purpose e invitation.",
+      "files": [
+        "src/lib/annual-journey-word.mjs"
+      ],
+      "status": "Pendiente de nueva estructura de plantilla, preservando estética."
+    },
+    {
+      "id": "QA-WORD-04",
+      "severity": "P2",
+      "symptom": "La primera página repite las trece decisiones en un bloque y luego en una lista. Se vuelven a copiar como Fuente 77. La frase Describe lo registrado; no acredita por sí solo un logro se repite 65 veces.",
+      "pages": [
+        1,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        30
+      ],
+      "expected": "Un resumen inicial sin duplicaciones; procedencia organizada como anexo diferenciado o consulta secundaria, conservando cada fuente y las advertencias necesarias. Una explicación común puede evitar repetir la misma frase tras cada registro.",
+      "cause": "Se exportan teacher_preferences, experience_context y todas las fuentes de forma acumulativa.",
+      "files": [
+        "src/lib/annual-journey-word.mjs"
+      ],
+      "status": "Mejora editorial y de estructura pendiente; no eliminar registros canónicos."
+    },
+    {
+      "id": "QA-WORD-05",
+      "severity": "P2",
+      "symptom": "No hay índice, numeración de páginas ni panorama anual compacto. La cabecera no identifica edad ni cantidad de estudiantes, aunque esos datos están guardados. Hay 98 encabezados con jerarquía poco diferenciada.",
+      "expected": "Identificación breve con datos existentes; panorama de los quince tramos con fechas y competencias; índice/navegación y páginas numeradas; jerarquía entre proyecto, competencia y sección. Mantener colores, tipografía y apariencia aprobados.",
+      "cause": "La rama journey_version=2 retorna renderAnnualJourneyWord antes de la rama annual-unified-v1, aunque document_context.template_version dice annual-unified-v1. El renderizador activo genera párrafos simples con un único nivel de encabezados.",
+      "files": [
+        "src/lib/document-word-export.mjs",
+        "src/lib/annual-journey-word.mjs"
+      ],
+      "status": "Actualizar el exportador realmente usado; cambiar únicamente una plantilla antigua que esta rama no utiliza no corregiría esta salida."
+    },
+    {
+      "id": "QA-WORD-06",
+      "severity": "P2",
+      "symptom": "Hay encabezados vacíos de Registros de referencia y comienzos de página con materiales o continuaciones del proyecto anterior, sin contexto del proyecto. Varios proyectos empiezan cerca del final de una página y continúan en la siguiente.",
+      "pages": [
+        5,
+        6,
+        7,
+        8,
+        11,
+        12,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "expected": "Omitir secciones vacías; mantener juntas unidades de lectura y señalar continuaciones cuando un proyecto ocupe más de una página. Evitar forzar una página por proyecto si compromete legibilidad.",
+      "cause": "El exportador crea siempre Registros de referencia, aun con source_fact_keys vacío. Mantiene encabezados con un párrafo siguiente, pero no organiza límites entre fichas de proyecto.",
+      "files": [
+        "src/lib/annual-journey-word.mjs"
+      ],
+      "status": "Mejora de paginación pendiente."
+    }
+  ],
+  "templateBrief": {
+    "preserve": [
+      "Estética aprobada por la persona usuaria, paleta, tipografía y sensación cuidada.",
+      "Datos canónicos, quince tramos, competencias y decisiones confirmadas; fuentes e historia accesibles.",
+      "Espacio y tamaño de letra legibles; evitar comprimir todo en tablas densas."
+    ],
+    "proposedStructure": [
+      "Identificación breve del aula con los datos guardados.",
+      "Síntesis del contexto y decisiones sin repetirlas.",
+      "Panorama anual de quince tramos, fechas y competencias.",
+      "Ficha de cada proyecto: situación significativa y reto, propósito, acciones infantiles, competencias y qué observar, acompañamiento, materiales y apoyos.",
+      "Oportunidades cotidianas, seguimiento y colaboración familiar.",
+      "Procedencia e interpretaciones en un apartado/anexo claramente identificado; no mezclar metadatos técnicos con el texto docente."
+    ],
+    "implementationFocus": "Adaptar el renderizador activo de annual journey v2 y sus proyecciones, no solo retocar una plantilla histórica. Separar correcciones de formato/fechas del fallo anterior de extracción del chat. La exportación debe seguir siendo determinística, sin nuevas llamadas de IA."
+  },
+  "cost": {
+    "newAIGenerationsRequested": 0,
+    "lastVerifiedAccumulatedControlUSD": 4.081868757,
+    "limitUSD": 5,
+    "note": "Exportación determinística desde contenido confirmado. La consulta final de consumo quedó sin respuesta y se canceló; no se presenta una conciliación nueva de facturación."
+  },
+  "pendingPedagogicalItems": [
+    {
+      "project": 1,
+      "change": "Concretar el reto de organizar/probar espacios, más allá de rutinas."
+    },
+    {
+      "project": 7,
+      "change": "Distinguir reconocimiento emocional de evidencia de autorregulación propia."
+    },
+    {
+      "project": 11,
+      "change": "Asegurar progresión en repartos y negociación, evitando repetición."
+    },
+    {
+      "project": 15,
+      "change": "Ofrecer retos iniciales concretos y un recorrido viable para tres semanas."
+    },
+    {
+      "project": 9,
+      "change": "Revisar integración de la intención familiar actual en los días disponibles."
+    }
+  ],
+  "evidence": [
+    "outputs/qa-interactivo-20261018/word-plan-anual/descarga-word-confirmado.png"
+  ],
+  "limitations": [
+    "No se modificó la plantilla ni el DOCX.",
+    "No se generaron Planes Maestros ni actividades diarias en esta revisión.",
+    "Los renderizados son copias locales de QA; no se publicaron."
+  ]
+}
