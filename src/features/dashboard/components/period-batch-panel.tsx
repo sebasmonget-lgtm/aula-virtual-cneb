@@ -75,7 +75,8 @@ export function PeriodBatchPanel({classroomId,periodId,kind,students,competencie
     }catch(cause){setError((cause as Error).message);}finally{setBusy(false);}
   }
   const itemState=(item:Item)=>item.saved_id?'saved':item.review_reason?'review':'ready';
-  const visible=items.filter(item=>filter==="all"||itemState(item)===filter);
+  const studentOrder=new Map(students.map((student,index)=>[student.id,index])),competencyOrder=new Map(competencies.map((competency,index)=>[competency.id,index]));
+  const visible=items.filter(item=>filter==="all"||itemState(item)===filter).sort((a,b)=>(studentOrder.get(a.student_id)??students.length)-(studentOrder.get(b.student_id)??students.length)||(competencyOrder.get(a.competency_id??'')??competencies.length)-(competencyOrder.get(b.competency_id??'')??competencies.length));
   const pages=Math.max(1,Math.ceil(visible.length/10)),currentPage=Math.min(page,pages),pageItems=visible.slice((currentPage-1)*10,currentPage*10);
   function turnPage(next:number){setPage(next);conclusionPanel.current?.scrollIntoView({block:'start',behavior:'auto'});}
   const key=(item:Item)=>`${item.student_id}:${item.competency_id??"family"}`;
