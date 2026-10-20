@@ -1,7 +1,8 @@
+import { retainCoverPageBreak, guideDetails } from "./teacher-guide-word-layout.mjs";
 import { routeObservationCriteria } from "./activity-observation-plan.mjs";
 import { ageReference, compactPlanningTable } from "./pedagogical-word-presentation.mjs";
 import path from "node:path";
-import { compactTeacherCover, insertCoverQuickView, removePageBreakAfterTable, removeParagraphsContaining, renderUnifiedWord, replaceWordText, xmlEscape } from "./unified-word-template.mjs";
+import { insertCoverQuickView, removePageBreakAfterTable, removeParagraphsContaining, renderUnifiedWord, replaceWordText, xmlEscape } from "./unified-word-template.mjs";
 
 const templateUrl = path.join(process.cwd(), "assets/templates/proyecto-unidad-inicial-unificada-v1.docx");
 const clean = (value) => typeof value === "string" ? value.trim() : "";
@@ -19,11 +20,6 @@ function paragraph(text, bold = false, bullet = false) {
   return `<w:p><w:pPr><w:spacing w:before="${bold ? 140 : 0}" w:after="${bold ? 75 : 55}"/>${bullet ? '<w:ind w:left="340" w:hanging="180"/>' : ""}${bold ? "<w:keepNext/>" : ""}</w:pPr><w:r><w:rPr>${bold ? "<w:b/>" : ""}<w:color w:val="173352"/><w:sz w:val="20"/></w:rPr><w:t xml:space="preserve">${xmlEscape(`${bullet ? "• " : ""}${text}`)}</w:t></w:r></w:p>`;
 }
 
-function block(label, value) {
-  const lines = Array.isArray(value) ? value.map(clean).filter(Boolean)
-    : clean(value).split(/(?<=[.!?])\s+(?=[A-ZÁÉÍÓÚÑ¿])|;\s*/u).map(clean).filter(Boolean);
-  return lines.length ? paragraph(label, true) + lines.map((line) => paragraph(line, false, true)).join("") : "";
-}
 
 function replaceSectionBody(xml, startText, endText, body) {
   const paragraphs = [...xml.matchAll(/<w:p(?:\s[^>]*)?>[\s\S]*?<\/w:p>/g)];
@@ -110,35 +106,32 @@ function valuesFor(document, cards) {
 export async function renderLearningExperienceUnifiedWord(document, cards = [], { logo = null } = {}) {
   const { values, competencyRows } = valuesFor(document, cards);
   const content = document.content ?? {};
-  const origin = [
-    clean(content.project_master?.meaningful_situation) || values.ORIGEN_NECESIDAD_INTERES_PROBLEMA===values.SITUACION_SIGNIFICATIVA ? "" : block("De dónde parte", values.ORIGEN_NECESIDAD_INTERES_PROBLEMA),
-    paragraph("Situación para empezar",true)+paragraph(values.SITUACION_SIGNIFICATIVA),
-    paragraph("Fundamentación pedagógica",true)+paragraph(clean(content.project_master?.meaningful_situation)?clean(content.project_master?.foundation):clean(content.formal_content?.foundation)),
-    block("Preguntas que orientan el recorrido", content.dependents?.guiding_questions?.length ? content.dependents.guiding_questions : values.RETO_PREGUNTA),
-    block("Resultado que se espera", values.PRODUCTO_FINAL),
-
-  ].join("");
-  const preplan = [
-    block("Primeros pasos", (content.activity_route ?? []).slice(0, 3).map((item) => item.title)),
-    (content.activity_route?.length ?? 0) > 3 ? paragraph(`La ruta completa tiene ${content.activity_route.length} actividades; se muestra más adelante.`) : "",
-    block("Cómo acompañará la docente", values.PREPLAN_COMO),
-    block("Materiales y recursos previstos", content.spaces_and_materials),
-    block("Acompañamiento y flexibilidad", values.AJUSTES_FLEXIBILIDAD),
-
-  ].join("");
-  const competencies = competencyRows.map((row) => [
-    paragraph(row.COMPETENCIA, true),
-    paragraph(row.AREA),
-    block("Capacidades de la competencia como referencia", row.CAPACIDADES),
-    block("Referente para observar", row.DESEMPENO_REFERENTE.split("\n")),
-    block("Criterio", row.CRITERIOS.split(/;\s*/).filter(Boolean)),
-    block("Evidencia esperada", row.EVIDENCIAS.split(/;\s*/).filter(Boolean)),
-  ].join("")).join("");
-  const assessment = [
-    block("Qué observar y registrar", "Usar los criterios y evidencias de la ruta. Registrar lo que cada niño hace o dice, con su fecha y el criterio correspondiente."),
-    block("Dónde quedará registrado", values.INSTRUMENTOS_PROYECTO),
-    block("Cómo acompañar los próximos encuentros", values.USO_EVIDENCIAS_PARA_AJUSTAR),
-  ].join("");
+  const origin = guideDetails([
+    ["De dónde parte", clean(content.project_master?.meaningful_situation) || values.ORIGEN_NECESIDAD_INTERES_PROBLEMA === values.SITUACION_SIGNIFICATIVA ? "" : values.ORIGEN_NECESIDAD_INTERES_PROBLEMA],
+    ["Situación para empezar", values.SITUACION_SIGNIFICATIVA],
+    ["Fundamentación pedagógica", clean(content.project_master?.meaningful_situation) ? clean(content.project_master?.foundation) : clean(content.formal_content?.foundation)],
+    ["Preguntas que orientan el recorrido", content.dependents?.guiding_questions?.length ? content.dependents.guiding_questions : values.RETO_PREGUNTA],
+    ["Resultado que se espera", values.PRODUCTO_FINAL],
+  ]);
+  const preplan = guideDetails([
+    ["Primeros pasos", (content.activity_route ?? []).slice(0, 3).map(item => item.title)],
+    ["Ruta completa", (content.activity_route?.length ?? 0) > 3 ? `La ruta completa tiene ${content.activity_route.length} actividades; se muestra más adelante.` : ""],
+    ["Cómo acompañará la docente", values.PREPLAN_COMO],
+    ["Materiales y recursos previstos", content.spaces_and_materials],
+    ["Acompañamiento y flexibilidad", values.AJUSTES_FLEXIBILIDAD],
+  ]);
+  const competencies = competencyRows.map(row => paragraph(row.COMPETENCIA, true) + guideDetails([
+    ["Área", row.AREA],
+    ["Capacidades de la competencia como referencia", row.CAPACIDADES],
+    ["Referente para observar", row.DESEMPENO_REFERENTE.split("\n")],
+    ["Criterio", row.CRITERIOS],
+    ["Evidencia esperada", row.EVIDENCIAS],
+  ])).join("");
+  const assessment = guideDetails([
+    ["Qué observar y registrar", "Usar los criterios y evidencias de la ruta. Registrar lo que cada niño hace o dice, con su fecha y el criterio correspondiente."],
+    ["Dónde quedará registrado", values.INSTRUMENTOS_PROYECTO],
+    ["Cómo acompañar los próximos encuentros", values.USO_EVIDENCIAS_PARA_AJUSTAR],
+  ]);
   const byId = new Map(cards.map(card=>[card.id,card.name??card.official_name]));
   const route = compactPlanningTable(["Actividad y fecha", "Propósito", "Criterios y evidencias"], content.activity_route.map(item=>[
     `${item.number}. ${item.title}\n${dateLabel(item.date)}`,
@@ -154,7 +147,7 @@ export async function renderLearningExperienceUnifiedWord(document, cards = [], 
     output = replaceSectionBody(output, "II. ORIGEN Y SITUACIÓN SIGNIFICATIVA", "III. PREPLANIFICACIÓN DOCENTE", origin);
     output = replaceSectionBody(output, "III. PREPLANIFICACIÓN DOCENTE", "V. PROPÓSITO GENERAL", preplan);
     output = replaceSectionBody(output, "VI. PROPÓSITOS DE APRENDIZAJE Y EVALUACIÓN", "VII. ENFOQUES", competencies);
-    const transversal = block("Enfoques previstos", content.transversal_approaches) + block("Actitudes a acompañar",content.observable_attitudes) + block("Apoyos previstos",values.APOYOS_DIVERSIDAD) + block("Participación familiar acordada",values.PARTICIPACION_FAMILIA_COMUNIDAD);
+    const transversal = guideDetails([["Enfoques previstos", content.transversal_approaches], ["Actitudes a acompañar", content.observable_attitudes], ["Apoyos previstos", values.APOYOS_DIVERSIDAD], ["Participación familiar acordada", values.PARTICIPACION_FAMILIA_COMUNIDAD]]);
     output = transversal ? replaceSectionBody(output,"VII. ENFOQUES","VIII. ESTRATEGIA",transversal) : removeBetween(output,"VII. ENFOQUES","VIII. ESTRATEGIA");
     output = replaceSectionBody(output, "VIII. ESTRATEGIA GENERAL DE EVALUACIÓN", "IX. RUTA DE ACTIVIDADES", assessment);
     output = replaceSectionBody(output, "IX. RUTA DE ACTIVIDADES", "X. RECURSOS", route);
@@ -165,12 +158,7 @@ export async function renderLearningExperienceUnifiedWord(document, cards = [], 
       ["Hitos o fechas del calendario", "Producto final / socialización"].some((label) => xmlText(row).includes(label)) ? "" : row);
     output=output.replace(/<w:tr(?:\s[^>]*)?>[\s\S]*?<\/w:tr>/g,row=>["UGEL","FECHA_SIGNIFICATIVA","ORGANIZACION_ESPACIOS","PARTICIPACION_FAMILIA_COMUNIDAD","APOYOS_DIVERSIDAD"].some(key=>!values[key]&&xmlText(row).includes("{{"+key+"}}"))?"":row);
     output = removePageBreakAfterTable(output, "Materiales y recursos base");
-    let coverBreak = false;
-    output = output.replace(/<w:p(?:\s[^>]*)?>[\s\S]*?<\/w:p>/g, (paragraph) => {
-      if (!/<w:br\b[^>]*w:type="page"/.test(paragraph)) return paragraph;
-      if (coverBreak) { coverBreak = false; return paragraph; }
-      return xmlText(paragraph) ? paragraph.replace(/<w:br\b[^>]*w:type="page"\s*\/>/g, "") : "";
-    });
+    output = retainCoverPageBreak(output);
     output = replaceWordText(output, "RUTA DE ACTIVIDADES / SESIONES", "RUTA DE ACTIVIDADES");
     output = replaceWordText(output, "Desempeño / referente", "Referente para observar");
     for (const [from, to] of [["V", "IV"], ["VI", "V"], ["VII", "VI"], ["VIII", "VII"], ["IX", "VIII"], ["X", "IX"]]) {
@@ -185,6 +173,6 @@ export async function renderLearningExperienceUnifiedWord(document, cards = [], 
       if(!/^[IVX]+\. (?:DATOS GENERALES|ORIGEN|PREPLANIFICACIÓN|PROPÓSITO|ENFOQUES|ESTRATEGIA|RUTA)/.test(title))return part;
       return replaceWordText(part,title,title.replace(/^[IVX]+/,numerals[section++]));
     });
-    return compactTeacherCover(insertCoverQuickView(output, "El proyecto en una mirada", overview),document.title);
+    return insertCoverQuickView(output, "El proyecto en una mirada", overview);
   } });
 }

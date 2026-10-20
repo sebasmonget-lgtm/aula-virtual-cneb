@@ -177,7 +177,7 @@ export async function renderSavedDocumentWord(document, competencyCards = [], { 
   if (!document || !["annual_plan", "diagnostic_summary", "experience", "activity", "family_report", "period_closure"].includes(document.kind)) {
     throw new Error("Documento no disponible para Word.");
   }
-  if (document.kind === "annual_plan" && document.content?.journey_version === 2) return renderAnnualJourneyWord(document, competencyCards);
+  if (document.kind === "annual_plan" && document.content?.journey_version === 2) return renderAnnualJourneyWord(document, competencyCards, {logo});
   if (document.kind === "annual_plan" && document.source_plan_format === "annual_preplan_v1" && !document.formal_ready)
     throw new Error("El Word de esta versión se está preparando. Inténtalo nuevamente cuando esté listo.");
   if (document.kind === "annual_plan" && document.document_context?.template_version === "annual-unified-v1")

@@ -1385,3 +1385,9 @@ QA: 96 regresiones PASS; typecheck, lint y build PASS. Muestra nueva de IA real:
 ## 2026-10-19 — Activación Preview con base independiente
 
 Usar la misma cuenta Supabase con un proyecto QA separado, según confirmación explícita de la persona usuaria. Mantener la identidad, credencial, registros y archivos de la cuenta QA durante la separación. Solo el nuevo despliegue Preview recibe la conexión, firma y secreto de ejecución nuevos; no cambiar la configuración general que siguen usando Producción y la Preview anterior. No copiar sesiones ni otras cuentas. La tabla v2 se activa mediante la migración aditiva en QA; nunca apuntar el ejecutor nuevo a la base compartida sin esa tabla.
+
+## 2026-10-19 — Presentación y jornada flexible
+
+Restaurar la plantilla Word anterior aportada: portada, bandas, tablas e ilustraciones. Encabezado puede limitarse a primera página si fuera necesario. Materiales de talleres se descargan como PDF A4 con datos del aula y logo opcional. Fichas oficiales solo con pertinencia comprobada; no atribuir origen MINEDU a tarjetas Ayni ni imponer fichas al juego corporal. Propuestas multiedad compatibles deben poder elegirse desde el aula.
+
+Hoy muestra actividad principal todo el día y taller como sugerencia; consultar no implica ejecutar. Desarrollar otra fecha requiere confirmación y conserva planificación y ejecución por separado, sin editar/regenerar una actividad confirmada. Asistencia: presente+tarde sobre días lectivos transcurridos; sin registro es pendiente, porcentaje provisional y no juicio pedagógico. No crear registros de evaluación desde una consulta de asistencia.

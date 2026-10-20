@@ -23,6 +23,16 @@ test('Word anual conserva fuentes una vez, con referencias y alcance legibles si
  assert.doesNotMatch(text,/child_1|literal_record_only|reported_not_observed|technical-fingerprint|observation_123/);
  assert.match(JSON.stringify(annualJourneyDocumentSections(plan,new Map(),{child_1:'Ana'})),/Registro individual · Ana/);
  const zip=await JSZip.loadAsync(await renderAnnualJourneyWord({status:'active',school_year:2026,version:1,content:plan}));
- assert.match(await zip.file('word/document.xml').async('string'),/Ana probó otra ubicación/);
+ const xml=await zip.file('word/document.xml').async('string');
+ assert.match(xml,/Ana probó otra ubicación/);
+ // The original data heading lives inside a table: cutting at its paragraph
+ // would leave orphaned table/row/cell elements and produce an unreadable DOCX.
+ const stack=[];
+ for(const match of xml.matchAll(/<(\/?)(w:(?:document|body|tbl|tr|tc|p))(?=[\s>])[^>]*>/g)){
+   if(match[1])assert.equal(stack.pop(),match[2],`Estructura Word inválida: ${match[0]}`);
+   else if(!match[0].endsWith('/>'))stack.push(match[2]);
+ }
+ assert.deepEqual(stack,[]);
+ assert.match(xml,/w:color w:val="173B65"/);
  assert.deepEqual(plan,before);
 });

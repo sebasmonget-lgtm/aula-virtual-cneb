@@ -1,4 +1,5 @@
 "use client";
+import { AttendanceSummary } from "./attendance-summary";
 import { newAyniFeatureEnabled } from "@/src/lib/new-ayni-feature-flag.mjs";
 
 import { StudentPhoto, StudentPhotoEditor, EnrollmentPhoto, uploadStudentPhoto } from "./student-photo";
@@ -151,6 +152,7 @@ export function StudentsScreen({ students, onImported, onEvaluate, onPlan, onDia
       <div className="flex flex-wrap items-baseline justify-between gap-2"><h1 className="text-3xl font-extrabold tracking-tight text-[#1c2e50]">Añade a tus niños</h1>{classroomLabel && <p className="text-sm text-[#526b87]">{classroomLabel}</p>}</div>
       <p className="mt-2 text-[#566883]">Estás preparando tu aula. Registra a tus niños uno por uno o importa una lista.</p>
     </header> : <div className={styles.intro}><PageIntro title="Mi aula" description="Tus niños y sus registros" icon={Users} illustration="/ayni-classroom-welcome.png" /><button type="button" onClick={() => setAddOpen((open) => !open)} aria-expanded={addOpen} className="flex min-h-11 shrink-0 items-center gap-2 rounded-xl border border-[#0b7891] bg-white px-4 font-bold text-[#07576c]"><Plus className="size-4" /> Añadir niño</button></div>}
+    {!initialEnrollment && <AttendanceSummary/>}
     {!initialEnrollment && <>
       <div className={styles.summary} aria-label="Resumen del aula"><span><Users aria-hidden="true"/><strong>{students.length}</strong> niños</span><span><NotebookPen aria-hidden="true"/><strong>{observedCount}</strong> con evidencias de actividad</span><span><Eye aria-hidden="true"/><strong>{students.length-observedCount}</strong> por observar</span></div>
       <label className="flex min-h-14 items-center gap-3 rounded-2xl border border-input bg-white px-4 text-[#60718a] focus-within:ring-[3px] focus-within:ring-ring/50"><Search className="size-5" aria-hidden="true" /><span className="sr-only">Buscar niño</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar niño" className="min-w-0 flex-1 border-0 bg-transparent text-[#1c2e50] outline-none" /></label>

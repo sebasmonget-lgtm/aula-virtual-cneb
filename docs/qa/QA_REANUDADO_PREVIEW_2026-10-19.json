@@ -1,0 +1,222 @@
+{
+  "environment": "https://ayni-aula-qa-20261019.vercel.app/",
+  "deployedSHA": "60a3d544137812f43cd02a21851fe988428b8368",
+  "mode": "QA conjunto reanudado por interfaz; documentar hallazgos y conservar fuentes confirmadas",
+  "scope": "Proyectos y actividades diarias guardados; separar validación de interfaz de calidad de nuevas generaciones",
+  "budget": {
+    "limitUSD": 6,
+    "priorAccumulatedEstimatedUSD": 4.75075397,
+    "newPaidCalls": 0,
+    "authorization": "La persona usuaria amplía explícitamente el máximo total de USD 5 a USD 6, antes de iniciar una generación nueva.",
+    "newEstimatedUSD": 0,
+    "accumulatedEstimatedUSD": 4.75075397
+  },
+  "checks": [
+    {
+      "id": "QA-R-01",
+      "status": "PASS",
+      "action": "Ingreso realizado por la persona usuaria en la nueva Preview y apertura de Mi año desde la navegación visible",
+      "observed": "Aula de cinco años con diez estudiantes; plan anual conservado con quince tramos y cuatro bimestres. Bimestre 4 seleccionado por fecha."
+    },
+    {
+      "id": "QA-R-02",
+      "status": "PASS",
+      "action": "Abrir proyecto 14, Otros caminos para un cuento",
+      "observed": "Diez actividades conservadas entre el 16 y el 27 de noviembre. Competencias Lectura y Escritura. Cada fila muestra fecha, competencia, estado Lista y acciones Ver en Hoy y Ver detalles.",
+      "qualification": "Es contenido histórico guardado antes de las correcciones. Su conservación no demuestra todavía la calidad de una generación con los prompts nuevos."
+    },
+    {
+      "id": "QA-R-03",
+      "status": "PASS lectura de esta muestra",
+      "action": "Ver detalle del proyecto de cuentos desde Mi año",
+      "observed": "Situación significativa identifica registros individuales, oportunidad y pregunta guía. Secuencia diferencia lectura completa, relectura con pistas, cambio imaginado, escritura para un destinatario y revisión. Materiales y mediación visibles.",
+      "qualification": "No se revisaron aquí las fuentes individuales originales ni se certifica cada interpretación curricular. No es contenido generado en esta reanudación.",
+      "screenshot": "outputs/qa-reanudado-20261019/proyecto-cuentos.png"
+    },
+    {
+      "id": "QA-R-04",
+      "status": "PASS consulta, guía y conservación de fecha; hallazgo separado sobre Cierre",
+      "action": "Ver en Hoy de Un cuento para disfrutar, sin pulsar Desarrollar ahora",
+      "observed": "Vista consultiva distinta del detalle, materiales abiertos, Observación libre general y tres momentos. Inicio: portada y anticipación; Desarrollo: lectura completa y comentario con criterio/botón; Cierre: comentar una acción y justificar con una pista. Texto breve y ejecutable en esta muestra. No se muestra botón general de guiada.",
+      "qualification": "Se recorrieron tres momentos en consulta. No se inició ni terminó la actividad y no se guardaron observaciones."
+    },
+    {
+      "id": "QA-R-H01",
+      "severity": "P2",
+      "status": "REPRODUCIDO en actividad histórica; pendiente de contrastar con generación nueva",
+      "action": "Abrir Momento 3 de 3 de Un cuento para disfrutar",
+      "expected": "La oportunidad de comentar la acción y su pista debe permitir registrar el criterio pertinente en Cierre.",
+      "observed": "Cierre propone explícitamente comentar una acción y una pista, pero no muestra Qué debo observar ni Registrar observación. Sí aparecen en Momento 2.",
+      "cause": "No determinada en esta reanudación. El hecho de tratarse de una fuente anterior a la corrección no prueba una regresión del generador nuevo.",
+      "screenshot": "outputs/qa-reanudado-20261019/cierre-cuento.png",
+      "next": "Contrastar criterio y momentos canónicos. No asignar ni reescribir silenciosamente momentos históricos para aparentar que el caso está corregido."
+    },
+    {
+      "id": "QA-R-05",
+      "status": "PASS orden y selección por interfaz; conteo canónico no contrastado aquí",
+      "action": "Abrir guiada desde el criterio de Lectura y seleccionar una niña con registros",
+      "observed": "Seis niños con 0 obs. aparecen antes de cuatro con 1 obs. Mensaje distingue cantidad y nivel. Seleccionar una niña con 1 habilita texto, dictado y foto. Criterio y competencia son los de la actividad.",
+      "qualification": "No se guardó una observación nueva ni se probó voz/foto efectivamente en esta reanudación.",
+      "screenshot": "outputs/qa-reanudado-20261019/observacion-guiada.png"
+    },
+    {
+      "id": "QA-R-06",
+      "status": "PASS formulario independiente por interfaz",
+      "action": "Abrir libre y elegir otra niña",
+      "observed": "Ninguna competencia preseleccionada, selector de doce competencias, Dejar sin competencia, Ayni sugiere deshabilitado con texto vacío y foto no analizada. Texto/dictado/foto habilitados al seleccionar.",
+      "qualification": "No se llamó a Ayni ni se guardó una observación.",
+      "screenshot": "outputs/qa-reanudado-20261019/observacion-libre.png"
+    },
+    {
+      "id": "QA-R-07",
+      "status": "PASS advertencia y cancelación",
+      "action": "Pulsar Desarrollar ahora en actividad futura y Cancelar",
+      "observed": "Modal explica otra fecha y conservación de fecha prevista; tras cancelar vuelve a consulta con Desarrollar ahora, sin iniciar.",
+      "screenshot": "outputs/qa-reanudado-20261019/confirmacion-actividad-futura.png"
+    },
+    {
+      "id": "QA-R-H02",
+      "severity": "P1",
+      "status": "REPRODUCIDO una vez; recuperación por un reintento PASS",
+      "action": "Volver desde Hoy a Mi año con la navegación visible",
+      "observed": "No se pudo comprobar dónde continuar. Reintentar carga del avance recuperó el mapa y los proyectos.",
+      "cause": "Pendiente: no se atribuye al proveedor IA, pues no había generación iniciada.",
+      "additionalUX": "Durante el reintento el mensaje de error y botón permanecieron visibles; el código refreshJourney no cambia loading ni deshabilita el botón. Riesgo de pulsaciones repetidas; no se provocaron.",
+      "screenshot": "outputs/qa-reanudado-20261019/error-carga-mi-ano.png",
+      "backendEvidence": "Los logs de Vercel muestran respuestas 503 de diagnostics/progress, learning-experiences y annual-plans/current en el mismo intervalo, además de workshop-library. No se determinó aún el origen del 503. Se separa de los fallos del proveedor IA."
+    },
+    {
+      "id": "QA-R-08",
+      "status": "PASS integridad de históricos",
+      "action": "Comparación de solo lectura con la copia congelada antes de la reanudación",
+      "observed": [
+        {
+          "table": "learning_experiences",
+          "originalRows": 2,
+          "identical": true
+        },
+        {
+          "table": "activities",
+          "originalRows": 20,
+          "identical": true
+        },
+        {
+          "table": "activity_criteria",
+          "originalRows": 20,
+          "identical": true
+        },
+        {
+          "table": "evidences",
+          "originalRows": 0,
+          "identical": true
+        },
+        {
+          "table": "ordinary_observations",
+          "originalRows": 0,
+          "identical": true
+        },
+        {
+          "table": "diagnostic_experience_observations",
+          "originalRows": 35,
+          "identical": true
+        },
+        {
+          "table": "diagnostic_spontaneous_observations",
+          "originalRows": 30,
+          "identical": true
+        },
+        {
+          "table": "student_family_interviews",
+          "originalRows": 10,
+          "identical": true
+        },
+        {
+          "table": "students",
+          "originalRows": 10,
+          "identical": true
+        }
+      ],
+      "consultedActivity": {
+        "occurs_on": "2026-11-16",
+        "status": "active"
+      },
+      "qualification": "Se comparan los registros que existían al comenzar: los nuevos borradores del intento de preparación se conservan aparte. No se realizaron escrituras directas de base de datos."
+    },
+    {
+      "id": "QA-R-09",
+      "status": "PASS confirmación previa de recursos y fechas por UI",
+      "action": "Preparar proyecto de macetas",
+      "observed": "Sin marcar disponibilidad, Confirmar días y preparar 10 actividades está deshabilitado. Diez fechas lectivas del 19 al 30 de octubre; fin de semana no seleccionable. Se confirmó la disponibilidad de macetas como supuesto explícito del caso ficticio de QA.",
+      "qualification": "No se afirma disponibilidad real en un colegio."
+    },
+    {
+      "id": "QA-R-H03",
+      "severity": "P1",
+      "status": "REPRODUCIDO por UI en intento inicial y una recuperación del mismo trabajo",
+      "action": "Preparar macetas, confirmar recursos y días, esperar; pulsar una vez Retomar lo pendiente",
+      "expected": "La confirmación del recurso debe conservarse hasta validar el Master y la secuencia completa.",
+      "observed": "El trabajo falla en master; el borrador conserva dependents pero resource_readiness está ausente. Sin Master, sin actividades nuevas y sin eventos nuevos de consumo IA.",
+      "cause": "La ruta de preparación guarda resource_readiness en learning_experiences.details. Después POST /api/project-flow/:id/dependents reconstruye details y no copia resource_readiness. La ruta /master llama assertResourceReadiness y se detiene antes del generador. El helper projectDetails sí preserva ese campo, pero no interviene en la reconstrucción de /dependents.",
+      "files": [
+        "scripts/preparation-routes.mjs",
+        "scripts/local-db-server.mjs",
+        "src/lib/project-resource-readiness.mjs"
+      ],
+      "requiredCorrection": "Preservar de forma explícita los metadatos de decisiones/recursos del proyecto al reconstruir dependents. Añadir regresión del flujo real de endpoints con recurso pendiente confirmado; no usar un adaptador simulado que omita el fallo.",
+      "correctionApplied": false,
+      "screenshot": "outputs/qa-reanudado-20261019/bloqueo-generacion-proyecto.png"
+    },
+    {
+      "id": "QA-R-H04",
+      "severity": "P1",
+      "status": "DETECTADO mediante análisis estático; ramas aún no ejecutadas por el bloqueo anterior",
+      "action": "ESLint sobre scripts/local-db-server.mjs con no-undef:error",
+      "observed": "Cuatro usos de context sin declaración: líneas 2190, 2217, 2266 y 3238 en el SHA desplegado. Los tres primeros pasan context.age en Master, mapa y confirmación; el último aparece en el catch de limpieza.",
+      "cause": "La edad está disponible en source.classroom.age, pero la variable context usada allí no pertenece al alcance de esos handlers. La configuración habitual de lint no detectó este defecto.",
+      "requiredCorrection": "Usar el contexto autorizado del aula en las validaciones y un identificador de petición disponible en el ámbito de limpieza. Regresión de las rutas reales Master/confirmación y control no-undef para JavaScript. No repetir generación pagada antes de corregir este bloqueo posterior.",
+      "qualification": "El fallo actual de macetas es anterior a estas líneas. No se atribuye el intento inicial a este ReferenceError ni se declara que la confirmación se haya ejecutado.",
+      "correctionApplied": false
+    },
+    {
+      "id": "QA-R-H05",
+      "severity": "P2",
+      "status": "REPRODUCIDO en la preparación fallida",
+      "observed": "El catch de runPreparationStep sustituye el error por texto genérico y deja failure_reason null si no es cuota. Los logs revisados no permiten recuperar la causa de dominio de este intento.",
+      "requiredCorrection": "Conservar un código de error operativo seguro, etapa y correlación del trabajo para diagnóstico; sin guardar prompts, credenciales ni datos personales. Evitar mensajes de reintento inútil ante una precondición determinista.",
+      "correctionApplied": false
+    }
+  ],
+  "dataPolicy": "Acciones de preparación realizadas desde la interfaz en QA aislado. Comprobaciones de servidor y datos únicamente de lectura. No se reescriben actividades históricas, no se guardan observaciones nuevas, no se confirma la ejecución de la actividad futura. No cambios de código de producto, commit ni despliegue en esta reanudación; se documentan hallazgos para corregir al terminar el QA conjunto.",
+  "newGeneration": {
+    "project": "Lo que cambia en las macetas",
+    "age": 5,
+    "selectedDays": 10,
+    "competencies": [
+      "CYT_INDAGA",
+      "COM_ORAL"
+    ],
+    "jobId": "843b71cc-2e82-4275-b648-d4fc36ce5edb",
+    "projectId": "4918a044-f692-4875-8e6f-7a706b1129f8",
+    "openedAt": "2026-10-19T23:01:43.988Z",
+    "confirmedAt": "2026-10-19T23:02:48.830Z",
+    "jobCreatedAt": "2026-10-19T23:03:11.938Z",
+    "initialFailureAt": "2026-10-19T23:04:12.123Z",
+    "retryClickedAt": "2026-10-19T23:06:16.579Z",
+    "lastWorkerStartedAt": "2026-10-19T23:06:19.508Z",
+    "lastFailureAt": "2026-10-19T23:06:40.017Z",
+    "clickToInitialFailureSeconds": 83.293,
+    "manualRecoveries": 1,
+    "status": "failed",
+    "stage": "master",
+    "masterGenerated": false,
+    "newActivities": 0,
+    "newPaidCalls": 0,
+    "newEstimatedCostUSD": 0,
+    "providerCheckpointPresent": false,
+    "pedagogicalQualityNewMaster": "NOT TESTED: no se generó",
+    "newDailyGuides": "NOT TESTED: no se generaron",
+    "newWordDocuments": "NOT TESTED: no hay nuevo Master ni actividades para exportar",
+    "parallelGenerationTiming": "NOT TESTED: no alcanzó la etapa de actividades"
+  },
+  "verdict": "PARTIAL: interfaz de históricos verificada con hallazgos; FAIL la generación nueva por pérdida de confirmación del recurso. No aprobar la preparación completa. Corregir los bloqueos y repetir el mismo trabajo antes de juzgar salidas nuevas."
+}

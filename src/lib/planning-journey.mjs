@@ -1,5 +1,6 @@
+import { createApiTransport } from './api-transport.mjs';
 async function getJson(fetcher, url) {
-  const response = await fetcher(url);
+  const response = await createApiTransport({ fetchImpl: fetcher })(url);
   if (!response.ok) throw new Error("No se pudo recuperar el avance de la planificación.");
   return response.json();
 }

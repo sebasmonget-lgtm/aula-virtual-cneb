@@ -1,9 +1,11 @@
-import {mkdir,writeFile} from 'node:fs/promises';
+import {mkdir,readFile,writeFile} from 'node:fs/promises';
 import sharp from 'sharp';
 // Original Ayni printable geometry and text, not reproductions of third-party sheets.
 const folder='public/workshops';await mkdir(folder,{recursive:true});
 const svgFolder='assets/workshop-resources';await mkdir(svgFolder,{recursive:true});
-const start=title=>`<svg xmlns="http://www.w3.org/2000/svg" width="1240" height="1754" viewBox="0 0 1240 1754"><rect width="1240" height="1754" fill="white"/><style>text{font-family:Arial,sans-serif;fill:#172b52}.title{font-size:48px;font-weight:700}.body{font-size:30px}.small{font-size:23px}</style><text x="80" y="105" class="title">${title}</text><text x="80" y="155" class="small">Ayni Aula · Recurso para explorar y conversar</text>`;
+const friendlyImage = async (name,x,y,size=140) => `<image x="${x}" y="${y}" width="${size}" height="${size}" href="data:image/png;base64,${(await sharp(await readFile(`public/project-illustrations/${name}.webp`)).resize(240,240).png().toBuffer()).toString('base64')}"/>`;
+const headerPicture=await friendlyImage('reading_clues',1020,20,150);
+const start=title=>`<svg xmlns="http://www.w3.org/2000/svg" width="1240" height="1754" viewBox="0 0 1240 1754"><rect width="1240" height="1754" fill="white"/><style>text{font-family:Arial,sans-serif;fill:#172b52}.title{font-size:48px;font-weight:700}.body{font-size:30px}.small{font-size:23px}</style><text x="80" y="105" class="title">${title}</text><text x="80" y="155" class="small">Ayni Aula · Recurso para explorar y conversar</text>${headerPicture}`;
 const end=`<text x="80" y="1690" class="small">Recurso original Ayni · La ficha acompaña el juego; no reemplaza la experiencia.</text></svg>`;
 const text=(lines,x,y,size=30)=>lines.map((line,i)=>`<text x="${x}" y="${y+i*(size+14)}" font-size="${size}">${line}</text>`).join('');
 const documents=[];
@@ -47,7 +49,7 @@ for(let i=0;i<3;i++){
 story+=text(['Para la docente: lee sin adelantar el final. Vuelvan a las pistas del cuento.', 'Los niños pueden señalar, conversar o dibujar; no es una prueba de lectura.'],80,1600,24);
 documents.push(['cuento-la-semilla',story+end]);
 let messages=start('Mensajes para alguien especial');
-messages+=text(['Escribe a tu manera. Puedes usar tus propias marcas y letras.', 'Cuenta para quién es tu mensaje y qué quieres comunicar.'],80,220,28);
+messages+=text(['Escribe a tu manera. Puedes hacer trazos y usar letras a tu manera.', 'Cuenta para quién es tu mensaje y qué quieres comunicar.'],80,220,28);
 for(let i=0;i<3;i++){
   const y=330+i*420;
   messages+=`<rect x="80" y="${y}" width="1080" height="370" rx="18" fill="${['#edf7fa','#eef8f2','#f5effc'][i]}" stroke="#93aab9" stroke-dasharray="8 8"/>`;
@@ -100,10 +102,11 @@ const riddleLines=[['Ruedo por el suelo.','Con tus manos me puedes enviar.','¿Q
 for(const [i,lines]of riddleLines.entries()){
  const y=285+i*300;
  riddles+=`<rect x="80" y="${y}" width="1080" height="275" rx="18" fill="${['#fff8e7','#f5effc','#eef8f2','#edf7fa'][i]}"/>`+text(lines,115,y+65,31);
- if(i===0)riddles+=`<circle cx="1020" cy="${y+120}" r="68" fill="#e7bd4d" stroke="#172b52" stroke-width="5"/><path d="M952 ${y+120}h136m-68-68v136" stroke="#172b52" stroke-width="4"/>`;
- if(i===1)riddles+=`<path d="M920 ${y+65}q50-20 100 0q50-20 100 0v125q-50-20-100 0q-50-20-100 0Z M1020 ${y+65}v125" fill="white" stroke="#087d96" stroke-width="5"/>`;
+ if(i===0)riddles+=await friendlyImage('ball',910,y+45,195);
+ if(i===1)riddles+=await friendlyImage('book',910,y+45,195);
  if(i===2){riddles+=`<circle cx="1020" cy="${y+125}" r="48" fill="#e7bd4d"/>`;for(let ray=0;ray<8;ray++){const a=ray*Math.PI/4;riddles+=`<path d="M${1020+Math.cos(a)*62} ${y+125+Math.sin(a)*62}l${Math.cos(a)*20} ${Math.sin(a)*20}" stroke="#b07911" stroke-width="6"/>`;}}
  if(i===3)riddles+=`<circle cx="1020" cy="${y+125}" r="70" fill="#e7bd4d"/><circle cx="1053" cy="${y+96}" r="64" fill="#edf7fa"/>`;
+ if(i>=2)riddles+=`<circle cx="1004" cy="${y+122}" r="4" fill="#172b52"/><circle cx="1030" cy="${y+122}" r="4" fill="#172b52"/><path d="M1006 ${y+140}q12 13 24 0" fill="none" stroke="#172b52" stroke-width="4"/>`;
 }
 riddles+=text(['Para la docente: las respuestas se pueden cubrir con papel si el grupo lo desea.', 'Relean y comparen pistas sin competir por adivinar más rápido.'],80,1585,24);
 documents.push(['adivinanzas-con-pistas',riddles+end]);
@@ -119,5 +122,5 @@ for(const [i,lines]of waterSteps.entries()){
 water+=text(['Para la docente: consulta el texto con los niños; no es una prueba de lectura.', 'Protege el suelo y acompaña el uso de agua.'],80,1585,24);
 documents.push(['pintamos-con-agua',water+end]);
 for(const [name,svg]of documents){await writeFile(`${svgFolder}/${name}.svg`,svg);await sharp(Buffer.from(svg)).png().toFile(`${folder}/${name}.png`);}
-await writeFile(`${svgFolder}/PROVENANCE.json`,JSON.stringify({author:'Ayni',version:'1.2.0',generator:'scripts/build-workshop-resources.mjs',method:'Original text and deterministic SVG geometry rendered with sharp',sources:[],files:documents.map(([name])=>name)},null,2)+'\n');
+await writeFile(`${svgFolder}/PROVENANCE.json`,JSON.stringify({author:'Ayni',version:'1.3.0',generator:'scripts/build-workshop-resources.mjs',method:'Original text, Ayni catalogue illustrations and deterministic SVG geometry rendered with sharp',sources:[],files:documents.map(([name])=>name)},null,2)+'\n');
 console.log(`Created ${documents.length} original printable resources.`);

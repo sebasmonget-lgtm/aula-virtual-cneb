@@ -1,10 +1,11 @@
 import { activityPedagogicalBlocks } from "./pedagogical-blocks.mjs";
 import { activityObservationCriteria } from "./activity-observation-plan.mjs";
-import { ageReference, compactPlanningTable } from "./pedagogical-word-presentation.mjs";
+import { ageReference } from "./pedagogical-word-presentation.mjs";
 import path from "node:path";
-import { compactTeacherCover, expandTableRow, insertCoverQuickView, removePageBreakAfterTable, removeParagraphsContaining, renderUnifiedWord, replaceWordText, xmlEscape } from "./unified-word-template.mjs";
+import { expandTableRow, insertCoverQuickView, removePageBreakAfterTable, removeParagraphsContaining, renderUnifiedWord, replaceWordText, xmlEscape } from "./unified-word-template.mjs";
 import { availableSheets, renderSheetPages } from "./workshop-sheet-catalog.mjs";
 import { activityReadingStages } from "./activity-reading-content.mjs";
+import { guidePanel, guideText, guideParagraph, guideDetails, retainCoverPageBreak } from "./teacher-guide-word-layout.mjs";
 
 const oldTemplateUrl = path.join(process.cwd(), "assets/templates/actividad-aprendizaje-inicial-ayni-v2.docx");
 const workshopTemplateUrl = path.join(process.cwd(), "assets/templates/actividad-aprendizaje-inicial-con-taller-v1.docx");
@@ -40,48 +41,41 @@ function replaceSectionBody(xml, startText, endText, body) {
 }
 
 function activityGuide(content, whatToObserve, observationBlocks = [], names = new Map()) {
-  const questions = [...clean(content.mediation).matchAll(/¿[^?]+\?/g)].map((match) => match[0]);
-  const materials = Array.isArray(content.materials) ? content.materials : [];
   const actions = activityReadingStages(content.child_actions);
   const mediation = activityReadingStages(content.mediation);
-  const observations = moment => (observationBlocks.find(block => block.id === moment)?.observations ?? []).map(item =>
-    readableBlock(`Qué observar · ${names.get(item.competency_id) ?? item.competency_name ?? item.competency_id}`, [item.criterion, ...(item.observation_focus ?? []).filter(text=>text!==item.criterion), `Evidencia esperada: ${item.expected_evidence ?? ""}`])).join("");
+  const observations = moment => (observationBlocks.find(block => block.id === moment)?.observations ?? []).map(item => ({
+    competency: names.get(item.competency_id) ?? item.competency_name ?? item.competency_id,
+    criterion: item.criterion,
+    focus: (item.observation_focus ?? []).filter(text => text !== item.criterion),
+    evidence: item.expected_evidence,
+  }));
+  const before = guidePanel("Antes de empezar", [
+    { title: "Docente · antes de empezar", body: content.teacher_preparation ? guideText(content.teacher_preparation) : "" },
+    { title: "Materiales", body: content.materials?.length ? guideText(content.materials) : "" },
+  ]);
   const phased = actions.stages.length === 3 && mediation.stages.length === 3;
   if (phased) return {
-    purpose: readableBlock("Propósito", content.purpose),
-    sequence: [
-      readableBlock("Docente · antes de empezar", content.teacher_preparation),
-      readableBlock("Materiales", materials),
-      readableBlock("Contexto de las acciones", actions.introduction),
-      readableBlock("Orientaciones generales", mediation.introduction),
-      ...actions.stages.map((stage, index) => [
-        readableParagraph(stage.label.toLocaleUpperCase("es-PE"), { bold: true }),
-        index === 0 ? readableBlock("Situación para empezar", content.meaningful_situation) : "",
-        readableBlock("Niños · qué harán", stage.text),
-        readableBlock("Docente · cómo acompaña", mediation.stages[index].text),
-        observations(["opening","development","closure"][index]),
-      ].join("")),
-      readableBlock("Continuidad", content.closure_or_continuity),
-    ].join(""),
+    purpose: guidePanel("El propósito de hoy", [{ title: "Propósito", body: guideText(content.purpose) }]),
+    sequence: before + readableBlock("Contexto de las acciones", actions.introduction) +
+      readableBlock("Orientaciones generales", mediation.introduction) +
+      actions.stages.map((stage, index) => guidePanel(stage.label.toLocaleUpperCase("es-PE"), [
+        { title: "Niños · qué harán", body: guideText(stage.text) },
+        { title: "Docente · cómo acompaña", body: (index === 0 && content.meaningful_situation ? readableBlock("Situación para empezar", content.meaningful_situation) : "") + guideText(mediation.stages[index].text) },
+      ], observations(["opening", "development", "closure"][index]))).join("") + readableBlock("Continuidad", content.closure_or_continuity),
   };
+  // Historical unphased instructions remain in their saved scope, rather than
+  // fabricating separate child actions for opening and closure.
   return {
-    purpose: readableBlock("Propósito", content.purpose),
-    sequence: [
-      readableParagraph("INICIO", { bold: true }),
-      readableBlock("Situación para empezar", content.meaningful_situation),
-      readableBlock("Docente · antes de empezar", content.teacher_preparation),
-      observations("opening"),
-      readableParagraph("DESARROLLO", { bold: true }),
-      readableBlock("Niños · qué harán", content.child_actions),
-      readableBlock("Docente · cómo acompaña", content.mediation),
-      readableBlock("Preguntas para conversar", questions),
-      readableBlock("Materiales", materials),
-      observations("development"),
-      readableParagraph("CIERRE", { bold: true }),
-      readableBlock("Para cerrar y continuar", content.closure_or_continuity),
-      observations("closure"),
-      observationBlocks.some(block => block.observations?.length) ? "" : readableBlock("Qué observar", whatToObserve),
-    ].join(""),
+    purpose: guidePanel("El propósito de hoy", [{ title: "Propósito", body: guideText(content.purpose) }]),
+    sequence: before + guidePanel("INICIO", [
+      { title: "Situación para empezar", body: content.meaningful_situation ? guideText(content.meaningful_situation) : "" },
+    ], observations("opening")) + guidePanel("DESARROLLO", [
+      { title: "Niños · qué harán", body: guideText(content.child_actions) },
+      { title: "Docente · cómo acompaña", body: guideText(content.mediation) },
+    ], observations("development")) + guidePanel("CIERRE", [
+      { title: "Para cerrar y continuar", body: content.closure_or_continuity ? guideText(content.closure_or_continuity) : "" },
+    ], observations("closure")) +
+      (observationBlocks.some(block => block.observations?.length) ? "" : readableBlock("Qué observar", whatToObserve)),
   };
 }
 
@@ -142,11 +136,15 @@ function transformActivity(xml, evidence, closure, withWorkshop, guide, curricul
     const reference=removeSection(output.slice(curriculumStart,sequenceStart)+'<w:sectPr/>',"IV. MOMENTOS FIJOS DE LA JORNADA").replace('<w:sectPr/>',''),sequence=output.slice(sequenceStart,evidenceStart);
     output=output.slice(0,curriculumStart)+sequence+reference+output.slice(evidenceStart);
   }
-  output=output.replace(/<w:br\b[^>]*w:type="page"\s*\/>/g,"");
-  // Empty observation forms should not create a trailing page; records remain in Hoy.
-  if(!evidence.length){
-    const start=[...output.matchAll(paragraphPattern)].find(match=>xmlText(match[0]).includes(withWorkshop?"VI. CUADERNO DE CAMPO":"VI. REGISTRO DE OBSERVACIONES"));
-    if(start)output=output.slice(0,start.index)+output.slice(start.index).replace(/<w:pageBreakBefore\s*\/>/g,"");
+  output = retainCoverPageBreak(output);
+  // No empty form or isolated heading when there are no field records yet.
+  if (!evidence.length) {
+    const start = [...output.matchAll(paragraphPattern)].find(match => xmlText(match[0]).includes(withWorkshop ? "VI. CUADERNO DE CAMPO" : "VI. REGISTRO DE OBSERVACIONES"));
+    const next = start && [...output.matchAll(paragraphPattern)].find(match => match.index > start.index);
+    if (start && next) output = output.slice(0, start.index) +
+      guideParagraph(withWorkshop ? "V. CUADERNO DE CAMPO" : "V. REGISTRO DE OBSERVACIONES Y EVIDENCIAS", { bold: true, size: 22, keepNext: true }) +
+      guideParagraph("Aún no hay observaciones registradas. Regístralas en Hoy para que aparezcan aquí.", { size: 20 }) +
+      output.slice(next.index + next[0].length);
   }
   output=replaceWordText(output,"Capacidad(es) pertinente(s)","Capacidades de referencia");
   output=replaceWordText(output,"V. SECUENCIA DE LA ACTIVIDAD","III. SECUENCIA DE LA ACTIVIDAD");
@@ -196,16 +194,16 @@ export async function renderActivityUnifiedWord(document, cards = [], { logo = n
   const blocks = activityPedagogicalBlocks(content,[],criteria);
   const names = new Map(cards.map(card=>[card.id,card.name??card.official_name]));
   const guide = activityGuide(content, whatToObserve, blocks, names);
-  const hasSelectedReferences = criteria.some(item => (item.details?.official_performance_refs ?? item.official_performance_refs)?.length);
-  const curriculum = (hasSelectedReferences ? criteria.map(item => {
-    const id=item.competency_v4_id??item.competency_id, reference=cards.find(card=>card.id===id);
-    return readableParagraph(names.get(id)??id,{bold:true}) +
-      readableBlock("Referentes curriculares", ageReference(reference,document.age,item.details?.official_performance_refs??item.official_performance_refs).split("\n")) +
-      compactPlanningTable(["Criterio de esta actividad","Evidencia esperada"],[[item.criterion_text,item.details?.expected_evidence??item.expected_evidence??content.expected_evidence]],[5000,5000]);
-  }).join("") : compactPlanningTable(["Competencia y referente", "Criterio de esta actividad", "Evidencia esperada"], criteria.map(item=>{
-    const id=item.competency_v4_id??item.competency_id, reference=cards.find(card=>card.id===id);
-    return [`${names.get(id)??id}\n${ageReference(reference,document.age,item.details?.official_performance_refs??item.official_performance_refs)}`,item.criterion_text,item.details?.expected_evidence??item.expected_evidence??content.expected_evidence];
-  }),[3800,3100,3100])) + (integratedIds.some(id=>!observedIds.includes(id)&&!criteria.some(item=>(item.competency_v4_id??item.competency_id)===id)) ? readableBlock("Integración prevista en el mapa",integrated) : "");
+  const curriculum = criteria.map(item => {
+    const id = item.competency_v4_id ?? item.competency_id;
+    const reference = cards.find(card => card.id === id);
+    return readableParagraph(names.get(id) ?? id, { bold: true }) + guideDetails([
+      ["Referentes curriculares", ageReference(reference, document.age, item.details?.official_performance_refs ?? item.official_performance_refs)],
+      ["Criterio de esta actividad", item.criterion_text],
+      ["Evidencia esperada", item.details?.expected_evidence ?? item.expected_evidence ?? content.expected_evidence],
+    ]);
+  }).join("") + (integratedIds.some(id => !observedIds.includes(id) && !criteria.some(item => (item.competency_v4_id ?? item.competency_id) === id))
+    ? readableBlock("Integración prevista en el mapa", integrated) : "");
   const supports = document.experience_details?.source_proposal_snapshot?.supports ?? [];
   const supportBlocks = readableBlock("Apoyos previstos", supports);
   guide.sequence += supportBlocks;
@@ -259,6 +257,6 @@ export async function renderActivityUnifiedWord(document, cards = [], { logo = n
     ["Qué haremos hoy", clean(content.purpose)],
   ].filter(([, value]) => value);
   return renderUnifiedWord({ templateUrl: withWorkshop ? workshopTemplateUrl : oldTemplateUrl, values, logo, appendixImages, compactTrailingSpace: true,
-    transform: (xml) => compactTeacherCover(insertCoverQuickView(transformActivity(xml, evidenceRows, closure, withWorkshop, guide, curriculum, values), "Hoy en el aula", overview), document.title),
+    transform: (xml) => insertCoverQuickView(transformActivity(xml, evidenceRows, closure, withWorkshop, guide, curriculum, values), "Hoy en el aula", overview),
     transformPart: (part, xml) => part.includes("header") ? replaceWordText(xml, "PLANIFICACIÓN ANUAL", "ACTIVIDAD DE APRENDIZAJE") : xml });
 }

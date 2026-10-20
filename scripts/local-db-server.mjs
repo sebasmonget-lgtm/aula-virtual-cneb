@@ -1,3 +1,6 @@
+import { loadWorkshopPrintContext, renderWorkshopPrint } from "../src/lib/workshop-print.mjs";
+import { workshopCatalog } from "../src/lib/workshop-catalog.mjs";
+import { loadAttendanceSummary } from "../src/lib/attendance-summary.mjs";
 import { loadConfirmedOrdinaryEvaluationRows } from "../src/lib/ordinary-evaluation-adapter.mjs";
 import {startActivityToday} from "../src/lib/activity-today-execution.mjs";
 import { criterionRealignmentEligibility } from "../src/lib/criterion-realignment-policy.mjs";
@@ -489,7 +492,7 @@ async function dashboard() {
     select se.id, se.start_time::text, se.end_time::text, se.block_type, coalesce(se.title, a.title) as title,
            se.activity_id, a.purpose, a.details as activity_details, le.title as experience_title, le.details->'activity_route' as activity_route, le.details as project_details,
            coalesce(criteria.criteria, '[]'::jsonb) as criteria,
-           coalesce(a.preparation->'materials', '[]'::jsonb) as materials, coalesce(a.preparation->'steps', '[]'::jsonb) as steps,
+           coalesce(a.preparation->'materials', a.details->'materials', '[]'::jsonb) as materials, coalesce(a.preparation->'steps', '[]'::jsonb) as steps,
            coalesce(del.status, 'planned') as status, coalesce(del.current_override, false) as current_override,
            coalesce(del.current_step_index, 0)::int as current_step_index,
            del.closure_type, del.teacher_closure_note
@@ -909,14 +912,27 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       return;
     }
     if(await handleWorkshopLibrary({request,url,response,origin,db,teacherId,readJson,send}))return;
+    if (request.method === "GET" && /^\/api\/workshop-print\/[a-z0-9-]+\/pdf$/.test(url.pathname)) {
+      try {
+        const id = url.pathname.split('/')[3];
+        const context = await loadWorkshopPrintContext(db, {teacherId, studentId:url.searchParams.get('studentId')});
+        const logo = await loadInstitutionLogoForDocuments(db, teacherId, logoStorage ?? assetsDir);
+        const bytes = await renderWorkshopPrint({context,logo,...(workshopCatalog.some(item=>item.id===id)?{workshopId:id}:{resourceId:id})});
+        const headers = {'content-type':'application/pdf','content-disposition':`attachment; filename="material-${id}.pdf"`,'content-length':String(bytes.length),'cache-control':'private, no-store','x-content-type-options':'nosniff'};
+        if(origin&&allowedOrigins.has(origin)){headers['access-control-allow-origin']=origin;headers['access-control-allow-credentials']='true';headers['access-control-expose-headers']='content-disposition';headers.vary='Origin';}
+        response.writeHead(200,headers);response.end(bytes);
+      } catch(error){send(response,httpStatusForError(error,422),{error:publicErrorMessage(error)},origin);}
+      return;
+    }
     if (request.method === "GET" && /^\/api\/library\/resources\/[a-z0-9-]+\/download$/.test(url.pathname)) {
       const id = url.pathname.split("/")[4];
       const resource = (await loadLibraryResources()).find((item) => item.id === id);
       if (!resource) { send(response, 404, { error: "Recurso no disponible." }, origin); return; }
-      const bytes = await readFile(resource.download.path);
+      const printable = resource.download.mimeType === 'image/png';
+      const bytes = printable ? await renderWorkshopPrint({context:await loadWorkshopPrintContext(db,{teacherId,studentId:url.searchParams.get('studentId')}),legacyResource:resource,logo:await loadInstitutionLogoForDocuments(db,teacherId,logoStorage??assetsDir)}) : await readFile(resource.download.path);
       const headers = {
-        "content-type": resource.download.mimeType,
-        "content-disposition": `attachment; filename="${resource.download.filename}"`,
+        "content-type": printable ? "application/pdf" : resource.download.mimeType,
+        "content-disposition": `attachment; filename="${printable ? resource.download.filename.replace(/\.png$/i,'.pdf') : resource.download.filename}"`,
         "content-length": String(bytes.length),
         "cache-control": "private, no-store",
         "x-content-type-options": "nosniff",
@@ -2130,6 +2146,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
           curriculum: source.aiContext.curriculum.filter((card) => decisions.competency_ids.includes(card.id)) },
           decisions, providerDecisions: source.plan.proposal.experience_context ? source.safeDecisions(decisions) : decisions, workflow: row.type });
         const details = { flow_version: "project-master-v1", stage: "dependents", preview: row.details.preview,
+          ...(row.details.resource_readiness ? { resource_readiness: row.details.resource_readiness } : {}),
           ...(row.details.project_context ? { project_context: row.details.project_context } : {}),
           ...(row.details.rebased_from?{rebased_from:row.details.rebased_from}:{}),
           decisions, dependents: simpleProjectEnabled() ? retainProjectCriterionIds(result.output, row.details.dependents) : result.output, planning_feedback: planningFeedback,
@@ -2187,7 +2204,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
           route = retainProtectedProjectRows(protectedVersion.sourceRoute, route, protectedVersion);
           assertFutureProjectMapEdits(protectedVersion.sourceRoute, route, protectedVersion);
         }
-        validateEditedActivityMap(route, row.details.decisions, dependents, calendarReview.selected_dates, context.age);
+        validateEditedActivityMap(route, row.details.decisions, dependents, calendarReview.selected_dates, source.classroom.age);
         let details = { ...base, activity_route: route, previous_map: row.details.previous_map ?? null,
           image_id: Object.hasOwn(row.details, "image_id") ? row.details.image_id : imageSuggestion?.suggested_id ?? null,
           image_suggested_id: imageSuggestion?.suggested_id ?? row.details.image_suggested_id ?? null,
@@ -2214,7 +2231,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         const source = await projectFlowSource(row.annual_plan_id, row.source_proposal_id, true, row.source_proposal_index);
         const calendarReview=await ensureProjectCalendarSelection(row,source);
         if(calendarReview.selection.status!=="confirmed")throw new Error("Confirma primero los días del proyecto.");
-        const route = validateEditedActivityMap(body.activity_route, row.details.decisions, row.details.dependents, calendarReview.selected_dates, context.age);
+        const route = validateEditedActivityMap(body.activity_route, row.details.decisions, row.details.dependents, calendarReview.selected_dates, source.classroom.age);
         const protectedVersion = await protectedProjectVersion(row);
         if (protectedVersion) assertFutureProjectMapEdits(protectedVersion.sourceRoute, route, protectedVersion);
         const overrides = [...(row.details.teacher_overrides ?? [])];
@@ -2263,7 +2280,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         const source = await projectFlowSource(row.annual_plan_id, row.source_proposal_id, true, row.source_proposal_index);
         const calendarReview=await ensureProjectCalendarSelection(row,source);
         if(calendarReview.selection.status!=="confirmed")throw new Error("Confirma primero los días del proyecto.");
-        const route = validateEditedActivityMap(row.details.activity_route, row.details.decisions, row.details.dependents, calendarReview.selected_dates, context.age);
+        const route = validateEditedActivityMap(row.details.activity_route, row.details.decisions, row.details.dependents, calendarReview.selected_dates, source.classroom.age);
         assertProjectAnnualAuthority(source,row.details.decisions);
         if (row.details.contract_version === "project-master-v3") validateProjectMasterV3(projectMasterV3(row), {
           instructionalDates: calendarReview.selected_dates,
@@ -2893,6 +2910,13 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       send(response, 201, { evidence: result.rows[0] }, origin);
       return;
     }
+    if (request.method === "GET" && url.pathname === "/api/attendance/summary") {
+      try {
+        const summary = await loadAttendanceSummary(db, { teacherId, classroomId: url.searchParams.get('classroomId'), periodId: url.searchParams.get('attendancePeriod'), today: qaDailyClock?.date ?? limaToday() });
+        send(response, 200, summary, origin);
+      } catch (error) { send(response, httpStatusForError(error, 422), {error:publicErrorMessage(error)}, origin); }
+      return;
+    }
     if (request.method === "POST" && url.pathname === "/api/attendance") {
       const today=qaDailyClock?.date??limaToday();
       const body = await readJson(request);
@@ -2906,6 +2930,9 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         send(response, 400, { error: "La asistencia contiene estudiantes o estados no válidos." }, origin);
         return;
       }
+      const attendanceCalendar = await loadEffectiveCalendar(db, {teacherId, classroomId:classroom.id, from:today, to:today});
+      if (!attendanceCalendar.days.some(day=>day.date===today && day.is_instructional)) { send(response,422,{error:"La asistencia se registra solo en días de clase."},origin); return; }
+      if (new Set(records.map(record=>record.studentId)).size !== records.length) { send(response,400,{error:"Hay niños repetidos en la asistencia."},origin); return; }
       await db.exec("begin");
       try {
         for (const record of records) await db.query(`insert into attendance_records
@@ -3141,8 +3168,8 @@ export async function handleApiRequest(request, response) {
   }
   const requestDb = database.requestDb();
   return requestDatabaseScope.run(requestDb, async () => {
-  try {
   let context;
+  try {
   try { context = await measureSetupPhase("auth", () => requestAuth.resolve(request, requestDb)); }
   catch (error) {
     const status = error instanceof RequestAuthError ? error.status : 401;

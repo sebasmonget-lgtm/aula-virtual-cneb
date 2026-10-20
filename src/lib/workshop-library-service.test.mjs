@@ -52,6 +52,9 @@ test('las 246 variantes se publican con adaptación y criterio propios en las tr
       const dates=library.available_dates;
       const variants=workshopCatalog.map(w=>workshopForAge(w,age)).filter(Boolean);
       assert.equal(variants.length,age===3?78:84);
+      assert.equal(library.workshops.length,variants.length);
+      assert.ok(library.workshops.every(w=>workshopAges(w).includes(age)));
+      assert.ok(library.workshops.some(w=>workshopAges(w).length>1),'Las propuestas multiedad compatibles también se pueden elegir.');
       assert.ok(dates.length>=variants.length,'Cada selección se prueba en un día lectivo diferente.');
       for(const [index,w]of variants.entries()){
         const saved=await scheduleLibraryWorkshop(db,{teacherId,classroomId:c.classroomId,workshopId:w.id,occursOn:dates[index],clientRequestId:randomUUID(),today:'2026-03-16'});
@@ -61,6 +64,7 @@ test('las 246 variantes se publican con adaptación y criterio propios en las tr
         assert.equal(doc.content.evaluation_criterion,w.criterion,w.id);
         assert.equal(doc.guide.pedagogical_blocks[1].expected_actions,w.development.children,w.id);
         assert.equal(doc.content.teacher_preparation,w.preparation,w.id);
+        assert.equal(doc.content.workshop_catalog.id,w.id,"La consulta conserva el enlace al paquete PDF del taller.");
         if(age===5&&w.id.startsWith('taller-biblioteca-')&&!exported.has(w.competency_id)){
           const word=await renderSavedDocumentWord(doc,kb.competencyCards.map(c=>({...c,name:c.official_name})));
           const xml=await(await JSZip.loadAsync(word)).file('word/document.xml').async('string');
@@ -71,7 +75,7 @@ test('las 246 variantes se publican con adaptación y criterio propios en las tr
         const snapshot=(await db.query('select details from activities where id=$1',[saved.id])).rows[0].details;
         assert.equal(snapshot.workshop_catalog.age,age);
         assert.equal(snapshot.workshop_catalog.id,w.id);
-        assert.equal(snapshot.workshop_catalog.version,'1.2.0');
+        assert.equal(snapshot.workshop_catalog.version,'1.3.0');
         assert.equal((await scheduleLibraryWorkshop(db,{teacherId,classroomId:c.classroomId,workshopId:w.id,occursOn:dates[index],clientRequestId:
           (await db.query('select generation_metadata from activities where id=$1',[saved.id])).rows[0].generation_metadata.client_request_id,today:'2026-03-16'})).id,saved.id);
       }

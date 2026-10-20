@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import JSZip from "jszip";
-import { writeFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { loadKnowledgeBaseV4 } from "./knowledge-base-v4.mjs";
 import { renderActivityUnifiedWord } from "./activity-unified-word.mjs";
@@ -33,8 +33,18 @@ test("la actividad distingue qué observar de las observaciones registradas", as
   assert.match(officialXml, /Participa en la construcción colectiva/);
   assert.doesNotMatch(officialXml, /Síntesis orientativa/);
   assert.equal(document.content.official_performance_refs, undefined, "No modifica la actividad histórica");
-  for (const label of ["Niños · qué harán", "Docente · cómo acompaña", "Preguntas para conversar", "Materiales", "Qué observar"])
+  for (const label of ["Niños · qué harán", "Docente · cómo acompaña", "Materiales", "Qué observar"])
     assert.match(xml, new RegExp(label));
+  assert.equal((xml.match(/¿Cómo podemos compartir\?/g) ?? []).length, 1, "La pregunta acompaña la mediación, sin duplicarse en otro bloque");
+  assert.match(xml, /ACTIVIDAD DE/);
+  assert.match(xml, /APRENDIZAJE/);
+  const coverEnd = xml.indexOf('w:type="page"');
+  assert.ok(coverEnd > 0 && coverEnd < xml.indexOf("I. DATOS GENERALES"), "La portada del original ocupa su propia página");
+  assert.ok((xml.match(/<w:tbl>/g) ?? []).length >= 7, "Conserva una guía tabulada y la portada");
+  assert.match(xml, /w:fill="F4EFFA"/, "El criterio se distingue dentro del momento");
+  const source = await JSZip.loadAsync(await readFile("assets/templates/actividad-aprendizaje-inicial-ayni-v2.docx"));
+  for (const name of Object.keys(source.files).filter(name => /word\/(styles\.xml|theme\/|media\/)/.test(name) && !source.files[name].dir))
+    assert.deepEqual(await archive.file(name).async("nodebuffer"), await source.file(name).async("nodebuffer"), `Preserva ${name}`);
   assert.doesNotMatch(xml, /¿QUÉ\?|¿CÓMO\?|¿PARA QUÉ\?/);
   assert.doesNotMatch(xml, /\{\{/);
   assert.match(xml, /V\. REGISTRO DE OBSERVACIONES Y EVIDENCIAS/);

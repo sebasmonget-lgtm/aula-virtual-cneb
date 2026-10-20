@@ -2,7 +2,7 @@ import { pilotWorkshops } from './workshop-pilot-content.mjs';
 import { multiageWorkshops } from './workshop-multiage-content.mjs';
 import { expandedWorkshops } from './workshop-expanded-content.mjs';
 
-export const WORKSHOP_CATALOG_VERSION = '1.2.0';
+export const WORKSHOP_CATALOG_VERSION = '1.3.0';
 const sources = ['CNEB', 'PCI_INICIAL_CANONICAL', 'PLANIFICACION_INICIAL_2019', 'INTERACCIONES_2019'];
 const resources = {
   cuento: { id: 'cuento-la-semilla', title: 'La semilla de Lila · cuento Ayni', url: '/workshops/cuento-la-semilla.png' },

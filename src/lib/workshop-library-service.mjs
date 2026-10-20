@@ -40,7 +40,7 @@ export async function loadWorkshopLibrary(db,{teacherId,classroomId,today=limaTo
     .map(a=>({id:a.id,date:a.occurs_on,title:a.title}));
   return {age:Number(own.age),today,available_dates:availableDates,scheduled,coverage,
     competencies:kb.competencyCards.map(c=>({id:c.id,name:c.official_name})),
-    workshops:rankWorkshopCatalog(workshopCatalog.map(w=>workshopForAge(w,Number(own.age))??w),coverage)};
+    workshops:rankWorkshopCatalog(workshopCatalog.map(w=>workshopForAge(w,Number(own.age))).filter(Boolean),coverage)};
 }
 
 /** Selection snapshots authored content into existing activities/criteria/calendar. No AI, no parallel observation store. */

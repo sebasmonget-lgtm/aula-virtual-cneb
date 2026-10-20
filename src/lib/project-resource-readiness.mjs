@@ -15,5 +15,5 @@ export function assertResourceReadiness(proposal, receipt) {
   const resources = unresolvedProjectResources(proposal);
   if (resources.length && (!receipt?.confirmed_by || !receipt.confirmed_at ||
     JSON.stringify(receipt.resources) !== JSON.stringify(resources)))
-    throw new Error("Confirma primero la disponibilidad de los recursos antes de generar el proyecto.");
+    throw Object.assign(new Error("Confirma primero la disponibilidad de los recursos antes de generar el proyecto."), {reason:"resources_confirmation_missing"});
 }

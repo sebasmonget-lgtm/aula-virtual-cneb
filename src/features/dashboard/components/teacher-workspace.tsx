@@ -487,8 +487,10 @@ function PlanningArea({ onPreparationStep, initialPreparation = false, onAnnualC
   }, [initialTab]);
 
   async function refreshJourney() {
+    setLoading(true); setProgressError(false);
     try { const next = await loadPlanningJourney(localDatabaseApiUrl); setJourney(next); setProgressError(false); }
-    catch { setJourney(null); setProgressError(true); }
+    catch { setProgressError(true); }
+    finally { setLoading(false); }
   }
 
   const consultationActivityId=readWorkspaceParams('Planificar').get('dayActivity')??initialActivity?.id;

@@ -2,6 +2,7 @@ import {isMaterialPlaceholder} from './annual-proposal-intent.mjs';
 const concrete=value=>Array.isArray(value)?value.filter(item=>typeof item==='string'&&item.trim()&&!isMaterialPlaceholder(item)):[];
 /** Read-only compatibility: use only literal resources from the saved project, never invented inventory. */
 export function activityMaterials(materials,details={},project={}){
+  materials=materials??details.materials;
   const known=concrete(materials);
   if(Array.isArray(materials)&&!materials.some(isMaterialPlaceholder))return {materials:known,source:'activity'};
   const route=(project.activity_route??[]).find(item=>item.id===details.route_item_id);

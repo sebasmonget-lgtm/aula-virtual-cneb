@@ -48,7 +48,7 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
   }
   async function ownedClassroom(classroomId) {
     if (!uuid.test(classroomId ?? "")) throw new Error("Aula inválida.");
-    const row = (await db.query(`select c.id,c.school_year_id,c.section,c.age_grade_id,c.castellano_l2_applicable,c.religion_applicable,ag.age_years as age,sy.year from classrooms c join school_years sy on sy.id=c.school_year_id join age_grades ag on ag.id=c.age_grade_id where c.id=$1 and c.teacher_id=$2 and sy.owner_id=$2`, [classroomId, teacherId])).rows[0];
+    const row = (await db.query(`select c.id,c.school_year_id,c.institution_name,c.section,c.age_grade_id,c.castellano_l2_applicable,c.religion_applicable,ag.age_years as age,sy.year from classrooms c join school_years sy on sy.id=c.school_year_id join age_grades ag on ag.id=c.age_grade_id where c.id=$1 and c.teacher_id=$2 and sy.owner_id=$2`, [classroomId, teacherId])).rows[0];
     if (!row) throw new Error("Aula no disponible.");
     return row;
   }
@@ -591,7 +591,7 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
           response.end(csv); return true;
         }
         if (url.pathname.endsWith(".xlsx")) {
-          const workbook=await buildGenericAssessmentWorkbook(rows);
+          const workbook=await buildGenericAssessmentWorkbook(rows,{institution_name:data.classroom.institution_name,section:data.classroom.section,period_label:data.period.label});
           response.writeHead(200,{"content-type":"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet","content-disposition":`attachment; filename="consolidado-ayni-${data.classroom.year}-${data.period.ordinal}.xlsx"`,"cache-control":"private, no-store",...(origin?{"access-control-allow-origin":origin,"access-control-allow-credentials":"true"}:{})});
           response.end(workbook);return true;
         }

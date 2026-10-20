@@ -4,7 +4,7 @@ import { randomUUID,createHmac } from "node:crypto";
 import { readdir,readFile } from "node:fs/promises";
 import { PGlite } from "@electric-sql/pglite";
 import { createPilotClassroom } from "./pilot-onboarding-service.mjs";
-import { enqueueActivityBlock,ownedPreparationJob,runPreparationStep,retryPreparation,acceptPreparationDispatch } from "./preparation-jobs.mjs";
+import { enqueueActivityBlock,enqueuePreparation,ownedPreparationJob,runPreparationStep,retryPreparation,acceptPreparationDispatch } from "./preparation-jobs.mjs";
 import { preparationExecutor } from "./preparation-executor.mjs";
 import { createPendingAIGenerationsStore } from "./pending-ai-generations-store.mjs";
 import { handlePreparationRoutes } from "../../scripts/preparation-routes.mjs";
@@ -110,3 +110,17 @@ test("repreparar un borrador distingue su revisión y rechaza contexto, propieda
     assert.equal((await db.query('select status from preparation_jobs where id=$1',[job.id])).rows[0].status,'queued');
   }finally{await db.close();}
  });
+
+test('reconexión acotada recupera solo una respuesta pendiente identificada y nunca repite creaciones inciertas',async()=>{
+ const {db,teacher,project}=await fixture();try{
+  const make=async(input,checkpoint)=>enqueuePreparation(db,{teacherId:teacher,classroomId:project.classroom_id,kind:'project',sourceId:project.id,sourceRevision:project.revision,input,payload:{project_id:project.id,stage:'master',project_provider_checkpoint:checkpoint}});
+  const known=await make({case:'known'},{provider_responses:{master:'resp_known'}});
+  const transient=()=>{throw Object.assign(new Error('Controlled unavailable response'),{status:503,uncertain:true});};
+  for(let index=1;index<=3;index++){const state=await runPreparationStep(db,transient);assert.equal(state.id,known.id);assert.equal(state.status,'queued');assert.equal(state.error,null);assert.equal((await ownedPreparationJob(db,teacher,known.id)).payload.resumption_attempts,index);}
+  assert.equal((await runPreparationStep(db,transient)).status,'uncertain');
+  assert.equal((await ownedPreparationJob(db,teacher,known.id)).payload.project_provider_checkpoint.provider_responses.master,'resp_known');
+  for(const checkpoint of [{},{provider_responses:{master:'resp_known'},completed_calls:{master:{output:{}}}}]){
+   const unknown=await make({case:JSON.stringify(checkpoint)},checkpoint);const state=await runPreparationStep(db,transient);assert.equal(state.id,unknown.id);assert.equal(state.status,'uncertain');
+  }
+ }finally{await db.close();}
+});

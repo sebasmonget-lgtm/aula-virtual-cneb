@@ -1,4 +1,4 @@
-import { resourceReadiness } from "../src/lib/project-resource-readiness.mjs";
+import { resourceReadiness, assertResourceReadiness } from "../src/lib/project-resource-readiness.mjs";
 import { enqueuePreparation, enqueueActivityBlock, ownedPreparationJob, publicPreparationJob, retryPreparation, preparationFingerprint,needsAcceptedProjectContinuation,recoverAcceptedProjectContinuation,recoverSavedPreparationResult } from "../src/lib/preparation-jobs.mjs";
 import { versionTransaction, VersionConflictError, httpStatusForError, publicErrorMessage } from "../src/lib/version-integrity.mjs";
 import { lockClassroomSchedule, limaToday } from "../src/lib/activity-schedule-integrity.mjs";
@@ -29,6 +29,18 @@ function futurePreview(project,proposal,chat){
 export async function handlePreparationRoutes({request,response,url,db,teacherId,origin,send,readJson,annualPlanningContext,projectFlowSource,projectFlowRow,domainRequest}) {
   if(!url.pathname.startsWith("/api/preparation/"))return false;
   try {
+    // Older failed drafts may have lost their receipt. Ask for the same explicit
+    // decision again; never infer availability or rewrite a confirmed project.
+    const resourceReview=async job=>{
+      if(job.legacy||job.kind!=='project'||!['failed','uncertain'].includes(job.status)||!job.payload.project_id)return null;
+      const project=(await db.query(`select e.id,e.revision,e.details,p.proposal from learning_experiences e join annual_plans p on p.id=e.annual_plan_id
+        where e.id=$1 and e.classroom_id=$2 and e.annual_plan_id=$3 and e.status='draft' and p.revision=$4`,[job.payload.project_id,job.classroom_id,job.source_id,job.source_revision])).rows[0];
+      if(!project||project.details.project_master)return null;
+      const proposal=project.proposal.proposed_experiences?.find(item=>item.proposal_id===job.payload.proposal_id);
+      if(!proposal)return null;
+      try{assertResourceReadiness(proposal,project.details.resource_readiness);return null;}catch(error){if(error.reason!=='resources_confirmation_missing')throw error;}
+      return {project,proposal,resources:resourceReadiness(proposal,true,teacherId).resources};
+    };
     const proposalActivities=/^\/api\/preparation\/proposals\/([0-9a-f-]{36})\/activities$/i.exec(url.pathname);
     if(proposalActivities&&request.method==='GET'){
       const context=await annualPlanningContext();if(!context)throw new VersionConflictError('Aula no disponible.');
@@ -158,7 +170,7 @@ export async function handlePreparationRoutes({request,response,url,db,teacherId
       if(started.experience.status==='draft'&&!started.experience.details.project_master)await domainRequest({id:plan.id,teacher_id:teacherId,classroom_id:context.id,payload:{}},`/api/project-flow/${started.experience.id}/calendar`,{
         selectedDates:[...dates].sort(),exclusions:Object.fromEntries(source.dates.filter(date=>!dates.includes(date)).map(date=>[date,'Día excluido por la docente del proyecto'])),confirm:true},'PUT');
       if(readiness && started.experience.status === 'draft' && !started.experience.details.project_master)
-        await db.query("update learning_experiences set details=jsonb_set(details,'{resource_readiness}',$1::jsonb),updated_at=now() where id=$2 and status='draft'",[JSON.stringify(readiness),started.experience.id]);
+        await db.query("update learning_experiences set details=jsonb_set(details,'{resource_readiness}',$1::jsonb) where id=$2 and status='draft'",[JSON.stringify(readiness),started.experience.id]);
       const contextText=started.experience.details.decisions?.additional_context??"";
       const job=await enqueuePreparation(db,{teacherId,classroomId:context.id,kind:'project',sourceId:plan.id,sourceRevision:plan.revision,
         input:{policy:COMPLETE_PROJECT_POLICY,proposalId:body.proposalId,dates},payload:{stage:'structure',proposal_id:body.proposalId,project_id:started.experience.id,
@@ -206,10 +218,19 @@ export async function handlePreparationRoutes({request,response,url,db,teacherId
     const [,id,action]=match,row=await ownedPreparationJob(db,teacherId,id);
     if(!action && request.method==="GET"){
       const recovered=row.status==='uncertain'?await recoverSavedPreparationResult(db,teacherId,id):row;
-      send(response,200,publicPreparationJob(needsAcceptedProjectContinuation(recovered)?await recoverAcceptedProjectContinuation(db,teacherId,id):recovered),origin);return true;
+      const review=await resourceReview(recovered);
+      send(response,200,{...publicPreparationJob(needsAcceptedProjectContinuation(recovered)?await recoverAcceptedProjectContinuation(db,teacherId,id):recovered),required_resources:review?.resources??[]},origin);return true;
     }
     if(action==="retry" && request.method==="POST"){
-      send(response,202,publicPreparationJob(await retryPreparation(db,teacherId,id,(await readJson(request)).acceptPotentialRepeat)),origin);return true;
+      const body=await readJson(request),review=await resourceReview(row);
+      if(review){
+        if(row.status==='uncertain'&&body.acceptPotentialRepeat!==true)throw new VersionConflictError('Confirma el reintento antes de continuar.');
+        const receipt=resourceReadiness(review.proposal,body.resourcesConfirmed,teacherId);
+        const saved=await db.query(`update learning_experiences set details=jsonb_set(details,'{resource_readiness}',$1::jsonb)
+          where id=$2 and classroom_id=$3 and status='draft' and revision=$4 and details->'project_master' is null returning id`,[JSON.stringify(receipt),review.project.id,row.classroom_id,review.project.revision]);
+        if(!saved.rows.length)throw new VersionConflictError('El proyecto cambió. Revisa su preparación antes de continuar.');
+      }
+      send(response,202,publicPreparationJob(await retryPreparation(db,teacherId,id,body.acceptPotentialRepeat)),origin);return true;
     }
     const activities=async(tx,job)=>(await tx.query(`select a.id,a.revision,a.status,a.details,a.preparation,a.occurs_on::text,
       (select jsonb_build_object('details',w.details) from activities w where w.linked_main_activity_id=a.id and w.status in ('draft','active') order by w.version desc limit 1) as workshop

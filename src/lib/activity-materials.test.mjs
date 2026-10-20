@@ -10,6 +10,8 @@ test('resuelve materiales incompletos exclusivamente desde recursos literales de
  assert.deepEqual(activityMaterials(saved),{materials:['Papel'],source:'incomplete'});
  assert.equal(saved[1],'Soporte de registro de la docente, por definir.');
  assert.deepEqual(activityMaterials([],{},project),{materials:[],source:'activity'});
+ assert.deepEqual(activityMaterials(undefined,{materials:['Bandeja','Registro anterior']},project),{materials:['Bandeja','Registro anterior'],source:'activity'});
+ assert.deepEqual(activityMaterials([],{materials:['Registro anterior']},project),{materials:[],source:'activity'},'Una lista vacía explícita no se rellena con otro origen');
  for(const text of ['supports','undefined','Cuento por seleccionar','Recurso por definir','TBD'])assert.equal(isMaterialPlaceholder(text),true);
  assert.equal(isMaterialPlaceholder('Papel y lápices'),false);
 });

@@ -1,0 +1,24 @@
+[
+  {
+    "workshop_id": "taller-biblioteca-adivinanzas-con-pistas",
+    "age": 5,
+    "competency_id": "COM_LECTURA",
+    "id": "minedu_crea_5_027",
+    "title": "¡Adivina, adivinador!",
+    "filename": "minedu_crea_5_027.pdf",
+    "sha256": "127055c98bb5cd3be27a01c87f4565f53b0e865686e1d20225bf82a21df86bfb",
+    "source": "MINEDU · cuadernos de Educación Inicial",
+    "usage": "Recurso complementario del taller; conservar páginas y autoría originales"
+  },
+  {
+    "workshop_id": "taller-biblioteca-mesa-para-munecos",
+    "age": 4,
+    "competency_id": "MAT_CANTIDAD",
+    "id": "minedu_crea_4_023",
+    "title": "Ayudamos a repartir platos y cubiertos",
+    "filename": "minedu_crea_4_023.pdf",
+    "sha256": "4127b3166f72980c1f3c82457d52baebafe1e0eb4dd94c98ec4a8c5556ccf508",
+    "source": "MINEDU · cuadernos de Educación Inicial",
+    "usage": "Recurso complementario del taller; conservar páginas y autoría originales"
+  }
+]

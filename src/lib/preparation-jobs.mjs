@@ -65,7 +65,7 @@ export async function recoverAcceptedProjectContinuation(db,teacherId,id){
     [row.source_id,row.classroom_id,row.source_revision,p.project_id,p.proposal_id,p.future_version===true])).rows[0];
     if(!source)return row;
     const uncertain=p.attempt_pending===true;
-    const payload={...p,stage:'activities',error:uncertain?'No pudimos comprobar si la última llamada terminó. El trabajo guardado se conserva.':null,
+    const payload={...p,stage:'activities',error:uncertain?'Tu avance está guardado. Necesitamos confirmar el último paso antes de continuar.':null,
       recovery:{kind:'accepted_master_without_publication',recovered_at:new Date().toISOString()}};
     return (await tx.query(`update preparation_jobs_v2 set status=$1,payload=$2::jsonb,lease_until=null,updated_at=now()
       where id=$3 and status='succeeded' and approved_at is null returning *`,[uncertain?'uncertain':'queued',JSON.stringify(payload),id])).rows[0]??row;
@@ -96,7 +96,7 @@ export async function retryPreparation(db,teacherId,id,acceptPotentialRepeat=fal
     if(row.status==="running" && new Date(row.lease_until).getTime()>Date.now())throw new VersionConflictError("La preparación sigue en curso.");
     if(row.status==="succeeded"&&!needsAcceptedProjectContinuation(row))return row;
     if((row.status==="uncertain"||needsAcceptedProjectContinuation(row)&&row.payload.attempt_pending===true) && acceptPotentialRepeat!==true)throw new VersionConflictError("No se pudo comprobar si la última llamada terminó. Confirma el reintento; podría repetir esa llamada.");
-    const payload={...row.payload,error:null,failure_reason:null,attempt_pending:false};
+    const payload={...row.payload,error:null,failure_reason:null,attempt_pending:false,resumption_attempts:0};
     if(row.payload.failure_reason==='insufficient_quota'){
       const provider=payload.project_provider_checkpoint;
       if(provider)provider.provider_responses=Object.fromEntries(Object.entries(provider.provider_responses??{}).filter(([key])=>provider.completed_calls?.[key]));
@@ -132,7 +132,7 @@ export async function runPreparationStep(db,execute) {
     const started=Date.now();
     await checkpoint({...job.payload,worker:{version:2,revision:process.env.VERCEL_GIT_COMMIT_SHA??'local',deployment:process.env.VERCEL_URL??'local',started_at:new Date(started).toISOString()}});
     const complete=await execute(job,checkpoint);
-    await checkpoint({...job.payload,last_step_ms:Date.now()-started});
+    await checkpoint({...job.payload,last_step_ms:Date.now()-started,resumption_attempts:0});
     if(complete&&needsAcceptedProjectContinuation({...job,status:'succeeded',approved_at:(await ownedPreparationJob(db,job.teacher_id,job.id)).approved_at}))
       throw new VersionConflictError('Falta publicar las actividades del proyecto aceptado. Conservamos el avance.');
     await db.query(`update preparation_jobs_v2 set status=$1,lease_until=null,updated_at=now()
@@ -140,8 +140,23 @@ export async function runPreparationStep(db,execute) {
   }catch(error){
     const quota=error.reason==='insufficient_quota'||error.provider_reason==='insufficient_quota';
     const uncertain=!quota&&error.uncertain===true;
-    job.payload.failure_reason=quota?'insufficient_quota':null;
-    job.payload.error=quota?"El servicio de IA no tiene saldo disponible. El avance está guardado. Después de recargar el saldo puedes retomar lo pendiente.":uncertain?"No pudimos comprobar si la última llamada terminó. El trabajo guardado se conserva.":"No pudimos completar lo pendiente. El trabajo guardado se conserva; puedes reintentar.";
+    const pendingResponses=Object.entries(job.payload.project_provider_checkpoint?.provider_responses??{})
+      .filter(([key,id])=>typeof id==='string'&&id.startsWith('resp_')&&!job.payload.project_provider_checkpoint?.completed_calls?.[key]);
+    const canResume=!quota&&uncertain&&job.kind==='project'&&job.payload.stage==='master'&&pendingResponses.length>0&&
+      [502,503,504].includes(Number(error.status))&&Number(job.payload.resumption_attempts??0)<3;
+    if(canResume){
+      // Consult the same identified response. An unknown creation/repair without
+      // its own ID is never automatically repeated (nor charged a second time).
+      job.payload.resumption_attempts=Number(job.payload.resumption_attempts??0)+1;
+      job.payload.provider_poll_after=new Date(Date.now()+5000*job.payload.resumption_attempts).toISOString();
+      job.payload.error=null;
+      await db.query(`update preparation_jobs_v2 set status='queued',payload=$1::jsonb,lease_until=null,updated_at=now()
+        where id=$2 and lease_token=$3 and status='running'`,[JSON.stringify(job.payload),job.id,job.lease_token]);
+      return publicPreparationJob(await ownedPreparationJob(db,job.teacher_id,job.id));
+    }
+    job.payload.failure_reason=quota?'insufficient_quota':error.name==='VersionConflictError'?'source_conflict':error.name==='ReferenceError'?'internal_reference':error.reason==='resources_confirmation_missing'?'resources_confirmation_missing':'preparation_step_failed';
+    job.payload.failure_stage=job.payload.stage;
+    job.payload.error=quota?"El servicio de IA no tiene saldo disponible. El avance está guardado. Después de recargar el saldo puedes retomar lo pendiente.":uncertain?"Tu avance está guardado. Necesitamos confirmar el último paso antes de continuar.":"La preparación está guardada y necesita una revisión para continuar.";
     await db.query(`update preparation_jobs_v2 set status=$1,payload=$2::jsonb,lease_until=null,updated_at=now()
       where id=$3 and lease_token=$4 and status='running'`,[uncertain?"uncertain":"failed",JSON.stringify(job.payload),job.id,job.lease_token]);
   }

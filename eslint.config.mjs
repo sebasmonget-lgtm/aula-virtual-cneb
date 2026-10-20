@@ -9,6 +9,9 @@ const eslintConfig = defineConfig([
   globalIgnores([
     // Default ignores of eslint-config-next:
     ".next/**",
+    ".local/**",
+    "outputs/**",
+    "dist/**",
     "out/**",
     "build/**",
     "tmp/**",
@@ -16,6 +19,10 @@ const eslintConfig = defineConfig([
     "experiments/**",
     "next-env.d.ts",
   ]),
+  {
+    files: ["scripts/local-db-server.mjs", "scripts/preparation-routes.mjs", "src/lib/preparation-*.mjs"],
+    rules: { "no-undef": "error" },
+  },
   {
     files: ["components/ui/**/*.{ts,tsx}", "hooks/use-mobile.ts"],
     rules: {
