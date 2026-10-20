@@ -78,7 +78,10 @@ export async function renderFamilyReportWord(document,competencyCards=[],{logo=n
   const blocks=[];
   if(clean(value.introduction))blocks.push(label('En pocas palabras',true),paragraph(value.introduction));
   blocks.push(new Paragraph({spacing:{after:150,line:230},children:[text('Valoración confirmada por la docente  ',{size:16,bold:true,color:MUTED}),...Object.entries(levels).flatMap(([grade,theme],index)=>[text(`${index?'   ·   ':''}${grade} ${theme.label}`,{size:16,color:theme.ink})])]}));
-  for(const [index,section] of (Array.isArray(value.sections)?value.sections:[]).entries())blocks.push(await competencyBlock(section,names,document.achievement_levels??[],index),space());
+  for(const [index,section] of (Array.isArray(value.sections)?value.sections:[]).entries()){
+    if(index>0)blocks.push(new Paragraph({pageBreakBefore:true,spacing:{before:0,after:0,line:20},children:[text('',{size:2})]}));
+    blocks.push(await competencyBlock(section,names,document.achievement_levels??[],index),space());
+  }
   if(clean(value.closing_note))blocks.push(label('Para seguir acompañando',true),paragraph(value.closing_note));
   if(clean(value.family_agreements))blocks.push(label('Acuerdos con la familia',true),paragraph(value.family_agreements));
   const rule=table([new TableRow({cantSplit:true,height:{value:45},children:['35648A','6FB58A','E7B04A'].map(fill=>cell([new Paragraph({spacing:{line:20,after:0},children:[text('',{size:1})]})],Math.floor(WIDTH/3),{shading:{fill},margins:{top:0,bottom:0,left:0,right:0}}))})],[3304,3305,3305],{borders:noBorders});

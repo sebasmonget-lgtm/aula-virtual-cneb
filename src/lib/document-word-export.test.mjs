@@ -51,6 +51,9 @@ test('Word familiar usa viñetas reales, notas docentes con color y foto en el b
  for(const fill of ['E6F2FF','DEF5E9','FFF2D5','FFEDEF'])assert.ok(xml.includes(fill),fill);
  assert.ok((xml.match(/<w:numPr>/g)??[]).length>=16,'Las listas tienen numeración Word editable');
  assert.equal((xml.match(/<w:tblHeader\/>/g)??[]).length,4,'Cada bloque repite su competencia y nota cuando continúa en otra página');
+ const pages=xml.split(/<w:p><w:pPr><w:pageBreakBefore\/>/);
+ assert.equal(pages.length,4,'Cada competencia comienza en una hoja distinta, sin portada ni hoja final extra');
+ for(const page of pages)assert.equal((page.match(/<w:tblHeader\/>/g)??[]).length,1,'No se mezclan dos competencias en una misma hoja');
  const firstTable=xml.match(/<w:tbl>[\s\S]*?<\/w:tbl>/)[0],cells=firstTable.match(/<w:tc>[\s\S]*?<\/w:tc>/g);
  assert.equal(cells.length,2);assert.doesNotMatch(cells[0],/Foto del estudiante/);assert.match(cells[1],/Foto del estudiante/);
  const extent=cells[1].match(/<wp:extent cx="(\d+)" cy="(\d+)"/);assert.ok(extent);assert.equal(Number(extent[1])/Number(extent[2]),2,'La foto conserva su proporción');

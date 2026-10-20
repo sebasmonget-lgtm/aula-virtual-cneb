@@ -1490,3 +1490,5 @@ La IA familiar usa exclusivamente la nota docente vinculada a cada conclusión p
 ## 2026-10-20: informe familiar organizado por competencia
 
 Aplicar la mejora visual en la exportación Word de todos los informes, conservando la fuente canónica. Usar viñetas reales, símbolo/color de competencia, nivel docente visible e ideas para casa en un bloque propio; foto opcional arriba a la derecha sin deformarla. No resumir, eliminar ejemplos ni cambiar una nota al maquetar. Mantener autorización y carga privada de imagen en servidor. Los grupos breves se mantienen mediante filas, sin encadenar todos los párrafos con `keepNext`; la competencia y su nota se repiten si el bloque continúa en otra página.
+
+La preferencia docente final es dedicar una hoja a cada competencia. Comenzar cada bloque posterior con un salto explícito, mantener la identificación en la primera y el cierre tras la última, sin portada ni página final obligatorias. Conservar el resto de la presentación; si un texto excepcionalmente largo requiere continuidad, preservar el contenido antes que truncarlo.
