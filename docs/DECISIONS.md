@@ -1479,3 +1479,10 @@ Para pares con evidencia, valoración o borrador propios, cargar solo ese niño 
 ### Colocación regional de QA
 
 La Preview usa --regions gru1 para acercar las funciones a su base sa-east-1. Mantener esta selección específica de la entrega QA, registrar la región efectiva del deployment y verificar autorización/datos/latencia antes del alias. No modificar configuración global del proyecto ni despliegue de Producción. La optimización de consultas sigue siendo necesaria; la medida temporal no representa por sí sola el HTTP interregional.
+
+
+## 2026-10-20: preparación parcial y paralela de textos del bimestre
+
+Separar generación de texto y confirmación docente: hasta12 conclusiones/6 informes simultáneos con checkpoints serializados. Una preparación anticipada requiere aviso5s y aceptación explícita en servidor, selecciona solo notas guardadas y mantiene el requisito completo de notas/conclusiones para informes. Menos de tres registros no constituye por sí solo una advertencia después de la valoración docente; conservar advertencia por información insuficiente, sin cuotas artificiales de aprobación.
+
+La IA familiar usa exclusivamente la nota docente vinculada a cada conclusión para adaptar ideas de acompañamiento; no propone ni modifica notas y no reescribe hallazgos canónicos. La aplicación imprime la nota por separado. Actualizar borradores anteriores solo con acción explícita. Paleta única de valoración:AD azul/A verde/B amarillo oscuro/C rojo, siempre con letra y etiqueta.

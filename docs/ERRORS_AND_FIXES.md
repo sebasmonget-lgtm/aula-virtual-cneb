@@ -2287,3 +2287,10 @@ En la población QA por API se observaron una respuesta503 de verificación de s
 ### Latencia regional identificada
 
 Observación verificable: despliegue97716be en iad1 y pool Supabase QA en sa-east-1, con guardados cloud de varios segundos pese a consultas temporales más rápidas. La distancia introduce un viaje de red por cada operación SQL; se considera un factor y se valida con una Preview gru1 antes de atribuirle toda la demora. CLI permite --regions; selección por despliegue, sin tocar Producción. Exigir región efectiva,15 smoke checks y muestras HTTP antes del alias; resultados en recibos privados de la entrega regional.
+
+
+## 2026-10-20: demasiadas advertencias y avance de textos poco visible
+
+Síntoma:120 conclusiones preparadas/100 por revisar, generación de un texto por POST e indicador familiar alejado del botón;120 tarjetas sin paginar. Causa: regla de menos de tres registros incluso tras valorar evidencia suficiente, runner de textos secuencial y progreso solo al inicio. Solución: motivos concretos desde suficiencia confirmada, lectura compatible de lotes previos, grupos12/6 con checkpoint serial y recuperación por tarea, resumen filtrable,10 resultados por página y progreso junto al informe. Se preservan identidad, snapshots, leases, guardado docente y datos antiguos.
+
+Validación:121 pruebas PASS incluyendo carga120+10 sin duplicados, evidencia insuficiente conservada, nota vinculada dentro del bundle y rechazo de preparación parcial sin aceptación. Typecheck/lint/build Vinext y revisión visual de componentes reales escritorio/390px; detector sin hallazgos. No inferir velocidad real del proveedor a partir de mocks. Ver QA_CONCLUSIONES_PARALELAS_2026-10-20.md y recibos privados de Preview para smoke y preservación efectiva.

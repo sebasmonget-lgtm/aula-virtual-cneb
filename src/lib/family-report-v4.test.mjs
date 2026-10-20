@@ -23,6 +23,22 @@ const section = (competencyId, informationStatus = "sufficient") => ({ competenc
 const report = (ids = ["COM_ORAL"], statuses = {}) => ({ introduction: "Compartimos algunos avances observados durante este periodo.", sections: ids.map((id) => section(id, statuses[id] ?? "sufficient")), closing_note: "Seguiremos observando y acompañando juntos." });
 const url = (path) => `http://localhost${path}`;
 
+test('la IA recibe solo la nota docente vinculada a cada conclusión, sin asignarla ni cambiarla',async()=>{
+ const conclusions=[{assessment_id:'assessment-one',competency_v4_id:'COM_ORAL',period_start:start,period_end:end,details:sourceDetails('COM_ORAL')}];
+ const confirmedAssessments=[{id:'assessment-one',teacher_confirmed_at:'2026-09-20',achievement_level:'C'},
+  {id:'other-child',teacher_confirmed_at:'2026-09-20',achievement_level:'AD'}];
+ const input=buildFamilyReportInput({age:5,competencyIds:['COM_ORAL'],conclusions,confirmedAssessments});
+ let request;
+ await generateAIWorkflowV4(input,{provider:{async generate(value){request=value;return report();}}});
+ const findings=request.ai_context_bundle.context.student.teacher_confirmed_findings;
+ assert.equal(findings.length,1);assert.equal(findings[0].confirmed_achievement_level,'C');
+ assert.doesNotMatch(JSON.stringify(request.ai_context_bundle),/assessment-one|other-child/);
+ assert.match(input.teacher_request,/No inventes logros ni dificultades/);
+ assert.throws(()=>validateFamilyReport({...report(),sections:[{...section('COM_ORAL'),achievement_level:'A'}]},['COM_ORAL'],conclusionSourceSnapshot([{...conclusions[0],id:oralId,version:1,updated_at:'2026-09-20',teacher_confirmed_at:'2026-09-20'}])),/family-report-v1/);
+ const noConfirmedGrade=buildFamilyReportInput({age:5,competencyIds:['COM_ORAL'],conclusions,confirmedAssessments:[{id:'assessment-one',achievement_level:'A'}]});
+ assert.equal(noConfirmedGrade.student_context.teacher_confirmed_findings[0].confirmed_achievement_level,null);
+});
+
 async function fixture({ oralStatus = "active", mathStatus = "active", oralInformation = "sufficient", failGeneration = false } = {}) {
   const db = await PGlite.create();
   await db.exec(`create table school_years(id uuid primary key,owner_id uuid,starts_on date,ends_on date);
@@ -30,7 +46,7 @@ async function fixture({ oralStatus = "active", mathStatus = "active", oralInfor
     create table classrooms(id uuid primary key,school_year_id uuid not null references school_years(id),teacher_id uuid,age_grade_id uuid,castellano_l2_applicable boolean,religion_applicable boolean);
     create table evaluation_periods(id uuid primary key,school_year_id uuid not null references school_years(id),starts_on date not null,ends_on date not null,label text);
     create table students(id uuid primary key,classroom_id uuid not null references classrooms(id),status text not null,first_name text,last_name text,preferred_name text);
-    create table competency_descriptive_conclusions(id uuid primary key,student_id uuid,competency_v4_id text,period_start date,period_end date,version integer,details jsonb,status text,teacher_confirmed_at timestamptz,updated_at timestamptz default now());`);
+    create table competency_descriptive_conclusions(id uuid primary key,student_id uuid,assessment_id uuid,competency_v4_id text,period_start date,period_end date,version integer,details jsonb,status text,teacher_confirmed_at timestamptz,updated_at timestamptz default now());`);
   await db.exec(`create table student_family_interviews(id uuid primary key,classroom_id uuid,student_id uuid,version integer,details jsonb,status text);`);
   await db.exec(await readFile(new URL("../../local-db/migrations/0022_family_reports.sql", import.meta.url), "utf8"));
   await db.query(`insert into school_years values($1,$2,'2026-03-01','2026-12-20')`, [schoolYearId,teacherId]);

@@ -1,0 +1,7 @@
+/* One teacher-facing palette for selectors, consolidated cells and reports. */
+.level{--grade-ink:#345372;--grade-surface:#f1f5f9}
+.level[data-level=AD]{--grade-ink:#185e91;--grade-surface:#e6f2ff}
+.level[data-level=A]{--grade-ink:#12634e;--grade-surface:#def5e9}
+.level[data-level=B]{--grade-ink:#88520b;--grade-surface:#fff2d5}
+.level[data-level=C]{--grade-ink:#a52c35;--grade-surface:#ffedef}
+.chip{color:var(--grade-ink);background:var(--grade-surface)}

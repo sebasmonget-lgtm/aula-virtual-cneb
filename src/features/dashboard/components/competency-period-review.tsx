@@ -5,6 +5,7 @@ import { CheckCircle2, Clock3, ImageIcon, Search, Sparkles, ChartColumn, ArrowLe
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import styles from "./period-review.module.css";
+import gradeStyles from "./achievement-colors.module.css";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { writeWorkspaceLocation } from "@/src/lib/workspace-location";
@@ -89,6 +90,7 @@ export function CompetencyPeriodReview({classroomId,periodId,students,scope,rows
   return <div className="space-y-6">
     {error&&<WorkflowFeedback tone="error">{error}</WorkflowFeedback>}
     {notice&&<WorkflowFeedback tone="success">{notice}</WorkflowFeedback>}
+    {relevant.length>0&&<PeriodBatchPanel key={`${classroomId}:${periodId}:conclusions:${batchRevision}`} classroomId={classroomId} periodId={periodId} kind="conclusions" collapsible pendingValuations={relevant.filter(row=>!row.valuation_confirmed).length} canPrepare={relevant.some(row=>row.valuation_confirmed)} students={students} competencies={scope} disabled={closed} onSaved={onChanged} onContinue={onContinue}/>}
     {!competencyId?<section aria-label="Competencias del bimestre" className={styles.competencyOverview}>
       <div className={styles.reviewIntro}><div><h2>¿Qué competencia revisamos?</h2><p>Las observaciones ya están guardadas. Ahora tú eliges y confirmas la valoración de cada niño.</p></div><p className={styles.reviewCount}><ChartColumn aria-hidden="true" size={20}/><span><strong>{pending.length}</strong> valoraciones por revisar</span></p></div>
       <div className={styles.competencyList}>{scope.map(card=>{const own=rows.filter(row=>row.competency_id===card.id),confirmed=own.filter(row=>row.valuation_confirmed).length,unobserved=own.filter(row=>!row.evidence_count&&!row.level).length;return <article key={card.id} className={styles.competencyRow} style={competencyTheme(card.id)}>
@@ -128,7 +130,7 @@ export function CompetencyPeriodReview({classroomId,periodId,students,scope,rows
           {current?.valuation_confirmed&&!editing?<><p className="rounded-xl bg-[#e5f6ee] p-3 font-semibold text-[#12634e]">Valoración confirmada: {detail.assessment?.achievement_level}</p>{reason&&<p className="whitespace-pre-wrap text-sm leading-relaxed text-[#526b87]">{reason}</p>}<Button variant="outline" disabled={closed} onClick={()=>setEditing(true)}>Corregir valoración</Button></>:<>
             {editing&&<WorkflowFeedback tone="info">Al cambiar esta valoración, su conclusión y el informe de este niño tendrán que prepararse de nuevo. Las versiones anteriores se conservan.</WorkflowFeedback>}
             {detail.draft?.details?.information_status==="insufficient"&&<WorkflowFeedback tone="info">Información insuficiente: {assessmentDisplayText(detail.draft.details.insufficiency_reason,name(studentId))}</WorkflowFeedback>}
-            <fieldset disabled={closed||busy}><legend className="mb-3 text-sm font-semibold">Selecciona la valoración</legend><div className={styles.gradeOptions}>{EVALUATION_LEVELS.map(({value})=><label key={value} className={styles.gradeOption} data-level={value} data-selected={level===value}><input className="sr-only" type="radio" name="achievement" checked={level===value} onChange={()=>setLevel(value)}/><b>{value}</b><span>{{AD:'Destacado',A:'Esperado',B:'En proceso',C:'En inicio'}[value]}</span></label>)}</div></fieldset>
+            <fieldset disabled={closed||busy}><legend className="mb-3 text-sm font-semibold">Selecciona la valoración</legend><div className={styles.gradeOptions}>{EVALUATION_LEVELS.map(({value})=><label key={value} className={`${styles.gradeOption} ${gradeStyles.level}`} data-level={value} data-selected={level===value}><input className="sr-only" type="radio" name="achievement" checked={level===value} onChange={()=>setLevel(value)}/><b>{value}</b><span>{{AD:'Destacado',A:'Esperado',B:'En proceso',C:'En inicio'}[value]}</span></label>)}</div></fieldset>
             {previousRank>=0&&chosenRank>previousRank&&<WorkflowFeedback tone="info">La nota anterior fue {detail.previous_valuation?.level}. Revisa las evidencias y el contexto antes de confirmar una valoración menor. La decisión sigue siendo tuya.</WorkflowFeedback>}
             {detail.evaluation_guidance&&detail.evaluation_guidance.performances.length>0&&<details className="rounded-xl border px-3 text-sm"><summary className="min-h-11 cursor-pointer py-3 font-semibold focus-visible:outline-2 focus-visible:outline-offset-2">Ver desempeños oficiales de {detail.evaluation_guidance.age} años</summary><ul className="list-disc space-y-3 pl-5 pb-3 leading-relaxed text-[#345372]">{detail.evaluation_guidance.performances.map(item=><li key={item.id}>{item.text} <span className="text-xs">(p. {item.page})</span></li>)}</ul><a href={detail.evaluation_guidance.source.url} target="_blank" rel="noreferrer" className="mb-3 inline-flex min-h-11 items-center rounded-lg border px-3 font-medium underline underline-offset-4">Programa Curricular de Educación Inicial · MINEDU</a></details>}
             {needsReason&&<label className="block text-sm font-semibold">Sustento de tu decisión con evidencia limitada<Textarea className="mt-1" disabled={closed||busy} value={reason} onChange={event=>setReason(event.target.value)}/></label>}
@@ -141,6 +143,6 @@ export function CompetencyPeriodReview({classroomId,periodId,students,scope,rows
         </div>
       </div>
     </section>}
-    {relevant.length>0&&relevant.every(row=>row.valuation_confirmed)&&<PeriodBatchPanel key={`${classroomId}:${periodId}:conclusions:${batchRevision}`} classroomId={classroomId} periodId={periodId} kind="conclusions" students={students} competencies={scope} disabled={closed} onSaved={onChanged} onContinue={onContinue}/>}
+
   </div>;
 }

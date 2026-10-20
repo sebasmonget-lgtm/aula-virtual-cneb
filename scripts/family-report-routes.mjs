@@ -44,7 +44,7 @@ export function createFamilyReportRouteHandler({ db, teacherId, annualPlanningCo
     return resolved;
   }
   async function sources(studentId, periodStart, periodEnd, formal=false) {
-    return (await db.query(`select id,student_id,competency_v4_id,period_start,period_end,version,details,status,teacher_confirmed_at,updated_at from competency_descriptive_conclusions where student_id=$1 and status='active' and teacher_confirmed_at is not null and period_start >= $2::date and period_end <= $3::date and ($4=false or (period_start=$2::date and period_end=$3::date)) order by competency_v4_id,period_start,id`, [studentId, periodStart, periodEnd,formal])).rows;
+    return (await db.query(`select id,student_id,assessment_id,competency_v4_id,period_start,period_end,version,details,status,teacher_confirmed_at,updated_at from competency_descriptive_conclusions where student_id=$1 and status='active' and teacher_confirmed_at is not null and period_start >= $2::date and period_end <= $3::date and ($4=false or (period_start=$2::date and period_end=$3::date)) order by competency_v4_id,period_start,id`, [studentId, periodStart, periodEnd,formal])).rows;
   }
   async function validatedSources(context, studentId, periodStart, periodEnd, requestedIds, periodId=null) {
     const period = await formalPeriod(context,periodId,periodStart,periodEnd);
@@ -54,19 +54,21 @@ export function createFamilyReportRouteHandler({ db, teacherId, annualPlanningCo
     const cards = new Map((await loadKnowledgeBase()).competencyCards.map((card) => [card.id, card]));
     // The compatibility endpoint must not bypass the modern classroom-wide prerequisite.
     // Resolve exact dates as well: omitting periodId does not evade this check.
+    let confirmedAssessments=[];
     const formal = period ?? (await db.query(`select * from evaluation_periods
       where school_year_id=$1 and starts_on=$2::date and ends_on=$3::date`, [context.school_year_id,periodStart,periodEnd])).rows[0];
     if (["bimester","trimester"].includes(formal?.kind) && newAyniFeatureEnabled(process.env.AYNI_F8_EVALUATION)) {
       const applicableIds = new Set([...cards.values()].filter(card => card.runtime_selectable_by_age?.[String(context.age)] &&
         cardIsApplicable(card,{castellanoL2Applicable:context.castellano_l2_applicable===true,religionApplicable:context.religion_applicable===true})).map(card=>card.id));
       const model = await loadPeriodEvaluationRows(db,{classroomId:context.id,period:{...formal,starts_on:dateOnly(formal.starts_on),ends_on:dateOnly(formal.ends_on)},applicableIds,includeOrdinary});
+      confirmedAssessments=model.rows.filter(row=>row.student_id===studentId).map(row=>row.assessment).filter(Boolean);
       if (!familyEvaluationReadiness(model).ready) throw new Error("Termina la evaluación del bimestre: guarda las notas y las conclusiones antes de preparar los informes.");
     }
     for (const id of ids) {
       const card = cards.get(id);
       if (!card?.runtime_selectable_by_age?.[String(context.age)] || !cardIsApplicable(card, { castellanoL2Applicable: context.castellano_l2_applicable === true, religionApplicable: context.religion_applicable === true })) throw new Error("Competencia v4 no aplicable al aula.");
     }
-    return { ids, rows: selectConfirmedConclusions(await sources(studentId, periodStart, periodEnd,Boolean(periodId)), ids, periodStart, periodEnd) };
+    return { ids, confirmedAssessments, rows: selectConfirmedConclusions(await sources(studentId, periodStart, periodEnd,Boolean(periodId)), ids, periodStart, periodEnd) };
   }
   async function checkPending(item, context, studentId, start, end,periodId=null) {
     if (item?.metadata?.family_context_fingerprint && item.metadata.family_context_fingerprint !== await currentFamilyRecommendationFingerprint(db, context.id, studentId)) throw new Error("La entrevista familiar cambió. Prepara de nuevo las recomendaciones.");
@@ -115,12 +117,12 @@ export function createFamilyReportRouteHandler({ db, teacherId, annualPlanningCo
         const student = await studentInClass(context, body.studentId);
         await assertPeriodDatesOpen(db,context.id,body.periodStart,body.periodEnd);
         const period=await formalPeriod(context,body.periodId,body.periodStart,body.periodEnd);
-        const { ids, rows } = await validatedSources(context, student.id, body.periodStart, body.periodEnd, body.competencyIds ?? [],period?.id);
+        const { ids, rows, confirmedAssessments } = await validatedSources(context, student.id, body.periodStart, body.periodEnd, body.competencyIds ?? [],period?.id);
         const classmates=(await db.query('select first_name,last_name,preferred_name from students where classroom_id=$1',[context.id])).rows;
         const interview = await loadConfirmedFamilyContext(db, context.id, student.id);
         const familyRecommendationContext = interview ? { source_type: "family_reported_context", version: interview.version,
           summary: neutralizeAssessmentText(summarizeFamilyInterview(interview.details), assessmentStudentNames(classmates)) } : null;
-        const input = buildFamilyReportInput({ age: context.age, studentName: [student.first_name, student.last_name].filter(Boolean).join(" "), competencyIds: ids, conclusions: rows, knownNames: assessmentStudentNames(classmates), familyRecommendationContext, castellanoL2Applicable: context.castellano_l2_applicable === true, religionApplicable: context.religion_applicable === true });
+        const input = buildFamilyReportInput({ age: context.age, studentName: [student.first_name, student.last_name].filter(Boolean).join(" "), competencyIds: ids, conclusions: rows, confirmedAssessments, knownNames: assessmentStudentNames(classmates), familyRecommendationContext, castellanoL2Applicable: context.castellano_l2_applicable === true, religionApplicable: context.religion_applicable === true });
         const plan = resolveAIExecutionPlan({ workflow: "family_report", task: "generation" });
         let result,source="ai";
         try { result=await generate(input, { provider: createProvider(plan), executionPlan: plan }); }

@@ -1095,3 +1095,10 @@ El evento se agrega atómicamente al JSONB almacenado en una consulta, conservan
 ### Región de ejecución de la Preview QA
 
 La API de Vercel confirma funciones iad1 y el host del pool QA confirma sa-east-1: estaban en regiones distintas. Tras corregir consultas redundantes, persiste el costo de ida/vuelta interregional por consulta. Se prepara una Preview con --regions gru1 (opción verificada en CLI63.1.2), junto a la base QA en Brasil; no modificar el target ni la configuración global de Producción. El SHA del código es el ya validado más esta documentación. Verificar región efectiva, smoke y medición HTTP antes de mover el alias. No declarar mejora regional hasta medirla. Recibos .local/evaluar-region-20261020; rollback al alias previo/--regions iad1.
+
+
+### 2026-10-20: conclusiones e informes en paralelo y paleta docente
+
+Conclusiones hasta12 e informes hasta6 llamadas concurrentes por grupo, un escritor de checkpoints, leases y snapshots existentes; recuperación acotada sin repetir resultados completos. Acceso de conclusiones visible arriba, aviso de notas pendientes con Cancelar principal y espera5s, aceptación explícita también en servidor; solo genera pares ya valorados. Informes sigue exigiendo todas las notas y conclusiones actuales y ofrece preparar conclusiones cuando solo faltan estas. Filtros mediante recuadros,10 textos por página e identidad compacta de competencia.
+
+Se elimina aviso general por menos de tres observaciones para conclusiones/informes; se conserva insuficiencia real. No se modifican textos guardados al reclasificar lotes antiguos. Input familiar recibe nota docente vinculada a la conclusión, solo para orientar recomendaciones; nota impresa por código en interfaz, Word ya conserva esa vinculación. Borradores familiares antiguos tienen actualización explícita de ideas, sin guardado automático. Paleta compartida:AD azul/A verde/B amarillo oscuro/C rojo.121 pruebas PASS, typecheck/lint/Vinext y revisión de escritorio/390px; ver QA_CONCLUSIONES_PARALELAS_2026-10-20.md para publicación, preservación de120 conclusiones y10 borradores existentes y rollback.

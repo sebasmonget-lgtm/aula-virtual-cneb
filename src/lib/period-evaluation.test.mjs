@@ -700,17 +700,70 @@ test("lotes: checkpoint durable, reintento explícito y guardado idempotente",as
   try{
     await confirmBatchGrades(f);let job=await prepareBatch(f,"conclusions");
     job=(await f.call("POST",`/api/period-evaluations/batches/${job.id}/run`,batchScope)).body;assert.equal(job.completed,1);
-    const failed=await f.call("POST",`/api/period-evaluations/batches/${job.id}/run`,batchScope);assert.equal(failed.status,503);assert.equal(failed.body.completed,1);
-    const recovered=(await f.call("GET",`/api/period-evaluations/batches/${job.id}?classroomId=${classId}&periodId=${firstPeriod}`)).body;assert.equal(recovered.status,"failed");assert.equal(recovered.completed,1);assert.equal(Object.hasOwn(recovered.items[0],"snapshot"),false);
+    const failed=await f.call("POST",`/api/period-evaluations/batches/${job.id}/run`,batchScope);assert.equal(failed.status,200);assert.equal(failed.body.status,"paused");assert.equal(failed.body.completed,1);
+    const recovered=(await f.call("GET",`/api/period-evaluations/batches/${job.id}?classroomId=${classId}&periodId=${firstPeriod}`)).body;assert.equal(recovered.status,"paused");assert.equal(recovered.completed,1);assert.equal(Object.hasOwn(recovered.items[0],"snapshot"),false);
     const resumed=await f.call("POST",`/api/period-evaluations/batches/${job.id}/run`,{...batchScope,retryUncertain:true});assert.equal(resumed.status,200);assert.equal(resumed.body.status,"ready");assert.equal(f.calls.length,3);
     const saved=await saveBatch(f,resumed.body);await saveBatch(f,saved);assert.equal((await f.db.query("select count(*)::int as n from competency_descriptive_conclusions where status='active'")).rows[0].n,2);
   }finally{await f.db.close();}
+});
+
+test('conclusiones anticipadas exigen aceptación explícita y solo usan notas guardadas',async()=>{
+ const f=await fixture();try{
+  await confirmBatchGrades(f,{both:false});
+  await f.db.query(`insert into evidences values(gen_random_uuid(),$1,$2,$3,now(),'observed','Comparte una idea en el juego.',null,'2026-04-10')`,[studentB,activity,criterion]);
+  const before=f.calls.length;
+  const blocked=await f.call('POST','/api/period-evaluations/batches',{...batchScope,kind:'conclusions'});
+  assert.equal(blocked.status,409);assert.equal(f.calls.length,before);
+  let job=await prepareBatch(f,'conclusions',{acknowledgeIncomplete:true});assert.equal(job.total,1);
+  job=await runBatch(f,job);assert.equal(job.items[0].student_id,studentA);assert.equal(job.items[0].review_reason,null,'Dos registros suficientes no generan una advertencia automática');
+  await saveBatch(f,job);
+  assert.equal((await f.call('POST','/api/period-evaluations/batches',{...batchScope,kind:'family'})).status,422);
+  assert.equal((await f.db.query('select count(*)::int as n from competency_descriptive_conclusions where student_id=$1',[studentB])).rows[0].n,0);
+ }finally{await f.db.close();}
+});
+
+test('120 conclusiones y 10 informes: paralelismo acotado, notas vinculadas y cero duplicados al retomar',async()=>{
+ const active={descriptive_conclusion:0,family_report:0},peak={descriptive_conclusion:0,family_report:0};
+ const f=await fixture({batchProvider:async input=>{
+  active[input.workflow]++;peak[input.workflow]=Math.max(peak[input.workflow],active[input.workflow]);
+  await new Promise(resolve=>setTimeout(resolve,15));active[input.workflow]--;
+  return input.workflow==='family_report'?mockFamily(input):{...mockConclusion(),competency_id:input.competency_ids[0]};
+ }});try{
+  const children=[studentA,studentB];
+  for(let i=0;i<8;i++){const child=`00000000-0000-4000-8000-${String(6000+i).padStart(12,'0')}`;children.push(child);await f.db.query("insert into students values($1,$2,'active','Clara','Flores',null)",[child,classId]);}
+  const competencies=['COM_LECTURA','PS_CONVIVE','COM_ARTE','PS_IDENTIDAD','MAT_FORMA','PSICO_MOTRICIDAD','COM_ORAL','COM_ESCRITURA','CYT_INDAGA','MAT_CANTIDAD','TRANS_AUTONOMO','TRANS_TIC'];
+  for(let i=0;i<competencies.length;i++){
+   const c=competencies[i]==='COM_ORAL'?criterion:`00000000-0000-4000-8000-${String(7000+i).padStart(12,'0')}`;
+   if(c!==criterion)await f.db.query("insert into activity_criteria(id,activity_id,competency_v4_id,criterion_text,details,status) values($1,$2,$3,'Explica lo que hizo durante el juego','{}','active')",[c,activity,competencies[i]]);
+   for(const child of children)await f.db.query("insert into evidences(id,student_id,activity_id,criterion_id,observed_at,observed_on,observation_text) values(gen_random_uuid(),$1,$2,$3,'2026-04-12T12:00:00Z','2026-04-12','Explicó una idea durante el juego.')",[child,activity,c]);
+  }
+  const period=(await f.call('GET','/api/period-evaluations/workspace')).body.periods[0];
+  const model=await loadPeriodEvaluationRows(f.db,{classroomId:classId,period,applicableIds:new Set(competencies)});
+  const {assessmentSourceSnapshot}=await import('./assessment-v4-service.mjs');
+  for(const row of model.rows)await f.db.query(`insert into competency_assessments(id,student_id,competency_v4_id,evaluation_period_id,period_start,period_end,version,source_evidence_ids,source_evidence_snapshot,details,generation_metadata,status,teacher_confirmed_at,achievement_level,teacher_justification)
+   values(gen_random_uuid(),$1,$2,$3,$4::date,$5::date,1,$6::jsonb,$7::jsonb,$8::jsonb,'{}','active',now(),$9,'La docente revisó las situaciones registradas.')`,[row.student_id,row.competency_v4_id,period.id,period.starts_on,period.ends_on,JSON.stringify(row.sourceRows.map(r=>r.id)),JSON.stringify(assessmentSourceSnapshot(row.sourceRows)),JSON.stringify({...mockAnalysis(),competency_id:row.competency_v4_id}),row.student_id===studentA?'AD':row.student_id===studentB?'C':'A']);
+  let job=await prepareBatch(f,'conclusions');assert.equal(job.total,120);
+  const path=`/api/period-evaluations/batches/${job.id}/run`;
+  for(let i=0;i<10;i++){job=(await f.call('POST',path,batchScope)).body;assert.equal(job.completed,(i+1)*12);}
+  assert.equal(job.status,'ready');assert.equal(peak.descriptive_conclusion,12);assert.equal(new Set(job.items.map(item=>`${item.student_id}:${item.competency_id}`)).size,120);
+  assert.equal(job.items.filter(item=>item.review_reason).length,0);
+  await f.call('POST',path,batchScope);assert.equal(f.calls.length,120);
+  await saveBatch(f,job);
+  job=await prepareBatch(f,'family');assert.equal(job.total,10);
+  job=(await f.call('POST',`/api/period-evaluations/batches/${job.id}/run`,batchScope)).body;assert.equal(job.completed,6);
+  job=await runBatch(f,job);assert.equal(job.completed,10);assert.equal(peak.family_report,6);
+  for(const item of job.items){assert.equal(item.achievement_levels.length,12);assert.ok(item.achievement_levels.every(level=>level.achievement_level===(item.student_id===studentA?'AD':item.student_id===studentB?'C':'A')));}
+  const inputs=f.calls.filter(input=>input.workflow==='family_report');
+  assert.ok(inputs.every(input=>input.student_context.teacher_confirmed_findings.every(finding=>['AD','A','C'].includes(finding.confirmed_achievement_level))));
+  const before=f.calls.length;await f.call('POST',`/api/period-evaluations/batches/${job.id}/run`,batchScope);assert.equal(f.calls.length,before);
+  assert.equal((await f.db.query('select count(*)::int as n from family_reports')).rows[0].n,0,'Preparar nunca publica ni confirma informes');
+ }finally{await f.db.close();}
 });
 test("lotes: una llamada incierta exige reintento y no repite resultados completados",async()=>{
   const f=await fixture();try{await confirmBatchGrades(f);let job=await prepareBatch(f,"conclusions");
     job=(await f.call("POST",`/api/period-evaluations/batches/${job.id}/run`,batchScope)).body;
     await f.db.query(`update ai_pending_generations set payload=payload||'{"status":"running","lease_until":"2020-01-01T00:00:00Z"}'::jsonb where id=$1`,[job.id]);
-    assert.equal((await f.call("POST",`/api/period-evaluations/batches/${job.id}/run`,batchScope)).status,409);assert.equal(f.calls.length,1);
+    assert.equal((await f.call("POST",`/api/period-evaluations/batches/${job.id}/run`,batchScope)).status,409);assert.equal(f.calls.length,2);
     const resumed=await f.call("POST",`/api/period-evaluations/batches/${job.id}/run`,{...batchScope,retryUncertain:true});assert.equal(resumed.status,200);assert.equal(resumed.body.completed,2);assert.equal(f.calls.length,2);
   }finally{await f.db.close();}
 });
@@ -756,7 +809,7 @@ test("lotes guardados: recargar conserva la advertencia de evidencia limitada si
     await saveBatch(f,await runBatch(f,await prepareBatch(f,"conclusions")));
     await saveBatch(f,await runBatch(f,await prepareBatch(f,"family")));
     const calls=f.calls.length;
-    for(const kind of ["conclusions","family"]){const result=await f.call("GET",`/api/period-evaluations/batches?classroomId=${classId}&periodId=${firstPeriod}&kind=${kind}`);assert.equal(result.status,200);assert.match(result.body.job.items.find(row=>row.student_id===studentA).review_reason,/pocas evidencias/);}
+    for(const kind of ["conclusions","family"]){const result=await f.call("GET",`/api/period-evaluations/batches?classroomId=${classId}&periodId=${firstPeriod}&kind=${kind}`);assert.equal(result.status,200);assert.match(result.body.job.items.find(row=>row.student_id===studentA).review_reason,/información/);}
     assert.equal(f.calls.length,calls);
   }finally{await f.db.close();}
 });

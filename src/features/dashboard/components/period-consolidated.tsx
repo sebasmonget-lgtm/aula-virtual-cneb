@@ -1,4 +1,5 @@
 "use client";
+import gradeStyles from "./achievement-colors.module.css";
 
 import { useEffect, useState } from "react";
 import { FileDown, CheckCircle2, Clock3 } from "lucide-react";
@@ -97,7 +98,7 @@ export function PeriodConsolidated({ classroomId, periodId, periodLabel, onRevie
           <thead className="sticky top-0 z-20 bg-[#eaf7fb]"><tr><th scope="col" className="sticky left-0 z-30 w-[180px] bg-[#eaf7fb] px-3 py-3">Niño / Niña</th>{visibleCompetencies.map(([id,name])=><th key={id} scope="col" aria-label={name} title={name} style={{...competencyTheme(id),background:'var(--competency-surface)'}} className="w-[168px] px-2 py-2 text-center align-middle text-xs font-semibold leading-snug"><CompetencyIdentity id={id} name={name} compact/></th>)}</tr></thead>
           <tbody>{visibleStudents.map(([id,name])=><tr key={id} className="group"><th scope="row" className="sticky left-0 z-10 border-t bg-white px-3 py-2 text-xs font-semibold group-hover:bg-[#f3f9fc]">{name}</th>{visibleCompetencies.map(([cid])=>{const row=cellIndex.get(`${id}:${cid}`);return <td key={cid} className="border-t p-1 text-center align-middle group-hover:bg-[#f8fbfd]">{row?<>
             <button type="button" className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg px-2 py-1.5 hover:bg-[#e8f3f8] focus-visible:outline-2 focus-visible:outline-[#087d96]" onClick={()=>onReview(id,cid)} title={statusLabel[row.state]??row.state} aria-label={`Ver evaluación de ${name} en ${row.competency_name}: ${row.achievement_level??"Sin valoración"}. ${statusLabel[row.state]??row.state}`}>
-              <span className={`inline-flex min-w-10 justify-center rounded-full px-2 py-1 font-bold ${row.valuation_confirmed?"bg-[#e0f4e8] text-[#155d49]":"bg-[#f1f5f9] text-[#526b87]"}`}>{row.achievement_level??"—"}</span>
+              <span data-level={row.valuation_confirmed?row.achievement_level:undefined} className={`inline-flex min-w-10 justify-center rounded-full px-2 py-1 font-bold ${gradeStyles.level} ${gradeStyles.chip}`}>{row.achievement_level??"—"}</span>
               {row.valuation_confirmed?<CheckCircle2 aria-hidden="true" className="size-3.5 text-[#12634e]"/>:<Clock3 aria-hidden="true" className="size-3.5 text-[#88520b]"/>}
             </button>{showConclusions&&<p className="px-2 pb-2 text-left text-xs leading-relaxed whitespace-pre-wrap">{row.conclusion||"Conclusión pendiente"}</p>}
           </>:<span aria-label="Fuera del filtro" className="text-xs text-[#526b87]">—</span>}</td>;})}</tr>)}</tbody>
